@@ -76,6 +76,9 @@ func main() {
 	p.RegisterEventHandler(func(e events.FrameDone) {
 		gs := p.GameState()
 		players := gs.Participants().Playing()
+		if len(players) != 10 {
+			return
+		}
 		matchStarted := 0
 		if gs.IsMatchStarted() {
 			matchStarted = 1
