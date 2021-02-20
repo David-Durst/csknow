@@ -1,4 +1,6 @@
 FROM gonzih/csgo-server:latest
+ADD ./csgo.sh /home/csgo/hlserver/csgo.sh
+RUN /home/csgo/hlserver/update.sh
 RUN echo "tv_enable 1" >> /home/csgo/hlserver/csgo/csgo/cfg/autoexec.cfg
 RUN echo "tv_autorecord 1" >> /home/csgo/hlserver/csgo/csgo/cfg/autoexec.cfg
 RUN echo "bot_quota 10" >> /home/csgo/hlserver/csgo/csgo/cfg/server.cfg
