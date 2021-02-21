@@ -7,7 +7,7 @@ bash "${STEAMCMDDIR}/steamcmd.sh" +login anonymous \
 				+app_update "${NONVOLUMESTEAMAPPID}" \
 				+quit
 
-./upload_logs.sh &> upload.log &
+./upload_logs.py &> upload.log &
 
 # We assume that if the config is missing, that this is a fresh container
 #if [ ! -f "${NONVOLUMESTEAMAPPDIR}/${STEAMAPP}/cfg/server.cfg" ]; then
