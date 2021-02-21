@@ -14,6 +14,7 @@ ADD ./server.cfg ${NONVOLUMESTEAMAPPDIR}/csgo/cfg/server.cfg
 ADD ./gamemode_competitive.cfg ${NONVOLUMESTEAMAPPDIR}/csgo/cfg/gamemode_competitive.cfg
 ADD ./gamemode_competitive_server.cfg ${NONVOLUMESTEAMAPPDIR}/csgo/cfg/gamemode_competitive_server.cfg
 ADD ./entry.sh ${HOMEDIR}/entry.sh
+ADD ./upload_logs.py ${HOMEDIR}/upload_logs.py
 RUN { \
         echo '@ShutdownOnFailedCommand 1'; \
         echo '@NoPromptForPassword 1'; \
