@@ -13,6 +13,7 @@ print("starting while loop of uploading")
 while True:
     files = glob.glob(cur_path + '/csgo-dedicated-non-volumne/csgo/*.dem') # * means all if need specific format then *.csv
     files.sort(key=os.path.getmtime)
+    print(f"found {len(files)} files, need to upload {len(files[:-1])} of them")
     # leave the most recently touched demo, as cs is still writing to it
     for f in files[:-1]:
         print("moving file:" + str(f))
