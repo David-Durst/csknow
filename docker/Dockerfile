@@ -1,9 +1,15 @@
 FROM cm2network/csgo:latest 
-ADD ./update.sh ${STEAMAPPDIR}/csgo.sh
-RUN ${STEAMAPPDIR}/csgo.sh
-USER root
-RUN apt-get -y update && apt-get -y install less procps
-USER $USER
+ENV NONVOLUMESTEAMAPPDIR "${HOMEDIR}/${STEAMAPP}-dedicated-non-volumne"
+ADD ./update.sh ${HOMEDIR}/update.sh
+RUN ${HOMEDIR}/update.sh
+#USER root
+#RUN apt-get -y update && apt-get -y install less procps
+#USER $USER
+#ADD ./server.cfg ${STEAMAPPDIR}/server.cfg
+#ADD ./gamemode_competitive.cfg ${STEAMAPPDIR}/gamemode_competitive.cfg
+#ADD ./entry.sh ${HOMEDIR}/entry.sh
+
+
 #RUN /home/csgo/hlserver/update.sh
 #ADD ./csgo.sh /home/csgo/hlserver/csgo.sh
 #RUN echo "tv_enable 1" >> /home/csgo/hlserver/csgo/csgo/cfg/autoexec.cfg
