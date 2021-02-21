@@ -19,7 +19,7 @@ while True:
         print("moving file:" + str(f))
         p = Path(f)
         aws_name = p.stem + str(machine_id) + p.suffix 
-        os.system(f"aws s3 cp {f} s3://csknow/demos/{aws_name}")
+        os.system(f"aws s3 cp {f} s3://csknow/demos/unprocessed/{aws_name}")
         os.remove(f)
     time.sleep(60)
 print("done while loop of uploading")
