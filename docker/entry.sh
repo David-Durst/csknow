@@ -45,13 +45,7 @@ bash "${NONVOLUMESTEAMAPPDIR}/srcds_run" -game "${STEAMAPP}" -console -autoupdat
 			+game_mode "${SRCDS_GAMEMODE}" \
 			+mapgroup "${SRCDS_MAPGROUP}" \
 			+map "${SRCDS_STARTMAP}" \
-			+sv_setsteamaccount "${SRCDS_TOKEN}" \
 			+rcon_password "${SRCDS_RCONPW}" \
 			+sv_password "${SRCDS_PW}" \
 			+sv_region "${SRCDS_REGION}" \
-			+net_public_adr "${SRCDS_NET_PUBLIC_ADDRESS}" \
-			-ip "${SRCDS_IP}" \
-			+host_workshop_collection "${SRCDS_HOST_WORKSHOP_COLLECTION}" \
-			+workshop_start_map "${SRCDS_WORKSHOP_START_MAP}" \
-			-authkey "${SRCDS_WORKSHOP_AUTHKEY}" \
-			"${ADDITIONAL_ARGS}"
+			+sv_lan 1
