@@ -1,5 +1,4 @@
 #!/bin/bash
-set -x
 script_dir="tmp"
 #https://www.ostricher.com/2014/10/the-right-way-to-get-the-directory-of-a-bash-script/
 get_script_dir () {
@@ -17,5 +16,5 @@ get_script_dir () {
 get_script_dir
 
 id=$(cat ${script_dir}/../private/.ec2)
-aws stop-instances --instance-ids $id
+aws ec2 stop-instances --instance-ids $id
 
