@@ -12,7 +12,7 @@ cur_path = os.path.dirname(os.path.realpath(__file__))
 if "RUNNING_IN_EC2" in os.environ:
     url = "http://169.254.169.254/latest/meta-data/iam/security-credentials/" + os.environ["ROLE"]
 else:
-    url = "169.254.170.2" + os.environ["AWS_CONTAINER_CREDENTIALS_RELATIVE_URI"]
+    url = "http://169.254.170.2" + os.environ["AWS_CONTAINER_CREDENTIALS_RELATIVE_URI"]
 
 machine_id = uuid.uuid1()
 print(f"machine uuid: {machine_id}")
