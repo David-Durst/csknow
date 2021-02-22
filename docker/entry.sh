@@ -1,16 +1,6 @@
 #!/bin/bash
 set -x
-
-if [[ -z "${RUNNING_IN_EC2}" ]]; then
-    CRED_JSON=$(curl 169.254.170.2$AWS_CONTAINER_CREDENTIALS_RELATIVE_URI)
-else
-    CRED_JSON=$(curl http://169.254.169.254/latest/meta-data/iam/security-credentials/${iam_role})
-fi
-
 mkdir -p "${NONVOLUMESTEAMAPPDIR}" || true  
-
-export AWS_ACCESS_KEY_ID=$(jq -r '.AccessKeyId' <<< $CRED_JSON)
-export AWS_SECRET_ACCESS_KEY=$(jq -r '.SecretAccessKey' <<< $CRED_JSON)
 
 bash "${STEAMCMDDIR}/steamcmd.sh" +login anonymous \
 				+force_install_dir "${NONVOLUMESTEAMAPPDIR}" \
