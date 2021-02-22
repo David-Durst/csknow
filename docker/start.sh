@@ -17,13 +17,11 @@ get_script_dir () {
 get_script_dir
 
 
-aws_access_key_id=$(cat ${script_dir}/../private/.aws_access_key_id)
-aws_secret_access_key=$(cat ${script_dir}/../private/.aws_secret_access_key)
+iam_role=$(cat ${script_dir}/../private/.aws_csgo_server_role)
 
 docker run --name durst_csgo \
-    --rm --net=host \
+    --rm \
     -e SRCDS_MAPGROUP=mg_de_dust2 -e SRCDS_STARTMAP=de_dust2 \
-    -e AWS_ACCESS_KEY_ID=${aws_access_key_id} -e AWS_SECRET_ACCESS_KEY=${aws_secret_access_key} \
-    --mount type=bind,source="$(pwd)"/../demos,target=/home/steam/demos \
+    -e RUNNING_IN_EC2=1 -e ROLE=${iam_role} \
     durst/csgo:0.1
 

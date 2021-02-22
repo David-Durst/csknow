@@ -3,7 +3,7 @@ ENV NONVOLUMESTEAMAPPDIR "${HOMEDIR}/${STEAMAPP}-dedicated-non-volumne"
 ADD ./update.sh ${HOMEDIR}/update.sh
 RUN ${HOMEDIR}/update.sh
 USER root
-RUN apt-get -y update && apt-get -y install less procps unzip zip python3
+RUN apt-get -y update && apt-get -y install less procps unzip zip python3 jq
 USER $USER
 RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" && \
     unzip awscliv2.zip
