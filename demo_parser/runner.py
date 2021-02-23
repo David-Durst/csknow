@@ -23,7 +23,7 @@ while True:
         os.environ["AWS_ACCESS_KEY_ID"] = values["AccessKeyId"]
         os.environ["AWS_SECRET_ACCESS_KEY"] = values["SecretAccessKey"]
         os.environ["AWS_SESSION_TOKEN"] = values["Token"]
-    os.system("go run main.go")
+    os.system("go run .")
     time.sleep(60)
     num_sleeps += 1
     if num_sleeps == 10:

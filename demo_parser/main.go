@@ -1,11 +1,13 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	"os"
 	"path/filepath"
 )
 
@@ -17,6 +19,16 @@ const csvPrefiix = "demos/csvs/"
 const bucketName = "csknow"
 
 func main() {
+
+	// if running locally, skip the aws stuff and just return
+	localFlag := flag.Bool("local", false, "set for non-aws (aka local) runs")
+	flag.Parse()
+	if *localFlag {
+		processFile("local_run")
+		os.Exit(0)
+	}
+
+
 	sess := session.Must(session.NewSession(&aws.Config{
 		Region:      aws.String("us-east-1")},
 		))
