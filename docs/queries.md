@@ -1,4 +1,4 @@
-* Queries
+# Queries
 These queries are important both from a game perspective (answer frustrations of mine) and a technical one (lots of intersection computations or spatio-temporal joins),
 1. Find the wallers. Compute the players (across multiple games) whose cursor points at people they can't see most frequently.
     a. context - wallers are a type of cheater who can see people through walls.
@@ -15,7 +15,7 @@ These queries are important both from a game perspective (answer frustrations of
     b. Type of query - spatio-temporal join
     c. Optimal Implementation - filter by trajectories moving towards region of map, then join based on trajectory similarity
 
-** Simpler Queries
+## Simpler Queries
 These will be less taxing on the system. I'll come back to them later.
 1. Compute all the times players got shot before they could see the enemy (i.e. they were shot and the enemy could only see them for less than 100ms).
    a. context - Players see enemies 100ms in the past. If an attacker runs around the corner, they will see the defender
@@ -30,6 +30,6 @@ These will be less taxing on the system. I'll come back to them later.
    b. Type of query - Group by of temporal sequence of events
    c. Optimal Implementation - join deaths table with visibility table
 
-** Technical Details
+##Technical Details
 1. Could replace vector-rectangle details with more complicated approximations of hit detection (https://www.hltv.org/news/8335/csgo-hitboxes-explained)
 but will come back to this later.
