@@ -31,7 +31,7 @@ func downloadFile(downloader *s3manager.Downloader, fileKey string) {
 }
 
 func uploadFile(uploader *s3manager.Uploader, fileKey string) {
-	csvFile, err := os.Open(localCSVName)
+	csvFile, err := os.Open(localPositionCSVName)
 	if err != nil {
 		panic(err)
 	}

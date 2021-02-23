@@ -18,21 +18,46 @@ func processFile(unprocessedKey string) {
 	}
 	defer f.Close()
 
-	csvFile, err := os.Create(localCSVName)
+	positionFile, err := os.Create(localPositionCSVName)
 	if err != nil {
 		panic(err)
 	}
-	defer csvFile.Close()
+	defer positionFile.Close()
+	positionFile.WriteString("tick number,match started,game phase,rounds played,is warmup,round start,round end,round end reason,freeze time ended,t score,ct score,num players")
+	for i := 0; i < 10; i++ {
+		positionFile.WriteString(fmt.Sprintf(
+			",player %d name,player %d team,player %d x position,player %d y position,player %d z position" +
+				",player %d x view direction,player %d y view direction", i, i, i, i, i, i, i))
+	}
+	positionFile.WriteString(fmt.Sprintf(",demo file key\n"))
+
+	spottedFile, err := os.Create(localSpottedCSVName)
+	if err != nil {
+		panic(err)
+	}
+	defer spottedFile.Close()
+	positionFile.WriteString("spotted player,")
+	for i := 0; i < 10; i++ {
+		positionFile.WriteString(fmt.Sprintf(
+			",player %d name,player %d spotter", i, i))
+	}
+	positionFile.WriteString(fmt.Sprintf("tick number,demo file key\n"))
+
+	shotsFile, err := os.Create(localShotsCSVName)
+	if err != nil {
+		panic(err)
+	}
+	defer shotsFile.Close()
+
+	grenadesFile, err := os.Create(localGrenadesCSVName)
+	if err != nil {
+		panic(err)
+	}
+	defer grenadesFile.Close()
 
 	p := demoinfocs.NewParser(f)
 	defer p.Close()
 
-	// Register handler on kill events
-	csvFile.WriteString("tick number,match started,game phase,rounds played,is warmup,round start,round end,round end reason,freeze time ended,t score,ct score,num players")
-	for i := 0; i < 10; i++ {
-		csvFile.WriteString(fmt.Sprintf(",player %d name,player %d team,player %d x postion,player %d y position,player %d z position,player %d x view direction,player %d y view direction", i, i, i, i, i, i, i))
-	}
-	csvFile.WriteString(fmt.Sprintf(",demo file key\n"))
 	// flags from other event handlers to frame done handler
 	roundStart := 0
 	roundEndReason := -1
@@ -94,7 +119,7 @@ func processFile(unprocessedKey string) {
 	p.RegisterEventHandler(func(e events.FrameDone) {
 		ticksProcessed++
 		gs := p.GameState()
-		players := gs.Participants().Playing()
+		players := getPlayers(&p)
 		if len(players) != 10 {
 			return
 		}
@@ -111,30 +136,65 @@ func processFile(unprocessedKey string) {
 		if gs.IsWarmupPeriod() {
 			isWarmup = 1
 		}
-		csvFile.WriteString(fmt.Sprintf("%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,", p.CurrentFrame(), matchStarted, gs.GamePhase(), gs.TotalRoundsPlayed(), isWarmup,
+		positionFile.WriteString(fmt.Sprintf("%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,", p.CurrentFrame(), matchStarted, gs.GamePhase(), gs.TotalRoundsPlayed(), isWarmup,
 			roundStart, roundEnd, roundEndReason, freezeTime, gs.TeamTerrorists().Score(), gs.TeamCounterTerrorists().Score(), len(players)))
 		sort.Slice(players, func(i int, j int) bool {
 			return players[i].Name < players[j].Name
 		})
 		for i := 0; i < 10; i++ {
 			if i >= len(players) {
-				csvFile.WriteString(",,,,,")
+				positionFile.WriteString(",,,,,")
 			} else {
-				csvFile.WriteString(fmt.Sprintf("%s,%d,%.2f,%.2f,%.2f,%.2f,%.2f", players[i].Name, teamToNum(players[i].Team),
+				positionFile.WriteString(fmt.Sprintf("%s,%d,%.2f,%.2f,%.2f,%.2f,%.2f", players[i].Name, teamToNum(players[i].Team),
 					players[i].Position().X, players[i].Position().Y, players[i].Position().Z,
 					players[i].ViewDirectionX(), players[i].ViewDirectionY()))
 			}
-			csvFile.WriteString(",")
+			positionFile.WriteString(",")
 		}
-		csvFile.WriteString(demFilePath + "\n")
+		positionFile.WriteString(demFilePath + "\n")
 		roundStart = 0
 		roundEnd = 0
 		roundEndReason = -1
 	})
+
+	p.RegisterEventHandler(func(e events.PlayerSpottersChanged) {
+		players := getPlayers(&p)
+
+		sort.Slice(players, func(i int, j int) bool {
+			return players[i].Name < players[j].Name
+		})
+		spottedFile.WriteString(fmt.Sprintf("%s,", e.Spotted.Name))
+		for i := 0; i < 10; i++ {
+			if i >= len(players) {
+				spottedFile.WriteString(",0,")
+			} else {
+				spottedFlag := 0
+				if e.Spotted.IsSpottedBy(players[i]) {
+					spottedFlag = 1
+				}
+				spottedFile.WriteString(fmt.Sprintf("%s,%d,", players[i].Name, spottedFlag))
+			}
+		}
+		positionFile.WriteString(fmt.Sprintf("%d,%s\n", p.CurrentFrame(), demFilePath))
+	})
+
+	p.RegisterEventHandler(func(e events.WeaponFire) {
+		players := getPlayers(&p)
+
+		sort.Slice(players, func(i int, j int) bool {
+			return players[i].Name < players[j].Name
+		})
+		e.
+	})
+
 	p.ParseToEnd()
 	if err != nil {
 		panic(err)
 	}
+}
+
+func getPlayers(p *demoinfocs.Parser) []*common.Player {
+	return (*p).GameState().Participants().Playing()
 }
 
 func teamToNum(team common.Team) int {

@@ -12,7 +12,10 @@ import (
 )
 
 const localDemName = "local.dem"
-const localCSVName = "local.csv"
+const localPositionCSVName = "local_position.csv"
+const localSpottedCSVName = "local_spotted.csv"
+const localShotsCSVName = "local_shots.csv"
+const localGrenadesCSVName = "local_grenades.csv"
 const unprocessedPrefix = "demos/unprocessed/"
 const processedPrefix = "demos/processed/"
 const csvPrefiix = "demos/csvs/"
@@ -21,7 +24,7 @@ const bucketName = "csknow"
 func main() {
 
 	// if running locally, skip the aws stuff and just return
-	localFlag := flag.Bool("local", false, "set for non-aws (aka local) runs")
+	localFlag := flag.Bool("l", false, "set for non-aws (aka local) runs")
 	flag.Parse()
 	if *localFlag {
 		processFile("local_run")
