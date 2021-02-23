@@ -1,4 +1,4 @@
-module github.com/David-Durst/csknow
+module github.com/David-Durst/csknow/demo_parser
 
 go 1.16
 
