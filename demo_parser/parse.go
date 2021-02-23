@@ -184,7 +184,7 @@ func processFile(unprocessedKey string) {
 		sort.Slice(players, func(i int, j int) bool {
 			return players[i].Name < players[j].Name
 		})
-		e.
+		//e.
 	})
 
 	p.ParseToEnd()
