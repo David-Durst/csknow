@@ -9,4 +9,4 @@ COPY . .
 
 RUN go build .
 
-CMD ["pwd"]
+CMD ["go", "run", "."]
