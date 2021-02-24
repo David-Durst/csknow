@@ -10,6 +10,8 @@ import (
 	"sort"
 )
 
+const minTicks = 30
+
 func processFile(unprocessedKey string) {
 	demFilePath := path.Base(unprocessedKey)
 	f, err := os.Open(localDemName)
@@ -29,31 +31,7 @@ func processFile(unprocessedKey string) {
 			",player %d name,player %d team,player %d x position,player %d y position,player %d z position" +
 				",player %d x view direction,player %d y view direction", i, i, i, i, i, i, i))
 	}
-	positionFile.WriteString(fmt.Sprintf(",demo file key\n"))
-
-	spottedFile, err := os.Create(localSpottedCSVName)
-	if err != nil {
-		panic(err)
-	}
-	defer spottedFile.Close()
-	positionFile.WriteString("spotted player,")
-	for i := 0; i < 10; i++ {
-		positionFile.WriteString(fmt.Sprintf(
-			",player %d name,player %d spotter", i, i))
-	}
-	positionFile.WriteString(fmt.Sprintf("tick number,demo file key\n"))
-
-	shotsFile, err := os.Create(localShotsCSVName)
-	if err != nil {
-		panic(err)
-	}
-	defer shotsFile.Close()
-
-	grenadesFile, err := os.Create(localGrenadesCSVName)
-	if err != nil {
-		panic(err)
-	}
-	defer grenadesFile.Close()
+	positionFile.WriteString(fmt.Sprintf(",demo file\n"))
 
 	p := demoinfocs.NewParser(f)
 	defer p.Close()
@@ -125,7 +103,7 @@ func processFile(unprocessedKey string) {
 		}
 		// skip the first couple seconds as tick number  can have issues with these
 		// this should be fine as should just be warmup, which is 3 seconds despite fact I told cs to disable
-		if ticksProcessed < 30 {
+		if ticksProcessed < minTicks {
 			return
 		}
 		matchStarted := 0
@@ -157,7 +135,24 @@ func processFile(unprocessedKey string) {
 		roundEndReason = -1
 	})
 
+
+	spottedFile, err := os.Create(localSpottedCSVName)
+	if err != nil {
+		panic(err)
+	}
+	defer spottedFile.Close()
+	spottedFile.WriteString("spotted player,")
+	for i := 0; i < 10; i++ {
+		spottedFile.WriteString(fmt.Sprintf(
+			",player %d name,player %d spotter", i, i))
+	}
+	spottedFile.WriteString(fmt.Sprintf("tick number,demo file\n"))
+
 	p.RegisterEventHandler(func(e events.PlayerSpottersChanged) {
+		if ticksProcessed < minTicks {
+			return
+		}
+
 		players := getPlayers(&p)
 
 		sort.Slice(players, func(i int, j int) bool {
@@ -175,16 +170,56 @@ func processFile(unprocessedKey string) {
 				spottedFile.WriteString(fmt.Sprintf("%s,%d,", players[i].Name, spottedFlag))
 			}
 		}
-		positionFile.WriteString(fmt.Sprintf("%d,%s\n", p.CurrentFrame(), demFilePath))
+		spottedFile.WriteString(fmt.Sprintf("%d,%s\n", p.CurrentFrame(), demFilePath))
 	})
 
-	p.RegisterEventHandler(func(e events.WeaponFire) {
-		players := getPlayers(&p)
+	weaponFireFile, err := os.Create(localWeaponFireCSVName)
+	if err != nil {
+		panic(err)
+	}
+	defer weaponFireFile.Close()
+	weaponFireFile.WriteString("shooter,weapon,tick number,demo file\n")
 
-		sort.Slice(players, func(i int, j int) bool {
-			return players[i].Name < players[j].Name
-		})
-		//e.
+	p.RegisterEventHandler(func(e events.WeaponFire) {
+		if ticksProcessed < minTicks {
+			return
+		}
+
+		weaponFireFile.WriteString(fmt.Sprintf("%s,%s,%d,%s\n",
+			e.Shooter.Name, e.Weapon.String(), p.CurrentFrame(), demFilePath))
+	})
+
+	hurtFile, err := os.Create(localHurtCSVName)
+	if err != nil {
+		panic(err)
+	}
+	defer hurtFile.Close()
+	hurtFile.WriteString("shooter,weapon,tick number,demo file\n")
+
+	p.RegisterEventHandler(func(e events.PlayerHurt) {
+		if ticksProcessed < minTicks {
+			return
+		}
+
+		hurtFile.WriteString(fmt.Sprintf("%s,%d,%d,%d,%d,%s,%s,%d,%s\n",
+			e.Player.Name, e.ArmorDamage, e.Armor, e.HealthDamage, e.Health, e.Attacker.Name, e.Weapon.String(),
+			p.CurrentFrame(), demFilePath))
+	})
+
+	grenadesFile, err := os.Create(localGrenadesCSVName)
+	if err != nil {
+		panic(err)
+	}
+	defer grenadesFile.Close()
+	grenadesFile.WriteString("thrower,grenade type,tick number,demo file\n")
+
+	p.RegisterEventHandler(func(e events.GrenadeEventIf) {
+		if ticksProcessed < minTicks {
+			return
+		}
+
+		grenadesFile.WriteString(fmt.Sprintf("%s,%s,%d,%s\n",
+			e.Base().Thrower, e.Base().GrenadeType, p.CurrentFrame(), demFilePath))
 	})
 
 	p.ParseToEnd()
