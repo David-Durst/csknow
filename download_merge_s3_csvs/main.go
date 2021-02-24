@@ -35,9 +35,21 @@ func fillAlreadyDownloaded(alreadyDownloaded *map[string]struct{}) {
 	}
 }
 
+func saveNewlyDownloaded(needToDownload []string) {
+	alreadyDownloadedFile, err := os.OpenFile(alreadyDownloadedFileName, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		panic(err)
+	}
+	defer alreadyDownloadedFile.Close()
+
+	for _, s := range needToDownload {
+		alreadyDownloadedFile.WriteString(s + "\n")
+	}
+}
+
 func downloadCSVForDemo(downloader *s3manager.Downloader, demKey string, csvType string) {
 	// Create a file to write the S3 Object contents to.
-	localPath := path.Join("..", csvType, demKey + csvType + ".csv")
+	localPath := path.Join("..", "local_data", csvType, demKey + csvType + ".csv")
 	awsF, err := os.Create(localPath)
 	if err != nil {
 		fmt.Errorf("failed to create file %q, %v", localPath, err)
@@ -89,4 +101,6 @@ func main() {
 
 		return true
 	})
+
+	saveNewlyDownloaded(needToDownload)
 }
