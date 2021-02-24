@@ -1,1 +1,1 @@
-docker kill durst_csgo_demo_parser
+docker kill durst_download_merge_s3_csvs

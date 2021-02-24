@@ -19,8 +19,8 @@ get_script_dir
 
 iam_role=$(cat ${script_dir}/../private/.aws_csgo_server_role)
 
-docker run --name durst_csgo_demo_parser \
+docker run --name durst_download_merge_s3_csvs \
     --rm \
     -e RUNNING_IN_EC2=1 -e ROLE=${iam_role} \
-    durst/csgo-demo-parser:0.3
+    durst/download-merge-s3-csvs:0.1
 

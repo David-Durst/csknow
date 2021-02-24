@@ -1,5 +1,5 @@
 mkdir -p ../demos
-docker run --name durst_csgo \
+docker run --name durst_download_merge_s3_csvs \
     --rm -it --net=host \
     --mount type=bind,source="$(pwd)"/../local_data,target=/go/src/local_data \
     --entrypoint /bin/bash \
