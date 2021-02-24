@@ -18,7 +18,7 @@ const csvPrefiix = "demos/csvs2/"
 const bucketName = "csknow"
 
 func fillAlreadyDownloaded(alreadyDownloaded *map[string]struct{}) {
-	alreadyDownloadedFile, err := os.OpenFile(alreadyDownloadedFileName, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	alreadyDownloadedFile, err := os.OpenFile(alreadyDownloadedFileName, os.O_APPEND|os.O_CREATE|os.O_RDONLY, 0644)
 	if err != nil {
 		panic(err)
 	}
