@@ -29,7 +29,8 @@ func processFile(unprocessedKey string) {
 	for i := 0; i < 10; i++ {
 		positionFile.WriteString(fmt.Sprintf(
 			",player %d name,player %d team,player %d x position,player %d y position,player %d z position" +
-				",player %d x view direction,player %d y view direction", i, i, i, i, i, i, i))
+				",player %d x view direction,player %d y view direction,player %d is alive,player %d team,player %d is blinded",
+				i, i, i, i, i, i, i, i, i, i))
 	}
 	positionFile.WriteString(fmt.Sprintf(",demo file\n"))
 
@@ -123,9 +124,18 @@ func processFile(unprocessedKey string) {
 			if i >= len(players) {
 				positionFile.WriteString(",,,,,")
 			} else {
-				positionFile.WriteString(fmt.Sprintf("%s,%d,%.2f,%.2f,%.2f,%.2f,%.2f", players[i].Name, teamToNum(players[i].Team),
-					players[i].Position().X, players[i].Position().Y, players[i].Position().Z,
-					players[i].ViewDirectionX(), players[i].ViewDirectionY()))
+				isAlive := 0
+				if players[i].IsAlive() {
+					isAlive = 1
+				}
+				isBlinded := 0
+				if players[i].IsBlinded() {
+					isBlinded = 1
+				}
+				positionFile.WriteString(fmt.Sprintf("%s,%d,%.2f,%.2f,%.2f,%.2f,%.2f,%d,%d,%d",
+					players[i].Name, teamToNum(players[i].Team), players[i].Position().X, players[i].Position().Y,
+					players[i].Position().Z, players[i].ViewDirectionX(), players[i].ViewDirectionY(),
+					isAlive, players[i].Team, isBlinded))
 			}
 			positionFile.WriteString(",")
 		}
@@ -222,6 +232,24 @@ func processFile(unprocessedKey string) {
 			e.Base().Thrower, e.Base().GrenadeType, p.CurrentFrame(), demFilePath))
 	})
 
+	killsFile, err := os.Create(localKillsCSVName)
+	if err != nil {
+		panic(err)
+	}
+	defer killsFile.Close()
+	killsFile.WriteString("killer,victim,weapon,assister,is headshot,is wallbang,penetrated objects,tick number,demo file\n")
+
+	p.RegisterEventHandler(func(e events.Kill) {
+		if ticksProcessed < minTicks {
+			return
+		}
+
+		killsFile.WriteString(fmt.Sprintf("%s,%s,%s,%s,%d,%d,%d,%d,%s\n",
+			e.Killer.Name, e.Victim.Name, e.Weapon.String(), e.Assister.Name,
+			boolToInt(e.IsHeadshot), boolToInt(e.IsWallBang()), e.PenetratedObjects,
+			p.CurrentFrame(), demFilePath))
+	})
+
 	p.ParseToEnd()
 	if err != nil {
 		panic(err)
@@ -246,4 +274,11 @@ func teamToNum(team common.Team) int {
 	return -1
 }
 
+func boolToInt(b bool) int {
+	if b {
+		return 1
+	} else {
+		return 0
+	}
+}
 
