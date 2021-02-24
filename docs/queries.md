@@ -1,4 +1,9 @@
-# Queries
+# Warmup Queries
+These queries are basic ones to test out the dataset
+1. Find all the times that two people did damage two each other within 10 seconds
+2. Find all the times that 3 people were all moving but stayed within 5 units of each other for at least 3 seconds
+
+# Target Queries
 These queries are important both from a game perspective (answer frustrations of mine) and a technical one (lots of intersection computations or spatio-temporal joins),
 1. Find the wallers. Compute the players (across multiple games) whose cursor points at people they can't see most frequently. 
     1. context - wallers are a type of cheater who can see people through walls.
@@ -15,7 +20,7 @@ These queries are important both from a game perspective (answer frustrations of
     1. Type of query - spatio-temporal join
     1. Optimal Implementation - filter by trajectories moving towards region of map, then join based on trajectory similarity
 
-## Simpler Queries
+# Simpler Queries
 These will be less taxing on the system. I'll come back to them later.
 1. Compute all the times players got shot before they could see the enemy (i.e. they were shot and the enemy could only see them for less than 100ms).
    1. context - Players see enemies 100ms in the past. If an attacker runs around the corner, they will see the defender
@@ -30,6 +35,14 @@ These will be less taxing on the system. I'll come back to them later.
    1. Type of query - Group by of temporal sequence of events
    1. Optimal Implementation - join deaths table with visibility table
 
-##Technical Details
+# Technical Details
 1. Could replace vector-rectangle details with more complicated approximations of hit detection (https://www.hltv.org/news/8335/csgo-hitboxes-explained)
 but will come back to this later.
+   
+# Data I Need To Add To My Prarser
+1. Frag events
+2. Teams for each player on each tick
+
+# Long Term Goals For Parser
+1. Add a complete table of keypoints
+2. Add a geometry table so can automatically query things like corners or wallbangable vs not
