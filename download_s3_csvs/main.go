@@ -89,11 +89,17 @@ func main() {
 	downloader := s3manager.NewDownloader(sess)
 
 	numDownloaded := 0
+	page := 0
 	svc.ListObjectsV2Pages(&s3.ListObjectsV2Input{
 		Bucket: aws.String(bucketName),
 		Prefix: aws.String(processedPrefix + "auto"),
 	}, func(p *s3.ListObjectsV2Output, last bool) bool {
+		fmt.Printf("Processing page %d\n", page)
+		elemsInPage := float64(len(p.Contents))
+		curElemInPage := 0.0
 		for _, obj := range p.Contents {
+			fmt.Printf("%.2f pct: %s", curElemInPage / elemsInPage, *obj.Key)
+			curElemInPage++
 			localKey := path.Base(*obj.Key)
 			if _, ok := alreadyDownloaded[localKey]; !ok {
 				needToDownload = append(needToDownload, localKey)
