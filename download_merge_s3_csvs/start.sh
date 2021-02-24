@@ -22,5 +22,7 @@ iam_role=$(cat ${script_dir}/../private/.aws_csgo_server_role)
 docker run --name durst_download_merge_s3_csvs \
     --rm \
     -e RUNNING_IN_EC2=1 -e ROLE=${iam_role} \
+    --cap-add=SYS_PTRACE \
+    --cap-add=SYS_ADMIN \
     durst/download-merge-s3-csvs:0.1
 
