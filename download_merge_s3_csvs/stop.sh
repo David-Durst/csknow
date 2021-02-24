@@ -1,0 +1,1 @@
+docker kill durst_csgo_demo_parser
