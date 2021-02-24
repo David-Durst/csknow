@@ -9,7 +9,7 @@ import (
 	"path"
 )
 
-func downloadFile(downloader *s3manager.Downloader, fileKey string) {
+func downloadDemo(downloader *s3manager.Downloader, fileKey string) {
 	// Create a file to write the S3 Object contents to.
 	awsF, err := os.Create(localDemName)
 	if err != nil {
@@ -30,8 +30,8 @@ func downloadFile(downloader *s3manager.Downloader, fileKey string) {
 
 }
 
-func uploadFile(uploader *s3manager.Uploader, fileKey string) {
-	csvFile, err := os.Open(localPositionCSVName)
+func uploadFile(uploader *s3manager.Uploader, csvPath string, fileKey string) {
+	csvFile, err := os.Open(csvPath)
 	if err != nil {
 		panic(err)
 	}
@@ -46,5 +46,13 @@ func uploadFile(uploader *s3manager.Uploader, fileKey string) {
 		fmt.Errorf("Couldn't upload file" + fileKey)
 		os.Exit(1)
 	}
+}
+
+func uploadCSVs(uploader *s3manager.Uploader, fileKey string) {
+	uploadFile(uploader, localPositionCSVName, fileKey + "_position")
+	uploadFile(uploader, localSpottedCSVName, fileKey + "_spotted")
+	uploadFile(uploader, localWeaponFireCSVName, fileKey + "_weapon_fire")
+	uploadFile(uploader, localHurtCSVName, fileKey + "_hurt")
+	uploadFile(uploader, localGrenadesCSVName, fileKey + "_grenades")
 }
 

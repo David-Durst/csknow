@@ -19,11 +19,13 @@ const localHurtCSVName = "local_hurt.csv"
 const localGrenadesCSVName = "local_grenades.csv"
 const unprocessedPrefix = "demos/unprocessed/"
 const processedPrefix = "demos/processed/"
-const csvPrefiix = "demos/csvs/"
+const csvPrefiix = "demos/csvs2/"
 const bucketName = "csknow"
 
 func main() {
 
+	// if reprocessing, don't move the demos
+	reprocessFlag := flag.Bool("r", false, "set for reprocessing demos")
 	// if running locally, skip the aws stuff and just return
 	localFlag := flag.Bool("l", false, "set for non-aws (aka local) runs")
 	flag.Parse()
@@ -43,34 +45,40 @@ func main() {
 	uploader := s3manager.NewUploader(sess)
 
 	var filesToMove []string
+	sourcePrefix := unprocessedPrefix
+	if *reprocessFlag {
+		sourcePrefix = processedPrefix
+	}
 
 	i := 0
 	svc.ListObjectsV2Pages(&s3.ListObjectsV2Input{
 		Bucket: aws.String(bucketName),
-		Prefix: aws.String(unprocessedPrefix + "auto"),
+		Prefix: aws.String(sourcePrefix + "auto"),
 	}, func(p *s3.ListObjectsV2Output, last bool) bool {
 		fmt.Printf("Processing page %d\n", i)
 
 		for _, obj := range p.Contents {
 			fmt.Printf("Handling file: %s\n", *obj.Key)
-			downloadFile(downloader, *obj.Key)
+			downloadDemo(downloader, *obj.Key)
 			processFile(*obj.Key)
-			uploadFile(uploader, *obj.Key)
+			uploadCSVs(uploader, *obj.Key)
 			filesToMove = append(filesToMove, *obj.Key)
 		}
 
 		return true
 	})
 
-	for _, fileName := range filesToMove {
-		svc.CopyObject(&s3.CopyObjectInput{
-			CopySource: aws.String(bucketName + "/" + fileName),
-			Bucket: aws.String(bucketName),
-			Key: aws.String(processedPrefix + "/" + filepath.Base(fileName)),
-		})
-		svc.DeleteObject(&s3.DeleteObjectInput{
-			Bucket: aws.String(bucketName),
-			Key: aws.String(fileName),
-		})
+	if !*reprocessFlag {
+		for _, fileName := range filesToMove {
+			svc.CopyObject(&s3.CopyObjectInput{
+				CopySource: aws.String(bucketName + "/" + fileName),
+				Bucket: aws.String(bucketName),
+				Key: aws.String(processedPrefix + "/" + filepath.Base(fileName)),
+			})
+			svc.DeleteObject(&s3.DeleteObjectInput{
+				Bucket: aws.String(bucketName),
+				Key: aws.String(fileName),
+			})
+		}
 	}
 }
