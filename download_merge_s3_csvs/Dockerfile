@@ -6,4 +6,6 @@ RUN apt update && \
 WORKDIR /go/src/app
 COPY . .
 
+RUN go build .
+
 CMD ["pwd"]
