@@ -40,5 +40,5 @@ These will be less taxing on the system. I'll come back to them later.
 but will come back to this later.
    
 # Long Term Goals For Parser
-1. Add a complete table of keypoints
+1. Add a complete table of keypoints in map (like top mid or cat)
 2. Add a geometry table so can automatically query things like corners or wallbangable vs not
