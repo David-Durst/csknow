@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"flag"
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -49,7 +50,7 @@ func saveNewlyDownloaded(needToDownload []string) {
 
 func downloadCSVForDemo(downloader *s3manager.Downloader, demKey string, csvType string) {
 	// Create a file to write the S3 Object contents to.
-	localPath := path.Join("..", "local_data", csvType, demKey + csvType + ".csv")
+	localPath := path.Join("..", "local_data", csvType, demKey + "_" + csvType + ".csv")
 	awsF, err := os.Create(localPath)
 	if err != nil {
 		fmt.Errorf("failed to create file %q, %v", localPath, err)
@@ -74,6 +75,9 @@ func main() {
 	var needToDownload []string
 	fillAlreadyDownloaded(&alreadyDownloaded)
 
+	localFlag := flag.Bool("l", false, "set for desktop runs that only download a few csvs")
+	flag.Parse()
+
 	sess := session.Must(session.NewSession(&aws.Config{
 		Region:      aws.String("us-east-1")},
 	))
@@ -82,6 +86,7 @@ func main() {
 
 	downloader := s3manager.NewDownloader(sess)
 
+	numDownloaded := 0
 	svc.ListObjectsV2Pages(&s3.ListObjectsV2Input{
 		Bucket: aws.String(bucketName),
 		Prefix: aws.String(processedPrefix + "auto"),
@@ -97,6 +102,10 @@ func main() {
 			downloadCSVForDemo(downloader, localKey, "hurt")
 			downloadCSVForDemo(downloader, localKey, "grenades")
 			downloadCSVForDemo(downloader, localKey, "kills")
+			numDownloaded++
+			if *localFlag && numDownloaded > 2 {
+				return false
+			}
 		}
 
 		return true
