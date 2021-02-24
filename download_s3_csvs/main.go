@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
@@ -71,7 +72,7 @@ func downloadCSVForDemo(downloader *s3manager.Downloader, demKey string, csvType
 }
 
 func main() {
-	var alreadyDownloaded map[string]struct{}
+	alreadyDownloaded := make(map[string]struct{})
 	var needToDownload []string
 	fillAlreadyDownloaded(&alreadyDownloaded)
 
@@ -79,8 +80,9 @@ func main() {
 	flag.Parse()
 
 	sess := session.Must(session.NewSession(&aws.Config{
-		Region:      aws.String("us-east-1")},
-	))
+		Region:      aws.String("us-east-1"),
+		Credentials: credentials.AnonymousCredentials,
+	}))
 
 	svc := s3.New(sess)
 
