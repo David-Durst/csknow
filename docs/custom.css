@@ -1,0 +1,17 @@
+body {
+    background-color: #f9f9f9;
+}
+
+.label {
+    font-weight: bold;
+}
+
+.first-entry{
+    border-left: 1px solid black;
+}
+.entry {
+    border-right: 1px solid black;
+    border-top: 1px solid black;
+    border-bottom: 1px solid black;
+    padding: 1px;
+}
