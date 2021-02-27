@@ -12,7 +12,7 @@ const light_blue = "rgba(194,255,243,1.0)";
 const dark_red = "rgba(209,0,0,1.0)";
 const light_red = "rgba(255,143,143,1.0)";
 
-function init() {
+function init_old() {
     canvas = document.querySelector("#myCanvas");
     ctx = canvas.getContext('2d');
     ctx.drawImage(background,0,0,1024,1024,0,0,700,700);
