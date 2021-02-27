@@ -2,7 +2,7 @@ const background = new Image();
 background.src = "de_dust2_radar_spectate.png";
 let canvas = null;
 let ctx = null;
-let data = null;
+let matches: any[] = [];
 
 // Import required AWS SDK clients and commands for Node.js
 const { S3Client, ListObjectsCommand } = require("@aws-sdk/client-s3");
@@ -39,13 +39,12 @@ async function init() {
     // Declare a variable that we will assign the key of the last element in the response to
     let pageMarker;
     // While loop that runs until response.truncated is false
+    let numMatches = 0;
     while (truncated) {
         try {
             const response = await s3.send(new ListObjectsCommand(listBucketParams));
-            console.log(response.Contents.length)//.forEach((item: { Key: any; }) => {
-                //console.log(item.Key);
-            //});
-            // Log the Key of every item in the response to standard output
+            matches = matches.concat(response.Contents)
+            numMatches += response.Contents.length
             truncated = response.IsTruncated;
             // If 'truncated' is true, assign the key of the final element in the response to our variable 'pageMarker'
             if (truncated) {
@@ -62,5 +61,10 @@ async function init() {
     canvas = <HTMLCanvasElement> document.querySelector("#myCanvas");
     ctx = canvas.getContext('2d');
     ctx.drawImage(background,0,0,1024,1024,0,0,700,700);
+    let matchSelector = document.querySelector<HTMLInputElement>("#match-selector")
+    matchSelector.value = "0"
+    matchSelector.min = "0"
+    matchSelector.max = numMatches.toString()
+    document.querySelector<HTMLLabelElement>("#cur-match").innerHTML = matches[0].toString();
 }
-export { init };
+export { init, matches };
