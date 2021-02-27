@@ -1,9 +1,7 @@
 const top_left_x = 122;
 const top_left_y = 61;
-let court_width = 0;
-let court_height = 0;
 const background = new Image();
-background.src = "court_background.jpg";
+background.src = "de_dust2_radar_spectate.png";
 let canvas = null;
 let ctx = null;
 let data = null;
@@ -17,9 +15,7 @@ const light_red = "rgba(255,143,143,1.0)";
 function init() {
     canvas = document.querySelector("#myCanvas");
     ctx = canvas.getContext('2d');
-    ctx.drawImage(background,0,0);
-    court_width = background.width - 2 * top_left_x;
-    court_height = background.height - 2 * top_left_y;
+    ctx.drawImage(background,0,0,1024,1024,0,0,700,700);
 }
 
 function gameClockAsText(game_clock_total_seconds) {

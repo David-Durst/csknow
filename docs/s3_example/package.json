@@ -1,0 +1,31 @@
+{
+  "name": "aws-sdk-v3-s3-examples",
+  "version": "1.0.0",
+  "private": "true",
+  "repository": "git@github.com/awsdocs/aws-doc-sdk-examples/tree/master/javascriptv3/example_code/s3.git",
+  "author": "Brian Murray <brmur@amazon.com>, Alex Forsyth <alex-git@amazon.com>",
+  "license": "MIT",
+  "scripts": {
+    "build:dev": "webpack --mode development --progress --profile --color",
+    "build:prod": "webpack --mode production --progress --profile --color"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.3.0",
+    "@aws-sdk/s3-request-presigner": "^3.3.0",
+    "@aws-sdk/util-create-request": "^3.3.0",
+    "@aws-sdk/util-format-url": "^3.3.0",
+    "@aws-sdk/client-cognito-identity": "^3.3.0",
+    "@aws-sdk/credential-provider-cognito-identity": "^3.3.0",
+    "@aws-sdk/node-http-handler": "^3.3.0",
+    "@aws-sdk/types": "^3.3.0",
+    "ts-node": "^9.0.0",
+    "node-fetch": "^2.6.1"
+  },
+  "devDependencies": {
+    "@types/node": "^14.0.23",
+    "ts-loader": "^8.0.17",
+    "typescript": "^4.2.2",
+    "webpack": "^5.24.2",
+    "webpack-cli": "^4.5.0"
+  }
+}

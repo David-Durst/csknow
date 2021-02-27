@@ -2,10 +2,60 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>CSGO Queries Visualizer</title>
+    <link rel="stylesheet" href="bootstrap.min.css">
+    <link rel="stylesheet" href="custom.css">
+    <link rel="stylesheet" href="slider.css">
+    <script src="visualize.js"></script>
+    <script src="s3_example/dist/bundle.js"></script>
 </head>
-<body>
-    <!--    https://github.com/CSGO-Analysis/csgo-maps-overviews/tree/master/overviews -->
+<body onload="init();">
+<!--    https://github.com/CSGO-Analysis/csgo-maps-overviews/tree/master/overviews -->
+<div class="container-fluid">
+    <div class="row justify-content-md-center">
+        <div class="col-4">
+            <canvas id="myCanvas" width="700" height="700">
+            </canvas>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div name="controls">
+                <div class="slidecontainer mb-3">
+                    <span class="label">current time step:</span>
+                    <span id="cur-time-step">NaN</span>
+                    <input type="range" min="0" max="24" value="0" class="slider"
+                           id="time-selector" oninput="redrawCanvas(false, true);">
+                </div>
+
+
+                <div class="mb-3">
+                    <span class="label">General Details:</span>
+                    <span class="entry first-entry">
+                        <span class="label">gameid:</span> <span id="gameid">NaN</span>
+                </span>
+                    <span class="entry">
+                        <span class="label">tick:</span> <span id="tick">NaN</span>
+                </span>
+                    <span class="entry">
+                        <span class="label">ct score:</span> <span id="ct_score">NaN</span>
+                </span>
+                    <span class="entry">
+                        <span class="label">t score:</span> <span id="t_score">NaN</span>
+                </span>
+                </div>
+
+                <div class="slidecontainer mb-3">
+                    <span class="label">Current Sample:</span>
+                    <span id="cur-sample">NaN</span>
+                    <input type="range" min="0" max="99" value="0" class="slider"
+                           id="sample-selector" oninput="redrawCanvas(true, false);">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
 </body>
 </html>
