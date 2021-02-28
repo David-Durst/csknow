@@ -8,39 +8,13 @@ export const minimapWidth = 1024
 export const minimapHeight = 1024
 export const minimapScale = 4.4
 export let canvas: HTMLCanvasElement = null;
-export function setCanvas(inputCanvas: HTMLCanvasElement) {
-    canvas = inputCanvas
-}
 export let ctx: CanvasRenderingContext2D = null;
-export function setCTX(inputCTX: CanvasRenderingContext2D) {
-    ctx = inputCTX
-}
-
 let xMapLabel: HTMLLabelElement = null;
-export function setXMapLabel(inputXLabel: HTMLLabelElement) {
-    xMapLabel = inputXLabel
-}
 let yMapLabel: HTMLLabelElement = null;
-export function setYMapLabel(inputYLabel: HTMLLabelElement) {
-    yMapLabel = inputYLabel
-}
-
 let xCanvasLabel: HTMLLabelElement = null;
-export function setXCanvasLabel(inputXLabel: HTMLLabelElement) {
-    xCanvasLabel = inputXLabel
-}
 let yCanvasLabel: HTMLLabelElement = null;
-export function setYCanvasLabel(inputYLabel: HTMLLabelElement) {
-    yCanvasLabel = inputYLabel
-}
 let tickSelector: HTMLInputElement = null;
-export function setTickSelector(inputTickSelector: HTMLInputElement) {
-    tickSelector = inputTickSelector
-}
 let tickLabel: HTMLLabelElement = null;
-export function setTickLabel(inputTickLabel: HTMLLabelElement) {
-    tickLabel = inputTickLabel
-}
 
 // see last post by randunel and csgo/resources/overview/de_dust2.txt
 // https://forums.alliedmods.net/showthread.php?p=2690857#post2690857
@@ -82,12 +56,22 @@ function trackMouse(e: MouseEvent) {
     yCanvasLabel.innerHTML = minimapCoordinate.getCanvasY().toPrecision(6)
 }
 
-export function drawTick() {
+function drawTick(e: InputEvent) {
     const cur_tick = parseInt(tickSelector.value)
+    tickLabel.innerHTML = cur_tick.toString()
     ctx.font = "30px Arial"
 }
 
 export function setup() {
+    canvas = <HTMLCanvasElement> document.querySelector("#myCanvas")
+    ctx = canvas.getContext('2d')
+    tickSelector = document.querySelector<HTMLInputElement>("#tick-selector")
+    tickLabel = document.querySelector<HTMLLabelElement>("#cur-tick")
+    xMapLabel = document.querySelector<HTMLLabelElement>("#xposMap")
+    yMapLabel = document.querySelector<HTMLLabelElement>("#yposMap")
+    xCanvasLabel = document.querySelector<HTMLLabelElement>("#xposCanvas")
+    yCanvasLabel = document.querySelector<HTMLLabelElement>("#yposCanvas")
     canvas.addEventListener("mousemove", trackMouse)
+    canvas.addEventListener("input", drawTick)
     tickLabel.innerHTML = "0"
 }

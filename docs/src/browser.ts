@@ -23,21 +23,13 @@ import {
 } from "./data";
 import {
     canvas,
-    setCanvas,
     ctx,
-    setCTX,
     canvasWidth,
     canvasHeight,
     minimapWidth,
     minimapHeight,
     minimapScale,
-    setup,
-    setXMapLabel,
-    setYMapLabel,
-    setXCanvasLabel,
-    setYCanvasLabel,
-    setTickLabel,
-    setTickSelector
+    setup
 } from "./drawing"
 
 const { S3Client, ListObjectsCommand } = require("@aws-sdk/client-s3");
@@ -124,20 +116,12 @@ async function init() {
             truncated = false;
         }
     }
-    setCanvas(<HTMLCanvasElement> document.querySelector("#myCanvas"));
-    setCTX(canvas.getContext('2d'));
     matchSelector = document.querySelector<HTMLInputElement>("#match-selector")
     matchSelector.value = "0"
     matchSelector.min = "0"
     matchSelector.max = numMatches.toString()
     matchLabel = document.querySelector<HTMLLabelElement>("#cur-match")
     matchLabel.innerHTML = matches[0].demoFile;
-    setTickSelector(document.querySelector<HTMLInputElement>("#tick-selector"))
-    setTickLabel(document.querySelector<HTMLLabelElement>("#cur-tick"))
-    setXMapLabel(document.querySelector<HTMLLabelElement>("#xposMap"))
-    setYMapLabel(document.querySelector<HTMLLabelElement>("#yposMap"))
-    setXCanvasLabel(document.querySelector<HTMLLabelElement>("#xposCanvas"))
-    setYCanvasLabel(document.querySelector<HTMLLabelElement>("#yposCanvas"))
     setup()
     await changedMatch();
 }
