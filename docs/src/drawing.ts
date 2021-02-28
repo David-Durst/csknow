@@ -1,3 +1,5 @@
+import { gameData } from "./data"
+
 export const d2_top_left_x = -2476
 export const d2_top_left_y = 3239
 export const canvasWidth = 700
@@ -30,6 +32,14 @@ export function setXCanvasLabel(inputXLabel: HTMLLabelElement) {
 let yCanvasLabel: HTMLLabelElement = null;
 export function setYCanvasLabel(inputYLabel: HTMLLabelElement) {
     yCanvasLabel = inputYLabel
+}
+let tickSelector: HTMLInputElement = null;
+export function setTickSelector(inputTickSelector: HTMLInputElement) {
+    tickSelector = inputTickSelector
+}
+let tickLabel: HTMLLabelElement = null;
+export function setTickLabel(inputTickLabel: HTMLLabelElement) {
+    tickLabel = inputTickLabel
 }
 
 // see last post by randunel and csgo/resources/overview/de_dust2.txt
@@ -72,6 +82,12 @@ function trackMouse(e: MouseEvent) {
     yCanvasLabel.innerHTML = minimapCoordinate.getCanvasY().toPrecision(6)
 }
 
+export function drawTick() {
+    const cur_tick = parseInt(tickSelector.value)
+    ctx.font = "30px Arial"
+}
+
 export function setup() {
     canvas.addEventListener("mousemove", trackMouse)
+    tickLabel.innerHTML = "0"
 }
