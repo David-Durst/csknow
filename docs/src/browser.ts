@@ -32,8 +32,10 @@ import {
     minimapHeight,
     minimapScale,
     setup,
-    setXLabel,
-    setYLabel
+    setXMapLabel,
+    setYMapLabel,
+    setXCanvasLabel,
+    setYCanvasLabel
 } from "./drawing"
 
 const { S3Client, ListObjectsCommand } = require("@aws-sdk/client-s3");
@@ -128,8 +130,10 @@ async function init() {
     matchSelector.max = numMatches.toString()
     matchLabel = document.querySelector<HTMLLabelElement>("#cur-match")
     matchLabel.innerHTML = matches[0].demoFile;
-    setXLabel(document.querySelector<HTMLLabelElement>("#xpos"))
-    setYLabel(document.querySelector<HTMLLabelElement>("#ypos"))
+    setXMapLabel(document.querySelector<HTMLLabelElement>("#xposMap"))
+    setYMapLabel(document.querySelector<HTMLLabelElement>("#yposMap"))
+    setXCanvasLabel(document.querySelector<HTMLLabelElement>("#xposCanvas"))
+    setYCanvasLabel(document.querySelector<HTMLLabelElement>("#yposCanvas"))
     setup()
     await changedMatch();
 }
