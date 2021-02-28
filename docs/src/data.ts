@@ -353,11 +353,16 @@ export async function parsePosition(tuple: { value: Uint8Array; done: boolean; }
         //console.log("length of position:" + gameData.position.length.toString() + ", line number: " + lineNumber.toString())
     }
     if (!tuple.done) {
-        await reader.read().then(parsePosition);
+        await positionReader.read().then(parsePosition);
     } else {
         console.log("h" + gameData.position.length.toString())
         console.log("done")
     }
+}
+
+export let positionReader:any = null;
+export function setPositionReader(readerInput: any) {
+    positionReader = readerInput
 }
 
 export class SpottedRow {
@@ -422,7 +427,7 @@ export class SpottedRow {
     }
 }
 
-export function parseSpotted(tuple: { value: Uint8Array; done: boolean; }) {
+export async function parseSpotted(tuple: { value: Uint8Array; done: boolean; }) {
     const linesUnsplit = tuple.value ? utf8Decoder.decode(tuple.value, {stream: true}) : "";
     const lines = linesUnsplit.split("\n");
     for(let lineNumber = 1; lineNumber < lines.length; lineNumber++) {
@@ -440,8 +445,13 @@ export function parseSpotted(tuple: { value: Uint8Array; done: boolean; }) {
         ));
     }
     if (!tuple.done) {
-        reader.read().then(parseSpotted);
+        await spottedReader.read().then(parseSpotted);
     }
+}
+
+export let spottedReader:any = null;
+export function setSpottedReader(readerInput: any) {
+    spottedReader = readerInput
 }
 
 export class WeaponFireRow {
@@ -459,7 +469,7 @@ export class WeaponFireRow {
     }
 }
 
-export function parseWeaponFire(tuple: { value: Uint8Array; done: boolean; }) {
+export async function parseWeaponFire(tuple: { value: Uint8Array; done: boolean; }) {
     const linesUnsplit = tuple.value ? utf8Decoder.decode(tuple.value, {stream: true}) : "";
     const lines = linesUnsplit.split("\n");
     for(let lineNumber = 1; lineNumber < lines.length; lineNumber++) {
@@ -472,8 +482,13 @@ export function parseWeaponFire(tuple: { value: Uint8Array; done: boolean; }) {
         ));
     }
     if (!tuple.done) {
-        reader.read().then(parseWeaponFire);
+        await weaponFireReader.read().then(parseWeaponFire);
     }
+}
+
+export let weaponFireReader:any = null;
+export function setWeaponFireReader(readerInput: any) {
+    weaponFireReader = readerInput
 }
 
 export class PlayerHurtRow {
@@ -503,8 +518,8 @@ export class PlayerHurtRow {
     }
 }
 
-export function parseHurt(tuple: { value: Uint8Array; done: boolean; }) {
-    const linesUnsplit = tuple.value ? utf8Decoder.decode(tuple.value, {stream: true}) : "";
+export async function parseHurt(tuple: { value: Uint8Array; done: boolean; }) {
+    const linesUnsplit = tuple ? utf8Decoder.decode(tuple.value, {stream: true}) : "";
     const lines = linesUnsplit.split("\n");
     for(let lineNumber = 1; lineNumber < lines.length; lineNumber++) {
         if (lines[lineNumber].trim() === "") {
@@ -517,9 +532,14 @@ export function parseHurt(tuple: { value: Uint8Array; done: boolean; }) {
             currentLine[5], currentLine[6], parseInt(currentLine[7]), currentLine[7]
         ));
     }
-    if (!tuple.done) {
-        reader.read().then(parseHurt);
+    if (tuple && !tuple.done) {
+        await hurtReader.read().then(parseHurt);
     }
+}
+
+export let hurtReader:any = null;
+export function setHurtReader(readerInput: any) {
+    hurtReader = readerInput
 }
 
 export class GrenadesRow {
@@ -536,8 +556,8 @@ export class GrenadesRow {
     }
 }
 
-export function parseGrenades(tuple: { value: Uint8Array; done: boolean; }) {
-    const linesUnsplit = tuple.value ? utf8Decoder.decode(tuple.value, {stream: true}) : "";
+export async function parseGrenades(tuple: { value: Uint8Array; done: boolean; }) {
+    const linesUnsplit = tuple ? utf8Decoder.decode(tuple.value, {stream: true}) : "";
     const lines = linesUnsplit.split("\n");
     for(let lineNumber = 1; lineNumber < lines.length; lineNumber++) {
         if (lines[lineNumber].trim() === "") {
@@ -548,9 +568,14 @@ export function parseGrenades(tuple: { value: Uint8Array; done: boolean; }) {
             currentLine[0], currentLine[1], parseInt(currentLine[2]), currentLine[3]
         ));
     }
-    if (!tuple.done) {
-        reader.read().then(parseGrenades);
+    if (tuple && !tuple.done) {
+        await grenadesReader.read().then(parseGrenades);
     }
+}
+
+export let grenadesReader:any = null;
+export function setGrenadesReader(readerInput: any) {
+    grenadesReader = readerInput
 }
 
 export class KillsRow {
@@ -579,7 +604,7 @@ export class KillsRow {
     }
 }
 
-export function parseKills(tuple: { value: Uint8Array; done: boolean; }) {
+export async function parseKills(tuple: { value: Uint8Array; done: boolean; }) {
     const linesUnsplit = tuple.value ? utf8Decoder.decode(tuple.value, {stream: true}) : "";
     const lines = linesUnsplit.split("\n");
     for(let lineNumber = 1; lineNumber < lines.length; lineNumber++) {
@@ -594,8 +619,13 @@ export function parseKills(tuple: { value: Uint8Array; done: boolean; }) {
         ));
     }
     if (!tuple.done) {
-        reader.read().then(parseKills);
+        await killsReader.read().then(parseKills);
     }
+}
+
+export let killsReader:any = null;
+export function setKillsReader(readerInput: any) {
+    killsReader = readerInput
 }
 
 export class GameData {
@@ -610,8 +640,4 @@ export class GameData {
 export let gameData: GameData = null;
 export function createGameData() {
     gameData = new GameData();
-}
-export let reader:any = null;
-export function setReader(readerInput: any) {
-    reader = readerInput
 }

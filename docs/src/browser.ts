@@ -1,13 +1,23 @@
 import {
     GameData,
-    parseKills,
     parsePosition,
+    positionReader,
+    setPositionReader,
     parseSpotted,
+    spottedReader,
+    setSpottedReader,
     parseWeaponFire,
+    weaponFireReader,
+    setWeaponFireReader,
+    parseKills,
+    killsReader,
+    setKillsReader,
     parseHurt,
+    hurtReader,
+    setHurtReader,
     parseGrenades,
-    reader,
-    setReader,
+    grenadesReader,
+    setGrenadesReader,
     gameData,
     createGameData
 } from "./data";
@@ -135,8 +145,8 @@ async function changedMatch() {
         promises.push(
             s3.send(new GetObjectCommand(getObjectParams(matchLabel.innerHTML, "position")))
                 .then((response: any) => {
-                    setReader(response.Body.getReader());
-                    return reader.read();
+                    setPositionReader(response.Body.getReader());
+                    return positionReader.read();
                 }).then(parsePosition));
     } catch (err) {
         console.log("Error", err);
@@ -146,9 +156,9 @@ async function changedMatch() {
         promises.push(
             s3.send(new GetObjectCommand(getObjectParams(matchLabel.innerHTML, "spotted")))
                 .then((response: any) => {
-                    setReader(response.Body.getReader());
-                    reader.read().then(parseSpotted);
-            }));
+                    setSpottedReader(response.Body.getReader());
+                    return spottedReader.read();
+            }).then(parseSpotted));
     } catch (err) {
         console.log("Error", err);
     }
@@ -157,9 +167,9 @@ async function changedMatch() {
         promises.push(
             s3.send(new GetObjectCommand(getObjectParams(matchLabel.innerHTML, "weapon_fire")))
                 .then((response: any) => {
-                    setReader(response.Body.getReader());
-                    reader.read().then(parseWeaponFire);
-            }));
+                    setWeaponFireReader(response.Body.getReader());
+                    return weaponFireReader.read();
+            }).then(parseWeaponFire));
     } catch (err) {
         console.log("Error", err);
     }
@@ -168,9 +178,9 @@ async function changedMatch() {
         promises.push(
             s3.send(new GetObjectCommand(getObjectParams(matchLabel.innerHTML, "hurt")))
                 .then((response: any) => {
-                    setReader(response.Body.getReader());
-                    reader.read().then(parseHurt);
-            }));
+                    setHurtReader(response.Body.getReader());
+                    hurtReader.read();
+            }).then(parseHurt));
     } catch (err) {
         console.log("Error", err);
     }
@@ -179,9 +189,9 @@ async function changedMatch() {
         promises.push(
             s3.send(new GetObjectCommand(getObjectParams(matchLabel.innerHTML, "grenades")))
                 .then((response: any) => {
-                    setReader(response.Body.getReader());
-                    reader.read().then(parseGrenades);
-            }));
+                    setGrenadesReader(response.Body.getReader());
+                    grenadesReader.read();
+            }).then(parseGrenades));
     } catch (err) {
         console.log("Error", err);
     }
@@ -190,9 +200,9 @@ async function changedMatch() {
         promises.push( 
             s3.send(new GetObjectCommand(getObjectParams(matchLabel.innerHTML, "kills")))
                 .then((response: any) => {
-                    setReader(response.Body.getReader());
-                    reader.read().then(parseKills);
-            }));
+                    setKillsReader(response.Body.getReader());
+                    killsReader.read();
+            }).then(parseKills));
     } catch (err) {
         console.log("Error", err);
     }
