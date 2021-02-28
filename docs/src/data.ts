@@ -1,18 +1,18 @@
 export class PositionRow {
-    tickNumber: bigint;
+    tickNumber: number;
     matchStarted: boolean;
-    gamePhase: bigint;
-    roundsPlayed: bigint;
+    gamePhase: number;
+    roundsPlayed: number;
     isWarmup: boolean;
     roundStart: boolean;
     roundEnd: boolean
-    roundEndReason: bigint;
+    roundEndReason: number;
     freezeTimeEnded: boolean
-    tScore: bigint;
-    ctScore: bigint;
-    numPlayers: bigint;
+    tScore: number;
+    ctScore: number;
+    numPlayers: number;
     player0Name: string;
-    player0Team: bigint;
+    player0Team: number;
     player0XPosition: number;
     player0YPosition: number;
     player0ZPosition: number;
@@ -20,10 +20,10 @@ export class PositionRow {
     player0YViewDirection: number;
     player0IsAlive: boolean;
     // remove this later when fix data set
-    player0TeamRepeat: bigint;
+    player0TeamRepeat: number;
     player0isBlinded: boolean;
     player1Name: string;
-    player1Team: bigint;
+    player1Team: number;
     player1XPosition: number;
     player1YPosition: number;
     player1ZPosition: number;
@@ -31,10 +31,10 @@ export class PositionRow {
     player1YViewDirection: number;
     player1IsAlive: boolean;
     // remove this later when fix data set
-    player1TeamRepeat: bigint;
+    player1TeamRepeat: number;
     player1isBlinded: boolean;
     player2Name: string;
-    player2Team: bigint;
+    player2Team: number;
     player2XPosition: number;
     player2YPosition: number;
     player2ZPosition: number;
@@ -42,10 +42,10 @@ export class PositionRow {
     player2YViewDirection: number;
     player2IsAlive: boolean;
     // remove this later when fix data set
-    player2TeamRepeat: bigint;
+    player2TeamRepeat: number;
     player2isBlinded: boolean;
     player3Name: string;
-    player3Team: bigint;
+    player3Team: number;
     player3XPosition: number;
     player3YPosition: number;
     player3ZPosition: number;
@@ -53,10 +53,10 @@ export class PositionRow {
     player3YViewDirection: number;
     player3IsAlive: boolean;
     // remove this later when fix data set
-    player3TeamRepeat: bigint;
+    player3TeamRepeat: number;
     player3isBlinded: boolean;
     player4Name: string;
-    player4Team: bigint;
+    player4Team: number;
     player4XPosition: number;
     player4YPosition: number;
     player4ZPosition: number;
@@ -64,10 +64,10 @@ export class PositionRow {
     player4YViewDirection: number;
     player4IsAlive: boolean;
     // remove this later when fix data set
-    player4TeamRepeat: bigint;
+    player4TeamRepeat: number;
     player4isBlinded: boolean;
     player5Name: string;
-    player5Team: bigint;
+    player5Team: number;
     player5XPosition: number;
     player5YPosition: number;
     player5ZPosition: number;
@@ -75,10 +75,10 @@ export class PositionRow {
     player5YViewDirection: number;
     player5IsAlive: boolean;
     // remove this later when fix data set
-    player5TeamRepeat: bigint;
+    player5TeamRepeat: number;
     player5isBlinded: boolean;
     player6Name: string;
-    player6Team: bigint;
+    player6Team: number;
     player6XPosition: number;
     player6YPosition: number;
     player6ZPosition: number;
@@ -86,10 +86,10 @@ export class PositionRow {
     player6YViewDirection: number;
     player6IsAlive: boolean;
     // remove this later when fix data set
-    player6TeamRepeat: bigint;
+    player6TeamRepeat: number;
     player6isBlinded: boolean;
     player7Name: string;
-    player7Team: bigint;
+    player7Team: number;
     player7XPosition: number;
     player7YPosition: number;
     player7ZPosition: number;
@@ -97,10 +97,10 @@ export class PositionRow {
     player7YViewDirection: number;
     player7IsAlive: boolean;
     // remove this later when fix data set
-    player7TeamRepeat: bigint;
+    player7TeamRepeat: number;
     player7isBlinded: boolean;
     player8Name: string;
-    player8Team: bigint;
+    player8Team: number;
     player8XPosition: number;
     player8YPosition: number;
     player8ZPosition: number;
@@ -108,10 +108,10 @@ export class PositionRow {
     player8YViewDirection: number;
     player8IsAlive: boolean;
     // remove this later when fix data set
-    player8TeamRepeat: bigint;
+    player8TeamRepeat: number;
     player8isBlinded: boolean;
     player9Name: string;
-    player9Team: bigint;
+    player9Team: number;
     player9XPosition: number;
     player9YPosition: number;
     player9ZPosition: number;
@@ -119,43 +119,43 @@ export class PositionRow {
     player9YViewDirection: number;
     player9IsAlive: boolean;
     // remove this later when fix data set
-    player9TeamRepeat: bigint;
+    player9TeamRepeat: number;
     player9isBlinded: boolean;
     demoFile: string;
 
-    constructor(tickNumber: bigint, matchStarted: boolean, gamePhase: bigint,
-                roundsPlayed: bigint, isWarmup: boolean, roundStart: boolean, roundEnd: boolean,
-                roundEndReason: bigint, freezeTimeEnded: boolean, tScore: bigint, ctScore: bigint, numPlayers: bigint,
-                player0Name: string, player0Team: bigint, player0XPosition: number, player0YPosition: number,
+    constructor(tickNumber: number, matchStarted: boolean, gamePhase: number,
+                roundsPlayed: number, isWarmup: boolean, roundStart: boolean, roundEnd: boolean,
+                roundEndReason: number, freezeTimeEnded: boolean, tScore: number, ctScore: number, numPlayers: number,
+                player0Name: string, player0Team: number, player0XPosition: number, player0YPosition: number,
                 player0ZPosition: number, player0XViewDirection: number, player0YViewDirection: number,
-                player0IsAlive: boolean, player0TeamRepeat: bigint, player0isBlinded: boolean,
-                player1Name: string, player1Team: bigint, player1XPosition: number, player1YPosition: number,
+                player0IsAlive: boolean, player0TeamRepeat: number, player0isBlinded: boolean,
+                player1Name: string, player1Team: number, player1XPosition: number, player1YPosition: number,
                 player1ZPosition: number, player1XViewDirection: number, player1YViewDirection: number,
-                player1IsAlive: boolean, player1TeamRepeat: bigint, player1isBlinded: boolean,
-                player2Name: string, player2Team: bigint, player2XPosition: number, player2YPosition: number,
+                player1IsAlive: boolean, player1TeamRepeat: number, player1isBlinded: boolean,
+                player2Name: string, player2Team: number, player2XPosition: number, player2YPosition: number,
                 player2ZPosition: number, player2XViewDirection: number, player2YViewDirection: number,
-                player2IsAlive: boolean, player2TeamRepeat: bigint, player2isBlinded: boolean,
-                player3Name: string, player3Team: bigint, player3XPosition: number, player3YPosition: number,
+                player2IsAlive: boolean, player2TeamRepeat: number, player2isBlinded: boolean,
+                player3Name: string, player3Team: number, player3XPosition: number, player3YPosition: number,
                 player3ZPosition: number, player3XViewDirection: number, player3YViewDirection: number,
-                player3IsAlive: boolean, player3TeamRepeat: bigint, player3isBlinded: boolean,
-                player4Name: string, player4Team: bigint, player4XPosition: number, player4YPosition: number,
+                player3IsAlive: boolean, player3TeamRepeat: number, player3isBlinded: boolean,
+                player4Name: string, player4Team: number, player4XPosition: number, player4YPosition: number,
                 player4ZPosition: number, player4XViewDirection: number, player4YViewDirection: number,
-                player4IsAlive: boolean, player4TeamRepeat: bigint, player4isBlinded: boolean,
-                player5Name: string, player5Team: bigint, player5XPosition: number, player5YPosition: number,
+                player4IsAlive: boolean, player4TeamRepeat: number, player4isBlinded: boolean,
+                player5Name: string, player5Team: number, player5XPosition: number, player5YPosition: number,
                 player5ZPosition: number, player5XViewDirection: number, player5YViewDirection: number,
-                player5IsAlive: boolean, player5TeamRepeat: bigint, player5isBlinded: boolean,
-                player6Name: string, player6Team: bigint, player6XPosition: number, player6YPosition: number,
+                player5IsAlive: boolean, player5TeamRepeat: number, player5isBlinded: boolean,
+                player6Name: string, player6Team: number, player6XPosition: number, player6YPosition: number,
                 player6ZPosition: number, player6XViewDirection: number, player6YViewDirection: number,
-                player6IsAlive: boolean, player6TeamRepeat: bigint, player6isBlinded: boolean,
-                player7Name: string, player7Team: bigint, player7XPosition: number, player7YPosition: number,
+                player6IsAlive: boolean, player6TeamRepeat: number, player6isBlinded: boolean,
+                player7Name: string, player7Team: number, player7XPosition: number, player7YPosition: number,
                 player7ZPosition: number, player7XViewDirection: number, player7YViewDirection: number,
-                player7IsAlive: boolean, player7TeamRepeat: bigint, player7isBlinded: boolean,
-                player8Name: string, player8Team: bigint, player8XPosition: number, player8YPosition: number,
+                player7IsAlive: boolean, player7TeamRepeat: number, player7isBlinded: boolean,
+                player8Name: string, player8Team: number, player8XPosition: number, player8YPosition: number,
                 player8ZPosition: number, player8XViewDirection: number, player8YViewDirection: number,
-                player8IsAlive: boolean, player8TeamRepeat: bigint, player8isBlinded: boolean,
-                player9Name: string, player9Team: bigint, player9XPosition: number, player9YPosition: number,
+                player8IsAlive: boolean, player8TeamRepeat: number, player8isBlinded: boolean,
+                player9Name: string, player9Team: number, player9XPosition: number, player9YPosition: number,
                 player9ZPosition: number, player9XViewDirection: number, player9YViewDirection: number,
-                player9IsAlive: boolean, player9TeamRepeat: bigint, player9isBlinded: boolean,
+                player9IsAlive: boolean, player9TeamRepeat: number, player9isBlinded: boolean,
                 demoFile: string
                 ) {
         this.tickNumber = tickNumber;
@@ -308,7 +308,7 @@ export class SpottedRow {
     player8Spotter: boolean;
     player9Name: string;
     player9Spotter: boolean;
-    tickNumber: bigint;
+    tickNumber: number;
     demoFile: string;
     
     constructor(spottedPlayer: string, player0Name: string, player0Spotter: boolean, 
@@ -321,7 +321,7 @@ export class SpottedRow {
                 player7Name: string, player7Spotter: boolean, 
                 player8Name: string, player8Spotter: boolean, 
                 player9Name: string, player9Spotter: boolean, 
-                tickNumber: bigint, demoFile: string) {
+                tickNumber: number, demoFile: string) {
         this.spottedPlayer = spottedPlayer;
         this.player0Name = player0Name;
         this.player0Spotter = player0Spotter;
@@ -351,11 +351,11 @@ export class SpottedRow {
 export class WeaponFireRow {
     shooter: string;
     weapon: string;
-    tickNumber: bigint;
+    tickNumber: number;
     demoFile: string;
     
     constructor(shooter: string, weapon: string, 
-                tickNumber: bigint, demoFile: string) {
+                tickNumber: number, demoFile: string) {
         this.shooter = shooter;
         this.weapon = weapon;
         this.tickNumber = tickNumber;
@@ -365,18 +365,18 @@ export class WeaponFireRow {
 
 export class PlayerHurtRow {
     victimName: string;
-    armorDamage: bigint;
-    armor: bigint;
-    healthDamage: bigint;
-    health: bigint;
+    armorDamage: number;
+    armor: number;
+    healthDamage: number;
+    health: number;
     attacker: string;
     weapon: string;
-    tickNumber: bigint;
+    tickNumber: number;
     demoFile: string;
-    
-    constructor(victimName: string, armorDamage: bigint, armor: bigint,
-                healthDamage: bigint, health: bigint, attacker: string,
-                weapon: string, tickNumber: bigint, demoFile: string) {
+
+    constructor(victimName: string, armorDamage: number, armor: number,
+                healthDamage: number, health: number, attacker: string,
+                weapon: string, tickNumber: number, demoFile: string) {
         this.victimName = victimName;
         this.armorDamage = armorDamage;
         this.armor = armor;
@@ -393,10 +393,10 @@ export class PlayerHurtRow {
 export class GrenadesRow {
     thrower: string;
     grenadeType: string;
-    tickNumber: bigint;
+    tickNumber: number;
     demoFile: string;
     
-    constructor(thrower: string, grenadeType: string, tickNumber: bigint, demoFile: string) {
+    constructor(thrower: string, grenadeType: string, tickNumber: number, demoFile: string) {
         this.thrower = thrower;
         this.grenadeType = grenadeType;
         this.tickNumber = tickNumber;
@@ -411,13 +411,13 @@ export class KillsRow {
     assister: string;
     isHeadshot: boolean;
     isWallbang: boolean;
-    penetratedObjects: bigint;
-    tickNumber: bigint;
+    penetratedObjects: number;
+    tickNumber: number;
     demoFile: string;
     
     constructor(killer: string, victim: string, weapon: string, assister: string,
-                isHeadshot: boolean, isWallbang: boolean, penetratedObjects: bigint,
-                tickNumber: bigint, demoFile: string) {
+                isHeadshot: boolean, isWallbang: boolean, penetratedObjects: number,
+                tickNumber: number, demoFile: string) {
         this.killer = killer;
         this.victim = victim;
         this.weapon = weapon;
@@ -431,10 +431,10 @@ export class KillsRow {
 }
 
 export class GameData {
-    positions: PositionRow;
-    spotted: SpottedRow[];
-    weaponFire: WeaponFireRow[];
-    playerHurt: PlayerHurtRow[];
-    grenades: GrenadesRow[];
-    kills: KillsRow[];
+    positions: PositionRow[] = [];
+    spotted: SpottedRow[] = [];
+    weaponFire: WeaponFireRow[] = [];
+    playerHurt: PlayerHurtRow[] = [];
+    grenades: GrenadesRow[] = [];
+    kills: KillsRow[] = [];
 }

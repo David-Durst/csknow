@@ -1,3 +1,5 @@
+import {PlayerHurtRow} from "./data";
+
 const { S3Client, ListObjectsCommand } = require("@aws-sdk/client-s3");
 const {CognitoIdentityClient} = require("@aws-sdk/client-cognito-identity");
 const {fromCognitoIdentityPool} = require("@aws-sdk/credential-provider-cognito-identity");
@@ -11,6 +13,7 @@ let canvas: HTMLCanvasElement = null;
 let ctx: CanvasRenderingContext2D = null;
 let matchSelector: HTMLInputElement = null;
 let matchLabel: HTMLLabelElement = null;
+let gameData: Data.GameData = new Data.GameData()
 const canvasWidth = 700
 const canvasHeight = 700
 const imageWidth = 1024
@@ -99,6 +102,7 @@ async function init() {
     matchSelector.max = numMatches.toString()
     matchLabel = document.querySelector<HTMLLabelElement>("#cur-match")
     matchLabel.innerHTML = matches[0].demoFile;
+    await changedMatch();
 }
 
 function changingMatch() {
@@ -108,12 +112,42 @@ function changingMatch() {
     ctx.fillRect(0, 0, canvasWidth, canvasHeight)
 }
 
-function getObjectParams(key: string) {
-    return { Bucket: listBucketParams.Bucket, Key: "csknow/demos/csv2/" + key };
+function getObjectParams(key: string, type: string) {
+    return {
+        Bucket: listBucketParams.Bucket,
+        Key: "demos/csvs2/" + key + ".dem_" + type + ".csv"
+    };
 }
 
+let reader:any = null;
 async function changedMatch() {
     matchLabel.innerHTML = matches[parseInt(matchSelector.value)].demoFile;
-    //await s3.send(new GetObjectCommand())
+    try {
+        s3.send(new GetObjectCommand(getObjectParams(matchLabel.innerHTML, "hurt")))
+            .then((response: any) => {
+                reader = response.Body.getReader();
+                reader.read().then(parseCSV);
+            });
+    } catch (err) {
+        console.log("Error", err);
+    }
 }
-export { init, matches, changingMatch, changedMatch };
+
+const utf8Decoder = new TextDecoder("utf-8");
+function parseCSV(tuple: { value: Uint8Array; done: boolean; }) {
+    const linesUnsplit = tuple.value ? utf8Decoder.decode(tuple.value, {stream: true}) : "";
+    const lines = linesUnsplit.split("\n");
+    for(let lineNumber = 1; lineNumber < lines.length; lineNumber++) {
+        let currentLine = lines[lineNumber].split(",");
+        gameData.playerHurt.push(new PlayerHurtRow(
+            currentLine[0], parseInt(currentLine[1]), parseInt(currentLine[2]),
+            parseInt(currentLine[3]), parseInt(currentLine[4]),
+            currentLine[5], currentLine[6], parseInt(currentLine[7]), currentLine[7]
+        ));
+    }
+    if (!tuple.done) {
+        reader.read().then(parseCSV);
+    }
+}
+
+export { init, matches, changingMatch, changedMatch, gameData };
