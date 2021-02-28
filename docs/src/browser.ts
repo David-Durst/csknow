@@ -21,7 +21,20 @@ import {
     gameData,
     createGameData
 } from "./data";
-import { canvas, setCanvas, ctx, setCTX } from "./drawing"
+import {
+    canvas,
+    setCanvas,
+    ctx,
+    setCTX,
+    canvasWidth,
+    canvasHeight,
+    minimapWidth,
+    minimapHeight,
+    minimapScale,
+    setup,
+    setXLabel,
+    setYLabel
+} from "./drawing"
 
 const { S3Client, ListObjectsCommand } = require("@aws-sdk/client-s3");
 const {CognitoIdentityClient} = require("@aws-sdk/client-cognito-identity");
@@ -33,10 +46,6 @@ const background = new Image();
 background.src = "de_dust2_radar_spectate.png";
 let matchSelector: HTMLInputElement = null;
 let matchLabel: HTMLLabelElement = null;
-const canvasWidth = 700
-const canvasHeight = 700
-const imageWidth = 1024
-const imageHeight = 1024
 const black = "rgba(0,0,0,1.0)";
 const gray = "rgba(159,159,159,1.0)";
 const lightGray = "rgba(200,200,200,0.7)";
@@ -119,11 +128,14 @@ async function init() {
     matchSelector.max = numMatches.toString()
     matchLabel = document.querySelector<HTMLLabelElement>("#cur-match")
     matchLabel.innerHTML = matches[0].demoFile;
+    setXLabel(document.querySelector<HTMLLabelElement>("#xpos"))
+    setYLabel(document.querySelector<HTMLLabelElement>("#ypos"))
+    setup()
     await changedMatch();
 }
 
 function changingMatch() {
-    ctx.drawImage(background,0,0,imageWidth,imageHeight,0,0,
+    ctx.drawImage(background,0,0,minimapWidth,minimapHeight,0,0,
         canvasWidth,canvasHeight);
     ctx.fillStyle = lightGray;
     ctx.fillRect(0, 0, canvasWidth, canvasHeight)
@@ -207,7 +219,7 @@ async function changedMatch() {
     }
 
     await Promise.all(promises)
-    ctx.drawImage(background,0,0,imageWidth,imageHeight,0,0,
+    ctx.drawImage(background,0,0,minimapWidth,minimapHeight,0,0,
         canvasWidth,canvasHeight);
     console.log(gameData.position.length)
 }
