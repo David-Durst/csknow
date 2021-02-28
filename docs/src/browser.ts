@@ -111,8 +111,6 @@ async function init() {
     matchLabel = document.querySelector<HTMLLabelElement>("#cur-match")
     matchLabel.innerHTML = matches[0].demoFile;
     await changedMatch();
-    ctx.drawImage(background,0,0,imageWidth,imageHeight,0,0,
-        canvasWidth,canvasHeight);
 }
 
 function changingMatch() {
@@ -138,8 +136,8 @@ async function changedMatch() {
             s3.send(new GetObjectCommand(getObjectParams(matchLabel.innerHTML, "position")))
                 .then((response: any) => {
                     setReader(response.Body.getReader());
-                    reader.read().then(parsePosition);
-                }));
+                    return reader.read();
+                }).then(parsePosition));
     } catch (err) {
         console.log("Error", err);
     }
@@ -199,6 +197,9 @@ async function changedMatch() {
         console.log("Error", err);
     }
     await Promise.all(promises)
+    ctx.drawImage(background,0,0,imageWidth,imageHeight,0,0,
+        canvasWidth,canvasHeight);
+    console.log(gameData.position.length)
 }
 
 

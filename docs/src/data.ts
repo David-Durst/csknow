@@ -292,10 +292,10 @@ export class PositionRow {
 
 }
 
-export function parsePosition(tuple: { value: Uint8Array; done: boolean; }) {
+export async function parsePosition(tuple: { value: Uint8Array; done: boolean; }) {
     const linesUnsplit = tuple.value ? utf8Decoder.decode(tuple.value, {stream: true}) : "";
     const lines = linesUnsplit.split("\n");
-    for(let lineNumber = 1; lineNumber < lines.length; lineNumber++) {
+    for (let lineNumber = 1; lineNumber < lines.length; lineNumber++) {
         if (lines[lineNumber].trim() === "") {
             continue;
         }
@@ -303,13 +303,13 @@ export function parsePosition(tuple: { value: Uint8Array; done: boolean; }) {
         gameData.position.push(new PositionRow(
             // first 12 aren't palyer specified
             parseInt(currentLine[0]), parseBool(currentLine[1]), parseInt(currentLine[2]),
-            parseInt(currentLine[3]), parseBool(currentLine[4]), parseBool(currentLine[5]), 
-            parseBool(currentLine[6]), parseInt(currentLine[7]), parseBool(currentLine[8]), 
+            parseInt(currentLine[3]), parseBool(currentLine[4]), parseBool(currentLine[5]),
+            parseBool(currentLine[6]), parseInt(currentLine[7]), parseBool(currentLine[8]),
             parseInt(currentLine[9]), parseInt(currentLine[10]), parseInt(currentLine[11]),
             // each player is 10 entries
             // player 0
-            currentLine[11], parseInt(currentLine[12]), parseFloat(currentLine[13]), 
-            parseFloat(currentLine[13]), parseFloat(currentLine[14]), parseFloat(currentLine[15]), 
+            currentLine[11], parseInt(currentLine[12]), parseFloat(currentLine[13]),
+            parseFloat(currentLine[13]), parseFloat(currentLine[14]), parseFloat(currentLine[15]),
             parseFloat(currentLine[16]), parseBool(currentLine[18]), parseInt(currentLine[19]), parseBool(currentLine[20]),
             // player 1
             currentLine[21], parseInt(currentLine[22]), parseFloat(currentLine[23]),
@@ -353,7 +353,10 @@ export function parsePosition(tuple: { value: Uint8Array; done: boolean; }) {
         //console.log("length of position:" + gameData.position.length.toString() + ", line number: " + lineNumber.toString())
     }
     if (!tuple.done) {
-        reader.read().then(parsePosition);
+        await reader.read().then(parsePosition);
+    } else {
+        console.log("h" + gameData.position.length.toString())
+        console.log("done")
     }
 }
 
