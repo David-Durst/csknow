@@ -292,6 +292,70 @@ export class PositionRow {
 
 }
 
+export function parsePosition(tuple: { value: Uint8Array; done: boolean; }) {
+    const linesUnsplit = tuple.value ? utf8Decoder.decode(tuple.value, {stream: true}) : "";
+    const lines = linesUnsplit.split("\n");
+    for(let lineNumber = 1; lineNumber < lines.length; lineNumber++) {
+        if (lines[lineNumber].trim() === "") {
+            continue;
+        }
+        let currentLine = lines[lineNumber].split(",");
+        gameData.position.push(new PositionRow(
+            // first 12 aren't palyer specified
+            parseInt(currentLine[0]), parseBool(currentLine[1]), parseInt(currentLine[2]),
+            parseInt(currentLine[3]), parseBool(currentLine[4]), parseBool(currentLine[5]), 
+            parseBool(currentLine[6]), parseInt(currentLine[7]), parseBool(currentLine[8]), 
+            parseInt(currentLine[9]), parseInt(currentLine[10]), parseInt(currentLine[11]),
+            // each player is 10 entries
+            // player 0
+            currentLine[11], parseInt(currentLine[12]), parseFloat(currentLine[13]), 
+            parseFloat(currentLine[13]), parseFloat(currentLine[14]), parseFloat(currentLine[15]), 
+            parseFloat(currentLine[16]), parseBool(currentLine[18]), parseInt(currentLine[19]), parseBool(currentLine[20]),
+            // player 1
+            currentLine[21], parseInt(currentLine[22]), parseFloat(currentLine[23]),
+            parseFloat(currentLine[23]), parseFloat(currentLine[24]), parseFloat(currentLine[25]),
+            parseFloat(currentLine[26]), parseBool(currentLine[28]), parseInt(currentLine[29]), parseBool(currentLine[30]),
+            // player 2
+            currentLine[31], parseInt(currentLine[32]), parseFloat(currentLine[33]),
+            parseFloat(currentLine[33]), parseFloat(currentLine[34]), parseFloat(currentLine[35]),
+            parseFloat(currentLine[36]), parseBool(currentLine[38]), parseInt(currentLine[39]), parseBool(currentLine[40]),
+            // player 3
+            currentLine[41], parseInt(currentLine[42]), parseFloat(currentLine[43]),
+            parseFloat(currentLine[43]), parseFloat(currentLine[44]), parseFloat(currentLine[45]),
+            parseFloat(currentLine[46]), parseBool(currentLine[48]), parseInt(currentLine[49]), parseBool(currentLine[50]),
+            // player 4
+            currentLine[51], parseInt(currentLine[52]), parseFloat(currentLine[53]),
+            parseFloat(currentLine[53]), parseFloat(currentLine[54]), parseFloat(currentLine[55]),
+            parseFloat(currentLine[56]), parseBool(currentLine[58]), parseInt(currentLine[59]), parseBool(currentLine[60]),
+            // player 5
+            currentLine[61], parseInt(currentLine[62]), parseFloat(currentLine[63]),
+            parseFloat(currentLine[63]), parseFloat(currentLine[64]), parseFloat(currentLine[65]),
+            parseFloat(currentLine[66]), parseBool(currentLine[68]), parseInt(currentLine[69]), parseBool(currentLine[70]),
+            // player 6
+            currentLine[71], parseInt(currentLine[72]), parseFloat(currentLine[73]),
+            parseFloat(currentLine[73]), parseFloat(currentLine[74]), parseFloat(currentLine[75]),
+            parseFloat(currentLine[76]), parseBool(currentLine[78]), parseInt(currentLine[79]), parseBool(currentLine[80]),
+            // player 7
+            currentLine[81], parseInt(currentLine[82]), parseFloat(currentLine[83]),
+            parseFloat(currentLine[83]), parseFloat(currentLine[84]), parseFloat(currentLine[85]),
+            parseFloat(currentLine[86]), parseBool(currentLine[88]), parseInt(currentLine[89]), parseBool(currentLine[90]),
+            // player 8
+            currentLine[91], parseInt(currentLine[92]), parseFloat(currentLine[93]),
+            parseFloat(currentLine[93]), parseFloat(currentLine[94]), parseFloat(currentLine[95]),
+            parseFloat(currentLine[96]), parseBool(currentLine[98]), parseInt(currentLine[99]), parseBool(currentLine[100]),
+            // player 9
+            currentLine[101], parseInt(currentLine[102]), parseFloat(currentLine[103]),
+            parseFloat(currentLine[103]), parseFloat(currentLine[104]), parseFloat(currentLine[105]),
+            parseFloat(currentLine[106]), parseBool(currentLine[108]), parseInt(currentLine[109]), parseBool(currentLine[110]),
+            // after player data
+            currentLine[111]
+        ));
+    }
+    if (!tuple.done) {
+        reader.read().then(parsePosition);
+    }
+}
+
 export class SpottedRow {
     spottedPlayer: string;
     player0Name: string;
@@ -354,6 +418,28 @@ export class SpottedRow {
     }
 }
 
+export function parseSpotted(tuple: { value: Uint8Array; done: boolean; }) {
+    const linesUnsplit = tuple.value ? utf8Decoder.decode(tuple.value, {stream: true}) : "";
+    const lines = linesUnsplit.split("\n");
+    for(let lineNumber = 1; lineNumber < lines.length; lineNumber++) {
+        if (lines[lineNumber].trim() === "") {
+            continue;
+        }
+        let currentLine = lines[lineNumber].split(",");
+        gameData.spotted.push(new SpottedRow(
+            currentLine[0], currentLine[1], parseBool(currentLine[2]),
+            currentLine[3], parseBool(currentLine[4]), currentLine[5], parseBool(currentLine[6]),
+            currentLine[7], parseBool(currentLine[8]), currentLine[9], parseBool(currentLine[10]),
+            currentLine[11], parseBool(currentLine[12]), currentLine[13], parseBool(currentLine[13]),
+            currentLine[14], parseBool(currentLine[15]), currentLine[16], parseBool(currentLine[18]),
+            currentLine[16], parseBool(currentLine[18]), parseInt(currentLine[2]), currentLine[3]
+        ));
+    }
+    if (!tuple.done) {
+        reader.read().then(parseSpotted);
+    }
+}
+
 export class WeaponFireRow {
     shooter: string;
     weapon: string;
@@ -366,6 +452,23 @@ export class WeaponFireRow {
         this.weapon = weapon;
         this.tickNumber = tickNumber;
         this.demoFile = demoFile;
+    }
+}
+
+export function parseWeaponFire(tuple: { value: Uint8Array; done: boolean; }) {
+    const linesUnsplit = tuple.value ? utf8Decoder.decode(tuple.value, {stream: true}) : "";
+    const lines = linesUnsplit.split("\n");
+    for(let lineNumber = 1; lineNumber < lines.length; lineNumber++) {
+        if (lines[lineNumber].trim() === "") {
+            continue;
+        }
+        let currentLine = lines[lineNumber].split(",");
+        gameData.weaponFire.push(new WeaponFireRow(
+            currentLine[0], currentLine[1], parseInt(currentLine[2]), currentLine[3]
+        ));
+    }
+    if (!tuple.done) {
+        reader.read().then(parseWeaponFire);
     }
 }
 
@@ -400,6 +503,9 @@ export function parseHurt(tuple: { value: Uint8Array; done: boolean; }) {
     const linesUnsplit = tuple.value ? utf8Decoder.decode(tuple.value, {stream: true}) : "";
     const lines = linesUnsplit.split("\n");
     for(let lineNumber = 1; lineNumber < lines.length; lineNumber++) {
+        if (lines[lineNumber].trim() === "") {
+            continue;
+        }
         let currentLine = lines[lineNumber].split(",");
         gameData.playerHurt.push(new PlayerHurtRow(
             currentLine[0], parseInt(currentLine[1]), parseInt(currentLine[2]),
@@ -430,6 +536,9 @@ export function parseGrenades(tuple: { value: Uint8Array; done: boolean; }) {
     const linesUnsplit = tuple.value ? utf8Decoder.decode(tuple.value, {stream: true}) : "";
     const lines = linesUnsplit.split("\n");
     for(let lineNumber = 1; lineNumber < lines.length; lineNumber++) {
+        if (lines[lineNumber].trim() === "") {
+            continue;
+        }
         let currentLine = lines[lineNumber].split(",");
         gameData.grenades.push(new GrenadesRow(
             currentLine[0], currentLine[1], parseInt(currentLine[2]), currentLine[3]
@@ -470,6 +579,9 @@ export function parseKills(tuple: { value: Uint8Array; done: boolean; }) {
     const linesUnsplit = tuple.value ? utf8Decoder.decode(tuple.value, {stream: true}) : "";
     const lines = linesUnsplit.split("\n");
     for(let lineNumber = 1; lineNumber < lines.length; lineNumber++) {
+        if (lines[lineNumber].trim() === "") {
+            continue;
+        }
         let currentLine = lines[lineNumber].split(",");
         gameData.kills.push(new KillsRow(
             currentLine[0], currentLine[1], currentLine[2], currentLine[3],
@@ -483,7 +595,7 @@ export function parseKills(tuple: { value: Uint8Array; done: boolean; }) {
 }
 
 export class GameData {
-    positions: PositionRow[] = [];
+    position: PositionRow[] = [];
     spotted: SpottedRow[] = [];
     weaponFire: WeaponFireRow[] = [];
     playerHurt: PlayerHurtRow[] = [];

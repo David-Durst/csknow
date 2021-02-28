@@ -1,4 +1,10 @@
-import {parseKills, PlayerHurtRow} from "./data";
+import {
+    parseKills,
+    parsePosition,
+    parseSpotted,
+    parseWeaponFire,
+    PlayerHurtRow
+} from "./data";
 
 const { S3Client, ListObjectsCommand } = require("@aws-sdk/client-s3");
 const {CognitoIdentityClient} = require("@aws-sdk/client-cognito-identity");
@@ -121,6 +127,36 @@ function getObjectParams(key: string, type: string) {
 async function changedMatch() {
     matchLabel.innerHTML = matches[parseInt(matchSelector.value)].demoFile;
     try {
+        s3.send(new GetObjectCommand(getObjectParams(matchLabel.innerHTML, "position")))
+            .then((response: any) => {
+                setReader(response.Body.getReader());
+                reader.read().then(parsePosition);
+            });
+    } catch (err) {
+        console.log("Error", err);
+    }
+
+    try {
+        s3.send(new GetObjectCommand(getObjectParams(matchLabel.innerHTML, "spotted")))
+            .then((response: any) => {
+                setReader(response.Body.getReader());
+                reader.read().then(parseSpotted);
+            });
+    } catch (err) {
+        console.log("Error", err);
+    }
+
+    try {
+        s3.send(new GetObjectCommand(getObjectParams(matchLabel.innerHTML, "weapon_fire")))
+            .then((response: any) => {
+                setReader(response.Body.getReader());
+                reader.read().then(parseWeaponFire);
+            });
+    } catch (err) {
+        console.log("Error", err);
+    }
+
+    try {
         s3.send(new GetObjectCommand(getObjectParams(matchLabel.innerHTML, "hurt")))
             .then((response: any) => {
                 setReader(response.Body.getReader());
@@ -144,7 +180,7 @@ async function changedMatch() {
         s3.send(new GetObjectCommand(getObjectParams(matchLabel.innerHTML, "kills")))
             .then((response: any) => {
                 setReader(response.Body.getReader());
-                reader.read().then(parseKills());
+                reader.read().then(parseKills);
             });
     } catch (err) {
         console.log("Error", err);
