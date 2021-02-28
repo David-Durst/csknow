@@ -1,9 +1,15 @@
 import {
+    GameData,
     parseKills,
     parsePosition,
     parseSpotted,
     parseWeaponFire,
-    PlayerHurtRow
+    parseHurt,
+    parseGrenades,
+    reader,
+    setReader,
+    gameData,
+    createGameData
 } from "./data";
 
 const { S3Client, ListObjectsCommand } = require("@aws-sdk/client-s3");
@@ -11,7 +17,6 @@ const {CognitoIdentityClient} = require("@aws-sdk/client-cognito-identity");
 const {fromCognitoIdentityPool} = require("@aws-sdk/credential-provider-cognito-identity");
 const path = require("path");
 import {GetObjectCommand} from "@aws-sdk/client-s3";
-import {parseHurt,parseGrenades,reader,setReader,gameData} from "./data"
 
 const background = new Image();
 background.src = "de_dust2_radar_spectate.png";
@@ -99,8 +104,6 @@ async function init() {
     }
     canvas = <HTMLCanvasElement> document.querySelector("#myCanvas");
     ctx = canvas.getContext('2d');
-    ctx.drawImage(background,0,0,imageWidth,imageHeight,0,0,
-        canvasWidth,canvasHeight);
     matchSelector = document.querySelector<HTMLInputElement>("#match-selector")
     matchSelector.value = "0"
     matchSelector.min = "0"
@@ -108,6 +111,8 @@ async function init() {
     matchLabel = document.querySelector<HTMLLabelElement>("#cur-match")
     matchLabel.innerHTML = matches[0].demoFile;
     await changedMatch();
+    ctx.drawImage(background,0,0,imageWidth,imageHeight,0,0,
+        canvasWidth,canvasHeight);
 }
 
 function changingMatch() {
@@ -125,66 +130,75 @@ function getObjectParams(key: string, type: string) {
 }
 
 async function changedMatch() {
+    createGameData();
     matchLabel.innerHTML = matches[parseInt(matchSelector.value)].demoFile;
+    let promises: Promise<any>[] = []
     try {
-        s3.send(new GetObjectCommand(getObjectParams(matchLabel.innerHTML, "position")))
-            .then((response: any) => {
-                setReader(response.Body.getReader());
-                reader.read().then(parsePosition);
-            });
+        promises.push(
+            s3.send(new GetObjectCommand(getObjectParams(matchLabel.innerHTML, "position")))
+                .then((response: any) => {
+                    setReader(response.Body.getReader());
+                    reader.read().then(parsePosition);
+                }));
     } catch (err) {
         console.log("Error", err);
     }
 
     try {
-        s3.send(new GetObjectCommand(getObjectParams(matchLabel.innerHTML, "spotted")))
-            .then((response: any) => {
-                setReader(response.Body.getReader());
-                reader.read().then(parseSpotted);
-            });
+        promises.push(
+            s3.send(new GetObjectCommand(getObjectParams(matchLabel.innerHTML, "spotted")))
+                .then((response: any) => {
+                    setReader(response.Body.getReader());
+                    reader.read().then(parseSpotted);
+            }));
     } catch (err) {
         console.log("Error", err);
     }
 
     try {
-        s3.send(new GetObjectCommand(getObjectParams(matchLabel.innerHTML, "weapon_fire")))
-            .then((response: any) => {
-                setReader(response.Body.getReader());
-                reader.read().then(parseWeaponFire);
-            });
+        promises.push(
+            s3.send(new GetObjectCommand(getObjectParams(matchLabel.innerHTML, "weapon_fire")))
+                .then((response: any) => {
+                    setReader(response.Body.getReader());
+                    reader.read().then(parseWeaponFire);
+            }));
     } catch (err) {
         console.log("Error", err);
     }
 
     try {
-        s3.send(new GetObjectCommand(getObjectParams(matchLabel.innerHTML, "hurt")))
-            .then((response: any) => {
-                setReader(response.Body.getReader());
-                reader.read().then(parseHurt);
-            });
+        promises.push(
+            s3.send(new GetObjectCommand(getObjectParams(matchLabel.innerHTML, "hurt")))
+                .then((response: any) => {
+                    setReader(response.Body.getReader());
+                    reader.read().then(parseHurt);
+            }));
     } catch (err) {
         console.log("Error", err);
     }
 
     try {
-        s3.send(new GetObjectCommand(getObjectParams(matchLabel.innerHTML, "grenades")))
-            .then((response: any) => {
-                setReader(response.Body.getReader());
-                reader.read().then(parseGrenades);
-            });
+        promises.push(
+            s3.send(new GetObjectCommand(getObjectParams(matchLabel.innerHTML, "grenades")))
+                .then((response: any) => {
+                    setReader(response.Body.getReader());
+                    reader.read().then(parseGrenades);
+            }));
     } catch (err) {
         console.log("Error", err);
     }
 
     try {
-        s3.send(new GetObjectCommand(getObjectParams(matchLabel.innerHTML, "kills")))
-            .then((response: any) => {
-                setReader(response.Body.getReader());
-                reader.read().then(parseKills);
-            });
+        promises.push( 
+            s3.send(new GetObjectCommand(getObjectParams(matchLabel.innerHTML, "kills")))
+                .then((response: any) => {
+                    setReader(response.Body.getReader());
+                    reader.read().then(parseKills);
+            }));
     } catch (err) {
         console.log("Error", err);
     }
+    await Promise.all(promises)
 }
 
 

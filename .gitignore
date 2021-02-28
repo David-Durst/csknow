@@ -3,3 +3,4 @@
 demos/
 local_data/
 download_s3_csvs/already_downloaded.txt
+.vscode/

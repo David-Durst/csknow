@@ -350,6 +350,7 @@ export function parsePosition(tuple: { value: Uint8Array; done: boolean; }) {
             // after player data
             currentLine[111]
         ));
+        //console.log("length of position:" + gameData.position.length.toString() + ", line number: " + lineNumber.toString())
     }
     if (!tuple.done) {
         reader.read().then(parsePosition);
@@ -603,7 +604,10 @@ export class GameData {
     kills: KillsRow[] = [];
 }
 
-export let gameData: GameData = new GameData();
+export let gameData: GameData = null;
+export function createGameData() {
+    gameData = new GameData();
+}
 export let reader:any = null;
 export function setReader(readerInput: any) {
     reader = readerInput
