@@ -29,6 +29,7 @@ import {
     minimapWidth,
     minimapHeight,
     minimapScale,
+    drawTick,
     setup
 } from "./drawing"
 
@@ -213,7 +214,7 @@ async function changedMatch() {
     await Promise.all(promises)
     ctx.drawImage(background,0,0,minimapWidth,minimapHeight,0,0,
         canvasWidth,canvasHeight);
-    console.log(gameData.position.length)
+    drawTick(null)
 }
 
 

@@ -56,10 +56,11 @@ function trackMouse(e: MouseEvent) {
     yCanvasLabel.innerHTML = minimapCoordinate.getCanvasY().toPrecision(6)
 }
 
-function drawTick(e: InputEvent) {
+export function drawTick(e: InputEvent) {
     const cur_tick = parseInt(tickSelector.value)
     tickLabel.innerHTML = cur_tick.toString()
     ctx.font = "30px Arial"
+    tickSelector.max = gameData.position.length.toString()
 }
 
 export function setup() {
@@ -72,6 +73,6 @@ export function setup() {
     xCanvasLabel = document.querySelector<HTMLLabelElement>("#xposCanvas")
     yCanvasLabel = document.querySelector<HTMLLabelElement>("#yposCanvas")
     canvas.addEventListener("mousemove", trackMouse)
-    canvas.addEventListener("input", drawTick)
+    document.querySelector<HTMLInputElement>("#tick-selector").addEventListener("input", drawTick)
     tickLabel.innerHTML = "0"
 }
