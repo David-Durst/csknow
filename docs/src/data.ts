@@ -354,9 +354,6 @@ export async function parsePosition(tuple: { value: Uint8Array; done: boolean; }
     }
     if (!tuple.done) {
         await positionReader.read().then(parsePosition);
-    } else {
-        console.log("h" + gameData.position.length.toString())
-        console.log("done")
     }
 }
 
@@ -519,7 +516,7 @@ export class PlayerHurtRow {
 }
 
 export async function parseHurt(tuple: { value: Uint8Array; done: boolean; }) {
-    const linesUnsplit = tuple ? utf8Decoder.decode(tuple.value, {stream: true}) : "";
+    const linesUnsplit = tuple.value ? utf8Decoder.decode(tuple.value, {stream: true}) : "";
     const lines = linesUnsplit.split("\n");
     for(let lineNumber = 1; lineNumber < lines.length; lineNumber++) {
         if (lines[lineNumber].trim() === "") {
@@ -532,7 +529,7 @@ export async function parseHurt(tuple: { value: Uint8Array; done: boolean; }) {
             currentLine[5], currentLine[6], parseInt(currentLine[7]), currentLine[7]
         ));
     }
-    if (tuple && !tuple.done) {
+    if (!tuple.done) {
         await hurtReader.read().then(parseHurt);
     }
 }
@@ -557,7 +554,7 @@ export class GrenadesRow {
 }
 
 export async function parseGrenades(tuple: { value: Uint8Array; done: boolean; }) {
-    const linesUnsplit = tuple ? utf8Decoder.decode(tuple.value, {stream: true}) : "";
+    const linesUnsplit = tuple.value ? utf8Decoder.decode(tuple.value, {stream: true}) : "";
     const lines = linesUnsplit.split("\n");
     for(let lineNumber = 1; lineNumber < lines.length; lineNumber++) {
         if (lines[lineNumber].trim() === "") {
@@ -568,7 +565,7 @@ export async function parseGrenades(tuple: { value: Uint8Array; done: boolean; }
             currentLine[0], currentLine[1], parseInt(currentLine[2]), currentLine[3]
         ));
     }
-    if (tuple && !tuple.done) {
+    if (!tuple.done) {
         await grenadesReader.read().then(parseGrenades);
     }
 }
@@ -619,7 +616,7 @@ export async function parseKills(tuple: { value: Uint8Array; done: boolean; }) {
         ));
     }
     if (!tuple.done) {
-        await killsReader.read().then(parseKills);
+        killsReader.read().then(parseKills);
     }
 }
 

@@ -179,7 +179,7 @@ async function changedMatch() {
             s3.send(new GetObjectCommand(getObjectParams(matchLabel.innerHTML, "hurt")))
                 .then((response: any) => {
                     setHurtReader(response.Body.getReader());
-                    hurtReader.read();
+                    return hurtReader.read();
             }).then(parseHurt));
     } catch (err) {
         console.log("Error", err);
@@ -190,22 +190,23 @@ async function changedMatch() {
             s3.send(new GetObjectCommand(getObjectParams(matchLabel.innerHTML, "grenades")))
                 .then((response: any) => {
                     setGrenadesReader(response.Body.getReader());
-                    grenadesReader.read();
+                    return grenadesReader.read();
             }).then(parseGrenades));
     } catch (err) {
         console.log("Error", err);
     }
 
     try {
-        promises.push( 
+        promises.push(
             s3.send(new GetObjectCommand(getObjectParams(matchLabel.innerHTML, "kills")))
                 .then((response: any) => {
                     setKillsReader(response.Body.getReader());
-                    killsReader.read();
+                    return killsReader.read();
             }).then(parseKills));
     } catch (err) {
         console.log("Error", err);
     }
+
     await Promise.all(promises)
     ctx.drawImage(background,0,0,imageWidth,imageHeight,0,0,
         canvasWidth,canvasHeight);
