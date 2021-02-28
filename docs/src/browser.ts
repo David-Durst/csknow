@@ -21,6 +21,7 @@ import {
     gameData,
     createGameData
 } from "./data";
+import { canvas, setCanvas, ctx, setCTX } from "./drawing"
 
 const { S3Client, ListObjectsCommand } = require("@aws-sdk/client-s3");
 const {CognitoIdentityClient} = require("@aws-sdk/client-cognito-identity");
@@ -30,8 +31,6 @@ import {GetObjectCommand} from "@aws-sdk/client-s3";
 
 const background = new Image();
 background.src = "de_dust2_radar_spectate.png";
-let canvas: HTMLCanvasElement = null;
-let ctx: CanvasRenderingContext2D = null;
 let matchSelector: HTMLInputElement = null;
 let matchLabel: HTMLLabelElement = null;
 const canvasWidth = 700
@@ -112,8 +111,8 @@ async function init() {
             truncated = false;
         }
     }
-    canvas = <HTMLCanvasElement> document.querySelector("#myCanvas");
-    ctx = canvas.getContext('2d');
+    setCanvas(<HTMLCanvasElement> document.querySelector("#myCanvas"));
+    setCTX(canvas.getContext('2d'));
     matchSelector = document.querySelector<HTMLInputElement>("#match-selector")
     matchSelector.value = "0"
     matchSelector.min = "0"
