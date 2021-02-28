@@ -204,7 +204,7 @@ func processFile(unprocessedKey string) {
 		panic(err)
 	}
 	defer hurtFile.Close()
-	hurtFile.WriteString("shooter,weapon,tick number,demo file\n")
+	hurtFile.WriteString("victim name,armor damage,armor,health damage,health,attacker,weapon,tick number,demo file\n")
 
 	p.RegisterEventHandler(func(e events.PlayerHurt) {
 		if ticksProcessed < minTicks {
