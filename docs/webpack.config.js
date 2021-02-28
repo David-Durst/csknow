@@ -21,6 +21,9 @@ module.exports = {
     },
     resolve:{
         extensions: [ '.tsx', '.ts', '.js' ],
+        fallback: {
+            "path": require.resolve("path-browserify")
+        }
     }
     /**
      * In Webpack version v2.0.0 and earlier, you must tell

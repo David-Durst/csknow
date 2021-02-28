@@ -50,7 +50,9 @@
                     <span class="label">Current Match:</span>
                     <span id="cur-match">Not Yet Loaded</span>
                     <input type="range" min="0" max="99" value="0" class="slider"
-                           id="match-selector" oninput="redrawCanvas(true, false);">
+                           id="match-selector"
+                           oninput="window.exposed.changingMatch();"
+                           onchange="window.exposed.changedMatch();">
                 </div>
             </div>
         </div>
