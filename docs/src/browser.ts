@@ -1,11 +1,11 @@
-import {PlayerHurtRow} from "./data";
+import {parseKills, PlayerHurtRow} from "./data";
 
 const { S3Client, ListObjectsCommand } = require("@aws-sdk/client-s3");
 const {CognitoIdentityClient} = require("@aws-sdk/client-cognito-identity");
 const {fromCognitoIdentityPool} = require("@aws-sdk/credential-provider-cognito-identity");
 const path = require("path");
 import {GetObjectCommand} from "@aws-sdk/client-s3";
-import * as Data from "./data"
+import {parseHurt,parseGrenades,reader,setReader,gameData} from "./data"
 
 const background = new Image();
 background.src = "de_dust2_radar_spectate.png";
@@ -13,7 +13,6 @@ let canvas: HTMLCanvasElement = null;
 let ctx: CanvasRenderingContext2D = null;
 let matchSelector: HTMLInputElement = null;
 let matchLabel: HTMLLabelElement = null;
-let gameData: Data.GameData = new Data.GameData()
 const canvasWidth = 700
 const canvasHeight = 700
 const imageWidth = 1024
@@ -119,35 +118,38 @@ function getObjectParams(key: string, type: string) {
     };
 }
 
-let reader:any = null;
 async function changedMatch() {
     matchLabel.innerHTML = matches[parseInt(matchSelector.value)].demoFile;
     try {
         s3.send(new GetObjectCommand(getObjectParams(matchLabel.innerHTML, "hurt")))
             .then((response: any) => {
-                reader = response.Body.getReader();
-                reader.read().then(parseCSV);
+                setReader(response.Body.getReader());
+                reader.read().then(parseHurt);
+            });
+    } catch (err) {
+        console.log("Error", err);
+    }
+
+    try {
+        s3.send(new GetObjectCommand(getObjectParams(matchLabel.innerHTML, "grenades")))
+            .then((response: any) => {
+                setReader(response.Body.getReader());
+                reader.read().then(parseGrenades);
+            });
+    } catch (err) {
+        console.log("Error", err);
+    }
+
+    try {
+        s3.send(new GetObjectCommand(getObjectParams(matchLabel.innerHTML, "kills")))
+            .then((response: any) => {
+                setReader(response.Body.getReader());
+                reader.read().then(parseKills());
             });
     } catch (err) {
         console.log("Error", err);
     }
 }
 
-const utf8Decoder = new TextDecoder("utf-8");
-function parseCSV(tuple: { value: Uint8Array; done: boolean; }) {
-    const linesUnsplit = tuple.value ? utf8Decoder.decode(tuple.value, {stream: true}) : "";
-    const lines = linesUnsplit.split("\n");
-    for(let lineNumber = 1; lineNumber < lines.length; lineNumber++) {
-        let currentLine = lines[lineNumber].split(",");
-        gameData.playerHurt.push(new PlayerHurtRow(
-            currentLine[0], parseInt(currentLine[1]), parseInt(currentLine[2]),
-            parseInt(currentLine[3]), parseInt(currentLine[4]),
-            currentLine[5], currentLine[6], parseInt(currentLine[7]), currentLine[7]
-        ));
-    }
-    if (!tuple.done) {
-        reader.read().then(parseCSV);
-    }
-}
 
 export { init, matches, changingMatch, changedMatch, gameData };

@@ -1,3 +1,9 @@
+const utf8Decoder = new TextDecoder("utf-8");
+
+function parseBool(b: string) {
+    return b == "1";
+}
+
 export class PositionRow {
     tickNumber: number;
     matchStarted: boolean;
@@ -390,6 +396,22 @@ export class PlayerHurtRow {
     }
 }
 
+export function parseHurt(tuple: { value: Uint8Array; done: boolean; }) {
+    const linesUnsplit = tuple.value ? utf8Decoder.decode(tuple.value, {stream: true}) : "";
+    const lines = linesUnsplit.split("\n");
+    for(let lineNumber = 1; lineNumber < lines.length; lineNumber++) {
+        let currentLine = lines[lineNumber].split(",");
+        gameData.playerHurt.push(new PlayerHurtRow(
+            currentLine[0], parseInt(currentLine[1]), parseInt(currentLine[2]),
+            parseInt(currentLine[3]), parseInt(currentLine[4]),
+            currentLine[5], currentLine[6], parseInt(currentLine[7]), currentLine[7]
+        ));
+    }
+    if (!tuple.done) {
+        reader.read().then(parseHurt);
+    }
+}
+
 export class GrenadesRow {
     thrower: string;
     grenadeType: string;
@@ -401,6 +423,20 @@ export class GrenadesRow {
         this.grenadeType = grenadeType;
         this.tickNumber = tickNumber;
         this.demoFile = demoFile;
+    }
+}
+
+export function parseGrenades(tuple: { value: Uint8Array; done: boolean; }) {
+    const linesUnsplit = tuple.value ? utf8Decoder.decode(tuple.value, {stream: true}) : "";
+    const lines = linesUnsplit.split("\n");
+    for(let lineNumber = 1; lineNumber < lines.length; lineNumber++) {
+        let currentLine = lines[lineNumber].split(",");
+        gameData.grenades.push(new GrenadesRow(
+            currentLine[0], currentLine[1], parseInt(currentLine[2]), currentLine[3]
+        ));
+    }
+    if (!tuple.done) {
+        reader.read().then(parseGrenades);
     }
 }
 
@@ -430,6 +466,22 @@ export class KillsRow {
     }
 }
 
+export function parseKills(tuple: { value: Uint8Array; done: boolean; }) {
+    const linesUnsplit = tuple.value ? utf8Decoder.decode(tuple.value, {stream: true}) : "";
+    const lines = linesUnsplit.split("\n");
+    for(let lineNumber = 1; lineNumber < lines.length; lineNumber++) {
+        let currentLine = lines[lineNumber].split(",");
+        gameData.kills.push(new KillsRow(
+            currentLine[0], currentLine[1], currentLine[2], currentLine[3],
+            parseBool(currentLine[4]), parseBool(currentLine[5]),
+            parseInt(currentLine[6]), parseInt(currentLine[7]), currentLine[8]
+        ));
+    }
+    if (!tuple.done) {
+        reader.read().then(parseKills);
+    }
+}
+
 export class GameData {
     positions: PositionRow[] = [];
     spotted: SpottedRow[] = [];
@@ -437,4 +489,10 @@ export class GameData {
     playerHurt: PlayerHurtRow[] = [];
     grenades: GrenadesRow[] = [];
     kills: KillsRow[] = [];
+}
+
+export let gameData: GameData = new GameData();
+export let reader:any = null;
+export function setReader(readerInput: any) {
+    reader = readerInput
 }
