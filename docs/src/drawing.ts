@@ -68,7 +68,7 @@ export function drawTick(e: InputEvent) {
     ctx.drawImage(minimap,0,0,minimapWidth,minimapHeight,0,0,
         canvasWidth,canvasHeight);
     const curTick = parseInt(tickSelector.value)
-    tickLabel.innerHTML = curTick.toString()
+    tickLabel.innerHTML = gameData.position[curTick].tickNumber.toString()
     ctx.font = "30px Arial"
     const tickData: PositionRow = gameData.position[curTick]
     tScoreLabel.innerHTML = tickData.tScore.toString()
@@ -99,8 +99,7 @@ export function setupMatch() {
             maxZ = Math.max(maxZ, gameData.position[t].players[p].zPosition)
         }
     }
-    tickSelector.min = gameData.position[0].tickNumber.toString()
-    tickSelector.max = gameData.position[gameData.position.length - 1].tickNumber.toString()
+    tickSelector.max = (gameData.position.length - 1).toString()
 }
 
 export function setupCanvas() {
