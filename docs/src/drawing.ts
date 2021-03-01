@@ -1,4 +1,4 @@
-import { gameData } from "./data"
+import {gameData, PositionRow} from "./data"
 
 export const d2_top_left_x = -2476
 export const d2_top_left_y = 3239
@@ -15,6 +15,10 @@ let xCanvasLabel: HTMLLabelElement = null;
 let yCanvasLabel: HTMLLabelElement = null;
 let tickSelector: HTMLInputElement = null;
 let tickLabel: HTMLLabelElement = null;
+let tScoreLabel: HTMLLabelElement = null;
+let ctScoreLabel: HTMLLabelElement = null;
+let minZ = 0;
+let maxZ = 0;
 
 // see last post by randunel and csgo/resources/overview/de_dust2.txt
 // https://forums.alliedmods.net/showthread.php?p=2690857#post2690857
@@ -57,13 +61,42 @@ function trackMouse(e: MouseEvent) {
 }
 
 export function drawTick(e: InputEvent) {
-    const cur_tick = parseInt(tickSelector.value)
-    tickLabel.innerHTML = cur_tick.toString()
+    const curTick = parseInt(tickSelector.value)
+    tickLabel.innerHTML = curTick.toString()
     ctx.font = "30px Arial"
     tickSelector.max = gameData.position.length.toString()
+    const tickData: PositionRow = gameData.position[curTick]
+    tScoreLabel.innerHTML = tickData.tScore.toString()
+    tScoreLabel.innerHTML = tickData.ctScore.toString()
+    for (let p = 0; p < 10; p++) {
+        let playerText = "o"
+        if (!tickData.players[p].isAlive) {
+            playerText = "x"
+        }
+        ctx.fillStyle = dark_blue
+        if (tickData.players[p].team == 2) {
+            ctx.fillStyle = dark_red
+        }
+        const location = new MapCoordinate(
+            tickData.players[p].xPosition,
+            tickData.players[p].yPosition,
+            false);
+        ctx.fillText(playerText, location.getCanvasX(), location.getCanvasY())
+    }
 }
 
-export function setup() {
+export function setupMatch() {
+    drawTick(null)
+    const numTicks = gameData.position.length
+    for (let t = 0; t < numTicks; t++) {
+        for (let p = 0; p < 10; p++) {
+            minZ = Math.min(minZ, gameData.position[t].players[p].zPosition)
+            maxZ = Math.max(maxZ, gameData.position[t].players[p].zPosition)
+        }
+    }
+}
+
+export function setupCanvas() {
     canvas = <HTMLCanvasElement> document.querySelector("#myCanvas")
     ctx = canvas.getContext('2d')
     tickSelector = document.querySelector<HTMLInputElement>("#tick-selector")
@@ -72,6 +105,8 @@ export function setup() {
     yMapLabel = document.querySelector<HTMLLabelElement>("#yposMap")
     xCanvasLabel = document.querySelector<HTMLLabelElement>("#xposCanvas")
     yCanvasLabel = document.querySelector<HTMLLabelElement>("#yposCanvas")
+    tScoreLabel = document.querySelector<HTMLLabelElement>("#t_score")
+    ctScoreLabel = document.querySelector<HTMLLabelElement>("#ct_score")
     canvas.addEventListener("mousemove", trackMouse)
     document.querySelector<HTMLInputElement>("#tick-selector").addEventListener("input", drawTick)
     tickLabel.innerHTML = "0"

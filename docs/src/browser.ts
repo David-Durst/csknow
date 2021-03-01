@@ -30,7 +30,8 @@ import {
     minimapHeight,
     minimapScale,
     drawTick,
-    setup
+    setupMatch,
+    setupCanvas
 } from "./drawing"
 
 const { S3Client, ListObjectsCommand } = require("@aws-sdk/client-s3");
@@ -123,7 +124,7 @@ async function init() {
     matchSelector.max = numMatches.toString()
     matchLabel = document.querySelector<HTMLLabelElement>("#cur-match")
     matchLabel.innerHTML = matches[0].demoFile;
-    setup()
+    setupCanvas()
     await changedMatch();
 }
 
@@ -214,7 +215,7 @@ async function changedMatch() {
     await Promise.all(promises)
     ctx.drawImage(background,0,0,minimapWidth,minimapHeight,0,0,
         canvasWidth,canvasHeight);
-    drawTick(null)
+    setupMatch()
 }
 
 
