@@ -19,7 +19,8 @@ import {
     grenadesReader,
     setGrenadesReader,
     gameData,
-    createGameData
+    createGameData,
+    initialized, setInitialized
 } from "./data";
 import {
     canvas,
@@ -128,6 +129,7 @@ async function init() {
     document.querySelector<HTMLSelectElement>("#download-type").addEventListener("change", setMatchLabel)
     setupCanvas()
     await changedMatch();
+    setInitialized();
 }
 
 function changingMatch() {

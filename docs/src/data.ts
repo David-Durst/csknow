@@ -504,3 +504,7 @@ export let gameData: GameData = null;
 export function createGameData() {
     gameData = new GameData();
 }
+export let initialized: boolean = false;
+export function setInitialized() {
+    initialized = true;
+}

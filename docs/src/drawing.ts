@@ -1,4 +1,4 @@
-import {gameData, PositionRow} from "./data"
+import {gameData, initialized, PositionRow} from "./data"
 
 export const d2_top_left_x = -2476
 export const d2_top_left_y = 3239
@@ -55,6 +55,9 @@ class MapCoordinate {
 }
 
 function trackMouse(e: MouseEvent) {
+    if (!initialized) {
+        return
+    }
     const rect = canvas.getBoundingClientRect();
     const xCanvas = (e.clientX - rect.left)
     const yCanvas = (e.clientY - rect.top)
