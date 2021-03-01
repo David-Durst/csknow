@@ -11,13 +11,13 @@
     "watch": "webpack --mode development --progress --profile --color --watch"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.3.0",
-    "@aws-sdk/s3-request-presigner": "^3.3.0",
-    "@aws-sdk/util-create-request": "^3.3.0",
-    "@aws-sdk/util-format-url": "^3.3.0",
     "@aws-sdk/client-cognito-identity": "^3.3.0",
+    "@aws-sdk/client-s3": "^3.3.0",
     "@aws-sdk/credential-provider-cognito-identity": "^3.3.0",
-    "@aws-sdk/types": "^3.3.0"
+    "@aws-sdk/s3-request-presigner": "^3.3.0",
+    "@aws-sdk/types": "^3.3.0",
+    "@aws-sdk/util-create-request": "^3.3.0",
+    "@aws-sdk/util-format-url": "^3.3.0"
   },
   "devDependencies": {
     "@types/node": "^14.0.23",

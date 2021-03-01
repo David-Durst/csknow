@@ -18,3 +18,7 @@ body {
 
 a:link {color: blue;}
 a:visited {color: purple;}
+
+.playButton {
+    padding: 0px;
+}
