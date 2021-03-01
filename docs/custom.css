@@ -15,3 +15,6 @@ body {
     border-bottom: 1px solid black;
     padding: 1px;
 }
+
+a:link {color: blue;}
+a:visited {color: purple;}

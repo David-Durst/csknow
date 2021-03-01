@@ -43,6 +43,7 @@ import {GetObjectCommand} from "@aws-sdk/client-s3";
 
 let matchSelector: HTMLInputElement = null;
 let matchLabel: HTMLLabelElement = null;
+let matchLabelStr: string = ""
 const black = "rgba(0,0,0,1.0)";
 const gray = "rgba(159,159,159,1.0)";
 const lightGray = "rgba(200,200,200,0.7)";
@@ -122,7 +123,6 @@ async function init() {
     matchSelector.min = "0"
     matchSelector.max = numMatches.toString()
     matchLabel = document.querySelector<HTMLLabelElement>("#cur-match")
-    matchLabel.innerHTML = matches[0].demoFile;
     setupCanvas()
     await changedMatch();
 }
@@ -143,11 +143,13 @@ function getObjectParams(key: string, type: string) {
 
 async function changedMatch() {
     createGameData();
-    matchLabel.innerHTML = matches[parseInt(matchSelector.value)].demoFile;
+    matchLabelStr = matches[parseInt(matchSelector.value)].demoFile;
+    matchLabel.innerHTML = "<a href=\"https://csknow.s3.amazonaws.com/demos/processed/" +
+        matchLabelStr + ".dem\">" + matchLabelStr + "</a>"
     let promises: Promise<any>[] = []
     try {
         promises.push(
-            s3.send(new GetObjectCommand(getObjectParams(matchLabel.innerHTML, "position")))
+            s3.send(new GetObjectCommand(getObjectParams(matchLabelStr, "position")))
                 .then((response: any) => {
                     setPositionReader(response.Body.getReader());
                     return positionReader.read();
@@ -158,7 +160,7 @@ async function changedMatch() {
 
     try {
         promises.push(
-            s3.send(new GetObjectCommand(getObjectParams(matchLabel.innerHTML, "spotted")))
+            s3.send(new GetObjectCommand(getObjectParams(matchLabelStr, "spotted")))
                 .then((response: any) => {
                     setSpottedReader(response.Body.getReader());
                     return spottedReader.read();
@@ -169,7 +171,7 @@ async function changedMatch() {
 
     try {
         promises.push(
-            s3.send(new GetObjectCommand(getObjectParams(matchLabel.innerHTML, "weapon_fire")))
+            s3.send(new GetObjectCommand(getObjectParams(matchLabelStr, "weapon_fire")))
                 .then((response: any) => {
                     setWeaponFireReader(response.Body.getReader());
                     return weaponFireReader.read();
@@ -180,7 +182,7 @@ async function changedMatch() {
 
     try {
         promises.push(
-            s3.send(new GetObjectCommand(getObjectParams(matchLabel.innerHTML, "hurt")))
+            s3.send(new GetObjectCommand(getObjectParams(matchLabelStr, "hurt")))
                 .then((response: any) => {
                     setHurtReader(response.Body.getReader());
                     return hurtReader.read();
@@ -191,7 +193,7 @@ async function changedMatch() {
 
     try {
         promises.push(
-            s3.send(new GetObjectCommand(getObjectParams(matchLabel.innerHTML, "grenades")))
+            s3.send(new GetObjectCommand(getObjectParams(matchLabelStr, "grenades")))
                 .then((response: any) => {
                     setGrenadesReader(response.Body.getReader());
                     return grenadesReader.read();
@@ -202,7 +204,7 @@ async function changedMatch() {
 
     try {
         promises.push(
-            s3.send(new GetObjectCommand(getObjectParams(matchLabel.innerHTML, "kills")))
+            s3.send(new GetObjectCommand(getObjectParams(matchLabelStr, "kills")))
                 .then((response: any) => {
                     setKillsReader(response.Body.getReader());
                     return killsReader.read();
