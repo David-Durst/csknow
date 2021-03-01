@@ -74,7 +74,6 @@ function trackMouse(e: MouseEvent) {
             playerCoordinate.getCanvasY() - 20 <= minimapCoordinate.getCanvasY() &&
             playerCoordinate.getCanvasY() >= minimapCoordinate.getCanvasY()) {
             playerNameLabel.innerHTML = tickData.players[p].name
-            console.log("hi")
             return
         }
     }
@@ -88,7 +87,7 @@ export function drawTick(e: InputEvent) {
     ctx.font = "30px Arial"
     const tickData: PositionRow = gameData.position[curTick]
     tScoreLabel.innerHTML = tickData.tScore.toString()
-    tScoreLabel.innerHTML = tickData.ctScore.toString()
+    ctScoreLabel.innerHTML = tickData.ctScore.toString()
     for (let p = 0; p < 10; p++) {
         let playerText = "o"
         if (!tickData.players[p].isAlive) {
