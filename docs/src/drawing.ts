@@ -19,6 +19,7 @@ let tickSelector: HTMLInputElement = null;
 let tickLabel: HTMLLabelElement = null;
 let tScoreLabel: HTMLLabelElement = null;
 let ctScoreLabel: HTMLLabelElement = null;
+let playerNameLabel: HTMLLabelElement = null;
 let minZ = 0;
 let maxZ = 0;
 const background = new Image();
@@ -62,6 +63,21 @@ function trackMouse(e: MouseEvent) {
     yMapLabel.innerHTML = minimapCoordinate.y.toPrecision(6)
     xCanvasLabel.innerHTML = minimapCoordinate.getCanvasX().toPrecision(6)
     yCanvasLabel.innerHTML = minimapCoordinate.getCanvasY().toPrecision(6)
+
+    const curTick = parseInt(tickSelector.value)
+    const tickData: PositionRow = gameData.position[curTick]
+    for (let p = 0; p < 10; p++) {
+        const playerCoordinate = new MapCoordinate(
+            tickData.players[p].xPosition, tickData.players[p].yPosition, false)
+        if (playerCoordinate.getCanvasX() <= minimapCoordinate.getCanvasX() &&
+            playerCoordinate.getCanvasX() + 20 >= minimapCoordinate.getCanvasX() &&
+            playerCoordinate.getCanvasY() - 20 <= minimapCoordinate.getCanvasY() &&
+            playerCoordinate.getCanvasY() >= minimapCoordinate.getCanvasY()) {
+            playerNameLabel.innerHTML = tickData.players[p].name
+            console.log("hi")
+            return
+        }
+    }
 }
 
 export function drawTick(e: InputEvent) {
@@ -87,6 +103,7 @@ export function drawTick(e: InputEvent) {
             tickData.players[p].yPosition,
             false);
         ctx.fillText(playerText, location.getCanvasX(), location.getCanvasY())
+        //ctx.fillRect(location.getCanvasX(), location.getCanvasY(), 1, 1)
     }
 }
 
@@ -113,6 +130,7 @@ export function setupCanvas() {
     yCanvasLabel = document.querySelector<HTMLLabelElement>("#yposCanvas")
     tScoreLabel = document.querySelector<HTMLLabelElement>("#t_score")
     ctScoreLabel = document.querySelector<HTMLLabelElement>("#ct_score")
+    playerNameLabel = document.querySelector<HTMLLabelElement>("#playerName")
     canvas.addEventListener("mousemove", trackMouse)
     document.querySelector<HTMLInputElement>("#tick-selector").addEventListener("input", drawTick)
     tickLabel.innerHTML = "0"
