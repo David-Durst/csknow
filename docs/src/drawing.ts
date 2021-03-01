@@ -28,10 +28,10 @@ const black = "rgba(0,0,0,1.0)";
 const gray = "rgba(159,159,159,1.0)";
 const dark_blue = "rgba(4,190,196,1.0)";
 const light_blue = "rgba(194,255,243,1.0)";
-const purple = "rgb(81,9,200)";
+const purple = "rgb(160,124,205)";
 const dark_red = "rgba(209,0,0,1.0)";
 const light_red = "rgba(255,143,143,1.0)";
-const orange = "rgb(110,50,0)";
+const yellow = "rgb(252,198,102)";
 
 // see last post by randunel and csgo/resources/overview/de_dust2.txt
 // https://forums.alliedmods.net/showthread.php?p=2690857#post2690857
@@ -114,7 +114,7 @@ export function drawTick(e: InputEvent) {
         if (tickData.players[p].team == 2) {
             ctx.fillStyle = dark_red
             if (p == selectedPlayer) {
-                ctx.fillStyle = orange
+                ctx.fillStyle = yellow
             }
         }
         const location = new MapCoordinate(
