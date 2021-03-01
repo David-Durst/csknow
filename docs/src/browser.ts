@@ -29,6 +29,7 @@ import {
     minimapWidth,
     minimapHeight,
     minimapScale,
+    minimap,
     drawTick,
     setupMatch,
     setupCanvas
@@ -40,8 +41,6 @@ const {fromCognitoIdentityPool} = require("@aws-sdk/credential-provider-cognito-
 const path = require("path");
 import {GetObjectCommand} from "@aws-sdk/client-s3";
 
-const background = new Image();
-background.src = "de_dust2_radar_spectate.png";
 let matchSelector: HTMLInputElement = null;
 let matchLabel: HTMLLabelElement = null;
 const black = "rgba(0,0,0,1.0)";
@@ -129,7 +128,7 @@ async function init() {
 }
 
 function changingMatch() {
-    ctx.drawImage(background,0,0,minimapWidth,minimapHeight,0,0,
+    ctx.drawImage(minimap,0,0,minimapWidth,minimapHeight,0,0,
         canvasWidth,canvasHeight);
     ctx.fillStyle = lightGray;
     ctx.fillRect(0, 0, canvasWidth, canvasHeight)
@@ -213,8 +212,6 @@ async function changedMatch() {
     }
 
     await Promise.all(promises)
-    ctx.drawImage(background,0,0,minimapWidth,minimapHeight,0,0,
-        canvasWidth,canvasHeight);
     setupMatch()
 }
 

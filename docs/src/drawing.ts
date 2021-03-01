@@ -9,6 +9,8 @@ export const minimapHeight = 1024
 export const minimapScale = 4.4
 export let canvas: HTMLCanvasElement = null;
 export let ctx: CanvasRenderingContext2D = null;
+export const minimap = new Image();
+minimap.src = "de_dust2_radar_spectate.png";
 let xMapLabel: HTMLLabelElement = null;
 let yMapLabel: HTMLLabelElement = null;
 let xCanvasLabel: HTMLLabelElement = null;
@@ -63,10 +65,11 @@ function trackMouse(e: MouseEvent) {
 }
 
 export function drawTick(e: InputEvent) {
+    ctx.drawImage(minimap,0,0,minimapWidth,minimapHeight,0,0,
+        canvasWidth,canvasHeight);
     const curTick = parseInt(tickSelector.value)
     tickLabel.innerHTML = curTick.toString()
     ctx.font = "30px Arial"
-    tickSelector.max = gameData.position.length.toString()
     const tickData: PositionRow = gameData.position[curTick]
     tScoreLabel.innerHTML = tickData.tScore.toString()
     tScoreLabel.innerHTML = tickData.ctScore.toString()
@@ -96,6 +99,8 @@ export function setupMatch() {
             maxZ = Math.max(maxZ, gameData.position[t].players[p].zPosition)
         }
     }
+    tickSelector.min = gameData.position[0].tickNumber.toString()
+    tickSelector.max = gameData.position[gameData.position.length - 1].tickNumber.toString()
 }
 
 export function setupCanvas() {
