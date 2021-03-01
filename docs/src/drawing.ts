@@ -19,6 +19,8 @@ let tScoreLabel: HTMLLabelElement = null;
 let ctScoreLabel: HTMLLabelElement = null;
 let minZ = 0;
 let maxZ = 0;
+const background = new Image();
+background.src = "de_dust2_radar_spectate.png";
 
 // see last post by randunel and csgo/resources/overview/de_dust2.txt
 // https://forums.alliedmods.net/showthread.php?p=2690857#post2690857

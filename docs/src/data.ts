@@ -162,6 +162,10 @@ export async function parsePosition(tuple: { value: Uint8Array; done: boolean; }
             continue;
         }
         let currentLine = lines[lineNumber].split(",");
+        // skip warmup
+        if (parseBool(currentLine[4])) {
+            continue;
+        }
         gameData.position.push(new PositionRow(
             // first 12 aren't palyer specified
             parseInt(currentLine[0]), parseBool(currentLine[1]), parseInt(currentLine[2]),
@@ -170,47 +174,47 @@ export async function parsePosition(tuple: { value: Uint8Array; done: boolean; }
             parseInt(currentLine[9]), parseInt(currentLine[10]), parseInt(currentLine[11]),
             // each player is 10 entries
             // player 0
-            currentLine[11], parseInt(currentLine[12]), parseFloat(currentLine[13]),
-            parseFloat(currentLine[13]), parseFloat(currentLine[14]), parseFloat(currentLine[15]),
-            parseFloat(currentLine[16]), parseBool(currentLine[18]), parseInt(currentLine[19]), parseBool(currentLine[20]),
+            currentLine[12], parseInt(currentLine[13]), parseFloat(currentLine[14]),
+            parseFloat(currentLine[15]), parseFloat(currentLine[16]), parseFloat(currentLine[17]),
+            parseFloat(currentLine[18]), parseBool(currentLine[19]), parseInt(currentLine[20]), parseBool(currentLine[21]),
             // player 1
-            currentLine[21], parseInt(currentLine[22]), parseFloat(currentLine[23]),
-            parseFloat(currentLine[23]), parseFloat(currentLine[24]), parseFloat(currentLine[25]),
-            parseFloat(currentLine[26]), parseBool(currentLine[28]), parseInt(currentLine[29]), parseBool(currentLine[30]),
+            currentLine[22], parseInt(currentLine[23]), parseFloat(currentLine[24]),
+            parseFloat(currentLine[25]), parseFloat(currentLine[26]), parseFloat(currentLine[27]),
+            parseFloat(currentLine[28]), parseBool(currentLine[29]), parseInt(currentLine[30]), parseBool(currentLine[31]),
             // player 2
-            currentLine[31], parseInt(currentLine[32]), parseFloat(currentLine[33]),
-            parseFloat(currentLine[33]), parseFloat(currentLine[34]), parseFloat(currentLine[35]),
-            parseFloat(currentLine[36]), parseBool(currentLine[38]), parseInt(currentLine[39]), parseBool(currentLine[40]),
+            currentLine[32], parseInt(currentLine[33]), parseFloat(currentLine[34]),
+            parseFloat(currentLine[35]), parseFloat(currentLine[36]), parseFloat(currentLine[37]),
+            parseFloat(currentLine[38]), parseBool(currentLine[39]), parseInt(currentLine[40]), parseBool(currentLine[41]),
             // player 3
-            currentLine[41], parseInt(currentLine[42]), parseFloat(currentLine[43]),
-            parseFloat(currentLine[43]), parseFloat(currentLine[44]), parseFloat(currentLine[45]),
-            parseFloat(currentLine[46]), parseBool(currentLine[48]), parseInt(currentLine[49]), parseBool(currentLine[50]),
+            currentLine[42], parseInt(currentLine[43]), parseFloat(currentLine[44]),
+            parseFloat(currentLine[45]), parseFloat(currentLine[46]), parseFloat(currentLine[47]),
+            parseFloat(currentLine[48]), parseBool(currentLine[49]), parseInt(currentLine[50]), parseBool(currentLine[51]),
             // player 4
-            currentLine[51], parseInt(currentLine[52]), parseFloat(currentLine[53]),
-            parseFloat(currentLine[53]), parseFloat(currentLine[54]), parseFloat(currentLine[55]),
-            parseFloat(currentLine[56]), parseBool(currentLine[58]), parseInt(currentLine[59]), parseBool(currentLine[60]),
+            currentLine[52], parseInt(currentLine[53]), parseFloat(currentLine[54]),
+            parseFloat(currentLine[55]), parseFloat(currentLine[56]), parseFloat(currentLine[57]),
+            parseFloat(currentLine[58]), parseBool(currentLine[59]), parseInt(currentLine[60]), parseBool(currentLine[61]),
             // player 5
-            currentLine[61], parseInt(currentLine[62]), parseFloat(currentLine[63]),
-            parseFloat(currentLine[63]), parseFloat(currentLine[64]), parseFloat(currentLine[65]),
-            parseFloat(currentLine[66]), parseBool(currentLine[68]), parseInt(currentLine[69]), parseBool(currentLine[70]),
+            currentLine[62], parseInt(currentLine[63]), parseFloat(currentLine[64]),
+            parseFloat(currentLine[65]), parseFloat(currentLine[66]), parseFloat(currentLine[67]),
+            parseFloat(currentLine[68]), parseBool(currentLine[69]), parseInt(currentLine[70]), parseBool(currentLine[71]),
             // player 6
-            currentLine[71], parseInt(currentLine[72]), parseFloat(currentLine[73]),
-            parseFloat(currentLine[73]), parseFloat(currentLine[74]), parseFloat(currentLine[75]),
-            parseFloat(currentLine[76]), parseBool(currentLine[78]), parseInt(currentLine[79]), parseBool(currentLine[80]),
+            currentLine[72], parseInt(currentLine[73]), parseFloat(currentLine[74]),
+            parseFloat(currentLine[75]), parseFloat(currentLine[76]), parseFloat(currentLine[77]),
+            parseFloat(currentLine[78]), parseBool(currentLine[79]), parseInt(currentLine[80]), parseBool(currentLine[81]),
             // player 7
-            currentLine[81], parseInt(currentLine[82]), parseFloat(currentLine[83]),
-            parseFloat(currentLine[83]), parseFloat(currentLine[84]), parseFloat(currentLine[85]),
-            parseFloat(currentLine[86]), parseBool(currentLine[88]), parseInt(currentLine[89]), parseBool(currentLine[90]),
+            currentLine[82], parseInt(currentLine[83]), parseFloat(currentLine[84]),
+            parseFloat(currentLine[85]), parseFloat(currentLine[86]), parseFloat(currentLine[87]),
+            parseFloat(currentLine[88]), parseBool(currentLine[89]), parseInt(currentLine[90]), parseBool(currentLine[91]),
             // player 8
-            currentLine[91], parseInt(currentLine[92]), parseFloat(currentLine[93]),
-            parseFloat(currentLine[93]), parseFloat(currentLine[94]), parseFloat(currentLine[95]),
-            parseFloat(currentLine[96]), parseBool(currentLine[98]), parseInt(currentLine[99]), parseBool(currentLine[100]),
+            currentLine[92], parseInt(currentLine[93]), parseFloat(currentLine[94]),
+            parseFloat(currentLine[95]), parseFloat(currentLine[96]), parseFloat(currentLine[97]),
+            parseFloat(currentLine[98]), parseBool(currentLine[99]), parseInt(currentLine[100]), parseBool(currentLine[101]),
             // player 9
-            currentLine[101], parseInt(currentLine[102]), parseFloat(currentLine[103]),
-            parseFloat(currentLine[103]), parseFloat(currentLine[104]), parseFloat(currentLine[105]),
-            parseFloat(currentLine[106]), parseBool(currentLine[108]), parseInt(currentLine[109]), parseBool(currentLine[110]),
+            currentLine[102], parseInt(currentLine[103]), parseFloat(currentLine[104]),
+            parseFloat(currentLine[105]), parseFloat(currentLine[106]), parseFloat(currentLine[107]),
+            parseFloat(currentLine[108]), parseBool(currentLine[109]), parseInt(currentLine[110]), parseBool(currentLine[111]),
             // after player data
-            currentLine[111]
+            currentLine[112]
         ));
         //console.log("length of position:" + gameData.position.length.toString() + ", line number: " + lineNumber.toString())
     }
