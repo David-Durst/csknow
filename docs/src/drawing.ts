@@ -24,6 +24,14 @@ let minZ = 0;
 let maxZ = 0;
 const background = new Image();
 background.src = "de_dust2_radar_spectate.png";
+const black = "rgba(0,0,0,1.0)";
+const gray = "rgba(159,159,159,1.0)";
+const dark_blue = "rgba(4,190,196,1.0)";
+const light_blue = "rgba(194,255,243,1.0)";
+const purple = "rgb(81,9,200)";
+const dark_red = "rgba(209,0,0,1.0)";
+const light_red = "rgba(255,143,143,1.0)";
+const orange = "rgb(110,50,0)";
 
 // see last post by randunel and csgo/resources/overview/de_dust2.txt
 // https://forums.alliedmods.net/showthread.php?p=2690857#post2690857
@@ -54,6 +62,8 @@ class MapCoordinate {
     }
 }
 
+let selectedPlayer = -1
+
 function trackMouse(e: MouseEvent) {
     if (!initialized) {
         return
@@ -77,6 +87,8 @@ function trackMouse(e: MouseEvent) {
             playerCoordinate.getCanvasY() - 20 <= minimapCoordinate.getCanvasY() &&
             playerCoordinate.getCanvasY() >= minimapCoordinate.getCanvasY()) {
             playerNameLabel.innerHTML = tickData.players[p].name
+            selectedPlayer = p;
+            drawTick(null)
             return
         }
     }
@@ -96,8 +108,14 @@ export function drawTick(e: InputEvent) {
             playerText = "x"
         }
         ctx.fillStyle = dark_blue
+        if (p == selectedPlayer) {
+            ctx.fillStyle = purple
+        }
         if (tickData.players[p].team == 2) {
             ctx.fillStyle = dark_red
+            if (p == selectedPlayer) {
+                ctx.fillStyle = orange
+            }
         }
         const location = new MapCoordinate(
             tickData.players[p].xPosition,
