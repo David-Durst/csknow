@@ -64,6 +64,16 @@
                 <div class="slidecontainer mb-3">
                     <span class="label">Current Match:</span>
                     <span id="cur-match">Not Yet Loaded</span>
+                    <span class="label">Download Type:</span>
+                    <select id="download-type">
+                        <option value="dem">Demo</option>
+                        <option value="position">Position</option>
+                        <option value="spotted">Spotted</option>
+                        <option value="weapon_fire">Weapon Fire</option>
+                        <option value="hurt">Hurt</option>
+                        <option value="grenades">Grenades</option>
+                        <option value="kills">Kills</option>
+                    </select>
                     <input type="range" min="0" max="99" value="0" class="slider"
                            id="match-selector"
                            oninput="window.exposed.changingMatch();"

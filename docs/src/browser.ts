@@ -44,6 +44,7 @@ import {GetObjectCommand} from "@aws-sdk/client-s3";
 let matchSelector: HTMLInputElement = null;
 let matchLabel: HTMLLabelElement = null;
 let matchLabelStr: string = ""
+let downloadSelect: HTMLSelectElement = null;
 const black = "rgba(0,0,0,1.0)";
 const gray = "rgba(159,159,159,1.0)";
 const lightGray = "rgba(200,200,200,0.7)";
@@ -123,6 +124,8 @@ async function init() {
     matchSelector.min = "0"
     matchSelector.max = numMatches.toString()
     matchLabel = document.querySelector<HTMLLabelElement>("#cur-match")
+    downloadSelect = document.querySelector<HTMLSelectElement>("#download-type")
+    document.querySelector<HTMLSelectElement>("#download-type").addEventListener("change", setMatchLabel)
     setupCanvas()
     await changedMatch();
 }
@@ -141,11 +144,41 @@ function getObjectParams(key: string, type: string) {
     };
 }
 
+function setMatchLabel() {
+    if (downloadSelect.value == "dem") {
+        matchLabel.innerHTML = "<a href=\"https://csknow.s3.amazonaws.com/demos/processed/" +
+            matchLabelStr + ".dem\">" + matchLabelStr + "</a>"
+    }
+    else if (downloadSelect.value == "position") {
+        matchLabel.innerHTML = "<a href=\"https://csknow.s3.amazonaws.com/demos/csvs2/" +
+            matchLabelStr + ".dem_position.csv\">" + matchLabelStr + "</a>"
+    }
+    else if (downloadSelect.value == "spotted") {
+        matchLabel.innerHTML = "<a href=\"https://csknow.s3.amazonaws.com/demos/csvs2/" +
+            matchLabelStr + ".dem_spotted.csv\">" + matchLabelStr + "</a>"
+    }
+    else if (downloadSelect.value == "weapon_fire") {
+        matchLabel.innerHTML = "<a href=\"https://csknow.s3.amazonaws.com/demos/csvs2/" +
+            matchLabelStr + ".dem_weapon_fire.csv\">" + matchLabelStr + "</a>"
+    }
+    else if (downloadSelect.value == "hurt") {
+        matchLabel.innerHTML = "<a href=\"https://csknow.s3.amazonaws.com/demos/csvs2/" +
+            matchLabelStr + ".dem_hurt.csv\">" + matchLabelStr + "</a>"
+    }
+    else if (downloadSelect.value == "grenades") {
+        matchLabel.innerHTML = "<a href=\"https://csknow.s3.amazonaws.com/demos/csvs2/" +
+            matchLabelStr + ".dem_grenades.csv\">" + matchLabelStr + "</a>"
+    }
+    else if (downloadSelect.value == "kills") {
+        matchLabel.innerHTML = "<a href=\"https://csknow.s3.amazonaws.com/demos/csvs2/" +
+            matchLabelStr + ".dem_kills.csv\">" + matchLabelStr + "</a>"
+    }
+}
+
 async function changedMatch() {
     createGameData();
     matchLabelStr = matches[parseInt(matchSelector.value)].demoFile;
-    matchLabel.innerHTML = "<a href=\"https://csknow.s3.amazonaws.com/demos/processed/" +
-        matchLabelStr + ".dem\">" + matchLabelStr + "</a>"
+    setMatchLabel();
     let promises: Promise<any>[] = []
     try {
         promises.push(
