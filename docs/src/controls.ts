@@ -52,24 +52,15 @@ function playXSpeed(speed: number, playButton: boolean = false) {
 
 function playFaster() {
     rwdImg.className = "btn btn-secondary playButton"
-    if (playSpeed <= 0) {
+    if (playSpeed <= speed1x) {
         playXSpeed(speed1x * 2)
     }
-    else if (playSpeed < 8 * speed1x) {
-        playXSpeed(playSpeed * 2)
-    }
-    else if (playSpeed == 8 * speed1x) {
+    else if (playSpeed == 2 * speed1x) {
         ticksPerUpdate = 10
-        playXSpeed(playSpeed)
+        playXSpeed(speed1x * 8)
     }
     if (playSpeed == speed1x * 2) {
         ffImg.className = "btn btn-blue playButton"
-    }
-    else if (playSpeed == speed1x * 4) {
-        ffImg.className = "btn btn-green playButton"
-    }
-    else if (playSpeed == speed1x * 8 && ticksPerUpdate == 1) {
-        ffImg.className = "btn btn-yellow playButton"
     }
     else if (playSpeed == speed1x * 8 && ticksPerUpdate == 10) {
         ffImg.className = "btn btn-red playButton"
@@ -78,25 +69,16 @@ function playFaster() {
 
 function playSlower() {
     ffImg.className = "btn btn-secondary playButton"
-    if (playSpeed >= 0) {
+    if (playSpeed >= speed1x) {
         ticksPerUpdate = 1
-        playXSpeed(speed1x * -1)
+        playXSpeed(speed1x * -2)
     }
-    else if (playSpeed > -4 * speed1x) {
-        playXSpeed(playSpeed * 2)
-    }
-    else if (playSpeed == -4 * speed1x) {
+    else if (playSpeed == -2 * speed1x) {
         ticksPerUpdate = 10
-        playXSpeed(playSpeed * 2)
+        playXSpeed(speed1x * -8)
     }
-    if (playSpeed == speed1x * -1) {
+    if (playSpeed == speed1x * -2) {
         rwdImg.className = "btn btn-blue playButton"
-    }
-    else if (playSpeed == speed1x * -2) {
-        rwdImg.className = "btn btn-green playButton"
-    }
-    else if (playSpeed == speed1x * -4) {
-        rwdImg.className = "btn btn-yellow playButton"
     }
     else if (playSpeed == speed1x * -8) {
         rwdImg.className = "btn btn-red playButton"
