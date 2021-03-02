@@ -22,3 +22,23 @@ a:visited {color: purple;}
 .playButton {
     padding: 0px;
 }
+
+.btn-blue {
+    background-color: #007bff;
+    border-color: #007bff;
+}
+
+.btn-green {
+    background-color: #28a745;
+    border-color: #28a745;
+}
+
+.btn-yellow {
+    background-color: #ffc107;
+    border-color: #ffc107;
+}
+
+.btn-red {
+    background-color: #dc3545;
+    border-color: #dc3545;
+}

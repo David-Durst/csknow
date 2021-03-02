@@ -25,8 +25,14 @@
                 <div class="slidecontainer mb-3">
                     <span class="label">current tick:</span>
                     <span id="cur-tick">NaN</span>
-                    <button type="button" id="button_play" class="btn btn-success playButton">
+                    <button type="button" id="button_rwd" class="btn btn-secondary playButton">
+                        <img src="images/skip-backward.svg" id="rwd_img" alt="Bootstrap" width="32" height="32">
+                    </button>
+                    <button type="button" id="button_play" class="btn btn-secondary playButton">
                         <img src="images/play-fill.svg" alt="Bootstrap" width="32" height="32">
+                    </button>
+                    <button type="button" id="button_ff" class="btn btn-secondary playButton">
+                        <img src="images/skip-forward.svg" id="ff_img" alt="Bootstrap" width="32" height="32">
                     </button>
                     <input type="range" min="0" max="24" value="0" class="slider"
                            id="tick-selector">

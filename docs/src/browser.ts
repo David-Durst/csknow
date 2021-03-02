@@ -35,6 +35,7 @@ import {
     setupMatch,
     setupCanvas
 } from "./drawing"
+import { registerPlayHandlers } from "./controls"
 
 const { S3Client, ListObjectsCommand } = require("@aws-sdk/client-s3");
 const {CognitoIdentityClient} = require("@aws-sdk/client-cognito-identity");
@@ -130,6 +131,7 @@ async function init() {
     setupCanvas()
     await changedMatch();
     setInitialized();
+    registerPlayHandlers();
 }
 
 function changingMatch() {
