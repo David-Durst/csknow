@@ -32,11 +32,11 @@ import {
     minimapScale,
     minimap,
     drawTick,
-    setupMatch,
+    setupMatchDrawing,
     setupCanvas
 } from "./drawing"
 import {
-    setupFilters
+    setupInitFilters, setupMatchFilters
 } from "./filter"
 import { registerPlayHandlers } from "./controls"
 
@@ -132,6 +132,7 @@ async function init() {
     downloadSelect = document.querySelector<HTMLSelectElement>("#download-type")
     document.querySelector<HTMLSelectElement>("#download-type").addEventListener("change", setMatchLabel)
     setupCanvas()
+    setupInitFilters()
     await changedMatch();
     setInitialized();
     registerPlayHandlers();
@@ -254,8 +255,8 @@ async function changedMatch() {
     }
 
     await Promise.all(promises)
-    setupFilters()
-    setupMatch()
+    setupMatchFilters()
+    setupMatchDrawing()
 }
 
 

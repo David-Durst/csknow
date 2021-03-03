@@ -2,6 +2,18 @@ import {GameData, gameData, PositionRow} from "./data";
 import {match} from "assert";
 import {drawTick} from "./drawing";
 
+export let tickSelector: HTMLInputElement = null;
+export let tickLabel: HTMLLabelElement = null;
+export function getCurTick(): number {
+    return parseInt(tickSelector.value)
+}
+function setCurTick(value: number) {
+    tickSelector.value = value.toString()
+}
+export function setTickLabel(value: number) {
+    tickLabel.innerHTML = value.toString()
+}
+
 let lastPlayerXs = [0,0,0,0,0,0,0,0,0,0]
 let lastPlayerYs = [0,0,0,0,0,0,0,0,0,0]
 let lastPlayerZs = [0,0,0,0,0,0,0,0,0,0]
@@ -31,9 +43,14 @@ function alwaysFilter() {
 
 export let filteredData: GameData = new GameData()
 
+// track where this tick so can keep slider pointing at same tick
+// when adding/removing filters
+let tickIndexFilteredToOrig: number[] = []
 export function filterRegion(minX: number, minY: number, maxX: number,
                              maxY: number) {
+    let curTickPrefiltering = getCurTick()
     let matchingPositions: PositionRow[] = []
+    tickIndexFilteredToOrig = []
     for (let t = 0; t < gameData.position.length; t++) {
         for (let p = 0; p < 10; p++) {
             if (gameData.position[t].players[p].isAlive &&
@@ -42,17 +59,31 @@ export function filterRegion(minX: number, minY: number, maxX: number,
                 gameData.position[t].players[p].yPosition <= minY &&
                 gameData.position[t].players[p].yPosition >= maxY) {
                 matchingPositions.push(gameData.position[t])
+                tickIndexFilteredToOrig.push(t)
+                if (t == curTickPrefiltering) {
+                    setCurTick(matchingPositions.length - 1);
+                }
                 continue
             }
         }
     }
     filteredData.position = matchingPositions
+    tickSelector.max = (filteredData.position.length - 1).toString()
 }
 
 export function clearRegionFilterData() {
     filteredData.position = gameData.position
+    tickSelector.max = (filteredData.position.length - 1).toString()
+    setCurTick(tickIndexFilteredToOrig[getCurTick()]);
 }
 
-export function setupFilters() {
+export function setupMatchFilters() {
+    tickSelector.max = (filteredData.position.length - 1).toString()
     alwaysFilter()
+}
+
+export function setupInitFilters() {
+    tickSelector = document.querySelector<HTMLInputElement>("#tick-selector")
+    tickLabel = document.querySelector<HTMLLabelElement>("#cur-tick")
+    tickLabel.innerHTML = "0"
 }

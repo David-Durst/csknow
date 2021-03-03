@@ -1,5 +1,11 @@
 import {gameData, initialized, PositionRow} from "./data"
-import {filteredData, clearRegionFilterData} from "./filter";
+import {
+    filteredData,
+    clearRegionFilterData,
+    getCurTick,
+    setTickLabel,
+    filterRegion
+} from "./filter";
 
 export const d2_top_left_x = -2476
 export const d2_top_left_y = 3239
@@ -16,8 +22,6 @@ let xMapLabel: HTMLLabelElement = null;
 let yMapLabel: HTMLLabelElement = null;
 let xCanvasLabel: HTMLLabelElement = null;
 let yCanvasLabel: HTMLLabelElement = null;
-export let tickSelector: HTMLInputElement = null;
-export let tickLabel: HTMLLabelElement = null;
 let tScoreLabel: HTMLLabelElement = null;
 let ctScoreLabel: HTMLLabelElement = null;
 let playerNameLabel: HTMLLabelElement = null;
@@ -102,7 +106,7 @@ function finishedRegionFilter(e: MouseEvent) {
     const minY = Math.min(filterTopLeftY, filterBottomRightY)
     const maxX = Math.max(filterTopLeftX, filterBottomRightX)
     const maxY = Math.max(filterTopLeftY, filterBottomRightY)
-    //filterRegion(minX, minY, maxX, maxY)
+    filterRegion(minX, minY, maxX, maxY)
     drawTick(null)
 }
 
@@ -131,7 +135,7 @@ function trackMouse(e: MouseEvent) {
     xCanvasLabel.innerHTML = minimapCoordinate.getCanvasX().toPrecision(6)
     yCanvasLabel.innerHTML = minimapCoordinate.getCanvasY().toPrecision(6)
 
-    const curTick = parseInt(tickSelector.value)
+    const curTick = getCurTick()
     const tickData: PositionRow = filteredData.position[curTick]
     for (let p = 0; p < tickData.players.length; p++) {
         const playerCoordinate = new MapCoordinate(
@@ -152,8 +156,8 @@ function trackMouse(e: MouseEvent) {
 export function drawTick(e: InputEvent) {
     ctx.drawImage(minimap,0,0,minimapWidth,minimapHeight,0,0,
         canvasWidth,canvasHeight);
-    const curTick = parseInt(tickSelector.value)
-    tickLabel.innerHTML = filteredData.position[curTick].tickNumber.toString()
+    const curTick = getCurTick()
+    setTickLabel(filteredData.position[curTick].tickNumber)
     const tickData: PositionRow = filteredData.position[curTick]
     tScoreLabel.innerHTML = tickData.tScore.toString()
     ctScoreLabel.innerHTML = tickData.ctScore.toString()
@@ -190,7 +194,7 @@ export function drawTick(e: InputEvent) {
     }
 }
 
-export function setupMatch() {
+export function setupMatchDrawing() {
     const numTicks = gameData.position.length
     for (let t = 0; t < numTicks; t++) {
         for (let p = 0; p < gameData.position[t].players.length; p++) {
@@ -198,15 +202,12 @@ export function setupMatch() {
             maxZ = Math.max(maxZ, gameData.position[t].players[p].zPosition)
         }
     }
-    tickSelector.max = (gameData.position.length - 1).toString()
     drawTick(null)
 }
 
 export function setupCanvas() {
     canvas = <HTMLCanvasElement> document.querySelector("#myCanvas")
     ctx = canvas.getContext('2d')
-    tickSelector = document.querySelector<HTMLInputElement>("#tick-selector")
-    tickLabel = document.querySelector<HTMLLabelElement>("#cur-tick")
     xMapLabel = document.querySelector<HTMLLabelElement>("#xposMap")
     yMapLabel = document.querySelector<HTMLLabelElement>("#yposMap")
     xCanvasLabel = document.querySelector<HTMLLabelElement>("#xposCanvas")
@@ -219,5 +220,4 @@ export function setupCanvas() {
     canvas.addEventListener("mouseup", finishedRegionFilter)
     document.querySelector<HTMLInputElement>("#tick-selector").addEventListener("input", drawTick)
     document.querySelector<HTMLButtonElement>("#clear_filter").addEventListener("click", clearRegionFilterDrawing)
-    tickLabel.innerHTML = "0"
 }

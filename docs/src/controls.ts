@@ -1,4 +1,5 @@
-import { tickSelector, tickLabel, drawTick } from "./drawing"
+import { drawTick } from "./drawing"
+import { tickSelector, tickLabel } from "./filter";
 
 let play1xButton: HTMLButtonElement = null;
 let ffImg: HTMLImageElement = null;
