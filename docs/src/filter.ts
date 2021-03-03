@@ -55,9 +55,9 @@ export function filterRegion(minX: number, minY: number, maxX: number,
         for (let p = 0; p < 10; p++) {
             if (gameData.position[t].players[p].isAlive &&
                 gameData.position[t].players[p].xPosition >= minX &&
-                gameData.position[t].players[p].xPosition >= maxX &&
-                gameData.position[t].players[p].yPosition <= minY &&
-                gameData.position[t].players[p].yPosition >= maxY) {
+                gameData.position[t].players[p].xPosition <= maxX &&
+                gameData.position[t].players[p].yPosition >= minY &&
+                gameData.position[t].players[p].yPosition <= maxY) {
                 matchingPositions.push(gameData.position[t])
                 tickIndexFilteredToOrig.push(t)
                 if (t == curTickPrefiltering) {
@@ -69,6 +69,7 @@ export function filterRegion(minX: number, minY: number, maxX: number,
     }
     filteredData.position = matchingPositions
     tickSelector.max = (filteredData.position.length - 1).toString()
+    console.log("new filter max: " + tickSelector.max)
 }
 
 export function clearRegionFilterData() {
