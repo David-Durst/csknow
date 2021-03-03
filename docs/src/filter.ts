@@ -4,10 +4,10 @@ import {drawTick} from "./drawing";
 
 export let tickSelector: HTMLInputElement = null;
 export let tickLabel: HTMLLabelElement = null;
-export function getCurTick(): number {
+export function getCurTickIndex(): number {
     return parseInt(tickSelector.value)
 }
-function setCurTick(value: number) {
+function setCurTickIndex(value: number) {
     tickSelector.value = value.toString()
 }
 export function setTickLabel(value: number) {
@@ -48,7 +48,7 @@ export let filteredData: GameData = new GameData()
 let tickIndexFilteredToOrig: number[] = []
 export function filterRegion(minX: number, minY: number, maxX: number,
                              maxY: number): boolean {
-    let curTickPrefiltering = getCurTick()
+    let curTickPrefiltering = getCurTickIndex()
     let curTickPostFiltering = -1;
     let matchingPositions: PositionRow[] = []
     tickIndexFilteredToOrig = []
@@ -71,9 +71,9 @@ export function filterRegion(minX: number, minY: number, maxX: number,
     if (matchingPositions.length == 0) {
         return false;
     }
-    setCurTick(curTickPostFiltering);
+    setCurTickIndex(curTickPostFiltering);
     filteredData.position = matchingPositions
-    tickSelector.max = (filteredData.position.length - 1).toString()
+    //tickSelector.max = (filteredData.position.length - 1).toString()
     console.log("new filter max: " + tickSelector.max)
     return true;
 }
@@ -83,8 +83,8 @@ export function clearRegionFilterData() {
         return;
     }
     filteredData.position = gameData.position
-    tickSelector.max = (filteredData.position.length - 1).toString()
-    setCurTick(tickIndexFilteredToOrig[getCurTick()]);
+    //tickSelector.max = (filteredData.position.length - 1).toString()
+    //setCurTickIndex(tickIndexFilteredToOrig[getCurTick()]);
 }
 
 export function setupMatchFilters() {

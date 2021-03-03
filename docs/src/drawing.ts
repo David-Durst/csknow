@@ -2,7 +2,7 @@ import {gameData, initialized, PositionRow} from "./data"
 import {
     filteredData,
     clearRegionFilterData,
-    getCurTick,
+    getCurTickIndex,
     setTickLabel,
     filterRegion
 } from "./filter";
@@ -138,8 +138,8 @@ function trackMouse(e: MouseEvent) {
     xCanvasLabel.innerHTML = minimapCoordinate.getCanvasX().toPrecision(6)
     yCanvasLabel.innerHTML = minimapCoordinate.getCanvasY().toPrecision(6)
 
-    const curTick = getCurTick()
-    const tickData: PositionRow = filteredData.position[curTick]
+    const curTickIndex = getCurTickIndex()
+    const tickData: PositionRow = filteredData.position[curTickIndex]
     for (let p = 0; p < tickData.players.length; p++) {
         const playerCoordinate = new MapCoordinate(
             tickData.players[p].xPosition, tickData.players[p].yPosition, false)
@@ -159,9 +159,9 @@ function trackMouse(e: MouseEvent) {
 export function drawTick(e: InputEvent) {
     ctx.drawImage(minimap,0,0,minimapWidth,minimapHeight,0,0,
         canvasWidth,canvasHeight);
-    const curTick = getCurTick()
-    setTickLabel(filteredData.position[curTick].tickNumber)
-    const tickData: PositionRow = filteredData.position[curTick]
+    const curTickIndex = getCurTickIndex()
+    setTickLabel(filteredData.position[curTickIndex].tickNumber)
+    const tickData: PositionRow = filteredData.position[curTickIndex]
     tScoreLabel.innerHTML = tickData.tScore.toString()
     ctScoreLabel.innerHTML = tickData.ctScore.toString()
     for (let p = 0; p < tickData.players.length; p++) {
