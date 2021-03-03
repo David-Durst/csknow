@@ -227,7 +227,6 @@ export async function parsePosition(tuple: { value: Uint8Array; done: boolean; }
             // after player data
             currentLine[112]
         ));
-
         /*
         if (gameData.position[gameData.position.length -1].tickNumber == 428) {
             console.log(gameData.position[gameData.position.length -1])
@@ -328,14 +327,18 @@ export class SpottedRow {
     }
 }
 
+let lastSpottedLine = ""
 export async function parseSpotted(tuple: { value: Uint8Array; done: boolean; }) {
-    const linesUnsplit = tuple.value ? utf8Decoder.decode(tuple.value, {stream: true}) : "";
+    const linesUnsplit = lastSpottedLine +
+        (tuple.value ? utf8Decoder.decode(tuple.value, {stream: true}) : "";)
+    lastSpottedLine = ""
     const lines = linesUnsplit.split("\n");
     for(let lineNumber = 1; lineNumber < lines.length; lineNumber++) {
         if (lines[lineNumber].trim() === "") {
             continue;
         }
         let currentLine = lines[lineNumber].split(",");
+        if (lineNumber == lines.length - 1 && currentLine.length < )
         gameData.spotted.push(new SpottedRow(
             currentLine[0], currentLine[1], parseBool(currentLine[2]),
             currentLine[3], parseBool(currentLine[4]), currentLine[5], parseBool(currentLine[6]),

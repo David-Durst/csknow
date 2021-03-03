@@ -29,7 +29,7 @@ func processFile(unprocessedKey string) {
 	for i := 0; i < 10; i++ {
 		positionFile.WriteString(fmt.Sprintf(
 			",player %d name,player %d team,player %d x position,player %d y position,player %d z position" +
-				",player %d x view direction,player %d y view direction,player %d is alive,player %d team,player %d is blinded",
+				",player %d x view direction,player %d y view direction,player %d is alive,player %d is blinded",
 				i, i, i, i, i, i, i, i, i, i))
 	}
 	positionFile.WriteString(fmt.Sprintf(",demo file\n"))
@@ -135,7 +135,7 @@ func processFile(unprocessedKey string) {
 				positionFile.WriteString(fmt.Sprintf("%s,%d,%.2f,%.2f,%.2f,%.2f,%.2f,%d,%d,%d",
 					players[i].Name, teamToNum(players[i].Team), players[i].Position().X, players[i].Position().Y,
 					players[i].Position().Z, players[i].ViewDirectionX(), players[i].ViewDirectionY(),
-					isAlive, players[i].Team, isBlinded))
+					isAlive, isBlinded))
 			}
 			positionFile.WriteString(",")
 		}
@@ -151,7 +151,7 @@ func processFile(unprocessedKey string) {
 		panic(err)
 	}
 	defer spottedFile.Close()
-	spottedFile.WriteString("spotted player,")
+	spottedFile.WriteString("spotted player")
 	for i := 0; i < 10; i++ {
 		spottedFile.WriteString(fmt.Sprintf(
 			",player %d name,player %d spotter", i, i))
