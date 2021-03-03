@@ -1,7 +1,10 @@
 import { drawTick } from "./drawing"
 import { tickSelector, tickLabel } from "./filter";
 
-let play1xButton: HTMLButtonElement = null;
+let playButton: HTMLButtonElement = null;
+let ffButton: HTMLButtonElement = null;
+let rwdButton: HTMLButtonElement = null;
+let playImg: HTMLImageElement = null;
 let ffImg: HTMLImageElement = null;
 let rwdImg: HTMLImageElement = null;
 let playSpeed: number = 0;
@@ -19,6 +22,9 @@ function incrementTick() {
     }
     else {
         stopPlaying()
+        playButton.className = "btn btn-secondary playButton"
+        rwdButton.className = "btn btn-secondary playButton"
+        ffButton.className = "btn btn-secondary playButton"
     }
 }
 
@@ -30,29 +36,28 @@ function stopPlaying() {
 }
 
 let isPlaying = false
-function playXSpeed(speed: number, playButton: boolean = false) {
-    const img = <HTMLImageElement> play1xButton.children.item(0)
+function playXSpeed(speed: number, isPlayButton: boolean = false) {
     stopPlaying()
-    if (playButton && isPlaying) {
+    if (isPlayButton && isPlaying) {
         playSpeed = 0
-        img.src = "images/play-fill.svg"
-        play1xButton.className = "btn btn-secondary playButton"
-        rwdImg.className = "btn btn-secondary playButton"
-        ffImg.className = "btn btn-secondary playButton"
+        playImg.src = "images/play-fill.svg"
+        playButton.className = "btn btn-secondary playButton"
+        rwdButton.className = "btn btn-secondary playButton"
+        ffButton.className = "btn btn-secondary playButton"
         isPlaying = false
         ticksPerUpdate = 1
     }
     else {
         playSpeed = speed
-        img.src = "images/pause-fill.svg"
+        playImg.src = "images/pause-fill.svg"
         curInterval = window.setInterval(incrementTick, Math.max(1, 1000 / Math.abs(playSpeed)))
-        play1xButton.className = "btn btn-green playButton"
+        playButton.className = "btn btn-green playButton"
         isPlaying = true
     }
 }
 
 function playFaster() {
-    rwdImg.className = "btn btn-secondary playButton"
+    rwdButton.className = "btn btn-secondary playButton"
     if (playSpeed <= speed1x) {
         playXSpeed(speed1x * 2)
     }
@@ -61,16 +66,17 @@ function playFaster() {
         playXSpeed(speed1x * 8)
     }
     if (playSpeed == speed1x * 2) {
-        ffImg.className = "btn btn-blue playButton"
+        ffButton.className = "btn btn-blue playButton"
     }
     else if (playSpeed == speed1x * 8 && ticksPerUpdate == 10) {
-        ffImg.className = "btn btn-red playButton"
+        ffButton.className = "btn btn-red playButton"
     }
 }
 
 function playSlower() {
-    ffImg.className = "btn btn-secondary playButton"
-    if (playSpeed >= speed1x) {
+    console.log("playSpeed: " + playSpeed.toString())
+    ffButton.className = "btn btn-secondary playButton"
+    if (playSpeed >= 0) {
         ticksPerUpdate = 1
         playXSpeed(speed1x * -2)
     }
@@ -79,21 +85,21 @@ function playSlower() {
         playXSpeed(speed1x * -8)
     }
     if (playSpeed == speed1x * -2) {
-        rwdImg.className = "btn btn-blue playButton"
+        rwdButton.className = "btn btn-blue playButton"
     }
     else if (playSpeed == speed1x * -8) {
-        rwdImg.className = "btn btn-red playButton"
+        rwdButton.className = "btn btn-red playButton"
     }
 }
 
 export function registerPlayHandlers() {
-    play1xButton = document.querySelector<HTMLButtonElement>("#button_play")
+    playButton = document.querySelector<HTMLButtonElement>("#button_play")
+    ffButton = document.querySelector<HTMLButtonElement>("#button_ff")
+    rwdButton = document.querySelector<HTMLButtonElement>("#button_rwd")
+    playImg = document.querySelector<HTMLImageElement>("#play_img")
     ffImg = document.querySelector<HTMLImageElement>("#ff_img")
     rwdImg = document.querySelector<HTMLImageElement>("#rwd_img")
-    document.querySelector<HTMLButtonElement>("#button_play")
-        .addEventListener("click", () => playXSpeed(speed1x, true))
-    document.querySelector<HTMLButtonElement>("#button_ff")
-        .addEventListener("click", playFaster)
-    document.querySelector<HTMLButtonElement>("#button_rwd")
-        .addEventListener("click", playSlower)
+    playButton.addEventListener("click", () => playXSpeed(speed1x, true))
+    ffButton.addEventListener("click", playFaster)
+    rwdButton.addEventListener("click", playSlower)
 }
