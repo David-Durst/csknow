@@ -1,4 +1,5 @@
 import {gameData, initialized, PositionRow} from "./data"
+import {filteredData, filterRegion} from "./filter";
 
 export const d2_top_left_x = -2476
 export const d2_top_left_y = 3239
@@ -32,6 +33,7 @@ const purple = "rgb(160,124,205)";
 const dark_red = "rgba(209,0,0,1.0)";
 const light_red = "rgba(255,143,143,1.0)";
 const yellow = "rgb(252,198,102)";
+const green = "rgba(0,150,0,1.0)";
 
 // see last post by randunel and csgo/resources/overview/de_dust2.txt
 // https://forums.alliedmods.net/showthread.php?p=2690857#post2690857
@@ -62,16 +64,54 @@ class MapCoordinate {
     }
 }
 
-let selectedPlayer = -1
+function getMouseCoordinate(e: MouseEvent) {
+    const rect = canvas.getBoundingClientRect();
+    const xCanvas = (e.clientX - rect.left)
+    const yCanvas = (e.clientY - rect.top)
+    return new MapCoordinate(xCanvas, yCanvas, true)
+}
 
+let drawingRegionFilter: boolean = false
+let definedRegionFilter: boolean = false
+let topLeftCoordinate: MapCoordinate = null
+let bottomRightCoordinate: MapCoordinate = null
+
+function startingRegionFilter(e: MouseEvent) {
+    if (!initialized) {
+        return
+    }
+    drawingRegionFilter = true
+    definedRegionFilter = false
+    topLeftCoordinate = getMouseCoordinate(e)
+    bottomRightCoordinate = topLeftCoordinate
+    drawTick(null)
+}
+
+function finishedRegionFilter(e: MouseEvent) {
+    if (!initialized) {
+        return
+    }
+    drawingRegionFilter = false
+    definedRegionFilter = true
+    bottomRightCoordinate = getMouseCoordinate(e)
+    const filterTopLeftX = topLeftCoordinate.x
+    const filterTopLeftY = topLeftCoordinate.y
+    const filterBottomRightX = bottomRightCoordinate.x
+    const filterBottomRightY = bottomRightCoordinate.y
+    filterRegion(filterTopLeftX, filterBottomRightY, filterBottomRightX, filterTopLeftY)
+    drawTick(null)
+}
+
+
+let selectedPlayer = -1
 function trackMouse(e: MouseEvent) {
     if (!initialized) {
         return
     }
-    const rect = canvas.getBoundingClientRect();
-    const xCanvas = (e.clientX - rect.left)
-    const yCanvas = (e.clientY - rect.top)
-    const minimapCoordinate = new MapCoordinate(xCanvas, yCanvas, true)
+    const minimapCoordinate = getMouseCoordinate(e)
+    if (drawingRegionFilter) {
+        bottomRightCoordinate = minimapCoordinate
+    }
     xMapLabel.innerHTML = minimapCoordinate.x.toPrecision(6)
     yMapLabel.innerHTML = minimapCoordinate.y.toPrecision(6)
     xCanvasLabel.innerHTML = minimapCoordinate.getCanvasX().toPrecision(6)
@@ -92,14 +132,15 @@ function trackMouse(e: MouseEvent) {
             return
         }
     }
+    drawTick(null)
 }
 
 export function drawTick(e: InputEvent) {
     ctx.drawImage(minimap,0,0,minimapWidth,minimapHeight,0,0,
         canvasWidth,canvasHeight);
     const curTick = parseInt(tickSelector.value)
-    tickLabel.innerHTML = gameData.position[curTick].tickNumber.toString()
-    const tickData: PositionRow = gameData.position[curTick]
+    tickLabel.innerHTML = filteredData.position[curTick].tickNumber.toString()
+    const tickData: PositionRow = filteredData.position[curTick]
     tScoreLabel.innerHTML = tickData.tScore.toString()
     ctScoreLabel.innerHTML = tickData.ctScore.toString()
     for (let p = 0; p < 10; p++) {
@@ -125,6 +166,11 @@ export function drawTick(e: InputEvent) {
         ctx.font = (zScaling * 20 + 30).toString() + "px Arial"
         ctx.fillText(playerText, location.getCanvasX(), location.getCanvasY())
         //ctx.fillRect(location.getCanvasX(), location.getCanvasY(), 1, 1)
+    }
+    if (drawingRegionFilter || definedRegionFilter) {
+        ctx.strokeStyle = green
+        ctx.strokeRect(topLeftCoordinate.getCanvasX(), topLeftCoordinate.getCanvasY(),
+                    bottomRightCoordinate.getCanvasX(), bottomRightCoordinate.getCanvasY())
     }
 }
 
@@ -153,6 +199,8 @@ export function setupCanvas() {
     ctScoreLabel = document.querySelector<HTMLLabelElement>("#ct_score")
     playerNameLabel = document.querySelector<HTMLLabelElement>("#playerName")
     canvas.addEventListener("mousemove", trackMouse)
+    canvas.addEventListener("mousedown", startingRegionFilter)
+    canvas.addEventListener("mouseup", finishedRegionFilter)
     document.querySelector<HTMLInputElement>("#tick-selector").addEventListener("input", drawTick)
     tickLabel.innerHTML = "0"
 }
