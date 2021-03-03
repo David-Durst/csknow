@@ -77,6 +77,7 @@ function getMouseCoordinate(e: MouseEvent) {
 
 let drawingRegionFilter: boolean = false
 let definedRegionFilter: boolean = false
+let emptyFilter: boolean = false
 let topLeftCoordinate: MapCoordinate = null
 let bottomRightCoordinate: MapCoordinate = null
 
@@ -84,8 +85,10 @@ function startingRegionFilter(e: MouseEvent) {
     if (!initialized) {
         return
     }
+    clearRegionFilterData()
     drawingRegionFilter = true
     definedRegionFilter = false
+    emptyFilter = false
     topLeftCoordinate = getMouseCoordinate(e)
     bottomRightCoordinate = topLeftCoordinate
     drawTick(null)
@@ -106,7 +109,7 @@ function finishedRegionFilter(e: MouseEvent) {
     const minY = Math.min(filterTopLeftY, filterBottomRightY)
     const maxX = Math.max(filterTopLeftX, filterBottomRightX)
     const maxY = Math.max(filterTopLeftY, filterBottomRightY)
-    filterRegion(minX, minY, maxX, maxY)
+    emptyFilter = !filterRegion(minX, minY, maxX, maxY)
     drawTick(null)
 }
 
@@ -186,7 +189,12 @@ export function drawTick(e: InputEvent) {
         //ctx.fillRect(location.getCanvasX(), location.getCanvasY(), 1, 1)
     }
     if (drawingRegionFilter || definedRegionFilter) {
-        ctx.strokeStyle = green
+        if (emptyFilter) {
+            ctx.strokeStyle = dark_red
+        }
+        else {
+            ctx.strokeStyle = green
+        }
         ctx.lineWidth = 3.0
         ctx.strokeRect(topLeftCoordinate.getCanvasX(), topLeftCoordinate.getCanvasY(),
             bottomRightCoordinate.getCanvasX() - topLeftCoordinate.getCanvasX(),

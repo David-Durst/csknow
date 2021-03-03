@@ -47,8 +47,9 @@ export let filteredData: GameData = new GameData()
 // when adding/removing filters
 let tickIndexFilteredToOrig: number[] = []
 export function filterRegion(minX: number, minY: number, maxX: number,
-                             maxY: number) {
+                             maxY: number): boolean {
     let curTickPrefiltering = getCurTick()
+    let curTickPostFiltering = -1;
     let matchingPositions: PositionRow[] = []
     tickIndexFilteredToOrig = []
     for (let t = 0; t < gameData.position.length; t++) {
@@ -61,18 +62,26 @@ export function filterRegion(minX: number, minY: number, maxX: number,
                 matchingPositions.push(gameData.position[t])
                 tickIndexFilteredToOrig.push(t)
                 if (t == curTickPrefiltering) {
-                    setCurTick(matchingPositions.length - 1);
+                    curTickPostFiltering = t
                 }
                 continue
             }
         }
     }
+    if (matchingPositions.length == 0) {
+        return false;
+    }
+    setCurTick(curTickPostFiltering);
     filteredData.position = matchingPositions
     tickSelector.max = (filteredData.position.length - 1).toString()
     console.log("new filter max: " + tickSelector.max)
+    return true;
 }
 
 export function clearRegionFilterData() {
+    if (filteredData.position.length === gameData.position.length) {
+        return;
+    }
     filteredData.position = gameData.position
     tickSelector.max = (filteredData.position.length - 1).toString()
     setCurTick(tickIndexFilteredToOrig[getCurTick()]);
