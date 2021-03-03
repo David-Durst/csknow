@@ -1,10 +1,11 @@
 import {GameData, gameData, PositionRow} from "./data";
 import {match} from "assert";
+import {drawTick} from "./drawing";
 
 let lastPlayerXs = [0,0,0,0,0,0,0,0,0,0]
 let lastPlayerYs = [0,0,0,0,0,0,0,0,0,0]
 let lastPlayerZs = [0,0,0,0,0,0,0,0,0,0]
-export function alwaysFilter() {
+function alwaysFilter() {
     for (let t = 1; t < gameData.position.length; t++) {
         const curTick = gameData.position[t]
         for (let p = 0; p < 10; p++) {
@@ -30,7 +31,7 @@ export function alwaysFilter() {
 
 export let filteredData: GameData = new GameData()
 
-export function filterRegion(minX: number, maxX: number, minY: number,
+export function filterRegion(minX: number, minY: number, maxX: number,
                              maxY: number) {
     let matchingPositions: PositionRow[] = []
     for (let t = 0; t < gameData.position.length; t++) {
@@ -48,8 +49,10 @@ export function filterRegion(minX: number, maxX: number, minY: number,
     filteredData.position = matchingPositions
 }
 
-export function clearFilterRegion() {
+export function clearRegionFilterData() {
     filteredData.position = gameData.position
 }
 
-
+export function setupFilters() {
+    alwaysFilter()
+}

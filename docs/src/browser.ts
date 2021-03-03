@@ -36,7 +36,7 @@ import {
     setupCanvas
 } from "./drawing"
 import {
-    alwaysFilter
+    setupFilters
 } from "./filter"
 import { registerPlayHandlers } from "./controls"
 
@@ -254,7 +254,7 @@ async function changedMatch() {
     }
 
     await Promise.all(promises)
-    alwaysFilter()
+    setupFilters()
     setupMatch()
 }
 
