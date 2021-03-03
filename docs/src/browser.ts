@@ -42,6 +42,7 @@ const {CognitoIdentityClient} = require("@aws-sdk/client-cognito-identity");
 const {fromCognitoIdentityPool} = require("@aws-sdk/credential-provider-cognito-identity");
 const path = require("path");
 import {GetObjectCommand} from "@aws-sdk/client-s3";
+import {setupFiltering} from "./filter";
 
 let matchSelector: HTMLInputElement = null;
 let matchLabel: HTMLLabelElement = null;
@@ -181,6 +182,7 @@ function setMatchLabel() {
 
 async function changedMatch() {
     createGameData();
+    setupFiltering();
     matchLabelStr = matches[parseInt(matchSelector.value)].demoFile;
     setMatchLabel();
     let promises: Promise<any>[] = []

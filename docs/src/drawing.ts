@@ -35,7 +35,7 @@ const yellow = "rgb(252,198,102)";
 
 // see last post by randunel and csgo/resources/overview/de_dust2.txt
 // https://forums.alliedmods.net/showthread.php?p=2690857#post2690857
-class MapCoordinate {
+export class MapCoordinate {
     x: number
     y: number
 

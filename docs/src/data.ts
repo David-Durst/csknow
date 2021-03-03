@@ -154,9 +154,6 @@ export class PositionRow {
 
 }
 
-let lastPlayerXs = [0,0,0,0,0,0,0,0,0,0]
-let lastPlayerYs = [0,0,0,0,0,0,0,0,0,0]
-let lastPlayerZs = [0,0,0,0,0,0,0,0,0,0]
 export async function parsePosition(tuple: { value: Uint8Array; done: boolean; }) {
     const linesUnsplit = tuple.value ? utf8Decoder.decode(tuple.value, {stream: true}) : "";
     const lines = linesUnsplit.split("\n");
@@ -220,19 +217,6 @@ export async function parsePosition(tuple: { value: Uint8Array; done: boolean; }
             currentLine[112]
         ));
         //console.log("length of position:" + gameData.position.length.toString() + ", line number: " + lineNumber.toString())
-        const lastTick = gameData.position[gameData.position.length - 1]
-        for (let p = 0; p < 10; p++) {
-            if (!lastTick.players[p].isAlive) {
-                lastTick.players[p].xPosition = lastPlayerXs[p];
-                lastTick.players[p].yPosition = lastPlayerYs[p];
-                lastTick.players[p].zPosition = lastPlayerZs[p];
-            }
-            else {
-                lastPlayerXs[p] = lastTick.players[p].xPosition
-                lastPlayerYs[p] = lastTick.players[p].yPosition
-                lastPlayerZs[p] = lastTick.players[p].zPosition
-            }
-        }
     }
     if (!tuple.done) {
         await positionReader.read().then(parsePosition);
