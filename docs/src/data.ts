@@ -158,8 +158,11 @@ let lastPlayerXs = [0,0,0,0,0,0,0,0,0,0]
 let lastPlayerYs = [0,0,0,0,0,0,0,0,0,0]
 let lastPlayerZs = [0,0,0,0,0,0,0,0,0,0]
 let seenNaNYet = false
+let lastPositionLine = ""
 export async function parsePosition(tuple: { value: Uint8Array; done: boolean; }) {
-    const linesUnsplit = tuple.value ? utf8Decoder.decode(tuple.value, {stream: true}) : "";
+    const linesUnsplit = lastPositionLine +
+        (tuple.value ? utf8Decoder.decode(tuple.value, {stream: true}) : "");
+    lastPositionLine = ""
     const lines = linesUnsplit.split("\n");
     for (let lineNumber = 1; lineNumber < lines.length; lineNumber++) {
         if (lines[lineNumber].trim() === "") {
@@ -169,6 +172,10 @@ export async function parsePosition(tuple: { value: Uint8Array; done: boolean; }
         // skip warmup
         if (parseBool(currentLine[4])) {
             continue;
+        }
+        if (lineNumber == lines.length - 1 && currentLine.length < 113) {
+            lastPositionLine = lines[lineNumber]
+            continue
         }
         gameData.position.push(new PositionRow(
             // first 12 aren't palyer specified
@@ -226,7 +233,6 @@ export async function parsePosition(tuple: { value: Uint8Array; done: boolean; }
             console.log(gameData.position[gameData.position.length -1])
             console.log(currentLine)
         }
-         */
         //console.log("length of position:" + gameData.position.length.toString() + ", line number: " + lineNumber.toString())
         const lastTick = gameData.position[gameData.position.length - 1]
         for (let p = 0; p < 10; p++) {
@@ -248,6 +254,7 @@ export async function parsePosition(tuple: { value: Uint8Array; done: boolean; }
                 lastPlayerZs[p] = lastTick.players[p].zPosition
             }
         }
+         */
     }
     if (!tuple.done) {
         await positionReader.read().then(parsePosition);
