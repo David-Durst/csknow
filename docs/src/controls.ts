@@ -95,5 +95,4 @@ export function registerPlayHandlers() {
         .addEventListener("click", playFaster)
     document.querySelector<HTMLButtonElement>("#button_rwd")
         .addEventListener("click", playSlower)
-    console.log(play1xButton)
 }

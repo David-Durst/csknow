@@ -157,6 +157,7 @@ export class PositionRow {
 let lastPlayerXs = [0,0,0,0,0,0,0,0,0,0]
 let lastPlayerYs = [0,0,0,0,0,0,0,0,0,0]
 let lastPlayerZs = [0,0,0,0,0,0,0,0,0,0]
+let seenNaNYet = false
 export async function parsePosition(tuple: { value: Uint8Array; done: boolean; }) {
     const linesUnsplit = tuple.value ? utf8Decoder.decode(tuple.value, {stream: true}) : "";
     const lines = linesUnsplit.split("\n");
@@ -219,9 +220,23 @@ export async function parsePosition(tuple: { value: Uint8Array; done: boolean; }
             // after player data
             currentLine[112]
         ));
+
+        /*
+        if (gameData.position[gameData.position.length -1].tickNumber == 428) {
+            console.log(gameData.position[gameData.position.length -1])
+            console.log(currentLine)
+        }
+         */
         //console.log("length of position:" + gameData.position.length.toString() + ", line number: " + lineNumber.toString())
         const lastTick = gameData.position[gameData.position.length - 1]
         for (let p = 0; p < 10; p++) {
+            if (isNaN(lastTick.players[p].zPosition) && !seenNaNYet) {
+                console.log(p)
+                console.log(currentLine)
+                console.log(lastTick)
+                console.log(lastTick.players[p])
+                seenNaNYet = true
+            }
             if (!lastTick.players[p].isAlive) {
                 lastTick.players[p].xPosition = lastPlayerXs[p];
                 lastTick.players[p].yPosition = lastPlayerYs[p];
