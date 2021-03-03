@@ -201,16 +201,29 @@ export function drawTick(e: InputEvent) {
             bottomRightCoordinate.getCanvasY() - topLeftCoordinate.getCanvasY())
     }
 }
-
+export let maxViewY = 0
+export let maxViewYT = 0
+export let maxViewYP = 0
 export function setupMatchDrawing() {
     const numTicks = gameData.position.length
     for (let t = 0; t < numTicks; t++) {
         for (let p = 0; p < gameData.position[t].players.length; p++) {
             minZ = Math.min(minZ, gameData.position[t].players[p].zPosition)
             maxZ = Math.max(maxZ, gameData.position[t].players[p].zPosition)
+            if (gameData.position[t].gamePhase !== 5 &&
+                gameData.position[t].gamePhase !== 1 &&
+                gameData.position[t].gamePhase !== 4 &&
+                !gameData.position[t].isWarmup) {
+                maxViewY = Math.max(maxViewY, gameData.position[t].players[p].yViewDirection)
+                maxViewYT = t
+                maxViewYP = p
+            }
         }
     }
     drawTick(null)
+    console.log("max view y if not warmup:" + maxViewY.toString())
+    console.log("max view y p:" + maxViewYP.toString())
+    console.log("max view y t:" + maxViewYT.toString())
 }
 
 export function setupCanvas() {
