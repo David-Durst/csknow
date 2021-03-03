@@ -130,21 +130,12 @@ export function drawTick(e: InputEvent) {
 
 export function setupMatch() {
     const numTicks = gameData.position.length
-    let seenNan = false
     for (let t = 0; t < numTicks; t++) {
-        let oldMin = minZ
         for (let p = 0; p < 10; p++) {
             minZ = Math.min(minZ, gameData.position[t].players[p].zPosition)
             maxZ = Math.max(maxZ, gameData.position[t].players[p].zPosition)
         }
-        if (isNaN(minZ) && !seenNan) {
-            console.log("minZ" + minZ.toString())
-            console.log("new value" + gameData.position[t].players[1].zPosition)
-            console.log(gameData.position[t])
-            seenNan = true
-        }
     }
-    console.log("minZ: " + minZ.toString() + ", maxZ:" + maxZ.toString())
     tickSelector.max = (gameData.position.length - 1).toString()
     drawTick(null)
 }

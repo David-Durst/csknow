@@ -154,10 +154,6 @@ export class PositionRow {
 
 }
 
-let lastPlayerXs = [0,0,0,0,0,0,0,0,0,0]
-let lastPlayerYs = [0,0,0,0,0,0,0,0,0,0]
-let lastPlayerZs = [0,0,0,0,0,0,0,0,0,0]
-let seenNaNYet = false
 let lastPositionLine = ""
 export async function parsePosition(tuple: { value: Uint8Array; done: boolean; }) {
     const linesUnsplit = lastPositionLine +

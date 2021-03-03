@@ -35,6 +35,9 @@ import {
     setupMatch,
     setupCanvas
 } from "./drawing"
+import {
+    alwaysFilter
+} from "./filter"
 import { registerPlayHandlers } from "./controls"
 
 const { S3Client, ListObjectsCommand } = require("@aws-sdk/client-s3");
@@ -251,6 +254,7 @@ async function changedMatch() {
     }
 
     await Promise.all(promises)
+    alwaysFilter()
     setupMatch()
 }
 
