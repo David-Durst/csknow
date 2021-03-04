@@ -188,12 +188,18 @@ export function drawTick(e: InputEvent) {
         const zScaling = (tickData.players[p].zPosition - minZ) / (maxZ - minZ)
         ctx.font = (zScaling * 20 + 30).toString() + "px Arial"
         ctx.fillText(playerText, location.getCanvasX(), location.getCanvasY())
-        //ctx.save()
-        //ctx.rotate((90+0)/180*Math.PI)
+        ctx.save()
+        ctx.translate(location.getCanvasX(), location.getCanvasY())
+        ctx.rotate((90-tickData.players[p].xViewDirection)/180*Math.PI)
+        // divide by -90 as brighter means up and < 0 is looking up
+        const yNeg1To1 = tickData.players[p].yViewDirection / -90 
+        const yLogistic = 2 / (1 + Math.pow(Math.E, -8 * yNeg1To1))
+        ctx.filter = "brightness(" + yLogistic + ")"
         if (tickData.players[p].isAlive) {
-            ctx.fillText("^", location.getCanvasX(), location.getCanvasY())
+            //ctx.fillText("^", 0, 0)
+            ctx.fillRect(-2, -13 + -7 * zScaling, 4, 10)
         }
-        //ctx.restore()
+        ctx.restore()
         //ctx.fillRect(location.getCanvasX(), location.getCanvasY(), 1, 1)
     }
     if (drawingRegionFilter || definedRegionFilter) {
