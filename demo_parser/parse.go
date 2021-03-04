@@ -25,12 +25,12 @@ func processFile(unprocessedKey string) {
 		panic(err)
 	}
 	defer positionFile.Close()
-	positionFile.WriteString("tick number,match started,game phase,rounds played,is warmup,round start,round end,round end reason,freeze time ended,t score,ct score,num players")
+	positionFile.WriteString("demo tick number,ingame tick,match started,game phase,rounds played,is warmup,round start,round end,round end reason,freeze time ended,t score,ct score,num players")
 	for i := 0; i < 10; i++ {
 		positionFile.WriteString(fmt.Sprintf(
 			",player %d name,player %d team,player %d x position,player %d y position,player %d z position" +
 				",player %d x view direction,player %d y view direction,player %d is alive,player %d is blinded",
-				i, i, i, i, i, i, i, i, i, i))
+				i, i, i, i, i, i, i, i, i))
 	}
 	positionFile.WriteString(fmt.Sprintf(",demo file\n"))
 
@@ -115,7 +115,7 @@ func processFile(unprocessedKey string) {
 		if gs.IsWarmupPeriod() {
 			isWarmup = 1
 		}
-		positionFile.WriteString(fmt.Sprintf("%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,", p.CurrentFrame(), matchStarted, gs.GamePhase(), gs.TotalRoundsPlayed(), isWarmup,
+		positionFile.WriteString(fmt.Sprintf("%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,", p.CurrentFrame(), gs.IngameTick(), matchStarted, gs.GamePhase(), gs.TotalRoundsPlayed(), isWarmup,
 			roundStart, roundEnd, roundEndReason, freezeTime, gs.TeamTerrorists().Score(), gs.TeamCounterTerrorists().Score(), len(players)))
 		sort.Slice(players, func(i int, j int) bool {
 			return players[i].Name < players[j].Name
@@ -132,7 +132,7 @@ func processFile(unprocessedKey string) {
 				if players[i].IsBlinded() {
 					isBlinded = 1
 				}
-				positionFile.WriteString(fmt.Sprintf("%s,%d,%.2f,%.2f,%.2f,%.2f,%.2f,%d,%d,%d",
+				positionFile.WriteString(fmt.Sprintf("%s,%d,%.2f,%.2f,%.2f,%.2f,%.2f,%d,%d",
 					players[i].Name, teamToNum(players[i].Team), players[i].Position().X, players[i].Position().Y,
 					players[i].Position().Z, players[i].ViewDirectionX(), players[i].ViewDirectionY(),
 					isAlive, isBlinded))
@@ -211,8 +211,16 @@ func processFile(unprocessedKey string) {
 			return
 		}
 
+		attackerName := "n/a"
+		if e.Attacker != nil {
+			attackerName =  e.Attacker.Name
+		}
+		weaponName := "n/a"
+		if e.Weapon != nil {
+			weaponName = e.Weapon.String()
+		}
 		hurtFile.WriteString(fmt.Sprintf("%s,%d,%d,%d,%d,%s,%s,%d,%s\n",
-			e.Player.Name, e.ArmorDamage, e.Armor, e.HealthDamage, e.Health, e.Attacker.Name, e.Weapon.String(),
+			e.Player.Name, e.ArmorDamage, e.Armor, e.HealthDamage, e.Health, attackerName, weaponName,
 			p.CurrentFrame(), demFilePath))
 	})
 
@@ -244,13 +252,25 @@ func processFile(unprocessedKey string) {
 			return
 		}
 
+		killerName := "n/a"
+		if e.Killer != nil {
+			killerName =  e.Killer.Name
+		}
+		assisterName := "n/a"
+		if e.Assister != nil {
+			assisterName =  e.Assister.Name
+		}
+		weaponName := "n/a"
+		if e.Weapon != nil {
+			weaponName = e.Weapon.String()
+		}
 		killsFile.WriteString(fmt.Sprintf("%s,%s,%s,%s,%d,%d,%d,%d,%s\n",
-			e.Killer.Name, e.Victim.Name, e.Weapon.String(), e.Assister.Name,
+			killerName, e.Victim.Name, weaponName, assisterName,
 			boolToInt(e.IsHeadshot), boolToInt(e.IsWallBang()), e.PenetratedObjects,
 			p.CurrentFrame(), demFilePath))
 	})
 
-	p.ParseToEnd()
+	err = p.ParseToEnd()
 	if err != nil {
 		panic(err)
 	}
