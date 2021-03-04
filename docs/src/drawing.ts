@@ -159,6 +159,8 @@ function trackMouse(e: MouseEvent) {
 export function drawTick(e: InputEvent) {
     ctx.drawImage(minimap,0,0,minimapWidth,minimapHeight,0,0,
         canvasWidth,canvasHeight);
+    ctx.textBaseline = "middle"
+    ctx.textAlign = "center"
     const curTickIndex = getCurTickIndex()
     setTickLabel(filteredData.position[curTickIndex].tickNumber)
     const tickData: PositionRow = filteredData.position[curTickIndex]
