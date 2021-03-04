@@ -20,7 +20,7 @@ export function setTickLabel(value: number) {
 let lastPlayerXs = [0,0,0,0,0,0,0,0,0,0]
 let lastPlayerYs = [0,0,0,0,0,0,0,0,0,0]
 let lastPlayerZs = [0,0,0,0,0,0,0,0,0,0]
-function alwaysFilter() {
+function fixAfterDeath() {
     for (let t = 1; t < gameData.position.length; t++) {
         const curTick = gameData.position[t]
         for (let p = 0; p < 10; p++) {
@@ -36,6 +36,22 @@ function alwaysFilter() {
             }
         }
     }
+}
+
+function makePitchNeg90To90() {
+    for (let t = 1; t < gameData.position.length; t++) {
+        const curTick = gameData.position[t]
+        for (let p = 0; p < 10; p++) {
+            if (curTick.players[p].yViewDirection > 260.0) {
+                curTick.players[p].yViewDirection -= 360
+            }
+        }
+    }
+}
+
+function alwaysFilter() {
+    fixAfterDeath()
+    makePitchNeg90To90()
     filteredData.position = gameData.position
     filteredData.spotted = gameData.spotted
     filteredData.weaponFire = gameData.weaponFire

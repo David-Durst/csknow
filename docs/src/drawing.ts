@@ -188,6 +188,12 @@ export function drawTick(e: InputEvent) {
         const zScaling = (tickData.players[p].zPosition - minZ) / (maxZ - minZ)
         ctx.font = (zScaling * 20 + 30).toString() + "px Arial"
         ctx.fillText(playerText, location.getCanvasX(), location.getCanvasY())
+        //ctx.save()
+        //ctx.rotate((90+0)/180*Math.PI)
+        if (tickData.players[p].isAlive) {
+            ctx.fillText("^", location.getCanvasX(), location.getCanvasY())
+        }
+        //ctx.restore()
         //ctx.fillRect(location.getCanvasX(), location.getCanvasY(), 1, 1)
     }
     if (drawingRegionFilter || definedRegionFilter) {
