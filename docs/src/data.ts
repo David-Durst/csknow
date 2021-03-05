@@ -13,13 +13,11 @@ class PlayerPositionRow {
     xViewDirection: number;
     yViewDirection: number;
     isAlive: boolean;
-    // remove this later when fix data set
-    teamRepeat: number;
     isBlinded: boolean;
     
     constructor(name: string, team: number, xPosition: number, yPosition: number,
             zPosition: number, xViewDirection: number, yViewDirection: number,
-            isAlive: boolean, teamRepeat: number, isBlinded: boolean) {
+            isAlive: boolean, isBlinded: boolean) {
         this.name = name
         this.team = team
         this.xPosition = xPosition
@@ -28,13 +26,13 @@ class PlayerPositionRow {
         this.xViewDirection = xViewDirection
         this.yViewDirection = yViewDirection
         this.isAlive = isAlive
-        this.teamRepeat = teamRepeat
         this.isBlinded = isBlinded
     }
 }
 
 export class PositionRow {
-    tickNumber: number;
+    demoTickNumber: number;
+    gameTickNumber: number;
     matchStarted: boolean;
     gamePhase: number;
     roundsPlayed: number;
@@ -49,42 +47,43 @@ export class PositionRow {
     players: PlayerPositionRow[];
     demoFile: string;
 
-    constructor(tickNumber: number, matchStarted: boolean, gamePhase: number,
+    constructor(demoTickNumber: number, gameTickNumber: number, matchStarted: boolean, gamePhase: number,
                 roundsPlayed: number, isWarmup: boolean, roundStart: boolean, roundEnd: boolean,
                 roundEndReason: number, freezeTimeEnded: boolean, tScore: number, ctScore: number, numPlayers: number,
                 player0Name: string, player0Team: number, player0XPosition: number, player0YPosition: number,
                 player0ZPosition: number, player0XViewDirection: number, player0YViewDirection: number,
-                player0IsAlive: boolean, player0TeamRepeat: number, player0isBlinded: boolean,
+                player0IsAlive: boolean, player0isBlinded: boolean,
                 player1Name: string, player1Team: number, player1XPosition: number, player1YPosition: number,
                 player1ZPosition: number, player1XViewDirection: number, player1YViewDirection: number,
-                player1IsAlive: boolean, player1TeamRepeat: number, player1isBlinded: boolean,
+                player1IsAlive: boolean, player1isBlinded: boolean,
                 player2Name: string, player2Team: number, player2XPosition: number, player2YPosition: number,
                 player2ZPosition: number, player2XViewDirection: number, player2YViewDirection: number,
-                player2IsAlive: boolean, player2TeamRepeat: number, player2isBlinded: boolean,
+                player2IsAlive: boolean, player2isBlinded: boolean,
                 player3Name: string, player3Team: number, player3XPosition: number, player3YPosition: number,
                 player3ZPosition: number, player3XViewDirection: number, player3YViewDirection: number,
-                player3IsAlive: boolean, player3TeamRepeat: number, player3isBlinded: boolean,
+                player3IsAlive: boolean, player3isBlinded: boolean,
                 player4Name: string, player4Team: number, player4XPosition: number, player4YPosition: number,
                 player4ZPosition: number, player4XViewDirection: number, player4YViewDirection: number,
-                player4IsAlive: boolean, player4TeamRepeat: number, player4isBlinded: boolean,
+                player4IsAlive: boolean, player4isBlinded: boolean,
                 player5Name: string, player5Team: number, player5XPosition: number, player5YPosition: number,
                 player5ZPosition: number, player5XViewDirection: number, player5YViewDirection: number,
-                player5IsAlive: boolean, player5TeamRepeat: number, player5isBlinded: boolean,
+                player5IsAlive: boolean, player5isBlinded: boolean,
                 player6Name: string, player6Team: number, player6XPosition: number, player6YPosition: number,
                 player6ZPosition: number, player6XViewDirection: number, player6YViewDirection: number,
-                player6IsAlive: boolean, player6TeamRepeat: number, player6isBlinded: boolean,
+                player6IsAlive: boolean, player6isBlinded: boolean,
                 player7Name: string, player7Team: number, player7XPosition: number, player7YPosition: number,
                 player7ZPosition: number, player7XViewDirection: number, player7YViewDirection: number,
-                player7IsAlive: boolean, player7TeamRepeat: number, player7isBlinded: boolean,
+                player7IsAlive: boolean, player7isBlinded: boolean,
                 player8Name: string, player8Team: number, player8XPosition: number, player8YPosition: number,
                 player8ZPosition: number, player8XViewDirection: number, player8YViewDirection: number,
-                player8IsAlive: boolean, player8TeamRepeat: number, player8isBlinded: boolean,
+                player8IsAlive: boolean, player8isBlinded: boolean,
                 player9Name: string, player9Team: number, player9XPosition: number, player9YPosition: number,
                 player9ZPosition: number, player9XViewDirection: number, player9YViewDirection: number,
-                player9IsAlive: boolean, player9TeamRepeat: number, player9isBlinded: boolean,
+                player9IsAlive: boolean, player9isBlinded: boolean,
                 demoFile: string
                 ) {
-        this.tickNumber = tickNumber;
+        this.demoTickNumber = demoTickNumber;
+        this.gameTickNumber = gameTickNumber;
         this.matchStarted = matchStarted;
         this.gamePhase = gamePhase;
         this.roundsPlayed = roundsPlayed;
@@ -102,130 +101,129 @@ export class PositionRow {
         this.players.push(new PlayerPositionRow(
             player0Name, player0Team, player0XPosition, player0YPosition,
             player0ZPosition, player0XViewDirection, player0YViewDirection, player0IsAlive,
-            // remove this later when fix data set
-            player0TeamRepeat, player0isBlinded))
+            player0isBlinded))
         this.players.push(new PlayerPositionRow(
             player1Name, player1Team, player1XPosition, player1YPosition,
             player1ZPosition, player1XViewDirection, player1YViewDirection, player1IsAlive,
-            // remove this later when fix data set
-            player1TeamRepeat, player1isBlinded))
+            player1isBlinded))
         this.players.push(new PlayerPositionRow(
             player2Name, player2Team, player2XPosition, player2YPosition,
             player2ZPosition, player2XViewDirection, player2YViewDirection, player2IsAlive,
-            // remove this later when fix data set
-            player2TeamRepeat, player2isBlinded))
+            player2isBlinded))
         this.players.push(new PlayerPositionRow(
             player3Name, player3Team, player3XPosition, player3YPosition,
             player3ZPosition, player3XViewDirection, player3YViewDirection, player3IsAlive,
-            // remove this later when fix data set
-            player3TeamRepeat, player3isBlinded))
+            player3isBlinded))
         this.players.push(new PlayerPositionRow(
             player4Name, player4Team, player4XPosition, player4YPosition,
             player4ZPosition, player4XViewDirection, player4YViewDirection, player4IsAlive,
-            // remove this later when fix data set
-            player4TeamRepeat, player4isBlinded))
+            player4isBlinded))
         this.players.push(new PlayerPositionRow(
             player5Name, player5Team, player5XPosition, player5YPosition,
             player5ZPosition, player5XViewDirection, player5YViewDirection, player5IsAlive,
-            // remove this later when fix data set
-            player5TeamRepeat, player5isBlinded))
+            player5isBlinded))
         this.players.push(new PlayerPositionRow(
             player6Name, player6Team, player6XPosition, player6YPosition,
             player6ZPosition, player6XViewDirection, player6YViewDirection, player6IsAlive,
-            // remove this later when fix data set
-            player6TeamRepeat, player6isBlinded))
+            player6isBlinded))
         this.players.push(new PlayerPositionRow(
             player7Name, player7Team, player7XPosition, player7YPosition,
             player7ZPosition, player7XViewDirection, player7YViewDirection, player7IsAlive,
-            // remove this later when fix data set
-            player7TeamRepeat, player7isBlinded))
+            player7isBlinded))
         this.players.push(new PlayerPositionRow(
             player8Name, player8Team, player8XPosition, player8YPosition,
             player8ZPosition, player8XViewDirection, player8YViewDirection, player8IsAlive,
-            // remove this later when fix data set
-            player8TeamRepeat, player8isBlinded))
+            player8isBlinded))
         this.players.push(new PlayerPositionRow(
             player9Name, player9Team, player9XPosition, player9YPosition,
             player9ZPosition, player9XViewDirection, player9YViewDirection, player9IsAlive,
-            // remove this later when fix data set
-            player9TeamRepeat, player9isBlinded))
+            player9isBlinded))
         this.demoFile = demoFile;
     }
 
 }
 
 let lastPositionLine = ""
+let positionLineCounter = 0
 export async function parsePosition(tuple: { value: Uint8Array; done: boolean; }) {
     const linesUnsplit = lastPositionLine +
         (tuple.value ? utf8Decoder.decode(tuple.value, {stream: true}) : "");
     lastPositionLine = ""
     const lines = linesUnsplit.split("\n");
-    for (let lineNumber = 1; lineNumber < lines.length; lineNumber++) {
+    for (let lineNumber = 0; lineNumber < lines.length; lineNumber++) {
+        // skip first line of first batch
+        if (positionLineCounter++ == 0) {
+            continue;
+        }
         if (lines[lineNumber].trim() === "") {
             continue;
         }
         let currentLine = lines[lineNumber].split(",");
         // skip warmup
-        if (parseBool(currentLine[4])) {
+        if (parseBool(currentLine[5])) {
             continue;
         }
-        if (lineNumber == lines.length - 1 && currentLine.length < 113) {
+        if (lineNumber == lines.length - 1 && currentLine.length < 104) {
             lastPositionLine = lines[lineNumber]
             continue
         }
         gameData.position.push(new PositionRow(
             // first 12 aren't palyer specified
-            parseInt(currentLine[0]), parseBool(currentLine[1]), parseInt(currentLine[2]),
-            parseInt(currentLine[3]), parseBool(currentLine[4]), parseBool(currentLine[5]),
-            parseBool(currentLine[6]), parseInt(currentLine[7]), parseBool(currentLine[8]),
-            parseInt(currentLine[9]), parseInt(currentLine[10]), parseInt(currentLine[11]),
+            parseInt(currentLine[0]), parseInt(currentLine[1]), parseBool(currentLine[2]), parseInt(currentLine[3]),
+            parseInt(currentLine[4]), parseBool(currentLine[5]), parseBool(currentLine[6]),
+            parseBool(currentLine[7]), parseInt(currentLine[8]), parseBool(currentLine[9]),
+            parseInt(currentLine[10]), parseInt(currentLine[11]), parseInt(currentLine[12]),
             // each player is 10 entries
             // player 0
-            currentLine[12], parseInt(currentLine[13]), parseFloat(currentLine[14]),
-            parseFloat(currentLine[15]), parseFloat(currentLine[16]), parseFloat(currentLine[17]),
-            parseFloat(currentLine[18]), parseBool(currentLine[19]), parseInt(currentLine[20]), parseBool(currentLine[21]),
+            currentLine[13], parseInt(currentLine[14]), parseFloat(currentLine[15]),
+            parseFloat(currentLine[16]), parseFloat(currentLine[17]), parseFloat(currentLine[18]),
+            parseFloat(currentLine[19]), parseBool(currentLine[20]), parseBool(currentLine[21]),
             // player 1
             currentLine[22], parseInt(currentLine[23]), parseFloat(currentLine[24]),
             parseFloat(currentLine[25]), parseFloat(currentLine[26]), parseFloat(currentLine[27]),
-            parseFloat(currentLine[28]), parseBool(currentLine[29]), parseInt(currentLine[30]), parseBool(currentLine[31]),
+            parseFloat(currentLine[28]), parseBool(currentLine[29]), parseBool(currentLine[30]),
             // player 2
-            currentLine[32], parseInt(currentLine[33]), parseFloat(currentLine[34]),
-            parseFloat(currentLine[35]), parseFloat(currentLine[36]), parseFloat(currentLine[37]),
-            parseFloat(currentLine[38]), parseBool(currentLine[39]), parseInt(currentLine[40]), parseBool(currentLine[41]),
+            currentLine[31], parseInt(currentLine[32]), parseFloat(currentLine[33]),
+            parseFloat(currentLine[34]), parseFloat(currentLine[35]), parseFloat(currentLine[36]),
+            parseFloat(currentLine[37]), parseBool(currentLine[38]), parseBool(currentLine[39]),
             // player 3
-            currentLine[42], parseInt(currentLine[43]), parseFloat(currentLine[44]),
-            parseFloat(currentLine[45]), parseFloat(currentLine[46]), parseFloat(currentLine[47]),
-            parseFloat(currentLine[48]), parseBool(currentLine[49]), parseInt(currentLine[50]), parseBool(currentLine[51]),
+            currentLine[40], parseInt(currentLine[41]), parseFloat(currentLine[42]),
+            parseFloat(currentLine[43]), parseFloat(currentLine[44]), parseFloat(currentLine[45]),
+            parseFloat(currentLine[46]), parseBool(currentLine[47]), parseBool(currentLine[48]),
             // player 4
-            currentLine[52], parseInt(currentLine[53]), parseFloat(currentLine[54]),
-            parseFloat(currentLine[55]), parseFloat(currentLine[56]), parseFloat(currentLine[57]),
-            parseFloat(currentLine[58]), parseBool(currentLine[59]), parseInt(currentLine[60]), parseBool(currentLine[61]),
+            currentLine[49], parseInt(currentLine[50]), parseFloat(currentLine[51]),
+            parseFloat(currentLine[52]), parseFloat(currentLine[53]), parseFloat(currentLine[54]),
+            parseFloat(currentLine[55]), parseBool(currentLine[56]), parseBool(currentLine[57]),
             // player 5
-            currentLine[62], parseInt(currentLine[63]), parseFloat(currentLine[64]),
-            parseFloat(currentLine[65]), parseFloat(currentLine[66]), parseFloat(currentLine[67]),
-            parseFloat(currentLine[68]), parseBool(currentLine[69]), parseInt(currentLine[70]), parseBool(currentLine[71]),
+            currentLine[58], parseInt(currentLine[59]), parseFloat(currentLine[60]),
+            parseFloat(currentLine[61]), parseFloat(currentLine[62]), parseFloat(currentLine[63]),
+            parseFloat(currentLine[64]), parseBool(currentLine[65]), parseBool(currentLine[66]),
             // player 6
-            currentLine[72], parseInt(currentLine[73]), parseFloat(currentLine[74]),
-            parseFloat(currentLine[75]), parseFloat(currentLine[76]), parseFloat(currentLine[77]),
-            parseFloat(currentLine[78]), parseBool(currentLine[79]), parseInt(currentLine[80]), parseBool(currentLine[81]),
+            currentLine[67], parseInt(currentLine[68]), parseFloat(currentLine[69]),
+            parseFloat(currentLine[70]), parseFloat(currentLine[71]), parseFloat(currentLine[72]),
+            parseFloat(currentLine[73]), parseBool(currentLine[74]), parseBool(currentLine[75]),
             // player 7
-            currentLine[82], parseInt(currentLine[83]), parseFloat(currentLine[84]),
-            parseFloat(currentLine[85]), parseFloat(currentLine[86]), parseFloat(currentLine[87]),
-            parseFloat(currentLine[88]), parseBool(currentLine[89]), parseInt(currentLine[90]), parseBool(currentLine[91]),
+            currentLine[76], parseInt(currentLine[77]), parseFloat(currentLine[78]),
+            parseFloat(currentLine[79]), parseFloat(currentLine[80]), parseFloat(currentLine[81]),
+            parseFloat(currentLine[82]), parseBool(currentLine[83]), parseBool(currentLine[84]),
             // player 8
-            currentLine[92], parseInt(currentLine[93]), parseFloat(currentLine[94]),
-            parseFloat(currentLine[95]), parseFloat(currentLine[96]), parseFloat(currentLine[97]),
-            parseFloat(currentLine[98]), parseBool(currentLine[99]), parseInt(currentLine[100]), parseBool(currentLine[101]),
+            currentLine[85], parseInt(currentLine[86]), parseFloat(currentLine[87]),
+            parseFloat(currentLine[88]), parseFloat(currentLine[89]), parseFloat(currentLine[90]),
+            parseFloat(currentLine[91]), parseBool(currentLine[92]), parseBool(currentLine[93]),
             // player 9
-            currentLine[102], parseInt(currentLine[103]), parseFloat(currentLine[104]),
-            parseFloat(currentLine[105]), parseFloat(currentLine[106]), parseFloat(currentLine[107]),
-            parseFloat(currentLine[108]), parseBool(currentLine[109]), parseInt(currentLine[110]), parseBool(currentLine[111]),
+            currentLine[94], parseInt(currentLine[95]), parseFloat(currentLine[96]),
+            parseFloat(currentLine[97]), parseFloat(currentLine[98]), parseFloat(currentLine[99]),
+            parseFloat(currentLine[100]), parseBool(currentLine[101]), parseBool(currentLine[102]),
             // after player data
-            currentLine[112]
+            currentLine[103]
         ));
     }
     if (!tuple.done) {
         await positionReader.read().then(parsePosition);
+    }
+    else {
+        console.log("line counter:" + positionLineCounter.toString())
+        console.log(":" + gameData.position.length.toString())
     }
 }
 
