@@ -151,21 +151,24 @@ export async function parsePosition(tuple: { value: Uint8Array; done: boolean; }
     lastPositionLine = ""
     const lines = linesUnsplit.split("\n");
     for (let lineNumber = 0; lineNumber < lines.length; lineNumber++) {
+        const oldPositionLineCounter = positionLineCounter++
+        let currentLine = lines[lineNumber].split(",");
+        // keep around split lines from end of chunks for next chunks
+        // this has to come first in case we skip an entire chunk
+        if (lineNumber == lines.length - 1 && currentLine.length < 104) {
+            lastPositionLine = lines[lineNumber]
+            continue
+        }
         // skip first line of first batch
-        if (positionLineCounter++ == 0) {
+        if (oldPositionLineCounter == 0) {
             continue;
         }
         if (lines[lineNumber].trim() === "") {
             continue;
         }
-        let currentLine = lines[lineNumber].split(",");
         // skip warmup
         if (parseBool(currentLine[5])) {
             continue;
-        }
-        if (lineNumber == lines.length - 1 && currentLine.length < 104) {
-            lastPositionLine = lines[lineNumber]
-            continue
         }
         gameData.position.push(new PositionRow(
             // first 12 aren't palyer specified
