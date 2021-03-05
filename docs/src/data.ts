@@ -298,19 +298,25 @@ export class SpottedRow {
 }
 
 let lastSpottedLine = ""
+let spottedLineCounter = 0
 export async function parseSpotted(tuple: { value: Uint8Array; done: boolean; }) {
     const linesUnsplit = lastSpottedLine +
         (tuple.value ? utf8Decoder.decode(tuple.value, {stream: true}) : "");
     lastSpottedLine = ""
     const lines = linesUnsplit.split("\n");
-    for(let lineNumber = 1; lineNumber < lines.length; lineNumber++) {
-        if (lines[lineNumber].trim() === "") {
-            continue;
-        }
+    for(let lineNumber = 0; lineNumber < lines.length; lineNumber++) {
+        let oldSpottedLineCounter = spottedLineCounter++
         let currentLine = lines[lineNumber].split(",");
         if (lineNumber == lines.length - 1 && currentLine.length < 23) {
             lastSpottedLine = lines[lineNumber]
             continue
+        }
+        // skip first line of first batch
+        if (oldSpottedLineCounter == 0) {
+            continue;
+        }
+        if (lines[lineNumber].trim() === "") {
+            continue;
         }
         gameData.spotted.push(new SpottedRow(
             currentLine[0], currentLine[1], parseBool(currentLine[2]),
@@ -347,18 +353,24 @@ export class WeaponFireRow {
 }
 
 let lastWeaponFireLine = ""
+let weaponFireLineCounter = 0
 export async function parseWeaponFire(tuple: { value: Uint8Array; done: boolean; }) {
     const linesUnsplit = lastWeaponFireLine +
         (tuple.value ? utf8Decoder.decode(tuple.value, {stream: true}) : "");
     lastWeaponFireLine = ""
     const lines = linesUnsplit.split("\n");
-    for(let lineNumber = 1; lineNumber < lines.length; lineNumber++) {
-        if (lines[lineNumber].trim() === "") {
-            continue;
-        }
+    for(let lineNumber = 0; lineNumber < lines.length; lineNumber++) {
+        const oldWeaponFireLineCounter = weaponFireLineCounter++
         let currentLine = lines[lineNumber].split(",");
         if (lineNumber == lines.length - 1 && currentLine.length < 4) {
             lastWeaponFireLine = lines[lineNumber];
+            continue;
+        }
+        // skip first line of first batch
+        if (oldWeaponFireLineCounter == 0) {
+            continue;
+        }
+        if (lines[lineNumber].trim() === "") {
             continue;
         }
         gameData.weaponFire.push(new WeaponFireRow(
@@ -403,18 +415,24 @@ export class PlayerHurtRow {
 }
 
 let lastHurtLine = ""
+let hurtLineCounter = 0
 export async function parseHurt(tuple: { value: Uint8Array; done: boolean; }) {
     const linesUnsplit = lastHurtLine +
         (tuple.value ? utf8Decoder.decode(tuple.value, {stream: true}) : "");
     lastHurtLine = ""
     const lines = linesUnsplit.split("\n");
     for(let lineNumber = 1; lineNumber < lines.length; lineNumber++) {
-        if (lines[lineNumber].trim() === "") {
-            continue;
-        }
+        const oldHurtLineCounter = hurtLineCounter++
         let currentLine = lines[lineNumber].split(",");
         if (lineNumber == lines.length - 1 && currentLine.length < 9) {
             lastHurtLine = lines[lineNumber]
+            continue;
+        }
+        // skip first line of first batch
+        if (oldHurtLineCounter == 0) {
+            continue;
+        }
+        if (lines[lineNumber].trim() === "") {
             continue;
         }
         gameData.playerHurt.push(new PlayerHurtRow(
@@ -448,19 +466,25 @@ export class GrenadesRow {
 }
 
 let lastGrenadesLine = ""
+let grenadesLineCounter = 0
 export async function parseGrenades(tuple: { value: Uint8Array; done: boolean; }) {
     const linesUnsplit = lastGrenadesLine +
         (tuple.value ? utf8Decoder.decode(tuple.value, {stream: true}) : "");
     lastGrenadesLine = ""
     const lines = linesUnsplit.split("\n");
     for(let lineNumber = 1; lineNumber < lines.length; lineNumber++) {
-        if (lines[lineNumber].trim() === "") {
-            continue;
-        }
+        const oldGrenadesLineCounter = grenadesLineCounter++
         let currentLine = lines[lineNumber].split(",");
         if (lineNumber == lines.length - 1 && currentLine.length < 4) {
             lastGrenadesLine = lines[lineNumber]
             continue
+        }
+        // skip first line of first batch
+        if (oldGrenadesLineCounter == 0) {
+            continue;
+        }
+        if (lines[lineNumber].trim() === "") {
+            continue;
         }
         gameData.grenades.push(new GrenadesRow(
             currentLine[0], currentLine[1], parseInt(currentLine[2]), currentLine[3]
@@ -503,19 +527,25 @@ export class KillsRow {
 }
 
 let lastKillsLine = ""
+let killsLineCounter = 0
 export async function parseKills(tuple: { value: Uint8Array; done: boolean; }) {
     const linesUnsplit = lastKillsLine +
         (tuple.value ? utf8Decoder.decode(tuple.value, {stream: true}) : "");
     lastKillsLine = ""
     const lines = linesUnsplit.split("\n");
     for(let lineNumber = 1; lineNumber < lines.length; lineNumber++) {
-        if (lines[lineNumber].trim() === "") {
-            continue;
-        }
+        const oldKillsLineCounter = killsLineCounter++
         let currentLine = lines[lineNumber].split(",");
         if (lineNumber == lines.length - 1 && currentLine.length < 9) {
             lastKillsLine = lines[lineNumber]
             continue
+        }
+        // skip first line of first batch
+        if (oldKillsLineCounter == 0) {
+            continue;
+        }
+        if (lines[lineNumber].trim() === "") {
+            continue;
         }
         gameData.kills.push(new KillsRow(
             currentLine[0], currentLine[1], currentLine[2], currentLine[3],
