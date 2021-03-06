@@ -1,6 +1,6 @@
 import {
     GameData,
-    parsePosition,
+    parse,
     positionReader,
     setPositionReader,
     parseSpotted,
@@ -198,7 +198,7 @@ async function changedMatch() {
                 .then((response: any) => {
                     setPositionReader(response.Body.getReader());
                     return positionReader.read();
-                }).then(parsePosition));
+                }).then(parse(gameData.positionParser, true)));
     } catch (err) {
         console.log("Error", err);
     }

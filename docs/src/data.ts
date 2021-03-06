@@ -4,6 +4,12 @@ function parseBool(b: string) {
     return b == "1";
 }
 
+interface Parseable {
+    lineCounter: number;
+    lastLine: string;
+    parseOneLine(currentLine: string[]): any
+}
+
 class PlayerPositionRow {
     name: string;
     team: number;
@@ -81,7 +87,7 @@ export class PositionRow {
                 player9ZPosition: number, player9XViewDirection: number, player9YViewDirection: number,
                 player9IsAlive: boolean, player9isBlinded: boolean,
                 demoFile: string
-                ) {
+    ) {
         this.demoTickNumber = demoTickNumber;
         this.gameTickNumber = gameTickNumber;
         this.matchStarted = matchStarted;
@@ -140,35 +146,19 @@ export class PositionRow {
             player9isBlinded))
         this.demoFile = demoFile;
     }
-
 }
 
-let lastPositionLine = ""
-let positionLineCounter = 0
-export async function parsePosition(tuple: { value: Uint8Array; done: boolean; }) {
-    const linesUnsplit = lastPositionLine +
-        (tuple.value ? utf8Decoder.decode(tuple.value, {stream: true}) : "");
-    lastPositionLine = ""
-    const lines = linesUnsplit.split("\n");
-    for (let lineNumber = 0; lineNumber < lines.length; lineNumber++) {
-        const oldPositionLineCounter = positionLineCounter++
-        let currentLine = lines[lineNumber].split(",");
-        // keep around split lines from end of chunks for next chunks
-        // this has to come first in case we skip an entire chunk
-        if (lineNumber == lines.length - 1 && currentLine.length < 104) {
-            lastPositionLine = lines[lineNumber]
-            continue
-        }
-        // skip first line of first batch
-        if (oldPositionLineCounter == 0) {
-            continue;
-        }
-        if (lines[lineNumber].trim() === "") {
-            continue;
-        }
+class PositionParser implements Parseable {
+    lineCounter: number = 0;
+    lastLine: string = "";
+    parseOneLine(currentLine: string[]): any {
         // skip warmup
         if (parseBool(currentLine[5])) {
-            continue;
+            return;
+        }
+        if (isNaN(parseInt(currentLine[0]))) {
+            console.log("line " + this.lineCounter.toString())
+            console.log(currentLine)
         }
         gameData.position.push(new PositionRow(
             // first 12 aren't palyer specified
@@ -221,8 +211,40 @@ export async function parsePosition(tuple: { value: Uint8Array; done: boolean; }
             currentLine[103]
         ));
     }
-    if (!tuple.done) {
-        await positionReader.read().then(parsePosition);
+}
+
+export function parse(container: Parseable, firstCall: Boolean = true) {
+    if (firstCall) {
+        container.lastLine = ""
+        container.lineCounter = 0
+    }
+    return async (tuple: { value: Uint8Array; done: boolean; }) => {
+        const linesUnsplit = container.lastLine +
+            (tuple.value ? utf8Decoder.decode(tuple.value, {stream: true}) : "");
+        container.lastLine = ""
+        const lines = linesUnsplit.split("\n");
+        for (let lineNumber = 0; lineNumber < lines.length; lineNumber++) {
+            const oldLineCounter = container.lineCounter
+            let currentLine = lines[lineNumber].split(",");
+            if (lineNumber == lines.length - 1 && currentLine.length < 104) {
+                container.lastLine = lines[lineNumber]
+                continue
+            }
+            // only increment oldLineCounter once the line is actually confirmed
+            // to be complete
+            container.lineCounter++
+            // skip first line of first batch
+            if (oldLineCounter == 0) {
+                continue;
+            }
+            if (lines[lineNumber].trim() === "") {
+                continue;
+            }
+            container.parseOneLine(currentLine)
+        }
+        if (!tuple.done) {
+            await positionReader.read().then(parse(container, false));
+        }
     }
 }
 
@@ -560,6 +582,7 @@ export function setKillsReader(readerInput: any) {
 }
 
 export class GameData {
+    positionParser: PositionParser = new PositionParser();
     position: PositionRow[] = [];
     spotted: SpottedRow[] = [];
     weaponFire: WeaponFireRow[] = [];
