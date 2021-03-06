@@ -224,10 +224,6 @@ export async function parsePosition(tuple: { value: Uint8Array; done: boolean; }
     if (!tuple.done) {
         await positionReader.read().then(parsePosition);
     }
-    else {
-        console.log("line counter:" + positionLineCounter.toString())
-        console.log(":" + gameData.position.length.toString())
-    }
 }
 
 export let positionReader:any = null;

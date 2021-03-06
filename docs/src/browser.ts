@@ -131,6 +131,8 @@ async function init() {
     matchLabel = document.querySelector<HTMLLabelElement>("#cur-match")
     downloadSelect = document.querySelector<HTMLSelectElement>("#download-type")
     document.querySelector<HTMLSelectElement>("#download-type").addEventListener("change", setMatchLabel)
+    matchSelector.addEventListener("input", changingMatch)
+    matchSelector.addEventListener("mouseup", changedMatch)
     setupCanvas()
     setupInitFilters()
     await changedMatch();
@@ -139,6 +141,7 @@ async function init() {
 }
 
 function changingMatch() {
+    console.log("changing match")
     ctx.drawImage(minimap,0,0,minimapWidth,minimapHeight,0,0,
         canvasWidth,canvasHeight);
     ctx.fillStyle = lightGray;
@@ -184,6 +187,7 @@ function setMatchLabel() {
 }
 
 async function changedMatch() {
+    console.log("changed match")
     createGameData();
     matchLabelStr = matches[parseInt(matchSelector.value)].demoFile;
     setMatchLabel();
@@ -260,4 +264,4 @@ async function changedMatch() {
 }
 
 
-export { init, matches, changingMatch, changedMatch, gameData };
+export { init, matches, gameData };

@@ -50,7 +50,6 @@ function makePitchNeg90To90() {
 }
 
 function alwaysFilter() {
-    console.log("pre filter position length" + gameData.position.length)
     fixAfterDeath()
     makePitchNeg90To90()
     filteredData.position = gameData.position
