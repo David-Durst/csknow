@@ -143,10 +143,10 @@ function trackMouse(e: MouseEvent) {
     for (let p = 0; p < tickData.players.length; p++) {
         const playerCoordinate = new MapCoordinate(
             tickData.players[p].xPosition, tickData.players[p].yPosition, false)
-        if (playerCoordinate.getCanvasX() <= minimapCoordinate.getCanvasX() &&
-            playerCoordinate.getCanvasX() + 20 >= minimapCoordinate.getCanvasX() &&
-            playerCoordinate.getCanvasY() - 20 <= minimapCoordinate.getCanvasY() &&
-            playerCoordinate.getCanvasY() >= minimapCoordinate.getCanvasY()) {
+        if (playerCoordinate.getCanvasX() - 10 <= minimapCoordinate.getCanvasX() &&
+            playerCoordinate.getCanvasX() + 10 >= minimapCoordinate.getCanvasX() &&
+            playerCoordinate.getCanvasY() - 10 <= minimapCoordinate.getCanvasY() &&
+            playerCoordinate.getCanvasY() + 10 >= minimapCoordinate.getCanvasY()) {
             playerNameLabel.innerHTML = tickData.players[p].name
             selectedPlayer = p;
             drawTick(null)
