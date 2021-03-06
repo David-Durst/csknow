@@ -3,19 +3,14 @@ import {
     parse,
     positionReader,
     setPositionReader,
-    parseSpotted,
     spottedReader,
     setSpottedReader,
-    parseWeaponFire,
     weaponFireReader,
     setWeaponFireReader,
-    parseKills,
     killsReader,
     setKillsReader,
-    parseHurt,
     hurtReader,
     setHurtReader,
-    parseGrenades,
     grenadesReader,
     setGrenadesReader,
     gameData,
@@ -209,7 +204,7 @@ async function changedMatch() {
                 .then((response: any) => {
                     setSpottedReader(response.Body.getReader());
                     return spottedReader.read();
-            }).then(parseSpotted));
+            }).then(parse(gameData.spottedParser, true)));
     } catch (err) {
         console.log("Error", err);
     }
@@ -220,7 +215,7 @@ async function changedMatch() {
                 .then((response: any) => {
                     setWeaponFireReader(response.Body.getReader());
                     return weaponFireReader.read();
-            }).then(parseWeaponFire));
+            }).then(parse(gameData.weaponFireParser, true)));
     } catch (err) {
         console.log("Error", err);
     }
@@ -231,7 +226,7 @@ async function changedMatch() {
                 .then((response: any) => {
                     setHurtReader(response.Body.getReader());
                     return hurtReader.read();
-            }).then(parseHurt));
+            }).then(parse(gameData.playerHurtParser, true)));
     } catch (err) {
         console.log("Error", err);
     }
@@ -242,7 +237,7 @@ async function changedMatch() {
                 .then((response: any) => {
                     setGrenadesReader(response.Body.getReader());
                     return grenadesReader.read();
-            }).then(parseGrenades));
+            }).then(parse(gameData.grenadeParser, true)));
     } catch (err) {
         console.log("Error", err);
     }
@@ -253,7 +248,7 @@ async function changedMatch() {
                 .then((response: any) => {
                     setKillsReader(response.Body.getReader());
                     return killsReader.read();
-            }).then(parseKills));
+            }).then(parse(gameData.killsParser, true)));
     } catch (err) {
         console.log("Error", err);
     }
