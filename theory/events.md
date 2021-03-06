@@ -19,4 +19,6 @@
     2. is player current visible to other player - one-to-one, state dependent
     3. is player firing during the current second (32 ticks) - predicate, state independent
     4. is player hurt during the current second (32 ticks) - predicate, state independent
-    5. is player throwing a grenade during the current second (32 ticks) - 
+    5. is player throwing a grenade during the current second (32 ticks) - predicate, state independent
+    6. is more players moving and within 100 units of at least 3 other players 
+       over a window of at least 96 ticks - one-to-many, state dependent
