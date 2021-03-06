@@ -5,8 +5,7 @@ function parseBool(b: string) {
 }
 
 interface Parseable {
-    lineCounter: number;
-    lastLine: string;
+    tempLineContainer: string;
     parseOneLine(currentLine: string[]): any
 }
 
@@ -149,15 +148,14 @@ export class PositionRow {
 }
 
 class PositionParser implements Parseable {
-    lineCounter: number = 0;
-    lastLine: string = "";
+    numElements: number = 104;
+    tempLineContainer: string = "";
     parseOneLine(currentLine: string[]): any {
         // skip warmup
         if (parseBool(currentLine[5])) {
             return;
         }
         if (isNaN(parseInt(currentLine[0]))) {
-            console.log("line " + this.lineCounter.toString())
             console.log(currentLine)
         }
         gameData.position.push(new PositionRow(
@@ -210,41 +208,6 @@ class PositionParser implements Parseable {
             // after player data
             currentLine[103]
         ));
-    }
-}
-
-export function parse(container: Parseable, firstCall: Boolean = true) {
-    if (firstCall) {
-        container.lastLine = ""
-        container.lineCounter = 0
-    }
-    return async (tuple: { value: Uint8Array; done: boolean; }) => {
-        const linesUnsplit = container.lastLine +
-            (tuple.value ? utf8Decoder.decode(tuple.value, {stream: true}) : "");
-        container.lastLine = ""
-        const lines = linesUnsplit.split("\n");
-        for (let lineNumber = 0; lineNumber < lines.length; lineNumber++) {
-            const oldLineCounter = container.lineCounter
-            let currentLine = lines[lineNumber].split(",");
-            if (lineNumber == lines.length - 1 && currentLine.length < 104) {
-                container.lastLine = lines[lineNumber]
-                continue
-            }
-            // only increment oldLineCounter once the line is actually confirmed
-            // to be complete
-            container.lineCounter++
-            // skip first line of first batch
-            if (oldLineCounter == 0) {
-                continue;
-            }
-            if (lines[lineNumber].trim() === "") {
-                continue;
-            }
-            container.parseOneLine(currentLine)
-        }
-        if (!tuple.done) {
-            await positionReader.read().then(parse(container, false));
-        }
     }
 }
 
@@ -315,6 +278,12 @@ export class SpottedRow {
     }
 }
 
+class SpottedParser implements Parseable {
+    numElements: number = 23;
+    tempLineContainer: string = "";
+    parseOneLine(currentLine: string[]): any {
+    }
+}
 let lastSpottedLine = ""
 let spottedLineCounter = 0
 export async function parseSpotted(tuple: { value: Uint8Array; done: boolean; }) {
@@ -579,6 +548,28 @@ export async function parseKills(tuple: { value: Uint8Array; done: boolean; }) {
 export let killsReader:any = null;
 export function setKillsReader(readerInput: any) {
     killsReader = readerInput
+}
+
+export function parse(container: Parseable, firstCall: Boolean = true) {
+    if (firstCall) {
+        container.tempLineContainer = ""
+    }
+    return async (tuple: { value: Uint8Array; done: boolean; }) => {
+        container.tempLineContainer += tuple.value ?
+            utf8Decoder.decode(tuple.value, {stream: true}) : "";
+        if (!tuple.done) {
+            await positionReader.read().then(parse(container, false));
+        }
+        else {
+            const lines = container.tempLineContainer.split("\n");
+            for (let lineNumber = 1; lineNumber < lines.length; lineNumber++) {
+                if (lines[lineNumber].trim() === "") {
+                    continue;
+                }
+                container.parseOneLine(lines[lineNumber].split(","))
+            }
+        }
+    }
 }
 
 export class GameData {
