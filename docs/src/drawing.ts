@@ -235,9 +235,6 @@ export function setupMatchDrawing() {
         }
     }
     drawTick(null)
-    console.log("max view y if not warmup:" + maxViewY.toString())
-    console.log("max view y p:" + maxViewYP.toString())
-    console.log("max view y t:" + maxViewYT.toString())
 }
 
 export function setupCanvas() {

@@ -182,7 +182,6 @@ function setMatchLabel() {
 }
 
 async function changedMatch() {
-    console.log("changed match")
     createGameData();
     matchLabelStr = matches[parseInt(matchSelector.value)].demoFile;
     setMatchLabel();
