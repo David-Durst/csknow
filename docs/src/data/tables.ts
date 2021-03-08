@@ -432,3 +432,23 @@ export class KillsParser implements Parseable {
 
     reader: any = null
 }
+
+export class GameData {
+    positionParser: PositionParser = new PositionParser();
+    position: PositionRow[] = [];
+    spottedParser: SpottedParser = new SpottedParser();
+    spotted: SpottedRow[] = [];
+    positionToSpotted: Map<number, number[]> = new Map<number, number[]>()
+    weaponFireParser: WeaponFireParser = new WeaponFireParser();
+    weaponFire: WeaponFireRow[] = [];
+    positionToWeaponFire: bigint[][] = [];
+    playerHurtParser: PlayerHurtParser = new PlayerHurtParser();
+    playerHurt: PlayerHurtRow[] = [];
+    positionToPlayerHurt: bigint[][] = [];
+    grenadeParser: GrenadesParser = new GrenadesParser();
+    grenades: GrenadesRow[] = [];
+    positionToGrenades: bigint[][] = [];
+    killsParser: KillsParser = new KillsParser();
+    kills: KillsRow[] = [];
+    positionToKills: bigint[][] = [];
+}

@@ -1,5 +1,4 @@
 import {
-    GameData,
     parse,
     gameData,
     createGameData,
@@ -32,7 +31,7 @@ import {
     GetObjectCommandOutput,
     GetObjectOutput
 } from "@aws-sdk/client-s3";
-import {setReader} from "./data/tables";
+import {GameData, setReader} from "./data/tables";
 
 let matchSelector: HTMLInputElement = null;
 let matchLabel: HTMLLabelElement = null;
