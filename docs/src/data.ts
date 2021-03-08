@@ -7,6 +7,11 @@ function parseBool(b: string) {
 interface Parseable {
     tempLineContainer: string;
     parseOneLine(currentLine: string[]): any
+    reader: ReadableStreamDefaultReader<any>
+}
+
+export function setReader(readerInput: any, container: Parseable) {
+    container.reader = readerInput
 }
 
 class PlayerPositionRow {
@@ -208,12 +213,9 @@ class PositionParser implements Parseable {
             currentLine[103]
         ));
     }
+    reader:any = null;
 }
 
-export let positionReader:any = null;
-export function setPositionReader(readerInput: any) {
-    positionReader = readerInput
-}
 
 export class SpottedRow {
     spottedPlayer: string;
@@ -289,11 +291,7 @@ class SpottedParser implements Parseable {
             currentLine[19], parseBool(currentLine[20]), parseInt(currentLine[21]), currentLine[22]
         ));
     }
-}
-
-export let spottedReader:any = null;
-export function setSpottedReader(readerInput: any) {
-    spottedReader = readerInput
+    reader:any = null
 }
 
 export class WeaponFireRow {
@@ -318,11 +316,7 @@ class WeaponFireParser implements Parseable {
             currentLine[0], currentLine[1], parseInt(currentLine[2]), currentLine[3]
         ));
     }
-}
-
-export let weaponFireReader:any = null;
-export function setWeaponFireReader(readerInput: any) {
-    weaponFireReader = readerInput
+    reader:any = null
 }
 
 export class PlayerHurtRow {
@@ -361,11 +355,7 @@ class PlayerHurtParser implements Parseable {
             currentLine[5], currentLine[6], parseInt(currentLine[7]), currentLine[8]
         ));
     }
-}
-
-export let hurtReader:any = null;
-export function setHurtReader(readerInput: any) {
-    hurtReader = readerInput
+    reader:any = null;
 }
 
 export class GrenadesRow {
@@ -389,11 +379,7 @@ class GrenadesParser implements Parseable {
             currentLine[0], currentLine[1], parseInt(currentLine[2]), currentLine[3]
         ));
     }
-}
-
-export let grenadesReader:any = null;
-export function setGrenadesReader(readerInput: any) {
-    grenadesReader = readerInput
+    reader: any = null
 }
 
 export class KillsRow {
@@ -431,22 +417,18 @@ class KillsParser implements Parseable {
             parseInt(currentLine[6]), parseInt(currentLine[7]), currentLine[8]
         ));
     }
-}
-
-export let killsReader:any = null;
-export function setKillsReader(readerInput: any) {
-    killsReader = readerInput
+    reader: any = null
 }
 
 export function parse(container: Parseable, firstCall: Boolean = true) {
     if (firstCall) {
         container.tempLineContainer = ""
     }
-    return async (tuple: { value: Uint8Array; done: boolean; }) => {
+    return async (tuple: ReadableStreamDefaultReadResult<any>) => {
         container.tempLineContainer += tuple.value ?
             utf8Decoder.decode(tuple.value, {stream: true}) : "";
         if (!tuple.done) {
-            await positionReader.read().then(parse(container, false));
+            await container.reader.read().then(parse(container, false));
         }
         else {
             const lines = container.tempLineContainer.split("\n");

@@ -1,18 +1,7 @@
 import {
     GameData,
     parse,
-    positionReader,
-    setPositionReader,
-    spottedReader,
-    setSpottedReader,
-    weaponFireReader,
-    setWeaponFireReader,
-    killsReader,
-    setKillsReader,
-    hurtReader,
-    setHurtReader,
-    grenadesReader,
-    setGrenadesReader,
+    setReader,
     gameData,
     createGameData,
     initialized, setInitialized
@@ -39,7 +28,11 @@ const { S3Client, ListObjectsCommand } = require("@aws-sdk/client-s3");
 const {CognitoIdentityClient} = require("@aws-sdk/client-cognito-identity");
 const {fromCognitoIdentityPool} = require("@aws-sdk/credential-provider-cognito-identity");
 const path = require("path");
-import {GetObjectCommand} from "@aws-sdk/client-s3";
+import {
+    GetObjectCommand,
+    GetObjectCommandOutput,
+    GetObjectOutput
+} from "@aws-sdk/client-s3";
 
 let matchSelector: HTMLInputElement = null;
 let matchLabel: HTMLLabelElement = null;
@@ -190,8 +183,8 @@ async function changedMatch() {
         promises.push(
             s3.send(new GetObjectCommand(getObjectParams(matchLabelStr, "position")))
                 .then((response: any) => {
-                    setPositionReader(response.Body.getReader());
-                    return positionReader.read();
+                    setReader((<ReadableStream> response.Body).getReader(), gameData.positionParser)
+                    return gameData.positionParser.reader.read();
                 }).then(parse(gameData.positionParser, true)));
     } catch (err) {
         console.log("Error", err);
@@ -201,8 +194,8 @@ async function changedMatch() {
         promises.push(
             s3.send(new GetObjectCommand(getObjectParams(matchLabelStr, "spotted")))
                 .then((response: any) => {
-                    setSpottedReader(response.Body.getReader());
-                    return spottedReader.read();
+                    setReader((<ReadableStream> response.Body).getReader(), gameData.spottedParser)
+                    return gameData.spottedParser.reader.read();
             }).then(parse(gameData.spottedParser, true)));
     } catch (err) {
         console.log("Error", err);
@@ -211,9 +204,9 @@ async function changedMatch() {
     try {
         promises.push(
             s3.send(new GetObjectCommand(getObjectParams(matchLabelStr, "weapon_fire")))
-                .then((response: any) => {
-                    setWeaponFireReader(response.Body.getReader());
-                    return weaponFireReader.read();
+                .then((response: GetObjectCommandOutput) => {
+                    setReader((<ReadableStream> response.Body).getReader(), gameData.weaponFireParser)
+                    return gameData.weaponFireParser.reader.read();
             }).then(parse(gameData.weaponFireParser, true)));
     } catch (err) {
         console.log("Error", err);
@@ -222,9 +215,9 @@ async function changedMatch() {
     try {
         promises.push(
             s3.send(new GetObjectCommand(getObjectParams(matchLabelStr, "hurt")))
-                .then((response: any) => {
-                    setHurtReader(response.Body.getReader());
-                    return hurtReader.read();
+                .then((response: GetObjectCommandOutput) => {
+                    setReader((<ReadableStream> response.Body).getReader(), gameData.playerHurtParser)
+                    return gameData.playerHurtParser.reader.read();
             }).then(parse(gameData.playerHurtParser, true)));
     } catch (err) {
         console.log("Error", err);
@@ -233,9 +226,9 @@ async function changedMatch() {
     try {
         promises.push(
             s3.send(new GetObjectCommand(getObjectParams(matchLabelStr, "grenades")))
-                .then((response: any) => {
-                    setGrenadesReader(response.Body.getReader());
-                    return grenadesReader.read();
+                .then((response: GetObjectCommandOutput) => {
+                    setReader((<ReadableStream> response.Body).getReader(), gameData.grenadeParser)
+                    return gameData.grenadeParser.reader.read();
             }).then(parse(gameData.grenadeParser, true)));
     } catch (err) {
         console.log("Error", err);
@@ -244,9 +237,9 @@ async function changedMatch() {
     try {
         promises.push(
             s3.send(new GetObjectCommand(getObjectParams(matchLabelStr, "kills")))
-                .then((response: any) => {
-                    setKillsReader(response.Body.getReader());
-                    return killsReader.read();
+                .then((response: GetObjectCommandOutput) => {
+                    setReader((<ReadableStream> response.Body).getReader(), gameData.killsParser)
+                    return gameData.killsParser.reader.read();
             }).then(parse(gameData.killsParser, true)));
     } catch (err) {
         console.log("Error", err);

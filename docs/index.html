@@ -34,8 +34,19 @@
                     <button type="button" id="button_ff" class="btn btn-secondary playButton">
                         <img src="images/skip-forward.svg" id="ff_img" alt="Bootstrap" width="32" height="32">
                     </button>
+                    <select id="event-type">
+                        <option value="none">None</option>
+                        <option value="spotted">Spotted</option>
+                        <option value="weapon_fire">Weapon Fire</option>
+                        <option value="hurt">Hurt</option>
+                        <option value="grenades">Grenades</option>
+                        <option value="kills">Kills</option>
+                    </select>
+                    <button type="button" id="event_filter" class="btn btn-info playButton">
+                        apply event filter
+                    </button>
                     <button type="button" id="clear_filter" class="btn btn-info playButton">
-                        clear filter
+                        clear all filters
                     </button>
                     <input type="range" min="0" max="24" value="0" class="slider"
                            id="tick-selector">
