@@ -1,6 +1,7 @@
-import {GameData, gameData, PositionRow} from "./data/data";
+import {GameData, gameData} from "./data/data";
 import {match} from "assert";
 import {drawTick} from "./drawing/drawing";
+import {PositionRow} from "./data/tables";
 
 export let tickSelector: HTMLInputElement = null;
 export let tickLabel: HTMLLabelElement = null;
