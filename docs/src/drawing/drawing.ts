@@ -1,11 +1,11 @@
-import {gameData, initialized, PositionRow} from "./data"
+import {gameData, initialized, PositionRow} from "../data"
 import {
     filteredData,
     clearRegionFilterData,
     getCurTickIndex,
     setTickLabel,
     filterRegion
-} from "./filter";
+} from "../filter";
 
 export const d2_top_left_x = -2476
 export const d2_top_left_y = 3239

@@ -18,7 +18,7 @@ import {
     drawTick,
     setupMatchDrawing,
     setupCanvas
-} from "./drawing"
+} from "./drawing/drawing"
 import {
     setupInitFilters, setupMatchFilters
 } from "./filter"
