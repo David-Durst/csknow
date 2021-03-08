@@ -16,6 +16,11 @@ export function setReader(readerInput: any, container: Parseable) {
     container.reader = readerInput
 }
 
+export interface DemoData {
+    demoTickNumber: number
+    demoFile: string
+}
+
 class PlayerPositionRow {
     name: string;
     team: number;
@@ -42,7 +47,7 @@ class PlayerPositionRow {
     }
 }
 
-export class PositionRow {
+export class PositionRow implements DemoData {
     demoTickNumber: number;
     gameTickNumber: number;
     matchStarted: boolean;
@@ -220,7 +225,7 @@ export class PositionParser implements Parseable {
     reader: any = null;
 }
 
-export class SpottedRow {
+export class SpottedRow implements DemoData {
     spottedPlayer: string;
     player0Name: string;
     player0Spotter: boolean;
@@ -242,7 +247,7 @@ export class SpottedRow {
     player8Spotter: boolean;
     player9Name: string;
     player9Spotter: boolean;
-    tickNumber: number;
+    demoTickNumber: number;
     demoFile: string;
 
     constructor(spottedPlayer: string, player0Name: string, player0Spotter: boolean,
@@ -277,7 +282,7 @@ export class SpottedRow {
         this.player8Spotter = player8Spotter;
         this.player9Name = player9Name;
         this.player9Spotter = player9Spotter;
-        this.tickNumber = tickNumber;
+        this.demoTickNumber = tickNumber;
         this.demoFile = demoFile;
     }
 }
@@ -299,17 +304,17 @@ export class SpottedParser implements Parseable {
     reader: any = null
 }
 
-export class WeaponFireRow {
+export class WeaponFireRow implements DemoData {
     shooter: string;
     weapon: string;
-    tickNumber: number;
+    demoTickNumber: number;
     demoFile: string;
 
     constructor(shooter: string, weapon: string,
                 tickNumber: number, demoFile: string) {
         this.shooter = shooter;
         this.weapon = weapon;
-        this.tickNumber = tickNumber;
+        this.demoTickNumber = tickNumber;
         this.demoFile = demoFile;
     }
 }
@@ -326,7 +331,7 @@ export class WeaponFireParser implements Parseable {
     reader: any = null
 }
 
-export class PlayerHurtRow {
+export class PlayerHurtRow implements DemoData {
     victimName: string;
     armorDamage: number;
     armor: number;
@@ -334,7 +339,7 @@ export class PlayerHurtRow {
     health: number;
     attacker: string;
     weapon: string;
-    tickNumber: number;
+    demoTickNumber: number;
     demoFile: string;
 
     constructor(victimName: string, armorDamage: number, armor: number,
@@ -347,7 +352,7 @@ export class PlayerHurtRow {
         this.health = health;
         this.attacker = attacker;
         this.weapon = weapon;
-        this.tickNumber = tickNumber;
+        this.demoTickNumber = tickNumber;
         this.demoFile = demoFile;
 
     }
@@ -367,16 +372,16 @@ export class PlayerHurtParser implements Parseable {
     reader: any = null;
 }
 
-export class GrenadesRow {
+export class GrenadesRow implements DemoData {
     thrower: string;
     grenadeType: string;
-    tickNumber: number;
+    demoTickNumber: number;
     demoFile: string;
 
     constructor(thrower: string, grenadeType: string, tickNumber: number, demoFile: string) {
         this.thrower = thrower;
         this.grenadeType = grenadeType;
-        this.tickNumber = tickNumber;
+        this.demoTickNumber = tickNumber;
         this.demoFile = demoFile;
     }
 }
@@ -393,7 +398,7 @@ export class GrenadesParser implements Parseable {
     reader: any = null
 }
 
-export class KillsRow {
+export class KillsRow implements DemoData {
     killer: string;
     victim: string;
     weapon: string;
@@ -401,7 +406,7 @@ export class KillsRow {
     isHeadshot: boolean;
     isWallbang: boolean;
     penetratedObjects: number;
-    tickNumber: number;
+    demoTickNumber: number;
     demoFile: string;
 
     constructor(killer: string, victim: string, weapon: string, assister: string,
@@ -414,7 +419,7 @@ export class KillsRow {
         this.isHeadshot = isHeadshot;
         this.isWallbang = isWallbang;
         this.penetratedObjects = penetratedObjects;
-        this.tickNumber = tickNumber;
+        this.demoTickNumber = tickNumber;
         this.demoFile = demoFile;
     }
 }
@@ -441,14 +446,14 @@ export class GameData {
     positionToSpotted: Map<number, number[]> = new Map<number, number[]>()
     weaponFireParser: WeaponFireParser = new WeaponFireParser();
     weaponFire: WeaponFireRow[] = [];
-    positionToWeaponFire: bigint[][] = [];
+    positionToWeaponFire: Map<number, number[]> = new Map<number, number[]>()
     playerHurtParser: PlayerHurtParser = new PlayerHurtParser();
     playerHurt: PlayerHurtRow[] = [];
-    positionToPlayerHurt: bigint[][] = [];
+    positionToPlayerHurt: Map<number, number[]> = new Map<number, number[]>()
     grenadeParser: GrenadesParser = new GrenadesParser();
     grenades: GrenadesRow[] = [];
-    positionToGrenades: bigint[][] = [];
+    positionToGrenades: Map<number, number[]> = new Map<number, number[]>()
     killsParser: KillsParser = new KillsParser();
     kills: KillsRow[] = [];
-    positionToKills: bigint[][] = [];
+    positionToKills: Map<number, number[]> = new Map<number, number[]>()
 }

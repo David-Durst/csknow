@@ -32,6 +32,7 @@ import {
     GetObjectOutput
 } from "@aws-sdk/client-s3";
 import {GameData, setReader} from "./data/tables";
+import {indexEventsForGame} from "./data/positionsToEvents";
 
 let matchSelector: HTMLInputElement = null;
 let matchLabel: HTMLLabelElement = null;
@@ -245,6 +246,7 @@ async function changedMatch() {
     }
 
     await Promise.all(promises)
+    indexEventsForGame(gameData)
     setupMatchFilters()
     setupMatchDrawing()
 }
