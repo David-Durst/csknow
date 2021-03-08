@@ -1,4 +1,4 @@
-import {GameData, gameData, PositionRow} from "./data";
+import {GameData, gameData, PositionRow} from "./data/data";
 import {match} from "assert";
 import {drawTick} from "./drawing/drawing";
 

@@ -5,7 +5,7 @@ import {
     gameData,
     createGameData,
     initialized, setInitialized
-} from "./data";
+} from "./data/data";
 import {
     canvas,
     ctx,

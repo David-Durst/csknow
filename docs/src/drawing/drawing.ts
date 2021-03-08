@@ -1,4 +1,4 @@
-import {gameData, initialized, PositionRow} from "../data"
+import {gameData, initialized, PositionRow} from "../data/data"
 import {
     filteredData,
     clearRegionFilterData,
