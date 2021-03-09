@@ -88,7 +88,11 @@ export function filterRegion(minX: number, minY: number, maxX: number,
     return true;
 }
 
+let shouldFilterEvents: boolean = false
 function filterEvent() {
+    if (curEvent === "none" || !shouldFilterEvents) {
+        return true;
+    }
     let matchingPositions: PositionRow[] = []
     const index = getEventIndex(filteredData, curEvent)
     for (let t = 0; t < filteredData.position.length; t++) {
@@ -106,11 +110,22 @@ function filterEvent() {
     return true;
 }
 
+function filterEventButton() {
+    shouldFilterEvents = true
+    filterEvent()
+}
+
+export function stopFilteringEvents() {
+    shouldFilterEvents = false
+}
+
 export function clearFilterData() {
     if (filteredData.position.length === gameData.position.length) {
         return;
     }
     filteredData.position = gameData.position
+    // reapply any existing event filters
+    filterEvent()
     setTickSelectorMax(filteredData.position.length - 1)
     setCurTickIndex(0);
 }
@@ -129,5 +144,5 @@ export function setupInitFilters() {
 }
 
 export function setupFilterHandlers() {
-    document.querySelector<HTMLSelectElement>("#event_filter").addEventListener("click", filterEvent)
+    document.querySelector<HTMLSelectElement>("#event_filter").addEventListener("click", filterEventButton)
 }

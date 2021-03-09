@@ -4,7 +4,7 @@ import {
     clearFilterData,
     getCurTickIndex,
     setTickLabel,
-    filterRegion
+    filterRegion, stopFilteringEvents
 } from "../filter";
 import {PositionRow} from "../data/tables";
 import {getPackedSettings} from "http2";
@@ -120,10 +120,11 @@ function finishedRegionFilter(e: MouseEvent) {
     drawTick(null)
 }
 
-function clearFilterDrawing() {
+function clearFilterButton() {
     if (!initialized) {
         return
     }
+    stopFilteringEvents()
     clearFilterData()
     drawingRegionFilter = false
     definedRegionFilter = false
@@ -266,6 +267,6 @@ function setEventsAndRedraw() {
 
 export function setupCanvasHandlers() {
     document.querySelector<HTMLInputElement>("#tick-selector").addEventListener("input", drawTick)
-    document.querySelector<HTMLButtonElement>("#clear_filter").addEventListener("click", clearFilterDrawing)
+    document.querySelector<HTMLButtonElement>("#clear_filter").addEventListener("click", clearFilterButton)
     document.querySelector<HTMLSelectElement>("#event-type").addEventListener("change", setEventsAndRedraw)
 }
