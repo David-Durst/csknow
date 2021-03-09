@@ -10,12 +10,6 @@ let eventSelector: HTMLSelectElement = null
 let eventDiv: HTMLDivElement = null
 export let curEvent: string = "none"
 
-class Event_Status {
-    event: DemoData
-    source: string
-    targets: string[]
-}
-
 function basicPlayerText(tickdata: PositionRow, playerIndex: number): string {
     if (tickdata.players[playerIndex].isAlive) {
         return "o"

@@ -330,8 +330,8 @@ export class SpottedParser implements Parseable {
             currentLine[0], currentLine[1], parseBool(currentLine[2]),
             currentLine[3], parseBool(currentLine[4]), currentLine[5], parseBool(currentLine[6]),
             currentLine[7], parseBool(currentLine[8]), currentLine[9], parseBool(currentLine[10]),
-            currentLine[11], parseBool(currentLine[12]), currentLine[13], parseBool(currentLine[13]),
-            currentLine[14], parseBool(currentLine[15]), currentLine[16], parseBool(currentLine[18]),
+            currentLine[11], parseBool(currentLine[12]), currentLine[13], parseBool(currentLine[14]),
+            currentLine[15], parseBool(currentLine[16]), currentLine[17], parseBool(currentLine[18]),
             currentLine[19], parseBool(currentLine[20]), parseInt(currentLine[21]), currentLine[22]
         ));
     }
