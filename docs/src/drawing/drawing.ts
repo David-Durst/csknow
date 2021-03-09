@@ -8,7 +8,11 @@ import {
 } from "../filter";
 import {PositionRow} from "../data/tables";
 import {getPackedSettings} from "http2";
-import {getPlayersText, setEventText, setupEventDrawing} from "./events";
+import {
+    getPlayersText,
+    setEventText, setEventToDraw,
+    setupEventDrawing,
+} from "./events";
 
 export const d2_top_left_x = -2476
 export const d2_top_left_y = 3239
@@ -252,7 +256,16 @@ export function setupCanvas() {
     canvas.addEventListener("mousemove", trackMouse)
     canvas.addEventListener("mousedown", startingRegionFilter)
     canvas.addEventListener("mouseup", finishedRegionFilter)
+    setupEventDrawing()
+}
+
+function setEventsAndRedraw() {
+    setEventToDraw()
+    drawTick(null)
+}
+
+export function setupCanvasHandlers() {
     document.querySelector<HTMLInputElement>("#tick-selector").addEventListener("input", drawTick)
     document.querySelector<HTMLButtonElement>("#clear_filter").addEventListener("click", clearFilterDrawing)
-    setupEventDrawing()
+    document.querySelector<HTMLSelectElement>("#event-type").addEventListener("change", setEventsAndRedraw)
 }

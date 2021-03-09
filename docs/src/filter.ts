@@ -115,6 +115,8 @@ export function clearFilterData() {
 }
 
 export function setupMatchFilters() {
+    gameData.clone(filteredData)
+    console.log(filteredData)
     alwaysFilter()
     setTickSelectorMax(filteredData.position.length - 1)
 }
@@ -123,5 +125,8 @@ export function setupInitFilters() {
     tickSelector = document.querySelector<HTMLInputElement>("#tick-selector")
     tickLabel = document.querySelector<HTMLLabelElement>("#cur-tick")
     tickLabel.innerHTML = "0"
-    document.querySelector<HTMLSelectElement>("#download-type").addEventListener("change", filterEvent)
+}
+
+export function setupFilterHandlers() {
+    document.querySelector<HTMLSelectElement>("#event_filter").addEventListener("click", filterEvent)
 }

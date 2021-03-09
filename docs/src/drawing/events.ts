@@ -31,7 +31,7 @@ export function getPlayersText(tickdata: PositionRow, gameData: GameData,
     // but 2 players can shoot each other same tick and not able to visualize that right now
     let result: string[] = []
     // if no event, do nothing special
-    if (curEvent == "none" || selectedPlayer === undefined) {
+    if (curEvent == "none" || selectedPlayer === -1) {
         for (let p = 0; p < tickdata.players.length; p++) {
             result.push(basicPlayerText(tickdata, p))
         }
@@ -94,10 +94,12 @@ export function setEventText(tickdata: PositionRow, gameData: GameData) {
     }
     eventDiv.innerHTML = ""
     const index = getEventIndex(gameData, curEvent)
-    const events = index.get(tickdata.demoTickNumber)
-    const eventArray = getEventArray(gameData, curEvent)
-    for (let eIndex = 0; eIndex < events.length; eIndex++) {
-        eventDiv.innerHTML += eventArray[events[eIndex]].getHTML()
+    if (index.has(tickdata.demoTickNumber)) {
+        const events = index.get(tickdata.demoTickNumber)
+        const eventArray = getEventArray(gameData, curEvent)
+        for (let eIndex = 0; eIndex < events.length; eIndex++) {
+            eventDiv.innerHTML += eventArray[events[eIndex]].getHTML()
+        }
     }
 }
 
@@ -107,7 +109,7 @@ export function setEventToDraw() {
 
 export function setupEventDrawing() {
     eventSelector = document.querySelector<HTMLSelectElement>("#event-type")
-    document.querySelector<HTMLSelectElement>("#download-type").addEventListener("change", setEventToDraw)
+    eventSelector.value = "none"
     curEvent = eventSelector.value;
     eventDiv = document.querySelector<HTMLDivElement>("#events")
 }

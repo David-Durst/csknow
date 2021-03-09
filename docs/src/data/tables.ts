@@ -545,6 +545,26 @@ export class GameData {
     killsParser: KillsParser = new KillsParser();
     kills: KillsRow[] = [];
     positionToKills: Map<number, number[]> = new Map<number, number[]>()
+    
+    clone(target: GameData) {
+        target.positionParser = this.positionParser
+        target.position = this.position
+        target.spottedParser = this.spottedParser
+        target.spotted = this.spotted
+        target.positionToSpotted = this.positionToSpotted
+        target.weaponFireParser = this.weaponFireParser
+        target.weaponFire = this.weaponFire
+        target.positionToWeaponFire = this.positionToWeaponFire
+        target.playerHurtParser = this.playerHurtParser
+        target.playerHurt = this.playerHurt
+        target.positionToPlayerHurt = this.positionToPlayerHurt
+        target.grenadeParser = this.grenadeParser
+        target.grenades = this.grenades
+        target.positionToGrenades = this.positionToGrenades
+        target.killsParser = this.killsParser
+        target.kills = this.kills
+        target.positionToKills = this.positionToKills
+    }
 }
 
 export function getEventIndex(gameData: GameData, event: string): Map<number, number[]> {

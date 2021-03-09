@@ -15,9 +15,10 @@ import {
     minimap,
     drawTick,
     setupMatchDrawing,
-    setupCanvas
+    setupCanvas, setupCanvasHandlers
 } from "./drawing/drawing"
 import {
+    setupFilterHandlers,
     setupInitFilters, setupMatchFilters
 } from "./filter"
 import { registerPlayHandlers } from "./controls"
@@ -118,14 +119,16 @@ async function init() {
     matchSelector.max = numMatches.toString()
     matchLabel = document.querySelector<HTMLLabelElement>("#cur-match")
     downloadSelect = document.querySelector<HTMLSelectElement>("#download-type")
-    document.querySelector<HTMLSelectElement>("#download-type").addEventListener("change", setMatchLabel)
-    matchSelector.addEventListener("input", changingMatch)
-    matchSelector.addEventListener("mouseup", changedMatch)
     setupCanvas()
     setupInitFilters()
     await changedMatch();
     setInitialized();
     registerPlayHandlers();
+    document.querySelector<HTMLSelectElement>("#download-type").addEventListener("change", setMatchLabel)
+    matchSelector.addEventListener("input", changingMatch)
+    matchSelector.addEventListener("mouseup", changedMatch)
+    setupCanvasHandlers()
+    setupFilterHandlers()
 }
 
 function changingMatch() {
