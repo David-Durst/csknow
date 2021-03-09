@@ -132,7 +132,6 @@ export function clearFilterData() {
 
 export function setupMatchFilters() {
     gameData.clone(filteredData)
-    console.log(filteredData)
     alwaysFilter()
     setTickSelectorMax(filteredData.position.length - 1)
 }
