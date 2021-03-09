@@ -1,4 +1,5 @@
 import {gameData} from "./data";
+import {InvalidParameterException} from "@aws-sdk/client-cognito-identity";
 
 function parseBool(b: string) {
     return b == "1";
@@ -19,6 +20,27 @@ export function setReader(readerInput: any, container: Parseable) {
 export interface DemoData {
     demoTickNumber: number
     demoFile: string
+}
+
+export interface Printable {
+    getHTML(): string
+    getSource?(): string
+    getTargets?(): string[]
+}
+
+function printTable(keys: string[], values: string[]): string {
+    let result = ""
+    for (let i = 0; i < keys.length; i++) {
+        if (i == 0) {
+            result += "<span class='entry first-entry'>"
+        }
+        else {
+            result += "<span class='entry'>"
+        }
+        result += "<span class='label'>" + keys[i] + ":</span>" +
+            "<span id='t_score'>" + values[i] + "</span></span>"
+    }
+    return result
 }
 
 class PlayerPositionRow {
@@ -171,7 +193,7 @@ export class PositionParser implements Parseable {
             console.log(currentLine)
         }
         gameData.position.push(new PositionRow(
-            // first 12 aren't palyer specified
+            // first 12 aren't player specified
             parseInt(currentLine[0]), parseInt(currentLine[1]), parseBool(currentLine[2]), parseInt(currentLine[3]),
             parseInt(currentLine[4]), parseBool(currentLine[5]), parseBool(currentLine[6]),
             parseBool(currentLine[7]), parseInt(currentLine[8]), parseBool(currentLine[9]),
@@ -225,7 +247,7 @@ export class PositionParser implements Parseable {
     reader: any = null;
 }
 
-export class SpottedRow implements DemoData {
+export class SpottedRow implements DemoData, Printable{
     spottedPlayer: string;
     player0Name: string;
     player0Spotter: boolean;
@@ -285,6 +307,19 @@ export class SpottedRow implements DemoData {
         this.demoTickNumber = tickNumber;
         this.demoFile = demoFile;
     }
+
+    getHTML(): string {
+        let keys: string[] = ["demo tick", "spotted player",
+            this.player0Name, this.player1Name, this.player2Name, this.player3Name,
+            this.player4Name, this.player5Name, this.player6Name, this.player7Name,
+            this.player8Name, this.player9Name]
+        let values: string[] = [this.demoTickNumber.toString(), this.spottedPlayer,
+            String(this.player0Spotter), String(this.player1Spotter), String(this.player2Spotter),
+            String(this.player3Spotter), String(this.player4Spotter), String(this.player5Spotter),
+            String(this.player6Spotter), String(this.player7Spotter), String(this.player8Spotter),
+            String(this.player9Spotter)]
+        return printTable(keys, values)
+    }
 }
 
 export class SpottedParser implements Parseable {
@@ -304,7 +339,7 @@ export class SpottedParser implements Parseable {
     reader: any = null
 }
 
-export class WeaponFireRow implements DemoData {
+export class WeaponFireRow implements DemoData, Printable {
     shooter: string;
     weapon: string;
     demoTickNumber: number;
@@ -316,6 +351,15 @@ export class WeaponFireRow implements DemoData {
         this.weapon = weapon;
         this.demoTickNumber = tickNumber;
         this.demoFile = demoFile;
+    }
+
+    getHTML(): string {
+        return printTable(["demo tick", "shooter", "weapon"],
+            [this.demoTickNumber.toString(), this.shooter, this.weapon])
+    }
+
+    getSource(): string {
+        return this.shooter
     }
 }
 
@@ -331,7 +375,7 @@ export class WeaponFireParser implements Parseable {
     reader: any = null
 }
 
-export class PlayerHurtRow implements DemoData {
+export class PlayerHurtRow implements DemoData, Printable {
     victimName: string;
     armorDamage: number;
     armor: number;
@@ -356,6 +400,22 @@ export class PlayerHurtRow implements DemoData {
         this.demoFile = demoFile;
 
     }
+
+    getHTML(): string {
+        return printTable(["demo tick", "victim", "armor", "armor damage",
+                "health", "health damage", "attacker", "weapon"],
+            [this.demoTickNumber.toString(), this.victimName, this.armor.toString(),
+                this.armorDamage.toString(), this.health.toString(), this.healthDamage.toString(),
+                this.attacker, this.weapon])
+    }
+
+    getSource(): string {
+        return this.victimName
+    }
+
+    getTargets(): string[] {
+        return [this.attacker]
+    }
 }
 
 export class PlayerHurtParser implements Parseable {
@@ -372,7 +432,7 @@ export class PlayerHurtParser implements Parseable {
     reader: any = null;
 }
 
-export class GrenadesRow implements DemoData {
+export class GrenadesRow implements DemoData, Printable {
     thrower: string;
     grenadeType: string;
     demoTickNumber: number;
@@ -383,6 +443,15 @@ export class GrenadesRow implements DemoData {
         this.grenadeType = grenadeType;
         this.demoTickNumber = tickNumber;
         this.demoFile = demoFile;
+    }
+
+    getHTML(): string {
+        return printTable(["demo tick", "thrower", "grenade type"],
+            [this.demoTickNumber.toString(), this.thrower, this.grenadeType])
+    }
+
+    getSource(): string {
+        return this.thrower
     }
 }
 
@@ -398,7 +467,7 @@ export class GrenadesParser implements Parseable {
     reader: any = null
 }
 
-export class KillsRow implements DemoData {
+export class KillsRow implements DemoData, Printable {
     killer: string;
     victim: string;
     weapon: string;
@@ -421,6 +490,26 @@ export class KillsRow implements DemoData {
         this.penetratedObjects = penetratedObjects;
         this.demoTickNumber = tickNumber;
         this.demoFile = demoFile;
+    }
+
+    getHTML(): string {
+        return printTable(["demo tick", "killer", "victim", "weapon",
+                "assister", "headshot", "wallbang", "penetrated objects"],
+            [this.demoTickNumber.toString(), this.killer, this.victim,
+                this.weapon, this.assister, String(this.isHeadshot),
+                String(this.isWallbang), this.penetratedObjects.toString()])
+    }
+
+    getSource(): string {
+        return this.killer
+    }
+
+    getTargets(): string[] {
+        let results = [this.killer]
+        if (this.assister != "n/a") {
+            results.push(this.assister)
+        }
+        return results
     }
 }
 
@@ -456,4 +545,46 @@ export class GameData {
     killsParser: KillsParser = new KillsParser();
     kills: KillsRow[] = [];
     positionToKills: Map<number, number[]> = new Map<number, number[]>()
+}
+
+export function getEventIndex(gameData: GameData, event: string): Map<number, number[]> {
+    if (event == "spotted") {
+        return gameData.positionToSpotted
+    }
+    else if (event == "weapon_fire") {
+        return gameData.positionToWeaponFire
+    }
+    else if (event == "hurt") {
+        return gameData.positionToPlayerHurt
+    }
+    else if (event == "grenades") {
+        return gameData.positionToGrenades
+    }
+    else if (event == "kills") {
+        return gameData.positionToKills
+    }
+    else {
+        throw new Error("getEventIndex for invalid event string " + event)
+    }
+}
+
+export function getEventArray(gameData: GameData, event: string): Printable[] {
+    if (event == "spotted") {
+        return gameData.spotted
+    }
+    else if (event == "weapon_fire") {
+        return gameData.weaponFire
+    }
+    else if (event == "hurt") {
+        return gameData.playerHurt
+    }
+    else if (event == "grenades") {
+        return gameData.grenades
+    }
+    else if (event == "kills") {
+        return gameData.grenades
+    }
+    else {
+        throw new Error("getEventIndex for invalid event string " + event)
+    }
 }

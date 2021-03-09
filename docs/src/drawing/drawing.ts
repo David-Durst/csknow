@@ -7,6 +7,8 @@ import {
     filterRegion
 } from "../filter";
 import {PositionRow} from "../data/tables";
+import {getPackedSettings} from "http2";
+import {getPlayersText} from "./events";
 
 export const d2_top_left_x = -2476
 export const d2_top_left_y = 3239
@@ -167,11 +169,10 @@ export function drawTick(e: InputEvent) {
     const tickData: PositionRow = filteredData.position[curTickIndex]
     tScoreLabel.innerHTML = tickData.tScore.toString()
     ctScoreLabel.innerHTML = tickData.ctScore.toString()
+    let playersText = getPlayersText(tickData, gameData,
+        tickData.players[selectedPlayer].name)
     for (let p = 0; p < tickData.players.length; p++) {
-        let playerText = "o"
-        if (!tickData.players[p].isAlive) {
-            playerText = "x"
-        }
+        let playerText = playersText[p]
         ctx.fillStyle = dark_blue
         if (p == selectedPlayer) {
             ctx.fillStyle = purple
