@@ -102,7 +102,7 @@ export function setEventText(tickdata: PositionRow, gameData: GameData) {
     if (index.has(tickdata.demoTickNumber)) {
         const events = index.get(tickdata.demoTickNumber)
         const eventArray = getEventArray(gameData, curEvent)
-        for (let eIndex = 0; eIndex < events.length; eIndex++) {
+        for (let eIndex = events.length - 1; eIndex >= 0; eIndex--) {
             eventDiv.innerHTML += eventArray[events[eIndex]].getHTML()
         }
     }
