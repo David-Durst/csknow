@@ -568,7 +568,10 @@ export class GameData {
 }
 
 export function getEventIndex(gameData: GameData, event: string): Map<number, number[]> {
-    if (event == "spotted") {
+    if (event == "none") {
+        return null
+    }
+    else if (event == "spotted") {
         return gameData.positionToSpotted
     }
     else if (event == "weapon_fire") {
