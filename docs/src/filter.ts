@@ -67,14 +67,14 @@ export let filteredData: GameData = new GameData()
 export function filterRegion(minX: number, minY: number, maxX: number,
                              maxY: number): boolean {
     let matchingPositions: PositionRow[] = []
-    for (let t = 0; t < gameData.position.length; t++) {
+    for (let t = 0; t < filteredData.position.length; t++) {
         for (let p = 0; p < 10; p++) {
-            if (gameData.position[t].players[p].isAlive &&
-                gameData.position[t].players[p].xPosition >= minX &&
-                gameData.position[t].players[p].xPosition <= maxX &&
-                gameData.position[t].players[p].yPosition >= minY &&
-                gameData.position[t].players[p].yPosition <= maxY) {
-                matchingPositions.push(gameData.position[t])
+            if (filteredData.position[t].players[p].isAlive &&
+                filteredData.position[t].players[p].xPosition >= minX &&
+                filteredData.position[t].players[p].xPosition <= maxX &&
+                filteredData.position[t].players[p].yPosition >= minY &&
+                filteredData.position[t].players[p].yPosition <= maxY) {
+                matchingPositions.push(filteredData.position[t])
                 break
             }
         }
@@ -102,6 +102,7 @@ function filterEvent() {
     filteredData.position = matchingPositions
     setTickSelectorMax(filteredData.position.length - 1)
     setCurTickIndex(0);
+    drawTick(null)
     return true;
 }
 

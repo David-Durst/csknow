@@ -109,7 +109,6 @@ export function setEventToDraw() {
 
 export function setupEventDrawing() {
     eventSelector = document.querySelector<HTMLSelectElement>("#event-type")
-    eventSelector.value = "none"
     curEvent = eventSelector.value;
     eventDiv = document.querySelector<HTMLDivElement>("#events")
 }
