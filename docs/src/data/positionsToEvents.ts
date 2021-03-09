@@ -6,17 +6,17 @@ function generatePositionsToEventsTable(position: PositionRow[],
                                                events: DemoData[],
                                                positionToEvent: Map<number, number[]>,
                                                ) {
-    for (let spottedIndex = 0; spottedIndex < events.length; spottedIndex++) {
-        let curSpotted = events[spottedIndex]
-        for (let curTick = curSpotted.demoTickNumber;
+    for (let eventIndex = 0; eventIndex < events.length; eventIndex++) {
+        let curEvent = events[eventIndex]
+        for (let curTick = curEvent.demoTickNumber;
              curTick < position.length &&
-                curTick < curSpotted.demoTickNumber + ticksPerEvent;
+                curTick < curEvent.demoTickNumber + ticksPerEvent;
              curTick++) {
             if (!positionToEvent.has(curTick)) {
                 positionToEvent.set(curTick, [])
             }
             let values = positionToEvent.get(curTick)
-            values.push(spottedIndex)
+            values.push(eventIndex)
             positionToEvent.set(curTick, values);
         }
     }

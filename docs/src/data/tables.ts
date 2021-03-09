@@ -29,7 +29,7 @@ export interface Printable {
 }
 
 function printTable(keys: string[], values: string[]): string {
-    let result = ""
+    let result = "<div>"
     for (let i = 0; i < keys.length; i++) {
         if (i == 0) {
             result += "<span class='entry first-entry'>"
@@ -40,7 +40,7 @@ function printTable(keys: string[], values: string[]): string {
         result += "<span class='label'>" + keys[i] + ":</span>" +
             "<span id='t_score'>" + values[i] + "</span></span>"
     }
-    return result
+    return result + "</div>"
 }
 
 class PlayerPositionRow {

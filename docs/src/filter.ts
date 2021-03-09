@@ -1,7 +1,8 @@
 import {gameData} from "./data/data";
 import {match} from "assert";
 import {drawTick} from "./drawing/drawing";
-import {GameData, PositionRow} from "./data/tables";
+import {GameData, getEventIndex, PositionRow} from "./data/tables";
+import {setEventToDraw, curEvent} from "./drawing/events";
 
 export let tickSelector: HTMLInputElement = null;
 export let tickLabel: HTMLLabelElement = null;
@@ -63,15 +64,9 @@ function alwaysFilter() {
 
 export let filteredData: GameData = new GameData()
 
-// track where this tick so can keep slider pointing at same tick
-// when adding/removing filters
-let tickIndexFilteredToOrig: number[] = []
 export function filterRegion(minX: number, minY: number, maxX: number,
                              maxY: number): boolean {
-    let curTickPrefiltering = getCurTickIndex()
-    let curTickPostFiltering = -1;
     let matchingPositions: PositionRow[] = []
-    tickIndexFilteredToOrig = []
     for (let t = 0; t < gameData.position.length; t++) {
         for (let p = 0; p < 10; p++) {
             if (gameData.position[t].players[p].isAlive &&
@@ -80,10 +75,6 @@ export function filterRegion(minX: number, minY: number, maxX: number,
                 gameData.position[t].players[p].yPosition >= minY &&
                 gameData.position[t].players[p].yPosition <= maxY) {
                 matchingPositions.push(gameData.position[t])
-                tickIndexFilteredToOrig.push(t)
-                if (t == curTickPrefiltering) {
-                    curTickPostFiltering = matchingPositions.length - 1
-                }
                 break
             }
         }
@@ -93,17 +84,34 @@ export function filterRegion(minX: number, minY: number, maxX: number,
     }
     filteredData.position = matchingPositions
     setTickSelectorMax(filteredData.position.length - 1)
-    setCurTickIndex(curTickPostFiltering);
+    setCurTickIndex(0);
     return true;
 }
 
-export function clearRegionFilterData() {
+function filterEvent() {
+    let matchingPositions: PositionRow[] = []
+    const index = getEventIndex(filteredData, curEvent)
+    for (let t = 0; t < filteredData.position.length; t++) {
+        if (index.has(filteredData.position[t].demoTickNumber)) {
+            matchingPositions.push(filteredData.position[t])
+        }
+    }
+    if (matchingPositions.length == 0) {
+        return false;
+    }
+    filteredData.position = matchingPositions
+    setTickSelectorMax(filteredData.position.length - 1)
+    setCurTickIndex(0);
+    return true;
+}
+
+export function clearFilterData() {
     if (filteredData.position.length === gameData.position.length) {
         return;
     }
     filteredData.position = gameData.position
     setTickSelectorMax(filteredData.position.length - 1)
-    setCurTickIndex(tickIndexFilteredToOrig[getCurTickIndex()]);
+    setCurTickIndex(0);
 }
 
 export function setupMatchFilters() {
@@ -115,4 +123,5 @@ export function setupInitFilters() {
     tickSelector = document.querySelector<HTMLInputElement>("#tick-selector")
     tickLabel = document.querySelector<HTMLLabelElement>("#cur-tick")
     tickLabel.innerHTML = "0"
+    document.querySelector<HTMLSelectElement>("#download-type").addEventListener("change", filterEvent)
 }

@@ -7,7 +7,8 @@ import {
 } from "../data/tables";
 
 let eventSelector: HTMLSelectElement = null
-let curEvent: string = "none"
+let eventDiv: HTMLDivElement = null
+export let curEvent: string = "none"
 
 class Event_Status {
     event: DemoData
@@ -25,12 +26,12 @@ function basicPlayerText(tickdata: PositionRow, playerIndex: number): string {
 }
 
 export function getPlayersText(tickdata: PositionRow, gameData: GameData,
-                               selectedPlayer: string): string[] {
+                               selectedPlayer: number): string[] {
     // would be great if could draw more than 1 player
     // but 2 players can shoot each other same tick and not able to visualize that right now
     let result: string[] = []
     // if no event, do nothing special
-    if (curEvent == "none") {
+    if (curEvent == "none" || selectedPlayer === undefined) {
         for (let p = 0; p < tickdata.players.length; p++) {
             result.push(basicPlayerText(tickdata, p))
         }
@@ -44,13 +45,13 @@ export function getPlayersText(tickdata: PositionRow, gameData: GameData,
         const eventsForTick = index.get(tickdata.demoTickNumber)
         for (let p = 0; p < tickdata.players.length; p++) {
             // print every player that is a target of the source that is selectedPlayer
-            if (tickdata.players[p].name != selectedPlayer) {
+            if (p != selectedPlayer) {
                 if (eventArray[0].getTargets !== undefined &&
                     eventArray[0].getSource !== undefined) {
                     let isTarget = false
                     for (let eIndex = 0; eIndex < eventsForTick.length; eIndex++)  {
                         let event = eventArray[eventsForTick[eIndex]]
-                        if (event.getSource() === selectedPlayer &&
+                        if (event.getSource() === tickdata.players[selectedPlayer].name &&
                             event.getTargets().includes(tickdata.players[p].name)) {
                             result.push("t")
                             isTarget = true
@@ -87,6 +88,19 @@ export function getPlayersText(tickdata: PositionRow, gameData: GameData,
     }
 }
 
+export function setEventText(tickdata: PositionRow, gameData: GameData) {
+    if (curEvent == "none") {
+        return
+    }
+    eventDiv.innerHTML = ""
+    const index = getEventIndex(gameData, curEvent)
+    const events = index.get(tickdata.demoTickNumber)
+    const eventArray = getEventArray(gameData, curEvent)
+    for (let eIndex = 0; eIndex < events.length; eIndex++) {
+        eventDiv.innerHTML += eventArray[events[eIndex]].getHTML()
+    }
+}
+
 export function setEventToDraw() {
     curEvent = eventSelector.value
 }
@@ -95,4 +109,5 @@ export function setupEventDrawing() {
     eventSelector = document.querySelector<HTMLSelectElement>("#event-type")
     document.querySelector<HTMLSelectElement>("#download-type").addEventListener("change", setEventToDraw)
     curEvent = eventSelector.value;
+    eventDiv = document.querySelector<HTMLDivElement>("#events")
 }

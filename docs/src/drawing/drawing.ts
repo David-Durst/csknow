@@ -1,14 +1,14 @@
 import {gameData, initialized} from "../data/data"
 import {
     filteredData,
-    clearRegionFilterData,
+    clearFilterData,
     getCurTickIndex,
     setTickLabel,
     filterRegion
 } from "../filter";
 import {PositionRow} from "../data/tables";
 import {getPackedSettings} from "http2";
-import {getPlayersText} from "./events";
+import {getPlayersText, setEventText, setupEventDrawing} from "./events";
 
 export const d2_top_left_x = -2476
 export const d2_top_left_y = 3239
@@ -88,7 +88,7 @@ function startingRegionFilter(e: MouseEvent) {
     if (!initialized) {
         return
     }
-    clearRegionFilterData()
+    clearFilterData()
     drawingRegionFilter = true
     definedRegionFilter = false
     emptyFilter = false
@@ -116,11 +116,11 @@ function finishedRegionFilter(e: MouseEvent) {
     drawTick(null)
 }
 
-function clearRegionFilterDrawing() {
+function clearFilterDrawing() {
     if (!initialized) {
         return
     }
-    clearRegionFilterData()
+    clearFilterData()
     drawingRegionFilter = false
     definedRegionFilter = false
     drawTick(null)
@@ -169,8 +169,7 @@ export function drawTick(e: InputEvent) {
     const tickData: PositionRow = filteredData.position[curTickIndex]
     tScoreLabel.innerHTML = tickData.tScore.toString()
     ctScoreLabel.innerHTML = tickData.ctScore.toString()
-    let playersText = getPlayersText(tickData, gameData,
-        tickData.players[selectedPlayer].name)
+    let playersText = getPlayersText(tickData, filteredData, selectedPlayer)
     for (let p = 0; p < tickData.players.length; p++) {
         let playerText = playersText[p]
         ctx.fillStyle = dark_blue
@@ -216,6 +215,7 @@ export function drawTick(e: InputEvent) {
             bottomRightCoordinate.getCanvasX() - topLeftCoordinate.getCanvasX(),
             bottomRightCoordinate.getCanvasY() - topLeftCoordinate.getCanvasY())
     }
+    setEventText(tickData, filteredData)
 }
 export let maxViewY = 0
 export let maxViewYT = 0
@@ -253,5 +253,6 @@ export function setupCanvas() {
     canvas.addEventListener("mousedown", startingRegionFilter)
     canvas.addEventListener("mouseup", finishedRegionFilter)
     document.querySelector<HTMLInputElement>("#tick-selector").addEventListener("input", drawTick)
-    document.querySelector<HTMLButtonElement>("#clear_filter").addEventListener("click", clearRegionFilterDrawing)
+    document.querySelector<HTMLButtonElement>("#clear_filter").addEventListener("click", clearFilterDrawing)
+    setupEventDrawing()
 }
