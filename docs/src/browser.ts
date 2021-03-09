@@ -129,7 +129,6 @@ async function init() {
 }
 
 function changingMatch() {
-    console.log("changing match")
     ctx.drawImage(minimap,0,0,minimapWidth,minimapHeight,0,0,
         canvasWidth,canvasHeight);
     ctx.fillStyle = lightGray;
