@@ -80,6 +80,9 @@ export function getPlayersText(tickdata: PositionRow, gameData: GameData,
                     result.push(basicPlayerText(tickdata, p))
                 }
             }
+            else {
+                result.push(basicPlayerText(tickdata, p))
+            }
         }
     }
     if (result.length < 10) {
