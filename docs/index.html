@@ -19,8 +19,22 @@
             </canvas>
         </div>
         <div class="col-4">
-            <textarea id="custom-filter" cols="50" rows="20"></textarea>
-            <button type="button" class="btn btn-info">Apply Custom Filter</button>
+            <div id="editor">let f = (a) => {return a}</div>
+            <script src="ace-src-min-noconflict/ace.js" type="text/javascript" charset="utf-8"></script>
+            <script src="ace-src-min-noconflict/theme-twilight.js" type="text/javascript" charset="utf-8"></script>
+            <script src="ace-src-min-noconflict/mode-javascript.js" type="text/javascript" charset="utf-8"></script>
+            <script src="ace-src-min-noconflict/ext-language_tools.js" type="text/javascript" charset="utf-8"></script>
+            <script>
+                var editor = ace.edit("editor");
+                editor.setTheme("ace/theme/twilight")
+                editor.session.setMode("ace/mode/javascript");
+                editor.setKeyboardHandler("ace/keyboard/vim");
+                editor.setOptions({
+                    enableBasicAutocompletion: true,
+                    enableSnippets: true,
+                    enableLiveAutocompletion: true
+                });
+            </script>
         </div>
     </div>
 
@@ -39,6 +53,7 @@
                     <button type="button" id="button_ff" class="btn btn-secondary playButton">
                         <img src="images/skip-forward.svg" id="ff_img" alt="Bootstrap" width="32" height="32">
                     </button>
+                    <span class="label">target event type: </span>
                     <select id="event-type">
                         <option value="none">None</option>
                         <option value="spotted">Spotted</option>
@@ -49,6 +64,9 @@
                     </select>
                     <button type="button" id="event_filter" class="btn btn-info playButton">
                         apply event filter
+                    </button>
+                    <button type="button" id="custom_filter" class="btn btn-info playButton">
+                        apply custom filter
                     </button>
                     <button type="button" id="clear_filter" class="btn btn-info playButton">
                         clear all filters

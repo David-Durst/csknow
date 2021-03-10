@@ -42,3 +42,21 @@ a:visited {color: purple;}
     background-color: #dc3545;
     border-color: #dc3545;
 }
+
+#editor {
+    position: absolute;
+    width: 500px;
+    height: 700px;
+}
+
+/*
+ https://stackoverflow.com/questions/56025536/will-change-memory-consumption-is-too-high-firefox-issue
+ https://github.com/ajaxorg/ace-builds/issues/142
+ */
+.ace_hidpi .ace_text-layer,
+.ace_hidpi .ace_gutter-layer,
+.ace_hidpi .ace_content,
+.ace_hidpi .ace_gutter {
+    contain: strict;
+    will-change: auto;
+}
