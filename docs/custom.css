@@ -2,6 +2,11 @@ body {
     background-color: #f9f9f9;
 }
 
+.right-align {
+    margin-left: auto;
+    display: block;
+}
+
 .label {
     font-weight: bold;
 }
