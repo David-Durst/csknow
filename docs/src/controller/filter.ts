@@ -3,6 +3,7 @@ import {match} from "assert";
 import {drawTick} from "../drawing/drawing";
 import {GameData, getEventIndex, PositionRow} from "../data/tables";
 import {setEventToDraw, curEvent} from "../drawing/events";
+import {customFilter, setupCustomFilters} from "./ide_filters";
 
 export let tickSelector: HTMLInputElement = null;
 export let tickLabel: HTMLLabelElement = null;
@@ -126,6 +127,7 @@ export function clearFilterData() {
     filteredData.position = gameData.position
     // reapply any existing event filters
     filterEvent()
+    customFilter()
     setTickSelectorMax(filteredData.position.length - 1)
     setCurTickIndex(0);
 }
@@ -144,4 +146,5 @@ export function setupInitFilters() {
 
 export function setupFilterHandlers() {
     document.querySelector<HTMLSelectElement>("#event_filter").addEventListener("click", filterEventButton)
+    setupCustomFilters()
 }

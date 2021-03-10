@@ -13,13 +13,12 @@
 <!--    https://github.com/CSGO-Analysis/csgo-maps-overviews/tree/master/overviews -->
 <div class="container-fluid">
     <div class="row justify-content-md-center">
-        <div class="col-3"></div>
-        <div class="col-5">
+        <div class="col-6">
             <canvas id="myCanvas" width="700" height="700">
             </canvas>
         </div>
-        <div class="col-4">
-            <div id="editor">let f = (a) => {return a}</div>
+        <div class="col-6">
+            <div id="editor"></div>
             <script src="ace-src-min-noconflict/ace.js" type="text/javascript" charset="utf-8"></script>
             <script src="ace-src-min-noconflict/theme-twilight.js" type="text/javascript" charset="utf-8"></script>
             <script src="ace-src-min-noconflict/mode-javascript.js" type="text/javascript" charset="utf-8"></script>
@@ -68,6 +67,8 @@
                     <button type="button" id="custom_filter" class="btn btn-info playButton">
                         apply custom filter
                     </button>
+                    <span class="label">current custom filter: </span>
+                    <span id="custom_filter_text">not applied</span>
                     <button type="button" id="clear_filter" class="btn btn-info playButton">
                         clear all filters
                     </button>

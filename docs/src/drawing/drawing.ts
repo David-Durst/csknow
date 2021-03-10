@@ -13,6 +13,7 @@ import {
     setEventText, setEventToDraw,
     setupEventDrawing,
 } from "./events";
+import {clearCustomFilter} from "../controller/ide_filters";
 
 export const d2_top_left_x = -2476
 export const d2_top_left_y = 3239
@@ -125,6 +126,7 @@ function clearFilterButton() {
         return
     }
     stopFilteringEvents()
+    clearCustomFilter()
     clearFilterData()
     drawingRegionFilter = false
     definedRegionFilter = false
