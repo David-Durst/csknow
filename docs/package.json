@@ -17,7 +17,8 @@
     "@aws-sdk/s3-request-presigner": "^3.3.0",
     "@aws-sdk/types": "^3.3.0",
     "@aws-sdk/util-create-request": "^3.3.0",
-    "@aws-sdk/util-format-url": "^3.3.0"
+    "@aws-sdk/util-format-url": "^3.3.0",
+    "file-saver": "^2.0.5"
   },
   "devDependencies": {
     "@types/node": "^14.0.23",
