@@ -20,8 +20,8 @@ import {
 import {
     setupFilterHandlers,
     setupInitFilters, setupMatchFilters
-} from "./filter"
-import { registerPlayHandlers } from "./controls"
+} from "./controller/filter"
+import { registerPlayHandlers } from "./controller/controls"
 
 const { S3Client, ListObjectsCommand } = require("@aws-sdk/client-s3");
 const {CognitoIdentityClient} = require("@aws-sdk/client-cognito-identity");

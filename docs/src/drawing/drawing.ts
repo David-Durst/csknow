@@ -5,7 +5,7 @@ import {
     getCurTickIndex,
     setTickLabel,
     filterRegion, stopFilteringEvents
-} from "../filter";
+} from "../controller/filter";
 import {PositionRow} from "../data/tables";
 import {getPackedSettings} from "http2";
 import {

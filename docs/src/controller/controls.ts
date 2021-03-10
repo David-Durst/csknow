@@ -1,4 +1,4 @@
-import { drawTick } from "./drawing/drawing"
+import { drawTick } from "../drawing/drawing"
 import { tickSelector, tickLabel } from "./filter";
 
 let playButton: HTMLButtonElement = null;
