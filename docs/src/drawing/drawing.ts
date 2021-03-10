@@ -2,8 +2,6 @@ import {gameData, initialized} from "../data/data"
 import {
     filteredData,
     clearFilterData,
-    getCurTickIndex,
-    setTickLabel,
     filterRegion, stopFilteringEvents
 } from "../controller/filter";
 import {PositionRow} from "../data/tables";
@@ -14,6 +12,7 @@ import {
     setupEventDrawing,
 } from "./events";
 import {clearCustomFilter} from "../controller/ide_filters";
+import {getCurTickIndex, setTickLabel} from "../controller/tickSelector";
 
 export const d2_top_left_x = -2476
 export const d2_top_left_y = 3239

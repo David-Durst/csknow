@@ -2,6 +2,7 @@ import {getEventIndex, PositionRow} from "../data/tables";
 import {drawTick} from "../drawing/drawing";
 import {filteredData} from "./filter";
 import {curEvent} from "../drawing/events";
+import {setCurTickIndex, setTickSelectorMax } from "./tickSelector";
 
 let customFilterEditor: HTMLDivElement = null
 let customFilterText: HTMLDivElement = null
@@ -24,6 +25,8 @@ export function customFilter() {
     }
     filteredData.position = matchingPositions
     customFilterText.innerHTML = "successfully applied filter"
+    setTickSelectorMax(filteredData.position.length - 1)
+    setCurTickIndex(0);
     drawTick(null)
     return true;
 }

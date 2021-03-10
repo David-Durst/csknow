@@ -1,24 +1,14 @@
 import {gameData} from "../data/data";
-import {match} from "assert";
 import {drawTick} from "../drawing/drawing";
 import {GameData, getEventIndex, PositionRow} from "../data/tables";
-import {setEventToDraw, curEvent} from "../drawing/events";
+import {curEvent} from "../drawing/events";
 import {customFilter, setupCustomFilters} from "./ide_filters";
-
-export let tickSelector: HTMLInputElement = null;
-export let tickLabel: HTMLLabelElement = null;
-function setTickSelectorMax(value: number) {
-    tickSelector.max = value.toString()
-}
-export function getCurTickIndex(): number {
-    return parseInt(tickSelector.value)
-}
-function setCurTickIndex(value: number) {
-    tickSelector.value = value.toString()
-}
-export function setTickLabel(value: number) {
-    tickLabel.innerHTML = value.toString()
-}
+import {
+    setCurTickIndex,
+    setTickSelectorMax, setupTickSelector,
+    tickLabel,
+    tickSelector
+} from "./tickSelector";
 
 let lastPlayerXs = [0,0,0,0,0,0,0,0,0,0]
 let lastPlayerYs = [0,0,0,0,0,0,0,0,0,0]
@@ -139,9 +129,7 @@ export function setupMatchFilters() {
 }
 
 export function setupInitFilters() {
-    tickSelector = document.querySelector<HTMLInputElement>("#tick-selector")
-    tickLabel = document.querySelector<HTMLLabelElement>("#cur-tick")
-    tickLabel.innerHTML = "0"
+    setupTickSelector()
 }
 
 export function setupFilterHandlers() {
