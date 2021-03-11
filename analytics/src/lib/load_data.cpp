@@ -1,4 +1,6 @@
-//
-// Created by durst on 3/10/21.
-//
+#include "load_data.H"
+#include <iostream>
 
+void load_position() {
+    std::cout << "hi" << std::endl;
+}

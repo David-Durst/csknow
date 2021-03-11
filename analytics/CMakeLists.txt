@@ -31,7 +31,7 @@ FATAL: In-source builds are not allowed.
 ")
 endif()
 
-add_library(csknow_lib STATIC ${NBA_SOURCES} ${NBA_HEADERS})
+add_library(csknow_lib STATIC ${CSKNOW_SOURCES} ${CSKNOW_HEADERS})
 add_executable(csknow ${PROJECT_SOURCE_DIR}/src/bin/csknow_main.cpp)
 target_link_libraries(csknow_lib OpenMP::OpenMP_CXX)
 target_link_libraries(csknow csknow_lib)
