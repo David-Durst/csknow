@@ -5,8 +5,24 @@
 #include <sys/types.h>
 #include <string>
 #include <iostream>
+#include <atomic>
+
 using std::to_string;
 using std::string;
+
+void printProgress(double progress) {
+    int barWidth = 70;
+
+    std::cout << "[";
+    int pos = barWidth * progress;
+    for (int i = 0; i < barWidth; ++i) {
+        if (i < pos) std::cout << "=";
+        else if (i == pos) std::cout << ">";
+        else std::cout << " ";
+    }
+    std::cout << "] " << int(progress * 100.0) << " %\r";
+    std::cout.flush();
+}
 
 const string placeholderFileName = ".placeholder";
 vector<string> getFilesInDirectory(string path) {
@@ -26,14 +42,17 @@ vector<string> getFilesInDirectory(string path) {
 }
 
 void loadData(Position & position, Spotted & spotted, WeaponFire & weaponFire, PlayerHurt & playerHurt,
-               Grenades & grenades, Kills & kills, string dataPath) {
+               Grenades & grenades, Kills & kills, string dataPath, OpenFiles & openFiles) {
     vector<string> positionPaths = getFilesInDirectory(dataPath + "/position");
     vector<PositionBuilder> positions{positionPaths.size()};
     vector<int64_t> startingPointPerFile;
+    std::cout << "loading positions off disk" << std::endl;
+    std::atomic<int64_t> filesProcessed = 0;
+    openFiles.paths.clear();
     #pragma omp parallel for
     for (int64_t fileIndex = 0; fileIndex < positionPaths.size(); fileIndex++) {
+        openFiles.paths.insert(positionPaths[fileIndex]);
         csv::CSVReader reader(positionPaths[fileIndex]);
-        std::cout << "starting: " << positionPaths[fileIndex] << std::endl;
         for (const auto & row : reader) {
             positions[fileIndex].demoTickNumber.push_back(row["demo tick number"].get<int32_t>());
             positions[fileIndex].gameTickNumber.push_back(row["ingame tick"].get<int32_t>());
@@ -63,9 +82,13 @@ void loadData(Position & position, Spotted & spotted, WeaponFire & weaponFire, P
 
             }
         }
-        std::cout << "ending: " << positionPaths[fileIndex] << std::endl;
+        openFiles.paths.erase(positionPaths[fileIndex]);
+        filesProcessed++;
+        printProgress((filesProcessed * 1.0) / positionPaths.size());
     }
-    
+    std::cout << std::endl;
+
+    std::cout << "allocating vectors" << std::endl;
     startingPointPerFile.push_back(0);
     for (int64_t fileIndex = 0; fileIndex < positionPaths.size(); fileIndex++) {
         startingPointPerFile.push_back(startingPointPerFile[fileIndex] + positions[fileIndex].demoTickNumber.size());
@@ -97,7 +120,9 @@ void loadData(Position & position, Spotted & spotted, WeaponFire & weaponFire, P
         position.players[i].isAlive = (bool *) malloc(rows * sizeof(bool));
         position.players[i].isBlinded = (bool *) malloc(rows * sizeof(bool));
     }
-    
+
+    std::cout << "merging vectors" << std::endl;
+    filesProcessed = 0;
     #pragma omp parallel for
     for (int64_t fileIndex = 0; fileIndex < positionPaths.size(); fileIndex++) {
         int64_t fileRow = 0;
@@ -130,5 +155,8 @@ void loadData(Position & position, Spotted & spotted, WeaponFire & weaponFire, P
                 position.players[i].isBlinded[positionIndex] = positions[fileIndex].players[i].isBlinded[fileRow];
             }
         }
+        filesProcessed++;
+        printProgress((filesProcessed * 1.0) / positionPaths.size());
     }
+    std::cout << std::endl;
 }

@@ -15,7 +15,17 @@ int main(int argc, char * argv[]) {
     PlayerHurt playerHurt;
     Grenades grenades;
     Kills kills;
+    OpenFiles openFiles;
 
-    loadData(position, spotted, weaponFire, playerHurt, grenades, kills, dataPath);
+    try {
+        loadData(position, spotted, weaponFire, playerHurt, grenades, kills, dataPath, openFiles);
+    }
+    catch (std::error_code& e) {
+        for (const auto & path : openFiles.paths) {
+            std::cerr << "open file: " << path << std::endl;
+        }
+        std::cerr << e.message() << std::endl;
+        return 0;
+    }
     std::cout << "num elements in position: " << position.size << std::endl;
 }

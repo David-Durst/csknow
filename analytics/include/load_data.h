@@ -2,9 +2,15 @@
 #define CSKNOW_LOAD_DATA_H
 #define NUM_PLAYERS 10
 #include <string>
+#include <set>
 #include <vector>
 using std::string;
 using std::vector;
+using std::set;
+
+struct OpenFiles {
+    set<string> paths;
+};
 
 struct PlayerPositionBuilder {
     vector<string> name;
@@ -132,6 +138,6 @@ struct Kills {
 };
 
 void loadData(Position & position, Spotted & spotted, WeaponFire & weaponFire, PlayerHurt & playerHurt,
-               Grenades & grenades, Kills & kills, string dataPath);
+               Grenades & grenades, Kills & kills, string dataPath, OpenFiles & openFiles);
 
 #endif //CSKNOW_LOAD_DATA_H
