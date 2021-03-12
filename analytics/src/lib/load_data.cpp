@@ -49,7 +49,7 @@ void loadData(Position & position, Spotted & spotted, WeaponFire & weaponFire, P
     std::cout << "loading positions off disk" << std::endl;
     std::atomic<int64_t> filesProcessed = 0;
     openFiles.paths.clear();
-    #pragma omp parallel for
+//    #pragma omp parallel for
     for (int64_t fileIndex = 0; fileIndex < positionPaths.size(); fileIndex++) {
         try {
             openFiles.paths.insert(positionPaths[fileIndex]);
