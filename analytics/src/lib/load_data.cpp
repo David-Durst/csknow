@@ -51,36 +51,42 @@ void loadData(Position & position, Spotted & spotted, WeaponFire & weaponFire, P
     openFiles.paths.clear();
     #pragma omp parallel for
     for (int64_t fileIndex = 0; fileIndex < positionPaths.size(); fileIndex++) {
-        openFiles.paths.insert(positionPaths[fileIndex]);
-        csv::CSVReader reader(positionPaths[fileIndex]);
-        for (const auto & row : reader) {
-            positions[fileIndex].demoTickNumber.push_back(row["demo tick number"].get<int32_t>());
-            positions[fileIndex].gameTickNumber.push_back(row["ingame tick"].get<int32_t>());
-            positions[fileIndex].demoFile.push_back(row["demo file"].get<string>());
-            positions[fileIndex].matchStarted.push_back(row["match started"].get<bool>());
-            positions[fileIndex].gamePhase.push_back(row["game phase"].get<int8_t>());
-            positions[fileIndex].roundsPlayed.push_back(row["rounds played"].get<int8_t>());
-            positions[fileIndex].isWarmup.push_back(row["is warmup"].get<bool>());
-            positions[fileIndex].roundStart.push_back(row["round start"].get<bool>());
-            positions[fileIndex].roundEnd.push_back(row["round end"].get<bool>());
-            positions[fileIndex].roundEndReason.push_back(row["round end reason"].get<int8_t>());
-            positions[fileIndex].freezeTimeEnded.push_back(row["freeze time ended"].get<bool>());
-            positions[fileIndex].tScore.push_back(row["t score"].get<int8_t>());
-            positions[fileIndex].ctScore.push_back(row["ct score"].get<int8_t>());
-            positions[fileIndex].numPlayers.push_back(row["num players"].get<int8_t>());
+        try {
+            openFiles.paths.insert(positionPaths[fileIndex]);
+            csv::CSVReader reader(positionPaths[fileIndex]);
+            for (const auto & row : reader) {
+                positions[fileIndex].demoTickNumber.push_back(row["demo tick number"].get<int32_t>());
+                positions[fileIndex].gameTickNumber.push_back(row["ingame tick"].get<int32_t>());
+                positions[fileIndex].demoFile.push_back(row["demo file"].get<string>());
+                positions[fileIndex].matchStarted.push_back(row["match started"].get<bool>());
+                positions[fileIndex].gamePhase.push_back(row["game phase"].get<int8_t>());
+                positions[fileIndex].roundsPlayed.push_back(row["rounds played"].get<int8_t>());
+                positions[fileIndex].isWarmup.push_back(row["is warmup"].get<bool>());
+                positions[fileIndex].roundStart.push_back(row["round start"].get<bool>());
+                positions[fileIndex].roundEnd.push_back(row["round end"].get<bool>());
+                positions[fileIndex].roundEndReason.push_back(row["round end reason"].get<int8_t>());
+                positions[fileIndex].freezeTimeEnded.push_back(row["freeze time ended"].get<bool>());
+                positions[fileIndex].tScore.push_back(row["t score"].get<int8_t>());
+                positions[fileIndex].ctScore.push_back(row["ct score"].get<int8_t>());
+                positions[fileIndex].numPlayers.push_back(row["num players"].get<int8_t>());
 
-            for (int i = 0; i < NUM_PLAYERS; i++) {
-                positions[fileIndex].players[i].name.push_back(row["player " + to_string(i) + " name"].get<string>());
-                positions[fileIndex].players[i].team.push_back(row["player " + to_string(i) + " team"].get<int8_t>());
-                positions[fileIndex].players[i].xPosition.push_back(row["player " + to_string(i) + " x position"].get<double>());
-                positions[fileIndex].players[i].yPosition.push_back(row["player " + to_string(i) + " y position"].get<double>());
-                positions[fileIndex].players[i].zPosition.push_back(row["player " + to_string(i) + " z position"].get<double>());
-                positions[fileIndex].players[i].xViewDirection.push_back(row["player " + to_string(i) + " x view direction"].get<double>());
-                positions[fileIndex].players[i].yViewDirection.push_back(row["player " + to_string(i) + " y view direction"].get<double>());
-                positions[fileIndex].players[i].isAlive.push_back(row["player " + to_string(i) + " is alive"].get<bool>());
-                positions[fileIndex].players[i].isBlinded.push_back(row["player " + to_string(i) + " is blinded"].get<bool>());
+                for (int i = 0; i < NUM_PLAYERS; i++) {
+                    positions[fileIndex].players[i].name.push_back(row["player " + to_string(i) + " name"].get<string>());
+                    positions[fileIndex].players[i].team.push_back(row["player " + to_string(i) + " team"].get<int8_t>());
+                    positions[fileIndex].players[i].xPosition.push_back(row["player " + to_string(i) + " x position"].get<double>());
+                    positions[fileIndex].players[i].yPosition.push_back(row["player " + to_string(i) + " y position"].get<double>());
+                    positions[fileIndex].players[i].zPosition.push_back(row["player " + to_string(i) + " z position"].get<double>());
+                    positions[fileIndex].players[i].xViewDirection.push_back(row["player " + to_string(i) + " x view direction"].get<double>());
+                    positions[fileIndex].players[i].yViewDirection.push_back(row["player " + to_string(i) + " y view direction"].get<double>());
+                    positions[fileIndex].players[i].isAlive.push_back(row["player " + to_string(i) + " is alive"].get<bool>());
+                    positions[fileIndex].players[i].isBlinded.push_back(row["player " + to_string(i) + " is blinded"].get<bool>());
 
+                }
             }
+        }
+        catch (const std::exception &exc){
+            std::cerr << "problem with file " << positionPaths[fileIndex] << std::endl;
+            std::cerr << exc.what();
         }
         openFiles.paths.erase(positionPaths[fileIndex]);
         filesProcessed++;
