@@ -49,10 +49,15 @@ void loadData(Position & position, Spotted & spotted, WeaponFire & weaponFire, P
     std::cout << "loading positions off disk" << std::endl;
     std::atomic<int64_t> filesProcessed = 0;
     openFiles.paths.clear();
-//    #pragma omp parallel for
+    #pragma omp parallel for
     for (int64_t fileIndex = 0; fileIndex < positionPaths.size(); fileIndex++) {
         try {
             openFiles.paths.insert(positionPaths[fileIndex]);
+            std::cerr << "open files: ";
+            for (const auto & path : openFiles.paths) {
+                std::cerr << path << "," << std::endl;
+            }
+            std::cerr << std::endl;
             csv::CSVReader reader(positionPaths[fileIndex]);
             for (const auto & row : reader) {
                 positions[fileIndex].demoTickNumber.push_back(row["demo tick number"].get<int32_t>());
