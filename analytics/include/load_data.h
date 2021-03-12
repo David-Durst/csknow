@@ -6,7 +6,7 @@
 using std::string;
 using std::vector;
 
-struct PlayerPosition {
+struct PlayerPositionBuilder {
     vector<string> name;
     vector<int8_t> team;
     vector<double> xPosition;
@@ -18,7 +18,7 @@ struct PlayerPosition {
     vector<bool> isBlinded;
 };
 
-struct Position {
+struct PositionBuilder {
     vector<int32_t> demoTickNumber;
     vector<int32_t> gameTickNumber;
     vector<string> demoFile;
@@ -33,6 +33,37 @@ struct Position {
     vector<int8_t> tScore;
     vector<int8_t> ctScore;
     vector<int8_t> numPlayers;
+    PlayerPositionBuilder players[NUM_PLAYERS];
+};
+
+struct PlayerPosition {
+    string * name;
+    int8_t * team;
+    double * xPosition;
+    double * yPosition;
+    double * zPosition;
+    double * xViewDirection;
+    double * yViewDirection;
+    bool * isAlive;
+    bool * isBlinded;
+};
+
+struct Position {
+    int64_t size;
+    int32_t * demoTickNumber;
+    int32_t * gameTickNumber;
+    string * demoFile;
+    bool * matchStarted;
+    int8_t * gamePhase;
+    int8_t * roundsPlayed;
+    bool * isWarmup;
+    bool * roundStart;
+    bool * roundEnd;
+    int8_t * roundEndReason;
+    bool * freezeTimeEnded;
+    int8_t * tScore;
+    int8_t * ctScore;
+    int8_t * numPlayers;
     PlayerPosition players[NUM_PLAYERS];
 };
 

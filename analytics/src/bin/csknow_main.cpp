@@ -17,5 +17,5 @@ int main(int argc, char * argv[]) {
     Kills kills;
 
     loadData(position, spotted, weaponFire, playerHurt, grenades, kills, dataPath);
-    std::cout << "num elements in position: " << position.numPlayers.size() << std::endl;
+    std::cout << "num elements in position: " << position.size << std::endl;
 }
