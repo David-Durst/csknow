@@ -33,6 +33,7 @@ void loadData(Position & position, Spotted & spotted, WeaponFire & weaponFire, P
     #pragma omp parallel for
     for (int64_t fileIndex = 0; fileIndex < positionPaths.size(); fileIndex++) {
         csv::CSVReader reader(positionPaths[fileIndex]);
+        std::cout << "starting: " << positionPaths[fileIndex] << std::endl;
         for (const auto & row : reader) {
             positions[fileIndex].demoTickNumber.push_back(row["demo tick number"].get<int32_t>());
             positions[fileIndex].gameTickNumber.push_back(row["ingame tick"].get<int32_t>());
@@ -62,6 +63,7 @@ void loadData(Position & position, Spotted & spotted, WeaponFire & weaponFire, P
 
             }
         }
+        std::cout << "ending: " << positionPaths[fileIndex] << std::endl;
     }
     
     startingPointPerFile.push_back(0);
