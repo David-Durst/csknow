@@ -33,7 +33,7 @@ struct Position {
     vector<int8_t> tScore;
     vector<int8_t> ctScore;
     vector<int8_t> numPlayers;
-    vector<PlayerPosition> players[NUM_PLAYERS];
+    PlayerPosition players[NUM_PLAYERS];
 };
 
 struct Spotted {
@@ -100,7 +100,7 @@ struct Kills {
     vector<int32_t> penetratedObjects;
 };
 
-void load_data(Position & position, Spotted & spotted, WeaponFire & weaponFire, PlayerHurt & playerHurt,
-               Grenades & grenades, Kills & kills);
+void loadData(Position & position, Spotted & spotted, WeaponFire & weaponFire, PlayerHurt & playerHurt,
+               Grenades & grenades, Kills & kills, string dataPath);
 
 #endif //CSKNOW_LOAD_DATA_H
