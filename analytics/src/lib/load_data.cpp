@@ -261,8 +261,8 @@ void loadPositions(Position & position, string dataPath) {
     int64_t rows = startingPointPerFile[positionPaths.size()];
 
     std::cout << "allocating arrays" << std::endl;
-    //std::cout << "rows: " << rows << std::endl;
-    //std::cout << "sizeof int32_t: " << rows << std::endl;
+    std::cout << "rows: " << rows << std::endl;
+    std::cout << "sizeof row: " << sizeof(int32_t)*3 + sizeof(bool)*7 + sizeof(int8_t)*7 + sizeof(double)*5 + 5*sizeof(char) + sizeof(char*) << std::endl;
     position.size = rows;
     position.fileNames.resize(positionPaths.size());
     position.demoTickNumber = (int32_t *) malloc(rows * sizeof(int32_t));
