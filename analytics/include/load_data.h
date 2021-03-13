@@ -43,7 +43,7 @@ struct PositionBuilder {
 };
 
 struct PlayerPosition {
-    string * name;
+    char ** name;
     int8_t * team;
     double * xPosition;
     double * yPosition;
@@ -70,7 +70,7 @@ struct Position {
     int8_t * ctScore;
     int8_t * numPlayers;
     PlayerPosition players[NUM_PLAYERS];
-    string * demoFile;
+    char ** demoFile;
 };
 
 struct Spotted {

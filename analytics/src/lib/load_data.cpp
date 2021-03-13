@@ -113,8 +113,10 @@ void readCol(const char * file, size_t start, size_t end, int64_t rowNumber, int
 }
 
 static inline __attribute__((always_inline))
-void readCol(const char * file, size_t start, size_t end, int64_t rowNumber, int64_t colNumber, string * value) {
-    value = new string(&file[start], end-start);
+void readCol(const char * file, size_t start, size_t end, int64_t rowNumber, int64_t colNumber, char ** value) {
+    *value = new char[end-start+1];
+    strncpy(*value, &file[start], end-start);
+    (*value)[end-start] = '\0';
 }
 
 static inline __attribute__((always_inline))
@@ -265,7 +267,7 @@ void loadPositions(Position & position, OpenFiles & openFiles, string dataPath) 
     position.size = rows;
     position.demoTickNumber = (int64_t *) malloc(rows * sizeof(int64_t));
     position.gameTickNumber = (int64_t *) malloc(rows * sizeof(int64_t));
-    position.demoFile = (string *) malloc(rows * sizeof(string));
+    position.demoFile = (char **) malloc(rows * sizeof(char*));
     position.matchStarted = (bool *) malloc(rows * sizeof(bool));
     position.gamePhase = (int8_t *) malloc(rows * sizeof(int8_t));
     position.roundsPlayed = (int8_t *) malloc(rows * sizeof(int8_t));
@@ -278,7 +280,7 @@ void loadPositions(Position & position, OpenFiles & openFiles, string dataPath) 
     position.ctScore = (int8_t *) malloc(rows * sizeof(int8_t));
     position.numPlayers = (int8_t *) malloc(rows * sizeof(int8_t));
     for (int i = 0; i < NUM_PLAYERS; i++) {
-        position.players[i].name = (string *) malloc(rows * sizeof(string));
+        position.players[i].name = (char **) malloc(rows * sizeof(char*));
         position.players[i].team = (int8_t *) malloc(rows * sizeof(int8_t));
         position.players[i].xPosition = (double *) malloc(rows * sizeof(double));
         position.players[i].yPosition = (double *) malloc(rows * sizeof(double));
