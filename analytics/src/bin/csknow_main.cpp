@@ -20,7 +20,7 @@ int main(int argc, char * argv[]) {
     loadData(position, spotted, weaponFire, playerHurt, grenades, kills, dataPath);
     //std::printf("GLIBCXX: %d\n",__GLIBCXX__);
     std::cout << "num elements in position: " << position.size << std::endl;
-    //while (true) {
-    //    usleep(1e6);
-    //}
+    while (true) {
+        usleep(1e6);
+    }
 }
