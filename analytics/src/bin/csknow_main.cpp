@@ -1,4 +1,5 @@
 #include <iostream>
+#include <unistd.h>
 #include "load_data.h"
 
 int main(int argc, char * argv[]) {
@@ -17,16 +18,10 @@ int main(int argc, char * argv[]) {
     Kills kills;
     OpenFiles openFiles;
 
-    try {
-        loadData(position, spotted, weaponFire, playerHurt, grenades, kills, dataPath, openFiles);
-    }
-    catch (std::error_code& e) {
-        for (const auto & path : openFiles.paths) {
-            std::cerr << "open file: " << path << std::endl;
-        }
-        std::cerr << e.message() << std::endl;
-        return 0;
-    }
+    loadData(position, spotted, weaponFire, playerHurt, grenades, kills, dataPath, openFiles);
     //std::printf("GLIBCXX: %d\n",__GLIBCXX__);
     std::cout << "num elements in position: " << position.size << std::endl;
+    while (true) {
+        usleep(1e6);
+    }
 }
