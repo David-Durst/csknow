@@ -266,6 +266,9 @@ void loadPositions(Position & position, string dataPath) {
     position.size = rows;
     position.fileNames.resize(positionPaths.size());
     position.demoTickNumber = (int32_t *) malloc(rows * sizeof(int32_t));
+    while (true) {
+        usleep(1e6);
+    }
     position.gameTickNumber = (int32_t *) malloc(rows * sizeof(int32_t));
     position.matchStarted = (bool *) malloc(rows * sizeof(bool));
     position.gamePhase = (int8_t *) malloc(rows * sizeof(int8_t));
