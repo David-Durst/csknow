@@ -101,7 +101,7 @@ void readCol(const char * file, size_t start, size_t end, int64_t rowNumber, int
 }
 
 static inline __attribute__((always_inline))
-void readCol(const char * file, size_t start, size_t end, int64_t rowNumber, int64_t colNumber, int64_t & value) {
+void readCol(const char * file, size_t start, size_t end, int64_t rowNumber, int64_t colNumber, int32_t & value) {
     auto messages = std::from_chars(&file[start], &file[end], value);
     printParsingError(messages.ec, rowNumber, colNumber);
 }
