@@ -255,6 +255,7 @@ void loadPositions(Position & position, OpenFiles & openFiles, string dataPath) 
         filesProcessed++;
         printProgress((filesProcessed * 1.0) / positionPaths.size());
     }
+    std::cout << std::endl;
     for (int64_t fileIndex = 0; fileIndex < positionPaths.size(); fileIndex++) {
         startingPointPerFile[fileIndex+1] += startingPointPerFile[fileIndex];
     }
