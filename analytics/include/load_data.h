@@ -58,7 +58,6 @@ struct Position {
     int64_t size;
     int32_t * demoTickNumber;
     int32_t * gameTickNumber;
-    string * demoFile;
     bool * matchStarted;
     int8_t * gamePhase;
     int8_t * roundsPlayed;
@@ -71,6 +70,7 @@ struct Position {
     int8_t * ctScore;
     int8_t * numPlayers;
     PlayerPosition players[NUM_PLAYERS];
+    string * demoFile;
 };
 
 struct Spotted {

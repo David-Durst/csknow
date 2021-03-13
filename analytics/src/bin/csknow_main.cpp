@@ -27,5 +27,6 @@ int main(int argc, char * argv[]) {
         std::cerr << e.message() << std::endl;
         return 0;
     }
+    //std::printf("GLIBCXX: %d\n",__GLIBCXX__);
     std::cout << "num elements in position: " << position.size << std::endl;
 }

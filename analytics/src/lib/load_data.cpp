@@ -1,14 +1,22 @@
 #include "load_data.h"
-#include "csv.hpp"
+#include "fast_float/fast_float.h"
 #include <iostream>
 #include <dirent.h>
-#include <sys/types.h>
 #include <string>
 #include <iostream>
 #include <atomic>
+#include <fstream>
+#include <fcntl.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/mman.h>
+#include <errno.h>
+#include <charconv>
 
 using std::to_string;
 using std::string;
+using std::string_view;
 
 void printProgress(double progress) {
     int barWidth = 70;
@@ -41,72 +49,221 @@ vector<string> getFilesInDirectory(string path) {
     return result;
 }
 
-void loadData(Position & position, Spotted & spotted, WeaponFire & weaponFire, PlayerHurt & playerHurt,
-               Grenades & grenades, Kills & kills, string dataPath, OpenFiles & openFiles) {
-    vector<string> positionPaths = //getFilesInDirectory(dataPath + "/position");
-    {"/home/ubuntu/csknow/analytics/scripts/../../local_data/position/auto0-20210222-234011-2123771339-de_dust2-Counter-Strike__Global_Offensive9589db6e-7561-11eb-a2c6-0242ac110002.dem_position.csv",
-    "/home/ubuntu/csknow/analytics/scripts/../../local_data/position/auto0-20210223-163009-132401449-de_dust2-Counter-Strike__Global_Offensive96385964-7561-11eb-8f49-0242ac110003.dem_position.csv",
-    "/home/ubuntu/csknow/analytics/scripts/../../local_data/position/auto0-20210224-010937-649479451-de_dust2-Counter-Strike__Global_Offensive954b1532-7561-11eb-bafe-0242ac110004.dem_position.csv",
-    "/home/ubuntu/csknow/analytics/scripts/../../local_data/position/auto0-20210224-151633-1822834750-de_dust2-Counter-Strike__Global_Offensive9589db6e-7561-11eb-a2c6-0242ac110002.dem_position.csv",
-    "/home/ubuntu/csknow/analytics/scripts/../../local_data/position/auto0-20210224-224413-465202928-de_dust2-Counter-Strike__Global_Offensive954b1532-7561-11eb-bafe-0242ac110004.dem_position.csv",
-    "/home/ubuntu/csknow/analytics/scripts/../../local_data/position/auto0-20210225-031650-62973402-de_dust2-Counter-Strike__Global_Offensive954b1532-7561-11eb-bafe-0242ac110004.dem_position.csv",
-    "/home/ubuntu/csknow/analytics/scripts/../../local_data/position/auto0-20210225-175422-660550782-de_dust2-Counter-Strike__Global_Offensive9589db6e-7561-11eb-a2c6-0242ac110002.dem_position.csv",
-    "/home/ubuntu/csknow/analytics/scripts/../../local_data/position/auto0-20210226-164016-1506070379-de_dust2-Counter-Strike__Global_Offensive9589db6e-7561-11eb-a2c6-0242ac110002.dem_position.csv"};
-    vector<PositionBuilder> positions{positionPaths.size()};
-    vector<int64_t> startingPointPerFile;
+size_t getNextDelimiter(const char * file, size_t curEntryStart, size_t fileLength) {
+    for (size_t curPos = curEntryStart; curPos < fileLength; curPos++) {
+        if (file[curPos] == '\n' || file[curPos] == ',') {
+            return curPos;
+        }
+    }
+    return fileLength;
+}
+
+size_t getNewline(const char * file, size_t curEntryStart, size_t fileLength) {
+    for (size_t curPos = curEntryStart; curPos < fileLength; curPos++) {
+        if (file[curPos] == '\n') {
+            return curPos;
+        }
+    }
+    return fileLength;
+}
+
+
+static inline __attribute__((always_inline))
+void printParsingError(std::errc ec, int64_t rowNumber, int64_t colNumber) {
+    if (ec != std::errc()) {
+        std::cerr << "error parsing row " << rowNumber << " col " << colNumber << std::endl;
+    }
+}
+
+static inline __attribute__((always_inline))
+void readCol(const char * file, size_t start, size_t end, int64_t rowNumber, int64_t colNumber, double & value) {
+    auto messages = fast_float::from_chars(&file[start], &file[end], value);
+    printParsingError(messages.ec, rowNumber, colNumber);
+}
+
+static inline __attribute__((always_inline))
+void readCol(const char * file, size_t start, size_t end, int64_t rowNumber, int64_t colNumber, int64_t & value) {
+    auto messages = std::from_chars(&file[start], &file[end], value);
+    printParsingError(messages.ec, rowNumber, colNumber);
+}
+
+static inline __attribute__((always_inline))
+void readCol(const char * file, size_t start, size_t end, int64_t rowNumber, int64_t colNumber, int8_t & value) {
+    auto messages = std::from_chars(&file[start], &file[end], value);
+    printParsingError(messages.ec, rowNumber, colNumber);
+}
+
+static inline __attribute__((always_inline))
+void readCol(const char * file, size_t start, size_t end, int64_t rowNumber, int64_t colNumber, string & value) {
+    value = string(&file[start], end-start);
+}
+
+static inline __attribute__((always_inline))
+void readCol(const char * file, size_t start, size_t end, int64_t rowNumber, int64_t colNumber, bool & value) {
+    int tmpVal;
+    auto messages = std::from_chars(&file[start], &file[end], tmpVal);
+    value = tmpVal != 0;
+    printParsingError(messages.ec, rowNumber, colNumber);
+}
+
+void loadPositionFile(PositionBuilder & positionBuilder, string filePath) {
+    // mmap the file
+    int fd = open(filePath.c_str(), O_RDONLY);
+    if (fd < 0)
+    {
+        fprintf(stderr, "Error opening file: %s\n", strerror(errno));
+        exit(EXIT_FAILURE);
+    }
+    struct stat stats;
+    fstat(fd, &stats);
+    const char * file = (char *) mmap(NULL, stats.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
+    string_view row;
+
+    // skip the header
+    size_t firstRow = getNewline(file, 0, stats.st_size);
+
+    // track location for error logging
+    int64_t rowNumber = 0;
+    int64_t colNumber = 0;
+
+    // values we will parse into and then push
+    double valueDouble;
+    int64_t valueInt64;
+    int8_t valueInt8;
+    string valueString;
+    bool valueBool;
+    for (size_t curStart = firstRow + 1, curDelimiter = getNextDelimiter(file, curStart, stats.st_size);
+        curDelimiter < stats.st_size;
+        curStart = curDelimiter + 1, curDelimiter = getNextDelimiter(file, curStart, stats.st_size)) {
+        if (colNumber == 0) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, valueInt64);
+            positionBuilder.demoTickNumber.push_back(valueInt64);
+        }
+        else if (colNumber == 1) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, valueInt64);
+            positionBuilder.gameTickNumber.push_back(valueInt64);
+        }
+        else if (colNumber == 2) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, valueBool);
+            positionBuilder.matchStarted.push_back(valueBool);
+        }
+        else if (colNumber == 3) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, valueInt8);
+            positionBuilder.gamePhase.push_back(valueInt8);
+        }
+        else if (colNumber == 4) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, valueInt8);
+            positionBuilder.roundsPlayed.push_back(valueInt8);
+        }
+        else if (colNumber == 5) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, valueBool);
+            positionBuilder.isWarmup.push_back(valueBool);
+        }
+        else if (colNumber == 6) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, valueBool);
+            positionBuilder.roundStart.push_back(valueBool);
+        }
+        else if (colNumber == 7) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, valueBool);
+            positionBuilder.roundEnd.push_back(valueBool);
+        }
+        else if (colNumber == 8) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, valueInt8);
+            positionBuilder.roundEndReason.push_back(valueInt8);
+        }
+        else if (colNumber == 9) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, valueBool);
+            positionBuilder.freezeTimeEnded.push_back(valueBool);
+        }
+        else if (colNumber == 10) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, valueInt8);
+            positionBuilder.tScore.push_back(valueInt8);
+        }
+        else if (colNumber == 11) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, valueInt8);
+            positionBuilder.ctScore.push_back(valueInt8);
+        }
+        else if (colNumber == 12) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, valueInt8);
+            positionBuilder.numPlayers.push_back(valueInt8);
+        }
+        // check last element before loop so don't need loop ending condition
+        else if (colNumber == 103) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, valueString);
+            positionBuilder.demoFile.push_back(valueString);
+            rowNumber++;
+        }
+        else if ((colNumber - 13) % 9 == 0) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, valueString);
+            positionBuilder.players[(colNumber - 13) / 9].name.push_back(valueString);
+        }
+        else if ((colNumber - 13) % 9 == 1) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, valueInt8);
+            positionBuilder.players[(colNumber - 13) / 9].team.push_back(valueInt8);
+        }
+        else if ((colNumber - 13) % 9 == 2) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, valueDouble);
+            positionBuilder.players[(colNumber - 13) / 9].xPosition.push_back(valueDouble);
+        }
+        else if ((colNumber - 13) % 9 == 3) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, valueDouble);
+            positionBuilder.players[(colNumber - 13) / 9].yPosition.push_back(valueDouble);
+        }
+        else if ((colNumber - 13) % 9 == 4) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, valueDouble);
+            positionBuilder.players[(colNumber - 13) / 9].zPosition.push_back(valueDouble);
+        }
+        else if ((colNumber - 13) % 9 == 5) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, valueDouble);
+            positionBuilder.players[(colNumber - 13) / 9].xViewDirection.push_back(valueDouble);
+        }
+        else if ((colNumber - 13) % 9 == 6) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, valueDouble);
+            positionBuilder.players[(colNumber - 13) / 9].yViewDirection.push_back(valueDouble);
+        }
+        else if ((colNumber - 13) % 9 == 7) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, valueBool);
+            positionBuilder.players[(colNumber - 13) / 9].isAlive.push_back(valueBool);
+        }
+        else if ((colNumber - 13) % 9 == 8) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, valueBool);
+            positionBuilder.players[(colNumber - 13) / 9].isBlinded.push_back(valueBool);
+        }
+        colNumber = (colNumber + 1) % 104;
+    }
+    munmap((void *) file, stats.st_size);
+    close(fd);
+}
+
+void loadPositions(Position & position, OpenFiles & openFiles, string dataPath) {
+
     std::cout << "loading positions off disk" << std::endl;
+
+    vector<string> positionPaths = //getFilesInDirectory(dataPath + "/position");
+            //{"/home/ubuntu/csknow/analytics/scripts/../../local_data/position/auto0-20210222-234011-2123771339-de_dust2-Counter-Strike__Global_Offensive9589db6e-7561-11eb-a2c6-0242ac110002.dem_position.csv",
+            //"/home/ubuntu/csknow/analytics/scripts/../../local_data/position/auto0-20210223-163009-132401449-de_dust2-Counter-Strike__Global_Offensive96385964-7561-11eb-8f49-0242ac110003.dem_position.csv",
+            //"/home/ubuntu/csknow/analytics/scripts/../../local_data/position/auto0-20210224-010937-649479451-de_dust2-Counter-Strike__Global_Offensive954b1532-7561-11eb-bafe-0242ac110004.dem_position.csv",
+            //"/home/ubuntu/csknow/analytics/scripts/../../local_data/position/auto0-20210224-151633-1822834750-de_dust2-Counter-Strike__Global_Offensive9589db6e-7561-11eb-a2c6-0242ac110002.dem_position.csv",
+            //"/home/ubuntu/csknow/analytics/scripts/../../local_data/position/auto0-20210224-224413-465202928-de_dust2-Counter-Strike__Global_Offensive954b1532-7561-11eb-bafe-0242ac110004.dem_position.csv",
+            //"/home/ubuntu/csknow/analytics/scripts/../../local_data/position/auto0-20210225-031650-62973402-de_dust2-Counter-Strike__Global_Offensive954b1532-7561-11eb-bafe-0242ac110004.dem_position.csv",
+            //"/home/ubuntu/csknow/analytics/scripts/../../local_data/position/auto0-20210225-175422-660550782-de_dust2-Counter-Strike__Global_Offensive9589db6e-7561-11eb-a2c6-0242ac110002.dem_position.csv",
+            //"/home/ubuntu/csknow/analytics/scripts/../../local_data/position/auto0-20210226-164016-1506070379-de_dust2-Counter-Strike__Global_Offensive9589db6e-7561-11eb-a2c6-0242ac110002.dem_position.csv"};
+            {"/home/durst/big_dev/csknow/local_data/auto0-20210226-164016-1506070379-de_dust2-Counter-Strike__Global_Offensive9589db6e-7561-11eb-a2c6-0242ac110002.dem_position.csv"};
+
+    vector<PositionBuilder> positions{positionPaths.size()};
     std::atomic<int64_t> filesProcessed = 0;
     openFiles.paths.clear();
-    #pragma omp parallel for
+    //#pragma omp parallel for
     for (int64_t fileIndex = 0; fileIndex < positionPaths.size(); fileIndex++) {
-        try {
-            openFiles.paths.insert(positionPaths[fileIndex]);
-            std::cerr << "open files: ";
-            for (const auto & path : openFiles.paths) {
-                std::cerr << path << "," << std::endl;
-            }
-            std::cerr << std::endl;
-            csv::CSVReader reader(positionPaths[fileIndex]);
-            for (const auto & row : reader) {
-                positions[fileIndex].demoTickNumber.push_back(row["demo tick number"].get<int32_t>());
-                positions[fileIndex].gameTickNumber.push_back(row["ingame tick"].get<int32_t>());
-                positions[fileIndex].demoFile.push_back(row["demo file"].get<string>());
-                positions[fileIndex].matchStarted.push_back(row["match started"].get<bool>());
-                positions[fileIndex].gamePhase.push_back(row["game phase"].get<int8_t>());
-                positions[fileIndex].roundsPlayed.push_back(row["rounds played"].get<int8_t>());
-                positions[fileIndex].isWarmup.push_back(row["is warmup"].get<bool>());
-                positions[fileIndex].roundStart.push_back(row["round start"].get<bool>());
-                positions[fileIndex].roundEnd.push_back(row["round end"].get<bool>());
-                positions[fileIndex].roundEndReason.push_back(row["round end reason"].get<int8_t>());
-                positions[fileIndex].freezeTimeEnded.push_back(row["freeze time ended"].get<bool>());
-                positions[fileIndex].tScore.push_back(row["t score"].get<int8_t>());
-                positions[fileIndex].ctScore.push_back(row["ct score"].get<int8_t>());
-                positions[fileIndex].numPlayers.push_back(row["num players"].get<int8_t>());
-
-                for (int i = 0; i < NUM_PLAYERS; i++) {
-                    positions[fileIndex].players[i].name.push_back(row["player " + to_string(i) + " name"].get<string>());
-                    positions[fileIndex].players[i].team.push_back(row["player " + to_string(i) + " team"].get<int8_t>());
-                    positions[fileIndex].players[i].xPosition.push_back(row["player " + to_string(i) + " x position"].get<double>());
-                    positions[fileIndex].players[i].yPosition.push_back(row["player " + to_string(i) + " y position"].get<double>());
-                    positions[fileIndex].players[i].zPosition.push_back(row["player " + to_string(i) + " z position"].get<double>());
-                    positions[fileIndex].players[i].xViewDirection.push_back(row["player " + to_string(i) + " x view direction"].get<double>());
-                    positions[fileIndex].players[i].yViewDirection.push_back(row["player " + to_string(i) + " y view direction"].get<double>());
-                    positions[fileIndex].players[i].isAlive.push_back(row["player " + to_string(i) + " is alive"].get<bool>());
-                    positions[fileIndex].players[i].isBlinded.push_back(row["player " + to_string(i) + " is blinded"].get<bool>());
-
-                }
-            }
-        }
-        catch (const std::exception &exc){
-            std::cerr << "problem with file " << positionPaths[fileIndex] << std::endl;
-            std::cerr << exc.what();
-        }
+        openFiles.paths.insert(positionPaths[fileIndex]);
+        loadPositionFile(positions[fileIndex], positionPaths[fileIndex]);
         openFiles.paths.erase(positionPaths[fileIndex]);
         filesProcessed++;
         printProgress((filesProcessed * 1.0) / positionPaths.size());
+        std::cout << std::endl;
     }
-    std::cout << std::endl;
 
+    vector<int64_t> startingPointPerFile;
     std::cout << "allocating vectors" << std::endl;
     startingPointPerFile.push_back(0);
     for (int64_t fileIndex = 0; fileIndex < positionPaths.size(); fileIndex++) {
@@ -146,7 +303,7 @@ void loadData(Position & position, Spotted & spotted, WeaponFire & weaponFire, P
     for (int64_t fileIndex = 0; fileIndex < positionPaths.size(); fileIndex++) {
         int64_t fileRow = 0;
         for (int64_t positionIndex = startingPointPerFile[fileIndex]; positionIndex < startingPointPerFile[fileIndex-1];
-            positionIndex++) {
+             positionIndex++) {
             fileRow++;
             position.demoTickNumber[positionIndex] = positions[fileIndex].demoTickNumber[fileRow];
             position.gameTickNumber[positionIndex] = positions[fileIndex].gameTickNumber[fileRow];
@@ -178,4 +335,11 @@ void loadData(Position & position, Spotted & spotted, WeaponFire & weaponFire, P
         printProgress((filesProcessed * 1.0) / positionPaths.size());
     }
     std::cout << std::endl;
+}
+
+void loadData(Position & position, Spotted & spotted, WeaponFire & weaponFire, PlayerHurt & playerHurt,
+               Grenades & grenades, Kills & kills, string dataPath, OpenFiles & openFiles) {
+    loadPositions(position, openFiles, dataPath);
+    /*
+     */
 }
