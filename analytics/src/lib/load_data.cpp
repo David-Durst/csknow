@@ -239,29 +239,20 @@ void loadPositions(Position & position, OpenFiles & openFiles, string dataPath) 
 
     std::cout << "loading positions off disk" << std::endl;
 
-    vector<string> positionPaths = //getFilesInDirectory(dataPath + "/position");
-            //{"/home/ubuntu/csknow/analytics/scripts/../../local_data/position/auto0-20210222-234011-2123771339-de_dust2-Counter-Strike__Global_Offensive9589db6e-7561-11eb-a2c6-0242ac110002.dem_position.csv",
-            //"/home/ubuntu/csknow/analytics/scripts/../../local_data/position/auto0-20210223-163009-132401449-de_dust2-Counter-Strike__Global_Offensive96385964-7561-11eb-8f49-0242ac110003.dem_position.csv",
-            //"/home/ubuntu/csknow/analytics/scripts/../../local_data/position/auto0-20210224-010937-649479451-de_dust2-Counter-Strike__Global_Offensive954b1532-7561-11eb-bafe-0242ac110004.dem_position.csv",
-            //"/home/ubuntu/csknow/analytics/scripts/../../local_data/position/auto0-20210224-151633-1822834750-de_dust2-Counter-Strike__Global_Offensive9589db6e-7561-11eb-a2c6-0242ac110002.dem_position.csv",
-            //"/home/ubuntu/csknow/analytics/scripts/../../local_data/position/auto0-20210224-224413-465202928-de_dust2-Counter-Strike__Global_Offensive954b1532-7561-11eb-bafe-0242ac110004.dem_position.csv",
-            //"/home/ubuntu/csknow/analytics/scripts/../../local_data/position/auto0-20210225-031650-62973402-de_dust2-Counter-Strike__Global_Offensive954b1532-7561-11eb-bafe-0242ac110004.dem_position.csv",
-            //"/home/ubuntu/csknow/analytics/scripts/../../local_data/position/auto0-20210225-175422-660550782-de_dust2-Counter-Strike__Global_Offensive9589db6e-7561-11eb-a2c6-0242ac110002.dem_position.csv",
-            //"/home/ubuntu/csknow/analytics/scripts/../../local_data/position/auto0-20210226-164016-1506070379-de_dust2-Counter-Strike__Global_Offensive9589db6e-7561-11eb-a2c6-0242ac110002.dem_position.csv"};
-            {"/home/durst/big_dev/csknow/local_data/auto0-20210226-164016-1506070379-de_dust2-Counter-Strike__Global_Offensive9589db6e-7561-11eb-a2c6-0242ac110002.dem_position.csv"};
+    vector<string> positionPaths = getFilesInDirectory(dataPath + "/position");
 
     vector<PositionBuilder> positions{positionPaths.size()};
     std::atomic<int64_t> filesProcessed = 0;
     openFiles.paths.clear();
-    //#pragma omp parallel for
+    #pragma omp parallel for
     for (int64_t fileIndex = 0; fileIndex < positionPaths.size(); fileIndex++) {
         openFiles.paths.insert(positionPaths[fileIndex]);
         loadPositionFile(positions[fileIndex], positionPaths[fileIndex]);
         openFiles.paths.erase(positionPaths[fileIndex]);
         filesProcessed++;
         printProgress((filesProcessed * 1.0) / positionPaths.size());
-        std::cout << std::endl;
     }
+    std::cout << std::endl;
 
     vector<int64_t> startingPointPerFile;
     std::cout << "allocating vectors" << std::endl;
