@@ -12,36 +12,6 @@ struct OpenFiles {
     set<string> paths;
 };
 
-struct PlayerPositionBuilder {
-    vector<string> name;
-    vector<int8_t> team;
-    vector<double> xPosition;
-    vector<double> yPosition;
-    vector<double> zPosition;
-    vector<double> xViewDirection;
-    vector<double> yViewDirection;
-    vector<bool> isAlive;
-    vector<bool> isBlinded;
-};
-
-struct PositionBuilder {
-    vector<int32_t> demoTickNumber;
-    vector<int32_t> gameTickNumber;
-    vector<string> demoFile;
-    vector<bool> matchStarted;
-    vector<int8_t> gamePhase;
-    vector<int8_t> roundsPlayed;
-    vector<bool> isWarmup;
-    vector<bool> roundStart;
-    vector<bool> roundEnd;
-    vector<int8_t> roundEndReason;
-    vector<bool> freezeTimeEnded;
-    vector<int8_t> tScore;
-    vector<int8_t> ctScore;
-    vector<int8_t> numPlayers;
-    PlayerPositionBuilder players[NUM_PLAYERS];
-};
-
 struct PlayerPosition {
     char ** name;
     int8_t * team;
@@ -56,6 +26,7 @@ struct PlayerPosition {
 
 struct Position {
     int64_t size;
+    vector<string> fileNames;
     int32_t * demoTickNumber;
     int32_t * gameTickNumber;
     bool * matchStarted;
@@ -70,7 +41,7 @@ struct Position {
     int8_t * ctScore;
     int8_t * numPlayers;
     PlayerPosition players[NUM_PLAYERS];
-    char ** demoFile;
+    int32_t * demoFile;
 };
 
 struct Spotted {

@@ -113,7 +113,7 @@ void readCol(const char * file, size_t start, size_t end, int64_t rowNumber, int
 }
 
 static inline __attribute__((always_inline))
-void readCol(const char * file, size_t start, size_t end, int64_t rowNumber, int64_t colNumber, char ** value) {
+void readCol(const char * file, size_t start, size_t end, char ** value) {
     *value = new char[end-start+1];
     strncpy(*value, &file[start], end-start);
     (*value)[end-start] = '\0';
@@ -127,7 +127,7 @@ void readCol(const char * file, size_t start, size_t end, int64_t rowNumber, int
     printParsingError(messages.ec, rowNumber, colNumber);
 }
 
-void loadPositionFile(Position & position, string filePath, int64_t fileRowStart) {
+void loadPositionFile(Position & position, string filePath, int64_t fileRowStart, int32_t fileNumber) {
     // mmap the file
     int fd = open(filePath.c_str(), O_RDONLY);
     if (fd < 0)
@@ -196,13 +196,15 @@ void loadPositionFile(Position & position, string filePath, int64_t fileRowStart
         }
         // check last element before loop so don't need loop ending condition
         else if (colNumber == 103) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, &position.demoFile[arrayEntry]);
+            if (rowNumber == 0) {
+                position.fileNames[fileNumber] = string(&file[curStart], curDelimiter-curStart);
+            }
+            position.demoFile[arrayEntry] = fileNumber;
             rowNumber++;
             arrayEntry++;
         }
         else if ((colNumber - 13) % 9 == 0) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber,
-                    &position.players[(colNumber - 13) / 9].name[arrayEntry]);
+            readCol(file, curStart, curDelimiter, &position.players[(colNumber - 13) / 9].name[arrayEntry]);
         }
         else if ((colNumber - 13) % 9 == 1) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber,
@@ -265,9 +267,9 @@ void loadPositions(Position & position, OpenFiles & openFiles, string dataPath) 
 
     std::cout << "allocating arrays" << std::endl;
     position.size = rows;
+    position.fileNames.resize(positionPaths.size());
     position.demoTickNumber = (int32_t *) malloc(rows * sizeof(int32_t));
     position.gameTickNumber = (int32_t *) malloc(rows * sizeof(int32_t));
-    position.demoFile = (char **) malloc(rows * sizeof(char*));
     position.matchStarted = (bool *) malloc(rows * sizeof(bool));
     position.gamePhase = (int8_t *) malloc(rows * sizeof(int8_t));
     position.roundsPlayed = (int8_t *) malloc(rows * sizeof(int8_t));
@@ -290,6 +292,7 @@ void loadPositions(Position & position, OpenFiles & openFiles, string dataPath) 
         position.players[i].isAlive = (bool *) malloc(rows * sizeof(bool));
         position.players[i].isBlinded = (bool *) malloc(rows * sizeof(bool));
     }
+    position.demoFile = (int32_t *) malloc(rows * sizeof(int32_t*));
 
     std::cout << "loading positions off disk" << std::endl;
     filesProcessed = 0;
@@ -297,7 +300,7 @@ void loadPositions(Position & position, OpenFiles & openFiles, string dataPath) 
 #pragma omp parallel for
     for (int64_t fileIndex = 0; fileIndex < positionPaths.size(); fileIndex++) {
         openFiles.paths.insert(positionPaths[fileIndex]);
-        loadPositionFile(position, positionPaths[fileIndex], startingPointPerFile[fileIndex]);
+        loadPositionFile(position, positionPaths[fileIndex], startingPointPerFile[fileIndex], fileIndex);
         openFiles.paths.erase(positionPaths[fileIndex]);
         filesProcessed++;
         printProgress((filesProcessed * 1.0) / positionPaths.size());
