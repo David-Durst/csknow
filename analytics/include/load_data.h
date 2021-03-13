@@ -9,10 +9,6 @@ using std::string;
 using std::vector;
 using std::set;
 
-struct OpenFiles {
-    set<string> paths;
-};
-
 struct PlayerPosition {
     char ** name;
     int8_t * team;
@@ -140,6 +136,6 @@ struct Kills {
 };
 
 void loadData(Position & position, Spotted & spotted, WeaponFire & weaponFire, PlayerHurt & playerHurt,
-               Grenades & grenades, Kills & kills, string dataPath, OpenFiles & openFiles);
+               Grenades & grenades, Kills & kills, string dataPath);
 
 #endif //CSKNOW_LOAD_DATA_H

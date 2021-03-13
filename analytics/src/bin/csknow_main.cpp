@@ -16,9 +16,8 @@ int main(int argc, char * argv[]) {
     PlayerHurt playerHurt;
     Grenades grenades;
     Kills kills;
-    OpenFiles openFiles;
 
-    loadData(position, spotted, weaponFire, playerHurt, grenades, kills, dataPath, openFiles);
+    loadData(position, spotted, weaponFire, playerHurt, grenades, kills, dataPath);
     //std::printf("GLIBCXX: %d\n",__GLIBCXX__);
     std::cout << "num elements in position: " << position.size << std::endl;
     //while (true) {

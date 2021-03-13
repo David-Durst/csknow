@@ -241,16 +241,14 @@ void loadPositionFile(Position & position, string filePath, int64_t fileRowStart
     close(fd);
 }
 
-void loadPositions(Position & position, OpenFiles & openFiles, string dataPath) {
-
-
+void loadPositions(Position & position, string dataPath) {
     vector<string> positionPaths = getFilesInDirectory(dataPath + "/position");
 
     std::cout << "determining array size" << std::endl;
     int64_t startingPointPerFile[positionPaths.size()+1];
     std::atomic<int64_t> filesProcessed = 0;
     startingPointPerFile[0] = 0;
-//#pragma omp parallel for
+#pragma omp parallel for
     for (int64_t fileIndex = 0; fileIndex < positionPaths.size(); fileIndex++) {
         startingPointPerFile[fileIndex+1] = getRows(positionPaths[fileIndex]);
         filesProcessed++;
@@ -295,12 +293,9 @@ void loadPositions(Position & position, OpenFiles & openFiles, string dataPath) 
 
     std::cout << "loading positions off disk" << std::endl;
     filesProcessed = 0;
-    openFiles.paths.clear();
-//#pragma omp parallel for
+#pragma omp parallel for
     for (int64_t fileIndex = 0; fileIndex < positionPaths.size(); fileIndex++) {
-        openFiles.paths.insert(positionPaths[fileIndex]);
         loadPositionFile(position, positionPaths[fileIndex], startingPointPerFile[fileIndex], fileIndex);
-        openFiles.paths.erase(positionPaths[fileIndex]);
         filesProcessed++;
         printProgress((filesProcessed * 1.0) / positionPaths.size());
     }
@@ -308,6 +303,6 @@ void loadPositions(Position & position, OpenFiles & openFiles, string dataPath) 
 }
 
 void loadData(Position & position, Spotted & spotted, WeaponFire & weaponFire, PlayerHurt & playerHurt,
-               Grenades & grenades, Kills & kills, string dataPath, OpenFiles & openFiles) {
-    loadPositions(position, openFiles, dataPath);
+               Grenades & grenades, Kills & kills, string dataPath) {
+    loadPositions(position, dataPath);
 }
