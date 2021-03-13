@@ -56,8 +56,8 @@ struct PlayerPosition {
 
 struct Position {
     int64_t size;
-    int32_t * demoTickNumber;
-    int32_t * gameTickNumber;
+    int64_t * demoTickNumber;
+    int64_t * gameTickNumber;
     bool * matchStarted;
     int8_t * gamePhase;
     int8_t * roundsPlayed;

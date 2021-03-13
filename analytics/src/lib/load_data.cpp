@@ -67,6 +67,25 @@ size_t getNewline(const char * file, size_t curEntryStart, size_t fileLength) {
     return fileLength;
 }
 
+int64_t getRows(string filePath) {
+    int fd = open(filePath.c_str(), O_RDONLY);
+    if (fd < 0)
+    {
+        fprintf(stderr, "Error opening file: %s\n", strerror(errno));
+        exit(EXIT_FAILURE);
+    }
+    struct stat stats;
+    fstat(fd, &stats);
+    const char * file = (char *) mmap(NULL, stats.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
+
+    // -2 to skip header and because going to increment once at end of file
+    int64_t numRows = -2;
+    for (size_t size = 0; size < stats.st_size; numRows++, size = getNewline(file, size+1, stats.st_size)) ;
+
+    munmap((void *) file, stats.st_size);
+    close(fd);
+    return numRows;
+}
 
 static inline __attribute__((always_inline))
 void printParsingError(std::errc ec, int64_t rowNumber, int64_t colNumber) {
@@ -106,7 +125,7 @@ void readCol(const char * file, size_t start, size_t end, int64_t rowNumber, int
     printParsingError(messages.ec, rowNumber, colNumber);
 }
 
-void loadPositionFile(PositionBuilder & positionBuilder, string filePath) {
+void loadPositionFile(Position & position, string filePath, int64_t fileRowStart) {
     // mmap the file
     int fd = open(filePath.c_str(), O_RDONLY);
     if (fd < 0)
@@ -119,6 +138,8 @@ void loadPositionFile(PositionBuilder & positionBuilder, string filePath) {
     const char * file = (char *) mmap(NULL, stats.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
     string_view row;
 
+
+
     // skip the header
     size_t firstRow = getNewline(file, 0, stats.st_size);
 
@@ -126,108 +147,92 @@ void loadPositionFile(PositionBuilder & positionBuilder, string filePath) {
     int64_t rowNumber = 0;
     int64_t colNumber = 0;
 
-    // values we will parse into and then push
-    double valueDouble;
-    int64_t valueInt64;
-    int8_t valueInt8;
-    string valueString;
-    bool valueBool;
+    // track location for insertion
+    int64_t arrayEntry = fileRowStart;
+
     for (size_t curStart = firstRow + 1, curDelimiter = getNextDelimiter(file, curStart, stats.st_size);
         curDelimiter < stats.st_size;
         curStart = curDelimiter + 1, curDelimiter = getNextDelimiter(file, curStart, stats.st_size)) {
         if (colNumber == 0) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, valueInt64);
-            positionBuilder.demoTickNumber.push_back(valueInt64);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, position.demoTickNumber[arrayEntry]);
         }
         else if (colNumber == 1) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, valueInt64);
-            positionBuilder.gameTickNumber.push_back(valueInt64);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, position.gameTickNumber[arrayEntry]);
         }
         else if (colNumber == 2) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, valueBool);
-            positionBuilder.matchStarted.push_back(valueBool);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, position.matchStarted[arrayEntry]);
         }
         else if (colNumber == 3) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, valueInt8);
-            positionBuilder.gamePhase.push_back(valueInt8);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, position.gamePhase[arrayEntry]);
         }
         else if (colNumber == 4) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, valueInt8);
-            positionBuilder.roundsPlayed.push_back(valueInt8);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, position.roundsPlayed[arrayEntry]);
         }
         else if (colNumber == 5) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, valueBool);
-            positionBuilder.isWarmup.push_back(valueBool);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, position.isWarmup[arrayEntry]);
         }
         else if (colNumber == 6) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, valueBool);
-            positionBuilder.roundStart.push_back(valueBool);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, position.roundStart[arrayEntry]);
         }
         else if (colNumber == 7) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, valueBool);
-            positionBuilder.roundEnd.push_back(valueBool);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, position.roundEnd[arrayEntry]);
         }
         else if (colNumber == 8) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, valueInt8);
-            positionBuilder.roundEndReason.push_back(valueInt8);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, position.roundEndReason[arrayEntry]);
         }
         else if (colNumber == 9) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, valueBool);
-            positionBuilder.freezeTimeEnded.push_back(valueBool);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, position.freezeTimeEnded[arrayEntry]);
         }
         else if (colNumber == 10) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, valueInt8);
-            positionBuilder.tScore.push_back(valueInt8);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, position.tScore[arrayEntry]);
         }
         else if (colNumber == 11) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, valueInt8);
-            positionBuilder.ctScore.push_back(valueInt8);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, position.ctScore[arrayEntry]);
         }
         else if (colNumber == 12) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, valueInt8);
-            positionBuilder.numPlayers.push_back(valueInt8);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, position.numPlayers[arrayEntry]);
         }
         // check last element before loop so don't need loop ending condition
         else if (colNumber == 103) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, valueString);
-            positionBuilder.demoFile.push_back(valueString);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, position.demoFile[arrayEntry]);
             rowNumber++;
+            arrayEntry++;
         }
         else if ((colNumber - 13) % 9 == 0) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, valueString);
-            positionBuilder.players[(colNumber - 13) / 9].name.push_back(valueString);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber,
+                    position.players[(colNumber - 13) / 9].name[arrayEntry]);
         }
         else if ((colNumber - 13) % 9 == 1) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, valueInt8);
-            positionBuilder.players[(colNumber - 13) / 9].team.push_back(valueInt8);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber,
+                    position.players[(colNumber - 13) / 9].team[arrayEntry]);
         }
         else if ((colNumber - 13) % 9 == 2) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, valueDouble);
-            positionBuilder.players[(colNumber - 13) / 9].xPosition.push_back(valueDouble);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber,
+                    position.players[(colNumber - 13) / 9].xPosition[arrayEntry]);
         }
         else if ((colNumber - 13) % 9 == 3) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, valueDouble);
-            positionBuilder.players[(colNumber - 13) / 9].yPosition.push_back(valueDouble);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber,
+                    position.players[(colNumber - 13) / 9].yPosition[arrayEntry]);
         }
         else if ((colNumber - 13) % 9 == 4) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, valueDouble);
-            positionBuilder.players[(colNumber - 13) / 9].zPosition.push_back(valueDouble);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber,
+                    position.players[(colNumber - 13) / 9].zPosition[arrayEntry]);
         }
         else if ((colNumber - 13) % 9 == 5) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, valueDouble);
-            positionBuilder.players[(colNumber - 13) / 9].xViewDirection.push_back(valueDouble);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber,
+                    position.players[(colNumber - 13) / 9].xViewDirection[arrayEntry]);
         }
         else if ((colNumber - 13) % 9 == 6) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, valueDouble);
-            positionBuilder.players[(colNumber - 13) / 9].yViewDirection.push_back(valueDouble);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber,
+                    position.players[(colNumber - 13) / 9].yViewDirection[arrayEntry]);
         }
         else if ((colNumber - 13) % 9 == 7) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, valueBool);
-            positionBuilder.players[(colNumber - 13) / 9].isAlive.push_back(valueBool);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber,
+                    position.players[(colNumber - 13) / 9].isAlive[arrayEntry]);
         }
         else if ((colNumber - 13) % 9 == 8) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, valueBool);
-            positionBuilder.players[(colNumber - 13) / 9].isBlinded.push_back(valueBool);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber,
+                    position.players[(colNumber - 13) / 9].isBlinded[arrayEntry]);
         }
         colNumber = (colNumber + 1) % 104;
     }
@@ -237,33 +242,27 @@ void loadPositionFile(PositionBuilder & positionBuilder, string filePath) {
 
 void loadPositions(Position & position, OpenFiles & openFiles, string dataPath) {
 
-    std::cout << "loading positions off disk" << std::endl;
 
     vector<string> positionPaths = getFilesInDirectory(dataPath + "/position");
 
-    vector<PositionBuilder> positions{positionPaths.size()};
+    std::cout << "determining array size" << std::endl;
+    int64_t startingPointPerFile[positionPaths.size()+1];
     std::atomic<int64_t> filesProcessed = 0;
-    openFiles.paths.clear();
-    #pragma omp parallel for
+#pragma omp parallel for
     for (int64_t fileIndex = 0; fileIndex < positionPaths.size(); fileIndex++) {
-        openFiles.paths.insert(positionPaths[fileIndex]);
-        loadPositionFile(positions[fileIndex], positionPaths[fileIndex]);
-        openFiles.paths.erase(positionPaths[fileIndex]);
+        startingPointPerFile[fileIndex+1] = getRows(positionPaths[fileIndex]);
         filesProcessed++;
         printProgress((filesProcessed * 1.0) / positionPaths.size());
     }
-    std::cout << std::endl;
-
-    vector<int64_t> startingPointPerFile;
-    std::cout << "allocating vectors" << std::endl;
-    startingPointPerFile.push_back(0);
     for (int64_t fileIndex = 0; fileIndex < positionPaths.size(); fileIndex++) {
-        startingPointPerFile.push_back(startingPointPerFile[fileIndex] + positions[fileIndex].demoTickNumber.size());
+        startingPointPerFile[fileIndex+1] += startingPointPerFile[fileIndex];
     }
-    int64_t rows = startingPointPerFile[startingPointPerFile.size() - 1];
+    int64_t rows = startingPointPerFile[positionPaths.size()];
+
+    std::cout << "allocating arrays" << std::endl;
     position.size = rows;
-    position.demoTickNumber = (int32_t *) malloc(rows * sizeof(int32_t));
-    position.gameTickNumber = (int32_t *) malloc(rows * sizeof(int32_t));
+    position.demoTickNumber = (int64_t *) malloc(rows * sizeof(int64_t));
+    position.gameTickNumber = (int64_t *) malloc(rows * sizeof(int64_t));
     position.demoFile = (string *) malloc(rows * sizeof(string));
     position.matchStarted = (bool *) malloc(rows * sizeof(bool));
     position.gamePhase = (int8_t *) malloc(rows * sizeof(int8_t));
@@ -288,40 +287,14 @@ void loadPositions(Position & position, OpenFiles & openFiles, string dataPath) 
         position.players[i].isBlinded = (bool *) malloc(rows * sizeof(bool));
     }
 
-    std::cout << "merging vectors" << std::endl;
+    std::cout << "loading positions off disk" << std::endl;
     filesProcessed = 0;
-    #pragma omp parallel for
+    openFiles.paths.clear();
+#pragma omp parallel for
     for (int64_t fileIndex = 0; fileIndex < positionPaths.size(); fileIndex++) {
-        int64_t fileRow = 0;
-        for (int64_t positionIndex = startingPointPerFile[fileIndex]; positionIndex < startingPointPerFile[fileIndex+1];
-             positionIndex++) {
-            position.demoTickNumber[positionIndex] = positions[fileIndex].demoTickNumber[fileRow];
-            position.gameTickNumber[positionIndex] = positions[fileIndex].gameTickNumber[fileRow];
-            position.demoFile[positionIndex] = positions[fileIndex].demoFile[fileRow];
-            position.matchStarted[positionIndex] = positions[fileIndex].matchStarted[fileRow];
-            position.gamePhase[positionIndex] = positions[fileIndex].gamePhase[fileRow];
-            position.roundsPlayed[positionIndex] = positions[fileIndex].roundsPlayed[fileRow];
-            position.isWarmup[positionIndex] = positions[fileIndex].isWarmup[fileRow];
-            position.roundStart[positionIndex] = positions[fileIndex].roundStart[fileRow];
-            position.roundEnd[positionIndex] = positions[fileIndex].roundEnd[fileRow];
-            position.roundEndReason[positionIndex] = positions[fileIndex].roundEndReason[fileRow];
-            position.freezeTimeEnded[positionIndex] = positions[fileIndex].freezeTimeEnded[fileRow];
-            position.tScore[positionIndex] = positions[fileIndex].tScore[fileRow];
-            position.ctScore[positionIndex] = positions[fileIndex].ctScore[fileRow];
-            position.numPlayers[positionIndex] = positions[fileIndex].numPlayers[fileRow];
-            for (int i = 0; i < NUM_PLAYERS; i++) {
-                position.players[i].name[positionIndex] = positions[fileIndex].players[i].name[fileRow];
-                position.players[i].team[positionIndex] = positions[fileIndex].players[i].team[fileRow];
-                position.players[i].xPosition[positionIndex] = positions[fileIndex].players[i].xPosition[fileRow];
-                position.players[i].yPosition[positionIndex] = positions[fileIndex].players[i].yPosition[fileRow];
-                position.players[i].zPosition[positionIndex] = positions[fileIndex].players[i].zPosition[fileRow];
-                position.players[i].xViewDirection[positionIndex] = positions[fileIndex].players[i].xViewDirection[fileRow];
-                position.players[i].yViewDirection[positionIndex] = positions[fileIndex].players[i].yViewDirection[fileRow];
-                position.players[i].isAlive[positionIndex] = positions[fileIndex].players[i].isAlive[fileRow];
-                position.players[i].isBlinded[positionIndex] = positions[fileIndex].players[i].isBlinded[fileRow];
-            }
-            fileRow++;
-        }
+        openFiles.paths.insert(positionPaths[fileIndex]);
+        loadPositionFile(position, positionPaths[fileIndex], startingPointPerFile[fileIndex]);
+        openFiles.paths.erase(positionPaths[fileIndex]);
         filesProcessed++;
         printProgress((filesProcessed * 1.0) / positionPaths.size());
     }
@@ -331,6 +304,4 @@ void loadPositions(Position & position, OpenFiles & openFiles, string dataPath) 
 void loadData(Position & position, Spotted & spotted, WeaponFire & weaponFire, PlayerHurt & playerHurt,
                Grenades & grenades, Kills & kills, string dataPath, OpenFiles & openFiles) {
     loadPositions(position, openFiles, dataPath);
-    /*
-     */
 }
