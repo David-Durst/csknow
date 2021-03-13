@@ -293,9 +293,8 @@ void loadPositions(Position & position, OpenFiles & openFiles, string dataPath) 
     #pragma omp parallel for
     for (int64_t fileIndex = 0; fileIndex < positionPaths.size(); fileIndex++) {
         int64_t fileRow = 0;
-        for (int64_t positionIndex = startingPointPerFile[fileIndex]; positionIndex < startingPointPerFile[fileIndex-1];
+        for (int64_t positionIndex = startingPointPerFile[fileIndex]; positionIndex < startingPointPerFile[fileIndex+1];
              positionIndex++) {
-            fileRow++;
             position.demoTickNumber[positionIndex] = positions[fileIndex].demoTickNumber[fileRow];
             position.gameTickNumber[positionIndex] = positions[fileIndex].gameTickNumber[fileRow];
             position.demoFile[positionIndex] = positions[fileIndex].demoFile[fileRow];
@@ -321,6 +320,7 @@ void loadPositions(Position & position, OpenFiles & openFiles, string dataPath) 
                 position.players[i].isAlive[positionIndex] = positions[fileIndex].players[i].isAlive[fileRow];
                 position.players[i].isBlinded[positionIndex] = positions[fileIndex].players[i].isBlinded[fileRow];
             }
+            fileRow++;
         }
         filesProcessed++;
         printProgress((filesProcessed * 1.0) / positionPaths.size());
