@@ -4,6 +4,7 @@
 #include <string>
 #include <set>
 #include <vector>
+#include <iostream>
 using std::string;
 using std::vector;
 using std::set;
@@ -42,6 +43,36 @@ struct Position {
     int8_t * numPlayers;
     PlayerPosition players[NUM_PLAYERS];
     int32_t * demoFile;
+    ~Position() {
+        free(demoTickNumber);
+        free(gameTickNumber);
+        free(matchStarted);
+        free(gamePhase);
+        free(roundsPlayed);
+        free(isWarmup);
+        free(roundStart);
+        free(roundEnd);
+        free(roundEndReason);
+        free(freezeTimeEnded);
+        free(tScore);
+        free(ctScore);
+        free(numPlayers);
+        for (int i = 0; i < NUM_PLAYERS; i++) {
+            for (int64_t row = 0; row < size; row++) {
+                free(players[i].name[row]);
+            }
+            free(players[i].name);
+            free(players[i].team);
+            free(players[i].xPosition);
+            free(players[i].yPosition);
+            free(players[i].zPosition);
+            free(players[i].xViewDirection);
+            free(players[i].yViewDirection);
+            free(players[i].isAlive);
+            free(players[i].isBlinded);
+        }
+        free(demoFile);
+    }
 };
 
 struct Spotted {

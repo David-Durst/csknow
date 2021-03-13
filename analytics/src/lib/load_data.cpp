@@ -114,7 +114,7 @@ void readCol(const char * file, size_t start, size_t end, int64_t rowNumber, int
 
 static inline __attribute__((always_inline))
 void readCol(const char * file, size_t start, size_t end, char ** value) {
-    *value = new char[end-start+1];
+    *value = (char *) malloc ((end-start+1) * sizeof(char));
     strncpy(*value, &file[start], end-start);
     (*value)[end-start] = '\0';
 }
@@ -138,9 +138,6 @@ void loadPositionFile(Position & position, string filePath, int64_t fileRowStart
     struct stat stats;
     fstat(fd, &stats);
     const char * file = (char *) mmap(NULL, stats.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
-    string_view row;
-
-
 
     // skip the header
     size_t firstRow = getNewline(file, 0, stats.st_size);
@@ -266,6 +263,8 @@ void loadPositions(Position & position, OpenFiles & openFiles, string dataPath) 
     int64_t rows = startingPointPerFile[positionPaths.size()];
 
     std::cout << "allocating arrays" << std::endl;
+    //std::cout << "rows: " << rows << std::endl;
+    //std::cout << "sizeof int32_t: " << rows << std::endl;
     position.size = rows;
     position.fileNames.resize(positionPaths.size());
     position.demoTickNumber = (int32_t *) malloc(rows * sizeof(int32_t));
