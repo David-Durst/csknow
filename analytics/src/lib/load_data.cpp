@@ -113,8 +113,8 @@ void readCol(const char * file, size_t start, size_t end, int64_t rowNumber, int
 }
 
 static inline __attribute__((always_inline))
-void readCol(const char * file, size_t start, size_t end, int64_t rowNumber, int64_t colNumber, string & value) {
-    value = string(&file[start], end-start);
+void readCol(const char * file, size_t start, size_t end, int64_t rowNumber, int64_t colNumber, string * value) {
+    value = new string(&file[start], end-start);
 }
 
 static inline __attribute__((always_inline))
@@ -194,13 +194,13 @@ void loadPositionFile(Position & position, string filePath, int64_t fileRowStart
         }
         // check last element before loop so don't need loop ending condition
         else if (colNumber == 103) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, position.demoFile[arrayEntry]);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, &position.demoFile[arrayEntry]);
             rowNumber++;
             arrayEntry++;
         }
         else if ((colNumber - 13) % 9 == 0) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber,
-                    position.players[(colNumber - 13) / 9].name[arrayEntry]);
+                    &position.players[(colNumber - 13) / 9].name[arrayEntry]);
         }
         else if ((colNumber - 13) % 9 == 1) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber,
@@ -248,6 +248,7 @@ void loadPositions(Position & position, OpenFiles & openFiles, string dataPath) 
     std::cout << "determining array size" << std::endl;
     int64_t startingPointPerFile[positionPaths.size()+1];
     std::atomic<int64_t> filesProcessed = 0;
+    startingPointPerFile[0] = 0;
 #pragma omp parallel for
     for (int64_t fileIndex = 0; fileIndex < positionPaths.size(); fileIndex++) {
         startingPointPerFile[fileIndex+1] = getRows(positionPaths[fileIndex]);
