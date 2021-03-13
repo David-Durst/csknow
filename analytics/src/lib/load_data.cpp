@@ -250,7 +250,7 @@ void loadPositions(Position & position, OpenFiles & openFiles, string dataPath) 
     int64_t startingPointPerFile[positionPaths.size()+1];
     std::atomic<int64_t> filesProcessed = 0;
     startingPointPerFile[0] = 0;
-#pragma omp parallel for
+//#pragma omp parallel for
     for (int64_t fileIndex = 0; fileIndex < positionPaths.size(); fileIndex++) {
         startingPointPerFile[fileIndex+1] = getRows(positionPaths[fileIndex]);
         filesProcessed++;
@@ -296,7 +296,7 @@ void loadPositions(Position & position, OpenFiles & openFiles, string dataPath) 
     std::cout << "loading positions off disk" << std::endl;
     filesProcessed = 0;
     openFiles.paths.clear();
-#pragma omp parallel for
+//#pragma omp parallel for
     for (int64_t fileIndex = 0; fileIndex < positionPaths.size(); fileIndex++) {
         openFiles.paths.insert(positionPaths[fileIndex]);
         loadPositionFile(position, positionPaths[fileIndex], startingPointPerFile[fileIndex], fileIndex);
