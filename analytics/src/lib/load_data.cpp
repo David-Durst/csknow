@@ -594,7 +594,7 @@ void loadGrenadesFile(Grenades & grenades, string filePath, int64_t fileRowStart
 
 void loadGrenades(Grenades & grenades, string dataPath) {
     vector<string> positionPaths;
-    getFilesInDirectory(dataPath + "/weapon_fire", positionPaths);
+    getFilesInDirectory(dataPath + "/grenades", positionPaths);
 
     std::cout << "determining array size" << std::endl;
     vector startingPointPerFile = getFileStartingRows(positionPaths);
@@ -614,6 +614,83 @@ void loadGrenades(Grenades & grenades, string dataPath) {
     std::cout << std::endl;
 }
 
+void loadKillsFile(Kills & kills, string filePath, int64_t fileRowStart, int32_t fileNumber) {
+    // mmap the file
+    auto [fd, stats, file] = openMMapFile(filePath);
+
+    // skip the header
+    size_t firstRow = getNewline(file, 0, stats.st_size);
+
+    // track location for error logging
+    int64_t rowNumber = 0;
+    int64_t colNumber = 0;
+
+    // track location for insertion
+    int64_t arrayEntry = fileRowStart;
+
+    for (size_t curStart = firstRow + 1, curDelimiter = getNextDelimiter(file, curStart, stats.st_size);
+         curDelimiter < stats.st_size;
+         curStart = curDelimiter + 1, curDelimiter = getNextDelimiter(file, curStart, stats.st_size)) {
+        if (colNumber == 0) {
+            readCol(file, curStart, curDelimiter, &kills.killer[arrayEntry]);
+        }
+        else if (colNumber == 1) {
+            readCol(file, curStart, curDelimiter, &kills.victim[arrayEntry]);
+        }
+        else if (colNumber == 2) {
+            readCol(file, curStart, curDelimiter, &kills.weapon[arrayEntry]);
+        }
+        else if (colNumber == 3) {
+            readCol(file, curStart, curDelimiter, &kills.assister[arrayEntry]);
+        }
+        else if (colNumber == 4) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, kills.isHeadshot[arrayEntry]);
+        }
+        else if (colNumber == 5) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, kills.isWallbang[arrayEntry]);
+        }
+        else if (colNumber == 6) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, kills.penetratedObjects[arrayEntry]);
+        }
+        else if (colNumber == 7) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, kills.demoTickNumber[arrayEntry]);
+        }
+        else if (colNumber == 8) {
+            if (rowNumber == 0) {
+                kills.fileNames[fileNumber] = string(&file[curStart], curDelimiter-curStart);
+            }
+            kills.demoFile[arrayEntry] = fileNumber;
+            rowNumber++;
+            arrayEntry++;
+        }
+        colNumber = (colNumber + 1) % 4;
+    }
+    closeMMapFile({fd, stats, file});
+}
+
+void loadKills(Kills & kills, string dataPath) {
+    vector<string> positionPaths;
+    getFilesInDirectory(dataPath + "/kills", positionPaths);
+
+    std::cout << "determining array size" << std::endl;
+    vector startingPointPerFile = getFileStartingRows(positionPaths);
+    int64_t rows = startingPointPerFile[positionPaths.size()];
+
+    std::cout << "allocating arrays" << std::endl;
+    kills.init(rows, positionPaths.size());
+
+    std::cout << "loading positions off disk" << std::endl;
+    std::atomic<int> filesProcessed = 0;
+#pragma omp parallel for
+    for (int64_t fileIndex = 0; fileIndex < positionPaths.size(); fileIndex++) {
+        loadKillsFile(kills, positionPaths[fileIndex], startingPointPerFile[fileIndex], fileIndex);
+        filesProcessed++;
+        printProgress((filesProcessed * 1.0) / positionPaths.size());
+    }
+    std::cout << std::endl;
+}
+
+
 void loadData(Position & position, Spotted & spotted, WeaponFire & weaponFire, PlayerHurt & playerHurt,
                Grenades & grenades, Kills & kills, string dataPath) {
     std::cout << "loading position" << std::endl;
@@ -626,4 +703,6 @@ void loadData(Position & position, Spotted & spotted, WeaponFire & weaponFire, P
     loadPlayerHurt(playerHurt, dataPath);
     std::cout << "loading grenades" << std::endl;
     loadGrenades(grenades, dataPath);
+    std::cout << "loading kills" << std::endl;
+    loadKills(kills, dataPath);
 }

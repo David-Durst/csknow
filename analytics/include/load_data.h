@@ -356,7 +356,6 @@ public:
 
     Kills() { };
     ~Kills() {
-        return;
         free(isHeadshot);
         free(isWallbang);
         free(penetratedObjects);
