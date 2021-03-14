@@ -33,20 +33,18 @@ void printProgress(double progress) {
 }
 
 const string placeholderFileName = ".placeholder";
-vector<string> getFilesInDirectory(string path) {
-    vector<string> result;
+void getFilesInDirectory(string path, vector<string> & files) {
     DIR * dir;
     struct dirent * en;
     dir = opendir(path.c_str());
     if (dir) {
         while ((en = readdir(dir)) != NULL) {
             if (en->d_type == DT_REG && placeholderFileName.compare(en->d_name) != 0) {
-                result.push_back(path + "/" + en->d_name);
+                files.push_back(path + "/" + en->d_name);
             }
         }
         closedir(dir);
     }
-    return result;
 }
 
 struct MMapFile {
@@ -272,7 +270,8 @@ void loadPositionFile(Position & position, string filePath, int64_t fileRowStart
 }
 
 void loadPositions(Position & position, string dataPath) {
-    vector<string> positionPaths = getFilesInDirectory(dataPath + "/position");
+    vector<string> positionPaths;
+    getFilesInDirectory(dataPath + "/position", positionPaths);
 
     std::cout << "determining array size" << std::endl;
     vector<int64_t> startingPointPerFile = getFileStartingRows(positionPaths);
@@ -393,7 +392,8 @@ void loadSpottedFile(Spotted & spotted, string filePath, int64_t fileRowStart, i
 }
 
 void loadSpotted(Spotted & spotted, string dataPath) {
-    vector<string> positionPaths = getFilesInDirectory(dataPath + "/spotted");
+    vector<string> positionPaths;
+    getFilesInDirectory(dataPath + "/spotted", positionPaths);
 
     std::cout << "determining array size" << std::endl;
     vector startingPointPerFile = getFileStartingRows(positionPaths);
