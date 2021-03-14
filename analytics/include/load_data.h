@@ -222,22 +222,23 @@ public:
     void init(int64_t rows, int64_t numFiles) {
         size = rows;
         fileNames.resize(numFiles);
-        demoTickNumber = (int32_t *) malloc(rows * sizeof(int32_t));
-        demoFile = (int32_t *) malloc(rows * sizeof(int32_t));
         shooter = (char **) malloc(rows * sizeof(char*));
         weapon = (char **) malloc(rows * sizeof(char*));
+        demoTickNumber = (int32_t *) malloc(rows * sizeof(int32_t));
+        demoFile = (int32_t *) malloc(rows * sizeof(int32_t));
     }
 
     WeaponFire() { };
     ~WeaponFire() {
-        free(demoTickNumber);
-        free(demoFile);
         for (int64_t row = 0; row < size; row++) {
             free(shooter[row]);
             free(weapon[row]);
         }
         free(shooter);
         free(weapon);
+
+        free(demoTickNumber);
+        free(demoFile);
     }
 
     WeaponFire(const WeaponFire& other) = delete;
@@ -246,8 +247,6 @@ public:
 
 class PlayerHurt : public ColStore {
 public:
-    int32_t * demoTickNumber;
-    int32_t * demoFile;
     char ** victimName;
     int32_t * armorDamage;
     int32_t * armor;
@@ -255,12 +254,12 @@ public:
     int32_t * health;
     char ** attacker;
     char ** weapon;
+    int32_t * demoTickNumber;
+    int32_t * demoFile;
 
     void init(int64_t rows, int64_t numFiles) {
         size = rows;
         fileNames.resize(numFiles);
-        demoTickNumber = (int32_t *) malloc(rows * sizeof(int32_t));
-        demoFile = (int32_t *) malloc(rows * sizeof(int32_t));
         victimName = (char **) malloc(rows * sizeof(char *));
         armorDamage = (int32_t *) malloc(rows * sizeof(int32_t));
         armor = (int32_t *) malloc(rows * sizeof(int32_t));
@@ -268,12 +267,12 @@ public:
         health = (int32_t *) malloc(rows * sizeof(int32_t));
         attacker = (char **) malloc(rows * sizeof(char *));
         weapon = (char **) malloc(rows * sizeof(char *));
+        demoTickNumber = (int32_t *) malloc(rows * sizeof(int32_t));
+        demoFile = (int32_t *) malloc(rows * sizeof(int32_t));
     }
 
     PlayerHurt() { };
     ~PlayerHurt() {
-        free(demoTickNumber);
-        free(demoFile);
         free(armorDamage);
         free(armor);
         free(healthDamage);
@@ -287,6 +286,9 @@ public:
         free(victimName);
         free(attacker);
         free(weapon);
+
+        free(demoTickNumber);
+        free(demoFile);
     }
 
     PlayerHurt(const PlayerHurt& other) = delete;
@@ -295,31 +297,31 @@ public:
 
 struct Grenades : public ColStore {
 public:
-    int32_t * demoTickNumber;
-    int32_t * demoFile;
     char ** thrower;
     char ** grenadeType;
+    int32_t * demoTickNumber;
+    int32_t * demoFile;
 
     void init(int64_t rows, int64_t numFiles) {
         size = rows;
         fileNames.resize(numFiles);
-        demoTickNumber = (int32_t *) malloc(rows * sizeof(int32_t));
-        demoFile = (int32_t *) malloc(rows * sizeof(int32_t));
         thrower = (char **) malloc(rows * sizeof(char *));
         grenadeType = (char **) malloc(rows * sizeof(char *));
+        demoTickNumber = (int32_t *) malloc(rows * sizeof(int32_t));
+        demoFile = (int32_t *) malloc(rows * sizeof(int32_t));
     }
 
     Grenades() { };
     ~Grenades() {
-        free(demoTickNumber);
-        free(demoFile);
-
         for (int64_t row = 0; row < size; row++) {
             free(thrower[row]);
             free(grenadeType[row]);
         }
         free(thrower);
         free(grenadeType);
+
+        free(demoTickNumber);
+        free(demoFile);
     }
 
     Grenades(const Grenades& other) = delete;
@@ -328,8 +330,6 @@ public:
 
 struct Kills : public ColStore {
 public:
-    int32_t * demoTickNumber;
-    int32_t * demoFile;
     char ** killer;
     char ** victim;
     char ** weapon;
@@ -337,12 +337,12 @@ public:
     bool * isHeadshot;
     bool * isWallbang;
     int32_t * penetratedObjects;
+    int32_t * demoTickNumber;
+    int32_t * demoFile;
 
     void init(int64_t rows, int64_t numFiles) {
         size = rows;
         fileNames.resize(numFiles);
-        demoTickNumber = (int32_t *) malloc(rows * sizeof(int32_t));
-        demoFile = (int32_t *) malloc(rows * sizeof(int32_t));
         killer = (char **) malloc(rows * sizeof(char *));
         victim = (char **) malloc(rows * sizeof(char *));
         weapon = (char **) malloc(rows * sizeof(char *));
@@ -350,12 +350,12 @@ public:
         isHeadshot = (bool *) malloc(rows * sizeof(bool));
         isWallbang = (bool *) malloc(rows * sizeof(bool));
         penetratedObjects = (int32_t *) malloc(rows * sizeof(int32_t));
+        demoTickNumber = (int32_t *) malloc(rows * sizeof(int32_t));
+        demoFile = (int32_t *) malloc(rows * sizeof(int32_t));
     }
 
     Kills() { };
     ~Kills() {
-        free(demoTickNumber);
-        free(demoFile);
         free(isHeadshot);
         free(isWallbang);
         free(penetratedObjects);
@@ -370,6 +370,9 @@ public:
         free(victim);
         free(weapon);
         free(assister);
+
+        free(demoTickNumber);
+        free(demoFile);
     }
 
     Kills(const Kills& other) = delete;
