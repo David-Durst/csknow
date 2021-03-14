@@ -21,7 +21,8 @@ int main(int argc, char * argv[]) {
     //std::printf("GLIBCXX: %d\n",__GLIBCXX__);
     std::cout << "num elements in position: " << position.size << std::endl;
     std::cout << "num elements in spotted: " << spotted.size << std::endl;
-    std::cout << "num elements in weaponfire: " << weaponFire.size << std::endl;
+    std::cout << "num elements in weaponFire: " << weaponFire.size << std::endl;
+    std::cout << "num elements in playerHurt: " << playerHurt.size << std::endl;
     std::cout << "num elements in grenades: " << grenades.size << std::endl;
     std::cout << "num elements in kills: " << kills.size << std::endl;
     /*

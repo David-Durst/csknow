@@ -699,10 +699,12 @@ void loadData(Position & position, Spotted & spotted, WeaponFire & weaponFire, P
     loadSpotted(spotted, dataPath);
     std::cout << "loading weapon fire" << std::endl;
     loadWeaponFire(weaponFire, dataPath);
+    /*
     std::cout << "loading player hurt" << std::endl;
     loadPlayerHurt(playerHurt, dataPath);
     std::cout << "loading grenades" << std::endl;
     loadGrenades(grenades, dataPath);
     std::cout << "loading kills" << std::endl;
     loadKills(kills, dataPath);
+     */
 }
