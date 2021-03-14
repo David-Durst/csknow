@@ -273,6 +273,7 @@ public:
 
     PlayerHurt() { };
     ~PlayerHurt() {
+        return;
         free(armorDamage);
         free(armor);
         free(healthDamage);
@@ -313,6 +314,7 @@ public:
 
     Grenades() { };
     ~Grenades() {
+        return;
         for (int64_t row = 0; row < size; row++) {
             free(thrower[row]);
             free(grenadeType[row]);
@@ -356,6 +358,7 @@ public:
 
     Kills() { };
     ~Kills() {
+        return;
         free(isHeadshot);
         free(isWallbang);
         free(penetratedObjects);
