@@ -121,6 +121,9 @@ vector<int64_t> getFileStartingRows(vector<string> filePaths) {
         printProgress((filesProcessed * 1.0) / filePaths.size());
     }
     std::cout << std::endl;
+    for (int64_t fileIndex = 0; fileIndex < filePaths.size(); fileIndex++) {
+        startingPointPerFile[fileIndex+1] += startingPointPerFile[fileIndex];
+    }
     return startingPointPerFile;
 }
 
