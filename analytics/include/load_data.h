@@ -14,7 +14,13 @@ public:
     bool beenInitialized = false;
     int64_t size;
     vector<string> fileNames;
-    virtual void init(int64_t rows, int64_t numFiles) = 0;
+    vector<int64_t> gameStarts;
+    virtual void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) {
+        beenInitialized = true;
+        size = rows;
+        fileNames.resize(numFiles);
+        this->gameStarts = gameStarts;
+    }
 };
 
 struct PlayerPosition {
@@ -47,10 +53,8 @@ public:
     PlayerPosition players[NUM_PLAYERS];
     int32_t * demoFile;
     
-    void init(int64_t rows, int64_t numFiles) {
-        beenInitialized = true;
-        size = rows;
-        fileNames.resize(numFiles);
+    void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) {
+        ColStore::init(rows, numFiles, gameStarts);
         demoTickNumber = (int32_t *) malloc(rows * sizeof(int32_t));
         gameTickNumber = (int32_t *) malloc(rows * sizeof(int32_t));
         matchStarted = (bool *) malloc(rows * sizeof(bool));
@@ -144,10 +148,8 @@ public:
     int32_t * demoTickNumber;
     int32_t * demoFile;
 
-    void init(int64_t rows, int64_t numFiles) {
-        beenInitialized = true;
-        size = rows;
-        fileNames.resize(numFiles);
+    void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) {
+        ColStore::init(rows, numFiles, gameStarts);
         spottedPlayer = (char **) malloc(rows * sizeof(char*));
         player0Name = (char **) malloc(rows * sizeof(char*));
         player0Spotter = (bool *) malloc(rows * sizeof(bool));
@@ -228,10 +230,8 @@ public:
     int32_t * demoTickNumber;
     int32_t * demoFile;
 
-    void init(int64_t rows, int64_t numFiles) {
-        beenInitialized = true;
-        size = rows;
-        fileNames.resize(numFiles);
+    void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) {
+        ColStore::init(rows, numFiles, gameStarts);
         shooter = (char **) malloc(rows * sizeof(char*));
         weapon = (char **) malloc(rows * sizeof(char*));
         demoTickNumber = (int32_t *) malloc(rows * sizeof(int32_t));
@@ -270,10 +270,8 @@ public:
     int32_t * demoTickNumber;
     int32_t * demoFile;
 
-    void init(int64_t rows, int64_t numFiles) {
-        beenInitialized = true;
-        size = rows;
-        fileNames.resize(numFiles);
+    void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) {
+        ColStore::init(rows, numFiles, gameStarts);
         victimName = (char **) malloc(rows * sizeof(char *));
         armorDamage = (int32_t *) malloc(rows * sizeof(int32_t));
         armor = (int32_t *) malloc(rows * sizeof(int32_t));
@@ -318,10 +316,8 @@ public:
     int32_t * demoTickNumber;
     int32_t * demoFile;
 
-    void init(int64_t rows, int64_t numFiles) {
-        beenInitialized = true;
-        size = rows;
-        fileNames.resize(numFiles);
+    void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) {
+        ColStore::init(rows, numFiles, gameStarts);
         thrower = (char **) malloc(rows * sizeof(char *));
         grenadeType = (char **) malloc(rows * sizeof(char *));
         demoTickNumber = (int32_t *) malloc(rows * sizeof(int32_t));
@@ -360,10 +356,8 @@ public:
     int32_t * demoTickNumber;
     int32_t * demoFile;
 
-    void init(int64_t rows, int64_t numFiles) {
-        beenInitialized = true;
-        size = rows;
-        fileNames.resize(numFiles);
+    void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) {
+        ColStore::init(rows, numFiles, gameStarts);
         killer = (char **) malloc(rows * sizeof(char *));
         victim = (char **) malloc(rows * sizeof(char *));
         weapon = (char **) malloc(rows * sizeof(char *));

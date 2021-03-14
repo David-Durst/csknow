@@ -287,7 +287,7 @@ void loadPositions(Position & position, string dataPath) {
     std::cout << "allocating arrays" << std::endl;
     //std::cout << "rows: " << rows << std::endl;
     //std::cout << "sizeof row: " << sizeof(int32_t)*3 + sizeof(bool)*5 + sizeof(int8_t)*6 + 10*(sizeof(double)*5 + 5*sizeof(char) + sizeof(char*) + sizeof(int8_t)) << std::endl;
-    position.init(rows, filePaths.size());
+    position.init(rows, filePaths.size(), startingPointPerFile);
 
     std::cout << "loading positions off disk" << std::endl;
     std::atomic<int> filesProcessed = 0;
@@ -298,7 +298,6 @@ void loadPositions(Position & position, string dataPath) {
         printProgress((filesProcessed * 1.0) / filePaths.size());
     }
     std::cout << std::endl;
-    std::cout << "finished" << std::endl;
 }
 
 
@@ -403,11 +402,11 @@ void loadSpotted(Spotted & spotted, string dataPath) {
     getFilesInDirectory(dataPath + "/spotted", filePaths);
 
     std::cout << "determining array size" << std::endl;
-    vector startingPointPerFile = getFileStartingRows(filePaths);
+    vector<int64_t> startingPointPerFile = getFileStartingRows(filePaths);
     int64_t rows = startingPointPerFile[filePaths.size()];
 
     std::cout << "allocating arrays" << std::endl;
-    spotted.init(rows, filePaths.size());
+    spotted.init(rows, filePaths.size(), startingPointPerFile);
 
     std::cout << "loading positions off disk" << std::endl;
 #pragma omp parallel for
@@ -464,7 +463,7 @@ void loadWeaponFire(WeaponFire & weaponFire, string dataPath) {
     int64_t rows = startingPointPerFile[filePaths.size()];
 
     std::cout << "allocating arrays" << std::endl;
-    weaponFire.init(rows, filePaths.size());
+    weaponFire.init(rows, filePaths.size(), startingPointPerFile);
 
     std::cout << "loading positions off disk" << std::endl;
 #pragma omp parallel for
@@ -536,7 +535,7 @@ void loadPlayerHurt(PlayerHurt & playerHurt, string dataPath) {
     int64_t rows = startingPointPerFile[filePaths.size()];
 
     std::cout << "allocating arrays" << std::endl;
-    playerHurt.init(rows, filePaths.size());
+    playerHurt.init(rows, filePaths.size(), startingPointPerFile);
 
     std::cout << "loading positions off disk" << std::endl;
 #pragma omp parallel for
@@ -593,7 +592,7 @@ void loadGrenades(Grenades & grenades, string dataPath) {
     int64_t rows = startingPointPerFile[filePaths.size()];
 
     std::cout << "allocating arrays" << std::endl;
-    grenades.init(rows, filePaths.size());
+    grenades.init(rows, filePaths.size(), startingPointPerFile);
 
     std::cout << "loading positions off disk" << std::endl;
 #pragma omp parallel for
@@ -665,7 +664,7 @@ void loadKills(Kills & kills, string dataPath) {
     int64_t rows = startingPointPerFile[filePaths.size()];
 
     std::cout << "allocating arrays" << std::endl;
-    kills.init(rows, filePaths.size());
+    kills.init(rows, filePaths.size(), startingPointPerFile);
 
     std::cout << "loading positions off disk" << std::endl;
 #pragma omp parallel for
