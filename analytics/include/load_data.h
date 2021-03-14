@@ -111,8 +111,6 @@ public:
 
 class Spotted : public ColStore {
 public:
-    int32_t * demoTickNumber;
-    int32_t * demoFile;
     char ** spottedPlayer;
     char ** player0Name;
     bool * player0Spotter;
@@ -134,12 +132,12 @@ public:
     bool * player8Spotter;
     char ** player9Name;
     bool * player9Spotter;
-    
+    int32_t * demoTickNumber;
+    int32_t * demoFile;
+
     void init(int64_t rows, int64_t numFiles) {
         size = rows;
         fileNames.resize(numFiles);
-        demoTickNumber = (int32_t *) malloc(rows * sizeof(int32_t));
-        demoFile = (int32_t *) malloc(rows * sizeof(int32_t));
         spottedPlayer = (char **) malloc(rows * sizeof(char*));
         player0Name = (char **) malloc(rows * sizeof(char*));
         player0Spotter = (bool *) malloc(rows * sizeof(bool));
@@ -161,12 +159,11 @@ public:
         player8Spotter = (bool *) malloc(rows * sizeof(bool));
         player9Name = (char **) malloc(rows * sizeof(char*));
         player9Spotter = (bool *) malloc(rows * sizeof(bool));
+        demoTickNumber = (int32_t *) malloc(rows * sizeof(int32_t));
+        demoFile = (int32_t *) malloc(rows * sizeof(int32_t));
     }
     
     ~Spotted() {
-        free(demoTickNumber);
-        free(demoFile);
-
         for (int64_t row = 0; row < size; row++) {
             free(spottedPlayer[row]);
             free(player0Name[row]);
@@ -201,10 +198,14 @@ public:
         free(player8Spotter);
         free(player9Name);
         free(player9Spotter);
+
+        free(demoTickNumber);
+        free(demoFile);
     }
 };
 
 class WeaponFire : public ColStore {
+public:
     int32_t * demoTickNumber;
     int32_t * demoFile;
     char ** shooter;
@@ -232,6 +233,7 @@ class WeaponFire : public ColStore {
 };
 
 class PlayerHurt : public ColStore {
+public:
     int32_t * demoTickNumber;
     int32_t * demoFile;
     char ** victimName;
@@ -276,6 +278,7 @@ class PlayerHurt : public ColStore {
 };
 
 struct Grenades : public ColStore {
+public:
     int32_t * demoTickNumber;
     int32_t * demoFile;
     char ** thrower;
@@ -304,6 +307,7 @@ struct Grenades : public ColStore {
 };
 
 struct Kills : public ColStore {
+public:
     int32_t * demoTickNumber;
     int32_t * demoFile;
     char ** killer;

@@ -65,7 +65,7 @@ MMapFile openMMapFile(string filePath) {
     struct stat stats;
     fstat(fd, &stats);
     const char * file = (char *) mmap(NULL, stats.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
-
+    return {fd, stats, file};
 }
 
 void closeMMapFile(MMapFile mMapFile) {
@@ -109,6 +109,21 @@ int64_t getRows(string filePath) {
     munmap((void *) file, stats.st_size);
     close(fd);
     return numRows;
+}
+
+vector<int64_t> getFileStartingRows(vector<string> filePaths) {
+    vector<int64_t> startingPointPerFile;
+    startingPointPerFile.resize(filePaths.size()+1);
+    std::atomic<int64_t> filesProcessed = 0;
+    startingPointPerFile[0] = 0;
+#pragma omp parallel for
+    for (int64_t fileIndex = 0; fileIndex < filePaths.size(); fileIndex++) {
+        startingPointPerFile[fileIndex+1] = getRows(filePaths[fileIndex]);
+        filesProcessed++;
+        printProgress((filesProcessed * 1.0) / filePaths.size());
+    }
+    std::cout << std::endl;
+    return startingPointPerFile;
 }
 
 static inline __attribute__((always_inline))
@@ -260,19 +275,7 @@ void loadPositions(Position & position, string dataPath) {
     vector<string> positionPaths = getFilesInDirectory(dataPath + "/position");
 
     std::cout << "determining array size" << std::endl;
-    int64_t startingPointPerFile[positionPaths.size()+1];
-    std::atomic<int64_t> filesProcessed = 0;
-    startingPointPerFile[0] = 0;
-#pragma omp parallel for
-    for (int64_t fileIndex = 0; fileIndex < positionPaths.size(); fileIndex++) {
-        startingPointPerFile[fileIndex+1] = getRows(positionPaths[fileIndex]);
-        filesProcessed++;
-        printProgress((filesProcessed * 1.0) / positionPaths.size());
-    }
-    std::cout << std::endl;
-    for (int64_t fileIndex = 0; fileIndex < positionPaths.size(); fileIndex++) {
-        startingPointPerFile[fileIndex+1] += startingPointPerFile[fileIndex];
-    }
+    vector startingPointPerFile = getFileStartingRows(positionPaths);
     int64_t rows = startingPointPerFile[positionPaths.size()];
 
     std::cout << "allocating arrays" << std::endl;
@@ -281,7 +284,7 @@ void loadPositions(Position & position, string dataPath) {
     position.init(rows, positionPaths.size());
 
     std::cout << "loading positions off disk" << std::endl;
-    filesProcessed = 0;
+    std::atomic<int> filesProcessed = 0;
 #pragma omp parallel for
     for (int64_t fileIndex = 0; fileIndex < positionPaths.size(); fileIndex++) {
         loadPositionFile(position, positionPaths[fileIndex], startingPointPerFile[fileIndex], fileIndex);
@@ -291,7 +294,128 @@ void loadPositions(Position & position, string dataPath) {
     std::cout << std::endl;
 }
 
+
+void loadSpottedFile(Spotted & spotted, string filePath, int64_t fileRowStart, int32_t fileNumber) {
+    // mmap the file
+    auto [fd, stats, file] = openMMapFile(filePath);
+
+    // skip the header
+    size_t firstRow = getNewline(file, 0, stats.st_size);
+
+    // track location for error logging
+    int64_t rowNumber = 0;
+    int64_t colNumber = 0;
+
+    // track location for insertion
+    int64_t arrayEntry = fileRowStart;
+
+    for (size_t curStart = firstRow + 1, curDelimiter = getNextDelimiter(file, curStart, stats.st_size);
+         curDelimiter < stats.st_size;
+         curStart = curDelimiter + 1, curDelimiter = getNextDelimiter(file, curStart, stats.st_size)) {
+        if (colNumber == 0) {
+            readCol(file, curStart, curDelimiter, &spotted.spottedPlayer[arrayEntry]);
+        }
+        else if (colNumber == 1) {
+            readCol(file, curStart, curDelimiter, &spotted.player0Name[arrayEntry]);
+        }
+        else if (colNumber == 2) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, spotted.player0Spotter[arrayEntry]);
+        }
+        else if (colNumber == 3) {
+            readCol(file, curStart, curDelimiter, &spotted.player1Name[arrayEntry]);
+        }
+        else if (colNumber == 4) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, spotted.player1Spotter[arrayEntry]);
+        }
+        else if (colNumber == 5) {
+            readCol(file, curStart, curDelimiter, &spotted.player2Name[arrayEntry]);
+        }
+        else if (colNumber == 6) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, spotted.player2Spotter[arrayEntry]);
+        }
+        else if (colNumber == 7) {
+            readCol(file, curStart, curDelimiter, &spotted.player3Name[arrayEntry]);
+        }
+        else if (colNumber == 8) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, spotted.player3Spotter[arrayEntry]);
+        }
+        else if (colNumber == 9) {
+            readCol(file, curStart, curDelimiter, &spotted.player4Name[arrayEntry]);
+        }
+        else if (colNumber == 10) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, spotted.player4Spotter[arrayEntry]);
+        }
+        else if (colNumber == 11) {
+            readCol(file, curStart, curDelimiter, &spotted.player5Name[arrayEntry]);
+        }
+        else if (colNumber == 12) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, spotted.player5Spotter[arrayEntry]);
+        }
+        else if (colNumber == 13) {
+            readCol(file, curStart, curDelimiter, &spotted.player6Name[arrayEntry]);
+        }
+        else if (colNumber == 14) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, spotted.player6Spotter[arrayEntry]);
+        }
+        else if (colNumber == 15) {
+            readCol(file, curStart, curDelimiter, &spotted.player7Name[arrayEntry]);
+        }
+        else if (colNumber == 16) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, spotted.player7Spotter[arrayEntry]);
+        }
+        else if (colNumber == 17) {
+            readCol(file, curStart, curDelimiter, &spotted.player8Name[arrayEntry]);
+        }
+        else if (colNumber == 18) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, spotted.player8Spotter[arrayEntry]);
+        }
+        else if (colNumber == 19) {
+            readCol(file, curStart, curDelimiter, &spotted.player9Name[arrayEntry]);
+        }
+        else if (colNumber == 20) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, spotted.player9Spotter[arrayEntry]);
+        }
+        else if (colNumber == 21) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, spotted.demoTickNumber[arrayEntry]);
+        }
+        else if (colNumber == 22) {
+            if (rowNumber == 0) {
+                spotted.fileNames[fileNumber] = string(&file[curStart], curDelimiter-curStart);
+            }
+            spotted.demoFile[arrayEntry] = fileNumber;
+            rowNumber++;
+            arrayEntry++;
+        }
+        colNumber = (colNumber + 1) % 23;
+    }
+    closeMMapFile({fd, stats, file});
+}
+
+void loadSpotted(Spotted & spotted, string dataPath) {
+    vector<string> positionPaths = getFilesInDirectory(dataPath + "/spotted");
+
+    std::cout << "determining array size" << std::endl;
+    vector startingPointPerFile = getFileStartingRows(positionPaths);
+    int64_t rows = startingPointPerFile[positionPaths.size()];
+
+    std::cout << "allocating arrays" << std::endl;
+    spotted.init(rows, positionPaths.size());
+
+    std::cout << "loading positions off disk" << std::endl;
+    std::atomic<int> filesProcessed = 0;
+#pragma omp parallel for
+    for (int64_t fileIndex = 0; fileIndex < positionPaths.size(); fileIndex++) {
+        loadSpottedFile(spotted, positionPaths[fileIndex], startingPointPerFile[fileIndex], fileIndex);
+        filesProcessed++;
+        printProgress((filesProcessed * 1.0) / positionPaths.size());
+    }
+    std::cout << std::endl;
+}
+
 void loadData(Position & position, Spotted & spotted, WeaponFire & weaponFire, PlayerHurt & playerHurt,
                Grenades & grenades, Kills & kills, string dataPath) {
+    std::cout << "loading position" << std::endl;
     loadPositions(position, dataPath);
+    std::cout << "loading spotted" << std::endl;
+    loadSpotted(spotted, dataPath);
 }
