@@ -214,10 +214,10 @@ public:
 
 class WeaponFire : public ColStore {
 public:
-    int32_t * demoTickNumber;
-    int32_t * demoFile;
     char ** shooter;
     char ** weapon;
+    int32_t * demoTickNumber;
+    int32_t * demoFile;
 
     void init(int64_t rows, int64_t numFiles) {
         size = rows;
