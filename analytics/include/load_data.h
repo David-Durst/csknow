@@ -11,6 +11,7 @@ using std::set;
 
 class ColStore {
 public:
+    bool beenInitialized = false;
     int64_t size;
     vector<string> fileNames;
     virtual void init(int64_t rows, int64_t numFiles) = 0;
@@ -47,6 +48,7 @@ public:
     int32_t * demoFile;
     
     void init(int64_t rows, int64_t numFiles) {
+        beenInitialized = true;
         size = rows;
         fileNames.resize(numFiles);
         demoTickNumber = (int32_t *) malloc(rows * sizeof(int32_t));
@@ -78,6 +80,9 @@ public:
 
     Position() { };
     ~Position() {
+        if (!beenInitialized){
+            return;
+        }
         free(demoTickNumber);
         free(gameTickNumber);
         free(matchStarted);
@@ -140,6 +145,7 @@ public:
     int32_t * demoFile;
 
     void init(int64_t rows, int64_t numFiles) {
+        beenInitialized = true;
         size = rows;
         fileNames.resize(numFiles);
         spottedPlayer = (char **) malloc(rows * sizeof(char*));
@@ -169,6 +175,9 @@ public:
 
     Spotted() { };
     ~Spotted() {
+        if (!beenInitialized){
+            return;
+        }
         for (int64_t row = 0; row < size; row++) {
             free(spottedPlayer[row]);
             free(player0Name[row]);
@@ -220,6 +229,7 @@ public:
     int32_t * demoFile;
 
     void init(int64_t rows, int64_t numFiles) {
+        beenInitialized = true;
         size = rows;
         fileNames.resize(numFiles);
         shooter = (char **) malloc(rows * sizeof(char*));
@@ -230,6 +240,9 @@ public:
 
     WeaponFire() { };
     ~WeaponFire() {
+        if (!beenInitialized){
+            return;
+        }
         for (int64_t row = 0; row < size; row++) {
             free(shooter[row]);
             free(weapon[row]);
@@ -258,6 +271,7 @@ public:
     int32_t * demoFile;
 
     void init(int64_t rows, int64_t numFiles) {
+        beenInitialized = true;
         size = rows;
         fileNames.resize(numFiles);
         victimName = (char **) malloc(rows * sizeof(char *));
@@ -273,6 +287,9 @@ public:
 
     PlayerHurt() { };
     ~PlayerHurt() {
+        if (!beenInitialized){
+            return;
+        }
         free(victimName);
         free(armorDamage);
         free(armor);
@@ -303,6 +320,7 @@ public:
     int32_t * demoFile;
 
     void init(int64_t rows, int64_t numFiles) {
+        beenInitialized = true;
         size = rows;
         fileNames.resize(numFiles);
         thrower = (char **) malloc(rows * sizeof(char *));
@@ -313,6 +331,9 @@ public:
 
     Grenades() { };
     ~Grenades() {
+        if (!beenInitialized){
+            return;
+        }
         for (int64_t row = 0; row < size; row++) {
             free(thrower[row]);
             free(grenadeType[row]);
@@ -341,6 +362,7 @@ public:
     int32_t * demoFile;
 
     void init(int64_t rows, int64_t numFiles) {
+        beenInitialized = true;
         size = rows;
         fileNames.resize(numFiles);
         killer = (char **) malloc(rows * sizeof(char *));
@@ -356,6 +378,9 @@ public:
 
     Kills() { };
     ~Kills() {
+        if (!beenInitialized){
+            return;
+        }
         free(isHeadshot);
         free(isWallbang);
         free(penetratedObjects);
