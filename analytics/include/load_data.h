@@ -13,6 +13,7 @@ class ColStore {
 public:
     int64_t size;
     vector<string> fileNames;
+    virtual void init(int64_t rows, int64_t numFiles) = 0;
 };
 
 struct PlayerPosition {
@@ -89,6 +90,7 @@ public:
         free(tScore);
         free(ctScore);
         free(numPlayers);
+
         for (int i = 0; i < NUM_PLAYERS; i++) {
             for (int64_t row = 0; row < size; row++) {
                 free(players[i].name[row]);
@@ -164,82 +166,186 @@ public:
     ~Spotted() {
         free(demoTickNumber);
         free(demoFile);
-        for (int i = 0; i < NUM_PLAYERS; i++) {
-            for (int64_t row = 0; row < size; row++) {
-                free(spottedPlayer[row]);
-                free(player0Name[row]);
-                free(player1Name[row]);
-                free(player2Name[row]);
-                free(player3Name[row]);
-                free(player4Name[row]);
-                free(player5Name[row]);
-                free(player6Name[row]);
-                free(player7Name[row]);
-                free(player8Name[row]);
-                free(player9Name[row]);
-            }
-            free(spottedPlayer);
-            free(player0Name);
-            free(player0Spotter);
-            free(player1Name);
-            free(player1Spotter);
-            free(player2Name);
-            free(player2Spotter);
-            free(player3Name);
-            free(player3Spotter);
-            free(player4Name);
-            free(player4Spotter);
-            free(player5Name);
-            free(player5Spotter);
-            free(player6Name);
-            free(player6Spotter);
-            free(player7Name);
-            free(player7Spotter);
-            free(player8Name);
-            free(player8Spotter);
-            free(player9Name);
-            free(player9Spotter);
+
+        for (int64_t row = 0; row < size; row++) {
+            free(spottedPlayer[row]);
+            free(player0Name[row]);
+            free(player1Name[row]);
+            free(player2Name[row]);
+            free(player3Name[row]);
+            free(player4Name[row]);
+            free(player5Name[row]);
+            free(player6Name[row]);
+            free(player7Name[row]);
+            free(player8Name[row]);
+            free(player9Name[row]);
         }
-        
+        free(spottedPlayer);
+        free(player0Name);
+        free(player0Spotter);
+        free(player1Name);
+        free(player1Spotter);
+        free(player2Name);
+        free(player2Spotter);
+        free(player3Name);
+        free(player3Spotter);
+        free(player4Name);
+        free(player4Spotter);
+        free(player5Name);
+        free(player5Spotter);
+        free(player6Name);
+        free(player6Spotter);
+        free(player7Name);
+        free(player7Spotter);
+        free(player8Name);
+        free(player8Spotter);
+        free(player9Name);
+        free(player9Spotter);
     }
 };
 
-struct WeaponFire {
-    vector<int32_t> demoTickNumber;
-    vector<string> demoFile;
-    vector<string> shooter;
-    vector<string> weapon;
+class WeaponFire : public ColStore {
+    int32_t * demoTickNumber;
+    int32_t * demoFile;
+    char ** shooter;
+    char ** weapon;
+
+    void init(int64_t rows, int64_t numFiles) {
+        size = rows;
+        fileNames.resize(numFiles);
+        demoTickNumber = (int32_t *) malloc(rows * sizeof(int32_t));
+        demoFile = (int32_t *) malloc(rows * sizeof(int32_t));
+        shooter = (char **) malloc(rows * sizeof(char*));
+        weapon = (char **) malloc(rows * sizeof(char*));
+    }
+    
+    ~WeaponFire() {
+        free(demoTickNumber);
+        free(demoFile);
+        for (int64_t row = 0; row < size; row++) {
+            free(shooter[row]);
+            free(weapon[row]);
+        }
+        free(shooter);
+        free(weapon);
+    }
 };
 
-struct PlayerHurt {
-    vector<int32_t> demoTickNumber;
-    vector<string> demoFile;
-    vector<string> victimName;
-    vector<int32_t> armorDamage;
-    vector<int32_t> armor;
-    vector<int32_t> healthDamage;
-    vector<int32_t> health;
-    vector<string> attacker;
-    vector<string> weapon;
+class PlayerHurt : public ColStore {
+    int32_t * demoTickNumber;
+    int32_t * demoFile;
+    char ** victimName;
+    int32_t * armorDamage;
+    int32_t * armor;
+    int32_t * healthDamage;
+    int32_t * health;
+    char ** attacker;
+    char ** weapon;
+
+    void init(int64_t rows, int64_t numFiles) {
+        size = rows;
+        fileNames.resize(numFiles);
+        demoTickNumber = (int32_t *) malloc(rows * sizeof(int32_t));
+        demoFile = (int32_t *) malloc(rows * sizeof(int32_t));
+        victimName = (char **) malloc(rows * sizeof(char *));
+        armorDamage = (int32_t *) malloc(rows * sizeof(int32_t));
+        armor = (int32_t *) malloc(rows * sizeof(int32_t));
+        healthDamage = (int32_t *) malloc(rows * sizeof(int32_t));
+        health = (int32_t *) malloc(rows * sizeof(int32_t));
+        attacker = (char **) malloc(rows * sizeof(char *));
+        weapon = (char **) malloc(rows * sizeof(char *));
+    }
+
+    ~PlayerHurt() {
+        free(demoTickNumber);
+        free(demoFile);
+        free(armorDamage);
+        free(armor);
+        free(healthDamage);
+        free(health);
+
+        for (int64_t row = 0; row < size; row++) {
+            free(victimName[row]);
+            free(attacker[row]);
+            free(weapon[row]);
+        }
+        free(victimName);
+        free(attacker);
+        free(weapon);
+    }
 };
 
-struct Grenades {
-    vector<int32_t> demoTickNumber;
-    vector<string> demoFile;
-    vector<string> thrower;
-    vector<string> grenadeType;
+struct Grenades : public ColStore {
+    int32_t * demoTickNumber;
+    int32_t * demoFile;
+    char ** thrower;
+    char ** grenadeType;
+
+    void init(int64_t rows, int64_t numFiles) {
+        size = rows;
+        fileNames.resize(numFiles);
+        demoTickNumber = (int32_t *) malloc(rows * sizeof(int32_t));
+        demoFile = (int32_t *) malloc(rows * sizeof(int32_t));
+        thrower = (char **) malloc(rows * sizeof(char *));
+        grenadeType = (char **) malloc(rows * sizeof(char *));
+    }
+
+    ~Grenades() {
+        free(demoTickNumber);
+        free(demoFile);
+
+        for (int64_t row = 0; row < size; row++) {
+            free(thrower[row]);
+            free(grenadeType[row]);
+        }
+        free(thrower);
+        free(grenadeType);
+    }
 };
 
-struct Kills {
-    vector<int32_t> demoTickNumber;
-    vector<string> demoFile;
-    vector<string> killer;
-    vector<string> victim;
-    vector<string> weapon;
-    vector<string> assister;
-    vector<bool> isHeadshot;
-    vector<bool> isWallbang;
-    vector<int32_t> penetratedObjects;
+struct Kills : public ColStore {
+    int32_t * demoTickNumber;
+    int32_t * demoFile;
+    char ** killer;
+    char ** victim;
+    char ** weapon;
+    char ** assister;
+    bool * isHeadshot;
+    bool * isWallbang;
+    int32_t * penetratedObjects;
+
+    void init(int64_t rows, int64_t numFiles) {
+        size = rows;
+        fileNames.resize(numFiles);
+        demoTickNumber = (int32_t *) malloc(rows * sizeof(int32_t));
+        demoFile = (int32_t *) malloc(rows * sizeof(int32_t));
+        killer = (char **) malloc(rows * sizeof(char *));
+        victim = (char **) malloc(rows * sizeof(char *));
+        weapon = (char **) malloc(rows * sizeof(char *));
+        assister = (char **) malloc(rows * sizeof(char *));
+        isHeadshot = (bool *) malloc(rows * sizeof(bool));
+        isWallbang = (bool *) malloc(rows * sizeof(bool));
+        penetratedObjects = (int32_t *) malloc(rows * sizeof(int32_t));
+    }
+
+    ~Kills() {
+        free(demoTickNumber);
+        free(demoFile);
+        free(isHeadshot);
+        free(isWallbang);
+        free(penetratedObjects);
+
+        for (int64_t row = 0; row < size; row++) {
+            free(killer[row]);
+            free(victim[row]);
+            free(weapon[row]);
+            free(assister[row]);
+        }
+        free(killer);
+        free(victim);
+        free(weapon);
+        free(assister);
+    }
 };
 
 void loadData(Position & position, Spotted & spotted, WeaponFire & weaponFire, PlayerHurt & playerHurt,

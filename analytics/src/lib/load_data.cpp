@@ -49,6 +49,30 @@ vector<string> getFilesInDirectory(string path) {
     return result;
 }
 
+struct MMapFile {
+    int fd;
+    struct stat stats;
+    const char * file;
+};
+
+MMapFile openMMapFile(string filePath) {
+    int fd = open(filePath.c_str(), O_RDONLY);
+    if (fd < 0)
+    {
+        fprintf(stderr, "Error opening file: %s\n", strerror(errno));
+        exit(EXIT_FAILURE);
+    }
+    struct stat stats;
+    fstat(fd, &stats);
+    const char * file = (char *) mmap(NULL, stats.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
+
+}
+
+void closeMMapFile(MMapFile mMapFile) {
+    munmap((void *) mMapFile.file, mMapFile.stats.st_size);
+    close(mMapFile.fd);
+}
+
 size_t getNextDelimiter(const char * file, size_t curEntryStart, size_t fileLength) {
     for (size_t curPos = curEntryStart; curPos < fileLength; curPos++) {
         if (file[curPos] == '\n' || file[curPos] == ',') {
@@ -129,15 +153,7 @@ void readCol(const char * file, size_t start, size_t end, int64_t rowNumber, int
 
 void loadPositionFile(Position & position, string filePath, int64_t fileRowStart, int32_t fileNumber) {
     // mmap the file
-    int fd = open(filePath.c_str(), O_RDONLY);
-    if (fd < 0)
-    {
-        fprintf(stderr, "Error opening file: %s\n", strerror(errno));
-        exit(EXIT_FAILURE);
-    }
-    struct stat stats;
-    fstat(fd, &stats);
-    const char * file = (char *) mmap(NULL, stats.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
+    auto [fd, stats, file] = openMMapFile(filePath);
 
     // skip the header
     size_t firstRow = getNewline(file, 0, stats.st_size);
@@ -237,8 +253,7 @@ void loadPositionFile(Position & position, string filePath, int64_t fileRowStart
         }
         colNumber = (colNumber + 1) % 104;
     }
-    munmap((void *) file, stats.st_size);
-    close(fd);
+    closeMMapFile({fd, stats, file});
 }
 
 void loadPositions(Position & position, string dataPath) {
