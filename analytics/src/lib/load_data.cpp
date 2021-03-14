@@ -663,7 +663,7 @@ void loadKillsFile(Kills & kills, string filePath, int64_t fileRowStart, int32_t
             rowNumber++;
             arrayEntry++;
         }
-        colNumber = (colNumber + 1) % 4;
+        colNumber = (colNumber + 1) % 9;
     }
     closeMMapFile({fd, stats, file});
 }
