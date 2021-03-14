@@ -313,7 +313,6 @@ public:
 
     Grenades() { };
     ~Grenades() {
-        return;
         for (int64_t row = 0; row < size; row++) {
             free(thrower[row]);
             free(grenadeType[row]);

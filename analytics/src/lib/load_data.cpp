@@ -553,6 +553,67 @@ void loadPlayerHurt(PlayerHurt & playerHurt, string dataPath) {
     std::cout << std::endl;
 }
 
+void loadGrenadesFile(Grenades & grenades, string filePath, int64_t fileRowStart, int32_t fileNumber) {
+    // mmap the file
+    auto [fd, stats, file] = openMMapFile(filePath);
+
+    // skip the header
+    size_t firstRow = getNewline(file, 0, stats.st_size);
+
+    // track location for error logging
+    int64_t rowNumber = 0;
+    int64_t colNumber = 0;
+
+    // track location for insertion
+    int64_t arrayEntry = fileRowStart;
+
+    for (size_t curStart = firstRow + 1, curDelimiter = getNextDelimiter(file, curStart, stats.st_size);
+         curDelimiter < stats.st_size;
+         curStart = curDelimiter + 1, curDelimiter = getNextDelimiter(file, curStart, stats.st_size)) {
+        if (colNumber == 0) {
+            readCol(file, curStart, curDelimiter, &grenades.thrower[arrayEntry]);
+        }
+        else if (colNumber == 1) {
+            readCol(file, curStart, curDelimiter, &grenades.grenadeType[arrayEntry]);
+        }
+        else if (colNumber == 2) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, grenades.demoTickNumber[arrayEntry]);
+        }
+        else if (colNumber == 3) {
+            if (rowNumber == 0) {
+                grenades.fileNames[fileNumber] = string(&file[curStart], curDelimiter-curStart);
+            }
+            grenades.demoFile[arrayEntry] = fileNumber;
+            rowNumber++;
+            arrayEntry++;
+        }
+        colNumber = (colNumber + 1) % 4;
+    }
+    closeMMapFile({fd, stats, file});
+}
+
+void loadGrenades(Grenades & grenades, string dataPath) {
+    vector<string> positionPaths;
+    getFilesInDirectory(dataPath + "/weapon_fire", positionPaths);
+
+    std::cout << "determining array size" << std::endl;
+    vector startingPointPerFile = getFileStartingRows(positionPaths);
+    int64_t rows = startingPointPerFile[positionPaths.size()];
+
+    std::cout << "allocating arrays" << std::endl;
+    grenades.init(rows, positionPaths.size());
+
+    std::cout << "loading positions off disk" << std::endl;
+    std::atomic<int> filesProcessed = 0;
+#pragma omp parallel for
+    for (int64_t fileIndex = 0; fileIndex < positionPaths.size(); fileIndex++) {
+        loadGrenadesFile(grenades, positionPaths[fileIndex], startingPointPerFile[fileIndex], fileIndex);
+        filesProcessed++;
+        printProgress((filesProcessed * 1.0) / positionPaths.size());
+    }
+    std::cout << std::endl;
+}
+
 void loadData(Position & position, Spotted & spotted, WeaponFire & weaponFire, PlayerHurt & playerHurt,
                Grenades & grenades, Kills & kills, string dataPath) {
     std::cout << "loading position" << std::endl;
@@ -563,4 +624,6 @@ void loadData(Position & position, Spotted & spotted, WeaponFire & weaponFire, P
     loadWeaponFire(weaponFire, dataPath);
     std::cout << "loading player hurt" << std::endl;
     loadPlayerHurt(playerHurt, dataPath);
+    std::cout << "loading grenades" << std::endl;
+    loadGrenades(grenades, dataPath);
 }
