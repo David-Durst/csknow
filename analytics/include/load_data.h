@@ -273,7 +273,7 @@ public:
 
     PlayerHurt() { };
     ~PlayerHurt() {
-        return;
+        free(victimName);
         free(armorDamage);
         free(armor);
         free(healthDamage);
@@ -284,7 +284,6 @@ public:
             free(attacker[row]);
             free(weapon[row]);
         }
-        free(victimName);
         free(attacker);
         free(weapon);
 
