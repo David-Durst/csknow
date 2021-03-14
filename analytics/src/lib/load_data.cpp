@@ -322,66 +322,7 @@ void loadSpottedFile(Spotted & spotted, string filePath, int64_t fileRowStart, i
         if (colNumber == 0) {
             readCol(file, curStart, curDelimiter, &spotted.spottedPlayer[arrayEntry]);
         }
-        else if (colNumber == 1) {
-            readCol(file, curStart, curDelimiter, &spotted.player0Name[arrayEntry]);
-        }
-        else if (colNumber == 2) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, spotted.player0Spotter[arrayEntry]);
-        }
-        else if (colNumber == 3) {
-            readCol(file, curStart, curDelimiter, &spotted.player1Name[arrayEntry]);
-        }
-        else if (colNumber == 4) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, spotted.player1Spotter[arrayEntry]);
-        }
-        else if (colNumber == 5) {
-            readCol(file, curStart, curDelimiter, &spotted.player2Name[arrayEntry]);
-        }
-        else if (colNumber == 6) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, spotted.player2Spotter[arrayEntry]);
-        }
-        else if (colNumber == 7) {
-            readCol(file, curStart, curDelimiter, &spotted.player3Name[arrayEntry]);
-        }
-        else if (colNumber == 8) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, spotted.player3Spotter[arrayEntry]);
-        }
-        else if (colNumber == 9) {
-            readCol(file, curStart, curDelimiter, &spotted.player4Name[arrayEntry]);
-        }
-        else if (colNumber == 10) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, spotted.player4Spotter[arrayEntry]);
-        }
-        else if (colNumber == 11) {
-            readCol(file, curStart, curDelimiter, &spotted.player5Name[arrayEntry]);
-        }
-        else if (colNumber == 12) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, spotted.player5Spotter[arrayEntry]);
-        }
-        else if (colNumber == 13) {
-            readCol(file, curStart, curDelimiter, &spotted.player6Name[arrayEntry]);
-        }
-        else if (colNumber == 14) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, spotted.player6Spotter[arrayEntry]);
-        }
-        else if (colNumber == 15) {
-            readCol(file, curStart, curDelimiter, &spotted.player7Name[arrayEntry]);
-        }
-        else if (colNumber == 16) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, spotted.player7Spotter[arrayEntry]);
-        }
-        else if (colNumber == 17) {
-            readCol(file, curStart, curDelimiter, &spotted.player8Name[arrayEntry]);
-        }
-        else if (colNumber == 18) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, spotted.player8Spotter[arrayEntry]);
-        }
-        else if (colNumber == 19) {
-            readCol(file, curStart, curDelimiter, &spotted.player9Name[arrayEntry]);
-        }
-        else if (colNumber == 20) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, spotted.player9Spotter[arrayEntry]);
-        }
+        // check last elements before loop so don't need loop ending condition
         else if (colNumber == 21) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, spotted.demoTickNumber[arrayEntry]);
         }
@@ -392,6 +333,13 @@ void loadSpottedFile(Spotted & spotted, string filePath, int64_t fileRowStart, i
             spotted.demoFile[arrayEntry] = fileNumber;
             rowNumber++;
             arrayEntry++;
+        }
+        else if ((colNumber - 1) % 2 == 0) {
+            readCol(file, curStart, curDelimiter, &spotted.spotters[(colNumber - 1) / 2].playerName[arrayEntry]);
+        }
+        else if ((colNumber - 1) % 2 == 1) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber,
+                    spotted.spotters[(colNumber - 1) / 2].playerSpotter[arrayEntry]);
         }
         colNumber = (colNumber + 1) % 23;
     }

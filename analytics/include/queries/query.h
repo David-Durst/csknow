@@ -5,6 +5,27 @@
 using std::vector;
 using std::stringstream;
 
+struct Vec3 {
+    double x;
+    double y;
+    double z;
+};
+
+struct Vec2 {
+    double x;
+    double y;
+};
+
+struct Vec5 {
+    Vec3 pos;
+    Vec2 view;
+};
+
+struct AABB {
+    Vec3 min;
+    Vec3 max;
+};
+
 class QueryResult {
 public:
     virtual string toCSV() = 0;
@@ -22,7 +43,7 @@ public:
         }
     }
 
-    string toCSV() {
+    virtual string toCSV() {
         stringstream ss;
         ss << "position index" << std::endl;
         for (const auto & index : positionIndex) {

@@ -134,55 +134,26 @@ public:
     Position& operator=(const Position& other) = delete;
 };
 
+struct SpotterPlayer {
+    char ** playerName;
+    bool * playerSpotter;
+};
+
 class Spotted : public ColStore {
 public:
     char ** spottedPlayer;
-    char ** player0Name;
-    bool * player0Spotter;
-    char ** player1Name;
-    bool * player1Spotter;
-    char ** player2Name;
-    bool * player2Spotter;
-    char ** player3Name;
-    bool * player3Spotter;
-    char ** player4Name;
-    bool * player4Spotter;
-    char ** player5Name;
-    bool * player5Spotter;
-    char ** player6Name;
-    bool * player6Spotter;
-    char ** player7Name;
-    bool * player7Spotter;
-    char ** player8Name;
-    bool * player8Spotter;
-    char ** player9Name;
-    bool * player9Spotter;
+    SpotterPlayer spotters[NUM_PLAYERS];
     int32_t * demoTickNumber;
     int32_t * demoFile;
 
     void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) {
         ColStore::init(rows, numFiles, gameStarts);
         spottedPlayer = (char **) malloc(rows * sizeof(char*));
-        player0Name = (char **) malloc(rows * sizeof(char*));
-        player0Spotter = (bool *) malloc(rows * sizeof(bool));
-        player1Name = (char **) malloc(rows * sizeof(char*));
-        player1Spotter = (bool *) malloc(rows * sizeof(bool));
-        player2Name = (char **) malloc(rows * sizeof(char*));
-        player2Spotter = (bool *) malloc(rows * sizeof(bool));
-        player3Name = (char **) malloc(rows * sizeof(char*));
-        player3Spotter = (bool *) malloc(rows * sizeof(bool));
-        player4Name = (char **) malloc(rows * sizeof(char*));
-        player4Spotter = (bool *) malloc(rows * sizeof(bool));
-        player5Name = (char **) malloc(rows * sizeof(char*));
-        player5Spotter = (bool *) malloc(rows * sizeof(bool));
-        player6Name = (char **) malloc(rows * sizeof(char*));
-        player6Spotter = (bool *) malloc(rows * sizeof(bool));
-        player7Name = (char **) malloc(rows * sizeof(char*));
-        player7Spotter = (bool *) malloc(rows * sizeof(bool));
-        player8Name = (char **) malloc(rows * sizeof(char*));
-        player8Spotter = (bool *) malloc(rows * sizeof(bool));
-        player9Name = (char **) malloc(rows * sizeof(char*));
-        player9Spotter = (bool *) malloc(rows * sizeof(bool));
+        for (int i = 0; i < NUM_PLAYERS; i++) {
+            spotters[i].playerName = (char **) malloc(rows * sizeof(char*));
+            spotters[i].playerSpotter = (bool *) malloc(rows * sizeof(bool));
+
+        }
         demoTickNumber = (int32_t *) malloc(rows * sizeof(int32_t));
         demoFile = (int32_t *) malloc(rows * sizeof(int32_t));
     }
@@ -194,38 +165,15 @@ public:
         }
         for (int64_t row = 0; row < size; row++) {
             free(spottedPlayer[row]);
-            free(player0Name[row]);
-            free(player1Name[row]);
-            free(player2Name[row]);
-            free(player3Name[row]);
-            free(player4Name[row]);
-            free(player5Name[row]);
-            free(player6Name[row]);
-            free(player7Name[row]);
-            free(player8Name[row]);
-            free(player9Name[row]);
         }
-        free(spottedPlayer);
-        free(player0Name);
-        free(player0Spotter);
-        free(player1Name);
-        free(player1Spotter);
-        free(player2Name);
-        free(player2Spotter);
-        free(player3Name);
-        free(player3Spotter);
-        free(player4Name);
-        free(player4Spotter);
-        free(player5Name);
-        free(player5Spotter);
-        free(player6Name);
-        free(player6Spotter);
-        free(player7Name);
-        free(player7Spotter);
-        free(player8Name);
-        free(player8Spotter);
-        free(player9Name);
-        free(player9Spotter);
+
+        for (int i = 0; i < NUM_PLAYERS; i++) {
+            for (int64_t row = 0; row < size; row++) {
+                free(spotters[i].playerName[row]);
+            }
+            free(spotters[i].playerName);
+            free(spotters[i].playerSpotter);
+        }
 
         free(demoTickNumber);
         free(demoFile);
