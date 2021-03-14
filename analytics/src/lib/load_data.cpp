@@ -265,6 +265,8 @@ void loadPositions(Position & position, string dataPath) {
     std::cout << "sizeof row: " << sizeof(int32_t)*3 + sizeof(bool)*7 + sizeof(int8_t)*7 + sizeof(double)*5 + 5*sizeof(char) + sizeof(char*) << std::endl;
     position.size = rows;
     position.fileNames.resize(positionPaths.size());
+    usleep(2e6);
+    std::cout << "starting malloc" << std::endl;
     position.demoTickNumber = (int32_t *) malloc(rows * sizeof(int32_t));
     while (true) {
         usleep(1e6);
