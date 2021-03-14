@@ -75,7 +75,8 @@ public:
         }
         demoFile = (int32_t *) malloc(rows * sizeof(int32_t*));
     }
-    
+
+    Position() { };
     ~Position() {
         free(demoTickNumber);
         free(gameTickNumber);
@@ -107,6 +108,9 @@ public:
         }
         free(demoFile);
     }
+
+    Position(const Position& other) = delete;
+    Position& operator=(const Position& other) = delete;
 };
 
 class Spotted : public ColStore {
@@ -162,7 +166,8 @@ public:
         demoTickNumber = (int32_t *) malloc(rows * sizeof(int32_t));
         demoFile = (int32_t *) malloc(rows * sizeof(int32_t));
     }
-    
+
+    Spotted() { };
     ~Spotted() {
         for (int64_t row = 0; row < size; row++) {
             free(spottedPlayer[row]);
@@ -202,6 +207,9 @@ public:
         free(demoTickNumber);
         free(demoFile);
     }
+
+    Spotted(const Spotted& other) = delete;
+    Spotted& operator=(const Spotted& other) = delete;
 };
 
 class WeaponFire : public ColStore {
@@ -219,7 +227,8 @@ public:
         shooter = (char **) malloc(rows * sizeof(char*));
         weapon = (char **) malloc(rows * sizeof(char*));
     }
-    
+
+    WeaponFire() { };
     ~WeaponFire() {
         free(demoTickNumber);
         free(demoFile);
@@ -230,6 +239,9 @@ public:
         free(shooter);
         free(weapon);
     }
+
+    WeaponFire(const WeaponFire& other) = delete;
+    WeaponFire& operator=(const WeaponFire& other) = delete;
 };
 
 class PlayerHurt : public ColStore {
@@ -258,6 +270,7 @@ public:
         weapon = (char **) malloc(rows * sizeof(char *));
     }
 
+    PlayerHurt() { };
     ~PlayerHurt() {
         free(demoTickNumber);
         free(demoFile);
@@ -275,6 +288,9 @@ public:
         free(attacker);
         free(weapon);
     }
+
+    PlayerHurt(const PlayerHurt& other) = delete;
+    PlayerHurt& operator=(const PlayerHurt& other) = delete;
 };
 
 struct Grenades : public ColStore {
@@ -293,6 +309,7 @@ public:
         grenadeType = (char **) malloc(rows * sizeof(char *));
     }
 
+    Grenades() { };
     ~Grenades() {
         free(demoTickNumber);
         free(demoFile);
@@ -304,6 +321,9 @@ public:
         free(thrower);
         free(grenadeType);
     }
+
+    Grenades(const Grenades& other) = delete;
+    Grenades& operator=(const Grenades& other) = delete;
 };
 
 struct Kills : public ColStore {
@@ -332,6 +352,7 @@ public:
         penetratedObjects = (int32_t *) malloc(rows * sizeof(int32_t));
     }
 
+    Kills() { };
     ~Kills() {
         free(demoTickNumber);
         free(demoFile);
@@ -350,6 +371,9 @@ public:
         free(weapon);
         free(assister);
     }
+
+    Kills(const Kills& other) = delete;
+    Kills& operator=(const Kills& other) = delete;
 };
 
 void loadData(Position & position, Spotted & spotted, WeaponFire & weaponFire, PlayerHurt & playerHurt,

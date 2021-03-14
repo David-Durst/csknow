@@ -275,7 +275,7 @@ void loadPositions(Position & position, string dataPath) {
     vector<string> positionPaths = getFilesInDirectory(dataPath + "/position");
 
     std::cout << "determining array size" << std::endl;
-    vector startingPointPerFile = getFileStartingRows(positionPaths);
+    vector<int64_t> startingPointPerFile = getFileStartingRows(positionPaths);
     int64_t rows = startingPointPerFile[positionPaths.size()];
 
     std::cout << "allocating arrays" << std::endl;
