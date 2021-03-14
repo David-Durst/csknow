@@ -509,10 +509,10 @@ void loadPlayerHurtFile(PlayerHurt & playerHurt, string filePath, int64_t fileRo
         else if (colNumber == 4) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, playerHurt.health[arrayEntry]);
         }
-        if (colNumber == 5) {
+        else if (colNumber == 5) {
             readCol(file, curStart, curDelimiter, &playerHurt.attacker[arrayEntry]);
         }
-        if (colNumber == 6) {
+        else if (colNumber == 6) {
             readCol(file, curStart, curDelimiter, &playerHurt.weapon[arrayEntry]);
         }
         else if (colNumber == 7) {
@@ -699,12 +699,10 @@ void loadData(Position & position, Spotted & spotted, WeaponFire & weaponFire, P
     loadSpotted(spotted, dataPath);
     std::cout << "loading weapon fire" << std::endl;
     loadWeaponFire(weaponFire, dataPath);
-    /*
     std::cout << "loading player hurt" << std::endl;
     loadPlayerHurt(playerHurt, dataPath);
     std::cout << "loading grenades" << std::endl;
     loadGrenades(grenades, dataPath);
     std::cout << "loading kills" << std::endl;
     loadKills(kills, dataPath);
-     */
 }

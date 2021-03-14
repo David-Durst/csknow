@@ -290,7 +290,6 @@ public:
         if (!beenInitialized){
             return;
         }
-        free(victimName);
         free(armorDamage);
         free(armor);
         free(healthDamage);
