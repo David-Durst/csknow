@@ -262,15 +262,11 @@ void loadPositions(Position & position, string dataPath) {
 
     std::cout << "allocating arrays" << std::endl;
     std::cout << "rows: " << rows << std::endl;
-    std::cout << "sizeof row: " << sizeof(int32_t)*3 + sizeof(bool)*7 + sizeof(int8_t)*7 + sizeof(double)*5 + 5*sizeof(char) + sizeof(char*) << std::endl;
+    std::cout << "sizeof row: " << sizeof(int32_t)*3 + sizeof(bool)*5 + sizeof(int8_t)*6 + 10*(sizeof(double)*5 + 5*sizeof(char) + sizeof(char*) + sizeof(int8_t)) << std::endl;
     position.size = rows;
     position.fileNames.resize(positionPaths.size());
-    usleep(2e6);
     std::cout << "starting malloc" << std::endl;
     position.demoTickNumber = (int32_t *) malloc(rows * sizeof(int32_t));
-    while (true) {
-        usleep(1e6);
-    }
     position.gameTickNumber = (int32_t *) malloc(rows * sizeof(int32_t));
     position.matchStarted = (bool *) malloc(rows * sizeof(bool));
     position.gamePhase = (int8_t *) malloc(rows * sizeof(int8_t));
