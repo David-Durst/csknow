@@ -83,6 +83,7 @@ public:
     }
 
     void makePitchNeg90To90() {
+#pragma omp parallel for
         for (int64_t i = 0; i < size; i++) {
             for (int p = 0; p < 10; p++) {
                 if (players[p].yViewDirection[i] > 260.0) {
