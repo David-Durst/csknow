@@ -82,6 +82,17 @@ public:
         demoFile = (int32_t *) malloc(rows * sizeof(int32_t*));
     }
 
+    void makePitchNeg90To90() {
+        for (int64_t i = 0; i < size; i++) {
+            for (int p = 0; p < 10; p++) {
+                if (players[p].yViewDirection[i] > 260.0) {
+                    players[p].yViewDirection[i] -= 360;
+                }
+            }
+        }
+    }
+
+
     Position() { };
     ~Position() {
         if (!beenInitialized){

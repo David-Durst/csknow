@@ -297,6 +297,7 @@ void loadPositions(Position & position, string dataPath) {
         filesProcessed++;
         printProgress((filesProcessed * 1.0) / filePaths.size());
     }
+    position.makePitchNeg90To90();
     std::cout << std::endl;
 }
 

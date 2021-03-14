@@ -3,10 +3,6 @@
 #include "load_data.h"
 #include "query.h"
 
-class WallersResult : public QueryResult {
-
-};
-
-void queryWallers(const Position & position);
+PredicateResult queryWallers(const Position & position, const Spotted & spotted);
 
 #endif //CSKNOW_WALLERS_H

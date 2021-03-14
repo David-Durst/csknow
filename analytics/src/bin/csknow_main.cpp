@@ -1,6 +1,7 @@
 #include <iostream>
 #include <unistd.h>
 #include "load_data.h"
+#include "queries/wallers.h"
 
 int main(int argc, char * argv[]) {
     if (argc != 2) {
@@ -25,6 +26,7 @@ int main(int argc, char * argv[]) {
     std::cout << "num elements in playerHurt: " << playerHurt.size << std::endl;
     std::cout << "num elements in grenades: " << grenades.size << std::endl;
     std::cout << "num elements in kills: " << kills.size << std::endl;
+    queryWallers(position, spotted);
     /*
     while (true) {
         usleep(1e6);
