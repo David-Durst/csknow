@@ -292,6 +292,7 @@ void loadPositions(Position & position, string dataPath) {
         printProgress((filesProcessed * 1.0) / positionPaths.size());
     }
     std::cout << std::endl;
+    std::cout << "finished" << std::endl;
 }
 
 
@@ -416,6 +417,6 @@ void loadData(Position & position, Spotted & spotted, WeaponFire & weaponFire, P
                Grenades & grenades, Kills & kills, string dataPath) {
     std::cout << "loading position" << std::endl;
     loadPositions(position, dataPath);
-    std::cout << "loading spotted" << std::endl;
-    loadSpotted(spotted, dataPath);
+    //std::cout << "loading spotted" << std::endl;
+    //loadSpotted(spotted, dataPath);
 }
