@@ -9,6 +9,12 @@ using std::string;
 using std::vector;
 using std::set;
 
+class ColStore {
+public:
+    int64_t size;
+    vector<string> fileNames;
+};
+
 struct PlayerPosition {
     char ** name;
     int8_t * team;
@@ -21,9 +27,8 @@ struct PlayerPosition {
     bool * isBlinded;
 };
 
-struct Position {
-    int64_t size;
-    vector<string> fileNames;
+class Position: public ColStore {
+public:
     int32_t * demoTickNumber;
     int32_t * gameTickNumber;
     bool * matchStarted;
@@ -39,6 +44,37 @@ struct Position {
     int8_t * numPlayers;
     PlayerPosition players[NUM_PLAYERS];
     int32_t * demoFile;
+    
+    void init(int64_t rows, int64_t numFiles) {
+        size = rows;
+        fileNames.resize(numFiles);
+        demoTickNumber = (int32_t *) malloc(rows * sizeof(int32_t));
+        gameTickNumber = (int32_t *) malloc(rows * sizeof(int32_t));
+        matchStarted = (bool *) malloc(rows * sizeof(bool));
+        gamePhase = (int8_t *) malloc(rows * sizeof(int8_t));
+        roundsPlayed = (int8_t *) malloc(rows * sizeof(int8_t));
+        isWarmup = (bool *) malloc(rows * sizeof(bool));
+        roundStart = (bool *) malloc(rows * sizeof(bool));
+        roundEnd = (bool *) malloc(rows * sizeof(bool));
+        roundEndReason = (int8_t *) malloc(rows * sizeof(int8_t));
+        freezeTimeEnded = (bool *) malloc(rows * sizeof(bool));
+        tScore = (int8_t *) malloc(rows * sizeof(int8_t));
+        ctScore = (int8_t *) malloc(rows * sizeof(int8_t));
+        numPlayers = (int8_t *) malloc(rows * sizeof(int8_t));
+        for (int i = 0; i < NUM_PLAYERS; i++) {
+            players[i].name = (char **) malloc(rows * sizeof(char*));
+            players[i].team = (int8_t *) malloc(rows * sizeof(int8_t));
+            players[i].xPosition = (double *) malloc(rows * sizeof(double));
+            players[i].yPosition = (double *) malloc(rows * sizeof(double));
+            players[i].zPosition = (double *) malloc(rows * sizeof(double));
+            players[i].xViewDirection = (double *) malloc(rows * sizeof(double));
+            players[i].yViewDirection = (double *) malloc(rows * sizeof(double));
+            players[i].isAlive = (bool *) malloc(rows * sizeof(bool));
+            players[i].isBlinded = (bool *) malloc(rows * sizeof(bool));
+        }
+        demoFile = (int32_t *) malloc(rows * sizeof(int32_t*));
+    }
+    
     ~Position() {
         free(demoTickNumber);
         free(gameTickNumber);
@@ -71,30 +107,101 @@ struct Position {
     }
 };
 
-struct Spotted {
-    vector<int32_t> demoTickNumber;
-    vector<string> demoFile;
-    vector<string> spottedPlayer;
-    vector<string> player0Name;
-    vector<bool> player0Spotter;
-    vector<string> player1Name;
-    vector<bool> player1Spotter;
-    vector<string> player2Name;
-    vector<bool> player2Spotter;
-    vector<string> player3Name;
-    vector<bool> player3Spotter;
-    vector<string> player4Name;
-    vector<bool> player4Spotter;
-    vector<string> player5Name;
-    vector<bool> player5Spotter;
-    vector<string> player6Name;
-    vector<bool> player6Spotter;
-    vector<string> player7Name;
-    vector<bool> player7Spotter;
-    vector<string> player8Name;
-    vector<bool> player8Spotter;
-    vector<string> player9Name;
-    vector<bool> player9Spotter;
+class Spotted : public ColStore {
+public:
+    int32_t * demoTickNumber;
+    int32_t * demoFile;
+    char ** spottedPlayer;
+    char ** player0Name;
+    bool * player0Spotter;
+    char ** player1Name;
+    bool * player1Spotter;
+    char ** player2Name;
+    bool * player2Spotter;
+    char ** player3Name;
+    bool * player3Spotter;
+    char ** player4Name;
+    bool * player4Spotter;
+    char ** player5Name;
+    bool * player5Spotter;
+    char ** player6Name;
+    bool * player6Spotter;
+    char ** player7Name;
+    bool * player7Spotter;
+    char ** player8Name;
+    bool * player8Spotter;
+    char ** player9Name;
+    bool * player9Spotter;
+    
+    void init(int64_t rows, int64_t numFiles) {
+        size = rows;
+        fileNames.resize(numFiles);
+        demoTickNumber = (int32_t *) malloc(rows * sizeof(int32_t));
+        demoFile = (int32_t *) malloc(rows * sizeof(int32_t));
+        spottedPlayer = (char **) malloc(rows * sizeof(char*));
+        player0Name = (char **) malloc(rows * sizeof(char*));
+        player0Spotter = (bool *) malloc(rows * sizeof(bool));
+        player1Name = (char **) malloc(rows * sizeof(char*));
+        player1Spotter = (bool *) malloc(rows * sizeof(bool));
+        player2Name = (char **) malloc(rows * sizeof(char*));
+        player2Spotter = (bool *) malloc(rows * sizeof(bool));
+        player3Name = (char **) malloc(rows * sizeof(char*));
+        player3Spotter = (bool *) malloc(rows * sizeof(bool));
+        player4Name = (char **) malloc(rows * sizeof(char*));
+        player4Spotter = (bool *) malloc(rows * sizeof(bool));
+        player5Name = (char **) malloc(rows * sizeof(char*));
+        player5Spotter = (bool *) malloc(rows * sizeof(bool));
+        player6Name = (char **) malloc(rows * sizeof(char*));
+        player6Spotter = (bool *) malloc(rows * sizeof(bool));
+        player7Name = (char **) malloc(rows * sizeof(char*));
+        player7Spotter = (bool *) malloc(rows * sizeof(bool));
+        player8Name = (char **) malloc(rows * sizeof(char*));
+        player8Spotter = (bool *) malloc(rows * sizeof(bool));
+        player9Name = (char **) malloc(rows * sizeof(char*));
+        player9Spotter = (bool *) malloc(rows * sizeof(bool));
+    }
+    
+    ~Spotted() {
+        free(demoTickNumber);
+        free(demoFile);
+        for (int i = 0; i < NUM_PLAYERS; i++) {
+            for (int64_t row = 0; row < size; row++) {
+                free(spottedPlayer[row]);
+                free(player0Name[row]);
+                free(player1Name[row]);
+                free(player2Name[row]);
+                free(player3Name[row]);
+                free(player4Name[row]);
+                free(player5Name[row]);
+                free(player6Name[row]);
+                free(player7Name[row]);
+                free(player8Name[row]);
+                free(player9Name[row]);
+            }
+            free(spottedPlayer);
+            free(player0Name);
+            free(player0Spotter);
+            free(player1Name);
+            free(player1Spotter);
+            free(player2Name);
+            free(player2Spotter);
+            free(player3Name);
+            free(player3Spotter);
+            free(player4Name);
+            free(player4Spotter);
+            free(player5Name);
+            free(player5Spotter);
+            free(player6Name);
+            free(player6Spotter);
+            free(player7Name);
+            free(player7Spotter);
+            free(player8Name);
+            free(player8Spotter);
+            free(player9Name);
+            free(player9Spotter);
+        }
+        
+    }
 };
 
 struct WeaponFire {

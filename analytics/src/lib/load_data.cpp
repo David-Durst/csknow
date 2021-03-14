@@ -261,36 +261,9 @@ void loadPositions(Position & position, string dataPath) {
     int64_t rows = startingPointPerFile[positionPaths.size()];
 
     std::cout << "allocating arrays" << std::endl;
-    std::cout << "rows: " << rows << std::endl;
-    std::cout << "sizeof row: " << sizeof(int32_t)*3 + sizeof(bool)*5 + sizeof(int8_t)*6 + 10*(sizeof(double)*5 + 5*sizeof(char) + sizeof(char*) + sizeof(int8_t)) << std::endl;
-    position.size = rows;
-    position.fileNames.resize(positionPaths.size());
-    std::cout << "starting malloc" << std::endl;
-    position.demoTickNumber = (int32_t *) malloc(rows * sizeof(int32_t));
-    position.gameTickNumber = (int32_t *) malloc(rows * sizeof(int32_t));
-    position.matchStarted = (bool *) malloc(rows * sizeof(bool));
-    position.gamePhase = (int8_t *) malloc(rows * sizeof(int8_t));
-    position.roundsPlayed = (int8_t *) malloc(rows * sizeof(int8_t));
-    position.isWarmup = (bool *) malloc(rows * sizeof(bool));
-    position.roundStart = (bool *) malloc(rows * sizeof(bool));
-    position.roundEnd = (bool *) malloc(rows * sizeof(bool));
-    position.roundEndReason = (int8_t *) malloc(rows * sizeof(int8_t));
-    position.freezeTimeEnded = (bool *) malloc(rows * sizeof(bool));
-    position.tScore = (int8_t *) malloc(rows * sizeof(int8_t));
-    position.ctScore = (int8_t *) malloc(rows * sizeof(int8_t));
-    position.numPlayers = (int8_t *) malloc(rows * sizeof(int8_t));
-    for (int i = 0; i < NUM_PLAYERS; i++) {
-        position.players[i].name = (char **) malloc(rows * sizeof(char*));
-        position.players[i].team = (int8_t *) malloc(rows * sizeof(int8_t));
-        position.players[i].xPosition = (double *) malloc(rows * sizeof(double));
-        position.players[i].yPosition = (double *) malloc(rows * sizeof(double));
-        position.players[i].zPosition = (double *) malloc(rows * sizeof(double));
-        position.players[i].xViewDirection = (double *) malloc(rows * sizeof(double));
-        position.players[i].yViewDirection = (double *) malloc(rows * sizeof(double));
-        position.players[i].isAlive = (bool *) malloc(rows * sizeof(bool));
-        position.players[i].isBlinded = (bool *) malloc(rows * sizeof(bool));
-    }
-    position.demoFile = (int32_t *) malloc(rows * sizeof(int32_t*));
+    //std::cout << "rows: " << rows << std::endl;
+    //std::cout << "sizeof row: " << sizeof(int32_t)*3 + sizeof(bool)*5 + sizeof(int8_t)*6 + 10*(sizeof(double)*5 + 5*sizeof(char) + sizeof(char*) + sizeof(int8_t)) << std::endl;
+    position.init(rows, positionPaths.size());
 
     std::cout << "loading positions off disk" << std::endl;
     filesProcessed = 0;
