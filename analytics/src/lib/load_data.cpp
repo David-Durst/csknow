@@ -109,7 +109,7 @@ int64_t getRows(string filePath) {
     return numRows;
 }
 
-vector<int64_t> getFileStartingRows(vector<string> filePaths) {
+vector<int64_t> getFileStartingRows(vector<string> filePaths, bool printProgressBar = false) {
     vector<int64_t> startingPointPerFile;
     startingPointPerFile.resize(filePaths.size()+1);
     std::atomic<int64_t> filesProcessed = 0;
@@ -118,9 +118,13 @@ vector<int64_t> getFileStartingRows(vector<string> filePaths) {
     for (int64_t fileIndex = 0; fileIndex < filePaths.size(); fileIndex++) {
         startingPointPerFile[fileIndex+1] = getRows(filePaths[fileIndex]);
         filesProcessed++;
-        printProgress((filesProcessed * 1.0) / filePaths.size());
+        if (printProgressBar) {
+            printProgress((filesProcessed * 1.0) / filePaths.size());
+        }
     }
-    std::cout << std::endl;
+    if (printProgressBar) {
+        std::cout << std::endl;
+    }
     for (int64_t fileIndex = 0; fileIndex < filePaths.size(); fileIndex++) {
         startingPointPerFile[fileIndex+1] += startingPointPerFile[fileIndex];
     }
@@ -277,7 +281,7 @@ void loadPositions(Position & position, string dataPath) {
     getFilesInDirectory(dataPath + "/position", filePaths);
 
     std::cout << "determining array size" << std::endl;
-    vector<int64_t> startingPointPerFile = getFileStartingRows(filePaths);
+    vector<int64_t> startingPointPerFile = getFileStartingRows(filePaths, true);
     int64_t rows = startingPointPerFile[filePaths.size()];
 
     std::cout << "allocating arrays" << std::endl;
@@ -406,14 +410,10 @@ void loadSpotted(Spotted & spotted, string dataPath) {
     spotted.init(rows, filePaths.size());
 
     std::cout << "loading positions off disk" << std::endl;
-    std::atomic<int> filesProcessed = 0;
 #pragma omp parallel for
     for (int64_t fileIndex = 0; fileIndex < filePaths.size(); fileIndex++) {
         loadSpottedFile(spotted, filePaths[fileIndex], startingPointPerFile[fileIndex], fileIndex);
-        filesProcessed++;
-        printProgress((filesProcessed * 1.0) / filePaths.size());
     }
-    std::cout << std::endl;
 }
 
 void loadWeaponFireFile(WeaponFire & weaponFire, string filePath, int64_t fileRowStart, int32_t fileNumber) {
@@ -467,14 +467,10 @@ void loadWeaponFire(WeaponFire & weaponFire, string dataPath) {
     weaponFire.init(rows, filePaths.size());
 
     std::cout << "loading positions off disk" << std::endl;
-    std::atomic<int> filesProcessed = 0;
 #pragma omp parallel for
     for (int64_t fileIndex = 0; fileIndex < filePaths.size(); fileIndex++) {
         loadWeaponFireFile(weaponFire, filePaths[fileIndex], startingPointPerFile[fileIndex], fileIndex);
-        filesProcessed++;
-        printProgress((filesProcessed * 1.0) / filePaths.size());
     }
-    std::cout << std::endl;
 }
 
 void loadPlayerHurtFile(PlayerHurt & playerHurt, string filePath, int64_t fileRowStart, int32_t fileNumber) {
@@ -543,14 +539,10 @@ void loadPlayerHurt(PlayerHurt & playerHurt, string dataPath) {
     playerHurt.init(rows, filePaths.size());
 
     std::cout << "loading positions off disk" << std::endl;
-    std::atomic<int> filesProcessed = 0;
 #pragma omp parallel for
     for (int64_t fileIndex = 0; fileIndex < filePaths.size(); fileIndex++) {
         loadPlayerHurtFile(playerHurt, filePaths[fileIndex], startingPointPerFile[fileIndex], fileIndex);
-        filesProcessed++;
-        printProgress((filesProcessed * 1.0) / filePaths.size());
     }
-    std::cout << std::endl;
 }
 
 void loadGrenadesFile(Grenades & grenades, string filePath, int64_t fileRowStart, int32_t fileNumber) {
@@ -604,14 +596,10 @@ void loadGrenades(Grenades & grenades, string dataPath) {
     grenades.init(rows, filePaths.size());
 
     std::cout << "loading positions off disk" << std::endl;
-    std::atomic<int> filesProcessed = 0;
 #pragma omp parallel for
     for (int64_t fileIndex = 0; fileIndex < filePaths.size(); fileIndex++) {
         loadGrenadesFile(grenades, filePaths[fileIndex], startingPointPerFile[fileIndex], fileIndex);
-        filesProcessed++;
-        printProgress((filesProcessed * 1.0) / filePaths.size());
     }
-    std::cout << std::endl;
 }
 
 void loadKillsFile(Kills & kills, string filePath, int64_t fileRowStart, int32_t fileNumber) {
@@ -680,14 +668,10 @@ void loadKills(Kills & kills, string dataPath) {
     kills.init(rows, filePaths.size());
 
     std::cout << "loading positions off disk" << std::endl;
-    std::atomic<int> filesProcessed = 0;
 #pragma omp parallel for
     for (int64_t fileIndex = 0; fileIndex < filePaths.size(); fileIndex++) {
         loadKillsFile(kills, filePaths[fileIndex], startingPointPerFile[fileIndex], fileIndex);
-        filesProcessed++;
-        printProgress((filesProcessed * 1.0) / filePaths.size());
     }
-    std::cout << std::endl;
 }
 
 
