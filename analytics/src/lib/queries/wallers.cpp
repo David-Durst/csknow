@@ -129,7 +129,8 @@ WallersResult queryWallers(const Position & position, const Spotted & spotted) {
             windowStartIndex + WALL_WINDOW_SIZE < position.gameStarts[gameIndex+1];
             windowStartIndex++) {
             // for all spotted events on cur tick, update the spotted spottedPerWindow
-            while (spotted.demoTickNumber[spottedIndex] <= position.demoTickNumber[windowStartIndex]) {
+            while (spotted.demoTickNumber[spottedIndex] <= position.demoTickNumber[windowStartIndex] &&
+                    spottedIndex < spotted.size) {
                 int spottedPlayer = playerNameToIndex[spotted.spottedPlayer[spottedIndex]];
                 for (int i = 0; i < NUM_PLAYERS; i++) {
                     spottedPerWindow[spottedPlayer][i] = spotted.spotters[i].playerSpotter[spottedIndex];
@@ -163,7 +164,8 @@ WallersResult queryWallers(const Position & position, const Spotted & spotted) {
             for (int64_t windowIndex = windowStartIndex; windowIndex < windowStartIndex + WALL_WINDOW_SIZE && !neededPlayers[curReader].empty();
                 windowIndex++) {
                 // update the spotted players for this window
-                while (spotted.demoTickNumber[spottedIndexInWindow] <= position.demoTickNumber[windowIndex]) {
+                while (spotted.demoTickNumber[spottedIndexInWindow] <= position.demoTickNumber[windowIndex] &&
+                        spottedIndexInWindow < spotted.size) {
                     int spottedPlayer = playerNameToIndex[spotted.spottedPlayer[spottedIndexInWindow]];
                     for (int i = 0; i < NUM_PLAYERS; i++) {
                         spottedPerWindow[spottedPlayer][i] |= spotted.spotters[i].playerSpotter[spottedIndexInWindow];

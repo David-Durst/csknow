@@ -45,6 +45,7 @@ public:
 class PredicateResult : public QueryResult {
 public:
     vector<int64_t> positionIndex;
+    vector<string> demoFile;
 
     void collectResults(vector<int64_t> * tmpIndices, int numThreads) {
         for (int i = 0; i < numThreads; i++) {

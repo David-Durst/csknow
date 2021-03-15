@@ -26,7 +26,9 @@ int main(int argc, char * argv[]) {
     std::cout << "num elements in playerHurt: " << playerHurt.size << std::endl;
     std::cout << "num elements in grenades: " << grenades.size << std::endl;
     std::cout << "num elements in kills: " << kills.size << std::endl;
-    queryWallers(position, spotted);
+    WallersResult result = queryWallers(position, spotted);
+    std::cout << "waller moments: " << result.positionIndex.size() << std::endl;
+    std::cout << "total ticks: " << position.size << std::endl;
     /*
     while (true) {
         usleep(1e6);

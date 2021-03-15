@@ -8,11 +8,12 @@ public:
     vector<int> cheaters;
     vector<int> victims;
 
-    virtual string toCSV() {
+    virtual string toCSV(const Position & position) {
         stringstream ss;
-        ss << "position index,cheater,victim" << std::endl;
+        ss << "demo tick,demo file,cheater,victim" << std::endl;
         for (int64_t i = 0; i < positionIndex.size(); i++) {
-            ss << i << "," << cheaters[i] << "," << victims[i] << std::endl;
+            ss << position.demoTickNumber[i] << "," << position.fileNames[position.demoFile[i]] << ","
+                << cheaters[i] << "," << victims[i] << std::endl;
         }
         return ss.str();
     };
