@@ -325,6 +325,9 @@ void loadSpottedFile(Spotted & spotted, string filePath, int64_t fileRowStart, i
         // check last elements before loop so don't need loop ending condition
         else if (colNumber == 21) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, spotted.demoTickNumber[arrayEntry]);
+            if (rowNumber == 301 && filePath.find("auto0-20210221-232115-1880750554-de_dust2-Counter-Strike__Global_Offensive0c007374-749b-11eb-b224-1622baae68c9.dem_spotted.csv") != string::npos) {
+                std::cout << "301 row on target file spotted demo tick: " << spotted.demoTickNumber[arrayEntry] << std::endl;
+            }
         }
         else if (colNumber == 22) {
             if (rowNumber == 0) {

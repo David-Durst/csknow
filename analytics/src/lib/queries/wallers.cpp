@@ -132,6 +132,10 @@ WallersResult queryWallers(const Position & position, const Spotted & spotted) {
             // for all spotted events on cur tick, update the spotted spottedPerWindow
             while (spottedIndex < spotted.size &&
                     spotted.demoTickNumber[spottedIndex] <= position.demoTickNumber[windowStartIndex]) {
+                if (position.fileNames[gameIndex].compare("auto0-20210221-232115-1880750554-de_dust2-Counter-Strike__Global_Offensive0c007374-749b-11eb-b224-1622baae68c9.dem") == 0 &&
+                        (spotted.demoTickNumber[spottedIndex] == 4785 || spotted.demoTickNumber[spottedIndex] == 4786)) {
+                    std::cout << "hit tick: " << spotted.demoTickNumber[spottedIndex] << std::endl;
+                }
                 int spottedPlayer = playerNameToIndex[spotted.spottedPlayer[spottedIndex]];
                 for (int i = 0; i < NUM_PLAYERS; i++) {
                     spottedPerWindow[spottedPlayer][i] = spotted.spotters[i].playerSpotter[spottedIndex];
