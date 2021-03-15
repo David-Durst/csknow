@@ -161,9 +161,11 @@ WallersResult queryWallers(const Position & position, const Spotted & spotted) {
                 }
             }
 
+            int numHitTicks = 0;
             // for each window, as long as any cheaters possibly left in that window
             for (int64_t windowIndex = windowStartIndex; windowIndex < windowStartIndex + WALL_WINDOW_SIZE && !neededPlayers[curReader].empty();
                 windowIndex++) {
+                numHitTicks++;
                 // update the spotted players for this window
                 while (spotted.demoTickNumber[spottedIndexInWindow] <= position.demoTickNumber[windowIndex] &&
                         spottedIndexInWindow < spotted.size) {
@@ -212,6 +214,7 @@ WallersResult queryWallers(const Position & position, const Spotted & spotted) {
                 position.demoTickNumber[windowStartIndex] >= 4762 && position.demoTickNumber[windowStartIndex] <= 4763) {
                 std::cout << "weird event at " << position.demoTickNumber[windowStartIndex] << std::endl;
                 std::cout << "num hits: " << windowTracking[curReader].size() << std::endl;
+                std::cout << "num hit ticks: " << numHitTicks << std::endl;
                 for (int playerIndex = 0; playerIndex < NUM_PLAYERS; playerIndex++) {
                     std::cout << "x: " << position.players[playerIndex].xPosition[windowStartIndex]
                               << ", y: " << position.players[playerIndex].yPosition[windowStartIndex]
