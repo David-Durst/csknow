@@ -106,6 +106,7 @@ WallersResult queryWallers(const Position & position, const Spotted & spotted) {
     // y angle -90 is looking towards larger z positions
 #pragma omp parallel for
     for (int64_t gameIndex = 0; gameIndex < numGames; gameIndex++) {
+        int hitsInFile = 0;
         int threadNum = omp_get_thread_num();
         AABB boxes[NUM_PLAYERS];
         Ray eyes[NUM_PLAYERS];
@@ -213,7 +214,11 @@ WallersResult queryWallers(const Position & position, const Spotted & spotted) {
                 tmpIndices[threadNum].push_back(windowStartIndex);
                 tmpCheaters[threadNum].push_back(cv.cheater);
                 tmpVictims[threadNum].push_back(cv.victim);
+                hitsInFile++;
             }
+        }
+        if (position.fileNames[gameIndex].compare("auto0-20210221-232115-1880750554-de_dust2-Counter-Strike__Global_Offensive0c007374-749b-11eb-b224-1622baae68c9.dem") == 0) {
+            std::cout << "tracked file waller events: " << hitsInFile << std::endl;
         }
     }
 
