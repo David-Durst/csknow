@@ -13,6 +13,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 project (csknow VERSION "0.1")
 include(GNUInstallDirs)
 find_package(OpenMP REQUIRED)
+find_package(OpenSSL REQUIRED)
 
 include_directories(${PROJECT_BINARY_DIR}/include)
 include_directories(${PROJECT_SOURCE_DIR}/include)
@@ -35,6 +36,7 @@ endif()
 add_library(csknow_lib STATIC ${CSKNOW_SOURCES} ${CSKNOW_HEADERS})
 add_executable(csknow ${PROJECT_SOURCE_DIR}/src/bin/csknow_main.cpp)
 target_link_libraries(csknow_lib OpenMP::OpenMP_CXX)
+target_link_libraries(csknow_lib OpenSSL::SSL)
 target_link_libraries(csknow csknow_lib)
 
 # add this to enable debug printing statements

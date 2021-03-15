@@ -36,8 +36,8 @@ int main(int argc, char * argv[]) {
 
     if (runServer) {
         httplib::Server svr;
-        svr.Get("/hi", [](const httplib::Request &, httplib::Response &res) {
-            res.set_content("Hello World!", "text/plain");
+        svr.Get("/waller", [&](const httplib::Request &, httplib::Response &res) {
+            res.set_content(result.toCSV(position), "text/csv");
         });
 
         svr.listen("0.0.0.0", 3123);
