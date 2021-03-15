@@ -147,7 +147,6 @@ function getObjectParams(key: string, type: string) {
 }
 
 function setMatchLabel() {
-    console.log(downloadSelect.value);
     if (downloadSelect.value == "dem") {
         matchLabel.innerHTML = "<a href=\"https://csknow.s3.amazonaws.com/demos/processed/" +
             matchLabelStr + ".dem\">" + matchLabelStr + "</a>"
@@ -185,7 +184,6 @@ function setMatchLabel() {
 async function changedMatch() {
     createGameData();
     matchLabelStr = matches[parseInt(matchSelector.value)].demoFile;
-    console.log("matchLabelStr: " + matchLabelStr)
     setMatchLabel();
     let promises: Promise<any>[] = []
     try {

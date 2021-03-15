@@ -1,5 +1,5 @@
 import { drawTick } from "../drawing/drawing"
-import {tickLabel, tickSelector} from "./tickSelector";
+import {setTickLabel, tickLabel, tickSelector} from "./tickSelector";
 
 let playButton: HTMLButtonElement = null;
 let ffButton: HTMLButtonElement = null;
@@ -17,7 +17,6 @@ function incrementTick() {
     const newTick = parseInt(tickSelector.value) + tickIncrement
     if (newTick <= parseInt(tickSelector.max) && newTick >= parseInt(tickSelector.min)) {
         tickSelector.value = newTick.toString()
-        tickLabel.innerHTML = newTick.toString()
         drawTick(null)
     }
     else {

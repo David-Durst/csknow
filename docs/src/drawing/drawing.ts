@@ -171,7 +171,8 @@ export function drawTick(e: InputEvent) {
     ctx.textBaseline = "middle"
     ctx.textAlign = "center"
     const curTickIndex = getCurTickIndex()
-    setTickLabel(filteredData.position[curTickIndex].demoTickNumber)
+    setTickLabel(filteredData.position[curTickIndex].demoTickNumber,
+        filteredData.position[curTickIndex].gameTickNumber)
     const tickData: PositionRow = filteredData.position[curTickIndex]
     tScoreLabel.innerHTML = tickData.tScore.toString()
     ctScoreLabel.innerHTML = tickData.ctScore.toString()
