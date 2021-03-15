@@ -48,9 +48,10 @@ function alwaysFilter() {
     filteredData.position = gameData.position
     filteredData.spotted = gameData.spotted
     filteredData.weaponFire = gameData.weaponFire
-    filteredData.playerHurt = filteredData.playerHurt
-    filteredData.grenades = filteredData.grenades
+    filteredData.playerHurt = gameData.playerHurt
+    filteredData.grenades = gameData.grenades
     filteredData.kills = gameData.kills
+    filteredData.wallers = gameData.wallers
 }
 
 export let filteredData: GameData = new GameData()

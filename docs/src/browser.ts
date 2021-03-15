@@ -46,6 +46,7 @@ const darkBlue = "rgba(4,190,196,1.0)";
 const lightBlue = "rgba(194,255,243,1.0)";
 const darkRed = "rgba(209,0,0,1.0)";
 const lightRed = "rgba(255,143,143,1.0)";
+const remoteAddr = "http://52.86.105.42:3123/"
 
 class Match {
     key: any
@@ -146,6 +147,7 @@ function getObjectParams(key: string, type: string) {
 }
 
 function setMatchLabel() {
+    console.log(downloadSelect.value);
     if (downloadSelect.value == "dem") {
         matchLabel.innerHTML = "<a href=\"https://csknow.s3.amazonaws.com/demos/processed/" +
             matchLabelStr + ".dem\">" + matchLabelStr + "</a>"
@@ -174,11 +176,16 @@ function setMatchLabel() {
         matchLabel.innerHTML = "<a href=\"https://csknow.s3.amazonaws.com/demos/csvs2/" +
             matchLabelStr + ".dem_kills.csv\">" + matchLabelStr + "</a>"
     }
+    else if (downloadSelect.value == "wallers") {
+        matchLabel.innerHTML = "<a href=\"" + remoteAddr + "waller/" +
+            matchLabelStr + ".dem.csv\">" + matchLabelStr + "</a>"
+    }
 }
 
 async function changedMatch() {
     createGameData();
     matchLabelStr = matches[parseInt(matchSelector.value)].demoFile;
+    console.log("matchLabelStr: " + matchLabelStr)
     setMatchLabel();
     let promises: Promise<any>[] = []
     try {
@@ -245,6 +252,19 @@ async function changedMatch() {
             }).then(parse(gameData.killsParser, true)));
     } catch (err) {
         console.log("Error", err);
+    }
+
+    try {
+        promises.push(
+            fetch(remoteAddr + "waller/" + matches[parseInt(matchSelector.value)].demoFileWithExt + ".csv")
+                .then((response: Response) => {
+                    document.getElementById("waller-select").innerHTML = "Wallers"
+                    setReader(response.body.getReader(), gameData.wallerParser)
+                    return gameData.wallerParser.reader.read();
+                }).then(parse(gameData.wallerParser, true)));
+    } catch (err) {
+        document.getElementById("waller-select").innerHTML = "Wallers (unavailable)"
+        console.log("Error parsing wallers", err);
     }
 
     await Promise.all(promises)

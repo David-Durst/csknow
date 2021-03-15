@@ -28,7 +28,7 @@ export interface Printable {
     getTargets?(): string[]
 }
 
-function printTable(keys: string[], values: string[]): string {
+export function printTable(keys: string[], values: string[]): string {
     let result = "<div>"
     for (let i = 0; i < keys.length; i++) {
         if (i == 0) {
@@ -527,6 +527,46 @@ export class KillsParser implements Parseable {
     reader: any = null
 }
 
+export class WallerRow implements DemoData, Printable {
+    demoTickNumber: number;
+    demoFile: string;
+    cheater: string;
+    victim: string;
+
+    constructor(demoTickNumber: number, demoFile: string, cheater: string,
+                victim: string) {
+        this.demoTickNumber = demoTickNumber;
+        this.demoFile = demoFile;
+        this.cheater = cheater;
+        this.victim = victim;
+    }
+
+    getHTML(): string {
+        return printTable(["demo tick", "cheater", "victim"],
+            [this.demoTickNumber.toString(), this.cheater, this.victim])
+    }
+
+    getSource(): string {
+        return this.cheater;
+    }
+
+    getTargets(): string[] {
+        return [this.victim]
+    }
+}
+
+export class WallerParser implements Parseable {
+    tempLineContainer: string = "";
+
+    parseOneLine(currentLine: string[]): any {
+        gameData.wallers.push(new WallerRow(
+            parseInt(currentLine[0]), currentLine[1], currentLine[2], currentLine[3]
+        ));
+    }
+
+    reader: any = null
+}
+
 export class GameData {
     positionParser: PositionParser = new PositionParser();
     position: PositionRow[] = [];
@@ -545,7 +585,10 @@ export class GameData {
     killsParser: KillsParser = new KillsParser();
     kills: KillsRow[] = [];
     positionToKills: Map<number, number[]> = new Map<number, number[]>()
-    
+    wallerParser: WallerParser = new WallerParser();
+    wallers: WallerRow[] = [];
+    positionToWallers: Map<number, number[]> = new Map<number, number[]>()
+
     clone(target: GameData) {
         target.positionParser = this.positionParser
         target.position = this.position
@@ -564,6 +607,9 @@ export class GameData {
         target.killsParser = this.killsParser
         target.kills = this.kills
         target.positionToKills = this.positionToKills
+        target.wallerParser = this.wallerParser
+        target.wallers = this.wallers
+        target.positionToWallers = this.positionToWallers
     }
 }
 
@@ -586,6 +632,9 @@ export function getEventIndex(gameData: GameData, event: string): Map<number, nu
     else if (event == "kills") {
         return gameData.positionToKills
     }
+    else if (event == "wallers") {
+        return gameData.positionToWallers
+    }
     else {
         throw new Error("getEventIndex for invalid event string " + event)
     }
@@ -606,6 +655,9 @@ export function getEventArray(gameData: GameData, event: string): Printable[] {
     }
     else if (event == "kills") {
         return gameData.grenades
+    }
+    else if (event == "wallers") {
+        return gameData.wallers
     }
     else {
         throw new Error("getEventIndex for invalid event string " + event)

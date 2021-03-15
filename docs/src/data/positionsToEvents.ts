@@ -33,4 +33,6 @@ export function indexEventsForGame(gameData: GameData) {
         gameData.positionToGrenades)
     generatePositionsToEventsTable(gameData.position, gameData.kills,
         gameData.positionToKills)
+    generatePositionsToEventsTable(gameData.position, gameData.wallers,
+        gameData.positionToWallers)
 }
