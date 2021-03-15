@@ -14,9 +14,9 @@ public:
         stringstream ss;
         ss << "demo tick,demo file,cheater,victim" << std::endl;
         for (int64_t i = 0; i < positionIndex.size(); i++) {
-            string curGame = position.fileNames[position.demoFile[i]];
+            int64_t posIdx = positionIndex[i];
+            string curGame = position.fileNames[position.demoFile[posIdx]];
             if (curGame.compare(game) == 0 || game == "") {
-                int64_t posIdx = positionIndex[i];
                 ss << position.demoTickNumber[posIdx] << "," << position.fileNames[position.demoFile[posIdx]] << ","
                    << position.players[cheaters[i]].name[posIdx] << "," << position.players[victims[i]].name[posIdx] << std::endl;
             }
