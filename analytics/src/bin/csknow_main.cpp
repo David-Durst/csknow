@@ -41,7 +41,7 @@ int main(int argc, char * argv[]) {
             res.set_header("Access-Control-Allow-Origin", "*");
         });
 
-        svr.Get("/waller/(.+)", [&](const httplib::Request & req, httplib::Response &res) {
+        svr.Get("/waller/(.+).csv", [&](const httplib::Request & req, httplib::Response &res) {
             string game = req.matches[1];
             res.set_content(result.toCSVFiltered(position, game), "text/csv");
             res.set_header("Access-Control-Allow-Origin", "*");
