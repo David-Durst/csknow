@@ -17,6 +17,6 @@ get_script_dir
 
 mkdir -p ${script_dir}/../build
 cd ${script_dir}/../build
-cmake .. -DCMAKE_BUILD_TYPE=Release
+cmake .. -DCMAKE_BUILD_TYPE=Debug
 make -j4
-./csknow ${script_dir}/../../local_data n
+./csknow ${script_dir}/../../local_data y

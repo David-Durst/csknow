@@ -2,14 +2,18 @@
 #include <unistd.h>
 #include "load_data.h"
 #include "queries/wallers.h"
+#define CPPHTTPLIB_OPENSSL_SUPPORT
+#include "httplib.h"
 
 int main(int argc, char * argv[]) {
-    if (argc != 2) {
-        std::cout << "please call this code 1 argument: " << std::endl;
+    if (argc != 3) {
+        std::cout << "please call this code 2 arguments: " << std::endl;
         std::cout << "1. path/to/local_data" << std::endl;
+        std::cout << "2. run server (y or n)" << std::endl;
         return 1;
     }
     string dataPath = argv[1];
+    bool runServer = argv[2][0] == 'y';
 
     Position position;
     Spotted spotted;
@@ -29,6 +33,15 @@ int main(int argc, char * argv[]) {
     WallersResult result = queryWallers(position, spotted);
     std::cout << "waller moments: " << result.positionIndex.size() << std::endl;
     std::cout << "total ticks: " << position.size << std::endl;
+
+    if (runServer) {
+        httplib::Server svr;
+        svr.Get("/hi", [](const httplib::Request &, httplib::Response &res) {
+            res.set_content("Hello World!", "text/plain");
+        });
+
+        svr.listen("0.0.0.0", 3123);
+    }
     /*
     while (true) {
         usleep(1e6);
