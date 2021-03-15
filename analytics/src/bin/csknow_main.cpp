@@ -30,6 +30,12 @@ int main(int argc, char * argv[]) {
     std::cout << "num elements in playerHurt: " << playerHurt.size << std::endl;
     std::cout << "num elements in grenades: " << grenades.size << std::endl;
     std::cout << "num elements in kills: " << kills.size << std::endl;
+
+    std::cout << "file numbers in position and spotted" << std::endl;
+    for (int i = 0; i < position.fileNames.size(); i++) {
+        std::cout << i << ": " << position.fileNames[i] << ", " << spotted.fileNames[i] << std::endl;
+    }
+
     WallersResult result = queryWallers(position, spotted);
     std::cout << "waller moments: " << result.positionIndex.size() << std::endl;
     std::cout << "total ticks: " << position.size << std::endl;

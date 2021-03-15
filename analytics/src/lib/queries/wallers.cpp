@@ -111,6 +111,10 @@ WallersResult queryWallers(const Position & position, const Spotted & spotted) {
         AABB boxes[NUM_PLAYERS];
         Ray eyes[NUM_PLAYERS];
         int64_t spottedIndex = spotted.gameStarts[gameIndex];
+        if (position.fileNames[gameIndex].compare("auto0-20210221-232115-1880750554-de_dust2-Counter-Strike__Global_Offensive0c007374-749b-11eb-b224-1622baae68c9.dem") == 0) {
+            std::cout << "pre-check start" << spottedIndex << std::endl;
+            std::cout << "pre-check gameNumber" << gameIndex << std::endl;
+        }
         // spottedPerWindow[i][j] - is player i visible to player j
         // initially, no one can see anyone else
         bool spottedPerWindow[NUM_PLAYERS][NUM_PLAYERS];
@@ -220,6 +224,7 @@ WallersResult queryWallers(const Position & position, const Spotted & spotted) {
                 std::cout << "num hits: " << windowTracking[curReader].size() << std::endl;
                 std::cout << "num hit ticks: " << numHitTicks << std::endl;
                 std::cout << "spotted demo tick at start of window: " << spotted.demoTickNumber[spottedIndex] << std::endl;
+                std::cout << "spottedIndex: " << spottedIndex << std::endl;
                 /*
                 for (int playerIndex = 0; playerIndex < NUM_PLAYERS; playerIndex++) {
                     std::cout << "x: " << position.players[playerIndex].xPosition[windowStartIndex]
