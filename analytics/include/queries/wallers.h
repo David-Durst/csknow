@@ -16,8 +16,9 @@ public:
         for (int64_t i = 0; i < positionIndex.size(); i++) {
             string curGame = position.fileNames[position.demoFile[i]];
             if (curGame.compare(game) == 0 || game == "") {
-                ss << position.demoTickNumber[i] << "," << position.fileNames[position.demoFile[i]] << ","
-                   << cheaters[i] << "," << victims[i] << std::endl;
+                int64_t posIdx = positionIndex[i];
+                ss << position.demoTickNumber[posIdx] << "," << position.fileNames[position.demoFile[posIdx]] << ","
+                   << position.players[cheaters[i]].name[posIdx] << "," << position.players[victims[i]].name[posIdx] << std::endl;
             }
         }
         return ss.str();
@@ -27,8 +28,9 @@ public:
         stringstream ss;
         ss << "demo tick,demo file,cheater,victim" << std::endl;
         for (int64_t i = 0; i < positionIndex.size(); i++) {
-            ss << position.demoTickNumber[i] << "," << position.fileNames[position.demoFile[i]] << ","
-                << cheaters[i] << "," << victims[i] << std::endl;
+            int64_t posIdx = positionIndex[i];
+            ss << position.demoTickNumber[posIdx] << "," << position.fileNames[position.demoFile[posIdx]] << ","
+                << position.players[cheaters[i]].name[posIdx] << "," << position.players[victims[i]].name[posIdx] << std::endl;
         }
         return ss.str();
     };
