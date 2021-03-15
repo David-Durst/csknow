@@ -36,8 +36,9 @@ int main(int argc, char * argv[]) {
 
     if (runServer) {
         httplib::Server svr;
-        svr.Get("/waller", [&](const httplib::Request &, httplib::Response &res) {
-            res.set_content(result.toCSV(position), "text/csv");
+        svr.Get("/waller/(.+)", [&](const httplib::Request & req, httplib::Response &res) {
+            string game = req.matches[1];
+            res.set_content(result.toCSVFiltered(position, game), "text/csv");
         });
 
         svr.listen("0.0.0.0", 3123);
