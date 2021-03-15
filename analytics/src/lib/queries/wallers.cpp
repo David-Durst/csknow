@@ -189,11 +189,13 @@ WallersResult queryWallers(const Position & position, const Spotted & spotted) {
                 // save for this window if still a suspect -
                 // 1. aim locked on
                 // 2. not on same team
-                // 3. not visible at any point in window
+                // 3. both alive
+                // 4. not visible at any point in window
                 for (const auto & cv: windowTracking[curReader]) {
-                    if (rayAABBIntersection(eyes[cv.cheater], boxes[cv.victim]) &&
-                        position.players[cv.cheater].team[windowIndex] != position.players[cv.victim].team[windowIndex] &&
-                        !spottedInWindow[cv.victim][cv.cheater]) {
+                    if (position.players[cv.cheater].team[windowIndex] != position.players[cv.victim].team[windowIndex] &&
+                        !spottedInWindow[cv.victim][cv.cheater] &&
+                        position.players[cv.cheater].isAlive[windowIndex] && position.players[cv.victim].isAlive[windowIndex] &&
+                        rayAABBIntersection(eyes[cv.cheater], boxes[cv.victim])) {
                         windowTracking[curWriter].insert({cv.cheater, cv.victim});
                         neededPlayers[curWriter].insert({cv.cheater});
                         neededPlayers[curWriter].insert({cv.victim});
