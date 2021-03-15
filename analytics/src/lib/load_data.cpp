@@ -1,5 +1,6 @@
 #include "load_data.h"
 #include "fast_float/fast_float.h"
+#include <algorithm>
 #include <iostream>
 #include <dirent.h>
 #include <string>
@@ -45,6 +46,7 @@ void getFilesInDirectory(string path, vector<string> & files) {
         }
         closedir(dir);
     }
+    std::sort(files.begin(), files.end());
 }
 
 struct MMapFile {
