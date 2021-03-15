@@ -37,7 +37,7 @@ int main(int argc, char * argv[]) {
     if (runServer) {
         httplib::Server svr;
         svr.Get("/waller", [&](const httplib::Request &, httplib::Response &res) {
-            res.set_content(result.toCSVFiltered(position), "text/csv");
+            res.set_content(result.toCSV(position), "text/csv");
         });
 
         svr.Get("/waller/(.+)", [&](const httplib::Request & req, httplib::Response &res) {
