@@ -16,14 +16,25 @@ struct Vec2 {
     double y;
 };
 
-struct Vec5 {
-    Vec3 pos;
-    Vec2 view;
+class Ray {
+public:
+    Ray() { }
+    Ray(const Vec3 &orig, const Vec3 &dir) : orig(orig), dir(dir) {
+        invdir.x = 1 / dir.x;
+        invdir.y = 1 / dir.y;
+        invdir.z = 1 / dir.y;
+        sign[0] = invdir.x < 0;
+        sign[1] = invdir.y < 0;
+        sign[2] = invdir.z < 0;
+    }
+
+    Vec3 orig, dir, invdir;
+    int sign[3];
 };
 
 struct AABB {
-    Vec3 min;
-    Vec3 max;
+    // 0 is min, 1 is max
+    Vec3 bounds[2];
 };
 
 class QueryResult {
