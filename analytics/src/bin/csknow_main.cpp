@@ -38,11 +38,13 @@ int main(int argc, char * argv[]) {
         httplib::Server svr;
         svr.Get("/waller", [&](const httplib::Request &, httplib::Response &res) {
             res.set_content(result.toCSV(position), "text/csv");
+            res.set_header("Access-Control-Allow-Origin", "*");
         });
 
         svr.Get("/waller/(.+)", [&](const httplib::Request & req, httplib::Response &res) {
             string game = req.matches[1];
             res.set_content(result.toCSVFiltered(position, game), "text/csv");
+            res.set_header("Access-Control-Allow-Origin", "*");
         });
 
         svr.listen("0.0.0.0", 3123);
