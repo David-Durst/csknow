@@ -208,6 +208,16 @@ WallersResult queryWallers(const Position & position, const Spotted & spotted) {
                 curReader = (curReader + 1) % 2;
                 curWriter = (curWriter + 1) % 2;
             }
+            if (position.fileNames[gameIndex].compare("auto0-20210221-232115-1880750554-de_dust2-Counter-Strike__Global_Offensive0c007374-749b-11eb-b224-1622baae68c9.dem") == 0 &&
+                position.demoTickNumber[windowStartIndex] >= 4762 && position.demoTickNumber[windowStartIndex] <= 4763) {
+                std::cout << "weird event at " << position.demoTickNumber[windowStartIndex] << std::endl;
+                std::cout << "num hits: " << windowTracking[curReader].size() << std::endl;
+                for (int playerIndex = 0; playerIndex < NUM_PLAYERS; playerIndex++) {
+                    std::cout << "x: " << position.players[playerIndex].xPosition[windowStartIndex]
+                              << ", y: " << position.players[playerIndex].yPosition[windowStartIndex]
+                              << ", z: " << position.players[playerIndex].zPosition[windowStartIndex] << std::endl;
+                }
+            }
 
             // save all found cheaters in this window
             for (const auto & cv : windowTracking[curReader]) {
