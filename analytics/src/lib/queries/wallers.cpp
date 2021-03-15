@@ -171,7 +171,7 @@ WallersResult queryWallers(const Position & position, const Spotted & spotted) {
                         spottedIndexInWindow < spotted.size) {
                     int spottedPlayer = playerNameToIndex[spotted.spottedPlayer[spottedIndexInWindow]];
                     for (int i = 0; i < NUM_PLAYERS; i++) {
-                        spottedPerWindow[spottedPlayer][i] |= spotted.spotters[i].playerSpotter[spottedIndexInWindow];
+                        spottedInWindow[spottedPlayer][i] |= spotted.spotters[i].playerSpotter[spottedIndexInWindow];
                     }
                     spottedIndexInWindow++;
                 }
@@ -190,18 +190,18 @@ WallersResult queryWallers(const Position & position, const Spotted & spotted) {
                     );
                 }
                 // save for this window if still a suspect -
-                // 1. aim locked on
-                // 2. not on same team
-                // 3. both alive
-                // 4. not visible at any point in window
+                // 1. not on same team
+                // 2. both alive
+                // 3. not visible at any point in window
+                // 4. aim locked on
                 for (const auto & cv: windowTracking[curReader]) {
                     if (position.players[cv.cheater].team[windowIndex] != position.players[cv.victim].team[windowIndex] &&
                         !spottedInWindow[cv.victim][cv.cheater] &&
                         position.players[cv.cheater].isAlive[windowIndex] && position.players[cv.victim].isAlive[windowIndex] &&
                         rayAABBIntersection(eyes[cv.cheater], boxes[cv.victim])) {
                         windowTracking[curWriter].insert({cv.cheater, cv.victim});
-                        neededPlayers[curWriter].insert({cv.cheater});
-                        neededPlayers[curWriter].insert({cv.victim});
+                        neededPlayers[curWriter].insert(cv.cheater);
+                        neededPlayers[curWriter].insert(cv.victim);
                     }
                 }
                 // finish double buffering for this frame
