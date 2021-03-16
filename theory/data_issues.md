@@ -23,5 +23,11 @@ to ground. z coordinates in data are correct
       4. 270 - looking from ct spawn to t spawn
       5. 360 - looking from B to A
       5. continues for all periods of 360 degrees
-      
+
+1. I'm tired of writing a csv parser for every project. Steps are
+    1. multithread
+    2. read twice - once to figure out size, then again to insert
+    3. mmap files for each read for fast access - side benefit is this hits page cache on reruns so things stay in memory
+
+1. GOTV appears as an entry in the spotted files. It would be nice to have a data filtering stage in pipeline so I don't have to skip this row in queeries.
    
