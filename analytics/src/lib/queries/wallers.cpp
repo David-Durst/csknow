@@ -6,14 +6,10 @@
 #include <limits>
 using std::set;
 using std::map;
-#define WALL_WINDOW_SIZE 32
+#define WALL_WINDOW_SIZE 64
 //https://github.com/ValveSoftware/source-sdk-2013/blob/master/sp/src/public/mathlib/mathlib.h#L301-L303
-#ifndef M_PI
-#define M_PI		3.14159265358979323846	// matches value in gcc v2 math.h
-#endif
-#define M_PI_F		((float)(M_PI))	// Shouldn't collide with anything.
 #ifndef DEG2RAD
-#define DEG2RAD( x  )  ( (float)(x) * (float)(M_PI_F / 180.f) )
+#define DEG2RAD( x  )  ( (double)(x) * (double)(M_PI / 180.) )
 #endif
 
 const int HEIGHT = 72;
@@ -110,17 +106,19 @@ WallersResult queryWallers(const Position & position, const Spotted & spotted) {
     // y angle -90 is looking towards larger z positions
 #pragma omp parallel for
     for (int64_t gameIndex = 0; gameIndex < numGames; gameIndex++) {
-        int hitsInFile = 0;
         int threadNum = omp_get_thread_num();
         AABB boxes[NUM_PLAYERS];
         Ray eyes[NUM_PLAYERS];
         int64_t spottedIndex = spotted.gameStarts[gameIndex];
+        // don't repeat cheating events within 32 ticks, decrease duplicate events
+        int64_t ticksSinceLastCheating[NUM_PLAYERS][NUM_PLAYERS];
         // spottedPerWindow[i][j] - is player i visible to player j
         // initially, no one can see anyone else
         bool spottedPerWindow[NUM_PLAYERS][NUM_PLAYERS];
         for (int i = 0; i < NUM_PLAYERS; i++) {
             for (int j = 0; j < NUM_PLAYERS; j++) {
                 spottedPerWindow[i][j] = false;
+                ticksSinceLastCheating[NUM_PLAYERS][NUM_PLAYERS] = 1000;
             }
         }
         // since spotted tracks names for spotted player, need to map that to the player index
@@ -165,11 +163,9 @@ WallersResult queryWallers(const Position & position, const Spotted & spotted) {
                 }
             }
 
-            int numHitTicks = 0;
             // for each window, as long as any cheaters possibly left in that window
             for (int64_t windowIndex = windowStartIndex; windowIndex < windowStartIndex + WALL_WINDOW_SIZE && !neededPlayers[curReader].empty();
                 windowIndex++) {
-                numHitTicks++;
                 // update the spotted players for this window
                 while (spottedIndexInWindow < spotted.size &&
                         spotted.demoTickNumber[spottedIndexInWindow] <= position.demoTickNumber[windowIndex]) {
@@ -221,12 +217,20 @@ WallersResult queryWallers(const Position & position, const Spotted & spotted) {
                 curWriter = (curWriter + 1) % 2;
             }
 
-            // save all found cheaters in this window
+            for (int i = 0; i < NUM_PLAYERS; i++) {
+                for (int j = 0; j < NUM_PLAYERS; j++) {
+                    ticksSinceLastCheating[i][j]++;
+                }
+            }
+
+            // save all found cheaters in this window who weren't found in last window's worth of ticks
             for (const auto & cv : windowTracking[curReader]) {
-                tmpIndices[threadNum].push_back(windowStartIndex);
-                tmpCheaters[threadNum].push_back(cv.cheater);
-                tmpVictims[threadNum].push_back(cv.victim);
-                hitsInFile++;
+                if (ticksSinceLastCheating[cv.cheater][cv.victim] >= WALL_WINDOW_SIZE) {
+                    tmpIndices[threadNum].push_back(windowStartIndex);
+                    tmpCheaters[threadNum].push_back(cv.cheater);
+                    tmpVictims[threadNum].push_back(cv.victim);
+                    ticksSinceLastCheating[cv.cheater][cv.victim] = 0;
+                }
             }
         }
     }
