@@ -254,14 +254,20 @@ async function changedMatch() {
 
     try {
         promises.push(
-            fetch(remoteAddr + "waller/" + matches[parseInt(matchSelector.value)].demoFileWithExt + ".csv")
-                .then((response: Response) => {
-                    document.getElementById("waller-select").innerHTML = "Wallers"
-                    setReader(response.body.getReader(), gameData.wallerParser)
-                    return gameData.wallerParser.reader.read();
-                }).then(parse(gameData.wallerParser, true)));
+            fetch(remoteAddr + "waller/" + matches[parseInt(matchSelector.value)].demoFileWithExt + ".csv",
+                {mode: 'no-cors'}).then(r =>
+                fetch(remoteAddr + "waller/" + matches[parseInt(matchSelector.value)].demoFileWithExt + ".csv")
+                    .then((response: Response) => {
+                        document.getElementById("waller-select").innerHTML = "Wallers"
+                        setReader(response.body.getReader(), gameData.wallerParser)
+                        return gameData.wallerParser.reader.read();
+                    }).then(parse(gameData.wallerParser, true))
+            ).catch(e => {
+                document.getElementById("waller-select").innerHTML = "Wallers (unavailable)"
+                console.log("remote server not up")
+            })
+        );
     } catch (err) {
-        document.getElementById("waller-select").innerHTML = "Wallers (unavailable)"
         console.log("Error parsing wallers", err);
     }
 
