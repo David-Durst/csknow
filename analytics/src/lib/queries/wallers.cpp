@@ -22,7 +22,7 @@ AABB getAABBForPlayer(Vec3 pos) {
     //making box with these coordinates wraps player perfectly
     AABB result;
     result.min = {pos.x - WIDTH / 2, pos.y - WIDTH / 2, pos.z};
-    result.max = {pos.x + WIDTH / 2, pos.x + WIDTH / 2, pos.z + HEIGHT};
+    result.max = {pos.x + WIDTH / 2, pos.y + WIDTH / 2, pos.z + HEIGHT};
     return result;
 }
 
@@ -61,7 +61,7 @@ void swap(T &a, T &b) {
 
 // https://github.com/mmp/pbrt-v4/blob/master/src/pbrt/util/vecmath.h#L1555
 static inline __attribute__((always_inline))
-bool intersectP(const AABB & box, const Ray & ray, double tMax = std::numeric_limits<double>::infinity()) {
+bool intersectP(const AABB & box, const Ray & ray, double * hitt0, double * hitt1, double tMax = std::numeric_limits<double>::infinity()) {
     double t0 = 0, t1 = tMax;
     for (int i = 0; i < 3; ++i) {
         // Update interval for _i_th bounding box slab
@@ -78,6 +78,8 @@ bool intersectP(const AABB & box, const Ray & ray, double tMax = std::numeric_li
         t1 = tFar < t1 ? tFar : t1;
         if (t0 > t1)
             return false;
+        hitt0[i] = t0;
+        hitt1[i] = t1;
     }
     return true;
 }
@@ -205,13 +207,26 @@ WallersResult queryWallers(const Position & position, const Spotted & spotted) {
                 // 3. not visible at any point in window
                 // 4. aim locked on
                 for (const auto & cv: windowTracking[curReader]) {
+                    double t0[3], t1[3];
                     if (position.players[cv.cheater].team[windowIndex] != position.players[cv.victim].team[windowIndex] &&
                         !spottedInWindow[cv.victim][cv.cheater] &&
                         position.players[cv.cheater].isAlive[windowIndex] && position.players[cv.victim].isAlive[windowIndex] &&
-                        intersectP(boxes[cv.victim], eyes[cv.cheater])) {
+                        intersectP(boxes[cv.victim], eyes[cv.cheater], t0, t1)) {
                         windowTracking[curWriter].insert({cv.cheater, cv.victim});
                         neededPlayers[curWriter].insert(cv.cheater);
                         neededPlayers[curWriter].insert(cv.victim);
+                        if (position.fileNames[gameIndex].compare("auto0-20210221-232115-1880750554-de_dust2-Counter-Strike__Global_Offensive0c007374-749b-11eb-b224-1622baae68c9.dem") == 0 &&
+                            position.demoTickNumber[windowStartIndex] == 4590 && position.demoTickNumber[windowIndex] == 4591 && cv.cheater == 4) {//position.players[playerIndex].name[windowStartIndex][0] == 'W') {
+                            std::cout << "eye pos x: " << eyes[cv.cheater].orig.x << ", y: " << eyes[cv.cheater].orig.y << ", z: " << eyes[cv.cheater].orig.z << std::endl;
+                            std::cout << "eye yaw: " << position.players[cv.cheater].xViewDirection[windowIndex] << ", pivot: " << position.players[cv.cheater].yViewDirection[windowIndex] << std::endl;
+                            std::cout << "eye view x: " << eyes[cv.cheater].dir.x << ", y: " << eyes[cv.cheater].dir.y << ", z: " << eyes[cv.cheater].dir.z << std::endl;
+                            std::cout << "victim  x: " << position.players[cv.victim].xPosition[windowIndex] << ", y: " << position.players[cv.victim].yPosition[windowIndex] << ", z: " << position.players[cv.victim].zPosition[windowIndex] << std::endl;
+                            std::cout << "victim min x: " << boxes[cv.victim].min.x << ", y: " << boxes[cv.victim].min.y << ", z: " << boxes[cv.victim].min.z << std::endl;
+                            std::cout << "victim max x: " << boxes[cv.victim].max.x << ", y: " << boxes[cv.victim].max.y << ", z: " << boxes[cv.victim].max.z << std::endl;
+                            std::cout << "t0 x: " << t0[0] << ", y: " << t0[1] << ", z: " << t0[2] << std::endl;
+                            std::cout << "t1 x: " << t1[0] << ", y: " << t1[1] << ", z: " << t1[2] << std::endl;
+                        }
+
                     }
                 }
                 // finish double buffering for this frame
