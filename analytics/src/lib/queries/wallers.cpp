@@ -124,7 +124,7 @@ WallersResult queryWallers(const Position & position, const Spotted & spotted) {
         // since spotted tracks names for spotted player, need to map that to the player index
         map<string, int> playerNameToIndex;
         for (int i = 0; i < NUM_PLAYERS; i++) {
-            playerNameToIndex.insert({position.players[i].name[0], i});
+            playerNameToIndex.insert({position.players[i].name[position.firstRowAfterWarmup[gameIndex]], i});
         }
         std::cout << "name index size" << playerNameToIndex.size() << std::endl;
 
@@ -135,6 +135,9 @@ WallersResult queryWallers(const Position & position, const Spotted & spotted) {
             // for all spotted events on cur tick, update the spotted spottedPerWindow
             while (spottedIndex < spotted.size && spotted.demoFile[spottedIndex] == position.demoFile[windowStartIndex] &&
                     spotted.demoTickNumber[spottedIndex] <= position.demoTickNumber[windowStartIndex]) {
+                if (playerNameToIndex.find(spotted.spottedPlayer[spottedIndex]) == playerNameToIndex.end()) {
+                    std::cout << "wut" << std::endl;
+                }
                 int spottedPlayer = playerNameToIndex[spotted.spottedPlayer[spottedIndex]];
                 if (playerNameToIndex.size() > 10) {
                     std::cout << "wut" << std::endl;
