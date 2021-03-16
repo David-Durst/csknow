@@ -15,6 +15,7 @@ public:
     int64_t size;
     vector<string> fileNames;
     vector<int64_t> gameStarts;
+    set<int64_t> skipRows;
     virtual void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) {
         beenInitialized = true;
         size = rows;

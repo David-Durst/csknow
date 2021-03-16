@@ -317,6 +317,9 @@ void loadSpottedFile(Spotted & spotted, string filePath, int64_t fileRowStart, i
     // mmap the file
     auto [fd, stats, file] = openMMapFile(filePath);
 
+    // ignore gotv rows
+    string gotvString = "GOTV";
+
     // skip the header
     size_t firstRow = getNewline(file, 0, stats.st_size);
 
@@ -332,6 +335,9 @@ void loadSpottedFile(Spotted & spotted, string filePath, int64_t fileRowStart, i
          curStart = curDelimiter + 1, curDelimiter = getNextDelimiter(file, curStart, stats.st_size)) {
         if (colNumber == 0) {
             readCol(file, curStart, curDelimiter, &spotted.spottedPlayer[arrayEntry]);
+            if (gotvString.compare(spotted.spottedPlayer[arrayEntry]) == 0) {
+                spotted.skipRows.insert(arrayEntry);
+            }
         }
         // check last elements before loop so don't need loop ending condition
         else if (colNumber == 21) {

@@ -135,6 +135,11 @@ WallersResult queryWallers(const Position & position, const Spotted & spotted) {
             // for all spotted events on cur tick, update the spotted spottedPerWindow
             while (spottedIndex < spotted.size && spotted.demoFile[spottedIndex] == position.demoFile[windowStartIndex] &&
                     spotted.demoTickNumber[spottedIndex] <= position.demoTickNumber[windowStartIndex]) {
+                // skip invalid rows
+                if (spotted.skipRows.find(spottedIndex) != spotted.skipRows.end()) {
+                    spottedIndex++;
+                    continue;
+                }
                 if (playerNameToIndex.find(spotted.spottedPlayer[spottedIndex]) == playerNameToIndex.end()) {
                     std::cout << "wut" << std::endl;
                 }
@@ -187,6 +192,11 @@ WallersResult queryWallers(const Position & position, const Spotted & spotted) {
                 // update the spotted players for this window
                 while (spottedIndexInWindow < spotted.size && spotted.demoFile[spottedIndexInWindow] == position.demoFile[windowIndex] &&
                         spotted.demoTickNumber[spottedIndexInWindow] <= position.demoTickNumber[windowIndex]) {
+                    // skip invalid rows
+                    if (spotted.skipRows.find(spottedIndex) != spotted.skipRows.end()) {
+                        spottedIndexInWindow++;
+                        continue;
+                    }
                     int spottedPlayer = playerNameToIndex[spotted.spottedPlayer[spottedIndexInWindow]];
                     if (playerNameToIndex.size() > 10) {
                         std::cout << "wut" << std::endl;
