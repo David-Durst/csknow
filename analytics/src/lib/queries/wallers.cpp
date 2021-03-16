@@ -104,7 +104,7 @@ WallersResult queryWallers(const Position & position, const Spotted & spotted) {
     // x angle 90 is looking towards larger y positions
     // y angle 90 is looking towards smaller z positions
     // y angle -90 is looking towards larger z positions
-#pragma omp parallel for
+//#pragma omp parallel for
     for (int64_t gameIndex = 0; gameIndex < numGames; gameIndex++) {
         int threadNum = omp_get_thread_num();
         AABB boxes[NUM_PLAYERS];
@@ -126,17 +126,28 @@ WallersResult queryWallers(const Position & position, const Spotted & spotted) {
         for (int i = 0; i < NUM_PLAYERS; i++) {
             playerNameToIndex.insert({position.players[i].name[0], i});
         }
+        std::cout << "name index size" << playerNameToIndex.size() << std::endl;
 
         // iterating over each possible window
         for (int64_t windowStartIndex = position.gameStarts[gameIndex];
             windowStartIndex + WALL_WINDOW_SIZE < position.gameStarts[gameIndex+1];
             windowStartIndex++) {
             // for all spotted events on cur tick, update the spotted spottedPerWindow
-            while (spottedIndex < spotted.size &&
+            while (spottedIndex < spotted.size && spotted.demoFile[spottedIndex] == position.demoFile[windowStartIndex] &&
                     spotted.demoTickNumber[spottedIndex] <= position.demoTickNumber[windowStartIndex]) {
                 int spottedPlayer = playerNameToIndex[spotted.spottedPlayer[spottedIndex]];
+                if (playerNameToIndex.size() > 10) {
+                    std::cout << "wut" << std::endl;
+                }
                 for (int i = 0; i < NUM_PLAYERS; i++) {
                     spottedPerWindow[spottedPlayer][i] = spotted.spotters[i].playerSpotter[spottedIndex];
+                    if (i == 1) {
+                        std::cout <<" spotted demo tick " << spotted.demoTickNumber[spottedIndex] <<
+                            " actual demo tick " << position.demoTickNumber[windowStartIndex] <<
+                            " spotted player " << spotted.spottedPlayer[spottedIndex] << " is index " << spottedPlayer <<
+                            " is brett visible " << spotted.spotters[1].playerSpotter[spottedIndex] <<
+                            " set spotted player visible from brett " << spottedPerWindow[spottedPlayer][i] << std::endl;
+                    }
                 }
                 spottedIndex++;
             }
@@ -166,10 +177,17 @@ WallersResult queryWallers(const Position & position, const Spotted & spotted) {
             // for each window, as long as any cheaters possibly left in that window
             for (int64_t windowIndex = windowStartIndex; windowIndex < windowStartIndex + WALL_WINDOW_SIZE && !neededPlayers[curReader].empty();
                 windowIndex++) {
+                if (position.fileNames[gameIndex].compare("auto0-20210221-232115-1880750554-de_dust2-Counter-Strike__Global_Offensive0c007374-749b-11eb-b224-1622baae68c9.dem") == 0 &&
+                    position.demoTickNumber[windowStartIndex] == 4577) {//position.players[playerIndex].name[windowStartIndex][0] == 'W') {
+                    std::cout << "hi" << std::endl;
+                }
                 // update the spotted players for this window
-                while (spottedIndexInWindow < spotted.size &&
+                while (spottedIndexInWindow < spotted.size && spotted.demoFile[spottedIndexInWindow] == position.demoFile[windowIndex] &&
                         spotted.demoTickNumber[spottedIndexInWindow] <= position.demoTickNumber[windowIndex]) {
                     int spottedPlayer = playerNameToIndex[spotted.spottedPlayer[spottedIndexInWindow]];
+                    if (playerNameToIndex.size() > 10) {
+                        std::cout << "wut" << std::endl;
+                    }
                     for (int i = 0; i < NUM_PLAYERS; i++) {
                         spottedInWindow[spottedPlayer][i] |= spotted.spotters[i].playerSpotter[spottedIndexInWindow];
                     }
@@ -189,7 +207,7 @@ WallersResult queryWallers(const Position & position, const Spotted & spotted) {
                          position.players[playerIndex].yViewDirection[windowIndex]}
                     );
                     if (position.fileNames[gameIndex].compare("auto0-20210221-232115-1880750554-de_dust2-Counter-Strike__Global_Offensive0c007374-749b-11eb-b224-1622baae68c9.dem") == 0 &&
-                        position.demoTickNumber[windowStartIndex] == 4762 && windowIndex == windowStartIndex && position.players[playerIndex].name[windowStartIndex][0] == 'W') {
+                        position.demoTickNumber[windowStartIndex] == 4577 && windowIndex == 4591 && playerIndex == 4) {//position.players[playerIndex].name[windowStartIndex][0] == 'W') {
                         std::cout << "eye pos x: " << eyes[playerIndex].orig.x << ", y: " << eyes[playerIndex].orig.y << ", y: " << eyes[playerIndex].orig.z << std::endl;
                         std::cout << "eye yaw: " << position.players[playerIndex].xViewDirection[windowIndex] << ", pivot: " << position.players[playerIndex].yViewDirection[windowIndex] << std::endl;
                         std::cout << "eye view x: " << eyes[playerIndex].dir.x << ", y: " << eyes[playerIndex].dir.y << ", y: " << eyes[playerIndex].dir.z << std::endl;
