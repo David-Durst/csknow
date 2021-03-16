@@ -37,6 +37,10 @@ Vec3 angleVectors(const Vec2 &angles) {
     forward.x = cp*cy;
     forward.y = cp*sy;
     forward.z = -sp;
+    double sum = sqrt(forward.x*forward.x + forward.y*forward.y + forward.z*forward.z);
+    forward.x /= sum;
+    forward.y /= sum;
+    forward.z /= sum;
     return forward;
 }
 
