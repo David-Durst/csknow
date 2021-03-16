@@ -37,6 +37,7 @@ struct PlayerPosition {
 
 class Position: public ColStore {
 public:
+    vector<int64_t> firstRowAfterWarmup;
     int32_t * demoTickNumber;
     int32_t * gameTickNumber;
     bool * matchStarted;
@@ -55,6 +56,7 @@ public:
     
     void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) {
         ColStore::init(rows, numFiles, gameStarts);
+        firstRowAfterWarmup.resize(numFiles);
         demoTickNumber = (int32_t *) malloc(rows * sizeof(int32_t));
         gameTickNumber = (int32_t *) malloc(rows * sizeof(int32_t));
         matchStarted = (bool *) malloc(rows * sizeof(bool));

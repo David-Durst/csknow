@@ -297,6 +297,15 @@ void loadPositions(Position & position, string dataPath) {
     for (int64_t fileIndex = 0; fileIndex < filePaths.size(); fileIndex++) {
         loadPositionFile(position, filePaths[fileIndex], startingPointPerFile[fileIndex], fileIndex);
         filesProcessed++;
+
+        // setup warmup starts
+        int64_t lastWarmup = 0;
+        for (int64_t rowNumber = position.gameStarts[fileIndex];
+             rowNumber < position.size && position.isWarmup[rowNumber]; rowNumber++) {
+            lastWarmup = rowNumber;
+        }
+        position.firstRowAfterWarmup[fileIndex] = lastWarmup + 1;
+
         printProgress((filesProcessed * 1.0) / filePaths.size());
     }
     position.makePitchNeg90To90();

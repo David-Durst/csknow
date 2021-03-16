@@ -129,7 +129,7 @@ WallersResult queryWallers(const Position & position, const Spotted & spotted) {
         std::cout << "name index size" << playerNameToIndex.size() << std::endl;
 
         // iterating over each possible window
-        for (int64_t windowStartIndex = position.gameStarts[gameIndex];
+        for (int64_t windowStartIndex = position.firstRowAfterWarmup[gameIndex];
             windowStartIndex + WALL_WINDOW_SIZE < position.gameStarts[gameIndex+1];
             windowStartIndex++) {
             // for all spotted events on cur tick, update the spotted spottedPerWindow
