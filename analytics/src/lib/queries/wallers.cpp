@@ -37,10 +37,6 @@ Vec3 angleVectors(const Vec2 &angles) {
     forward.x = cp*cy;
     forward.y = cp*sy;
     forward.z = -sp;
-    double sum = sqrt(forward.x*forward.x + forward.y*forward.y + forward.z*forward.z);
-    forward.x /= sum;
-    forward.y /= sum;
-    forward.z /= sum;
     return forward;
 }
 
@@ -110,7 +106,7 @@ WallersResult queryWallers(const Position & position, const Spotted & spotted) {
     // x angle 90 is looking towards larger y positions
     // y angle 90 is looking towards smaller z positions
     // y angle -90 is looking towards larger z positions
-#pragma omp parallel for
+//#pragma omp parallel for
     for (int64_t gameIndex = 0; gameIndex < numGames; gameIndex++) {
         int threadNum = omp_get_thread_num();
         AABB boxes[NUM_PLAYERS];
@@ -229,6 +225,7 @@ WallersResult queryWallers(const Position & position, const Spotted & spotted) {
                             std::cout << "victim max x: " << boxes[cv.victim].max.x << ", y: " << boxes[cv.victim].max.y << ", z: " << boxes[cv.victim].max.z << std::endl;
                             std::cout << "t0 x: " << t0[0] << ", y: " << t0[1] << ", z: " << t0[2] << std::endl;
                             std::cout << "t1 x: " << t1[0] << ", y: " << t1[1] << ", z: " << t1[2] << std::endl;
+                            intersectP(boxes[cv.victim], eyes[cv.cheater], t0, t1);
                         }
 
                     }
