@@ -3,6 +3,7 @@
 #include <set>
 #include <map>
 #include <math.h>
+#include <limits>
 using std::set;
 using std::map;
 #define WALL_WINDOW_SIZE 32
@@ -22,9 +23,10 @@ AABB getAABBForPlayer(Vec3 pos) {
     //https://developer.valvesoftware.com/wiki/Counter-Strike:_Global_Offensive_Mapper%27s_Reference
     // looks like coordinates are center at feet - tested using getpos_exact and box commands from
     //https://old.reddit.com/r/csmapmakers/comments/58ch3f/useful_console_commands_for_map_making_csgo/
+    //making box with these coordinates wraps player perfectly
     AABB result;
-    result.bounds[0] = {pos.x - WIDTH / 2, pos.y - WIDTH / 2, pos.z};
-    result.bounds[1] = {pos.x + WIDTH / 2, pos.x + WIDTH / 2, pos.z + HEIGHT};
+    result.min = {pos.x - WIDTH / 2, pos.y - WIDTH / 2, pos.z};
+    result.max = {pos.x + WIDTH / 2, pos.x + WIDTH / 2, pos.z + HEIGHT};
     return result;
 }
 
@@ -52,35 +54,37 @@ Ray getEyeCoordinatesForPlayer(Vec3 pos, Vec2 view) {
     return Ray({pos.x, pos.y, pos.z + EYE_HEIGHT}, angleVectors({view.x, view.y}));
 }
 
-// https://www.scratchapixel.com/lessons/3d-basic-rendering/minimal-ray-tracer-rendering-simple-shapes/ray-box-intersection
+// https://github.com/mmp/pbrt-v4/blob/master/src/pbrt/util/pstd.h#L26-L31
+template <typename T>
 static inline __attribute__((always_inline))
-bool rayAABBIntersection(Ray ray, AABB box) {
-    double tmin, tmax, tymin, tymax, tzmin, tzmax;
+void swap(T &a, T &b) {
+    T tmp = std::move(a);
+    a = std::move(b);
+    b = std::move(tmp);
+}
 
+// https://github.com/mmp/pbrt-v4/blob/master/src/pbrt/util/vecmath.h#L1555
+static inline __attribute__((always_inline))
+bool intersectP(const AABB & box, const Ray & ray, double tMax = std::numeric_limits<double>::infinity()) {
+    double t0 = 0, t1 = tMax;
+    for (int i = 0; i < 3; ++i) {
+        // Update interval for _i_th bounding box slab
+        double invRayDir = 1 / ray.dir[i];
+        double tNear = (box.min[i] - ray.orig[i]) * invRayDir;
+        double tFar = (box.max[i] - ray.orig[i]) * invRayDir;
+        // Update parametric interval from slab intersection $t$ values
+        if (tNear > tFar)
+           swap(tNear, tFar);
+        // Update _tFar_ to ensure robust ray--bounds intersection
+        tFar *= 1 + 2 * gamma(3);
 
-    tmin = (box.bounds[ray.sign[0]].x - ray.orig.x) * ray.invdir.x;
-    tmax = (box.bounds[1-ray.sign[0]].x - ray.orig.x) * ray.invdir.x;
-    tymin = (box.bounds[ray.sign[1]].y - ray.orig.y) * ray.invdir.y;
-    tymax = (box.bounds[1-ray.sign[1]].y - ray.orig.y) * ray.invdir.y;
-
-    if ((tmin > tymax) || (tymin > tmax))
-        return false;
-    if (tymin > tmin)
-        tmin = tymin;
-    if (tymax < tmax)
-        tmax = tymax;
-
-    tzmin = (box.bounds[ray.sign[2]].z - ray.orig.z) * ray.invdir.z;
-    tzmax = (box.bounds[1-ray.sign[2]].z - ray.orig.z) * ray.invdir.z;
-
-    if ((tmin > tzmax) || (tzmin > tmax))
-        return false;
-    if (tzmin > tmin)
-        tmin = tzmin;
-    if (tzmax < tmax)
-        tmax = tzmax;
-
-    return true; }
+        t0 = tNear > t0 ? tNear : t0;
+        t1 = tFar < t1 ? tFar : t1;
+        if (t0 > t1)
+            return false;
+    }
+    return true;
+}
 
 struct CheaterAndVictim {
     int cheater, victim;
@@ -188,6 +192,12 @@ WallersResult queryWallers(const Position & position, const Spotted & spotted) {
                         {position.players[playerIndex].xViewDirection[windowIndex],
                          position.players[playerIndex].yViewDirection[windowIndex]}
                     );
+                    if (position.fileNames[gameIndex].compare("auto0-20210221-232115-1880750554-de_dust2-Counter-Strike__Global_Offensive0c007374-749b-11eb-b224-1622baae68c9.dem") == 0 &&
+                        position.demoTickNumber[windowStartIndex] == 4762 && windowIndex == windowStartIndex && position.players[playerIndex].name[windowStartIndex][0] == 'W') {
+                        std::cout << "eye pos x: " << eyes[playerIndex].orig.x << ", y: " << eyes[playerIndex].orig.y << ", y: " << eyes[playerIndex].orig.z << std::endl;
+                        std::cout << "eye yaw: " << position.players[playerIndex].xViewDirection[windowIndex] << ", pivot: " << position.players[playerIndex].yViewDirection[windowIndex] << std::endl;
+                        std::cout << "eye view x: " << eyes[playerIndex].dir.x << ", y: " << eyes[playerIndex].dir.y << ", y: " << eyes[playerIndex].dir.z << std::endl;
+                    }
                 }
                 // save for this window if still a suspect -
                 // 1. not on same team
@@ -198,7 +208,7 @@ WallersResult queryWallers(const Position & position, const Spotted & spotted) {
                     if (position.players[cv.cheater].team[windowIndex] != position.players[cv.victim].team[windowIndex] &&
                         !spottedInWindow[cv.victim][cv.cheater] &&
                         position.players[cv.cheater].isAlive[windowIndex] && position.players[cv.victim].isAlive[windowIndex] &&
-                        rayAABBIntersection(eyes[cv.cheater], boxes[cv.victim])) {
+                        intersectP(boxes[cv.victim], eyes[cv.cheater])) {
                         windowTracking[curWriter].insert({cv.cheater, cv.victim});
                         neededPlayers[curWriter].insert(cv.cheater);
                         neededPlayers[curWriter].insert(cv.victim);

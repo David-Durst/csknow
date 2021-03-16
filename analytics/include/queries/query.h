@@ -9,6 +9,16 @@ struct Vec3 {
     double x;
     double y;
     double z;
+
+    double operator[](size_t index) const {
+        if (index == 0) {
+            return x;
+        } else if (index == 1) {
+            return y;
+        } else {
+            return z;
+        }
+    }
 };
 
 struct Vec2 {
@@ -33,8 +43,8 @@ public:
 };
 
 struct AABB {
-    // 0 is min, 1 is max
-    Vec3 bounds[2];
+    Vec3 min;
+    Vec3 max;
 };
 
 class QueryResult {
