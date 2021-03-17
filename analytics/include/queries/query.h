@@ -8,25 +8,14 @@ using std::stringstream;
 
 class QueryResult {
 public:
+    vector<int64_t> positionIndex;
+    vector<string> demoFile;
+
     virtual string toCSVFiltered(const Position & position, string game) = 0;
     virtual string toCSV(const Position & position) = 0;
 };
 
-class PredicateResult : public QueryResult {
-public:
-    vector<int64_t> positionIndex;
-    vector<string> demoFile;
-
-    void collectResults(vector<int64_t> * tmpIndices, int numThreads) {
-        for (int i = 0; i < numThreads; i++) {
-            for (const auto & elem : tmpIndices[i]) {
-                positionIndex.push_back(elem);
-            }
-        }
-    }
-};
-
-class SingleSourceSingleTargetResult : public PredicateResult {
+class SingleSourceSingleTargetResult : public QueryResult {
 public:
     string sourceName;
     string targetName;
