@@ -16,6 +16,9 @@ These queries are important both from a game perspective (answer frustrations of
     1. Efficient Implementation - Join shots with tick table, then for each shot check if vector-rectangle intersection works for each player, then aggregate.
 1. How often do peoople "bait" - assuming a maximum velocity of v, if I was no more than (t * v) distance away from being able to see the opponent when my 
     teammate was at least (t * v - alpha) distance away (alpha is fuzzyness factor) and I choose not to move to line ofsite, that's a bait
+    1. current implementation is local (could you have gotten to where teammate died), but would prefer a global version where you could have gotten to any visible location for killer.
+    However, this will require the map data as need to know where is visible.
+1. Find the places where ct's bet on a or b site - 3 people on b or 3 people on a
 1. How do people peek with different AK vs other weapons? For 2-3 corners of interest, for each time a player peeks those corners,
     find the most similar trajectory with another weapon leading up to getting to that corner, and see how the trajectories diverge
     1. context - Do people play differently with different weapons? Let's understand how weapon causes game decisions
