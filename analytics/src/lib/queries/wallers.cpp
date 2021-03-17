@@ -131,7 +131,7 @@ WallersResult queryWallers(const Position & position, const Spotted & spotted) {
                 // 3. not visible at any point in window
                 // 4. aim locked on
                 for (const auto & cv: windowTracking[curReader]) {
-                    double t0[3], t1[3];
+                    double t0, t1;
                     if (position.players[cv.cheater].team[windowIndex] != position.players[cv.victim].team[windowIndex] &&
                         !spottedInWindow[cv.victim][cv.cheater] &&
                         position.players[cv.cheater].isAlive[windowIndex] && position.players[cv.victim].isAlive[windowIndex] &&
@@ -147,8 +147,8 @@ WallersResult queryWallers(const Position & position, const Spotted & spotted) {
                             std::cout << "victim  x: " << position.players[cv.victim].xPosition[windowIndex] << ", y: " << position.players[cv.victim].yPosition[windowIndex] << ", z: " << position.players[cv.victim].zPosition[windowIndex] << std::endl;
                             std::cout << "victim min x: " << boxes[cv.victim].min.x << ", y: " << boxes[cv.victim].min.y << ", z: " << boxes[cv.victim].min.z << std::endl;
                             std::cout << "victim max x: " << boxes[cv.victim].max.x << ", y: " << boxes[cv.victim].max.y << ", z: " << boxes[cv.victim].max.z << std::endl;
-                            std::cout << "t0 x: " << t0[0] << ", y: " << t0[1] << ", z: " << t0[2] << std::endl;
-                            std::cout << "t1 x: " << t1[0] << ", y: " << t1[1] << ", z: " << t1[2] << std::endl;
+                            std::cout << "t0 " << t0 << std::endl;
+                            std::cout << "t1 " << t1 << std::endl;
                             intersectP(boxes[cv.victim], eyes[cv.cheater], t0, t1);
                         }
 

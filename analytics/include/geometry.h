@@ -100,7 +100,7 @@ void swap(T &a, T &b) {
 
 // https://github.com/mmp/pbrt-v4/blob/master/src/pbrt/util/vecmath.h#L1555
 static inline __attribute__((always_inline))
-bool intersectP(const AABB & box, const Ray & ray, double * hitt0, double * hitt1,
+bool intersectP(const AABB & box, const Ray & ray, double & hitt0, double & hitt1,
                 double tMax = std::numeric_limits<double>::infinity()) {
     double t0 = 0, t1 = tMax;
     for (int i = 0; i < 3; ++i) {
@@ -118,9 +118,9 @@ bool intersectP(const AABB & box, const Ray & ray, double * hitt0, double * hitt
         t1 = tFar < t1 ? tFar : t1;
         if (t0 > t1)
             return false;
-        hitt0[i] = t0;
-        hitt1[i] = t1;
     }
+    hitt0 = t0;
+    hitt1 = t1;
     return true;
 }
 
