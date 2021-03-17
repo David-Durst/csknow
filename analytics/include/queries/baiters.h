@@ -2,6 +2,7 @@
 #define CSKNOW_BAITERS_H
 #include "load_data.h"
 #include "query.h"
+#include "indices.h"
 #include <string>
 using std::string;
 
@@ -25,6 +26,6 @@ public:
     }
 };
 
-BaitersResult queryBaiters(const Position & position, const Kills & kills);
+BaitersResult queryBaiters(const Position & position, const Kills & kills, const SpottedIndex & spottedIndex);
 
 #endif //CSKNOW_BAITERS_H

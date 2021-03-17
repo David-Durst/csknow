@@ -1,5 +1,6 @@
 #include "queries/baiters.h"
 #include "geometry.h"
+#include "indices.h"
 #include <omp.h>
 #include <set>
 #include <map>
@@ -17,7 +18,7 @@ bool withinVelocityRadius(const Position & position, int baiter, int victim, int
     return distance <= radius;
 }
 
-BaitersResult queryBaiters(const Position & position, const Kills & kills) {
+BaitersResult queryBaiters(const Position & position, const Kills & kills, const SpottedIndex & spottedIndex) {
     int64_t numGames = position.gameStarts.size() - 1;
     int numThreads = omp_get_max_threads();
     vector<int64_t> tmpIndices[numThreads];

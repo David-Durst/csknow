@@ -33,9 +33,12 @@ int main(int argc, char * argv[]) {
     std::cout << "num elements in grenades: " << grenades.size << std::endl;
     std::cout << "num elements in kills: " << kills.size << std::endl;
 
+    SpottedIndex spottedIndex(position, spotted);
+    std::cout << "built spotted index" << std::endl;
+
     WallersResult wallersResult = queryWallers(position, spotted);
     std::cout << "waller moments: " << wallersResult.positionIndex.size() << std::endl;
-    BaitersResult baitersResult = queryBaiters(position, kills);
+    BaitersResult baitersResult = queryBaiters(position, kills, spottedIndex);
     std::cout << "baiter moments: " << baitersResult.positionIndex.size() << std::endl;
     std::cout << "total ticks: " << position.size << std::endl;
 
