@@ -13,6 +13,6 @@ int main(int argc, char * argv[]) {
     double hitt0[3], hitt1[3];
     bool result = intersectP(victimBox, cheaterRay, hitt0, hitt1);
     std::cout << "result: " << result << std::endl;
-    std::cout << "hitt0 x" << hitt0[0] << "," << hitt0[1] << "," << hitt0[2] << std::endl;
-    std::cout << "hitt1 x" << hitt1[0] << "," << hitt1[1] << "," << hitt1[2] << std::endl;
+    std::cout << "hitt0 " << hitt0[0] << "," << hitt0[1] << "," << hitt0[2] << std::endl;
+    std::cout << "hitt1 " << hitt1[0] << "," << hitt1[1] << "," << hitt1[2] << std::endl;
 }
