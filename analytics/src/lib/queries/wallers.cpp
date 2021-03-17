@@ -139,19 +139,6 @@ WallersResult queryWallers(const Position & position, const Spotted & spotted) {
                         windowTracking[curWriter].insert({cv.cheater, cv.victim});
                         neededPlayers[curWriter].insert(cv.cheater);
                         neededPlayers[curWriter].insert(cv.victim);
-                        if (position.fileNames[gameIndex].compare("auto0-20210221-232115-1880750554-de_dust2-Counter-Strike__Global_Offensive0c007374-749b-11eb-b224-1622baae68c9.dem") == 0 &&
-                            position.demoTickNumber[windowStartIndex] == 4590 && position.demoTickNumber[windowIndex] == 4591 && cv.cheater == 4) {//position.players[playerIndex].name[windowStartIndex][0] == 'W') {
-                            std::cout << "eye pos x: " << eyes[cv.cheater].orig.x << ", y: " << eyes[cv.cheater].orig.y << ", z: " << eyes[cv.cheater].orig.z << std::endl;
-                            std::cout << "eye yaw: " << position.players[cv.cheater].xViewDirection[windowIndex] << ", pivot: " << position.players[cv.cheater].yViewDirection[windowIndex] << std::endl;
-                            std::cout << "eye view x: " << eyes[cv.cheater].dir.x << ", y: " << eyes[cv.cheater].dir.y << ", z: " << eyes[cv.cheater].dir.z << std::endl;
-                            std::cout << "victim  x: " << position.players[cv.victim].xPosition[windowIndex] << ", y: " << position.players[cv.victim].yPosition[windowIndex] << ", z: " << position.players[cv.victim].zPosition[windowIndex] << std::endl;
-                            std::cout << "victim min x: " << boxes[cv.victim].min.x << ", y: " << boxes[cv.victim].min.y << ", z: " << boxes[cv.victim].min.z << std::endl;
-                            std::cout << "victim max x: " << boxes[cv.victim].max.x << ", y: " << boxes[cv.victim].max.y << ", z: " << boxes[cv.victim].max.z << std::endl;
-                            std::cout << "t0 " << t0 << std::endl;
-                            std::cout << "t1 " << t1 << std::endl;
-                            intersectP(boxes[cv.victim], eyes[cv.cheater], t0, t1);
-                        }
-
                     }
                 }
                 // finish double buffering for this frame

@@ -111,44 +111,6 @@ inline constexpr double gamma2(int n) {
 static inline __attribute__((always_inline))
 bool intersectP(const AABB & box, const Ray & ray, double & hitt0, double & hitt1,
                 double tMax = std::numeric_limits<double>::infinity()) {
-    /*
-    // Check for ray intersection against $x$ and $y$ slabs
-    Float tMin = (bounds[dirIsNeg[0]].x - o.x) * invDir.x;
-    Float tMax = (bounds[1 - dirIsNeg[0]].x - o.x) * invDir.x;
-    Float tyMin = (bounds[dirIsNeg[1]].y - o.y) * invDir.y;
-    Float tyMax = (bounds[1 - dirIsNeg[1]].y - o.y) * invDir.y;
-    // Update _tMax_ and _tyMax_ to ensure robust bounds intersection
-    tMax *= 1 + 2 * gamma(3);
-    tyMax *= 1 + 2 * gamma(3);
-
-    if (tMin > tyMax || tyMin > tMax)
-        return false;
-    if (tyMin > tMin)
-        tMin = tyMin;
-    if (tyMax < tMax)
-        tMax = tyMax;
-
-    // Check for ray intersection against $z$ slab
-    Float tzMin = (bounds[dirIsNeg[2]].z - o.z) * invDir.z;
-    Float tzMax = (bounds[1 - dirIsNeg[2]].z - o.z) * invDir.z;
-    // Update _tzMax_ to ensure robust bounds intersection
-    tzMax *= 1 + 2 * gamma(3);
-
-    if (tMin > tzMax || tzMin > tMax)
-        return false;
-    if (tzMin > tMin)
-        tMin = tzMin;
-    if (tzMax < tMax)
-        tMax = tzMax;
-
-    return (tMin < raytMax) && (tMax > 0);
-     */
-    std::cout << "starting intersectP" << std::endl;
-    std::cout << "box min x: " << box.min.x << ", y: " << box.min.y << ", z: " << box.min.z << std::endl;
-    std::cout << "box max x: " << box.max.x << ", y: " << box.max.y << ", z: " << box.max.z << std::endl;
-    std::cout << "ray pos x: " << ray.orig.x << ", y: " << ray.orig.y << ", z: " << ray.orig.z << std::endl;
-    std::cout << "ray view x: " << ray.dir.x << ", y: " << ray.dir.y << ", z: " << ray.dir.z << std::endl;
-
     double t0 = 0, t1 = tMax;
     for (int i = 0; i < 3; ++i) {
         // Update interval for _i_th bounding box slab
@@ -163,10 +125,6 @@ bool intersectP(const AABB & box, const Ray & ray, double & hitt0, double & hitt
 
         t0 = tNear > t0 ? tNear : t0;
         t1 = tFar < t1 ? tFar : t1;
-        std::cout << "tNear: " << tNear << std::endl;
-        std::cout << "tFar: " << tFar << std::endl;
-        std::cout << "t0: " << t0 << std::endl;
-        std::cout << "t1: " << t1 << std::endl;
         if (t0 > t1)
             return false;
     }
