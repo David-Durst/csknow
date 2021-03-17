@@ -35,9 +35,11 @@ endif()
 
 add_library(csknow_lib STATIC ${CSKNOW_SOURCES} ${CSKNOW_HEADERS})
 add_executable(csknow ${PROJECT_SOURCE_DIR}/src/bin/csknow_main.cpp)
+add_executable(csknow_intersection ${PROJECT_SOURCE_DIR}/src/bin/csknow_intersection.cpp)
 target_link_libraries(csknow_lib OpenMP::OpenMP_CXX)
 target_link_libraries(csknow_lib OpenSSL::SSL)
 target_link_libraries(csknow csknow_lib)
+target_link_libraries(csknow_intersection csknow_lib)
 
 # add this to enable debug printing statements
 
@@ -45,6 +47,7 @@ set_target_properties(csknow_lib PROPERTIES VERSION ${PROJECT_VERSION})
 
 # add the install targets
 install (TARGETS csknow DESTINATION bin)
+install (TARGETS csknow_intersection DESTINATION bin)
 install (TARGETS csknow_lib
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
         INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDERDIR})
