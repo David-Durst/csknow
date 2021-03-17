@@ -70,7 +70,7 @@ BaitersResult queryBaiters(const Position &position, const Kills &kills, const S
                          positionWindowStartIndex >= position.firstRowAfterWarmup[gameIndex] &&
                          positionWindowIndex >= positionWindowStartIndex - BAIT_WINDOW_SIZE;
                          positionWindowIndex--) {
-                        seenInWindow |= spottedIndex.visible[baiterIndex][killIndex][positionWindowIndex];
+                        seenInWindow |= spottedIndex.visible[baiterIndex][killerIndex][positionWindowIndex];
                     }
                     if (!seenInWindow) {
                         neededBaiters[curReader].insert(baiterIndex);
