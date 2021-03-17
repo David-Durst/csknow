@@ -30,7 +30,7 @@ WallersResult queryWallers(const Position & position, const Spotted & spotted) {
     // x angle 90 is looking towards larger y positions
     // y angle 90 is looking towards smaller z positions
     // y angle -90 is looking towards larger z positions
-//#pragma omp parallel for
+#pragma omp parallel for
     for (int64_t gameIndex = 0; gameIndex < numGames; gameIndex++) {
         int threadNum = omp_get_thread_num();
         AABB boxes[NUM_PLAYERS];
