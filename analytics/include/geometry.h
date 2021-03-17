@@ -69,6 +69,7 @@ AABB getAABBForPlayer(Vec3 pos) {
 }
 
 // https://github.com/ValveSoftware/source-sdk-2013/blob/master/sp/src/mathlib/mathlib_base.cpp#L901-L914
+static inline __attribute__((always_inline))
 Vec3 angleVectors(const Vec2 &angles) {
     Vec3 forward;
     double sp, sy, cp, cy;
