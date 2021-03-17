@@ -23,6 +23,9 @@ public:
     vector<int> sources;
     vector<int> targets;
 
+    virtual string getExtraColumns() = 0;
+    virtual string getExtraRow(const Position & position, int64_t index) = 0;
+
     string toCSVFiltered(const Position & position, string game) {
         stringstream ss;
         ss << "demo tick,demo file," << sourceName << "," << targetName << std::endl;
@@ -48,6 +51,13 @@ public:
         return ss.str();
     };
 
+};
+
+struct SourceAndTarget {
+    int source, target;
+    bool operator <(const SourceAndTarget& cv) const {
+        return source < cv.source || ((source == cv.source) && target < cv.target);
+    }
 };
 
 #endif //CSKNOW_QUERY_H

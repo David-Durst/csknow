@@ -8,6 +8,9 @@
 #ifndef DEG2RAD
 #define DEG2RAD( x  )  ( (double)(x) * (double)(M_PI / 180.) )
 #endif
+// https://counterstrike.fandom.com/wiki/Movement
+#define MAX_RUN_SPEED 250.0
+#define TICKS_PER_SECOND 32
 
 struct Vec3 {
     double x;

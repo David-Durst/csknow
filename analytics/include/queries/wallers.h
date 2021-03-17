@@ -14,6 +14,14 @@ public:
         sourceName = "waller";
         targetName = "victim";
     }
+
+    string getExtraColumns() {
+        return "";
+    }
+
+    string getExtraRow(const Position & position, int64_t index) {
+        return "";
+    }
 };
 
 WallersResult queryWallers(const Position & position, const Spotted & spotted);

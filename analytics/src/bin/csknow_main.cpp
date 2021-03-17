@@ -2,6 +2,7 @@
 #include <unistd.h>
 #include "load_data.h"
 #include "queries/wallers.h"
+#include "queries/baiters.h"
 #define CPPHTTPLIB_OPENSSL_SUPPORT
 #include "httplib.h"
 
@@ -31,20 +32,33 @@ int main(int argc, char * argv[]) {
     std::cout << "num elements in grenades: " << grenades.size << std::endl;
     std::cout << "num elements in kills: " << kills.size << std::endl;
 
-    WallersResult result = queryWallers(position, spotted);
-    std::cout << "waller moments: " << result.positionIndex.size() << std::endl;
+    WallersResult wallersResult = queryWallers(position, spotted);
+    std::cout << "waller moments: " << wallersResult.positionIndex.size() << std::endl;
+    BaitersResult baitersResult = queryBaiters(position, kills);
+    std::cout << "baiter moments: " << baitersResult.positionIndex.size() << std::endl;
     std::cout << "total ticks: " << position.size << std::endl;
 
     if (runServer) {
         httplib::Server svr;
         svr.Get("/waller", [&](const httplib::Request &, httplib::Response &res) {
-            res.set_content(result.toCSV(position), "text/csv");
+            res.set_content(wallersResult.toCSV(position), "text/csv");
             res.set_header("Access-Control-Allow-Origin", "*");
         });
 
         svr.Get("/waller/(.+).csv", [&](const httplib::Request & req, httplib::Response &res) {
             string game = req.matches[1];
-            res.set_content(result.toCSVFiltered(position, game), "text/csv");
+            res.set_content(wallersResult.toCSVFiltered(position, game), "text/csv");
+            res.set_header("Access-Control-Allow-Origin", "*");
+        });
+
+        svr.Get("/baiter", [&](const httplib::Request &, httplib::Response &res) {
+            res.set_content(baitersResult.toCSV(position), "text/csv");
+            res.set_header("Access-Control-Allow-Origin", "*");
+        });
+
+        svr.Get("/baiter/(.+).csv", [&](const httplib::Request & req, httplib::Response &res) {
+            string game = req.matches[1];
+            res.set_content(baitersResult.toCSVFiltered(position, game), "text/csv");
             res.set_header("Access-Control-Allow-Origin", "*");
         });
 

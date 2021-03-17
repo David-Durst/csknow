@@ -9,11 +9,22 @@ class BaitersResult : public SingleSourceSingleTargetResult {
 public:
     vector<int> & baiters = sources;
     vector<int> & victims = targets;
+    vector<int64_t> mostRecentPossibleHelp;
 
     BaitersResult() {
         sourceName = "baiter";
         targetName = "victim";
     }
+
+    string getExtraColumns() {
+        return ",most recent possible help";
+    }
+
+    string getExtraRow(const Position & position, int64_t index) {
+        return "," + std::to_string(mostRecentPossibleHelp[index]);
+    }
 };
+
+BaitersResult queryBaiters(const Position & position, const Kills & kills);
 
 #endif //CSKNOW_BAITERS_H
