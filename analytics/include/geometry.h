@@ -2,6 +2,7 @@
 #define CSKNOW_GEOMETRY_H
 #include <math.h>
 #include <limits>
+#include <iostream>
 #include "geometry.h"
 //https://github.com/ValveSoftware/source-sdk-2013/blob/master/sp/src/public/mathlib/mathlib.h#L301-L303
 #ifndef DEG2RAD
@@ -116,6 +117,8 @@ bool intersectP(const AABB & box, const Ray & ray, double & hitt0, double & hitt
 
         t0 = tNear > t0 ? tNear : t0;
         t1 = tFar < t1 ? tFar : t1;
+        std::cout << "t0: " << t0 << std::endl;
+        std::cout << "t1: " << t1 << std::endl;
         if (t0 > t1)
             return false;
     }
