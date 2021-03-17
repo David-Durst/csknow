@@ -103,6 +103,12 @@ void swap(T &a, T &b) {
 static inline __attribute__((always_inline))
 bool intersectP(const AABB & box, const Ray & ray, double & hitt0, double & hitt1,
                 double tMax = std::numeric_limits<double>::infinity()) {
+    std::cout << "starting intersectP" << std::endl;
+    std::cout << "box min x: " << box.min.x << ", y: " << box.min.y << ", z: " << box.min.z << std::endl;
+    std::cout << "box max x: " << box.max.x << ", y: " << box.max.y << ", z: " << box.max.z << std::endl;
+    std::cout << "ray pos x: " << ray.orig.x << ", y: " << ray.orig.y << ", z: " << ray.orig.z << std::endl;
+    std::cout << "ray view x: " << ray.dir.x << ", y: " << ray.dir.y << ", z: " << ray.dir.z << std::endl;
+
     double t0 = 0, t1 = tMax;
     for (int i = 0; i < 3; ++i) {
         // Update interval for _i_th bounding box slab
@@ -117,6 +123,8 @@ bool intersectP(const AABB & box, const Ray & ray, double & hitt0, double & hitt
 
         t0 = tNear > t0 ? tNear : t0;
         t1 = tFar < t1 ? tFar : t1;
+        std::cout << "tNear: " << tNear << std::endl;
+        std::cout << "tFar: " << tFar << std::endl;
         std::cout << "t0: " << t0 << std::endl;
         std::cout << "t1: " << t1 << std::endl;
         if (t0 > t1)
