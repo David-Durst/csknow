@@ -1,4 +1,0 @@
-#ifndef CSKNOW_BAITERS_H
-#define CSKNOW_BAITERS_H
-
-#endif //CSKNOW_BAITERS_H

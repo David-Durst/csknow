@@ -8,7 +8,8 @@ using std::stringstream;
 
 class QueryResult {
 public:
-    virtual string toCSV() = 0;
+    virtual string toCSVFiltered(const Position & position, string game) = 0;
+    virtual string toCSV(const Position & position) = 0;
 };
 
 class PredicateResult : public QueryResult {
@@ -23,15 +24,41 @@ public:
             }
         }
     }
+};
 
-    virtual string toCSV() {
+class SingleSourceSingleTargetResult : public PredicateResult {
+public:
+    string sourceName;
+    string targetName;
+
+    vector<int> sources;
+    vector<int> targets;
+
+    string toCSVFiltered(const Position & position, string game) {
         stringstream ss;
-        ss << "position index" << std::endl;
-        for (const auto & index : positionIndex) {
-            ss << index << std::endl;
+        ss << "demo tick,demo file," << sourceName << "," << targetName << std::endl;
+        for (int64_t i = 0; i < positionIndex.size(); i++) {
+            int64_t posIdx = positionIndex[i];
+            string curGame = position.fileNames[position.demoFile[posIdx]];
+            if (curGame.compare(game) == 0 || game == "") {
+                ss << position.demoTickNumber[posIdx] << "," << position.fileNames[position.demoFile[posIdx]] << ","
+                   << position.players[sources[i]].name[posIdx] << "," << position.players[targets[i]].name[posIdx] << std::endl;
+            }
+        }
+        return ss.str();
+    }
+
+    string toCSV(const Position & position) {
+        stringstream ss;
+        ss << "demo tick,demo file," << sourceName << "," << targetName << std::endl;
+        for (int64_t i = 0; i < positionIndex.size(); i++) {
+            int64_t posIdx = positionIndex[i];
+            ss << position.demoTickNumber[posIdx] << "," << position.fileNames[position.demoFile[posIdx]] << ","
+               << position.players[sources[i]].name[posIdx] << "," << position.players[targets[i]].name[posIdx] << std::endl;
         }
         return ss.str();
     };
+
 };
 
 #endif //CSKNOW_QUERY_H
