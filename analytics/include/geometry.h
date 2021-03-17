@@ -37,13 +37,13 @@ public:
         invdir.x = 1 / dir.x;
         invdir.y = 1 / dir.y;
         invdir.z = 1 / dir.y;
-        sign[0] = invdir.x < 0;
-        sign[1] = invdir.y < 0;
-        sign[2] = invdir.z < 0;
+        dirIsNeg[0] = invdir.x < 0;
+        dirIsNeg[1] = invdir.y < 0;
+        dirIsNeg[2] = invdir.z < 0;
     }
 
     Vec3 orig, dir, invdir;
-    int sign[3];
+    int dirIsNeg[3];
 };
 
 struct AABB {
@@ -99,10 +99,50 @@ void swap(T &a, T &b) {
     b = std::move(tmp);
 }
 
+#define MachineEpsilon std::numeric_limits<double>::epsilon() * 0.5
+
+inline constexpr double gamma2(int n) {
+    return (n * MachineEpsilon) / (1 - n * MachineEpsilon);
+}
+
+
+
 // https://github.com/mmp/pbrt-v4/blob/master/src/pbrt/util/vecmath.h#L1555
 static inline __attribute__((always_inline))
 bool intersectP(const AABB & box, const Ray & ray, double & hitt0, double & hitt1,
                 double tMax = std::numeric_limits<double>::infinity()) {
+    /*
+    // Check for ray intersection against $x$ and $y$ slabs
+    Float tMin = (bounds[dirIsNeg[0]].x - o.x) * invDir.x;
+    Float tMax = (bounds[1 - dirIsNeg[0]].x - o.x) * invDir.x;
+    Float tyMin = (bounds[dirIsNeg[1]].y - o.y) * invDir.y;
+    Float tyMax = (bounds[1 - dirIsNeg[1]].y - o.y) * invDir.y;
+    // Update _tMax_ and _tyMax_ to ensure robust bounds intersection
+    tMax *= 1 + 2 * gamma(3);
+    tyMax *= 1 + 2 * gamma(3);
+
+    if (tMin > tyMax || tyMin > tMax)
+        return false;
+    if (tyMin > tMin)
+        tMin = tyMin;
+    if (tyMax < tMax)
+        tMax = tyMax;
+
+    // Check for ray intersection against $z$ slab
+    Float tzMin = (bounds[dirIsNeg[2]].z - o.z) * invDir.z;
+    Float tzMax = (bounds[1 - dirIsNeg[2]].z - o.z) * invDir.z;
+    // Update _tzMax_ to ensure robust bounds intersection
+    tzMax *= 1 + 2 * gamma(3);
+
+    if (tMin > tzMax || tzMin > tMax)
+        return false;
+    if (tzMin > tMin)
+        tMin = tzMin;
+    if (tzMax < tMax)
+        tMax = tzMax;
+
+    return (tMin < raytMax) && (tMax > 0);
+     */
     std::cout << "starting intersectP" << std::endl;
     std::cout << "box min x: " << box.min.x << ", y: " << box.min.y << ", z: " << box.min.z << std::endl;
     std::cout << "box max x: " << box.max.x << ", y: " << box.max.y << ", z: " << box.max.z << std::endl;
@@ -119,7 +159,7 @@ bool intersectP(const AABB & box, const Ray & ray, double & hitt0, double & hitt
         if (tNear > tFar)
             swap(tNear, tFar);
         // Update _tFar_ to ensure robust ray--bounds intersection
-        tFar *= 1 + 2 * gamma(3);
+        tFar *= 1 + 2 * gamma2(3);
 
         t0 = tNear > t0 ? tNear : t0;
         t1 = tFar < t1 ? tFar : t1;
