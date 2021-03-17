@@ -8,10 +8,10 @@ using std::map;
 #define BAIT_WINDOW_SIZE 64
 
 static inline __attribute__((always_inline))
-bool withinVelocityRadius(const Position & position, int source, int target, int64_t positionIndex, int tOffset) {
-    double xDistance = position.players[source].xPosition[positionIndex] - position.players[target].xPosition[positionIndex];
-    double yDistance = position.players[source].yPosition[positionIndex] - position.players[target].yPosition[positionIndex];
-    double zDistance = position.players[source].zPosition[positionIndex] - position.players[target].zPosition[positionIndex];
+bool withinVelocityRadius(const Position & position, int baiter, int victim, int64_t curIndex, int64_t windowStartIndex, int tOffset) {
+    double xDistance = position.players[baiter].xPosition[curIndex] - position.players[victim].xPosition[windowStartIndex];
+    double yDistance = position.players[baiter].yPosition[curIndex] - position.players[victim].yPosition[windowStartIndex];
+    double zDistance = position.players[baiter].zPosition[curIndex] - position.players[victim].zPosition[windowStartIndex];
     double distance = sqrt(xDistance*xDistance + yDistance*yDistance + zDistance*zDistance);
     double radius = MAX_RUN_SPEED / TICKS_PER_SECOND * tOffset;
     return distance <= radius;
@@ -30,6 +30,8 @@ BaitersResult queryBaiters(const Position & position, const Kills & kills) {
         int threadNum = omp_get_thread_num();
         // assuming first position is less than first kills
         int64_t positionGameStartIndex = position.gameStarts[gameIndex];
+
+
 
         // since spotted tracks names for spotted player, need to map that to the player index
         map<string, int> playerNameToIndex;
@@ -60,8 +62,14 @@ BaitersResult queryBaiters(const Position & position, const Kills & kills) {
                     int tOffset = positionWindowStartIndex - positionWindowIndex;
 
                     for (int playerIndex = 0; playerIndex < NUM_PLAYERS; playerIndex++) {
-                        if (alreadyBaited.find({playerIndex, victimIndex}) == alreadyBaited.end() &&
-                            withinVelocityRadius(position, playerIndex, victimIndex, positionWindowIndex, tOffset)) {
+                        // baiting if
+                        // 1. on same team - checked by neededBaiters
+                        // 2. didn't already bait - checked by neededBaiters
+                        // 2. baiter never visible to killer during window
+                        // 3. baiter could've gotten to spot where victim died
+                        if (position.players[playerIndex].team == position.players[victimIndex].team &&
+                            alreadyBaited.find({playerIndex, victimIndex}) == alreadyBaited.end() &&
+                            withinVelocityRadius(position, playerIndex, victimIndex, positionWindowIndex, positionWindowStartIndex, tOffset)) {
                             alreadyBaited.insert({playerIndex, victimIndex});
                             tmpIndices[threadNum].push_back(positionWindowStartIndex);
                             tmpMostRecentPossibleHelp[threadNum].push_back(positionWindowIndex);

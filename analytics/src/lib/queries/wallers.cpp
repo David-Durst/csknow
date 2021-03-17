@@ -48,10 +48,7 @@ WallersResult queryWallers(const Position & position, const Spotted & spotted) {
             }
         }
         // since spotted tracks names for spotted player, need to map that to the player index
-        map<string, int> playerNameToIndex;
-        for (int i = 0; i < NUM_PLAYERS; i++) {
-            playerNameToIndex.insert({position.players[i].name[position.firstRowAfterWarmup[gameIndex]], i});
-        }
+        map<string, int> playerNameToIndex = position.getPlayerNameToIndex(gameIndex);
 
         // iterating over each possible window
         for (int64_t windowStartIndex = position.firstRowAfterWarmup[gameIndex];

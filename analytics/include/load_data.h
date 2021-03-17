@@ -5,9 +5,11 @@
 #include <set>
 #include <vector>
 #include <iostream>
+#include <map>
 using std::string;
 using std::vector;
 using std::set;
+using std::map;
 
 class ColStore {
 public:
@@ -135,6 +137,16 @@ public:
 
     Position(const Position& other) = delete;
     Position& operator=(const Position& other) = delete;
+
+    // since spotted tracks names for spotted player, need to map that to the player index
+
+    map<string, int> getPlayerNameToIndex(int64_t gameIndex) const {
+        map<string, int> result;
+        for (int i = 0; i < NUM_PLAYERS; i++) {
+            result.insert({players[i].name[firstRowAfterWarmup[gameIndex]], i});
+        }
+
+    }
 };
 
 struct SpotterPlayer {

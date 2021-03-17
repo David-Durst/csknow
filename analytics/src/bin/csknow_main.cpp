@@ -3,6 +3,7 @@
 #include "load_data.h"
 #include "queries/wallers.h"
 #include "queries/baiters.h"
+#include "indices.h"
 #define CPPHTTPLIB_OPENSSL_SUPPORT
 #include "httplib.h"
 
