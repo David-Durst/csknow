@@ -145,7 +145,7 @@ public:
         for (int i = 0; i < NUM_PLAYERS; i++) {
             result.insert({players[i].name[firstRowAfterWarmup[gameIndex]], i});
         }
-
+        return result;
     }
 };
 
