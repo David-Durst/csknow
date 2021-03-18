@@ -654,7 +654,7 @@ export function getEventArray(gameData: GameData, event: string): Printable[] {
         return gameData.grenades
     }
     else if (event == "kills") {
-        return gameData.grenades
+        return gameData.kills
     }
     else if (event == "wallers") {
         return gameData.wallers
