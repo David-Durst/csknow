@@ -93,6 +93,7 @@ NetcodeResult queryNetcode(const Position & position, const WeaponFire & weaponF
                         }
                     }
                 }
+                fireIndex++;
             }
         }
     }

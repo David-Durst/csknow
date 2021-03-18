@@ -150,8 +150,8 @@ public:
 
     map<int, vector<int>> getEnemiesForTeam(int64_t gameIndex) const {
         map<int, vector<int>> result;
-        result.insert(2, {});
-        result.insert(3, {});
+        result.insert({2, {}});
+        result.insert({3, {}});
         for (int i = 0; i < NUM_PLAYERS; i++) {
             if (players[i].team[firstRowAfterWarmup[gameIndex]] == 2) {
                 result[2].push_back(i);
