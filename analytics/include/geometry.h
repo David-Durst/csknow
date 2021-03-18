@@ -68,6 +68,17 @@ AABB getAABBForPlayer(Vec3 pos) {
     return result;
 }
 
+static inline __attribute__((always_inline))
+AABB getAABBForPlayer(Vec3 pos, double scalingFactor) {
+    // for AABB that are smaller than whole bounding box, keep z a
+    AABB result;
+    result.min = {pos.x - WIDTH / 2 * scalingFactor, pos.y - WIDTH / 2 * scalingFactor,
+                  pos.z + HEIGHT / 2 - HEIGHT / 2 * scalingFactor};
+    result.max = {pos.x + WIDTH / 2 * scalingFactor, pos.y + WIDTH / 2 * scalingFactor,
+                  pos.z + HEIGHT / 2 + HEIGHT / 2 * scalingFactor};
+    return result;
+}
+
 // https://github.com/ValveSoftware/source-sdk-2013/blob/master/sp/src/mathlib/mathlib_base.cpp#L901-L914
 static inline __attribute__((always_inline))
 Vec3 angleVectors(const Vec2 &angles) {

@@ -3,6 +3,7 @@
 #include "load_data.h"
 #include "queries/wallers.h"
 #include "queries/baiters.h"
+#include "queries/netcode.h"
 #include "indices.h"
 #define CPPHTTPLIB_OPENSSL_SUPPORT
 #include "httplib.h"
@@ -40,6 +41,8 @@ int main(int argc, char * argv[]) {
     std::cout << "waller moments: " << wallersResult.positionIndex.size() << std::endl;
     BaitersResult baitersResult = queryBaiters(position, kills, spottedIndex);
     std::cout << "baiter moments: " << baitersResult.positionIndex.size() << std::endl;
+    NetcodeResult netcodeResult = queryNetcode(position, weaponFire, playerHurt);
+    std::cout << "netcode moments: " << netcodeResult.positionIndex.size() << std::endl;
     std::cout << "total ticks: " << position.size << std::endl;
 
     if (runServer) {
@@ -63,6 +66,17 @@ int main(int argc, char * argv[]) {
         svr.Get("/baiter/(.+).csv", [&](const httplib::Request & req, httplib::Response &res) {
             string game = req.matches[1];
             res.set_content(baitersResult.toCSVFiltered(position, game), "text/csv");
+            res.set_header("Access-Control-Allow-Origin", "*");
+        });
+
+        svr.Get("/netcode", [&](const httplib::Request &, httplib::Response &res) {
+            res.set_content(netcodeResult.toCSV(position), "text/csv");
+            res.set_header("Access-Control-Allow-Origin", "*");
+        });
+
+        svr.Get("/netcode/(.+).csv", [&](const httplib::Request & req, httplib::Response &res) {
+            string game = req.matches[1];
+            res.set_content(netcodeResult.toCSVFiltered(position, game), "text/csv");
             res.set_header("Access-Control-Allow-Origin", "*");
         });
 
