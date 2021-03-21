@@ -54,8 +54,8 @@ int main(int argc, char * argv[]) {
     std::cout << "total ticks: " << position.size << std::endl;
     //map<string, int> queries {{"hi", 1}};
     map<string, reference_wrapper<QueryResult>> queries {
-        {"waller", wallersResult},
-        {"baiter", baitersResult},
+        {"wallers", wallersResult},
+        {"baiters", baitersResult},
         {"netcode", netcodeResult}
     };
 
