@@ -32,7 +32,7 @@ import {
     GetObjectCommandOutput,
     GetObjectOutput
 } from "@aws-sdk/client-s3";
-import {GameData, setReader} from "./data/tables";
+import {DownloadParser, GameData, setReader} from "./data/tables";
 import {indexEventsForGame} from "./data/positionsToEvents";
 
 let matchSelector: HTMLInputElement = null;
@@ -252,23 +252,50 @@ async function changedMatch() {
         console.log("Error", err);
     }
 
-    try {
+    // wait for list of responses, then do each element
+    await fetch(remoteAddr + "list", {mode: 'no-cors'})
+        .then(_ => fetch(remoteAddr + "list"))
+        .then((response: Response) => response.text())
+        .then((remoteTablesText: string) => {
+            const lines = remoteTablesText.split("\n");
+            for (let lineNumber = 0; lineNumber < lines.length; lineNumber++) {
+                const cols = lines[lineNumber].split(",");
+                gameData.downloadedDataNames.push(cols[0])
+                gameData.downloadedData.set(cols[0], [])
+                const numTargetsIndex = 2
+                const numTargets = parseInt(cols[numTargetsIndex])
+                const numOtherColsIndex = numTargetsIndex + numTargets + 1
+                const numOtherCols = parseInt(cols[numTargets])
+                gameData.downloadedParsers.set(cols[0],
+                    new DownloadParser(cols[0], cols[1],
+                        cols.slice(numTargetsIndex + 1, numTargetsIndex + numTargets + 1),
+                        cols.slice(numOtherColsIndex + 1, numOtherColsIndex + numOtherCols + 1),
+                        parseInt(cols[cols.length - 1])
+                    )
+                )
+                gameData.downloadedPositionToEvent.set(cols[0], new Map<number, number[]>());
+                const newOption = new HTMLOptionElement();
+                newOption.value = cols[0];
+                newOption.text = cols[0];
+                (<HTMLSelectElement> document.getElementById("download-type"))
+                    .add(newOption)
+            }
+        })
+        .catch(_ => console.log("remote server not up"));
+
+    for (const downloadedDataName of gameData.downloadedDataNames) {
         promises.push(
-            fetch(remoteAddr + "waller/" + matches[parseInt(matchSelector.value)].demoFileWithExt + ".csv",
-                {mode: 'no-cors'}).then(r =>
-                fetch(remoteAddr + "waller/" + matches[parseInt(matchSelector.value)].demoFileWithExt + ".csv")
-                    .then((response: Response) => {
-                        document.getElementById("waller-select").innerHTML = "Wallers"
-                        setReader(response.body.getReader(), gameData.wallerParser)
-                        return gameData.wallerParser.reader.read();
-                    }).then(parse(gameData.wallerParser, true))
-            ).catch(e => {
-                document.getElementById("waller-select").innerHTML = "Wallers (unavailable)"
-                console.log("remote server not up")
+            fetch(remoteAddr + downloadedDataName + "/" +
+                matches[parseInt(matchSelector.value)].demoFileWithExt + ".csv")
+            .then((response: Response) => {
+                setReader(response.body.getReader(), gameData.downloadedParsers.get(downloadedDataName))
+                return gameData.downloadedParsers.get(downloadedDataName).reader.read();
+            })
+            .then(parse(gameData.downloadedParsers.get(downloadedDataName), true))
+            .catch(e => {
+                console.log("error downloading " + downloadedDataName)
             })
         );
-    } catch (err) {
-        console.log("Error parsing wallers", err);
     }
 
     await Promise.all(promises)
