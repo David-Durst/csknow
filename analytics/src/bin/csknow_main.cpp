@@ -1,5 +1,9 @@
 #include <iostream>
 #include <unistd.h>
+#include <map>
+#include <string>
+#include <sstream>
+#include <functional>
 #include "load_data.h"
 #include "queries/wallers.h"
 #include "queries/baiters.h"
@@ -7,6 +11,10 @@
 #include "indices.h"
 #define CPPHTTPLIB_OPENSSL_SUPPORT
 #include "httplib.h"
+
+using std::map;
+using std::string;
+using std::reference_wrapper;
 
 int main(int argc, char * argv[]) {
     if (argc != 3) {
@@ -44,40 +52,49 @@ int main(int argc, char * argv[]) {
     NetcodeResult netcodeResult = queryNetcode(position, weaponFire, playerHurt);
     std::cout << "netcode moments: " << netcodeResult.positionIndex.size() << std::endl;
     std::cout << "total ticks: " << position.size << std::endl;
+    //map<string, int> queries {{"hi", 1}};
+    map<string, reference_wrapper<QueryResult>> queries {
+        {"waller", wallersResult},
+        {"baiter", baitersResult},
+        {"netcode", netcodeResult}
+    };
 
     if (runServer) {
         httplib::Server svr;
-        svr.Get("/waller", [&](const httplib::Request &, httplib::Response &res) {
-            res.set_content(wallersResult.toCSV(position), "text/csv");
-            res.set_header("Access-Control-Allow-Origin", "*");
+        svr.Get("/query/(\\w+)", [&](const httplib::Request & req, httplib::Response &res) {
+            string resultType = req.matches[1];
+            if (queries.find(resultType) != queries.end()) {
+                res.set_content(queries.find(resultType)->second.get().toCSV(position), "text/csv");
+                res.set_header("Access-Control-Allow-Origin", "*");
+            }
+            else {
+                res.status = 404;
+            }
         });
 
-        svr.Get("/waller/(.+).csv", [&](const httplib::Request & req, httplib::Response &res) {
-            string game = req.matches[1];
-            res.set_content(wallersResult.toCSVFiltered(position, game), "text/csv");
-            res.set_header("Access-Control-Allow-Origin", "*");
+        svr.Get("/query/(\\w+)/(.+).csv", [&](const httplib::Request & req, httplib::Response &res) {
+            string resultType = req.matches[1];
+            string game = req.matches[2];
+            if (queries.find(resultType) != queries.end()) {
+                res.set_content(queries.find(resultType)->second.get().toCSVFiltered(position, game), "text/csv");
+                res.set_header("Access-Control-Allow-Origin", "*");
+            }
+            else {
+                res.status = 404;
+            }
         });
 
-        svr.Get("/baiter", [&](const httplib::Request &, httplib::Response &res) {
-            res.set_content(baitersResult.toCSV(position), "text/csv");
-            res.set_header("Access-Control-Allow-Origin", "*");
-        });
-
-        svr.Get("/baiter/(.+).csv", [&](const httplib::Request & req, httplib::Response &res) {
-            string game = req.matches[1];
-            res.set_content(baitersResult.toCSVFiltered(position, game), "text/csv");
-            res.set_header("Access-Control-Allow-Origin", "*");
-        });
-
-        svr.Get("/netcode", [&](const httplib::Request &, httplib::Response &res) {
-            res.set_content(netcodeResult.toCSV(position), "text/csv");
-            res.set_header("Access-Control-Allow-Origin", "*");
-        });
-
-        svr.Get("/netcode/(.+).csv", [&](const httplib::Request & req, httplib::Response &res) {
-            string game = req.matches[1];
-            res.set_content(netcodeResult.toCSVFiltered(position, game), "text/csv");
-            res.set_header("Access-Control-Allow-Origin", "*");
+        svr.Get("/list", [&](const httplib::Request & req, httplib::Response &res) {
+            std::stringstream ss;
+            bool first = true;
+            for (const auto query : queries) {
+                if (!first) {
+                    ss << ",";
+                }
+                ss << query.first;
+                first = false;
+            }
+            res.set_content(ss.str(), "text/plain");
         });
 
         svr.listen("0.0.0.0", 3123);
