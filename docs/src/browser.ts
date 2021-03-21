@@ -175,8 +175,8 @@ function setMatchLabel() {
         matchLabel.innerHTML = "<a href=\"https://csknow.s3.amazonaws.com/demos/csvs2/" +
             matchLabelStr + ".dem_kills.csv\">" + matchLabelStr + "</a>"
     }
-    else if (downloadSelect.value == "wallers") {
-        matchLabel.innerHTML = "<a href=\"" + remoteAddr + "waller/" +
+    else {
+        matchLabel.innerHTML = "<a href=\"" + remoteAddr + downloadSelect.value + "/" +
             matchLabelStr + ".dem.csv\">" + matchLabelStr + "</a>"
     }
 }
@@ -277,7 +277,7 @@ async function changedMatch() {
                 const newOption = new HTMLOptionElement();
                 newOption.value = cols[0];
                 newOption.text = cols[0];
-                (<HTMLSelectElement> document.getElementById("download-type"))
+                (<HTMLSelectElement> document.getElementById("event-type"))
                     .add(newOption)
             }
         })
