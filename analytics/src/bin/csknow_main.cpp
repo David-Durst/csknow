@@ -52,11 +52,11 @@ int main(int argc, char * argv[]) {
     NetcodeResult netcodeResult = queryNetcode(position, weaponFire, playerHurt);
     std::cout << "netcode moments: " << netcodeResult.positionIndex.size() << std::endl;
     std::cout << "total ticks: " << position.size << std::endl;
-    //map<string, int> queries {{"hi", 1}};
+    vector<string> queryNames = {"wallers", "baiters", "netcode"};
     map<string, reference_wrapper<QueryResult>> queries {
-        {"wallers", wallersResult},
-        {"baiters", baitersResult},
-        {"netcode", netcodeResult}
+        {queryNames[0], wallersResult},
+        {queryNames[1], baitersResult},
+        {queryNames[2], netcodeResult}
     };
 
     if (runServer) {
@@ -86,13 +86,19 @@ int main(int argc, char * argv[]) {
 
         svr.Get("/list", [&](const httplib::Request & req, httplib::Response &res) {
             std::stringstream ss;
-            bool first = true;
-            for (const auto query : queries) {
-                if (!first) {
-                    ss << ",";
+            for (const auto queryName : queryNames) {
+                QueryResult & queryValue = queries.find(queryName)->second.get();
+                ss << queryName << "," << queryValue.getSourceName() << ","
+                    << queryValue.getTargetNames().size() << ",";
+                for (const auto & targetName : queryValue.getTargetNames()) {
+                    ss << targetName << ",";
                 }
-                ss << query.first;
-                first = false;
+                ss << queryValue.getExtraColumnNames().size() << ",";
+                for (const auto & extraColName : queryValue.getExtraColumnNames()) {
+                    ss << extraColName << ",";
+                }
+                ss << queryValue.getDatatype();
+                ss << std::endl;
             }
             res.set_content(ss.str(), "text/plain");
         });

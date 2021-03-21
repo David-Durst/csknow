@@ -15,12 +15,12 @@ public:
         targetName = "lucky";
     }
 
-    string getExtraColumns() {
-        return "";
+    vector<string> getExtraColumnNames() {
+        return {};
     }
 
-    string getExtraRow(const Position & position, int64_t index) {
-        return "";
+    vector<string> getExtraRow(const Position & position, int64_t index) {
+        return {};
     }
 };
 

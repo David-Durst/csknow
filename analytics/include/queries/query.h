@@ -5,6 +5,11 @@
 using std::vector;
 using std::stringstream;
 
+enum DataType {
+    noSrcTarget = 0,
+    justSrc = 1,
+    srcAndTarget = 2
+};
 
 class QueryResult {
 public:
@@ -13,6 +18,10 @@ public:
 
     virtual string toCSVFiltered(const Position & position, string game) = 0;
     virtual string toCSV(const Position & position) = 0;
+    virtual string getSourceName() = 0;
+    virtual vector<string> getTargetNames() = 0;
+    virtual vector<string> getExtraColumnNames() = 0;
+    virtual DataType getDatatype() = 0;
 };
 
 class SingleSourceSingleTargetResult : public QueryResult {
@@ -23,12 +32,15 @@ public:
     vector<int> sources;
     vector<int> targets;
 
-    virtual string getExtraColumns() = 0;
-    virtual string getExtraRow(const Position & position, int64_t index) = 0;
+    virtual vector<string> getExtraRow(const Position & position, int64_t index) = 0;
 
     string toCSVFiltered(const Position & position, string game) {
         stringstream ss;
-        ss << "demo tick,demo file," << sourceName << "," << targetName << std::endl;
+        ss << "demo tick,demo file," << sourceName << "," << targetName;
+        for (const auto & extraColName : getExtraColumnNames()) {
+            ss << "," << extraColName;
+        }
+        ss << std::endl;
         for (int64_t i = 0; i < positionIndex.size(); i++) {
             int64_t posIdx = positionIndex[i];
             string curGame = position.fileNames[position.demoFile[posIdx]];
@@ -42,14 +54,34 @@ public:
 
     string toCSV(const Position & position) {
         stringstream ss;
-        ss << "demo tick,demo file," << sourceName << "," << targetName << std::endl;
+        ss << "demo tick,demo file," << sourceName << "," << targetName;
+        for (const auto & extraColName : getExtraColumnNames()) {
+            ss << "," << extraColName;
+        }
+        ss << std::endl;
         for (int64_t i = 0; i < positionIndex.size(); i++) {
             int64_t posIdx = positionIndex[i];
             ss << position.demoTickNumber[posIdx] << "," << position.fileNames[position.demoFile[posIdx]] << ","
-               << position.players[sources[i]].name[posIdx] << "," << position.players[targets[i]].name[posIdx] << std::endl;
+               << position.players[sources[i]].name[posIdx] << "," << position.players[targets[i]].name[posIdx];
+            for (const auto & extraColValue : getExtraRow(position, i)) {
+                ss << "," << extraColValue;
+            }
+            ss << std::endl;
         }
         return ss.str();
     };
+
+    string getSourceName() {
+        return sourceName;
+    }
+
+    vector<string> getTargetNames() {
+        return {targetName};
+    }
+
+    DataType getDatatype() {
+        return srcAndTarget;
+    }
 
 };
 

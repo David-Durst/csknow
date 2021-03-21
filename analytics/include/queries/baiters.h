@@ -17,12 +17,12 @@ public:
         targetName = "victim";
     }
 
-    string getExtraColumns() {
-        return ",most recent possible help";
+    vector<string> getExtraColumnNames() {
+        return {"most recent possible help"};
     }
 
-    string getExtraRow(const Position & position, int64_t index) {
-        return "," + std::to_string(mostRecentPossibleHelp[index]);
+    vector<string> getExtraRow(const Position & position, int64_t index) {
+        return {std::to_string(mostRecentPossibleHelp[index])};
     }
 };
 
