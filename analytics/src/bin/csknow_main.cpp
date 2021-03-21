@@ -101,6 +101,7 @@ int main(int argc, char * argv[]) {
                 ss << std::endl;
             }
             res.set_content(ss.str(), "text/plain");
+            res.set_header("Access-Control-Allow-Origin", "*");
         });
 
         svr.listen("0.0.0.0", 3123);
