@@ -176,11 +176,12 @@ function setMatchLabel() {
             matchLabelStr + ".dem_kills.csv\">" + matchLabelStr + "</a>"
     }
     else {
-        matchLabel.innerHTML = "<a href=\"" + remoteAddr + downloadSelect.value + "/" +
+        matchLabel.innerHTML = "<a href=\"" + remoteAddr + "query/" + downloadSelect.value + "/" +
             matchLabelStr + ".dem.csv\">" + matchLabelStr + "</a>"
     }
 }
 
+let addedDownloadedOptions = false;
 async function changedMatch() {
     createGameData();
     matchLabelStr = matches[parseInt(matchSelector.value)].demoFile;
@@ -254,10 +255,14 @@ async function changedMatch() {
 
     // wait for list of responses, then do each element
     await fetch(remoteAddr + "list", {mode: 'no-cors'})
-        .then(_ => fetch(remoteAddr + "list"))
-        .then((response: Response) => response.text())
+        .then(_ =>
+            fetch(remoteAddr + "list")
+        )
+        .then((response: Response) =>
+            response.text()
+        )
         .then((remoteTablesText: string) => {
-            const lines = remoteTablesText.split("\n");
+            const lines = remoteTablesText.trim().split("\n");
             for (let lineNumber = 0; lineNumber < lines.length; lineNumber++) {
                 const cols = lines[lineNumber].split(",");
                 gameData.downloadedDataNames.push(cols[0])
@@ -265,7 +270,7 @@ async function changedMatch() {
                 const numTargetsIndex = 2
                 const numTargets = parseInt(cols[numTargetsIndex])
                 const numOtherColsIndex = numTargetsIndex + numTargets + 1
-                const numOtherCols = parseInt(cols[numTargets])
+                const numOtherCols = parseInt(cols[numOtherColsIndex])
                 gameData.downloadedParsers.set(cols[0],
                     new DownloadParser(cols[0], cols[1],
                         cols.slice(numTargetsIndex + 1, numTargetsIndex + numTargets + 1),
@@ -274,18 +279,22 @@ async function changedMatch() {
                     )
                 )
                 gameData.downloadedPositionToEvent.set(cols[0], new Map<number, number[]>());
-                const newOption = new HTMLOptionElement();
-                newOption.value = cols[0];
-                newOption.text = cols[0];
-                (<HTMLSelectElement> document.getElementById("event-type"))
-                    .add(newOption)
+                if (!addedDownloadedOptions) {
+                    (<HTMLSelectElement> document.getElementById("event-type"))
+                        .add(new Option(cols[0], cols[0]));
+                    (<HTMLSelectElement> document.getElementById("download-type"))
+                        .add(new Option(cols[0], cols[0]));
+                }
             }
         })
-        .catch(_ => console.log("remote server not up"));
+        .catch(e => {
+            console.log("can't read listing from remote server")
+            console.log(e)
+        });
 
     for (const downloadedDataName of gameData.downloadedDataNames) {
         promises.push(
-            fetch(remoteAddr + downloadedDataName + "/" +
+            fetch(remoteAddr + "query/" + downloadedDataName + "/" +
                 matches[parseInt(matchSelector.value)].demoFileWithExt + ".csv")
             .then((response: Response) => {
                 setReader(response.body.getReader(), gameData.downloadedParsers.get(downloadedDataName))
@@ -302,6 +311,7 @@ async function changedMatch() {
     indexEventsForGame(gameData)
     setupMatchFilters()
     setupMatchDrawing()
+    addedDownloadedOptions = true;
 }
 
 
