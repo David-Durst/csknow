@@ -527,41 +527,147 @@ export class KillsParser implements Parseable {
     reader: any = null
 }
 
-export class WallerRow implements DemoData, Printable {
+export class DownloadedRowNoSourceTarget implements DemoData, Printable {
     demoTickNumber: number;
     demoFile: string;
-    cheater: string;
-    victim: string;
+    otherColumnNames: string[];
+    otherColumnValues: string[];
 
-    constructor(demoTickNumber: number, demoFile: string, cheater: string,
-                victim: string) {
+    constructor(demoTickNumber: number, demoFile: string, otherColumnNames: string[],
+                otherColumnValues: string[]) {
         this.demoTickNumber = demoTickNumber;
         this.demoFile = demoFile;
-        this.cheater = cheater;
-        this.victim = victim;
+        this.otherColumnNames = otherColumnNames;
+        this.otherColumnValues = otherColumnValues;
     }
 
     getHTML(): string {
-        return printTable(["demo tick", "cheater", "victim"],
-            [this.demoTickNumber.toString(), this.cheater, this.victim])
-    }
-
-    getSource(): string {
-        return this.cheater;
-    }
-
-    getTargets(): string[] {
-        return [this.victim]
+        return printTable(["demo tick"].concat(this.otherColumnNames),
+            [this.demoTickNumber.toString()].concat(this.otherColumnValues))
     }
 }
 
-export class WallerParser implements Parseable {
+export class DownloadedRowWithSourceOnly implements DemoData, Printable {
+    demoTickNumber: number;
+    demoFile: string;
+    sourceName: string;
+    sourceValue: string;
+    otherColumnNames: string[];
+    otherColumnValues: string[];
+
+    constructor(demoTickNumber: number, demoFile: string, sourceName: string,
+                sourceValue: string, otherColumnNames: string[],
+                otherColumnValues: string[]) {
+        this.demoTickNumber = demoTickNumber;
+        this.demoFile = demoFile;
+        this.sourceName = sourceName;
+        this.sourceValue = sourceValue;
+        this.otherColumnNames = otherColumnNames;
+        this.otherColumnValues = otherColumnValues;
+    }
+
+    getHTML(): string {
+        return printTable(["demo tick", this.sourceName].concat(this.otherColumnNames),
+            [this.demoTickNumber.toString(), this.sourceValue].concat(this.otherColumnValues))
+    }
+
+    getSource(): string {
+        return this.sourceValue;
+    }
+}
+
+export class DownloadedRowWithSourceTarget implements DemoData, Printable {
+    demoTickNumber: number;
+    demoFile: string;
+    sourceName: string;
+    sourceValue: string;
+    targetNames: string[];
+    targetValues: string[];
+    otherColumnNames: string[];
+    otherColumnValues: string[];
+
+    constructor(demoTickNumber: number, demoFile: string,
+                sourceName: string, sourceValue: string,
+                targetNames: string[], targetValues: string[],
+                otherColumnNames: string[], otherColumnValues: string[]) {
+        this.demoTickNumber = demoTickNumber;
+        this.demoFile = demoFile;
+        this.sourceName = sourceName;
+        this.sourceValue = sourceValue;
+        this.targetNames = targetNames;
+        this.targetValues = targetValues;
+        this.otherColumnNames = otherColumnNames;
+        this.otherColumnValues = otherColumnValues;
+    }
+
+    getHTML(): string {
+        return printTable(
+            ["demo tick", this.sourceName].concat(this.targetNames)
+                .concat(this.otherColumnNames),
+            [this.demoTickNumber.toString(), this.sourceValue].concat(this.targetValues)
+                .concat(this.otherColumnValues))
+    }
+
+    getSource(): string {
+        return this.sourceValue;
+    }
+
+    getTargets(): string[] {
+        return this.targetValues;
+    }
+}
+
+enum RowType {
+    noSrcTarget,
+    justSrc,
+    srcAndTarget
+}
+
+export class DownloadParser implements Parseable {
     tempLineContainer: string = "";
+    datasetName: string
+    sourceName: string
+    targetNames: string[]
+    otherColumnNames: string[];
+    rowType: RowType;
+
+    constructor(datsetName: string, sourceName: string, targetNames: string[],
+                otherColumnNames: string[], rowType: number) {
+        this.datasetName = datsetName;
+        this.sourceName = sourceName
+        this.targetNames = targetNames
+        this.otherColumnNames = otherColumnNames
+        this.rowType = rowType;
+    }
 
     parseOneLine(currentLine: string[]): any {
-        gameData.wallers.push(new WallerRow(
-            parseInt(currentLine[0]), currentLine[1], currentLine[2], currentLine[3]
-        ));
+        const demoTickNumber = parseInt(currentLine[0]);
+        const demoFile = currentLine[1];
+        if (this.rowType == RowType.noSrcTarget) {
+            gameData.downloadedData.get(this.datasetName).push(
+                new DownloadedRowNoSourceTarget(
+                    demoTickNumber, demoFile, this.otherColumnNames,
+                    currentLine.slice(2, currentLine.length)
+                )
+            )
+        }
+        else if (this.rowType == RowType.justSrc) {
+            gameData.downloadedData.get(this.datasetName).push(
+                new DownloadedRowWithSourceOnly(
+                    demoTickNumber, demoFile, this.sourceName, currentLine[2],
+                    this.otherColumnNames, currentLine.slice(2, currentLine.length)
+                )
+            )
+        }
+        else {
+            gameData.downloadedData.get(this.datasetName).push(
+                new DownloadedRowWithSourceTarget(
+                    demoTickNumber, demoFile, this.sourceName, currentLine[2],
+                    this.targetNames, currentLine.slice(2, 2+this.targetNames.length),
+                    this.otherColumnNames, currentLine.slice(2+this.targetNames.length, currentLine.length)
+                )
+            )
+        }
     }
 
     reader: any = null
@@ -585,9 +691,12 @@ export class GameData {
     killsParser: KillsParser = new KillsParser();
     kills: KillsRow[] = [];
     positionToKills: Map<number, number[]> = new Map<number, number[]>()
-    wallerParser: WallerParser = new WallerParser();
-    wallers: WallerRow[] = [];
-    positionToWallers: Map<number, number[]> = new Map<number, number[]>()
+    downloadedDataNames: string[] = [];
+    downloadedParsers: Map<string, Parseable> = new Map<string, Parseable>();
+    downloadedData: Map<string, (DemoData & Printable)[]> =
+        new Map<string, (DemoData & Printable)[]>();
+    downloadedPositionToEvent: Map<string, Map<number, number[]>> =
+        new Map<string, Map<number, number[]>>();
 
     clone(target: GameData) {
         target.positionParser = this.positionParser
@@ -607,9 +716,10 @@ export class GameData {
         target.killsParser = this.killsParser
         target.kills = this.kills
         target.positionToKills = this.positionToKills
-        target.wallerParser = this.wallerParser
-        target.wallers = this.wallers
-        target.positionToWallers = this.positionToWallers
+        target.downloadedDataNames = this.downloadedDataNames;
+        target.downloadedParsers = this.downloadedParsers
+        target.downloadedData = this.downloadedData
+        target.downloadedPositionToEvent = this.downloadedPositionToEvent
     }
 }
 
@@ -632,8 +742,8 @@ export function getEventIndex(gameData: GameData, event: string): Map<number, nu
     else if (event == "kills") {
         return gameData.positionToKills
     }
-    else if (event == "wallers") {
-        return gameData.positionToWallers
+    else if (gameData.downloadedDataNames.includes(event)) {
+        return gameData.downloadedPositionToEvent.get(event)
     }
     else {
         throw new Error("getEventIndex for invalid event string " + event)
@@ -656,8 +766,8 @@ export function getEventArray(gameData: GameData, event: string): Printable[] {
     else if (event == "kills") {
         return gameData.kills
     }
-    else if (event == "wallers") {
-        return gameData.wallers
+    else if (gameData.downloadedDataNames.includes(event)) {
+        return gameData.downloadedData.get(event)
     }
     else {
         throw new Error("getEventIndex for invalid event string " + event)

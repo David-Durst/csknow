@@ -51,7 +51,7 @@ function alwaysFilter() {
     filteredData.playerHurt = gameData.playerHurt
     filteredData.grenades = gameData.grenades
     filteredData.kills = gameData.kills
-    filteredData.wallers = gameData.wallers
+    filteredData.downloadedData = gameData.downloadedData
 }
 
 export let filteredData: GameData = new GameData()
