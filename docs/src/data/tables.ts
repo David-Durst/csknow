@@ -643,6 +643,7 @@ export class DownloadParser implements Parseable {
     parseOneLine(currentLine: string[]): any {
         const demoTickNumber = parseInt(currentLine[0]);
         const demoFile = currentLine[1];
+        const sourceIndex = 2;
         if (this.rowType == RowType.noSrcTarget) {
             gameData.downloadedData.get(this.datasetName).push(
                 new DownloadedRowNoSourceTarget(
@@ -654,17 +655,19 @@ export class DownloadParser implements Parseable {
         else if (this.rowType == RowType.justSrc) {
             gameData.downloadedData.get(this.datasetName).push(
                 new DownloadedRowWithSourceOnly(
-                    demoTickNumber, demoFile, this.sourceName, currentLine[2],
-                    this.otherColumnNames, currentLine.slice(2, currentLine.length)
+                    demoTickNumber, demoFile, this.sourceName, currentLine[sourceIndex],
+                    this.otherColumnNames, currentLine.slice(sourceIndex + 1, currentLine.length)
                 )
             )
         }
         else {
             gameData.downloadedData.get(this.datasetName).push(
                 new DownloadedRowWithSourceTarget(
-                    demoTickNumber, demoFile, this.sourceName, currentLine[2],
-                    this.targetNames, currentLine.slice(2, 2+this.targetNames.length),
-                    this.otherColumnNames, currentLine.slice(2+this.targetNames.length, currentLine.length)
+                    demoTickNumber, demoFile, this.sourceName, currentLine[sourceIndex],
+                    this.targetNames, currentLine.slice(sourceIndex + 1,
+                        sourceIndex + 1 + this.targetNames.length),
+                    this.otherColumnNames, currentLine.slice(sourceIndex + this.targetNames.length,
+                        currentLine.length)
                 )
             )
         }
