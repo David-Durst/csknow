@@ -15,7 +15,7 @@ import {
     minimap,
     drawTick,
     setupMatchDrawing,
-    setupCanvas, setupCanvasHandlers
+    setupCanvas, setupCanvasHandlers, setDemoURL
 } from "./drawing/drawing"
 import {
     setupFilterHandlers,
@@ -147,36 +147,38 @@ function getObjectParams(key: string, type: string) {
 }
 
 function setMatchLabel() {
+    setDemoURL("https://csknow.s3.amazonaws.com/demos/processed/" +
+        matchLabelStr + ".dem")
     if (downloadSelect.value == "dem") {
-        matchLabel.innerHTML = "<a href=\"https://csknow.s3.amazonaws.com/demos/processed/" +
+        matchLabel.innerHTML = "<a id=\"match-url\" href=\"https://csknow.s3.amazonaws.com/demos/processed/" +
             matchLabelStr + ".dem\">" + matchLabelStr + "</a>"
     }
     else if (downloadSelect.value == "position") {
-        matchLabel.innerHTML = "<a href=\"https://csknow.s3.amazonaws.com/demos/csvs2/" +
+        matchLabel.innerHTML = "<a id=\"match-url\" href=\"https://csknow.s3.amazonaws.com/demos/csvs2/" +
             matchLabelStr + ".dem_position.csv\">" + matchLabelStr + "</a>"
     }
     else if (downloadSelect.value == "spotted") {
-        matchLabel.innerHTML = "<a href=\"https://csknow.s3.amazonaws.com/demos/csvs2/" +
+        matchLabel.innerHTML = "<a id=\"match-url\" href=\"https://csknow.s3.amazonaws.com/demos/csvs2/" +
             matchLabelStr + ".dem_spotted.csv\">" + matchLabelStr + "</a>"
     }
     else if (downloadSelect.value == "weapon_fire") {
-        matchLabel.innerHTML = "<a href=\"https://csknow.s3.amazonaws.com/demos/csvs2/" +
+        matchLabel.innerHTML = "<a id=\"match-url\" href=\"https://csknow.s3.amazonaws.com/demos/csvs2/" +
             matchLabelStr + ".dem_weapon_fire.csv\">" + matchLabelStr + "</a>"
     }
     else if (downloadSelect.value == "hurt") {
-        matchLabel.innerHTML = "<a href=\"https://csknow.s3.amazonaws.com/demos/csvs2/" +
+        matchLabel.innerHTML = "<a id=\"match-url\" href=\"https://csknow.s3.amazonaws.com/demos/csvs2/" +
             matchLabelStr + ".dem_hurt.csv\">" + matchLabelStr + "</a>"
     }
     else if (downloadSelect.value == "grenades") {
-        matchLabel.innerHTML = "<a href=\"https://csknow.s3.amazonaws.com/demos/csvs2/" +
+        matchLabel.innerHTML = "<a id=\"match-url\" href=\"https://csknow.s3.amazonaws.com/demos/csvs2/" +
             matchLabelStr + ".dem_grenades.csv\">" + matchLabelStr + "</a>"
     }
     else if (downloadSelect.value == "kills") {
-        matchLabel.innerHTML = "<a href=\"https://csknow.s3.amazonaws.com/demos/csvs2/" +
+        matchLabel.innerHTML = "<a id=\"match-url\" href=\"https://csknow.s3.amazonaws.com/demos/csvs2/" +
             matchLabelStr + ".dem_kills.csv\">" + matchLabelStr + "</a>"
     }
     else {
-        matchLabel.innerHTML = "<a href=\"" + remoteAddr + "query/" + downloadSelect.value + "/" +
+        matchLabel.innerHTML = "<a id=\"match-url\" href=\"" + remoteAddr + "query/" + downloadSelect.value + "/" +
             matchLabelStr + ".dem.csv\">" + matchLabelStr + "</a>"
     }
 }

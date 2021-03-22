@@ -13,6 +13,8 @@ import {
 } from "./events";
 import {clearCustomFilter} from "../controller/ide_filters";
 import {getCurTickIndex, setTickLabel} from "../controller/tickSelector";
+import {start} from "repl";
+import {match} from "assert";
 
 export const d2_top_left_x = -2476
 export const d2_top_left_y = 3239
@@ -32,6 +34,7 @@ let yCanvasLabel: HTMLLabelElement = null;
 let tScoreLabel: HTMLLabelElement = null;
 let ctScoreLabel: HTMLLabelElement = null;
 let playerNameLabel: HTMLLabelElement = null;
+let configClientButton: HTMLAnchorElement = null;
 let minZ = 0;
 let maxZ = 0;
 const background = new Image();
@@ -45,6 +48,11 @@ const dark_red = "rgba(209,0,0,1.0)";
 const light_red = "rgba(255,143,143,1.0)";
 const yellow = "rgb(252,198,102)";
 const green = "rgba(0,150,0,1.0)";
+
+let demoURL: string = ""
+export function setDemoURL(newUrl: string) {
+    demoURL = newUrl
+}
 
 // see last post by randunel and csgo/resources/overview/de_dust2.txt
 // https://forums.alliedmods.net/showthread.php?p=2690857#post2690857
@@ -223,6 +231,15 @@ export function drawTick(e: InputEvent) {
             bottomRightCoordinate.getCanvasY() - topLeftCoordinate.getCanvasY())
     }
     setEventText(tickData, filteredData)
+    // setup client config for this tick
+    let startDemoTick = filteredData.position[curTickIndex].gameTickNumber - 100
+    startDemoTick = Math.max(startDemoTick, 10)
+    configClientButton.href = URL.createObjectURL(new Blob(
+        ["//" + demoURL + "\nplaydemo csknow\ndemo_gototick " +
+        startDemoTick.toString() +
+        "\ndemo_pause\ndemoui"],
+        {type: 'text/plain'}
+    ))
 }
 export let maxViewY = 0
 export let maxViewYT = 0
@@ -256,6 +273,7 @@ export function setupCanvas() {
     tScoreLabel = document.querySelector<HTMLLabelElement>("#t_score")
     ctScoreLabel = document.querySelector<HTMLLabelElement>("#ct_score")
     playerNameLabel = document.querySelector<HTMLLabelElement>("#playerName")
+    configClientButton = document.querySelector<HTMLAnchorElement>("#download_client")
     canvas.addEventListener("mousemove", trackMouse)
     canvas.addEventListener("mousedown", startingRegionFilter)
     canvas.addEventListener("mouseup", finishedRegionFilter)
