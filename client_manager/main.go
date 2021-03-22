@@ -1,13 +1,15 @@
 package main
 
 import (
-	"fmt"
+    "bufio"
+    "fmt"
     "github.com/fsnotify/fsnotify"
     "io"
     "io/ioutil"
     "log"
     "net/http"
     "os"
+    "path/filepath"
     "strings"
 )
 
@@ -23,8 +25,10 @@ func main() {
     csgoConfigDir := configs[1]
     cfgSrc := downloadDir + string(os.PathSeparator) + "csknow.cfg"
     cfgDst := csgoConfigDir + string(os.PathSeparator) + "csknow.cfg"
+    demoDst := filepath.Dir(csgoConfigDir) + string(os.PathSeparator) + "csknow.dem"
     fmt.Println("CSGO config source: ", cfgSrc)
     fmt.Println("CSGO config destination: ", cfgDst)
+    fmt.Println("CSGO demo destination: ", demoDst)
 
     watcher, err := fsnotify.NewWatcher()
     if err != nil {
@@ -43,6 +47,7 @@ func main() {
                 if ((event.Op&fsnotify.Write == fsnotify.Write) || (event.Op&fsnotify.Create == fsnotify.Create)) &&
                     (event.Name == cfgSrc){
                     log.Println("modified file:", event.Name)
+                    downloadDemo(cfgSrc, demoDst)
                     copy(cfgSrc, cfgDst)
                 }
             case err, ok := <-watcher.Errors:
@@ -84,10 +89,22 @@ func copy(src string, dst string) error {
     return out.Close()
 }
 
+func downloadDemo(filepath string, dst string) {
+    cfgFile, err := os.OpenFile(filepath, os.O_APPEND|os.O_CREATE|os.O_RDONLY, 0644)
+    if err != nil {
+        panic(err)
+    }
+    defer cfgFile.Close()
+
+    reader := bufio.NewReader(cfgFile)
+    cfgFileText, _, _ := reader.ReadLine()
+    downloadFile(dst, trimLeftChars(string(cfgFileText), 2))
+}
+
 // https://golangcode.com/download-a-file-from-a-url/
 // DownloadFile will download a url to a local file. It's efficient because it will
 // write as it downloads and not load the whole file into memory.
-func DownloadFile(filepath string, url string) error {
+func downloadFile(filepath string, url string) error {
 
     // Get the data
     resp, err := http.Get(url)
@@ -106,4 +123,15 @@ func DownloadFile(filepath string, url string) error {
     // Write the body to file
     _, err = io.Copy(out, resp.Body)
     return err
+}
+
+func trimLeftChars(s string, n int) string {
+    m := 0
+    for i := range s {
+        if m >= n {
+            return s[i:]
+        }
+        m++
+    }
+    return s[:0]
 }
