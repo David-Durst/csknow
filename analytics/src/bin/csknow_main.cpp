@@ -63,9 +63,9 @@ int main(int argc, char * argv[]) {
         httplib::Server svr;
         svr.Get("/query/(\\w+)", [&](const httplib::Request & req, httplib::Response &res) {
             string resultType = req.matches[1];
+            res.set_header("Access-Control-Allow-Origin", "*");
             if (queries.find(resultType) != queries.end()) {
                 res.set_content(queries.find(resultType)->second.get().toCSV(position), "text/csv");
-                res.set_header("Access-Control-Allow-Origin", "*");
             }
             else {
                 res.status = 404;
@@ -75,9 +75,9 @@ int main(int argc, char * argv[]) {
         svr.Get("/query/(\\w+)/(.+).csv", [&](const httplib::Request & req, httplib::Response &res) {
             string resultType = req.matches[1];
             string game = req.matches[2];
+            res.set_header("Access-Control-Allow-Origin", "*");
             if (queries.find(resultType) != queries.end()) {
                 res.set_content(queries.find(resultType)->second.get().toCSVFiltered(position, game), "text/csv");
-                res.set_header("Access-Control-Allow-Origin", "*");
             }
             else {
                 res.status = 404;
