@@ -45,7 +45,7 @@ func main() {
                     return
                 }
                 if ((event.Op&fsnotify.Write == fsnotify.Write) || (event.Op&fsnotify.Create == fsnotify.Create)) &&
-                    (event.Name == cfgSrc){
+                    (strings.Contains(event.Name, cfgSrc)){
                     log.Println("modified file:", event.Name)
                     downloadDemo(cfgSrc, demoDst)
                     copy(cfgSrc, cfgDst)
