@@ -49,6 +49,7 @@ func main() {
                     log.Println("modified file:", event.Name)
                     downloadDemo(cfgSrc, demoDst)
                     copy(cfgSrc, cfgDst)
+                    log.Println("downloaded demo")
                 }
             case err, ok := <-watcher.Errors:
                 if !ok {
