@@ -240,8 +240,10 @@ export function drawTick(e: InputEvent) {
     let startDemoTick = filteredData.position[curTickIndex].gameTickNumber - 100
     startDemoTick = Math.max(startDemoTick, 10)
     configClientButton.href = URL.createObjectURL(new Blob(
+        // https://csgo-ranks.com/demo-commands/
         ["//" + demoURL + "\n//" + demoName + "\nplaydemo " + demoName +
-        "\ndemo_gototick " + startDemoTick.toString() + "\ndemo_pause\ndemoui"],
+        "\ndemo_gototick " + startDemoTick.toString() + "\ndemo_pause" +
+        "\ndemo_timescale 0.125\nspec_player_by_name " + playerNameLabel.innerHTML],
         {type: 'text/plain'}
     ))
 }
