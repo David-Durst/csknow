@@ -54,6 +54,11 @@ export function setDemoURL(newUrl: string) {
     demoURL = newUrl
 }
 
+let demoName: string = ""
+export function setDemoName(newName: string) {
+    demoName = newName
+}
+
 // see last post by randunel and csgo/resources/overview/de_dust2.txt
 // https://forums.alliedmods.net/showthread.php?p=2690857#post2690857
 class MapCoordinate {
@@ -235,9 +240,8 @@ export function drawTick(e: InputEvent) {
     let startDemoTick = filteredData.position[curTickIndex].gameTickNumber - 100
     startDemoTick = Math.max(startDemoTick, 10)
     configClientButton.href = URL.createObjectURL(new Blob(
-        ["//" + demoURL + "\nplaydemo csknow\ndemo_gototick " +
-        startDemoTick.toString() +
-        "\ndemo_pause\ndemoui"],
+        ["//" + demoURL + "\n//" + demoName + "\nplaydemo " + demoName +
+        "\ndemo_gototick " + startDemoTick.toString() + "\ndemo_pause\ndemoui"],
         {type: 'text/plain'}
     ))
 }

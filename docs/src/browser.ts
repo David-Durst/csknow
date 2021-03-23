@@ -15,7 +15,7 @@ import {
     minimap,
     drawTick,
     setupMatchDrawing,
-    setupCanvas, setupCanvasHandlers, setDemoURL
+    setupCanvas, setupCanvasHandlers, setDemoURL, setDemoName
 } from "./drawing/drawing"
 import {
     setupFilterHandlers,
@@ -149,6 +149,7 @@ function getObjectParams(key: string, type: string) {
 function setMatchLabel() {
     setDemoURL("https://csknow.s3.amazonaws.com/demos/processed/" +
         matchLabelStr + ".dem")
+    setDemoName(matchLabelStr + ".dem")
     if (downloadSelect.value == "dem") {
         matchLabel.innerHTML = "<a id=\"match-url\" href=\"https://csknow.s3.amazonaws.com/demos/processed/" +
             matchLabelStr + ".dem\">" + matchLabelStr + "</a>"
