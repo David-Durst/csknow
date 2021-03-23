@@ -39,6 +39,7 @@ let matchSelector: HTMLInputElement = null;
 let matchLabel: HTMLLabelElement = null;
 let matchLabelStr: string = ""
 let downloadSelect: HTMLSelectElement = null;
+let remoteAddrSelect: HTMLSelectElement = null;
 const black = "rgba(0,0,0,1.0)";
 const gray = "rgba(159,159,159,1.0)";
 const lightGray = "rgba(200,200,200,0.7)";
@@ -46,7 +47,11 @@ const darkBlue = "rgba(4,190,196,1.0)";
 const lightBlue = "rgba(194,255,243,1.0)";
 const darkRed = "rgba(209,0,0,1.0)";
 const lightRed = "rgba(255,143,143,1.0)";
-const remoteAddr = "http://52.86.105.42:3123/"
+
+let remoteAddr = "http://52.86.105.42:3123/"
+function setRemoteAddr() {
+    remoteAddr = remoteAddrSelect.value
+}
 
 class Match {
     key: any
@@ -120,12 +125,15 @@ async function init() {
     matchSelector.max = numMatches.toString()
     matchLabel = document.querySelector<HTMLLabelElement>("#cur-match")
     downloadSelect = document.querySelector<HTMLSelectElement>("#download-type")
+    remoteAddrSelect = document.querySelector<HTMLSelectElement>("#remote-addr")
+    remoteAddr = remoteAddrSelect.value
     setupCanvas()
     setupInitFilters()
     await changedMatch();
     setInitialized();
     registerPlayHandlers();
     document.querySelector<HTMLSelectElement>("#download-type").addEventListener("change", setMatchLabel)
+    document.querySelector<HTMLSelectElement>("#remote-addr").addEventListener("change", setRemoteAddr)
     matchSelector.addEventListener("input", changingMatch)
     matchSelector.addEventListener("mouseup", changedMatch)
     setupCanvasHandlers()
