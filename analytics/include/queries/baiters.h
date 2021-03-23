@@ -10,7 +10,7 @@ class BaitersResult : public SingleSourceSingleTargetResult {
 public:
     vector<int> & baiters = sources;
     vector<int> & victims = targets;
-    vector<int64_t> mostRecentPossibleHelp;
+    vector<int64_t> allyDeathTicks;
 
     BaitersResult() {
         sourceName = "baiter";
@@ -18,11 +18,11 @@ public:
     }
 
     vector<string> getExtraColumnNames() {
-        return {"most recent possible help"};
+        return {"ally death tick"};
     }
 
     vector<string> getExtraRow(const Position & position, int64_t index) {
-        return {std::to_string(mostRecentPossibleHelp[index])};
+        return {std::to_string(allyDeathTicks[index])};
     }
 };
 

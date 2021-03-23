@@ -27,7 +27,7 @@ BaitersResult queryBaiters(const Position &position, const Kills &kills, const S
     int64_t numGames = position.gameStarts.size() - 1;
     int numThreads = omp_get_max_threads();
     vector<int64_t> tmpIndices[numThreads];
-    vector<int64_t> tmpMostRecentPossibleHelp[numThreads];
+    vector<int64_t> tmpAllyDeathTicks[numThreads];
     vector<int> tmpBaiters[numThreads];
     vector<int> tmpVictims[numThreads];
 
@@ -56,8 +56,9 @@ BaitersResult queryBaiters(const Position &position, const Kills &kills, const S
             int victimIndex = playerNameToIndex[kills.victim[killIndex]];
             int killerIndex = playerNameToIndex[kills.killer[killIndex]];
 
-            // tracking who already baited so don't need to add them multiple times in a window
-            set<int> neededBaiters[2];
+            // tracking who might be a baiter but hasn't been conclusive marked as such yet
+            // so don't need to add them multiple times in a window
+            set<int> possibleBaiters[2];
             int curReader = 0, curWriter = 1;
             for (int baiterIndex = 0; baiterIndex < NUM_PLAYERS; baiterIndex++) {
                 // require baiter to be on same team and not same person
@@ -67,42 +68,44 @@ BaitersResult queryBaiters(const Position &position, const Kills &kills, const S
                     // require baiter not to be seen in window
                     bool seenInWindow = false;
                     for (int64_t positionWindowIndex = positionWindowStartIndex;
-                         positionWindowStartIndex >= position.firstRowAfterWarmup[gameIndex] &&
-                         positionWindowIndex >= positionWindowStartIndex - BAIT_WINDOW_SIZE;
+                         positionWindowIndex >= position.firstRowAfterWarmup[gameIndex] &&
+                         positionWindowIndex > positionWindowStartIndex - BAIT_WINDOW_SIZE;
                          positionWindowIndex--) {
                         seenInWindow |= spottedIndex.visible[baiterIndex][killerIndex][positionWindowIndex];
                     }
                     if (!seenInWindow) {
-                        neededBaiters[curReader].insert(baiterIndex);
+                        possibleBaiters[curReader].insert(baiterIndex);
                     }
                 }
             }
 
 
             for (int64_t positionWindowIndex = positionWindowStartIndex;
-                 positionWindowStartIndex >= position.firstRowAfterWarmup[gameIndex] &&
-                 positionWindowIndex >= positionWindowStartIndex - BAIT_WINDOW_SIZE &&
-                 !neededBaiters[curReader].empty();
+                 positionWindowIndex >= position.firstRowAfterWarmup[gameIndex] &&
+                 positionWindowIndex > positionWindowStartIndex - BAIT_WINDOW_SIZE &&
+                 !possibleBaiters[curReader].empty();
                  positionWindowIndex--) {
                 int tOffset = positionWindowStartIndex - positionWindowIndex;
 
-                for (const auto & playerIndex : neededBaiters[curReader]) {
+                for (const auto & playerIndex : possibleBaiters[curReader]) {
                     // baiting if
-                    // 1. on same team - checked by neededBaiters
-                    // 2. didn't already bait - checked by neededBaiters
-                    // 2. baiter never visible to killer during window - checked by neededBaiters
+                    // 1. on same team - checked by possibleBaiters
+                    // 2. didn't already bait - checked by possibleBaiters
+                    // 2. baiter never visible to killer during window - checked by possibleBaiters
                     // 3. baiter could've gotten to spot where victim died
                     if (withinVelocityRadius(position, playerIndex, victimIndex, positionWindowIndex,
                                              positionWindowStartIndex, tOffset)) {
-                        neededBaiters[curWriter].insert(playerIndex);
-                        tmpIndices[threadNum].push_back(positionWindowStartIndex);
-                        tmpMostRecentPossibleHelp[threadNum].push_back(positionWindowIndex);
+                        tmpIndices[threadNum].push_back(positionWindowIndex);
+                        tmpAllyDeathTicks[threadNum].push_back(positionWindowStartIndex);
                         tmpBaiters[threadNum].push_back(playerIndex);
                         tmpVictims[threadNum].push_back(victimIndex);
                     }
+                    else {
+                        possibleBaiters[curWriter].insert(playerIndex);
+                    }
                 }
 
-                neededBaiters[curReader].clear();
+                possibleBaiters[curReader].clear();
                 curReader = (curReader + 1) % 2;
                 curWriter = (curWriter + 1) % 2;
             }
@@ -113,7 +116,7 @@ BaitersResult queryBaiters(const Position &position, const Kills &kills, const S
     for (int i = 0; i < numThreads; i++) {
         for (int j = 0; j < tmpIndices[i].size(); j++) {
             result.positionIndex.push_back(tmpIndices[i][j]);
-            result.mostRecentPossibleHelp.push_back(tmpMostRecentPossibleHelp[i][j]);
+            result.allyDeathTicks.push_back(tmpAllyDeathTicks[i][j]);
             result.baiters.push_back(tmpBaiters[i][j]);
             result.victims.push_back(tmpVictims[i][j]);
         }
