@@ -11,6 +11,7 @@ import (
     "os"
     "path/filepath"
     "strings"
+    "time"
 )
 
 func main() {
@@ -37,6 +38,7 @@ func main() {
     }
     defer watcher.Close()
 
+    curTime := time.Now()
     done := make(chan bool)
     go func() {
         for {
@@ -45,8 +47,11 @@ func main() {
                 if !ok {
                     return
                 }
+                newTime := time.Now()
                 if ((event.Op&fsnotify.Write == fsnotify.Write) || (event.Op&fsnotify.Create == fsnotify.Create)) &&
-                    (strings.Contains(event.Name, cfgSrcPrefix)){
+                    strings.Contains(event.Name, cfgSrcPrefix) && (newTime.Sub(curTime) > 4 * time.Second)  {
+                	time.Sleep(4 * time.Second)
+                    curTime = newTime
                     log.Println("modified file:", event.Name)
                     downloadDemo(cfgSrc, demoDst)
                     copy(cfgSrc, cfgDst)
