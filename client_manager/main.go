@@ -21,9 +21,10 @@ func main() {
     }
 
     configs := strings.Split(string(data), "\n")
-    downloadDir := configs[0]
-    csgoConfigDir := configs[1]
+    downloadDir := strings.TrimRight(configs[0], "\r\n")
+    csgoConfigDir := strings.TrimRight(configs[1], "\r\n")
     cfgSrc := downloadDir + string(os.PathSeparator) + "csknow.cfg"
+	cfgSrcPrefix := downloadDir + string(os.PathSeparator) + "csknow"
     cfgDst := csgoConfigDir + string(os.PathSeparator) + "csknow.cfg"
     demoDst := filepath.Dir(csgoConfigDir) + string(os.PathSeparator) + "csknow.dem"
     fmt.Println("CSGO config source: ", cfgSrc)
@@ -45,7 +46,7 @@ func main() {
                     return
                 }
                 if ((event.Op&fsnotify.Write == fsnotify.Write) || (event.Op&fsnotify.Create == fsnotify.Create)) &&
-                    (strings.Contains(event.Name, cfgSrc)){
+                    (strings.Contains(event.Name, cfgSrcPrefix)){
                     log.Println("modified file:", event.Name)
                     downloadDemo(cfgSrc, demoDst)
                     copy(cfgSrc, cfgDst)
