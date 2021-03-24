@@ -12,13 +12,7 @@ using std::map;
 static inline __attribute__((always_inline))
 bool withinVelocityRadius(const Position &position, int baiter, int victim, int64_t curIndex, int64_t windowStartIndex,
                           int tOffset) {
-    double xDistance =
-            position.players[baiter].xPosition[curIndex] - position.players[victim].xPosition[windowStartIndex];
-    double yDistance =
-            position.players[baiter].yPosition[curIndex] - position.players[victim].yPosition[windowStartIndex];
-    double zDistance =
-            position.players[baiter].zPosition[curIndex] - position.players[victim].zPosition[windowStartIndex];
-    double distance = sqrt(xDistance * xDistance + yDistance * yDistance + zDistance * zDistance);
+    double distance = computeDistance(position, baiter, victim, curIndex, windowStartIndex);
     double radius = MAX_RUN_SPEED / TICKS_PER_SECOND * tOffset;
     return distance <= radius;
 }

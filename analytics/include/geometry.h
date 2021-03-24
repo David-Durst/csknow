@@ -4,6 +4,7 @@
 #include <limits>
 #include <iostream>
 #include "geometry.h"
+#include "load_data.h"
 //https://github.com/ValveSoftware/source-sdk-2013/blob/master/sp/src/public/mathlib/mathlib.h#L301-L303
 #ifndef DEG2RAD
 #define DEG2RAD( x  )  ( (double)(x) * (double)(M_PI / 180.) )
@@ -146,6 +147,17 @@ bool intersectP(const AABB & box, const Ray & ray, double & hitt0, double & hitt
     hitt0 = t0;
     hitt1 = t1;
     return true;
+}
+
+static inline __attribute__((always_inline))
+double computeDistance(const Position &position, int source, int target, int64_t sourceIndex, int64_t targetIndex) {
+    double xDistance =
+            position.players[source].xPosition[sourceIndex] - position.players[target].xPosition[targetIndex];
+    double yDistance =
+            position.players[source].yPosition[sourceIndex] - position.players[target].yPosition[targetIndex];
+    double zDistance =
+            position.players[source].zPosition[sourceIndex] - position.players[target].zPosition[targetIndex];
+    return sqrt(xDistance * xDistance + yDistance * yDistance + zDistance * zDistance);
 }
 
 #endif //CSKNOW_GEOMETRY_H

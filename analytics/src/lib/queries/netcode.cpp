@@ -76,7 +76,9 @@ NetcodeResult queryNetcode(const Position & position, const WeaponFire & weaponF
 
                 // check for each player that is alive
                 for (const auto &enemyIndex : enemiesForTeam[position.players[firingPlayer].team[positionIndex]]) {
-                    if (position.players[enemyIndex].isAlive) {
+                    if (position.players[enemyIndex].isAlive &&
+                        computeDistance(position, firingPlayer, enemyIndex, positionIndex, positionIndex) <
+                            weaponAccurateRanges.find(weaponFire.weapon[fireIndex])->second) {
                         AABB victimBox = getAABBForPlayer({position.players[firingPlayer].xPosition[positionIndex],
                                                            position.players[firingPlayer].yPosition[positionIndex],
                                                            position.players[firingPlayer].zPosition[positionIndex]},
