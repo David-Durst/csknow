@@ -6,19 +6,19 @@
 #include <string>
 using std::string;
 
-class BaitersResult : public SingleSourceSingleTargetResult {
+class BaitersResult : public SourceAndTargetResult {
 public:
     vector<int> & baiters = sources;
-    vector<int> & victims = targets;
+    vector<vector<int>> & victimsAndKillers = targets;
     vector<int64_t> allyDeathTicks;
 
     BaitersResult() {
         sourceName = "baiter";
-        targetName = "victim";
+        targetNames = {"victim", "killer"};
     }
 
     vector<string> getExtraColumnNames() {
-        return {"ally death tick"};
+        return {"ally death tick", "killer"};
     }
 
     vector<string> getExtraRow(const Position & position, int64_t index) {

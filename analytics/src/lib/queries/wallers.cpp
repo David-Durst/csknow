@@ -168,7 +168,7 @@ WallersResult queryWallers(const Position & position, const Spotted & spotted) {
         for (int j = 0; j < tmpIndices[i].size(); j++) {
             result.positionIndex.push_back(tmpIndices[i][j]);
             result.cheaters.push_back(tmpCheaters[i][j]);
-            result.victims.push_back(tmpVictims[i][j]);
+            result.victims.push_back({tmpVictims[i][j]});
         }
     }
     return result;

@@ -5,14 +5,14 @@
 #include <string>
 using std::string;
 
-class WallersResult : public SingleSourceSingleTargetResult {
+class WallersResult : public SourceAndTargetResult {
 public:
     vector<int> & cheaters = sources;
-    vector<int> & victims = targets;
+    vector<vector<int>> & victims = targets;
 
     WallersResult() {
         sourceName = "waller";
-        targetName = "victim";
+        targetNames = {"victim"};
     }
 
     vector<string> getExtraColumnNames() {

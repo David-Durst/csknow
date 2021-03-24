@@ -30,6 +30,7 @@ BaitersResult queryBaiters(const Position &position, const Kills &kills, const S
     vector<int64_t> tmpAllyDeathTicks[numThreads];
     vector<int> tmpBaiters[numThreads];
     vector<int> tmpVictims[numThreads];
+    vector<int> tmpKillers[numThreads];
 
 #pragma omp parallel for
     for (int64_t gameIndex = 0; gameIndex < numGames; gameIndex++) {
@@ -99,6 +100,7 @@ BaitersResult queryBaiters(const Position &position, const Kills &kills, const S
                         tmpAllyDeathTicks[threadNum].push_back(positionWindowStartIndex);
                         tmpBaiters[threadNum].push_back(playerIndex);
                         tmpVictims[threadNum].push_back(victimIndex);
+                        tmpKillers[threadNum].push_back(killerIndex);
                     }
                     else {
                         possibleBaiters[curWriter].insert(playerIndex);
@@ -118,7 +120,7 @@ BaitersResult queryBaiters(const Position &position, const Kills &kills, const S
             result.positionIndex.push_back(tmpIndices[i][j]);
             result.allyDeathTicks.push_back(tmpAllyDeathTicks[i][j]);
             result.baiters.push_back(tmpBaiters[i][j]);
-            result.victims.push_back(tmpVictims[i][j]);
+            result.victimsAndKillers.push_back({tmpVictims[i][j], tmpKillers[i][j]});
         }
     }
     return result;

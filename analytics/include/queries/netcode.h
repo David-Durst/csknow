@@ -5,14 +5,14 @@
 #include <string>
 using std::string;
 
-class NetcodeResult : public SingleSourceSingleTargetResult {
+class NetcodeResult : public SourceAndTargetResult {
 public:
     vector<int> & shooters = sources;
-    vector<int> & luckys = targets;
+    vector<vector<int>> & luckys = targets;
 
     NetcodeResult() {
         sourceName = "shooter";
-        targetName = "lucky";
+        targetNames = {"lucky"};
     }
 
     vector<string> getExtraColumnNames() {

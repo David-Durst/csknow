@@ -103,7 +103,7 @@ NetcodeResult queryNetcode(const Position & position, const WeaponFire & weaponF
         for (int j = 0; j < tmpIndices[i].size(); j++) {
             result.positionIndex.push_back(tmpIndices[i][j]);
             result.shooters.push_back(tmpShooters[i][j]);
-            result.luckys.push_back(tmpLuckys[i][j]);
+            result.luckys.push_back({tmpLuckys[i][j]});
         }
     }
     return result;
