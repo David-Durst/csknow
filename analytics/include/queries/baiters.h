@@ -18,7 +18,7 @@ public:
     }
 
     vector<string> getExtraColumnNames() {
-        return {"ally death tick", "killer"};
+        return {"ally death tick"};
     }
 
     vector<string> getExtraRow(const Position & position, int64_t index) {

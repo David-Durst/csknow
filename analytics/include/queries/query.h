@@ -49,7 +49,7 @@ public:
             string curGame = position.fileNames[position.demoFile[posIdx]];
             if (curGame.compare(game) == 0 || game == "") {
                 ss << position.demoTickNumber[posIdx] << "," << position.fileNames[position.demoFile[posIdx]] << ","
-                   << position.players[sources[i]].name[posIdx] << ",";
+                   << position.players[sources[i]].name[posIdx];
                 for (int j = 0; j < targets[i].size(); j++) {
                     ss << "," << position.players[targets[i][j]].name[posIdx];
                 }
