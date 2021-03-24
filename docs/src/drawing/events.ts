@@ -19,14 +19,13 @@ function basicPlayerText(tickdata: PositionRow, playerIndex: number): string {
     }
 }
 
-export function getPlayersText(tickdata: PositionRow, gameData: GameData,
-                               selectedPlayer: number): string[] {
+export function getPlayersText(tickdata: PositionRow, gameData: GameData): string[] {
     // would be great if could draw more than 1 player
     // but 2 players can shoot each other same tick and not able to visualize that right now
     let result: string[] = []
     const index = getEventIndex(gameData, curEvent)
     // if no event, do nothing special
-    if (curEvent == "none" || selectedPlayer === -1 || !index.has(tickdata.demoTickNumber)) {
+    if (curEvent == "none" || !index.has(tickdata.demoTickNumber)) {
         for (let p = 0; p < tickdata.players.length; p++) {
             result.push(basicPlayerText(tickdata, p))
         }
@@ -42,47 +41,30 @@ export function getPlayersText(tickdata: PositionRow, gameData: GameData,
     const eventArray = getEventArray(gameData, curEvent)
     const eventsForTick = index.get(tickdata.demoTickNumber)
     for (let p = 0; p < tickdata.players.length; p++) {
-        // print every player that is a target of the source that is selectedPlayer
-        if (p != selectedPlayer) {
-            if (eventArray[0].getTargets !== undefined &&
-                eventArray[0].getSource !== undefined) {
-                let isTarget = false
-                for (let eIndex = 0; eIndex < eventsForTick.length; eIndex++)  {
-                    let event = eventArray[eventsForTick[eIndex]]
-                    if (event.getSource() === tickdata.players[selectedPlayer].name &&
-                        event.getTargets().includes(tickdata.players[p].name)) {
-                        result.push("t")
-                        isTarget = true
-                        break;
-                    }
+        // print every player that is a target or source
+        if (eventArray[0].getSource !== undefined) {
+            let isTargetOrSource = false
+            for (let eIndex = 0; eIndex < eventsForTick.length; eIndex++)  {
+                let event = eventArray[eventsForTick[eIndex]]
+                // targets can be undefined even if source is defined
+                if (eventArray[0].getTargets !== undefined &&
+                    event.getTargets().includes(tickdata.players[p].name)) {
+                    result.push("t")
+                    isTargetOrSource = true
+                    break;
                 }
-                if (!isTarget) {
-                    result.push(basicPlayerText(tickdata, p))
+                else if (event.getSource() === tickdata.players[p].name) {
+                    result.push("s")
+                    isTargetOrSource = true
+                    break;
                 }
             }
-            else {
+            if (!isTargetOrSource) {
                 result.push(basicPlayerText(tickdata, p))
             }
         }
-        // print the source
         else {
-            if (eventArray[0].getSource !== undefined) {
-                let isSource = false
-                for (let eIndex = 0; eIndex < eventsForTick.length; eIndex++) {
-                    let event = eventArray[eventsForTick[eIndex]]
-                    if (event.getSource() === tickdata.players[p].name) {
-                        result.push("s")
-                        isSource = true
-                        break;
-                    }
-                }
-                if (!isSource) {
-                    result.push(basicPlayerText(tickdata, p))
-                }
-            }
-            else {
-                result.push(basicPlayerText(tickdata, p))
-            }
+            result.push(basicPlayerText(tickdata, p))
         }
     }
     if (result.length < 10) {

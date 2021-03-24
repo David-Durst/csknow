@@ -189,7 +189,7 @@ export function drawTick(e: InputEvent) {
     const tickData: PositionRow = filteredData.position[curTickIndex]
     tScoreLabel.innerHTML = tickData.tScore.toString()
     ctScoreLabel.innerHTML = tickData.ctScore.toString()
-    let playersText = getPlayersText(tickData, filteredData, selectedPlayer)
+    let playersText = getPlayersText(tickData, filteredData)
     for (let p = 0; p < tickData.players.length; p++) {
         let playerText = playersText[p]
         ctx.fillStyle = dark_blue
