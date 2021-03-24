@@ -154,10 +154,10 @@ public:
         result.insert({3, {}});
         for (int i = 0; i < NUM_PLAYERS; i++) {
             if (players[i].team[firstRowAfterWarmup[gameIndex]] == 2) {
-                result[2].push_back(i);
+                result[3].push_back(i);
             }
             else {
-                result[3].push_back(i);
+                result[2].push_back(i);
             }
         }
         return result;

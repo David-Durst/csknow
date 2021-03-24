@@ -16,7 +16,7 @@ NetcodeResult queryNetcode(const Position & position, const WeaponFire & weaponF
     vector<int> tmpShooters[numThreads];
     vector<int> tmpLuckys[numThreads];
 
-#pragma omp parallel for
+//#pragma omp parallel for
     for (int64_t gameIndex = 0; gameIndex < numGames; gameIndex++) {
         int threadNum = omp_get_thread_num();
         AABB boxes[NUM_PLAYERS];
