@@ -193,13 +193,21 @@ export function drawTick(e: InputEvent) {
     for (let p = 0; p < tickData.players.length; p++) {
         let playerText = playersText[p]
         ctx.fillStyle = dark_blue
-        if (p == selectedPlayer) {
-            ctx.fillStyle = purple
+        if (tickData.players[p].team == 3) {
+            if (p == selectedPlayer) {
+                ctx.fillStyle = purple
+            }
+            else if (playerText == "t" || playerText == "s") {
+                ctx.fillStyle = light_blue
+            }
         }
-        if (tickData.players[p].team == 2) {
+        else {
             ctx.fillStyle = dark_red
             if (p == selectedPlayer) {
                 ctx.fillStyle = yellow
+            }
+            else if (playerText == "t" || playerText == "s") {
+                ctx.fillStyle = light_red
             }
         }
         const location = new MapCoordinate(
