@@ -47,15 +47,14 @@ NetcodeResult queryNetcode(const Position & position, const WeaponFire & weaponF
                     lastMoveOrFireTick[i] = positionIndex;
                 }
             }
-            set<SourceAndTarget> hurtEntriesThisTick;
+            set<int> hurtersThisTick;
             while (hurtIndex < playerHurt.size && playerHurt.demoFile[hurtIndex] == position.demoFile[positionIndex] &&
                    playerHurt.demoTickNumber[hurtIndex] <= position.demoTickNumber[positionIndex]) {
                 if (playerHurt.demoTickNumber[hurtIndex] < position.demoTickNumber[positionIndex]) {
                     std::cerr << "player hurt somehow get behind position" << std::endl;
                 }
                 else {
-                    hurtEntriesThisTick.insert({ playerNameToIndex[playerHurt.attacker[hurtIndex]],
-                                                 playerNameToIndex[playerHurt.victimName[hurtIndex]]});
+                    hurtersThisTick.insert(playerNameToIndex[playerHurt.attacker[hurtIndex]]);
                 }
                 hurtIndex++;
             }
@@ -70,11 +69,14 @@ NetcodeResult queryNetcode(const Position & position, const WeaponFire & weaponF
                     std::cerr << "weapon fire somehow get behind position" << std::endl;
                 }
 
+                // skip all shots that hit someone
+                if (hurtersThisTick.find(firingPlayer) != hurtersThisTick.end()) {
+                    continue;
+                }
 
-                // check for each player that is alive and didn't get shot by attacker this tick if should've hit them
+                // check for each player that is alive
                 for (const auto &enemyIndex : enemiesForTeam[position.players[firingPlayer].team[positionIndex]]) {
-                    if (position.players[enemyIndex].isAlive &&
-                        hurtEntriesThisTick.find({firingPlayer, enemyIndex}) == hurtEntriesThisTick.end()) {
+                    if (position.players[enemyIndex].isAlive) {
                         AABB victimBox = getAABBForPlayer({position.players[firingPlayer].xPosition[positionIndex],
                                                            position.players[firingPlayer].yPosition[positionIndex],
                                                            position.players[firingPlayer].zPosition[positionIndex]},
