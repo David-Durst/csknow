@@ -53,7 +53,9 @@ NetcodeResult queryNetcode(const Position & position, const WeaponFire & weaponF
             while (hurtIndex < playerHurt.size && playerHurt.demoFile[hurtIndex] == position.demoFile[positionIndex] &&
                    playerHurt.demoTickNumber[hurtIndex] <= position.demoTickNumber[positionIndex]) {
                 if (playerHurt.demoTickNumber[hurtIndex] < position.demoTickNumber[positionIndex]) {
-                    std::cerr << "player hurt somehow get behind position" << std::endl;
+                    std::cerr << "player hurt demo tick number " << playerHurt.demoTickNumber[hurtIndex]
+                        << " got behind position demo tick number " << position.demoTickNumber[positionIndex]
+                        << " in game " << position.fileNames[position.demoFile[positionIndex]] << std::endl;
                 }
                 else {
                     hurtersThisTick.insert(playerNameToIndex[playerHurt.attacker[hurtIndex]]);
@@ -67,7 +69,9 @@ NetcodeResult queryNetcode(const Position & position, const WeaponFire & weaponF
                 int firingPlayer = playerNameToIndex[weaponFire.shooter[fireIndex]];
 
                 if (weaponFire.demoTickNumber[fireIndex] < position.demoTickNumber[positionIndex]) {
-                    std::cerr << "weapon fire somehow get behind position" << std::endl;
+                    std::cerr << "weapon fire demo tick number " << weaponFire.demoTickNumber[fireIndex]
+                              << " got behind position demo tick number " << position.demoTickNumber[positionIndex]
+                              << " in game " << position.fileNames[position.demoFile[positionIndex]] << std::endl;
                 }
 
                 // skip all shots that hit someone

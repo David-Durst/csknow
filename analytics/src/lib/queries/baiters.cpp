@@ -44,7 +44,9 @@ BaitersResult queryBaiters(const Position &position, const Kills &kills, const S
                                                kills.demoTickNumber[killIndex] -
                                                position.demoTickNumber[positionGameStartIndex];
             if (position.demoTickNumber[positionWindowStartIndex] != kills.demoTickNumber[killIndex]) {
-                std::cerr << "bad position computing for baiters" << std::endl;
+                std::cerr << "bad kill demo tick number " << kills.demoTickNumber[killIndex] <<
+                    " not equal position demo tick number " << position.demoTickNumber[positionWindowStartIndex]
+                    << " in game " << position.fileNames[position.demoFile[positionWindowStartIndex]] << std::endl;
                 continue;
             }
 
