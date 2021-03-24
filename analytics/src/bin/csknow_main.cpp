@@ -49,7 +49,7 @@ int main(int argc, char * argv[]) {
     std::cout << "waller moments: " << wallersResult.positionIndex.size() << std::endl;
     BaitersResult baitersResult = queryBaiters(position, kills, spottedIndex);
     std::cout << "baiter moments: " << baitersResult.positionIndex.size() << std::endl;
-    NetcodeResult netcodeResult = queryNetcode(position, weaponFire, playerHurt);
+    NetcodeResult netcodeResult = queryNetcode(position, weaponFire, playerHurt, spottedIndex);
     std::cout << "netcode moments: " << netcodeResult.positionIndex.size() << std::endl;
     std::cout << "total ticks: " << position.size << std::endl;
     vector<string> queryNames = {"wallers", "baiters", "netcode"};

@@ -12,6 +12,7 @@ public:
         int64_t numGames = spotted.gameStarts.size() - 1;
         int numThreads = omp_get_max_threads();
         vector<bool> tmpVisible[numThreads][NUM_PLAYERS][NUM_PLAYERS];
+        vector<int64_t> tmpIndices[numThreads][NUM_PLAYERS][NUM_PLAYERS];
 #pragma omp parallel for
         for (int64_t gameIndex = 0; gameIndex < numGames; gameIndex++) {
             int threadNum = omp_get_thread_num();
@@ -48,8 +49,15 @@ public:
                 for (int i = 0; i < NUM_PLAYERS; i++) {
                     for (int j = 0; j < NUM_PLAYERS; j++) {
                         tmpVisible[threadNum][i][j].push_back(lastVisible[i][j]);
+                        tmpIndices[threadNum][i][j].push_back(positionIndex);
                     }
                 }
+            }
+        }
+
+        for (int i = 0; i < NUM_PLAYERS; i++) {
+            for (int j = 0; j < NUM_PLAYERS; j++) {
+                visible[i][j].resize(position.size);
             }
         }
 
@@ -57,7 +65,7 @@ public:
             for (int i = 0; i < NUM_PLAYERS; i++) {
                 for (int j = 0; j < NUM_PLAYERS; j++) {
                     for (int t = 0; t < tmpVisible[thread][i][j].size(); t++) {
-                        visible[i][j].push_back(tmpVisible[thread][i][j][t]);
+                        visible[i][j][tmpIndices[thread][i][j][t]] = tmpVisible[thread][i][j][t];
                     }
                 }
             }

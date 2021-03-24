@@ -3,13 +3,15 @@
 #include <omp.h>
 #include <set>
 #include <map>
+#include <indices.h>
+
 using std::set;
 using std::map;
 // TODO: replace this with a reset time per weapon
 #define RESET_TIME 32
 
 NetcodeResult queryNetcode(const Position & position, const WeaponFire & weaponFire,
-                           const PlayerHurt & playerHurt) {
+                           const PlayerHurt & playerHurt, const SpottedIndex & spottedIndex) {
     int64_t numGames = position.gameStarts.size() - 1;
     int numThreads = omp_get_max_threads();
     vector<int64_t> tmpIndices[numThreads];
@@ -27,7 +29,7 @@ NetcodeResult queryNetcode(const Position & position, const WeaponFire & weaponF
         for (int i = 0; i < NUM_PLAYERS; i++) {
             lastMoveOrFireTick[i] = position.demoTickNumber[position.firstRowAfterWarmup[gameIndex]];
         }
-        // since spotted tracks names for spotted player, need to map that to the player index
+        // since weaponFire tracks names for spotted player, need to map that to the player index
         map<string, int> playerNameToIndex = position.getPlayerNameToIndex(gameIndex);
         // given a team's id, get all enemies
         map<int, vector<int>> enemiesForTeam = position.getEnemiesForTeam(gameIndex);
@@ -60,7 +62,6 @@ NetcodeResult queryNetcode(const Position & position, const WeaponFire & weaponF
             }
 
             // then check for all firing events on this tick
-            // for all spotted events on cur tick, update the spotted spottedPerWindow
             while (fireIndex < weaponFire.size && weaponFire.demoFile[fireIndex] == position.demoFile[positionIndex] &&
                    weaponFire.demoTickNumber[fireIndex] <= position.demoTickNumber[positionIndex]) {
                 int firingPlayer = playerNameToIndex[weaponFire.shooter[fireIndex]];
@@ -71,12 +72,19 @@ NetcodeResult queryNetcode(const Position & position, const WeaponFire & weaponF
 
                 // skip all shots that hit someone
                 if (hurtersThisTick.find(firingPlayer) != hurtersThisTick.end()) {
+                    fireIndex++;
                     continue;
                 }
 
                 // check for each player that is alive
                 for (const auto &enemyIndex : enemiesForTeam[position.players[firingPlayer].team[positionIndex]]) {
+                    // conditions for netcode moment
+                    // (1) enemy is alive
+                    // (2) enemy is within accurate range
+                    // (3) enemy is visible
+                    // (4) crosshair interesects enemy
                     if (position.players[enemyIndex].isAlive &&
+                        spottedIndex.visible[enemyIndex][firingPlayer][positionIndex] &&
                         computeDistance(position, firingPlayer, enemyIndex, positionIndex, positionIndex) <
                             weaponAccurateRanges.find(weaponFire.weapon[fireIndex])->second) {
                         AABB victimBox = getAABBForPlayer({position.players[firingPlayer].xPosition[positionIndex],

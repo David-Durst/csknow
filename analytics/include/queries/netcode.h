@@ -2,6 +2,7 @@
 #define CSKNOW_NETCODE_H
 #include "load_data.h"
 #include "query.h"
+#include "indices.h"
 #include <string>
 #include <map>
 using std::string;
@@ -27,7 +28,7 @@ public:
 };
 
 NetcodeResult queryNetcode(const Position & position, const WeaponFire & weaponFire,
-                           const PlayerHurt & playerHurt);
+                           const PlayerHurt & playerHurt, const SpottedIndex & spottedIndex);
 
 // https://developer.valvesoftware.com/wiki/Dimensions#Map_Grid_Units:_quick_reference
 const double UNITS_PER_METER = 52.49;
