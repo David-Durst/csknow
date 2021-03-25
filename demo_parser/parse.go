@@ -95,12 +95,35 @@ func processFile(unprocessedKey string) {
 	})
 
 	ticksProcessed := 0
+	var oldPlayers []*common.Player
 	p.RegisterEventHandler(func(e events.FrameDone) {
 		ticksProcessed++
 		gs := p.GameState()
 		players := getPlayers(&p)
-		if len(players) != 10 {
-			return
+
+		// if fewer than 10 players here, add back the old ones if they got dropped
+		var playersStillHere []int
+		var playersNotHere []*common.Player
+		if len(players) < 10 {
+			playersCurTick := make(map[string]bool)
+			for i := 0; i < 10; i++ {
+				playersCurTick[players[i].Name]	= true
+			}
+			for i := 0; i < 10; i++ {
+				_, ok := playersCurTick[oldPlayers[i].Name]
+				if ok {
+					playersStillHere = append(playersStillHere, i)
+				} else {
+					playersNotHere = append(playersNotHere, oldPlayers[i])
+				}
+			}
+			// if all the current players were here last tick, then just add old players in, otherwise return
+			if len(players) + len(playersNotHere) == 10 {
+				players = append(players, playersNotHere...)
+			} else {
+				oldPlayers = nil
+				return
+			}
 		}
 		// skip the first couple seconds as tick number  can have issues with these
 		// this should be fine as should just be warmup, which is 3 seconds despite fact I told cs to disable
@@ -114,6 +137,9 @@ func processFile(unprocessedKey string) {
 		isWarmup := 0
 		if gs.IsWarmupPeriod() {
 			isWarmup = 1
+		}
+		if (p.CurrentFrame() == 88703) {
+			print("hi\n")
 		}
 		positionFile.WriteString(fmt.Sprintf("%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,", p.CurrentFrame(), gs.IngameTick(), matchStarted, gs.GamePhase(), gs.TotalRoundsPlayed(), isWarmup,
 			roundStart, roundEnd, roundEndReason, freezeTime, gs.TeamTerrorists().Score(), gs.TeamCounterTerrorists().Score(), len(players)))
@@ -143,6 +169,10 @@ func processFile(unprocessedKey string) {
 		roundStart = 0
 		roundEnd = 0
 		roundEndReason = -1
+		oldPlayers = players
+		for i := 0; i < 10; i++ {
+			playerIndexLastTick[players[i].Name] = i
+		}
 	})
 
 
