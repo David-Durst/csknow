@@ -52,7 +52,9 @@ NetcodeResult queryNetcode(const Position & position, const WeaponFire & weaponF
             set<int> hurtersThisTick;
             while (hurtIndex < playerHurt.size && playerHurt.demoFile[hurtIndex] == position.demoFile[positionIndex] &&
                    playerHurt.demoTickNumber[hurtIndex] <= position.demoTickNumber[positionIndex]) {
-                if (playerHurt.demoTickNumber[hurtIndex] < position.demoTickNumber[positionIndex]) {
+                // ok if hurt happens before game start as skipping those position ticks
+                if (playerHurt.demoTickNumber[hurtIndex] < position.demoTickNumber[positionIndex] &&
+                    playerHurt.demoTickNumber[hurtIndex] >= position.firstRowAfterWarmup[gameIndex]) {
                     std::cerr << "player hurt demo tick number " << playerHurt.demoTickNumber[hurtIndex]
                         << " got behind position demo tick number " << position.demoTickNumber[positionIndex]
                         << " in game " << position.fileNames[position.demoFile[positionIndex]] << std::endl;
@@ -68,7 +70,9 @@ NetcodeResult queryNetcode(const Position & position, const WeaponFire & weaponF
                    weaponFire.demoTickNumber[fireIndex] <= position.demoTickNumber[positionIndex]) {
                 int firingPlayer = playerNameToIndex[weaponFire.shooter[fireIndex]];
 
-                if (weaponFire.demoTickNumber[fireIndex] < position.demoTickNumber[positionIndex]) {
+                // ok if weapon fire happens before game start as skipping those position ticks
+                if (weaponFire.demoTickNumber[fireIndex] < position.demoTickNumber[positionIndex] &&
+                    weaponFire.demoTickNumber[fireIndex] >= position.firstRowAfterWarmup[gameIndex]) {
                     std::cerr << "weapon fire demo tick number " << weaponFire.demoTickNumber[fireIndex]
                               << " got behind position demo tick number " << position.demoTickNumber[positionIndex]
                               << " in game " << position.fileNames[position.demoFile[positionIndex]] << std::endl;

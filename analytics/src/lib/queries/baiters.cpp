@@ -43,7 +43,9 @@ BaitersResult queryBaiters(const Position &position, const Kills &kills, const S
             int64_t positionWindowStartIndex = positionGameStartIndex +
                                                kills.demoTickNumber[killIndex] -
                                                position.demoTickNumber[positionGameStartIndex];
-            if (position.demoTickNumber[positionWindowStartIndex] != kills.demoTickNumber[killIndex]) {
+            // ok if kill happens before game start as skipping those position ticks
+            if (position.demoTickNumber[positionWindowStartIndex] != kills.demoTickNumber[killIndex] &&
+                kills.demoTickNumber[killIndex] >= position.firstRowAfterWarmup[gameIndex]) {
                 std::cerr << "bad kill demo tick number " << kills.demoTickNumber[killIndex] <<
                     " not equal position demo tick number " << position.demoTickNumber[positionWindowStartIndex]
                     << " in game " << position.fileNames[position.demoFile[positionWindowStartIndex]] << std::endl;
