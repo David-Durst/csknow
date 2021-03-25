@@ -45,8 +45,8 @@ NetcodeResult queryNetcode(const Position & position, const WeaponFire & weaponF
             for (int i = 0; i < NUM_PLAYERS; i++) {
                 if (abs(position.players[i].xPosition[positionIndex] - position.players[i].xPosition[positionIndex-1]) > 0.05 ||
                     abs(position.players[i].yPosition[positionIndex] - position.players[i].yPosition[positionIndex-1]) > 0.05 ||
-                    abs(position.players[i].zPosition[positionIndex] - position.players[i].yPosition[positionIndex-1]) > 0.05) {
-                    lastMoveOrFireTick[i] = positionIndex;
+                    abs(position.players[i].zPosition[positionIndex] - position.players[i].zPosition[positionIndex-1]) > 0.05) {
+                    lastMoveOrFireTick[i] = position.demoTickNumber[positionIndex];
                 }
             }
             set<int> hurtersThisTick;
@@ -78,8 +78,10 @@ NetcodeResult queryNetcode(const Position & position, const WeaponFire & weaponF
                               << " in game " << position.fileNames[position.demoFile[positionIndex]] << std::endl;
                 }
 
-                // skip all shots that hit someone
-                if (hurtersThisTick.find(firingPlayer) != hurtersThisTick.end()) {
+                // skip all shots that hit someone or shooter moved recently
+                if (hurtersThisTick.find(firingPlayer) != hurtersThisTick.end() ||
+                    weaponFire.demoTickNumber[fireIndex] - lastMoveOrFireTick[firingPlayer] < 32) {
+                    lastMoveOrFireTick[firingPlayer] = weaponFire.demoTickNumber[fireIndex];
                     fireIndex++;
                     continue;
                 }
@@ -87,10 +89,11 @@ NetcodeResult queryNetcode(const Position & position, const WeaponFire & weaponF
                 // check for each player that is alive
                 for (const auto &enemyIndex : enemiesForTeam[position.players[firingPlayer].team[positionIndex]]) {
                     // conditions for netcode moment
-                    // (1) enemy is alive
-                    // (2) enemy is within accurate range
+                    // (1) shooter didn't move recently (checked above)
+                    // (2) enemy is alive
                     // (3) enemy is visible
-                    // (4) crosshair interesects enemy
+                    // (4) enemy is within accurate range
+                    // (5) crosshair interesects enemy
                     if (position.players[enemyIndex].isAlive &&
                         spottedIndex.visible[enemyIndex][firingPlayer][positionIndex] &&
                         computeDistance(position, firingPlayer, enemyIndex, positionIndex, positionIndex) <
@@ -113,6 +116,7 @@ NetcodeResult queryNetcode(const Position & position, const WeaponFire & weaponF
                         }
                     }
                 }
+                lastMoveOrFireTick[firingPlayer] = weaponFire.demoTickNumber[fireIndex];
                 fireIndex++;
             }
         }
