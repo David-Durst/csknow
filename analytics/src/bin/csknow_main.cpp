@@ -4,6 +4,9 @@
 #include <string>
 #include <sstream>
 #include <functional>
+#include <fstream>
+#include <iomanip>
+#include <ctime>
 #include "load_data.h"
 #include "queries/wallers.h"
 #include "queries/baiters.h"
@@ -17,14 +20,28 @@ using std::string;
 using std::reference_wrapper;
 
 int main(int argc, char * argv[]) {
-    if (argc != 3) {
+    if (argc != 3 && argc != 4) {
         std::cout << "please call this code 2 arguments: " << std::endl;
         std::cout << "1. path/to/local_data" << std::endl;
         std::cout << "2. run server (y or n)" << std::endl;
+        std::cout << "(optional) 3. path/to/output/dir" << std::endl;
         return 1;
     }
     string dataPath = argv[1];
     bool runServer = argv[2][0] == 'y';
+    bool writeOutput = false;
+    string outputDir = "";
+    if (argc == 4) {
+        outputDir = argv[3];
+        writeOutput = true;
+    }
+
+    auto t = std::time(nullptr);
+    auto tm = *std::localtime(&t);
+    std::ostringstream timestampSS;
+    timestampSS << std::put_time(&tm, "%d_%m_%Y__%H_%M_%S");
+    string timestamp = timestampSS.str();
+    std::cout << "timestamp: " << timestamp << std::endl;
 
     Position position;
     Spotted spotted;
@@ -58,6 +75,44 @@ int main(int argc, char * argv[]) {
         {queryNames[1], baitersResult},
         {queryNames[2], netcodeResult}
     };
+
+    // create the output files and the metadata describing files
+    if (writeOutput) {
+        for (const auto & [name, result] : queries) {
+            std::fstream fs;
+            fs.open(outputDir + "/" + timestamp + "_" + name + ".csv", std::fstream::out);
+            fs << result.get().toCSV(position);
+            fs.close();
+        }
+
+        // data sets describes types of data sets
+        // versions describes all versions, with most recent first
+        std::fstream datasetsTest, datasets, versions;
+        string datasetsPath = outputDir + "/datasets.txt";
+        string versionsPath = outputDir + "/versions.txt";
+        datasetsTest.open(datasetsPath);
+        bool createdFiles = datasetsTest.good();
+        datasetsTest.close();
+        if (createdFiles) {
+            versions.open(versionsPath, std::fstream::in);
+            std::stringstream oldVersionsContents;
+            oldVersionsContents << versions.rdbuf();
+            versions.close();
+            versions.open(versionsPath, std::fstream::out | std::fstream::trunc);
+            versions << timestamp << std::endl;
+            versions << oldVersionsContents.rdbuf();
+        }
+        else {
+            datasets.open(datasetsPath, std::fstream::out);
+            for (const auto & [name, _] : queries) {
+                datasets << name << std::endl;
+            }
+            datasets.close();
+            versions.open(versionsPath, std::fstream::out);
+            versions << timestamp;
+            versions.close();
+        }
+    }
 
     if (runServer) {
         httplib::Server svr;
