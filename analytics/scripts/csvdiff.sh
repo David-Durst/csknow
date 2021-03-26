@@ -25,5 +25,5 @@ olderVersion=$(head -2 "${csvsPath}/versions.txt" | tail -1)
 recentVersion=$(head -1 "${csvsPath}/versions.txt")
 cat "${csvsPath}/datasets.txt" | while read line
 do
-    $csvdiffPath "${csvsPath}/${olderVersion}_${line}.csv" "${csvsPath}/${recentVersion}_${line}.csv" -p 0,1
+    $csvdiffPath "${csvsPath}/${olderVersion}_${line}.csv" "${csvsPath}/${recentVersion}_${line}.csv" -p 0,1,2,3
 done
