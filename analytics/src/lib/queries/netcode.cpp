@@ -3,7 +3,7 @@
 #include <omp.h>
 #include <set>
 #include <map>
-#include <indices.h>
+#include "indices/spotted.h"
 
 using std::set;
 using std::map;

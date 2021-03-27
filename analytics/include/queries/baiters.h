@@ -2,7 +2,7 @@
 #define CSKNOW_BAITERS_H
 #include "load_data.h"
 #include "query.h"
-#include "indices.h"
+#include "indices/spotted.h"
 #include <string>
 using std::string;
 

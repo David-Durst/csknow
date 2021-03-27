@@ -1,6 +1,6 @@
 #include "queries/baiters.h"
 #include "geometry.h"
-#include "indices.h"
+#include "indices/spotted.h"
 #include <omp.h>
 #include <set>
 #include <map>

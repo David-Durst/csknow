@@ -11,7 +11,7 @@
 #include "queries/wallers.h"
 #include "queries/baiters.h"
 #include "queries/netcode.h"
-#include "indices.h"
+#include "indices/spotted.h"
 #define CPPHTTPLIB_OPENSSL_SUPPORT
 #include "httplib.h"
 
