@@ -6,7 +6,7 @@
 #include <map>
 using std::string;
 using std::map;
-
+/*
 class NetcodeResult : public SourceAndTargetResult {
 public:
     vector<int> & shooters = sources;
@@ -31,5 +31,5 @@ public:
 NetcodeResult queryNetcode(const Position & position, const WeaponFire & weaponFire,
                            const PlayerHurt & playerHurt, const SpottedIndex & spottedIndex);
 
-
+*/
 #endif //CSKNOW_VELOCITY_H

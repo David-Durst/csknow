@@ -90,8 +90,8 @@ public:
 
     vector<string> getKeyNames() {
         vector<string> result = {sourceName};
-        result.insert(result.end(), targets.begin(), targets.end());
-        return result
+        result.insert(result.end(), targetNames.begin(), targetNames.end());
+        return result;
     }
 
     DataType getDatatype() {
