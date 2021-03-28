@@ -1,10 +1,9 @@
 import {PositionRow, DemoData, GameData} from "./tables";
 
-const ticksPerEvent = 32
-
 function generatePositionsToEventsTable(position: PositionRow[],
                                                events: DemoData[],
                                                positionToEvent: Map<number, number[]>,
+                                               ticksPerEvent: number
                                                ) {
     for (let eventIndex = 0; eventIndex < events.length; eventIndex++) {
         let curEvent = events[eventIndex]
@@ -24,18 +23,19 @@ function generatePositionsToEventsTable(position: PositionRow[],
 
 export function indexEventsForGame(gameData: GameData) {
     generatePositionsToEventsTable(gameData.position, gameData.spotted,
-        gameData.positionToSpotted)
+        gameData.positionToSpotted, gameData.spottedParser.ticksPerEvent)
     generatePositionsToEventsTable(gameData.position, gameData.weaponFire,
-        gameData.positionToWeaponFire)
+        gameData.positionToWeaponFire, gameData.weaponFireParser.ticksPerEvent)
     generatePositionsToEventsTable(gameData.position, gameData.playerHurt,
-        gameData.positionToPlayerHurt)
+        gameData.positionToPlayerHurt, gameData.playerHurtParser.ticksPerEvent)
     generatePositionsToEventsTable(gameData.position, gameData.grenades,
-        gameData.positionToGrenades)
+        gameData.positionToGrenades, gameData.grenadeParser.ticksPerEvent)
     generatePositionsToEventsTable(gameData.position, gameData.kills,
-        gameData.positionToKills)
+        gameData.positionToKills, gameData.killsParser.ticksPerEvent)
     for (let dataName of gameData.downloadedDataNames) {
         generatePositionsToEventsTable(gameData.position,
             gameData.downloadedData.get(dataName),
-            gameData.downloadedPositionToEvent.get(dataName))
+            gameData.downloadedPositionToEvent.get(dataName),
+            gameData.downloadedParsers.get(dataName).ticksPerEvent)
     }
 }
