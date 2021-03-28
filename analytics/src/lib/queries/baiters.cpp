@@ -94,7 +94,7 @@ BaitersResult queryBaiters(const Position &position, const Kills &kills, const S
                     if (withinVelocityRadius(position, playerIndex, victimIndex, positionWindowIndex,
                                              positionWindowStartIndex, tOffset)) {
                         tmpIndices[threadNum].push_back(positionWindowIndex);
-                        tmpAllyDeathTicks[threadNum].push_back(positionWindowStartIndex);
+                        tmpAllyDeathTicks[threadNum].push_back(position.demoTickNumber[positionWindowStartIndex]);
                         tmpBaiters[threadNum].push_back(playerIndex);
                         tmpVictims[threadNum].push_back(victimIndex);
                         tmpKillers[threadNum].push_back(killerIndex);
