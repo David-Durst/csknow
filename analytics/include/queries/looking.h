@@ -19,6 +19,7 @@ public:
         sourceName = "lookers";
         targetNames = {"lookedAt"};
         ticksPerEvent = 1;
+        keysForDiff = {0, 1, 2, 3};
     }
 
     vector<string> getExtraColumnNames() {

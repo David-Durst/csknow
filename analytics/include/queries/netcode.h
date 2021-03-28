@@ -17,6 +17,7 @@ public:
         sourceName = "shooter";
         targetNames = {"lucky"};
         ticksPerEvent = 32;
+        keysForDiff = {0, 1, 2, 3};
     }
 
     vector<string> getExtraColumnNames() {

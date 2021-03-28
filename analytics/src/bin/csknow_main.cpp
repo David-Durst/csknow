@@ -108,8 +108,16 @@ int main(int argc, char * argv[]) {
         }
         else {
             datasets.open(datasetsPath, std::fstream::out);
-            for (const auto & [name, _] : queries) {
+            for (const auto & [name, query] : queries) {
                 datasets << name << std::endl;
+                for (int i = 0; i < query.get().keysForDiff.size(); i++) {
+                    if (i != 0) {
+                        datasets << ",";
+
+                    }
+                    datasets << query.get().keysForDiff[i];
+                }
+                datasets << std::endl;
             }
             datasets.close();
             versions.open(versionsPath, std::fstream::out);

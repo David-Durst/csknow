@@ -16,6 +16,7 @@ public:
     vector<int64_t> positionIndex;
     vector<string> demoFile;
     int ticksPerEvent;
+    vector<int> keysForDiff;
 
     virtual string toCSVFiltered(const Position & position, string game) = 0;
     virtual string toCSV(const Position & position) = 0;

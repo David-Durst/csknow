@@ -15,6 +15,7 @@ public:
         sourceName = "waller";
         targetNames = {"victim"};
         ticksPerEvent = WALL_WINDOW_SIZE;
+        keysForDiff = {0, 1, 2, 3};
     }
 
     vector<string> getExtraColumnNames() {

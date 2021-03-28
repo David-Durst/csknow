@@ -17,6 +17,7 @@ public:
         sourceName = "baiter";
         targetNames = {"victim", "killer"};
         ticksPerEvent = BAIT_WINDOW_SIZE;
+        keysForDiff = {0, 1, 2, 3};
     }
 
     vector<string> getExtraColumnNames() {
