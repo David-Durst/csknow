@@ -14,12 +14,14 @@ LookingResult queryLookers(const Position & position) {
     vector<int64_t> tmpIndices[numThreads];
     vector<int> tmpLookers[numThreads];
     vector<int> tmpLookedAt[numThreads];
+    vector<int64_t> tmpGameIndex[numThreads];
+    vector<int64_t> tmpGameStarts[numThreads];
 
 #pragma omp parallel for
     for (int64_t gameIndex = 0; gameIndex < numGames; gameIndex++) {
         int threadNum = omp_get_thread_num();
-        // assuming first position is less than first kills
-        int64_t positionGameStartIndex = position.gameStarts[gameIndex];
+        tmpGameIndex[threadNum].push_back(gameIndex);
+        tmpGameStarts[threadNum].push_back(tmpLookers[threadNum].size());
 
         // since spotted tracks names for spotted player, need to map that to the player index
         for (int64_t positionIndex = position.firstRowAfterWarmup[gameIndex];
@@ -56,7 +58,11 @@ LookingResult queryLookers(const Position & position) {
     result.gameStarts.resize(position.fileNames.size());
     result.fileNames = position.fileNames;
     for (int i = 0; i < numThreads; i++) {
-        result.gameStarts[position.demoFile[tmpIndices[i][0]]] = result.positionIndex.size();
+        // for all games in thread, note position as position in thread plus start of thread results
+        for (int j = 0; j < tmpGameStarts[i].size(); j++) {
+            result.gameStarts[tmpGameIndex[i][j]] = tmpGameStarts[i][j] + result.positionIndex.size();
+        }
+
         for (int j = 0; j < tmpIndices[i].size(); j++) {
             result.positionIndex.push_back(tmpIndices[i][j]);
             result.lookers.push_back(tmpLookers[i][j]);
