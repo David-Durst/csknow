@@ -77,7 +77,7 @@ int main(int argc, char * argv[]) {
     std::cout << "total ticks: " << position.size << std::endl;
     vector<string> queryNames = {"velocity", "lookers", "wallers", "baiters", "netcode"};
     map<string, reference_wrapper<QueryResult>> queries {
-        {queryNames[0], lookersResult},
+        {queryNames[0], velocityResult},
         {queryNames[1], lookersResult},
         {queryNames[2], wallersResult},
         {queryNames[3], baitersResult},

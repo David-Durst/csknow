@@ -50,7 +50,7 @@ public:
             if (curGame.compare(game) == 0 || game == "") {
                 ss << position.demoTickNumber[posIdx] << "," << position.fileNames[position.demoFile[posIdx]];
                 for (int j = 0; j < NUM_PLAYERS; j++) {
-                    ss << "," << position.players[j].name << "," << perPlayerValueToString(resultsPerPlayer[j][i]);
+                    ss << "," << position.players[j].name[posIdx] << "," << perPlayerValueToString(resultsPerPlayer[j][i]);
                 }
                 for (const auto & extraColValue : getExtraRow(position, i)) {
                     ss << "," << extraColValue;
