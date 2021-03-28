@@ -18,6 +18,7 @@ public:
     LookingResult() {
         sourceName = "lookers";
         targetNames = {"lookedAt"};
+        ticksPerEvent = 1;
     }
 
     vector<string> getExtraColumnNames() {

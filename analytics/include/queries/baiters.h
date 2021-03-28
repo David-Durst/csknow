@@ -4,6 +4,7 @@
 #include "query.h"
 #include "indices/spotted.h"
 #include <string>
+#define BAIT_WINDOW_SIZE 64
 using std::string;
 
 class BaitersResult : public SourceAndTargetResult {
@@ -15,6 +16,7 @@ public:
     BaitersResult() {
         sourceName = "baiter";
         targetNames = {"victim", "killer"};
+        ticksPerEvent = BAIT_WINDOW_SIZE;
     }
 
     vector<string> getExtraColumnNames() {

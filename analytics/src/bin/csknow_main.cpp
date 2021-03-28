@@ -156,7 +156,8 @@ int main(int argc, char * argv[]) {
                 for (const auto & extraColName : queryValue.getExtraColumnNames()) {
                     ss << extraColName << ",";
                 }
-                ss << queryValue.getDatatype();
+                ss << queryValue.getDatatype() << ",";
+                ss << queryValue.ticksPerEvent;
                 ss << std::endl;
             }
             res.set_content(ss.str(), "text/plain");

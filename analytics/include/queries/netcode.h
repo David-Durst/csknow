@@ -16,6 +16,7 @@ public:
     NetcodeResult() {
         sourceName = "shooter";
         targetNames = {"lucky"};
+        ticksPerEvent = 32;
     }
 
     vector<string> getExtraColumnNames() {

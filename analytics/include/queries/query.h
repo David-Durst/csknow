@@ -15,6 +15,7 @@ class QueryResult {
 public:
     vector<int64_t> positionIndex;
     vector<string> demoFile;
+    int ticksPerEvent;
 
     virtual string toCSVFiltered(const Position & position, string game) = 0;
     virtual string toCSV(const Position & position) = 0;

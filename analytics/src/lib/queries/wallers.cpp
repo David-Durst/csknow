@@ -5,7 +5,6 @@
 #include <map>
 using std::set;
 using std::map;
-#define WALL_WINDOW_SIZE 64
 
 
 struct CheaterAndVictim {

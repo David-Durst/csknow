@@ -7,7 +7,6 @@
 
 using std::set;
 using std::map;
-#define BAIT_WINDOW_SIZE 64
 
 static inline __attribute__((always_inline))
 bool withinVelocityRadius(const Position &position, int baiter, int victim, int64_t curIndex, int64_t windowStartIndex,

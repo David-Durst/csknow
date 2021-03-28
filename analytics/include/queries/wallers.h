@@ -3,6 +3,7 @@
 #include "load_data.h"
 #include "query.h"
 #include <string>
+#define WALL_WINDOW_SIZE 64
 using std::string;
 
 class WallersResult : public SourceAndTargetResult {
@@ -13,6 +14,7 @@ public:
     WallersResult() {
         sourceName = "waller";
         targetNames = {"victim"};
+        ticksPerEvent = WALL_WINDOW_SIZE;
     }
 
     vector<string> getExtraColumnNames() {
