@@ -278,13 +278,13 @@ async function changedMatch() {
                 const cols = lines[lineNumber].split(",");
                 gameData.downloadedDataNames.push(cols[0])
                 gameData.downloadedData.set(cols[0], [])
-                const numTargetsIndex = 2
-                const numTargets = parseInt(cols[numTargetsIndex])
-                const numOtherColsIndex = numTargetsIndex + numTargets + 1
+                const numKeysIndex = 1
+                const numKeys = parseInt(cols[numKeysIndex])
+                const numOtherColsIndex = numKeysIndex + numKeys + 1
                 const numOtherCols = parseInt(cols[numOtherColsIndex])
                 gameData.downloadedParsers.set(cols[0],
-                    new DownloadParser(cols[0], cols[1],
-                        cols.slice(numTargetsIndex + 1, numTargetsIndex + numTargets + 1),
+                    new DownloadParser(cols[0],
+                        cols.slice(numKeysIndex + 1, numKeysIndex + numKeys + 1),
                         cols.slice(numOtherColsIndex + 1, numOtherColsIndex + numOtherCols + 1),
                         parseInt(cols[cols.length - 2]), parseInt(cols[cols.length - 1])
                     )

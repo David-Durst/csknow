@@ -633,17 +633,25 @@ enum RowType {
 export class DownloadParser implements Parseable {
     tempLineContainer: string = "";
     datasetName: string
+    keyNames: string[]
     sourceName: string
     targetNames: string[]
     otherColumnNames: string[];
     rowType: RowType;
     ticksPerEvent: number;
 
-    constructor(datsetName: string, sourceName: string, targetNames: string[],
+    constructor(datsetName: string, keyColumnNames: string[],
                 otherColumnNames: string[], rowType: number, ticksPerEvent: number) {
         this.datasetName = datsetName;
-        this.sourceName = sourceName
-        this.targetNames = targetNames
+        if (rowType == RowType.noSrcTarget) {
+            this.keyNames = keyColumnNames
+        }
+        else if (rowType == RowType.justSrc) {
+        }
+        else {
+            this.sourceName = keyColumnNames[0]
+            this.targetNames = keyColumnNames.slice(1)
+        }
         this.otherColumnNames = otherColumnNames
         this.rowType = rowType;
         this.ticksPerEvent = ticksPerEvent;
@@ -675,7 +683,7 @@ export class DownloadParser implements Parseable {
                     demoTickNumber, demoFile, this.sourceName, currentLine[sourceIndex],
                     this.targetNames, currentLine.slice(sourceIndex + 1,
                         sourceIndex + 1 + this.targetNames.length),
-                    this.otherColumnNames, currentLine.slice(sourceIndex + this.targetNames.length,
+                    this.otherColumnNames, currentLine.slice(sourceIndex + 1 + this.targetNames.length,
                         currentLine.length)
                 )
             )
