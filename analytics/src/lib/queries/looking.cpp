@@ -6,7 +6,6 @@
 
 using std::set;
 using std::map;
-#define BAIT_WINDOW_SIZE 64
 
 LookingResult queryLookers(const Position & position) {
     int64_t numGames = position.gameStarts.size() - 1;

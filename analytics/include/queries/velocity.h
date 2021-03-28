@@ -6,17 +6,20 @@
 #include <map>
 using std::string;
 using std::map;
-/*
-class NetcodeResult : public SourceAndTargetResult {
-public:
-    vector<int> & shooters = sources;
-    vector<vector<int>> & luckys = targets;
 
-    NetcodeResult() {
-        sourceName = "shooter";
-        targetNames = {"lucky"};
-        ticksPerEvent = 32;
-        keysForDiff = {0, 1, 2, 3};
+class VelocityResult : public AllPlayersQuery<double> {
+public:
+    vector<int64_t> gameStarts;
+    vector<string> fileNames;
+
+    VelocityResult() {
+        ticksPerEvent = 1;
+        keysForDiff = {0, 1};
+        valueName = "velocity";
+    }
+
+    string perPlayerValueToString(double value) {
+        return std::to_string(value);
     }
 
     vector<string> getExtraColumnNames() {
@@ -28,8 +31,6 @@ public:
     }
 };
 
-NetcodeResult queryNetcode(const Position & position, const WeaponFire & weaponFire,
-                           const PlayerHurt & playerHurt, const SpottedIndex & spottedIndex);
+VelocityResult queryVelocity(const Position & position);
 
-*/
 #endif //CSKNOW_VELOCITY_H

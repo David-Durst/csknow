@@ -8,6 +8,7 @@
 #include <iomanip>
 #include <ctime>
 #include "load_data.h"
+#include "queries/velocity.h"
 #include "queries/wallers.h"
 #include "queries/baiters.h"
 #include "queries/netcode.h"
@@ -63,6 +64,8 @@ int main(int argc, char * argv[]) {
     SpottedIndex spottedIndex(position, spotted);
     std::cout << "built spotted index" << std::endl;
 
+    VelocityResult velocityResult = queryVelocity(position);
+    std::cout << "velocity moments: " << velocityResult.positionIndex.size() << std::endl;
     LookingResult lookersResult = queryLookers(position);
     std::cout << "looker moments: " << lookersResult.positionIndex.size() << std::endl;
     WallersResult wallersResult = queryWallers(position, spotted);
@@ -72,12 +75,13 @@ int main(int argc, char * argv[]) {
     NetcodeResult netcodeResult = queryNetcode(position, weaponFire, playerHurt, spottedIndex);
     std::cout << "netcode moments: " << netcodeResult.positionIndex.size() << std::endl;
     std::cout << "total ticks: " << position.size << std::endl;
-    vector<string> queryNames = {"lookers", "wallers", "baiters", "netcode"};
+    vector<string> queryNames = {"velocity", "lookers", "wallers", "baiters", "netcode"};
     map<string, reference_wrapper<QueryResult>> queries {
         {queryNames[0], lookersResult},
-        {queryNames[1], wallersResult},
-        {queryNames[2], baitersResult},
-        {queryNames[3], netcodeResult}
+        {queryNames[1], lookersResult},
+        {queryNames[2], wallersResult},
+        {queryNames[3], baitersResult},
+        {queryNames[4], netcodeResult}
     };
 
     // create the output files and the metadata describing files
