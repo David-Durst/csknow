@@ -155,10 +155,9 @@ int main(int argc, char * argv[]) {
             std::stringstream ss;
             for (const auto queryName : queryNames) {
                 QueryResult & queryValue = queries.find(queryName)->second.get();
-                ss << queryName << "," << queryValue.getSourceName() << ","
-                    << queryValue.getTargetNames().size() << ",";
-                for (const auto & targetName : queryValue.getTargetNames()) {
-                    ss << targetName << ",";
+                ss << queryName << "," << queryValue.getKeyNames().size() << ",";
+                for (const auto & keyName : queryValue.getKeyNames()) {
+                    ss << keyName << ",";
                 }
                 ss << queryValue.getExtraColumnNames().size() << ",";
                 for (const auto & extraColName : queryValue.getExtraColumnNames()) {

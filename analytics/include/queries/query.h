@@ -20,8 +20,7 @@ public:
 
     virtual string toCSVFiltered(const Position & position, string game) = 0;
     virtual string toCSV(const Position & position) = 0;
-    virtual string getSourceName() = 0;
-    virtual vector<string> getTargetNames() = 0;
+    virtual vector<string> getKeyNames() = 0;
     virtual vector<string> getExtraColumnNames() = 0;
     virtual DataType getDatatype() = 0;
 };
@@ -89,12 +88,10 @@ public:
         return ss.str();
     };
 
-    string getSourceName() {
-        return sourceName;
-    }
-
-    vector<string> getTargetNames() {
-        return targetNames;
+    vector<string> getKeyNames() {
+        vector<string> result = {sourceName};
+        result.insert(result.end(), targets.begin(), targets.end());
+        return result
     }
 
     DataType getDatatype() {
