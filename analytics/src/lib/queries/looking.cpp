@@ -33,6 +33,10 @@ LookingResult queryLookers(const Position & position) {
                     if (possibleLookedAt == possibleLooker) {
                         continue;
                     }
+                    if (!position.players[possibleLooker].isAlive[positionIndex] ||
+                        !position.players[possibleLookedAt].isAlive[positionIndex]) {
+                        continue;
+                    }
                     AABB lookeeBox = getAABBForPlayer({position.players[possibleLookedAt].xPosition[positionIndex],
                                                        position.players[possibleLookedAt].yPosition[positionIndex],
                                                        position.players[possibleLookedAt].zPosition[positionIndex]});
