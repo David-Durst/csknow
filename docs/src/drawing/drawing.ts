@@ -34,6 +34,8 @@ let yCanvasLabel: HTMLLabelElement = null;
 let tScoreLabel: HTMLLabelElement = null;
 let ctScoreLabel: HTMLLabelElement = null;
 let playerNameLabel: HTMLLabelElement = null;
+let playerCopyButton: HTMLButtonElement = null;
+let playerCopyText: HTMLInputElement = null;
 let configClientButton: HTMLAnchorElement = null;
 let minZ = 0;
 let maxZ = 0;
@@ -145,6 +147,22 @@ function clearFilterButton() {
     drawTick(null)
 }
 
+function setPosition(playerX: number, playerY: number, playerZ: number) {
+    const startX = playerX - 16;
+    const endX = playerX + 16;
+    const startY = playerY - 16;
+    const endY = playerY + 16;
+    const startZ = playerZ;
+    const endZ = playerZ + 72;
+    playerCopyText.value = "box " + startX.toString() + " " +
+        startY.toString() + " " + startZ.toString() + " " +
+        endX.toString() + " " + endY.toString() + " " + endZ.toString()
+}
+
+function copyPosition() {
+    playerCopyText.select();
+    document.execCommand("copy");
+}
 
 let selectedPlayer = -1
 function trackMouse(e: MouseEvent) {
@@ -170,6 +188,9 @@ function trackMouse(e: MouseEvent) {
             playerCoordinate.getCanvasY() - 10 <= minimapCoordinate.getCanvasY() &&
             playerCoordinate.getCanvasY() + 10 >= minimapCoordinate.getCanvasY()) {
             playerNameLabel.innerHTML = tickData.players[p].name
+            setPosition(tickData.players[p].xPosition,
+                tickData.players[p].yPosition,
+                tickData.players[p].zPosition)
             selectedPlayer = p;
             drawTick(null)
             return
@@ -287,6 +308,9 @@ export function setupCanvas() {
     tScoreLabel = document.querySelector<HTMLLabelElement>("#t_score")
     ctScoreLabel = document.querySelector<HTMLLabelElement>("#ct_score")
     playerNameLabel = document.querySelector<HTMLLabelElement>("#playerName")
+    playerCopyText = document.querySelector<HTMLInputElement>("#copy_text")
+    playerCopyButton = document.querySelector<HTMLButtonElement>("#copy_button")
+    playerCopyButton.addEventListener("click", copyPosition)
     configClientButton = document.querySelector<HTMLAnchorElement>("#download_client")
     canvas.addEventListener("mousemove", trackMouse)
     canvas.addEventListener("mousedown", startingRegionFilter)
