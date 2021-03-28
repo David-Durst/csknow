@@ -11,6 +11,7 @@
 #include "queries/wallers.h"
 #include "queries/baiters.h"
 #include "queries/netcode.h"
+#include "queries/looking.h"
 #include "indices/spotted.h"
 #define CPPHTTPLIB_OPENSSL_SUPPORT
 #include "httplib.h"
@@ -62,6 +63,8 @@ int main(int argc, char * argv[]) {
     SpottedIndex spottedIndex(position, spotted);
     std::cout << "built spotted index" << std::endl;
 
+    LookingResult lookersResult = queryLookers(position);
+    std::cout << "looker moments: " << lookersResult.positionIndex.size() << std::endl;
     WallersResult wallersResult = queryWallers(position, spotted);
     std::cout << "waller moments: " << wallersResult.positionIndex.size() << std::endl;
     BaitersResult baitersResult = queryBaiters(position, kills, spottedIndex);
@@ -69,11 +72,12 @@ int main(int argc, char * argv[]) {
     NetcodeResult netcodeResult = queryNetcode(position, weaponFire, playerHurt, spottedIndex);
     std::cout << "netcode moments: " << netcodeResult.positionIndex.size() << std::endl;
     std::cout << "total ticks: " << position.size << std::endl;
-    vector<string> queryNames = {"wallers", "baiters", "netcode"};
+    vector<string> queryNames = {"lookers", "wallers", "baiters", "netcode"};
     map<string, reference_wrapper<QueryResult>> queries {
-        {queryNames[0], wallersResult},
-        {queryNames[1], baitersResult},
-        {queryNames[2], netcodeResult}
+        {queryNames[0], lookersResult},
+        {queryNames[1], wallersResult},
+        {queryNames[2], baitersResult},
+        {queryNames[3], netcodeResult}
     };
 
     // create the output files and the metadata describing files
