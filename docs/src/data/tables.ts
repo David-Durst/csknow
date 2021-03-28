@@ -7,6 +7,7 @@ function parseBool(b: string) {
 
 export interface Parseable {
     tempLineContainer: string;
+    ticksPerEvent: number;
 
     parseOneLine(currentLine: string[]): any
 
@@ -183,6 +184,7 @@ export class PositionRow implements DemoData {
 
 export class PositionParser implements Parseable {
     tempLineContainer: string = "";
+    ticksPerEvent = 1;
 
     parseOneLine(currentLine: string[]): any {
         // skip warmup
@@ -324,6 +326,7 @@ export class SpottedRow implements DemoData, Printable{
 
 export class SpottedParser implements Parseable {
     tempLineContainer: string = "";
+    ticksPerEvent = 32;
 
     parseOneLine(currentLine: string[]): any {
         gameData.spotted.push(new SpottedRow(
@@ -365,6 +368,7 @@ export class WeaponFireRow implements DemoData, Printable {
 
 export class WeaponFireParser implements Parseable {
     tempLineContainer: string = "";
+    ticksPerEvent = 32;
 
     parseOneLine(currentLine: string[]): any {
         gameData.weaponFire.push(new WeaponFireRow(
@@ -420,6 +424,7 @@ export class PlayerHurtRow implements DemoData, Printable {
 
 export class PlayerHurtParser implements Parseable {
     tempLineContainer: string = "";
+    ticksPerEvent = 32;
 
     parseOneLine(currentLine: string[]): any {
         gameData.playerHurt.push(new PlayerHurtRow(
@@ -457,6 +462,7 @@ export class GrenadesRow implements DemoData, Printable {
 
 export class GrenadesParser implements Parseable {
     tempLineContainer: string = "";
+    ticksPerEvent = 32;
 
     parseOneLine(currentLine: string[]): any {
         gameData.grenades.push(new GrenadesRow(
@@ -515,6 +521,7 @@ export class KillsRow implements DemoData, Printable {
 
 export class KillsParser implements Parseable {
     tempLineContainer: string = "";
+    ticksPerEvent = 32;
 
     parseOneLine(currentLine: string[]): any {
         gameData.kills.push(new KillsRow(
@@ -630,14 +637,16 @@ export class DownloadParser implements Parseable {
     targetNames: string[]
     otherColumnNames: string[];
     rowType: RowType;
+    ticksPerEvent: number;
 
     constructor(datsetName: string, sourceName: string, targetNames: string[],
-                otherColumnNames: string[], rowType: number) {
+                otherColumnNames: string[], rowType: number, ticksPerEvent: number) {
         this.datasetName = datsetName;
         this.sourceName = sourceName
         this.targetNames = targetNames
         this.otherColumnNames = otherColumnNames
         this.rowType = rowType;
+        this.ticksPerEvent = ticksPerEvent;
     }
 
     parseOneLine(currentLine: string[]): any {

@@ -286,7 +286,7 @@ async function changedMatch() {
                     new DownloadParser(cols[0], cols[1],
                         cols.slice(numTargetsIndex + 1, numTargetsIndex + numTargets + 1),
                         cols.slice(numOtherColsIndex + 1, numOtherColsIndex + numOtherCols + 1),
-                        parseInt(cols[cols.length - 1])
+                        parseInt(cols[cols.length - 2]), parseInt(cols[cols.length - 1])
                     )
                 )
                 gameData.downloadedPositionToEvent.set(cols[0], new Map<number, number[]>());
