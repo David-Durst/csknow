@@ -647,6 +647,7 @@ export class DownloadParser implements Parseable {
             this.keyNames = keyColumnNames
         }
         else if (rowType == RowType.justSrc) {
+            this.sourceName = keyColumnNames[0]
         }
         else {
             this.sourceName = keyColumnNames[0]

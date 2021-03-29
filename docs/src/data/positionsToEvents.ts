@@ -8,7 +8,7 @@ function generatePositionsToEventsTable(position: PositionRow[],
     for (let eventIndex = 0; eventIndex < events.length; eventIndex++) {
         let curEvent = events[eventIndex]
         for (let curTick = curEvent.demoTickNumber;
-             curTick < position.length &&
+             curTick <= position[position.length-1].demoTickNumber &&
                 curTick < curEvent.demoTickNumber + ticksPerEvent;
              curTick++) {
             if (!positionToEvent.has(curTick)) {
