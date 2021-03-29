@@ -4,6 +4,7 @@
 #include "query.h"
 #include <string>
 #include <map>
+#include <iomanip>
 using std::string;
 using std::map;
 
@@ -19,7 +20,9 @@ public:
     }
 
     string perPlayerValueToString(double value) {
-        return std::to_string(value);
+        std::stringstream ss;
+        ss << std::setprecision(2) << std::fixed << value;
+        return ss.str();
     }
 
     vector<string> getExtraRow(const Position & position, int64_t index) {
