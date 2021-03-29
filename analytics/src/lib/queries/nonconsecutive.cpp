@@ -24,7 +24,7 @@ NonConsecutiveResult queryNonConsecutive(const Position & position) {
 
         // since spotted tracks names for spotted player, need to map that to the player index
         for (int64_t positionIndex = position.firstRowAfterWarmup[gameIndex];
-             positionIndex < position.gameStarts[gameIndex+1] + result.ticksPerEvent;
+             positionIndex < position.gameStarts[gameIndex+1] - result.ticksPerEvent;
              positionIndex++) {
 
             if (position.demoTickNumber[positionIndex] + 1 != position.demoTickNumber[positionIndex+1]) {
