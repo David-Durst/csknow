@@ -25,21 +25,13 @@ public:
     virtual DataType getDatatype() = 0;
 };
 
-template <typename T>
-class AllPlayersQuery : public QueryResult {
+class NoSourceTargetQuery : public QueryResult {
 public:
-    string valueName;
-    vector<T> resultsPerPlayer[NUM_PLAYERS];
-
-    virtual string perPlayerValueToString(T value) = 0;
     virtual vector<string> getExtraRow(const Position & position, int64_t index) = 0;
 
     string toCSVFiltered(const Position & position, string game) {
         stringstream ss;
         ss << "demo tick,demo file";
-        for (int i = 0; i < NUM_PLAYERS; i++) {
-            ss << ",player " << i << "name,player " << i << " " << valueName;
-        }
         for (const auto & extraColName : getExtraColumnNames()) {
             ss << "," << extraColName;
         }
@@ -49,9 +41,6 @@ public:
             string curGame = position.fileNames[position.demoFile[posIdx]];
             if (curGame.compare(game) == 0 || game == "") {
                 ss << position.demoTickNumber[posIdx] << "," << position.fileNames[position.demoFile[posIdx]];
-                for (int j = 0; j < NUM_PLAYERS; j++) {
-                    ss << "," << position.players[j].name[posIdx] << "," << perPlayerValueToString(resultsPerPlayer[j][i]);
-                }
                 for (const auto & extraColValue : getExtraRow(position, i)) {
                     ss << "," << extraColValue;
                 }
@@ -64,9 +53,6 @@ public:
     string toCSV(const Position & position) {
         stringstream ss;
         ss << "demo tick,demo file";
-        for (int i = 0; i < NUM_PLAYERS; i++) {
-            ss << ",player " << i << "name,player " << i << " " << valueName;
-        }
         for (const auto & extraColName : getExtraColumnNames()) {
             ss << "," << extraColName;
         }
@@ -75,9 +61,6 @@ public:
             int64_t posIdx = positionIndex[i];
             string curGame = position.fileNames[position.demoFile[posIdx]];
             ss << position.demoTickNumber[posIdx] << "," << position.fileNames[position.demoFile[posIdx]];
-            for (int j = 0; j < NUM_PLAYERS; j++) {
-                ss << "," << position.players[j].name << "," << perPlayerValueToString(resultsPerPlayer[j][i]);
-            }
             for (const auto & extraColValue : getExtraRow(position, i)) {
                 ss << "," << extraColValue;
             }
@@ -88,15 +71,6 @@ public:
 
     vector<string> getKeyNames() {
         return {};
-    }
-
-    vector<string> getExtraColumnNames() {
-        vector<string> result = {};
-        for (int i = 0; i < NUM_PLAYERS; i++) {
-            result.push_back(std::to_string(i) + " name");
-            result.push_back(std::to_string(i) + " " + valueName);
-        }
-        return result;
     }
 
     DataType getDatatype() {

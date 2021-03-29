@@ -8,15 +8,15 @@
 using std::string;
 using std::map;
 
-class VelocityResult : public AllPlayersQuery<double> {
+class VelocityResult : public NoSourceTargetQuery {
 public:
     vector<int64_t> gameStarts;
     vector<string> fileNames;
+    vector<double> resultsPerPlayer[NUM_PLAYERS];
 
     VelocityResult() {
         ticksPerEvent = 1;
         keysForDiff = {0, 1};
-        valueName = "velocity";
     }
 
     string perPlayerValueToString(double value) {
@@ -25,8 +25,22 @@ public:
         return ss.str();
     }
 
+    vector<string> getExtraColumnNames() {
+        vector<string> result = {};
+        for (int i = 0; i < NUM_PLAYERS; i++) {
+            result.push_back(std::to_string(i) + " name");
+            result.push_back(std::to_string(i) + " velocity");
+        }
+        return result;
+    }
+
     vector<string> getExtraRow(const Position & position, int64_t index) {
-        return {};
+        vector<string> result = {};
+        for (int i = 0; i < NUM_PLAYERS; i++) {
+            result.push_back(position.players[i].name[index]);
+            result.push_back(perPlayerValueToString(resultsPerPlayer[i][index]));
+        }
+        return result;
     }
 };
 
