@@ -22,10 +22,6 @@ public:
         return std::to_string(value);
     }
 
-    vector<string> getExtraColumnNames() {
-        return {};
-    }
-
     vector<string> getExtraRow(const Position & position, int64_t index) {
         return {};
     }
