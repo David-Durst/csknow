@@ -93,8 +93,8 @@ public:
     vector<string> getExtraColumnNames() {
         vector<string> result = {};
         for (int i = 0; i < NUM_PLAYERS; i++) {
-            result.push_back("player " + std::to_string(i) + " name");
-            result.push_back("player " + std::to_string(i) + " " + valueName);
+            result.push_back(std::to_string(i) + " name");
+            result.push_back(std::to_string(i) + " " + valueName);
         }
         return result;
     }
