@@ -22,13 +22,12 @@ public:
     virtual string toCSV(const Position & position) = 0;
     virtual vector<string> getKeyNames() = 0;
     virtual vector<string> getExtraColumnNames() = 0;
+    virtual vector<string> getExtraRow(const Position & position, int64_t queryIndex, int64_t posIndex) = 0;
     virtual DataType getDatatype() = 0;
 };
 
 class NoSourceTargetQuery : public QueryResult {
 public:
-    virtual vector<string> getExtraRow(const Position & position, int64_t index) = 0;
-
     string toCSVFiltered(const Position & position, string game) {
         stringstream ss;
         ss << "demo tick,demo file";
@@ -41,7 +40,7 @@ public:
             string curGame = position.fileNames[position.demoFile[posIdx]];
             if (curGame.compare(game) == 0 || game == "") {
                 ss << position.demoTickNumber[posIdx] << "," << position.fileNames[position.demoFile[posIdx]];
-                for (const auto & extraColValue : getExtraRow(position, i)) {
+                for (const auto & extraColValue : getExtraRow(position, i, posIdx)) {
                     ss << "," << extraColValue;
                 }
                 ss << std::endl;
@@ -61,7 +60,7 @@ public:
             int64_t posIdx = positionIndex[i];
             string curGame = position.fileNames[position.demoFile[posIdx]];
             ss << position.demoTickNumber[posIdx] << "," << position.fileNames[position.demoFile[posIdx]];
-            for (const auto & extraColValue : getExtraRow(position, i)) {
+            for (const auto & extraColValue : getExtraRow(position, i, posIdx)) {
                 ss << "," << extraColValue;
             }
             ss << std::endl;
@@ -86,8 +85,6 @@ public:
     vector<int> sources;
     vector<vector<int>> targets;
 
-    virtual vector<string> getExtraRow(const Position & position, int64_t index) = 0;
-
     string toCSVFiltered(const Position & position, string game) {
         stringstream ss;
         ss << "demo tick,demo file," << sourceName;
@@ -107,7 +104,7 @@ public:
                 for (int j = 0; j < targets[i].size(); j++) {
                     ss << "," << position.players[targets[i][j]].name[posIdx];
                 }
-                for (const auto & extraColValue : getExtraRow(position, i)) {
+                for (const auto & extraColValue : getExtraRow(position, i, posIdx)) {
                     ss << "," << extraColValue;
                 }
                 ss << std::endl;
@@ -133,7 +130,7 @@ public:
             for (int j = 0; j < targets[i].size(); j++) {
                 ss << "," << position.players[targets[i][j]].name[posIdx];
             }
-            for (const auto & extraColValue : getExtraRow(position, i)) {
+            for (const auto & extraColValue : getExtraRow(position, i, posIdx)) {
                 ss << "," << extraColValue;
             }
             ss << std::endl;

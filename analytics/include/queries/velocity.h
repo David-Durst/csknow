@@ -34,11 +34,11 @@ public:
         return result;
     }
 
-    vector<string> getExtraRow(const Position & position, int64_t index) {
+    vector<string> getExtraRow(const Position & position, int64_t queryIndex, int64_t posIndex) {
         vector<string> result = {};
         for (int i = 0; i < NUM_PLAYERS; i++) {
-            result.push_back(position.players[i].name[index]);
-            result.push_back(perPlayerValueToString(resultsPerPlayer[i][index]));
+            result.push_back(position.players[i].name[posIndex]);
+            result.push_back(perPlayerValueToString(resultsPerPlayer[i][queryIndex]));
         }
         return result;
     }

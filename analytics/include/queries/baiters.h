@@ -24,8 +24,8 @@ public:
         return {"ally death tick"};
     }
 
-    vector<string> getExtraRow(const Position & position, int64_t index) {
-        return {std::to_string(allyDeathTicks[index])};
+    vector<string> getExtraRow(const Position & position, int64_t queryIndex, int64_t posIndex) {
+        return {std::to_string(allyDeathTicks[queryIndex])};
     }
 };
 

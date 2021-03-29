@@ -24,7 +24,7 @@ public:
         return {};
     }
 
-    vector<string> getExtraRow(const Position & position, int64_t index) {
+    vector<string> getExtraRow(const Position & position, int64_t queryIndex, int64_t posIndex) {
         return {};
     }
 };
