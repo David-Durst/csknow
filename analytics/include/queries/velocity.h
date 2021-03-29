@@ -20,9 +20,9 @@ public:
     }
 
     string perPlayerValueToString(double value) {
-        std::stringstream ss;
-        ss << std::setprecision(2) << std::fixed << value;
-        return ss.str();
+        char result[20];
+        sprintf(result, "%.2f", value);
+        return string(result);
     }
 
     vector<string> getExtraColumnNames() {
