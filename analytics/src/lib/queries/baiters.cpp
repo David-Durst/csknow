@@ -63,15 +63,17 @@ BaitersResult queryBaiters(const Position &position, const Kills &kills, const S
                 if (baiterIndex != victimIndex &&
                     position.players[baiterIndex].team[positionWindowStartIndex] ==
                         position.players[victimIndex].team[positionWindowStartIndex]) {
-                    // require baiter not to be seen in window
+                    // require baiter not to be seen in window and alive whole time
                     bool seenInWindow = false;
+                    bool alive = true;
                     for (int64_t positionWindowIndex = positionWindowStartIndex;
                          positionWindowIndex >= position.firstRowAfterWarmup[gameIndex] &&
                          positionWindowIndex > positionWindowStartIndex - BAIT_WINDOW_SIZE;
                          positionWindowIndex--) {
                         seenInWindow |= spottedIndex.visible[baiterIndex][killerIndex][positionWindowIndex];
+                        alive &= position.players[baiterIndex].isAlive[positionWindowIndex];
                     }
-                    if (!seenInWindow) {
+                    if (!seenInWindow && alive) {
                         possibleBaiters[curReader].insert(baiterIndex);
                     }
                 }
@@ -89,8 +91,9 @@ BaitersResult queryBaiters(const Position &position, const Kills &kills, const S
                     // baiting if
                     // 1. on same team - checked by possibleBaiters
                     // 2. didn't already bait - checked by possibleBaiters
-                    // 2. baiter never visible to killer during window - checked by possibleBaiters
-                    // 3. baiter could've gotten to spot where victim died
+                    // 3. baiter never visible to killer during window - checked by possibleBaiters
+                    // 4. baiter alive whole time - checked by possibleBaiters
+                    // 5. baiter could've gotten to spot where victim died
                     if (withinVelocityRadius(position, playerIndex, victimIndex, positionWindowIndex,
                                              positionWindowStartIndex, tOffset)) {
                         tmpIndices[threadNum].push_back(positionWindowIndex);
