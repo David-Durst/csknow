@@ -5,10 +5,18 @@
 using std::vector;
 using std::stringstream;
 
+static inline __attribute__((always_inline))
+string doubleToString(double val) {
+    int64_t valInt = val;
+    int64_t valFrac = (((int64_t) val) * 100) - 100 * valInt;
+    return std::to_string((int64_t) val) + "." + std::to_string(valFrac);
+}
+
 enum DataType {
     noSrcTarget = 0,
     justSrc = 1,
-    srcAndTarget = 2
+    justTarget = 2,
+    srcAndTarget = 3
 };
 
 class QueryResult {
@@ -75,6 +83,73 @@ public:
     DataType getDatatype() {
         return noSrcTarget;
     }
+};
+
+class JustTargetResult : public QueryResult {
+public:
+    vector<string> targetNames;
+
+    vector<vector<int>> targets;
+
+    string toCSVFiltered(const Position & position, string game) {
+        stringstream ss;
+        ss << "demo tick,demo file";
+        for (const auto & targetName : targetNames) {
+            ss << "," << targetName;
+        }
+        for (const auto & extraColName : getExtraColumnNames()) {
+            ss << "," << extraColName;
+        }
+        ss << std::endl;
+        for (int64_t i = 0; i < positionIndex.size(); i++) {
+            int64_t posIdx = positionIndex[i];
+            string curGame = position.fileNames[position.demoFile[posIdx]];
+            if (curGame.compare(game) == 0 || game == "") {
+                ss << position.demoTickNumber[posIdx] << "," << position.fileNames[position.demoFile[posIdx]];
+                for (int j = 0; j < targets[i].size(); j++) {
+                    ss << "," << position.players[targets[i][j]].name[posIdx];
+                }
+                for (const auto & extraColValue : getExtraRow(position, i, posIdx)) {
+                    ss << "," << extraColValue;
+                }
+                ss << std::endl;
+            }
+        }
+        return ss.str();
+    }
+
+    string toCSV(const Position & position) {
+        stringstream ss;
+        ss << "demo tick,demo file";
+        for (const auto & targetName : targetNames) {
+            ss << "," << targetName;
+        }
+        for (const auto & extraColName : getExtraColumnNames()) {
+            ss << "," << extraColName;
+        }
+        ss << std::endl;
+        for (int64_t i = 0; i < positionIndex.size(); i++) {
+            int64_t posIdx = positionIndex[i];
+            ss << position.demoTickNumber[posIdx] << "," << position.fileNames[position.demoFile[posIdx]];
+            for (int j = 0; j < targets[i].size(); j++) {
+                ss << "," << position.players[targets[i][j]].name[posIdx];
+            }
+            for (const auto & extraColValue : getExtraRow(position, i, posIdx)) {
+                ss << "," << extraColValue;
+            }
+            ss << std::endl;
+        }
+        return ss.str();
+    };
+
+    vector<string> getKeyNames() {
+        return targetNames;
+    }
+
+    DataType getDatatype() {
+        return justTarget;
+    }
+
 };
 
 class SourceAndTargetResult : public QueryResult {

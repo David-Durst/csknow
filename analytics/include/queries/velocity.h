@@ -19,12 +19,6 @@ public:
         keysForDiff = {0, 1};
     }
 
-    string perPlayerValueToString(double value) {
-        std::stringstream ss;
-        ss << std::setprecision(2) << std::fixed << value;
-        return ss.str();
-    }
-
     vector<string> getExtraColumnNames() {
         vector<string> result = {};
         for (int i = 0; i < NUM_PLAYERS; i++) {
@@ -38,7 +32,7 @@ public:
         vector<string> result = {};
         for (int i = 0; i < NUM_PLAYERS; i++) {
             result.push_back(position.players[i].name[posIndex]);
-            result.push_back(perPlayerValueToString(resultsPerPlayer[i][queryIndex]));
+            result.push_back(doubleToString(resultsPerPlayer[i][queryIndex]));
         }
         return result;
     }
