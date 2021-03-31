@@ -19,7 +19,7 @@ double quadMax(double base, double a, double b, double c) {
 }
 
 static inline __attribute__((always_inline))
-AABB adjustMinMaxRegion(const Position & position, int64_t index, AABB & region, int playerA, int playerB, int playerC) {
+void adjustMinMaxRegion(const Position & position, int64_t index, AABB & region, int playerA, int playerB, int playerC) {
     region.min.x = quadMin(region.min.x, position.players[playerA].xPosition[index],
                            position.players[playerB].xPosition[index], position.players[playerC].xPosition[index]);
     region.min.y = quadMin(region.min.y, position.players[playerA].yPosition[index],
