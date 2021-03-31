@@ -42,7 +42,8 @@ export function getPlayersText(tickdata: PositionRow, gameData: GameData): strin
     const eventsForTick = index.get(tickdata.demoTickNumber)
     for (let p = 0; p < tickdata.players.length; p++) {
         // print every player that is a target or source
-        if (eventArray[0].getSource !== undefined) {
+        if (eventArray[0].getSource !== undefined ||
+            eventArray[0].getTargets !== undefined) {
             let isTargetOrSource = false
             for (let eIndex = 0; eIndex < eventsForTick.length; eIndex++)  {
                 let event = eventArray[eventsForTick[eIndex]]
@@ -53,7 +54,8 @@ export function getPlayersText(tickdata: PositionRow, gameData: GameData): strin
                     isTargetOrSource = true
                     break;
                 }
-                else if (event.getSource() === tickdata.players[p].name) {
+                else if (eventArray[0].getSource !== undefined &&
+                    event.getSource() === tickdata.players[p].name) {
                     result.push("s")
                     isTargetOrSource = true
                     break;

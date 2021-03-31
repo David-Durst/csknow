@@ -583,6 +583,38 @@ export class DownloadedRowWithSourceOnly implements DemoData, Printable {
     }
 }
 
+export class DownloadedRowWithTargetOnly implements DemoData, Printable {
+    demoTickNumber: number;
+    demoFile: string;
+    targetNames: string[];
+    targetValues: string[];
+    otherColumnNames: string[];
+    otherColumnValues: string[];
+
+    constructor(demoTickNumber: number, demoFile: string, targetNames: string[],
+                targetValues: string[], otherColumnNames: string[],
+                otherColumnValues: string[]) {
+        this.demoTickNumber = demoTickNumber;
+        this.demoFile = demoFile;
+        this.targetNames = targetNames;
+        this.targetValues = targetValues;
+        this.otherColumnNames = otherColumnNames;
+        this.otherColumnValues = otherColumnValues;
+    }
+
+    getHTML(): string {
+        return printTable(
+            ["demo tick"].concat(this.targetNames)
+                .concat(this.otherColumnNames),
+            [this.demoTickNumber.toString()].concat(this.targetValues)
+                .concat(this.otherColumnValues))
+    }
+
+    getTargets(): string[] {
+        return this.targetValues;
+    }
+}
+
 export class DownloadedRowWithSourceTarget implements DemoData, Printable {
     demoTickNumber: number;
     demoFile: string;
@@ -627,6 +659,7 @@ export class DownloadedRowWithSourceTarget implements DemoData, Printable {
 enum RowType {
     noSrcTarget,
     justSrc,
+    justTarget,
     srcAndTarget
 }
 
@@ -648,6 +681,9 @@ export class DownloadParser implements Parseable {
         }
         else if (rowType == RowType.justSrc) {
             this.sourceName = keyColumnNames[0]
+        }
+        else if (rowType == RowType.justTarget) {
+            this.targetNames = keyColumnNames
         }
         else {
             this.sourceName = keyColumnNames[0]
@@ -674,6 +710,16 @@ export class DownloadParser implements Parseable {
             gameData.downloadedData.get(this.datasetName).push(
                 new DownloadedRowWithSourceOnly(
                     demoTickNumber, demoFile, this.sourceName, currentLine[sourceIndex],
+                    this.otherColumnNames, currentLine.slice(sourceIndex + 1, currentLine.length)
+                )
+            )
+        }
+        else if (this.rowType == RowType.justTarget) {
+            gameData.downloadedData.get(this.datasetName).push(
+                new DownloadedRowWithTargetOnly(
+                    // using source index as target index if no source
+                    demoTickNumber, demoFile, this.targetNames, currentLine.slice(sourceIndex,
+                        sourceIndex + this.targetNames.length),
                     this.otherColumnNames, currentLine.slice(sourceIndex + 1, currentLine.length)
                 )
             )
