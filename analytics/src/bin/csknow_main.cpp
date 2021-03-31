@@ -14,6 +14,7 @@
 #include "queries/netcode.h"
 #include "queries/looking.h"
 #include "queries/nonconsecutive.h"
+#include "queries/grouping.h"
 #include "indices/spotted.h"
 #define CPPHTTPLIB_OPENSSL_SUPPORT
 #include "httplib.h"
@@ -77,15 +78,18 @@ int main(int argc, char * argv[]) {
     std::cout << "netcode moments: " << netcodeResult.positionIndex.size() << std::endl;
     NonConsecutiveResult nonConsecutiveResult = queryNonConsecutive(position);
     std::cout << "nonconsecutive moments: " << nonConsecutiveResult.positionIndex.size() << std::endl;
+    GroupingResult groupingResult = queryGrouping(position);
+    std::cout << "grouping moments: " << groupingResult.positionIndex.size() << std::endl;
     std::cout << "total ticks: " << position.size << std::endl;
-    vector<string> queryNames = {"velocity", "lookers", "wallers", "baiters", "netcode", "nonconsecutive"};
+    vector<string> queryNames = {"velocity", "lookers", "wallers", "baiters", "netcode", "nonconsecutive", "grouping"};
     map<string, reference_wrapper<QueryResult>> queries {
         {queryNames[0], velocityResult},
         {queryNames[1], lookersResult},
         {queryNames[2], wallersResult},
         {queryNames[3], baitersResult},
         {queryNames[4], netcodeResult},
-        {queryNames[5], nonConsecutiveResult}
+        {queryNames[5], nonConsecutiveResult},
+        {queryNames[6], groupingResult},
     };
 
     // create the output files and the metadata describing files

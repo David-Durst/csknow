@@ -117,7 +117,10 @@ GroupingResult queryGrouping(const Position & position) {
             }
 
             // save all found groups
+            timeOfGrouping[windowStartIndex] = {};
             for (const auto & group : possibleGroups[curReader]) {
+                timeOfGrouping[windowStartIndex].push_back(group);
+                recentlyGrouped.insert(group);
                 tmpIndices[threadNum].push_back(windowStartIndex);
                 tmpTeamates[threadNum].push_back(group);
                 tmpMinX[threadNum].push_back(groupRegions[group].min.x);
