@@ -4,6 +4,7 @@
 #include "query.h"
 #include <string>
 #define GROUPING_WINDOW_SIZE 64
+#define GROUPING_DISTANCE 1000
 using std::string;
 
 class GroupingResult : public JustTargetResult {
@@ -13,6 +14,8 @@ public:
     vector<double> minX;
     vector<double> maxY;
     vector<double> minY;
+    vector<double> maxZ;
+    vector<double> minZ;
 
     GroupingResult() {
         targetNames = {"member 1, member 2, member 3"};
@@ -25,11 +28,12 @@ public:
     }
 
     vector<string> getExtraRow(const Position & position, int64_t queryIndex, int64_t posIndex) {
-        return {doubleToString(maxX[queryIndex], minX[queryIndex], maxY[queryIndex], minY[queryIndex])};
+        return {doubleToString(maxX[queryIndex]), doubleToString(minX[queryIndex]),
+                doubleToString(maxY[queryIndex]), doubleToString(minY[queryIndex])};
     }
 };
 
-WallersResult queryGrouping(const Position & position, const Spotted & spotted);
+GroupingResult queryGrouping(const Position & position);
 
 
 #endif //CSKNOW_GROUPING_H
