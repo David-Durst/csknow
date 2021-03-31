@@ -26,6 +26,8 @@ public:
     }
 };
 
+#define CT_TEAM 3
+#define T_TEAM 2
 struct PlayerPosition {
     char ** name;
     int8_t * team;
