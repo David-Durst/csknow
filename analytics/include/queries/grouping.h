@@ -1,0 +1,4 @@
+#ifndef CSKNOW_GROUPING_H
+#define CSKNOW_GROUPING_H
+
+#endif //CSKNOW_GROUPING_H
