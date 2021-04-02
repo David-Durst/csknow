@@ -4,7 +4,7 @@
 #include "query.h"
 #include <string>
 #define GROUPING_WINDOW_SIZE 64
-#define GROUPING_DISTANCE 1000
+#define GROUPING_DISTANCE 700
 using std::string;
 
 class GroupingResult : public JustTargetResult {

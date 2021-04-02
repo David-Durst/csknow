@@ -46,6 +46,8 @@ GroupingResult queryGrouping(const Position & position) {
     vector<double> tmpMaxY[numThreads];
     vector<double> tmpMaxZ[numThreads];
 
+    // find any frame when at least 3 people from a team are together
+    // this means i can track all groups of 3 people togther, but only record 1 and have good recall
 #pragma omp parallel for
     for (int64_t gameIndex = 0; gameIndex < numGames; gameIndex++) {
         int threadNum = omp_get_thread_num();
@@ -79,28 +81,28 @@ GroupingResult queryGrouping(const Position & position) {
                         if (!position.players[playerCIndex].isAlive) {
                             continue;
                         }
-                        if (computeDistance(position, playerAIndex, playerBIndex, windowStartIndex, windowStartIndex) < GROUPING_DISTANCE &&
-                            computeDistance(position, playerAIndex, playerCIndex, windowStartIndex, windowStartIndex) < GROUPING_DISTANCE &&
+                        AABB region{{1E6, 1E6, 1E6}, {-1E6, -1E6, -1E6}};
+                        adjustMinMaxRegion(position, windowStartIndex, region, playerAIndex, playerBIndex, playerCIndex);
+                        if (position.players[playerAIndex].team[windowStartIndex] == position.players[playerBIndex].team[windowStartIndex] &&
+                            position.players[playerAIndex].team[windowStartIndex] == position.players[playerCIndex].team[windowStartIndex] &&
+                            computeAABBSize(region) < GROUPING_DISTANCE &&
                             recentlyGrouped.find({playerAIndex, playerBIndex, playerCIndex}) == recentlyGrouped.end()) {
                             possibleGroups[curReader].insert({playerAIndex, playerBIndex, playerCIndex});
-                            AABB region{{1E6, 1E6, 1E6}, {-1E6, -1E6, -1E6}};
-                            adjustMinMaxRegion(position, windowStartIndex, region, playerAIndex, playerBIndex, playerCIndex);
                             groupRegions.insert({{playerAIndex, playerBIndex, playerCIndex}, region});
                         }
                     }
                 }
             }
 
-            // for each window, as long as any cheaters possibly left in that window
+            // for each window, as long as any groups possibly left
             for (int64_t windowIndex = windowStartIndex; windowIndex < windowStartIndex + GROUPING_WINDOW_SIZE && !possibleGroups[curReader].empty();
                  windowIndex++) {
-                // for all needed player supdate only needed players
+                // only track possible groups for this window
                 for (const auto & possibleGroup : possibleGroups[curReader]) {
-                    if (computeDistance(position, possibleGroup[0], possibleGroup[1], windowStartIndex, windowStartIndex) < GROUPING_DISTANCE &&
-                        computeDistance(position, possibleGroup[0], possibleGroup[2], windowStartIndex, windowStartIndex) < GROUPING_DISTANCE) {
+                    adjustMinMaxRegion(position, windowIndex, groupRegions[possibleGroup], possibleGroup[0],
+                                       possibleGroup[1], possibleGroup[2]);
+                    if (computeAABBSize(groupRegions[possibleGroup]) < GROUPING_DISTANCE) {
                         possibleGroups[curWriter].insert(possibleGroup);
-                        adjustMinMaxRegion(position, windowIndex, groupRegions[possibleGroup], possibleGroup[0],
-                                           possibleGroup[1], possibleGroup[2]);
                     }
                 }
                 possibleGroups[curReader].clear();
