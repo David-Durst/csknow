@@ -18,7 +18,7 @@ public:
     vector<double> minZ;
 
     GroupingResult() {
-        targetNames = {"member 1, member 2, member 3"};
+        targetNames = {"member 1", "member 2", "member 3"};
         ticksPerEvent = GROUPING_WINDOW_SIZE;
         keysForDiff = {0, 1, 2, 3, 4};
     }
