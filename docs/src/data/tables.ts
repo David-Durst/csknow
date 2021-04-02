@@ -720,7 +720,8 @@ export class DownloadParser implements Parseable {
                     // using source index as target index if no source
                     demoTickNumber, demoFile, this.targetNames, currentLine.slice(sourceIndex,
                         sourceIndex + this.targetNames.length),
-                    this.otherColumnNames, currentLine.slice(sourceIndex + 1, currentLine.length)
+                    this.otherColumnNames, currentLine.slice(sourceIndex +
+                        this.targetNames.length, currentLine.length)
                 )
             )
         }
