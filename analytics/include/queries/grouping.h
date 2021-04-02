@@ -5,6 +5,7 @@
 #include <string>
 #define GROUPING_WINDOW_SIZE 64
 #define GROUPING_DISTANCE 700
+#define MAX_GROUP_SIZE 5
 using std::string;
 
 class GroupingResult : public JustTargetResult {
@@ -18,9 +19,9 @@ public:
     vector<double> minZ;
 
     GroupingResult() {
-        targetNames = {"member 1", "member 2", "member 3"};
+        targetNames = {"member 1", "member 2", "member 3", "member 4", "member 5"};
         ticksPerEvent = GROUPING_WINDOW_SIZE;
-        keysForDiff = {0, 1, 2, 3, 4};
+        keysForDiff = {0, 1, 2, 3, 4, 5, 6};
     }
 
     vector<string> getExtraColumnNames() {

@@ -2,6 +2,7 @@
 #define CSKNOW_QUERY_H
 #include <vector>
 #include <sstream>
+#define NOT_PLAYER_ID -1
 using std::vector;
 using std::stringstream;
 

@@ -124,7 +124,11 @@ GroupingResult queryGrouping(const Position & position) {
                 timeOfGrouping[windowStartIndex].push_back(group);
                 recentlyGrouped.insert(group);
                 tmpIndices[threadNum].push_back(windowStartIndex);
-                tmpTeamates[threadNum].push_back(group);
+                vector<int> resultGroup = group;
+                while (resultGroup.size() < MAX_GROUP_SIZE) {
+                    resultGroup.push_back(NOT_PLAYER_ID);
+                }
+                tmpTeamates[threadNum].push_back(resultGroup);
                 tmpMinX[threadNum].push_back(groupRegions[group].min.x);
                 tmpMinY[threadNum].push_back(groupRegions[group].min.y);
                 tmpMinZ[threadNum].push_back(groupRegions[group].min.z);
