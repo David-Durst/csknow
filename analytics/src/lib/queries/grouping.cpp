@@ -124,7 +124,10 @@ GroupingResult queryGrouping(const Position & position) {
                     AABB regionCopy = groupRegions[possibleGroup];
                     adjustMinMaxRegion(position, windowIndex, regionCopy, possibleGroup[0],
                                        possibleGroup[1], possibleGroup[2]);
-                    if (computeAABBSize(groupRegions[possibleGroup]) < GROUPING_DISTANCE) {
+                    if (computeAABBSize(groupRegions[possibleGroup]) < GROUPING_DISTANCE &&
+                        position.players[possibleGroup[0]].isAlive[windowIndex] &&
+                        position.players[possibleGroup[1]].isAlive[windowIndex] &&
+                        position.players[possibleGroup[2]].isAlive[windowIndex]) {
                         possibleGroups[curWriter].insert(possibleGroup);
                         groupRegions[possibleGroup] = regionCopy;
                     }
@@ -149,7 +152,7 @@ GroupingResult queryGrouping(const Position & position) {
             // for all possible groups not culled (i.e. lasted until round end or last tick with a group) add them to confirmedGroups
             for (const auto & group : possibleGroups[curReader]) {
                 confirmedGroups.insert(group);
-                lastEndTimeForGroup[group[0]][group[1]][group[2]] = lastTimeInWindow;
+                lastEndTimeForGroup[group[0]][group[1]][group[2]] = position.demoTickNumber[lastTimeInWindow];
             }
             //std::cout << "merged confirmedGroups size" << confirmedGroups.size() << std::endl;
 
