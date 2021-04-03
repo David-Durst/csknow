@@ -49,12 +49,19 @@ GroupingResult queryGrouping(const Position & position) {
 
     // find any frame when at least 3 people from a team are together
     // this means i can track all groups of 3 people togther, but only record 1 and have good recall
-#pragma omp parallel for
+//#pragma omp parallel for
     for (int64_t gameIndex = 0; gameIndex < numGames; gameIndex++) {
         int threadNum = omp_get_thread_num();
         // don't repeat cheating events within window, decrease duplicate events
         // so track last ending time for each group
         int64_t lastEndTimeForGroup[NUM_PLAYERS][NUM_PLAYERS][NUM_PLAYERS];
+        for (int i = 0; i < NUM_PLAYERS; i++) {
+            for (int j = 0; j < NUM_PLAYERS; j++) {
+                for (int k = 0; k < NUM_PLAYERS; k++) {
+                    lastEndTimeForGroup[i][j][k] = 0;
+                }
+            }
+        }
         // since spotted tracks names for spotted player, need to map that to the player index
         map<string, int> playerNameToIndex = position.getPlayerNameToIndex(gameIndex);
 
@@ -66,7 +73,7 @@ GroupingResult queryGrouping(const Position & position) {
             // track who I currently need
             // double buffer so no need to remove untracked, just won't add them after each frame
             set<vector<int>> possibleGroups[2];
-            set<vector<int>> confirmedGroups[2];
+            set<vector<int>> confirmedGroups;
             map<vector<int>, AABB> groupRegions;
             int curReader = 0, curWriter = 1;
             // start tracking all groups at current tick who weren't grouped together in last window
@@ -102,6 +109,14 @@ GroupingResult queryGrouping(const Position & position) {
                 lastTimeInWindow = windowIndex;
                 // only track possible groups for this window
                 for (const auto & possibleGroup : possibleGroups[curReader]) {
+                    /*
+                    if (gameIndex == 0 && windowStartIndex == 263 && possibleGroup[0] == 7 && possibleGroup[1] == 8 && possibleGroup[2] == 9) {
+                        std::cout << "window index " << windowIndex << std::endl;
+                        if (windowIndex == 886) {
+                            std::cout << "last index" << std::endl;
+                        }
+                    }
+                     */
                     AABB regionCopy = groupRegions[possibleGroup];
                     adjustMinMaxRegion(position, windowIndex, regionCopy, possibleGroup[0],
                                        possibleGroup[1], possibleGroup[2]);
@@ -110,23 +125,31 @@ GroupingResult queryGrouping(const Position & position) {
                         groupRegions[possibleGroup] = regionCopy;
                     }
                     else if (windowIndex >= windowStartIndex + GROUPING_WINDOW_SIZE){
-                        confirmedGroups[curWriter].insert(possibleGroup);
+                        confirmedGroups.insert(possibleGroup);
                         lastEndTimeForGroup[possibleGroup[0]][possibleGroup[1]][possibleGroup[2]] = windowIndex;
                     }
                 }
+                /*
+                std::cout << "possibleGroups size" << possibleGroups[curWriter].size() << std::endl;
+                std::cout << "confirmedGroups size" << confirmedGroups.size() << std::endl;
+                 */
                 possibleGroups[curReader].clear();
-                confirmedGroups[curReader].clear();
                 curReader = (curReader + 1) % 2;
                 curWriter = (curWriter + 1) % 2;
             }
 
+            /*
+            std::cout << "possibleGroups size" << possibleGroups[curReader].size() << std::endl;
+            std::cout << "confirmedGroups size" << confirmedGroups.size() << std::endl;
+             */
             // for all possible groups not culled (i.e. lasted until round end or last tick with a group) add them to confirmedGroups
             for (const auto & group : possibleGroups[curReader]) {
-                confirmedGroups[curWriter].insert(group);
+                confirmedGroups.insert(group);
                 lastEndTimeForGroup[group[0]][group[1]][group[2]] = lastTimeInWindow;
             }
+            //std::cout << "merged confirmedGroups size" << confirmedGroups.size() << std::endl;
 
-            for (const auto & group : confirmedGroups[curReader]) {
+            for (const auto & group : confirmedGroups) {
                 tmpIndices[threadNum].push_back(windowStartIndex);
                 tmpTeamates[threadNum].push_back(group);
                 tmpEndTick[threadNum].push_back(lastEndTimeForGroup[group[0]][group[1]][group[2]]);
