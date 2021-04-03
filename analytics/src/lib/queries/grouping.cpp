@@ -91,10 +91,14 @@ GroupingResult queryGrouping(const Position & position) {
                         }
                         AABB region{{1E6, 1E6, 1E6}, {-1E6, -1E6, -1E6}};
                         adjustMinMaxRegion(position, windowStartIndex, region, playerAIndex, playerBIndex, playerCIndex);
+                        if (gameIndex == 0 && position.demoTickNumber[windowStartIndex] == 887 && playerAIndex == 7 && playerBIndex == 8 && playerCIndex == 9) {
+                            std::cout << "window index " << windowStartIndex << std::endl;
+                            std::cout << "region size " << computeAABBSize(region)  << std::endl;
+                        }
                         if (position.players[playerAIndex].team[windowStartIndex] == position.players[playerBIndex].team[windowStartIndex] &&
                             position.players[playerAIndex].team[windowStartIndex] == position.players[playerCIndex].team[windowStartIndex] &&
                             computeAABBSize(region) < GROUPING_DISTANCE &&
-                            lastEndTimeForGroup[playerAIndex][playerBIndex][playerCIndex] < windowStartIndex) {
+                            lastEndTimeForGroup[playerAIndex][playerBIndex][playerCIndex] < position.demoTickNumber[windowStartIndex]) {
                             possibleGroups[curReader].insert({playerAIndex, playerBIndex, playerCIndex});
                             groupRegions.insert({{playerAIndex, playerBIndex, playerCIndex}, region});
                         }
