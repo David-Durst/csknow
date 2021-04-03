@@ -17,7 +17,10 @@ also tracks the game's tick number during a demo tick as gameTickNumber.
 ## Event Tables
 ![](schema_events.png)
 
-There are four types of events classified by whether they have a single source player
-or multiple target players.
-For example, a source player might be the person cheating by staring at the enemy through the wall.
-The victim would be the person being stared at.
+Each event occurs at a moment in time (demoTickNumber) and has a duration (ticksPerEvent).
+Additionally, events may have different numbers of players involved.
+I break the events into four categories depending on whether they have a single 
+source player or multiple target players.
+For the wallers query that identifies cheaters staring at other players
+through a wall, the source is the cheater and the target is the person being stared at.
+
