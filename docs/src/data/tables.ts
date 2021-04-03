@@ -7,7 +7,9 @@ function parseBool(b: string) {
 
 export interface Parseable {
     tempLineContainer: string;
+    variableLength: boolean;
     ticksPerEvent: number;
+    ticksColumn: number;
 
     parseOneLine(currentLine: string[]): any
 
@@ -184,7 +186,9 @@ export class PositionRow implements DemoData {
 
 export class PositionParser implements Parseable {
     tempLineContainer: string = "";
+    variableLength = false;
     ticksPerEvent = 1;
+    ticksColumn = -1;
 
     parseOneLine(currentLine: string[]): any {
         // skip warmup
@@ -326,7 +330,9 @@ export class SpottedRow implements DemoData, Printable{
 
 export class SpottedParser implements Parseable {
     tempLineContainer: string = "";
+    variableLength = false;
     ticksPerEvent = 32;
+    ticksColumn = -1;
 
     parseOneLine(currentLine: string[]): any {
         gameData.spotted.push(new SpottedRow(
@@ -368,7 +374,9 @@ export class WeaponFireRow implements DemoData, Printable {
 
 export class WeaponFireParser implements Parseable {
     tempLineContainer: string = "";
+    variableLength = false;
     ticksPerEvent = 32;
+    ticksColumn = -1;
 
     parseOneLine(currentLine: string[]): any {
         gameData.weaponFire.push(new WeaponFireRow(
@@ -424,7 +432,9 @@ export class PlayerHurtRow implements DemoData, Printable {
 
 export class PlayerHurtParser implements Parseable {
     tempLineContainer: string = "";
+    variableLength = false;
     ticksPerEvent = 32;
+    ticksColumn = -1;
 
     parseOneLine(currentLine: string[]): any {
         gameData.playerHurt.push(new PlayerHurtRow(
@@ -462,7 +472,9 @@ export class GrenadesRow implements DemoData, Printable {
 
 export class GrenadesParser implements Parseable {
     tempLineContainer: string = "";
+    variableLength = false;
     ticksPerEvent = 32;
+    ticksColumn = -1;
 
     parseOneLine(currentLine: string[]): any {
         gameData.grenades.push(new GrenadesRow(
@@ -521,7 +533,9 @@ export class KillsRow implements DemoData, Printable {
 
 export class KillsParser implements Parseable {
     tempLineContainer: string = "";
+    variableLength = false;
     ticksPerEvent = 32;
+    ticksColumn = -1;
 
     parseOneLine(currentLine: string[]): any {
         gameData.kills.push(new KillsRow(
@@ -671,10 +685,15 @@ export class DownloadParser implements Parseable {
     targetNames: string[]
     otherColumnNames: string[];
     rowType: RowType;
+    // if variable length, set ticks column
+    // otherwise set ticksPerEvent
+    variableLength: boolean;
     ticksPerEvent: number;
+    ticksColumn: number;
 
     constructor(datsetName: string, keyColumnNames: string[],
-                otherColumnNames: string[], rowType: number, ticksPerEvent: number) {
+                otherColumnNames: string[], rowType: number,
+                ticksPerEvent: string) {
         this.datasetName = datsetName;
         if (rowType == RowType.noSrcTarget) {
             this.keyNames = keyColumnNames
@@ -691,7 +710,16 @@ export class DownloadParser implements Parseable {
         }
         this.otherColumnNames = otherColumnNames
         this.rowType = rowType;
-        this.ticksPerEvent = ticksPerEvent;
+        if (ticksPerEvent[0] == 'c') {
+            this.variableLength = true;
+            this.ticksPerEvent = -1;
+            this.ticksColumn = parseInt(ticksPerEvent.slice(1));
+        }
+        else {
+            this.variableLength = false;
+            this.ticksPerEvent = parseInt(ticksPerEvent);
+            this.ticksColumn = -1;
+        }
     }
 
     parseOneLine(currentLine: string[]): any {
