@@ -24,7 +24,9 @@ class QueryResult {
 public:
     vector<int64_t> positionIndex;
     vector<string> demoFile;
+    bool variableLength = false;
     int ticksPerEvent;
+    int ticksColumn;
     vector<int> keysForDiff;
 
     virtual string toCSVFiltered(const Position & position, string game) = 0;

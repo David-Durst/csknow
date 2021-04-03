@@ -39,6 +39,7 @@ GroupingResult queryGrouping(const Position & position) {
     int numThreads = omp_get_max_threads();
     vector<int64_t> tmpIndices[numThreads];
     vector<vector<int>> tmpTeamates[numThreads];
+    vector<int64_t> tmpEndTick[numThreads];
     vector<double> tmpMinX[numThreads];
     vector<double> tmpMinY[numThreads];
     vector<double> tmpMinZ[numThreads];
@@ -52,9 +53,8 @@ GroupingResult queryGrouping(const Position & position) {
     for (int64_t gameIndex = 0; gameIndex < numGames; gameIndex++) {
         int threadNum = omp_get_thread_num();
         // don't repeat cheating events within window, decrease duplicate events
-        // so track all recently grouped and remove old ones
-        set<vector<int>> recentlyGrouped;
-        map<int64_t, vector<vector<int>>> timeOfGrouping;
+        // so track last ending time for each group
+        int64_t lastEndTimeForGroup[NUM_PLAYERS][NUM_PLAYERS][NUM_PLAYERS];
         // since spotted tracks names for spotted player, need to map that to the player index
         map<string, int> playerNameToIndex = position.getPlayerNameToIndex(gameIndex);
 
@@ -66,6 +66,7 @@ GroupingResult queryGrouping(const Position & position) {
             // track who I currently need
             // double buffer so no need to remove untracked, just won't add them after each frame
             set<vector<int>> possibleGroups[2];
+            set<vector<int>> confirmedGroups[2];
             map<vector<int>, AABB> groupRegions;
             int curReader = 0, curWriter = 1;
             // start tracking all groups at current tick who weren't grouped together in last window
@@ -86,7 +87,7 @@ GroupingResult queryGrouping(const Position & position) {
                         if (position.players[playerAIndex].team[windowStartIndex] == position.players[playerBIndex].team[windowStartIndex] &&
                             position.players[playerAIndex].team[windowStartIndex] == position.players[playerCIndex].team[windowStartIndex] &&
                             computeAABBSize(region) < GROUPING_DISTANCE &&
-                            recentlyGrouped.find({playerAIndex, playerBIndex, playerCIndex}) == recentlyGrouped.end()) {
+                            lastEndTimeForGroup[playerAIndex][playerBIndex][playerCIndex] < windowStartIndex) {
                             possibleGroups[curReader].insert({playerAIndex, playerBIndex, playerCIndex});
                             groupRegions.insert({{playerAIndex, playerBIndex, playerCIndex}, region});
                         }
@@ -94,41 +95,41 @@ GroupingResult queryGrouping(const Position & position) {
                 }
             }
 
-            // for each window, as long as any groups possibly left
-            for (int64_t windowIndex = windowStartIndex; windowIndex < windowStartIndex + GROUPING_WINDOW_SIZE && !possibleGroups[curReader].empty();
+            int64_t lastTimeInWindow;
+            // for as long as any groups possibly left
+            for (int64_t windowIndex = windowStartIndex; !position.roundEnd[windowIndex] && !possibleGroups[curReader].empty();
                  windowIndex++) {
+                lastTimeInWindow = windowIndex;
                 // only track possible groups for this window
                 for (const auto & possibleGroup : possibleGroups[curReader]) {
-                    adjustMinMaxRegion(position, windowIndex, groupRegions[possibleGroup], possibleGroup[0],
+                    AABB regionCopy = groupRegions[possibleGroup];
+                    adjustMinMaxRegion(position, windowIndex, regionCopy, possibleGroup[0],
                                        possibleGroup[1], possibleGroup[2]);
                     if (computeAABBSize(groupRegions[possibleGroup]) < GROUPING_DISTANCE) {
                         possibleGroups[curWriter].insert(possibleGroup);
+                        groupRegions[possibleGroup] = regionCopy;
+                    }
+                    else if (windowIndex >= windowStartIndex + GROUPING_WINDOW_SIZE){
+                        confirmedGroups[curWriter].insert(possibleGroup);
+                        lastEndTimeForGroup[possibleGroup[0]][possibleGroup[1]][possibleGroup[2]] = windowIndex;
                     }
                 }
                 possibleGroups[curReader].clear();
+                confirmedGroups[curReader].clear();
                 curReader = (curReader + 1) % 2;
                 curWriter = (curWriter + 1) % 2;
             }
 
-            // remove old windows from recentlyGroupd
-            if (timeOfGrouping.find(windowStartIndex - GROUPING_WINDOW_SIZE) != timeOfGrouping.end()) {
-                for (const auto & oldGroup : timeOfGrouping[windowStartIndex - GROUPING_WINDOW_SIZE]) {
-                    recentlyGrouped.erase(oldGroup);
-                }
-                timeOfGrouping.erase(windowStartIndex - GROUPING_WINDOW_SIZE);
+            // for all possible groups not culled (i.e. lasted until round end or last tick with a group) add them to confirmedGroups
+            for (const auto & group : possibleGroups[curReader]) {
+                confirmedGroups[curWriter].insert(group);
+                lastEndTimeForGroup[group[0]][group[1]][group[2]] = lastTimeInWindow;
             }
 
-            // save all found groups
-            timeOfGrouping[windowStartIndex] = {};
-            for (const auto & group : possibleGroups[curReader]) {
-                timeOfGrouping[windowStartIndex].push_back(group);
-                recentlyGrouped.insert(group);
+            for (const auto & group : confirmedGroups[curReader]) {
                 tmpIndices[threadNum].push_back(windowStartIndex);
-                vector<int> resultGroup = group;
-                while (resultGroup.size() < MAX_GROUP_SIZE) {
-                    resultGroup.push_back(NOT_PLAYER_ID);
-                }
-                tmpTeamates[threadNum].push_back(resultGroup);
+                tmpTeamates[threadNum].push_back(group);
+                tmpEndTick[threadNum].push_back(lastEndTimeForGroup[group[0]][group[1]][group[2]]);
                 tmpMinX[threadNum].push_back(groupRegions[group].min.x);
                 tmpMinY[threadNum].push_back(groupRegions[group].min.y);
                 tmpMinZ[threadNum].push_back(groupRegions[group].min.z);
@@ -144,6 +145,7 @@ GroupingResult queryGrouping(const Position & position) {
         for (int j = 0; j < tmpIndices[i].size(); j++) {
             result.positionIndex.push_back(tmpIndices[i][j]);
             result.teammates.push_back(tmpTeamates[i][j]);
+            result.endTick.push_back((tmpEndTick[i][j]));
             result.minX.push_back({tmpMinX[i][j]});
             result.minY.push_back({tmpMinY[i][j]});
             result.minZ.push_back({tmpMinZ[i][j]});

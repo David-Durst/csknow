@@ -176,7 +176,12 @@ int main(int argc, char * argv[]) {
                     ss << extraColName << ",";
                 }
                 ss << queryValue.getDatatype() << ",";
-                ss << queryValue.ticksPerEvent;
+                if (queryValue.variableLength) {
+                    ss << "c" << queryValue.ticksColumn << ",";
+                }
+                else {
+                    ss << queryValue.ticksPerEvent;
+                }
                 ss << std::endl;
             }
             res.set_content(ss.str(), "text/plain");

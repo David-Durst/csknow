@@ -11,6 +11,7 @@ using std::string;
 class GroupingResult : public JustTargetResult {
 public:
     vector<vector<int>> & teammates = targets;
+    vector<int64_t> endTick;
     vector<double> maxX;
     vector<double> minX;
     vector<double> maxY;
@@ -19,17 +20,18 @@ public:
     vector<double> minZ;
 
     GroupingResult() {
-        targetNames = {"member 1", "member 2", "member 3", "member 4", "member 5"};
-        ticksPerEvent = GROUPING_WINDOW_SIZE;
-        keysForDiff = {0, 1, 2, 3, 4, 5, 6};
+        targetNames = {"member 1", "member 2", "member 3"};
+        variableLength = true;
+        ticksColumn = 5;
+        keysForDiff = {0, 1, 2, 3, 4};
     }
 
     vector<string> getExtraColumnNames() {
-        return {"max x", "min x", "max y", "min y"};
+        return {"end tick", "max x", "min x", "max y", "min y"};
     }
 
     vector<string> getExtraRow(const Position & position, int64_t queryIndex, int64_t posIndex) {
-        return {doubleToString(maxX[queryIndex]), doubleToString(minX[queryIndex]),
+        return {std::to_string(endTick[queryIndex]), doubleToString(maxX[queryIndex]), doubleToString(minX[queryIndex]),
                 doubleToString(maxY[queryIndex]), doubleToString(minY[queryIndex])};
     }
 };
