@@ -31,6 +31,10 @@ export interface Printable {
     getTargets?(): string[]
 }
 
+export interface GetUnderlyingColumns {
+    getColumns(): string[]
+}
+
 export function printTable(keys: string[], values: string[]): string {
     let result = "<div>"
     for (let i = 0; i < keys.length; i++) {
@@ -548,7 +552,7 @@ export class KillsParser implements Parseable {
     reader: any = null
 }
 
-export class DownloadedRowNoSourceTarget implements DemoData, Printable {
+export class DownloadedRowNoSourceTarget implements DemoData, Printable, GetUnderlyingColumns {
     demoTickNumber: number;
     demoFile: string;
     otherColumnNames: string[];
@@ -566,9 +570,14 @@ export class DownloadedRowNoSourceTarget implements DemoData, Printable {
         return printTable(["demo tick"].concat(this.otherColumnNames),
             [this.demoTickNumber.toString()].concat(this.otherColumnValues))
     }
+
+    getColumns(): string[] {
+        return [this.demoTickNumber.toString(), this.demoFile]
+            .concat(this.otherColumnValues);
+    }
 }
 
-export class DownloadedRowWithSourceOnly implements DemoData, Printable {
+export class DownloadedRowWithSourceOnly implements DemoData, Printable, GetUnderlyingColumns {
     demoTickNumber: number;
     demoFile: string;
     sourceName: string;
@@ -595,9 +604,14 @@ export class DownloadedRowWithSourceOnly implements DemoData, Printable {
     getSource(): string {
         return this.sourceValue;
     }
+
+    getColumns(): string[] {
+        return [this.demoTickNumber.toString(), this.demoFile, this.sourceValue]
+            .concat(this.otherColumnValues);
+    }
 }
 
-export class DownloadedRowWithTargetOnly implements DemoData, Printable {
+export class DownloadedRowWithTargetOnly implements DemoData, Printable, GetUnderlyingColumns {
     demoTickNumber: number;
     demoFile: string;
     targetNames: string[];
@@ -627,9 +641,15 @@ export class DownloadedRowWithTargetOnly implements DemoData, Printable {
     getTargets(): string[] {
         return this.targetValues;
     }
+
+    getColumns(): string[] {
+        return [this.demoTickNumber.toString(), this.demoFile]
+            .concat(this.targetValues)
+            .concat(this.otherColumnValues);
+    }
 }
 
-export class DownloadedRowWithSourceTarget implements DemoData, Printable {
+export class DownloadedRowWithSourceTarget implements DemoData, Printable, GetUnderlyingColumns {
     demoTickNumber: number;
     demoFile: string;
     sourceName: string;
@@ -667,6 +687,12 @@ export class DownloadedRowWithSourceTarget implements DemoData, Printable {
 
     getTargets(): string[] {
         return this.targetValues;
+    }
+
+    getColumns(): string[] {
+        return [this.demoTickNumber.toString(), this.demoFile, this.sourceValue]
+            .concat(this.targetValues)
+            .concat(this.otherColumnValues);
     }
 }
 
@@ -789,8 +815,8 @@ export class GameData {
     positionToKills: Map<number, number[]> = new Map<number, number[]>()
     downloadedDataNames: string[] = [];
     downloadedParsers: Map<string, Parseable> = new Map<string, Parseable>();
-    downloadedData: Map<string, (DemoData & Printable)[]> =
-        new Map<string, (DemoData & Printable)[]>();
+    downloadedData: Map<string, (DemoData & Printable & GetUnderlyingColumns)[]> =
+        new Map<string, (DemoData & Printable & GetUnderlyingColumns)[]>();
     downloadedPositionToEvent: Map<string, Map<number, number[]>> =
         new Map<string, Map<number, number[]>>();
 
