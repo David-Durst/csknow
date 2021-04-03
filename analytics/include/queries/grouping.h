@@ -22,7 +22,8 @@ public:
     GroupingResult() {
         targetNames = {"member 1", "member 2", "member 3"};
         variableLength = true;
-        ticksColumn = 5;
+        // this is relative to extraColumns
+        ticksColumn = 0;
         keysForDiff = {0, 1, 2, 3, 4};
     }
 
