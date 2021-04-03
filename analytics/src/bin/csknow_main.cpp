@@ -177,7 +177,7 @@ int main(int argc, char * argv[]) {
                 }
                 ss << queryValue.getDatatype() << ",";
                 if (queryValue.variableLength) {
-                    ss << "c" << queryValue.ticksColumn << ",";
+                    ss << "c" << queryValue.ticksColumn;
                 }
                 else {
                     ss << queryValue.ticksPerEvent;
