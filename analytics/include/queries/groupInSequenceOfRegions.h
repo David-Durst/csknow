@@ -55,14 +55,14 @@ public:
         int posInResults = 0;
         for (int i = 0; i < wantToReachRegions.size(); i++) {
             if (wantToReachRegions[i]) {
-                colNames.push_back(memberInRegion[queryIndex][posInResults]);
-                colNames.push_back(std::to_string(tickInRegion[queryIndex][posInResults]));
-                colNames.push_back(doubleToString(xInRegion[queryIndex][posInResults]));
-                colNames.push_back(doubleToString(yInRegion[queryIndex][posInResults]));
-                colNames.push_back(doubleToString(zInRegion[queryIndex][posInResults]));
+                results.push_back(memberInRegion[queryIndex][posInResults]);
+                results.push_back(std::to_string(tickInRegion[queryIndex][posInResults]));
+                results.push_back(doubleToString(xInRegion[queryIndex][posInResults]));
+                results.push_back(doubleToString(yInRegion[queryIndex][posInResults]));
+                results.push_back(doubleToString(zInRegion[queryIndex][posInResults]));
                 // using different index here as store stillGrouped once for all regions
                 // while per column results only store entries for entries you actually want to be in
-                colNames.push_back(boolToString(stillGrouped[i]));
+                results.push_back(boolToString(stillGrouped[i]));
                 posInResults++;
             }
         }
