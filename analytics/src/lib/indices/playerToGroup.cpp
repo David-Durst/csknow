@@ -5,7 +5,6 @@ PlayerToGroupIndex::PlayerToGroupIndex(const Position &position, const GroupingR
     int64_t numGames = groupingResult.gameStarts.size() - 1;
     int numThreads = omp_get_max_threads();
     vector<vector<int64_t>> tmpGroupsPerPlayerTick[numThreads][NUM_PLAYERS];
-    vector<int64_t> tmpIndices[numThreads][NUM_PLAYERS];
 
     for (int i = 0; i < NUM_PLAYERS; i++) {
         groupsPerPlayerTick[i].resize(position.size);
@@ -13,6 +12,7 @@ PlayerToGroupIndex::PlayerToGroupIndex(const Position &position, const GroupingR
 
 #pragma omp parallel for
     for (int64_t gameIndex = 0; gameIndex < numGames; gameIndex++) {
+        int threadNum = omp_get_thread_num();
         // need position as outer loop since since demoTick is unique only for position, may have multiple groups
         // for one position tick
         int64_t groupingIndex = groupingResult.gameStarts[gameIndex];
@@ -39,13 +39,6 @@ PlayerToGroupIndex::PlayerToGroupIndex(const Position &position, const GroupingR
                     }
                 }
             }
-        }
-    }
-
-    for (int thread = 0; thread < numThreads; thread++) {
-        for (int i = 0; i < NUM_PLAYERS; i++) {
-            for (int64_t t = 0; t < tmpGroupsPerPlayerTick[thread][i].size(); t++)
-            groupsPerPlayerTick[i][tmpIndices[thread][i][t]] = tmpGroupsPerPlayerTick[thread][i][t];
         }
     }
 }
