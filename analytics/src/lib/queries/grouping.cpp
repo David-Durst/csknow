@@ -89,7 +89,8 @@ GroupingResult queryGrouping(const Position & position) {
                         if (!position.players[playerCIndex].isAlive) {
                             continue;
                         }
-                        AABB region{{1E6, 1E6, 1E6}, {-1E6, -1E6, -1E6}};
+                        AABB region;
+                        region.makeInvalid();
                         adjustMinMaxRegion(position, windowStartIndex, region, playerAIndex, playerBIndex, playerCIndex);
                         if (gameIndex == 0 && position.demoTickNumber[windowStartIndex] == 887 && playerAIndex == 7 && playerBIndex == 8 && playerCIndex == 9) {
                             std::cout << "window index " << windowStartIndex << std::endl;
@@ -113,12 +114,6 @@ GroupingResult queryGrouping(const Position & position) {
                 lastTimeInWindow = windowIndex;
                 // only track possible groups for this window
                 for (const auto & possibleGroup : possibleGroups[curReader]) {
-                    if (gameIndex == 0 && position.demoTickNumber[windowStartIndex] == 293 && possibleGroup[0] == 2 && possibleGroup[1] == 7 && possibleGroup[2] == 9) {
-                        std::cout << "window index " << windowIndex << std::endl;
-                        if (position.demoTickNumber[windowIndex] == 1637) {
-                            std::cout << "last index" << std::endl;
-                        }
-                    }
                     AABB regionCopy = groupRegions[possibleGroup];
                     adjustMinMaxRegion(position, windowIndex, regionCopy, possibleGroup[0],
                                        possibleGroup[1], possibleGroup[2]);
@@ -127,7 +122,13 @@ GroupingResult queryGrouping(const Position & position) {
                     frameRegion.makeInvalid();
                     adjustMinMaxRegion(position, windowIndex, frameRegion, possibleGroup[0],
                                        possibleGroup[1], possibleGroup[2]);
-                    std::cout << "frame region size " << computeAABBSize(frameRegion) << std::endl;
+                    if (gameIndex == 0 && position.demoTickNumber[windowStartIndex] == 293 && possibleGroup[0] == 2 && possibleGroup[1] == 7 && possibleGroup[2] == 9) {
+                        std::cout << "window index " << position.demoTickNumber[windowIndex] << std::endl;
+                        std::cout << "frame region size " << computeAABBSize(frameRegion) << std::endl;
+                        if (position.demoTickNumber[windowIndex] == 1668) {
+                            std::cout << "last index" << std::endl;
+                        }
+                    }
                     if (computeAABBSize(frameRegion) < GROUPING_DISTANCE &&
                         position.players[possibleGroup[0]].isAlive[windowIndex] &&
                         position.players[possibleGroup[1]].isAlive[windowIndex] &&
@@ -137,7 +138,8 @@ GroupingResult queryGrouping(const Position & position) {
                     }
                     else if (windowIndex >= windowStartIndex + GROUPING_WINDOW_SIZE){
                         confirmedGroups.insert(possibleGroup);
-                        lastEndTimeForGroup[possibleGroup[0]][possibleGroup[1]][possibleGroup[2]] = windowIndex;
+                        lastEndTimeForGroup[possibleGroup[0]][possibleGroup[1]][possibleGroup[2]] =
+                                position.demoTickNumber[windowIndex];
                     }
                 }
                 /*

@@ -55,7 +55,7 @@ struct AABB {
     Vec3 max;
 
     void makeInvalid() {
-        max = {std::numeric_limits<double>::infinity(), std::numeric_limits<double>::infinity(),
+        min = {std::numeric_limits<double>::infinity(), std::numeric_limits<double>::infinity(),
                std::numeric_limits<double>::infinity()};
         max = {-std::numeric_limits<double>::infinity(), -std::numeric_limits<double>::infinity(),
                -std::numeric_limits<double>::infinity()};
