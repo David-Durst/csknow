@@ -109,7 +109,10 @@ GroupingResult queryGrouping(const Position & position) {
 
             int64_t lastTimeInWindow;
             // track window until end of round or until all groups split apart
-            for (int64_t windowIndex = windowStartIndex; !position.roundEnd[windowIndex] && !possibleGroups[curReader].empty();
+            // need to track both freezeTime and roundEnd as round ends then nothing for a while before start
+            // and freezeTime denotes next start. (note: really freezeTime, not freezeTimeEnded. need to rename)
+            for (int64_t windowIndex = windowStartIndex; !position.roundEnd[windowIndex] && !position.freezeTimeEnded[windowIndex]
+                && !possibleGroups[curReader].empty();
                  windowIndex++) {
                 lastTimeInWindow = windowIndex;
                 // only track possible groups for this window
@@ -140,10 +143,13 @@ GroupingResult queryGrouping(const Position & position) {
                 curWriter = (curWriter + 1) % 2;
             }
 
-            // for all possible groups not culled (i.e. lasted until round end or last tick with a group) add them to confirmedGroups
-            for (const auto & group : possibleGroups[curReader]) {
-                confirmedGroups.insert(group);
-                lastEndTimeForGroup[group[0]][group[1]][group[2]] = position.demoTickNumber[lastTimeInWindow];
+            // if above ran for more than GROUPING_WINDOW_INDEX
+            if (lastTimeInWindow >= windowStartIndex + GROUPING_WINDOW_SIZE) {
+                // for all possible groups not culled (i.e. lasted until round end or last tick with a group) add them to confirmedGroups
+                for (const auto & group : possibleGroups[curReader]) {
+                    confirmedGroups.insert(group);
+                    lastEndTimeForGroup[group[0]][group[1]][group[2]] = position.demoTickNumber[lastTimeInWindow];
+                }
             }
 
             for (const auto & group : confirmedGroups) {
