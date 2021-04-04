@@ -74,6 +74,7 @@ GroupInSequenceOfRegionsResult queryGroupingInSequenceOfRegions(const Position &
                                                                 const GroupingResult & groupingResult,
                                                                 vector<CompoundAABB> sequenceOfRegions,
                                                                 vector<bool> wantToReachRegions,
-                                                                vector<bool> stillGrouped);
+                                                                vector<bool> stillGrouped,
+                                                                set<int> teams);
 
 #endif //CSKNOW_GROUPINSEQUENCEOFREGIONS_H

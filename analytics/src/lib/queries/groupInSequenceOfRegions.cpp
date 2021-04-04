@@ -12,7 +12,8 @@ GroupInSequenceOfRegionsResult queryGroupingInSequenceOfRegions(const Position &
                                                                 const GroupingResult & groupingResult,
                                                                 vector<CompoundAABB> sequenceOfRegions,
                                                                 vector<bool> wantToReachRegions,
-                                                                vector<bool> stillGrouped) {
+                                                                vector<bool> stillGrouped,
+                                                                set<int> teams) {
     int64_t numGames = position.gameStarts.size() - 1;
     int numThreads = omp_get_max_threads();
     vector<int64_t> tmpIndices[numThreads];
@@ -32,14 +33,15 @@ GroupInSequenceOfRegionsResult queryGroupingInSequenceOfRegions(const Position &
     for (int64_t gameIndex = 0; gameIndex < numGames; gameIndex++) {
         int threadNum = omp_get_thread_num();
         int64_t groupingIndex = groupingResult.gameStarts[gameIndex];
-        for (int64_t positionIndex = position.gameStarts[gameIndex];
+        for (int64_t positionIndex = position.firstRowAfterWarmup[gameIndex];
              positionIndex < position.gameStarts[gameIndex + 1];
              positionIndex++) {
             while (groupingIndex < groupingResult.positionIndex.size() &&
                     groupingIndex < groupingResult.gameStarts[gameIndex + 1] &&
-                   groupingResult.positionIndex[groupingIndex] <= position.demoTickNumber[positionIndex]) {
-                if (groupingResult.positionIndex[groupingIndex] != position.demoTickNumber[positionIndex]) {
+                   groupingResult.positionIndex[groupingIndex] <= positionIndex) {
+                if (groupingResult.positionIndex[groupingIndex] != positionIndex) {
                     std::cerr << "bad groupingResult at grouping index " << groupingIndex << std::endl;
+                    groupingIndex++;
                     continue;
                 }
                 vector<string> memberCurGrouping;
@@ -47,6 +49,12 @@ GroupInSequenceOfRegionsResult queryGroupingInSequenceOfRegions(const Position &
                 vector<double> xCurGrouping;
                 vector<double> yCurGrouping;
                 vector<double> zCurGrouping;
+                // filter by teams
+                if (teams.find(position.players[groupingResult.teammates[groupingIndex][0]].team[positionIndex]) ==
+                    teams.end()) {
+                    groupingIndex++;
+                    continue;
+                }
 
                 // for each region in sequence, find first time a player is in first region (if wantToReachRegion)
                 // or verify not in region (if not wantToReachRegion)
@@ -121,6 +129,7 @@ GroupInSequenceOfRegionsResult queryGroupingInSequenceOfRegions(const Position &
                         }
                     }
                 }
+                groupingIndex++;
             }
         }
     }
