@@ -28,7 +28,7 @@ GroupInSequenceOfRegionsResult queryGroupingInSequenceOfRegions(const Position &
 
     // find any frame when at least 3 people from a team are together
     // this means i can track all groups of 3 people togther, but only record 1 and have good recall
-#pragma omp parallel for
+//#pragma omp parallel for
     for (int64_t gameIndex = 0; gameIndex < numGames; gameIndex++) {
         int threadNum = omp_get_thread_num();
         int64_t groupingIndex = groupingResult.gameStarts[gameIndex];
@@ -60,11 +60,15 @@ GroupInSequenceOfRegionsResult queryGroupingInSequenceOfRegions(const Position &
                     bool playerInRegions = false;
                     // track last value of positionIndexInGroup
                     int64_t lastCheckedPositionIndex = 0;
+                    // stop checking if everyone dead
+                    bool groupAlive = true;
                     for (int64_t positionIndexInGroup = groupingResult.positionIndex[groupingIndex];
                         // always stop at end of round
                         !position.roundEnd[positionIndexInGroup] &&
                         // stop once found someone
                         !playerInRegions &&
+                        // stop once everyone in group dead
+                        groupAlive &&
                         // if also require still grouped, check that still in group
                         (!stillGrouped[seqIndex] ||
                             position.demoTickNumber[positionIndexInGroup] <= groupingResult.endTick[groupingIndex]);
@@ -107,6 +111,14 @@ GroupInSequenceOfRegionsResult queryGroupingInSequenceOfRegions(const Position &
                     // nothing to start after
                     else if (playerInRegions) {
                         positionIndexSeq = lastCheckedPositionIndex;
+                    }
+                    // disable group is everyone dead
+                    groupAlive = false;
+                    for (const auto & member : groupingResult.teammates[groupingIndex]) {
+                        if (position.players[member].isAlive) {
+                            groupAlive = true;
+                            break;
+                        }
                     }
                 }
             }
