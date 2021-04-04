@@ -53,6 +53,13 @@ public:
 struct AABB {
     Vec3 min;
     Vec3 max;
+
+    void makeInvalid() {
+        max = {std::numeric_limits<double>::infinity(), std::numeric_limits<double>::infinity(),
+               std::numeric_limits<double>::infinity()};
+        max = {-std::numeric_limits<double>::infinity(), -std::numeric_limits<double>::infinity(),
+               -std::numeric_limits<double>::infinity()};
+    }
 };
 
 const int HEIGHT = 72;

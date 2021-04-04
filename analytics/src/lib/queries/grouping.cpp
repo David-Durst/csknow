@@ -113,18 +113,22 @@ GroupingResult queryGrouping(const Position & position) {
                 lastTimeInWindow = windowIndex;
                 // only track possible groups for this window
                 for (const auto & possibleGroup : possibleGroups[curReader]) {
-                    /*
-                    if (gameIndex == 0 && windowStartIndex == 263 && possibleGroup[0] == 7 && possibleGroup[1] == 8 && possibleGroup[2] == 9) {
+                    if (gameIndex == 0 && position.demoTickNumber[windowStartIndex] == 293 && possibleGroup[0] == 2 && possibleGroup[1] == 7 && possibleGroup[2] == 9) {
                         std::cout << "window index " << windowIndex << std::endl;
-                        if (windowIndex == 886) {
+                        if (position.demoTickNumber[windowIndex] == 1637) {
                             std::cout << "last index" << std::endl;
                         }
                     }
-                     */
                     AABB regionCopy = groupRegions[possibleGroup];
                     adjustMinMaxRegion(position, windowIndex, regionCopy, possibleGroup[0],
                                        possibleGroup[1], possibleGroup[2]);
-                    if (computeAABBSize(groupRegions[possibleGroup]) < GROUPING_DISTANCE &&
+                    // track just this frame to see if still together
+                    AABB frameRegion;
+                    frameRegion.makeInvalid();
+                    adjustMinMaxRegion(position, windowIndex, frameRegion, possibleGroup[0],
+                                       possibleGroup[1], possibleGroup[2]);
+                    std::cout << "frame region size " << computeAABBSize(frameRegion) << std::endl;
+                    if (computeAABBSize(frameRegion) < GROUPING_DISTANCE &&
                         position.players[possibleGroup[0]].isAlive[windowIndex] &&
                         position.players[possibleGroup[1]].isAlive[windowIndex] &&
                         position.players[possibleGroup[2]].isAlive[windowIndex]) {
