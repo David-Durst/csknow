@@ -96,13 +96,15 @@ int main(int argc, char * argv[]) {
     }};
     exactlyOnASite.regions[0].coverAllZ();
     exactlyOnASite.regions[1].coverAllZ();
+    /*
     GroupInSequenceOfRegionsResult successfulATakes =
             queryGroupingInSequenceOfRegions(position, groupingResult, {aroundARegions, exactlyOnASite},
-                                             {true, true}, {true, false}, {2});
+                                             {true, true}, {true, false}, {TEAM_T});
     std::cout << "successful a takes moments: " << successfulATakes.positionIndex.size() << std::endl;
+     */
     GroupInSequenceOfRegionsResult failedATakes =
             queryGroupingInSequenceOfRegions(position, groupingResult, {aroundARegions, exactlyOnASite},
-                                             {true, false}, {true, false}, {2});
+                                             {true, false}, {true, false}, {TEAM_T});
     std::cout << "failed a takes moments: " << failedATakes.positionIndex.size() << std::endl;
     std::cout << "total ticks: " << position.size << std::endl;
     vector<string> queryNames = {"velocity", "lookers", "wallers", "baiters", "netcode", "nonconsecutive", "grouping"};

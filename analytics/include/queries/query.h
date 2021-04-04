@@ -3,6 +3,8 @@
 #include <vector>
 #include <sstream>
 #define NOT_PLAYER_ID -1
+#define TEAM_T 2
+#define TEAM_CT 3
 using std::vector;
 using std::stringstream;
 

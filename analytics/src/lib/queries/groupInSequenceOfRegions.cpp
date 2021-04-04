@@ -82,6 +82,15 @@ GroupInSequenceOfRegionsResult queryGroupingInSequenceOfRegions(const Position &
                             position.demoTickNumber[positionIndexInGroup] <= groupingResult.endTick[groupingIndex]);
                          positionIndexInGroup++) {
                         lastCheckedPositionIndex = positionIndexInGroup;
+                        /*
+                        vector<int> m = {0,1,4};
+                        if (groupingResult.teammates[groupingIndex] == m) {
+                            int x = 2;
+                            if (position.demoTickNumber[positionIndexInGroup] > 4050) {
+                                std::cout << "hi" << std::endl;
+                            }
+                        }
+                         */
                         for (const auto & member : groupingResult.teammates[groupingIndex]) {
                             Vec3 memberPosition = {position.players[member].xPosition[positionIndexInGroup],
                                                    position.players[member].yPosition[positionIndexInGroup],
@@ -106,9 +115,11 @@ GroupInSequenceOfRegionsResult queryGroupingInSequenceOfRegions(const Position &
                     // other wise this iteration was successful. if this the last iteration and was successful,
                     // then add results vector
                     else if (seqIndex == sequenceOfRegions.size() - 1) {
+                        tmpIndices[threadNum].push_back(positionIndex);
                         tmpTeamates[threadNum].push_back(groupingResult.teammates[groupingIndex]);
                         tmpEndTick[threadNum].push_back(position.demoTickNumber[lastCheckedPositionIndex]);
                         tmpMemberInRegion[threadNum].push_back(memberCurGrouping);
+                        tmpTickInRegion[threadNum].push_back(tickInRegionCurGrouping);
                         tmpX[threadNum].push_back(xCurGrouping);
                         tmpY[threadNum].push_back(yCurGrouping);
                         tmpZ[threadNum].push_back(zCurGrouping);
