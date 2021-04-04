@@ -19,15 +19,19 @@ public:
     vector<vector<double>> xInRegion;
     vector<vector<double>> yInRegion;
     vector<vector<double>> zInRegion;
+    // this is requirement for all results, so only need to store once
+    vector<bool> stillGrouped;
     vector<string> colNames;
 
-    GroupInSequenceOfRegionsResult(vector<CompoundAABB> sequenceOfRegions, vector<bool> wantToReachRegions) {
+    GroupInSequenceOfRegionsResult(vector<CompoundAABB> sequenceOfRegions, vector<bool> wantToReachRegions,
+                                   vector<bool> stillGrouped) {
         targetNames = {"member 1", "member 2", "member 3"};
         variableLength = true;
         ticksColumn = 5;
         keysForDiff = {0, 1, 2, 3, 4, 5};
         this->sequenceOfRegions = sequenceOfRegions;
         this->wantToReachRegions = wantToReachRegions;
+        this->stillGrouped = stillGrouped;
 
         colNames = {"end tick"};
         for (int i = 0; i < wantToReachRegions.size(); i++) {
@@ -37,6 +41,7 @@ public:
                 colNames.push_back("x " + std::to_string(i));
                 colNames.push_back("y " + std::to_string(i));
                 colNames.push_back("z " + std::to_string(i));
+                colNames.push_back("still grouped " + std::to_string(i));
             }
         }
     }
@@ -55,6 +60,9 @@ public:
                 colNames.push_back(doubleToString(xInRegion[queryIndex][posInResults]));
                 colNames.push_back(doubleToString(yInRegion[queryIndex][posInResults]));
                 colNames.push_back(doubleToString(zInRegion[queryIndex][posInResults]));
+                // using different index here as store stillGrouped once for all regions
+                // while per column results only store entries for entries you actually want to be in
+                colNames.push_back(boolToString(stillGrouped[i]));
                 posInResults++;
             }
         }
@@ -63,8 +71,9 @@ public:
 };
 
 GroupInSequenceOfRegionsResult queryGroupingInSequenceOfRegions(const Position & position,
-                                                                const GroupingResult & grouping,
+                                                                const GroupingResult & groupingResult,
                                                                 vector<CompoundAABB> sequenceOfRegions,
-                                                                vector<bool> wantToReachRegions);
+                                                                vector<bool> wantToReachRegions,
+                                                                vector<bool> stillGrouped);
 
 #endif //CSKNOW_GROUPINSEQUENCEOFREGIONS_H

@@ -191,7 +191,7 @@ double computeDistance(const Position &position, int source, int target, int64_t
 
 struct CompoundAABB {
     vector<AABB> regions;
-}
+};
 
 static inline __attribute__((always_inline))
 bool pointInCompoundRegion(CompoundAABB boxes, Vec3 point) {

@@ -13,6 +13,16 @@ string doubleToString(double val) {
     return std::to_string((int64_t) val) + "." + std::to_string(valFrac);
 }
 
+static inline __attribute__((always_inline))
+string boolToString(bool val) {
+    if (val) {
+        return "true";
+    }
+    else {
+        return "false";
+    }
+}
+
 enum DataType {
     noSrcTarget = 0,
     justSrc = 1,

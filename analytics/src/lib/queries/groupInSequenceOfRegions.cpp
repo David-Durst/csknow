@@ -9,9 +9,10 @@ using std::set;
 using std::map;
 
 GroupInSequenceOfRegionsResult queryGroupingInSequenceOfRegions(const Position & position,
-                                                                const GroupingResult & grouping,
+                                                                const GroupingResult & groupingResult,
                                                                 vector<CompoundAABB> sequenceOfRegions,
-                                                                vector<bool> wantToReachRegions) {
+                                                                vector<bool> wantToReachRegions,
+                                                                vector<bool> stillGrouped) {
     int64_t numGames = position.gameStarts.size() - 1;
     int numThreads = omp_get_max_threads();
     vector<int64_t> tmpIndices[numThreads];
@@ -30,9 +31,89 @@ GroupInSequenceOfRegionsResult queryGroupingInSequenceOfRegions(const Position &
 #pragma omp parallel for
     for (int64_t gameIndex = 0; gameIndex < numGames; gameIndex++) {
         int threadNum = omp_get_thread_num();
+        int64_t groupingIndex = groupingResult.gameStarts[gameIndex];
+        for (int64_t positionIndex = position.gameStarts[gameIndex];
+             positionIndex < position.gameStarts[gameIndex + 1];
+             positionIndex++) {
+            while (groupingIndex < groupingResult.positionIndex.size() &&
+                   groupingResult.demoFile[groupingIndex] == position.fileNames[position.demoFile[positionIndex]] &&
+                   groupingResult.positionIndex[groupingIndex] <= position.demoTickNumber[positionIndex]) {
+                if (groupingResult.positionIndex[groupingIndex] != position.demoTickNumber[positionIndex]) {
+                    std::cerr << "bad groupingResult at grouping index " << groupingIndex << std::endl;
+                    continue;
+                }
+                vector<string> memberCurGrouping;
+                vector<int64_t> tickInRegionCurGrouping;
+                vector<double> xCurGrouping;
+                vector<double> yCurGrouping;
+                vector<double> zCurGrouping;
+
+                // for each region in sequence, find first time a player is in first region (if wantToReachRegion)
+                // or verify not in region (if not wantToReachRegion)
+                // also check if still in grouping (if required for that step in sequence)
+                // if above hold true, continue to later regions
+                bool foundInstanceInRegion = false;
+
+                // need to track positionIndex across all events in sequence
+                int64_t positionIndexSeq = groupingResult.positionIndex[groupingIndex];
+                for (int seqIndex = 0; seqIndex < sequenceOfRegions.size(); seqIndex++) {
+                    bool playerInRegions = false;
+                    // track last value of positionIndexInGroup
+                    int64_t lastCheckedPositionIndex = 0;
+                    for (int64_t positionIndexInGroup = groupingResult.positionIndex[groupingIndex];
+                        // always stop at end of round
+                        !position.roundEnd[positionIndexInGroup] &&
+                        // stop once found someone
+                        !playerInRegions &&
+                        // if also require still grouped, check that still in group
+                        (!stillGrouped[seqIndex] ||
+                            position.demoTickNumber[positionIndexInGroup] <= groupingResult.endTick[groupingIndex]);
+                         positionIndexInGroup++) {
+                        lastCheckedPositionIndex = positionIndexInGroup;
+                        for (const auto & member : groupingResult.teammates[groupingIndex]) {
+                            Vec3 memberPosition = {position.players[member].xPosition[positionIndexInGroup],
+                                                   position.players[member].yPosition[positionIndexInGroup],
+                                                   position.players[member].zPosition[positionIndexInGroup]};
+                            if (position.players[member].isAlive[positionIndexInGroup] &&
+                                pointInCompoundRegion(sequenceOfRegions[seqIndex], memberPosition)) {
+                                memberCurGrouping.push_back(position.players[member].name[positionIndexInGroup]);
+                                tickInRegionCurGrouping.push_back(position.demoTickNumber[positionIndexInGroup]);
+                                xCurGrouping.push_back(memberPosition.x);
+                                yCurGrouping.push_back(memberPosition.y);
+                                zCurGrouping.push_back(memberPosition.z);
+                                playerInRegions = true;
+                                break;
+                            }
+                        }
+                    }
+                    // stop if didn't find region and wanted to or found region and didn't want to
+                    if ((playerInRegions && !wantToReachRegions[seqIndex]) ||
+                        (!playerInRegions && wantToReachRegions[seqIndex])) {
+                        break;
+                    }
+                    // other wise this iteration was successful. if this the last iteration and was successful,
+                    // then add results vector
+                    else if (seqIndex == sequenceOfRegions.size() - 1) {
+                        tmpTeamates[threadNum].push_back(groupingResult.teammates[groupingIndex]);
+                        tmpEndTick[threadNum].push_back(position.demoTickNumber[lastCheckedPositionIndex]);
+                        tmpMemberInRegion[threadNum].push_back(memberCurGrouping);
+                        tmpX[threadNum].push_back(xCurGrouping);
+                        tmpY[threadNum].push_back(yCurGrouping);
+                        tmpZ[threadNum].push_back(zCurGrouping);
+                    }
+                    // if this was a succesful iteration but not last and wanted to be in a region
+                    // updated positionIndexSeq to start after this event
+                    // don't update if don't want player to be in region as there was no positive result, so
+                    // nothing to start after
+                    else if (playerInRegions) {
+                        positionIndexSeq = lastCheckedPositionIndex;
+                    }
+                }
+            }
+        }
     }
 
-    GroupInSequenceOfRegionsResult result(sequenceOfRegions, wantToReachRegions);
+    GroupInSequenceOfRegionsResult result(sequenceOfRegions, wantToReachRegions, stillGrouped);
     result.gameStarts.resize(position.fileNames.size());
     for (int i = 0; i < numThreads; i++) {
         // for all games in thread, note position as position in thread plus start of thread results
