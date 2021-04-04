@@ -195,7 +195,7 @@ struct CompoundAABB {
 
 static inline __attribute__((always_inline))
 bool pointInCompoundRegion(CompoundAABB boxes, Vec3 point) {
-    for (const auto & box : boxes) {
+    for (const auto & box : boxes.regions) {
         if (pointInRegion(box, point)) {
             return true;
         }

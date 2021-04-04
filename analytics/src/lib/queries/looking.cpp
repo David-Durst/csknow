@@ -58,7 +58,7 @@ LookingResult queryLookers(const Position & position) {
     }
 
     LookingResult result;
-    result.gameStarts.resize(position.fileNames.size());
+    result.gameStarts.resize(position.fileNames.size() + 1);
     result.fileNames = position.fileNames;
     for (int i = 0; i < numThreads; i++) {
         // for all games in thread, note position as position in thread plus start of thread results
@@ -72,6 +72,7 @@ LookingResult queryLookers(const Position & position) {
             result.lookedAt.push_back({tmpLookedAt[i][j]});
         }
     }
+    result.gameStarts[numGames] = result.positionIndex.size();
     return result;
 }
 

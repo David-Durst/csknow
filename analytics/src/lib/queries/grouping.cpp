@@ -161,7 +161,7 @@ GroupingResult queryGrouping(const Position & position) {
     }
 
     GroupingResult result;
-    result.gameStarts.resize(position.fileNames.size());
+    result.gameStarts.resize(position.fileNames.size() + 1);
     for (int i = 0; i < numThreads; i++) {
         // for all games in thread, note position as position in thread plus start of thread results
         for (int j = 0; j < tmpGameStarts[i].size(); j++) {
@@ -180,5 +180,6 @@ GroupingResult queryGrouping(const Position & position) {
             result.maxZ.push_back({tmpMaxZ[i][j]});
         }
     }
+    result.gameStarts[numGames] = result.positionIndex.size();
     return result;
 }

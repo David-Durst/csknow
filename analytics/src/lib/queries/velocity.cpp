@@ -44,7 +44,7 @@ VelocityResult queryVelocity(const Position & position) {
         }
     }
 
-    result.gameStarts.resize(position.fileNames.size());
+    result.gameStarts.resize(position.fileNames.size() + 1);
     result.fileNames = position.fileNames;
     for (int i = 0; i < numThreads; i++) {
         // for all games in thread, note position as position in thread plus start of thread results
@@ -59,6 +59,7 @@ VelocityResult queryVelocity(const Position & position) {
             }
         }
     }
+    result.gameStarts[numGames] = result.positionIndex.size();
     return result;
 }
 

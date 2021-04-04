@@ -36,7 +36,7 @@ GroupInSequenceOfRegionsResult queryGroupingInSequenceOfRegions(const Position &
              positionIndex < position.gameStarts[gameIndex + 1];
              positionIndex++) {
             while (groupingIndex < groupingResult.positionIndex.size() &&
-                   groupingResult.demoFile[groupingIndex] == position.fileNames[position.demoFile[positionIndex]] &&
+                    groupingIndex < groupingResult.gameStarts[gameIndex + 1] &&
                    groupingResult.positionIndex[groupingIndex] <= position.demoTickNumber[positionIndex]) {
                 if (groupingResult.positionIndex[groupingIndex] != position.demoTickNumber[positionIndex]) {
                     std::cerr << "bad groupingResult at grouping index " << groupingIndex << std::endl;
