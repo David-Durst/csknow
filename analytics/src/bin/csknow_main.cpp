@@ -96,18 +96,17 @@ int main(int argc, char * argv[]) {
     }};
     exactlyOnASite.regions[0].coverAllZ();
     exactlyOnASite.regions[1].coverAllZ();
-    /*
     GroupInSequenceOfRegionsResult successfulATakes =
             queryGroupingInSequenceOfRegions(position, groupingResult, {aroundARegions, exactlyOnASite},
                                              {true, true}, {true, false}, {TEAM_T});
     std::cout << "successful a takes moments: " << successfulATakes.positionIndex.size() << std::endl;
-     */
     GroupInSequenceOfRegionsResult failedATakes =
             queryGroupingInSequenceOfRegions(position, groupingResult, {aroundARegions, exactlyOnASite},
                                              {true, false}, {true, false}, {TEAM_T});
     std::cout << "failed a takes moments: " << failedATakes.positionIndex.size() << std::endl;
     std::cout << "total ticks: " << position.size << std::endl;
-    vector<string> queryNames = {"velocity", "lookers", "wallers", "baiters", "netcode", "nonconsecutive", "grouping"};
+    vector<string> queryNames = {"velocity", "lookers", "wallers", "baiters", "netcode", "nonconsecutive", "grouping",
+                                 "successful_A_takes", "failed_A_takes"};
     map<string, reference_wrapper<QueryResult>> queries {
         {queryNames[0], velocityResult},
         {queryNames[1], lookersResult},
@@ -116,6 +115,8 @@ int main(int argc, char * argv[]) {
         {queryNames[4], netcodeResult},
         {queryNames[5], nonConsecutiveResult},
         {queryNames[6], groupingResult},
+        {queryNames[7], successfulATakes},
+        {queryNames[8], failedATakes},
     };
 
     // create the output files and the metadata describing files
