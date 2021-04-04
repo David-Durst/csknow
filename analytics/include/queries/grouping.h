@@ -24,7 +24,7 @@ public:
         targetNames = {"member 1", "member 2", "member 3"};
         variableLength = true;
         ticksColumn = 5;
-        keysForDiff = {0, 1, 2, 3, 4};
+        keysForDiff = {0, 1, 2, 3, 4, 5};
     }
 
     vector<string> getExtraColumnNames() {

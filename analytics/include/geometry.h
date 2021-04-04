@@ -3,6 +3,7 @@
 #include <math.h>
 #include <limits>
 #include <iostream>
+#include <vector>
 #include "geometry.h"
 #include "load_data.h"
 //https://github.com/ValveSoftware/source-sdk-2013/blob/master/sp/src/public/mathlib/mathlib.h#L301-L303
@@ -12,6 +13,7 @@
 // https://counterstrike.fandom.com/wiki/Movement
 #define MAX_RUN_SPEED 250.0
 #define TICKS_PER_SECOND 32
+using std::vector;
 
 struct Vec3 {
     double x;
@@ -60,6 +62,11 @@ struct AABB {
         max = {-std::numeric_limits<double>::infinity(), -std::numeric_limits<double>::infinity(),
                -std::numeric_limits<double>::infinity()};
     }
+
+    void coverAllZ() {
+        min.z = -std::numeric_limits<double>::infinity();
+        max.z = std::numeric_limits<double>::infinity();
+    }
 };
 
 const int HEIGHT = 72;
@@ -93,6 +100,13 @@ double computeAABBSize(AABB box) {
     double yDistance = box.max.y - box.min.y;
     double zDistance = box.max.z - box.min.z;
     return sqrt(xDistance * xDistance + yDistance * yDistance + zDistance * zDistance);
+}
+
+static inline __attribute__((always_inline))
+bool pointInRegion(AABB box, Vec3 point) {
+    return point.x > box.min.x && point.x < box.max.x &&
+           point.y > box.min.y && point.y < box.max.y &&
+           point.z > box.min.z && point.z < box.max.z;
 }
 
 // https://github.com/ValveSoftware/source-sdk-2013/blob/master/sp/src/mathlib/mathlib_base.cpp#L901-L914
@@ -173,6 +187,20 @@ double computeDistance(const Position &position, int source, int target, int64_t
     double zDistance =
             position.players[source].zPosition[sourceIndex] - position.players[target].zPosition[targetIndex];
     return sqrt(xDistance * xDistance + yDistance * yDistance + zDistance * zDistance);
+}
+
+struct CompoundAABB {
+    vector<AABB> regions;
+}
+
+static inline __attribute__((always_inline))
+bool pointInCompoundRegion(CompoundAABB boxes, Vec3 point) {
+    for (const auto & box : boxes) {
+        if (pointInRegion(box, point)) {
+            return true;
+        }
+    }
+    return false;
 }
 
 #endif //CSKNOW_GEOMETRY_H
