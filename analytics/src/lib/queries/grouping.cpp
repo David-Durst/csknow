@@ -92,10 +92,6 @@ GroupingResult queryGrouping(const Position & position) {
                         AABB region;
                         region.makeInvalid();
                         adjustMinMaxRegion(position, windowStartIndex, region, playerAIndex, playerBIndex, playerCIndex);
-                        if (gameIndex == 0 && position.demoTickNumber[windowStartIndex] == 887 && playerAIndex == 7 && playerBIndex == 8 && playerCIndex == 9) {
-                            std::cout << "window index " << windowStartIndex << std::endl;
-                            std::cout << "region size " << computeAABBSize(region)  << std::endl;
-                        }
                         if (position.players[playerAIndex].team[windowStartIndex] == position.players[playerBIndex].team[windowStartIndex] &&
                             position.players[playerAIndex].team[windowStartIndex] == position.players[playerCIndex].team[windowStartIndex] &&
                             computeAABBSize(region) < GROUPING_DISTANCE &&
@@ -108,7 +104,7 @@ GroupingResult queryGrouping(const Position & position) {
             }
 
             int64_t lastTimeInWindow;
-            // for as long as any groups possibly left
+            // track window until end of round or until all groups split apart
             for (int64_t windowIndex = windowStartIndex; !position.roundEnd[windowIndex] && !possibleGroups[curReader].empty();
                  windowIndex++) {
                 lastTimeInWindow = windowIndex;
@@ -122,13 +118,6 @@ GroupingResult queryGrouping(const Position & position) {
                     frameRegion.makeInvalid();
                     adjustMinMaxRegion(position, windowIndex, frameRegion, possibleGroup[0],
                                        possibleGroup[1], possibleGroup[2]);
-                    if (gameIndex == 0 && position.demoTickNumber[windowStartIndex] == 293 && possibleGroup[0] == 2 && possibleGroup[1] == 7 && possibleGroup[2] == 9) {
-                        std::cout << "window index " << position.demoTickNumber[windowIndex] << std::endl;
-                        std::cout << "frame region size " << computeAABBSize(frameRegion) << std::endl;
-                        if (position.demoTickNumber[windowIndex] == 1668) {
-                            std::cout << "last index" << std::endl;
-                        }
-                    }
                     if (computeAABBSize(frameRegion) < GROUPING_DISTANCE &&
                         position.players[possibleGroup[0]].isAlive[windowIndex] &&
                         position.players[possibleGroup[1]].isAlive[windowIndex] &&
@@ -142,25 +131,16 @@ GroupingResult queryGrouping(const Position & position) {
                                 position.demoTickNumber[windowIndex];
                     }
                 }
-                /*
-                std::cout << "possibleGroups size" << possibleGroups[curWriter].size() << std::endl;
-                std::cout << "confirmedGroups size" << confirmedGroups.size() << std::endl;
-                 */
                 possibleGroups[curReader].clear();
                 curReader = (curReader + 1) % 2;
                 curWriter = (curWriter + 1) % 2;
             }
 
-            /*
-            std::cout << "possibleGroups size" << possibleGroups[curReader].size() << std::endl;
-            std::cout << "confirmedGroups size" << confirmedGroups.size() << std::endl;
-             */
             // for all possible groups not culled (i.e. lasted until round end or last tick with a group) add them to confirmedGroups
             for (const auto & group : possibleGroups[curReader]) {
                 confirmedGroups.insert(group);
                 lastEndTimeForGroup[group[0]][group[1]][group[2]] = position.demoTickNumber[lastTimeInWindow];
             }
-            //std::cout << "merged confirmedGroups size" << confirmedGroups.size() << std::endl;
 
             for (const auto & group : confirmedGroups) {
                 tmpIndices[threadNum].push_back(windowStartIndex);
