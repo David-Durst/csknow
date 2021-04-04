@@ -15,6 +15,7 @@
 #include "queries/looking.h"
 #include "queries/nonconsecutive.h"
 #include "queries/grouping.h"
+#include "queries/groupInSequenceOfRegions.h"
 #include "indices/spotted.h"
 #define CPPHTTPLIB_OPENSSL_SUPPORT
 #include "httplib.h"
@@ -80,6 +81,29 @@ int main(int argc, char * argv[]) {
     std::cout << "nonconsecutive moments: " << nonConsecutiveResult.positionIndex.size() << std::endl;
     GroupingResult groupingResult = queryGrouping(position);
     std::cout << "grouping moments: " << groupingResult.positionIndex.size() << std::endl;
+
+    CompoundAABB aroundARegions = {{
+        {{462., 136., 0.}, {1860., 1257., 0.}},
+        {{166., 2048., 0.}, {1955., 3168., 0.}},
+        {{1141., 831., 0.}, {1940., 3200., 0.}}
+    }};
+    aroundARegions.regions[0].coverAllZ();
+    aroundARegions.regions[1].coverAllZ();
+    aroundARegions.regions[2].coverAllZ();
+    CompoundAABB exactlyOnASite {{
+        {{932., 2421., 0.}, {1260., 2653., 0.}},
+        {{1028., 2318., 0.}, {1253., 2537., 0.}}
+    }};
+    exactlyOnASite.regions[0].coverAllZ();
+    exactlyOnASite.regions[1].coverAllZ();
+    GroupInSequenceOfRegionsResult successfulATakes =
+            queryGroupingInSequenceOfRegions(position, groupingResult, {aroundARegions, exactlyOnASite},
+                                             {true, true}, {true, false});
+    std::cout << "successful a takes moments: " << successfulATakes.positionIndex.size() << std::endl;
+    GroupInSequenceOfRegionsResult failedATakes =
+            queryGroupingInSequenceOfRegions(position, groupingResult, {aroundARegions, exactlyOnASite},
+                                             {true, false}, {true, false});
+    std::cout << "successful a takes moments: " << failedATakes.positionIndex.size() << std::endl;
     std::cout << "total ticks: " << position.size << std::endl;
     vector<string> queryNames = {"velocity", "lookers", "wallers", "baiters", "netcode", "nonconsecutive", "grouping"};
     map<string, reference_wrapper<QueryResult>> queries {
