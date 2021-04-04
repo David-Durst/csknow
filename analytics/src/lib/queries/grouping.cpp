@@ -46,12 +46,16 @@ GroupingResult queryGrouping(const Position & position) {
     vector<double> tmpMaxX[numThreads];
     vector<double> tmpMaxY[numThreads];
     vector<double> tmpMaxZ[numThreads];
+    vector<int64_t> tmpGameIndex[numThreads];
+    vector<int64_t> tmpGameStarts[numThreads];
 
     // find any frame when at least 3 people from a team are together
     // this means i can track all groups of 3 people togther, but only record 1 and have good recall
-//#pragma omp parallel for
+#pragma omp parallel for
     for (int64_t gameIndex = 0; gameIndex < numGames; gameIndex++) {
         int threadNum = omp_get_thread_num();
+        tmpGameIndex[threadNum].push_back(gameIndex);
+        tmpGameStarts[threadNum].push_back(tmpIndices[threadNum].size());
         // don't repeat cheating events within window, decrease duplicate events
         // so track last ending time for each group
         int64_t lastEndTimeForGroup[NUM_PLAYERS][NUM_PLAYERS][NUM_PLAYERS];
@@ -158,6 +162,12 @@ GroupingResult queryGrouping(const Position & position) {
 
     GroupingResult result;
     for (int i = 0; i < numThreads; i++) {
+        result.gameStarts.resize(position.fileNames.size());
+        // for all games in thread, note position as position in thread plus start of thread results
+        for (int j = 0; j < tmpGameStarts[i].size(); j++) {
+            result.gameStarts[tmpGameIndex[i][j]] = tmpGameStarts[i][j] + result.positionIndex.size();
+        }
+
         for (int j = 0; j < tmpIndices[i].size(); j++) {
             result.positionIndex.push_back(tmpIndices[i][j]);
             result.teammates.push_back(tmpTeamates[i][j]);

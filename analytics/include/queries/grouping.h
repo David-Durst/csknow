@@ -10,6 +10,7 @@ using std::string;
 
 class GroupingResult : public JustTargetResult {
 public:
+    vector<int64_t> gameStarts;
     vector<vector<int>> & teammates = targets;
     vector<int64_t> endTick;
     vector<double> maxX;
