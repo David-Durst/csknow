@@ -51,8 +51,9 @@ GroupingResult queryGrouping(const Position & position) {
 
     // find any frame when at least 3 people from a team are together
     // this means i can track all groups of 3 people togther, but only record 1 and have good recall
-#pragma omp parallel for
+//#pragma omp parallel for
     for (int64_t gameIndex = 0; gameIndex < numGames; gameIndex++) {
+        std::cout << "starting game " << gameIndex << std::endl;
         int threadNum = omp_get_thread_num();
         tmpGameIndex[threadNum].push_back(gameIndex);
         tmpGameStarts[threadNum].push_back(tmpIndices[threadNum].size());
