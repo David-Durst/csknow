@@ -3,6 +3,7 @@
 #include "load_data.h"
 #include "query.h"
 #include "geometry.h"
+#include "queries/grouping.h"
 #include <string>
 using std::string;
 
@@ -20,7 +21,7 @@ public:
     vector<vector<double>> zInRegion;
     vector<string> colNames;
 
-    GroupingResult(vector<CompoundAABB> sequenceOfRegions, vector<bool> wantToReachRegions) {
+    GroupInSequenceOfRegionsResult(vector<CompoundAABB> sequenceOfRegions, vector<bool> wantToReachRegions) {
         targetNames = {"member 1", "member 2", "member 3"};
         variableLength = true;
         ticksColumn = 5;
@@ -41,7 +42,7 @@ public:
     }
 
     vector<string> getExtraColumnNames() {
-        return colNames
+        return colNames;
     }
 
     vector<string> getExtraRow(const Position & position, int64_t queryIndex, int64_t posIndex) {
@@ -49,18 +50,21 @@ public:
         int posInResults = 0;
         for (int i = 0; i < wantToReachRegions.size(); i++) {
             if (wantToReachRegions[i]) {
-                colNames.push_back(memberInRegion[queryIndex][j]);
-                colNames.push_back(std::to_string(tickInRegion[queryIndex][j]));
-                colNames.push_back(doubleToString(xInRegion[queryIndex][j]));
-                colNames.push_back(doubleToString(yInRegion[queryIndex][j]));
-                colNames.push_back(doubleToString(zInRegion[queryIndex][j]));
-                j++;
+                colNames.push_back(memberInRegion[queryIndex][posInResults]);
+                colNames.push_back(std::to_string(tickInRegion[queryIndex][posInResults]));
+                colNames.push_back(doubleToString(xInRegion[queryIndex][posInResults]));
+                colNames.push_back(doubleToString(yInRegion[queryIndex][posInResults]));
+                colNames.push_back(doubleToString(zInRegion[queryIndex][posInResults]));
+                posInResults++;
             }
         }
         return results;
     }
 };
 
-GroupingResult queryGrouping(const Position & position);
+GroupInSequenceOfRegionsResult queryGroupingInSequenceOfRegions(const Position & position,
+                                                                const GroupingResult & grouping,
+                                                                vector<CompoundAABB> sequenceOfRegions,
+                                                                vector<bool> wantToReachRegions);
 
 #endif //CSKNOW_GROUPINSEQUENCEOFREGIONS_H
