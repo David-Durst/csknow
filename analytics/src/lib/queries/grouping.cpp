@@ -53,7 +53,6 @@ GroupingResult queryGrouping(const Position & position) {
     // this means i can track all groups of 3 people togther, but only record 1 and have good recall
 #pragma omp parallel for
     for (int64_t gameIndex = 0; gameIndex < numGames; gameIndex++) {
-        std::cout << "starting game " << position.fileNames[gameIndex] << std::endl;
         int threadNum = omp_get_thread_num();
         tmpGameIndex[threadNum].push_back(gameIndex);
         tmpGameStarts[threadNum].push_back(tmpIndices[threadNum].size());
@@ -67,9 +66,6 @@ GroupingResult queryGrouping(const Position & position) {
                 }
             }
         }
-        // since spotted tracks names for spotted player, need to map that to the player index
-        map<string, int> playerNameToIndex = position.getPlayerNameToIndex(gameIndex);
-
         // iterating over each possible window
         for (int64_t windowStartIndex = position.firstRowAfterWarmup[gameIndex];
              windowStartIndex + GROUPING_WINDOW_SIZE < position.gameStarts[gameIndex+1];
@@ -108,12 +104,13 @@ GroupingResult queryGrouping(const Position & position) {
                 }
             }
 
-            int64_t lastTimeInWindow;
+            int64_t lastTimeInWindow = 0;
             // track window until end of round or until all groups split apart
-            // need to track both freezeTime and roundEnd as round ends then nothing for a while before start
-            // and freezeTime denotes next start. (note: really freezeTime, not freezeTimeEnded. need to rename)
-            for (int64_t windowIndex = windowStartIndex; !position.roundEnd[windowIndex] && !position.freezeTimeEnded[windowIndex]
-                && !possibleGroups[curReader].empty();
+            // need to track total length and freezeTime and roundEnd as round ends is only set for one tick, need to fix that,
+            // and there is time after round end and next round start or end of game (note: really freezeTime, not freezeTimeEnded. need to rename)
+            for (int64_t windowIndex = windowStartIndex; !position.roundEnd[windowIndex] &&
+                !position.freezeTimeEnded[windowIndex] && !possibleGroups[curReader].empty() &&
+                windowIndex < position.gameStarts[gameIndex+1];
                  windowIndex++) {
                 lastTimeInWindow = windowIndex;
                 // only track possible groups for this window
