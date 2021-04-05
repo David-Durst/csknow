@@ -523,7 +523,7 @@ export class KillsRow implements DemoData, Printable {
     }
 
     getSource(): string {
-        return this.killer
+        return this.victim
     }
 
     getTargets(): string[] {
