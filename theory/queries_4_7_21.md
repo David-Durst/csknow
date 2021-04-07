@@ -71,7 +71,7 @@ B kills player C.
 ### Pseudocode Definition
 1. For every `demoTickNumber` `j` and in each `demoFile` `d`
 2. For all triples of players `(A,B,C)` such that `TEAMMATES(A,C)` and `!TEAMMATES(A,B)`
-3. If exists j such that `j-TWO_SECONDS < k < j` such that `DISTANCE(A,C,k) / MAX_SPEED < j-k`
+3. If exists j such that `j-TWO_SECONDS < k < j` . `DISTANCE(A,C,k) / MAX_SPEED < j-k`
     1. `DISTANCE(A,C,K)` - computed from `playerPosition` table by taking row with
        `demoFile` `d` and `demoTickNumber` `k` and positions determined by `xPosition`,
        `yPosition`, and `zPosition` for `playerNumber` `A` and `B`.
@@ -79,4 +79,32 @@ B kills player C.
        running with their knife as their active weapon. All players always have a knife.
 4. Then `BAITER(A,B,C,j,k)`
 
+## Strategies
+Situations where players taking A site on de_dust2 succeeds or fails.
+
+### Summary
+Situations where a team of 3 or more works together to take A site. 
+This succeeds if they get to the site. This fails if they don't.
+
+### English Definition
+1. There is a group of three players on offense who are standing near each other.
+2. At least one of the players in the group is near A site.
+3. Successful if any one of the players reaches A site before the end of the round.
+Otherwise, a failure.
+   
+### In-Game Examples
+[![](http://img.youtube.com/vi/PtsJbDJZIjw/0.jpg)](http://www.youtube.com/watch?v=PtsJbDJZIjw "Video Example of a Successful A Take")
+
+The above is a video example of a successful A take. It shows the same situation
+as the 2D visualization below. Three offensive players stand together on cat on 
+de_dust2. One player eventually reaches A site.
+
+![Strats example image](example_images/successful_a_take.png)
+
+### Pseudocode Definition
+1. For every `demoTickNumber` `j` and in each `demoFile` `d`
+2. For all triples of players `t` such that `TEAMMATES(t[0],t[1])` and `TEAMMATES(t[0],t[2])`
+3. If exists `i` such that `0 < i < 2` . `STANDING_IN(t[i], NEARBY_A_SITE,j)`
+4. If exists `n` such that `0 < n < 2`, `j < k` . `STANDING_IN(t[n], EXACT_A_SITE,j)`
+5. Then `SUCCESSFUL_A_TAKE(t, j, k)`
 
