@@ -22,8 +22,10 @@ Situations where it appears that players can see enemies through walls.
 2. Ray from A's crosshair intersects B's bounding box for two seconds
 
 ### In-Game Examples
-[A video example of a waller](https://youtu.be/o_4wTBSnopA) that corresponds to 
-the below image in which player A (BOT Moe) is running through lower tunnels of 
+[![](http://img.youtube.com/vi/o_4wTBSnopA/0.jpg)](http://www.youtube.com/watch?v=o_4wTBSnopA "Video Example of a Waller")
+
+The above is a video example of a waller. It shows the same situations as the 2D
+visualization below. Player A (BOT Moe) is running through lower tunnels of 
 the de_dust2 map and staring at player B (BOT Vitaly) through the wall.
 
 ![Wallers example image](example_images/wallers.png)
