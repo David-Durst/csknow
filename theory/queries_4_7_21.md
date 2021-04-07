@@ -12,10 +12,10 @@ The pseudocode definitions assume knowledge of the schema specified in
 
 # Queries
 
-## Waller
+## Wallers
 
 ### Summary
-Situations where it appears that players can see enemies through walls.
+Situations where it appears that a player can see enemies through walls.
 
 ### English Definition
 1. Game state specifies that player A can't see player B
@@ -29,5 +29,22 @@ visualization below. Player A (BOT Moe) is running through lower tunnels of
 the de_dust2 map and staring at player B (BOT Vitaly) through the wall.
 
 ![Wallers example image](example_images/wallers.png)
+
+### Pseudocode Definition
+1. For every tick `j`
+2. For all pairs of players `(A,B)` on different teams
+3. If `STARING_AT(A,B,k)` and `MOST_RECENT_ENTRY(SPOTTED,A,B,k)` for all `j < k < j+TWO_SECONDS`
+   1. `STARING_AT` - computed from `playerPosition` table - for `de`
+4. Then `WALLER(A,B,j)`.
+
+## Baiters
+
+### Summary
+Situations where players could help their teammates by moving to their position,
+but instead hide and let their teammates die.
+
+### English Definition
+1. 
+
 
 
