@@ -9,6 +9,12 @@ const yesterdayString = date.format(yesterday, 'YYYY-MM-DD');
 
 console.log(yesterdayString)
 console.log(nowString)
-HLTV.getPastEvents({ startDate: yesterdayString, endDate: nowString }).then(res => {
+//HLTV.getPastEvents({ startDate: yesterdayString, endDate: nowString }).then(res => {
+//console.log(res)
+//})
+HLTV.getEvents().then(res => {
+    console.log(res)
+})
+HLTV.getMatches().then(res => {
     console.log(res)
 })
