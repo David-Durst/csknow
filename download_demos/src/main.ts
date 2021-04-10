@@ -2,9 +2,13 @@ import HLTV, {GameMap} from 'hltv';
 import {FullMatch} from "hltv/lib/endpoints/getMatch";
 import * as download from 'download'
 import * as fs from 'fs'
+import * as sevenBin from '7zip-bin'
+import sevenZip from 'node-7z'
+const pathTo7zip = sevenBin.path7za
 
 const date = require('date-and-time');
 
+const downloadsFolder = "temp_downloads/"
 const now = new Date();
 const nowString = date.format(now, 'YYYY-MM-DD');
 const yesterday = new Date();
@@ -12,37 +16,20 @@ yesterday.setDate(yesterday.getDate() - 1);
 const yesterdayString = date.format(yesterday, 'YYYY-MM-DD');
 
 console.log("Downloading demos for " + yesterdayString)
-//HLTV.getPastEvents({ startDate: yesterdayString, endDate: nowString }).then(res => {
-//console.log(res)
-//})
-/*
-HLTV.getEvents().then(res => {
-    console.log(res)
-})
-HLTV.getMatches().then(res => {
-    console.log(res)
-})
-
-async function saveFile(url: string, dest: string) {
-    const file = fs.createWriteStream(dest);
-    return new Promise((resolve, reject) =>
-            https.get(url, function(response) {
-                response.pipe(file);
-                file.on('finish', function() {
-                    file.close();  // close() is async, call cb after close completes.
-                    resolve(1)
-                });
-            }).on('error', function(err) { // Handle errors
-                // Delete the file async. (But we don't check the result)
-                fs.unlink(file.path, () => console.log("error in saving " + dest));
-                reject(2)
-            })
-        )
-};
- */
 const matchMapStatsIds: number[] = []
 const matches: Map<number, FullMatch> = new Map<number, FullMatch>()
 const mapStatsIdsToMatchchIds: Map<number, number> = new Map<number, number>()
+
+async function unzip(filePath: string) {
+    await new Promise((resolve, reject) => {
+        const files = []
+        const process  = sevenZip.extract(filePath, downloadsFolder,
+            { $bin: pathTo7zip, $cherryPick: "*dust2*.dem"})
+        process.on('data', file => files.push(file))
+        process.on('end', () => resolve({ files }))
+        process.on('error', reject)
+    })
+}
 
 async function loadDemos() {
     for (const matchMapStatsId of matchMapStatsIds) {
@@ -63,8 +50,10 @@ async function loadDemos() {
                 for (const demo of matchData.demos) {
                     if (demo.name == "GOTV Demo") {
                         matchingDemos++;
-                        fs.writeFileSync(matchData.id.toString() + ".rar",
+                        const rarFile = downloadsFolder + matchData.id.toString() + ".rar"
+                        fs.writeFileSync(rarFile,
                             await download("https://www.hltv.org/" + demo.link));
+                        unzip(rarFile)
                     }
                 }
                 if (matchingDemos != 1) {
