@@ -3,7 +3,7 @@ import {FullMatch} from "hltv/lib/endpoints/getMatch";
 import * as download from 'download'
 import * as fs from 'fs'
 import * as sevenBin from '7zip-bin'
-import sevenZip from 'node-7z'
+import * as sevenZip from 'node-7z'
 const pathTo7zip = sevenBin.path7za
 
 const date = require('date-and-time');
@@ -27,7 +27,10 @@ async function unzip(filePath: string) {
             { $bin: pathTo7zip, $cherryPick: "*dust2*.dem"})
         process.on('data', file => files.push(file))
         process.on('end', () => resolve({ files }))
-        process.on('error', reject)
+        process.on('error', (result) => {
+            console.log(result)
+            reject
+        })
     })
 }
 
@@ -51,9 +54,12 @@ async function loadDemos() {
                     if (demo.name == "GOTV Demo") {
                         matchingDemos++;
                         const rarFile = downloadsFolder + matchData.id.toString() + ".rar"
+                        /*
                         fs.writeFileSync(rarFile,
                             await download("https://www.hltv.org/" + demo.link));
+                         */
                         unzip(rarFile)
+                        return
                     }
                 }
                 if (matchingDemos != 1) {

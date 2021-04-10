@@ -6,7 +6,7 @@
   "author": "David Durst",
   "license": "MIT",
   "scripts": {
-    "scrape": "ts-node src/main.ts"
+    "scrape": "ts-node main.ts"
   },
   "dependencies": {
     "7zip-bin": "^5.1.1",
