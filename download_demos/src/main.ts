@@ -1,6 +1,6 @@
 import HLTV, {GameMap} from 'hltv';
 import {FullMatch} from "hltv/lib/endpoints/getMatch";
-import * as http from 'http'
+import * as download from 'download'
 import * as fs from 'fs'
 
 const date = require('date-and-time');
@@ -22,24 +22,27 @@ HLTV.getEvents().then(res => {
 HLTV.getMatches().then(res => {
     console.log(res)
 })
+
+async function saveFile(url: string, dest: string) {
+    const file = fs.createWriteStream(dest);
+    return new Promise((resolve, reject) =>
+            https.get(url, function(response) {
+                response.pipe(file);
+                file.on('finish', function() {
+                    file.close();  // close() is async, call cb after close completes.
+                    resolve(1)
+                });
+            }).on('error', function(err) { // Handle errors
+                // Delete the file async. (But we don't check the result)
+                fs.unlink(file.path, () => console.log("error in saving " + dest));
+                reject(2)
+            })
+        )
+};
  */
 const matchMapStatsIds: number[] = []
 const matches: Map<number, FullMatch> = new Map<number, FullMatch>()
 const mapStatsIdsToMatchchIds: Map<number, number> = new Map<number, number>()
-const downloadedMatches: Set<number> = new Set<number>()
-
-async function saveFile(url: string, dest: string) {
-    const file = fs.createWriteStream(dest);
-    const request = await http.get(url, function(response) {
-        response.pipe(file);
-        file.on('finish', function() {
-            file.close();  // close() is async, call cb after close completes.
-        });
-    }).on('error', function(err) { // Handle errors
-        // Delete the file async. (But we don't check the result)
-        fs.unlink(file.path, () => console.log("error in saving " + dest));
-    });
-};
 
 async function loadDemos() {
     for (const matchMapStatsId of matchMapStatsIds) {
@@ -60,6 +63,8 @@ async function loadDemos() {
                 for (const demo of matchData.demos) {
                     if (demo.name == "GOTV Demo") {
                         matchingDemos++;
+                        fs.writeFileSync(matchData.id.toString() + ".rar",
+                            await download("https://www.hltv.org/" + demo.link));
                     }
                 }
                 if (matchingDemos != 1) {
@@ -68,17 +73,13 @@ async function loadDemos() {
                 }
                 console.log("added match " + matchMapStatsData.matchId.toString())
             }
-            if (matchMapStatsData.map == GameMap.Dust2 && !downloadedMatches.has()) {
-                saveFile("https://www.hltv.org/" + demo.link,
-                    matchData.id.toString() + ".rar")
-                return;
-            }
             await new Promise(r => setTimeout(r, 1000));
         }
     }
 }
 
-HLTV.getMatchesStats({ startDate: yesterdayString, endDate: yesterdayString, delayBetweenPageRequests: 100 }).then((res) => {
+HLTV.getMatchesStats({ startDate: yesterdayString, endDate: yesterdayString,
+    delayBetweenPageRequests: 100 , maps: [GameMap.Dust2]}).then((res) => {
     res.map( (matchPreview) =>
         matchMapStatsIds.push(matchPreview.mapStatsId)
     )
