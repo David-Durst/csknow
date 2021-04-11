@@ -30,7 +30,7 @@ os.system("7z e temp_downloads/*.rar -otemp_downloads/ *dust2*.dem -y")
 files = glob.glob(cur_path + '/temp_downloads/*.dem') # * means all if need specific format then *.csv
 print(f"uploading {len(files)} files")
 # leave the most recently touched demo, as cs is still writing to it
-for f in files[]:
+for f in files:
     print("moving file:" + str(f))
     p = Path(f)
     aws_name = str(sys.argv[1]) + "_" + p.stem + str(machine_id) + p.suffix 
