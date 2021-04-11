@@ -22,4 +22,4 @@ iam_role=$(cat ${script_dir}/../private/.aws_csgo_server_role)
 
 docker run --name durst_pro_demos_downloader \
     -e RUNNING_IN_EC2=1 -e ROLE=${iam_role} \
-    --rm -it durst/csgo-pro-demos-downloader:0.1 /bin/bash
+    --rm -it durst/csgo-pro-demos-downloader:0.2 /bin/bash

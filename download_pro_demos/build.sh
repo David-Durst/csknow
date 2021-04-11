@@ -1,1 +1,1 @@
-docker build -t durst/csgo-pro-demos-downloader:0.1 .
+docker build -t durst/csgo-pro-demos-downloader:0.2 .
