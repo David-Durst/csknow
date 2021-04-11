@@ -4,7 +4,7 @@ import * as download from 'download'
 import * as fs from 'fs'
 import * as sevenBin from '7zip-bin'
 import * as sevenZip from 'node-7z'
-const pathTo7zip = sevenBin.path7za
+const pathTo7zip = sevenBin.path7x
 
 const date = require('date-and-time');
 
@@ -57,7 +57,7 @@ async function loadDemos() {
                         /*
                         fs.writeFileSync(rarFile,
                             await download("https://www.hltv.org/" + demo.link));
-                         */
+                            */
                         unzip(rarFile)
                         return
                     }
