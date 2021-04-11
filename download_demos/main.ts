@@ -2,9 +2,6 @@ import HLTV, {GameMap} from 'hltv';
 import {FullMatch} from "hltv/lib/endpoints/getMatch";
 import * as download from 'download'
 import * as fs from 'fs'
-import * as sevenBin from '7zip-bin'
-import * as sevenZip from 'node-7z'
-const pathTo7zip = sevenBin.path7x
 
 const date = require('date-and-time');
 
@@ -19,20 +16,6 @@ console.log("Downloading demos for " + yesterdayString)
 const matchMapStatsIds: number[] = []
 const matches: Map<number, FullMatch> = new Map<number, FullMatch>()
 const mapStatsIdsToMatchchIds: Map<number, number> = new Map<number, number>()
-
-async function unzip(filePath: string) {
-    await new Promise((resolve, reject) => {
-        const files = []
-        const process  = sevenZip.extract(filePath, downloadsFolder,
-            { $bin: pathTo7zip, $cherryPick: "*dust2*.dem"})
-        process.on('data', file => files.push(file))
-        process.on('end', () => resolve({ files }))
-        process.on('error', (result) => {
-            console.log(result)
-            reject
-        })
-    })
-}
 
 async function loadDemos() {
     for (const matchMapStatsId of matchMapStatsIds) {
@@ -54,11 +37,9 @@ async function loadDemos() {
                     if (demo.name == "GOTV Demo") {
                         matchingDemos++;
                         const rarFile = downloadsFolder + matchData.id.toString() + ".rar"
-                        /*
                         fs.writeFileSync(rarFile,
                             await download("https://www.hltv.org/" + demo.link));
-                            */
-                        unzip(rarFile)
+                        
                         return
                     }
                 }
