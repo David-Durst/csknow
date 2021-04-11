@@ -33,7 +33,7 @@ print(f"uploading {len(files)} files")
 for f in files:
     print("moving file:" + str(f))
     p = Path(f)
-    aws_name = str(sys.argv[1]) + "_" + p.stem + str(machine_id) + p.suffix 
+    aws_name = sys.argv[1] + "_" + sys.argv[2] + "_" + p.stem + "_" + str(machine_id) + p.suffix 
     os.system(f"aws s3 cp {f} s3://csknow/demos/unprocessed2/pros/{aws_name}")
 
 os.system("rm temp_downloads/*.rar")

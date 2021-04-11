@@ -49,8 +49,7 @@ async function loadDemos() {
                         matchingDemos++;
                         const rarFile = downloadsFolder + matchData.id.toString() + ".rar"
                         await execAsync("wget", ["-O", rarFile, "https://www.hltv.org" + demo.link, "--progress=bar:force:noscroll"])
-                        await execAsync("python3", ["upload_logs.py", matchData.id.toString()])
-                        return
+                        await execAsync("python3", ["upload_logs.py", matchData.id.toString(), matchMapStatsIds.toString()])
                     }
                 }
                 if (matchingDemos != 1) {
