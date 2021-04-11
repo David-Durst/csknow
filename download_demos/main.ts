@@ -2,7 +2,7 @@ import HLTV, {GameMap} from 'hltv';
 import {FullMatch} from "hltv/lib/endpoints/getMatch";
 import * as download from 'download'
 import * as fs from 'fs'
-import { exec } from "child_process"
+import { spawn } from "child_process"
 
 const date = require('date-and-time');
 
@@ -18,8 +18,10 @@ const matchMapStatsIds: number[] = []
 const matches: Map<number, FullMatch> = new Map<number, FullMatch>()
 const mapStatsIdsToMatchchIds: Map<number, number> = new Map<number, number>()
 
-async function execAsync(command: string) {
-    const childProcess = exec(command)
+async function execAsync(command: string, args: string[]) {
+    const childProcess = spawn(command, args)
+    childProcess.stdout.pipe(process.stdout)
+    childProcess.stderr.pipe(process.stderr)
     await new Promise((resolve, reject) => {
         childProcess.addListener("error", reject);
         childProcess.addListener("exit", resolve);
@@ -46,9 +48,11 @@ async function loadDemos() {
                     if (demo.name == "GOTV Demo") {
                         matchingDemos++;
                         const rarFile = downloadsFolder + matchData.id.toString() + ".rar"
+                        /*
                         fs.writeFileSync(rarFile,
                             await download("https://www.hltv.org/" + demo.link));
-                        execAsync("python3 upload_logs.py " + matchData.id.toString())
+                            */
+                        execAsync("python3", ["upload_logs.py", matchData.id.toString()])
                         return
                     }
                 }
