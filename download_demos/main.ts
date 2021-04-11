@@ -48,12 +48,9 @@ async function loadDemos() {
                     if (demo.name == "GOTV Demo") {
                         matchingDemos++;
                         const rarFile = downloadsFolder + matchData.id.toString() + ".rar"
-                        /*
                         fs.writeFileSync(rarFile,
                             await download("https://www.hltv.org/" + demo.link));
-                            */
                         execAsync("python3", ["upload_logs.py", matchData.id.toString()])
-                        return
                     }
                 }
                 if (matchingDemos != 1) {
