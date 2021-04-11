@@ -59,7 +59,7 @@ async function loadDemos() {
                 }
                 console.log("added match " + matchMapStatsData.matchId.toString())
             }
-            await new Promise(r => setTimeout(r, 1000));
+            await new Promise(r => setTimeout(r, 20000));
         }
     }
 }
