@@ -6,13 +6,11 @@ In the below diagrams, the primary keys of each table are in bold.
 Multiple bold keys means a composite primary key.
 
 ## Input Tables
-![](schema_data.png)
+![](csknow_data_schema_v3.png)
 
-The main input table is position. This tracks the location of every player.
-There is one row in the position table for each time step (tick) in the demo file.
-The composite primary key for position is demoFile and demoTickNumber.
-Since the demo file runs at a lower tick rate than the actual game, each row in position
-also tracks the game's tick number during a demo tick as gameTickNumber.
+The main input table is `player_at_tick`. This tracks the location of every player.
+There is one row in `player_at_tick` for each player and time step (tick) in the demo file.
+The primary key for each table is id.
 
 ## Event Tables
 ![](schema_events.png)
