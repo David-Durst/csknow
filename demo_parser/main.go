@@ -17,13 +17,17 @@ const localSpottedCSVName = "local_spotted.csv"
 const localWeaponFireCSVName = "local_weapon_fire.csv"
 const localHurtCSVName = "local_hurt.csv"
 const localGrenadesCSVName = "local_grenades.csv"
+const localGrenadeTrajectoriesCSVName = "local_grenade_trajectoriess.csv"
 const localKillsCSVName = "local_kills.csv"
+const localEquipmentFactTable = "local_equipment_fact_table.csv"
 const unprocessedPrefix = "demos/unprocessed/"
 const processedPrefix = "demos/processed/"
 const csvPrefiix = "demos/csvs2/"
 const bucketName = "csknow"
 
 func main() {
+	startIDState := IDState{0, 0, 0, 0, 0, 0, 0, 0, 0 , 0, 0, 0, 0, 0}
+	wroteFactTables := false
 
 	// if reprocessing, don't move the demos
 	reprocessFlag := flag.Bool("r", false, "set for reprocessing demos")
@@ -31,7 +35,8 @@ func main() {
 	localFlag := flag.Bool("l", false, "set for non-aws (aka local) runs")
 	flag.Parse()
 	if *localFlag {
-		processFile("local_run")
+		processFile("local_run", &startIDState, wroteFactTables)
+		wroteFactTables = true
 		os.Exit(0)
 	}
 
@@ -61,7 +66,8 @@ func main() {
 		for _, obj := range p.Contents {
 			fmt.Printf("Handling file: %s\n", *obj.Key)
 			downloadDemo(downloader, *obj.Key)
-			processFile(*obj.Key)
+			processFile(*obj.Key, &startIDState, wroteFactTables)
+			wroteFactTables = true
 			uploadCSVs(uploader, *obj.Key)
 			filesToMove = append(filesToMove, *obj.Key)
 		}
