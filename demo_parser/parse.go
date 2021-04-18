@@ -58,6 +58,10 @@ type IDState struct {
 	nextExplosion int64
 }
 
+type SourceTarget struct {
+	source, target int64
+}
+
 
 func processFile(unprocessedKey string, idState * IDState, firstRun bool) {
 	demFilePath := path.Base(unprocessedKey)
@@ -113,6 +117,7 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool) {
 	//curPlant := PlantTracker{false, 0, 0, 0}
 	//curDefusal := DefusalTracker{false, 0, 0}
 	playersTracker := make(map[uint64]int64)
+	lastFlash := make(map[SourceTarget]int64)
 
 	p.RegisterEventHandler(func(e events.RoundStart) {
 		roundStart = 1
@@ -489,6 +494,15 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool) {
 		if ticksProcessed < minTicks {
 			return
 		}
+
+		source := playersTracker[e.Attacker.SteamID64]
+		target := playersTracker[e.Player.SteamID64]
+		lastFlashKey := SourceTarget{source, target}
+
+		if oldTick, ok := lastFlash[lastFlashKey]; ok && oldTick == idState.nextTick {
+			return
+		}
+		lastFlash[lastFlashKey]	= idState.nextTick
 
 		curID := idState.nextPlayerFlashed
 		idState.nextPlayerFlashed++
