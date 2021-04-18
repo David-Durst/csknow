@@ -605,6 +605,24 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool) {
 			curDefusal.id, curDefusal.plantID, curDefusal.startTick, curDefusal.endTick, curDefusal.defuser, boolToInt(true)))
 	})
 
+	explosionsFile, err := os.Create(localExplosionsCSVName)
+	if err != nil {
+		panic(err)
+	}
+	defer explosionsFile.Close()
+	explosionsFile.WriteString("id,plant_id,tick_id\n")
+
+	p.RegisterEventHandler(func(e events.BombExplode) {
+		if ticksProcessed < minTicks {
+			return
+		}
+
+		curID := idState.nextExplosion
+		idState.nextExplosion++
+
+		defusalsFile.WriteString(fmt.Sprintf("%d,%d,%d", curID, curPlant.id, idState.nextTick))
+	})
+
 	killsFile, err := os.Create(localKillsCSVName)
 	if err != nil {
 		panic(err)
