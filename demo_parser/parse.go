@@ -12,15 +12,11 @@ import (
 
 const minTicks = 30
 
-const (
-	ctTeam = 0
-	tTeam = 1
-)
-
 type RoundTracker struct {
 	id int64
 	gameID int64
 	startTick int64
+	endTick int64
 	freezeTimeEnd int64
 	roundNumber int
 	roundEndReason int
@@ -123,7 +119,7 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 	curGameID := idState.nextGame
 
 	// setup trackers for logs that cross multiple events
-	curRound := RoundTracker{0,0,0,0,0,0,0}
+	curRound := RoundTracker{0,0,0,0,0,0,0,0}
 	grenadesTracker := make(map[int64]GrenadeTracker)
 	playerToLastFireGrenade := make(map[int64]int64)
 	curPlant := PlantTracker{0, 0, 0, 0, false}
@@ -131,12 +127,14 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 	playersTracker := make(map[uint64]int64)
 	lastFlash := make(map[SourceTarget]int64)
 	ticksProcessed := 0
+	roundsProcessed := 0
 
 	roundsFile, err := os.Create(localRoundsFile)
 	if err != nil {
 		panic(err)
 	}
 	defer roundsFile.Close()
+	roundsFile.WriteString("id,game_id,start_tick,end_tick,freeze_time_end,round_number,round_end_reason,winner\n")
 	p.RegisterEventHandler(func(e events.RoundStart) {
 		if ticksProcessed < minTicks {
 			return
@@ -144,53 +142,42 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 
 		curID := idState.nextRound
 		idState.nextRound++
-		curRound = RoundTracker{curID, curGameID, idState.nextTick, 0, 0, 0, 0}
+		curRound = RoundTracker{curID, curGameID, idState.nextTick, 0,-1, roundsProcessed, 0, 0}
+		roundsProcessed++
 	})
 
+	const (
+		ctWinner = 0
+		tWinner = 1
+		draw = 2
+	)
+
 	p.RegisterEventHandler(func(e events.RoundEnd) {
-		roundEndReason := -1
-		switch e.Reason {
-		case events.RoundEndReasonTargetBombed:
-			roundEndReason = 1
-		case events.RoundEndReasonVIPEscaped:
-			roundEndReason = 2
-		case events.RoundEndReasonVIPKilled:
-			roundEndReason = 3
-		case events.RoundEndReasonTerroristsEscaped:
-			roundEndReason = 4
-		case events.RoundEndReasonCTStoppedEscape:
-			roundEndReason = 5
-		case events.RoundEndReasonTerroristsStopped:
-			roundEndReason = 6
-		case events.RoundEndReasonBombDefused:
-			roundEndReason = 7
-		case events.RoundEndReasonCTWin:
-			roundEndReason = 8
-		case events.RoundEndReasonTerroristsWin:
-			roundEndReason = 9
-		case events.RoundEndReasonDraw:
-			roundEndReason = 10
-		case events.RoundEndReasonHostagesRescued:
-			roundEndReason = 11
-		case events.RoundEndReasonTargetSaved:
-			roundEndReason = 12
-		case events.RoundEndReasonHostagesNotRescued:
-			roundEndReason = 13
-		case events.RoundEndReasonTerroristsNotEscaped:
-			roundEndReason = 14
-		case events.RoundEndReasonVIPNotEscaped:
-			roundEndReason = 15
-		case events.RoundEndReasonGameStart:
-			roundEndReason = 16
-		case events.RoundEndReasonTerroristsSurrender:
-			roundEndReason = 17
-		case events.RoundEndReasonCTSurrender:
-			roundEndReason = 18
+		if ticksProcessed < minTicks {
+			return
 		}
+
+		curRound.roundEndReason = int(e.Reason)
+		if e.Winner == common.TeamCounterTerrorists {
+			curRound.winner = ctWinner
+		} else if e.Winner == common.TeamTerrorists {
+			curRound.winner = tWinner
+		} else {
+			curRound.winner = draw
+		}
+		curRound.endTick = idState.nextTick
+		roundsFile.WriteString(fmt.Sprintf("%d,%d,%d,%d,%d,%d,%d,%d\n",
+			curRound.id, curRound.gameID, curRound.startTick, curRound.endTick, curRound.freezeTimeEnd,
+			curRound.roundNumber, curRound.roundEndReason, curRound.winner,
+		))
 	})
 
 	p.RegisterEventHandler(func(e events.RoundFreezetimeEnd) {
-		freezeTime = 0
+		if ticksProcessed < minTicks {
+			return
+		}
+
+		curRound.freezeTimeEnd = idState.nextTick
 	})
 
 	playersFile, err := os.Create(localPlayersCSVName)
