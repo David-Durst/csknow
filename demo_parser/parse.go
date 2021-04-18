@@ -362,7 +362,6 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool) {
 			return
 		}
 
-		fmt.Printf("id %d\n", e.Grenade.UniqueID())
 		curGrenade := grenadesTracker[e.Grenade.UniqueID()]
 		curGrenade.activeTick = idState.nextTick
 		curGrenade.expiredTick = idState.nextTick
@@ -435,47 +434,17 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool) {
 		grenadesTracker[grenadeUniqueID] = curGrenade
 	})
 
-	/*
-	p.RegisterEventHandler(func(e events.FireGrenadeExpired) {
-		if ticksProcessed < minTicks {
-			return
-		}
-
-		fmt.Printf("fire grenade expired on %d\n", idState.nextTick)
-		fmt.Printf("fire grenade expired position %s\n", e.Position.String())
-		curID := fireTracker[e.Position]
-		fmt.Printf("curID %d\n", curID)
-		/*
-		fmt.Printf("id %d\n", e.Grenade.UniqueID())
-		curGrenade := grenadesTracker[e.Grenade.UniqueID()]
-		curGrenade.expiredTick = idState.nextTick
-		curGrenade.expired = true
-		grenadesTracker[e.Grenade.UniqueID()] = curGrenade
-		saveGrenade(e.Grenade.UniqueID())
-	})
-*/
-
 	p.RegisterEventHandler(func(e events.InfernoExpired) {
 		if ticksProcessed < minTicks {
 			return
 		}
 
-		fmt.Printf("inferno grenade expired on %d\n", idState.nextTick)
-		fmt.Printf("inferno thrower %d\n", e.Inferno.Thrower().SteamID64)
 		grenadeUniqueID := playerToLastFireGrenade[playersTracker[e.Inferno.Thrower().SteamID64]]
 		curGrenade := grenadesTracker[grenadeUniqueID]
 		curGrenade.expiredTick = idState.nextTick
 		curGrenade.expired = true
 		grenadesTracker[grenadeUniqueID] = curGrenade
 		saveGrenade(grenadeUniqueID)
-		/*
-			fmt.Printf("id %d\n", e.Grenade.UniqueID())
-			curGrenade := grenadesTracker[e.Grenade.UniqueID()]
-			curGrenade.expiredTick = idState.nextTick
-			curGrenade.expired = true
-			grenadesTracker[e.Grenade.UniqueID()] = curGrenade
-			saveGrenade(e.Grenade.UniqueID())
-		*/
 	})
 
 	grenadeTrajectoriesFile, err := os.Create(localGrenadeTrajectoriesCSVName)
@@ -493,9 +462,6 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool) {
 			return
 		}
 
-		fmt.Printf("weapon instance unqiue id %d\n", e.Projectile.WeaponInstance.UniqueID())
-		fmt.Printf("grenade id %d\n", e.Projectile.Entity.ID())
-		fmt.Printf("porjectile unique id %d\n", e.Projectile.UniqueID())
 		curGrenade := grenadesTracker[e.Projectile.WeaponInstance.UniqueID()]
 		curGrenade.destroyTick = idState.nextTick
 		curGrenade.destroyed = true
