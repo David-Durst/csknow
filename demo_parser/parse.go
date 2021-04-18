@@ -319,6 +319,36 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool) {
 			p.CurrentFrame(), demFilePath))
 	})
 
+	killsFile, err := os.Create(localKillsCSVName)
+	if err != nil {
+		panic(err)
+	}
+	defer killsFile.Close()
+	killsFile.WriteString("killer,victim,weapon,assister,is headshot,is wallbang,penetrated objects,tick number,demo file\n")
+
+	p.RegisterEventHandler(func(e events.Kill) {
+		if ticksProcessed < minTicks {
+			return
+		}
+
+		killerName := "n/a"
+		if e.Killer != nil {
+			killerName =  e.Killer.Name
+		}
+		assisterName := "n/a"
+		if e.Assister != nil {
+			assisterName =  e.Assister.Name
+		}
+		weaponName := "n/a"
+		if e.Weapon != nil {
+			weaponName = e.Weapon.String()
+		}
+		killsFile.WriteString(fmt.Sprintf("%s,%s,%s,%s,%d,%d,%d,%d,%s\n",
+			killerName, e.Victim.Name, weaponName, assisterName,
+			boolToInt(e.IsHeadshot), boolToInt(e.IsWallBang()), e.PenetratedObjects,
+			p.CurrentFrame(), demFilePath))
+	})
+
 	grenadesFile, err := os.Create(localGrenadesCSVName)
 	if err != nil {
 		panic(err)
@@ -621,36 +651,6 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool) {
 		idState.nextExplosion++
 
 		defusalsFile.WriteString(fmt.Sprintf("%d,%d,%d", curID, curPlant.id, idState.nextTick))
-	})
-
-	killsFile, err := os.Create(localKillsCSVName)
-	if err != nil {
-		panic(err)
-	}
-	defer killsFile.Close()
-	killsFile.WriteString("killer,victim,weapon,assister,is headshot,is wallbang,penetrated objects,tick number,demo file\n")
-
-	p.RegisterEventHandler(func(e events.Kill) {
-		if ticksProcessed < minTicks {
-			return
-		}
-
-		killerName := "n/a"
-		if e.Killer != nil {
-			killerName =  e.Killer.Name
-		}
-		assisterName := "n/a"
-		if e.Assister != nil {
-			assisterName =  e.Assister.Name
-		}
-		weaponName := "n/a"
-		if e.Weapon != nil {
-			weaponName = e.Weapon.String()
-		}
-		killsFile.WriteString(fmt.Sprintf("%s,%s,%s,%s,%d,%d,%d,%d,%s\n",
-			killerName, e.Victim.Name, weaponName, assisterName,
-			boolToInt(e.IsHeadshot), boolToInt(e.IsWallBang()), e.PenetratedObjects,
-			p.CurrentFrame(), demFilePath))
 	})
 
 	err = p.ParseToEnd()
