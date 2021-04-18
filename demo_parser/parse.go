@@ -26,18 +26,21 @@ type GrenadeTracker struct {
 
 type PlantTracker struct {
 	//will reset to not valid at end of round
-	valid bool
 	id int64
 	startTick int64
 	endTick int64
+	planter int64
+	successful bool
 }
 
 type DefusalTracker struct {
 	//will reset to not valid at end of round
-	valid bool
 	id int64
+	plantID int64
 	startTick int64
-	// not tracking destroyTick since save on endTick
+	endTick int64
+	defuser int64
+	successful bool
 }
 
 type IDState struct {
@@ -61,7 +64,6 @@ type IDState struct {
 type SourceTarget struct {
 	source, target int64
 }
-
 
 func processFile(unprocessedKey string, idState * IDState, firstRun bool) {
 	demFilePath := path.Base(unprocessedKey)
@@ -114,8 +116,8 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool) {
 	// setup trackers for logs that cross multiple events
 	grenadesTracker := make(map[int64]GrenadeTracker)
 	playerToLastFireGrenade := make(map[int64]int64)
-	//curPlant := PlantTracker{false, 0, 0, 0}
-	//curDefusal := DefusalTracker{false, 0, 0}
+	curPlant := PlantTracker{0, 0, 0, 0, false}
+	curDefusal := DefusalTracker{0, 0, 0, 0, 0, false}
 	playersTracker := make(map[uint64]int64)
 	lastFlash := make(map[SourceTarget]int64)
 
@@ -509,6 +511,98 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool) {
 		playerFlashedFile.WriteString(fmt.Sprintf("%d,%d,%d,%d,%d\n",
 			curID, e.Projectile.WeaponInstance.UniqueID(), idState.nextTick, playersTracker[e.Attacker.SteamID64],
 			playersTracker[e.Player.SteamID64]))
+	})
+
+
+	plantsFile, err := os.Create(localPlantsCSVName)
+	if err != nil {
+		panic(err)
+	}
+	defer plantsFile.Close()
+	plantsFile.WriteString("id,start_tick,end_tick,planter,successful\n")
+
+	p.RegisterEventHandler(func(e events.BombPlantBegin) {
+		if ticksProcessed < minTicks {
+			return
+		}
+
+		curID := idState.nextDefusal
+		idState.nextDefusal++
+
+		curPlant = PlantTracker{curID,
+			idState.nextTick,
+			0,
+			playersTracker[e.Player.SteamID64],
+			false,
+		}
+	})
+
+	p.RegisterEventHandler(func(e events.BombPlantAborted) {
+		if ticksProcessed < minTicks {
+			return
+		}
+
+		curPlant.endTick = idState.nextTick
+		curPlant.successful = false
+		plantsFile.WriteString(fmt.Sprintf("%d,%d,%d,%d,%d",
+			curPlant.id, curPlant.startTick, curPlant.endTick, curPlant.planter, boolToInt(false)))
+	})
+
+	p.RegisterEventHandler(func(e events.BombPlanted) {
+		if ticksProcessed < minTicks {
+			return
+		}
+
+		curPlant.endTick = idState.nextTick
+		curPlant.successful = true
+		plantsFile.WriteString(fmt.Sprintf("%d,%d,%d,%d,%d",
+			curPlant.id, curPlant.startTick, curPlant.endTick, curPlant.planter, boolToInt(true)))
+	})
+
+	defusalsFile, err := os.Create(localDefusalsSVName)
+	if err != nil {
+		panic(err)
+	}
+	defer defusalsFile.Close()
+	defusalsFile.WriteString("id,plant_id,start_tick,end_tick,defuser,successful\n")
+
+	p.RegisterEventHandler(func(e events.BombDefuseStart) {
+		if ticksProcessed < minTicks {
+			return
+		}
+
+		curID := idState.nextDefusal
+		idState.nextDefusal++
+
+		curDefusal = DefusalTracker{curID,
+			curPlant.id,
+			idState.nextTick,
+			0,
+			playersTracker[e.Player.SteamID64],
+			false,
+		}
+	})
+
+	p.RegisterEventHandler(func(e events.BombDefuseAborted) {
+		if ticksProcessed < minTicks {
+			return
+		}
+
+		curDefusal.endTick = idState.nextTick
+		curDefusal.successful = false
+		defusalsFile.WriteString(fmt.Sprintf("%d,%d,%d,%d,%d,%d",
+			curDefusal.id, curDefusal.plantID, curDefusal.startTick, curDefusal.endTick, curDefusal.defuser, boolToInt(false)))
+	})
+
+	p.RegisterEventHandler(func(e events.BombDefused) {
+		if ticksProcessed < minTicks {
+			return
+		}
+
+		curDefusal.endTick = idState.nextTick
+		curDefusal.successful = true
+		defusalsFile.WriteString(fmt.Sprintf("%d,%d,%d,%d,%d,%d",
+			curDefusal.id, curDefusal.plantID, curDefusal.startTick, curDefusal.endTick, curDefusal.defuser, boolToInt(true)))
 	})
 
 	killsFile, err := os.Create(localKillsCSVName)
