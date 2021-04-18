@@ -109,6 +109,7 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool) {
 
 	// setup trackers for logs that cross multiple events
 	grenadesTracker := make(map[int64]GrenadeTracker)
+	playerToLastFireGrenade := make(map[int64]int64)
 	//curPlant := PlantTracker{false, 0, 0, 0}
 	//curDefusal := DefusalTracker{false, 0, 0}
 	playersTracker := make(map[uint64]int64)
@@ -336,6 +337,12 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool) {
 			false,
 			false,
 		}
+
+		if e.Projectile.WeaponInstance.Type == common.EqMolotov ||
+			e.Projectile.WeaponInstance.Type == common.EqIncendiary {
+			playerToLastFireGrenade[playersTracker[e.Projectile.Thrower.SteamID64]] =
+				e.Projectile.WeaponInstance.UniqueID()
+		}
 	})
 
 	saveGrenade := func(id int64) {
@@ -345,7 +352,7 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool) {
 		if curGrenade.destroyed && curGrenade.expired {
 			grenadesFile.WriteString(fmt.Sprintf("%d,%d,%d,%d,%d,%d,%d\n",
 				curGrenade.id, curGrenade.thrower, curGrenade.grenadeType,
-				curGrenade.throwTick, curGrenade.activeTick, curGrenade.expiredTick, idState.nextTick))
+				curGrenade.throwTick, curGrenade.activeTick, curGrenade.expiredTick, curGrenade.destroyTick))
 			delete(grenadesTracker, id)
 		}
 	}
@@ -417,27 +424,58 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool) {
 		grenadesTracker[e.Grenade.UniqueID()] = curGrenade
 	})
 
-	p.RegisterEventHandler(func(e events.FireGrenadeStart) {
+	p.RegisterEventHandler(func(e events.InfernoStart) {
 		if ticksProcessed < minTicks {
 			return
 		}
 
-		curGrenade := grenadesTracker[e.Grenade.UniqueID()]
+		grenadeUniqueID := playerToLastFireGrenade[playersTracker[e.Inferno.Thrower().SteamID64]]
+		curGrenade := grenadesTracker[grenadeUniqueID]
 		curGrenade.activeTick = idState.nextTick
-		grenadesTracker[e.Grenade.UniqueID()] = curGrenade
+		grenadesTracker[grenadeUniqueID] = curGrenade
 	})
 
+	/*
 	p.RegisterEventHandler(func(e events.FireGrenadeExpired) {
 		if ticksProcessed < minTicks {
 			return
 		}
 
+		fmt.Printf("fire grenade expired on %d\n", idState.nextTick)
+		fmt.Printf("fire grenade expired position %s\n", e.Position.String())
+		curID := fireTracker[e.Position]
+		fmt.Printf("curID %d\n", curID)
+		/*
 		fmt.Printf("id %d\n", e.Grenade.UniqueID())
 		curGrenade := grenadesTracker[e.Grenade.UniqueID()]
 		curGrenade.expiredTick = idState.nextTick
 		curGrenade.expired = true
 		grenadesTracker[e.Grenade.UniqueID()] = curGrenade
 		saveGrenade(e.Grenade.UniqueID())
+	})
+*/
+
+	p.RegisterEventHandler(func(e events.InfernoExpired) {
+		if ticksProcessed < minTicks {
+			return
+		}
+
+		fmt.Printf("inferno grenade expired on %d\n", idState.nextTick)
+		fmt.Printf("inferno thrower %d\n", e.Inferno.Thrower().SteamID64)
+		grenadeUniqueID := playerToLastFireGrenade[playersTracker[e.Inferno.Thrower().SteamID64]]
+		curGrenade := grenadesTracker[grenadeUniqueID]
+		curGrenade.expiredTick = idState.nextTick
+		curGrenade.expired = true
+		grenadesTracker[grenadeUniqueID] = curGrenade
+		saveGrenade(grenadeUniqueID)
+		/*
+			fmt.Printf("id %d\n", e.Grenade.UniqueID())
+			curGrenade := grenadesTracker[e.Grenade.UniqueID()]
+			curGrenade.expiredTick = idState.nextTick
+			curGrenade.expired = true
+			grenadesTracker[e.Grenade.UniqueID()] = curGrenade
+			saveGrenade(e.Grenade.UniqueID())
+		*/
 	})
 
 	grenadeTrajectoriesFile, err := os.Create(localGrenadeTrajectoriesCSVName)
@@ -455,7 +493,9 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool) {
 			return
 		}
 
-		fmt.Printf("id %d\n", e.Projectile.WeaponInstance.UniqueID())
+		fmt.Printf("weapon instance unqiue id %d\n", e.Projectile.WeaponInstance.UniqueID())
+		fmt.Printf("grenade id %d\n", e.Projectile.Entity.ID())
+		fmt.Printf("porjectile unique id %d\n", e.Projectile.UniqueID())
 		curGrenade := grenadesTracker[e.Projectile.WeaponInstance.UniqueID()]
 		curGrenade.destroyTick = idState.nextTick
 		curGrenade.destroyed = true
