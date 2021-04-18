@@ -52,7 +52,7 @@ type IDState struct {
 	nextPlayerHurt int64
 	nextGrenade int64
 	nextGrenadeTrajectory int64
-	nextFlashed int64
+	nextPlayerFlashed int64
 	nextPlant int64
 	nextDefusal int64
 	nextExplosion int64
@@ -478,6 +478,24 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool) {
 		saveGrenade(e.Projectile.WeaponInstance.UniqueID())
 	})
 
+	playerFlashedFile, err := os.Create(localPlayerFlashedCSVName)
+	if err != nil {
+		panic(err)
+	}
+	defer playerFlashedFile.Close()
+	playerFlashedFile.WriteString("id,grenade_id,tick_id,thrower,victim\n")
+
+	p.RegisterEventHandler(func(e events.PlayerFlashed) {
+		if ticksProcessed < minTicks {
+			return
+		}
+
+		curID := idState.nextPlayerFlashed
+		idState.nextPlayerFlashed++
+		playerFlashedFile.WriteString(fmt.Sprintf("%d,%d,%d,%d,%d\n",
+			curID, e.Projectile.WeaponInstance.UniqueID(), idState.nextTick, playersTracker[e.Attacker.SteamID64],
+			playersTracker[e.Player.SteamID64]))
+	})
 
 	killsFile, err := os.Create(localKillsCSVName)
 	if err != nil {
