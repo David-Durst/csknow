@@ -12,12 +12,14 @@ import (
 )
 
 const localDemName = "local.dem"
+const gamesCSVName = "global_games.csv"
+const localPlayersCSVName = "local_players.csv"
 const localPositionCSVName = "local_position.csv"
 const localSpottedCSVName = "local_spotted.csv"
 const localWeaponFireCSVName = "local_weapon_fire.csv"
 const localHurtCSVName = "local_hurt.csv"
 const localGrenadesCSVName = "local_grenades.csv"
-const localGrenadeTrajectoriesCSVName = "local_grenade_trajectoriess.csv"
+const localGrenadeTrajectoriesCSVName = "local_grenade_trajectories.csv"
 const localKillsCSVName = "local_kills.csv"
 const localEquipmentFactTable = "local_equipment_fact_table.csv"
 const unprocessedPrefix = "demos/unprocessed/"
@@ -26,8 +28,8 @@ const csvPrefiix = "demos/csvs2/"
 const bucketName = "csknow"
 
 func main() {
-	startIDState := IDState{0, 0, 0, 0, 0, 0, 0, 0, 0 , 0, 0, 0, 0, 0}
-	wroteFactTables := false
+	startIDState := IDState{0, 0, 0, 0, 0, 0, 0, 0, 0 , 0, 0, 0, 0, 0, 0}
+	firstRun := true
 
 	// if reprocessing, don't move the demos
 	reprocessFlag := flag.Bool("r", false, "set for reprocessing demos")
@@ -35,8 +37,8 @@ func main() {
 	localFlag := flag.Bool("l", false, "set for non-aws (aka local) runs")
 	flag.Parse()
 	if *localFlag {
-		processFile("local_run", &startIDState, wroteFactTables)
-		wroteFactTables = true
+		processFile("local_run", &startIDState, firstRun)
+		firstRun = false
 		os.Exit(0)
 	}
 
@@ -66,8 +68,8 @@ func main() {
 		for _, obj := range p.Contents {
 			fmt.Printf("Handling file: %s\n", *obj.Key)
 			downloadDemo(downloader, *obj.Key)
-			processFile(*obj.Key, &startIDState, wroteFactTables)
-			wroteFactTables = true
+			processFile(*obj.Key, &startIDState, firstRun)
+			firstRun = false
 			uploadCSVs(uploader, *obj.Key)
 			filesToMove = append(filesToMove, *obj.Key)
 		}
