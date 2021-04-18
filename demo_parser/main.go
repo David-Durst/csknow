@@ -13,6 +13,7 @@ import (
 
 const localDemName = "local.dem"
 const gamesCSVName = "global_games.csv"
+const localRoundsFile = "local_players.csv"
 const localPlayersCSVName = "local_players.csv"
 const localPositionCSVName = "local_position.csv"
 const localSpottedCSVName = "local_spotted.csv"
@@ -26,6 +27,7 @@ const localDefusalsSVName = "local_defusals.csv"
 const localExplosionsCSVName = "local_explosions.csv"
 const localKillsCSVName = "local_kills.csv"
 const localEquipmentFactTable = "local_equipment_fact_table.csv"
+const localGameTypeFactTable = "local_game_type_fact_table.csv"
 const unprocessedPrefix = "demos/unprocessed/"
 const processedPrefix = "demos/processed/"
 const csvPrefiix = "demos/csvs2/"
@@ -40,8 +42,9 @@ func main() {
 	// if running locally, skip the aws stuff and just return
 	localFlag := flag.Bool("l", false, "set for non-aws (aka local) runs")
 	flag.Parse()
+	gameTypeToID := saveGameTypesFile()
 	if *localFlag {
-		processFile("local_run", &startIDState, firstRun)
+		processFile("local_run", &startIDState, firstRun, gameTypeToID, "bots")
 		firstRun = false
 		os.Exit(0)
 	}
@@ -72,7 +75,7 @@ func main() {
 		for _, obj := range p.Contents {
 			fmt.Printf("Handling file: %s\n", *obj.Key)
 			downloadDemo(downloader, *obj.Key)
-			processFile(*obj.Key, &startIDState, firstRun)
+			processFile(*obj.Key, &startIDState, firstRun, gameTypeToID, "bots")
 			firstRun = false
 			uploadCSVs(uploader, *obj.Key)
 			filesToMove = append(filesToMove, *obj.Key)

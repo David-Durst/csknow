@@ -93,3 +93,21 @@ func saveEquipmentFile(equipmentToName map[common.EquipmentType]string) {
 		equipmentFactTable.WriteString(fmt.Sprintf("%d,%s\n", id, name))
 	}
 }
+
+func saveGameTypesFile() map[string]int {
+	gameTypeFactTable, err := os.Create(localGameTypeFactTable)
+	if err != nil {
+		panic(err)
+	}
+	defer gameTypeFactTable.Close()
+	gameTypeFactTable.WriteString("id,table_type\n")
+
+	nameToID := make(map[string]int)
+	nameToID["pros"] = 0
+	nameToID["bots"] = 1
+
+	for name, id := range nameToID {
+		gameTypeFactTable.WriteString(fmt.Sprintf("%d,%s\n", id, name))
+	}
+	return nameToID
+}

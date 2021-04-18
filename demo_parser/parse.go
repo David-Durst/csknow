@@ -12,6 +12,21 @@ import (
 
 const minTicks = 30
 
+const (
+	ctTeam = 0
+	tTeam = 1
+)
+
+type RoundTracker struct {
+	id int64
+	gameID int64
+	startTick int64
+	freezeTimeEnd int64
+	roundNumber int
+	roundEndReason int
+	winner int
+}
+
 type GrenadeTracker struct {
 	id int64
 	thrower int64
@@ -65,7 +80,7 @@ type SourceTarget struct {
 	source, target int64
 }
 
-func processFile(unprocessedKey string, idState * IDState, firstRun bool) {
+func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTypeToID map[string]int, gameType string) {
 	demFilePath := path.Base(unprocessedKey)
 	f, err := os.Open(localDemName)
 	if err != nil {
@@ -107,27 +122,33 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool) {
 	}
 	curGameID := idState.nextGame
 
-	// flags from other event handlers to frame done handler
-	roundStart := 0
-	roundEndReason := -1
-	roundEnd := 0
-	freezeTime := 0
-
 	// setup trackers for logs that cross multiple events
+	curRound := RoundTracker{0,0,0,0,0,0,0}
 	grenadesTracker := make(map[int64]GrenadeTracker)
 	playerToLastFireGrenade := make(map[int64]int64)
 	curPlant := PlantTracker{0, 0, 0, 0, false}
 	curDefusal := DefusalTracker{0, 0, 0, 0, 0, false}
 	playersTracker := make(map[uint64]int64)
 	lastFlash := make(map[SourceTarget]int64)
+	ticksProcessed := 0
 
+	roundsFile, err := os.Create(localRoundsFile)
+	if err != nil {
+		panic(err)
+	}
+	defer roundsFile.Close()
 	p.RegisterEventHandler(func(e events.RoundStart) {
-		roundStart = 1
-		freezeTime = 1
+		if ticksProcessed < minTicks {
+			return
+		}
+
+		curID := idState.nextRound
+		idState.nextRound++
+		curRound = RoundTracker{curID, curGameID, idState.nextTick, 0, 0, 0, 0}
 	})
 
 	p.RegisterEventHandler(func(e events.RoundEnd) {
-		roundEnd = 1
+		roundEndReason := -1
 		switch e.Reason {
 		case events.RoundEndReasonTargetBombed:
 			roundEndReason = 1
@@ -185,7 +206,6 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool) {
 		idState.nextPlayer++
 	})
 
-	ticksProcessed := 0
 	p.RegisterEventHandler(func(e events.FrameDone) {
 		// on the first tick save the game state
 		if ticksProcessed == 0 {
