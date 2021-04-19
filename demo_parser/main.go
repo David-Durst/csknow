@@ -45,6 +45,7 @@ func main() {
 	localFlag := flag.Bool("l", false, "set for non-aws (aka local) runs")
 	flag.Parse()
 	gameTypeToID := saveGameTypesFile()
+	saveHitGroupsFile()
 	if *localFlag {
 		processFile("local_run", &startIDState, firstRun, gameTypeToID, "bots")
 		firstRun = false

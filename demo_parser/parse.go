@@ -76,6 +76,14 @@ type SourceTarget struct {
 	source, target int64
 }
 
+func getPlayerBySteamID(playersTracker * map[uint64]int64, player * common.Player) int64 {
+	if player == nil {
+		return -1
+	} else {
+		return (*playersTracker)[player.SteamID64]
+	}
+}
+
 func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTypeToID map[string]int, gameType string) {
 	demFilePath := path.Base(unprocessedKey)
 	f, err := os.Open(localDemName)
@@ -213,11 +221,7 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 		gs.IsWarmupPeriod()
 		tickID := idState.nextTick
 		var carrierID int64
-		if gs.Bomb().Carrier == nil {
-			carrierID = -1
-		} else {
-			carrierID = playersTracker[gs.Bomb().Carrier.SteamID64]
-		}
+		carrierID = getPlayerBySteamID(&playersTracker, gs.Bomb().Carrier)
 		ticksFile.WriteString(fmt.Sprintf("%d,%d,%d,%d,%d,%d,%.2f,%.2f,%.2f\n",
 			tickID,curRound.id,p.CurrentTime().Milliseconds(), gs.IsWarmupPeriod(), carrierID,
 			gs.Bomb().Position().X, gs.Bomb().Position().Y, gs.Bomb().Position().Z))
@@ -288,7 +292,7 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 				"%d,%d,%d,%f,%d,%d,%d," +
 				"%d,%d,%d,%d,%d,%d,%d," +
 				"%d,%d,%d,%d,%d,%d,%d\n",
-				playerAtTickID, playersTracker[player.SteamID64], tickID, player.Position().X, player.Position().Y,
+				playerAtTickID, getPlayerBySteamID(&playersTracker, player), tickID, player.Position().X, player.Position().Y,
 				player.Position().Z, player.ViewDirectionX(), player.ViewDirectionY(), player.Health(), player.Armor(),
 				boolToInt(player.HasHelmet()),
 				boolToInt(player.IsAlive()), boolToInt(player.IsDucking()), boolToInt(player.IsAirborne()), player.FlashDuration,
@@ -321,7 +325,7 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 			curID := idState.nextSpotted
 			idState.nextSpotted++
 			spottedFile.WriteString(fmt.Sprintf("%d,%d,%d,%d,%d\n",
-				curID, idState.nextTick, playersTracker[e.Spotted.SteamID64], playersTracker[possibleSpotter.SteamID64],
+				curID, idState.nextTick, getPlayerBySteamID(&playersTracker, e.Spotted), getPlayerBySteamID(&playersTracker, possibleSpotter),
 				boolToInt(e.Spotted.IsSpottedBy(possibleSpotter))))
 		}
 	})
@@ -341,7 +345,7 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 		curID := idState.nextWeaponFire
 		idState.nextWeaponFire++
 		weaponFireFile.WriteString(fmt.Sprintf("%d,%d,%d,%d\n",
-			curID, idState.nextTick, playersTracker[e.Shooter.SteamID64], int(e.Weapon.Type)))
+			curID, idState.nextTick, getPlayerBySteamID(&playersTracker, e.Shooter), int(e.Weapon.Type)))
 	})
 
 	hurtFile, err := os.Create(localHurtCSVName)
@@ -359,8 +363,8 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 		curID := idState.nextPlayerHurt
 		idState.nextPlayerHurt++
 		hurtFile.WriteString(fmt.Sprintf("%d,%d,%d,%d,%d,%d,%d,%d,%d,%d\n",
-			curID, idState.nextTick, playersTracker[e.Player.SteamID64], playersTracker[e.Attacker.SteamID64],
-			e.ArmorDamage, e.Armor, e.HealthDamage, e.Health, e.HitGroup))
+			curID, idState.nextTick, getPlayerBySteamID(&playersTracker, e.Player), getPlayerBySteamID(&playersTracker, e.Attacker),
+			int(e.Weapon.Type), e.ArmorDamage, e.Armor, e.HealthDamage, e.Health, int(e.HitGroup)))
 	})
 
 	killsFile, err := os.Create(localKillsCSVName)
@@ -368,29 +372,19 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 		panic(err)
 	}
 	defer killsFile.Close()
-	killsFile.WriteString("killer,victim,weapon,assister,is headshot,is wallbang,penetrated objects,tick number,demo file\n")
+	killsFile.WriteString("id,tick_id,killer,victim,weapon,assister,is_headshot,is_wallbang,penetrated_objects\n")
 
 	p.RegisterEventHandler(func(e events.Kill) {
 		if ticksProcessed < minTicks {
 			return
 		}
 
-		killerName := "n/a"
-		if e.Killer != nil {
-			killerName =  e.Killer.Name
-		}
-		assisterName := "n/a"
-		if e.Assister != nil {
-			assisterName =  e.Assister.Name
-		}
-		weaponName := "n/a"
-		if e.Weapon != nil {
-			weaponName = e.Weapon.String()
-		}
-		killsFile.WriteString(fmt.Sprintf("%s,%s,%s,%s,%d,%d,%d,%d,%s\n",
-			killerName, e.Victim.Name, weaponName, assisterName,
-			boolToInt(e.IsHeadshot), boolToInt(e.IsWallBang()), e.PenetratedObjects,
-			p.CurrentFrame(), demFilePath))
+		curID := idState.nextKill
+		idState.nextKill++
+		killsFile.WriteString(fmt.Sprintf("%d,%d,%d,%d,%d,%d,%d,%d,%d\n",
+			curID, idState.nextTick, getPlayerBySteamID(&playersTracker, e.Killer), getPlayerBySteamID(&playersTracker, e.Victim),
+			int(e.Weapon.Type), getPlayerBySteamID(&playersTracker, e.Assister), boolToInt(e.IsHeadshot), boolToInt(e.IsWallBang()),
+			e.PenetratedObjects))
 	})
 
 	grenadesFile, err := os.Create(localGrenadesCSVName)
@@ -409,7 +403,7 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 		idState.nextGrenade++
 
 		grenadesTracker[e.Projectile.WeaponInstance.UniqueID()] = GrenadeTracker{curID,
-			playersTracker[e.Projectile.Thrower.SteamID64],
+			getPlayerBySteamID(&playersTracker, e.Projectile.Thrower),
 			e.Projectile.WeaponInstance.Type,
 			idState.nextTick,
 			0,
@@ -421,7 +415,7 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 
 		if e.Projectile.WeaponInstance.Type == common.EqMolotov ||
 			e.Projectile.WeaponInstance.Type == common.EqIncendiary {
-			playerToLastFireGrenade[playersTracker[e.Projectile.Thrower.SteamID64]] =
+			playerToLastFireGrenade[getPlayerBySteamID(&playersTracker, e.Projectile.Thrower)] =
 				e.Projectile.WeaponInstance.UniqueID()
 		}
 	})
@@ -509,7 +503,7 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 			return
 		}
 
-		grenadeUniqueID := playerToLastFireGrenade[playersTracker[e.Inferno.Thrower().SteamID64]]
+		grenadeUniqueID := playerToLastFireGrenade[getPlayerBySteamID(&playersTracker, e.Inferno.Thrower())]
 		curGrenade := grenadesTracker[grenadeUniqueID]
 		curGrenade.activeTick = idState.nextTick
 		grenadesTracker[grenadeUniqueID] = curGrenade
@@ -520,7 +514,7 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 			return
 		}
 
-		grenadeUniqueID := playerToLastFireGrenade[playersTracker[e.Inferno.Thrower().SteamID64]]
+		grenadeUniqueID := playerToLastFireGrenade[getPlayerBySteamID(&playersTracker, e.Inferno.Thrower())]
 		curGrenade := grenadesTracker[grenadeUniqueID]
 		curGrenade.expiredTick = idState.nextTick
 		curGrenade.expired = true
@@ -571,8 +565,8 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 			return
 		}
 
-		source := playersTracker[e.Attacker.SteamID64]
-		target := playersTracker[e.Player.SteamID64]
+		source := getPlayerBySteamID(&playersTracker, e.Attacker)
+		target := getPlayerBySteamID(&playersTracker, e.Player)
 		lastFlashKey := SourceTarget{source, target}
 
 		if oldTick, ok := lastFlash[lastFlashKey]; ok && oldTick == idState.nextTick {
@@ -583,8 +577,8 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 		curID := idState.nextPlayerFlashed
 		idState.nextPlayerFlashed++
 		playerFlashedFile.WriteString(fmt.Sprintf("%d,%d,%d,%d,%d\n",
-			curID, e.Projectile.WeaponInstance.UniqueID(), idState.nextTick, playersTracker[e.Attacker.SteamID64],
-			playersTracker[e.Player.SteamID64]))
+			curID, e.Projectile.WeaponInstance.UniqueID(), idState.nextTick, getPlayerBySteamID(&playersTracker, e.Attacker),
+			getPlayerBySteamID(&playersTracker, e.Player)))
 	})
 
 
@@ -606,7 +600,7 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 		curPlant = PlantTracker{curID,
 			idState.nextTick,
 			0,
-			playersTracker[e.Player.SteamID64],
+			getPlayerBySteamID(&playersTracker, e.Player),
 			false,
 		}
 	})
@@ -652,7 +646,7 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 			curPlant.id,
 			idState.nextTick,
 			0,
-			playersTracker[e.Player.SteamID64],
+			getPlayerBySteamID(&playersTracker, e.Player),
 			false,
 		}
 	})
