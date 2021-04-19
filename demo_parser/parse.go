@@ -211,6 +211,11 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 				curGameID, demFilePath, (&header).FrameRate(), p.TickRate(), gameTypeToID[gameType]))
 			idState.nextGame++
 		}
+		/*
+		if ticksProcessed % 1000 == 0 {
+			fmt.Printf("on tick %d/%d", ticksProcessed, p.Header().PlaybackFrames)
+		}
+		 */
 		ticksProcessed++
 		gs := p.GameState()
 		// skip the first couple seconds as tick number  can have issues with these
@@ -288,6 +293,10 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 					hasBomb = true
 				}
 			}
+			activeWeapon := -1
+			if player.ActiveWeapon() != nil {
+				activeWeapon = int(player.ActiveWeapon().Type)
+			}
 			playerAtTickFile.WriteString(fmt.Sprintf("%d,%d,%d,%.2f,%.2f,%.2f,%.2f,%.2f,%d,%d,%d," +
 				"%d,%d,%d,%f,%d,%d,%d," +
 				"%d,%d,%d,%d,%d,%d,%d," +
@@ -296,7 +305,7 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 				player.Position().Z, player.ViewDirectionX(), player.ViewDirectionY(), player.Health(), player.Armor(),
 				boolToInt(player.HasHelmet()),
 				boolToInt(player.IsAlive()), boolToInt(player.IsDucking()), boolToInt(player.IsAirborne()), player.FlashDuration,
-				int(player.ActiveWeapon().Type), primaryWeapon, primaryBulletsClip,
+				activeWeapon, primaryWeapon, primaryBulletsClip,
 				primaryBulletsReserve, secondaryWeapon, secondaryBulletsClip, secondaryBulletsReserve, numHE, numFlash, numSmoke,
 				numIncendiary, numMolotov, numDecoy, numZeus, boolToInt(hasBomb), boolToInt(hasDefuser), player.Money()))
 		}

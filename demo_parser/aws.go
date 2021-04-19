@@ -49,7 +49,7 @@ func uploadFile(uploader *s3manager.Uploader, csvPath string, fileKey string) {
 }
 
 func uploadCSVs(uploader *s3manager.Uploader, fileKey string) {
-	uploadFile(uploader, localPositionCSVName, fileKey + "_position")
+	//uploadFile(uploader, localPositionCSVName, fileKey + "_position")
 	uploadFile(uploader, localSpottedCSVName, fileKey + "_spotted")
 	uploadFile(uploader, localWeaponFireCSVName, fileKey + "_weapon_fire")
 	uploadFile(uploader, localHurtCSVName, fileKey + "_hurt")
