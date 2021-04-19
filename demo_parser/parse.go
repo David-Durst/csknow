@@ -140,9 +140,9 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 	})
 
 	const (
-		ctWinner = 0
-		tWinner = 1
-		draw = 2
+		ctSide = 0
+		tSide = 1
+		spectator = 2
 	)
 
 	p.RegisterEventHandler(func(e events.RoundEnd) {
@@ -152,11 +152,11 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 
 		curRound.roundEndReason = int(e.Reason)
 		if e.Winner == common.TeamCounterTerrorists {
-			curRound.winner = ctWinner
+			curRound.winner = ctSide
 		} else if e.Winner == common.TeamTerrorists {
-			curRound.winner = tWinner
+			curRound.winner = tSide
 		} else {
-			curRound.winner = draw
+			curRound.winner = spectator
 		}
 		curRound.endTick = idState.nextTick
 		roundsFile.WriteString(fmt.Sprintf("%d,%d,%d,%d,%d,%d,%d,%d\n",
@@ -198,7 +198,7 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 		panic(err)
 	}
 	defer playerAtTickFile.Close()
-	playerAtTickFile.WriteString("id,player_id,tick_id,pos_x,pos_y,pos_z,view_x,view_y,health,armor,has_helmet," +
+	playerAtTickFile.WriteString("id,player_id,tick_id,pos_x,pos_y,pos_z,view_x,view_y,team,health,armor,has_helmet," +
 		"is_alive,is_crouching,is_airborne,remaining_flash_time,active_weapon,main_weapon,primary_bullets_clip," +
 		"primary_bullets_reserve,secondary_weapon,secondary_bullets_clip,secondary_bullets_reserve,num_he,num_flash,num_smoke," +
 		"num_incendiary,num_molotov,num_decoy,num_zeus,has_defuser,has_bomb,money\n")
@@ -211,11 +211,6 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 				curGameID, demFilePath, (&header).FrameRate(), p.TickRate(), gameTypeToID[gameType]))
 			idState.nextGame++
 		}
-		/*
-		if ticksProcessed % 1000 == 0 {
-			fmt.Printf("on tick %d/%d", ticksProcessed, p.Header().PlaybackFrames)
-		}
-		 */
 		ticksProcessed++
 		gs := p.GameState()
 		// skip the first couple seconds as tick number  can have issues with these
@@ -236,16 +231,6 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 			return players[i].Name < players[j].Name
 		})
 		for _, player := range players {
-			/*
-			isAlive := 0
-			if players[i].IsAlive() {
-				isAlive = 1
-			}
-			isBlinded := 0
-			if players[i].IsBlinded() {
-				isBlinded = 1
-			}
-			 */
 			playerAtTickID := idState.nextPlayerAtTick
 			idState.nextPlayerAtTick++
 			primaryWeapon := -1
@@ -297,12 +282,18 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 			if player.ActiveWeapon() != nil {
 				activeWeapon = int(player.ActiveWeapon().Type)
 			}
-			playerAtTickFile.WriteString(fmt.Sprintf("%d,%d,%d,%.2f,%.2f,%.2f,%.2f,%.2f,%d,%d,%d," +
+			side := spectator
+			if player.Team == common.TeamCounterTerrorists {
+				side = ctSide
+			} else if player.Team == common.TeamTerrorists {
+				side = tSide
+			}
+			playerAtTickFile.WriteString(fmt.Sprintf("%d,%d,%d,%.2f,%.2f,%.2f,%.2f,%.2f,%d,%d,%d,%d," +
 				"%d,%d,%d,%f,%d,%d,%d," +
 				"%d,%d,%d,%d,%d,%d,%d," +
 				"%d,%d,%d,%d,%d,%d,%d\n",
 				playerAtTickID, getPlayerBySteamID(&playersTracker, player), tickID, player.Position().X, player.Position().Y,
-				player.Position().Z, player.ViewDirectionX(), player.ViewDirectionY(), player.Health(), player.Armor(),
+				player.Position().Z, player.ViewDirectionX(), player.ViewDirectionY(), side, player.Health(), player.Armor(),
 				boolToInt(player.HasHelmet()),
 				boolToInt(player.IsAlive()), boolToInt(player.IsDucking()), boolToInt(player.IsAirborne()), player.FlashDuration,
 				activeWeapon, primaryWeapon, primaryBulletsClip,
