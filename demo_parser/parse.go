@@ -84,20 +84,6 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 	}
 	defer f.Close()
 
-	positionFile, err := os.Create(localPositionCSVName)
-	if err != nil {
-		panic(err)
-	}
-	defer positionFile.Close()
-	positionFile.WriteString("demo tick number,ingame tick,match started,game phase,rounds played,is warmup,round start,round end,round end reason,freeze time ended,t score,ct score,num players")
-	for i := 0; i < 10; i++ {
-		positionFile.WriteString(fmt.Sprintf(
-			",player %d name,player %d team,player %d x position,player %d y position,player %d z position" +
-				",player %d x view direction,player %d y view direction,player %d is alive,player %d is blinded",
-				i, i, i, i, i, i, i, i, i))
-	}
-	positionFile.WriteString(fmt.Sprintf(",demo file\n"))
-
 	p := demoinfocs.NewParser(f)
 	defer p.Close()
 
@@ -193,6 +179,23 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 		idState.nextPlayer++
 	})
 
+	ticksFile, err := os.Create(localTicksCSVName)
+	if err != nil {
+		panic(err)
+	}
+	defer ticksFile.Close()
+	ticksFile.WriteString("id,round_id,game_time,warmup,bomb_carrier,bomb_x,bomb_y,bomb_z\n")
+
+	playerAtTickFile, err := os.Create(localPlayerAtTickCSVName)
+	if err != nil {
+		panic(err)
+	}
+	defer playerAtTickFile.Close()
+	playerAtTickFile.WriteString("id,player_id,tick_id,pos_x,pos_y,pos_z,view_x,view_y,health,armor,has_helmet," +
+		"is_alive,is_crouching,is_airborne,remaining_flash_time,active_weapon,main_weapon,primary_bullets_clip," +
+		"primary_bullets_reserve,secondary_weapon,secondary_bullets_clip,secondary_bullets_reserve,num_he,num_flash,num_smoke," +
+		"num_incendiary,num_molotov,num_decoy,num_zeus,has_defuser,has_bomb,money\n")
+
 	p.RegisterEventHandler(func(e events.FrameDone) {
 		// on the first tick save the game state
 		if ticksProcessed == 0 {
@@ -202,48 +205,97 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 		}
 		ticksProcessed++
 		gs := p.GameState()
-		players := getPlayers(&p)
 		// skip the first couple seconds as tick number  can have issues with these
 		// this should be fine as should just be warmup, which is 3 seconds despite fact I told cs to disable
 		if ticksProcessed < minTicks {
 			return
 		}
-		matchStarted := 0
-		if gs.IsMatchStarted() {
-			matchStarted = 1
+		gs.IsWarmupPeriod()
+		tickID := idState.nextTick
+		var carrierID int64
+		if gs.Bomb().Carrier == nil {
+			carrierID = -1
+		} else {
+			carrierID = playersTracker[gs.Bomb().Carrier.SteamID64]
 		}
-		isWarmup := 0
-		if gs.IsWarmupPeriod() {
-			isWarmup = 1
-		}
-		positionFile.WriteString(fmt.Sprintf("%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,", p.CurrentFrame(), gs.IngameTick(), matchStarted, gs.GamePhase(), gs.TotalRoundsPlayed(), isWarmup,
-			roundStart, roundEnd, roundEndReason, freezeTime, gs.TeamTerrorists().Score(), gs.TeamCounterTerrorists().Score(), len(players)))
+		ticksFile.WriteString(fmt.Sprintf("%d,%d,%d,%d,%d,%d,%.2f,%.2f,%.2f\n",
+			tickID,curRound.id,p.CurrentTime().Milliseconds(), gs.IsWarmupPeriod(), carrierID,
+			gs.Bomb().Position().X, gs.Bomb().Position().Y, gs.Bomb().Position().Z))
+
+		players := getPlayers(&p)
 		sort.Slice(players, func(i int, j int) bool {
 			return players[i].Name < players[j].Name
 		})
-		for i := 0; i < 10; i++ {
-			if i >= len(players) {
-				positionFile.WriteString(",,,,,")
-			} else {
-				isAlive := 0
-				if players[i].IsAlive() {
-					isAlive = 1
-				}
-				isBlinded := 0
-				if players[i].IsBlinded() {
-					isBlinded = 1
-				}
-				positionFile.WriteString(fmt.Sprintf("%s,%d,%.2f,%.2f,%.2f,%.2f,%.2f,%d,%d",
-					players[i].Name, teamToNum(players[i].Team), players[i].Position().X, players[i].Position().Y,
-					players[i].Position().Z, players[i].ViewDirectionX(), players[i].ViewDirectionY(),
-					isAlive, isBlinded))
+		for _, player := range players {
+			/*
+			isAlive := 0
+			if players[i].IsAlive() {
+				isAlive = 1
 			}
-			positionFile.WriteString(",")
+			isBlinded := 0
+			if players[i].IsBlinded() {
+				isBlinded = 1
+			}
+			 */
+			playerAtTickID := idState.nextPlayerAtTick
+			idState.nextPlayerAtTick++
+			primaryWeapon := -1
+			primaryBulletsClip := 0
+			primaryBulletsReserve := 0
+			secondaryWeapon := -1
+			secondaryBulletsClip := 0
+			secondaryBulletsReserve := 0
+			numHE := 0
+			numFlash := 0
+			numSmoke := 0
+			numIncendiary := 0
+			numMolotov := 0
+			numDecoy := 0
+			numZeus := 0
+			hasDefuser := false
+			hasBomb := false
+			for _, weapon := range player.Weapons() {
+				if weapon.Class() == common.EqClassPistols {
+					secondaryWeapon = int(weapon.Type)
+					secondaryBulletsClip = weapon.AmmoInMagazine()
+					secondaryBulletsReserve = weapon.AmmoReserve()
+				} else if weapon.Class() == common.EqClassSMG || weapon.Class() == common.EqClassHeavy ||
+					weapon.Class() == common.EqClassRifle {
+					primaryWeapon = int(weapon.Type)
+					primaryBulletsClip = weapon.AmmoInMagazine()
+					primaryBulletsReserve = weapon.AmmoReserve()
+				} else if weapon.Type == common.EqHE {
+					numHE = weapon.AmmoReserve() + weapon.AmmoInMagazine()
+				} else if weapon.Type == common.EqFlash {
+					numFlash = weapon.AmmoReserve() + weapon.AmmoInMagazine()
+				} else if weapon.Type == common.EqSmoke {
+					numSmoke = weapon.AmmoReserve() + weapon.AmmoInMagazine()
+				} else if weapon.Type == common.EqMolotov {
+					numMolotov = weapon.AmmoReserve() + weapon.AmmoInMagazine()
+				} else if weapon.Type == common.EqIncendiary {
+					numIncendiary = weapon.AmmoReserve() + weapon.AmmoInMagazine()
+				} else if weapon.Type == common.EqDecoy {
+					numDecoy = weapon.AmmoReserve() + weapon.AmmoInMagazine()
+				} else if weapon.Type == common.EqZeus {
+					numZeus = weapon.AmmoReserve() + weapon.AmmoInMagazine()
+				} else if weapon.Type == common.EqDefuseKit {
+					hasDefuser = true
+				} else if weapon.Type == common.EqBomb {
+					hasBomb = true
+				}
+			}
+			playerAtTickFile.WriteString(fmt.Sprintf("%d,%d,%d,%.2f,%.2f,%.2f,%.2f,%.2f,%d,%d,%d," +
+				"%d,%d,%d,%f,%d,%d,%d," +
+				"%d,%d,%d,%d,%d,%d,%d," +
+				"%d,%d,%d,%d,%d,%d,%d\n",
+				playerAtTickID, playersTracker[player.SteamID64], tickID, player.Position().X, player.Position().Y,
+				player.Position().Z, player.ViewDirectionX(), player.ViewDirectionY(), player.Health(), player.Armor(),
+				boolToInt(player.HasHelmet()),
+				boolToInt(player.IsAlive()), boolToInt(player.IsDucking()), boolToInt(player.IsAirborne()), player.FlashDuration,
+				int(player.ActiveWeapon().Type), primaryWeapon, primaryBulletsClip,
+				primaryBulletsReserve, secondaryWeapon, secondaryBulletsClip, secondaryBulletsReserve, numHE, numFlash, numSmoke,
+				numIncendiary, numMolotov, numDecoy, numZeus, boolToInt(hasBomb), boolToInt(hasDefuser), player.Money()))
 		}
-		positionFile.WriteString(demFilePath + "\n")
-		roundStart = 0
-		roundEnd = 0
-		roundEndReason = -1
 		idState.nextTick++
 	})
 
@@ -514,7 +566,7 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 		for i := range e.Projectile.Trajectory {
 			curTrajectoryID := idState.nextGrenadeTrajectory
 			idState.nextGrenadeTrajectory++
-			grenadeTrajectoriesFile.WriteString(fmt.Sprintf("%d,%d,%d,%f,%f,%f\n",
+			grenadeTrajectoriesFile.WriteString(fmt.Sprintf("%d,%d,%d,%.2f,%.2f,%.2f\n",
 				curTrajectoryID, curGrenade.id, i,
 				e.Projectile.Trajectory[i].X, e.Projectile.Trajectory[i].Y, e.Projectile.Trajectory[i].Z))
 		}
@@ -581,7 +633,7 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 
 		curPlant.endTick = idState.nextTick
 		curPlant.successful = false
-		plantsFile.WriteString(fmt.Sprintf("%d,%d,%d,%d,%d",
+		plantsFile.WriteString(fmt.Sprintf("%d,%d,%d,%d,%d\n",
 			curPlant.id, curPlant.startTick, curPlant.endTick, curPlant.planter, boolToInt(false)))
 	})
 
@@ -592,7 +644,7 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 
 		curPlant.endTick = idState.nextTick
 		curPlant.successful = true
-		plantsFile.WriteString(fmt.Sprintf("%d,%d,%d,%d,%d",
+		plantsFile.WriteString(fmt.Sprintf("%d,%d,%d,%d,%d\n",
 			curPlant.id, curPlant.startTick, curPlant.endTick, curPlant.planter, boolToInt(true)))
 	})
 
@@ -627,7 +679,7 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 
 		curDefusal.endTick = idState.nextTick
 		curDefusal.successful = false
-		defusalsFile.WriteString(fmt.Sprintf("%d,%d,%d,%d,%d,%d",
+		defusalsFile.WriteString(fmt.Sprintf("%d,%d,%d,%d,%d,%d\n",
 			curDefusal.id, curDefusal.plantID, curDefusal.startTick, curDefusal.endTick, curDefusal.defuser, boolToInt(false)))
 	})
 
@@ -638,7 +690,7 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 
 		curDefusal.endTick = idState.nextTick
 		curDefusal.successful = true
-		defusalsFile.WriteString(fmt.Sprintf("%d,%d,%d,%d,%d,%d",
+		defusalsFile.WriteString(fmt.Sprintf("%d,%d,%d,%d,%d,%d\n",
 			curDefusal.id, curDefusal.plantID, curDefusal.startTick, curDefusal.endTick, curDefusal.defuser, boolToInt(true)))
 	})
 
@@ -657,7 +709,7 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 		curID := idState.nextExplosion
 		idState.nextExplosion++
 
-		defusalsFile.WriteString(fmt.Sprintf("%d,%d,%d", curID, curPlant.id, idState.nextTick))
+		defusalsFile.WriteString(fmt.Sprintf("%d,%d,%d\n", curID, curPlant.id, idState.nextTick))
 	})
 
 	err = p.ParseToEnd()
