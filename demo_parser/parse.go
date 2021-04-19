@@ -305,36 +305,25 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 		panic(err)
 	}
 	defer spottedFile.Close()
-	spottedFile.WriteString("spotted player")
-	for i := 0; i < 10; i++ {
-		spottedFile.WriteString(fmt.Sprintf(
-			",player %d name,player %d spotter", i, i))
-	}
-	spottedFile.WriteString(fmt.Sprintf("tick number,demo file\n"))
+	spottedFile.WriteString("id,tick_id,spotted_player,spotter_player,is_spotted\n")
 
 	p.RegisterEventHandler(func(e events.PlayerSpottersChanged) {
 		if ticksProcessed < minTicks {
 			return
 		}
 
-		players := getPlayers(&p)
 
+		players := getPlayers(&p)
 		sort.Slice(players, func(i int, j int) bool {
 			return players[i].Name < players[j].Name
 		})
-		spottedFile.WriteString(fmt.Sprintf("%s,", e.Spotted.Name))
-		for i := 0; i < 10; i++ {
-			if i >= len(players) {
-				spottedFile.WriteString(",0,")
-			} else {
-				spottedFlag := 0
-				if e.Spotted.IsSpottedBy(players[i]) {
-					spottedFlag = 1
-				}
-				spottedFile.WriteString(fmt.Sprintf("%s,%d,", players[i].Name, spottedFlag))
-			}
+		for _, possibleSpotter := range players {
+			curID := idState.nextSpotted
+			idState.nextSpotted++
+			spottedFile.WriteString(fmt.Sprintf("%d,%d,%d,%d,%d\n",
+				curID, idState.nextTick, playersTracker[e.Spotted.SteamID64], playersTracker[possibleSpotter.SteamID64],
+				boolToInt(e.Spotted.IsSpottedBy(possibleSpotter))))
 		}
-		spottedFile.WriteString(fmt.Sprintf("%d,%s\n", p.CurrentFrame(), demFilePath))
 	})
 
 	weaponFireFile, err := os.Create(localWeaponFireCSVName)
@@ -342,15 +331,17 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 		panic(err)
 	}
 	defer weaponFireFile.Close()
-	weaponFireFile.WriteString("shooter,weapon,tick number,demo file\n")
+	weaponFireFile.WriteString("id,tick_id,shooter,weapon\n")
 
 	p.RegisterEventHandler(func(e events.WeaponFire) {
 		if ticksProcessed < minTicks {
 			return
 		}
 
-		weaponFireFile.WriteString(fmt.Sprintf("%s,%s,%d,%s\n",
-			e.Shooter.Name, e.Weapon.String(), p.CurrentFrame(), demFilePath))
+		curID := idState.nextWeaponFire
+		idState.nextWeaponFire++
+		weaponFireFile.WriteString(fmt.Sprintf("%d,%d,%d,%d\n",
+			curID, idState.nextTick, playersTracker[e.Shooter.SteamID64], int(e.Weapon.Type)))
 	})
 
 	hurtFile, err := os.Create(localHurtCSVName)
@@ -358,24 +349,18 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 		panic(err)
 	}
 	defer hurtFile.Close()
-	hurtFile.WriteString("victim name,armor damage,armor,health damage,health,attacker,weapon,tick number,demo file\n")
+	hurtFile.WriteString("id,tick_id,victim,attacker,weapon,armor_damage,armor,health_damage,health,hit_group\n")
 
 	p.RegisterEventHandler(func(e events.PlayerHurt) {
 		if ticksProcessed < minTicks {
 			return
 		}
 
-		attackerName := "n/a"
-		if e.Attacker != nil {
-			attackerName =  e.Attacker.Name
-		}
-		weaponName := "n/a"
-		if e.Weapon != nil {
-			weaponName = e.Weapon.String()
-		}
-		hurtFile.WriteString(fmt.Sprintf("%s,%d,%d,%d,%d,%s,%s,%d,%s\n",
-			e.Player.Name, e.ArmorDamage, e.Armor, e.HealthDamage, e.Health, attackerName, weaponName,
-			p.CurrentFrame(), demFilePath))
+		curID := idState.nextPlayerHurt
+		idState.nextPlayerHurt++
+		hurtFile.WriteString(fmt.Sprintf("%d,%d,%d,%d,%d,%d,%d,%d,%d,%d\n",
+			curID, idState.nextTick, playersTracker[e.Player.SteamID64], playersTracker[e.Attacker.SteamID64],
+			e.ArmorDamage, e.Armor, e.HealthDamage, e.Health, e.HitGroup))
 	})
 
 	killsFile, err := os.Create(localKillsCSVName)
