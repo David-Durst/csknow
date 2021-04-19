@@ -7,81 +7,77 @@ import (
 )
 
 // function rather than make on init as need parser to init it's table
-func makeEquipmentToName() map[common.EquipmentType]string {
-	result := make(map[common.EquipmentType]string)
-	result[common.EqUnknown] = common.EqUnknown.String()
+func saveEquipmentFile() {
+	equipmentToName := make(map[common.EquipmentType]string)
+	equipmentToName[common.EqUnknown] = common.EqUnknown.String()
 
 	// Pistols
-	result[common.EqP2000] = common.EqP2000.String()
-	result[common.EqGlock] = common.EqGlock.String()
-	result[common.EqP250] = common.EqP250.String()
-	result[common.EqDeagle] = common.EqDeagle.String()
-	result[common.EqFiveSeven] = common.EqFiveSeven.String()
-	result[common.EqDualBerettas] = common.EqDualBerettas.String()
-	result[common.EqTec9] = common.EqTec9.String()
-	result[common.EqCZ] = common.EqCZ.String()
-	result[common.EqUSP] = common.EqUSP.String()
-	result[common.EqRevolver] = common.EqRevolver.String()
+	equipmentToName[common.EqP2000] = common.EqP2000.String()
+	equipmentToName[common.EqGlock] = common.EqGlock.String()
+	equipmentToName[common.EqP250] = common.EqP250.String()
+	equipmentToName[common.EqDeagle] = common.EqDeagle.String()
+	equipmentToName[common.EqFiveSeven] = common.EqFiveSeven.String()
+	equipmentToName[common.EqDualBerettas] = common.EqDualBerettas.String()
+	equipmentToName[common.EqTec9] = common.EqTec9.String()
+	equipmentToName[common.EqCZ] = common.EqCZ.String()
+	equipmentToName[common.EqUSP] = common.EqUSP.String()
+	equipmentToName[common.EqRevolver] = common.EqRevolver.String()
 
 	// SMGs
 
-	result[common.EqMP7] = common.EqMP7.String()
-	result[common.EqMP9] = common.EqMP9.String()
-	result[common.EqBizon] = common.EqBizon.String()
-	result[common.EqMac10] = common.EqMac10.String()
-	result[common.EqUMP] = common.EqUMP.String()
-	result[common.EqP90] = common.EqP90.String()
-	result[common.EqMP5] = common.EqMP5.String()
+	equipmentToName[common.EqMP7] = common.EqMP7.String()
+	equipmentToName[common.EqMP9] = common.EqMP9.String()
+	equipmentToName[common.EqBizon] = common.EqBizon.String()
+	equipmentToName[common.EqMac10] = common.EqMac10.String()
+	equipmentToName[common.EqUMP] = common.EqUMP.String()
+	equipmentToName[common.EqP90] = common.EqP90.String()
+	equipmentToName[common.EqMP5] = common.EqMP5.String()
 
 	// Heavy
 
-	result[common.EqSawedOff] = common.EqSawedOff.String()
-	result[common.EqNova] = common.EqNova.String()
-	result[common.EqMag7] = common.EqMag7.String()
-	result[common.EqSwag7] = common.EqSwag7.String()
-	result[common.EqXM1014] = common.EqXM1014.String()
-	result[common.EqM249] = common.EqM249.String()
-	result[common.EqNegev] = common.EqNegev.String()
+	equipmentToName[common.EqSawedOff] = common.EqSawedOff.String()
+	equipmentToName[common.EqNova] = common.EqNova.String()
+	equipmentToName[common.EqMag7] = common.EqMag7.String()
+	equipmentToName[common.EqSwag7] = common.EqSwag7.String()
+	equipmentToName[common.EqXM1014] = common.EqXM1014.String()
+	equipmentToName[common.EqM249] = common.EqM249.String()
+	equipmentToName[common.EqNegev] = common.EqNegev.String()
 
 	// Rifles
 
-	result[common.EqGalil] = common.EqGalil.String()
-	result[common.EqFamas] = common.EqFamas.String()
-	result[common.EqAK47] = common.EqAK47.String()
-	result[common.EqM4A4] = common.EqM4A4.String()
-	result[common.EqM4A1] = common.EqM4A1.String()
-	result[common.EqScout] = common.EqScout.String()
-	result[common.EqSSG08] = common.EqSSG08.String()
-	result[common.EqSG556] = common.EqSG556.String()
-	result[common.EqSG553] = common.EqSG553.String()
-	result[common.EqAUG] = common.EqAUG.String()
-	result[common.EqAWP] = common.EqAWP.String()
-	result[common.EqScar20] = common.EqScar20.String()
-	result[common.EqG3SG1] = common.EqG3SG1.String()
+	equipmentToName[common.EqGalil] = common.EqGalil.String()
+	equipmentToName[common.EqFamas] = common.EqFamas.String()
+	equipmentToName[common.EqAK47] = common.EqAK47.String()
+	equipmentToName[common.EqM4A4] = common.EqM4A4.String()
+	equipmentToName[common.EqM4A1] = common.EqM4A1.String()
+	equipmentToName[common.EqScout] = common.EqScout.String()
+	equipmentToName[common.EqSSG08] = common.EqSSG08.String()
+	equipmentToName[common.EqSG556] = common.EqSG556.String()
+	equipmentToName[common.EqSG553] = common.EqSG553.String()
+	equipmentToName[common.EqAUG] = common.EqAUG.String()
+	equipmentToName[common.EqAWP] = common.EqAWP.String()
+	equipmentToName[common.EqScar20] = common.EqScar20.String()
+	equipmentToName[common.EqG3SG1] = common.EqG3SG1.String()
 
-	// result[common.Equipment] = common.Equipment.String()
+	// equipmentToName[common.Equipment] = common.Equipment.String()
 
-	result[common.EqZeus] = common.EqZeus.String()
-	result[common.EqKevlar] = common.EqKevlar.String()
-	result[common.EqHelmet] = common.EqHelmet.String()
-	result[common.EqBomb] = common.EqBomb.String()
-	result[common.EqKnife] = common.EqKnife.String()
-	result[common.EqDefuseKit] = common.EqDefuseKit.String()
-	result[common.EqWorld] = common.EqWorld.String()
+	equipmentToName[common.EqZeus] = common.EqZeus.String()
+	equipmentToName[common.EqKevlar] = common.EqKevlar.String()
+	equipmentToName[common.EqHelmet] = common.EqHelmet.String()
+	equipmentToName[common.EqBomb] = common.EqBomb.String()
+	equipmentToName[common.EqKnife] = common.EqKnife.String()
+	equipmentToName[common.EqDefuseKit] = common.EqDefuseKit.String()
+	equipmentToName[common.EqWorld] = common.EqWorld.String()
 
 	// Grenades
 
-	result[common.EqDecoy] = common.EqDecoy.String()
-	result[common.EqMolotov] = common.EqMolotov.String()
-	result[common.EqIncendiary] = common.EqIncendiary.String()
-	result[common.EqFlash] = common.EqFlash.String()
-	result[common.EqSmoke] = common.EqSmoke.String()
-	result[common.EqHE] = common.EqHE.String()
+	equipmentToName[common.EqDecoy] = common.EqDecoy.String()
+	equipmentToName[common.EqMolotov] = common.EqMolotov.String()
+	equipmentToName[common.EqIncendiary] = common.EqIncendiary.String()
+	equipmentToName[common.EqFlash] = common.EqFlash.String()
+	equipmentToName[common.EqSmoke] = common.EqSmoke.String()
+	equipmentToName[common.EqHE] = common.EqHE.String()
 
-	return result
-}
-
-func saveEquipmentFile(equipmentToName map[common.EquipmentType]string) {
 	equipmentFactTable, err := os.Create(localEquipmentFactTable)
 	if err != nil {
 		panic(err)
@@ -110,4 +106,28 @@ func saveGameTypesFile() map[string]int {
 		gameTypeFactTable.WriteString(fmt.Sprintf("%d,%s\n", id, name))
 	}
 	return nameToID
+}
+
+func saveHitGroupsFile() {
+	hitGroupFactTable, err := os.Create(localHitGroupFactTable)
+	if err != nil {
+		panic(err)
+	}
+	defer hitGroupFactTable.Close()
+	hitGroupFactTable.WriteString("id,table_type\n")
+
+	groupToID := make(map[string]int)
+	groupToID["HitGroupGeneric"] = 0
+	groupToID["HitGroupHead"] = 1
+	groupToID["HitGroupChest"] = 2
+	groupToID["HitGroupStomach"] = 3
+	groupToID["HitGroupLeftArm"] = 4
+	groupToID["HitGroupRightArm"] = 5
+	groupToID["HitGroupLeftLeg"] = 6
+	groupToID["HitGroupRightLeg"] = 7
+	groupToID["HitGroupGear"] = 10
+
+	for name, id := range groupToID {
+		hitGroupFactTable.WriteString(fmt.Sprintf("%d,%s\n", id, name))
+	}
 }

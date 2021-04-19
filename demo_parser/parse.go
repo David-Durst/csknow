@@ -88,9 +88,8 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 	defer p.Close()
 
 	// generate fact tables (and save if necessary) after parser init
-	equipmentToName := makeEquipmentToName()
 	if firstRun {
-		saveEquipmentFile(equipmentToName)
+		saveEquipmentFile()
 	}
 
 	// create games table if it didn't exist, and append header if first run
@@ -100,7 +99,7 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 	}
 	defer gamesFile.Close()
 	if firstRun {
-		gamesFile.WriteString("id,demo_file,demo_tick_rate,game_tick_rate\n")
+		gamesFile.WriteString("id,demo_file,demo_tick_rate,game_tick_rate,game_type\n")
 	}
 	curGameID := idState.nextGame
 
@@ -200,7 +199,8 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 		// on the first tick save the game state
 		if ticksProcessed == 0 {
 			header := p.Header()
-			gamesFile.WriteString(fmt.Sprintf("%d,%s,%f,%f\n", curGameID, demFilePath, (&header).FrameRate(), p.TickRate()))
+			gamesFile.WriteString(fmt.Sprintf("%d,%s,%f,%f,%d\n",
+				curGameID, demFilePath, (&header).FrameRate(), p.TickRate(), gameTypeToID[gameType]))
 			idState.nextGame++
 		}
 		ticksProcessed++
