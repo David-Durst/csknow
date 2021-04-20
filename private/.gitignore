@@ -1,2 +1,3 @@
 .ec2
 .aws_csgo_server_role
+.mysql_password
