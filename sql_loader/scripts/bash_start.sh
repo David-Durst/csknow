@@ -14,7 +14,7 @@ get_script_dir () {
 }
 get_script_dir
 
-pass=$(cat ${script_dir}/../private/.mysql_password)
+pass=$(cat ${script_dir}/../../private/.mysql_password)
 
 docker run --name durst_sql_loader \
     --rm -it \
