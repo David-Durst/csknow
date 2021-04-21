@@ -20,7 +20,7 @@ ${script_dir}/start_helper.sh &
 
 docker run --name durst_sql_loader \
     --rm \
-    --mount type=bind,source="$(pwd)"/local_data2,target=/go/src/local_data2 \
+    --mount type=bind,source="$(pwd)"/../local_data2,target=/local_data2 \
     -p 3124:3306 \
     -e MYSQL_ROOT_PASSWORD=${pass} \
     durst/sql_loader:0.1
