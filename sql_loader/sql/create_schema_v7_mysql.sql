@@ -100,7 +100,7 @@ CREATE TABLE `hit_groups` (
   `group_name` varchar(30)
 );
 
-CREATE TABLE `player_hurt` (
+CREATE TABLE `hurt` (
   `id` bigint PRIMARY KEY,
   `tick_id` bigint,
   `victim` bigint,
@@ -132,7 +132,7 @@ CREATE TABLE `grenade_trajectories` (
   `pos_z` double
 );
 
-CREATE TABLE `player_flashed` (
+CREATE TABLE `flashed` (
   `id` bigint PRIMARY KEY,
   `tick_id` bigint,
   `grenade_id` bigint,
@@ -160,7 +160,7 @@ CREATE TABLE `plants` (
   `succesful` boolean
 );
 
-CREATE TABLE `defusal` (
+CREATE TABLE `defusals` (
   `id` bigint PRIMARY KEY,
   `plant_id` bigint,
   `start_tick` bigint,
@@ -169,7 +169,7 @@ CREATE TABLE `defusal` (
   `succesful` boolean
 );
 
-CREATE TABLE `explosion` (
+CREATE TABLE `explosions` (
   `id` bigint PRIMARY KEY,
   `plant_id` bigint,
   `tick_id` bigint
@@ -207,15 +207,15 @@ ALTER TABLE `weapon_fire` ADD FOREIGN KEY (`shooter`) REFERENCES `players` (`id`
 
 ALTER TABLE `weapon_fire` ADD FOREIGN KEY (`weapon`) REFERENCES `equipment` (`id`);
 
-ALTER TABLE `player_hurt` ADD FOREIGN KEY (`tick_id`) REFERENCES `ticks` (`id`);
+ALTER TABLE `hurt` ADD FOREIGN KEY (`tick_id`) REFERENCES `ticks` (`id`);
 
-ALTER TABLE `player_hurt` ADD FOREIGN KEY (`victim`) REFERENCES `players` (`id`);
+ALTER TABLE `hurt` ADD FOREIGN KEY (`victim`) REFERENCES `players` (`id`);
 
-ALTER TABLE `player_hurt` ADD FOREIGN KEY (`attacker`) REFERENCES `players` (`id`);
+ALTER TABLE `hurt` ADD FOREIGN KEY (`attacker`) REFERENCES `players` (`id`);
 
-ALTER TABLE `player_hurt` ADD FOREIGN KEY (`weapon`) REFERENCES `equipment` (`id`);
+ALTER TABLE `hurt` ADD FOREIGN KEY (`weapon`) REFERENCES `equipment` (`id`);
 
-ALTER TABLE `player_hurt` ADD FOREIGN KEY (`hit_group`) REFERENCES `hit_groups` (`id`);
+ALTER TABLE `hurt` ADD FOREIGN KEY (`hit_group`) REFERENCES `hit_groups` (`id`);
 
 ALTER TABLE `grenades` ADD FOREIGN KEY (`thrower`) REFERENCES `players` (`id`);
 
@@ -231,13 +231,13 @@ ALTER TABLE `grenades` ADD FOREIGN KEY (`destroy_tick`) REFERENCES `ticks` (`id`
 
 ALTER TABLE `grenade_trajectories` ADD FOREIGN KEY (`grenade_id`) REFERENCES `grenades` (`id`);
 
-ALTER TABLE `player_flashed` ADD FOREIGN KEY (`tick_id`) REFERENCES `ticks` (`id`);
+ALTER TABLE `flashed` ADD FOREIGN KEY (`tick_id`) REFERENCES `ticks` (`id`);
 
-ALTER TABLE `player_flashed` ADD FOREIGN KEY (`grenade_id`) REFERENCES `grenades` (`id`);
+ALTER TABLE `flashed` ADD FOREIGN KEY (`grenade_id`) REFERENCES `grenades` (`id`);
 
-ALTER TABLE `player_flashed` ADD FOREIGN KEY (`thrower`) REFERENCES `players` (`id`);
+ALTER TABLE `flashed` ADD FOREIGN KEY (`thrower`) REFERENCES `players` (`id`);
 
-ALTER TABLE `player_flashed` ADD FOREIGN KEY (`victim`) REFERENCES `players` (`id`);
+ALTER TABLE `flashed` ADD FOREIGN KEY (`victim`) REFERENCES `players` (`id`);
 
 ALTER TABLE `kills` ADD FOREIGN KEY (`tick_id`) REFERENCES `ticks` (`id`);
 
@@ -255,14 +255,14 @@ ALTER TABLE `plants` ADD FOREIGN KEY (`end_tick`) REFERENCES `ticks` (`id`);
 
 ALTER TABLE `plants` ADD FOREIGN KEY (`planter`) REFERENCES `players` (`id`);
 
-ALTER TABLE `defusal` ADD FOREIGN KEY (`plant_id`) REFERENCES `plants` (`id`);
+ALTER TABLE `defusals` ADD FOREIGN KEY (`plant_id`) REFERENCES `plants` (`id`);
 
-ALTER TABLE `defusal` ADD FOREIGN KEY (`start_tick`) REFERENCES `ticks` (`id`);
+ALTER TABLE `defusals` ADD FOREIGN KEY (`start_tick`) REFERENCES `ticks` (`id`);
 
-ALTER TABLE `defusal` ADD FOREIGN KEY (`end_tick`) REFERENCES `ticks` (`id`);
+ALTER TABLE `defusals` ADD FOREIGN KEY (`end_tick`) REFERENCES `ticks` (`id`);
 
-ALTER TABLE `defusal` ADD FOREIGN KEY (`defuser`) REFERENCES `players` (`id`);
+ALTER TABLE `defusals` ADD FOREIGN KEY (`defuser`) REFERENCES `players` (`id`);
 
-ALTER TABLE `explosion` ADD FOREIGN KEY (`plant_id`) REFERENCES `plants` (`id`);
+ALTER TABLE `explosions` ADD FOREIGN KEY (`plant_id`) REFERENCES `plants` (`id`);
 
-ALTER TABLE `explosion` ADD FOREIGN KEY (`tick_id`) REFERENCES `ticks` (`id`);
+ALTER TABLE `explosions` ADD FOREIGN KEY (`tick_id`) REFERENCES `ticks` (`id`);
