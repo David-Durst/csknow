@@ -594,8 +594,8 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 			return
 		}
 
-		curID := idState.nextDefusal
-		idState.nextDefusal++
+		curID := idState.nextPlant
+		idState.nextPlant++
 
 		curPlant = PlantTracker{curID,
 			idState.nextTick,
