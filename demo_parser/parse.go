@@ -76,11 +76,11 @@ type SourceTarget struct {
 	source, target int64
 }
 
-func getPlayerBySteamID(playersTracker * map[uint64]int64, player * common.Player) int64 {
+func getPlayerBySteamID(playersTracker * map[int]int64, player * common.Player) int64 {
 	if player == nil {
 		return -1
 	} else {
-		return (*playersTracker)[player.SteamID64]
+		return (*playersTracker)[player.UserID]
 	}
 }
 
@@ -117,7 +117,7 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 	playerToLastFireGrenade := make(map[int64]int64)
 	curPlant := PlantTracker{0, 0, 0, 0, false}
 	curDefusal := DefusalTracker{0, 0, 0, 0, 0, false}
-	playersTracker := make(map[uint64]int64)
+	playersTracker := make(map[int]int64)
 	lastFlash := make(map[SourceTarget]int64)
 	ticksProcessed := 0
 	roundsProcessed := 0
@@ -179,12 +179,6 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 	}
 	defer playersFile.Close()
 	playersFile.WriteString("id,game_id,name,steam_id\n")
-	p.RegisterEventHandler(func(e events.PlayerConnect) {
-		playersFile.WriteString(fmt.Sprintf("%d,%d,%s,%d\n",
-			idState.nextPlayer, curGameID, e.Player.Name, e.Player.SteamID64))
-		playersTracker[e.Player.SteamID64] = idState.nextPlayer
-		idState.nextPlayer++
-	})
 
 	ticksFile, err := os.Create(localTicksCSVName)
 	if err != nil {
@@ -220,16 +214,25 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 		}
 		gs.IsWarmupPeriod()
 		tickID := idState.nextTick
+		players := getPlayers(&p)
+		sort.Slice(players, func(i int, j int) bool {
+			return players[i].Name < players[j].Name
+		})
+		for _, player := range players {
+			if _, ok := playersTracker[player.UserID]; !ok {
+				playersFile.WriteString(fmt.Sprintf("%d,%d,%s,%d\n",
+					idState.nextPlayer, curGameID, player.Name, player.SteamID64))
+				playersTracker[player.UserID] = idState.nextPlayer
+				idState.nextPlayer++
+			}
+		}
 		var carrierID int64
 		carrierID = getPlayerBySteamID(&playersTracker, gs.Bomb().Carrier)
 		ticksFile.WriteString(fmt.Sprintf("%d,%d,%d,%d,%d,%d,%.2f,%.2f,%.2f\n",
 			tickID,curRound.id,p.CurrentTime().Milliseconds(), gs.IsWarmupPeriod(), carrierID,
 			gs.Bomb().Position().X, gs.Bomb().Position().Y, gs.Bomb().Position().Z))
 
-		players := getPlayers(&p)
-		sort.Slice(players, func(i int, j int) bool {
-			return players[i].Name < players[j].Name
-		})
+
 		for _, player := range players {
 			playerAtTickID := idState.nextPlayerAtTick
 			idState.nextPlayerAtTick++

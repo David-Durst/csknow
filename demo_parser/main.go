@@ -13,7 +13,7 @@ import (
 
 const localDemName = "local.dem"
 const gamesCSVName = "global_games.csv"
-const localRoundsFile = "local_players.csv"
+const localRoundsFile = "local_rounds.csv"
 const localPlayersCSVName = "local_players.csv"
 const localTicksCSVName = "local_ticks.csv"
 const localPlayerAtTickCSVName = "local_player_at_tick.csv"
