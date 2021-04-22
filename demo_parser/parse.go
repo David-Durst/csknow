@@ -688,7 +688,7 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 		curID := idState.nextExplosion
 		idState.nextExplosion++
 
-		defusalsFile.WriteString(fmt.Sprintf("%d,%d,%d\n", curID, curPlant.id, idState.nextTick))
+		explosionsFile.WriteString(fmt.Sprintf("%d,%d,%d\n", curID, curPlant.id, idState.nextTick))
 	})
 
 	err = p.ParseToEnd()
