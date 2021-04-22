@@ -11,6 +11,7 @@ for name in players rounds ticks player_at_tick spotted weapon_fire kills hurt g
 do
     for f in ${dir_path}/${name}/*.csv
     do
+        echo "loading ${f}$"
         mysql --host=localhost --user=root --password=${pass} -e "LOAD DATA INFILE '${f}' INTO TABLE ${name} FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n' IGNORE 1 ROWS;" csknow
     done
 done
