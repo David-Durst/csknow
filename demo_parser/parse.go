@@ -8,7 +8,6 @@ import (
 	"os"
 	"path"
 	"sort"
-	"strconv"
 )
 
 const minTicks = 30
@@ -180,6 +179,10 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 	}
 	defer playersFile.Close()
 	playersFile.WriteString("id,game_id,name,steam_id\n")
+	// add -1 player at start of first players file
+	if idState.nextPlayer == 0 {
+		playersFile.WriteString("-1,-1,invalid,0")
+	}
 
 	ticksFile, err := os.Create(localTicksCSVName)
 	if err != nil {
@@ -229,12 +232,8 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 		}
 		var carrierID int64
 		carrierID = getPlayerBySteamID(&playersTracker, gs.Bomb().Carrier)
-		carrierString := "NULL"
-		if carrierID != -1 {
-			carrierString = strconv.FormatInt(carrierID, 10)
-		}
-		ticksFile.WriteString(fmt.Sprintf("%d,%d,%d,%d,%s,%.2f,%.2f,%.2f\n",
-			tickID,curRound.id,p.CurrentTime().Milliseconds(), boolToInt(gs.IsWarmupPeriod()), carrierString,
+		ticksFile.WriteString(fmt.Sprintf("%d,%d,%d,%d,%d,%.2f,%.2f,%.2f\n",
+			tickID,curRound.id,p.CurrentTime().Milliseconds(), boolToInt(gs.IsWarmupPeriod()), carrierID,
 			gs.Bomb().Position().X, gs.Bomb().Position().Y, gs.Bomb().Position().Z))
 
 
