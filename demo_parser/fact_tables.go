@@ -9,6 +9,7 @@ import (
 // function rather than make on init as need parser to init it's table
 func saveEquipmentFile() {
 	equipmentToName := make(map[common.EquipmentType]string)
+	equipmentToName[-1] = "empty"
 	equipmentToName[common.EqUnknown] = common.EqUnknown.String()
 
 	// Pistols
