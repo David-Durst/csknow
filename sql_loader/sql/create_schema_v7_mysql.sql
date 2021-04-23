@@ -54,6 +54,7 @@ CREATE TABLE `player_at_tick` (
   `pos_z` double,
   `view_x` double,
   `view_y` double,
+  `team` smallint,
   `health` double,
   `armor` double,
   `has_helmet` boolean,
