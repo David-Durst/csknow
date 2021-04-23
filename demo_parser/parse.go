@@ -369,9 +369,13 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 
 		curID := idState.nextPlayerHurt
 		idState.nextPlayerHurt++
+		hitGroup := int(e.HitGroup)
+		if hitGroup < 0 || (hitGroup > 7 && hitGroup != 10) {
+			hitGroup = 0
+		}
 		hurtFile.WriteString(fmt.Sprintf("%d,%d,%d,%d,%d,%d,%d,%d,%d,%d\n",
 			curID, idState.nextTick, getPlayerBySteamID(&playersTracker, e.Player), getPlayerBySteamID(&playersTracker, e.Attacker),
-			int(e.Weapon.Type), e.ArmorDamage, e.Armor, e.HealthDamage, e.Health, int(e.HitGroup)))
+			int(e.Weapon.Type), e.ArmorDamage, e.Armor, e.HealthDamage, e.Health, hitGroup))
 	})
 
 	killsFile, err := os.Create(localKillsCSVName)
