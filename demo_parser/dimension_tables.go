@@ -118,6 +118,7 @@ func saveHitGroupsFile() {
 	hitGroupFactTable.WriteString("id,table_type\n")
 
 	groupToID := make(map[string]int)
+	groupToID["HitGroupInvalid"] = -1
 	groupToID["HitGroupGeneric"] = 0
 	groupToID["HitGroupHead"] = 1
 	groupToID["HitGroupChest"] = 2
