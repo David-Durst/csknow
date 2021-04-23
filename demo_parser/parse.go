@@ -587,9 +587,9 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 
 		curID := idState.nextPlayerFlashed
 		idState.nextPlayerFlashed++
-		grenadeID := grenadesTracker[e.Projectile.WeaponInstance.UniqueID()]
+		grenade := grenadesTracker[e.Projectile.WeaponInstance.UniqueID()]
 		playerFlashedFile.WriteString(fmt.Sprintf("%d,%d,%d,%d,%d\n",
-			curID, idState.nextTick, grenadeID, getPlayerBySteamID(&playersTracker, e.Attacker),
+			curID, idState.nextTick, grenade.id, getPlayerBySteamID(&playersTracker, e.Attacker),
 			getPlayerBySteamID(&playersTracker, e.Player)))
 	})
 
