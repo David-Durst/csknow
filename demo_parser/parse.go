@@ -569,7 +569,7 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 		panic(err)
 	}
 	defer playerFlashedFile.Close()
-	playerFlashedFile.WriteString("id,grenade_id,tick_id,thrower,victim\n")
+	playerFlashedFile.WriteString("id,tick_id,grenade_id,thrower,victim\n")
 
 	p.RegisterEventHandler(func(e events.PlayerFlashed) {
 		if ticksProcessed < minTicks {
@@ -587,8 +587,9 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 
 		curID := idState.nextPlayerFlashed
 		idState.nextPlayerFlashed++
+		grenadeID := grenadesTracker[e.Projectile.WeaponInstance.UniqueID()]
 		playerFlashedFile.WriteString(fmt.Sprintf("%d,%d,%d,%d,%d\n",
-			curID, e.Projectile.WeaponInstance.UniqueID(), idState.nextTick, getPlayerBySteamID(&playersTracker, e.Attacker),
+			curID, idState.nextTick, grenadeID, getPlayerBySteamID(&playersTracker, e.Attacker),
 			getPlayerBySteamID(&playersTracker, e.Player)))
 	})
 
