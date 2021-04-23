@@ -1,1 +1,1 @@
-docker build -t durst/csgo-demo-parser:0.3 .
+docker build -t durst/csgo-demo-parser:0.4 .
