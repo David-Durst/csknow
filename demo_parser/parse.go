@@ -181,7 +181,7 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 	playersFile.WriteString("id,game_id,name,steam_id\n")
 	// add -1 player at start of first players file
 	if idState.nextPlayer == 0 {
-		playersFile.WriteString("-1,-1,invalid,0")
+		playersFile.WriteString("-1,-1,invalid,0\n")
 	}
 
 	ticksFile, err := os.Create(localTicksCSVName)
