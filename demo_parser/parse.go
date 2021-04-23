@@ -84,7 +84,7 @@ func getPlayerBySteamID(playersTracker * map[int]int64, player * common.Player) 
 	}
 }
 
-func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTypeToID map[string]int, gameType string) {
+func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameType int) {
 	demFilePath := path.Base(unprocessedKey)
 	f, err := os.Open(localDemName)
 	if err != nil {
@@ -122,7 +122,7 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 	ticksProcessed := 0
 	roundsProcessed := 0
 
-	roundsFile, err := os.Create(localRoundsFile)
+	roundsFile, err := os.Create(localRoundsCSVName)
 	if err != nil {
 		panic(err)
 	}
@@ -206,7 +206,7 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 		if ticksProcessed == 0 {
 			header := p.Header()
 			gamesFile.WriteString(fmt.Sprintf("%d,%s,%f,%f,%d\n",
-				curGameID, demFilePath, (&header).FrameRate(), p.TickRate(), gameTypeToID[gameType]))
+				curGameID, demFilePath, (&header).FrameRate(), p.TickRate(), gameType))
 			idState.nextGame++
 		}
 		ticksProcessed++
@@ -639,7 +639,7 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 			curPlant.id, curPlant.startTick, curPlant.endTick, curPlant.planter, boolToInt(true)))
 	})
 
-	defusalsFile, err := os.Create(localDefusalsSVName)
+	defusalsFile, err := os.Create(localDefusalsCSVName)
 	if err != nil {
 		panic(err)
 	}

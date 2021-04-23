@@ -13,7 +13,7 @@ import (
 
 const localDemName = "local.dem"
 const gamesCSVName = "global_games.csv"
-const localRoundsFile = "local_rounds.csv"
+const localRoundsCSVName = "local_rounds.csv"
 const localPlayersCSVName = "local_players.csv"
 const localTicksCSVName = "local_ticks.csv"
 const localPlayerAtTickCSVName = "local_player_at_tick.csv"
@@ -24,15 +24,17 @@ const localGrenadesCSVName = "local_grenades.csv"
 const localGrenadeTrajectoriesCSVName = "local_grenade_trajectories.csv"
 const localPlayerFlashedCSVName = "local_flashed.csv"
 const localPlantsCSVName = "local_plants.csv"
-const localDefusalsSVName = "local_defusals.csv"
+const localDefusalsCSVName = "local_defusals.csv"
 const localExplosionsCSVName = "local_explosions.csv"
 const localKillsCSVName = "local_kills.csv"
 const localEquipmentDimTable = "dimension_table_equipment.csv"
 const localGameTypeDimTable = "dimension_table_game_types.csv"
 const localHitGroupDimTable = "dimension_table_hit_groups.csv"
-const unprocessedPrefix = "demos/unprocessed/"
-const processedPrefix = "demos/processed/"
-const csvPrefiix = "demos/csvs2/"
+const unprocessedPrefix = "demos/unprocessed2/"
+const processedPrefix = "demos/processed2/"
+const csvPrefixLocal = "demos/csvs3/local/"
+const csvPrefixGlobal = "demos/csvs3/global/"
+var gameTypes = [2]string{"pros","bots"}
 const bucketName = "csknow"
 
 func main() {
@@ -44,10 +46,10 @@ func main() {
 	// if running locally, skip the aws stuff and just return
 	localFlag := flag.Bool("l", false, "set for non-aws (aka local) runs")
 	flag.Parse()
-	gameTypeToID := saveGameTypesFile()
+	saveGameTypesFile()
 	saveHitGroupsFile()
 	if *localFlag {
-		processFile("local_run", &startIDState, firstRun, gameTypeToID, "bots")
+		processFile("local_run", &startIDState, firstRun, 1)
 		firstRun = false
 		os.Exit(0)
 	}
@@ -68,24 +70,31 @@ func main() {
 		sourcePrefix = processedPrefix
 	}
 
+	uploadFile(uploader, gamesCSVName, "global_games", false)
+	uploadFile(uploader, localEquipmentDimTable, "dimension_table_equipment", false)
+	uploadFile(uploader, localGameTypeDimTable, "dimension_table_game_types", false)
+	uploadFile(uploader, localHitGroupDimTable, "dimension_table_hit_groups", false)
 	i := 0
-	svc.ListObjectsV2Pages(&s3.ListObjectsV2Input{
-		Bucket: aws.String(bucketName),
-		Prefix: aws.String(sourcePrefix + "auto"),
-	}, func(p *s3.ListObjectsV2Output, last bool) bool {
-		fmt.Printf("Processing page %d\n", i)
+	for gameTypeIndex, gameTypeString := range gameTypes {
+		sourcePrefixWithType := sourcePrefix + gameTypeString + "/"
+		svc.ListObjectsV2Pages(&s3.ListObjectsV2Input{
+			Bucket: aws.String(bucketName),
+			Prefix: aws.String(sourcePrefixWithType + "auto"),
+		}, func(p *s3.ListObjectsV2Output, last bool) bool {
+			fmt.Printf("Processing page %d\n", i)
 
-		for _, obj := range p.Contents {
-			fmt.Printf("Handling file: %s\n", *obj.Key)
-			downloadDemo(downloader, *obj.Key)
-			processFile(*obj.Key, &startIDState, firstRun, gameTypeToID, "bots")
-			firstRun = false
-			uploadCSVs(uploader, *obj.Key)
-			filesToMove = append(filesToMove, *obj.Key)
-		}
+			for _, obj := range p.Contents {
+				fmt.Printf("Handling file: %s\n", *obj.Key)
+				downloadDemo(downloader, *obj.Key)
+				processFile(*obj.Key, &startIDState, firstRun, gameTypeIndex)
+				firstRun = false
+				uploadCSVs(uploader, *obj.Key)
+				filesToMove = append(filesToMove, *obj.Key)
+			}
 
-		return true
-	})
+			return true
+		})
+	}
 
 	if !*reprocessFlag {
 		for _, fileName := range filesToMove {

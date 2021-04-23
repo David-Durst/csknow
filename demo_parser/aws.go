@@ -30,16 +30,20 @@ func downloadDemo(downloader *s3manager.Downloader, fileKey string) {
 
 }
 
-func uploadFile(uploader *s3manager.Uploader, csvPath string, fileKey string) {
+func uploadFile(uploader *s3manager.Uploader, csvPath string, fileKey string, local bool) {
 	csvFile, err := os.Open(csvPath)
 	if err != nil {
 		panic(err)
 	}
 	defer csvFile.Close()
+	csvPrefix := csvPrefixGlobal
+	if local {
+		csvPrefix = csvPrefixLocal
+	}
 
 	_, err = uploader.Upload(&s3manager.UploadInput{
 		Bucket: aws.String(bucketName),
-		Key:    aws.String(csvPrefiix + path.Base(fileKey) + ".csv"),
+		Key:    aws.String(csvPrefix + path.Base(fileKey) + ".csv"),
 		Body:   csvFile,
 	})
 	if err != nil {
@@ -49,11 +53,19 @@ func uploadFile(uploader *s3manager.Uploader, csvPath string, fileKey string) {
 }
 
 func uploadCSVs(uploader *s3manager.Uploader, fileKey string) {
-	//uploadFile(uploader, localPositionCSVName, fileKey + "_position")
-	uploadFile(uploader, localSpottedCSVName, fileKey + "_spotted")
-	uploadFile(uploader, localWeaponFireCSVName, fileKey + "_weapon_fire")
-	uploadFile(uploader, localHurtCSVName, fileKey + "_hurt")
-	uploadFile(uploader, localGrenadesCSVName, fileKey + "_grenades")
-	uploadFile(uploader, localKillsCSVName, fileKey + "_kills")
+	uploadFile(uploader, localRoundsCSVName, fileKey + "_rounds", true)
+	uploadFile(uploader, localPlayersCSVName, fileKey + "_players", true)
+	uploadFile(uploader, localTicksCSVName, fileKey + "_ticks", true)
+	uploadFile(uploader, localPlayerAtTickCSVName, fileKey + "_player_at_tick", true)
+	uploadFile(uploader, localSpottedCSVName, fileKey + "_spotted", true)
+	uploadFile(uploader, localWeaponFireCSVName, fileKey + "_weapon_fire", true)
+	uploadFile(uploader, localHurtCSVName, fileKey + "_hurt", true)
+	uploadFile(uploader, localGrenadesCSVName, fileKey + "_grenades", true)
+	uploadFile(uploader, localGrenadeTrajectoriesCSVName, fileKey + "_grenade_trajectories", true)
+	uploadFile(uploader, localPlayerFlashedCSVName, fileKey + "_flashed", true)
+	uploadFile(uploader, localPlantsCSVName, fileKey + "_plants", true)
+	uploadFile(uploader, localDefusalsCSVName, fileKey + "_defusals", true)
+	uploadFile(uploader, localExplosionsCSVName, fileKey + "_explosions", true)
+	uploadFile(uploader, localKillsCSVName, fileKey + "_kills", true)
 }
 

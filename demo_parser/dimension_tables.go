@@ -91,7 +91,7 @@ func saveEquipmentFile() {
 	}
 }
 
-func saveGameTypesFile() map[string]int {
+func saveGameTypesFile() {
 	gameTypeFactTable, err := os.Create(localGameTypeDimTable)
 	if err != nil {
 		panic(err)
@@ -99,14 +99,9 @@ func saveGameTypesFile() map[string]int {
 	defer gameTypeFactTable.Close()
 	gameTypeFactTable.WriteString("id,table_type\n")
 
-	nameToID := make(map[string]int)
-	nameToID["pros"] = 0
-	nameToID["bots"] = 1
-
-	for name, id := range nameToID {
+	for id, name := range gameTypes {
 		gameTypeFactTable.WriteString(fmt.Sprintf("%d,%s\n", id, name))
 	}
-	return nameToID
 }
 
 func saveHitGroupsFile() {
