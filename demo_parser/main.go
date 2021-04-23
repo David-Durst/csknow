@@ -70,10 +70,6 @@ func main() {
 		sourcePrefix = processedPrefix
 	}
 
-	uploadFile(uploader, gamesCSVName, "global_games", false)
-	uploadFile(uploader, localEquipmentDimTable, "dimension_table_equipment", false)
-	uploadFile(uploader, localGameTypeDimTable, "dimension_table_game_types", false)
-	uploadFile(uploader, localHitGroupDimTable, "dimension_table_hit_groups", false)
 	i := 0
 	for gameTypeIndex, gameTypeString := range gameTypes {
 		sourcePrefixWithType := sourcePrefix + gameTypeString + "/"
@@ -95,6 +91,10 @@ func main() {
 			return true
 		})
 	}
+	uploadFile(uploader, gamesCSVName, "global_games", false)
+	uploadFile(uploader, localEquipmentDimTable, "dimension_table_equipment", false)
+	uploadFile(uploader, localGameTypeDimTable, "dimension_table_game_types", false)
+	uploadFile(uploader, localHitGroupDimTable, "dimension_table_hit_groups", false)
 
 	if !*reprocessFlag {
 		for _, fileName := range filesToMove {
