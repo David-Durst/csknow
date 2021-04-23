@@ -79,7 +79,7 @@ func saveEquipmentFile() {
 	equipmentToName[common.EqSmoke] = common.EqSmoke.String()
 	equipmentToName[common.EqHE] = common.EqHE.String()
 
-	equipmentFactTable, err := os.Create(localEquipmentFactTable)
+	equipmentFactTable, err := os.Create(localEquipmentDimTable)
 	if err != nil {
 		panic(err)
 	}
@@ -92,7 +92,7 @@ func saveEquipmentFile() {
 }
 
 func saveGameTypesFile() map[string]int {
-	gameTypeFactTable, err := os.Create(localGameTypeFactTable)
+	gameTypeFactTable, err := os.Create(localGameTypeDimTable)
 	if err != nil {
 		panic(err)
 	}
@@ -110,7 +110,7 @@ func saveGameTypesFile() map[string]int {
 }
 
 func saveHitGroupsFile() {
-	hitGroupFactTable, err := os.Create(localHitGroupFactTable)
+	hitGroupFactTable, err := os.Create(localHitGroupDimTable)
 	if err != nil {
 		panic(err)
 	}

@@ -2,9 +2,9 @@ mysql --host=localhost --user=root --password=${pass} -e "source /sql/create_sch
 
 dir_path=/local_data2
 
-mysql --host=localhost --user=root --password=${pass} -e "LOAD DATA INFILE '${dir_path}/fact_table_equipment.csv' INTO TABLE equipment FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n' IGNORE 1 ROWS;" csknow
-mysql --host=localhost --user=root --password=${pass} -e "LOAD DATA INFILE '${dir_path}/fact_table_game_types.csv' INTO TABLE game_types FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n' IGNORE 1 ROWS;" csknow
-mysql --host=localhost --user=root --password=${pass} -e "LOAD DATA INFILE '${dir_path}/fact_table_hit_groups.csv' INTO TABLE hit_groups FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n' IGNORE 1 ROWS;" csknow
+mysql --host=localhost --user=root --password=${pass} -e "LOAD DATA INFILE '${dir_path}/dimension_table_equipment.csv' INTO TABLE equipment FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n' IGNORE 1 ROWS;" csknow
+mysql --host=localhost --user=root --password=${pass} -e "LOAD DATA INFILE '${dir_path}/dimension_table_game_types.csv' INTO TABLE game_types FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n' IGNORE 1 ROWS;" csknow
+mysql --host=localhost --user=root --password=${pass} -e "LOAD DATA INFILE '${dir_path}/dimension_table_hit_groups.csv' INTO TABLE hit_groups FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n' IGNORE 1 ROWS;" csknow
 mysql --host=localhost --user=root --password=${pass} -e "LOAD DATA INFILE '${dir_path}/global_games.csv' INTO TABLE games FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n' IGNORE 1 ROWS;" csknow
 
 for name in players rounds ticks player_at_tick spotted weapon_fire kills hurt grenades flashed grenade_trajectories plants defusals explosions
