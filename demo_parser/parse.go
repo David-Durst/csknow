@@ -705,7 +705,7 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 
 	err = p.ParseToEnd()
 	if err != nil {
-		fmt.Printf("Error in parsing. T score %d, CT score %d, progress: %f, error:\n %s\n. ",
+		fmt.Printf("Error in parsing. T score %d, CT score %d, progress: %f, error:\n %s\n",
 			p.GameState().TeamTerrorists().Score(), p.GameState().TeamCounterTerrorists().Score(), p.Progress(), err.Error())
 	}
 }
