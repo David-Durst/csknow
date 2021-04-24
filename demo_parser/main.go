@@ -1,18 +1,24 @@
 package main
 
 import (
+	"bufio"
 	"flag"
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	"log"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 )
 
 const localDemName = "local.dem"
+const baseStateCSVName = "global_id_state.csv"
+const inputStateCSVName = "input_" + baseStateCSVName
+const outputStateCSVName = "output_" + baseStateCSVName
 const gamesCSVName = "global_games.csv"
 const localRoundsCSVName = "local_rounds.csv"
 const localPlayersCSVName = "local_players.csv"
@@ -72,7 +78,7 @@ func main() {
 		sourcePrefix = processedPrefix
 	}
 
-	idStateAWS := csvPrefixBase + "idState.csv"
+	idStateAWS := csvPrefixBase + baseStateCSVName
 	result, err := svc.ListObjectsV2(&s3.ListObjectsV2Input{
 		Bucket: aws.String(bucketName),
 		Prefix: &idStateAWS,
@@ -81,7 +87,26 @@ func main() {
 		panic(err)
 	}
 	fmt.Println(result)
-	return
+	// if not reprocessing and already have an id state, start from there
+	if *result.KeyCount == 1 && !*reprocessFlag {
+		downloadFile(downloader, *result.Contents[0].Key, inputStateCSVName)
+		idStateFile, err := os.Open(inputStateCSVName)
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer idStateFile.Close()
+
+		var values []int64
+		scanner := bufio.NewScanner(idStateFile)
+		for scanner.Scan() {
+			// drop all the labels, save the values
+			valueStr := strings.Split(scanner.Text(), ",")[1]
+			i, _ := strconv.ParseInt(valueStr, 10, 64)
+			values = append(values, i)
+		}
+		startIDState = IDState{values[0], values[1], values[2], values[3], values[4], values[5], values[6],
+			values[7], values[8], values[9], values[10], values[11], values[12], values[13], values[14]}
+	}
 
 	i := 0
 	for gameTypeIndex, gameTypeString := range gameTypes {
@@ -98,7 +123,7 @@ func main() {
 					continue
 				}
 				fmt.Printf("Handling file: %s\n", *obj.Key)
-				downloadDemo(downloader, *obj.Key)
+				downloadFile(downloader, *obj.Key, localDemName)
 				processFile(*obj.Key, &startIDState, firstRun, gameTypeIndex)
 				firstRun = false
 				uploadCSVs(uploader, *obj.Key)
@@ -108,10 +133,25 @@ func main() {
 			return true
 		})
 	}
-	uploadFile(uploader, gamesCSVName, "global_games", false)
-	uploadFile(uploader, localEquipmentDimTable, "dimension_table_equipment", false)
-	uploadFile(uploader, localGameTypeDimTable, "dimension_table_game_types", false)
-	uploadFile(uploader, localHitGroupDimTable, "dimension_table_hit_groups", false)
+	uploadFile(uploader, gamesCSVName, "global_games", csvPrefixGlobal)
+	uploadFile(uploader, localEquipmentDimTable, "dimension_table_equipment", csvPrefixGlobal)
+	uploadFile(uploader, localGameTypeDimTable, "dimension_table_game_types", csvPrefixGlobal)
+	uploadFile(uploader, localHitGroupDimTable, "dimension_table_hit_groups", csvPrefixGlobal)
+
+	// save the id state
+	idStateFile, err := os.Create(outputStateCSVName)
+	if err != nil {
+		panic(err)
+	}
+	defer idStateFile.Close()
+	idStateFile.WriteString(fmt.Sprintf(
+		"nextGame,%d\nnextPlayer,%d\nnextRound,%d\nnextTick,%d\n" +
+			"nextPlayerAtTick,%d\nnextSpotted,%d\nnextWeaponFire,%d\nnextKill,%d\nnextPlayerHurt,%d\n" +
+			"nextGrenade,%d\nnextGrenadeTrajectory,%d\nnextPlayerFlashed,%d\nnextPlant,%d\nnextDefusal,%d\nnextExplosion,%d\n",
+			startIDState.nextGame, startIDState.nextPlayer, startIDState.nextRound, startIDState.nextTick,
+			startIDState.nextPlayerAtTick, startIDState.nextSpotted, startIDState.nextWeaponFire, startIDState.nextKill, startIDState.nextPlayerHurt,
+			startIDState.nextGrenade, startIDState.nextGrenadeTrajectory, startIDState.nextPlayerFlashed, startIDState.nextPlant, startIDState.nextDefusal, startIDState.nextExplosion))
+	uploadFile(uploader, outputStateCSVName, "global_id_state", csvPrefixBase)
 
 	if !*reprocessFlag {
 		for _, fileName := range filesToMove {
