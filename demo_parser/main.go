@@ -75,7 +75,7 @@ func main() {
 		sourcePrefixWithType := sourcePrefix + gameTypeString + "/"
 		svc.ListObjectsV2Pages(&s3.ListObjectsV2Input{
 			Bucket: aws.String(bucketName),
-			Prefix: aws.String(sourcePrefixWithType + "auto"),
+			Prefix: aws.String(sourcePrefixWithType),
 		}, func(p *s3.ListObjectsV2Output, last bool) bool {
 			fmt.Printf("Processing page %d\n", i)
 
