@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 const localDemName = "local.dem"
@@ -80,6 +81,10 @@ func main() {
 			fmt.Printf("Processing page %d\n", i)
 
 			for _, obj := range p.Contents {
+				if !strings.HasSuffix(".dem", *obj.Key) {
+					fmt.Printf("Skipping: %s\n", *obj.Key)
+					continue
+				}
 				fmt.Printf("Handling file: %s\n", *obj.Key)
 				downloadDemo(downloader, *obj.Key)
 				processFile(*obj.Key, &startIDState, firstRun, gameTypeIndex)
