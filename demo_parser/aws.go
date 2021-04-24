@@ -30,16 +30,12 @@ func downloadFile(downloader *s3manager.Downloader, fileKey string, localFileNam
 
 }
 
-func uploadFile(uploader *s3manager.Uploader, csvPath string, fileKey string, csvPrfix string) {
+func uploadFile(uploader *s3manager.Uploader, csvPath string, fileKey string, csvPrefix string) {
 	csvFile, err := os.Open(csvPath)
 	if err != nil {
 		panic(err)
 	}
 	defer csvFile.Close()
-	csvPrefix := csvPrefixGlobal
-	if local {
-		csvPrefix = csvPrefixLocal
-	}
 
 	_, err = uploader.Upload(&s3manager.UploadInput{
 		Bucket: aws.String(bucketName),
