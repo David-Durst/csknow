@@ -33,8 +33,9 @@ const localGameTypeDimTable = "dimension_table_game_types.csv"
 const localHitGroupDimTable = "dimension_table_hit_groups.csv"
 const unprocessedPrefix = "demos/unprocessed2/"
 const processedPrefix = "demos/processed2/"
-const csvPrefixLocal = "demos/csvs3/local/"
-const csvPrefixGlobal = "demos/csvs3/global/"
+const csvPrefixBase = "demos/csvs3/"
+const csvPrefixLocal = csvPrefixBase + "local/"
+const csvPrefixGlobal = csvPrefixBase +  "global/"
 var gameTypes = [2]string{"pros","bots"}
 const bucketName = "csknow"
 
@@ -70,6 +71,17 @@ func main() {
 	if *reprocessFlag {
 		sourcePrefix = processedPrefix
 	}
+
+	idStateAWS := csvPrefixBase + "idState.csv"
+	result, err := svc.ListObjectsV2(&s3.ListObjectsV2Input{
+		Bucket: aws.String(bucketName),
+		Prefix: &idStateAWS,
+	})
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(result)
+	return
 
 	i := 0
 	for gameTypeIndex, gameTypeString := range gameTypes {
