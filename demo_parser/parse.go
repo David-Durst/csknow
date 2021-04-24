@@ -13,6 +13,7 @@ import (
 const minTicks = 30
 
 type RoundTracker struct {
+	valid bool
 	id int64
 	gameID int64
 	startTick int64
@@ -112,7 +113,7 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 	curGameID := idState.nextGame
 
 	// setup trackers for logs that cross multiple events
-	curRound := RoundTracker{0,0,0,0,0,0,0,0}
+	curRound := RoundTracker{false, 0,0,0,0,0,0,0,0}
 	grenadesTracker := make(map[int64]GrenadeTracker)
 	playerToLastFireGrenade := make(map[int64]int64)
 	curPlant := PlantTracker{0, 0, 0, 0, false}
@@ -129,13 +130,9 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 	defer roundsFile.Close()
 	roundsFile.WriteString("id,game_id,start_tick,end_tick,freeze_time_end,round_number,round_end_reason,winner\n")
 	p.RegisterEventHandler(func(e events.RoundStart) {
-		if ticksProcessed < minTicks {
-			return
-		}
-
 		curID := idState.nextRound
 		idState.nextRound++
-		curRound = RoundTracker{curID, curGameID, idState.nextTick, 0,-1, roundsProcessed, 0, 0}
+		curRound = RoundTracker{true, curID, curGameID, idState.nextTick, 0,-1, roundsProcessed, 0, 0}
 		roundsProcessed++
 	})
 
@@ -146,10 +143,6 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 	)
 
 	p.RegisterEventHandler(func(e events.RoundEnd) {
-		if ticksProcessed < minTicks {
-			return
-		}
-
 		curRound.roundEndReason = int(e.Reason)
 		if e.Winner == common.TeamCounterTerrorists {
 			curRound.winner = ctSide
@@ -159,6 +152,11 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 			curRound.winner = spectator
 		}
 		curRound.endTick = idState.nextTick
+		// handle demos that start after first round start
+		if !curRound.valid {
+			curRound.id = idState.nextRound
+			idState.nextRound++
+		}
 		roundsFile.WriteString(fmt.Sprintf("%d,%d,%d,%d,%d,%d,%d,%d\n",
 			curRound.id, curRound.gameID, curRound.startTick, curRound.endTick, curRound.freezeTimeEnd,
 			curRound.roundNumber, curRound.roundEndReason, curRound.winner,
@@ -211,8 +209,7 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 		}
 		ticksProcessed++
 		gs := p.GameState()
-		// skip the first couple seconds as tick number  can have issues with these
-		// this should be fine as should just be warmup, which is 3 seconds despite fact I told cs to disable
+		// skip the first seconds as tick number can have issues with these
 		if ticksProcessed < minTicks {
 			return
 		}
