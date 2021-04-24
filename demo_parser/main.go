@@ -81,7 +81,7 @@ func main() {
 			fmt.Printf("Processing page %d\n", i)
 
 			for _, obj := range p.Contents {
-				if !strings.HasSuffix(".dem", *obj.Key) {
+				if !strings.HasSuffix(*obj.Key, ".dem") {
 					fmt.Printf("Skipping: %s\n", *obj.Key)
 					continue
 				}
