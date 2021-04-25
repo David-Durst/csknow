@@ -4,5 +4,5 @@ docker run --name durst_download_merge_s3_csvs \
     --entrypoint /bin/bash \
     --cap-add=SYS_PTRACE \
     --cap-add=SYS_ADMIN \
-    durst/download-merge-s3-csvs:0.1
+    durst/download-merge-s3-csvs:0.2
 
