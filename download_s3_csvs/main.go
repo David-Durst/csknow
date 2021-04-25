@@ -109,7 +109,8 @@ func main() {
 		curElemInPage := 0
 		for _, obj := range p.Contents {
 			if !strings.HasSuffix(*obj.Key, ".dem") {
-				fmt.Printf("Skipping: %s\n", *obj.Key)
+				fmt.Printf("Skipping %d / %d in page: %s\n", curElemInPage, elemsInPage, *obj.Key)
+				curElemInPage++
 				continue
 			}
 			fmt.Printf("%d / %d in page: %s\n", curElemInPage, elemsInPage, *obj.Key)
