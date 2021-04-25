@@ -12,6 +12,7 @@ import (
 	"log"
 	"os"
 	"path"
+	"strings"
 )
 
 const gamesCSVName = "global_games.csv"
@@ -101,12 +102,16 @@ func main() {
 	page := 0
 	svc.ListObjectsV2Pages(&s3.ListObjectsV2Input{
 		Bucket: aws.String(bucketName),
-		Prefix: aws.String(processedPrefix + "auto"),
+		Prefix: aws.String(processedPrefix),
 	}, func(p *s3.ListObjectsV2Output, last bool) bool {
 		fmt.Printf("Processing page %d\n", page)
 		elemsInPage := len(p.Contents)
 		curElemInPage := 0
 		for _, obj := range p.Contents {
+			if !strings.HasSuffix(*obj.Key, ".dem") {
+				fmt.Printf("Skipping: %s\n", *obj.Key)
+				continue
+			}
 			fmt.Printf("%d / %d in page: %s\n", curElemInPage, elemsInPage, *obj.Key)
 			curElemInPage++
 			localKey := path.Base(*obj.Key)
