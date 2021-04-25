@@ -1,6 +1,6 @@
 mysql --host=localhost --user=root --password=${pass} -e "source /sql/create_schema_v7_mysql.sql" csknow
 
-dir_path=/local_data2
+dir_path=/local_data
 
 mysql --host=localhost --user=root --password=${pass} -e "LOAD DATA INFILE '${dir_path}/dimension_table_equipment.csv' INTO TABLE equipment FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n' IGNORE 1 ROWS;" csknow
 mysql --host=localhost --user=root --password=${pass} -e "LOAD DATA INFILE '${dir_path}/dimension_table_game_types.csv' INTO TABLE game_types FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n' IGNORE 1 ROWS;" csknow
