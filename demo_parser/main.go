@@ -86,7 +86,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	
+
 	// if not reprocessing and already have an id state, start from there
 	if *result.KeyCount == 1 && !*reprocessFlag {
 		downloadFile(downloader, *result.Contents[0].Key, inputStateCSVName)

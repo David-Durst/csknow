@@ -14,9 +14,15 @@ import (
 	"path"
 )
 
+const gamesCSVName = "global_games.csv"
+const localEquipmentDimTable = "dimension_table_equipment.csv"
+const localGameTypeDimTable = "dimension_table_game_types.csv"
+const localHitGroupDimTable = "dimension_table_hit_groups.csv"
 const alreadyDownloadedFileName = "already_downloaded.txt"
-const processedPrefix = "demos/processed/"
-const csvPrefiix = "demos/csvs2/"
+const processedPrefix = "demos/processed2/"
+const csvPrefixBase = "demos/csvs3/"
+const csvPrefixLocal = csvPrefixBase + "local/"
+const csvPrefixGlobal = csvPrefixBase +  "global/"
 const bucketName = "csknow"
 
 func fillAlreadyDownloaded(alreadyDownloaded *map[string]struct{}) {
@@ -49,12 +55,11 @@ func saveNewlyDownloaded(needToDownload []string) {
 	}
 }
 
-func downloadCSVForDemo(downloader *s3manager.Downloader, demKey string, csvType string) {
+func downloadFile(downloader *s3manager.Downloader, fileKey string, localFileName string) {
 	// Create a file to write the S3 Object contents to.
-	localPath := path.Join("..", "local_data", csvType, demKey + "_" + csvType + ".csv")
-	awsF, err := os.Create(localPath)
+	awsF, err := os.Create(localFileName)
 	if err != nil {
-		fmt.Errorf("failed to create file %q, %v", localPath, err)
+		fmt.Errorf("failed to create file %q, %v", localFileName, err)
 		os.Exit(1)
 	}
 	defer awsF.Close()
@@ -62,13 +67,17 @@ func downloadCSVForDemo(downloader *s3manager.Downloader, demKey string, csvType
 	// Write the contents of S3 Object to the file
 	_, err = downloader.Download(awsF, &s3.GetObjectInput{
 		Bucket: aws.String(bucketName),
-		Key:    aws.String(csvPrefiix + demKey + "_" + csvType + ".csv"),
+		Key:    aws.String(fileKey),
 	})
 	if err != nil {
 		fmt.Errorf("failed to download file, %v", err)
 		os.Exit(1)
 	}
+}
 
+func downloadCSVForDemo(downloader *s3manager.Downloader, demKey string, csvType string) {
+	localPath := path.Join("..", "local_data", csvType, demKey + "_" + csvType + ".csv")
+	downloadFile(downloader, csvPrefixLocal + demKey + "_" + csvType + ".csv", localPath)
 }
 
 func main() {
@@ -104,11 +113,19 @@ func main() {
 			if _, ok := alreadyDownloaded[localKey]; !ok {
 				needToDownload = append(needToDownload, localKey)
 			}
-			downloadCSVForDemo(downloader, localKey,  "position")
+			downloadCSVForDemo(downloader, localKey, "rounds")
+			downloadCSVForDemo(downloader, localKey, "players")
+			downloadCSVForDemo(downloader, localKey, "ticks")
+			downloadCSVForDemo(downloader, localKey, "player_at_tick")
 			downloadCSVForDemo(downloader, localKey, "spotted")
 			downloadCSVForDemo(downloader, localKey, "weapon_fire")
 			downloadCSVForDemo(downloader, localKey, "hurt")
 			downloadCSVForDemo(downloader, localKey, "grenades")
+			downloadCSVForDemo(downloader, localKey, "grenade_trajectories")
+			downloadCSVForDemo(downloader, localKey, "flashed")
+			downloadCSVForDemo(downloader, localKey, "plants")
+			downloadCSVForDemo(downloader, localKey, "defusals")
+			downloadCSVForDemo(downloader, localKey, "explosions")
 			downloadCSVForDemo(downloader, localKey, "kills")
 			numDownloaded++
 			if *localFlag && numDownloaded > 2 {
@@ -118,6 +135,12 @@ func main() {
 
 		return true
 	})
+
+	localDir := "../local_data/"
+	downloadFile(downloader, csvPrefixGlobal + "global_games.csv", localDir + gamesCSVName)
+	downloadFile(downloader, csvPrefixGlobal + "dimension_table_equipment.csv", localDir + gamesCSVName)
+	downloadFile(downloader, csvPrefixGlobal + "dimension_table_game_types.csv", localDir + gamesCSVName)
+	downloadFile(downloader, csvPrefixGlobal + "dimension_table_hit_groups.csv", localDir + gamesCSVName)
 
 	saveNewlyDownloaded(needToDownload)
 }

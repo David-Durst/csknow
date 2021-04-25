@@ -27,7 +27,6 @@ func downloadFile(downloader *s3manager.Downloader, fileKey string, localFileNam
 		fmt.Errorf("failed to download file, %v", err)
 		os.Exit(1)
 	}
-
 }
 
 func uploadFile(uploader *s3manager.Uploader, csvPath string, fileKey string, csvPrefix string) {
