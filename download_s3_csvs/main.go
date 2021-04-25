@@ -144,9 +144,9 @@ func main() {
 
 	localDir := "../local_data/"
 	downloadFile(downloader, csvPrefixGlobal + "global_games.csv", localDir + gamesCSVName)
-	downloadFile(downloader, csvPrefixGlobal + "dimension_table_equipment.csv", localDir + gamesCSVName)
-	downloadFile(downloader, csvPrefixGlobal + "dimension_table_game_types.csv", localDir + gamesCSVName)
-	downloadFile(downloader, csvPrefixGlobal + "dimension_table_hit_groups.csv", localDir + gamesCSVName)
+	downloadFile(downloader, csvPrefixGlobal + "dimension_table_equipment.csv", localDir + localEquipmentDimTable)
+	downloadFile(downloader, csvPrefixGlobal + "dimension_table_game_types.csv", localDir + localGameTypeDimTable)
+	downloadFile(downloader, csvPrefixGlobal + "dimension_table_hit_groups.csv", localDir + localHitGroupDimTable)
 
 	saveNewlyDownloaded(needToDownload)
 }
