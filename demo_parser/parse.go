@@ -101,7 +101,11 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 	}
 
 	// create games table if it didn't exist, and append header if first run
-	gamesFile, err := os.OpenFile(gamesCSVName, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	flags := os.O_CREATE|os.O_WRONLY
+	if !firstRun {
+		flags = flags | os.O_APPEND
+	}
+	gamesFile, err := os.OpenFile(gamesCSVName, flags, 0644)
 	if err != nil {
 		panic(err)
 	}
