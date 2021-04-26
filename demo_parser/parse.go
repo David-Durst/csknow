@@ -16,6 +16,7 @@ type RoundTracker struct {
 	gameID int64
 	startTick int64
 	endTick int64
+	warmup bool
 	freezeTimeEnd int64
 	roundNumber int
 	roundEndReason int
@@ -111,7 +112,7 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 	curGameID := idState.nextGame
 
 	// setup trackers for logs that cross multiple events
-	curRound := RoundTracker{false, 0,0,0,0,0,0,0,0}
+	curRound := RoundTracker{false, 0,0,0,0,false, 0,0,0,0}
 	grenadesTracker := make(map[int64]GrenadeTracker)
 	playerToLastFireGrenade := make(map[int64]int64)
 	curPlant := PlantTracker{0, 0, 0, 0, false}
@@ -138,7 +139,7 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 
 		curID := idState.nextRound
 		idState.nextRound++
-		curRound = RoundTracker{true, curID, curGameID, idState.nextTick, 0,-1, roundsProcessed, 0, 0}
+		curRound = RoundTracker{true, curID, curGameID, idState.nextTick, 0, false, -1, roundsProcessed, 0, 0}
 		roundsProcessed++
 	})
 
@@ -178,6 +179,7 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 			curRound.roundNumber, curRound.roundEndReason, curRound.winner,
 		))
 		curRound.valid = false
+		curRound.warmup = false
 	})
 
 	p.RegisterEventHandler(func(e events.RoundFreezetimeEnd) {
@@ -200,7 +202,7 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 		panic(err)
 	}
 	defer ticksFile.Close()
-	ticksFile.WriteString("id,round_id,game_time,demo_tick_number,round_tick_number,warmup,bomb_carrier,bomb_x,bomb_y,bomb_z\n")
+	ticksFile.WriteString("id,round_id,game_time,demo_tick_number,round_tick_number,bomb_carrier,bomb_x,bomb_y,bomb_z\n")
 
 	playerAtTickFile, err := os.Create(localPlayerAtTickCSVName)
 	if err != nil {
@@ -222,7 +224,9 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 		}
 		ticksProcessed++
 		gs := p.GameState()
-		gs.IsWarmupPeriod()
+		if gs.IsWarmupPeriod() {
+			curRound.warmup = true
+		}
 		tickID := idState.nextTick
 		players := getPlayers(&p)
 		sort.Slice(players, func(i int, j int) bool {
@@ -238,8 +242,8 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 		}
 		var carrierID int64
 		carrierID = getPlayerBySteamID(&playersTracker, gs.Bomb().Carrier)
-		ticksFile.WriteString(fmt.Sprintf("%d,%d,%d,%d,%d,%d,%d,%.2f,%.2f,%.2f\n",
-			tickID,curRound.id,p.CurrentTime().Milliseconds(), p.CurrentFrame(), gs.IngameTick(), boolToInt(gs.IsWarmupPeriod()),
+		ticksFile.WriteString(fmt.Sprintf("%d,%d,%d,%d,%d,%d,%.2f,%.2f,%.2f\n",
+			tickID,curRound.id,p.CurrentTime().Milliseconds(), p.CurrentFrame(), gs.IngameTick(),
 			carrierID, gs.Bomb().Position().X, gs.Bomb().Position().Y, gs.Bomb().Position().Z))
 
 
