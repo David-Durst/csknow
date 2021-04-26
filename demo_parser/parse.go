@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/golang/geo/r3"
 	"github.com/markus-wa/demoinfocs-golang/v2/pkg/demoinfocs"
 	"github.com/markus-wa/demoinfocs-golang/v2/pkg/demoinfocs/common"
 	"github.com/markus-wa/demoinfocs-golang/v2/pkg/demoinfocs/events"
@@ -34,6 +35,7 @@ type GrenadeTracker struct {
 	destroyTick int64
 	expired bool
 	destroyed bool
+	trajectory []r3.Vector
 }
 
 type PlantTracker struct {
@@ -419,6 +421,13 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 	defer grenadesFile.Close()
 	grenadesFile.WriteString("id,thrower,grenade_type,throw_tick,active_tick,expired_tick,destroy_tick\n")
 
+	grenadeTrajectoriesFile, err := os.Create(localGrenadeTrajectoriesCSVName)
+	if err != nil {
+		panic(err)
+	}
+	defer grenadeTrajectoriesFile.Close()
+	grenadeTrajectoriesFile.WriteString("id,grenade_id,id_per_grenade,pos_x,pos_y,pos_z\n")
+
 	p.RegisterEventHandler(func(e events.GrenadeProjectileThrow) {
 		curID := idState.nextGrenade
 		idState.nextGrenade++
@@ -433,6 +442,7 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 				0,
 				false,
 				false,
+				nil,
 			})
 
 		if e.Projectile.WeaponInstance.Type == common.EqMolotov ||
@@ -462,6 +472,15 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 			grenadesFile.WriteString(fmt.Sprintf("%d,%d,%d,%d,%s,%s,%s\n",
 				curGrenade.id, curGrenade.thrower, curGrenade.grenadeType,
 				curGrenade.throwTick, activeString, expiredString, destoryString))
+
+			for i := range curGrenade.trajectory {
+				curTrajectoryID := idState.nextGrenadeTrajectory
+				idState.nextGrenadeTrajectory++
+				grenadeTrajectoriesFile.WriteString(fmt.Sprintf("%d,%d,%d,%.2f,%.2f,%.2f\n",
+					curTrajectoryID, curGrenade.id, i,
+					curGrenade.trajectory[i].X, curGrenade.trajectory[i].Y, curGrenade.trajectory[i].Z))
+			}
+
 			grenadesTracker[id] = grenadesTracker[id][1:]
 			if len(grenadesTracker[id]) == 0 {
 				delete(grenadesTracker, id)
@@ -528,13 +547,6 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 		saveGrenade(grenadeUniqueID)
 	})
 
-	grenadeTrajectoriesFile, err := os.Create(localGrenadeTrajectoriesCSVName)
-	if err != nil {
-		panic(err)
-	}
-	defer grenadeTrajectoriesFile.Close()
-	grenadeTrajectoriesFile.WriteString("id,grenade_id,id_per_grenade,pos_x,pos_y,pos_z\n")
-
 	p.RegisterEventHandler(func(e events.GrenadeProjectileDestroy) {
 		// he grenade destroy happens when smoke from after explosion fades
 		// still some smoke left, but totally visible, when smoke grenade expires
@@ -543,16 +555,8 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 		curGrenade := grenadesTracker[e.Projectile.WeaponInstance.UniqueID()][0]
 		curGrenade.destroyTick = idState.nextTick
 		curGrenade.destroyed = true
+		curGrenade.trajectory = e.Projectile.Trajectory
 		grenadesTracker[e.Projectile.WeaponInstance.UniqueID()][0] = curGrenade
-
-		for i := range e.Projectile.Trajectory {
-			curTrajectoryID := idState.nextGrenadeTrajectory
-			idState.nextGrenadeTrajectory++
-			grenadeTrajectoriesFile.WriteString(fmt.Sprintf("%d,%d,%d,%.2f,%.2f,%.2f\n",
-				curTrajectoryID, curGrenade.id, i,
-				e.Projectile.Trajectory[i].X, e.Projectile.Trajectory[i].Y, e.Projectile.Trajectory[i].Z))
-		}
-
 		saveGrenade(e.Projectile.WeaponInstance.UniqueID())
 	})
 
