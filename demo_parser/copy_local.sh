@@ -1,0 +1,16 @@
+cp dimension_table*.csv ../local_data/
+cp global_games.csv ../local_data/
+cp local_defusals.csv ../local_data/defusals/
+cp local_flashed.csv ../local_data/flashed/
+cp local_grenades.csv ../local_data/grenades/ 
+cp local_kills.csv ../local_data/kills/
+cp local_player_at_tick.csv ../local_data/player_at_tick/ 
+cp local_rounds.csv ../local_data/rounds/
+cp local_ticks.csv ../local_data/ticks/
+cp local_explosions.csv ../local_data/explosions/ 
+cp local_grenade_trajectories.csv ../local_data/grenade_trajectories/
+cp local_hurt.csv ../local_data/hurt/
+cp local_plants.csv ../local_data/plants/ 
+cp local_players.csv ../local_data/players/ 
+cp local_spotted.csv ../local_data/spotted/
+cp local_weapon_fire.csv ../local_data/weapon_fire/
