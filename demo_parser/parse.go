@@ -137,6 +137,7 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 	p.RegisterEventHandler(func(e events.RoundStart) {
 		// warmup can end wihtout a roundend call, so save repeated round starts
 		if curRound.valid {
+			curRound.endTick = idState.nextTick - 1
 			roundsFile.WriteString(fmt.Sprintf("%d,%d,%d,%d,%d,%d,%d,%d,%d\n",
 				curRound.id, curRound.gameID, curRound.startTick, curRound.endTick, boolToInt(curRound.warmup), curRound.freezeTimeEnd,
 				curRound.roundNumber, curRound.roundEndReason, curRound.winner,
@@ -175,8 +176,11 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 			idState.nextRound++
 			curRound.roundNumber = roundsProcessed
 			roundsProcessed++
-			// if missed roudn start event, we'll just make this round really short
-			if curRound.roundNumber != 0 {
+			// can have short pre-warmup round that ends without round start, so mark that as warmup
+			if curRound.roundNumber == 0 {
+				curRound.warmup = true
+			} else {
+				// if normal state but just missed round start event, we'll just make this round really short
 				curRound.startTick = curRound.endTick
 			}
 		}
