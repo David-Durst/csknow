@@ -162,15 +162,22 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 			curRound.winner = spectator
 		}
 		curRound.endTick = idState.nextTick
-		// handle demos that start after first round start
+		// handle demos that start after first round start or just miss a round start event
 		if !curRound.valid {
 			curRound.id = idState.nextRound
 			idState.nextRound++
+			curRound.roundNumber = roundsProcessed
+			roundsProcessed++
+			// if missed roudn start event, we'll just make this round really short
+			if curRound.roundNumber != 0 {
+				curRound.startTick = curRound.endTick
+			}
 		}
 		roundsFile.WriteString(fmt.Sprintf("%d,%d,%d,%d,%d,%d,%d,%d\n",
 			curRound.id, curRound.gameID, curRound.startTick, curRound.endTick, curRound.freezeTimeEnd,
 			curRound.roundNumber, curRound.roundEndReason, curRound.winner,
 		))
+		curRound.valid = false
 	})
 
 	p.RegisterEventHandler(func(e events.RoundFreezetimeEnd) {
