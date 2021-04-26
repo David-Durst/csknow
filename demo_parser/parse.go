@@ -488,6 +488,9 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 	}
 
 	p.RegisterEventHandler(func(e events.HeExplode) {
+		if _, ok := grenadesTracker[e.Grenade.UniqueID()]; !ok {
+			return
+		}
 		curGrenade := grenadesTracker[e.Grenade.UniqueID()][0]
 		curGrenade.activeTick = idState.nextTick
 		curGrenade.expiredTick = idState.nextTick
@@ -496,6 +499,9 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 	})
 
 	p.RegisterEventHandler(func(e events.FlashExplode) {
+		if _, ok := grenadesTracker[e.Grenade.UniqueID()]; !ok {
+			return
+		}
 		curGrenade := grenadesTracker[e.Grenade.UniqueID()][0]
 		curGrenade.activeTick = idState.nextTick
 		curGrenade.expiredTick = idState.nextTick
@@ -505,12 +511,18 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 	})
 
 	p.RegisterEventHandler(func(e events.DecoyStart) {
+		if _, ok := grenadesTracker[e.Grenade.UniqueID()]; !ok {
+			return
+		}
 		curGrenade := grenadesTracker[e.Grenade.UniqueID()][0]
 		curGrenade.activeTick = idState.nextTick
 		grenadesTracker[e.Grenade.UniqueID()][0] = curGrenade
 	})
 
 	p.RegisterEventHandler(func(e events.DecoyExpired) {
+		if _, ok := grenadesTracker[e.Grenade.UniqueID()]; !ok {
+			return
+		}
 		curGrenade := grenadesTracker[e.Grenade.UniqueID()][0]
 		curGrenade.expiredTick = idState.nextTick
 		curGrenade.expired = true
@@ -518,12 +530,18 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 	})
 
 	p.RegisterEventHandler(func(e events.SmokeStart) {
+		if _, ok := grenadesTracker[e.Grenade.UniqueID()]; !ok {
+			return
+		}
 		curGrenade := grenadesTracker[e.Grenade.UniqueID()][0]
 		curGrenade.activeTick = idState.nextTick
 		grenadesTracker[e.Grenade.UniqueID()][0] = curGrenade
 	})
 
 	p.RegisterEventHandler(func(e events.SmokeExpired) {
+		if _, ok := grenadesTracker[e.Grenade.UniqueID()]; !ok {
+			return
+		}
 		curGrenade := grenadesTracker[e.Grenade.UniqueID()][0]
 		curGrenade.expiredTick = idState.nextTick
 		curGrenade.expired = true
@@ -532,6 +550,9 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 
 	p.RegisterEventHandler(func(e events.InfernoStart) {
 		grenadeUniqueID := playerToLastFireGrenade[getPlayerBySteamID(&playersTracker, e.Inferno.Thrower())]
+		if _, ok := grenadesTracker[grenadeUniqueID]; !ok {
+			return
+		}
 		curGrenade := grenadesTracker[grenadeUniqueID][0]
 		curGrenade.activeTick = idState.nextTick
 		grenadesTracker[grenadeUniqueID][0] = curGrenade
@@ -539,6 +560,9 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 
 	p.RegisterEventHandler(func(e events.InfernoExpired) {
 		grenadeUniqueID := playerToLastFireGrenade[getPlayerBySteamID(&playersTracker, e.Inferno.Thrower())]
+		if _, ok := grenadesTracker[grenadeUniqueID]; !ok {
+			return
+		}
 		curGrenade := grenadesTracker[grenadeUniqueID][0]
 		curGrenade.expiredTick = idState.nextTick
 		curGrenade.expired = true
@@ -547,6 +571,9 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 	})
 
 	p.RegisterEventHandler(func(e events.GrenadeProjectileDestroy) {
+		if _, ok := grenadesTracker[e.Projectile.WeaponInstance.UniqueID()]; !ok {
+			return
+		}
 		// he grenade destroy happens when smoke from after explosion fades
 		// still some smoke left, but totally visible, when smoke grenade expires
 		// fire grenades are destroyed as soon as land, then burn for a while
