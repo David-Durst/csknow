@@ -8,6 +8,7 @@ import (
 	"os"
 	"path"
 	"sort"
+	"strconv"
 )
 
 type RoundTracker struct {
@@ -434,10 +435,6 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 				false,
 			})
 
-		if e.Projectile.WeaponInstance.UniqueID() == 4596876061716608039 {
-			fmt.Printf("huh333: %d, %d, %d, %d\n", e.Projectile.Entity.ID(), e.Projectile.WeaponInstance.UniqueID(), e.Projectile.UniqueID() , p.GameState().IngameTick())
-		}
-
 		if e.Projectile.WeaponInstance.Type == common.EqMolotov ||
 			e.Projectile.WeaponInstance.Type == common.EqIncendiary {
 			playerToLastFireGrenade[getPlayerBySteamID(&playersTracker, e.Projectile.Thrower)] =
@@ -450,13 +447,21 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 		// both have happened
 		curGrenade := grenadesTracker[id][0]
 		if curGrenade.destroyed && curGrenade.expired {
-			/*
-			if curGrenade.id == 0 && curGrenade.thrower == 0 && curGrenade.grenadeType == 0 {
-				fmt.Printf("huh")
-			}*/
-			grenadesFile.WriteString(fmt.Sprintf("%d,%d,%d,%d,%d,%d,%d\n",
+			activeString := strconv.FormatInt(curGrenade.activeTick, 10)
+			if curGrenade.activeTick == 0 {
+				activeString = "\\N"
+			}
+			expiredString := strconv.FormatInt(curGrenade.expiredTick, 10)
+			if curGrenade.expiredTick == 0 {
+				expiredString = "\\N"
+			}
+			destoryString := strconv.FormatInt(curGrenade.destroyTick, 10)
+			if curGrenade.destroyTick == 0 {
+				destoryString = "\\N"
+			}
+			grenadesFile.WriteString(fmt.Sprintf("%d,%d,%d,%d,%s,%s,%s\n",
 				curGrenade.id, curGrenade.thrower, curGrenade.grenadeType,
-				curGrenade.throwTick, curGrenade.activeTick, curGrenade.expiredTick, curGrenade.destroyTick))
+				curGrenade.throwTick, activeString, expiredString, destoryString))
 			grenadesTracker[id] = grenadesTracker[id][1:]
 			if len(grenadesTracker[id]) == 0 {
 				delete(grenadesTracker, id)
@@ -535,9 +540,6 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 		// still some smoke left, but totally visible, when smoke grenade expires
 		// fire grenades are destroyed as soon as land, then burn for a while
 		//fmt.Printf("destroying uid: %d\n", e.Projectile.WeaponInstance.UniqueID())
-		if _, ok := grenadesTracker[e.Projectile.WeaponInstance.UniqueID()]; !ok || e.Projectile.WeaponInstance.UniqueID() == 4596876061716608039 {
-			fmt.Printf("huh2222: %d\n", e.Projectile.WeaponInstance.UniqueID())
-		}
 		curGrenade := grenadesTracker[e.Projectile.WeaponInstance.UniqueID()][0]
 		curGrenade.destroyTick = idState.nextTick
 		curGrenade.destroyed = true
