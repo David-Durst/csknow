@@ -180,8 +180,8 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 				curRound.startTick = curRound.endTick
 			}
 		}
-		roundsFile.WriteString(fmt.Sprintf("%d,%d,%d,%d,%d,%d,%d,%d\n",
-			curRound.id, curRound.gameID, curRound.startTick, curRound.endTick, curRound.freezeTimeEnd,
+		roundsFile.WriteString(fmt.Sprintf("%d,%d,%d,%d,%d,%d,%d,%d,%d\n",
+			curRound.id, curRound.gameID, curRound.startTick, curRound.endTick, boolToInt(curRound.warmup), curRound.freezeTimeEnd,
 			curRound.roundNumber, curRound.roundEndReason, curRound.winner,
 		))
 		curRound.valid = false
