@@ -202,7 +202,7 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 		panic(err)
 	}
 	defer ticksFile.Close()
-	ticksFile.WriteString("id,round_id,game_time,demo_tick_number,round_tick_number,bomb_carrier,bomb_x,bomb_y,bomb_z\n")
+	ticksFile.WriteString("id,round_id,game_time,demo_tick_number,game_tick_number,bomb_carrier,bomb_x,bomb_y,bomb_z\n")
 
 	playerAtTickFile, err := os.Create(localPlayerAtTickCSVName)
 	if err != nil {
