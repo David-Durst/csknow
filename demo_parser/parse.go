@@ -490,10 +490,6 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 		// he grenade destroy happens when smoke from after explosion fades
 		// still some smoke left, but totally visible, when smoke grenade expires
 		// fire grenades are destroyed as soon as land, then burn for a while
-		if ticksProcessed < minTicks {
-			return
-		}
-
 		curGrenade := grenadesTracker[e.Projectile.WeaponInstance.UniqueID()]
 		curGrenade.destroyTick = idState.nextTick
 		curGrenade.destroyed = true
@@ -518,10 +514,6 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 	playerFlashedFile.WriteString("id,tick_id,grenade_id,thrower,victim\n")
 
 	p.RegisterEventHandler(func(e events.PlayerFlashed) {
-		if ticksProcessed < minTicks {
-			return
-		}
-
 		source := getPlayerBySteamID(&playersTracker, e.Attacker)
 		target := getPlayerBySteamID(&playersTracker, e.Player)
 		lastFlashKey := SourceTarget{source, target}
@@ -548,10 +540,6 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 	plantsFile.WriteString("id,start_tick,end_tick,planter,successful\n")
 
 	p.RegisterEventHandler(func(e events.BombPlantBegin) {
-		if ticksProcessed < minTicks {
-			return
-		}
-
 		curID := idState.nextPlant
 		idState.nextPlant++
 
@@ -564,10 +552,6 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 	})
 
 	p.RegisterEventHandler(func(e events.BombPlantAborted) {
-		if ticksProcessed < minTicks {
-			return
-		}
-
 		curPlant.endTick = idState.nextTick
 		curPlant.successful = false
 		plantsFile.WriteString(fmt.Sprintf("%d,%d,%d,%d,%d\n",
@@ -575,10 +559,6 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 	})
 
 	p.RegisterEventHandler(func(e events.BombPlanted) {
-		if ticksProcessed < minTicks {
-			return
-		}
-
 		curPlant.endTick = idState.nextTick
 		curPlant.successful = true
 		plantsFile.WriteString(fmt.Sprintf("%d,%d,%d,%d,%d\n",
@@ -593,10 +573,6 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 	defusalsFile.WriteString("id,plant_id,start_tick,end_tick,defuser,successful\n")
 
 	p.RegisterEventHandler(func(e events.BombDefuseStart) {
-		if ticksProcessed < minTicks {
-			return
-		}
-
 		curID := idState.nextDefusal
 		idState.nextDefusal++
 
@@ -610,10 +586,6 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 	})
 
 	p.RegisterEventHandler(func(e events.BombDefuseAborted) {
-		if ticksProcessed < minTicks {
-			return
-		}
-
 		curDefusal.endTick = idState.nextTick
 		curDefusal.successful = false
 		defusalsFile.WriteString(fmt.Sprintf("%d,%d,%d,%d,%d,%d\n",
@@ -621,10 +593,6 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 	})
 
 	p.RegisterEventHandler(func(e events.BombDefused) {
-		if ticksProcessed < minTicks {
-			return
-		}
-
 		curDefusal.endTick = idState.nextTick
 		curDefusal.successful = true
 		defusalsFile.WriteString(fmt.Sprintf("%d,%d,%d,%d,%d,%d\n",
@@ -639,10 +607,6 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 	explosionsFile.WriteString("id,plant_id,tick_id\n")
 
 	p.RegisterEventHandler(func(e events.BombExplode) {
-		if ticksProcessed < minTicks {
-			return
-		}
-
 		curID := idState.nextExplosion
 		idState.nextExplosion++
 
