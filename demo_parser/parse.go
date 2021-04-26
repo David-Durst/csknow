@@ -134,13 +134,26 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 	}
 	defer roundsFile.Close()
 	roundsFile.WriteString("id,game_id,start_tick,end_tick,warmup,freeze_time_end,round_number,round_end_reason,winner\n")
+
+	const (
+		ctSide = 0
+		tSide = 1
+		spectator = 2
+	)
+
 	p.RegisterEventHandler(func(e events.RoundStart) {
+		// can have a round start at end of game, ignore them
+		if roundsProcessed > 10 && p.GameState().TeamCounterTerrorists().Score() == 0 &&
+			p.GameState().TeamTerrorists().Score() == 0 {
+			return
+		}
 		// warmup can end wihtout a roundend call, so save repeated round starts
 		if curRound.valid {
 			curRound.endTick = idState.nextTick - 1
+			fmt.Printf("round end in start t score: %d, ct score: %d\n", p.GameState().TeamTerrorists().Score(), p.GameState().TeamCounterTerrorists().Score())
 			roundsFile.WriteString(fmt.Sprintf("%d,%d,%d,%d,%d,%d,%d,%d,%d\n",
 				curRound.id, curRound.gameID, curRound.startTick, curRound.endTick, boolToInt(curRound.warmup), curRound.freezeTimeEnd,
-				curRound.roundNumber, curRound.roundEndReason, curRound.winner,
+				curRound.roundNumber, -1, spectator,
 			))
 		}
 
@@ -149,12 +162,6 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 		curRound = RoundTracker{true, curID, curGameID, idState.nextTick, 0, false, -1, roundsProcessed, 0, 0}
 		roundsProcessed++
 	})
-
-	const (
-		ctSide = 0
-		tSide = 1
-		spectator = 2
-	)
 
 	p.RegisterEventHandler(func(e events.RoundEnd) {
 		// skip round ends on first tick, these are worthless

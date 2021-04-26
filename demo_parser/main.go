@@ -42,7 +42,7 @@ const processedPrefix = "demos/processed2/"
 const csvPrefixBase = "demos/csvs3/"
 const csvPrefixLocal = csvPrefixBase + "local/"
 const csvPrefixGlobal = csvPrefixBase +  "global/"
-var gameTypes = [2]string{"pros","bots"}
+var gameTypes = []string{"pros","bots"}
 const bucketName = "csknow"
 
 func main() {
@@ -109,8 +109,15 @@ func main() {
 	}
 
 	i := 0
-	for gameTypeIndex, gameTypeString := range gameTypes {
+	localGameTypes := gameTypes
+	if *reprocessFlag {
+		localGameTypes = []string{""}
+	}
+	for gameTypeIndex, gameTypeString := range localGameTypes {
 		sourcePrefixWithType := sourcePrefix + gameTypeString + "/"
+		if *reprocessFlag {
+			sourcePrefixWithType = sourcePrefix
+		}
 		svc.ListObjectsV2Pages(&s3.ListObjectsV2Input{
 			Bucket: aws.String(bucketName),
 			Prefix: aws.String(sourcePrefixWithType),
