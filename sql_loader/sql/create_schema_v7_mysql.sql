@@ -39,6 +39,8 @@ CREATE TABLE `ticks` (
   `round_id` bigint,
   `game_time` bigint,
   `warmup` boolean,
+  `demo_tick_number` bigint,
+  `game_tick_number` bigint,
   `bomb_carrier` bigint,
   `bomb_x` double,
   `bomb_y` double,
