@@ -122,6 +122,8 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 
 	// setup trackers for logs that cross multiple events
 	curRound := RoundTracker{false, 0,0,0,0,false, 0,0,0,0}
+	// save finished rounds, write them at end so can update warmups if necessary
+	var finishedRounds []RoundTracker
 	// creating list as flashes thrown back to back will have same id.
 	// this could introduce bugs if flashes fuse is impacted by factor other than time thrown, but don't think that is case right now
 	grenadesTracker := make(map[int64][]GrenadeTracker)
@@ -154,13 +156,13 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 			return
 		}
 		// warmup can end wihtout a roundend call, so save repeated round starts
+		// restarts also seem to start without a round end (like live on 3) - set all to warmup
 		if curRound.valid {
 			curRound.endTick = idState.nextTick - 1
-			fmt.Printf("round end in start t score: %d, ct score: %d\n", p.GameState().TeamTerrorists().Score(), p.GameState().TeamCounterTerrorists().Score())
-			roundsFile.WriteString(fmt.Sprintf("%d,%d,%d,%d,%d,%d,%d,%d,%d\n",
-				curRound.id, curRound.gameID, curRound.startTick, curRound.endTick, boolToInt(curRound.warmup), curRound.freezeTimeEnd,
-				curRound.roundNumber, -1, spectator,
-			))
+			curRound.warmup = true
+			curRound.roundEndReason = -1
+			curRound.winner = spectator
+			finishedRounds = append(finishedRounds, curRound)
 		}
 
 		curID := idState.nextRound
@@ -197,10 +199,7 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 				curRound.startTick = curRound.endTick
 			}
 		}
-		roundsFile.WriteString(fmt.Sprintf("%d,%d,%d,%d,%d,%d,%d,%d,%d\n",
-			curRound.id, curRound.gameID, curRound.startTick, curRound.endTick, boolToInt(curRound.warmup), curRound.freezeTimeEnd,
-			curRound.roundNumber, curRound.roundEndReason, curRound.winner,
-		))
+		finishedRounds = append(finishedRounds, curRound)
 		curRound.valid = false
 		curRound.warmup = false
 	})
@@ -674,6 +673,23 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 	if err != nil {
 		fmt.Printf("Error in parsing. T score %d, CT score %d, progress: %f, error:\n %s\n",
 			p.GameState().TeamTerrorists().Score(), p.GameState().TeamCounterTerrorists().Score(), p.Progress(), err.Error())
+	}
+
+	// update warmups
+	lastWarmupRound := -1
+	for i := range finishedRounds {
+		if finishedRounds[i].warmup {
+			lastWarmupRound = i
+		}
+	}
+	for i := 0; i < lastWarmupRound; i++ {
+		finishedRounds[i].warmup = true
+	}
+	for _, round := range finishedRounds {
+		roundsFile.WriteString(fmt.Sprintf("%d,%d,%d,%d,%d,%d,%d,%d,%d\n",
+			round.id, round.gameID, round.startTick, round.endTick, boolToInt(round.warmup), round.freezeTimeEnd,
+			round.roundNumber, round.roundEndReason, round.winner,
+		))
 	}
 }
 
