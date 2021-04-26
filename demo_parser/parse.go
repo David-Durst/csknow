@@ -580,10 +580,12 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 
 		curID := idState.nextPlayerFlashed
 		idState.nextPlayerFlashed++
-		grenade := lastFlashExplosion[e.Projectile.WeaponInstance.UniqueID()]
-		playerFlashedFile.WriteString(fmt.Sprintf("%d,%d,%d,%d,%d\n",
-			curID, idState.nextTick, grenade.id, getPlayerBySteamID(&playersTracker, e.Attacker),
-			getPlayerBySteamID(&playersTracker, e.Player)))
+		// filter for flashes whose explosion wasn't recorded
+		if grenade, ok := lastFlashExplosion[e.Projectile.WeaponInstance.UniqueID()]; ok {
+			playerFlashedFile.WriteString(fmt.Sprintf("%d,%d,%d,%d,%d\n",
+				curID, idState.nextTick, grenade.id, getPlayerBySteamID(&playersTracker, e.Attacker),
+				getPlayerBySteamID(&playersTracker, e.Player)))
+		}
 	})
 
 
