@@ -10,8 +10,6 @@ import (
 	"sort"
 )
 
-const minTicks = 30
-
 type RoundTracker struct {
 	valid bool
 	id int64
@@ -130,6 +128,14 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 	defer roundsFile.Close()
 	roundsFile.WriteString("id,game_id,start_tick,end_tick,freeze_time_end,round_number,round_end_reason,winner\n")
 	p.RegisterEventHandler(func(e events.RoundStart) {
+		// warmup can end wihtout a roundend call, so save repeated round starts
+		if curRound.valid {
+			roundsFile.WriteString(fmt.Sprintf("%d,%d,%d,%d,%d,%d,%d,%d\n",
+				curRound.id, curRound.gameID, curRound.startTick, curRound.endTick, curRound.freezeTimeEnd,
+				curRound.roundNumber, curRound.roundEndReason, curRound.winner,
+			))
+		}
+
 		curID := idState.nextRound
 		idState.nextRound++
 		curRound = RoundTracker{true, curID, curGameID, idState.nextTick, 0,-1, roundsProcessed, 0, 0}
@@ -143,6 +149,10 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 	)
 
 	p.RegisterEventHandler(func(e events.RoundEnd) {
+		// skip round ends on first tick, these are worthless
+		if idState.nextTick == 0 {
+			return
+		}
 		curRound.roundEndReason = int(e.Reason)
 		if e.Winner == common.TeamCounterTerrorists {
 			curRound.winner = ctSide
@@ -164,10 +174,6 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 	})
 
 	p.RegisterEventHandler(func(e events.RoundFreezetimeEnd) {
-		if ticksProcessed < minTicks {
-			return
-		}
-
 		curRound.freezeTimeEnd = idState.nextTick
 	})
 
@@ -187,7 +193,7 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 		panic(err)
 	}
 	defer ticksFile.Close()
-	ticksFile.WriteString("id,round_id,game_time,warmup,bomb_carrier,bomb_x,bomb_y,bomb_z\n")
+	ticksFile.WriteString("id,round_id,game_time,demo_tick_number,round_tick_number,warmup,bomb_carrier,bomb_x,bomb_y,bomb_z\n")
 
 	playerAtTickFile, err := os.Create(localPlayerAtTickCSVName)
 	if err != nil {
@@ -209,10 +215,6 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 		}
 		ticksProcessed++
 		gs := p.GameState()
-		// skip the first seconds as tick number can have issues with these
-		if ticksProcessed < minTicks {
-			return
-		}
 		gs.IsWarmupPeriod()
 		tickID := idState.nextTick
 		players := getPlayers(&p)
@@ -229,9 +231,9 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 		}
 		var carrierID int64
 		carrierID = getPlayerBySteamID(&playersTracker, gs.Bomb().Carrier)
-		ticksFile.WriteString(fmt.Sprintf("%d,%d,%d,%d,%d,%.2f,%.2f,%.2f\n",
-			tickID,curRound.id,p.CurrentTime().Milliseconds(), boolToInt(gs.IsWarmupPeriod()), carrierID,
-			gs.Bomb().Position().X, gs.Bomb().Position().Y, gs.Bomb().Position().Z))
+		ticksFile.WriteString(fmt.Sprintf("%d,%d,%d,%d,%d,%d,%d,%.2f,%.2f,%.2f\n",
+			tickID,curRound.id,p.CurrentTime().Milliseconds(), p.CurrentFrame(), gs.IngameTick(), boolToInt(gs.IsWarmupPeriod()),
+			carrierID, gs.Bomb().Position().X, gs.Bomb().Position().Y, gs.Bomb().Position().Z))
 
 
 		for _, player := range players {
@@ -316,11 +318,6 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 	spottedFile.WriteString("id,tick_id,spotted_player,spotter_player,is_spotted\n")
 
 	p.RegisterEventHandler(func(e events.PlayerSpottersChanged) {
-		if ticksProcessed < minTicks {
-			return
-		}
-
-
 		players := getPlayers(&p)
 		sort.Slice(players, func(i int, j int) bool {
 			return players[i].Name < players[j].Name
@@ -342,10 +339,6 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 	weaponFireFile.WriteString("id,tick_id,shooter,weapon\n")
 
 	p.RegisterEventHandler(func(e events.WeaponFire) {
-		if ticksProcessed < minTicks {
-			return
-		}
-
 		curID := idState.nextWeaponFire
 		idState.nextWeaponFire++
 		weaponFireFile.WriteString(fmt.Sprintf("%d,%d,%d,%d\n",
@@ -360,10 +353,6 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 	hurtFile.WriteString("id,tick_id,victim,attacker,weapon,armor_damage,armor,health_damage,health,hit_group\n")
 
 	p.RegisterEventHandler(func(e events.PlayerHurt) {
-		if ticksProcessed < minTicks {
-			return
-		}
-
 		curID := idState.nextPlayerHurt
 		idState.nextPlayerHurt++
 		hitGroup := int(e.HitGroup)
@@ -383,10 +372,6 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 	killsFile.WriteString("id,tick_id,killer,victim,weapon,assister,is_headshot,is_wallbang,penetrated_objects\n")
 
 	p.RegisterEventHandler(func(e events.Kill) {
-		if ticksProcessed < minTicks {
-			return
-		}
-
 		curID := idState.nextKill
 		idState.nextKill++
 		killsFile.WriteString(fmt.Sprintf("%d,%d,%d,%d,%d,%d,%d,%d,%d\n",
@@ -403,10 +388,6 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 	grenadesFile.WriteString("id,thrower,grenade_type,throw_tick,active_tick,expired_tick,destroy_tick\n")
 
 	p.RegisterEventHandler(func(e events.GrenadeProjectileThrow) {
-		if ticksProcessed < minTicks {
-			return
-		}
-
 		curID := idState.nextGrenade
 		idState.nextGrenade++
 
@@ -441,10 +422,6 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 	}
 
 	p.RegisterEventHandler(func(e events.HeExplode) {
-		if ticksProcessed < minTicks {
-			return
-		}
-
 		curGrenade := grenadesTracker[e.Grenade.UniqueID()]
 		curGrenade.activeTick = idState.nextTick
 		curGrenade.expiredTick = idState.nextTick
@@ -453,10 +430,6 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 	})
 
 	p.RegisterEventHandler(func(e events.FlashExplode) {
-		if ticksProcessed < minTicks {
-			return
-		}
-
 		curGrenade := grenadesTracker[e.Grenade.UniqueID()]
 		curGrenade.activeTick = idState.nextTick
 		curGrenade.expiredTick = idState.nextTick
@@ -465,20 +438,12 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 	})
 
 	p.RegisterEventHandler(func(e events.DecoyStart) {
-		if ticksProcessed < minTicks {
-			return
-		}
-
 		curGrenade := grenadesTracker[e.Grenade.UniqueID()]
 		curGrenade.activeTick = idState.nextTick
 		grenadesTracker[e.Grenade.UniqueID()] = curGrenade
 	})
 
 	p.RegisterEventHandler(func(e events.DecoyExpired) {
-		if ticksProcessed < minTicks {
-			return
-		}
-
 		curGrenade := grenadesTracker[e.Grenade.UniqueID()]
 		curGrenade.expiredTick = idState.nextTick
 		curGrenade.expired = true
@@ -486,20 +451,12 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 	})
 
 	p.RegisterEventHandler(func(e events.SmokeStart) {
-		if ticksProcessed < minTicks {
-			return
-		}
-
 		curGrenade := grenadesTracker[e.Grenade.UniqueID()]
 		curGrenade.activeTick = idState.nextTick
 		grenadesTracker[e.Grenade.UniqueID()] = curGrenade
 	})
 
 	p.RegisterEventHandler(func(e events.SmokeExpired) {
-		if ticksProcessed < minTicks {
-			return
-		}
-
 		curGrenade := grenadesTracker[e.Grenade.UniqueID()]
 		curGrenade.expiredTick = idState.nextTick
 		curGrenade.expired = true
@@ -507,10 +464,6 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 	})
 
 	p.RegisterEventHandler(func(e events.InfernoStart) {
-		if ticksProcessed < minTicks {
-			return
-		}
-
 		grenadeUniqueID := playerToLastFireGrenade[getPlayerBySteamID(&playersTracker, e.Inferno.Thrower())]
 		curGrenade := grenadesTracker[grenadeUniqueID]
 		curGrenade.activeTick = idState.nextTick
@@ -518,10 +471,6 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 	})
 
 	p.RegisterEventHandler(func(e events.InfernoExpired) {
-		if ticksProcessed < minTicks {
-			return
-		}
-
 		grenadeUniqueID := playerToLastFireGrenade[getPlayerBySteamID(&playersTracker, e.Inferno.Thrower())]
 		curGrenade := grenadesTracker[grenadeUniqueID]
 		curGrenade.expiredTick = idState.nextTick
