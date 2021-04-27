@@ -186,6 +186,13 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 		if idState.nextTick == 0 {
 			return
 		}
+		// flip rounds before adding next win as you flip after hitting 15 rounds
+		maxRounds, _ := strconv.Atoi(p.GameState().ConVars()["mp_maxrounds"])
+		if tWins + ctWins == maxRounds / 2 {
+			oldCTWins := ctWins
+			ctWins = tWins
+			tWins = oldCTWins
+		}
 		curRound.roundEndReason = int(e.Reason)
 		if e.Winner == common.TeamCounterTerrorists {
 			curRound.winner = ctSide
@@ -195,12 +202,6 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 			tWins++
 		} else {
 			curRound.winner = spectator
-		}
-		maxRounds, _ := strconv.Atoi(p.GameState().ConVars()["mp_maxrounds"])
-		if tWins + ctWins == maxRounds / 2 {
-			oldCTWins := ctWins
-			ctWins = tWins
-			tWins = oldCTWins
 		}
 		curRound.endTick = idState.nextTick
 		// handle demos that start after first round start or just miss a round start event
