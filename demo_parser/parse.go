@@ -47,6 +47,7 @@ type PlantTracker struct {
 	endTick int64
 	planter int64
 	successful bool
+	written bool
 }
 
 type DefusalTracker struct {
@@ -146,7 +147,7 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 	grenadesTracker := make(map[int64][]GrenadeTracker)
 	lastFlashExplosion := make(map[int64]GrenadeTracker)
 	playerToLastFireGrenade := make(map[int64]int64)
-	curPlant := PlantTracker{0, 0, 0, 0, false}
+	curPlant := PlantTracker{0, 0, 0, 0, false, false}
 	curDefusal := DefusalTracker{0, 0, 0, 0, 0, false}
 	playersTracker := make(map[int]int64)
 	lastFlash := make(map[SourceTarget]int64)
@@ -652,21 +653,32 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 			0,
 			getPlayerBySteamID(&playersTracker, e.Player),
 			false,
+			false,
 		}
 	})
 
 	p.RegisterEventHandler(func(e events.BombPlantAborted) {
+		// plants interrupted by end of round may fire twice, ignore second firing
+		if curPlant.written {
+			return
+		}
 		curPlant.endTick = idState.nextTick
 		curPlant.successful = false
 		plantsFile.WriteString(fmt.Sprintf("%d,%d,%d,%d,%d\n",
 			curPlant.id, curPlant.startTick, curPlant.endTick, curPlant.planter, boolToInt(false)))
+		curPlant.written = true
 	})
 
 	p.RegisterEventHandler(func(e events.BombPlanted) {
+		// plants interrupted by end of round may fire twice, ignore second firing
+		if curPlant.written {
+			return
+		}
 		curPlant.endTick = idState.nextTick
 		curPlant.successful = true
 		plantsFile.WriteString(fmt.Sprintf("%d,%d,%d,%d,%d\n",
 			curPlant.id, curPlant.startTick, curPlant.endTick, curPlant.planter, boolToInt(true)))
+		curPlant.written = true
 	})
 
 	defusalsFile, err := os.Create(localDefusalsCSVName)
