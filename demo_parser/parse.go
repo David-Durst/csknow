@@ -196,8 +196,8 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 		} else {
 			curRound.winner = spectator
 		}
-		if tWins + ctWins == 15 {
-			fmt.Printf("change sides\n")
+		maxRounds, _ := strconv.Atoi(p.GameState().ConVars()["mp_maxrounds"])
+		if tWins + ctWins == maxRounds / 2 {
 			oldCTWins := ctWins
 			ctWins = tWins
 			tWins = oldCTWins
