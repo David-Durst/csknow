@@ -739,7 +739,7 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 	for _, round := range finishedRounds {
 		roundsFile.WriteString(fmt.Sprintf("%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d\n",
 			round.id, round.gameID, round.startTick, round.endTick, boolToInt(round.warmup), round.freezeTimeEnd,
-			round.roundNumber, round.roundEndReason, round.winner, round.tWins, round.ctWins
+			round.roundNumber, round.roundEndReason, round.winner, round.tWins, round.ctWins,
 		))
 	}
 }
