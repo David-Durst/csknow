@@ -23,6 +23,8 @@ type RoundTracker struct {
 	roundNumber int
 	roundEndReason int
 	winner int
+	tWins int
+	ctWins int
 }
 
 type GrenadeTracker struct {
@@ -87,6 +89,21 @@ func getPlayerBySteamID(playersTracker * map[int]int64, player * common.Player) 
 	}
 }
 
+const (
+	ctSide = 0
+	tSide = 1
+	spectator = 2
+)
+
+func finishGarbageRound(round * RoundTracker, idState IDState, tWins int, ctWins int) {
+	round.endTick = idState.nextTick - 1
+	round.warmup = true
+	round.roundEndReason = -1
+	round.winner = spectator
+	round.tWins = tWins
+	round.ctWins = ctWins
+}
+
 func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameType int) {
 	demFilePath := path.Base(unprocessedKey)
 	f, err := os.Open(localDemName)
@@ -121,7 +138,7 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 	curGameID := idState.nextGame
 
 	// setup trackers for logs that cross multiple events
-	curRound := RoundTracker{false, 0,0,0,0,false, 0,0,0,0}
+	curRound := RoundTracker{false, 0,0,0,0,false, 0,0,0,0, 0, 0}
 	// save finished rounds, write them at end so can update warmups if necessary
 	var finishedRounds []RoundTracker
 	// creating list as flashes thrown back to back will have same id.
@@ -141,14 +158,10 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 		panic(err)
 	}
 	defer roundsFile.Close()
-	roundsFile.WriteString("id,game_id,start_tick,end_tick,warmup,freeze_time_end,round_number,round_end_reason,winner\n")
+	roundsFile.WriteString("id,game_id,start_tick,end_tick,warmup,freeze_time_end,round_number,round_end_reason,winner,t_wins,ct_wins\n")
 
-	const (
-		ctSide = 0
-		tSide = 1
-		spectator = 2
-	)
-
+	ctWins := 0
+	tWins := 0
 	p.RegisterEventHandler(func(e events.RoundStart) {
 		// can have a round start at end of game, ignore them
 		if roundsProcessed > 10 && p.GameState().TeamCounterTerrorists().Score() == 0 &&
@@ -158,16 +171,13 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 		// warmup can end wihtout a roundend call, so save repeated round starts
 		// restarts also seem to start without a round end (like live on 3) - set all to warmup
 		if curRound.valid {
-			curRound.endTick = idState.nextTick - 1
-			curRound.warmup = true
-			curRound.roundEndReason = -1
-			curRound.winner = spectator
+			finishGarbageRound(&curRound, *idState, tWins, ctWins)
 			finishedRounds = append(finishedRounds, curRound)
 		}
 
 		curID := idState.nextRound
 		idState.nextRound++
-		curRound = RoundTracker{true, curID, curGameID, idState.nextTick, 0, false, -1, roundsProcessed, 0, 0}
+		curRound = RoundTracker{true, curID, curGameID, idState.nextTick, 0, false, -1, roundsProcessed, 0, 0, 0, 0}
 		roundsProcessed++
 	})
 
@@ -179,10 +189,18 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 		curRound.roundEndReason = int(e.Reason)
 		if e.Winner == common.TeamCounterTerrorists {
 			curRound.winner = ctSide
+			ctWins++
 		} else if e.Winner == common.TeamTerrorists {
 			curRound.winner = tSide
+			tWins++
 		} else {
 			curRound.winner = spectator
+		}
+		if tWins + ctWins == 15 {
+			fmt.Printf("change sides\n")
+			oldCTWins := ctWins
+			ctWins = tWins
+			tWins = oldCTWins
 		}
 		curRound.endTick = idState.nextTick
 		// handle demos that start after first round start or just miss a round start event
@@ -199,6 +217,8 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 				curRound.startTick = curRound.endTick
 			}
 		}
+		curRound.tWins = tWins
+		curRound.ctWins = ctWins
 		finishedRounds = append(finishedRounds, curRound)
 		curRound.valid = false
 		curRound.warmup = false
@@ -701,7 +721,6 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 		fmt.Printf("Error in parsing. T score %d, CT score %d, progress: %f, error:\n %s\n",
 			p.GameState().TeamTerrorists().Score(), p.GameState().TeamCounterTerrorists().Score(), p.Progress(), err.Error())
 	}
-
 	// update warmups
 	lastWarmupRound := -1
 	for i := range finishedRounds {
@@ -712,10 +731,15 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 	for i := 0; i < lastWarmupRound; i++ {
 		finishedRounds[i].warmup = true
 	}
+	// if extra round at end, make it a warmup round and finish it
+	if curRound.valid {
+		finishGarbageRound(&curRound, *idState, tWins, ctWins)
+		finishedRounds = append(finishedRounds, curRound)
+	}
 	for _, round := range finishedRounds {
-		roundsFile.WriteString(fmt.Sprintf("%d,%d,%d,%d,%d,%d,%d,%d,%d\n",
+		roundsFile.WriteString(fmt.Sprintf("%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d\n",
 			round.id, round.gameID, round.startTick, round.endTick, boolToInt(round.warmup), round.freezeTimeEnd,
-			round.roundNumber, round.roundEndReason, round.winner,
+			round.roundNumber, round.roundEndReason, round.winner, round.tWins, round.ctWins
 		))
 	}
 }

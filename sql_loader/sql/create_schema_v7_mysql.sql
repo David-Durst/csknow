@@ -32,7 +32,9 @@ CREATE TABLE `rounds` (
   `freeze_time_end` bigint,
   `round_number` smallint,
   `round_end_reason` smallint,
-  `winner` smallint
+  `winner` smallint,
+  `t_wins` smallint,
+  `ct_wins` smallint
 );
 
 CREATE TABLE `ticks` (
