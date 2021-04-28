@@ -1,4 +1,4 @@
-until docker exec durst_sql_loader mysql --host=localhost --user=root --password=${pass} -e "source /sql/privileges.sql"
+until docker exec durst_sql_loader psql -h 127.0.0.1 -U root  --password=${pass} -e "source /sql/privileges.sql"
 do
     sleep 2;
 done

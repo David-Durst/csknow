@@ -1,4 +1,4 @@
-FROM mariadb:10.5.9-focal
+FROM postgres:13.2
 
 RUN apt update && \
     apt install -y vim neovim gdb && \
