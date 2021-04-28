@@ -26,7 +26,7 @@ from doltpy.sql.sync import sync_schema_to_dolt, MYSQL_TO_DOLT_TYPE_MAPPING
 
 sync_schema_to_dolt(mysql_engine,
                     dssc.engine,
-                    {"players":"players", "rounds":"rounds", "ticks":"ticks", "player_at_tick":"player_at_tick", "spotted":"spotted", "weapon_fire":"weapon_fire", "kills":"kills", "hurt":"hurt", "grenades":"grenades" "flashed":"flashed", "grenade_trajectories":"grenade_trajectories", "plants":"plants", "defusals":"defusals", "explosions":"explosions"},
+                    {"players":"players", "rounds":"rounds", "ticks":"ticks", "player_at_tick":"player_at_tick", "spotted":"spotted", "weapon_fire":"weapon_fire", "kills":"kills", "hurt":"hurt", "grenades":"grenades", "flashed":"flashed", "grenade_trajectories":"grenade_trajectories", "plants":"plants", "defusals":"defusals", "explosions":"explosions"},
                     MYSQL_TO_DOLT_TYPE_MAPPINGS)
 
 dssc.stop_server()
