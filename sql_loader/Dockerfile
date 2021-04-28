@@ -1,4 +1,4 @@
-FROM mariadb/columnstore:latest
+FROM mariadb:10.5.9-focal
 
 RUN apt update && \
     apt install -y vim neovim gdb && \
