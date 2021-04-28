@@ -9,11 +9,8 @@ mysql --host=localhost --user=root --password=${pass} -e "LOAD DATA INFILE '${di
 
 for name in players rounds ticks player_at_tick spotted weapon_fire kills hurt grenades flashed grenade_trajectories plants defusals explosions
 do
-    for f in ${dir_path}/${name}/*.csv
-    do
-        echo "loading ${f}$"
-        mysqlimport --fields-terminated-by=, --user=root --password=${pass} csknow ${f} 
-    done
+    echo "loading ${name}$"
+    mysqlimport --fields-terminated-by=, --user=root --password=${pass} csknow ${dir_path}/${name}/*.csv
 done
 echo "done loading"
 #defusals  explosions flashed  grenade_trajectories  grenades  hurt  kills  plants  player_at_tick  players  spotted  ticks  weapon_fire
