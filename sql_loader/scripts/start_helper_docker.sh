@@ -12,7 +12,7 @@ do
     for f in ${dir_path}/${name}/*.csv
     do
         echo "loading ${f}$"
-        mysql --host=localhost --user=root --password=${pass} -e "LOAD DATA INFILE '${f}' INTO TABLE ${name} FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n' IGNORE 1 ROWS;" csknow
+        cpimport csknow ${name} ${f}
     done
 done
 echo "done loading"
