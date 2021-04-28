@@ -1,1 +1,1 @@
-docker kill durst_sql_loader
+docker kill durst_cstore_loader

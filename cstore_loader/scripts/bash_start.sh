@@ -16,11 +16,11 @@ get_script_dir
 
 pass=$(cat ${script_dir}/../../private/.mysql_password)
 
-docker run --name durst_sql_loader \
+docker run --name durst_cstore_loader \
     --rm -it \
     --mount type=bind,source="$(pwd)"/../local_data,target=/local_data \
     --entrypoint /bin/bash \
     -p 127.0.0.1:3306:3306 \
     -e MYSQL_ROOT_PASSWORD=${pass} \
-    durst/sql_loader:0.1
+    durst/cstore_loader:0.1
 

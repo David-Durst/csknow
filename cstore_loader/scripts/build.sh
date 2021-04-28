@@ -1,1 +1,1 @@
-docker build -t durst/sql_loader:0.1 .
+docker build -t durst/cstore_loader:0.1 .

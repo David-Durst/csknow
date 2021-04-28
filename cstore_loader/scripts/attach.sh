@@ -1,1 +1,1 @@
-docker exec -it durst_sql_loader bash
+docker exec -it durst_cstore_loader bash
