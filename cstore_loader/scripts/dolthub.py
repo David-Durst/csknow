@@ -4,7 +4,7 @@ import sqlalchemy as sa
 import os
 
 cur_dir = os.path.dirname(os.path.realpath(__file__))
-f = open(cur_dir + "../../private/.mysql_password", "r")
+f = open(cur_dir + "/../../private/.mysql_password", "r")
 mysql_password = f.read().strip("\n")
 
 # Setup objects to represents source and target databases, start Dolt SQL Server
