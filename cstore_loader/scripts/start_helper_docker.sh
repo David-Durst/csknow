@@ -12,7 +12,7 @@ do
     for f in ${dir_path}/${name}/*.csv
     do
         echo "loading ${f}$"
-        cpimport csknow ${name} ${f}
+        cpimport -s , csknow ${name} ${f}
     done
 done
 echo "done loading"
