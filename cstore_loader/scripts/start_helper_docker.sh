@@ -7,7 +7,16 @@ mysql --host=localhost --user=root --password=${pass} -e "LOAD DATA INFILE '${di
 mysql --host=localhost --user=root --password=${pass} -e "LOAD DATA INFILE '${dir_path}/dimension_table_hit_groups.csv' INTO TABLE hit_groups FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n' IGNORE 1 ROWS;" csknow
 mysql --host=localhost --user=root --password=${pass} -e "LOAD DATA INFILE '${dir_path}/global_games.csv' INTO TABLE games FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n' IGNORE 1 ROWS;" csknow
 
-for name in players rounds ticks player_at_tick spotted weapon_fire kills hurt grenades flashed grenade_trajectories plants defusals explosions
+for name in players rounds
+do
+    for f in ${dir_path}/${name}/*.csv
+    do
+        echo "loading ${f}$"
+        mysql --host=localhost --user=root --password=${pass} -e "LOAD DATA INFILE '${f}' INTO TABLE ${name} FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n' IGNORE 1 ROWS;" csknow
+    done
+done
+
+for name in ticks player_at_tick spotted weapon_fire kills hurt grenades flashed grenade_trajectories plants defusals explosions
 do
     for f in ${dir_path}/${name}/*.csv
     do
