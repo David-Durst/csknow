@@ -16,7 +16,7 @@ get_script_dir
 
 export pass=$(cat ${script_dir}/../../private/.mysql_password)
 
-#${script_dir}/start_helper.sh &
+${script_dir}/start_helper.sh &
 
 docker run --name durst_sql_loader \
     --rm \
