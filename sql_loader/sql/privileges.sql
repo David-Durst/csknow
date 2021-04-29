@@ -5,7 +5,7 @@ CREATE ROLE readaccess;
 GRANT USAGE ON SCHEMA public TO readaccess;
 GRANT SELECT ON ALL TABLES IN SCHEMA public TO readaccess;
 GRANT SELECT ON ALL SEQUENCES IN SCHEMA public TO readaccess;
-REVOKE CREATE ON SCHEMA public FROM readaccess;
+REVOKE CREATE ON SCHEMA public FROM PUBLIC;
 
 -- Grant access to future tables
 ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO readaccess;
