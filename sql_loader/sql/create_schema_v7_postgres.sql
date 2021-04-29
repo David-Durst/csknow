@@ -6,8 +6,8 @@ CREATE TABLE "game_types" (
 CREATE TABLE "games" (
   "id" bigint PRIMARY KEY,
   "demo_file" varchar(1000),
-  "demo_tick_rate" double,
-  "game_tick_rate" double,
+  "demo_tick_rate" double precision,
+  "game_tick_rate" double precision,
   "game_type" bigint
 );
 
@@ -44,28 +44,28 @@ CREATE TABLE "ticks" (
   "demo_tick_number" bigint,
   "game_tick_number" bigint,
   "bomb_carrier" bigint,
-  "bomb_x" double,
-  "bomb_y" double,
-  "bomb_z" double
+  "bomb_x" double precision,
+  "bomb_y" double precision,
+  "bomb_z" double precision
 );
 
 CREATE TABLE "player_at_tick" (
   "id" bigint PRIMARY KEY,
   "player_id" bigint,
   "tick_id" bigint,
-  "pos_x" double,
-  "pos_y" double,
-  "pos_z" double,
-  "view_x" double,
-  "view_y" double,
+  "pos_x" double precision,
+  "pos_y" double precision,
+  "pos_z" double precision,
+  "view_x" double precision,
+  "view_y" double precision,
   "team" smallint,
-  "health" double,
-  "armor" double,
+  "health" double precision,
+  "armor" double precision,
   "has_helmet" boolean,
   "is_alive" boolean,
   "is_crouching" boolean,
   "is_airborne" boolean,
-  "remaining_flash_time" double,
+  "remaining_flash_time" double precision,
   "active_weapon" smallint,
   "primary_weapon" smallint,
   "primary_bullets_clip" smallint,
@@ -132,9 +132,9 @@ CREATE TABLE "grenade_trajectories" (
   "id" bigint PRIMARY KEY,
   "grenade_id" bigint,
   "id_per_grenade" int,
-  "pos_x" double,
-  "pos_y" double,
-  "pos_z" double
+  "pos_x" double precision,
+  "pos_y" double precision,
+  "pos_z" double precision
 );
 
 CREATE TABLE "flashed" (
