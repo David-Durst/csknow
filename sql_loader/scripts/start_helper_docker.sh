@@ -14,7 +14,7 @@ psql --user=postgres -d csknow -c "\\copy games FROM '${dir_path}/global_games.c
 for name in players rounds ticks player_at_tick spotted weapon_fire kills hurt grenades flashed grenade_trajectories plants defusals explosions
 do
     echo "loading ${name}$"
-    psql --user=postgres -d csknow -c "\\copy ${name} FROM '${dir_path}/${name}.csv' csv header;"
+    psql --user=postgres -d csknow -c "\\copy ${name} FROM '${dir_path}/${name}.csv' csv;"
 done
 echo "done loading"
 #defusals  explosions flashed  grenade_trajectories  grenades  hurt  kills  plants  player_at_tick  players  spotted  ticks  weapon_fire
