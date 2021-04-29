@@ -1,4 +1,4 @@
-psql --user=postgres -f /sql/create_schema_v7_mysql.sql -d csknow
+psql --user=postgres -f /sql/create_schema_v7_postgres.sql -d csknow
 
 dir_path=/local_data
 
