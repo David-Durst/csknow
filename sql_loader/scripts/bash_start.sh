@@ -20,7 +20,7 @@ docker run --name durst_sql_loader \
     --rm -it \
     --mount type=bind,source="$(pwd)"/../local_data,target=/local_data \
     --entrypoint /bin/bash \
-    -p 127.0.0.1:3306:3306 \
+    -p 3125:5432 \
     -e MYSQL_ROOT_PASSWORD=${pass} \
     durst/sql_loader:0.1
 
