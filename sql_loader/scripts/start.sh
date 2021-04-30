@@ -19,7 +19,7 @@ export pass=$(cat ${script_dir}/../../private/.mysql_password)
 ${script_dir}/start_helper.sh &
 
 docker run --name durst_sql_loader \
-    --rm \
+    --rm -d \
     --mount type=bind,source="$(pwd)"/../local_data,target=/local_data \
     -p 3125:5432 \
     -e POSTGRES_PASSWORD=${pass} \
