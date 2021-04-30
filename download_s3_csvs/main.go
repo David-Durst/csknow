@@ -20,7 +20,8 @@ const localEquipmentDimTable = "dimension_table_equipment.csv"
 const localGameTypeDimTable = "dimension_table_game_types.csv"
 const localHitGroupDimTable = "dimension_table_hit_groups.csv"
 const alreadyDownloadedFileName = "../local_data/already_downloaded.txt"
-const processedPrefix = "demos/processed2_small/"
+const processedPrefix = "demos/processed2/"
+const processedSmallPrefix = "demos/processed2_small/"
 const csvPrefixBase = "demos/csvs3/"
 const csvPrefixLocal = csvPrefixBase + "local/"
 const csvPrefixGlobal = csvPrefixBase +  "global/"
@@ -87,6 +88,7 @@ func main() {
 	fillAlreadyDownloaded(&alreadyDownloaded)
 
 	localFlag := flag.Bool("l", false, "set for desktop runs that only download a few csvs")
+	subsetFlag := flag.Bool("s", false, "set for server runs that only download a subset csvs (but more than -l)")
 	flag.Parse()
 
 	sess := session.Must(session.NewSession(&aws.Config{
@@ -98,11 +100,15 @@ func main() {
 
 	downloader := s3manager.NewDownloader(sess)
 
+	awsPrefix := processedPrefix
+	if *subsetFlag {
+		awsPrefix = processedSmallPrefix
+	}
 	numDownloaded := 0
 	page := 0
 	svc.ListObjectsV2Pages(&s3.ListObjectsV2Input{
 		Bucket: aws.String(bucketName),
-		Prefix: aws.String(processedPrefix),
+		Prefix: aws.String(awsPrefix),
 	}, func(p *s3.ListObjectsV2Output, last bool) bool {
 		fmt.Printf("Processing page %d\n", page)
 		elemsInPage := len(p.Contents)
