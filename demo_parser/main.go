@@ -39,6 +39,7 @@ const localGameTypeDimTable = "dimension_table_game_types.csv"
 const localHitGroupDimTable = "dimension_table_hit_groups.csv"
 const unprocessedPrefix = "demos/unprocessed2/"
 const processedPrefix = "demos/processed2/"
+const processedSmallPrefix = "demos/processed2_small/"
 const csvPrefixBase = "demos/csvs3/"
 const csvPrefixLocal = csvPrefixBase + "local/"
 const csvPrefixGlobal = csvPrefixBase +  "global/"
@@ -51,6 +52,7 @@ func main() {
 
 	// if reprocessing, don't move the demos
 	reprocessFlag := flag.Bool("r", false, "set for reprocessing demos")
+	subsetReprocessFlag := flag.Bool("s", false, "set for reprocessing a subset of demos")
 	// if running locally, skip the aws stuff and just return
 	localFlag := flag.Bool("l", false, "set for non-aws (aka local) runs")
 	flag.Parse()
@@ -76,6 +78,8 @@ func main() {
 	sourcePrefix := unprocessedPrefix
 	if *reprocessFlag {
 		sourcePrefix = processedPrefix
+	} else if *subsetReprocessFlag {
+		sourcePrefix = processedSmallPrefix
 	}
 
 	idStateAWS := csvPrefixBase + baseStateCSVName
@@ -88,7 +92,7 @@ func main() {
 	}
 
 	// if not reprocessing and already have an id state, start from there
-	if *result.KeyCount == 1 && !*reprocessFlag {
+	if *result.KeyCount == 1 && !*reprocessFlag && !*subsetReprocessFlag {
 		downloadFile(downloader, *result.Contents[0].Key, inputStateCSVName)
 		idStateFile, err := os.Open(inputStateCSVName)
 		if err != nil {
@@ -110,12 +114,12 @@ func main() {
 
 	i := 0
 	localGameTypes := gameTypes
-	if *reprocessFlag {
+	if *reprocessFlag || *subsetReprocessFlag {
 		localGameTypes = []string{""}
 	}
 	for gameTypeIndex, gameTypeString := range localGameTypes {
 		sourcePrefixWithType := sourcePrefix + gameTypeString + "/"
-		if *reprocessFlag {
+		if *reprocessFlag || *subsetReprocessFlag {
 			sourcePrefixWithType = sourcePrefix
 		}
 		svc.ListObjectsV2Pages(&s3.ListObjectsV2Input{
@@ -160,7 +164,7 @@ func main() {
 			startIDState.nextGrenade, startIDState.nextGrenadeTrajectory, startIDState.nextPlayerFlashed, startIDState.nextPlant, startIDState.nextDefusal, startIDState.nextExplosion))
 	uploadFile(uploader, outputStateCSVName, "global_id_state", csvPrefixBase)
 
-	if !*reprocessFlag {
+	if !*reprocessFlag && !*subsetReprocessFlag {
 		for _, fileName := range filesToMove {
 			svc.CopyObject(&s3.CopyObjectInput{
 				CopySource: aws.String(bucketName + "/" + fileName),

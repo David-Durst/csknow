@@ -139,7 +139,7 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 	curGameID := idState.nextGame
 
 	// setup trackers for logs that cross multiple events
-	curRound := RoundTracker{false, 0,0,0,0,false, 0,0,0,0, 0, 0}
+	curRound := RoundTracker{false, idState.nextRound,0,0,0,false, 0,0,0,0, 0, 0}
 	// save finished rounds, write them at end so can update warmups if necessary
 	var finishedRounds []RoundTracker
 	// creating list as flashes thrown back to back will have same id.
