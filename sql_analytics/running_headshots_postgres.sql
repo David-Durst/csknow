@@ -18,10 +18,12 @@ select h.tick_id                                        as base_tick_id,
        lag(pos_z) over (order by pat.tick_id)               as lagz,
        lead(t.demo_tick_number) over (order by pat.tick_id) as lead_tick,
        lag(t.demo_tick_number) over (order by pat.tick_id)  as lag_tick
-from hurt h
+from ticks t
          join player_at_tick pat on
-                h.tick_id - 1 <= pat.tick_id and h.tick_id + 1 >= pat.tick_id and h.attacker = pat.player_id
-         join ticks t on pat.tick_id = t.id
+                t.id = pat.tick_id - 1 or
+                t.id = pat.tick_id + 1 or
+                t.id = pat.tick_id
+         join hurt h on h.tick_id = t.id and h.attacker = pat.player_id
          join rounds r on t.round_id = r.id
          join games g on r.game_id = g.id
 where hit_group = 1
