@@ -28,4 +28,5 @@ from ticks t
          join games g on r.game_id = g.id
 where hit_group = 1
   and warmup = false
+  and not is_airborne
 order by tick_id
