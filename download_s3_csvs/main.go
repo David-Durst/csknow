@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"log"
 	"os"
+	"os/exec"
 	"path"
 	"strings"
 )
@@ -155,4 +156,11 @@ func main() {
 	downloadFile(downloader, csvPrefixGlobal + "dimension_table_hit_groups.csv", localDir + localHitGroupDimTable)
 
 	saveNewlyDownloaded(needToDownload)
+
+	fmt.Printf("executing merge.sh")
+	out, err := exec.Command("/bin/bash", "merge.sh").Output()
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(out)
 }
