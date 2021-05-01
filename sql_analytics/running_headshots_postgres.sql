@@ -29,4 +29,12 @@ from ticks t
 where hit_group = 1
   and warmup = false
   and not is_airborne
-order by tick_id
+order by tick_id;
+
+
+select tbl.table_schema,
+       tbl.table_name
+from information_schema.tables tbl
+join information_schema.key_column_usage kcu on kcu.table_catalog = tbl.table_name
+where tbl.table_type = 'BASE TABLE'
+  and tbl.table_schema not in ('pg_catalog', 'information_schema')
