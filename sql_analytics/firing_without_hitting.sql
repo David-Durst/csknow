@@ -10,13 +10,14 @@ create temporary table firing_no_hits (
                         over (partition by round_id, burst_id, num_hits order by tick_id) as last_hit_neg
              from (
                   select *,
-                         sum(case when game_tick_number - last_game_tick < 128 then 0 else 1 end)
+                         sum(case when game_tick_number - last_game_tick < game_tick_rate then 0 else 1 end)
                              over (partition by round_id order by tick_id) as burst_id
                   from (
                            select g.id                                                            as game_id,
                                   r.id                                                            as round_id,
                                   t.id                                                            as tick_id,
                                   t.game_tick_number,
+                                  g.game_tick_rate,
                                   wf.shooter,
                                   e.name                                                          as weapon_name,
                                   h.victim,
