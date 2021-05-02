@@ -9,6 +9,6 @@ from ticks t
          join players p on pat.player_id = p.id
 where not warmup
 group by round_id, pat.player_id
-order by pct_crouching DESC
+order by pct_crouching DESC;
 
 select * from rounds join games g on rounds.game_id = g.id join ticks t on rounds.start_tick = t.id where rounds.id = 965
