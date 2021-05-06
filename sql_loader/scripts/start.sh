@@ -23,4 +23,4 @@ docker run --name durst_sql_loader \
     --mount type=bind,source="$(pwd)"/../local_data,target=/local_data \
     -p 3125:5432 \
     -e POSTGRES_PASSWORD=${pass} \
-    durst/sql_loader:0.1
+    durst/sql_loader:0.1 postgres -c 'config_file=/postgresql.conf'
