@@ -5,3 +5,5 @@ RUN apt update && \
     echo "set auto-load safe-path /" >> /root/.gdbinit
 
 COPY . .
+
+RUN cp postgresql.conf /var/lib/postgresql/data/postgresql.conf 
