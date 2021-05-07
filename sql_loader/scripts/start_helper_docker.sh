@@ -1,4 +1,4 @@
-psql --user=postgres -f /sql/create_schema_v7_postgres.sql -d csknow
+psql --user=postgres -f /sql/create_schema_v8_postgres.sql -d csknow
 
 dir_path=/local_data
 
@@ -18,6 +18,6 @@ do
     psql --user=postgres -d csknow -c "\\copy ${name} FROM '${dir_path}/${name}.csv' csv null '\\N';"
     psql --user=postgres -d csknow -c "ALTER TABLE ${name} SET LOGGED;"
 done
-psql --user=postgres -f /sql/create_fk_v7_postgres.sql -d csknow
+psql --user=postgres -f /sql/create_fk_v8_postgres.sql -d csknow
 echo "done loading"
 #defusals  explosions flashed  grenade_trajectories  grenades  hurt  kills  plants  player_at_tick  players  spotted  ticks  weapon_fire
