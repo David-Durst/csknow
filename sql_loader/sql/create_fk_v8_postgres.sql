@@ -98,7 +98,7 @@ CREATE INDEX "tick_index" ON "player_at_tick" ("tick_id");
 
 CREATE INDEX "player_tick_index" ON "player_at_tick" ("player_id", "tick_id");
 
-CREATE INDEX "tick_player_index" ON "player_at_tick" USING gist ("pos_x", "pos_y", "pos_z");
+CREATE INDEX "tick_player_index" ON "player_at_tick" USING spgist (point("pos_x", "pos_y"));
 
 CREATE INDEX "spotted_tick_index" ON "spotted" ("tick_id");
 
