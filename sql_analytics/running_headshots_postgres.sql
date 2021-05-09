@@ -52,5 +52,9 @@ where base_tick_id = tick_id and velocity > 170;
 
 set enable_hashjoin = off;
 set enable_mergejoin = off;
-set join_collapse_limit = 8;
+set enable_hashjoin = on;
+set enable_mergejoin = on;
+set join_collapse_limit = 1;
+show default_statistics_target;
+set default_statistics_target = 10000;
 
