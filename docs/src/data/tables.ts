@@ -20,7 +20,7 @@ export function printTable(keys: string[], values: string[]): string {
     return result + "</div>"
 }
 
-export let rowTypes: String[] = []
+export let rowTypes: string[] = ["ticks"]
 
 export class Row {
     id: number;
@@ -119,21 +119,13 @@ export class GameData {
     }
 }
 
-export function getEventIndex(gameData: GameData, event: string): Map<number, number[]> {
+export function getTickToOtherTableIndex(gameData: GameData, event: string):
+    Map<number, number[]> {
     if (event == "none") {
         return null
     }
     else if (gameData.tableNames.includes(event)) {
         return gameData.ticksToOtherTablesIndices.get(event)
-    }
-    else {
-        throw new Error("getEventIndex for invalid event string " + event)
-    }
-}
-
-export function getEventArray(gameData: GameData, event: string): Row[] {
-    if (gameData.tableNames.includes(event)) {
-        return gameData.tables.get(event)
     }
     else {
         throw new Error("getEventIndex for invalid event string " + event)

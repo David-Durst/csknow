@@ -2,7 +2,7 @@ import {
     DemoData,
     GameData,
     getEventArray,
-    getEventIndex,
+    getTickToOtherTableIndex,
     PositionRow, Printable
 } from "../data/tables";
 
@@ -23,7 +23,7 @@ export function getPlayersText(tickdata: PositionRow, gameData: GameData): strin
     // would be great if could draw more than 1 player
     // but 2 players can shoot each other same tick and not able to visualize that right now
     let result: string[] = []
-    const index = getEventIndex(gameData, curEvent)
+    const index = getTickToOtherTableIndex(gameData, curEvent)
     // if no event, do nothing special
     if (curEvent == "none" || !index.has(tickdata.demoTickNumber)) {
         for (let p = 0; p < tickdata.players.length; p++) {
@@ -82,7 +82,7 @@ export function setEventText(tickdata: PositionRow, gameData: GameData) {
         return
     }
     eventDiv.innerHTML = ""
-    const index = getEventIndex(gameData, curEvent)
+    const index = getTickToOtherTableIndex(gameData, curEvent)
     if (index.has(tickdata.demoTickNumber)) {
         const events = index.get(tickdata.demoTickNumber)
         const eventArray = getEventArray(gameData, curEvent)

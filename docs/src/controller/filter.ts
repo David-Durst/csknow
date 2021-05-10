@@ -1,6 +1,6 @@
 import {gameData} from "../data/data";
 import {drawTick} from "../drawing/drawing";
-import {GameData, getEventIndex, PositionRow} from "../data/tables";
+import {GameData, getTickToOtherTableIndex, PositionRow} from "../data/tables";
 import {curEvent} from "../drawing/events";
 import {customFilter, setupCustomFilters} from "./ide_filters";
 import {
@@ -86,7 +86,7 @@ function filterEvent() {
         return true;
     }
     let matchingPositions: PositionRow[] = []
-    const index = getEventIndex(filteredData, curEvent)
+    const index = getTickToOtherTableIndex(filteredData, curEvent)
     for (let t = 0; t < filteredData.position.length; t++) {
         if (index.has(filteredData.position[t].demoTickNumber)) {
             matchingPositions.push(filteredData.position[t])

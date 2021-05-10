@@ -1,43 +1,27 @@
-import {PositionRow, DemoData, GameData} from "./tables";
+import {Row, GameData, rowTypes} from "./tables";
 
-function generatePositionsToEventsTable(position: PositionRow[],
-                                               events: DemoData[],
-                                               positionToEvent: Map<number, number[]>,
-                                               getEventLength: (index: number, tick:number) => number
+function generateTickToOtherTableIndex(ticks: Row[], otherTable: Row[],
+                                       index: Map<number, number[]>,
+                                       getEventLength: (index: number, tick:number) => number
                                                ) {
-    for (let eventIndex = 0; eventIndex < events.length; eventIndex++) {
-        let curEvent = events[eventIndex]
-        let endTick = getEventLength(eventIndex, curEvent.demoTickNumber);
-        for (let curTick = curEvent.demoTickNumber;
-             curTick <= position[position.length-1].demoTickNumber &&
+    for (let otherIndex = 0; otherIndex < otherTable.length; otherIndex++) {
+        let curEvent = otherTable[otherIndex]
+        let endTick = getEventLength(otherIndex, curEvent.id);
+        for (let curTick = curEvent.id;
+             curTick <= ticks[ticks.length-1].id &&
                 curTick < endTick;
              curTick++) {
-            if (!positionToEvent.has(curTick)) {
-                positionToEvent.set(curTick, [])
+            if (!index.has(curTick)) {
+                index.set(curTick, [])
             }
-            let values = positionToEvent.get(curTick)
-            values.push(eventIndex)
-            positionToEvent.set(curTick, values);
+            let values = index.get(curTick)
+            values.push(otherIndex)
+            index.set(curTick, values);
         }
     }
 }
 
 export function indexEventsForGame(gameData: GameData) {
-    generatePositionsToEventsTable(gameData.position, gameData.spotted,
-        gameData.positionToSpotted,
-        (_: number, tick: number) => tick + gameData.spottedParser.ticksPerEvent)
-    generatePositionsToEventsTable(gameData.position, gameData.weaponFire,
-        gameData.positionToWeaponFire,
-        (_: number, tick: number) => tick + gameData.weaponFireParser.ticksPerEvent)
-    generatePositionsToEventsTable(gameData.position, gameData.playerHurt,
-        gameData.positionToPlayerHurt,
-        (_: number, tick: number) => tick + gameData.playerHurtParser.ticksPerEvent)
-    generatePositionsToEventsTable(gameData.position, gameData.grenades,
-        gameData.positionToGrenades,
-        (_: number, tick: number) => tick + gameData.grenadeParser.ticksPerEvent)
-    generatePositionsToEventsTable(gameData.position, gameData.kills,
-        gameData.positionToKills,
-        (_: number, tick: number) => tick + gameData.killsParser.ticksPerEvent)
     for (let dataName of gameData.tableNames) {
         let getTicksPerEvent = function (index: number, tick: number): number {
             if (gameData.parsers.get(dataName).variableLength) {
@@ -50,7 +34,7 @@ export function indexEventsForGame(gameData: GameData) {
                 return tick + gameData.parsers.get(dataName).ticksPerEvent
             }
         }
-        generatePositionsToEventsTable(gameData.position,
+        generateTickToOtherTableIndex(gameData.tables.get(rowTypes[0]),
             gameData.tables.get(dataName),
             gameData.ticksToOtherTablesIndices.get(dataName),
             getTicksPerEvent)

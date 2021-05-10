@@ -1,4 +1,4 @@
-import {getEventIndex, PositionRow} from "../data/tables";
+import {getTickToOtherTableIndex, PositionRow} from "../data/tables";
 import {drawTick} from "../drawing/drawing";
 import {filteredData} from "./filter";
 import {curEvent} from "../drawing/events";

@@ -1,9 +1,9 @@
-import {GameData, Parseable} from "./tables";
+import {GameData, Parser} from "./tables";
 
 const utf8Decoder = new TextDecoder("utf-8");
 
 
-export function parse(container: Parseable, firstCall: Boolean = true) {
+export function parse(container: Parser, firstCall: Boolean = true) {
     if (firstCall) {
         container.tempLineContainer = ""
     }
