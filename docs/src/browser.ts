@@ -32,7 +32,7 @@ import {
     GetObjectCommandOutput,
     GetObjectOutput
 } from "@aws-sdk/client-s3";
-import {DownloadParser, GameData, setReader} from "./data/tables";
+import {Parser, GameData, setReader} from "./data/tables";
 import {indexEventsForGame} from "./data/positionsToEvents";
 
 let matchSelector: HTMLInputElement = null;
@@ -276,20 +276,20 @@ async function changedMatch() {
             const lines = remoteTablesText.trim().split("\n");
             for (let lineNumber = 0; lineNumber < lines.length; lineNumber++) {
                 const cols = lines[lineNumber].split(",");
-                gameData.downloadedDataNames.push(cols[0])
-                gameData.downloadedData.set(cols[0], [])
+                gameData.tableNames.push(cols[0])
+                gameData.tables.set(cols[0], [])
                 const numKeysIndex = 1
                 const numKeys = parseInt(cols[numKeysIndex])
                 const numOtherColsIndex = numKeysIndex + numKeys + 1
                 const numOtherCols = parseInt(cols[numOtherColsIndex])
-                gameData.downloadedParsers.set(cols[0],
-                    new DownloadParser(cols[0],
+                gameData.parsers.set(cols[0],
+                    new Parser(cols[0],
                         cols.slice(numKeysIndex + 1, numKeysIndex + numKeys + 1),
                         cols.slice(numOtherColsIndex + 1, numOtherColsIndex + numOtherCols + 1),
                         parseInt(cols[cols.length - 2]), cols[cols.length - 1]
                     )
                 )
-                gameData.downloadedPositionToEvent.set(cols[0], new Map<number, number[]>());
+                gameData.ticksToOtherTablesIndices.set(cols[0], new Map<number, number[]>());
                 if (!addedDownloadedOptions) {
                     (<HTMLSelectElement> document.getElementById("event-type"))
                         .add(new Option(cols[0], cols[0]));
@@ -303,15 +303,15 @@ async function changedMatch() {
             console.log(e)
         });
 
-    for (const downloadedDataName of gameData.downloadedDataNames) {
+    for (const downloadedDataName of gameData.tableNames) {
         promises.push(
             fetch(remoteAddr + "query/" + downloadedDataName + "/" +
                 matches[parseInt(matchSelector.value)].demoFileWithExt + ".csv")
             .then((response: Response) => {
-                setReader(response.body.getReader(), gameData.downloadedParsers.get(downloadedDataName))
-                return gameData.downloadedParsers.get(downloadedDataName).reader.read();
+                setReader(response.body.getReader(), gameData.parsers.get(downloadedDataName))
+                return gameData.parsers.get(downloadedDataName).reader.read();
             })
-            .then(parse(gameData.downloadedParsers.get(downloadedDataName), true))
+            .then(parse(gameData.parsers.get(downloadedDataName), true))
             .catch(e => {
                 console.log("error downloading " + downloadedDataName)
             })

@@ -38,21 +38,21 @@ export function indexEventsForGame(gameData: GameData) {
     generatePositionsToEventsTable(gameData.position, gameData.kills,
         gameData.positionToKills,
         (_: number, tick: number) => tick + gameData.killsParser.ticksPerEvent)
-    for (let dataName of gameData.downloadedDataNames) {
+    for (let dataName of gameData.tableNames) {
         let getTicksPerEvent = function (index: number, tick: number): number {
-            if (gameData.downloadedParsers.get(dataName).variableLength) {
+            if (gameData.parsers.get(dataName).variableLength) {
                 return parseInt(
-                    gameData.downloadedData.get(dataName)[index]
-                    .getColumns()[gameData.downloadedParsers.get(dataName).ticksColumn]
+                    gameData.tables.get(dataName)[index]
+                    .getColumns()[gameData.parsers.get(dataName).ticksColumn]
                 )
             }
             else {
-                return tick + gameData.downloadedParsers.get(dataName).ticksPerEvent
+                return tick + gameData.parsers.get(dataName).ticksPerEvent
             }
         }
         generatePositionsToEventsTable(gameData.position,
-            gameData.downloadedData.get(dataName),
-            gameData.downloadedPositionToEvent.get(dataName),
+            gameData.tables.get(dataName),
+            gameData.ticksToOtherTablesIndices.get(dataName),
             getTicksPerEvent)
     }
 }
