@@ -4,7 +4,7 @@ import {
     clearFilterData,
     filterRegion, stopFilteringEvents
 } from "../controller/filter";
-import {PositionRow} from "../data/tables";
+import {PlayerAtTickRow, TickRow} from "../data/tables";
 import {getPackedSettings} from "http2";
 import {
     getPlayersText,
@@ -179,18 +179,17 @@ function trackMouse(e: MouseEvent) {
     yCanvasLabel.innerHTML = minimapCoordinate.getCanvasY().toPrecision(6)
 
     const curTickIndex = getCurTickIndex()
-    const tickData: PositionRow = filteredData.position[curTickIndex]
-    for (let p = 0; p < tickData.players.length; p++) {
+    const tickData: TickRow = filteredData.ticksTable[curTickIndex]
+    const players: PlayerAtTickRow[] = gameData.getPlayers(tickData)
+    for (let p = 0; p < players.length; p++) {
         const playerCoordinate = new MapCoordinate(
-            tickData.players[p].xPosition, tickData.players[p].yPosition, false)
+            players[p].posX, players[p].posY, false)
         if (playerCoordinate.getCanvasX() - 10 <= minimapCoordinate.getCanvasX() &&
             playerCoordinate.getCanvasX() + 10 >= minimapCoordinate.getCanvasX() &&
             playerCoordinate.getCanvasY() - 10 <= minimapCoordinate.getCanvasY() &&
             playerCoordinate.getCanvasY() + 10 >= minimapCoordinate.getCanvasY()) {
-            playerNameLabel.innerHTML = tickData.players[p].name
-            setPosition(tickData.players[p].xPosition,
-                tickData.players[p].yPosition,
-                tickData.players[p].zPosition)
+            playerNameLabel.innerHTML = gameData.getPlayerName(players[p].id)
+            setPosition(players[p].posX, players[p].posY, players[p].posZ)
             selectedPlayer = p;
             drawTick(null)
             return
@@ -205,16 +204,17 @@ export function drawTick(e: InputEvent) {
     ctx.textBaseline = "middle"
     ctx.textAlign = "center"
     const curTickIndex = getCurTickIndex()
-    setTickLabel(filteredData.position[curTickIndex].demoTickNumber,
-        filteredData.position[curTickIndex].gameTickNumber)
-    const tickData: PositionRow = filteredData.position[curTickIndex]
-    tScoreLabel.innerHTML = tickData.tScore.toString()
-    ctScoreLabel.innerHTML = tickData.ctScore.toString()
+    setTickLabel(filteredData.ticksTable[curTickIndex].demoTickNumber,
+        filteredData.ticksTable[curTickIndex].gameTickNumber)
+    const tickData: TickRow = filteredData.ticksTable[curTickIndex]
+    tScoreLabel.innerHTML = gameData.getRound(tickData).tWins.toString()
+    ctScoreLabel.innerHTML = gameData.getRound(tickData).ctWins.toString()
     let playersText = getPlayersText(tickData, filteredData)
-    for (let p = 0; p < tickData.players.length; p++) {
+    const players = gameData.getPlayers(tickData)
+    for (let p = 0; p < players.length; p++) {
         let playerText = playersText[p]
         ctx.fillStyle = dark_blue
-        if (tickData.players[p].team == 3) {
+        if (players[p].team == 3) {
             if (p == selectedPlayer) {
                 ctx.fillStyle = purple
             }
@@ -232,10 +232,10 @@ export function drawTick(e: InputEvent) {
             }
         }
         const location = new MapCoordinate(
-            tickData.players[p].xPosition,
-            tickData.players[p].yPosition,
+            players[p].posX,
+            players[p].posY,
             false);
-        const zScaling = (tickData.players[p].zPosition - minZ) / (maxZ - minZ)
+        const zScaling = (players[p].posZ - minZ) / (maxZ - minZ)
         ctx.font = (zScaling * 20 + 30).toString() + "px Arial"
         ctx.fillText(playerText, location.getCanvasX(), location.getCanvasY())
         ctx.save()

@@ -29,9 +29,7 @@ export function getPlayersText(tickData: TickRow, gameData: GameData): string[] 
     // but 2 players can shoot each other same tick and not able to visualize that right now
     let result: string[] = []
     const index = getTickToOtherTableIndex(gameData, curEvent)
-    const players: PlayerAtTickRow[] = gameData.ticksToOtherTablesIndices
-        .get(playerAtTickTableName).get(tickData.id)
-        .map((value) => gameData.playerAtTicksTable[value])
+    const players: PlayerAtTickRow[] = gameData.getPlayers(tickData)
     // if no event, do nothing special
     if (curEvent == "none" || !index.has(tickData.id)) {
         for (let p = 0; p < players.length; p++) {

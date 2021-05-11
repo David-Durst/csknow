@@ -8,7 +8,7 @@ import {
     playerAtTickTableName
 } from "./tables";
 
-function generateTickToOtherTableIndex(ticks: TickRow[], otherTable: Row[],
+function generateTicksToOtherTableIndex(ticks: TickRow[], otherTable: Row[],
                                        index: Index,
                                        getEventLength: (index: number, tick:number)
                                            => number) {
@@ -30,7 +30,7 @@ function generateTickToOtherTableIndex(ticks: TickRow[], otherTable: Row[],
 }
 
 export function indexEventsForGame(gameData: GameData) {
-    generateTickToOtherTableIndex(gameData.ticksTable, gameData.playerAtTicksTable,
+    generateTicksToOtherTableIndex(gameData.ticksTable, gameData.playerAtTicksTable,
         gameData.ticksToOtherTablesIndices.get(playerAtTickTableName),
         (_: number, tick: number) => tick)
 
@@ -46,7 +46,7 @@ export function indexEventsForGame(gameData: GameData) {
                 return tick + gameData.parsers.get(dataName).ticksPerEvent
             }
         }
-        generateTickToOtherTableIndex(gameData.ticksTable,
+        generateTicksToOtherTableIndex(gameData.ticksTable,
             gameData.tables.get(dataName),
             gameData.ticksToOtherTablesIndices.get(dataName),
             getTicksPerEvent)

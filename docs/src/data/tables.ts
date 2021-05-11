@@ -51,6 +51,34 @@ export class Row {
     }
 }
 
+export class RoundRow extends Row {
+    gameId: number;
+    startTick: number;
+    endTick: number;
+    warmup: boolean;
+    freezeTimeEnd: number;
+    roundNumber: number;
+    roundEndReason: number;
+    winner: number;
+    tWins: number;
+    ctWins: number;
+
+    constructor(id: number, parser: Parser,
+                foreignKeyValues: number[], otherColumnValues: string[]) {
+        super(id, parser, foreignKeyValues, otherColumnValues);
+        this.gameId = foreignKeyValues[0];
+        this.startTick = parseInt(otherColumnValues[0]);
+        this.endTick = parseInt(otherColumnValues[1]);
+        this.warmup = parseBool(otherColumnValues[2]);
+        this.freezeTimeEnd = parseInt(otherColumnValues[3]);
+        this.roundNumber = parseInt(otherColumnValues[4]);
+        this.roundEndReason = parseInt(otherColumnValues[5]);
+        this.winner = parseInt(otherColumnValues[6]);
+        this.tWins = parseInt(otherColumnValues[7]);
+        this.ctWins = parseInt(otherColumnValues[8]);
+    }
+}
+
 export class TickRow extends Row {
     roundId: number;
     gameTime: number;
@@ -72,6 +100,16 @@ export class TickRow extends Row {
         this.bombX = parseFloat(otherColumnValues[4]);
         this.bombY = parseFloat(otherColumnValues[5]);
         this.bombZ = parseFloat(otherColumnValues[6]);
+    }
+}
+
+export class PlayerRow extends Row {
+    name: string;
+
+    constructor(id: number, parser: Parser,
+                foreignKeyValues: number[], otherColumnValues: string[]) {
+        super(id, parser, foreignKeyValues, otherColumnValues);
+        this.name = otherColumnValues[0];
     }
 }
 
@@ -107,6 +145,8 @@ export class PlayerAtTickRow extends Row {
 
 enum ParserType {
     tick,
+    round,
+    player,
     playerAtTick,
     other
 }
@@ -158,6 +198,28 @@ export class Parser {
                 )
             )
         }
+        else if (this.parserType == ParserType.round) {
+            gameData.roundsTable.push(
+                new RoundRow(
+                    id, this,
+                    currentLine.slice(foreignKeysStart,
+                        foreignKeysStart + this.foreignKeyNames.length)
+                        .map(parseInt),
+                    currentLine.slice(2, currentLine.length)
+                )
+            )
+        }
+        else if (this.parserType == ParserType.player) {
+            gameData.playersTable.push(
+                new PlayerRow(
+                    id, this,
+                    currentLine.slice(foreignKeysStart,
+                        foreignKeysStart + this.foreignKeyNames.length)
+                        .map(parseInt),
+                    currentLine.slice(2, currentLine.length)
+                )
+            )
+        }
         else if (this.parserType == ParserType.playerAtTick) {
             gameData.playerAtTicksTable.push(
                 new PlayerAtTickRow(
@@ -195,12 +257,40 @@ export const playerAtTickTableName = "playerAtTick"
 export class GameData {
     tableNames: string[] = [];
     parsers: Map<string, Parser> = new Map<string, Parser>();
+    roundsTable: RoundRow[];
+    roundIdToIndex: Map<number, number> = new Map<number, number>();
     ticksTable: TickRow[];
+    playersTable: PlayerRow[];
+    playerIdToIndex: Map<number, number> = new Map<number, number>();
     playerAtTicksTable: PlayerAtTickRow[];
     tables: Map<string, Row[]> =
         new Map<string, Row[]>();
     ticksToOtherTablesIndices: Map<string, Index> =
         new Map<string, Map<number, number[]>>();
+
+    getRound(tickData: TickRow) : RoundRow {
+        if (this.roundIdToIndex.size == 0) {
+            for (let i = 0; i < this.roundsTable.length; i++) {
+                this.roundIdToIndex.set(this.roundsTable[i].id, i);
+            }
+        }
+        return this.roundsTable[this.roundIdToIndex.get(tickData.roundId)]
+    }
+
+    getPlayers(tickData: TickRow) {
+        return this.ticksToOtherTablesIndices
+            .get(playerAtTickTableName).get(tickData.id)
+            .map((value) => gameData.playerAtTicksTable[value])
+    }
+
+    getPlayerName(playerId: number) : string {
+        if (this.playerIdToIndex.size == 0) {
+            for (let i = 0; i < this.playersTable.length; i++) {
+                this.playerIdToIndex.set(this.playersTable[i].id, i);
+            }
+        }
+        return this.playersTable[this.playerIdToIndex.get(playerId)].name
+    }
 
     clone(target: GameData) {
         target.tableNames = this.tableNames;
