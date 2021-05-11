@@ -240,12 +240,12 @@ export function drawTick(e: InputEvent) {
         ctx.fillText(playerText, location.getCanvasX(), location.getCanvasY())
         ctx.save()
         ctx.translate(location.getCanvasX(), location.getCanvasY())
-        ctx.rotate((90-tickData.players[p].xViewDirection)/180*Math.PI)
+        ctx.rotate((90-players[p].viewX)/180*Math.PI)
         // divide by -90 as brighter means up and < 0 is looking up
-        const yNeg1To1 = tickData.players[p].yViewDirection / -90 
+        const yNeg1To1 = players[p].viewY / -90
         const yLogistic = 2 / (1 + Math.pow(Math.E, -8 * yNeg1To1))
         ctx.filter = "brightness(" + yLogistic + ")"
-        if (tickData.players[p].isAlive) {
+        if (players[p].isAlive) {
             //ctx.fillText("^", 0, 0)
             ctx.fillRect(-2, -13 + -7 * zScaling, 4, 10)
         }
@@ -266,7 +266,7 @@ export function drawTick(e: InputEvent) {
     }
     setEventText(tickData, filteredData)
     // setup client config for this tick
-    let startDemoTick = filteredData.position[curTickIndex].gameTickNumber - 100
+    let startDemoTick = tickData.gameTickNumber - 100
     startDemoTick = Math.max(startDemoTick, 10)
     configClientButton.href = URL.createObjectURL(new Blob(
         // https://csgo-ranks.com/demo-commands/
