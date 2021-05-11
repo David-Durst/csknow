@@ -276,7 +276,25 @@ export function drawTick(e: InputEvent) {
         {type: 'text/plain'}
     ))
 }
+export let maxViewY = 0
+export let maxViewYT = 0
+export let maxViewYP = 0
 export function setupMatchDrawing() {
+    const numTicks = gameData.ticksTable.length
+    for (let t = 0; t < numTicks; t++) {
+        const tickData = gameData.ticksTable[t]
+        const players = gameData.getPlayers(tickData)
+        const round = gameData.getRound(tickData)
+        for (let p = 0; p < players.length; p++) {
+            minZ = Math.min(minZ, players[p].posZ)
+            maxZ = Math.max(maxZ, players[p].posZ)
+            if (!round.warmup) {
+                maxViewY = Math.max(maxViewY, players[p].viewY)
+                maxViewYT = t
+                maxViewYP = p
+            }
+        }
+    }
     drawTick(null)
 }
 
