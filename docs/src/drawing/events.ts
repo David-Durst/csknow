@@ -12,11 +12,9 @@ let eventSelector: HTMLSelectElement = null
 let eventDiv: HTMLDivElement = null
 export let curEvent: string = "none"
 
-function basicPlayerText(gameData: GameData, tickId: number,
+function basicPlayerText(gameData: GameData, tickData: TickRow,
                          playerIndex: number): string {
-    const playerAtTickId = gameData.ticksToOtherTablesIndices
-        .get(playerAtTickTableName).get(tickId)[playerIndex]
-    if (gameData.playerAtTicksTable[playerAtTickId].isAlive) {
+    if (gameData.getPlayers(tickData)[playerIndex].isAlive) {
         return "o"
     }
     else {
@@ -33,7 +31,7 @@ export function getPlayersText(tickData: TickRow, gameData: GameData): string[] 
     // if no event, do nothing special
     if (curEvent == "none" || !index.has(tickData.id)) {
         for (let p = 0; p < players.length; p++) {
-            result.push(basicPlayerText(gameData, tickData.id, p))
+            result.push(basicPlayerText(gameData, tickData, p))
         }
         if (result.length < 10) {
             console.log("exit 1")
@@ -43,42 +41,35 @@ export function getPlayersText(tickData: TickRow, gameData: GameData): string[] 
         return result
     }
 
-    // if event, print source and target if present
+    // if event, get min key player number for each player
     const eventArray = gameData.tables.get(curEvent)
     const eventsForTick = index.get(tickData.id)
     for (let p = 0; p < players.length; p++) {
-        // print every player that is a target or source
-        if (eventArray[0].getSource !== undefined ||
-            eventArray[0].getTargets !== undefined) {
-            let isTargetOrSource = false
-            for (let eIndex = 0; eIndex < eventsForTick.length; eIndex++)  {
-                let event = eventArray[eventsForTick[eIndex]]
-                // targets can be undefined even if source is defined
-                if (eventArray[0].getTargets !== undefined &&
-                    event.getTargets().includes(tickdata.players[p].name)) {
-                    result.push("t")
-                    isTargetOrSource = true
-                    break;
-                }
-                else if (eventArray[0].getSource !== undefined &&
-                    event.getSource() === tickdata.players[p].name) {
-                    result.push("s")
-                    isTargetOrSource = true
-                    break;
-                }
+        result.push(basicPlayerText(gameData, tickData, p))
+    }
+
+    let numKeyPlayers = eventArray[0].parser.keyPlayerColumns.length;
+    let minKeyPlayerNumbers: number[] = [];
+    const bogusMinKeyPlayerNumber = 100
+    for (let p = 0; p < players.length; p++) {
+        minKeyPlayerNumbers[p] = bogusMinKeyPlayerNumber
+    }
+    for (let eIndex = 0; eIndex < eventsForTick.length; eIndex++)  {
+        for (let eIndex = 0; eIndex < eventsForTick.length; eIndex++) {
+            let event = eventArray[eventsForTick[eIndex]]
+            for (let keyPlayerIndex = 0; keyPlayerIndex < numKeyPlayers;
+                 keyPlayerIndex++) {
+                const playerIndex =
+                    gameData.getPlayerIndex(event.foreignKeyValues[keyPlayerIndex]);
+                minKeyPlayerNumbers[playerIndex] =
+                    Math.min(minKeyPlayerNumbers[playerIndex], keyPlayerIndex);
             }
-            if (!isTargetOrSource) {
-                result.push(basicPlayerText(tickdata, p))
-            }
-        }
-        else {
-            result.push(basicPlayerText(tickdata, p))
         }
     }
-    if (result.length < 10) {
-        console.log("exit 2")
-        console.log(result)
-        console.log(gameData)
+    for (let p = 0; p < players.length; p++) {
+        if (minKeyPlayerNumbers[p] < bogusMinKeyPlayerNumber) {
+            result[p] = minKeyPlayerNumbers[p].toString()
+        }
     }
     return result
 }

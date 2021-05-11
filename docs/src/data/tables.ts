@@ -157,6 +157,7 @@ export class Parser {
     foreignKeyNames: string[]
     otherColumnNames: string[];
     rowType: number;
+    keyPlayerColumns: number[];
     // if variable number of ticks per event (variableLength), set ticks column
     // otherwise set ticksPerEvent
     variableLength: boolean;
@@ -281,6 +282,15 @@ export class GameData {
         return this.ticksToOtherTablesIndices
             .get(playerAtTickTableName).get(tickData.id)
             .map((value) => gameData.playerAtTicksTable[value])
+    }
+
+    getPlayerIndex(playerId: number) : number {
+        if (this.playerIdToIndex.size == 0) {
+            for (let i = 0; i < this.playersTable.length; i++) {
+                this.playerIdToIndex.set(this.playersTable[i].id, i);
+            }
+        }
+        return this.playerIdToIndex.get(playerId);
     }
 
     getPlayerName(playerId: number) : string {
