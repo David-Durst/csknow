@@ -1,4 +1,4 @@
-import {getTickToOtherTableIndex, PositionRow} from "../data/tables";
+import {getTickToOtherTableIndex, Row} from "../data/tables";
 import {drawTick} from "../drawing/drawing";
 import {filteredData} from "./filter";
 import {curEvent} from "../drawing/events";
@@ -16,7 +16,7 @@ export function customFilter() {
     if (!shouldFilterCustom) {
         return true;
     }
-    let matchingPositions: PositionRow[] = []
+    let matchingPositions: Row[] = []
     // @ts-ignore
     eval(window.editor.getValue())
     console.log("ran, matching positions size: " + matchingPositions.length.toString())
@@ -24,7 +24,7 @@ export function customFilter() {
         customFilterText.innerHTML = "found no values"
         return false;
     }
-    filteredData.position = matchingPositions
+    filteredData.tables.set("player_at_tick", matchingPositions)
     customFilterText.innerHTML = "successfully applied filter"
     setTickSelectorMax(filteredData.position.length - 1)
     setCurTickIndex(0);

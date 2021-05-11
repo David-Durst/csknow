@@ -1,9 +1,17 @@
-import {Row, GameData, rowTypes} from "./tables";
+import {
+    Row,
+    TickRow,
+    PlayerAtTickRow,
+    GameData,
+    rowTypes,
+    Index,
+    playerAtTickTableName
+} from "./tables";
 
-function generateTickToOtherTableIndex(ticks: Row[], otherTable: Row[],
-                                       index: Map<number, number[]>,
-                                       getEventLength: (index: number, tick:number) => number
-                                               ) {
+function generateTickToOtherTableIndex(ticks: TickRow[], otherTable: Row[],
+                                       index: Index,
+                                       getEventLength: (index: number, tick:number)
+                                           => number) {
     for (let otherIndex = 0; otherIndex < otherTable.length; otherIndex++) {
         let curEvent = otherTable[otherIndex]
         let endTick = getEventLength(otherIndex, curEvent.id);
@@ -22,6 +30,10 @@ function generateTickToOtherTableIndex(ticks: Row[], otherTable: Row[],
 }
 
 export function indexEventsForGame(gameData: GameData) {
+    generateTickToOtherTableIndex(gameData.ticksTable, gameData.playerAtTicksTable,
+        gameData.ticksToOtherTablesIndices.get(playerAtTickTableName),
+        (_: number, tick: number) => tick)
+
     for (let dataName of gameData.tableNames) {
         let getTicksPerEvent = function (index: number, tick: number): number {
             if (gameData.parsers.get(dataName).variableLength) {
@@ -34,7 +46,7 @@ export function indexEventsForGame(gameData: GameData) {
                 return tick + gameData.parsers.get(dataName).ticksPerEvent
             }
         }
-        generateTickToOtherTableIndex(gameData.tables.get(rowTypes[0]),
+        generateTickToOtherTableIndex(gameData.ticksTable,
             gameData.tables.get(dataName),
             gameData.ticksToOtherTablesIndices.get(dataName),
             getTicksPerEvent)

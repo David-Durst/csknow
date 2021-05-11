@@ -1,17 +1,22 @@
 import {
-    DemoData,
     GameData,
-    getEventArray,
     getTickToOtherTableIndex,
-    PositionRow, Printable
+    Index,
+    PlayerAtTickRow,
+    playerAtTickTableName,
+    Row,
+    TickRow,
 } from "../data/tables";
 
 let eventSelector: HTMLSelectElement = null
 let eventDiv: HTMLDivElement = null
 export let curEvent: string = "none"
 
-function basicPlayerText(tickdata: PositionRow, playerIndex: number): string {
-    if (tickdata.players[playerIndex].isAlive) {
+function basicPlayerText(gameData: GameData, tickId: number,
+                         playerIndex: number): string {
+    const playerAtTickId = gameData.ticksToOtherTablesIndices
+        .get(playerAtTickTableName).get(tickId)[playerIndex]
+    if (gameData.playerAtTicksTable[playerAtTickId].isAlive) {
         return "o"
     }
     else {
@@ -19,15 +24,18 @@ function basicPlayerText(tickdata: PositionRow, playerIndex: number): string {
     }
 }
 
-export function getPlayersText(tickdata: PositionRow, gameData: GameData): string[] {
+export function getPlayersText(tickData: TickRow, gameData: GameData): string[] {
     // would be great if could draw more than 1 player
     // but 2 players can shoot each other same tick and not able to visualize that right now
     let result: string[] = []
     const index = getTickToOtherTableIndex(gameData, curEvent)
+    const players: PlayerAtTickRow[] = gameData.ticksToOtherTablesIndices
+        .get(playerAtTickTableName).get(tickData.id)
+        .map((value) => gameData.playerAtTicksTable[value])
     // if no event, do nothing special
-    if (curEvent == "none" || !index.has(tickdata.demoTickNumber)) {
-        for (let p = 0; p < tickdata.players.length; p++) {
-            result.push(basicPlayerText(tickdata, p))
+    if (curEvent == "none" || !index.has(tickData.id)) {
+        for (let p = 0; p < players.length; p++) {
+            result.push(basicPlayerText(gameData, tickData.id, p))
         }
         if (result.length < 10) {
             console.log("exit 1")
@@ -38,9 +46,9 @@ export function getPlayersText(tickdata: PositionRow, gameData: GameData): strin
     }
 
     // if event, print source and target if present
-    const eventArray = getEventArray(gameData, curEvent)
-    const eventsForTick = index.get(tickdata.demoTickNumber)
-    for (let p = 0; p < tickdata.players.length; p++) {
+    const eventArray = gameData.tables.get(curEvent)
+    const eventsForTick = index.get(tickData.id)
+    for (let p = 0; p < players.length; p++) {
         // print every player that is a target or source
         if (eventArray[0].getSource !== undefined ||
             eventArray[0].getTargets !== undefined) {
@@ -77,15 +85,15 @@ export function getPlayersText(tickdata: PositionRow, gameData: GameData): strin
     return result
 }
 
-export function setEventText(tickdata: PositionRow, gameData: GameData) {
+export function setEventText(tickData: TickRow, gameData: GameData) {
     if (curEvent == "none") {
         return
     }
     eventDiv.innerHTML = ""
     const index = getTickToOtherTableIndex(gameData, curEvent)
-    if (index.has(tickdata.demoTickNumber)) {
-        const events = index.get(tickdata.demoTickNumber)
-        const eventArray = getEventArray(gameData, curEvent)
+    if (index.has(tickData.id)) {
+        const events = index.get(tickData.id)
+        const eventArray = gameData.tables.get(curEvent)
         for (let eIndex = events.length - 1; eIndex >= 0; eIndex--) {
             eventDiv.innerHTML += eventArray[events[eIndex]].getHTML()
         }
