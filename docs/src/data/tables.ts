@@ -20,8 +20,6 @@ export function printTable(keys: string[], values: string[]): string {
     return result + "</div>"
 }
 
-export let rowTypes: string[] = ["ticks"]
-
 export class Row {
     id: number;
     foreignKeyValues: number[];
@@ -143,7 +141,7 @@ export class PlayerAtTickRow extends Row {
     }
 }
 
-enum ParserType {
+export enum ParserType {
     tick,
     round,
     player,
@@ -156,7 +154,6 @@ export class Parser {
     tableName: string
     foreignKeyNames: string[]
     otherColumnNames: string[];
-    rowType: number;
     keyPlayerColumns: number[];
     // if variable number of ticks per event (variableLength), set ticks column
     // otherwise set ticksPerEvent
@@ -166,12 +163,11 @@ export class Parser {
     parserType: ParserType;
 
     constructor(tableName: string, foreignKeyNames: string[],
-                otherColumnNames: string[], rowType: number,
+                otherColumnNames: string[],
                 ticksPerEvent: string, parserType: ParserType) {
         this.tableName = tableName;
         this.foreignKeyNames = foreignKeyNames;
         this.otherColumnNames = otherColumnNames;
-        this.rowType = rowType;
         if (ticksPerEvent[0] == 'c') {
             this.variableLength = true;
             this.ticksPerEvent = -1;
@@ -254,6 +250,7 @@ export class Parser {
 
 export type Index = Map<number, number[]>;
 export const tickTableName = "ticks"
+export const roundTableName = "rounds"
 export const playerAtTickTableName = "playerAtTick"
 export class GameData {
     tableNames: string[] = [];

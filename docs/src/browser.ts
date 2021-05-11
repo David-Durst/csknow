@@ -1,39 +1,37 @@
+import {createGameData, gameData, parse, setInitialized} from "./data/data";
 import {
-    parse,
-    gameData,
-    createGameData,
-    initialized, setInitialized
-} from "./data/data";
-import {
-    canvas,
-    ctx,
-    canvasWidth,
     canvasHeight,
-    minimapWidth,
-    minimapHeight,
-    minimapScale,
+    canvasWidth,
+    ctx,
     minimap,
-    drawTick,
-    setupMatchDrawing,
-    setupCanvas, setupCanvasHandlers, setDemoURL, setDemoName
+    minimapHeight,
+    minimapWidth,
+    setDemoName,
+    setDemoURL,
+    setupCanvas,
+    setupCanvasHandlers,
+    setupMatchDrawing
 } from "./drawing/drawing"
 import {
     setupFilterHandlers,
-    setupInitFilters, setupMatchFilters
+    setupInitFilters,
+    setupMatchFilters
 } from "./controller/filter"
-import { registerPlayHandlers } from "./controller/controls"
+import {registerPlayHandlers} from "./controller/controls"
+import {GetObjectCommand, GetObjectCommandOutput} from "@aws-sdk/client-s3";
+import {
+    Parser,
+    ParserType, PlayerAtTickRow, playerAtTickTableName, RoundRow,
+    roundTableName,
+    TickRow,
+    tickTableName
+} from "./data/tables";
+import {indexEventsForGame} from "./data/ticksToOtherTables";
 
 const { S3Client, ListObjectsCommand } = require("@aws-sdk/client-s3");
 const {CognitoIdentityClient} = require("@aws-sdk/client-cognito-identity");
 const {fromCognitoIdentityPool} = require("@aws-sdk/credential-provider-cognito-identity");
 const path = require("path");
-import {
-    GetObjectCommand,
-    GetObjectCommandOutput,
-    GetObjectOutput
-} from "@aws-sdk/client-s3";
-import {Parser, GameData, setReader} from "./data/tables";
-import {indexEventsForGame} from "./data/positionsToEvents";
 
 let matchSelector: HTMLInputElement = null;
 let matchLabel: HTMLLabelElement = null;
@@ -198,71 +196,6 @@ async function changedMatch() {
     matchLabelStr = matches[parseInt(matchSelector.value)].demoFile;
     setMatchLabel();
     let promises: Promise<any>[] = []
-    try {
-        promises.push(
-            s3.send(new GetObjectCommand(getObjectParams(matchLabelStr, "position")))
-                .then((response: any) => {
-                    setReader((<ReadableStream> response.Body).getReader(), gameData.positionParser)
-                    return gameData.positionParser.reader.read();
-                }).then(parse(gameData.positionParser, true)));
-    } catch (err) {
-        console.log("Error", err);
-    }
-
-    try {
-        promises.push(
-            s3.send(new GetObjectCommand(getObjectParams(matchLabelStr, "spotted")))
-                .then((response: any) => {
-                    setReader((<ReadableStream> response.Body).getReader(), gameData.spottedParser)
-                    return gameData.spottedParser.reader.read();
-            }).then(parse(gameData.spottedParser, true)));
-    } catch (err) {
-        console.log("Error", err);
-    }
-
-    try {
-        promises.push(
-            s3.send(new GetObjectCommand(getObjectParams(matchLabelStr, "weapon_fire")))
-                .then((response: GetObjectCommandOutput) => {
-                    setReader((<ReadableStream> response.Body).getReader(), gameData.weaponFireParser)
-                    return gameData.weaponFireParser.reader.read();
-            }).then(parse(gameData.weaponFireParser, true)));
-    } catch (err) {
-        console.log("Error", err);
-    }
-
-    try {
-        promises.push(
-            s3.send(new GetObjectCommand(getObjectParams(matchLabelStr, "hurt")))
-                .then((response: GetObjectCommandOutput) => {
-                    setReader((<ReadableStream> response.Body).getReader(), gameData.playerHurtParser)
-                    return gameData.playerHurtParser.reader.read();
-            }).then(parse(gameData.playerHurtParser, true)));
-    } catch (err) {
-        console.log("Error", err);
-    }
-
-    try {
-        promises.push(
-            s3.send(new GetObjectCommand(getObjectParams(matchLabelStr, "grenades")))
-                .then((response: GetObjectCommandOutput) => {
-                    setReader((<ReadableStream> response.Body).getReader(), gameData.grenadeParser)
-                    return gameData.grenadeParser.reader.read();
-            }).then(parse(gameData.grenadeParser, true)));
-    } catch (err) {
-        console.log("Error", err);
-    }
-
-    try {
-        promises.push(
-            s3.send(new GetObjectCommand(getObjectParams(matchLabelStr, "kills")))
-                .then((response: GetObjectCommandOutput) => {
-                    setReader((<ReadableStream> response.Body).getReader(), gameData.killsParser)
-                    return gameData.killsParser.reader.read();
-            }).then(parse(gameData.killsParser, true)));
-    } catch (err) {
-        console.log("Error", err);
-    }
 
     // wait for list of responses, then do each element
     await fetch(remoteAddr + "list", {mode: 'no-cors'})
@@ -282,11 +215,24 @@ async function changedMatch() {
                 const numKeys = parseInt(cols[numKeysIndex])
                 const numOtherColsIndex = numKeysIndex + numKeys + 1
                 const numOtherCols = parseInt(cols[numOtherColsIndex])
+                let parserType: ParserType;
+                if (cols[0] == tickTableName) {
+                    parserType = ParserType.tick;
+                }
+                else if (cols[0] == roundTableName) {
+                    parserType = ParserType.round;
+                }
+                else if (cols[0] == playerAtTickTableName) {
+                    parserType = ParserType.playerAtTick;
+                }
+                else {
+                    parserType = ParserType.other
+                }
                 gameData.parsers.set(cols[0],
                     new Parser(cols[0],
                         cols.slice(numKeysIndex + 1, numKeysIndex + numKeys + 1),
                         cols.slice(numOtherColsIndex + 1, numOtherColsIndex + numOtherCols + 1),
-                        parseInt(cols[cols.length - 2]), cols[cols.length - 1]
+                        cols[cols.length - 1], parserType
                     )
                 )
                 gameData.ticksToOtherTablesIndices.set(cols[0], new Map<number, number[]>());
@@ -308,7 +254,8 @@ async function changedMatch() {
             fetch(remoteAddr + "query/" + downloadedDataName + "/" +
                 matches[parseInt(matchSelector.value)].demoFileWithExt + ".csv")
             .then((response: Response) => {
-                setReader(response.body.getReader(), gameData.parsers.get(downloadedDataName))
+                gameData.parsers.get(downloadedDataName)
+                    .setReader(response.body.getReader(), )
                 return gameData.parsers.get(downloadedDataName).reader.read();
             })
             .then(parse(gameData.parsers.get(downloadedDataName), true))
@@ -317,6 +264,13 @@ async function changedMatch() {
             })
         );
     }
+    gameData.roundsTable = <RoundRow[]> gameData.tables.get(roundTableName)
+    gameData.tables.delete(roundTableName)
+    gameData.ticksTable = <TickRow[]> gameData.tables.get(tickTableName)
+    gameData.tables.delete(tickTableName)
+    gameData.playerAtTicksTable =
+        <PlayerAtTickRow[]> gameData.tables.get(playerAtTickTableName)
+
 
     await Promise.all(promises)
     indexEventsForGame(gameData)

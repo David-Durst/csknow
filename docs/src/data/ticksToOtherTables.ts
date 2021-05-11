@@ -3,9 +3,8 @@ import {
     TickRow,
     PlayerAtTickRow,
     GameData,
-    rowTypes,
     Index,
-    playerAtTickTableName
+    playerAtTickTableName, roundTableName, tickTableName
 } from "./tables";
 
 function generateTicksToOtherTableIndex(ticks: TickRow[], otherTable: Row[],
