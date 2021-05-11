@@ -26,7 +26,7 @@ export function customFilter() {
     }
     filteredData.tables.set("player_at_tick", matchingPositions)
     customFilterText.innerHTML = "successfully applied filter"
-    setTickSelectorMax(filteredData.position.length - 1)
+    setTickSelectorMax(filteredData.ticksTable.length - 1)
     setCurTickIndex(0);
     drawTick(null)
     return true;

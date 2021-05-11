@@ -305,7 +305,11 @@ export class GameData {
     clone(target: GameData) {
         target.tableNames = this.tableNames;
         target.parsers = this.parsers;
+        target.roundsTable = this.roundsTable;
+        target.roundIdToIndex = this.roundIdToIndex
         target.ticksTable = this.ticksTable;
+        target.playersTable = this.playersTable
+        target.playerIdToIndex = this.playerIdToIndex
         target.playerAtTicksTable = this.playerAtTicksTable;
         target.tables = this.tables;
         target.ticksToOtherTablesIndices = this.ticksToOtherTablesIndices;

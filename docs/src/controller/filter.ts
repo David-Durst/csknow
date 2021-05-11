@@ -1,6 +1,6 @@
 import {gameData} from "../data/data";
 import {drawTick} from "../drawing/drawing";
-import {GameData, getTickToOtherTableIndex, PositionRow} from "../data/tables";
+import {GameData, getTickToOtherTableIndex, TickRow} from "../data/tables";
 import {curEvent} from "../drawing/events";
 import {customFilter, setupCustomFilters} from "./ide_filters";
 import {
@@ -10,33 +10,37 @@ import {
     tickSelector
 } from "./tickSelector";
 
-let lastPlayerXs = [0,0,0,0,0,0,0,0,0,0]
-let lastPlayerYs = [0,0,0,0,0,0,0,0,0,0]
-let lastPlayerZs = [0,0,0,0,0,0,0,0,0,0]
+// adding some extra entries in these arrays incase extra players in server
+// like casters
+let lastPlayerXs = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+let lastPlayerYs = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+let lastPlayerZs = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
 function fixAfterDeath() {
-    for (let t = 1; t < gameData.position.length; t++) {
-        const curTick = gameData.position[t]
-        for (let p = 0; p < 10; p++) {
-            if (!curTick.players[p].isAlive) {
-                curTick.players[p].xPosition = lastPlayerXs[p];
-                curTick.players[p].yPosition = lastPlayerYs[p];
-                curTick.players[p].zPosition = lastPlayerZs[p];
+    for (let t = 1; t < gameData.ticksTable.length; t++) {
+        const tickData = gameData.ticksTable[t]
+        const players = gameData.getPlayers(tickData)
+        for (let p = 0; p < players.length; p++) {
+            if (!players[p].isAlive) {
+                players[p].posX = lastPlayerXs[p];
+                players[p].posY = lastPlayerYs[p];
+                players[p].posZ = lastPlayerZs[p];
             }
             else {
-                lastPlayerXs[p] = curTick.players[p].xPosition
-                lastPlayerYs[p] = curTick.players[p].yPosition
-                lastPlayerZs[p] = curTick.players[p].zPosition
+                lastPlayerXs[p] = players[p].posX
+                lastPlayerYs[p] = players[p].posY
+                lastPlayerZs[p] = players[p].posZ
             }
         }
     }
 }
 
 function makePitchNeg90To90() {
-    for (let t = 1; t < gameData.position.length; t++) {
-        const curTick = gameData.position[t]
-        for (let p = 0; p < 10; p++) {
-            if (curTick.players[p].yViewDirection > 260.0) {
-                curTick.players[p].yViewDirection -= 360
+    for (let t = 1; t < gameData.ticksTable.length; t++) {
+        const tickData = gameData.ticksTable[t]
+        const players = gameData.getPlayers(tickData);
+        for (let p = 0; p < players.length; p++) {
+            if (players[p].viewY > 260.0) {
+                players[p].viewY -= 360
             }
         }
     }
@@ -45,37 +49,32 @@ function makePitchNeg90To90() {
 function alwaysFilter() {
     fixAfterDeath()
     makePitchNeg90To90()
-    filteredData.position = gameData.position
-    filteredData.spotted = gameData.spotted
-    filteredData.weaponFire = gameData.weaponFire
-    filteredData.playerHurt = gameData.playerHurt
-    filteredData.grenades = gameData.grenades
-    filteredData.kills = gameData.kills
-    filteredData.tables = gameData.tables
+    gameData.clone(filteredData)
 }
 
 export let filteredData: GameData = new GameData()
 
 export function filterRegion(minX: number, minY: number, maxX: number,
                              maxY: number): boolean {
-    let matchingPositions: PositionRow[] = []
-    for (let t = 0; t < filteredData.position.length; t++) {
+    let matchingTicks: TickRow[] = []
+    for (let t = 0; t < filteredData.ticksTable.length; t++) {
+        let players = filteredData.getPlayers(filteredData.ticksTable[t])
         for (let p = 0; p < 10; p++) {
-            if (filteredData.position[t].players[p].isAlive &&
-                filteredData.position[t].players[p].xPosition >= minX &&
-                filteredData.position[t].players[p].xPosition <= maxX &&
-                filteredData.position[t].players[p].yPosition >= minY &&
-                filteredData.position[t].players[p].yPosition <= maxY) {
-                matchingPositions.push(filteredData.position[t])
+            if (players[p].isAlive &&
+                players[p].posX >= minX &&
+                players[p].posX <= maxX &&
+                players[p].posY >= minY &&
+                players[p].posY <= maxY) {
+                matchingTicks.push(filteredData.ticksTable[t])
                 break
             }
         }
     }
-    if (matchingPositions.length == 0) {
+    if (matchingTicks.length == 0) {
         return false;
     }
-    filteredData.position = matchingPositions
-    setTickSelectorMax(filteredData.position.length - 1)
+    filteredData.ticksTable = matchingTicks
+    setTickSelectorMax(filteredData.ticksTable.length - 1)
     setCurTickIndex(0);
     return true;
 }
@@ -85,18 +84,18 @@ function filterEvent() {
     if (curEvent === "none" || !shouldFilterEvents) {
         return true;
     }
-    let matchingPositions: PositionRow[] = []
+    let matchingPositions: TickRow[] = []
     const index = getTickToOtherTableIndex(filteredData, curEvent)
-    for (let t = 0; t < filteredData.position.length; t++) {
-        if (index.has(filteredData.position[t].demoTickNumber)) {
-            matchingPositions.push(filteredData.position[t])
+    for (let t = 0; t < filteredData.ticksTable.length; t++) {
+        if (index.has(filteredData.ticksTable[t].demoTickNumber)) {
+            matchingPositions.push(filteredData.ticksTable[t])
         }
     }
     if (matchingPositions.length == 0) {
         return false;
     }
-    filteredData.position = matchingPositions
-    setTickSelectorMax(filteredData.position.length - 1)
+    filteredData.ticksTable = matchingPositions
+    setTickSelectorMax(filteredData.ticksTable.length - 1)
     setCurTickIndex(0);
     drawTick(null)
     return true;
@@ -112,21 +111,21 @@ export function stopFilteringEvents() {
 }
 
 export function clearFilterData() {
-    if (filteredData.position.length === gameData.position.length) {
+    if (filteredData.ticksTable.length === gameData.ticksTable.length) {
         return;
     }
-    filteredData.position = gameData.position
+    filteredData.ticksTable = gameData.ticksTable
     // reapply any existing event filters
     filterEvent()
     customFilter()
-    setTickSelectorMax(filteredData.position.length - 1)
+    setTickSelectorMax(filteredData.ticksTable.length - 1)
     setCurTickIndex(0);
 }
 
 export function setupMatchFilters() {
     gameData.clone(filteredData)
     alwaysFilter()
-    setTickSelectorMax(filteredData.position.length - 1)
+    setTickSelectorMax(filteredData.ticksTable.length - 1)
 }
 
 export function setupInitFilters() {
