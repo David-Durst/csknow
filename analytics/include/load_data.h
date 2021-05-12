@@ -10,6 +10,9 @@ using std::string;
 using std::vector;
 using std::set;
 using std::map;
+#define CT_TEAM 0
+#define T_TEAM 1
+#define SPECTATOR 2
 
 class ColStore {
 public:
@@ -24,22 +27,8 @@ public:
     }
 };
 
-#define CT_TEAM 0
-#define T_TEAM 1
-#define SPECTATOR 2
-struct PlayerPosition {
-    char ** name;
-    int8_t * team;
-    double * xPosition;
-    double * yPosition;
-    double * zPosition;
-    double * xViewDirection;
-    double * yViewDirection;
-    bool * isAlive;
-    bool * isBlinded;
-};
 
-class EquipmentTable : public ColStore {
+class Equipment : public ColStore {
 public:
     char ** name;
 
@@ -48,8 +37,8 @@ public:
         name = (char **) malloc(rows * sizeof(char*));
     }
 
-    EquipmentTable() { };
-    ~EquipmentTable() {
+    Equipment() { };
+    ~Equipment() {
         if (!beenInitialized){
             return;
         }
@@ -59,11 +48,11 @@ public:
         free(name);
     }
 
-    EquipmentTable(const EquipmentTable& other) = delete;
-    EquipmentTable& operator=(const EquipmentTable& other) = delete;
+    Equipment(const Equipment& other) = delete;
+    Equipment& operator=(const Equipment& other) = delete;
 };
 
-class GameTypesTable : public ColStore {
+class GameTypes : public ColStore {
 public:
     char ** tableType;
 
@@ -72,8 +61,8 @@ public:
         tableType = (char **) malloc(rows * sizeof(char*));
     }
 
-    GameTypesTable() { };
-    ~GameTypesTable() {
+    GameTypes() { };
+    ~GameTypes() {
         if (!beenInitialized){
             return;
         }
@@ -83,11 +72,11 @@ public:
         free(tableType);
     }
 
-    GameTypesTable(const GameTypesTable& other) = delete;
-    GameTypesTable& operator=(const GameTypesTable& other) = delete;
+    GameTypes(const GameTypes& other) = delete;
+    GameTypes& operator=(const GameTypes& other) = delete;
 };
 
-class HitGroupsTable : public ColStore {
+class HitGroups : public ColStore {
 public:
     char ** groupName;
 
@@ -96,8 +85,8 @@ public:
         groupName = (char **) malloc(rows * sizeof(char*));
     }
 
-    HitGroupsTable() { };
-    ~HitGroupsTable() {
+    HitGroups() { };
+    ~HitGroups() {
         if (!beenInitialized){
             return;
         }
@@ -107,11 +96,11 @@ public:
         free(groupName);
     }
 
-    HitGroupsTable(const HitGroupsTable& other) = delete;
-    HitGroupsTable& operator=(const HitGroupsTable& other) = delete;
+    HitGroups(const HitGroups& other) = delete;
+    HitGroups& operator=(const HitGroups& other) = delete;
 };
 
-class GamesTable : public ColStore {
+class Games : public ColStore {
 public:
     char ** demoFile;
     double * demoTickRate;
@@ -126,8 +115,8 @@ public:
         gameType = (int64_t *) malloc(rows * sizeof(int64_t));
     }
 
-    GamesTable() { };
-    ~GamesTable() {
+    Games() { };
+    ~Games() {
         if (!beenInitialized){
             return;
         }
@@ -141,11 +130,11 @@ public:
         free(gameType);
     }
 
-    GamesTable(const GamesTable& other) = delete;
-    GamesTable& operator=(const GamesTable& other) = delete;
+    Games(const Games& other) = delete;
+    Games& operator=(const Games& other) = delete;
 };
 
-class PlayersTable : public ColStore {
+class Players : public ColStore {
 public:
     int64_t * gameId;
     char ** name;
@@ -158,8 +147,8 @@ public:
         steamId = (int64_t *) malloc(rows * sizeof(int64_t));
     }
 
-    PlayersTable() { };
-    ~PlayersTable() {
+    Players() { };
+    ~Players() {
         if (!beenInitialized){
             return;
         }
@@ -172,11 +161,11 @@ public:
         free(steamId);
     }
 
-    PlayersTable(const PlayersTable& other) = delete;
-    PlayersTable& operator=(const PlayersTable& other) = delete;
+    Players(const Players& other) = delete;
+    Players& operator=(const Players& other) = delete;
 };
 
-class RoundsTable : public ColStore {
+class Rounds : public ColStore {
 public:
     int64_t * gameId;
     int64_t * startTick;
@@ -203,8 +192,8 @@ public:
         ctWins = (int8_t *) malloc(rows * sizeof(int8_t));
     }
 
-    RoundsTable() { };
-    ~RoundsTable() {
+    Rounds() { };
+    ~Rounds() {
         if (!beenInitialized){
             return;
         }
@@ -221,11 +210,11 @@ public:
         free(ctWins);
     }
 
-    RoundsTable(const RoundsTable& other) = delete;
-    RoundsTable& operator=(const RoundsTable& other) = delete;
+    Rounds(const Rounds& other) = delete;
+    Rounds& operator=(const Rounds& other) = delete;
 };
 
-class TicksTable: public ColStore {
+class Ticks: public ColStore {
 public:
     int64_t * roundId;
     int64_t * gameTime;
@@ -248,8 +237,8 @@ public:
         bombZ = (double *) malloc(rows * sizeof(double));
     }
 
-    TicksTable() { };
-    ~TicksTable() {
+    Ticks() { };
+    ~Ticks() {
         if (!beenInitialized){
             return;
         }
@@ -263,8 +252,8 @@ public:
         free(bombZ);
     }
 
-    TicksTable(const TicksTable& other) = delete;
-    TicksTable& operator=(const TicksTable& other) = delete;
+    Ticks(const Ticks& other) = delete;
+    Ticks& operator=(const Ticks& other) = delete;
 
     /*
     // since spotted tracks names for spotted player, need to map that to the player index
@@ -294,7 +283,7 @@ public:
      */
 };
 
-class PlayerAtTickTable: public ColStore {
+class PlayerAtTick: public ColStore {
 public:
     int64_t * playerId;
     int64_t * tickId;
@@ -372,8 +361,8 @@ public:
     }
 
 
-    PlayerAtTickTable() { };
-    ~PlayerAtTickTable() {
+    PlayerAtTick() { };
+    ~PlayerAtTick() {
         if (!beenInitialized){
             return;
         }
@@ -409,8 +398,8 @@ public:
         free(money);
     }
 
-    PlayerAtTickTable(const PlayerAtTickTable& other) = delete;
-    PlayerAtTickTable& operator=(const PlayerAtTickTable& other) = delete;
+    PlayerAtTick(const PlayerAtTick& other) = delete;
+    PlayerAtTick& operator=(const PlayerAtTick& other) = delete;
 
     /*
     // since spotted tracks names for spotted player, need to map that to the player index
@@ -440,7 +429,7 @@ public:
      */
 };
 
-class SpottedTable : public ColStore {
+class Spotted : public ColStore {
 public:
     int64_t * tickId;
     int64_t * spottedPlayer;
@@ -455,8 +444,8 @@ public:
         isSpotted = (bool *) malloc(rows * sizeof(bool));
     }
 
-    SpottedTable() { };
-    ~SpottedTable() {
+    Spotted() { };
+    ~Spotted() {
         if (!beenInitialized){
             return;
         }
@@ -466,11 +455,11 @@ public:
         free(isSpotted);
     }
 
-    SpottedTable(const SpottedTable& other) = delete;
-    SpottedTable& operator=(const SpottedTable& other) = delete;
+    Spotted(const Spotted& other) = delete;
+    Spotted& operator=(const Spotted& other) = delete;
 };
 
-class WeaponFireTable : public ColStore {
+class WeaponFire : public ColStore {
 public:
     int64_t * tickId;
     int64_t * shooter;
@@ -483,8 +472,8 @@ public:
         weapon = (int8_t *) malloc(rows * sizeof(int8_t));
     }
 
-    WeaponFireTable() { };
-    ~WeaponFireTable() {
+    WeaponFire() { };
+    ~WeaponFire() {
         if (!beenInitialized){
             return;
         }
@@ -493,11 +482,11 @@ public:
         free(weapon);
     }
 
-    WeaponFireTable(const WeaponFireTable& other) = delete;
-    WeaponFireTable& operator=(const WeaponFireTable& other) = delete;
+    WeaponFire(const WeaponFire& other) = delete;
+    WeaponFire& operator=(const WeaponFire& other) = delete;
 };
 
-class PlayerHurtTable : public ColStore {
+class PlayerHurt : public ColStore {
 public:
     char ** victimName;
     int32_t * armorDamage;
