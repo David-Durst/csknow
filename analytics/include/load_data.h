@@ -18,11 +18,13 @@ class ColStore {
 public:
     bool beenInitialized = false;
     int64_t size;
+    vector<string> fileNames;
     vector<int64_t> id;
     set<int64_t> skipRows;
     virtual void init(int64_t rows, int64_t numFiles, vector<int64_t> id) {
         beenInitialized = true;
         size = rows;
+        fileNames.resize(numFiles);
         this->id = id;
     }
 };
@@ -495,7 +497,7 @@ public:
     int64_t * assister;
     bool * isHeadshot;
     bool * isWallbang;
-    int32_t * penetratedObject;
+    int32_t * penetratedObjects;
 
     void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) {
         ColStore::init(rows, numFiles, gameStarts);
@@ -506,7 +508,7 @@ public:
         assister = (int64_t *) malloc(rows * sizeof(int64_t));
         isHeadshot = (bool *) malloc(rows * sizeof(int64_t));
         isWallbang = (bool *) malloc(rows * sizeof(int64_t));
-        penetratedObject = (int32_t *) malloc(rows * sizeof(int32_t));
+        penetratedObjects = (int32_t *) malloc(rows * sizeof(int32_t));
     }
 
     Kills() { };
@@ -520,7 +522,7 @@ public:
         free(assister);
         free(isHeadshot);
         free(isWallbang);
-        free(penetratedObject);
+        free(penetratedObjects);
     }
 
     Kills(const Kills& other) = delete;
