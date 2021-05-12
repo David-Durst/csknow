@@ -15,19 +15,18 @@ class ColStore {
 public:
     bool beenInitialized = false;
     int64_t size;
-    vector<string> fileNames;
-    vector<int64_t> gameStarts;
+    vector<int64_t> id;
     set<int64_t> skipRows;
-    virtual void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) {
+    virtual void init(int64_t rows, int64_t numFiles, vector<int64_t> id) {
         beenInitialized = true;
         size = rows;
-        fileNames.resize(numFiles);
-        this->gameStarts = gameStarts;
+        this->id = id;
     }
 };
 
-#define CT_TEAM 3
-#define T_TEAM 2
+#define CT_TEAM 0
+#define T_TEAM 1
+#define SPECTATOR 2
 struct PlayerPosition {
     char ** name;
     int8_t * team;
@@ -40,106 +39,234 @@ struct PlayerPosition {
     bool * isBlinded;
 };
 
-class Position: public ColStore {
+class EquipmentTable : public ColStore {
 public:
-    vector<int64_t> firstRowAfterWarmup;
-    int32_t * demoTickNumber;
-    int32_t * gameTickNumber;
-    bool * matchStarted;
-    int8_t * gamePhase;
-    int8_t * roundsPlayed;
-    bool * isWarmup;
-    bool * roundStart;
-    bool * roundEnd;
-    int8_t * roundEndReason;
-    bool * freezeTimeEnded;
-    int8_t * tScore;
-    int8_t * ctScore;
-    int8_t * numPlayers;
-    PlayerPosition players[NUM_PLAYERS];
-    int32_t * demoFile;
-    
+    char ** name;
+
     void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) {
         ColStore::init(rows, numFiles, gameStarts);
-        firstRowAfterWarmup.resize(numFiles);
-        demoTickNumber = (int32_t *) malloc(rows * sizeof(int32_t));
-        gameTickNumber = (int32_t *) malloc(rows * sizeof(int32_t));
-        matchStarted = (bool *) malloc(rows * sizeof(bool));
-        gamePhase = (int8_t *) malloc(rows * sizeof(int8_t));
-        roundsPlayed = (int8_t *) malloc(rows * sizeof(int8_t));
-        isWarmup = (bool *) malloc(rows * sizeof(bool));
-        roundStart = (bool *) malloc(rows * sizeof(bool));
-        roundEnd = (bool *) malloc(rows * sizeof(bool));
-        roundEndReason = (int8_t *) malloc(rows * sizeof(int8_t));
-        freezeTimeEnded = (bool *) malloc(rows * sizeof(bool));
-        tScore = (int8_t *) malloc(rows * sizeof(int8_t));
-        ctScore = (int8_t *) malloc(rows * sizeof(int8_t));
-        numPlayers = (int8_t *) malloc(rows * sizeof(int8_t));
-        for (int i = 0; i < NUM_PLAYERS; i++) {
-            players[i].name = (char **) malloc(rows * sizeof(char*));
-            players[i].team = (int8_t *) malloc(rows * sizeof(int8_t));
-            players[i].xPosition = (double *) malloc(rows * sizeof(double));
-            players[i].yPosition = (double *) malloc(rows * sizeof(double));
-            players[i].zPosition = (double *) malloc(rows * sizeof(double));
-            players[i].xViewDirection = (double *) malloc(rows * sizeof(double));
-            players[i].yViewDirection = (double *) malloc(rows * sizeof(double));
-            players[i].isAlive = (bool *) malloc(rows * sizeof(bool));
-            players[i].isBlinded = (bool *) malloc(rows * sizeof(bool));
-        }
-        demoFile = (int32_t *) malloc(rows * sizeof(int32_t*));
+        name = (char **) malloc(rows * sizeof(char*));
     }
 
-    void makePitchNeg90To90() {
-#pragma omp parallel for
-        for (int64_t i = 0; i < size; i++) {
-            for (int p = 0; p < 10; p++) {
-                if (players[p].yViewDirection[i] > 260.0) {
-                    players[p].yViewDirection[i] -= 360;
-                }
-            }
-        }
-    }
-
-
-    Position() { };
-    ~Position() {
+    EquipmentTable() { };
+    ~EquipmentTable() {
         if (!beenInitialized){
             return;
         }
-        free(demoTickNumber);
-        free(gameTickNumber);
-        free(matchStarted);
-        free(gamePhase);
-        free(roundsPlayed);
-        free(isWarmup);
-        free(roundStart);
-        free(roundEnd);
-        free(roundEndReason);
-        free(freezeTimeEnded);
-        free(tScore);
-        free(ctScore);
-        free(numPlayers);
-
-        for (int i = 0; i < NUM_PLAYERS; i++) {
-            for (int64_t row = 0; row < size; row++) {
-                free(players[i].name[row]);
-            }
-            free(players[i].name);
-            free(players[i].team);
-            free(players[i].xPosition);
-            free(players[i].yPosition);
-            free(players[i].zPosition);
-            free(players[i].xViewDirection);
-            free(players[i].yViewDirection);
-            free(players[i].isAlive);
-            free(players[i].isBlinded);
+        for (int64_t row = 0; row < size; row++) {
+            free(name[row]);
         }
-        free(demoFile);
+        free(name);
     }
 
-    Position(const Position& other) = delete;
-    Position& operator=(const Position& other) = delete;
+    EquipmentTable(const EquipmentTable& other) = delete;
+    EquipmentTable& operator=(const EquipmentTable& other) = delete;
+};
 
+class GameTypesTable : public ColStore {
+public:
+    char ** tableType;
+
+    void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) {
+        ColStore::init(rows, numFiles, gameStarts);
+        tableType = (char **) malloc(rows * sizeof(char*));
+    }
+
+    GameTypesTable() { };
+    ~GameTypesTable() {
+        if (!beenInitialized){
+            return;
+        }
+        for (int64_t row = 0; row < size; row++) {
+            free(tableType[row]);
+        }
+        free(tableType);
+    }
+
+    GameTypesTable(const GameTypesTable& other) = delete;
+    GameTypesTable& operator=(const GameTypesTable& other) = delete;
+};
+
+class HitGroupsTable : public ColStore {
+public:
+    char ** groupName;
+
+    void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) {
+        ColStore::init(rows, numFiles, gameStarts);
+        groupName = (char **) malloc(rows * sizeof(char*));
+    }
+
+    HitGroupsTable() { };
+    ~HitGroupsTable() {
+        if (!beenInitialized){
+            return;
+        }
+        for (int64_t row = 0; row < size; row++) {
+            free(groupName[row]);
+        }
+        free(groupName);
+    }
+
+    HitGroupsTable(const HitGroupsTable& other) = delete;
+    HitGroupsTable& operator=(const HitGroupsTable& other) = delete;
+};
+
+class GamesTable : public ColStore {
+public:
+    char ** demoFile;
+    double * demoTickRate;
+    double * gameTickRate;
+    int64_t * gameType;
+
+    void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) {
+        ColStore::init(rows, numFiles, gameStarts);
+        demoFile = (char **) malloc(rows * sizeof(char*));
+        demoTickRate = (double *) malloc(rows * sizeof(double));
+        gameTickRate = (double *) malloc(rows * sizeof(double));
+        gameType = (int64_t *) malloc(rows * sizeof(int64_t));
+    }
+
+    GamesTable() { };
+    ~GamesTable() {
+        if (!beenInitialized){
+            return;
+        }
+        for (int64_t row = 0; row < size; row++) {
+            free(demoFile[row]);
+        }
+        free(demoFile);
+
+        free(demoTickRate);
+        free(gameTickRate);
+        free(gameType);
+    }
+
+    GamesTable(const GamesTable& other) = delete;
+    GamesTable& operator=(const GamesTable& other) = delete;
+};
+
+class PlayersTable : public ColStore {
+public:
+    int64_t * gameId;
+    char ** name;
+    int64_t * steamId;
+
+    void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) {
+        ColStore::init(rows, numFiles, gameStarts);
+        gameId = (int64_t *) malloc(rows * sizeof(int64_t));
+        name = (char **) malloc(rows * sizeof(char*));
+        steamId = (int64_t *) malloc(rows * sizeof(int64_t));
+    }
+
+    PlayersTable() { };
+    ~PlayersTable() {
+        if (!beenInitialized){
+            return;
+        }
+        for (int64_t row = 0; row < size; row++) {
+            free(name[row]);
+        }
+        free(name);
+
+        free(gameId);
+        free(steamId);
+    }
+
+    PlayersTable(const PlayersTable& other) = delete;
+    PlayersTable& operator=(const PlayersTable& other) = delete;
+};
+
+class RoundsTable : public ColStore {
+public:
+    int64_t * gameId;
+    int64_t * startTick;
+    int64_t * endTick;
+    bool * warmup;
+    int64_t * freezeTimeEnd;
+    int8_t * roundNumber;
+    int8_t * roundEndReason;
+    int8_t * winner;
+    int8_t * tWins;
+    int8_t * ctWins;
+
+    void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) {
+        ColStore::init(rows, numFiles, gameStarts);
+        gameId = (int64_t *) malloc(rows * sizeof(int64_t));
+        startTick = (int64_t *) malloc(rows * sizeof(int64_t));
+        endTick = (int64_t *) malloc(rows * sizeof(int64_t));
+        warmup = (bool *) malloc(rows * sizeof(bool));
+        freezeTimeEnd = (int64_t *) malloc(rows * sizeof(int64_t));
+        roundNumber = (int8_t *) malloc(rows * sizeof(int8_t));
+        roundEndReason = (int8_t *) malloc(rows * sizeof(int8_t));
+        winner = (int8_t *) malloc(rows * sizeof(int8_t));
+        tWins = (int8_t *) malloc(rows * sizeof(int8_t));
+        ctWins = (int8_t *) malloc(rows * sizeof(int8_t));
+    }
+
+    RoundsTable() { };
+    ~RoundsTable() {
+        if (!beenInitialized){
+            return;
+        }
+
+        free(gameId);
+        free(startTick);
+        free(endTick);
+        free(warmup);
+        free(freezeTimeEnd);
+        free(roundNumber);
+        free(roundEndReason);
+        free(winner);
+        free(tWins);
+        free(ctWins);
+    }
+
+    RoundsTable(const RoundsTable& other) = delete;
+    RoundsTable& operator=(const RoundsTable& other) = delete;
+};
+
+class TicksTable: public ColStore {
+public:
+    int64_t * roundId;
+    int64_t * gameTime;
+    int64_t * demoTickNumber;
+    int64_t * gameTickNumber;
+    int64_t * bombCarrier;
+    double * bombX;
+    double * bombY;
+    double * bombZ;
+
+    void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) {
+        ColStore::init(rows, numFiles, gameStarts);
+        roundId = (int64_t *) malloc(rows * sizeof(int64_t));
+        gameTime = (int64_t *) malloc(rows * sizeof(int64_t));
+        demoTickNumber = (int64_t *) malloc(rows * sizeof(int64_t));
+        gameTickNumber = (int64_t *) malloc(rows * sizeof(int64_t));
+        bombCarrier = (int64_t *) malloc(rows * sizeof(int64_t));
+        bombX = (double *) malloc(rows * sizeof(double));
+        bombY = (double *) malloc(rows * sizeof(double));
+        bombZ = (double *) malloc(rows * sizeof(double));
+    }
+
+    TicksTable() { };
+    ~TicksTable() {
+        if (!beenInitialized){
+            return;
+        }
+        free(roundId);
+        free(gameTime);
+        free(demoTickNumber);
+        free(gameTickNumber);
+        free(bombCarrier);
+        free(bombX);
+        free(bombY);
+        free(bombZ);
+    }
+
+    TicksTable(const TicksTable& other) = delete;
+    TicksTable& operator=(const TicksTable& other) = delete;
+
+    /*
     // since spotted tracks names for spotted player, need to map that to the player index
 
     map<string, int> getPlayerNameToIndex(int64_t gameIndex) const {
@@ -164,93 +291,213 @@ public:
         }
         return result;
     }
+     */
 };
 
-struct SpotterPlayer {
-    char ** playerName;
-    bool * playerSpotter;
-};
-
-class Spotted : public ColStore {
+class PlayerAtTickTable: public ColStore {
 public:
-    char ** spottedPlayer;
-    SpotterPlayer spotters[NUM_PLAYERS];
-    int32_t * demoTickNumber;
-    int32_t * demoFile;
+    int64_t * playerId;
+    int64_t * tickId;
+    double * posX;
+    double * posY;
+    double * posZ;
+    double * viewX;
+    double * viewY;
+    int8_t * team;
+    double * health;
+    double * armor;
+    bool * isAlive;
+    bool * isCrouching;
+    bool * isAirborne;
+    double * remainingFlashTime;
+    int8_t * activeWeapon;
+    int8_t * primaryWeapon;
+    int8_t * primaryBulletsClip;
+    int8_t * primaryBulletsReserve;
+    int8_t * secondaryWeapon;
+    int8_t * secondaryBulletsClip;
+    int8_t * secondaryBulletsReserve;
+    int8_t * numHe;
+    int8_t * numFlash;
+    int8_t * numSmoke;
+    int8_t * numMolotov;
+    int8_t * numIncendiary;
+    int8_t * numDecoy;
+    int8_t * numZeus;
+    bool * hasDefuser;
+    bool * hasBomb;
+    int32_t * money;
 
     void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) {
         ColStore::init(rows, numFiles, gameStarts);
-        spottedPlayer = (char **) malloc(rows * sizeof(char*));
-        for (int i = 0; i < NUM_PLAYERS; i++) {
-            spotters[i].playerName = (char **) malloc(rows * sizeof(char*));
-            spotters[i].playerSpotter = (bool *) malloc(rows * sizeof(bool));
-
-        }
-        demoTickNumber = (int32_t *) malloc(rows * sizeof(int32_t));
-        demoFile = (int32_t *) malloc(rows * sizeof(int32_t));
+        playerId = (int64_t *) malloc(rows * sizeof(int64_t));
+        tickId = (int64_t *) malloc(rows * sizeof(int64_t));
+        posX = (double *) malloc(rows * sizeof(double));
+        posY = (double *) malloc(rows * sizeof(double));
+        posZ = (double *) malloc(rows * sizeof(double));
+        viewX = (double *) malloc(rows * sizeof(double));
+        viewY = (double *) malloc(rows * sizeof(double));
+        team = (int8_t *) malloc(rows * sizeof(int8_t));
+        health = (double *) malloc(rows * sizeof(double));
+        armor = (double *) malloc(rows * sizeof(double));
+        isAlive = (bool *) malloc(rows * sizeof(bool));
+        isCrouching = (bool *) malloc(rows * sizeof(bool));
+        isAirborne = (bool *) malloc(rows * sizeof(bool));
+        remainingFlashTime = (double *) malloc(rows * sizeof(double));
+        activeWeapon = (int8_t *) malloc(rows * sizeof(int8_t));
+        primaryWeapon = (int8_t *) malloc(rows * sizeof(int8_t));
+        primaryBulletsClip = (int8_t *) malloc(rows * sizeof(int8_t));
+        primaryBulletsReserve = (int8_t *) malloc(rows * sizeof(int8_t));
+        secondaryWeapon = (int8_t *) malloc(rows * sizeof(int8_t));
+        secondaryBulletsClip = (int8_t *) malloc(rows * sizeof(int8_t));
+        secondaryBulletsReserve = (int8_t *) malloc(rows * sizeof(int8_t));
+        numHe = (int8_t *) malloc(rows * sizeof(int8_t));
+        numFlash = (int8_t *) malloc(rows * sizeof(int8_t));
+        numSmoke = (int8_t *) malloc(rows * sizeof(int8_t));
+        numMolotov = (int8_t *) malloc(rows * sizeof(int8_t));
+        numIncendiary = (int8_t *) malloc(rows * sizeof(int8_t));
+        numDecoy = (int8_t *) malloc(rows * sizeof(int8_t));
+        numZeus = (int8_t *) malloc(rows * sizeof(int8_t));
+        hasDefuser = (bool *) malloc(rows * sizeof(bool));
+        hasBomb = (bool *) malloc(rows * sizeof(bool));
+        money = (int32_t *) malloc(rows * sizeof(int32_t));
     }
 
-    Spotted() { };
-    ~Spotted() {
-        if (!beenInitialized){
-            return;
-        }
-        for (int64_t row = 0; row < size; row++) {
-            free(spottedPlayer[row]);
-        }
-
-        for (int i = 0; i < NUM_PLAYERS; i++) {
-            for (int64_t row = 0; row < size; row++) {
-                free(spotters[i].playerName[row]);
+    void makePitchNeg90To90() {
+        for (int64_t i = 0; i < size; i++) {
+            if (viewY[i] > 260.0) {
+                viewY[i] -= 360;
             }
-            free(spotters[i].playerName);
-            free(spotters[i].playerSpotter);
         }
-
-        free(demoTickNumber);
-        free(demoFile);
     }
 
-    Spotted(const Spotted& other) = delete;
-    Spotted& operator=(const Spotted& other) = delete;
-};
 
-class WeaponFire : public ColStore {
-public:
-    char ** shooter;
-    char ** weapon;
-    int32_t * demoTickNumber;
-    int32_t * demoFile;
-
-    void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) {
-        ColStore::init(rows, numFiles, gameStarts);
-        shooter = (char **) malloc(rows * sizeof(char*));
-        weapon = (char **) malloc(rows * sizeof(char*));
-        demoTickNumber = (int32_t *) malloc(rows * sizeof(int32_t));
-        demoFile = (int32_t *) malloc(rows * sizeof(int32_t));
-    }
-
-    WeaponFire() { };
-    ~WeaponFire() {
+    PlayerAtTickTable() { };
+    ~PlayerAtTickTable() {
         if (!beenInitialized){
             return;
         }
-        for (int64_t row = 0; row < size; row++) {
-            free(shooter[row]);
-            free(weapon[row]);
+        free(playerId);
+        free(tickId);
+        free(posX);
+        free(posY);
+        free(posZ);
+        free(viewX);
+        free(team);
+        free(health);
+        free(armor);
+        free(isAlive);
+        free(isCrouching);
+        free(isAirborne);
+        free(remainingFlashTime);
+        free(activeWeapon);
+        free(primaryWeapon);
+        free(primaryBulletsClip);
+        free(primaryBulletsReserve);
+        free(secondaryWeapon);
+        free(secondaryBulletsClip);
+        free(secondaryBulletsReserve);
+        free(numHe);
+        free(numFlash);
+        free(numSmoke);
+        free(numMolotov);
+        free(numIncendiary);
+        free(numDecoy);
+        free(numZeus);
+        free(hasDefuser);
+        free(hasBomb);
+        free(money);
+    }
+
+    PlayerAtTickTable(const PlayerAtTickTable& other) = delete;
+    PlayerAtTickTable& operator=(const PlayerAtTickTable& other) = delete;
+
+    /*
+    // since spotted tracks names for spotted player, need to map that to the player index
+
+    map<string, int> getPlayerNameToIndex(int64_t gameIndex) const {
+        map<string, int> result;
+        for (int i = 0; i < NUM_PLAYERS; i++) {
+            result.insert({players[i].name[firstRowAfterWarmup[gameIndex]], i});
         }
+        return result;
+    }
+
+    map<int, vector<int>> getEnemiesForTeam(int64_t gameIndex) const {
+        map<int, vector<int>> result;
+        result.insert({2, {}});
+        result.insert({3, {}});
+        for (int i = 0; i < NUM_PLAYERS; i++) {
+            if (players[i].team[firstRowAfterWarmup[gameIndex]] == 2) {
+                result[3].push_back(i);
+            }
+            else {
+                result[2].push_back(i);
+            }
+        }
+        return result;
+    }
+     */
+};
+
+class SpottedTable : public ColStore {
+public:
+    int64_t * tickId;
+    int64_t * spottedPlayer;
+    int64_t * spotterPlayer;
+    bool * isSpotted;
+
+    void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) {
+        ColStore::init(rows, numFiles, gameStarts);
+        tickId = (int64_t *) malloc(rows * sizeof(int64_t));
+        spottedPlayer = (int64_t *) malloc(rows * sizeof(int64_t));
+        spotterPlayer = (int64_t *) malloc(rows * sizeof(int64_t));
+        isSpotted = (bool *) malloc(rows * sizeof(bool));
+    }
+
+    SpottedTable() { };
+    ~SpottedTable() {
+        if (!beenInitialized){
+            return;
+        }
+        free(tickId);
+        free(spottedPlayer);
+        free(spotterPlayer);
+        free(isSpotted);
+    }
+
+    SpottedTable(const SpottedTable& other) = delete;
+    SpottedTable& operator=(const SpottedTable& other) = delete;
+};
+
+class WeaponFireTable : public ColStore {
+public:
+    int64_t * tickId;
+    int64_t * shooter;
+    int8_t * weapon;
+
+    void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) {
+        ColStore::init(rows, numFiles, gameStarts);
+        tickId = (int64_t *) malloc(rows * sizeof(int64_t));
+        shooter = (int64_t *) malloc(rows * sizeof(int64_t));
+        weapon = (int8_t *) malloc(rows * sizeof(int8_t));
+    }
+
+    WeaponFireTable() { };
+    ~WeaponFireTable() {
+        if (!beenInitialized){
+            return;
+        }
+        free(tickId);
         free(shooter);
         free(weapon);
-
-        free(demoTickNumber);
-        free(demoFile);
     }
 
-    WeaponFire(const WeaponFire& other) = delete;
-    WeaponFire& operator=(const WeaponFire& other) = delete;
+    WeaponFireTable(const WeaponFireTable& other) = delete;
+    WeaponFireTable& operator=(const WeaponFireTable& other) = delete;
 };
 
-class PlayerHurt : public ColStore {
+class PlayerHurtTable : public ColStore {
 public:
     char ** victimName;
     int32_t * armorDamage;
