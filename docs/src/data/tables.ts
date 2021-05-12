@@ -135,8 +135,8 @@ export class PlayerAtTickRow extends Row {
         this.viewX = parseFloat(otherColumnValues[4]);
         this.viewY = parseFloat(otherColumnValues[5]);
         this.team = parseInt(otherColumnValues[6]);
-        this.health = parseInt(otherColumnValues[7]);
-        this.armor = parseInt(otherColumnValues[8]);
+        this.health = parseFloat(otherColumnValues[7]);
+        this.armor = parseFloat(otherColumnValues[8]);
         this.isAlive = parseBool(otherColumnValues[9]);
     }
 }
