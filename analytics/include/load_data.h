@@ -486,115 +486,27 @@ public:
     WeaponFire& operator=(const WeaponFire& other) = delete;
 };
 
-class PlayerHurt : public ColStore {
+class Kills : public ColStore {
 public:
-    char ** victimName;
-    int32_t * armorDamage;
-    int32_t * armor;
-    int32_t * healthDamage;
-    int32_t * health;
-    char ** attacker;
-    char ** weapon;
-    int32_t * demoTickNumber;
-    int32_t * demoFile;
-
-    void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) {
-        ColStore::init(rows, numFiles, gameStarts);
-        victimName = (char **) malloc(rows * sizeof(char *));
-        armorDamage = (int32_t *) malloc(rows * sizeof(int32_t));
-        armor = (int32_t *) malloc(rows * sizeof(int32_t));
-        healthDamage = (int32_t *) malloc(rows * sizeof(int32_t));
-        health = (int32_t *) malloc(rows * sizeof(int32_t));
-        attacker = (char **) malloc(rows * sizeof(char *));
-        weapon = (char **) malloc(rows * sizeof(char *));
-        demoTickNumber = (int32_t *) malloc(rows * sizeof(int32_t));
-        demoFile = (int32_t *) malloc(rows * sizeof(int32_t));
-    }
-
-    PlayerHurt() { };
-    ~PlayerHurt() {
-        if (!beenInitialized){
-            return;
-        }
-        free(armorDamage);
-        free(armor);
-        free(healthDamage);
-        free(health);
-
-        for (int64_t row = 0; row < size; row++) {
-            free(victimName[row]);
-            free(attacker[row]);
-            free(weapon[row]);
-        }
-        free(attacker);
-        free(weapon);
-
-        free(demoTickNumber);
-        free(demoFile);
-    }
-
-    PlayerHurt(const PlayerHurt& other) = delete;
-    PlayerHurt& operator=(const PlayerHurt& other) = delete;
-};
-
-struct Grenades : public ColStore {
-public:
-    char ** thrower;
-    char ** grenadeType;
-    int32_t * demoTickNumber;
-    int32_t * demoFile;
-
-    void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) {
-        ColStore::init(rows, numFiles, gameStarts);
-        thrower = (char **) malloc(rows * sizeof(char *));
-        grenadeType = (char **) malloc(rows * sizeof(char *));
-        demoTickNumber = (int32_t *) malloc(rows * sizeof(int32_t));
-        demoFile = (int32_t *) malloc(rows * sizeof(int32_t));
-    }
-
-    Grenades() { };
-    ~Grenades() {
-        if (!beenInitialized){
-            return;
-        }
-        for (int64_t row = 0; row < size; row++) {
-            free(thrower[row]);
-            free(grenadeType[row]);
-        }
-        free(thrower);
-        free(grenadeType);
-
-        free(demoTickNumber);
-        free(demoFile);
-    }
-
-    Grenades(const Grenades& other) = delete;
-    Grenades& operator=(const Grenades& other) = delete;
-};
-
-struct Kills : public ColStore {
-public:
-    char ** killer;
-    char ** victim;
-    char ** weapon;
-    char ** assister;
+    int64_t * tickId;
+    int64_t * killer;
+    int64_t * victim;
+    int8_t * weapon;
+    int64_t * assister;
     bool * isHeadshot;
     bool * isWallbang;
-    int32_t * penetratedObjects;
-    int32_t * demoTickNumber;
-    int32_t * demoFile;
+    int32_t * penetratedObject;
 
     void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) {
         ColStore::init(rows, numFiles, gameStarts);
-        killer = (char **) malloc(rows * sizeof(char *));
-        victim = (char **) malloc(rows * sizeof(char *));
-        weapon = (char **) malloc(rows * sizeof(char *));
-        assister = (char **) malloc(rows * sizeof(char *));
-        isHeadshot = (bool *) malloc(rows * sizeof(bool));
-        isWallbang = (bool *) malloc(rows * sizeof(bool));
-        penetratedObjects = (int32_t *) malloc(rows * sizeof(int32_t));
-        demoTickNumber = (int32_t *) malloc(rows * sizeof(int32_t));
-        demoFile = (int32_t *) malloc(rows * sizeof(int32_t));
+        tickId = (int64_t *) malloc(rows * sizeof(int64_t));
+        killer = (int64_t *) malloc(rows * sizeof(int64_t));
+        victim = (int64_t *) malloc(rows * sizeof(int64_t));
+        weapon = (int8_t *) malloc(rows * sizeof(int8_t));
+        assister = (int64_t *) malloc(rows * sizeof(int64_t));
+        isHeadshot = (bool *) malloc(rows * sizeof(int64_t));
+        isWallbang = (bool *) malloc(rows * sizeof(int64_t));
+        penetratedObject = (int32_t *) malloc(rows * sizeof(int32_t));
     }
 
     Kills() { };
@@ -602,30 +514,253 @@ public:
         if (!beenInitialized){
             return;
         }
-        free(isHeadshot);
-        free(isWallbang);
-        free(penetratedObjects);
-
-        for (int64_t row = 0; row < size; row++) {
-            free(killer[row]);
-            free(victim[row]);
-            free(weapon[row]);
-            free(assister[row]);
-        }
+        free(tickId);
         free(killer);
-        free(victim);
         free(weapon);
         free(assister);
-
-        free(demoTickNumber);
-        free(demoFile);
+        free(isHeadshot);
+        free(isWallbang);
+        free(penetratedObject);
     }
 
     Kills(const Kills& other) = delete;
     Kills& operator=(const Kills& other) = delete;
 };
 
-void loadData(Position & position, Spotted & spotted, WeaponFire & weaponFire, PlayerHurt & playerHurt,
-               Grenades & grenades, Kills & kills, string dataPath);
+class Hurt : public ColStore {
+public:
+    int64_t * tickId;
+    int64_t * victim;
+    int64_t * attacker;
+    int8_t * weapon;
+    int32_t * armorDamage;
+    int32_t * armor;
+    int32_t * healthDamage;
+    int32_t * health;
+    int64_t * hitGroup;
+
+    void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) {
+        ColStore::init(rows, numFiles, gameStarts);
+        tickId = (int64_t *) malloc(rows * sizeof(int64_t));
+        victim = (int64_t *) malloc(rows * sizeof(int64_t));
+        attacker = (int64_t *) malloc(rows * sizeof(int64_t));
+        weapon = (int8_t *) malloc(rows * sizeof(int8_t));
+        armorDamage = (int32_t *) malloc(rows * sizeof(int32_t));
+        armor = (int32_t *) malloc(rows * sizeof(int32_t));
+        healthDamage = (int32_t *) malloc(rows * sizeof(int32_t));
+        health = (int32_t *) malloc(rows * sizeof(int32_t));
+        hitGroup = (int64_t *) malloc(rows * sizeof(int64_t));
+    }
+
+    Hurt() { };
+    ~Hurt() {
+        if (!beenInitialized){
+            return;
+        }
+        free(tickId);
+        free(victim);
+        free(attacker);
+        free(weapon);
+        free(armorDamage);
+        free(armor);
+        free(healthDamage);
+        free(health);
+        free(hitGroup);
+    }
+
+    Hurt(const Hurt& other) = delete;
+    Hurt& operator=(const Hurt& other) = delete;
+};
+
+class Grenades : public ColStore {
+public:
+    int64_t * thrower;
+    int8_t * grenadeType;
+    int64_t * throwTick;
+    int64_t * activeTick;
+    int64_t * expiredTick;
+    int64_t * destroyTick;
+
+    void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) {
+        ColStore::init(rows, numFiles, gameStarts);
+        thrower = (int64_t *) malloc(rows * sizeof(int64_t));
+        grenadeType = (int8_t *) malloc(rows * sizeof(int8_t));
+        throwTick = (int64_t *) malloc(rows * sizeof(int64_t));
+        activeTick = (int64_t *) malloc(rows * sizeof(int64_t));
+        expiredTick = (int64_t *) malloc(rows * sizeof(int64_t));
+        destroyTick = (int64_t *) malloc(rows * sizeof(int64_t));
+    }
+
+    Grenades() { };
+    ~Grenades() {
+        if (!beenInitialized){
+            return;
+        }
+        free(thrower);
+        free(grenadeType);
+        free(throwTick);
+        free(activeTick);
+        free(expiredTick);
+        free(destroyTick);
+    }
+
+    Grenades(const Grenades& other) = delete;
+    Grenades& operator=(const Grenades& other) = delete;
+};
+
+class Flashed : public ColStore {
+public:
+    int64_t * tickId;
+    int64_t * grenadeId;
+    int64_t * thrower;
+    int64_t * victim;
+
+    void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) {
+        ColStore::init(rows, numFiles, gameStarts);
+        tickId = (int64_t *) malloc(rows * sizeof(int64_t));
+        grenadeId = (int64_t *) malloc(rows * sizeof(int64_t));
+        thrower = (int64_t *) malloc(rows * sizeof(int64_t));
+        victim = (int64_t *) malloc(rows * sizeof(int64_t));
+    }
+
+    Flashed() { };
+    ~Flashed() {
+        if (!beenInitialized){
+            return;
+        }
+        free(tickId);
+        free(grenadeId);
+        free(thrower);
+        free(victim);
+    }
+
+    Flashed(const Flashed& other) = delete;
+    Flashed& operator=(const Flashed& other) = delete;
+};
+
+class GrenadeTrajectories : public ColStore {
+public:
+    int64_t * grenadeId;
+    int32_t * idPerGrenade;
+    double * posX;
+    double * posY;
+    double * posZ;
+
+    void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) {
+        ColStore::init(rows, numFiles, gameStarts);
+        grenadeId = (int64_t *) malloc(rows * sizeof(int64_t));
+        idPerGrenade = (int32_t *) malloc(rows * sizeof(int32_t));
+        posX = (double *) malloc(rows * sizeof(double));
+        posY = (double *) malloc(rows * sizeof(double));
+        posZ = (double *) malloc(rows * sizeof(double));
+    }
+
+    GrenadeTrajectories() { };
+    ~GrenadeTrajectories() {
+        if (!beenInitialized){
+            return;
+        }
+        free(grenadeId);
+        free(idPerGrenade);
+        free(posX);
+        free(posY);
+        free(posZ);
+    }
+
+    GrenadeTrajectories(const GrenadeTrajectories& other) = delete;
+    GrenadeTrajectories& operator=(const GrenadeTrajectories& other) = delete;
+};
+
+class Plants : public ColStore {
+public:
+    int64_t * startTick;
+    int64_t * endTick;
+    int64_t * planter;
+    bool * succesful;
+
+    void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) {
+        ColStore::init(rows, numFiles, gameStarts);
+        startTick = (int64_t *) malloc(rows * sizeof(int64_t));
+        endTick = (int64_t *) malloc(rows * sizeof(int64_t));
+        planter = (int64_t *) malloc(rows * sizeof(int64_t));
+        succesful = (bool *) malloc(rows * sizeof(bool));
+    }
+
+    Plants() { };
+    ~Plants() {
+        if (!beenInitialized){
+            return;
+        }
+        free(startTick);
+        free(endTick);
+        free(planter);
+        free(succesful);
+    }
+
+    Plants(const Plants& other) = delete;
+    Plants& operator=(const Plants& other) = delete;
+};
+
+class Defusals : public ColStore {
+public:
+    int64_t * plantId;
+    int64_t * startTick;
+    int64_t * endTick;
+    int64_t * defuser;
+    bool * succesful;
+
+    void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) {
+        ColStore::init(rows, numFiles, gameStarts);
+        plantId = (int64_t *) malloc(rows * sizeof(int64_t));
+        startTick = (int64_t *) malloc(rows * sizeof(int64_t));
+        endTick = (int64_t *) malloc(rows * sizeof(int64_t));
+        defuser = (int64_t *) malloc(rows * sizeof(int64_t));
+        succesful = (bool *) malloc(rows * sizeof(bool));
+    }
+
+    Defusals() { };
+    ~Defusals() {
+        if (!beenInitialized){
+            return;
+        }
+        free(plantId);
+        free(startTick);
+        free(endTick);
+        free(defuser);
+        free(succesful);
+    }
+
+    Defusals(const Defusals& other) = delete;
+    Defusals& operator=(const Defusals& other) = delete;
+};
+
+class Explosions : public ColStore {
+public:
+    int64_t * plantId;
+    int64_t * tickId;
+
+    void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) {
+        ColStore::init(rows, numFiles, gameStarts);
+        plantId = (int64_t *) malloc(rows * sizeof(int64_t));
+        tickId = (int64_t *) malloc(rows * sizeof(int64_t));
+    }
+
+    Explosions() { };
+    ~Explosions() {
+        if (!beenInitialized){
+            return;
+        }
+        free(plantId);
+        free(tickId);
+    }
+
+    Explosions(const Explosions& other) = delete;
+    Explosions& operator=(const Explosions& other) = delete;
+};
+
+void loadData(Equipment & equipment, GameTypes & gameTypes, HitGroups & hitGroups, Games & games, Players & players,
+              Rounds & rounds, Ticks & ticks, PlayerAtTick & playerAtTick, Spotted & spotted, WeaponFire & weaponFire,
+              Kills & kills, Hurt & hurt, Grenades & grenades, Flashed & flashed, GrenadeTrajectories & grenadeTrajectories,
+              Plants & plants, Defusals & defusals, Explosions & explosions, string dataPath);
 
 #endif //CSKNOW_LOAD_DATA_H
