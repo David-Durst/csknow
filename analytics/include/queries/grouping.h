@@ -7,7 +7,7 @@
 #define GROUPING_DISTANCE 700
 #define MAX_GROUP_SIZE 5
 using std::string;
-
+/*
 class GroupingResult : public JustTargetResult {
 public:
     vector<int64_t> gameStarts;
@@ -38,6 +38,6 @@ public:
 };
 
 GroupingResult queryGrouping(const Position & position);
-
+*/
 
 #endif //CSKNOW_GROUPING_H

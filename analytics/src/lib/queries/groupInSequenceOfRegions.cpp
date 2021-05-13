@@ -7,7 +7,7 @@
 #include <map>
 using std::set;
 using std::map;
-
+/*
 GroupInSequenceOfRegionsResult queryGroupingInSequenceOfRegions(const Position & position,
                                                                 const GroupingResult & groupingResult,
                                                                 vector<CompoundAABB> sequenceOfRegions,
@@ -166,3 +166,4 @@ GroupInSequenceOfRegionsResult queryGroupingInSequenceOfRegions(const Position &
     }
     return result;
 }
+*/

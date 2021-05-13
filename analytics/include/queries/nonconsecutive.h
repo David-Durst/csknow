@@ -7,7 +7,7 @@
 #include <iomanip>
 using std::string;
 using std::map;
-
+/*
 class NonConsecutiveResult : public NoSourceTargetQuery {
 public:
     vector<int64_t> gameStarts;
@@ -29,5 +29,5 @@ public:
 };
 
 NonConsecutiveResult queryNonConsecutive(const Position & position);
-
+*/
 #endif //CSKNOW_NONCONSECUTIVE_H

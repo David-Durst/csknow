@@ -7,7 +7,7 @@
 #include <iomanip>
 using std::string;
 using std::map;
-
+/*
 class VelocityResult : public NoSourceTargetQuery {
 public:
     vector<int64_t> gameStarts;
@@ -39,5 +39,5 @@ public:
 };
 
 VelocityResult queryVelocity(const Position & position);
-
+*/
 #endif //CSKNOW_VELOCITY_H

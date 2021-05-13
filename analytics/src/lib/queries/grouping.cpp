@@ -17,7 +17,7 @@ static inline __attribute__((always_inline))
 double quadMax(double base, double a, double b, double c) {
     return std::max(base, std::max(a, std::max(b, c)));
 }
-
+/*
 static inline __attribute__((always_inline))
 void adjustMinMaxRegion(const Position & position, int64_t index, AABB & region, int playerA, int playerB, int playerC) {
     region.min.x = quadMin(region.min.x, position.players[playerA].xPosition[index],
@@ -187,3 +187,4 @@ GroupingResult queryGrouping(const Position & position) {
     result.gameStarts[numGames] = result.positionIndex.size();
     return result;
 }
+*/

@@ -6,7 +6,7 @@
 
 using std::set;
 using std::map;
-
+/*
 NonConsecutiveResult queryNonConsecutive(const Position & position) {
     int64_t numGames = position.gameStarts.size() - 1;
     int numThreads = omp_get_max_threads();
@@ -51,3 +51,4 @@ NonConsecutiveResult queryNonConsecutive(const Position & position) {
     return result;
 }
 
+*/

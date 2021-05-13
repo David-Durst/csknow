@@ -24,11 +24,11 @@ public:
         return {"ally death tick"};
     }
 
-    vector<string> getExtraRow(const Position & position, int64_t queryIndex, int64_t posIndex) {
+    vector<string> getExtraRow(const Ticks & ticks, const PlayerAtTick & pat, int64_t queryIndex, int64_t posIndex) {
         return {std::to_string(allyDeathTicks[queryIndex])};
     }
 };
 
-BaitersResult queryBaiters(const Position & position, const Kills & kills, const SpottedIndex & spottedIndex);
+BaitersResult queryBaiters(const Ticks & ticks, const PlayerAtTick & pat, const Kills & kills, const SpottedIndex & spottedIndex);
 
 #endif //CSKNOW_BAITERS_H

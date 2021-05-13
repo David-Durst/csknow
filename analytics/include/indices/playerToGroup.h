@@ -8,7 +8,7 @@ class PlayerToGroupIndex {
 public:
     // for each player, for each tick, a vector of indices in grouping
     vector<vector<int64_t>> groupsPerPlayerTick[NUM_PLAYERS];
-    PlayerToGroupIndex(const Position & position, const GroupingResult & groupingResult);
+    PlayerToGroupIndex(const Ticks & ticks, const PlayerAtTick & pat, const GroupingResult & groupingResult);
 };
 
 #endif //CSKNOW_PLAYERTOGROUP_H

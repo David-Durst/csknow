@@ -9,7 +9,7 @@ using std::set;
 using std::map;
 // TODO: replace this with a reset time per weapon
 #define RESET_TIME 32
-
+/*
 NetcodeResult queryNetcode(const Position & position, const WeaponFire & weaponFire,
                            const PlayerHurt & playerHurt, const SpottedIndex & spottedIndex) {
     int64_t numGames = position.gameStarts.size() - 1;
@@ -132,3 +132,4 @@ NetcodeResult queryNetcode(const Position & position, const WeaponFire & weaponF
     }
     return result;
 }
+*/

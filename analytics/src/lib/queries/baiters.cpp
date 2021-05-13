@@ -7,7 +7,7 @@
 
 using std::set;
 using std::map;
-
+/*
 static inline __attribute__((always_inline))
 bool withinVelocityRadius(const Position &position, int baiter, int victim, int64_t curIndex, int64_t windowStartIndex,
                           int tOffset) {
@@ -125,3 +125,4 @@ BaitersResult queryBaiters(const Position &position, const Kills &kills, const S
     }
     return result;
 }
+*/

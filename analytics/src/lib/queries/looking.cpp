@@ -6,7 +6,7 @@
 
 using std::set;
 using std::map;
-
+/*
 LookingResult queryLookers(const Position & position) {
     int64_t numGames = position.gameStarts.size() - 1;
     int numThreads = omp_get_max_threads();
@@ -76,3 +76,4 @@ LookingResult queryLookers(const Position & position) {
     return result;
 }
 
+*/

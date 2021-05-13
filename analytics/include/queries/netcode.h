@@ -7,7 +7,7 @@
 #include <map>
 using std::string;
 using std::map;
-
+/*
 class NetcodeResult : public SourceAndTargetResult {
 public:
     vector<int> & shooters = sources;
@@ -66,5 +66,5 @@ const map<string, double> weaponAccurateRanges {
     {"UMP-45", metersToUnits(10.56)},
     {"XM1014", metersToUnits(3.39)}
 };
-
+*/
 #endif //CSKNOW_NETCODE_H

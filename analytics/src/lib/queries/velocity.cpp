@@ -6,7 +6,7 @@
 
 using std::set;
 using std::map;
-
+/*
 VelocityResult queryVelocity(const Position & position) {
     int64_t numGames = position.gameStarts.size() - 1;
     int numThreads = omp_get_max_threads();
@@ -63,3 +63,4 @@ VelocityResult queryVelocity(const Position & position) {
     return result;
 }
 
+*/

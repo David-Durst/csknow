@@ -7,7 +7,7 @@ class SpottedIndex {
 public:
     // visible[i][j] - is i visible to j
     vector<bool> visible[NUM_PLAYERS][NUM_PLAYERS];
-    SpottedIndex(const Position & position, const Spotted & spotted);
+    SpottedIndex(const Ticks & ticks, const PlayerAtTick & pat, const Spotted & spotted);
 };
 
 #endif //CSKNOW_SPOTTED_H

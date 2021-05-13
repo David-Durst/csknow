@@ -31,7 +31,7 @@ enum DataType {
     justTarget = 2,
     srcAndTarget = 3
 };
-
+/*
 class QueryResult {
 public:
     vector<int64_t> positionIndex;
@@ -245,5 +245,5 @@ struct SourceAndTarget {
         return source < cv.source || ((source == cv.source) && target < cv.target);
     }
 };
-
+*/
 #endif //CSKNOW_QUERY_H

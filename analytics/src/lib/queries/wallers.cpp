@@ -13,7 +13,7 @@ struct CheaterAndVictim {
         return cheater < cv.cheater || ((cheater == cv.cheater) && victim < cv.victim);
     }
 };
-
+/*
 WallersResult queryWallers(const Position & position, const Spotted & spotted) {
     int64_t numGames = position.gameStarts.size() - 1;
     int numThreads = omp_get_max_threads();
@@ -172,3 +172,4 @@ WallersResult queryWallers(const Position & position, const Spotted & spotted) {
     }
     return result;
 }
+*/

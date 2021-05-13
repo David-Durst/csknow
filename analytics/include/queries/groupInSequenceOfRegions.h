@@ -6,7 +6,7 @@
 #include "queries/grouping.h"
 #include <string>
 using std::string;
-
+/*
 class GroupInSequenceOfRegionsResult : public JustTargetResult {
 public:
     vector<CompoundAABB> sequenceOfRegions;
@@ -76,5 +76,5 @@ GroupInSequenceOfRegionsResult queryGroupingInSequenceOfRegions(const Position &
                                                                 vector<bool> wantToReachRegions,
                                                                 vector<bool> stillGrouped,
                                                                 set<int> teams);
-
+*/
 #endif //CSKNOW_GROUPINSEQUENCEOFREGIONS_H

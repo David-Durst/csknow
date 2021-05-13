@@ -7,7 +7,7 @@
 #include <map>
 using std::string;
 using std::map;
-
+/*
 class LookingResult : public SourceAndTargetResult {
 public:
     vector<int> & lookers = sources;
@@ -32,5 +32,5 @@ public:
 };
 
 LookingResult queryLookers(const Position & position);
-
+*/
 #endif //CSKNOW_LOOKING_H

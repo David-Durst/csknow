@@ -1,7 +1,8 @@
 #include "indices/playerToGroup.h"
 #include "omp.h"
 
-PlayerToGroupIndex::PlayerToGroupIndex(const Position &position, const GroupingResult &groupingResult) {
+PlayerToGroupIndex(const Ticks & ticks, const PlayerAtTick & pat, const GroupingResult & groupingResult) {
+    /*
     int64_t numGames = groupingResult.gameStarts.size() - 1;
     int numThreads = omp_get_max_threads();
     vector<vector<int64_t>> tmpGroupsPerPlayerTick[numThreads][NUM_PLAYERS];
@@ -41,4 +42,5 @@ PlayerToGroupIndex::PlayerToGroupIndex(const Position &position, const GroupingR
             }
         }
     }
+     */
 }

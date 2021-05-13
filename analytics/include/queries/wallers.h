@@ -5,7 +5,7 @@
 #include <string>
 #define WALL_WINDOW_SIZE 64
 using std::string;
-
+/*
 class WallersResult : public SourceAndTargetResult {
 public:
     vector<int> & cheaters = sources;
@@ -28,5 +28,5 @@ public:
 };
 
 WallersResult queryWallers(const Position & position, const Spotted & spotted);
-
+*/
 #endif //CSKNOW_WALLERS_H
