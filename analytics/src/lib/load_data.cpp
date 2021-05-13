@@ -148,7 +148,7 @@ void readCol(const char * file, size_t start, size_t end, int64_t rowNumber, int
 
 static inline __attribute__((always_inline))
 void readCol(const char * file, size_t start, size_t end, int64_t rowNumber, int64_t colNumber, int64_t & value) {
-    auto messages = std::from_chars(&file[start], &file[end] - 1, value);
+    auto messages = std::from_chars(&file[start], &file[end], value);
     printParsingError(messages.ec, rowNumber, colNumber);
 }
 
@@ -385,7 +385,12 @@ void loadPlayersFile(Players & players, string filePath, int64_t fileRowStart, i
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, players.id[arrayEntry]);
         }
         else if (colNumber == 1) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, players.gameId[arrayEntry]);
+            if (file[curStart] == '\\') {
+                players.gameId[arrayEntry] = -1;
+            }
+            else {
+                readCol(file, curStart, curDelimiter, rowNumber, colNumber, players.gameId[arrayEntry]);
+            }
         }
         else if (colNumber == 2) {
             readCol(file, curStart, curDelimiter, &players.name[arrayEntry]);
