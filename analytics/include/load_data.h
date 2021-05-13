@@ -19,13 +19,14 @@ public:
     bool beenInitialized = false;
     int64_t size;
     vector<string> fileNames;
+    vector<int64_t> gameStarts;
     vector<int64_t> id;
-    set<int64_t> skipRows;
-    virtual void init(int64_t rows, int64_t numFiles, vector<int64_t> id) {
+    virtual void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) {
         beenInitialized = true;
         size = rows;
         fileNames.resize(numFiles);
-        this->id = id;
+        this->gameStarts = gameStarts;
+        this->id.resize(rows);
     }
 };
 
