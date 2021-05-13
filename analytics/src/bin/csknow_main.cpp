@@ -48,25 +48,53 @@ int main(int argc, char * argv[]) {
     string timestamp = timestampSS.str();
     std::cout << "timestamp: " << timestamp << std::endl;
 
-    Position position;
+    Equipment equipment;
+    GameTypes gameTypes;
+    HitGroups hitGroups;
+    Games games;
+    Players players;
+    Rounds rounds;
+    Ticks ticks;
+    PlayerAtTick playerAtTick;
     Spotted spotted;
     WeaponFire weaponFire;
-    PlayerHurt playerHurt;
-    Grenades grenades;
     Kills kills;
-
-    loadData(position, spotted, weaponFire, playerHurt, grenades, kills, dataPath);
+    Hurt hurt;
+    Grenades grenades;
+    Flashed flashed;
+    GrenadeTrajectories grenadeTrajectories;
+    Plants plants;
+    Defusals defusals;
+    Explosions explosions;
+    
+    loadData(equipment, gameTypes, hitGroups, games, players, rounds, ticks, playerAtTick, spotted, weaponFire,
+             kills, hurt, grenades, flashed, grenadeTrajectories, plants, defusals, explosions, dataPath);
     //std::printf("GLIBCXX: %d\n",__GLIBCXX__);
-    std::cout << "num elements in position: " << position.size << std::endl;
+    std::cout << "num elements in equipment: " << equipment.size << std::endl;
+    std::cout << "num elements in game_types: " << gameTypes.size << std::endl;
+    std::cout << "num elements in hit_groups: " << hitGroups.size << std::endl;
+    std::cout << "num elements in games: " << games.size << std::endl;
+    std::cout << "num elements in players: " << players.size << std::endl;
+    std::cout << "num elements in rounds: " << rounds.size << std::endl;
+    std::cout << "num elements in ticks: " << ticks.size << std::endl;
+    std::cout << "num elements in playerAtTick: " << playerAtTick.size << std::endl;
     std::cout << "num elements in spotted: " << spotted.size << std::endl;
     std::cout << "num elements in weaponFire: " << weaponFire.size << std::endl;
-    std::cout << "num elements in playerHurt: " << playerHurt.size << std::endl;
-    std::cout << "num elements in grenades: " << grenades.size << std::endl;
     std::cout << "num elements in kills: " << kills.size << std::endl;
+    std::cout << "num elements in hurt: " << hurt.size << std::endl;
+    std::cout << "num elements in grenades: " << grenades.size << std::endl;
+    std::cout << "num elements in flashed: " << flashed.size << std::endl;
+    std::cout << "num elements in grenadeTrajectories: " << grenadeTrajectories.size << std::endl;
+    std::cout << "num elements in plants: " << plants.size << std::endl;
+    std::cout << "num elements in defusals: " << defusals.size << std::endl;
+    std::cout << "num elements in explosions: " << explosions.size << std::endl;
 
+    /*
     SpottedIndex spottedIndex(position, spotted);
     std::cout << "built spotted index" << std::endl;
+     */
 
+    /*
     VelocityResult velocityResult = queryVelocity(position);
     std::cout << "velocity moments: " << velocityResult.positionIndex.size() << std::endl;
     LookingResult lookersResult = queryLookers(position);
@@ -118,8 +146,10 @@ int main(int argc, char * argv[]) {
         {queryNames[7], successfulATakes},
         {queryNames[8], failedATakes},
     };
+     */
 
     // create the output files and the metadata describing files
+    /*
     if (writeOutput) {
         for (const auto & [name, result] : queries) {
             std::fstream fs;
@@ -164,9 +194,11 @@ int main(int argc, char * argv[]) {
             versions.close();
         }
     }
+     */
 
     if (runServer) {
         httplib::Server svr;
+        /*
         svr.Get("/query/(\\w+)", [&](const httplib::Request & req, httplib::Response &res) {
             string resultType = req.matches[1];
             res.set_header("Access-Control-Allow-Origin", "*");
@@ -189,9 +221,12 @@ int main(int argc, char * argv[]) {
                 res.status = 404;
             }
         });
+         */
 
+        // list schema is: d/q (d for dataset, q for query), 
         svr.Get("/list", [&](const httplib::Request & req, httplib::Response &res) {
             std::stringstream ss;
+            /*
             for (const auto queryName : queryNames) {
                 QueryResult & queryValue = queries.find(queryName)->second.get();
                 ss << queryName << "," << queryValue.getKeyNames().size() << ",";
@@ -211,6 +246,7 @@ int main(int argc, char * argv[]) {
                 }
                 ss << std::endl;
             }
+             */
             res.set_content(ss.str(), "text/plain");
             res.set_header("Access-Control-Allow-Origin", "*");
         });

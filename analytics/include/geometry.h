@@ -179,13 +179,13 @@ bool intersectP(const AABB & box, const Ray & ray, double & hitt0, double & hitt
 }
 
 static inline __attribute__((always_inline))
-double computeDistance(const Position &position, int source, int target, int64_t sourceIndex, int64_t targetIndex) {
+double computeDistance(const PlayerAtTick & playerAtTick, int64_t sourceIndex, int64_t targetIndex) {
     double xDistance =
-            position.players[source].xPosition[sourceIndex] - position.players[target].xPosition[targetIndex];
+            playerAtTick.posX[sourceIndex] - playerAtTick.posX[targetIndex];
     double yDistance =
-            position.players[source].yPosition[sourceIndex] - position.players[target].yPosition[targetIndex];
+            playerAtTick.posY[sourceIndex] - playerAtTick.posY[targetIndex];
     double zDistance =
-            position.players[source].zPosition[sourceIndex] - position.players[target].zPosition[targetIndex];
+            playerAtTick.posZ[sourceIndex] - playerAtTick.posZ[targetIndex];
     return sqrt(xDistance * xDistance + yDistance * yDistance + zDistance * zDistance);
 }
 

@@ -6,7 +6,7 @@
 #include <string>
 #define BAIT_WINDOW_SIZE 64
 using std::string;
-
+/*
 class BaitersResult : public SourceAndTargetResult {
 public:
     vector<int> & baiters = sources;
@@ -30,5 +30,5 @@ public:
 };
 
 BaitersResult queryBaiters(const Ticks & ticks, const PlayerAtTick & pat, const Kills & kills, const SpottedIndex & spottedIndex);
-
+*/
 #endif //CSKNOW_BAITERS_H

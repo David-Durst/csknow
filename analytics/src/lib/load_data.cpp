@@ -148,7 +148,7 @@ void readCol(const char * file, size_t start, size_t end, int64_t rowNumber, int
 
 static inline __attribute__((always_inline))
 void readCol(const char * file, size_t start, size_t end, int64_t rowNumber, int64_t colNumber, int64_t & value) {
-    auto messages = std::from_chars(&file[start], &file[end], value);
+    auto messages = std::from_chars(&file[start], &file[end] - 1, value);
     printParsingError(messages.ec, rowNumber, colNumber);
 }
 
@@ -262,7 +262,7 @@ void loadGameTypes(GameTypes & gameTypes, string dataPath) {
     std::cout << "allocating arrays" << std::endl;
     gameTypes.init(rows, 1, startingPointPerFile);
 
-    std::cout << "loading equipment off disk" << std::endl;
+    std::cout << "loading game_types off disk" << std::endl;
     gameTypes.fileNames[0] = fileName;
     loadGameTypesFile(gameTypes, filePath);
 }
@@ -306,7 +306,7 @@ void loadHitGroups(HitGroups & hitGroups, string dataPath) {
     std::cout << "allocating arrays" << std::endl;
     hitGroups.init(rows, 1, startingPointPerFile);
 
-    std::cout << "loading equipment off disk" << std::endl;
+    std::cout << "loading hit_groups off disk" << std::endl;
     hitGroups.fileNames[0] = fileName;
     loadHitGroupsFile(hitGroups, filePath);
 }
@@ -359,9 +359,9 @@ void loadGames(Games & games, string dataPath) {
     std::cout << "allocating arrays" << std::endl;
     games.init(rows, 1, startingPointPerFile);
 
-    std::cout << "loading equipment off disk" << std::endl;
+    std::cout << "loading games off disk" << std::endl;
     games.fileNames[0] = fileName;
-    loadGames(games, filePath);
+    loadGamesFile(games, filePath);
 }
 
 void loadPlayersFile(Players & players, string filePath, int64_t fileRowStart, int32_t fileNumber) {
@@ -548,7 +548,7 @@ void loadTicks(Ticks & ticks, string dataPath) {
 
     std::cout << "loading ticks off disk" << std::endl;
     std::atomic<int> filesProcessed = 0;
-#pragma omp parallel for
+//#pragma omp parallel for
     for (int64_t fileIndex = 0; fileIndex < filePaths.size(); fileIndex++) {
         loadTicksFile(ticks, filePaths[fileIndex], startingPointPerFile[fileIndex], fileIndex);
         filesProcessed++;

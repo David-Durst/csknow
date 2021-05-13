@@ -1,8 +1,7 @@
 #include "indices/spotted.h"
 #include "omp.h"
-
+/*
 SpottedIndex(const Ticks & ticks, const PlayerAtTick & pat, const Spotted & spotted) {
-    /*
     int64_t numGames = spotted.gameStarts.size() - 1;
     int numThreads = omp_get_max_threads();
     vector<bool> tmpVisible[numThreads][NUM_PLAYERS][NUM_PLAYERS];
@@ -64,6 +63,6 @@ SpottedIndex(const Ticks & ticks, const PlayerAtTick & pat, const Spotted & spot
             }
         }
     }
-     */
 }
+     */
 
