@@ -175,11 +175,11 @@ public:
     int64_t * endTick;
     bool * warmup;
     int64_t * freezeTimeEnd;
-    int8_t * roundNumber;
-    int8_t * roundEndReason;
-    int8_t * winner;
-    int8_t * tWins;
-    int8_t * ctWins;
+    int16_t * roundNumber;
+    int16_t * roundEndReason;
+    int16_t * winner;
+    int16_t * tWins;
+    int16_t * ctWins;
 
     void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) {
         ColStore::init(rows, numFiles, gameStarts);
@@ -188,11 +188,11 @@ public:
         endTick = (int64_t *) malloc(rows * sizeof(int64_t));
         warmup = (bool *) malloc(rows * sizeof(bool));
         freezeTimeEnd = (int64_t *) malloc(rows * sizeof(int64_t));
-        roundNumber = (int8_t *) malloc(rows * sizeof(int8_t));
-        roundEndReason = (int8_t *) malloc(rows * sizeof(int8_t));
-        winner = (int8_t *) malloc(rows * sizeof(int8_t));
-        tWins = (int8_t *) malloc(rows * sizeof(int8_t));
-        ctWins = (int8_t *) malloc(rows * sizeof(int8_t));
+        roundNumber = (int16_t *) malloc(rows * sizeof(int16_t));
+        roundEndReason = (int16_t *) malloc(rows * sizeof(int16_t));
+        winner = (int16_t *) malloc(rows * sizeof(int16_t));
+        tWins = (int16_t *) malloc(rows * sizeof(int16_t));
+        ctWins = (int16_t *) malloc(rows * sizeof(int16_t));
     }
 
     Rounds() { };
@@ -295,27 +295,28 @@ public:
     double * posZ;
     double * viewX;
     double * viewY;
-    int8_t * team;
+    int16_t * team;
     double * health;
     double * armor;
+    bool * hasHelmet;
     bool * isAlive;
     bool * isCrouching;
     bool * isAirborne;
     double * remainingFlashTime;
-    int8_t * activeWeapon;
-    int8_t * primaryWeapon;
-    int8_t * primaryBulletsClip;
-    int8_t * primaryBulletsReserve;
-    int8_t * secondaryWeapon;
-    int8_t * secondaryBulletsClip;
-    int8_t * secondaryBulletsReserve;
-    int8_t * numHe;
-    int8_t * numFlash;
-    int8_t * numSmoke;
-    int8_t * numMolotov;
-    int8_t * numIncendiary;
-    int8_t * numDecoy;
-    int8_t * numZeus;
+    int16_t * activeWeapon;
+    int16_t * primaryWeapon;
+    int16_t * primaryBulletsClip;
+    int16_t * primaryBulletsReserve;
+    int16_t * secondaryWeapon;
+    int16_t * secondaryBulletsClip;
+    int16_t * secondaryBulletsReserve;
+    int16_t * numHe;
+    int16_t * numFlash;
+    int16_t * numSmoke;
+    int16_t * numMolotov;
+    int16_t * numIncendiary;
+    int16_t * numDecoy;
+    int16_t * numZeus;
     bool * hasDefuser;
     bool * hasBomb;
     int32_t * money;
@@ -329,27 +330,28 @@ public:
         posZ = (double *) malloc(rows * sizeof(double));
         viewX = (double *) malloc(rows * sizeof(double));
         viewY = (double *) malloc(rows * sizeof(double));
-        team = (int8_t *) malloc(rows * sizeof(int8_t));
+        team = (int16_t *) malloc(rows * sizeof(int16_t));
         health = (double *) malloc(rows * sizeof(double));
         armor = (double *) malloc(rows * sizeof(double));
+        hasHelmet = (bool *) malloc(rows * sizeof(bool));
         isAlive = (bool *) malloc(rows * sizeof(bool));
         isCrouching = (bool *) malloc(rows * sizeof(bool));
         isAirborne = (bool *) malloc(rows * sizeof(bool));
         remainingFlashTime = (double *) malloc(rows * sizeof(double));
-        activeWeapon = (int8_t *) malloc(rows * sizeof(int8_t));
-        primaryWeapon = (int8_t *) malloc(rows * sizeof(int8_t));
-        primaryBulletsClip = (int8_t *) malloc(rows * sizeof(int8_t));
-        primaryBulletsReserve = (int8_t *) malloc(rows * sizeof(int8_t));
-        secondaryWeapon = (int8_t *) malloc(rows * sizeof(int8_t));
-        secondaryBulletsClip = (int8_t *) malloc(rows * sizeof(int8_t));
-        secondaryBulletsReserve = (int8_t *) malloc(rows * sizeof(int8_t));
-        numHe = (int8_t *) malloc(rows * sizeof(int8_t));
-        numFlash = (int8_t *) malloc(rows * sizeof(int8_t));
-        numSmoke = (int8_t *) malloc(rows * sizeof(int8_t));
-        numMolotov = (int8_t *) malloc(rows * sizeof(int8_t));
-        numIncendiary = (int8_t *) malloc(rows * sizeof(int8_t));
-        numDecoy = (int8_t *) malloc(rows * sizeof(int8_t));
-        numZeus = (int8_t *) malloc(rows * sizeof(int8_t));
+        activeWeapon = (int16_t *) malloc(rows * sizeof(int16_t));
+        primaryWeapon = (int16_t *) malloc(rows * sizeof(int16_t));
+        primaryBulletsClip = (int16_t *) malloc(rows * sizeof(int16_t));
+        primaryBulletsReserve = (int16_t *) malloc(rows * sizeof(int16_t));
+        secondaryWeapon = (int16_t *) malloc(rows * sizeof(int16_t));
+        secondaryBulletsClip = (int16_t *) malloc(rows * sizeof(int16_t));
+        secondaryBulletsReserve = (int16_t *) malloc(rows * sizeof(int16_t));
+        numHe = (int16_t *) malloc(rows * sizeof(int16_t));
+        numFlash = (int16_t *) malloc(rows * sizeof(int16_t));
+        numSmoke = (int16_t *) malloc(rows * sizeof(int16_t));
+        numMolotov = (int16_t *) malloc(rows * sizeof(int16_t));
+        numIncendiary = (int16_t *) malloc(rows * sizeof(int16_t));
+        numDecoy = (int16_t *) malloc(rows * sizeof(int16_t));
+        numZeus = (int16_t *) malloc(rows * sizeof(int16_t));
         hasDefuser = (bool *) malloc(rows * sizeof(bool));
         hasBomb = (bool *) malloc(rows * sizeof(bool));
         money = (int32_t *) malloc(rows * sizeof(int32_t));
@@ -378,6 +380,7 @@ public:
         free(team);
         free(health);
         free(armor);
+        free(hasHelmet);
         free(isAlive);
         free(isCrouching);
         free(isAirborne);
@@ -466,13 +469,13 @@ class WeaponFire : public ColStore {
 public:
     int64_t * tickId;
     int64_t * shooter;
-    int8_t * weapon;
+    int16_t * weapon;
 
     void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) {
         ColStore::init(rows, numFiles, gameStarts);
         tickId = (int64_t *) malloc(rows * sizeof(int64_t));
         shooter = (int64_t *) malloc(rows * sizeof(int64_t));
-        weapon = (int8_t *) malloc(rows * sizeof(int8_t));
+        weapon = (int16_t *) malloc(rows * sizeof(int16_t));
     }
 
     WeaponFire() { };
@@ -494,7 +497,7 @@ public:
     int64_t * tickId;
     int64_t * killer;
     int64_t * victim;
-    int8_t * weapon;
+    int16_t * weapon;
     int64_t * assister;
     bool * isHeadshot;
     bool * isWallbang;
@@ -505,7 +508,7 @@ public:
         tickId = (int64_t *) malloc(rows * sizeof(int64_t));
         killer = (int64_t *) malloc(rows * sizeof(int64_t));
         victim = (int64_t *) malloc(rows * sizeof(int64_t));
-        weapon = (int8_t *) malloc(rows * sizeof(int8_t));
+        weapon = (int16_t *) malloc(rows * sizeof(int16_t));
         assister = (int64_t *) malloc(rows * sizeof(int64_t));
         isHeadshot = (bool *) malloc(rows * sizeof(int64_t));
         isWallbang = (bool *) malloc(rows * sizeof(int64_t));
@@ -535,7 +538,7 @@ public:
     int64_t * tickId;
     int64_t * victim;
     int64_t * attacker;
-    int8_t * weapon;
+    int16_t * weapon;
     int32_t * armorDamage;
     int32_t * armor;
     int32_t * healthDamage;
@@ -547,7 +550,7 @@ public:
         tickId = (int64_t *) malloc(rows * sizeof(int64_t));
         victim = (int64_t *) malloc(rows * sizeof(int64_t));
         attacker = (int64_t *) malloc(rows * sizeof(int64_t));
-        weapon = (int8_t *) malloc(rows * sizeof(int8_t));
+        weapon = (int16_t *) malloc(rows * sizeof(int16_t));
         armorDamage = (int32_t *) malloc(rows * sizeof(int32_t));
         armor = (int32_t *) malloc(rows * sizeof(int32_t));
         healthDamage = (int32_t *) malloc(rows * sizeof(int32_t));
@@ -578,7 +581,7 @@ public:
 class Grenades : public ColStore {
 public:
     int64_t * thrower;
-    int8_t * grenadeType;
+    int16_t * grenadeType;
     int64_t * throwTick;
     int64_t * activeTick;
     int64_t * expiredTick;
@@ -587,7 +590,7 @@ public:
     void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) {
         ColStore::init(rows, numFiles, gameStarts);
         thrower = (int64_t *) malloc(rows * sizeof(int64_t));
-        grenadeType = (int8_t *) malloc(rows * sizeof(int8_t));
+        grenadeType = (int16_t *) malloc(rows * sizeof(int16_t));
         throwTick = (int64_t *) malloc(rows * sizeof(int64_t));
         activeTick = (int64_t *) malloc(rows * sizeof(int64_t));
         expiredTick = (int64_t *) malloc(rows * sizeof(int64_t));
