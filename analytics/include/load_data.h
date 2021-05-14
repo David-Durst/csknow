@@ -42,7 +42,6 @@ public:
 
     Equipment() { };
     ~Equipment() {
-        /*
         if (!beenInitialized){
             return;
         }
@@ -50,7 +49,6 @@ public:
             free(name[row]);
         }
         free(name);
-         */
     }
 
     Equipment(const Equipment& other) = delete;
@@ -68,7 +66,6 @@ public:
 
     GameTypes() { };
     ~GameTypes() {
-        /*
         if (!beenInitialized){
             return;
         }
@@ -76,7 +73,6 @@ public:
             free(tableType[row]);
         }
         free(tableType);
-         */
     }
 
     GameTypes(const GameTypes& other) = delete;
@@ -94,7 +90,6 @@ public:
 
     HitGroups() { };
     ~HitGroups() {
-        /*
         if (!beenInitialized){
             return;
         }
@@ -102,7 +97,6 @@ public:
             free(groupName[row]);
         }
         free(groupName);
-         */
     }
 
     HitGroups(const HitGroups& other) = delete;
@@ -126,7 +120,6 @@ public:
 
     Games() { };
     ~Games() {
-        /*
         if (!beenInitialized){
             return;
         }
@@ -138,7 +131,6 @@ public:
         free(demoTickRate);
         free(gameTickRate);
         free(gameType);
-         */
     }
 
     Games(const Games& other) = delete;
@@ -164,10 +156,8 @@ public:
             return;
         }
         for (int64_t row = 0; row < size; row++) {
-            std::cout << "freeing: " << &name[row] << std::endl;
             free(name[row]);
         }
-        std::cout << "freeing: " << &name << std::endl;
         free(name);
 
         free(gameId);
@@ -207,7 +197,6 @@ public:
 
     Rounds() { };
     ~Rounds() {
-        /*
         if (!beenInitialized){
             return;
         }
@@ -222,7 +211,6 @@ public:
         free(winner);
         free(tWins);
         free(ctWins);
-         */
     }
 
     Rounds(const Rounds& other) = delete;
@@ -254,7 +242,6 @@ public:
 
     Ticks() { };
     ~Ticks() {
-        /*
         if (!beenInitialized){
             return;
         }
@@ -266,7 +253,6 @@ public:
         free(bombX);
         free(bombY);
         free(bombZ);
-         */
     }
 
     Ticks(const Ticks& other) = delete;
@@ -382,7 +368,6 @@ public:
 
     PlayerAtTick() { };
     ~PlayerAtTick() {
-        /*
         if (!beenInitialized){
             return;
         }
@@ -417,7 +402,6 @@ public:
         free(hasDefuser);
         free(hasBomb);
         free(money);
-         */
     }
 
     PlayerAtTick(const PlayerAtTick& other) = delete;
@@ -468,7 +452,6 @@ public:
 
     Spotted() { };
     ~Spotted() {
-        /*
         if (!beenInitialized){
             return;
         }
@@ -476,7 +459,6 @@ public:
         free(spottedPlayer);
         free(spotterPlayer);
         free(isSpotted);
-         */
     }
 
     Spotted(const Spotted& other) = delete;
@@ -498,14 +480,12 @@ public:
 
     WeaponFire() { };
     ~WeaponFire() {
-        /*
         if (!beenInitialized){
             return;
         }
         free(tickId);
         free(shooter);
         free(weapon);
-         */
     }
 
     WeaponFire(const WeaponFire& other) = delete;
@@ -537,7 +517,6 @@ public:
 
     Kills() { };
     ~Kills() {
-        /*
         if (!beenInitialized){
             return;
         }
@@ -548,7 +527,6 @@ public:
         free(isHeadshot);
         free(isWallbang);
         free(penetratedObjects);
-         */
     }
 
     Kills(const Kills& other) = delete;
@@ -582,7 +560,6 @@ public:
 
     Hurt() { };
     ~Hurt() {
-        /*
         if (!beenInitialized){
             return;
         }
@@ -595,7 +572,6 @@ public:
         free(healthDamage);
         free(health);
         free(hitGroup);
-         */
     }
 
     Hurt(const Hurt& other) = delete;
@@ -623,7 +599,6 @@ public:
 
     Grenades() { };
     ~Grenades() {
-        /*
         if (!beenInitialized){
             return;
         }
@@ -633,7 +608,6 @@ public:
         free(activeTick);
         free(expiredTick);
         free(destroyTick);
-         */
     }
 
     Grenades(const Grenades& other) = delete;
@@ -657,7 +631,6 @@ public:
 
     Flashed() { };
     ~Flashed() {
-        /*
         if (!beenInitialized){
             return;
         }
@@ -665,7 +638,6 @@ public:
         free(grenadeId);
         free(thrower);
         free(victim);
-         */
     }
 
     Flashed(const Flashed& other) = delete;
@@ -691,7 +663,6 @@ public:
 
     GrenadeTrajectories() { };
     ~GrenadeTrajectories() {
-        /*
         if (!beenInitialized){
             return;
         }
@@ -700,7 +671,6 @@ public:
         free(posX);
         free(posY);
         free(posZ);
-         */
     }
 
     GrenadeTrajectories(const GrenadeTrajectories& other) = delete;
@@ -724,7 +694,6 @@ public:
 
     Plants() { };
     ~Plants() {
-        /*
         if (!beenInitialized){
             return;
         }
@@ -732,7 +701,6 @@ public:
         free(endTick);
         free(planter);
         free(succesful);
-         */
     }
 
     Plants(const Plants& other) = delete;
@@ -758,7 +726,6 @@ public:
 
     Defusals() { };
     ~Defusals() {
-        /*
         if (!beenInitialized){
             return;
         }
@@ -767,7 +734,6 @@ public:
         free(endTick);
         free(defuser);
         free(succesful);
-         */
     }
 
     Defusals(const Defusals& other) = delete;
@@ -787,13 +753,11 @@ public:
 
     Explosions() { };
     ~Explosions() {
-        /*
         if (!beenInitialized){
             return;
         }
         free(plantId);
         free(tickId);
-         */
     }
 
     Explosions(const Explosions& other) = delete;
