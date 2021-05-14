@@ -148,24 +148,40 @@ void readCol(const char * file, size_t start, size_t end, int64_t rowNumber, int
 
 static inline __attribute__((always_inline))
 void readCol(const char * file, size_t start, size_t end, int64_t rowNumber, int64_t colNumber, int64_t & value) {
+    if (file[start] == '\\' && file[start+1] == 'N') {
+        value = -1;
+        return;
+    }
     auto messages = std::from_chars(&file[start], &file[end], value);
     printParsingError(messages.ec, rowNumber, colNumber);
 }
 
 static inline __attribute__((always_inline))
 void readCol(const char * file, size_t start, size_t end, int64_t rowNumber, int64_t colNumber, int32_t & value) {
+    if (file[start] == '\\' && file[start+1] == 'N') {
+        value = -1;
+        return;
+    }
     auto messages = std::from_chars(&file[start], &file[end], value);
     printParsingError(messages.ec, rowNumber, colNumber);
 }
 
 static inline __attribute__((always_inline))
 void readCol(const char * file, size_t start, size_t end, int64_t rowNumber, int64_t colNumber, int16_t & value) {
+    if (file[start] == '\\' && file[start+1] == 'N') {
+        value = -1;
+        return;
+    }
     auto messages = std::from_chars(&file[start], &file[end], value);
     printParsingError(messages.ec, rowNumber, colNumber);
 }
 
 static inline __attribute__((always_inline))
 void readCol(const char * file, size_t start, size_t end, int64_t rowNumber, int64_t colNumber, int8_t & value) {
+    if (file[start] == '\\' && file[start+1] == 'N') {
+        value = -1;
+        return;
+    }
     auto messages = std::from_chars(&file[start], &file[end], value);
     printParsingError(messages.ec, rowNumber, colNumber);
 }
@@ -393,12 +409,7 @@ void loadPlayersFile(Players & players, string filePath, int64_t fileRowStart, i
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, players.id[arrayEntry]);
         }
         else if (colNumber == 1) {
-            if (file[curStart] == '\\') {
-                players.gameId[arrayEntry] = -1;
-            }
-            else {
-                readCol(file, curStart, curDelimiter, rowNumber, colNumber, players.gameId[arrayEntry]);
-            }
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, players.gameId[arrayEntry]);
         }
         else if (colNumber == 2) {
             readCol(file, curStart, curDelimiter, &players.name[arrayEntry]);
@@ -981,22 +992,25 @@ void loadGrenadesFile(Grenades & grenades, string filePath, int64_t fileRowStart
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, grenades.id[arrayEntry]);
         }
         else if (colNumber == 1) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, grenades.grenadeType[arrayEntry]);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, grenades.thrower[arrayEntry]);
         }
         else if (colNumber == 2) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, grenades.throwTick[arrayEntry]);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, grenades.grenadeType[arrayEntry]);
         }
         else if (colNumber == 3) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, grenades.activeTick[arrayEntry]);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, grenades.throwTick[arrayEntry]);
         }
         else if (colNumber == 4) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, grenades.expiredTick[arrayEntry]);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, grenades.activeTick[arrayEntry]);
         }
         else if (colNumber == 5) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, grenades.expiredTick[arrayEntry]);
+        }
+        else if (colNumber == 6) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, grenades.destroyTick[arrayEntry]);
             rowNumber++;
         }
-        colNumber = (colNumber + 1) % 6;
+        colNumber = (colNumber + 1) % 7;
     }
     closeMMapFile({fd, stats, file});
 }
@@ -1013,7 +1027,7 @@ void loadGrenades(Grenades & grenades, string dataPath) {
     grenades.init(rows, filePaths.size(), startingPointPerFile);
 
     std::cout << "loading grenades off disk" << std::endl;
-#pragma omp parallel for
+//#pragma omp parallel for
     for (int64_t fileIndex = 0; fileIndex < filePaths.size(); fileIndex++) {
         loadGrenadesFile(grenades, filePaths[fileIndex], startingPointPerFile[fileIndex], fileIndex);
     }
