@@ -223,6 +223,8 @@ void loadEquipmentFile(Equipment & equipment, string filePath) {
         }
         else if (colNumber == 1) {
             readCol(file, curStart, curDelimiter, &equipment.name[arrayEntry]);
+            rowNumber++;
+            arrayEntry++;
         }
         colNumber = (colNumber + 1) % 2;
     }
@@ -267,6 +269,8 @@ void loadGameTypesFile(GameTypes & gameTypes, string filePath) {
         }
         else if (colNumber == 1) {
             readCol(file, curStart, curDelimiter, &gameTypes.tableType[arrayEntry]);
+            rowNumber++;
+            arrayEntry++;
         }
         colNumber = (colNumber + 1) % 2;
     }
