@@ -583,7 +583,7 @@ void loadTicks(Ticks & ticks, string dataPath) {
 
     std::cout << "loading ticks off disk" << std::endl;
     std::atomic<int> filesProcessed = 0;
-//#pragma omp parallel for
+#pragma omp parallel for
     for (int64_t fileIndex = 0; fileIndex < filePaths.size(); fileIndex++) {
         loadTicksFile(ticks, filePaths[fileIndex], startingPointPerFile[fileIndex], fileIndex);
         filesProcessed++;
@@ -763,6 +763,9 @@ void loadSpottedFile(Spotted & spotted, string filePath, int64_t fileRowStart, i
         }
         else if (colNumber == 3) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, spotted.spotterPlayer[arrayEntry]);
+        }
+        else if (colNumber == 4) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, spotted.isSpotted[arrayEntry]);
             rowNumber++;
             arrayEntry++;
         }
@@ -1041,7 +1044,7 @@ void loadGrenades(Grenades & grenades, string dataPath) {
     grenades.init(rows, filePaths.size(), startingPointPerFile);
 
     std::cout << "loading grenades off disk" << std::endl;
-//#pragma omp parallel for
+#pragma omp parallel for
     for (int64_t fileIndex = 0; fileIndex < filePaths.size(); fileIndex++) {
         loadGrenadesFile(grenades, filePaths[fileIndex], startingPointPerFile[fileIndex], fileIndex);
     }
@@ -1068,17 +1071,20 @@ void loadFlashedFile(Flashed & flashed, string filePath, int64_t fileRowStart, i
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, flashed.id[arrayEntry]);
         }
         else if (colNumber == 1) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, flashed.grenadeId[arrayEntry]);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, flashed.tickId[arrayEntry]);
         }
         else if (colNumber == 2) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, flashed.thrower[arrayEntry]);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, flashed.grenadeId[arrayEntry]);
         }
         else if (colNumber == 3) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, flashed.thrower[arrayEntry]);
+        }
+        else if (colNumber == 4) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, flashed.victim[arrayEntry]);
             rowNumber++;
             arrayEntry++;
         }
-        colNumber = (colNumber + 1) % 4;
+        colNumber = (colNumber + 1) % 5;
     }
     closeMMapFile({fd, stats, file});
 }
@@ -1347,10 +1353,8 @@ void loadData(Equipment & equipment, GameTypes & gameTypes, HitGroups & hitGroup
     loadRounds(rounds, dataPath);
     std::cout << "loading ticks" << std::endl;
     loadTicks(ticks, dataPath);
-    /*
     std::cout << "loading player_at_tick" << std::endl;
     loadPlayerAtTick(playerAtTick, dataPath);
-     */
     std::cout << "loading spotted" << std::endl;
     loadSpotted(spotted, dataPath);
     std::cout << "loading weaponFire" << std::endl;
