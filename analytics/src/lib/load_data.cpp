@@ -312,6 +312,7 @@ void loadHitGroupsFile(HitGroups & hitGroups, string filePath) {
         else if (colNumber == 1) {
             readCol(file, curStart, curDelimiter, &hitGroups.groupName[arrayEntry]);
             rowNumber++;
+            arrayEntry++;
         }
         colNumber = (colNumber + 1) % 2;
     }
@@ -366,6 +367,7 @@ void loadGamesFile(Games & games, string filePath) {
         else if (colNumber == 4) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, games.gameType[arrayEntry]);
             rowNumber++;
+            arrayEntry++;
         }
         colNumber = (colNumber + 1) % 5;
     }
@@ -417,6 +419,7 @@ void loadPlayersFile(Players & players, string filePath, int64_t fileRowStart, i
         else if (colNumber == 3) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, players.steamId[arrayEntry]);
             rowNumber++;
+            arrayEntry++;
         }
         colNumber = (colNumber + 1) % 4;
     }
@@ -491,6 +494,7 @@ void loadRoundsFile(Rounds & rounds, string filePath, int64_t fileRowStart, int3
         else if (colNumber == 10) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, rounds.ctWins[arrayEntry]);
             rowNumber++;
+            arrayEntry++;
         }
         colNumber = (colNumber + 1) % 11;
     }
@@ -556,6 +560,7 @@ void loadTicksFile(Ticks & ticks, string filePath, int64_t fileRowStart, int32_t
         else if (colNumber == 7) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, ticks.bombZ[arrayEntry]);
             rowNumber++;
+            arrayEntry++;
         }
         colNumber = (colNumber + 1) % 8;
     }
@@ -699,6 +704,7 @@ void loadPlayerAtTickFile(PlayerAtTick & pat, string filePath, int64_t fileRowSt
         else if (colNumber == 32) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, pat.money[arrayEntry]);
             rowNumber++;
+            arrayEntry++;
         }
         colNumber = (colNumber + 1) % 33;
     }
@@ -755,6 +761,7 @@ void loadSpottedFile(Spotted & spotted, string filePath, int64_t fileRowStart, i
         else if (colNumber == 3) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, spotted.spotterPlayer[arrayEntry]);
             rowNumber++;
+            arrayEntry++;
         }
         colNumber = (colNumber + 1) % 4;
     }
@@ -808,6 +815,7 @@ void loadWeaponFireFile(WeaponFire & weaponFire, string filePath, int64_t fileRo
         else if (colNumber == 3) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, weaponFire.weapon[arrayEntry]);
             rowNumber++;
+            arrayEntry++;
         }
         colNumber = (colNumber + 1) % 4;
     }
@@ -876,6 +884,7 @@ void loadKillsFile(Kills & kills, string filePath, int64_t fileRowStart, int32_t
         else if (colNumber == 8) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, kills.penetratedObjects[arrayEntry]);
             rowNumber++;
+            arrayEntry++;
         }
         colNumber = (colNumber + 1) % 9;
     }
@@ -947,6 +956,7 @@ void loadHurtFile(Hurt & hurt, string filePath, int64_t fileRowStart, int32_t fi
         else if (colNumber == 9) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, hurt.hitGroup[arrayEntry]);
             rowNumber++;
+            arrayEntry++;
         }
         colNumber = (colNumber + 1) % 10;
     }
@@ -1009,6 +1019,7 @@ void loadGrenadesFile(Grenades & grenades, string filePath, int64_t fileRowStart
         else if (colNumber == 6) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, grenades.destroyTick[arrayEntry]);
             rowNumber++;
+            arrayEntry++;
         }
         colNumber = (colNumber + 1) % 7;
     }
@@ -1062,6 +1073,7 @@ void loadFlashedFile(Flashed & flashed, string filePath, int64_t fileRowStart, i
         else if (colNumber == 3) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, flashed.victim[arrayEntry]);
             rowNumber++;
+            arrayEntry++;
         }
         colNumber = (colNumber + 1) % 4;
     }
@@ -1121,6 +1133,7 @@ void loadGrenadeTrajectoriesFile(GrenadeTrajectories & grenadeTrajectories, stri
         else if (colNumber == 5) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, grenadeTrajectories.posZ[arrayEntry]);
             rowNumber++;
+            arrayEntry++;
         }
         colNumber = (colNumber + 1) % 6;
     }
@@ -1177,6 +1190,7 @@ void loadPlantsFile(Plants & plants, string filePath, int64_t fileRowStart, int3
         else if (colNumber == 4) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, plants.succesful[arrayEntry]);
             rowNumber++;
+            arrayEntry++;
         }
         colNumber = (colNumber + 1) % 5;
     }
@@ -1236,6 +1250,7 @@ void loadDefusalsFile(Defusals & defusals, string filePath, int64_t fileRowStart
         else if (colNumber == 5) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, defusals.succesful[arrayEntry]);
             rowNumber++;
+            arrayEntry++;
         }
         colNumber = (colNumber + 1) % 6;
     }
@@ -1286,6 +1301,7 @@ void loadExplosionsFile(Explosions & explosions, string filePath, int64_t fileRo
         else if (colNumber == 2) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, explosions.tickId[arrayEntry]);
             rowNumber++;
+            arrayEntry++;
         }
         colNumber = (colNumber + 1) % 3;
     }
@@ -1328,8 +1344,10 @@ void loadData(Equipment & equipment, GameTypes & gameTypes, HitGroups & hitGroup
     loadRounds(rounds, dataPath);
     std::cout << "loading ticks" << std::endl;
     loadTicks(ticks, dataPath);
+    /*
     std::cout << "loading player_at_tick" << std::endl;
     loadPlayerAtTick(playerAtTick, dataPath);
+     */
     std::cout << "loading spotted" << std::endl;
     loadSpotted(spotted, dataPath);
     std::cout << "loading weaponFire" << std::endl;
