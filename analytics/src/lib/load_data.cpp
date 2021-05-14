@@ -543,26 +543,29 @@ void loadTicksFile(Ticks & ticks, string filePath, int64_t fileRowStart, int32_t
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, ticks.roundId[arrayEntry]);
         }
         else if (colNumber == 2) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, ticks.demoTickNumber[arrayEntry]);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, ticks.gameTime[arrayEntry]);
         }
         else if (colNumber == 3) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, ticks.gameTickNumber[arrayEntry]);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, ticks.demoTickNumber[arrayEntry]);
         }
         else if (colNumber == 4) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, ticks.bombCarrier[arrayEntry]);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, ticks.gameTickNumber[arrayEntry]);
         }
         else if (colNumber == 5) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, ticks.bombX[arrayEntry]);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, ticks.bombCarrier[arrayEntry]);
         }
         else if (colNumber == 6) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, ticks.bombY[arrayEntry]);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, ticks.bombX[arrayEntry]);
         }
         else if (colNumber == 7) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, ticks.bombY[arrayEntry]);
+        }
+        else if (colNumber == 8) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, ticks.bombZ[arrayEntry]);
             rowNumber++;
             arrayEntry++;
         }
-        colNumber = (colNumber + 1) % 8;
+        colNumber = (colNumber + 1) % 9;
     }
     closeMMapFile({fd, stats, file});
 }
@@ -580,7 +583,7 @@ void loadTicks(Ticks & ticks, string dataPath) {
 
     std::cout << "loading ticks off disk" << std::endl;
     std::atomic<int> filesProcessed = 0;
-#pragma omp parallel for
+//#pragma omp parallel for
     for (int64_t fileIndex = 0; fileIndex < filePaths.size(); fileIndex++) {
         loadTicksFile(ticks, filePaths[fileIndex], startingPointPerFile[fileIndex], fileIndex);
         filesProcessed++;
