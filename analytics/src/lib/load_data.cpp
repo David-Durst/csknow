@@ -737,6 +737,8 @@ void loadPlayerAtTick(PlayerAtTick & pat, string dataPath) {
         filesProcessed++;
         printProgress((filesProcessed * 1.0) / filePaths.size());
     }
+
+    pat.makePitchNeg90To90();
 }
 
 void loadSpottedFile(Spotted & spotted, string filePath, int64_t fileRowStart, int32_t fileNumber) {

@@ -358,6 +358,7 @@ public:
     }
 
     void makePitchNeg90To90() {
+#pragma omp parallel for
         for (int64_t i = 0; i < size; i++) {
             if (viewY[i] > 260.0) {
                 viewY[i] -= 360;
@@ -377,6 +378,7 @@ public:
         free(posY);
         free(posZ);
         free(viewX);
+        free(viewY);
         free(team);
         free(health);
         free(armor);
@@ -522,6 +524,7 @@ public:
         }
         free(tickId);
         free(killer);
+        free(victim);
         free(weapon);
         free(assister);
         free(isHeadshot);
