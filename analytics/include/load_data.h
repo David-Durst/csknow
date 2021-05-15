@@ -6,13 +6,22 @@
 #include <vector>
 #include <iostream>
 #include <map>
+#include <list>
 using std::string;
 using std::vector;
 using std::set;
 using std::map;
+using std::list;
 #define CT_TEAM 0
 #define T_TEAM 1
 #define SPECTATOR 2
+
+struct RangeIndexEntry {
+    int64_t minId, maxId;
+};
+
+typedef RangeIndexEntry * RangeIndex;
+typedef map<int64_t, list<int64_t>> HashmapIndex;
 
 class ColStore {
 public:
@@ -109,6 +118,7 @@ public:
     double * demoTickRate;
     double * gameTickRate;
     int64_t * gameType;
+    RangeIndex roundsPerGame;
 
     void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) {
         ColStore::init(rows, numFiles, gameStarts);
@@ -116,6 +126,7 @@ public:
         demoTickRate = (double *) malloc(rows * sizeof(double));
         gameTickRate = (double *) malloc(rows * sizeof(double));
         gameType = (int64_t *) malloc(rows * sizeof(int64_t));
+        roundsPerGame = (RangeIndexEntry *) malloc(rows * sizeof(RangeIndexEntry));
     }
 
     Games() { };
@@ -131,6 +142,7 @@ public:
         free(demoTickRate);
         free(gameTickRate);
         free(gameType);
+        free(roundsPerGame);
     }
 
     Games(const Games& other) = delete;
@@ -180,6 +192,7 @@ public:
     int16_t * winner;
     int16_t * tWins;
     int16_t * ctWins;
+    RangeIndex ticksPerRound;
 
     void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) {
         ColStore::init(rows, numFiles, gameStarts);
@@ -193,6 +206,7 @@ public:
         winner = (int16_t *) malloc(rows * sizeof(int16_t));
         tWins = (int16_t *) malloc(rows * sizeof(int16_t));
         ctWins = (int16_t *) malloc(rows * sizeof(int16_t));
+        ticksPerRound = (RangeIndexEntry *) malloc(rows * sizeof(RangeIndexEntry));
     }
 
     Rounds() { };
@@ -211,6 +225,7 @@ public:
         free(winner);
         free(tWins);
         free(ctWins);
+        free(ticksPerRound);
     }
 
     Rounds(const Rounds& other) = delete;
@@ -227,6 +242,23 @@ public:
     double * bombX;
     double * bombY;
     double * bombZ;
+    RangeIndex playersPerTick;
+    RangeIndex spottedPerTick;
+    HashmapIndex killsPerTick;
+    HashmapIndex hurtPerTick;
+    HashmapIndex grenadesPerTick;
+    HashmapIndex grenadesThrowPerTick;
+    HashmapIndex grenadesActivePerTick;
+    HashmapIndex grenadesExpiredPerTick;
+    HashmapIndex grenadesDestroyedPerTick;
+    HashmapIndex flashedPerTick;
+    HashmapIndex plantsPerTick;
+    HashmapIndex plantsStartPerTick;
+    HashmapIndex plantsEndPerTick;
+    HashmapIndex defusalsPerTick;
+    HashmapIndex defusalsStartPerTick;
+    HashmapIndex defusalsEndPerTick;
+    HashmapIndex explosionsPerTick;
 
     void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) {
         ColStore::init(rows, numFiles, gameStarts);
@@ -238,6 +270,8 @@ public:
         bombX = (double *) malloc(rows * sizeof(double));
         bombY = (double *) malloc(rows * sizeof(double));
         bombZ = (double *) malloc(rows * sizeof(double));
+        playersPerTick = (RangeIndexEntry *) malloc(rows * sizeof(RangeIndexEntry));
+        spottedPerTick = (RangeIndexEntry *) malloc(rows * sizeof(RangeIndexEntry));
     }
 
     Ticks() { };
@@ -253,6 +287,8 @@ public:
         free(bombX);
         free(bombY);
         free(bombZ);
+        free(playersPerTick);
+        free(spottedPerTick);
     }
 
     Ticks(const Ticks& other) = delete;
@@ -589,6 +625,8 @@ public:
     int64_t * activeTick;
     int64_t * expiredTick;
     int64_t * destroyTick;
+    RangeIndex flashedPerGrenade;
+    RangeIndex trajectoryPerGrenade;
 
     void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) {
         ColStore::init(rows, numFiles, gameStarts);
@@ -598,6 +636,8 @@ public:
         activeTick = (int64_t *) malloc(rows * sizeof(int64_t));
         expiredTick = (int64_t *) malloc(rows * sizeof(int64_t));
         destroyTick = (int64_t *) malloc(rows * sizeof(int64_t));
+        flashedPerGrenade = (RangeIndexEntry *) malloc(rows * sizeof(RangeIndexEntry));
+        trajectoryPerGrenade = (RangeIndexEntry *) malloc(rows * sizeof(RangeIndexEntry));
     }
 
     Grenades() { };
@@ -611,6 +651,8 @@ public:
         free(activeTick);
         free(expiredTick);
         free(destroyTick);
+        free(flashedPerGrenade);
+        free(trajectoryPerGrenade);
     }
 
     Grenades(const Grenades& other) = delete;
@@ -686,6 +728,8 @@ public:
     int64_t * endTick;
     int64_t * planter;
     bool * succesful;
+    RangeIndex defusalsPerGrenade;
+    RangeIndex explosionsPerGrenade;
 
     void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) {
         ColStore::init(rows, numFiles, gameStarts);
@@ -693,6 +737,8 @@ public:
         endTick = (int64_t *) malloc(rows * sizeof(int64_t));
         planter = (int64_t *) malloc(rows * sizeof(int64_t));
         succesful = (bool *) malloc(rows * sizeof(bool));
+        defusalsPerGrenade = (RangeIndexEntry *) malloc(rows * sizeof(RangeIndexEntry));
+        explosionsPerGrenade = (RangeIndexEntry *) malloc(rows * sizeof(RangeIndexEntry));
     }
 
     Plants() { };
@@ -704,6 +750,8 @@ public:
         free(endTick);
         free(planter);
         free(succesful);
+        free(defusalsPerGrenade);
+        free(explosionsPerGrenade);
     }
 
     Plants(const Plants& other) = delete;
@@ -771,5 +819,10 @@ void loadData(Equipment & equipment, GameTypes & gameTypes, HitGroups & hitGroup
               Rounds & rounds, Ticks & ticks, PlayerAtTick & playerAtTick, Spotted & spotted, WeaponFire & weaponFire,
               Kills & kills, Hurt & hurt, Grenades & grenades, Flashed & flashed, GrenadeTrajectories & grenadeTrajectories,
               Plants & plants, Defusals & defusals, Explosions & explosions, string dataPath);
+
+void buildRangeIndexes(Equipment & equipment, GameTypes & gameTypes, HitGroups & hitGroups, Games & games,
+                       Players & players, Rounds & rounds, Ticks & ticks, PlayerAtTick & playerAtTick, Spotted & spotted,
+                       WeaponFire & weaponFire, Kills & kills, Hurt & hurt, Grenades & grenades, Flashed & flashed,
+                       GrenadeTrajectories & grenadeTrajectories, Plants & plants, Defusals & defusals, Explosions & explosions);
 
 #endif //CSKNOW_LOAD_DATA_H
