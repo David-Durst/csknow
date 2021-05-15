@@ -163,4 +163,13 @@ func main() {
 		log.Fatal(err)
 	}
 	fmt.Println(out)
+
+	if *localFlag {
+		fmt.Printf("executing first_lines_games.sh")
+		firstLinesGamesOut, err := exec.Command("/bin/bash", "first_lines_games.sh").Output()
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Println(firstLinesGamesOut)
+	}
 }
