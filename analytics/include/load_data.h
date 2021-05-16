@@ -119,6 +119,7 @@ public:
     double * gameTickRate;
     int64_t * gameType;
     RangeIndex roundsPerGame;
+    RangeIndex playersPerGame;
 
     void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) {
         ColStore::init(rows, numFiles, gameStarts);
@@ -127,6 +128,7 @@ public:
         gameTickRate = (double *) malloc(rows * sizeof(double));
         gameType = (int64_t *) malloc(rows * sizeof(int64_t));
         roundsPerGame = (RangeIndexEntry *) malloc(rows * sizeof(RangeIndexEntry));
+        playersPerGame = (RangeIndexEntry *) malloc(rows * sizeof(RangeIndexEntry));
     }
 
     Games() { };
@@ -143,6 +145,7 @@ public:
         free(gameTickRate);
         free(gameType);
         free(roundsPerGame);
+        free(playersPerGame);
     }
 
     Games(const Games& other) = delete;

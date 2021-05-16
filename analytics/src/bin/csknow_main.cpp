@@ -253,7 +253,7 @@ int main(int argc, char * argv[]) {
         svr.Get("/ticks/(\\d+)", [&](const httplib::Request & req, httplib::Response &res) {
             int64_t roundId = std::stol(req.matches[1].str());
             std::stringstream ss;
-            for (int64_t tickIndex = rounds.ticksPerRound->minId; roundIndex <= rounds.ticksPerRound->maxId; tickIndex++) {
+            for (int64_t tickIndex = rounds.ticksPerRound->minId; tickIndex <= rounds.ticksPerRound->maxId; tickIndex++) {
                 ss << ticks.id[tickIndex] << "," << ticks.roundId[tickIndex] << "," << ticks.gameTime[tickIndex] << ","
                     << ticks.demoTickNumber[tickIndex] << "," << ticks.gameTickNumber << "," << ticks.bombCarrier << ","
                     << ticks.bombX << "," << ticks.bombY << "," << ticks.bombZ << std::endl;
