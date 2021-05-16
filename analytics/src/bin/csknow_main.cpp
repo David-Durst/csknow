@@ -92,6 +92,8 @@ int main(int argc, char * argv[]) {
     std::cout << "num elements in defusals: " << defusals.size << std::endl;
     std::cout << "num elements in explosions: " << explosions.size << std::endl;
 
+    QueryGames queryGames(games);
+
     /*
     SpottedIndex spottedIndex(position, spotted);
     std::cout << "built spotted index" << std::endl;
@@ -200,7 +202,7 @@ int main(int argc, char * argv[]) {
      */
     vector<string> queryNames = {"games", "rounds", "players", "ticks", "playerAtTick"};
     map<string, reference_wrapper<QueryResult>> queries {
-            {queryNames[0], velocityResult},
+            {queryNames[0], queryGames},
     };
 
     if (runServer) {
@@ -209,7 +211,7 @@ int main(int argc, char * argv[]) {
             string resultType = req.matches[1];
             std::stringstream ss;
             if (queries.find(resultType) != queries.end()) {
-                res.set_content(queries.find(resultType)->second.get().toCSV(position), "text/csv");
+                res.set_content(queries.find(resultType)->second.get().toCSV(), "text/csv");
             }
             else {
                 res.status = 404;
@@ -218,18 +220,19 @@ int main(int argc, char * argv[]) {
             res.set_header("Access-Control-Allow-Origin", "*");
         });
 
-        svr.Get("/query/(\\w+)/(.+).csv", [&](const httplib::Request & req, httplib::Response &res) {
+        svr.Get("/query/(\\w+)/(\\d+)", [&](const httplib::Request & req, httplib::Response &res) {
             string resultType = req.matches[1];
-            string game = req.matches[2];
+            int64_t filter = std::stol(req.matches[2].str());
             res.set_header("Access-Control-Allow-Origin", "*");
             if (queries.find(resultType) != queries.end()) {
-                res.set_content(queries.find(resultType)->second.get().toCSVFiltered(position, game), "text/csv");
+                res.set_content(queries.find(resultType)->second.get().toCSV(filter), "text/csv");
             }
             else {
                 res.status = 404;
             }
         });
 
+        /*
         svr.Get("/games", [&](const httplib::Request & req, httplib::Response &res) {
             std::stringstream ss;
             for (int64_t gameIndex = 0; gameIndex < games.size; gameIndex++) {
@@ -289,6 +292,7 @@ int main(int argc, char * argv[]) {
             res.set_content(ss.str(), "text/plain");
             res.set_header("Access-Control-Allow-Origin", "*");
         });
+         */
 
         // list schema is: name, num foreign keys, list of foreign key column names, other columns, other column names
         svr.Get("/list", [&](const httplib::Request & req, httplib::Response &res) {
