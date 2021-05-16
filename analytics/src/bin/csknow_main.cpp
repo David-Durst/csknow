@@ -200,7 +200,7 @@ int main(int argc, char * argv[]) {
         }
     }
      */
-    vector<string> queryNames = {"games", "rounds", "players", "ticks", "playerAtTick"};
+    vector<string> queryNames = {"games"};//, "rounds", "players", "ticks", "playerAtTick"};
     map<string, reference_wrapper<QueryResult>> queries {
             {queryNames[0], queryGames},
     };
@@ -297,18 +297,16 @@ int main(int argc, char * argv[]) {
         // list schema is: name, num foreign keys, list of foreign key column names, other columns, other column names
         svr.Get("/list", [&](const httplib::Request & req, httplib::Response &res) {
             std::stringstream ss;
-            /*
             for (const auto queryName : queryNames) {
                 QueryResult & queryValue = queries.find(queryName)->second.get();
-                ss << queryName << "," << queryValue.getKeyNames().size() << ",";
-                for (const auto & keyName : queryValue.getKeyNames()) {
+                ss << queryName << "," << queryValue.getForeignKeyNames().size() << ",";
+                for (const auto & keyName : queryValue.getForeignKeyNames()) {
                     ss << keyName << ",";
                 }
-                ss << queryValue.getExtraColumnNames().size() << ",";
-                for (const auto & extraColName : queryValue.getExtraColumnNames()) {
+                ss << queryValue.getOtherColumnNames().size() << ",";
+                for (const auto & extraColName : queryValue.getOtherColumnNames()) {
                     ss << extraColName << ",";
                 }
-                ss << queryValue.getDatatype() << ",";
                 if (queryValue.variableLength) {
                     ss << "c" << queryValue.ticksColumn;
                 }
@@ -317,7 +315,6 @@ int main(int argc, char * argv[]) {
                 }
                 ss << std::endl;
             }
-             */
             res.set_content(ss.str(), "text/plain");
             res.set_header("Access-Control-Allow-Origin", "*");
         });

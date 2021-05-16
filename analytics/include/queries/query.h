@@ -34,9 +34,9 @@ enum DataType {
 class QueryResult {
 public:
 //    vector<int64_t> positionIndex;
-//    bool variableLength = false;
-//    int ticksPerEvent;
-//    int ticksColumn;
+    bool variableLength = false;
+    int ticksPerEvent;
+    int ticksColumn;
 //    vector<int> keysForDiff;
 
     //virtual string toCSVFiltered(const Position & position, string game) = 0;
