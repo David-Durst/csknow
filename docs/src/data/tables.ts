@@ -49,6 +49,18 @@ export class Row {
     }
 }
 
+export class GameRow extends Row {
+    demoFile: string;
+    demoTickRate: number;
+
+    constructor(id: number, parser: Parser,
+                foreignKeyValues: number[], otherColumnValues: string[]) {
+        super(id, parser, foreignKeyValues, otherColumnValues);
+        this.demoFile = otherColumnValues[0];
+        this.demoTickRate = parseInt(otherColumnValues[1]);
+    }
+}
+
 export class RoundRow extends Row {
     gameId: number;
     startTick: number;
@@ -143,10 +155,20 @@ export class PlayerAtTickRow extends Row {
 
 export enum ParserType {
     tick,
+    game,
     round,
     player,
     playerAtTick,
     other
+}
+
+function getOtherColumnsStart(foreignKeyStart: number, foreignKeyLength: number) {
+    if (foreignKeyLength > 0) {
+        return foreignKeyStart + foreignKeyLength + 1;
+    }
+    else {
+        return foreignKeyStart;
+    }
 }
 
 export class Parser {
@@ -184,6 +206,8 @@ export class Parser {
     parseOneLine(currentLine: string[]) {
         const id = parseInt(currentLine[0]);
         const foreignKeysStart = 1;
+        const otherColumnsStart = getOtherColumnsStart(foreignKeysStart,
+            this.foreignKeyNames.length);
         if (this.parserType == ParserType.tick) {
             gameData.ticksTable.push(
                 new TickRow(
@@ -191,7 +215,18 @@ export class Parser {
                     currentLine.slice(foreignKeysStart,
                         foreignKeysStart + this.foreignKeyNames.length)
                         .map(parseInt),
-                    currentLine.slice(2, currentLine.length)
+                    currentLine.slice(otherColumnsStart, currentLine.length)
+                )
+            )
+        }
+        else if (this.parserType == ParserType.game) {
+            gameData.gamesTable.push(
+                new GameRow(
+                    id, this,
+                    currentLine.slice(foreignKeysStart,
+                        foreignKeysStart + this.foreignKeyNames.length)
+                        .map(parseInt),
+                    currentLine.slice(otherColumnsStart, currentLine.length)
                 )
             )
         }
@@ -202,7 +237,7 @@ export class Parser {
                     currentLine.slice(foreignKeysStart,
                         foreignKeysStart + this.foreignKeyNames.length)
                         .map(parseInt),
-                    currentLine.slice(2, currentLine.length)
+                    currentLine.slice(otherColumnsStart, currentLine.length)
                 )
             )
         }
@@ -213,7 +248,7 @@ export class Parser {
                     currentLine.slice(foreignKeysStart,
                         foreignKeysStart + this.foreignKeyNames.length)
                         .map(parseInt),
-                    currentLine.slice(2, currentLine.length)
+                    currentLine.slice(otherColumnsStart, currentLine.length)
                 )
             )
         }
@@ -224,7 +259,7 @@ export class Parser {
                     currentLine.slice(foreignKeysStart,
                         foreignKeysStart + this.foreignKeyNames.length)
                         .map(parseInt),
-                    currentLine.slice(2, currentLine.length)
+                    currentLine.slice(otherColumnsStart, currentLine.length)
                 )
             )
         }
@@ -235,7 +270,7 @@ export class Parser {
                     currentLine.slice(foreignKeysStart,
                         foreignKeysStart + this.foreignKeyNames.length)
                         .map(parseInt),
-                    currentLine.slice(2, currentLine.length)
+                    currentLine.slice(otherColumnsStart, currentLine.length)
                 )
             )
         }
@@ -250,11 +285,14 @@ export class Parser {
 
 export type Index = Map<number, number[]>;
 export const tickTableName = "ticks"
+export const gameTableName = "games"
 export const roundTableName = "rounds"
 export const playerAtTickTableName = "playerAtTick"
+export const playersTableName = "players"
 export class GameData {
     tableNames: string[] = [];
     parsers: Map<string, Parser> = new Map<string, Parser>();
+    gamesTable: GameRow[];
     roundsTable: RoundRow[];
     roundIdToIndex: Map<number, number> = new Map<number, number>();
     ticksTable: TickRow[];

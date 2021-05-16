@@ -20,8 +20,13 @@ import {
 import {registerPlayHandlers} from "./controller/controls"
 import {GetObjectCommand, GetObjectCommandOutput} from "@aws-sdk/client-s3";
 import {
+    gameTableName,
     Parser,
-    ParserType, PlayerAtTickRow, playerAtTickTableName, RoundRow,
+    ParserType,
+    PlayerAtTickRow,
+    playerAtTickTableName,
+    playersTableName,
+    RoundRow,
     roundTableName,
     TickRow,
     tickTableName
@@ -219,11 +224,17 @@ async function changedMatch() {
                 if (cols[0] == tickTableName) {
                     parserType = ParserType.tick;
                 }
+                else if (cols[0] == gameTableName) {
+                    parserType = ParserType.game;
+                }
                 else if (cols[0] == roundTableName) {
                     parserType = ParserType.round;
                 }
                 else if (cols[0] == playerAtTickTableName) {
                     parserType = ParserType.playerAtTick;
+                }
+                else if (cols[0] == playersTableName) {
+                    parserType = ParserType.player;
                 }
                 else {
                     parserType = ParserType.other
