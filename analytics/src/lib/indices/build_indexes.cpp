@@ -44,7 +44,7 @@ void buildHashmapIndex(const vector<int64_t *> foreignKeyCols, int64_t foreignSi
     }
 }
 
-void buildRangeIndexes(Equipment & equipment, GameTypes & gameTypes, HitGroups & hitGroups, Games & games,
+void buildIndexes(Equipment & equipment, GameTypes & gameTypes, HitGroups & hitGroups, Games & games,
                        Players & players, Rounds & rounds, Ticks & ticks, PlayerAtTick & playerAtTick, Spotted & spotted,
                        WeaponFire & weaponFire, Kills & kills, Hurt & hurt, Grenades & grenades, Flashed & flashed,
                        GrenadeTrajectories & grenadeTrajectories, Plants & plants, Defusals & defusals, Explosions & explosions) {
