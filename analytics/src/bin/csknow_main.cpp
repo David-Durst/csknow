@@ -225,6 +225,43 @@ int main(int argc, char * argv[]) {
         });
          */
 
+        svr.Get("/games", [&](const httplib::Request & req, httplib::Response &res) {
+            std::stringstream ss;
+            for (int64_t gameIndex = 0; gameIndex < games.size; gameIndex++) {
+                ss << games.id[gameIndex] << "," << games.demoFile[gameIndex] << ","
+                    << games.demoTickRate[gameIndex];
+                ss << std::endl;
+            }
+            res.set_content(ss.str(), "text/plain");
+            res.set_header("Access-Control-Allow-Origin", "*");
+        });
+
+        svr.Get("/rounds/(\\d+)", [&](const httplib::Request & req, httplib::Response &res) {
+            int64_t gameId = std::stol(req.matches[1].str());
+            std::stringstream ss;
+            for (int64_t roundIndex = games.roundsPerGame->minId; roundIndex <= games.roundsPerGame->maxId; roundIndex++) {
+                ss << rounds.id[roundIndex] << "," << rounds.gameId[roundIndex] << "," << rounds.startTick[roundIndex]
+                    << "," << rounds.endTick[roundIndex] << "," << rounds.warmup[roundIndex] << ","
+                    << rounds.freezeTimeEnd[roundIndex] << "," << rounds.roundNumber[roundIndex] << ","
+                    << rounds.roundEndReason[roundIndex] << "," << rounds.winner[roundIndex] << ","
+                    << rounds.tWins[roundIndex] << "," << rounds.ctWins[roundIndex];
+            }
+            res.set_content(ss.str(), "text/plain");
+            res.set_header("Access-Control-Allow-Origin", "*");
+        });
+
+        svr.Get("/ticks/(\\d+)", [&](const httplib::Request & req, httplib::Response &res) {
+            int64_t roundId = std::stol(req.matches[1].str());
+            std::stringstream ss;
+            for (int64_t tickIndex = rounds.ticksPerRound->minId; roundIndex <= rounds.ticksPerRound->maxId; tickIndex++) {
+                ss << ticks.id[tickIndex] << "," << ticks.roundId[tickIndex] << "," << ticks.gameTime[tickIndex] << ","
+                    << ticks.demoTickNumber[tickIndex] << "," << ticks.gameTickNumber << "," << ticks.bombCarrier << ","
+                    << ticks.bombX << "," << ticks.bombY << "," << ticks.bombZ << std::endl;
+            }
+            res.set_content(ss.str(), "text/plain");
+            res.set_header("Access-Control-Allow-Origin", "*");
+        });
+
         // list schema is: d/q (d for dataset, q for query), 
         svr.Get("/list", [&](const httplib::Request & req, httplib::Response &res) {
             std::stringstream ss;
