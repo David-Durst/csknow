@@ -5,13 +5,13 @@
 #include <set>
 #include <vector>
 #include <iostream>
-#include <map>
+#include <unordered_map>
 #include <list>
 using std::string;
 using std::vector;
 using std::set;
-using std::map;
-using std::list;
+using std::unordered_map;
+using std::vector;
 #define CT_TEAM 0
 #define T_TEAM 1
 #define SPECTATOR 2
@@ -21,7 +21,7 @@ struct RangeIndexEntry {
 };
 
 typedef RangeIndexEntry * RangeIndex;
-typedef map<int64_t, list<int64_t>> HashmapIndex;
+typedef unordered_map<int64_t, vector<int64_t>> HashmapIndex;
 
 class ColStore {
 public:
@@ -244,6 +244,7 @@ public:
     double * bombZ;
     RangeIndex playersPerTick;
     RangeIndex spottedPerTick;
+    HashmapIndex weaponFirePerTick;
     HashmapIndex killsPerTick;
     HashmapIndex hurtPerTick;
     HashmapIndex grenadesPerTick;

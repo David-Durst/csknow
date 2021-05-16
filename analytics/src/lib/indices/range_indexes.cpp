@@ -7,7 +7,7 @@ using std::endl;
 
 void buildRangeIndex(const vector<int64_t> primaryKeyCol, int64_t primarySize, const int64_t * foreignKeyCol,
                           int64_t foreignSize, RangeIndex rangeIndexCol) {
-    for (int64_t primaryIndex = 0, foreignIndex = 0; primaryIndex < primarySize; primaryIndex++) {
+    for (int64_t primaryIndex = 0, foreignIndex = 0; primaryIndex < primarySize && foreignIndex < foreignSize; primaryIndex++) {
         // sometimes have mistakes where point to 0 as uninitalized, skip entries
         if(foreignKeyCol[foreignIndex] == 0 &&  primaryKeyCol[primaryIndex] > 0) {
             for (; foreignKeyCol[foreignIndex] == 0; foreignIndex++) ;
@@ -17,13 +17,6 @@ void buildRangeIndex(const vector<int64_t> primaryKeyCol, int64_t primarySize, c
                  << " and primary " << primaryIndex << " val " << primaryKeyCol[primaryIndex] << endl;
             assert(foreignKeyCol[foreignIndex] >= primaryKeyCol[primaryIndex]);
         }
-        if (foreignIndex >= foreignSize) {
-            cout << "foreign index " << foreignIndex  << " larger than size " << foreignSize << endl;
-            assert(foreignKeyCol[foreignIndex] < primaryKeyCol[primaryIndex]);
-        }
-        if (primaryIndex == 29) {
-            int x = 1;
-        }
         assert(foreignIndex < foreignSize);
         if (primaryIndex >= foreignSize || foreignKeyCol[foreignIndex] > primaryKeyCol[primaryIndex]) {
             rangeIndexCol[primaryIndex].minId = -1;
@@ -31,7 +24,7 @@ void buildRangeIndex(const vector<int64_t> primaryKeyCol, int64_t primarySize, c
         }
 
         rangeIndexCol[primaryIndex].minId = foreignIndex;
-        for (; foreignKeyCol[foreignIndex] == primaryKeyCol[primaryIndex]; foreignIndex++) ;
+        for (; foreignKeyCol[foreignIndex] == primaryKeyCol[primaryIndex] && foreignIndex < foreignSize; foreignIndex++) ;
         rangeIndexCol[primaryIndex].maxId = foreignIndex - 1;
     }
 }
@@ -46,9 +39,6 @@ void buildHashmapIndex(const vector<int64_t *> foreignKeyCols, int64_t foreignSi
         }
         // insert into all key cols in range
         for (int64_t primaryIndex = minPrimaryIndex; primaryIndex <= maxPrimaryIndex; primaryIndex++) {
-            if (hashIndexCol.find(primaryIndex) == hashIndexCol.end()) {
-                hashIndexCol.insert({primaryIndex, {}});
-            }
             hashIndexCol[primaryIndex].push_back(foreignIndex);
         }
     }
@@ -58,10 +48,18 @@ void buildRangeIndexes(Equipment & equipment, GameTypes & gameTypes, HitGroups &
                        Players & players, Rounds & rounds, Ticks & ticks, PlayerAtTick & playerAtTick, Spotted & spotted,
                        WeaponFire & weaponFire, Kills & kills, Hurt & hurt, Grenades & grenades, Flashed & flashed,
                        GrenadeTrajectories & grenadeTrajectories, Plants & plants, Defusals & defusals, Explosions & explosions) {
+    cout << "building range indexes" << endl;
     buildRangeIndex(games.id, games.size, rounds.gameId, rounds.size, games.roundsPerGame);
     buildRangeIndex(rounds.id, rounds.size, ticks.roundId, ticks.size, rounds.ticksPerRound);
     buildRangeIndex(ticks.id, ticks.size, playerAtTick.tickId, playerAtTick.size, ticks.playersPerTick);
     buildRangeIndex(ticks.id, ticks.size, spotted.tickId, spotted.size, ticks.spottedPerTick);
+    buildRangeIndex(grenades.id, grenades.size, flashed.grenadeId, flashed.size, grenades.flashedPerGrenade);
+    buildRangeIndex(grenades.id, grenades.size, grenadeTrajectories.grenadeId, grenadeTrajectories.size, grenades.trajectoryPerGrenade);
+    buildRangeIndex(plants.id, plants.size, defusals.plantId, defusals.size, plants.defusalsPerGrenade);
+    buildRangeIndex(plants.id, plants.size, explosions.plantId, explosions.size, plants.explosionsPerGrenade);
+
+    cout << "building hashmap indexes" << endl;
+    buildHashmapIndex({weaponFire.tickId}, weaponFire.size, ticks.weaponFirePerTick);
     buildHashmapIndex({kills.tickId}, kills.size, ticks.killsPerTick);
     buildHashmapIndex({hurt.tickId}, hurt.size, ticks.hurtPerTick);
     buildHashmapIndex({grenades.throwTick, grenades.activeTick, grenades.expiredTick, grenades.destroyTick}, grenades.size, ticks.grenadesPerTick);
@@ -77,8 +75,4 @@ void buildRangeIndexes(Equipment & equipment, GameTypes & gameTypes, HitGroups &
     buildHashmapIndex({defusals.startTick}, defusals.size, ticks.defusalsStartPerTick);
     buildHashmapIndex({defusals.endTick}, defusals.size, ticks.defusalsEndPerTick);
     buildHashmapIndex({explosions.tickId}, explosions.size, ticks.explosionsPerTick);
-    buildRangeIndex(grenades.id, grenades.size, flashed.grenadeId, flashed.size, grenades.flashedPerGrenade);
-    buildRangeIndex(grenades.id, grenades.size, grenadeTrajectories.grenadeId, grenadeTrajectories.size, grenades.trajectoryPerGrenade);
-    buildRangeIndex(plants.id, plants.size, defusals.plantId, defusals.size, plants.defusalsPerGrenade);
-    buildRangeIndex(plants.id, plants.size, explosions.plantId, explosions.size, plants.explosionsPerGrenade);
 }

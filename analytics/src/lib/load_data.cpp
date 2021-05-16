@@ -775,7 +775,7 @@ void loadSpottedFile(Spotted & spotted, string filePath, int64_t fileRowStart, i
             rowNumber++;
             arrayEntry++;
         }
-        colNumber = (colNumber + 1) % 4;
+        colNumber = (colNumber + 1) % 5;
     }
     closeMMapFile({fd, stats, file});
 }
