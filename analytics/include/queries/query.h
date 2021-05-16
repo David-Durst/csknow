@@ -31,23 +31,46 @@ enum DataType {
     justTarget = 2,
     srcAndTarget = 3
 };
-/*
 class QueryResult {
 public:
-    vector<int64_t> positionIndex;
-    bool variableLength = false;
-    int ticksPerEvent;
-    int ticksColumn;
-    vector<int> keysForDiff;
+//    vector<int64_t> positionIndex;
+//    bool variableLength = false;
+//    int ticksPerEvent;
+//    int ticksColumn;
+//    vector<int> keysForDiff;
 
-    virtual string toCSVFiltered(const Position & position, string game) = 0;
-    virtual string toCSV(const Position & position) = 0;
-    virtual vector<string> getKeyNames() = 0;
-    virtual vector<string> getExtraColumnNames() = 0;
-    virtual vector<string> getExtraRow(const Position & position, int64_t queryIndex, int64_t posIndex) = 0;
-    virtual DataType getDatatype() = 0;
+    //virtual string toCSVFiltered(const Position & position, string game) = 0;
+    int64_t size;
+
+    string toCSV() {
+        std::stringstream ss;
+        for (int64_t index = 0; index < size; index++) {
+            oneLineToCSV(index, ss);
+        }
+        return ss.str();
+    }
+
+    string toCSV(RangeIndexEntry filter) {
+        std::stringstream ss;
+        for (int64_t index = filter.minId; index <= filter.maxId ; index++) {
+            oneLineToCSV(index, ss);
+        }
+        return ss.str();
+    }
+
+    string toCSV(vector<int64_t> filter) {
+        std::stringstream ss;
+        for (const auto & index : filter) {
+            oneLineToCSV(index, ss);
+        }
+        return ss.str();
+    }
+    virtual string oneLineToCSV(int64_t index, stringstream & ss) = 0;
+    virtual vector<string> getForeignKeyNames() = 0;
+    virtual vector<string> getOtherColumnNames() = 0;
 };
 
+/*
 class NoSourceTargetQuery : public QueryResult {
 public:
     string toCSVFiltered(const Position & position, string game) {

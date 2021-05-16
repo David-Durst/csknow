@@ -16,6 +16,7 @@
 #include "queries/nonconsecutive.h"
 #include "queries/grouping.h"
 #include "queries/groupInSequenceOfRegions.h"
+#include "queries/base_tables.h"
 #include "indices/spotted.h"
 #define CPPHTTPLIB_OPENSSL_SUPPORT
 #include "httplib.h"
@@ -197,19 +198,24 @@ int main(int argc, char * argv[]) {
         }
     }
      */
+    vector<string> queryNames = {"games", "rounds", "players", "ticks", "playerAtTick"};
+    map<string, reference_wrapper<QueryResult>> queries {
+            {queryNames[0], velocityResult},
+    };
 
     if (runServer) {
         httplib::Server svr;
-        /*
         svr.Get("/query/(\\w+)", [&](const httplib::Request & req, httplib::Response &res) {
             string resultType = req.matches[1];
-            res.set_header("Access-Control-Allow-Origin", "*");
+            std::stringstream ss;
             if (queries.find(resultType) != queries.end()) {
                 res.set_content(queries.find(resultType)->second.get().toCSV(position), "text/csv");
             }
             else {
                 res.status = 404;
             }
+            res.set_content(ss.str(), "text/plain");
+            res.set_header("Access-Control-Allow-Origin", "*");
         });
 
         svr.Get("/query/(\\w+)/(.+).csv", [&](const httplib::Request & req, httplib::Response &res) {
@@ -223,7 +229,6 @@ int main(int argc, char * argv[]) {
                 res.status = 404;
             }
         });
-         */
 
         svr.Get("/games", [&](const httplib::Request & req, httplib::Response &res) {
             std::stringstream ss;
@@ -285,7 +290,7 @@ int main(int argc, char * argv[]) {
             res.set_header("Access-Control-Allow-Origin", "*");
         });
 
-        // list schema is: d/q (d for dataset, q for query), 
+        // list schema is: name, num foreign keys, list of foreign key column names, other columns, other column names
         svr.Get("/list", [&](const httplib::Request & req, httplib::Response &res) {
             std::stringstream ss;
             /*
