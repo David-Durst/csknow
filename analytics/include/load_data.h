@@ -245,7 +245,7 @@ public:
     double * bombX;
     double * bombY;
     double * bombZ;
-    RangeIndex playersPerTick;
+    RangeIndex patPerTick;
     RangeIndex spottedPerTick;
     HashmapIndex weaponFirePerTick;
     HashmapIndex killsPerTick;
@@ -274,7 +274,7 @@ public:
         bombX = (double *) malloc(rows * sizeof(double));
         bombY = (double *) malloc(rows * sizeof(double));
         bombZ = (double *) malloc(rows * sizeof(double));
-        playersPerTick = (RangeIndexEntry *) malloc(rows * sizeof(RangeIndexEntry));
+        patPerTick = (RangeIndexEntry *) malloc(rows * sizeof(RangeIndexEntry));
         spottedPerTick = (RangeIndexEntry *) malloc(rows * sizeof(RangeIndexEntry));
     }
 
@@ -291,7 +291,7 @@ public:
         free(bombX);
         free(bombY);
         free(bombZ);
-        free(playersPerTick);
+        free(patPerTick);
         free(spottedPerTick);
     }
 

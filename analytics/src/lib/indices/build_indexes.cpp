@@ -52,7 +52,7 @@ void buildIndexes(Equipment & equipment, GameTypes & gameTypes, HitGroups & hitG
     buildRangeIndex(games.id, games.size, rounds.gameId, rounds.size, games.roundsPerGame);
     buildRangeIndex(games.id, games.size, players.gameId, players.size, games.roundsPerGame);
     buildRangeIndex(rounds.id, rounds.size, ticks.roundId, ticks.size, rounds.ticksPerRound);
-    buildRangeIndex(ticks.id, ticks.size, playerAtTick.tickId, playerAtTick.size, ticks.playersPerTick);
+    buildRangeIndex(ticks.id, ticks.size, playerAtTick.tickId, playerAtTick.size, ticks.patPerTick);
     buildRangeIndex(ticks.id, ticks.size, spotted.tickId, spotted.size, ticks.spottedPerTick);
     buildRangeIndex(grenades.id, grenades.size, flashed.grenadeId, flashed.size, grenades.flashedPerGrenade);
     buildRangeIndex(grenades.id, grenades.size, grenadeTrajectories.grenadeId, grenadeTrajectories.size, grenades.trajectoryPerGrenade);

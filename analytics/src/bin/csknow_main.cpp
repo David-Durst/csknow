@@ -236,6 +236,16 @@ int main(int argc, char * argv[]) {
             res.set_header("Access-Control-Allow-Origin", "*");
         });
 
+        svr.Get("/players/(\\d+)", [&](const httplib::Request & req, httplib::Response &res) {
+            int64_t gameId = std::stol(req.matches[1].str());
+            std::stringstream ss;
+            for (int64_t playerIndex = games.playersPerGame->minId; playerIndex <= games.playersPerGame->maxId; playerIndex++) {
+                ss << players.id[playerIndex] << "," << players.name[playerIndex] << std::endl;
+            }
+            res.set_content(ss.str(), "text/plain");
+            res.set_header("Access-Control-Allow-Origin", "*");
+        });
+
         svr.Get("/rounds/(\\d+)", [&](const httplib::Request & req, httplib::Response &res) {
             int64_t gameId = std::stol(req.matches[1].str());
             std::stringstream ss;
@@ -244,7 +254,7 @@ int main(int argc, char * argv[]) {
                     << "," << rounds.endTick[roundIndex] << "," << rounds.warmup[roundIndex] << ","
                     << rounds.freezeTimeEnd[roundIndex] << "," << rounds.roundNumber[roundIndex] << ","
                     << rounds.roundEndReason[roundIndex] << "," << rounds.winner[roundIndex] << ","
-                    << rounds.tWins[roundIndex] << "," << rounds.ctWins[roundIndex];
+                    << rounds.tWins[roundIndex] << "," << rounds.ctWins[roundIndex] << std::endl;
             }
             res.set_content(ss.str(), "text/plain");
             res.set_header("Access-Control-Allow-Origin", "*");
@@ -255,8 +265,21 @@ int main(int argc, char * argv[]) {
             std::stringstream ss;
             for (int64_t tickIndex = rounds.ticksPerRound->minId; tickIndex <= rounds.ticksPerRound->maxId; tickIndex++) {
                 ss << ticks.id[tickIndex] << "," << ticks.roundId[tickIndex] << "," << ticks.gameTime[tickIndex] << ","
-                    << ticks.demoTickNumber[tickIndex] << "," << ticks.gameTickNumber << "," << ticks.bombCarrier << ","
-                    << ticks.bombX << "," << ticks.bombY << "," << ticks.bombZ << std::endl;
+                    << ticks.demoTickNumber[tickIndex] << "," << ticks.gameTickNumber[tickIndex] << "," << ticks.bombCarrier[tickIndex] << ","
+                    << ticks.bombX[tickIndex] << "," << ticks.bombY[tickIndex] << "," << ticks.bombZ[tickIndex] << std::endl;
+            }
+            res.set_content(ss.str(), "text/plain");
+            res.set_header("Access-Control-Allow-Origin", "*");
+        });
+
+        svr.Get("/playerAtTick/(\\d+)", [&](const httplib::Request & req, httplib::Response &res) {
+            int64_t tickId = std::stol(req.matches[1].str());
+            std::stringstream ss;
+            for (int64_t patIndex = ticks.patPerTick->minId; patIndex <= ticks.patPerTick->maxId; patIndex++) {
+                ss << playerAtTick.id[patIndex] << "," << playerAtTick.playerId[patIndex] << "," << playerAtTick.tickId[patIndex] << ","
+                   << playerAtTick.posX[patIndex] << "," << playerAtTick.posY[patIndex] << "," << playerAtTick.posZ[patIndex] << ","
+                   << playerAtTick.viewX[patIndex] << "," << playerAtTick.viewY[patIndex] << "," << playerAtTick.team[patIndex] << ","
+                   << playerAtTick.health[patIndex] << "," << playerAtTick.armor[patIndex] << "," << playerAtTick.isAlive[patIndex] << std::endl;
             }
             res.set_content(ss.str(), "text/plain");
             res.set_header("Access-Control-Allow-Origin", "*");
