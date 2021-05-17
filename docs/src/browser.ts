@@ -101,27 +101,6 @@ async function init() {
     // Declare a variable that we will assign the key of the last element in the response to
     let pageMarker;
     // While loop that runs until response.truncated is false
-    let numMatches = 0;
-    while (truncated) {
-        try {
-            const response = await s3.send(new ListObjectsCommand(listBucketParams));
-            response.Contents.forEach((item: any) => {
-                matches.push(new Match(item.Key))
-            })
-            numMatches += response.Contents.length
-            truncated = response.IsTruncated;
-            // If 'truncated' is true, assign the key of the final element in the response to our variable 'pageMarker'
-            if (truncated) {
-                pageMarker = response.Contents.slice(-1)[0].Key;
-                // Assign value of pageMarker to bucketParams so that the next iteration will start from the new pageMarker.
-                listBucketParams.Marker = pageMarker;
-            }
-            // At end of the list, response.truncated is false and our function exits the while loop.
-        } catch (err) {
-            console.log("Error", err);
-            truncated = false;
-        }
-    }
     matchSelector = document.querySelector<HTMLInputElement>("#match-selector")
     matchSelector.value = "0"
     matchSelector.min = "0"
@@ -216,9 +195,9 @@ async function changedMatch() {
                 const cols = lines[lineNumber].split(",");
                 gameData.tableNames.push(cols[0])
                 gameData.tables.set(cols[0], [])
-                const numKeysIndex = 1
-                const numKeys = parseInt(cols[numKeysIndex])
-                const numOtherColsIndex = numKeysIndex + numKeys + 1
+                const numForeignKeysIndex = 1
+                const numForeignKeys = parseInt(cols[numForeignKeysIndex])
+                const numOtherColsIndex = numForeignKeysIndex + numForeignKeys + 1
                 const numOtherCols = parseInt(cols[numOtherColsIndex])
                 let parserType: ParserType;
                 if (cols[0] == tickTableName) {
@@ -241,7 +220,7 @@ async function changedMatch() {
                 }
                 gameData.parsers.set(cols[0],
                     new Parser(cols[0],
-                        cols.slice(numKeysIndex + 1, numKeysIndex + numKeys + 1),
+                        cols.slice(numForeignKeysIndex + 1, numForeignKeysIndex + numForeignKeys + 1),
                         cols.slice(numOtherColsIndex + 1, numOtherColsIndex + numOtherCols + 1),
                         cols[cols.length - 1], parserType
                     )

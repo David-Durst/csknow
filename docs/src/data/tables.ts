@@ -52,12 +52,14 @@ export class Row {
 export class GameRow extends Row {
     demoFile: string;
     demoTickRate: number;
+    gameTickRate: number;
 
     constructor(id: number, parser: Parser,
                 foreignKeyValues: number[], otherColumnValues: string[]) {
         super(id, parser, foreignKeyValues, otherColumnValues);
         this.demoFile = otherColumnValues[0];
         this.demoTickRate = parseInt(otherColumnValues[1]);
+        this.gameTickRate = parseInt(otherColumnValues[2]);
     }
 }
 
@@ -114,18 +116,20 @@ export class TickRow extends Row {
 }
 
 export class PlayerRow extends Row {
+    gameId: number;
     name: string;
 
     constructor(id: number, parser: Parser,
                 foreignKeyValues: number[], otherColumnValues: string[]) {
         super(id, parser, foreignKeyValues, otherColumnValues);
+        this.gameId = foreignKeyValues[0];
         this.name = otherColumnValues[0];
     }
 }
 
 export class PlayerAtTickRow extends Row {
-    playerId: number;
     tickId: number;
+    playerId: number;
     posX: number;
     posY: number;
     posZ: number;
@@ -139,17 +143,17 @@ export class PlayerAtTickRow extends Row {
     constructor(id: number, parser: Parser,
                 foreignKeyValues: number[], otherColumnValues: string[]) {
         super(id, parser, foreignKeyValues, otherColumnValues);
-        this.playerId = parseInt(otherColumnValues[0]);
         this.tickId = foreignKeyValues[0];
-        this.posX = parseFloat(otherColumnValues[1]);
-        this.posY = parseFloat(otherColumnValues[2]);
-        this.posZ = parseFloat(otherColumnValues[3]);
-        this.viewX = parseFloat(otherColumnValues[4]);
-        this.viewY = parseFloat(otherColumnValues[5]);
-        this.team = parseInt(otherColumnValues[6]);
-        this.health = parseFloat(otherColumnValues[7]);
-        this.armor = parseFloat(otherColumnValues[8]);
-        this.isAlive = parseBool(otherColumnValues[9]);
+        this.playerId = foreignKeyValues[1];
+        this.posX = parseFloat(otherColumnValues[0]);
+        this.posY = parseFloat(otherColumnValues[1]);
+        this.posZ = parseFloat(otherColumnValues[2]);
+        this.viewX = parseFloat(otherColumnValues[3]);
+        this.viewY = parseFloat(otherColumnValues[4]);
+        this.team = parseInt(otherColumnValues[5]);
+        this.health = parseFloat(otherColumnValues[6]);
+        this.armor = parseFloat(otherColumnValues[7]);
+        this.isAlive = parseBool(otherColumnValues[8]);
     }
 }
 
