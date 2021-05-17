@@ -324,7 +324,7 @@ void loadHitGroupsFile(HitGroups & hitGroups, string filePath) {
 }
 
 void loadHitGroups(HitGroups & hitGroups, string dataPath) {
-    string fileName = "dimension_table_game_types.csv";
+    string fileName = "dimension_table_hit_groups.csv";
     string filePath = dataPath + "/" + fileName;
 
     std::cout << "determining array size" << std::endl;

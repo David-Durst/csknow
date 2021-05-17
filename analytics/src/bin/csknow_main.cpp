@@ -93,6 +93,10 @@ int main(int argc, char * argv[]) {
     std::cout << "num elements in explosions: " << explosions.size << std::endl;
 
     QueryGames queryGames(games);
+    QueryRounds queryRounds(games, rounds);
+    QueryPlayers queryPlayers(games, players);
+    QueryTicks queryTicks(rounds, ticks);
+    QueryPlayerAtTick queryPlayerAtTick(ticks, playerAtTick);
 
     /*
     SpottedIndex spottedIndex(position, spotted);
@@ -200,9 +204,13 @@ int main(int argc, char * argv[]) {
         }
     }
      */
-    vector<string> queryNames = {"games"};//, "rounds", "players", "ticks", "playerAtTick"};
+    vector<string> queryNames = {"games", "rounds", "players", "ticks", "playerAtTick"};
     map<string, reference_wrapper<QueryResult>> queries {
             {queryNames[0], queryGames},
+            {queryNames[1], queryRounds},
+            {queryNames[2], queryPlayers},
+            {queryNames[3], queryTicks},
+            {queryNames[4], queryPlayerAtTick},
     };
 
     if (runServer) {
@@ -216,7 +224,6 @@ int main(int argc, char * argv[]) {
             else {
                 res.status = 404;
             }
-            res.set_content(ss.str(), "text/plain");
             res.set_header("Access-Control-Allow-Origin", "*");
         });
 

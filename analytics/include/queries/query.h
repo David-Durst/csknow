@@ -50,7 +50,7 @@ public:
         return ss.str();
     }
 
-    virtual string toCSV(int64_t otherTableIndex) {
+    string toCSV(int64_t otherTableIndex) {
         std::stringstream ss;
         vector<int64_t> filter = filterByForeignKey(otherTableIndex);
         for (const auto & index : filter) {
@@ -60,7 +60,7 @@ public:
     }
     // find all rows with foreign key that reference another table
     virtual vector<int64_t> filterByForeignKey(int64_t otherTableIndex) = 0;
-    virtual string oneLineToCSV(int64_t index, stringstream & ss) = 0;
+    virtual void oneLineToCSV(int64_t index, stringstream & ss) = 0;
     virtual vector<string> getForeignKeyNames() = 0;
     virtual vector<string> getOtherColumnNames() = 0;
 };
