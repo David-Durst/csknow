@@ -4,7 +4,7 @@ import {
     PlayerAtTickRow,
     GameData,
     Index,
-    playerAtTickTableName, roundTableName, tickTableName, customParsedTabled
+    playerAtTickTableName, roundTableName, tickTableName, customParsedTables
 } from "./tables";
 
 function generateTicksToOtherTableIndex(ticks: TickRow[], otherTable: Row[],

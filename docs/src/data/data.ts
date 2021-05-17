@@ -27,7 +27,12 @@ export function parse(container: Parser, firstCall: Boolean = true) {
 
 export let gameData: GameData = null;
 export function createGameData() {
-    gameData = new GameData();
+    if (gameData == null) {
+        gameData = new GameData();
+    }
+    else {
+        gameData.clear();
+    }
 }
 export let initialized: boolean = false;
 export function setInitialized() {

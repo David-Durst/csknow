@@ -20,6 +20,7 @@ import {
 import {registerPlayHandlers} from "./controller/controls"
 import {GetObjectCommand, GetObjectCommandOutput} from "@aws-sdk/client-s3";
 import {
+    GameRow,
     gameTableName,
     Parser,
     ParserType,
@@ -27,12 +28,17 @@ import {
     playerAtTickTableName,
     playersTableName,
     RoundRow,
-    roundTableName,
+    roundTableName, tablesNotFilteredByRound,
     TickRow,
     tickTableName
 } from "./data/tables";
 import {indexEventsForGame} from "./data/ticksToOtherTables";
-import {remoteAddr, setRemoteAddr} from "./controller/downloadData";
+import {
+    getGames, getPlayers, getRounds,
+    getTables,
+    remoteAddr,
+    setRemoteAddr
+} from "./controller/downloadData";
 
 const { S3Client, ListObjectsCommand } = require("@aws-sdk/client-s3");
 const {CognitoIdentityClient} = require("@aws-sdk/client-cognito-identity");
@@ -41,7 +47,9 @@ const path = require("path");
 
 let matchSelector: HTMLInputElement = null;
 let matchLabel: HTMLLabelElement = null;
-let matchLabelStr: string = ""
+let roundSelector: HTMLInputElement = null;
+let roundLabel: HTMLLabelElement = null;
+let roundLabelStr: string = ""
 let downloadSelect: HTMLSelectElement = null;
 let remoteAddrSelect: HTMLSelectElement = null;
 const black = "rgba(0,0,0,1.0)";
@@ -55,21 +63,6 @@ const lightRed = "rgba(255,143,143,1.0)";
 function assignRemoteAddr() {
     setRemoteAddr(remoteAddrSelect.value)
 }
-
-class Match {
-    key: any
-    demoFileWithExt: string;
-    demoFile: string
-
-    constructor(key: any) {
-        this.key = key
-        const p = path.parse(key)
-        this.demoFileWithExt = p.base
-        this.demoFile = p.name
-    }
-
-}
-let matches: Match[] = [];
 
 // Set the AWS region
 const REGION = "us-east-1"; //e.g. "us-east-1"
@@ -101,28 +94,43 @@ async function init() {
     // Declare a variable that we will assign the key of the last element in the response to
     let pageMarker;
     // While loop that runs until response.truncated is false
-    matchSelector = document.querySelector<HTMLInputElement>("#match-selector")
-    matchSelector.value = "0"
-    matchSelector.min = "0"
-    matchSelector.max = gameData.gamesTable.length.toString()
     matchLabel = document.querySelector<HTMLLabelElement>("#cur-match")
+    roundLabel = document.querySelector<HTMLLabelElement>("#cur-round")
     downloadSelect = document.querySelector<HTMLSelectElement>("#download-type")
     remoteAddrSelect = document.querySelector<HTMLSelectElement>("#remote-addr")
     setRemoteAddr(remoteAddrSelect.value)
     setupCanvas()
     setupInitFilters()
-    await changedMatch();
+    createGameData();
+    await getTables();
+    await getGames();
+    await getRounds(0);
+    setupMatchRoundSelectors();
+    await changedMatchOrRound();
     setInitialized();
     registerPlayHandlers();
     document.querySelector<HTMLSelectElement>("#download-type").addEventListener("change", setMatchLabel)
     document.querySelector<HTMLSelectElement>("#remote-addr").addEventListener("change", assignRemoteAddr)
-    matchSelector.addEventListener("input", changingMatch)
+    matchSelector.addEventListener("input", changingMatchOrRound)
     matchSelector.addEventListener("mouseup", changedMatch)
+    roundSelector.addEventListener("input", changingMatchOrRound)
+    roundSelector.addEventListener("mouseup", changedMatchOrRound)
     setupCanvasHandlers()
     setupFilterHandlers()
 }
 
-function changingMatch() {
+function setupMatchRoundSelectors() {
+    matchSelector = document.querySelector<HTMLInputElement>("#match-selector")
+    matchSelector.value = "0"
+    matchSelector.min = "0"
+    matchSelector.max = gameData.gamesTable.length.toString()
+    roundSelector = document.querySelector<HTMLInputElement>("#round-selector")
+    roundSelector.value = "0"
+    roundSelector.min = "0"
+    roundSelector.max = gameData.gamesTable.length.toString()
+}
+
+function changingMatchOrRound() {
     ctx.drawImage(minimap,0,0,minimapWidth,minimapHeight,0,0,
         canvasWidth,canvasHeight);
     ctx.fillStyle = lightGray;
@@ -136,7 +144,10 @@ function getObjectParams(key: string, type: string) {
     };
 }
 
+
 function setMatchLabel() {
+    console.log("can't set match label yet")
+    /*
     setDemoURL("https://csknow.s3.amazonaws.com/demos/processed/" +
         matchLabelStr + ".dem")
     setDemoName(matchLabelStr + ".dem")
@@ -144,6 +155,11 @@ function setMatchLabel() {
         matchLabel.innerHTML = "<a id=\"match-url\" href=\"https://csknow.s3.amazonaws.com/demos/processed/" +
             matchLabelStr + ".dem\">" + matchLabelStr + "</a>"
     }
+    else {
+        console.log("can't set match label yet")
+    }
+     */
+    /*
     else if (downloadSelect.value == "position") {
         matchLabel.innerHTML = "<a id=\"match-url\" href=\"https://csknow.s3.amazonaws.com/demos/csvs2/" +
             matchLabelStr + ".dem_position.csv\">" + matchLabelStr + "</a>"
@@ -172,19 +188,30 @@ function setMatchLabel() {
         matchLabel.innerHTML = "<a id=\"match-url\" href=\"" + remoteAddr + "query/" + downloadSelect.value + "/" +
             matchLabelStr + ".dem.csv\">" + matchLabelStr + "</a>"
     }
+     */
 }
 
 async function changedMatch() {
+    await getRounds(gameData.gamesTable[parseInt(matchSelector.value)].id);
+    await changedMatchOrRound();
+}
+
+async function changedMatchOrRound() {
+    const curGame : GameRow = gameData.gamesTable[parseInt(matchSelector.value)]
+    const curRound : RoundRow = gameData.roundsTable[parseInt(roundSelector.value)]
     createGameData();
-    matchLabelStr = matches[parseInt(matchSelector.value)].demoFile;
     setMatchLabel();
     let promises: Promise<any>[] = []
 
 
+    await getPlayers(curGame.id);
     for (const downloadedDataName of gameData.tableNames) {
+        if (downloadedDataName in tablesNotFilteredByRound) {
+            continue;
+        }
         promises.push(
             fetch(remoteAddr + "query/" + downloadedDataName + "/" +
-                matches[parseInt(matchSelector.value)].demoFileWithExt + ".csv")
+                curRound.id)
             .then((response: Response) => {
                 gameData.parsers.get(downloadedDataName)
                     .setReader(response.body.getReader(), )
@@ -211,4 +238,4 @@ async function changedMatch() {
 }
 
 
-export { init, matches, gameData };
+export { init, gameData };

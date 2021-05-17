@@ -1,6 +1,6 @@
-import {gameData} from "../data/data";
+import {gameData, parse} from "../data/data";
 import {
-    customParsedTabled,
+    customParsedTables,
     gameTableName, Parser,
     ParserType, playerAtTickTableName, playersTableName,
     roundTableName,
@@ -14,7 +14,7 @@ export function setRemoteAddr(newRemoteAddr: string) {
 }
 
 let addedDownloadedOptions = false;
-async function getTables() {
+export async function getTables() {
     // wait for list of responses, then do each element
     await fetch(remoteAddr + "list", {mode: 'no-cors'})
         .then(_ =>
@@ -59,7 +59,7 @@ async function getTables() {
                         cols[cols.length - 1], parserType
                     )
                 )
-                if (!(cols[0] in customParsedTabled)) {
+                if (!(cols[0] in customParsedTables)) {
                     gameData.ticksToOtherTablesIndices.set(cols[0], new Map<number, number[]>());
                 }
                 if (!addedDownloadedOptions) {
@@ -75,4 +75,47 @@ async function getTables() {
             console.log(e)
         });
     addedDownloadedOptions = true;
+}
+
+export async function getGames() {
+    await fetch(remoteAddr + "query/games")
+        .then((response: Response) => {
+            gameData.parsers.get(gameTableName)
+                .setReader(response.body.getReader())
+            // read first time to
+            return gameData.parsers.get(gameTableName).reader.read();
+        })
+        .then(parse(gameData.parsers.get(gameTableName), true))
+        .catch(e => {
+            console.log("error downloading " + gameTableName)
+        })
+}
+
+export async function getRounds(gameId: number) {
+    gameData.roundsTable = [];
+    await fetch(remoteAddr + "query/rounds/" + gameId.toString())
+        .then((response: Response) => {
+            gameData.parsers.get(roundTableName)
+                .setReader(response.body.getReader())
+            // read first time to
+            return gameData.parsers.get(roundTableName).reader.read();
+        })
+        .then(parse(gameData.parsers.get(roundTableName), true))
+        .catch(e => {
+            console.log("error downloading " + roundTableName)
+        })
+}
+
+export async function getPlayers(gameId: number) {
+    await fetch(remoteAddr + "query/players/" + gameId.toString())
+        .then((response: Response) => {
+            gameData.parsers.get(playersTableName)
+                .setReader(response.body.getReader())
+            // read first time to
+            return gameData.parsers.get(playersTableName).reader.read();
+        })
+        .then(parse(gameData.parsers.get(playersTableName), true))
+        .catch(e => {
+            console.log("error downloading " + playersTableName)
+        })
 }
