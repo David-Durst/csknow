@@ -9,9 +9,7 @@ void buildRangeIndex(const vector<int64_t> primaryKeyCol, int64_t primarySize, c
                           int64_t foreignSize, RangeIndex rangeIndexCol) {
     for (int64_t primaryIndex = 0, foreignIndex = 0; primaryIndex < primarySize && foreignIndex < foreignSize; primaryIndex++) {
         // sometimes have mistakes where point to 0 as uninitalized, skip entries
-        if(foreignKeyCol[foreignIndex] <= 0 &&  foreignKeyCol[foreignIndex] < primaryKeyCol[primaryIndex]) {
-            for (; foreignKeyCol[foreignIndex] <= 0; foreignIndex++) ;
-        }
+        for(; foreignKeyCol[foreignIndex] <= 0 && foreignKeyCol[foreignIndex] < primaryKeyCol[primaryIndex]; foreignIndex++);
         if (foreignKeyCol[foreignIndex] < primaryKeyCol[primaryIndex]) {
             cout << "bad foreign " << foreignIndex  << " val " << foreignKeyCol[foreignIndex]
                  << " and primary " << primaryIndex << " val " << primaryKeyCol[primaryIndex] << endl;
@@ -50,7 +48,7 @@ void buildIndexes(Equipment & equipment, GameTypes & gameTypes, HitGroups & hitG
                        GrenadeTrajectories & grenadeTrajectories, Plants & plants, Defusals & defusals, Explosions & explosions) {
     cout << "building range indexes" << endl;
     buildRangeIndex(games.id, games.size, rounds.gameId, rounds.size, games.roundsPerGame);
-    buildRangeIndex(games.id, games.size, players.gameId, players.size, games.roundsPerGame);
+    buildRangeIndex(games.id, games.size, players.gameId, players.size, games.playersPerGame);
     buildRangeIndex(rounds.id, rounds.size, ticks.roundId, ticks.size, rounds.ticksPerRound);
     buildRangeIndex(ticks.id, ticks.size, playerAtTick.tickId, playerAtTick.size, ticks.patPerTick);
     buildRangeIndex(ticks.id, ticks.size, spotted.tickId, spotted.size, ticks.spottedPerTick);
