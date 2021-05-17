@@ -44,6 +44,7 @@ public:
 
     string toCSV() {
         std::stringstream ss;
+        addHeader(ss);
         for (int64_t index = 0; index < size; index++) {
             oneLineToCSV(index, ss);
         }
@@ -52,12 +53,25 @@ public:
 
     string toCSV(int64_t otherTableIndex) {
         std::stringstream ss;
+        addHeader(ss);
         vector<int64_t> filter = filterByForeignKey(otherTableIndex);
         for (const auto & index : filter) {
             oneLineToCSV(index, ss);
         }
         return ss.str();
     }
+
+    void addHeader(stringstream & ss) {
+        ss << "id";
+        for (const auto & foreignKey : getForeignKeyNames()) {
+            ss << "," << foreignKey;
+        }
+        for (const auto & otherCol : getOtherColumnNames()) {
+            ss << "," << otherCol;
+        }
+        ss << std::endl;
+    }
+    
     // find all rows with foreign key that reference another table
     virtual vector<int64_t> filterByForeignKey(int64_t otherTableIndex) = 0;
     virtual void oneLineToCSV(int64_t index, stringstream & ss) = 0;
