@@ -126,6 +126,10 @@ export async function getPlayers(gameId: number) {
 export function getRoundFilteredTables(promises: Promise<any>[], curRound: RoundRow) {
     console.log(tablesNotFilteredByRound);
     for (const downloadedDataName of gameData.tableNames) {
+        if (!tablesNotIndexedByTick.includes(downloadedDataName)) {
+            gameData.ticksToOtherTablesIndices.set(downloadedDataName,
+                new Map<number, number[]>());
+        }
         if (tablesNotFilteredByRound.includes(downloadedDataName)) {
             continue;
         }

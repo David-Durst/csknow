@@ -293,9 +293,8 @@ export const gameTableName = "games"
 export const roundTableName = "rounds"
 export const playerAtTickTableName = "playerAtTick"
 export const playersTableName = "players"
-export const tablesNotIndexedByTick = [tickTableName, gameTableName,
-    roundTableName, playersTableName]
 export const tablesNotFilteredByRound = [gameTableName, roundTableName, playersTableName]
+export const tablesNotIndexedByTick = tablesNotFilteredByRound.concat([tickTableName])
 export class GameData {
     tableNames: string[] = [];
     parsers: Map<string, Parser> = new Map<string, Parser>();

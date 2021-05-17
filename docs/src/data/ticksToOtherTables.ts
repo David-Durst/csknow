@@ -3,8 +3,9 @@ import {
     TickRow,
     GameData,
     Index,
-    playerAtTickTableName,
+    playerAtTickTableName, tablesNotIndexedByTick, tickTableName,
 } from "./tables";
+import {gameData} from "./data";
 
 function generateTicksToOtherTableIndex(ticks: TickRow[], otherTable: Row[],
                                        index: Index,
@@ -33,6 +34,10 @@ export function indexEventsForGame(gameData: GameData) {
         (_: number, tick: number) => tick)
 
     for (let dataName of gameData.tableNames) {
+        if (tablesNotIndexedByTick.includes(dataName)
+            || dataName == playerAtTickTableName || dataName == tickTableName) {
+            continue;
+        }
         let getTicksPerEvent = function (index: number, tick: number): number {
             if (gameData.parsers.get(dataName).variableLength) {
                 return parseInt(
