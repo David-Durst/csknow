@@ -293,6 +293,8 @@ export const gameTableName = "games"
 export const roundTableName = "rounds"
 export const playerAtTickTableName = "playerAtTick"
 export const playersTableName = "players"
+export const customParsedTabled = [tickTableName, gameTableName,
+    roundTableName, playerAtTickTableName, playersTableName]
 export class GameData {
     tableNames: string[] = [];
     parsers: Map<string, Parser> = new Map<string, Parser>();

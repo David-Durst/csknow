@@ -32,6 +32,7 @@ import {
     tickTableName
 } from "./data/tables";
 import {indexEventsForGame} from "./data/ticksToOtherTables";
+import {remoteAddr, setRemoteAddr} from "./controller/downloadData";
 
 const { S3Client, ListObjectsCommand } = require("@aws-sdk/client-s3");
 const {CognitoIdentityClient} = require("@aws-sdk/client-cognito-identity");
@@ -51,9 +52,8 @@ const lightBlue = "rgba(194,255,243,1.0)";
 const darkRed = "rgba(209,0,0,1.0)";
 const lightRed = "rgba(255,143,143,1.0)";
 
-let remoteAddr = "http://52.86.105.42:3123/"
-function setRemoteAddr() {
-    remoteAddr = remoteAddrSelect.value
+function assignRemoteAddr() {
+    setRemoteAddr(remoteAddrSelect.value)
 }
 
 class Match {
@@ -104,18 +104,18 @@ async function init() {
     matchSelector = document.querySelector<HTMLInputElement>("#match-selector")
     matchSelector.value = "0"
     matchSelector.min = "0"
-    matchSelector.max = numMatches.toString()
+    matchSelector.max = gameData.gamesTable.length.toString()
     matchLabel = document.querySelector<HTMLLabelElement>("#cur-match")
     downloadSelect = document.querySelector<HTMLSelectElement>("#download-type")
     remoteAddrSelect = document.querySelector<HTMLSelectElement>("#remote-addr")
-    remoteAddr = remoteAddrSelect.value
+    setRemoteAddr(remoteAddrSelect.value)
     setupCanvas()
     setupInitFilters()
     await changedMatch();
     setInitialized();
     registerPlayHandlers();
     document.querySelector<HTMLSelectElement>("#download-type").addEventListener("change", setMatchLabel)
-    document.querySelector<HTMLSelectElement>("#remote-addr").addEventListener("change", setRemoteAddr)
+    document.querySelector<HTMLSelectElement>("#remote-addr").addEventListener("change", assignRemoteAddr)
     matchSelector.addEventListener("input", changingMatch)
     matchSelector.addEventListener("mouseup", changedMatch)
     setupCanvasHandlers()
@@ -174,70 +174,12 @@ function setMatchLabel() {
     }
 }
 
-let addedDownloadedOptions = false;
 async function changedMatch() {
     createGameData();
     matchLabelStr = matches[parseInt(matchSelector.value)].demoFile;
     setMatchLabel();
     let promises: Promise<any>[] = []
 
-    // wait for list of responses, then do each element
-    await fetch(remoteAddr + "list", {mode: 'no-cors'})
-        .then(_ =>
-            fetch(remoteAddr + "list")
-        )
-        .then((response: Response) =>
-            response.text()
-        )
-        .then((remoteTablesText: string) => {
-            const lines = remoteTablesText.trim().split("\n");
-            for (let lineNumber = 0; lineNumber < lines.length; lineNumber++) {
-                const cols = lines[lineNumber].split(",");
-                gameData.tableNames.push(cols[0])
-                gameData.tables.set(cols[0], [])
-                const numForeignKeysIndex = 1
-                const numForeignKeys = parseInt(cols[numForeignKeysIndex])
-                const numOtherColsIndex = numForeignKeysIndex + numForeignKeys + 1
-                const numOtherCols = parseInt(cols[numOtherColsIndex])
-                let parserType: ParserType;
-                if (cols[0] == tickTableName) {
-                    parserType = ParserType.tick;
-                }
-                else if (cols[0] == gameTableName) {
-                    parserType = ParserType.game;
-                }
-                else if (cols[0] == roundTableName) {
-                    parserType = ParserType.round;
-                }
-                else if (cols[0] == playerAtTickTableName) {
-                    parserType = ParserType.playerAtTick;
-                }
-                else if (cols[0] == playersTableName) {
-                    parserType = ParserType.player;
-                }
-                else {
-                    parserType = ParserType.other
-                }
-                gameData.parsers.set(cols[0],
-                    new Parser(cols[0],
-                        cols.slice(numForeignKeysIndex + 1, numForeignKeysIndex + numForeignKeys + 1),
-                        cols.slice(numOtherColsIndex + 1, numOtherColsIndex + numOtherCols + 1),
-                        cols[cols.length - 1], parserType
-                    )
-                )
-                gameData.ticksToOtherTablesIndices.set(cols[0], new Map<number, number[]>());
-                if (!addedDownloadedOptions) {
-                    (<HTMLSelectElement> document.getElementById("event-type"))
-                        .add(new Option(cols[0], cols[0]));
-                    (<HTMLSelectElement> document.getElementById("download-type"))
-                        .add(new Option(cols[0], cols[0]));
-                }
-            }
-        })
-        .catch(e => {
-            console.log("can't read listing from remote server")
-            console.log(e)
-        });
 
     for (const downloadedDataName of gameData.tableNames) {
         promises.push(
@@ -266,7 +208,6 @@ async function changedMatch() {
     indexEventsForGame(gameData)
     setupMatchFilters()
     setupMatchDrawing()
-    addedDownloadedOptions = true;
 }
 
 
