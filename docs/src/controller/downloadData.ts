@@ -1,10 +1,10 @@
 import {gameData, parse} from "../data/data";
 import {
-    customParsedTables,
+    tablesNotIndexedByTick,
     gameTableName, Parser,
-    ParserType, playerAtTickTableName, playersTableName,
-    roundTableName,
-    tickTableName
+    ParserType, playerAtTickTableName, playersTableName, RoundRow,
+    roundTableName, tablesNotFilteredByRound,
+    tickTableName, TickRow, PlayerAtTickRow
 } from "../data/tables";
 
 export let remoteAddr = "http://52.86.105.42:3123/"
@@ -59,7 +59,7 @@ export async function getTables() {
                         cols[cols.length - 1], parserType
                     )
                 )
-                if (!(cols[0] in customParsedTables)) {
+                if (!tablesNotIndexedByTick.includes(cols[0])) {
                     gameData.ticksToOtherTablesIndices.set(cols[0], new Map<number, number[]>());
                 }
                 if (!addedDownloadedOptions) {
@@ -88,6 +88,7 @@ export async function getGames() {
         .then(parse(gameData.parsers.get(gameTableName), true))
         .catch(e => {
             console.log("error downloading " + gameTableName)
+            console.log(e)
         })
 }
 
@@ -103,6 +104,7 @@ export async function getRounds(gameId: number) {
         .then(parse(gameData.parsers.get(roundTableName), true))
         .catch(e => {
             console.log("error downloading " + roundTableName)
+            console.log(e)
         })
 }
 
@@ -117,5 +119,29 @@ export async function getPlayers(gameId: number) {
         .then(parse(gameData.parsers.get(playersTableName), true))
         .catch(e => {
             console.log("error downloading " + playersTableName)
+            console.log(e)
         })
+}
+
+export function getRoundFilteredTables(promises: Promise<any>[], curRound: RoundRow) {
+    console.log(tablesNotFilteredByRound);
+    for (const downloadedDataName of gameData.tableNames) {
+        if (tablesNotFilteredByRound.includes(downloadedDataName)) {
+            continue;
+        }
+        promises.push(
+            fetch(remoteAddr + "query/" + downloadedDataName + "/" +
+                curRound.id)
+                .then((response: Response) => {
+                    gameData.parsers.get(downloadedDataName)
+                        .setReader(response.body.getReader(),)
+                    return gameData.parsers.get(downloadedDataName).reader.read();
+                })
+                .then(parse(gameData.parsers.get(downloadedDataName), true))
+                .catch(e => {
+                    console.log("error downloading " + downloadedDataName)
+                    console.log(e)
+                })
+        );
+    }
 }

@@ -18,7 +18,6 @@ import {
     setupMatchFilters
 } from "./controller/filter"
 import {registerPlayHandlers} from "./controller/controls"
-import {GetObjectCommand, GetObjectCommandOutput} from "@aws-sdk/client-s3";
 import {
     GameRow,
     gameTableName,
@@ -37,7 +36,8 @@ import {
     getGames, getPlayers, getRounds,
     getTables,
     remoteAddr,
-    setRemoteAddr
+    setRemoteAddr,
+    getRoundFilteredTables
 } from "./controller/downloadData";
 
 const { S3Client, ListObjectsCommand } = require("@aws-sdk/client-s3");
@@ -196,6 +196,7 @@ async function changedMatch() {
     await changedMatchOrRound();
 }
 
+
 async function changedMatchOrRound() {
     const curGame : GameRow = gameData.gamesTable[parseInt(matchSelector.value)]
     const curRound : RoundRow = gameData.roundsTable[parseInt(roundSelector.value)]
@@ -205,31 +206,7 @@ async function changedMatchOrRound() {
 
 
     await getPlayers(curGame.id);
-    for (const downloadedDataName of gameData.tableNames) {
-        if (downloadedDataName in tablesNotFilteredByRound) {
-            continue;
-        }
-        promises.push(
-            fetch(remoteAddr + "query/" + downloadedDataName + "/" +
-                curRound.id)
-            .then((response: Response) => {
-                gameData.parsers.get(downloadedDataName)
-                    .setReader(response.body.getReader(), )
-                return gameData.parsers.get(downloadedDataName).reader.read();
-            })
-            .then(parse(gameData.parsers.get(downloadedDataName), true))
-            .catch(e => {
-                console.log("error downloading " + downloadedDataName)
-            })
-        );
-    }
-    gameData.roundsTable = <RoundRow[]> gameData.tables.get(roundTableName)
-    gameData.tables.delete(roundTableName)
-    gameData.ticksTable = <TickRow[]> gameData.tables.get(tickTableName)
-    gameData.tables.delete(tickTableName)
-    gameData.playerAtTicksTable =
-        <PlayerAtTickRow[]> gameData.tables.get(playerAtTickTableName)
-
+    getRoundFilteredTables(promises, curRound);
 
     await Promise.all(promises)
     indexEventsForGame(gameData)

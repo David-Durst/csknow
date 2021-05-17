@@ -293,17 +293,17 @@ export const gameTableName = "games"
 export const roundTableName = "rounds"
 export const playerAtTickTableName = "playerAtTick"
 export const playersTableName = "players"
-export const customParsedTables = [tickTableName, gameTableName,
-    roundTableName, playerAtTickTableName, playersTableName]
+export const tablesNotIndexedByTick = [tickTableName, gameTableName,
+    roundTableName, playersTableName]
 export const tablesNotFilteredByRound = [gameTableName, roundTableName, playersTableName]
 export class GameData {
     tableNames: string[] = [];
     parsers: Map<string, Parser> = new Map<string, Parser>();
-    gamesTable: GameRow[];
-    roundsTable: RoundRow[];
+    gamesTable: GameRow[] = [];
+    roundsTable: RoundRow[] = [];
     roundIdToIndex: Map<number, number> = new Map<number, number>();
-    ticksTable: TickRow[];
-    playersTable: PlayerRow[];
+    ticksTable: TickRow[] = [];
+    playersTable: PlayerRow[] = [];
     playerIdToIndex: Map<number, number> = new Map<number, number>();
     playerAtTicksTable: PlayerAtTickRow[];
     tables: Map<string, Row[]> =
