@@ -187,10 +187,12 @@ export class Parser {
     ticksPerEvent: number;
     ticksColumn: number;
     parserType: ParserType;
+    baseUrl: string;
+    filterUrl: string;
 
     constructor(tableName: string, foreignKeyNames: string[],
                 otherColumnNames: string[],
-                ticksPerEvent: string, parserType: ParserType) {
+                ticksPerEvent: string, parserType: ParserType, url: string) {
         this.tableName = tableName;
         this.foreignKeyNames = foreignKeyNames;
         this.otherColumnNames = otherColumnNames;

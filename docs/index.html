@@ -56,11 +56,6 @@
                     <span class="label">target event type: </span>
                     <select id="event-type">
                         <option value="none">None</option>
-                        <option value="spotted">Spotted</option>
-                        <option value="weapon_fire">Weapon Fire</option>
-                        <option value="hurt">Hurt</option>
-                        <option value="grenades">Grenades</option>
-                        <option value="kills">Kills</option>
                     </select>
                     <button type="button" id="event_filter" class="btn btn-info playButton">
                         apply event filter
@@ -132,6 +127,7 @@
                     <span id="cur-round">Not Yet Loaded</span>
                     <span class="label">Download Type:</span>
                     <select id="download-type">
+                        <option value="dem">Demo</option>
                     </select>
                     <a role="button" download="csknow.cfg" style="color:#fff" id="download_client" class="btn btn-info playButton">
                         config client

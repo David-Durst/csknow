@@ -38,7 +38,12 @@ import {
     setRemoteAddr,
     getRoundFilteredTables
 } from "./controller/downloadData";
-import {setupSelectors, matchSelector, roundSelector} from "./controller/selectors";
+import {
+    setupSelectors,
+    matchSelector,
+    roundSelector,
+    roundLabel, matchLabel, setRoundsSelectorMax
+} from "./controller/selectors";
 
 const { S3Client, ListObjectsCommand } = require("@aws-sdk/client-s3");
 const {CognitoIdentityClient} = require("@aws-sdk/client-cognito-identity");
@@ -106,7 +111,7 @@ async function init() {
     await changedMatchOrRound();
     setInitialized();
     registerPlayHandlers();
-    document.querySelector<HTMLSelectElement>("#download-type").addEventListener("change", setMatchLabel)
+    document.querySelector<HTMLSelectElement>("#download-type").addEventListener("change", setMatchAndRoundLabels)
     document.querySelector<HTMLSelectElement>("#remote-addr").addEventListener("change", assignRemoteAddr)
     setupCanvasHandlers()
     setupFilterHandlers()
@@ -117,6 +122,7 @@ function changingMatchOrRound() {
         canvasWidth,canvasHeight);
     ctx.fillStyle = lightGray;
     ctx.fillRect(0, 0, canvasWidth, canvasHeight)
+    setMatchAndRoundLabels();
 }
 
 function getObjectParams(key: string, type: string) {
@@ -127,8 +133,23 @@ function getObjectParams(key: string, type: string) {
 }
 
 
-function setMatchLabel() {
-    console.log("can't set match label yet")
+function setMatchAndRoundLabels() {
+    roundLabel.innerHTML =
+        gameData.roundsTable[parseInt(roundSelector.value)].roundNumber.toString()
+    const curGame = gameData.gamesTable[parseInt(matchSelector.value)]
+    if (downloadSelect.value == "dem") {
+        matchLabel.innerHTML = "<a id=\"match-url\" href=\"https://csknow.s3.amazonaws.com/demos/processed2/" +
+             curGame.demoFile + "\">" + curGame.demoFile + "</a>"
+    }
+    else {
+        const parser = gameData.parsers.get(downloadSelect.value)
+        let url = parser.baseUrl
+        if (parser.filterUrl != "") {
+            url = url + "/" + parser.filterUrl
+        }
+        matchLabel.innerHTML = "<a id=\"match-url\" href=\"" + url + "\">" +
+            curGame.demoFile + "</a>"
+    }
     /*
     setDemoURL("https://csknow.s3.amazonaws.com/demos/processed/" +
         matchLabelStr + ".dem")
@@ -175,6 +196,7 @@ function setMatchLabel() {
 
 async function changedMatch() {
     await getRounds(gameData.gamesTable[parseInt(matchSelector.value)].id);
+    setRoundsSelectorMax(gameData.roundsTable.length - 1);
     await changedMatchOrRound();
 }
 
@@ -183,7 +205,7 @@ async function changedMatchOrRound() {
     const curGame : GameRow = gameData.gamesTable[parseInt(matchSelector.value)]
     const curRound : RoundRow = gameData.roundsTable[parseInt(roundSelector.value)]
     createGameData();
-    setMatchLabel();
+    setMatchAndRoundLabels();
     let promises: Promise<any>[] = []
 
 

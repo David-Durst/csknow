@@ -56,7 +56,8 @@ export async function getTables() {
                     new Parser(cols[0],
                         cols.slice(numForeignKeysIndex + 1, numForeignKeysIndex + numForeignKeys + 1),
                         cols.slice(numOtherColsIndex + 1, numOtherColsIndex + numOtherCols + 1),
-                        cols[cols.length - 1], parserType
+                        cols[cols.length - 1], parserType,
+                        remoteAddr + cols[0]
                     )
                 )
                 if (!tablesNotIndexedByTick.includes(cols[0])) {
@@ -78,6 +79,7 @@ export async function getTables() {
 }
 
 export async function getGames() {
+    gameData.parsers.get(gameTableName).filterUrl = ""
     await fetch(remoteAddr + "query/games")
         .then((response: Response) => {
             gameData.parsers.get(gameTableName)
@@ -93,6 +95,7 @@ export async function getGames() {
 }
 
 export async function getRounds(gameId: number) {
+    gameData.parsers.get(roundTableName).filterUrl = gameId.toString()
     gameData.roundsTable = [];
     await fetch(remoteAddr + "query/rounds/" + gameId.toString())
         .then((response: Response) => {
@@ -109,6 +112,7 @@ export async function getRounds(gameId: number) {
 }
 
 export async function getPlayers(gameId: number) {
+    gameData.parsers.get(playersTableName).filterUrl = gameId.toString()
     await fetch(remoteAddr + "query/players/" + gameId.toString())
         .then((response: Response) => {
             gameData.parsers.get(playersTableName)
@@ -126,6 +130,7 @@ export async function getPlayers(gameId: number) {
 export function getRoundFilteredTables(promises: Promise<any>[], curRound: RoundRow) {
     console.log(tablesNotFilteredByRound);
     for (const downloadedDataName of gameData.tableNames) {
+        gameData.parsers.get(downloadedDataName).filterUrl = curRound.gameId.toString()
         if (!tablesNotIndexedByTick.includes(downloadedDataName)) {
             gameData.ticksToOtherTablesIndices.set(downloadedDataName,
                 new Map<number, number[]>());
