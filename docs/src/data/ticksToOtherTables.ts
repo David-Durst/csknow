@@ -58,10 +58,8 @@ function generateHashmapIndex(ticks: TickRow[], otherTable: Row[],
 }
 
 export function indexEventsForRound(gameData: GameData) {
-    console.log("a")
     generateRangeIndex(gameData.ticksTable, gameData.playerAtTicksTable,
         gameData.ticksToPlayerAtTick)
-    console.log("b")
 
     for (let dataName of gameData.tableNames) {
         if (tablesNotIndexedByTick.includes(dataName)
