@@ -288,7 +288,12 @@ export class Parser {
 
 }
 
-export type Index = Map<number, number[]>;
+export type HashmapIndex = Map<number, number[]>;
+export class RangeIndexEntry {
+    minId: number;
+    maxId: number;
+}
+export type RangeIndex = RangeIndexEntry[];
 export const tickTableName = "ticks"
 export const gameTableName = "games"
 export const roundTableName = "rounds"
@@ -306,9 +311,10 @@ export class GameData {
     playersTable: PlayerRow[] = [];
     playerIdToIndex: Map<number, number> = new Map<number, number>();
     playerAtTicksTable: PlayerAtTickRow[];
+    ticksToPlayerAtTick: RangeIndex = [];
     tables: Map<string, Row[]> =
         new Map<string, Row[]>();
-    ticksToOtherTablesIndices: Map<string, Index> =
+    ticksToOtherTablesIndices: Map<string, HashmapIndex> =
         new Map<string, Map<number, number[]>>();
 
     getRound(tickData: TickRow) : RoundRow {
@@ -321,12 +327,15 @@ export class GameData {
     }
 
     getPlayersAtTick(tickData: TickRow) : PlayerAtTickRow[] {
-        if (!this.ticksToOtherTablesIndices.get(playerAtTickTableName).has(tickData.id)) {
+        if (tickData.id >= this.ticksToPlayerAtTick.length) {
             return [];
         }
-        return this.ticksToOtherTablesIndices
-            .get(playerAtTickTableName).get(tickData.id)
-            .map((value) => gameData.playerAtTicksTable[value])
+        let result: PlayerAtTickRow[] = [];
+        for (let i = this.ticksToPlayerAtTick[tickData.id].minId;
+             i <= this.ticksToPlayerAtTick[tickData.id].maxId; i++) {
+            result.push(this.playerAtTicksTable[i])
+        }
+        return result;
     }
 
     getPlayerIndex(playerId: number) : number {

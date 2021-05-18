@@ -2,15 +2,44 @@ import {
     Row,
     TickRow,
     GameData,
-    Index,
-    playerAtTickTableName, tablesNotIndexedByTick, tickTableName,
+    HashmapIndex,
+    playerAtTickTableName,
+    tablesNotIndexedByTick,
+    tickTableName,
+    RangeIndex,
+    RangeIndexEntry,
 } from "./tables";
 import {gameData} from "./data";
 
-function generateTicksToOtherTableIndex(ticks: TickRow[], otherTable: Row[],
-                                       index: Index,
-                                       getEventLength: (index: number, tick:number)
-                                           => number) {
+function generateRangeIndex(ticks: TickRow[], otherTable: Row[],
+                            index: RangeIndex) {
+    for (let tickIndex = 0, otherIndex = 0; tickIndex < ticks.length; tickIndex++) {
+        // sometimes have mistakes where point to 0 as uninitalized, skip entries
+        for(; otherTable[otherIndex].getStartTick() <= 0 &&
+              otherTable[otherIndex].getStartTick() < ticks[tickIndex].id;
+              otherIndex++);
+
+        if (otherIndex >= otherTable.length ||
+            otherTable[otherIndex].getStartTick() > ticks[tickIndex].id) {
+            index.push(new RangeIndexEntry())
+            index[tickIndex].minId = -1;
+            index[tickIndex].maxId = -1;
+        }
+        else {
+            index.push(new RangeIndexEntry())
+            index[tickIndex].minId = otherIndex;
+            for (; otherIndex < otherTable.length &&
+                   otherTable[otherIndex].getStartTick() == ticks[tickIndex].id;
+                   otherIndex++) ;
+            index[tickIndex].maxId = otherIndex - 1;
+        }
+    }
+
+}
+
+function generateHashmapIndex(ticks: TickRow[], otherTable: Row[],
+                              index: HashmapIndex,
+                              getEventLength: (index: number, tick:number) => number) {
     for (let otherIndex = 0; otherIndex < otherTable.length; otherIndex++) {
         let curEvent = otherTable[otherIndex]
         let endTick = curEvent.getStartTick() + getEventLength(otherIndex, curEvent.id);
@@ -30,10 +59,8 @@ function generateTicksToOtherTableIndex(ticks: TickRow[], otherTable: Row[],
 
 export function indexEventsForRound(gameData: GameData) {
     console.log("a")
-    generateTicksToOtherTableIndex(gameData.ticksTable, gameData.playerAtTicksTable,
-        gameData.ticksToOtherTablesIndices.get(playerAtTickTableName),
-        (_: number, tick: number) => tick +
-            gameData.parsers.get(playerAtTickTableName).ticksPerEvent)
+    generateRangeIndex(gameData.ticksTable, gameData.playerAtTicksTable,
+        gameData.ticksToPlayerAtTick)
     console.log("b")
 
     for (let dataName of gameData.tableNames) {
@@ -52,7 +79,7 @@ export function indexEventsForRound(gameData: GameData) {
                 return tick + gameData.parsers.get(dataName).ticksPerEvent
             }
         }
-        generateTicksToOtherTableIndex(gameData.ticksTable,
+        generateHashmapIndex(gameData.ticksTable,
             gameData.tables.get(dataName),
             gameData.ticksToOtherTablesIndices.get(dataName),
             getTicksPerEvent)

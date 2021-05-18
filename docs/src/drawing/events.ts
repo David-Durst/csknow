@@ -1,7 +1,7 @@
 import {
     GameData,
     getTickToOtherTableIndex,
-    Index,
+    HashmapIndex,
     PlayerAtTickRow,
     playerAtTickTableName,
     Row,
