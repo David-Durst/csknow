@@ -139,14 +139,14 @@ public:
         vector<int64_t> result;
         for (int i = rounds.ticksPerRound[otherTableIndex].minId; i <= rounds.ticksPerRound[otherTableIndex].maxId; i++) {
             for (int j = ticks.patPerTick[i].minId; j <= ticks.patPerTick[i].maxId; j++) {
-                result.push_back(i);
+                result.push_back(j);
             }
         }
         return result;
     }
 
     void oneLineToCSV(int64_t index, stringstream & ss) {
-        ss << pat.id[index] << "," << pat.playerId[index] << "," << pat.tickId[index] << ","
+        ss << pat.id[index] << "," << pat.tickId[index] << "," << pat.playerId[index] << ","
            << pat.posX[index] << "," << pat.posY[index] << "," << pat.posZ[index] << ","
            << pat.viewX[index] << "," << pat.viewY[index] << "," << pat.team[index] << ","
            << pat.health[index] << "," << pat.armor[index] << "," << pat.isAlive[index] << std::endl;
