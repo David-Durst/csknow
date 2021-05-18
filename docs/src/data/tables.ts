@@ -47,6 +47,10 @@ export class Row {
             .concat(this.foreignKeyValues.map(((value) => value.toString())))
             .concat(this.otherColumnValues);
     }
+
+    getStartTick(): number {
+        return this.foreignKeyValues[this.parser.startTickColumn]
+    }
 }
 
 export class GameRow extends Row {
@@ -67,6 +71,7 @@ export class RoundRow extends Row {
     gameId: number;
     startTick: number;
     endTick: number;
+    roundLength: number;
     warmup: boolean;
     freezeTimeEnd: number;
     roundNumber: number;
@@ -79,15 +84,16 @@ export class RoundRow extends Row {
                 foreignKeyValues: number[], otherColumnValues: string[]) {
         super(id, parser, foreignKeyValues, otherColumnValues);
         this.gameId = foreignKeyValues[0];
-        this.startTick = parseInt(otherColumnValues[0]);
-        this.endTick = parseInt(otherColumnValues[1]);
-        this.warmup = parseBool(otherColumnValues[2]);
-        this.freezeTimeEnd = parseInt(otherColumnValues[3]);
-        this.roundNumber = parseInt(otherColumnValues[4]);
-        this.roundEndReason = parseInt(otherColumnValues[5]);
-        this.winner = parseInt(otherColumnValues[6]);
-        this.tWins = parseInt(otherColumnValues[7]);
-        this.ctWins = parseInt(otherColumnValues[8]);
+        this.startTick = parseInt(otherColumnValues[1]);
+        this.endTick = parseInt(otherColumnValues[2]);
+        this.roundLength = parseInt(otherColumnValues[3]);
+        this.warmup = parseBool(otherColumnValues[0]);
+        this.freezeTimeEnd = parseInt(otherColumnValues[1]);
+        this.roundNumber = parseInt(otherColumnValues[2]);
+        this.roundEndReason = parseInt(otherColumnValues[3]);
+        this.winner = parseInt(otherColumnValues[4]);
+        this.tWins = parseInt(otherColumnValues[5]);
+        this.ctWins = parseInt(otherColumnValues[6]);
     }
 }
 
@@ -172,6 +178,7 @@ export class Parser {
     foreignKeyNames: string[]
     otherColumnNames: string[];
     keyPlayerColumns: number[];
+    startTickColumn: number;
     // if variable number of ticks per event (variableLength), set ticks column
     // otherwise set ticksPerEvent
     variableLength: boolean;
@@ -181,12 +188,13 @@ export class Parser {
     baseUrl: string;
     filterUrl: string;
 
-    constructor(tableName: string, foreignKeyNames: string[],
-                otherColumnNames: string[],
-                ticksPerEvent: string, parserType: ParserType, url: string) {
+    constructor(tableName: string, startTickColumn: string,
+                foreignKeyNames: string[], otherColumnNames: string[],
+                ticksPerEvent: string, parserType: ParserType, baseUrl: string) {
         this.tableName = tableName;
         this.foreignKeyNames = foreignKeyNames;
         this.otherColumnNames = otherColumnNames;
+        this.startTickColumn = parseInt(startTickColumn);
         if (ticksPerEvent[0] == 'c') {
             this.variableLength = true;
             this.ticksPerEvent = -1;
@@ -198,6 +206,7 @@ export class Parser {
             this.ticksColumn = -1;
         }
         this.parserType = parserType;
+        this.baseUrl = baseUrl
     }
 
     parseOneLine(currentLine: string[]) {
@@ -210,7 +219,7 @@ export class Parser {
                     id, this,
                     currentLine.slice(foreignKeysStart,
                         foreignKeysStart + this.foreignKeyNames.length)
-                        .map(parseInt),
+                        .map(s => parseInt(s)),
                     currentLine.slice(otherColumnsStart, currentLine.length)
                 )
             )
@@ -221,7 +230,7 @@ export class Parser {
                     id, this,
                     currentLine.slice(foreignKeysStart,
                         foreignKeysStart + this.foreignKeyNames.length)
-                        .map(parseInt),
+                        .map(s => parseInt(s)),
                     currentLine.slice(otherColumnsStart, currentLine.length)
                 )
             )
@@ -232,7 +241,7 @@ export class Parser {
                     id, this,
                     currentLine.slice(foreignKeysStart,
                         foreignKeysStart + this.foreignKeyNames.length)
-                        .map(parseInt),
+                        .map(s => parseInt(s)),
                     currentLine.slice(otherColumnsStart, currentLine.length)
                 )
             )
@@ -243,7 +252,7 @@ export class Parser {
                     id, this,
                     currentLine.slice(foreignKeysStart,
                         foreignKeysStart + this.foreignKeyNames.length)
-                        .map(parseInt),
+                        .map(s => parseInt(s)),
                     currentLine.slice(otherColumnsStart, currentLine.length)
                 )
             )
@@ -254,7 +263,7 @@ export class Parser {
                     id, this,
                     currentLine.slice(foreignKeysStart,
                         foreignKeysStart + this.foreignKeyNames.length)
-                        .map(parseInt),
+                        .map(s => parseInt(s)),
                     currentLine.slice(otherColumnsStart, currentLine.length)
                 )
             )
@@ -265,7 +274,7 @@ export class Parser {
                     id, this,
                     currentLine.slice(foreignKeysStart,
                         foreignKeysStart + this.foreignKeyNames.length)
-                        .map(parseInt),
+                        .map(s => parseInt(s)),
                     currentLine.slice(otherColumnsStart, currentLine.length)
                 )
             )

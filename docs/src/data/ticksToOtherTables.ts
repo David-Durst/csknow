@@ -13,8 +13,8 @@ function generateTicksToOtherTableIndex(ticks: TickRow[], otherTable: Row[],
                                            => number) {
     for (let otherIndex = 0; otherIndex < otherTable.length; otherIndex++) {
         let curEvent = otherTable[otherIndex]
-        let endTick = getEventLength(otherIndex, curEvent.id);
-        for (let curTick = curEvent.id;
+        let endTick = curEvent.getStartTick() + getEventLength(otherIndex, curEvent.id);
+        for (let curTick = curEvent.getStartTick();
              curTick <= ticks[ticks.length-1].id &&
                 curTick < endTick;
              curTick++) {
@@ -28,11 +28,13 @@ function generateTicksToOtherTableIndex(ticks: TickRow[], otherTable: Row[],
     }
 }
 
-export function indexEventsForGame(gameData: GameData) {
+export function indexEventsForRound(gameData: GameData) {
+    console.log("a")
     generateTicksToOtherTableIndex(gameData.ticksTable, gameData.playerAtTicksTable,
         gameData.ticksToOtherTablesIndices.get(playerAtTickTableName),
         (_: number, tick: number) => tick +
             gameData.parsers.get(playerAtTickTableName).ticksPerEvent)
+    console.log("b")
 
     for (let dataName of gameData.tableNames) {
         if (tablesNotIndexedByTick.includes(dataName)

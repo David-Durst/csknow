@@ -30,7 +30,7 @@ import {
     TickRow,
     tickTableName
 } from "./data/tables";
-import {indexEventsForGame} from "./data/ticksToOtherTables";
+import {indexEventsForRound} from "./data/ticksToOtherTables";
 import {
     getGames, getPlayers, getRounds,
     getTables,
@@ -213,7 +213,7 @@ async function changedMatchOrRound() {
     getRoundFilteredTables(promises, curRound);
 
     await Promise.all(promises)
-    indexEventsForGame(gameData)
+    indexEventsForRound(gameData)
     setupMatchFilters()
     setupMatchDrawing()
 }

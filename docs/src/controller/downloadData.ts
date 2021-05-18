@@ -29,7 +29,7 @@ export async function getTables() {
                 const cols = lines[lineNumber].split(",");
                 gameData.tableNames.push(cols[0])
                 gameData.tables.set(cols[0], [])
-                const numForeignKeysIndex = 1
+                const numForeignKeysIndex = 2
                 const numForeignKeys = parseInt(cols[numForeignKeysIndex])
                 const numOtherColsIndex = numForeignKeysIndex + numForeignKeys + 1
                 const numOtherCols = parseInt(cols[numOtherColsIndex])
@@ -53,7 +53,7 @@ export async function getTables() {
                     parserType = ParserType.other
                 }
                 gameData.parsers.set(cols[0],
-                    new Parser(cols[0],
+                    new Parser(cols[0], cols[1],
                         cols.slice(numForeignKeysIndex + 1, numForeignKeysIndex + numForeignKeys + 1),
                         cols.slice(numOtherColsIndex + 1, numOtherColsIndex + numOtherCols + 1),
                         cols[cols.length - 1], parserType,
