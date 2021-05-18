@@ -43,8 +43,6 @@ export function setupSelectors(gameData: GameData) {
     roundSelector.value = "0"
     roundSelector.min = "0"
     const roundsLength: number = gameData.roundsTable.length - 1
-    console.log("roundSelector max " + roundsLength.toString())
-    console.log(roundSelector)
     roundSelector.max = roundsLength.toString()
 
     tickSelector = document.querySelector<HTMLInputElement>("#tick-selector")
