@@ -166,15 +166,6 @@ export enum ParserType {
     other
 }
 
-function getOtherColumnsStart(foreignKeyStart: number, foreignKeyLength: number) {
-    if (foreignKeyLength > 0) {
-        return foreignKeyStart + foreignKeyLength + 1;
-    }
-    else {
-        return foreignKeyStart;
-    }
-}
-
 export class Parser {
     tempLineContainer: string = "";
     tableName: string
@@ -212,8 +203,7 @@ export class Parser {
     parseOneLine(currentLine: string[]) {
         const id = parseInt(currentLine[0]);
         const foreignKeysStart = 1;
-        const otherColumnsStart = getOtherColumnsStart(foreignKeysStart,
-            this.foreignKeyNames.length);
+        const otherColumnsStart = foreignKeysStart + this.foreignKeyNames.length;
         if (this.parserType == ParserType.tick) {
             gameData.ticksTable.push(
                 new TickRow(
