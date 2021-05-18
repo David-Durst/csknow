@@ -5,10 +5,10 @@ import {curEvent} from "../drawing/events";
 import {customFilter, setupCustomFilters} from "./ide_filters";
 import {
     setCurTickIndex,
-    setTickSelectorMax, setupTickSelector,
+    setTickSelectorMax,
     tickLabel,
     tickSelector
-} from "./tickSelector";
+} from "./selectors";
 
 // adding some extra entries in these arrays incase extra players in server
 // like casters
@@ -126,10 +126,6 @@ export function setupMatchFilters() {
     gameData.clone(filteredData)
     alwaysFilter()
     setTickSelectorMax(filteredData.ticksTable.length - 1)
-}
-
-export function setupInitFilters() {
-    setupTickSelector()
 }
 
 export function setupFilterHandlers() {

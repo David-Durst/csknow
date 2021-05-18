@@ -14,7 +14,6 @@ import {
 } from "./drawing/drawing"
 import {
     setupFilterHandlers,
-    setupInitFilters,
     setupMatchFilters
 } from "./controller/filter"
 import {registerPlayHandlers} from "./controller/controls"
@@ -39,16 +38,13 @@ import {
     setRemoteAddr,
     getRoundFilteredTables
 } from "./controller/downloadData";
+import {setupSelectors, matchSelector, roundSelector} from "./controller/selectors";
 
 const { S3Client, ListObjectsCommand } = require("@aws-sdk/client-s3");
 const {CognitoIdentityClient} = require("@aws-sdk/client-cognito-identity");
 const {fromCognitoIdentityPool} = require("@aws-sdk/credential-provider-cognito-identity");
 const path = require("path");
 
-let matchSelector: HTMLInputElement = null;
-let matchLabel: HTMLLabelElement = null;
-let roundSelector: HTMLInputElement = null;
-let roundLabel: HTMLLabelElement = null;
 let roundLabelStr: string = ""
 let downloadSelect: HTMLSelectElement = null;
 let remoteAddrSelect: HTMLSelectElement = null;
@@ -94,40 +90,26 @@ async function init() {
     // Declare a variable that we will assign the key of the last element in the response to
     let pageMarker;
     // While loop that runs until response.truncated is false
-    matchLabel = document.querySelector<HTMLLabelElement>("#cur-match")
-    roundLabel = document.querySelector<HTMLLabelElement>("#cur-round")
     downloadSelect = document.querySelector<HTMLSelectElement>("#download-type")
     remoteAddrSelect = document.querySelector<HTMLSelectElement>("#remote-addr")
     setRemoteAddr(remoteAddrSelect.value)
     setupCanvas()
-    setupInitFilters()
     createGameData();
     await getTables();
     await getGames();
     await getRounds(0);
-    setupMatchRoundSelectors();
+    setupSelectors(gameData);
+    matchSelector.addEventListener("input", changingMatchOrRound)
+    matchSelector.addEventListener("mouseup", changedMatch)
+    roundSelector.addEventListener("input", changingMatchOrRound)
+    roundSelector.addEventListener("mouseup", changedMatchOrRound)
     await changedMatchOrRound();
     setInitialized();
     registerPlayHandlers();
     document.querySelector<HTMLSelectElement>("#download-type").addEventListener("change", setMatchLabel)
     document.querySelector<HTMLSelectElement>("#remote-addr").addEventListener("change", assignRemoteAddr)
-    matchSelector.addEventListener("input", changingMatchOrRound)
-    matchSelector.addEventListener("mouseup", changedMatch)
-    roundSelector.addEventListener("input", changingMatchOrRound)
-    roundSelector.addEventListener("mouseup", changedMatchOrRound)
     setupCanvasHandlers()
     setupFilterHandlers()
-}
-
-function setupMatchRoundSelectors() {
-    matchSelector = document.querySelector<HTMLInputElement>("#match-selector")
-    matchSelector.value = "0"
-    matchSelector.min = "0"
-    matchSelector.max = gameData.gamesTable.length.toString()
-    roundSelector = document.querySelector<HTMLInputElement>("#round-selector")
-    roundSelector.value = "0"
-    roundSelector.min = "0"
-    roundSelector.max = gameData.gamesTable.length.toString()
 }
 
 function changingMatchOrRound() {

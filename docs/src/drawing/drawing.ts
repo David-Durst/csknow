@@ -12,7 +12,7 @@ import {
     setupEventDrawing,
 } from "./events";
 import {clearCustomFilter} from "../controller/ide_filters";
-import {getCurTickIndex, setTickLabel} from "../controller/tickSelector";
+import {getCurTickIndex, setTickLabel} from "../controller/selectors";
 import {start} from "repl";
 import {match} from "assert";
 

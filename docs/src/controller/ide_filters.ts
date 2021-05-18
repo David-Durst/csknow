@@ -2,7 +2,7 @@ import {getTickToOtherTableIndex, Row} from "../data/tables";
 import {drawTick} from "../drawing/drawing";
 import {filteredData} from "./filter";
 import {curEvent} from "../drawing/events";
-import {setCurTickIndex, setTickSelectorMax } from "./tickSelector";
+import {setCurTickIndex, setTickSelectorMax } from "./selectors";
 
 let customFilterEditor: HTMLDivElement = null
 let customFilterText: HTMLDivElement = null

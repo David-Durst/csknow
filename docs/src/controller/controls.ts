@@ -1,5 +1,5 @@
 import { drawTick } from "../drawing/drawing"
-import {setTickLabel, tickLabel, tickSelector} from "./tickSelector";
+import {setTickLabel, tickLabel, tickSelector} from "./selectors";
 
 let playButton: HTMLButtonElement = null;
 let ffButton: HTMLButtonElement = null;

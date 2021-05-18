@@ -33,11 +33,6 @@ export function getPlayersText(tickData: TickRow, gameData: GameData): string[] 
         for (let p = 0; p < players.length; p++) {
             result.push(basicPlayerText(gameData, tickData, p))
         }
-        if (result.length < 10) {
-            console.log("exit 1")
-            console.log(result)
-            console.log(gameData)
-        }
         return result
     }
 
