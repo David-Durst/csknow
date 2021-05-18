@@ -127,13 +127,20 @@ class QueryPlayerAtTick : public QueryResult {
 public:
     const PlayerAtTick & pat;
     const Ticks & ticks;
-    QueryPlayerAtTick(const Ticks & ticks, const PlayerAtTick & pat) : ticks(ticks), pat(pat) { this->size = pat.size; }
+    const Rounds & rounds;
+    QueryPlayerAtTick(const Rounds & rounds, const Ticks & ticks, const PlayerAtTick & pat)
+        : rounds(rounds), ticks(ticks), pat(pat) {
+        this->size = pat.size;
+        this->ticksPerEvent = 1;
+    }
 
     vector<int64_t> filterByForeignKey(int64_t otherTableIndex) {
         // no foreign keys in games, so no way to filter based on those foreign keys
         vector<int64_t> result;
-        for (int i = ticks.patPerTick[otherTableIndex].minId; i <= ticks.patPerTick[otherTableIndex].maxId; i++) {
-            result.push_back(i);
+        for (int i = rounds.ticksPerRound[otherTableIndex].minId; i <= rounds.ticksPerRound[otherTableIndex].maxId; i++) {
+            for (int j = ticks.patPerTick[i].minId; j <= ticks.patPerTick[i].maxId; j++) {
+                result.push_back(i);
+            }
         }
         return result;
     }

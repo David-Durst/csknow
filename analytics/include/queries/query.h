@@ -71,7 +71,7 @@ public:
         }
         ss << std::endl;
     }
-    
+
     // find all rows with foreign key that reference another table
     virtual vector<int64_t> filterByForeignKey(int64_t otherTableIndex) = 0;
     virtual void oneLineToCSV(int64_t index, stringstream & ss) = 0;

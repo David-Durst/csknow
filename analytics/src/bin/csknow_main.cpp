@@ -96,7 +96,7 @@ int main(int argc, char * argv[]) {
     QueryRounds queryRounds(games, rounds);
     QueryPlayers queryPlayers(games, players);
     QueryTicks queryTicks(rounds, ticks);
-    QueryPlayerAtTick queryPlayerAtTick(ticks, playerAtTick);
+    QueryPlayerAtTick queryPlayerAtTick(rounds, ticks, playerAtTick);
 
     /*
     SpottedIndex spottedIndex(position, spotted);
