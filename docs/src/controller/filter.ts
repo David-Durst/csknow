@@ -18,7 +18,7 @@ let lastPlayerZs = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
 function fixAfterDeath() {
     for (let t = 1; t < gameData.ticksTable.length; t++) {
         const tickData = gameData.ticksTable[t]
-        const players = gameData.getPlayers(tickData)
+        const players = gameData.getPlayersAtTick(tickData)
         for (let p = 0; p < players.length; p++) {
             if (!players[p].isAlive) {
                 players[p].posX = lastPlayerXs[p];
@@ -37,7 +37,7 @@ function fixAfterDeath() {
 function makePitchNeg90To90() {
     for (let t = 1; t < gameData.ticksTable.length; t++) {
         const tickData = gameData.ticksTable[t]
-        const players = gameData.getPlayers(tickData);
+        const players = gameData.getPlayersAtTick(tickData);
         for (let p = 0; p < players.length; p++) {
             if (players[p].viewY > 260.0) {
                 players[p].viewY -= 360
@@ -58,7 +58,7 @@ export function filterRegion(minX: number, minY: number, maxX: number,
                              maxY: number): boolean {
     let matchingTicks: TickRow[] = []
     for (let t = 0; t < filteredData.ticksTable.length; t++) {
-        let players = filteredData.getPlayers(filteredData.ticksTable[t])
+        let players = filteredData.getPlayersAtTick(filteredData.ticksTable[t])
         for (let p = 0; p < 10; p++) {
             if (players[p].isAlive &&
                 players[p].posX >= minX &&

@@ -180,7 +180,7 @@ function trackMouse(e: MouseEvent) {
 
     const curTickIndex = getCurTickIndex()
     const tickData: TickRow = filteredData.ticksTable[curTickIndex]
-    const players: PlayerAtTickRow[] = gameData.getPlayers(tickData)
+    const players: PlayerAtTickRow[] = gameData.getPlayersAtTick(tickData)
     for (let p = 0; p < players.length; p++) {
         const playerCoordinate = new MapCoordinate(
             players[p].posX, players[p].posY, false)
@@ -210,7 +210,7 @@ export function drawTick(e: InputEvent) {
     tScoreLabel.innerHTML = gameData.getRound(tickData).tWins.toString()
     ctScoreLabel.innerHTML = gameData.getRound(tickData).ctWins.toString()
     let playersText = getPlayersText(tickData, filteredData)
-    const players = gameData.getPlayers(tickData)
+    const players = gameData.getPlayersAtTick(tickData)
     for (let p = 0; p < players.length; p++) {
         let playerText = playersText[p]
         ctx.fillStyle = dark_blue
@@ -283,7 +283,7 @@ export function setupMatchDrawing() {
     const numTicks = gameData.ticksTable.length
     for (let t = 0; t < numTicks; t++) {
         const tickData = gameData.ticksTable[t]
-        const players = gameData.getPlayers(tickData)
+        const players = gameData.getPlayersAtTick(tickData)
         const round = gameData.getRound(tickData)
         for (let p = 0; p < players.length; p++) {
             minZ = Math.min(minZ, players[p].posZ)

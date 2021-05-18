@@ -14,7 +14,7 @@ export let curEvent: string = "none"
 
 function basicPlayerText(gameData: GameData, tickData: TickRow,
                          playerIndex: number): string {
-    if (gameData.getPlayers(tickData)[playerIndex].isAlive) {
+    if (gameData.getPlayersAtTick(tickData)[playerIndex].isAlive) {
         return "o"
     }
     else {
@@ -27,7 +27,7 @@ export function getPlayersText(tickData: TickRow, gameData: GameData): string[] 
     // but 2 players can shoot each other same tick and not able to visualize that right now
     let result: string[] = []
     const index = getTickToOtherTableIndex(gameData, curEvent)
-    const players: PlayerAtTickRow[] = gameData.getPlayers(tickData)
+    const players: PlayerAtTickRow[] = gameData.getPlayersAtTick(tickData)
     // if no event, do nothing special
     if (curEvent == "none" || !index.has(tickData.id)) {
         for (let p = 0; p < players.length; p++) {

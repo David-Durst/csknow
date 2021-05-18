@@ -31,7 +31,8 @@ function generateTicksToOtherTableIndex(ticks: TickRow[], otherTable: Row[],
 export function indexEventsForGame(gameData: GameData) {
     generateTicksToOtherTableIndex(gameData.ticksTable, gameData.playerAtTicksTable,
         gameData.ticksToOtherTablesIndices.get(playerAtTickTableName),
-        (_: number, tick: number) => tick)
+        (_: number, tick: number) => tick +
+            gameData.parsers.get(playerAtTickTableName).ticksPerEvent)
 
     for (let dataName of gameData.tableNames) {
         if (tablesNotIndexedByTick.includes(dataName)

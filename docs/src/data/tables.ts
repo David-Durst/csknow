@@ -319,7 +319,10 @@ export class GameData {
         return this.roundsTable[this.roundIdToIndex.get(tickData.roundId)]
     }
 
-    getPlayers(tickData: TickRow) {
+    getPlayersAtTick(tickData: TickRow) : PlayerAtTickRow[] {
+        if (!this.ticksToOtherTablesIndices.get(playerAtTickTableName).has(tickData.id)) {
+            return [];
+        }
         return this.ticksToOtherTablesIndices
             .get(playerAtTickTableName).get(tickData.id)
             .map((value) => gameData.playerAtTicksTable[value])
