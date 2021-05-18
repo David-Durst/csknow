@@ -14,7 +14,8 @@ import {
 } from "./drawing/drawing"
 import {
     setupFilterHandlers,
-    setupMatchFilters
+    setupMatchFilters,
+    filteredData
 } from "./controller/filter"
 import {registerPlayHandlers} from "./controller/controls"
 import {
@@ -219,4 +220,4 @@ async function changedMatchOrRound() {
 }
 
 
-export { init, gameData };
+export { init, gameData, filteredData };

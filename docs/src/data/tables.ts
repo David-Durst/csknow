@@ -366,6 +366,7 @@ export class GameData {
         target.playersTable = this.playersTable
         target.playerIdToIndex = this.playerIdToIndex
         target.playerAtTicksTable = this.playerAtTicksTable;
+        target.ticksToPlayerAtTick = this.ticksToPlayerAtTick;
         target.tables = this.tables;
         target.ticksToOtherTablesIndices = this.ticksToOtherTablesIndices;
     }
