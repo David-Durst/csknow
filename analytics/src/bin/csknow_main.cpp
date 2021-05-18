@@ -306,7 +306,7 @@ int main(int argc, char * argv[]) {
             std::stringstream ss;
             for (const auto queryName : queryNames) {
                 QueryResult & queryValue = queries.find(queryName)->second.get();
-                ss << queryName << "," << queryValue.getForeignKeyNames().size() << ",";
+                ss << queryName << "," << queryValue.startTickColumn << "," << queryValue.getForeignKeyNames().size() << ",";
                 for (const auto & keyName : queryValue.getForeignKeyNames()) {
                     ss << keyName << ",";
                 }

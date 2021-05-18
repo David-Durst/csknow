@@ -10,7 +10,11 @@
 class QueryGames : public QueryResult {
 public:
     const Games & games;
-    QueryGames(Games & games) : games(games) { this->size = games.size; }
+    QueryGames(Games & games) : games(games) {
+        this->size = games.size;
+        this->startTickColumn = -1;
+        this->variableLength = false;
+    }
 
     vector<int64_t> filterByForeignKey(int64_t otherTableIndex) {
         // no foreign keys in games, so no way to filter based on those foreign keys
@@ -36,7 +40,12 @@ class QueryRounds : public QueryResult {
 public:
     const Rounds & rounds;
     const Games & games;
-    QueryRounds(const Games & games, const Rounds & rounds) : games(games), rounds(rounds) { this->size = rounds.size; }
+    QueryRounds(const Games & games, const Rounds & rounds) : games(games), rounds(rounds) {
+        this->size = rounds.size;
+        this->startTickColumn = 1;
+        this->variableLength = true;
+        this->ticksColumn = 3;
+    }
 
     vector<int64_t> filterByForeignKey(int64_t otherTableIndex) {
         // no foreign keys in games, so no way to filter based on those foreign keys
@@ -49,18 +58,18 @@ public:
 
     void oneLineToCSV(int64_t index, stringstream & ss) {
         ss << rounds.id[index] << "," << rounds.gameId[index] << "," << rounds.startTick[index]
-           << "," << rounds.endTick[index] << "," << rounds.warmup[index] << ","
-           << rounds.freezeTimeEnd[index] << "," << rounds.roundNumber[index] << ","
+           << "," << rounds.endTick[index] << "," << rounds.endTick[index] - rounds.startTick[index] << ","
+           << rounds.warmup[index] << "," << rounds.freezeTimeEnd[index] << "," << rounds.roundNumber[index] << ","
            << rounds.roundEndReason[index] << "," << rounds.winner[index] << ","
            << rounds.tWins[index] << "," << rounds.ctWins[index] << std::endl;
     }
 
     vector<string> getForeignKeyNames() {
-        return {"game id"};
+        return {"game id", "start tick", "end tick", "round length"};
     }
 
     vector<string> getOtherColumnNames() {
-        return {"start tick", "end tick", "warmup", "freeze time end", "round number", "round end reason", "winner",
+        return {"warmup", "freeze time end", "round number", "round end reason", "winner",
                 "t wins", "ct wins"};
     }
 };
@@ -69,7 +78,10 @@ class QueryPlayers : public QueryResult {
 public:
     const Players & players;
     const Games & games;
-    QueryPlayers(const Games & games, const Players & players) : games(games), players(players) { this->size = players.size; }
+    QueryPlayers(const Games & games, const Players & players) : games(games), players(players) {
+        this->size = players.size;
+        this->startTickColumn = -1;
+    }
 
     vector<int64_t> filterByForeignKey(int64_t otherTableIndex) {
         // no foreign keys in games, so no way to filter based on those foreign keys
@@ -97,7 +109,10 @@ class QueryTicks : public QueryResult {
 public:
     const Ticks & ticks;
     const Rounds & rounds;
-    QueryTicks(const Rounds & rounds, const Ticks & ticks) : rounds(rounds), ticks(ticks) { this->size = ticks.size; }
+    QueryTicks(const Rounds & rounds, const Ticks & ticks) : rounds(rounds), ticks(ticks) {
+        this->size = ticks.size;
+        this->startTickColumn = -1;
+    }
 
     vector<int64_t> filterByForeignKey(int64_t otherTableIndex) {
         // no foreign keys in games, so no way to filter based on those foreign keys
@@ -131,6 +146,7 @@ public:
     QueryPlayerAtTick(const Rounds & rounds, const Ticks & ticks, const PlayerAtTick & pat)
         : rounds(rounds), ticks(ticks), pat(pat) {
         this->size = pat.size;
+        this->startTickColumn = 0;
         this->ticksPerEvent = 1;
     }
 

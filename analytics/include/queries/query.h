@@ -34,6 +34,7 @@ enum DataType {
 class QueryResult {
 public:
 //    vector<int64_t> positionIndex;
+    int startTickColumn;
     bool variableLength = false;
     int ticksPerEvent;
     int ticksColumn;
