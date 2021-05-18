@@ -327,7 +327,8 @@ export class GameData {
     }
 
     getPlayersAtTick(tickData: TickRow) : PlayerAtTickRow[] {
-        if (tickData.id >= this.ticksToPlayerAtTick.length) {
+        if (tickData.id >= this.ticksToPlayerAtTick.length ||
+            this.ticksToPlayerAtTick[tickData.id].minId == -1) {
             return [];
         }
         let result: PlayerAtTickRow[] = [];
