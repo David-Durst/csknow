@@ -73,6 +73,16 @@ public:
         ss << std::endl;
     }
 
+    void commaSeparateList(stringstream & ss, vector<string> list) {
+        if (list.size() == 0) {
+            return;
+        }
+        ss << list[0];
+        for (int i = 1; i < list.size(); i++) {
+            ss << "," << list[i];
+        }
+    }
+
     // find all rows with foreign key that reference another table
     virtual vector<int64_t> filterByForeignKey(int64_t otherTableIndex) = 0;
     virtual void oneLineToCSV(int64_t index, stringstream & ss) = 0;

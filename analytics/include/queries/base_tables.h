@@ -17,7 +17,6 @@ public:
     }
 
     vector<int64_t> filterByForeignKey(int64_t otherTableIndex) {
-        // no foreign keys in games, so no way to filter based on those foreign keys
         return {};
     }
 
@@ -48,7 +47,6 @@ public:
     }
 
     vector<int64_t> filterByForeignKey(int64_t otherTableIndex) {
-        // no foreign keys in games, so no way to filter based on those foreign keys
         vector<int64_t> result;
         for (int i = games.roundsPerGame[otherTableIndex].minId; i <= games.roundsPerGame[otherTableIndex].maxId; i++) {
             result.push_back(i);
@@ -84,7 +82,6 @@ public:
     }
 
     vector<int64_t> filterByForeignKey(int64_t otherTableIndex) {
-        // no foreign keys in games, so no way to filter based on those foreign keys
         vector<int64_t> result;
         for (int i = games.playersPerGame[otherTableIndex].minId; i <= games.playersPerGame[otherTableIndex].maxId; i++) {
             result.push_back(i);
@@ -115,7 +112,6 @@ public:
     }
 
     vector<int64_t> filterByForeignKey(int64_t otherTableIndex) {
-        // no foreign keys in games, so no way to filter based on those foreign keys
         vector<int64_t> result;
         for (int i = rounds.ticksPerRound[otherTableIndex].minId; i <= rounds.ticksPerRound[otherTableIndex].maxId; i++) {
             result.push_back(i);
@@ -151,7 +147,6 @@ public:
     }
 
     vector<int64_t> filterByForeignKey(int64_t otherTableIndex) {
-        // no foreign keys in games, so no way to filter based on those foreign keys
         vector<int64_t> result;
         for (int i = rounds.ticksPerRound[otherTableIndex].minId; i <= rounds.ticksPerRound[otherTableIndex].maxId; i++) {
             for (int j = ticks.patPerTick[i].minId; j <= ticks.patPerTick[i].maxId; j++) {
