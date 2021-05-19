@@ -8,6 +8,8 @@
 #include <set>
 #include <map>
 #include <limits>
+#include <string>
+using std::string;
 
 ACatPeekers queryACatPeekers(const Rounds & rounds, const Ticks & ticks, const PlayerAtTick & playerAtTick) {
     int numThreads = omp_get_max_threads();
@@ -40,15 +42,16 @@ ACatPeekers queryACatPeekers(const Rounds & rounds, const Ticks & ticks, const P
                        leftContainer, topContainer, bottomContainer, rightContainer};
     ACatPeekers result(walls);
 
-#pragma omp parallel for
+//#pragma omp parallel for
     for (int64_t roundIndex = 0; roundIndex < rounds.size; roundIndex++) {
         int threadNum = omp_get_thread_num();
         // assuming first position is less than first kills
-        for (int64_t tickIndex = rounds.ticksPerRound[tickIndex].minId;
-             tickIndex <= rounds.ticksPerRound[tickIndex].maxId; tickIndex++) {
+        for (int64_t tickIndex = rounds.ticksPerRound[roundIndex].minId;
+             tickIndex <= rounds.ticksPerRound[roundIndex].maxId; tickIndex++) {
             for (int64_t patIndex = ticks.patPerTick[tickIndex].minId; patIndex <= ticks.patPerTick[tickIndex].maxId; patIndex++) {
                 Vec3 playerPosition = {playerAtTick.posX[tickIndex], playerAtTick.posY[tickIndex], playerAtTick.posZ[tickIndex]};
                 if (pointInRegion(aCatPositions, playerPosition)) {
+                    tmpPlayerAtTickId[threadNum].push_back(playerAtTick.id[tickIndex]);
                     tmpPosX[threadNum].push_back(playerAtTick.posX[tickIndex]);
                     tmpPosY[threadNum].push_back(playerAtTick.posY[tickIndex]);
                     tmpPosZ[threadNum].push_back(playerAtTick.posZ[tickIndex]);
@@ -93,5 +96,6 @@ ACatPeekers queryACatPeekers(const Rounds & rounds, const Ticks & ticks, const P
             result.wallZ.push_back(tmpWallZ[i][j]);
         }
     }
+    result.size = result.playerAtTickId.size();
     return result;
 }

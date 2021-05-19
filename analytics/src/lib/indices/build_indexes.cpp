@@ -8,19 +8,19 @@ using std::endl;
 void buildRangeIndex(const vector<int64_t> primaryKeyCol, int64_t primarySize, const int64_t * foreignKeyCol,
                           int64_t foreignSize, RangeIndex rangeIndexCol) {
     for (int64_t primaryIndex = 0, foreignIndex = 0; primaryIndex < primarySize; primaryIndex++) {
-        // sometimes have mistakes where point to 0 as uninitalized, skip entries
-        for(; foreignKeyCol[foreignIndex] <= 0 && foreignKeyCol[foreignIndex] < primaryKeyCol[primaryIndex]; foreignIndex++);
-        if (foreignKeyCol[foreignIndex] < primaryKeyCol[primaryIndex]) {
-            cout << "bad foreign " << foreignIndex  << " val " << foreignKeyCol[foreignIndex]
-                 << " and primary " << primaryIndex << " val " << primaryKeyCol[primaryIndex] << endl;
-            assert(foreignKeyCol[foreignIndex] >= primaryKeyCol[primaryIndex]);
-        }
-        assert(foreignIndex < foreignSize);
         if (foreignIndex >= foreignSize || foreignKeyCol[foreignIndex] > primaryKeyCol[primaryIndex]) {
             rangeIndexCol[primaryIndex].minId = -1;
             rangeIndexCol[primaryIndex].maxId = -1;
         }
         else {
+            // sometimes have mistakes where point to 0 as uninitalized, skip entries
+            for(; foreignKeyCol[foreignIndex] <= 0 && foreignKeyCol[foreignIndex] < primaryKeyCol[primaryIndex]; foreignIndex++);
+            if (foreignKeyCol[foreignIndex] < primaryKeyCol[primaryIndex]) {
+                cout << "bad foreign " << foreignIndex  << " val " << foreignKeyCol[foreignIndex]
+                     << " and primary " << primaryIndex << " val " << primaryKeyCol[primaryIndex] << endl;
+                assert(foreignKeyCol[foreignIndex] >= primaryKeyCol[primaryIndex]);
+            }
+            assert(foreignIndex < foreignSize);
             rangeIndexCol[primaryIndex].minId = foreignIndex;
             for (; foreignIndex < foreignSize && foreignKeyCol[foreignIndex] == primaryKeyCol[primaryIndex]; foreignIndex++) ;
             rangeIndexCol[primaryIndex].maxId = foreignIndex - 1;

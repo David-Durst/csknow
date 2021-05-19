@@ -2,11 +2,13 @@
 #define CSKNOW_QUERY_H
 #include <vector>
 #include <sstream>
+#include <string>
 #define NOT_PLAYER_ID -1
 #define TEAM_T 2
 #define TEAM_CT 3
 using std::vector;
 using std::stringstream;
+using std::string;
 
 static inline __attribute__((always_inline))
 string doubleToString(double val) {
