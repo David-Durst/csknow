@@ -327,13 +327,14 @@ export class GameData {
     }
 
     getPlayersAtTick(tickData: TickRow) : PlayerAtTickRow[] {
-        if (tickData.id >= this.ticksToPlayerAtTick.length ||
-            this.ticksToPlayerAtTick[tickData.id].minId == -1) {
+        const tickIndex = tickData.id - this.ticksTable[0].id;
+        if (tickIndex >= this.ticksToPlayerAtTick.length ||
+            this.ticksToPlayerAtTick[tickIndex].minId == -1) {
             return [];
         }
         let result: PlayerAtTickRow[] = [];
-        for (let i = this.ticksToPlayerAtTick[tickData.id].minId;
-             i <= this.ticksToPlayerAtTick[tickData.id].maxId; i++) {
+        for (let i = this.ticksToPlayerAtTick[tickIndex].minId;
+             i <= this.ticksToPlayerAtTick[tickIndex].maxId; i++) {
             result.push(this.playerAtTicksTable[i])
         }
         return result;
