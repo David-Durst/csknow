@@ -17,6 +17,7 @@
 #include "queries/grouping.h"
 #include "queries/groupInSequenceOfRegions.h"
 #include "queries/base_tables.h"
+#include "queries/a_cat_peekers.h"
 #include "indices/spotted.h"
 #define CPPHTTPLIB_OPENSSL_SUPPORT
 #include "httplib.h"
@@ -98,6 +99,8 @@ int main(int argc, char * argv[]) {
     QueryTicks queryTicks(rounds, ticks);
     QueryPlayerAtTick queryPlayerAtTick(rounds, ticks, playerAtTick);
 
+    ACatPeekers aCatPeekers = queryACatPeekers(rounds, ticks, playerAtTick);
+
     /*
     SpottedIndex spottedIndex(position, spotted);
     std::cout << "built spotted index" << std::endl;
@@ -156,17 +159,21 @@ int main(int argc, char * argv[]) {
         {queryNames[8], failedATakes},
     };
      */
+    vector<string> analysisNames = {"a_cat_peekers"};
+    map<string, reference_wrapper<QueryResult>> analyses {
+            {analysisNames[0], aCatPeekers},
+    };
 
-    // create the output files and the metadata describing files
-    /*
+    // createHanno Philip the output files and the metadata describing files
     if (writeOutput) {
-        for (const auto & [name, result] : queries) {
+        for (const auto & [name, result] : analyses) {
             std::fstream fs;
             fs.open(outputDir + "/" + timestamp + "_" + name + ".csv", std::fstream::out);
-            fs << result.get().toCSV(position);
+            fs << result.get().toCSV();
             fs.close();
         }
 
+        /*
         // data sets describes types of data sets
         // versions describes all versions, with most recent first
         std::fstream datasetsTest, datasets, versions;
@@ -186,7 +193,7 @@ int main(int argc, char * argv[]) {
         }
         else {
             datasets.open(datasetsPath, std::fstream::out);
-            for (const auto & [name, query] : queries) {
+            for (const auto & [name, query] : analyses) {
                 datasets << name << std::endl;
                 for (int i = 0; i < query.get().keysForDiff.size(); i++) {
                     if (i != 0) {
@@ -202,8 +209,9 @@ int main(int argc, char * argv[]) {
             versions << timestamp;
             versions.close();
         }
+         */
     }
-     */
+
     vector<string> queryNames = {"games", "rounds", "players", "ticks", "playerAtTick"};
     map<string, reference_wrapper<QueryResult>> queries {
             {queryNames[0], queryGames},

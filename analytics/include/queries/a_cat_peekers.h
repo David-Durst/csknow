@@ -21,12 +21,12 @@ public:
     vector<double> posZ;
     vector<double> viewX;
     vector<double> viewY;
-
-    vector<AABB> walls;
-    vector<int64_t> wallId;
     vector<double> wallX;
     vector<double> wallY;
     vector<double> wallZ;
+
+    vector<AABB> walls;
+    vector<int64_t> wallId;
     ACatPeekers(vector<AABB> walls) {
         this->startTickColumn = -1;
         this->ticksPerEvent = 1;
@@ -39,8 +39,9 @@ public:
     }
 
     void oneLineToCSV(int64_t index, stringstream & ss) {
-        ss << posX[index] << "," << posY[index] << "," << posZ[index] << "," << viewX[index] << "," << viewY[index]
-            << "," << wallId[index] << "," << wallX[index] << "," << wallY[index] << "," << wallZ[index] << std::endl;
+        ss << index << "," << playerAtTickId[index] << "," << posX[index] << "," << posY[index] << "," << posZ[index]
+            << "," << viewX[index] << "," << viewY[index] << "," << wallId[index] << ","
+            << wallX[index] << "," << wallY[index] << "," << wallZ[index] << std::endl;
     }
 
     vector<string> getForeignKeyNames() {
@@ -53,7 +54,7 @@ public:
 };
 
 
-ACatPeekers queryACatPeekers(const Ticks & ticks, const PlayerAtTick & playerAtTick);
+ACatPeekers queryACatPeekers(const Rounds & rounds, const Ticks & ticks, const PlayerAtTick & playerAtTick);
 
 
 #endif //CSKNOW_A_CAT_PEEKERS_H
