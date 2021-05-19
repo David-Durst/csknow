@@ -188,7 +188,7 @@ function trackMouse(e: MouseEvent) {
             playerCoordinate.getCanvasX() + 10 >= minimapCoordinate.getCanvasX() &&
             playerCoordinate.getCanvasY() - 10 <= minimapCoordinate.getCanvasY() &&
             playerCoordinate.getCanvasY() + 10 >= minimapCoordinate.getCanvasY()) {
-            playerNameLabel.innerHTML = gameData.getPlayerName(players[p].id)
+            playerNameLabel.innerHTML = gameData.getPlayerName(players[p].playerId)
             setPosition(players[p].posX, players[p].posY, players[p].posZ)
             selectedPlayer = p;
             drawTick(null)
