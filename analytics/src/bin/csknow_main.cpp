@@ -8,6 +8,7 @@
 #include <iomanip>
 #include <ctime>
 #include "load_data.h"
+#include "load_clusters.h"
 #include "queries/velocity.h"
 #include "queries/wallers.h"
 #include "queries/baiters.h"
@@ -211,6 +212,8 @@ int main(int argc, char * argv[]) {
         }
          */
     }
+
+    Cluster aCatPeekersClusters(dataPath + "/../python_analytics/a_cat_peekers_clusters.csv");
 
     vector<string> queryNames = {"games", "rounds", "players", "ticks", "playerAtTick"};
     map<string, reference_wrapper<QueryResult>> queries {

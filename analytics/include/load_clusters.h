@@ -13,12 +13,13 @@ using std::unordered_map;
 using std::vector;
 
 class Cluster {
+public:
     vector<int64_t> index;
     vector<double> x;
     vector<double> y;
     vector<double> z;
 
-    Cluster(string inputPath);
+    Cluster(string filePath);
 };
 
 
