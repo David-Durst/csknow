@@ -102,7 +102,9 @@ int main(int argc, char * argv[]) {
 
     ACatPeekers aCatPeekers = queryACatPeekers(rounds, ticks, playerAtTick);
     Cluster aCatPeekersClusters(dataPath + "/../python_analytics/a_cat_peekers_clusters.csv");
-    analyzeACatPeekersClusters(playerAtTick, aCatPeekers, aCatPeekersClusters);
+    std::cout << "starting to analyze a cat peekers clusters" << std::endl;
+    ACatClusterSequence aCatClusterSequence = analyzeACatPeekersClusters(playerAtTick, aCatPeekers, aCatPeekersClusters);
+    std::cout << "done analyzing a cat peekers clusters" << std::endl;
 
     /*
     SpottedIndex spottedIndex(position, spotted);
@@ -162,9 +164,10 @@ int main(int argc, char * argv[]) {
         {queryNames[8], failedATakes},
     };
      */
-    vector<string> analysisNames = {"a_cat_peekers"};
+    vector<string> analysisNames = {"a_cat_peekers", "a_cat_cluster_sequence"};
     map<string, reference_wrapper<QueryResult>> analyses {
             {analysisNames[0], aCatPeekers},
+            {analysisNames[1], aCatClusterSequence},
     };
 
     // create the output files and the metadata describing files
