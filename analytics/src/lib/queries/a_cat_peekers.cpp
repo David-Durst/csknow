@@ -113,12 +113,11 @@ struct ACatPeekersSortableElement {
     int64_t playerAtTickId;
     int64_t playerId;
     int64_t aCatPeekersId;
+    bool operator<(const ACatPeekersSortableElement & other) const {
+        return (roundId < other.roundId) || (roundId == other.roundId && playerId < other.playerId) ||
+               (roundId == other.roundId && playerId == other.playerId && playerAtTickId < other.playerAtTickId);
+    }
 };
-
-bool peekersCompare(ACatPeekersSortableElement a, ACatPeekersSortableElement b) {
-    return (a.roundId < b.roundId) || (a.roundId == b.roundId && a.playerId < b.roundId) ||
-           (a.roundId == b.roundId && a.playerId == b.roundId && a.playerAtTickId < b.playerAtTickId);
-}
 
 ACatClusterSequence analyzeACatPeekersClusters(const PlayerAtTick & pat, ACatPeekers & aCatPeekers, const Cluster & clusters) {
     vector<ACatPeekersSortableElement> sortable;
@@ -149,7 +148,7 @@ ACatClusterSequence analyzeACatPeekersClusters(const PlayerAtTick & pat, ACatPee
 
         aCatPeekers.clusterId[aCatPeekerIndex] = clusters.id[minId];
     }
-    std::sort(sortable.begin(), sortable.end(), peekersCompare);
+    std::sort(sortable.begin(), sortable.end());
 
     ACatClusterSequence result;
     vector<ClusterSequence> & clusterSequences = result.clusterSequences;
