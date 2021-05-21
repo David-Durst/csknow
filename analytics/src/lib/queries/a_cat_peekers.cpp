@@ -175,5 +175,6 @@ ACatClusterSequence analyzeACatPeekersClusters(const PlayerAtTick & pat, ACatPee
             curSequence.tickIdsInCluster[curSequence.tickIdsInCluster.size() - 1].maxId = curTickId;
         }
     }
+    result.size = clusterSequences.size();
     return result;
 }
