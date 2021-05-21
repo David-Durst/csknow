@@ -33,10 +33,12 @@ for partitioned_df in partitioned_dfs:
 
 # %%
 f = open("a_cat_peekers_clusters.csv", "w")
-f.write("cluster id,cluster x, cluster y, cluster z\n")
+f.write("cluster id,wall id,cluster x, cluster y, cluster z\n")
+cluster_id = 0;
 for i in range(len(kmeans_per_wall)):
     kmeans = kmeans_per_wall[i]
     wall_id = walls[i]
     for cluster_center in kmeans.cluster_centers_:
-        f.write(str(wall_id) + "," + str(cluster_center[0]) + "," + str(cluster_center[1]) + "," + str(cluster_center[2]) + "\n")
+        f.write(str(cluster_id) + "," + str(wall_id) + "," + str(cluster_center[0]) + "," + str(cluster_center[1]) + "," + str(cluster_center[2]) + "\n")
+        cluster_id += 1
 f.close()

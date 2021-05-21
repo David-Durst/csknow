@@ -56,7 +56,7 @@ public:
 
     void oneLineToCSV(int64_t index, stringstream & ss) {
         ss << rounds.id[index] << "," << rounds.gameId[index] << "," << rounds.startTick[index]
-           << "," << rounds.endTick[index] << "," << rounds.endTick[index] - rounds.startTick[index] << ","
+           << "," << rounds.endTick[index] << "," << rounds.endTick[index] - rounds.startTick[index] + 1 << ","
            << rounds.warmup[index] << "," << rounds.freezeTimeEnd[index] << "," << rounds.roundNumber[index] << ","
            << rounds.roundEndReason[index] << "," << rounds.winner[index] << ","
            << rounds.tWins[index] << "," << rounds.ctWins[index] << std::endl;

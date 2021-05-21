@@ -101,6 +101,8 @@ int main(int argc, char * argv[]) {
     QueryPlayerAtTick queryPlayerAtTick(rounds, ticks, playerAtTick);
 
     ACatPeekers aCatPeekers = queryACatPeekers(rounds, ticks, playerAtTick);
+    Cluster aCatPeekersClusters(dataPath + "/../python_analytics/a_cat_peekers_clusters.csv");
+    analyzeACatPeekersClusters(playerAtTick, aCatPeekers, aCatPeekersClusters);
 
     /*
     SpottedIndex spottedIndex(position, spotted);
@@ -165,7 +167,7 @@ int main(int argc, char * argv[]) {
             {analysisNames[0], aCatPeekers},
     };
 
-    // createHanno Philip the output files and the metadata describing files
+    // create the output files and the metadata describing files
     if (writeOutput) {
         for (const auto & [name, result] : analyses) {
             std::fstream fs;
@@ -212,8 +214,6 @@ int main(int argc, char * argv[]) {
         }
          */
     }
-
-    Cluster aCatPeekersClusters(dataPath + "/../python_analytics/a_cat_peekers_clusters.csv");
 
     vector<string> queryNames = {"games", "rounds", "players", "ticks", "playerAtTick"};
     map<string, reference_wrapper<QueryResult>> queries {

@@ -4,6 +4,7 @@
 #include <limits>
 #include <iostream>
 #include <vector>
+#include <algorithm>
 #include "geometry.h"
 #include "load_data.h"
 //https://github.com/ValveSoftware/source-sdk-2013/blob/master/sp/src/public/mathlib/mathlib.h#L301-L303
@@ -136,14 +137,6 @@ Ray getEyeCoordinatesForPlayer(Vec3 pos, Vec2 view) {
 
 
 // https://github.com/mmp/pbrt-v4/blob/master/src/pbrt/util/pstd.h#L26-L31
-template <typename T>
-static inline __attribute__((always_inline))
-void swap(T &a, T &b) {
-    T tmp = std::move(a);
-    a = std::move(b);
-    b = std::move(tmp);
-}
-
 #define MachineEpsilon std::numeric_limits<double>::epsilon() * 0.5
 
 inline constexpr double gamma2(int n) {
@@ -164,7 +157,7 @@ bool intersectP(const AABB & box, const Ray & ray, double & hitt0, double & hitt
         double tFar = (box.max[i] - ray.orig[i]) * invRayDir;
         // Update parametric interval from slab intersection $t$ values
         if (tNear > tFar)
-            swap(tNear, tFar);
+            std::swap(tNear, tFar);
         // Update _tFar_ to ensure robust ray--bounds intersection
         tFar *= 1 + 2 * gamma2(3);
 
@@ -176,6 +169,14 @@ bool intersectP(const AABB & box, const Ray & ray, double & hitt0, double & hitt
     hitt0 = t0;
     hitt1 = t1;
     return true;
+}
+
+static inline __attribute__((always_inline))
+double computeDistance(Vec3 v1, Vec3 v2) {
+    double xDistance = v1.x - v2.x;
+    double yDistance = v1.y - v2.y;
+    double zDistance = v1.z - v2.z;
+    return sqrt(xDistance * xDistance + yDistance * yDistance + zDistance * zDistance);
 }
 
 static inline __attribute__((always_inline))
