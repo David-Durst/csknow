@@ -30,9 +30,9 @@ ACatPeekers queryACatPeekers(const Rounds & rounds, const Ticks & ticks, const P
     AABB aCatPositions{{217.0, 1327.34, -5.0}, {513.0, 2260.0, std::numeric_limits<double>::max()}};
     AABB frontCatWall{{507.0, 1353.0, std::numeric_limits<double>::min()}, {507.1, 2003.0, std::numeric_limits<double>::max()}};
     AABB oppositeElevatorWall{{507.0, 2003.0, std::numeric_limits<double>::min()}, {1215.0, 2003.1, std::numeric_limits<double>::max()}};
-    AABB backCatWall{{224.0, 1301, std::numeric_limits<double>::min()}, {224.1, 2833.0, std::numeric_limits<double>::max()}};
-    AABB ninjaWall{{224.0, 2833.0, std::numeric_limits<double>::min()}, {1010.0, 2833.1, std::numeric_limits<double>::max()}};
-    AABB gooseWall{{1010.0, 2833.0, std::numeric_limits<double>::min()}, {1010.1, 3090.0, std::numeric_limits<double>::max()}};
+    AABB backCatWall{{224.0, 1301, std::numeric_limits<double>::min()}, {224.1, 2733.0, std::numeric_limits<double>::max()}};
+    AABB ninjaWall{{224.0, 2733.0, std::numeric_limits<double>::min()}, {1010.0, 2733.1, std::numeric_limits<double>::max()}};
+    AABB gooseWall{{1010.0, 2733.0, std::numeric_limits<double>::min()}, {1010.1, 3090.0, std::numeric_limits<double>::max()}};
     AABB topRampWall{{1010.0, 3090.0, std::numeric_limits<double>::min()}, {1588.0, 3090.1, std::numeric_limits<double>::max()}};
     AABB longWall{{1588.0, -1247.0, std::numeric_limits<double>::min()}, {1588.0, 3090.1, std::numeric_limits<double>::max()}};
 
@@ -146,7 +146,12 @@ ACatClusterSequence analyzeACatPeekersClusters(const PlayerAtTick & pat, ACatPee
             }
         }
 
-        aCatPeekers.clusterId[aCatPeekerIndex] = clusters.id[minId];
+        if (minId == -1) {
+            aCatPeekers.clusterId[aCatPeekerIndex] = -1;
+        }
+        else {
+            aCatPeekers.clusterId[aCatPeekerIndex] = clusters.id[minId];
+        }
     }
     std::sort(sortable.begin(), sortable.end());
 
