@@ -45,27 +45,27 @@ ACatPeekers queryACatPeekers(const Rounds & rounds, const Ticks & ticks, const P
                        leftContainer, topContainer, bottomContainer, rightContainer};
     ACatPeekers result(walls);
 
-#pragma omp parallel for
+//#pragma omp parallel for
     for (int64_t roundIndex = 0; roundIndex < rounds.size; roundIndex++) {
         int threadNum = omp_get_thread_num();
         // assuming first position is less than first kills
         for (int64_t tickIndex = rounds.ticksPerRound[roundIndex].minId;
              tickIndex <= rounds.ticksPerRound[roundIndex].maxId; tickIndex++) {
             for (int64_t patIndex = ticks.patPerTick[tickIndex].minId; patIndex <= ticks.patPerTick[tickIndex].maxId; patIndex++) {
-                Vec3 playerPosition = {playerAtTick.posX[tickIndex], playerAtTick.posY[tickIndex], playerAtTick.posZ[tickIndex]};
+                Vec3 playerPosition = {playerAtTick.posX[patIndex], playerAtTick.posY[patIndex], playerAtTick.posZ[patIndex]};
                 if (pointInRegion(aCatPositions, playerPosition)) {
                     tmpRoundId[threadNum].push_back(roundIndex);
-                    tmpPlayerAtTickId[threadNum].push_back(playerAtTick.id[tickIndex]);
-                    tmpPlayerId[threadNum].push_back(playerAtTick.playerId[tickIndex]);
-                    tmpPosX[threadNum].push_back(playerAtTick.posX[tickIndex]);
-                    tmpPosY[threadNum].push_back(playerAtTick.posY[tickIndex]);
-                    tmpPosZ[threadNum].push_back(playerAtTick.posZ[tickIndex]);
-                    tmpViewX[threadNum].push_back(playerAtTick.viewX[tickIndex]);
-                    tmpViewY[threadNum].push_back(playerAtTick.viewY[tickIndex]);
+                    tmpPlayerAtTickId[threadNum].push_back(playerAtTick.id[patIndex]);
+                    tmpPlayerId[threadNum].push_back(playerAtTick.playerId[patIndex]);
+                    tmpPosX[threadNum].push_back(playerAtTick.posX[patIndex]);
+                    tmpPosY[threadNum].push_back(playerAtTick.posY[patIndex]);
+                    tmpPosZ[threadNum].push_back(playerAtTick.posZ[patIndex]);
+                    tmpViewX[threadNum].push_back(playerAtTick.viewX[patIndex]);
+                    tmpViewY[threadNum].push_back(playerAtTick.viewY[patIndex]);
                     bool hitAWall = false;
                     for (int wallIndex = 0; wallIndex < walls.size(); wallIndex++) {
                         Ray playerEyes = getEyeCoordinatesForPlayer(
-                                playerPosition, {playerAtTick.viewX[tickIndex], playerAtTick.viewY[tickIndex]});
+                                playerPosition, {playerAtTick.viewX[patIndex], playerAtTick.viewY[patIndex]});
                         double hit0, hit1;
                         if (intersectP(walls[wallIndex], playerEyes, hit0, hit1)) {
                             tmpWallId[threadNum].push_back(wallIndex);
@@ -125,24 +125,17 @@ ACatClusterSequence analyzeACatPeekersClusters(const PlayerAtTick & pat, ACatPee
         // create sortable array
         sortable.push_back({aCatPeekers.roundId[aCatPeekerIndex], aCatPeekers.playerAtTickId[aCatPeekerIndex],
                             aCatPeekers.playerId[aCatPeekerIndex], aCatPeekerIndex});
-        // assuming first position is less than first kills
-        vector<int64_t> candidateClusters;
-        for (int i = 0; i < clusters.wallId.size(); i++) {
-            if (clusters.wallId[i] == aCatPeekers.wallId[aCatPeekerIndex]) {
-                candidateClusters.push_back(i);
-            }
-        }
 
         double minDistance = std::numeric_limits<double>::max();
         int minId = -1;
-        for (int i = 0; i < candidateClusters.size(); i++) {
+        for (int i = 0; i < clusters.id.size(); i++) {
             double newDistance = computeDistance(
-                    {clusters.x[candidateClusters[i]], clusters.y[candidateClusters[i]], clusters.z[candidateClusters[i]]},
+                    {clusters.x[i], clusters.y[i], clusters.z[i]},
                     {aCatPeekers.wallX[aCatPeekerIndex], aCatPeekers.wallY[aCatPeekerIndex], aCatPeekers.wallZ[aCatPeekerIndex]}
                     );
             if (newDistance < minDistance) {
                 minDistance = newDistance;
-                minId = candidateClusters[i];
+                minId = i;
             }
         }
 

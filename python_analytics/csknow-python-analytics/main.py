@@ -6,7 +6,7 @@ import os
 
 # %%
 # load data
-df = pd.read_csv(os.getcwd() + "/../../analytics/csv_outputs/23_05_2021__10_57_10_a_cat_peekers.csv")
+df = pd.read_csv(os.getcwd() + "/../../analytics/csv_outputs/23_05_2021__14_43_55_a_cat_peekers.csv")
 
 # %%
 # partition it by wall
