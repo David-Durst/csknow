@@ -102,7 +102,7 @@ int main(int argc, char * argv[]) {
 
     ACatPeekers aCatPeekers = queryACatPeekers(rounds, ticks, playerAtTick);
     Cluster aCatPeekersClusters(dataPath + "/../python_analytics/a_cat_peekers_clusters.csv");
-    ACatClusterSequence aCatClusterSequence = analyzeACatPeekersClusters(playerAtTick, aCatPeekers, aCatPeekersClusters);
+    ACatClusterSequence aCatClusterSequence = analyzeACatPeekersClusters(rounds, playerAtTick, aCatPeekers, aCatPeekersClusters);
 
     /*
     SpottedIndex spottedIndex(position, spotted);

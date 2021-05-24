@@ -159,9 +159,9 @@ ACatClusterSequence analyzeACatPeekersClusters(const Rounds & rounds, const Play
             || clusterSequences[clusterSequences.size() - 1].roundId != sortableElement.roundId
             || clusterSequences[clusterSequences.size() - 1].playerId != sortableElement.playerId) {
             clusterSequences.push_back(ClusterSequence {});
-            result.clusterSequencesPerRound[clusterSequences.size() - 1].maxId = clusterSequences.size() - 1;
-            if (result.clusterSequencesPerRound[clusterSequences.size() - 1].minId == -1) {
-                result.clusterSequencesPerRound[clusterSequences.size() - 1].minId = clusterSequences.size() - 1;
+            result.clusterSequencesPerRound[sortableElement.roundId].maxId = clusterSequences.size() - 1;
+            if (result.clusterSequencesPerRound[sortableElement.roundId].minId == -1) {
+                result.clusterSequencesPerRound[sortableElement.roundId].minId = clusterSequences.size() - 1;
             }
         }
         ClusterSequence & curSequence = clusterSequences[clusterSequences.size() - 1];
