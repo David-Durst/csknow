@@ -14,11 +14,6 @@ import {gameData} from "./data";
 function generateRangeIndex(ticks: TickRow[], otherTable: Row[],
                             index: RangeIndex) {
     for (let tickIndex = 0, otherIndex = 0; tickIndex < ticks.length; tickIndex++) {
-        // sometimes have mistakes where point to 0 as uninitalized, skip entries
-        for(; otherTable[otherIndex].getStartTick() <= 0 &&
-              otherTable[otherIndex].getStartTick() < ticks[tickIndex].id;
-              otherIndex++);
-
         if (otherIndex >= otherTable.length ||
             otherTable[otherIndex].getStartTick() > ticks[tickIndex].id) {
             index.push(new RangeIndexEntry())
@@ -26,6 +21,11 @@ function generateRangeIndex(ticks: TickRow[], otherTable: Row[],
             index[tickIndex].maxId = -1;
         }
         else {
+            // sometimes have mistakes where point to 0 as uninitalized, skip entries
+            for(; otherTable[otherIndex].getStartTick() <= 0 &&
+                  otherTable[otherIndex].getStartTick() < ticks[tickIndex].id;
+                  otherIndex++);
+
             index.push(new RangeIndexEntry())
             index[tickIndex].minId = otherIndex;
             for (; otherIndex < otherTable.length &&
