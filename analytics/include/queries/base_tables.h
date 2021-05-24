@@ -114,7 +114,9 @@ public:
     vector<int64_t> filterByForeignKey(int64_t otherTableIndex) {
         vector<int64_t> result;
         for (int i = rounds.ticksPerRound[otherTableIndex].minId; i <= rounds.ticksPerRound[otherTableIndex].maxId; i++) {
-            result.push_back(i);
+            if (i != -1) {
+                result.push_back(i);
+            }
         }
         return result;
     }
@@ -150,7 +152,9 @@ public:
         vector<int64_t> result;
         for (int i = rounds.ticksPerRound[otherTableIndex].minId; i <= rounds.ticksPerRound[otherTableIndex].maxId; i++) {
             for (int j = ticks.patPerTick[i].minId; j <= ticks.patPerTick[i].maxId; j++) {
-                result.push_back(j);
+                if (j != -1) {
+                    result.push_back(j);
+                }
             }
         }
         return result;
