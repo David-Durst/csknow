@@ -2,6 +2,7 @@
 #include "file_helpers.h"
 
 Cluster::Cluster(string filePath) {
+    this->variableLength = false;
     // mmap the file
     auto [fd, stats, file] = openMMapFile(filePath);
 

@@ -62,6 +62,7 @@ public:
 class ACatClusterSequence : public QueryResult {
 public:
     vector<ClusterSequence> clusterSequences;
+    vector<RangeIndexEntry> clusterSequencesPerRound;
 
     ACatClusterSequence() {
         this->variableLength = true;
@@ -71,7 +72,11 @@ public:
 
     vector<int64_t> filterByForeignKey(int64_t otherTableIndex) {
         // no indexes on results
-        return {};
+        vector<int64_t> result;
+        for (int i = clusterSequencesPerRound[otherTableIndex].minId; i <= clusterSequencesPerRound[otherTableIndex].maxId; i++) {
+            result.push_back(i);
+        }
+        return result;
     }
 
     void oneLineToCSV(int64_t index, stringstream & ss) {
@@ -97,7 +102,7 @@ public:
 
 
 ACatPeekers queryACatPeekers(const Rounds & rounds, const Ticks & ticks, const PlayerAtTick & playerAtTick);
-ACatClusterSequence analyzeACatPeekersClusters(const PlayerAtTick & pat, ACatPeekers & aCatPeekers, const Cluster & clusters);
+ACatClusterSequence analyzeACatPeekersClusters(const Rounds & rounds, const PlayerAtTick & pat, ACatPeekers & aCatPeekers, const Cluster & clusters);
 
 
 #endif //CSKNOW_A_CAT_PEEKERS_H

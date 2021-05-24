@@ -119,7 +119,7 @@ struct ACatPeekersSortableElement {
     }
 };
 
-ACatClusterSequence analyzeACatPeekersClusters(const PlayerAtTick & pat, ACatPeekers & aCatPeekers, const Cluster & clusters) {
+ACatClusterSequence analyzeACatPeekersClusters(const Rounds & rounds, const PlayerAtTick & pat, ACatPeekers & aCatPeekers, const Cluster & clusters) {
     vector<ACatPeekersSortableElement> sortable;
     for (int64_t aCatPeekerIndex = 0; aCatPeekerIndex < aCatPeekers.size; aCatPeekerIndex++) {
         // create sortable array
@@ -149,12 +149,20 @@ ACatClusterSequence analyzeACatPeekersClusters(const PlayerAtTick & pat, ACatPee
     std::sort(sortable.begin(), sortable.end());
 
     ACatClusterSequence result;
+    for (int i = 0; i < rounds.id.size(); i++) {
+        result.clusterSequencesPerRound.push_back({-1, -1});
+    }
+
     vector<ClusterSequence> & clusterSequences = result.clusterSequences;
     for (const auto & sortableElement : sortable) {
         if (clusterSequences.empty()
             || clusterSequences[clusterSequences.size() - 1].roundId != sortableElement.roundId
             || clusterSequences[clusterSequences.size() - 1].playerId != sortableElement.playerId) {
             clusterSequences.push_back(ClusterSequence {});
+            result.clusterSequencesPerRound[clusterSequences.size() - 1].maxId = clusterSequences.size() - 1;
+            if (result.clusterSequencesPerRound[clusterSequences.size() - 1].minId == -1) {
+                result.clusterSequencesPerRound[clusterSequences.size() - 1].minId = clusterSequences.size() - 1;
+            }
         }
         ClusterSequence & curSequence = clusterSequences[clusterSequences.size() - 1];
         curSequence.roundId = sortableElement.roundId;
@@ -175,5 +183,6 @@ ACatClusterSequence analyzeACatPeekersClusters(const PlayerAtTick & pat, ACatPee
         }
     }
     result.size = clusterSequences.size();
+
     return result;
 }

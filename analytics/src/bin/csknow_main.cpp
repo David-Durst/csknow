@@ -102,9 +102,7 @@ int main(int argc, char * argv[]) {
 
     ACatPeekers aCatPeekers = queryACatPeekers(rounds, ticks, playerAtTick);
     Cluster aCatPeekersClusters(dataPath + "/../python_analytics/a_cat_peekers_clusters.csv");
-    std::cout << "starting to analyze a cat peekers clusters" << std::endl;
     ACatClusterSequence aCatClusterSequence = analyzeACatPeekersClusters(playerAtTick, aCatPeekers, aCatPeekersClusters);
-    std::cout << "done analyzing a cat peekers clusters" << std::endl;
 
     /*
     SpottedIndex spottedIndex(position, spotted);
@@ -218,13 +216,19 @@ int main(int argc, char * argv[]) {
          */
     }
 
-    vector<string> queryNames = {"games", "rounds", "players", "ticks", "playerAtTick"};
+    vector<string> queryNames = {"games", "rounds", "players", "ticks", "playerAtTick", "aCatClusterSequence"};
     map<string, reference_wrapper<QueryResult>> queries {
             {queryNames[0], queryGames},
             {queryNames[1], queryRounds},
             {queryNames[2], queryPlayers},
             {queryNames[3], queryTicks},
             {queryNames[4], queryPlayerAtTick},
+            {queryNames[5], aCatClusterSequence},
+    };
+
+    vector<string> clusterNames = {"aCat"};
+    map<string, reference_wrapper<QueryResult>> clusters {
+            {clusterNames[0], aCatPeekersClusters},
     };
 
     if (runServer) {
@@ -335,6 +339,27 @@ int main(int argc, char * argv[]) {
                     ss << queryValue.ticksPerEvent;
                 }
                 ss << std::endl;
+            }
+            res.set_content(ss.str(), "text/plain");
+            res.set_header("Access-Control-Allow-Origin", "*");
+        });
+
+        svr.Get("/clusters/(\\w+)", [&](const httplib::Request & req, httplib::Response &res) {
+            string resultType = req.matches[1];
+            std::stringstream ss;
+            if (clusters.find(resultType) != queries.end()) {
+                res.set_content(queries.find(resultType)->second.get().toCSV(), "text/csv");
+            }
+            else {
+                res.status = 404;
+            }
+            res.set_header("Access-Control-Allow-Origin", "*");
+        });
+
+        svr.Get("/listClusters", [&](const httplib::Request & req, httplib::Response &res) {
+            std::stringstream ss;
+            for (const auto clusterName : clusterNames) {
+                ss << clusterName << std::endl;
             }
             res.set_content(ss.str(), "text/plain");
             res.set_header("Access-Control-Allow-Origin", "*");

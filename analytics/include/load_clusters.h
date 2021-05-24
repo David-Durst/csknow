@@ -7,13 +7,14 @@
 #include <unordered_map>
 #include <list>
 #include "load_data.h"
+#include "queries/query.h"
 using std::string;
 using std::vector;
 using std::set;
 using std::unordered_map;
 using std::vector;
 
-class Cluster {
+class Cluster : public QueryResult {
 public:
     vector<int64_t> id;
     vector<int64_t> wallId;
@@ -21,8 +22,27 @@ public:
     vector<double> y;
     vector<double> z;
 
-    Cluster() {};
+    vector<int64_t> filterByForeignKey(int64_t otherTableIndex) {
+        // no indexes on results
+        return {};
+    }
+
+    Cluster() {
+        this->variableLength = false;
+    };
     Cluster(string filePath);
+
+    void oneLineToCSV(int64_t index, stringstream & ss) {
+        ss << id[index] << "," << wallId[index] << "," << x[index] << "," << y[index] << "," << z[index] << std::endl;
+    }
+
+    vector<string> getForeignKeyNames() {
+        return {"wall id"};
+    }
+
+    vector<string> getOtherColumnNames() {
+        return {"x", "y", "z"};
+    }
 };
 
 struct ClusterSequence {
