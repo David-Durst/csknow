@@ -338,6 +338,15 @@ int main(int argc, char * argv[]) {
                 else {
                     ss << queryValue.ticksPerEvent;
                 }
+                ss << ",";
+                bool firstKPC = true;
+                for (const auto keyPlayerColumn : queryValue.keyPlayerColumns) {
+                    if (!firstKPC) {
+                        ss << ";";
+                    }
+                    ss << keyPlayerColumn;
+                    firstKPC = false;
+                }
                 ss << std::endl;
             }
             res.set_content(ss.str(), "text/plain");

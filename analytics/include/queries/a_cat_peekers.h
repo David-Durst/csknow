@@ -68,6 +68,7 @@ public:
         this->variableLength = true;
         this->startTickColumn = 4;
         this->ticksColumn = 6;
+        this->keyPlayerColumns = {1};
     }
 
     vector<int64_t> filterByForeignKey(int64_t otherTableIndex) {

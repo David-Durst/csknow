@@ -40,6 +40,7 @@ public:
     bool variableLength = false;
     int ticksPerEvent;
     int ticksColumn;
+    vector<int> keyPlayerColumns = {};
 //    vector<int> keysForDiff;
 
     //virtual string toCSVFiltered(const Position & position, string game) = 0;
