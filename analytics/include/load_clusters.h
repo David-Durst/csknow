@@ -28,7 +28,8 @@ public:
 struct ClusterSequence {
     int64_t roundId;
     int64_t playerId;
-    vector<int64_t> playerAtTickIds;
+    // separate playerAtTickIds for each time period in a cluster
+    vector<vector<int64_t>> playerAtTickIds;
     vector<int> clusterIds;
     vector<RangeIndexEntry> tickIdsInCluster;
 };

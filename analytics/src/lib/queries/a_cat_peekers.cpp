@@ -159,7 +159,6 @@ ACatClusterSequence analyzeACatPeekersClusters(const PlayerAtTick & pat, ACatPee
         ClusterSequence & curSequence = clusterSequences[clusterSequences.size() - 1];
         curSequence.roundId = sortableElement.roundId;
         curSequence.playerId = sortableElement.playerId;
-        curSequence.playerAtTickIds.push_back(sortableElement.playerAtTickId);
         // if empty, start a new cluster
         // if not empty and old cluster doesn't match new one, add new cluster (and trust old timeInCluster.max was set before)
         // if not empty and old clsuter matches new one, update timeInCluster.max
@@ -168,9 +167,11 @@ ACatClusterSequence analyzeACatPeekersClusters(const PlayerAtTick & pat, ACatPee
         if (curSequence.clusterIds.empty() || curSequence.clusterIds[curSequence.clusterIds.size() - 1] != curClusterId) {
             curSequence.clusterIds.push_back(curClusterId);
             curSequence.tickIdsInCluster.push_back({curTickId, curTickId});
+            curSequence.playerAtTickIds.push_back({sortableElement.playerAtTickId});
         }
         else {
             curSequence.tickIdsInCluster[curSequence.tickIdsInCluster.size() - 1].maxId = curTickId;
+            curSequence.playerAtTickIds[curSequence.playerAtTickIds.size() - 1].push_back(sortableElement.playerAtTickId);
         }
     }
     result.size = clusterSequences.size();

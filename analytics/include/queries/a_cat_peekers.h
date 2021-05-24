@@ -78,7 +78,7 @@ public:
         for (int i = 0; i < clusterSequences[index].playerAtTickIds.size(); i++) {
             ss << index << ",";
             ss << clusterSequences[index].roundId << "," << clusterSequences[index].playerId << ","
-                << clusterSequences[index].playerAtTickIds[i] << "," << clusterSequences[index].clusterIds[i] << ","
+                << clusterSequences[index].clusterIds[i] << ","
                 << clusterSequences[index].tickIdsInCluster[i].minId << "," << clusterSequences[index].tickIdsInCluster[i].maxId << ","
                 << clusterSequences[index].tickIdsInCluster[i].maxId - clusterSequences[index].tickIdsInCluster[i].minId + 1
                 << std::endl;
