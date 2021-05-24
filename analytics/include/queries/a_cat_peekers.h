@@ -91,8 +91,7 @@ public:
     }
 
     vector<string> getForeignKeyNames() {
-        return {"round id", "player id", "player at tick id",
-                "cluster id", "min tick id in cluster", "max tick id in cluster", "cluster length"};
+        return {"round id", "player id", "cluster id", "min tick id in cluster", "max tick id in cluster", "cluster length"};
     }
 
     vector<string> getOtherColumnNames() {
