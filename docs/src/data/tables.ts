@@ -378,8 +378,13 @@ export class GameData {
         this.playersTable = [];
         this.playerIdToIndex.clear();
         this.playerAtTicksTable = [];
-        this.tables.clear();
-        this.ticksToOtherTablesIndices.clear();
+        for (const key of Array.from(this.tables.keys())) {
+            this.tables.set(key, []);
+        }
+        for (const key of Array.from(this.ticksToOtherTablesIndices.keys())) {
+            this.ticksToOtherTablesIndices.set(key, new Map<number, number[]>());
+        }
+        this.ticksToPlayerAtTick = [];
     }
 }
 
