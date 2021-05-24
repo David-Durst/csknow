@@ -57,7 +57,7 @@ export async function getTables() {
                         cols.slice(numForeignKeysIndex + 1, numForeignKeysIndex + numForeignKeys + 1),
                         cols.slice(numOtherColsIndex + 1, numOtherColsIndex + numOtherCols + 1),
                         cols[cols.length - 1], parserType,
-                        remoteAddr + cols[0]
+                        remoteAddr + "query/" + cols[0]
                     )
                 )
                 if (!tablesNotIndexedByTick.includes(cols[0])) {
