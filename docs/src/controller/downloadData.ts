@@ -33,6 +33,8 @@ export async function getTables() {
                 const numForeignKeys = parseInt(cols[numForeignKeysIndex])
                 const numOtherColsIndex = numForeignKeysIndex + numForeignKeys + 1
                 const numOtherCols = parseInt(cols[numOtherColsIndex])
+                const ticksPerEventIndex = cols.length - 2
+                const keyPlayerColumnsIndex = cols.length - 1
                 let parserType: ParserType;
                 if (cols[0] == tickTableName) {
                     parserType = ParserType.tick;
@@ -56,8 +58,9 @@ export async function getTables() {
                     new Parser(cols[0], cols[1],
                         cols.slice(numForeignKeysIndex + 1, numForeignKeysIndex + numForeignKeys + 1),
                         cols.slice(numOtherColsIndex + 1, numOtherColsIndex + numOtherCols + 1),
-                        cols[cols.length - 1], parserType,
-                        remoteAddr + "query/" + cols[0]
+                        cols[ticksPerEventIndex], parserType,
+                        remoteAddr + "query/" + cols[0],
+                        cols[keyPlayerColumnsIndex]
                     )
                 )
                 if (!tablesNotIndexedByTick.includes(cols[0])) {

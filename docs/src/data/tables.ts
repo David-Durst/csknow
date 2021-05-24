@@ -190,7 +190,8 @@ export class Parser {
 
     constructor(tableName: string, startTickColumn: string,
                 foreignKeyNames: string[], otherColumnNames: string[],
-                ticksPerEvent: string, parserType: ParserType, baseUrl: string) {
+                ticksPerEvent: string, parserType: ParserType, baseUrl: string,
+                keyPlayerColumns: string) {
         this.tableName = tableName;
         this.foreignKeyNames = foreignKeyNames;
         this.otherColumnNames = otherColumnNames;
@@ -207,6 +208,12 @@ export class Parser {
         }
         this.parserType = parserType;
         this.baseUrl = baseUrl
+        this.keyPlayerColumns = []
+        if (keyPlayerColumns.length > 0) {
+            for (const keyPlayerColumn of keyPlayerColumns.split(";")) {
+                this.keyPlayerColumns.push(parseInt(keyPlayerColumn))
+            }
+        }
     }
 
     parseOneLine(currentLine: string[]) {
