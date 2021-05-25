@@ -4,7 +4,7 @@ import {
     gameTableName, Parser,
     ParserType, playerAtTickTableName, playersTableName, RoundRow,
     roundTableName, tablesNotFilteredByRound,
-    tickTableName, TickRow, PlayerAtTickRow
+    tickTableName, TickRow, PlayerAtTickRow, parseBool
 } from "../data/tables";
 import IntervalTree from "@flatten-js/interval-tree";
 
@@ -29,13 +29,20 @@ export async function getTables() {
             for (let lineNumber = 0; lineNumber < lines.length; lineNumber++) {
                 const cols = lines[lineNumber].split(",");
                 gameData.tableNames.push(cols[0])
-                gameData.tables.set(cols[0], [])
                 const numForeignKeysIndex = 2
                 const numForeignKeys = parseInt(cols[numForeignKeysIndex])
                 const numOtherColsIndex = numForeignKeysIndex + numForeignKeys + 1
                 const numOtherCols = parseInt(cols[numOtherColsIndex])
-                const ticksPerEventIndex = cols.length - 2
-                const keyPlayerColumnsIndex = cols.length - 1
+                const ticksPerEventIndex = cols.length - 3
+                const keyPlayerColumnsIndex = cols.length - 2
+                const allTicksIndex = cols.length - 1
+                const allTicks = parseBool(cols[allTicksIndex])
+                if (allTicks) {
+                    gameData.clusters.set(cols[0], [])
+                }
+                else {
+                    gameData.tables.set(cols[0], [])
+                }
                 let parserType: ParserType;
                 if (cols[0] == tickTableName) {
                     parserType = ParserType.tick;
@@ -61,15 +68,21 @@ export async function getTables() {
                         cols.slice(numOtherColsIndex + 1, numOtherColsIndex + numOtherCols + 1),
                         cols[ticksPerEventIndex], parserType,
                         remoteAddr + "query/" + cols[0],
-                        cols[keyPlayerColumnsIndex]
+                        cols[keyPlayerColumnsIndex], cols[allTicksIndex]
                     )
                 )
                 if (!tablesNotIndexedByTick.includes(cols[0])) {
                     gameData.ticksToOtherTablesIndices.set(cols[0], new IntervalTree<number>());
                 }
                 if (!addedDownloadedOptions) {
-                    (<HTMLSelectElement> document.getElementById("event-type"))
-                        .add(new Option(cols[0], cols[0]));
+                    if (allTicks) {
+                        (<HTMLSelectElement> document.getElementById("cluster-type"))
+                            .add(new Option(cols[0], cols[0]));
+                    }
+                    else {
+                        (<HTMLSelectElement> document.getElementById("event-type"))
+                            .add(new Option(cols[0], cols[0]));
+                    }
                     (<HTMLSelectElement> document.getElementById("download-type"))
                         .add(new Option(cols[0], cols[0]));
                 }

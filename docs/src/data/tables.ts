@@ -1,8 +1,8 @@
 import {gameData} from "./data";
 import IntervalTree from "@flatten-js/interval-tree";
 
-function parseBool(b: string) {
-    return b == "1";
+export function parseBool(b: string) {
+    return b == "1" || b == "true";
 }
 
 export function printTable(keys: string[], values: string[]): string {
@@ -187,11 +187,12 @@ export class Parser {
     parserType: ParserType;
     baseUrl: string;
     filterUrl: string;
+    allTicks: boolean;
 
     constructor(tableName: string, startTickColumn: string,
                 foreignKeyNames: string[], otherColumnNames: string[],
                 ticksPerEvent: string, parserType: ParserType, baseUrl: string,
-                keyPlayerColumns: string) {
+                keyPlayerColumns: string, allTicks: string) {
         this.tableName = tableName;
         this.foreignKeyNames = foreignKeyNames;
         this.otherColumnNames = otherColumnNames;
@@ -214,6 +215,7 @@ export class Parser {
                 this.keyPlayerColumns.push(parseInt(keyPlayerColumn))
             }
         }
+        this.allTicks = parseBool(allTicks)
     }
 
     parseOneLine(currentLine: string[]) {
@@ -275,6 +277,18 @@ export class Parser {
                 )
             )
         }
+        // clusters last for all times
+        else if (this.allTicks) {
+            gameData.clusters.get(this.tableName).push(
+                new Row(
+                    id, this,
+                    currentLine.slice(foreignKeysStart,
+                        foreignKeysStart + this.foreignKeyNames.length)
+                        .map(s => parseInt(s)),
+                    currentLine.slice(otherColumnsStart, currentLine.length)
+                )
+            )
+        }
         else {
             gameData.tables.get(this.tableName).push(
                 new Row(
@@ -322,6 +336,8 @@ export class GameData {
         new Map<string, Row[]>();
     ticksToOtherTablesIndices: Map<string, IntervalTree<number>> =
         new Map<string, IntervalTree<number>>();
+    clusters: Map<string, Row[]> =
+        new Map<string, Row[]>();
 
     getRound(tickData: TickRow) : RoundRow {
         if (this.roundIdToIndex.size == 0) {
@@ -376,6 +392,7 @@ export class GameData {
         target.ticksToPlayerAtTick = this.ticksToPlayerAtTick;
         target.tables = this.tables;
         target.ticksToOtherTablesIndices = this.ticksToOtherTablesIndices;
+        target.clusters = this.clusters;
     }
 
     clear() {
@@ -391,6 +408,9 @@ export class GameData {
             this.ticksToOtherTablesIndices.set(key, new IntervalTree<number>())
         }
         this.ticksToPlayerAtTick = [];
+        for (const key of Array.from(this.clusters.keys())) {
+            this.clusters.set(key, []);
+        }
     }
 }
 
