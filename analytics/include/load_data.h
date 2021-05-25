@@ -157,6 +157,8 @@ public:
     int64_t * gameId;
     char ** name;
     int64_t * steamId;
+    // add this offset to id to get the row entry
+    int64_t idOffset = 1;
 
     void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) {
         ColStore::init(rows, numFiles, gameStarts);
@@ -196,6 +198,8 @@ public:
     int16_t * tWins;
     int16_t * ctWins;
     RangeIndex ticksPerRound;
+    // add this offset to id to get the row entry
+    int64_t idOffset = 1;
 
     void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) {
         ColStore::init(rows, numFiles, gameStarts);

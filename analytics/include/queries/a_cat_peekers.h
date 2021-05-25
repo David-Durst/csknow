@@ -82,12 +82,11 @@ public:
 
     void oneLineToCSV(int64_t index, stringstream & ss) {
         for (int i = 0; i < clusterSequences[index].playerAtTickIds.size(); i++) {
-            ss << index << ",";
-            ss << clusterSequences[index].roundId << "," << clusterSequences[index].playerId << ","
-                << clusterSequences[index].clusterIds[i] << ","
+            ss << clusterSequences[index].ids[i] << "," << clusterSequences[index].roundId
+                << "," << clusterSequences[index].playerId << "," << clusterSequences[index].clusterIds[i] << ","
                 << clusterSequences[index].tickIdsInCluster[i].minId << "," << clusterSequences[index].tickIdsInCluster[i].maxId << ","
                 << clusterSequences[index].tickIdsInCluster[i].maxId - clusterSequences[index].tickIdsInCluster[i].minId + 1
-                << std::endl;
+                << "," << clusterSequences[index].name << std::endl;
         }
     }
 
@@ -96,13 +95,14 @@ public:
     }
 
     vector<string> getOtherColumnNames() {
-        return {};
+        return {"player name"};
     }
 };
 
 
 ACatPeekers queryACatPeekers(const Rounds & rounds, const Ticks & ticks, const PlayerAtTick & playerAtTick);
-ACatClusterSequence analyzeACatPeekersClusters(const Rounds & rounds, const PlayerAtTick & pat, ACatPeekers & aCatPeekers, const Cluster & clusters);
+ACatClusterSequence analyzeACatPeekersClusters(const Rounds & rounds, const Players & players,
+                                               const PlayerAtTick & pat, ACatPeekers & aCatPeekers, const Cluster & clusters);
 
 
 #endif //CSKNOW_A_CAT_PEEKERS_H

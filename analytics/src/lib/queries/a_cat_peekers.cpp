@@ -27,7 +27,7 @@ ACatPeekers queryACatPeekers(const Rounds & rounds, const Ticks & ticks, const P
     vector<double> tmpWallY[numThreads];
     vector<double> tmpWallZ[numThreads];
 
-    AABB aCatPositions{{217.0, 1327.34, -5.0}, {513.0, 2260.0, std::numeric_limits<double>::max()}};
+    AABB aCatPositions{{190.0, 1327.34, -5.0}, {513.0, 2260.0, std::numeric_limits<double>::max()}};
     AABB frontCatWall{{507.0, 1353.0, std::numeric_limits<double>::min()}, {507.1, 2003.0, std::numeric_limits<double>::max()}};
     AABB oppositeElevatorWall{{507.0, 2003.0, std::numeric_limits<double>::min()}, {1215.0, 2003.1, std::numeric_limits<double>::max()}};
     AABB backCatWall{{224.0, 1301, std::numeric_limits<double>::min()}, {224.1, 2733.0, std::numeric_limits<double>::max()}};
@@ -119,12 +119,16 @@ struct ACatPeekersSortableElement {
     }
 };
 
-ACatClusterSequence analyzeACatPeekersClusters(const Rounds & rounds, const PlayerAtTick & pat, ACatPeekers & aCatPeekers, const Cluster & clusters) {
+ACatClusterSequence analyzeACatPeekersClusters(const Rounds & rounds, const Players & players,
+                                               const PlayerAtTick & pat, ACatPeekers & aCatPeekers, const Cluster & clusters) {
     vector<ACatPeekersSortableElement> sortable;
     for (int64_t aCatPeekerIndex = 0; aCatPeekerIndex < aCatPeekers.size; aCatPeekerIndex++) {
         // create sortable array
         sortable.push_back({aCatPeekers.roundId[aCatPeekerIndex], aCatPeekers.playerAtTickId[aCatPeekerIndex],
                             aCatPeekers.playerId[aCatPeekerIndex], aCatPeekerIndex});
+        if (pat.tickId[aCatPeekers.playerAtTickId[aCatPeekerIndex]] == 11000 && aCatPeekers.playerId[aCatPeekerIndex] == 4) {
+            int z = 2;
+        }
 
         double minDistance = std::numeric_limits<double>::max();
         int minId = -1;
@@ -154,6 +158,7 @@ ACatClusterSequence analyzeACatPeekersClusters(const Rounds & rounds, const Play
     }
 
     vector<ClusterSequence> & clusterSequences = result.clusterSequences;
+    int64_t idPerClusterInSequence = 0;
     for (const auto & sortableElement : sortable) {
         if (clusterSequences.empty()
             || clusterSequences[clusterSequences.size() - 1].roundId != sortableElement.roundId
@@ -167,12 +172,14 @@ ACatClusterSequence analyzeACatPeekersClusters(const Rounds & rounds, const Play
         ClusterSequence & curSequence = clusterSequences[clusterSequences.size() - 1];
         curSequence.roundId = sortableElement.roundId;
         curSequence.playerId = sortableElement.playerId;
+        curSequence.name = players.name[sortableElement.playerId + players.idOffset];
         // if empty, start a new cluster
         // if not empty and old cluster doesn't match new one, add new cluster (and trust old timeInCluster.max was set before)
         // if not empty and old clsuter matches new one, update timeInCluster.max
         int curClusterId = aCatPeekers.clusterId[sortableElement.aCatPeekersId];
         int curTickId = pat.tickId[aCatPeekers.playerAtTickId[sortableElement.aCatPeekersId]];
         if (curSequence.clusterIds.empty() || curSequence.clusterIds[curSequence.clusterIds.size() - 1] != curClusterId) {
+            curSequence.ids.push_back(idPerClusterInSequence++);
             curSequence.clusterIds.push_back(curClusterId);
             curSequence.tickIdsInCluster.push_back({curTickId, curTickId});
             curSequence.playerAtTickIds.push_back({sortableElement.playerAtTickId});

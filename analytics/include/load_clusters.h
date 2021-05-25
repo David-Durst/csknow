@@ -46,8 +46,10 @@ public:
 };
 
 struct ClusterSequence {
+    vector<int64_t> ids;
     int64_t roundId;
     int64_t playerId;
+    string name;
     // separate playerAtTickIds for each time period in a cluster
     vector<vector<int64_t>> playerAtTickIds;
     vector<int> clusterIds;
