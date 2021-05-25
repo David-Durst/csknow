@@ -1,0 +1,13 @@
+name,min x,min y,min z,max x,max y,max z
+aCatPositions,190.0,1327.34,-5.0,513.0,2260.0,
+frontCatWall,507.0,1353.0,,507.1,2003.0,
+oppositeElevatorWall,507.0,2003.0,,1215.0,2003.1,
+backCatWall,224.0,1301,,224.1,2733.0,
+ninjaWall,224.0,2733.0,,1010.0,2733.1,
+gooseWall,1010.0,2733.0,,1010.1,3090.0,
+topRampWall,1010.0,3090.0,,1588.0,3090.1,
+longWall,1588.0,-1247.0,,1588.0,3090.1,
+leftContainer,-2253.0,-900.0,,-2253.1,3168.0,
+topContainer,-2253.0,3168.0,,1897.0,3168.1,
+bottomContainer,-2253.0,-900.0,,1897.0,-900.1,
+rightContainer,1897.0,-900.0,,1897.0,3168.1,

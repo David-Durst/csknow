@@ -6,7 +6,7 @@ import os
 
 # %%
 # load data
-df = pd.read_csv(os.getcwd() + "/../../analytics/csv_outputs/23_05_2021__14_43_55_a_cat_peekers.csv")
+df = pd.read_csv(os.getcwd() + "/../../analytics/csv_outputs/24_05_2021__11_33_18_a_cat_peekers.csv")
 
 # %%
 # partition it by wall
@@ -64,10 +64,10 @@ partitioned_csgo_f.close()
 # %%
 clusters_f = open("a_cat_peekers_clusters.csv", "w")
 csgo_f = open("a_cat_peekers.cfg", "w")
-clusters_f.write("cluster id,cluster x, cluster y, cluster z\n")
+clusters_f.write("cluster id,wall id,cluster x, cluster y, cluster z\n")
 cluster_id = 0;
 for cluster_center in unpartitioned_kmeans.cluster_centers_:
-    clusters_f.write(str(cluster_id) + "," + str(cluster_center[0]) + "," + str(cluster_center[1]) + "," + str(cluster_center[2]) + "\n")
+    clusters_f.write(str(cluster_id) + ",-1," + str(cluster_center[0]) + "," + str(cluster_center[1]) + "," + str(cluster_center[2]) + "\n")
     cluster_id += 1
     csgo_f.write("box " + str(cluster_center[0] - 20) + " " + str(cluster_center[1] - 20) + " "
              + str(cluster_center[2] - 20) + " "
