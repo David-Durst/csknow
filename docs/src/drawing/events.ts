@@ -79,9 +79,11 @@ export function setEventText(tickData: TickRow, gameData: GameData) {
     if (index.has(tickData.id)) {
         const events = index.get(tickData.id)
         const eventArray = gameData.tables.get(curEvent)
+        /*
         for (let eIndex = events.length - 1; eIndex >= 0; eIndex--) {
             eventDiv.innerHTML += eventArray[events[eIndex]].getHTML()
         }
+         */
     }
 }
 
