@@ -216,7 +216,7 @@ int main(int argc, char * argv[]) {
          */
     }
 
-    vector<string> queryNames = {"games", "rounds", "players", "ticks", "playerAtTick", "aCatClusterSequence"};
+    vector<string> queryNames = {"games", "rounds", "players", "ticks", "playerAtTick", "aCatClusterSequence", "aCatClusters"};
     map<string, reference_wrapper<QueryResult>> queries {
             {queryNames[0], queryGames},
             {queryNames[1], queryRounds},
@@ -224,11 +224,7 @@ int main(int argc, char * argv[]) {
             {queryNames[3], queryTicks},
             {queryNames[4], queryPlayerAtTick},
             {queryNames[5], aCatClusterSequence},
-    };
-
-    vector<string> clusterNames = {"aCat"};
-    map<string, reference_wrapper<QueryResult>> clusters {
-            {clusterNames[0], aCatPeekersClusters},
+            {queryNames[6], aCatPeekersClusters},
     };
 
     if (runServer) {
@@ -347,28 +343,9 @@ int main(int argc, char * argv[]) {
                     ss << keyPlayerColumn;
                     firstKPC = false;
                 }
+                ss << ",";
+                ss << boolToString(queryValue.allTicks);
                 ss << std::endl;
-            }
-            res.set_content(ss.str(), "text/plain");
-            res.set_header("Access-Control-Allow-Origin", "*");
-        });
-
-        svr.Get("/clusters/(\\w+)", [&](const httplib::Request & req, httplib::Response &res) {
-            string resultType = req.matches[1];
-            std::stringstream ss;
-            if (clusters.find(resultType) != queries.end()) {
-                res.set_content(queries.find(resultType)->second.get().toCSV(), "text/csv");
-            }
-            else {
-                res.status = 404;
-            }
-            res.set_header("Access-Control-Allow-Origin", "*");
-        });
-
-        svr.Get("/listClusters", [&](const httplib::Request & req, httplib::Response &res) {
-            std::stringstream ss;
-            for (const auto clusterName : clusterNames) {
-                ss << clusterName << std::endl;
             }
             res.set_content(ss.str(), "text/plain");
             res.set_header("Access-Control-Allow-Origin", "*");

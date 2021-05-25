@@ -29,6 +29,7 @@ public:
 
     Cluster() {
         this->variableLength = false;
+        this->allTicks = true;
     };
     Cluster(string filePath);
 

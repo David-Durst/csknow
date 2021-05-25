@@ -3,6 +3,7 @@
 
 Cluster::Cluster(string filePath) {
     this->variableLength = false;
+    this->allTicks = true;
     // mmap the file
     auto [fd, stats, file] = openMMapFile(filePath);
 
@@ -44,4 +45,5 @@ Cluster::Cluster(string filePath) {
         colNumber = (colNumber + 1) % 5;
     }
     closeMMapFile({fd, stats, file});
+    this->size = rowNumber;
 }
