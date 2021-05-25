@@ -8,7 +8,7 @@ import {PlayerAtTickRow, TickRow} from "../data/tables";
 import {getPackedSettings} from "http2";
 import {
     getPlayersText,
-    setEventText, setEventToDraw,
+    setEventText, setSelectionsToDraw,
     setupEventDrawing,
 } from "./events";
 import {clearCustomFilter} from "../controller/ide_filters";
@@ -319,7 +319,7 @@ export function setupCanvas() {
 }
 
 function setEventsAndRedraw() {
-    setEventToDraw()
+    setSelectionsToDraw()
     drawTick(null)
 }
 
