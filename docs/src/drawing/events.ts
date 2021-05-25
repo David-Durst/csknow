@@ -1,12 +1,12 @@
 import {
     GameData,
     getTickToOtherTableIndex,
-    HashmapIndex,
     PlayerAtTickRow,
     playerAtTickTableName, PlayerRow,
     Row,
     TickRow,
 } from "../data/tables";
+import IntervalTree from "@flatten-js/interval-tree";
 
 let eventSelector: HTMLSelectElement = null
 let eventDiv: HTMLDivElement = null
@@ -29,7 +29,7 @@ export function getPlayersText(tickData: TickRow, gameData: GameData): string[] 
     const index = getTickToOtherTableIndex(gameData, curEvent)
     const players: PlayerAtTickRow[] = gameData.getPlayersAtTick(tickData)
     // if no event, do nothing special
-    if (curEvent == "none" || !index.has(tickData.id)) {
+    if (curEvent == "none" || !index.intersect_any([tickData.id, tickData.id])) {
         for (let p = 0; p < players.length; p++) {
             result.push(basicPlayerText(gameData, tickData, p))
         }
@@ -39,7 +39,7 @@ export function getPlayersText(tickData: TickRow, gameData: GameData): string[] 
     const playerIDToLocalPATIndex: Map<number, number> = new Map<number, number>()
     // if event, get min key player number for each player
     const eventArray = gameData.tables.get(curEvent)
-    const eventsForTick = index.get(tickData.id)
+    const eventsForTick = index.search([tickData.id, tickData.id])
     for (let p = 0; p < players.length; p++) {
         result.push(basicPlayerText(gameData, tickData, p))
         playerIDToLocalPATIndex.set(players[p].playerId, p)
@@ -76,14 +76,12 @@ export function setEventText(tickData: TickRow, gameData: GameData) {
     }
     eventDiv.innerHTML = ""
     const index = getTickToOtherTableIndex(gameData, curEvent)
-    if (index.has(tickData.id)) {
-        const events = index.get(tickData.id)
+    if (index.intersect_any([tickData.id, tickData.id])) {
+        const events = index.search([tickData.id, tickData.id])
         const eventArray = gameData.tables.get(curEvent)
-        /*
         for (let eIndex = events.length - 1; eIndex >= 0; eIndex--) {
             eventDiv.innerHTML += eventArray[events[eIndex]].getHTML()
         }
-         */
     }
 }
 

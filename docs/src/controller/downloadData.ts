@@ -6,6 +6,7 @@ import {
     roundTableName, tablesNotFilteredByRound,
     tickTableName, TickRow, PlayerAtTickRow
 } from "../data/tables";
+import IntervalTree from "@flatten-js/interval-tree";
 
 export let remoteAddr = "http://52.86.105.42:3123/"
 
@@ -64,7 +65,7 @@ export async function getTables() {
                     )
                 )
                 if (!tablesNotIndexedByTick.includes(cols[0])) {
-                    gameData.ticksToOtherTablesIndices.set(cols[0], new Map<number, number[]>());
+                    gameData.ticksToOtherTablesIndices.set(cols[0], new IntervalTree<number>());
                 }
                 if (!addedDownloadedOptions) {
                     (<HTMLSelectElement> document.getElementById("event-type"))
@@ -135,7 +136,7 @@ export function getRoundFilteredTables(promises: Promise<any>[], curRound: Round
         gameData.parsers.get(downloadedDataName).filterUrl = curRound.gameId.toString()
         if (!tablesNotIndexedByTick.includes(downloadedDataName)) {
             gameData.ticksToOtherTablesIndices.set(downloadedDataName,
-                new Map<number, number[]>());
+                new IntervalTree<number>());
         }
         if (tablesNotFilteredByRound.includes(downloadedDataName)) {
             continue;

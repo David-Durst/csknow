@@ -9,6 +9,7 @@ import {
     tickLabel,
     tickSelector
 } from "./selectors";
+import IntervalTree from "@flatten-js/interval-tree";
 
 // adding some extra entries in these arrays incase extra players in server
 // like casters
@@ -87,7 +88,8 @@ function filterEvent() {
     let matchingPositions: TickRow[] = []
     const index = getTickToOtherTableIndex(filteredData, curEvent)
     for (let t = 0; t < filteredData.ticksTable.length; t++) {
-        if (index.has(filteredData.ticksTable[t].demoTickNumber)) {
+        if (index.intersect_any([filteredData.ticksTable[t].demoTickNumber,
+                filteredData.ticksTable[t].demoTickNumber])) {
             matchingPositions.push(filteredData.ticksTable[t])
         }
     }

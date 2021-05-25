@@ -1,5 +1,5 @@
 import {gameData} from "./data";
-import {InvalidParameterException} from "@aws-sdk/client-cognito-identity";
+import IntervalTree from "@flatten-js/interval-tree";
 
 function parseBool(b: string) {
     return b == "1";
@@ -295,7 +295,6 @@ export class Parser {
 
 }
 
-export type HashmapIndex = Map<number, number[]>;
 export class RangeIndexEntry {
     minId: number;
     maxId: number;
@@ -321,8 +320,8 @@ export class GameData {
     ticksToPlayerAtTick: RangeIndex = [];
     tables: Map<string, Row[]> =
         new Map<string, Row[]>();
-    ticksToOtherTablesIndices: Map<string, HashmapIndex> =
-        new Map<string, Map<number, number[]>>();
+    ticksToOtherTablesIndices: Map<string, IntervalTree<number>> =
+        new Map<string, IntervalTree<number>>();
 
     getRound(tickData: TickRow) : RoundRow {
         if (this.roundIdToIndex.size == 0) {
@@ -389,18 +388,18 @@ export class GameData {
             this.tables.set(key, []);
         }
         for (const key of Array.from(this.ticksToOtherTablesIndices.keys())) {
-            this.ticksToOtherTablesIndices.set(key, new Map<number, number[]>());
+            this.ticksToOtherTablesIndices.set(key, new IntervalTree<number>())
         }
         this.ticksToPlayerAtTick = [];
     }
 }
 
 export function getTickToOtherTableIndex(gameData: GameData, tableName: string):
-    Map<number, number[]> {
+    IntervalTree<number> {
     if (tableName == "none") {
         return null
     }
-    else if (tableName == playerAtTickTableName || gameData.tableNames.includes(tableName)) {
+    else if (gameData.tableNames.includes(tableName)) {
         return gameData.ticksToOtherTablesIndices.get(tableName)
     }
     else {

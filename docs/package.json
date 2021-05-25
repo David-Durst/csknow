@@ -18,6 +18,7 @@
     "@aws-sdk/types": "^3.3.0",
     "@aws-sdk/util-create-request": "^3.3.0",
     "@aws-sdk/util-format-url": "^3.3.0",
+    "@flatten-js/interval-tree": "^1.0.14",
     "file-saver": "^2.0.5"
   },
   "devDependencies": {
