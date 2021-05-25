@@ -66,8 +66,8 @@ public:
 
     ACatClusterSequence() {
         this->variableLength = true;
-        this->startTickColumn = 4;
-        this->ticksColumn = 6;
+        this->startTickColumn = 3;
+        this->ticksColumn = 5;
         this->keyPlayerColumns = {1};
     }
 
