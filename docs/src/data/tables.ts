@@ -347,13 +347,13 @@ export class GameData {
         return result;
     }
 
-    getPlayerIndex(playerId: number) : number {
+    getPlayerByIndex(playerId: number) : PlayerRow {
         if (this.playerIdToIndex.size == 0) {
             for (let i = 0; i < this.playersTable.length; i++) {
                 this.playerIdToIndex.set(this.playersTable[i].id, i);
             }
         }
-        return this.playerIdToIndex.get(playerId);
+        return this.playersTable[this.playerIdToIndex.get(playerId)];
     }
 
     getPlayerName(playerId: number) : string {

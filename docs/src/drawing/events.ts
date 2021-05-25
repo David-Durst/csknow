@@ -3,7 +3,7 @@ import {
     getTickToOtherTableIndex,
     HashmapIndex,
     PlayerAtTickRow,
-    playerAtTickTableName,
+    playerAtTickTableName, PlayerRow,
     Row,
     TickRow,
 } from "../data/tables";
@@ -36,29 +36,30 @@ export function getPlayersText(tickData: TickRow, gameData: GameData): string[] 
         return result
     }
 
+    const playerIDToLocalPATIndex: Map<number, number> = new Map<number, number>()
     // if event, get min key player number for each player
     const eventArray = gameData.tables.get(curEvent)
     const eventsForTick = index.get(tickData.id)
     for (let p = 0; p < players.length; p++) {
         result.push(basicPlayerText(gameData, tickData, p))
+        playerIDToLocalPATIndex.set(players[p].playerId, p)
     }
 
-    let numKeyPlayers = eventArray[0].parser.keyPlayerColumns.length;
     let minKeyPlayerNumbers: number[] = [];
     const bogusMinKeyPlayerNumber = 100
     for (let p = 0; p < players.length; p++) {
         minKeyPlayerNumbers[p] = bogusMinKeyPlayerNumber
     }
     for (let eIndex = 0; eIndex < eventsForTick.length; eIndex++)  {
-        for (let eIndex = 0; eIndex < eventsForTick.length; eIndex++) {
-            let event = eventArray[eventsForTick[eIndex]]
-            for (let keyPlayerIndex = 0; keyPlayerIndex < numKeyPlayers;
-                 keyPlayerIndex++) {
-                const playerIndex =
-                    gameData.getPlayerIndex(event.foreignKeyValues[keyPlayerIndex]);
-                minKeyPlayerNumbers[playerIndex] =
-                    Math.min(minKeyPlayerNumbers[playerIndex], keyPlayerIndex);
+        let event = eventArray[eventsForTick[eIndex]]
+        for (const keyPlayerIndex of eventArray[0].parser.keyPlayerColumns) {
+            const localID =
+                playerIDToLocalPATIndex.get(event.foreignKeyValues[keyPlayerIndex])
+            if (!players[localID].isAlive) {
+                continue;
             }
+            minKeyPlayerNumbers[localID] =
+                Math.min(minKeyPlayerNumbers[localID], keyPlayerIndex);
         }
     }
     for (let p = 0; p < players.length; p++) {
