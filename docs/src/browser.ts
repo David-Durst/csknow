@@ -37,7 +37,7 @@ import {
     getTables,
     remoteAddr,
     setRemoteAddr,
-    getRoundFilteredTables
+    getRoundFilteredTables, getAllTicksTables
 } from "./controller/downloadData";
 import {
     setupSelectors,
@@ -212,6 +212,7 @@ async function changedMatchOrRound() {
 
     await getPlayers(curGame.id);
     getRoundFilteredTables(promises, curRound);
+    getAllTicksTables(promises);
 
     await Promise.all(promises)
     indexEventsForRound(gameData)

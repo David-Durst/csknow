@@ -7,6 +7,7 @@ import {
 import {PlayerAtTickRow, TickRow} from "../data/tables";
 import {getPackedSettings} from "http2";
 import {
+    curCluster,
     getPlayersText,
     setEventText, setSelectionsToDraw,
     setupEventDrawing,
@@ -263,6 +264,20 @@ export function drawTick(e: InputEvent) {
         ctx.strokeRect(topLeftCoordinate.getCanvasX(), topLeftCoordinate.getCanvasY(),
             bottomRightCoordinate.getCanvasX() - topLeftCoordinate.getCanvasX(),
             bottomRightCoordinate.getCanvasY() - topLeftCoordinate.getCanvasY())
+    }
+    if (curCluster != "none") {
+        const clusterRows = filteredData.clusters.get(curCluster)
+        for (let c = 0; c < clusterRows.length; c++) {
+            const cluster = clusterRows[c]
+            const clusterLocation = new MapCoordinate(
+                parseFloat(cluster.otherColumnValues[0]),
+                parseFloat(cluster.otherColumnValues[1]),
+                false);
+            const zScaling = (parseFloat(cluster.otherColumnValues[2]) - minZ) /
+                (maxZ - minZ)
+            ctx.font = ((zScaling * 20 + 30)/2).toString() + "px Tahoma"
+            ctx.fillText(cluster.id.toString(), clusterLocation.getCanvasX(), clusterLocation.getCanvasY())
+        }
     }
     setEventText(tickData, filteredData)
     // setup client config for this tick

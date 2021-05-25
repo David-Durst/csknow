@@ -146,7 +146,6 @@ export async function getPlayers(gameId: number) {
 
 export function getRoundFilteredTables(promises: Promise<any>[], curRound: RoundRow) {
     for (const downloadedDataName of gameData.tableNames) {
-        gameData.parsers.get(downloadedDataName).filterUrl = curRound.gameId.toString()
         if (!tablesNotIndexedByTick.includes(downloadedDataName)) {
             gameData.ticksToOtherTablesIndices.set(downloadedDataName,
                 new IntervalTree<number>());
@@ -154,9 +153,35 @@ export function getRoundFilteredTables(promises: Promise<any>[], curRound: Round
         if (tablesNotFilteredByRound.includes(downloadedDataName)) {
             continue;
         }
+        if (gameData.parsers.get(downloadedDataName).allTicks) {
+            continue;
+        }
+        gameData.parsers.get(downloadedDataName).filterUrl = curRound.gameId.toString()
         promises.push(
             fetch(remoteAddr + "query/" + downloadedDataName + "/" +
                 curRound.id)
+                .then((response: Response) => {
+                    gameData.parsers.get(downloadedDataName)
+                        .setReader(response.body.getReader(),)
+                    return gameData.parsers.get(downloadedDataName).reader.read();
+                })
+                .then(parse(gameData.parsers.get(downloadedDataName), true))
+                .catch(e => {
+                    console.log("error downloading " + downloadedDataName)
+                    console.log(e)
+                })
+        );
+    }
+}
+
+export function getAllTicksTables(promises: Promise<any>[]) {
+    for (const downloadedDataName of gameData.tableNames) {
+        if (!gameData.parsers.get(downloadedDataName).allTicks) {
+            continue;
+        }
+        gameData.parsers.get(downloadedDataName).filterUrl = ""
+        promises.push(
+            fetch(remoteAddr + "query/" + downloadedDataName)
                 .then((response: Response) => {
                     gameData.parsers.get(downloadedDataName)
                         .setReader(response.body.getReader(),)
