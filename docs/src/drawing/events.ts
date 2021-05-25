@@ -11,6 +11,7 @@ import IntervalTree from "@flatten-js/interval-tree";
 let eventSelector: HTMLSelectElement = null
 let eventDiv: HTMLDivElement = null
 let clusterSelector: HTMLSelectElement = null
+export let clusterLimiter: HTMLInputElement = null
 export let curEvent: string = "none"
 export let curCluster: string = "none"
 
@@ -98,4 +99,5 @@ export function setupEventDrawing() {
     eventDiv = document.querySelector<HTMLDivElement>("#events")
     clusterSelector = document.querySelector<HTMLSelectElement>("#cluster-type")
     curCluster = clusterSelector.value;
+    clusterLimiter = document.querySelector<HTMLInputElement>("#cluster-limiter")
 }

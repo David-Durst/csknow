@@ -7,6 +7,7 @@ import {
 import {PlayerAtTickRow, TickRow} from "../data/tables";
 import {getPackedSettings} from "http2";
 import {
+    clusterLimiter,
     curCluster,
     getPlayersText,
     setEventText, setSelectionsToDraw,
@@ -266,9 +267,28 @@ export function drawTick(e: InputEvent) {
             bottomRightCoordinate.getCanvasY() - topLeftCoordinate.getCanvasY())
     }
     if (curCluster != "none") {
+        ctx.fillStyle = green
         const clusterRows = filteredData.clusters.get(curCluster)
+        const clusterLimiterText = clusterLimiter.value.split(";")
+        const validClusters: number[] = []
+        for (const clusterLimiterEntry of clusterLimiterText) {
+            if (!clusterLimiterEntry.includes("-")) {
+                validClusters.push(parseInt(clusterLimiterEntry))
+            }
+            else {
+                const minMaxClusterLimit = clusterLimiterEntry.split("-")
+                const minLimit = parseInt(minMaxClusterLimit[0])
+                const maxLimit = parseInt(minMaxClusterLimit[1])
+                for (let i = minLimit; i <= maxLimit; i++) {
+                    validClusters.push(i)
+                }
+            }
+        }
         for (let c = 0; c < clusterRows.length; c++) {
             const cluster = clusterRows[c]
+            if (clusterLimiter.value != "" && !validClusters.includes(cluster.id)) {
+                continue;
+            }
             const clusterLocation = new MapCoordinate(
                 parseFloat(cluster.otherColumnValues[0]),
                 parseFloat(cluster.otherColumnValues[1]),
@@ -342,4 +362,5 @@ export function setupCanvasHandlers() {
     document.querySelector<HTMLInputElement>("#tick-selector").addEventListener("input", drawTick)
     //document.querySelector<HTMLButtonElement>("#clear_filter").addEventListener("click", clearFilterButton)
     document.querySelector<HTMLSelectElement>("#event-type").addEventListener("change", setEventsAndRedraw)
+    document.querySelector<HTMLSelectElement>("#cluster-type").addEventListener("change", setEventsAndRedraw)
 }
