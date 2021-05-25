@@ -59,9 +59,9 @@ function saveCustomFilterProgram() {
 }
 
 export function setupCustomFilters() {
-    customFilterEditor = document.querySelector<HTMLDivElement>("#editor")
-    document.querySelector<HTMLButtonElement>("#custom_filter").addEventListener("click", customFilterButton)
-    customFilterText = document.querySelector<HTMLDivElement>("#custom_filter_text")
-    filterUploadButton = document.querySelector<HTMLInputElement>("#upload_custom_filter")
-    document.querySelector<HTMLInputElement>("#upload_custom_filter").addEventListener("change", updateCustomFilterProgram)
+    //customFilterEditor = document.querySelector<HTMLDivElement>("#editor")
+    //document.querySelector<HTMLButtonElement>("#custom_filter").addEventListener("click", customFilterButton)
+    //customFilterText = document.querySelector<HTMLDivElement>("#custom_filter_text")
+    //filterUploadButton = document.querySelector<HTMLInputElement>("#upload_custom_filter")
+    //document.querySelector<HTMLInputElement>("#upload_custom_filter").addEventListener("change", updateCustomFilterProgram)
 }

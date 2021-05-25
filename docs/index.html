@@ -12,27 +12,9 @@
 <!--    https://github.com/CSGO-Analysis/csgo-maps-overviews/tree/master/overviews -->
 <div class="container-fluid">
     <div class="row justify-content-md-center">
-        <div class="col-6">
-            <canvas class="right-align" id="myCanvas" width="700" height="700">
+        <div class="col-4">
+            <canvas id="myCanvas" width="700" height="700">
             </canvas>
-        </div>
-        <div class="col-6">
-            <div id="editor"></div>
-            <script src="ace-src-min-noconflict/ace.js" type="text/javascript" charset="utf-8"></script>
-            <script src="ace-src-min-noconflict/theme-twilight.js" type="text/javascript" charset="utf-8"></script>
-            <script src="ace-src-min-noconflict/mode-javascript.js" type="text/javascript" charset="utf-8"></script>
-            <script src="ace-src-min-noconflict/ext-language_tools.js" type="text/javascript" charset="utf-8"></script>
-            <script>
-                var editor = ace.edit("editor");
-                editor.setTheme("ace/theme/twilight")
-                editor.session.setMode("ace/mode/javascript");
-                editor.setKeyboardHandler("ace/keyboard/vim");
-                editor.setOptions({
-                    enableBasicAutocompletion: true,
-                    enableSnippets: true,
-                    enableLiveAutocompletion: true
-                });
-            </script>
         </div>
     </div>
 
@@ -60,16 +42,6 @@
                     <button type="button" id="event_filter" class="btn btn-info playButton">
                         apply event filter
                     </button>
-                    <button type="button" id="custom_filter" class="btn btn-info playButton">
-                        apply custom filter
-                    </button>
-                    <span class="label">current custom filter: </span>
-                    <span id="custom_filter_text">not applied</span>
-                    <button type="button" id="clear_filter" class="btn btn-info playButton">
-                        clear all filters
-                    </button>
-                    <span class="label">Upload Custom Filter:</span>
-                    <input type="file" id="upload_custom_filter" accept="text/javascript">
                     <select id="remote-addr">
                         <option value="http://localhost:3123/">localhost</option>
                         <option value="http://52.86.105.42:3123/">real</option>

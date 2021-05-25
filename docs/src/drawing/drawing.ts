@@ -325,6 +325,6 @@ function setEventsAndRedraw() {
 
 export function setupCanvasHandlers() {
     document.querySelector<HTMLInputElement>("#tick-selector").addEventListener("input", drawTick)
-    document.querySelector<HTMLButtonElement>("#clear_filter").addEventListener("click", clearFilterButton)
+    //document.querySelector<HTMLButtonElement>("#clear_filter").addEventListener("click", clearFilterButton)
     document.querySelector<HTMLSelectElement>("#event-type").addEventListener("change", setEventsAndRedraw)
 }
