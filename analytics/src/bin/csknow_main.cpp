@@ -106,6 +106,12 @@ int main(int argc, char * argv[]) {
     Cluster aCatPeekersClusters(dataPath + "/../python_analytics/csknow-python-analytics/a_cat_peekers_clusters.csv");
     ClusterSequencesByRound aCatClusterSequence = analyzeViewClusters(rounds, players, playerAtTick, aCatPeekers,
                                                                       aCatPeekersClusters);
+    PositionsAndWallViews midPeekers = queryViewsFromRegion(rounds, ticks, playerAtTick,
+                                                             dataPath + "/../analytics/walls/midTStanding.csv",
+                                                             dataPath + "/../analytics/walls/midWalls.csv");
+    //Cluster midTPeekersClusters(dataPath + "/../python_analytics/csknow-python-analytics/mid_clusters.csv");
+    //ClusterSequencesByRound midTClusterSequence = analyzeViewClusters(rounds, players, playerAtTick, midPeekers,
+    //                                                                  midTPeekersClusters);
 
     /*
     SpottedIndex spottedIndex(position, spotted);
@@ -165,19 +171,23 @@ int main(int argc, char * argv[]) {
         {queryNames[8], failedATakes},
     };
      */
-    vector<string> analysisNames = {"a_cat_peekers", "a_cat_cluster_sequence"};
+    vector<string> analysisNames = {"a_cat_peekers", "a_cat_cluster_sequence", "mid_t_peekers"};
     map<string, reference_wrapper<QueryResult>> analyses {
             {analysisNames[0], aCatPeekers},
             {analysisNames[1], aCatClusterSequence},
+            {analysisNames[2], midPeekers},
     };
 
     // create the output files and the metadata describing files
     if (writeOutput) {
         for (const auto & [name, result] : analyses) {
-            std::fstream fs;
-            fs.open(outputDir + "/" + timestamp + "_" + name + ".csv", std::fstream::out);
-            fs << result.get().toCSV();
-            fs.close();
+            std::fstream fsTimed, fsOverride;
+            fsTimed.open(outputDir + "/" + timestamp + "_" + name + ".csv", std::fstream::out);
+            fsTimed << result.get().toCSV();
+            fsTimed.close();
+            fsOverride.open(outputDir + "/" + name + ".csv", std::fstream::out);
+            fsOverride << result.get().toCSV();
+            fsOverride.close();
         }
 
         /*
