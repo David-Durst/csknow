@@ -269,7 +269,7 @@ export function drawTick(e: InputEvent) {
     if (curCluster != "none") {
         ctx.fillStyle = green
         const clusterRows = filteredData.clusters.get(curCluster)
-        const clusterLimiterText = clusterLimiter.value.split(";")
+        const clusterLimiterText = clusterLimiter.value.split(",")
         const validClusters: number[] = []
         for (const clusterLimiterEntry of clusterLimiterText) {
             if (!clusterLimiterEntry.includes("-")) {
