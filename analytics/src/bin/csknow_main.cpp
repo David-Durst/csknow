@@ -100,7 +100,7 @@ int main(int argc, char * argv[]) {
     QueryTicks queryTicks(rounds, ticks);
     QueryPlayerAtTick queryPlayerAtTick(rounds, ticks, playerAtTick);
 
-    ACatPeekers aCatPeekers = queryACatPeekers(rounds, ticks, playerAtTick);
+    ACatPeekers aCatPeekers = queryACatPeekers(rounds, ticks, playerAtTick, dataPath + "/../analytics/walls/aCatWalls.csv");
     Cluster aCatPeekersClusters(dataPath + "/../python_analytics/csknow-python-analytics/a_cat_peekers_clusters.csv");
     ACatClusterSequence aCatClusterSequence = analyzeACatPeekersClusters(rounds, players, playerAtTick, aCatPeekers, aCatPeekersClusters);
 

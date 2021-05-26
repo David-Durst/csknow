@@ -2,6 +2,7 @@
 // Created by durst on 5/18/21.
 //
 #include "queries/a_cat_peekers.h"
+#include "load_walls.h"
 #include "geometry.h"
 #include "indices/spotted.h"
 #include <omp.h>
@@ -12,7 +13,8 @@
 using std::string;
 using std::map;
 
-ACatPeekers queryACatPeekers(const Rounds & rounds, const Ticks & ticks, const PlayerAtTick & playerAtTick) {
+ACatPeekers queryACatPeekers(const Rounds & rounds, const Ticks & ticks, const PlayerAtTick & playerAtTick,
+                             string wallsFilePath) {
     int numThreads = omp_get_max_threads();
     vector<int64_t> tmpRoundId[numThreads];
     vector<int64_t> tmpPlayerAtTickId[numThreads];
@@ -27,7 +29,9 @@ ACatPeekers queryACatPeekers(const Rounds & rounds, const Ticks & ticks, const P
     vector<double> tmpWallY[numThreads];
     vector<double> tmpWallZ[numThreads];
 
+    Walls walls = loadWalls(wallsFilePath);
     AABB aCatPositions{{190.0, 1327.34, -5.0}, {513.0, 2260.0, std::numeric_limits<double>::max()}};
+    /*
     AABB frontCatWall{{507.0, 1353.0, std::numeric_limits<double>::min()}, {507.1, 2003.0, std::numeric_limits<double>::max()}};
     AABB oppositeElevatorWall{{507.0, 2003.0, std::numeric_limits<double>::min()}, {1215.0, 2003.1, std::numeric_limits<double>::max()}};
     AABB backCatWall{{224.0, 1301, std::numeric_limits<double>::min()}, {224.1, 2733.0, std::numeric_limits<double>::max()}};
@@ -43,9 +47,10 @@ ACatPeekers queryACatPeekers(const Rounds & rounds, const Ticks & ticks, const P
     AABB rightContainer{{1897.0, -900.0, std::numeric_limits<double>::min()}, {1897.0, 3168.1, std::numeric_limits<double>::max()}};
     vector<AABB> walls{frontCatWall, oppositeElevatorWall, backCatWall, ninjaWall, gooseWall, topRampWall, longWall,
                        leftContainer, topContainer, bottomContainer, rightContainer};
-    ACatPeekers result(walls);
+                       */
+    ACatPeekers result(walls.aabb);
 
-//#pragma omp parallel for
+#pragma omp parallel for
     for (int64_t roundIndex = 0; roundIndex < rounds.size; roundIndex++) {
         int threadNum = omp_get_thread_num();
         // assuming first position is less than first kills
@@ -63,12 +68,12 @@ ACatPeekers queryACatPeekers(const Rounds & rounds, const Ticks & ticks, const P
                     tmpViewX[threadNum].push_back(playerAtTick.viewX[patIndex]);
                     tmpViewY[threadNum].push_back(playerAtTick.viewY[patIndex]);
                     bool hitAWall = false;
-                    for (int wallIndex = 0; wallIndex < walls.size(); wallIndex++) {
+                    for (int wallIndex = 0; wallIndex < walls.aabb.size(); wallIndex++) {
                         Ray playerEyes = getEyeCoordinatesForPlayer(
                                 playerPosition, {playerAtTick.viewX[patIndex], playerAtTick.viewY[patIndex]});
                         double hit0, hit1;
-                        if (intersectP(walls[wallIndex], playerEyes, hit0, hit1)) {
-                            tmpWallId[threadNum].push_back(wallIndex);
+                        if (intersectP(walls.aabb[wallIndex], playerEyes, hit0, hit1)) {
+                            tmpWallId[threadNum].push_back(walls.id[wallIndex]);
                             tmpWallX[threadNum].push_back(playerEyes.orig.x + hit0 * playerEyes.dir.x);
                             tmpWallY[threadNum].push_back(playerEyes.orig.y + hit0 * playerEyes.dir.y);
                             tmpWallZ[threadNum].push_back(playerEyes.orig.z + hit0 * playerEyes.dir.z);
@@ -126,9 +131,6 @@ ACatClusterSequence analyzeACatPeekersClusters(const Rounds & rounds, const Play
         // create sortable array
         sortable.push_back({aCatPeekers.roundId[aCatPeekerIndex], aCatPeekers.playerAtTickId[aCatPeekerIndex],
                             aCatPeekers.playerId[aCatPeekerIndex], aCatPeekerIndex});
-        if (pat.tickId[aCatPeekers.playerAtTickId[aCatPeekerIndex]] == 11000 && aCatPeekers.playerId[aCatPeekerIndex] == 4) {
-            int z = 2;
-        }
 
         double minDistance = std::numeric_limits<double>::max();
         int minId = -1;

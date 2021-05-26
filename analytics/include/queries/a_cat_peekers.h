@@ -100,7 +100,8 @@ public:
 };
 
 
-ACatPeekers queryACatPeekers(const Rounds & rounds, const Ticks & ticks, const PlayerAtTick & playerAtTick);
+ACatPeekers queryACatPeekers(const Rounds & rounds, const Ticks & ticks, const PlayerAtTick & playerAtTick,
+                             string wallsFilePath);
 ACatClusterSequence analyzeACatPeekersClusters(const Rounds & rounds, const Players & players,
                                                const PlayerAtTick & pat, ACatPeekers & aCatPeekers, const Cluster & clusters);
 
