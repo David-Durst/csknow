@@ -31,7 +31,7 @@ Regions loadRegions(string filePath) {
         }
         else if (colNumber == 3) {
             if (curStart == curDelimiter) {
-                minZ = std::numeric_limits<double>::min();
+                minZ = -1 * std::numeric_limits<double>::max();
             }
             else {
                 readCol(file, curStart, curDelimiter, rowNumber, colNumber, minZ);

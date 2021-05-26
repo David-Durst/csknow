@@ -106,12 +106,12 @@ int main(int argc, char * argv[]) {
     Cluster aCatPeekersClusters(dataPath + "/../python_analytics/csknow-python-analytics/a_cat_peekers_clusters.csv");
     ClusterSequencesByRound aCatClusterSequence = analyzeViewClusters(rounds, players, playerAtTick, aCatPeekers,
                                                                       aCatPeekersClusters);
-    PositionsAndWallViews midPeekers = queryViewsFromRegion(rounds, ticks, playerAtTick,
+    PositionsAndWallViews midTPeekers = queryViewsFromRegion(rounds, ticks, playerAtTick,
                                                              dataPath + "/../analytics/walls/midTStanding.csv",
                                                              dataPath + "/../analytics/walls/midWalls.csv");
-    //Cluster midTPeekersClusters(dataPath + "/../python_analytics/csknow-python-analytics/mid_clusters.csv");
-    //ClusterSequencesByRound midTClusterSequence = analyzeViewClusters(rounds, players, playerAtTick, midPeekers,
-    //                                                                  midTPeekersClusters);
+    Cluster midTPeekersClusters(dataPath + "/../python_analytics/csknow-python-analytics/mid_t_peekers_clusters.csv");
+    ClusterSequencesByRound midTClusterSequence = analyzeViewClusters(rounds, players, playerAtTick, midTPeekers,
+                                                                      midTPeekersClusters);
 
     /*
     SpottedIndex spottedIndex(position, spotted);
@@ -171,11 +171,12 @@ int main(int argc, char * argv[]) {
         {queryNames[8], failedATakes},
     };
      */
-    vector<string> analysisNames = {"a_cat_peekers", "a_cat_cluster_sequence", "mid_t_peekers"};
+    vector<string> analysisNames = {"a_cat_peekers", "a_cat_cluster_sequence", "mid_t_peekers", "mid_t_cluster_sequence"};
     map<string, reference_wrapper<QueryResult>> analyses {
             {analysisNames[0], aCatPeekers},
             {analysisNames[1], aCatClusterSequence},
-            {analysisNames[2], midPeekers},
+            {analysisNames[2], midTPeekers},
+            {analysisNames[3], midTClusterSequence},
     };
 
     // create the output files and the metadata describing files
@@ -229,7 +230,7 @@ int main(int argc, char * argv[]) {
          */
     }
 
-    vector<string> queryNames = {"games", "rounds", "players", "ticks", "playerAtTick", "aCatClusterSequence", "aCatClusters"};
+    vector<string> queryNames = {"games", "rounds", "players", "ticks", "playerAtTick", "aCatClusterSequence", "aCatClusters", "midTClusterSequence", "midTClusters"};
     map<string, reference_wrapper<QueryResult>> queries {
             {queryNames[0], queryGames},
             {queryNames[1], queryRounds},
@@ -238,6 +239,8 @@ int main(int argc, char * argv[]) {
             {queryNames[4], queryPlayerAtTick},
             {queryNames[5], aCatClusterSequence},
             {queryNames[6], aCatPeekersClusters},
+            {queryNames[7], midTClusterSequence},
+            {queryNames[8], midTPeekersClusters},
     };
 
     if (runServer) {

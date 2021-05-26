@@ -52,7 +52,7 @@ PositionsAndWallViews queryViewsFromRegion(const Rounds & rounds, const Ticks & 
                        */
     PositionsAndWallViews result(walls.aabb);
 
-#pragma omp parallel for
+//#pragma omp parallel for
     for (int64_t roundIndex = 0; roundIndex < rounds.size; roundIndex++) {
         int threadNum = omp_get_thread_num();
         // assuming first position is less than first kills
@@ -182,7 +182,9 @@ ClusterSequencesByRound analyzeViewClusters(const Rounds & rounds, const Players
         // if not empty and old clsuter matches new one, update timeInCluster.max
         int curClusterId = posAndWall.clusterId[sortableElement.posAndWallId];
         int curTickId = pat.tickId[posAndWall.playerAtTickId[sortableElement.posAndWallId]];
-        if (curSequence.clusterIds.empty() || curSequence.clusterIds[curSequence.clusterIds.size() - 1] != curClusterId) {
+        if (curSequence.clusterIds.empty()
+            || curSequence.clusterIds[curSequence.clusterIds.size() - 1] != curClusterId
+            || curSequence.tickIdsInCluster[curSequence.tickIdsInCluster.size() - 1].maxId != curTickId - 1) {
             curSequence.ids.push_back(idPerClusterInSequence++);
             curSequence.clusterIds.push_back(curClusterId);
             curSequence.tickIdsInCluster.push_back({curTickId, curTickId});
