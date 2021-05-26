@@ -2,8 +2,8 @@
 // Created by durst on 5/18/21.
 //
 
-#ifndef CSKNOW_A_CAT_PEEKERS_H
-#define CSKNOW_A_CAT_PEEKERS_H
+#ifndef CSKNOW_POSITION_AND_WALL_VIEW_H
+#define CSKNOW_POSITION_AND_WALL_VIEW_H
 
 #include "load_clusters.h"
 #include "queries/query.h"
@@ -14,7 +14,7 @@
 using std::string;
 using std::vector;
 
-class ACatPeekers : public QueryResult {
+class PositionsAndWallViews : public QueryResult {
 public:
     vector<int64_t> roundId;
     vector<int64_t> playerAtTickId;
@@ -29,11 +29,11 @@ public:
     vector<double> wallY;
     vector<double> wallZ;
     vector<AABB> walls;
-    // cluster data per ACatPeekers tick
+    // cluster data per PositionsAndWallViews tick
     vector<int> clusterId;
 
 
-    ACatPeekers(vector<AABB> walls) {
+    PositionsAndWallViews(vector<AABB> walls) {
         this->startTickColumn = -1;
         this->ticksPerEvent = 1;
         this->walls = walls;
@@ -59,12 +59,12 @@ public:
     }
 };
 
-class ACatClusterSequence : public QueryResult {
+class ClusterSequencesByRound : public QueryResult {
 public:
     vector<ClusterSequence> clusterSequences;
     vector<RangeIndexEntry> clusterSequencesPerRound;
 
-    ACatClusterSequence() {
+    ClusterSequencesByRound() {
         this->variableLength = true;
         this->startTickColumn = 3;
         this->ticksColumn = 5;
@@ -100,10 +100,10 @@ public:
 };
 
 
-ACatPeekers queryACatPeekers(const Rounds & rounds, const Ticks & ticks, const PlayerAtTick & playerAtTick,
-                             string wallsFilePath);
-ACatClusterSequence analyzeACatPeekersClusters(const Rounds & rounds, const Players & players,
-                                               const PlayerAtTick & pat, ACatPeekers & aCatPeekers, const Cluster & clusters);
+PositionsAndWallViews queryViewsFromRegion(const Rounds & rounds, const Ticks & ticks, const PlayerAtTick & playerAtTick,
+                                           string standingFilePath, string wallsFilePath);
+ClusterSequencesByRound analyzeViewClusters(const Rounds & rounds, const Players & players,
+                                            const PlayerAtTick & pat, PositionsAndWallViews & posAndWall, const Cluster & clusters);
 
 
-#endif //CSKNOW_A_CAT_PEEKERS_H
+#endif //CSKNOW_POSITION_AND_WALL_VIEW_H

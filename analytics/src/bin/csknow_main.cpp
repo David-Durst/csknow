@@ -18,7 +18,7 @@
 #include "queries/grouping.h"
 #include "queries/groupInSequenceOfRegions.h"
 #include "queries/base_tables.h"
-#include "queries/a_cat_peekers.h"
+#include "queries/position_and_wall_view.h"
 #include "indices/spotted.h"
 #define CPPHTTPLIB_OPENSSL_SUPPORT
 #include "httplib.h"
@@ -100,9 +100,12 @@ int main(int argc, char * argv[]) {
     QueryTicks queryTicks(rounds, ticks);
     QueryPlayerAtTick queryPlayerAtTick(rounds, ticks, playerAtTick);
 
-    ACatPeekers aCatPeekers = queryACatPeekers(rounds, ticks, playerAtTick, dataPath + "/../analytics/walls/aCatWalls.csv");
+    PositionsAndWallViews aCatPeekers = queryViewsFromRegion(rounds, ticks, playerAtTick,
+                                                   dataPath + "/../analytics/walls/aCatStanding.csv",
+                                                   dataPath + "/../analytics/walls/aCatWalls.csv");
     Cluster aCatPeekersClusters(dataPath + "/../python_analytics/csknow-python-analytics/a_cat_peekers_clusters.csv");
-    ACatClusterSequence aCatClusterSequence = analyzeACatPeekersClusters(rounds, players, playerAtTick, aCatPeekers, aCatPeekersClusters);
+    ClusterSequencesByRound aCatClusterSequence = analyzeViewClusters(rounds, players, playerAtTick, aCatPeekers,
+                                                                      aCatPeekersClusters);
 
     /*
     SpottedIndex spottedIndex(position, spotted);

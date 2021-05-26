@@ -1,7 +1,7 @@
-#include "load_walls.h"
+#include "load_regions.h"
 #include <limits>
 
-Walls loadWalls(string filePath) {
+Regions loadRegions(string filePath) {
     // mmap the file
     auto [fd, stats, file] = openMMapFile(filePath);
 
@@ -13,7 +13,7 @@ Walls loadWalls(string filePath) {
     int64_t colNumber = 0;
 
     // track data for results
-    Walls result;
+    Regions result;
     char ** name = (char **) malloc(sizeof(char*));;
     double minX, minY, minZ, maxX, maxY, maxZ;
 
@@ -45,7 +45,7 @@ Walls loadWalls(string filePath) {
         }
         else if (colNumber == 6) {
             if (curStart == curDelimiter) {
-                minZ = std::numeric_limits<double>::max();
+                maxZ = std::numeric_limits<double>::max();
             }
             else {
                 readCol(file, curStart, curDelimiter, rowNumber, colNumber, maxZ);

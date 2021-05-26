@@ -1,5 +1,5 @@
-#ifndef CSKNOW_LOAD_WALLS_H
-#define CSKNOW_LOAD_WALLS_H
+#ifndef CSKNOW_LOAD_REGIONS_H
+#define CSKNOW_LOAD_REGIONS_H
 #include "file_helpers.h"
 #include "geometry.h"
 #include <vector>
@@ -7,12 +7,12 @@
 using std::vector;
 using std::string;
 
-struct Walls {
+struct Regions {
     vector<int64_t> id;
     vector<string> name;
     vector<AABB> aabb;
 };
 
-Walls loadWalls(string filePath);
+Regions loadRegions(string filePath);
 
-#endif //CSKNOW_LOAD_WALLS_H
+#endif //CSKNOW_LOAD_REGIONS_H

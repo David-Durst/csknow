@@ -1,8 +1,8 @@
 //
 // Created by durst on 5/18/21.
 //
-#include "queries/a_cat_peekers.h"
-#include "load_walls.h"
+#include "queries/position_and_wall_view.h"
+#include "load_regions.h"
 #include "geometry.h"
 #include "indices/spotted.h"
 #include <omp.h>
@@ -13,8 +13,8 @@
 using std::string;
 using std::map;
 
-ACatPeekers queryACatPeekers(const Rounds & rounds, const Ticks & ticks, const PlayerAtTick & playerAtTick,
-                             string wallsFilePath) {
+PositionsAndWallViews queryViewsFromRegion(const Rounds & rounds, const Ticks & ticks, const PlayerAtTick & playerAtTick,
+                                           string standingFilePath, string wallsFilePath) {
     int numThreads = omp_get_max_threads();
     vector<int64_t> tmpRoundId[numThreads];
     vector<int64_t> tmpPlayerAtTickId[numThreads];
@@ -29,9 +29,11 @@ ACatPeekers queryACatPeekers(const Rounds & rounds, const Ticks & ticks, const P
     vector<double> tmpWallY[numThreads];
     vector<double> tmpWallZ[numThreads];
 
-    Walls walls = loadWalls(wallsFilePath);
-    AABB aCatPositions{{190.0, 1327.34, -5.0}, {513.0, 2260.0, std::numeric_limits<double>::max()}};
+    Regions standingPositionRegion = loadRegions(standingFilePath);
+    AABB standingPosition = standingPositionRegion.aabb[0];
+    Regions walls = loadRegions(wallsFilePath);
     /*
+    AABB standingPosition{{190.0, 1327.34, -5.0}, {513.0, 2260.0, std::numeric_limits<double>::max()}};
     AABB frontCatWall{{507.0, 1353.0, std::numeric_limits<double>::min()}, {507.1, 2003.0, std::numeric_limits<double>::max()}};
     AABB oppositeElevatorWall{{507.0, 2003.0, std::numeric_limits<double>::min()}, {1215.0, 2003.1, std::numeric_limits<double>::max()}};
     AABB backCatWall{{224.0, 1301, std::numeric_limits<double>::min()}, {224.1, 2733.0, std::numeric_limits<double>::max()}};
@@ -48,7 +50,7 @@ ACatPeekers queryACatPeekers(const Rounds & rounds, const Ticks & ticks, const P
     vector<AABB> walls{frontCatWall, oppositeElevatorWall, backCatWall, ninjaWall, gooseWall, topRampWall, longWall,
                        leftContainer, topContainer, bottomContainer, rightContainer};
                        */
-    ACatPeekers result(walls.aabb);
+    PositionsAndWallViews result(walls.aabb);
 
 #pragma omp parallel for
     for (int64_t roundIndex = 0; roundIndex < rounds.size; roundIndex++) {
@@ -58,7 +60,7 @@ ACatPeekers queryACatPeekers(const Rounds & rounds, const Ticks & ticks, const P
              tickIndex <= rounds.ticksPerRound[roundIndex].maxId; tickIndex++) {
             for (int64_t patIndex = ticks.patPerTick[tickIndex].minId; patIndex <= ticks.patPerTick[tickIndex].maxId; patIndex++) {
                 Vec3 playerPosition = {playerAtTick.posX[patIndex], playerAtTick.posY[patIndex], playerAtTick.posZ[patIndex]};
-                if (pointInRegion(aCatPositions, playerPosition)) {
+                if (pointInRegion(standingPosition, playerPosition)) {
                     tmpRoundId[threadNum].push_back(roundIndex);
                     tmpPlayerAtTickId[threadNum].push_back(playerAtTick.id[patIndex]);
                     tmpPlayerId[threadNum].push_back(playerAtTick.playerId[patIndex]);
@@ -113,31 +115,31 @@ ACatPeekers queryACatPeekers(const Rounds & rounds, const Ticks & ticks, const P
     return result;
 }
 
-struct ACatPeekersSortableElement {
+struct PosAndWallSortableElement {
     int64_t roundId;
     int64_t playerAtTickId;
     int64_t playerId;
-    int64_t aCatPeekersId;
-    bool operator<(const ACatPeekersSortableElement & other) const {
+    int64_t posAndWallId;
+    bool operator<(const PosAndWallSortableElement & other) const {
         return (roundId < other.roundId) || (roundId == other.roundId && playerId < other.playerId) ||
                (roundId == other.roundId && playerId == other.playerId && playerAtTickId < other.playerAtTickId);
     }
 };
 
-ACatClusterSequence analyzeACatPeekersClusters(const Rounds & rounds, const Players & players,
-                                               const PlayerAtTick & pat, ACatPeekers & aCatPeekers, const Cluster & clusters) {
-    vector<ACatPeekersSortableElement> sortable;
-    for (int64_t aCatPeekerIndex = 0; aCatPeekerIndex < aCatPeekers.size; aCatPeekerIndex++) {
+ClusterSequencesByRound analyzeViewClusters(const Rounds & rounds, const Players & players,
+                                            const PlayerAtTick & pat, PositionsAndWallViews & posAndWall, const Cluster & clusters) {
+    vector<PosAndWallSortableElement> sortable;
+    for (int64_t aCatPeekerIndex = 0; aCatPeekerIndex < posAndWall.size; aCatPeekerIndex++) {
         // create sortable array
-        sortable.push_back({aCatPeekers.roundId[aCatPeekerIndex], aCatPeekers.playerAtTickId[aCatPeekerIndex],
-                            aCatPeekers.playerId[aCatPeekerIndex], aCatPeekerIndex});
+        sortable.push_back({posAndWall.roundId[aCatPeekerIndex], posAndWall.playerAtTickId[aCatPeekerIndex],
+                            posAndWall.playerId[aCatPeekerIndex], aCatPeekerIndex});
 
         double minDistance = std::numeric_limits<double>::max();
         int minId = -1;
         for (int i = 0; i < clusters.id.size(); i++) {
             double newDistance = computeDistance(
                     {clusters.x[i], clusters.y[i], clusters.z[i]},
-                    {aCatPeekers.wallX[aCatPeekerIndex], aCatPeekers.wallY[aCatPeekerIndex], aCatPeekers.wallZ[aCatPeekerIndex]}
+                    {posAndWall.wallX[aCatPeekerIndex], posAndWall.wallY[aCatPeekerIndex], posAndWall.wallZ[aCatPeekerIndex]}
                     );
             if (newDistance < minDistance) {
                 minDistance = newDistance;
@@ -146,15 +148,15 @@ ACatClusterSequence analyzeACatPeekersClusters(const Rounds & rounds, const Play
         }
 
         if (minId == -1) {
-            aCatPeekers.clusterId[aCatPeekerIndex] = -1;
+            posAndWall.clusterId[aCatPeekerIndex] = -1;
         }
         else {
-            aCatPeekers.clusterId[aCatPeekerIndex] = clusters.id[minId];
+            posAndWall.clusterId[aCatPeekerIndex] = clusters.id[minId];
         }
     }
     std::sort(sortable.begin(), sortable.end());
 
-    ACatClusterSequence result;
+    ClusterSequencesByRound result;
     for (int i = 0; i < rounds.id.size(); i++) {
         result.clusterSequencesPerRound.push_back({-1, -1});
     }
@@ -178,8 +180,8 @@ ACatClusterSequence analyzeACatPeekersClusters(const Rounds & rounds, const Play
         // if empty, start a new cluster
         // if not empty and old cluster doesn't match new one, add new cluster (and trust old timeInCluster.max was set before)
         // if not empty and old clsuter matches new one, update timeInCluster.max
-        int curClusterId = aCatPeekers.clusterId[sortableElement.aCatPeekersId];
-        int curTickId = pat.tickId[aCatPeekers.playerAtTickId[sortableElement.aCatPeekersId]];
+        int curClusterId = posAndWall.clusterId[sortableElement.posAndWallId];
+        int curTickId = pat.tickId[posAndWall.playerAtTickId[sortableElement.posAndWallId]];
         if (curSequence.clusterIds.empty() || curSequence.clusterIds[curSequence.clusterIds.size() - 1] != curClusterId) {
             curSequence.ids.push_back(idPerClusterInSequence++);
             curSequence.clusterIds.push_back(curClusterId);
