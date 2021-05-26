@@ -14,7 +14,7 @@ Walls loadWalls(string filePath) {
 
     // track data for results
     Walls result;
-    char ** name;
+    char ** name = (char **) malloc(sizeof(char*));;
     double minX, minY, minZ, maxX, maxY, maxZ;
 
     for (size_t curStart = firstRow + 1, curDelimiter = getNextDelimiter(file, curStart, stats.st_size);
@@ -50,6 +50,7 @@ Walls loadWalls(string filePath) {
             else {
                 readCol(file, curStart, curDelimiter, rowNumber, colNumber, maxZ);
             }
+            rowNumber++;
             result.id.push_back(rowNumber++);
             result.name.push_back(*name);
             result.aabb.push_back({{minX, minY, minZ}, {maxX, maxY, maxZ}});
@@ -57,5 +58,6 @@ Walls loadWalls(string filePath) {
         colNumber = (colNumber + 1) % 7;
     }
     closeMMapFile({fd, stats, file});
+    free(name);
     return result;
 }
