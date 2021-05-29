@@ -34,7 +34,7 @@ def clusterDataset(df, name):
     csgo_f.close()
 
 # %%j
-def histogramByWall(df, wallDF, name):
+def heatmapByWall(df, wallDF, name):
     reasonableHeightDF = df[(df['wall z'] > -1000) & (df['wall z'] < 2000)]
     wallIDs = reasonableHeightDF['wall id'].unique()
     wallIDs.sort()
@@ -69,8 +69,8 @@ def histogramByWall(df, wallDF, name):
 aCatDF = pd.read_csv(os.getcwd() + "/../../analytics/csv_outputs/a_cat_peekers.csv")
 aCatWalls = pd.read_csv(os.getcwd() + "/../../analytics/walls/aCatWalls.csv")
 clusterDataset(aCatDF, "a_cat_peekers")
-histogramByWall(aCatDF, "a_cat_peekers")
+heatmapByWall(aCatDF, "a_cat_peekers")
 midTDF = pd.read_csv(os.getcwd() + "/../../analytics/csv_outputs/mid_t_peekers.csv")
 midWalls = pd.read_csv(os.getcwd() + "/../../analytics/walls/midWalls.csv")
 clusterDataset(midTDF, "mid_t_peekers")
-histogramByWall(midTDF, "mid_t_peekers")
+heatmapByWall(midTDF, "mid_t_peekers")
