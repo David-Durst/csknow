@@ -2,6 +2,8 @@ from sklearn.cluster import KMeans
 import numpy as np
 import pandas as pd
 import os
+import seaborn as sns
+import matplotlib.pyplot as plt
 
 
 def clusterDataset(df, name):
@@ -31,9 +33,44 @@ def clusterDataset(df, name):
     clusters_f.close()
     csgo_f.close()
 
+# %%j
+def histogramByWall(df, wallDF, name):
+    reasonableHeightDF = df[(df['wall z'] > -1000) & (df['wall z'] < 2000)]
+    wallIDs = reasonableHeightDF['wall id'].unique()
+    wallIDs.sort()
+    for id in wallIDs:
+        # why copy: https://www.dataquest.io/blog/settingwithcopywarning/'
+        wallDF = df[df['wall id'] == id].copy()
+        # pick if wall in x or y dimension
+        xDelta = wallDF['wall x'].max() - wallDF['wall x'].min()
+        xOrYGraphDim = 'wall x'
+        if xDelta < 0.5:
+            xOrYGraphDim = 'wall y'
+        # grouping by x and z values in modded by 1
+        print(wallDF)
+        wallDF['wall z'] = wallDF['wall z'].apply(np.int64) // 100 * 100
+        wallDF[xOrYGraphDim] = wallDF[xOrYGraphDim].apply(np.int64) // 100 * 100
+        print(wallDF)
+        heatmapDF = pd.pivot_table(wallDF, values='id', index=['wall z'], columns=[xOrYGraphDim], aggfunc='count', fill_value=0)
+        print(heatmapDF)
+        fig, ax = plt.subplots()
+        sns.heatmap(heatmapDF, ax=ax)
+        ax.invert_yaxis()
+        ax.set_title(wallDF.iloc[id]['name'])
+        plt.tight_layout()
+        plt.savefig(name + '_' + wallDF.iloc[id]['name'] + '.png')
+        plt.clf()
+
+
+# %%
+
 
 # load data and run scripts
 aCatDF = pd.read_csv(os.getcwd() + "/../../analytics/csv_outputs/a_cat_peekers.csv")
+aCatWalls = pd.read_csv(os.getcwd() + "/../../analytics/walls/aCatWalls.csv")
 clusterDataset(aCatDF, "a_cat_peekers")
+histogramByWall(aCatDF, "a_cat_peekers")
 midTDF = pd.read_csv(os.getcwd() + "/../../analytics/csv_outputs/mid_t_peekers.csv")
+midWalls = pd.read_csv(os.getcwd() + "/../../analytics/walls/midWalls.csv")
 clusterDataset(midTDF, "mid_t_peekers")
+histogramByWall(midTDF, "mid_t_peekers")

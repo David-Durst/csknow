@@ -50,7 +50,6 @@ Regions loadRegions(string filePath) {
             else {
                 readCol(file, curStart, curDelimiter, rowNumber, colNumber, maxZ);
             }
-            rowNumber++;
             result.id.push_back(rowNumber++);
             result.name.push_back(*name);
             result.aabb.push_back({{minX, minY, minZ}, {maxX, maxY, maxZ}});
