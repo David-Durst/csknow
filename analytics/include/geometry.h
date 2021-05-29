@@ -78,6 +78,9 @@ AABB getAABBForPlayer(Vec3 pos) {
     // looks like coordinates are center at feet - tested using getpos_exact and box commands from
     //https://old.reddit.com/r/csmapmakers/comments/58ch3f/useful_console_commands_for_map_making_csgo/
     //making box with these coordinates wraps player perfectly
+    // https://developer.valvesoftware.com/wiki/Dimensions#Eyelevel
+    // eye level is 64 units when standing, 46 when crouching
+    // getpos is eye level, getpos_exact is foot, both are center of model
     AABB result;
     result.min = {pos.x - WIDTH / 2, pos.y - WIDTH / 2, pos.z};
     result.max = {pos.x + WIDTH / 2, pos.y + WIDTH / 2, pos.z + HEIGHT};

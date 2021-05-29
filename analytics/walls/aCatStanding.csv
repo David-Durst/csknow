@@ -1,2 +1,2 @@
-name,min x,min y,min z,max x,max y,max z
-aCatStanding,190.0,1327.34,-5.0,513.0,2260.0,
+name,min x,min y,min z,max x,max y,max z,flip
+aCatStanding,225.0,1334,-5.0,506.0,2260.0,,0

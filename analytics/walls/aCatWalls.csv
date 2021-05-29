@@ -1,12 +1,16 @@
-name,min x,min y,min z,max x,max y,max z
-frontCatWall,507.0,1353.0,,507.1,2003.0,
-oppositeElevatorWall,507.0,2003.0,,1215.0,2003.1,
-backCatWall,224.0,1301,,224.1,2733.0,
-ninjaWall,224.0,2733.0,,1010.0,2733.1,
-gooseWall,1010.0,2733.0,,1010.1,3090.0,
-topRampWall,1010.0,3090.0,,1588.0,3090.1,
-longWall,1588.0,-1247.0,,1588.0,3090.1,
-leftContainer,-2253.0,-900.0,,-2253.1,3168.0,
-topContainer,-2253.0,3168.0,,1897.0,3168.1,
-bottomContainer,-2253.0,-900.0,,1897.0,-900.1,
-rightContainer,1897.0,-900.0,,1897.0,3168.1,
+name,min x,min y,min z,max x,max y,max z,flip
+oppositeElevatorWall,507.0,2050.0,,1215.0,2050.1,,1
+frontCatWall,507.0,1333.0,,507.1,2050.0,,1
+boxesCatWall,224.0,1333.0,,507.0,1333.1,,1
+backCatWall,224.0,1333.0,,224.1,2733.0,,0
+ninjaWall,224.0,2733.0,,1010.0,2733.1,,0
+gooseWall,1010.0,2733.0,,1010.1,3090.0,,0
+topRampWall,1010.0,3090.0,,1588.0,3090.1,,0
+longWall,1588.0,-1247.0,,1588.0,1732.0,,1
+backLongWall,1215.0,1732.0,,1588.0,1732.1,,1
+sideElevator,527.0,2408.0,,1016.0,2408.1,121.0,0
+mainlevator,1016.0,2325.0,,1016.1,2408.0,121.0,0
+leftContainer,-2253.1,-900.0,,-2253.0,3168.0,,0
+topContainer,-2253.0,3168.0,,1897.0,3168.1,,0
+bottomContainer,-2253.0,-900.1,,1897.0,-900.0,,0
+rightContainer,1897.0,-900.0,,1897.0,3168.1,,0
