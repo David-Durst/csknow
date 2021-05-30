@@ -36,8 +36,7 @@ def clusterDataset(df, name):
     clusters_f.close()
     csgo_f.close()
 
-# %%
-def heatmapByWall(df, wallDF, name, screenshotFolder):
+def heatmapByWall(df, wallDF, name, screenshotFolder, dstFolder):
     reasonableHeightDF = df[(df['wall z'] > -1000) & (df['wall z'] < 2000)]
     wallIDs = reasonableHeightDF['wall id'].unique()
     wallIDs.sort()
@@ -70,20 +69,17 @@ def heatmapByWall(df, wallDF, name, screenshotFolder):
             botIm.thumbnail([topIm.width, topIm.height], Image.ANTIALIAS)
             dstIm.paste(topIm, (0,0))
             dstIm.paste(botIm, (0,topIm.height))
-            dstIm.save(imgPath + "_complete.png")
+            dstIm.save(dstFolder + "/" + wallDF.iloc[id]['name'] + ".png")
         else:
-            shutil.copy(imgPath + ".png", imgPath + "_complete.png")
-
-
-# %%
+            shutil.copy(imgPath + ".png", dstFolder + "/" + wallDF.iloc[id]['name'] + ".png")
 
 
 # load data and run scripts
 aCatDF = pd.read_csv(os.getcwd() + "/../../analytics/csv_outputs/a_cat_peekers.csv")
 aCatWalls = pd.read_csv(os.getcwd() + "/../../analytics/walls/aCatWalls.csv")
 clusterDataset(aCatDF, "a_cat_peekers")
-heatmapByWall(aCatDF, aCatWalls, "a_cat_peekers", os.getcwd() + "/../../analytics/walls/wallImages/aCat")
-midTDF = pd.read_csv(os.getcwd() + "/../../analytics/csv_outputs/mid_ct_peekers.csv")
+heatmapByWall(aCatDF, aCatWalls, "a_cat_peekers", os.getcwd() + "/../../analytics/walls/wallImages/aCat", os.getcwd() + "/../heatmaps/aCat/")
+midCTDF = pd.read_csv(os.getcwd() + "/../../analytics/csv_outputs/mid_ct_peekers.csv")
 midWalls = pd.read_csv(os.getcwd() + "/../../analytics/walls/midWalls.csv")
-clusterDataset(midTDF, "mid_ct_peekers")
-heatmapByWall(midTDF, midWalls, "mid_ct_peekers", os.getcwd() + "/../../analytics/walls/wallImages/midCT")
+clusterDataset(midCTDF, "mid_ct_peekers")
+heatmapByWall(midCTDF, midWalls, "mid_ct_peekers", os.getcwd() + "/../../analytics/walls/wallImages/midCT", os.getcwd() + "/../heatmaps/midCT/")
