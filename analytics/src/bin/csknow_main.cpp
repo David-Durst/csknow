@@ -100,18 +100,32 @@ int main(int argc, char * argv[]) {
     QueryTicks queryTicks(rounds, ticks);
     QueryPlayerAtTick queryPlayerAtTick(rounds, ticks, playerAtTick);
 
+    // record locations and view angles
+    std::fstream fsACatPeekers, fsMidCTPeekers;
     PositionsAndWallViews aCatPeekers = queryViewsFromRegion(rounds, ticks, playerAtTick,
                                                    dataPath + "/../analytics/walls/aCatStanding.csv",
                                                    dataPath + "/../analytics/walls/aCatWalls.csv");
-    Cluster aCatPeekersClusters(dataPath + "/../python_analytics/csknow-python-analytics/a_cat_peekers_clusters.csv");
-    ClusterSequencesByRound aCatClusterSequence = analyzeViewClusters(rounds, players, playerAtTick, aCatPeekers,
-                                                                      aCatPeekersClusters);
+    string aCatPeekersName = "a_cat_Peekers";
+    fsACatPeekers.open(outputDir + "/" + aCatPeekersName + ".csv", std::fstream::out);
+    fsACatPeekers << aCatPeekers.toCSV();
+    fsACatPeekers.close();
+
     PositionsAndWallViews midCTPeekers = queryViewsFromRegion(rounds, ticks, playerAtTick,
                                                              dataPath + "/../analytics/walls/midCTStanding.csv",
                                                              dataPath + "/../analytics/walls/midWalls.csv");
-    //Cluster midCTPeekersClusters(dataPath + "/../python_analytics/csknow-python-analytics/mid_ct_peekers_clusters.csv");
-    //ClusterSequencesByRound midCTClusterSequence = analyzeViewClusters(rounds, players, playerAtTick, midCTPeekers,
-    //                                                                   midCTPeekersClusters);
+    string midCTPeekersName = "mid_ct_peekers";
+    fsMidCTPeekers.open(outputDir + "/" + midCTPeekersName + ".csv", std::fstream::out);
+    fsMidCTPeekers << midCTPeekers.toCSV();
+    fsMidCTPeekers.close();
+
+    // import clusters, track cluster sequences
+    Cluster aCatPeekersClusters(dataPath + "/../python_analytics/csknow-python-analytics/a_cat_peekers_clusters.csv");
+    ClusterSequencesByRound aCatClusterSequence = analyzeViewClusters(rounds, players, playerAtTick, aCatPeekers,
+                                                                      aCatPeekersClusters);
+
+    Cluster midCTPeekersClusters(dataPath + "/../python_analytics/csknow-python-analytics/mid_ct_peekers_clusters.csv");
+    ClusterSequencesByRound midCTClusterSequence = analyzeViewClusters(rounds, players, playerAtTick, midCTPeekers,
+                                                                       midCTPeekersClusters);
 
     /*
     SpottedIndex spottedIndex(position, spotted);
@@ -171,12 +185,12 @@ int main(int argc, char * argv[]) {
         {queryNames[8], failedATakes},
     };
      */
-    vector<string> analysisNames = {"a_cat_peekers", "a_cat_cluster_sequence", "mid_t_peekers", "mid_t_cluster_sequence"};
+    vector<string> analysisNames = {aCatPeekersName, "a_cat_cluster_sequence", midCTPeekersName, "mid_ct_cluster_sequence"};
     map<string, reference_wrapper<QueryResult>> analyses {
             {analysisNames[0], aCatPeekers},
             {analysisNames[1], aCatClusterSequence},
             {analysisNames[2], midCTPeekers},
-            //{analysisNames[3], midCTClusterSequence},
+            {analysisNames[3], midCTClusterSequence},
     };
 
     // create the output files and the metadata describing files
@@ -239,8 +253,8 @@ int main(int argc, char * argv[]) {
             {queryNames[4], queryPlayerAtTick},
             {queryNames[5], aCatClusterSequence},
             {queryNames[6], aCatPeekersClusters},
-            //{queryNames[7], midCTClusterSequence},
-            //{queryNames[8], midCTPeekersClusters},
+            {queryNames[7], midCTClusterSequence},
+            {queryNames[8], midCTPeekersClusters},
     };
 
     if (runServer) {

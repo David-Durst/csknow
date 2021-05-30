@@ -11,6 +11,7 @@ struct Regions {
     vector<int64_t> id;
     vector<string> name;
     vector<AABB> aabb;
+    vector<bool> flip;
 };
 
 Regions loadRegions(string filePath);

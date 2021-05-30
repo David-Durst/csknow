@@ -16,6 +16,7 @@ Regions loadRegions(string filePath) {
     Regions result;
     char ** name = (char **) malloc(sizeof(char*));;
     double minX, minY, minZ, maxX, maxY, maxZ;
+    bool flip;
 
     for (size_t curStart = firstRow + 1, curDelimiter = getNextDelimiter(file, curStart, stats.st_size);
          curDelimiter < stats.st_size;
@@ -50,11 +51,15 @@ Regions loadRegions(string filePath) {
             else {
                 readCol(file, curStart, curDelimiter, rowNumber, colNumber, maxZ);
             }
+        }
+        else if (colNumber == 7) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, flip);
             result.id.push_back(rowNumber++);
             result.name.push_back(*name);
             result.aabb.push_back({{minX, minY, minZ}, {maxX, maxY, maxZ}});
+            result.flip.push_back(flip);
         }
-        colNumber = (colNumber + 1) % 7;
+        colNumber = (colNumber + 1) % 8;
     }
     closeMMapFile({fd, stats, file});
     free(name);
