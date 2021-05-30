@@ -118,7 +118,7 @@ int main(int argc, char * argv[]) {
     fsMidCTPeekers << midCTPeekers.toCSV();
     fsMidCTPeekers.close();
 
-    string runPythonCmd("bash " + dataPath + "/../python_analytics/run.sh");
+    string runPythonCmd("bash " + dataPath + "/../python_analytics/cluster.sh");
     int cmdResult = std::system(runPythonCmd.c_str());
     if (cmdResult != 0) {
         std::cout << "cmd result: " << cmdResult << std::endl;
