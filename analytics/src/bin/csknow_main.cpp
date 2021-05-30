@@ -105,7 +105,7 @@ int main(int argc, char * argv[]) {
     PositionsAndWallViews aCatPeekers = queryViewsFromRegion(rounds, ticks, playerAtTick,
                                                    dataPath + "/../analytics/walls/aCatStanding.csv",
                                                    dataPath + "/../analytics/walls/aCatWalls.csv");
-    string aCatPeekersName = "a_cat_Peekers";
+    string aCatPeekersName = "a_cat_peekers";
     fsACatPeekers.open(outputDir + "/" + aCatPeekersName + ".csv", std::fstream::out);
     fsACatPeekers << aCatPeekers.toCSV();
     fsACatPeekers.close();
@@ -118,7 +118,7 @@ int main(int argc, char * argv[]) {
     fsMidCTPeekers << midCTPeekers.toCSV();
     fsMidCTPeekers.close();
 
-    string runPythonCmd(dataPath + "/../python_analytics/run.sh");
+    string runPythonCmd("bash " + dataPath + "/../python_analytics/run.sh");
     int cmdResult = std::system(runPythonCmd.c_str());
     if (cmdResult != 0) {
         std::cout << "cmd result: " << cmdResult << std::endl;

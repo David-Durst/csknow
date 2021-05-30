@@ -1,4 +1,4 @@
-from sklearn.cluster import KMeans
+from sklearn.cluster import MiniBatchKMeans
 import numpy as np
 import pandas as pd
 import os
@@ -11,7 +11,7 @@ def clusterDataset(df, name):
     kmeans_columns = ['wall x', 'wall y', 'wall z']
     kmeans_df = df[kmeans_columns]
     kmeans_matrix = kmeans_df.values
-    unpartitioned_kmeans = KMeans(n_clusters=24).fit(kmeans_matrix);
+    unpartitioned_kmeans = MiniBatchKMeans(n_clusters=24).fit(kmeans_matrix)
     #for cluster_center in kmeans.cluster_centers_:
     #    print("box " + str(cluster_center[0] - 20) + " " + str(cluster_center[1] - 20) + " "
     #          + str(cluster_center[2] - 20) + " "
@@ -47,12 +47,9 @@ def heatmapByWall(df, wallDF, name):
         if xDelta < 0.5:
             xOrYGraphDim = 'wall y'
         # grouping by x and z values in modded by 1
-        print(perWallDF)
-        perWallDF['wall z'] = perWallDF['wall z'].apply(np.int64) // 100 * 100
-        perWallDF[xOrYGraphDim] = perWallDF[xOrYGraphDim].apply(np.int64) // 100 * 100
-        print(perWallDF)
+        perWallDF['wall z'] = perWallDF['wall z'].apply(np.int64) // 10 * 10
+        perWallDF[xOrYGraphDim] = perWallDF[xOrYGraphDim].apply(np.int64) // 10 * 10
         heatmapDF = pd.pivot_table(perWallDF, values='id', index=['wall z'], columns=[xOrYGraphDim], aggfunc='count', fill_value=0)
-        print(heatmapDF)
         fig, ax = plt.subplots()
         sns.heatmap(heatmapDF, ax=ax)
         ax.invert_yaxis()
@@ -61,7 +58,7 @@ def heatmapByWall(df, wallDF, name):
             ax.invert_xaxis()
         plt.tight_layout()
         plt.savefig(name + '_' + wallDF.iloc[id]['name'] + '.png')
-        plt.clf()
+        plt.close(fig)
 
 
 # %%
