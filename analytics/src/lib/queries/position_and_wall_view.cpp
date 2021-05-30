@@ -52,7 +52,7 @@ PositionsAndWallViews queryViewsFromRegion(const Rounds & rounds, const Ticks & 
                        */
     PositionsAndWallViews result(walls.aabb);
 
-//#pragma omp parallel for
+#pragma omp parallel for
     for (int64_t roundIndex = 0; roundIndex < rounds.size; roundIndex++) {
         int threadNum = omp_get_thread_num();
         // assuming first position is less than first kills
