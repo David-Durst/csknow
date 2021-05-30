@@ -19,7 +19,8 @@ setup(
         "numpy",
         "scikit-learn",
         "matplotlib",
-        "seaborn"
+        "seaborn",
+        "pillow"
     ],
     python_requires='>=3.7',
     long_description=long_description,

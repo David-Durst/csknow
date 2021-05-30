@@ -2,8 +2,11 @@ from sklearn.cluster import MiniBatchKMeans
 import numpy as np
 import pandas as pd
 import os
+from os import path
+import shutil
 import seaborn as sns
 import matplotlib.pyplot as plt
+from PIL import Image
 
 
 def clusterDataset(df, name):
@@ -34,7 +37,7 @@ def clusterDataset(df, name):
     csgo_f.close()
 
 # %%
-def heatmapByWall(df, wallDF, name):
+def heatmapByWall(df, wallDF, name, screenshotFolder):
     reasonableHeightDF = df[(df['wall z'] > -1000) & (df['wall z'] < 2000)]
     wallIDs = reasonableHeightDF['wall id'].unique()
     wallIDs.sort()
@@ -57,8 +60,19 @@ def heatmapByWall(df, wallDF, name):
         if wallDF.iloc[id]['flip'] == 1:
             ax.invert_xaxis()
         plt.tight_layout()
-        plt.savefig(name + '_' + wallDF.iloc[id]['name'] + '.png')
+        imgPath = name + '_' + wallDF.iloc[id]['name']
+        plt.savefig(imgPath + ".png")
         plt.close(fig)
+        if path.exists(screenshotFolder + "/" + wallDF.iloc[id]['name'] + ".png"):
+            topIm = Image.open(imgPath + ".png")
+            botIm = Image.open(screenshotFolder + "/" + wallDF.iloc[id]['name'] + ".png")
+            dstIm = Image.new('RGB', (topIm.width, 2*topIm.height))
+            botIm.thumbnail([topIm.width, topIm.height], Image.ANTIALIAS)
+            dstIm.paste(topIm, (0,0))
+            dstIm.paste(botIm, (0,topIm.height))
+            dstIm.save(imgPath + "_complete.png")
+        else:
+            shutil.copy(imgPath + ".png", imgPath + "_complete.png")
 
 
 # %%
@@ -68,8 +82,8 @@ def heatmapByWall(df, wallDF, name):
 aCatDF = pd.read_csv(os.getcwd() + "/../../analytics/csv_outputs/a_cat_peekers.csv")
 aCatWalls = pd.read_csv(os.getcwd() + "/../../analytics/walls/aCatWalls.csv")
 clusterDataset(aCatDF, "a_cat_peekers")
-heatmapByWall(aCatDF, aCatWalls, "a_cat_peekers")
+heatmapByWall(aCatDF, aCatWalls, "a_cat_peekers", os.getcwd() + "/../../analytics/walls/wallImages/aCat")
 midTDF = pd.read_csv(os.getcwd() + "/../../analytics/csv_outputs/mid_ct_peekers.csv")
 midWalls = pd.read_csv(os.getcwd() + "/../../analytics/walls/midWalls.csv")
 clusterDataset(midTDF, "mid_ct_peekers")
-heatmapByWall(midTDF, midWalls, "mid_ct_peekers")
+heatmapByWall(midTDF, midWalls, "mid_ct_peekers", os.getcwd() + "/../../analytics/walls/wallImages/midCT")
