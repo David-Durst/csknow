@@ -118,6 +118,12 @@ int main(int argc, char * argv[]) {
     fsMidCTPeekers << midCTPeekers.toCSV();
     fsMidCTPeekers.close();
 
+    string runPythonCmd(dataPath + "/../python_analytics/run.sh");
+    int cmdResult = std::system(runPythonCmd.c_str());
+    if (cmdResult != 0) {
+        std::cout << "cmd result: " << cmdResult << std::endl;
+    }
+
     // import clusters, track cluster sequences
     Cluster aCatPeekersClusters(dataPath + "/../python_analytics/csknow-python-analytics/a_cat_peekers_clusters.csv");
     ClusterSequencesByRound aCatClusterSequence = analyzeViewClusters(rounds, players, playerAtTick, aCatPeekers,
