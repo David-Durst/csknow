@@ -10,16 +10,6 @@ def sameSequence(df, i, j):
 
 # %%
 def generateSequenceBags(df, ngramLength=2):
-    #sequenceBags = []
-    #for i in range(len(df['id'])):
-    #    sequenceBag = []
-    #    for l in range(ngramLength):
-    #        index = i - l
-    #        if index < 0 or not sameSequence(df, i, index):
-    #            sequenceBag.append(-1)
-    #        else:
-    #            sequenceBag.append(df.iloc[index]['cluster id'])
-    #    sequenceBags.append(sorted(sequenceBag))
     columnsToMerge = ['cluster id']
     for i in range(1,ngramLength):
         df['cluster id' + str(i)] = df['cluster id'].copy().shift(periods=i, fill_value=-1).apply(np.int64)
