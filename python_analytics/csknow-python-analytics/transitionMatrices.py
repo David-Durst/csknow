@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import csv
 import os
 from itertools import combinations_with_replacement
 
@@ -17,21 +18,22 @@ def generateSequenceBags(df, ngramLength=2):
     df['sequence bags'] = df[columnsToMerge].apply(lambda row: tuple(sorted(row.values)), axis=1)
 
 # %%
-def generateTransitionMatrix(sequencesDF):
+def generateTransitionMatrix(sequencesDF, dstFolder):
     sequencesDF['prior sequence bags'] = sequencesDF['sequence bags'].copy().shift(periods=1)
     sequencesDF.at[0,'prior sequence bags'] = (-1, -1)
     transition_df = sequencesDF.groupby(['sequence bags', 'prior sequence bags']).agg({'cluster id': 'count'})
     transition_matrix = pd.pivot_table(sequencesDF, values='cluster id', index=['sequence bags'], columns=['prior sequence bags'], aggfunc='count',
                                fill_value=0)
-    return (transition_df, transition_matrix)
-
-    #print(transition_matrix)
+    filtered_matrix = transition_matrix.loc[(transition_matrix != 0).any(axis=1)]
+    sorted_df = transition_df.sort_values('cluster id', 0, ascending=False)
+    sorted_df.to_csv(dstFolder + "/transition_df.csv", sep=";")
+    filtered_matrix.to_csv(dstFolder + "/transition_matrix.csv", sep=";")
 
 # %%
 aCatSequences = pd.read_csv(os.getcwd() + "/../../analytics/csv_outputs/a_cat_cluster_sequence.csv")
-aCatClusters = pd.read_csv(os.getcwd() + "/a_cat_peekers_clusters.csv")
-
-# %%
 generateSequenceBags(aCatSequences)
-transition_df, transition_matrix = generateTransitionMatrix(aCatSequences)
+generateTransitionMatrix(aCatSequences, os.getcwd() + "/../transitionMatrices/aCat/")
 
+midCTSequences = pd.read_csv(os.getcwd() + "/../../analytics/csv_outputs/mid_ct_cluster_sequence.csv")
+generateSequenceBags(midCTSequences)
+generateTransitionMatrix(midCTSequences, os.getcwd() + "/../transitionMatrices/midCT/")

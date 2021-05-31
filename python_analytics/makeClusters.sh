@@ -18,6 +18,6 @@ source $(dirname $(which conda))/../etc/profile.d/conda.sh
 conda activate csknow
 
 cd ${script_dir}/csknow-python-analytics
-
+pwd
 python cluster.py
 rm *.png

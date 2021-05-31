@@ -118,21 +118,37 @@ int main(int argc, char * argv[]) {
     fsMidCTPeekers << midCTPeekers.toCSV();
     fsMidCTPeekers.close();
 
-    string runPythonCmd("bash " + dataPath + "/../python_analytics/cluster.sh");
-    int cmdResult = std::system(runPythonCmd.c_str());
-    if (cmdResult != 0) {
-        std::cout << "cmd result: " << cmdResult << std::endl;
+    string runClustersPythonCmd("bash " + dataPath + "/../python_analytics/makeClusters.sh");
+    int clustersCmdResult = std::system(runClustersPythonCmd.c_str());
+    if (clustersCmdResult != 0) {
+        std::cout << "clusters cmd result: " << clustersCmdResult << std::endl;
     }
 
     // import clusters, track cluster sequences
+    std::fstream fsACatSequences, fsMidCTSequences;
     Cluster aCatPeekersClusters(dataPath + "/../python_analytics/csknow-python-analytics/a_cat_peekers_clusters.csv");
     ClusterSequencesByRound aCatClusterSequence = analyzeViewClusters(rounds, players, playerAtTick, aCatPeekers,
                                                                       aCatPeekersClusters);
+
+    string aCatSequenceName = "a_cat_cluster_sequence";
+    fsACatSequences.open(outputDir + "/" + aCatSequenceName + ".csv", std::fstream::out);
+    fsACatSequences << aCatClusterSequence.toCSV();
+    fsACatSequences.close();
 
     Cluster midCTPeekersClusters(dataPath + "/../python_analytics/csknow-python-analytics/mid_ct_peekers_clusters.csv");
     ClusterSequencesByRound midCTClusterSequence = analyzeViewClusters(rounds, players, playerAtTick, midCTPeekers,
                                                                        midCTPeekersClusters);
 
+    string midCTSequenceName = "mid_ct_cluster_sequence";
+    fsMidCTSequences.open(outputDir + "/" + midCTSequenceName + ".csv", std::fstream::out);
+    fsMidCTSequences << midCTClusterSequence.toCSV();
+    fsMidCTSequences.close();
+
+    string runTMPythonCmd("bash " + dataPath + "/../python_analytics/makeTransitionMatrices.sh");
+    int tmCmdResult = std::system(runTMPythonCmd.c_str());
+    if (tmCmdResult != 0) {
+        std::cout << "transition matrices cmd result: " << tmCmdResult << std::endl;
+    }
     /*
     SpottedIndex spottedIndex(position, spotted);
     std::cout << "built spotted index" << std::endl;
@@ -191,7 +207,7 @@ int main(int argc, char * argv[]) {
         {queryNames[8], failedATakes},
     };
      */
-    vector<string> analysisNames = {aCatPeekersName, "a_cat_cluster_sequence", midCTPeekersName, "mid_ct_cluster_sequence"};
+    vector<string> analysisNames = {aCatPeekersName, aCatSequenceName, midCTPeekersName, midCTSequenceName};
     map<string, reference_wrapper<QueryResult>> analyses {
             {analysisNames[0], aCatPeekers},
             {analysisNames[1], aCatClusterSequence},
