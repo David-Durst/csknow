@@ -7,6 +7,7 @@ import shutil
 import seaborn as sns
 import matplotlib.pyplot as plt
 from PIL import Image
+import math
 
 
 def clusterDataset(df, name):
@@ -21,18 +22,31 @@ def clusterDataset(df, name):
     #          + str(cluster_center[0] + 20) + " " + str(cluster_center[1] + 20) + " "
     #          + str(cluster_center[2] + 20) + " ; ")
 
+    # compute variance per cluster
+    df['cluster_labels'] = unpartitioned_kmeans.labels_
+
+    cluster_centers = unpartitioned_kmeans.cluster_centers_[df['cluster_labels']]
+    distances = np.sqrt(np.power(df['wall x'] - cluster_centers[:,0],2) +
+                         np.power(df['wall y'] - cluster_centers[:,1],2) +
+                         np.power(df['wall z'] - cluster_centers[:,2],2))
+    df['distances'] = distances
+    df['distances_squared'] = df['distances'] * df['distances'];
+
+    avgDistancePerCluster = df.groupby('cluster_labels').agg({'distances': 'mean', 'distances_squared': 'mean'})
+    avgDistancePerCluster['stddev'] = np.sqrt(avgDistancePerCluster['distances_squared'] - avgDistancePerCluster['distances'] * avgDistancePerCluster['distances'])
+
 
     clusters_f = open(name + "_clusters.csv", "w")
     csgo_f = open(name + "_clusters.cfg", "w")
     clusters_f.write("cluster id,wall id,cluster x, cluster y, cluster z\n")
-    cluster_id = 0;
-    for cluster_center in unpartitioned_kmeans.cluster_centers_:
+    for cluster_id in range(len(unpartitioned_kmeans.cluster_centers_)):
+        cluster_center = unpartitioned_kmeans.cluster_centers_[cluster_id]
         clusters_f.write(str(cluster_id) + ",-1," + str(cluster_center[0]) + "," + str(cluster_center[1]) + "," + str(cluster_center[2]) + "\n")
-        cluster_id += 1
-        csgo_f.write("box " + str(cluster_center[0] - 20) + " " + str(cluster_center[1] - 20) + " "
-                 + str(cluster_center[2] - 20) + " "
-                 + str(cluster_center[0] + 20) + " " + str(cluster_center[1] + 20) + " "
-                 + str(cluster_center[2] + 20) + "\n")
+        half_stddev = avgDistancePerCluster.iloc[cluster_id]['stddev']
+        csgo_f.write("box " + str(cluster_center[0] - half_stddev) + " " + str(cluster_center[1] - half_stddev) + " "
+                 + str(cluster_center[2] - half_stddev) + " "
+                 + str(cluster_center[0] + half_stddev) + " " + str(cluster_center[1] + half_stddev) + " "
+                 + str(cluster_center[2] + half_stddev) + "\n")
     clusters_f.close()
     csgo_f.close()
 
