@@ -1,3 +1,4 @@
+#!/bin/bash
 script_dir="tmp"
 #https://www.ostricher.com/2014/10/the-right-way-to-get-the-directory-of-a-bash-script/
 get_script_dir () {
@@ -18,6 +19,5 @@ source $(dirname $(which conda))/../etc/profile.d/conda.sh
 conda activate csknow
 
 cd ${script_dir}/csknow-python-analytics
-pwd
 python cluster.py
 rm *.png

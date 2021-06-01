@@ -118,7 +118,7 @@ int main(int argc, char * argv[]) {
     fsMidCTPeekers << midCTPeekers.toCSV();
     fsMidCTPeekers.close();
 
-    string runClustersPythonCmd("bash " + dataPath + "/../python_analytics/makeClusters.sh");
+    string runClustersPythonCmd(dataPath + "/../python_analytics/makeClusters.sh");
     int clustersCmdResult = std::system(runClustersPythonCmd.c_str());
     if (clustersCmdResult != 0) {
         std::cout << "clusters cmd result: " << clustersCmdResult << std::endl;
@@ -144,7 +144,7 @@ int main(int argc, char * argv[]) {
     fsMidCTSequences << midCTClusterSequence.toCSV();
     fsMidCTSequences.close();
 
-    string runTMPythonCmd("bash " + dataPath + "/../python_analytics/makeTransitionMatrices.sh");
+    string runTMPythonCmd(dataPath + "/../python_analytics/makeTransitionMatrices.sh");
     int tmCmdResult = std::system(runTMPythonCmd.c_str());
     if (tmCmdResult != 0) {
         std::cout << "transition matrices cmd result: " << tmCmdResult << std::endl;
