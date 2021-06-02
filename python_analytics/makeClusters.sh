@@ -14,7 +14,7 @@ get_script_dir () {
      script_dir="$DIR"
 }
 get_script_dir
-
+echo "hi" > ${script_dir}/tmp.txt
 source $(dirname $(which conda))/../etc/profile.d/conda.sh
 conda activate csknow
 
