@@ -20,4 +20,4 @@ conda activate csknow
 
 cd ${script_dir}/csknow-python-analytics
 python cluster.py
-rm *.png
+rm -f *.png

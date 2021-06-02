@@ -19,4 +19,5 @@ mkdir -p ${script_dir}/../build
 cd ${script_dir}/../build
 cmake .. -DCMAKE_BUILD_TYPE=Debug
 make -j4
-./csknow ${script_dir}/../../local_data y
+mkdir -p ../csv_outputs
+./csknow ${script_dir}/../../local_data y ../csv_outputs

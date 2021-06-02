@@ -2,6 +2,7 @@ from sklearn.cluster import MiniBatchKMeans
 import numpy as np
 import pandas as pd
 import os
+import sys
 from os import path
 import shutil
 import seaborn as sns
@@ -38,17 +39,24 @@ def clusterDataset(df, name):
 
     clusters_f = open(name + "_clusters.csv", "w")
     csgo_f = open(name + "_clusters.cfg", "w")
+    csgo_variance_f = open(name + "_clusters_variance.cfg", "w")
     clusters_f.write("cluster id,wall id,cluster x, cluster y, cluster z\n")
     for cluster_id in range(len(unpartitioned_kmeans.cluster_centers_)):
         cluster_center = unpartitioned_kmeans.cluster_centers_[cluster_id]
         clusters_f.write(str(cluster_id) + ",-1," + str(cluster_center[0]) + "," + str(cluster_center[1]) + "," + str(cluster_center[2]) + "\n")
-        half_stddev = avgDistancePerCluster.iloc[cluster_id]['stddev']
-        csgo_f.write("box " + str(cluster_center[0] - half_stddev) + " " + str(cluster_center[1] - half_stddev) + " "
+        if cluster_id in avgDistancePerCluster.index:
+            half_stddev = avgDistancePerCluster.loc[cluster_id]['stddev']
+            csgo_f.write("box " + str(cluster_center[0] - 20) + " " + str(cluster_center[1] - 20) + " "
+                     + str(cluster_center[2] - 20) + " "
+                     + str(cluster_center[0] + 20) + " " + str(cluster_center[1] + 20) + " "
+                     + str(cluster_center[2] + 20) + "\n")
+        csgo_variance_f.write("box " + str(cluster_center[0] - half_stddev) + " " + str(cluster_center[1] - half_stddev) + " "
                  + str(cluster_center[2] - half_stddev) + " "
                  + str(cluster_center[0] + half_stddev) + " " + str(cluster_center[1] + half_stddev) + " "
                  + str(cluster_center[2] + half_stddev) + "\n")
     clusters_f.close()
     csgo_f.close()
+    csgo_variance_f.close()
 
 def heatmapByWall(df, wallDF, name, screenshotFolder, dstFolder):
     reasonableHeightDF = df[(df['wall z'] > -1000) & (df['wall z'] < 2000)]
@@ -89,11 +97,18 @@ def heatmapByWall(df, wallDF, name, screenshotFolder, dstFolder):
 
 
 # load data and run scripts
-aCatDF = pd.read_csv(os.getcwd() + "/../../analytics/csv_outputs/a_cat_peekers.csv")
+generateHeatmaps = False
+if len(sys.argv) > 1:
+    generateHeatmaps = True
+
+aCatDF = pd.read_csv(os.getcwd() + "/../../analytics/csv_outputs/a_cat_peekers.csv", index_col=False)
 aCatWalls = pd.read_csv(os.getcwd() + "/../../analytics/walls/aCatWalls.csv")
 clusterDataset(aCatDF, "a_cat_peekers")
-heatmapByWall(aCatDF, aCatWalls, "a_cat_peekers", os.getcwd() + "/../../analytics/walls/wallImages/aCat", os.getcwd() + "/../heatmaps/aCat/")
-midCTDF = pd.read_csv(os.getcwd() + "/../../analytics/csv_outputs/mid_ct_peekers.csv")
+if generateHeatmaps:
+    heatmapByWall(aCatDF, aCatWalls, "a_cat_peekers", os.getcwd() + "/../../analytics/walls/wallImages/aCat", os.getcwd() + "/../heatmaps/aCat/")
+
+midCTDF = pd.read_csv(os.getcwd() + "/../../analytics/csv_outputs/mid_ct_peekers.csv", index_col=False)
 midWalls = pd.read_csv(os.getcwd() + "/../../analytics/walls/midWalls.csv")
 clusterDataset(midCTDF, "mid_ct_peekers")
-heatmapByWall(midCTDF, midWalls, "mid_ct_peekers", os.getcwd() + "/../../analytics/walls/wallImages/midCT", os.getcwd() + "/../heatmaps/midCT/")
+if generateHeatmaps:
+    heatmapByWall(midCTDF, midWalls, "mid_ct_peekers", os.getcwd() + "/../../analytics/walls/wallImages/midCT", os.getcwd() + "/../heatmaps/midCT/")

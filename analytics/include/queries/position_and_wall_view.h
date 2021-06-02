@@ -55,7 +55,7 @@ public:
     }
 
     vector<string> getOtherColumnNames() {
-        return {"pos x", "pos y", "pos z", "view x", "wall id", "wall x", "wall y", "wall z"};
+        return {"pos x", "pos y", "pos z", "view x", "view y", "wall id", "wall x", "wall y", "wall z"};
     }
 };
 

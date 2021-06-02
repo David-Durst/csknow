@@ -28,21 +28,17 @@ using std::string;
 using std::reference_wrapper;
 
 int main(int argc, char * argv[]) {
-    if (argc != 3 && argc != 4) {
+    if (argc != 4) {
         std::cout << "please call this code 2 arguments: " << std::endl;
         std::cout << "1. path/to/local_data" << std::endl;
         std::cout << "2. run server (y or n)" << std::endl;
-        std::cout << "(optional) 3. path/to/output/dir" << std::endl;
+        std::cout << "3. path/to/output/dir" << std::endl;
         return 1;
     }
     string dataPath = argv[1];
     bool runServer = argv[2][0] == 'y';
-    bool writeOutput = false;
     string outputDir = "";
-    if (argc == 4) {
-        outputDir = argv[3];
-        writeOutput = true;
-    }
+    outputDir = argv[3];
 
     auto t = std::time(nullptr);
     auto tm = *std::localtime(&t);
@@ -101,21 +97,23 @@ int main(int argc, char * argv[]) {
     QueryPlayerAtTick queryPlayerAtTick(rounds, ticks, playerAtTick);
 
     // record locations and view angles
-    std::fstream fsACatPeekers, fsMidCTPeekers;
+    std::ofstream fsACatPeekers, fsMidCTPeekers;
     PositionsAndWallViews aCatPeekers = queryViewsFromRegion(rounds, ticks, playerAtTick,
                                                    dataPath + "/../analytics/walls/aCatStanding.csv",
                                                    dataPath + "/../analytics/walls/aCatWalls.csv");
     string aCatPeekersName = "a_cat_peekers";
-    fsACatPeekers.open(outputDir + "/" + aCatPeekersName + ".csv", std::fstream::out);
+    fsACatPeekers.open(outputDir + "/" + aCatPeekersName + ".csv" );
     fsACatPeekers << aCatPeekers.toCSV();
+    fsACatPeekers.flush();
     fsACatPeekers.close();
 
     PositionsAndWallViews midCTPeekers = queryViewsFromRegion(rounds, ticks, playerAtTick,
                                                              dataPath + "/../analytics/walls/midCTStanding.csv",
                                                              dataPath + "/../analytics/walls/midWalls.csv");
     string midCTPeekersName = "mid_ct_peekers";
-    fsMidCTPeekers.open(outputDir + "/" + midCTPeekersName + ".csv", std::fstream::out);
+    fsMidCTPeekers.open(outputDir + "/" + midCTPeekersName + ".csv");
     fsMidCTPeekers << midCTPeekers.toCSV();
+    fsMidCTPeekers.flush();
     fsMidCTPeekers.close();
 
     string runClustersPythonCmd(dataPath + "/../python_analytics/makeClusters.sh");
@@ -125,14 +123,15 @@ int main(int argc, char * argv[]) {
     }
 
     // import clusters, track cluster sequences
-    std::fstream fsACatSequences, fsMidCTSequences;
+    std::ofstream fsACatSequences, fsMidCTSequences;
     Cluster aCatPeekersClusters(dataPath + "/../python_analytics/csknow-python-analytics/a_cat_peekers_clusters.csv");
     ClusterSequencesByRound aCatClusterSequence = analyzeViewClusters(rounds, players, playerAtTick, aCatPeekers,
                                                                       aCatPeekersClusters);
 
     string aCatSequenceName = "a_cat_cluster_sequence";
-    fsACatSequences.open(outputDir + "/" + aCatSequenceName + ".csv", std::fstream::out);
+    fsACatSequences.open(outputDir + "/" + aCatSequenceName + ".csv");
     fsACatSequences << aCatClusterSequence.toCSV();
+    fsACatSequences.flush();
     fsACatSequences.close();
 
     Cluster midCTPeekersClusters(dataPath + "/../python_analytics/csknow-python-analytics/mid_ct_peekers_clusters.csv");
@@ -140,8 +139,9 @@ int main(int argc, char * argv[]) {
                                                                        midCTPeekersClusters);
 
     string midCTSequenceName = "mid_ct_cluster_sequence";
-    fsMidCTSequences.open(outputDir + "/" + midCTSequenceName + ".csv", std::fstream::out);
+    fsMidCTSequences.open(outputDir + "/" + midCTSequenceName + ".csv");
     fsMidCTSequences << midCTClusterSequence.toCSV();
+    fsMidCTSequences.flush();
     fsMidCTSequences.close();
 
     string runTMPythonCmd(dataPath + "/../python_analytics/makeTransitionMatrices.sh");
@@ -216,16 +216,15 @@ int main(int argc, char * argv[]) {
     };
 
     // create the output files and the metadata describing files
-    if (writeOutput) {
-        for (const auto & [name, result] : analyses) {
-            std::fstream fsTimed, fsOverride;
-            fsTimed.open(outputDir + "/" + timestamp + "_" + name + ".csv", std::fstream::out);
-            fsTimed << result.get().toCSV();
-            fsTimed.close();
-            fsOverride.open(outputDir + "/" + name + ".csv", std::fstream::out);
-            fsOverride << result.get().toCSV();
-            fsOverride.close();
-        }
+    for (const auto & [name, result] : analyses) {
+        std::ofstream fsTimed, fsOverride;
+        fsTimed.open(outputDir + "/" + timestamp + "_" + name + ".csv");
+        fsTimed << result.get().toCSV();
+        fsTimed.close();
+        fsOverride.open(outputDir + "/" + name + ".csv");
+        fsOverride << result.get().toCSV();
+        fsOverride.close();
+    }
 
         /*
         // data sets describes types of data sets
@@ -264,7 +263,6 @@ int main(int argc, char * argv[]) {
             versions.close();
         }
          */
-    }
 
     vector<string> queryNames = {"games", "rounds", "players", "ticks", "playerAtTick", "aCatClusterSequence", "aCatClusters", "midCTClusterSequence", "midTClusters"};
     map<string, reference_wrapper<QueryResult>> queries {
@@ -280,6 +278,7 @@ int main(int argc, char * argv[]) {
     };
 
     if (runServer) {
+        std::cout << "starting server" << std::endl;
         httplib::Server svr;
         svr.Get("/query/(\\w+)", [&](const httplib::Request & req, httplib::Response &res) {
             string resultType = req.matches[1];
