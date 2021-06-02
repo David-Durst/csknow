@@ -31,9 +31,9 @@ def generateTransitionMatrix(sequencesDF, dstFolder):
 
 # %%
 aCatSequences = pd.read_csv(os.getcwd() + "/../../analytics/csv_outputs/a_cat_cluster_sequence.csv")
-generateSequenceBags(aCatSequences)
+generateSequenceBags(aCatSequences,1)
 generateTransitionMatrix(aCatSequences, os.getcwd() + "/../transitionMatrices/aCat/")
 
 midCTSequences = pd.read_csv(os.getcwd() + "/../../analytics/csv_outputs/mid_ct_cluster_sequence.csv")
-generateSequenceBags(midCTSequences)
+generateSequenceBags(midCTSequences,1)
 generateTransitionMatrix(midCTSequences, os.getcwd() + "/../transitionMatrices/midCT/")
