@@ -1,4 +1,4 @@
-from sklearn.cluster import MiniBatchKMeans
+from sklearn.cluster import MiniBatchKMeans, KMeans
 import numpy as np
 import pandas as pd
 import os
@@ -16,7 +16,7 @@ def clusterDataset(df, name):
     kmeans_columns = ['wall x', 'wall y', 'wall z']
     kmeans_df = df[kmeans_columns]
     kmeans_matrix = kmeans_df.values
-    unpartitioned_kmeans = MiniBatchKMeans(n_clusters=24).fit(kmeans_matrix)
+    unpartitioned_kmeans = KMeans(n_clusters=24).fit(kmeans_matrix)
     #for cluster_center in kmeans.cluster_centers_:
     #    print("box " + str(cluster_center[0] - 20) + " " + str(cluster_center[1] - 20) + " "
     #          + str(cluster_center[2] - 20) + " "

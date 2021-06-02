@@ -18,7 +18,7 @@ def generateSequenceBags(df, ngramLength=2):
     df['sequence bags'] = df[columnsToMerge].apply(lambda row: tuple(sorted(row.values)), axis=1)
 
 # %%
-def generateTransitionMatrix(sequencesDF, dstFolder):
+def generateTransitionMatrix(sequencesDF, dstFolder, ngramLength=2):
     sequencesDF['prior sequence bags'] = sequencesDF['sequence bags'].copy().shift(periods=1)
     sequencesDF.at[0,'prior sequence bags'] = (-1, -1)
     transition_df = sequencesDF.groupby(['sequence bags', 'prior sequence bags']).agg({'cluster id': 'count'})
@@ -26,14 +26,26 @@ def generateTransitionMatrix(sequencesDF, dstFolder):
                                fill_value=0)
     filtered_matrix = transition_matrix.loc[(transition_matrix != 0).any(axis=1)]
     sorted_df = transition_df.sort_values('cluster id', 0, ascending=False)
-    sorted_df.to_csv(dstFolder + "/transition_df.csv", sep=";")
-    filtered_matrix.to_csv(dstFolder + "/transition_matrix.csv", sep=";")
+    sorted_df.to_csv(dstFolder + "/transition_df_" + str(ngramLength) + ".csv", sep=";")
+    filtered_matrix.to_csv(dstFolder + "/transition_matrix_" + str(ngramLength) + ".csv", sep=";")
 
 # %%
 aCatSequences = pd.read_csv(os.getcwd() + "/../../analytics/csv_outputs/a_cat_cluster_sequence.csv")
 generateSequenceBags(aCatSequences,1)
-generateTransitionMatrix(aCatSequences, os.getcwd() + "/../transitionMatrices/aCat/")
+generateTransitionMatrix(aCatSequences, os.getcwd() + "/../transitionMatrices/aCat/",1)
+
+generateSequenceBags(aCatSequences,2)
+generateTransitionMatrix(aCatSequences, os.getcwd() + "/../transitionMatrices/aCat/",2)
+
+generateSequenceBags(aCatSequences,3)
+generateTransitionMatrix(aCatSequences, os.getcwd() + "/../transitionMatrices/aCat/",3)
 
 midCTSequences = pd.read_csv(os.getcwd() + "/../../analytics/csv_outputs/mid_ct_cluster_sequence.csv")
 generateSequenceBags(midCTSequences,1)
-generateTransitionMatrix(midCTSequences, os.getcwd() + "/../transitionMatrices/midCT/")
+generateTransitionMatrix(midCTSequences, os.getcwd() + "/../transitionMatrices/midCT/",1)
+
+generateSequenceBags(midCTSequences,2)
+generateTransitionMatrix(midCTSequences, os.getcwd() + "/../transitionMatrices/midCT/",2)
+
+generateSequenceBags(midCTSequences,3)
+generateTransitionMatrix(midCTSequences, os.getcwd() + "/../transitionMatrices/midCT/",3)
