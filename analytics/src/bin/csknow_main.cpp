@@ -56,10 +56,6 @@ int main(int argc, char * argv[]) {
     string outputDir = "";
     outputDir = argv[3];
 
-    exec("ls -lath " + outputDir + "/" + "a_cat_peekers" + ".csv");
-    exec("bash " + dataPath + "/../python_analytics/test2.sh");
-    string runClustersPythonCmd2("bash " + dataPath + "/../python_analytics/makeClusters.sh");
-    exec(runClustersPythonCmd2);
     auto t = std::time(nullptr);
     auto tm = *std::localtime(&t);
     std::ostringstream timestampSS;
@@ -122,7 +118,6 @@ int main(int argc, char * argv[]) {
                                                    dataPath + "/../analytics/walls/aCatStanding.csv",
                                                    dataPath + "/../analytics/walls/aCatWalls.csv");
     string aCatPeekersName = "a_cat_peekers";
-    std::cout << "writing to " << outputDir + "/" + aCatPeekersName + ".csv" << std::endl;
     fsACatPeekers.open(outputDir + "/" + aCatPeekersName + ".csv" );
     fsACatPeekers << aCatPeekers.toCSV();
     fsACatPeekers.flush();
@@ -138,7 +133,6 @@ int main(int argc, char * argv[]) {
     fsMidCTPeekers.close();
 
     string runClustersPythonCmd("bash " + dataPath + "/../python_analytics/makeClusters.sh");
-    std::cout << "running: " << runClustersPythonCmd << std::endl;
     exec(runClustersPythonCmd);
     /*
     int clustersCmdResult = std::system(runClustersPythonCmd.c_str());
@@ -169,7 +163,7 @@ int main(int argc, char * argv[]) {
     fsMidCTSequences.flush();
     fsMidCTSequences.close();
 
-    string runTMPythonCmd(dataPath + "/../python_analytics/makeTransitionMatrices.sh &> logMatrices.txt");
+    string runTMPythonCmd(dataPath + "/../python_analytics/makeTransitionMatrices.sh");
     int tmCmdResult = std::system(runTMPythonCmd.c_str());
     if (tmCmdResult != 0) {
         std::cout << "transition matrices cmd result: " << tmCmdResult << std::endl;
