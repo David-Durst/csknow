@@ -10,12 +10,30 @@ import matplotlib.pyplot as plt
 from PIL import Image
 import math
 
+def sorted_cluster(x, model=None):
+    if model == None:
+        model = KMeans(n_clusters=24)
+    model = sorted_cluster_centers_(model, x)
+    model = sorted_labels_(model, x)
+    return model
+
+def sorted_cluster_centers_(model, x):
+    model.fit(x)
+    magnitude = []
+    idx_argsort = np.lexsort((model.cluster_centers_[:,2] // 10, model.cluster_centers_[:,1] // 100, model.cluster_centers_[:,0] // 200))
+    model.cluster_centers_ = model.cluster_centers_[idx_argsort]
+    return model
+
+def sorted_labels_(sorted_model, x):
+    sorted_model.labels_ = sorted_model.predict(x)
+    return sorted_model
 
 def clusterDataset(df, name):
     # cluster overall
     kmeans_columns = ['wall x', 'wall y', 'wall z']
     kmeans_df = df[kmeans_columns]
     kmeans_matrix = kmeans_df.values
+    #unpartitioned_kmeans = sorted_cluster(kmeans_matrix)
     unpartitioned_kmeans = KMeans(n_clusters=24).fit(kmeans_matrix)
     #for cluster_center in kmeans.cluster_centers_:
     #    print("box " + str(cluster_center[0] - 20) + " " + str(cluster_center[1] - 20) + " "
