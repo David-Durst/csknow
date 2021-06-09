@@ -34,7 +34,8 @@ def clusterDataset(df, name):
     df['distances_squared'] = df['distances'] * df['distances'];
 
     avgDistancePerCluster = df.groupby('cluster_labels').agg({'distances': 'mean', 'distances_squared': 'mean'})
-    avgDistancePerCluster['stddev'] = np.sqrt(avgDistancePerCluster['distances_squared'] - avgDistancePerCluster['distances'] * avgDistancePerCluster['distances'])
+    # need to abs as float's near 0 can become slightly negative
+    avgDistancePerCluster['stddev'] = np.sqrt(np.abs(avgDistancePerCluster['distances_squared'] - avgDistancePerCluster['distances'] * avgDistancePerCluster['distances']))
 
 
     clusters_f = open(name + "_clusters.csv", "w")

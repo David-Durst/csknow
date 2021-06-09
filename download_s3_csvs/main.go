@@ -13,6 +13,7 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"strconv"
 	"strings"
 )
 
@@ -89,6 +90,7 @@ func main() {
 	fillAlreadyDownloaded(&alreadyDownloaded)
 
 	localFlag := flag.Bool("l", false, "set for desktop runs that only download a few csvs")
+	keyFilterFlag := flag.String("f", "", "set for adding to local runs files that contain a substring")
 	subsetFlag := flag.Bool("s", false, "set for server runs that only download a subset csvs (but more than -l)")
 	flag.Parse()
 
@@ -102,7 +104,7 @@ func main() {
 	downloader := s3manager.NewDownloader(sess)
 
 	awsPrefix := processedPrefix
-	if *subsetFlag {
+	if *subsetFlag || *localFlag {
 		awsPrefix = processedSmallPrefix
 	}
 	numDownloaded := 0
@@ -120,9 +122,13 @@ func main() {
 				curElemInPage++
 				continue
 			}
+			localKey := path.Base(*obj.Key)
+			if *localFlag && !(numDownloaded <= 2 || (*keyFilterFlag != "" && strings.Contains(localKey, *keyFilterFlag))) {
+				curElemInPage++
+				continue
+			}
 			fmt.Printf("%d / %d in page: %s\n", curElemInPage, elemsInPage, *obj.Key)
 			curElemInPage++
-			localKey := path.Base(*obj.Key)
 			if _, ok := alreadyDownloaded[localKey]; !ok {
 				needToDownload = append(needToDownload, localKey)
 			}
@@ -141,9 +147,6 @@ func main() {
 			downloadCSVForDemo(downloader, localKey, "explosions")
 			downloadCSVForDemo(downloader, localKey, "kills")
 			numDownloaded++
-			if *localFlag && numDownloaded > 2 {
-				return false
-			}
 		}
 
 		return true
@@ -166,7 +169,7 @@ func main() {
 
 	if *localFlag {
 		fmt.Printf("executing first_lines_games.sh")
-		firstLinesGamesOut, err := exec.Command("/bin/bash", "first_lines_games.sh").Output()
+		firstLinesGamesOut, err := exec.Command("/bin/bash", "first_lines_games.sh", strconv.Itoa(1 + numDownloaded)).Output()
 		if err != nil {
 			log.Fatal(err)
 		}

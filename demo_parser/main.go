@@ -56,6 +56,11 @@ func main() {
 	// if running locally, skip the aws stuff and just return
 	localFlag := flag.Bool("l", false, "set for non-aws (aka local) runs")
 	flag.Parse()
+	if *reprocessFlag && *subsetReprocessFlag {
+		fmt.Printf("-s (reprocess subset) and -r (reprocess all) can't be set at same time\n")
+		os.Exit(0)
+	}
+
 	saveGameTypesFile()
 	saveHitGroupsFile()
 	if *localFlag {
