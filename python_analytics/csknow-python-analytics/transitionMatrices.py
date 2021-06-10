@@ -3,7 +3,7 @@ import pandas as pd
 import csv
 import os
 from itertools import combinations_with_replacement
-
+pd.set_option('display.max_columns', None)
 
 def sameSequence(df, i, j):
     return df.iloc[i]['round id'] == df.iloc[j]['round id'] and \
@@ -33,19 +33,22 @@ def generateTransitionMatrix(sequencesDF, dstFolder, ngramLength=2):
 aCatSequences = pd.read_csv(os.getcwd() + "/../../analytics/csv_outputs/a_cat_cluster_sequence.csv")
 generateSequenceBags(aCatSequences,1)
 generateTransitionMatrix(aCatSequences, os.getcwd() + "/../transitionMatrices/aCat/",1)
+swings = aCatSequences[(aCatSequences['prior sequence bags'] == (17,)) & ((aCatSequences['sequence bags'] == (14,)) | (aCatSequences['sequence bags'] == (13,)))]
+swings_per_player = swings.groupby("player name").agg({'player id': 'count'})
 
-generateSequenceBags(aCatSequences,2)
-generateTransitionMatrix(aCatSequences, os.getcwd() + "/../transitionMatrices/aCat/",2)
 
-generateSequenceBags(aCatSequences,3)
-generateTransitionMatrix(aCatSequences, os.getcwd() + "/../transitionMatrices/aCat/",3)
-
-midCTSequences = pd.read_csv(os.getcwd() + "/../../analytics/csv_outputs/mid_ct_cluster_sequence.csv")
-generateSequenceBags(midCTSequences,1)
-generateTransitionMatrix(midCTSequences, os.getcwd() + "/../transitionMatrices/midCT/",1)
-
-generateSequenceBags(midCTSequences,2)
-generateTransitionMatrix(midCTSequences, os.getcwd() + "/../transitionMatrices/midCT/",2)
-
-generateSequenceBags(midCTSequences,3)
-generateTransitionMatrix(midCTSequences, os.getcwd() + "/../transitionMatrices/midCT/",3)
+#generateSequenceBags(aCatSequences,2)
+#generateTransitionMatrix(aCatSequences, os.getcwd() + "/../transitionMatrices/aCat/",2)
+#
+#generateSequenceBags(aCatSequences,3)
+#generateTransitionMatrix(aCatSequences, os.getcwd() + "/../transitionMatrices/aCat/",3)
+#
+#midCTSequences = pd.read_csv(os.getcwd() + "/../../analytics/csv_outputs/mid_ct_cluster_sequence.csv")
+#generateSequenceBags(midCTSequences,1)
+#generateTransitionMatrix(midCTSequences, os.getcwd() + "/../transitionMatrices/midCT/",1)
+#
+#generateSequenceBags(midCTSequences,2)
+#generateTransitionMatrix(midCTSequences, os.getcwd() + "/../transitionMatrices/midCT/",2)
+#
+#generateSequenceBags(midCTSequences,3)
+#generateTransitionMatrix(midCTSequences, os.getcwd() + "/../transitionMatrices/midCT/",3)
