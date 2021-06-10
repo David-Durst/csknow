@@ -9,6 +9,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from PIL import Image
 import math
+pd.set_option('display.max_columns', None)
 
 def sorted_cluster(x, model=None):
     if model == None:
@@ -33,8 +34,8 @@ def clusterDataset(df, name):
     kmeans_columns = ['wall x', 'wall y', 'wall z']
     kmeans_df = df[kmeans_columns]
     kmeans_matrix = kmeans_df.values
-    #unpartitioned_kmeans = sorted_cluster(kmeans_matrix)
-    unpartitioned_kmeans = KMeans(n_clusters=24).fit(kmeans_matrix)
+    unpartitioned_kmeans = sorted_cluster(kmeans_matrix)
+    #unpartitioned_kmeans = KMeans(n_clusters=24).fit(kmeans_matrix)
     #for cluster_center in kmeans.cluster_centers_:
     #    print("box " + str(cluster_center[0] - 20) + " " + str(cluster_center[1] - 20) + " "
     #          + str(cluster_center[2] - 20) + " "
@@ -43,7 +44,6 @@ def clusterDataset(df, name):
 
     # compute variance per cluster
     df['cluster_labels'] = unpartitioned_kmeans.labels_
-
     cluster_centers = unpartitioned_kmeans.cluster_centers_[df['cluster_labels']]
     distances = np.sqrt(np.power(df['wall x'] - cluster_centers[:,0],2) +
                          np.power(df['wall y'] - cluster_centers[:,1],2) +
