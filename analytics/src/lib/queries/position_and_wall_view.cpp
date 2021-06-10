@@ -52,7 +52,7 @@ PositionsAndWallViews queryViewsFromRegion(const Rounds & rounds, const Ticks & 
                        */
     PositionsAndWallViews result(walls.aabb);
 
-#pragma omp parallel for
+//#pragma omp parallel for
     for (int64_t roundIndex = 0; roundIndex < rounds.size; roundIndex++) {
         int threadNum = omp_get_thread_num();
         // assuming first position is less than first kills
@@ -60,7 +60,7 @@ PositionsAndWallViews queryViewsFromRegion(const Rounds & rounds, const Ticks & 
              tickIndex <= rounds.ticksPerRound[roundIndex].maxId; tickIndex++) {
             for (int64_t patIndex = ticks.patPerTick[tickIndex].minId; patIndex <= ticks.patPerTick[tickIndex].maxId; patIndex++) {
                 Vec3 playerPosition = {playerAtTick.posX[patIndex], playerAtTick.posY[patIndex], playerAtTick.posZ[patIndex]};
-                if (pointInRegion(standingPosition, playerPosition)) {
+                if (playerAtTick.isAirborne[patIndex] && pointInRegion(standingPosition, playerPosition)) {
                     tmpRoundId[threadNum].push_back(roundIndex);
                     tmpPlayerAtTickId[threadNum].push_back(playerAtTick.id[patIndex]);
                     tmpPlayerId[threadNum].push_back(playerAtTick.playerId[patIndex]);
@@ -69,26 +69,30 @@ PositionsAndWallViews queryViewsFromRegion(const Rounds & rounds, const Ticks & 
                     tmpPosZ[threadNum].push_back(playerAtTick.posZ[patIndex]);
                     tmpViewX[threadNum].push_back(playerAtTick.viewX[patIndex]);
                     tmpViewY[threadNum].push_back(playerAtTick.viewY[patIndex]);
-                    bool hitAWall = false;
+                    // get closest wall hit
+                    double minT0 = std::numeric_limits<double>::max();
+                    int64_t closestWallIndex = -1;
+                    double minWallX = std::numeric_limits<double>::min();
+                    double minWallY = std::numeric_limits<double>::min();
+                    double minWallZ = std::numeric_limits<double>::min();
                     for (int wallIndex = 0; wallIndex < walls.aabb.size(); wallIndex++) {
                         Ray playerEyes = getEyeCoordinatesForPlayer(
                                 playerPosition, {playerAtTick.viewX[patIndex], playerAtTick.viewY[patIndex]});
                         double hit0, hit1;
                         if (intersectP(walls.aabb[wallIndex], playerEyes, hit0, hit1)) {
-                            tmpWallId[threadNum].push_back(walls.id[wallIndex]);
-                            tmpWallX[threadNum].push_back(playerEyes.orig.x + hit0 * playerEyes.dir.x);
-                            tmpWallY[threadNum].push_back(playerEyes.orig.y + hit0 * playerEyes.dir.y);
-                            tmpWallZ[threadNum].push_back(playerEyes.orig.z + hit0 * playerEyes.dir.z);
-                            hitAWall = true;
-                            break;
+                            if (hit0 < minT0) {
+                                minT0 = hit0;
+                                closestWallIndex = walls.id[wallIndex];
+                                minWallX = playerEyes.orig.x + hit0 * playerEyes.dir.x;
+                                minWallY = playerEyes.orig.y + hit0 * playerEyes.dir.y;
+                                minWallZ = playerEyes.orig.z + hit0 * playerEyes.dir.z;
+                            }
                         }
                     }
-                    if (!hitAWall) {
-                        tmpWallId[threadNum].push_back(-1);
-                        tmpWallX[threadNum].push_back(std::numeric_limits<double>::min());
-                        tmpWallY[threadNum].push_back(std::numeric_limits<double>::min());
-                        tmpWallZ[threadNum].push_back(std::numeric_limits<double>::min());
-                    }
+                    tmpWallId[threadNum].push_back(closestWallIndex);
+                    tmpWallX[threadNum].push_back(minWallX);
+                    tmpWallY[threadNum].push_back(minWallY);
+                    tmpWallZ[threadNum].push_back(minWallZ);
                 }
             }
         }

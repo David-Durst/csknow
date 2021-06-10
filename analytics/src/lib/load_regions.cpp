@@ -25,10 +25,20 @@ Regions loadRegions(string filePath) {
             readCol(file, curStart, curDelimiter, name);
         }
         else if (colNumber == 1) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, minX);
+            if (curStart == curDelimiter) {
+                minX = -1 * std::numeric_limits<double>::max();
+            }
+            else {
+                readCol(file, curStart, curDelimiter, rowNumber, colNumber, minX);
+            }
         }
         else if (colNumber == 2) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, minY);
+            if (curStart == curDelimiter) {
+                minY = -1 * std::numeric_limits<double>::max();
+            }
+            else {
+                readCol(file, curStart, curDelimiter, rowNumber, colNumber, minY);
+            }
         }
         else if (colNumber == 3) {
             if (curStart == curDelimiter) {
@@ -39,10 +49,20 @@ Regions loadRegions(string filePath) {
             }
         }
         else if (colNumber == 4) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, maxX);
+            if (curStart == curDelimiter) {
+                maxX = std::numeric_limits<double>::max();
+            }
+            else {
+                readCol(file, curStart, curDelimiter, rowNumber, colNumber, maxX);
+            }
         }
         else if (colNumber == 5) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, maxY);
+            if (curStart == curDelimiter) {
+                maxY = std::numeric_limits<double>::max();
+            }
+            else {
+                readCol(file, curStart, curDelimiter, rowNumber, colNumber, maxY);
+            }
         }
         else if (colNumber == 6) {
             if (curStart == curDelimiter) {
