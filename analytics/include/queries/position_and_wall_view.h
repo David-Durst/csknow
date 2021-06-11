@@ -75,6 +75,9 @@ public:
         // no indexes on results
         vector<int64_t> result;
         for (int i = clusterSequencesPerRound[otherTableIndex].minId; i <= clusterSequencesPerRound[otherTableIndex].maxId; i++) {
+            if (i == -1) {
+                continue;
+            }
             result.push_back(i);
         }
         return result;
