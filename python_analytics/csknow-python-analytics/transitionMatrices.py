@@ -33,8 +33,35 @@ def generateTransitionMatrix(sequencesDF, dstFolder, ngramLength=2):
 aCatSequences = pd.read_csv(os.getcwd() + "/../../analytics/csv_outputs/a_cat_cluster_sequence.csv")
 generateSequenceBags(aCatSequences,1)
 generateTransitionMatrix(aCatSequences, os.getcwd() + "/../transitionMatrices/aCat/",1)
-swings = aCatSequences[(aCatSequences['prior sequence bags'] == (17,)) & ((aCatSequences['sequence bags'] == (14,)) | (aCatSequences['sequence bags'] == (13,)))]
-swings_per_player = swings.groupby("player name").agg({'player id': 'count'})
+rtl_swings = aCatSequences[(aCatSequences['prior sequence bags'] == (23,)) & (aCatSequences['sequence bags'] == (17,))]
+rtl_swings_per_player = rtl_swings.groupby("player name").agg({'player id': 'count'})
+ltr_swings = aCatSequences[(aCatSequences['prior sequence bags'] == (23,)) & (aCatSequences['sequence bags'] == (21,))]
+ltr_swings_per_player = ltr_swings.groupby("player name").agg({'player id': 'count'})
+all_swings_stats = aCatSequences.groupby("player name").agg({'cluster length': ['mean','std','count']})
+
+# find rounds where peek 20 but not 23
+clusters_per_round = aCatSequences.groupby(["round id", "cluster id"]).agg({'round id': 'count'})
+max_round = max(aCatSequences['round id'])
+has_cluster_20 = []
+has_cluster_23 = []
+num_20_and_23 = []
+num_20_not_23 = []
+num_23_not_20 = []
+num_not_23_and_not_20 = []
+for round in range(max_round+1):
+    has_20 = (round, 20) in clusters_per_round.index
+    has_cluster_20.append(has_20)
+    has_23 = (round, 23) in clusters_per_round.index
+    has_cluster_23.append(has_23)
+    if has_20 and has_23:
+        num_20_and_23.append(round)
+    if has_20 and not has_23:
+        num_20_not_23.append(round)
+    if not has_20 and has_23:
+        num_23_not_20.append(round)
+    if not has_20 and not has_23:
+        num_not_23_and_not_20.append(round)
+
 
 
 #generateSequenceBags(aCatSequences,2)
