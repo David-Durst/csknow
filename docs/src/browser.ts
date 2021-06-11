@@ -138,9 +138,10 @@ function setMatchAndRoundLabels() {
     roundLabel.innerHTML =
         gameData.roundsTable[parseInt(roundSelector.value)].roundNumber.toString()
     const curGame = gameData.gamesTable[parseInt(matchSelector.value)]
+    const demoURL = "https://csknow.s3.amazonaws.com/demos/processed2_small/" + curGame.demoFile
     if (downloadSelect.value == "dem") {
-        matchLabel.innerHTML = "<a id=\"match-url\" href=\"https://csknow.s3.amazonaws.com/demos/processed2/" +
-             curGame.demoFile + "\">" + curGame.demoFile + "</a>"
+        matchLabel.innerHTML = "<a id=\"match-url\" href=\"" +
+             demoURL + "\">" + curGame.demoFile + "</a>"
     }
     else {
         const parser = gameData.parsers.get(downloadSelect.value)
@@ -151,10 +152,9 @@ function setMatchAndRoundLabels() {
         matchLabel.innerHTML = "<a id=\"match-url\" href=\"" + url + "\">" +
             curGame.demoFile + "</a>"
     }
+    setDemoURL(demoURL)
+    setDemoName(curGame.demoFile)
     /*
-    setDemoURL("https://csknow.s3.amazonaws.com/demos/processed/" +
-        matchLabelStr + ".dem")
-    setDemoName(matchLabelStr + ".dem")
     if (downloadSelect.value == "dem") {
         matchLabel.innerHTML = "<a id=\"match-url\" href=\"https://csknow.s3.amazonaws.com/demos/processed/" +
             matchLabelStr + ".dem\">" + matchLabelStr + "</a>"
