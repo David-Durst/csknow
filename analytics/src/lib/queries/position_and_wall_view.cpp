@@ -60,7 +60,7 @@ PositionsAndWallViews queryViewsFromRegion(const Rounds & rounds, const Ticks & 
              tickIndex <= rounds.ticksPerRound[roundIndex].maxId; tickIndex++) {
             for (int64_t patIndex = ticks.patPerTick[tickIndex].minId; patIndex <= ticks.patPerTick[tickIndex].maxId; patIndex++) {
                 Vec3 playerPosition = {playerAtTick.posX[patIndex], playerAtTick.posY[patIndex], playerAtTick.posZ[patIndex]};
-                if (playerAtTick.isAirborne[patIndex] && pointInRegion(standingPosition, playerPosition)) {
+                if (playerAtTick.isAlive[patIndex] && pointInRegion(standingPosition, playerPosition)) {
                     tmpRoundId[threadNum].push_back(roundIndex);
                     tmpPlayerAtTickId[threadNum].push_back(playerAtTick.id[patIndex]);
                     tmpPlayerId[threadNum].push_back(playerAtTick.playerId[patIndex]);
