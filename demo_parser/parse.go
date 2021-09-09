@@ -105,8 +105,9 @@ func finishGarbageRound(round * RoundTracker, idState IDState, tWins int, ctWins
 	round.ctWins = ctWins
 }
 
-func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameType int) {
+func processFile(unprocessedKey string, localDemName string, idState * IDState, firstRun bool, gameType int) {
 	demFilePath := path.Base(unprocessedKey)
+	fmt.Printf("localDemName: %s", localDemName)
 	f, err := os.Open(localDemName)
 	if err != nil {
 		panic(err)
@@ -147,7 +148,7 @@ func processFile(unprocessedKey string, idState * IDState, firstRun bool, gameTy
 	grenadesTracker := make(map[int64][]GrenadeTracker)
 	lastFlashExplosion := make(map[int64]GrenadeTracker)
 	playerToLastFireGrenade := make(map[int64]int64)
-	curPlant := PlantTracker{0, 0, 0, 0, false, false}
+	curPlant := PlantTracker{0, 0, 0, 0, false, true}
 	curDefusal := DefusalTracker{0, 0, 0, 0, 0, false}
 	playersTracker := make(map[int]int64)
 	lastFlash := make(map[SourceTarget]int64)

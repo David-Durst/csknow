@@ -15,7 +15,7 @@ import (
 	"strings"
 )
 
-const localDemName = "local.dem"
+var localDemName string
 const baseStateCSVName = "global_id_state.csv"
 const inputStateCSVName = "input_" + baseStateCSVName
 const outputStateCSVName = "output_" + baseStateCSVName
@@ -46,16 +46,52 @@ const csvPrefixGlobal = csvPrefixBase +  "global/"
 var gameTypes = []string{"pros","bots"}
 const bucketName = "csknow"
 
+func parseInputStateCSV() IDState {
+	idStateFile, err := os.Open(inputStateCSVName)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer idStateFile.Close()
+
+	var values []int64
+	scanner := bufio.NewScanner(idStateFile)
+	for scanner.Scan() {
+		// drop all the labels, save the values
+		valueStr := strings.Split(scanner.Text(), ",")[1]
+		i, _ := strconv.ParseInt(valueStr, 10, 64)
+		values = append(values, i)
+	}
+	return IDState{values[0], values[1], values[2], values[3], values[4], values[5], values[6],
+		values[7], values[8], values[9], values[10], values[11], values[12], values[13], values[14]}
+}
+
+func saveOutputStateCSV(idState *IDState) {
+	idStateFile, err := os.Create(outputStateCSVName)
+	if err != nil {
+		panic(err)
+	}
+	defer idStateFile.Close()
+	idStateFile.WriteString(fmt.Sprintf(
+		"nextGame,%d\nnextPlayer,%d\nnextRound,%d\nnextTick,%d\n" +
+			"nextPlayerAtTick,%d\nnextSpotted,%d\nnextWeaponFire,%d\nnextKill,%d\nnextPlayerHurt,%d\n" +
+			"nextGrenade,%d\nnextGrenadeTrajectory,%d\nnextPlayerFlashed,%d\nnextPlant,%d\nnextDefusal,%d\nnextExplosion,%d\n",
+		idState.nextGame, idState.nextPlayer, idState.nextRound, idState.nextTick,
+		idState.nextPlayerAtTick, idState.nextSpotted, idState.nextWeaponFire, idState.nextKill, idState.nextPlayerHurt,
+		idState.nextGrenade, idState.nextGrenadeTrajectory, idState.nextPlayerFlashed, idState.nextPlant, idState.nextDefusal, idState.nextExplosion))
+}
+
 func main() {
 	startIDState := IDState{0, 0, 0, 0, 0, 0, 0, 0, 0 , 0, 0, 0, 0, 0, 0}
-	firstRun := true
 
 	// if reprocessing, don't move the demos
+	firstRunPtr := flag.Bool("f", true, "set if first file processed is first overall")
 	reprocessFlag := flag.Bool("r", false, "set for reprocessing demos")
 	subsetReprocessFlag := flag.Bool("s", false, "set for reprocessing a subset of demos")
 	// if running locally, skip the aws stuff and just return
 	localFlag := flag.Bool("l", false, "set for non-aws (aka local) runs")
+	localDemName := flag.String("n", "local.dem", "set for demo's name on local file system")
 	flag.Parse()
+	firstRun := *firstRunPtr
 	if *reprocessFlag && *subsetReprocessFlag {
 		fmt.Printf("-s (reprocess subset) and -r (reprocess all) can't be set at same time\n")
 		os.Exit(0)
@@ -64,8 +100,11 @@ func main() {
 	saveGameTypesFile()
 	saveHitGroupsFile()
 	if *localFlag {
-		processFile("local_run", &startIDState, firstRun, 1)
-		firstRun = false
+		if !firstRun {
+			startIDState = parseInputStateCSV()
+		}
+		processFile(*localDemName, *localDemName, &startIDState, firstRun, 1)
+		saveOutputStateCSV(&startIDState)
 		os.Exit(0)
 	}
 
@@ -99,22 +138,7 @@ func main() {
 	// if not reprocessing and already have an id state, start from there
 	if *result.KeyCount == 1 && !*reprocessFlag && !*subsetReprocessFlag {
 		downloadFile(downloader, *result.Contents[0].Key, inputStateCSVName)
-		idStateFile, err := os.Open(inputStateCSVName)
-		if err != nil {
-			log.Fatal(err)
-		}
-		defer idStateFile.Close()
-
-		var values []int64
-		scanner := bufio.NewScanner(idStateFile)
-		for scanner.Scan() {
-			// drop all the labels, save the values
-			valueStr := strings.Split(scanner.Text(), ",")[1]
-			i, _ := strconv.ParseInt(valueStr, 10, 64)
-			values = append(values, i)
-		}
-		startIDState = IDState{values[0], values[1], values[2], values[3], values[4], values[5], values[6],
-			values[7], values[8], values[9], values[10], values[11], values[12], values[13], values[14]}
+		startIDState = parseInputStateCSV()
 	}
 
 	i := 0
@@ -139,8 +163,8 @@ func main() {
 					continue
 				}
 				fmt.Printf("Handling file: %s\n", *obj.Key)
-				downloadFile(downloader, *obj.Key, localDemName)
-				processFile(*obj.Key, &startIDState, firstRun, gameTypeIndex)
+				downloadFile(downloader, *obj.Key, *localDemName)
+				processFile(*obj.Key, *localDemName, &startIDState, firstRun, gameTypeIndex)
 				firstRun = false
 				uploadCSVs(uploader, *obj.Key)
 				filesToMove = append(filesToMove, *obj.Key)
@@ -155,18 +179,7 @@ func main() {
 	uploadFile(uploader, localHitGroupDimTable, "dimension_table_hit_groups", csvPrefixGlobal)
 
 	// save the id state
-	idStateFile, err := os.Create(outputStateCSVName)
-	if err != nil {
-		panic(err)
-	}
-	defer idStateFile.Close()
-	idStateFile.WriteString(fmt.Sprintf(
-		"nextGame,%d\nnextPlayer,%d\nnextRound,%d\nnextTick,%d\n" +
-			"nextPlayerAtTick,%d\nnextSpotted,%d\nnextWeaponFire,%d\nnextKill,%d\nnextPlayerHurt,%d\n" +
-			"nextGrenade,%d\nnextGrenadeTrajectory,%d\nnextPlayerFlashed,%d\nnextPlant,%d\nnextDefusal,%d\nnextExplosion,%d\n",
-			startIDState.nextGame, startIDState.nextPlayer, startIDState.nextRound, startIDState.nextTick,
-			startIDState.nextPlayerAtTick, startIDState.nextSpotted, startIDState.nextWeaponFire, startIDState.nextKill, startIDState.nextPlayerHurt,
-			startIDState.nextGrenade, startIDState.nextGrenadeTrajectory, startIDState.nextPlayerFlashed, startIDState.nextPlant, startIDState.nextDefusal, startIDState.nextExplosion))
+	saveOutputStateCSV(&startIDState)
 	uploadFile(uploader, outputStateCSVName, "global_id_state", csvPrefixBase)
 
 	if !*reprocessFlag && !*subsetReprocessFlag {
