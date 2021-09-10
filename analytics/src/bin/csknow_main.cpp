@@ -173,11 +173,12 @@ int main(int argc, char * argv[]) {
     std::cout << "built spotted index" << std::endl;
      */
 
+    string lookerName = "lookers";
+    LookingResult lookersResult = queryLookers(rounds, ticks, playerAtTick);
+    std::cout << "looker entries: " << lookersResult.tickId.size() << std::endl;
     /*
     VelocityResult velocityResult = queryVelocity(position);
     std::cout << "velocity moments: " << velocityResult.positionIndex.size() << std::endl;
-    LookingResult lookersResult = queryLookers(position);
-    std::cout << "looker moments: " << lookersResult.positionIndex.size() << std::endl;
     WallersResult wallersResult = queryWallers(position, spotted);
     std::cout << "waller moments: " << wallersResult.positionIndex.size() << std::endl;
     BaitersResult baitersResult = queryBaiters(position, kills, spottedIndex);
@@ -226,20 +227,23 @@ int main(int argc, char * argv[]) {
         {queryNames[8], failedATakes},
     };
      */
-    vector<string> analysisNames = {aCatPeekersName, aCatSequenceName, midCTPeekersName, midCTSequenceName};
+    vector<string> analysisNames = {aCatPeekersName, aCatSequenceName, midCTPeekersName, midCTSequenceName, lookerName};
     map<string, reference_wrapper<QueryResult>> analyses {
             {analysisNames[0], aCatPeekers},
             {analysisNames[1], aCatClusterSequence},
             {analysisNames[2], midCTPeekers},
             {analysisNames[3], midCTClusterSequence},
+            { analysisNames[4], lookersResult},
     };
 
     // create the output files and the metadata describing files
     for (const auto & [name, result] : analyses) {
+        std::cout << "writing " << outputDir + "/" + timestamp + "_" + name + ".csv" << std::endl;
         std::ofstream fsTimed, fsOverride;
         fsTimed.open(outputDir + "/" + timestamp + "_" + name + ".csv");
         fsTimed << result.get().toCSV();
         fsTimed.close();
+        std::cout << "writing " << outputDir + "/" + name + ".csv" << std::endl;
         fsOverride.open(outputDir + "/" + name + ".csv");
         fsOverride << result.get().toCSV();
         fsOverride.close();
@@ -284,6 +288,7 @@ int main(int argc, char * argv[]) {
          */
 
     vector<string> queryNames = {"games", "rounds", "players", "ticks", "playerAtTick", "aCatClusterSequence", "aCatClusters", "midCTClusterSequence", "midTClusters"};
+    //vector<string> queryNames = {"games", "rounds", "players", "ticks", "playerAtTick", "aCatClusterSequence", "aCatClusters", "midCTClusterSequence", "midTClusters", "lookers"};
     map<string, reference_wrapper<QueryResult>> queries {
             {queryNames[0], queryGames},
             {queryNames[1], queryRounds},
@@ -294,6 +299,7 @@ int main(int argc, char * argv[]) {
             {queryNames[6], aCatPeekersClusters},
             {queryNames[7], midCTClusterSequence},
             {queryNames[8], midCTPeekersClusters},
+            //{queryNames[9], lookersResult}
     };
 
     if (runServer) {

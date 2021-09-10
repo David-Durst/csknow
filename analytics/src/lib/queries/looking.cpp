@@ -6,51 +6,60 @@
 
 using std::set;
 using std::map;
-/*
-LookingResult queryLookers(const Position & position) {
-    int64_t numGames = position.gameStarts.size() - 1;
+
+LookingResult queryLookers(const Rounds & rounds, const Ticks & ticks, const PlayerAtTick & playerAtTick) {
     int numThreads = omp_get_max_threads();
-    vector<int64_t> tmpIndices[numThreads];
-    vector<int> tmpLookers[numThreads];
-    vector<int> tmpLookedAt[numThreads];
-    vector<int64_t> tmpGameIndex[numThreads];
-    vector<int64_t> tmpGameStarts[numThreads];
+    vector<int64_t> tmpTickId[numThreads];
+    vector<int64_t> tmpLookerPlayerAtTickIds[numThreads];
+    vector<int64_t> tmpLookerPlayerIds[numThreads];
+    vector<int64_t> tmpLookedAtPlayerAtTickIds[numThreads];
+    vector<int64_t> tmpLookedAtPlayerIds[numThreads];
 
-#pragma omp parallel for
-    for (int64_t gameIndex = 0; gameIndex < numGames; gameIndex++) {
+//#pragma omp parallel for
+    for (int64_t roundIndex = 0; roundIndex < rounds.size; roundIndex++) {
         int threadNum = omp_get_thread_num();
-        tmpGameIndex[threadNum].push_back(gameIndex);
-        tmpGameStarts[threadNum].push_back(tmpLookers[threadNum].size());
+        for (int64_t tickIndex = rounds.ticksPerRound[roundIndex].minId;
+            tickIndex <= rounds.ticksPerRound[roundIndex].maxId; tickIndex++) {
+            vector<Ray> playerEyes;
+            vector<AABB> playerAABBs;
+            vector<int64_t> playerIds;
+            vector<int64_t> patIds;
+            vector<bool> alive;
 
-        // since spotted tracks names for spotted player, need to map that to the player index
-        for (int64_t positionIndex = position.firstRowAfterWarmup[gameIndex];
-             positionIndex < position.gameStarts[gameIndex+1];
-             positionIndex++) {
+            // since spotted tracks names for spotted player, need to map that to the player index
+            for (int64_t patIndex = ticks.patPerTick[tickIndex].minId; patIndex <= ticks.patPerTick[tickIndex].maxId; patIndex++) {
+                playerEyes.push_back(getEyeCoordinatesForPlayer(
+                        {playerAtTick.posX[patIndex],
+                         playerAtTick.posY[patIndex],
+                         playerAtTick.posZ[patIndex]},
+                        {playerAtTick.viewX[patIndex],
+                         playerAtTick.viewY[patIndex]}
+                ));
+                playerAABBs.push_back(getAABBForPlayer({playerAtTick.posX[patIndex],
+                                                        playerAtTick.posY[patIndex],
+                                                        playerAtTick.posZ[patIndex]}
+                ));
+                playerIds.push_back(playerAtTick.playerId[patIndex]);
+                patIds.push_back(patIndex);
+                alive.push_back(playerAtTick.isAlive[patIndex]);
+            }
 
-            for (int possibleLooker = 0; possibleLooker < NUM_PLAYERS; possibleLooker++) {
-                for (int possibleLookedAt = 0; possibleLookedAt < NUM_PLAYERS; possibleLookedAt++) {
-                    if (possibleLookedAt == possibleLooker) {
+            for (int lookerId = 0; lookerId < playerEyes.size(); lookerId++) {
+                if (!alive[lookerId]) {
+                    continue;
+                }
+                for (int lookedAtId = 0; lookedAtId < playerEyes.size(); lookedAtId++) {
+                    if (!alive[lookerId] || lookerId == lookedAtId) {
                         continue;
                     }
-                    if (!position.players[possibleLooker].isAlive[positionIndex] ||
-                        !position.players[possibleLookedAt].isAlive[positionIndex]) {
-                        continue;
-                    }
-                    AABB lookeeBox = getAABBForPlayer({position.players[possibleLookedAt].xPosition[positionIndex],
-                                                       position.players[possibleLookedAt].yPosition[positionIndex],
-                                                       position.players[possibleLookedAt].zPosition[positionIndex]});
-                    Ray lookerEyes = getEyeCoordinatesForPlayer(
-                            {position.players[possibleLooker].xPosition[positionIndex],
-                             position.players[possibleLooker].yPosition[positionIndex],
-                             position.players[possibleLooker].zPosition[positionIndex]},
-                            {position.players[possibleLooker].xViewDirection[positionIndex],
-                             position.players[possibleLooker].yViewDirection[positionIndex]}
-                    );
+
                     double t0, t1;
-                    if (intersectP(lookeeBox, lookerEyes, t0, t1)) {
-                        tmpIndices[threadNum].push_back(positionIndex);
-                        tmpLookers[threadNum].push_back(possibleLooker);
-                        tmpLookedAt[threadNum].push_back(possibleLookedAt);
+                    if (intersectP(playerAABBs[lookedAtId], playerEyes[lookerId], t0, t1)) {
+                        tmpTickId[threadNum].push_back(tickIndex);
+                        tmpLookerPlayerAtTickIds[threadNum].push_back(patIds[lookerId]);
+                        tmpLookerPlayerIds[threadNum].push_back(playerIds[lookerId]);
+                        tmpLookedAtPlayerAtTickIds[threadNum].push_back(patIds[lookedAtId]);
+                        tmpLookedAtPlayerIds[threadNum].push_back(playerIds[lookedAtId]);
                     }
                 }
             }
@@ -58,22 +67,18 @@ LookingResult queryLookers(const Position & position) {
     }
 
     LookingResult result;
-    result.gameStarts.resize(position.fileNames.size() + 1);
-    result.fileNames = position.fileNames;
     for (int i = 0; i < numThreads; i++) {
-        // for all games in thread, note position as position in thread plus start of thread results
-        for (int j = 0; j < tmpGameStarts[i].size(); j++) {
-            result.gameStarts[tmpGameIndex[i][j]] = tmpGameStarts[i][j] + result.positionIndex.size();
+        result.lookersPerRound.push_back({});
+        result.lookersPerRound[i].minId = result.tickId.size();
+        for (int j = 0; j < tmpTickId[i].size(); j++) {
+            result.tickId.push_back(tmpTickId[i][j]);
+            result.lookerPlayerAtTickId.push_back(tmpLookerPlayerAtTickIds[i][j]);
+            result.lookerPlayerId.push_back(tmpLookerPlayerIds[i][j]);
+            result.lookedAtPlayerAtTickId.push_back(tmpLookedAtPlayerAtTickIds[i][j]);
+            result.lookedAtPlayerId.push_back(tmpLookedAtPlayerIds[i][j]);
         }
-
-        for (int j = 0; j < tmpIndices[i].size(); j++) {
-            result.positionIndex.push_back(tmpIndices[i][j]);
-            result.lookers.push_back(tmpLookers[i][j]);
-            result.lookedAt.push_back({tmpLookedAt[i][j]});
-        }
+        result.lookersPerRound[i].maxId = result.tickId.size();
     }
-    result.gameStarts[numGames] = result.positionIndex.size();
+    result.size = result.lookerPlayerId.size();
     return result;
 }
-
-*/

@@ -7,30 +7,49 @@
 #include <map>
 using std::string;
 using std::map;
-/*
-class LookingResult : public SourceAndTargetResult {
+
+class LookingResult : public QueryResult {
 public:
-    vector<int> & lookers = sources;
-    vector<vector<int>> & lookedAt = targets;
-    vector<int64_t> gameStarts;
-    vector<string> fileNames;
+    vector<RangeIndexEntry> lookersPerRound;
+    vector<int64_t> tickId;
+    vector<int64_t> lookerPlayerAtTickId;
+    vector<int64_t> lookerPlayerId;
+    vector<int64_t> lookedAtPlayerAtTickId;
+    vector<int64_t> lookedAtPlayerId;
 
     LookingResult() {
-        sourceName = "lookers";
-        targetNames = {"lookedAt"};
-        ticksPerEvent = 1;
-        keysForDiff = {0, 1, 2, 3};
+        this->startTickColumn = -1;
+        this->ticksPerEvent = 1;
     }
 
-    vector<string> getExtraColumnNames() {
-        return {};
+    vector<int64_t> filterByForeignKey(int64_t otherTableIndex) {
+        // no indexes on results
+        vector<int64_t> result;
+        for (int i = lookersPerRound[otherTableIndex].minId; i <= lookersPerRound[otherTableIndex].maxId; i++) {
+            if (i == -1) {
+                continue;
+            }
+            result.push_back(i);
+        }
+        return result;
     }
 
-    vector<string> getExtraRow(const Position & position, int64_t queryIndex, int64_t posIndex) {
+    void oneLineToCSV(int64_t index, stringstream & ss) {
+        ss << index << "," << tickId[index] << "," << lookerPlayerAtTickId[index] << "," << lookerPlayerId[index] << ","
+           << lookedAtPlayerAtTickId[index] << "," << lookedAtPlayerId[index] << std::endl;
+    }
+
+    vector<string> getForeignKeyNames() {
+        return {"tick id",
+                "looker player at tick id", "looker player id",
+                "looked at player at tick id", "looked at player id"};
+    }
+
+    vector<string> getOtherColumnNames() {
         return {};
     }
 };
 
-LookingResult queryLookers(const Position & position);
-*/
+LookingResult queryLookers(const Rounds & rounds, const Ticks & ticks, const PlayerAtTick & playerAtTick);
+
 #endif //CSKNOW_LOOKING_H
