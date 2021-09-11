@@ -20,15 +20,22 @@ import {match} from "assert";
 
 export const d2_top_left_x = -2476
 export const d2_top_left_y = 3239
-export const canvasWidth = 700
-export const canvasHeight = 700
-export const minimapWidth = 1024
-export const minimapHeight = 1024
-export const minimapScale = 4.4
+// size of image when drawing on website
+export const defaultCanvasSize = 700
+export const bigCanvasSize = 2048
+export let canvasWidth = defaultCanvasSize
+export let canvasHeight = defaultCanvasSize
+// size of image from file
+export const minimapWidth = 2048
+export const minimapHeight = 2048
+// conversion from minimap coordinates to csgo coordinates I figured out to be 4.4
+// when the input file was 1024x1024
+export const minimapScale = 4.4 * 1024 / minimapHeight
+let fontScale = 1.0
 export let canvas: HTMLCanvasElement = null;
 export let ctx: CanvasRenderingContext2D = null;
 export const minimap = new Image();
-minimap.src = "de_dust2_radar_spectate.png";
+minimap.src = "de_dust2_radar_upsampled_labels.png";
 let xMapLabel: HTMLLabelElement = null;
 let yMapLabel: HTMLLabelElement = null;
 let xCanvasLabel: HTMLLabelElement = null;
@@ -39,6 +46,7 @@ let playerNameLabel: HTMLLabelElement = null;
 let playerCopyButton: HTMLButtonElement = null;
 let playerCopyText: HTMLInputElement = null;
 let configClientButton: HTMLAnchorElement = null;
+let toggleCanvasSizeButton: HTMLButtonElement = null;
 let minZ = 0;
 let maxZ = 0;
 const background = new Image();
@@ -61,6 +69,24 @@ export function setDemoURL(newUrl: string) {
 let demoName: string = ""
 export function setDemoName(newName: string) {
     demoName = newName
+}
+
+export function toggleCanvasSize() {
+    if (canvasWidth == defaultCanvasSize) {
+        resizeCanvas(bigCanvasSize)
+    }
+    else {
+        resizeCanvas(defaultCanvasSize)
+    }
+    drawTick(null)
+}
+
+function resizeCanvas(newSize: number) {
+    canvasWidth = newSize
+    canvasHeight = newSize
+    canvas.width = newSize
+    canvas.height = newSize
+    fontScale = newSize / defaultCanvasSize
 }
 
 // see last post by randunel and csgo/resources/overview/de_dust2.txt
@@ -238,7 +264,7 @@ export function drawTick(e: InputEvent) {
             players[p].posY,
             false);
         const zScaling = (players[p].posZ - minZ) / (maxZ - minZ)
-        ctx.font = (zScaling * 20 + 30).toString() + "px Arial"
+        ctx.font = ((zScaling * 20 + 30) * fontScale).toString() + "px Arial"
         ctx.fillText(playerText, location.getCanvasX(), location.getCanvasY())
         ctx.save()
         ctx.translate(location.getCanvasX(), location.getCanvasY())
@@ -249,7 +275,7 @@ export function drawTick(e: InputEvent) {
         ctx.filter = "brightness(" + yLogistic + ")"
         if (players[p].isAlive) {
             //ctx.fillText("^", 0, 0)
-            ctx.fillRect(-2, -13 + -7 * zScaling, 4, 10)
+            ctx.fillRect(-2 * fontScale, (-13 + -7 * zScaling) * fontScale, 4 * fontScale, 10 * fontScale)
         }
         ctx.restore()
         //ctx.fillRect(location.getCanvasX(), location.getCanvasY(), 1, 1)
@@ -295,7 +321,7 @@ export function drawTick(e: InputEvent) {
                 false);
             const zScaling = (parseFloat(cluster.otherColumnValues[2]) - minZ) /
                 (maxZ - minZ)
-            ctx.font = ((zScaling * 20 + 30)/2).toString() + "px Tahoma"
+            ctx.font = (((zScaling * 20 + 30)/2)*fontScale).toString() + "px Tahoma"
             ctx.fillText(cluster.id.toString(), clusterLocation.getCanvasX(), clusterLocation.getCanvasY())
         }
     }
@@ -347,6 +373,8 @@ export function setupCanvas() {
     playerCopyButton = document.querySelector<HTMLButtonElement>("#copy_button")
     playerCopyButton.addEventListener("click", copyPosition)
     configClientButton = document.querySelector<HTMLAnchorElement>("#download_client")
+    toggleCanvasSizeButton = document.querySelector<HTMLButtonElement>("#canvas_size")
+    toggleCanvasSizeButton.addEventListener("click", toggleCanvasSize)
     canvas.addEventListener("mousemove", trackMouse)
     canvas.addEventListener("mousedown", startingRegionFilter)
     canvas.addEventListener("mouseup", finishedRegionFilter)

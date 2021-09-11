@@ -12,8 +12,8 @@
 <!--    https://github.com/CSGO-Analysis/csgo-maps-overviews/tree/master/overviews -->
 <div class="container-fluid">
     <div class="row justify-content-md-center">
-        <div class="col-4">
-            <canvas id="myCanvas" width="700" height="700">
+        <div class="col-12">
+            <canvas style="margin:auto;display:block" id="myCanvas" width="700" height="700">
             </canvas>
         </div>
     </div>
@@ -51,6 +51,9 @@
                         <option value="http://localhost:3123/">localhost</option>
                         <option value="http://52.86.105.42:3123/">real</option>
                     </select>
+                    <button type="button" id="canvas_size" class="btn btn-info playButton">
+                        toggle canvas size
+                    </button>
                     <input type="range" min="0" max="24" value="0" class="slider"
                            id="tick-selector">
                 </div>

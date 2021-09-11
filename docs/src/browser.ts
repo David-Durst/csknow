@@ -10,7 +10,8 @@ import {
     setDemoURL,
     setupCanvas,
     setupCanvasHandlers,
-    setupMatchDrawing
+    setupMatchDrawing,
+    toggleCanvasSize
 } from "./drawing/drawing"
 import {
     setupFilterHandlers,
