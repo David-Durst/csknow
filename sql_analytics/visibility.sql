@@ -100,19 +100,68 @@ where spotted is null
 order by  demo_file, game_tick_number;
 
 
+drop table if exists visibilities_with_others;
+create temp table visibilities_with_others as
+select v_main.index,
+       v_main.demo,
+       v_main.tick_id,
+       v_main.spotter_id,
+       v_main.spotter,
+       v_main.spotted_id,
+       v_main.spotted,
+       v_main.start_game_tick,
+       v_main.end_game_tick,
+       v_main.next_start_game_tick,
+       v_main.cpu_vis_tick,
+       v_main.hacking,
+       count(distinct v_other.spotted_id) as distinct_others_spotted_during_time
+from visibilities v_main
+         left join visibilities v_other
+                   on v_main.spotter_id = v_other.spotter_id
+                       and v_main.spotted_id != v_other.spotted_id
+                       and int8range(v_main.start_game_tick, v_main.end_game_tick) && int8range(v_other.start_game_tick, v_other.end_game_tick)
+group by v_main.index,
+         v_main.demo,
+         v_main.tick_id,
+         v_main.spotter_id,
+         v_main.spotter,
+         v_main.spotted_id,
+         v_main.spotted,
+         v_main.start_game_tick,
+         v_main.end_game_tick,
+         v_main.next_start_game_tick,
+         v_main.cpu_vis_tick,
+         v_main.hacking
+order by v_main.index;
+
 
 drop table if exists react_ticks;
 create temp table react_ticks as
-select v.index, v.demo, v.tick_id, v.spotter_id, v.spotter, v.spotted_id, v.spotted, v.start_game_tick, v.end_game_tick, v.next_start_game_tick, v.cpu_vis_tick, min(t.game_tick_number) as react_end_tick, v.hacking
+select v.index,
+       v.demo,
+       v.tick_id,
+       v.spotter_id,
+       v.spotter,
+       v.spotted_id,
+       v.spotted,
+       v.start_game_tick,
+       v.end_game_tick,
+       v.next_start_game_tick,
+       v.cpu_vis_tick,
+       min(t.game_tick_number) as react_end_tick,
+       v.distinct_others_spotted_during_time,
+       v.hacking
 from lookers l
          join ticks t on l.tick_id = t.id
-         right join visibilities v
+         right join visibilities_with_others v
                     on v.start_game_tick <= t.game_tick_number
                         and v.next_start_game_tick >= t.game_tick_number
                         and l.looker_player_id = v.spotter_id
                         and l.looked_at_player_id = v.spotted_id
-group by v.index, v.demo, v.tick_id, v.spotter_id, v.spotter, v.spotted_id, v.spotted, v.start_game_tick, v.end_game_tick, v.next_start_game_tick, v.cpu_vis_tick, v.hacking
+group by v.index, v.demo, v.tick_id, v.spotter_id, v.spotter, v.spotted_id, v.spotted, v.start_game_tick,
+         v.end_game_tick, v.next_start_game_tick, v.cpu_vis_tick, v.hacking
 order by v.index;
+
 
 drop table if exists react_final;
 create temp table react_final as
