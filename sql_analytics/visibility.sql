@@ -83,6 +83,7 @@ from last_spotted_cpu s
                        and h.spotter_id = s.spotter_player
                        and h.start_game_tick <= s.game_tick_number
                        and h.next_start_game_tick >= s.game_tick_number
+                       and s.is_spotted = true
 order by h.index;
 
 select g.demo_file, game_tick_number, is_spotted, p_spotter.name as spotter, p_spotted.name as spotted
@@ -94,7 +95,8 @@ from ungrouped_visibilities
     join games g on p_spotted.game_id = g.id
 where spotted is null
     and is_spotted and p_spotter.name in ('i_eat_short_people_for_breakfast')
-    and pat_spotted.is_alive and pat_spotter.is_alive and pat_spotter.team != pat_spotted.team;
+    and pat_spotted.is_alive and pat_spotter.is_alive and pat_spotter.team != pat_spotted.team
+order by  demo_file, game_tick_number;
 
 
 
@@ -111,16 +113,9 @@ from lookers l
 group by v.index, v.demo, v.tick_id, v.spotter_id, v.spotted_id, v.spotted, v.start_game_tick, v.end_game_tick, v.next_start_game_tick, v.automated_vis_tick, v.hacking
 order by v.index;
 
--- the final result for visualization
-select *, (react_end_tick - start_game_tick) / 64.0 as hand_react_ticks, (react_end_tick - react_ticks.automated_vis_tick) / 64.0 as automated_react_ticks
-from react_ticks;
+drop table react_final;
+create temp table react_final as
+select *, (react_end_tick - start_game_tick) / 64.0 as hand_react_ms, (react_end_tick - react_ticks.automated_vis_tick) / 64.0 as automated_react_ms
+from react_ticks where (react_end_tick - start_game_tick) / 64.0 < 3;
 
-select *
-from spotted s
-join ticks t on s.tick_id = t.id
-join rounds r on t.round_id = r.id
-join games g on r.game_id = g.id
-where game_tick_number >= 7150 and game_tick_number <= 8000
-    and g.id = 0
-    and s.spotted_player = 1 and s.spotter_player = 2
-order by t.id;
+select * from react_final;
