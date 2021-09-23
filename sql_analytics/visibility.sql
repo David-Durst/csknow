@@ -117,5 +117,3 @@ drop table react_final;
 create temp table react_final as
 select *, (react_end_tick - start_game_tick) / 64.0 as hand_react_ms, (react_end_tick - react_ticks.automated_vis_tick) / 64.0 as automated_react_ms
 from react_ticks where (react_end_tick - start_game_tick) / 64.0 < 3;
-
-select * from react_final;
