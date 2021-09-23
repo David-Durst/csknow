@@ -20,7 +20,8 @@ setup(
         "scikit-learn",
         "matplotlib",
         "seaborn",
-        "pillow"
+        "pillow",
+        "psycopg2-binary"
     ],
     python_requires='>=3.7',
     long_description=long_description,

@@ -1,4 +1,4 @@
-drop table last_spotted_cpu;
+drop table if exists last_spotted_cpu;
 create temp table last_spotted_cpu as
 select *,
        case when not is_spotted then first_value(lag_game_tick_number)
@@ -37,7 +37,7 @@ from (
      ) as t_3;
 
 
-drop table hand_visibility_with_next_start;
+drop table if exists hand_visibility_with_next_start;
 create temp table hand_visibility_with_next_start as
 select *,
        lead(start_game_tick, 1, cast(1e7 as bigint))
@@ -46,12 +46,13 @@ select *,
 from hand_visibility;
 
 
-drop table visibilities;
+drop table if exists visibilities;
 create temp table visibilities as
 select h.index,
        h.demo,
        min(tick_id)            as tick_id,
        h.spotter_id,
+       h.spotter,
        h.spotted_id,
        h.spotted,
        h.start_game_tick,
@@ -66,14 +67,14 @@ from last_spotted_cpu s
                         and h.start_game_tick <= s.game_tick_number
                         and h.next_start_game_tick >= s.game_tick_number
                         and s.is_spotted = true
-group by h.index, h.demo, h.spotter_id, h.spotted_id, h.spotted, h.start_game_tick, h.end_game_tick,
+group by h.index, h.demo, h.spotter_id, h.spotter, h.spotted_id, h.spotted, h.start_game_tick, h.end_game_tick,
          h.next_start_game_tick, h.hacking
 order by h.index;
 
 
 -- this table and next row shows that for me, only missed CPU visibility events from above join
 -- (aka null values for hand_visibility_with_next_start) are in warmup, so join is ok
-drop table ungrouped_visibilities;
+drop table if exists ungrouped_visibilities;
 create temp table ungrouped_visibilities as
 select h.index, h.demo, s.tick_id, h.spotter_id, h.spotted_id, h.spotted, h.start_game_tick, h.end_game_tick, h.next_start_game_tick, s.game_tick_number,
        s.is_spotted, s.spotted_player as s_spotted_player, s.spotter_player as s_spotter_player, s.g_id
@@ -100,9 +101,9 @@ order by  demo_file, game_tick_number;
 
 
 
-drop table react_ticks;
+drop table if exists react_ticks;
 create temp table react_ticks as
-select v.index, v.demo, v.tick_id, v.spotter_id, v.spotted_id, v.spotted, v.start_game_tick, v.end_game_tick, v.next_start_game_tick, v.automated_vis_tick, min(t.game_tick_number) as react_end_tick, v.hacking
+select v.index, v.demo, v.tick_id, v.spotter_id, v.spotter, v.spotted_id, v.spotted, v.start_game_tick, v.end_game_tick, v.next_start_game_tick, v.automated_vis_tick, min(t.game_tick_number) as react_end_tick, v.hacking
 from lookers l
          join ticks t on l.tick_id = t.id
          right join visibilities v
@@ -110,10 +111,12 @@ from lookers l
                         and v.next_start_game_tick >= t.game_tick_number
                         and l.looker_player_id = v.spotter_id
                         and l.looked_at_player_id = v.spotted_id
-group by v.index, v.demo, v.tick_id, v.spotter_id, v.spotted_id, v.spotted, v.start_game_tick, v.end_game_tick, v.next_start_game_tick, v.automated_vis_tick, v.hacking
+group by v.index, v.demo, v.tick_id, v.spotter_id, v.spotter, v.spotted_id, v.spotted, v.start_game_tick, v.end_game_tick, v.next_start_game_tick, v.automated_vis_tick, v.hacking
 order by v.index;
 
-drop table react_final;
+drop table if exists react_final;
 create temp table react_final as
 select *, (react_end_tick - start_game_tick) / 64.0 as hand_react_ms, (react_end_tick - react_ticks.automated_vis_tick) / 64.0 as automated_react_ms
 from react_ticks where (react_end_tick - start_game_tick) / 64.0 < 3;
+
+select * from react_final;
