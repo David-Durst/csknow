@@ -159,7 +159,7 @@ from lookers l
                         and l.looker_player_id = v.spotter_id
                         and l.looked_at_player_id = v.spotted_id
 group by v.index, v.demo, v.tick_id, v.spotter_id, v.spotter, v.spotted_id, v.spotted, v.start_game_tick,
-         v.end_game_tick, v.next_start_game_tick, v.cpu_vis_tick, v.hacking
+         v.end_game_tick, v.next_start_game_tick, v.cpu_vis_tick, v.distinct_others_spotted_during_time, v.hacking
 order by v.index;
 
 
