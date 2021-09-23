@@ -21,4 +21,4 @@ conda activate csknow
 
 cd ${script_dir}/csknow-python-analytics
 
-python visualizeReactions.py ${pass} ${script_dir}/../sql_analytics/visibility.sql
+python visualizeReactions.py ${pass} ${script_dir}/../sql_analytics/visibility.sql ${script_dir}/reactionPlots/

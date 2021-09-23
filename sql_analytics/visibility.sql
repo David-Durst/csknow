@@ -58,7 +58,7 @@ select h.index,
        h.start_game_tick,
        h.end_game_tick,
        h.next_start_game_tick,
-       min(s.game_tick_number) as automated_vis_tick,
+       min(s.game_tick_number) as cpu_vis_tick,
        h.hacking
 from last_spotted_cpu s
          right join hand_visibility_with_next_start h
@@ -103,7 +103,7 @@ order by  demo_file, game_tick_number;
 
 drop table if exists react_ticks;
 create temp table react_ticks as
-select v.index, v.demo, v.tick_id, v.spotter_id, v.spotter, v.spotted_id, v.spotted, v.start_game_tick, v.end_game_tick, v.next_start_game_tick, v.automated_vis_tick, min(t.game_tick_number) as react_end_tick, v.hacking
+select v.index, v.demo, v.tick_id, v.spotter_id, v.spotter, v.spotted_id, v.spotted, v.start_game_tick, v.end_game_tick, v.next_start_game_tick, v.cpu_vis_tick, min(t.game_tick_number) as react_end_tick, v.hacking
 from lookers l
          join ticks t on l.tick_id = t.id
          right join visibilities v
@@ -111,12 +111,10 @@ from lookers l
                         and v.next_start_game_tick >= t.game_tick_number
                         and l.looker_player_id = v.spotter_id
                         and l.looked_at_player_id = v.spotted_id
-group by v.index, v.demo, v.tick_id, v.spotter_id, v.spotter, v.spotted_id, v.spotted, v.start_game_tick, v.end_game_tick, v.next_start_game_tick, v.automated_vis_tick, v.hacking
+group by v.index, v.demo, v.tick_id, v.spotter_id, v.spotter, v.spotted_id, v.spotted, v.start_game_tick, v.end_game_tick, v.next_start_game_tick, v.cpu_vis_tick, v.hacking
 order by v.index;
 
 drop table if exists react_final;
 create temp table react_final as
-select *, (react_end_tick - start_game_tick) / 64.0 as hand_react_ms, (react_end_tick - react_ticks.automated_vis_tick) / 64.0 as automated_react_ms
-from react_ticks where (react_end_tick - start_game_tick) / 64.0 < 3;
-
-select * from react_final;
+select *, (react_end_tick - start_game_tick) / 64.0 as hand_react_ms, (react_end_tick - react_ticks.cpu_vis_tick) / 64.0 as cpu_react_ms
+from react_ticks;
