@@ -7,6 +7,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
 from sklearn import metrics
 import seaborn as sn
+import numpy as np
 
 parser = argparse.ArgumentParser()
 parser.add_argument("password", help="database password",
@@ -71,15 +72,15 @@ ax[1][1].annotate('total points: ' + str(len(legit_cpu_filtered_df)), (1.1,11.2)
 plt.tight_layout()
 fig.savefig(args.plot_folder + 'histogram__hand_vs_cpu__hacking_vs_legit.png')
 
-all_filtered_df = sqlio.read_sql_query("select * from react_final where hand_react_ms is not null and cpu_react_ms is not null", conn)
+all_filtered_df = sqlio.read_sql_query("select * from react_final where abs(hand_react_ms) <= 3.0 and abs(cpu_react_ms) <= 3.0", conn)
+#all_filtered_df = pd.concat([hand_filtered_df, cpu_filtered_df], ignore_index=True)
+all_filtered_df['hacking'] = all_filtered_df['hacking'].map({True: 1, False: 0})
 print(f'''all filtered size {len(all_filtered_df)}''')
 
 for hand_or_cpu in ['hand', 'cpu']:
     plt.clf()
     X_df = all_filtered_df[[hand_or_cpu + '_react_ms', 'distinct_others_spotted_during_time']]
-    print(X_df)
     y_series = all_filtered_df['hacking']
-    print(y_series)
 
     X_train, X_test, y_train, y_test = train_test_split(X_df,y_series,test_size=0.2,random_state=42)
 
@@ -88,8 +89,11 @@ for hand_or_cpu in ['hand', 'cpu']:
     y_pred = lr_model.predict(X_test)
 
     confusion_matrix = pd.crosstab(y_test, y_pred, rownames=['Actual'], colnames=['Predicted'])
+    sn.set(font_scale=1.5)
     confusion_matrix_heatmap = sn.heatmap(confusion_matrix, annot=True)
     confusion_matrix_figure = confusion_matrix_heatmap.get_figure()
     confusion_matrix_figure.savefig(args.plot_folder + hand_or_cpu + '_confusion_matrix__hand_vs_cpu__hacking_vs_legit.png')
 
+    print(hand_or_cpu + ' coeff: ', lr_model.coef_)
     print(hand_or_cpu + ' accuracy: ', metrics.accuracy_score(y_test, y_pred))
+    print(np.argwhere(y_pred == False))
