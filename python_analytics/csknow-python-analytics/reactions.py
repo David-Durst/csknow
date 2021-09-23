@@ -1,10 +1,12 @@
 import psycopg2
 import argparse
+import pandas as pd
 import pandas.io.sql as sqlio
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
 from sklearn import metrics
+import seaborn as sn
 
 parser = argparse.ArgumentParser()
 parser.add_argument("password", help="database password",
@@ -26,7 +28,7 @@ cur = conn.cursor()
 with open(args.query_file, 'r') as query_file:
     cur.execute(query_file.read())
 
-unfiltered_df = sqlio.read_sql_query("select * from react_ticks", conn)
+unfiltered_df = sqlio.read_sql_query("select * from react_final", conn)
 hand_filtered_df = sqlio.read_sql_query("select * from react_final where hand_react_ms <= 3 and hand_react_ms >= -3", conn)
 cpu_filtered_df = sqlio.read_sql_query("select * from react_final where cpu_react_ms <= 3 and cpu_react_ms >= -3", conn)
 
@@ -67,11 +69,27 @@ ax[1][0].annotate('total points: ' + str(len(hacks_cpu_filtered_df)), (1.1,11.2)
 ax[1][1].annotate('total points: ' + str(len(legit_cpu_filtered_df)), (1.1,11.2), fontsize="14")
 
 plt.tight_layout()
-fig.savefig(args.plot_folder + 'hand_vs_cpu__hacking_vs_legit.png')
+fig.savefig(args.plot_folder + 'histogram__hand_vs_cpu__hacking_vs_legit.png')
 
-all_filtered_df = sqlio.read_sql_query("select * from react_ticks where hand_react_ms is not null and cpu_react_ms is not null", conn)
+all_filtered_df = sqlio.read_sql_query("select * from react_final where hand_react_ms is not null and cpu_react_ms is not null", conn)
 print(f'''all filtered size {len(all_filtered_df)}''')
 
-X_df = all_filtered_df[['hand_react_ms', 'cpu_react_ms']]
-y_series =
-X_train, X_test, y_train, y_test = train_test_split(,y,test_size=0.25,random_state=0)
+for hand_or_cpu in ['hand', 'cpu']:
+    plt.clf()
+    X_df = all_filtered_df[[hand_or_cpu + '_react_ms', 'distinct_others_spotted_during_time']]
+    print(X_df)
+    y_series = all_filtered_df['hacking']
+    print(y_series)
+
+    X_train, X_test, y_train, y_test = train_test_split(X_df,y_series,test_size=0.2,random_state=42)
+
+    lr_model = LogisticRegression()
+    lr_model.fit(X_train, y_train)
+    y_pred = lr_model.predict(X_test)
+
+    confusion_matrix = pd.crosstab(y_test, y_pred, rownames=['Actual'], colnames=['Predicted'])
+    confusion_matrix_heatmap = sn.heatmap(confusion_matrix, annot=True)
+    confusion_matrix_figure = confusion_matrix_heatmap.get_figure()
+    confusion_matrix_figure.savefig(args.plot_folder + hand_or_cpu + '_confusion_matrix__hand_vs_cpu__hacking_vs_legit.png')
+
+    print(hand_or_cpu + ' accuracy: ', metrics.accuracy_score(y_test, y_pred))
