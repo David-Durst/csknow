@@ -2,6 +2,9 @@ import psycopg2
 import argparse
 import pandas.io.sql as sqlio
 import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression
+from sklearn import metrics
 
 parser = argparse.ArgumentParser()
 parser.add_argument("password", help="database password",
@@ -32,9 +35,9 @@ hacks_cpu_filtered_df = cpu_filtered_df[cpu_filtered_df['hacking']]
 legit_hand_filtered_df = hand_filtered_df[~hand_filtered_df['hacking']]
 legit_cpu_filtered_df = cpu_filtered_df[~cpu_filtered_df['hacking']]
 
-print(f"""total size {len(unfiltered_df)}, hacks hand size {len(hacks_hand_filtered_df)}, """ +
-      f"""hacks cpu size {len(hacks_cpu_filtered_df)}, legit hand size {len(legit_hand_filtered_df)}, """ +
-      f"""legit cpu size {len(legit_cpu_filtered_df)}""")
+print(f'''total size {len(unfiltered_df)}, hacks hand size {len(hacks_hand_filtered_df)}, ''' +
+      f'''hacks cpu size {len(hacks_cpu_filtered_df)}, legit hand size {len(legit_hand_filtered_df)}, ''' +
+      f'''legit cpu size {len(legit_cpu_filtered_df)}''')
 
 fig, ax = plt.subplots(nrows=2, ncols=2, figsize=(16, 16))
 
@@ -53,10 +56,10 @@ for i in range(len(ax)):
         ax[i][j].set_xlabel('Reaction Time (s)', fontsize=14)
         ax[i][j].set_ylabel('Frequency', fontsize=14)
 
-ax[0][0].set_title("Hand Labeled, Hacking", fontsize=18)
-ax[0][1].set_title("Hand Labeled, Not Hacking", fontsize=18)
-ax[1][0].set_title("CPU Labeled, Hacking", fontsize=18)
-ax[1][1].set_title("CPU Labeled, Not Hacking", fontsize=18)
+ax[0][0].set_title('Hand Labeled, Hacking', fontsize=18)
+ax[0][1].set_title('Hand Labeled, Not Hacking', fontsize=18)
+ax[1][0].set_title('CPU Labeled, Hacking', fontsize=18)
+ax[1][1].set_title('CPU Labeled, Not Hacking', fontsize=18)
 
 ax[0][0].annotate('total points: ' + str(len(hacks_hand_filtered_df)), (1.1,45), fontsize="14")
 ax[0][1].annotate('total points: ' + str(len(legit_hand_filtered_df)), (1.1,45), fontsize="14")
@@ -64,5 +67,11 @@ ax[1][0].annotate('total points: ' + str(len(hacks_cpu_filtered_df)), (1.1,11.2)
 ax[1][1].annotate('total points: ' + str(len(legit_cpu_filtered_df)), (1.1,11.2), fontsize="14")
 
 plt.tight_layout()
-fig.savefig(args.plot_folder + "hand_vs_cpu__hacking_vs_legit.png")
+fig.savefig(args.plot_folder + 'hand_vs_cpu__hacking_vs_legit.png')
 
+all_filtered_df = sqlio.read_sql_query("select * from react_ticks where hand_react_ms is not null and cpu_react_ms is not null", conn)
+print(f'''all filtered size {len(all_filtered_df)}''')
+
+X_df = all_filtered_df[['hand_react_ms', 'cpu_react_ms']]
+y_series =
+X_train, X_test, y_train, y_test = train_test_split(,y,test_size=0.25,random_state=0)
