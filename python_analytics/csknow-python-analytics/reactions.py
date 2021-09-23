@@ -62,9 +62,6 @@ ax[0][0].annotate('total points: ' + str(len(hacks_hand_filtered_df)), (1.1,45),
 ax[0][1].annotate('total points: ' + str(len(legit_hand_filtered_df)), (1.1,45), fontsize="14")
 ax[1][0].annotate('total points: ' + str(len(hacks_cpu_filtered_df)), (1.1,11.2), fontsize="14")
 ax[1][1].annotate('total points: ' + str(len(legit_cpu_filtered_df)), (1.1,11.2), fontsize="14")
-#ax[1][0].text(-2.5, 45, 'total points: ' + str(len(hacks_cpu_filtered_df)), size=14)
-#ax[0][1].text(-2.5, 9, 'total points: ' + str(len(legit_hand_filtered_df)), size=14)
-#ax[1][1].text(-2.5, 9, 'total points: ' + str(len(legit_cpu_filtered_df)), size=14)
 
 plt.tight_layout()
 fig.savefig(args.plot_folder + "hand_vs_cpu__hacking_vs_legit.png")
