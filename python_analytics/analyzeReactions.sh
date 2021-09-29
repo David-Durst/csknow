@@ -19,6 +19,6 @@ export pass=$(cat ${script_dir}/../private/.mysql_password)
 source $(dirname $(which conda))/../etc/profile.d/conda.sh
 conda activate csknow
 
-cd ${script_dir}/csknow-python-analytics
+cd ${script_dir}/csknow-python-analytics/reactions/
 
-python reactions.py ${pass} ${script_dir}/../sql_analytics/visibility.sql ${script_dir}/reactionPlots/
+python individual.py ${pass} ${script_dir}/../sql_analytics/visibility.sql ${script_dir}/reactionPlots/
