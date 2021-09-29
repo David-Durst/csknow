@@ -154,8 +154,8 @@ group by v_main.index,
 order by v_main.index;
 
 
-drop table if exists react_ticks;
-create temp table react_ticks as
+drop table if exists react_aim_ticks;
+create temp table react_aim_ticks as
 select v.index,
        v.demo,
        v.cpu_tick_id,
@@ -167,7 +167,7 @@ select v.index,
        v.end_game_tick,
        v.next_start_game_tick,
        v.cpu_vis_game_tick,
-       min(t.game_tick_number) as react_end_tick,
+       min(t.game_tick_number) as react_aim_end_tick,
        v.distinct_others_spotted_during_time,
        v.hacking
 from lookers l
@@ -180,6 +180,35 @@ from lookers l
 group by v.index, v.demo, v.cpu_tick_id, v.spotter_id, v.spotter, v.spotted_id, v.spotted, v.start_game_tick,
          v.end_game_tick, v.next_start_game_tick, v.cpu_vis_game_tick, v.distinct_others_spotted_during_time, v.hacking
 order by v.index;
+
+
+drop table if exists react_aim_and_fire_ticks;
+create temp table react_aim_and_fire_ticks as
+select rat.index,
+       rat.demo,
+       rat.cpu_tick_id,
+       rat.spotter_id,
+       rat.spotter,
+       rat.spotted_id,
+       rat.spotted,
+       rat.start_game_tick,
+       rat.end_game_tick,
+       rat.next_start_game_tick,
+       rat.cpu_vis_game_tick,
+       rat.react_aim_end_tick,
+       min(t.game_tick_number) as react_fire_end_tick,
+       rat.distinct_others_spotted_during_time,
+       rat.hacking
+from hurt h
+         join ticks t on h.tick_id = t.id
+         right join react_aim_ticks rat
+                    on rat.start_game_tick <= t.game_tick_number
+                        and rat.next_start_game_tick >= t.game_tick_number
+                        and h.attacker = rat.spotter_id
+                        and h.victim = rat.spotted_id
+group by rat.index, rat.demo, rat.cpu_tick_id, rat.spotter_id, rat.spotter, rat.spotted_id, rat.spotted, rat.start_game_tick,
+         rat.end_game_tick, rat.next_start_game_tick, rat.cpu_vis_game_tick, rat.react_aim_end_tick, rat.distinct_others_spotted_during_time, rat.hacking
+order by rat.index;
 
 
 drop table if exists round_start_end_tick;
@@ -198,30 +227,34 @@ order by r.game_id, r.id;
 
 drop table if exists react_final;
 create temp table react_final as
-select r.index,
-       r.demo,
-       r.cpu_tick_id,
-       r.spotter_id,
-       r.spotter,
-       r.spotted_id,
-       r.spotted,
-       r.start_game_tick,
-       r.end_game_tick,
-       r.next_start_game_tick,
-       r.cpu_vis_game_tick,
-       r.react_end_tick,
-       r.distinct_others_spotted_during_time,
-       r.hacking,
-       (r.react_end_tick - r.start_game_tick) / 64.0   as hand_react_s,
-       (r.react_end_tick - r.cpu_vis_game_tick) / 64.0 as cpu_react_s,
+select raft.index,
+       raft.demo,
+       raft.cpu_tick_id,
+       raft.spotter_id,
+       raft.spotter,
+       raft.spotted_id,
+       raft.spotted,
+       raft.start_game_tick,
+       raft.end_game_tick,
+       raft.next_start_game_tick,
+       raft.cpu_vis_game_tick,
+       raft.react_aim_end_tick,
+       raft.react_fire_end_tick,
+       raft.distinct_others_spotted_during_time,
+       raft.hacking,
+       (raft.react_aim_end_tick - raft.start_game_tick) / 64.0   as hand_aim_react_s,
+       (raft.react_aim_end_tick - raft.cpu_vis_game_tick) / 64.0 as cpu_aim_react_s,
+       (raft.react_fire_end_tick - raft.start_game_tick) / 64.0   as hand_fire_react_s,
+       (raft.react_fire_end_tick - raft.cpu_vis_game_tick) / 64.0 as cpu_fire_react_s,
        rset.round_id,
        rset.game_id
-from react_ticks r
-         join games g on g.demo_file = r.demo
+from react_aim_and_fire_ticks raft
+         join games g on g.demo_file = raft.demo
          join round_start_end_tick rset
               on g.id = rset.game_id
-                  and int8range(r.start_game_tick, r.end_game_tick) &&
+                  and int8range(raft.start_game_tick, raft.end_game_tick) &&
                       int8range(rset.min_game_tick, rset.max_game_tick);
+
 
 drop table if exists hand_react_reasonable;
 create temp table hand_react_reasonable as
@@ -236,19 +269,23 @@ select index,
        end_game_tick,
        next_start_game_tick,
        cpu_vis_game_tick,
-       react_end_tick,
+       react_aim_end_tick,
+       react_fire_end_tick,
        distinct_others_spotted_during_time,
        hacking,
-       hand_react_s,
-       cpu_react_s,
+       hand_aim_react_s,
+       cpu_aim_react_s,
+       hand_fire_react_s,
+       cpu_fire_react_s,
        round_id,
        game_id
 from react_final
-where abs(hand_react_s) <= 3.0;
+where abs(hand_aim_react_s) <= 3.0;
 
 
 drop table if exists cpu_react_reasonable;
 create temp table cpu_react_reasonable as
+
 select index,
        demo,
        cpu_tick_id,
@@ -260,12 +297,15 @@ select index,
        end_game_tick,
        next_start_game_tick,
        cpu_vis_game_tick,
-       react_end_tick,
+       react_aim_end_tick,
+       react_fire_end_tick,
        distinct_others_spotted_during_time,
        hacking,
-       hand_react_s,
-       cpu_react_s,
+       hand_aim_react_s,
+       cpu_aim_react_s,
+       hand_fire_react_s,
+       cpu_fire_react_s,
        round_id,
        game_id
 from react_final
-where abs(cpu_react_s) <= 3.0;
+where abs(cpu_aim_react_s) <= 3.0;
