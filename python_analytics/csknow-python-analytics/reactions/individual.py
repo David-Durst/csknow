@@ -41,9 +41,9 @@ hacks_cpu_filtered_df = cpu_filtered_df[cpu_filtered_df['hacking']]
 legit_hand_filtered_df = hand_filtered_df[~hand_filtered_df['hacking']]
 legit_cpu_filtered_df = cpu_filtered_df[~cpu_filtered_df['hacking']]
 
-print(f'''total size {len(unfiltered_df)}, hacks hand size {len(hacks_hand_filtered_df)}, ''' +
-      f'''hacks cpu size {len(hacks_cpu_filtered_df)}, legit hand size {len(legit_hand_filtered_df)}, ''' +
-      f'''legit cpu size {len(legit_cpu_filtered_df)}''')
+print(f'''total size {len(unfiltered_df)} \n ''' +
+      f'''hacks hand size {len(hacks_hand_filtered_df)}, legit hand size {len(legit_hand_filtered_df)} \n ''' +
+      f'''hacks cpu size {len(hacks_cpu_filtered_df)}, legit cpu size {len(legit_cpu_filtered_df)}''')
 
 # plot raw numbers
 fig, ax = plt.subplots(nrows=2, ncols=2, figsize=(16, 16))
@@ -148,4 +148,4 @@ for hand_or_cpu in ['hand', 'cpu']:
 
     print(hand_or_cpu + ' coeff: ', lr_model.coef_)
     print(hand_or_cpu + ' accuracy: ', metrics.accuracy_score(y_test, y_pred))
-    print(np.argwhere(y_pred == False))
+    #print(np.argwhere(y_pred == False))

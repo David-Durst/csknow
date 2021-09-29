@@ -35,10 +35,11 @@ with open(args.query_file, 'r') as query_file:
     cur.execute(query_file.read())
 
 
-select_cols = 'game_id, round_id, spotter_id, spotter, ' + \
-    'avg(hand_react_s) as avg_hand_react, avg(cpu_react_s) as avg_cpu_react' + \
-    'count(case when hand_react_s < 0.2'
-group_cols = 'group by game_id, round_id, spotter_id, spotter'
+select_cols = 'game_id, min(round_id) as min_round_id, max(round_id) as max_round_id, spotter_id, spotter, hacking, ' + \
+    'avg(hand_react_s) as avg_hand_react, avg(cpu_react_s) as avg_cpu_react, ' + \
+    'sum(case when abs(hand_react_s) <= 0.2 then 1 else 0 end) as hand_preaims, ' + \
+    'sum(case when abs(cpu_react_s) <= 0.2 then 1 else 0 end) as cpu_preaims'
+group_cols = f'''group by game_id, round_id / {args.grouping_rounds}, spotter_id, spotter, hacking'''
 hand_filtered_df = sqlio.read_sql_query(f'''select {select_cols} from hand_react_reasonable {group_cols}''', conn)
 cpu_filtered_df = sqlio.read_sql_query(f'''select {select_cols} from cpu_react_reasonable {group_cols}''', conn)
 
@@ -47,8 +48,8 @@ hacks_cpu_filtered_df = cpu_filtered_df[cpu_filtered_df['hacking']]
 legit_hand_filtered_df = hand_filtered_df[~hand_filtered_df['hacking']]
 legit_cpu_filtered_df = cpu_filtered_df[~cpu_filtered_df['hacking']]
 
-print(f'''hacks cpu size {len(hacks_cpu_filtered_df)}, legit hand size {len(legit_hand_filtered_df)}, ''' +
-      f'''legit cpu size {len(legit_cpu_filtered_df)}''')
+print(f'''hacks hand size {len(hacks_hand_filtered_df)}, legit hand size {len(legit_hand_filtered_df)} \n ''' +
+      f'''hacks cpu size {len(hacks_cpu_filtered_df)}, legit cpu size {len(legit_cpu_filtered_df)}''')
 
 # plot raw numbers
 fig, ax = plt.subplots(nrows=2, ncols=2, figsize=(16, 16))
@@ -58,10 +59,11 @@ def plotWith100MSBins(df, col, ax):
     df.hist(col, bins=num_bins, ax=ax)
     return pd.cut(df[col], num_bins).value_counts().sort_index()
 
-hacks_hand_distribution = plotWith100MSBins(hacks_hand_filtered_df, 'hand_react_s', ax[0][0])
-hacks_cpu_distribution = plotWith100MSBins(hacks_cpu_filtered_df, 'cpu_react_s', ax[1][0])
-legit_hand_distribution = plotWith100MSBins(legit_hand_filtered_df, 'hand_react_s', ax[0][1])
-legit_cpu_distribution = plotWith100MSBins(legit_cpu_filtered_df, 'cpu_react_s', ax[1][1])
+
+hacks_hand_distribution = plotWith100MSBins(hacks_hand_filtered_df, 'avg_hand_react', ax[0][0])
+legit_hand_distribution = plotWith100MSBins(legit_hand_filtered_df, 'avg_hand_react', ax[0][1])
+hacks_cpu_distribution = plotWith100MSBins(hacks_cpu_filtered_df, 'avg_cpu_react', ax[1][0])
+legit_cpu_distribution = plotWith100MSBins(legit_cpu_filtered_df, 'avg_cpu_react', ax[1][1])
 
 for i in range(len(ax)):
     for j in range(len(ax[i])):
@@ -84,7 +86,7 @@ ax[1][0].annotate('total points: ' + str(len(hacks_cpu_filtered_df)), (1.1,11.2)
 ax[1][1].annotate('total points: ' + str(len(legit_cpu_filtered_df)), (1.1,11.2), fontsize="14")
 
 plt.tight_layout()
-fig.savefig(args.plot_folder + 'histogram__hand_vs_cpu__hacking_vs_legit.png')
+fig.savefig(args.plot_folder + 'grouped_histogram__hand_vs_cpu__hacking_vs_legit.png')
 
 plt.clf()
 
@@ -98,10 +100,10 @@ def plotWith100MSBins(df, col, ax):
     ax.yaxis.set_major_formatter(PercentFormatter(1))
     return pd.cut(df[col], num_bins).value_counts().sort_index()
 
-plotWith100MSBins(hacks_hand_filtered_df, 'hand_react_s', ax[0][0])
-plotWith100MSBins(hacks_cpu_filtered_df, 'cpu_react_s', ax[1][0])
-plotWith100MSBins(legit_hand_filtered_df, 'hand_react_s', ax[0][1])
-plotWith100MSBins(legit_cpu_filtered_df, 'cpu_react_s', ax[1][1])
+plotWith100MSBins(hacks_hand_filtered_df, 'avg_hand_react', ax[0][0])
+plotWith100MSBins(legit_hand_filtered_df, 'avg_hand_react', ax[0][1])
+plotWith100MSBins(hacks_cpu_filtered_df, 'avg_cpu_react', ax[1][0])
+plotWith100MSBins(legit_cpu_filtered_df, 'avg_cpu_react', ax[1][1])
 
 # make rows share same ylim
 max_row_0_ylim = max(ax[0][0].get_ylim()[1], ax[0][1].get_ylim()[1])
@@ -124,7 +126,7 @@ ax[1][0].set_title('CPU Labeled, Hacking', fontsize=18)
 ax[1][1].set_title('CPU Labeled, Not Hacking', fontsize=18)
 
 plt.tight_layout()
-fig.savefig(args.plot_folder + 'percent_histogram__hand_vs_cpu__hacking_vs_legit.png')
+fig.savefig(args.plot_folder + 'percent_grouped_histogram__hand_vs_cpu__hacking_vs_legit.png')
 
 plt.clf()
 
@@ -135,7 +137,7 @@ print(f'''all filtered size {len(all_filtered_df)}''')
 
 for hand_or_cpu in ['hand', 'cpu']:
     plt.clf()
-    X_df = all_filtered_df[[hand_or_cpu + '_react_s', 'distinct_others_spotted_during_time']]
+    X_df = all_filtered_df[['avg_' + hand_or_cpu + '_react', 'distinct_others_spotted_during_time']]
     y_series = all_filtered_df['hacking']
 
     X_train, X_test, y_train, y_test = train_test_split(X_df,y_series,test_size=0.2,random_state=42)
@@ -149,7 +151,7 @@ for hand_or_cpu in ['hand', 'cpu']:
     confusion_matrix_heatmap = sn.heatmap(confusion_matrix, annot=True)
     plt.title(hand_or_cpu + ' Labeled Confusion Matrix', fontsize=24)
     confusion_matrix_figure = confusion_matrix_heatmap.get_figure()
-    confusion_matrix_figure.savefig(args.plot_folder + hand_or_cpu + '_confusion_matrix__hand_vs_cpu__hacking_vs_legit.png')
+    confusion_matrix_figure.savefig(args.plot_folder + hand_or_cpu + '_grouped_confusion_matrix__hand_vs_cpu__hacking_vs_legit.png')
 
     print(hand_or_cpu + ' coeff: ', lr_model.coef_)
     print(hand_or_cpu + ' accuracy: ', metrics.accuracy_score(y_test, y_pred))
