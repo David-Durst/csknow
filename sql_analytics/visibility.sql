@@ -1,8 +1,9 @@
 drop table if exists last_spotted_cpu;
 create temp table last_spotted_cpu as
 select *,
-       case when not is_spotted then first_value(lag_game_tick_number)
-           over (partition by r_id, spotter_player, spotted_player, last_spotted_region_id order by tick_id)
+       case
+           when not is_spotted then first_value(lag_game_tick_number)
+                                    over (partition by r_id, spotter_player, spotted_player, last_spotted_region_id order by tick_id)
            else game_tick_number end as last_spotted_game_tick_number
 from (
          select *,
@@ -41,7 +42,7 @@ drop table if exists hand_visibility_with_next_start;
 create temp table hand_visibility_with_next_start as
 select *,
        lead(start_game_tick, 1, cast(1e7 as bigint))
-           over (partition by demo, spotter_id, spotted_id order by start_game_tick)
+       over (partition by demo, spotter_id, spotted_id order by start_game_tick)
            as next_start_game_tick
 from hand_visibility;
 
@@ -50,7 +51,7 @@ drop table if exists visibilities;
 create temp table visibilities as
 select h.index,
        h.demo,
-       min(tick_id)            as tick_id,
+       min(s.tick_id)            as cpu_tick_id,
        h.spotter_id,
        h.spotter,
        h.spotted_id,
@@ -58,7 +59,7 @@ select h.index,
        h.start_game_tick,
        h.end_game_tick,
        h.next_start_game_tick,
-       min(s.game_tick_number) as cpu_vis_tick,
+       min(s.game_tick_number) as cpu_vis_game_tick,
        h.hacking
 from last_spotted_cpu s
          right join hand_visibility_with_next_start h
@@ -76,8 +77,20 @@ order by h.index;
 -- (aka null values for hand_visibility_with_next_start) are in warmup, so join is ok
 drop table if exists ungrouped_visibilities;
 create temp table ungrouped_visibilities as
-select h.index, h.demo, s.tick_id, h.spotter_id, h.spotted_id, h.spotted, h.start_game_tick, h.end_game_tick, h.next_start_game_tick, s.game_tick_number,
-       s.is_spotted, s.spotted_player as s_spotted_player, s.spotter_player as s_spotter_player, s.g_id
+select h.index,
+       h.demo,
+       s.tick_id,
+       h.spotter_id,
+       h.spotted_id,
+       h.spotted,
+       h.start_game_tick,
+       h.end_game_tick,
+       h.next_start_game_tick,
+       s.game_tick_number,
+       s.is_spotted,
+       s.spotted_player as s_spotted_player,
+       s.spotter_player as s_spotter_player,
+       s.g_id
 from last_spotted_cpu s
          full join hand_visibility_with_next_start h
                    on h.spotted_id = s.spotted_player
@@ -89,22 +102,27 @@ order by h.index;
 
 select g.demo_file, game_tick_number, is_spotted, p_spotter.name as spotter, p_spotted.name as spotted
 from ungrouped_visibilities
-    join players p_spotted on p_spotted.id = s_spotted_player
-    join players p_spotter on p_spotter.id = s_spotter_player
-    join player_at_tick pat_spotted on p_spotted.id = pat_spotted.player_id and pat_spotted.tick_id = ungrouped_visibilities.tick_id
-    join player_at_tick pat_spotter on p_spotter.id = pat_spotter.player_id and pat_spotter.tick_id = ungrouped_visibilities.tick_id
-    join games g on p_spotted.game_id = g.id
+         join players p_spotted on p_spotted.id = s_spotted_player
+         join players p_spotter on p_spotter.id = s_spotter_player
+         join player_at_tick pat_spotted
+              on p_spotted.id = pat_spotted.player_id and pat_spotted.tick_id = ungrouped_visibilities.tick_id
+         join player_at_tick pat_spotter
+              on p_spotter.id = pat_spotter.player_id and pat_spotter.tick_id = ungrouped_visibilities.tick_id
+         join games g on p_spotted.game_id = g.id
 where spotted is null
-    and is_spotted and p_spotter.name in ('i_eat_short_people_for_breakfast')
-    and pat_spotted.is_alive and pat_spotter.is_alive and pat_spotter.team != pat_spotted.team
-order by  demo_file, game_tick_number;
+  and is_spotted
+  and p_spotter.name in ('i_eat_short_people_for_breakfast')
+  and pat_spotted.is_alive
+  and pat_spotter.is_alive
+  and pat_spotter.team != pat_spotted.team
+order by demo_file, game_tick_number;
 
 
 drop table if exists visibilities_with_others;
 create temp table visibilities_with_others as
 select v_main.index,
        v_main.demo,
-       v_main.tick_id,
+       v_main.cpu_tick_id,
        v_main.spotter_id,
        v_main.spotter,
        v_main.spotted_id,
@@ -112,17 +130,18 @@ select v_main.index,
        v_main.start_game_tick,
        v_main.end_game_tick,
        v_main.next_start_game_tick,
-       v_main.cpu_vis_tick,
+       v_main.cpu_vis_game_tick,
        v_main.hacking,
        count(distinct v_other.spotted_id) as distinct_others_spotted_during_time
 from visibilities v_main
          left join visibilities v_other
                    on v_main.spotter_id = v_other.spotter_id
                        and v_main.spotted_id != v_other.spotted_id
-                       and int8range(v_main.start_game_tick, v_main.end_game_tick) && int8range(v_other.start_game_tick, v_other.end_game_tick)
+                       and int8range(v_main.start_game_tick, v_main.end_game_tick) &&
+                           int8range(v_other.start_game_tick, v_other.end_game_tick)
 group by v_main.index,
          v_main.demo,
-         v_main.tick_id,
+         v_main.cpu_tick_id,
          v_main.spotter_id,
          v_main.spotter,
          v_main.spotted_id,
@@ -130,7 +149,7 @@ group by v_main.index,
          v_main.start_game_tick,
          v_main.end_game_tick,
          v_main.next_start_game_tick,
-         v_main.cpu_vis_tick,
+         v_main.cpu_vis_game_tick,
          v_main.hacking
 order by v_main.index;
 
@@ -139,7 +158,7 @@ drop table if exists react_ticks;
 create temp table react_ticks as
 select v.index,
        v.demo,
-       v.tick_id,
+       v.cpu_tick_id,
        v.spotter_id,
        v.spotter,
        v.spotted_id,
@@ -147,7 +166,7 @@ select v.index,
        v.start_game_tick,
        v.end_game_tick,
        v.next_start_game_tick,
-       v.cpu_vis_tick,
+       v.cpu_vis_game_tick,
        min(t.game_tick_number) as react_end_tick,
        v.distinct_others_spotted_during_time,
        v.hacking
@@ -158,12 +177,46 @@ from lookers l
                         and v.next_start_game_tick >= t.game_tick_number
                         and l.looker_player_id = v.spotter_id
                         and l.looked_at_player_id = v.spotted_id
-group by v.index, v.demo, v.tick_id, v.spotter_id, v.spotter, v.spotted_id, v.spotted, v.start_game_tick,
-         v.end_game_tick, v.next_start_game_tick, v.cpu_vis_tick, v.distinct_others_spotted_during_time, v.hacking
+group by v.index, v.demo, v.cpu_tick_id, v.spotter_id, v.spotter, v.spotted_id, v.spotted, v.start_game_tick,
+         v.end_game_tick, v.next_start_game_tick, v.cpu_vis_game_tick, v.distinct_others_spotted_during_time, v.hacking
 order by v.index;
+
+
+drop table if exists round_start_end_tick;
+create temp table round_start_end_tick as
+select r.game_id as game_id,
+       r.id      as round_id,
+       min(t.id) as min_tick_id,
+       max(t.id) as max_tick_id,
+       min(t.game_tick_number) as min_game_tick,
+       max(t.game_tick_number) as max_game_tick
+from ticks t
+         join rounds r on t.round_id = r.id
+group by r.game_id, r.id
+order by r.game_id, r.id;
 
 
 drop table if exists react_final;
 create temp table react_final as
-select *, (react_end_tick - start_game_tick) / 64.0 as hand_react_ms, (react_end_tick - react_ticks.cpu_vis_tick) / 64.0 as cpu_react_ms
-from react_ticks;
+select r.index,
+       r.demo,
+       r.cpu_tick_id,
+       r.spotter_id,
+       r.spotter,
+       r.spotted_id,
+       r.spotted,
+       r.start_game_tick,
+       r.end_game_tick,
+       r.next_start_game_tick,
+       r.cpu_vis_game_tick,
+       r.react_end_tick,
+       r.distinct_others_spotted_during_time,
+       r.hacking,
+       (react_end_tick - start_game_tick) / 64.0          as hand_react_ms,
+       (react_end_tick - react_ticks.cpu_vis_game_tick) / 64.0 as cpu_react_ms,
+       rset.round_id,
+       rset.game_id
+from react_ticks r
+         join round_start_end_tick rset
+              on int8range(r.start_game_tick, r.end_game_tick) &&
+                 int8range(rset.min_game_tick, rset.max_game_tick);
