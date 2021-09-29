@@ -212,8 +212,8 @@ select r.index,
        r.react_end_tick,
        r.distinct_others_spotted_during_time,
        r.hacking,
-       (react_end_tick - start_game_tick) / 64.0          as hand_react_ms,
-       (react_end_tick - react_ticks.cpu_vis_game_tick) / 64.0 as cpu_react_ms,
+       (r.react_end_tick - r.start_game_tick) / 64.0          as hand_react_ms,
+       (r.react_end_tick - r.cpu_vis_game_tick) / 64.0 as cpu_react_ms,
        rset.round_id,
        rset.game_id
 from react_ticks r
