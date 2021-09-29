@@ -51,7 +51,7 @@ drop table if exists visibilities;
 create temp table visibilities as
 select h.index,
        h.demo,
-       min(s.tick_id)            as cpu_tick_id,
+       min(s.tick_id)          as cpu_tick_id,
        h.spotter_id,
        h.spotter,
        h.spotted_id,
@@ -184,10 +184,10 @@ order by v.index;
 
 drop table if exists round_start_end_tick;
 create temp table round_start_end_tick as
-select r.game_id as game_id,
-       r.id      as round_id,
-       min(t.id) as min_tick_id,
-       max(t.id) as max_tick_id,
+select r.game_id               as game_id,
+       r.id                    as round_id,
+       min(t.id)               as min_tick_id,
+       max(t.id)               as max_tick_id,
        min(t.game_tick_number) as min_game_tick,
        max(t.game_tick_number) as max_game_tick
 from ticks t
@@ -212,11 +212,13 @@ select r.index,
        r.react_end_tick,
        r.distinct_others_spotted_during_time,
        r.hacking,
-       (r.react_end_tick - r.start_game_tick) / 64.0          as hand_react_ms,
+       (r.react_end_tick - r.start_game_tick) / 64.0   as hand_react_ms,
        (r.react_end_tick - r.cpu_vis_game_tick) / 64.0 as cpu_react_ms,
        rset.round_id,
        rset.game_id
 from react_ticks r
+         join games g on g.demo_file = r.demo
          join round_start_end_tick rset
-              on int8range(r.start_game_tick, r.end_game_tick) &&
-                 int8range(rset.min_game_tick, rset.max_game_tick);
+              on g.id = rset.game_id
+                  and int8range(r.start_game_tick, r.end_game_tick) &&
+                      int8range(rset.min_game_tick, rset.max_game_tick);
