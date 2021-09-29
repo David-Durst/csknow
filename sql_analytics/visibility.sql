@@ -212,8 +212,8 @@ select r.index,
        r.react_end_tick,
        r.distinct_others_spotted_during_time,
        r.hacking,
-       (r.react_end_tick - r.start_game_tick) / 64.0   as hand_react_ms,
-       (r.react_end_tick - r.cpu_vis_game_tick) / 64.0 as cpu_react_ms,
+       (r.react_end_tick - r.start_game_tick) / 64.0   as hand_react_s,
+       (r.react_end_tick - r.cpu_vis_game_tick) / 64.0 as cpu_react_s,
        rset.round_id,
        rset.game_id
 from react_ticks r
@@ -222,3 +222,50 @@ from react_ticks r
               on g.id = rset.game_id
                   and int8range(r.start_game_tick, r.end_game_tick) &&
                       int8range(rset.min_game_tick, rset.max_game_tick);
+
+drop table if exists hand_react_reasonable;
+create temp table hand_react_reasonable as
+select index,
+       demo,
+       cpu_tick_id,
+       spotter_id,
+       spotter,
+       spotted_id,
+       spotted,
+       start_game_tick,
+       end_game_tick,
+       next_start_game_tick,
+       cpu_vis_game_tick,
+       react_end_tick,
+       distinct_others_spotted_during_time,
+       hacking,
+       hand_react_s,
+       cpu_react_s,
+       round_id,
+       game_id
+from react_final
+where abs(hand_react_s) <= 3.0;
+
+
+drop table if exists cpu_react_reasonable;
+create temp table cpu_react_reasonable as
+select index,
+       demo,
+       cpu_tick_id,
+       spotter_id,
+       spotter,
+       spotted_id,
+       spotted,
+       start_game_tick,
+       end_game_tick,
+       next_start_game_tick,
+       cpu_vis_game_tick,
+       react_end_tick,
+       distinct_others_spotted_during_time,
+       hacking,
+       hand_react_s,
+       cpu_react_s,
+       round_id,
+       game_id
+from react_final
+where abs(cpu_react_s) <= 3.0;
