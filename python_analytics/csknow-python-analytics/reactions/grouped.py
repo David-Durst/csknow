@@ -156,6 +156,6 @@ def makeLogReg(df, cols, name):
     #print(np.argwhere(y_pred == False))
 
 #makeLogReg(hand_filtered_df, ['avg_aim_hand_react'], 'Hand')
-makeLogReg(hand_filtered_df, ['avg_aim_hand_react', 'avg_fire_hand_react', 'hand_preaims'], 'Hand')
+makeLogReg(hand_filtered_df, ['avg_aim_hand_react', 'hand_preaims'], 'Hand')
 #makeLogReg(cpu_filtered_df, ['avg_aim_cpu_react'], 'CPU')
-makeLogReg(cpu_filtered_df, ['avg_aim_cpu_react', 'avg_fire_cpu_react', 'cpu_preaims'], 'CPU')
+makeLogReg(cpu_filtered_df, ['avg_aim_cpu_react', 'cpu_preaims'], 'CPU')
