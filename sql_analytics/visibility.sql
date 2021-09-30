@@ -65,7 +65,7 @@ from last_spotted_cpu s
          right join hand_visibility_with_next_start h
                     on h.spotted_id = s.spotted_player
                         and h.spotter_id = s.spotter_player
-                        and h.start_game_tick - 64 <= s.game_tick_number
+                        and h.start_game_tick + 64 <= s.game_tick_number
                         and h.next_start_game_tick >= s.game_tick_number
                         and s.is_spotted = true
 group by h.index, h.demo, h.spotter_id, h.spotter, h.spotted_id, h.spotted, h.start_game_tick, h.end_game_tick,
