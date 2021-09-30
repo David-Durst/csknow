@@ -202,7 +202,7 @@ select rat.index,
 from hurt h
          join ticks t on h.tick_id = t.id
          right join react_aim_ticks rat
-                    on rat.start_game_tick <= t.game_tick_number
+                    on rat.start_game_tick - 128 <= t.game_tick_number
                         and rat.next_start_game_tick >= t.game_tick_number
                         and h.attacker = rat.spotter_id
                         and h.victim = rat.spotted_id
