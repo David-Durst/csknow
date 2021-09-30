@@ -41,8 +41,8 @@ select_cols = 'game_id, min(round_id) as min_round_id, max(round_id) as max_roun
     'distinct_others_spotted_during_time, ' + \
     'avg(hand_aim_react_s) as avg_aim_hand_react, avg(cpu_aim_react_s) as avg_aim_cpu_react, ' + \
     'avg(hand_fire_react_s) as avg_fire_hand_react, avg(cpu_fire_react_s) as avg_fire_cpu_react, ' + \
-    'sum(case when abs(hand_aim_react_s) <= 0.2 then 1 else 0 end) as hand_preaims, ' + \
-    'sum(case when abs(cpu_aim_react_s) <= 0.2 then 1 else 0 end) as cpu_preaims'
+    'sum(case when hand_aim_react_s < 0.0 then 1 else 0 end) as hand_preaims, ' + \
+    'sum(case when cpu_aim_react_s < 0.0 then 1 else 0 end) as cpu_preaims'
 group_cols = f'''group by game_id, round_id / {args.grouping_rounds}, spotter_id, spotter, hacking, distinct_others_spotted_during_time'''
 hand_filtered_df = sqlio.read_sql_query(f'''select {select_cols} from {hand_react_reasonable} {group_cols}''', conn)
 cpu_filtered_df = sqlio.read_sql_query(f'''select {select_cols} from {cpu_react_reasonable} {group_cols}''', conn)
@@ -70,16 +70,16 @@ print(f'''hacks hand size {len(hacks_hand_filtered_df)}, legit hand size {len(le
 def makePlotterFunction(bin_width, pct):
     def plotPctWith200MSBins(df, col, ax):
         col_vals = df[col].dropna()
-        num_bins = math.ceil((col_vals.max() - col_vals.min()) / bin_width)
+        num_bins = math.ceil((col_vals.max() - col_vals.min()) / bin_width) + 1
         df.hist(col, bins=num_bins, ax=ax, weights=np.ones(len(col_vals)) / len(col_vals))
         ax.yaxis.set_major_formatter(PercentFormatter(1))
-        return pd.cut(df[col], num_bins).value_counts().sort_index()
+        return pd.cut(col_vals, num_bins).value_counts(normalize=True).sort_index()
 
     def plotNumWith200MSBins(df, col, ax):
         col_vals = df[col].dropna()
-        num_bins = math.ceil((col_vals.max() - col_vals.min()) / bin_width)
+        num_bins = math.ceil((col_vals.max() - col_vals.min()) / bin_width) + 1
         df.hist(col, bins=num_bins, ax=ax)
-        return pd.cut(df[col], num_bins).value_counts().sort_index()
+        return pd.cut(col_vals, num_bins).value_counts().sort_index()
 
     if pct:
         return plotPctWith200MSBins
@@ -100,9 +100,9 @@ def makeHistograms(dfs, hand_col, cpu_col, plotting_function, change_x_lim, chan
                 ax[i][j].set_xlim(-3, 3)
             if change_y_lim:
                 if i == 0:
-                    ax[i][j].set_ylim(0, max(hacks_hand_distribution.max(), legit_hand_distribution.max()) + 2)
+                    ax[i][j].set_ylim(0, max(hacks_hand_distribution.max(), legit_hand_distribution.max()) * 1.1)
                 else:
-                    ax[i][j].set_ylim(0, max(hacks_cpu_distribution.max(), legit_cpu_distribution.max()) + 1)
+                    ax[i][j].set_ylim(0, max(hacks_cpu_distribution.max(), legit_cpu_distribution.max()) * 1.1)
             ax[i][j].set_xlabel(x_label, fontsize=14)
             ax[i][j].set_ylabel('Frequency', fontsize=14)
 
@@ -126,13 +126,12 @@ def makeHistograms(dfs, hand_col, cpu_col, plotting_function, change_x_lim, chan
 
     plt.clf()
 
-
 makeHistograms(dfs, 'avg_aim_hand_react', 'avg_aim_cpu_react', makePlotterFunction(0.2, False), True, True, 'count_aim', 'Aim Reaction Time (s)')
-makeHistograms(dfs, 'avg_aim_hand_react', 'avg_aim_cpu_react', makePlotterFunction(0.2, True), True, False, 'pct_aim', 'Aim Reaction Time (s)')
+makeHistograms(dfs, 'avg_aim_hand_react', 'avg_aim_cpu_react', makePlotterFunction(0.2, True), True, True, 'pct_aim', 'Aim Reaction Time (s)')
 makeHistograms(dfs, 'avg_fire_hand_react', 'avg_fire_cpu_react', makePlotterFunction(0.2, False), True, True, 'count_fire', 'Fire Reaction Time (s)')
-makeHistograms(dfs, 'avg_fire_hand_react', 'avg_fire_cpu_react', makePlotterFunction(0.2, True), True, False, 'pct_fire', 'Fire Reaction Time (s)')
+makeHistograms(dfs, 'avg_fire_hand_react', 'avg_fire_cpu_react', makePlotterFunction(0.2, True), True, True, 'pct_fire', 'Fire Reaction Time (s)')
 makeHistograms(dfs, 'hand_preaims', 'cpu_preaims', makePlotterFunction(1, False), False, True, 'count_preaim', 'Number of Preaims')
-makeHistograms(dfs, 'hand_preaims', 'cpu_preaims', makePlotterFunction(1, True), False, False, 'pct_preaim', 'Number of Preaims')
+makeHistograms(dfs, 'hand_preaims', 'cpu_preaims', makePlotterFunction(1, True), False, True, 'pct_preaim', 'Number of Preaims')
 
 def makeLogReg(df, col, name):
     plt.clf()
