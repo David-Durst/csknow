@@ -33,8 +33,8 @@ with open(args.query_file, 'r') as query_file:
     cur.execute(query_file.read())
 
 unfiltered_df = sqlio.read_sql_query("select * from react_final", conn)
-hand_filtered_df = sqlio.read_sql_query("select * from react_final where hand_react_s <= 3 and hand_react_s >= -3", conn)
-cpu_filtered_df = sqlio.read_sql_query("select * from react_final where cpu_react_s <= 3 and cpu_react_s >= -3", conn)
+hand_filtered_df = sqlio.read_sql_query("select * from react_final where hand_aim_react_s <= 3 and hand_aim_react_s >= -3", conn)
+cpu_filtered_df = sqlio.read_sql_query("select * from react_final where cpu_aim_react_s <= 3 and cpu_aim_react_s >= -3", conn)
 
 hacks_hand_filtered_df = hand_filtered_df[hand_filtered_df['hacking']]
 hacks_cpu_filtered_df = cpu_filtered_df[cpu_filtered_df['hacking']]
@@ -53,10 +53,10 @@ def plotWith100MSBins(df, col, ax):
     df.hist(col, bins=num_bins, ax=ax)
     return pd.cut(df[col], num_bins).value_counts().sort_index()
 
-hacks_hand_distribution = plotWith100MSBins(hacks_hand_filtered_df, 'hand_react_s', ax[0][0])
-hacks_cpu_distribution = plotWith100MSBins(hacks_cpu_filtered_df, 'cpu_react_s', ax[1][0])
-legit_hand_distribution = plotWith100MSBins(legit_hand_filtered_df, 'hand_react_s', ax[0][1])
-legit_cpu_distribution = plotWith100MSBins(legit_cpu_filtered_df, 'cpu_react_s', ax[1][1])
+hacks_hand_distribution = plotWith100MSBins(hacks_hand_filtered_df, 'hand_aim_react_s', ax[0][0])
+hacks_cpu_distribution = plotWith100MSBins(hacks_cpu_filtered_df, 'cpu_aim_react_s', ax[1][0])
+legit_hand_distribution = plotWith100MSBins(legit_hand_filtered_df, 'hand_aim_react_s', ax[0][1])
+legit_cpu_distribution = plotWith100MSBins(legit_cpu_filtered_df, 'cpu_aim_react_s', ax[1][1])
 
 for i in range(len(ax)):
     for j in range(len(ax[i])):
@@ -93,10 +93,10 @@ def plotWith100MSBins(df, col, ax):
     ax.yaxis.set_major_formatter(PercentFormatter(1))
     return pd.cut(df[col], num_bins).value_counts().sort_index()
 
-plotWith100MSBins(hacks_hand_filtered_df, 'hand_react_s', ax[0][0])
-plotWith100MSBins(hacks_cpu_filtered_df, 'cpu_react_s', ax[1][0])
-plotWith100MSBins(legit_hand_filtered_df, 'hand_react_s', ax[0][1])
-plotWith100MSBins(legit_cpu_filtered_df, 'cpu_react_s', ax[1][1])
+plotWith100MSBins(hacks_hand_filtered_df, 'hand_aim_react_s', ax[0][0])
+plotWith100MSBins(hacks_cpu_filtered_df, 'cpu_aim_react_s', ax[1][0])
+plotWith100MSBins(legit_hand_filtered_df, 'hand_aim_react_s', ax[0][1])
+plotWith100MSBins(legit_cpu_filtered_df, 'cpu_aim_react_s', ax[1][1])
 
 # make rows share same ylim
 max_row_0_ylim = max(ax[0][0].get_ylim()[1], ax[0][1].get_ylim()[1])
@@ -123,14 +123,14 @@ fig.savefig(args.plot_folder + 'percent_histogram__hand_vs_cpu__hacking_vs_legit
 
 plt.clf()
 
-all_filtered_df = sqlio.read_sql_query("select * from react_final where abs(hand_react_s) <= 3.0 and abs(cpu_react_s) <= 3.0", conn)
+all_filtered_df = sqlio.read_sql_query("select * from react_final where abs(hand_aim_react_s) <= 3.0 and abs(cpu_aim_react_s) <= 3.0", conn)
 #all_filtered_df = pd.concat([hand_filtered_df, cpu_filtered_df], ignore_index=True)
 all_filtered_df['hacking'] = all_filtered_df['hacking'].map({True: 1, False: 0})
 print(f'''all filtered size {len(all_filtered_df)}''')
 
 for hand_or_cpu in ['hand', 'cpu']:
     plt.clf()
-    X_df = all_filtered_df[[hand_or_cpu + '_react_s', 'distinct_others_spotted_during_time']]
+    X_df = all_filtered_df[[hand_or_cpu + '_aim_react_s', 'distinct_others_spotted_during_time']]
     y_series = all_filtered_df['hacking']
 
     X_train, X_test, y_train, y_test = train_test_split(X_df,y_series,test_size=0.2,random_state=42)
