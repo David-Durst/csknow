@@ -39,8 +39,8 @@ hand_react_reasonable = '(select * from react_final where abs(hand_aim_react_s) 
 cpu_react_reasonable = '(select * from react_final where abs(cpu_aim_react_s) <= 3) as cpu_react_reasonable'
 select_cols = 'game_id, min(round_id) as min_round_id, max(round_id) as max_round_id, spotter_id, spotter, hacking, ' + \
     'distinct_others_spotted_during_time, ' + \
-    'avg(hand_aim_react_s) as avg_aim_hand_react, avg(cpu_aim_react_s) as avg_aim_cpu_react, ' + \
-    'avg(hand_fire_react_s) as avg_fire_hand_react, avg(cpu_fire_react_s) as avg_fire_cpu_react, ' + \
+    'avg(coalesce(hand_aim_react_s, 4.0)) as avg_aim_hand_react, avg(coalesce(cpu_aim_react_s, 4.0)) as avg_aim_cpu_react, ' + \
+    'avg(coalesce(hand_fire_react_s, 4.0)) as avg_fire_hand_react, avg(coalesce(cpu_fire_react_s, 4.0)) as avg_fire_cpu_react, ' + \
     'sum(case when hand_aim_react_s < 0.15 then 1 else 0 end) as hand_preaims, ' + \
     'sum(case when cpu_aim_react_s < 0.15 then 1 else 0 end) as cpu_preaims'
 group_cols = f'''group by game_id, round_id / {args.grouping_rounds}, spotter_id, spotter, hacking, distinct_others_spotted_during_time'''
@@ -87,7 +87,7 @@ def makePlotterFunction(bin_width, pct):
         return plotNumWith200MSBins
 
 
-def makeHistograms(dfs, hand_col, cpu_col, plotting_function, change_x_lim, change_y_lim, name, x_label):
+def makeHistograms(dfs, hand_col, cpu_col, plotting_function, name, x_label):
     fig, ax = plt.subplots(nrows=2, ncols=2, figsize=(16, 16))
     hacks_hand_distribution = plotting_function(dfs.hacks_hand_filtered_df, hand_col, ax[0][0])
     legit_hand_distribution = plotting_function(dfs.legit_hand_filtered_df, hand_col, ax[0][1])
@@ -96,13 +96,13 @@ def makeHistograms(dfs, hand_col, cpu_col, plotting_function, change_x_lim, chan
 
     for i in range(len(ax)):
         for j in range(len(ax[i])):
-            if change_x_lim:
-                ax[i][j].set_xlim(-3, 3)
-            if change_y_lim:
-                if i == 0:
-                    ax[i][j].set_ylim(0, max(hacks_hand_distribution.max(), legit_hand_distribution.max()) * 1.1)
-                else:
-                    ax[i][j].set_ylim(0, max(hacks_cpu_distribution.max(), legit_cpu_distribution.max()) * 1.1)
+            (x0_min, x0_max) = ax[i][0].get_xlim()
+            (x1_min, x1_max) = ax[i][1].get_xlim()
+            ax[i][j].set_xlim(min(x0_min, x1_min), min(x0_max, x1_max))
+            if i == 0:
+                ax[i][j].set_ylim(0, max(hacks_hand_distribution.max(), legit_hand_distribution.max()) * 1.1)
+            else:
+                ax[i][j].set_ylim(0, max(hacks_cpu_distribution.max(), legit_cpu_distribution.max()) * 1.1)
             ax[i][j].set_xlabel(x_label, fontsize=14)
             ax[i][j].set_ylabel('Frequency', fontsize=14)
 
@@ -126,16 +126,16 @@ def makeHistograms(dfs, hand_col, cpu_col, plotting_function, change_x_lim, chan
 
     plt.clf()
 
-makeHistograms(dfs, 'avg_aim_hand_react', 'avg_aim_cpu_react', makePlotterFunction(0.2, False), True, True, 'count_aim', 'Aim Reaction Time (s)')
-makeHistograms(dfs, 'avg_aim_hand_react', 'avg_aim_cpu_react', makePlotterFunction(0.2, True), True, True, 'pct_aim', 'Aim Reaction Time (s)')
-makeHistograms(dfs, 'avg_fire_hand_react', 'avg_fire_cpu_react', makePlotterFunction(0.2, False), True, True, 'count_fire', 'Fire Reaction Time (s)')
-makeHistograms(dfs, 'avg_fire_hand_react', 'avg_fire_cpu_react', makePlotterFunction(0.2, True), True, True, 'pct_fire', 'Fire Reaction Time (s)')
-makeHistograms(dfs, 'hand_preaims', 'cpu_preaims', makePlotterFunction(1, False), False, True, 'count_preaim', 'Number of Preaims')
-makeHistograms(dfs, 'hand_preaims', 'cpu_preaims', makePlotterFunction(1, True), False, True, 'pct_preaim', 'Number of Preaims')
+makeHistograms(dfs, 'avg_aim_hand_react', 'avg_aim_cpu_react', makePlotterFunction(0.2, False), 'count_aim', 'Aim Reaction Time (s)')
+makeHistograms(dfs, 'avg_aim_hand_react', 'avg_aim_cpu_react', makePlotterFunction(0.2, True), 'pct_aim', 'Aim Reaction Time (s)')
+makeHistograms(dfs, 'avg_fire_hand_react', 'avg_fire_cpu_react', makePlotterFunction(0.5, False), 'count_fire', 'Fire Reaction Time (s)')
+makeHistograms(dfs, 'avg_fire_hand_react', 'avg_fire_cpu_react', makePlotterFunction(0.5, True), 'pct_fire', 'Fire Reaction Time (s)')
+makeHistograms(dfs, 'hand_preaims', 'cpu_preaims', makePlotterFunction(1, False), 'count_preaim', 'Number of Preaims')
+makeHistograms(dfs, 'hand_preaims', 'cpu_preaims', makePlotterFunction(1, True), 'pct_preaim', 'Number of Preaims')
 
-def makeLogReg(df, col, name):
+def makeLogReg(df, cols, name):
     plt.clf()
-    X_df = df[[col, 'distinct_others_spotted_during_time']]
+    X_df = df[cols + ['distinct_others_spotted_during_time']]
     y_series = df['hacking']
 
     X_train, X_test, y_train, y_test = train_test_split(X_df,y_series,test_size=0.2,random_state=42)
@@ -155,5 +155,7 @@ def makeLogReg(df, col, name):
     print(name + ' accuracy: ', metrics.accuracy_score(y_test, y_pred))
     #print(np.argwhere(y_pred == False))
 
-makeLogReg(hand_filtered_df, 'avg_aim_hand_react', 'Hand')
-makeLogReg(cpu_filtered_df, 'avg_aim_cpu_react', 'CPU')
+#makeLogReg(hand_filtered_df, ['avg_aim_hand_react'], 'Hand')
+makeLogReg(hand_filtered_df, ['avg_aim_hand_react', 'avg_fire_hand_react', 'hand_preaims'], 'Hand')
+#makeLogReg(cpu_filtered_df, ['avg_aim_cpu_react'], 'CPU')
+makeLogReg(cpu_filtered_df, ['avg_aim_cpu_react', 'avg_fire_cpu_react', 'cpu_preaims'], 'CPU')
