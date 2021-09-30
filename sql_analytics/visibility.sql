@@ -65,7 +65,7 @@ from last_spotted_cpu s
          right join hand_visibility_with_next_start h
                     on h.spotted_id = s.spotted_player
                         and h.spotter_id = s.spotter_player
-                        and h.start_game_tick + 64 <= s.game_tick_number
+                        and h.start_game_tick <= s.game_tick_number
                         and h.next_start_game_tick >= s.game_tick_number
                         and s.is_spotted = true
 group by h.index, h.demo, h.spotter_id, h.spotter, h.spotted_id, h.spotted, h.start_game_tick, h.end_game_tick,
@@ -173,7 +173,7 @@ select v.index,
 from lookers l
          join ticks t on l.tick_id = t.id
          right join visibilities_with_others v
-                    on v.start_game_tick <= t.game_tick_number
+                    on v.start_game_tick - 64 <= t.game_tick_number
                         and v.next_start_game_tick >= t.game_tick_number
                         and l.looker_player_id = v.spotter_id
                         and l.looked_at_player_id = v.spotted_id
