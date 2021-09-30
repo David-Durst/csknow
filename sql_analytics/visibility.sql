@@ -173,7 +173,7 @@ select v.index,
 from lookers l
          join ticks t on l.tick_id = t.id
          right join visibilities_with_others v
-                    on v.start_game_tick - 64 <= t.game_tick_number
+                    on v.start_game_tick - 128 <= t.game_tick_number
                         and v.next_start_game_tick >= t.game_tick_number
                         and l.looker_player_id = v.spotter_id
                         and l.looked_at_player_id = v.spotted_id
