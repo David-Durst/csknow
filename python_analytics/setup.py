@@ -21,7 +21,8 @@ setup(
         "matplotlib",
         "seaborn",
         "pillow",
-        "psycopg2-binary"
+        "psycopg2-binary",
+        "opencv-python"
     ],
     python_requires='>=3.7',
     long_description=long_description,
