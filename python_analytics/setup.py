@@ -22,7 +22,8 @@ setup(
         "seaborn",
         "pillow",
         "psycopg2-binary",
-        "opencv-python"
+        "opencv-python",
+        "pytesseract"
     ],
     python_requires='>=3.7',
     long_description=long_description,
