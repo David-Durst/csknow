@@ -48,15 +48,15 @@ print(f'''total size {len(unfiltered_df)} \n ''' +
 # plot raw numbers
 fig, ax = plt.subplots(nrows=2, ncols=2, figsize=(16, 16))
 
-def plotWith100MSBins(df, col, ax):
+def plotNumWith100MSBins(df, col, ax):
     num_bins = math.ceil((df[col].max() - df[col].min()) / 0.2)
     df.hist(col, bins=num_bins, ax=ax)
     return pd.cut(df[col], num_bins).value_counts().sort_index()
 
-hacks_hand_distribution = plotWith100MSBins(hacks_hand_filtered_df, 'hand_aim_react_s', ax[0][0])
-hacks_cpu_distribution = plotWith100MSBins(hacks_cpu_filtered_df, 'cpu_aim_react_s', ax[1][0])
-legit_hand_distribution = plotWith100MSBins(legit_hand_filtered_df, 'hand_aim_react_s', ax[0][1])
-legit_cpu_distribution = plotWith100MSBins(legit_cpu_filtered_df, 'cpu_aim_react_s', ax[1][1])
+hacks_hand_distribution = plotNumWith100MSBins(hacks_hand_filtered_df, 'hand_aim_react_s', ax[0][0])
+hacks_cpu_distribution = plotNumWith100MSBins(hacks_cpu_filtered_df, 'cpu_aim_react_s', ax[1][0])
+legit_hand_distribution = plotNumWith100MSBins(legit_hand_filtered_df, 'hand_aim_react_s', ax[0][1])
+legit_cpu_distribution = plotNumWith100MSBins(legit_cpu_filtered_df, 'cpu_aim_react_s', ax[1][1])
 
 for i in range(len(ax)):
     for j in range(len(ax[i])):
@@ -87,16 +87,16 @@ plt.clf()
 
 fig, ax = plt.subplots(nrows=2, ncols=2, figsize=(16, 16))
 
-def plotWith100MSBins(df, col, ax):
+def plotPctWith100MSBins(df, col, ax):
     num_bins = math.ceil((df[col].max() - df[col].min()) / 0.2)
     df.hist(col, bins=num_bins, ax=ax, weights=np.ones(len(df[col])) / len(df[col]))
     ax.yaxis.set_major_formatter(PercentFormatter(1))
     return pd.cut(df[col], num_bins).value_counts().sort_index()
 
-plotWith100MSBins(hacks_hand_filtered_df, 'hand_aim_react_s', ax[0][0])
-plotWith100MSBins(hacks_cpu_filtered_df, 'cpu_aim_react_s', ax[1][0])
-plotWith100MSBins(legit_hand_filtered_df, 'hand_aim_react_s', ax[0][1])
-plotWith100MSBins(legit_cpu_filtered_df, 'cpu_aim_react_s', ax[1][1])
+plotPctWith100MSBins(hacks_hand_filtered_df, 'hand_aim_react_s', ax[0][0])
+plotPctWith100MSBins(hacks_cpu_filtered_df, 'cpu_aim_react_s', ax[1][0])
+plotPctWith100MSBins(legit_hand_filtered_df, 'hand_aim_react_s', ax[0][1])
+plotPctWith100MSBins(legit_cpu_filtered_df, 'cpu_aim_react_s', ax[1][1])
 
 # make rows share same ylim
 max_row_0_ylim = max(ax[0][0].get_ylim()[1], ax[0][1].get_ylim()[1])
