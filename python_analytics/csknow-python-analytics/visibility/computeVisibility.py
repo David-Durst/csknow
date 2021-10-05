@@ -3,9 +3,11 @@ import pytesseract
 import cv2
 import numpy as np
 import pandas as pd
+import pandas.io.sql as sqlio
 import os
 import re
 import psycopg2
+from dataclasses import dataclass, asdict
 
 parser = argparse.ArgumentParser()
 parser.add_argument("video_file", help="video file to analyze",
@@ -14,29 +16,38 @@ parser.add_argument("output_dir", help="output directory file of visibilities",
                     type=str)
 parser.add_argument("spotter", help="the spotter player for the entire video",
                     type=str)
-parser.add_argument("player_name_per_color", help="comma separated list of players per color of redPlayer,redGreenPlayer,greenPlayer,greenBluePlayer,bluePlayer,redBluePlayer",
+parser.add_argument("player_name_per_color",
+                    help="comma separated list of players per color of redPlayer,redGreenPlayer,greenPlayer,greenBluePlayer,bluePlayer,redBluePlayer",
                     type=str)
 parser.add_argument("hacking", help="1 if demo is hacking and 0 otherwise",
                     type=int)
 parser.add_argument("demo_file", help="name of demo file",
-                    type=int)
-parser.add_argument("password", help="database password",
                     type=str)
-parser.add_argument("query_file", help="file containing query",
+parser.add_argument("password", help="database password",
                     type=str)
 args = parser.parse_args()
 
+# get the id for each player
 conn = psycopg2.connect(
     host="localhost",
     database="csknow",
     user="postgres",
     password=args.password,
     port=3125)
-cur = conn.cursor()
+df_players_and_games = sqlio.read_sql_query(
+    'select name, players.id as player_id, g.id as game_id, demo_file from players join games g on players.game_id = g.id',
+    conn)
+
+
+def getPlayerId(player_name):
+    return df_players_and_games[df_players_and_games['name'] == player_name & 
+                                df_players_and_games['demo_file'] == args.demo_file].iloc[0]['player_id']
+
 
 players = args.player_name_per_color.split(',')
 
 cap = cv2.VideoCapture(args.video_file)
+
 
 # define colors in hsv, allow any value above like 30 as blend with black backgorund ok, need saturation of at least 60
 # so filter out smokes and flash
@@ -66,6 +77,7 @@ class HSVColorBand:
         mask = cv2.inRange(cap_hsv, self.get_lower_bound(), self.get_upper_bound())
         return cv2.countNonZero(mask)
 
+
 # need two reds since color range wraps
 redLow = HSVColorBand(8, 8)
 redHigh = HSVColorBand(352, 8)
@@ -76,21 +88,61 @@ blue = HSVColorBand(240, 16)
 redBlue = HSVColorBand(300, 16)
 
 colors = ['red', 'redGreen', 'green', 'greenBlue', 'blue', 'redBlue']
+seen_cur_tick = []
+cur_visibility_events = []
+finished_visibility_events = []
 
-spotter = []
-spotted = []
-start_game_tick = []
-end_game_tick = []
-spotter_id = []
-spotted_id = []
-demo = []
-hacking = []
-start_frame_num = []
-end_frame_num = []
-color = []
+
+@dataclass()
+class VisibilityEvent:
+    valid: bool
+    spotted: str
+    start_game_tick: int
+    end_game_tick: int
+    spotted_id: int
+    start_frame_num: int
+    end_frame_num: int
+    color: str
+
+
+def visEventToOutputDict(visEvent: VisibilityEvent):
+    result = {}
+    result['spotter'] = args.spotter
+    result['spotted'] = visEvent.spotted
+    result['start_game_tick'] = visEvent.start_game_tick
+    result['end_game_tick'] = visEvent.end_game_tick
+    result['spotter_id'] = getPlayerId(args.spotter)
+    result['spotted_id'] = getPlayerId(visEvent.spotted)
+    result['demo'] = args.demo_file
+    result['hacking'] = args.hacking
+    result['start_frame_num'] = visEvent.start_frame_num
+    result['end_frame_num'] = visEvent.end_frame_num
+    result['color'] = visEvent.color
+    return result
+
+
+for i in range(len(colors)):
+    cur_visibility_events.append(VisibilityEvent(False, "", -1, -1, -1, -1, -1, colors[i]))
+
+
+def resetSeenCurTick():
+    for i in range(len(colors)):
+        seen_cur_tick[i] = False
+
+
+def finishTick():
+    # using data from last frame, if didn't see a player and was in active event for seeing them, finish that event
+    for i in range(len(colors)):
+        if not seen_cur_tick[i] and cur_visibility_events[i].valid:
+            # don't need to update end_game_tick and end_frame_num here as that's done every frame that event is valid
+            finished_visibility_events.append(cur_visibility_events[i])
+            cur_visibility_events[i].valid = False
+    resetSeenCurTick()
+
 
 frame_id = 0
-while(cap.isOpened()):
+last_frame_tick = -1
+while (cap.isOpened()):
     # Capture frame-by-frame
     ret, frame = cap.read()
 
@@ -101,8 +153,8 @@ while(cap.isOpened()):
 
     # skip repeated frames
     (_, cap_black_text) = cv2.threshold(cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY), 175, 255, cv2.THRESH_BINARY_INV)
-    cap_black_text_demoUI = cap_black_text[demoUI_rect[1]:demoUI_rect[1]+demoUI_rect[3],
-                                           demoUI_rect[0]:demoUI_rect[0]+demoUI_rect[2]]
+    cap_black_text_demoUI = cap_black_text[demoUI_rect[1]:demoUI_rect[1] + demoUI_rect[3],
+                            demoUI_rect[0]:demoUI_rect[0] + demoUI_rect[2]]
     cv2.imshow('frame', cap_black_text_demoUI)
     text = pytesseract.image_to_string(cap_black_text_demoUI)
 
@@ -113,6 +165,8 @@ while(cap.isOpened()):
         print("didn't find time on frame " + str(frame_id))
         quit(1)
 
+    if cur_tick != last_frame_tick:
+        finishTick()
 
     # Convert BGR to HSV
     cap_hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
@@ -126,24 +180,31 @@ while(cap.isOpened()):
                   redBlue.get_pixel_count_in_range(cap_hsv)]
 
     # Display the resulting frame
-    #cv2.imshow('frame', cap_rgb)
+    # cv2.imshow('frame', cap_rgb)
     for i in range(len(maskCounts)):
-        spotter.append(args.spotter)
-        spotted.append(players[i])
-        frame_num.append(frame_id)
-        game_tick.append(-1)
-        color.append(colors[i])
+        if maskCounts[i] > 0:
+            cur_visibility_events[i].end_game_tick = cur_tick
+            cur_visibility_events[i].end_frame_num = frame_id
+            if not cur_visibility_events[i].valid:
+                cur_visibility_events[i].valid = True
+                cur_visibility_events[i].spotted = players[i]
+                cur_visibility_events[i].spotted_id = getPlayerId(players[i])
+                cur_visibility_events[i].start_game_tick = cur_tick
+                cur_visibility_events[i].start_frame_num = frame_id
+                cur_visibility_events[i].color = colors[i]
 
-    #cv2.imshow('frame', cap_black_text)
+    # cv2.imshow('frame', cap_black_text)
     if frame_id % 1000 == 0:
         print(f'''frame_id {frame_id}''')
-        cv2.imwrite(args.output_dir + "/" + os.path.basename(args.video_file) + "_" + str(frame_id) + ".png", frame)
+        # cv2.imwrite(args.output_dir + "/" + os.path.basename(args.video_file) + "_" + str(frame_id) + ".png", frame)
     frame_id += 1
+    last_frame_tick = cur_tick
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
 
-dict_visibility = {'spotter': spotter, 'spotted': spotted, 'frame_num': frame_num, 'game_tick': game_tick, 'color': color}
-df_visibility = pd.DataFrame(dict)
+finishTick()
+
+df_visibility = pd.DataFrame([visEventToOutputDict(e) for e in finished_visibility_events])
 df_visibility.to_csv(args.output_dir + "/" + os.path.basename(args.video_file) + ".csv")
 
 # When everything done, release the capture

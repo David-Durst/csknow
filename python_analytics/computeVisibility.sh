@@ -21,4 +21,4 @@ conda activate csknow
 
 cd ${script_dir}/csknow-python-analytics/visibility/
 
-python computeVisibility.py ${script_dir}/10_3_21_wallhacks_2.mp4 ${script_dir}/../local_data/visibilities/ i_eat_short_people_for_breakfast "Malia Obama,,Kcirrem,,Pinkay,"
+python computeVisibility.py ${script_dir}/10_4_21_no_wallhacks_merrick.mp4 ${script_dir}/../local_data/visibilities/ Kcirrem "i_eat_short_people_for_breakfast,,meeseeks,,Step Papi,Tom" 0 merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem ${pass}
