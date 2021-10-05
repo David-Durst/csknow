@@ -26,7 +26,7 @@ parser.add_argument("demo_file", help="name of demo file",
 parser.add_argument("password", help="database password",
                     type=str)
 args = parser.parse_args()
-
+print(args)
 # get the id for each player
 conn = psycopg2.connect(
     host="localhost",
@@ -38,6 +38,34 @@ df_players_and_games = sqlio.read_sql_query(
     'select name, players.id as player_id, g.id as game_id, demo_file from players join games g on players.game_id = g.id',
     conn)
 
+df_deaths = sqlio.read_sql_query(
+    f'''
+    select t.game_tick_number as game_tick_number
+    from kills k
+        join players p on k.victim = p.id
+        join ticks t on k.tick_id = t.id
+        join games g on p.game_id = g.id
+    where g.demo_file = {args.demo_file} and
+        p.name = '{args.spotter}'
+    order by t.game_tick_number;
+    '''
+)
+
+set_deaths = set(df_deaths['game_tick_number'])
+
+df_round_starts = sqlio.read_sql_query(
+    f'''
+    select min(t.game_tick_number) as min_game_tick
+    from ticks t
+    join rounds r on t.round_id = r.id
+    join games g on r.game_id = g.id
+    where g.demo_file = {args.demo_file}
+    group by r.game_id, r.id
+    order by r.game_id, r.id;
+    '''
+)
+
+set_round_starts = set(df_round_starts['min_game_tick'])
 
 def getPlayerId(player_name):
     return df_players_and_games[df_players_and_games['name'] == player_name & 
@@ -45,8 +73,6 @@ def getPlayerId(player_name):
 
 
 players = args.player_name_per_color.split(',')
-
-cap = cv2.VideoCapture(args.video_file)
 
 
 # define colors in hsv, allow any value above like 30 as blend with black backgorund ok, need saturation of at least 60
@@ -130,10 +156,10 @@ def resetSeenCurTick():
         seen_cur_tick[i] = False
 
 
-def finishTick():
-    # using data from last frame, if didn't see a player and was in active event for seeing them, finish that event
+def finishTick(player_dead_for_round):
+    # using data from last frame, if (didn't see a player or dead) and was in active event for seeing them, finish that event
     for i in range(len(colors)):
-        if not seen_cur_tick[i] and cur_visibility_events[i].valid:
+        if (player_dead_for_round or not seen_cur_tick[i]) and cur_visibility_events[i].valid:
             # don't need to update end_game_tick and end_frame_num here as that's done every frame that event is valid
             finished_visibility_events.append(cur_visibility_events[i])
             cur_visibility_events[i].valid = False
@@ -142,6 +168,8 @@ def finishTick():
 
 frame_id = 0
 last_frame_tick = -1
+player_dead_for_round = False
+cap = cv2.VideoCapture(args.video_file)
 while (cap.isOpened()):
     # Capture frame-by-frame
     ret, frame = cap.read()
@@ -163,10 +191,20 @@ while (cap.isOpened()):
         cur_tick = int(cur_tick_string_match.group(1))
     else:
         print("didn't find time on frame " + str(frame_id))
-        quit(1)
+        break
+
+    # if died, then set player_dead_for_round, reset that when next round starts
+    if cur_tick in set_deaths:
+        player_dead_for_round = True
+    elif cur_tick in set_round_starts:
+        player_dead_for_round = False
+
+    # demo is over on return to menu when tick becomes 0
+    if cur_tick == 0:
+        break
 
     if cur_tick != last_frame_tick:
-        finishTick()
+        finishTick(player_dead_for_round)
 
     # Convert BGR to HSV
     cap_hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
@@ -182,7 +220,7 @@ while (cap.isOpened()):
     # Display the resulting frame
     # cv2.imshow('frame', cap_rgb)
     for i in range(len(maskCounts)):
-        if maskCounts[i] > 0:
+        if not player_dead_for_round and maskCounts[i] > 0:
             cur_visibility_events[i].end_game_tick = cur_tick
             cur_visibility_events[i].end_frame_num = frame_id
             if not cur_visibility_events[i].valid:
@@ -202,7 +240,7 @@ while (cap.isOpened()):
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
 
-finishTick()
+finishTick(True)
 
 df_visibility = pd.DataFrame([visEventToOutputDict(e) for e in finished_visibility_events])
 df_visibility.to_csv(args.output_dir + "/" + os.path.basename(args.video_file) + ".csv")
