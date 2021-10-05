@@ -7,7 +7,8 @@ import pandas.io.sql as sqlio
 import os
 import re
 import psycopg2
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass
+import time
 
 parser = argparse.ArgumentParser()
 parser.add_argument("video_file", help="video file to analyze",
@@ -45,10 +46,10 @@ df_deaths = sqlio.read_sql_query(
         join players p on k.victim = p.id
         join ticks t on k.tick_id = t.id
         join games g on p.game_id = g.id
-    where g.demo_file = {args.demo_file} and
+    where g.demo_file = '{args.demo_file}' and
         p.name = '{args.spotter}'
     order by t.game_tick_number;
-    '''
+    ''', conn
 )
 
 set_deaths = set(df_deaths['game_tick_number'])
@@ -59,17 +60,17 @@ df_round_starts = sqlio.read_sql_query(
     from ticks t
     join rounds r on t.round_id = r.id
     join games g on r.game_id = g.id
-    where g.demo_file = {args.demo_file}
+    where g.demo_file = '{args.demo_file}'
     group by r.game_id, r.id
     order by r.game_id, r.id;
-    '''
+    ''', conn
 )
 
 set_round_starts = set(df_round_starts['min_game_tick'])
 
 def getPlayerId(player_name):
-    return df_players_and_games[df_players_and_games['name'] == player_name & 
-                                df_players_and_games['demo_file'] == args.demo_file].iloc[0]['player_id']
+    return df_players_and_games[(df_players_and_games['name'] == player_name) &
+                                (df_players_and_games['demo_file'] == args.demo_file)].iloc[0]['player_id']
 
 
 players = args.player_name_per_color.split(',')
@@ -149,6 +150,7 @@ def visEventToOutputDict(visEvent: VisibilityEvent):
 
 for i in range(len(colors)):
     cur_visibility_events.append(VisibilityEvent(False, "", -1, -1, -1, -1, -1, colors[i]))
+    seen_cur_tick.append(False)
 
 
 def resetSeenCurTick():
@@ -170,6 +172,7 @@ frame_id = 0
 last_frame_tick = -1
 player_dead_for_round = False
 cap = cv2.VideoCapture(args.video_file)
+start_time = time.time()
 while (cap.isOpened()):
     # Capture frame-by-frame
     ret, frame = cap.read()
@@ -183,7 +186,7 @@ while (cap.isOpened()):
     (_, cap_black_text) = cv2.threshold(cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY), 175, 255, cv2.THRESH_BINARY_INV)
     cap_black_text_demoUI = cap_black_text[demoUI_rect[1]:demoUI_rect[1] + demoUI_rect[3],
                             demoUI_rect[0]:demoUI_rect[0] + demoUI_rect[2]]
-    cv2.imshow('frame', cap_black_text_demoUI)
+    #cv2.imshow('frame', cap_black_text_demoUI)
     text = pytesseract.image_to_string(cap_black_text_demoUI)
 
     cur_tick_string_match = re.search("Tick:([^\n]+)\/", text)
@@ -232,8 +235,11 @@ while (cap.isOpened()):
                 cur_visibility_events[i].color = colors[i]
 
     # cv2.imshow('frame', cap_black_text)
-    if frame_id % 1000 == 0:
-        print(f'''frame_id {frame_id}''')
+    if frame_id % 100 == 0:
+        elapsed_time = time.time() - start_time
+        runtime_duration_str = time.strftime("%H:%M:%S", time.gmtime(elapsed_time))
+        video_duration_str = time.strftime("%H:%M:%S", time.gmtime(frame_id / 60.0))
+        print(f'''frame_id {frame_id}, runtime duration from start {runtime_duration_str}, video duration processed {video_duration_str}''')
         # cv2.imwrite(args.output_dir + "/" + os.path.basename(args.video_file) + "_" + str(frame_id) + ".png", frame)
     frame_id += 1
     last_frame_tick = cur_tick
