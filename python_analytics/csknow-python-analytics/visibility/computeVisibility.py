@@ -15,7 +15,9 @@ import time
 parser = argparse.ArgumentParser()
 parser.add_argument("video_file", help="video file to analyze",
                     type=str)
-parser.add_argument("output_dir", help="output directory file of visibilities",
+parser.add_argument("output_dir", help="output directory for visibility csvs",
+                    type=str)
+parser.add_argument("log_dir", help="output directory for logs",
                     type=str)
 parser.add_argument("spotter", help="the spotter player for the entire video",
                     type=str)
@@ -192,7 +194,7 @@ def logState(writeFrame = False):
           f'''video duration processed {processed_cap_duration_str} / {entire_cap_duration_str}, ''' +
           f'''last non-ff tick {last_tick} / {max_tick}''')
     if writeFrame:
-        cv2.imwrite(args.output_dir + "/" + os.path.basename(args.video_file) + ".png", last_frame)
+        cv2.imwrite(args.log_dir + "/" + os.path.basename(args.video_file) + ".png", last_frame)
 
 while (cap.isOpened()):
     frame_id += 1
