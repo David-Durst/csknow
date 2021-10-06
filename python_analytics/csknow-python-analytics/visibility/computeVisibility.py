@@ -30,8 +30,7 @@ parser.add_argument("demo_file", help="name of demo file",
                     type=str)
 parser.add_argument("password", help="database password",
                     type=str)
-parser.add_argument("show_non_ff", help="show images that aren't fast forwarded past",
-                    type=bool, default=False)
+parser.add_argument("--show_non_ff", help="show images that aren't fast forwarded past", action='store_true')
 args = parser.parse_args()
 print(args)
 # get the id for each player
@@ -268,6 +267,7 @@ while (cap.isOpened()):
                   redBlue.get_pixel_count_in_range(cap_hsv)]
 
     if args.show_non_ff:
+        logState(False)
         cv2.imshow('frame', frame)
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
@@ -287,6 +287,9 @@ while (cap.isOpened()):
                 cur_visibility_events[i].color = colors[i]
 
     last_tick = cur_tick
+    if last_tick + 10 >= max_tick:
+        print("finished all ticks, skipped last 10 for acceptable error bound")
+        break
 
 finishTick(True)
 
