@@ -1,4 +1,6 @@
 import argparse
+import math
+
 import pytesseract
 import cv2
 import numpy as np
@@ -52,7 +54,7 @@ df_deaths = sqlio.read_sql_query(
     ''', conn
 )
 
-set_deaths = set(df_deaths['game_tick_number'])
+series_deaths = df_deaths['game_tick_number']
 
 df_round_starts = sqlio.read_sql_query(
     f'''
@@ -66,7 +68,7 @@ df_round_starts = sqlio.read_sql_query(
     ''', conn
 )
 
-set_round_starts = set(df_round_starts['min_game_tick'])
+series_round_starts = df_round_starts['min_game_tick']
 
 def getPlayerId(player_name):
     return df_players_and_games[(df_players_and_games['name'] == player_name) &
@@ -113,6 +115,7 @@ green = HSVColorBand(120, 16)
 greenBlue = HSVColorBand(180, 16)
 blue = HSVColorBand(240, 16)
 redBlue = HSVColorBand(300, 16)
+anyColor = HSVColorBand(180, 180)
 
 colors = ['red', 'redGreen', 'green', 'greenBlue', 'blue', 'redBlue']
 seen_cur_tick = []
@@ -168,49 +171,90 @@ def finishTick(player_dead_for_round):
     resetSeenCurTick()
 
 
-frame_id = 0
-last_frame_tick = -1
+frame_id = -1
+max_tick = -1
+# this doesn't get updated when fast forwarding through black frames
+last_tick = -1
 player_dead_for_round = False
 cap = cv2.VideoCapture(args.video_file)
+fps = cap.get(cv2.CAP_PROP_FPS)
+frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+entire_cap_duration_str = time.strftime("%H:%M:%S", time.gmtime(frame_count / fps))
 start_time = time.time()
+last_frame = None
+
+def logState(writeFrame = False):
+    elapsed_time = time.time() - start_time
+    runtime_duration_str = time.strftime("%H:%M:%S", time.gmtime(elapsed_time))
+    processed_cap_duration_str = time.strftime("%H:%M:%S", time.gmtime(frame_id / fps))
+    print(f'''frame_id {frame_id - 1} / {frame_count}, ''' +
+          f'''runtime duration from start {runtime_duration_str}, ''' +
+          f'''video duration processed {processed_cap_duration_str} / {entire_cap_duration_str}, ''' +
+          f'''last non-ff tick {last_tick} / {max_tick}''')
+    if writeFrame:
+        cv2.imwrite(args.output_dir + "/" + os.path.basename(args.video_file) + ".png", last_frame)
+
 while (cap.isOpened()):
+    frame_id += 1
+    # cv2.imshow('frame', cap_black_text)
+    if (frame_id - 1) % 1000 == 0:
+       logState()
+
     # Capture frame-by-frame
     ret, frame = cap.read()
+    if not ret:
+        break
+    last_frame = frame
 
     # assuming starting on all black frame except for tick number
     if frame_id == 0:
         demoUI_points = cv2.findNonZero(cv2.inRange(frame, np.array([159, 159, 159]), np.array([163, 163, 163])))
         demoUI_rect = cv2.boundingRect(demoUI_points)
 
-    # skip repeated frames
-    (_, cap_black_text) = cv2.threshold(cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY), 175, 255, cv2.THRESH_BINARY_INV)
-    cap_black_text_demoUI = cap_black_text[demoUI_rect[1]:demoUI_rect[1] + demoUI_rect[3],
-                            demoUI_rect[0]:demoUI_rect[0] + demoUI_rect[2]]
+    # Convert BGR to HSV for hue checks
+    cap_hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+
+    # if all black and not tracking anything, fast forward
+    # don't do it on first frame as want to always have a tick to refer to after start
+    if frame_id != 0 and anyColor.get_pixel_count_in_range(cap_hsv) == 0 and \
+            all([not cve.valid for cve in cur_visibility_events]):
+        continue
+
+    # turn gray and invert image so eaiser to find tick text
+    cap_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    (_, cap_black_text) = cv2.threshold(cap_gray, 175, 255, cv2.THRESH_BINARY_INV)
+    # hand measured on a 720p image that 91->108 out of 0->136 for demo ui bounding box
+    # was right y values for text, so take just that part of y region in bounding box
+    y_bbox_min = math.floor(demoUI_rect[1] + (91.0/136) * demoUI_rect[3])
+    y_bbox_max = math.ceil(demoUI_rect[1] + (108.0/136) * demoUI_rect[3])
+    cap_black_text_demoUI = cap_black_text[y_bbox_min:y_bbox_max, demoUI_rect[0]:demoUI_rect[0] + demoUI_rect[2]]
     #cv2.imshow('frame', cap_black_text_demoUI)
     text = pytesseract.image_to_string(cap_black_text_demoUI)
 
-    cur_tick_string_match = re.search("Tick:([^\n]+)\/", text)
+    cur_tick_string_match = re.search('Tick[^\d]*(\d+)[^\d]*\/[^\d]*(\d+)', text)
     if cur_tick_string_match:
         cur_tick = int(cur_tick_string_match.group(1))
+        max_tick = int(cur_tick_string_match.group(2))
     else:
-        print("didn't find time on frame " + str(frame_id))
+        print("didn't find tick on frame " + str(frame_id))
         break
 
-    # if died, then set player_dead_for_round, reset that when next round starts
-    if cur_tick in set_deaths:
+    # if died sometimes between, then set player_dead_for_round, reset that when next round starts
+    # start range at tick after last (or current tick if same tick across frames)
+    # range as doing fast forwarding
+    range_start = min(last_tick + 1, cur_tick)
+    if len(series_deaths.between(range_start, cur_tick, inclusive=True)) > 0:
         player_dead_for_round = True
-    elif cur_tick in set_round_starts:
+    # not an elif because you could fast forward over both a death and a round start
+    if len(series_round_starts.between(range_start, cur_tick, inclusive=True)) > 0:
         player_dead_for_round = False
 
     # demo is over on return to menu when tick becomes 0
     if cur_tick == 0:
         break
 
-    if cur_tick != last_frame_tick:
+    if cur_tick != last_tick:
         finishTick(player_dead_for_round)
-
-    # Convert BGR to HSV
-    cap_hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
 
     # compute masks
     maskCounts = [redLow.get_pixel_count_in_range(cap_hsv) + redHigh.get_pixel_count_in_range(cap_hsv),
@@ -234,15 +278,7 @@ while (cap.isOpened()):
                 cur_visibility_events[i].start_frame_num = frame_id
                 cur_visibility_events[i].color = colors[i]
 
-    # cv2.imshow('frame', cap_black_text)
-    if frame_id % 100 == 0:
-        elapsed_time = time.time() - start_time
-        runtime_duration_str = time.strftime("%H:%M:%S", time.gmtime(elapsed_time))
-        video_duration_str = time.strftime("%H:%M:%S", time.gmtime(frame_id / 60.0))
-        print(f'''frame_id {frame_id}, runtime duration from start {runtime_duration_str}, video duration processed {video_duration_str}''')
-        # cv2.imwrite(args.output_dir + "/" + os.path.basename(args.video_file) + "_" + str(frame_id) + ".png", frame)
-    frame_id += 1
-    last_frame_tick = cur_tick
+    last_tick = cur_tick
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
 
@@ -250,6 +286,9 @@ finishTick(True)
 
 df_visibility = pd.DataFrame([visEventToOutputDict(e) for e in finished_visibility_events])
 df_visibility.to_csv(args.output_dir + "/" + os.path.basename(args.video_file) + ".csv")
+
+# save last frame for debugging
+logState(True)
 
 # When everything done, release the capture
 cap.release()
