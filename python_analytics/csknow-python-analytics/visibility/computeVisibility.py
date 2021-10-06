@@ -30,6 +30,8 @@ parser.add_argument("demo_file", help="name of demo file",
                     type=str)
 parser.add_argument("password", help="database password",
                     type=str)
+parser.add_argument("show_non_ff", help="show images that aren't fast forwarded past",
+                    type=bool, default=False)
 args = parser.parse_args()
 print(args)
 # get the id for each player
@@ -95,11 +97,11 @@ class HSVColorBand:
         # OpenCV H,S,V: (0-180,0-255 ,0-255)
         hue_min = hue_mid - hue_range
         hue_max = hue_mid + hue_range
-        self.hue_min = 180 * hue_min / 360
-        self.hue_max = 180 * hue_max / 360
+        self.hue_min = int(180 * hue_min / 360)
+        self.hue_max = int(180 * hue_max / 360)
 
     def get_lower_bound(self):
-        return np.array([self.hue_min, self.saturation_min, self.saturation_max])
+        return np.array([self.hue_min, self.saturation_min, self.saturation_min])
 
     def get_upper_bound(self):
         return np.array([self.hue_max, self.saturation_max, self.saturation_max])
@@ -198,7 +200,6 @@ def logState(writeFrame = False):
 
 while (cap.isOpened()):
     frame_id += 1
-    # cv2.imshow('frame', cap_black_text)
     if (frame_id - 1) % 1000 == 0:
        logState()
 
@@ -231,7 +232,7 @@ while (cap.isOpened()):
     y_bbox_max = math.ceil(demoUI_rect[1] + (108.0/136) * demoUI_rect[3])
     cap_black_text_demoUI = cap_black_text[y_bbox_min:y_bbox_max, demoUI_rect[0]:demoUI_rect[0] + demoUI_rect[2]]
     #cv2.imshow('frame', cap_black_text_demoUI)
-    text = pytesseract.image_to_string(cap_black_text_demoUI)
+    text = pytesseract.image_to_string(cap_black_text_demoUI, config='--psm 6')
 
     cur_tick_string_match = re.search('Tick[^\d]*(\d+)[^\d]*\/[^\d]*(\d+)', text)
     if cur_tick_string_match:
@@ -245,10 +246,10 @@ while (cap.isOpened()):
     # start range at tick after last (or current tick if same tick across frames)
     # range as doing fast forwarding
     range_start = min(last_tick + 1, cur_tick)
-    if len(series_deaths.between(range_start, cur_tick, inclusive=True)) > 0:
+    if len(series_deaths[series_deaths.between(range_start, cur_tick, inclusive=True)]) > 0:
         player_dead_for_round = True
     # not an elif because you could fast forward over both a death and a round start
-    if len(series_round_starts.between(range_start, cur_tick, inclusive=True)) > 0:
+    if len(series_round_starts[series_round_starts.between(range_start, cur_tick, inclusive=True)]) > 0:
         player_dead_for_round = False
 
     # demo is over on return to menu when tick becomes 0
@@ -266,6 +267,11 @@ while (cap.isOpened()):
                   blue.get_pixel_count_in_range(cap_hsv),
                   redBlue.get_pixel_count_in_range(cap_hsv)]
 
+    if args.show_non_ff:
+        cv2.imshow('frame', frame)
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+
     # Display the resulting frame
     # cv2.imshow('frame', cap_rgb)
     for i in range(len(maskCounts)):
@@ -281,13 +287,11 @@ while (cap.isOpened()):
                 cur_visibility_events[i].color = colors[i]
 
     last_tick = cur_tick
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
 
 finishTick(True)
 
 df_visibility = pd.DataFrame([visEventToOutputDict(e) for e in finished_visibility_events])
-df_visibility.to_csv(args.output_dir + "/" + os.path.basename(args.video_file) + ".csv")
+df_visibility.to_csv(args.output_dir + "/" + os.path.basename(args.video_file) + ".csv", index_label='id')
 
 # save last frame for debugging
 logState(True)
