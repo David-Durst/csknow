@@ -73,6 +73,7 @@ df_round_starts = sqlio.read_sql_query(
 
 series_round_starts = df_round_starts['min_game_tick']
 
+
 def getPlayerId(player_name):
     return df_players_and_games[(df_players_and_games['name'] == player_name) &
                                 (df_players_and_games['demo_file'] == args.demo_file)].iloc[0]['player_id']
@@ -129,6 +130,7 @@ finished_visibility_events = []
 @dataclass()
 class VisibilityEvent:
     valid: bool
+    valid_for_ff: bool # this allows ff checking even when player is dead
     spotted: str
     start_game_tick: int
     end_game_tick: int
@@ -155,7 +157,7 @@ def visEventToOutputDict(visEvent: VisibilityEvent):
 
 
 for i in range(len(colors)):
-    cur_visibility_events.append(VisibilityEvent(False, "", -1, -1, -1, -1, -1, colors[i]))
+    cur_visibility_events.append(VisibilityEvent(False, False, "", -1, -1, -1, -1, -1, colors[i]))
     seen_cur_tick.append(False)
 
 
@@ -171,6 +173,8 @@ def finishTick(player_dead_for_round):
             # don't need to update end_game_tick and end_frame_num here as that's done every frame that event is valid
             finished_visibility_events.append(cur_visibility_events[i])
             cur_visibility_events[i].valid = False
+        if not seen_cur_tick:
+            cur_visibility_events[i].valid_for_ff = False
     resetSeenCurTick()
 
 
@@ -185,8 +189,9 @@ frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
 entire_cap_duration_str = time.strftime("%H:%M:%S", time.gmtime(frame_count / fps))
 start_time = time.time()
 last_frame = None
+mask_threshold = 0
 
-def logState(writeFrame = False):
+def logState(writeFrame=False):
     elapsed_time = time.time() - start_time
     runtime_duration_str = time.strftime("%H:%M:%S", time.gmtime(elapsed_time))
     processed_cap_duration_str = time.strftime("%H:%M:%S", time.gmtime(frame_id / fps))
@@ -197,10 +202,11 @@ def logState(writeFrame = False):
     if writeFrame:
         cv2.imwrite(args.log_dir + "/" + os.path.basename(args.video_file) + ".png", last_frame)
 
+
 while (cap.isOpened()):
     frame_id += 1
     if (frame_id - 1) % 1000 == 0:
-       logState()
+        logState()
 
     # Capture frame-by-frame
     ret, frame = cap.read()
@@ -222,21 +228,43 @@ while (cap.isOpened()):
             all([not cve.valid for cve in cur_visibility_events]):
         continue
 
+    # compute color masks
+    maskCounts = [redLow.get_pixel_count_in_range(cap_hsv) + redHigh.get_pixel_count_in_range(cap_hsv),
+                  redGreen.get_pixel_count_in_range(cap_hsv),
+                  green.get_pixel_count_in_range(cap_hsv),
+                  greenBlue.get_pixel_count_in_range(cap_hsv),
+                  blue.get_pixel_count_in_range(cap_hsv),
+                  redBlue.get_pixel_count_in_range(cap_hsv)]
+
+    # if all previously visible colors are still visible and not in last 50 frames, keep going
+    # 10 frames is arbitrary safety so don't run off end
+    color_change = False
+    if max_tick != -1 and last_tick + 10 < max_tick:
+        for i in range(len(colors)):
+            if (cur_visibility_events[i].valid_for_ff and maskCounts[i] == 0) or \
+                    (not cur_visibility_events[i].valid_for_ff and maskCounts[i] > 0):
+                color_change = True
+                break
+        if not color_change:
+            continue
+            hit_last_frame = False
+
     # turn gray and invert image so eaiser to find tick text
     cap_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     (_, cap_black_text) = cv2.threshold(cap_gray, 175, 255, cv2.THRESH_BINARY_INV)
     # hand measured on a 720p image that 91->108 out of 0->136 for demo ui bounding box
     # was right y values for text, so take just that part of y region in bounding box
-    y_bbox_min = math.floor(demoUI_rect[1] + (91.0/136) * demoUI_rect[3])
-    y_bbox_max = math.ceil(demoUI_rect[1] + (108.0/136) * demoUI_rect[3])
+    y_bbox_min = math.floor(demoUI_rect[1] + (91.0 / 136) * demoUI_rect[3])
+    y_bbox_max = math.ceil(demoUI_rect[1] + (108.0 / 136) * demoUI_rect[3])
     cap_black_text_demoUI = cap_black_text[y_bbox_min:y_bbox_max, demoUI_rect[0]:demoUI_rect[0] + demoUI_rect[2]]
-    #cv2.imshow('frame', cap_black_text_demoUI)
+    # cv2.imshow('frame', cap_black_text_demoUI)
     text = pytesseract.image_to_string(cap_black_text_demoUI, config='--psm 6')
 
     cur_tick_string_match = re.search('Tick[^\d]*(\d+)[^\d]*\/[^\d]*(\d+)', text)
     if cur_tick_string_match:
         cur_tick = int(cur_tick_string_match.group(1))
-        max_tick = int(cur_tick_string_match.group(2))
+        if frame_id == 0:
+            max_tick = int(cur_tick_string_match.group(2))
     else:
         print("didn't find tick on frame " + str(frame_id))
         break
@@ -244,12 +272,17 @@ while (cap.isOpened()):
     # if died sometimes between, then set player_dead_for_round, reset that when next round starts
     # start range at tick after last (or current tick if same tick across frames)
     # range as doing fast forwarding
-    range_start = min(last_tick + 1, cur_tick)
-    if len(series_deaths[series_deaths.between(range_start, cur_tick, inclusive=True)]) > 0:
-        player_dead_for_round = True
-    # not an elif because you could fast forward over both a death and a round start
-    if len(series_round_starts[series_round_starts.between(range_start, cur_tick, inclusive=True)]) > 0:
-        player_dead_for_round = False
+    if frame_id > 0:
+        range_start = min(last_tick + 1, cur_tick)
+        if len(series_deaths[series_deaths.between(range_start, cur_tick, inclusive=True)]) > 0:
+            player_dead_for_round = True
+        # not an elif because you could fast forward over both a death and a round start
+        min_cur_tick_and_last_death = cur_tick
+        if len(series_round_starts[series_round_starts.between(range_start, cur_tick, inclusive=True)]) > 0:
+            player_dead_for_round = False
+            min_last_tick_and_last_death = min(min_cur_tick_and_last_death,
+                                               series_round_starts[series_round_starts.between(range_start, cur_tick, inclusive=True)].min())
+
 
     # demo is over on return to menu when tick becomes 0
     if cur_tick == 0:
@@ -258,31 +291,33 @@ while (cap.isOpened()):
     if cur_tick != last_tick:
         finishTick(player_dead_for_round)
 
-    # compute masks
-    maskCounts = [redLow.get_pixel_count_in_range(cap_hsv) + redHigh.get_pixel_count_in_range(cap_hsv),
-                  redGreen.get_pixel_count_in_range(cap_hsv),
-                  green.get_pixel_count_in_range(cap_hsv),
-                  greenBlue.get_pixel_count_in_range(cap_hsv),
-                  blue.get_pixel_count_in_range(cap_hsv),
-                  redBlue.get_pixel_count_in_range(cap_hsv)]
-
     if args.show_non_ff:
         logState(False)
         cv2.imshow('frame', frame)
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
 
+    if last_tick >= 8037:
+        logState(True)
+        x =2
+
     # Display the resulting frame
     # cv2.imshow('frame', cap_rgb)
     for i in range(len(maskCounts)):
-        if not player_dead_for_round and maskCounts[i] > 0:
+        # skip recognized players that aren't in the demo
+        if players[i] == "" and maskCounts[i] > mask_threshold:
+            logState(False)
+            print("found non-existent player on frame logged in above line")
+            continue
+        cur_visibility_events[i].valid_for_ff = maskCounts[i] > mask_threshold
+        if not player_dead_for_round and maskCounts[i] > mask_threshold:
             cur_visibility_events[i].end_game_tick = cur_tick
             cur_visibility_events[i].end_frame_num = frame_id
             if not cur_visibility_events[i].valid:
                 cur_visibility_events[i].valid = True
                 cur_visibility_events[i].spotted = players[i]
                 cur_visibility_events[i].spotted_id = getPlayerId(players[i])
-                cur_visibility_events[i].start_game_tick = cur_tick
+                cur_visibility_events[i].start_game_tick = min_cur_tick_and_last_death
                 cur_visibility_events[i].start_frame_num = frame_id
                 cur_visibility_events[i].color = colors[i]
 
