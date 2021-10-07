@@ -297,9 +297,10 @@ while (cap.isOpened()):
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
 
-    if last_tick >= 8037:
-        logState(True)
-        x =2
+    # 8035 in short should be recognized, come back to this later
+    #if last_tick >= 8037:
+    #    logState(True)
+    #    x =2
 
     # Display the resulting frame
     # cv2.imshow('frame', cap_rgb)
