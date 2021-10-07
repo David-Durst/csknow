@@ -110,6 +110,10 @@ class HSVColorBand:
         mask = cv2.inRange(cap_hsv, self.get_lower_bound(), self.get_upper_bound())
         return cv2.countNonZero(mask)
 
+    def get_nonzero_pixels(self, cap_hsv):
+        mask = cv2.inRange(cap_hsv, self.get_lower_bound(), self.get_upper_bound())
+        return cv2.findNonZero(mask)
+
 
 # need two reds since color range wraps
 redLow = HSVColorBand(8, 8)
@@ -308,7 +312,7 @@ while (cap.isOpened()):
         # skip recognized players that aren't in the demo
         if players[i] == "" and maskCounts[i] > mask_threshold:
             logState(False)
-            print("found non-existent player on frame logged in above line")
+            print(f'''found non-existent player on frame logged in above line with {maskCounts[i]} pixels''')
             continue
         cur_visibility_events[i].valid_for_ff = maskCounts[i] > mask_threshold
         if not player_dead_for_round and maskCounts[i] > mask_threshold:
