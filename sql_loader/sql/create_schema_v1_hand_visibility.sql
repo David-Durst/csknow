@@ -10,6 +10,21 @@ CREATE TABLE "hand_visibility" (
   "hacking" boolean
 );
 
+CREATE TABLE "visibilities" (
+  "index" bigint PRIMARY KEY,
+  "spotter" varchar(255),
+  "spotted" varchar(255),
+  "start_game_tick" bigint,
+  "end_game_tick" bigint,
+  "spotter_id" bigint,
+  "spotted_id" bigint,
+  "demo" varchar(255),
+  "hacking" boolean,
+  "start_frame_num" bigint,
+  "end_frame_num" bigint,
+  "color" varchar(255)
+);
+
 CREATE TABLE "lookers" (
   "index" bigint PRIMARY KEY,
   "tick_id" bigint,
