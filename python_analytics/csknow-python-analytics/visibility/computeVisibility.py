@@ -126,7 +126,6 @@ redBlue = HSVColorBand(300, 16)
 anyColor = HSVColorBand(180, 180)
 
 colors = ['red', 'redGreen', 'green', 'greenBlue', 'blue', 'redBlue']
-seen_cur_tick = []
 cur_visibility_events = []
 finished_visibility_events = []
 
@@ -162,30 +161,25 @@ def visEventToOutputDict(visEvent: VisibilityEvent):
 
 for i in range(len(colors)):
     cur_visibility_events.append(VisibilityEvent(False, False, "", -1, -1, -1, -1, -1, colors[i]))
-    seen_cur_tick.append(False)
 
 
-def resetSeenCurTick():
-    for i in range(len(colors)):
-        seen_cur_tick[i] = False
-
-
-def finishTick(player_dead_for_round):
+def finishTick(player_dead_for_round, cur_tick, frame_id, maskCounts):
     # using data from last frame, if (didn't see a player or dead) and was in active event for seeing them, finish that event
     for i in range(len(colors)):
-        if (player_dead_for_round or not seen_cur_tick[i]) and cur_visibility_events[i].valid:
-            # don't need to update end_game_tick and end_frame_num here as that's done every frame that event is valid
-            finished_visibility_events.append(cur_visibility_events[i])
+        if (player_dead_for_round or maskCounts[i] == 0) and cur_visibility_events[i].valid:
+            cur_visibility_events[i].end_game_tick = cur_tick
+            cur_visibility_events[i].end_frame_num = frame_id
+            finished_visibility_events.append(visEventToOutputDict(cur_visibility_events[i]))
             cur_visibility_events[i].valid = False
-        if not seen_cur_tick:
+        if maskCounts[i] == 0:
             cur_visibility_events[i].valid_for_ff = False
-    resetSeenCurTick()
 
 
 frame_id = -1
 max_tick = -1
 # this doesn't get updated when fast forwarding through black frames
 last_tick = -1
+cur_tick = -1
 player_dead_for_round = False
 cap = cv2.VideoCapture(args.video_file)
 fps = cap.get(cv2.CAP_PROP_FPS)
@@ -293,7 +287,7 @@ while (cap.isOpened()):
         break
 
     if cur_tick != last_tick:
-        finishTick(player_dead_for_round)
+        finishTick(player_dead_for_round, cur_tick, frame_id, maskCounts)
 
     if args.show_non_ff:
         logState(False)
@@ -316,8 +310,6 @@ while (cap.isOpened()):
             continue
         cur_visibility_events[i].valid_for_ff = maskCounts[i] > mask_threshold
         if not player_dead_for_round and maskCounts[i] > mask_threshold:
-            cur_visibility_events[i].end_game_tick = cur_tick
-            cur_visibility_events[i].end_frame_num = frame_id
             if not cur_visibility_events[i].valid:
                 cur_visibility_events[i].valid = True
                 cur_visibility_events[i].spotted = players[i]
@@ -331,9 +323,9 @@ while (cap.isOpened()):
         print("finished all ticks, skipped last 10 for acceptable error bound")
         break
 
-finishTick(True)
+finishTick(True, cur_tick, frame_id, maskCounts)
 
-df_visibility = pd.DataFrame([visEventToOutputDict(e) for e in finished_visibility_events])
+df_visibility = pd.DataFrame(finished_visibility_events)
 df_visibility.to_csv(args.output_dir + "/" + os.path.basename(args.video_file) + ".csv", index_label='id')
 
 # save last frame for debugging
