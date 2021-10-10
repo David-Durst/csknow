@@ -44,7 +44,7 @@ select *,
        lead(start_game_tick, 1, cast(1e7 as bigint))
        over (partition by demo, spotter_id, spotted_id order by start_game_tick)
            as next_start_game_tick
-from hand_visibility;
+from visibilities;
 
 
 drop table if exists visibilities;
