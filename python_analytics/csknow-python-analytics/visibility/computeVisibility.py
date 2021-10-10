@@ -331,7 +331,32 @@ while (cap.isOpened()):
 finishTick(True, cur_tick, frame_id, maskCounts)
 
 df_visibility = pd.DataFrame([e for e in finished_visibility_events if e['end_game_tick'] - e['start_game_tick'] > 2])
-df_visibility.to_csv(args.output_dir + "/" + os.path.basename(args.video_file) + ".csv", index_label='id')
+df_visibility_sorted = df_visibility.sort_values(['demo', 'spotter', 'spotted', 'start_game_tick'])
+dicts_sorted = df_visibility_sorted.to_dict(orient='records')
+dicts_output = []
+i = 0
+while i < len(dicts_sorted):
+    j = 1
+    while j < len(dicts_sorted) - i:
+        next_row = dicts_sorted[i+j]
+        a = dicts_sorted[i]['demo'] != next_row['demo']
+        b = dicts_sorted[i]['spotter'] != next_row['spotter']
+        c = dicts_sorted[i]['spotted'] != next_row['spotted']
+        d = dicts_sorted[i]['end_game_tick'] + 2 < next_row['start_game_tick']
+        if dicts_sorted[i]['demo'] != next_row['demo'] or \
+                dicts_sorted[i]['spotter'] != next_row['spotter'] or \
+                dicts_sorted[i]['spotted'] != next_row['spotted'] or \
+                dicts_sorted[i]['end_game_tick'] + 2 < next_row['start_game_tick']:
+            break
+        else:
+            dicts_sorted[i]['end_game_tick'] = next_row['end_game_tick']
+            j += 1
+    dicts_output.append(dicts_sorted[i])
+    i += j
+
+df_output_unsorted = pd.DataFrame(dicts_output)
+df_output = df_output_unsorted.sort_values(['demo', 'start_game_tick'])
+df_output.to_csv(args.output_dir + "/" + os.path.basename(args.video_file) + ".csv", index_label='id')
 
 # save last frame for debugging
 logState(True)
