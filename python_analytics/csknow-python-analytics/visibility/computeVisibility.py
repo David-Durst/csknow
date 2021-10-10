@@ -187,7 +187,7 @@ frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
 entire_cap_duration_str = time.strftime("%H:%M:%S", time.gmtime(frame_count / fps))
 start_time = time.time()
 last_frame = None
-mask_threshold = 0
+mask_threshold = 5
 
 def logState(writeFrame=False):
     elapsed_time = time.time() - start_time
@@ -304,12 +304,17 @@ while (cap.isOpened()):
     # cv2.imshow('frame', cap_rgb)
     for i in range(len(maskCounts)):
         # skip recognized players that aren't in the demo
-        if players[i] == "" and maskCounts[i] > mask_threshold:
+        if players[i] == "" and maskCounts[i] >= mask_threshold:
             logState(False)
             print(f'''found non-existent player on frame logged in above line with {maskCounts[i]} pixels''')
+            if maskCounts[i] > 20:
+                x = redGreen.get_nonzero_pixels(cap_hsv)
+                y = greenBlue.get_nonzero_pixels(cap_hsv)
+                z = redBlue.get_nonzero_pixels(cap_hsv)
+                q = 1
             continue
         cur_visibility_events[i].valid_for_ff = maskCounts[i] > mask_threshold
-        if not player_dead_for_round and maskCounts[i] > mask_threshold:
+        if not player_dead_for_round and maskCounts[i] >= mask_threshold:
             if not cur_visibility_events[i].valid:
                 cur_visibility_events[i].valid = True
                 cur_visibility_events[i].spotted = players[i]
@@ -325,7 +330,7 @@ while (cap.isOpened()):
 
 finishTick(True, cur_tick, frame_id, maskCounts)
 
-df_visibility = pd.DataFrame(finished_visibility_events)
+df_visibility = pd.DataFrame([e for e in finished_visibility_events if e['end_game_tick'] - e['start_game_tick'] > 2])
 df_visibility.to_csv(args.output_dir + "/" + os.path.basename(args.video_file) + ".csv", index_label='id')
 
 # save last frame for debugging
