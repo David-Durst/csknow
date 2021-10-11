@@ -356,7 +356,7 @@ while i < len(dicts_sorted):
 
 df_output_unsorted = pd.DataFrame(dicts_output)
 df_output = df_output_unsorted.sort_values(['demo', 'start_game_tick'])
-df_output.to_csv(args.output_dir + "/" + os.path.basename(args.video_file) + ".csv", index_label='id')
+df_output.to_csv(args.output_dir + "/" + os.path.basename(args.video_file) + ".csv", index=False)
 
 # save last frame for debugging
 logState(True)
