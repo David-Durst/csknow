@@ -46,9 +46,8 @@ select *,
            as next_start_game_tick
 from visibilities;
 
-
-drop table if exists visibilities;
-create temp table visibilities as
+drop table if exists grouped_visibilities;
+create temp table grouped_visibilities as
 select h.index,
        h.demo,
        min(s.tick_id)          as cpu_tick_id,
@@ -133,8 +132,8 @@ select v_main.index,
        v_main.cpu_vis_game_tick,
        v_main.hacking,
        count(distinct v_other.spotted_id) as distinct_others_spotted_during_time
-from visibilities v_main
-         left join visibilities v_other
+from grouped_visibilities v_main
+         left join grouped_visibilities v_other
                    on v_main.spotter_id = v_other.spotter_id
                        and v_main.spotted_id != v_other.spotted_id
                        and int8range(v_main.start_game_tick, v_main.end_game_tick) &&
