@@ -172,7 +172,7 @@ select v.index,
 from lookers l
          join ticks t on l.tick_id = t.id
          right join visibilities_with_others v
-                    on v.start_game_tick - 128 <= t.game_tick_number
+                    on v.start_game_tick - (64*3) <= t.game_tick_number
                         and v.next_start_game_tick >= t.game_tick_number
                         and l.looker_player_id = v.spotter_id
                         and l.looked_at_player_id = v.spotted_id
@@ -242,6 +242,7 @@ select raft.index,
        raft.distinct_others_spotted_during_time,
        raft.hacking,
        (raft.react_aim_end_tick - raft.start_game_tick) / 64.0 + (ppgl.lag / 1000.0 + 0.032) as hand_aim_react_s,
+       (raft.react_aim_end_tick - raft.start_game_tick) / 64.0 as hand_aim_react_s_no_lag,
        (raft.react_aim_end_tick - raft.cpu_vis_game_tick) / 64.0 as cpu_aim_react_s,
        (raft.react_fire_end_tick - raft.start_game_tick) / 64.0 + (ppgl.lag / 1000.0 + 0.032) as hand_fire_react_s,
        (raft.react_fire_end_tick - raft.cpu_vis_game_tick) / 64.0 as cpu_fire_react_s,
