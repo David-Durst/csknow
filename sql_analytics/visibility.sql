@@ -241,9 +241,9 @@ select raft.index,
        raft.react_fire_end_tick,
        raft.distinct_others_spotted_during_time,
        raft.hacking,
-       (raft.react_aim_end_tick - raft.start_game_tick) / 64.0   as hand_aim_react_s,
+       (raft.react_aim_end_tick - raft.start_game_tick) / 64.0 + (ppgl.lag / 1000.0 + 0.032)  as hand_aim_react_s,
        (raft.react_aim_end_tick - raft.cpu_vis_game_tick) / 64.0 as cpu_aim_react_s,
-       (raft.react_fire_end_tick - raft.start_game_tick) / 64.0   as hand_fire_react_s,
+       (raft.react_fire_end_tick - raft.start_game_tick) / 64.0 + (ppgl.lag / 1000.0 + 0.032) as hand_fire_react_s,
        (raft.react_fire_end_tick - raft.cpu_vis_game_tick) / 64.0 as cpu_fire_react_s,
        rset.round_id,
        rset.game_id
@@ -252,4 +252,5 @@ from react_aim_and_fire_ticks raft
          join round_start_end_tick rset
               on g.id = rset.game_id
                   and int8range(raft.start_game_tick, raft.end_game_tick) &&
-                      int8range(rset.min_game_tick, rset.max_game_tick);
+                      int8range(rset.min_game_tick, rset.max_game_tick)
+         join per_player_game_lag ppgl on ppgl.match = raft.demo and ppgl.player = raft.spotter;
