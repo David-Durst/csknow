@@ -11,7 +11,7 @@ CREATE TABLE "hand_visibility" (
 );
 
 CREATE TABLE "visibilities" (
-  "index" bigint PRIMARY KEY,
+  "index" bigint,
   "spotter" varchar(255),
   "spotted" varchar(255),
   "start_game_tick" bigint,
@@ -22,7 +22,8 @@ CREATE TABLE "visibilities" (
   "hacking" boolean,
   "start_frame_num" bigint,
   "end_frame_num" bigint,
-  "color" varchar(255)
+  "color" varchar(255),
+  PRIMARY KEY(spotter, spotted, start_game_tick, demo)
 );
 
 CREATE TABLE "lookers" (
@@ -32,4 +33,11 @@ CREATE TABLE "lookers" (
   "looker_player_id" bigint,
   "looked_at_pat_id" bigint,
   "looked_at_player_id" bigint
+);
+
+CREATE TABLE "per_player_game_lag" (
+  "lag" bigint,
+  "player" varchar(255),
+  "match" varchar(255),
+  PRIMARY KEY(lag, player, match)
 );
