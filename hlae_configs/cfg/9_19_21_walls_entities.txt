@@ -1,0 +1,40 @@
+1 (2934.716726): class C_CSPlayer:: :50135041
+	playerInfo.xuid: 0
+	playerInfo.name: GOTV
+	playerInfo.userID: 16
+	playerInfo.guid: BOT
+2 (64.000000): class C_CSPlayer:: :45744130
+	playerInfo.xuid: 76561197994971023
+	playerInfo.name: i_eat_short_people_for_breakfast
+	playerInfo.userID: 17
+	playerInfo.guid: STEAM_1:1:17352647
+3 (441.566473): class C_CSPlayer:: :11534339
+	playerInfo.xuid: 76561198086491843
+	playerInfo.name: Michelle Obama
+	playerInfo.userID: 18
+	playerInfo.guid: STEAM_1:1:63113057
+5 (162.899149): class C_CSPlayer:: :61079557
+	playerInfo.xuid: 0
+	playerInfo.name: Gary
+	playerInfo.userID: 26
+	playerInfo.guid: BOT
+6 (1143.516085): class C_CSPlayer:: :3932166
+	playerInfo.xuid: 0
+	playerInfo.name: Henry
+	playerInfo.userID: 27
+	playerInfo.guid: BOT
+7 (1078.738455): class C_CSPlayer:: :48431111
+	playerInfo.xuid: 0
+	playerInfo.name: Adam
+	playerInfo.userID: 28
+	playerInfo.guid: BOT
+8 (998.943503): class C_CSPlayer:: :36962312
+	playerInfo.xuid: 0
+	playerInfo.name: Chris
+	playerInfo.userID: 29
+	playerInfo.guid: BOT
+9 (1489.307709): class C_CSPlayer:: :22741001
+	playerInfo.xuid: 0
+	playerInfo.name: Martin
+	playerInfo.userID: 30
+	playerInfo.guid: BOT
