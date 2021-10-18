@@ -24,14 +24,14 @@ cd ${script_dir}/csknow-python-analytics/visibility/
 python computeVisibility.py ${script_dir}/videos/9_20_21_no_hacks/merrick_9_20_21_no_hacks.dem.mp4 ${script_dir}/../local_data/visibilities/ ${script_dir}/visibilityLogs/ Kcirrem "i_eat_short_people_for_breakfast,,meeseeks,,Step Papi," 0 merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem ${pass}
 python computeVisibility.py ${script_dir}/videos/9_20_21_no_hacks/kingston_9_20_21_no_hacks.dem.mp4 ${script_dir}/../local_data/visibilities/ ${script_dir}/visibilityLogs/ "Malia Obama" "i_eat_short_people_for_breakfast,,meeseeks,,Step Papi," 0 merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem ${pass}
 python computeVisibility.py ${script_dir}/videos/9_20_21_no_hacks/rory_9_20_21_no_hacks.dem.mp4 ${script_dir}/../local_data/visibilities/ ${script_dir}/visibilityLogs/ Pinkay "i_eat_short_people_for_breakfast,,meeseeks,,Step Papi," 0 merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem ${pass}
-
+#
 python computeVisibility.py ${script_dir}/videos/9_20_21_no_hacks/durst_9_20_21_no_hacks.dem.mp4 ${script_dir}/../local_data/visibilities/ ${script_dir}/visibilityLogs/ i_eat_short_people_for_breakfast "Malia Obama,,Kcirrem,,Pinkay,Tom" 0 merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem ${pass}
 python computeVisibility.py ${script_dir}/videos/9_20_21_no_hacks/gabe_9_20_21_no_hacks.dem.mp4 ${script_dir}/../local_data/visibilities/ ${script_dir}/visibilityLogs/ meeseeks "Malia Obama,,Kcirrem,,Pinkay,Tom" 0 merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem ${pass}
 python computeVisibility.py ${script_dir}/videos/9_20_21_no_hacks/matt_9_20_21_no_hacks.dem.mp4 ${script_dir}/../local_data/visibilities/ ${script_dir}/visibilityLogs/ "Step Papi" "Malia Obama,,Kcirrem,,Pinkay,Tom" 0 merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem ${pass}
 
 
 # 9_20_21 hacks
-python computeVisibility.py ${script_dir}/videos/9_20_21_wallhacks_2/merrick_9_20_21_wallhacks_2.dem.mp4 ${script_dir}/../local_data/visibilities/ ${script_dir}/visibilityLogs/ i_eat_short_people_for_breakfast "i_eat_short_people_for_breakfast,,meeseeks,,Step Papi,Alfred" 1 merrick_kingston_matt_gabe_rory_durst_9_20_21_wallhacks_2.dem ${pass}
+python computeVisibility.py ${script_dir}/videos/9_20_21_wallhacks_2/merrick_9_20_21_wallhacks_2.dem.mp4 ${script_dir}/../local_data/visibilities/ ${script_dir}/visibilityLogs/ Kcirrem "i_eat_short_people_for_breakfast,,meeseeks,,Step Papi,Alfred" 1 merrick_kingston_matt_gabe_rory_durst_9_20_21_wallhacks_2.dem ${pass}
 python computeVisibility.py ${script_dir}/videos/9_20_21_wallhacks_2/kingston_9_20_21_wallhacks_2.dem.mp4 ${script_dir}/../local_data/visibilities/ ${script_dir}/visibilityLogs/ "Malia Obama" "i_eat_short_people_for_breakfast,,meeseeks,,Step Papi,Alfred" 1 merrick_kingston_matt_gabe_rory_durst_9_20_21_wallhacks_2.dem ${pass}
 python computeVisibility.py ${script_dir}/videos/9_20_21_wallhacks_2/rory_9_20_21_wallhacks_2.dem.mp4 ${script_dir}/../local_data/visibilities/ ${script_dir}/visibilityLogs/ Pinkay "i_eat_short_people_for_breakfast,,meeseeks,,Step Papi,Alfred" 1 merrick_kingston_matt_gabe_rory_durst_9_20_21_wallhacks_2.dem ${pass}
 

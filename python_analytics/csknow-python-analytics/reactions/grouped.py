@@ -39,10 +39,10 @@ hand_react_reasonable = '(select * from react_final where abs(hand_aim_react_s) 
 cpu_react_reasonable = '(select * from react_final where abs(cpu_aim_react_s) <= 3) as cpu_react_reasonable'
 select_cols = 'game_id, min(round_id) as min_round_id, max(round_id) as max_round_id, spotter_id, spotter, hacking, ' + \
     'distinct_others_spotted_during_time, ' + \
-    'avg(coalesce(hand_aim_react_s, 4.0)) as avg_aim_hand_react, avg(coalesce(cpu_aim_react_s, 4.0)) as avg_aim_cpu_react, ' + \
-    'avg(coalesce(hand_fire_react_s, 4.0)) as avg_fire_hand_react, avg(coalesce(cpu_fire_react_s, 4.0)) as avg_fire_cpu_react, ' + \
-    'sum(case when hand_aim_react_s < 0.15 then 1 else 0 end) as hand_preaims, ' + \
-    'sum(case when cpu_aim_react_s < 0.15 then 1 else 0 end) as cpu_preaims'
+    'avg(coalesce(hand_aim_react_s, 6.0)) as avg_aim_hand_react, avg(coalesce(cpu_aim_react_s, 4.0)) as avg_aim_cpu_react, ' + \
+    'avg(coalesce(hand_fire_react_s, 6.0)) as avg_fire_hand_react, avg(coalesce(cpu_fire_react_s, 4.0)) as avg_fire_cpu_react, ' + \
+    'sum(case when hand_aim_react_s < -2.25 then 1 else 0 end) as hand_preaims, ' + \
+    'sum(case when cpu_aim_react_s < -2.25 then 1 else 0 end) as cpu_preaims'
 group_cols = f'''group by game_id, round_id / {args.grouping_rounds}, spotter_id, spotter, hacking, distinct_others_spotted_during_time'''
 hand_filtered_df = sqlio.read_sql_query(f'''select {select_cols} from {hand_react_reasonable} {group_cols}''', conn)
 cpu_filtered_df = sqlio.read_sql_query(f'''select {select_cols} from {cpu_react_reasonable} {group_cols}''', conn)
