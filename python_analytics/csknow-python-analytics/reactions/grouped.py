@@ -135,6 +135,7 @@ makeHistograms(dfs, 'hand_preaims', 'cpu_preaims', makePlotterFunction(1, True),
 
 def makeLogReg(df, cols, name):
     plt.clf()
+    fig, ax = plt.subplots(figsize=(10, 10))
     X_df = df[cols + ['distinct_others_spotted_during_time']]
     y_series = df['hacking']
 
@@ -144,10 +145,14 @@ def makeLogReg(df, cols, name):
     lr_model.fit(X_train, y_train)
     y_pred = lr_model.predict(X_test)
 
+    sn.set(font_scale=2.0)
     confusion_matrix = pd.crosstab(y_test, y_pred, rownames=['Actual'], colnames=['Predicted'])
-    sn.set(font_scale=1.5)
-    confusion_matrix_heatmap = sn.heatmap(confusion_matrix, annot=True)
-    plt.title(name + ' Labeled Confusion Matrix', fontsize=24)
+    confusion_matrix_heatmap = sn.heatmap(confusion_matrix, annot=True, annot_kws={"size": 24}, ax=ax)
+    confusion_matrix_heatmap.set_yticklabels(confusion_matrix_heatmap.get_ymajorticklabels(), fontsize=24)
+    confusion_matrix_heatmap.set_xticklabels(confusion_matrix_heatmap.get_xmajorticklabels(), fontsize=24)
+    confusion_matrix_heatmap.set_xlabel("Actual", fontsize=24)
+    confusion_matrix_heatmap.set_ylabel("Predicted", fontsize=24)
+    plt.title(name + ' Labeled Confusion Matrix', fontsize=30)
     confusion_matrix_figure = confusion_matrix_heatmap.get_figure()
     confusion_matrix_figure.savefig(args.plot_folder + name + '_grouped_confusion_matrix__hand_vs_cpu__hacking_vs_legit.png')
 
