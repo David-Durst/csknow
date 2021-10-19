@@ -11,7 +11,6 @@ CREATE TABLE "hand_visibility" (
 );
 
 CREATE TABLE "visibilities" (
-  "index" bigint,
   "spotter" varchar(255),
   "spotted" varchar(255),
   "start_game_tick" bigint,

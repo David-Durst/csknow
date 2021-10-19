@@ -48,8 +48,7 @@ from visibilities;
 
 drop table if exists grouped_visibilities;
 create temp table grouped_visibilities as
-select h.index,
-       h.demo,
+select h.demo,
        min(s.tick_id)          as cpu_tick_id,
        h.spotter_id,
        h.spotter,
@@ -67,17 +66,16 @@ from last_spotted_cpu s
                         and h.start_game_tick <= s.game_tick_number
                         and h.next_start_game_tick >= s.game_tick_number
                         and s.is_spotted = true
-group by h.index, h.demo, h.spotter_id, h.spotter, h.spotted_id, h.spotted, h.start_game_tick, h.end_game_tick,
+group by h.demo, h.spotter_id, h.spotter, h.spotted_id, h.spotted, h.start_game_tick, h.end_game_tick,
          h.next_start_game_tick, h.hacking
-order by h.index;
+order by h.demo, h.start_game_tick, h.spotter, h.spotted;
 
 
 -- this table and next row shows that for me, only missed CPU visibility events from above join
 -- (aka null values for hand_visibility_with_next_start) are in warmup, so join is ok
 drop table if exists ungrouped_visibilities;
 create temp table ungrouped_visibilities as
-select h.index,
-       h.demo,
+select h.demo,
        s.tick_id,
        h.spotter_id,
        h.spotted_id,
@@ -97,7 +95,7 @@ from last_spotted_cpu s
                        and h.start_game_tick <= s.game_tick_number
                        and h.next_start_game_tick >= s.game_tick_number
                        and s.is_spotted = true
-order by h.index;
+order by h.demo, h.start_game_tick, h.spotter, h.spotted;
 
 select g.demo_file, game_tick_number, is_spotted, p_spotter.name as spotter, p_spotted.name as spotted
 from ungrouped_visibilities
@@ -119,8 +117,7 @@ order by demo_file, game_tick_number;
 
 drop table if exists visibilities_with_others;
 create temp table visibilities_with_others as
-select v_main.index,
-       v_main.demo,
+select v_main.demo,
        v_main.cpu_tick_id,
        v_main.spotter_id,
        v_main.spotter,
@@ -138,8 +135,7 @@ from grouped_visibilities v_main
                        and v_main.spotted_id != v_other.spotted_id
                        and int8range(v_main.start_game_tick, v_main.end_game_tick) &&
                            int8range(v_other.start_game_tick, v_other.end_game_tick)
-group by v_main.index,
-         v_main.demo,
+group by v_main.demo,
          v_main.cpu_tick_id,
          v_main.spotter_id,
          v_main.spotter,
@@ -150,13 +146,12 @@ group by v_main.index,
          v_main.next_start_game_tick,
          v_main.cpu_vis_game_tick,
          v_main.hacking
-order by v_main.index;
+order by v_main.demo, v_main.start_game_tick, v_main.spotter, v_main.spotted;
 
 
 drop table if exists react_aim_ticks;
 create temp table react_aim_ticks as
-select v.index,
-       v.demo,
+select v.demo,
        v.cpu_tick_id,
        v.spotter_id,
        v.spotter,
@@ -176,15 +171,14 @@ from lookers l
                         and v.next_start_game_tick >= t.game_tick_number
                         and l.looker_player_id = v.spotter_id
                         and l.looked_at_player_id = v.spotted_id
-group by v.index, v.demo, v.cpu_tick_id, v.spotter_id, v.spotter, v.spotted_id, v.spotted, v.start_game_tick,
+group by v.demo, v.cpu_tick_id, v.spotter_id, v.spotter, v.spotted_id, v.spotted, v.start_game_tick,
          v.end_game_tick, v.next_start_game_tick, v.cpu_vis_game_tick, v.distinct_others_spotted_during_time, v.hacking
-order by v.index;
+order by v.demo, v.start_game_tick, v.spotter, v.spotted;
 
 
 drop table if exists react_aim_and_fire_ticks;
 create temp table react_aim_and_fire_ticks as
-select rat.index,
-       rat.demo,
+select rat.demo,
        rat.cpu_tick_id,
        rat.spotter_id,
        rat.spotter,
@@ -205,9 +199,9 @@ from hurt h
                         and rat.next_start_game_tick >= t.game_tick_number
                         and h.attacker = rat.spotter_id
                         and h.victim = rat.spotted_id
-group by rat.index, rat.demo, rat.cpu_tick_id, rat.spotter_id, rat.spotter, rat.spotted_id, rat.spotted, rat.start_game_tick,
+group by rat.demo, rat.cpu_tick_id, rat.spotter_id, rat.spotter, rat.spotted_id, rat.spotted, rat.start_game_tick,
          rat.end_game_tick, rat.next_start_game_tick, rat.cpu_vis_game_tick, rat.react_aim_end_tick, rat.distinct_others_spotted_during_time, rat.hacking
-order by rat.index;
+order by rat.demo, rat.start_game_tick, rat.spotter, rat.spotted;
 
 
 drop table if exists round_start_end_tick;
@@ -226,8 +220,7 @@ order by r.game_id, r.id;
 
 drop table if exists react_final;
 create temp table react_final as
-select raft.index,
-       raft.demo,
+select raft.demo,
        raft.cpu_tick_id,
        raft.spotter_id,
        raft.spotter,
@@ -241,20 +234,18 @@ select raft.index,
        raft.react_fire_end_tick,
        raft.distinct_others_spotted_during_time,
        raft.hacking,
-       (raft.react_aim_end_tick - raft.start_game_tick) / 64.0 + (ppgl.lag / 1000.0 + 0.032) as hand_aim_react_s,
+       (raft.react_aim_end_tick - raft.start_game_tick) / 64.0 as hand_aim_react_s,
        (raft.react_aim_end_tick - raft.start_game_tick) / 64.0 as hand_aim_react_s_no_lag,
        (raft.react_aim_end_tick - raft.cpu_vis_game_tick) / 64.0 as cpu_aim_react_s,
-       (raft.react_fire_end_tick - raft.start_game_tick) / 64.0 + (ppgl.lag / 1000.0 + 0.032) as hand_fire_react_s,
+       (raft.react_fire_end_tick - raft.start_game_tick) / 64.0 as hand_fire_react_s,
        (raft.react_fire_end_tick - raft.cpu_vis_game_tick) / 64.0 as cpu_fire_react_s,
        rset.round_id,
-       rset.game_id,
-       ppgl.player
+       rset.game_id
 from react_aim_and_fire_ticks raft
          join games g on g.demo_file = raft.demo
          join round_start_end_tick rset
               on g.id = rset.game_id
                   and int8range(raft.start_game_tick, raft.end_game_tick) &&
-                      int8range(rset.min_game_tick, rset.max_game_tick)
-         left join per_player_game_lag ppgl on ppgl.match = raft.demo and ppgl.player = raft.spotter;
+                      int8range(rset.min_game_tick, rset.max_game_tick);
 -- + (ppgl.lag / 1000.0 + 0.032)
 select * from react_final;
