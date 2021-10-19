@@ -68,8 +68,8 @@ for i in range(len(ax)):
         ax[i][j].set_xlabel('Reaction Time (s)', fontsize=14)
         ax[i][j].set_ylabel('Frequency', fontsize=14)
 
-ax[0][0].set_title('Hand Labeled, Hacking', fontsize=18)
-ax[0][1].set_title('Hand Labeled, Not Hacking', fontsize=18)
+ax[0][0].set_title('GPU Labeled, Hacking', fontsize=18)
+ax[0][1].set_title('GPU Labeled, Not Hacking', fontsize=18)
 ax[1][0].set_title('CPU Labeled, Hacking', fontsize=18)
 ax[1][1].set_title('CPU Labeled, Not Hacking', fontsize=18)
 
@@ -113,11 +113,11 @@ for i in range(len(ax)):
         ax[i][j].set_xlabel('Reaction Time (s)', fontsize=14)
         ax[i][j].set_ylabel('Percent Frequency', fontsize=14)
 
-ax[0][0].set_title('Hand Labeled, Hacking', fontsize=18)
-ax[0][1].set_title('Hand Labeled, Not Hacking', fontsize=18)
+ax[0][0].set_title('GPU Labeled, Hacking', fontsize=18)
+ax[0][1].set_title('GPU Labeled, Not Hacking', fontsize=18)
 ax[1][0].set_title('CPU Labeled, Hacking', fontsize=18)
 ax[1][1].set_title('CPU Labeled, Not Hacking', fontsize=18)
-
+plt.suptitle('Individual Data Points Histograms', fontsize=30)
 plt.tight_layout()
 fig.savefig(args.plot_folder + 'percent_histogram__hand_vs_cpu__hacking_vs_legit.png')
 

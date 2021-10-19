@@ -106,8 +106,8 @@ def makeHistograms(dfs, hand_col, cpu_col, plotting_function, name, x_label):
             ax[i][j].set_xlabel(x_label, fontsize=14)
             ax[i][j].set_ylabel('Frequency', fontsize=14)
 
-    ax[0][0].set_title('Hand Labeled, Hacking', fontsize=18)
-    ax[0][1].set_title('Hand Labeled, Not Hacking', fontsize=18)
+    ax[0][0].set_title('GPU Labeled, Hacking', fontsize=18)
+    ax[0][1].set_title('GPU Labeled, Not Hacking', fontsize=18)
     ax[1][0].set_title('CPU Labeled, Hacking', fontsize=18)
     ax[1][1].set_title('CPU Labeled, Not Hacking', fontsize=18)
 
@@ -121,6 +121,7 @@ def makeHistograms(dfs, hand_col, cpu_col, plotting_function, name, x_label):
     ax[1][0].annotate('total points: ' + str(len(hacks_cpu_filtered_df[cpu_col].dropna())), get_num_points_coordinate(ax[1][0]), fontsize="14")
     ax[1][1].annotate('total points: ' + str(len(legit_cpu_filtered_df[cpu_col].dropna())), get_num_points_coordinate(ax[1][1]), fontsize="14")
 
+    plt.suptitle(name + ' Grouped Data Points Histograms', fontsize=30)
     plt.tight_layout()
     fig.savefig(args.plot_folder + name + '_grouped_histogram__hand_vs_cpu__hacking_vs_legit.png')
 
@@ -160,7 +161,7 @@ def makeLogReg(df, cols, name):
     print(name + ' accuracy: ', metrics.accuracy_score(y_test, y_pred))
     #print(np.argwhere(y_pred == False))
 
-#makeLogReg(hand_filtered_df, ['avg_aim_hand_react'], 'Hand')
-makeLogReg(hand_filtered_df, ['avg_aim_hand_react', 'hand_preaims'], 'Hand')
+#makeLogReg(hand_filtered_df, ['avg_aim_hand_react'], 'GPU')
+makeLogReg(hand_filtered_df, ['avg_aim_hand_react', 'hand_preaims'], 'GPU')
 #makeLogReg(cpu_filtered_df, ['avg_aim_cpu_react'], 'CPU')
 makeLogReg(cpu_filtered_df, ['avg_aim_cpu_react', 'cpu_preaims'], 'CPU')
