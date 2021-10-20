@@ -1,0 +1,52 @@
+id,spotter,spotted,start_game_tick,end_game_tick,spotter_id,spotted_id,demo,hacking,start_frame_num,end_frame_num,color
+0,Step Papi,Kcirrem,6927,6985,32,29,merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,1150,1260,green
+17,Step Papi,Malia Obama,6943,6957,32,31,merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,1180,1206,red
+1,Step Papi,Kcirrem,7971,8085,32,29,merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,3108,3322,green
+2,Step Papi,Kcirrem,9219,9233,32,29,merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,5449,5475,green
+3,Step Papi,Kcirrem,9244,9264,32,29,merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,5494,5532,green
+34,Step Papi,Tom,11984,11996,32,34,merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,10633,10654,redBlue
+35,Step Papi,Tom,12015,12095,32,34,merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,10691,10841,redBlue
+36,Step Papi,Tom,12115,12212,32,34,merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,10877,11060,redBlue
+4,Step Papi,Kcirrem,12208,12274,32,29,merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,11052,11176,green
+37,Step Papi,Tom,12267,12270,32,34,merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,11165,11168,redBlue
+29,Step Papi,Pinkay,14283,14342,32,33,merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,14943,15055,blue
+5,Step Papi,Kcirrem,14372,14430,32,29,merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,15110,15170,green
+38,Step Papi,Tom,14395,14425,32,34,merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,15153,15170,redBlue
+39,Step Papi,Tom,16484,16488,32,34,merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,19069,19076,redBlue
+18,Step Papi,Malia Obama,16488,16492,32,31,merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,19076,19084,red
+19,Step Papi,Malia Obama,16529,16543,32,31,merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,19155,19181,red
+40,Step Papi,Tom,16551,16583,32,34,merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,19196,19226,redBlue
+30,Step Papi,Pinkay,16623,16697,32,33,merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,19330,19416,blue
+41,Step Papi,Tom,16623,16643,32,34,merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,19330,19368,redBlue
+42,Step Papi,Tom,18179,18232,32,34,merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,22250,22348,redBlue
+31,Step Papi,Pinkay,18269,18286,32,33,merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,22418,22449,blue
+6,Step Papi,Kcirrem,21333,21400,32,29,merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,28162,28287,green
+43,Step Papi,Tom,22470,22552,32,34,merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,30293,30447,redBlue
+32,Step Papi,Pinkay,22493,22552,32,33,merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,30336,30447,blue
+44,Step Papi,Tom,25103,25138,32,34,merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,35231,35295,redBlue
+45,Step Papi,Tom,25154,25194,32,34,merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,35326,35401,redBlue
+20,Step Papi,Malia Obama,25156,25198,32,31,merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,35330,35408,red
+21,Step Papi,Malia Obama,25254,25283,32,31,merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,35514,35569,red
+46,Step Papi,Tom,25258,25316,32,34,merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,35521,35631,redBlue
+7,Step Papi,Kcirrem,25269,25329,32,29,merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,35541,35655,green
+8,Step Papi,Kcirrem,25363,25403,32,29,merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,35718,35779,green
+9,Step Papi,Kcirrem,25406,25413,32,29,merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,35799,35812,green
+47,Step Papi,Tom,25492,25558,32,34,merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,35960,36084,redBlue
+33,Step Papi,Pinkay,25494,25558,32,33,merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,35964,36084,blue
+22,Step Papi,Malia Obama,27315,27341,32,31,merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,39378,39427,red
+23,Step Papi,Malia Obama,27347,27410,32,31,merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,39437,39479,red
+24,Step Papi,Malia Obama,27493,27518,32,31,merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,39711,39759,red
+10,Step Papi,Kcirrem,28265,28288,32,29,merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,41160,41203,green
+11,Step Papi,Kcirrem,28304,28378,32,29,merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,41232,41271,green
+25,Step Papi,Malia Obama,32658,32822,32,31,merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,49397,49417,red
+48,Step Papi,Tom,36380,36507,32,34,merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,56374,56614,redBlue
+49,Step Papi,Tom,38551,38650,32,34,merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,60445,60631,redBlue
+12,Step Papi,Kcirrem,39130,39202,32,29,merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,61531,61655,green
+26,Step Papi,Malia Obama,39150,39202,32,31,merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,61568,61655,red
+50,Step Papi,Tom,40870,40908,32,34,merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,64794,64865,redBlue
+13,Step Papi,Kcirrem,40936,41126,32,29,merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,64918,65047,green
+14,Step Papi,Kcirrem,41148,41190,32,29,merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,65314,65378,green
+15,Step Papi,Kcirrem,43381,43388,32,29,merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,69502,69514,green
+27,Step Papi,Malia Obama,43385,43406,32,31,merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,69509,69548,red
+16,Step Papi,Kcirrem,43433,43438,32,29,merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,69599,69609,green
+28,Step Papi,Malia Obama,43574,43590,32,31,merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,69863,69894,red

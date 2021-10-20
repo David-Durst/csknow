@@ -1,0 +1,53 @@
+id,spotter,spotted,start_game_tick,end_game_tick,spotter_id,spotted_id,demo,hacking,start_frame_num,end_frame_num,color
+5,Pinkay,i_eat_short_people_for_breakfast,6985,7025,33,24,merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,1205,1280,red
+6,Pinkay,i_eat_short_people_for_breakfast,7078,7119,33,24,merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,1380,1458,red
+7,Pinkay,i_eat_short_people_for_breakfast,7145,7151,33,24,merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,1505,1517,red
+8,Pinkay,i_eat_short_people_for_breakfast,7161,7183,33,24,merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,1536,1576,red
+23,Pinkay,meeseeks,7230,7236,33,30,merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,1665,1676,green
+24,Pinkay,meeseeks,7243,7277,33,30,merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,1690,1754,green
+9,Pinkay,i_eat_short_people_for_breakfast,9322,9342,33,24,merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,5587,5625,red
+10,Pinkay,i_eat_short_people_for_breakfast,9346,9498,33,24,merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,5632,5918,red
+25,Pinkay,meeseeks,12351,12359,33,30,merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,11268,11283,green
+26,Pinkay,meeseeks,12416,12447,33,30,merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,11388,11424,green
+27,Pinkay,meeseeks,12456,12520,33,30,merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,11465,11584,green
+28,Pinkay,meeseeks,12560,12578,33,30,merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,11660,11693,green
+29,Pinkay,meeseeks,14090,14097,33,30,merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,14528,14540,green
+30,Pinkay,meeseeks,14195,14246,33,30,merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,14724,14820,green
+0,Pinkay,Step Papi,14281,14338,33,32,merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,14886,14993,blue
+31,Pinkay,meeseeks,14326,14401,33,30,merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,14970,15111,green
+32,Pinkay,meeseeks,14439,14465,33,30,merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,15182,15222,green
+33,Pinkay,meeseeks,14506,14525,33,30,merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,15308,15343,green
+34,Pinkay,meeseeks,14711,14946,33,30,merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,15691,15890,green
+35,Pinkay,meeseeks,14980,14996,33,30,merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,16196,16226,green
+11,Pinkay,i_eat_short_people_for_breakfast,16574,16660,33,24,merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,19185,19347,red
+1,Pinkay,Step Papi,16618,16694,33,32,merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,19268,19371,blue
+12,Pinkay,i_eat_short_people_for_breakfast,16683,16692,33,24,merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,19390,19395,red
+2,Pinkay,Step Papi,18267,18315,33,32,merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,22360,22449,blue
+36,Pinkay,meeseeks,18470,18515,33,30,merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,22739,22825,green
+37,Pinkay,meeseeks,18696,18812,33,30,merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,23165,23382,green
+38,Pinkay,meeseeks,18901,18982,33,30,merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,23547,23701,green
+39,Pinkay,meeseeks,19287,19331,33,30,merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,24272,24355,green
+40,Pinkay,meeseeks,19444,19471,33,30,merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,24567,24618,green
+41,Pinkay,meeseeks,21699,21746,33,30,merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,28794,28882,green
+3,Pinkay,Step Papi,22496,22552,33,32,merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,30289,30395,blue
+4,Pinkay,Step Papi,25489,25558,33,32,merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,35900,36031,blue
+13,Pinkay,i_eat_short_people_for_breakfast,25690,25711,33,24,merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,36279,36316,red
+14,Pinkay,i_eat_short_people_for_breakfast,27147,27570,33,24,merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,39009,39146,red
+15,Pinkay,i_eat_short_people_for_breakfast,27879,27886,33,24,merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,40381,40396,red
+16,Pinkay,i_eat_short_people_for_breakfast,29926,29955,33,24,merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,44221,44275,red
+17,Pinkay,i_eat_short_people_for_breakfast,30056,30114,33,24,merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,44464,44572,red
+42,Pinkay,meeseeks,31512,31528,33,30,merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,47194,47224,green
+43,Pinkay,meeseeks,31564,31674,33,30,merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,47291,47498,green
+44,Pinkay,meeseeks,31702,31712,33,30,merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,47551,47569,green
+18,Pinkay,i_eat_short_people_for_breakfast,32865,32885,33,24,merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,49731,49769,red
+19,Pinkay,i_eat_short_people_for_breakfast,32888,32943,33,24,merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,49773,49781,red
+20,Pinkay,i_eat_short_people_for_breakfast,33136,33185,33,24,merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,50238,50331,red
+45,Pinkay,meeseeks,33150,33185,33,30,merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,50265,50331,green
+46,Pinkay,meeseeks,36142,36198,33,30,merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,55875,55931,green
+47,Pinkay,meeseeks,36269,36285,33,30,merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,56113,56143,green
+48,Pinkay,meeseeks,38286,38300,33,30,merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,59896,59922,green
+21,Pinkay,i_eat_short_people_for_breakfast,38553,38560,33,24,merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,60397,60408,red
+22,Pinkay,i_eat_short_people_for_breakfast,38568,38637,33,24,merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,60423,60553,red
+49,Pinkay,meeseeks,40923,40956,33,30,merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,64839,64901,green
+50,Pinkay,meeseeks,43807,43868,33,30,merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,70246,70361,green
+51,Pinkay,meeseeks,43884,43897,33,30,merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,70391,70416,green
