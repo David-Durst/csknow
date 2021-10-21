@@ -553,6 +553,9 @@ func processFile(unprocessedKey string, localDemName string, idState * IDState, 
 	})
 
 	p.RegisterEventHandler(func(e events.SmokeStart) {
+		if e.Grenade == nil {
+			return
+		}
 		if _, ok := grenadesTracker[e.Grenade.UniqueID()]; !ok {
 			return
 		}
@@ -562,6 +565,9 @@ func processFile(unprocessedKey string, localDemName string, idState * IDState, 
 	})
 
 	p.RegisterEventHandler(func(e events.SmokeExpired) {
+		if e.Grenade == nil {
+			return
+		}
 		if _, ok := grenadesTracker[e.Grenade.UniqueID()]; !ok {
 			return
 		}

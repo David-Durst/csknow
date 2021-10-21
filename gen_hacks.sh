@@ -1,29 +1,45 @@
 rm local_data/*.csv
 rm local_data/*/*.csv
 cd demo_parser
-go run . -l -n=no_hacks_4.dem
+go run . -l -n=demos/no_hacks_4.dem
 ./copy_local.sh
 ./update_local.sh 1
 
 cp output_global_id_state.csv input_global_id_state.csv 
-go run . -l -f=false -n=with_hacks_3.dem
+go run . -l -f=false -n=demos/with_hacks_3.dem
 ./copy_local.sh
 ./update_local.sh 2
 
 cp output_global_id_state.csv input_global_id_state.csv 
-go run . -l -f=false -n=9_19_21_durst_t_wang_ct_with_walls.dem
+go run . -l -f=false -n=demos/9_19_21_durst_t_wang_ct_with_walls.dem
 ./copy_local.sh
 ./update_local.sh 3
 
 cp output_global_id_state.csv input_global_id_state.csv 
-go run . -l -f=false -n=merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem
+go run . -l -f=false -n=demos/merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem
 ./copy_local.sh
 ./update_local.sh 4
 
 cp output_global_id_state.csv input_global_id_state.csv 
-go run . -l -f=false -n=merrick_kingston_matt_gabe_rory_durst_9_20_21_wallhacks_2.dem
+go run . -l -f=false -n=demos/merrick_kingston_matt_gabe_rory_durst_9_20_21_wallhacks_2.dem
 ./copy_local.sh
 ./update_local.sh 5
+
+declare -a ProDemos=(
+    "319_titan-epsilon_de_dust2.dem" 
+    "334_natus-vincere-team-ldlc_de_inferno.dem" 
+    "336_natus-vincere-team-ldlc_de_overpass.dem"
+    "320_titan-epsilon_de_cache.dem" 
+    "335_natus-vincere-team-ldlc_de_dust2.dem"
+    "337_natus-vincere-team-ldlc_de_mirage.dem")
+local_files_id=6
+for f in ${ProDemos[@]}; do
+    cp output_global_id_state.csv input_global_id_state.csv 
+    go run . -l -f=false -n=demos/$f
+    ./copy_local.sh
+    ./update_local.sh $local_files_id
+    ((local_files_id++))
+done
 
 cd ../download_s3_csvs
 ./merge.sh
