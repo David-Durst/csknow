@@ -1,5 +1,7 @@
 rm local_data/*.csv
 rm local_data/*/*.csv
+cp backup_visibility_data/*.csv local_data/
+cp -r backup_visibility_data/visibilities backup_visibility_data/visibilities_unadjusted local_data/
 cd demo_parser
 go run . -l -n=demos/no_hacks_4.dem
 ./copy_local.sh
