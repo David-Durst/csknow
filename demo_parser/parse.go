@@ -6,10 +6,13 @@ import (
 	"github.com/markus-wa/demoinfocs-golang/v2/pkg/demoinfocs"
 	"github.com/markus-wa/demoinfocs-golang/v2/pkg/demoinfocs/common"
 	"github.com/markus-wa/demoinfocs-golang/v2/pkg/demoinfocs/events"
+	"github.com/markus-wa/demoinfocs-golang/v2/pkg/demoinfocs/msg"
+	st "github.com/markus-wa/demoinfocs-golang/v2/pkg/demoinfocs/sendtables"
 	"os"
 	"path"
 	"sort"
 	"strconv"
+	"strings"
 )
 
 type RoundTracker struct {
@@ -259,6 +262,50 @@ func processFile(unprocessedKey string, localDemName string, idState * IDState, 
 		"primary_bullets_reserve,secondary_weapon,secondary_bullets_clip,secondary_bullets_reserve,num_he,num_flash,num_smoke," +
 		"num_incendiary,num_molotov,num_decoy,num_zeus,has_defuser,has_bomb,money\n")
 
+	p.RegisterNetMessageHandler(func(m *msg.CSVCMsg_SetView) {
+		print(m.EntityIndex)
+		/*
+		classBits := uint8(math.Ceil(math.Log2(float64(len(p.ServerClasses())))))
+		r := bitio.NewReader(bytes.NewReader(m.EntityData))
+
+		scID, _ := r.ReadBits(classBits)
+		handle, _ := r.ReadBits(21)
+
+		if handle == 45875202 {
+			print("howdy")
+		}
+
+		if handle % 1000000 == 875202 {
+			print("howdy")
+		}
+
+		if scID == 40 {
+			println(scID)
+			println(handle)
+			print("dude")
+		}
+
+		 */
+	})
+
+	p.RegisterEventHandler(func(events.DataTablesParsed) {
+		x := 1
+		if false {
+			print(x)
+		}
+		p.ServerClasses().FindByName("CCSPlayer").OnEntityCreated(func(ent st.Entity) {
+			//y := ent.Property("m_hOwnerEntity")
+			//x := p.GameState().Participants().FindByHandle(y.Value().IntVal)
+			//v := reflect.ValueOf(p)
+			//z := v.FieldByName("y")
+			//fmt.Println(z.Interface())
+			//print("hi")
+			if false {
+				print(x)
+			}
+		})
+	})
+
 	p.RegisterEventHandler(func(e events.FrameDone) {
 		// on the first tick save the game state
 		if ticksProcessed == 0 {
@@ -293,6 +340,20 @@ func processFile(unprocessedKey string, localDemName string, idState * IDState, 
 
 
 		for _, player := range players {
+			for _, elem := range gs.Entities() {
+				for _, prop_elem := range elem.Properties()	{
+					if prop_elem.Value().IntVal == 45875202 {
+						fmt.Printf("%s: %d", prop_elem.Name(), prop_elem.Value().IntVal)
+					}
+					if prop_elem.Name() == "m_hOwnerEntity" {
+						fmt.Printf("%s: %d", prop_elem.Name(), prop_elem.Value().IntVal)
+					}
+				}
+			}
+			x := player.Entity.ServerClass().BaseClasses()[0].PropertyEntries()
+			//y := player.Entity.ServerClass().PropertyEntries()
+			fmt.Println(strings.Join(x, ", "))
+			//fmt.Println(strings.Join(y, ", "))
 			playerAtTickID := idState.nextPlayerAtTick
 			idState.nextPlayerAtTick++
 			primaryWeapon := -1
