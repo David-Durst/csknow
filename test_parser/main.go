@@ -15,7 +15,11 @@ func main() {
 	}
 	defer f.Close()
 
-	p := dem.NewParser(f)
+	cfg := dem.DefaultParserConfig
+	cfg.IgnoreErrBombsiteIndexNotFound = true
+
+	p := dem.NewParserWithConfig(f, cfg)
+
 	defer p.Close()
 
 	// Register handler on kill events
