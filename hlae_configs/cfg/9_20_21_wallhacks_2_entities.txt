@@ -1,5 +1,5 @@
 merrick_kingston_matt_gabe_rory_durst_9_20_21_wallhacks_2.dem
-17180
+6100
 1 (2573.127383): class C_CSPlayer:: :50266113
 	playerInfo.xuid: 0
 	playerInfo.name: GOTV

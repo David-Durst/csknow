@@ -25,6 +25,7 @@ conn = psycopg2.connect(
 @dataclass(frozen=True)
 class PlayerEntity:
     name: str
+    xuid: str
     id: str
     handle: str
     team: str
@@ -56,15 +57,19 @@ players_and_teams = sqlio.read_sql_query(f'''
 
 for entity_index in range(num_entities):
     entity_index_and_handle_line = lines[entity_index * lines_per_entity + entities_offset]
+    player_xuid_line = lines[entity_index * lines_per_entity + 1 + entities_offset]
     player_name_line = lines[entity_index * lines_per_entity + 2 + entities_offset]
     if match_line_0 := re.search('(\d+) .*Player:: :(\d+)', entity_index_and_handle_line):
         if match_line_1 := re.search('playerInfo.name: (.+)', player_name_line):
-            # skip gotv as not coloring them
-            if match_line_1.group(1) == 'GOTV':
-                continue
-            team = str(players_and_teams.loc[players_and_teams['name'] == match_line_1.group(1), 'team'].item())
-            players.append(PlayerEntity(match_line_1.group(1), match_line_0.group(1), match_line_0.group(2), team))
-            teams.add(team)
+            if match_line_2 := re.search('playerInfo.xuid: (.+)', player_xuid_line):
+                # skip gotv and bots as not using their perspective
+                if match_line_1.group(1) == 'GOTV':
+                    continue
+                team = str(players_and_teams.loc[players_and_teams['name'] == match_line_1.group(1), 'team'].item())
+                players.append(PlayerEntity(match_line_1.group(1), match_line_2.group(1), match_line_0.group(1), match_line_0.group(2), team))
+                teams.add(team)
+            else:
+                print(f'''missed on xuid line for entity {entity_index}''')
         else:
             print(f'''missed on name line for entity {entity_index}''')
             exit(1)
@@ -80,9 +85,9 @@ else:
     exit(1)
 
 color_actions = ['afxWhTRed', 'afxWhTGreen', 'afxWhTBlue', 'afxWhTRedBlue', 'afxWhTGreenBlue']
-color_counter = 0
 for team in teams:
-    team_file_path = file_dir / prefix + '_post_load_' + team + '.cfg'
+    color_counter = 0
+    team_file_path = file_dir / (prefix + '_post_load_' + team + '.cfg')
     with open(team_file_path, 'w+') as team_f:
         team_f.write('exec create_bfs_stream\n')
         for p in players:
@@ -93,7 +98,10 @@ for team in teams:
                 color_counter += 1
 
 for player in players:
-    player_file_path = file_dir / prefix + '_pre_load_' + player.name[:5] + '.cfg'
+    if player.xuid == '0':
+        continue
+    player_file_path = file_dir / (prefix + '_pre_load_' + player.name[:5] + '_' + player.team + '.cfg')
     with open(player_file_path, 'w+') as player_f:
-        player_f.write(f'''mirv_pov {p.id}''')
-        player_f.write(f'''playdemo {demo_name}''')
+        player_f.write(f'''mirv_pov {p.id}\n''')
+        player_f.write(f'''playdemo {demo_name}\n''')
+        player_f.write(f'''demo_goto {game_tick_for_getting_teams}\n''')

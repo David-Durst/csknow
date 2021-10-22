@@ -22,3 +22,5 @@ conda activate csknow
 cd ${script_dir}/csknow-python-analytics/visibility/
 
 python createHLAEConfigs.py ${script_dir}/../hlae_configs/cfg/9_19_21_walls_entities.txt ${pass}
+python createHLAEConfigs.py ${script_dir}/../hlae_configs/cfg/9_20_21_no_wallhacks_entities.txt ${pass}
+python createHLAEConfigs.py ${script_dir}/../hlae_configs/cfg/9_20_21_wallhacks_2_entities.txt ${pass}

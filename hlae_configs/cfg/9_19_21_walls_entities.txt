@@ -1,5 +1,5 @@
 9_19_21_durst_t_wang_ct_with_walls.dem
-13884
+6100
 1 (2934.716726): class C_CSPlayer:: :50135041
 	playerInfo.xuid: 0
 	playerInfo.name: GOTV
