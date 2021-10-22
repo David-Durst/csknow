@@ -100,7 +100,7 @@ for team in teams:
 for player in players:
     if player.xuid == '0':
         continue
-    player_file_path = file_dir / (prefix + '_pre_load_' + player.name[:5] + '_' + player.team + '.cfg')
+    player_file_path = file_dir / (prefix + '_pre_load_' + player.name[:5].rstrip() + '_' + player.team + '.cfg')
     with open(player_file_path, 'w+') as player_f:
         player_f.write(f'''mirv_pov {p.id}\n''')
         player_f.write(f'''playdemo {demo_name}\n''')
