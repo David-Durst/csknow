@@ -23,7 +23,8 @@ setup(
         "pillow",
         "psycopg2-binary",
         "opencv-python",
-        "pytesseract"
+        "pytesseract",
+        "pyautogui"
     ],
     python_requires='>=3.7',
     long_description=long_description,
