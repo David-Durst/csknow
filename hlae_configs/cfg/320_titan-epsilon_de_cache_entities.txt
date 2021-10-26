@@ -1,0 +1,67 @@
+320_titan-epsilon_de_cache.dem
+11747
+1 (316.355913): class C_CSPlayer:: :24051713
+	playerInfo.xuid: 0
+	playerInfo.name: PrivateTV
+	playerInfo.userID: 2
+	playerInfo.guid: BOT
+2 (153.284044): class C_CSPlayer:: :51380226
+	playerInfo.xuid: 76561197967432889
+	playerInfo.name: EPSILON MAJ3R
+	playerInfo.userID: 3
+	playerInfo.guid: STEAM_1:1:3583580
+3 (101.552932): class C_CSPlayer:: :55246851
+	playerInfo.xuid: 76561197988206102
+	playerInfo.name: EPSILON G[M]X * Nike
+	playerInfo.userID: 51
+	playerInfo.guid: STEAM_1:0:13970187
+4 (4459.672409): class C_CSPlayer:: :50987012
+	playerInfo.xuid: 76561197972003061
+	playerInfo.name: Ex6TenZ
+	playerInfo.userID: 69
+	playerInfo.guid: STEAM_1:1:5868666
+5 (4389.680968): class C_CSPlayer:: :10420229
+	playerInfo.xuid: 76561197993284269
+	playerInfo.name: Captain Solo
+	playerInfo.userID: 74
+	playerInfo.guid: STEAM_1:1:16509270
+6 (163.966454): class C_CSPlayer:: :31195142
+	playerInfo.xuid: 76561198000078546
+	playerInfo.name: EPSILON • Uzzziii * ViewSonic
+	playerInfo.userID: 66
+	playerInfo.guid: STEAM_1:0:19906409
+7 (4671.616636): class C_CSPlayer:: :22740999
+	playerInfo.xuid: 76561197960301489
+	playerInfo.name: Maniac
+	playerInfo.userID: 70
+	playerInfo.guid: STEAM_1:1:17880
+8 (4671.616636): class C_CSPlayer:: :47579144
+	playerInfo.xuid: 76561197997382660
+	playerInfo.name: SLTV | SL4M
+	playerInfo.userID: 71
+	playerInfo.guid: STEAM_1:0:18558466
+9 (4389.680968): class C_CSPlayer:: :18612233
+	playerInfo.xuid: 76561198000020858
+	playerInfo.name: KQLY
+	playerInfo.userID: 72
+	playerInfo.guid: STEAM_1:0:19877565
+10 (64.000000): class C_CSPlayer:: :60620810
+	playerInfo.xuid: 76561197988768248
+	playerInfo.name: EPSILON • ScreaM -R-
+	playerInfo.userID: 73
+	playerInfo.guid: STEAM_1:0:14251260
+14 (321.948320): class C_CSPlayer:: :32440334
+	playerInfo.xuid: 76561197963694984
+	playerInfo.name: EPSILON • SIXER/j/
+	playerInfo.userID: 62
+	playerInfo.guid: STEAM_1:0:1714628
+15 (4516.124555): class C_CSPlayer:: :8847375
+	playerInfo.xuid: 76561198024905796
+	playerInfo.name: kennyS
+	playerInfo.userID: 39
+	playerInfo.guid: STEAM_1:0:32320034
+18 (4440.828526): class C_CSPlayer:: :46727186
+	playerInfo.xuid: 76561197989744167
+	playerInfo.name: apEX[D]
+	playerInfo.userID: 65
+	playerInfo.guid: STEAM_1:1:14739219

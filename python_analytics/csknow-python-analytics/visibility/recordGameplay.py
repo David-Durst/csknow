@@ -16,10 +16,12 @@ def csv_list(string):
    return string.split(',')
 
 parser = argparse.ArgumentParser()
-parser.add_argument("configs", help="comma separated list of configs for recording",
-                    type=csv_list)
 parser.add_argument("end_image", help="file with image to look for when demo is done",
                     type=str)
+parser.add_argument("video_folder", help="file with image to look for when demo is done",
+                    type=str)
+parser.add_argument("configs", help="comma separated list of configs for recording",
+                    type=csv_list)
 args = parser.parse_args()
 
 num_hlae_icon_clicks = 0

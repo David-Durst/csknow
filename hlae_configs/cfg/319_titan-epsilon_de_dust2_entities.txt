@@ -1,0 +1,67 @@
+319_titan-epsilon_de_dust2.dem
+13113
+1 (2359.965347): class C_CSPlayer:: :23920641
+	playerInfo.xuid: 0
+	playerInfo.name: PrivateTV
+	playerInfo.userID: 2
+	playerInfo.guid: BOT
+2 (3342.950032): class C_CSPlayer:: :51249154
+	playerInfo.xuid: 76561197967432889
+	playerInfo.name: EPSILON MAJ3R
+	playerInfo.userID: 3
+	playerInfo.guid: STEAM_1:1:3583580
+3 (64.000000): class C_CSPlayer:: :55115779
+	playerInfo.xuid: 76561197993284269
+	playerInfo.name: Captain Solo
+	playerInfo.userID: 15
+	playerInfo.guid: STEAM_1:1:16509270
+4 (165.118337): class C_CSPlayer:: :50790404
+	playerInfo.xuid: 76561197989744167
+	playerInfo.name: apEX[D]
+	playerInfo.userID: 27
+	playerInfo.guid: STEAM_1:1:14739219
+5 (3277.989664): class C_CSPlayer:: :10092549
+	playerInfo.xuid: 76561197963694984
+	playerInfo.name: EPSILON • SIXER/j/
+	playerInfo.userID: 30
+	playerInfo.guid: STEAM_1:0:1714628
+6 (3477.267344): class C_CSPlayer:: :30998534
+	playerInfo.xuid: 76561198000078546
+	playerInfo.name: EPSILON • Uzzziii * ViewSonic
+	playerInfo.userID: 31
+	playerInfo.guid: STEAM_1:0:19906409
+7 (64.000000): class C_CSPlayer:: :22413319
+	playerInfo.xuid: 76561197972003061
+	playerInfo.name: Ex6TenZ
+	playerInfo.userID: 40
+	playerInfo.guid: STEAM_1:1:5868666
+10 (3237.705514): class C_CSPlayer:: :60424202
+	playerInfo.xuid: 76561197988206102
+	playerInfo.name: EPSILON G[M]X * Nike
+	playerInfo.userID: 35
+	playerInfo.guid: STEAM_1:0:13970187
+11 (64.000000): class C_CSPlayer:: :917515
+	playerInfo.xuid: 76561197997382660
+	playerInfo.name: SLTV | SL4M
+	playerInfo.userID: 36
+	playerInfo.guid: STEAM_1:0:18558466
+12 (3322.006745): class C_CSPlayer:: :21757964
+	playerInfo.xuid: 76561197988768248
+	playerInfo.name: EPSILON • ScreaM -R-
+	playerInfo.userID: 13
+	playerInfo.guid: STEAM_1:0:14251260
+13 (200.282481): class C_CSPlayer:: :5636109
+	playerInfo.xuid: 76561197960301489
+	playerInfo.name: Maniac
+	playerInfo.userID: 37
+	playerInfo.guid: STEAM_1:1:17880
+14 (107.627834): class C_CSPlayer:: :32309262
+	playerInfo.xuid: 76561198000020858
+	playerInfo.name: KQLY
+	playerInfo.userID: 26
+	playerInfo.guid: STEAM_1:0:19877565
+15 (96.913693): class C_CSPlayer:: :8716303
+	playerInfo.xuid: 76561198024905796
+	playerInfo.name: kennyS
+	playerInfo.userID: 39
+	playerInfo.guid: STEAM_1:0:32320034

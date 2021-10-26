@@ -1,4 +1,5 @@
 import re
+import string
 
 import psycopg2
 import argparse
@@ -72,6 +73,9 @@ for entity_index in range(num_entities):
                 # skip gotv and bots as not using their perspective
                 if match_line_1.group(1) == 'GOTV':
                     continue
+                # skip coaches, other people with steam id not in match
+                if len(players_and_teams.loc[players_and_teams['name'] == match_line_1.group(1)]) == 0:
+                    continue
                 team = str(players_and_teams.loc[players_and_teams['name'] == match_line_1.group(1), 'team'].item())
                 players.append(PlayerEntity(match_line_1.group(1), match_line_2.group(1), match_line_0.group(1), match_line_0.group(2), team))
                 teams.add(team)
@@ -123,7 +127,8 @@ compute_visibility_sh.write(f'''#{prefix}\n''')
 for player in players:
     if player.xuid == '0':
         continue
-    player_config_file_name = prefix + '_pre_load_' + player.name[:5].rstrip() + '_' + player.team + '.cfg'
+    clean_name = re.sub(r'\W+', '', player.name)
+    player_config_file_name = prefix + '_pre_load_' + clean_name + '_' + player.team + '.cfg'
     player_file_path = file_dir / player_config_file_name
     player_config_file_names.append(player_config_file_name)
     with open(player_file_path, 'w+') as player_f:
@@ -133,7 +138,7 @@ for player in players:
     players_by_color = []
     for color in colors_for_analysis:
         players_by_color.append(enemy_to_color_per_team[player.team][color])
-    compute_visibility_sh.write(f'''python computeVisibility.py ${{script_dir}}/videos/{prefix}/{prefix}_{player.name[:5].rstrip()}_{player.team}.mp4 ${{script_dir}}/../local_data/visibilities/ ${{script_dir}}/visibilityLogs/ {player.name} "{','.join(players_by_color)}" {args.hacking} {demo_name} ${{pass}}\n''')
+    compute_visibility_sh.write(f'''python computeVisibility.py ${{script_dir}}/videos/{prefix}/{prefix}_{clean_name}_{player.team}.mp4 ${{script_dir}}/../local_data/visibilities/ ${{script_dir}}/visibilityLogs/ "{player.name}" "{','.join(players_by_color)}" {args.hacking} {demo_name} ${{pass}}\n''')
 compute_visibility_sh.write(f'''\n\n''')
 compute_visibility_sh.close()
 
