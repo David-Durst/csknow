@@ -45,7 +45,7 @@ for config in args.configs:
     pyautogui.click()
     pyautogui.write(f'''exec {config}\n''')
 
-    time.sleep(25)
+    time.sleep(40)
 
     # run post load configs
     pydirectinput.press('`')
