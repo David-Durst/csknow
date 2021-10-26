@@ -6,12 +6,19 @@ import pandas as pd
 import pandas.io.sql as sqlio
 import pathlib
 from dataclasses import dataclass
+import os
 
 
 parser = argparse.ArgumentParser()
 parser.add_argument("entities_file", help="file with output of mirv_listEntities isPlayer=1 for demo",
                     type=str)
+parser.add_argument("compute_visibility", help="path to computeVisibility.sh",
+                    type=str)
+parser.add_argument("video_dir", help="path to video directory",
+                    type=str)
 parser.add_argument("password", help="database password",
+                    type=str)
+parser.add_argument("hacking", help="1 if hacking, 0 if not",
                     type=str)
 args = parser.parse_args()
 
@@ -85,6 +92,15 @@ else:
     exit(1)
 
 color_actions = ['afxWhTRed', 'afxWhTGreen', 'afxWhTBlue', 'afxWhTRedBlue', 'afxWhTGreenBlue']
+colors_for_analysis = ['red', 'redGreen', 'green', 'greenBlue', 'blue', 'redBlue']
+actions_to_analysis = { 'afxWhTRed':'red', 'afxWhTGreen':'green', 'afxWhTBlue':'blue',
+                        'afxWhTRedBlue':'redBlue', 'afxWhTGreenBlue':'greenBlue'}
+enemy_to_color_per_team = {}
+for team in teams:
+    enemy_to_color_per_team[team] = {}
+    for color in colors_for_analysis:
+        enemy_to_color_per_team[team][color] = ""
+
 for team in teams:
     color_counter = 0
     team_file_path = file_dir / (prefix + '_post_load_' + team + '.cfg')
@@ -95,9 +111,15 @@ for team in teams:
                 team_f.write(f'''mirv_streams edit bfs actionFilter addEx "handle={p.handle}" "action=noDraw" // {p.name}\n''')
             else:
                 team_f.write(f'''mirv_streams edit bfs actionFilter addEx "handle={p.handle}" "action={color_actions[color_counter]}" // {p.name}\n''')
+                enemy_to_color_per_team[team][actions_to_analysis[color_actions[color_counter]]] = p.name
                 color_counter += 1
 
+video_path = os.path.join(args.video_dir, prefix)
+if not os.path.exists(video_path):
+    os.mkdir(video_path)
 player_config_file_names = []
+compute_visibility_sh = open(args.compute_visibility, 'a')
+compute_visibility_sh.write(f'''#{prefix}\n''')
 for player in players:
     if player.xuid == '0':
         continue
@@ -108,5 +130,11 @@ for player in players:
         player_f.write(f'''mirv_pov {player.id}\n''')
         player_f.write(f'''playdemo {demo_name}\n''')
         player_f.write(f'''demo_goto {game_tick_for_getting_teams}\n''')
+    players_by_color = []
+    for color in colors_for_analysis:
+        players_by_color.append(enemy_to_color_per_team[player.team][color])
+    compute_visibility_sh.write(f'''python computeVisibility.py ${{script_dir}}/videos/{prefix}/{prefix}_{player.name[:5].rstrip()}_{player.team}.mp4 ${{script_dir}}/../local_data/visibilities/ ${{script_dir}}/visibilityLogs/ {player.name} "{','.join(players_by_color)}" {args.hacking} {demo_name} ${{pass}}\n''')
+compute_visibility_sh.write(f'''\n\n''')
+compute_visibility_sh.close()
 
 print(",".join(player_config_file_names))
