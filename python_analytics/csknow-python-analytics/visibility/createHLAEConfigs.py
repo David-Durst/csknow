@@ -105,7 +105,7 @@ for player in players:
     player_file_path = file_dir / player_config_file_name
     player_config_file_names.append(player_config_file_name)
     with open(player_file_path, 'w+') as player_f:
-        player_f.write(f'''mirv_pov {p.id}\n''')
+        player_f.write(f'''mirv_pov {player.id}\n''')
         player_f.write(f'''playdemo {demo_name}\n''')
         player_f.write(f'''demo_goto {game_tick_for_getting_teams}\n''')
 
