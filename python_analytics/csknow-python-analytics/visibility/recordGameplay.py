@@ -3,6 +3,7 @@ import pydirectinput
 import time
 import argparse
 import re
+import os
 
 if False:
     i = 0
@@ -26,6 +27,7 @@ for config in args.configs:
     print(f'''processing {config}''')
     if match_config := re.search('(.*)_pre_load_(.*)_(\d+)\.cfg', config):
         match_prefix = match_config.group(1)
+        player_name = match_config.group(2)
         team_number = match_config.group(3)
     else:
         print(f'''bad config {config}''')
@@ -68,8 +70,8 @@ for config in args.configs:
     # start playback and recording
     pydirectinput.moveTo(950, 763)
     pyautogui.click()
-    pyautogui.write('mirv_streams previewEnd\n')
-    time.sleep(0.5)
+    #pyautogui.write('mirv_streams previewEnd\n')
+    #time.sleep(0.5)
     pyautogui.write('demo_resume\n')
     pydirectinput.press('`')
     pydirectinput.press('F1')
@@ -90,4 +92,11 @@ for config in args.configs:
     pydirectinput.press('F2')
     pydirectinput.press('`')
     pyautogui.write('quit\n')
+
+    # get latest video file and name it appropriately
+    files = os.listdir(args.video_folder)
+    paths = [os.path.join(args.video_folder, basename) for basename in files]
+    newest_video_path = max(paths, key=os.path.getmtime)
+    os.rename(newest_video_path, os.path.join(args.video_folder, f'''{match_prefix}_{player_name}_{team_number}.mp4'''))
+
     time.sleep(5)
