@@ -21,6 +21,7 @@ parser.add_argument("end_image", help="file with image to look for when demo is 
                     type=str)
 args = parser.parse_args()
 
+num_hlae_icon_clicks = 0
 for config in args.configs:
     print(f'''processing {config}''')
     if match_config := re.search('(.*)_pre_load_(.*)_(\d+)\.cfg', config):
@@ -32,6 +33,11 @@ for config in args.configs:
     # start game
     pyautogui.moveTo(164, 1185)
     pyautogui.click()
+    # do in loop to ensure hlae on top
+    num_hlae_icon_clicks += 1
+    while num_hlae_icon_clicks % 2 != 1:
+        pyautogui.click()
+        num_hlae_icon_clicks += 1
     time.sleep(2)
     with pyautogui.hold('alt'):
         pyautogui.press('f')
