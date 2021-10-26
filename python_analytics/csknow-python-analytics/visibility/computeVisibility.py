@@ -275,11 +275,8 @@ while (cap.isOpened()):
         if len(series_deaths[series_deaths.between(range_start, cur_tick, inclusive=True)]) > 0:
             player_dead_for_round = True
         # not an elif because you could fast forward over both a death and a round start
-        min_cur_tick_and_last_death = cur_tick
         if len(series_round_starts[series_round_starts.between(range_start, cur_tick, inclusive=True)]) > 0:
             player_dead_for_round = False
-            min_last_tick_and_last_death = min(min_cur_tick_and_last_death,
-                                               series_round_starts[series_round_starts.between(range_start, cur_tick, inclusive=True)].min())
 
 
     # demo is over on return to menu when tick becomes 0
@@ -294,11 +291,6 @@ while (cap.isOpened()):
         cv2.imshow('frame', frame)
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
-
-    # 8035 in short should be recognized, come back to this later
-    #if last_tick >= 8037:
-    #    logState(True)
-    #    x =2
 
     # Display the resulting frame
     # cv2.imshow('frame', cap_rgb)
@@ -319,7 +311,7 @@ while (cap.isOpened()):
                 cur_visibility_events[i].valid = True
                 cur_visibility_events[i].spotted = players[i]
                 cur_visibility_events[i].spotted_id = getPlayerId(players[i])
-                cur_visibility_events[i].start_game_tick = min_cur_tick_and_last_death
+                cur_visibility_events[i].start_game_tick = cur_tick
                 cur_visibility_events[i].start_frame_num = frame_id
                 cur_visibility_events[i].color = colors[i]
 
