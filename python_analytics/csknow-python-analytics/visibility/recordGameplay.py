@@ -79,10 +79,12 @@ for config in args.configs:
     while not found_end:
         found_end = True
         try:
-            pyautogui.locateOnScreen(args.end_image)
+            location = pyautogui.locateOnScreen(args.end_image)
         except pyautogui.ImageNotFoundException:
             found_end = False
             time.sleep(2.5)
+        if location is None:
+            found_end = False
 
 
     pydirectinput.press('F2')
