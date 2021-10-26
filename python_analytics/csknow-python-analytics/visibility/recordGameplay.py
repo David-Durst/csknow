@@ -93,6 +93,8 @@ for config in args.configs:
     pydirectinput.press('`')
     pyautogui.write('quit\n')
 
+    time.sleep(1)
+
     # get latest video file and name it appropriately
     files = os.listdir(args.video_folder)
     paths = [os.path.join(args.video_folder, basename) for basename in files]
