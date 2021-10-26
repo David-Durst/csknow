@@ -97,11 +97,16 @@ for team in teams:
                 team_f.write(f'''mirv_streams edit bfs actionFilter addEx "handle={p.handle}" "action={color_actions[color_counter]}" // {p.name}\n''')
                 color_counter += 1
 
+player_config_file_names = []
 for player in players:
     if player.xuid == '0':
         continue
-    player_file_path = file_dir / (prefix + '_pre_load_' + player.name[:5].rstrip() + '_' + player.team + '.cfg')
+    player_config_file_name = prefix + '_pre_load_' + player.name[:5].rstrip() + '_' + player.team + '.cfg'
+    player_file_path = file_dir / player_config_file_name
+    player_config_file_names.append(player_config_file_name)
     with open(player_file_path, 'w+') as player_f:
         player_f.write(f'''mirv_pov {p.id}\n''')
         player_f.write(f'''playdemo {demo_name}\n''')
         player_f.write(f'''demo_goto {game_tick_for_getting_teams}\n''')
+
+print(",".join(player_config_file_names))
