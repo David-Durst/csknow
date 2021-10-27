@@ -257,7 +257,7 @@ func processFile(unprocessedKey string, localDemName string, idState * IDState, 
 	playerAtTickFile.WriteString("id,player_id,tick_id,pos_x,pos_y,pos_z,view_x,view_y,team,health,armor,has_helmet," +
 		"is_alive,is_crouching,is_airborne,remaining_flash_time,active_weapon,main_weapon,primary_bullets_clip," +
 		"primary_bullets_reserve,secondary_weapon,secondary_bullets_clip,secondary_bullets_reserve,num_he,num_flash,num_smoke," +
-		"num_incendiary,num_molotov,num_decoy,num_zeus,has_defuser,has_bomb,money\n")
+		"num_incendiary,num_molotov,num_decoy,num_zeus,has_defuser,has_bomb,money,ping\n")
 
 	p.RegisterEventHandler(func(e events.FrameDone) {
 		// on the first tick save the game state
@@ -353,14 +353,14 @@ func processFile(unprocessedKey string, localDemName string, idState * IDState, 
 			playerAtTickFile.WriteString(fmt.Sprintf("%d,%d,%d,%.2f,%.2f,%.2f,%.2f,%.2f,%d,%d,%d,%d," +
 				"%d,%d,%d,%f,%d,%d,%d," +
 				"%d,%d,%d,%d,%d,%d,%d," +
-				"%d,%d,%d,%d,%d,%d,%d\n",
+				"%d,%d,%d,%d,%d,%d,%d,%d\n",
 				playerAtTickID, getPlayerBySteamID(&playersTracker, player), tickID, player.Position().X, player.Position().Y,
 				player.Position().Z, player.ViewDirectionX(), player.ViewDirectionY(), side, player.Health(), player.Armor(),
 				boolToInt(player.HasHelmet()),
 				boolToInt(player.IsAlive()), boolToInt(player.IsDucking()), boolToInt(player.IsAirborne()), player.FlashDuration,
 				activeWeapon, primaryWeapon, primaryBulletsClip,
 				primaryBulletsReserve, secondaryWeapon, secondaryBulletsClip, secondaryBulletsReserve, numHE, numFlash, numSmoke,
-				numIncendiary, numMolotov, numDecoy, numZeus, boolToInt(hasBomb), boolToInt(hasDefuser), player.Money()))
+				numIncendiary, numMolotov, numDecoy, numZeus, boolToInt(hasBomb), boolToInt(hasDefuser), player.Money(), player.Ping()))
 		}
 		idState.nextTick++
 	})

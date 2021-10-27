@@ -82,7 +82,8 @@ CREATE TABLE "player_at_tick" (
   "num_zeus" smallint,
   "has_defuser" boolean,
   "has_bomb" boolean,
-  "money" int
+  "money" int,
+  "ping" int
 );
 
 CREATE TABLE "spotted" (

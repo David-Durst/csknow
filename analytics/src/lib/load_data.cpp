@@ -530,10 +530,13 @@ void loadPlayerAtTickFile(PlayerAtTick & pat, string filePath, int64_t fileRowSt
         }
         else if (colNumber == 32) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, pat.money[arrayEntry]);
+        }
+        else if (colNumber == 33) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, pat.ping[arrayEntry]);
             rowNumber++;
             arrayEntry++;
         }
-        colNumber = (colNumber + 1) % 33;
+        colNumber = (colNumber + 1) % 34;
     }
     closeMMapFile({fd, stats, file});
 }

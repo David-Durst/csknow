@@ -364,6 +364,7 @@ public:
     bool * hasDefuser;
     bool * hasBomb;
     int32_t * money;
+    int32_t * ping;
 
     void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) {
         ColStore::init(rows, numFiles, gameStarts);
@@ -399,6 +400,7 @@ public:
         hasDefuser = (bool *) malloc(rows * sizeof(bool));
         hasBomb = (bool *) malloc(rows * sizeof(bool));
         money = (int32_t *) malloc(rows * sizeof(int32_t));
+        ping = (int32_t *) malloc(rows * sizeof(int32_t));
     }
 
     void makePitchNeg90To90() {
@@ -448,6 +450,7 @@ public:
         free(hasDefuser);
         free(hasBomb);
         free(money);
+        free(ping);
     }
 
     PlayerAtTick(const PlayerAtTick& other) = delete;
