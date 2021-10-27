@@ -61,22 +61,23 @@ for config in args.configs:
     pydirectinput.press('`')
     pyautogui.write(f'''exec {match_prefix}_post_load_{team_number}\n''')
 
-    time.sleep(0.5)
+    time.sleep(3)
 
     # move demoui to top left corner
     pydirectinput.moveTo(620, 639)
     pydirectinput.mouseDown(button='left')
+    time.sleep(1.0)
     pydirectinput.moveTo(405, 326)
     pydirectinput.mouseUp(button='left')
 
     # start playback and recording
     pydirectinput.moveTo(950, 763)
-    pyautogui.click()
+    pydirectinput.click()
     #pyautogui.write('mirv_streams previewEnd\n')
     #time.sleep(0.5)
     pyautogui.write('demo_resume\n')
-    pydirectinput.press('`')
     pydirectinput.moveTo(30, 30)
+    pydirectinput.press('`')
     pydirectinput.press('F1')
 
     # wait until demo over
