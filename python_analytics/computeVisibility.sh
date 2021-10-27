@@ -69,6 +69,7 @@ python computeVisibility.py ${script_dir}/videos/9_19_21_walls_gotv_adjusted/9_1
 #python computeVisibility.py ${script_dir}/videos/9_19_21_walls_gotv_unadjusted/wang_9_19_21_walls.dem.mp4 ${script_dir}/../local_data/visibilities_unadjusted/ ${script_dir}/visibilityLogs/ "Michelle Obama" "i_eat_short_people_for_breakfast,,Henry,,Adam," 1 9_19_21_durst_t_wang_ct_with_walls.dem ${pass}
 
 #python computeVisibility.py ${script_dir}/10_4_21_shortened_merrick.mp4 ${script_dir}/../local_data/visibilities/ ${script_dir}/visibilityLogs/ Kcirrem "i_eat_short_people_for_breakfast,,meeseeks,,Step Papi,Tom" 0 merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem ${pass}
+
 #319_titan-epsilon_de_dust2
 python computeVisibility.py ${script_dir}/videos/319_titan-epsilon_de_dust2/319_titan-epsilon_de_dust2_EPSILONMAJ3R_1.mp4 ${script_dir}/../local_data/visibilities/ ${script_dir}/visibilityLogs/ "EPSILON MAJ3R" "apEX[D],,Ex6TenZ,kennyS,Maniac,KQLY" 0 319_titan-epsilon_de_dust2.dem ${pass}
 python computeVisibility.py ${script_dir}/videos/319_titan-epsilon_de_dust2/319_titan-epsilon_de_dust2_apEXD_0.mp4 ${script_dir}/../local_data/visibilities/ ${script_dir}/visibilityLogs/ "apEX[D]" "EPSILON MAJ3R,,EPSILON • SIXER/j/,EPSILON • ScreaM -R-,EPSILON • Uzzziii * ViewSonic,EPSILON G[M]X * Nike" 0 319_titan-epsilon_de_dust2.dem ${pass}
