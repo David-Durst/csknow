@@ -117,13 +117,14 @@ for team in teams:
                 team_f.write(f'''mirv_streams edit bfs actionFilter addEx "handle={p.handle}" "action={color_actions[color_counter]}" // {p.name}\n''')
                 enemy_to_color_per_team[team][actions_to_analysis[color_actions[color_counter]]] = p.name
                 color_counter += 1
+        team_f.write(f'''demo_goto {game_tick_for_getting_teams}\n''')
 
 video_path = os.path.join(args.video_dir, prefix)
 if not os.path.exists(video_path):
     os.mkdir(video_path)
 player_config_file_names = []
 compute_visibility_sh = open(args.compute_visibility, 'a')
-compute_visibility_sh.write(f'''#{prefix}\n''')
+compute_visibility_sh.write(f'''\n#{prefix}\n''')
 for player in players:
     if player.xuid == '0':
         continue
@@ -134,7 +135,6 @@ for player in players:
     with open(player_file_path, 'w+') as player_f:
         player_f.write(f'''mirv_pov {player.id}\n''')
         player_f.write(f'''playdemo {demo_name}\n''')
-        player_f.write(f'''demo_goto {game_tick_for_getting_teams}\n''')
     players_by_color = []
     for color in colors_for_analysis:
         players_by_color.append(enemy_to_color_per_team[player.team][color])

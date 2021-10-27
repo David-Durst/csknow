@@ -82,6 +82,7 @@ python computeVisibility.py ${script_dir}/videos/319_titan-epsilon_de_dust2/319_
 python computeVisibility.py ${script_dir}/videos/319_titan-epsilon_de_dust2/319_titan-epsilon_de_dust2_kennyS_0.mp4 ${script_dir}/../local_data/visibilities/ ${script_dir}/visibilityLogs/ "kennyS" "EPSILON MAJ3R,,EPSILON • SIXER/j/,EPSILON • ScreaM -R-,EPSILON • Uzzziii * ViewSonic,EPSILON G[M]X * Nike" 0 319_titan-epsilon_de_dust2.dem ${pass}
 
 
+
 #320_titan-epsilon_de_cache
 python computeVisibility.py ${script_dir}/videos/320_titan-epsilon_de_cache/320_titan-epsilon_de_cache_EPSILONMAJ3R_1.mp4 ${script_dir}/../local_data/visibilities/ ${script_dir}/visibilityLogs/ "EPSILON MAJ3R" "Ex6TenZ,,Maniac,apEX[D],KQLY,kennyS" 0 320_titan-epsilon_de_cache.dem ${pass}
 python computeVisibility.py ${script_dir}/videos/320_titan-epsilon_de_cache/320_titan-epsilon_de_cache_EPSILONGMXNike_1.mp4 ${script_dir}/../local_data/visibilities/ ${script_dir}/visibilityLogs/ "EPSILON G[M]X * Nike" "Ex6TenZ,,Maniac,apEX[D],KQLY,kennyS" 0 320_titan-epsilon_de_cache.dem ${pass}
