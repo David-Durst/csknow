@@ -76,6 +76,7 @@ for config in args.configs:
     #time.sleep(0.5)
     pyautogui.write('demo_resume\n')
     pydirectinput.press('`')
+    pydirectinput.moveTo(30, 30)
     pydirectinput.press('F1')
 
     # wait until demo over
