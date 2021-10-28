@@ -174,7 +174,7 @@ int main(int argc, char * argv[]) {
      */
 
     string lookerName = "lookers";
-    LookingResult lookersResult = queryLookers(rounds, ticks, playerAtTick);
+    LookingResult lookersResult = queryLookers(games, rounds, ticks, playerAtTick);
     std::cout << "looker entries: " << lookersResult.tickId.size() << std::endl;
     /*
     VelocityResult velocityResult = queryVelocity(position);

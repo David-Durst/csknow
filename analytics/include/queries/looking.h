@@ -50,6 +50,6 @@ public:
     }
 };
 
-LookingResult queryLookers(const Rounds & rounds, const Ticks & ticks, const PlayerAtTick & playerAtTick);
+LookingResult queryLookers(const Games & games, const Rounds & rounds, const Ticks & ticks, const PlayerAtTick & playerAtTick);
 
 #endif //CSKNOW_LOOKING_H
