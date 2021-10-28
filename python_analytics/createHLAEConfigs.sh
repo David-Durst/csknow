@@ -32,8 +32,8 @@ declare -a ProDemos=(
     "319_titan-epsilon_de_dust2"
     "334_natus-vincere-team-ldlc_de_inferno"
     #"336_natus-vincere-team-ldlc_de_overpass"
-    "320_titan-epsilon_de_cache")
-    #"335_natus-vincere-team-ldlc_de_dust2"
+    "320_titan-epsilon_de_cache"
+    "335_natus-vincere-team-ldlc_de_dust2")
     #"337_natus-vincere-team-ldlc_de_mirage")
 for f in "${ProDemos[@]}"; do
   python createHLAEConfigs.py ${script_dir}/../hlae_configs/cfg/${f}_entities.txt ${script_dir}/computeVisibilityGenerated.sh ~/third_shared/videos/ ${pass} 0

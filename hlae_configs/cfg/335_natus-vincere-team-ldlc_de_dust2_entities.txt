@@ -1,0 +1,67 @@
+335_natus-vincere-team-ldlc_de_dust2.dem
+12121
+1 (2905.919047): class C_CSPlayer:: :25952257
+	playerInfo.xuid: 0
+	playerInfo.name: PrivateTV
+	playerInfo.userID: 104
+	playerInfo.guid: BOT
+2 (64.000000): class C_CSPlayer:: :53673986
+	playerInfo.xuid: 76561197963914156
+	playerInfo.name: seized
+	playerInfo.userID: 438
+	playerInfo.guid: STEAM_1:0:1824214
+3 (3329.802097): class C_CSPlayer:: :57802755
+	playerInfo.xuid: 76561197960710573
+	playerInfo.name: LDLC NBeardK- * CMSTORM
+	playerInfo.userID: 459
+	playerInfo.guid: STEAM_1:1:222422
+4 (3375.545901): class C_CSPlayer:: :53477380
+	playerInfo.xuid: 76561198006920295
+	playerInfo.name: LDLC shox * CMSTORM
+	playerInfo.userID: 452
+	playerInfo.guid: STEAM_1:1:23327283
+5 (3464.679329): class C_CSPlayer:: :13041669
+	playerInfo.xuid: 76561198000782895
+	playerInfo.name: LDLC kiokiNgo * CMSTORM
+	playerInfo.userID: 453
+	playerInfo.guid: STEAM_1:1:20258583
+6 (3402.243573): class C_CSPlayer:: :34209798
+	playerInfo.xuid: 76561197974587647
+	playerInfo.name: LDLC SMITHZZ * CMSTORM
+	playerInfo.userID: 470
+	playerInfo.guid: STEAM_1:1:7160959
+7 (203.325442): class C_CSPlayer:: :25559047
+	playerInfo.xuid: 76561198013603966
+	playerInfo.name: starix
+	playerInfo.userID: 460
+	playerInfo.guid: STEAM_1:0:26669119
+8 (3445.274054): class C_CSPlayer:: :49938440
+	playerInfo.xuid: 76561197978241352
+	playerInfo.name: LDLC Happy * CMSTORM
+	playerInfo.userID: 456
+	playerInfo.guid: STEAM_1:0:8987812
+9 (503.296641): class C_CSPlayer:: :21364745
+	playerInfo.xuid: 76561198019328472
+	playerInfo.name: Zeu$
+	playerInfo.userID: 471
+	playerInfo.guid: STEAM_1:0:29531372
+10 (265.179156): class C_CSPlayer:: :63438858
+	playerInfo.xuid: 76561197972331023
+	playerInfo.name: GuardviaN
+	playerInfo.userID: 462
+	playerInfo.guid: STEAM_1:1:6032647
+11 (139.197605): class C_CSPlayer:: :3801099
+	playerInfo.xuid: 76561197983695262
+	playerInfo.name: Edward
+	playerInfo.userID: 482
+	playerInfo.guid: STEAM_1:0:11714767
+12 (3445.274054): class C_CSPlayer:: :23724044
+	playerInfo.xuid: 76561197997382660
+	playerInfo.name: SLTV | SL4M
+	playerInfo.userID: 485
+	playerInfo.guid: STEAM_1:0:18558466
+13 (503.296641): class C_CSPlayer:: :7471117
+	playerInfo.xuid: 76561198013596023
+	playerInfo.name: Strike
+	playerInfo.userID: 449
+	playerInfo.guid: STEAM_1:1:26665147
