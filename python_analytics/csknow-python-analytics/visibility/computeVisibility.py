@@ -2,6 +2,7 @@ import argparse
 import math
 
 import pytesseract
+from tesserocr import PyTessBaseAPI
 import cv2
 import numpy as np
 import pandas as pd
@@ -11,6 +12,7 @@ import re
 import psycopg2
 from dataclasses import dataclass
 import time
+from PIL import Image
 
 parser = argparse.ArgumentParser()
 parser.add_argument("video_file", help="video file to analyze",
@@ -189,6 +191,8 @@ start_time = time.time()
 last_frame = None
 mask_threshold = 5
 
+tessocr_api = PyTessBaseAPI()
+
 def logState(writeFrame=False):
     elapsed_time = time.time() - start_time
     runtime_duration_str = time.strftime("%H:%M:%S", time.gmtime(elapsed_time))
@@ -255,10 +259,12 @@ while (cap.isOpened()):
     y_bbox_min = math.floor(demoUI_rect[1] + (91.0 / 136) * demoUI_rect[3])
     y_bbox_max = math.ceil(demoUI_rect[1] + (108.0 / 136) * demoUI_rect[3])
     cap_black_text_demoUI = cap_black_text[y_bbox_min:y_bbox_max, demoUI_rect[0]:demoUI_rect[0] + demoUI_rect[2]]
-    # cv2.imshow('frame', cap_black_text_demoUI)
-    text = pytesseract.image_to_string(cap_black_text_demoUI, config='--psm 6')
 
-    cur_tick_string_match = re.search('Tick[^\d]*(\d+)[^\d]*\/[^\d]*(\d+)', text)
+    pil_cap_black_text_demoUI = Image.fromarray(cap_black_text_demoUI)
+    tessocr_api.SetImage(pil_cap_black_text_demoUI)
+    text = tessocr_api.GetUTF8Text()
+
+    cur_tick_string_match = re.search('k[^\d]*(\d+)[^\d]*\/[^\d]*(\d+)', text)
     if cur_tick_string_match:
         cur_tick = int(cur_tick_string_match.group(1))
         if frame_id == 0:
@@ -320,6 +326,7 @@ while (cap.isOpened()):
         print("finished all ticks, skipped last 10 for acceptable error bound")
         break
 
+tessocr_api.End()
 finishTick(True, cur_tick, frame_id, maskCounts)
 
 df_visibility = pd.DataFrame([e for e in finished_visibility_events if e['end_game_tick'] - e['start_game_tick'] > 2])
