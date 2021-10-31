@@ -204,7 +204,8 @@ def logState(writeFrame=False):
     if writeFrame:
         cv2.imwrite(args.log_dir + "/" + os.path.basename(args.video_file) + ".png", last_frame)
 
-
+missed_frames = 0
+last_hit_frame = -1
 while (cap.isOpened()):
     frame_id += 1
     if (frame_id - 1) % 1000 == 0:
@@ -266,12 +267,26 @@ while (cap.isOpened()):
 
     cur_tick_string_match = re.search('k[^\d]*(\d+)[^\d]*\/[^\d]*(\d+)', text)
     if cur_tick_string_match:
+        missed_frames = 0
+        last_tick = cur_tick
         cur_tick = int(cur_tick_string_match.group(1))
         if frame_id == 0:
             max_tick = int(cur_tick_string_match.group(2))
     else:
         print("didn't find tick on frame " + str(frame_id))
-        break
+        if missed_frames >= 30:
+            break
+        missed_frames += 1
+        continue
+    # if jump to far based on number of frames, know misread tick from frame
+    if last_hit_frame > -1 and (cur_tick - last_tick) * 1.0 / (frame_id - last_hit_frame) > 10:
+        logState(False)
+        cv2.imshow('frame', frame)
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+        print(f'''misread tick {cur_tick}''')
+        cur_tick = last_tick
+        continue
 
     # if died sometimes between, then set player_dead_for_round, reset that when next round starts
     # start range at tick after last (or current tick if same tick across frames)
@@ -321,6 +336,7 @@ while (cap.isOpened()):
                 cur_visibility_events[i].start_frame_num = frame_id
                 cur_visibility_events[i].color = colors[i]
 
+    last_hit_frame = frame_id
     last_tick = cur_tick
     if last_tick + 10 >= max_tick:
         print("finished all ticks, skipped last 10 for acceptable error bound")
