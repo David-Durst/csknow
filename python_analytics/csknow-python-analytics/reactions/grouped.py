@@ -1,5 +1,4 @@
 import math
-
 import psycopg2
 import argparse
 import pandas as pd
@@ -12,6 +11,7 @@ from sklearn import metrics
 import seaborn as sn
 import numpy as np
 from dataclasses import dataclass
+from plottingHelpers import *
 
 parser = argparse.ArgumentParser()
 parser.add_argument("password", help="database password",
@@ -55,6 +55,10 @@ class LabeledData:
     legit_hand_filtered_df: pd.DataFrame
     legit_cpu_filtered_df: pd.DataFrame
 
+    def get_as_grid(self):
+        return [[self.hacks_hand_filtered_df, self.legit_hand_filtered_df],
+                [self.hacks_cpu_filtered_df, self.legit_cpu_filtered_df]]
+
 hacks_hand_filtered_df = hand_filtered_df[hand_filtered_df['hacking'] == 1]
 hacks_cpu_filtered_df = cpu_filtered_df[cpu_filtered_df['hacking'] == 1]
 legit_hand_filtered_df = hand_filtered_df[hand_filtered_df['hacking'] == 0]
@@ -66,7 +70,7 @@ dfs = LabeledData(hacks_hand_filtered_df, hacks_cpu_filtered_df, legit_hand_filt
 print(f'''hacks hand size {len(hacks_hand_filtered_df)}, legit hand size {len(legit_hand_filtered_df)} \n ''' +
       f'''hacks cpu size {len(hacks_cpu_filtered_df)}, legit cpu size {len(legit_cpu_filtered_df)}''')
 
-
+"""
 def makePlotterFunction(bin_width, pct):
     def plotPctWith200MSBins(df, col, ax):
         col_vals = df[col].dropna()
@@ -133,6 +137,21 @@ makeHistograms(dfs, 'avg_fire_hand_react', 'avg_fire_cpu_react', makePlotterFunc
 makeHistograms(dfs, 'avg_fire_hand_react', 'avg_fire_cpu_react', makePlotterFunction(0.5, True), 'pct_fire', 'Fire Reaction Time (s)')
 makeHistograms(dfs, 'hand_preaims', 'cpu_preaims', makePlotterFunction(1, False), 'count_preaim', 'Number of Preaims')
 makeHistograms(dfs, 'hand_preaims', 'cpu_preaims', makePlotterFunction(1, True), 'pct_preaim', 'Number of Preaims')
+"""
+plot_titles = [['GPU Labeled, Hacking', 'GPU Labeled, Not Hacking'], ['CPU Labeled, Hacking', 'CPU Labeled, Not Hacking']]
+
+makeHistograms(dfs.get_as_grid(), [['avg_aim_hand_react', 'avg_aim_hand_react'], ['avg_aim_cpu_react', 'avg_aim_cpu_react']],
+               makePlotterFunction(0.2, False), plot_titles, 'Grouped Count Aim Reactions', 'Aim Reaction Time (s)', args.plot_folder)
+makeHistograms(dfs.get_as_grid(), [['avg_aim_hand_react', 'avg_aim_hand_react'], ['avg_aim_cpu_react', 'avg_aim_cpu_react']],
+               makePlotterFunction(0.2, True), plot_titles, 'Grouped Percent Aim Reactions', 'Aim Reaction Time (s)', args.plot_folder)
+makeHistograms(dfs.get_as_grid(), [['avg_fire_hand_react', 'avg_fire_hand_react'], ['avg_fire_cpu_react', 'avg_fire_cpu_react']],
+               makePlotterFunction(0.5, False), plot_titles, 'Grouped Count Fire Reactions', 'Fire Reaction Time (s)', args.plot_folder)
+makeHistograms(dfs.get_as_grid(), [['avg_fire_hand_react', 'avg_fire_hand_react'], ['avg_fire_cpu_react', 'avg_fire_cpu_react']],
+               makePlotterFunction(0.5, True), plot_titles, 'Grouped Percent Fire Reactions', 'Fire Reaction Time (s)', args.plot_folder)
+makeHistograms(dfs.get_as_grid(), [['hand_preaims', 'hand_preaims'], ['cpu_preaims', 'cpu_preaims']],
+               makePlotterFunction(1, False), plot_titles, 'Grouped Count Pre-Aims', 'Number of Pre-Aims', args.plot_folder)
+makeHistograms(dfs.get_as_grid(), [['hand_preaims', 'hand_preaims'], ['cpu_preaims', 'cpu_preaims']],
+               makePlotterFunction(1, True), plot_titles, 'Grouped Percent Pre-Aims', 'Number of Pre-Aims', args.plot_folder)
 
 def makeLogReg(df, cols, name):
     plt.clf()
