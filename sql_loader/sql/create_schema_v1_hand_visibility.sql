@@ -18,7 +18,7 @@ CREATE TABLE "visibilities" (
   "spotter_id" bigint,
   "spotted_id" bigint,
   "demo" varchar(255),
-  "hacking" boolean,
+  "hacking" int,
   "start_frame_num" bigint,
   "end_frame_num" bigint,
   "color" varchar(255),
