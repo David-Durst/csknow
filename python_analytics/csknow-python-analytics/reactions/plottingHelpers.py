@@ -33,7 +33,9 @@ def makeHistograms(dfs, col_names, plotting_function, plot_titles, name, x_label
     for r in range(num_rows):
         distributions.append([])
         for c in range(num_cols):
-            distributions[r].append(plotting_function(dfs[r][c], col_names[r][c], ax[r][c]))
+            if len(dfs[r][c]) == 0:
+                continue
+            distributions[r].append(plotting_function(dfs[r][c], col_names[r], ax[r][c]))
 
     def get_num_points_coordinate(ax, x_pct = 0.6, y_pct = 0.8):
         (y_min, y_max) = ax.get_ylim()
@@ -46,6 +48,8 @@ def makeHistograms(dfs, col_names, plotting_function, plot_titles, name, x_label
         ymin = 10000000
         ymax = -1 * ymin
         for c in range(num_cols):
+            if len(dfs[r][c] == 0):
+                continue
             cur_xlim = ax[r][c].get_xlim()
             xmin = min(xmin, cur_xlim[0])
             xmax = max(xmax, cur_xlim[1])

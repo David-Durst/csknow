@@ -5,7 +5,7 @@ import pandas as pd
 import pandas.io.sql as sqlio
 import matplotlib.pyplot as plt
 from matplotlib.ticker import PercentFormatter
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, cross_val_score, StratifiedKFold
 from sklearn.linear_model import LogisticRegression
 from sklearn import metrics
 import seaborn as sn
@@ -35,138 +35,80 @@ cur = conn.cursor()
 with open(args.query_file, 'r') as query_file:
     cur.execute(query_file.read())
 
-hand_react_reasonable = '(select * from react_final where hacking < 2 and abs(hand_aim_react_s) <= 3) as hand_react_reasonable'
-cpu_react_reasonable = '(select * from react_final where hacking < 2 and abs(cpu_aim_react_s) <= 3) as cpu_react_reasonable'
-select_cols = 'game_id, min(round_id) as min_round_id, max(round_id) as max_round_id, spotter_id, spotter, hacking, ' + \
-    'distinct_others_spotted_during_time, ' + \
+hand_react_reasonable = '(select * from react_final where abs(hand_aim_react_s) <= 3) as hand_react_reasonable'
+cpu_react_reasonable = '(select * from react_final where abs(cpu_aim_react_s) <= 3) as cpu_react_reasonable'
+select_cols = 'game_id, count(*) as num, min(round_id) as min_round_id, max(round_id) as max_round_id, spotter_id, spotter, hacking, ' + \
+    'avg(distinct_others_spotted_during_time) as distinct_others_spotted_during_time, ' + \
     'avg(coalesce(hand_aim_react_s, 6.0)) as avg_aim_hand_react, avg(coalesce(cpu_aim_react_s, 4.0)) as avg_aim_cpu_react, ' + \
     'avg(coalesce(hand_fire_react_s, 6.0)) as avg_fire_hand_react, avg(coalesce(cpu_fire_react_s, 4.0)) as avg_fire_cpu_react, ' + \
     'sum(case when hand_aim_react_s < -1.5 then 1 else 0 end) as hand_preaims, ' + \
     'sum(case when cpu_aim_react_s < -1.5 then 1 else 0 end) as cpu_preaims'
-group_cols = f'''group by game_id, round_id / {args.grouping_rounds}, spotter_id, spotter, hacking, distinct_others_spotted_during_time'''
-hand_filtered_df = sqlio.read_sql_query(f'''select {select_cols} from {hand_react_reasonable} {group_cols}''', conn)
-cpu_filtered_df = sqlio.read_sql_query(f'''select {select_cols} from {cpu_react_reasonable} {group_cols}''', conn)
+group_cols = f'''group by game_id, round_id / {args.grouping_rounds}, spotter_id, spotter, hacking'''
+order_cols = f'''order by game_id, min_round_id, spotter'''
+hand_filtered_df = sqlio.read_sql_query(f'''select {select_cols} from {hand_react_reasonable} {group_cols} {order_cols}''', conn)
+cpu_filtered_df = sqlio.read_sql_query(f'''select {select_cols} from {cpu_react_reasonable} {group_cols} {order_cols}''', conn)
 
 
 @dataclass(frozen=True)
 class LabeledData:
+    pro_hand_filtered_df: pd.DataFrame
+    pro_cpu_filtered_df: pd.DataFrame
     hacks_hand_filtered_df: pd.DataFrame
     hacks_cpu_filtered_df: pd.DataFrame
     legit_hand_filtered_df: pd.DataFrame
     legit_cpu_filtered_df: pd.DataFrame
 
     def get_as_grid(self):
-        return [[self.hacks_hand_filtered_df, self.legit_hand_filtered_df],
-                [self.hacks_cpu_filtered_df, self.legit_cpu_filtered_df]]
+        return [[self.pro_hand_filtered_df, self.hacks_hand_filtered_df, self.legit_hand_filtered_df],
+                [self.pro_cpu_filtered_df, self.hacks_cpu_filtered_df, self.legit_cpu_filtered_df]]
 
+pro_hand_filtered_df = hand_filtered_df[hand_filtered_df['hacking'] == 2]
+pro_cpu_filtered_df = cpu_filtered_df[cpu_filtered_df['hacking'] == 2]
 hacks_hand_filtered_df = hand_filtered_df[hand_filtered_df['hacking'] == 1]
 hacks_cpu_filtered_df = cpu_filtered_df[cpu_filtered_df['hacking'] == 1]
 legit_hand_filtered_df = hand_filtered_df[hand_filtered_df['hacking'] == 0]
 legit_cpu_filtered_df = cpu_filtered_df[cpu_filtered_df['hacking'] == 0]
 
-dfs = LabeledData(hacks_hand_filtered_df, hacks_cpu_filtered_df, legit_hand_filtered_df, legit_cpu_filtered_df)
+dfs = LabeledData(pro_hand_filtered_df, pro_cpu_filtered_df, hacks_hand_filtered_df, hacks_cpu_filtered_df, legit_hand_filtered_df, legit_cpu_filtered_df)
 
 
-print(f'''hacks hand size {len(hacks_hand_filtered_df)}, legit hand size {len(legit_hand_filtered_df)} \n ''' +
-      f'''hacks cpu size {len(hacks_cpu_filtered_df)}, legit cpu size {len(legit_cpu_filtered_df)}''')
+print(f'''pro hand size {len(pro_hand_filtered_df)}, hacks hand size {len(hacks_hand_filtered_df)}, legit hand size {len(legit_hand_filtered_df)} \n ''' +
+      f'''pro cpu size {len(pro_cpu_filtered_df)}, hacks cpu size {len(hacks_cpu_filtered_df)}, legit cpu size {len(legit_cpu_filtered_df)}''')
 
-"""
-def makePlotterFunction(bin_width, pct):
-    def plotPctWith200MSBins(df, col, ax):
-        col_vals = df[col].dropna()
-        num_bins = math.ceil((col_vals.max() - col_vals.min()) / bin_width) + 1
-        df.hist(col, bins=num_bins, ax=ax, weights=np.ones(len(col_vals)) / len(col_vals))
-        ax.yaxis.set_major_formatter(PercentFormatter(1))
-        return pd.cut(col_vals, num_bins).value_counts(normalize=True).sort_index()
+plot_titles = [['GPU Labeled, Pro', 'GPU Labeled, Hacking', 'GPU Labeled, Not Hacking'], ['CPU Labeled, Pro', 'CPU Labeled, Hacking', 'CPU Labeled, Not Hacking']]
 
-    def plotNumWith200MSBins(df, col, ax):
-        col_vals = df[col].dropna()
-        num_bins = math.ceil((col_vals.max() - col_vals.min()) / bin_width) + 1
-        df.hist(col, bins=num_bins, ax=ax)
-        return pd.cut(col_vals, num_bins).value_counts().sort_index()
-
-    if pct:
-        return plotPctWith200MSBins
-    else:
-        return plotNumWith200MSBins
-
-
-def makeHistograms(dfs, hand_col, cpu_col, plotting_function, name, x_label):
-    fig, ax = plt.subplots(nrows=2, ncols=2, figsize=(16, 16))
-    hacks_hand_distribution = plotting_function(dfs.hacks_hand_filtered_df, hand_col, ax[0][0])
-    legit_hand_distribution = plotting_function(dfs.legit_hand_filtered_df, hand_col, ax[0][1])
-    hacks_cpu_distribution = plotting_function(dfs.hacks_cpu_filtered_df, cpu_col, ax[1][0])
-    legit_cpu_distribution = plotting_function(dfs.legit_cpu_filtered_df, cpu_col, ax[1][1])
-
-    for i in range(len(ax)):
-        for j in range(len(ax[i])):
-            (x0_min, x0_max) = ax[i][0].get_xlim()
-            (x1_min, x1_max) = ax[i][1].get_xlim()
-            ax[i][j].set_xlim(min(x0_min, x1_min), min(x0_max, x1_max))
-            if i == 0:
-                ax[i][j].set_ylim(0, max(hacks_hand_distribution.max(), legit_hand_distribution.max()) * 1.1)
-            else:
-                ax[i][j].set_ylim(0, max(hacks_cpu_distribution.max(), legit_cpu_distribution.max()) * 1.1)
-            ax[i][j].set_xlabel(x_label, fontsize=14)
-            ax[i][j].set_ylabel('Frequency', fontsize=14)
-
-    ax[0][0].set_title('GPU Labeled, Hacking', fontsize=18)
-    ax[0][1].set_title('GPU Labeled, Not Hacking', fontsize=18)
-    ax[1][0].set_title('CPU Labeled, Hacking', fontsize=18)
-    ax[1][1].set_title('CPU Labeled, Not Hacking', fontsize=18)
-
-    def get_num_points_coordinate(ax, x_pct = 0.6, y_pct = 0.8):
-        (y_min, y_max) = ax.get_ylim()
-        (x_min, x_max) = ax.get_xlim()
-        return (x_min + (x_max-x_min) * x_pct, y_min + (y_max-y_min)*y_pct)
-
-    ax[0][0].annotate('total points: ' + str(len(hacks_hand_filtered_df[hand_col].dropna())), get_num_points_coordinate(ax[0][0]), fontsize="14")
-    ax[0][1].annotate('total points: ' + str(len(legit_hand_filtered_df[hand_col].dropna())), get_num_points_coordinate(ax[0][1]), fontsize="14")
-    ax[1][0].annotate('total points: ' + str(len(hacks_cpu_filtered_df[cpu_col].dropna())), get_num_points_coordinate(ax[1][0]), fontsize="14")
-    ax[1][1].annotate('total points: ' + str(len(legit_cpu_filtered_df[cpu_col].dropna())), get_num_points_coordinate(ax[1][1]), fontsize="14")
-
-    plt.suptitle(name + ' Grouped Data Points Histograms', fontsize=30)
-    plt.tight_layout()
-    fig.savefig(args.plot_folder + name + '_grouped_histogram__hand_vs_cpu__hacking_vs_legit.png')
-
-    plt.clf()
-
-makeHistograms(dfs, 'avg_aim_hand_react', 'avg_aim_cpu_react', makePlotterFunction(0.2, False), 'count_aim', 'Aim Reaction Time (s)')
-makeHistograms(dfs, 'avg_aim_hand_react', 'avg_aim_cpu_react', makePlotterFunction(0.2, True), 'pct_aim', 'Aim Reaction Time (s)')
-makeHistograms(dfs, 'avg_fire_hand_react', 'avg_fire_cpu_react', makePlotterFunction(0.5, False), 'count_fire', 'Fire Reaction Time (s)')
-makeHistograms(dfs, 'avg_fire_hand_react', 'avg_fire_cpu_react', makePlotterFunction(0.5, True), 'pct_fire', 'Fire Reaction Time (s)')
-makeHistograms(dfs, 'hand_preaims', 'cpu_preaims', makePlotterFunction(1, False), 'count_preaim', 'Number of Preaims')
-makeHistograms(dfs, 'hand_preaims', 'cpu_preaims', makePlotterFunction(1, True), 'pct_preaim', 'Number of Preaims')
-"""
-plot_titles = [['GPU Labeled, Hacking', 'GPU Labeled, Not Hacking'], ['CPU Labeled, Hacking', 'CPU Labeled, Not Hacking']]
-
-makeHistograms(dfs.get_as_grid(), [['avg_aim_hand_react', 'avg_aim_hand_react'], ['avg_aim_cpu_react', 'avg_aim_cpu_react']],
+makeHistograms(dfs.get_as_grid(), ['avg_aim_hand_react', 'avg_aim_cpu_react'],
                makePlotterFunction(0.2, False), plot_titles, 'Grouped Count Aim Reactions', 'Aim Reaction Time (s)', args.plot_folder)
-makeHistograms(dfs.get_as_grid(), [['avg_aim_hand_react', 'avg_aim_hand_react'], ['avg_aim_cpu_react', 'avg_aim_cpu_react']],
+makeHistograms(dfs.get_as_grid(), ['avg_aim_hand_react', 'avg_aim_cpu_react'],
                makePlotterFunction(0.2, True), plot_titles, 'Grouped Percent Aim Reactions', 'Aim Reaction Time (s)', args.plot_folder)
-makeHistograms(dfs.get_as_grid(), [['avg_fire_hand_react', 'avg_fire_hand_react'], ['avg_fire_cpu_react', 'avg_fire_cpu_react']],
+makeHistograms(dfs.get_as_grid(), ['avg_fire_hand_react', 'avg_fire_cpu_react'],
                makePlotterFunction(0.5, False), plot_titles, 'Grouped Count Fire Reactions', 'Fire Reaction Time (s)', args.plot_folder)
-makeHistograms(dfs.get_as_grid(), [['avg_fire_hand_react', 'avg_fire_hand_react'], ['avg_fire_cpu_react', 'avg_fire_cpu_react']],
+makeHistograms(dfs.get_as_grid(), ['avg_fire_hand_react', 'avg_fire_cpu_react'],
                makePlotterFunction(0.5, True), plot_titles, 'Grouped Percent Fire Reactions', 'Fire Reaction Time (s)', args.plot_folder)
-makeHistograms(dfs.get_as_grid(), [['hand_preaims', 'hand_preaims'], ['cpu_preaims', 'cpu_preaims']],
+makeHistograms(dfs.get_as_grid(), ['hand_preaims', 'cpu_preaims'],
                makePlotterFunction(1, False), plot_titles, 'Grouped Count Pre-Aims', 'Number of Pre-Aims', args.plot_folder)
-makeHistograms(dfs.get_as_grid(), [['hand_preaims', 'hand_preaims'], ['cpu_preaims', 'cpu_preaims']],
+makeHistograms(dfs.get_as_grid(), ['hand_preaims', 'cpu_preaims'],
                makePlotterFunction(1, True), plot_titles, 'Grouped Percent Pre-Aims', 'Number of Pre-Aims', args.plot_folder)
 
-def makeLogReg(df, cols, name):
+def makeLogReg(df, cols, name, save_confusion_matrix = False):
     plt.clf()
-    fig, ax = plt.subplots(figsize=(10, 10))
-    X_df = df[cols + ['distinct_others_spotted_during_time']]
+    X_df = df[cols]
     y_series = df['hacking']
 
-    X_train, X_test, y_train, y_test = train_test_split(X_df,y_series,test_size=0.2,random_state=42)
 
     lr_model = LogisticRegression()
+    skf = StratifiedKFold(n_splits=5, shuffle=True)
+    scores = cross_val_score(lr_model, X_df, y_series, cv=skf)
+
+    """
+    X_train, X_test, y_train, y_test = train_test_split(X_df,y_series,stratify=y_series,test_size=0.2)
     lr_model.fit(X_train, y_train)
     y_pred = lr_model.predict(X_test)
-
-    sn.set(font_scale=2.0)
+    
     confusion_matrix = pd.crosstab(y_test, y_pred, rownames=['Actual'], colnames=['Predicted'])
+    print(confusion_matrix)
+    fig, ax = plt.subplots(figsize=(10, 10))
+    sn.set(font_scale=2.0)
     confusion_matrix_heatmap = sn.heatmap(confusion_matrix, annot=True, annot_kws={"size": 24}, ax=ax)
     confusion_matrix_heatmap.set_yticklabels(confusion_matrix_heatmap.get_ymajorticklabels(), fontsize=24)
     confusion_matrix_heatmap.set_xticklabels(confusion_matrix_heatmap.get_xmajorticklabels(), fontsize=24)
@@ -175,12 +117,16 @@ def makeLogReg(df, cols, name):
     plt.title(name + ' Labeled Confusion Matrix', fontsize=30)
     confusion_matrix_figure = confusion_matrix_heatmap.get_figure()
     confusion_matrix_figure.savefig(args.plot_folder + name + '_grouped_confusion_matrix__hand_vs_cpu__hacking_vs_legit.png')
+    """
 
-    print(name + ' coeff: ', lr_model.coef_)
-    print(name + ' accuracy: ', metrics.accuracy_score(y_test, y_pred))
+    print(f'''{name} {scores.mean()} accuracy with a standard deviation of {scores.std()}''')
+    #print(name + ' coeff: ', lr_model.coef_)
+    #return metrics.accuracy_score(y_test, y_pred)
     #print(np.argwhere(y_pred == False))
 
+hand_just_legit_cheat_df = hand_filtered_df[hand_filtered_df['hacking'] < 2]
+cpu_just_legit_cheat_df = cpu_filtered_df[cpu_filtered_df['hacking'] < 2]
 #makeLogReg(hand_filtered_df, ['avg_aim_hand_react'], 'GPU')
-makeLogReg(hand_filtered_df, ['avg_aim_hand_react', 'hand_preaims'], 'GPU')
+makeLogReg(hand_just_legit_cheat_df, ['avg_aim_hand_react', 'hand_preaims'], 'GPU')
 #makeLogReg(cpu_filtered_df, ['avg_aim_cpu_react'], 'CPU')
-makeLogReg(cpu_filtered_df, ['avg_aim_cpu_react', 'cpu_preaims'], 'CPU')
+makeLogReg(cpu_just_legit_cheat_df, ['avg_aim_cpu_react', 'cpu_preaims'], 'CPU')
