@@ -35,8 +35,8 @@ cur = conn.cursor()
 with open(args.query_file, 'r') as query_file:
     cur.execute(query_file.read())
 
-hand_react_reasonable = '(select * from react_final where abs(hand_aim_react_s) <= 3) as hand_react_reasonable'
-cpu_react_reasonable = '(select * from react_final where abs(cpu_aim_react_s) <= 3) as cpu_react_reasonable'
+hand_react_reasonable = '(select * from react_final where hacking < 2 and abs(hand_aim_react_s) <= 3) as hand_react_reasonable'
+cpu_react_reasonable = '(select * from react_final where hacking < 2 and abs(cpu_aim_react_s) <= 3) as cpu_react_reasonable'
 select_cols = 'game_id, min(round_id) as min_round_id, max(round_id) as max_round_id, spotter_id, spotter, hacking, ' + \
     'distinct_others_spotted_during_time, ' + \
     'avg(coalesce(hand_aim_react_s, 6.0)) as avg_aim_hand_react, avg(coalesce(cpu_aim_react_s, 4.0)) as avg_aim_cpu_react, ' + \
@@ -55,10 +55,10 @@ class LabeledData:
     legit_hand_filtered_df: pd.DataFrame
     legit_cpu_filtered_df: pd.DataFrame
 
-hacks_hand_filtered_df = hand_filtered_df[hand_filtered_df['hacking']]
-hacks_cpu_filtered_df = cpu_filtered_df[cpu_filtered_df['hacking']]
-legit_hand_filtered_df = hand_filtered_df[~hand_filtered_df['hacking']]
-legit_cpu_filtered_df = cpu_filtered_df[~cpu_filtered_df['hacking']]
+hacks_hand_filtered_df = hand_filtered_df[hand_filtered_df['hacking'] == 1]
+hacks_cpu_filtered_df = cpu_filtered_df[cpu_filtered_df['hacking'] == 1]
+legit_hand_filtered_df = hand_filtered_df[hand_filtered_df['hacking'] == 0]
+legit_cpu_filtered_df = cpu_filtered_df[cpu_filtered_df['hacking'] == 0]
 
 dfs = LabeledData(hacks_hand_filtered_df, hacks_cpu_filtered_df, legit_hand_filtered_df, legit_cpu_filtered_df)
 
