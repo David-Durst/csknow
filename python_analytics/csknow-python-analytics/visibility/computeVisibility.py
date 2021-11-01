@@ -244,17 +244,20 @@ while (cap.isOpened()):
     color_change = False
     if max_tick != -1 and last_tick + 10 < max_tick:
         for i in range(len(colors)):
-            if (cur_visibility_events[i].valid_for_ff and maskCounts[i] == 0) or \
+            # skip recognized players that aren't in the demo
+            if players[i] == "" and maskCounts[i] >= mask_threshold:
+                logState(False)
+                print(f'''found non-existent player on frame logged in above line with {maskCounts[i]} pixels''')
+            elif (cur_visibility_events[i].valid_for_ff and maskCounts[i] == 0) or \
                     (not cur_visibility_events[i].valid_for_ff and maskCounts[i] > 0):
                 color_change = True
                 break
         if not color_change:
             continue
-            hit_last_frame = False
 
     # turn gray and invert image so eaiser to find tick text
     cap_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    (_, cap_black_text) = cv2.threshold(cap_gray, 175, 255, cv2.THRESH_BINARY_INV)
+    (_, cap_black_text) = cv2.threshold(cap_gray, 190, 255, cv2.THRESH_BINARY_INV)
     # hand measured on a 720p image that 91->108 out of 0->136 for demo ui bounding box
     # was right y values for text, so take just that part of y region in bounding box
     y_bbox_min = math.floor(demoUI_rect[1] + (91.0 / 136) * demoUI_rect[3])
@@ -279,11 +282,12 @@ while (cap.isOpened()):
         missed_frames += 1
         continue
     # if jump to far based on number of frames, know misread tick from frame
-    if last_hit_frame > -1 and (cur_tick - last_tick) * 1.0 / (frame_id - last_hit_frame) > 10:
+    if last_hit_frame > -1 and cur_tick != 0 and \
+            (cur_tick < last_tick or (cur_tick - last_tick) * 1.0 / (frame_id - last_hit_frame) > 10):
         logState(False)
-        cv2.imshow('frame', frame)
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
+        #cv2.imshow('frame', cap_black_text_demoUI)
+        #if cv2.waitKey(1) & 0xFF == ord('q'):
+        #    break
         print(f'''misread tick {cur_tick}''')
         cur_tick = last_tick
         continue
@@ -318,13 +322,6 @@ while (cap.isOpened()):
     for i in range(len(maskCounts)):
         # skip recognized players that aren't in the demo
         if players[i] == "" and maskCounts[i] >= mask_threshold:
-            logState(False)
-            print(f'''found non-existent player on frame logged in above line with {maskCounts[i]} pixels''')
-            if maskCounts[i] > 20:
-                x = redGreen.get_nonzero_pixels(cap_hsv)
-                y = greenBlue.get_nonzero_pixels(cap_hsv)
-                z = redBlue.get_nonzero_pixels(cap_hsv)
-                q = 1
             continue
         cur_visibility_events[i].valid_for_ff = maskCounts[i] > mask_threshold
         if not player_dead_for_round and maskCounts[i] >= mask_threshold:
