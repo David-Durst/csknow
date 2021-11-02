@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 from matplotlib.ticker import PercentFormatter
 from sklearn.model_selection import train_test_split, cross_val_score, StratifiedKFold
 from sklearn.linear_model import LogisticRegression
-from sklearn import metrics
+from sklearn import metrics, preprocessing, pipeline
 import seaborn as sn
 import numpy as np
 from dataclasses import dataclass
@@ -23,6 +23,7 @@ parser.add_argument("plot_folder", help="folder for plots",
 parser.add_argument("grouping_rounds", help="number of rounds to group together",
                     type=int)
 args = parser.parse_args()
+print(args)
 
 conn = psycopg2.connect(
     host="localhost",
@@ -75,7 +76,7 @@ dfs = LabeledData(pro_hand_filtered_df, pro_cpu_filtered_df, hacks_hand_filtered
 print(f'''pro hand size {len(pro_hand_filtered_df)}, hacks hand size {len(hacks_hand_filtered_df)}, legit hand size {len(legit_hand_filtered_df)} \n ''' +
       f'''pro cpu size {len(pro_cpu_filtered_df)}, hacks cpu size {len(hacks_cpu_filtered_df)}, legit cpu size {len(legit_cpu_filtered_df)}''')
 
-plot_titles = [['GPU Labeled, Pro', 'GPU Labeled, Hacking', 'GPU Labeled, Not Hacking'], ['CPU Labeled, Pro', 'CPU Labeled, Hacking', 'CPU Labeled, Not Hacking']]
+plot_titles = [['Pixel Labeled, Pro', 'Pixel Labeled, Hacking', 'Pixel Labeled, Not Hacking'], ['BBox Labeled, Pro', 'BBox Labeled, Hacking', 'BBox Labeled, Not Hacking']]
 
 makeHistograms(dfs.get_as_grid(), ['avg_aim_hand_react', 'avg_aim_cpu_react'],
                makePlotterFunction(0.2, False), plot_titles, 'Grouped Count Aim Reactions', 'Aim Reaction Time (s)', args.plot_folder)
@@ -97,16 +98,17 @@ def makeLogReg(df, cols, name, save_confusion_matrix = False):
 
 
     lr_model = LogisticRegression()
+    scalar = preprocessing.StandardScaler()
+    pipe = pipeline.Pipeline([('transformer', scalar), ('estimator', lr_model)])
     skf = StratifiedKFold(n_splits=5, shuffle=True)
-    scores = cross_val_score(lr_model, X_df, y_series, cv=skf)
+    scores = cross_val_score(pipe, X_df, y_series, cv=skf)
+    print(f'''{name} {scores.mean():.2f} accuracy with a standard deviation of {scores.std():.2f}''')
 
-    """
     X_train, X_test, y_train, y_test = train_test_split(X_df,y_series,stratify=y_series,test_size=0.2)
-    lr_model.fit(X_train, y_train)
-    y_pred = lr_model.predict(X_test)
+    pipe.fit(X_train, y_train)
+    y_pred = pipe.predict(X_test)
     
     confusion_matrix = pd.crosstab(y_test, y_pred, rownames=['Actual'], colnames=['Predicted'])
-    print(confusion_matrix)
     fig, ax = plt.subplots(figsize=(10, 10))
     sn.set(font_scale=2.0)
     confusion_matrix_heatmap = sn.heatmap(confusion_matrix, annot=True, annot_kws={"size": 24}, ax=ax)
@@ -117,9 +119,15 @@ def makeLogReg(df, cols, name, save_confusion_matrix = False):
     plt.title(name + ' Labeled Confusion Matrix', fontsize=30)
     confusion_matrix_figure = confusion_matrix_heatmap.get_figure()
     confusion_matrix_figure.savefig(args.plot_folder + name + '_grouped_confusion_matrix__hand_vs_cpu__hacking_vs_legit.png')
-    """
 
-    print(f'''{name} {scores.mean()} accuracy with a standard deviation of {scores.std()}''')
+    #for input, prediction, label in zip(X_test, y_pred, y_test):
+    #    if prediction != label:
+    #        print()
+    result = X_test.copy()
+    result['label'] = y_test
+    result['pred'] = y_pred
+    print(result[result['label'] != result['pred']])
+
     #print(name + ' coeff: ', lr_model.coef_)
     #return metrics.accuracy_score(y_test, y_pred)
     #print(np.argwhere(y_pred == False))
@@ -127,6 +135,6 @@ def makeLogReg(df, cols, name, save_confusion_matrix = False):
 hand_just_legit_cheat_df = hand_filtered_df[hand_filtered_df['hacking'] < 2]
 cpu_just_legit_cheat_df = cpu_filtered_df[cpu_filtered_df['hacking'] < 2]
 #makeLogReg(hand_filtered_df, ['avg_aim_hand_react'], 'GPU')
-makeLogReg(hand_just_legit_cheat_df, ['avg_aim_hand_react', 'avg_fire_hand_react', 'hand_preaims'], 'GPU')
+makeLogReg(hand_just_legit_cheat_df, ['avg_aim_hand_react', 'avg_fire_hand_react', 'hand_preaims'], 'Pixel')
 #makeLogReg(cpu_filtered_df, ['avg_aim_cpu_react'], 'CPU')
-makeLogReg(cpu_just_legit_cheat_df, ['avg_aim_cpu_react', 'avg_fire_cpu_react', 'cpu_preaims'], 'CPU')
+makeLogReg(cpu_just_legit_cheat_df, ['avg_aim_cpu_react', 'avg_fire_cpu_react', 'cpu_preaims'], 'BBox')

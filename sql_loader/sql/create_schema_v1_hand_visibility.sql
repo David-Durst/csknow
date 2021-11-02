@@ -26,7 +26,6 @@ CREATE TABLE "visibilities" (
 );
 
 CREATE TABLE "visibilities_unadjusted" (
-  "id" int,
   "spotter" varchar(255),
   "spotted" varchar(255),
   "start_game_tick" bigint,

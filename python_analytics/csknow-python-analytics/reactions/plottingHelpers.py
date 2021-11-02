@@ -48,7 +48,7 @@ def makeHistograms(dfs, col_names, plotting_function, plot_titles, name, x_label
         ymin = 10000000
         ymax = -1 * ymin
         for c in range(num_cols):
-            if len(dfs[r][c] == 0):
+            if len(dfs[r][c]) == 0:
                 continue
             cur_xlim = ax[r][c].get_xlim()
             xmin = min(xmin, cur_xlim[0])
