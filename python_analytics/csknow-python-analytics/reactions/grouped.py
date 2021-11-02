@@ -127,6 +127,6 @@ def makeLogReg(df, cols, name, save_confusion_matrix = False):
 hand_just_legit_cheat_df = hand_filtered_df[hand_filtered_df['hacking'] < 2]
 cpu_just_legit_cheat_df = cpu_filtered_df[cpu_filtered_df['hacking'] < 2]
 #makeLogReg(hand_filtered_df, ['avg_aim_hand_react'], 'GPU')
-makeLogReg(hand_just_legit_cheat_df, ['avg_aim_hand_react', 'hand_preaims'], 'GPU')
+makeLogReg(hand_just_legit_cheat_df, ['avg_aim_hand_react', 'avg_fire_hand_react', 'hand_preaims'], 'GPU')
 #makeLogReg(cpu_filtered_df, ['avg_aim_cpu_react'], 'CPU')
-makeLogReg(cpu_just_legit_cheat_df, ['avg_aim_cpu_react', 'cpu_preaims'], 'CPU')
+makeLogReg(cpu_just_legit_cheat_df, ['avg_aim_cpu_react', 'avg_fire_cpu_react', 'cpu_preaims'], 'CPU')
