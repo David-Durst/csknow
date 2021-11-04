@@ -126,7 +126,8 @@ def makeLogReg(df, cols, name, save_confusion_matrix = False):
     result = X_test.copy()
     result['label'] = y_test
     result['pred'] = y_pred
-    print(result[result['label'] != result['pred']])
+    bad_results = result[result['label'] != result['pred']]
+    print(df.iloc[bad_results.index])
 
     #print(name + ' coeff: ', lr_model.coef_)
     #return metrics.accuracy_score(y_test, y_pred)

@@ -60,7 +60,7 @@ select h.demo,
        min(s.game_tick_number) as cpu_vis_game_tick,
        h.hacking
 from last_spotted_cpu s
-         right join hand_visibility_with_next_start h
+         full join hand_visibility_with_next_start h
                     on h.spotted_id = s.spotted_player
                         and h.spotter_id = s.spotter_player
                         and h.start_game_tick <= s.game_tick_number

@@ -23,6 +23,7 @@
 #define CPPHTTPLIB_OPENSSL_SUPPORT
 #include "httplib.h"
 #include <errno.h>
+#include "navmesh/nav_file.h"
 
 using std::map;
 using std::string;
@@ -51,6 +52,22 @@ int main(int argc, char * argv[]) {
         std::cout << "3. path/to/output/dir" << std::endl;
         return 1;
     }
+
+    try {
+        nav_mesh::nav_file map_nav( "/home/durst/third_shared/de_dust2.nav" );
+        //Alternatively, you can just call map_nav.load( "path/to/map.nav" );
+
+        //Figure out from where to where you'd like to find a path
+
+        auto path = map_nav.find_path( {1544.02,3047.64,129.03}, {-516,1745,-118.11} );
+
+        if ( !path.empty( ) ) {
+            //Do something
+        }
+    } catch ( const std::exception& e ) {
+        std::cout << e.what( ) << std::endl;
+    }
+
     string dataPath = argv[1];
     bool runServer = argv[2][0] == 'y';
     string outputDir = "";
