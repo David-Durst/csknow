@@ -1,78 +1,78 @@
-id,spotter,spotted,start_game_tick,end_game_tick,spotter_id,spotted_id,demo,hacking,start_frame_num,end_frame_num,color
-22,i_eat_short_people_for_breakfast,Gary,6660,6680,16,14,9_19_21_durst_t_wang_ct_with_walls.dem,1,857,895,green
-52,i_eat_short_people_for_breakfast,Michelle Obama,6663,6710,16,21,9_19_21_durst_t_wang_ct_with_walls.dem,1,861,950,red
-36,i_eat_short_people_for_breakfast,Martin,7127,7220,16,20,9_19_21_durst_t_wang_ct_with_walls.dem,1,1732,1906,redBlue
-0,i_eat_short_people_for_breakfast,Chris,7405,7444,16,18,9_19_21_durst_t_wang_ct_with_walls.dem,1,2254,2326,blue
-1,i_eat_short_people_for_breakfast,Chris,7465,7583,16,18,9_19_21_durst_t_wang_ct_with_walls.dem,1,2365,2587,blue
-53,i_eat_short_people_for_breakfast,Michelle Obama,7666,7672,16,21,9_19_21_durst_t_wang_ct_with_walls.dem,1,2742,2753,red
-54,i_eat_short_people_for_breakfast,Michelle Obama,7680,7701,16,21,9_19_21_durst_t_wang_ct_with_walls.dem,1,2768,2809,red
-55,i_eat_short_people_for_breakfast,Michelle Obama,7713,7737,16,21,9_19_21_durst_t_wang_ct_with_walls.dem,1,2831,2876,red
-37,i_eat_short_people_for_breakfast,Martin,10027,10245,16,20,9_19_21_durst_t_wang_ct_with_walls.dem,1,7170,7577,redBlue
-56,i_eat_short_people_for_breakfast,Michelle Obama,10290,10351,16,21,9_19_21_durst_t_wang_ct_with_walls.dem,1,7663,7777,red
-57,i_eat_short_people_for_breakfast,Michelle Obama,10384,10388,16,21,9_19_21_durst_t_wang_ct_with_walls.dem,1,7838,7846,red
-23,i_eat_short_people_for_breakfast,Gary,10527,10543,16,14,9_19_21_durst_t_wang_ct_with_walls.dem,1,8107,8137,green
-2,i_eat_short_people_for_breakfast,Chris,11022,11280,16,18,9_19_21_durst_t_wang_ct_with_walls.dem,1,9035,9519,blue
-38,i_eat_short_people_for_breakfast,Martin,11125,11159,16,20,9_19_21_durst_t_wang_ct_with_walls.dem,1,9228,9292,redBlue
-39,i_eat_short_people_for_breakfast,Martin,11185,11310,16,20,9_19_21_durst_t_wang_ct_with_walls.dem,1,9340,9575,redBlue
-24,i_eat_short_people_for_breakfast,Gary,11239,11324,16,14,9_19_21_durst_t_wang_ct_with_walls.dem,1,9442,9602,green
-25,i_eat_short_people_for_breakfast,Gary,11480,11590,16,14,9_19_21_durst_t_wang_ct_with_walls.dem,1,9893,10101,green
-40,i_eat_short_people_for_breakfast,Martin,11490,11574,16,20,9_19_21_durst_t_wang_ct_with_walls.dem,1,9912,10071,redBlue
-26,i_eat_short_people_for_breakfast,Gary,11783,11837,16,14,9_19_21_durst_t_wang_ct_with_walls.dem,1,10461,10563,green
-41,i_eat_short_people_for_breakfast,Martin,11785,11837,16,20,9_19_21_durst_t_wang_ct_with_walls.dem,1,10465,10563,redBlue
-42,i_eat_short_people_for_breakfast,Martin,11894,11902,16,20,9_19_21_durst_t_wang_ct_with_walls.dem,1,10670,10685,redBlue
-27,i_eat_short_people_for_breakfast,Gary,11896,11904,16,14,9_19_21_durst_t_wang_ct_with_walls.dem,1,10674,10689,green
-28,i_eat_short_people_for_breakfast,Gary,11916,12040,16,14,9_19_21_durst_t_wang_ct_with_walls.dem,1,10711,10943,green
-43,i_eat_short_people_for_breakfast,Martin,11940,11944,16,20,9_19_21_durst_t_wang_ct_with_walls.dem,1,10756,10763,redBlue
-29,i_eat_short_people_for_breakfast,Gary,12111,12121,16,14,9_19_21_durst_t_wang_ct_with_walls.dem,1,11078,11095,green
-30,i_eat_short_people_for_breakfast,Gary,12126,12171,16,14,9_19_21_durst_t_wang_ct_with_walls.dem,1,11105,11189,green
-31,i_eat_short_people_for_breakfast,Gary,12308,12350,16,14,9_19_21_durst_t_wang_ct_with_walls.dem,1,11446,11524,green
-58,i_eat_short_people_for_breakfast,Michelle Obama,13379,13455,16,21,9_19_21_durst_t_wang_ct_with_walls.dem,1,13454,13597,red
-3,i_eat_short_people_for_breakfast,Chris,13431,13443,16,18,9_19_21_durst_t_wang_ct_with_walls.dem,1,13552,13575,blue
-59,i_eat_short_people_for_breakfast,Michelle Obama,13581,13634,16,21,9_19_21_durst_t_wang_ct_with_walls.dem,1,13833,13932,red
-44,i_eat_short_people_for_breakfast,Martin,13591,13620,16,20,9_19_21_durst_t_wang_ct_with_walls.dem,1,13851,13906,redBlue
-4,i_eat_short_people_for_breakfast,Chris,13593,13618,16,18,9_19_21_durst_t_wang_ct_with_walls.dem,1,13856,13902,blue
-45,i_eat_short_people_for_breakfast,Martin,13927,14114,16,20,9_19_21_durst_t_wang_ct_with_walls.dem,1,14481,14817,redBlue
-60,i_eat_short_people_for_breakfast,Michelle Obama,13928,14066,16,21,9_19_21_durst_t_wang_ct_with_walls.dem,1,14485,14519,red
-5,i_eat_short_people_for_breakfast,Chris,13930,13945,16,18,9_19_21_durst_t_wang_ct_with_walls.dem,1,14488,14515,blue
-6,i_eat_short_people_for_breakfast,Chris,13949,14103,16,18,9_19_21_durst_t_wang_ct_with_walls.dem,1,14522,14813,blue
-7,i_eat_short_people_for_breakfast,Chris,14305,14324,16,18,9_19_21_durst_t_wang_ct_with_walls.dem,1,15190,15226,blue
-8,i_eat_short_people_for_breakfast,Chris,14344,14352,16,18,9_19_21_durst_t_wang_ct_with_walls.dem,1,15264,15279,blue
-46,i_eat_short_people_for_breakfast,Martin,14466,14575,16,20,9_19_21_durst_t_wang_ct_with_walls.dem,1,15493,15698,redBlue
-61,i_eat_short_people_for_breakfast,Michelle Obama,15469,15513,16,21,9_19_21_durst_t_wang_ct_with_walls.dem,1,17385,17467,red
-32,i_eat_short_people_for_breakfast,Gary,15823,15853,16,14,9_19_21_durst_t_wang_ct_with_walls.dem,1,18048,18104,green
-9,i_eat_short_people_for_breakfast,Chris,16226,16304,16,18,9_19_21_durst_t_wang_ct_with_walls.dem,1,18803,18950,blue
-47,i_eat_short_people_for_breakfast,Martin,16232,16280,16,20,9_19_21_durst_t_wang_ct_with_walls.dem,1,18815,18905,redBlue
-10,i_eat_short_people_for_breakfast,Chris,16395,16477,16,18,9_19_21_durst_t_wang_ct_with_walls.dem,1,19120,19274,blue
-11,i_eat_short_people_for_breakfast,Chris,16661,16843,16,18,9_19_21_durst_t_wang_ct_with_walls.dem,1,19619,19961,blue
-62,i_eat_short_people_for_breakfast,Michelle Obama,18115,18260,16,21,9_19_21_durst_t_wang_ct_with_walls.dem,1,22345,22469,red
-12,i_eat_short_people_for_breakfast,Chris,21069,21077,16,18,9_19_21_durst_t_wang_ct_with_walls.dem,1,27884,27900,blue
-63,i_eat_short_people_for_breakfast,Michelle Obama,21930,21938,16,21,9_19_21_durst_t_wang_ct_with_walls.dem,1,29500,29514,red
-64,i_eat_short_people_for_breakfast,Michelle Obama,23011,23024,16,21,9_19_21_durst_t_wang_ct_with_walls.dem,1,31526,31550,red
-65,i_eat_short_people_for_breakfast,Michelle Obama,23028,23103,16,21,9_19_21_durst_t_wang_ct_with_walls.dem,1,31557,31699,red
-13,i_eat_short_people_for_breakfast,Chris,23034,23070,16,18,9_19_21_durst_t_wang_ct_with_walls.dem,1,31569,31637,blue
-66,i_eat_short_people_for_breakfast,Michelle Obama,23157,23184,16,21,9_19_21_durst_t_wang_ct_with_walls.dem,1,31800,31824,red
-67,i_eat_short_people_for_breakfast,Michelle Obama,23230,23260,16,21,9_19_21_durst_t_wang_ct_with_walls.dem,1,31936,31944,red
-14,i_eat_short_people_for_breakfast,Chris,23232,23260,16,18,9_19_21_durst_t_wang_ct_with_walls.dem,1,31940,31993,blue
-33,i_eat_short_people_for_breakfast,Gary,23367,23421,16,14,9_19_21_durst_t_wang_ct_with_walls.dem,1,32192,32294,green
-68,i_eat_short_people_for_breakfast,Michelle Obama,23383,23421,16,21,9_19_21_durst_t_wang_ct_with_walls.dem,1,32223,32294,red
-48,i_eat_short_people_for_breakfast,Martin,23391,23421,16,20,9_19_21_durst_t_wang_ct_with_walls.dem,1,32238,32294,redBlue
-15,i_eat_short_people_for_breakfast,Chris,25125,25225,16,18,9_19_21_durst_t_wang_ct_with_walls.dem,1,35489,35677,blue
-69,i_eat_short_people_for_breakfast,Michelle Obama,25345,25372,16,21,9_19_21_durst_t_wang_ct_with_walls.dem,1,35901,35953,red
-16,i_eat_short_people_for_breakfast,Chris,28707,28751,16,18,9_19_21_durst_t_wang_ct_with_walls.dem,1,42205,42289,blue
-70,i_eat_short_people_for_breakfast,Michelle Obama,30330,30368,16,21,9_19_21_durst_t_wang_ct_with_walls.dem,1,45248,45271,red
-17,i_eat_short_people_for_breakfast,Chris,30559,30588,16,18,9_19_21_durst_t_wang_ct_with_walls.dem,1,45678,45732,blue
-49,i_eat_short_people_for_breakfast,Martin,30761,30793,16,20,9_19_21_durst_t_wang_ct_with_walls.dem,1,46057,46091,redBlue
-71,i_eat_short_people_for_breakfast,Michelle Obama,30871,30894,16,21,9_19_21_durst_t_wang_ct_with_walls.dem,1,46263,46307,red
-72,i_eat_short_people_for_breakfast,Michelle Obama,32862,32935,16,21,9_19_21_durst_t_wang_ct_with_walls.dem,1,49996,50051,red
-73,i_eat_short_people_for_breakfast,Michelle Obama,35741,35779,16,21,9_19_21_durst_t_wang_ct_with_walls.dem,1,55394,55466,red
-74,i_eat_short_people_for_breakfast,Michelle Obama,35810,35847,16,21,9_19_21_durst_t_wang_ct_with_walls.dem,1,55523,55593,red
-75,i_eat_short_people_for_breakfast,Michelle Obama,35870,35877,16,21,9_19_21_durst_t_wang_ct_with_walls.dem,1,55636,55650,red
-50,i_eat_short_people_for_breakfast,Martin,35999,36013,16,20,9_19_21_durst_t_wang_ct_with_walls.dem,1,55878,55906,redBlue
-18,i_eat_short_people_for_breakfast,Chris,36000,36044,16,18,9_19_21_durst_t_wang_ct_with_walls.dem,1,55879,55963,blue
-19,i_eat_short_people_for_breakfast,Chris,36084,36089,16,18,9_19_21_durst_t_wang_ct_with_walls.dem,1,56038,56046,blue
-34,i_eat_short_people_for_breakfast,Gary,36316,36333,16,14,9_19_21_durst_t_wang_ct_with_walls.dem,1,56472,56504,green
-76,i_eat_short_people_for_breakfast,Michelle Obama,37612,37637,16,21,9_19_21_durst_t_wang_ct_with_walls.dem,1,58903,58951,red
-20,i_eat_short_people_for_breakfast,Chris,37703,37715,16,18,9_19_21_durst_t_wang_ct_with_walls.dem,1,59074,59096,blue
-21,i_eat_short_people_for_breakfast,Chris,37723,37756,16,18,9_19_21_durst_t_wang_ct_with_walls.dem,1,59112,59173,blue
-35,i_eat_short_people_for_breakfast,Gary,37732,37885,16,14,9_19_21_durst_t_wang_ct_with_walls.dem,1,59127,59415,green
-51,i_eat_short_people_for_breakfast,Martin,37883,38014,16,20,9_19_21_durst_t_wang_ct_with_walls.dem,1,59411,59656,redBlue
+spotter,spotted,start_game_tick,end_game_tick,spotter_id,spotted_id,demo,hacking,start_frame_num,end_frame_num,color
+i_eat_short_people_for_breakfast,Gary,6660,6680,16,14,9_19_21_durst_t_wang_ct_with_walls.dem,1,857,895,green
+i_eat_short_people_for_breakfast,Michelle Obama,6663,6710,16,21,9_19_21_durst_t_wang_ct_with_walls.dem,1,861,950,red
+i_eat_short_people_for_breakfast,Martin,7127,7220,16,20,9_19_21_durst_t_wang_ct_with_walls.dem,1,1732,1906,redBlue
+i_eat_short_people_for_breakfast,Chris,7405,7444,16,18,9_19_21_durst_t_wang_ct_with_walls.dem,1,2254,2326,blue
+i_eat_short_people_for_breakfast,Chris,7465,7583,16,18,9_19_21_durst_t_wang_ct_with_walls.dem,1,2365,2587,blue
+i_eat_short_people_for_breakfast,Michelle Obama,7666,7672,16,21,9_19_21_durst_t_wang_ct_with_walls.dem,1,2742,2753,red
+i_eat_short_people_for_breakfast,Michelle Obama,7680,7701,16,21,9_19_21_durst_t_wang_ct_with_walls.dem,1,2768,2809,red
+i_eat_short_people_for_breakfast,Michelle Obama,7713,7737,16,21,9_19_21_durst_t_wang_ct_with_walls.dem,1,2831,2876,red
+i_eat_short_people_for_breakfast,Martin,10027,10245,16,20,9_19_21_durst_t_wang_ct_with_walls.dem,1,7170,7577,redBlue
+i_eat_short_people_for_breakfast,Michelle Obama,10290,10351,16,21,9_19_21_durst_t_wang_ct_with_walls.dem,1,7663,7777,red
+i_eat_short_people_for_breakfast,Michelle Obama,10384,10388,16,21,9_19_21_durst_t_wang_ct_with_walls.dem,1,7838,7846,red
+i_eat_short_people_for_breakfast,Gary,10527,10543,16,14,9_19_21_durst_t_wang_ct_with_walls.dem,1,8107,8137,green
+i_eat_short_people_for_breakfast,Chris,11022,11280,16,18,9_19_21_durst_t_wang_ct_with_walls.dem,1,9035,9519,blue
+i_eat_short_people_for_breakfast,Martin,11125,11159,16,20,9_19_21_durst_t_wang_ct_with_walls.dem,1,9228,9292,redBlue
+i_eat_short_people_for_breakfast,Martin,11185,11310,16,20,9_19_21_durst_t_wang_ct_with_walls.dem,1,9340,9575,redBlue
+i_eat_short_people_for_breakfast,Gary,11239,11324,16,14,9_19_21_durst_t_wang_ct_with_walls.dem,1,9442,9602,green
+i_eat_short_people_for_breakfast,Gary,11480,11590,16,14,9_19_21_durst_t_wang_ct_with_walls.dem,1,9893,10101,green
+i_eat_short_people_for_breakfast,Martin,11490,11574,16,20,9_19_21_durst_t_wang_ct_with_walls.dem,1,9912,10071,redBlue
+i_eat_short_people_for_breakfast,Gary,11783,11837,16,14,9_19_21_durst_t_wang_ct_with_walls.dem,1,10461,10563,green
+i_eat_short_people_for_breakfast,Martin,11785,11837,16,20,9_19_21_durst_t_wang_ct_with_walls.dem,1,10465,10563,redBlue
+i_eat_short_people_for_breakfast,Martin,11894,11902,16,20,9_19_21_durst_t_wang_ct_with_walls.dem,1,10670,10685,redBlue
+i_eat_short_people_for_breakfast,Gary,11896,11904,16,14,9_19_21_durst_t_wang_ct_with_walls.dem,1,10674,10689,green
+i_eat_short_people_for_breakfast,Gary,11916,12040,16,14,9_19_21_durst_t_wang_ct_with_walls.dem,1,10711,10943,green
+i_eat_short_people_for_breakfast,Martin,11940,11944,16,20,9_19_21_durst_t_wang_ct_with_walls.dem,1,10756,10763,redBlue
+i_eat_short_people_for_breakfast,Gary,12111,12121,16,14,9_19_21_durst_t_wang_ct_with_walls.dem,1,11078,11095,green
+i_eat_short_people_for_breakfast,Gary,12126,12171,16,14,9_19_21_durst_t_wang_ct_with_walls.dem,1,11105,11189,green
+i_eat_short_people_for_breakfast,Gary,12308,12350,16,14,9_19_21_durst_t_wang_ct_with_walls.dem,1,11446,11524,green
+i_eat_short_people_for_breakfast,Michelle Obama,13379,13455,16,21,9_19_21_durst_t_wang_ct_with_walls.dem,1,13454,13597,red
+i_eat_short_people_for_breakfast,Chris,13431,13443,16,18,9_19_21_durst_t_wang_ct_with_walls.dem,1,13552,13575,blue
+i_eat_short_people_for_breakfast,Michelle Obama,13581,13634,16,21,9_19_21_durst_t_wang_ct_with_walls.dem,1,13833,13932,red
+i_eat_short_people_for_breakfast,Martin,13591,13620,16,20,9_19_21_durst_t_wang_ct_with_walls.dem,1,13851,13906,redBlue
+i_eat_short_people_for_breakfast,Chris,13593,13618,16,18,9_19_21_durst_t_wang_ct_with_walls.dem,1,13856,13902,blue
+i_eat_short_people_for_breakfast,Martin,13927,14114,16,20,9_19_21_durst_t_wang_ct_with_walls.dem,1,14481,14817,redBlue
+i_eat_short_people_for_breakfast,Michelle Obama,13928,14066,16,21,9_19_21_durst_t_wang_ct_with_walls.dem,1,14485,14519,red
+i_eat_short_people_for_breakfast,Chris,13930,13945,16,18,9_19_21_durst_t_wang_ct_with_walls.dem,1,14488,14515,blue
+i_eat_short_people_for_breakfast,Chris,13949,14103,16,18,9_19_21_durst_t_wang_ct_with_walls.dem,1,14522,14813,blue
+i_eat_short_people_for_breakfast,Chris,14305,14324,16,18,9_19_21_durst_t_wang_ct_with_walls.dem,1,15190,15226,blue
+i_eat_short_people_for_breakfast,Chris,14344,14352,16,18,9_19_21_durst_t_wang_ct_with_walls.dem,1,15264,15279,blue
+i_eat_short_people_for_breakfast,Martin,14466,14575,16,20,9_19_21_durst_t_wang_ct_with_walls.dem,1,15493,15698,redBlue
+i_eat_short_people_for_breakfast,Michelle Obama,15469,15513,16,21,9_19_21_durst_t_wang_ct_with_walls.dem,1,17385,17467,red
+i_eat_short_people_for_breakfast,Gary,15823,15853,16,14,9_19_21_durst_t_wang_ct_with_walls.dem,1,18048,18104,green
+i_eat_short_people_for_breakfast,Chris,16226,16304,16,18,9_19_21_durst_t_wang_ct_with_walls.dem,1,18803,18950,blue
+i_eat_short_people_for_breakfast,Martin,16232,16280,16,20,9_19_21_durst_t_wang_ct_with_walls.dem,1,18815,18905,redBlue
+i_eat_short_people_for_breakfast,Chris,16395,16477,16,18,9_19_21_durst_t_wang_ct_with_walls.dem,1,19120,19274,blue
+i_eat_short_people_for_breakfast,Chris,16661,16843,16,18,9_19_21_durst_t_wang_ct_with_walls.dem,1,19619,19961,blue
+i_eat_short_people_for_breakfast,Michelle Obama,18115,18260,16,21,9_19_21_durst_t_wang_ct_with_walls.dem,1,22345,22469,red
+i_eat_short_people_for_breakfast,Chris,21069,21077,16,18,9_19_21_durst_t_wang_ct_with_walls.dem,1,27884,27900,blue
+i_eat_short_people_for_breakfast,Michelle Obama,21930,21938,16,21,9_19_21_durst_t_wang_ct_with_walls.dem,1,29500,29514,red
+i_eat_short_people_for_breakfast,Michelle Obama,23011,23024,16,21,9_19_21_durst_t_wang_ct_with_walls.dem,1,31526,31550,red
+i_eat_short_people_for_breakfast,Michelle Obama,23028,23103,16,21,9_19_21_durst_t_wang_ct_with_walls.dem,1,31557,31699,red
+i_eat_short_people_for_breakfast,Chris,23034,23070,16,18,9_19_21_durst_t_wang_ct_with_walls.dem,1,31569,31637,blue
+i_eat_short_people_for_breakfast,Michelle Obama,23157,23184,16,21,9_19_21_durst_t_wang_ct_with_walls.dem,1,31800,31824,red
+i_eat_short_people_for_breakfast,Michelle Obama,23230,23260,16,21,9_19_21_durst_t_wang_ct_with_walls.dem,1,31936,31944,red
+i_eat_short_people_for_breakfast,Chris,23232,23260,16,18,9_19_21_durst_t_wang_ct_with_walls.dem,1,31940,31993,blue
+i_eat_short_people_for_breakfast,Gary,23367,23421,16,14,9_19_21_durst_t_wang_ct_with_walls.dem,1,32192,32294,green
+i_eat_short_people_for_breakfast,Michelle Obama,23383,23421,16,21,9_19_21_durst_t_wang_ct_with_walls.dem,1,32223,32294,red
+i_eat_short_people_for_breakfast,Martin,23391,23421,16,20,9_19_21_durst_t_wang_ct_with_walls.dem,1,32238,32294,redBlue
+i_eat_short_people_for_breakfast,Chris,25125,25225,16,18,9_19_21_durst_t_wang_ct_with_walls.dem,1,35489,35677,blue
+i_eat_short_people_for_breakfast,Michelle Obama,25345,25372,16,21,9_19_21_durst_t_wang_ct_with_walls.dem,1,35901,35953,red
+i_eat_short_people_for_breakfast,Chris,28707,28751,16,18,9_19_21_durst_t_wang_ct_with_walls.dem,1,42205,42289,blue
+i_eat_short_people_for_breakfast,Michelle Obama,30330,30368,16,21,9_19_21_durst_t_wang_ct_with_walls.dem,1,45248,45271,red
+i_eat_short_people_for_breakfast,Chris,30559,30588,16,18,9_19_21_durst_t_wang_ct_with_walls.dem,1,45678,45732,blue
+i_eat_short_people_for_breakfast,Martin,30761,30793,16,20,9_19_21_durst_t_wang_ct_with_walls.dem,1,46057,46091,redBlue
+i_eat_short_people_for_breakfast,Michelle Obama,30871,30894,16,21,9_19_21_durst_t_wang_ct_with_walls.dem,1,46263,46307,red
+i_eat_short_people_for_breakfast,Michelle Obama,32862,32935,16,21,9_19_21_durst_t_wang_ct_with_walls.dem,1,49996,50051,red
+i_eat_short_people_for_breakfast,Michelle Obama,35741,35779,16,21,9_19_21_durst_t_wang_ct_with_walls.dem,1,55394,55466,red
+i_eat_short_people_for_breakfast,Michelle Obama,35810,35847,16,21,9_19_21_durst_t_wang_ct_with_walls.dem,1,55523,55593,red
+i_eat_short_people_for_breakfast,Michelle Obama,35870,35877,16,21,9_19_21_durst_t_wang_ct_with_walls.dem,1,55636,55650,red
+i_eat_short_people_for_breakfast,Martin,35999,36013,16,20,9_19_21_durst_t_wang_ct_with_walls.dem,1,55878,55906,redBlue
+i_eat_short_people_for_breakfast,Chris,36000,36044,16,18,9_19_21_durst_t_wang_ct_with_walls.dem,1,55879,55963,blue
+i_eat_short_people_for_breakfast,Chris,36084,36089,16,18,9_19_21_durst_t_wang_ct_with_walls.dem,1,56038,56046,blue
+i_eat_short_people_for_breakfast,Gary,36316,36333,16,14,9_19_21_durst_t_wang_ct_with_walls.dem,1,56472,56504,green
+i_eat_short_people_for_breakfast,Michelle Obama,37612,37637,16,21,9_19_21_durst_t_wang_ct_with_walls.dem,1,58903,58951,red
+i_eat_short_people_for_breakfast,Chris,37703,37715,16,18,9_19_21_durst_t_wang_ct_with_walls.dem,1,59074,59096,blue
+i_eat_short_people_for_breakfast,Chris,37723,37756,16,18,9_19_21_durst_t_wang_ct_with_walls.dem,1,59112,59173,blue
+i_eat_short_people_for_breakfast,Gary,37732,37885,16,14,9_19_21_durst_t_wang_ct_with_walls.dem,1,59127,59415,green
+i_eat_short_people_for_breakfast,Martin,37883,38014,16,20,9_19_21_durst_t_wang_ct_with_walls.dem,1,59411,59656,redBlue

@@ -1,42 +1,42 @@
-id,spotter,spotted,start_game_tick,end_game_tick,spotter_id,spotted_id,demo,hacking,start_frame_num,end_frame_num,color
-32,Pinkay,meeseeks,6925,7037,46,43,merrick_kingston_matt_gabe_rory_durst_9_20_21_wallhacks_2.dem,1,1093,1302,green
-33,Pinkay,meeseeks,7203,7234,46,43,merrick_kingston_matt_gabe_rory_durst_9_20_21_wallhacks_2.dem,1,1614,1672,green
-7,Pinkay,Step Papi,7629,7663,46,45,merrick_kingston_matt_gabe_rory_durst_9_20_21_wallhacks_2.dem,1,2412,2476,blue
-8,Pinkay,Step Papi,7754,7760,46,45,merrick_kingston_matt_gabe_rory_durst_9_20_21_wallhacks_2.dem,1,2647,2658,blue
-9,Pinkay,Step Papi,7795,7809,46,45,merrick_kingston_matt_gabe_rory_durst_9_20_21_wallhacks_2.dem,1,2723,2750,blue
-0,Pinkay,Alfred,7938,8117,46,39,merrick_kingston_matt_gabe_rory_durst_9_20_21_wallhacks_2.dem,1,2993,3327,redBlue
-1,Pinkay,Alfred,8142,8150,46,39,merrick_kingston_matt_gabe_rory_durst_9_20_21_wallhacks_2.dem,1,3375,3390,redBlue
-2,Pinkay,Alfred,8233,8257,46,39,merrick_kingston_matt_gabe_rory_durst_9_20_21_wallhacks_2.dem,1,3546,3590,redBlue
-3,Pinkay,Alfred,8271,8279,46,39,merrick_kingston_matt_gabe_rory_durst_9_20_21_wallhacks_2.dem,1,3616,3631,redBlue
-4,Pinkay,Alfred,8289,8301,46,39,merrick_kingston_matt_gabe_rory_durst_9_20_21_wallhacks_2.dem,1,3651,3673,redBlue
-10,Pinkay,Step Papi,9717,9725,46,45,merrick_kingston_matt_gabe_rory_durst_9_20_21_wallhacks_2.dem,1,6328,6343,blue
-25,Pinkay,i_eat_short_people_for_breakfast,11906,11947,46,38,merrick_kingston_matt_gabe_rory_durst_9_20_21_wallhacks_2.dem,1,10432,10510,red
-5,Pinkay,Alfred,12054,12075,46,39,merrick_kingston_matt_gabe_rory_durst_9_20_21_wallhacks_2.dem,1,10710,10750,redBlue
-6,Pinkay,Alfred,12349,12364,46,39,merrick_kingston_matt_gabe_rory_durst_9_20_21_wallhacks_2.dem,1,11263,11290,redBlue
-11,Pinkay,Step Papi,12504,12510,46,45,merrick_kingston_matt_gabe_rory_durst_9_20_21_wallhacks_2.dem,1,11554,11565,blue
-26,Pinkay,i_eat_short_people_for_breakfast,15164,15222,46,38,merrick_kingston_matt_gabe_rory_durst_9_20_21_wallhacks_2.dem,1,16541,16604,red
-27,Pinkay,i_eat_short_people_for_breakfast,16490,16497,46,38,merrick_kingston_matt_gabe_rory_durst_9_20_21_wallhacks_2.dem,1,19028,19040,red
-12,Pinkay,Step Papi,17928,17981,46,45,merrick_kingston_matt_gabe_rory_durst_9_20_21_wallhacks_2.dem,1,21723,21823,blue
-13,Pinkay,Step Papi,18004,18018,46,45,merrick_kingston_matt_gabe_rory_durst_9_20_21_wallhacks_2.dem,1,21866,21891,blue
-14,Pinkay,Step Papi,18056,18136,46,45,merrick_kingston_matt_gabe_rory_durst_9_20_21_wallhacks_2.dem,1,21963,22114,blue
-15,Pinkay,Step Papi,21763,21777,46,45,merrick_kingston_matt_gabe_rory_durst_9_20_21_wallhacks_2.dem,1,28914,28940,blue
-34,Pinkay,meeseeks,26276,26306,46,43,merrick_kingston_matt_gabe_rory_durst_9_20_21_wallhacks_2.dem,1,37376,37431,green
-35,Pinkay,meeseeks,26858,26893,46,43,merrick_kingston_matt_gabe_rory_durst_9_20_21_wallhacks_2.dem,1,38467,38532,green
-16,Pinkay,Step Papi,28783,28828,46,45,merrick_kingston_matt_gabe_rory_durst_9_20_21_wallhacks_2.dem,1,42077,42161,blue
-36,Pinkay,meeseeks,31472,31479,46,43,merrick_kingston_matt_gabe_rory_durst_9_20_21_wallhacks_2.dem,1,47119,47131,green
-17,Pinkay,Step Papi,31728,31745,46,45,merrick_kingston_matt_gabe_rory_durst_9_20_21_wallhacks_2.dem,1,47598,47631,blue
-18,Pinkay,Step Papi,31757,31805,46,45,merrick_kingston_matt_gabe_rory_durst_9_20_21_wallhacks_2.dem,1,47653,47742,blue
-19,Pinkay,Step Papi,32057,32081,46,45,merrick_kingston_matt_gabe_rory_durst_9_20_21_wallhacks_2.dem,1,48215,48260,blue
-28,Pinkay,i_eat_short_people_for_breakfast,34129,34178,46,38,merrick_kingston_matt_gabe_rory_durst_9_20_21_wallhacks_2.dem,1,52100,52193,red
-29,Pinkay,i_eat_short_people_for_breakfast,34507,34513,46,38,merrick_kingston_matt_gabe_rory_durst_9_20_21_wallhacks_2.dem,1,52810,52821,red
-30,Pinkay,i_eat_short_people_for_breakfast,34608,34644,46,38,merrick_kingston_matt_gabe_rory_durst_9_20_21_wallhacks_2.dem,1,52998,53010,red
-20,Pinkay,Step Papi,35158,35168,46,45,merrick_kingston_matt_gabe_rory_durst_9_20_21_wallhacks_2.dem,1,54029,54047,blue
-37,Pinkay,meeseeks,37141,37147,46,43,merrick_kingston_matt_gabe_rory_durst_9_20_21_wallhacks_2.dem,1,57747,57760,green
-38,Pinkay,meeseeks,37167,37243,46,43,merrick_kingston_matt_gabe_rory_durst_9_20_21_wallhacks_2.dem,1,57796,57811,green
-39,Pinkay,meeseeks,39240,39284,46,43,merrick_kingston_matt_gabe_rory_durst_9_20_21_wallhacks_2.dem,1,61683,61766,green
-21,Pinkay,Step Papi,39609,39622,46,45,merrick_kingston_matt_gabe_rory_durst_9_20_21_wallhacks_2.dem,1,62374,62400,blue
-22,Pinkay,Step Papi,39670,39690,46,45,merrick_kingston_matt_gabe_rory_durst_9_20_21_wallhacks_2.dem,1,62490,62528,blue
-31,Pinkay,i_eat_short_people_for_breakfast,39756,39785,46,38,merrick_kingston_matt_gabe_rory_durst_9_20_21_wallhacks_2.dem,1,62651,62704,red
-23,Pinkay,Step Papi,39834,39872,46,45,merrick_kingston_matt_gabe_rory_durst_9_20_21_wallhacks_2.dem,1,62798,62869,blue
-24,Pinkay,Step Papi,39875,39881,46,45,merrick_kingston_matt_gabe_rory_durst_9_20_21_wallhacks_2.dem,1,62873,62885,blue
-40,Pinkay,meeseeks,42404,42559,46,43,merrick_kingston_matt_gabe_rory_durst_9_20_21_wallhacks_2.dem,1,67615,67906,green
+spotter,spotted,start_game_tick,end_game_tick,spotter_id,spotted_id,demo,hacking,start_frame_num,end_frame_num,color
+Pinkay,meeseeks,6925,7037,46,43,merrick_kingston_matt_gabe_rory_durst_9_20_21_wallhacks_2.dem,1,1093,1302,green
+Pinkay,meeseeks,7203,7234,46,43,merrick_kingston_matt_gabe_rory_durst_9_20_21_wallhacks_2.dem,1,1614,1672,green
+Pinkay,Step Papi,7629,7663,46,45,merrick_kingston_matt_gabe_rory_durst_9_20_21_wallhacks_2.dem,1,2412,2476,blue
+Pinkay,Step Papi,7754,7760,46,45,merrick_kingston_matt_gabe_rory_durst_9_20_21_wallhacks_2.dem,1,2647,2658,blue
+Pinkay,Step Papi,7795,7809,46,45,merrick_kingston_matt_gabe_rory_durst_9_20_21_wallhacks_2.dem,1,2723,2750,blue
+Pinkay,Alfred,7938,8117,46,39,merrick_kingston_matt_gabe_rory_durst_9_20_21_wallhacks_2.dem,1,2993,3327,redBlue
+Pinkay,Alfred,8142,8150,46,39,merrick_kingston_matt_gabe_rory_durst_9_20_21_wallhacks_2.dem,1,3375,3390,redBlue
+Pinkay,Alfred,8233,8257,46,39,merrick_kingston_matt_gabe_rory_durst_9_20_21_wallhacks_2.dem,1,3546,3590,redBlue
+Pinkay,Alfred,8271,8279,46,39,merrick_kingston_matt_gabe_rory_durst_9_20_21_wallhacks_2.dem,1,3616,3631,redBlue
+Pinkay,Alfred,8289,8301,46,39,merrick_kingston_matt_gabe_rory_durst_9_20_21_wallhacks_2.dem,1,3651,3673,redBlue
+Pinkay,Step Papi,9717,9725,46,45,merrick_kingston_matt_gabe_rory_durst_9_20_21_wallhacks_2.dem,1,6328,6343,blue
+Pinkay,i_eat_short_people_for_breakfast,11906,11947,46,38,merrick_kingston_matt_gabe_rory_durst_9_20_21_wallhacks_2.dem,1,10432,10510,red
+Pinkay,Alfred,12054,12075,46,39,merrick_kingston_matt_gabe_rory_durst_9_20_21_wallhacks_2.dem,1,10710,10750,redBlue
+Pinkay,Alfred,12349,12364,46,39,merrick_kingston_matt_gabe_rory_durst_9_20_21_wallhacks_2.dem,1,11263,11290,redBlue
+Pinkay,Step Papi,12504,12510,46,45,merrick_kingston_matt_gabe_rory_durst_9_20_21_wallhacks_2.dem,1,11554,11565,blue
+Pinkay,i_eat_short_people_for_breakfast,15164,15222,46,38,merrick_kingston_matt_gabe_rory_durst_9_20_21_wallhacks_2.dem,1,16541,16604,red
+Pinkay,i_eat_short_people_for_breakfast,16490,16497,46,38,merrick_kingston_matt_gabe_rory_durst_9_20_21_wallhacks_2.dem,1,19028,19040,red
+Pinkay,Step Papi,17928,17981,46,45,merrick_kingston_matt_gabe_rory_durst_9_20_21_wallhacks_2.dem,1,21723,21823,blue
+Pinkay,Step Papi,18004,18018,46,45,merrick_kingston_matt_gabe_rory_durst_9_20_21_wallhacks_2.dem,1,21866,21891,blue
+Pinkay,Step Papi,18056,18136,46,45,merrick_kingston_matt_gabe_rory_durst_9_20_21_wallhacks_2.dem,1,21963,22114,blue
+Pinkay,Step Papi,21763,21777,46,45,merrick_kingston_matt_gabe_rory_durst_9_20_21_wallhacks_2.dem,1,28914,28940,blue
+Pinkay,meeseeks,26276,26306,46,43,merrick_kingston_matt_gabe_rory_durst_9_20_21_wallhacks_2.dem,1,37376,37431,green
+Pinkay,meeseeks,26858,26893,46,43,merrick_kingston_matt_gabe_rory_durst_9_20_21_wallhacks_2.dem,1,38467,38532,green
+Pinkay,Step Papi,28783,28828,46,45,merrick_kingston_matt_gabe_rory_durst_9_20_21_wallhacks_2.dem,1,42077,42161,blue
+Pinkay,meeseeks,31472,31479,46,43,merrick_kingston_matt_gabe_rory_durst_9_20_21_wallhacks_2.dem,1,47119,47131,green
+Pinkay,Step Papi,31728,31745,46,45,merrick_kingston_matt_gabe_rory_durst_9_20_21_wallhacks_2.dem,1,47598,47631,blue
+Pinkay,Step Papi,31757,31805,46,45,merrick_kingston_matt_gabe_rory_durst_9_20_21_wallhacks_2.dem,1,47653,47742,blue
+Pinkay,Step Papi,32057,32081,46,45,merrick_kingston_matt_gabe_rory_durst_9_20_21_wallhacks_2.dem,1,48215,48260,blue
+Pinkay,i_eat_short_people_for_breakfast,34129,34178,46,38,merrick_kingston_matt_gabe_rory_durst_9_20_21_wallhacks_2.dem,1,52100,52193,red
+Pinkay,i_eat_short_people_for_breakfast,34507,34513,46,38,merrick_kingston_matt_gabe_rory_durst_9_20_21_wallhacks_2.dem,1,52810,52821,red
+Pinkay,i_eat_short_people_for_breakfast,34608,34644,46,38,merrick_kingston_matt_gabe_rory_durst_9_20_21_wallhacks_2.dem,1,52998,53010,red
+Pinkay,Step Papi,35158,35168,46,45,merrick_kingston_matt_gabe_rory_durst_9_20_21_wallhacks_2.dem,1,54029,54047,blue
+Pinkay,meeseeks,37141,37147,46,43,merrick_kingston_matt_gabe_rory_durst_9_20_21_wallhacks_2.dem,1,57747,57760,green
+Pinkay,meeseeks,37167,37243,46,43,merrick_kingston_matt_gabe_rory_durst_9_20_21_wallhacks_2.dem,1,57796,57811,green
+Pinkay,meeseeks,39240,39284,46,43,merrick_kingston_matt_gabe_rory_durst_9_20_21_wallhacks_2.dem,1,61683,61766,green
+Pinkay,Step Papi,39609,39622,46,45,merrick_kingston_matt_gabe_rory_durst_9_20_21_wallhacks_2.dem,1,62374,62400,blue
+Pinkay,Step Papi,39670,39690,46,45,merrick_kingston_matt_gabe_rory_durst_9_20_21_wallhacks_2.dem,1,62490,62528,blue
+Pinkay,i_eat_short_people_for_breakfast,39756,39785,46,38,merrick_kingston_matt_gabe_rory_durst_9_20_21_wallhacks_2.dem,1,62651,62704,red
+Pinkay,Step Papi,39834,39872,46,45,merrick_kingston_matt_gabe_rory_durst_9_20_21_wallhacks_2.dem,1,62798,62869,blue
+Pinkay,Step Papi,39875,39881,46,45,merrick_kingston_matt_gabe_rory_durst_9_20_21_wallhacks_2.dem,1,62873,62885,blue
+Pinkay,meeseeks,42404,42559,46,43,merrick_kingston_matt_gabe_rory_durst_9_20_21_wallhacks_2.dem,1,67615,67906,green
