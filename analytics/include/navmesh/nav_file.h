@@ -40,7 +40,6 @@ namespace nav_mesh {
 
 		virtual void PrintStateInfo( void* state ) { }
 
-	private:
 		nav_area& get_area_by_id( std::uint32_t id );
 		nav_area& get_area_by_position( vec3_t position );
 

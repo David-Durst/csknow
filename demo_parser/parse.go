@@ -135,7 +135,7 @@ func processFile(unprocessedKey string, localDemName string, idState * IDState, 
 	}
 	defer gamesFile.Close()
 	if firstRun {
-		gamesFile.WriteString("id,demo_file,demo_tick_rate,game_tick_rate,game_type\n")
+		gamesFile.WriteString("id,demo_file,demo_tick_rate,game_tick_rate,map_name,game_type\n")
 	}
 	curGameID := idState.nextGame
 
@@ -263,8 +263,8 @@ func processFile(unprocessedKey string, localDemName string, idState * IDState, 
 		// on the first tick save the game state
 		if ticksProcessed == 0 {
 			header := p.Header()
-			gamesFile.WriteString(fmt.Sprintf("%d,%s,%f,%f,%d\n",
-				curGameID, demFilePath, (&header).FrameRate(), p.TickRate(), gameType))
+			gamesFile.WriteString(fmt.Sprintf("%d,%s,%f,%f,%s,%d\n",
+				curGameID, demFilePath, (&header).FrameRate(), p.TickRate(), (&header).MapName, gameType))
 			idState.nextGame++
 		}
 		ticksProcessed++

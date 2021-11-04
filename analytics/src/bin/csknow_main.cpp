@@ -54,11 +54,19 @@ int main(int argc, char * argv[]) {
         return 1;
     }
 
+    string dataPath = argv[1];
+    string navPath = argv[2];
+    bool runServer = argv[3][0] == 'y';
+    string outputDir = "";
+    outputDir = argv[4];
+
     try {
-        nav_mesh::nav_file map_nav( "/home/durst/third_shared/de_dust2.nav" );
+        nav_mesh::nav_file map_nav( navPath + "/de_dust2.nav" );
         //Alternatively, you can just call map_nav.load( "path/to/map.nav" );
 
         //Figure out from where to where you'd like to find a path
+
+        auto x = map_nav.get_area_by_id(map_nav.m_areas[0].get_id());
 
         auto path = map_nav.find_path( {1544.02,3047.64,129.03}, {-516,1745,-118.11} );
 
@@ -68,12 +76,6 @@ int main(int argc, char * argv[]) {
     } catch ( const std::exception& e ) {
         std::cout << e.what( ) << std::endl;
     }
-
-    string dataPath = argv[1];
-    string navPath = argv[2];
-    bool runServer = argv[3][0] == 'y';
-    string outputDir = "";
-    outputDir = argv[4];
 
     auto t = std::time(nullptr);
     auto tm = *std::localtime(&t);
