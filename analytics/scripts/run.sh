@@ -20,5 +20,5 @@ cd ${script_dir}/../build
 cmake .. -DCMAKE_BUILD_TYPE=Release
 make -j4
 mkdir -p ../csv_outputs
-./csknow ${script_dir}/../../local_data n ../csv_outputs
+./csknow ${script_dir}/../../local_data ${script_dir}/../nav n ../csv_outputs
 #${script_dir}/csvdiff.sh

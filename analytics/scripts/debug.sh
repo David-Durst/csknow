@@ -20,4 +20,4 @@ cd ${script_dir}/../build
 cmake .. -DCMAKE_BUILD_TYPE=Debug
 make -j4
 mkdir -p ../csv_outputs
-./csknow ${script_dir}/../../local_data n ../csv_outputs
+./csknow ${script_dir}/../../local_data ${script_dir}/../nav n ../csv_outputs

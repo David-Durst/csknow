@@ -13,7 +13,7 @@ import os
 parser = argparse.ArgumentParser()
 parser.add_argument("entities_file", help="file with output of mirv_listEntities isPlayer=1 for demo",
                     type=str)
-parser.add_argument("compute_visibility", help="path to computeVisibility.sh",
+parser.add_argument("compute_visibility", help="path to computeVisibilityGenerated.sh folder",
                     type=str)
 parser.add_argument("video_dir", help="path to video directory",
                     type=str)
@@ -123,7 +123,7 @@ video_path = os.path.join(args.video_dir, prefix)
 if not os.path.exists(video_path):
     os.mkdir(video_path)
 player_config_file_names = []
-compute_visibility_sh = open(args.compute_visibility, 'a')
+compute_visibility_sh = open(os.path.join(args.compute_visibility, 'computeVisibilityGenerated.sh'), 'a')
 compute_visibility_sh.write(f'''\n#{prefix}\n''')
 for player in players:
     if player.xuid == '0':
@@ -142,4 +142,8 @@ for player in players:
 compute_visibility_sh.write(f'''\n\n''')
 compute_visibility_sh.close()
 
-print(",".join(player_config_file_names))
+record_gameplay_bat = open(os.path.join(args.compute_visibility, 'recordGameplay.bat'), 'a')
+record_gameplay_bat.write(f'''\n:: #{prefix}\n''')
+record_gameplay_bat.write('python recordGameplay.py %script_dir%visibilitySignImages\\tick0.png C:\\Users\\Administrator\\Videos\\ ')
+record_gameplay_bat.write(",".join(player_config_file_names))
+record_gameplay_bat.write('\n')

@@ -45,11 +45,12 @@ void exec(string cmd) {
 }
 
 int main(int argc, char * argv[]) {
-    if (argc != 4) {
-        std::cout << "please call this code 2 arguments: " << std::endl;
+    if (argc != 5) {
+        std::cout << "please call this code 4 arguments: " << std::endl;
         std::cout << "1. path/to/local_data" << std::endl;
-        std::cout << "2. run server (y or n)" << std::endl;
-        std::cout << "3. path/to/output/dir" << std::endl;
+        std::cout << "2. path/to/nav_meshes" << std::endl;
+        std::cout << "3. run server (y or n)" << std::endl;
+        std::cout << "4. path/to/output/dir" << std::endl;
         return 1;
     }
 
@@ -69,9 +70,10 @@ int main(int argc, char * argv[]) {
     }
 
     string dataPath = argv[1];
-    bool runServer = argv[2][0] == 'y';
+    string navPath = argv[2];
+    bool runServer = argv[3][0] == 'y';
     string outputDir = "";
-    outputDir = argv[3];
+    outputDir = argv[4];
 
     auto t = std::time(nullptr);
     auto tm = *std::localtime(&t);
