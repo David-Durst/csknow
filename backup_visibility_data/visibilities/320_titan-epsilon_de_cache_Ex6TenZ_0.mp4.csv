@@ -1,77 +1,77 @@
 spotter,spotted,start_game_tick,end_game_tick,spotter_id,spotted_id,demo,hacking,start_frame_num,end_frame_num,color
-Ex6TenZ,EPSILON MAJ3R,15525,15547,94,90,320_titan-epsilon_de_cache.dem,0,3479,3500,red
-Ex6TenZ,EPSILON MAJ3R,15586,15609,94,90,320_titan-epsilon_de_cache.dem,0,3537,3559,red
-Ex6TenZ,EPSILON G[M]X * Nike,21954,21962,94,89,320_titan-epsilon_de_cache.dem,0,9506,9514,green
-Ex6TenZ,EPSILON • SIXER/j/,28470,28574,94,91,320_titan-epsilon_de_cache.dem,0,15615,15714,greenBlue
-Ex6TenZ,EPSILON G[M]X * Nike,41095,41116,94,89,320_titan-epsilon_de_cache.dem,0,27451,27471,green
-Ex6TenZ,EPSILON G[M]X * Nike,41217,41305,94,89,320_titan-epsilon_de_cache.dem,0,27566,27648,green
-Ex6TenZ,EPSILON G[M]X * Nike,41425,41493,94,89,320_titan-epsilon_de_cache.dem,0,27761,27824,green
-Ex6TenZ,EPSILON • Uzzziii * ViewSonic,48733,48771,94,93,320_titan-epsilon_de_cache.dem,0,34612,34647,blue
-Ex6TenZ,EPSILON G[M]X * Nike,55895,55925,94,89,320_titan-epsilon_de_cache.dem,0,41326,41354,green
-Ex6TenZ,EPSILON G[M]X * Nike,56153,56316,94,89,320_titan-epsilon_de_cache.dem,0,41568,41721,green
-Ex6TenZ,EPSILON • Uzzziii * ViewSonic,86034,86107,94,93,320_titan-epsilon_de_cache.dem,0,69581,69650,blue
-Ex6TenZ,EPSILON G[M]X * Nike,86458,86487,94,89,320_titan-epsilon_de_cache.dem,0,69979,70006,green
-Ex6TenZ,EPSILON G[M]X * Nike,86549,86668,94,89,320_titan-epsilon_de_cache.dem,0,70064,70157,green
-Ex6TenZ,EPSILON G[M]X * Nike,87561,87582,94,89,320_titan-epsilon_de_cache.dem,0,71013,71033,green
-Ex6TenZ,EPSILON G[M]X * Nike,87982,87988,94,89,320_titan-epsilon_de_cache.dem,0,71408,71413,green
-Ex6TenZ,EPSILON • ScreaM -R-,101376,101416,94,92,320_titan-epsilon_de_cache.dem,0,83964,84002,redBlue
-Ex6TenZ,EPSILON G[M]X * Nike,119073,119170,94,89,320_titan-epsilon_de_cache.dem,0,100556,100647,green
-Ex6TenZ,EPSILON • Uzzziii * ViewSonic,119899,120098,94,93,320_titan-epsilon_de_cache.dem,0,101330,101517,blue
-Ex6TenZ,EPSILON MAJ3R,120144,120346,94,90,320_titan-epsilon_de_cache.dem,0,101560,101749,red
-Ex6TenZ,EPSILON MAJ3R,146823,146851,94,90,320_titan-epsilon_de_cache.dem,0,126571,126597,red
-Ex6TenZ,EPSILON • ScreaM -R-,152863,152991,94,92,320_titan-epsilon_de_cache.dem,0,132234,132354,redBlue
-Ex6TenZ,EPSILON G[M]X * Nike,159213,159244,94,89,320_titan-epsilon_de_cache.dem,0,138187,138216,green
-Ex6TenZ,EPSILON G[M]X * Nike,159283,159293,94,89,320_titan-epsilon_de_cache.dem,0,138252,138262,green
-Ex6TenZ,EPSILON • ScreaM -R-,162166,162201,94,92,320_titan-epsilon_de_cache.dem,0,140955,140988,redBlue
-Ex6TenZ,EPSILON G[M]X * Nike,162236,162276,94,89,320_titan-epsilon_de_cache.dem,0,141021,141058,green
-Ex6TenZ,EPSILON • ScreaM -R-,162354,162434,94,92,320_titan-epsilon_de_cache.dem,0,141131,141206,redBlue
-Ex6TenZ,EPSILON • SIXER/j/,173718,173799,94,91,320_titan-epsilon_de_cache.dem,0,151785,151861,greenBlue
-Ex6TenZ,EPSILON • Uzzziii * ViewSonic,182640,182816,94,93,320_titan-epsilon_de_cache.dem,0,160149,160314,blue
-Ex6TenZ,EPSILON • ScreaM -R-,182687,182716,94,92,320_titan-epsilon_de_cache.dem,0,160194,160221,redBlue
-Ex6TenZ,EPSILON MAJ3R,202312,202407,94,90,320_titan-epsilon_de_cache.dem,0,178592,178681,red
-Ex6TenZ,EPSILON • ScreaM -R-,202946,202993,94,92,320_titan-epsilon_de_cache.dem,0,179187,179230,redBlue
-Ex6TenZ,EPSILON • ScreaM -R-,203372,203478,94,92,320_titan-epsilon_de_cache.dem,0,179586,179685,redBlue
-Ex6TenZ,EPSILON • ScreaM -R-,216701,216779,94,92,320_titan-epsilon_de_cache.dem,0,192082,192098,redBlue
-Ex6TenZ,EPSILON • Uzzziii * ViewSonic,216701,216709,94,93,320_titan-epsilon_de_cache.dem,0,192082,192089,blue
-Ex6TenZ,EPSILON • Uzzziii * ViewSonic,216737,216805,94,93,320_titan-epsilon_de_cache.dem,0,192116,192180,blue
-Ex6TenZ,EPSILON • SIXER/j/,228601,228617,94,91,320_titan-epsilon_de_cache.dem,0,203238,203253,greenBlue
-Ex6TenZ,EPSILON • SIXER/j/,228627,228651,94,91,320_titan-epsilon_de_cache.dem,0,203263,203285,greenBlue
-Ex6TenZ,EPSILON G[M]X * Nike,229408,229426,94,89,320_titan-epsilon_de_cache.dem,0,203994,204011,green
-Ex6TenZ,EPSILON • SIXER/j/,229858,229896,94,91,320_titan-epsilon_de_cache.dem,0,204417,204452,greenBlue
-Ex6TenZ,EPSILON • Uzzziii * ViewSonic,240336,240410,94,93,320_titan-epsilon_de_cache.dem,0,214240,214310,blue
-Ex6TenZ,EPSILON • ScreaM -R-,240483,240541,94,92,320_titan-epsilon_de_cache.dem,0,214377,214432,redBlue
-Ex6TenZ,EPSILON • ScreaM -R-,241162,241230,94,92,320_titan-epsilon_de_cache.dem,0,215014,215078,redBlue
-Ex6TenZ,EPSILON MAJ3R,249197,249204,94,90,320_titan-epsilon_de_cache.dem,0,222547,222553,red
-Ex6TenZ,EPSILON MAJ3R,249236,249312,94,90,320_titan-epsilon_de_cache.dem,0,222584,222655,red
-Ex6TenZ,EPSILON • SIXER/j/,256315,256366,94,91,320_titan-epsilon_de_cache.dem,0,229220,229267,greenBlue
-Ex6TenZ,EPSILON • SIXER/j/,256500,256664,94,91,320_titan-epsilon_de_cache.dem,0,229393,229547,greenBlue
-Ex6TenZ,EPSILON • Uzzziii * ViewSonic,257365,257451,94,93,320_titan-epsilon_de_cache.dem,0,230204,230285,blue
-Ex6TenZ,EPSILON • SIXER/j/,257758,257809,94,91,320_titan-epsilon_de_cache.dem,0,230572,230621,greenBlue
-Ex6TenZ,EPSILON • SIXER/j/,257858,257984,94,91,320_titan-epsilon_de_cache.dem,0,230666,230785,greenBlue
-Ex6TenZ,EPSILON • SIXER/j/,258180,258223,94,91,320_titan-epsilon_de_cache.dem,0,230969,231009,greenBlue
-Ex6TenZ,EPSILON • SIXER/j/,258298,258306,94,91,320_titan-epsilon_de_cache.dem,0,231079,231087,greenBlue
-Ex6TenZ,EPSILON • Uzzziii * ViewSonic,267248,267329,94,93,320_titan-epsilon_de_cache.dem,0,239470,239545,blue
-Ex6TenZ,EPSILON G[M]X * Nike,267501,267521,94,89,320_titan-epsilon_de_cache.dem,0,239707,239726,green
-Ex6TenZ,EPSILON G[M]X * Nike,267533,267552,94,89,320_titan-epsilon_de_cache.dem,0,239737,239754,green
-Ex6TenZ,EPSILON • SIXER/j/,271116,271300,94,91,320_titan-epsilon_de_cache.dem,0,243096,243269,greenBlue
-Ex6TenZ,EPSILON • SIXER/j/,271359,271416,94,91,320_titan-epsilon_de_cache.dem,0,243324,243377,greenBlue
-Ex6TenZ,EPSILON • SIXER/j/,271490,271494,94,91,320_titan-epsilon_de_cache.dem,0,243447,243450,greenBlue
-Ex6TenZ,EPSILON • SIXER/j/,271497,271505,94,91,320_titan-epsilon_de_cache.dem,0,243453,243461,greenBlue
-Ex6TenZ,EPSILON • SIXER/j/,271509,271520,94,91,320_titan-epsilon_de_cache.dem,0,243464,243475,greenBlue
-Ex6TenZ,EPSILON • SIXER/j/,271524,271544,94,91,320_titan-epsilon_de_cache.dem,0,243478,243487,greenBlue
-Ex6TenZ,EPSILON G[M]X * Nike,274664,274710,94,89,320_titan-epsilon_de_cache.dem,0,246422,246466,green
-Ex6TenZ,EPSILON G[M]X * Nike,274790,275172,94,89,320_titan-epsilon_de_cache.dem,0,246540,246899,green
-Ex6TenZ,EPSILON MAJ3R,283067,283072,94,90,320_titan-epsilon_de_cache.dem,0,254300,254304,red
-Ex6TenZ,EPSILON MAJ3R,283075,283120,94,90,320_titan-epsilon_de_cache.dem,0,254307,254350,red
-Ex6TenZ,EPSILON MAJ3R,292203,292308,94,90,320_titan-epsilon_de_cache.dem,0,262865,262964,red
-Ex6TenZ,EPSILON • Uzzziii * ViewSonic,292208,292513,94,93,320_titan-epsilon_de_cache.dem,0,262870,263156,blue
-Ex6TenZ,EPSILON • Uzzziii * ViewSonic,292668,292733,94,93,320_titan-epsilon_de_cache.dem,0,263301,263362,blue
-Ex6TenZ,EPSILON MAJ3R,297318,297407,94,90,320_titan-epsilon_de_cache.dem,0,267660,267744,red
-Ex6TenZ,EPSILON MAJ3R,298277,298290,94,90,320_titan-epsilon_de_cache.dem,0,268559,268572,red
-Ex6TenZ,EPSILON MAJ3R,298320,298358,94,90,320_titan-epsilon_de_cache.dem,0,268600,268635,red
-Ex6TenZ,EPSILON MAJ3R,305889,305942,94,90,320_titan-epsilon_de_cache.dem,0,275695,275745,red
-Ex6TenZ,EPSILON G[M]X * Nike,306119,306171,94,89,320_titan-epsilon_de_cache.dem,0,275911,275960,green
-Ex6TenZ,EPSILON MAJ3R,318080,318087,94,90,320_titan-epsilon_de_cache.dem,0,287125,287131,red
-Ex6TenZ,EPSILON MAJ3R,318330,318404,94,90,320_titan-epsilon_de_cache.dem,0,287359,287428,red
-Ex6TenZ,EPSILON MAJ3R,318704,318760,94,90,320_titan-epsilon_de_cache.dem,0,287710,287762,red
-Ex6TenZ,EPSILON • ScreaM -R-,323313,323404,94,92,320_titan-epsilon_de_cache.dem,0,292031,292116,redBlue
+Ex6TenZ,EPSILON MAJ3R,15525,15547,94,90,320_titan-epsilon_de_cache.dem,2,3479,3500,red
+Ex6TenZ,EPSILON MAJ3R,15586,15609,94,90,320_titan-epsilon_de_cache.dem,2,3537,3559,red
+Ex6TenZ,EPSILON G[M]X * Nike,21954,21962,94,89,320_titan-epsilon_de_cache.dem,2,9506,9514,green
+Ex6TenZ,EPSILON • SIXER/j/,28470,28574,94,91,320_titan-epsilon_de_cache.dem,2,15615,15714,greenBlue
+Ex6TenZ,EPSILON G[M]X * Nike,41095,41116,94,89,320_titan-epsilon_de_cache.dem,2,27451,27471,green
+Ex6TenZ,EPSILON G[M]X * Nike,41217,41305,94,89,320_titan-epsilon_de_cache.dem,2,27566,27648,green
+Ex6TenZ,EPSILON G[M]X * Nike,41425,41493,94,89,320_titan-epsilon_de_cache.dem,2,27761,27824,green
+Ex6TenZ,EPSILON • Uzzziii * ViewSonic,48733,48771,94,93,320_titan-epsilon_de_cache.dem,2,34612,34647,blue
+Ex6TenZ,EPSILON G[M]X * Nike,55895,55925,94,89,320_titan-epsilon_de_cache.dem,2,41326,41354,green
+Ex6TenZ,EPSILON G[M]X * Nike,56153,56316,94,89,320_titan-epsilon_de_cache.dem,2,41568,41721,green
+Ex6TenZ,EPSILON • Uzzziii * ViewSonic,86034,86107,94,93,320_titan-epsilon_de_cache.dem,2,69581,69650,blue
+Ex6TenZ,EPSILON G[M]X * Nike,86458,86487,94,89,320_titan-epsilon_de_cache.dem,2,69979,70006,green
+Ex6TenZ,EPSILON G[M]X * Nike,86549,86668,94,89,320_titan-epsilon_de_cache.dem,2,70064,70157,green
+Ex6TenZ,EPSILON G[M]X * Nike,87561,87582,94,89,320_titan-epsilon_de_cache.dem,2,71013,71033,green
+Ex6TenZ,EPSILON G[M]X * Nike,87982,87988,94,89,320_titan-epsilon_de_cache.dem,2,71408,71413,green
+Ex6TenZ,EPSILON • ScreaM -R-,101376,101416,94,92,320_titan-epsilon_de_cache.dem,2,83964,84002,redBlue
+Ex6TenZ,EPSILON G[M]X * Nike,119073,119170,94,89,320_titan-epsilon_de_cache.dem,2,100556,100647,green
+Ex6TenZ,EPSILON • Uzzziii * ViewSonic,119899,120098,94,93,320_titan-epsilon_de_cache.dem,2,101330,101517,blue
+Ex6TenZ,EPSILON MAJ3R,120144,120346,94,90,320_titan-epsilon_de_cache.dem,2,101560,101749,red
+Ex6TenZ,EPSILON MAJ3R,146823,146851,94,90,320_titan-epsilon_de_cache.dem,2,126571,126597,red
+Ex6TenZ,EPSILON • ScreaM -R-,152863,152991,94,92,320_titan-epsilon_de_cache.dem,2,132234,132354,redBlue
+Ex6TenZ,EPSILON G[M]X * Nike,159213,159244,94,89,320_titan-epsilon_de_cache.dem,2,138187,138216,green
+Ex6TenZ,EPSILON G[M]X * Nike,159283,159293,94,89,320_titan-epsilon_de_cache.dem,2,138252,138262,green
+Ex6TenZ,EPSILON • ScreaM -R-,162166,162201,94,92,320_titan-epsilon_de_cache.dem,2,140955,140988,redBlue
+Ex6TenZ,EPSILON G[M]X * Nike,162236,162276,94,89,320_titan-epsilon_de_cache.dem,2,141021,141058,green
+Ex6TenZ,EPSILON • ScreaM -R-,162354,162434,94,92,320_titan-epsilon_de_cache.dem,2,141131,141206,redBlue
+Ex6TenZ,EPSILON • SIXER/j/,173718,173799,94,91,320_titan-epsilon_de_cache.dem,2,151785,151861,greenBlue
+Ex6TenZ,EPSILON • Uzzziii * ViewSonic,182640,182816,94,93,320_titan-epsilon_de_cache.dem,2,160149,160314,blue
+Ex6TenZ,EPSILON • ScreaM -R-,182687,182716,94,92,320_titan-epsilon_de_cache.dem,2,160194,160221,redBlue
+Ex6TenZ,EPSILON MAJ3R,202312,202407,94,90,320_titan-epsilon_de_cache.dem,2,178592,178681,red
+Ex6TenZ,EPSILON • ScreaM -R-,202946,202993,94,92,320_titan-epsilon_de_cache.dem,2,179187,179230,redBlue
+Ex6TenZ,EPSILON • ScreaM -R-,203372,203478,94,92,320_titan-epsilon_de_cache.dem,2,179586,179685,redBlue
+Ex6TenZ,EPSILON • ScreaM -R-,216701,216779,94,92,320_titan-epsilon_de_cache.dem,2,192082,192098,redBlue
+Ex6TenZ,EPSILON • Uzzziii * ViewSonic,216701,216709,94,93,320_titan-epsilon_de_cache.dem,2,192082,192089,blue
+Ex6TenZ,EPSILON • Uzzziii * ViewSonic,216737,216805,94,93,320_titan-epsilon_de_cache.dem,2,192116,192180,blue
+Ex6TenZ,EPSILON • SIXER/j/,228601,228617,94,91,320_titan-epsilon_de_cache.dem,2,203238,203253,greenBlue
+Ex6TenZ,EPSILON • SIXER/j/,228627,228651,94,91,320_titan-epsilon_de_cache.dem,2,203263,203285,greenBlue
+Ex6TenZ,EPSILON G[M]X * Nike,229408,229426,94,89,320_titan-epsilon_de_cache.dem,2,203994,204011,green
+Ex6TenZ,EPSILON • SIXER/j/,229858,229896,94,91,320_titan-epsilon_de_cache.dem,2,204417,204452,greenBlue
+Ex6TenZ,EPSILON • Uzzziii * ViewSonic,240336,240410,94,93,320_titan-epsilon_de_cache.dem,2,214240,214310,blue
+Ex6TenZ,EPSILON • ScreaM -R-,240483,240541,94,92,320_titan-epsilon_de_cache.dem,2,214377,214432,redBlue
+Ex6TenZ,EPSILON • ScreaM -R-,241162,241230,94,92,320_titan-epsilon_de_cache.dem,2,215014,215078,redBlue
+Ex6TenZ,EPSILON MAJ3R,249197,249204,94,90,320_titan-epsilon_de_cache.dem,2,222547,222553,red
+Ex6TenZ,EPSILON MAJ3R,249236,249312,94,90,320_titan-epsilon_de_cache.dem,2,222584,222655,red
+Ex6TenZ,EPSILON • SIXER/j/,256315,256366,94,91,320_titan-epsilon_de_cache.dem,2,229220,229267,greenBlue
+Ex6TenZ,EPSILON • SIXER/j/,256500,256664,94,91,320_titan-epsilon_de_cache.dem,2,229393,229547,greenBlue
+Ex6TenZ,EPSILON • Uzzziii * ViewSonic,257365,257451,94,93,320_titan-epsilon_de_cache.dem,2,230204,230285,blue
+Ex6TenZ,EPSILON • SIXER/j/,257758,257809,94,91,320_titan-epsilon_de_cache.dem,2,230572,230621,greenBlue
+Ex6TenZ,EPSILON • SIXER/j/,257858,257984,94,91,320_titan-epsilon_de_cache.dem,2,230666,230785,greenBlue
+Ex6TenZ,EPSILON • SIXER/j/,258180,258223,94,91,320_titan-epsilon_de_cache.dem,2,230969,231009,greenBlue
+Ex6TenZ,EPSILON • SIXER/j/,258298,258306,94,91,320_titan-epsilon_de_cache.dem,2,231079,231087,greenBlue
+Ex6TenZ,EPSILON • Uzzziii * ViewSonic,267248,267329,94,93,320_titan-epsilon_de_cache.dem,2,239470,239545,blue
+Ex6TenZ,EPSILON G[M]X * Nike,267501,267521,94,89,320_titan-epsilon_de_cache.dem,2,239707,239726,green
+Ex6TenZ,EPSILON G[M]X * Nike,267533,267552,94,89,320_titan-epsilon_de_cache.dem,2,239737,239754,green
+Ex6TenZ,EPSILON • SIXER/j/,271116,271300,94,91,320_titan-epsilon_de_cache.dem,2,243096,243269,greenBlue
+Ex6TenZ,EPSILON • SIXER/j/,271359,271416,94,91,320_titan-epsilon_de_cache.dem,2,243324,243377,greenBlue
+Ex6TenZ,EPSILON • SIXER/j/,271490,271494,94,91,320_titan-epsilon_de_cache.dem,2,243447,243450,greenBlue
+Ex6TenZ,EPSILON • SIXER/j/,271497,271505,94,91,320_titan-epsilon_de_cache.dem,2,243453,243461,greenBlue
+Ex6TenZ,EPSILON • SIXER/j/,271509,271520,94,91,320_titan-epsilon_de_cache.dem,2,243464,243475,greenBlue
+Ex6TenZ,EPSILON • SIXER/j/,271524,271544,94,91,320_titan-epsilon_de_cache.dem,2,243478,243487,greenBlue
+Ex6TenZ,EPSILON G[M]X * Nike,274664,274710,94,89,320_titan-epsilon_de_cache.dem,2,246422,246466,green
+Ex6TenZ,EPSILON G[M]X * Nike,274790,275172,94,89,320_titan-epsilon_de_cache.dem,2,246540,246899,green
+Ex6TenZ,EPSILON MAJ3R,283067,283072,94,90,320_titan-epsilon_de_cache.dem,2,254300,254304,red
+Ex6TenZ,EPSILON MAJ3R,283075,283120,94,90,320_titan-epsilon_de_cache.dem,2,254307,254350,red
+Ex6TenZ,EPSILON MAJ3R,292203,292308,94,90,320_titan-epsilon_de_cache.dem,2,262865,262964,red
+Ex6TenZ,EPSILON • Uzzziii * ViewSonic,292208,292513,94,93,320_titan-epsilon_de_cache.dem,2,262870,263156,blue
+Ex6TenZ,EPSILON • Uzzziii * ViewSonic,292668,292733,94,93,320_titan-epsilon_de_cache.dem,2,263301,263362,blue
+Ex6TenZ,EPSILON MAJ3R,297318,297407,94,90,320_titan-epsilon_de_cache.dem,2,267660,267744,red
+Ex6TenZ,EPSILON MAJ3R,298277,298290,94,90,320_titan-epsilon_de_cache.dem,2,268559,268572,red
+Ex6TenZ,EPSILON MAJ3R,298320,298358,94,90,320_titan-epsilon_de_cache.dem,2,268600,268635,red
+Ex6TenZ,EPSILON MAJ3R,305889,305942,94,90,320_titan-epsilon_de_cache.dem,2,275695,275745,red
+Ex6TenZ,EPSILON G[M]X * Nike,306119,306171,94,89,320_titan-epsilon_de_cache.dem,2,275911,275960,green
+Ex6TenZ,EPSILON MAJ3R,318080,318087,94,90,320_titan-epsilon_de_cache.dem,2,287125,287131,red
+Ex6TenZ,EPSILON MAJ3R,318330,318404,94,90,320_titan-epsilon_de_cache.dem,2,287359,287428,red
+Ex6TenZ,EPSILON MAJ3R,318704,318760,94,90,320_titan-epsilon_de_cache.dem,2,287710,287762,red
+Ex6TenZ,EPSILON • ScreaM -R-,323313,323404,94,92,320_titan-epsilon_de_cache.dem,2,292031,292116,redBlue
