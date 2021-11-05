@@ -14,7 +14,6 @@ namespace nav_mesh {
 		
 		bool is_within( vec3_t position );
 
-	private:
 		void load( nav_buffer& buffer );
 
 		std::uint16_t m_place = 0;

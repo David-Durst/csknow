@@ -24,6 +24,9 @@
 #include "httplib.h"
 #include <errno.h>
 #include "navmesh/nav_file.h"
+#include "queries/nav_mesh.h"
+#include <filesystem>
+namespace fs = std::filesystem;
 
 using std::map;
 using std::string;
@@ -60,21 +63,12 @@ int main(int argc, char * argv[]) {
     string outputDir = "";
     outputDir = argv[4];
 
-    try {
-        nav_mesh::nav_file map_nav( navPath + "/de_dust2.nav" );
-        //Alternatively, you can just call map_nav.load( "path/to/map.nav" );
+    std::map<std::string, nav_mesh::nav_file> map_navs;
 
-        //Figure out from where to where you'd like to find a path
-
-        auto x = map_nav.get_area_by_id(map_nav.m_areas[0].get_id());
-
-        auto path = map_nav.find_path( {1544.02,3047.64,129.03}, {-516,1745,-118.11} );
-
-        if ( !path.empty( ) ) {
-            //Do something
-        }
-    } catch ( const std::exception& e ) {
-        std::cout << e.what( ) << std::endl;
+    //Figure out from where to where you'd like to find a path
+    for (const auto & entry : fs::directory_iterator(navPath)) {
+        map_navs.insert(std::pair<std::string, nav_mesh::nav_file>(entry.path().filename().replace_extension(),
+                                                                   nav_mesh::nav_file(entry.path().c_str())));
     }
 
     auto t = std::time(nullptr);
@@ -197,6 +191,9 @@ int main(int argc, char * argv[]) {
     string lookerName = "lookers";
     LookingResult lookersResult = queryLookers(games, rounds, ticks, playerAtTick);
     std::cout << "looker entries: " << lookersResult.tickId.size() << std::endl;
+
+    string dust2Name = "de_dust2_mesh";
+    MapMeshResult d2MeshResult = queryMapMesh(map_navs["de_dust2"]);
     /*
     VelocityResult velocityResult = queryVelocity(position);
     std::cout << "velocity moments: " << velocityResult.positionIndex.size() << std::endl;
@@ -254,7 +251,7 @@ int main(int argc, char * argv[]) {
             {analysisNames[1], aCatClusterSequence},
             {analysisNames[2], midCTPeekers},
             {analysisNames[3], midCTClusterSequence},
-            { analysisNames[4], lookersResult},
+            {analysisNames[4], lookersResult},
     };
 
     // create the output files and the metadata describing files
@@ -308,7 +305,7 @@ int main(int argc, char * argv[]) {
         }
          */
 
-    vector<string> queryNames = {"games", "rounds", "players", "ticks", "playerAtTick", "aCatClusterSequence", "aCatClusters", "midCTClusterSequence", "midTClusters"};
+    vector<string> queryNames = {"games", "rounds", "players", "ticks", "playerAtTick", "aCatClusterSequence", "aCatClusters", "midCTClusterSequence", "midTClusters", dust2Name};
     //vector<string> queryNames = {"games", "rounds", "players", "ticks", "playerAtTick", "aCatClusterSequence", "aCatClusters", "midCTClusterSequence", "midTClusters", "lookers"};
     map<string, reference_wrapper<QueryResult>> queries {
             {queryNames[0], queryGames},
@@ -320,6 +317,7 @@ int main(int argc, char * argv[]) {
             {queryNames[6], aCatPeekersClusters},
             {queryNames[7], midCTClusterSequence},
             {queryNames[8], midCTPeekersClusters},
+            {queryNames[9], d2MeshResult},
             //{queryNames[9], lookersResult}
     };
 

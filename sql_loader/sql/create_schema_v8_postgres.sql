@@ -8,6 +8,7 @@ CREATE TABLE "games" (
   "demo_file" varchar(1000),
   "demo_tick_rate" double precision,
   "game_tick_rate" double precision,
+  "map_name" varchar(255),
   "game_type" bigint
 );
 

@@ -189,11 +189,14 @@ void loadGamesFile(Games & games, string filePath) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, games.gameTickRate[arrayEntry]);
         }
         else if (colNumber == 4) {
+            readCol(file, curStart, curDelimiter, &games.mapName[arrayEntry]);
+        }
+        else if (colNumber == 5) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, games.gameType[arrayEntry]);
             rowNumber++;
             arrayEntry++;
         }
-        colNumber = (colNumber + 1) % 5;
+        colNumber = (colNumber + 1) % 6;
     }
     closeMMapFile({fd, stats, file});
 }

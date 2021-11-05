@@ -21,7 +21,7 @@ namespace nav_mesh {
 	};
 
 	class nav_area_critical_data {
-	protected:
+	public:
 		vec3_t m_nw_corner = { },
 			m_se_corner = { },
 			m_center = { };

@@ -117,6 +117,7 @@ public:
     char ** demoFile;
     double * demoTickRate;
     double * gameTickRate;
+    char ** mapName;
     int64_t * gameType;
     RangeIndex roundsPerGame;
     RangeIndex playersPerGame;
@@ -126,6 +127,7 @@ public:
         demoFile = (char **) malloc(rows * sizeof(char*));
         demoTickRate = (double *) malloc(rows * sizeof(double));
         gameTickRate = (double *) malloc(rows * sizeof(double));
+        mapName = (char **) malloc(rows * sizeof(char*));
         gameType = (int64_t *) malloc(rows * sizeof(int64_t));
         roundsPerGame = (RangeIndexEntry *) malloc(rows * sizeof(RangeIndexEntry));
         playersPerGame = (RangeIndexEntry *) malloc(rows * sizeof(RangeIndexEntry));
@@ -143,6 +145,7 @@ public:
 
         free(demoTickRate);
         free(gameTickRate);
+        free(mapName);
         free(gameType);
         free(roundsPerGame);
         free(playersPerGame);
