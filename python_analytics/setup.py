@@ -26,8 +26,7 @@ setup(
         "pytesseract",
         "pyautogui",
         "pydirectinput",
-        "keyboard",
-        "tesserocr"
+        "keyboard"
     ],
     python_requires='>=3.7',
     long_description=long_description,
