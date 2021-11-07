@@ -66,7 +66,7 @@ pydirectinput.press('`')
 pyautogui.write(f'''exec {match_prefix}_post_load_{team_number}\n''')
 
 time.sleep(3)
-
+pyautogui.click()
 pyautogui.write(f'''mirv_streams previewEnd\n''')
 time.sleep(3)
 
