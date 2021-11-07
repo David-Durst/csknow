@@ -79,11 +79,12 @@ tessocr_api = PyTessBaseAPI()
 first_time = False
 while True:
     print(instruction_str)
-    key = keyboard.wait()
+    key = keyboard.read_key()
+    time.sleep(0.4)
     # stop everything if z, skip if invalid key
     if key == 'z':
         break
-    elif key != 'o' and key not in range(1,len(action_strings)+1):
+    elif key != 'o' and key not in [str(i) for  i  in range(1,len(action_strings)+1)]:
         print(f'''{key} not in valid range 1 to {len(action_strings)+1}''')
         continue
 
