@@ -12,13 +12,11 @@ import pandas as pd
 import time
 
 parser = argparse.ArgumentParser()
-parser.add_argument("output_dir", help="directory for data output",
-                    type=str)
 parser.add_argument("death_image", help="file with image to look for next death control",
                     type=str)
-parser.add_argument("tick_image", help="file with image to look for curreng game tick",
+parser.add_argument("tick_image", help="file with image of example current game tick",
                     type=str)
-parser.add_argument("video_folder", help="file with image to look for when demo is done",
+parser.add_argument("output_dir", help="directory for data output",
                     type=str)
 parser.add_argument("config", help="config for loading demo from player's perspective",
                     type=str)
