@@ -24,8 +24,10 @@ using std::vector;
 class MapMeshResult : public QueryResult {
 public:
     vector<int64_t> id;
+    vector<int64_t> areaId;
     vector<string> placeName;
     vector<AABB> coordinate;
+    vector<vector<int64_t>> connectionAreaIds;
 
     vector<int64_t> filterByForeignKey(int64_t otherTableIndex) {
         return {};
@@ -37,8 +39,15 @@ public:
     };
 
     void oneLineToCSV(int64_t index, stringstream & ss) {
-        ss << id[index] << "," << placeName[index] << "," << coordinate[index].min.x << "," << coordinate[index].min.y << "," << coordinate[index].min.z
-            << "," << coordinate[index].max.x << "," << coordinate[index].max.y << "," << coordinate[index].max.z << std::endl;
+        ss << id[index] << "," << placeName[index] << "," << areaId[index] << "," << coordinate[index].min.x << "," << coordinate[index].min.y << "," << coordinate[index].min.z
+            << "," << coordinate[index].max.x << "," << coordinate[index].max.y << "," << coordinate[index].max.z << ",";
+        for (int i = 0; i < connectionAreaIds[index].size(); i++) {
+            if (i > 0) {
+                ss << ";";
+            }
+            ss << connectionAreaIds[index][i];
+        }
+        ss << std::endl;
     }
 
     vector<string> getForeignKeyNames() {
@@ -46,7 +55,7 @@ public:
     }
 
     vector<string> getOtherColumnNames() {
-        return {"placeName", "min_x", "min_y", "min_z", "max_x", "max_y", "max_z"};
+        return {"placeName", "areaId", "min_x", "min_y", "min_z", "max_x", "max_y", "max_z", "connectionAreaIds"};
     }
 };
 

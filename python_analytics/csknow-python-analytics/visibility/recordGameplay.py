@@ -109,3 +109,7 @@ for config in args.configs:
     os.rename(newest_video_path, os.path.join(args.video_folder, f'''{match_prefix}_{player_name}_{team_number}.mp4'''))
 
     time.sleep(5)
+
+# click off any windows at end so next script can start fressh
+pydirectinput.moveTo(1600, 1170)
+pydirectinput.click()

@@ -25,7 +25,8 @@ setup(
         "opencv-python",
         "pytesseract",
         "pyautogui",
-        "pydirectinput"
+        "pydirectinput",
+        "keyboard"
     ],
     python_requires='>=3.7',
     long_description=long_description,
