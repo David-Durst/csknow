@@ -67,12 +67,18 @@ pyautogui.write(f'''exec {match_prefix}_post_load_{team_number}\n''')
 
 time.sleep(3)
 
+pyautogui.write(f'''mirv_streams previewEnd\n''')
+time.sleep(3)
+
+pydirectinput.press('`')
+
 # process data
 tick_image = Image.open(args.tick_image)
 tick_width, tick_height = tick_image.size
 tessocr_api = PyTessBaseAPI()
 first_time = False
 while True:
+    print(instruction_str)
     key = keyboard.wait()
     # stop everything if z, skip if invalid key
     if key == 'z':
