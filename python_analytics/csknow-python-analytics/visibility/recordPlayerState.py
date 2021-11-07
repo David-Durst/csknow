@@ -10,6 +10,7 @@ import cv2
 from tesserocr import PyTessBaseAPI
 import pandas as pd
 import time
+from pathlib import Path
 
 parser = argparse.ArgumentParser()
 parser.add_argument("death_image", help="file with image to look for next death control",
@@ -22,7 +23,7 @@ parser.add_argument("config", help="config for loading demo from player's perspe
                     type=str)
 args = parser.parse_args()
 
-action_strings = ['holding', 'pushing', 'combat', 'rotating', 'utility']
+action_strings = ['holding', 'peeking', 'rotating', 'utility']
 actions = []
 
 def addActionDict(action_number, game_tick):
@@ -140,4 +141,4 @@ while True:
         print(f'''missed budget by {time_budget}''')
 
 df_actions = pd.DataFrame(actions)
-df_actions.to_csv(os.path.join(args.output_dir, "actions_" + args.player_and_match + ".csv"), index=False)
+df_actions.to_csv(os.path.join(args.output_dir, "actions_" + str(Path(args.config).with_suffix('.csv'))), index=False)
