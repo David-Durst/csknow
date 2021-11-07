@@ -25,7 +25,10 @@ rm ${script_dir}/computeVisibilityGenerated.sh
 touch ${script_dir}/computeVisibilityGenerated.sh
 
 rm ${script_dir}/recordGameplay.bat
-cp ${script_dir}/prefixRecordGameplay.bat ${script_dir}/recordGameplay.bat
+cp ${script_dir}/prefixRecord.bat ${script_dir}/recordGameplay.bat
+
+rm ${script_dir}/recordPlayerState.bat
+cp ${script_dir}/prefixRecord.bat ${script_dir}/recordPlayerState.bat
 
 python createHLAEConfigs.py ${script_dir}/../hlae_configs/cfg/9_19_21_walls_entities.txt ${script_dir} ~/third_shared/videos/ ${pass} 1
 python createHLAEConfigs.py ${script_dir}/../hlae_configs/cfg/9_20_21_no_wallhacks_entities.txt ${script_dir} ~/third_shared/videos/ ${pass} 0
@@ -44,3 +47,6 @@ done
 
 echo " " >> ${script_dir}/recordGameplay.bat
 echo "cd %script_dir%" >> ${script_dir}/recordGameplay.bat
+
+echo " " >> ${script_dir}/recordPlayerState.bat
+echo "cd %script_dir%" >> ${script_dir}/recordPlayerState.bat
