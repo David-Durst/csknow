@@ -85,7 +85,7 @@ for config in args.configs:
     while not found_end:
         found_end = True
         pydirectinput.moveTo(35, 35)
-        time.sleep(0.5)
+        time.sleep(7)
         pydirectinput.moveTo(30, 30)
         try:
             location = pyautogui.locateOnScreen(args.end_image)

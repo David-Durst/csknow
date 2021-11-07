@@ -144,13 +144,13 @@ compute_visibility_sh.close()
 
 record_gameplay_bat = open(os.path.join(args.compute_visibility, 'recordGameplay.bat'), 'a')
 record_gameplay_bat.write(f'''\n:: #{prefix}\n''')
-record_gameplay_bat.write('python recordGameplay.py %script_dir%visibilitySignImages\\tick0.png C:\\Users\\Administrator\\Videos\\ ')
+record_gameplay_bat.write(':: python recordGameplay.py %script_dir%visibilitySignImages\\tick0.png C:\\Users\\Administrator\\Videos\\ ')
 record_gameplay_bat.write(",".join(player_config_file_names))
 record_gameplay_bat.write('\n')
 
 record_player_state_bat = open(os.path.join(args.compute_visibility, 'recordPlayerState.bat'), 'a')
 for config_file_name in player_config_file_names:
     record_player_state_bat.write(f'''\n:: #{prefix}\n''')
-    record_player_state_bat.write(':: python recordPLayerState.py %script_dir%visibilitySignImages\\just_death.png %script_dir%visibilitySignImages\\tick_no_death.png C:\\Users\\Administrator\\Documents\\ ')
+    record_player_state_bat.write(':: python recordPlayerState.py %script_dir%visibilitySignImages\\just_death.png %script_dir%visibilitySignImages\\tick_no_death.png C:\\Users\\Administrator\\Documents\\ ')
     record_player_state_bat.write(config_file_name)
     record_player_state_bat.write('\n')
