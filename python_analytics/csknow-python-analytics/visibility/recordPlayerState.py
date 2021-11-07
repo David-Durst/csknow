@@ -80,7 +80,7 @@ pydirectinput.press('`')
 tick_image = Image.open(args.tick_image)
 tick_width, tick_height = tick_image.size
 tessocr_api = PyTessBaseAPI()
-first_time = False
+first_time = True
 while True:
     print(instruction_str)
     key = keyboard.read_key()
@@ -95,6 +95,7 @@ while True:
 
     # get the death image location, and continue if just orienting
     if first_time or key == 'o':
+        first_time = False
         try:
             death_location = pyautogui.locateOnScreen(args.death_image)
             found_end = True
