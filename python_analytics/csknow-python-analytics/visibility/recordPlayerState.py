@@ -68,7 +68,11 @@ pyautogui.write(f'''exec {match_prefix}_post_load_{team_number}\n''')
 time.sleep(3)
 pyautogui.click()
 pyautogui.write(f'''mirv_streams previewEnd\n''')
-time.sleep(3)
+time.sleep(1.5)
+pyautogui.write(f'''demo_timescale 1\n''')
+time.sleep(1.5)
+pyautogui.write(f'''demo_resume\n''')
+time.sleep(1.5)
 
 pydirectinput.press('`')
 
@@ -80,7 +84,7 @@ first_time = False
 while True:
     print(instruction_str)
     key = keyboard.read_key()
-    time.sleep(0.4)
+    processing_start_time = time.time()
     # stop everything if z, skip if invalid key
     if key == 'z':
         break
@@ -126,6 +130,13 @@ while True:
         continue
 
     addActionDict(action_number, cur_tick)
+    processing_end_time = time.time()
+    time_budget = 0.4 - (processing_end_time - processing_start_time)
+    if time_budget > 0:
+        print(f'''hit budget, sleeping for {time_budget}''')
+        time.sleep(time_budget)
+    else:
+        print(f'''missed budget by {time_budget}''')
 
 df_actions = pd.DataFrame(actions)
-df_actions.to_csv(os.join(args.output_dir, "actions_" + args.player_and_match + ".csv"), index=False)
+df_actions.to_csv(os.path.join(args.output_dir, "actions_" + args.player_and_match + ".csv"), index=False)
