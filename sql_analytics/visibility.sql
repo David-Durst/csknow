@@ -43,8 +43,12 @@ create temp table hand_visibility_with_next_start as
 select *,
        lead(start_game_tick, 1, cast(1e7 as bigint))
        over (partition by demo, spotter_id, spotted_id order by start_game_tick)
-           as next_start_game_tick
+           as next_start_game_tick,
+       lag(end_game_tick, 1, cast(0 as bigint))
+       over (partition by demo, spotter_id, spotted_id order by start_game_tick)
+           as last_end_game_tick
 from visibilities;
+
 
 drop table if exists grouped_visibilities;
 create temp table grouped_visibilities as
@@ -57,6 +61,7 @@ select h.demo,
        h.start_game_tick,
        h.end_game_tick,
        h.next_start_game_tick,
+       h.last_end_game_tick,
        min(s.game_tick_number) as cpu_vis_game_tick,
        h.hacking
 from last_spotted_cpu s
@@ -67,7 +72,7 @@ from last_spotted_cpu s
                         and h.next_start_game_tick >= s.game_tick_number
                         and s.is_spotted = true
 group by h.demo, h.spotter_id, h.spotter, h.spotted_id, h.spotted, h.start_game_tick, h.end_game_tick,
-         h.next_start_game_tick, h.hacking
+         h.next_start_game_tick, h.last_end_game_tick, h.hacking
 order by h.demo, h.start_game_tick, h.spotter, h.spotted;
 
 
@@ -83,6 +88,7 @@ select h.demo,
        h.start_game_tick,
        h.end_game_tick,
        h.next_start_game_tick,
+       h.last_end_game_tick,
        s.game_tick_number,
        s.is_spotted,
        s.spotted_player as s_spotted_player,
@@ -126,6 +132,7 @@ select v_main.demo,
        v_main.start_game_tick,
        v_main.end_game_tick,
        v_main.next_start_game_tick,
+       v_main.last_end_game_tick,
        v_main.cpu_vis_game_tick,
        v_main.hacking,
        count(distinct v_other.spotted_id) as distinct_others_spotted_during_time
@@ -144,6 +151,7 @@ group by v_main.demo,
          v_main.start_game_tick,
          v_main.end_game_tick,
          v_main.next_start_game_tick,
+         v_main.last_end_game_tick,
          v_main.cpu_vis_game_tick,
          v_main.hacking
 order by v_main.demo, v_main.start_game_tick, v_main.spotter, v_main.spotted;
@@ -208,6 +216,7 @@ select v.demo,
        v.start_game_tick,
        v.end_game_tick,
        v.next_start_game_tick,
+       v.last_end_game_tick,
        v.cpu_vis_game_tick,
        min(t.game_tick_number) as react_aim_end_tick,
        v.distinct_others_spotted_during_time,
@@ -220,7 +229,7 @@ from (select * from lookers_with_last where seconds_since_look_started >= 0.1) l
                         and l.looker_player_id = v.spotter_id
                         and l.looked_at_player_id = v.spotted_id
 group by v.demo, v.cpu_tick_id, v.spotter_id, v.spotter, v.spotted_id, v.spotted, v.start_game_tick,
-         v.end_game_tick, v.next_start_game_tick, v.cpu_vis_game_tick, v.distinct_others_spotted_during_time, v.hacking
+         v.end_game_tick, v.next_start_game_tick, v.last_end_game_tick, v.cpu_vis_game_tick, v.distinct_others_spotted_during_time, v.hacking
 order by v.demo, v.start_game_tick, v.spotter, v.spotted;
 
 select * from react_aim_ticks;
@@ -237,6 +246,7 @@ select rat.demo,
        rat.start_game_tick,
        rat.end_game_tick,
        rat.next_start_game_tick,
+       rat.last_end_game_tick,
        rat.cpu_vis_game_tick,
        rat.react_aim_end_tick,
        min(t.game_tick_number) as react_fire_end_tick,
@@ -250,7 +260,7 @@ from hurt h
                         and h.attacker = rat.spotter_id
                         and h.victim = rat.spotted_id
 group by rat.demo, rat.cpu_tick_id, rat.spotter_id, rat.spotter, rat.spotted_id, rat.spotted, rat.start_game_tick,
-         rat.end_game_tick, rat.next_start_game_tick, rat.cpu_vis_game_tick, rat.react_aim_end_tick, rat.distinct_others_spotted_during_time, rat.hacking
+         rat.end_game_tick, rat.next_start_game_tick, rat.cpu_vis_game_tick, rat.react_aim_end_tick, rat.last_end_game_tick, rat.distinct_others_spotted_during_time, rat.hacking
 order by rat.demo, rat.start_game_tick, rat.spotter, rat.spotted;
 
 
@@ -279,16 +289,17 @@ select raft.demo,
        raft.start_game_tick,
        raft.end_game_tick,
        raft.next_start_game_tick,
-       raft.cpu_vis_game_tick,
+       raft.last_end_game_tick,
+       (raft.start_game_tick - raft.last_end_game_tick) / cast(g.game_tick_rate as double precision) > 5 as seen_last_five_seconds,
        raft.react_aim_end_tick,
        raft.react_fire_end_tick,
        raft.distinct_others_spotted_during_time,
        raft.hacking,
-       (raft.react_aim_end_tick - raft.start_game_tick) / 64.0 as hand_aim_react_s,
-       (raft.react_aim_end_tick - raft.start_game_tick) / 64.0 as hand_aim_react_s_no_lag,
-       (raft.react_aim_end_tick - raft.cpu_vis_game_tick) / 64.0 as cpu_aim_react_s,
-       (raft.react_fire_end_tick - raft.start_game_tick) / 64.0 as hand_fire_react_s,
-       (raft.react_fire_end_tick - raft.cpu_vis_game_tick) / 64.0 as cpu_fire_react_s,
+       (raft.react_aim_end_tick - raft.start_game_tick) / cast(g.game_tick_rate as double precision) as hand_aim_react_s,
+       (raft.react_aim_end_tick - raft.start_game_tick) / cast(g.game_tick_rate as double precision) as hand_aim_react_s_no_lag,
+       (raft.react_aim_end_tick - raft.cpu_vis_game_tick) / cast(g.game_tick_rate as double precision) as cpu_aim_react_s,
+       (raft.react_fire_end_tick - raft.start_game_tick) / cast(g.game_tick_rate as double precision) as hand_fire_react_s,
+       (raft.react_fire_end_tick - raft.cpu_vis_game_tick) / cast(g.game_tick_rate as double precision) as cpu_fire_react_s,
        rset.round_id,
        rset.game_id
 from react_aim_and_fire_ticks raft
