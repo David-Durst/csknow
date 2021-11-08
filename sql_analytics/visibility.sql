@@ -149,6 +149,54 @@ group by v_main.demo,
 order by v_main.demo, v_main.start_game_tick, v_main.spotter, v_main.spotted;
 
 
+drop table if exists lookers_with_last;
+create temp table lookers_with_last as
+select *,
+       sum(seconds_since_last_looker_row_per_look)
+           over (partition by game_id, round_id, looker_player_id, looked_at_player_id, look_id order by tick_id)
+           as seconds_since_look_started
+    from (
+           select *,
+                  sum(new_look)
+                  over (partition by game_id, round_id, looker_player_id, looked_at_player_id order by tick_id)
+                      as look_id,
+                  case when new_look = 1 then 0 else seconds_since_last_looker_row end
+                      as seconds_since_last_looker_row_per_look
+           from (
+                    select *,
+                           case when seconds_since_last_looker_row > 0.1 then 1 else 0 end
+                               as new_look
+                    from (
+                             select *,
+                                    (game_tick_number - last_look_game_tick) / cast(game_tick_rate as double precision)
+                                        as seconds_since_last_looker_row
+                             from (
+                                      select *,
+                                             lag(game_tick_number, 1, cast(0 as bigint))
+                                             over (partition by game_id, round_id, looker_player_id, looked_at_player_id order by tick_id)
+                                                 as last_look_game_tick
+                                      from (
+                                               select l.index,
+                                                      l.tick_id,
+                                                      l.looker_pat_id,
+                                                      l.looker_player_id,
+                                                      l.looked_at_pat_id,
+                                                      l.looked_at_player_id,
+                                                      t.game_tick_number,
+                                                      g.game_tick_rate,
+                                                      g.id as game_id,
+                                                      r.id as round_id
+                                               from lookers l
+                                                        join ticks t on l.tick_id = t.id
+                                                        join rounds r on t.round_id = r.id
+                                                        join games g on r.game_id = g.id
+                                           ) inner1
+                                  ) inner2
+                         ) inner3
+                ) inner4
+       ) inner5;
+
+
 drop table if exists react_aim_ticks;
 create temp table react_aim_ticks as
 select v.demo,
@@ -164,7 +212,7 @@ select v.demo,
        min(t.game_tick_number) as react_aim_end_tick,
        v.distinct_others_spotted_during_time,
        v.hacking
-from lookers l
+from (select * from lookers_with_last where seconds_since_look_started >= 0.1) l
          join ticks t on l.tick_id = t.id
          right join visibilities_with_others v
                     on v.start_game_tick - (64*3) <= t.game_tick_number
@@ -174,6 +222,8 @@ from lookers l
 group by v.demo, v.cpu_tick_id, v.spotter_id, v.spotter, v.spotted_id, v.spotted, v.start_game_tick,
          v.end_game_tick, v.next_start_game_tick, v.cpu_vis_game_tick, v.distinct_others_spotted_during_time, v.hacking
 order by v.demo, v.start_game_tick, v.spotter, v.spotted;
+
+select * from react_aim_ticks;
 
 
 drop table if exists react_aim_and_fire_ticks;
