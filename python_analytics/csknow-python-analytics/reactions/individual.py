@@ -19,6 +19,8 @@ parser.add_argument("query_file", help="file containing query",
                     type=str)
 parser.add_argument("plot_folder", help="folder_for_plots",
                     type=str)
+parser.add_argument("visibility_technique_id", help="folder_for_plots",
+                    type=int)
 args = parser.parse_args()
 
 conn = psycopg2.connect(
@@ -33,8 +35,8 @@ with open(args.query_file, 'r') as query_file:
     cur.execute(query_file.read())
 
 unfiltered_df = sqlio.read_sql_query("select * from react_final", conn)
-hand_filtered_df = sqlio.read_sql_query("select * from react_final where hand_aim_react_s <= 3 and hand_aim_react_s >= -3", conn)
-cpu_filtered_df = sqlio.read_sql_query("select * from react_final where cpu_aim_react_s <= 3 and cpu_aim_react_s >= -3", conn)
+hand_filtered_df = sqlio.read_sql_query("select * from react_final where aim_react_s <= 3 and aim_react_s >= -3", conn)
+cpu_filtered_df = sqlio.read_sql_query("select * from react_final where aim_react_s <= 3 and aim_react_s >= -3", conn)
 
 hacks_hand_filtered_df = hand_filtered_df[hand_filtered_df['hacking'] == 1]
 hacks_cpu_filtered_df = cpu_filtered_df[cpu_filtered_df['hacking'] == 1]
