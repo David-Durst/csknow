@@ -290,7 +290,7 @@ select raft.demo,
        raft.end_game_tick,
        raft.next_start_game_tick,
        raft.last_end_game_tick,
-       (raft.start_game_tick - raft.last_end_game_tick) / cast(g.game_tick_rate as double precision) > 5 as seen_last_five_seconds,
+       (raft.start_game_tick - raft.last_end_game_tick) / cast(g.game_tick_rate as double precision) < 5 as seen_last_five_seconds,
        raft.react_aim_end_tick,
        raft.react_fire_end_tick,
        raft.distinct_others_spotted_during_time,
@@ -309,4 +309,4 @@ from react_aim_and_fire_ticks raft
                   and int8range(raft.start_game_tick, raft.end_game_tick) &&
                       int8range(rset.min_game_tick, rset.max_game_tick);
 -- + (ppgl.lag / 1000.0 + 0.032)
-select * from react_final;
+select * from react_final where spotter = 'i_eat_short_people_for_breakfast';
