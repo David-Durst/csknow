@@ -4,7 +4,7 @@ select distinct demo, hacking from visibilities;
 
 drop table if exists visibility_sources;
 create temp table visibility_sources as
-select * from (values (1, 'pixel_adjusted'), (2, 'pixel_unadjusted'), (3, 'bbox')) AS t (id,visibility_technique);
+select * from (values (0, 'pixel_adjusted'), (1, 'pixel_unadjusted'), (2, 'bbox')) AS t (id,visibility_technique);
 
 -- per round, sequence of ticks with repeated true for still spotted and false for still not spotted
 -- so find the transitions from spotted to not spotted, create counter separating spotted regions
@@ -73,7 +73,7 @@ select demo,
        start_game_tick,
        end_game_tick,
        hacking,
-       1 as visibility_technique_id from visibilities
+       0 as visibility_technique_id from visibilities
 union
 select demo,
        spotter_id,
@@ -83,7 +83,7 @@ select demo,
        start_game_tick,
        end_game_tick,
        hacking,
-       2 as visibility_technique_id from visibilities_unadjusted
+       1 as visibility_technique_id from visibilities_unadjusted
 union
 select demo,
        spotter_id,
@@ -93,7 +93,7 @@ select demo,
        start_game_tick,
        end_game_tick,
        hacking,
-       3 as visibility_technique_id from visibilities_bbox;
+       2 as visibility_technique_id from visibilities_bbox;
 
 drop table if exists visibilities_with_next_start;
 create temp table visibilities_with_next_start as
@@ -287,4 +287,3 @@ from react_aim_and_fire_ticks raft
               on g.id = rset.game_id
                   and int8range(raft.start_game_tick, raft.end_game_tick) &&
                       int8range(rset.min_game_tick, rset.max_game_tick);
--- + (ppgl.lag / 1000.0 + 0.032)
