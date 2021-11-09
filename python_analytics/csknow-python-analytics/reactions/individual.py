@@ -14,6 +14,7 @@ import numpy as np
 from dataclasses import dataclass
 from plottingHelpers import *
 from regressionHelpers import *
+from dataframeHelpers import *
 
 parser = argparse.ArgumentParser()
 parser.add_argument("password", help="database password",
@@ -39,61 +40,9 @@ unfiltered_df = sqlio.read_sql_query("select * from react_final", conn)
 base_select_str = "select * from react_final where abs(aim_react_s) <= 3 "
 filtered_df = sqlio.read_sql_query(base_select_str, conn)
 
-
-class HackingTypeDataFrames:
-    pro_df: pd.DataFrame
-    hacks_df: pd.DataFrame
-    legit_df: pd.DataFrame
-
-    def __init__(self, visibility_technique_id):
-        self.pro_df = filtered_df[(filtered_df['hacking'] == 2) &
-                                  (filtered_df['visibility_technique_id'] == visibility_technique_id)]
-        self.hacks_df = filtered_df[(filtered_df['hacking'] == 1) &
-                                  (filtered_df['visibility_technique_id'] == visibility_technique_id)]
-        self.legit_df = filtered_df[(filtered_df['hacking'] == 0) &
-                                  (filtered_df['visibility_technique_id'] == visibility_technique_id)]
-
-    def get_as_array(self):
-        return [self.pro_df, self.hacks_df, self.legit_df]
-
-    def print_size(self, df_outer_name):
-        print(f'''{df_outer_name} pro size {len(self.pro_df)}, hacking size {len(self.hacks_df)}, ''' +
-              f'''legit size {len(self.legit_df)}''')
-
-    def get_hacks_union_legit(self):
-        return pd.concat([self.hacks_df, self.legit_df]).reset_index(drop=True)
-
-
-class VisibilityTechniqueDataFrames:
-    pix_adjusted_dfs: HackingTypeDataFrames
-    pix_unadjusted_dfs: HackingTypeDataFrames
-    bbox_dfs: HackingTypeDataFrames
-
-    def __init__(self):
-        self.pix_adjusted_dfs = HackingTypeDataFrames(0)
-        self.pix_unadjusted_dfs = HackingTypeDataFrames(1)
-        self.bbox_dfs = HackingTypeDataFrames(2)
-
-    def get_as_grid(self):
-        return [self.pix_adjusted_dfs.get_as_array(), self.pix_unadjusted_dfs.get_as_array(),
-                self.bbox_dfs.get_as_array()]
-
-    def print_size(self):
-        print(f'''unfiltered size {len(unfiltered_df)}''')
-        print(f'''filtered size {len(filtered_df)}''')
-        self.pix_adjusted_dfs.print_size('pixel adjusted')
-        self.pix_unadjusted_dfs.print_size('pixel unadjusted')
-        self.bbox_dfs.print_size('bbox')
-
-dfs = VisibilityTechniqueDataFrames()
+dfs = VisibilityTechniqueDataFrames(unfiltered_df, filtered_df)
 dfs.print_size()
 
-plot_titles = []
-visibility_techniques = ['Pixel Adjusted', 'Pixel Unadjusted', 'Bounding Box']
-for i, visibility_technique in enumerate(visibility_techniques):
-    plot_titles.append([])
-    for hacking_approach in ['Pro', 'Hacking Amateur', 'Legit Amateur']:
-        plot_titles[i].append(f'''{visibility_technique}, {hacking_approach}''')
 
 makeHistograms(dfs.get_as_grid(), 'aim_react_s', makePlotterFunction(0.2, False), plot_titles,
                'Individual Count Aim Reactions', 'Aim Reaction Time (s)', args.plot_folder)
