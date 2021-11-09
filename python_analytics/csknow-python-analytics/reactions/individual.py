@@ -37,7 +37,7 @@ with open(args.query_file, 'r') as query_file:
     cur.execute(query_file.read())
 
 unfiltered_df = sqlio.read_sql_query("select * from react_final", conn)
-base_select_str = "select * from react_final where abs(aim_react_s) <= 3 "
+base_select_str = "select * from react_final where abs(aim_react_s) <= 3 and not seen_last_five_seconds"
 filtered_df = sqlio.read_sql_query(base_select_str, conn)
 
 dfs = VisibilityTechniqueDataFrames(unfiltered_df, filtered_df)

@@ -30,7 +30,7 @@ with open(args.query_file, 'r') as query_file:
     cur.execute(query_file.read())
 
 unfiltered_table = 'react_final'
-filtered_table = '(select * from react_final where abs(aim_react_s) <= 3) filtered_table'
+filtered_table = '(select * from react_final where abs(aim_react_s) <= 3 and not seen_last_five_seconds) filtered_table'
 select_cols = 'game_id, visibility_technique_id, count(*) as num, min(round_id) as min_round_id, max(round_id) as max_round_id, spotter_id, spotter, hacking, ' + \
     'avg(distinct_others_spotted_during_time) as distinct_others_spotted_during_time, ' + \
     'avg(coalesce(aim_react_s, 6.0)) as avg_aim_react_s, avg(coalesce(fire_react_s, 6.0)) as avg_fire_react_s, ' + \
