@@ -7,6 +7,8 @@ import numpy as np
 def makePlotterFunction(bin_width, pct):
     def plotPct(df, col_name, ax):
         col_vals = df[col_name].dropna()
+        if len(col_vals) == 0:
+            return
         num_bins = math.ceil((col_vals.max() - col_vals.min()) / bin_width) + 1
         df.hist(col_name, bins=num_bins, ax=ax, weights=np.ones(len(col_vals)) / len(col_vals))
         ax.yaxis.set_major_formatter(PercentFormatter(1))
@@ -14,6 +16,8 @@ def makePlotterFunction(bin_width, pct):
 
     def plotNum(df, col_name, ax):
         col_vals = df[col_name].dropna()
+        if len(col_vals) == 0:
+            return
         num_bins = math.ceil((col_vals.max() - col_vals.min()) / bin_width) + 1
         df.hist(col_name, bins=num_bins, ax=ax)
         return pd.cut(col_vals, num_bins).value_counts().sort_index()
@@ -29,13 +33,11 @@ def makeHistograms(dfs, col_name, plotting_function, plot_titles, name, x_label,
     num_cols = len(dfs[0])
     fig, ax = plt.subplots(nrows=num_rows, ncols=num_cols, figsize=(num_cols*8, num_rows*8))
 
-    distributions = []
     for r in range(num_rows):
-        distributions.append([])
         for c in range(num_cols):
             if len(dfs[r][c]) == 0:
                 continue
-            distributions[r].append(plotting_function(dfs[r][c], col_name, ax[r][c]))
+            plotting_function(dfs[r][c], col_name, ax[r][c])
 
     def get_num_points_coordinate(ax, x_pct = 0.6, y_pct = 0.8):
         (y_min, y_max) = ax.get_ylim()

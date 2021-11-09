@@ -61,7 +61,7 @@ class HackingTypeDataFrames:
               f'''legit size {len(self.legit_df)}''')
 
     def get_hacks_union_legit(self):
-        pd.concat(self.hacks_df, self.legit_df)
+        return pd.concat([self.hacks_df, self.legit_df]).reset_index(drop=True)
 
 
 class VisibilityTechniqueDataFrames:
@@ -106,9 +106,9 @@ makeHistograms(dfs.get_as_grid(), 'fire_react_s', makePlotterFunction(0.5, True)
 
 
 
-makeLogReg(dfs.pix_adjusted_dfs.get_hacks_union_legit(), ['aim_react_s', 'fire_react_s'], visibility_techniques[0], args.plot_folder)
-makeLogReg(dfs.pix_unadjusted_dfs.get_hacks_union_legit(), ['aim_react_s', 'fire_react_s'], visibility_techniques[1], args.plot_folder)
-makeLogReg(dfs.bbox_dfs.get_hacks_union_legit(), ['aim_react_s', 'fire_react_s'], visibility_techniques[2], args.plot_folder)
+makeLogReg(dfs.pix_adjusted_dfs.get_hacks_union_legit(), ['aim_react_s'], visibility_techniques[0], args.plot_folder)
+makeLogReg(dfs.pix_unadjusted_dfs.get_hacks_union_legit(), ['aim_react_s'], visibility_techniques[1], args.plot_folder)
+makeLogReg(dfs.bbox_dfs.get_hacks_union_legit(), ['aim_react_s'], visibility_techniques[2], args.plot_folder)
 #makeLogReg(cpu_filtered_df, ['avg_aim_cpu_react'], 'CPU')
 #makeLogReg(cpu_just_legit_cheat_df, ['avg_aim_cpu_react', 'avg_fire_cpu_react', 'cpu_preaims'], 'BBox')
 #all_filtered_df = pd.concat([hand_filtered_df, cpu_filtered_df], ignore_index=True)
