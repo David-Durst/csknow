@@ -69,7 +69,7 @@ def makeHistograms(dfs, col_name, plotting_function, plot_titles, name, x_label,
                               get_num_points_coordinate(ax[r][c]), fontsize="14")
 
     plt.suptitle(name, fontsize=30)
-    plt.tight_layout()
+    plt.tight_layout(rect=[0, 0.03, 1, 0.95])
     fig.savefig(plot_folder + 'hist_' + name.lower().replace(' ', '_') + '.png')
 
     plt.clf()
