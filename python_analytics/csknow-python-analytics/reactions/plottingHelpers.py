@@ -65,7 +65,7 @@ def makeHistograms(dfs, col_name, plotting_function, plot_titles, name, x_label,
             ax[r][c].set_xlabel(x_label, fontsize=14)
             ax[r][c].set_ylabel('Frequency', fontsize=14)
             ax[r][c].set_title(plot_titles[r][c], fontsize=18)
-            ax[r][c].annotate('total points: ' + str(len(dfs[r][c].dropna())),
+            ax[r][c].annotate('total points: ' + str(len(dfs[r][c][col_name].dropna())),
                               get_num_points_coordinate(ax[r][c]), fontsize="14")
 
     plt.suptitle(name, fontsize=30)
