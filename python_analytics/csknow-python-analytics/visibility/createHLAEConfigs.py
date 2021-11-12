@@ -124,7 +124,7 @@ if not os.path.exists(video_path):
     os.mkdir(video_path)
 player_config_file_names = []
 compute_visibility_sh = open(os.path.join(args.compute_visibility, 'computeVisibilityGenerated.sh'), 'a')
-compute_visibility_sh.write(f'''\n#{prefix}\n''')
+compute_visibility_sh.write(f'''\n##{prefix}\n''')
 for player in players:
     if player.xuid == '0':
         continue
@@ -138,7 +138,7 @@ for player in players:
     players_by_color = []
     for color in colors_for_analysis:
         players_by_color.append(enemy_to_color_per_team[player.team][color])
-    compute_visibility_sh.write(f'''python computeVisibility.py ${{script_dir}}/videos/{prefix}/{prefix}_{clean_name}_{player.team}.mp4 ${{script_dir}}/../local_data/visibilities/ ${{script_dir}}/visibilityLogs/ "{player.name}" "{','.join(players_by_color)}" {args.hacking} {demo_name} ${{pass}}\n''')
+    compute_visibility_sh.write(f'''#python computeVisibility.py ${{script_dir}}/videos/{prefix}/{prefix}_{clean_name}_{player.team}.mp4 ${{script_dir}}/../local_data/visibilities/ ${{script_dir}}/visibilityLogs/ "{player.name}" "{','.join(players_by_color)}" {args.hacking} {demo_name} ${{pass}}\n''')
 compute_visibility_sh.write(f'''\n\n''')
 compute_visibility_sh.close()
 

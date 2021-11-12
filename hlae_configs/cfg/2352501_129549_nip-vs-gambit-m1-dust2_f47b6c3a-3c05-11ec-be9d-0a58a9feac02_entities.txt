@@ -1,0 +1,72 @@
+2352501_129549_nip-vs-gambit-m1-dust2_f47b6c3a-3c05-11ec-be9d-0a58a9feac02.dem
+489
+1 (1471.563279): class C_CSPlayer:: :23920641
+	playerInfo.xuid: 0
+	playerInfo.name: PGL Major - A Stream
+	playerInfo.userID: 2
+	playerInfo.guid: BOT
+2 (1471.563280): class C_CSPlayer:: :51314690
+	playerInfo.xuid: 0
+	playerInfo.name: (1)PGL Major - A Stream
+	playerInfo.userID: 3
+	playerInfo.guid: BOT
+3 (1831.897453): class C_CSPlayer:: :54984707
+	playerInfo.xuid: 76561198025512818
+	playerInfo.name: PGL @Mod645
+	playerInfo.userID: 4
+	playerInfo.guid: STEAM_1:0:32623545
+4 (841.821937): class C_CSPlayer:: :50659332
+	playerInfo.xuid: 76561198045433304
+	playerInfo.name: Ax1Le
+	playerInfo.userID: 5
+	playerInfo.guid: STEAM_1:0:42583788
+5 (1058.070583): class C_CSPlayer:: :9961477
+	playerInfo.xuid: 76561197987713664
+	playerInfo.name: dev1ce
+	playerInfo.userID: 6
+	playerInfo.guid: STEAM_1:0:13723968
+6 (1142.953814): class C_CSPlayer:: :30801926
+	playerInfo.xuid: 76561198135878798
+	playerInfo.name: Plopski
+	playerInfo.userID: 7
+	playerInfo.guid: STEAM_1:0:87806535
+7 (1255.470013): class C_CSPlayer:: :22282247
+	playerInfo.xuid: 76561198081484775
+	playerInfo.name: sh1ro
+	playerInfo.userID: 10
+	playerInfo.guid: STEAM_1:1:60609523
+8 (1858.795689): class C_CSPlayer:: :47251464
+	playerInfo.xuid: 76561198034172415
+	playerInfo.name: REZ
+	playerInfo.userID: 12
+	playerInfo.guid: STEAM_1:1:36953343
+9 (1983.886463): class C_CSPlayer:: :18284553
+	playerInfo.xuid: 76561198104626893
+	playerInfo.name: LNZ
+	playerInfo.userID: 11
+	playerInfo.guid: STEAM_1:1:72180582
+10 (63.999999): class C_CSPlayer:: :60358666
+	playerInfo.xuid: 76561198086945950
+	playerInfo.name: hampus
+	playerInfo.userID: 14
+	playerInfo.guid: STEAM_1:0:63340111
+11 (408.493816): class C_CSPlayer:: :786443
+	playerInfo.xuid: 76561198208074320
+	playerInfo.name: interz
+	playerInfo.userID: 15
+	playerInfo.guid: STEAM_1:0:123904296
+12 (408.593642): class C_CSPlayer:: :21757964
+	playerInfo.xuid: 76561198115731852
+	playerInfo.name: PGL @ItsRandall26
+	playerInfo.userID: 19
+	playerInfo.guid: STEAM_1:0:77733062
+13 (1325.344903): class C_CSPlayer:: :5701645
+	playerInfo.xuid: 76561198059714128
+	playerInfo.name: nafany
+	playerInfo.userID: 20
+	playerInfo.guid: STEAM_1:0:49724200
+14 (1291.067018): class C_CSPlayer:: :32309262
+	playerInfo.xuid: 76561198028292758
+	playerInfo.name: HObbit
+	playerInfo.userID: 21
+	playerInfo.guid: STEAM_1:0:3401351561067

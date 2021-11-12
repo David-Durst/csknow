@@ -1,0 +1,72 @@
+2351898_128353_g2-vs-ence-m3-dust2_5f2f16a6-292a-11ec-8e27-0a58a9feac02.dem
+1510
+1 (460.428233): class C_CSPlayer:: :23855105
+	playerInfo.xuid: 0
+	playerInfo.name: ESL GOTV
+	playerInfo.userID: 2
+	playerInfo.guid: BOT
+2 (460.428233): class C_CSPlayer:: :51249154
+	playerInfo.xuid: 0
+	playerInfo.name: (1)ESL GOTV
+	playerInfo.userID: 3
+	playerInfo.guid: BOT
+3 (12797.016310): class C_CSPlayer:: :54984707
+	playerInfo.xuid: 76561198025512818
+	playerInfo.name: Mod
+	playerInfo.userID: 4
+	playerInfo.guid: STEAM_1:0:32623545
+4 (3304.081824): class C_CSPlayer:: :50724868
+	playerInfo.xuid: 76561198063336407
+	playerInfo.name: Spinx
+	playerInfo.userID: 10
+	playerInfo.guid: STEAM_1:1:51535339
+5 (3358.221238): class C_CSPlayer:: :9961477
+	playerInfo.xuid: 76561197999584343
+	playerInfo.name: doto
+	playerInfo.userID: 6
+	playerInfo.guid: STEAM_1:1:19659307
+6 (64.000000): class C_CSPlayer:: :30801926
+	playerInfo.xuid: 76561198213765927
+	playerInfo.name: @Rushly123456 & @jeyrazz
+	playerInfo.userID: 7
+	playerInfo.guid: STEAM_1:1:126750099
+7 (3232.205492): class C_CSPlayer:: :22347783
+	playerInfo.xuid: 76561198041416993
+	playerInfo.name: dycha
+	playerInfo.userID: 9
+	playerInfo.guid: STEAM_1:1:40575632
+8 (3252.627581): class C_CSPlayer:: :47251464
+	playerInfo.xuid: 76561198050922008
+	playerInfo.name: hades
+	playerInfo.userID: 11
+	playerInfo.guid: STEAM_1:0:45328140
+9 (3327.553673): class C_CSPlayer:: :18350089
+	playerInfo.xuid: 76561197989423065
+	playerInfo.name: Snappi
+	playerInfo.userID: 13
+	playerInfo.guid: STEAM_1:1:14578668
+10 (87.731813): class C_CSPlayer:: :60293130
+	playerInfo.xuid: 76561197972242917
+	playerInfo.name: JACKZ
+	playerInfo.userID: 14
+	playerInfo.guid: STEAM_1:1:5988594
+11 (131.913563): class C_CSPlayer:: :786443
+	playerInfo.xuid: 76561197999825422
+	playerInfo.name: nexa
+	playerInfo.userID: 15
+	playerInfo.guid: STEAM_1:0:19779847
+12 (64.000000): class C_CSPlayer:: :21757964
+	playerInfo.xuid: 76561198068944951
+	playerInfo.name: AmaNEk
+	playerInfo.userID: 17
+	playerInfo.guid: STEAM_1:1:54339611
+13 (331.321561): class C_CSPlayer:: :5636109
+	playerInfo.xuid: 76561198012872053
+	playerInfo.name: huNter-
+	playerInfo.userID: 19
+	playerInfo.guid: STEAM_1:1:26303162
+14 (496.089654): class C_CSPlayer:: :32309262
+	playerInfo.xuid: 76561198041683378
+	playerInfo.name: NiKo
+	playerInfo.userID: 20
+	playerInfo.guid: STEAM_1:0:40708825
