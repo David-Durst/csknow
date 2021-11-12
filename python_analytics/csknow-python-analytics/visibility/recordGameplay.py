@@ -64,7 +64,7 @@ for config in args.configs:
     time.sleep(3)
 
     # move demoui to top left corner
-    pydirectinput.moveTo(620, 639)
+    pydirectinput.moveTo(620, 650)
     pydirectinput.mouseDown(button='left')
     time.sleep(1.0)
     pydirectinput.moveTo(405, 326)
