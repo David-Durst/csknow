@@ -58,7 +58,7 @@ makeHistograms(dfs.get_as_grid(), 'preaims', makePlotterFunction(1, False),
 makeHistograms(dfs.get_as_grid(), 'preaims', makePlotterFunction(1, True),
                plot_titles, 'Grouped Percent Pre-Aims', 'Number of Pre-Aims', args.plot_folder)
 
-input_cols = ['avg_aim_react_s', 'avg_fire_react_s', 'preaims']
+input_cols = ['avg_aim_react_s', 'preaims']
 makeLogReg(dfs.pix_adjusted_dfs.get_hacks_union_legit(), input_cols, visibility_techniques[0], args.plot_folder)
 makeLogReg(dfs.pix_unadjusted_dfs.get_hacks_union_legit(), input_cols, visibility_techniques[1], args.plot_folder)
 makeLogReg(dfs.bbox_dfs.get_hacks_union_legit(), input_cols, visibility_techniques[2], args.plot_folder)

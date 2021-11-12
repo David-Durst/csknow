@@ -33,7 +33,9 @@ declare -a ProDemos=(
     "336_natus-vincere-team-ldlc_de_overpass.dem"
     "320_titan-epsilon_de_cache.dem" 
     "335_natus-vincere-team-ldlc_de_dust2.dem"
-    "337_natus-vincere-team-ldlc_de_mirage.dem")
+    "337_natus-vincere-team-ldlc_de_mirage.dem"
+    "2351898_128353_g2-vs-ence-m3-dust2_5f2f16a6-292a-11ec-8e27-0a58a9feac02.dem"
+    "2352501_129549_nip-vs-gambit-m1-dust2_f47b6c3a-3c05-11ec-be9d-0a58a9feac02.dem")
 local_files_id=6
 for f in ${ProDemos[@]}; do
     cp output_global_id_state.csv input_global_id_state.csv 
