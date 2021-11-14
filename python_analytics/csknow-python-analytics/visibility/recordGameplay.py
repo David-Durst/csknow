@@ -52,7 +52,17 @@ for config in args.configs:
     time.sleep(25)
 
     # load demo
-    pyautogui.moveTo(950, 763)
+    console_text_entry_path = end_image_path.parent / 'console_text_entry.png'
+    try:
+        console_text_entry_location = pyautogui.locateOnScreen(str(console_text_entry_path))
+    except pyautogui.ImageNotFoundException:
+        print("couldn't find console text entry")
+        quit(1)
+    if demo_playback_name_location is None:
+        print("couldn't find console text entry")
+        quit(1)
+    pydirectinput.moveTo(int(console_text_entry_location.left + console_text_entry_location.width / 3),
+                         int(console_text_entry_location.top + console_text_entry_location.height / 2))
     pyautogui.click()
     pyautogui.write(f'''exec {config}\n''')
 
@@ -79,19 +89,10 @@ for config in args.configs:
                          int(demo_playback_name_location.top + demo_playback_name_location.height / 2))
     pydirectinput.mouseDown(button='left')
     time.sleep(1.0)
-    pydirectinput.moveTo(-215, -324)
+    pydirectinput.move(-215, -324)
     pydirectinput.mouseUp(button='left')
 
     # start playback and recording
-    console_text_entry_path = end_image_path.parent / 'console_text_entry.png'
-    try:
-        console_text_entry_location = pyautogui.locateOnScreen(str(console_text_entry_path))
-    except pyautogui.ImageNotFoundException:
-        print("couldn't find console text entry")
-        quit(1)
-    if demo_playback_name_location is None:
-        print("couldn't find console text entry")
-        quit(1)
     pydirectinput.moveTo(int(console_text_entry_location.left + console_text_entry_location.width / 3),
                          int(console_text_entry_location.top + console_text_entry_location.height / 2))
     pydirectinput.click()
