@@ -52,6 +52,7 @@ for config in args.configs:
     time.sleep(25)
 
     # load demo
+    end_image_path = pathlib.Path(args.end_image)
     console_text_entry_path = end_image_path.parent / 'console_text_entry.png'
     try:
         console_text_entry_location = pyautogui.locateOnScreen(str(console_text_entry_path))
@@ -75,7 +76,6 @@ for config in args.configs:
     time.sleep(3)
 
     # move demoui to top left corner
-    end_image_path = pathlib.Path(args.end_image)
     demo_playback_name_path = end_image_path.parent / 'demo_playback_name.png'
     try:
         demo_playback_name_location = pyautogui.locateOnScreen(str(demo_playback_name_path))
