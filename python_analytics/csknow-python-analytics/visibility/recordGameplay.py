@@ -59,7 +59,7 @@ for config in args.configs:
     except pyautogui.ImageNotFoundException:
         print("couldn't find console text entry")
         quit(1)
-    if demo_playback_name_location is None:
+    if console_text_entry_location is None:
         print("couldn't find console text entry")
         quit(1)
     pydirectinput.moveTo(int(console_text_entry_location.left + console_text_entry_location.width / 3),
