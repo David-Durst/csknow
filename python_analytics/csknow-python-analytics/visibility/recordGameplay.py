@@ -55,7 +55,7 @@ for config in args.configs:
     end_image_path = pathlib.Path(args.end_image)
     console_text_entry_path = end_image_path.parent / 'console_text_entry.png'
     try:
-        console_text_entry_location = pyautogui.locateOnScreen(str(console_text_entry_path))
+        console_text_entry_location = pyautogui.locateOnScreen(str(console_text_entry_path), confidence=0.9)
     except pyautogui.ImageNotFoundException:
         print("couldn't find console text entry")
         quit(1)
@@ -78,7 +78,7 @@ for config in args.configs:
     # move demoui to top left corner
     demo_playback_name_path = end_image_path.parent / 'demo_playback_name.png'
     try:
-        demo_playback_name_location = pyautogui.locateOnScreen(str(demo_playback_name_path))
+        demo_playback_name_location = pyautogui.locateOnScreen(str(demo_playback_name_path), confidence=0.9)
     except pyautogui.ImageNotFoundException:
         print("couldn't find demo playback name")
         quit(1)
@@ -111,7 +111,7 @@ for config in args.configs:
         time.sleep(7)
         pydirectinput.moveTo(30, 30)
         try:
-            location = pyautogui.locateOnScreen(args.end_image)
+            location = pyautogui.locateOnScreen(args.end_image, confidence=0.9)
         except pyautogui.ImageNotFoundException:
             found_end = False
             time.sleep(2.5)
