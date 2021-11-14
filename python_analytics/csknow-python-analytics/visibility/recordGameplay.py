@@ -89,7 +89,7 @@ for config in args.configs:
                          int(demo_playback_name_location.top + demo_playback_name_location.height / 2))
     pydirectinput.mouseDown(button='left')
     time.sleep(1.0)
-    pydirectinput.move(-215, -324)
+    pydirectinput.move(-315, -324)
     pydirectinput.mouseUp(button='left')
 
     # start playback and recording
