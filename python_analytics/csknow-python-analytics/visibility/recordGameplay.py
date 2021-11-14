@@ -4,6 +4,7 @@ import time
 import argparse
 import re
 import os
+import pathlib
 
 if False:
     i = 0
@@ -64,14 +65,35 @@ for config in args.configs:
     time.sleep(3)
 
     # move demoui to top left corner
-    pydirectinput.moveTo(620, 650)
+    end_image_path = pathlib.Path(args.end_image)
+    demo_playback_name_path = end_image_path.parent / 'demo_playback_name.png'
+    try:
+        demo_playback_name_location = pyautogui.locateOnScreen(str(demo_playback_name_path))
+    except pyautogui.ImageNotFoundException:
+        print("couldn't find demo playback name")
+        quit(1)
+    if demo_playback_name_location is None:
+        print("couldn't find demo playback name")
+        quit(1)
+    pydirectinput.moveTo(demo_playback_name_location.left + demo_playback_name_location.width,
+                         demo_playback_name_location.top + demo_playback_name_location.height / 2)
     pydirectinput.mouseDown(button='left')
     time.sleep(1.0)
-    pydirectinput.moveTo(405, 326)
+    pydirectinput.moveTo(-215, -324)
     pydirectinput.mouseUp(button='left')
 
     # start playback and recording
-    pydirectinput.moveTo(950, 763)
+    console_text_entry_path = end_image_path.parent / 'console_text_entry.png'
+    try:
+        console_text_entry_location = pyautogui.locateOnScreen(str(console_text_entry_path))
+    except pyautogui.ImageNotFoundException:
+        print("couldn't find console text entry")
+        quit(1)
+    if demo_playback_name_location is None:
+        print("couldn't find console text entry")
+        quit(1)
+    pydirectinput.moveTo(console_text_entry_location.left + console_text_entry_location.width / 3,
+                         console_text_entry_location.top + console_text_entry_location.height / 2)
     pydirectinput.click()
     #pyautogui.write('mirv_streams previewEnd\n')
     #time.sleep(0.5)
@@ -95,7 +117,9 @@ for config in args.configs:
         if location is None:
             found_end = False
 
-
+    pydirectinput.moveTo(console_text_entry_location.left + console_text_entry_location.width / 3,
+                         console_text_entry_location.top + console_text_entry_location.height / 2)
+    pydirectinput.click()
     pydirectinput.press('F2')
     pydirectinput.press('`')
     pyautogui.write('quit\n')
