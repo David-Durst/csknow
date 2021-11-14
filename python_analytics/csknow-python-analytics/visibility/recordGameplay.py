@@ -85,7 +85,7 @@ for config in args.configs:
     if demo_playback_name_location is None:
         print("couldn't find demo playback name")
         quit(1)
-    pydirectinput.moveTo(demo_playback_name_location.left + demo_playback_name_location.width + 100z,
+    pydirectinput.moveTo(demo_playback_name_location.left + demo_playback_name_location.width + 100,
                          int(demo_playback_name_location.top + demo_playback_name_location.height / 2))
     pydirectinput.mouseDown(button='left')
     time.sleep(1.0)
