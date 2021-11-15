@@ -200,7 +200,7 @@ def logState(writeFrame=False):
     print(f'''frame_id {frame_id - 1} / {frame_count}, ''' +
           f'''runtime duration from start {runtime_duration_str}, ''' +
           f'''video duration processed {processed_cap_duration_str} / {entire_cap_duration_str}, ''' +
-          f'''last non-ff tick {last_tick} / {max_tick}''')
+          f'''last non-ff tick {last_tick} / {max_tick}''', flush=True)
     if writeFrame:
         cv2.imwrite(args.log_dir + "/" + os.path.basename(args.video_file) + ".png", last_frame)
 
