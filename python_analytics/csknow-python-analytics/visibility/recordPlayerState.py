@@ -19,23 +19,12 @@ parser.add_argument("tick_image", help="file with image of example current game 
                     type=str)
 parser.add_argument("output_dir", help="directory for data output",
                     type=str)
+parser.add_argument("demo_file", help="name of demo file",
+                    type=str)
 parser.add_argument("config", help="config for loading demo from player's perspective",
                     type=str)
 args = parser.parse_args()
 
-action_strings = ['holding', 'peeking', 'rotating', 'utility']
-actions = []
-
-def addActionDict(action_number, game_tick):
-    actions.append({'action_name': action_strings[action_number], 'action_number': action_number, 'game_tick_number': game_tick})
-    print(f'''adding {actions[len(actions)-1]}''')
-
-instruction_str = "Press "
-for i in range(len(action_strings)):
-    instruction_str += f'''{str(i+1)} for {action_strings[i]}, '''
-instruction_str += "z to quit, o to orient (must orient each time demo ui is moved)"
-
-#
 if match_config := re.search('(.*)_pre_load_(.*)_(\d+)\.cfg', args.config):
     match_prefix = match_config.group(1)
     player_name = match_config.group(2)
@@ -43,6 +32,24 @@ if match_config := re.search('(.*)_pre_load_(.*)_(\d+)\.cfg', args.config):
 else:
     print(f'''bad config {args.config}''')
     exit(1)
+
+action_strings = ['holding', 'peeking', 'rotating', 'utility']
+actions = []
+
+def addActionDict(action_number, game_tick):
+    actions.append({
+        'action_name': action_strings[action_number],
+        'action_number': action_number,
+        'game_tick_number': game_tick,
+        'demo': args.demo_file,
+        'player': player_name
+    })
+    print(f'''adding {actions[len(actions)-1]}''')
+
+instruction_str = "Press "
+for i in range(len(action_strings)):
+    instruction_str += f'''{str(i+1)} for {action_strings[i]}, '''
+instruction_str += "z to quit, o to orient (must orient each time demo ui is moved)"
 
 # start game
 pyautogui.moveTo(164, 1185)
@@ -90,7 +97,7 @@ while True:
     if key == 'z':
         break
     elif key != 'o' and key not in [str(i) for i in range(1,len(action_strings)+1)]:
-        print(f'''{key} not in valid range 1 to {len(action_strings)+1}''')
+        print(f'''{key} not in valid range 1 to {len(action_strings)}''')
         continue
 
 

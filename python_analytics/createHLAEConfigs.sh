@@ -44,7 +44,7 @@ declare -a ProDemos=(
     "2351898_128353_g2-vs-ence-m3-dust2_5f2f16a6-292a-11ec-8e27-0a58a9feac02"
     "2352501_129549_nip-vs-gambit-m1-dust2_f47b6c3a-3c05-11ec-be9d-0a58a9feac02")
 for f in "${ProDemos[@]}"; do
-  python createHLAEConfigs.py ${script_dir}/../hlae_configs/cfg/${f}_entities.txt ${script_dir} ~/third_shared/videos/ ${pass} 0
+  python createHLAEConfigs.py ${script_dir}/../hlae_configs/cfg/${f}_entities.txt ${script_dir} ~/third_shared/videos/ ${pass} 2
 done
 
 echo " " >> ${script_dir}/recordGameplay.bat
