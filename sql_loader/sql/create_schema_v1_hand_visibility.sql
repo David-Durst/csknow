@@ -49,9 +49,11 @@ CREATE TABLE "lookers" (
   "looked_at_player_id" bigint
 );
 
-CREATE TABLE "per_player_game_lag" (
-  "lag" bigint,
+CREATE TABLE "actions" (
+  "action_name" varchar(255),
+  "action_number" bigint,
+  "game_tick_number" bigint,
+  "demo" varchar(255),
   "player" varchar(255),
-  "match" varchar(255),
-  PRIMARY KEY(lag, player, match)
+  PRIMARY KEY(action_number, game_tick_number, demo, player)
 );
