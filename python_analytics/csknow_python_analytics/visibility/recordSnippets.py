@@ -7,25 +7,17 @@ import re
 import os
 import pathlib
 
-wmgr = w.WindowMgr()
-wmgr.find_window_wildcard("hi*")
-
-if False:
-    i = 0
-    while True:
-        print(f'''mouse position {i}: {pyautogui.position()}''')
-        i += 1
-        time.sleep(2)
-
 parser = argparse.ArgumentParser()
 parser.add_argument("state_images", help="folder with image to look for understanding demo state",
                     type=str)
 parser.add_argument("video_folder", help="file with image to look for when demo is done",
                     type=str)
-parser.add_argument("configs", help="comma separated list of configs for recording",
-                    type=csv_list)
+parser.add_argument("snippets", help="csv of start and end snippets to record",
+                    type=str)
 args = parser.parse_args()
 
+wmgr = w.WindowMgr()
+wmgr.find_window_wildcard("Half-Life Advanced*")
 num_hlae_icon_clicks = 0
 for config in args.configs:
     print(f'''processing {config}''')

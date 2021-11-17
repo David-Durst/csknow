@@ -35,4 +35,4 @@ class WindowMgr:
 
     def found_window(self):
         """return if last call found a window"""
-        return self._handle != 0
+        return self._handle is not None and self._handle != 0
