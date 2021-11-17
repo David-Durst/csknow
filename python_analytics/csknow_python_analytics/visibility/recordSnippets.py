@@ -1,4 +1,4 @@
-import csknow_python_analytics.windows_helpers.windowManager
+import csknow_python_analytics.windows_helpers.windowManager as w
 import pyautogui
 import pydirectinput
 import time
@@ -6,6 +6,9 @@ import argparse
 import re
 import os
 import pathlib
+
+wmgr = w.WindowMgr()
+wmgr.find_window_wildcard("hi*")
 
 if False:
     i = 0

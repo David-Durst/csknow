@@ -14,6 +14,8 @@ class WindowMgr:
     def find_window(self, class_name, window_name=None):
         """find a window by its class_name"""
         self._handle = win32gui.FindWindow(class_name, window_name)
+        if self._handle == 0:
+            print("didn't find window")
 
     def _window_enum_callback(self, hwnd, wildcard):
         """Pass to win32gui.EnumWindows() to check all the opened windows"""
@@ -24,7 +26,13 @@ class WindowMgr:
         """find a window whose title matches the wildcard regex"""
         self._handle = None
         win32gui.EnumWindows(self._window_enum_callback, wildcard)
+        if self._handle == 0:
+            print("didn't find window")
 
     def set_foreground(self):
         """put the window in the foreground"""
         win32gui.SetForegroundWindow(self._handle)
+
+    def found_window(self):
+        """return if last call found a window"""
+        return self._handle != 0
