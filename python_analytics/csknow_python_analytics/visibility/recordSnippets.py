@@ -1,3 +1,4 @@
+import csknow_python_analytics.windows_helpers.windowManager
 import pyautogui
 import pydirectinput
 import time
