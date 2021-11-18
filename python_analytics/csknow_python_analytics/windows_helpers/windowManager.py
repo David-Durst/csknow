@@ -2,6 +2,7 @@
 import pywintypes
 import win32gui
 import re
+import pydirectinput
 
 
 class WindowMgr:
@@ -36,3 +37,6 @@ class WindowMgr:
     def found_window(self):
         """return if last call found a window"""
         return self._handle is not None and self._handle != 0
+
+def stop_recording():
+    pydirectinput.press('F3')

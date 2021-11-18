@@ -80,9 +80,6 @@ pyautogui.write(f'''exec {args.config}\n''')
 
 time.sleep(40)
 
-# for some reason shift gets pressed, this hack disables it
-pyautogui.press('shift')
-
 pydirectinput.press('`')
 pyautogui.write(f'''exec {match_prefix}_post_load_{team_number}\n''')
 pyautogui.write(f'''mirv_streams previewEnd\n''')
@@ -133,7 +130,7 @@ for index, row in snippets_df.iterrows():
 
 
     # stop now that done with snippet
-    pydirectinput.press('F2')
+    w.stop_recording()
     pydirectinput.press('`')
     moveToRegion(resume_region)
     pydirectinput.click()
