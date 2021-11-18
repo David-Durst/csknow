@@ -83,6 +83,7 @@ time.sleep(40)
 pydirectinput.press('`')
 pyautogui.write(f'''exec {match_prefix}_post_load_{team_number}\n''')
 pyautogui.write(f'''mirv_streams previewEnd\n''')
+pyautogui.write(f'''r_drawothermodels 2\n''')
 
 tessocr_api = PyTessBaseAPI()
 snippets_df = pd.read_csv(args.snippets)
@@ -94,7 +95,6 @@ for index, row in snippets_df.iterrows():
     # run post load configs
     time.sleep(1)
     pydirectinput.press('`')
-    pyautogui.write(f'''r_drawothermodels 2\n''')
     pyautogui.write(f'''demo_goto {row["start_game_tick"]}\n''')
 
     time.sleep(3)
@@ -133,7 +133,6 @@ for index, row in snippets_df.iterrows():
 
     # stop now that done with snippet
     w.stop_recording()
-    pydirectinput.press('`')
     moveToRegion(resume_region)
     pydirectinput.click()
 
