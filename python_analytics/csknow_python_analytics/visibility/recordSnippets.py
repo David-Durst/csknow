@@ -82,20 +82,26 @@ time.sleep(40)
 
 pydirectinput.press('`')
 pyautogui.write(f'''exec {match_prefix}_post_load_{team_number}\n''')
+time.sleep(1)
+pyautogui.click()
 pyautogui.write(f'''mirv_streams previewEnd\n''')
+time.sleep(1)
+pyautogui.click()
 pyautogui.write(f'''r_drawothermodels 2\n''')
+time.sleep(1)
 
 tessocr_api = PyTessBaseAPI()
 snippets_df = pd.read_csv(args.snippets)
 misread_ticks = 0
 time.sleep(1)
 pydirectinput.press('`')
+offset = 500
 for index, row in snippets_df.iterrows():
     print(f'''Running from {row['start_game_tick']} to {row['end_game_tick']}''')
     # run post load configs
     time.sleep(1)
     pydirectinput.press('`')
-    pyautogui.write(f'''demo_goto {row["start_game_tick"]}\n''')
+    pyautogui.write(f'''demo_goto {row["start_game_tick"] - offset}\n''')
 
     time.sleep(3)
 
@@ -125,7 +131,7 @@ for index, row in snippets_df.iterrows():
             if misread_ticks >= 30:
                 quit(1)
             continue
-        if tick > row['end_game_tick']:
+        if tick > row['end_game_tick'] + offset:
             misread_ticks = 0
             break
         time.sleep(2)
