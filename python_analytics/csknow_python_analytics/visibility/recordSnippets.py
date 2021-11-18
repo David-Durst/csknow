@@ -24,21 +24,21 @@ args = parser.parse_args()
 
 # get windows that will exist for entire video
 hlae_wmgr = w.WindowMgr()
-hlae_wmgr.find_window_wildcard("Half-Life Advanced*")
+hlae_wmgr.find_window_wildcard("Half-Life Advanced.*")
 if not hlae_wmgr.found_window():
     subprocess.call(['C:\\Users\\Administrator\\Documents\\hlae_2_123_0\\HLAE.exe'])
     time.sleep(0.1)
-    hlae_wmgr.find_window_wildcard("Half-Life Advanced*")
+    hlae_wmgr.find_window_wildcard("Half-Life Advanced.*")
 if not hlae_wmgr.found_window():
     print("couldn't find HLAE")
     quit(1)
 
 obs_wmgr = w.WindowMgr()
-obs_wmgr.find_window_wildcard("OBS*")
+obs_wmgr.find_window_wildcard("OBS.*")
 if not hlae_wmgr.found_window():
     subprocess.call(['C:\\Program Files\\obs-studio\\bin\\64bit\\obs64.exe'])
     time.sleep(0.1)
-    hlae_wmgr.find_window_wildcard("OBS*")
+    hlae_wmgr.find_window_wildcard("OBS.*")
 if not obs_wmgr.found_window():
     print("couldn't find OBS")
     quit(1)
@@ -62,7 +62,7 @@ pyautogui.press('enter')
 time.sleep(25)
 
 csgo_wmgr = w.WindowMgr()
-csgo_wmgr.find_window_wildcard("Counter*")
+csgo_wmgr.find_window_wildcard("Counter.*")
 if not csgo_wmgr.found_window():
     print("couldn't find CSGO")
     quit(1)
