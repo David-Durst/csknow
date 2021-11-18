@@ -73,7 +73,7 @@ time.sleep(1)
 # load demo
 state_images_path = pathlib.Path(args.state_images)
 console_text_entry_path = state_images_path / 'console_text_entry.png'
-console_text_entry_region = getRegionFromImage(console_text_entry_path)
+console_text_entry_region = getRegionFromImage(console_text_entry_path, "console text entry")
 moveToRegion(console_text_entry_region)
 pyautogui.click()
 pyautogui.write(f'''exec {args.config}\n''')
@@ -91,13 +91,13 @@ for index, row in snippets_df.iterrows():
     time.sleep(3)
 
     # get death and tick locations
-    death_region = getRegionFromImage(state_images_path / 'just_death.png')
+    death_region = getRegionFromImage(state_images_path / 'just_death.png', "death selector")
     tick_image = Image.open(state_images_path / 'tick_no_death.png')
     tick_width, tick_height = tick_image.size
 
     # get play button location
     play_path = state_images_path / 'just_play.png'
-    play_region = getRegionFromImage(play_path)
+    play_region = getRegionFromImage(play_path, "just play button")
 
     # start playback and recording
     pydirectinput.press('`')
