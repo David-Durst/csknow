@@ -1,19 +1,4 @@
 demo,visibility_technique_id,spotter_id,spotter,spotted_id,spotted,start_game_tick,end_game_tick,next_start_game_tick,last_end_game_tick,seen_last_five_seconds,react_aim_end_tick,react_fire_end_tick,distinct_others_spotted_during_time,hacking,aim_react_s,fire_react_s,round_id,game_id
-merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,33,Pinkay,30,meeseeks,7234,7277,12340,0,false,7227,,1,0,-0.109375,,25,3
-merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,33,Pinkay,24,i_eat_short_people_for_breakfast,9319,9497,16572,7254,false,9309,9403,0,0,-0.15625,1.3125,26,3
-merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,31,Malia Obama,24,i_eat_short_people_for_breakfast,14045,14058,16440,9549,false,14021,,0,0,-0.375,,28,3
-merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,29,Kcirrem,30,meeseeks,14735,14793,14812,14245,false,14727,,3,0,-0.125,,28,3
 merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,24,i_eat_short_people_for_breakfast,29,Kcirrem,17920,17941,21319,14101,false,17903,17941,1,0,-0.265625,0.328125,30,3
-merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,29,Kcirrem,24,i_eat_short_people_for_breakfast,21318,21344,25265,14101,false,21312,21344,1,0,-0.09375,0.40625,31,3
-merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,32,Step Papi,29,Kcirrem,21325,21400,25259,14433,false,21308,21388,0,0,-0.265625,0.984375,31,3
-merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,33,Pinkay,30,meeseeks,21691,21746,31507,19471,false,21686,21724,1,0,-0.078125,0.515625,31,3
 merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,24,i_eat_short_people_for_breakfast,31,Malia Obama,25141,25183,25251,21116,false,25127,,0,0,-0.21875,,32,3
-merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,31,Malia Obama,30,meeseeks,27164,27220,31920,25283,false,27140,27194,0,0,-0.375,0.46875,33,3
-merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,32,Step Papi,29,Kcirrem,29902,29951,29963,28368,false,29884,,0,0,-0.28125,,34,3
 merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,24,i_eat_short_people_for_breakfast,34,Tom,30047,30064,44547,28229,false,30022,30028,1,0,-0.390625,-0.296875,34,3
-merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,32,Step Papi,34,Tom,36372,36507,38540,25557,false,36355,36443,0,0,-0.265625,1.109375,36,3
-merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,30,meeseeks,31,Malia Obama,37347,37374,41114,36050,false,37347,37373,3,0,0,0.40625,36,3
-merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,29,Kcirrem,24,i_eat_short_people_for_breakfast,38812,38832,41480,36517,false,38803,,0,0,-0.140625,,37,3
-merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,29,Kcirrem,32,Step Papi,39113,39201,40927,32654,false,39113,39149,2,0,0,0.5625,37,3
-merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,32,Step Papi,31,Malia Obama,43373,43403,43475,39201,false,43362,,1,0,-0.171875,,39,3
-merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem,0,29,Kcirrem,24,i_eat_short_people_for_breakfast,43624,43652,10000000,41528,false,43594,43626,0,0,-0.46875,0.03125,39,3
