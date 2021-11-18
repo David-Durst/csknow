@@ -25,7 +25,7 @@ class WindowMgr:
     def find_window_wildcard(self, wildcard):
         """find a window whose title matches the wildcard regex"""
         self._handle = None
-        win32gui.EnumWindows(self._window_enum_callback, wildcard + "$")
+        win32gui.EnumWindows(self._window_enum_callback, wildcard)
         if self._handle == 0:
             print("didn't find window")
 

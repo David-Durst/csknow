@@ -295,3 +295,5 @@ from react_aim_and_fire_ticks raft
               on g.id = rset.game_id
                   and int8range(raft.start_game_tick, raft.end_game_tick) &&
                       int8range(rset.min_game_tick, rset.max_game_tick);
+
+select * from react_final where hacking = 0 and visibility_technique_id = 0 and aim_react_s <= 0 and aim_react_s >= -0.5 and not seen_last_five_seconds;
