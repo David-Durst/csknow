@@ -152,3 +152,5 @@ for index, row in snippets_df.iterrows():
 csgo_wmgr.set_foreground()
 pydirectinput.press('`')
 pyautogui.write('quit\n')
+
+time.sleep(3)
