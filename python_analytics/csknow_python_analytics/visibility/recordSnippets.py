@@ -95,13 +95,13 @@ for index, row in snippets_df.iterrows():
     tick_image = Image.open(state_images_path / 'tick_no_death.png')
     tick_width, tick_height = tick_image.size
 
-    # get play button location
-    play_path = state_images_path / 'just_play.png'
-    play_region = getRegionFromImage(play_path, "just play button")
+    # get resume button location
+    resume_path = state_images_path / 'just_resume.png'
+    resume_region = getRegionFromImage(resume_path, "just resume button")
 
     # start playback and recording
     pydirectinput.press('`')
-    moveToRegion(play_region)
+    moveToRegion(resume_region)
     pydirectinput.click()
     pydirectinput.moveTo(30, 30)
     pydirectinput.press('F1')
@@ -123,7 +123,7 @@ for index, row in snippets_df.iterrows():
 
     # stop now that done with snippet
     pydirectinput.press('F2')
-    moveToRegion(play_region)
+    moveToRegion(resume_region)
     pydirectinput.click()
 
     time.sleep(1)
