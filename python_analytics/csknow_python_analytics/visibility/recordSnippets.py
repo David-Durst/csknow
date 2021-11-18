@@ -142,7 +142,7 @@ for index, row in snippets_df.iterrows():
     paths = [os.path.join(args.video_folder, basename) for basename in files]
     newest_video_path = max(paths, key=os.path.getmtime)
     os.rename(newest_video_path, os.path.join(args.video_folder,
-                                              f'''{match_prefix}_{player_name}_{team_number}_{row["start_game_tick"]}_end_{row["end_game_tick"]}.mp4'''))
+                                              f'''{match_prefix}_{player_name}_{team_number}_{row["start_game_tick"]}_{row["end_game_tick"]}.mp4'''))
 
     time.sleep(2)
 
