@@ -90,6 +90,7 @@ misread_ticks = 0
 time.sleep(1)
 pydirectinput.press('`')
 for index, row in snippets_df.iterrows():
+    print(f'''Running from {row['start_game_tick']} to {row['end_game_tick']}''')
     # run post load configs
     time.sleep(1)
     pydirectinput.press('`')
@@ -117,6 +118,7 @@ for index, row in snippets_df.iterrows():
     # wait until end of snippet
     while True:
         tick = getTick(death_region, tick_width, tick_height, tessocr_api)
+        print(f'''Read tick {tick}''')
         # skip invalid or misread ticks
         if tick is None or tick > 5 * row['end_game_tick']:
             misread_ticks += 1
