@@ -35,7 +35,7 @@ if not hlae_wmgr.found_window():
 
 obs_wmgr = w.WindowMgr()
 obs_wmgr.find_window_wildcard("OBS.*")
-if not hlae_wmgr.found_window():
+if not obs_wmgr.found_window():
     subprocess.call(['C:\\Program Files\\obs-studio\\bin\\64bit\\obs64.exe'])
     time.sleep(0.1)
     hlae_wmgr.find_window_wildcard("OBS.*")
@@ -52,7 +52,7 @@ else:
     print(f'''bad config {args.config}''')
     exit(1)
 # start game
-obs_wmgr.set_foreground()
+hlae_wmgr.set_foreground()
 time.sleep(1)
 with pyautogui.hold('alt'):
     pyautogui.press('f')
