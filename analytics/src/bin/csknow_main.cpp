@@ -127,6 +127,7 @@ int main(int argc, char * argv[]) {
     QueryTicks queryTicks(rounds, ticks);
     QueryPlayerAtTick queryPlayerAtTick(rounds, ticks, playerAtTick);
 
+    /*
     // record locations and view angles
     std::ofstream fsACatPeekers, fsMidCTPeekers;
     PositionsAndWallViews aCatPeekers = queryViewsFromRegion(rounds, ticks, playerAtTick,
@@ -154,11 +155,11 @@ int main(int argc, char * argv[]) {
     if (clustersCmdResult != 0) {
         std::cout << "clusters cmd result: " << clustersCmdResult << std::endl;
     }
-     */
+     * /
 
     // import clusters, track cluster sequences
     std::ofstream fsACatSequences, fsMidCTSequences;
-    Cluster aCatPeekersClusters(dataPath + "/../python_analytics/csknow-python-analytics/a_cat_peekers_clusters.csv");
+    Cluster aCatPeekersClusters(dataPath + "/../python_analytics/csknow_python_analytics/a_cat_peekers_clusters.csv");
     ClusterSequencesByRound aCatClusterSequence = analyzeViewClusters(rounds, players, playerAtTick, aCatPeekers,
                                                                       aCatPeekersClusters);
 
@@ -168,7 +169,7 @@ int main(int argc, char * argv[]) {
     fsACatSequences.flush();
     fsACatSequences.close();
 
-    Cluster midCTPeekersClusters(dataPath + "/../python_analytics/csknow-python-analytics/mid_ct_peekers_clusters.csv");
+    Cluster midCTPeekersClusters(dataPath + "/../python_analytics/csknow_python_analytics/mid_ct_peekers_clusters.csv");
     ClusterSequencesByRound midCTClusterSequence = analyzeViewClusters(rounds, players, playerAtTick, midCTPeekers,
                                                                        midCTPeekersClusters);
 
@@ -183,6 +184,7 @@ int main(int argc, char * argv[]) {
     if (tmCmdResult != 0) {
         std::cout << "transition matrices cmd result: " << tmCmdResult << std::endl;
     }
+    */
     /*
     SpottedIndex spottedIndex(position, spotted);
     std::cout << "built spotted index" << std::endl;
@@ -245,6 +247,7 @@ int main(int argc, char * argv[]) {
         {queryNames[8], failedATakes},
     };
      */
+    /*
     vector<string> analysisNames = {aCatPeekersName, aCatSequenceName, midCTPeekersName, midCTSequenceName, lookerName};
     map<string, reference_wrapper<QueryResult>> analyses {
             {analysisNames[0], aCatPeekers},
@@ -252,6 +255,11 @@ int main(int argc, char * argv[]) {
             {analysisNames[2], midCTPeekers},
             {analysisNames[3], midCTClusterSequence},
             {analysisNames[4], lookersResult},
+    };
+     */
+    vector<string> analysisNames = {lookerName};
+    map<string, reference_wrapper<QueryResult>> analyses {
+            {analysisNames[0], lookersResult},
     };
 
     // create the output files and the metadata describing files
@@ -305,7 +313,7 @@ int main(int argc, char * argv[]) {
         }
          */
 
-    vector<string> queryNames = {"games", "rounds", "players", "ticks", "playerAtTick", "aCatClusterSequence", "aCatClusters", "midCTClusterSequence", "midTClusters", dust2Name};
+    vector<string> queryNames = {"games", "rounds", "players", "ticks", "playerAtTick", dust2Name};
     //vector<string> queryNames = {"games", "rounds", "players", "ticks", "playerAtTick", "aCatClusterSequence", "aCatClusters", "midCTClusterSequence", "midTClusters", "lookers"};
     map<string, reference_wrapper<QueryResult>> queries {
             {queryNames[0], queryGames},
@@ -313,11 +321,11 @@ int main(int argc, char * argv[]) {
             {queryNames[2], queryPlayers},
             {queryNames[3], queryTicks},
             {queryNames[4], queryPlayerAtTick},
-            {queryNames[5], aCatClusterSequence},
-            {queryNames[6], aCatPeekersClusters},
-            {queryNames[7], midCTClusterSequence},
-            {queryNames[8], midCTPeekersClusters},
-            {queryNames[9], d2MeshResult},
+            {queryNames[5], d2MeshResult},
+            //{queryNames[5], aCatClusterSequence},
+            //{queryNames[6], aCatPeekersClusters},
+            //{queryNames[7], midCTClusterSequence},
+            //{queryNames[8], midCTPeekersClusters},
             //{queryNames[9], lookersResult}
     };
 

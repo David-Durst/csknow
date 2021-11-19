@@ -228,7 +228,7 @@ while (cap.isOpened()):
     # if all black and not tracking anything, fast forward
     # don't do it on first frame as want to always have a tick to refer to after start
     if frame_id != 0 and anyColor.get_pixel_count_in_range(cap_hsv) == 0 and \
-            all([not cve.valid for cve in cur_visibility_events]):
+            all([not cve.valid_for_ff for cve in cur_visibility_events]):
         continue
 
     # compute color masks

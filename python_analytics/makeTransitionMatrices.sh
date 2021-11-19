@@ -18,6 +18,6 @@ get_script_dir
 source $(dirname $(which conda))/../etc/profile.d/conda.sh
 conda activate csknow
 
-cd ${script_dir}/csknow-python-analytics
+cd ${script_dir}/csknow_python_analytics
 
 python transitionMatrices.py
