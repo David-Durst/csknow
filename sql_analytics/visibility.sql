@@ -242,13 +242,12 @@ select rat.demo,
        min(t.game_tick_number) as react_fire_end_tick,
        rat.distinct_others_spotted_during_time,
        rat.hacking
-from hurt h
-         join ticks t on h.tick_id = t.id
+from weapon_fire f
+         join ticks t on f.tick_id = t.id
          right join react_aim_ticks rat
                     on rat.start_game_tick - 128 <= t.game_tick_number
                         and rat.next_start_game_tick >= t.game_tick_number
-                        and h.attacker = rat.spotter_id
-                        and h.victim = rat.spotted_id
+                        and f.shooter = rat.spotter_id
 group by rat.demo, rat.visibility_technique_id, rat.spotter_id, rat.spotter, rat.spotted_id, rat.spotted, rat.start_game_tick,
          rat.end_game_tick, rat.next_start_game_tick, rat.react_aim_end_tick, rat.last_end_game_tick, rat.distinct_others_spotted_during_time, rat.hacking
 order by rat.demo, rat.start_game_tick, rat.spotter, rat.spotted;
@@ -297,3 +296,15 @@ from react_aim_and_fire_ticks raft
                       int8range(rset.min_game_tick, rset.max_game_tick);
 
 select * from react_final where hacking = 0 and visibility_technique_id = 0 and aim_react_s <= 0 and aim_react_s >= -0.5 and not seen_last_five_seconds and spotter = 'i_eat_short_people_for_breakfast';
+
+select * from visibilities where spotter = 'i_eat_short_people_for_breakfast' and demo = 'merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem' and start_game_tick >= 29000;
+
+select * from lookers_with_last l
+join players p_looked_at on l.looked_at_player_id = p_looked_at.id
+join players p_looker on l.looker_player_id = p_looker.id
+join games g on l.game_id = g.id
+where p_looker.name = 'i_eat_short_people_for_breakfast' and g.demo_file = 'merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem'
+    and game_tick_number >= 29000
+order by game_tick_number;
+
+
