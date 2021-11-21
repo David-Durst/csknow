@@ -4,16 +4,6 @@ sh1ro,Plopski,2581,2711,138,132,2352501_129549_nip-vs-gambit-m1-dust2_f47b6c3a-3
 sh1ro,dev1ce,10009,10052,138,134,2352501_129549_nip-vs-gambit-m1-dust2_f47b6c3a-3c05-11ec-be9d-0a58a9feac02.dem,2,8870,8910,red
 sh1ro,dev1ce,10059,10066,138,134,2352501_129549_nip-vs-gambit-m1-dust2_f47b6c3a-3c05-11ec-be9d-0a58a9feac02.dem,2,8917,8923,red
 sh1ro,Plopski,13488,13570,138,132,2352501_129549_nip-vs-gambit-m1-dust2_f47b6c3a-3c05-11ec-be9d-0a58a9feac02.dem,2,12131,12209,green
-sh1ro,hampus,24826,24910,138,135,2352501_129549_nip-vs-gambit-m1-dust2_f47b6c3a-3c05-11ec-be9d-0a58a9feac02.dem,2,22761,22840,greenBlue
-sh1ro,hampus,24915,24940,138,135,2352501_129549_nip-vs-gambit-m1-dust2_f47b6c3a-3c05-11ec-be9d-0a58a9feac02.dem,2,22845,22869,greenBlue
-sh1ro,hampus,25006,25037,138,135,2352501_129549_nip-vs-gambit-m1-dust2_f47b6c3a-3c05-11ec-be9d-0a58a9feac02.dem,2,22931,22959,greenBlue
-sh1ro,LNZ,25282,25387,138,131,2352501_129549_nip-vs-gambit-m1-dust2_f47b6c3a-3c05-11ec-be9d-0a58a9feac02.dem,2,23189,23287,redBlue
-sh1ro,dev1ce,28023,28061,138,134,2352501_129549_nip-vs-gambit-m1-dust2_f47b6c3a-3c05-11ec-be9d-0a58a9feac02.dem,2,25758,25794,red
-sh1ro,dev1ce,28144,28197,138,134,2352501_129549_nip-vs-gambit-m1-dust2_f47b6c3a-3c05-11ec-be9d-0a58a9feac02.dem,2,25872,25921,red
-sh1ro,hampus,28832,28881,138,135,2352501_129549_nip-vs-gambit-m1-dust2_f47b6c3a-3c05-11ec-be9d-0a58a9feac02.dem,2,26517,26557,greenBlue
-sh1ro,hampus,28889,28893,138,135,2352501_129549_nip-vs-gambit-m1-dust2_f47b6c3a-3c05-11ec-be9d-0a58a9feac02.dem,2,26570,26574,greenBlue
-sh1ro,hampus,28901,28934,138,135,2352501_129549_nip-vs-gambit-m1-dust2_f47b6c3a-3c05-11ec-be9d-0a58a9feac02.dem,2,26582,26612,greenBlue
-sh1ro,dev1ce,29337,29509,138,134,2352501_129549_nip-vs-gambit-m1-dust2_f47b6c3a-3c05-11ec-be9d-0a58a9feac02.dem,2,26990,27153,red
 sh1ro,hampus,34592,34625,138,135,2352501_129549_nip-vs-gambit-m1-dust2_f47b6c3a-3c05-11ec-be9d-0a58a9feac02.dem,2,31916,31948,greenBlue
 sh1ro,REZ,34777,34795,138,133,2352501_129549_nip-vs-gambit-m1-dust2_f47b6c3a-3c05-11ec-be9d-0a58a9feac02.dem,2,32090,32107,blue
 sh1ro,REZ,35614,35820,138,133,2352501_129549_nip-vs-gambit-m1-dust2_f47b6c3a-3c05-11ec-be9d-0a58a9feac02.dem,2,32875,33068,blue
@@ -30,6 +20,8 @@ sh1ro,hampus,66486,66513,138,135,2352501_129549_nip-vs-gambit-m1-dust2_f47b6c3a-
 sh1ro,Plopski,71049,71171,138,132,2352501_129549_nip-vs-gambit-m1-dust2_f47b6c3a-3c05-11ec-be9d-0a58a9feac02.dem,2,66095,66210,green
 sh1ro,dev1ce,71873,71911,138,134,2352501_129549_nip-vs-gambit-m1-dust2_f47b6c3a-3c05-11ec-be9d-0a58a9feac02.dem,2,66867,66903,red
 sh1ro,REZ,74316,74391,138,133,2352501_129549_nip-vs-gambit-m1-dust2_f47b6c3a-3c05-11ec-be9d-0a58a9feac02.dem,2,69158,69228,blue
+sh1ro,REZ,86560,86591,138,133,2352501_129549_nip-vs-gambit-m1-dust2_f47b6c3a-3c05-11ec-be9d-0a58a9feac02.dem,2,80636,80666,blue
+sh1ro,REZ,86594,86618,138,133,2352501_129549_nip-vs-gambit-m1-dust2_f47b6c3a-3c05-11ec-be9d-0a58a9feac02.dem,2,80669,80691,blue
 sh1ro,LNZ,87473,87483,138,131,2352501_129549_nip-vs-gambit-m1-dust2_f47b6c3a-3c05-11ec-be9d-0a58a9feac02.dem,2,81493,81502,redBlue
 sh1ro,LNZ,87516,87550,138,131,2352501_129549_nip-vs-gambit-m1-dust2_f47b6c3a-3c05-11ec-be9d-0a58a9feac02.dem,2,81533,81564,redBlue
 sh1ro,LNZ,87560,87630,138,131,2352501_129549_nip-vs-gambit-m1-dust2_f47b6c3a-3c05-11ec-be9d-0a58a9feac02.dem,2,81574,81640,redBlue
@@ -91,8 +83,8 @@ sh1ro,dev1ce,344566,344643,138,134,2352501_129549_nip-vs-gambit-m1-dust2_f47b6c3
 sh1ro,hampus,359953,360003,138,135,2352501_129549_nip-vs-gambit-m1-dust2_f47b6c3a-3c05-11ec-be9d-0a58a9feac02.dem,2,336947,336994,greenBlue
 sh1ro,Plopski,362213,362252,138,132,2352501_129549_nip-vs-gambit-m1-dust2_f47b6c3a-3c05-11ec-be9d-0a58a9feac02.dem,2,339066,339102,green
 sh1ro,dev1ce,364037,364143,138,134,2352501_129549_nip-vs-gambit-m1-dust2_f47b6c3a-3c05-11ec-be9d-0a58a9feac02.dem,2,340776,340875,red
+sh1ro,dev1ce,383296,383331,138,134,2352501_129549_nip-vs-gambit-m1-dust2_f47b6c3a-3c05-11ec-be9d-0a58a9feac02.dem,2,358831,358864,red
 sh1ro,LNZ,383301,383312,138,131,2352501_129549_nip-vs-gambit-m1-dust2_f47b6c3a-3c05-11ec-be9d-0a58a9feac02.dem,2,358836,358846,redBlue
-sh1ro,dev1ce,383301,383331,138,134,2352501_129549_nip-vs-gambit-m1-dust2_f47b6c3a-3c05-11ec-be9d-0a58a9feac02.dem,2,358835,358864,red
 sh1ro,LNZ,391460,391499,138,131,2352501_129549_nip-vs-gambit-m1-dust2_f47b6c3a-3c05-11ec-be9d-0a58a9feac02.dem,2,366485,366521,redBlue
 sh1ro,LNZ,391502,391553,138,131,2352501_129549_nip-vs-gambit-m1-dust2_f47b6c3a-3c05-11ec-be9d-0a58a9feac02.dem,2,366524,366572,redBlue
 sh1ro,hampus,391685,391740,138,135,2352501_129549_nip-vs-gambit-m1-dust2_f47b6c3a-3c05-11ec-be9d-0a58a9feac02.dem,2,366696,366747,greenBlue
@@ -101,6 +93,7 @@ sh1ro,hampus,391763,391769,138,135,2352501_129549_nip-vs-gambit-m1-dust2_f47b6c3
 sh1ro,hampus,392040,392071,138,135,2352501_129549_nip-vs-gambit-m1-dust2_f47b6c3a-3c05-11ec-be9d-0a58a9feac02.dem,2,367028,367058,greenBlue
 sh1ro,hampus,392076,392082,138,135,2352501_129549_nip-vs-gambit-m1-dust2_f47b6c3a-3c05-11ec-be9d-0a58a9feac02.dem,2,367062,367068,greenBlue
 sh1ro,hampus,392390,392444,138,135,2352501_129549_nip-vs-gambit-m1-dust2_f47b6c3a-3c05-11ec-be9d-0a58a9feac02.dem,2,367356,367407,greenBlue
+sh1ro,hampus,439384,439408,138,135,2352501_129549_nip-vs-gambit-m1-dust2_f47b6c3a-3c05-11ec-be9d-0a58a9feac02.dem,2,411413,411436,greenBlue
 sh1ro,LNZ,439416,439428,138,131,2352501_129549_nip-vs-gambit-m1-dust2_f47b6c3a-3c05-11ec-be9d-0a58a9feac02.dem,2,411443,411455,redBlue
 sh1ro,dev1ce,447578,447607,138,134,2352501_129549_nip-vs-gambit-m1-dust2_f47b6c3a-3c05-11ec-be9d-0a58a9feac02.dem,2,419095,419123,red
 sh1ro,hampus,451049,451085,138,135,2352501_129549_nip-vs-gambit-m1-dust2_f47b6c3a-3c05-11ec-be9d-0a58a9feac02.dem,2,422350,422383,greenBlue

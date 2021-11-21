@@ -1,6 +1,9 @@
 spotter,spotted,start_game_tick,end_game_tick,spotter_id,spotted_id,demo,hacking,start_frame_num,end_frame_num,color
 GuardviaN,LDLC SMITHZZ * CMSTORM,20958,21128,100,103,335_natus-vincere-team-ldlc_de_dust2.dem,2,8229,8388,redBlue
 GuardviaN,LDLC SMITHZZ * CMSTORM,21186,21191,100,103,335_natus-vincere-team-ldlc_de_dust2.dem,2,8443,8447,redBlue
+GuardviaN,LDLC SMITHZZ * CMSTORM,27746,27752,100,103,335_natus-vincere-team-ldlc_de_dust2.dem,2,14592,14598,redBlue
+GuardviaN,LDLC SMITHZZ * CMSTORM,27761,27778,100,103,335_natus-vincere-team-ldlc_de_dust2.dem,2,14607,14623,redBlue
+GuardviaN,LDLC SMITHZZ * CMSTORM,27939,28109,100,103,335_natus-vincere-team-ldlc_de_dust2.dem,2,14774,14933,redBlue
 GuardviaN,LDLC shox * CMSTORM,31299,31443,100,105,335_natus-vincere-team-ldlc_de_dust2.dem,2,17924,18058,green
 GuardviaN,LDLC shox * CMSTORM,31481,31504,100,105,335_natus-vincere-team-ldlc_de_dust2.dem,2,18094,18116,green
 GuardviaN,LDLC shox * CMSTORM,43429,43448,100,105,335_natus-vincere-team-ldlc_de_dust2.dem,2,29295,29313,green
@@ -79,10 +82,12 @@ GuardviaN,LDLC NBeardK- * CMSTORM,102488,102522,100,102,335_natus-vincere-team-l
 GuardviaN,LDLC NBeardK- * CMSTORM,102590,102627,100,102,335_natus-vincere-team-ldlc_de_dust2.dem,2,84759,84794,red
 GuardviaN,LDLC SMITHZZ * CMSTORM,111260,111269,100,103,335_natus-vincere-team-ldlc_de_dust2.dem,2,92887,92895,redBlue
 GuardviaN,LDLC SMITHZZ * CMSTORM,111313,111324,100,103,335_natus-vincere-team-ldlc_de_dust2.dem,2,92936,92947,redBlue
+GuardviaN,LDLC SMITHZZ * CMSTORM,114125,114165,100,103,335_natus-vincere-team-ldlc_de_dust2.dem,2,95573,95611,redBlue
 GuardviaN,LDLC kiokiNgo * CMSTORM,121902,121983,100,104,335_natus-vincere-team-ldlc_de_dust2.dem,2,102864,102902,blue
 GuardviaN,LDLC NBeardK- * CMSTORM,124721,124747,100,102,335_natus-vincere-team-ldlc_de_dust2.dem,2,105507,105531,red
 GuardviaN,LDLC shox * CMSTORM,124888,124923,100,105,335_natus-vincere-team-ldlc_de_dust2.dem,2,105663,105697,green
 GuardviaN,LDLC Happy * CMSTORM,132520,132654,100,101,335_natus-vincere-team-ldlc_de_dust2.dem,2,112819,112944,greenBlue
+GuardviaN,LDLC NBeardK- * CMSTORM,144398,144442,100,102,335_natus-vincere-team-ldlc_de_dust2.dem,2,123954,123995,red
 GuardviaN,LDLC SMITHZZ * CMSTORM,145755,145806,100,103,335_natus-vincere-team-ldlc_de_dust2.dem,2,125226,125274,redBlue
 GuardviaN,LDLC kiokiNgo * CMSTORM,150636,150729,100,104,335_natus-vincere-team-ldlc_de_dust2.dem,2,129803,129889,blue
 GuardviaN,LDLC SMITHZZ * CMSTORM,150972,151042,100,103,335_natus-vincere-team-ldlc_de_dust2.dem,2,130117,130183,redBlue
@@ -129,6 +134,11 @@ GuardviaN,LDLC shox * CMSTORM,199512,199521,100,105,335_natus-vincere-team-ldlc_
 GuardviaN,LDLC kiokiNgo * CMSTORM,199662,199709,100,104,335_natus-vincere-team-ldlc_de_dust2.dem,2,175764,175808,blue
 GuardviaN,LDLC shox * CMSTORM,199708,199741,100,105,335_natus-vincere-team-ldlc_de_dust2.dem,2,175807,175839,green
 GuardviaN,LDLC kiokiNgo * CMSTORM,199712,199741,100,104,335_natus-vincere-team-ldlc_de_dust2.dem,2,175811,175839,blue
+GuardviaN,LDLC shox * CMSTORM,203822,203834,100,105,335_natus-vincere-team-ldlc_de_dust2.dem,2,179664,179675,green
+GuardviaN,LDLC shox * CMSTORM,203901,203924,100,105,335_natus-vincere-team-ldlc_de_dust2.dem,2,179738,179759,green
+GuardviaN,LDLC shox * CMSTORM,204127,204140,100,105,335_natus-vincere-team-ldlc_de_dust2.dem,2,179950,179962,green
+GuardviaN,LDLC shox * CMSTORM,204524,204541,100,105,335_natus-vincere-team-ldlc_de_dust2.dem,2,180322,180338,green
+GuardviaN,LDLC shox * CMSTORM,204951,204985,100,105,335_natus-vincere-team-ldlc_de_dust2.dem,2,180722,180754,green
 GuardviaN,LDLC shox * CMSTORM,205102,205133,100,105,335_natus-vincere-team-ldlc_de_dust2.dem,2,180864,180893,green
 GuardviaN,LDLC shox * CMSTORM,205266,205334,100,105,335_natus-vincere-team-ldlc_de_dust2.dem,2,181018,181081,green
 GuardviaN,LDLC shox * CMSTORM,205971,205979,100,105,335_natus-vincere-team-ldlc_de_dust2.dem,2,181679,181686,green
@@ -179,6 +189,7 @@ GuardviaN,LDLC SMITHZZ * CMSTORM,243340,243343,100,103,335_natus-vincere-team-ld
 GuardviaN,LDLC shox * CMSTORM,243572,243625,100,105,335_natus-vincere-team-ldlc_de_dust2.dem,2,216929,216979,green
 GuardviaN,LDLC shox * CMSTORM,243895,243967,100,105,335_natus-vincere-team-ldlc_de_dust2.dem,2,217232,217300,green
 GuardviaN,LDLC kiokiNgo * CMSTORM,244069,244141,100,104,335_natus-vincere-team-ldlc_de_dust2.dem,2,217396,217463,blue
+GuardviaN,LDLC kiokiNgo * CMSTORM,249705,249777,100,104,335_natus-vincere-team-ldlc_de_dust2.dem,2,222679,222746,blue
 GuardviaN,LDLC shox * CMSTORM,250450,250719,100,105,335_natus-vincere-team-ldlc_de_dust2.dem,2,223378,223630,green
 GuardviaN,LDLC shox * CMSTORM,250722,250778,100,105,335_natus-vincere-team-ldlc_de_dust2.dem,2,223633,223685,green
 GuardviaN,LDLC kiokiNgo * CMSTORM,250813,250931,100,104,335_natus-vincere-team-ldlc_de_dust2.dem,2,223718,223829,blue
@@ -195,6 +206,7 @@ GuardviaN,LDLC shox * CMSTORM,264478,264492,100,105,335_natus-vincere-team-ldlc_
 GuardviaN,LDLC shox * CMSTORM,264542,264576,100,105,335_natus-vincere-team-ldlc_de_dust2.dem,2,236589,236621,green
 GuardviaN,LDLC shox * CMSTORM,264579,264674,100,105,335_natus-vincere-team-ldlc_de_dust2.dem,2,236624,236713,green
 GuardviaN,LDLC shox * CMSTORM,264781,264835,100,105,335_natus-vincere-team-ldlc_de_dust2.dem,2,236813,236864,green
+GuardviaN,LDLC kiokiNgo * CMSTORM,275168,275195,100,104,335_natus-vincere-team-ldlc_de_dust2.dem,2,246551,246576,blue
 GuardviaN,LDLC NBeardK- * CMSTORM,275771,275822,100,102,335_natus-vincere-team-ldlc_de_dust2.dem,2,247116,247164,red
 GuardviaN,LDLC shox * CMSTORM,278720,278739,100,105,335_natus-vincere-team-ldlc_de_dust2.dem,2,249881,249898,green
 GuardviaN,LDLC shox * CMSTORM,278797,278841,100,105,335_natus-vincere-team-ldlc_de_dust2.dem,2,249953,249994,green
@@ -216,7 +228,9 @@ GuardviaN,LDLC Happy * CMSTORM,301447,301488,100,101,335_natus-vincere-team-ldlc
 GuardviaN,LDLC NBeardK- * CMSTORM,301944,301972,100,102,335_natus-vincere-team-ldlc_de_dust2.dem,2,271653,271679,red
 GuardviaN,LDLC NBeardK- * CMSTORM,302020,302050,100,102,335_natus-vincere-team-ldlc_de_dust2.dem,2,271724,271753,red
 GuardviaN,LDLC NBeardK- * CMSTORM,302053,302165,100,102,335_natus-vincere-team-ldlc_de_dust2.dem,2,271756,271860,red
-GuardviaN,LDLC kiokiNgo * CMSTORM,312323,312356,100,104,335_natus-vincere-team-ldlc_de_dust2.dem,2,281384,281415,blue
+GuardviaN,LDLC kiokiNgo * CMSTORM,312057,312070,100,104,335_natus-vincere-team-ldlc_de_dust2.dem,2,281134,281147,blue
+GuardviaN,LDLC kiokiNgo * CMSTORM,312212,312299,100,104,335_natus-vincere-team-ldlc_de_dust2.dem,2,281280,281362,blue
+GuardviaN,LDLC kiokiNgo * CMSTORM,312303,312356,100,104,335_natus-vincere-team-ldlc_de_dust2.dem,2,281365,281415,blue
 GuardviaN,LDLC shox * CMSTORM,312323,312356,100,105,335_natus-vincere-team-ldlc_de_dust2.dem,2,281384,281415,green
 GuardviaN,LDLC kiokiNgo * CMSTORM,312956,313011,100,104,335_natus-vincere-team-ldlc_de_dust2.dem,2,281977,282029,blue
 GuardviaN,LDLC kiokiNgo * CMSTORM,313026,313029,100,104,335_natus-vincere-team-ldlc_de_dust2.dem,2,282043,282046,blue

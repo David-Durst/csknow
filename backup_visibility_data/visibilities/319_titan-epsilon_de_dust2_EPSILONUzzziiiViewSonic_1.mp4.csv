@@ -2,7 +2,7 @@ spotter,spotted,start_game_tick,end_game_tick,spotter_id,spotted_id,demo,hacking
 EPSILON • Uzzziii * ViewSonic,Maniac,64127,64199,51,54,319_titan-epsilon_de_dust2.dem,2,2822,2890,blue
 EPSILON • Uzzziii * ViewSonic,Ex6TenZ,65617,65783,51,52,319_titan-epsilon_de_dust2.dem,2,4219,4375,green
 EPSILON • Uzzziii * ViewSonic,apEX[D],65628,65741,51,55,319_titan-epsilon_de_dust2.dem,2,4229,4335,red
-EPSILON • Uzzziii * ViewSonic,Ex6TenZ,69188,69210,51,52,319_titan-epsilon_de_dust2.dem,2,7566,7587,green
+EPSILON • Uzzziii * ViewSonic,Ex6TenZ,69179,69210,51,52,319_titan-epsilon_de_dust2.dem,2,7558,7587,green
 EPSILON • Uzzziii * ViewSonic,apEX[D],70101,70162,51,55,319_titan-epsilon_de_dust2.dem,2,8422,8480,red
 EPSILON • Uzzziii * ViewSonic,KQLY,71370,71451,51,53,319_titan-epsilon_de_dust2.dem,2,9612,9688,redBlue
 EPSILON • Uzzziii * ViewSonic,apEX[D],71897,71909,51,55,319_titan-epsilon_de_dust2.dem,2,10106,10117,red
@@ -99,6 +99,7 @@ EPSILON • Uzzziii * ViewSonic,apEX[D],229776,229819,51,55,319_titan-epsilon_de
 EPSILON • Uzzziii * ViewSonic,KQLY,234121,234167,51,53,319_titan-epsilon_de_dust2.dem,2,162191,162234,redBlue
 EPSILON • Uzzziii * ViewSonic,KQLY,234552,234658,51,53,319_titan-epsilon_de_dust2.dem,2,162595,162694,redBlue
 EPSILON • Uzzziii * ViewSonic,KQLY,234730,234765,51,53,319_titan-epsilon_de_dust2.dem,2,162762,162795,redBlue
+EPSILON • Uzzziii * ViewSonic,apEX[D],234747,234752,51,55,319_titan-epsilon_de_dust2.dem,2,162778,162783,red
 EPSILON • Uzzziii * ViewSonic,kennyS,244037,244075,51,56,319_titan-epsilon_de_dust2.dem,2,171488,171523,greenBlue
 EPSILON • Uzzziii * ViewSonic,kennyS,244176,244195,51,56,319_titan-epsilon_de_dust2.dem,2,171618,171635,greenBlue
 EPSILON • Uzzziii * ViewSonic,KQLY,255883,255906,51,53,319_titan-epsilon_de_dust2.dem,2,182593,182614,redBlue
@@ -112,7 +113,7 @@ EPSILON • Uzzziii * ViewSonic,Maniac,290434,290572,51,54,319_titan-epsilon_de_
 EPSILON • Uzzziii * ViewSonic,Maniac,290752,290773,51,54,319_titan-epsilon_de_dust2.dem,2,215283,215303,blue
 EPSILON • Uzzziii * ViewSonic,Maniac,291298,291375,51,54,319_titan-epsilon_de_dust2.dem,2,215795,215867,blue
 EPSILON • Uzzziii * ViewSonic,Maniac,291382,291394,51,54,319_titan-epsilon_de_dust2.dem,2,215874,215885,blue
-EPSILON • Uzzziii * ViewSonic,apEX[D],298050,298067,51,55,319_titan-epsilon_de_dust2.dem,2,222125,222141,red
+EPSILON • Uzzziii * ViewSonic,apEX[D],297949,298067,51,55,319_titan-epsilon_de_dust2.dem,2,222030,222141,red
 EPSILON • Uzzziii * ViewSonic,KQLY,316256,316336,51,53,319_titan-epsilon_de_dust2.dem,2,239193,239268,redBlue
 EPSILON • Uzzziii * ViewSonic,kennyS,321247,321254,51,56,319_titan-epsilon_de_dust2.dem,2,243872,243878,greenBlue
 EPSILON • Uzzziii * ViewSonic,kennyS,321290,321338,51,56,319_titan-epsilon_de_dust2.dem,2,243912,243957,greenBlue

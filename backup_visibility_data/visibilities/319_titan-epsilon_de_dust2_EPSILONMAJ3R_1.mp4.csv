@@ -3,6 +3,8 @@ EPSILON MAJ3R,Maniac,64165,64199,48,54,319_titan-epsilon_de_dust2.dem,2,2856,288
 EPSILON MAJ3R,apEX[D],65526,65833,48,55,319_titan-epsilon_de_dust2.dem,2,4132,4420,red
 EPSILON MAJ3R,apEX[D],66009,66194,48,55,319_titan-epsilon_de_dust2.dem,2,4584,4758,red
 EPSILON MAJ3R,Ex6TenZ,66057,66212,48,52,319_titan-epsilon_de_dust2.dem,2,4629,4775,green
+EPSILON MAJ3R,Ex6TenZ,72927,72971,48,52,319_titan-epsilon_de_dust2.dem,2,11070,11112,green
+EPSILON MAJ3R,Ex6TenZ,72975,73016,48,52,319_titan-epsilon_de_dust2.dem,2,11115,11154,green
 EPSILON MAJ3R,Ex6TenZ,76432,76695,48,52,319_titan-epsilon_de_dust2.dem,2,14356,14603,green
 EPSILON MAJ3R,Ex6TenZ,76974,77008,48,52,319_titan-epsilon_de_dust2.dem,2,14864,14896,green
 EPSILON MAJ3R,Ex6TenZ,77082,77118,48,52,319_titan-epsilon_de_dust2.dem,2,14965,15000,green
@@ -17,7 +19,7 @@ EPSILON MAJ3R,Ex6TenZ,82177,82329,48,52,319_titan-epsilon_de_dust2.dem,2,19742,1
 EPSILON MAJ3R,apEX[D],82222,82332,48,55,319_titan-epsilon_de_dust2.dem,2,19784,19887,red
 EPSILON MAJ3R,KQLY,85988,87836,48,53,319_titan-epsilon_de_dust2.dem,2,23315,25047,redBlue
 EPSILON MAJ3R,Ex6TenZ,87888,87989,48,52,319_titan-epsilon_de_dust2.dem,2,25096,25190,green
-EPSILON MAJ3R,KQLY,87952,87957,48,53,319_titan-epsilon_de_dust2.dem,2,25156,25160,redBlue
+EPSILON MAJ3R,KQLY,87952,87968,48,53,319_titan-epsilon_de_dust2.dem,2,25156,25171,redBlue
 EPSILON MAJ3R,apEX[D],88194,88260,48,55,319_titan-epsilon_de_dust2.dem,2,25383,25445,red
 EPSILON MAJ3R,apEX[D],88293,88314,48,55,319_titan-epsilon_de_dust2.dem,2,25476,25496,red
 EPSILON MAJ3R,apEX[D],88356,88390,48,55,319_titan-epsilon_de_dust2.dem,2,25535,25567,red
@@ -51,9 +53,9 @@ EPSILON MAJ3R,apEX[D],116607,116626,48,55,319_titan-epsilon_de_dust2.dem,2,52020
 EPSILON MAJ3R,apEX[D],116668,116825,48,55,319_titan-epsilon_de_dust2.dem,2,52077,52225,red
 EPSILON MAJ3R,KQLY,116887,116962,48,53,319_titan-epsilon_de_dust2.dem,2,52283,52353,redBlue
 EPSILON MAJ3R,Ex6TenZ,116924,117109,48,52,319_titan-epsilon_de_dust2.dem,2,52317,52491,green
-EPSILON MAJ3R,kennyS,117636,117656,48,56,319_titan-epsilon_de_dust2.dem,2,52985,53004,greenBlue
+EPSILON MAJ3R,kennyS,117636,117713,48,56,319_titan-epsilon_de_dust2.dem,2,52985,53057,greenBlue
 EPSILON MAJ3R,kennyS,124780,124941,48,56,319_titan-epsilon_de_dust2.dem,2,59682,59833,greenBlue
-EPSILON MAJ3R,Ex6TenZ,133879,133957,48,52,319_titan-epsilon_de_dust2.dem,2,68213,68286,green
+EPSILON MAJ3R,Ex6TenZ,133865,133957,48,52,319_titan-epsilon_de_dust2.dem,2,68200,68286,green
 EPSILON MAJ3R,apEX[D],134784,134825,48,55,319_titan-epsilon_de_dust2.dem,2,69061,69099,red
 EPSILON MAJ3R,KQLY,140280,140431,48,53,319_titan-epsilon_de_dust2.dem,2,74213,74355,redBlue
 EPSILON MAJ3R,KQLY,150042,150139,48,53,319_titan-epsilon_de_dust2.dem,2,83365,83456,redBlue
@@ -87,6 +89,7 @@ EPSILON MAJ3R,kennyS,247983,247991,48,56,319_titan-epsilon_de_dust2.dem,2,175185
 EPSILON MAJ3R,apEX[D],248947,249041,48,55,319_titan-epsilon_de_dust2.dem,2,176089,176177,red
 EPSILON MAJ3R,kennyS,254959,255059,48,56,319_titan-epsilon_de_dust2.dem,2,181725,181819,greenBlue
 EPSILON MAJ3R,kennyS,255215,255256,48,56,319_titan-epsilon_de_dust2.dem,2,181965,182004,greenBlue
+EPSILON MAJ3R,apEX[D],276198,276241,48,55,319_titan-epsilon_de_dust2.dem,2,201636,201677,red
 EPSILON MAJ3R,Maniac,277863,277912,48,54,319_titan-epsilon_de_dust2.dem,2,203197,203244,blue
 EPSILON MAJ3R,Maniac,277915,277924,48,54,319_titan-epsilon_de_dust2.dem,2,203247,203254,blue
 EPSILON MAJ3R,KQLY,282322,282421,48,53,319_titan-epsilon_de_dust2.dem,2,207378,207470,redBlue
@@ -112,7 +115,7 @@ EPSILON MAJ3R,Maniac,327165,327184,48,54,319_titan-epsilon_de_dust2.dem,2,249418
 EPSILON MAJ3R,Maniac,327217,327291,48,54,319_titan-epsilon_de_dust2.dem,2,249467,249536,blue
 EPSILON MAJ3R,KQLY,331816,331915,48,53,319_titan-epsilon_de_dust2.dem,2,253778,253871,redBlue
 EPSILON MAJ3R,kennyS,332963,332994,48,56,319_titan-epsilon_de_dust2.dem,2,254853,254883,greenBlue
-EPSILON MAJ3R,kennyS,344734,344737,48,56,319_titan-epsilon_de_dust2.dem,2,265889,265892,greenBlue
+EPSILON MAJ3R,kennyS,344729,344737,48,56,319_titan-epsilon_de_dust2.dem,2,265884,265888,greenBlue
 EPSILON MAJ3R,KQLY,344792,344804,48,53,319_titan-epsilon_de_dust2.dem,2,265943,265955,redBlue
 EPSILON MAJ3R,kennyS,344794,344804,48,56,319_titan-epsilon_de_dust2.dem,2,265945,265955,greenBlue
 EPSILON MAJ3R,Maniac,344801,344804,48,54,319_titan-epsilon_de_dust2.dem,2,265952,265955,blue

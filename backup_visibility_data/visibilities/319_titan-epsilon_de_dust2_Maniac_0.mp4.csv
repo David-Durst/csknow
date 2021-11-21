@@ -2,29 +2,8 @@ spotter,spotted,start_game_tick,end_game_tick,spotter_id,spotted_id,demo,hacking
 Maniac,EPSILON • Uzzziii * ViewSonic,64133,64199,54,51,319_titan-epsilon_de_dust2.dem,2,2825,2887,blue
 Maniac,EPSILON MAJ3R,64170,64199,54,48,319_titan-epsilon_de_dust2.dem,2,2859,2887,red
 Maniac,EPSILON G[M]X * Nike,70486,70594,54,47,319_titan-epsilon_de_dust2.dem,2,8781,8882,redBlue
-Maniac,EPSILON • ScreaM -R-,81228,81233,54,50,319_titan-epsilon_de_dust2.dem,2,18852,18857,greenBlue
-Maniac,EPSILON • Uzzziii * ViewSonic,81228,83052,54,51,319_titan-epsilon_de_dust2.dem,2,18852,20561,blue
-Maniac,EPSILON • ScreaM -R-,81292,81326,54,50,319_titan-epsilon_de_dust2.dem,2,18912,18944,greenBlue
-Maniac,EPSILON • ScreaM -R-,81399,81446,54,50,319_titan-epsilon_de_dust2.dem,2,19012,19024,greenBlue
-Maniac,EPSILON • ScreaM -R-,81449,81458,54,50,319_titan-epsilon_de_dust2.dem,2,19059,19067,greenBlue
-Maniac,EPSILON • ScreaM -R-,81463,81494,54,50,319_titan-epsilon_de_dust2.dem,2,19072,19102,greenBlue
-Maniac,EPSILON • ScreaM -R-,81498,81521,54,50,319_titan-epsilon_de_dust2.dem,2,19105,19112,greenBlue
-Maniac,EPSILON • ScreaM -R-,81551,81600,54,50,319_titan-epsilon_de_dust2.dem,2,19154,19169,greenBlue
-Maniac,EPSILON • ScreaM -R-,81628,81679,54,50,319_titan-epsilon_de_dust2.dem,2,19227,19230,greenBlue
-Maniac,EPSILON • ScreaM -R-,81698,81710,54,50,319_titan-epsilon_de_dust2.dem,2,19293,19304,greenBlue
-Maniac,EPSILON • ScreaM -R-,81718,81734,54,50,319_titan-epsilon_de_dust2.dem,2,19311,19326,greenBlue
-Maniac,EPSILON • ScreaM -R-,81741,81746,54,50,319_titan-epsilon_de_dust2.dem,2,19333,19337,greenBlue
-Maniac,EPSILON • ScreaM -R-,81782,81790,54,50,319_titan-epsilon_de_dust2.dem,2,19371,19374,greenBlue
-Maniac,EPSILON • ScreaM -R-,81798,81847,54,50,319_titan-epsilon_de_dust2.dem,2,19386,19401,greenBlue
-Maniac,EPSILON • ScreaM -R-,81852,81898,54,50,319_titan-epsilon_de_dust2.dem,2,19437,19440,greenBlue
-Maniac,EPSILON • ScreaM -R-,81901,81939,54,50,319_titan-epsilon_de_dust2.dem,2,19483,19518,greenBlue
-Maniac,EPSILON • ScreaM -R-,81942,82116,54,50,319_titan-epsilon_de_dust2.dem,2,19521,19578,greenBlue
-Maniac,EPSILON • ScreaM -R-,82119,82429,54,50,319_titan-epsilon_de_dust2.dem,2,19687,19810,greenBlue
-Maniac,EPSILON MAJ3R,82223,82341,54,48,319_titan-epsilon_de_dust2.dem,2,19784,19895,red
-Maniac,EPSILON • ScreaM -R-,82434,82575,54,50,319_titan-epsilon_de_dust2.dem,2,19982,20115,greenBlue
-Maniac,EPSILON MAJ3R,82439,82467,54,48,319_titan-epsilon_de_dust2.dem,2,19987,20013,red
-Maniac,EPSILON • ScreaM -R-,82578,82638,54,50,319_titan-epsilon_de_dust2.dem,2,20117,20173,greenBlue
-Maniac,EPSILON • ScreaM -R-,82642,82645,54,50,319_titan-epsilon_de_dust2.dem,2,20177,20181,greenBlue
+Maniac,EPSILON MAJ3R,80367,80425,54,48,319_titan-epsilon_de_dust2.dem,2,18044,18099,red
+Maniac,EPSILON MAJ3R,80429,80445,54,48,319_titan-epsilon_de_dust2.dem,2,18102,18118,red
 Maniac,EPSILON • SIXER/j/,87551,87647,54,49,319_titan-epsilon_de_dust2.dem,2,24779,24869,green
 Maniac,EPSILON • SIXER/j/,87897,87959,54,49,319_titan-epsilon_de_dust2.dem,2,25103,25162,green
 Maniac,EPSILON • SIXER/j/,88025,88038,54,49,319_titan-epsilon_de_dust2.dem,2,25223,25235,green
@@ -43,7 +22,7 @@ Maniac,EPSILON • SIXER/j/,101804,101817,54,49,319_titan-epsilon_de_dust2.dem,2
 Maniac,EPSILON • Uzzziii * ViewSonic,101852,101902,54,51,319_titan-epsilon_de_dust2.dem,2,38186,38234,blue
 Maniac,EPSILON • SIXER/j/,101854,101903,54,49,319_titan-epsilon_de_dust2.dem,2,38188,38235,green
 Maniac,EPSILON • ScreaM -R-,101855,101902,54,50,319_titan-epsilon_de_dust2.dem,2,38189,38234,greenBlue
-Maniac,EPSILON MAJ3R,108956,109374,54,48,319_titan-epsilon_de_dust2.dem,2,44847,45238,red
+Maniac,EPSILON MAJ3R,108951,109374,54,48,319_titan-epsilon_de_dust2.dem,2,44842,45238,red
 Maniac,EPSILON G[M]X * Nike,108958,109029,54,47,319_titan-epsilon_de_dust2.dem,2,44848,44915,redBlue
 Maniac,EPSILON • Uzzziii * ViewSonic,109678,109778,54,51,319_titan-epsilon_de_dust2.dem,2,45523,45617,blue
 Maniac,EPSILON • Uzzziii * ViewSonic,109781,109868,54,51,319_titan-epsilon_de_dust2.dem,2,45620,45701,blue
@@ -54,42 +33,7 @@ Maniac,EPSILON • Uzzziii * ViewSonic,115037,115051,54,51,319_titan-epsilon_de_
 Maniac,EPSILON • SIXER/j/,135694,135737,54,49,319_titan-epsilon_de_dust2.dem,2,69913,69954,green
 Maniac,EPSILON • SIXER/j/,135764,135806,54,49,319_titan-epsilon_de_dust2.dem,2,69979,70019,green
 Maniac,EPSILON • SIXER/j/,136092,136119,54,49,319_titan-epsilon_de_dust2.dem,2,70286,70312,green
-Maniac,EPSILON • Uzzziii * ViewSonic,140644,140665,54,51,319_titan-epsilon_de_dust2.dem,2,74554,74573,blue
-Maniac,EPSILON • Uzzziii * ViewSonic,140674,140888,54,51,319_titan-epsilon_de_dust2.dem,2,74582,74782,blue
-Maniac,EPSILON • Uzzziii * ViewSonic,141421,142064,54,51,319_titan-epsilon_de_dust2.dem,2,75283,75885,blue
-Maniac,EPSILON • Uzzziii * ViewSonic,142174,142514,54,51,319_titan-epsilon_de_dust2.dem,2,75989,76307,blue
-Maniac,EPSILON • ScreaM -R-,142443,142458,54,50,319_titan-epsilon_de_dust2.dem,2,76240,76255,greenBlue
-Maniac,EPSILON • ScreaM -R-,142479,142482,54,50,319_titan-epsilon_de_dust2.dem,2,76274,76277,greenBlue
-Maniac,EPSILON • ScreaM -R-,142490,142493,54,50,319_titan-epsilon_de_dust2.dem,2,76285,76287,greenBlue
-Maniac,EPSILON • Uzzziii * ViewSonic,144313,144318,54,51,319_titan-epsilon_de_dust2.dem,2,77994,77998,blue
-Maniac,EPSILON • Uzzziii * ViewSonic,144350,144358,54,51,319_titan-epsilon_de_dust2.dem,2,78028,78036,blue
-Maniac,EPSILON MAJ3R,144361,144610,54,48,319_titan-epsilon_de_dust2.dem,2,78039,78272,red
-Maniac,EPSILON • Uzzziii * ViewSonic,144572,144576,54,51,319_titan-epsilon_de_dust2.dem,2,78237,78240,blue
-Maniac,EPSILON • Uzzziii * ViewSonic,144583,144598,54,51,319_titan-epsilon_de_dust2.dem,2,78247,78261,blue
-Maniac,EPSILON MAJ3R,144619,144648,54,48,319_titan-epsilon_de_dust2.dem,2,78280,78308,red
-Maniac,EPSILON • Uzzziii * ViewSonic,144630,144943,54,51,319_titan-epsilon_de_dust2.dem,2,78291,78584,blue
-Maniac,EPSILON • SIXER/j/,145056,145093,54,49,319_titan-epsilon_de_dust2.dem,2,78690,78725,green
-Maniac,EPSILON • Uzzziii * ViewSonic,145095,145110,54,51,319_titan-epsilon_de_dust2.dem,2,78727,78741,blue
-Maniac,EPSILON • SIXER/j/,145096,145100,54,49,319_titan-epsilon_de_dust2.dem,2,78728,78732,green
-Maniac,EPSILON • Uzzziii * ViewSonic,145114,145146,54,51,319_titan-epsilon_de_dust2.dem,2,78745,78775,blue
-Maniac,EPSILON • Uzzziii * ViewSonic,145151,145378,54,51,319_titan-epsilon_de_dust2.dem,2,78779,78917,blue
-Maniac,EPSILON • ScreaM -R-,145298,145338,54,50,319_titan-epsilon_de_dust2.dem,2,78917,78954,greenBlue
-Maniac,EPSILON • SIXER/j/,145301,145338,54,49,319_titan-epsilon_de_dust2.dem,2,78920,78954,green
-Maniac,EPSILON • Uzzziii * ViewSonic,145387,145466,54,51,319_titan-epsilon_de_dust2.dem,2,79001,79075,blue
-Maniac,EPSILON • SIXER/j/,145409,145457,54,49,319_titan-epsilon_de_dust2.dem,2,79021,79066,green
-Maniac,EPSILON • ScreaM -R-,145415,145427,54,50,319_titan-epsilon_de_dust2.dem,2,79027,79038,greenBlue
-Maniac,EPSILON • ScreaM -R-,145444,145466,54,50,319_titan-epsilon_de_dust2.dem,2,79054,79062,greenBlue
-Maniac,EPSILON • Uzzziii * ViewSonic,145528,145543,54,51,319_titan-epsilon_de_dust2.dem,2,79133,79147,blue
-Maniac,EPSILON • Uzzziii * ViewSonic,145548,145696,54,51,319_titan-epsilon_de_dust2.dem,2,79151,79290,blue
-Maniac,EPSILON • SIXER/j/,145573,145589,54,49,319_titan-epsilon_de_dust2.dem,2,79175,79190,green
-Maniac,EPSILON • ScreaM -R-,145642,145664,54,50,319_titan-epsilon_de_dust2.dem,2,79240,79260,greenBlue
-Maniac,EPSILON • ScreaM -R-,145669,145696,54,50,319_titan-epsilon_de_dust2.dem,2,79265,79269,greenBlue
-Maniac,EPSILON • Uzzziii * ViewSonic,145829,145843,54,51,319_titan-epsilon_de_dust2.dem,2,79415,79428,blue
-Maniac,EPSILON • SIXER/j/,145908,145945,54,49,319_titan-epsilon_de_dust2.dem,2,79489,79525,green
-Maniac,EPSILON • Uzzziii * ViewSonic,145945,145958,54,51,319_titan-epsilon_de_dust2.dem,2,79525,79536,blue
-Maniac,EPSILON • Uzzziii * ViewSonic,146004,146063,54,51,319_titan-epsilon_de_dust2.dem,2,79579,79634,blue
-Maniac,EPSILON • Uzzziii * ViewSonic,146085,146108,54,51,319_titan-epsilon_de_dust2.dem,2,79655,79676,blue
-Maniac,EPSILON • Uzzziii * ViewSonic,146111,146123,54,51,319_titan-epsilon_de_dust2.dem,2,79679,79690,blue
+Maniac,EPSILON • Uzzziii * ViewSonic,140593,140665,54,51,319_titan-epsilon_de_dust2.dem,2,74506,74573,blue
 Maniac,EPSILON • ScreaM -R-,150302,150352,54,50,319_titan-epsilon_de_dust2.dem,2,83608,83655,greenBlue
 Maniac,EPSILON G[M]X * Nike,150303,150503,54,47,319_titan-epsilon_de_dust2.dem,2,83609,83797,redBlue
 Maniac,EPSILON • ScreaM -R-,150376,150537,54,50,319_titan-epsilon_de_dust2.dem,2,83678,83829,greenBlue
@@ -163,8 +107,8 @@ Maniac,EPSILON MAJ3R,301297,301415,54,48,319_titan-epsilon_de_dust2.dem,2,225166
 Maniac,EPSILON MAJ3R,301429,301490,54,48,319_titan-epsilon_de_dust2.dem,2,225290,225348,red
 Maniac,EPSILON MAJ3R,301533,301587,54,48,319_titan-epsilon_de_dust2.dem,2,225388,225438,red
 Maniac,EPSILON MAJ3R,301629,301699,54,48,319_titan-epsilon_de_dust2.dem,2,225478,225543,red
+Maniac,EPSILON MAJ3R,315734,315833,54,48,319_titan-epsilon_de_dust2.dem,2,238701,238794,red
 Maniac,EPSILON G[M]X * Nike,315745,315811,54,47,319_titan-epsilon_de_dust2.dem,2,238711,238773,redBlue
-Maniac,EPSILON MAJ3R,315745,315828,54,48,319_titan-epsilon_de_dust2.dem,2,238711,238789,red
 Maniac,EPSILON • SIXER/j/,327128,327200,54,49,319_titan-epsilon_de_dust2.dem,2,249383,249450,green
 Maniac,EPSILON MAJ3R,327165,327285,54,48,319_titan-epsilon_de_dust2.dem,2,249418,249530,red
 Maniac,EPSILON G[M]X * Nike,327192,327258,54,47,319_titan-epsilon_de_dust2.dem,2,249443,249505,redBlue
@@ -234,7 +178,7 @@ Maniac,EPSILON • ScreaM -R-,443870,443921,54,50,319_titan-epsilon_de_dust2.dem
 Maniac,EPSILON • ScreaM -R-,443954,444028,54,50,319_titan-epsilon_de_dust2.dem,2,358908,358977,greenBlue
 Maniac,EPSILON • ScreaM -R-,444064,444096,54,50,319_titan-epsilon_de_dust2.dem,2,359010,359040,greenBlue
 Maniac,EPSILON • ScreaM -R-,445448,445471,54,50,319_titan-epsilon_de_dust2.dem,2,360307,360329,greenBlue
-Maniac,EPSILON MAJ3R,447881,447915,54,48,319_titan-epsilon_de_dust2.dem,2,362588,362621,red
+Maniac,EPSILON MAJ3R,447881,447936,54,48,319_titan-epsilon_de_dust2.dem,2,362588,362640,red
 Maniac,EPSILON • ScreaM -R-,458079,458097,54,50,319_titan-epsilon_de_dust2.dem,2,372149,372166,greenBlue
 Maniac,EPSILON • ScreaM -R-,458144,458178,54,50,319_titan-epsilon_de_dust2.dem,2,372210,372242,greenBlue
 Maniac,EPSILON • ScreaM -R-,459624,459895,54,50,319_titan-epsilon_de_dust2.dem,2,373597,373852,greenBlue
