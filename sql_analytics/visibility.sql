@@ -245,7 +245,7 @@ select rat.demo,
 from weapon_fire f
          join ticks t on f.tick_id = t.id
          right join react_aim_ticks rat
-                    on rat.start_game_tick - 128 <= t.game_tick_number
+                    on rat.start_game_tick <= t.game_tick_number
                         and rat.next_start_game_tick >= t.game_tick_number
                         and f.shooter = rat.spotter_id
 group by rat.demo, rat.visibility_technique_id, rat.spotter_id, rat.spotter, rat.spotted_id, rat.spotted, rat.start_game_tick,

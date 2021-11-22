@@ -40,6 +40,8 @@ unfiltered_df = sqlio.read_sql_query("select * from react_final", conn)
 base_select_str = "select * from react_final where abs(aim_react_s) <= 3 and not seen_last_five_seconds"
 filtered_df = sqlio.read_sql_query(base_select_str, conn)
 
+filtered_df[filtered_df['fire_react_s'] > 2] = np.NaN
+
 dfs = VisibilityTechniqueDataFrames(unfiltered_df, filtered_df)
 dfs.print_size()
 
