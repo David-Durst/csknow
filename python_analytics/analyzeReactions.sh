@@ -19,7 +19,7 @@ export pass=$(cat ${script_dir}/../private/.mysql_password)
 source $(dirname $(which conda))/../etc/profile.d/conda.sh
 conda activate csknow
 
-cd ${script_dir}/csknow-python-analytics/reactions/
+cd ${script_dir}/csknow_python_analytics/reactions/
 
 python individual.py ${pass} ${script_dir}/../sql_analytics/visibility.sql ${script_dir}/reactionPlots/
 # change 4 to 3 for best cpu result

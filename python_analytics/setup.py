@@ -4,7 +4,7 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setup(
-    name='csknow-python-analytics',
+    name='csknow_python_analytics',
     version='0.0.1',
     url='https://github.com/David-Durst/csknow/python_analytics',
     license='MIT',
@@ -12,7 +12,7 @@ setup(
     maintainer_email='davidbdurst@gmail.com',
     description='CSKnow Python Analytics',
     packages=[
-        "csknow-python-analytics",
+        "csknow_python_analytics",
     ],
     install_requires=[
         "pandas",

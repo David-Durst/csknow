@@ -19,7 +19,7 @@ export pass=$(cat ${script_dir}/../private/.mysql_password)
 source $(dirname $(which conda))/../etc/profile.d/conda.sh
 conda activate csknow
 
-cd ${script_dir}/csknow-python-analytics/visibility/
+cd ${script_dir}/csknow_python_analytics/visibility/
 
 rm ${script_dir}/computeVisibilityGenerated.sh
 touch ${script_dir}/computeVisibilityGenerated.sh
