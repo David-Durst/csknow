@@ -27,21 +27,24 @@ void loadCoverEdgesFile(CoverEdges & coverEdges, string filePath) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, coverEdges.originId[arrayEntry]);
         }
         else if (colNumber == 1) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, coverEdges.aabbs[arrayEntry].min.x);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, coverEdges.clusterId[arrayEntry]);
         }
         else if (colNumber == 2) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, coverEdges.aabbs[arrayEntry].min.y);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, coverEdges.aabbs[arrayEntry].min.x);
         }
         else if (colNumber == 3) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, coverEdges.aabbs[arrayEntry].min.z);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, coverEdges.aabbs[arrayEntry].min.y);
         }
         else if (colNumber == 4) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, coverEdges.aabbs[arrayEntry].max.x);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, coverEdges.aabbs[arrayEntry].min.z);
         }
         else if (colNumber == 5) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, coverEdges.aabbs[arrayEntry].max.y);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, coverEdges.aabbs[arrayEntry].max.x);
         }
         else if (colNumber == 6) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, coverEdges.aabbs[arrayEntry].max.y);
+        }
+        else if (colNumber == 7) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, coverEdges.aabbs[arrayEntry].max.z);
             rowNumber++;
             arrayEntry++;
@@ -120,8 +123,10 @@ void loadCoverOrigins(CoverOrigins & coverOrigins, string dataPath) {
 }
 
 void loadCover(CoverOrigins & origins, CoverEdges & edges, string dataPath) {
+    /*
     std::cout << "loading cover origins" << std::endl;
     loadCoverOrigins(origins, dataPath);
+     */
     std::cout << "loading cover edges" << std::endl;
     loadCoverEdges(edges, dataPath);
 }
