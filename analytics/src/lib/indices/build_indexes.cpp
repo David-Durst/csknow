@@ -1,11 +1,12 @@
 #include "load_data.h"
+#include "load_cover.h"
 #include <algorithm>
 #include <iostream>
 #include <assert.h>
 using std::cout;
 using std::endl;
 
-void buildRangeIndex(const vector<int64_t> primaryKeyCol, int64_t primarySize, const int64_t * foreignKeyCol,
+void buildRangeIndex(const vector<int64_t> &primaryKeyCol, int64_t primarySize, const int64_t * foreignKeyCol,
                           int64_t foreignSize, RangeIndex rangeIndexCol,
                           string primaryName, string foreignName) {
     for (int64_t primaryIndex = 0, foreignIndex = 0; primaryIndex < primarySize; primaryIndex++) {
@@ -78,4 +79,63 @@ void buildIndexes(Equipment & equipment, GameTypes & gameTypes, HitGroups & hitG
     buildHashmapIndex({defusals.startTick}, defusals.size, ticks.defusalsStartPerTick);
     buildHashmapIndex({defusals.endTick}, defusals.size, ticks.defusalsEndPerTick);
     buildHashmapIndex({explosions.tickId}, explosions.size, ticks.explosionsPerTick);
+}
+
+struct CompareVec3Indexes
+{
+    const Vec3 * origins;
+
+    bool operator() (const int64_t& lhs_index, const int64_t& rhs_index) const
+    {
+        Vec3 lhs = origins[lhs_index];
+        Vec3 rhs = origins[rhs_index];
+        return (lhs.x < rhs.x) ||
+               (lhs.x == rhs.x && lhs.y < rhs.y) ||
+               (lhs.x == rhs.x && lhs.y == rhs.y && lhs.z < rhs.z);
+    }
+};
+
+void buildGridIndex(const vector<int64_t> &primaryKeyCol, const Vec3 * points, GridIndex &index) {
+    // get min and max values
+    index.minValues = points[0];
+    index.maxValues = points[0];
+    for (int64_t i = 0; i < primaryKeyCol.size(); i++) {
+        index.minValues = min(points[i], index.minValues);
+        index.maxValues = max(points[i], index.minValues);
+    }
+
+    // compute number of cells
+    index.numCells = index.getCellCoordinates(index.maxValues);
+    index.numCells.x += 1;
+    index.numCells.y += 1;
+    index.numCells.z += 1;
+    int64_t totalCells = index.numCells.x * index.numCells.y * index.numCells.z;
+    index.minIdIndex.resize(totalCells, -1);
+    index.numIds.resize(totalCells, 0);
+
+    // sort ids by coordinates
+    index.sortedIds = primaryKeyCol;
+    CompareVec3Indexes comparator;
+    comparator.origins = points;
+    std::sort(index.sortedIds.begin(), index.sortedIds.end(), comparator);
+
+    // get ranges within each cell
+    IVec3 curCell{-1, -1, -1};
+    for (int64_t idIndex = 0; idIndex < index.sortedIds.size(); idIndex++) {
+        const int64_t id = index.sortedIds[idIndex];
+        IVec3 newCell = index.getCellCoordinates(points[id]);
+        int64_t cellIndex = index.getCellIndex(newCell);
+        if (curCell != newCell) {
+            curCell = newCell;
+            index.minIdIndex[cellIndex] = idIndex;
+        }
+        index.numIds[cellIndex]++;
+    }
+}
+
+void buildCoverIndex(CoverOrigins & origins, CoverEdges & edges) {
+    cout << "building cover indexes" << endl;
+    buildGridIndex(origins.id, origins.origins, origins.originsGrid);
+    buildRangeIndex(origins.id, origins.size, edges.originId, edges.size,
+                    origins.coverEdgesPerOrigin, "origins", "edges");
 }

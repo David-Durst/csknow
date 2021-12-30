@@ -16,6 +16,22 @@
 #define TICKS_PER_SECOND 32
 using std::vector;
 
+struct IVec3 {
+    int64_t x;
+    int64_t y;
+    int64_t z;
+
+    bool operator==(const IVec3& rhs)
+    {
+        return x == rhs.x && y == rhs.y && z == rhs.z;
+    }
+
+    bool operator!=(const IVec3& rhs)
+    {
+        return x != rhs.x || y != rhs.y || z == rhs.z;
+    }
+};
+
 struct Vec3 {
     double x;
     double y;
@@ -31,6 +47,22 @@ struct Vec3 {
         }
     }
 };
+
+Vec3 min(Vec3 a, Vec3 b) {
+    Vec3 result;
+    result.x = std::min(a.x, b.x);
+    result.y = std::min(a.y, b.y);
+    result.z = std::min(a.z, b.z);
+    return result;
+}
+
+Vec3 max(Vec3 a, Vec3 b) {
+    Vec3 result;
+    result.x = std::max(a.x, b.x);
+    result.y = std::max(a.y, b.y);
+    result.z = std::max(a.z, b.z);
+    return result;
+}
 
 struct Vec2 {
     double x;
