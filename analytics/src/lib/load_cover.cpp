@@ -123,10 +123,8 @@ void loadCoverOrigins(CoverOrigins & coverOrigins, string dataPath) {
 }
 
 void loadCover(CoverOrigins & origins, CoverEdges & edges, string dataPath) {
-    /*
-    std::cout << "loading cover origins" << std::endl;
-    loadCoverOrigins(origins, dataPath);
-     */
     std::cout << "loading cover edges" << std::endl;
     loadCoverEdges(edges, dataPath);
+    std::cout << "loading cover origins" << std::endl;
+    loadCoverOrigins(origins, dataPath);
 }

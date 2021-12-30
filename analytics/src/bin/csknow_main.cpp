@@ -125,7 +125,6 @@ int main(int argc, char * argv[]) {
     std::cout << "num elements in explosions: " << explosions.size << std::endl;
 
     loadCover(coverOrigins, coverEdges, dataPath);
-    coverOrigins.originsGrid.minIdIndex.resize(31200, -1);
     buildCoverIndex(coverOrigins, coverEdges);
     std::cout << "num elements in cover origins: " << coverOrigins.size << std::endl;
     std::cout << "num elements in cover edges: " << coverEdges.size << std::endl;
