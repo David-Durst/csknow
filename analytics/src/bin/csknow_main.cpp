@@ -8,6 +8,7 @@
 #include <iomanip>
 #include <ctime>
 #include "load_data.h"
+#include "load_cover.h"
 #include "load_clusters.h"
 #include "queries/velocity.h"
 #include "queries/wallers.h"
@@ -96,7 +97,9 @@ int main(int argc, char * argv[]) {
     Plants plants;
     Defusals defusals;
     Explosions explosions;
-    
+    CoverEdges coverEdges;
+    CoverOrigins coverOrigins;
+
     loadData(equipment, gameTypes, hitGroups, games, players, rounds, ticks, playerAtTick, spotted, weaponFire,
              kills, hurt, grenades, flashed, grenadeTrajectories, plants, defusals, explosions, dataPath);
     buildIndexes(equipment, gameTypes, hitGroups, games, players, rounds, ticks, playerAtTick, spotted, weaponFire,
@@ -120,6 +123,12 @@ int main(int argc, char * argv[]) {
     std::cout << "num elements in plants: " << plants.size << std::endl;
     std::cout << "num elements in defusals: " << defusals.size << std::endl;
     std::cout << "num elements in explosions: " << explosions.size << std::endl;
+
+    loadCover(coverOrigins, coverEdges, dataPath);
+    coverOrigins.originsGrid.minIdIndex.resize(31200, -1);
+    buildCoverIndex(coverOrigins, coverEdges);
+    std::cout << "num elements in cover origins: " << coverOrigins.size << std::endl;
+    std::cout << "num elements in cover edges: " << coverEdges.size << std::endl;
 
     QueryGames queryGames(games);
     QueryRounds queryRounds(games, rounds);

@@ -48,6 +48,7 @@ struct Vec3 {
     }
 };
 
+static inline __attribute__((always_inline))
 Vec3 min(Vec3 a, Vec3 b) {
     Vec3 result;
     result.x = std::min(a.x, b.x);
@@ -56,6 +57,7 @@ Vec3 min(Vec3 a, Vec3 b) {
     return result;
 }
 
+static inline __attribute__((always_inline))
 Vec3 max(Vec3 a, Vec3 b) {
     Vec3 result;
     result.x = std::max(a.x, b.x);

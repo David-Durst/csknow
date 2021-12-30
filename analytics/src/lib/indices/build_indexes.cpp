@@ -109,7 +109,7 @@ void buildGridIndex(const vector<int64_t> &primaryKeyCol, const Vec3 * points, G
     index.numCells.x += 1;
     index.numCells.y += 1;
     index.numCells.z += 1;
-    int64_t totalCells = index.numCells.x * index.numCells.y * index.numCells.z;
+    size_t totalCells = index.numCells.x * index.numCells.y * index.numCells.z;
     index.minIdIndex.resize(totalCells, -1);
     index.numIds.resize(totalCells, 0);
 
