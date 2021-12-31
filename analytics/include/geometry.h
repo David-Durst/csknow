@@ -30,7 +30,41 @@ struct IVec3 {
     {
         return x != rhs.x || y != rhs.y || z == rhs.z;
     }
+
+    IVec3 operator+(int64_t value) const {
+        IVec3 result = *this;
+        result.x += value;
+        result.y += value;
+        result.z += value;
+        return result;
+    }
+
+    IVec3 operator-(int64_t value) const {
+        IVec3 result = *this;
+        result.x -= value;
+        result.y -= value;
+        result.z -= value;
+        return result;
+    }
 };
+
+static inline __attribute__((always_inline))
+IVec3 min(IVec3 a, IVec3 b) {
+    IVec3 result;
+    result.x = std::min(a.x, b.x);
+    result.y = std::min(a.y, b.y);
+    result.z = std::min(a.z, b.z);
+    return result;
+}
+
+static inline __attribute__((always_inline))
+IVec3 max(IVec3 a, IVec3 b) {
+    IVec3 result;
+    result.x = std::max(a.x, b.x);
+    result.y = std::max(a.y, b.y);
+    result.z = std::max(a.z, b.z);
+    return result;
+}
 
 struct Vec3 {
     double x;

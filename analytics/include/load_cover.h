@@ -16,7 +16,7 @@ struct GridIndex {
     Vec3 minValues;
     Vec3 maxValues;
 
-    IVec3 getCellCoordinates(Vec3 v) {
+    IVec3 getCellCoordinates(Vec3 v) const {
         return {
             (int64_t) std::floor((v.x - minValues.x) / cellSizes.x),
             (int64_t) std::floor((v.y - minValues.y) / cellSizes.y),
@@ -24,8 +24,34 @@ struct GridIndex {
         };
     }
 
-    int64_t getCellIndex(IVec3 v) {
+    int64_t getCellIndex(IVec3 v) const {
         return v.x * numCells.y * numCells.z + v.y * numCells.z + v.z;
+    }
+
+    int64_t getNearest(Vec3 * origins, Vec3 curPosition, Vec3 & result) const {
+        int64_t resultIndex = -1;
+        double minDistance = -1;
+        IVec3 centerCoord = getCellCoordinates(curPosition);
+        IVec3 minCoord = max({0,0,0}, centerCoord - 1);
+        IVec3 maxCoord = min(numCells - 1, centerCoord + 1);
+        for (int64_t xCoord = minCoord.x; xCoord <= maxCoord.x; xCoord++) {
+            for (int64_t yCoord = minCoord.y; yCoord <= maxCoord.y; yCoord++) {
+                for (int64_t zCoord = minCoord.z; zCoord <= maxCoord.z; zCoord++) {
+                    int64_t curCoord = getCellIndex({xCoord, yCoord, zCoord});
+                    for (int64_t idIndex = minIdIndex[curCoord];
+                        idIndex < minIdIndex[curCoord] + numIds[curCoord];
+                        idIndex++) {
+                        double newDistance = computeDistance(curPosition, origins[sortedIds[idIndex]]);
+                        if (resultIndex == -1 || newDistance < minDistance) {
+                            minDistance = newDistance;
+                            resultIndex = sortedIds[idIndex];
+                            result = origins[resultIndex];
+                        }
+                    }
+                }
+            }
+        }
+        return resultIndex;
     }
 };
 
@@ -39,7 +65,7 @@ public:
         ColStore::init(rows, numFiles, {});
         origins = (Vec3 *) malloc(rows * sizeof(Vec3));
         coverEdgesPerOrigin = (RangeIndexEntry *) malloc(rows * sizeof(RangeIndexEntry));
-        originsGrid.cellSizes = {20.0, 20.0, 20.0};
+        originsGrid.cellSizes = {20.0, 20.0, 10000.0};
     }
 
     CoverOrigins() { };
