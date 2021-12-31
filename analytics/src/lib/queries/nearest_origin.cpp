@@ -36,7 +36,8 @@ NearestOriginResult queryNearestOrigin(const Rounds & rounds, const Ticks & tick
                 int64_t nearestIndex = coverOrigins.originsGrid.getNearest(coverOrigins.origins,
                                                                         {playerAtTick.posX[patIndex],
                                                                          playerAtTick.posY[patIndex],
-                                                                         playerAtTick.posZ[patIndex]}, nearestOrigin);
+                                                                         playerAtTick.posZ[patIndex] + EYE_HEIGHT},
+                                                                         nearestOrigin);
                 tmpOriginIds[threadNum].push_back(nearestIndex);
             }
 
