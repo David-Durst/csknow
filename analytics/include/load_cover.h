@@ -15,6 +15,7 @@ struct GridIndex {
     IVec3 numCells;
     Vec3 minValues;
     Vec3 maxValues;
+    Vec3 * values;
 
     IVec3 getCellCoordinates(Vec3 v) const {
         return {
@@ -55,6 +56,20 @@ struct GridIndex {
     }
 };
 
+struct GridComparator {
+    GridIndex & gridIndex;
+
+    GridComparator(GridIndex & gridIndex) : gridIndex(gridIndex) {}
+
+    bool operator() (const int64_t& lhs_index, const int64_t& rhs_index) const
+    {
+        Vec3 lhs = gridIndex.values[lhs_index];
+        Vec3 rhs = gridIndex.values[rhs_index];
+        return gridIndex.getCellIndex(gridIndex.getCellCoordinates(lhs)) <
+               gridIndex.getCellIndex(gridIndex.getCellCoordinates(rhs));
+    }
+};
+
 class CoverOrigins : public ColStore {
 public:
     Vec3 * origins;
@@ -64,6 +79,7 @@ public:
     void init(int64_t rows, int64_t numFiles) {
         ColStore::init(rows, numFiles, {});
         origins = (Vec3 *) malloc(rows * sizeof(Vec3));
+        originsGrid.values = origins;
         coverEdgesPerOrigin = (RangeIndexEntry *) malloc(rows * sizeof(RangeIndexEntry));
         originsGrid.cellSizes = {20.0, 20.0, 10000.0};
     }

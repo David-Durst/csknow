@@ -129,6 +129,7 @@ int main(int argc, char * argv[]) {
 
     loadCover(coverOrigins, coverEdges, dataPath);
     buildCoverIndex(coverOrigins, coverEdges);
+
     std::cout << "num elements in cover origins: " << coverOrigins.size << std::endl;
     std::cout << "num elements in cover edges: " << coverEdges.size << std::endl;
 
@@ -205,6 +206,7 @@ int main(int argc, char * argv[]) {
     LookingResult lookersResult = queryLookers(games, rounds, ticks, playerAtTick);
     std::cout << "looker entries: " << lookersResult.tickId.size() << std::endl;
 
+    /*
     string nearestOriginName = "nearest_origin";
     NearestOriginResult nearestOriginResult = queryNearestOrigin(rounds, ticks, playerAtTick, coverOrigins);
     std::cout << "nearest_origin entries: " << nearestOriginResult.tickId.size() << std::endl;
@@ -218,6 +220,7 @@ int main(int argc, char * argv[]) {
     PlayerLookingAtCoverEdgeResult playerLookingAtCoverEdgeResult =
             queryPlayerLookingAtCoverEdge(rounds, ticks, playerAtTick, coverOrigins, coverEdges, nearestOriginResult);
     std::cout << "player_looking_at_cover_edge entries: " << playerLookingAtCoverEdgeResult.tickId.size() << std::endl;
+    */
 
     string dust2Name = "de_dust2_mesh";
     MapMeshResult d2MeshResult = queryMapMesh(map_navs["de_dust2"]);
@@ -282,10 +285,9 @@ int main(int argc, char * argv[]) {
             {analysisNames[4], lookersResult},
     };
      */
-    vector<string> analysisNames = {lookerName, nearestOriginName};
     map<string, reference_wrapper<QueryResult>> analyses {
-            {analysisNames[0], lookersResult},
-            {analysisNames[1], nearestOriginResult}
+            {lookerName, lookersResult},
+            //{nearestOriginName, nearestOriginResult}
     };
 
     // create the output files and the metadata describing files

@@ -81,27 +81,13 @@ void buildIndexes(Equipment & equipment, GameTypes & gameTypes, HitGroups & hitG
     buildHashmapIndex({explosions.tickId}, explosions.size, ticks.explosionsPerTick);
 }
 
-struct CompareVec3Indexes
-{
-    const Vec3 * origins;
-
-    bool operator() (const int64_t& lhs_index, const int64_t& rhs_index) const
-    {
-        Vec3 lhs = origins[lhs_index];
-        Vec3 rhs = origins[rhs_index];
-        return (lhs.x < rhs.x) ||
-               (lhs.x == rhs.x && lhs.y < rhs.y) ||
-               (lhs.x == rhs.x && lhs.y == rhs.y && lhs.z < rhs.z);
-    }
-};
-
 void buildGridIndex(const vector<int64_t> &primaryKeyCol, const Vec3 * points, GridIndex &index) {
     // get min and max values
     index.minValues = points[0];
     index.maxValues = points[0];
     for (int64_t i = 0; i < primaryKeyCol.size(); i++) {
         index.minValues = min(points[i], index.minValues);
-        index.maxValues = max(points[i], index.minValues);
+        index.maxValues = max(points[i], index.maxValues);
     }
 
     // compute number of cells
@@ -115,8 +101,7 @@ void buildGridIndex(const vector<int64_t> &primaryKeyCol, const Vec3 * points, G
 
     // sort ids by coordinates
     index.sortedIds = primaryKeyCol;
-    CompareVec3Indexes comparator;
-    comparator.origins = points;
+    GridComparator comparator(index);
     std::sort(index.sortedIds.begin(), index.sortedIds.end(), comparator);
 
     // get ranges within each cell
