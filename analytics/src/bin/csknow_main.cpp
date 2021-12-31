@@ -15,6 +15,7 @@
 #include "queries/baiters.h"
 #include "queries/netcode.h"
 #include "queries/looking.h"
+#include "queries/nearest_origin.h"
 #include "queries/nonconsecutive.h"
 #include "queries/grouping.h"
 #include "queries/groupInSequenceOfRegions.h"
@@ -202,6 +203,10 @@ int main(int argc, char * argv[]) {
     LookingResult lookersResult = queryLookers(games, rounds, ticks, playerAtTick);
     std::cout << "looker entries: " << lookersResult.tickId.size() << std::endl;
 
+    string nearestOriginName = "nearest_origin";
+    NearestOriginResult nearestOriginResult = queryNearestOrigin(rounds, ticks, playerAtTick, coverOrigins);
+    std::cout << "nearest_origin entries: " << nearestOriginResult.tickId.size() << std::endl;
+
     string dust2Name = "de_dust2_mesh";
     MapMeshResult d2MeshResult = queryMapMesh(map_navs["de_dust2"]);
     /*
@@ -265,9 +270,10 @@ int main(int argc, char * argv[]) {
             {analysisNames[4], lookersResult},
     };
      */
-    vector<string> analysisNames = {lookerName};
+    vector<string> analysisNames = {lookerName, nearestOriginName};
     map<string, reference_wrapper<QueryResult>> analyses {
             {analysisNames[0], lookersResult},
+            {analysisNames[1], nearestOriginResult}
     };
 
     // create the output files and the metadata describing files
