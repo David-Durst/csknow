@@ -138,6 +138,14 @@ struct AABB {
     }
 };
 
+static inline __attribute__((always_inline))
+bool aabbOverlap(AABB b0, AABB b1) {
+    return
+            (b0.min.x <= b1.max.x && b1.min.x <= b0.max.x) &&
+            (b0.min.y <= b1.max.y && b1.min.y <= b0.max.y) &&
+            (b0.min.z <= b1.max.z && b1.min.z <= b0.max.z);
+}
+
 const int HEIGHT = 72;
 const int WIDTH = 32;
 static inline __attribute__((always_inline))

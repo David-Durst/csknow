@@ -17,6 +17,7 @@
 #include "queries/looking.h"
 #include "queries/nearest_origin.h"
 #include "queries/player_in_cover_edge.h"
+#include "queries/player_looking_at_cover_edge.h"
 #include "queries/nonconsecutive.h"
 #include "queries/grouping.h"
 #include "queries/groupInSequenceOfRegions.h"
@@ -212,6 +213,11 @@ int main(int argc, char * argv[]) {
     PlayerInCoverEdgeResult playerInCoverEdgeResult = queryPlayerInCoverEdge(rounds, ticks, playerAtTick, coverOrigins,
                                                                              coverEdges, nearestOriginResult);
     std::cout << "player_in_cover_edge entries: " << playerInCoverEdgeResult.tickId.size() << std::endl;
+
+    string playerLookingAtCoverEdgeName = "player_looking_at_cover_edge";
+    PlayerLookingAtCoverEdgeResult playerLookingAtCoverEdgeResult =
+            queryPlayerLookingAtCoverEdge(rounds, ticks, playerAtTick, coverOrigins, coverEdges, nearestOriginResult);
+    std::cout << "player_looking_at_cover_edge entries: " << playerLookingAtCoverEdgeResult.tickId.size() << std::endl;
 
     string dust2Name = "de_dust2_mesh";
     MapMeshResult d2MeshResult = queryMapMesh(map_navs["de_dust2"]);
