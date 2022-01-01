@@ -42,18 +42,18 @@ queryPlayerLookingAtCoverEdge(const Rounds & rounds, const Ticks & ticks, const 
                 if (!playerAtTick.isAlive[lookedAtPatIndex]) {
                     continue;
                 }
+                Ray playerEyeCoord = getEyeCoordinatesForPlayer(
+                        {playerAtTick.posX[lookedAtPatIndex], playerAtTick.posY[lookedAtPatIndex],
+                         playerAtTick.posZ[lookedAtPatIndex]},
+                        {playerAtTick.viewX[lookedAtPatIndex], playerAtTick.viewY[lookedAtPatIndex]});
+
+                double t0, t1;
+                if (!intersectP(coverOrigins.coverEdgeBoundsPerOrigin[originIndex], playerEyeCoord, t0, t1)) {
+                    continue;
+                }
                 for (int64_t coverEdgeIndex = coverOrigins.coverEdgesPerOrigin[originIndex].minId;
                      coverEdgeIndex != -1 && coverEdgeIndex <= coverOrigins.coverEdgesPerOrigin[originIndex].maxId;
                      coverEdgeIndex++) {
-                    Ray playerEyeCoord = getEyeCoordinatesForPlayer(
-                            {playerAtTick.posX[lookedAtPatIndex], playerAtTick.posY[lookedAtPatIndex],
-                             playerAtTick.posZ[lookedAtPatIndex]},
-                            {playerAtTick.viewX[lookedAtPatIndex], playerAtTick.viewY[lookedAtPatIndex]});
-
-                    double t0, t1;
-                    if (!intersectP(coverOrigins.coverEdgeBoundsPerOrigin[originIndex], playerEyeCoord, t0, t1)) {
-                        continue;
-                    }
                     if (intersectP(coverEdges.aabbs[coverEdgeIndex], playerEyeCoord, t0, t1)) {
                         tmpTickId[threadNum].push_back(tickIndex);
                         tmpCurPlayerAtTickIds[threadNum].push_back(lookedAtPatIndex);

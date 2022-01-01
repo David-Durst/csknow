@@ -15,6 +15,7 @@
 #include <sys/mman.h>
 #include <errno.h>
 #include <charconv>
+#include <omp.h>
 
 using std::to_string;
 using std::string;
