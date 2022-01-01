@@ -4,10 +4,12 @@
 
 #include "queries/player_in_cover_edge.h"
 #include "geometry.h"
+#include "file_helpers.h"
 #include <omp.h>
 #include <set>
 #include <map>
 #include "cmath"
+#include <atomic>
 
 PlayerInCoverEdgeResult queryPlayerInCoverEdge(const Rounds & rounds, const Ticks & ticks, const PlayerAtTick & playerAtTick,
                                                const CoverOrigins & coverOrigins, const CoverEdges & coverEdges,
@@ -23,6 +25,7 @@ PlayerInCoverEdgeResult queryPlayerInCoverEdge(const Rounds & rounds, const Tick
     vector<int64_t> tmpRoundIds[numThreads];
     vector<int64_t> tmpRoundStarts[numThreads];
     vector<int64_t> tmpRoundSizes[numThreads];
+    std::atomic<int64_t> roundsProcessed = 0;
 
 #pragma omp parallel for
     for (int64_t roundIndex = 0; roundIndex < rounds.size; roundIndex++) {
@@ -63,6 +66,8 @@ PlayerInCoverEdgeResult queryPlayerInCoverEdge(const Rounds & rounds, const Tick
 
         }
         tmpRoundSizes[threadNum].push_back(tmpTickId[threadNum].size() - tmpRoundStarts[threadNum].back());
+        roundsProcessed++;
+        printProgress((roundsProcessed * 1.0) / rounds.size);
     }
 
     PlayerInCoverEdgeResult result;
