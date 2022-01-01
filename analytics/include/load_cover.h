@@ -70,17 +70,21 @@ struct GridComparator {
     }
 };
 
+typedef AABB * AABBIndex;
+
 class CoverOrigins : public ColStore {
 public:
     Vec3 * origins;
     GridIndex originsGrid;
     RangeIndex coverEdgesPerOrigin;
+    AABBIndex coverEdgeBoundsPerOrigin;
 
     void init(int64_t rows, int64_t numFiles) {
         ColStore::init(rows, numFiles, {});
         origins = (Vec3 *) malloc(rows * sizeof(Vec3));
         originsGrid.values = origins;
         coverEdgesPerOrigin = (RangeIndexEntry *) malloc(rows * sizeof(RangeIndexEntry));
+        coverEdgeBoundsPerOrigin = (AABB *) malloc(rows * sizeof(AABB));
         originsGrid.cellSizes = {20.0, 20.0, 10000.0};
     }
 

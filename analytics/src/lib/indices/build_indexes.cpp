@@ -118,9 +118,28 @@ void buildGridIndex(const vector<int64_t> &primaryKeyCol, const Vec3 * points, G
     }
 }
 
+void buildAABBIndex(const RangeIndex rangeIndex, int64_t rangeSize, const AABB * aabbCol, AABBIndex aabbIndexCol) {
+    for (int64_t rangeId = 0; rangeId < rangeSize; rangeId++) {
+        bool firstAABB = true;
+        for (int64_t aabbId = rangeIndex[rangeId].minId; aabbId != -1 && aabbId <= rangeIndex[rangeId].maxId;
+            aabbId++) {
+            AABB aabb = aabbCol[aabbId];
+            if (firstAABB) {
+                firstAABB = false;
+                aabbIndexCol[rangeId] = aabb;
+            }
+            else {
+                aabbIndexCol[rangeId].min = min(aabbIndexCol[rangeId].min, aabb.min);
+                aabbIndexCol[rangeId].max = max(aabbIndexCol[rangeId].max, aabb.max);
+            }
+        }
+    }
+}
+
 void buildCoverIndex(CoverOrigins & origins, CoverEdges & edges) {
     cout << "building cover indexes" << endl;
     buildGridIndex(origins.id, origins.origins, origins.originsGrid);
     buildRangeIndex(origins.id, origins.size, edges.originId, edges.size,
                     origins.coverEdgesPerOrigin, "origins", "edges");
+    buildAABBIndex(origins.coverEdgesPerOrigin, origins.size, edges.aabbs, origins.coverEdgeBoundsPerOrigin);
 }

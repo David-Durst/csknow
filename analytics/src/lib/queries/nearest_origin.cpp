@@ -16,10 +16,15 @@ NearestOriginResult queryNearestOrigin(const Rounds & rounds, const Ticks & tick
     vector<int64_t> tmpPlayerAtTickIds[numThreads];
     vector<int64_t> tmpPlayerIds[numThreads];
     vector<int64_t> tmpOriginIds[numThreads];
+    vector<int64_t> tmpRoundIds[numThreads];
+    vector<int64_t> tmpRoundStarts[numThreads];
+    vector<int64_t> tmpRoundSizes[numThreads];
 
-//#pragma omp parallel for
+#pragma omp parallel for
     for (int64_t roundIndex = 0; roundIndex < rounds.size; roundIndex++) {
         int threadNum = omp_get_thread_num();
+        tmpRoundIds[threadNum].push_back(roundIndex);
+        tmpRoundStarts[threadNum].push_back(tmpTickId[threadNum].size());
 
         for (int64_t tickIndex = rounds.ticksPerRound[roundIndex].minId;
              tickIndex <= rounds.ticksPerRound[roundIndex].maxId; tickIndex++) {
@@ -42,19 +47,40 @@ NearestOriginResult queryNearestOrigin(const Rounds & rounds, const Ticks & tick
             }
 
         }
+        tmpRoundSizes[threadNum].push_back(tmpTickId[threadNum].size() - tmpRoundStarts[threadNum].back());
     }
 
     NearestOriginResult result;
-    for (int i = 0; i < numThreads; i++) {
-        result.nearestOriginPerRound.push_back({});
-        result.nearestOriginPerRound[i].minId = result.tickId.size();
-        for (int j = 0; j < tmpTickId[i].size(); j++) {
-            result.tickId.push_back(tmpTickId[i][j]);
-            result.playerAtTickId.push_back(tmpPlayerAtTickIds[i][j]);
-            result.playerId.push_back(tmpPlayerIds[i][j]);
-            result.originId.push_back(tmpOriginIds[i][j]);
+    vector<int64_t> roundsProcessedPerThread(numThreads, 0);
+    while (true) {
+        bool roundToProcess = false;
+        int64_t minThreadId = -1;
+        int64_t minRoundId = -1;
+        for (int64_t threadId = 0; threadId < numThreads; threadId++) {
+            if (roundsProcessedPerThread[threadId] < tmpRoundIds[threadId].size()) {
+                roundToProcess = true;
+                if (minThreadId == -1 || tmpRoundIds[threadId][roundsProcessedPerThread[threadId]] < minRoundId) {
+                    minThreadId = threadId;
+                    minRoundId = tmpRoundIds[minThreadId][roundsProcessedPerThread[minThreadId]];
+                }
+
+            }
         }
-        result.nearestOriginPerRound[i].maxId = result.tickId.size();
+        if (!roundToProcess) {
+            break;
+        }
+        result.nearestOriginPerRound.push_back({});
+        result.nearestOriginPerRound[minRoundId].minId = result.tickId.size();
+        int64_t roundStart = tmpRoundStarts[minThreadId][roundsProcessedPerThread[minThreadId]];
+        int64_t roundEnd = roundStart + tmpRoundSizes[minThreadId][roundsProcessedPerThread[minThreadId]];
+        for (int tmpRowId = roundStart; tmpRowId < roundEnd; tmpRowId++) {
+            result.tickId.push_back(tmpTickId[minThreadId][tmpRowId]);
+            result.playerAtTickId.push_back(tmpPlayerAtTickIds[minThreadId][tmpRowId]);
+            result.playerId.push_back(tmpPlayerIds[minThreadId][tmpRowId]);
+            result.originId.push_back(tmpOriginIds[minThreadId][tmpRowId]);
+        }
+        result.nearestOriginPerRound[minRoundId].maxId = result.tickId.size();
+        roundsProcessedPerThread[minThreadId]++;
     }
     result.size = result.tickId.size();
     return result;

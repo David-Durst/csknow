@@ -20,10 +20,15 @@ PlayerInCoverEdgeResult queryPlayerInCoverEdge(const Rounds & rounds, const Tick
     vector<int64_t> tmpLookedAtPlayerAtTickIds[numThreads];
     vector<int64_t> tmpLookedAtPlayerIds[numThreads];
     vector<int64_t> tmpNearestOriginIds[numThreads];
+    vector<int64_t> tmpRoundIds[numThreads];
+    vector<int64_t> tmpRoundStarts[numThreads];
+    vector<int64_t> tmpRoundSizes[numThreads];
 
-//#pragma omp parallel for
+#pragma omp parallel for
     for (int64_t roundIndex = 0; roundIndex < rounds.size; roundIndex++) {
         int threadNum = omp_get_thread_num();
+        tmpRoundIds[threadNum].push_back(roundIndex);
+        tmpRoundStarts[threadNum].push_back(tmpTickId[threadNum].size());
 
         for (int64_t nearestOriginIndex = nearestOriginResult.nearestOriginPerRound[roundIndex].minId;
              nearestOriginIndex <= nearestOriginResult.nearestOriginPerRound[roundIndex].maxId; nearestOriginIndex++) {
@@ -35,12 +40,15 @@ PlayerInCoverEdgeResult queryPlayerInCoverEdge(const Rounds & rounds, const Tick
                 if (!playerAtTick.isAlive[lookedAtPatIndex]) {
                     continue;
                 }
+                AABB playerAABB = getAABBForPlayer({playerAtTick.posX[lookedAtPatIndex],
+                                                    playerAtTick.posY[lookedAtPatIndex],
+                                                    playerAtTick.posZ[lookedAtPatIndex]});
+                if (!aabbOverlap(coverOrigins.coverEdgeBoundsPerOrigin[originIndex], playerAABB)) {
+                    continue;
+                }
                 for (int64_t coverEdgeIndex = coverOrigins.coverEdgesPerOrigin[originIndex].minId;
                      coverEdgeIndex != -1 && coverEdgeIndex <= coverOrigins.coverEdgesPerOrigin[originIndex].maxId;
                      coverEdgeIndex++) {
-                    AABB playerAABB = getAABBForPlayer({playerAtTick.posX[lookedAtPatIndex],
-                                                         playerAtTick.posY[lookedAtPatIndex],
-                                                         playerAtTick.posZ[lookedAtPatIndex]});
                     if (aabbOverlap(coverEdges.aabbs[coverEdgeIndex], playerAABB)) {
                         tmpTickId[threadNum].push_back(tickIndex);
                         tmpLookerPlayerAtTickIds[threadNum].push_back(nearestOriginResult.playerAtTickId[originIndex]);
@@ -48,28 +56,48 @@ PlayerInCoverEdgeResult queryPlayerInCoverEdge(const Rounds & rounds, const Tick
                         tmpLookedAtPlayerAtTickIds[threadNum].push_back(lookedAtPatIndex);
                         tmpLookedAtPlayerIds[threadNum].push_back(playerAtTick.playerId[lookedAtPatIndex]);
                         tmpNearestOriginIds[threadNum].push_back(nearestOriginIndex);
-                        break;
                     }
 
                 }
             }
 
         }
+        tmpRoundSizes[threadNum].push_back(tmpTickId[threadNum].size() - tmpRoundStarts[threadNum].back());
     }
 
     PlayerInCoverEdgeResult result;
-    for (int i = 0; i < numThreads; i++) {
-        result.playerInCoverEdgePerRound.push_back({});
-        result.playerInCoverEdgePerRound[i].minId = result.tickId.size();
-        for (int j = 0; j < tmpTickId[i].size(); j++) {
-            result.tickId.push_back(tmpTickId[i][j]);
-            result.lookerPlayerAtTickId.push_back(tmpLookerPlayerAtTickIds[i][j]);
-            result.lookerPlayerId.push_back(tmpLookerPlayerIds[i][j]);
-            result.lookedAtPlayerAtTickId.push_back(tmpLookedAtPlayerAtTickIds[i][j]);
-            result.lookedAtPlayerId.push_back(tmpLookedAtPlayerIds[i][j]);
-            result.nearestOriginId.push_back(tmpNearestOriginIds[i][j]);
+    vector<int64_t> roundsProcessedPerThread(numThreads, 0);
+    while (true) {
+        bool roundToProcess = false;
+        int64_t minThreadId = -1;
+        int64_t minRoundId = -1;
+        for (int64_t threadId = 0; threadId < numThreads; threadId++) {
+            if (roundsProcessedPerThread[threadId] < tmpRoundIds[threadId].size()) {
+                roundToProcess = true;
+                if (minThreadId == -1 || tmpRoundIds[threadId][roundsProcessedPerThread[threadId]] < minRoundId) {
+                    minThreadId = threadId;
+                    minRoundId = tmpRoundIds[minThreadId][roundsProcessedPerThread[minThreadId]];
+                }
+
+            }
         }
-        result.playerInCoverEdgePerRound[i].maxId = result.tickId.size();
+        if (!roundToProcess) {
+            break;
+        }
+        result.playerInCoverEdgePerRound.push_back({});
+        result.playerInCoverEdgePerRound[minRoundId].minId = result.tickId.size();
+        int64_t roundStart = tmpRoundStarts[minThreadId][roundsProcessedPerThread[minThreadId]];
+        int64_t roundEnd = roundStart + tmpRoundSizes[minThreadId][roundsProcessedPerThread[minThreadId]];
+        for (int tmpRowId = roundStart; tmpRowId < roundEnd; tmpRowId++) {
+            result.tickId.push_back(tmpTickId[minThreadId][tmpRowId]);
+            result.lookerPlayerAtTickId.push_back(tmpLookerPlayerAtTickIds[minThreadId][tmpRowId]);
+            result.lookerPlayerId.push_back(tmpLookerPlayerIds[minThreadId][tmpRowId]);
+            result.lookedAtPlayerAtTickId.push_back(tmpLookedAtPlayerAtTickIds[minThreadId][tmpRowId]);
+            result.lookedAtPlayerId.push_back(tmpLookedAtPlayerIds[minThreadId][tmpRowId]);
+            result.nearestOriginId.push_back(tmpNearestOriginIds[minThreadId][tmpRowId]);
+        }
+        result.playerInCoverEdgePerRound[minRoundId].maxId = result.tickId.size();
+        roundsProcessedPerThread[minThreadId]++;
     }
     result.size = result.tickId.size();
     return result;
