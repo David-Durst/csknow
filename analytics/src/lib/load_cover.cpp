@@ -49,7 +49,7 @@ void loadCoverEdgesFile(CoverEdges & coverEdges, string filePath) {
             rowNumber++;
             arrayEntry++;
         }
-        colNumber = (colNumber + 1) % 7;
+        colNumber = (colNumber + 1) % 8;
     }
     closeMMapFile({fd, stats, file});
 }
