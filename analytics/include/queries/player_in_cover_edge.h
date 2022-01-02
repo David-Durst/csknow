@@ -22,6 +22,7 @@ public:
     vector<int64_t> lookedAtPlayerAtTickId;
     vector<int64_t> lookedAtPlayerId;
     vector<int64_t> nearestOriginId;
+    vector<int64_t> coverEdgeId;
 
     PlayerInCoverEdgeResult() {
         this->startTickColumn = -1;
@@ -43,14 +44,14 @@ public:
     void oneLineToCSV(int64_t index, stringstream & ss) {
         ss << index << "," << tickId[index] << "," << lookerPlayerAtTickId[index] << "," << lookerPlayerId[index] << ","
            << lookedAtPlayerAtTickId[index] << "," << lookedAtPlayerId[index] << ","
-           << nearestOriginId[index] << std::endl;
+           << nearestOriginId[index] << "," << coverEdgeId[index] << std::endl;
     }
 
     vector<string> getForeignKeyNames() {
         return {"tick id",
                 "looker player at tick id", "looker player id",
                 "looked at player at tick id", "looked at player id",
-                "nearest origin id"};
+                "nearest origin id", "cover edge id"};
     }
 
     vector<string> getOtherColumnNames() {

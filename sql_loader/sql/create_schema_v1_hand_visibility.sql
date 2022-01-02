@@ -92,7 +92,8 @@ CREATE TABLE "player_in_cover_edge" (
   "looker_player_id" bigint,
   "looked_at_pat_id" bigint,
   "looked_at_player_id" bigint,
-  "nearest_origin_id" bigint
+  "nearest_origin_id" bigint,
+  "cover_edge_id" bigint
 );
 
 CREATE TABLE "player_looking_at_cover_edge" (
@@ -102,5 +103,6 @@ CREATE TABLE "player_looking_at_cover_edge" (
   "cur_player_id" bigint,
   "looker_pat_id" bigint,
   "looker_player_id" bigint,
-  "nearest_origin_id" bigint
+  "nearest_origin_id" bigint,
+  "cover_edge_id" bigint
 );

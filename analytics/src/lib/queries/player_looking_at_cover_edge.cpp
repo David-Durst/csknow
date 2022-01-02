@@ -21,6 +21,7 @@ queryPlayerLookingAtCoverEdge(const Rounds & rounds, const Ticks & ticks, const 
     vector<int64_t> tmpLookerPlayerAtTickIds[numThreads];
     vector<int64_t> tmpLookerPlayerIds[numThreads];
     vector<int64_t> tmpNearestOriginIds[numThreads];
+    vector<int64_t> tmpCoverEdgeIds[numThreads];
     vector<int64_t> tmpRoundIds[numThreads];
     vector<int64_t> tmpRoundStarts[numThreads];
     vector<int64_t> tmpRoundSizes[numThreads];
@@ -61,6 +62,7 @@ queryPlayerLookingAtCoverEdge(const Rounds & rounds, const Ticks & ticks, const 
                         tmpLookerPlayerAtTickIds[threadNum].push_back(nearestOriginResult.playerAtTickId[originIndex]);
                         tmpLookerPlayerIds[threadNum].push_back(nearestOriginResult.playerId[originIndex]);
                         tmpNearestOriginIds[threadNum].push_back(nearestOriginIndex);
+                        tmpCoverEdgeIds[threadNum].push_back(coverEdgeIndex);
                     }
 
                 }
@@ -102,6 +104,7 @@ queryPlayerLookingAtCoverEdge(const Rounds & rounds, const Ticks & ticks, const 
             result.lookerPlayerAtTickId.push_back(tmpLookerPlayerAtTickIds[minThreadId][tmpRowId]);
             result.lookerPlayerId.push_back(tmpLookerPlayerIds[minThreadId][tmpRowId]);
             result.nearestOriginId.push_back(tmpNearestOriginIds[minThreadId][tmpRowId]);
+            result.coverEdgeId.push_back(tmpCoverEdgeIds[minThreadId][tmpRowId]);
         }
         result.playerLookingAtCoverEdgePerRound[minRoundId].maxId = result.tickId.size();
         roundsProcessedPerThread[minThreadId]++;

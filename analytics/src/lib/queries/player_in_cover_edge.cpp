@@ -22,6 +22,7 @@ PlayerInCoverEdgeResult queryPlayerInCoverEdge(const Rounds & rounds, const Tick
     vector<int64_t> tmpLookedAtPlayerAtTickIds[numThreads];
     vector<int64_t> tmpLookedAtPlayerIds[numThreads];
     vector<int64_t> tmpNearestOriginIds[numThreads];
+    vector<int64_t> tmpCoverEdgeIds[numThreads];
     vector<int64_t> tmpRoundIds[numThreads];
     vector<int64_t> tmpRoundStarts[numThreads];
     vector<int64_t> tmpRoundSizes[numThreads];
@@ -59,6 +60,7 @@ PlayerInCoverEdgeResult queryPlayerInCoverEdge(const Rounds & rounds, const Tick
                         tmpLookedAtPlayerAtTickIds[threadNum].push_back(lookedAtPatIndex);
                         tmpLookedAtPlayerIds[threadNum].push_back(playerAtTick.playerId[lookedAtPatIndex]);
                         tmpNearestOriginIds[threadNum].push_back(nearestOriginIndex);
+                        tmpCoverEdgeIds[threadNum].push_back(coverEdgeIndex);
                     }
 
                 }
@@ -100,6 +102,7 @@ PlayerInCoverEdgeResult queryPlayerInCoverEdge(const Rounds & rounds, const Tick
             result.lookedAtPlayerAtTickId.push_back(tmpLookedAtPlayerAtTickIds[minThreadId][tmpRowId]);
             result.lookedAtPlayerId.push_back(tmpLookedAtPlayerIds[minThreadId][tmpRowId]);
             result.nearestOriginId.push_back(tmpNearestOriginIds[minThreadId][tmpRowId]);
+            result.coverEdgeId.push_back(tmpCoverEdgeIds[minThreadId][tmpRowId]);
         }
         result.playerInCoverEdgePerRound[minRoundId].maxId = result.tickId.size();
         roundsProcessedPerThread[minThreadId]++;

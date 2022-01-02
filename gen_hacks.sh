@@ -62,3 +62,6 @@ cp csv_outputs/player_in_cover_edge.csv ../local_data/
 cp csv_outputs/player_looking_at_cover_edge.csv ../local_data/
 cd ..
 sed -i '1d' local_data/lookers.csv
+sed -i '1d' local_data/nearest_origin.csv
+sed -i '1d' local_data/player_in_cover_edge.csv
+sed -i '1d' local_data/player_looking_at_cover_edge.csv
