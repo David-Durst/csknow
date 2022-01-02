@@ -285,7 +285,9 @@ int main(int argc, char * argv[]) {
      */
     map<string, reference_wrapper<QueryResult>> analyses {
             {lookerName, lookersResult},
-            //{nearestOriginName, nearestOriginResult}
+            {nearestOriginName, nearestOriginResult},
+            {playerInCoverEdgeName, playerInCoverEdgeResult},
+            {playerLookingAtCoverEdgeName, playerLookingAtCoverEdgeResult},
     };
 
     // create the output files and the metadata describing files

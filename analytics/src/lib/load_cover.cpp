@@ -24,32 +24,35 @@ void loadCoverEdgesFile(CoverEdges & coverEdges, string filePath) {
          curDelimiter < stats.st_size;
          curStart = curDelimiter + 1, curDelimiter = getNextDelimiter(file, curStart, stats.st_size)) {
         if (colNumber == 0) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, coverEdges.originId[arrayEntry]);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, coverEdges.id[arrayEntry]);
         }
         else if (colNumber == 1) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, coverEdges.clusterId[arrayEntry]);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, coverEdges.originId[arrayEntry]);
         }
         else if (colNumber == 2) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, coverEdges.aabbs[arrayEntry].min.x);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, coverEdges.clusterId[arrayEntry]);
         }
         else if (colNumber == 3) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, coverEdges.aabbs[arrayEntry].min.y);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, coverEdges.aabbs[arrayEntry].min.x);
         }
         else if (colNumber == 4) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, coverEdges.aabbs[arrayEntry].min.z);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, coverEdges.aabbs[arrayEntry].min.y);
         }
         else if (colNumber == 5) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, coverEdges.aabbs[arrayEntry].max.x);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, coverEdges.aabbs[arrayEntry].min.z);
         }
         else if (colNumber == 6) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, coverEdges.aabbs[arrayEntry].max.y);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, coverEdges.aabbs[arrayEntry].max.x);
         }
         else if (colNumber == 7) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, coverEdges.aabbs[arrayEntry].max.y);
+        }
+        else if (colNumber == 8) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, coverEdges.aabbs[arrayEntry].max.z);
             rowNumber++;
             arrayEntry++;
         }
-        colNumber = (colNumber + 1) % 8;
+        colNumber = (colNumber + 1) % 9;
     }
     closeMMapFile({fd, stats, file});
 }
