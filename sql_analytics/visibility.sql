@@ -216,8 +216,10 @@ select v.demo,
        v.hacking
 from (select * from lookers_with_last where new_look = 1 and look_length >= 0.1) l
          join ticks t on l.tick_id = t.id
+         join rounds r on t.round_id = r.id
+         join games g on r.game_id = g.id
          right join visibilities_with_others v
-                    on v.start_game_tick - (64*3) <= t.game_tick_number
+                    on v.start_game_tick - (g.game_tick_rate*3) <= t.game_tick_number
                         and v.next_start_game_tick >= t.game_tick_number
                         and l.looker_player_id = v.spotter_id
                         and l.looked_at_player_id = v.spotted_id
@@ -267,6 +269,45 @@ group by r.game_id, r.id
 order by r.game_id, r.id;
 
 
+drop table if exists cover_origins_with_cluster_counts;
+create temp table cover_origins_with_cluster_counts as
+select co.index as index,
+       co.x as x,
+       co.y as y,
+       co.z as z,
+       count(distinct ce.cluster_id) as num_clusters
+from cover_origins co
+    join cover_edges ce on ce.origin_id = co.index
+group by co.index, co.x, co.y, co.z
+order by co.index;
+
+
+drop table if exists near_react_looking_at_cover_edge;
+create temp table near_react_looking_at_cover_edge as
+select g.id as game_id,
+       raft.start_game_tick as start_game_tick,
+       plce.cur_player_id as cur_player_id,
+       plce.cur_pat_id as cur_pat_id,
+       raft.spotted_id as spotted_id,
+       cocc.num_clusters as num_clusters,
+       count(distinct ce.cluster_id) as looked_at_clusters_by_teammates
+from player_looking_at_cover_edge plce
+    join ticks t on t.id = plce.tick_id
+    join rounds r on t.round_id = r.id
+    join games g on r.game_id = g.id
+    join react_aim_and_fire_ticks raft on
+       raft.start_game_tick = t.game_tick_number
+           and raft.spotter_id = plce.cur_player_id
+    join player_at_tick cur_pat on plce.cur_pat_id = cur_pat.id
+    join player_at_tick looker_pat on plce.looker_pat_id = looker_pat.id
+    join nearest_origin as no on no.index = plce.nearest_origin_id
+    join cover_edges ce on ce.index = plce.cover_edge_id
+    join cover_origins_with_cluster_counts cocc on no.origin_id = cocc.index
+where looker_pat.team = cur_pat.team
+group by g.id, raft.start_game_tick, plce.cur_player_id, plce.cur_pat_id, raft.spotted_id, cocc.num_clusters
+order by g.id, raft.start_game_tick;
+
+
 drop table if exists react_final;
 create temp table react_final as
 select raft.demo,
@@ -287,24 +328,17 @@ select raft.demo,
        (raft.react_aim_end_tick - raft.start_game_tick) / cast(g.game_tick_rate as double precision) as aim_react_s,
        (raft.react_fire_end_tick - raft.start_game_tick) / cast(g.game_tick_rate as double precision) as fire_react_s,
        rset.round_id,
-       rset.game_id
+       rset.game_id,
+       nrlace.looked_at_clusters_by_teammates / cast(nrlace.num_clusters as double precision) as pct_clusters_covered,
+       nrlace.num_clusters as num_clusters
 from react_aim_and_fire_ticks raft
          join games g on g.demo_file = raft.demo
          join round_start_end_tick rset
               on g.id = rset.game_id
                   and int8range(raft.start_game_tick, raft.end_game_tick) &&
-                      int8range(rset.min_game_tick, rset.max_game_tick);
-
-select * from react_final where hacking = 0 and visibility_technique_id = 0 and aim_react_s <= 0 and aim_react_s >= -0.5 and not seen_last_five_seconds and spotter = 'i_eat_short_people_for_breakfast';
-
-select * from visibilities where spotter = 'i_eat_short_people_for_breakfast' and demo = 'merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem' and start_game_tick >= 29000;
-
-select * from lookers_with_last l
-join players p_looked_at on l.looked_at_player_id = p_looked_at.id
-join players p_looker on l.looker_player_id = p_looker.id
-join games g on l.game_id = g.id
-where p_looker.name = 'i_eat_short_people_for_breakfast' and g.demo_file = 'merrick_kingston_matt_gabe_rory_durst_9_20_21_no_hacks.dem'
-    and game_tick_number >= 29000
-order by game_tick_number;
-
-
+                      int8range(rset.min_game_tick, rset.max_game_tick)
+         join near_react_looking_at_cover_edge nrlace
+             on g.id = nrlace.game_id
+                    and raft.start_game_tick = nrlace.start_game_tick
+                    and raft.spotter_id = nrlace.cur_player_id
+                    and raft.spotted_id = nrlace.spotted_id;
