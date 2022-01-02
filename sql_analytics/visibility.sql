@@ -197,8 +197,6 @@ select *,
               ) inner5
      ) inner6;
 
-select * from lookers_with_last;
-
 drop table if exists react_aim_ticks;
 create temp table react_aim_ticks as
 select v.demo,
