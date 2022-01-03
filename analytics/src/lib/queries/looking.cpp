@@ -1,5 +1,6 @@
 #include "queries/looking.h"
 #include "geometry.h"
+#include "queries/lookback.h"
 #include <omp.h>
 #include <set>
 #include <map>
@@ -7,10 +8,6 @@
 
 using std::set;
 using std::map;
-// max time you can look back in ms
-// this assumes tick in demo for every tick in game
-const int maxLookBackTime = 300;
-const int clInterp = 31;
 
 LookingResult queryLookers(const Games & games, const Rounds & rounds, const Ticks & ticks, const PlayerAtTick & playerAtTick) {
     int numThreads = omp_get_max_threads();
@@ -23,11 +20,9 @@ LookingResult queryLookers(const Games & games, const Rounds & rounds, const Tic
 //#pragma omp parallel for
     for (int64_t roundIndex = 0; roundIndex < rounds.size; roundIndex++) {
         int threadNum = omp_get_thread_num();
-        int demoTickRate = static_cast<int>(games.demoTickRate[rounds.gameId[roundIndex]]);
-        int maxLookBackDemoTicks = ceil(demoTickRate * maxLookBackTime / 1000.0);
-        int gameTickRate = static_cast<int>(games.gameTickRate[rounds.gameId[roundIndex]]);
+        TickRates tickRates = computeTickRates(games, rounds, roundIndex);
 
-        for (int64_t tickIndex = rounds.ticksPerRound[roundIndex].minId + maxLookBackDemoTicks;
+        for (int64_t tickIndex = rounds.ticksPerRound[roundIndex].minId;
             tickIndex <= rounds.ticksPerRound[roundIndex].maxId; tickIndex++) {
 
             // since spotted tracks names for spotted player, need to map that to the player index
@@ -47,12 +42,10 @@ LookingResult queryLookers(const Games & games, const Rounds & rounds, const Tic
                 // find the right tick within lookback window for other players' positions
                 // only looking on ticks, so ignore interpolating between ticks for now, just take one of two old ticks
                 // used for interpolation
-                double lookbackGameTicks = std::max(1.0, gameTickRate * (clInterp + playerAtTick.ping[lookerPatIndex]) / 1000.0);
-                int lookbackDemoTicks = 1;
-                for (;ticks.gameTickNumber[tickIndex - lookbackDemoTicks] > ticks.gameTickNumber[tickIndex] - lookbackGameTicks &&
-                        lookbackDemoTicks < maxLookBackDemoTicks;
-                        lookbackDemoTicks++);
-                int64_t lookedAtTickId = tickIndex - lookbackDemoTicks;
+                int64_t lookbackGameTicks = (int64_t) std::ceil(
+                        std::max(1.0, tickRates.gameTickRate * (clInterp + playerAtTick.ping[lookerPatIndex]) / 1000.0));
+                int64_t lookedAtTickId =
+                        tickIndex - getLookbackDemoTick(rounds, ticks, playerAtTick, tickIndex, tickRates, lookbackGameTicks);
 
                 for (int64_t lookedAtPatIndex = ticks.patPerTick[lookedAtTickId].minId;
                      lookedAtPatIndex != -1 && lookedAtPatIndex <= ticks.patPerTick[lookedAtTickId].maxId;

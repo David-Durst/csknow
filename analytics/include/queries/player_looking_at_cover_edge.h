@@ -61,7 +61,7 @@ public:
 };
 
 PlayerLookingAtCoverEdgeResult
-queryPlayerLookingAtCoverEdge(const Rounds & rounds, const Ticks & ticks, const PlayerAtTick & playerAtTick,
+queryPlayerLookingAtCoverEdge(const Games & games, const Rounds & rounds, const Ticks & ticks, const PlayerAtTick & playerAtTick,
                               const CoverOrigins & coverOrigins, const CoverEdges & coverEdges,
                               const NearestOriginResult & nearestOriginResult);
 

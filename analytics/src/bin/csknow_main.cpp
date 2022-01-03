@@ -217,7 +217,7 @@ int main(int argc, char * argv[]) {
 
     string playerLookingAtCoverEdgeName = "player_looking_at_cover_edge";
     PlayerLookingAtCoverEdgeResult playerLookingAtCoverEdgeResult =
-            queryPlayerLookingAtCoverEdge(rounds, ticks, playerAtTick, coverOrigins, coverEdges, nearestOriginResult);
+            queryPlayerLookingAtCoverEdge(games, rounds, ticks, playerAtTick, coverOrigins, coverEdges, nearestOriginResult);
     std::cout << "player_looking_at_cover_edge entries: " << playerLookingAtCoverEdgeResult.tickId.size() << std::endl;
 
     string dust2Name = "de_dust2_mesh";

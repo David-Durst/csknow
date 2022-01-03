@@ -3,6 +3,7 @@
 //
 
 #include "queries/player_looking_at_cover_edge.h"
+#include "queries/lookback.h"
 #include "geometry.h"
 #include "file_helpers.h"
 #include <omp.h>
@@ -11,7 +12,7 @@
 #include "cmath"
 
 PlayerLookingAtCoverEdgeResult
-queryPlayerLookingAtCoverEdge(const Rounds & rounds, const Ticks & ticks, const PlayerAtTick & playerAtTick,
+queryPlayerLookingAtCoverEdge(const Games & games, const Rounds & rounds, const Ticks & ticks, const PlayerAtTick & playerAtTick,
                               const CoverOrigins & coverOrigins, const CoverEdges & coverEdges,
                               const NearestOriginResult & nearestOriginResult) {
     int numThreads = omp_get_max_threads();
@@ -32,13 +33,18 @@ queryPlayerLookingAtCoverEdge(const Rounds & rounds, const Ticks & ticks, const 
         int threadNum = omp_get_thread_num();
         tmpRoundIds[threadNum].push_back(roundIndex);
         tmpRoundStarts[threadNum].push_back(tmpTickId[threadNum].size());
+        TickRates tickRates = computeTickRates(games, rounds, roundIndex);
+        int64_t lookbackGameTicks = tickRates.gameTickRate;
 
         for (int64_t nearestOriginIndex = nearestOriginResult.nearestOriginPerRound[roundIndex].minId;
              nearestOriginIndex <= nearestOriginResult.nearestOriginPerRound[roundIndex].maxId; nearestOriginIndex++) {
-
             int64_t originIndex = nearestOriginResult.originId[nearestOriginIndex];
             int64_t tickIndex = nearestOriginResult.tickId[nearestOriginIndex];
-            for (int64_t lookedAtPatIndex = ticks.patPerTick[tickIndex].minId;
+            int64_t startLookedAtTickIndex =
+                    tickIndex - getLookbackDemoTick(rounds, ticks, playerAtTick, tickIndex, tickRates, lookbackGameTicks);
+            std::set<int64_t> coveredClusters;
+
+            for (int64_t lookedAtPatIndex = ticks.patPerTick[startLookedAtTickIndex].minId;
                  lookedAtPatIndex != -1 && lookedAtPatIndex <= ticks.patPerTick[tickIndex].maxId; lookedAtPatIndex++) {
                 if (!playerAtTick.isAlive[lookedAtPatIndex]) {
                     continue;
@@ -63,6 +69,7 @@ queryPlayerLookingAtCoverEdge(const Rounds & rounds, const Ticks & ticks, const 
                         tmpLookerPlayerIds[threadNum].push_back(nearestOriginResult.playerId[originIndex]);
                         tmpNearestOriginIds[threadNum].push_back(nearestOriginIndex);
                         tmpCoverEdgeIds[threadNum].push_back(coverEdgeIndex);
+                        coveredClusters.insert(coverEdges.clusterId[coverEdgeIndex]);
                     }
 
                 }
