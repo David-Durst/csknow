@@ -4,12 +4,18 @@ from matplotlib.ticker import PercentFormatter
 import math
 import numpy as np
 
-def makePlotterFunction(bin_width, pct):
+def makePlotterFunction(bin_width, pct, max_val = None, min_val = None):
     def plotPct(df, col_name, ax):
         col_vals = df[col_name].dropna()
         if len(col_vals) == 0:
             return
-        num_bins = math.ceil((col_vals.max() - col_vals.min()) / bin_width) + 1
+        local_min_val = min_val
+        if local_min_val is None:
+            local_min_val = col_vals.min()
+        local_max_val = max_val
+        if local_max_val is None:
+            local_max_val = col_vals.max()
+        num_bins = math.ceil((local_max_val - local_min_val) / bin_width) + 1
         df.hist(col_name, bins=num_bins, ax=ax, weights=np.ones(len(col_vals)) / len(col_vals))
         ax.yaxis.set_major_formatter(PercentFormatter(1))
         return pd.cut(col_vals, num_bins).value_counts(normalize=True).sort_index()
@@ -18,7 +24,13 @@ def makePlotterFunction(bin_width, pct):
         col_vals = df[col_name].dropna()
         if len(col_vals) == 0:
             return
-        num_bins = math.ceil((col_vals.max() - col_vals.min()) / bin_width) + 1
+        local_min_val = min_val
+        if local_min_val is None:
+            local_min_val = col_vals.min()
+        local_max_val = max_val
+        if local_max_val is None:
+            local_max_val = col_vals.max()
+        num_bins = math.ceil((local_max_val - local_min_val) / bin_width) + 1
         df.hist(col_name, bins=num_bins, ax=ax)
         return pd.cut(col_vals, num_bins).value_counts().sort_index()
 
