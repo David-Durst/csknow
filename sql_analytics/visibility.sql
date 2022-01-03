@@ -284,25 +284,21 @@ drop table if exists near_react_looking_at_cover_edge;
 create temp table near_react_looking_at_cover_edge as
 select g.id as game_id,
        raft.start_game_tick as start_game_tick,
-       plce.cur_player_id as cur_player_id,
-       plce.cur_pat_id as cur_pat_id,
+       tlacec.cur_player_id as cur_player_id,
+       tlacec.cur_pat_id as cur_pat_id,
        raft.spotted_id as spotted_id,
        cocc.num_clusters as num_clusters,
-       count(distinct ce.cluster_id) as looked_at_clusters_by_teammates
-from player_looking_at_cover_edge plce
-    join ticks t on t.id = plce.tick_id
+       count(distinct tlacec.cover_edge_cluster_id) as looked_at_clusters_by_teammates
+from team_looking_at_cover_edge_cluster tlacec
+    join ticks t on t.id = tlacec.tick_id
     join rounds r on t.round_id = r.id
     join games g on r.game_id = g.id
     join react_aim_and_fire_ticks raft on
        raft.start_game_tick = t.game_tick_number
-           and raft.spotter_id = plce.cur_player_id
-    join player_at_tick cur_pat on plce.cur_pat_id = cur_pat.id
-    join player_at_tick looker_pat on plce.looker_pat_id = looker_pat.id
-    join nearest_origin as no on no.index = plce.nearest_origin_id
-    join cover_edges ce on ce.index = plce.cover_edge_id
+           and raft.spotter_id = tlacec.cur_player_id
+    join nearest_origin as no on no.index = tlacec.nearest_origin_id
     join cover_origins_with_cluster_counts cocc on no.origin_id = cocc.index
-where looker_pat.team = cur_pat.team
-group by g.id, raft.start_game_tick, plce.cur_player_id, plce.cur_pat_id, raft.spotted_id, cocc.num_clusters
+group by g.id, raft.start_game_tick, tlacec.cur_player_id, tlacec.cur_pat_id, raft.spotted_id, cocc.num_clusters
 order by g.id, raft.start_game_tick;
 
 
