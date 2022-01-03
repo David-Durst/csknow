@@ -17,7 +17,7 @@
 #include "queries/looking.h"
 #include "queries/nearest_origin.h"
 #include "queries/player_in_cover_edge.h"
-#include "queries/player_looking_at_cover_edge.h"
+#include "queries/team_looking_at_cover_edge_cluster.h"
 #include "queries/nonconsecutive.h"
 #include "queries/grouping.h"
 #include "queries/groupInSequenceOfRegions.h"
@@ -215,10 +215,11 @@ int main(int argc, char * argv[]) {
                                                                              coverEdges, nearestOriginResult);
     std::cout << "player_in_cover_edge entries: " << playerInCoverEdgeResult.tickId.size() << std::endl;
 
-    string playerLookingAtCoverEdgeName = "player_looking_at_cover_edge";
-    PlayerLookingAtCoverEdgeResult playerLookingAtCoverEdgeResult =
-            queryPlayerLookingAtCoverEdge(games, rounds, ticks, playerAtTick, coverOrigins, coverEdges, nearestOriginResult);
-    std::cout << "player_looking_at_cover_edge entries: " << playerLookingAtCoverEdgeResult.tickId.size() << std::endl;
+    string teamLookingAtCoverEdgeClusterName = "team_looking_at_cover_edge_cluster";
+    TeamLookingAtCoverEdgeCluster teamLookingAtCoverEdgeClusterResult =
+            queryTeamLookingAtCoverEdgeCluster(games, rounds, ticks, playerAtTick, coverOrigins, coverEdges,
+                                               nearestOriginResult);
+    std::cout << "team_looking_at_cover_edge_cluster entries: " << teamLookingAtCoverEdgeClusterResult.tickId.size() << std::endl;
 
     string dust2Name = "de_dust2_mesh";
     MapMeshResult d2MeshResult = queryMapMesh(map_navs["de_dust2"]);
@@ -284,10 +285,10 @@ int main(int argc, char * argv[]) {
     };
      */
     map<string, reference_wrapper<QueryResult>> analyses {
-            {lookerName, lookersResult},
-            {nearestOriginName, nearestOriginResult},
-            {playerInCoverEdgeName, playerInCoverEdgeResult},
-            {playerLookingAtCoverEdgeName, playerLookingAtCoverEdgeResult},
+            {lookerName,                        lookersResult},
+            {nearestOriginName,                 nearestOriginResult},
+            {playerInCoverEdgeName,             playerInCoverEdgeResult},
+            {teamLookingAtCoverEdgeClusterName, teamLookingAtCoverEdgeClusterResult},
     };
 
     // create the output files and the metadata describing files

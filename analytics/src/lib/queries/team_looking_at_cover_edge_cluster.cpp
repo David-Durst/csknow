@@ -2,7 +2,7 @@
 // Created by durst on 12/31/21.
 //
 
-#include "queries/player_looking_at_cover_edge.h"
+#include "queries/team_looking_at_cover_edge_cluster.h"
 #include "queries/lookback.h"
 #include "geometry.h"
 #include "file_helpers.h"
@@ -11,10 +11,10 @@
 #include <map>
 #include "cmath"
 
-PlayerLookingAtCoverEdgeResult
-queryPlayerLookingAtCoverEdge(const Games & games, const Rounds & rounds, const Ticks & ticks, const PlayerAtTick & playerAtTick,
-                              const CoverOrigins & coverOrigins, const CoverEdges & coverEdges,
-                              const NearestOriginResult & nearestOriginResult) {
+TeamLookingAtCoverEdgeCluster
+queryTeamLookingAtCoverEdgeCluster(const Games & games, const Rounds & rounds, const Ticks & ticks,
+                                   const PlayerAtTick & playerAtTick, const CoverOrigins & coverOrigins,
+                                   const CoverEdges & coverEdges, const NearestOriginResult & nearestOriginResult) {
     int numThreads = omp_get_max_threads();
     vector<int64_t> tmpTickId[numThreads];
     vector<int64_t> tmpCurPlayerAtTickIds[numThreads];
@@ -22,7 +22,7 @@ queryPlayerLookingAtCoverEdge(const Games & games, const Rounds & rounds, const 
     vector<int64_t> tmpLookerPlayerAtTickIds[numThreads];
     vector<int64_t> tmpLookerPlayerIds[numThreads];
     vector<int64_t> tmpNearestOriginIds[numThreads];
-    vector<int64_t> tmpCoverEdgeIds[numThreads];
+    vector<int64_t> tmpCoverEdgeClusterIds[numThreads];
     vector<int64_t> tmpRoundIds[numThreads];
     vector<int64_t> tmpRoundStarts[numThreads];
     vector<int64_t> tmpRoundSizes[numThreads];
@@ -46,7 +46,8 @@ queryPlayerLookingAtCoverEdge(const Games & games, const Rounds & rounds, const 
 
             for (int64_t lookedAtPatIndex = ticks.patPerTick[startLookedAtTickIndex].minId;
                  lookedAtPatIndex != -1 && lookedAtPatIndex <= ticks.patPerTick[tickIndex].maxId; lookedAtPatIndex++) {
-                if (!playerAtTick.isAlive[lookedAtPatIndex]) {
+                if (!playerAtTick.isAlive[lookedAtPatIndex] ||
+                    playerAtTick.team[lookedAtPatIndex] != playerAtTick.team[nearestOriginResult.playerAtTickId[originIndex]]) {
                     continue;
                 }
                 Ray playerEyeCoord = getEyeCoordinatesForPlayer(
@@ -61,6 +62,9 @@ queryPlayerLookingAtCoverEdge(const Games & games, const Rounds & rounds, const 
                 for (int64_t coverEdgeIndex = coverOrigins.coverEdgesPerOrigin[originIndex].minId;
                      coverEdgeIndex != -1 && coverEdgeIndex <= coverOrigins.coverEdgesPerOrigin[originIndex].maxId;
                      coverEdgeIndex++) {
+                    if (coveredClusters.count(coverEdges.clusterId[coverEdgeIndex]) == 1) {
+                        continue;
+                    }
                     if (intersectP(coverEdges.aabbs[coverEdgeIndex], playerEyeCoord, t0, t1)) {
                         tmpTickId[threadNum].push_back(tickIndex);
                         tmpCurPlayerAtTickIds[threadNum].push_back(lookedAtPatIndex);
@@ -68,7 +72,7 @@ queryPlayerLookingAtCoverEdge(const Games & games, const Rounds & rounds, const 
                         tmpLookerPlayerAtTickIds[threadNum].push_back(nearestOriginResult.playerAtTickId[originIndex]);
                         tmpLookerPlayerIds[threadNum].push_back(nearestOriginResult.playerId[originIndex]);
                         tmpNearestOriginIds[threadNum].push_back(nearestOriginIndex);
-                        tmpCoverEdgeIds[threadNum].push_back(coverEdgeIndex);
+                        tmpCoverEdgeClusterIds[threadNum].push_back(coverEdges.clusterId[coverEdgeIndex]);
                         coveredClusters.insert(coverEdges.clusterId[coverEdgeIndex]);
                     }
 
@@ -81,7 +85,7 @@ queryPlayerLookingAtCoverEdge(const Games & games, const Rounds & rounds, const 
         printProgress((roundsProcessed * 1.0) / rounds.size);
     }
 
-    PlayerLookingAtCoverEdgeResult result;
+    TeamLookingAtCoverEdgeCluster result;
     vector<int64_t> roundsProcessedPerThread(numThreads, 0);
     while (true) {
         bool roundToProcess = false;
@@ -100,8 +104,8 @@ queryPlayerLookingAtCoverEdge(const Games & games, const Rounds & rounds, const 
         if (!roundToProcess) {
             break;
         }
-        result.playerLookingAtCoverEdgePerRound.push_back({});
-        result.playerLookingAtCoverEdgePerRound[minRoundId].minId = result.tickId.size();
+        result.teamLookingAtCoverEdgeClusterPerRound.push_back({});
+        result.teamLookingAtCoverEdgeClusterPerRound[minRoundId].minId = result.tickId.size();
         int64_t roundStart = tmpRoundStarts[minThreadId][roundsProcessedPerThread[minThreadId]];
         int64_t roundEnd = roundStart + tmpRoundSizes[minThreadId][roundsProcessedPerThread[minThreadId]];
         for (int tmpRowId = roundStart; tmpRowId < roundEnd; tmpRowId++) {
@@ -111,9 +115,9 @@ queryPlayerLookingAtCoverEdge(const Games & games, const Rounds & rounds, const 
             result.lookerPlayerAtTickId.push_back(tmpLookerPlayerAtTickIds[minThreadId][tmpRowId]);
             result.lookerPlayerId.push_back(tmpLookerPlayerIds[minThreadId][tmpRowId]);
             result.nearestOriginId.push_back(tmpNearestOriginIds[minThreadId][tmpRowId]);
-            result.coverEdgeId.push_back(tmpCoverEdgeIds[minThreadId][tmpRowId]);
+            result.coverEdgeClusterId.push_back(tmpCoverEdgeClusterIds[minThreadId][tmpRowId]);
         }
-        result.playerLookingAtCoverEdgePerRound[minRoundId].maxId = result.tickId.size();
+        result.teamLookingAtCoverEdgeClusterPerRound[minRoundId].maxId = result.tickId.size();
         roundsProcessedPerThread[minThreadId]++;
     }
     result.size = result.tickId.size();
