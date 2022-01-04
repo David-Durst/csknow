@@ -67,8 +67,8 @@ queryTeamLookingAtCoverEdgeCluster(const Games & games, const Rounds & rounds, c
                     }
                     if (intersectP(coverEdges.aabbs[coverEdgeIndex], playerEyeCoord, t0, t1)) {
                         tmpTickId[threadNum].push_back(tickIndex);
-                        tmpOriginPlayerAtTickIds[threadNum].push_back(nearestOriginResult.playerAtTickId[originIndex]);
-                        tmpOriginPlayerIds[threadNum].push_back(nearestOriginResult.playerId[originIndex]);
+                        tmpOriginPlayerAtTickIds[threadNum].push_back(nearestOriginResult.playerAtTickId[nearestOriginIndex]);
+                        tmpOriginPlayerIds[threadNum].push_back(nearestOriginResult.playerId[nearestOriginIndex]);
                         tmpLookingPlayerAtTickIds[threadNum].push_back(lookingPatIndex);
                         tmpLookingPlayerIds[threadNum].push_back(playerAtTick.playerId[lookingPatIndex]);
                         tmpNearestOriginIds[threadNum].push_back(nearestOriginIndex);
