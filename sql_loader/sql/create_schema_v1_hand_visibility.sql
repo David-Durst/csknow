@@ -99,10 +99,10 @@ CREATE TABLE "player_in_cover_edge" (
 CREATE TABLE "team_looking_at_cover_edge_cluster" (
   "index" bigint PRIMARY KEY,
   "tick_id" bigint,
-  "cur_pat_id" bigint,
-  "cur_player_id" bigint,
-  "looker_pat_id" bigint,
-  "looker_player_id" bigint,
+  "origin_pat_id" bigint,
+  "origin_player_id" bigint,
+  "looking_pat_id" bigint,
+  "looking_player_id" bigint,
   "nearest_origin_id" bigint,
   "cover_edge_cluster_id" bigint
 );

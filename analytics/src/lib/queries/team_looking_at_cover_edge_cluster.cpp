@@ -17,10 +17,10 @@ queryTeamLookingAtCoverEdgeCluster(const Games & games, const Rounds & rounds, c
                                    const CoverEdges & coverEdges, const NearestOriginResult & nearestOriginResult) {
     int numThreads = omp_get_max_threads();
     vector<int64_t> tmpTickId[numThreads];
-    vector<int64_t> tmpCurPlayerAtTickIds[numThreads];
-    vector<int64_t> tmpCurPlayerIds[numThreads];
-    vector<int64_t> tmpLookerPlayerAtTickIds[numThreads];
-    vector<int64_t> tmpLookerPlayerIds[numThreads];
+    vector<int64_t> tmpOriginPlayerAtTickIds[numThreads];
+    vector<int64_t> tmpOriginPlayerIds[numThreads];
+    vector<int64_t> tmpLookingPlayerAtTickIds[numThreads];
+    vector<int64_t> tmpLookingPlayerIds[numThreads];
     vector<int64_t> tmpNearestOriginIds[numThreads];
     vector<int64_t> tmpCoverEdgeClusterIds[numThreads];
     vector<int64_t> tmpRoundIds[numThreads];
@@ -40,20 +40,20 @@ queryTeamLookingAtCoverEdgeCluster(const Games & games, const Rounds & rounds, c
              nearestOriginIndex <= nearestOriginResult.nearestOriginPerRound[roundIndex].maxId; nearestOriginIndex++) {
             int64_t originIndex = nearestOriginResult.originId[nearestOriginIndex];
             int64_t tickIndex = nearestOriginResult.tickId[nearestOriginIndex];
-            int64_t startLookedAtTickIndex =
+            int64_t startLookingTickIndex =
                     tickIndex - getLookbackDemoTick(rounds, ticks, playerAtTick, tickIndex, tickRates, lookbackGameTicks);
             std::set<int64_t> coveredClusters;
 
-            for (int64_t lookedAtPatIndex = ticks.patPerTick[startLookedAtTickIndex].minId;
-                 lookedAtPatIndex != -1 && lookedAtPatIndex <= ticks.patPerTick[tickIndex].maxId; lookedAtPatIndex++) {
-                if (!playerAtTick.isAlive[lookedAtPatIndex] ||
-                    playerAtTick.team[lookedAtPatIndex] != playerAtTick.team[nearestOriginResult.playerAtTickId[originIndex]]) {
+            for (int64_t lookingPatIndex = ticks.patPerTick[startLookingTickIndex].minId;
+                 lookingPatIndex != -1 && lookingPatIndex <= ticks.patPerTick[tickIndex].maxId; lookingPatIndex++) {
+                if (!playerAtTick.isAlive[lookingPatIndex] ||
+                    playerAtTick.team[lookingPatIndex] != playerAtTick.team[nearestOriginResult.playerAtTickId[originIndex]]) {
                     continue;
                 }
                 Ray playerEyeCoord = getEyeCoordinatesForPlayer(
-                        {playerAtTick.posX[lookedAtPatIndex], playerAtTick.posY[lookedAtPatIndex],
-                         playerAtTick.posZ[lookedAtPatIndex]},
-                        {playerAtTick.viewX[lookedAtPatIndex], playerAtTick.viewY[lookedAtPatIndex]});
+                        {playerAtTick.posX[lookingPatIndex], playerAtTick.posY[lookingPatIndex],
+                         playerAtTick.posZ[lookingPatIndex]},
+                        {playerAtTick.viewX[lookingPatIndex], playerAtTick.viewY[lookingPatIndex]});
 
                 double t0, t1;
                 if (!intersectP(coverOrigins.coverEdgeBoundsPerOrigin[originIndex], playerEyeCoord, t0, t1)) {
@@ -67,10 +67,10 @@ queryTeamLookingAtCoverEdgeCluster(const Games & games, const Rounds & rounds, c
                     }
                     if (intersectP(coverEdges.aabbs[coverEdgeIndex], playerEyeCoord, t0, t1)) {
                         tmpTickId[threadNum].push_back(tickIndex);
-                        tmpCurPlayerAtTickIds[threadNum].push_back(lookedAtPatIndex);
-                        tmpCurPlayerIds[threadNum].push_back(playerAtTick.playerId[lookedAtPatIndex]);
-                        tmpLookerPlayerAtTickIds[threadNum].push_back(nearestOriginResult.playerAtTickId[originIndex]);
-                        tmpLookerPlayerIds[threadNum].push_back(nearestOriginResult.playerId[originIndex]);
+                        tmpOriginPlayerAtTickIds[threadNum].push_back(nearestOriginResult.playerAtTickId[originIndex]);
+                        tmpOriginPlayerIds[threadNum].push_back(nearestOriginResult.playerId[originIndex]);
+                        tmpLookingPlayerAtTickIds[threadNum].push_back(lookingPatIndex);
+                        tmpLookingPlayerIds[threadNum].push_back(playerAtTick.playerId[lookingPatIndex]);
                         tmpNearestOriginIds[threadNum].push_back(nearestOriginIndex);
                         tmpCoverEdgeClusterIds[threadNum].push_back(coverEdges.clusterId[coverEdgeIndex]);
                         coveredClusters.insert(coverEdges.clusterId[coverEdgeIndex]);
@@ -110,10 +110,10 @@ queryTeamLookingAtCoverEdgeCluster(const Games & games, const Rounds & rounds, c
         int64_t roundEnd = roundStart + tmpRoundSizes[minThreadId][roundsProcessedPerThread[minThreadId]];
         for (int tmpRowId = roundStart; tmpRowId < roundEnd; tmpRowId++) {
             result.tickId.push_back(tmpTickId[minThreadId][tmpRowId]);
-            result.curPlayerAtTickId.push_back(tmpCurPlayerAtTickIds[minThreadId][tmpRowId]);
-            result.curPlayerId.push_back(tmpCurPlayerIds[minThreadId][tmpRowId]);
-            result.lookerPlayerAtTickId.push_back(tmpLookerPlayerAtTickIds[minThreadId][tmpRowId]);
-            result.lookerPlayerId.push_back(tmpLookerPlayerIds[minThreadId][tmpRowId]);
+            result.originPlayerAtTickId.push_back(tmpOriginPlayerAtTickIds[minThreadId][tmpRowId]);
+            result.originPlayerId.push_back(tmpOriginPlayerIds[minThreadId][tmpRowId]);
+            result.lookingPlayerAtTickId.push_back(tmpLookingPlayerAtTickIds[minThreadId][tmpRowId]);
+            result.lookingPlayerId.push_back(tmpLookingPlayerIds[minThreadId][tmpRowId]);
             result.nearestOriginId.push_back(tmpNearestOriginIds[minThreadId][tmpRowId]);
             result.coverEdgeClusterId.push_back(tmpCoverEdgeClusterIds[minThreadId][tmpRowId]);
         }

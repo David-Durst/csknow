@@ -17,10 +17,10 @@ class TeamLookingAtCoverEdgeCluster : public QueryResult {
 public:
     vector<RangeIndexEntry> teamLookingAtCoverEdgeClusterPerRound;
     vector<int64_t> tickId;
-    vector<int64_t> curPlayerAtTickId;
-    vector<int64_t> curPlayerId;
-    vector<int64_t> lookerPlayerAtTickId;
-    vector<int64_t> lookerPlayerId;
+    vector<int64_t> originPlayerAtTickId;
+    vector<int64_t> originPlayerId;
+    vector<int64_t> lookingPlayerAtTickId;
+    vector<int64_t> lookingPlayerId;
     vector<int64_t> nearestOriginId;
     vector<int64_t> coverEdgeClusterId;
 
@@ -43,15 +43,15 @@ public:
     }
 
     void oneLineToCSV(int64_t index, stringstream & ss) {
-        ss << index << "," << tickId[index] << "," << curPlayerAtTickId[index] << "," << curPlayerId[index] << ","
-           << lookerPlayerAtTickId[index] << "," << lookerPlayerId[index] << ","
+        ss << index << "," << tickId[index] << "," << originPlayerAtTickId[index] << "," << originPlayerId[index] << ","
+           << lookingPlayerAtTickId[index] << "," << lookingPlayerId[index] << ","
            << nearestOriginId[index] << "," << coverEdgeClusterId[index] << std::endl;
     }
 
     vector<string> getForeignKeyNames() {
         return {"tick id",
-                "cur player at tick id", "cur player id",
-                "looker player at tick id", "looker player id",
+                "origin player at tick id", "origin player id",
+                "looking player at tick id", "looking player id",
                 "nearest origin id", "cover edge cluster id"};
     }
 

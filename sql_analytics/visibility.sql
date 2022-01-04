@@ -322,17 +322,17 @@ select raft.demo,
        (raft.react_aim_end_tick - raft.start_game_tick) / cast(g.game_tick_rate as double precision) as aim_react_s,
        (raft.react_fire_end_tick - raft.start_game_tick) / cast(g.game_tick_rate as double precision) as fire_react_s,
        rset.round_id,
-       rset.game_id,
-       nrlace.looked_at_clusters_by_teammates / cast(nrlace.num_clusters as double precision) as pct_clusters_covered,
-       nrlace.num_clusters as num_clusters
+       rset.game_id--,
+       --nrlace.looked_at_clusters_by_teammates / cast(nrlace.num_clusters as double precision) as pct_clusters_covered,
+       --nrlace.num_clusters as num_clusters
 from react_aim_and_fire_ticks raft
          join games g on g.demo_file = raft.demo
          join round_start_end_tick rset
               on g.id = rset.game_id
                   and int8range(raft.start_game_tick, raft.end_game_tick) &&
-                      int8range(rset.min_game_tick, rset.max_game_tick)
-         join near_react_looking_at_cover_edge nrlace
-             on g.id = nrlace.game_id
-                    and raft.start_game_tick = nrlace.start_game_tick
-                    and raft.spotter_id = nrlace.cur_player_id
-                    and raft.spotted_id = nrlace.spotted_id;
+                      int8range(rset.min_game_tick, rset.max_game_tick);
+--         join near_react_looking_at_cover_edge nrlace
+--             on g.id = nrlace.game_id
+--                    and raft.start_game_tick = nrlace.start_game_tick
+--                    and raft.spotter_id = nrlace.cur_player_id
+--                    and raft.spotted_id = nrlace.spotted_id;
