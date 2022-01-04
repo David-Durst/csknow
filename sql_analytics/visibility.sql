@@ -234,7 +234,6 @@ select rat.demo,
        rat.spotter,
        rat.spotted_id,
        rat.spotted,
-       min(t.id) as start_tick_id,
        rat.start_game_tick,
        rat.end_game_tick,
        rat.next_start_game_tick,
@@ -291,8 +290,8 @@ group by co.index, co.x, co.y, co.z
 order by co.index;
 
 
-drop table if exists near_react_looking_at_cover_edge;
-create temp table near_react_looking_at_cover_edge as
+drop table if exists react_aim_fire_cover;
+create temp table react_aim_fire_cover as
 select raft.demo,
        raft.visibility_technique_id,
        raft.spotter_id,
@@ -307,19 +306,25 @@ select raft.demo,
        raft.react_fire_end_tick,
        raft.distinct_others_spotted_during_time,
        raft.hacking,
-       cocc.num_clusters as num_clusters,
+       --cocc.num_clusters as num_clusters,
        coalesce(count(distinct tlacec.cover_edge_cluster_id),0) as looked_at_clusters_by_teammates
 from team_looking_at_cover_edge_cluster tlacec
+         join ticks t on tlacec.tick_id = t.id
+         join rounds r on t.round_id = r.id
+         join games g on r.game_id = g.id
          right join react_aim_and_fire_ticks raft on
-            raft.start_tick_id = tlacec.tick_id
+            g.demo_file = raft.demo
+            and raft.start_game_tick = t.game_tick_number
             and raft.spotter_id = tlacec.origin_player_id
-         join nearest_origin no on raft.start_tick_id = no.tick_id
-         join cover_origins_with_cluster_counts cocc on no.origin_id = cocc.index
+         --join nearest_origin no on t.id = no.tick_id
+         --join cover_origins_with_cluster_counts cocc on no.origin_id = cocc.index
 -- need a bunch of extra cols in group by from raft for situations where tlacec is null
 group by raft.demo, raft.visibility_technique_id, raft.spotter_id, raft.spotter, raft.spotted_id, raft.spotted,
          raft.start_game_tick, raft.end_game_tick, raft.next_start_game_tick, raft.last_end_game_tick,
-         raft.react_aim_end_tick, raft.react_fire_end_tick, raft.distinct_others_spotted_during_time, raft.hacking, cocc.num_clusters
+         raft.react_aim_end_tick, raft.react_fire_end_tick, raft.distinct_others_spotted_during_time, raft.hacking--, cocc.num_clusters
 order by raft.demo, raft.start_game_tick;
+
+select count(*) from react_aim_fire_cover;
 
 
 drop table if exists react_final;
@@ -342,20 +347,15 @@ select raft.demo,
        (raft.react_aim_end_tick - raft.start_game_tick) / cast(g.game_tick_rate as double precision) as aim_react_s,
        (raft.react_fire_end_tick - raft.start_game_tick) / cast(g.game_tick_rate as double precision) as fire_react_s,
        rset.round_id,
-       rset.game_id--,
---       nrlace.looked_at_clusters_by_teammates / cast(nrlace.num_clusters as double precision) as pct_clusters_covered,
---       nrlace.num_clusters as num_clusters
-from react_aim_and_fire_ticks raft
+       rset.game_id
+from react_aim_fire_cover raft
          join games g on g.demo_file = raft.demo
          join round_start_end_tick rset
               on g.id = rset.game_id
                   and int8range(raft.start_game_tick, raft.end_game_tick) <@
-                      int8range(rset.min_game_tick, rset.max_game_tick);
---         join near_react_looking_at_cover_edge nrlace
---             on g.id = nrlace.game_id
---                    and raft.start_game_tick = nrlace.start_game_tick
---                    and raft.spotter_id = nrlace.cur_player_id
---                    and raft.spotted_id = nrlace.spotted_id;
+                      int8range(rset.min_game_tick, rset.max_game_tick)
+;
+
 
 select count(*) from react_final;
 
