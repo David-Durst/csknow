@@ -10,6 +10,7 @@ CREATE MATERIALIZED VIEW ticks_rounds_games AS
 	t.round_id as round_id,
 	t.demo_tick_number as demo_tick_number,
 	t.game_tick_number as game_tick_number,
+	lead(t.game_tick_number) over (partition by g.id order by t.id) as next_game_tick_number,
 	t.bomb_carrier as bomb_carrier,
 	t.bomb_x as bomb_x,
 	t.bomb_y as bomb_y,
@@ -26,6 +27,6 @@ CREATE MATERIALIZED VIEW ticks_rounds_games AS
 
 CREATE UNIQUE INDEX ticks_rounds_games_tick_id on ticks_rounds_games (tick_id);
 
-CREATE UNIQUE INDEX ticks_rounds_games_tick_game_tick_number on ticks_rounds_games (demo_file, game_tick_number);
+CREATE UNIQUE INDEX ticks_rounds_games_tick_game_tick_number on ticks_rounds_games (demo_file, game_tick_number, next_game_tick_number);
 
 
