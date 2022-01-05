@@ -357,8 +357,14 @@ where t.game_tick_number > 10
 group by r.game_id, r.id
 order by r.game_id, r.id;
 
+/*
+-- make sure all rounds are distinct ranges
 select count(*) from round_start_end_tick;
-
+select count(*)
+    from round_start_end_tick r1
+        join round_start_end_tick r2 on r1.game_id = r2.game_id
+                                            and int8range(r1.min_game_tick, r1.max_game_tick) && int8range(r2.min_game_tick, r2.max_game_tick)
+*/
 
 drop table if exists cover_origins_with_cluster_counts;
 create temp table cover_origins_with_cluster_counts as
@@ -430,6 +436,7 @@ select raft.demo,
        (raft.start_game_tick - raft.last_end_game_tick) / cast(g.game_tick_rate as double precision) < 5 as seen_last_five_seconds,
        raft.react_aim_end_tick,
        raft.react_fire_end_tick,
+       raft.start_tick_id,
        raft.distinct_others_spotted_during_time,
        raft.hacking,
        (raft.react_aim_end_tick - raft.start_game_tick) / cast(g.game_tick_rate as double precision) as aim_react_s,
@@ -441,10 +448,10 @@ from react_aim_fire_cover raft
          join games g on g.demo_file = raft.demo
          join round_start_end_tick rset
               on g.id = rset.game_id
-                  and int8range(raft.start_game_tick, raft.end_game_tick) <@
+                     -- end_game_tick can be null, maybe look at this later
+                  and raft.start_game_tick <@
                       int8range(rset.min_game_tick, rset.max_game_tick)
 ;
-
 
 /*
 select count(*) from react_final;
