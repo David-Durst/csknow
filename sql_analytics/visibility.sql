@@ -405,7 +405,7 @@ from team_looking_at_cover_edge_cluster tlacec
             and raft.start_game_tick = t.game_tick_number
             and raft.spotter_id = tlacec.origin_player_id
          join nearest_origin no on raft.start_tick_id = no.tick_id and raft.spotter_id = no.player_id
-         left join cover_origins_with_cluster_counts cocc on no.origin_id = cocc.index
+         join cover_origins_with_cluster_counts cocc on no.origin_id = cocc.index
 -- need a bunch of extra cols in group by from raft for situations where tlacec is null
 group by raft.demo, raft.visibility_technique_id, raft.spotter_id, raft.spotter, raft.spotted_id, raft.spotted,
          raft.start_game_tick, raft.end_game_tick, raft.next_start_game_tick, raft.last_end_game_tick,
@@ -413,18 +413,7 @@ group by raft.demo, raft.visibility_technique_id, raft.spotter_id, raft.spotter,
          raft.game_id, raft.round_id, raft.start_tick_id, raft.game_tick_rate, no.origin_id, cocc.num_clusters
 order by raft.demo, raft.start_game_tick;
 
-select count(*) from react_aim_and_fire_ticks;
 select count(*) from react_aim_fire_cover;
-select player_id, tick_id, pos_x, pos_y, pos_z from react_aim_fire_cover r join player_at_tick pat on r.spotter_id = pat.player_id and r.start_tick_id = pat.tick_id where num_clusters is null and player_id = 123 and tick_id = 1554092;
-select * from player_at_tick where player_id = 123 and tick_id = 1554092;
-select * from cover_origins where x >= 380 and x <= 441 and y >= 1680 and y <= 1740;
-select * from nearest_origin where player_id = 123 and tick_id = 1554092;
-select * from player_at_tick where id = 1670181;
-select * from players where id = 126;
-select * from games where id = 11;
-select * from ticks where id = 1554092;
-
-select * from react_aim_fire_cover;
 
 drop table if exists react_final;
 create temp table react_final as
@@ -456,6 +445,7 @@ from react_aim_fire_cover raft
 ;
 
 
+/*
 select count(*) from react_final;
 
 select count(*) from react_aim_and_fire_ticks raft
@@ -466,3 +456,5 @@ from cover_edges ce
     join cover_origins co on co.index = ce.origin_id
 group by origin_id, co.x, co.y, co.z
 order by num_edges desc
+
+ */
