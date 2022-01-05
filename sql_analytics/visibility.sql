@@ -134,135 +134,50 @@ analyze visibilities_with_next_start;
 drop table if exists visibilities_with_game_tick;
 create temp table visibilities_with_game_tick as
 select v.demo,
+       v.visibility_technique_id,
        v.spotter_id,
        v.spotter,
        v.spotted_id,
        v.spotted,
        v.start_game_tick,
        v.end_game_tick,
+       v.next_start_game_tick,
+       v.last_end_game_tick,
        v.hacking,
-       v.visibility_technique_id,
        trg.game_id,
        trg.round_id,
        trg.tick_id as start_tick_id,
        trg.game_tick_rate
 from visibilities_with_next_start v
-         join ticks_rounds_games trg on v.demo = trg.demo_file
-    and trg.game_tick_number <= v.start_game_tick and trg.next_game_tick_number > v.start_game_tick;
---and int8range(v.start_game_tick, v.start_game_tick + 20) @>  trg.game_tick_number
-
-/*
-explain select count(*)
-from visibilities_with_next_start v
-         join ticks_rounds_games trg on v.demo = trg.demo_file
-    and abs(v.start_game_tick-trg.game_tick_number) < 5;
-
-explain select count(*)
-from visibilities_with_next_start v
-         join ticks_rounds_games trg on v.demo = trg.demo_file
-    and trg.game_tick_number < v.start_game_tick;
-
-explain select count(*)
-        from visibilities_with_next_start v
-                 join ticks_rounds_games trg on v.demo = trg.demo_file
-            and trg.game_tick_number = v.start_game_tick and trg.next_game_tick_number > v.start_game_tick;
-
-drop table if exists visibilities_with_game_tick_;
-create temp table visibilities_with_game_tick_ as
-select v.demo,
-       v.spotter_id,
-       v.spotter,
-       v.spotted_id,
-       v.spotted,
-       v.start_game_tick,
-       v.end_game_tick,
-       v.hacking,
-       v.visibility_technique_id,
-       max(trg.tick_id) as start_tick_id
-from visibilities_with_next_start v
-         join ticks_rounds_games trg on v.demo = trg.demo_file
-    and abs(v.start_game_tick-trg.game_tick_number) < 5
-    --and int8range(v.start_game_tick, v.start_game_tick + 20) @>  trg.game_tick_number
-group by v.demo, v.spotter_id, v.spotter, v.spotted_id, v.spotted, v.start_game_tick, v.end_game_tick, v.hacking,
-         v.visibility_technique_id;
-
-CREATE UNIQUE INDEX ticks_rounds_games_tick_game_tick_number4 on ticks_rounds_games (game_tick_number desc, demo_file);
-cluster ticks_rounds_games using ticks_rounds_games_tick_game_tick_number4;
-analyze ticks_rounds_games;
-vacuum analyze ticks_rounds_games;
-analyze visibilities_with_next_start;
-explain select v.demo,
-       v.spotter_id,
-       v.spotter,
-       v.spotted_id,
-       v.spotted,
-       v.start_game_tick,
-       v.end_game_tick,
-       v.hacking,
-       v.visibility_technique_id,
-       max(trg.tick_id) as start_tick_id
-from visibilities_with_next_start v
-         join ticks_rounds_games trg on v.demo = trg.demo_file
-    and v.start_game_tick = trg.game_tick_number
-     --and int8range(v.start_game_tick, v.start_game_tick + 20) @>  trg.game_tick_number
-group by v.demo, v.spotter_id, v.spotter, v.spotted_id, v.spotted, v.start_game_tick, v.end_game_tick, v.hacking,
-         v.visibility_technique_id;
-
-
-explain select v.demo,
-               v.spotter_id,
-               v.spotter,
-               v.spotted_id,
-               v.spotted,
-               v.start_game_tick,
-               v.end_game_tick,
-               v.hacking,
-               v.visibility_technique_id,
-               trg.tick_id
-        from visibilities_with_next_start v
-                 join ticks_rounds_games trg on v.demo = trg.demo_file
-            and int8range(trg.tick_id, trg.tick_id +2) @> v.start_game_tick;
-             --and int8range(v.start_game_tick, v.start_game_tick + 20) @>  trg.game_tick_number
-
-explain select v.demo,
-       v.spotter_id,
-       v.spotter,
-       v.spotted_id,
-       v.spotted,
-       v.start_game_tick,
-       v.end_game_tick,
-       v.hacking,
-       v.visibility_technique_id,
-       min(trg.tick_id) as start_tick_id
-from visibilities_with_next_start v
-         join ticks_rounds_games trg on v.demo = trg.demo_file
-    and v.start_game_tick <= trg.tick_id and v.start_game_tick + 1 > trg.tick_id
-     --and int8range(v.start_game_tick, v.start_game_tick + 20) @>  trg.game_tick_number
-group by v.demo, v.spotter_id, v.spotter, v.spotted_id, v.spotted, v.start_game_tick, v.end_game_tick, v.hacking,
-         v.visibility_technique_id;
-*/
-drop table if exists visibilities_with_game_tick;
-create temp table visibilities_with_game_tick as
-select v.*,
-       trg.tick_id,
-       trg.round_id,
-       trg.game_id,
-       trg.game_tick_rate,
-       trg.game_tick_number
-from visibilities_with_next_start v
-         join ticks_rounds_games trg on v.demo = trg.demo_file and v.start_game_tick = trg.game_tick_number
-
-select count(*) from visibilities_with_game_tick;
-select count(*) from visibilities_with_next_start;
-
-select v.demo, v.start_game_tick
-from visibilities_with_next_start v
-         left join ticks_rounds_games trg on v.demo = trg.demo_file and v.start_game_tick = trg.game_tick_number
-where trg.game_tick_rate is null;
-
-select * from ticks_rounds_games
-    where demo_file = '319_titan-epsilon_de_dust2.dem' and game_tick_number >= 63070
+    join ticks_rounds_games trg
+        on v.demo = trg.demo_file
+               and trg.game_tick_number <= v.start_game_tick
+               and trg.next_game_tick_number > v.start_game_tick
 ;
+
+drop table if exists visibilities_filtered_alive;
+create temp table visibilities_filtered_alive as
+select v.demo,
+       v.visibility_technique_id,
+       v.spotter_id,
+       v.spotter,
+       v.spotted_id,
+       v.spotted,
+       v.start_game_tick,
+       v.end_game_tick,
+       v.next_start_game_tick,
+       v.last_end_game_tick,
+       v.hacking,
+       v.game_id,
+       v.round_id,
+       v.start_tick_id,
+       v.game_tick_rate
+from visibilities_with_game_tick v
+    join player_at_tick spotter_pat
+        on v.start_tick_id = spotter_pat.tick_id
+               and spotter_pat.player_id = v.spotter_id
+               and spotter_pat.is_alive
+where spotter_pat.is_alive;
 
 
 drop table if exists visibilities_with_others;
@@ -278,9 +193,13 @@ select v_main.demo,
        v_main.next_start_game_tick,
        v_main.last_end_game_tick,
        v_main.hacking,
+       v_main.game_id,
+       v_main.round_id,
+       v_main.start_tick_id,
+       v_main.game_tick_rate,
        count(distinct v_other.spotted_id) as distinct_others_spotted_during_time
-from visibilities_with_next_start v_main
-         left join visibilities_with_next_start v_other
+from visibilities_filtered_alive v_main
+         left join visibilities_filtered_alive v_other
                    on v_main.spotter_id = v_other.spotter_id
                        and v_main.visibility_technique_id = v_main.visibility_technique_id
                        and v_main.spotted_id != v_other.spotted_id
@@ -296,7 +215,11 @@ group by v_main.demo,
          v_main.end_game_tick,
          v_main.next_start_game_tick,
          v_main.last_end_game_tick,
-         v_main.hacking
+         v_main.hacking,
+         v_main.game_id,
+         v_main.round_id,
+         v_main.start_tick_id,
+         v_main.game_tick_rate
 order by v_main.demo, v_main.start_game_tick, v_main.spotter, v_main.spotted;
 
 
@@ -368,7 +291,11 @@ select v.demo,
        v.last_end_game_tick,
        min(t.game_tick_number) as react_aim_end_tick,
        v.distinct_others_spotted_during_time,
-       v.hacking
+       v.hacking,
+       v.game_id,
+       v.round_id,
+       v.start_tick_id,
+       v.game_tick_rate
 from (select * from lookers_with_last where new_look = 1 and look_length >= 0.1) l
          join ticks t on l.tick_id = t.id
          join rounds r on t.round_id = r.id
@@ -379,7 +306,8 @@ from (select * from lookers_with_last where new_look = 1 and look_length >= 0.1)
                         and l.looker_player_id = v.spotter_id
                         and l.looked_at_player_id = v.spotted_id
 group by v.demo, v.visibility_technique_id, v.spotter_id, v.spotter, v.spotted_id, v.spotted, v.start_game_tick,
-         v.end_game_tick, v.next_start_game_tick, v.last_end_game_tick, v.distinct_others_spotted_during_time, v.hacking
+         v.end_game_tick, v.next_start_game_tick, v.last_end_game_tick, v.distinct_others_spotted_during_time, v.hacking,
+         v.game_id, v.round_id, v.start_tick_id, v.game_tick_rate
 order by v.demo, v.start_game_tick, v.spotter, v.spotted;
 
 
@@ -398,7 +326,11 @@ select rat.demo,
        rat.react_aim_end_tick,
        min(t.game_tick_number) as react_fire_end_tick,
        rat.distinct_others_spotted_during_time,
-       rat.hacking
+       rat.hacking,
+       rat.game_id,
+       rat.round_id,
+       rat.start_tick_id,
+       rat.game_tick_rate
 from weapon_fire f
          join ticks t on f.tick_id = t.id
          right join react_aim_ticks rat
@@ -406,7 +338,8 @@ from weapon_fire f
                         and rat.next_start_game_tick >= t.game_tick_number
                         and f.shooter = rat.spotter_id
 group by rat.demo, rat.visibility_technique_id, rat.spotter_id, rat.spotter, rat.spotted_id, rat.spotted, rat.start_game_tick,
-         rat.end_game_tick, rat.next_start_game_tick, rat.react_aim_end_tick, rat.last_end_game_tick, rat.distinct_others_spotted_during_time, rat.hacking
+         rat.end_game_tick, rat.next_start_game_tick, rat.react_aim_end_tick, rat.last_end_game_tick, rat.distinct_others_spotted_during_time, rat.hacking,
+         rat.game_id, rat.round_id, rat.start_tick_id, rat.game_tick_rate
 order by rat.demo, rat.start_game_tick, rat.spotter, rat.spotted;
 
 
@@ -425,13 +358,6 @@ group by r.game_id, r.id
 order by r.game_id, r.id;
 
 select count(*) from round_start_end_tick;
-
-select * from round_start_end_tick r1
-    join round_start_end_tick r2
-        on r1.game_id = r2.game_id and
-           r1.round_id != r2.round_id and
-           int8range(r1.min_game_tick, r1.max_game_tick) <@
-                      int8range(r2.min_game_tick, r2.max_game_tick);
 
 
 drop table if exists cover_origins_with_cluster_counts;
@@ -463,25 +389,40 @@ select raft.demo,
        raft.react_fire_end_tick,
        raft.distinct_others_spotted_during_time,
        raft.hacking,
-       min(cocc.num_clusters) as num_clusters,
+       raft.game_id,
+       raft.round_id,
+       raft.start_tick_id,
+       raft.game_tick_rate,
+       no.origin_id,
+       cocc.num_clusters,
        coalesce(count(distinct tlacec.cover_edge_cluster_id),0) as looked_at_clusters_by_teammates
 from team_looking_at_cover_edge_cluster tlacec
-         join ticks t_cluster on tlacec.tick_id = t_cluster.id
-         join rounds r on t_cluster.round_id = r.id
+         join ticks t on tlacec.tick_id = t.id
+         join rounds r on t.round_id = r.id
          join games g on r.game_id = g.id
          right join react_aim_and_fire_ticks raft on
             g.demo_file = raft.demo
             and raft.start_game_tick = t.game_tick_number
             and raft.spotter_id = tlacec.origin_player_id
-         join nearest_origin no on t.id = no.tick_id
-         join cover_origins_with_cluster_counts cocc on no.origin_id = cocc.index
+         join nearest_origin no on raft.start_tick_id = no.tick_id and raft.spotter_id = no.player_id
+         left join cover_origins_with_cluster_counts cocc on no.origin_id = cocc.index
 -- need a bunch of extra cols in group by from raft for situations where tlacec is null
 group by raft.demo, raft.visibility_technique_id, raft.spotter_id, raft.spotter, raft.spotted_id, raft.spotted,
          raft.start_game_tick, raft.end_game_tick, raft.next_start_game_tick, raft.last_end_game_tick,
-         raft.react_aim_end_tick, raft.react_fire_end_tick, raft.distinct_others_spotted_during_time, raft.hacking--, cocc.num_clusters
+         raft.react_aim_end_tick, raft.react_fire_end_tick, raft.distinct_others_spotted_during_time, raft.hacking,
+         raft.game_id, raft.round_id, raft.start_tick_id, raft.game_tick_rate, no.origin_id, cocc.num_clusters
 order by raft.demo, raft.start_game_tick;
 
+select count(*) from react_aim_and_fire_ticks;
 select count(*) from react_aim_fire_cover;
+select player_id, tick_id, pos_x, pos_y, pos_z from react_aim_fire_cover r join player_at_tick pat on r.spotter_id = pat.player_id and r.start_tick_id = pat.tick_id where num_clusters is null and player_id = 123 and tick_id = 1554092;
+select * from player_at_tick where player_id = 123 and tick_id = 1554092;
+select * from cover_origins where x >= 380 and x <= 441 and y >= 1680 and y <= 1740;
+select * from nearest_origin where player_id = 123 and tick_id = 1554092;
+select * from player_at_tick where id = 1670181;
+select * from players where id = 126;
+select * from games where id = 11;
+select * from ticks where id = 1554092;
 
 select * from react_aim_fire_cover;
 
