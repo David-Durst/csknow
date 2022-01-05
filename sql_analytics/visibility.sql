@@ -95,6 +95,27 @@ select demo,
        hacking,
        2 as visibility_technique_id from visibilities_bbox;
 
+select
+    t.id as tick_id,
+    t.round_id as round_id,
+    t.demo_tick_number as demo_tick_number,
+    t.game_tick_number as game_tick_number,
+    lead(t.game_tick_number) over (partition by g.id order by t.id) as nex,
+    t.bomb_carrier as bomb_carrier,
+    t.bomb_x as bomb_x,
+    t.bomb_y as bomb_y,
+    t.bomb_z as bomb_z,
+    r.game_id,
+    g.demo_file,
+    g.game_tick_rate,
+    g.demo_tick_rate
+from ticks t
+    join rounds r on t.round_id = r.id
+    join games g on r.game_id = g.id
+order by t.id
+;
+
+
 drop table if exists visibilities_with_next_start;
 create temp table visibilities_with_next_start as
 select *,
@@ -105,6 +126,143 @@ select *,
        over (partition by visibility_technique_id, demo, spotter_id, spotted_id order by start_game_tick)
            as last_end_game_tick
 from all_visibilities;
+
+-- clustering has no benefit, just analyze
+analyze ticks_rounds_games;
+analyze visibilities_with_next_start;
+
+drop table if exists visibilities_with_game_tick;
+create temp table visibilities_with_game_tick as
+select v.demo,
+       v.spotter_id,
+       v.spotter,
+       v.spotted_id,
+       v.spotted,
+       v.start_game_tick,
+       v.end_game_tick,
+       v.hacking,
+       v.visibility_technique_id,
+       trg.game_id,
+       trg.round_id,
+       trg.tick_id as start_tick_id,
+       trg.game_tick_rate
+from visibilities_with_next_start v
+         join ticks_rounds_games trg on v.demo = trg.demo_file
+    and trg.game_tick_number <= v.start_game_tick and trg.next_game_tick_number > v.start_game_tick;
+--and int8range(v.start_game_tick, v.start_game_tick + 20) @>  trg.game_tick_number
+
+/*
+explain select count(*)
+from visibilities_with_next_start v
+         join ticks_rounds_games trg on v.demo = trg.demo_file
+    and abs(v.start_game_tick-trg.game_tick_number) < 5;
+
+explain select count(*)
+from visibilities_with_next_start v
+         join ticks_rounds_games trg on v.demo = trg.demo_file
+    and trg.game_tick_number < v.start_game_tick;
+
+explain select count(*)
+        from visibilities_with_next_start v
+                 join ticks_rounds_games trg on v.demo = trg.demo_file
+            and trg.game_tick_number = v.start_game_tick and trg.next_game_tick_number > v.start_game_tick;
+
+drop table if exists visibilities_with_game_tick_;
+create temp table visibilities_with_game_tick_ as
+select v.demo,
+       v.spotter_id,
+       v.spotter,
+       v.spotted_id,
+       v.spotted,
+       v.start_game_tick,
+       v.end_game_tick,
+       v.hacking,
+       v.visibility_technique_id,
+       max(trg.tick_id) as start_tick_id
+from visibilities_with_next_start v
+         join ticks_rounds_games trg on v.demo = trg.demo_file
+    and abs(v.start_game_tick-trg.game_tick_number) < 5
+    --and int8range(v.start_game_tick, v.start_game_tick + 20) @>  trg.game_tick_number
+group by v.demo, v.spotter_id, v.spotter, v.spotted_id, v.spotted, v.start_game_tick, v.end_game_tick, v.hacking,
+         v.visibility_technique_id;
+
+CREATE UNIQUE INDEX ticks_rounds_games_tick_game_tick_number4 on ticks_rounds_games (game_tick_number desc, demo_file);
+cluster ticks_rounds_games using ticks_rounds_games_tick_game_tick_number4;
+analyze ticks_rounds_games;
+vacuum analyze ticks_rounds_games;
+analyze visibilities_with_next_start;
+explain select v.demo,
+       v.spotter_id,
+       v.spotter,
+       v.spotted_id,
+       v.spotted,
+       v.start_game_tick,
+       v.end_game_tick,
+       v.hacking,
+       v.visibility_technique_id,
+       max(trg.tick_id) as start_tick_id
+from visibilities_with_next_start v
+         join ticks_rounds_games trg on v.demo = trg.demo_file
+    and v.start_game_tick = trg.game_tick_number
+     --and int8range(v.start_game_tick, v.start_game_tick + 20) @>  trg.game_tick_number
+group by v.demo, v.spotter_id, v.spotter, v.spotted_id, v.spotted, v.start_game_tick, v.end_game_tick, v.hacking,
+         v.visibility_technique_id;
+
+
+explain select v.demo,
+               v.spotter_id,
+               v.spotter,
+               v.spotted_id,
+               v.spotted,
+               v.start_game_tick,
+               v.end_game_tick,
+               v.hacking,
+               v.visibility_technique_id,
+               trg.tick_id
+        from visibilities_with_next_start v
+                 join ticks_rounds_games trg on v.demo = trg.demo_file
+            and int8range(trg.tick_id, trg.tick_id +2) @> v.start_game_tick;
+             --and int8range(v.start_game_tick, v.start_game_tick + 20) @>  trg.game_tick_number
+
+explain select v.demo,
+       v.spotter_id,
+       v.spotter,
+       v.spotted_id,
+       v.spotted,
+       v.start_game_tick,
+       v.end_game_tick,
+       v.hacking,
+       v.visibility_technique_id,
+       min(trg.tick_id) as start_tick_id
+from visibilities_with_next_start v
+         join ticks_rounds_games trg on v.demo = trg.demo_file
+    and v.start_game_tick <= trg.tick_id and v.start_game_tick + 1 > trg.tick_id
+     --and int8range(v.start_game_tick, v.start_game_tick + 20) @>  trg.game_tick_number
+group by v.demo, v.spotter_id, v.spotter, v.spotted_id, v.spotted, v.start_game_tick, v.end_game_tick, v.hacking,
+         v.visibility_technique_id;
+*/
+drop table if exists visibilities_with_game_tick;
+create temp table visibilities_with_game_tick as
+select v.*,
+       trg.tick_id,
+       trg.round_id,
+       trg.game_id,
+       trg.game_tick_rate,
+       trg.game_tick_number
+from visibilities_with_next_start v
+         join ticks_rounds_games trg on v.demo = trg.demo_file and v.start_game_tick = trg.game_tick_number
+
+select count(*) from visibilities_with_game_tick;
+select count(*) from visibilities_with_next_start;
+
+select v.demo, v.start_game_tick
+from visibilities_with_next_start v
+         left join ticks_rounds_games trg on v.demo = trg.demo_file and v.start_game_tick = trg.game_tick_number
+where trg.game_tick_rate is null;
+
+select * from ticks_rounds_games
+    where demo_file = '319_titan-epsilon_de_dust2.dem' and game_tick_number >= 63070
+;
 
 
 drop table if exists visibilities_with_others;
