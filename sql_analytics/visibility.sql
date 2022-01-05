@@ -435,7 +435,8 @@ select raft.demo,
        (raft.react_aim_end_tick - raft.start_game_tick) / cast(g.game_tick_rate as double precision) as aim_react_s,
        (raft.react_fire_end_tick - raft.start_game_tick) / cast(g.game_tick_rate as double precision) as fire_react_s,
        rset.round_id,
-       rset.game_id
+       rset.game_id,
+       raft.looked_at_clusters_by_teammates / cast(raft.num_clusters as double precision) as clusters_covered
 from react_aim_fire_cover raft
          join games g on g.demo_file = raft.demo
          join round_start_end_tick rset
