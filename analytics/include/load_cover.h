@@ -33,22 +33,36 @@ struct GridIndex {
         int64_t resultIndex = -1;
         double minDistance = -1;
         IVec3 centerCoord = getCellCoordinates(curPosition);
-        IVec3 minCoord = max({0,0,0}, centerCoord - 1);
-        IVec3 maxCoord = min(numCells - 1, centerCoord + 1);
-        for (int64_t xCoord = minCoord.x; xCoord <= maxCoord.x; xCoord++) {
-            for (int64_t yCoord = minCoord.y; yCoord <= maxCoord.y; yCoord++) {
-                for (int64_t zCoord = minCoord.z; zCoord <= maxCoord.z; zCoord++) {
-                    int64_t curCoord = getCellIndex({xCoord, yCoord, zCoord});
-                    for (int64_t idIndex = minIdIndex[curCoord];
-                        idIndex < minIdIndex[curCoord] + numIds[curCoord];
-                        idIndex++) {
-                        double newDistance = computeDistance(curPosition, origins[sortedIds[idIndex]]);
-                        if (resultIndex == -1 || newDistance < minDistance) {
-                            minDistance = newDistance;
-                            resultIndex = sortedIds[idIndex];
-                            result = origins[resultIndex];
+        int64_t offset = 1;
+        while (minDistance == -1) {
+            IVec3 minCoord = max({0,0,0}, centerCoord - offset);
+            IVec3 maxCoord = min(numCells - 1, centerCoord + offset);
+            for (int64_t xCoord = minCoord.x; xCoord <= maxCoord.x; xCoord++) {
+                for (int64_t yCoord = minCoord.y; yCoord <= maxCoord.y; yCoord++) {
+                    for (int64_t zCoord = minCoord.z; zCoord <= maxCoord.z; zCoord++) {
+                        int64_t curCoord = getCellIndex({xCoord, yCoord, zCoord});
+                        for (int64_t idIndex = minIdIndex[curCoord];
+                             idIndex < minIdIndex[curCoord] + numIds[curCoord];
+                             idIndex++) {
+                            double newDistance = computeDistance(curPosition, origins[sortedIds[idIndex]]);
+                            if (resultIndex == -1 || newDistance < minDistance) {
+                                minDistance = newDistance;
+                                resultIndex = sortedIds[idIndex];
+                                result = origins[resultIndex];
+                            }
                         }
                     }
+                }
+            }
+            offset += 3;
+        }
+        if (resultIndex == -1) {
+            for (int64_t idIndex = 0; idIndex < sortedIds.size(); idIndex++) {
+                double newDistance = computeDistance(curPosition, origins[sortedIds[idIndex]]);
+                if (resultIndex == -1 || newDistance < minDistance) {
+                    minDistance = newDistance;
+                    resultIndex = sortedIds[idIndex];
+                    result = origins[resultIndex];
                 }
             }
         }
