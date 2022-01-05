@@ -107,47 +107,6 @@ select *,
 from all_visibilities;
 
 
-drop table if exists ticks_rounds_games;
-create temp table ticks_rounds_games as
-select t.*, r.game_id, g.demo_file, g.game_tick_rate, g.demo_tick_rate
-from ticks t
-    join rounds r on t.round_id = r.id
-    join games g on r.game_id = g.id;
-
-
-CREATE UNIQUE INDEX CONCURRENTLY ticks_rounds_games_game_tick_id on ticks_rounds_games (demo_file, game_tick_number);
-
-ALTER TABLE "visibilities_with_next_start" ADD FOREIGN KEY ("demo", start_game_tick) REFERENCES ticks_rounds_games ("demo_file", "game_tick_number");
-
-select *
-from ticks_rounds_games trg1
-    join ticks_rounds_games trg2 on trg1.game_id = trg2.game_id and trg1.id != trg2.id and trg1.game_tick_number = trg2.game_tick_number;
-
-select g.demo_file, r.game_id, t1.id, t2.id, t1.round_id, t2.round_id, t1.game_tick_number, count(*) as d from ticks t1
-       join ticks t2 on t1.id != t2.id and t1.game_tick_number = t2.game_tick_number and t1.round_id = t2.round_id
-        join rounds r on t1.round_id = r.id
-        join games g on r.game_id = g.id
-group by g.demo_file, r.game_id, t1.id, t2.id, t1.round_id, t2.round_id, t1.game_tick_number
-;
-
-select * from ticks where id in (557738, 557736)
-;
-
-select * from ticks where game_tick_number = 194572784;
-
-select * from games;
-
-select * from (
-                  select r1.game_id, t1.id, t2.id, count(*) as d
-                  from ticks t1
-                           join rounds r1 on t1.round_id = r1.id
-                           join rounds r2 on r2.game_id = r1.game_id
-                           join ticks t2 on r2.id = t2.round_id and t1.game_tick_number = t2.game_tick_number
-                  group by r1.game_id, t1.id, t2.id
-                  ) t1
-where d > 1
-;
-
 drop table if exists visibilities_with_others;
 create temp table visibilities_with_others as
 select v_main.demo,
