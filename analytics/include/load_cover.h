@@ -56,16 +56,6 @@ struct GridIndex {
             }
             offset += 3;
         }
-        if (resultIndex == -1) {
-            for (int64_t idIndex = 0; idIndex < sortedIds.size(); idIndex++) {
-                double newDistance = computeDistance(curPosition, origins[sortedIds[idIndex]]);
-                if (resultIndex == -1 || newDistance < minDistance) {
-                    minDistance = newDistance;
-                    resultIndex = sortedIds[idIndex];
-                    result = origins[resultIndex];
-                }
-            }
-        }
         return resultIndex;
     }
 };
