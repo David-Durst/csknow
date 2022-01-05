@@ -3,6 +3,7 @@
 //
 #include "queries/nearest_origin.h"
 #include "geometry.h"
+#include "file_helpers.h"
 #include <omp.h>
 #include <set>
 #include <map>
@@ -19,6 +20,7 @@ NearestOriginResult queryNearestOrigin(const Rounds & rounds, const Ticks & tick
     vector<int64_t> tmpRoundIds[numThreads];
     vector<int64_t> tmpRoundStarts[numThreads];
     vector<int64_t> tmpRoundSizes[numThreads];
+    std::atomic<int64_t> roundsProcessed = 0;
 
 #pragma omp parallel for
     for (int64_t roundIndex = 0; roundIndex < rounds.size; roundIndex++) {
@@ -48,6 +50,8 @@ NearestOriginResult queryNearestOrigin(const Rounds & rounds, const Ticks & tick
 
         }
         tmpRoundSizes[threadNum].push_back(tmpTickId[threadNum].size() - tmpRoundStarts[threadNum].back());
+        roundsProcessed++;
+        printProgress((roundsProcessed * 1.0) / rounds.size);
     }
 
     NearestOriginResult result;
