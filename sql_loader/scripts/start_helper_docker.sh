@@ -23,5 +23,6 @@ do
     psql --user=postgres -d csknow -c "ALTER TABLE ${name} SET LOGGED;"
 done
 psql --user=postgres -f /sql/create_fk_v8_postgres.sql -d csknow
+psql --user=postgres -f /sql/create_fk_v1_hand_visibility.sql -d csknow
 echo "done loading"
 #defusals  explosions flashed  grenade_trajectories  grenades  hurt  kills  plants  player_at_tick  players  spotted  ticks  weapon_fire

@@ -154,6 +154,7 @@ func processFile(unprocessedKey string, localDemName string, idState * IDState, 
 	lastFlash := make(map[SourceTarget]int64)
 	ticksProcessed := 0
 	roundsProcessed := 0
+	lastInGameTick := 0
 
 	roundsFile, err := os.Create(localRoundsCSVName)
 	if err != nil {
@@ -208,6 +209,7 @@ func processFile(unprocessedKey string, localDemName string, idState * IDState, 
 		curRound.endTick = idState.nextTick
 		// handle demos that start after first round start or just miss a round start event
 		if !curRound.valid {
+			curRound.gameID = curGameID
 			curRound.id = idState.nextRound
 			idState.nextRound++
 			curRound.roundNumber = roundsProcessed
@@ -260,6 +262,10 @@ func processFile(unprocessedKey string, localDemName string, idState * IDState, 
 		"num_incendiary,num_molotov,num_decoy,num_zeus,has_defuser,has_bomb,money,ping\n")
 
 	p.RegisterEventHandler(func(e events.FrameDone) {
+		gs := p.GameState()
+		if gs.IngameTick() < 1 || (ticksProcessed == 0 && gs.IngameTick() > 100000 && !gs.IsMatchStarted()) {
+			return
+		}
 		// on the first tick save the game state
 		if ticksProcessed == 0 {
 			header := p.Header()
@@ -267,8 +273,13 @@ func processFile(unprocessedKey string, localDemName string, idState * IDState, 
 				curGameID, demFilePath, (&header).FrameRate(), p.TickRate(), (&header).MapName, gameType))
 			idState.nextGame++
 		}
+		if ticksProcessed != 0 {
+			if lastInGameTick >= gs.IngameTick() {
+				print("bad in game tick")
+			}
+		}
+		lastInGameTick = gs.IngameTick()
 		ticksProcessed++
-		gs := p.GameState()
 		if gs.IsWarmupPeriod() {
 			curRound.warmup = true
 		}
@@ -290,7 +301,6 @@ func processFile(unprocessedKey string, localDemName string, idState * IDState, 
 		ticksFile.WriteString(fmt.Sprintf("%d,%d,%d,%d,%d,%d,%.2f,%.2f,%.2f\n",
 			tickID,curRound.id,p.CurrentTime().Milliseconds(), p.CurrentFrame(), gs.IngameTick(),
 			carrierID, gs.Bomb().Position().X, gs.Bomb().Position().Y, gs.Bomb().Position().Z))
-
 
 		for _, player := range players {
 			playerAtTickID := idState.nextPlayerAtTick
