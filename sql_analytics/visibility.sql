@@ -95,26 +95,6 @@ select demo,
        hacking,
        2 as visibility_technique_id from visibilities_bbox;
 
-select
-    t.id as tick_id,
-    t.round_id as round_id,
-    t.demo_tick_number as demo_tick_number,
-    t.game_tick_number as game_tick_number,
-    lead(t.game_tick_number) over (partition by g.id order by t.id) as nex,
-    t.bomb_carrier as bomb_carrier,
-    t.bomb_x as bomb_x,
-    t.bomb_y as bomb_y,
-    t.bomb_z as bomb_z,
-    r.game_id,
-    g.demo_file,
-    g.game_tick_rate,
-    g.demo_tick_rate
-from ticks t
-    join rounds r on t.round_id = r.id
-    join games g on r.game_id = g.id
-order by t.id
-;
-
 
 drop table if exists visibilities_with_next_start;
 create temp table visibilities_with_next_start as
@@ -127,10 +107,10 @@ select *,
            as last_end_game_tick
 from all_visibilities;
 
--- clustering has no benefit, just analyze
+
+-- analyze to make sure get index
 analyze ticks_rounds_games;
 analyze visibilities_with_next_start;
-
 drop table if exists visibilities_with_game_tick;
 create temp table visibilities_with_game_tick as
 select v.demo,
@@ -151,9 +131,9 @@ select v.demo,
 from visibilities_with_next_start v
     join ticks_rounds_games trg
         on v.demo = trg.demo_file
-               and trg.game_tick_number <= v.start_game_tick
-               and trg.next_game_tick_number > v.start_game_tick
+               and v.start_game_tick <@ trg.game_tick_range
 ;
+
 
 drop table if exists visibilities_filtered_alive;
 create temp table visibilities_filtered_alive as
