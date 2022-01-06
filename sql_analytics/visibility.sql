@@ -156,7 +156,6 @@ from visibilities_with_game_tick v
     join player_at_tick spotter_pat
         on v.start_tick_id = spotter_pat.tick_id
                and spotter_pat.player_id = v.spotter_id
-               and spotter_pat.is_alive
 where spotter_pat.is_alive;
 
 
