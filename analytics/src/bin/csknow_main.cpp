@@ -29,6 +29,7 @@
 #include <errno.h>
 #include "navmesh/nav_file.h"
 #include "queries/nav_mesh.h"
+#include "queries/reachable.h"
 #include <filesystem>
 namespace fs = std::filesystem;
 
@@ -221,8 +222,10 @@ int main(int argc, char * argv[]) {
                                                nearestOriginResult);
     std::cout << "team_looking_at_cover_edge_cluster entries: " << teamLookingAtCoverEdgeClusterResult.tickId.size() << std::endl;
 
-    string dust2Name = "de_dust2_mesh";
+    string dust2MeshName = "de_dust2_mesh";
     MapMeshResult d2MeshResult = queryMapMesh(map_navs["de_dust2"]);
+    string dust2ReachableName = "de_dust2_mesh";
+    ReachableResult d2ReachableResult = queryReachable(d2MeshResult);
     /*
     VelocityResult velocityResult = queryVelocity(position);
     std::cout << "velocity moments: " << velocityResult.positionIndex.size() << std::endl;
@@ -342,7 +345,7 @@ int main(int argc, char * argv[]) {
         }
          */
 
-    vector<string> queryNames = {"games", "rounds", "players", "ticks", "playerAtTick", dust2Name};
+    vector<string> queryNames = {"games", "rounds", "players", "ticks", "playerAtTick", dust2MeshName, dust2ReachableName};
     //vector<string> queryNames = {"games", "rounds", "players", "ticks", "playerAtTick", "aCatClusterSequence", "aCatClusters", "midCTClusterSequence", "midTClusters", "lookers"};
     map<string, reference_wrapper<QueryResult>> queries {
             {queryNames[0], queryGames},
@@ -351,6 +354,7 @@ int main(int argc, char * argv[]) {
             {queryNames[3], queryTicks},
             {queryNames[4], queryPlayerAtTick},
             {queryNames[5], d2MeshResult},
+            {queryNames[6], d2ReachableResult},
             //{queryNames[5], aCatClusterSequence},
             //{queryNames[6], aCatPeekersClusters},
             //{queryNames[7], midCTClusterSequence},

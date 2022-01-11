@@ -20,6 +20,7 @@ using std::vector;
 using std::set;
 using std::unordered_map;
 using std::vector;
+using std::map;
 
 class MapMeshResult : public QueryResult {
 public:
@@ -28,6 +29,7 @@ public:
     vector<string> placeName;
     vector<AABB> coordinate;
     vector<vector<int64_t>> connectionAreaIds;
+    map<int64_t, int64_t> areaToInternalId;
 
     vector<int64_t> filterByForeignKey(int64_t otherTableIndex) {
         return {};

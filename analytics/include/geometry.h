@@ -251,6 +251,11 @@ bool intersectP(const AABB & box, const Ray & ray, double & hitt0, double & hitt
 }
 
 static inline __attribute__((always_inline))
+Vec3 getCenter(AABB aabb) {
+    return {(aabb.max.x + aabb.min.x)/2, (aabb.max.y + aabb.min.y)/2, (aabb.max.z + aabb.min.z)/2};
+}
+
+static inline __attribute__((always_inline))
 double computeDistance(Vec3 v1, Vec3 v2) {
     double xDistance = v1.x - v2.x;
     double yDistance = v1.y - v2.y;

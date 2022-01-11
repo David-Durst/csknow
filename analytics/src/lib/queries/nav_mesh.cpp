@@ -6,6 +6,7 @@ MapMeshResult queryMapMesh(nav_mesh::nav_file & navFile) {
     for (const auto & navArea : navFile.m_areas) {
         result.areaId.push_back(navArea.m_id);
         result.id.push_back(i);
+        result.areaToInternalId.insert({navArea.m_id, i});
         i++;
         if (navArea.m_place < navFile.m_place_count) {
             result.placeName.push_back(navFile.m_places[navArea.m_place]);

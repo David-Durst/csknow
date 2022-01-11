@@ -14,6 +14,8 @@ get_script_dir () {
 }
 get_script_dir
 
+${script_dir}/build.sh
+
 export pass=$(cat ${script_dir}/../../private/.mysql_password)
 
 ${script_dir}/start_helper.sh &
