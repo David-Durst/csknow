@@ -224,7 +224,7 @@ int main(int argc, char * argv[]) {
 
     string dust2MeshName = "de_dust2_mesh";
     MapMeshResult d2MeshResult = queryMapMesh(map_navs["de_dust2"]);
-    string dust2ReachableName = "de_dust2_mesh";
+    string dust2ReachableName = "de_dust2_reachable";
     ReachableResult d2ReachableResult = queryReachable(d2MeshResult);
     /*
     VelocityResult velocityResult = queryVelocity(position);
