@@ -294,7 +294,7 @@ export function drawTick(e: InputEvent) {
             bottomRightCoordinate.getCanvasX() - topLeftCoordinate.getCanvasX(),
             bottomRightCoordinate.getCanvasY() - topLeftCoordinate.getCanvasY())
     }
-    if (curCluster != "none" && !curCluster.includes("mesh")) {
+    if (curCluster != "none" && !curCluster.includes("mesh") && !curCluster.includes("reachable")) {
         ctx.fillStyle = green
         const clusterRows = filteredData.clusters.get(curCluster)
         const clusterLimiterText = clusterLimiter.value.split(",")
@@ -389,6 +389,78 @@ export function drawTick(e: InputEvent) {
             const zScaling = (avgZ - minZ) / (maxZ - minZ)
             ctx.font = (((zScaling * 20 + 30)/2)*fontScale).toString() + "px Tahoma"
             ctx.fillStyle = "rgba(255, 0, 0, 0.2)";
+            ctx.fillRect(minCoordinate.getCanvasX(), minCoordinate.getCanvasY(),
+                maxCoordinate.getCanvasX() - minCoordinate.getCanvasX(),
+                maxCoordinate.getCanvasY() - minCoordinate.getCanvasY())
+        }
+        if (targetAreaId != -1) {
+            ctx.fillStyle = 'green'
+            ctx.font = targetFontSize.toString() + "px Tahoma"
+            ctx.fillText(targetAreaId.toString(), targetX, targetY)
+        }
+    }
+    else if (curCluster.includes("reachable")) {
+        ctx.fillStyle = green
+        const clusterRows = filteredData.clusters.get(curCluster)
+        let distances: number[] = [];
+        let minDistance;
+        let maxDistance;
+        let targetAreaId = -1
+        let targetX = -1
+        let targetY = -1
+        let targetFontSize = -1
+        for (let c = 0; c < clusterRows.length; c++) {
+            const cluster = clusterRows[c]
+            const minCoordinate = new MapCoordinate(
+                parseFloat(cluster.otherColumnValues[0]),
+                parseFloat(cluster.otherColumnValues[1]),
+                false);
+            const maxCoordinate = new MapCoordinate(
+                parseFloat(cluster.otherColumnValues[3]),
+                parseFloat(cluster.otherColumnValues[4]),
+                false);
+            const avgX = (minCoordinate.getCanvasX() + maxCoordinate.getCanvasX()) / 2
+            const avgY = (minCoordinate.getCanvasY() + maxCoordinate.getCanvasY()) / 2
+            const avgZ = (parseFloat(cluster.otherColumnValues[2]) + parseFloat(cluster.otherColumnValues[5])) / 2;
+            const zScaling = (avgZ - minZ) / (maxZ - minZ)
+            if (lastMousePosition.x >= minCoordinate.x &&
+                lastMousePosition.x <= maxCoordinate.x &&
+                lastMousePosition.y >= minCoordinate.y &&
+                lastMousePosition.y <= maxCoordinate.y) {
+                targetAreaId = cluster.id
+                targetX = avgX
+                targetY = avgY
+                targetFontSize = (((zScaling * 20 + 30)/2)*fontScale)
+                distances = cluster.otherColumnValues.slice(6).map(s => parseFloat(s))
+                minDistance = Math.min(...distances);
+                maxDistance = Math.max(...distances);
+                ctx.fillStyle = "rgba(0, 0, 0, 0.9)";
+                ctx.fillRect(minCoordinate.getCanvasX(), minCoordinate.getCanvasY(),
+                    maxCoordinate.getCanvasX() - minCoordinate.getCanvasX(),
+                    maxCoordinate.getCanvasY() - minCoordinate.getCanvasY())
+            }
+            ctx.lineWidth = 0.5
+            ctx.strokeStyle = "black";
+            ctx.strokeRect(minCoordinate.getCanvasX(), minCoordinate.getCanvasY(),
+                maxCoordinate.getCanvasX() - minCoordinate.getCanvasX(),
+                maxCoordinate.getCanvasY() - minCoordinate.getCanvasY())
+
+        }
+        for (let c = 0; targetAreaId != -1 && c < clusterRows.length; c++) {
+            const cluster = clusterRows[c]
+            if (distances[c] == -1) {
+                continue
+            }
+            const minCoordinate = new MapCoordinate(
+                parseFloat(cluster.otherColumnValues[0]),
+                parseFloat(cluster.otherColumnValues[1]),
+                false);
+            const maxCoordinate = new MapCoordinate(
+                parseFloat(cluster.otherColumnValues[3]),
+                parseFloat(cluster.otherColumnValues[4]),
+                false);
+            const percentDistance = (distances[c] - minDistance) / (maxDistance - minDistance);
+            ctx.fillStyle = `rgba(${percentDistance * 255}, 0, ${(1 - percentDistance) * 255}, 0.5)`;
             ctx.fillRect(minCoordinate.getCanvasX(), minCoordinate.getCanvasY(),
                 maxCoordinate.getCanvasX() - minCoordinate.getCanvasX(),
                 maxCoordinate.getCanvasY() - minCoordinate.getCanvasY())

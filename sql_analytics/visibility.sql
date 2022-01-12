@@ -398,6 +398,9 @@ group by raft.demo, raft.visibility_technique_id, raft.spotter_id, raft.spotter,
          raft.game_id, raft.round_id, raft.start_tick_id, raft.game_tick_rate, no.origin_id, cocc.num_clusters
 order by raft.demo, raft.start_game_tick;
 
+select * from cover_origins;
+select * from cover_edges;
+
 select count(*) from react_aim_fire_cover;
 
 drop table if exists react_final;
