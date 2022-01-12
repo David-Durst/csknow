@@ -8,6 +8,7 @@ ReachableResult queryReachable(const MapMeshResult & mapMeshResult) {
     ReachableResult result;
     int64_t i = 0;
     int64_t numAreas = mapMeshResult.size;
+    result.coordinate = mapMeshResult.coordinate;
     result.distanceMatrix.resize(numAreas * numAreas, std::numeric_limits<double>::max());
 
     // setup initial connections in reachability matrix

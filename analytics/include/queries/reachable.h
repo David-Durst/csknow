@@ -13,7 +13,6 @@ using std::vector;
 
 class ReachableResult : public QueryResult {
 public:
-    vector<int64_t> navMeshId;
     vector<AABB> coordinate;
     vector<double> distanceMatrix;
 
@@ -27,11 +26,11 @@ public:
     };
 
     void oneLineToCSV(int64_t index, stringstream & ss) {
-        ss << index << ",";
-        ss << "," << navMeshId[index] << "," << coordinate[index].min.x << "," << coordinate[index].min.y << "," << coordinate[index].min.z
+        ss << index;
+        ss << "," << coordinate[index].min.x << "," << coordinate[index].min.y << "," << coordinate[index].min.z
            << "," << coordinate[index].max.x << "," << coordinate[index].max.y << "," << coordinate[index].max.z;
-        for (int i = 0; i < navMeshId.size(); i++) {
-            ss << "," << distanceMatrix[index * navMeshId.size() + i];
+        for (int i = 0; i < coordinate.size(); i++) {
+            ss << "," << distanceMatrix[index * coordinate.size() + i];
         }
         ss << std::endl;
     }
@@ -41,8 +40,8 @@ public:
     }
 
     vector<string> getOtherColumnNames() {
-        vector<string> nameVector = {"navMeshId", "min_x", "min_y", "min_z", "max_x", "max_y", "max_z"};
-        for (uint64_t i = 0; i < navMeshId.size(); i++) {
+        vector<string> nameVector = {"min_x", "min_y", "min_z", "max_x", "max_y", "max_z"};
+        for (uint64_t i = 0; i < coordinate.size(); i++) {
             nameVector.push_back(std::to_string(i));
         }
         return nameVector;
