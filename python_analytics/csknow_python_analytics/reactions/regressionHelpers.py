@@ -3,6 +3,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn import metrics, preprocessing, pipeline
 import seaborn as sn
 import matplotlib.pyplot as plt
+import matplotlib as mpl
 import pandas as pd
 from collections import Counter
 
@@ -41,7 +42,8 @@ def makeLogReg(df, cols, name, grouped_str, plot_folder):
     no_skill_fpr, no_skill_tpr, _ = metrics.roc_curve(y_test, no_skill_pred)
     y_pred_fpr, y_pred_tpr, _ = metrics.roc_curve(y_test, y_pred_prob_pos)
 
-    roc_figure = plt.figure()
+    #mpl.style.use('default')
+    roc_figure = plt.figure(figsize=(10,10))
     roc_axis = roc_figure.gca()
     roc_axis.plot(no_skill_fpr, no_skill_tpr, linestyle='--', label='No Skill')
     roc_axis.plot(y_pred_fpr, y_pred_tpr, linestyle='-', marker='o', label='Logistic')
@@ -60,6 +62,7 @@ def makeLogReg(df, cols, name, grouped_str, plot_folder):
     plt.suptitle(name + ' Labeled Confusion Matrix', fontsize=30)
     confusion_matrix_figure = confusion_matrix_heatmap.get_figure()
     confusion_matrix_figure.savefig(plot_folder + 'confusion_' + plot_str)
+    sn.reset_orig() # disable seaborn style
 
     result = X_test.copy()
     result['label'] = y_test
