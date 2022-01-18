@@ -1,11 +1,13 @@
 from sklearn.model_selection import train_test_split, cross_val_score, StratifiedKFold
 from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import RocCurveDisplay
 from sklearn import metrics, preprocessing, pipeline
 import seaborn as sn
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 import pandas as pd
 from collections import Counter
+import numpy as np
 
 def makeLogReg(df, cols, name, grouped_str, plot_folder):
     plot_str = grouped_str + '_' + name.lower().replace(' ', '_') + '.png'
@@ -21,35 +23,42 @@ def makeLogReg(df, cols, name, grouped_str, plot_folder):
     scores = cross_val_score(pipe, X_df, y_series, cv=skf)
     print(f'''{name} {scores.mean():.2f} accuracy with a standard deviation of {scores.std():.2f}''')
 
+    good_roc_figure = plt.figure(figsize=(10,10))
+    good_roc_axis = good_roc_figure.gca()
+    kfoldROCCurve(pipe, skf, X_df, y_series, good_roc_axis, name)
+    good_roc_figure.savefig(plot_folder + 'roc_' + plot_str)
+
     X_train, X_test, y_train, y_test = train_test_split(X_df, y_series, stratify=y_series, test_size=0.2)
     pipe.fit(X_train, y_train)
     y_pred = pipe.predict(X_test)
-    y_pred_prob = pipe.predict_proba(X_test)
-    y_pred_prob_pos = y_pred_prob[:, 1]
 
-    # no skill prediction
-    (most_common_class_value, most_common_class_count) = \
-        Counter(y_test).most_common(1)[0]
-    no_skill_pred = [most_common_class_value for _ in range(len(y_test))]
-    print(f'''percent hacking: {most_common_class_count * 1.0 / len(y_test)}''')
+    if False:
+        y_pred_prob = pipe.predict_proba(X_test)
+        y_pred_prob_pos = y_pred_prob[:, 1]
 
-    # calculate auc scores
-    no_skill_auc = metrics.roc_auc_score(y_test, no_skill_pred)
-    y_pred_auc = metrics.roc_auc_score(y_test, y_pred_prob_pos)
-    print(f'''No Skill: ROC AUC={no_skill_auc}''')
-    print(f'''Logistic: ROC AUC={y_pred_auc}''')
+        # no skill prediction
+        (most_common_class_value, most_common_class_count) = \
+            Counter(y_test).most_common(1)[0]
+        no_skill_pred = [most_common_class_value for _ in range(len(y_test))]
+        print(f'''percent hacking: {most_common_class_count * 1.0 / len(y_test)}''')
 
-    no_skill_fpr, no_skill_tpr, _ = metrics.roc_curve(y_test, no_skill_pred)
-    y_pred_fpr, y_pred_tpr, _ = metrics.roc_curve(y_test, y_pred_prob_pos)
+        # calculate auc scores
+        no_skill_auc = metrics.roc_auc_score(y_test, no_skill_pred)
+        y_pred_auc = metrics.roc_auc_score(y_test, y_pred_prob_pos)
+        print(f'''No Skill: ROC AUC={no_skill_auc}''')
+        print(f'''Logistic: ROC AUC={y_pred_auc}''')
 
-    #mpl.style.use('default')
-    roc_figure = plt.figure(figsize=(10,10))
-    roc_axis = roc_figure.gca()
-    roc_axis.plot(no_skill_fpr, no_skill_tpr, linestyle='--', label=f'''No Skill (area = {no_skill_auc})''')
-    roc_axis.plot(y_pred_fpr, y_pred_tpr, linestyle='-', marker='o', label=f'''Logistic (area = {y_pred_auc})''')
-    roc_axis.legend()
-    roc_figure.savefig(plot_folder + 'roc_' + plot_str)
-    plt.clf()
+        no_skill_fpr, no_skill_tpr, _ = metrics.roc_curve(y_test, no_skill_pred)
+        y_pred_fpr, y_pred_tpr, _ = metrics.roc_curve(y_test, y_pred_prob_pos)
+
+        #mpl.style.use('default')
+        roc_figure = plt.figure(figsize=(10,10))
+        roc_axis = roc_figure.gca()
+        roc_axis.plot(no_skill_fpr, no_skill_tpr, linestyle='--', label=f'''No Skill (area = {no_skill_auc})''')
+        roc_axis.plot(y_pred_fpr, y_pred_tpr, linestyle='-', marker='o', label=f'''Logistic (area = {y_pred_auc})''')
+        roc_axis.legend()
+        #roc_figure.savefig(plot_folder + 'roc_' + plot_str)
+        plt.clf()
 
     confusion_matrix = pd.crosstab(y_test, y_pred, rownames=['Actual'], colnames=['Predicted'])
     fig, ax = plt.subplots(figsize=(10, 10))
@@ -69,3 +78,58 @@ def makeLogReg(df, cols, name, grouped_str, plot_folder):
     result['pred'] = y_pred
     bad_results = result[result['label'] != result['pred']]
     print(df.iloc[bad_results.index])
+
+def kfoldROCCurve(pipe: pipeline.Pipeline, skf: StratifiedKFold, X_df, y_series, ax, name):
+    tprs = []
+    aucs = []
+    mean_fpr = np.linspace(0, 1, 100)
+
+    for i, (train, test) in enumerate(skf.split(X_df, y_series)):
+        pipe.fit(X_df.iloc[train], y_series[train])
+        viz = RocCurveDisplay.from_estimator(
+            pipe,
+            X_df.iloc[test],
+            y_series[test],
+            name="ROC fold {}".format(i),
+            alpha=0.3,
+            lw=1,
+            ax=ax,
+        )
+        interp_tpr = np.interp(mean_fpr, viz.fpr, viz.tpr)
+        interp_tpr[0] = 0.0
+        tprs.append(interp_tpr)
+        aucs.append(viz.roc_auc)
+
+    ax.plot([0, 1], [0, 1], linestyle="--", lw=2, color="r", label="Chance", alpha=0.8)
+
+    mean_tpr = np.mean(tprs, axis=0)
+    mean_tpr[-1] = 1.0
+    mean_auc = metrics.auc(mean_fpr, mean_tpr)
+    std_auc = np.std(aucs)
+    ax.plot(
+        mean_fpr,
+        mean_tpr,
+        color="b",
+        label=r"Mean ROC (AUC = %0.2f $\pm$ %0.2f)" % (mean_auc, std_auc),
+        lw=2,
+        alpha=0.8,
+    )
+
+    std_tpr = np.std(tprs, axis=0)
+    tprs_upper = np.minimum(mean_tpr + std_tpr, 1)
+    tprs_lower = np.maximum(mean_tpr - std_tpr, 0)
+    ax.fill_between(
+        mean_fpr,
+        tprs_lower,
+        tprs_upper,
+        color="grey",
+        alpha=0.2,
+        label=r"$\pm$ 1 std. dev.",
+    )
+
+    ax.set(
+        xlim=[-0.05, 1.05],
+        ylim=[-0.05, 1.05],
+        title=name + "Receiver Operating Characteristic",
+    )
+    ax.legend(loc="lower right")
