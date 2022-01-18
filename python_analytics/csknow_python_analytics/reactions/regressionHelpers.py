@@ -32,34 +32,6 @@ def makeLogReg(df, cols, name, grouped_str, plot_folder):
     pipe.fit(X_train, y_train)
     y_pred = pipe.predict(X_test)
 
-    if False:
-        y_pred_prob = pipe.predict_proba(X_test)
-        y_pred_prob_pos = y_pred_prob[:, 1]
-
-        # no skill prediction
-        (most_common_class_value, most_common_class_count) = \
-            Counter(y_test).most_common(1)[0]
-        no_skill_pred = [most_common_class_value for _ in range(len(y_test))]
-        print(f'''percent hacking: {most_common_class_count * 1.0 / len(y_test)}''')
-
-        # calculate auc scores
-        no_skill_auc = metrics.roc_auc_score(y_test, no_skill_pred)
-        y_pred_auc = metrics.roc_auc_score(y_test, y_pred_prob_pos)
-        print(f'''No Skill: ROC AUC={no_skill_auc}''')
-        print(f'''Logistic: ROC AUC={y_pred_auc}''')
-
-        no_skill_fpr, no_skill_tpr, _ = metrics.roc_curve(y_test, no_skill_pred)
-        y_pred_fpr, y_pred_tpr, _ = metrics.roc_curve(y_test, y_pred_prob_pos)
-
-        #mpl.style.use('default')
-        roc_figure = plt.figure(figsize=(10,10))
-        roc_axis = roc_figure.gca()
-        roc_axis.plot(no_skill_fpr, no_skill_tpr, linestyle='--', label=f'''No Skill (area = {no_skill_auc})''')
-        roc_axis.plot(y_pred_fpr, y_pred_tpr, linestyle='-', marker='o', label=f'''Logistic (area = {y_pred_auc})''')
-        roc_axis.legend()
-        #roc_figure.savefig(plot_folder + 'roc_' + plot_str)
-        plt.clf()
-
     confusion_matrix = pd.crosstab(y_test, y_pred, rownames=['Actual'], colnames=['Predicted'])
     fig, ax = plt.subplots(figsize=(10, 10))
     sn.set(font_scale=2.0)
