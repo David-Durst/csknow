@@ -5,7 +5,7 @@ import seaborn as sn
 import matplotlib.pyplot as plt
 import pandas as pd
 
-def makeLogReg(df, cols, name, plot_folder):
+def makeLogReg(df, cols, name, grouped_str, plot_folder):
     plt.clf()
     X_df = df[cols]
     y_series = df['hacking']
@@ -31,7 +31,7 @@ def makeLogReg(df, cols, name, plot_folder):
     confusion_matrix_heatmap.set_xlabel("Predicted", fontsize=24)
     plt.suptitle(name + ' Labeled Confusion Matrix', fontsize=30)
     confusion_matrix_figure = confusion_matrix_heatmap.get_figure()
-    confusion_matrix_figure.savefig(plot_folder + name.lower().replace(' ', '_') + '_grouped_confusion_matrix__hand_vs_cpu__hacking_vs_legit.png')
+    confusion_matrix_figure.savefig(plot_folder + 'confusion_' + grouped_str + '_' + name.lower().replace(' ', '_') + '.png')
 
     result = X_test.copy()
     result['label'] = y_test

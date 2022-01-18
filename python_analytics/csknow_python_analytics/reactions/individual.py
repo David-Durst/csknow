@@ -56,10 +56,10 @@ makeHistograms(dfs.get_as_grid(), 'fire_react_s', makePlotterFunction(0.5, True)
                'Individual Percent Fire Reactions', 'Fire Reaction Time (s)', args.plot_folder)
 
 
-
-makeLogReg(dfs.pix_adjusted_dfs.get_hacks_union_legit(), ['aim_react_s'], visibility_techniques[0], args.plot_folder)
-makeLogReg(dfs.pix_unadjusted_dfs.get_hacks_union_legit(), ['aim_react_s'], visibility_techniques[1], args.plot_folder)
-makeLogReg(dfs.bbox_dfs.get_hacks_union_legit(), ['aim_react_s'], visibility_techniques[2], args.plot_folder)
+individual_str = 'individual'
+makeLogReg(dfs.pix_adjusted_dfs.get_hacks_union_legit(), ['aim_react_s'], visibility_techniques[0], individual_str, args.plot_folder)
+makeLogReg(dfs.pix_unadjusted_dfs.get_hacks_union_legit(), ['aim_react_s'], visibility_techniques[1], individual_str, args.plot_folder)
+makeLogReg(dfs.bbox_dfs.get_hacks_union_legit(), ['aim_react_s'], visibility_techniques[2], individual_str, args.plot_folder)
 #makeLogReg(cpu_filtered_df, ['avg_aim_cpu_react'], 'CPU')
 #makeLogReg(cpu_just_legit_cheat_df, ['avg_aim_cpu_react', 'avg_fire_cpu_react', 'cpu_preaims'], 'BBox')
 #all_filtered_df = pd.concat([hand_filtered_df, cpu_filtered_df], ignore_index=True)

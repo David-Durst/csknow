@@ -64,9 +64,10 @@ makeHistograms(dfs.get_as_grid(), 'avg_pct_clusters_covered', makePlotterFunctio
                plot_titles, 'Grouped Percent Avg Pct Clusters Covered', 'Pct Clusters Covered', args.plot_folder)
 
 input_cols = ['avg_aim_react_s', 'avg_fire_react_s', 'preaims', 'avg_pct_clusters_covered']
-makeLogReg(dfs.pix_adjusted_dfs.get_hacks_union_legit(), input_cols, visibility_techniques[0], args.plot_folder)
-makeLogReg(dfs.pix_unadjusted_dfs.get_hacks_union_legit(), input_cols, visibility_techniques[1], args.plot_folder)
-makeLogReg(dfs.bbox_dfs.get_hacks_union_legit(), input_cols, visibility_techniques[2], args.plot_folder)
+grouped_str = 'grouped'
+makeLogReg(dfs.pix_adjusted_dfs.get_hacks_union_legit(), input_cols, visibility_techniques[0], grouped_str, args.plot_folder)
+makeLogReg(dfs.pix_unadjusted_dfs.get_hacks_union_legit(), input_cols, visibility_techniques[1], grouped_str, args.plot_folder)
+makeLogReg(dfs.bbox_dfs.get_hacks_union_legit(), input_cols, visibility_techniques[2], grouped_str, args.plot_folder)
 #hand_just_legit_cheat_df = hand_filtered_df[hand_filtered_df['hacking'] < 2]
 #cpu_just_legit_cheat_df = cpu_filtered_df[cpu_filtered_df['hacking'] < 2]
 ##makeLogReg(hand_filtered_df, ['avg_aim_hand_react'], 'GPU')
