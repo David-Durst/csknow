@@ -22,5 +22,4 @@ conda activate csknow
 cd ${script_dir}/csknow_python_analytics/reactions/
 
 python individual.py ${pass} ${script_dir}/../sql_analytics/visibility.sql ${script_dir}/reactionPlots/
-# change 4 to 3 for best cpu result
 python grouped.py ${pass} ${script_dir}/../sql_analytics/visibility.sql ${script_dir}/reactionPlots/ 3

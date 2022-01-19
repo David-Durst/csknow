@@ -1,5 +1,6 @@
 from sklearn.model_selection import train_test_split, cross_val_score, StratifiedKFold
 from sklearn.linear_model import LogisticRegression
+from sklearn.svm import SVC
 from sklearn.metrics import RocCurveDisplay
 from sklearn import metrics, preprocessing, pipeline
 import seaborn as sn
@@ -16,6 +17,7 @@ def makeLogReg(df, cols, name, grouped_str, plot_folder):
     X_df = df[cols]
     y_series = df['hacking']
 
+    #lr_model = SVC(gamma='auto')
     lr_model = LogisticRegression()
     scalar = preprocessing.StandardScaler()
     pipe = pipeline.Pipeline([('transformer', scalar), ('estimator', lr_model)])

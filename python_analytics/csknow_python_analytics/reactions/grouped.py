@@ -33,7 +33,12 @@ unfiltered_table = 'react_final'
 filtered_table = '(select * from react_final where abs(aim_react_s) <= 3 and not seen_last_five_seconds) filtered_table'
 select_cols = 'game_id, visibility_technique_id, count(*) as num, min(round_id) as min_round_id, max(round_id) as max_round_id, spotter_id, spotter, hacking, ' + \
     'avg(distinct_others_spotted_during_time) as distinct_others_spotted_during_time, ' + \
-    'avg(aim_react_s) as avg_aim_react_s, avg(case when fire_react_s is not null and fire_react_s <= 2.0 then fire_react_s else NULL end) as avg_fire_react_s, ' + \
+    'avg(aim_react_s) as avg_aim_react_s, ' + \
+    'min(aim_react_s) as min_aim_react_s, ' + \
+    'max(aim_react_s) as max_aim_react_s, ' + \
+    'avg(case when fire_react_s is not null and fire_react_s <= 2.0 then fire_react_s else NULL end) as avg_fire_react_s, ' + \
+    'min(case when fire_react_s is not null and fire_react_s <= 2.0 then fire_react_s else NULL end) as min_fire_react_s, ' + \
+    'max(case when fire_react_s is not null and fire_react_s <= 2.0 then fire_react_s else NULL end) as max_fire_react_s, ' + \
     'sum(case when aim_react_s < -1.5 then 1 else 0 end) as preaims, ' + \
     'avg(clusters_covered) as avg_pct_clusters_covered'
 group_cols = f'''group by hacking, visibility_technique_id, game_id, round_id / {args.grouping_rounds}, spotter_id, spotter'''
@@ -63,7 +68,9 @@ makeHistograms(dfs.get_as_grid(), 'avg_pct_clusters_covered', makePlotterFunctio
 makeHistograms(dfs.get_as_grid(), 'avg_pct_clusters_covered', makePlotterFunction(0.1, True, 1.0, 0.0),
                plot_titles, 'Grouped Percent Avg Pct Clusters Covered', 'Pct Clusters Covered', args.plot_folder)
 
-input_cols = ['avg_aim_react_s', 'avg_fire_react_s', 'preaims', 'avg_pct_clusters_covered']
+input_cols = ['avg_aim_react_s', 'min_aim_react_s', 'max_aim_react_s',
+              'avg_fire_react_s', 'min_fire_react_s', 'max_fire_react_s',
+              'preaims', 'avg_pct_clusters_covered']
 grouped_str = 'grouped'
 makeLogReg(dfs.pix_adjusted_dfs.get_hacks_union_legit(), input_cols, visibility_techniques[0], grouped_str, args.plot_folder)
 makeLogReg(dfs.pix_unadjusted_dfs.get_hacks_union_legit(), input_cols, visibility_techniques[1], grouped_str, args.plot_folder)
