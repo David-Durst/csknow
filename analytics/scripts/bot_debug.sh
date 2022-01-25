@@ -18,6 +18,7 @@ get_script_dir
 mkdir -p ${script_dir}/../build
 cd ${script_dir}/../build
 cmake .. -DCMAKE_BUILD_TYPE=Debug
+chmod a+x csknow_bot
 if make -j4; then
-    ./csknow_bot 
+    sudo su - steam -c "${script_dir}/../build/csknow_bot /home/steam/csgo-ds/csgo/addons/sourcemod/bot-link-data 128"
 fi
