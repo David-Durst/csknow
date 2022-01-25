@@ -6,7 +6,7 @@
 int main(int argc, char * argv[]) {
     if (argc != 3) {
         std::cout << "please call this code 2 arguments: \n" 
-            << "1. path/to/data\n" <<
+            << "1. path/to/data\n"
             << "2. server_tick_rate" << std::endl;
         return 1;
     }
@@ -44,7 +44,7 @@ int main(int argc, char * argv[]) {
             std::cout << "Failed to load state" << std::endl;
         }
         auto end = std::chrono::system_clock::now();
-        std::chrono::duration<double> botTime = end - state;
+        std::chrono::duration<double> botTime = end - start;
         std::cout << "Bot compute time: " << botTime.count() << "s" << std::endl;
         if (botTime < timePerTick) {
             std::this_thread::sleep_for(timePerTick - botTime);
