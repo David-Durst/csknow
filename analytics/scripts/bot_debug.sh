@@ -18,6 +18,6 @@ get_script_dir
 mkdir -p ${script_dir}/../build
 cd ${script_dir}/../build
 cmake .. -DCMAKE_BUILD_TYPE=Debug
-make -j4
-mkdir -p ../csv_outputs
-./csknow_bot 
+if make -j4; then
+    ./csknow_bot 
+fi

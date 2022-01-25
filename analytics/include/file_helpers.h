@@ -109,7 +109,14 @@ static inline __attribute__((always_inline))
 void readCol(const char * file, size_t start, size_t end, char ** value) {
     *value = (char *) malloc ((end-start+1) * sizeof(char));
     strncpy(*value, &file[start], end-start);
+    // need to append null terminator as none is applied
+    // by default in strncpy
     (*value)[end-start] = '\0';
+}
+
+static inline __attribute__((always_inline))
+void readCol(const char * file, size_t start, size_t end, string & value) {
+    value.assign(&file[start], end-start);
 }
 
 static inline __attribute__((always_inline))

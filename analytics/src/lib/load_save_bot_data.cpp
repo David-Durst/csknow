@@ -1,6 +1,7 @@
 //
 // Created by durst on 12/29/21.
 //
+#include "load_save_bot_data.h"
 #include "load_cover.h"
 #include "load_data.h"
 #include "file_helpers.h"
@@ -8,9 +9,9 @@
 #include <filesystem>
 #include <fstream>
 
-void loadClients(string clientsFilePath) {
+void ServerState::loadClients(string clientsFilePath) {
     // mmap the file
-    auto [fd, stats, file] = openMMapFile(clientFilePath);
+    auto [fd, stats, file] = openMMapFile(clientsFilePath);
 
     // skip the header
     size_t firstRow = getNewline(file, 0, stats.st_size);
@@ -29,7 +30,7 @@ void loadClients(string clientsFilePath) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].serverId);
         }
         else if (colNumber == 1) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].name);
+            readCol(file, curStart, curDelimiter, clients[arrayEntry].name);
         }
         else if (colNumber == 2) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].isBot);
@@ -41,7 +42,7 @@ void loadClients(string clientsFilePath) {
     closeMMapFile({fd, stats, file});
 }
 
-void loadClientStates(string clientStatesFilePath) {
+void ServerState::loadClientStates(string clientStatesFilePath) {
     // mmap the file
     auto [fd, stats, file] = openMMapFile(clientStatesFilePath);
 
@@ -149,17 +150,21 @@ void ServerState::saveBotInputs(string dataPath) const {
         std::filesystem::rename(inputsFilePath, tmpInputsFilePath);
     }
 
-    std::ofstream fsInputs(tmpInputsFilePath);
-    fsInputs << "Player Index,Buttons,Input Angle Delta Pct X,Input Angle Delta Pct Y\n";
-    
+    inputsCopy.str(string());
+    inputsCopy << "Player Index,Buttons,Input Angle Delta Pct X,Input Angle Delta Pct Y\n";
+    numLines = 1;
+
     for (int i = 0; i < (int) inputsValid.size(); i++) {
         if (i < (int) clients.size() && inputsValid[i]) {
-            fsInputs << clients[i].serverId << ","
+            inputsCopy << clients[i].serverId << ","
                 << clients[i].buttons << ","
                 << clients[i].inputAngleDeltaPctX << ","
-                << clients[i].inputAngleDeltaPctY;
+                << clients[i].inputAngleDeltaPctY << "\n";
+            numLines++;
         }
     }
-        
+
+    std::ofstream fsInputs(tmpInputsFilePath);
+    fsInputs << inputsCopy.str();
     fsInputs.close();
 }
