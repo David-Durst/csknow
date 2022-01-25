@@ -60,6 +60,12 @@ void readCol(const char * file, size_t start, size_t end, int64_t rowNumber, int
 }
 
 static inline __attribute__((always_inline))
+void readCol(const char * file, size_t start, size_t end, int64_t rowNumber, int64_t colNumber, float & value) {
+    auto messages = fast_float::from_chars(&file[start], &file[end], value);
+    printParsingError(messages.ec, rowNumber, colNumber);
+}
+
+static inline __attribute__((always_inline))
 void readCol(const char * file, size_t start, size_t end, int64_t rowNumber, int64_t colNumber, int64_t & value) {
     if (file[start] == '\\' && file[start+1] == 'N') {
         value = -1;
