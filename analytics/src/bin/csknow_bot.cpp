@@ -16,10 +16,8 @@ int main(int argc, char * argv[]) {
 
     ServerState state;
     bool firstFrame = true;
-    string upAndClear = "\r\eK";
-    std::cout << "Failed to load state\n";
-    std::cout << upAndClear << "hi" << std::flush;
-    return 0;
+    // \033[A moves up 1 line, \r moves cursor to start of line, \eK clears line
+    string upAndClear = "\033[A\r\eK";
 
     while (true) {
         auto start = std::chrono::system_clock::now();
