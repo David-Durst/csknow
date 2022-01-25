@@ -16,7 +16,10 @@ int main(int argc, char * argv[]) {
 
     ServerState state;
     bool firstFrame = true;
-    string upAndClear = "\33[2K\r";
+    string upAndClear = "\r\eK";
+    std::cout << "Failed to load state\n";
+    std::cout << upAndClear << "hi" << std::flush;
+    return 0;
 
     while (true) {
         auto start = std::chrono::system_clock::now();
@@ -49,6 +52,7 @@ int main(int argc, char * argv[]) {
         if (botTime < timePerTick) {
             std::this_thread::sleep_for(timePerTick - botTime);
         }
+        firstFrame = false;
     }
 
     return 0;

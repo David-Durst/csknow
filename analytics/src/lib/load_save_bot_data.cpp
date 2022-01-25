@@ -116,6 +116,11 @@ void ServerState::loadServerState(string dataPath) {
             std::filesystem::exists(clientStatesFilePath)) {
         std::filesystem::rename(clientsFilePath, tmpClientsFilePath);
         std::filesystem::rename(clientStatesFilePath, tmpClientStatesFilePath);
+        loadedSuccessfully = true;
+    }
+    else {
+        loadedSuccessfully = false;
+        return;
     }
 
     vector<int64_t> startingPointPerFile = getFileStartingRows({clientsFilePath});
