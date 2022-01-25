@@ -42,7 +42,7 @@ int main(int argc, char * argv[]) {
             if (!firstFrame) {
                 std::cout << upAndClear;
             }
-            std::cout << "Failed to load state" << std::endl;
+            std::cout << "Failed to load " << state.badPath << std::endl;
         }
         auto end = std::chrono::system_clock::now();
         std::chrono::duration<double> botTime = end - start;

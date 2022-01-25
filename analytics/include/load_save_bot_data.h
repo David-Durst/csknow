@@ -17,7 +17,6 @@ private:
     void loadClientStates(string clientStatesFilePath);
 
 public:
-    bool loadedSuccessfully;
     struct Client {
         int serverId;
         string name;
@@ -45,6 +44,10 @@ public:
     vector<int> serverClientIdToCSKnowId;
     vector<Client> clients;
     vector<bool> inputsValid;
+
+    // state for caller to debug
+    bool loadedSuccessfully;
+    string badPath;
     int numLines;
     std::stringstream inputsCopy;
 

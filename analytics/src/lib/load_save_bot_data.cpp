@@ -119,17 +119,23 @@ void ServerState::loadServerState(string dataPath) {
         loadedSuccessfully = true;
     }
     else {
+        if (!std::filesystem::exists(clientsFilePath)) {
+            badPath = clientsFilePath;
+        }
+        else {
+            badPath = clientStatesFilePath;
+        }
         loadedSuccessfully = false;
         return;
     }
 
-    vector<int64_t> startingPointPerFile = getFileStartingRows({clientsFilePath});
+    vector<int64_t> startingPointPerFile = getFileStartingRows({tmpClientsFilePath});
     int64_t rows = startingPointPerFile[1];
 
     clients.resize(rows);
 
-    loadClients(clientsFilePath);
-    loadClientStates(clientStatesFilePath);
+    loadClients(tmpClientsFilePath);
+    loadClientStates(tmpClientStatesFilePath);
 
     // build map from server id to CSKnow id
     int maxServerId = -1;
