@@ -51,7 +51,7 @@ public:
     ServerState() : inputsCopy(std::ios_base::ate) {};
 
     void loadServerState(string dataPath);
-    void saveBotInputs(string dataPath) const;
+    void saveBotInputs(string dataPath);
 };
 
 

@@ -108,9 +108,9 @@ void ServerState::loadServerState(string dataPath) {
     string tmpClientsFileName = "clients.csv.tmp.read";
     string tmpClientsFilePath = dataPath + "/" + tmpClientsFileName;
     string clientStatesFileName = "state.csv";
-    string clientStatesFilePath = dataPath + "/" + stateFileName;
+    string clientStatesFilePath = dataPath + "/" + clientStatesFileName;
     string tmpClientStatesFileName = "state.csv.tmp.read";
-    string tmpClientStatesFilePath = dataPath + "/" + stateFileName;
+    string tmpClientStatesFilePath = dataPath + "/" + tmpClientStatesFileName;
 
     if (std::filesystem::exists(clientsFilePath) && 
             std::filesystem::exists(clientStatesFilePath)) {
@@ -136,15 +136,15 @@ void ServerState::loadServerState(string dataPath) {
         serverClientIdToCSKnowId[i] = -1;
     }
     for (int i = 0; i < (int) clients.size(); i++) {
-        serverClientIdToCSKnowId[clients.serverId] = i;
+        serverClientIdToCSKnowId[clients[i].serverId] = i;
     }
 }
 
-void ServerState::saveBotInputs(string dataPath) const {
+void ServerState::saveBotInputs(string dataPath) {
     string inputsFileName = "input.csv";
     string inputsFilePath = dataPath + "/" + inputsFileName;
     string tmpInputsFileName = "input.csv.tmp.write";
-    string tmpInputsFilePath = dataPath + "/" + tmpClientsFileName;
+    string tmpInputsFilePath = dataPath + "/" + tmpInputsFileName;
 
     if (std::filesystem::exists(inputsFilePath)) {
         std::filesystem::rename(inputsFilePath, tmpInputsFilePath);
