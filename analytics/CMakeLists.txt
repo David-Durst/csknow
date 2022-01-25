@@ -35,12 +35,14 @@ FATAL: In-source builds are not allowed.
 ")
 endif()
 
-add_library(csknow_lib STATIC ${CSKNOW_SOURCES} ${CSKNOW_HEADERS} src/lib/queries/nav_mesh.cpp)
-add_executable(csknow ${PROJECT_SOURCE_DIR}/src/bin/csknow_main.cpp src/lib/load_cover.cpp)
+add_library(csknow_lib STATIC ${CSKNOW_SOURCES} ${CSKNOW_HEADERS})
+add_executable(csknow ${PROJECT_SOURCE_DIR}/src/bin/csknow_main.cpp)
+add_executable(csknow_bot ${PROJECT_SOURCE_DIR}/src/bin/csknow_bot.cpp)
 add_executable(csknow_intersection ${PROJECT_SOURCE_DIR}/src/bin/csknow_intersection.cpp)
 target_link_libraries(csknow_lib OpenMP::OpenMP_CXX)
 target_link_libraries(csknow_lib OpenSSL::SSL)
 target_link_libraries(csknow csknow_lib)
+target_link_libraries(csknow_bot csknow_lib)
 target_link_libraries(csknow_intersection csknow_lib)
 
 # add this to enable debug printing statements
