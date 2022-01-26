@@ -1,4 +1,5 @@
 #include "load_save_bot_data.h"
+#include "bots/thinker.h"
 #include <iostream>
 #include <thread>
 #include <chrono>
@@ -15,6 +16,7 @@ int main(int argc, char * argv[]) {
     std::chrono::duration<double> timePerTick(1.0 / tickRate);
 
     ServerState state;
+    Thinker thinker(state, 3);
     bool firstFrame = true;
     // \033[A moves up 1 line, \r moves cursor to start of line, \33[2K clears line
     string upAndClear = "\033[A\r\33[2K";
@@ -38,6 +40,7 @@ int main(int argc, char * argv[]) {
             }
         }
         if (state.loadedSuccessfully) {
+
             state.saveBotInputs(dataPath);
             std::cout << state.inputsCopy << std::endl;            
         }

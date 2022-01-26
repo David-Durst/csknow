@@ -6,7 +6,6 @@
 #define CSKNOW_LOAD_SAVE_BOT_DATA_H
 #include "load_data.h"
 #include "geometry.h"
-#include "bot_input_bits.h"
 #include <iostream>
 #include <sstream>
 
