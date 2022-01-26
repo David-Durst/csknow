@@ -127,7 +127,8 @@ void ServerState::saveBotInputs(string dataPath) {
 
     std::stringstream inputsStream;
     inputsStream << "Player Index,Buttons,Input Angle Delta Pct X,Input Angle Delta Pct Y\n";
-    numLines = 1;
+    // two lines as need to get rid of the last newline
+    numInputLines = 2;
 
     for (int i = 0; i < (int) inputsValid.size(); i++) {
         if (i < (int) clients.size() && inputsValid[i]) {
@@ -135,7 +136,7 @@ void ServerState::saveBotInputs(string dataPath) {
                 << clients[i].buttons << ","
                 << clients[i].inputAngleDeltaPctX << ","
                 << clients[i].inputAngleDeltaPctY << "\n";
-            numLines++;
+            numInputLines++;
         }
     }
 

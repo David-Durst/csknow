@@ -48,7 +48,7 @@ public:
     // state for caller to debug
     bool loadedSuccessfully;
     string badPath;
-    int numLines;
+    int numInputLines;
     string inputsCopy;
 
     void loadServerState(string dataPath);
