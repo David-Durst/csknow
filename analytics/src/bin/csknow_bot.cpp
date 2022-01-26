@@ -16,8 +16,8 @@ int main(int argc, char * argv[]) {
 
     ServerState state;
     bool firstFrame = true;
-    // \033[A moves up 1 line, \r moves cursor to start of line, \eK clears line
-    string upAndClear = "\033[A\r\eK";
+    // \033[A moves up 1 line, \r moves cursor to start of line, \33[2K clears line
+    string upAndClear = "\033[A\r\33[2K";
     uint64_t numFailures = 0;
     state.numInputLines = 0;
 
@@ -47,6 +47,7 @@ int main(int argc, char * argv[]) {
         }
         auto end = std::chrono::system_clock::now();
         std::chrono::duration<double> botTime = end - start;
+        std::cout << "Num failures " << numFailures << ", last bad path: " << state.badPath << std::endl;
         if (botTime < timePerTick) {
             std::cout << "Bot compute time: " << botTime.count() << "s" << std::endl;
             std::this_thread::sleep_for(timePerTick - botTime);
@@ -54,7 +55,6 @@ int main(int argc, char * argv[]) {
         else {
             std::cout << "\033[1;31mMissed Bot compute time:\033[0m " << botTime.count() << "s" << std::endl;
         }
-        std::cout << "Num failures " << numFailures << ", last bad path: " << state.badPath << std::endl;
         firstFrame = false;
     }
 
