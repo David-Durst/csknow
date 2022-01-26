@@ -40,7 +40,7 @@ int main(int argc, char * argv[]) {
             }
         }
         if (state.loadedSuccessfully) {
-
+            thinker.think();
             state.saveBotInputs(dataPath);
             std::cout << state.inputsCopy << std::endl;            
         }

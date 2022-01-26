@@ -98,6 +98,7 @@ void ServerState::loadServerState(string dataPath) {
     int64_t rows = startingPointPerFile[1];
 
     clients.resize(rows);
+    inputsValid.resize(rows, false);
 
     loadClientStates(tmpClientStatesFilePath);
 
@@ -145,4 +146,6 @@ void ServerState::saveBotInputs(string dataPath) {
     std::ofstream fsInputs(tmpInputsFilePath);
     fsInputs << inputsCopy;
     fsInputs.close();
+    
+    std::filesystem::rename(tmpInputsFilePath, inputsFilePath);
 }
