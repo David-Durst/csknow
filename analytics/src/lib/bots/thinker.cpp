@@ -1,6 +1,9 @@
 #include "bots/thinker.h"
 
 void Thinker::think() {
+    if (curBot >= state.clients.size()) {
+        return;
+    }
     int csknowId = state.serverClientIdToCSKnowId[curBot];
     state.inputsValid[csknowId] = true;
     state.clients[csknowId].buttons = 0;
