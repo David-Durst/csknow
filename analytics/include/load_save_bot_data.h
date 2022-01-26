@@ -49,9 +49,7 @@ public:
     bool loadedSuccessfully;
     string badPath;
     int numLines;
-    std::stringstream inputsCopy;
-
-    ServerState() : inputsCopy(std::ios_base::ate) {};
+    string inputsCopy;
 
     void loadServerState(string dataPath);
     void saveBotInputs(string dataPath);
