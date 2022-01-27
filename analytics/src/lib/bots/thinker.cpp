@@ -8,5 +8,5 @@ void Thinker::think() {
     state.inputsValid[csknowId] = true;
     state.clients[csknowId].buttons = 0;
     state.clients[csknowId].buttons |= IN_FORWARD;
-    state.clients[csknowId].inputAngleDeltaPctX = 0.2;
+    state.clients[csknowId].inputAngleDeltaPctY = 0.2;
 }
