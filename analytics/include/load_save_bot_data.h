@@ -17,10 +17,22 @@ private:
 
 public:
     struct Client {
-        int serverId;
-        string name;
-        bool isBot;
         int32_t lastFrame;
+        int32_t serverId;
+        string name;
+        int32_t team;
+        int32_t rifleId;
+        int32_t rifleClipAmmo;
+        int32_t rifleReserveAmmo;
+        int32_t pistolId;
+        int32_t pistolClipAmmo;
+        int32_t pistolReserveAmmo;
+        int32_t flashes;
+        int32_t molotovs;
+        int32_t smokes;
+        int32_t hes;
+        int32_t decoys;
+        int32_t incendiaries;
         float lastEyePosX;
         float lastEyePosY;
         float lastEyePosZ;
@@ -32,9 +44,10 @@ public:
         float lastEyeWithRecoilAngleX;
         float lastEyeWithRecoilAngleY;
         bool isAlive;
+        bool isBot;
 
         // keyboard/mouse inputs sent to game engine
-        int32_t buttons;
+        int buttons;
         // these range from -1 to 1
         float inputAngleDeltaPctX;
         float inputAngleDeltaPctY;
