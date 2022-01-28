@@ -126,6 +126,15 @@ struct Vec2 {
         return result;
     }
 
+    void makeYawNeg180To180() {
+        if (this->x > 180.) {
+            this->x -= 360.;
+        }
+        else if (this->x < -180.) {
+            this->x += 360.;
+        }
+    }
+
     void makePitch0To360() {
         if (this->y < 0.) {
             this->y += 360.;

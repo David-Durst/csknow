@@ -17,17 +17,20 @@ Vec2 Thinker::aimAt(int targetClientId) {
     targetAngles.y = std::max(-1 * MAX_PITCH_MAGNITUDE, 
             std::min(MAX_PITCH_MAGNITUDE, targetAngles.y));
 
-    Vec2 currentToTarget = targetAngles - currentAngles;
-    Vec2 targetToCurrent = currentAngles - targetAngles;
-    Vec2 deltaAngles = {
-        std::abs(currentToTarget.x) <= std::abs(targetToCurrent.x) ?
-            currentToTarget.x : targetToCurrent.x,
-        std::abs(currentToTarget.y) <= std::abs(targetToCurrent.y) ?
-            currentToTarget.y : targetToCurrent.y
-    };
+    // https://stackoverflow.com/a/7428771
+    Vec2 deltaAngles = targetAngles - currentAngles;
+    deltaAngles.makeYawNeg180To180();
     deltaAngles.x /= MAX_ONE_DIRECTION_ANGLE_DELTA;
+    deltaAngles.x /= 3.;
     deltaAngles.y /= MAX_ONE_DIRECTION_ANGLE_DELTA;
+    deltaAngles.y /= 3.;
     deltaAngles = max({-1., -1}, min({1., 1.}, deltaAngles));
+    if (std::abs(deltaAngles.x) < 0.05) {
+        deltaAngles.x = 0.;
+    }
+    if (std::abs(deltaAngles.y) < 0.05) {
+        deltaAngles.y = 0.;
+    }
 
     return deltaAngles;
 }
