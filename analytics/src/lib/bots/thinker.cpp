@@ -14,8 +14,17 @@ Vec2 Thinker::aimAt(int targetClientId) {
     Vec2 currentAngles = {curClient.lastEyeAngleX, curClient.lastEyeAngleY};
     Vec2 targetAngles = vectorAngles(targetVector);
     targetAngles.makePitchNeg90To90();
+    targetAngles.y = std::max(-1 * MAX_PITCH_MAGNITUDE, 
+            std::min(MAX_PITCH_MAGNITUDE, targetAngles.y));
 
-    Vec2 deltaAngles = targetAngles - currentAngles;
+    Vec2 currentToTarget = targetAngles - currentAngles;
+    Vec2 targetToCurrent = currentAngles - targetAngles;
+    Vec2 deltaAngles = {
+        std::abs(currentToTarget.x) <= std::abs(targetToCurrent.x) ?
+            currentToTarget.x : targetToCurrent.x,
+        std::abs(currentToTarget.y) <= std::abs(targetToCurrent.y) ?
+            currentToTarget.y : targetToCurrent.y
+    };
     deltaAngles.x /= MAX_ONE_DIRECTION_ANGLE_DELTA;
     deltaAngles.y /= MAX_ONE_DIRECTION_ANGLE_DELTA;
     deltaAngles = max({-1., -1}, min({1., 1.}, deltaAngles));
