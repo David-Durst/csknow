@@ -282,8 +282,8 @@ Vec2 vectorAngles(const Vec3 &forward)
 			pitch += 360;
 	}
 	
-	angles[0] = pitch;
-	angles[1] = yaw;
+	angles[0] = yaw;
+	angles[1] = pitch;
     return angles;
 }
 
