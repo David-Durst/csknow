@@ -86,23 +86,24 @@ void ServerState::loadClientStates(string clientStatesFilePath) {
         else if (colNumber == 19) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].lastFootPosZ);
         }
+        // Y AND X ARE INTENTIONALLY FLIPPED, I USE X FOR YAW, Y FOR PITCH, ENGINE DOES OPPOSITE
         else if (colNumber == 20) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].lastEyeAngleX);
-        }
-        else if (colNumber == 21) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].lastEyeAngleY);
         }
-        else if (colNumber == 22) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].lastAimpunchAngleX);
+        else if (colNumber == 21) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].lastEyeAngleX);
         }
-        else if (colNumber == 23) {
+        else if (colNumber == 22) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].lastAimpunchAngleY);
         }
+        else if (colNumber == 23) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].lastAimpunchAngleX);
+        }
         else if (colNumber == 24) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].lastEyeWithRecoilAngleX);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].lastEyeWithRecoilAngleY);
         }
         else if (colNumber == 25) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].lastEyeWithRecoilAngleY);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].lastEyeWithRecoilAngleX);
         }
         else if (colNumber == 26) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].isAlive);
@@ -166,7 +167,7 @@ void ServerState::saveBotInputs(string dataPath) {
     }
 
     std::stringstream inputsStream;
-    inputsStream << "Player Index,Buttons,Input Angle Delta Pct X,Input Angle Delta Pct Y\n";
+    inputsStream << "Player Index,Buttons,Input Angle Delta Pct Pitch,Input Angle Delta Pct Yaw\n";
     // two lines as need to get rid of the last newline
     numInputLines = 2;
 
@@ -174,8 +175,9 @@ void ServerState::saveBotInputs(string dataPath) {
         if (i < (int) clients.size() && inputsValid[i]) {
             inputsStream << clients[i].serverId << ","
                 << clients[i].buttons << ","
-                << clients[i].inputAngleDeltaPctX << ","
-                << clients[i].inputAngleDeltaPctY << "\n";
+                // FLIPPING TO MATCH YAW AND PITCH
+                << clients[i].inputAngleDeltaPctY << ","
+                << clients[i].inputAngleDeltaPctX << "\n";
             numInputLines++;
         }
     }

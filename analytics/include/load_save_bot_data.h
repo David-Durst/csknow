@@ -4,6 +4,7 @@
 
 #ifndef CSKNOW_LOAD_SAVE_BOT_DATA_H
 #define CSKNOW_LOAD_SAVE_BOT_DATA_H
+#define MAX_ONE_DIRECTION_ANGLE_DELTA 30.0
 #include "load_data.h"
 #include "geometry.h"
 #include <iostream>
@@ -37,6 +38,7 @@ public:
         float lastEyePosY;
         float lastEyePosZ;
         float lastFootPosZ;
+        // I USE X FOR YAW, Y FOR PITCH, ENGINE DOES OPPOSITE
         float lastEyeAngleX;
         float lastEyeAngleY;
         float lastAimpunchAngleX;

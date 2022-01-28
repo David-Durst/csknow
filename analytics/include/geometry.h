@@ -103,7 +103,57 @@ Vec3 max(Vec3 a, Vec3 b) {
 struct Vec2 {
     double x;
     double y;
+
+    double& operator[](size_t index) {
+        if (index == 0) {
+            return x;
+        } else {
+            return y;
+        }
+    }
+
+    Vec2 operator+(const Vec2 & other) const {
+        Vec2 result = *this;
+        result.x += other.x;
+        result.y += other.y;
+        return result;
+    }
+
+    Vec2 operator-(const Vec2 & other) const {
+        Vec2 result = *this;
+        result.x -= other.x;
+        result.y -= other.y;
+        return result;
+    }
+
+    void makePitch0To360() {
+        if (this->y < 0.) {
+            this->y += 360.;
+        }
+    }
+
+    void makePitchNeg90To90() {
+        if (this->y > 260.) {
+            this->y -= 360.;
+        }
+    }
 };
+
+static inline __attribute__((always_inline))
+Vec2 min(Vec2 a, Vec2 b) {
+    Vec2 result;
+    result.x = std::min(a.x, b.x);
+    result.y = std::min(a.y, b.y);
+    return result;
+}
+
+static inline __attribute__((always_inline))
+Vec2 max(Vec2 a, Vec2 b) {
+    Vec2 result;
+    result.x = std::max(a.x, b.x);
+    result.y = std::max(a.y, b.y);
+    return result;
+}
 
 class Ray {
 public:
@@ -190,6 +240,7 @@ bool pointInRegion(AABB box, Vec3 point) {
 }
 
 // https://github.com/ValveSoftware/source-sdk-2013/blob/master/sp/src/mathlib/mathlib_base.cpp#L901-L914
+// https://developer.valvesoftware.com/wiki/QAngle - QAngle is just a regular Euler angle
 static inline __attribute__((always_inline))
 Vec3 angleVectors(const Vec2 &angles) {
     Vec3 forward;
@@ -203,6 +254,39 @@ Vec3 angleVectors(const Vec2 &angles) {
     forward.z = -sp;
     return forward;
 }
+
+// https://github.com/ValveSoftware/source-sdk-2013/blob/master/sp/src/mathlib/mathlib_base.cpp#L1000-L1029
+static inline __attribute__((always_inline))
+Vec2 vectorAngles(const Vec3 &forward)
+{
+    Vec2 angles;
+	float tmp, yaw, pitch;
+	
+	if (forward[1] == 0 && forward[0] == 0)
+	{
+		yaw = 0;
+		if (forward[2] > 0)
+			pitch = 270;
+		else
+			pitch = 90;
+	}
+	else
+	{
+		yaw = (atan2(forward[1], forward[0]) * 180 / M_PI);
+		if (yaw < 0)
+			yaw += 360;
+
+		tmp = sqrt(forward[0]*forward[0] + forward[1]*forward[1]);
+		pitch = (atan2(-forward[2], tmp) * 180 / M_PI);
+		if (pitch < 0)
+			pitch += 360;
+	}
+	
+	angles[0] = pitch;
+	angles[1] = yaw;
+    return angles;
+}
+
 
 const int EYE_HEIGHT = 64;
 static inline __attribute__((always_inline))

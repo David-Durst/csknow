@@ -12,6 +12,8 @@ class Thinker {
     int curBot;
     ServerState & state;
 
+    Vec2 aimAt(int targetClient);
+
 public:
     Thinker(ServerState & state, int curBot) : state(state), curBot(curBot) {};
     void think();
