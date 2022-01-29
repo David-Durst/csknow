@@ -22,7 +22,7 @@ Vec2 Thinker::aimAt(int targetClientId) {
         targetClient.lastEyePosZ - curClient.lastEyePosZ
     };
 
-    Vec2 currentAngles = {curClient.lastEyeAngleX, curClient.lastEyeAngleY};
+    Vec2 currentAngles = {curClient.lastEyeWithRecoilAngleX, curClient.lastEyeWithRecoilAngleY};
     Vec2 targetAngles = vectorAngles(targetVector);
     targetAngles.makePitchNeg90To90();
     targetAngles.y = std::max(-1 * MAX_PITCH_MAGNITUDE, 
@@ -46,7 +46,7 @@ void Thinker::think() {
         return;
     }
     int csknowId = state.serverClientIdToCSKnowId[curBot];
-    const ServerState::Client & curClient = state.clients[csknowId];
+    ServerState::Client & curClient = state.clients[csknowId];
     int nearestEnemyServerId = -1;
     double distance = std::numeric_limits<double>::max();
     for (const auto & otherClient : state.clients) {
@@ -65,10 +65,22 @@ void Thinker::think() {
         this->aimAt(state.serverClientIdToCSKnowId[nearestEnemyServerId]);
 
     state.inputsValid[csknowId] = true;
-    state.clients[csknowId].buttons = 0;
-    //state.clients[csknowId].buttons |= IN_FORWARD;
-    state.clients[csknowId].inputAngleDeltaPctX = angleDelta.x;
-    state.clients[csknowId].inputAngleDeltaPctY = angleDelta.y;
+    bool attackLastFrame = curClient.buttons & IN_ATTACK > 0;
+    curClient.buttons = 0;
+    //curClient.buttons |= IN_FORWARD;
+    curClient.inputAngleDeltaPctX = angleDelta.x;
+    curClient.inputAngleDeltaPctY = angleDelta.y;
+
+    ServerState::Client & targetClient = state.clients[state.serverClientIdToCSKnowId[nearestEnemyServerId]];
+    Ray eyeCoordinates = getEyeCoordinatesForPlayer(
+            {curClient.lastEyePosX, curClient.lastEyePosY, curClient.lastFootPosZ},
+            {curClient.lastEyeWithRecoilAngleX, curClient.lastEyeWithRecoilAngleY});
+    AABB targetAABB = getAABBForPlayer(
+            {targetClient.lastEyePosX, targetClient.lastEyePosY, targetClient.lastFootPosZ});
+    double hitt0, hitt1;
+    if (intersectP(targetAABB, eyeCoordinates, hitt0, hitt1) && !attackLastFrame) {
+        curClient.buttons |= IN_ATTACK;
+    }
     //state.clients[csknowId].inputAngleDeltaPctX = 0.02;
     //state.clients[csknowId].inputAngleDeltaPctY = 0.;
 }
