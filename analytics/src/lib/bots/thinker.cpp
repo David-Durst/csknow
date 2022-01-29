@@ -2,8 +2,8 @@
 #include <limits>
 
 float velocityCurve(double totalDeltaAngle, double lastDeltaAngle) {
-    double newDeltaAngle = std::max(MAX_ONE_DIRECTION_ANGLE_VEL,
-            std::min(-1 * MAX_ONE_DIRECTION_ANGLE_VEL, totalDeltaAngle / 3));
+    double newDeltaAngle = std::max(-1 * MAX_ONE_DIRECTION_ANGLE_VEL,
+            std::min(MAX_ONE_DIRECTION_ANGLE_VEL, totalDeltaAngle / 3));
     double newAccelAngle = newDeltaAngle - lastDeltaAngle;
     if (std::abs(newAccelAngle) > MAX_ONE_DIRECTION_ANGLE_ACCEL) {
         newDeltaAngle = lastDeltaAngle + 
@@ -31,22 +31,24 @@ Vec2 Thinker::aimAt(int targetClientId) {
     // https://stackoverflow.com/a/7428771
     Vec2 totalDeltaAngles = targetAngles - currentAngles;
     totalDeltaAngles.makeYawNeg180To180();
-    totalDeltaAngles.x = MAX_ONE_DIRECTION_ANGLE_VEL;
-    totalDeltaAngles.x /= 3.;
-    totalDeltaAngles.y /= MAX_ONE_DIRECTION_ANGLE_VEL;
-    totalDeltaAngles.y /= 3.;
-    totalDeltaAngles = max({-1., -1}, min({1., 1.}, totalDeltaAngles));
-
     Vec2 resultDeltaAngles;
-    resultDeltaAngles = totalDeltaAngles;
-    //resultDeltaAngles.x = velocityCurve(totalDeltaAngles.x, lastDeltaAngles.x);
-    //resultDeltaAngles.y = velocityCurve(totalDeltaAngles.y, lastDeltaAngles.y);
+    //totalDeltaAngles.x /= MAX_ONE_DIRECTION_ANGLE_VEL;
+    //totalDeltaAngles.x /= 3.;
+    //totalDeltaAngles.y /= MAX_ONE_DIRECTION_ANGLE_VEL;
+    //totalDeltaAngles.y /= 3.;
+    //totalDeltaAngles = max({-1., -1}, min({1., 1.}, totalDeltaAngles));
+
+    //resultDeltaAngles = totalDeltaAngles;
+    resultDeltaAngles.x = velocityCurve(totalDeltaAngles.x, lastDeltaAngles.x);
+    resultDeltaAngles.y = velocityCurve(totalDeltaAngles.y, lastDeltaAngles.y);
+    /*
     if (std::abs(resultDeltaAngles.x) < 0.05) {
         resultDeltaAngles.x = 0.;
     }
     if (std::abs(resultDeltaAngles.y) < 0.05) {
         resultDeltaAngles.y = 0.;
     }
+    */
 
     lastDeltaAngles = resultDeltaAngles;
 
