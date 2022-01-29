@@ -10,12 +10,13 @@
 
 class Thinker {
     int curBot;
+    Vec2 lastDeltaAngles;
     ServerState & state;
 
     Vec2 aimAt(int targetClient);
 
 public:
-    Thinker(ServerState & state, int curBot) : state(state), curBot(curBot) {};
+    Thinker(ServerState & state, int curBot) : state(state), curBot(curBot), lastDeltaAngles{0,0} {};
     void think();
 };
 

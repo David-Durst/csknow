@@ -66,6 +66,11 @@ IVec3 max(IVec3 a, IVec3 b) {
     return result;
 }
 
+static inline __attribute__((always_inline))
+double positiveModulo(double x, double y) {
+    return fmod(fmod(x, y) + y, y);
+}
+
 struct Vec3 {
     double x;
     double y;
@@ -127,21 +132,21 @@ struct Vec2 {
     }
 
     void makeYawNeg180To180() {
+        this->x = positiveModulo(this->x, 360.);
         if (this->x > 180.) {
             this->x -= 360.;
-        }
-        else if (this->x < -180.) {
-            this->x += 360.;
         }
     }
 
     void makePitch0To360() {
+        this->y = positiveModulo(this->y, 360.);
         if (this->y < 0.) {
             this->y += 360.;
         }
     }
 
     void makePitchNeg90To90() {
+        this->y = positiveModulo(this->y, 360.);
         if (this->y > 260.) {
             this->y -= 360.;
         }

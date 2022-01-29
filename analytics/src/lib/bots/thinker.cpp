@@ -1,6 +1,17 @@
 #include "bots/thinker.h"
 #include <limits>
 
+float velocityCurve(double totalDeltaAngle, double lastDeltaAngle) {
+    double newDeltaAngle = std::max(MAX_ONE_DIRECTION_ANGLE_VEL,
+            std::min(-1 * MAX_ONE_DIRECTION_ANGLE_VEL, totalDeltaAngle / 3));
+    double newAccelAngle = newDeltaAngle - lastDeltaAngle;
+    if (std::abs(newAccelAngle) > MAX_ONE_DIRECTION_ANGLE_ACCEL) {
+        newDeltaAngle = lastDeltaAngle + 
+            copysign(MAX_ONE_DIRECTION_ANGLE_ACCEL, newAccelAngle);
+    }
+    return newDeltaAngle / MAX_ONE_DIRECTION_ANGLE_VEL;
+}
+
 Vec2 Thinker::aimAt(int targetClientId) {
     const ServerState::Client & curClient = state.clients[state.serverClientIdToCSKnowId[curBot]],
         & targetClient = state.clients[targetClientId];
@@ -18,21 +29,26 @@ Vec2 Thinker::aimAt(int targetClientId) {
             std::min(MAX_PITCH_MAGNITUDE, targetAngles.y));
 
     // https://stackoverflow.com/a/7428771
-    Vec2 deltaAngles = targetAngles - currentAngles;
-    deltaAngles.makeYawNeg180To180();
-    deltaAngles.x /= MAX_ONE_DIRECTION_ANGLE_DELTA;
-    deltaAngles.x /= 3.;
-    deltaAngles.y /= MAX_ONE_DIRECTION_ANGLE_DELTA;
-    deltaAngles.y /= 3.;
-    deltaAngles = max({-1., -1}, min({1., 1.}, deltaAngles));
-    if (std::abs(deltaAngles.x) < 0.05) {
-        deltaAngles.x = 0.;
+    Vec2 totalDeltaAngles = targetAngles - currentAngles;
+    totalDeltaAngles.makeYawNeg180To180();
+    //deltaAngles.x = MAX_ONE_DIRECTION_ANGLE_VEL;
+    //deltaAngles.x /= 3.;
+    //deltaAngles.y /= MAX_ONE_DIRECTION_ANGLE_VEL;
+    //deltaAngles.y /= 3.;
+    //deltaAngles = max({-1., -1}, min({1., 1.}, deltaAngles));
+    Vec2 resultDeltaAngles;
+    resultDeltaAngles.x = velocityCurve(totalDeltaAngles.x, lastDeltaAngles.x);
+    resultDeltaAngles.y = velocityCurve(totalDeltaAngles.y, lastDeltaAngles.y);
+    if (std::abs(resultDeltaAngles.x) < 0.05) {
+        resultDeltaAngles.x = 0.;
     }
-    if (std::abs(deltaAngles.y) < 0.05) {
-        deltaAngles.y = 0.;
+    if (std::abs(resultDeltaAngles.y) < 0.05) {
+        resultDeltaAngles.y = 0.;
     }
 
-    return deltaAngles;
+    lastDeltaAngles = resultDeltaAngles;
+
+    return resultDeltaAngles;
 }
 
 void Thinker::think() {
@@ -63,4 +79,6 @@ void Thinker::think() {
     //state.clients[csknowId].buttons |= IN_FORWARD;
     state.clients[csknowId].inputAngleDeltaPctX = angleDelta.x;
     state.clients[csknowId].inputAngleDeltaPctY = angleDelta.y;
+    //state.clients[csknowId].inputAngleDeltaPctX = 0.02;
+    //state.clients[csknowId].inputAngleDeltaPctY = 0.;
 }
