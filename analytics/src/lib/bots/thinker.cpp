@@ -31,14 +31,16 @@ Vec2 Thinker::aimAt(int targetClientId) {
     // https://stackoverflow.com/a/7428771
     Vec2 totalDeltaAngles = targetAngles - currentAngles;
     totalDeltaAngles.makeYawNeg180To180();
-    //deltaAngles.x = MAX_ONE_DIRECTION_ANGLE_VEL;
-    //deltaAngles.x /= 3.;
-    //deltaAngles.y /= MAX_ONE_DIRECTION_ANGLE_VEL;
-    //deltaAngles.y /= 3.;
-    //deltaAngles = max({-1., -1}, min({1., 1.}, deltaAngles));
+    totalDeltaAngles.x = MAX_ONE_DIRECTION_ANGLE_VEL;
+    totalDeltaAngles.x /= 3.;
+    totalDeltaAngles.y /= MAX_ONE_DIRECTION_ANGLE_VEL;
+    totalDeltaAngles.y /= 3.;
+    totalDeltaAngles = max({-1., -1}, min({1., 1.}, totalDeltaAngles));
+
     Vec2 resultDeltaAngles;
-    resultDeltaAngles.x = velocityCurve(totalDeltaAngles.x, lastDeltaAngles.x);
-    resultDeltaAngles.y = velocityCurve(totalDeltaAngles.y, lastDeltaAngles.y);
+    resultDeltaAngles = totalDeltaAngles;
+    //resultDeltaAngles.x = velocityCurve(totalDeltaAngles.x, lastDeltaAngles.x);
+    //resultDeltaAngles.y = velocityCurve(totalDeltaAngles.y, lastDeltaAngles.y);
     if (std::abs(resultDeltaAngles.x) < 0.05) {
         resultDeltaAngles.x = 0.;
     }
