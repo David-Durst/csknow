@@ -20,6 +20,19 @@ void Thinker::think() {
     this->fire(curClient, targetClient);
 }
 
+void Thinker::updatePolicy(const ServerState::Client & curClient) {
+    auto curTime = std::chrono::system_clock::now();
+    if ((curTime - lastPolicyThinkTime).count() > SECONDS_BETWEEN_POLICY_CHANGES) {
+        if (dis(gen) < 0.5) {
+           curPolicy = PolicyStates::Push; 
+        }
+        else {
+           curPolicy = PolicyStates::Hold; 
+        }
+        lastPolicyThinkTime = curTime;
+    }
+}
+
 Thinker::Target Thinker::selectTarget(const ServerState::Client & curClient) {
     int nearestEnemyServerId = -1;
     double distance = std::numeric_limits<double>::max();
