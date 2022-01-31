@@ -244,7 +244,7 @@ void ServerState::loadServerState(string dataPath) {
 
     loadClientStates(tmpClientStatesFilePath);
     loadVisibilityClientPairs(tmpVisibilityFilePath);
-    //loadC4State(tmpC4FilePath);
+    loadC4State(tmpC4FilePath);
 
     // build map from server id to CSKnow id
     int maxServerId = -1;

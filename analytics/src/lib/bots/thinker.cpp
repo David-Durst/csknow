@@ -8,7 +8,14 @@ void Thinker::think() {
     int csknowId = state.serverClientIdToCSKnowId[curBot];
     ServerState::Client & curClient = state.clients[csknowId];
 
+    // don't think if dead
+    if (!curClient.isAlive) {
+        return;
+    }
+
     buttonsLastFrame = curClient.buttons;
+
+    this->updatePolicy(curClient);
 
     Target target = selectTarget(curClient);
     const ServerState::Client & targetClient = state.clients[target.id];
@@ -18,16 +25,21 @@ void Thinker::think() {
 
     this->aimAt(curClient, targetClient);
     this->fire(curClient, targetClient);
+    this->move(curClient);
 }
 
 void Thinker::updatePolicy(const ServerState::Client & curClient) {
     auto curTime = std::chrono::system_clock::now();
-    if ((curTime - lastPolicyThinkTime).count() > SECONDS_BETWEEN_POLICY_CHANGES) {
+    if ((curTime - lastPolicyThinkTime).count() > SECONDS_BETWEEN_POLICY_CHANGES && 
+            state.c4IsPlanted) {
         if (dis(gen) < 0.5) {
-           curPolicy = PolicyStates::Push; 
+            curPolicy = PolicyStates::Push; 
+            waypoints = navFile.find_path(
+                    {curClient.lastEyePosX, curClient.lastEyePosY, curClient.lastFootPosZ},
+                    {state.c4X, state.c4Y, state.c4Z});                    
         }
         else {
-           curPolicy = PolicyStates::Hold; 
+            curPolicy = PolicyStates::Hold; 
         }
         lastPolicyThinkTime = curTime;
     }
@@ -120,4 +132,16 @@ void Thinker::fire(ServerState::Client & curClient, const ServerState::Client & 
             intersectP(targetAABB, eyeCoordinates, hitt0, hitt1) && 
             !attackLastFrame && haveAmmo && visible);
     this->setButton(curClient, IN_RELOAD, !haveAmmo);
+}
+
+void Thinker::move(ServerState::Client & curClient) {
+    if (curPolicy == PolicyStates::Hold || getButton(curClient, IN_ATTACK)) {
+        this->setButton(curClient, IN_FORWARD, false);
+        this->setButton(curClient, IN_BACK, false);
+        this->setButton(curClient, IN_LEFT, false);
+        this->setButton(curClient, IN_RIGHT, false);
+    }
+    else {
+
+    }
 }

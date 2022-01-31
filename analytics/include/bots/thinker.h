@@ -4,7 +4,7 @@
 
 #ifndef CSKNOW_THINKER_H
 #define CSKNOW_THINKER_H
-#define SECONDS_BETWEEN_POLICY_CHANGES 30.
+#define SECONDS_BETWEEN_POLICY_CHANGES 5.
 
 #include "load_save_bot_data.h"
 #include "bots/input_bits.h"
@@ -29,11 +29,14 @@ class Thinker {
     nav_mesh::nav_file navFile;
     std::chrono::time_point<std::chrono::system_clock> lastPolicyThinkTime;
     PolicyStates curPolicy;
+    std::vector<nav_mesh::vec3_t> waypoints;
+    uint64_t curWaypoint;
 
     void updatePolicy(const ServerState::Client & curClient);
     Target selectTarget(const ServerState::Client & curClient);
     void aimAt(ServerState::Client & curClient, const ServerState::Client & targetClient);
     void fire(ServerState::Client & curClient, const ServerState::Client & targetClient);
+    void move(ServerState::Client & curClient);
 
     void setButton(ServerState::Client & curClient, int32_t button, bool setTrue) {
         if (setTrue) {
@@ -42,6 +45,10 @@ class Thinker {
         else {
             curClient.buttons &= ~button;
         }
+    }
+
+    bool getButton(ServerState::Client & curClient, int32_t button) {
+        return curClient.buttons & button > 0;
     }
 
     // randomness state https://en.cppreference.com/w/cpp/numeric/random/uniform_real_distribution
