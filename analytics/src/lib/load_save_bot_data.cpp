@@ -135,16 +135,16 @@ void ServerState::loadVisibilityClientPairs(string visibilityFilePath) {
     // track location for insertion
     int64_t arrayEntry = 0;
 
-    int32_t sourceClient, targetClient;
+    int32_t clients[2];
     for (size_t curStart = firstRow + 1, curDelimiter = getNextDelimiter(file, curStart, stats.st_size);
          curDelimiter < stats.st_size;
          curStart = curDelimiter + 1, curDelimiter = getNextDelimiter(file, curStart, stats.st_size)) {
         if (colNumber == 0) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, sourceClient);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[0]);
         }
         else if (colNumber == 1) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, targetClient);
-            visibilityClientPairs.insert({sourceClient, targetClient});
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[1]);
+            visibilityClientPairs.insert({clients[0], clients[1]});
             rowNumber++;
             arrayEntry++;
         }

@@ -12,6 +12,7 @@ void Thinker::think() {
     const ServerState::Client & targetClient = state.clients[target.id];
 
     state.inputsValid[csknowId] = true;
+    curClient.buttons = 0;
 
     this->aimAt(curClient, targetClient);
     this->fire(curClient, targetClient);

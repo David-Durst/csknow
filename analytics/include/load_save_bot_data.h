@@ -64,7 +64,6 @@ public:
     vector<Client> clients;
     vector<bool> inputsValid;
 
-    // visibility data
     std::set<std::pair<int32_t, int32_t>> visibilityClientPairs;
 
     // state for caller to debug
