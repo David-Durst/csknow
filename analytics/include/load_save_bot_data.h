@@ -11,12 +11,14 @@
 #include "geometry.h"
 #include <iostream>
 #include <sstream>
+#include <set>
+#include <utility>
 
 
 class ServerState {
 private:
-    void loadClients(string clientsFilePath);
     void loadClientStates(string clientStatesFilePath);
+    void loadVisibilityClientPairs(string visibilityFilePath);
 
 public:
     struct Client {
@@ -61,6 +63,9 @@ public:
     vector<int> serverClientIdToCSKnowId;
     vector<Client> clients;
     vector<bool> inputsValid;
+
+    // visibility data
+    std::set<std::pair<int32_t, int32_t>> visibilityClientPairs;
 
     // state for caller to debug
     bool loadedSuccessfully;

@@ -121,18 +121,62 @@ void ServerState::loadClientStates(string clientStatesFilePath) {
     closeMMapFile({fd, stats, file});
 }
 
+void ServerState::loadVisibilityClientPairs(string visibilityFilePath) {
+    // mmap the file
+    auto [fd, stats, file] = openMMapFile(visibilityFilePath);
+
+    // skip the header
+    size_t firstRow = getNewline(file, 0, stats.st_size);
+
+    // track location for error logging
+    int64_t rowNumber = 0;
+    int64_t colNumber = 0;
+
+    // track location for insertion
+    int64_t arrayEntry = 0;
+
+    int32_t sourceClient, targetClient;
+    for (size_t curStart = firstRow + 1, curDelimiter = getNextDelimiter(file, curStart, stats.st_size);
+         curDelimiter < stats.st_size;
+         curStart = curDelimiter + 1, curDelimiter = getNextDelimiter(file, curStart, stats.st_size)) {
+        if (colNumber == 0) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, sourceClient);
+        }
+        else if (colNumber == 1) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, targetClient);
+            visibilityClientPairs.insert({sourceClient, targetClient});
+            rowNumber++;
+            arrayEntry++;
+        }
+        colNumber = (colNumber + 1) % 2;
+    }
+    closeMMapFile({fd, stats, file});
+}
+
 void ServerState::loadServerState(string dataPath) {
     string clientStatesFileName = "state.csv";
     string clientStatesFilePath = dataPath + "/" + clientStatesFileName;
     string tmpClientStatesFileName = "state.csv.tmp.read";
     string tmpClientStatesFilePath = dataPath + "/" + tmpClientStatesFileName;
+    string visibilityFileName = "visibility.csv";
+    string visibilityFilePath = dataPath + "/" + visibilityFileName;
+    string tmpVisibilityFileName = "visibility.csv.tmp.read";
+    string tmpVisibilityFilePath = dataPath + "/" + tmpVisibilityFileName;
 
-    if (std::filesystem::exists(clientStatesFilePath)) {
+    bool clientStatesExists = std::filesystem::exists(clientStatesFilePath);
+    bool visibilityExists = std::filesystem::exists(visibilityFilePath);
+    if (clientStatesExists && visibilityExists) {
         std::filesystem::rename(clientStatesFilePath, tmpClientStatesFilePath);
         loadedSuccessfully = true;
     }
     else {
-        badPath = clientStatesFilePath;
+        badPath = "";
+        if (!clientStatesExists) {
+            badPath += clientStatesFilePath;
+        }
+        if (!visibilityExists) {
+            badPath += " " + visibilityFilePath;
+        }
         loadedSuccessfully = false;
         return;
     }
@@ -142,6 +186,8 @@ void ServerState::loadServerState(string dataPath) {
 
     clients.resize(rows);
     inputsValid.resize(rows, false);
+    
+    visibilityClientPairs.clear();
 
     loadClientStates(tmpClientStatesFilePath);
 
