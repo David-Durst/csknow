@@ -21,6 +21,15 @@ class Thinker {
     void aimAt(ServerState::Client & curClient, const ServerState::Client & targetClient);
     void fire(ServerState::Client & curClient, const ServerState::Client & targetClient);
 
+    void setButton(ServerState::Client & curClient, int32_t button, bool setTrue) {
+        if (setTrue) {
+            curClient.buttons |= button;
+        }
+        else {
+            curClient.buttons &= ~button;
+        }
+    }
+
 public:
     Thinker(ServerState & state, int curBot) : state(state), curBot(curBot), lastDeltaAngles{0,0} {};
     void think();

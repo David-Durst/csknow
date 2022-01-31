@@ -52,7 +52,7 @@ public:
         bool isBot;
 
         // keyboard/mouse inputs sent to game engine
-        int buttons;
+        int32_t buttons;
         // these range from -1 to 1
         float inputAngleDeltaPctX;
         float inputAngleDeltaPctY;

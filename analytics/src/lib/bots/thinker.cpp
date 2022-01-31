@@ -80,6 +80,15 @@ void Thinker::aimAt(ServerState::Client & curClient, const ServerState::Client &
 
 void Thinker::fire(ServerState::Client & curClient, const ServerState::Client & targetClient) {
     bool attackLastFrame = curClient.buttons & IN_ATTACK > 0;
+
+    // no reloading for knives and grenades
+    bool haveAmmo = true;
+    if (curClient.currentWeaponId == curClient.rifleId) {
+        haveAmmo = curClient.rifleClipAmmo > 0;
+    }
+    else if (curClient.currentWeaponId == curClient.pistolId) {
+        haveAmmo = curClient.pistolClipAmmo > 0;
+    }
     //curClient.buttons |= IN_FORWARD;
 
     Ray eyeCoordinates = getEyeCoordinatesForPlayer(
@@ -88,10 +97,7 @@ void Thinker::fire(ServerState::Client & curClient, const ServerState::Client & 
     AABB targetAABB = getAABBForPlayer(
             {targetClient.lastEyePosX, targetClient.lastEyePosY, targetClient.lastFootPosZ});
     double hitt0, hitt1;
-    if (intersectP(targetAABB, eyeCoordinates, hitt0, hitt1) && !attackLastFrame) {
-        curClient.buttons |= IN_ATTACK;
-    }
-    else {
-        curClient.buttons &= ~IN_ATTACK;
-    }
+    this->setButton(curClient, IN_ATTACK, 
+            intersectP(targetAABB, eyeCoordinates, hitt0, hitt1) && !attackLastFrame && haveAmmo);
+    this->setButton(curClient, IN_RELOAD, !haveAmmo);
 }
