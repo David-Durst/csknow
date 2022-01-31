@@ -85,6 +85,22 @@ struct Vec3 {
             return z;
         }
     }
+
+    Vec3 operator+(const Vec3 & other) const {
+        Vec3 result = *this;
+        result.x += other.x;
+        result.y += other.y;
+        result.z += other.z;
+        return result;
+    }
+
+    Vec3 operator-(const Vec3 & other) const {
+        Vec3 result = *this;
+        result.x -= other.x;
+        result.y -= other.y;
+        result.z -= other.z;
+        return result;
+    }
 };
 
 static inline __attribute__((always_inline))

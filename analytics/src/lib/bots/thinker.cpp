@@ -32,11 +32,17 @@ void Thinker::updatePolicy(const ServerState::Client & curClient) {
     auto curTime = std::chrono::system_clock::now();
     if ((curTime - lastPolicyThinkTime).count() > SECONDS_BETWEEN_POLICY_CHANGES && 
             state.c4IsPlanted) {
-        if (dis(gen) < 0.5) {
+        if (dis(gen) < 2.5) {
             curPolicy = PolicyStates::Push; 
-            waypoints = navFile.find_path(
-                    {curClient.lastEyePosX, curClient.lastEyePosY, curClient.lastFootPosZ},
-                    {state.c4X, state.c4Y, state.c4Z});                    
+            try {
+                waypoints = navFile.find_path(
+                        {curClient.lastEyePosX, curClient.lastEyePosY, curClient.lastFootPosZ},
+                        {state.c4X, state.c4Y, state.c4Z});                    
+            }
+            catch (std::exception& error) {
+                waypoints = {{state.c4X, state.c4Y, state.c4Z}};  
+            }
+            curWaypoint = 0;
         }
         else {
             curPolicy = PolicyStates::Hold; 
@@ -135,13 +141,37 @@ void Thinker::fire(ServerState::Client & curClient, const ServerState::Client & 
 }
 
 void Thinker::move(ServerState::Client & curClient) {
-    if (curPolicy == PolicyStates::Hold || getButton(curClient, IN_ATTACK)) {
+    //if (curPolicy == PolicyStates::Hold || getButton(curClient, IN_ATTACK)) {
+    if (curPolicy == PolicyStates::Hold) {
         this->setButton(curClient, IN_FORWARD, false);
+        this->setButton(curClient, IN_RIGHT, false);
         this->setButton(curClient, IN_BACK, false);
         this->setButton(curClient, IN_LEFT, false);
-        this->setButton(curClient, IN_RIGHT, false);
     }
     else {
+        Vec3 waypointPos{waypoints[curWaypoint].x, waypoints[curWaypoint].y, waypoints[curWaypoint].z};
+        Vec3 curPos{curClient.lastEyePosX, curClient.lastEyePosY, curClient.lastFootPosZ};
+        Vec3 targetVector = waypointPos - curPos;
 
+        Vec2 currentAngles = {
+            curClient.lastEyeAngleX + curClient.lastAimpunchAngleX, 
+            curClient.lastEyeAngleY + curClient.lastAimpunchAngleY};
+        Vec2 targetAngles = vectorAngles(targetVector);
+        Vec2 totalDeltaAngles = targetAngles - currentAngles;
+        totalDeltaAngles.makeYawNeg180To180();
+        // don't need to worry about targetAngles y since can't move up and down
+        //
+        this->setButton(curClient, IN_FORWARD, 
+                totalDeltaAngles.x >= 315. || totalDeltaAngles.x <= 45.);
+        this->setButton(curClient, IN_RIGHT, 
+                totalDeltaAngles.x >= 45. || totalDeltaAngles.x <= 135.);
+        this->setButton(curClient, IN_BACK, 
+                totalDeltaAngles.x >= 135. || totalDeltaAngles.x <= 225.);
+        this->setButton(curClient, IN_LEFT, 
+                totalDeltaAngles.x >= 225. || totalDeltaAngles.x <= 315.);
+
+        if (computeDistance(curPos, waypointPos) < 20. && curWaypoint < waypoints.size() - 1) {
+            curWaypoint++;
+        }
     }
 }
