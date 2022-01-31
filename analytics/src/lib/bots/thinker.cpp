@@ -8,6 +8,8 @@ void Thinker::think() {
     int csknowId = state.serverClientIdToCSKnowId[curBot];
     ServerState::Client & curClient = state.clients[csknowId];
 
+    buttonsLastFrame = curClient.buttons;
+
     Target target = selectTarget(curClient);
     const ServerState::Client & targetClient = state.clients[target.id];
 
@@ -77,7 +79,7 @@ void Thinker::aimAt(ServerState::Client & curClient, const ServerState::Client &
 }
 
 void Thinker::fire(ServerState::Client & curClient, const ServerState::Client & targetClient) {
-    bool attackLastFrame = curClient.buttons & IN_ATTACK > 0;
+    bool attackLastFrame = buttonsLastFrame & IN_ATTACK > 0;
 
     // no reloading for knives and grenades
     bool haveAmmo = true;

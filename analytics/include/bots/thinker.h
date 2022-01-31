@@ -9,7 +9,7 @@
 #include "bots/input_bits.h"
 
 class Thinker {
-    int curBot;
+    int curBot, buttonsLastFrame;
     Vec2 lastDeltaAngles;
     ServerState & state;
 

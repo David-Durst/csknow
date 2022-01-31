@@ -190,6 +190,7 @@ void ServerState::loadServerState(string dataPath) {
     visibilityClientPairs.clear();
 
     loadClientStates(tmpClientStatesFilePath);
+    loadVisibilityClientPairs(tmpVisibilityFilePath);
 
     // build map from server id to CSKnow id
     int maxServerId = -1;
