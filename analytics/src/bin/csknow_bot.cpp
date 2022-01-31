@@ -7,12 +7,13 @@
 int main(int argc, char * argv[]) {
     if (argc != 3) {
         std::cout << "please call this code 2 arguments: \n" 
-            << "1. path/to/data\n"
-            << "2. server_tick_rate" << std::endl;
+            << "1. path/to/maps\n"
+            << "2. path/to/data\n"
+            << "3. server_tick_rate" << std::endl;
         return 1;
     }
-    string dataPath = argv[1];
-    int tickRate = std::stoi(argv[2]);
+    string mapsPath = argv[1], dataPath = argv[2];
+    int tickRate = std::stoi(argv[3]);
     std::chrono::duration<double> timePerTick(1.0 / tickRate);
 
     ServerState state;
