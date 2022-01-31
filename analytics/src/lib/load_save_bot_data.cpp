@@ -209,7 +209,7 @@ void ServerState::loadServerState(string dataPath) {
     string c4FileName = "c4.csv";
     string c4FilePath = dataPath + "/" + c4FileName;
     string tmpC4FileName = "c4.csv.tmp.read";
-    string tmpC4FilePath = dataPath + "/" + tmpVisibilityFileName;
+    string tmpC4FilePath = dataPath + "/" + tmpC4FileName;
 
     bool clientStatesExists = std::filesystem::exists(clientStatesFilePath);
     bool visibilityExists = std::filesystem::exists(visibilityFilePath);

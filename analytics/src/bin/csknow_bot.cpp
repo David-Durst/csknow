@@ -1,11 +1,12 @@
 #include "load_save_bot_data.h"
 #include "bots/thinker.h"
+#include "navmesh/nav_file.h"
 #include <iostream>
 #include <thread>
 #include <chrono>
 
 int main(int argc, char * argv[]) {
-    if (argc != 3) {
+    if (argc != 4) {
         std::cout << "please call this code 2 arguments: \n" 
             << "1. path/to/maps\n"
             << "2. path/to/data\n"
