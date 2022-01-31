@@ -78,45 +78,48 @@ void ServerState::loadClientStates(string clientStatesFilePath) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].incendiaries);
         }
         else if (colNumber == 17) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].lastEyePosX);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].hasC4);
         }
         else if (colNumber == 18) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].lastEyePosY);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].lastEyePosX);
         }
         else if (colNumber == 19) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].lastEyePosZ);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].lastEyePosY);
         }
         else if (colNumber == 20) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].lastEyePosZ);
+        }
+        else if (colNumber == 21) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].lastFootPosZ);
         }
         // Y AND X ARE INTENTIONALLY FLIPPED, I USE X FOR YAW, Y FOR PITCH, ENGINE DOES OPPOSITE
-        else if (colNumber == 21) {
+        else if (colNumber == 22) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].lastEyeAngleY);
         }
-        else if (colNumber == 22) {
+        else if (colNumber == 23) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].lastEyeAngleX);
         }
-        else if (colNumber == 23) {
+        else if (colNumber == 24) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].lastAimpunchAngleY);
         }
-        else if (colNumber == 24) {
+        else if (colNumber == 25) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].lastAimpunchAngleX);
         }
-        else if (colNumber == 25) {
+        else if (colNumber == 26) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].lastEyeWithRecoilAngleY);
         }
-        else if (colNumber == 26) {
+        else if (colNumber == 27) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].lastEyeWithRecoilAngleX);
         }
-        else if (colNumber == 27) {
+        else if (colNumber == 28) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].isAlive);
         }
-        else if (colNumber == 28) {
+        else if (colNumber == 29) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].isBot);
             rowNumber++;
             arrayEntry++;
         }
-        colNumber = (colNumber + 1) % 29;
+        colNumber = (colNumber + 1) % 30;
     }
     closeMMapFile({fd, stats, file});
 }
@@ -153,29 +156,79 @@ void ServerState::loadVisibilityClientPairs(string visibilityFilePath) {
     closeMMapFile({fd, stats, file});
 }
 
+void ServerState::loadC4State(string visibilityFilePath) {
+    // mmap the file
+    auto [fd, stats, file] = openMMapFile(visibilityFilePath);
+
+    // skip the header
+    size_t firstRow = getNewline(file, 0, stats.st_size);
+
+    // track location for error logging
+    int64_t rowNumber = 0;
+    int64_t colNumber = 0;
+
+    // track location for insertion
+    int64_t arrayEntry = 0;
+
+    for (size_t curStart = firstRow + 1, curDelimiter = getNextDelimiter(file, curStart, stats.st_size);
+         curDelimiter < stats.st_size;
+         curStart = curDelimiter + 1, curDelimiter = getNextDelimiter(file, curStart, stats.st_size)) {
+        if (colNumber == 0) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, c4IsPlanted);
+        }
+        else if (colNumber == 1) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, c4IsDropped);
+        }
+        else if (colNumber == 2) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, c4X);
+        }
+        else if (colNumber == 3) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, c4Y);
+        }
+        else if (colNumber == 4) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, c4Z);
+            rowNumber++;
+            arrayEntry++;
+        }
+        colNumber = (colNumber + 1) % 5;
+    }
+    closeMMapFile({fd, stats, file});
+}
+
 void ServerState::loadServerState(string dataPath) {
     string clientStatesFileName = "state.csv";
     string clientStatesFilePath = dataPath + "/" + clientStatesFileName;
     string tmpClientStatesFileName = "state.csv.tmp.read";
     string tmpClientStatesFilePath = dataPath + "/" + tmpClientStatesFileName;
+
     string visibilityFileName = "visibility.csv";
     string visibilityFilePath = dataPath + "/" + visibilityFileName;
     string tmpVisibilityFileName = "visibility.csv.tmp.read";
     string tmpVisibilityFilePath = dataPath + "/" + tmpVisibilityFileName;
 
+    string c4FileName = "c4.csv";
+    string c4FilePath = dataPath + "/" + c4FileName;
+    string tmpC4FileName = "c4.csv.tmp.read";
+    string tmpC4FilePath = dataPath + "/" + tmpVisibilityFileName;
+
     bool clientStatesExists = std::filesystem::exists(clientStatesFilePath);
     bool visibilityExists = std::filesystem::exists(visibilityFilePath);
-    if (clientStatesExists && visibilityExists) {
+    bool c4Exists = std::filesystem::exists(c4FilePath);
+    if (clientStatesExists && visibilityExists && c4Exists) {
         std::filesystem::rename(clientStatesFilePath, tmpClientStatesFilePath);
         std::filesystem::rename(visibilityFilePath, tmpVisibilityFilePath);
+        std::filesystem::rename(c4FilePath, tmpC4FilePath);
         loadedSuccessfully = true;
     }
     else {
         if (!clientStatesExists) {
             badPath = clientStatesFilePath;
         }
-        else {
+        else if (!visibilityExists) {
             badPath = visibilityFilePath;
+        }
+        else {
+            badPath = c4FilePath;
         }
         loadedSuccessfully = false;
         return;
@@ -191,6 +244,7 @@ void ServerState::loadServerState(string dataPath) {
 
     loadClientStates(tmpClientStatesFilePath);
     loadVisibilityClientPairs(tmpVisibilityFilePath);
+    //loadC4State(tmpC4FilePath);
 
     // build map from server id to CSKnow id
     int maxServerId = -1;

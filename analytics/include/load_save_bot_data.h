@@ -19,6 +19,7 @@ class ServerState {
 private:
     void loadClientStates(string clientStatesFilePath);
     void loadVisibilityClientPairs(string visibilityFilePath);
+    void loadC4State(string c4FilePath);
 
 public:
     struct Client {
@@ -39,6 +40,7 @@ public:
         int32_t hes;
         int32_t decoys;
         int32_t incendiaries;
+        bool hasC4;
         float lastEyePosX;
         float lastEyePosY;
         float lastEyePosZ;
@@ -64,7 +66,15 @@ public:
     vector<Client> clients;
     vector<bool> inputsValid;
 
+    // visibility state
     std::set<std::pair<int32_t, int32_t>> visibilityClientPairs;
+
+    // c4 state
+    // Is Planted,Pos X,Pos Y,Pos Z
+    bool c4IsPlanted;
+    bool c4IsDropped;
+    float c4X, c4Y, c4Z;
+
 
     // state for caller to debug
     bool loadedSuccessfully;
