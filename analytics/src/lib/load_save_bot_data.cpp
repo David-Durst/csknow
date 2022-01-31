@@ -165,10 +165,6 @@ void ServerState::saveBotInputs(string dataPath) {
     string tmpInputsFileName = "input.csv.tmp.write";
     string tmpInputsFilePath = dataPath + "/" + tmpInputsFileName;
 
-    if (std::filesystem::exists(inputsFilePath)) {
-        std::filesystem::rename(inputsFilePath, tmpInputsFilePath);
-    }
-
     std::stringstream inputsStream;
     inputsStream << "Player Index,Buttons,Input Angle Delta Pct Pitch,Input Angle Delta Pct Yaw\n";
     // two lines as need to get rid of the last newline
