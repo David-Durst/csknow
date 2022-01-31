@@ -56,7 +56,8 @@ int main(int argc, char * argv[]) {
             std::this_thread::sleep_for(timePerTick - botTime);
         }
         else {
-            std::cout << "\033[1;31mMissed Bot compute time:\033[0m " << botTime.count() << "s" << std::endl;
+            std::cout << "\033[1;31mMissed Bot compute time:\033[0m " 
+                << std::chrono::duration_cast<std::chrono::seconds>(botTime).count() << "s" << std::endl;
         }
         firstFrame = false;
     }
