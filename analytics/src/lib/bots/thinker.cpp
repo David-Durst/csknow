@@ -22,7 +22,9 @@ Vec2 Thinker::aimAt(int targetClientId) {
         targetClient.lastEyePosZ - curClient.lastEyePosZ
     };
 
-    Vec2 currentAngles = {curClient.lastEyeWithRecoilAngleX, curClient.lastEyeWithRecoilAngleY};
+    Vec2 currentAngles = {
+        curClient.lastEyeAngleX + curClient.lastAimpunchAngleX, 
+        curClient.lastEyeAngleY + curClient.lastAimpunchAngleY};
     Vec2 targetAngles = vectorAngles(targetVector);
     targetAngles.makePitchNeg90To90();
     targetAngles.y = std::max(-1 * MAX_PITCH_MAGNITUDE, 
