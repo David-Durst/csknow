@@ -24,6 +24,7 @@ public:
         int32_t serverId;
         string name;
         int32_t team;
+        int32_t currentWeaponId;
         int32_t rifleId;
         int32_t rifleClipAmmo;
         int32_t rifleReserveAmmo;

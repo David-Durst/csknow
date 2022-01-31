@@ -13,7 +13,13 @@ class Thinker {
     Vec2 lastDeltaAngles;
     ServerState & state;
 
-    Vec2 aimAt(int targetClient);
+    struct Target {
+        int32_t id;
+        double distance;
+    };
+    Target selectTarget(const ServerState::Client & curClient);
+    void aimAt(ServerState::Client & curClient, const ServerState::Client & targetClient);
+    void fire(ServerState::Client & curClient, const ServerState::Client & targetClient);
 
 public:
     Thinker(ServerState & state, int curBot) : state(state), curBot(curBot), lastDeltaAngles{0,0} {};

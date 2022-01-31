@@ -1,7 +1,44 @@
 #include "bots/thinker.h"
 #include <limits>
 
-float velocityCurve(double totalDeltaAngle, double lastDeltaAngle) {
+void Thinker::think() {
+    if (curBot >= state.clients.size()) {
+        return;
+    }
+    int csknowId = state.serverClientIdToCSKnowId[curBot];
+    ServerState::Client & curClient = state.clients[csknowId];
+
+    Target target = selectTarget(curClient);
+    const ServerState::Client & targetClient = state.clients[target.id];
+
+    state.inputsValid[csknowId] = true;
+
+    this->aimAt(curClient, targetClient);
+    this->fire(curClient, targetClient);
+
+    //state.clients[csknowId].inputAngleDeltaPctX = 0.02;
+    //state.clients[csknowId].inputAngleDeltaPctY = 0.;
+}
+
+Thinker::Target Thinker::selectTarget(const ServerState::Client & curClient) {
+    int nearestEnemyServerId = -1;
+    double distance = std::numeric_limits<double>::max();
+    for (const auto & otherClient : state.clients) {
+        if (otherClient.team != curClient.team && otherClient.isAlive) {
+            double otherDistance = computeDistance(
+                    {curClient.lastEyePosX, curClient.lastEyePosY, curClient.lastEyePosZ},
+                    {otherClient.lastEyePosX, otherClient.lastEyePosY, otherClient.lastEyePosZ});
+            if (otherDistance < distance) {
+                nearestEnemyServerId = otherClient.serverId;
+                distance = otherDistance;
+            }
+        }
+    }
+    
+    return {state.serverClientIdToCSKnowId[nearestEnemyServerId], distance};
+}
+
+float computeAngleVelocity(double totalDeltaAngle, double lastDeltaAngle) {
     double newDeltaAngle = std::max(-1 * MAX_ONE_DIRECTION_ANGLE_VEL,
             std::min(MAX_ONE_DIRECTION_ANGLE_VEL, totalDeltaAngle / 3));
     double newAccelAngle = newDeltaAngle - lastDeltaAngle;
@@ -12,10 +49,7 @@ float velocityCurve(double totalDeltaAngle, double lastDeltaAngle) {
     return newDeltaAngle / MAX_ONE_DIRECTION_ANGLE_VEL;
 }
 
-Vec2 Thinker::aimAt(int targetClientId) {
-    const ServerState::Client & curClient = state.clients[state.serverClientIdToCSKnowId[curBot]],
-        & targetClient = state.clients[targetClientId];
-
+void Thinker::aimAt(ServerState::Client & curClient, const ServerState::Client & targetClient) {
     Vec3 targetVector{
         targetClient.lastEyePosX - curClient.lastEyePosX,
         targetClient.lastEyePosY - curClient.lastEyePosY,
@@ -35,45 +69,19 @@ Vec2 Thinker::aimAt(int targetClientId) {
     totalDeltaAngles.makeYawNeg180To180();
 
     Vec2 resultDeltaAngles;
-    resultDeltaAngles.x = velocityCurve(totalDeltaAngles.x, lastDeltaAngles.x);
-    resultDeltaAngles.y = velocityCurve(totalDeltaAngles.y, lastDeltaAngles.y);
+    resultDeltaAngles.x = computeAngleVelocity(totalDeltaAngles.x, lastDeltaAngles.x);
+    resultDeltaAngles.y = computeAngleVelocity(totalDeltaAngles.y, lastDeltaAngles.y);
 
     lastDeltaAngles = resultDeltaAngles;
 
-    return resultDeltaAngles;
+    curClient.inputAngleDeltaPctX = resultDeltaAngles.x;
+    curClient.inputAngleDeltaPctY = resultDeltaAngles.y;
 }
 
-void Thinker::think() {
-    if (curBot >= state.clients.size()) {
-        return;
-    }
-    int csknowId = state.serverClientIdToCSKnowId[curBot];
-    ServerState::Client & curClient = state.clients[csknowId];
-    int nearestEnemyServerId = -1;
-    double distance = std::numeric_limits<double>::max();
-    for (const auto & otherClient : state.clients) {
-        if (otherClient.team != curClient.team) {
-            double otherDistance = computeDistance(
-                    {curClient.lastEyePosX, curClient.lastEyePosY, curClient.lastEyePosZ},
-                    {otherClient.lastEyePosX, otherClient.lastEyePosY, otherClient.lastEyePosZ});
-            if (otherDistance < distance) {
-                nearestEnemyServerId = otherClient.serverId;
-                distance = otherDistance;
-            }
-        }
-    }
-
-    Vec2 angleDelta = 
-        this->aimAt(state.serverClientIdToCSKnowId[nearestEnemyServerId]);
-
-    state.inputsValid[csknowId] = true;
+void Thinker::fire(ServerState::Client & curClient, const ServerState::Client & targetClient) {
     bool attackLastFrame = curClient.buttons & IN_ATTACK > 0;
-    curClient.buttons = 0;
     //curClient.buttons |= IN_FORWARD;
-    curClient.inputAngleDeltaPctX = angleDelta.x;
-    curClient.inputAngleDeltaPctY = angleDelta.y;
 
-    ServerState::Client & targetClient = state.clients[state.serverClientIdToCSKnowId[nearestEnemyServerId]];
     Ray eyeCoordinates = getEyeCoordinatesForPlayer(
             {curClient.lastEyePosX, curClient.lastEyePosY, curClient.lastFootPosZ},
             {curClient.lastEyeWithRecoilAngleX, curClient.lastEyeWithRecoilAngleY});
@@ -83,6 +91,7 @@ void Thinker::think() {
     if (intersectP(targetAABB, eyeCoordinates, hitt0, hitt1) && !attackLastFrame) {
         curClient.buttons |= IN_ATTACK;
     }
-    //state.clients[csknowId].inputAngleDeltaPctX = 0.02;
-    //state.clients[csknowId].inputAngleDeltaPctY = 0.;
+    else {
+        curClient.buttons &= ~IN_ATTACK;
+    }
 }

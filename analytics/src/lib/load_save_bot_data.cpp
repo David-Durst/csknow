@@ -39,81 +39,84 @@ void ServerState::loadClientStates(string clientStatesFilePath) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].team);
         }
         else if (colNumber == 4) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].rifleId);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].currentWeaponId);
         }
         else if (colNumber == 5) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].rifleClipAmmo);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].rifleId);
         }
         else if (colNumber == 6) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].rifleReserveAmmo);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].rifleClipAmmo);
         }
         else if (colNumber == 7) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].pistolId);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].rifleReserveAmmo);
         }
         else if (colNumber == 8) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].pistolClipAmmo);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].pistolId);
         }
         else if (colNumber == 9) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].pistolReserveAmmo);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].pistolClipAmmo);
         }
         else if (colNumber == 10) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].flashes);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].pistolReserveAmmo);
         }
         else if (colNumber == 11) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].molotovs);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].flashes);
         }
         else if (colNumber == 12) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].smokes);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].molotovs);
         }
         else if (colNumber == 13) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].hes);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].smokes);
         }
         else if (colNumber == 14) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].decoys);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].hes);
         }
         else if (colNumber == 15) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].incendiaries);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].decoys);
         }
         else if (colNumber == 16) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].lastEyePosX);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].incendiaries);
         }
         else if (colNumber == 17) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].lastEyePosY);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].lastEyePosX);
         }
         else if (colNumber == 18) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].lastEyePosZ);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].lastEyePosY);
         }
         else if (colNumber == 19) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].lastEyePosZ);
+        }
+        else if (colNumber == 20) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].lastFootPosZ);
         }
         // Y AND X ARE INTENTIONALLY FLIPPED, I USE X FOR YAW, Y FOR PITCH, ENGINE DOES OPPOSITE
-        else if (colNumber == 20) {
+        else if (colNumber == 21) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].lastEyeAngleY);
         }
-        else if (colNumber == 21) {
+        else if (colNumber == 22) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].lastEyeAngleX);
         }
-        else if (colNumber == 22) {
+        else if (colNumber == 23) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].lastAimpunchAngleY);
         }
-        else if (colNumber == 23) {
+        else if (colNumber == 24) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].lastAimpunchAngleX);
         }
-        else if (colNumber == 24) {
+        else if (colNumber == 25) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].lastEyeWithRecoilAngleY);
         }
-        else if (colNumber == 25) {
+        else if (colNumber == 26) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].lastEyeWithRecoilAngleX);
         }
-        else if (colNumber == 26) {
+        else if (colNumber == 27) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].isAlive);
         }
-        else if (colNumber == 27) {
+        else if (colNumber == 28) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].isBot);
             rowNumber++;
             arrayEntry++;
         }
-        colNumber = (colNumber + 1) % 28;
+        colNumber = (colNumber + 1) % 29;
     }
     closeMMapFile({fd, stats, file});
 }
