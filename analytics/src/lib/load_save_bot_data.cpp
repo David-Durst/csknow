@@ -167,15 +167,15 @@ void ServerState::loadServerState(string dataPath) {
     bool visibilityExists = std::filesystem::exists(visibilityFilePath);
     if (clientStatesExists && visibilityExists) {
         std::filesystem::rename(clientStatesFilePath, tmpClientStatesFilePath);
+        std::filesystem::rename(visibilityFilePath, tmpVisibilityFilePath);
         loadedSuccessfully = true;
     }
     else {
-        badPath = "";
         if (!clientStatesExists) {
-            badPath += clientStatesFilePath;
+            badPath = clientStatesFilePath;
         }
-        if (!visibilityExists) {
-            badPath += " " + visibilityFilePath;
+        else {
+            badPath = visibilityFilePath;
         }
         loadedSuccessfully = false;
         return;

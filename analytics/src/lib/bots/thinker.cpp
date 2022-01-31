@@ -16,9 +16,6 @@ void Thinker::think() {
 
     this->aimAt(curClient, targetClient);
     this->fire(curClient, targetClient);
-
-    //state.clients[csknowId].inputAngleDeltaPctX = 0.02;
-    //state.clients[csknowId].inputAngleDeltaPctY = 0.;
 }
 
 Thinker::Target Thinker::selectTarget(const ServerState::Client & curClient) {
@@ -92,6 +89,12 @@ void Thinker::fire(ServerState::Client & curClient, const ServerState::Client & 
     }
     //curClient.buttons |= IN_FORWARD;
 
+    bool visible = state.visibilityClientPairs.find({ 
+            std::min(curClient.serverId, targetClient.serverId), 
+            std::max(curClient.serverId, targetClient.serverId)
+        }) != state.visibilityClientPairs.end();
+    
+
     Ray eyeCoordinates = getEyeCoordinatesForPlayer(
             {curClient.lastEyePosX, curClient.lastEyePosY, curClient.lastFootPosZ},
             {curClient.lastEyeWithRecoilAngleX, curClient.lastEyeWithRecoilAngleY});
@@ -99,6 +102,7 @@ void Thinker::fire(ServerState::Client & curClient, const ServerState::Client & 
             {targetClient.lastEyePosX, targetClient.lastEyePosY, targetClient.lastFootPosZ});
     double hitt0, hitt1;
     this->setButton(curClient, IN_ATTACK, 
-            intersectP(targetAABB, eyeCoordinates, hitt0, hitt1) && !attackLastFrame && haveAmmo);
+            intersectP(targetAABB, eyeCoordinates, hitt0, hitt1) && 
+            !attackLastFrame && haveAmmo && visible);
     this->setButton(curClient, IN_RELOAD, !haveAmmo);
 }
