@@ -173,6 +173,7 @@ void Thinker::fire(ServerState::Client & curClient, const ServerState::Client & 
     if (targetClient.serverId == INVALID_SERVER_ID) {
         this->setButton(curClient, IN_ATTACK, false);
         this->setButton(curClient, IN_RELOAD, false);
+        inSpray = false;
         return;
     }
 
@@ -186,7 +187,6 @@ void Thinker::fire(ServerState::Client & curClient, const ServerState::Client & 
     else if (curClient.currentWeaponId == curClient.pistolId) {
         haveAmmo = curClient.pistolClipAmmo > 0;
     }
-    //curClient.buttons |= IN_FORWARD;
 
     bool visible = state.visibilityClientPairs.find({ 
             std::min(curClient.serverId, targetClient.serverId), 
@@ -228,6 +228,7 @@ void Thinker::move(ServerState::Client & curClient) {
                 this->setButton(curClient, IN_MOVELEFT, false);
                 this->setButton(curClient, IN_BACK, false);
                 this->setButton(curClient, IN_MOVERIGHT, false);
+                return;
             }
         }
 
