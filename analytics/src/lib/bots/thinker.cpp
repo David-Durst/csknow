@@ -164,11 +164,11 @@ void Thinker::move(ServerState::Client & curClient) {
         this->setButton(curClient, IN_FORWARD, 
                 totalDeltaAngles.x >= 315. || totalDeltaAngles.x <= 45.);
         this->setButton(curClient, IN_MOVERIGHT, 
-                totalDeltaAngles.x >= 45. || totalDeltaAngles.x <= 135.);
+                totalDeltaAngles.x >= 45. && totalDeltaAngles.x <= 135.);
         this->setButton(curClient, IN_BACK, 
-                totalDeltaAngles.x >= 135. || totalDeltaAngles.x <= 225.);
+                totalDeltaAngles.x >= 135. && totalDeltaAngles.x <= 225.);
         this->setButton(curClient, IN_MOVELEFT, 
-                totalDeltaAngles.x >= 225. || totalDeltaAngles.x <= 315.);
+                totalDeltaAngles.x >= 225. && totalDeltaAngles.x <= 315.);
 
         if (computeDistance(curPos, waypointPos) < 20. && curWaypoint < waypoints.size() - 1) {
             curWaypoint++;
