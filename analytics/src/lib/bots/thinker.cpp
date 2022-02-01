@@ -234,13 +234,13 @@ void Thinker::move(ServerState::Client & curClient) {
         // don't need to worry about targetAngles y since can't move up and down
         //
         this->setButton(curClient, IN_FORWARD, 
-                totalDeltaAngles.x >= -45. && totalDeltaAngles.x <= 45.);
+                totalDeltaAngles.x >= -80. && totalDeltaAngles.x <= 80.);
         this->setButton(curClient, IN_MOVELEFT, 
-                totalDeltaAngles.x >= 45. && totalDeltaAngles.x <= 135.);
+                totalDeltaAngles.x >= 10. && totalDeltaAngles.x <= 170.);
         this->setButton(curClient, IN_BACK, 
-                totalDeltaAngles.x >= 135. || totalDeltaAngles.x <= -135.);
+                totalDeltaAngles.x >= 100. || totalDeltaAngles.x <= -100.);
         this->setButton(curClient, IN_MOVERIGHT, 
-                totalDeltaAngles.x >= -135. && totalDeltaAngles.x <= -45.);
+                totalDeltaAngles.x >= -170. && totalDeltaAngles.x <= -10.);
 
         if (computeDistance(curPos, waypointPos) < 20. && curWaypoint < waypoints.size() - 1) {
             curWaypoint++;
