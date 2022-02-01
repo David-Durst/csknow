@@ -79,8 +79,8 @@ public:
     // state for caller to debug
     bool loadedSuccessfully;
     string badPath;
-    int numInputLines;
-    string inputsCopy;
+    int numInputLines, numThinkLines;
+    string inputsCopy, thinkCopy;
 
     void loadServerState(string dataPath);
     void saveBotInputs(string dataPath);

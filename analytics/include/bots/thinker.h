@@ -11,6 +11,7 @@
 #include "navmesh/nav_file.h"
 #include <chrono>
 #include <random>
+#include <type_traits>
 
 class Thinker {
     enum class PolicyStates {

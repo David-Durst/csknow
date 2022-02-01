@@ -2,6 +2,8 @@
 #include <limits>
 
 void Thinker::think() {
+    state.numThinkLines = 0;
+
     if (curBot >= state.clients.size()) {
         return;
     }
@@ -49,6 +51,25 @@ void Thinker::updatePolicy(const ServerState::Client & curClient) {
         }
         lastPolicyThinkTime = curTime;
     }
+
+    std::stringstream thinkStream;
+    thinkStream << "num waypoints: " << waypoints.size() << ", cur policy " 
+        << static_cast<std::underlying_type_t<PolicyStates>>(curPolicy) << "\n";
+    state.numThinkLines++;
+    if (waypoints.size() > curWaypoint) {
+        thinkStream << "cur waypoint " << curWaypoint << ":" 
+            << waypoints[curWaypoint].x << "," << waypoints[curWaypoint].y 
+            << "," << waypoints[curWaypoint].z << "\n";
+        state.numThinkLines++;
+    }
+    if (!waypoints.empty()) {
+        uint64_t lastWaypoint = waypoints.size() - 1;
+        thinkStream << "last waypoint " << curWaypoint << ":" 
+            << waypoints[lastWaypoint].x << "," << waypoints[lastWaypoint].y 
+            << "," << waypoints[lastWaypoint].z << "\n";
+        state.numThinkLines++;
+    }
+    state.thinkCopy = thinkStream.str();
 }
 
 Thinker::Target Thinker::selectTarget(const ServerState::Client & curClient) {

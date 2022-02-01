@@ -39,17 +39,18 @@ int main(int argc, char * argv[]) {
             std::cout << upAndClear;
 
             // this handles bot inputs
-            for (int i = 0; i < state.numInputLines; i++) {
+            for (int i = 0; i < state.numInputLines + state.numThinkLines; i++) {
                 std::cout << upAndClear;
             }
         }
         if (state.loadedSuccessfully) {
             thinker.think();
             state.saveBotInputs(dataPath);
-            std::cout << state.inputsCopy << std::endl;            
+            std::cout << state.inputsCopy << state.thinkCopy << std::endl;            
         }
         else {
             state.numInputLines = 0;
+            state.numThinkLines = 0;
             numFailures++;
         }
         auto end = std::chrono::system_clock::now();
