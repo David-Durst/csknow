@@ -61,7 +61,9 @@ class Thinker {
 public:
     Thinker(ServerState & state, int curBot, string navPath) 
         : state(state), curBot(curBot), lastDeltaAngles{0,0}, navFile(navPath.c_str()),
-        lastPolicyThinkTime(std::chrono::system_clock::now()), gen(rd()), dis(0., 1.) {};
+        // init to 24 hours before now so think on first tick
+        lastPolicyThinkTime(std::chrono::system_clock::now() - std::chrono::hours(24)), 
+        gen(rd()), dis(0., 1.) {};
     void think();
 };
 

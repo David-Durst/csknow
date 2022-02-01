@@ -26,6 +26,7 @@ int main(int argc, char * argv[]) {
     string upAndClear = "\033[A\r\33[2K";
     uint64_t numFailures = 0;
     state.numInputLines = 0;
+    state.numThinkLines = 0;
 
     while (true) {
         auto start = std::chrono::system_clock::now();
@@ -47,6 +48,8 @@ int main(int argc, char * argv[]) {
             thinker.think();
             state.saveBotInputs(dataPath);
             std::cout << state.inputsCopy << state.thinkCopy << std::endl;            
+            state.inputsCopy = "";
+            state.thinkCopy = "";
         }
         else {
             state.numInputLines = 0;

@@ -32,19 +32,22 @@ void Thinker::think() {
 
 void Thinker::updatePolicy(const ServerState::Client & curClient) {
     auto curTime = std::chrono::system_clock::now();
+    nav_mesh::vec3_t targetPoint{state.c4X, state.c4Y, state.c4Z}; 
+    nav_mesh::vec3_t curPoint{curClient.lastEyePosX, curClient.lastEyePosY, curClient.lastFootPosZ};
     if ((curTime - lastPolicyThinkTime).count() > SECONDS_BETWEEN_POLICY_CHANGES && 
             state.c4IsPlanted) {
         if (dis(gen) < 2.5) {
             curPolicy = PolicyStates::Push; 
-            try {
-                waypoints = navFile.find_path(
-                        {curClient.lastEyePosX, curClient.lastEyePosY, curClient.lastFootPosZ},
-                        {state.c4X, state.c4Y, state.c4Z});                    
+            // choose a new path only if target has changed
+            if (waypoints.empty() || waypoints.back() != targetPoint) {
+                try {
+                    waypoints = navFile.find_path(curPoint, targetPoint);                    
+                }
+                catch (std::exception& error) {
+                    waypoints = {targetPoint};  
+                }
+                curWaypoint = 0;
             }
-            catch (std::exception& error) {
-                waypoints = {{state.c4X, state.c4Y, state.c4Z}};  
-            }
-            curWaypoint = 0;
         }
         else {
             curPolicy = PolicyStates::Hold; 
@@ -56,15 +59,14 @@ void Thinker::updatePolicy(const ServerState::Client & curClient) {
     thinkStream << "num waypoints: " << waypoints.size() << ", cur policy " 
         << static_cast<std::underlying_type_t<PolicyStates>>(curPolicy) << "\n";
     state.numThinkLines++;
-    if (waypoints.size() > curWaypoint) {
-        thinkStream << "cur waypoint " << curWaypoint << ":" 
-            << waypoints[curWaypoint].x << "," << waypoints[curWaypoint].y 
-            << "," << waypoints[curWaypoint].z << "\n";
-        state.numThinkLines++;
-    }
+
+    thinkStream << "cur waypoint " << curWaypoint << ":" 
+        << waypoints[curWaypoint].x << "," << waypoints[curWaypoint].y 
+        << "," << waypoints[curWaypoint].z << "\n";
+    state.numThinkLines++;
     if (!waypoints.empty()) {
         uint64_t lastWaypoint = waypoints.size() - 1;
-        thinkStream << "last waypoint " << curWaypoint << ":" 
+        thinkStream << "last waypoint " << lastWaypoint << ":" 
             << waypoints[lastWaypoint].x << "," << waypoints[lastWaypoint].y 
             << "," << waypoints[lastWaypoint].z << "\n";
         state.numThinkLines++;

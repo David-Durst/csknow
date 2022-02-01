@@ -7,6 +7,8 @@ namespace nav_mesh {
 		vec3_t operator+( const vec3_t other )	{ return { x + other.x, y + other.y, z + other.z }; }
 		vec3_t operator-( const vec3_t other )	{ return { x - other.x, y - other.y, z - other.z }; }
 		vec3_t operator*( const float m )		{ return { x * m, y * m, z* m }; }
+        bool operator==( const vec3_t& other ) { return x == other.x && y == other.y && z == other.z; }
+        bool operator!=( const vec3_t& other ) { return !operator==(other); }
 
 		float x = 0.f, y = 0.f, z = 0.f;
 	};
