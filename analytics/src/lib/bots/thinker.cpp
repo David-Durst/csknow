@@ -17,11 +17,11 @@ void Thinker::think() {
 
     buttonsLastFrame = curClient.buttons;
 
-    this->updatePolicy(curClient);
-
     Target target = selectTarget(curClient);
     const ServerState::Client & targetClient = target.id == -1 ?  
         invalidClient : state.clients[target.id];
+
+    this->updatePolicy(curClient, targetClient);
 
     state.inputsValid[csknowId] = true;
     curClient.buttons = 0;
@@ -32,9 +32,38 @@ void Thinker::think() {
     this->defuse(curClient, targetClient);
 }
 
-void Thinker::updatePolicy(const ServerState::Client & curClient) {
+Thinker::Target Thinker::selectTarget(const ServerState::Client & curClient) {
+    int nearestEnemyServerId = -1;
+    double distance = std::numeric_limits<double>::max();
+    for (const auto & otherClient : state.clients) {
+        if (otherClient.team != curClient.team && otherClient.isAlive) {
+            double otherDistance = computeDistance(
+                    {curClient.lastEyePosX, curClient.lastEyePosY, curClient.lastEyePosZ},
+                    {otherClient.lastEyePosX, otherClient.lastEyePosY, otherClient.lastEyePosZ});
+            if (otherDistance < distance) {
+                nearestEnemyServerId = otherClient.serverId;
+                distance = otherDistance;
+            }
+        }
+    }
+    
+    if (nearestEnemyServerId != -1) {
+        return {state.serverClientIdToCSKnowId[nearestEnemyServerId], distance};
+    }
+    else {
+        return {-1, -1.};
+    }
+}
+
+void Thinker::updatePolicy(const ServerState::Client & curClient, const ServerState::Client & targetClient) {
     auto curTime = std::chrono::system_clock::now();
-    nav_mesh::vec3_t targetPoint{state.c4X, state.c4Y, state.c4Z}; 
+    nav_mesh::vec3_t targetPoint;
+    if (targetClient.serverId == INVALID_SERVER_ID) {
+        targetPoint = {state.c4X, state.c4Y, state.c4Z}; 
+    }
+    else {
+        targetPoint = {targetClient.lastEyePosX, targetClient.lastEyePosY, targetClient.lastFootPosZ};
+    }
     nav_mesh::vec3_t curPoint{curClient.lastEyePosX, curClient.lastEyePosY, curClient.lastFootPosZ};
     std::chrono::duration<double> thinkTime = curTime - lastPolicyThinkTime;
     if (thinkTime.count() > SECONDS_BETWEEN_POLICY_CHANGES) {
@@ -79,29 +108,6 @@ void Thinker::updatePolicy(const ServerState::Client & curClient) {
         state.numThinkLines++;
     }
     state.thinkCopy = thinkStream.str();
-}
-
-Thinker::Target Thinker::selectTarget(const ServerState::Client & curClient) {
-    int nearestEnemyServerId = -1;
-    double distance = std::numeric_limits<double>::max();
-    for (const auto & otherClient : state.clients) {
-        if (otherClient.team != curClient.team && otherClient.isAlive) {
-            double otherDistance = computeDistance(
-                    {curClient.lastEyePosX, curClient.lastEyePosY, curClient.lastEyePosZ},
-                    {otherClient.lastEyePosX, otherClient.lastEyePosY, otherClient.lastEyePosZ});
-            if (otherDistance < distance) {
-                nearestEnemyServerId = otherClient.serverId;
-                distance = otherDistance;
-            }
-        }
-    }
-    
-    if (nearestEnemyServerId != -1) {
-        return {state.serverClientIdToCSKnowId[nearestEnemyServerId], distance};
-    }
-    else {
-        return {-1, -1.};
-    }
 }
 
 float computeAngleVelocity(double totalDeltaAngle, double lastDeltaAngle) {
@@ -194,14 +200,14 @@ void Thinker::fire(ServerState::Client & curClient, const ServerState::Client & 
     AABB targetAABB = getAABBForPlayer(
             {targetClient.lastEyePosX, targetClient.lastEyePosY, targetClient.lastFootPosZ});
     double hitt0, hitt1;
+    inSpray = intersectP(targetAABB, eyeCoordinates, hitt0, hitt1) && haveAmmo && visible;
     this->setButton(curClient, IN_ATTACK, 
-            intersectP(targetAABB, eyeCoordinates, hitt0, hitt1) && 
-            !attackLastFrame && haveAmmo && visible);
+            !attackLastFrame && inSpray);
     this->setButton(curClient, IN_RELOAD, !haveAmmo);
 }
 
 void Thinker::move(ServerState::Client & curClient) {
-    if (curPolicy == PolicyStates::Hold || getButton(curClient, IN_ATTACK)) {
+    if (curPolicy == PolicyStates::Hold || inSpray) {
         this->setButton(curClient, IN_FORWARD, false);
         this->setButton(curClient, IN_MOVELEFT, false);
         this->setButton(curClient, IN_BACK, false);
@@ -258,6 +264,10 @@ void Thinker::move(ServerState::Client & curClient) {
                 totalDeltaAngles.x >= 100. || totalDeltaAngles.x <= -100.);
         this->setButton(curClient, IN_MOVERIGHT, 
                 totalDeltaAngles.x >= -170. && totalDeltaAngles.x <= -10.);
+
+        if (std::abs(waypointPos.z - curPos.z) > 20.) {
+            this->setButton(curClient, IN_JUMP, true);
+        }
     }
 }
 

@@ -33,11 +33,12 @@ class Thinker {
     std::vector<nav_mesh::vec3_t> waypoints;
     uint64_t curWaypoint;
 
-    void updatePolicy(const ServerState::Client & curClient);
     Target selectTarget(const ServerState::Client & curClient);
     ServerState::Client invalidClient;
+    void updatePolicy(const ServerState::Client & curClient, const ServerState::Client & targetClient);
     void aimAt(ServerState::Client & curClient, const ServerState::Client & targetClient);
     void fire(ServerState::Client & curClient, const ServerState::Client & targetClient);
+    bool inSpray;
     void move(ServerState::Client & curClient);
     void defuse(ServerState::Client & curClient, const ServerState::Client & targetClient);
 
