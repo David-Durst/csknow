@@ -67,7 +67,15 @@ void Thinker::updatePolicy(const ServerState::Client & curClient, const ServerSt
     nav_mesh::vec3_t curPoint{curClient.lastEyePosX, curClient.lastEyePosY, curClient.lastFootPosZ};
     std::chrono::duration<double> thinkTime = curTime - lastPolicyThinkTime;
     if (thinkTime.count() > SECONDS_BETWEEN_POLICY_CHANGES) {
-        if (dis(gen) < 0.5 && state.c4IsPlanted) {
+        randomLeft = dis(gen) > 0.5;
+        randomRight = !randomLeft;
+        randomForward = dis(gen) > 0.5;
+        randomBack = !randomForward;
+        if (!waypoints.empty() && curWaypoint == oldWaypoint && curPolicy == PolicyStates::Push) {
+            curPolicy = PolicyStates::Random;
+        }
+        else if (dis(gen) < 0.8 && state.c4IsPlanted) {
+            oldWaypoint = curWaypoint;
             curPolicy = PolicyStates::Push; 
             // choose a new path only if target has changed
             if (waypoints.empty() || waypoints.back() != targetPoint) {
@@ -78,6 +86,7 @@ void Thinker::updatePolicy(const ServerState::Client & curClient, const ServerSt
                     }
                 }
                 catch (std::exception& error) {
+                    curPolicy = PolicyStates::Random;
                     waypoints = {targetPoint};  
                 }
                 curWaypoint = 0;
@@ -212,6 +221,12 @@ void Thinker::move(ServerState::Client & curClient) {
         this->setButton(curClient, IN_MOVELEFT, false);
         this->setButton(curClient, IN_BACK, false);
         this->setButton(curClient, IN_MOVERIGHT, false);
+    }
+    else if (curPolicy == PolicyStates::Random) {
+        this->setButton(curClient, IN_FORWARD, randomForward);
+        this->setButton(curClient, IN_MOVELEFT, randomLeft);
+        this->setButton(curClient, IN_BACK, randomBack);
+        this->setButton(curClient, IN_MOVERIGHT, randomRight);
     }
     else {
         Vec3 waypointPos{waypoints[curWaypoint].x, waypoints[curWaypoint].y, waypoints[curWaypoint].z};

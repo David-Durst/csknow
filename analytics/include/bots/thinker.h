@@ -15,6 +15,7 @@
 
 class Thinker {
     enum class PolicyStates {
+        Random,
         Push,
         Hold
     };
@@ -32,10 +33,12 @@ class Thinker {
     PolicyStates curPolicy;
     std::vector<nav_mesh::vec3_t> waypoints;
     uint64_t curWaypoint;
+    bool randomLeft, randomRight, randomForward, randomBack;
 
     Target selectTarget(const ServerState::Client & curClient);
     ServerState::Client invalidClient;
     void updatePolicy(const ServerState::Client & curClient, const ServerState::Client & targetClient);
+    uint64_t oldWaypoint;
     void aimAt(ServerState::Client & curClient, const ServerState::Client & targetClient);
     void fire(ServerState::Client & curClient, const ServerState::Client & targetClient);
     bool inSpray;
