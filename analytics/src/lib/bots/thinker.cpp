@@ -60,11 +60,6 @@ void Thinker::updatePolicy(const ServerState::Client & curClient) {
         << static_cast<std::underlying_type_t<PolicyStates>>(curPolicy) << "\n";
     state.numThinkLines++;
 
-    thinkStream << "cur point: " 
-        << curPoint.x << "," << curPoint.y 
-        << "," << curPoint.z << "\n";
-    state.numThinkLines++;
-
     if (waypoints.size() > curWaypoint) {
         thinkStream << "cur waypoint " << curWaypoint << ":" 
             << waypoints[curWaypoint].x << "," << waypoints[curWaypoint].y 
@@ -174,9 +169,9 @@ void Thinker::move(ServerState::Client & curClient) {
     //if (curPolicy == PolicyStates::Hold || getButton(curClient, IN_ATTACK)) {
     if (curPolicy == PolicyStates::Hold) {
         this->setButton(curClient, IN_FORWARD, false);
-        this->setButton(curClient, IN_MOVERIGHT, false);
-        this->setButton(curClient, IN_BACK, false);
         this->setButton(curClient, IN_MOVELEFT, false);
+        this->setButton(curClient, IN_BACK, false);
+        this->setButton(curClient, IN_MOVERIGHT, false);
     }
     else {
         Vec3 waypointPos{waypoints[curWaypoint].x, waypoints[curWaypoint].y, waypoints[curWaypoint].z};
@@ -187,18 +182,35 @@ void Thinker::move(ServerState::Client & curClient) {
             curClient.lastEyeAngleX + curClient.lastAimpunchAngleX, 
             curClient.lastEyeAngleY + curClient.lastAimpunchAngleY};
         Vec2 targetAngles = vectorAngles(targetVector);
+
+        std::stringstream thinkStream;
+        thinkStream << "cur point: " 
+            << curPos.x << "," << curPos.y 
+            << "," << curPos.z << "\n";
+        state.numThinkLines++;
+
+        thinkStream << "cur angle: " 
+            << currentAngles.x << "," << currentAngles.y << "\n";
+        state.numThinkLines++;
+
+        thinkStream << "target angle: " 
+            << targetAngles.x << "," << targetAngles.y << "\n";
+        state.numThinkLines++;
+        
+        state.thinkCopy += thinkStream.str();
+
         Vec2 totalDeltaAngles = targetAngles - currentAngles;
         totalDeltaAngles.makeYawNeg180To180();
         // don't need to worry about targetAngles y since can't move up and down
         //
         this->setButton(curClient, IN_FORWARD, 
-                totalDeltaAngles.x >= 315. || totalDeltaAngles.x <= 45.);
-        this->setButton(curClient, IN_MOVERIGHT, 
+                totalDeltaAngles.x >= -45. && totalDeltaAngles.x <= 45.);
+        this->setButton(curClient, IN_MOVELEFT, 
                 totalDeltaAngles.x >= 45. && totalDeltaAngles.x <= 135.);
         this->setButton(curClient, IN_BACK, 
-                totalDeltaAngles.x >= 135. && totalDeltaAngles.x <= 225.);
-        this->setButton(curClient, IN_MOVELEFT, 
-                totalDeltaAngles.x >= 225. && totalDeltaAngles.x <= 315.);
+                totalDeltaAngles.x >= 135. || totalDeltaAngles.x <= -135.);
+        this->setButton(curClient, IN_MOVERIGHT, 
+                totalDeltaAngles.x >= -135. && totalDeltaAngles.x <= -45.);
 
         if (computeDistance(curPos, waypointPos) < 20. && curWaypoint < waypoints.size() - 1) {
             curWaypoint++;
