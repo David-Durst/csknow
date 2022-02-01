@@ -35,12 +35,18 @@ void Thinker::think() {
 Thinker::Target Thinker::selectTarget(const ServerState::Client & curClient) {
     int nearestEnemyServerId = -1;
     double distance = std::numeric_limits<double>::max();
+    bool targetVisible = false;
     for (const auto & otherClient : state.clients) {
         if (otherClient.team != curClient.team && otherClient.isAlive) {
             double otherDistance = computeDistance(
                     {curClient.lastEyePosX, curClient.lastEyePosY, curClient.lastEyePosZ},
                     {otherClient.lastEyePosX, otherClient.lastEyePosY, otherClient.lastEyePosZ});
-            if (otherDistance < distance) {
+            bool otherVisible = state.visibilityClientPairs.find({ 
+                    std::min(curClient.serverId, otherClient.serverId), 
+                    std::max(curClient.serverId, otherClient.serverId)
+                }) != state.visibilityClientPairs.end();
+            if (otherDistance < distance || (otherVisible && !targetVisible)) {
+                targetVisible = otherVisible;
                 nearestEnemyServerId = otherClient.serverId;
                 distance = otherDistance;
             }
@@ -71,11 +77,13 @@ void Thinker::updatePolicy(const ServerState::Client & curClient, const ServerSt
         randomRight = !randomLeft;
         randomForward = dis(gen) > 0.5;
         randomBack = !randomForward;
-        if (!waypoints.empty() && curWaypoint == oldWaypoint && curPolicy == PolicyStates::Push) {
+        Vec3 curPosition = {curPoint.x, curPoint.y, curPoint.z};
+        if (!waypoints.empty() && computeDistance(curPosition, oldPosition) < 5. && curPolicy == PolicyStates::Push) {
             curPolicy = PolicyStates::Random;
+            waypoints.clear();
         }
         else if (dis(gen) < 0.8 && state.c4IsPlanted) {
-            oldWaypoint = curWaypoint;
+            oldPosition = curPosition;
             curPolicy = PolicyStates::Push; 
             // choose a new path only if target has changed
             if (waypoints.empty() || waypoints.back() != targetPoint) {
@@ -85,7 +93,7 @@ void Thinker::updatePolicy(const ServerState::Client & curClient, const ServerSt
                         waypoints.push_back(targetPoint);
                     }
                 }
-                catch (std::exception& error) {
+                catch (const std::exception& e) {
                     curPolicy = PolicyStates::Random;
                     waypoints = {targetPoint};  
                 }
