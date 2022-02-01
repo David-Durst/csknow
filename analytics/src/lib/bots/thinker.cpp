@@ -20,7 +20,8 @@ void Thinker::think() {
     this->updatePolicy(curClient);
 
     Target target = selectTarget(curClient);
-    const ServerState::Client & targetClient = state.clients[target.id];
+    const ServerState::Client & targetClient = target.id == -1 ?  
+        invalidClient : state.clients[target.id];
 
     state.inputsValid[csknowId] = true;
     curClient.buttons = 0;
@@ -91,7 +92,12 @@ Thinker::Target Thinker::selectTarget(const ServerState::Client & curClient) {
         }
     }
     
-    return {state.serverClientIdToCSKnowId[nearestEnemyServerId], distance};
+    if (nearestEnemyServerId != -1) {
+        return {state.serverClientIdToCSKnowId[nearestEnemyServerId], distance};
+    }
+    else {
+        return {-1, -1.};
+    }
 }
 
 float computeAngleVelocity(double totalDeltaAngle, double lastDeltaAngle) {
@@ -106,11 +112,29 @@ float computeAngleVelocity(double totalDeltaAngle, double lastDeltaAngle) {
 }
 
 void Thinker::aimAt(ServerState::Client & curClient, const ServerState::Client & targetClient) {
-    Vec3 targetVector{
-        targetClient.lastEyePosX - curClient.lastEyePosX,
-        targetClient.lastEyePosY - curClient.lastEyePosY,
-        targetClient.lastEyePosZ - curClient.lastEyePosZ
-    };
+    // if no plant and no enemies, then nothing to look at
+    if (targetClient.serverId == INVALID_SERVER_ID && !state.c4IsPlanted) {
+        curClient.inputAngleDeltaPctX = 0.;
+        curClient.inputAngleDeltaPctY = 0.;
+        return;
+    }
+
+    // look at an enemy if it exists, otherwise look at bomb
+    Vec3 targetVector;
+    if (targetClient.serverId != INVALID_SERVER_ID) {
+        targetVector = {
+            targetClient.lastEyePosX - curClient.lastEyePosX,
+            targetClient.lastEyePosY - curClient.lastEyePosY,
+            targetClient.lastEyePosZ - curClient.lastEyePosZ
+        };
+    }
+    else {
+        targetVector = { 
+            state.c4X - curClient.lastEyePosX,
+            state.c4Y - curClient.lastEyePosY,
+            state.c4Z - curClient.lastEyePosZ
+        };
+    }
 
     Vec2 currentAngles = {
         curClient.lastEyeAngleX + curClient.lastAimpunchAngleX, 
@@ -135,6 +159,13 @@ void Thinker::aimAt(ServerState::Client & curClient, const ServerState::Client &
 }
 
 void Thinker::fire(ServerState::Client & curClient, const ServerState::Client & targetClient) {
+    // don't shoot or reload if no enemies left 
+    if (targetClient.serverId == INVALID_SERVER_ID) {
+        this->setButton(curClient, IN_ATTACK, false);
+        this->setButton(curClient, IN_RELOAD, false);
+        return;
+    }
+
     bool attackLastFrame = buttonsLastFrame & IN_ATTACK > 0;
 
     // no reloading for knives and grenades
@@ -166,8 +197,7 @@ void Thinker::fire(ServerState::Client & curClient, const ServerState::Client & 
 }
 
 void Thinker::move(ServerState::Client & curClient) {
-    //if (curPolicy == PolicyStates::Hold || getButton(curClient, IN_ATTACK)) {
-    if (curPolicy == PolicyStates::Hold) {
+    if (curPolicy == PolicyStates::Hold || getButton(curClient, IN_ATTACK)) {
         this->setButton(curClient, IN_FORWARD, false);
         this->setButton(curClient, IN_MOVELEFT, false);
         this->setButton(curClient, IN_BACK, false);

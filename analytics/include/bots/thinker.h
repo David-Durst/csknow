@@ -35,6 +35,7 @@ class Thinker {
 
     void updatePolicy(const ServerState::Client & curClient);
     Target selectTarget(const ServerState::Client & curClient);
+    ServerState::Client invalidClient;
     void aimAt(ServerState::Client & curClient, const ServerState::Client & targetClient);
     void fire(ServerState::Client & curClient, const ServerState::Client & targetClient);
     void move(ServerState::Client & curClient);
@@ -63,7 +64,9 @@ public:
         : state(state), curBot(curBot), lastDeltaAngles{0,0}, navFile(navPath.c_str()),
         // init to 24 hours before now so think on first tick
         lastPolicyThinkTime(std::chrono::system_clock::now() - std::chrono::hours(24)), 
-        gen(rd()), dis(0., 1.) {};
+        gen(rd()), dis(0., 1.) {
+            invalidClient.serverId = INVALID_SERVER_ID;
+        };
     void think();
 };
 
