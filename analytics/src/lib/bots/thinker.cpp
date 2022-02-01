@@ -44,6 +44,9 @@ void Thinker::updatePolicy(const ServerState::Client & curClient) {
             if (waypoints.empty() || waypoints.back() != targetPoint) {
                 try {
                     waypoints = navFile.find_path(curPoint, targetPoint);                    
+                    if (waypoints.back() != targetPoint) {
+                        waypoints.push_back(targetPoint);
+                    }
                 }
                 catch (std::exception& error) {
                     waypoints = {targetPoint};  
@@ -264,5 +267,5 @@ void Thinker::defuse(ServerState::Client & curClient, const ServerState::Client 
     Vec3 c4Pos{state.c4X, state.c4Y, state.c4Z};
     this->setButton(curClient, IN_USE, 
             targetClient.serverId == INVALID_SERVER_ID && state.c4IsPlanted && 
-            computeDistance(curPos, c4Pos) < 20.);
+            computeDistance(curPos, c4Pos) < 50.);
 }
