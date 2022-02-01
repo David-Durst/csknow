@@ -60,6 +60,11 @@ void Thinker::updatePolicy(const ServerState::Client & curClient) {
         << static_cast<std::underlying_type_t<PolicyStates>>(curPolicy) << "\n";
     state.numThinkLines++;
 
+    thinkStream << "cur point: " 
+        << curPoint.x << "," << curPoint.y 
+        << "," << curPoint.z << "\n";
+    state.numThinkLines++;
+
     if (waypoints.size() > curWaypoint) {
         thinkStream << "cur waypoint " << curWaypoint << ":" 
             << waypoints[curWaypoint].x << "," << waypoints[curWaypoint].y 
