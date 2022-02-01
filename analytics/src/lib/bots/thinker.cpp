@@ -34,9 +34,9 @@ void Thinker::updatePolicy(const ServerState::Client & curClient) {
     auto curTime = std::chrono::system_clock::now();
     nav_mesh::vec3_t targetPoint{state.c4X, state.c4Y, state.c4Z}; 
     nav_mesh::vec3_t curPoint{curClient.lastEyePosX, curClient.lastEyePosY, curClient.lastFootPosZ};
-    if ((curTime - lastPolicyThinkTime).count() > SECONDS_BETWEEN_POLICY_CHANGES && 
-            state.c4IsPlanted) {
-        if (dis(gen) < 2.5) {
+    std::chrono::duration<double> thinkTime = curTime - lastPolicyThinkTime;
+    if (thinkTime.count() > SECONDS_BETWEEN_POLICY_CHANGES) {
+        if (dis(gen) < 2.5 && state.c4IsPlanted) {
             curPolicy = PolicyStates::Push; 
             // choose a new path only if target has changed
             if (waypoints.empty() || waypoints.back() != targetPoint) {
@@ -60,10 +60,12 @@ void Thinker::updatePolicy(const ServerState::Client & curClient) {
         << static_cast<std::underlying_type_t<PolicyStates>>(curPolicy) << "\n";
     state.numThinkLines++;
 
-    thinkStream << "cur waypoint " << curWaypoint << ":" 
-        << waypoints[curWaypoint].x << "," << waypoints[curWaypoint].y 
-        << "," << waypoints[curWaypoint].z << "\n";
-    state.numThinkLines++;
+    if (waypoints.size() > curWaypoint) {
+        thinkStream << "cur waypoint " << curWaypoint << ":" 
+            << waypoints[curWaypoint].x << "," << waypoints[curWaypoint].y 
+            << "," << waypoints[curWaypoint].z << "\n";
+        state.numThinkLines++;
+    }
     if (!waypoints.empty()) {
         uint64_t lastWaypoint = waypoints.size() - 1;
         thinkStream << "last waypoint " << lastWaypoint << ":" 
