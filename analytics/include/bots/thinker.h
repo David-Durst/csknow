@@ -39,6 +39,7 @@ class Thinker {
     void aimAt(ServerState::Client & curClient, const ServerState::Client & targetClient);
     void fire(ServerState::Client & curClient, const ServerState::Client & targetClient);
     void move(ServerState::Client & curClient);
+    void defuse(ServerState::Client & curClient, const ServerState::Client & targetClient);
 
     void setButton(ServerState::Client & curClient, int32_t button, bool setTrue) {
         if (setTrue) {

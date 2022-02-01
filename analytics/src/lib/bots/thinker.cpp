@@ -29,6 +29,7 @@ void Thinker::think() {
     this->aimAt(curClient, targetClient);
     this->fire(curClient, targetClient);
     this->move(curClient);
+    this->defuse(curClient, targetClient);
 }
 
 void Thinker::updatePolicy(const ServerState::Client & curClient) {
@@ -37,7 +38,7 @@ void Thinker::updatePolicy(const ServerState::Client & curClient) {
     nav_mesh::vec3_t curPoint{curClient.lastEyePosX, curClient.lastEyePosY, curClient.lastFootPosZ};
     std::chrono::duration<double> thinkTime = curTime - lastPolicyThinkTime;
     if (thinkTime.count() > SECONDS_BETWEEN_POLICY_CHANGES) {
-        if (dis(gen) < 2.5 && state.c4IsPlanted) {
+        if (dis(gen) < 0.5 && state.c4IsPlanted) {
             curPolicy = PolicyStates::Push; 
             // choose a new path only if target has changed
             if (waypoints.empty() || waypoints.back() != targetPoint) {
@@ -208,6 +209,19 @@ void Thinker::move(ServerState::Client & curClient) {
         Vec3 curPos{curClient.lastEyePosX, curClient.lastEyePosY, curClient.lastFootPosZ};
         Vec3 targetVector = waypointPos - curPos;
 
+        if (computeDistance(curPos, waypointPos) < 20.) {
+            // move to next waypoint if not done path, otherwise stop
+            if (curWaypoint < waypoints.size() - 1) {
+                curWaypoint++;
+            }
+            else {
+                this->setButton(curClient, IN_FORWARD, false);
+                this->setButton(curClient, IN_MOVELEFT, false);
+                this->setButton(curClient, IN_BACK, false);
+                this->setButton(curClient, IN_MOVERIGHT, false);
+            }
+        }
+
         Vec2 currentAngles = {
             curClient.lastEyeAngleX + curClient.lastAimpunchAngleX, 
             curClient.lastEyeAngleY + curClient.lastAimpunchAngleY};
@@ -241,9 +255,14 @@ void Thinker::move(ServerState::Client & curClient) {
                 totalDeltaAngles.x >= 100. || totalDeltaAngles.x <= -100.);
         this->setButton(curClient, IN_MOVERIGHT, 
                 totalDeltaAngles.x >= -170. && totalDeltaAngles.x <= -10.);
-
-        if (computeDistance(curPos, waypointPos) < 20. && curWaypoint < waypoints.size() - 1) {
-            curWaypoint++;
-        }
     }
+}
+
+void Thinker::defuse(ServerState::Client & curClient, const ServerState::Client & targetClient) {
+    // if near C4 and no one alive and it's planted, start defusing
+    Vec3 curPos{curClient.lastEyePosX, curClient.lastEyePosY, curClient.lastFootPosZ};
+    Vec3 c4Pos{state.c4X, state.c4Y, state.c4Z};
+    this->setButton(curClient, IN_USE, 
+            targetClient.serverId == INVALID_SERVER_ID && state.c4IsPlanted && 
+            computeDistance(curPos, c4Pos) < 20.);
 }
