@@ -83,7 +83,7 @@ void Thinker::updatePolicy(const ServerState::Client & curClient, const ServerSt
             curPolicy = PolicyStates::Random;
             waypoints.clear();
         }
-        else if (dis(gen) < 0.8 && state.c4IsPlanted) {
+        else if (dis(gen) < 0.8) {
             oldPosition = curPosition;
             curPolicy = PolicyStates::Push; 
             // choose a new path only if target has changed
