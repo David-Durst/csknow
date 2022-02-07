@@ -18,11 +18,14 @@
 
 class ServerState {
 private:
+    void loadGeneralState(string generalFilePath);
     void loadClientStates(string clientStatesFilePath);
     void loadVisibilityClientPairs(string visibilityFilePath);
     void loadC4State(string c4FilePath);
 
 public:
+    string mapName;
+
     struct Client {
         int32_t lastFrame;
         int32_t serverId;
