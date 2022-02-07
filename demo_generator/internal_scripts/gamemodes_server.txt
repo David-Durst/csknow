@@ -2,20 +2,22 @@
 //
 // Values here override the default gamemodes.txt 
 
-"GameModes_Server.txt"{"gameTypes"{"custom"{"gameModes"{
+"GameModes_Server.txt"{"gameTypes"{"custom"{
+"value" "3"
+"gameModes"{
 
 /////////////////////////////////////////
 // CASUAL
 /////////////////////////////////////////
 "custom"{
 
-
+        "value" "0"
 
 		"maxplayers"		"2"
 
 		"exec"
 		{
-			"exec"					"server_last.cfg"
+			"exec"					"gamemode_custom.cfg"
 		}
 
 		"mapgroupsSP"						// List of mapgroups valid for this game mode
