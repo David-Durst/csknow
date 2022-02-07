@@ -73,7 +73,7 @@ void Thinker::updatePolicy(const ServerState::Client & curClient, const ServerSt
     }
     nav_mesh::vec3_t curPoint{curClient.lastEyePosX, curClient.lastEyePosY, curClient.lastFootPosZ};
     std::chrono::duration<double> thinkTime = curTime - lastPolicyThinkTime;
-    if (thinkTime.count() > SECONDS_BETWEEN_POLICY_CHANGES) {
+    if (lastPolicyRound != state.roundNumber || thinkTime.count() > SECONDS_BETWEEN_POLICY_CHANGES) {
         randomLeft = dis(gen) > 0.5;
         randomRight = !randomLeft;
         randomForward = dis(gen) > 0.5;
@@ -105,6 +105,7 @@ void Thinker::updatePolicy(const ServerState::Client & curClient, const ServerSt
             curPolicy = PolicyStates::Hold; 
         }
         lastPolicyThinkTime = curTime;
+        lastPolicyRound = state.roundNumber;
     }
 
     std::stringstream thinkStream;
