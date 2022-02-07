@@ -4,7 +4,8 @@
 void Thinker::think() {
     state.numThinkLines = 0;
 
-    if (curBot >= state.clients.size()) {
+    if (curBot >= state.serverClientIdToCSKnowId.size() || 
+            state.serverClientIdToCSKnowId[curBot] == -1) {
         return;
     }
     int csknowId = state.serverClientIdToCSKnowId[curBot];

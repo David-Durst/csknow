@@ -14,13 +14,16 @@ int main(int argc, char * argv[]) {
         return 1;
     }
     string mapsPath = argv[1], dataPath = argv[2];
-    string navPath = mapsPath + "/de_dust2.nav";
     int tickRate = std::stoi(argv[3]);
     std::chrono::duration<double> timePerTick(1.0 / tickRate);
 
 
     ServerState state;
+    // load once so can initialize rest of structs with data
+    state.loadServerState(dataPath);
+    string navPath = mapsPath + "/" + state.mapName + ".nav";
     Thinker thinker(state, 3, navPath);
+
     bool firstFrame = true;
     // \033[A moves up 1 line, \r moves cursor to start of line, \33[2K clears line
     string upAndClear = "\033[A\r\33[2K";
