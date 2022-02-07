@@ -16,7 +16,7 @@
 		{
 											// Any config files listed here will be executed after the ones in gamemodes.txt.
 			
-			"exec"					"server_last.cfg" 
+			"exec"					"test_server_last.cfg" 
 		}
 
 		"mapgroupsMP"						// List of mapgroups valid for this game mode ( competitive )
@@ -150,12 +150,7 @@
 			"name"			"mg_bomb_se"
 			"maps"
 			{
-				"de_dust_se"		""
-				"de_dust2_se"		""
-				"de_nuke_se"		""
-				"de_train_se"		""
-				"de_inferno_se"		""
-				"de_aztec_se"		""
+				"bot_playground" 	""
 			}
 		}
 		"mg_bot"									// mapgroup definition
