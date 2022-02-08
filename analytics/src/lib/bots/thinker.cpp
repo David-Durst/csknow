@@ -79,11 +79,7 @@ void Thinker::updatePolicy(const ServerState::Client & curClient, const ServerSt
         randomForward = dis(gen) > 0.5;
         randomBack = !randomForward;
         Vec3 curPosition = {curPoint.x, curPoint.y, curPoint.z};
-        if (!waypoints.empty() && computeDistance(curPosition, oldPosition) < 5. && curPolicy == PolicyStates::Push) {
-            curPolicy = PolicyStates::Random;
-            waypoints.clear();
-        }
-        else if (dis(gen) < 0.8) {
+        if (mustPush || dis(gen) < 0.8) {
             oldPosition = curPosition;
             // choose a new path only if target has changed or it's a new push policy
             if (curPolicy != PolicyStates::Push || lastPolicyRound != state.roundNumber || 
@@ -102,6 +98,10 @@ void Thinker::updatePolicy(const ServerState::Client & curClient, const ServerSt
             }
             curPolicy = PolicyStates::Push; 
         }
+        else if (!waypoints.empty() && computeDistance(curPosition, oldPosition) < 5. && curPolicy == PolicyStates::Push) {
+            curPolicy = PolicyStates::Random;
+            waypoints.clear();
+        }
         else {
             curPolicy = PolicyStates::Hold; 
         }
@@ -111,7 +111,7 @@ void Thinker::updatePolicy(const ServerState::Client & curClient, const ServerSt
 
     std::stringstream thinkStream;
     thinkStream << "num waypoints: " << waypoints.size() << ", cur policy " 
-        << static_cast<std::underlying_type_t<PolicyStates>>(curPolicy) << "\n";
+        << policyAsInt(curPolicy) << "\n";
     state.numThinkLines++;
 
     if (waypoints.size() > curWaypoint) {
@@ -127,7 +127,7 @@ void Thinker::updatePolicy(const ServerState::Client & curClient, const ServerSt
             << "," << waypoints[lastWaypoint].z << "\n";
         state.numThinkLines++;
     }
-    state.thinkCopy = thinkStream.str();
+    state.thinkCopy += thinkStream.str();
 }
 
 float computeAngleVelocity(double totalDeltaAngle, double lastDeltaAngle) {

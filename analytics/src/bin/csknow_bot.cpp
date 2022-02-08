@@ -22,7 +22,7 @@ int main(int argc, char * argv[]) {
     // load once so can initialize rest of structs with data
     state.loadServerState(dataPath);
     string navPath = mapsPath + "/" + state.mapName + ".nav";
-    Thinker thinker(state, 3, navPath);
+    Thinker thinker(state, 3, navPath, true);
 
     bool firstFrame = true;
     // \033[A moves up 1 line, \r moves cursor to start of line, \33[2K clears line

@@ -3,6 +3,7 @@
 #include "micropather.h"
 #include <math.h>
 #include <memory>
+#include <map>
 
 namespace nav_mesh {
 	class nav_file : public micropather::Graph {
@@ -42,6 +43,9 @@ namespace nav_mesh {
 
 		nav_area& get_area_by_id( std::uint32_t id );
 		nav_area& get_area_by_position( vec3_t position );
+        float get_point_to_area_distance( vec3_t position, nav_area& area);
+        vec3_t get_nearest_point_in_area( vec3_t position, nav_area& area);
+		nav_area& get_nearest_area_by_position( vec3_t position );
 
 		std::unique_ptr< micropather::MicroPather > m_pather = nullptr;
 
@@ -59,5 +63,6 @@ namespace nav_mesh {
 		nav_buffer m_buffer = { };
 		std::vector< nav_area > m_areas = { };
 		std::vector< std::string > m_places = { };
+        std::map< uint32_t, size_t > m_area_ids_to_indices;
 	};
 }
