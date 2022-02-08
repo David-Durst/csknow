@@ -85,9 +85,9 @@ void Thinker::updatePolicy(const ServerState::Client & curClient, const ServerSt
         }
         else if (dis(gen) < 0.8) {
             oldPosition = curPosition;
-            curPolicy = PolicyStates::Push; 
-            // choose a new path only if target has changed
-            if (waypoints.empty() || waypoints.back() != targetPoint) {
+            // choose a new path only if target has changed or it's a new push policy
+            if (curPolicy != PolicyStates::Push || lastPolicyRound != state.roundNumber || 
+                    waypoints.empty() || waypoints.back() != targetPoint) {
                 try {
                     waypoints = navFile.find_path(curPoint, targetPoint);                    
                     if (waypoints.back() != targetPoint) {
@@ -100,6 +100,7 @@ void Thinker::updatePolicy(const ServerState::Client & curClient, const ServerSt
                 }
                 curWaypoint = 0;
             }
+            curPolicy = PolicyStates::Push; 
         }
         else {
             curPolicy = PolicyStates::Hold; 
