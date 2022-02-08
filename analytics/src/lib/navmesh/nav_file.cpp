@@ -82,9 +82,9 @@ namespace nav_mesh {
                 vec3_t nearest_0 = get_nearest_point_in_area(last_area.get_center(), area);
                 vec3_t nearest_1 = get_nearest_point_in_area(area.get_center(), last_area);
                 vec3_t middle = {
-                    (nearest_0.x + nearest_1.x) / 2.,
-                    (nearest_0.y + nearest_1.y) / 2.,
-                    (nearest_0.z + nearest_1.z) / 2.
+                    (nearest_0.x + nearest_1.x) / 2.f,
+                    (nearest_0.y + nearest_1.y) / 2.f,
+                    (nearest_0.z + nearest_1.z) / 2.f
                 };
                 path.push_back( middle );
             }
