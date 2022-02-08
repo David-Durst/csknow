@@ -30,25 +30,42 @@ class Thinker {
         double distance;
     };
 
-    int curBot, buttonsLastFrame;
-    Vec2 lastDeltaAngles;
-    ServerState & state;
+    struct Plan {
+        PolicyStates policy;
+    };
+
+    // constant values across game
+    int curBot;
     nav_mesh::nav_file navFile;
+    ServerState & state; // technically not constant, but pointer is constant
+    bool mustPush;
+    ServerState::Client invalidClient;
+
+    // randomness state https://en.cppreference.com/w/cpp/numeric/random/uniform_real_distribution
+    std::random_device rd;  // Will be used to obtain a seed for the random number engine
+    std::mt19937 gen; // Standard mersenne_twister_engine seeded with rd()
+    std::uniform_real_distribution<> dis;
+
+    // across policy state
     std::chrono::time_point<std::chrono::system_clock> lastPolicyThinkTime;
     int32_t lastPolicyRound;
     PolicyStates curPolicy;
-    bool mustPush;
     std::vector<nav_mesh::vec3_t> waypoints;
+    bool randomLeft, randomRight, randomForward, randomBack;
+
+    // last frame state
+    int buttonsLastFrame;
+    Vec2 lastDeltaAngles;
+    Vec3 lastPushPosition; 
+
+    // cur frame state
     uint64_t curWaypoint;
-    bool randomLeft = true, randomRight, randomForward, randomBack;
+    bool inSpray;
 
     Target selectTarget(const ServerState::Client & curClient);
-    ServerState::Client invalidClient;
     void updatePolicy(const ServerState::Client & curClient, const ServerState::Client & targetClient);
-    Vec3 oldPosition;
     void aimAt(ServerState::Client & curClient, const ServerState::Client & targetClient);
     void fire(ServerState::Client & curClient, const ServerState::Client & targetClient);
-    bool inSpray;
     void move(ServerState::Client & curClient);
     void defuse(ServerState::Client & curClient, const ServerState::Client & targetClient);
 
@@ -64,12 +81,6 @@ class Thinker {
     bool getButton(ServerState::Client & curClient, int32_t button) {
         return curClient.buttons & button > 0;
     }
-
-    // randomness state https://en.cppreference.com/w/cpp/numeric/random/uniform_real_distribution
-    std::random_device rd;  // Will be used to obtain a seed for the random number engine
-    std::mt19937 gen; // Standard mersenne_twister_engine seeded with rd()
-    std::uniform_real_distribution<> dis;
-
 
 public:
     Thinker(ServerState & state, int curBot, string navPath, bool mustPush) 

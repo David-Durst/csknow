@@ -1,4 +1,5 @@
 #include "bots/thinker.h"
+#include <thread>
 #include <limits>
 
 void Thinker::think() {
@@ -80,7 +81,7 @@ void Thinker::updatePolicy(const ServerState::Client & curClient, const ServerSt
         randomBack = !randomForward;
         Vec3 curPosition = {curPoint.x, curPoint.y, curPoint.z};
         if (mustPush || dis(gen) < 0.8) {
-            oldPosition = curPosition;
+            lastPushPosition = curPosition;
             // choose a new path only if target has changed or it's a new push policy
             if (curPolicy != PolicyStates::Push || lastPolicyRound != state.roundNumber || 
                     waypoints.empty() || waypoints.back() != targetPoint) {
@@ -98,7 +99,8 @@ void Thinker::updatePolicy(const ServerState::Client & curClient, const ServerSt
             }
             curPolicy = PolicyStates::Push; 
         }
-        else if (!waypoints.empty() && computeDistance(curPosition, oldPosition) < 5. && curPolicy == PolicyStates::Push) {
+        else if (!waypoints.empty() && computeDistance(curPosition, lastPushPosition) < 5. && 
+                curPolicy == PolicyStates::Push) {
             curPolicy = PolicyStates::Random;
             waypoints.clear();
         }
