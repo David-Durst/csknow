@@ -1,0 +1,16 @@
+// this is an actually working way to add mapgroups
+"GameModes_Server.txt"
+{
+
+	"mapgroups"
+	{
+		"mg_bot_playground"
+		{
+			"name"			"mg_bot_playground"
+			"maps"
+			{
+				"bot_playground"	""
+			}
+		}
+	}
+}
