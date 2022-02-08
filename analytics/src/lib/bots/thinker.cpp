@@ -23,7 +23,7 @@ void Thinker::think() {
     const ServerState::Client & targetClient = target.id == -1 ?  
         invalidClient : state.clients[target.id];
 
-    this->updatePolicy(curClient, targetClient);
+    this->updateMovementType(curClient, targetClient);
 
     state.inputsValid[csknowId] = true;
     curClient.buttons = 0;
@@ -63,7 +63,7 @@ Thinker::Target Thinker::selectTarget(const ServerState::Client & curClient) {
     }
 }
 
-void Thinker::updatePolicy(const ServerState::Client & curClient, const ServerState::Client & targetClient) {
+void Thinker::updateMovementType(const ServerState::Client & curClient, const ServerState::Client & targetClient) {
     auto curTime = std::chrono::system_clock::now();
     nav_mesh::vec3_t targetPoint;
     if (targetClient.serverId == INVALID_SERVER_ID) {
@@ -73,8 +73,8 @@ void Thinker::updatePolicy(const ServerState::Client & curClient, const ServerSt
         targetPoint = {targetClient.lastEyePosX, targetClient.lastEyePosY, targetClient.lastFootPosZ};
     }
     nav_mesh::vec3_t curPoint{curClient.lastEyePosX, curClient.lastEyePosY, curClient.lastFootPosZ};
-    std::chrono::duration<double> thinkTime = curTime - lastPolicyThinkTime;
-    if (lastPolicyRound != state.roundNumber || thinkTime.count() > SECONDS_BETWEEN_POLICY_CHANGES) {
+    std::chrono::duration<double> planTime = curTime - lastPlanTime;
+    if (lastPlanRound != state.roundNumber || planTime.count() > SECONDS_BETWEEN_POLICY_CHANGES) {
         randomLeft = dis(gen) > 0.5;
         randomRight = !randomLeft;
         randomForward = dis(gen) > 0.5;
@@ -82,8 +82,8 @@ void Thinker::updatePolicy(const ServerState::Client & curClient, const ServerSt
         Vec3 curPosition = {curPoint.x, curPoint.y, curPoint.z};
         if (mustPush || dis(gen) < 0.8) {
             lastPushPosition = curPosition;
-            // choose a new path only if target has changed or it's a new push policy
-            if (curPolicy != PolicyStates::Push || lastPolicyRound != state.roundNumber || 
+            // choose a new path only if target has changed or it's a new push movement type
+            if (curMovementType != MovementType::Push || lastPlanRound != state.roundNumber || 
                     waypoints.empty() || waypoints.back() != targetPoint) {
                 try {
                     waypoints = navFile.find_path(curPoint, targetPoint);                    
@@ -92,28 +92,28 @@ void Thinker::updatePolicy(const ServerState::Client & curClient, const ServerSt
                     }
                 }
                 catch (const std::exception& e) {
-                    curPolicy = PolicyStates::Random;
+                    curMovementType = MovementType::Random;
                     waypoints = {targetPoint};  
                 }
                 curWaypoint = 0;
             }
-            curPolicy = PolicyStates::Push; 
+            curMovementType = MovementType::Push; 
         }
         else if (!waypoints.empty() && computeDistance(curPosition, lastPushPosition) < 5. && 
-                curPolicy == PolicyStates::Push) {
-            curPolicy = PolicyStates::Random;
+                curMovementType == MovementType::Push) {
+            curMovementType = MovementType::Random;
             waypoints.clear();
         }
         else {
-            curPolicy = PolicyStates::Hold; 
+            curMovementType = MovementType::Hold; 
         }
-        lastPolicyThinkTime = curTime;
-        lastPolicyRound = state.roundNumber;
+        lastPlanTime = curTime;
+        lastPlanRound = state.roundNumber;
     }
 
     std::stringstream thinkStream;
-    thinkStream << "num waypoints: " << waypoints.size() << ", cur policy " 
-        << policyAsInt(curPolicy) << "\n";
+    thinkStream << "num waypoints: " << waypoints.size() << ", cur movement type " 
+        << movementTypeAsInt(curMovementType) << "\n";
     state.numThinkLines++;
 
     if (waypoints.size() > curWaypoint) {
@@ -229,13 +229,13 @@ void Thinker::fire(ServerState::Client & curClient, const ServerState::Client & 
 }
 
 void Thinker::move(ServerState::Client & curClient) {
-    if (curPolicy == PolicyStates::Hold || inSpray) {
+    if (curMovementType == MovementType::Hold || inSpray) {
         this->setButton(curClient, IN_FORWARD, false);
         this->setButton(curClient, IN_MOVELEFT, false);
         this->setButton(curClient, IN_BACK, false);
         this->setButton(curClient, IN_MOVERIGHT, false);
     }
-    else if (curPolicy == PolicyStates::Random) {
+    else if (curMovementType == MovementType::Random) {
         this->setButton(curClient, IN_FORWARD, randomForward);
         this->setButton(curClient, IN_MOVELEFT, randomLeft);
         this->setButton(curClient, IN_BACK, randomBack);

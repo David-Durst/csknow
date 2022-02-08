@@ -14,15 +14,15 @@
 #include <type_traits>
 
 class Thinker {
-    enum class PolicyStates {
+    enum class MovementType {
         Push,
         Random,
         Hold,
         NUM_POLICIES
     };
 
-    int policyAsInt(PolicyStates policy) {
-        return static_cast<std::underlying_type_t<PolicyStates>>(policy);
+    int movementTypeAsInt(MovementType policy) {
+        return static_cast<std::underlying_type_t<MovementType>>(policy);
     }
 
     struct Target {
@@ -31,7 +31,7 @@ class Thinker {
     };
 
     struct Plan {
-        PolicyStates policy;
+        MovementType policy;
     };
 
     // constant values across game
@@ -47,9 +47,9 @@ class Thinker {
     std::uniform_real_distribution<> dis;
 
     // across policy state
-    std::chrono::time_point<std::chrono::system_clock> lastPolicyThinkTime;
-    int32_t lastPolicyRound;
-    PolicyStates curPolicy;
+    std::chrono::time_point<std::chrono::system_clock> lastPlanTime;
+    int32_t lastPlanRound;
+    MovementType curMovementType;
     std::vector<nav_mesh::vec3_t> waypoints;
     bool randomLeft, randomRight, randomForward, randomBack;
 
@@ -63,7 +63,7 @@ class Thinker {
     bool inSpray;
 
     Target selectTarget(const ServerState::Client & curClient);
-    void updatePolicy(const ServerState::Client & curClient, const ServerState::Client & targetClient);
+    void updateMovementType(const ServerState::Client & curClient, const ServerState::Client & targetClient);
     void aimAt(ServerState::Client & curClient, const ServerState::Client & targetClient);
     void fire(ServerState::Client & curClient, const ServerState::Client & targetClient);
     void move(ServerState::Client & curClient);
@@ -86,8 +86,8 @@ public:
     Thinker(ServerState & state, int curBot, string navPath, bool mustPush) 
         : state(state), curBot(curBot), lastDeltaAngles{0,0}, navFile(navPath.c_str()),
         // init to 24 hours before now so think on first tick
-        lastPolicyThinkTime(std::chrono::system_clock::now() - std::chrono::hours(24)), 
-        lastPolicyRound(-1), mustPush(mustPush),
+        lastPlanTime(std::chrono::system_clock::now() - std::chrono::hours(24)), 
+        lastPlanRound(-1), mustPush(mustPush),
         gen(rd()), dis(0., 1.) {
             invalidClient.serverId = INVALID_SERVER_ID;
         };
