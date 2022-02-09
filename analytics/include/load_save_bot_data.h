@@ -7,7 +7,7 @@
 #define MAX_ONE_DIRECTION_ANGLE_VEL 15.0
 #define MAX_ONE_DIRECTION_ANGLE_ACCEL 5.0
 #define MAX_PITCH_MAGNITUDE 89.0
-#define INVALID_SERVER_ID -1
+#define INVALID_ID -1
 #include "load_data.h"
 #include "geometry.h"
 #include <iostream>
@@ -29,7 +29,7 @@ public:
 
     struct Client {
         int32_t lastFrame;
-        int32_t serverId;
+        int32_t csgoId;
         string name;
         int32_t team;
         int32_t currentWeaponId;
@@ -67,7 +67,7 @@ public:
         float inputAngleDeltaPctY;
     };
 
-    vector<int> serverClientIdToCSKnowId;
+    vector<int> csgoIdToCSKnowId;
     vector<Client> clients;
     vector<bool> inputsValid;
 

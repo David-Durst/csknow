@@ -4,8 +4,8 @@
 void Thinker::think() {
     state.numThinkLines = 0;
 
-    if (curBot >= liveState.serverClientIdToCSKnowId.size() || 
-            liveState.serverClientIdToCSKnowId[curBot] == -1) {
+    if (curBot >= liveState.csgoIdToCSKnowId.size() || 
+            liveState.csgoIdToCSKnowId[curBot] == -1) {
         return;
     }
     ServerState::Client & curClient = getCurClient(liveState);
@@ -57,9 +57,10 @@ float computeAngleVelocity(double totalDeltaAngle, double lastDeltaAngle) {
     return newDeltaAngle / MAX_ONE_DIRECTION_ANGLE_VEL;
 }
 
+
 void Thinker::aimAt(ServerState::Client & curClient, const ServerState::Client & targetClient) {
     // if no plant and no enemies, then nothing to look at
-    if (targetClient.serverId == INVALID_SERVER_ID && !state.c4IsPlanted) {
+    if (targetClient.serverId == INVALID_ID && !state.c4IsPlanted) {
         curClient.inputAngleDeltaPctX = 0.;
         curClient.inputAngleDeltaPctY = 0.;
         return;
@@ -67,7 +68,7 @@ void Thinker::aimAt(ServerState::Client & curClient, const ServerState::Client &
 
     // look at an enemy if it exists, otherwise look at bomb
     Vec3 targetVector;
-    if (targetClient.serverId != INVALID_SERVER_ID) {
+    if (targetClient.serverId != INVALID_ID) {
         targetVector = {
             targetClient.lastEyePosX - curClient.lastEyePosX,
             targetClient.lastEyePosY - curClient.lastEyePosY,

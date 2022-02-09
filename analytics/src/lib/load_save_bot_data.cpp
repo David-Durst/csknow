@@ -60,7 +60,7 @@ void ServerState::loadClientStates(string clientStatesFilePath) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].lastFrame);
         }
         else if (colNumber == 1) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].serverId);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].csgoId);
         }
         else if (colNumber == 2) {
             readCol(file, curStart, curDelimiter, clients[arrayEntry].name);
@@ -290,14 +290,14 @@ void ServerState::loadServerState(string dataPath) {
     // build map from server id to CSKnow id
     int maxServerId = -1;
     for (const auto & client : clients) {
-        maxServerId = std::max(maxServerId, client.serverId);
+        maxServerId = std::max(maxServerId, client.csgoId);
     }
-    serverClientIdToCSKnowId.resize(maxServerId + 1);
+    csgoIdToCSKnowId.resize(maxServerId + 1);
     for (int i = 0; i <= maxServerId; i++) {
-        serverClientIdToCSKnowId[i] = -1;
+        csgoIdToCSKnowId[i] = INVALID_ID;
     }
     for (int i = 0; i < (int) clients.size(); i++) {
-        serverClientIdToCSKnowId[clients[i].serverId] = i;
+        csgoIdToCSKnowId[clients[i].csgoId] = i;
     }
 }
 
@@ -314,7 +314,7 @@ void ServerState::saveBotInputs(string dataPath) {
 
     for (int i = 0; i < (int) inputsValid.size(); i++) {
         if (i < (int) clients.size() && inputsValid[i]) {
-            inputsStream << clients[i].serverId << ","
+            inputsStream << clients[i].csgoId << ","
                 << clients[i].buttons << ","
                 // FLIPPING TO MATCH YAW AND PITCH
                 << clients[i].inputAngleDeltaPctY << ","

@@ -65,12 +65,12 @@ void Thinker::selectTarget() {
     }
     
     // if found any targets, set them, otherwise mark target as invalid
-    if (nearestEnemyServerId != INVALID_SERVER_ID) {
+    if (nearestEnemyServerId != INVALID_ID) {
         // TODO: make offset random based on skill, more skill less offset from target
-        developingPlan.target = {state.serverClientIdToCSKnowId[nearestEnemyServerId], {0, 0, 0}};
+        developingPlan.target = {state.csgoIdToCSKnowId[nearestEnemyServerId], {0, 0, 0}};
     }
     else {
-        developingPlan.target.id = INVALID_SERVER_ID;
+        developingPlan.target.id = INVALID_ID;
     }
 }
 
