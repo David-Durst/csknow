@@ -50,9 +50,9 @@ int main(int argc, char * argv[]) {
         if (state.loadedSuccessfully) {
             thinker.think();
             state.saveBotInputs(dataPath);
-            std::cout << state.inputsCopy << state.thinkCopy << std::endl;            
-            state.inputsCopy = "";
-            state.thinkCopy = "";
+            std::cout << state.inputsLog << state.thinkLog << std::endl;
+            state.inputsLog = "";
+            state.thinkLog = "";
         }
         else {
             state.numInputLines = 0;

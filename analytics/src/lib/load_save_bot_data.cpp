@@ -323,10 +323,10 @@ void ServerState::saveBotInputs(string dataPath) {
         }
     }
 
-    inputsCopy = inputsStream.str();
+    inputsLog = inputsStream.str();
 
     std::ofstream fsInputs(tmpInputsFilePath);
-    fsInputs << inputsCopy;
+    fsInputs << inputsLog;
     fsInputs.close();
     
     std::filesystem::rename(tmpInputsFilePath, inputsFilePath);

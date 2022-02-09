@@ -45,7 +45,7 @@ public:
         tail = (tail + 1) & maxSize();
     }
 
-    void dequeue() {
+    T dequeue() {
         if (isEmpty()) {
             throw std::runtime_error("buffer is empty");
         }

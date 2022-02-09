@@ -57,7 +57,7 @@ class Thinker {
     };
 
     // constant values across game
-    int curBot;
+    int32_t curBotCSGOId;
     nav_mesh::nav_file navFile;
     ServerState & liveState; 
     bool mustPush;
@@ -92,15 +92,16 @@ class Thinker {
             const ServerState::Client & oldClient, const ServerState::Client & targetClient);
 
     // short term thinking based on plan
-    void aimAt(ServerState::Client & curClient, const ServerState::Client & targetClient, 
+    void aimAt(ServerState::Client & curClient, const ServerState::Client & targetClient,
+            const Vec3 & aimOffset, const ServerState::Client & priorClient);
+    void fire(ServerState::Client & curClient, const ServerState::Client & targetClient,
             const ServerState::Client & priorClient);
-    void fire(ServerState::Client & curClient, const ServerState::Client & targetClient);
     void move(ServerState::Client & curClient);
     void defuse(ServerState::Client & curClient, const ServerState::Client & targetClient);
 
     // helper functions
     ServerState::Client & getCurClient(ServerState & state) {
-        int csknowId = state.csgoIdToCSKnowId[curBot];
+        int csknowId = state.csgoIdToCSKnowId[curBotCSGOId];
         return state.clients[csknowId];
     }
     void setButton(ServerState::Client & curClient, int32_t button, bool setTrue) {
@@ -118,8 +119,8 @@ class Thinker {
 
 public:
     Thinker(ServerState & state, int curBot, string navPath, bool mustPush) 
-        : liveState(state), curBot(curBot), lastDeltaAngles{0,0}, navFile(navPath.c_str()),
-        mustPush(mustPush), gen(rd()), dis(0., 1.) {
+        : liveState(state), curBotCSGOId(curBot), lastDeltaAngles{0, 0}, navFile(navPath.c_str()),
+          mustPush(mustPush), gen(rd()), dis(0., 1.) {
             invalidClient.csgoId = INVALID_ID;
         };
     void think();
