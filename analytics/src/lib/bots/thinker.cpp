@@ -1,136 +1,50 @@
 #include "bots/thinker.h"
-#include <thread>
 #include <limits>
 
 void Thinker::think() {
     state.numThinkLines = 0;
 
-    if (curBot >= state.serverClientIdToCSKnowId.size() || 
-            state.serverClientIdToCSKnowId[curBot] == -1) {
+    if (curBot >= liveState.serverClientIdToCSKnowId.size() || 
+            liveState.serverClientIdToCSKnowId[curBot] == -1) {
         return;
     }
-    int csknowId = state.serverClientIdToCSKnowId[curBot];
-    ServerState::Client & curClient = state.clients[csknowId];
+    ServerState::Client & curClient = getCurClient(liveState);
 
-    // don't think if dead
-    if (!curClient.isAlive) {
+    // don't think if dead or not bot
+    if (!curClient.isAlive || !curClient.isBot) {
+        state.inputsValid[csknowId] = false;
         return;
     }
 
-    buttonsLastFrame = curClient.buttons;
+    if (!launchedPlanThread) {
+        planThread = {&Thinker::plan, this};
+    }
 
-    Target target = selectTarget(curClient);
-    const ServerState::Client & targetClient = target.id == -1 ?  
-        invalidClient : state.clients[target.id];
+    // keep doing same thing if miss due to lock contention, don't block rest of system
+    bool gotLock = planLock.try_lock();
+    if (gotLock) {
+        state.inputsValid[csknowId] = true;
+        curClient.buttons = 0;
+        curClient.inputAngleDeltaPctX = resultDeltaAngles.x;
+        curClient.inputAngleDeltaPctY = resultDeltaAngles.y;
 
-    this->updateMovementType(curClient, targetClient);
+        // only move if there's a plan
+        if (executingPlan.valid) {
+            this->aimAt(curClient, targetClient);
+            this->fire(curClient, targetClient);
+            this->move(curClient);
+            this->defuse(curClient, targetClient);
+        }
 
-    state.inputsValid[csknowId] = true;
-    curClient.buttons = 0;
+        // other thinkers may update inputs later
+        // but only know your inputs, so doesn't matter
+        stateForNextPlan.stateHistory.enqueue(state);
 
-    this->aimAt(curClient, targetClient);
-    this->fire(curClient, targetClient);
-    this->move(curClient);
-    this->defuse(curClient, targetClient);
+        planLock.unlock();
+    }
+
 }
 
-Thinker::Target Thinker::selectTarget(const ServerState::Client & curClient) {
-    int nearestEnemyServerId = -1;
-    double distance = std::numeric_limits<double>::max();
-    bool targetVisible = false;
-    for (const auto & otherClient : state.clients) {
-        if (otherClient.team != curClient.team && otherClient.isAlive) {
-            double otherDistance = computeDistance(
-                    {curClient.lastEyePosX, curClient.lastEyePosY, curClient.lastEyePosZ},
-                    {otherClient.lastEyePosX, otherClient.lastEyePosY, otherClient.lastEyePosZ});
-            bool otherVisible = state.visibilityClientPairs.find({ 
-                    std::min(curClient.serverId, otherClient.serverId), 
-                    std::max(curClient.serverId, otherClient.serverId)
-                }) != state.visibilityClientPairs.end();
-            if (otherDistance < distance || (otherVisible && !targetVisible)) {
-                targetVisible = otherVisible;
-                nearestEnemyServerId = otherClient.serverId;
-                distance = otherDistance;
-            }
-        }
-    }
-    
-    if (nearestEnemyServerId != -1) {
-        return {state.serverClientIdToCSKnowId[nearestEnemyServerId], distance};
-    }
-    else {
-        return {-1, -1.};
-    }
-}
-
-void Thinker::updateMovementType(const ServerState::Client & curClient, const ServerState::Client & targetClient) {
-    auto curTime = std::chrono::system_clock::now();
-    nav_mesh::vec3_t targetPoint;
-    if (targetClient.serverId == INVALID_SERVER_ID) {
-        targetPoint = {state.c4X, state.c4Y, state.c4Z}; 
-    }
-    else {
-        targetPoint = {targetClient.lastEyePosX, targetClient.lastEyePosY, targetClient.lastFootPosZ};
-    }
-    nav_mesh::vec3_t curPoint{curClient.lastEyePosX, curClient.lastEyePosY, curClient.lastFootPosZ};
-    std::chrono::duration<double> planTime = curTime - lastPlanTime;
-    if (lastPlanRound != state.roundNumber || planTime.count() > SECONDS_BETWEEN_POLICY_CHANGES) {
-        randomLeft = dis(gen) > 0.5;
-        randomRight = !randomLeft;
-        randomForward = dis(gen) > 0.5;
-        randomBack = !randomForward;
-        Vec3 curPosition = {curPoint.x, curPoint.y, curPoint.z};
-        if (mustPush || dis(gen) < 0.8) {
-            lastPushPosition = curPosition;
-            // choose a new path only if target has changed or it's a new push movement type
-            if (curMovementType != MovementType::Push || lastPlanRound != state.roundNumber || 
-                    waypoints.empty() || waypoints.back() != targetPoint) {
-                try {
-                    waypoints = navFile.find_path(curPoint, targetPoint);                    
-                    if (waypoints.back() != targetPoint) {
-                        waypoints.push_back(targetPoint);
-                    }
-                }
-                catch (const std::exception& e) {
-                    curMovementType = MovementType::Random;
-                    waypoints = {targetPoint};  
-                }
-                curWaypoint = 0;
-            }
-            curMovementType = MovementType::Push; 
-        }
-        else if (!waypoints.empty() && computeDistance(curPosition, lastPushPosition) < 5. && 
-                curMovementType == MovementType::Push) {
-            curMovementType = MovementType::Random;
-            waypoints.clear();
-        }
-        else {
-            curMovementType = MovementType::Hold; 
-        }
-        lastPlanTime = curTime;
-        lastPlanRound = state.roundNumber;
-    }
-
-    std::stringstream thinkStream;
-    thinkStream << "num waypoints: " << waypoints.size() << ", cur movement type " 
-        << movementTypeAsInt(curMovementType) << "\n";
-    state.numThinkLines++;
-
-    if (waypoints.size() > curWaypoint) {
-        thinkStream << "cur waypoint " << curWaypoint << ":" 
-            << waypoints[curWaypoint].x << "," << waypoints[curWaypoint].y 
-            << "," << waypoints[curWaypoint].z << "\n";
-        state.numThinkLines++;
-    }
-    if (!waypoints.empty()) {
-        uint64_t lastWaypoint = waypoints.size() - 1;
-        thinkStream << "last waypoint " << lastWaypoint << ":" 
-            << waypoints[lastWaypoint].x << "," << waypoints[lastWaypoint].y 
-            << "," << waypoints[lastWaypoint].z << "\n";
-        state.numThinkLines++;
-    }
-    state.thinkCopy += thinkStream.str();
-}
 
 float computeAngleVelocity(double totalDeltaAngle, double lastDeltaAngle) {
     double newDeltaAngle = std::max(-1 * MAX_ONE_DIRECTION_ANGLE_VEL,
@@ -229,26 +143,27 @@ void Thinker::fire(ServerState::Client & curClient, const ServerState::Client & 
 }
 
 void Thinker::move(ServerState::Client & curClient) {
-    if (curMovementType == MovementType::Hold || inSpray) {
+    if (curPlan.curMovementType == MovementType::Hold || inSpray) {
         this->setButton(curClient, IN_FORWARD, false);
         this->setButton(curClient, IN_MOVELEFT, false);
         this->setButton(curClient, IN_BACK, false);
         this->setButton(curClient, IN_MOVERIGHT, false);
     }
-    else if (curMovementType == MovementType::Random) {
-        this->setButton(curClient, IN_FORWARD, randomForward);
-        this->setButton(curClient, IN_MOVELEFT, randomLeft);
-        this->setButton(curClient, IN_BACK, randomBack);
-        this->setButton(curClient, IN_MOVERIGHT, randomRight);
+    else if (curPlan.curMovementType == MovementType::Random) {
+        this->setButton(curClient, IN_FORWARD, curPlan.randomForward);
+        this->setButton(curClient, IN_MOVELEFT, curPlan.randomLeft);
+        this->setButton(curClient, IN_BACK, curPlan.randomBack);
+        this->setButton(curClient, IN_MOVERIGHT, curPlan.randomRight);
     }
     else {
-        Vec3 waypointPos{waypoints[curWaypoint].x, waypoints[curWaypoint].y, waypoints[curWaypoint].z};
+        Vec3 waypointPos{curPlan.waypoints[curWaypoint].x, 
+            curPlan.waypoints[curWaypoint].y, curPlan.waypoints[curWaypoint].z};
         Vec3 curPos{curClient.lastEyePosX, curClient.lastEyePosY, curClient.lastFootPosZ};
         Vec3 targetVector = waypointPos - curPos;
 
         if (computeDistance(curPos, waypointPos) < 20.) {
             // move to next waypoint if not done path, otherwise stop
-            if (curWaypoint < waypoints.size() - 1) {
+            if (curWaypoint < curPlan.waypoints.size() - 1) {
                 curWaypoint++;
             }
             else {

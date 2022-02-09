@@ -70,7 +70,7 @@ namespace nav_mesh {
         if ( m_pather->Solve( start, end, &path_area_ids, &total_cost ) != 0 )
             throw std::runtime_error( "nav_file::find_path: couldn't find path" );
 
-        std::vector< vec3_t > path = { from };
+        std::vector< vec3_t > path = { };
         for ( std::size_t i = 0; i < path_area_ids.size( ); i++ ) {
             nav_area& area = m_areas[m_area_ids_to_indices[LO_32( path_area_ids[ i ] )]];
             // smooth paths by adding intersections between nav areas after the first 
