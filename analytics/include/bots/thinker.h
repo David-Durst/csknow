@@ -56,7 +56,7 @@ class Thinker {
 
         // for logging infrastructure
         string log;
-        int numLogLines;
+        int numLogLines = 0;
     };
 
     // constant values across game
@@ -69,7 +69,7 @@ class Thinker {
 
     // logging for entire thinker
     string thinkLog;
-    int numThinkLines;
+    int numThinkLines = 0;
 
     // randomness state https://en.cppreference.com/w/cpp/numeric/random/uniform_real_distribution
     std::random_device rd;  // Will be used to obtain a seed for the random number engine
