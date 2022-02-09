@@ -28,8 +28,8 @@ void Thinker::think() {
         curClient.buttons = 0;
         curClient.inputAngleDeltaPctX = 0.;
         curClient.inputAngleDeltaPctY = 0.;
-        thinkLog = executingPlan.log;
-        numThinkLines = executingPlan.numLogLines;
+        thinkLog = "CSGO id: " + std::to_string(curClient.csgoId) + "\n" + executingPlan.log;
+        numThinkLines = 1 + executingPlan.numLogLines;
 
         // only move if there's a plan
         if (executingPlan.valid) {
