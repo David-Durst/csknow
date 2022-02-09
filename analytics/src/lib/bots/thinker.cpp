@@ -2,7 +2,7 @@
 #include <limits>
 
 void Thinker::think() {
-    state.numThinkLines = 0;
+    liveState.numThinkLines = 0;
 
     if (curBot >= liveState.csgoIdToCSKnowId.size() || 
             liveState.csgoIdToCSKnowId[curBot] == -1) {
@@ -12,7 +12,7 @@ void Thinker::think() {
 
     // don't think if dead or not bot
     if (!curClient.isAlive || !curClient.isBot) {
-        state.inputsValid[csknowId] = false;
+        state.inputsValid[liveState.csgoIdToCSKnowId[curBot]] = false;
         return;
     }
 
@@ -27,10 +27,16 @@ void Thinker::think() {
         curClient.buttons = 0;
         curClient.inputAngleDeltaPctX = resultDeltaAngles.x;
         curClient.inputAngleDeltaPctY = resultDeltaAngles.y;
+        thinkLog = executingPlan.log();
+        numThinkLines = executingPlan.numLogLines;
 
         // only move if there's a plan
         if (executingPlan.valid) {
-            this->aimAt(curClient, targetClient);
+            // assuming clients aren't reshuffled, if so, will just be off for a second
+            const ServerState::Client & targetClient = 
+                liveState.clients[executingPlan.target.csknowId];
+            ServerState::Client & priorClient = getCurClient(stateForNextPlan.stateHistory.fromFront());
+            this->aimAt(curClient, targetClient, priorClient);
             this->fire(curClient, targetClient);
             this->move(curClient);
             this->defuse(curClient, targetClient);
@@ -43,6 +49,9 @@ void Thinker::think() {
         planLock.unlock();
     }
 
+    // this ensures repeating to log if repeating operations due to lock miss
+    state.thinkLog += thinkLog;
+    state.numThinkLines += numThinkLines;
 }
 
 
@@ -58,9 +67,10 @@ float computeAngleVelocity(double totalDeltaAngle, double lastDeltaAngle) {
 }
 
 
-void Thinker::aimAt(ServerState::Client & curClient, const ServerState::Client & targetClient) {
+void Thinker::aimAt(ServerState::Client & curClient, const ServerState::Client & targetClient,
+        const ServerState::Client & priorClient) {
     // if no plant and no enemies, then nothing to look at
-    if (targetClient.serverId == INVALID_ID && !state.c4IsPlanted) {
+    if (targetClient.csgoId == INVALID_ID && !state.c4IsPlanted) {
         curClient.inputAngleDeltaPctX = 0.;
         curClient.inputAngleDeltaPctY = 0.;
         return;
@@ -68,7 +78,7 @@ void Thinker::aimAt(ServerState::Client & curClient, const ServerState::Client &
 
     // look at an enemy if it exists, otherwise look at bomb
     Vec3 targetVector;
-    if (targetClient.serverId != INVALID_ID) {
+    if (targetClient.csgoId != INVALID_ID) {
         targetVector = {
             targetClient.lastEyePosX - curClient.lastEyePosX,
             targetClient.lastEyePosY - curClient.lastEyePosY,
@@ -96,10 +106,8 @@ void Thinker::aimAt(ServerState::Client & curClient, const ServerState::Client &
     totalDeltaAngles.makeYawNeg180To180();
 
     Vec2 resultDeltaAngles;
-    resultDeltaAngles.x = computeAngleVelocity(totalDeltaAngles.x, lastDeltaAngles.x);
-    resultDeltaAngles.y = computeAngleVelocity(totalDeltaAngles.y, lastDeltaAngles.y);
-
-    lastDeltaAngles = resultDeltaAngles;
+    resultDeltaAngles.x = computeAngleVelocity(totalDeltaAngles.x, priorClient.inputAngleDeltaPctX);
+    resultDeltaAngles.y = computeAngleVelocity(totalDeltaAngles.y, priorClient.inputAngleDeltaPctY);
 
     curClient.inputAngleDeltaPctX = resultDeltaAngles.x;
     curClient.inputAngleDeltaPctY = resultDeltaAngles.y;
@@ -107,7 +115,7 @@ void Thinker::aimAt(ServerState::Client & curClient, const ServerState::Client &
 
 void Thinker::fire(ServerState::Client & curClient, const ServerState::Client & targetClient) {
     // don't shoot or reload if no enemies left 
-    if (targetClient.serverId == INVALID_SERVER_ID) {
+    if (targetClient.csgoId == INVALID_SERVER_ID) {
         this->setButton(curClient, IN_ATTACK, false);
         this->setButton(curClient, IN_RELOAD, false);
         inSpray = false;
@@ -126,8 +134,8 @@ void Thinker::fire(ServerState::Client & curClient, const ServerState::Client & 
     }
 
     bool visible = state.visibilityClientPairs.find({ 
-            std::min(curClient.serverId, targetClient.serverId), 
-            std::max(curClient.serverId, targetClient.serverId)
+            std::min(curClient.csgoId, targetClient.csgoId), 
+            std::max(curClient.csgoId, targetClient.csgoId)
         }) != state.visibilityClientPairs.end();
     
 
@@ -185,17 +193,17 @@ void Thinker::move(ServerState::Client & curClient) {
         thinkStream << "cur point: " 
             << curPos.x << "," << curPos.y 
             << "," << curPos.z << "\n";
-        state.numThinkLines++;
+        numThinkLines++;
 
         thinkStream << "cur angle: " 
             << currentAngles.x << "," << currentAngles.y << "\n";
-        state.numThinkLines++;
+        numThinkLines++;
 
         thinkStream << "target angle: " 
             << targetAngles.x << "," << targetAngles.y << "\n";
-        state.numThinkLines++;
+        numThinkLines++;
         
-        state.thinkCopy += thinkStream.str();
+        thinkLog += thinkStream.str();
 
         Vec2 totalDeltaAngles = targetAngles - currentAngles;
         totalDeltaAngles.makeYawNeg180To180();
@@ -221,6 +229,6 @@ void Thinker::defuse(ServerState::Client & curClient, const ServerState::Client 
     Vec3 curPos{curClient.lastEyePosX, curClient.lastEyePosY, curClient.lastFootPosZ};
     Vec3 c4Pos{state.c4X, state.c4Y, state.c4Z};
     this->setButton(curClient, IN_USE, 
-            targetClient.serverId == INVALID_SERVER_ID && state.c4IsPlanted && 
+            targetClient.csgoId == INVALID_SERVER_ID && state.c4IsPlanted && 
             computeDistance(curPos, c4Pos) < 50.);
 }

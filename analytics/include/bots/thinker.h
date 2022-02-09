@@ -4,7 +4,7 @@
 
 #ifndef CSKNOW_THINKER_H
 #define CSKNOW_THINKER_H
-#define SECONDS_BETWEEN_PLAN_CHANGES std::chrono::seconds(0.5)
+#define SECONDS_BETWEEN_PLAN_CHANGES std::chrono::seconds<double>(0.5)
 #define HISTORY_LENGTH 10
 
 #include "load_save_bot_data.h"
@@ -30,7 +30,7 @@ class Thinker {
     }
 
     struct Target {
-        int32_t id;
+        int32_t csknowId;
         Vec3 offset;
     };
 
@@ -38,12 +38,10 @@ class Thinker {
     public:
         bool valid = false;
         MovementType movementType = MovementType::Hold;
-        Target target;
+        Target target{INVALID_ID, {0., 0., 0.}};
         // represents server state for from i and 
         // resulting inputs derived from state i for state i+1
         CircularBuffer<ServerState> stateHistory;
-        // round during which state is collected, shouldn't have history from different rounds
-        int32_t roundNumber;
         // time when computing plan started
         std::chrono::time_point<std::chrono::system_clock> computeStartTime, computeEndTime;
         // navigation data for plan
@@ -51,12 +49,9 @@ class Thinker {
         uint64_t curWaypoint;
         bool randomLeft, randomRight, randomForward, randomBack;
 
-        Plan() : stateHistory(HISTORY_LENGTH) {
-            target.id = INVALID_SERVER_ID;
-        };
+        Plan() : stateHistory(HISTORY_LENGTH) { };
 
         // for logging infrastructure
-        std::stringstream logStream;
         string log;
         int numLogLines;
     };
@@ -67,6 +62,11 @@ class Thinker {
     ServerState & liveState; 
     bool mustPush;
     ServerState::Client invalidClient;
+
+
+    // logging for entire thinker
+    string thinkLog;
+    int numThinkLines;
 
     // randomness state https://en.cppreference.com/w/cpp/numeric/random/uniform_real_distribution
     std::random_device rd;  // Will be used to obtain a seed for the random number engine
@@ -87,19 +87,21 @@ class Thinker {
 
     // plan sets long term goals, runs independently of short term thinking
     void plan();
-    void selectTarget();
-    void updateMovementType();
+    void selectTarget(const ServerState state, const ServerState::Client & curClient);
+    void updateMovementType(const ServerState state, const ServerState::Client & curClient,
+            const ServerState::Client & oldClient, const ServerState::Client & targetClient);
 
     // short term thinking based on plan
-    void aimAt(ServerState::Client & curClient, const ServerState::Client & targetClient);
+    void aimAt(ServerState::Client & curClient, const ServerState::Client & targetClient, 
+            const ServerState::Client & priorClient);
     void fire(ServerState::Client & curClient, const ServerState::Client & targetClient);
     void move(ServerState::Client & curClient);
     void defuse(ServerState::Client & curClient, const ServerState::Client & targetClient);
 
     // helper functions
     ServerState::Client & getCurClient(ServerState & state) {
-        int csknowId = state.serverClientIdToCSKnowId[curBot];
-        ServerState::Client & curClient = state.clients[csknowId];
+        int csknowId = state.csgoIdToCSKnowId[curBot];
+        return state.clients[csknowId];
     }
     void setButton(ServerState::Client & curClient, int32_t button, bool setTrue) {
         if (setTrue) {
@@ -116,13 +118,9 @@ class Thinker {
 
 public:
     Thinker(ServerState & state, int curBot, string navPath, bool mustPush) 
-        : curState(state), curBot(curBot), lastDeltaAngles{0,0}, navFile(navPath.c_str()),
-        , mustPush(mustPush),
-        gen(rd()), dis(0., 1.) {
-            invalidClient.serverId = INVALID_SERVER_ID;
-            // init to 24 hours before now so think on first tick
-            curPlan.computeEndTime = std::chrono::system_clock::now() - std::chrono::hours(24);
-            curplan.computeStartRound = -1;
+        : liveState(state), curBot(curBot), lastDeltaAngles{0,0}, navFile(navPath.c_str()),
+        mustPush(mustPush), gen(rd()), dis(0., 1.) {
+            invalidClient.csgoId = INVALID_ID;
         };
     void think();
 };

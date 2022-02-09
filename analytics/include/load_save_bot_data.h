@@ -85,7 +85,7 @@ public:
     bool loadedSuccessfully;
     string badPath;
     int numInputLines, numThinkLines;
-    string inputsCopy, thinkCopy;
+    string inputsLog, thinkLog;
 
     void loadServerState(string dataPath);
     void saveBotInputs(string dataPath);
