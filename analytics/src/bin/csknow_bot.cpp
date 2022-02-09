@@ -5,6 +5,33 @@
 #include <thread>
 #include <chrono>
 #include <list>
+#include <map>
+
+void updateThinkers(ServerState & state, string navPath, std::list<Thinker> & thinkers) {
+    std::map<int32_t, bool> botCSGOIdsToAdd;
+    for (const auto & client : state.clients) {
+        if (client.isBot) {
+            botCSGOIdsToAdd.insert({client.csgoId, true});
+        }
+    }
+
+    // remove all elements that aren't currently bots
+    thinkers.remove_if([&](const Thinker & thinker){ 
+            return botCSGOIdsToAdd.find(thinker.getCurBotCSGOId()) == botCSGOIdsToAdd.end() ; 
+        });
+
+    // mark already controlled bots as not needed to be added
+    for (const auto & thinker : thinkers) {
+        botCSGOIdsToAdd[thinker.getCurBotCSGOId()] = false;
+    }
+
+    // add all uncontrolled bots
+    for (const auto & [csgoId, toAdd] : botCSGOIdsToAdd) {
+        if (toAdd) {
+            thinkers.emplace_back(state, csgoId, navPath, true);
+        }
+    }
+}
 
 int main(int argc, char * argv[]) {
     if (argc != 4) {
@@ -25,11 +52,6 @@ int main(int argc, char * argv[]) {
     string navPath = mapsPath + "/" + state.mapName + ".nav";
     //Thinker thinker(state, 3, navPath, true);
     std::list<Thinker> thinkers;
-    for (const auto & client : state.clients) {
-        if (client.isBot) {
-            thinkers.emplace_back(state, client.csgoId, navPath, true);
-        }
-    }
 
     bool firstFrame = true;
     // \033[A moves up 1 line, \r moves cursor to start of line, \33[2K clears line
@@ -59,6 +81,7 @@ int main(int argc, char * argv[]) {
             state.numThinkLines = 0;
         }
         if (state.loadedSuccessfully) {
+            updateThinkers(state, navPath, thinkers);
             for (auto & thinker : thinkers) {
                 thinker.think();
             }

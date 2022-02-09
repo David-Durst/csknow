@@ -136,6 +136,7 @@ public:
         }
     }
     void think();
+    int32_t getCurBotCSGOId() const { return curBotCSGOId; }
 };
 
 
