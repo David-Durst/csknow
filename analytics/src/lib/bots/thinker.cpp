@@ -46,6 +46,9 @@ void Thinker::think() {
 
         // other thinkers may update inputs later
         // but only know your inputs, so doesn't matter
+        if (stateForNextPlan.stateHistory.getCurSize() == 10) {
+            int x = 1;
+        }
         stateForNextPlan.stateHistory.enqueue(liveState, true);
 
         planLock.unlock();

@@ -4,14 +4,14 @@
 void Thinker::plan() {
     while (true) {
         planLock.lock();
-        // this copy brings the round number and the state history
-        developingPlan = stateForNextPlan;
         // ok to have an empty executing plan as thinking will ignore
         // any invalid plan
         if (developingPlan.saveWaypoint) {
             developingPlan.curWaypoint = executingPlan.curWaypoint;
         }
         executingPlan = developingPlan;
+        // this copy brings the round number and the state history
+        developingPlan = stateForNextPlan;
         planLock.unlock();
 
         developingPlan.computeStartTime = std::chrono::system_clock::now();
@@ -28,10 +28,12 @@ void Thinker::plan() {
             const ServerState::Client & curClient = getCurClient(state);
             // take from back so get oldest positions
             const ServerState::Client & oldClient = getCurClient(developingPlan.stateHistory.fromBack());
-            const ServerState::Client & targetClient = state.clients[developingPlan.target.csknowId];
 
             selectTarget(state, curClient);
+            const ServerState::Client & targetClient = state.clients[developingPlan.target.csknowId];
+
             updateMovementType(state, curClient, oldClient, targetClient);
+
             developingPlan.valid = true;
         }
         developingPlan.computeEndTime = std::chrono::system_clock::now();

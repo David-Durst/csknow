@@ -42,7 +42,7 @@ public:
 
         curSize++;
         buffer[tail] = item;
-        tail = (tail + 1) & maxSize();
+        tail = (tail + 1) % maxSize();
     }
 
     T dequeue() {
