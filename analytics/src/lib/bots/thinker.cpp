@@ -2,7 +2,6 @@
 #include <limits>
 
 void Thinker::think() {
-    liveState.numThinkLines = 0;
     int32_t curBotCSKnowId = liveState.csgoIdToCSKnowId[curBotCSGOId];
 
     if (curBotCSGOId >= liveState.csgoIdToCSKnowId.size() ||
