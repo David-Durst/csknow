@@ -194,7 +194,15 @@ void Thinker::move(ServerState::Client & curClient) {
         Vec2 targetAngles = vectorAngles(targetVector);
 
         std::stringstream thinkStream;
-        thinkStream << "cur point: " 
+        if (executingPlan.curWaypoint < executingPlan.waypoints.size()) {
+            thinkStream << "cur waypoint " << executingPlan.curWaypoint << ":"
+                      << executingPlan.waypoints[executingPlan.curWaypoint].x << ","
+                      << executingPlan.waypoints[executingPlan.curWaypoint].y << ","
+                      << executingPlan.waypoints[executingPlan.curWaypoint].z << "\n";
+            numThinkLines++;
+        }
+
+        thinkStream << "cur point: "
             << curPos.x << "," << curPos.y 
             << "," << curPos.z << "\n";
         numThinkLines++;

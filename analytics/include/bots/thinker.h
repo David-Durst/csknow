@@ -4,7 +4,7 @@
 
 #ifndef CSKNOW_THINKER_H
 #define CSKNOW_THINKER_H
-#define SECONDS_BETWEEN_PLAN_CHANGES std::chrono::seconds<double>(0.5)
+#define SECONDS_BETWEEN_PLAN_CHANGES std::chrono::milliseconds(500)
 #define HISTORY_LENGTH 10
 
 #include "load_save_bot_data.h"
@@ -47,6 +47,9 @@ class Thinker {
         // navigation data for plan
         std::vector<nav_mesh::vec3_t> waypoints;
         uint64_t curWaypoint;
+        // save the waypoint from the last plan
+        // need to do this at copy time so you get the most recent waypoint
+        bool saveWaypoint;
         bool randomLeft, randomRight, randomForward, randomBack;
 
         Plan() : stateHistory(HISTORY_LENGTH) { };
