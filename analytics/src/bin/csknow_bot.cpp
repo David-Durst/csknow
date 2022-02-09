@@ -23,10 +23,11 @@ int main(int argc, char * argv[]) {
     // load once so can initialize rest of structs with data
     state.loadServerState(dataPath);
     string navPath = mapsPath + "/" + state.mapName + ".nav";
+    //Thinker thinker(state, 3, navPath, true);
     std::list<Thinker> thinkers;
     for (const auto & client : state.clients) {
         if (client.isBot) {
-            thinkers.emplace_back(std::ref(state), client.csgoId, navPath, true);
+            thinkers.emplace_back(state, client.csgoId, navPath, true);
         }
     }
 
@@ -52,21 +53,23 @@ int main(int argc, char * argv[]) {
             for (int i = 0; i < state.numInputLines + state.numThinkLines; i++) {
                 std::cout << upAndClear;
             }
+            state.inputsLog = "";
+            state.thinkLog = "";
+            state.numInputLines = 0;
+            state.numThinkLines = 0;
         }
         if (state.loadedSuccessfully) {
             for (auto & thinker : thinkers) {
                 thinker.think();
             }
+            //thinker.think();
             state.saveBotInputs(dataPath);
             std::cout << state.inputsLog << state.thinkLog << std::endl;
-            state.inputsLog = "";
-            state.thinkLog = "";
         }
         else {
-            state.numInputLines = 0;
-            state.numThinkLines = 0;
             numFailures++;
         }
+
         auto end = std::chrono::system_clock::now();
         std::chrono::duration<double> botTime = end - start;
         std::cout << "Num failures " << numFailures << ", last bad path: " << state.badPath << std::endl;
