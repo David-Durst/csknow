@@ -18,7 +18,8 @@ void Thinker::think() {
     }
 
     if (!launchedPlanThread) {
-        planThread = std::thread(&Thinker::plan, this);
+        planThread = std::move(std::thread(&Thinker::plan, this));
+        launchedPlanThread = true;
     }
 
     // keep doing same thing if miss due to lock contention, don't block rest of system
