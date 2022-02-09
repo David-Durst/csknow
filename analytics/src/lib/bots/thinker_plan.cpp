@@ -2,7 +2,7 @@
 #include <string>
 
 void Thinker::plan() {
-    while (true) {
+    while (continuePlanning) {
         planLock.lock();
         // ok to have an empty executing plan as thinking will ignore
         // any invalid plan

@@ -4,6 +4,7 @@
 #include <iostream>
 #include <thread>
 #include <chrono>
+#include <list>
 
 int main(int argc, char * argv[]) {
     if (argc != 4) {
@@ -22,7 +23,12 @@ int main(int argc, char * argv[]) {
     // load once so can initialize rest of structs with data
     state.loadServerState(dataPath);
     string navPath = mapsPath + "/" + state.mapName + ".nav";
-    Thinker thinker(state, 3, navPath, true);
+    std::list<Thinker> thinkers;
+    for (const auto & client : state.clients) {
+        if (client.isBot) {
+            thinkers.emplace_back(std::ref(state), client.csgoId, navPath, true);
+        }
+    }
 
     bool firstFrame = true;
     // \033[A moves up 1 line, \r moves cursor to start of line, \33[2K clears line
@@ -48,7 +54,9 @@ int main(int argc, char * argv[]) {
             }
         }
         if (state.loadedSuccessfully) {
-            thinker.think();
+            for (auto & thinker : thinkers) {
+                thinker.think();
+            }
             state.saveBotInputs(dataPath);
             std::cout << state.inputsLog << state.thinkLog << std::endl;
             state.inputsLog = "";

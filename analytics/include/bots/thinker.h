@@ -16,6 +16,7 @@
 #include <type_traits>
 #include <mutex>
 #include <thread>
+#include <atomic>
 
 class Thinker {
     enum class MovementType {
@@ -83,6 +84,7 @@ class Thinker {
     std::mutex planLock;
     std::thread planThread;
     bool launchedPlanThread = false;
+    std::atomic<bool> continuePlanning = true;
 
     // state across individual frames, shorter term than a plan
     Vec2 lastDeltaAngles;
@@ -121,11 +123,18 @@ class Thinker {
     }
 
 public:
-    Thinker(ServerState & state, int curBot, string navPath, bool mustPush) 
-        : liveState(state), curBotCSGOId(curBot), lastDeltaAngles{0, 0}, navFile(navPath.c_str()),
+    Thinker(ServerState & state, int curBotCSGOId, string navPath, bool mustPush) 
+        : liveState(state), curBotCSGOId(curBotCSGOId), lastDeltaAngles{0, 0}, navFile(navPath.c_str()),
           mustPush(mustPush), gen(rd()), dis(0., 1.) {
             invalidClient.csgoId = INVALID_ID;
         };
+
+    ~Thinker() {
+        continuePlanning = false;
+        if (launchedPlanThread) {
+            planThread.join();
+        }
+    }
     void think();
 };
 
