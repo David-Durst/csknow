@@ -9,6 +9,17 @@ void Thinker::plan() {
         if (developingPlan.saveWaypoint) {
             developingPlan.curWaypoint = executingPlan.curWaypoint;
         }
+        // if can match progress in current executing plan to next one, then start at the same point
+        // in the new executing plan
+        else if (developingPlan.stateHistory.fromFront().roundNumber == executingPlan.stateHistory.fromFront().roundNumber && 
+                executingPlan.curWaypoint > 0) {
+            for (size_t i = 0; i < developingPlan.waypoints.size(); i++) {
+                if (executingPlan.waypoints[executingPlan.curWaypoint - 1] == developingPlan.waypoints[i]) {
+                    // if on last waypoint in new plan, don't jump over the end
+                    developingPlan.curWaypoint = std::min(i+1, developingPlan.waypoints.size() - 1);
+                }
+            }
+        }
         executingPlan = developingPlan;
         // this copy brings the round number and the state history
         developingPlan = stateForNextPlan;
@@ -145,11 +156,15 @@ void Thinker::updateMovementType(const ServerState state, const ServerState::Cli
     developingPlan.numLogLines++;
 
     if (!developingPlan.waypoints.empty()) {
+        logStream << "first waypoint " << 0 << ":" 
+            << developingPlan.waypoints[0].x << "," << developingPlan.waypoints[0].y 
+            << "," << developingPlan.waypoints[0].z << "\n";
+
         uint64_t lastWaypoint = developingPlan.waypoints.size() - 1;
         logStream << "last waypoint " << lastWaypoint << ":" 
             << developingPlan.waypoints[lastWaypoint].x << "," << developingPlan.waypoints[lastWaypoint].y 
             << "," << developingPlan.waypoints[lastWaypoint].z << "\n";
-        developingPlan.numLogLines++;
+        developingPlan.numLogLines += 2;
     }
     developingPlan.log += logStream.str();
 }
