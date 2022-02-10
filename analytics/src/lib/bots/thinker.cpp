@@ -149,11 +149,14 @@ void Thinker::fire(ServerState::Client & curClient, const ServerState::Client & 
     double hitt0, hitt1;
     bool aimingAtEnemy = intersectP(targetAABB, eyeCoordinates, hitt0, hitt1);
     inSpray = haveAmmo && visible;
-    if (inSpray && skill.stopToShoot) {
-        int dude = 1;
-    }
+
+    Vec3 priorPos{priorClient.lastEyePosX, priorClient.lastEyePosY, priorClient.lastFootPosZ}; 
+    Vec3 curPos{curClient.lastEyePosX, curClient.lastEyePosY, curClient.lastFootPosZ};
+    bool stoppedEnoughToShoot = !skill.stopToShoot ||
+        computeDistance(priorPos, curPos) < MAX_VELOCITY_WHEN_STOPPED;
+
     this->setButton(curClient, IN_ATTACK, 
-            !attackLastFrame && aimingAtEnemy && inSpray);
+            !attackLastFrame && aimingAtEnemy && inSpray && stoppedEnoughToShoot);
     this->setButton(curClient, IN_RELOAD, !haveAmmo);
 }
 
@@ -189,7 +192,7 @@ void Thinker::move(ServerState::Client & curClient, const ServerState::Client & 
         numThinkLines++;
         thinkLog += "Stopping to shoot\n";
 
-        if (computeDistance(priorPos, curPos) < 5.) {
+        if (computeDistance(priorPos, curPos) < MAX_VELOCITY_WHEN_STOPPED) {
             // if not moving (roughly), then stop
             this->setButton(curClient, IN_FORWARD, false);
             this->setButton(curClient, IN_MOVELEFT, false);
