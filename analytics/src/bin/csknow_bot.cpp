@@ -31,6 +31,13 @@ void updateThinkers(ServerState & state, string navPath, std::list<Thinker> & th
             thinkers.emplace_back(state, csgoId, navPath, true);
         }
     }
+
+    // clear all old inputs
+    // and force existing players to put a new one in
+    // this will happen infrequrntly, so unlikely to cause issue with frequent missed inputs
+    for (size_t i = 0; i < state.inputsValid.size(); i++) {
+        state.inputsValid[i] = false;
+    }
 }
 
 int main(int argc, char * argv[]) {
