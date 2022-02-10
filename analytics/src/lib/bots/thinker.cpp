@@ -39,7 +39,7 @@ void Thinker::think() {
             ServerState::Client & priorClient = getCurClient(stateForNextPlan.stateHistory.fromFront());
             this->aimAt(curClient, targetClient, executingPlan.target.offset, priorClient);
             this->fire(curClient, targetClient, priorClient);
-            this->move(curClient);
+            this->move(curClient, priorClient);
             this->defuse(curClient, targetClient);
         }
 
@@ -107,15 +107,11 @@ void Thinker::aimAt(ServerState::Client & curClient, const ServerState::Client &
             std::min(MAX_PITCH_MAGNITUDE, targetAngles.y));
 
     // https://stackoverflow.com/a/7428771
-    Vec2 totalDeltaAngles = targetAngles - currentAngles;
-    totalDeltaAngles.makeYawNeg180To180();
+    Vec2 deltaAngles = targetAngles - currentAngles;
+    deltaAngles.makeYawNeg180To180();
 
-    Vec2 resultDeltaAngles;
-    resultDeltaAngles.x = computeAngleVelocity(totalDeltaAngles.x, priorClient.inputAngleDeltaPctX);
-    resultDeltaAngles.y = computeAngleVelocity(totalDeltaAngles.y, priorClient.inputAngleDeltaPctY);
-
-    curClient.inputAngleDeltaPctX = resultDeltaAngles.x;
-    curClient.inputAngleDeltaPctY = resultDeltaAngles.y;
+    curClient.inputAngleDeltaPctX = computeAngleVelocity(deltaAngles.x, priorClient.inputAngleDeltaPctX);
+    curClient.inputAngleDeltaPctY = computeAngleVelocity(deltaAngles.y, priorClient.inputAngleDeltaPctY);
 }
 
 void Thinker::fire(ServerState::Client & curClient, const ServerState::Client & targetClient,
@@ -151,14 +147,27 @@ void Thinker::fire(ServerState::Client & curClient, const ServerState::Client & 
     AABB targetAABB = getAABBForPlayer(
             {targetClient.lastEyePosX, targetClient.lastEyePosY, targetClient.lastFootPosZ});
     double hitt0, hitt1;
-    inSpray = intersectP(targetAABB, eyeCoordinates, hitt0, hitt1) && haveAmmo && visible;
+    bool aimingAtEnemy = intersectP(targetAABB, eyeCoordinates, hitt0, hitt1);
+    inSpray = haveAmmo && visible;
     this->setButton(curClient, IN_ATTACK, 
-            !attackLastFrame && inSpray);
+            !attackLastFrame && aimingAtEnemy && inSpray);
     this->setButton(curClient, IN_RELOAD, !haveAmmo);
 }
 
-void Thinker::move(ServerState::Client & curClient) {
-    if (executingPlan.movementType == MovementType::Hold || inSpray) {
+void Thinker::moveInDir(ServerState::Client & curClient, Vec2 dir) {
+    // don't need to worry about targetAngles y since can't move up and down
+    this->setButton(curClient, IN_FORWARD, 
+            dir.x >= -80. && dir.x <= 80.);
+    this->setButton(curClient, IN_MOVELEFT, 
+            dir.x >= 10. && dir.x <= 170.);
+    this->setButton(curClient, IN_BACK, 
+            dir.x >= 100. || dir.x <= -100.);
+    this->setButton(curClient, IN_MOVERIGHT, 
+            dir.x >= -170. && dir.x <= -10.);
+}
+
+void Thinker::move(ServerState::Client & curClient, const ServerState::Client & priorClient) {
+    if (executingPlan.movementType == MovementType::Hold) {
         this->setButton(curClient, IN_FORWARD, false);
         this->setButton(curClient, IN_MOVELEFT, false);
         this->setButton(curClient, IN_BACK, false);
@@ -169,6 +178,35 @@ void Thinker::move(ServerState::Client & curClient) {
         this->setButton(curClient, IN_MOVELEFT, executingPlan.randomLeft);
         this->setButton(curClient, IN_BACK, executingPlan.randomBack);
         this->setButton(curClient, IN_MOVERIGHT, executingPlan.randomRight);
+    }
+    else if (inSpray && skill.stopToShoot) {
+        Vec3 priorPos{priorClient.lastEyePosX, priorClient.lastEyePosY, priorClient.lastFootPosZ}; 
+        Vec3 curPos{curClient.lastEyePosX, curClient.lastEyePosY, curClient.lastFootPosZ};
+
+        if (computeDistance(priorPos, curPos) < 20.) {
+            // if not moving (roughly), then stop
+            this->setButton(curClient, IN_FORWARD, false);
+            this->setButton(curClient, IN_MOVELEFT, false);
+            this->setButton(curClient, IN_BACK, false);
+            this->setButton(curClient, IN_MOVERIGHT, false);
+            return;
+        }
+
+        // when stopping to shoot, make sure to counter strafe
+        Vec3 oppositeLastFrameVelocity = priorPos - curPos;        
+        Vec2 targetAngles = vectorAngles(oppositeLastFrameVelocity);
+
+        Vec2 currentAngles = {
+            curClient.lastEyeAngleX + curClient.lastAimpunchAngleX, 
+            curClient.lastEyeAngleY + curClient.lastAimpunchAngleY};
+
+        Vec2 deltaAngles = targetAngles - currentAngles;
+        deltaAngles.makeYawNeg180To180();
+        moveInDir(curClient, deltaAngles);
+
+        numThinkLines++;
+        thinkLog += "Stopping to shoot\n";
+
     }
     else {
         Vec3 waypointPos{executingPlan.waypoints[executingPlan.curWaypoint].x,
@@ -196,6 +234,19 @@ void Thinker::move(ServerState::Client & curClient) {
             curClient.lastEyeAngleY + curClient.lastAimpunchAngleY};
         Vec2 targetAngles = vectorAngles(targetVector);
 
+        Vec2 deltaAngles = targetAngles - currentAngles;
+        deltaAngles.makeYawNeg180To180();
+        moveInDir(curClient, deltaAngles);
+
+        if (!inSpray && std::abs(waypointPos.z - curPos.z) > 20.) {
+            this->setButton(curClient, IN_JUMP, true);
+        }
+
+        // crouch when shooting and moving
+        if (inSpray) {
+            this->setButton(curClient, IN_DUCK, true);
+        }
+
         std::stringstream thinkStream;
         if (executingPlan.curWaypoint < executingPlan.waypoints.size()) {
             thinkStream << "cur waypoint " << executingPlan.curWaypoint << ":"
@@ -219,23 +270,6 @@ void Thinker::move(ServerState::Client & curClient) {
         numThinkLines++;
         
         thinkLog += thinkStream.str();
-
-        Vec2 totalDeltaAngles = targetAngles - currentAngles;
-        totalDeltaAngles.makeYawNeg180To180();
-        // don't need to worry about targetAngles y since can't move up and down
-        //
-        this->setButton(curClient, IN_FORWARD, 
-                totalDeltaAngles.x >= -80. && totalDeltaAngles.x <= 80.);
-        this->setButton(curClient, IN_MOVELEFT, 
-                totalDeltaAngles.x >= 10. && totalDeltaAngles.x <= 170.);
-        this->setButton(curClient, IN_BACK, 
-                totalDeltaAngles.x >= 100. || totalDeltaAngles.x <= -100.);
-        this->setButton(curClient, IN_MOVERIGHT, 
-                totalDeltaAngles.x >= -170. && totalDeltaAngles.x <= -10.);
-
-        if (std::abs(waypointPos.z - curPos.z) > 20.) {
-            this->setButton(curClient, IN_JUMP, true);
-        }
     }
 }
 

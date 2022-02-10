@@ -7,6 +7,8 @@
 #include <list>
 #include <map>
 
+std::vector<Skill> botSkills {{5, true, true}, {50, false, true}};
+
 void updateThinkers(ServerState & state, string navPath, std::list<Thinker> & thinkers) {
     std::map<int32_t, bool> botCSGOIdsToAdd;
     for (const auto & client : state.clients) {
@@ -20,15 +22,24 @@ void updateThinkers(ServerState & state, string navPath, std::list<Thinker> & th
             return botCSGOIdsToAdd.find(thinker.getCurBotCSGOId()) == botCSGOIdsToAdd.end() ; 
         });
 
+    // track if have at least one skilled bot
+    bool haveSkilledBot = false;
     // mark already controlled bots as not needed to be added
     for (const auto & thinker : thinkers) {
+        if (thinker.getSkill().maxInaccuracy == botSkills[0].maxInaccuracy) {
+            haveSkilledBot = true;
+        }
         botCSGOIdsToAdd[thinker.getCurBotCSGOId()] = false;
     }
 
     // add all uncontrolled bots
     for (const auto & [csgoId, toAdd] : botCSGOIdsToAdd) {
         if (toAdd) {
-            thinkers.emplace_back(state, csgoId, navPath, true);
+            // add a one skilled if none, others are all bad
+            Skill skill = !haveSkilledBot ?
+                botSkills[0] : botSkills[1];
+            haveSkilledBot = true;
+            thinkers.emplace_back(state, csgoId, navPath, skill);
         }
     }
 

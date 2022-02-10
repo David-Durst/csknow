@@ -74,7 +74,7 @@ void Thinker::selectTarget(const ServerState state, const ServerState::Client & 
     // if found any targets, set them, otherwise mark target as invalid
     if (nearestEnemyServerId != INVALID_ID) {
         // TODO: make offset random based on skill, more skill less offset from target
-        developingPlan.target = {state.csgoIdToCSKnowId[nearestEnemyServerId], {0, 0, 0}};
+        developingPlan.target = {state.csgoIdToCSKnowId[nearestEnemyServerId], {aimDis(aimGen), aimDis(aimGen), aimDis(aimGen)}};
     }
     else {
         developingPlan.target.csknowId = INVALID_ID;
@@ -96,14 +96,14 @@ void Thinker::updateMovementType(const ServerState state, const ServerState::Cli
 
     // set random directions here so that random movement type chosen either due to 
     // nav path failure or getting stuck has new random directions to go in
-    developingPlan.randomLeft = dis(gen) > 0.5;
+    developingPlan.randomLeft = movementDis(movementGen) > 0.5;
     developingPlan.randomRight = !developingPlan.randomLeft;
-    developingPlan.randomForward = dis(gen) > 0.5;
+    developingPlan.randomForward = movementDis(movementGen) > 0.5;
     developingPlan.randomBack = !developingPlan.randomForward;
 
     developingPlan.saveWaypoint = false;
 
-    if (mustPush || dis(gen) < 0.8) {
+    if (skill.mustPush || movementDis(movementGen) < 0.8) {
         // choose a new path only if no waypoints or target has changed or plan was for old round
         if (executingPlan.waypoints.empty() || executingPlan.waypoints.back() != targetPoint || 
                 executingPlan.stateHistory.fromFront().roundNumber != developingPlan.stateHistory.fromFront().roundNumber) {

@@ -18,6 +18,12 @@
 #include <thread>
 #include <atomic>
 
+struct Skill {
+    double maxInaccuracy;
+    bool stopToShoot;
+    bool mustPush;
+};
+
 class Thinker {
     enum class MovementType {
         Push,
@@ -66,6 +72,7 @@ class Thinker {
     ServerState & liveState; 
     bool mustPush;
     ServerState::Client invalidClient;
+    Skill skill;
 
 
     // logging for entire thinker
@@ -74,8 +81,8 @@ class Thinker {
 
     // randomness state https://en.cppreference.com/w/cpp/numeric/random/uniform_real_distribution
     std::random_device rd;  // Will be used to obtain a seed for the random number engine
-    std::mt19937 gen; // Standard mersenne_twister_engine seeded with rd()
-    std::uniform_real_distribution<> dis;
+    std::mt19937 movementGen, aimGen; // Standard mersenne_twister_engine seeded with rd()
+    std::uniform_real_distribution<> movementDis, aimDis;
 
     // stateForNextPlan builds up the stateHistory buffer for the next plan to make a decision based on
     // developingPlan is the working space for the long term planning
@@ -101,7 +108,8 @@ class Thinker {
             const Vec3 & aimOffset, const ServerState::Client & priorClient);
     void fire(ServerState::Client & curClient, const ServerState::Client & targetClient,
             const ServerState::Client & priorClient);
-    void move(ServerState::Client & curClient);
+    void moveInDir(ServerState::Client & curClient, Vec2 dir);
+    void move(ServerState::Client & curClient, const ServerState::Client & priorClient);
     void defuse(ServerState::Client & curClient, const ServerState::Client & targetClient);
 
     // helper functions
@@ -123,9 +131,9 @@ class Thinker {
     }
 
 public:
-    Thinker(ServerState & state, int curBotCSGOId, string navPath, bool mustPush) 
-        : liveState(state), curBotCSGOId(curBotCSGOId), lastDeltaAngles{0, 0}, navFile(navPath.c_str()),
-          mustPush(mustPush), gen(rd()), dis(0., 1.) {
+    Thinker(ServerState & state, int curBotCSGOId, string navPath, Skill skill) 
+        : liveState(state), curBotCSGOId(curBotCSGOId), lastDeltaAngles{0, 0}, navFile(navPath.c_str()), skill(skill), 
+          movementGen(rd()), aimGen(rd()), movementDis(0., 1.), aimDis(-skill.maxInaccuracy, skill.maxInaccuracy) {
             invalidClient.csgoId = INVALID_ID;
         };
 
@@ -137,6 +145,7 @@ public:
     }
     void think();
     int32_t getCurBotCSGOId() const { return curBotCSGOId; }
+    Skill getSkill() const { return skill; }
 };
 
 
