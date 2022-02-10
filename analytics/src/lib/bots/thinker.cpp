@@ -149,6 +149,9 @@ void Thinker::fire(ServerState::Client & curClient, const ServerState::Client & 
     double hitt0, hitt1;
     bool aimingAtEnemy = intersectP(targetAABB, eyeCoordinates, hitt0, hitt1);
     inSpray = haveAmmo && visible;
+    if (inSpray && skill.stopToShoot) {
+        int dude = 1;
+    }
     this->setButton(curClient, IN_ATTACK, 
             !attackLastFrame && aimingAtEnemy && inSpray);
     this->setButton(curClient, IN_RELOAD, !haveAmmo);
@@ -183,7 +186,10 @@ void Thinker::move(ServerState::Client & curClient, const ServerState::Client & 
         Vec3 priorPos{priorClient.lastEyePosX, priorClient.lastEyePosY, priorClient.lastFootPosZ}; 
         Vec3 curPos{curClient.lastEyePosX, curClient.lastEyePosY, curClient.lastFootPosZ};
 
-        if (computeDistance(priorPos, curPos) < 20.) {
+        numThinkLines++;
+        thinkLog += "Stopping to shoot\n";
+
+        if (computeDistance(priorPos, curPos) < 5.) {
             // if not moving (roughly), then stop
             this->setButton(curClient, IN_FORWARD, false);
             this->setButton(curClient, IN_MOVELEFT, false);
@@ -203,10 +209,6 @@ void Thinker::move(ServerState::Client & curClient, const ServerState::Client & 
         Vec2 deltaAngles = targetAngles - currentAngles;
         deltaAngles.makeYawNeg180To180();
         moveInDir(curClient, deltaAngles);
-
-        numThinkLines++;
-        thinkLog += "Stopping to shoot\n";
-
     }
     else {
         Vec3 waypointPos{executingPlan.waypoints[executingPlan.curWaypoint].x,
