@@ -1,25 +1,37 @@
 #include "bots/thinker.h"
 #include <string>
 #include <functional>
+#include <csignal>
 
 void Thinker::plan() {
     while (continuePlanning) {
         planLock.lock();
-        // ok to have an empty executing plan as thinking will ignore
-        // any invalid plan
-        if (developingPlan.saveWaypoint) {
-            developingPlan.curWaypoint = executingPlan.curWaypoint;
-        }
-        // if can match progress in current executing plan to next one, then start at the same point
-        // in the new executing plan
-        else if (developingPlan.stateHistory.fromFront().roundNumber == executingPlan.stateHistory.fromFront().roundNumber && 
-                executingPlan.curWaypoint > 0) {
-            for (size_t i = 0; i < developingPlan.waypoints.size(); i++) {
-                if (executingPlan.waypoints[executingPlan.curWaypoint - 1] == developingPlan.waypoints[i]) {
-                    // if on last waypoint in new plan, don't jump over the end
-                    developingPlan.curWaypoint = std::min(i+1, developingPlan.waypoints.size() - 1);
+        if (executingPlan.valid) {
+            // ok to have an empty executing plan as thinking will ignore
+            // any invalid plan
+            if (developingPlan.saveWaypoint) {
+                developingPlan.curWaypoint = executingPlan.curWaypoint;
+                if (developingPlan.valid && developingPlan.curWaypoint > 10000) {
+                    std::raise(SIGINT);
                 }
             }
+            // if can match progress in current executing plan to next one, then start at the same point
+            // in the new executing plan
+            else if (developingPlan.stateHistory.fromFront().roundNumber == executingPlan.stateHistory.fromFront().roundNumber && 
+                    executingPlan.curWaypoint > 0) {
+                for (size_t i = 0; i < developingPlan.waypoints.size(); i++) {
+                    if (executingPlan.waypoints[executingPlan.curWaypoint - 1] == developingPlan.waypoints[i]) {
+                        // if on last waypoint in new plan, don't jump over the end
+                        developingPlan.curWaypoint = std::min(i+1, developingPlan.waypoints.size() - 1);
+                        if (developingPlan.valid && developingPlan.curWaypoint > 10000) {
+                            std::raise(SIGINT);
+                        }
+                    }
+                }
+            }
+        }
+        if (developingPlan.valid && developingPlan.curWaypoint > 10000) {
+            std::raise(SIGINT);
         }
         executingPlan = developingPlan;
         // this copy brings the round number and the state history
