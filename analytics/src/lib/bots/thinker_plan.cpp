@@ -105,8 +105,17 @@ void Thinker::selectTarget(const ServerState & state, const ServerState::Client 
     
     // if found any targets, set them, otherwise mark target as invalid
     if (nearestEnemyServerId != INVALID_ID) {
-        // TODO: make offset random based on skill, more skill less offset from target
-        developingPlan.target = {state.csgoIdToCSKnowId[nearestEnemyServerId], {aimDis(aimGen), aimDis(aimGen), aimDis(aimGen)}};
+        if (developingPlan.target.csknowId == executingPlan.target.csknowId && targetVisible) {
+            developingPlan.numTimesRetargeted = executingPlan.numTimesRetargeted + 1;
+        }
+        else {
+            developingPlan.numTimesRetargeted = 0;
+        }
+        developingPlan.target = {state.csgoIdToCSKnowId[nearestEnemyServerId], {
+            aimDis(aimGen) / std::pow(2, developingPlan.numTimesRetargeted),
+            aimDis(aimGen) / std::pow(2, developingPlan.numTimesRetargeted),
+            aimDis(aimGen) / std::pow(2, developingPlan.numTimesRetargeted)
+        }};
     }
     else {
         developingPlan.target.csknowId = INVALID_ID;
@@ -126,6 +135,9 @@ void Thinker::updateDevelopingPlanWaypoints(const Vec3 & curPosition, const Vec3
     // if waypoint finding fails, just walk randomnly
     catch (const std::exception& e) {
         developingPlan.movementType = MovementType::Random;
+    }
+    if (developingPlan.movementType == MovementType::Random) {
+        int x = 1;
     }
     developingPlan.curWaypoint = 0;
 }

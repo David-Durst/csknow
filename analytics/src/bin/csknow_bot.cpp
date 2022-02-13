@@ -39,7 +39,8 @@ void updateThinkers(ServerState & state, string navPath, std::list<Thinker> & th
             Skill skill = !haveSkilledBot ?
                 botSkills[0] : botSkills[1];
             haveSkilledBot = true;
-            thinkers.emplace_back(state, csgoId, navPath, skill);
+            //thinkers.emplace_back(state, csgoId, navPath, skill);
+            thinkers.emplace_back(state, csgoId, navPath, botSkills[1]);
         }
     }
 

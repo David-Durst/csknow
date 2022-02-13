@@ -4,7 +4,7 @@
 
 #ifndef CSKNOW_THINKER_H
 #define CSKNOW_THINKER_H
-#define SECONDS_BETWEEN_PLAN_CHANGES std::chrono::milliseconds(500)
+#define SECONDS_BETWEEN_PLAN_CHANGES std::chrono::milliseconds(250)
 #define HISTORY_LENGTH 10
 #define MAX_VELOCITY_WHEN_STOPPED 5.
 
@@ -70,6 +70,8 @@ class Thinker {
         // need to do this at copy time so you get the most recent waypoint
         bool saveWaypoint;
         bool randomLeft, randomRight, randomForward, randomBack;
+        // track how many times aimed at same target so can get more accurate over time
+        uint64_t numTimesRetargeted = 0;
 
         Plan() : stateHistory(HISTORY_LENGTH) { };
 
