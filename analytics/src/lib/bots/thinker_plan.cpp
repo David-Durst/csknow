@@ -114,7 +114,7 @@ void Thinker::updateMovementType(const ServerState state, const ServerState::Cli
 
     developingPlan.saveWaypoint = false;
 
-    if (skill.mustPush || movementDis(movementGen) < 0.8) {
+    if (skill.movementPolicy == MovementPolicy::PushOnly || movementDis(movementGen) < 0.8) {
         // choose a new path only if no waypoints or target has changed or plan was for old round
         if (executingPlan.waypoints.empty() || executingPlan.waypoints.back() != targetPoint || 
                 executingPlan.stateHistory.fromFront().roundNumber != developingPlan.stateHistory.fromFront().roundNumber) {
@@ -152,7 +152,7 @@ void Thinker::updateMovementType(const ServerState state, const ServerState::Cli
     // log results
     std::stringstream logStream;
     logStream << "num waypoints: " << developingPlan.waypoints.size() << ", cur movement type " 
-        << movementTypeAsInt(developingPlan.movementType) << "\n";
+        << enumAsInt(developingPlan.movementType) << "\n";
     developingPlan.numLogLines++;
 
     if (!developingPlan.waypoints.empty()) {

@@ -18,24 +18,35 @@
 #include <mutex>
 #include <thread>
 #include <atomic>
+#include <array>
+
+enum class MovementType {
+    Push,
+    Retreat,
+    Random,
+    Hold,
+    NUM_TYPES
+};
+
+enum class MovementPolicy {
+    Normal,
+    PushOnly,
+    PushAndRetreat,
+    NUM_POLICIES
+};
+
+template <class T>
+constexpr int enumAsInt(T enumElem) {
+    return static_cast<std::underlying_type_t<T>>(enumElem);
+}
 
 struct Skill {
     double maxInaccuracy;
     bool stopToShoot;
-    bool mustPush;
+    MovementPolicy movementPolicy;
 };
 
 class Thinker {
-    enum class MovementType {
-        Push,
-        Random,
-        Hold,
-        NUM_POLICIES
-    };
-
-    int movementTypeAsInt(MovementType movementType) {
-        return static_cast<std::underlying_type_t<MovementType>>(movementType);
-    }
 
     struct Target {
         int32_t csknowId;
@@ -71,7 +82,6 @@ class Thinker {
     int32_t curBotCSGOId;
     nav_mesh::nav_file navFile;
     ServerState & liveState; 
-    bool mustPush;
     ServerState::Client invalidClient;
     Skill skill;
 
