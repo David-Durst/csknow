@@ -66,10 +66,10 @@ class Thinker {
         std::chrono::time_point<std::chrono::system_clock> computeStartTime, computeEndTime;
         // navigation data for plan
         std::vector<nav_mesh::vec3_t> waypoints;
-        uint64_t curWaypoint;
+        uint64_t curWaypoint = -1;
         // save the waypoint from the last plan
         // need to do this at copy time so you get the most recent waypoint
-        bool saveWaypoint;
+        bool saveWaypoint = false;
         bool randomLeft, randomRight, randomForward, randomBack;
         // track how many times aimed at same target so can get more accurate over time
         uint64_t numTimesRetargeted = 0;

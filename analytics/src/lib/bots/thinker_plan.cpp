@@ -204,7 +204,11 @@ void Thinker::updateMovementType(const ServerState state, const ServerState::Cli
         if (executingPlan.movementType != MovementType::Retreat) {
             updateDevelopingPlanWaypoints(curPosition, retreatOptions.fromFront());
         }
-        // if still retreating, leave the aypoints alone alone
+        // if still retreating, make sure to get latest waypoint
+        else {
+            developingPlan.waypoints = executingPlan.waypoints;
+            developingPlan.saveWaypoint = true;
+        }
     }
     // walk randomly if stuck in a push or retreat but havent moved during window leading to plan decision
     else if ((executingPlan.movementType == MovementType::Push || executingPlan.movementType == MovementType::Retreat) &&
@@ -213,6 +217,10 @@ void Thinker::updateMovementType(const ServerState state, const ServerState::Cli
     }
     else {
         developingPlan.movementType = MovementType::Hold;
+    }
+
+    if (developingPlan.movementType != MovementType::Push && developingPlan.movementType != MovementType::Retreat && developingPlan.curWaypoint > 10000) {
+        std::raise(SIGINT);
     }
 
     // log results
