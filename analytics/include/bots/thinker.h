@@ -51,6 +51,7 @@ class Thinker {
     struct Target {
         int32_t csknowId;
         Vec3 offset;
+        bool visible;
     };
 
     class Plan {

@@ -62,19 +62,15 @@ void Thinker::plan() {
     }
 }
 
-std::vector<std::reference_wrapper<const ServerState::Client>> 
-getVisibleClients(const ServerState & state, const ServerState::Client & curClient) {
-    std::vector<std::reference_wrapper<const ServerState::Client>> result;
-    if (curClient.isAlive) {
-        for (const auto & otherClient : state.clients) {
-            bool otherVisible = state.visibilityClientPairs.find({ 
-                    std::min(curClient.csgoId, otherClient.csgoId),
-                    std::max(curClient.csgoId, otherClient.csgoId)
-                }) != state.visibilityClientPairs.end();
-            if (otherClient.isAlive && otherVisible) {
-                result.push_back(otherClient);
-            }
-        }
+std::map<int32_t, bool>
+getCSGOIdToVisibleClients(const ServerState & state, const ServerState::Client & curClient) {
+    std::map<int32_t, bool> result;
+    for (const auto & otherClient : state.clients) {
+        bool otherVisible = state.visibilityClientPairs.find({ 
+                std::min(curClient.csgoId, otherClient.csgoId),
+                std::max(curClient.csgoId, otherClient.csgoId)
+            }) != state.visibilityClientPairs.end();
+        result.insert({otherClient.csgoId, otherVisible});
     }
     return result;
 }
@@ -85,16 +81,14 @@ void Thinker::selectTarget(const ServerState & state, const ServerState::Client 
     int nearestEnemyServerId = INVALID_ID;
     double distance = std::numeric_limits<double>::max();
     bool targetVisible = false;
+    std::map<int32_t, bool> csgoIdToVisible = getCSGOIdToVisibleClients(state, curClient);
     // need to explicitly give type so cast reference_wrapper to ref
-    for (const ServerState::Client & otherClient : getVisibleClients(state, curClient)) {
-        if (otherClient.team != curClient.team) {
+    for (const ServerState::Client & otherClient : state.clients) {
+        if (otherClient.team != curClient.team && otherClient.isAlive) {
             double otherDistance = computeDistance(
                     {curClient.lastEyePosX, curClient.lastEyePosY, curClient.lastEyePosZ},
                     {otherClient.lastEyePosX, otherClient.lastEyePosY, otherClient.lastEyePosZ});
-            bool otherVisible = state.visibilityClientPairs.find({ 
-                    std::min(curClient.csgoId, otherClient.csgoId),
-                    std::max(curClient.csgoId, otherClient.csgoId)
-                }) != state.visibilityClientPairs.end();
+            bool otherVisible = csgoIdToVisible[otherClient.csgoId];
             if (otherDistance < distance || (otherVisible && !targetVisible)) {
                 targetVisible = otherVisible;
                 nearestEnemyServerId = otherClient.csgoId;
@@ -136,9 +130,6 @@ void Thinker::updateDevelopingPlanWaypoints(const Vec3 & curPosition, const Vec3
     catch (const std::exception& e) {
         developingPlan.movementType = MovementType::Random;
     }
-    if (developingPlan.movementType == MovementType::Random) {
-        int x = 1;
-    }
     developingPlan.curWaypoint = 0;
 }
 
@@ -165,12 +156,15 @@ void Thinker::updateMovementType(const ServerState state, const ServerState::Cli
     developingPlan.saveWaypoint = false;
 
     int numVisibleEnemies = 0, numVisibleTeammates = 0;
-    for (const ServerState::Client & otherClient : getVisibleClients(state, curClient)) {
-        if (otherClient.team == curClient.team) {
-            numVisibleTeammates++;
-        }
-        else {
-            numVisibleEnemies++;
+    std::map<int32_t, bool> csgoIdToVisible = getCSGOIdToVisibleClients(state, curClient);
+    for (const ServerState::Client & otherClient : state.clients) {
+        if (csgoIdToVisible[otherClient.csgoId] && otherClient.isAlive) {
+            if (otherClient.team == curClient.team) {
+                numVisibleTeammates++;
+            }
+            else {
+                numVisibleEnemies++;
+            }
         }
     }
     bool outnumbered = numVisibleEnemies <= numVisibleTeammates + 1;
