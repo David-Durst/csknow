@@ -1,7 +1,6 @@
 #include "bots/thinker.h"
 #include <string>
 #include <functional>
-#include <csignal>
 
 void Thinker::plan() {
     while (continuePlanning) {
@@ -11,9 +10,6 @@ void Thinker::plan() {
             // any invalid plan
             if (developingPlan.saveWaypoint) {
                 developingPlan.curWaypoint = executingPlan.curWaypoint;
-                if (developingPlan.valid && developingPlan.curWaypoint > 10000) {
-                    std::raise(SIGINT);
-                }
             }
             // if can match progress in current executing plan to next one, then start at the same point
             // in the new executing plan
@@ -23,15 +19,9 @@ void Thinker::plan() {
                     if (executingPlan.waypoints[executingPlan.curWaypoint - 1] == developingPlan.waypoints[i]) {
                         // if on last waypoint in new plan, don't jump over the end
                         developingPlan.curWaypoint = std::min(i+1, developingPlan.waypoints.size() - 1);
-                        if (developingPlan.valid && developingPlan.curWaypoint > 10000) {
-                            std::raise(SIGINT);
-                        }
                     }
                 }
             }
-        }
-        if (developingPlan.valid && developingPlan.curWaypoint > 10000) {
-            std::raise(SIGINT);
         }
         executingPlan = developingPlan;
         // this copy brings the round number and the state history
@@ -217,10 +207,6 @@ void Thinker::updateMovementType(const ServerState state, const ServerState::Cli
     }
     else {
         developingPlan.movementType = MovementType::Hold;
-    }
-
-    if (developingPlan.movementType != MovementType::Push && developingPlan.movementType != MovementType::Retreat && developingPlan.curWaypoint > 10000) {
-        std::raise(SIGINT);
     }
 
     // log results
