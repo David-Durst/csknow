@@ -19,6 +19,7 @@
 #include <thread>
 #include <atomic>
 #include <array>
+#include <csignal>
 
 enum class MovementType {
     Push,

@@ -60,15 +60,16 @@ namespace nav_mesh {
 
     }
 
-    std::vector< vec3_t > nav_file::find_path( vec3_t from, vec3_t to ) {
+    std::optional< std::vector< vec3_t > > nav_file::find_path( vec3_t from, vec3_t to ) {
         auto start = reinterpret_cast< void* >( get_nearest_area_by_position( from ).get_id( ) );
         auto end = reinterpret_cast< void* >( get_nearest_area_by_position( to ).get_id( ) );
 
         float total_cost = 0.f;
         micropather::MPVector< void* > path_area_ids = { };
 
-        if ( m_pather->Solve( start, end, &path_area_ids, &total_cost ) != 0 )
-            throw std::runtime_error( "nav_file::find_path: couldn't find path" );
+        if ( m_pather->Solve( start, end, &path_area_ids, &total_cost ) != 0 ) {
+            return {};
+        }
 
         std::vector< vec3_t > path = { };
         for ( std::size_t i = 0; i < path_area_ids.size( ); i++ ) {

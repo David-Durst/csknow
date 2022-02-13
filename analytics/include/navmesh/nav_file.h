@@ -4,6 +4,7 @@
 #include <math.h>
 #include <memory>
 #include <map>
+#include <optional>
 
 namespace nav_mesh {
 	class nav_file : public micropather::Graph {
@@ -13,7 +14,7 @@ namespace nav_mesh {
 		
 		void load( std::string_view nav_mesh_file );
 
-		std::vector< vec3_t > find_path( vec3_t from, vec3_t to );
+        std::optional< std::vector< vec3_t > > find_path( vec3_t from, vec3_t to );
 
 		//MicroPather implementation
 		virtual float LeastCostEstimate( void* start, void* end ) {

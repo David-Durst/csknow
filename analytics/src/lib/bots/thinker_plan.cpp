@@ -122,14 +122,16 @@ void Thinker::updateDevelopingPlanWaypoints(const Vec3 & curPosition, const Vec3
     nav_mesh::vec3_t curPoint = vec3Conv(curPosition), 
         targetPoint = vec3Conv(targetPosition);
 
-    try {
-        developingPlan.waypoints = navFile.find_path(curPoint, targetPoint);                    
+    auto optionalWaypoints = navFile.find_path(curPoint, targetPoint);
+    if (optionalWaypoints) {
+        developingPlan.waypoints = optionalWaypoints.value();
         if (developingPlan.waypoints.back() != targetPoint) {
             developingPlan.waypoints.push_back(targetPoint);
         }
     }
     // if waypoint finding fails, just walk randomnly
-    catch (const std::exception& e) {
+    else {
+        navFile.find_path(curPoint, targetPoint);
         developingPlan.movementType = MovementType::Random;
     }
     developingPlan.curWaypoint = 0;
@@ -207,6 +209,10 @@ void Thinker::updateMovementType(const ServerState state, const ServerState::Cli
     }
     else {
         developingPlan.movementType = MovementType::Hold;
+    }
+
+    if (developingPlan.movementType == MovementType::Random) {
+        std::raise(SIGINT);
     }
 
     // log results
