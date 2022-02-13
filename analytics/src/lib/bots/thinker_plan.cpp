@@ -1,5 +1,6 @@
 #include "bots/thinker.h"
 #include <string>
+#include <functional>
 
 void Thinker::plan() {
     while (continuePlanning) {
@@ -33,12 +34,14 @@ void Thinker::plan() {
         // make sure state history is filled out
         // otherwise wait as will be filled out in a few frames
         if (developingPlan.stateHistory.getCurSize() == developingPlan.stateHistory.maxSize()) {
-
             // take from front so get most recent positions
             ServerState & state = developingPlan.stateHistory.fromFront();
             const ServerState::Client & curClient = getCurClient(state);
             // take from back so get oldest positions
             const ServerState::Client & oldClient = getCurClient(developingPlan.stateHistory.fromBack());
+
+            // you can retreat to the current location
+            retreatOptions.enqueue({curClient.lastEyePosX, curClient.lastEyePosY, curClient.lastFootPosZ}, true);
 
             selectTarget(state, curClient);
             const ServerState::Client & targetClient = state.clients[developingPlan.target.csknowId];
@@ -59,14 +62,32 @@ void Thinker::plan() {
     }
 }
 
-void Thinker::selectTarget(const ServerState state, const ServerState::Client & curClient) {
+std::vector<std::reference_wrapper<const ServerState::Client>> 
+getVisibleClients(const ServerState & state, const ServerState::Client & curClient) {
+    std::vector<std::reference_wrapper<const ServerState::Client>> result;
+    if (curClient.isAlive) {
+        for (const auto & otherClient : state.clients) {
+            bool otherVisible = state.visibilityClientPairs.find({ 
+                    std::min(curClient.csgoId, otherClient.csgoId),
+                    std::max(curClient.csgoId, otherClient.csgoId)
+                }) != state.visibilityClientPairs.end();
+            if (otherClient.isAlive && otherVisible) {
+                result.push_back(otherClient);
+            }
+        }
+    }
+    return result;
+}
+
+void Thinker::selectTarget(const ServerState & state, const ServerState::Client & curClient) {
     // find the nearest, visible enemy
     // if no enemies are visible, just take the nearest one
     int nearestEnemyServerId = INVALID_ID;
     double distance = std::numeric_limits<double>::max();
     bool targetVisible = false;
-    for (const auto & otherClient : state.clients) {
-        if (otherClient.team != curClient.team && otherClient.isAlive) {
+    // need to explicitly give type so cast reference_wrapper to ref
+    for (const ServerState::Client & otherClient : getVisibleClients(state, curClient)) {
+        if (otherClient.team != curClient.team) {
             double otherDistance = computeDistance(
                     {curClient.lastEyePosX, curClient.lastEyePosY, curClient.lastEyePosZ},
                     {otherClient.lastEyePosX, otherClient.lastEyePosY, otherClient.lastEyePosZ});
@@ -92,14 +113,31 @@ void Thinker::selectTarget(const ServerState state, const ServerState::Client & 
     }
 }
 
+void Thinker::updateDevelopingPlanWaypoints(const Vec3 & curPosition, const Vec3 & targetPosition) {
+    nav_mesh::vec3_t curPoint = vec3Conv(curPosition), 
+        targetPoint = vec3Conv(targetPosition);
+
+    try {
+        developingPlan.waypoints = navFile.find_path(curPoint, targetPoint);                    
+        if (developingPlan.waypoints.back() != targetPoint) {
+            developingPlan.waypoints.push_back(targetPoint);
+        }
+    }
+    // if waypoint finding fails, just walk randomnly
+    catch (const std::exception& e) {
+        developingPlan.movementType = MovementType::Random;
+    }
+    developingPlan.curWaypoint = 0;
+}
+
 void Thinker::updateMovementType(const ServerState state, const ServerState::Client & curClient,
         const ServerState::Client & oldClient, const ServerState::Client & targetClient) {
-    nav_mesh::vec3_t targetPoint;
+    Vec3 targetPosition;
     if (targetClient.csgoId == INVALID_ID) {
-        targetPoint = {state.c4X, state.c4Y, state.c4Z}; 
+        targetPosition = {state.c4X, state.c4Y, state.c4Z}; 
     }
     else {
-        targetPoint = {targetClient.lastEyePosX, targetClient.lastEyePosY, targetClient.lastFootPosZ};
+        targetPosition = {targetClient.lastEyePosX, targetClient.lastEyePosY, targetClient.lastFootPosZ};
     }
     
     Vec3 curPosition{curClient.lastEyePosX, curClient.lastEyePosY, curClient.lastFootPosZ};
@@ -114,34 +152,44 @@ void Thinker::updateMovementType(const ServerState state, const ServerState::Cli
 
     developingPlan.saveWaypoint = false;
 
-    if (skill.movementPolicy == MovementPolicy::PushOnly || movementDis(movementGen) < 0.8) {
+    int numVisibleEnemies = 0, numVisibleTeammates = 0;
+    for (const ServerState::Client & otherClient : getVisibleClients(state, curClient)) {
+        if (otherClient.team == curClient.team) {
+            numVisibleTeammates++;
+        }
+        else {
+            numVisibleEnemies++;
+        }
+    }
+    bool outnumbered = numVisibleEnemies <= numVisibleTeammates + 1;
+
+    if (skill.movementPolicy == MovementPolicy::PushOnly || 
+            (skill.movementPolicy == MovementPolicy::PushAndRetreat && !outnumbered) ||
+            movementDis(movementGen) < 0.8) {
+        // set push, let updateDevelopingPlanWaypoint set to random if it fails
+        developingPlan.movementType = MovementType::Push;
         // choose a new path only if no waypoints or target has changed or plan was for old round
-        if (executingPlan.waypoints.empty() || executingPlan.waypoints.back() != targetPoint || 
+        if (executingPlan.waypoints.empty() || executingPlan.waypoints.back() != vec3Conv(targetPosition) || 
                 executingPlan.stateHistory.fromFront().roundNumber != developingPlan.stateHistory.fromFront().roundNumber) {
-            try {
-                developingPlan.waypoints = navFile.find_path(
-                        {static_cast<float>(curPosition.x), static_cast<float>(curPosition.y),
-                         static_cast<float>(curPosition.z)},
-                        targetPoint);                    
-                if (developingPlan.waypoints.back() != targetPoint) {
-                    developingPlan.waypoints.push_back(targetPoint);
-                }
-            }
-            // if waypoint finding fails, just walk randomnly
-            catch (const std::exception& e) {
-                developingPlan.movementType = MovementType::Random;
-            }
-            developingPlan.curWaypoint = 0;
+            updateDevelopingPlanWaypoints(curPosition, targetPosition);
         }
         // otherwise, keep same path
         else {
             developingPlan.waypoints = executingPlan.waypoints;
             developingPlan.saveWaypoint = true;
         }
-        developingPlan.movementType = MovementType::Push;
     }
-    // walk randomly if stuck in a push but havent moved during window leading to plan decision
-    else if (executingPlan.movementType == MovementType::Push &&
+    else if (outnumbered) {
+        // set retreat, let updateDevelopingPlanWaypoint set to random if it fails
+        developingPlan.movementType = MovementType::Retreat;
+        // if newly retreating, take oldest remembered position
+        if (executingPlan.movementType != MovementType::Retreat) {
+            updateDevelopingPlanWaypoints(curPosition, retreatOptions.fromFront());
+        }
+        // if still retreating, leave the aypoints alone alone
+    }
+    // walk randomly if stuck in a push or retreat but havent moved during window leading to plan decision
+    else if ((executingPlan.movementType == MovementType::Push || executingPlan.movementType == MovementType::Retreat) &&
             computeDistance(curPosition, oldPosition) < 5.) {
         developingPlan.movementType = MovementType::Random;
     }

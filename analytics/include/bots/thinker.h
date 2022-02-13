@@ -108,9 +108,13 @@ class Thinker {
     Vec2 lastDeltaAngles;
     bool inSpray;
 
+    // state for planning only
+    // locations you've been in past that you can go to again
+    CircularBuffer<Vec3> retreatOptions;
+
     // plan sets long term goals, runs independently of short term thinking
     void plan();
-    void selectTarget(const ServerState state, const ServerState::Client & curClient);
+    void selectTarget(const ServerState & state, const ServerState::Client & curClient);
     void updateMovementType(const ServerState state, const ServerState::Client & curClient,
             const ServerState::Client & oldClient, const ServerState::Client & targetClient);
 
@@ -141,10 +145,17 @@ class Thinker {
         return curClient.buttons & button > 0;
     }
 
+    // helper functions used in planning
+    nav_mesh::vec3_t vec3Conv(Vec3 vec) {
+        return {static_cast<float>(vec.x), static_cast<float>(vec.y), static_cast<float>(vec.z)};
+    }
+    void updateDevelopingPlanWaypoints(const Vec3 & curPosition, const Vec3 & targetPosition); 
+
 public:
     Thinker(ServerState & state, int curBotCSGOId, string navPath, Skill skill) 
-        : liveState(state), curBotCSGOId(curBotCSGOId), lastDeltaAngles{0, 0}, navFile(navPath.c_str()), skill(skill), 
-          movementGen(rd()), aimGen(rd()), movementDis(0., 1.), aimDis(-skill.maxInaccuracy, skill.maxInaccuracy) {
+        : liveState(state), curBotCSGOId(curBotCSGOId), lastDeltaAngles{0, 0}, navFile(navPath.c_str()), 
+        skill(skill), retreatOptions(HISTORY_LENGTH),
+        movementGen(rd()), aimGen(rd()), movementDis(0., 1.), aimDis(-skill.maxInaccuracy, skill.maxInaccuracy) {
             invalidClient.csgoId = INVALID_ID;
         };
 
