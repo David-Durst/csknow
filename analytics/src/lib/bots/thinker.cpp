@@ -177,6 +177,11 @@ void Thinker::moveInDir(ServerState::Client & curClient, Vec2 dir) {
 }
 
 void Thinker::move(ServerState::Client & curClient, const ServerState::Client & priorClient) {
+    Vec3 curPos{curClient.lastEyePosX, curClient.lastEyePosY, curClient.lastFootPosZ};
+    thinkLog += "cur pos: " + std::to_string(curPos.x) +
+        "," + std::to_string(curPos.y) + "," + std::to_string(curPos.z) + "\n";
+    numThinkLines++;
+
     if (executingPlan.movementType == MovementType::Hold) {
         this->setButton(curClient, IN_FORWARD, false);
         this->setButton(curClient, IN_MOVELEFT, false);
@@ -197,7 +202,6 @@ void Thinker::move(ServerState::Client & curClient, const ServerState::Client & 
     }
     else if (inSpray && skill.stopToShoot) {
         Vec3 priorPos{priorClient.lastEyePosX, priorClient.lastEyePosY, priorClient.lastFootPosZ}; 
-        Vec3 curPos{curClient.lastEyePosX, curClient.lastEyePosY, curClient.lastFootPosZ};
 
         numThinkLines++;
         thinkLog += "Stopping to shoot\n";
@@ -227,7 +231,6 @@ void Thinker::move(ServerState::Client & curClient, const ServerState::Client & 
         Vec3 waypointPos{executingPlan.waypoints[executingPlan.curWaypoint].x,
             executingPlan.waypoints[executingPlan.curWaypoint].y,
             executingPlan.waypoints[executingPlan.curWaypoint].z};
-        Vec3 curPos{curClient.lastEyePosX, curClient.lastEyePosY, curClient.lastFootPosZ};
         Vec3 targetVector = waypointPos - curPos;
         
         // crouch when shooting and moving
@@ -275,11 +278,6 @@ void Thinker::move(ServerState::Client & curClient, const ServerState::Client & 
 
         thinkStream << "in spray: "
             << (inSpray ? 1 : 0) << "\n";
-        numThinkLines++;
-
-        thinkStream << "cur point: "
-            << curPos.x << "," << curPos.y 
-            << "," << curPos.z << "\n";
         numThinkLines++;
 
         thinkStream << "cur angle: " 
