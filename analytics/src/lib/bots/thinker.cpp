@@ -159,8 +159,8 @@ void Thinker::fire(ServerState::Client & curClient, const ServerState::Client & 
     bool stoppedEnoughToShoot = !skill.stopToShoot ||
         computeDistance(priorPos, curPos) < MAX_VELOCITY_WHEN_STOPPED;
 
-    //this->setButton(curClient, IN_ATTACK, 
-            //!attackLastFrame && aimingAtEnemy && inSpray && stoppedEnoughToShoot);
+    this->setButton(curClient, IN_ATTACK, 
+            !attackLastFrame && aimingAtEnemy && inSpray && stoppedEnoughToShoot);
     this->setButton(curClient, IN_RELOAD, !haveAmmo);
 }
 
