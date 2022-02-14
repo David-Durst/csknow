@@ -3,6 +3,7 @@
 #include <memory>
 #include <limits>
 #include <cmath>
+#include <csignal>
 
 namespace nav_mesh {
     nav_file::nav_file( std::string_view nav_mesh_file ) {

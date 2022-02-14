@@ -208,7 +208,24 @@ void Thinker::updateMovementType(const ServerState state, const ServerState::Cli
         developingPlan.movementType = MovementType::Retreat;
         // if newly retreating, take oldest remembered position
         if (executingPlan.movementType != MovementType::Retreat) {
-            updateDevelopingPlanWaypoints(curPosition, retreatOptions.fromFront());
+            // if get into a cycle of retreats that syncrhonizes with history length
+            // taking oldest position will just sit still
+            // this takes farthest
+            size_t curRetreatOption = 0;
+            double curRetreatDistance = computeDistance(curPosition, retreatOptions.fromFront());
+            for (size_t i = 1; i < retreatOptions.getCurSize(); i++) {
+                double nextRetreatDistance = computeDistance(curPosition, retreatOptions.fromFront(i));
+                if (nextRetreatDistance > curRetreatDistance) {
+                    curRetreatOption = i;
+                    curRetreatDistance = nextRetreatDistance;
+                }
+            }
+            /*
+            if (retreatOptions.getCurSize() > 1 && curRetreatDistance < 20.) {
+                std::raise(SIGINT);
+            }
+            */
+            updateDevelopingPlanWaypoints(curPosition, retreatOptions.fromFront(curRetreatOption));
         }
         // if still retreating, make sure to get latest waypoint
         else {
@@ -225,10 +242,6 @@ void Thinker::updateMovementType(const ServerState state, const ServerState::Cli
         developingPlan.movementType = MovementType::Hold;
     }
 
-    if (outnumbered && developingPlan.movementType != MovementType::Retreat) {
-        std::raise(SIGINT);
-    }
-
     /*
     if (developingPlan.movementType == MovementType::Random) {
         std::raise(SIGINT);
@@ -237,9 +250,11 @@ void Thinker::updateMovementType(const ServerState state, const ServerState::Cli
 
     // log results
     std::stringstream logStream;
+    string targetName = executingPlan.target.csknowId != INVALID_ID ? 
+        state.clients[executingPlan.target.csknowId].name : "";
     logStream << "num waypoints: " << developingPlan.waypoints.size() << ", cur movement type " 
         << enumAsInt(developingPlan.movementType) << ", num visible enemies " << numVisibleEnemies
-        << ", target " << state.clients[executingPlan.target.csknowId].name << "\n";
+        << ", target " << targetName << "\n";
     developingPlan.numLogLines++;
 
     if (!developingPlan.waypoints.empty()) {

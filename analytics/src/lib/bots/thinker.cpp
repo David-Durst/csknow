@@ -43,11 +43,12 @@ void Thinker::think() {
             this->defuse(curClient, targetClient);
         }
 
+        // clear the state history on each new round
+        if (stateForNextPlan.stateHistory.fromFront().roundNumber != liveState.roundNumber) {
+            stateForNextPlan.stateHistory.clear();
+        }
         // other thinkers may update inputs later
         // but only know your inputs, so doesn't matter
-        if (stateForNextPlan.stateHistory.getCurSize() == 10) {
-            int x = 1;
-        }
         stateForNextPlan.stateHistory.enqueue(liveState, true);
 
         planLock.unlock();
@@ -153,7 +154,7 @@ void Thinker::fire(ServerState::Client & curClient, const ServerState::Client & 
     bool aimingAtEnemy = intersectP(targetAABB, eyeCoordinates, hitt0, hitt1);
     // if the retreat will end up near the current position, no option but fight from theredd
     bool stopToRetreat = executingPlan.movementType == MovementType::Retreat && 
-        computeDistance(curPos, vec3tConv(executingPlan.waypoints.back())) > 20.;
+        computeDistance(curPos, vec3tConv(executingPlan.waypoints.back())) > 50.;
     inSpray = haveAmmo && visible && !stopToRetreat;
 
     bool stoppedEnoughToShoot = !skill.stopToShoot ||
