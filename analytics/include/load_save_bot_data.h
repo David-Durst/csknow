@@ -76,6 +76,7 @@ public:
 
     // c4 state
     // Is Planted,Pos X,Pos Y,Pos Z
+    bool c4Exists;
     bool c4IsPlanted;
     bool c4IsDropped;
     float c4X, c4Y, c4Z;

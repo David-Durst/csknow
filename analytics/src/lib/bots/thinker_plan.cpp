@@ -49,7 +49,8 @@ void Thinker::plan() {
             }
 
             selectTarget(state, curClient);
-            const ServerState::Client & targetClient = state.clients[developingPlan.target.csknowId];
+            const ServerState::Client & targetClient = developingPlan.target.csknowId == INVALID_ID ?
+                invalidClient : state.clients[developingPlan.target.csknowId];
 
             updateMovementType(state, curClient, oldClient, targetClient);
 
@@ -142,16 +143,20 @@ void Thinker::updateDevelopingPlanWaypoints(const Vec3 & curPosition, const Vec3
 
 void Thinker::updateMovementType(const ServerState state, const ServerState::Client & curClient,
         const ServerState::Client & oldClient, const ServerState::Client & targetClient) {
+    Vec3 curPosition{curClient.lastEyePosX, curClient.lastEyePosY, curClient.lastFootPosZ};
+    Vec3 oldPosition{oldClient.lastEyePosX, oldClient.lastEyePosY, oldClient.lastFootPosZ};
+
     Vec3 targetPosition;
-    if (targetClient.csgoId == INVALID_ID) {
+    if (targetClient.csgoId != INVALID_ID) {
+        targetPosition = {targetClient.lastEyePosX, targetClient.lastEyePosY, targetClient.lastFootPosZ};
+    }
+    else if (state.c4Exists) {
         targetPosition = {state.c4X, state.c4Y, state.c4Z}; 
     }
     else {
-        targetPosition = {targetClient.lastEyePosX, targetClient.lastEyePosY, targetClient.lastFootPosZ};
-    }
-    
-    Vec3 curPosition{curClient.lastEyePosX, curClient.lastEyePosY, curClient.lastFootPosZ};
-    Vec3 oldPosition{oldClient.lastEyePosX, oldClient.lastEyePosY, oldClient.lastFootPosZ};
+        // go to where you are if no where to go
+        targetPosition = curPosition;
+    }    
 
     // set random directions here so that random movement type chosen either due to 
     // nav path failure or getting stuck has new random directions to go in
@@ -165,16 +170,19 @@ void Thinker::updateMovementType(const ServerState state, const ServerState::Cli
     int numVisibleEnemies = 0, numVisibleTeammates = 0;
     std::map<int32_t, bool> csgoIdToVisible = getCSGOIdToVisibleClients(state, curClient);
     for (const ServerState::Client & otherClient : state.clients) {
-        if (csgoIdToVisible[otherClient.csgoId] && otherClient.isAlive) {
+        if (csgoIdToVisible[otherClient.csgoId] && otherClient.isAlive && curClient.csgoId != otherClient.csgoId) {
             if (otherClient.team == curClient.team) {
                 numVisibleTeammates++;
             }
-            else {
+            else if (otherClient.team == 2 || otherClient.team == 3) {
                 numVisibleEnemies++;
             }
         }
     }
-    bool outnumbered = numVisibleEnemies <= numVisibleTeammates + 1;
+    bool outnumbered = numVisibleEnemies > numVisibleTeammates + 1;
+    if (outnumbered && curClient.team == 3) {
+        std::raise(SIGINT);
+    }
 
     if (skill.movementPolicy == MovementPolicy::PushOnly || 
             (skill.movementPolicy == MovementPolicy::PushAndRetreat && !outnumbered) ||

@@ -200,10 +200,13 @@ void ServerState::loadC4State(string visibilityFilePath) {
     // track location for insertion
     int64_t arrayEntry = 0;
 
+    c4Exists = false;
+
     for (size_t curStart = firstRow + 1, curDelimiter = getNextDelimiter(file, curStart, stats.st_size);
          curDelimiter < stats.st_size;
          curStart = curDelimiter + 1, curDelimiter = getNextDelimiter(file, curStart, stats.st_size)) {
         if (colNumber == 0) {
+            c4Exists = true;
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, c4IsPlanted);
         }
         else if (colNumber == 1) {
