@@ -110,13 +110,14 @@ void Thinker::selectTarget(const ServerState & state, const ServerState::Client 
     
     // if found any targets, set them, otherwise mark target as invalid
     if (nearestEnemyServerId != INVALID_ID) {
-        if (developingPlan.target.csknowId == executingPlan.target.csknowId && targetVisible) {
+        int32_t targetCSKnowId = state.csgoIdToCSKnowId[nearestEnemyServerId];
+        if (targetCSKnowId == executingPlan.target.csknowId && targetVisible) {
             developingPlan.numTimesRetargeted = executingPlan.numTimesRetargeted + 1;
         }
         else {
             developingPlan.numTimesRetargeted = 0;
         }
-        developingPlan.target = {state.csgoIdToCSKnowId[nearestEnemyServerId], {
+        developingPlan.target = {targetCSKnowId, {
             aimDis(aimGen) / std::pow(2, developingPlan.numTimesRetargeted),
             aimDis(aimGen) / std::pow(2, developingPlan.numTimesRetargeted),
             aimDis(aimGen) / std::pow(2, developingPlan.numTimesRetargeted)
@@ -237,7 +238,8 @@ void Thinker::updateMovementType(const ServerState state, const ServerState::Cli
     // log results
     std::stringstream logStream;
     logStream << "num waypoints: " << developingPlan.waypoints.size() << ", cur movement type " 
-        << enumAsInt(developingPlan.movementType) << ", num visible enemies " << numVisibleEnemies << "\n";
+        << enumAsInt(developingPlan.movementType) << ", num visible enemies " << numVisibleEnemies
+        << ", target " << state.clients[executingPlan.target.csknowId].name << "\n";
     developingPlan.numLogLines++;
 
     if (!developingPlan.waypoints.empty()) {
