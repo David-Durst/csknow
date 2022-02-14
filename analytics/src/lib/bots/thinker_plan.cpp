@@ -114,7 +114,7 @@ void Thinker::selectTarget(const ServerState & state, const ServerState::Client 
             aimDis(aimGen) / std::pow(2, developingPlan.numTimesRetargeted),
             aimDis(aimGen) / std::pow(2, developingPlan.numTimesRetargeted),
             aimDis(aimGen) / std::pow(2, developingPlan.numTimesRetargeted)
-        }};
+        }, targetVisible};
     }
     else {
         developingPlan.target.csknowId = INVALID_ID;
