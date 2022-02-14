@@ -1,4 +1,3 @@
-//
 // Created by durst on 1/25/22.
 //
 
@@ -152,6 +151,9 @@ class Thinker {
     // helper functions used in planning
     nav_mesh::vec3_t vec3Conv(Vec3 vec) {
         return {static_cast<float>(vec.x), static_cast<float>(vec.y), static_cast<float>(vec.z)};
+    }
+    Vec3 vec3tConv(nav_mesh::vec3_t vec) {
+        return {static_cast<double>(vec.x), static_cast<double>(vec.y), static_cast<double>(vec.z)};
     }
     void updateDevelopingPlanWaypoints(const Vec3 & curPosition, const Vec3 & targetPosition); 
 

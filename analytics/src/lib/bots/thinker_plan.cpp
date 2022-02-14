@@ -42,6 +42,11 @@ void Thinker::plan() {
             // take from back so get oldest positions
             const ServerState::Client & oldClient = getCurClient(developingPlan.stateHistory.fromBack());
 
+            // clear retreats on new round
+            if (executingPlan.stateHistory.fromFront().roundNumber != 
+                    developingPlan.stateHistory.fromFront().roundNumber) {
+                retreatOptions.clear();
+            }
             // you can retreat to the current location
             Vec3 curPosition = {curClient.lastEyePosX, curClient.lastEyePosY, curClient.lastFootPosZ};
             if (retreatOptions.getCurSize() == 0 || curPosition != retreatOptions.fromFront()) {

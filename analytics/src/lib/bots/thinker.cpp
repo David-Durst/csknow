@@ -141,6 +141,9 @@ void Thinker::fire(ServerState::Client & curClient, const ServerState::Client & 
         }) != liveState.visibilityClientPairs.end();
     
 
+    Vec3 priorPos{priorClient.lastEyePosX, priorClient.lastEyePosY, priorClient.lastFootPosZ}; 
+    Vec3 curPos{curClient.lastEyePosX, curClient.lastEyePosY, curClient.lastFootPosZ};
+
     Ray eyeCoordinates = getEyeCoordinatesForPlayer(
             {curClient.lastEyePosX, curClient.lastEyePosY, curClient.lastFootPosZ},
             {curClient.lastEyeWithRecoilAngleX, curClient.lastEyeWithRecoilAngleY});
@@ -148,15 +151,16 @@ void Thinker::fire(ServerState::Client & curClient, const ServerState::Client & 
             {targetClient.lastEyePosX, targetClient.lastEyePosY, targetClient.lastFootPosZ});
     double hitt0, hitt1;
     bool aimingAtEnemy = intersectP(targetAABB, eyeCoordinates, hitt0, hitt1);
-    inSpray = haveAmmo && visible && executingPlan.movementType != MovementType::Retreat;
+    // if the retreat will end up near the current position, no option but fight from theredd
+    bool stopToRetreat = executingPlan.movementType == MovementType::Retreat && 
+        computeDistance(curPos, vec3tConv(executingPlan.waypoints.back())) > 20.;
+    inSpray = haveAmmo && visible && !stopToRetreat;
 
-    Vec3 priorPos{priorClient.lastEyePosX, priorClient.lastEyePosY, priorClient.lastFootPosZ}; 
-    Vec3 curPos{curClient.lastEyePosX, curClient.lastEyePosY, curClient.lastFootPosZ};
     bool stoppedEnoughToShoot = !skill.stopToShoot ||
         computeDistance(priorPos, curPos) < MAX_VELOCITY_WHEN_STOPPED;
 
-    this->setButton(curClient, IN_ATTACK, 
-            !attackLastFrame && aimingAtEnemy && inSpray && stoppedEnoughToShoot);
+    //this->setButton(curClient, IN_ATTACK, 
+            //!attackLastFrame && aimingAtEnemy && inSpray && stoppedEnoughToShoot);
     this->setButton(curClient, IN_RELOAD, !haveAmmo);
 }
 
