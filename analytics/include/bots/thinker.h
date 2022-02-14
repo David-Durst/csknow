@@ -50,7 +50,7 @@ class Thinker {
 
     struct Target {
         int32_t csknowId;
-        Vec3 offset;
+        Vec2 offset;
         bool visible;
     };
 
@@ -58,7 +58,7 @@ class Thinker {
     public:
         bool valid = false;
         MovementType movementType = MovementType::Hold;
-        Target target{INVALID_ID, {0., 0., 0.}};
+        Target target{INVALID_ID, {0., 0.}};
         // represents server state for from i and 
         // resulting inputs derived from state i for state i+1
         CircularBuffer<ServerState> stateHistory;
@@ -123,7 +123,7 @@ class Thinker {
 
     // short term thinking based on plan
     void aimAt(ServerState::Client & curClient, const ServerState::Client & targetClient,
-            const Vec3 & aimOffset, const ServerState::Client & priorClient);
+            const Vec2 & aimOffset, const ServerState::Client & priorClient);
     void fire(ServerState::Client & curClient, const ServerState::Client & targetClient,
             const ServerState::Client & priorClient);
     void moveInDir(ServerState::Client & curClient, Vec2 dir);

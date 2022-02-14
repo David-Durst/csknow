@@ -7,7 +7,7 @@
 #include <list>
 #include <map>
 
-std::vector<Skill> botSkills {{5, true, MovementPolicy::PushOnly}, {50, false, MovementPolicy::PushAndRetreat}};
+std::vector<Skill> botSkills {{0.001, true, MovementPolicy::PushOnly}, {7.5, false, MovementPolicy::PushAndRetreat}};
 
 void updateThinkers(ServerState & state, string navPath, std::list<Thinker> & thinkers) {
     std::map<int32_t, bool> botCSGOIdsToAdd;

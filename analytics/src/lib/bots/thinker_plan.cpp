@@ -119,7 +119,6 @@ void Thinker::selectTarget(const ServerState & state, const ServerState::Client 
         }
         developingPlan.target = {targetCSKnowId, {
             aimDis(aimGen) / std::pow(2, developingPlan.numTimesRetargeted),
-            aimDis(aimGen) / std::pow(2, developingPlan.numTimesRetargeted),
             aimDis(aimGen) / std::pow(2, developingPlan.numTimesRetargeted)
         }, targetVisible};
     }

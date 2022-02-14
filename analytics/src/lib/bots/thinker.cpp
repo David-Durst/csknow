@@ -73,7 +73,7 @@ float computeAngleVelocity(double totalDeltaAngle, double lastDeltaAngle) {
 
 
 void Thinker::aimAt(ServerState::Client & curClient, const ServerState::Client & targetClient,
-        const Vec3 & aimOffset, const ServerState::Client & priorClient) {
+        const Vec2 & aimOffset, const ServerState::Client & priorClient) {
     // if no plant and no enemies, then nothing to look at
     if (targetClient.csgoId == INVALID_ID && !liveState.c4IsPlanted) {
         curClient.inputAngleDeltaPctX = 0.;
@@ -89,7 +89,6 @@ void Thinker::aimAt(ServerState::Client & curClient, const ServerState::Client &
             targetClient.lastEyePosY - curClient.lastEyePosY,
             targetClient.lastEyePosZ - curClient.lastEyePosZ
         };
-        targetVector = targetVector + aimOffset;
     }
     else {
         targetVector = { 
@@ -102,7 +101,7 @@ void Thinker::aimAt(ServerState::Client & curClient, const ServerState::Client &
     Vec2 currentAngles = {
         curClient.lastEyeAngleX + curClient.lastAimpunchAngleX, 
         curClient.lastEyeAngleY + curClient.lastAimpunchAngleY};
-    Vec2 targetAngles = vectorAngles(targetVector);
+    Vec2 targetAngles = vectorAngles(targetVector) + aimOffset;
     targetAngles.makePitchNeg90To90();
     targetAngles.y = std::max(-1 * MAX_PITCH_MAGNITUDE, 
             std::min(MAX_PITCH_MAGNITUDE, targetAngles.y));
