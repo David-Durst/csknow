@@ -151,7 +151,7 @@ void Thinker::fire(ServerState::Client & curClient, const ServerState::Client & 
             {targetClient.lastEyePosX, targetClient.lastEyePosY, targetClient.lastFootPosZ});
     double hitt0, hitt1;
     bool aimingAtEnemy = intersectP(targetAABB, eyeCoordinates, hitt0, hitt1);
-    // if the retreat will end up near the current position, no option but fight from theredd
+    // if the retreat will end up near the current position, no option but fight
     bool stopToRetreat = executingPlan.movementType == MovementType::Retreat && 
         computeDistance(curPos, vec3tConv(executingPlan.waypoints.back())) > 50.;
     inSpray = haveAmmo && visible && !stopToRetreat;
@@ -182,12 +182,18 @@ void Thinker::move(ServerState::Client & curClient, const ServerState::Client & 
         this->setButton(curClient, IN_MOVELEFT, false);
         this->setButton(curClient, IN_BACK, false);
         this->setButton(curClient, IN_MOVERIGHT, false);
+
+        numThinkLines++;
+        thinkLog += "Holding\n";
     }
     else if (executingPlan.movementType == MovementType::Random) {
         this->setButton(curClient, IN_FORWARD, executingPlan.randomForward);
         this->setButton(curClient, IN_MOVELEFT, executingPlan.randomLeft);
         this->setButton(curClient, IN_BACK, executingPlan.randomBack);
         this->setButton(curClient, IN_MOVERIGHT, executingPlan.randomRight);
+
+        numThinkLines++;
+        thinkLog += "Random movement\n";
     }
     else if (inSpray && skill.stopToShoot) {
         Vec3 priorPos{priorClient.lastEyePosX, priorClient.lastEyePosY, priorClient.lastFootPosZ}; 
@@ -223,6 +229,11 @@ void Thinker::move(ServerState::Client & curClient, const ServerState::Client & 
             executingPlan.waypoints[executingPlan.curWaypoint].z};
         Vec3 curPos{curClient.lastEyePosX, curClient.lastEyePosY, curClient.lastFootPosZ};
         Vec3 targetVector = waypointPos - curPos;
+        
+        // crouch when shooting and moving
+        if (inSpray) {
+            this->setButton(curClient, IN_DUCK, true);
+        }
 
         if (computeDistance(curPos, waypointPos) < 20.) {
             // move to next waypoint if not done path, otherwise stop
@@ -230,6 +241,8 @@ void Thinker::move(ServerState::Client & curClient, const ServerState::Client & 
                 executingPlan.curWaypoint++;
             }
             else {
+                numThinkLines++;
+                thinkLog += "at path end\n";
                 this->setButton(curClient, IN_FORWARD, false);
                 this->setButton(curClient, IN_MOVELEFT, false);
                 this->setButton(curClient, IN_BACK, false);
@@ -251,11 +264,6 @@ void Thinker::move(ServerState::Client & curClient, const ServerState::Client & 
             this->setButton(curClient, IN_JUMP, true);
         }
 
-        // crouch when shooting and moving
-        if (inSpray) {
-            this->setButton(curClient, IN_DUCK, true);
-        }
-
         std::stringstream thinkStream;
         if (executingPlan.curWaypoint < executingPlan.waypoints.size()) {
             thinkStream << "cur waypoint " << executingPlan.curWaypoint << ":"
@@ -264,6 +272,10 @@ void Thinker::move(ServerState::Client & curClient, const ServerState::Client & 
                       << executingPlan.waypoints[executingPlan.curWaypoint].z << "\n";
             numThinkLines++;
         }
+
+        thinkStream << "in spray: "
+            << (inSpray ? 1 : 0) << "\n";
+        numThinkLines++;
 
         thinkStream << "cur point: "
             << curPos.x << "," << curPos.y 

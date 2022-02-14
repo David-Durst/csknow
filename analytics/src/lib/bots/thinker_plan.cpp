@@ -64,8 +64,9 @@ void Thinker::plan() {
         developingPlan.computeEndTime = std::chrono::system_clock::now();
 
         std::chrono::duration<double> computeTime = developingPlan.computeEndTime - developingPlan.computeStartTime;
-        developingPlan.numLogLines++;
-        developingPlan.log += "plan compute time: " + std::to_string(computeTime.count()) + "\n";
+        developingPlan.numLogLines += 2;
+        developingPlan.log += "plan valid " + std::to_string(developingPlan.valid ? 1 : 0) + "\n" +
+            "plan compute time: " + std::to_string(computeTime.count()) + "\n";
 
         if (computeTime < SECONDS_BETWEEN_PLAN_CHANGES) {
             std::this_thread::sleep_for(SECONDS_BETWEEN_PLAN_CHANGES - computeTime);
