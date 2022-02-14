@@ -211,9 +211,11 @@ void Thinker::updateMovementType(const ServerState state, const ServerState::Cli
         developingPlan.movementType = MovementType::Hold;
     }
 
+    /*
     if (developingPlan.movementType == MovementType::Random) {
         std::raise(SIGINT);
     }
+    */
 
     // log results
     std::stringstream logStream;

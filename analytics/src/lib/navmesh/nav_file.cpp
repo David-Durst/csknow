@@ -63,6 +63,11 @@ namespace nav_mesh {
     std::optional< std::vector< vec3_t > > nav_file::find_path( vec3_t from, vec3_t to ) {
         auto start = reinterpret_cast< void* >( get_nearest_area_by_position( from ).get_id( ) );
         auto end = reinterpret_cast< void* >( get_nearest_area_by_position( to ).get_id( ) );
+        std::vector< vec3_t > path = { };
+        if (start == end) {
+            path.push_back( to );
+            return path;
+        }
 
         float total_cost = 0.f;
         micropather::MPVector< void* > path_area_ids = { };
@@ -71,7 +76,6 @@ namespace nav_mesh {
             return {};
         }
 
-        std::vector< vec3_t > path = { };
         for ( std::size_t i = 0; i < path_area_ids.size( ); i++ ) {
             nav_area& area = m_areas[m_area_ids_to_indices[LO_32( path_area_ids[ i ] )]];
             // smooth paths by adding intersections between nav areas after the first 
