@@ -90,6 +90,15 @@ void Thinker::selectTarget(const ServerState & state, const ServerState::Client 
                     {curClient.lastEyePosX, curClient.lastEyePosY, curClient.lastEyePosZ},
                     {otherClient.lastEyePosX, otherClient.lastEyePosY, otherClient.lastEyePosZ});
             bool otherVisible = csgoIdToVisible[otherClient.csgoId];
+            // if existing target still visible, keep going for it without switching
+            // doing this inside loop so don't have to with issues about clients disconnecting mid target
+            if (state.csgoIdToCSKnowId[otherClient.csgoId] == executingPlan.target.csknowId && otherVisible) {
+                targetVisible = otherVisible;
+                nearestEnemyServerId = otherClient.csgoId;
+                distance = otherDistance;
+                break;
+            }
+            // otherwise find the nearest target
             if (otherDistance < distance || (otherVisible && !targetVisible)) {
                 targetVisible = otherVisible;
                 nearestEnemyServerId = otherClient.csgoId;
