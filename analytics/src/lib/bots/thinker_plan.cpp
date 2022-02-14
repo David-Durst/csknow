@@ -42,17 +42,6 @@ void Thinker::plan() {
             // take from back so get oldest positions
             const ServerState::Client & oldClient = getCurClient(developingPlan.stateHistory.fromBack());
 
-            // clear retreats on new round
-            if (executingPlan.stateHistory.fromFront().roundNumber != 
-                    developingPlan.stateHistory.fromFront().roundNumber) {
-                retreatOptions.clear();
-            }
-            // you can retreat to the current location
-            Vec3 curPosition = {curClient.lastEyePosX, curClient.lastEyePosY, curClient.lastFootPosZ};
-            if (retreatOptions.getCurSize() == 0 || curPosition != retreatOptions.fromFront()) {
-                retreatOptions.enqueue(curPosition, true);
-            }
-
             selectTarget(state, curClient);
             const ServerState::Client & targetClient = developingPlan.target.csknowId == INVALID_ID ?
                 invalidClient : state.clients[developingPlan.target.csknowId];
@@ -187,6 +176,17 @@ void Thinker::updateMovementType(const ServerState state, const ServerState::Cli
     }
     bool outnumbered = numVisibleEnemies > numVisibleTeammates + 1;
 
+    // clear retreats on new round
+    if (executingPlan.stateHistory.fromFront().roundNumber != 
+            developingPlan.stateHistory.fromFront().roundNumber) {
+        retreatOptions.clear();
+    }
+    // you can retreat to the current location if not visible there
+    if (retreatOptions.getCurSize() == 0 || 
+            (curPosition != retreatOptions.fromFront() && numVisibleEnemies == 0)) {
+        retreatOptions.enqueue(curPosition, true);
+    }
+
     if (skill.movementPolicy == MovementPolicy::PushOnly || 
             (skill.movementPolicy == MovementPolicy::PushAndRetreat && !outnumbered) ||
             (skill.movementPolicy == MovementPolicy::Normal && movementDis(movementGen) < 0.8)) {
@@ -208,24 +208,7 @@ void Thinker::updateMovementType(const ServerState state, const ServerState::Cli
         developingPlan.movementType = MovementType::Retreat;
         // if newly retreating, take oldest remembered position
         if (executingPlan.movementType != MovementType::Retreat) {
-            // if get into a cycle of retreats that syncrhonizes with history length
-            // taking oldest position will just sit still
-            // this takes farthest
-            size_t curRetreatOption = 0;
-            double curRetreatDistance = computeDistance(curPosition, retreatOptions.fromFront());
-            for (size_t i = 1; i < retreatOptions.getCurSize(); i++) {
-                double nextRetreatDistance = computeDistance(curPosition, retreatOptions.fromFront(i));
-                if (nextRetreatDistance > curRetreatDistance) {
-                    curRetreatOption = i;
-                    curRetreatDistance = nextRetreatDistance;
-                }
-            }
-            /*
-            if (retreatOptions.getCurSize() > 1 && curRetreatDistance < 20.) {
-                std::raise(SIGINT);
-            }
-            */
-            updateDevelopingPlanWaypoints(curPosition, retreatOptions.fromFront(curRetreatOption));
+            updateDevelopingPlanWaypoints(curPosition, retreatOptions.fromFront());
         }
         // if still retreating, make sure to get latest waypoint
         else {

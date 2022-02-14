@@ -5,7 +5,7 @@
 #define CSKNOW_THINKER_H
 #define SECONDS_BETWEEN_PLAN_CHANGES std::chrono::milliseconds(250)
 #define HISTORY_LENGTH 10
-#define RETREAT_LENGTH 100
+#define RETREAT_LENGTH 10
 #define MAX_VELOCITY_WHEN_STOPPED 5.
 
 #include "load_save_bot_data.h"
