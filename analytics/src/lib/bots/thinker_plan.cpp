@@ -43,7 +43,10 @@ void Thinker::plan() {
             const ServerState::Client & oldClient = getCurClient(developingPlan.stateHistory.fromBack());
 
             // you can retreat to the current location
-            retreatOptions.enqueue({curClient.lastEyePosX, curClient.lastEyePosY, curClient.lastFootPosZ}, true);
+            Vec3 curPosition = {curClient.lastEyePosX, curClient.lastEyePosY, curClient.lastFootPosZ};
+            if (retreatOptions.getCurSize() == 0 || curPosition != retreatOptions.fromFront()) {
+                retreatOptions.enqueue(curPosition, true);
+            }
 
             selectTarget(state, curClient);
             const ServerState::Client & targetClient = state.clients[developingPlan.target.csknowId];
