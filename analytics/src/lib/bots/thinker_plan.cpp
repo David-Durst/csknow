@@ -180,13 +180,10 @@ void Thinker::updateMovementType(const ServerState state, const ServerState::Cli
         }
     }
     bool outnumbered = numVisibleEnemies > numVisibleTeammates + 1;
-    if (outnumbered && curClient.team == 3) {
-        std::raise(SIGINT);
-    }
 
     if (skill.movementPolicy == MovementPolicy::PushOnly || 
             (skill.movementPolicy == MovementPolicy::PushAndRetreat && !outnumbered) ||
-            movementDis(movementGen) < 0.8) {
+            (skill.movementPolicy == MovementPolicy::Normal && movementDis(movementGen) < 0.8)) {
         // set push, let updateDevelopingPlanWaypoint set to random if it fails
         developingPlan.movementType = MovementType::Push;
         // choose a new path only if no waypoints or target has changed or plan was for old round
@@ -222,6 +219,10 @@ void Thinker::updateMovementType(const ServerState state, const ServerState::Cli
         developingPlan.movementType = MovementType::Hold;
     }
 
+    if (outnumbered && developingPlan.movementType != MovementType::Retreat) {
+        std::raise(SIGINT);
+    }
+
     /*
     if (developingPlan.movementType == MovementType::Random) {
         std::raise(SIGINT);
@@ -231,7 +232,7 @@ void Thinker::updateMovementType(const ServerState state, const ServerState::Cli
     // log results
     std::stringstream logStream;
     logStream << "num waypoints: " << developingPlan.waypoints.size() << ", cur movement type " 
-        << enumAsInt(developingPlan.movementType) << "\n";
+        << enumAsInt(developingPlan.movementType) << ", num visible enemies " << numVisibleEnemies << "\n";
     developingPlan.numLogLines++;
 
     if (!developingPlan.waypoints.empty()) {

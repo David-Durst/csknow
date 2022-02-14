@@ -148,7 +148,7 @@ void Thinker::fire(ServerState::Client & curClient, const ServerState::Client & 
             {targetClient.lastEyePosX, targetClient.lastEyePosY, targetClient.lastFootPosZ});
     double hitt0, hitt1;
     bool aimingAtEnemy = intersectP(targetAABB, eyeCoordinates, hitt0, hitt1);
-    inSpray = haveAmmo && visible;
+    inSpray = haveAmmo && visible && executingPlan.movementType != MovementType::Retreat;
 
     Vec3 priorPos{priorClient.lastEyePosX, priorClient.lastEyePosY, priorClient.lastFootPosZ}; 
     Vec3 curPos{curClient.lastEyePosX, curClient.lastEyePosY, curClient.lastFootPosZ};
