@@ -5,6 +5,7 @@
 #define CSKNOW_THINKER_H
 #define SECONDS_BETWEEN_PLAN_CHANGES std::chrono::milliseconds(250)
 #define HISTORY_LENGTH 10
+#define RETREAT_LENGTH 100
 #define MAX_VELOCITY_WHEN_STOPPED 5.
 
 #include "load_save_bot_data.h"
@@ -160,7 +161,7 @@ class Thinker {
 public:
     Thinker(ServerState & state, int curBotCSGOId, string navPath, Skill skill) 
         : liveState(state), curBotCSGOId(curBotCSGOId), lastDeltaAngles{0, 0}, navFile(navPath.c_str()), 
-        skill(skill), retreatOptions(HISTORY_LENGTH),
+        skill(skill), retreatOptions(RETREAT_LENGTH),
         movementGen(rd()), aimGen(rd()), movementDis(0., 1.), aimDis(-skill.maxInaccuracy, skill.maxInaccuracy) {
             invalidClient.csgoId = INVALID_ID;
         };
