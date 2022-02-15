@@ -242,8 +242,8 @@ void Thinker::updateMovementType(const ServerState state, const ServerState::Cli
 
     // log results
     std::stringstream logStream;
-    string targetName = executingPlan.target.csknowId != INVALID_ID ? 
-        state.clients[executingPlan.target.csknowId].name : "";
+    string targetName = developingPlan.target.csknowId != INVALID_ID ? 
+        state.clients[developingPlan.target.csknowId].name : "";
     logStream << "num waypoints: " << developingPlan.waypoints.size() << ", cur movement type " 
         << enumAsInt(developingPlan.movementType) << ", num visible enemies " << numVisibleEnemies
         << ", target " << targetName << "\n";
