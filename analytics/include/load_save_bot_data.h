@@ -26,6 +26,7 @@ private:
 public:
     string mapName;
     int32_t roundNumber;
+    double tickInterval;
 
     struct Client {
         int32_t lastFrame;

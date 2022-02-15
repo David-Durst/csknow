@@ -56,13 +56,10 @@ int main(int argc, char * argv[]) {
     if (argc != 4) {
         std::cout << "please call this code 2 arguments: \n" 
             << "1. path/to/maps\n"
-            << "2. path/to/data\n"
-            << "3. server_tick_rate" << std::endl;
+            << "2. path/to/data\n" << std::endl;
         return 1;
     }
     string mapsPath = argv[1], dataPath = argv[2];
-    int tickRate = std::stoi(argv[3]);
-    std::chrono::duration<double> timePerTick(1.0 / tickRate);
 
 
     ServerState state;
@@ -71,6 +68,7 @@ int main(int argc, char * argv[]) {
     string navPath = mapsPath + "/" + state.mapName + ".nav";
     //Thinker thinker(state, 3, navPath, true);
     std::list<Thinker> thinkers;
+    std::chrono::duration<double> timePerTick(state.tickInterval);
 
     bool firstFrame = true;
     // \033[A moves up 1 line, \r moves cursor to start of line, \33[2K clears line
