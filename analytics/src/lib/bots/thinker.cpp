@@ -28,22 +28,31 @@ void Thinker::think() {
         curClient.buttons = 0;
         curClient.inputAngleDeltaPctX = 0.;
         curClient.inputAngleDeltaPctY = 0.;
-        thinkLog = "CSGO id: " + std::to_string(curClient.csgoId) + "\n" + executingPlan.log;
+        thinkLog = "Bot " + curClient.name + " CSGO id: " + std::to_string(curClient.csgoId) + 
+            "\n" + executingPlan.log;
         numThinkLines = 1 + executingPlan.numLogLines;
-
+        
         // only move if there's a plan
         if (executingPlan.valid) {
-            // assuming clients aren't reshuffled, if so, will just be off for a second
-            const ServerState::Client & targetClient = 
-                liveState.clients[executingPlan.target.csknowId];
-            ServerState::Client & priorClient = getCurClient(stateForNextPlan.stateHistory.fromFront());
-            this->aimAt(curClient, targetClient, executingPlan.target.offset, priorClient);
-            this->fire(curClient, targetClient, priorClient);
-            this->move(curClient, priorClient);
-            this->defuse(curClient, targetClient);
+            // ensure that plan state mismatch doesn't cause crash
+            if (liveState.clients.size() <= executingPlan.target.csknowId) {
+                executingPlan.valid = false;
+            }
+            else {
+                // assuming clients aren't reshuffled, if so, will just be off for a second
+                const ServerState::Client & targetClient = 
+                    liveState.clients[executingPlan.target.csknowId];
+                // from back to get most recent prior client
+                ServerState::Client & priorClient = getCurClient(stateForNextPlan.stateHistory.fromBack());
+                this->aimAt(curClient, targetClient, executingPlan.target.offset, priorClient);
+                this->fire(curClient, targetClient, priorClient);
+                this->move(curClient, priorClient);
+                this->defuse(curClient, targetClient);
+            }
         }
 
         // clear the state history on each new round
+        // take oldest as want if any are wrong, not just most recent
         if (stateForNextPlan.stateHistory.fromFront().roundNumber != liveState.roundNumber) {
             stateForNextPlan.stateHistory.clear();
         }
@@ -182,6 +191,8 @@ void Thinker::move(ServerState::Client & curClient, const ServerState::Client & 
         "," + std::to_string(curPos.y) + "," + std::to_string(curPos.z) + "\n";
     numThinkLines++;
 
+    Vec3 priorPos{priorClient.lastEyePosX, priorClient.lastEyePosY, priorClient.lastFootPosZ}; 
+
     if (executingPlan.movementType == MovementType::Hold) {
         this->setButton(curClient, IN_FORWARD, false);
         this->setButton(curClient, IN_MOVELEFT, false);
@@ -201,8 +212,6 @@ void Thinker::move(ServerState::Client & curClient, const ServerState::Client & 
         thinkLog += "Random movement\n";
     }
     else if (inSpray && skill.stopToShoot) {
-        Vec3 priorPos{priorClient.lastEyePosX, priorClient.lastEyePosY, priorClient.lastFootPosZ}; 
-
         numThinkLines++;
         thinkLog += "Stopping to shoot\n";
 
@@ -238,6 +247,7 @@ void Thinker::move(ServerState::Client & curClient, const ServerState::Client & 
             this->setButton(curClient, IN_DUCK, true);
         }
 
+       // if (computeMinDistanceLinePoint(priorPos, curPos, waypointPos) < 20.) {
         if (computeDistance(curPos, waypointPos) < 20.) {
             // move to next waypoint if not done path, otherwise stop
             if (executingPlan.curWaypoint < executingPlan.waypoints.size() - 1) {

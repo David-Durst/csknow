@@ -111,6 +111,14 @@ struct Vec3 {
         result.z -= other.z;
         return result;
     }
+
+    Vec3 operator*(const Vec3 & other) const {
+        Vec3 result;
+        result.x = y * other.z - z * other.y;
+        result.y = z * other.x - x * other.z;
+        result.z = x * other.y - y * other.x;
+        return result;
+    }
 };
 
 static inline __attribute__((always_inline))
@@ -385,6 +393,21 @@ double computeDistance(Vec3 v1, Vec3 v2) {
     double yDistance = v1.y - v2.y;
     double zDistance = v1.z - v2.z;
     return sqrt(xDistance * xDistance + yDistance * yDistance + zDistance * zDistance);
+}
+
+static inline __attribute__((always_inline))
+double computeMagnitude(Vec3 v) {
+    return computeDistance(v, {0, 0, 0});
+}
+
+// https://www.geeksforgeeks.org/shortest-distance-between-a-line-and-a-point-in-a-3-d-plane/
+static inline __attribute__((always_inline))
+double computeMinDistanceLinePoint(Vec3 linePoint1, Vec3 linePoint2, Vec3 point) {
+    Vec3 ab = linePoint2 - linePoint1;
+    Vec3 ac = point - linePoint1;
+    double area = computeMagnitude(ab * ac);
+    double cd = area / computeMagnitude(ab);
+    return cd;
 }
 
 static inline __attribute__((always_inline))

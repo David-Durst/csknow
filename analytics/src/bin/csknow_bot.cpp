@@ -80,6 +80,7 @@ int main(int argc, char * argv[]) {
     while (true) {
         auto start = std::chrono::system_clock::now();
         state.loadServerState(dataPath);
+        auto parseEnd = std::chrono::system_clock::now();
             
         if (!firstFrame) {
             // this handles bot time line
@@ -112,13 +113,17 @@ int main(int argc, char * argv[]) {
 
         auto end = std::chrono::system_clock::now();
         std::chrono::duration<double> botTime = end - start;
+        std::chrono::duration<double> parseTime = parseEnd - start;
         std::cout << "Num failures " << numFailures << ", last bad path: " << state.badPath << std::endl;
         if (botTime < timePerTick) {
-            std::cout << "Bot compute time: " << botTime.count() << "s" << std::endl;
+            std::cout << "Bot compute time: " << botTime.count() 
+                << "s, pct parse " << parseTime.count() / botTime.count() << std::endl;
             std::this_thread::sleep_for(timePerTick - botTime);
         }
         else {
-            std::cout << "\033[1;31mMissed Bot compute time:\033[0m " << botTime.count() << "s" << std::endl;
+            std::cout << "\033[1;31mMissed Bot compute time:\033[0m " << botTime.count() 
+                << "s, pct parse " << parseTime.count() / botTime.count() << std::endl;
+
         }
         firstFrame = false;
     }
