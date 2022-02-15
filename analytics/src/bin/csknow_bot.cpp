@@ -9,7 +9,9 @@
 
 std::vector<Skill> botSkills {{0.001, true, MovementPolicy::PushOnly}, {7.5, false, MovementPolicy::PushAndRetreat}};
 
-void updateThinkers(ServerState & state, string navPath, std::list<Thinker> & thinkers) {
+void updateThinkers(ServerState & state, string mapsPath, std::list<Thinker> & thinkers) {
+    string navPath = mapsPath + "/" + state.mapName + ".nav";
+
     std::map<int32_t, bool> botCSGOIdsToAdd;
     for (const auto & client : state.clients) {
         if (client.isBot) {
@@ -63,12 +65,8 @@ int main(int argc, char * argv[]) {
 
 
     ServerState state;
-    // load once so can initialize rest of structs with data
-    state.loadServerState(dataPath);
-    string navPath = mapsPath + "/" + state.mapName + ".nav";
     //Thinker thinker(state, 3, navPath, true);
     std::list<Thinker> thinkers;
-    std::chrono::duration<double> timePerTick(state.tickInterval);
 
     bool firstFrame = true;
     // \033[A moves up 1 line, \r moves cursor to start of line, \33[2K clears line
@@ -80,6 +78,7 @@ int main(int argc, char * argv[]) {
     while (true) {
         auto start = std::chrono::system_clock::now();
         state.loadServerState(dataPath);
+        std::chrono::duration<double> timePerTick(state.tickInterval);
         auto parseEnd = std::chrono::system_clock::now();
             
         if (!firstFrame) {
@@ -99,7 +98,7 @@ int main(int argc, char * argv[]) {
             state.numThinkLines = 0;
         }
         if (state.loadedSuccessfully) {
-            updateThinkers(state, navPath, thinkers);
+            updateThinkers(state, mapsPath, thinkers);
             for (auto & thinker : thinkers) {
                 thinker.think();
             }
