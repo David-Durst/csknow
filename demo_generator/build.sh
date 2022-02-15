@@ -1,1 +1,1 @@
-docker build -t durst/csgo:0.2 .
+docker build -t durst/csgo:0.3 .

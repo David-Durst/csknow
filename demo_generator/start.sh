@@ -23,5 +23,5 @@ docker run --name durst_csgo \
     --rm \
     -e SRCDS_MAPGROUP=mg_de_dust2 -e SRCDS_STARTMAP=de_dust2 \
     -e RUNNING_IN_EC2=1 -e ROLE=${iam_role} \
-    durst/csgo:0.2
+    durst/csgo:0.3
 

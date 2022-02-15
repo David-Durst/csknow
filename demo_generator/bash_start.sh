@@ -4,5 +4,5 @@ docker run --name durst_csgo \
     -e SRCDS_MAPGROUP=mg_de_durst2 -e SRCDS_STARTMAP=de_dust2 \
     --mount type=bind,source="$(pwd)"/../demos,target=/home/steam/demos \
     --entrypoint /bin/bash \
-    durst/csgo:0.2
+    durst/csgo:0.3
 

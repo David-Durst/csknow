@@ -1,7 +1,7 @@
 #!/bin/bash
 mkdir -p "${NONVOLUMESTEAMAPPDIR}" || true  
 
-bash "${STEAMCMDDIR}/steamcmd.sh" +login anonymous \
-				+force_install_dir "${NONVOLUMESTEAMAPPDIR}" \
+bash "${STEAMCMDDIR}/steamcmd.sh" +force_install_dir "${NONVOLUMESTEAMAPPDIR}" \
+                +login anonymous \
 				+app_update "${STEAMAPPID}" \
-				+quit			+quit
+				+quit

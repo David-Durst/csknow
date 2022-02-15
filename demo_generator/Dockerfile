@@ -10,17 +10,21 @@ RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2
 USER root
 RUN ./aws/install
 USER $USER
+ADD ./install_sourcemod.sh ${HOMEDIR}/install_sourcemod.sh
+RUN ${HOMEDIR}/install_sourcemod.sh ${NONVOLUMESTEAMAPPDIR}/csgo
 ADD ./internal_scripts/server.cfg ${NONVOLUMESTEAMAPPDIR}/csgo/cfg/server.cfg
 ADD ./internal_scripts/gamemode_competitive.cfg ${NONVOLUMESTEAMAPPDIR}/csgo/cfg/gamemode_competitive.cfg
 ADD ./internal_scripts/gamemode_competitive_server.cfg ${NONVOLUMESTEAMAPPDIR}/csgo/cfg/gamemode_competitive_server.cfg
 ADD ./internal_scripts/gamemode_casual_server.cfg ${NONVOLUMESTEAMAPPDIR}/csgo/cfg/gamemode_casual_server.cfg
+ADD ./internal_scripts/run_csgo_bots.sh ${NONVOLUMESTEAMAPPDIR}/run_csgo_bots.sh
+ADD ./internal_scripts/run_csgo_bots_2v1.sh ${NONVOLUMESTEAMAPPDIR}/run_csgo_bots_2v1.sh
 ADD ./entry.sh ${HOMEDIR}/entry.sh
 ADD ./upload_logs.py ${HOMEDIR}/upload_logs.py
 RUN { \
         echo '@ShutdownOnFailedCommand 1'; \
         echo '@NoPromptForPassword 1'; \
-        echo 'login anonymous'; \
         echo 'force_install_dir '"${NONVOLUMESTEAMAPPDIR}"''; \
+        echo 'login anonymous'; \
         echo 'app_update '"${STEAMAPPID}"''; \
         echo 'quit'; \
     } > "${HOMEDIR}/${STEAMAPP}_update.txt"
