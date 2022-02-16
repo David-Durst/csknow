@@ -153,8 +153,8 @@ void Thinker::fire(ServerState::Client & curClient, const ServerState::Client & 
     Vec3 priorPos{priorClient.lastEyePosX, priorClient.lastEyePosY, priorClient.lastFootPosZ}; 
     Vec3 curPos{curClient.lastEyePosX, curClient.lastEyePosY, curClient.lastFootPosZ};
 
-    Ray eyeCoordinates = getEyeCoordinatesForPlayer(
-            {curClient.lastEyePosX, curClient.lastEyePosY, curClient.lastFootPosZ},
+    Ray eyeCoordinates = getEyeCoordinatesForPlayerGivenEyeHeight(
+            {curClient.lastEyePosX, curClient.lastEyePosY, curClient.lastEyePosZ},
             {curClient.lastEyeWithRecoilAngleX, curClient.lastEyeWithRecoilAngleY});
     AABB targetAABB = getAABBForPlayer(
             {targetClient.lastEyePosX, targetClient.lastEyePosY, targetClient.lastFootPosZ});
@@ -164,13 +164,20 @@ void Thinker::fire(ServerState::Client & curClient, const ServerState::Client & 
     bool stopToRetreat = executingPlan.movementType == MovementType::Retreat && 
         computeDistance(curPos, vec3tConv(executingPlan.waypoints.back())) > 50.;
     inSpray = haveAmmo && visible && !stopToRetreat;
-
+    
     bool stoppedEnoughToShoot = !skill.stopToShoot ||
         computeDistance(priorPos, curPos) < MAX_VELOCITY_WHEN_STOPPED;
 
     this->setButton(curClient, IN_ATTACK, 
             !attackLastFrame && aimingAtEnemy && inSpray && stoppedEnoughToShoot);
     this->setButton(curClient, IN_RELOAD, !haveAmmo);
+
+    thinkLog += "eye coordinates: " + eyeCoordinates.toString() + "\n";
+    thinkLog += "target AABB: " + targetAABB.toString() + "\n";
+    thinkLog += "aiming at enemy: " + std::to_string(aimingAtEnemy ? 1 : 0) + "\n";
+    thinkLog += "in spray: " + std::to_string(inSpray ? 1 : 0) + "\n";
+    thinkLog += "stopped enough to shoot: " + std::to_string(stoppedEnoughToShoot ? 1 : 0) + "\n";
+    numThinkLines += 5;
 }
 
 void Thinker::moveInDir(ServerState::Client & curClient, Vec2 dir) {
@@ -285,10 +292,6 @@ void Thinker::move(ServerState::Client & curClient, const ServerState::Client & 
                       << executingPlan.waypoints[executingPlan.curWaypoint].z << "\n";
             numThinkLines++;
         }
-
-        thinkStream << "in spray: "
-            << (inSpray ? 1 : 0) << "\n";
-        numThinkLines++;
 
         thinkStream << "cur angle: " 
             << currentAngles.x << "," << currentAngles.y << "\n";

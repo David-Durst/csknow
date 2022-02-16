@@ -119,6 +119,11 @@ struct Vec3 {
         result.z = x * other.y - y * other.x;
         return result;
     }
+
+    string toString() {
+        return "{" + std::to_string(x) + ", " + std::to_string(y) 
+            + ", " + std::to_string(z) + "}";
+    }
 };
 
 static inline __attribute__((always_inline))
@@ -185,6 +190,10 @@ struct Vec2 {
             this->y -= 360.;
         }
     }
+
+    string toString() {
+        return "{" + std::to_string(x) + ", " + std::to_string(y) + "}";
+    }
 };
 
 static inline __attribute__((always_inline))
@@ -217,6 +226,10 @@ public:
 
     Vec3 orig, dir, invdir;
     int dirIsNeg[3];
+
+    string toString() {
+        return "{" + orig.toString() + ", " + dir.toString() + "}";
+    }
 };
 
 struct AABB {
@@ -233,6 +246,10 @@ struct AABB {
     void coverAllZ() {
         min.z = -std::numeric_limits<double>::infinity();
         max.z = std::numeric_limits<double>::infinity();
+    }
+
+    string toString() {
+        return "{" + min.toString() + ", " + max.toString() + "}";
     }
 };
 
@@ -344,6 +361,12 @@ Ray getEyeCoordinatesForPlayer(Vec3 pos, Vec2 view) {
     //https://old.reddit.com/r/csmapmakers/comments/58ch3f/useful_console_commands_for_map_making_csgo/
     // don't negative view.y as it runs negative (it's pitch, not actually y), used in angleVectors
     return Ray({pos.x, pos.y, pos.z + EYE_HEIGHT}, angleVectors({view.x, view.y}));
+}
+
+static inline __attribute__((always_inline))
+Ray getEyeCoordinatesForPlayerGivenEyeHeight(Vec3 pos, Vec2 view) {
+    // same as above, but the pos.z is eye, not foot
+    return Ray({pos.x, pos.y, pos.z}, angleVectors({view.x, view.y}));
 }
 
 
