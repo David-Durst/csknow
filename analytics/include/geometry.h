@@ -120,6 +120,14 @@ struct Vec3 {
         return result;
     }
 
+    Vec3 operator*(double scale) const {
+        Vec3 result = *this;
+        result.x *= scale;
+        result.y *= scale;
+        result.z *= scale;
+        return result;
+    }
+
     string toString() {
         return "{" + std::to_string(x) + ", " + std::to_string(y) 
             + ", " + std::to_string(z) + "}";

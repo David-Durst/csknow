@@ -98,6 +98,9 @@ void Thinker::aimAt(ServerState::Client & curClient, const ServerState::Client &
             targetClient.lastEyePosY - curClient.lastEyePosY,
             targetClient.lastEyePosZ - curClient.lastEyePosZ
         };
+        Vec3 targetView = angleVectors({curClient.lastEyeWithRecoilAngleX, 
+                curClient.lastEyeWithRecoilAngleY});
+        targetVector = targetVector + targetView * HEAD_ADJUSTMENT;
     }
     else {
         targetVector = { 
