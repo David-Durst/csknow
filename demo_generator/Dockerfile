@@ -28,3 +28,4 @@ RUN { \
         echo 'app_update '"${STEAMAPPID}"''; \
         echo 'quit'; \
     } > "${HOMEDIR}/${STEAMAPP}_update.txt"
+CMD ["bash", "entry.sh"]
