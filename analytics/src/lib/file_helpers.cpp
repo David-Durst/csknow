@@ -111,12 +111,24 @@ vector<int64_t> getFileStartingRows(vector<string> filePaths, bool printProgress
     startingPointPerFile.resize(filePaths.size()+1);
     std::atomic<int64_t> filesProcessed = 0;
     startingPointPerFile[0] = 0;
+
+    if (filePaths.size() > 1) {
 #pragma omp parallel for
-    for (int64_t fileIndex = 0; fileIndex < filePaths.size(); fileIndex++) {
-        startingPointPerFile[fileIndex+1] = getRows(filePaths[fileIndex]);
-        filesProcessed++;
-        if (printProgressBar) {
-            printProgress((filesProcessed * 1.0) / filePaths.size());
+        for (int64_t fileIndex = 0; fileIndex < filePaths.size(); fileIndex++) {
+            startingPointPerFile[fileIndex+1] = getRows(filePaths[fileIndex]);
+            filesProcessed++;
+            if (printProgressBar) {
+                printProgress((filesProcessed * 1.0) / filePaths.size());
+            }
+        }
+    }
+    else {
+        for (int64_t fileIndex = 0; fileIndex < filePaths.size(); fileIndex++) {
+            startingPointPerFile[fileIndex+1] = getRows(filePaths[fileIndex]);
+            filesProcessed++;
+            if (printProgressBar) {
+                printProgress((filesProcessed * 1.0) / filePaths.size());
+            }
         }
     }
     if (printProgressBar) {
