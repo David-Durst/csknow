@@ -55,7 +55,7 @@ void updateThinkers(ServerState & state, string mapsPath, std::list<Thinker> & t
 }
 
 int main(int argc, char * argv[]) {
-    if (argc != 4) {
+    if (argc != 3) {
         std::cout << "please call this code 2 arguments: \n" 
             << "1. path/to/maps\n"
             << "2. path/to/data\n" << std::endl;
