@@ -5,15 +5,20 @@ RUN ${HOMEDIR}/update.sh
 USER root
 # DONT INSTALL c++, g++ works but c++ crashes for some reason
 RUN apt-get -y update && \
-    apt-get -y install less procps unzip zip python3 jq libgomp1 make g++ git cat
+    apt-get -y install less procps unzip zip python3 jq libgomp1 make g++ git
 RUN wget https://github.com/Kitware/CMake/releases/download/v3.22.2/cmake-3.22.2-linux-x86_64.sh && \
     chmod a+x cmake-3.22.2-linux-x86_64.sh && \
     mkdir cmake && \
     ./cmake-3.22.2-linux-x86_64.sh --skip-license --prefix=cmake && \
-    ln cmake/bin/cmake /usr/bin/cmake
+    update-alternatives --install /usr/bin/cmake cmake ${HOMEDIR}/cmake/bin/cmake 60
+    #&& \
+#    ln cmake/bin/cmake /usr/bin/cmake
 USER $USER
-RUN git clone https://github.com/David-Durst/csknow.git && \
-    cd csknow/analytics
+RUN git clone https://github.com/David-Durst/csknow.git 
+# && \
+    #cd csknow/analytics 
+    #&& \
+    #./scripts/bot_build.sh
 #RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" && \
 #    unzip awscliv2.zip
 #USER root
