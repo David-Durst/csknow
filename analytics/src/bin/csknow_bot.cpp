@@ -78,7 +78,7 @@ int main(int argc, char * argv[]) {
     while (true) {
         auto start = std::chrono::system_clock::now();
         state.loadServerState(dataPath);
-        std::chrono::duration<double> timePerTick(state.tickInterval);
+        std::chrono::duration<double> timePerTick(state.loadedSuccessfully ? state.tickInterval : 0.1);
         auto parseEnd = std::chrono::system_clock::now();
             
         if (!firstFrame) {
