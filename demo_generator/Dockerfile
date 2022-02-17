@@ -14,7 +14,7 @@ RUN wget https://github.com/Kitware/CMake/releases/download/v3.22.2/cmake-3.22.2
     #&& \
 #    ln cmake/bin/cmake /usr/bin/cmake
 USER $USER
-RUN git clone https://github.com/David-Durst/csknow.git  && echo "hi"
+RUN git clone https://github.com/David-Durst/csknow.git  && echo "hi3"
 # && \
     #cd csknow/analytics 
     #&& \

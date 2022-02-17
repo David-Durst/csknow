@@ -18,7 +18,7 @@ git pull
 mkdir -p ${script_dir}/../build
 cd ${script_dir}/../build
 cmake .. -DCMAKE_BUILD_TYPE=Release
-chmod a+x csknow_bot
 if make -j4; then
-    ${script_dir}/csknow_bot ${NONVOLUMESTEAMAPPDIR}/csgo/maps ${NONVOLUMESTEAMAPPDIR}/csgo/addons/sourcemod/bot-link-data
+    chmod a+x csknow_bot
+    ./csknow_bot ${NONVOLUMESTEAMAPPDIR}/csgo/maps ${NONVOLUMESTEAMAPPDIR}/csgo/addons/sourcemod/bot-link-data
 fi
