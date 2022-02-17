@@ -18,5 +18,5 @@ get_script_dir
 mkdir -p ${script_dir}/../build
 cd ${script_dir}/../build
 cmake .. -DCMAKE_BUILD_TYPE=Release
-chmod a+x csknow_bot
 make -j4
+chmod a+x csknow_bot

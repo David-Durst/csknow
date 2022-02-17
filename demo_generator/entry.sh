@@ -1,12 +1,6 @@
 #!/bin/bash
 set -x
-mkdir -p "${NONVOLUMESTEAMAPPDIR}" || true  
-
-bash "${STEAMCMDDIR}/steamcmd.sh" +login anonymous \
-				+force_install_dir "${NONVOLUMESTEAMAPPDIR}" \
-				+app_update "${NONVOLUMESTEAMAPPID}" \
-				+quit
-
+bash update.sh
 python3 -u upload_logs.py >> upload.log 2>> upload.log &
 
 # We assume that if the config is missing, that this is a fresh container
@@ -33,21 +27,6 @@ python3 -u upload_logs.py >> upload.log 2>> upload.log &
 # Believe it or not, if you don't do this srcds_run shits itself
 cd ${NONVOLUMESTEAMAPPDIR}
 
-bash "${NONVOLUMESTEAMAPPDIR}/srcds_run" -game "${STEAMAPP}" -console -autoupdate \
-			-steam_dir "${STEAMCMDDIR}" \
-			-steamcmd_script "${HOMEDIR}/${STEAMAPP}_update.txt" \
-			-usercon \
-			+fps_max "${SRCDS_FPSMAX}" \
-			-tickrate "${SRCDS_TICKRATE}" \
-			-port "${SRCDS_PORT}" \
-			+tv_port "${SRCDS_TV_PORT}" \
-			+clientport "${SRCDS_CLIENT_PORT}" \
-			-maxplayers_override "${SRCDS_MAXPLAYERS}" \
-			+game_type "${SRCDS_GAMETYPE}" \
-			+game_mode "${SRCDS_GAMEMODE}" \
-			+mapgroup "${SRCDS_MAPGROUP}" \
-			+map "${SRCDS_STARTMAP}" \
-			+rcon_password "${SRCDS_RCONPW}" \
-			+sv_password "${SRCDS_PW}" \
-			+sv_region "${SRCDS_REGION}" \
-			+sv_lan 1
+bash bot_run_no_build.sh &
+
+bash docker_run_csgo_bots.sh
