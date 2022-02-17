@@ -3,6 +3,9 @@ set -x
 bash update.sh
 python3 -u upload_logs.py >> upload.log 2>> upload.log &
 
+cd ~/csknow/analytics.sh
+bash bot_run_docker.sh &
+
 # We assume that if the config is missing, that this is a fresh container
 #if [ ! -f "${NONVOLUMESTEAMAPPDIR}/${STEAMAPP}/cfg/server.cfg" ]; then
 #	# Download & extract the config
@@ -26,7 +29,5 @@ python3 -u upload_logs.py >> upload.log 2>> upload.log &
 
 # Believe it or not, if you don't do this srcds_run shits itself
 cd ${NONVOLUMESTEAMAPPDIR}
-
-bash bot_run_no_build.sh &
 
 bash docker_run_csgo_bots.sh
