@@ -1,5 +1,5 @@
 FROM cm2network/csgo:latest 
-ENV NONVOLUMESTEAMAPPDIR "${HOMEDIR}/${STEAMAPP}-dedicated-non-volumne"
+ENV NONVOLUMESTEAMAPPDIR "${HOMEDIR}/${STEAMAPP}-dedicated-non-volume"
 ADD ./update.sh ${HOMEDIR}/update.sh
 RUN ${HOMEDIR}/update.sh
 USER root
@@ -20,12 +20,14 @@ RUN ./aws/install
 USER $USER
 ADD ./install_sourcemod.sh ${HOMEDIR}/install_sourcemod.sh
 RUN ${HOMEDIR}/install_sourcemod.sh ${NONVOLUMESTEAMAPPDIR}/csgo
+ADD ./install_link.sh ${HOMEDIR}/install_link.sh
+RUN ${HOMEDIR}/install_link.sh 
 ADD ./internal_scripts/server.cfg ${NONVOLUMESTEAMAPPDIR}/csgo/cfg/server.cfg
 ADD ./internal_scripts/gamemode_competitive.cfg ${NONVOLUMESTEAMAPPDIR}/csgo/cfg/gamemode_competitive.cfg
 ADD ./internal_scripts/gamemode_competitive_server.cfg ${NONVOLUMESTEAMAPPDIR}/csgo/cfg/gamemode_competitive_server.cfg
 ADD ./internal_scripts/gamemode_casual_server.cfg ${NONVOLUMESTEAMAPPDIR}/csgo/cfg/gamemode_casual_server.cfg
-ADD ./internal_scripts/run_csgo_bots.sh ${NONVOLUMESTEAMAPPDIR}/docker_run_csgo_bots.sh
-ADD ./internal_scripts/run_csgo_bots_2v1.sh ${NONVOLUMESTEAMAPPDIR}/docker_run_csgo_bots_2v1.sh
+ADD ./internal_scripts/docker_run_csgo_bots_1v1.sh ${NONVOLUMESTEAMAPPDIR}/docker_run_csgo_bots_1v1.sh
+ADD ./internal_scripts/docker_run_csgo_bots_2v1.sh ${NONVOLUMESTEAMAPPDIR}/docker_run_csgo_bots_2v1.sh
 ADD ./maps/bot_playground.bsp ./maps/bot_playground.nav \
     ./maps/bot_playground_2v1.bsp ./maps/bot_playground_2v1.nav ${NONVOLUMESTEAMAPPDIR}/csgo/maps/
 ADD ./entry.sh ${HOMEDIR}/entry.sh
