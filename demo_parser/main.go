@@ -37,12 +37,20 @@ const localKillsCSVName = "local_kills.csv"
 const localEquipmentDimTable = "dimension_table_equipment.csv"
 const localGameTypeDimTable = "dimension_table_game_types.csv"
 const localHitGroupDimTable = "dimension_table_hit_groups.csv"
-const unprocessedPrefix = "demos/unprocessed2/"
-const processedPrefix = "demos/processed2/"
-const processedSmallPrefix = "demos/processed2_small/"
-const csvPrefixBase = "demos/csvs3/"
-const csvPrefixLocal = csvPrefixBase + "local/"
-const csvPrefixGlobal = csvPrefixBase +  "global/"
+var unprocessedPrefix = "demos/unprocessed2/"
+var processedPrefix = "demos/processed2/"
+var processedSmallPrefix = "demos/processed2_small/"
+var csvPrefixBase = "demos/csvs3/"
+// these will be used to replace the prefixes if using bot train data set
+const trainUnprocessedPrefix = "demos/train_data/unprocessed/"
+const trainProcessedPrefix = "demos/train_data/processed/"
+const trainCsvPrefixBase = "demos/train_data/csvs/"
+var csvPrefixLocal string
+var csvPrefixGlobal string
+func updatePrefixs() {
+	csvPrefixLocal = csvPrefixBase + "local/"
+	csvPrefixGlobal = csvPrefixBase + "global/"
+}
 var gameTypes = []string{"pros","bots"}
 const bucketName = "csknow"
 
@@ -83,6 +91,7 @@ func saveOutputStateCSV(idState *IDState) {
 func main() {
 	startIDState := IDState{0, 0, 0, 0, 0, 0, 0, 0, 0 , 0, 0, 0, 0, 0, 0}
 
+	trainDataFlag := flag.Bool("t", true, "set if not using bot training data")
 	// if reprocessing, don't move the demos
 	firstRunPtr := flag.Bool("f", true, "set if first file processed is first overall")
 	reprocessFlag := flag.Bool("r", false, "set for reprocessing demos")
@@ -108,6 +117,12 @@ func main() {
 		os.Exit(0)
 	}
 
+	if *trainDataFlag {
+		unprocessedPrefix = trainUnprocessedPrefix
+		processedSmallPrefix = trainProcessedPrefix
+		csvPrefixBase = trainCsvPrefixBase
+		updatePrefixs()
+	}
 
 	sess := session.Must(session.NewSession(&aws.Config{
 		Region:      aws.String("us-east-1")},
