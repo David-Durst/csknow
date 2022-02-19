@@ -1,3 +1,5 @@
+map=${1:-bot_playground}
+
 mkdir -p ../demos
 
 script_dir="tmp"
@@ -21,7 +23,6 @@ iam_role=$(cat ${script_dir}/../private/.aws_csgo_server_role)
 
 docker run --name durst_csgo \
     --rm \
-    -e SRCDS_MAPGROUP=mg_de_dust2 -e SRCDS_STARTMAP=de_dust2 \
-    -e RUNNING_IN_EC2=1 -e ROLE=${iam_role} \
+    -e RUNNING_IN_EC2=1 -e ROLE=${iam_role} -e MAP=${map} \
     durst/csgo:0.3
 

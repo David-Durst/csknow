@@ -26,8 +26,7 @@ ADD ./internal_scripts/server.cfg ${NONVOLUMESTEAMAPPDIR}/csgo/cfg/server.cfg
 ADD ./internal_scripts/gamemode_competitive.cfg ${NONVOLUMESTEAMAPPDIR}/csgo/cfg/gamemode_competitive.cfg
 ADD ./internal_scripts/gamemode_competitive_server.cfg ${NONVOLUMESTEAMAPPDIR}/csgo/cfg/gamemode_competitive_server.cfg
 ADD ./internal_scripts/gamemode_casual_server.cfg ${NONVOLUMESTEAMAPPDIR}/csgo/cfg/gamemode_casual_server.cfg
-ADD ./internal_scripts/docker_run_csgo_bots_1v1.sh ${NONVOLUMESTEAMAPPDIR}/docker_run_csgo_bots_1v1.sh
-ADD ./internal_scripts/docker_run_csgo_bots_2v1.sh ${NONVOLUMESTEAMAPPDIR}/docker_run_csgo_bots_2v1.sh
+ADD ./internal_scripts/docker_run_csgo_bots.sh ${NONVOLUMESTEAMAPPDIR}/docker_run_csgo_bots.sh
 ADD ./maps/bot_playground.bsp ./maps/bot_playground.nav \
     ./maps/bot_playground_2v1.bsp ./maps/bot_playground_2v1.nav ${NONVOLUMESTEAMAPPDIR}/csgo/maps/
 ADD ./entry.sh ${HOMEDIR}/entry.sh

@@ -10,4 +10,4 @@ bash ~/install_link.sh
 # Believe it or not, if you don't do this srcds_run shits itself
 cd ${NONVOLUMESTEAMAPPDIR}
 
-bash docker_run_csgo_bots_1v1.sh
+bash docker_run_csgo_bots.sh

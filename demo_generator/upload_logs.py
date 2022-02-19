@@ -27,7 +27,7 @@ while True:
         os.environ["AWS_ACCESS_KEY_ID"] = values["AccessKeyId"]
         os.environ["AWS_SECRET_ACCESS_KEY"] = values["SecretAccessKey"]
         os.environ["AWS_SESSION_TOKEN"] = values["Token"]
-    files = glob.glob(cur_path + '/csgo-dedicated-non-volumne/csgo/*.dem') # * means all if need specific format then *.csv
+    files = glob.glob(os.environ['NONVOLUMESTEAMAPPDIR'] + '/csgo/*.dem') # * means all if need specific format then *.csv
     files.sort(key=os.path.getmtime)
     print(f"found {len(files)} files, need to upload {len(files[:-1])} of them")
     # leave the most recently touched demo, as cs is still writing to it
