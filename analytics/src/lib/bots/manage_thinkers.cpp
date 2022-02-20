@@ -44,12 +44,6 @@ void updateThinkers(ServerState & state, string mapsPath, std::list<Thinker> & t
     string navPath = mapsPath + "/" + state.mapName + ".nav";
     bool newBotsForThisGame = false;
 
-    std::filesystem::directory_entry latestDemoFile = getLatestDemoFile(mapsPath);
-    if (firstGame || latestDemoFile.path() != curDemoFile.path()) {
-        curDemoFile = latestDemoFile;
-        botNameToSkill.clear();
-    }
-    firstGame = false;
 
     std::map<int32_t, bool> botCSGOIdsToAdd;
     std::map<int32_t, string> botCSGOIdsToNames;
@@ -71,8 +65,19 @@ void updateThinkers(ServerState & state, string mapsPath, std::list<Thinker> & t
     }
 
     // add all uncontrolled bots
+    bool firstAdd = true;
     for (const auto & [csgoId, toAdd] : botCSGOIdsToAdd) {
         if (toAdd) {
+            // if we are adding any bots, update the demo file list
+            if (firstAdd) {
+                std::filesystem::directory_entry latestDemoFile = getLatestDemoFile(mapsPath);
+                if (firstGame || latestDemoFile.path() != curDemoFile.path()) {
+                    curDemoFile = latestDemoFile;
+                    botNameToSkill.clear();
+                }
+                firstGame = false;
+            }
+
             Skill skill;
             string botName = botCSGOIdsToNames[csgoId];
             // if don't have a skill for this bot, generate one
