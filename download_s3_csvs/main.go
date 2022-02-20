@@ -160,6 +160,7 @@ func main() {
 			downloadCSVForDemo(downloader, localKey, "defusals")
 			downloadCSVForDemo(downloader, localKey, "explosions")
 			downloadCSVForDemo(downloader, localKey, "kills")
+            downloadCSVForDemo(downloader, localKey, "skill")
 			numDownloaded++
 		}
 
