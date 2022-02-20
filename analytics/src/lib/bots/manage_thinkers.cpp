@@ -31,10 +31,10 @@ void savePlayersFile() {
     std::filesystem::path p = curDemoFile.path();
     std::ofstream fsPlayers(p.replace_extension(".csv"));
     p += "_skills";
-    fsPlayers << "name,maxInaccuracy,stopToShoot,movementPolicy\n";
+    fsPlayers << "name,maxInaccuracy,stopToShoot,movementPolicy,demo_file\n";
     for (const auto & [name, skill] : botNameToSkill) {
         fsPlayers << name << "," << skill.maxInaccuracy << "," << (skill.stopToShoot ? 1 : 0)
-            << "," << enumAsInt(skill.movementPolicy) << "\n";
+            << "," << enumAsInt(skill.movementPolicy) << "," << curDemoFile.path().filename() << "\n";
     }
     fsPlayers.close();
 
