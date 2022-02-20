@@ -1,58 +1,13 @@
 #include "load_save_bot_data.h"
 #include "bots/thinker.h"
+#include "bots/manage_thinkers.h"
 #include "navmesh/nav_file.h"
 #include <iostream>
 #include <thread>
 #include <chrono>
 #include <list>
 #include <map>
-
-std::vector<Skill> botSkills {{0.001, true, MovementPolicy::PushOnly}, {7.5, false, MovementPolicy::PushAndRetreat}};
-
-void updateThinkers(ServerState & state, string mapsPath, std::list<Thinker> & thinkers) {
-    string navPath = mapsPath + "/" + state.mapName + ".nav";
-
-    std::map<int32_t, bool> botCSGOIdsToAdd;
-    for (const auto & client : state.clients) {
-        if (client.isBot) {
-            botCSGOIdsToAdd.insert({client.csgoId, true});
-        }
-    }
-
-    // remove all elements that aren't currently bots
-    thinkers.remove_if([&](const Thinker & thinker){ 
-            return botCSGOIdsToAdd.find(thinker.getCurBotCSGOId()) == botCSGOIdsToAdd.end() ; 
-        });
-
-    // track if have at least one skilled bot
-    bool haveSkilledBot = false;
-    // mark already controlled bots as not needed to be added
-    for (const auto & thinker : thinkers) {
-        if (thinker.getSkill().maxInaccuracy == botSkills[0].maxInaccuracy) {
-            haveSkilledBot = true;
-        }
-        botCSGOIdsToAdd[thinker.getCurBotCSGOId()] = false;
-    }
-
-    // add all uncontrolled bots
-    for (const auto & [csgoId, toAdd] : botCSGOIdsToAdd) {
-        if (toAdd) {
-            // add a one skilled if none, others are all bad
-            Skill skill = !haveSkilledBot ?
-                botSkills[0] : botSkills[1];
-            haveSkilledBot = true;
-            //thinkers.emplace_back(state, csgoId, navPath, skill);
-            thinkers.emplace_back(state, csgoId, navPath, botSkills[1]);
-        }
-    }
-
-    // clear all old inputs
-    // and force existing players to put a new one in
-    // this will happen infrequrntly, so unlikely to cause issue with frequent missed inputs
-    for (size_t i = 0; i < state.inputsValid.size(); i++) {
-        state.inputsValid[i] = false;
-    }
-}
+#include <filesystem>
 
 int main(int argc, char * argv[]) {
     if (argc != 3) {
