@@ -37,6 +37,9 @@ while True:
         aws_name = p.stem + str(machine_id) + p.suffix 
         os.system(f"aws s3 cp {f} s3://csknow/demos/train_data/unprocessed/bots/{aws_name}")
         os.remove(f)
+        skill_path = p.with_suffix(".csv")
+        if os.path.exists(skill_path):
+            os.system(f"aws s3 cp {str(skill_path)} s3://csknow/demos/train_data/csvs/local/{aws_name}_skill.csv")
     time.sleep(60)
     num_sleeps += 1
     if num_sleeps == 10:
