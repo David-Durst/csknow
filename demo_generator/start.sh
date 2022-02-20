@@ -21,7 +21,7 @@ get_script_dir
 
 iam_role=$(cat ${script_dir}/../private/.aws_csgo_server_role)
 
-docker run --name durst_csgo \
+docker run --name durst_csgo_${map} \
     --rm \
     -e RUNNING_IN_EC2=1 -e ROLE=${iam_role} -e MAP=${map} \
     durst/csgo:0.3
