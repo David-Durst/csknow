@@ -22,11 +22,18 @@ const localEquipmentDimTable = "dimension_table_equipment.csv"
 const localGameTypeDimTable = "dimension_table_game_types.csv"
 const localHitGroupDimTable = "dimension_table_hit_groups.csv"
 const alreadyDownloadedFileName = "../local_data/already_downloaded.txt"
-const processedPrefix = "demos/processed2/"
-const processedSmallPrefix = "demos/processed2_small/"
-const csvPrefixBase = "demos/csvs3/"
-const csvPrefixLocal = csvPrefixBase + "local/"
-const csvPrefixGlobal = csvPrefixBase +  "global/"
+var processedPrefix = "demos/processed2/"
+var processedSmallPrefix = "demos/processed2_small/"
+var csvPrefixBase = "demos/csvs3/"
+// these will be used to replace the prefixes if using bot train data set
+const trainProcessedPrefix = "demos/train_data/processed/"
+const trainCsvPrefixBase = "demos/train_data/csvs/"
+var csvPrefixLocal string
+var csvPrefixGlobal string
+func updatePrefixs() {
+	csvPrefixLocal = csvPrefixBase + "local/"
+	csvPrefixGlobal = csvPrefixBase + "global/"
+}
 const bucketName = "csknow"
 
 func fillAlreadyDownloaded(alreadyDownloaded *map[string]struct{}) {
@@ -89,10 +96,17 @@ func main() {
 	var needToDownload []string
 	fillAlreadyDownloaded(&alreadyDownloaded)
 
+	trainDataFlag := flag.Bool("t", true, "set if not using bot training data")
 	localFlag := flag.Bool("l", false, "set for desktop runs that only download a few csvs")
 	keyFilterFlag := flag.String("f", "", "set for adding to local runs files that contain a substring")
 	subsetFlag := flag.Bool("s", false, "set for server runs that only download a subset csvs (but more than -l)")
 	flag.Parse()
+
+	if *trainDataFlag {
+		processedSmallPrefix = trainProcessedPrefix
+		csvPrefixBase = trainCsvPrefixBase
+		updatePrefixs()
+	}
 
 	sess := session.Must(session.NewSession(&aws.Config{
 		Region:      aws.String("us-east-1"),
