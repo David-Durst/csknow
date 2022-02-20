@@ -134,6 +134,7 @@ func main() {
 	uploader := s3manager.NewUploader(sess)
 
 	var filesToMove []string
+	var destinationAppendix []string
 	sourcePrefix := unprocessedPrefix
 	if *reprocessFlag {
 		sourcePrefix = processedPrefix
@@ -163,9 +164,6 @@ func main() {
 	}
 	for gameTypeIndex, gameTypeString := range localGameTypes {
 		sourcePrefixWithType := sourcePrefix + gameTypeString + "/"
-		if *reprocessFlag || *subsetReprocessFlag {
-			sourcePrefixWithType = sourcePrefix
-		}
 		svc.ListObjectsV2Pages(&s3.ListObjectsV2Input{
 			Bucket: aws.String(bucketName),
 			Prefix: aws.String(sourcePrefixWithType),
@@ -183,6 +181,7 @@ func main() {
 				firstRun = false
 				uploadCSVs(uploader, *obj.Key)
 				filesToMove = append(filesToMove, *obj.Key)
+				destinationAppendix = append(destinationAppendix, gameTypeString + "/")
 			}
 
 			return true
@@ -198,11 +197,11 @@ func main() {
 	uploadFile(uploader, outputStateCSVName, "global_id_state", csvPrefixBase)
 
 	if !*reprocessFlag && !*subsetReprocessFlag {
-		for _, fileName := range filesToMove {
+		for i, fileName := range filesToMove {
 			svc.CopyObject(&s3.CopyObjectInput{
 				CopySource: aws.String(bucketName + "/" + fileName),
 				Bucket: aws.String(bucketName),
-				Key: aws.String(processedPrefix + "/" + filepath.Base(fileName)),
+				Key: aws.String(processedPrefix + destinationAppendix[i] + filepath.Base(fileName)),
 			})
 			svc.DeleteObject(&s3.DeleteObjectInput{
 				Bucket: aws.String(bucketName),
