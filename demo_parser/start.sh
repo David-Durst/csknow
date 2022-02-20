@@ -22,5 +22,5 @@ iam_role=$(cat ${script_dir}/../private/.aws_csgo_server_role)
 docker run --name durst_csgo_demo_parser \
     --rm \
     -e RUNNING_IN_EC2=1 -e ROLE=${iam_role} \
-    durst/csgo-demo-parser:0.4
+    durst/csgo-demo-parser:0.5
 
