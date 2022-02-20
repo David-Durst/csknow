@@ -107,7 +107,7 @@ func finishGarbageRound(round * RoundTracker, idState IDState, tWins int, ctWins
 
 func processFile(unprocessedKey string, localDemName string, idState * IDState, firstRun bool, gameType int) {
 	demFilePath := path.Base(unprocessedKey)
-	fmt.Printf("localDemName: %s", localDemName)
+	fmt.Printf("localDemName: %s\n", localDemName)
 	f, err := os.Open(localDemName)
 	if err != nil {
 		panic(err)
