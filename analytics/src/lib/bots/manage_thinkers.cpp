@@ -2,6 +2,7 @@
 // Created by durst on 2/20/22.
 //
 #include "bots/manage_thinkers.h"
+using namespace std::chrono_literals;
 
 std::vector<Skill> botSkills {{0.001, true, MovementPolicy::PushOnly}, {7.5, false, MovementPolicy::PushAndRetreat}};
 bool firstGame = true;
@@ -11,7 +12,7 @@ std::random_device rd;  // Will be used to obtain a seed for the random number e
 std::mt19937 accuracyGen(rd()), otherSkillGen(rd()); // Standard mersenne_twister_engine seeded with rd()
 std::uniform_real_distribution<> accuracyDis(0., 10.), otherSkillDis(0., 1.);
 
-std::filesystem::directory_entry getLatestDemoFile(string mapsPath) {
+std::filesystem::directory_entry getLatestDemoFile(string mapsPath, bool deleteOldDemoFiles) {
     bool firstFile = true;
     std::filesystem::directory_entry mostRecentEntry;
 
@@ -20,6 +21,12 @@ std::filesystem::directory_entry getLatestDemoFile(string mapsPath) {
             if (firstFile || mostRecentEntry.last_write_time() < entry.last_write_time()) {
                 mostRecentEntry = entry;
                 firstFile = false;
+            }
+
+            if (deleteOldDemoFiles) {
+                if (std::filesystem::file_time_type::clock::now() - entry.last_write_time() > 3min) {
+                    std::filesystem::remove(entry.path());
+                }
             }
         }
     }
@@ -40,7 +47,7 @@ void savePlayersFile() {
 
 }
 
-void updateThinkers(ServerState & state, string mapsPath, std::list<Thinker> & thinkers) {
+void updateThinkers(ServerState & state, string mapsPath, std::list<Thinker> & thinkers, bool deleteOldDemoFiles) {
     string navPath = mapsPath + "/" + state.mapName + ".nav";
     bool newBotsForThisGame = false;
 
@@ -70,7 +77,7 @@ void updateThinkers(ServerState & state, string mapsPath, std::list<Thinker> & t
         if (toAdd) {
             // if we are adding any bots, update the demo file list
             if (firstAdd) {
-                std::filesystem::directory_entry latestDemoFile = getLatestDemoFile(mapsPath);
+                std::filesystem::directory_entry latestDemoFile = getLatestDemoFile(mapsPath, deleteOldDemoFiles);
                 if (firstGame || latestDemoFile.path() != curDemoFile.path()) {
                     curDemoFile = latestDemoFile;
                     botNameToSkill.clear();

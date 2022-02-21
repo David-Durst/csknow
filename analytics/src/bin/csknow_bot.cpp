@@ -10,14 +10,15 @@
 #include <filesystem>
 
 int main(int argc, char * argv[]) {
-    if (argc != 3) {
-        std::cout << "please call this code 2 arguments: \n" 
+    if (argc != 3 && argc != 4) {
+        std::cout << "please call this code 2 or 3 arguments: \n"
             << "1. path/to/maps\n"
-            << "2. path/to/data\n" << std::endl;
+            << "2. path/to/data\n"
+            << "3. delete (if delete old demo files, optional)\n" << std::endl;
         return 1;
     }
     string mapsPath = argv[1], dataPath = argv[2];
-
+    bool deleteOldDemos = argc == 4;
 
     ServerState state;
     //Thinker thinker(state, 3, navPath, true);
@@ -53,7 +54,7 @@ int main(int argc, char * argv[]) {
             state.numThinkLines = 0;
         }
         if (state.loadedSuccessfully) {
-            updateThinkers(state, mapsPath, thinkers);
+            updateThinkers(state, mapsPath, thinkers, deleteOldDemos);
             for (auto & thinker : thinkers) {
                 thinker.think();
             }
