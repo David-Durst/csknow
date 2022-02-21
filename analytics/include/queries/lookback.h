@@ -27,6 +27,11 @@ int computeMaxLookbackDemoTicks(const TickRates & tickRates) {
     return ceil(tickRates.demoTickRate * maxLookBackTime / 1000.0);
 }
 
+static inline __attribute__((always_inline))
+double secondsBetweenTicks(const Ticks & ticks, TickRates tickRates, int64_t startTick, int64_t endTick) {
+    return (ticks.gameTickNumber[endTick] - ticks.gameTickNumber[startTick]) / static_cast<double>(tickRates.gameTickRate);
+}
+
 /**
  * Convert number of game ticks back to number of demo ticks back
  * @param ticks vector of demo ticks

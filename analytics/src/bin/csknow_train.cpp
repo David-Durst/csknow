@@ -11,6 +11,7 @@
 #include "load_cover.h"
 #include "navmesh/nav_file.h"
 #include "queries/nav_mesh.h"
+#include "queries/train_dataset.h"
 #include <filesystem>
 namespace fs = std::filesystem;
 
@@ -91,5 +92,11 @@ int main(int argc, char * argv[]) {
     std::cout << "num elements in plants: " << plants.size << std::endl;
     std::cout << "num elements in defusals: " << defusals.size << std::endl;
     std::cout << "num elements in explosions: " << explosions.size << std::endl;
+
+
+
+    TrainDatasetResult trainDatasetResult = queryTrainDataset(games, rounds, ticks, players, playerAtTick);
+
+
 
 }
