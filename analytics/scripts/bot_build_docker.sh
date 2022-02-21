@@ -14,5 +14,10 @@ get_script_dir () {
 }
 get_script_dir
 
-cd ${script_dir}/../build
-./csknow_bot ${NONVOLUMESTEAMAPPDIR}/csgo/maps ${NONVOLUMESTEAMAPPDIR}/csgo/addons/sourcemod/bot-link-data
+mkdir -p ${script_dir}/../build
+cd ${script_dir}/..
+git pull
+cd build
+cmake .. -DCMAKE_BUILD_TYPE=Release
+make -j4
+chmod a+x csknow_bot
