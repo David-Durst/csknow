@@ -13,8 +13,8 @@
 #ifndef CSKNOW_MANAGE_THINKERS_H
 #define CSKNOW_MANAGE_THINKERS_H
 
-std::filesystem::directory_entry getLatestDemoFile(string mapsPath, bool deleteOldDemoFiles);
+std::filesystem::directory_entry getLatestDemoFile(string mapsPath);
 void savePlayersFile();
-void updateThinkers(ServerState & state, string mapsPath, std::list<Thinker> & thinkers, bool deleteOldDemoFiles);
+void updateThinkers(ServerState & state, string mapsPath, std::list<Thinker> & thinkers);
 
 #endif //CSKNOW_MANAGE_THINKERS_H

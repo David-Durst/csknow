@@ -20,5 +20,5 @@ git pull
 cmake .. -DCMAKE_BUILD_TYPE=Release
 if make -j4; then
     chmod a+x csknow_bot
-    ./csknow_bot ${NONVOLUMESTEAMAPPDIR}/csgo/maps ${NONVOLUMESTEAMAPPDIR}/csgo/addons/sourcemod/bot-link-data delete
+    ./csknow_bot ${NONVOLUMESTEAMAPPDIR}/csgo/maps ${NONVOLUMESTEAMAPPDIR}/csgo/addons/sourcemod/bot-link-data
 fi

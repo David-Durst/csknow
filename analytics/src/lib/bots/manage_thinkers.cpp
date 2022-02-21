@@ -1,6 +1,7 @@
 //
 // Created by durst on 2/20/22.
 //
+#include <algorithm>
 #include "bots/manage_thinkers.h"
 using namespace std::chrono_literals;
 
@@ -12,26 +13,25 @@ std::random_device rd;  // Will be used to obtain a seed for the random number e
 std::mt19937 accuracyGen(rd()), otherSkillGen(rd()); // Standard mersenne_twister_engine seeded with rd()
 std::uniform_real_distribution<> accuracyDis(0., 10.), otherSkillDis(0., 1.);
 
-std::filesystem::directory_entry getLatestDemoFile(string mapsPath, bool deleteOldDemoFiles) {
-    bool firstFile = true;
-    std::filesystem::directory_entry mostRecentEntry;
+std::filesystem::directory_entry getLatestDemoFile(string mapsPath) {
+    std::filesystem::directory_entry defaultEntry;
+    std::vector<std::filesystem::directory_entry> entries;
 
     for (auto &entry : std::filesystem::directory_iterator(mapsPath + "/../")) {
         if (entry.is_regular_file() && entry.path().has_extension() && entry.path().extension() == ".dem") {
-            if (firstFile || mostRecentEntry.last_write_time() < entry.last_write_time()) {
-                mostRecentEntry = entry;
-                firstFile = false;
-            }
-
-            if (deleteOldDemoFiles) {
-                if (std::filesystem::file_time_type::clock::now() - entry.last_write_time() > 3min) {
-                    std::filesystem::remove(entry.path());
-                }
-            }
+            entries.push_back(entry);
         }
     }
 
-    return mostRecentEntry;
+    std::sort(entries.begin(), entries.end(),
+              [](std::filesystem::directory_entry a, std::filesystem::directory_entry b) { return a.path() > b.path(); });
+
+    if (entries.empty()) {
+        return defaultEntry;
+    }
+    else {
+        return entries.front();
+    }
 }
 
 void savePlayersFile() {
@@ -47,7 +47,7 @@ void savePlayersFile() {
 
 }
 
-void updateThinkers(ServerState & state, string mapsPath, std::list<Thinker> & thinkers, bool deleteOldDemoFiles) {
+void updateThinkers(ServerState & state, string mapsPath, std::list<Thinker> & thinkers) {
     string navPath = mapsPath + "/" + state.mapName + ".nav";
     bool newBotsForThisGame = false;
 
@@ -83,6 +83,7 @@ void updateThinkers(ServerState & state, string mapsPath, std::list<Thinker> & t
                     botNameToSkill.clear();
                 }
                 firstGame = false;
+                firstAdd = false;
             }
 
             Skill skill;
