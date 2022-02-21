@@ -119,7 +119,7 @@ func main() {
 
 	if *trainDataFlag {
 		unprocessedPrefix = trainUnprocessedPrefix
-		processedSmallPrefix = trainProcessedPrefix
+		processedPrefix = trainProcessedPrefix
 		csvPrefixBase = trainCsvPrefixBase
 		updatePrefixs()
 	}
@@ -155,6 +155,20 @@ func main() {
 	if *result.KeyCount == 1 && !*reprocessFlag && !*subsetReprocessFlag {
 		downloadFile(downloader, *result.Contents[0].Key, inputStateCSVName)
 		startIDState = parseInputStateCSV()
+	}
+
+	gamesAWS := csvPrefixGlobal + gamesCSVName
+	gamesResult, gamesErr := svc.ListObjectsV2(&s3.ListObjectsV2Input{
+		Bucket: aws.String(bucketName),
+		Prefix: &gamesAWS,
+	})
+	if gamesErr != nil {
+		panic(gamesErr)
+	}
+
+	// if not reprocessing and already have an games file, start from there
+	if *gamesResult.KeyCount == 1 && !*reprocessFlag && !*subsetReprocessFlag {
+		downloadFile(downloader, *gamesResult.Contents[0].Key, gamesCSVName)
 	}
 
 	i := 0
