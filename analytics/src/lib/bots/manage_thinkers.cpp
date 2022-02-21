@@ -102,6 +102,7 @@ void updateThinkers(ServerState & state, string mapsPath, std::list<Thinker> & t
                 newBotsForThisGame = true;
             }
             skill = botNameToSkill[botName];
+            std::cout << "map :" << state.mapName << ", navPath " << navPath << std::endl;
             thinkers.emplace_back(state, csgoId, navPath, skill);
         }
     }
