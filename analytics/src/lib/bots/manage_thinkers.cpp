@@ -77,7 +77,7 @@ void updateThinkers(ServerState & state, string mapsPath, std::list<Thinker> & t
         if (toAdd) {
             // if we are adding any bots, update the demo file list
             if (firstAdd) {
-                std::filesystem::directory_entry latestDemoFile = getLatestDemoFile(mapsPath, deleteOldDemoFiles);
+                std::filesystem::directory_entry latestDemoFile = getLatestDemoFile(mapsPath);
                 if (firstGame || latestDemoFile.path() != curDemoFile.path()) {
                     curDemoFile = latestDemoFile;
                     botNameToSkill.clear();
