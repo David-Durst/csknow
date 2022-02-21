@@ -47,6 +47,10 @@ void savePlayersFile() {
 
 }
 
+bool haveLatestDemoFile(string mapsPath) {
+    return getLatestDemoFile(mapsPath) == curDemoFile.path());
+}
+
 void updateThinkers(ServerState & state, string mapsPath, std::list<Thinker> & thinkers) {
     string navPath = mapsPath + "/" + state.mapName + ".nav";
     bool newBotsForThisGame = false;
