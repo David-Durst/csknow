@@ -201,6 +201,11 @@ func main() {
 			return true
 		})
 	}
+
+	if len(filesToMove) == 0 {
+		os.Exit(0)
+	}
+
 	uploadFile(uploader, gamesCSVName, "global_games", csvPrefixGlobal)
 	uploadFile(uploader, localEquipmentDimTable, "dimension_table_equipment", csvPrefixGlobal)
 	uploadFile(uploader, localGameTypeDimTable, "dimension_table_game_types", csvPrefixGlobal)
