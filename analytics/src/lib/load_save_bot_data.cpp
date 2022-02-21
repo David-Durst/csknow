@@ -33,11 +33,14 @@ void ServerState::loadGeneralState(string generalFilePath) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, roundNumber);
         }
         else if (colNumber == 2) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, mapNumber);
+        }
+        else if (colNumber == 3) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, tickInterval);
             rowNumber++;
             arrayEntry++;
         }
-        colNumber = (colNumber + 1) % 3;
+        colNumber = (colNumber + 1) % 4;
     }
     closeMMapFile({fd, stats, file});
 }

@@ -8,6 +8,7 @@ using namespace std::chrono_literals;
 std::vector<Skill> botSkills {{0.001, true, MovementPolicy::PushOnly}, {7.5, false, MovementPolicy::PushAndRetreat}};
 bool firstGame = true;
 std::filesystem::directory_entry curDemoFile;
+int32_t curMapNumber = -1;
 std::map<string, Skill> botNameToSkill;
 std::random_device rd;  // Will be used to obtain a seed for the random number engine
 std::mt19937 accuracyGen(rd()), otherSkillGen(rd()); // Standard mersenne_twister_engine seeded with rd()
@@ -48,13 +49,18 @@ void savePlayersFile() {
 }
 
 bool haveLatestDemoFile(string mapsPath) {
-    return getLatestDemoFile(mapsPath) == curDemoFile.path());
+    return getLatestDemoFile(mapsPath) == curDemoFile.path();
 }
 
 void updateThinkers(ServerState & state, string mapsPath, std::list<Thinker> & thinkers) {
     string navPath = mapsPath + "/" + state.mapName + ".nav";
     bool newBotsForThisGame = false;
 
+    // on each new game, clear all the thinkers out
+    if (state.mapNumber != curMapNumber) {
+        curMapNumber = state.mapNumber;
+        thinkers.clear();
+    }
 
     std::map<int32_t, bool> botCSGOIdsToAdd;
     std::map<int32_t, string> botCSGOIdsToNames;
@@ -104,7 +110,7 @@ void updateThinkers(ServerState & state, string mapsPath, std::list<Thinker> & t
             thinkers.emplace_back(state, csgoId, navPath, skill);
         }
     }
-
+    
     if (newBotsForThisGame) {
         savePlayersFile();
     }

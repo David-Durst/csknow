@@ -54,9 +54,6 @@ int main(int argc, char * argv[]) {
         }
         if (state.loadedSuccessfully) {
             updateThinkers(state, mapsPath, thinkers);
-            if (!haveLatestDemoFile(mapsPath)) {
-                int x = 1;
-            }
             for (auto & thinker : thinkers) {
                 thinker.think();
             }

@@ -30,21 +30,20 @@ while True:
     files = glob.glob(os.environ['NONVOLUMESTEAMAPPDIR'] + '/csgo/*.dem') # * means all if need specific format then *.csv
     files.sort(key=os.path.getmtime)
     print(f"found {len(files)} files, need to upload {len(files[:-1])} of them")
-    bot_running = False
     # leave the most recently touched demo, as cs is still writing to it
     for f in files[:-1]:
         print("moving file:" + str(f))
         p = Path(f)
         aws_name = p.stem + str(machine_id) + p.suffix 
         os.system(f"aws s3 cp {f} s3://csknow/demos/train_data/unprocessed/bots/{aws_name}")
+        os.remove(f)
         skill_path = p.with_suffix(".csv")
         if os.path.exists(skill_path):
-            bot_running = True
             os.system(f"aws s3 cp {str(skill_path)} s3://csknow/demos/train_data/csvs/local/{aws_name}_skill.csv")
+            os.remove(skill_path)
     # bot will handle deleting demos normally, only if no bot program running
     if not bot_running:
         for f in files[:-1]:
-            os.remove(f)
     time.sleep(60)
     num_sleeps += 1
     if num_sleeps == 10:
