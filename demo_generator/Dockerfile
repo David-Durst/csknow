@@ -12,7 +12,6 @@ RUN wget https://github.com/Kitware/CMake/releases/download/v3.22.2/cmake-3.22.2
     ./cmake-3.22.2-linux-x86_64.sh --skip-license --prefix=cmake && \
     update-alternatives --install /usr/bin/cmake cmake ${HOMEDIR}/cmake/bin/cmake 60
 USER $USER
-RUN git clone https://github.com/David-Durst/csknow.git 
 RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" && \
     unzip awscliv2.zip
 USER root
@@ -22,6 +21,7 @@ ADD ./install_sourcemod.sh ${HOMEDIR}/install_sourcemod.sh
 RUN ${HOMEDIR}/install_sourcemod.sh ${NONVOLUMESTEAMAPPDIR}/csgo
 ADD ./install_link.sh ${HOMEDIR}/install_link.sh
 RUN ${HOMEDIR}/install_link.sh 
+RUN git clone https://github.com/David-Durst/csknow.git 
 ADD ./internal_scripts/server.cfg ${NONVOLUMESTEAMAPPDIR}/csgo/cfg/server.cfg
 ADD ./internal_scripts/gamemode_competitive.cfg ${NONVOLUMESTEAMAPPDIR}/csgo/cfg/gamemode_competitive.cfg
 ADD ./internal_scripts/gamemode_competitive_server.cfg ${NONVOLUMESTEAMAPPDIR}/csgo/cfg/gamemode_competitive_server.cfg

@@ -14,9 +14,9 @@ get_script_dir () {
 }
 get_script_dir
 
-git pull
 mkdir -p ${script_dir}/../build
 cd ${script_dir}/../build
+git pull
 cmake .. -DCMAKE_BUILD_TYPE=Release
 if make -j4; then
     chmod a+x csknow_bot
