@@ -15,24 +15,19 @@ std::mt19937 accuracyGen(rd()), otherSkillGen(rd()); // Standard mersenne_twiste
 std::uniform_real_distribution<> accuracyDis(0., 10.), otherSkillDis(0., 1.);
 
 std::filesystem::directory_entry getLatestDemoFile(string mapsPath) {
-    std::filesystem::directory_entry defaultEntry;
-    std::vector<std::filesystem::directory_entry> entries;
+    bool firstFile = true;
+    std::filesystem::directory_entry mostRecentEntry;
 
     for (auto &entry : std::filesystem::directory_iterator(mapsPath + "/../")) {
         if (entry.is_regular_file() && entry.path().has_extension() && entry.path().extension() == ".dem") {
-            entries.push_back(entry);
+            if (firstFile || mostRecentEntry.last_write_time() < entry.last_write_time()) {
+                mostRecentEntry = entry;
+                firstFile = false;
+            }
         }
     }
 
-    std::sort(entries.begin(), entries.end(),
-              [](std::filesystem::directory_entry a, std::filesystem::directory_entry b) { return a.path() > b.path(); });
-
-    if (entries.empty()) {
-        return defaultEntry;
-    }
-    else {
-        return entries.front();
-    }
+    return mostRecentEntry;
 }
 
 void savePlayersFile() {
