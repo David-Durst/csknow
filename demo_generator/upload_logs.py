@@ -41,9 +41,6 @@ while True:
         if os.path.exists(skill_path):
             os.system(f"aws s3 cp {str(skill_path)} s3://csknow/demos/train_data/csvs/local/{aws_name}_skill.csv")
             os.remove(skill_path)
-    # bot will handle deleting demos normally, only if no bot program running
-    if not bot_running:
-        for f in files[:-1]:
     time.sleep(60)
     num_sleeps += 1
     if num_sleeps == 10:
