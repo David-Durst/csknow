@@ -5,6 +5,7 @@
 #include "queries/train_dataset.h"
 #include "geometryNavConversions.h"
 #include <utility>
+#include <cassert>
 
 void addStepStatesForTick(const Ticks & ticks, const PlayerAtTick & playerAtTick, const int64_t gameId, const int64_t tickIndex,
                           const nav_mesh::nav_file & navFile, vector<TrainDatasetResult::TimeStepState> & stepStates,
@@ -23,14 +24,17 @@ void addStepStatesForTick(const Ticks & ticks, const PlayerAtTick & playerAtTick
         nav_mesh::vec3_t pos {static_cast<float>(playerAtTick.posX[patIndex]),
                               static_cast<float>(playerAtTick.posY[patIndex]),
                               static_cast<float>(playerAtTick.posZ[patIndex])};
-        uint32_t navId = navFile.get_nearest_area_by_position(pos).get_id();
+        size_t navId = navFile.m_area_ids_to_indices.at(navFile.get_nearest_area_by_position(pos).get_id());
         playerIdToAABBAndPATId[playerAtTick.playerId[patIndex]] = {navId, patIndex};
 
-        if (playerAtTick.team[patIndex] == TEAM_CT) {
+        assert(navId < timeStepStateCT.navStates.size());
+        assert(navId < timeStepStateT.navStates.size());
+
+        if (playerAtTick.team[patIndex] == INTERNAL_TEAM_CT) {
             timeStepStateCT.navStates[navId].numFriends++;
             timeStepStateT.navStates[navId].numEnemies++;
         }
-        else if (playerAtTick.team[patIndex] == TEAM_T) {
+        else if (playerAtTick.team[patIndex] == INTERNAL_TEAM_T) {
             timeStepStateCT.navStates[navId].numEnemies++;
             timeStepStateT.navStates[navId].numFriends++;
         }
@@ -38,11 +42,12 @@ void addStepStatesForTick(const Ticks & ticks, const PlayerAtTick & playerAtTick
 
     for (const auto & [playerId, aabbAndPATId] : playerIdToAABBAndPATId) {
         if (!playerAtTick.isAlive[aabbAndPATId.second] ||
-            (playerAtTick.team[aabbAndPATId.second] != TEAM_CT && playerAtTick.team[aabbAndPATId.second] != TEAM_T)) {
+            (playerAtTick.team[aabbAndPATId.second] != INTERNAL_TEAM_CT &&
+                playerAtTick.team[aabbAndPATId.second] != INTERNAL_TEAM_T)) {
             continue;
         }
 
-        TrainDatasetResult::TimeStepState timeStepStateForPlayer = playerAtTick.team[aabbAndPATId.second] == TEAM_CT ?
+        TrainDatasetResult::TimeStepState timeStepStateForPlayer = playerAtTick.team[aabbAndPATId.second] == INTERNAL_TEAM_CT ?
                 timeStepStateCT : timeStepStateT;
         timeStepStateForPlayer.curAABB = aabbAndPATId.first;
         timeStepStateForPlayer.patId = aabbAndPATId.second;
@@ -64,7 +69,7 @@ TrainDatasetResult queryTrainDataset(const Games & games, const Rounds & rounds,
     vector<TrainDatasetResult::TimeStepState> tmpOldState[numThreads];
     vector<TrainDatasetResult::TimeStepPlan> tmpPlan[numThreads];
 
-#pragma omp parallel for
+//#pragma omp parallel for
     for (int64_t roundIndex = 0; roundIndex < rounds.size; roundIndex++) {
         int threadNum = omp_get_thread_num();
         TickRates tickRates = computeTickRates(games, rounds, roundIndex);
@@ -90,13 +95,14 @@ TrainDatasetResult queryTrainDataset(const Games & games, const Rounds & rounds,
             }
             lastTickInDataset = tickIndex;
 
-            int64_t nextDemoTickId = tickIndex - 1;
-            int64_t lastDemoTickId = tickIndex - 1;
-            int64_t oldDemoTickId = getLookbackDemoTick(rounds, ticks, playerAtTick, tickIndex, tickRates, lookbackGameTicks);
-            addStepStatesForTick(ticks, playerAtTick, rounds.gameId[roundIndex], tickIndex,
-                                 navFile, tmpCurState[threadNum], defaultTimeStepState);
+            int64_t nextDemoTickId = tickIndex;
+            int64_t curDemoTickId = tickIndex - getLookbackDemoTick(rounds, ticks, playerAtTick, tickIndex, tickRates, lookbackGameTicks, 1000);
+            int64_t lastDemoTickId = curDemoTickId - 1;
+            int64_t oldDemoTickId = tickIndex - getLookbackDemoTick(rounds, ticks, playerAtTick, tickIndex, tickRates, 2 * lookbackGameTicks, 1000);
             addStepStatesForTick(ticks, playerAtTick, rounds.gameId[roundIndex], nextDemoTickId,
                                  navFile, tmpNextState[threadNum], defaultTimeStepState);
+            addStepStatesForTick(ticks, playerAtTick, rounds.gameId[roundIndex], curDemoTickId,
+                                 navFile, tmpCurState[threadNum], defaultTimeStepState);
             addStepStatesForTick(ticks, playerAtTick, rounds.gameId[roundIndex], lastDemoTickId,
                                  navFile, tmpLastState[threadNum], defaultTimeStepState);
             addStepStatesForTick(ticks, playerAtTick, rounds.gameId[roundIndex], oldDemoTickId,

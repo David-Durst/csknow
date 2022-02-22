@@ -4,6 +4,8 @@
 #include <sstream>
 #include <string>
 #define NOT_PLAYER_ID -1
+#define INTERNAL_TEAM_CT 0
+#define INTERNAL_TEAM_T 1
 #define TEAM_T 2
 #define TEAM_CT 3
 using std::vector;

@@ -21,7 +21,7 @@ public:
     };
 
     struct TimeStepState {
-        uint32_t curAABB;
+        size_t curAABB;
         Vec3 pos;
         vector<NavmeshState> navStates;
         // these aren't printed, just used for bookkeeping during query

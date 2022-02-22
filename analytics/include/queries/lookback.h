@@ -10,7 +10,6 @@
 
 // max time you can look back in ms
 // this assumes tick in demo for every tick in game
-const int maxLookBackTime = 300;
 const int clInterp = 31;
 
 struct TickRates {
@@ -26,12 +25,11 @@ TickRates computeTickRates(const Games & games, const Rounds & rounds, int64_t r
 }
 
 static inline __attribute__((always_inline))
-int computeMaxLookbackDemoTicks(const TickRates & tickRates) {
+int computeMaxLookbackDemoTicks(const TickRates & tickRates, int maxLookBackTime = 300) {
     return ceil(tickRates.demoTickRate * maxLookBackTime / 1000.0);
 }
 
-static inline __attribute__((always_inline))
-double secondsBetweenTicks(const Ticks & ticks, TickRates tickRates, int64_t startTick, int64_t endTick) {
+static double secondsBetweenTicks(const Ticks & ticks, TickRates tickRates, int64_t startTick, int64_t endTick) {
     return (ticks.gameTickNumber[endTick] - ticks.gameTickNumber[startTick]) / static_cast<double>(tickRates.gameTickRate);
 }
 
@@ -44,14 +42,14 @@ double secondsBetweenTicks(const Ticks & ticks, TickRates tickRates, int64_t sta
  * @param tickRates tick rates for the game
  * @return
  */
-static inline __attribute__((always_inline))
-int64_t getLookbackDemoTick(const Rounds & rounds, const Ticks & ticks, const PlayerAtTick & playerAtTick, const int64_t tickIndex,
-                            const TickRates & tickRates, const int64_t lookbackGameTicks) {
-    int maxLookBackDemoTicks = computeMaxLookbackDemoTicks(tickRates);
+static int64_t getLookbackDemoTick(const Rounds & rounds, const Ticks & ticks, const PlayerAtTick & playerAtTick, const int64_t tickIndex,
+                            const TickRates & tickRates, const int64_t lookbackGameTicks, int maxLookBackTime = 300) {
+    int maxLookBackDemoTicks = computeMaxLookbackDemoTicks(tickRates, maxLookBackTime);
+
     int lookbackDemoTicks = 1;
     for (; ticks.gameTickNumber[tickIndex - lookbackDemoTicks] > ticks.gameTickNumber[tickIndex] - lookbackGameTicks &&
            lookbackDemoTicks < maxLookBackDemoTicks &&
-           tickIndex - lookbackDemoTicks > rounds.startTick[ticks.roundId[tickIndex]];
+           tickIndex - lookbackDemoTicks > rounds.ticksPerRound[ticks.roundId[tickIndex]].minId;
            lookbackDemoTicks++);
     return lookbackDemoTicks;
 }
