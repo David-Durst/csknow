@@ -63,21 +63,23 @@ TrainDatasetResult queryTrainDataset(const Games & games, const Rounds & rounds,
     for (int64_t roundIndex = 0; roundIndex < rounds.size; roundIndex++) {
         int threadNum = omp_get_thread_num();
         TickRates tickRates = computeTickRates(games, rounds, roundIndex);
-        int64_t lookbackGameTicks = LOOKBACK_SECONDS * tickRates.gameTickRate;
+        int64_t lookbackGameTicks = DECISION_SECONDS * tickRates.gameTickRate;
 
         // initialize the default state for this round based on number of navmesh entries
         string mapName = games.mapName[rounds.gameId[roundIndex]];
         const nav_mesh::nav_file & navFile = mapNavs.at(mapName);
         TrainDatasetResult::TimeStepState defaultTimeStepState(navFile.m_area_count);
 
+        int64_t lastTickInDataset = rounds.ticksPerRound[roundIndex].minId;
         for (int64_t tickIndex = rounds.ticksPerRound[roundIndex].minId;
              tickIndex <= rounds.ticksPerRound[roundIndex].maxId; tickIndex++) {
 
-            // skip ticks until far enough to compute all relevant history
-            if (secondsBetweenTicks(ticks, tickRates, rounds.ticksPerRound[roundIndex].minId, tickIndex)
-                < LOOKBACK_SECONDS) {
+            // only store every LOOKBACK_SECONDS, not continually making a decision
+            if (secondsBetweenTicks(ticks, tickRates, lastTickInDataset, tickIndex)
+                < DECISION_SECONDS) {
                 continue;
             }
+            lastTickInDataset = tickIndex;
 
             int64_t lastDemoTickId = tickIndex - 1;
             int64_t oldDemoTickId = getLookbackDemoTick(rounds, ticks, playerAtTick, tickIndex, tickRates, lookbackGameTicks);

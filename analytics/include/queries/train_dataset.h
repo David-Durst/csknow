@@ -9,7 +9,7 @@
 #include <sstream>
 using std::string;
 using std::map;
-#define LOOKBACK_SECONDS 0.25
+#define DECISION_SECONDS 0.25
 
 class TrainDatasetResult : public QueryResult {
 public:
