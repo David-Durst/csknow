@@ -7,9 +7,10 @@
 #include <utility>
 #include <cassert>
 
-void addStepStatesForTick(const Ticks & ticks, const PlayerAtTick & playerAtTick, const int64_t gameId, const int64_t tickIndex,
-                          const nav_mesh::nav_file & navFile, vector<TrainDatasetResult::TimeStepState> & stepStates,
-                          const TrainDatasetResult::TimeStepState defaultTimeStepState) {
+vector<TrainDatasetResult::TimeStepState>
+addStepStatesForTick(const Ticks & ticks, const PlayerAtTick & playerAtTick, const int64_t gameId, const int64_t tickIndex,
+                          const nav_mesh::nav_file & navFile, const TrainDatasetResult::TimeStepState defaultTimeStepState) {
+    vector<TrainDatasetResult::TimeStepState> result;
     // default is CT friends, T enemy, will flip for each player
     TrainDatasetResult::TimeStepState timeStepStateCT = defaultTimeStepState;
     TrainDatasetResult::TimeStepState timeStepStateT = defaultTimeStepState;
@@ -53,8 +54,9 @@ void addStepStatesForTick(const Ticks & ticks, const PlayerAtTick & playerAtTick
         timeStepStateForPlayer.patId = aabbAndPATId.second;
         timeStepStateForPlayer.pos = {playerAtTick.posX[aabbAndPATId.second], playerAtTick.posY[aabbAndPATId.second],
                                       playerAtTick.posZ[aabbAndPATId.second]};
-        stepStates.push_back(timeStepStateForPlayer);
+        result.push_back(timeStepStateForPlayer);
     }
+    return result;
 }
 
 
@@ -69,8 +71,12 @@ TrainDatasetResult queryTrainDataset(const Games & games, const Rounds & rounds,
     vector<TrainDatasetResult::TimeStepState> tmpOldState[numThreads];
     vector<TrainDatasetResult::TimeStepPlan> tmpPlan[numThreads];
 
-//#pragma omp parallel for
+#pragma omp parallel for
     for (int64_t roundIndex = 0; roundIndex < rounds.size; roundIndex++) {
+        if (strcmp(games.mapName[rounds.gameId[roundIndex]], "bot_playground_2v1") != 0) {
+            continue;
+        }
+
         int threadNum = omp_get_thread_num();
         TickRates tickRates = computeTickRates(games, rounds, roundIndex);
         int64_t lookbackGameTicks = DECISION_SECONDS * tickRates.gameTickRate;
@@ -99,14 +105,35 @@ TrainDatasetResult queryTrainDataset(const Games & games, const Rounds & rounds,
             int64_t curDemoTickId = tickIndex - getLookbackDemoTick(rounds, ticks, playerAtTick, tickIndex, tickRates, lookbackGameTicks, 1000);
             int64_t lastDemoTickId = curDemoTickId - 1;
             int64_t oldDemoTickId = tickIndex - getLookbackDemoTick(rounds, ticks, playerAtTick, tickIndex, tickRates, 2 * lookbackGameTicks, 1000);
-            addStepStatesForTick(ticks, playerAtTick, rounds.gameId[roundIndex], nextDemoTickId,
-                                 navFile, tmpNextState[threadNum], defaultTimeStepState);
-            addStepStatesForTick(ticks, playerAtTick, rounds.gameId[roundIndex], curDemoTickId,
-                                 navFile, tmpCurState[threadNum], defaultTimeStepState);
-            addStepStatesForTick(ticks, playerAtTick, rounds.gameId[roundIndex], lastDemoTickId,
-                                 navFile, tmpLastState[threadNum], defaultTimeStepState);
-            addStepStatesForTick(ticks, playerAtTick, rounds.gameId[roundIndex], oldDemoTickId,
-                                 navFile, tmpOldState[threadNum], defaultTimeStepState);
+            auto nextStepStates = addStepStatesForTick(ticks, playerAtTick, rounds.gameId[roundIndex], nextDemoTickId,
+                                 navFile, defaultTimeStepState);
+            auto curStepStates = addStepStatesForTick(ticks, playerAtTick, rounds.gameId[roundIndex], curDemoTickId,
+                                 navFile, defaultTimeStepState);
+            auto lastStepStates = addStepStatesForTick(ticks, playerAtTick, rounds.gameId[roundIndex], lastDemoTickId,
+                                 navFile, defaultTimeStepState);
+            auto oldStepStates = addStepStatesForTick(ticks, playerAtTick, rounds.gameId[roundIndex], oldDemoTickId,
+                                 navFile, defaultTimeStepState);
+
+            // players could leave in between frames, don't store any situations where all clients aren't same
+            if (nextStepStates.size() == curStepStates.size() && nextStepStates.size() == lastStepStates.size() &&
+                nextStepStates.size() == oldStepStates.size()) {
+                bool samePlayersInSamePositions = true;
+                for (size_t i = 0; i < nextStepStates.size(); i++) {
+                    if (playerAtTick.playerId[nextStepStates[i].patId] != playerAtTick.playerId[curStepStates[i].patId] ||
+                        playerAtTick.playerId[nextStepStates[i].patId] != playerAtTick.playerId[lastStepStates[i].patId] ||
+                        playerAtTick.playerId[nextStepStates[i].patId] != playerAtTick.playerId[oldStepStates[i].patId]) {
+                        samePlayersInSamePositions = false;
+                        break;
+                    }
+                }
+
+                if (samePlayersInSamePositions) {
+                    tmpNextState[threadNum].insert(tmpNextState[threadNum].end(), nextStepStates.begin(), nextStepStates.end());
+                    tmpCurState[threadNum].insert(tmpCurState[threadNum].end(), curStepStates.begin(), curStepStates.end());
+                    tmpLastState[threadNum].insert(tmpLastState[threadNum].end(), lastStepStates.begin(), lastStepStates.end());
+                    tmpOldState[threadNum].insert(tmpOldState[threadNum].end(), oldStepStates.begin(), oldStepStates.end());
+                }
+            }
         }
 
         for (int64_t planIndex = planStartIndex; planIndex < tmpCurState[threadNum].size(); planIndex++) {
@@ -118,6 +145,8 @@ TrainDatasetResult queryTrainDataset(const Games & games, const Rounds & rounds,
             plan.shootDuringNextThink = playerAtTick.primaryBulletsClip[tmpNextState[threadNum][planIndex].patId] !=
                     playerAtTick.primaryBulletsClip[tmpCurState[threadNum][planIndex].patId];
             plan.crouchDuringNextThink = playerAtTick.isCrouching[tmpNextState[threadNum][planIndex].patId];
+
+            tmpPlan[threadNum].push_back(plan);
         }
     }
 

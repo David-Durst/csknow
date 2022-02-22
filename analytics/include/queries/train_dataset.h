@@ -98,7 +98,8 @@ public:
         ss << index << "," << tickId[index] << "," << sourcePlayerId[index] << "," << sourcePlayerName[index]
             << "," << demoName[index] << "," << timeStepStateToString(curState[index])
             << "," << timeStepStateToString(lastState[index])
-            << "," << timeStepStateToString(lastState[index]) << "," << timeStepPlanToString(plan[index]);
+            << "," << timeStepStateToString(lastState[index]) << "," << timeStepPlanToString(plan[index])
+            << std::endl;
     }
 
     vector<string> getForeignKeyNames() {
