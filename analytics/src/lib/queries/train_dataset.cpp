@@ -3,7 +3,6 @@
 //
 #include "queries/lookback.h"
 #include "queries/train_dataset.h"
-#include "geometry.h"
 #include "geometryNavConversions.h"
 #include <utility>
 
@@ -104,7 +103,7 @@ TrainDatasetResult queryTrainDataset(const Games & games, const Rounds & rounds,
                                  navFile, tmpOldState[threadNum], defaultTimeStepState);
         }
 
-        for (int64_t planIndex = planStartIndex; planIndex < tmpCurState[threadNum].size() - 1; planIndex++) {
+        for (int64_t planIndex = planStartIndex; planIndex < tmpCurState[threadNum].size(); planIndex++) {
             TrainDatasetResult::TimeStepPlan plan;
 
             plan.deltaX = tmpNextState[threadNum][planIndex].pos.x - tmpCurState[threadNum][planIndex].pos.x;

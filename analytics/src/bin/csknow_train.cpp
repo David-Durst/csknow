@@ -95,7 +95,7 @@ int main(int argc, char * argv[]) {
 
 
 
-    TrainDatasetResult trainDatasetResult = queryTrainDataset(games, rounds, ticks, players, playerAtTick);
+    TrainDatasetResult trainDatasetResult = queryTrainDataset(games, rounds, ticks, players, playerAtTick, map_navs);
 
 
 

@@ -4,6 +4,7 @@
 #include "query.h"
 #include "indices/spotted.h"
 #include "navmesh/nav_file.h"
+#include "geometry.h"
 #include <array>
 #include <string>
 #include <map>
