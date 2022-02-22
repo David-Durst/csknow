@@ -47,6 +47,8 @@ void addStepStatesForTick(const Ticks & ticks, const PlayerAtTick & playerAtTick
                 timeStepStateCT : timeStepStateT;
         timeStepStateForPlayer.curAABB = aabbAndPATId.first;
         timeStepStateForPlayer.patId = aabbAndPATId.second;
+        timeStepStateForPlayer.pos = {playerAtTick.posX[aabbAndPATId.second], playerAtTick.posY[aabbAndPATId.second],
+                                      playerAtTick.posZ[aabbAndPATId.second]};
         stepStates.push_back(timeStepStateForPlayer);
     }
 }
@@ -103,22 +105,14 @@ TrainDatasetResult queryTrainDataset(const Games & games, const Rounds & rounds,
         }
 
         for (int64_t planIndex = planStartIndex; planIndex < tmpCurState[threadNum].size() - 1; planIndex++) {
-            TrainDatasetResult::TimeStepPlan plan(navFile.m_area_count);
+            TrainDatasetResult::TimeStepPlan plan;
 
-            if (tmpCurState[threadNum][planIndex].curAABB != tmpNextState[threadNum][planIndex].curAABB) {
-                plan.nextStepAABB[tmpNextState[threadNum][planIndex].curAABB] = 1.;
-            }
-            else {
+            plan.deltaX = tmpNextState[threadNum][planIndex].pos.x - tmpCurState[threadNum][planIndex].pos.x;
+            plan.deltaY = tmpNextState[threadNum][planIndex].pos.y - tmpCurState[threadNum][planIndex].pos.y;
 
-                const nav_mesh::nav_area & area = navFile.get_area_by_id(tmpCurState[threadNum][planIndex].curAABB);
-                for (const auto & neighborId : area.get_connections()) {
-                    navFile.get_point_to_area_distance()
-                }
-
-                auto& area_connections = area.get_connections( );
-
-            }
-            tmpPlan.
+            plan.shootDuringNextThink = playerAtTick.primaryBulletsClip[tmpNextState[threadNum][planIndex].patId] !=
+                    playerAtTick.primaryBulletsClip[tmpCurState[threadNum][planIndex].patId];
+            plan.crouchDuringNextThink = playerAtTick.isCrouching[tmpNextState[threadNum][planIndex].patId];
         }
     }
 

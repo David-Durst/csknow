@@ -21,7 +21,7 @@ public:
 
     struct TimeStepState {
         uint32_t curAABB;
-        Vec3 curPos;
+        Vec3 pos;
         vector<NavmeshState> navStates;
         // these aren't printed, just used for bookkeeping during query
         int64_t gameId;
@@ -33,6 +33,7 @@ public:
     string timeStepStateToString(TimeStepState step) {
         std::stringstream result;
         result << step.curAABB;
+        result << "," << step.pos.x << "," << step.pos.y << "," << step.pos.z;
         for (const auto & navState : step.navStates) {
             result << "," << navState.numFriends << "," << navState.numEnemies;
         }
@@ -41,6 +42,9 @@ public:
 
     void timeStepStateColumns(vector<TimeStepState> steps, string prefix, vector<string> & result) {
         result.push_back(prefix + " nav aabb");
+        result.push_back(prefix + " x");
+        result.push_back(prefix + " y");
+        result.push_back(prefix + " z");
         for (size_t i = 0; i < steps.front().navStates.size(); i++) {
             result.push_back(prefix + " nav " + std::to_string(i) + " friends");
             result.push_back(prefix + " nav " + std::to_string(i) + " enemies");
@@ -56,24 +60,15 @@ public:
 
     string timeStepPlanToString(TimeStepPlan plan) {
         std::stringstream result;
-        bool first = true;
-        for (const auto & aabb : plan.nextStepAABB) {
-            if (first) {
-                result << ",";
-            }
-            result << "," << aabb;
-            first = false;
-        }
-        // don't start with comma if no prior strings pushed to result
-        result << (plan.nextStepAABB.size() > 0 ? "," : "") << (plan.shootDuringNextThink ? 1 : 0);
+        result << plan.deltaX << "," << plan.deltaY;
+        result << "," << (plan.shootDuringNextThink ? 1 : 0);
         result << "," << (plan.crouchDuringNextThink ? 1 : 0);
         return result.str();
     }
 
     void timeStepPlanColumns(vector<TimeStepState> steps, vector<string> & result) {
-        for (size_t i = 0; i < steps.front().navStates.size(); i++) {
-            result.push_back(" nav " + std::to_string(i) + " next step");
-        }
+        result.push_back("delta x");
+        result.push_back("delta y");
         result.push_back("shoot next");
         result.push_back("crouch next");
     }
