@@ -93,10 +93,13 @@ int main(int argc, char * argv[]) {
     std::cout << "num elements in defusals: " << defusals.size << std::endl;
     std::cout << "num elements in explosions: " << explosions.size << std::endl;
 
-
-
     TrainDatasetResult trainDatasetResult = queryTrainDataset(games, rounds, ticks, players, playerAtTick, map_navs);
 
+    std::ofstream outputFile;
+    string outputPath = outputDir + "/train_dataset.csv";
 
-
+    std::cout << "writing train dataset with size " << trainDatasetResult.size << " to " << outputPath << std::endl;
+    outputFile.open(outputPath);
+    outputFile << trainDatasetResult.toCSV();
+    outputFile.close();
 }
