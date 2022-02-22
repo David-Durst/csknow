@@ -21,8 +21,10 @@ void addStepStatesForTick(const Ticks & ticks, const PlayerAtTick & playerAtTick
 
     for (int64_t patIndex = ticks.patPerTick[tickIndex].minId;
          patIndex != -1 && patIndex <= ticks.patPerTick[tickIndex].maxId; patIndex++) {
-        Vec3 pos {playerAtTick.posX[patIndex], playerAtTick.posY[patIndex], playerAtTick.posZ[patIndex]};
-        uint32_t navId = navFile.get_nearest_area_by_position(vec3Conv(pos)).get_id();
+        nav_mesh::vec3_t pos {static_cast<float>(playerAtTick.posX[patIndex]),
+                              static_cast<float>(playerAtTick.posY[patIndex]),
+                              static_cast<float>(playerAtTick.posZ[patIndex])};
+        uint32_t navId = navFile.get_nearest_area_by_position(pos).get_id();
         playerIdToAABBAndPATId[playerAtTick.playerId[patIndex]] = {navId, patIndex};
 
         if (playerAtTick.team[patIndex] == TEAM_CT) {
@@ -56,8 +58,10 @@ TrainDatasetResult queryTrainDataset(const Games & games, const Rounds & rounds,
 
     int numThreads = omp_get_max_threads();
     vector<TrainDatasetResult::TimeStepState> tmpCurState[numThreads];
+    vector<TrainDatasetResult::TimeStepState> tmpNextState[numThreads];
     vector<TrainDatasetResult::TimeStepState> tmpLastState[numThreads];
     vector<TrainDatasetResult::TimeStepState> tmpOldState[numThreads];
+    vector<TrainDatasetResult::TimeStepPlan> tmpPlan[numThreads];
 
 #pragma omp parallel for
     for (int64_t roundIndex = 0; roundIndex < rounds.size; roundIndex++) {
@@ -70,25 +74,51 @@ TrainDatasetResult queryTrainDataset(const Games & games, const Rounds & rounds,
         const nav_mesh::nav_file & navFile = mapNavs.at(mapName);
         TrainDatasetResult::TimeStepState defaultTimeStepState(navFile.m_area_count);
 
+        // remember start in tmp vectors for plan recording
+        int64_t planStartIndex = tmpCurState[threadNum].size();
+
         int64_t lastTickInDataset = rounds.ticksPerRound[roundIndex].minId;
         for (int64_t tickIndex = rounds.ticksPerRound[roundIndex].minId;
              tickIndex <= rounds.ticksPerRound[roundIndex].maxId; tickIndex++) {
 
-            // only store every LOOKBACK_SECONDS, not continually making a decision
-            if (secondsBetweenTicks(ticks, tickRates, lastTickInDataset, tickIndex)
-                < DECISION_SECONDS) {
+            // only store every DECISION_SECONDS, not continually making a decision
+            // make sure at least 2 DECISION_SECONDS from start so can look into future
+            if (secondsBetweenTicks(ticks, tickRates, lastTickInDataset, tickIndex) < DECISION_SECONDS ||
+                    secondsBetweenTicks(ticks, tickRates, rounds.ticksPerRound[roundIndex].minId, tickIndex) < 2*DECISION_SECONDS) {
                 continue;
             }
             lastTickInDataset = tickIndex;
 
+            int64_t nextDemoTickId = tickIndex - 1;
             int64_t lastDemoTickId = tickIndex - 1;
             int64_t oldDemoTickId = getLookbackDemoTick(rounds, ticks, playerAtTick, tickIndex, tickRates, lookbackGameTicks);
             addStepStatesForTick(ticks, playerAtTick, rounds.gameId[roundIndex], tickIndex,
                                  navFile, tmpCurState[threadNum], defaultTimeStepState);
+            addStepStatesForTick(ticks, playerAtTick, rounds.gameId[roundIndex], nextDemoTickId,
+                                 navFile, tmpNextState[threadNum], defaultTimeStepState);
             addStepStatesForTick(ticks, playerAtTick, rounds.gameId[roundIndex], lastDemoTickId,
                                  navFile, tmpLastState[threadNum], defaultTimeStepState);
             addStepStatesForTick(ticks, playerAtTick, rounds.gameId[roundIndex], oldDemoTickId,
                                  navFile, tmpOldState[threadNum], defaultTimeStepState);
+        }
+
+        for (int64_t planIndex = planStartIndex; planIndex < tmpCurState[threadNum].size() - 1; planIndex++) {
+            TrainDatasetResult::TimeStepPlan plan(navFile.m_area_count);
+
+            if (tmpCurState[threadNum][planIndex].curAABB != tmpNextState[threadNum][planIndex].curAABB) {
+                plan.nextStepAABB[tmpNextState[threadNum][planIndex].curAABB] = 1.;
+            }
+            else {
+
+                const nav_mesh::nav_area & area = navFile.get_area_by_id(tmpCurState[threadNum][planIndex].curAABB);
+                for (const auto & neighborId : area.get_connections()) {
+                    navFile.get_point_to_area_distance()
+                }
+
+                auto& area_connections = area.get_connections( );
+
+            }
+            tmpPlan.
         }
     }
 
@@ -102,6 +132,7 @@ TrainDatasetResult queryTrainDataset(const Games & games, const Rounds & rounds,
             result.curState.push_back(tmpCurState[i][j]);
             result.lastState.push_back(tmpLastState[i][j]);
             result.oldState.push_back(tmpOldState[i][j]);
+            result.plan.push_back(tmpPlan[i][j]);
         }
     }
     result.size = result.tickId.size();

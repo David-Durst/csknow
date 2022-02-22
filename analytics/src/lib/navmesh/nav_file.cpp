@@ -102,7 +102,7 @@ namespace nav_mesh {
         return path;
     }
 
-    nav_area& nav_file::get_area_by_id( std::uint32_t id ) {
+    const nav_area& nav_file::get_area_by_id( std::uint32_t id ) const {
         for ( auto& area : m_areas ) {
             if ( area.get_id( ) == id )
                 return area;

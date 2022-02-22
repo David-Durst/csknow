@@ -10,7 +10,7 @@ namespace nav_mesh {
 		vec3_t get_center( ) const								{ return m_center; }
 		std::uint32_t get_id( )	const							{ return m_id; }
 		
-		std::vector< nav_connect_t >& get_connections( )	{ return m_connections; }
+		const std::vector< nav_connect_t >& get_connections( ) const	{ return m_connections; }
 		
 		bool is_within( vec3_t position ) const;
 
