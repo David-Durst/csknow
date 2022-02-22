@@ -121,7 +121,7 @@ namespace nav_mesh {
     }
 
     // https://stackoverflow.com/questions/5254838/calculating-distance-between-a-point-and-a-rectangular-box-nearest-point
-    float nav_file::get_point_to_area_distance( vec3_t position, nav_area& area) {
+    float nav_file::get_point_to_area_distance( vec3_t position, const nav_area& area) const {
         float dx = std::max(area.m_nw_corner.x - position.x,
                 std::max(0.f, position.x - area.m_se_corner.x));
         float dy = std::max(area.m_nw_corner.y - position.y, 
@@ -154,12 +154,12 @@ namespace nav_mesh {
         return result;
     }
 
-    nav_area& nav_file::get_nearest_area_by_position( vec3_t position ) {
+    const nav_area& nav_file::get_nearest_area_by_position( vec3_t position ) const {
         float nearest_area_distance = std::numeric_limits<float>::max();        
         size_t nearest_area_id = -1;
 
         for ( size_t area_id = 0; area_id < m_areas.size(); area_id++) {
-            nav_area& area = m_areas[area_id];
+            const nav_area& area = m_areas[area_id];
             if ( area.is_within( position ) ) {
                 return area;
             }

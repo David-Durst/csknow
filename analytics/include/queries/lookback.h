@@ -5,6 +5,9 @@
 #ifndef CSKNOW_LOOKBACK_H
 #define CSKNOW_LOOKBACK_H
 
+#include "load_data.h"
+#include <cmath>
+
 // max time you can look back in ms
 // this assumes tick in demo for every tick in game
 const int maxLookBackTime = 300;

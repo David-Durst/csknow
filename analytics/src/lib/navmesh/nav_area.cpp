@@ -7,7 +7,7 @@ namespace nav_mesh {
 		load( buffer );
 	}
 
-	bool nav_area::is_within( vec3_t position ) {
+	bool nav_area::is_within( vec3_t position ) const {
 		if ( position.x < m_nw_corner.x )
 			return false;
 

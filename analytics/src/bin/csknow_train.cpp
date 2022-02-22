@@ -33,7 +33,7 @@ int main(int argc, char * argv[]) {
     string navPath = argv[2];
     string outputDir = argv[3];
 
-    std::map<std::string, nav_mesh::nav_file> map_navs;
+    std::map<std::string, const nav_mesh::nav_file> map_navs;
 
     //Figure out from where to where you'd like to find a path
     for (const auto & entry : fs::directory_iterator(navPath)) {

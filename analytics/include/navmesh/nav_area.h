@@ -7,12 +7,12 @@ namespace nav_mesh {
 	public:
 		nav_area( nav_buffer& buffer );
 
-		vec3_t get_center( )								{ return m_center; }
-		std::uint32_t get_id( )								{ return m_id; }		
+		vec3_t get_center( ) const								{ return m_center; }
+		std::uint32_t get_id( )	const							{ return m_id; }
 		
 		std::vector< nav_connect_t >& get_connections( )	{ return m_connections; }
 		
-		bool is_within( vec3_t position );
+		bool is_within( vec3_t position ) const;
 
 		void load( nav_buffer& buffer );
 

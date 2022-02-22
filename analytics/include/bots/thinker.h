@@ -12,6 +12,7 @@
 #include "load_save_bot_data.h"
 #include "bots/input_bits.h"
 #include "navmesh/nav_file.h"
+#include "geometryNavConversions.h"
 #include "circular_buffer.h"
 #include <chrono>
 #include <random>
@@ -151,13 +152,7 @@ class Thinker {
     }
 
     // helper functions used in planning
-    nav_mesh::vec3_t vec3Conv(Vec3 vec) {
-        return {static_cast<float>(vec.x), static_cast<float>(vec.y), static_cast<float>(vec.z)};
-    }
-    Vec3 vec3tConv(nav_mesh::vec3_t vec) {
-        return {static_cast<double>(vec.x), static_cast<double>(vec.y), static_cast<double>(vec.z)};
-    }
-    void updateDevelopingPlanWaypoints(const Vec3 & curPosition, const Vec3 & targetPosition); 
+    void updateDevelopingPlanWaypoints(const Vec3 & curPosition, const Vec3 & targetPosition);
 
 public:
     Thinker(ServerState & state, int curBotCSGOId, string navPath, Skill skill) 
