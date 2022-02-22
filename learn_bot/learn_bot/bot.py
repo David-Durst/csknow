@@ -4,8 +4,44 @@ from torch import nn
 from torch.utils.data import DataLoader
 from torchvision import datasets
 from torchvision.transforms import ToTensor
+from torch.utils.data import Dataset
+from torchvision import datasets
+from torchvision.transforms import ToTensor
+import pandas as pd
+from pathlib import Path
+
+# https://androidkt.com/load-pandas-dataframe-using-dataset-and-dataloader-in-pytorch/
+class BotDataset(Dataset):
+    def __init__(self, file):
+        all_data = pd.read_csv(file)
+        self.id = all_data.iloc[:,0]
+        self.tick_id = all_data.iloc[:,1]
+        self.source_player_name = all_data.iloc[:,2]
+        self.source_player_id = all_data.iloc[:,3]
+        self.demo_name = all_data.iloc[:,4]
+        self.X = torch.tensor(all_data.iloc[:,5:94].values)
+        self.Y = torch.tensor(all_data.iloc[:,95:].values)
 
 
+    def __len__(self):
+        return len(self.id)
+
+    def __getitem__(self, idx):
+        return self.X[idx], self.Y[idx]
+
+
+training_data = BotDataset(Path(__file__).parent / '..' / 'data' / 'train_dataset.csv')
+
+batch_size = 64
+
+train_dataloader = DataLoader(training_data, batch_size=batch_size, shuffle=True)
+
+for X, Y in train_dataloader:
+    print(f"Shape of X: {X.shape} {X.dtype}")
+    print(f"Shape of Y: {Y.shape} {Y.dtype}")
+    break
+
+"""
 # Download training data from open datasets.
 training_data = datasets.FashionMNIST(
     root="../data",
@@ -101,3 +137,4 @@ for t in range(epochs):
     train(train_dataloader, model, loss_fn, optimizer)
     test(test_dataloader, model, loss_fn)
 print("Done!")
+"""
