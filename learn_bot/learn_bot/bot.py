@@ -110,6 +110,10 @@ class NeuralNetwork(nn.Module):
 
 model = NeuralNetwork().to(device)
 print(model)
+params = list(model.parameters())
+print("params by layer")
+for param_layer in params:
+    print(param_layer.shape)
 
 loss_fn = nn.CrossEntropyLoss()
 optimizer = torch.optim.SGD(model.parameters(), lr=1e-3)
