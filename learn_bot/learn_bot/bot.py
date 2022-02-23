@@ -57,23 +57,23 @@ class NeuralNetwork(nn.Module):
         super(NeuralNetwork, self).__init__()
         self.flatten = nn.Flatten()
         self.linear_relu_stack = nn.Sequential(
-            nn.Linear(89, 512),
+            nn.Linear(89, 128),
             nn.ReLU(),
-            nn.Linear(512, 512),
+            nn.Linear(128, 128),
             nn.ReLU(),
-            nn.Linear(512, 512),
+            nn.Linear(128, 128),
             nn.ReLU(),
         )
         self.moveLayer = nn.Sequential(
-            nn.Linear(512, 2),
+            nn.Linear(128, 2),
             nn.ReLU(),
         )
         self.crouchLayer = nn.Sequential(
-            nn.Linear(512, 2),
+            nn.Linear(128, 2),
             nn.ReLU(),
         )
         self.shootLayer = nn.Sequential(
-            nn.Linear(512, 2),
+            nn.Linear(128, 2),
             nn.ReLU(),
         )
         self.moveSigmoid = nn.Sigmoid()
