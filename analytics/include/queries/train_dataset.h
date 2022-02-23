@@ -61,17 +61,19 @@ public:
 
     string timeStepPlanToString(TimeStepPlan plan) {
         std::stringstream result;
-        result << plan.deltaX << "," << plan.deltaY;
-        result << "," << (plan.shootDuringNextThink ? 1 : 0);
-        result << "," << (plan.crouchDuringNextThink ? 1 : 0);
+        result << plan.deltaX << "," << plan.deltaY
+             << "," << (plan.shootDuringNextThink ? "1,0" : "0,1")
+             << "," << (plan.crouchDuringNextThink ? "1,0" : "0,1");
         return result.str();
     }
 
     void timeStepPlanColumns(vector<TimeStepState> steps, vector<string> & result) {
         result.push_back("delta x");
         result.push_back("delta y");
-        result.push_back("shoot next");
-        result.push_back("crouch next");
+        result.push_back("shoot next true");
+        result.push_back("shoot next false");
+        result.push_back("crouch next true");
+        result.push_back("crouch next false");
     }
 
     vector<int64_t> tickId;
