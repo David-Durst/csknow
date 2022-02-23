@@ -9,21 +9,26 @@ from torchvision import datasets
 from torchvision.transforms import ToTensor
 import pandas as pd
 from sklearn import preprocessing
+from sklearn.model_selection import train_test_split
 from pathlib import Path
+
+all_data_df = pd.read_csv(Path(__file__).parent / '..' / 'data' / 'train_dataset.csv')
+train_df, test_df = train_test_split(all_data_df, test_size=0.2)
+min_max_scaler = preprocessing.MinMaxScaler()
+min_max_scaler.fit(all_data_df.iloc[:, 95:].values)
+
 
 # https://androidkt.com/load-pandas-dataframe-using-dataset-and-dataloader-in-pytorch/
 class BotDataset(Dataset):
-    def __init__(self, file):
-        all_data = pd.read_csv(file)
-        self.id = all_data.iloc[:,0]
-        self.tick_id = all_data.iloc[:,1]
-        self.source_player_name = all_data.iloc[:,2]
-        self.source_player_id = all_data.iloc[:,3]
-        self.demo_name = all_data.iloc[:,4]
-        self.X = torch.tensor(all_data.iloc[:,5:94].values).float()
-        Y_prescale_df = all_data.iloc[:, 95:].values
-        min_max_scaler = preprocessing.MinMaxScaler()
-        Y_scaled_df = min_max_scaler.fit_transform(Y_prescale_df)
+    def __init__(self, df):
+        self.id = df.iloc[:,0]
+        self.tick_id = df.iloc[:,1]
+        self.source_player_name = df.iloc[:,2]
+        self.source_player_id = df.iloc[:,3]
+        self.demo_name = df.iloc[:,4]
+        self.X = torch.tensor(df.iloc[:,5:94].values).float()
+        Y_prescale_df = df.iloc[:, 95:].values
+        Y_scaled_df = min_max_scaler.transform(Y_prescale_df)
         self.Y = torch.tensor(Y_scaled_df).float()
 
     def __len__(self):
@@ -33,15 +38,22 @@ class BotDataset(Dataset):
         return self.X[idx], self.Y[idx]
 
 
-training_data = BotDataset(Path(__file__).parent / '..' / 'data' / 'train_dataset.csv')
+training_data = BotDataset(train_df)
+test_data = BotDataset(test_df)
 
 batch_size = 64
 
 train_dataloader = DataLoader(training_data, batch_size=batch_size, shuffle=True)
+test_dataloader = DataLoader(training_data, batch_size=batch_size, shuffle=True)
 
 for X, Y in train_dataloader:
-    print(f"Shape of X: {X.shape} {X.dtype}")
-    print(f"Shape of Y: {Y.shape} {Y.dtype}")
+    print(f"Train shape of X: {X.shape} {X.dtype}")
+    print(f"Train shape of Y: {Y.shape} {Y.dtype}")
+    break
+
+for X, Y in test_dataloader:
+    print(f"Test shape of X: {X.shape} {X.dtype}")
+    print(f"Test shape of Y: {Y.shape} {Y.dtype}")
     break
 
 # Get cpu or gpu device for training.
@@ -110,9 +122,27 @@ def train(dataloader, model, loss_fn, optimizer):
             loss, current = loss.item(), batch * len(X)
             print(f"loss: {loss:>7f}  [{current:>5d}/{size:>5d}]")
 
+
+def test(dataloader, model, loss_fn):
+    size = len(dataloader.dataset)
+    num_batches = len(dataloader)
+    model.eval()
+    test_loss, correct = 0, 0
+    with torch.no_grad():
+        for X, Y in dataloader:
+            X, Y = X.to(device), Y.to(device)
+            pred = model(X)
+            test_loss += loss_fn(pred, Y).item()
+            #correct += (pred.argmax(1) == y).type(torch.float).sum().item()
+    test_loss /= num_batches
+    print(f"Test Error: Avg loss: {test_loss:>8f} \n")
+    #correct /= size
+    #print(f"Test Error: \n Accuracy: {(100*correct):>0.1f}%, Avg loss: {test_loss:>8f} \n")
+
+
 epochs = 5
 for t in range(epochs):
     print(f"Epoch {t+1}\n-------------------------------")
     train(train_dataloader, model, loss_fn, optimizer)
-    #test(test_dataloader, model, loss_fn)
-print("Done!")
+    test(test_dataloader, model, loss_fn)
+print("Done")
