@@ -17,16 +17,23 @@ train_df, test_df = train_test_split(all_data_df, test_size=0.2)
 min_max_scaler = preprocessing.MinMaxScaler()
 min_max_scaler.fit(all_data_df.iloc[:, 95:].values)
 
+unique_player_id = all_data_df.iloc[:,2].unique()
+player_id_to_ix = {player_id: i for (i, player_id) in enumerate(unique_player_id)}
+embedding_dim = 5
+
 
 # https://androidkt.com/load-pandas-dataframe-using-dataset-and-dataloader-in-pytorch/
 class BotDataset(Dataset):
     def __init__(self, df):
-        self.id = df.iloc[:,0]
-        self.tick_id = df.iloc[:,1]
-        self.source_player_name = df.iloc[:,2]
-        self.source_player_id = df.iloc[:,3]
-        self.demo_name = df.iloc[:,4]
-        self.X = torch.tensor(df.iloc[:,5:94].values).float()
+        self.id = df.iloc[:, 0]
+        self.tick_id = df.iloc[:, 1]
+        self.source_player_id = df.iloc[:, 2]
+        self.source_player_name = df.iloc[:, 3]
+        self.demo_name = df.iloc[:, 4]
+        x_cols = [all_data_df.columns[2]] + all_data_df.columns[5:94].tolist()
+        # convert player id's to indexes
+        df_with_ixs = df.replace({all_data_df.columns[2]: player_id_to_ix})
+        self.X = torch.tensor(df_with_ixs.loc[:, x_cols].values).float()
         Y_prescale_df = df.iloc[:, 95:].values
         Y_scaled_df = min_max_scaler.transform(Y_prescale_df)
         self.Y = torch.tensor(Y_scaled_df).float()
@@ -64,9 +71,9 @@ print(f"Using {device} device")
 class NeuralNetwork(nn.Module):
     def __init__(self):
         super(NeuralNetwork, self).__init__()
-        self.flatten = nn.Flatten()
+        self.embeddings = nn.Embedding(len(unique_player_id), embedding_dim)
         self.linear_relu_stack = nn.Sequential(
-            nn.Linear(89, 128),
+            nn.Linear(89 + embedding_dim, 128),
             nn.ReLU(),
             nn.Linear(128, 128),
             nn.ReLU(),
@@ -90,7 +97,11 @@ class NeuralNetwork(nn.Module):
         self.shootSigmoid = nn.Softmax(dim=1)
 
     def forward(self, x):
-        logits = self.linear_relu_stack(x)
+        idx, x_vals = torch.split(x, [1, 89], dim=1)
+        idx_long = idx.long()
+        embeds = self.embeddings(idx_long).view((-1, embedding_dim))
+        x_all = torch.cat((embeds, x_vals), 1)
+        logits = self.linear_relu_stack(x_all)
         moveOutput = self.moveSigmoid(self.moveLayer(logits))
         crouchOutput = self.crouchSigmoid(self.crouchLayer(logits))
         shootOutput = self.shootSigmoid(self.shootLayer(logits))
