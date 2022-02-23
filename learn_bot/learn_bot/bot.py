@@ -25,9 +25,6 @@ class BotDataset(Dataset):
         min_max_scaler = preprocessing.MinMaxScaler()
         Y_scaled_df = min_max_scaler.fit_transform(Y_prescale_df)
         self.Y = torch.tensor(Y_scaled_df).float()
-        print(self.Y.dtype)
-        print("hi")
-
 
     def __len__(self):
         return len(self.id)
