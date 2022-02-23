@@ -35,6 +35,7 @@ enum class MovementPolicy {
     Normal,
     PushOnly,
     PushAndRetreat,
+    HoldOnly,
     NUM_POLICIES
 };
 

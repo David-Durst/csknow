@@ -5,7 +5,14 @@
 #include "bots/manage_thinkers.h"
 using namespace std::chrono_literals;
 
-std::vector<Skill> botSkills {{0.001, true, MovementPolicy::PushOnly}, {7.5, false, MovementPolicy::PushAndRetreat}};
+Skill terminatorSkill = {0.001, true, MovementPolicy::PushOnly};
+Skill badAggressiveSkill = {10.0, false, MovementPolicy::PushOnly};
+Skill badStopSkill = {10.0, true, MovementPolicy::PushOnly};
+Skill afraidSkill = {10.0, false, MovementPolicy::PushAndRetreat};
+Skill nothingSkill = {10.0, true, MovementPolicy::HoldOnly};
+std::vector<Skill> allBotSkills {terminatorSkill, badAggressiveSkill, badStopSkill, afraidSkill, nothingSkill};
+std::vector<Skill> teamBotSkills {terminatorSkill, nothingSkill};
+bool pickFromSkillVector = false, pickByTeam = true;
 bool firstGame = true;
 std::filesystem::directory_entry curDemoFile;
 int32_t curMapNumber = -1;
@@ -59,10 +66,12 @@ void updateThinkers(ServerState & state, string mapsPath, std::list<Thinker> & t
 
     std::map<int32_t, bool> botCSGOIdsToAdd;
     std::map<int32_t, string> botCSGOIdsToNames;
+    std::map<int32_t, int32_t> botCSGOIdsToTeam;
     for (const auto & client : state.clients) {
         if (client.isBot) {
             botCSGOIdsToAdd.insert({client.csgoId, true});
             botCSGOIdsToNames.insert({client.csgoId, client.name});
+            botCSGOIdsToTeam.insert({client.csgoId, client.team});
         }
     }
 
@@ -98,7 +107,16 @@ void updateThinkers(ServerState & state, string mapsPath, std::list<Thinker> & t
                 bool stopToShoot = otherSkillDis(otherSkillGen) < 0.5;
                 MovementPolicy policy = otherSkillDis(otherSkillGen) < 0.5 ?
                                         MovementPolicy::PushAndRetreat : MovementPolicy::PushOnly;
-                botNameToSkill.insert({botName, {accuracyDis(accuracyGen), stopToShoot, policy} });
+                if (pickFromSkillVector) {
+                    botNameToSkill.insert({botName, allBotSkills[botNameToSkill.size() % allBotSkills.size()]});
+                }
+                else if (pickByTeam) {
+                    int32_t skillIndex = botCSGOIdsToTeam[csgoId] == 3 ? 0 : 1;
+                    botNameToSkill.insert({botName, teamBotSkills[skillIndex]});
+                }
+                else {
+                    botNameToSkill.insert({botName, {accuracyDis(accuracyGen), stopToShoot, policy} });
+                }
                 newBotsForThisGame = true;
             }
             skill = botNameToSkill[botName];

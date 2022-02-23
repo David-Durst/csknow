@@ -212,7 +212,7 @@ void Thinker::updateMovementType(const ServerState state, const ServerState::Cli
             developingPlan.saveWaypoint = true;
         }
     }
-    else if (outnumbered) {
+    else if (skill.movementPolicy != MovementPolicy::HoldOnly && outnumbered) {
         // set retreat, let updateDevelopingPlanWaypoint set to random if it fails
         developingPlan.movementType = MovementType::Retreat;
         // if newly retreating, take oldest remembered position
@@ -226,7 +226,8 @@ void Thinker::updateMovementType(const ServerState state, const ServerState::Cli
         }
     }
     // walk randomly if stuck in a push or retreat but havent moved during window leading to plan decision
-    else if ((executingPlan.movementType == MovementType::Push || executingPlan.movementType == MovementType::Retreat) &&
+    else if (skill.movementPolicy != MovementPolicy::HoldOnly &&
+            (executingPlan.movementType == MovementType::Push || executingPlan.movementType == MovementType::Retreat) &&
             computeDistance(curPosition, oldPosition) < 5.) {
         developingPlan.movementType = MovementType::Random;
     }
