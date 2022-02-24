@@ -124,7 +124,7 @@ for param_layer in params:
     print(param_layer.shape)
 
 loss_fn = nn.CrossEntropyLoss()
-optimizer = torch.optim.SGD(model.parameters(), lr=1e-3)
+optimizer = torch.optim.Adam(model.parameters())
 
 def train(dataloader, model, loss_fn, optimizer):
     size = len(dataloader.dataset)
