@@ -71,9 +71,9 @@ TrainDatasetResult queryTrainDataset(const Games & games, const Rounds & rounds,
     vector<TrainDatasetResult::TimeStepState> tmpOldState[numThreads];
     vector<TrainDatasetResult::TimeStepPlan> tmpPlan[numThreads];
 
-#pragma omp parallel for
+//#pragma omp parallel for
     for (int64_t roundIndex = 0; roundIndex < rounds.size; roundIndex++) {
-        if (strcmp(games.mapName[rounds.gameId[roundIndex]], "bot_playground_2v1") != 0) {
+        if (strcmp(games.mapName[rounds.gameId[roundIndex]], games.mapName[0]) != 0) {
             continue;
         }
 

@@ -46,9 +46,11 @@ public:
         result.push_back(prefix + " x");
         result.push_back(prefix + " y");
         result.push_back(prefix + " z");
-        for (size_t i = 0; i < steps.front().navStates.size(); i++) {
-            result.push_back(prefix + " nav " + std::to_string(i) + " friends");
-            result.push_back(prefix + " nav " + std::to_string(i) + " enemies");
+        if (steps.size() > 0) {
+            for (size_t i = 0; i < steps.front().navStates.size(); i++) {
+                result.push_back(prefix + " nav " + std::to_string(i) + " friends");
+                result.push_back(prefix + " nav " + std::to_string(i) + " enemies");
+            }
         }
     }
 

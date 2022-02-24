@@ -175,9 +175,6 @@ func main() {
 
 	i := 0
 	localGameTypes := gameTypes
-	if *reprocessFlag || *subsetReprocessFlag {
-		localGameTypes = []string{""}
-	}
 	for gameTypeIndex, gameTypeString := range localGameTypes {
 		sourcePrefixWithType := sourcePrefix + gameTypeString + "/"
 		svc.ListObjectsV2Pages(&s3.ListObjectsV2Input{
