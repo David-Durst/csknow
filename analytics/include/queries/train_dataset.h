@@ -21,7 +21,8 @@ public:
     };
 
     struct TimeStepState {
-        size_t curAABB;
+        size_t curArea;
+        int32_t team;
         Vec3 pos;
         vector<NavmeshState> navStates;
         // these aren't printed, just used for bookkeeping during query
@@ -33,8 +34,8 @@ public:
 
     string timeStepStateToString(TimeStepState step) {
         std::stringstream result;
-        result << step.curAABB;
-        result << "," << step.pos.x << "," << step.pos.y << "," << step.pos.z;
+        result << step.curArea;
+        result << "," << step.team;
         for (const auto & navState : step.navStates) {
             result << "," << navState.numFriends << "," << navState.numEnemies;
         }
@@ -42,10 +43,8 @@ public:
     }
 
     void timeStepStateColumns(vector<TimeStepState> steps, string prefix, vector<string> & result) {
-        result.push_back(prefix + " nav aabb");
-        result.push_back(prefix + " x");
-        result.push_back(prefix + " y");
-        result.push_back(prefix + " z");
+        result.push_back(prefix + " nav area");
+        result.push_back(prefix + " team");
         if (steps.size() > 0) {
             for (size_t i = 0; i < steps.front().navStates.size(); i++) {
                 result.push_back(prefix + " nav " + std::to_string(i) + " friends");

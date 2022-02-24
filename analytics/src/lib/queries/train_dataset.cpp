@@ -50,8 +50,9 @@ addStepStatesForTick(const Ticks & ticks, const PlayerAtTick & playerAtTick, con
 
         TrainDatasetResult::TimeStepState timeStepStateForPlayer = playerAtTick.team[aabbAndPATId.second] == INTERNAL_TEAM_CT ?
                 timeStepStateCT : timeStepStateT;
-        timeStepStateForPlayer.curAABB = aabbAndPATId.first;
+        timeStepStateForPlayer.curArea = aabbAndPATId.first;
         timeStepStateForPlayer.patId = aabbAndPATId.second;
+        timeStepStateForPlayer.team = playerAtTick.team[aabbAndPATId.second];
         timeStepStateForPlayer.pos = {playerAtTick.posX[aabbAndPATId.second], playerAtTick.posY[aabbAndPATId.second],
                                       playerAtTick.posZ[aabbAndPATId.second]};
         result.push_back(timeStepStateForPlayer);
