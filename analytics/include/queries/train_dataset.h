@@ -35,7 +35,7 @@ public:
     string timeStepStateToString(TimeStepState step) {
         std::stringstream result;
         result << step.curArea;
-        result << "," << step.team;
+        //result << "," << step.team;
         for (const auto & navState : step.navStates) {
             result << "," << navState.numFriends << "," << navState.numEnemies;
         }
@@ -44,7 +44,7 @@ public:
 
     void timeStepStateColumns(vector<TimeStepState> steps, string prefix, vector<string> & result) {
         result.push_back(prefix + " nav area");
-        result.push_back(prefix + " team");
+        //result.push_back(prefix + " team");
         if (steps.size() > 0) {
             for (size_t i = 0; i < steps.front().navStates.size(); i++) {
                 result.push_back(prefix + " nav " + std::to_string(i) + " friends");
@@ -121,9 +121,10 @@ public:
     string getDataLabelRanges() {
         vector<string> stateCols;
         timeStepStateColumns(curState, "cur", stateCols);
-        string dataRange = "data range: 2,5:" + std::to_string(5 + 3*stateCols.size());
-        string labelRange = "label range: " + std::to_string(5 + 3*stateCols.size()) + ":";
-        return dataRange + "\n" + labelRange;
+        string columns = "data player id,data main min,data main max,label main min\n";
+        string values = "2,5," + std::to_string(5 + 3*stateCols.size()) + "," +
+                std::to_string(5 + 3*stateCols.size());
+        return columns + values;
     }
 };
 

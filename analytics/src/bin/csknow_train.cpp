@@ -95,12 +95,15 @@ int main(int argc, char * argv[]) {
 
     TrainDatasetResult trainDatasetResult = queryTrainDataset(games, rounds, ticks, players, playerAtTick, map_navs);
 
-    std::ofstream outputFile;
+    std::ofstream outputFile, configFile;
     string outputPath = outputDir + "/train_dataset.csv";
+    string configPath = outputDir + "/train_config.csv";
 
     std::cout << "writing train dataset with size " << trainDatasetResult.size << " to " << outputPath << std::endl;
-    std::cout << trainDatasetResult.getDataLabelRanges() << std::endl;
     outputFile.open(outputPath);
     outputFile << trainDatasetResult.toCSV();
     outputFile.close();
+    configFile.open(configPath);
+    configFile << trainDatasetResult.getDataLabelRanges();
+    configFile.close();
 }
