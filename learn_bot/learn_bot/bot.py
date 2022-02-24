@@ -14,6 +14,7 @@ from sklearn.model_selection import train_test_split
 from pathlib import Path
 
 all_data_df = pd.read_csv(Path(__file__).parent / '..' / 'data' / 'train_dataset.csv')
+config = pd.read_csv(Path(__file__).parent / '..' / 'data' / 'train_config.csv')
 train_df, test_df = train_test_split(all_data_df, test_size=0.2)
 #min_max_scaler = preprocessing.MinMaxScaler()
 #min_max_scaler.fit(all_data_df.iloc[:, 95:].values)
@@ -29,15 +30,18 @@ class BotDataset(Dataset):
         global non_embedding_features
         self.id = df.iloc[:, 0]
         self.tick_id = df.iloc[:, 1]
-        self.source_player_id = df.iloc[:, 2]
+        self.source_player_id = df.iloc[:, config.at[0,'data player id']]
         self.source_player_name = df.iloc[:, 3]
         self.demo_name = df.iloc[:, 4]
-        x_cols = [all_data_df.columns[2]] + all_data_df.columns[5:77].tolist()
+
+        """data main min,data main max"""
+        x_cols = [all_data_df.columns[config.at[0,'data player id']]] + \
+                 all_data_df.columns[config.at[0,'data main min']:config.at[0,'data main max']].tolist()
         non_embedding_features = len(x_cols) - 1
         # convert player id's to indexes
         df_with_ixs = df.replace({all_data_df.columns[2]: player_id_to_ix})
         self.X = torch.tensor(df_with_ixs.loc[:, x_cols].values).float()
-        Y_prescale_df = df.iloc[:, 77:]
+        Y_prescale_df = df.iloc[:, config.at[0,'label main min']:]
         #Y_scaled_df = min_max_scaler.transform(Y_prescale_df)
         df['moving'] = np.where((df['delta x']**2 + df['delta y']**2) ** 0.5 > 0.5, 1.0, 0.0)
         df['not moving'] = np.where((df['delta x']**2 + df['delta y']**2) ** 0.5 > 0.5, 0.0, 1.0)
