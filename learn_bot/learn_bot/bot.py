@@ -34,7 +34,6 @@ class BotDataset(Dataset):
         self.source_player_name = df.iloc[:, 3]
         self.demo_name = df.iloc[:, 4]
 
-        """data main min,data main max"""
         x_cols = [all_data_df.columns[config.at[0,'data player id']]] + \
                  all_data_df.columns[config.at[0,'data main min']:config.at[0,'data main max']].tolist()
         non_embedding_features = len(x_cols) - 1
@@ -45,7 +44,8 @@ class BotDataset(Dataset):
         #Y_scaled_df = min_max_scaler.transform(Y_prescale_df)
         df['moving'] = np.where((df['delta x']**2 + df['delta y']**2) ** 0.5 > 0.5, 1.0, 0.0)
         df['not moving'] = np.where((df['delta x']**2 + df['delta y']**2) ** 0.5 > 0.5, 0.0, 1.0)
-        sub_df = df[['moving', 'not moving']].values
+        sub_df = df[['moving', 'not moving', 'shoot next true', 'shoot next false',
+                     'crouch next true', 'crouch next false']].values
         self.Y = torch.tensor(sub_df).float()
 
     def __len__(self):
@@ -93,16 +93,13 @@ class NeuralNetwork(nn.Module):
         self.moveLayer = nn.Sequential(
             nn.Linear(128, 2),
         )
-        #self.crouchLayer = nn.Sequential(
-        #    nn.Linear(128, 2),
-        #)
-        #self.shootLayer = nn.Sequential(
-        #    nn.Linear(128, 2),
-        #)
-        #self.moveSoftmax = nn.Softmax(dim=1)
+        self.crouchLayer = nn.Sequential(
+            nn.Linear(128, 2),
+        )
+        self.shootLayer = nn.Sequential(
+            nn.Linear(128, 2),
+        )
         #self.moveSigmoid = nn.Sigmoid()
-        #self.crouchSoftmax = nn.Softmax(dim=1)
-        #self.shootSoftmax = nn.Softmax(dim=1)
 
     def forward(self, x):
         idx, x_vals = torch.split(x, [1, non_embedding_features], dim=1)
@@ -110,10 +107,11 @@ class NeuralNetwork(nn.Module):
         embeds = self.embeddings(idx_long).view((-1, embedding_dim))
         x_all = torch.cat((embeds, x_vals), 1)
         logits = self.linear_relu_stack(x_all)
+        moveOutput = self.moveLayer(logits)
         #moveOutput = self.moveSigmoid(self.moveLayer(logits))
-        #crouchOutput = self.crouchSoftmax(self.crouchLayer(logits))
-        #shootOutput = self.shootSoftmax(self.shootLayer(logits))
-        return self.moveLayer(logits) #torch.cat((moveOutput, crouchOutput, shootOutput), dim=1)
+        crouchOutput = self.crouchLayer(logits)
+        shootOutput = self.shootLayer(logits)
+        return torch.cat((moveOutput, crouchOutput, shootOutput), dim=1)
 
 
 model = NeuralNetwork().to(device)
@@ -126,6 +124,13 @@ for param_layer in params:
 loss_fn = nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(model.parameters())
 
+def compute_loss(pred, y):
+    move_loss = loss_fn(pred[:, 0:2], y[:, 0:2])
+    shoot_loss = loss_fn(pred[:, 2:4], y[:, 2:4])
+    crouch_loss = loss_fn(pred[:, 4:6], y[:, 4:6])
+    return move_loss + shoot_loss + crouch_loss
+
+
 def train(dataloader, model, loss_fn, optimizer):
     size = len(dataloader.dataset)
     model.train()
@@ -134,15 +139,15 @@ def train(dataloader, model, loss_fn, optimizer):
 
         # Compute prediction error
         pred = model(X)
-        loss = loss_fn(pred, y)
+        total_loss = compute_loss(pred, y)
 
         # Backpropagation
         optimizer.zero_grad()
-        loss.backward()
+        total_loss.backward()
         optimizer.step()
 
         if batch % 100 == 0:
-            loss, current = loss.item(), batch * len(X)
+            loss, current = total_loss.item(), batch * len(X)
             print(f"loss: {loss:>7f}  [{current:>5d}/{size:>5d}]")
 
 
@@ -155,7 +160,7 @@ def test(dataloader, model, loss_fn):
         for X, Y in dataloader:
             X, Y = X.to(device), Y.to(device)
             pred = model(X)
-            test_loss += loss_fn(pred, Y).item()
+            test_loss += compute_loss(pred, Y).item()
             #correct += (pred.argmax(1) == y).type(torch.float).sum().item()
     test_loss /= num_batches
     print(f"Test Error: Avg loss: {test_loss:>8f} \n")
