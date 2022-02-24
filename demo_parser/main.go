@@ -155,6 +155,8 @@ func main() {
 	if *result.KeyCount == 1 && !*reprocessFlag && !*subsetReprocessFlag {
 		downloadFile(downloader, *result.Contents[0].Key, inputStateCSVName)
 		startIDState = parseInputStateCSV()
+		// set first run to false since found an old state and not reprocessing
+		firstRun = false
 	}
 
 	gamesAWS := csvPrefixGlobal + gamesCSVName
