@@ -99,6 +99,7 @@ int main(int argc, char * argv[]) {
     string outputPath = outputDir + "/train_dataset.csv";
 
     std::cout << "writing train dataset with size " << trainDatasetResult.size << " to " << outputPath << std::endl;
+    std::cout << trainDatasetResult.getDataLabelRanges() << std::endl;
     outputFile.open(outputPath);
     outputFile << trainDatasetResult.toCSV();
     outputFile.close();

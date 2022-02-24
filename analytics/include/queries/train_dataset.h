@@ -117,6 +117,14 @@ public:
         timeStepPlanColumns(curState, result);
         return result;
     }
+
+    string getDataLabelRanges() {
+        vector<string> stateCols;
+        timeStepStateColumns(curState, "cur", stateCols);
+        string dataRange = "data range: 2,5:" + std::to_string(5 + 3*stateCols.size());
+        string labelRange = "label range: " + std::to_string(5 + 3*stateCols.size()) + ":";
+        return dataRange + "\n" + labelRange;
+    }
 };
 
 TrainDatasetResult queryTrainDataset(const Games & games, const Rounds & rounds, const Ticks & ticks,
