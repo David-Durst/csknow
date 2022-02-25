@@ -12,6 +12,7 @@
 using std::string;
 using std::map;
 #define DECISION_SECONDS 0.25
+#define COSINE_SIMILARITY_THRESHOLD 0.9
 
 class TrainDatasetResult : public QueryResult {
 public:
@@ -29,7 +30,7 @@ public:
         int64_t gameId;
         int64_t tickId;
         int64_t patId;
-        TimeStepState(int64_t numNavmeshAABBs) : navStates(numNavmeshAABBs, {0, 0}) { };
+        TimeStepState(int64_t numNavmeshAreas) : navStates(numNavmeshAreas, {0, 0}) { };
     };
 
     string timeStepStateToString(TimeStepState step) {
@@ -58,6 +59,8 @@ public:
         double deltaX, deltaY;
         bool shootDuringNextThink;
         bool crouchDuringNextThink;
+        vector<bool> isTarget;
+        TimeStepPlan(int64_t numNavmeshAreas) : isTarget(numNavmeshAreas, false) { };
     };
 
     string timeStepPlanToString(TimeStepPlan plan) {
@@ -65,16 +68,25 @@ public:
         result << plan.deltaX << "," << plan.deltaY
              << "," << (plan.shootDuringNextThink ? "1,0" : "0,1")
              << "," << (plan.crouchDuringNextThink ? "1,0" : "0,1");
+        for (const auto & isTarget : plan.isTarget) {
+            result << "," << (isTarget ? 1 : 0);
+        }
         return result.str();
     }
 
-    void timeStepPlanColumns(vector<TimeStepState> steps, vector<string> & result) {
+    void timeStepPlanColumns(vector<TimeStepPlan> plans, vector<string> & result) {
         result.push_back("delta x");
         result.push_back("delta y");
         result.push_back("shoot next true");
         result.push_back("shoot next false");
         result.push_back("crouch next true");
         result.push_back("crouch next false");
+
+        if (plans.size() > 0) {
+            for (size_t i = 0; i < plans.front().isTarget.size(); i++) {
+                result.push_back("nav " + std::to_string(i) + " target");
+            }
+        }
     }
 
     vector<int64_t> tickId;
@@ -114,7 +126,7 @@ public:
         timeStepStateColumns(curState, "cur", result);
         timeStepStateColumns(lastState, "last", result);
         timeStepStateColumns(oldState, "old", result);
-        timeStepPlanColumns(curState, result);
+        timeStepPlanColumns(plan, result);
         return result;
     }
 

@@ -138,10 +138,51 @@ TrainDatasetResult queryTrainDataset(const Games & games, const Rounds & rounds,
         }
 
         for (int64_t planIndex = planStartIndex; planIndex < tmpCurState[threadNum].size(); planIndex++) {
-            TrainDatasetResult::TimeStepPlan plan;
+            TrainDatasetResult::TimeStepPlan plan(tmpCurState[threadNum][planIndex].navStates.size());
 
             plan.deltaX = tmpNextState[threadNum][planIndex].pos.x - tmpCurState[threadNum][planIndex].pos.x;
             plan.deltaY = tmpNextState[threadNum][planIndex].pos.y - tmpCurState[threadNum][planIndex].pos.y;
+            double deltaZ = tmpNextState[threadNum][planIndex].pos.z - tmpCurState[threadNum][planIndex].pos.z;
+
+            size_t curAreaId = tmpCurState[threadNum][planIndex].curArea,
+                nextAreaId = tmpNextState[threadNum][planIndex].curArea;
+            Vec3 curAreaCenter(vec3tConv(navFile.m_areas[curAreaId].get_center()));
+            Vec2 movementDir{plan.deltaX, plan.deltaY},
+                curAreaDir{curAreaCenter.x - tmpCurState[threadNum][planIndex].pos.x,
+                           curAreaCenter.y - tmpCurState[threadNum][planIndex].pos.y};
+            Ray movementRay(tmpCurState[threadNum][planIndex].pos, {movementDir.x, movementDir.y, deltaZ});
+            if (curAreaId != nextAreaId) {
+                plan.isTarget[nextAreaId] = true;
+            }
+            else if (cosineSimilarity(movementDir, curAreaDir) > COSINE_SIMILARITY_THRESHOLD) {
+                plan.isTarget[curAreaId] = true;
+            }
+            else {
+                const nav_mesh::nav_area & startArea = navFile.m_areas[curAreaId];
+                auto& areaConnections = startArea.get_connections( );
+                // default to not hitting anything, so just stay in current area
+                // this captures not moving
+                uint32_t nearestArea = curAreaId;
+                if (computeMagnitude(movementRay.dir) > 0.) {
+                    int dude =1;
+                }
+                double nearestDistance = std::numeric_limits<double>::max();
+                for ( auto& connection : areaConnections ) {
+                    auto &connection_area = navFile.get_area_by_id(connection.id);
+                    // create some z
+                    AABB areaAABB{vec3tConv(connection_area.m_nw_corner), vec3tConv(connection_area.m_se_corner)};
+                    // create some extra vertical space for too small AABB
+                    areaAABB.min.z -= 5.;
+                    areaAABB.max.z += 5.;
+                    double newT0, newT1;
+                    if(intersectP(areaAABB, movementRay, newT0, newT1) &&
+                        newT0 * computeMagnitude(movementRay.dir) < nearestDistance) {
+                        nearestArea = connection.id;
+                        nearestDistance = newT0 * computeMagnitude(movementRay.dir);
+                    }
+                }
+                plan.isTarget[nearestArea] = true;
+            }
 
             plan.shootDuringNextThink = playerAtTick.primaryBulletsClip[tmpNextState[threadNum][planIndex].patId] !=
                     playerAtTick.primaryBulletsClip[tmpCurState[threadNum][planIndex].patId];

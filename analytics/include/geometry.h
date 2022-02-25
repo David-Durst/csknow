@@ -178,6 +178,17 @@ struct Vec2 {
         return result;
     }
 
+    Vec2 operator/(double scale) const {
+        Vec2 result = *this;
+        result.x /= scale;
+        result.y /= scale;
+        return result;
+    }
+
+    double dot(const Vec2 & other) const {
+        return (this->x * other.x) + (this->y * other.y);
+    }
+
     void makeYawNeg180To180() {
         this->x = positiveModulo(this->x, 360.);
         if (this->x > 180.) {
@@ -429,6 +440,16 @@ double computeDistance(Vec3 v1, Vec3 v2) {
 static inline __attribute__((always_inline))
 double computeMagnitude(Vec3 v) {
     return computeDistance(v, {0, 0, 0});
+}
+
+static inline __attribute__((always_inline))
+double computeMagnitude(Vec2 v) {
+    return computeDistance({v.x, v.y, 0}, {0, 0, 0});
+}
+
+static inline __attribute__((always_inline))
+double cosineSimilarity(Vec2 v1, Vec2 v2) {
+    return v1.dot(v2) / (computeMagnitude(v1) * computeMagnitude(v2));
 }
 
 // https://www.geeksforgeeks.org/shortest-distance-between-a-line-and-a-point-in-a-3-d-plane/
