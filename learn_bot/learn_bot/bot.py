@@ -16,8 +16,8 @@ from pathlib import Path
 all_data_df = pd.read_csv(Path(__file__).parent / '..' / 'data' / 'train_dataset.csv')
 config = pd.read_csv(Path(__file__).parent / '..' / 'data' / 'train_config.csv')
 train_df, test_df = train_test_split(all_data_df, test_size=0.2)
-#min_max_scaler = preprocessing.MinMaxScaler()
-#min_max_scaler.fit(all_data_df.iloc[:, 95:].values)
+min_max_scaler = preprocessing.MinMaxScaler()
+min_max_scaler.fit(all_data_df.iloc[:, config.at[0, 'label main min']:].values)
 
 unique_player_id = all_data_df.iloc[:,2].unique()
 player_id_to_ix = {player_id: i for (i, player_id) in enumerate(unique_player_id)}
@@ -40,11 +40,11 @@ class BotDataset(Dataset):
         # convert player id's to indexes
         df_with_ixs = df.replace({all_data_df.columns[2]: player_id_to_ix})
         self.X = torch.tensor(df_with_ixs.loc[:, x_cols].values).float()
-        Y_prescale_df = df.iloc[:, config.at[0,'label main min']:]
-        #Y_scaled_df = min_max_scaler.transform(Y_prescale_df)
-        df['moving'] = np.where((df['delta x']**2 + df['delta y']**2) ** 0.5 > 0.5, 1.0, 0.0)
-        df['not moving'] = np.where((df['delta x']**2 + df['delta y']**2) ** 0.5 > 0.5, 0.0, 1.0)
-        sub_df = df[['moving', 'not moving', 'shoot next true', 'shoot next false',
+        Y_prescale_df = df.iloc[:, config.at[0, 'label main min']:]
+        Y_scaled_df = min_max_scaler.transform(Y_prescale_df)
+        #df['moving'] = np.where((df['delta x']**2 + df['delta y']**2) ** 0.5 > 0.5, 1.0, 0.0)
+        #df['not moving'] = np.where((df['delta x']**2 + df['delta y']**2) ** 0.5 > 0.5, 0.0, 1.0)
+        sub_df = Y_scaled_df[['delta x', 'delta y', 'shoot next true', 'shoot next false',
                      'crouch next true', 'crouch next false']].values
         self.Y = torch.tensor(sub_df).float()
 
@@ -124,6 +124,7 @@ for param_layer in params:
 loss_fn = nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(model.parameters())
 
+# https://discuss.pytorch.org/t/how-to-combine-multiple-criterions-to-a-loss-function/348/4
 def compute_loss(pred, y):
     move_loss = loss_fn(pred[:, 0:2], y[:, 0:2])
     shoot_loss = loss_fn(pred[:, 2:4], y[:, 2:4])
@@ -131,7 +132,7 @@ def compute_loss(pred, y):
     return move_loss + shoot_loss + crouch_loss
 
 
-def train(dataloader, model, loss_fn, optimizer):
+def train(dataloader, model, optimizer):
     size = len(dataloader.dataset)
     model.train()
     for batch, (X, y) in enumerate(dataloader):
@@ -151,7 +152,7 @@ def train(dataloader, model, loss_fn, optimizer):
             print(f"loss: {loss:>7f}  [{current:>5d}/{size:>5d}]")
 
 
-def test(dataloader, model, loss_fn):
+def test(dataloader, model):
     size = len(dataloader.dataset)
     num_batches = len(dataloader)
     model.eval()
@@ -171,6 +172,6 @@ def test(dataloader, model, loss_fn):
 epochs = 5
 for t in range(epochs):
     print(f"Epoch {t+1}\n-------------------------------")
-    train(train_dataloader, model, loss_fn, optimizer)
-    test(test_dataloader, model, loss_fn)
+    train(train_dataloader, model, optimizer)
+    test(test_dataloader, model)
 print("Done")
