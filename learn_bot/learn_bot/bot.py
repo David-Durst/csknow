@@ -12,6 +12,7 @@ import numpy as np
 from sklearn import preprocessing
 from sklearn.model_selection import train_test_split
 from pathlib import Path
+from learn_bot.baseline import *
 
 all_data_df = pd.read_csv(Path(__file__).parent / '..' / 'data' / 'train_dataset.csv')
 config = pd.read_csv(Path(__file__).parent / '..' / 'data' / 'train_config.csv')
@@ -192,4 +193,9 @@ for t in range(epochs):
     print(f"Epoch {t+1}\n-------------------------------")
     train(train_dataloader, model, optimizer)
     test(test_dataloader, model)
+
+#baseline_model = BaselineBotModel(training_data.X, training_data.Y, prediction_names,
+#                                  prediction_range_starts, prediction_range_ends)
+#baseline_model.score(test_data.X, test_data.Y)
+
 print("Done")
