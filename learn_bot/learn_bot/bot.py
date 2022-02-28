@@ -24,10 +24,11 @@ player_id_to_ix = {player_id: i for (i, player_id) in enumerate(unique_player_id
 embedding_dim = 5
 
 non_embedding_features = 0
+num_target_cols = 0
 # https://androidkt.com/load-pandas-dataframe-using-dataset-and-dataloader-in-pytorch/
 class BotDataset(Dataset):
     def __init__(self, df):
-        global non_embedding_features
+        global non_embedding_features, num_target_cols
         self.id = df.iloc[:, 0]
         self.tick_id = df.iloc[:, 1]
         self.source_player_id = df.iloc[:, config.at[0,'data player id']]
@@ -41,10 +42,12 @@ class BotDataset(Dataset):
         df_with_ixs = df.replace({all_data_df.columns[2]: player_id_to_ix})
         self.X = torch.tensor(df_with_ixs.loc[:, x_cols].values).float()
         Y_prescale_df = df.iloc[:, config.at[0, 'label main min']:]
-        Y_scaled_df = min_max_scaler.transform(Y_prescale_df)
+        target_cols = [column for column in df.columns if column.startswith('nav') and column.endswith('target')]
+        num_target_cols = len(target_cols)
+        #Y_scaled_df = min_max_scaler.transform(Y_prescale_df)
         #df['moving'] = np.where((df['delta x']**2 + df['delta y']**2) ** 0.5 > 0.5, 1.0, 0.0)
         #df['not moving'] = np.where((df['delta x']**2 + df['delta y']**2) ** 0.5 > 0.5, 0.0, 1.0)
-        sub_df = Y_scaled_df[['delta x', 'delta y', 'shoot next true', 'shoot next false',
+        sub_df = Y_prescale_df[target_cols + ['shoot next true', 'shoot next false',
                      'crouch next true', 'crouch next false']].values
         self.Y = torch.tensor(sub_df).float()
 
@@ -91,7 +94,7 @@ class NeuralNetwork(nn.Module):
             nn.ReLU(),
         )
         self.moveLayer = nn.Sequential(
-            nn.Linear(128, 2),
+            nn.Linear(128, num_target_cols),
         )
         self.crouchLayer = nn.Sequential(
             nn.Linear(128, 2),
@@ -123,24 +126,31 @@ for param_layer in params:
 
 loss_fn = nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(model.parameters())
+#optimizer = torch.optim.SGD(model.parameters(), lr=0.001)
 
+prediction_names = ['move nav area', 'shoot', 'crouch']
+prediction_range_starts = [0, num_target_cols, num_target_cols+2]
+prediction_range_ends = [num_target_cols, num_target_cols+2, num_target_cols+4]
 # https://discuss.pytorch.org/t/how-to-combine-multiple-criterions-to-a-loss-function/348/4
 def compute_loss(pred, y):
-    move_loss = loss_fn(pred[:, 0:2], y[:, 0:2])
-    shoot_loss = loss_fn(pred[:, 2:4], y[:, 2:4])
-    crouch_loss = loss_fn(pred[:, 4:6], y[:, 4:6])
+    move_loss = loss_fn(pred[:, prediction_range_starts[0]:prediction_range_ends[0]],
+                        y[:, prediction_range_starts[0]:prediction_range_ends[0]])
+    shoot_loss = loss_fn(pred[:, prediction_range_starts[1]:prediction_range_ends[1]],
+                        y[:, prediction_range_starts[1]:prediction_range_ends[1]])
+    crouch_loss = loss_fn(pred[:, prediction_range_starts[2]:prediction_range_ends[2]],
+                        y[:, prediction_range_starts[2]:prediction_range_ends[2]])
     return move_loss + shoot_loss + crouch_loss
 
 
 def train(dataloader, model, optimizer):
     size = len(dataloader.dataset)
     model.train()
-    for batch, (X, y) in enumerate(dataloader):
-        X, y = X.to(device), y.to(device)
+    for batch, (X, Y) in enumerate(dataloader):
+        X, Y = X.to(device), Y.to(device)
 
         # Compute prediction error
         pred = model(X)
-        total_loss = compute_loss(pred, y)
+        total_loss = compute_loss(pred, Y)
 
         # Backpropagation
         optimizer.zero_grad()
@@ -156,17 +166,25 @@ def test(dataloader, model):
     size = len(dataloader.dataset)
     num_batches = len(dataloader)
     model.eval()
-    test_loss, correct = 0, 0
+    test_loss = 0
+    correct = {}
+    for name in prediction_names:
+        correct[name] = 0
     with torch.no_grad():
         for X, Y in dataloader:
             X, Y = X.to(device), Y.to(device)
             pred = model(X)
             test_loss += compute_loss(pred, Y).item()
-            #correct += (pred.argmax(1) == y).type(torch.float).sum().item()
+            for i, name in enumerate(prediction_names):
+                correct[name] += (pred[:, prediction_range_starts[i]:prediction_range_ends[i]].argmax(1) ==
+                                Y[:, prediction_range_starts[i]:prediction_range_ends[i]].argmax(1)) \
+                    .type(torch.float).sum().item()
     test_loss /= num_batches
     print(f"Test Error: Avg loss: {test_loss:>8f} \n")
-    #correct /= size
-    #print(f"Test Error: \n Accuracy: {(100*correct):>0.1f}%, Avg loss: {test_loss:>8f} \n")
+    for name in prediction_names:
+        correct[name] /= size
+        correct[name] *= 100
+    print(f"Test Error: \n Accuracy: {correct}%, Avg loss: {test_loss:>8f} \n")
 
 
 epochs = 5
