@@ -43,13 +43,18 @@ public:
         return result.str();
     }
 
-    void timeStepStateColumns(vector<TimeStepState> steps, string prefix, vector<string> & result) {
-        result.push_back(prefix + " nav area");
+    void timeStepStateColumns(vector<TimeStepState> steps, string prefix, vector<string> & result,
+                              bool onlyOneHot = false, bool onlyMinMaxScale = false) {
+        if (!onlyMinMaxScale) {
+            result.push_back(prefix + " nav area");
+        }
         //result.push_back(prefix + " team");
-        if (steps.size() > 0) {
-            for (size_t i = 0; i < steps.front().navStates.size(); i++) {
-                result.push_back(prefix + " nav " + std::to_string(i) + " friends");
-                result.push_back(prefix + " nav " + std::to_string(i) + " enemies");
+        if (!onlyOneHot) {
+            if (steps.size() > 0) {
+                for (size_t i = 0; i < steps.front().navStates.size(); i++) {
+                    result.push_back(prefix + " nav " + std::to_string(i) + " friends");
+                    result.push_back(prefix + " nav " + std::to_string(i) + " enemies");
+                }
             }
         }
     }
@@ -71,12 +76,17 @@ public:
         return result.str();
     }
 
-    void timeStepPlanColumns(vector<TimeStepPlan> plans, vector<string> & result) {
-        result.push_back("delta x");
-        result.push_back("delta y");
-        result.push_back("shoot next");
-        result.push_back("crouch next");
-        result.push_back("nav target");
+    void timeStepPlanColumns(vector<TimeStepPlan> plans, vector<string> & result,
+                             bool onlyOneHot = false, bool onlyMinMaxScale = false) {
+        if (!onlyOneHot) {
+            result.push_back("delta x");
+            result.push_back("delta y");
+        }
+        if (!onlyMinMaxScale) {
+            result.push_back("shoot next");
+            result.push_back("crouch next");
+            result.push_back("nav target");
+        }
     }
 
     vector<int64_t> tickId;
@@ -122,25 +132,35 @@ public:
 
     string getDataLabelRanges() {
         std::stringstream result;
-        vector<string> inputCols, outputCols;
+        vector<string> inputCols, outputCols, inputOneHot, outputOneHot, inputMinMaxScale, outputMinMaxScale;
+
         timeStepStateColumns(curState, "cur", inputCols);
         timeStepStateColumns(lastState, "last", inputCols);
         timeStepStateColumns(oldState, "old", inputCols);
         timeStepPlanColumns(plan, outputCols);
+
+        timeStepStateColumns(curState, "cur", inputOneHot, true);
+        timeStepStateColumns(lastState, "last", inputOneHot, true);
+        timeStepStateColumns(oldState, "old", inputOneHot, true);
+        timeStepPlanColumns(plan, outputOneHot, true);
+
+        timeStepStateColumns(curState, "cur", inputMinMaxScale, false, true);
+        timeStepStateColumns(lastState, "last", inputMinMaxScale, false, true);
+        timeStepStateColumns(oldState, "old", inputMinMaxScale, false, true);
+        timeStepPlanColumns(plan, outputMinMaxScale, false, true);
+
         result << "source player id\n";
-        for (size_t i = 0; i < inputCols.size(); i++) {
-            if (i != 0) {
-                result << ",";
-            }
-            result << inputCols[i];
-        }
+        commaSeparateList(result, inputCols);
         result << "\n";
-        for (size_t i = 0; i < outputCols.size(); i++) {
-            if (i != 0) {
-                result << ",";
-            }
-            result << outputCols[i];
-        }
+        commaSeparateList(result, inputOneHot);
+        result << "\n";
+        commaSeparateList(result, inputMinMaxScale);
+        result << "\n";
+        commaSeparateList(result, outputCols);
+        result << "\n";
+        commaSeparateList(result, outputOneHot);
+        result << "\n";
+        commaSeparateList(result, outputMinMaxScale);
         return result.str();
     }
 };
