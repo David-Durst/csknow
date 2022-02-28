@@ -138,7 +138,7 @@ TrainDatasetResult queryTrainDataset(const Games & games, const Rounds & rounds,
         }
 
         for (int64_t planIndex = planStartIndex; planIndex < tmpCurState[threadNum].size(); planIndex++) {
-            TrainDatasetResult::TimeStepPlan plan(tmpCurState[threadNum][planIndex].navStates.size());
+            TrainDatasetResult::TimeStepPlan plan;
 
             plan.deltaX = tmpNextState[threadNum][planIndex].pos.x - tmpCurState[threadNum][planIndex].pos.x;
             plan.deltaY = tmpNextState[threadNum][planIndex].pos.y - tmpCurState[threadNum][planIndex].pos.y;
@@ -152,10 +152,10 @@ TrainDatasetResult queryTrainDataset(const Games & games, const Rounds & rounds,
                            curAreaCenter.y - tmpCurState[threadNum][planIndex].pos.y};
             Ray movementRay(tmpCurState[threadNum][planIndex].pos, {movementDir.x, movementDir.y, deltaZ});
             if (curAreaId != nextAreaId) {
-                plan.isTarget[nextAreaId] = true;
+                plan.navTargetArea = nextAreaId;
             }
             else if (cosineSimilarity(movementDir, curAreaDir) > COSINE_SIMILARITY_THRESHOLD) {
-                plan.isTarget[curAreaId] = true;
+                plan.navTargetArea = curAreaId;
             }
             else {
                 const nav_mesh::nav_area & startArea = navFile.m_areas[curAreaId];
@@ -163,9 +163,6 @@ TrainDatasetResult queryTrainDataset(const Games & games, const Rounds & rounds,
                 // default to not hitting anything, so just stay in current area
                 // this captures not moving
                 uint32_t nearestArea = curAreaId;
-                if (computeMagnitude(movementRay.dir) > 0.) {
-                    int dude =1;
-                }
                 double nearestDistance = std::numeric_limits<double>::max();
                 for ( auto& connection : areaConnections ) {
                     auto &connection_area = navFile.get_area_by_id(connection.id);
@@ -181,7 +178,7 @@ TrainDatasetResult queryTrainDataset(const Games & games, const Rounds & rounds,
                         nearestDistance = newT0 * computeMagnitude(movementRay.dir);
                     }
                 }
-                plan.isTarget[nearestArea] = true;
+                plan.navTargetArea = nearestArea;
             }
 
             plan.shootDuringNextThink = playerAtTick.primaryBulletsClip[tmpNextState[threadNum][planIndex].patId] !=
@@ -197,7 +194,7 @@ TrainDatasetResult queryTrainDataset(const Games & games, const Rounds & rounds,
         for (int j = 0; j < tmpCurState[i].size(); j++) {
             result.tickId.push_back(tmpCurState[i][j].tickId);
             result.sourcePlayerId.push_back(playerAtTick.playerId[tmpCurState[i][j].patId]);
-            result.sourcePlayerName.push_back(players.name[result.sourcePlayerId.back()]);
+            result.sourcePlayerName.push_back(players.name[result.sourcePlayerId.back() + players.idOffset]);
             result.demoName.push_back(games.demoFile[tmpCurState[i][j].gameId]);
             result.curState.push_back(tmpCurState[i][j]);
             result.lastState.push_back(tmpLastState[i][j]);

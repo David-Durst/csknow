@@ -59,34 +59,24 @@ public:
         double deltaX, deltaY;
         bool shootDuringNextThink;
         bool crouchDuringNextThink;
-        vector<bool> isTarget;
-        TimeStepPlan(int64_t numNavmeshAreas) : isTarget(numNavmeshAreas, false) { };
+        int32_t navTargetArea;
     };
 
     string timeStepPlanToString(TimeStepPlan plan) {
         std::stringstream result;
         result << plan.deltaX << "," << plan.deltaY
-             << "," << (plan.shootDuringNextThink ? "1,0" : "0,1")
-             << "," << (plan.crouchDuringNextThink ? "1,0" : "0,1");
-        for (const auto & isTarget : plan.isTarget) {
-            result << "," << (isTarget ? 1 : 0);
-        }
+             << "," << (plan.shootDuringNextThink ? "1" : "0")
+             << "," << (plan.crouchDuringNextThink ? "1" : "0")
+             << "," << plan.navTargetArea;
         return result.str();
     }
 
     void timeStepPlanColumns(vector<TimeStepPlan> plans, vector<string> & result) {
         result.push_back("delta x");
         result.push_back("delta y");
-        result.push_back("shoot next true");
-        result.push_back("shoot next false");
-        result.push_back("crouch next true");
-        result.push_back("crouch next false");
-
-        if (plans.size() > 0) {
-            for (size_t i = 0; i < plans.front().isTarget.size(); i++) {
-                result.push_back("nav " + std::to_string(i) + " target");
-            }
-        }
+        result.push_back("shoot next");
+        result.push_back("crouch next");
+        result.push_back("nav target");
     }
 
     vector<int64_t> tickId;
