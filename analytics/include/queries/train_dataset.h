@@ -121,12 +121,27 @@ public:
     }
 
     string getDataLabelRanges() {
-        vector<string> stateCols;
-        timeStepStateColumns(curState, "cur", stateCols);
-        string columns = "data player id,data main min,data main max,label main min\n";
-        string values = "2,5," + std::to_string(5 + 3*stateCols.size()) + "," +
-                std::to_string(5 + 3*stateCols.size());
-        return columns + values;
+        std::stringstream result;
+        vector<string> inputCols, outputCols;
+        timeStepStateColumns(curState, "cur", inputCols);
+        timeStepStateColumns(lastState, "last", inputCols);
+        timeStepStateColumns(oldState, "old", inputCols);
+        timeStepPlanColumns(plan, outputCols);
+        result << "source player id\n";
+        for (size_t i = 0; i < inputCols.size(); i++) {
+            if (i != 0) {
+                result << ",";
+            }
+            result << inputCols[i];
+        }
+        result << "\n";
+        for (size_t i = 0; i < outputCols.size(); i++) {
+            if (i != 0) {
+                result << ",";
+            }
+            result << outputCols[i];
+        }
+        return result.str();
     }
 };
 
