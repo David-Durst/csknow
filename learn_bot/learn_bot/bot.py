@@ -103,6 +103,9 @@ class BotDataset(Dataset):
 training_data = BotDataset(train_df)
 test_data = BotDataset(test_df)
 
+baseline_model = BaselineBotModel(training_data.X, training_data.Y, output_names, output_ranges)
+baseline_model.score(test_data.X, test_data.Y)
+
 batch_size = 64
 
 train_dataloader = DataLoader(training_data, batch_size=batch_size, shuffle=True)
@@ -242,9 +245,5 @@ for t in range(epochs):
     print(f"Epoch {t+1}\n-------------------------------")
     train(train_dataloader, model, optimizer)
     test(test_dataloader, model)
-
-#baseline_model = BaselineBotModel(training_data.X, training_data.Y, prediction_names,
-#                                  prediction_range_starts, prediction_range_ends)
-#baseline_model.score(test_data.X, test_data.Y)
 
 print("Done")
