@@ -28,6 +28,7 @@ public:
         vector<NavmeshState> navStates;
         // these aren't printed, just used for bookkeeping during query
         int64_t gameId;
+        int64_t roundId;
         int64_t tickId;
         int64_t patId;
         TimeStepState(int64_t numNavmeshAreas) : navStates(numNavmeshAreas, {0, 0}) { };
@@ -37,6 +38,7 @@ public:
         std::stringstream result;
         result << step.curArea;
         //result << "," << step.team;
+        result << "," << step.pos.x << "," << step.pos.y << "," << step.pos.y;
         for (const auto & navState : step.navStates) {
             result << "," << navState.numFriends << "," << navState.numEnemies;
         }
@@ -50,6 +52,9 @@ public:
         }
         //result.push_back(prefix + " team");
         if (!onlyOneHot) {
+            result.push_back(prefix + " pos x");
+            result.push_back(prefix + " pos y");
+            result.push_back(prefix + " pos z");
             if (steps.size() > 0) {
                 for (size_t i = 0; i < steps.front().navStates.size(); i++) {
                     result.push_back(prefix + " nav " + std::to_string(i) + " friends");
@@ -90,6 +95,7 @@ public:
     }
 
     vector<int64_t> tickId;
+    vector<int64_t> roundId;
     vector<int64_t> sourcePlayerId;
     vector<string> sourcePlayerName;
     vector<string> demoName;
@@ -110,7 +116,8 @@ public:
     }
 
     void oneLineToCSV(int64_t index, stringstream & ss) {
-        ss << index << "," << tickId[index] << "," << sourcePlayerId[index] << "," << sourcePlayerName[index]
+        ss << index << "," << tickId[index] << "," << roundId[index]
+            << "," << sourcePlayerId[index] << "," << sourcePlayerName[index]
             << "," << demoName[index] << "," << curState[index].team
             << "," << timeStepStateToString(curState[index])
             << "," << timeStepStateToString(lastState[index])
@@ -119,7 +126,7 @@ public:
     }
 
     vector<string> getForeignKeyNames() {
-        return {"tick id", "source player id"};
+        return {"tick id", "round id", "source player id"};
     }
 
     vector<string> getOtherColumnNames() {

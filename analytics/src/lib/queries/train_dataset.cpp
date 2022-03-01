@@ -8,7 +8,7 @@
 #include <cassert>
 
 vector<TrainDatasetResult::TimeStepState>
-addStepStatesForTick(const Ticks & ticks, const PlayerAtTick & playerAtTick, const int64_t gameId, const int64_t tickIndex,
+addStepStatesForTick(const Ticks & ticks, const PlayerAtTick & playerAtTick, const int64_t gameId, const int64_t roundId, const int64_t tickIndex,
                           const nav_mesh::nav_file & navFile, const TrainDatasetResult::TimeStepState defaultTimeStepState) {
     vector<TrainDatasetResult::TimeStepState> result;
     // default is CT friends, T enemy, will flip for each player
@@ -106,13 +106,13 @@ TrainDatasetResult queryTrainDataset(const Games & games, const Rounds & rounds,
             int64_t curDemoTickId = tickIndex - getLookbackDemoTick(rounds, ticks, playerAtTick, tickIndex, tickRates, lookbackGameTicks, 1000);
             int64_t lastDemoTickId = curDemoTickId - 1;
             int64_t oldDemoTickId = tickIndex - getLookbackDemoTick(rounds, ticks, playerAtTick, tickIndex, tickRates, 2 * lookbackGameTicks, 1000);
-            auto nextStepStates = addStepStatesForTick(ticks, playerAtTick, rounds.gameId[roundIndex], nextDemoTickId,
+            auto nextStepStates = addStepStatesForTick(ticks, playerAtTick, rounds.gameId[roundIndex], roundIndex, nextDemoTickId,
                                  navFile, defaultTimeStepState);
-            auto curStepStates = addStepStatesForTick(ticks, playerAtTick, rounds.gameId[roundIndex], curDemoTickId,
+            auto curStepStates = addStepStatesForTick(ticks, playerAtTick, rounds.gameId[roundIndex], roundIndex, curDemoTickId,
                                  navFile, defaultTimeStepState);
-            auto lastStepStates = addStepStatesForTick(ticks, playerAtTick, rounds.gameId[roundIndex], lastDemoTickId,
+            auto lastStepStates = addStepStatesForTick(ticks, playerAtTick, rounds.gameId[roundIndex], roundIndex, lastDemoTickId,
                                  navFile, defaultTimeStepState);
-            auto oldStepStates = addStepStatesForTick(ticks, playerAtTick, rounds.gameId[roundIndex], oldDemoTickId,
+            auto oldStepStates = addStepStatesForTick(ticks, playerAtTick, rounds.gameId[roundIndex], roundIndex, oldDemoTickId,
                                  navFile, defaultTimeStepState);
 
             // players could leave in between frames, don't store any situations where all clients aren't same
@@ -193,6 +193,7 @@ TrainDatasetResult queryTrainDataset(const Games & games, const Rounds & rounds,
     for (int i = 0; i < numThreads; i++) {
         for (int j = 0; j < tmpCurState[i].size(); j++) {
             result.tickId.push_back(tmpCurState[i][j].tickId);
+            result.roundId.push_back(tmpCurState[i][j].roundId);
             result.sourcePlayerId.push_back(playerAtTick.playerId[tmpCurState[i][j].patId]);
             result.sourcePlayerName.push_back(players.name[result.sourcePlayerId.back() + players.idOffset]);
             result.demoName.push_back(games.demoFile[tmpCurState[i][j].gameId]);
