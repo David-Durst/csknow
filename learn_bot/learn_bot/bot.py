@@ -56,12 +56,13 @@ input_ct = ColumnTransformer(transformers=[
     ('pass', 'passthrough', compute_passthrough_cols(input_cols, input_one_hot_cols, input_min_max_cols)),
     ('one-hot', OneHotEncoder(), input_one_hot_cols),
     ('zero-to-one', MinMaxScaler(), input_min_max_cols),
-])
+], sparse_threshold=0)
 output_ct = ColumnTransformer(transformers=[
-    ('pass', 'passthrough', compute_passthrough_cols(output_cols, output_one_hot_cols, output_min_max_cols)),
+    #('pass', 'passthrough', compute_passthrough_cols(output_cols, output_one_hot_cols, output_min_max_cols)),
     ('one-hot', OneHotEncoder(), output_one_hot_cols),
-    ('zero-to-one', MinMaxScaler(), output_min_max_cols),
-])
+    ('drop', 'drop', output_min_max_cols),
+    #('zero-to-one', MinMaxScaler(), output_min_max_cols),
+], sparse_threshold=0)
 # remember: fit Y is ignored for this fitting as not SL
 input_ct.fit(all_data_df.loc[:, input_cols])
 output_ct.fit(all_data_df.loc[:, output_cols])
@@ -103,13 +104,10 @@ class BotDataset(Dataset):
 training_data = BotDataset(train_df)
 test_data = BotDataset(test_df)
 
-baseline_model = BaselineBotModel(training_data.X, training_data.Y, output_names, output_ranges)
-baseline_model.score(test_data.X, test_data.Y)
-
 batch_size = 64
 
 train_dataloader = DataLoader(training_data, batch_size=batch_size, shuffle=True)
-test_dataloader = DataLoader(training_data, batch_size=batch_size, shuffle=True)
+test_dataloader = DataLoader(test_data, batch_size=batch_size, shuffle=True)
 
 for X, Y in train_dataloader:
     print(f"Train shape of X: {X.shape} {X.dtype}")
@@ -120,6 +118,9 @@ for X, Y in test_dataloader:
     print(f"Test shape of X: {X.shape} {X.dtype}")
     print(f"Test shape of Y: {Y.shape} {Y.dtype}")
     break
+
+baseline_model = BaselineBotModel(training_data.X, training_data.Y, output_names, output_ranges)
+baseline_model.score(test_data.X, test_data.Y)
 
 # Get cpu or gpu device for training.
 device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -182,7 +183,9 @@ def compute_loss(pred, y):
     return move_loss + shoot_loss + crouch_loss
 
 
+first_batch = True
 def train(dataloader, model, optimizer):
+    global first_batch
     size = len(dataloader.dataset)
     num_batches = len(dataloader)
     model.train()
@@ -191,6 +194,10 @@ def train(dataloader, model, optimizer):
     for name in output_names:
         correct[name] = 0
     for batch, (X, Y) in enumerate(dataloader):
+        if first_batch:
+            first_batch = False
+            print(X.cpu().tolist())
+            print(Y.cpu().tolist())
         X, Y = X.to(device), Y.to(device)
 
         # Compute prediction error
