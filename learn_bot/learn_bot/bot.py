@@ -181,22 +181,37 @@ def compute_loss(pred, y):
 
 def train(dataloader, model, optimizer):
     size = len(dataloader.dataset)
+    num_batches = len(dataloader)
     model.train()
+    train_loss = 0
+    correct = {}
+    for name in output_names:
+        correct[name] = 0
     for batch, (X, Y) in enumerate(dataloader):
         X, Y = X.to(device), Y.to(device)
 
         # Compute prediction error
         pred = model(X)
-        total_loss = compute_loss(pred, Y)
+        batch_loss = compute_loss(pred, Y)
+        train_loss += batch_loss
 
         # Backpropagation
         optimizer.zero_grad()
-        total_loss.backward()
+        batch_loss.backward()
         optimizer.step()
 
         if batch % 100 == 0:
-            loss, current = total_loss.item(), batch * len(X)
+            loss, current = batch_loss.item(), batch * len(X)
             print(f"loss: {loss:>7f}  [{current:>5d}/{size:>5d}]")
+
+        for name, r in zip(output_names, output_ranges):
+            correct[name] += (pred[:, r].argmax(1) == Y[:, r].argmax(1)) \
+                .type(torch.float).sum().item()
+    train_loss /= num_batches
+    for name in output_names:
+        correct[name] /= size
+        correct[name] *= 100
+    print(f"Epoch Train Error: Accuracy: {correct}%, Avg loss: {train_loss:>8f} \n")
 
 
 def test(dataloader, model):
@@ -216,11 +231,10 @@ def test(dataloader, model):
                 correct[name] += (pred[:, r].argmax(1) == Y[:, r].argmax(1)) \
                     .type(torch.float).sum().item()
     test_loss /= num_batches
-    print(f"Test Error: Avg loss: {test_loss:>8f} \n")
     for name in output_names:
         correct[name] /= size
         correct[name] *= 100
-    print(f"Test Error: \n Accuracy: {correct}%, Avg loss: {test_loss:>8f} \n")
+    print(f"Epoch Test Error: Accuracy: {correct}%, Avg loss: {test_loss:>8f} \n")
 
 
 epochs = 5
