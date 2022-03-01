@@ -40,6 +40,7 @@ all_data_cols = input_cols + output_cols
 unique_player_id = all_data_df.loc[:, player_id_col].unique()
 player_id_to_ix = {player_id: i for (i, player_id) in enumerate(unique_player_id)}
 all_data_df = all_data_df.replace({player_id_col: player_id_to_ix})
+all_data_df = all_data_df[all_data_df['team'] == 0]
 
 train_df, test_df = train_test_split(all_data_df, test_size=0.2)
 
@@ -81,6 +82,7 @@ class BotDataset(Dataset):
         self.source_player_id = df.loc[:, player_id_col]
         self.source_player_name = df.iloc[:, 3]
         self.demo_name = df.iloc[:, 4]
+        self.team = df.iloc[:, 5]
 
         # convert player id's to indexes
         self.X = torch.tensor(input_ct.transform(df.loc[:, input_cols])).float()
@@ -119,8 +121,8 @@ for X, Y in test_dataloader:
     print(f"Test shape of Y: {Y.shape} {Y.dtype}")
     break
 
-baseline_model = BaselineBotModel(training_data.X, training_data.Y, output_names, output_ranges)
-baseline_model.score(test_data.X, test_data.Y)
+#baseline_model = BaselineBotModel(training_data.X, training_data.Y, output_names, output_ranges)
+#baseline_model.score(test_data.X, test_data.Y)
 
 # Get cpu or gpu device for training.
 device = "cuda" if torch.cuda.is_available() else "cpu"
