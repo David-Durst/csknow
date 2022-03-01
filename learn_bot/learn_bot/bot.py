@@ -36,6 +36,11 @@ output_one_hot_cols = get_config_line(5)
 output_min_max_cols = get_config_line(6)
 all_data_cols = input_cols + output_cols
 
+# for good embeddings, make sure player indices are from 0 to max-1, makes sure missing ids aren't problem
+unique_player_id = all_data_df.loc[:, player_id_col].unique()
+player_id_to_ix = {player_id: i for (i, player_id) in enumerate(unique_player_id)}
+all_data_df = all_data_df.replace({player_id_col: player_id_to_ix})
+
 train_df, test_df = train_test_split(all_data_df, test_size=0.2)
 
 
@@ -45,30 +50,31 @@ def compute_passthrough_cols(all_cols, *non_passthrough_lists):
         non_passthrough_cols += non_passthrough_list
     return [c for c in all_cols if c not in non_passthrough_cols]
 
-
+# transform concatenates outputs in order provided, so this ensures that source player id comes first
+# as that is only pass through col
 input_ct = ColumnTransformer(transformers=[
+    ('pass', 'passthrough', compute_passthrough_cols(input_cols, input_one_hot_cols, input_min_max_cols)),
     ('one-hot', OneHotEncoder(), input_one_hot_cols),
     ('zero-to-one', MinMaxScaler(), input_min_max_cols),
-    ('pass', 'passthrough', compute_passthrough_cols(input_cols, input_one_hot_cols, input_min_max_cols))
 ])
 output_ct = ColumnTransformer(transformers=[
+    ('pass', 'passthrough', compute_passthrough_cols(output_cols, output_one_hot_cols, output_min_max_cols)),
     ('one-hot', OneHotEncoder(), output_one_hot_cols),
     ('zero-to-one', MinMaxScaler(), output_min_max_cols),
-    ('pass', 'passthrough', compute_passthrough_cols(output_cols, output_one_hot_cols, output_min_max_cols))
 ])
 # remember: fit Y is ignored for this fitting as not SL
 input_ct.fit(all_data_df.loc[:, input_cols])
 output_ct.fit(all_data_df.loc[:, output_cols])
 
-unique_player_id = all_data_df.loc[:, player_id_col].unique()
-player_id_to_ix = {player_id: i for (i, player_id) in enumerate(unique_player_id)}
-embedding_dim = 5
+def get_name_range(name: str) -> slice:
+    name_indices = [i for i, col_name in enumerate(output_ct.get_feature_names_out()) if name in col_name]
+    return slice(min(name_indices), max(name_indices) + 1)
+output_names = ['nav target', 'shoot', 'crouch']
+output_ranges = [get_name_range(name) for name in output_names]
 
-num_target_cols = 0
 # https://androidkt.com/load-pandas-dataframe-using-dataset-and-dataloader-in-pytorch/
 class BotDataset(Dataset):
     def __init__(self, df):
-        global num_target_cols
         self.id = df.iloc[:, 0]
         self.tick_id = df.iloc[:, 1]
         self.source_player_id = df.loc[:, player_id_col]
@@ -76,19 +82,16 @@ class BotDataset(Dataset):
         self.demo_name = df.iloc[:, 4]
 
         # convert player id's to indexes
-        df_with_ixs = df.replace({all_data_df.columns[2]: player_id_to_ix})
-        input_df = df_with_ixs.loc[:, input_cols]
-        input_df_transformed = input_ct.transform(input_df)
-        self.X = torch.tensor(input_df_transformed.values).float()
-        Y_prescale_df = df.loc[:, output_cols]
-        target_cols = [column for column in df.columns if column.startswith('nav') and column.endswith('target')]
-        num_target_cols = len(target_cols)
+        self.X = torch.tensor(input_ct.transform(df.loc[:, input_cols])).float()
+        #Y_prescale_df = df.loc[:, output_cols]
+        #target_cols = [column for column in df.columns if column.startswith('nav') and column.endswith('target')]
+        #num_target_cols = len(target_cols)
         #Y_scaled_df = min_max_scaler.transform(Y_prescale_df)
         #df['moving'] = np.where((df['delta x']**2 + df['delta y']**2) ** 0.5 > 0.5, 1.0, 0.0)
         #df['not moving'] = np.where((df['delta x']**2 + df['delta y']**2) ** 0.5 > 0.5, 0.0, 1.0)
-        sub_df = Y_prescale_df[target_cols + ['shoot next true', 'shoot next false',
-                     'crouch next true', 'crouch next false']].values
-        self.Y = torch.tensor(sub_df).float()
+        #sub_df = Y_prescale_df[target_cols + ['shoot next true', 'shoot next false',
+        #             'crouch next true', 'crouch next false']].values
+        self.Y = torch.tensor(output_ct.transform(df.loc[:, output_cols])).float()
 
     def __len__(self):
         return len(self.id)
@@ -119,13 +122,14 @@ for X, Y in test_dataloader:
 device = "cuda" if torch.cuda.is_available() else "cpu"
 print(f"Using {device} device")
 
+embedding_dim = 5
 # Define model
 class NeuralNetwork(nn.Module):
     def __init__(self):
         super(NeuralNetwork, self).__init__()
         self.embeddings = nn.Embedding(len(unique_player_id), embedding_dim)
         self.linear_relu_stack = nn.Sequential(
-            nn.Linear(embedding_dim + len(non_player_id_input_cols), 128),
+            nn.Linear(embedding_dim + input_ct.get_feature_names_out().size - 1, 128),
             nn.ReLU(),
             nn.Linear(128, 128),
             nn.ReLU(),
@@ -133,7 +137,7 @@ class NeuralNetwork(nn.Module):
             nn.ReLU(),
         )
         self.moveLayer = nn.Sequential(
-            nn.Linear(128, num_target_cols),
+            nn.Linear(128, output_ranges[0].stop - output_ranges[0].start),
         )
         self.crouchLayer = nn.Sequential(
             nn.Linear(128, 2),
@@ -144,7 +148,7 @@ class NeuralNetwork(nn.Module):
         #self.moveSigmoid = nn.Sigmoid()
 
     def forward(self, x):
-        idx, x_vals = torch.split(x, [1, len(non_embedding_features)], dim=1)
+        idx, x_vals = x.split([1, x.shape[1] - 1], dim=1)
         idx_long = idx.long()
         embeds = self.embeddings(idx_long).view((-1, embedding_dim))
         x_all = torch.cat((embeds, x_vals), 1)
@@ -167,17 +171,11 @@ loss_fn = nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(model.parameters())
 #optimizer = torch.optim.SGD(model.parameters(), lr=0.001)
 
-prediction_names = ['move nav area', 'shoot', 'crouch']
-prediction_range_starts = [0, num_target_cols, num_target_cols+2]
-prediction_range_ends = [num_target_cols, num_target_cols+2, num_target_cols+4]
 # https://discuss.pytorch.org/t/how-to-combine-multiple-criterions-to-a-loss-function/348/4
 def compute_loss(pred, y):
-    move_loss = loss_fn(pred[:, prediction_range_starts[0]:prediction_range_ends[0]],
-                        y[:, prediction_range_starts[0]:prediction_range_ends[0]])
-    shoot_loss = loss_fn(pred[:, prediction_range_starts[1]:prediction_range_ends[1]],
-                        y[:, prediction_range_starts[1]:prediction_range_ends[1]])
-    crouch_loss = loss_fn(pred[:, prediction_range_starts[2]:prediction_range_ends[2]],
-                        y[:, prediction_range_starts[2]:prediction_range_ends[2]])
+    move_loss = loss_fn(pred[:, output_ranges[0]], y[:, output_ranges[0]])
+    shoot_loss = loss_fn(pred[:, output_ranges[1]], y[:, output_ranges[1]])
+    crouch_loss = loss_fn(pred[:, output_ranges[2]], y[:, output_ranges[2]])
     return move_loss + shoot_loss + crouch_loss
 
 
@@ -207,20 +205,19 @@ def test(dataloader, model):
     model.eval()
     test_loss = 0
     correct = {}
-    for name in prediction_names:
+    for name in output_names:
         correct[name] = 0
     with torch.no_grad():
         for X, Y in dataloader:
             X, Y = X.to(device), Y.to(device)
             pred = model(X)
             test_loss += compute_loss(pred, Y).item()
-            for i, name in enumerate(prediction_names):
-                correct[name] += (pred[:, prediction_range_starts[i]:prediction_range_ends[i]].argmax(1) ==
-                                Y[:, prediction_range_starts[i]:prediction_range_ends[i]].argmax(1)) \
+            for name, r in zip(output_names, output_ranges):
+                correct[name] += (pred[:, r].argmax(1) == Y[:, r].argmax(1)) \
                     .type(torch.float).sum().item()
     test_loss /= num_batches
     print(f"Test Error: Avg loss: {test_loss:>8f} \n")
-    for name in prediction_names:
+    for name in output_names:
         correct[name] /= size
         correct[name] *= 100
     print(f"Test Error: \n Accuracy: {correct}%, Avg loss: {test_loss:>8f} \n")

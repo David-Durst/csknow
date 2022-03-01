@@ -7,22 +7,21 @@ from torch import Tensor
 class BaselineBotModel:
     names: List[str]
     models: List[ClassifierMixin]
-    Y_range_starts: List[int]
-    Y_range_ends: List[int]
+    output_range_starts: List[int]
+    output_range_ends: List[int]
 
     def __init__(self, X: Tensor, Y: Tensor, output_names: List[str],
-                  Y_range_starts: List[int], Y_range_ends: List[int]):
+                  output_ranges: List[slice]):
         self.models = []
         for i, output_name in enumerate(output_names):
             self.models.append(KNeighborsClassifier(n_neighbors=3)
-                          .fit(X.numpy(), Y.numpy()[:, Y_range_starts[i]:Y_range_ends[i]]))
+                          .fit(X.numpy(), Y.numpy()[:, output_ranges[i]]))
         self.names = output_names
-        self.Y_range_starts = Y_range_starts
-        self.Y_range_ends = Y_range_ends
+        self.output_ranges = output_ranges
 
     def score(self, X: Tensor, Y: Tensor):
         for i, name in enumerate(self.names):
-            Y_subset = Y.numpy()[:, self.Y_range_starts[i]:self.Y_range_ends[i]]
-            print(f'{name} test accuracy {self.models[i].score(X.numpy(), Y_subset)}')
+            output_subset = Y.numpy()[:, self.output_ranges[i]]
+            print(f'{name} test accuracy {self.models[i].score(X.numpy(), output_subset)}')
 
 
