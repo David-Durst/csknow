@@ -44,7 +44,17 @@ all_data_df = all_data_df[all_data_df['team'] == 0]
 target_ax = all_data_df.loc[:, 'nav target'].value_counts().plot(kind='bar')
 target_ax.figure.savefig(Path(__file__).parent / '..' / 'data' / 'nav_distribution.png')
 
-train_df, test_df = train_test_split(all_data_df, test_size=0.2)
+
+# train test split on rounds with rounds weighted by number of entries in each round
+# so 80-20 train test split on actual data with rounds kept coherent
+# split by rounds, weight rounds by number of values in each round
+per_round_df = all_data_df.groupby(['round id']).count()
+# sample frac = 1 to shuffle
+random_sum_rounds_df = per_round_df.sample(frac=1).cumsum()
+top_80_pct_rounds = random_sum_rounds_df[random_sum_rounds_df['id'] < 0.8 * len(all_data_df)].index.to_list()
+all_data_df_split_predicate = all_data_df['round id'].isin(top_80_pct_rounds)
+train_df = all_data_df[all_data_df_split_predicate]
+test_df = all_data_df[~all_data_df_split_predicate]
 
 
 def compute_passthrough_cols(all_cols, *non_passthrough_lists):
@@ -79,12 +89,13 @@ output_ranges = [get_name_range(name) for name in output_names]
 # https://androidkt.com/load-pandas-dataframe-using-dataset-and-dataloader-in-pytorch/
 class BotDataset(Dataset):
     def __init__(self, df):
-        self.id = df.iloc[:, 0]
-        self.tick_id = df.iloc[:, 1]
+        self.id = df.loc[:, 'id']
+        self.tick_id = df.loc[:, 'tick id']
+        self.round_id = df.loc[:, 'round id']
         self.source_player_id = df.loc[:, player_id_col]
-        self.source_player_name = df.iloc[:, 3]
-        self.demo_name = df.iloc[:, 4]
-        self.team = df.iloc[:, 5]
+        self.source_player_name = df.loc[:, 'source player name']
+        self.demo_name = df.loc[:, 'demo name']
+        self.team = df.loc[:, 'team']
 
         # convert player id's to indexes
         self.X = torch.tensor(input_ct.transform(df.loc[:, input_cols])).float()
