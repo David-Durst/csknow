@@ -16,6 +16,8 @@ addStepStatesForTick(const Ticks & ticks, const PlayerAtTick & playerAtTick, con
     TrainDatasetResult::TimeStepState timeStepStateT = defaultTimeStepState;
     timeStepStateCT.gameId = gameId;
     timeStepStateT.gameId = gameId;
+    timeStepStateCT.roundId = roundId;
+    timeStepStateT.roundId = roundId;
     timeStepStateCT.tickId = tickIndex;
     timeStepStateT.tickId = tickIndex;
     map<int64_t, std::pair<uint32_t, int64_t>> playerIdToAABBAndPATId;
@@ -93,7 +95,7 @@ TrainDatasetResult queryTrainDataset(const Games & games, const Rounds & rounds,
         int64_t lastTickInDataset = rounds.ticksPerRound[roundIndex].minId;
         for (int64_t tickIndex = rounds.ticksPerRound[roundIndex].minId;
              tickIndex <= rounds.ticksPerRound[roundIndex].maxId; tickIndex++) {
-
+            
             // only store every DECISION_SECONDS, not continually making a decision
             // make sure at least 2 DECISION_SECONDS from start so can look into future
             if (secondsBetweenTicks(ticks, tickRates, lastTickInDataset, tickIndex) < DECISION_SECONDS ||
