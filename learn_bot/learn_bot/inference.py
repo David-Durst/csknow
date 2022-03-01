@@ -12,7 +12,7 @@ import re
 args: NNArgs = load(Path(__file__).parent / '..' / 'model' / 'args.joblib')
 device = "cpu"
 model = NeuralNetwork(args).to(device)
-model.load_state_dict(Path(__file__).parent / '..' / 'model' / 'model.pt')
+model.load_state_dict(torch.load(Path(__file__).parent / '..' / 'model' / 'model.pt'))
 
 def infer(inference_data: Dict):
     inference_df = pd.from_dict(inference_data)
