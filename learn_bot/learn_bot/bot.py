@@ -99,14 +99,6 @@ class BotDataset(Dataset):
 
         # convert player id's to indexes
         self.X = torch.tensor(input_ct.transform(df.loc[:, input_cols])).float()
-        #Y_prescale_df = df.loc[:, output_cols]
-        #target_cols = [column for column in df.columns if column.startswith('nav') and column.endswith('target')]
-        #num_target_cols = len(target_cols)
-        #Y_scaled_df = min_max_scaler.transform(Y_prescale_df)
-        #df['moving'] = np.where((df['delta x']**2 + df['delta y']**2) ** 0.5 > 0.5, 1.0, 0.0)
-        #df['not moving'] = np.where((df['delta x']**2 + df['delta y']**2) ** 0.5 > 0.5, 0.0, 1.0)
-        #sub_df = Y_prescale_df[target_cols + ['shoot next true', 'shoot next false',
-        #             'crouch next true', 'crouch next false']].values
         self.Y = torch.tensor(output_ct.transform(df.loc[:, output_cols])).float()
 
     def __len__(self):
