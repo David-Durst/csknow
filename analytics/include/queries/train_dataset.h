@@ -111,10 +111,11 @@ public:
 
     void oneLineToCSV(int64_t index, stringstream & ss) {
         ss << index << "," << tickId[index] << "," << sourcePlayerId[index] << "," << sourcePlayerName[index]
-            << "," << demoName[index] << "," << timeStepStateToString(curState[index])
+            << "," << demoName[index] << "," << curState[index].team
+            << "," << timeStepStateToString(curState[index])
             << "," << timeStepStateToString(lastState[index])
-            << "," << timeStepStateToString(lastState[index]) << "," << timeStepPlanToString(plan[index])
-            << std::endl;
+            << "," << timeStepStateToString(lastState[index])
+            << "," << timeStepPlanToString(plan[index]) << std::endl;
     }
 
     vector<string> getForeignKeyNames() {
@@ -122,7 +123,7 @@ public:
     }
 
     vector<string> getOtherColumnNames() {
-        vector<string> result{"source player name", "demo name"};
+        vector<string> result{"source player name", "demo name", "team"};
         timeStepStateColumns(curState, "cur", result);
         timeStepStateColumns(lastState, "last", result);
         timeStepStateColumns(oldState, "old", result);
