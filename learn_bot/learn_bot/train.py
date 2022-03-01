@@ -2,21 +2,15 @@
 import torch
 from torch import nn
 from torch.utils.data import DataLoader
-from torchvision import datasets
-from torchvision.transforms import ToTensor
 from torch.utils.data import Dataset
-from torchvision import datasets
-from torchvision.transforms import ToTensor
 import pandas as pd
 import numpy as np
 from sklearn.preprocessing import MinMaxScaler, OneHotEncoder
-from sklearn.model_selection import train_test_split
 from sklearn.compose import ColumnTransformer
-from sklearn.pipeline import Pipeline
 from pathlib import Path
 from learn_bot.baseline import *
-from joblib import dump, load
-from learn_bot.model import NeuralNetwork
+from joblib import dump
+from learn_bot.model import NeuralNetwork, NNArgs
 
 all_data_df = pd.read_csv(Path(__file__).parent / '..' / 'data' / 'train_dataset.csv')
 
@@ -137,8 +131,8 @@ print(f"Using {device} device")
 
 # Define model
 embedding_dim = 5
-num_unique_players = len(unique_player_id)
-model = NeuralNetwork(num_unique_players, embedding_dim, input_ct, output_ranges).to(device)
+args = NNArgs(len(unique_player_id), embedding_dim, input_ct, output_ct, output_names, output_ranges)
+model = NeuralNetwork(args).to(device)
 print(model)
 params = list(model.parameters())
 print("params by layer")
@@ -227,8 +221,7 @@ for t in range(epochs):
     train(train_dataloader, model, optimizer)
     test(test_dataloader, model)
 
-dump(input_ct, Path(__file__).parent / '..' / 'model' / 'input_ct.joblib')
-dump(output_ct, Path(__file__).parent / '..' / 'model' / 'output_ct.joblib')
+dump(args, Path(__file__).parent / '..' / 'model' / 'args.joblib')
 torch.save(model.state_dict(), Path(__file__).parent / '..' / 'model' / 'model.pt')
 
 print("Done")
