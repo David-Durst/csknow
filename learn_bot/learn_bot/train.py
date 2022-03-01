@@ -15,6 +15,8 @@ from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 from pathlib import Path
 from learn_bot.baseline import *
+from joblib import dump, load
+from learn_bot.model import NeuralNetwork
 
 all_data_df = pd.read_csv(Path(__file__).parent / '..' / 'data' / 'train_dataset.csv')
 
@@ -133,45 +135,10 @@ for X, Y in test_dataloader:
 device = "cuda" if torch.cuda.is_available() else "cpu"
 print(f"Using {device} device")
 
-embedding_dim = 5
 # Define model
-class NeuralNetwork(nn.Module):
-    def __init__(self):
-        super(NeuralNetwork, self).__init__()
-        self.embeddings = nn.Embedding(len(unique_player_id), embedding_dim)
-        self.linear_relu_stack = nn.Sequential(
-            nn.Linear(embedding_dim + input_ct.get_feature_names_out().size - 1, 128),
-            nn.ReLU(),
-            nn.Linear(128, 128),
-            nn.ReLU(),
-            nn.Linear(128, 128),
-            nn.ReLU(),
-        )
-        self.moveLayer = nn.Sequential(
-            nn.Linear(128, output_ranges[0].stop - output_ranges[0].start),
-        )
-        self.crouchLayer = nn.Sequential(
-            nn.Linear(128, 2),
-        )
-        self.shootLayer = nn.Sequential(
-            nn.Linear(128, 2),
-        )
-        #self.moveSigmoid = nn.Sigmoid()
-
-    def forward(self, x):
-        idx, x_vals = x.split([1, x.shape[1] - 1], dim=1)
-        idx_long = idx.long()
-        embeds = self.embeddings(idx_long).view((-1, embedding_dim))
-        x_all = torch.cat((embeds, x_vals), 1)
-        logits = self.linear_relu_stack(x_all)
-        moveOutput = self.moveLayer(logits)
-        #moveOutput = self.moveSigmoid(self.moveLayer(logits))
-        crouchOutput = self.crouchLayer(logits)
-        shootOutput = self.shootLayer(logits)
-        return torch.cat((moveOutput, crouchOutput, shootOutput), dim=1)
-
-
-model = NeuralNetwork().to(device)
+embedding_dim = 5
+num_unique_players = len(unique_player_id)
+model = NeuralNetwork(num_unique_players, embedding_dim, input_ct, output_ranges).to(device)
 print(model)
 params = list(model.parameters())
 print("params by layer")
@@ -259,5 +226,9 @@ for t in range(epochs):
     print(f"Epoch {t+1}\n-------------------------------")
     train(train_dataloader, model, optimizer)
     test(test_dataloader, model)
+
+dump(input_ct, Path(__file__).parent / '..' / 'model' / 'input_ct.joblib')
+dump(output_ct, Path(__file__).parent / '..' / 'model' / 'output_ct.joblib')
+torch.save(model.state_dict(), Path(__file__).parent / '..' / 'model' / 'model.pt')
 
 print("Done")
