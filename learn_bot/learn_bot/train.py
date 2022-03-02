@@ -2,7 +2,6 @@
 import torch
 from torch import nn
 from torch.utils.data import DataLoader
-from torch.utils.data import Dataset
 import pandas as pd
 import numpy as np
 from sklearn.preprocessing import MinMaxScaler, OneHotEncoder
@@ -11,6 +10,7 @@ from pathlib import Path
 from learn_bot.baseline import *
 from joblib import dump
 from learn_bot.model import NeuralNetwork, NNArgs
+from learn_bot.dataset import BotDataset, BotDatasetArgs
 
 all_data_df = pd.read_csv(Path(__file__).parent / '..' / 'data' / 'train_dataset.csv')
 
@@ -82,30 +82,10 @@ def get_name_range(name: str) -> slice:
 output_names = ['nav target', 'shoot', 'crouch']
 output_ranges = [get_name_range(name) for name in output_names]
 
-# https://androidkt.com/load-pandas-dataframe-using-dataset-and-dataloader-in-pytorch/
-class BotDataset(Dataset):
-    def __init__(self, df):
-        self.id = df.loc[:, 'id']
-        self.tick_id = df.loc[:, 'tick id']
-        self.round_id = df.loc[:, 'round id']
-        self.source_player_id = df.loc[:, player_id_col]
-        self.source_player_name = df.loc[:, 'source player name']
-        self.demo_name = df.loc[:, 'demo name']
-        self.team = df.loc[:, 'team']
 
-        # convert player id's to indexes
-        self.X = torch.tensor(input_ct.transform(df.loc[:, input_cols])).float()
-        self.Y = torch.tensor(output_ct.transform(df.loc[:, output_cols])).float()
-
-    def __len__(self):
-        return len(self.id)
-
-    def __getitem__(self, idx):
-        return self.X[idx], self.Y[idx]
-
-
-training_data = BotDataset(train_df)
-test_data = BotDataset(test_df)
+dataset_args = BotDatasetArgs(input_ct, output_ct, input_cols, output_cols)
+training_data = BotDataset(train_df, dataset_args)
+test_data = BotDataset(test_df, dataset_args)
 
 batch_size = 64
 
@@ -131,8 +111,8 @@ print(f"Using {device} device")
 
 # Define model
 embedding_dim = 5
-args = NNArgs(len(unique_player_id), embedding_dim, input_ct, output_ct, output_names, output_ranges)
-model = NeuralNetwork(args).to(device)
+nn_args = NNArgs(len(unique_player_id), embedding_dim, input_ct, output_ct, output_names, output_ranges)
+model = NeuralNetwork(nn_args).to(device)
 print(model)
 params = list(model.parameters())
 print("params by layer")
@@ -221,7 +201,8 @@ for t in range(epochs):
     train(train_dataloader, model, optimizer)
     test(test_dataloader, model)
 
-dump(args, Path(__file__).parent / '..' / 'model' / 'args.joblib')
+dump(dataset_args, Path(__file__).parent / '..' / 'model' / 'dataset_args.joblib')
+dump(nn_args, Path(__file__).parent / '..' / 'model' / 'nn_args.joblib')
 torch.save(model.state_dict(), Path(__file__).parent / '..' / 'model' / 'model.pt')
 
 print("Done")
