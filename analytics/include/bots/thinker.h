@@ -174,6 +174,7 @@ public:
     Skill getSkill() const { return skill; }
 };
 
+int run_model(string moduleName, string functionName);
 
 #endif //CSKNOW_THINKER_H
 

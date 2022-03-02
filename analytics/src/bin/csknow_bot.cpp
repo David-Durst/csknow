@@ -10,14 +10,19 @@
 #include <filesystem>
 
 int main(int argc, char * argv[]) {
-    if (argc != 3) {
-        std::cout << "please call this code 2 arguments: \n"
+    if (argc != 3 && argc != 4) {
+        std::cout << "please call this code with 2 or 3 arguments: \n"
             << "1. path/to/maps\n"
-            << "2. path/to/data\n" << std::endl;
+            << "2. path/to/data\n"
+            << "3. use_model (optional)\n" << std::endl;
         return 1;
     }
     string mapsPath = argv[1], dataPath = argv[2];
 
+    if (argc == 4) {
+        run_model("learn_bot.inference", "infer");
+    }
+    return 0;
 
     ServerState state;
     //Thinker thinker(state, 3, navPath, true);

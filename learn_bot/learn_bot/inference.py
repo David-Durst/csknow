@@ -15,7 +15,8 @@ model = NeuralNetwork(args).to(device)
 model.load_state_dict(torch.load(Path(__file__).parent / '..' / 'model' / 'model.pt', map_location=torch.device('cpu')))
 
 def infer(inference_data: Dict):
-    inference_df = pd.from_dict(inference_data)
+    print([inference_data])
+    inference_df = pd.DataFrame.from_dict([inference_data])
     # hack, will fix later when actually storing player ids
     inference_df['player_id'] = 0
     dataloader = DataLoader(inference_df, batch_size=len(inference_df))
