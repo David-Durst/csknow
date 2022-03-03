@@ -16,6 +16,50 @@ using std::map;
 
 class TrainDatasetResult : public QueryResult {
 public:
+    // container used for storing one of any value when being serialized to python
+    enum class ContainerType {
+        intType,
+        doubleType,
+        stringType,
+        numTypes
+    };
+    struct TrainDataContainer {
+        int64_t intOption;
+        double doubleOption;
+        string stringOption;
+        ContainerType containerType;
+
+        TrainDataContainer(uint64_t v) {
+            intOption = v;
+            containerType = ContainerType::intType;
+        }
+
+        TrainDataContainer(uint32_t v) {
+            intOption = v;
+            containerType = ContainerType::intType;
+        }
+
+        TrainDataContainer(int64_t v) {
+            intOption = v;
+            containerType = ContainerType::intType;
+        }
+
+        TrainDataContainer(int32_t v) {
+            intOption = v;
+            containerType = ContainerType::intType;
+        }
+
+        TrainDataContainer(double v) {
+            doubleOption = v;
+            containerType = ContainerType::doubleType;
+        }
+
+        TrainDataContainer(string v) {
+            stringOption = v;
+            containerType = ContainerType::stringType;
+        }
+    };
+
     struct NavmeshState {
         uint32_t numFriends;
         uint32_t numEnemies;
@@ -38,11 +82,23 @@ public:
         std::stringstream result;
         result << step.curArea;
         //result << "," << step.team;
-        result << "," << step.pos.x << "," << step.pos.y << "," << step.pos.y;
+        result << "," << step.pos.x << "," << step.pos.y << "," << step.pos.z;
         for (const auto & navState : step.navStates) {
             result << "," << navState.numFriends << "," << navState.numEnemies;
         }
         return result.str();
+    }
+
+    void timeStepStateToVec(TimeStepState step, vector<TrainDataContainer> & result) {
+        result.push_back(step.curArea);
+        //result << "," << step.team;
+        result.push_back(step.pos.x);
+        result.push_back(step.pos.y);
+        result.push_back(step.pos.z);
+        for (const auto & navState : step.navStates) {
+            result.push_back(navState.numFriends);
+            result.push_back(navState.numEnemies);
+        }
     }
 
     void timeStepStateColumns(vector<TimeStepState> steps, string prefix, vector<string> & result,
@@ -79,6 +135,14 @@ public:
              << "," << (plan.crouchDuringNextThink ? "1" : "0")
              << "," << plan.navTargetArea;
         return result.str();
+    }
+
+    void timeStepPlanToVec(TimeStepPlan plan, vector<TrainDataContainer> & result) {
+        result.push_back(plan.deltaX);
+        result.push_back(plan.deltaY);
+        result.push_back({plan.shootDuringNextThink ? 1u : 0u});
+        result.push_back({plan.crouchDuringNextThink ? 1u : 0u});
+        result.push_back(plan.navTargetArea);
     }
 
     void timeStepPlanColumns(vector<TimeStepPlan> plans, vector<string> & result,
@@ -123,6 +187,22 @@ public:
             << "," << timeStepStateToString(lastState[index])
             << "," << timeStepStateToString(lastState[index])
             << "," << timeStepPlanToString(plan[index]) << std::endl;
+    }
+
+    vector<TrainDataContainer> oneLineToVec(int64_t index) {
+        vector<TrainDataContainer> result;
+        result.push_back(index);
+        result.push_back(tickId[index]);
+        result.push_back(roundId[index]);
+        result.push_back(sourcePlayerId[index]);
+        result.push_back(sourcePlayerName[index]);
+        result.push_back(demoName[index]);
+        result.push_back(curState[index].team);
+        timeStepStateToVec(curState[index], result);
+        timeStepStateToVec(lastState[index], result);
+        timeStepStateToVec(oldState[index], result);
+        timeStepPlanToVec(plan[index], result);
+        return result;
     }
 
     vector<string> getForeignKeyNames() {
