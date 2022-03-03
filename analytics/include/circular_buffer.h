@@ -22,8 +22,8 @@ public:
     inline bool isFull() { return tail == head && curSize > 0; }
     inline bool isEmpty() { return tail == head && curSize == 0; }
 
-    T & fromFront(size_t i = 0) { return buffer[(head + i) % maxSize()]; }
-    T & fromBack(size_t i = 0) { return buffer[positiveModulo(tail - i - 1, maxSize())]; }
+    T & fromOldest(size_t i = 0) { return buffer[(head + i) % maxSize()]; }
+    T & fromNewest(size_t i = 0) { return buffer[positiveModulo(tail - i - 1, maxSize())]; }
 
     void clear() { 
         head = tail;

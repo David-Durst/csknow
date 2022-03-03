@@ -5,13 +5,15 @@
 #include "bots/manage_thinkers.h"
 using namespace std::chrono_literals;
 
-Skill terminatorSkill = {0.001, true, MovementPolicy::PushOnly};
-Skill badAggressiveSkill = {10.0, false, MovementPolicy::PushOnly};
-Skill badStopSkill = {10.0, true, MovementPolicy::PushOnly};
-Skill afraidSkill = {10.0, false, MovementPolicy::PushAndRetreat};
-Skill nothingSkill = {10.0, true, MovementPolicy::HoldOnly};
+Skill learnedTerminatorSkill = {true, 0.001, true, MovementPolicy::HoldOnly};
+Skill terminatorSkill = {false, 0.001, true, MovementPolicy::PushOnly};
+Skill badAggressiveSkill = {false, 10.0, false, MovementPolicy::PushOnly};
+Skill badStopSkill = {false, 10.0, true, MovementPolicy::PushOnly};
+Skill afraidSkill = {false, 10.0, false, MovementPolicy::PushAndRetreat};
+Skill nothingSkill = {false, 10.0, true, MovementPolicy::HoldOnly};
 std::vector<Skill> allBotSkills {terminatorSkill, badAggressiveSkill, badStopSkill, afraidSkill, nothingSkill};
 std::vector<Skill> teamBotSkills {terminatorSkill, nothingSkill};
+std::vector<Skill> learnedBotSkills {learnedTerminatorSkill, nothingSkill};
 bool pickFromSkillVector = false, pickByTeam = true;
 bool firstGame = true;
 std::filesystem::directory_entry curDemoFile;
@@ -50,11 +52,7 @@ void savePlayersFile() {
 
 }
 
-bool haveLatestDemoFile(string mapsPath) {
-    return getLatestDemoFile(mapsPath) == curDemoFile.path();
-}
-
-void updateThinkers(ServerState & state, string mapsPath, std::list<Thinker> & thinkers) {
+void updateThinkers(ServerState & state, string mapsPath, std::list<Thinker> & thinkers, bool useLearned) {
     string navPath = mapsPath + "/" + state.mapName + ".nav";
     bool newBotsForThisGame = false;
 
@@ -112,10 +110,15 @@ void updateThinkers(ServerState & state, string mapsPath, std::list<Thinker> & t
                 }
                 else if (pickByTeam) {
                     int32_t skillIndex = botCSGOIdsToTeam[csgoId] == 3 ? 0 : 1;
-                    botNameToSkill.insert({botName, teamBotSkills[skillIndex]});
+                    if (useLearned) {
+                        botNameToSkill.insert({botName, learnedBotSkills[skillIndex]});
+                    }
+                    else {
+                        botNameToSkill.insert({botName, teamBotSkills[skillIndex]});
+                    }
                 }
                 else {
-                    botNameToSkill.insert({botName, {accuracyDis(accuracyGen), stopToShoot, policy} });
+                    botNameToSkill.insert({botName, {false, accuracyDis(accuracyGen), stopToShoot, policy} });
                 }
                 newBotsForThisGame = true;
             }

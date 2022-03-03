@@ -18,11 +18,7 @@ int main(int argc, char * argv[]) {
         return 1;
     }
     string mapsPath = argv[1], dataPath = argv[2];
-
-    if (argc == 4) {
-        run_model("learn_bot.inference", "infer");
-    }
-    return 0;
+    bool useLearned = argc == 4;
 
     ServerState state;
     //Thinker thinker(state, 3, navPath, true);
@@ -58,7 +54,7 @@ int main(int argc, char * argv[]) {
             state.numThinkLines = 0;
         }
         if (state.loadedSuccessfully) {
-            updateThinkers(state, mapsPath, thinkers);
+            updateThinkers(state, mapsPath, thinkers, useLearned);
             for (auto & thinker : thinkers) {
                 thinker.think();
             }

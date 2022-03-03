@@ -42,8 +42,8 @@ void Thinker::think() {
                 // assuming clients aren't reshuffled, if so, will just be off for a second
                 const ServerState::Client & targetClient = 
                     liveState.clients[executingPlan.target.csknowId];
-                // from back to get most recent prior client
-                ServerState::Client & priorClient = getCurClient(stateForNextPlan.stateHistory.fromBack());
+                // get most recent prior client
+                ServerState::Client & priorClient = getCurClient(stateForNextPlan.stateHistory.fromNewest());
                 this->aimAt(curClient, targetClient, executingPlan.target.offset, priorClient);
                 this->fire(curClient, targetClient, priorClient);
                 this->move(curClient, priorClient);
@@ -53,7 +53,7 @@ void Thinker::think() {
 
         // clear the state history on each new round
         // take oldest as want if any are wrong, not just most recent
-        if (stateForNextPlan.stateHistory.fromFront().roundNumber != liveState.roundNumber) {
+        if (stateForNextPlan.stateHistory.fromOldest().roundNumber != liveState.roundNumber) {
             stateForNextPlan.stateHistory.clear();
         }
         // other thinkers may update inputs later

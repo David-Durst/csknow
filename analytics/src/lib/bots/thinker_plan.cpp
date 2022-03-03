@@ -13,7 +13,7 @@ void Thinker::plan() {
             }
             // if can match progress in current executing plan to next one, then start at the same point
             // in the new executing plan
-            else if (developingPlan.stateHistory.fromFront().roundNumber == executingPlan.stateHistory.fromFront().roundNumber && 
+            else if (developingPlan.stateHistory.fromOldest().roundNumber == executingPlan.stateHistory.fromOldest().roundNumber &&
                     executingPlan.curWaypoint > 0) {
                 for (size_t i = 0; i < developingPlan.waypoints.size(); i++) {
                     if (executingPlan.waypoints[executingPlan.curWaypoint - 1] == developingPlan.waypoints[i]) {
@@ -36,17 +36,18 @@ void Thinker::plan() {
         // make sure state history is filled out
         // otherwise wait as will be filled out in a few frames
         if (developingPlan.stateHistory.getCurSize() == developingPlan.stateHistory.maxSize()) {
-            // take from front so get most recent positions
-            ServerState & state = developingPlan.stateHistory.fromFront();
-            const ServerState::Client & curClient = getCurClient(state);
-            // take from back so get oldest positions
-            const ServerState::Client & oldClient = getCurClient(developingPlan.stateHistory.fromBack());
+            ServerState & curState = developingPlan.stateHistory.fromNewest();
+            const ServerState & lastState = developingPlan.stateHistory.fromNewest(1);
+            // get oldest positions - either newest from last plan or oldest from current plan
+            const ServerState & oldState =
+                    executingPlan.stateHistory.getCurSize() == executingPlan.stateHistory.maxSize() ?
+                    executingPlan.stateHistory.fromNewest() : developingPlan.stateHistory.fromOldest();
 
-            selectTarget(state, curClient);
+            selectTarget(curState);
             const ServerState::Client & targetClient = developingPlan.target.csknowId == INVALID_ID ?
-                invalidClient : state.clients[developingPlan.target.csknowId];
+                invalidClient : curState.clients[developingPlan.target.csknowId];
 
-            updateMovementType(state, curClient, oldClient, targetClient);
+            updateMovementType(curState, lastState, oldState, targetClient);
 
             developingPlan.valid = true;
         }
@@ -76,7 +77,8 @@ getCSGOIdToVisibleClients(const ServerState & state, const ServerState::Client &
     return result;
 }
 
-void Thinker::selectTarget(const ServerState & state, const ServerState::Client & curClient) {
+void Thinker::selectTarget(ServerState & state) {
+    ServerState::Client curClient = getCurClient(state);
     // find the nearest, visible enemy
     // if no enemies are visible, just take the nearest one
     int nearestEnemyServerId = INVALID_ID;
@@ -145,17 +147,30 @@ void Thinker::updateDevelopingPlanWaypoints(const Vec3 & curPosition, const Vec3
     developingPlan.curWaypoint = 0;
 }
 
-void Thinker::updateMovementType(const ServerState state, const ServerState::Client & curClient,
-        const ServerState::Client & oldClient, const ServerState::Client & targetClient) {
+void Thinker::updateMovementType(ServerState curState, ServerState lastState,
+                                 ServerState oldState, const ServerState::Client & targetClient) {
+    ServerState::Client curClient = getCurClient(curState);
+    ServerState::Client oldClient = getCurClient(oldState);
     Vec3 curPosition{curClient.lastEyePosX, curClient.lastEyePosY, curClient.lastFootPosZ};
     Vec3 oldPosition{oldClient.lastEyePosX, oldClient.lastEyePosY, oldClient.lastFootPosZ};
 
     Vec3 targetPosition;
-    if (targetClient.csgoId != INVALID_ID) {
+    if (skill.learned) {
+        std::optional<int64_t> targetNavId =
+                planModel.GetTargetNavArea(curState.csgoIdToCSKnowId[curClient.csgoId], curState, lastState, oldState);
+        if (targetNavId) {
+            targetPosition = vec3tConv(navFile.m_areas[targetNavId.value()].get_center());
+        }
+        else {
+            std::cerr << "bad model call" << std::endl;
+        }
+        targetPosition = curPosition;
+    }
+    else if (targetClient.csgoId != INVALID_ID) {
         targetPosition = {targetClient.lastEyePosX, targetClient.lastEyePosY, targetClient.lastFootPosZ};
     }
-    else if (state.c4Exists) {
-        targetPosition = {state.c4X, state.c4Y, state.c4Z}; 
+    else if (curState.c4Exists) {
+        targetPosition = {curState.c4X, curState.c4Y, curState.c4Z};
     }
     else {
         // go to where you are if no where to go
@@ -172,8 +187,8 @@ void Thinker::updateMovementType(const ServerState state, const ServerState::Cli
     developingPlan.saveWaypoint = false;
 
     int numVisibleEnemies = 0, numVisibleTeammates = 0;
-    std::map<int32_t, bool> csgoIdToVisible = getCSGOIdToVisibleClients(state, curClient);
-    for (const ServerState::Client & otherClient : state.clients) {
+    std::map<int32_t, bool> csgoIdToVisible = getCSGOIdToVisibleClients(curState, curClient);
+    for (const ServerState::Client & otherClient : curState.clients) {
         if (csgoIdToVisible[otherClient.csgoId] && otherClient.isAlive && curClient.csgoId != otherClient.csgoId) {
             if (otherClient.team == curClient.team) {
                 numVisibleTeammates++;
@@ -186,13 +201,13 @@ void Thinker::updateMovementType(const ServerState state, const ServerState::Cli
     bool outnumbered = numVisibleEnemies > numVisibleTeammates + 1;
 
     // clear retreats on new round
-    if (executingPlan.stateHistory.fromFront().roundNumber != 
-            developingPlan.stateHistory.fromFront().roundNumber) {
+    if (executingPlan.stateHistory.fromOldest().roundNumber !=
+        developingPlan.stateHistory.fromOldest().roundNumber) {
         retreatOptions.clear();
     }
     // you can retreat to the current location if not visible there
     if (retreatOptions.getCurSize() == 0 || 
-            (curPosition != retreatOptions.fromFront() && numVisibleEnemies == 0)) {
+            (curPosition != retreatOptions.fromOldest() && numVisibleEnemies == 0)) {
         retreatOptions.enqueue(curPosition, true);
     }
 
@@ -202,8 +217,8 @@ void Thinker::updateMovementType(const ServerState state, const ServerState::Cli
         // set push, let updateDevelopingPlanWaypoint set to random if it fails
         developingPlan.movementType = MovementType::Push;
         // choose a new path only if no waypoints or target has changed or plan was for old round
-        if (executingPlan.waypoints.empty() || executingPlan.waypoints.back() != vec3Conv(targetPosition) || 
-                executingPlan.stateHistory.fromFront().roundNumber != developingPlan.stateHistory.fromFront().roundNumber) {
+        if (executingPlan.waypoints.empty() || executingPlan.waypoints.back() != vec3Conv(targetPosition) ||
+                executingPlan.stateHistory.fromOldest().roundNumber != developingPlan.stateHistory.fromOldest().roundNumber) {
             updateDevelopingPlanWaypoints(curPosition, targetPosition);
         }
         // otherwise, keep same path
@@ -217,7 +232,7 @@ void Thinker::updateMovementType(const ServerState state, const ServerState::Cli
         developingPlan.movementType = MovementType::Retreat;
         // if newly retreating, take oldest remembered position
         if (executingPlan.movementType != MovementType::Retreat) {
-            updateDevelopingPlanWaypoints(curPosition, retreatOptions.fromFront());
+            updateDevelopingPlanWaypoints(curPosition, retreatOptions.fromOldest());
         }
         // if still retreating, make sure to get latest waypoint
         else {
@@ -244,7 +259,7 @@ void Thinker::updateMovementType(const ServerState state, const ServerState::Cli
     // log results
     std::stringstream logStream;
     string targetName = developingPlan.target.csknowId != INVALID_ID ? 
-        state.clients[developingPlan.target.csknowId].name : "";
+        curState.clients[developingPlan.target.csknowId].name : "";
     logStream << "num waypoints: " << developingPlan.waypoints.size() << ", cur movement type " 
         << enumAsInt(developingPlan.movementType) << ", num visible enemies " << numVisibleEnemies
         << ", target " << targetName << "\n";

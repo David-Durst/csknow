@@ -15,7 +15,6 @@
 
 std::filesystem::directory_entry getLatestDemoFile(string mapsPath);
 void savePlayersFile();
-void updateThinkers(ServerState & state, string mapsPath, std::list<Thinker> & thinkers);
-bool haveLatestDemoFile(string mapsPath);
+void updateThinkers(ServerState & state, string mapsPath, std::list<Thinker> & thinkers, bool useLearned);
 
 #endif //CSKNOW_MANAGE_THINKERS_H

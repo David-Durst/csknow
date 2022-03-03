@@ -14,6 +14,7 @@
 #include "navmesh/nav_file.h"
 #include "geometryNavConversions.h"
 #include "circular_buffer.h"
+#include "bots/python_plan_model.h"
 #include <chrono>
 #include <random>
 #include <type_traits>
@@ -45,9 +46,10 @@ constexpr int enumAsInt(T enumElem) {
 }
 
 struct Skill {
-    double maxInaccuracy;
-    bool stopToShoot;
-    MovementPolicy movementPolicy;
+        bool learned;
+        double maxInaccuracy;
+        bool stopToShoot;
+        MovementPolicy movementPolicy;
 };
 
 class Thinker {
@@ -85,6 +87,9 @@ class Thinker {
         int numLogLines = 0;
     };
 
+    // learned planning
+    PythonPlanModel planModel;
+
     // constant values across game
     int32_t curBotCSGOId;
     nav_mesh::nav_file navFile;
@@ -121,9 +126,9 @@ class Thinker {
 
     // plan sets long term goals, runs independently of short term thinking
     void plan();
-    void selectTarget(const ServerState & state, const ServerState::Client & curClient);
-    void updateMovementType(const ServerState state, const ServerState::Client & curClient,
-            const ServerState::Client & oldClient, const ServerState::Client & targetClient);
+    void selectTarget(ServerState & state);
+    void updateMovementType(ServerState curState, ServerState lastState,
+                            ServerState oldState, const ServerState::Client & targetClient);
 
     // short term thinking based on plan
     void aimAt(ServerState::Client & curClient, const ServerState::Client & targetClient,
@@ -159,7 +164,8 @@ public:
     Thinker(ServerState & state, int curBotCSGOId, string navPath, Skill skill) 
         : liveState(state), curBotCSGOId(curBotCSGOId), lastDeltaAngles{0, 0}, navFile(navPath.c_str()), 
         skill(skill), retreatOptions(RETREAT_LENGTH),
-        movementGen(rd()), aimGen(rd()), movementDis(0., 1.), aimDis(-skill.maxInaccuracy, skill.maxInaccuracy) {
+        movementGen(rd()), aimGen(rd()), movementDis(0., 1.), aimDis(-skill.maxInaccuracy, skill.maxInaccuracy),
+        planModel(navFile) {
             invalidClient.csgoId = INVALID_ID;
         };
 
