@@ -24,9 +24,11 @@ class BotDataset(Dataset):
             self.source_player_name = df.loc[:, 'source player name']
             self.demo_name = df.loc[:, 'demo name']
         self.team = df.loc[:, 'team']
+        print('inner 1')
 
         # convert player id's to indexes
         self.X = torch.tensor(args.input_ct.transform(df.loc[:, args.input_cols])).float()
+        print('inner 2')
         self.Y = torch.tensor(args.output_ct.transform(df.loc[:, args.output_cols])).float()
 
     def __len__(self):

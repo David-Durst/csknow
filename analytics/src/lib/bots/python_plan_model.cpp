@@ -99,6 +99,9 @@ std::optional<int64_t> PythonPlanModel::GetTargetNavArea(int32_t csknowId, Serve
         PyDict_SetItem(pArg, keysToFree.back(), valuesToFree.back());
     }
     pValue = PyObject_CallOneArg(pFunc, pArg);
+    Py_XDECREF(pFunc);
+    pFunc = PyObject_GetAttrString(pModule, functionName.c_str());
+    pValue = PyObject_CallOneArg(pFunc, pArg);
     Py_DECREF(pArg);
     for (int i = 0; i < keysToFree.size(); i++) {
         Py_DecRef(keysToFree[i]);
