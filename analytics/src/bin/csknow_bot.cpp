@@ -8,6 +8,7 @@
 #include <list>
 #include <map>
 #include <filesystem>
+//#define LOG_STATE
 
 int main(int argc, char * argv[]) {
     if (argc != 3 && argc != 4) {
@@ -38,16 +39,18 @@ int main(int argc, char * argv[]) {
         auto parseEnd = std::chrono::system_clock::now();
             
         if (!firstFrame) {
+#ifdef LOG_STATE
             // this handles bot time line
-            //std::cout << upAndClear;
+            std::cout << upAndClear;
 
             // this handles the count of failures
-            //std::cout << upAndClear;
+            std::cout << upAndClear;
 
             // this handles bot inputs
             for (int i = 0; i < state.numInputLines + state.numThinkLines; i++) {
-                //std::cout << upAndClear;
+                std::cout << upAndClear;
             }
+#endif // LOG_STATE
             state.inputsLog = "";
             state.thinkLog = "";
             state.numInputLines = 0;
@@ -59,7 +62,9 @@ int main(int argc, char * argv[]) {
                 thinker.think();
             }
             state.saveBotInputs(dataPath);
-            //std::cout << state.inputsLog << state.thinkLog << std::endl;
+#ifdef LOG_STATE
+            std::cout << state.inputsLog << state.thinkLog << std::endl;
+#endif // LOG_STATE
         }
         else {
             numFailures++;
@@ -68,16 +73,21 @@ int main(int argc, char * argv[]) {
         auto end = std::chrono::system_clock::now();
         std::chrono::duration<double> botTime = end - start;
         std::chrono::duration<double> parseTime = parseEnd - start;
-        //std::cout << "Num failures " << numFailures << ", last bad path: " << state.badPath << std::endl;
+#ifdef LOG_STATE
+        std::cout << "Num failures " << numFailures << ", last bad path: " << state.badPath << std::endl;
+#endif // LOG_STATE
         if (botTime < timePerTick) {
-            //std::cout << "Bot compute time: " << botTime.count() 
-                //<< "s, pct parse " << parseTime.count() / botTime.count() << std::endl;
+#ifdef LOG_STATE
+            std::cout << "Bot compute time: " << botTime.count()
+                << "s, pct parse " << parseTime.count() / botTime.count() << std::endl;
+#endif // LOG_STATE
             std::this_thread::sleep_for(timePerTick - botTime);
         }
         else {
-            //std::cout << "\033[1;31mMissed Bot compute time:\033[0m " << botTime.count() 
-             //   << "s, pct parse " << parseTime.count() / botTime.count() << std::endl;
-
+#ifdef LOG_STATE
+            std::cout << "\033[1;31mMissed Bot compute time:\033[0m " << botTime.count()
+                << "s, pct parse " << parseTime.count() / botTime.count() << std::endl;
+#endif // LOG_STATE
         }
         firstFrame = false;
     }
