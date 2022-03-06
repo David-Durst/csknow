@@ -63,9 +63,9 @@ int64_t PythonModelInterface::GetTargetNavArea(int32_t csknowId, ServerState cur
 void PythonModelInterface::CommunicateWithPython() {
     // no pipeline, only allow one outstanding request to python at a time
     if (waitingOnPython) {
-        string pythonToCppFileName = "cpp_to_python.csv";
+        string pythonToCppFileName = "python_to_cpp.csv";
         string pythonToCppFilePath = dataPath + "/" + pythonToCppFileName;
-        string tmpPythonToCppFileName = "cpp_to_python.csv.tmp.read";
+        string tmpPythonToCppFileName = "python_to_cpp.csv.tmp.read";
         string tmpPythonToCppFilePath = dataPath + "/" + tmpPythonToCppFileName;
 
         std::unique_lock<std::mutex> lk(pythonPlanLock);
@@ -93,7 +93,7 @@ void PythonModelInterface::CommunicateWithPython() {
     if (!waitingOnPython) {
         string cppToPythonFileName = "cpp_to_python.csv";
         string cppToPythonFilePath = dataPath + "/" + cppToPythonFileName;
-        string tmpCppToPythonFileName = "cpp_to_python.csv.tmp.write";
+        string tmpCppToPythonFileName = "cpp_to_python.csv.tmp.read";
         string tmpCppToPythonFilePath = dataPath + "/" + tmpCppToPythonFileName;
 
         std::unique_lock<std::mutex> lk(pythonPlanLock);
