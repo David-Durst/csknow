@@ -1,3 +1,6 @@
+trap "jobs -p | xargs -r kill" EXIT
+trap "jobs -p | xargs -r kill" SIGINT
+
 script_dir="tmp"
 #https://www.ostricher.com/2014/10/the-right-way-to-get-the-directory-of-a-bash-script/
 get_script_dir () {
@@ -25,7 +28,5 @@ cmake .. -DCMAKE_BUILD_TYPE=Release
 if make -j4; then
     chmod a+x csknow_bot
     python -m learn_bot.inference /home/steam/csgo-ds/csgo/addons/sourcemod/bot-link-data &
-    python_pid=$!
     ${script_dir}/../build/csknow_bot /home/steam/csgo-ds/csgo/maps /home/steam/csgo-ds/csgo/addons/sourcemod/bot-link-data true
-    kill $python_pid
 fi
