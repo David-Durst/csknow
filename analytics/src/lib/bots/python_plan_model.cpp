@@ -37,16 +37,16 @@ int64_t PythonModelInterface::GetTargetNavArea(int32_t csknowId, ServerState cur
     //vector<string> a = {"id","tick id","round id","source player id","team","cur nav area","cur pos x","cur pos y","cur pos z","cur nav 0 friends","cur nav 0 enemies","cur nav 1 friends","cur nav 1 enemies","cur nav 2 friends","cur nav 2 enemies","cur nav 3 friends","cur nav 3 enemies","cur nav 4 friends","cur nav 4 enemies","cur nav 5 friends","cur nav 5 enemies","cur nav 6 friends","cur nav 6 enemies","cur nav 7 friends","cur nav 7 enemies","cur nav 8 friends","cur nav 8 enemies","cur nav 9 friends","cur nav 9 enemies","cur nav 10 friends","cur nav 10 enemies","last nav area","last pos x","last pos y","last pos z","last nav 0 friends","last nav 0 enemies","last nav 1 friends","last nav 1 enemies","last nav 2 friends","last nav 2 enemies","last nav 3 friends","last nav 3 enemies","last nav 4 friends","last nav 4 enemies","last nav 5 friends","last nav 5 enemies","last nav 6 friends","last nav 6 enemies","last nav 7 friends","last nav 7 enemies","last nav 8 friends","last nav 8 enemies","last nav 9 friends","last nav 9 enemies","last nav 10 friends","last nav 10 enemies","old nav area","old pos x","old pos y","old pos z","old nav 0 friends","old nav 0 enemies","old nav 1 friends","old nav 1 enemies","old nav 2 friends","old nav 2 enemies","old nav 3 friends","old nav 3 enemies","old nav 4 friends","old nav 4 enemies","old nav 5 friends","old nav 5 enemies","old nav 6 friends","old nav 6 enemies","old nav 7 friends","old nav 7 enemies","old nav 8 friends","old nav 8 enemies","old nav 9 friends","old nav 9 enemies","old nav 10 friends","old nav 10 enemies","delta x","delta y","shoot next","crouch next","nav target"};
     //vector<long> b = {1,30,0,1,0,7,128,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,7,128,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,7,128,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,7};
     std::unique_lock<std::mutex> lk(pythonPlanLock);
-    sentIndexToCSKnowId[stateSentToPython.tickId.size()] = csknowId;
-    stateSentToPython.tickId.push_back(0);
-    stateSentToPython.roundId.push_back(curState.roundNumber);
-    stateSentToPython.sourcePlayerId.push_back(0);
-    stateSentToPython.sourcePlayerName.push_back(curState.clients[csknowId].name);
-    stateSentToPython.demoName.push_back("live");
-    stateSentToPython.curState.push_back(serverStateToTimeStepState(csknowId, curState));
-    stateSentToPython.lastState.push_back(serverStateToTimeStepState(csknowId, lastState));
-    stateSentToPython.oldState.push_back(serverStateToTimeStepState(csknowId, oldState));
-    stateSentToPython.plan.push_back({});
+    toSendIndexToCSKnowId[stateToSendToPython.tickId.size()] = csknowId;
+    stateToSendToPython.tickId.push_back(0);
+    stateToSendToPython.roundId.push_back(curState.roundNumber);
+    stateToSendToPython.sourcePlayerId.push_back(0);
+    stateToSendToPython.sourcePlayerName.push_back(curState.clients[csknowId].name);
+    stateToSendToPython.demoName.push_back("live");
+    stateToSendToPython.curState.push_back(serverStateToTimeStepState(csknowId, curState));
+    stateToSendToPython.lastState.push_back(serverStateToTimeStepState(csknowId, lastState));
+    stateToSendToPython.oldState.push_back(serverStateToTimeStepState(csknowId, oldState));
+    stateToSendToPython.plan.push_back({});
 
     // wait for main thread to handle communication with python
     // need to check if got this threads results as could write while a request is outstanding, those results come back
@@ -78,10 +78,12 @@ void PythonModelInterface::CommunicateWithPython() {
             for (size_t curStart = 0, curDelimiter = getNextDelimiter(bufferPtr, curStart, buffer.size()), colNumber = 0;
                  curDelimiter < buffer.size();
                  curStart = curDelimiter + 1, curDelimiter = getNextDelimiter(bufferPtr, curStart, buffer.size()), colNumber++) {
+                assert(colNumber < sentIndexToCSKnowId.size());
                 // assuming results per player come back in same order as rows sent to python
                 readCol(bufferPtr, curStart, curDelimiter, 0, colNumber, csknowIdToReceivedState[sentIndexToCSKnowId[colNumber]]);
             }
             f.close();
+            sentIndexToCSKnowId.clear();
             waitingOnPython = false;
         }
         lk.unlock();
@@ -96,12 +98,13 @@ void PythonModelInterface::CommunicateWithPython() {
 
         std::unique_lock<std::mutex> lk(pythonPlanLock);
 
-        if (!stateSentToPython.tickId.empty()) {
+        if (!stateToSendToPython.tickId.empty()) {
             std::ofstream f(tmpCppToPythonFilePath);
-            f << stateSentToPython.toCSV();
+            f << stateToSendToPython.toCSV();
             f.close();
             waitingOnPython = true;
             std::filesystem::rename(tmpCppToPythonFilePath, cppToPythonFilePath);
+            sentIndexToCSKnowId = toSendIndexToCSKnowId;
         }
 
         lk.unlock();

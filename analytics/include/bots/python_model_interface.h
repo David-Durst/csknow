@@ -16,7 +16,9 @@
 class PythonModelInterface {
     std::mutex pythonPlanLock;
     std::condition_variable pythonPlanCV;
-    TrainDatasetResult stateSentToPython;
+    TrainDatasetResult stateToSendToPython;
+    map<size_t, int32_t> toSendIndexToCSKnowId;
+    // once sent, copy over here so that can build up next toSend list while waiting for pythong to respond
     map<size_t, int32_t> sentIndexToCSKnowId;
     // if a thread stalls for a while, writing results by id ensures it's state will be around when it wakes up
     map<int32_t, int64_t> csknowIdToReceivedState;
