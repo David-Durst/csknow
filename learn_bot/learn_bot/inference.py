@@ -23,6 +23,7 @@ model.load_state_dict(torch.load(Path(__file__).parent / '..' / 'model' / 'model
 #    print([inference_dict])
 #    print('hi')
 def infer(inference_df: pd.DataFrame):
+    print('called infer')
     # hack, will fix later when actually storing player ids
     inference_df['source player id'] = 0
     inference_data = BotDataset(inference_df, dataset_args, True)
@@ -65,8 +66,12 @@ if __name__ == "__main__":
         if cppToPythonFilePath.exists():
             cppToPythonFilePath.rename(tmpCppToPythonFilePath)
             inference_df = pd.read_csv(tmpCppToPythonFilePath)
+            if len(inference_df) > 1:
+                print("BADDD")
+                print(inference_df)
             targets = infer(inference_df)
-            tmpPythonToCppFilePath.write_text(",".join([str(target) for target in targets]))
+            with tmpPythonToCppFilePath.open("w") as f:
+                f.write(",".join([str(target) for target in targets]) + "\n")
             tmpPythonToCppFilePath.rename(pythonToCppFilePath)
         sleep(0.01)
 

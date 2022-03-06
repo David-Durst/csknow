@@ -78,8 +78,9 @@ void PythonModelInterface::CommunicateWithPython() {
         if (std::filesystem::exists(pythonToCppFilePath)) {
             std::filesystem::rename(pythonToCppFilePath, tmpPythonToCppFilePath);
             std::ifstream f(tmpPythonToCppFilePath);
-            std::string buffer;
-            std::getline(f, buffer);
+            std::ostringstream sstr;
+            sstr << f.rdbuf();
+            std::string buffer(sstr.str());
             const char * bufferPtr = buffer.c_str();
             for (size_t curStart = 0, curDelimiter = getNextDelimiter(bufferPtr, curStart, buffer.size()), colNumber = 0;
                  curDelimiter < buffer.size();
@@ -114,6 +115,7 @@ void PythonModelInterface::CommunicateWithPython() {
             waitingOnPython = true;
             std::filesystem::rename(tmpCppToPythonFilePath, cppToPythonFilePath);
             sentIndexToCSKnowId = toSendIndexToCSKnowId;
+            stateToSendToPython = TrainDatasetResult();
         }
 
         lk.unlock();
