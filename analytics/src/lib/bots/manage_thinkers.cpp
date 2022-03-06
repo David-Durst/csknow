@@ -1,8 +1,8 @@
 //
 // Created by durst on 2/20/22.
 //
-#include <algorithm>
 #include "bots/manage_thinkers.h"
+#include <algorithm>
 using namespace std::chrono_literals;
 
 Skill learnedTerminatorSkill = {true, 0.001, true, MovementPolicy::HoldOnly};
@@ -23,7 +23,8 @@ std::random_device rd;  // Will be used to obtain a seed for the random number e
 std::mt19937 accuracyGen(rd()), otherSkillGen(rd()); // Standard mersenne_twister_engine seeded with rd()
 std::uniform_real_distribution<> accuracyDis(0., 10.), otherSkillDis(0., 1.);
 
-std::filesystem::directory_entry getLatestDemoFile(string mapsPath) {
+std::filesystem::directory_entry
+ManageThinkerState::getLatestDemoFile(string mapsPath) {
     bool firstFile = true;
     std::filesystem::directory_entry mostRecentEntry;
 
@@ -39,7 +40,7 @@ std::filesystem::directory_entry getLatestDemoFile(string mapsPath) {
     return mostRecentEntry;
 }
 
-void savePlayersFile() {
+void ManageThinkerState::savePlayersFile() {
     std::filesystem::path p = curDemoFile.path();
     std::ofstream fsPlayers(p.replace_extension(".csv"));
     p += "_skills";
@@ -52,14 +53,16 @@ void savePlayersFile() {
 
 }
 
-void updateThinkers(ServerState & state, string mapsPath, std::list<Thinker> & thinkers, bool useLearned) {
+void
+ManageThinkerState::updateThinkers(ServerState & state, string mapsPath, std::list<Thinker> & thinkers, bool useLearned) {
     string navPath = mapsPath + "/" + state.mapName + ".nav";
     bool newBotsForThisGame = false;
 
-    // on each new game, clear all the thinkers out
+    // on each new game, clear all the thinkers out and update nav file for python interconnect
     if (state.mapNumber != curMapNumber) {
         curMapNumber = state.mapNumber;
         thinkers.clear();
+        pythonPlanState.reloadNavFile(navPath);
     }
 
     std::map<int32_t, bool> botCSGOIdsToAdd;
@@ -123,12 +126,16 @@ void updateThinkers(ServerState & state, string mapsPath, std::list<Thinker> & t
                 newBotsForThisGame = true;
             }
             skill = botNameToSkill[botName];
-            thinkers.emplace_back(state, csgoId, navPath, skill);
+            thinkers.emplace_back(state, csgoId, navPath, skill, pythonPlanState);
         }
     }
     
     if (newBotsForThisGame) {
         savePlayersFile();
+    }
+
+    if (useLearned) {
+        pythonPlanState.CommunicateWithPython();
     }
 
     // clear all old inputs

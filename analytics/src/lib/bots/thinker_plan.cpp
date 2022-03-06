@@ -157,7 +157,7 @@ void Thinker::updateMovementType(ServerState curState, ServerState lastState,
     Vec3 targetPosition;
     if (skill.learned) {
         std::optional<int64_t> targetNavId =
-                planModel.GetTargetNavArea(curState.csgoIdToCSKnowId[curClient.csgoId], curState, lastState, oldState);
+                pythonPlanState.GetTargetNavArea(curState.csgoIdToCSKnowId[curClient.csgoId], curState, lastState, oldState);
         if (targetNavId) {
             targetPosition = vec3tConv(navFile.m_areas[targetNavId.value()].get_center());
         }

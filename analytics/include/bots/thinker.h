@@ -14,7 +14,7 @@
 #include "navmesh/nav_file.h"
 #include "geometryNavConversions.h"
 #include "circular_buffer.h"
-#include "bots/python_plan_model.h"
+#include "bots/python_model_interface.h"
 #include <chrono>
 #include <random>
 #include <type_traits>
@@ -87,9 +87,6 @@ class Thinker {
         int numLogLines = 0;
     };
 
-    // learned planning
-    PythonPlanModel planModel;
-
     // constant values across game
     int32_t curBotCSGOId;
     nav_mesh::nav_file navFile;
@@ -123,6 +120,9 @@ class Thinker {
     // state for planning only
     // locations you've been in past that you can go to again
     CircularBuffer<Vec3> retreatOptions;
+    // reference to python state from manage_thinkers.h
+    PythonModelInterface & pythonPlanState;
+
 
     // plan sets long term goals, runs independently of short term thinking
     void plan();
@@ -161,11 +161,11 @@ class Thinker {
     void updateDevelopingPlanWaypoints(const Vec3 & curPosition, const Vec3 & targetPosition);
 
 public:
-    Thinker(ServerState & state, int curBotCSGOId, string navPath, Skill skill) 
+    Thinker(ServerState & state, int curBotCSGOId, string navPath, Skill skill, PythonModelInterface & pythonPlanState)
         : liveState(state), curBotCSGOId(curBotCSGOId), lastDeltaAngles{0, 0}, navFile(navPath.c_str()), 
         skill(skill), retreatOptions(RETREAT_LENGTH),
         movementGen(rd()), aimGen(rd()), movementDis(0., 1.), aimDis(-skill.maxInaccuracy, skill.maxInaccuracy),
-        planModel(navFile) {
+        pythonPlanState(pythonPlanState) {
             invalidClient.csgoId = INVALID_ID;
         };
 
@@ -179,8 +179,6 @@ public:
     int32_t getCurBotCSGOId() const { return curBotCSGOId; }
     Skill getSkill() const { return skill; }
 };
-
-int run_model(string moduleName, string functionName);
 
 #endif //CSKNOW_THINKER_H
 

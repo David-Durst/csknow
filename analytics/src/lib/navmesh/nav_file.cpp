@@ -18,6 +18,7 @@ namespace nav_mesh {
         m_pather->Reset( );
         m_areas.clear( );
         m_places.clear( );
+        m_area_ids_to_indices.clear( );
 
         m_buffer.load_from_file( nav_mesh_file );
 

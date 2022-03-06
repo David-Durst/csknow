@@ -31,6 +31,7 @@ int main(int argc, char * argv[]) {
     uint64_t numFailures = 0;
     state.numInputLines = 0;
     state.numThinkLines = 0;
+    ManageThinkerState manageThinkerState(dataPath);
 
     while (true) {
         auto start = std::chrono::system_clock::now();
@@ -57,7 +58,7 @@ int main(int argc, char * argv[]) {
             state.numThinkLines = 0;
         }
         if (state.loadedSuccessfully) {
-            updateThinkers(state, mapsPath, thinkers, useLearned);
+            manageThinkerState.updateThinkers(state, mapsPath, thinkers, useLearned);
             for (auto & thinker : thinkers) {
                 thinker.think();
             }

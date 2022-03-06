@@ -13,8 +13,15 @@
 #ifndef CSKNOW_MANAGE_THINKERS_H
 #define CSKNOW_MANAGE_THINKERS_H
 
-std::filesystem::directory_entry getLatestDemoFile(string mapsPath);
-void savePlayersFile();
-void updateThinkers(ServerState & state, string mapsPath, std::list<Thinker> & thinkers, bool useLearned);
+// need to move more of the state at top of manage_thinkers.cpp to here
+struct ManageThinkerState {
+    PythonModelInterface pythonPlanState;
+
+    std::filesystem::directory_entry getLatestDemoFile(string mapsPath);
+    void savePlayersFile();
+    void updateThinkers(ServerState & state, string mapsPath, std::list<Thinker> & thinkers, bool useLearned);
+
+    ManageThinkerState(string dataPath) : pythonPlanState(dataPath) { };
+};
 
 #endif //CSKNOW_MANAGE_THINKERS_H
