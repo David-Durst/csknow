@@ -14,16 +14,6 @@ get_script_dir () {
 }
 get_script_dir
 
-
-mkdir -p ${script_dir}/../analytics/build
-cd ${script_dir}/../analytics/build
-cmake .. -DCMAKE_BUILD_TYPE=Release
-chmod a+x csknow_bot
-if make -j4; then
-    mkdir -p ${script_dir}/tmp
-    cp csknow_bot ${script_dir}/tmp/
-    cp ../scripts/bot_run_no_build.sh ${script_dir}/tmp/
-    cd ${script_dir}    
-    docker build -t durst/csgo:0.3 .
-fi
+cd ${script_dir}    
+docker build -t durst/csgo:0.3 .
 
