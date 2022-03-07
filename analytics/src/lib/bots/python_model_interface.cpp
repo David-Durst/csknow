@@ -6,6 +6,7 @@
 #include "geometryNavConversions.h"
 #include <filesystem>
 #include <file_helpers.h>
+//#define DEBUG_INTERFACE
 
 TrainDatasetResult::TimeStepState
 PythonModelInterface::serverStateToTimeStepState(int32_t csknowId, ServerState serverState) {
@@ -52,8 +53,13 @@ int64_t PythonModelInterface::GetTargetNavArea(int32_t csknowId, ServerState cur
     // wait for main thread to handle communication with python
     // need to check if got this threads results as could write while a request is outstanding, those results come back
     // and keep waiting for next request to happen
+#ifdef DEBUG_INTERFACE
+    std::cout << "waiting on " << csknowId << std::endl;
+#endif // DEBUG_INTERFACE
     pythonPlanCV.wait(lk, [&] { return csknowIdToReceivedState.find(csknowId) != csknowIdToReceivedState.end(); });
-    //pythonPlanCV.wait(lk);
+#ifdef DEBUG_INTERFACE
+    std::cout << "got it" << std::endl;
+#endif // DEBUG_INTERFACE
 
     int64_t result = csknowIdToReceivedState[csknowId];
 
@@ -86,6 +92,13 @@ void PythonModelInterface::CommunicateWithPython() {
                 // assuming results per player come back in same order as rows sent to python
                 readCol(bufferPtr, curStart, curDelimiter, 0, colNumber, csknowIdToReceivedState[sentIndexToCSKnowId[colNumber]]);
             }
+#ifdef DEBUG_INTERFACE
+            std::cout << "adding values  ";
+            for (const auto & [k, v] : csknowIdToReceivedState) {
+                std::cout << k << "," << v << ";" << std::endl;
+            }
+            std::cout << std::endl;
+#endif // DEBUG_INTERFACE
             f.close();
             sentIndexToCSKnowId.clear();
             waitingOnPython = false;

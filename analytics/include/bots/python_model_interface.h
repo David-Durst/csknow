@@ -27,7 +27,7 @@ class PythonModelInterface {
 
     // variable to check if waiting for results to come back
     // if false, free to send new states to Python
-    bool waitingOnPython;
+    bool waitingOnPython = false;
 
     TrainDatasetResult::TimeStepState serverStateToTimeStepState(int32_t csknowId, ServerState serverState);
 
