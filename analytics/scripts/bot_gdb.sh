@@ -20,5 +20,5 @@ cd ${script_dir}/../build
 cmake .. -DCMAKE_BUILD_TYPE=Debug
 if make -j4; then
     chmod a+x csknow_bot
-    sudo su - steam -c "gdb --args ${script_dir}/../build/csknow_bot /home/steam/csgo-ds/csgo/maps /home/steam/csgo-ds/csgo/addons/sourcemod/bot-link-data"
+    gdb --args ${script_dir}/../build/csknow_bot /home/steam/csgo-ds/csgo/maps /home/steam/csgo-ds/csgo/addons/sourcemod/bot-link-data
 fi

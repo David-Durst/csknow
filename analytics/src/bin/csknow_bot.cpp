@@ -8,7 +8,7 @@
 #include <list>
 #include <map>
 #include <filesystem>
-#define LOG_STATE
+//#define LOG_STATE
 
 int main(int argc, char * argv[]) {
     if (argc != 3 && argc != 4) {

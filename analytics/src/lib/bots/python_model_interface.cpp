@@ -6,7 +6,7 @@
 #include "geometryNavConversions.h"
 #include <filesystem>
 #include <file_helpers.h>
-//#define DEBUG_INTERFACE
+#define DEBUG_INTERFACE
 
 TrainDatasetResult::TimeStepState
 PythonModelInterface::serverStateToTimeStepState(int32_t csknowId, ServerState serverState) {
@@ -58,7 +58,8 @@ int64_t PythonModelInterface::GetTargetNavArea(int32_t csknowId, ServerState cur
 #endif // DEBUG_INTERFACE
     pythonPlanCV.wait(lk, [&] { return csknowIdToReceivedState.find(csknowId) != csknowIdToReceivedState.end(); });
 #ifdef DEBUG_INTERFACE
-    std::cout << "got it" << std::endl;
+    std::cout << "got it: cur nav area " << serverStateToTimeStepState(csknowId, curState).curArea 
+        << " target area " << csknowIdToReceivedState[csknowId] << std::endl;
 #endif // DEBUG_INTERFACE
 
     int64_t result = csknowIdToReceivedState[csknowId];
