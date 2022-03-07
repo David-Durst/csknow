@@ -26,10 +26,12 @@ player_id_col = get_config_line(0)[0]
 non_player_id_input_cols = get_config_line(1)
 input_cols = [player_id_col] + non_player_id_input_cols
 input_one_hot_cols = get_config_line(2)
-input_min_max_cols = get_config_line(3)
-output_cols = get_config_line(4)
-output_one_hot_cols = get_config_line(5)
-output_min_max_cols = get_config_line(6)
+input_one_hot_cols_num_cats = [list(range(int(i))) for i in get_config_line(3)]
+input_min_max_cols = get_config_line(4)
+output_cols = get_config_line(5)
+output_one_hot_cols = get_config_line(6)
+output_one_hot_cols_num_cats = [list(range(int(i))) for i in get_config_line(7)]
+output_min_max_cols = get_config_line(8)
 all_data_cols = input_cols + output_cols
 
 # for good embeddings, make sure player indices are from 0 to max-1, makes sure missing ids aren't problem
@@ -63,12 +65,12 @@ def compute_passthrough_cols(all_cols, *non_passthrough_lists):
 # as that is only pass through col
 input_ct = ColumnTransformer(transformers=[
     ('pass', 'passthrough', compute_passthrough_cols(input_cols, input_one_hot_cols, input_min_max_cols)),
-    ('one-hot', OneHotEncoder(), input_one_hot_cols),
+    ('one-hot', OneHotEncoder(categories=input_one_hot_cols_num_cats), input_one_hot_cols),
     ('zero-to-one', MinMaxScaler(), input_min_max_cols),
 ], sparse_threshold=0)
 output_ct = ColumnTransformer(transformers=[
     #('pass', 'passthrough', compute_passthrough_cols(output_cols, output_one_hot_cols, output_min_max_cols)),
-    ('one-hot', OneHotEncoder(), output_one_hot_cols),
+    ('one-hot', OneHotEncoder(categories=output_one_hot_cols_num_cats), output_one_hot_cols),
     ('drop', 'drop', output_min_max_cols),
     #('zero-to-one', MinMaxScaler(), output_min_max_cols),
 ], sparse_threshold=0)
