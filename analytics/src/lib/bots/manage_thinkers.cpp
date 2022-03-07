@@ -14,7 +14,7 @@ Skill nothingSkill = {false, 10.0, true, MovementPolicy::HoldOnly};
 std::vector<Skill> allBotSkills {terminatorSkill, badAggressiveSkill, badStopSkill, afraidSkill, nothingSkill};
 std::vector<Skill> teamBotSkills {terminatorSkill, nothingSkill};
 std::vector<Skill> learnedBotSkills {learnedTerminatorSkill, nothingSkill};
-bool pickFromSkillVector = false, pickByTeam = true;
+bool pickFromSkillVector = false, pickByTeam = false;
 bool firstGame = true;
 std::filesystem::directory_entry curDemoFile;
 int32_t curMapNumber = -1;
@@ -105,9 +105,6 @@ ManageThinkerState::updateThinkers(ServerState & state, string mapsPath, std::li
             string botName = botCSGOIdsToNames[csgoId];
             // if don't have a skill for this bot, generate one
             if (botNameToSkill.find(botName) == botNameToSkill.end()) {
-                bool stopToShoot = otherSkillDis(otherSkillGen) < 0.5;
-                MovementPolicy policy = otherSkillDis(otherSkillGen) < 0.5 ?
-                                        MovementPolicy::PushAndRetreat : MovementPolicy::PushOnly;
                 if (pickFromSkillVector) {
                     botNameToSkill.insert({botName, allBotSkills[botNameToSkill.size() % allBotSkills.size()]});
                 }
@@ -121,6 +118,9 @@ ManageThinkerState::updateThinkers(ServerState & state, string mapsPath, std::li
                     }
                 }
                 else {
+                    bool stopToShoot = otherSkillDis(otherSkillGen) < 0.5;
+                    MovementPolicy policy = otherSkillDis(otherSkillGen) < 0.5 ?
+                                            MovementPolicy::PushAndRetreat : MovementPolicy::PushOnly;
                     botNameToSkill.insert({botName, {false, accuracyDis(accuracyGen), stopToShoot, policy} });
                 }
                 newBotsForThisGame = true;
