@@ -74,6 +74,7 @@ TrainDatasetResult queryTrainDataset(const Games & games, const Rounds & rounds,
     vector<TrainDatasetResult::TimeStepState> tmpLastState[numThreads];
     vector<TrainDatasetResult::TimeStepState> tmpOldState[numThreads];
     vector<TrainDatasetResult::TimeStepPlan> tmpPlan[numThreads];
+    vector<int64_t> numNavAreas(numThreads, 0);
 
 //#pragma omp parallel for
     for (int64_t roundIndex = 0; roundIndex < rounds.size; roundIndex++) {
@@ -88,6 +89,7 @@ TrainDatasetResult queryTrainDataset(const Games & games, const Rounds & rounds,
         // initialize the default state for this round based on number of navmesh entries
         string mapName = games.mapName[rounds.gameId[roundIndex]];
         const nav_mesh::nav_file & navFile = mapNavs.at(mapName);
+        numNavAreas[threadNum] = navFile.m_area_count;
         TrainDatasetResult::TimeStepState defaultTimeStepState(navFile.m_area_count);
 
         // remember start in tmp vectors for plan recording
@@ -195,7 +197,9 @@ TrainDatasetResult queryTrainDataset(const Games & games, const Rounds & rounds,
     }
 
     TrainDatasetResult result;
+    result.numNavAreas = 0;
     for (int i = 0; i < numThreads; i++) {
+        result.numNavAreas = std::max(result.numNavAreas, numNavAreas[i]);
         for (int j = 0; j < tmpCurState[i].size(); j++) {
             result.tickId.push_back(tmpCurState[i][j].tickId);
             result.roundId.push_back(tmpCurState[i][j].roundId);

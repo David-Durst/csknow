@@ -64,6 +64,10 @@ public:
         }
     }
 
+    void timeStepStateOneHotNumCategories(vector<string> & result) {
+        result.push_back(std::to_string(numNavAreas));
+    }
+
     struct TimeStepPlan {
         // result data
         double deltaX, deltaY;
@@ -94,6 +98,12 @@ public:
         }
     }
 
+    void timeStepPlanOneHotNumCategories(vector<string> & result) {
+        result.push_back("2");
+        result.push_back("2");
+        result.push_back(std::to_string(numNavAreas));
+    }
+
     vector<int64_t> tickId;
     vector<int64_t> roundId;
     vector<int64_t> sourcePlayerId;
@@ -103,6 +113,7 @@ public:
     vector<TimeStepState> lastState;
     vector<TimeStepState> oldState;
     vector<TimeStepPlan> plan;
+    int64_t numNavAreas;
 
     TrainDatasetResult() {
         this->startTickColumn = -1;
@@ -140,7 +151,8 @@ public:
 
     string getDataLabelRanges() {
         std::stringstream result;
-        vector<string> inputCols, outputCols, inputOneHot, outputOneHot, inputMinMaxScale, outputMinMaxScale;
+        vector<string> inputCols, outputCols, inputOneHot, inputOneHotNumCategories, outputOneHot, outputOneHotNumCategories,
+            inputMinMaxScale, outputMinMaxScale;
 
         timeStepStateColumns(curState, "cur", inputCols);
         timeStepStateColumns(lastState, "last", inputCols);
@@ -152,6 +164,12 @@ public:
         timeStepStateColumns(oldState, "old", inputOneHot, true);
         timeStepPlanColumns(plan, outputOneHot, true);
 
+        // repeat the below once for each state
+        timeStepStateOneHotNumCategories(inputOneHotNumCategories);
+        timeStepStateOneHotNumCategories(inputOneHotNumCategories);
+        timeStepStateOneHotNumCategories(inputOneHotNumCategories);
+        timeStepPlanOneHotNumCategories(outputOneHotNumCategories);
+
         timeStepStateColumns(curState, "cur", inputMinMaxScale, false, true);
         timeStepStateColumns(lastState, "last", inputMinMaxScale, false, true);
         timeStepStateColumns(oldState, "old", inputMinMaxScale, false, true);
@@ -162,11 +180,15 @@ public:
         result << "\n";
         commaSeparateList(result, inputOneHot);
         result << "\n";
+        commaSeparateList(result, inputOneHotNumCategories);
+        result << "\n";
         commaSeparateList(result, inputMinMaxScale);
         result << "\n";
         commaSeparateList(result, outputCols);
         result << "\n";
         commaSeparateList(result, outputOneHot);
+        result << "\n";
+        commaSeparateList(result, outputOneHotNumCategories);
         result << "\n";
         commaSeparateList(result, outputMinMaxScale);
         return result.str();
