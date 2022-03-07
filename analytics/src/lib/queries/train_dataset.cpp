@@ -4,6 +4,7 @@
 #include "queries/lookback.h"
 #include "queries/train_dataset.h"
 #include "geometryNavConversions.h"
+#include "bots/thinker.h"
 #include <utility>
 #include <cassert>
 
@@ -142,6 +143,7 @@ TrainDatasetResult queryTrainDataset(const Games & games, const Rounds & rounds,
         for (int64_t planIndex = planStartIndex; planIndex < tmpCurState[threadNum].size(); planIndex++) {
             TrainDatasetResult::TimeStepPlan plan;
 
+
             plan.deltaX = tmpNextState[threadNum][planIndex].pos.x - tmpCurState[threadNum][planIndex].pos.x;
             plan.deltaY = tmpNextState[threadNum][planIndex].pos.y - tmpCurState[threadNum][planIndex].pos.y;
             double deltaZ = tmpNextState[threadNum][planIndex].pos.z - tmpCurState[threadNum][planIndex].pos.z;
@@ -156,7 +158,8 @@ TrainDatasetResult queryTrainDataset(const Games & games, const Rounds & rounds,
             if (curAreaId != nextAreaId) {
                 plan.navTargetArea = nextAreaId;
             }
-            else if (cosineSimilarity(movementDir, curAreaDir) > COSINE_SIMILARITY_THRESHOLD) {
+            else if (computeDistance(tmpCurState[threadNum][planIndex].pos, curAreaCenter) >= MIN_DISTANCE_TO_NAV_POINT &&
+                cosineSimilarity(movementDir, curAreaDir) > COSINE_SIMILARITY_THRESHOLD) {
                 plan.navTargetArea = curAreaId;
             }
             else {

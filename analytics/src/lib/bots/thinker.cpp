@@ -258,7 +258,7 @@ void Thinker::move(ServerState::Client & curClient, const ServerState::Client & 
         }
 
        // if (computeMinDistanceLinePoint(priorPos, curPos, waypointPos) < 20.) {
-        if (computeDistance(curPos, waypointPos) < 20.) {
+        if (computeDistance(curPos, waypointPos) < MIN_DISTANCE_TO_NAV_POINT) {
             // move to next waypoint if not done path, otherwise stop
             if (executingPlan.curWaypoint < executingPlan.waypoints.size() - 1) {
                 executingPlan.curWaypoint++;

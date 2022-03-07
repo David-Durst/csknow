@@ -8,6 +8,7 @@
 #define RETREAT_LENGTH 10
 #define MAX_VELOCITY_WHEN_STOPPED 5.
 #define HEAD_ADJUSTMENT 8.
+#define MIN_DISTANCE_TO_NAV_POINT 20.
 
 #include "load_save_bot_data.h"
 #include "bots/input_bits.h"
