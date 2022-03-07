@@ -16,14 +16,6 @@ using std::map;
 
 class TrainDatasetResult : public QueryResult {
 public:
-    // container used for storing one of any value when being serialized to python
-    enum class ContainerType {
-        intType,
-        doubleType,
-        stringType,
-        numTypes
-    };
-
     struct NavmeshState {
         uint32_t numFriends;
         uint32_t numEnemies;
