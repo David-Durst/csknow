@@ -23,7 +23,6 @@ model.load_state_dict(torch.load(Path(__file__).parent / '..' / 'model' / 'model
 #    print([inference_dict])
 #    print('hi')
 def infer(inference_df: pd.DataFrame):
-    print('called infer')
     # hack, will fix later when actually storing player ids
     inference_df['source player id'] = 0
     inference_data = BotDataset(inference_df, dataset_args, True)
