@@ -5,7 +5,7 @@
 #include <algorithm>
 using namespace std::chrono_literals;
 
-Skill learnedTerminatorSkill = {true, 0.001, true, MovementPolicy::HoldOnly};
+Skill learnedTerminatorSkill = {true, 0.001, true, MovementPolicy::PushOnly};
 Skill terminatorSkill = {false, 0.001, true, MovementPolicy::PushOnly};
 Skill badAggressiveSkill = {false, 10.0, false, MovementPolicy::PushOnly};
 Skill badStopSkill = {false, 10.0, true, MovementPolicy::PushOnly};
