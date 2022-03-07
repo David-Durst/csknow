@@ -10,6 +10,7 @@
 #include <mutex>
 #include <condition_variable>
 #include <thread>
+#include <memory>
 
 
 // state for communicating with python model - one will be made in manage_thinkers, will be referenced here
@@ -22,7 +23,7 @@ class PythonModelInterface {
     map<size_t, int32_t> sentIndexToCSKnowId;
     // if a thread stalls for a while, writing results by id ensures it's state will be around when it wakes up
     map<int32_t, int64_t> csknowIdToReceivedState;
-    nav_mesh::nav_file navFile;
+    std::unique_ptr<nav_mesh::nav_file> navFile;
     string dataPath;
 
     // variable to check if waiting for results to come back
@@ -42,7 +43,7 @@ public:
     // THIS DOESN'T BLOCK FOR ANOTHER THREAD TO NOTIFY ON A CV, JUST BLOCKS ON pythonPlanLock
     void CommunicateWithPython();
 
-    void reloadNavFile(string navPath) { navFile.load(navPath); }
+    void reloadNavFile(string navPath) { navFile = std::unique_ptr<nav_mesh::nav_file>(new nav_mesh::nav_file(navPath)); }
 
     PythonModelInterface(string dataPath) : dataPath(dataPath) { };
 };

@@ -10,17 +10,17 @@
 
 TrainDatasetResult::TimeStepState
 PythonModelInterface::serverStateToTimeStepState(int32_t csknowId, ServerState serverState) {
-    TrainDatasetResult::TimeStepState timeStepState(navFile.m_area_count);
+    TrainDatasetResult::TimeStepState timeStepState(navFile->m_area_count);
     const ServerState::Client & curClient = serverState.clients[csknowId];
     timeStepState.team = curClient.team;
     timeStepState.pos = {curClient.lastEyePosX, curClient.lastEyePosY, curClient.lastFootPosZ};
-    timeStepState.curArea = navFile.m_area_ids_to_indices.at(
-            navFile.get_nearest_area_by_position(vec3Conv(timeStepState.pos)).get_id());
+    timeStepState.curArea = navFile->m_area_ids_to_indices.at(
+            navFile->get_nearest_area_by_position(vec3Conv(timeStepState.pos)).get_id());
 
     for (const auto & otherClient : serverState.clients) {
         Vec3 otherPos = {otherClient.lastEyePosX, otherClient.lastEyePosY, otherClient.lastFootPosZ};
-        size_t navId = navFile.m_area_ids_to_indices.at(
-                navFile.get_nearest_area_by_position(vec3Conv(otherPos)).get_id());
+        size_t navId = navFile->m_area_ids_to_indices.at(
+                navFile->get_nearest_area_by_position(vec3Conv(otherPos)).get_id());
         if (otherClient.team == curClient.team) {
             timeStepState.navStates[navId].numFriends++;
         }
