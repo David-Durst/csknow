@@ -6,7 +6,7 @@
 #include "geometryNavConversions.h"
 #include <filesystem>
 #include <file_helpers.h>
-#define DEBUG_INTERFACE
+//#define DEBUG_INTERFACE
 
 TrainDatasetResult::TimeStepState
 PythonModelInterface::serverStateToTimeStepState(int32_t csknowId, ServerState serverState) {

@@ -159,6 +159,7 @@ void Thinker::updateMovementType(ServerState curState, ServerState lastState,
         int64_t targetNavId =
                 pythonPlanState.GetTargetNavArea(curState.csgoIdToCSKnowId[curClient.csgoId], curState, lastState, oldState);
         targetPosition = vec3tConv(navFile.m_areas[targetNavId].get_center());
+        //targetPosition = {targetClient.lastEyePosX, targetClient.lastEyePosY, targetClient.lastFootPosZ};
     }
     else if (targetClient.csgoId != INVALID_ID) {
         targetPosition = {targetClient.lastEyePosX, targetClient.lastEyePosY, targetClient.lastFootPosZ};
@@ -260,14 +261,18 @@ void Thinker::updateMovementType(ServerState curState, ServerState lastState,
     developingPlan.numLogLines++;
 
     if (!developingPlan.waypoints.empty()) {
-        logStream << "first waypoint " << 0 << ":" 
+        logStream << "first waypoint " << 0 << ": (" 
             << developingPlan.waypoints[0].x << "," << developingPlan.waypoints[0].y 
-            << "," << developingPlan.waypoints[0].z << "\n";
+            << "," << developingPlan.waypoints[0].z << ") area: " 
+            << navFile.m_area_ids_to_indices[navFile.get_nearest_area_by_position(developingPlan.waypoints[0]).m_id] 
+            << "\n";
 
         uint64_t lastWaypoint = developingPlan.waypoints.size() - 1;
         logStream << "last waypoint " << lastWaypoint << ":" 
             << developingPlan.waypoints[lastWaypoint].x << "," << developingPlan.waypoints[lastWaypoint].y 
-            << "," << developingPlan.waypoints[lastWaypoint].z << "\n";
+            << "," << developingPlan.waypoints[lastWaypoint].z << ") area: "  
+            << navFile.m_area_ids_to_indices[navFile.get_nearest_area_by_position(developingPlan.waypoints[lastWaypoint]).m_id] 
+            << "\n";
         developingPlan.numLogLines += 2;
     }
     developingPlan.log += logStream.str();
