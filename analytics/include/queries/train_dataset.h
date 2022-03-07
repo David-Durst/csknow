@@ -23,42 +23,6 @@ public:
         stringType,
         numTypes
     };
-    struct TrainDataContainer {
-        int64_t intOption;
-        double doubleOption;
-        string stringOption;
-        ContainerType containerType;
-
-        TrainDataContainer(uint64_t v) {
-            intOption = v;
-            containerType = ContainerType::intType;
-        }
-
-        TrainDataContainer(uint32_t v) {
-            intOption = v;
-            containerType = ContainerType::intType;
-        }
-
-        TrainDataContainer(int64_t v) {
-            intOption = v;
-            containerType = ContainerType::intType;
-        }
-
-        TrainDataContainer(int32_t v) {
-            intOption = v;
-            containerType = ContainerType::intType;
-        }
-
-        TrainDataContainer(double v) {
-            doubleOption = v;
-            containerType = ContainerType::doubleType;
-        }
-
-        TrainDataContainer(string v) {
-            stringOption = v;
-            containerType = ContainerType::stringType;
-        }
-    };
 
     struct NavmeshState {
         uint32_t numFriends;
