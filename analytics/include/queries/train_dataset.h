@@ -89,18 +89,6 @@ public:
         return result.str();
     }
 
-    void timeStepStateToVec(TimeStepState step, vector<TrainDataContainer> & result) {
-        result.push_back(step.curArea);
-        //result << "," << step.team;
-        result.push_back(step.pos.x);
-        result.push_back(step.pos.y);
-        result.push_back(step.pos.z);
-        for (const auto & navState : step.navStates) {
-            result.push_back(navState.numFriends);
-            result.push_back(navState.numEnemies);
-        }
-    }
-
     void timeStepStateColumns(vector<TimeStepState> steps, string prefix, vector<string> & result,
                               bool onlyOneHot = false, bool onlyMinMaxScale = false) {
         if (!onlyMinMaxScale) {
@@ -135,14 +123,6 @@ public:
              << "," << (plan.crouchDuringNextThink ? "1" : "0")
              << "," << plan.navTargetArea;
         return result.str();
-    }
-
-    void timeStepPlanToVec(TimeStepPlan plan, vector<TrainDataContainer> & result) {
-        result.push_back(plan.deltaX);
-        result.push_back(plan.deltaY);
-        result.push_back({plan.shootDuringNextThink ? 1u : 0u});
-        result.push_back({plan.crouchDuringNextThink ? 1u : 0u});
-        result.push_back(plan.navTargetArea);
     }
 
     void timeStepPlanColumns(vector<TimeStepPlan> plans, vector<string> & result,
@@ -187,22 +167,6 @@ public:
             << "," << timeStepStateToString(lastState[index])
             << "," << timeStepStateToString(lastState[index])
             << "," << timeStepPlanToString(plan[index]) << std::endl;
-    }
-
-    vector<TrainDataContainer> oneLineToVec(int64_t index) {
-        vector<TrainDataContainer> result;
-        result.push_back(index);
-        result.push_back(tickId[index]);
-        result.push_back(roundId[index]);
-        result.push_back(sourcePlayerId[index]);
-        result.push_back(sourcePlayerName[index]);
-        result.push_back(demoName[index]);
-        result.push_back(curState[index].team);
-        timeStepStateToVec(curState[index], result);
-        timeStepStateToVec(lastState[index], result);
-        timeStepStateToVec(oldState[index], result);
-        timeStepPlanToVec(plan[index], result);
-        return result;
     }
 
     vector<string> getForeignKeyNames() {
