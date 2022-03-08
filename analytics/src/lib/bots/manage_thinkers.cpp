@@ -3,6 +3,8 @@
 //
 #include "bots/manage_thinkers.h"
 #include <algorithm>
+#include <file_helpers.h>
+
 using namespace std::chrono_literals;
 
 Skill learnedTerminatorSkill = {true, 0.001, true, MovementPolicy::PushOnly};
@@ -38,19 +40,6 @@ ManageThinkerState::getLatestDemoFile(string mapsPath) {
     }
 
     return mostRecentEntry;
-}
-
-void ManageThinkerState::savePlayersFile() {
-    std::filesystem::path p = curDemoFile.path();
-    std::ofstream fsPlayers(p.replace_extension(".csv"));
-    p += "_skills";
-    fsPlayers << "name,learned,maxInaccuracy,stopToShoot,movementPolicy,demo_file\n";
-    for (const auto & [name, skill] : botNameToSkill) {
-        fsPlayers << name << "," << (skill.learned ? 1 : 0) << "," << skill.maxInaccuracy << "," << (skill.stopToShoot ? 1 : 0)
-            << "," << enumAsInt(skill.movementPolicy) << "," << curDemoFile.path().filename() << "\n";
-    }
-    fsPlayers.close();
-
 }
 
 void
@@ -131,7 +120,7 @@ ManageThinkerState::updateThinkers(ServerState & state, string mapsPath, std::li
     }
     
     if (newBotsForThisGame) {
-        savePlayersFile();
+        saveSkillsDuringPlay();
     }
 
     if (useLearned) {
@@ -144,4 +133,102 @@ ManageThinkerState::updateThinkers(ServerState & state, string mapsPath, std::li
     for (size_t i = 0; i < state.inputsValid.size(); i++) {
         state.inputsValid[i] = false;
     }
+}
+
+void ManageThinkerState::saveSkillsDuringPlay() {
+    std::filesystem::path p = curDemoFile.path();
+    std::ofstream fsPlayers(p.replace_extension(".csv"));
+    p += "_skills";
+    fsPlayers << "name,learned,maxInaccuracy,stopToShoot,movementPolicy,demo_file\n";
+    for (const auto & [name, skill] : botNameToSkill) {
+        fsPlayers << name << "," << (skill.learned ? 1 : 0) << "," << skill.maxInaccuracy << "," << (skill.stopToShoot ? 1 : 0)
+                  << "," << enumAsInt(skill.movementPolicy) << "," << curDemoFile.path().filename() << "\n";
+    }
+    fsPlayers.close();
+}
+
+void ManageThinkerState::saveSkillsDuringTraining(string outputPath) {
+    std::ofstream fsSkills(outputPath);
+    fsSkills << "player_id,learned,maxInaccuracy,stopToShoot,movementPolicy\n";
+    for (size_t i = 0; i < skillsFromFile.size(); i++) {
+        fsSkills << i << "," << (skillsFromFile[i].learned ? 1 : 0) << ","
+                 << skillsFromFile[i].maxInaccuracy << ","
+                 << (skillsFromFile[i].stopToShoot ? 1 : 0) << ","
+                 << enumAsInt(skillsFromFile[i].movementPolicy) << "\n";
+    }
+    fsSkills.close();
+}
+
+void ManageThinkerState::loadSkills(const Games & games, const Players & players) {
+    string skillFileName = "skill.csv";
+    string skillFilePath = dataPath + "/" + skillFileName;
+
+    map<string, map<string, int64_t>> demoNameToPlayerNameToPlayerId;
+    for (int64_t gameIndex = 0; gameIndex < games.size; gameIndex++) {
+        for (int64_t playerIndex = games.playersPerGame[gameIndex].minId;
+                playerIndex <= games.playersPerGame[gameIndex].maxId; playerIndex++) {
+            string demoFileName = games.demoFile[gameIndex];
+            // remove machine id from demo file name for now as player's don't know it. will need to add it later
+            string demoSuffix = "Global_Offensive";
+            size_t suffixStart = demoFileName.find(demoSuffix);
+            string subsetDemoFileName = demoFileName.substr(0, suffixStart + demoSuffix.size()) + ".dem";
+            demoNameToPlayerNameToPlayerId[subsetDemoFileName][players.name[playerIndex]] = players.id[playerIndex];
+        }
+    }
+
+    // load skills into here, will reorder by player index later
+    map<int64_t, Skill> playerIdToSkill;
+
+    // mmap the file
+    auto [fd, stats, file] = openMMapFile(skillFilePath);
+
+    // track location for error logging
+    int64_t rowNumber = 0;
+    int64_t colNumber = 0;
+
+    // track location for insertion
+    int64_t arrayEntry = 0;
+
+    Skill tmpSkill;
+    int32_t tmpMovementPolicy;
+    string tmpPlayerName, tmpDemoName;
+
+    for (size_t curStart = 0, curDelimiter = getNextDelimiter(file, curStart, stats.st_size);
+         curDelimiter < stats.st_size;
+         curStart = curDelimiter + 1, curDelimiter = getNextDelimiter(file, curStart, stats.st_size)) {
+        if (colNumber == 0) {
+            readCol(file, curStart, curDelimiter, tmpPlayerName);
+        }
+        else if (colNumber == 1) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, tmpSkill.learned);
+        }
+        else if (colNumber == 2) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, tmpSkill.maxInaccuracy);
+        }
+        else if (colNumber == 3) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, tmpSkill.stopToShoot);
+        }
+        else if (colNumber == 4) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, tmpMovementPolicy);
+            tmpSkill.movementPolicy = intAsEnum<MovementPolicy>(tmpMovementPolicy);
+        }
+        else if (colNumber == 5) {
+            readCol(file, curStart, curDelimiter, tmpDemoName);
+            tmpDemoName.erase(remove(tmpDemoName.begin(), tmpDemoName.end(), '\"'), tmpDemoName.end());
+            assert(demoNameToPlayerNameToPlayerId.find(tmpDemoName) != demoNameToPlayerNameToPlayerId.end());
+            assert(demoNameToPlayerNameToPlayerId[tmpDemoName].find(tmpPlayerName) !=
+                    demoNameToPlayerNameToPlayerId[tmpDemoName].end());
+            playerIdToSkill[demoNameToPlayerNameToPlayerId[tmpDemoName][tmpPlayerName]] = tmpSkill;
+            rowNumber++;
+            arrayEntry++;
+        }
+        colNumber = (colNumber + 1) % 6;
+    }
+    closeMMapFile({fd, stats, file});
+
+    for (const auto & [playerId, skill] : playerIdToSkill) {
+        assert(playerId == skillsFromFile.size());
+        skillsFromFile.push_back(skill);
+    }
+    assert(players.size == skillsFromFile.size());
 }

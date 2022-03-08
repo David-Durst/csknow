@@ -12,6 +12,7 @@
 #include "navmesh/nav_file.h"
 #include "queries/nav_mesh.h"
 #include "queries/train_dataset.h"
+#include "bots/manage_thinkers.h"
 #include <filesystem>
 namespace fs = std::filesystem;
 
@@ -93,11 +94,16 @@ int main(int argc, char * argv[]) {
     std::cout << "num elements in defusals: " << defusals.size << std::endl;
     std::cout << "num elements in explosions: " << explosions.size << std::endl;
 
+    ManageThinkerState manageThinkerState(dataPath);
+    manageThinkerState.loadSkills(games, players);
+    std::cout << "num elements in skillsFromFile: " << manageThinkerState.skillsFromFile.size() << std::endl;
+
     TrainDatasetResult trainDatasetResult = queryTrainDataset(games, rounds, ticks, players, playerAtTick, map_navs);
 
     std::ofstream outputFile, configFile;
     string outputPath = outputDir + "/train_dataset.csv";
     string configPath = outputDir + "/train_config.csv";
+    string skillPath = outputDir + "/train_skills.csv";
 
     std::cout << "writing train dataset with size " << trainDatasetResult.size << " to " << outputPath << std::endl;
     outputFile.open(outputPath);
@@ -106,4 +112,5 @@ int main(int argc, char * argv[]) {
     configFile.open(configPath);
     configFile << trainDatasetResult.getDataLabelRanges();
     configFile.close();
+    manageThinkerState.saveSkillsDuringTraining(skillPath);
 }

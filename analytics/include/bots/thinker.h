@@ -46,6 +46,11 @@ constexpr int enumAsInt(T enumElem) {
     return static_cast<std::underlying_type_t<T>>(enumElem);
 }
 
+template <class T>
+constexpr T intAsEnum(int32_t intElem) {
+    return static_cast<T>(intElem);
+}
+
 struct Skill {
         bool learned;
         double maxInaccuracy;
