@@ -38,7 +38,7 @@ all_data_cols = input_cols + output_cols
 unique_player_id = all_data_df.loc[:, player_id_col].unique()
 player_id_to_ix = {player_id: i for (i, player_id) in enumerate(unique_player_id)}
 all_data_df = all_data_df.replace({player_id_col: player_id_to_ix})
-all_data_df = all_data_df[all_data_df['team'] == 0]
+#all_data_df = all_data_df[all_data_df['team'] == 0]
 target_ax = all_data_df.loc[:, 'nav target'].value_counts().plot(kind='bar')
 target_ax.figure.savefig(Path(__file__).parent / '..' / 'data' / 'nav_distribution.png')
 
@@ -113,7 +113,7 @@ print(f"Using {device} device")
 
 # Define model
 embedding_dim = 5
-nn_args = NNArgs(len(unique_player_id), embedding_dim, input_ct, output_ct, output_names, output_ranges)
+nn_args = NNArgs(player_id_to_ix, embedding_dim, input_ct, output_ct, output_names, output_ranges)
 model = NeuralNetwork(nn_args).to(device)
 print(model)
 params = list(model.parameters())

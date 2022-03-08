@@ -2,12 +2,12 @@ from torch import nn
 import torch
 from sklearn.compose import ColumnTransformer
 from dataclasses import dataclass
-from typing import List
+from typing import List, Dict
 
 
 @dataclass(frozen=True)
 class NNArgs:
-    num_unique_players: int
+    player_id_to_ix: Dict[int, int]
     embedding_dim: int
     input_ct: ColumnTransformer
     output_ct: ColumnTransformer
@@ -21,7 +21,7 @@ class NeuralNetwork(nn.Module):
     def __init__(self, args):
         super(NeuralNetwork, self).__init__()
         self.args = args
-        self.embeddings = nn.Embedding(args.num_unique_players, args.embedding_dim)
+        self.embeddings = nn.Embedding(len(args.player_id_to_ix), args.embedding_dim)
         self.linear_relu_stack = nn.Sequential(
             nn.Linear(args.embedding_dim + args.input_ct.get_feature_names_out().size - 1, 128),
             nn.ReLU(),
