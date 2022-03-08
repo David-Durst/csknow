@@ -33,15 +33,10 @@ for r, skill_col_name in enumerate(rows):
         ax_df = skills_and_embeddings_df.copy()
         if len(ax_df.loc[:, skill_col_name].unique()) > 10:
             ax_df.loc[:, skill_col_name] = pd.qcut(ax_df.loc[:, skill_col_name], 10, duplicates='drop')
-        #else:
-            #ax_df.loc[:, skill_col_name] = pd.Categorical(ax_df.loc[:, skill_col_name])
-            #x = 1
         ax_df.loc[:, embedding_col_name] = pd.qcut(ax_df.loc[:, embedding_col_name], 10)
         ax_df = ax_df.loc[:, [embedding_col_name, skill_col_name]]
-        #ax_quantiled_df = ax_df.groupby([embedding_col_name, skill_col_name]).size().reset_index(name='counts')
         ax_crosstab = pd.crosstab(ax_df.loc[:, embedding_col_name], ax_df.loc[:, skill_col_name])
         sns.heatmap(ax_crosstab, annot=True, ax=ax[r][c])
-        #ax_df.plot.scatter(embedding_col_name, skill_col_name, ax=ax[r][c])
         ax[r][c].set_xlabel(embedding_col_name, fontsize=14)
         ax[r][c].set_xlabel(skill_col_name, fontsize=14)
         ax[r][c].set_title(embedding_col_name + ' vs ' + skill_col_name, fontsize=14)
