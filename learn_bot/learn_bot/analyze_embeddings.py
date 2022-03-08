@@ -31,7 +31,11 @@ for r, skill_col_name in enumerate(rows):
     for c, embedding_col_name in enumerate(columns):
         z = pd.qcut(skills_and_embeddings_df.loc[:, skill_col_name], 10, duplicates='drop')
         ax_df = skills_and_embeddings_df.copy()
-        ax_df.loc[:, skill_col_name] = pd.qcut(ax_df.loc[:, skill_col_name], 10, duplicates='drop')
+        if len(ax_df.loc[:, skill_col_name].unique()) > 10:
+            ax_df.loc[:, skill_col_name] = pd.qcut(ax_df.loc[:, skill_col_name], 10, duplicates='drop')
+        #else:
+            #ax_df.loc[:, skill_col_name] = pd.Categorical(ax_df.loc[:, skill_col_name])
+            #x = 1
         ax_df.loc[:, embedding_col_name] = pd.qcut(ax_df.loc[:, embedding_col_name], 10)
         ax_df = ax_df.loc[:, [embedding_col_name, skill_col_name]]
         #ax_quantiled_df = ax_df.groupby([embedding_col_name, skill_col_name]).size().reset_index(name='counts')
