@@ -11,6 +11,7 @@ import numpy as np
 import re
 import sys
 from io import StringIO
+import seaborn as sns
 
 nn_args: NNArgs = load(Path(__file__).parent / '..' / 'model' / 'nn_args.joblib')
 device = "cpu"
@@ -22,21 +23,26 @@ player_embeddings_df = pd.DataFrame(model.embeddings.weight.detach().clone().num
 player_embeddings_df.columns = ['embedding ' + str(c) for c in player_embeddings_df.columns]
 skills_and_embeddings_df = pd.concat([skills_df, player_embeddings_df], axis=1).reindex(skills_df.index)
 
-rows = len(skills_df.columns[1:])
-columns = len(player_embeddings_df.columns)
+rows = skills_df.columns[2:]
+columns = player_embeddings_df.columns
 fig, ax = plt.subplots(nrows=len(rows), ncols=len(columns), figsize=(len(columns)*8, len(rows)*8))
 
-for skill_col_name in rows:
-    for embedding_col_name in columns:
+for r, skill_col_name in enumerate(rows):
+    for c, embedding_col_name in enumerate(columns):
+        z = pd.qcut(skills_and_embeddings_df.loc[:, skill_col_name], 10, duplicates='drop')
+        ax_df = skills_and_embeddings_df.copy()
+        ax_df.loc[:, skill_col_name] = pd.qcut(ax_df.loc[:, skill_col_name], 10, duplicates='drop')
+        ax_df.loc[:, embedding_col_name] = pd.qcut(ax_df.loc[:, embedding_col_name], 10)
+        ax_df = ax_df.loc[:, [embedding_col_name, skill_col_name]]
+        #ax_quantiled_df = ax_df.groupby([embedding_col_name, skill_col_name]).size().reset_index(name='counts')
+        ax_crosstab = pd.crosstab(ax_df.loc[:, embedding_col_name], ax_df.loc[:, skill_col_name])
+        sns.heatmap(ax_crosstab, annot=True, ax=ax[r][c])
+        #ax_df.plot.scatter(embedding_col_name, skill_col_name, ax=ax[r][c])
+        ax[r][c].set_xlabel(embedding_col_name, fontsize=14)
+        ax[r][c].set_xlabel(skill_col_name, fontsize=14)
+        ax[r][c].set_title(embedding_col_name + ' vs ' + skill_col_name, fontsize=14)
 
-        if len(column_series.unique()) == 2:
-            for column_value in column_series.unique():
-                filtered_series = column_series[column_series == column_value]
-
-
-        for player_index in range(len(skills_df)):
-            x = 1
 
 plt.suptitle("Skill Parameters vs Embeddings", fontsize=30)
 plt.tight_layout(rect=[0, 0.03, 1, 0.95])
-fig.savefig(plot_folder + 'hist_' + name.lower().replace(' ', '_') + '.png')
+fig.savefig(Path(__file__).parent / '..' / 'plots' / 'embeddings_scatters.png')
