@@ -181,7 +181,7 @@ TrainDatasetResult queryTrainDataset(const Games & games, const Rounds & rounds,
                     double newT0, newT1;
                     if(intersectP(areaAABB, movementRay, newT0, newT1) &&
                         newT0 * computeMagnitude(movementRay.dir) < nearestDistance) {
-                        nearestArea = connection.id;
+                        nearestArea = navFile.m_area_ids_to_indices.at(connection.id);
                         nearestDistance = newT0 * computeMagnitude(movementRay.dir);
                     }
                 }
