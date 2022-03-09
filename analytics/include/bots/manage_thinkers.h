@@ -16,16 +16,30 @@
 // need to move more of the state at top of manage_thinkers.cpp to here
 struct ManageThinkerState {
     PythonModelInterface pythonPlanState;
-    string dataPath;
+    string dataPath, pythonDataPath;
     vector<Skill> skillsFromFile;
+
+    bool firstGame = true;
+    int32_t curMapNumber = -1;
+
+    enum class BotAddMode {
+        PickFromSkillVector,
+        TerminatorCTStoppedT,
+        GenRandom,
+        NUM_ADD_MODES
+    };
+    BotAddMode curMode = BotAddMode::GenRandom;
 
     std::filesystem::directory_entry getLatestDemoFile(string mapsPath);
     void updateThinkers(ServerState & state, string mapsPath, std::list<Thinker> & thinkers, bool useLearned);
     void saveSkillsDuringPlay();
     void saveSkillsDuringTraining(string outputPath);
-    void loadSkills(const Games & games, const Players & players);
+    void loadSkillsDuringTraining(const Games & games, const Players & players);
+    void loadSkillsAfterTraining();
+    Skill findMostSimilarSkillFromTraining(Skill inputSkill);
 
-    ManageThinkerState(string dataPath) : pythonPlanState(dataPath), dataPath(dataPath) { };
+    ManageThinkerState(string dataPath, string pythonDataPath)
+        : pythonPlanState(dataPath), dataPath(dataPath), pythonDataPath(pythonDataPath) { };
 };
 
 #endif //CSKNOW_MANAGE_THINKERS_H

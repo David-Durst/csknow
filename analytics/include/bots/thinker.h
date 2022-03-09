@@ -16,6 +16,7 @@
 #include "geometryNavConversions.h"
 #include "circular_buffer.h"
 #include "bots/python_model_interface.h"
+#include "enum_helpers.h"
 #include <chrono>
 #include <random>
 #include <type_traits>
@@ -40,16 +41,6 @@ enum class MovementPolicy {
     HoldOnly,
     NUM_POLICIES
 };
-
-template <class T>
-constexpr int enumAsInt(T enumElem) {
-    return static_cast<std::underlying_type_t<T>>(enumElem);
-}
-
-template <class T>
-constexpr T intAsEnum(int32_t intElem) {
-    return static_cast<T>(intElem);
-}
 
 struct Skill {
         bool learned;

@@ -28,5 +28,5 @@ cmake .. -DCMAKE_BUILD_TYPE=Release
 if make -j4; then
     chmod a+x csknow_bot
     python -m learn_bot.inference /home/steam/csgo-ds/csgo/addons/sourcemod/bot-link-data &
-    ${script_dir}/../build/csknow_bot /home/steam/csgo-ds/csgo/maps /home/steam/csgo-ds/csgo/addons/sourcemod/bot-link-data true
+    ${script_dir}/../build/csknow_bot /home/steam/csgo-ds/csgo/maps /home/steam/csgo-ds/csgo/addons/sourcemod/bot-link-data true /home/steam/csknow/learn_bot/data
 fi

@@ -94,8 +94,9 @@ int main(int argc, char * argv[]) {
     std::cout << "num elements in defusals: " << defusals.size << std::endl;
     std::cout << "num elements in explosions: " << explosions.size << std::endl;
 
-    ManageThinkerState manageThinkerState(dataPath);
-    manageThinkerState.loadSkills(games, players);
+    // don't need a python path during train data generation, making data for python now
+    ManageThinkerState manageThinkerState(dataPath, "");
+    manageThinkerState.loadSkillsDuringTraining(games, players);
     std::cout << "num elements in skillsFromFile: " << manageThinkerState.skillsFromFile.size() << std::endl;
 
     TrainDatasetResult trainDatasetResult = queryTrainDataset(games, rounds, ticks, players, playerAtTick, map_navs);

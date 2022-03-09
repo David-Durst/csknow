@@ -11,15 +11,19 @@
 #define LOG_STATE
 
 int main(int argc, char * argv[]) {
-    if (argc != 3 && argc != 4) {
-        std::cout << "please call this code with 2 or 3 arguments: \n"
+    if (argc != 3 && argc != 5) {
+        std::cout << "please call this code with 2 or 4 (NOT 3) arguments: \n"
             << "1. path/to/maps\n"
             << "2. path/to/data\n"
-            << "3. use_model (optional)\n" << std::endl;
+            << "3. use_model (optional)\n"
+            << "4. path/to/python/data/ (IFF use_model)\n" << std::endl;
         return 1;
     }
-    string mapsPath = argv[1], dataPath = argv[2];
-    bool useLearned = argc == 4;
+    string mapsPath = argv[1], dataPath = argv[2], pythonDataPath;
+    bool useLearned = argc == 5;
+    if (useLearned) {
+        pythonDataPath = argv[4];
+    }
 
     ServerState state;
     //Thinker thinker(state, 3, navPath, true);
@@ -31,7 +35,7 @@ int main(int argc, char * argv[]) {
     uint64_t numFailures = 0;
     state.numInputLines = 0;
     state.numThinkLines = 0;
-    ManageThinkerState manageThinkerState(dataPath);
+    ManageThinkerState manageThinkerState(dataPath, pythonDataPath);
 
     while (true) {
         auto start = std::chrono::system_clock::now();

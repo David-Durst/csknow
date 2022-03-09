@@ -7,7 +7,6 @@
 
 using namespace std::chrono_literals;
 
-Skill learnedTerminatorSkill = {true, 0.001, true, MovementPolicy::PushOnly};
 Skill terminatorSkill = {false, 0.001, true, MovementPolicy::PushOnly};
 Skill badAggressiveSkill = {false, 10.0, false, MovementPolicy::PushOnly};
 Skill badStopSkill = {false, 10.0, true, MovementPolicy::PushOnly};
@@ -15,11 +14,7 @@ Skill afraidSkill = {false, 10.0, false, MovementPolicy::PushAndRetreat};
 Skill nothingSkill = {false, 10.0, true, MovementPolicy::HoldOnly};
 std::vector<Skill> allBotSkills {terminatorSkill, badAggressiveSkill, badStopSkill, afraidSkill, nothingSkill};
 std::vector<Skill> teamBotSkills {terminatorSkill, nothingSkill};
-std::vector<Skill> learnedBotSkills {learnedTerminatorSkill, nothingSkill};
-bool pickFromSkillVector = false, pickByTeam = false;
-bool firstGame = true;
 std::filesystem::directory_entry curDemoFile;
-int32_t curMapNumber = -1;
 std::map<string, Skill> botNameToSkill;
 std::random_device rd;  // Will be used to obtain a seed for the random number engine
 std::mt19937 accuracyGen(rd()), otherSkillGen(rd()); // Standard mersenne_twister_engine seeded with rd()
@@ -94,24 +89,28 @@ ManageThinkerState::updateThinkers(ServerState & state, string mapsPath, std::li
             string botName = botCSGOIdsToNames[csgoId];
             // if don't have a skill for this bot, generate one
             if (botNameToSkill.find(botName) == botNameToSkill.end()) {
-                if (pickFromSkillVector) {
-                    botNameToSkill.insert({botName, allBotSkills[botNameToSkill.size() % allBotSkills.size()]});
+                Skill newBotSkill;
+                if (curMode == BotAddMode::PickFromSkillVector) {
+                    newBotSkill = allBotSkills[botNameToSkill.size() % allBotSkills.size()];
                 }
-                else if (pickByTeam) {
+                else if (curMode == BotAddMode::TerminatorCTStoppedT) {
                     int32_t skillIndex = botCSGOIdsToTeam[csgoId] == 3 ? 0 : 1;
-                    if (useLearned) {
-                        botNameToSkill.insert({botName, learnedBotSkills[skillIndex]});
-                    }
-                    else {
-                        botNameToSkill.insert({botName, teamBotSkills[skillIndex]});
-                    }
+                    newBotSkill = teamBotSkills[skillIndex];
                 }
+                // this is BotAddMode::GenRandom
                 else {
                     bool stopToShoot = otherSkillDis(otherSkillGen) < 0.5;
                     MovementPolicy policy = otherSkillDis(otherSkillGen) < 0.5 ?
                                             MovementPolicy::PushAndRetreat : MovementPolicy::PushOnly;
-                    botNameToSkill.insert({botName, {false, accuracyDis(accuracyGen), stopToShoot, policy} });
+                    newBotSkill = {false, accuracyDis(accuracyGen), stopToShoot, policy};
                 }
+
+                // if learned, find most similar in list of players and make parameters actually that
+                if (useLearned) {
+                    newBotSkill = findMostSimilarSkillFromTraining(newBotSkill);
+                }
+
+                botNameToSkill.insert({botName, newBotSkill});
                 newBotsForThisGame = true;
             }
             skill = botNameToSkill[botName];
@@ -159,7 +158,7 @@ void ManageThinkerState::saveSkillsDuringTraining(string outputPath) {
     fsSkills.close();
 }
 
-void ManageThinkerState::loadSkills(const Games & games, const Players & players) {
+void ManageThinkerState::loadSkillsDuringTraining(const Games & games, const Players & players) {
     string skillFileName = "skill.csv";
     string skillFilePath = dataPath + "/" + skillFileName;
 
@@ -232,3 +231,77 @@ void ManageThinkerState::loadSkills(const Games & games, const Players & players
     }
     assert(players.size == skillsFromFile.size());
 }
+
+void ManageThinkerState::loadSkillsAfterTraining() {
+    string skillFileName = "train_skills.csv";
+    string skillFilePath = pythonDataPath + "/" + skillFileName;
+
+    // mmap the file
+    auto [fd, stats, file] = openMMapFile(skillFilePath);
+
+    // track location for error logging
+    int64_t rowNumber = 0;
+    int64_t colNumber = 0;
+
+    // track location for insertion
+    int64_t arrayEntry = 0;
+
+    Skill tmpSkill;
+    int32_t tmpMovementPolicy;
+    string tmpPlayerName, tmpDemoName;
+
+    for (size_t curStart = 0, curDelimiter = getNextDelimiter(file, curStart, stats.st_size);
+         curDelimiter < stats.st_size;
+         curStart = curDelimiter + 1, curDelimiter = getNextDelimiter(file, curStart, stats.st_size)) {
+        if (colNumber == 0) {
+            readCol(file, curStart, curDelimiter, tmpPlayerName);
+        }
+        else if (colNumber == 1) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, tmpSkill.learned);
+        }
+        else if (colNumber == 2) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, tmpSkill.maxInaccuracy);
+        }
+        else if (colNumber == 3) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, tmpSkill.stopToShoot);
+        }
+        else if (colNumber == 4) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, tmpMovementPolicy);
+            tmpSkill.movementPolicy = intAsEnum<MovementPolicy>(tmpMovementPolicy);
+            skillsFromFile.push_back(tmpSkill);
+            rowNumber++;
+            arrayEntry++;
+        }
+        colNumber = (colNumber + 1) % 5;
+    }
+    closeMMapFile({fd, stats, file});
+}
+
+Skill ManageThinkerState::findMostSimilarSkillFromTraining(Skill inputSkill) {
+    if (skillsFromFile.empty()) {
+        loadSkillsAfterTraining();
+    }
+
+    double minInaccuracyDifference = std::numeric_limits<double>::max();
+    Skill resultSkill;
+
+    for (const auto & candidateSkill : skillsFromFile) {
+        if (candidateSkill.stopToShoot == inputSkill.stopToShoot &&
+            candidateSkill.movementPolicy == inputSkill.movementPolicy) {
+            double newInaccuracyDifference = std::abs(candidateSkill.maxInaccuracy - inputSkill.maxInaccuracy);
+            if (newInaccuracyDifference < minInaccuracyDifference) {
+                minInaccuracyDifference = newInaccuracyDifference;
+                resultSkill = candidateSkill;
+            }
+
+        }
+    }
+
+    // if nothing matches, just take the first one
+    if (minInaccuracyDifference == std::numeric_limits<double>::max()) {
+        resultSkill = skillsFromFile[0];
+    }
+    resultSkill.learned = true;
+    return resultSkill;
+}
+
