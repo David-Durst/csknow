@@ -332,6 +332,7 @@ export function drawTick(e: InputEvent) {
         const clusterRows = filteredData.clusters.get(curCluster)
         let connectionAreaIds: number[] = [];
         let targetAreaId = -1
+        let targetAreaName = ""
         let targetX = -1
         let targetY = -1
         let targetFontSize = -1
@@ -354,6 +355,7 @@ export function drawTick(e: InputEvent) {
                 lastMousePosition.y >= minCoordinate.y &&
                 lastMousePosition.y <= maxCoordinate.y) {
                 targetAreaId = cluster.id
+                targetAreaName = cluster.otherColumnValues[0]
                 targetX = avgX
                 targetY = avgY
                 targetFontSize = (((zScaling * 20 + 30)/2)*fontScale)
@@ -396,7 +398,7 @@ export function drawTick(e: InputEvent) {
         if (targetAreaId != -1) {
             ctx.fillStyle = 'green'
             ctx.font = targetFontSize.toString() + "px Tahoma"
-            ctx.fillText(targetAreaId.toString(), targetX, targetY)
+            ctx.fillText(targetAreaId.toString() + "," + targetAreaName, targetX, targetY)
         }
     }
     else if (curCluster.includes("reachable")) {
