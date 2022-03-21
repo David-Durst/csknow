@@ -14,7 +14,7 @@ psql --user=postgres -d csknow -c "\\copy games FROM '${dir_path}/global_games.c
 #mysql --host=localhost --user=root --password=${pass} -e "LOAD DATA INFILE '${dir_path}/dimension_table_hit_groups.csv' INTO TABLE hit_groups FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n' IGNORE 1 ROWS;" csknow
 #mysql --host=localhost --user=root --password=${pass} -e "LOAD DATA INFILE '${dir_path}/global_games.csv' INTO TABLE games FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n' IGNORE 1 ROWS;" csknow
 #
-for name in players rounds ticks player_at_tick spotted weapon_fire kills hurt grenades flashed grenade_trajectories plants defusals explosions hand_visibility visibilities visibilities_unadjusted lookers actions \
+for name in players rounds ticks player_at_tick spotted footstep weapon_fire kills hurt grenades flashed grenade_trajectories plants defusals explosions hand_visibility visibilities visibilities_unadjusted lookers actions \
 	nearest_origin player_in_cover_edge team_looking_at_cover_edge_cluster
 do
     echo "loading ${name}$"

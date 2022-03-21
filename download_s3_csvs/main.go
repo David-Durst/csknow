@@ -151,6 +151,7 @@ func main() {
 			downloadCSVForDemo(downloader, localKey, "ticks")
 			downloadCSVForDemo(downloader, localKey, "player_at_tick")
 			downloadCSVForDemo(downloader, localKey, "spotted")
+			downloadCSVForDemo(downloader, localKey, "footstep")
 			downloadCSVForDemo(downloader, localKey, "weapon_fire")
 			downloadCSVForDemo(downloader, localKey, "hurt")
 			downloadCSVForDemo(downloader, localKey, "grenades")

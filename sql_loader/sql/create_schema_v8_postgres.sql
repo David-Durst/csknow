@@ -95,6 +95,12 @@ CREATE TABLE "spotted" (
   "is_spotted" boolean
 );
 
+CREATE TABLE "footstep" (
+  "id" bigint PRIMARY KEY,
+  "tick_id" bigint,
+  "stepping_player" bigint
+);
+
 CREATE TABLE "weapon_fire" (
   "id" bigint PRIMARY KEY,
   "tick_id" bigint,

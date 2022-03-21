@@ -24,6 +24,10 @@ ALTER TABLE "spotted" ADD FOREIGN KEY ("spotted_player") REFERENCES "players" ("
 
 ALTER TABLE "spotted" ADD FOREIGN KEY ("spotter_player") REFERENCES "players" ("id");
 
+ALTER TABLE "footstep" ADD FOREIGN KEY ("tick_id") REFERENCES "ticks" ("id");
+
+ALTER TABLE "footstep" ADD FOREIGN KEY ("stepping_player") REFERENCES "players" ("id");
+
 ALTER TABLE "weapon_fire" ADD FOREIGN KEY ("tick_id") REFERENCES "ticks" ("id");
 
 ALTER TABLE "weapon_fire" ADD FOREIGN KEY ("shooter") REFERENCES "players" ("id");
