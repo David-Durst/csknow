@@ -53,6 +53,7 @@ func uploadCSVs(uploader *s3manager.Uploader, fileKey string) {
 	uploadFile(uploader, localTicksCSVName, fileKey + "_ticks", csvPrefixLocal)
 	uploadFile(uploader, localPlayerAtTickCSVName, fileKey + "_player_at_tick", csvPrefixLocal)
 	uploadFile(uploader, localSpottedCSVName, fileKey + "_spotted", csvPrefixLocal)
+	uploadFile(uploader, localFootstepCSVName, fileKey + "_footstep", csvPrefixLocal)
 	uploadFile(uploader, localWeaponFireCSVName, fileKey + "_weapon_fire", csvPrefixLocal)
 	uploadFile(uploader, localHurtCSVName, fileKey + "_hurt", csvPrefixLocal)
 	uploadFile(uploader, localGrenadesCSVName, fileKey + "_grenades", csvPrefixLocal)

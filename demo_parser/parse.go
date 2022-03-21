@@ -67,6 +67,7 @@ type IDState struct {
 	nextTick int64
 	nextPlayerAtTick int64
 	nextSpotted int64
+	nextFootstep int64
 	nextWeaponFire int64
 	nextKill int64
 	nextPlayerHurt int64
@@ -395,6 +396,20 @@ func processFile(unprocessedKey string, localDemName string, idState * IDState, 
 				curID, idState.nextTick, getPlayerBySteamID(&playersTracker, e.Spotted), getPlayerBySteamID(&playersTracker, possibleSpotter),
 				boolToInt(e.Spotted.IsSpottedBy(possibleSpotter))))
 		}
+	})
+
+	heardFile, err := os.Create(localFootstepCSVName)
+	if err != nil {
+		panic(err)
+	}
+	defer heardFile.Close()
+	heardFile.WriteString("id,tick_id,stepping_player\n")
+
+	p.RegisterEventHandler(func(e events.Footstep) {
+		curID := idState.nextFootstep
+		idState.nextFootstep++
+		heardFile.WriteString(fmt.Sprintf("%d,%d,%d\n",
+			curID, idState.nextTick, getPlayerBySteamID(&playersTracker, e.Player)))
 	})
 
 	weaponFireFile, err := os.Create(localWeaponFireCSVName)

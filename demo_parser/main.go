@@ -25,6 +25,7 @@ const localPlayersCSVName = "local_players.csv"
 const localTicksCSVName = "local_ticks.csv"
 const localPlayerAtTickCSVName = "local_player_at_tick.csv"
 const localSpottedCSVName = "local_spotted.csv"
+const localFootstepCSVName = "local_footstep.csv"
 const localWeaponFireCSVName = "local_weapon_fire.csv"
 const localHurtCSVName = "local_hurt.csv"
 const localGrenadesCSVName = "local_grenades.csv"
@@ -70,7 +71,7 @@ func parseInputStateCSV() IDState {
 		values = append(values, i)
 	}
 	return IDState{values[0], values[1], values[2], values[3], values[4], values[5], values[6],
-		values[7], values[8], values[9], values[10], values[11], values[12], values[13], values[14]}
+		values[7], values[8], values[9], values[10], values[11], values[12], values[13], values[14], values[15]}
 }
 
 func saveOutputStateCSV(idState *IDState) {
@@ -81,15 +82,15 @@ func saveOutputStateCSV(idState *IDState) {
 	defer idStateFile.Close()
 	idStateFile.WriteString(fmt.Sprintf(
 		"nextGame,%d\nnextPlayer,%d\nnextRound,%d\nnextTick,%d\n" +
-			"nextPlayerAtTick,%d\nnextSpotted,%d\nnextWeaponFire,%d\nnextKill,%d\nnextPlayerHurt,%d\n" +
+			"nextPlayerAtTick,%d\nnextSpotted,%d\nnextFootstep,%d\nnextWeaponFire,%d\nnextKill,%d\nnextPlayerHurt,%d\n" +
 			"nextGrenade,%d\nnextGrenadeTrajectory,%d\nnextPlayerFlashed,%d\nnextPlant,%d\nnextDefusal,%d\nnextExplosion,%d\n",
 		idState.nextGame, idState.nextPlayer, idState.nextRound, idState.nextTick,
-		idState.nextPlayerAtTick, idState.nextSpotted, idState.nextWeaponFire, idState.nextKill, idState.nextPlayerHurt,
+		idState.nextPlayerAtTick, idState.nextSpotted, idState.nextFootstep, idState.nextWeaponFire, idState.nextKill, idState.nextPlayerHurt,
 		idState.nextGrenade, idState.nextGrenadeTrajectory, idState.nextPlayerFlashed, idState.nextPlant, idState.nextDefusal, idState.nextExplosion))
 }
 
 func main() {
-	startIDState := IDState{0, 0, 0, 0, 0, 0, 0, 0, 0 , 0, 0, 0, 0, 0, 0}
+	startIDState := IDState{0, 0, 0, 0, 0, 0, 0, 0, 0, 0 , 0, 0, 0, 0, 0, 0}
 
 	trainDataFlag := flag.Bool("t", true, "set if not using bot training data")
 	// if reprocessing, don't move the demos
