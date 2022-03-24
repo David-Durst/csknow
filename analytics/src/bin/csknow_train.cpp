@@ -58,6 +58,7 @@ int main(int argc, char * argv[]) {
     Ticks ticks;
     PlayerAtTick playerAtTick;
     Spotted spotted;
+    Footstep footstep;
     WeaponFire weaponFire;
     Kills kills;
     Hurt hurt;
@@ -70,9 +71,9 @@ int main(int argc, char * argv[]) {
     CoverEdges coverEdges;
     CoverOrigins coverOrigins;
 
-    loadData(equipment, gameTypes, hitGroups, games, players, rounds, ticks, playerAtTick, spotted, weaponFire,
+    loadData(equipment, gameTypes, hitGroups, games, players, rounds, ticks, playerAtTick, spotted, footstep, weaponFire,
              kills, hurt, grenades, flashed, grenadeTrajectories, plants, defusals, explosions, dataPath);
-    buildIndexes(equipment, gameTypes, hitGroups, games, players, rounds, ticks, playerAtTick, spotted, weaponFire,
+    buildIndexes(equipment, gameTypes, hitGroups, games, players, rounds, ticks, playerAtTick, spotted, footstep, weaponFire,
                  kills, hurt, grenades, flashed, grenadeTrajectories, plants, defusals, explosions);
     //std::printf("GLIBCXX: %d\n",__GLIBCXX__);
     std::cout << "num elements in equipment: " << equipment.size << std::endl;
@@ -84,6 +85,7 @@ int main(int argc, char * argv[]) {
     std::cout << "num elements in ticks: " << ticks.size << std::endl;
     std::cout << "num elements in playerAtTick: " << playerAtTick.size << std::endl;
     std::cout << "num elements in spotted: " << spotted.size << std::endl;
+    std::cout << "num elements in footstep: " << footstep.size << std::endl;
     std::cout << "num elements in weaponFire: " << weaponFire.size << std::endl;
     std::cout << "num elements in kills: " << kills.size << std::endl;
     std::cout << "num elements in hurt: " << hurt.size << std::endl;
@@ -96,15 +98,17 @@ int main(int argc, char * argv[]) {
 
     // don't need a python path during train data generation, making data for python now
     ManageThinkerState manageThinkerState(dataPath, "");
+    /*
     manageThinkerState.loadSkillsDuringTraining(games, players);
     std::cout << "num elements in skillsFromFile: " << manageThinkerState.skillsFromFile.size() << std::endl;
+     */
 
     TrainDatasetResult trainDatasetResult = queryTrainDataset(games, rounds, ticks, players, playerAtTick, map_navs);
 
     std::ofstream outputFile, configFile;
     string outputPath = outputDir + "/train_dataset.csv";
     string configPath = outputDir + "/train_config.csv";
-    string skillPath = outputDir + "/train_skills.csv";
+    //string skillPath = outputDir + "/train_skills.csv";
 
     std::cout << "writing train dataset with size " << trainDatasetResult.size << " to " << outputPath << std::endl;
     outputFile.open(outputPath);
@@ -113,5 +117,5 @@ int main(int argc, char * argv[]) {
     configFile.open(configPath);
     configFile << trainDatasetResult.getDataLabelRanges();
     configFile.close();
-    manageThinkerState.saveSkillsDuringTraining(skillPath);
+    //manageThinkerState.saveSkillsDuringTraining(skillPath);
 }

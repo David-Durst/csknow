@@ -66,7 +66,7 @@ func saveNewlyDownloaded(needToDownload []string) {
 	}
 }
 
-func downloadFile(downloader *s3manager.Downloader, fileKey string, localFileName string) {
+func downloadFile(downloader *s3manager.Downloader, fileKey string, localFileName string, mustDownload bool) {
 	// Create a file to write the S3 Object contents to.
 	awsF, err := os.Create(localFileName)
 	if err != nil {
@@ -81,14 +81,18 @@ func downloadFile(downloader *s3manager.Downloader, fileKey string, localFileNam
 		Key:    aws.String(fileKey),
 	})
 	if err != nil {
-		fmt.Errorf("failed to download file, %v", err)
-		os.Exit(1)
+		if mustDownload {
+			fmt.Errorf("failed to download file, %v", err)
+			os.Exit(1)
+		} else {
+			os.Remove(localFileName)
+		}
 	}
 }
 
-func downloadCSVForDemo(downloader *s3manager.Downloader, demKey string, csvType string) {
+func downloadCSVForDemo(downloader *s3manager.Downloader, demKey string, csvType string, mustDownload bool) {
 	localPath := path.Join("..", "local_data", csvType, demKey + "_" + csvType + ".csv")
-	downloadFile(downloader, csvPrefixLocal + demKey + "_" + csvType + ".csv", localPath)
+	downloadFile(downloader, csvPrefixLocal + demKey + "_" + csvType + ".csv", localPath, mustDownload)
 }
 
 func main() {
@@ -102,7 +106,10 @@ func main() {
 	subsetFlag := flag.Bool("s", false, "set for server runs that only download a subset csvs (but more than -l)")
 	flag.Parse()
 
+	println("trainDataFlag ", *trainDataFlag)
+
 	if *trainDataFlag {
+		processedPrefix = trainProcessedPrefix
 		processedSmallPrefix = trainProcessedPrefix
 		csvPrefixBase = trainCsvPrefixBase
 		updatePrefixs()
@@ -146,22 +153,22 @@ func main() {
 			if _, ok := alreadyDownloaded[localKey]; !ok {
 				needToDownload = append(needToDownload, localKey)
 			}
-			downloadCSVForDemo(downloader, localKey, "rounds")
-			downloadCSVForDemo(downloader, localKey, "players")
-			downloadCSVForDemo(downloader, localKey, "ticks")
-			downloadCSVForDemo(downloader, localKey, "player_at_tick")
-			downloadCSVForDemo(downloader, localKey, "spotted")
-			downloadCSVForDemo(downloader, localKey, "footstep")
-			downloadCSVForDemo(downloader, localKey, "weapon_fire")
-			downloadCSVForDemo(downloader, localKey, "hurt")
-			downloadCSVForDemo(downloader, localKey, "grenades")
-			downloadCSVForDemo(downloader, localKey, "grenade_trajectories")
-			downloadCSVForDemo(downloader, localKey, "flashed")
-			downloadCSVForDemo(downloader, localKey, "plants")
-			downloadCSVForDemo(downloader, localKey, "defusals")
-			downloadCSVForDemo(downloader, localKey, "explosions")
-			downloadCSVForDemo(downloader, localKey, "kills")
-            downloadCSVForDemo(downloader, localKey, "skill")
+			downloadCSVForDemo(downloader, localKey, "rounds", true)
+			downloadCSVForDemo(downloader, localKey, "players", true)
+			downloadCSVForDemo(downloader, localKey, "ticks", true)
+			downloadCSVForDemo(downloader, localKey, "player_at_tick", true)
+			downloadCSVForDemo(downloader, localKey, "spotted", true)
+			downloadCSVForDemo(downloader, localKey, "footstep", true)
+			downloadCSVForDemo(downloader, localKey, "weapon_fire", true)
+			downloadCSVForDemo(downloader, localKey, "hurt", true)
+			downloadCSVForDemo(downloader, localKey, "grenades", true)
+			downloadCSVForDemo(downloader, localKey, "grenade_trajectories", true)
+			downloadCSVForDemo(downloader, localKey, "flashed", true)
+			downloadCSVForDemo(downloader, localKey, "plants", true)
+			downloadCSVForDemo(downloader, localKey, "defusals", true)
+			downloadCSVForDemo(downloader, localKey, "explosions", true)
+			downloadCSVForDemo(downloader, localKey, "kills", true)
+			downloadCSVForDemo(downloader, localKey, "skill", false)
 			numDownloaded++
 		}
 
@@ -169,10 +176,10 @@ func main() {
 	})
 
 	localDir := "../local_data/"
-	downloadFile(downloader, csvPrefixGlobal + "global_games.csv", localDir + gamesCSVName)
-	downloadFile(downloader, csvPrefixGlobal + "dimension_table_equipment.csv", localDir + localEquipmentDimTable)
-	downloadFile(downloader, csvPrefixGlobal + "dimension_table_game_types.csv", localDir + localGameTypeDimTable)
-	downloadFile(downloader, csvPrefixGlobal + "dimension_table_hit_groups.csv", localDir + localHitGroupDimTable)
+	downloadFile(downloader, csvPrefixGlobal + "global_games.csv", localDir + gamesCSVName, true)
+	downloadFile(downloader, csvPrefixGlobal + "dimension_table_equipment.csv", localDir + localEquipmentDimTable, true)
+	downloadFile(downloader, csvPrefixGlobal + "dimension_table_game_types.csv", localDir + localGameTypeDimTable, true)
+	downloadFile(downloader, csvPrefixGlobal + "dimension_table_hit_groups.csv", localDir + localHitGroupDimTable, true)
 
 	saveNewlyDownloaded(needToDownload)
 

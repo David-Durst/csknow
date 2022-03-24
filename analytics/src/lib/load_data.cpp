@@ -625,6 +625,57 @@ void loadSpotted(Spotted & spotted, string dataPath) {
     }
 }
 
+void loadFootstepFile(Footstep & footstep, string filePath, int64_t fileRowStart, int32_t fileNumber) {
+    // mmap the file
+    auto [fd, stats, file] = openMMapFile(filePath);
+
+    // skip the header
+    size_t firstRow = getNewline(file, 0, stats.st_size);
+
+    // track location for error logging
+    int64_t rowNumber = 0;
+    int64_t colNumber = 0;
+
+    // track location for insertion
+    int64_t arrayEntry = fileRowStart;
+
+    for (size_t curStart = firstRow + 1, curDelimiter = getNextDelimiter(file, curStart, stats.st_size);
+         curDelimiter < stats.st_size;
+         curStart = curDelimiter + 1, curDelimiter = getNextDelimiter(file, curStart, stats.st_size)) {
+        if (colNumber == 0) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, footstep.id[arrayEntry]);
+        }
+        else if (colNumber == 1) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, footstep.tickId[arrayEntry]);
+        }
+        else if (colNumber == 2) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, footstep.steppingPlayer[arrayEntry]);
+            rowNumber++;
+            arrayEntry++;
+        }
+        colNumber = (colNumber + 1) % 3;
+    }
+    closeMMapFile({fd, stats, file});
+}
+
+void loadFootstep(Footstep & footstep, string dataPath) {
+    vector<string> filePaths;
+    getFilesInDirectory(dataPath + "/footstep", filePaths);
+
+    std::cout << "determining array size" << std::endl;
+    vector<int64_t> startingPointPerFile = getFileStartingRows(filePaths);
+    int64_t rows = startingPointPerFile[filePaths.size()];
+
+    std::cout << "allocating arrays" << std::endl;
+    footstep.init(rows, filePaths.size(), startingPointPerFile);
+
+    std::cout << "loading spotted off disk" << std::endl;
+#pragma omp parallel for
+    for (int64_t fileIndex = 0; fileIndex < filePaths.size(); fileIndex++) {
+        loadFootstepFile(footstep, filePaths[fileIndex], startingPointPerFile[fileIndex], fileIndex);
+    }
+}
+
 void loadWeaponFireFile(WeaponFire & weaponFire, string filePath, int64_t fileRowStart, int32_t fileNumber) {
     // mmap the file
     auto [fd, stats, file] = openMMapFile(filePath);
@@ -1169,7 +1220,7 @@ void loadExplosions(Explosions & explosions, string dataPath) {
 }
 
 void loadData(Equipment & equipment, GameTypes & gameTypes, HitGroups & hitGroups, Games & games, Players & players,
-              Rounds & rounds, Ticks & ticks, PlayerAtTick & playerAtTick, Spotted & spotted, WeaponFire & weaponFire,
+              Rounds & rounds, Ticks & ticks, PlayerAtTick & playerAtTick, Spotted & spotted, Footstep & footstep, WeaponFire & weaponFire,
               Kills & kills, Hurt & hurt, Grenades & grenades, Flashed & flashed, GrenadeTrajectories & grenadeTrajectories,
               Plants & plants, Defusals & defusals, Explosions & explosions, string dataPath) {
     std::cout << "loading equipment" << std::endl;
@@ -1190,6 +1241,8 @@ void loadData(Equipment & equipment, GameTypes & gameTypes, HitGroups & hitGroup
     loadPlayerAtTick(playerAtTick, dataPath);
     std::cout << "loading spotted" << std::endl;
     loadSpotted(spotted, dataPath);
+    std::cout << "loading footstep" << std::endl;
+    loadFootstep(footstep, dataPath);
     std::cout << "loading weaponFire" << std::endl;
     loadWeaponFire(weaponFire, dataPath);
     std::cout << "loading kills" << std::endl;

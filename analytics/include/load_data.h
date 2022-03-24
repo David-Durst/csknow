@@ -254,6 +254,7 @@ public:
     double * bombZ;
     RangeIndex patPerTick;
     RangeIndex spottedPerTick;
+    RangeIndex footstepPerTick;
     HashmapIndex weaponFirePerTick;
     HashmapIndex killsPerTick;
     HashmapIndex hurtPerTick;
@@ -283,6 +284,7 @@ public:
         bombZ = (double *) malloc(rows * sizeof(double));
         patPerTick = (RangeIndexEntry *) malloc(rows * sizeof(RangeIndexEntry));
         spottedPerTick = (RangeIndexEntry *) malloc(rows * sizeof(RangeIndexEntry));
+        footstepPerTick = (RangeIndexEntry *) malloc(rows * sizeof(RangeIndexEntry));
     }
 
     Ticks() { };
@@ -515,6 +517,30 @@ public:
 
     Spotted(const Spotted& other) = delete;
     Spotted& operator=(const Spotted& other) = delete;
+};
+
+class Footstep : public ColStore {
+public:
+    int64_t * tickId;
+    int64_t * steppingPlayer;
+
+    void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) {
+        ColStore::init(rows, numFiles, gameStarts);
+        tickId = (int64_t *) malloc(rows * sizeof(int64_t));
+        steppingPlayer = (int64_t *) malloc(rows * sizeof(int64_t));
+    }
+
+    Footstep() { };
+    ~Footstep() {
+        if (!beenInitialized){
+            return;
+        }
+        free(tickId);
+        free(steppingPlayer);
+    }
+
+    Footstep(const Footstep& other) = delete;
+    Footstep& operator=(const Footstep& other) = delete;
 };
 
 class WeaponFire : public ColStore {
@@ -830,12 +856,12 @@ public:
 };
 
 void loadData(Equipment & equipment, GameTypes & gameTypes, HitGroups & hitGroups, Games & games, Players & players,
-              Rounds & rounds, Ticks & ticks, PlayerAtTick & playerAtTick, Spotted & spotted, WeaponFire & weaponFire,
+              Rounds & rounds, Ticks & ticks, PlayerAtTick & playerAtTick, Spotted & spotted, Footstep & footstep, WeaponFire & weaponFire,
               Kills & kills, Hurt & hurt, Grenades & grenades, Flashed & flashed, GrenadeTrajectories & grenadeTrajectories,
               Plants & plants, Defusals & defusals, Explosions & explosions, string dataPath);
 
 void buildIndexes(Equipment & equipment, GameTypes & gameTypes, HitGroups & hitGroups, Games & games,
-                       Players & players, Rounds & rounds, Ticks & ticks, PlayerAtTick & playerAtTick, Spotted & spotted,
+                       Players & players, Rounds & rounds, Ticks & ticks, PlayerAtTick & playerAtTick, Spotted & spotted, Footstep & footstep,
                        WeaponFire & weaponFire, Kills & kills, Hurt & hurt, Grenades & grenades, Flashed & flashed,
                        GrenadeTrajectories & grenadeTrajectories, Plants & plants, Defusals & defusals, Explosions & explosions);
 
