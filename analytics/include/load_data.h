@@ -145,6 +145,9 @@ public:
 
         free(demoTickRate);
         free(gameTickRate);
+        for (int64_t row = 0; row < size; row++) {
+            free(mapName[row]);
+        }
         free(mapName);
         free(gameType);
         free(roundsPerGame);
@@ -302,6 +305,7 @@ public:
         free(bombZ);
         free(patPerTick);
         free(spottedPerTick);
+        free(footstepPerTick);
     }
 
     Ticks(const Ticks& other) = delete;
