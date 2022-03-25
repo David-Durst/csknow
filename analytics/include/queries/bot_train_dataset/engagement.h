@@ -33,13 +33,6 @@ public:
         Vec2 viewAngleWithVisualRecoil;
     };
 
-    struct WeaponState {
-        int16_t currentWeapon;
-        bool haveAwp;
-        bool haveScout;
-        bool haveAutomatic;
-    };
-
     struct PosState {
         array<Vec3, VELOCITY_LOOKBACK> eyePosRelativeToShooter;
         Vec3 velocityRelativeToShooter;
@@ -56,7 +49,7 @@ public:
         bool alive;
         PosState posState;
         int64_t money;
-        WeaponState weaponState;
+        int16_t currentWeapon;
         int32_t health;
         int32_t armor;
         double secondsSinceLastFootstep;
@@ -69,7 +62,7 @@ public:
         PosState posState;
         bool startRoundMoneyLessThan4k;
         bool beenHeadshotThisRound;
-        WeaponState weaponState;
+        int16_t currentWeapon;
         int32_t priorTimesEngagedThisRound;
         double secondsSinceLastRadar;
         double secondsSinceLastFootstep;
