@@ -1,7 +1,7 @@
 #ifndef CSKNOW_DATAST_GENERATION_H
 #define CSKNOW_DATAST_GENERATION_H
 #include "load_data.h"
-#include "query.h"
+#include "queries/query.h"
 #include "indices/spotted.h"
 #include "navmesh/nav_file.h"
 #include "geometry.h"
@@ -14,7 +14,7 @@ using std::map;
 #define DECISION_SECONDS 0.25
 #define COSINE_SIMILARITY_THRESHOLD 0.9
 
-class TrainDatasetResult : public QueryResult {
+class NextNavmeshResult : public QueryResult {
 public:
     struct NavmeshState {
         uint32_t numFriends;
@@ -115,7 +115,7 @@ public:
     vector<TimeStepPlan> plan;
     int64_t numNavAreas;
 
-    TrainDatasetResult() {
+    NextNavmeshResult() {
         this->startTickColumn = -1;
         this->ticksPerEvent = 1;
     }
@@ -195,8 +195,8 @@ public:
     }
 };
 
-TrainDatasetResult queryTrainDataset(const Games & games, const Rounds & rounds, const Ticks & ticks,
-                                     const Players & players, const PlayerAtTick & playerAtTick,
-                                     const std::map<std::string, const nav_mesh::nav_file> & mapNavs);
+NextNavmeshResult queryTrainDataset(const Games & games, const Rounds & rounds, const Ticks & ticks,
+                                    const Players & players, const PlayerAtTick & playerAtTick,
+                                    const std::map<std::string, const nav_mesh::nav_file> & mapNavs);
 
 #endif //CSKNOW_DATAST_GENERATION_H

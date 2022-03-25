@@ -8,9 +8,9 @@
 #include <file_helpers.h>
 //#define DEBUG_INTERFACE
 
-TrainDatasetResult::TimeStepState
+NextNavmeshResult::TimeStepState
 PythonModelInterface::serverStateToTimeStepState(int32_t csknowId, ServerState serverState) {
-    TrainDatasetResult::TimeStepState timeStepState(navFile->m_area_count);
+    NextNavmeshResult::TimeStepState timeStepState(navFile->m_area_count);
     const ServerState::Client & curClient = serverState.clients[csknowId];
     timeStepState.team = curClient.team;
     timeStepState.pos = {curClient.lastEyePosX, curClient.lastEyePosY, curClient.lastFootPosZ};
@@ -126,7 +126,7 @@ void PythonModelInterface::CommunicateWithPython() {
             waitingOnPython = true;
             std::filesystem::rename(tmpCppToPythonFilePath, cppToPythonFilePath);
             sentIndexToCSKnowId = toSendIndexToCSKnowId;
-            stateToSendToPython = TrainDatasetResult();
+            stateToSendToPython = NextNavmeshResult();
         }
 
         lk.unlock();

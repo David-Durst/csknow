@@ -4,7 +4,7 @@
 #ifndef CSKNOW_MODEL_PLAN_H
 #define CSKNOW_MODEL_PLAN_H
 #include "load_save_bot_data.h"
-#include "queries/train_dataset.h"
+#include "queries/bot_train_dataset/next_navmesh.h"
 #include "navmesh/nav_file.h"
 #include <optional>
 #include <mutex>
@@ -17,7 +17,7 @@
 class PythonModelInterface {
     std::mutex pythonPlanLock;
     std::condition_variable pythonPlanCV;
-    TrainDatasetResult stateToSendToPython;
+    NextNavmeshResult stateToSendToPython;
     map<size_t, int32_t> toSendIndexToCSKnowId;
     // once sent, copy over here so that can build up next toSend list while waiting for pythong to respond
     map<size_t, int32_t> sentIndexToCSKnowId;
@@ -30,7 +30,7 @@ class PythonModelInterface {
     // if false, free to send new states to Python
     bool waitingOnPython = false;
 
-    TrainDatasetResult::TimeStepState serverStateToTimeStepState(int32_t csknowId, ServerState serverState);
+    NextNavmeshResult::TimeStepState serverStateToTimeStepState(int32_t csknowId, ServerState serverState);
 
 public:
     // the planning thread calls this, blocks on adding state to stateToSnedToPython and is only woken up

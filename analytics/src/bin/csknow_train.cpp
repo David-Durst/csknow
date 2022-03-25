@@ -11,7 +11,7 @@
 #include "load_cover.h"
 #include "navmesh/nav_file.h"
 #include "queries/nav_mesh.h"
-#include "queries/train_dataset.h"
+#include "queries/bot_train_dataset/next_navmesh.h"
 #include "bots/manage_thinkers.h"
 #include <filesystem>
 namespace fs = std::filesystem;
@@ -103,7 +103,7 @@ int main(int argc, char * argv[]) {
     std::cout << "num elements in skillsFromFile: " << manageThinkerState.skillsFromFile.size() << std::endl;
      */
 
-    TrainDatasetResult trainDatasetResult = queryTrainDataset(games, rounds, ticks, players, playerAtTick, map_navs);
+    NextNavmeshResult trainDatasetResult = queryTrainDataset(games, rounds, ticks, players, playerAtTick, map_navs);
 
     std::ofstream outputFile, configFile;
     string outputPath = outputDir + "/train_dataset.csv";

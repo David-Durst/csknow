@@ -2,19 +2,19 @@
 // Created by durst on 2/21/22.
 //
 #include "queries/lookback.h"
-#include "queries/train_dataset.h"
+#include "queries/bot_train_dataset/next_navmesh.h"
 #include "geometryNavConversions.h"
 #include "bots/thinker.h"
 #include <utility>
 #include <cassert>
 
-vector<TrainDatasetResult::TimeStepState>
+vector<NextNavmeshResult::TimeStepState>
 addStepStatesForTick(const Ticks & ticks, const PlayerAtTick & playerAtTick, const int64_t gameId, const int64_t roundId, const int64_t tickIndex,
-                          const nav_mesh::nav_file & navFile, const TrainDatasetResult::TimeStepState defaultTimeStepState) {
-    vector<TrainDatasetResult::TimeStepState> result;
+                          const nav_mesh::nav_file & navFile, const NextNavmeshResult::TimeStepState defaultTimeStepState) {
+    vector<NextNavmeshResult::TimeStepState> result;
     // default is CT friends, T enemy, will flip for each player
-    TrainDatasetResult::TimeStepState timeStepStateCT = defaultTimeStepState;
-    TrainDatasetResult::TimeStepState timeStepStateT = defaultTimeStepState;
+    NextNavmeshResult::TimeStepState timeStepStateCT = defaultTimeStepState;
+    NextNavmeshResult::TimeStepState timeStepStateT = defaultTimeStepState;
     timeStepStateCT.gameId = gameId;
     timeStepStateT.gameId = gameId;
     timeStepStateCT.roundId = roundId;
@@ -51,8 +51,8 @@ addStepStatesForTick(const Ticks & ticks, const PlayerAtTick & playerAtTick, con
             continue;
         }
 
-        TrainDatasetResult::TimeStepState timeStepStateForPlayer = playerAtTick.team[aabbAndPATId.second] == INTERNAL_TEAM_CT ?
-                timeStepStateCT : timeStepStateT;
+        NextNavmeshResult::TimeStepState timeStepStateForPlayer = playerAtTick.team[aabbAndPATId.second] == INTERNAL_TEAM_CT ?
+                                                                  timeStepStateCT : timeStepStateT;
         timeStepStateForPlayer.curArea = aabbAndPATId.first;
         timeStepStateForPlayer.patId = aabbAndPATId.second;
         timeStepStateForPlayer.team = playerAtTick.team[aabbAndPATId.second];
@@ -64,20 +64,20 @@ addStepStatesForTick(const Ticks & ticks, const PlayerAtTick & playerAtTick, con
 }
 
 
-TrainDatasetResult queryTrainDataset(const Games & games, const Rounds & rounds, const Ticks & ticks,
-                                     const Players & players, const PlayerAtTick & playerAtTick,
-                                     const std::map<std::string, const nav_mesh::nav_file> & mapNavs) {
+NextNavmeshResult queryTrainDataset(const Games & games, const Rounds & rounds, const Ticks & ticks,
+                                    const Players & players, const PlayerAtTick & playerAtTick,
+                                    const std::map<std::string, const nav_mesh::nav_file> & mapNavs) {
 
     int numThreads = omp_get_max_threads();
-    vector<TrainDatasetResult::TimeStepState> tmpCurState[numThreads];
-    vector<TrainDatasetResult::TimeStepState> tmpNextState[numThreads];
-    vector<TrainDatasetResult::TimeStepState> tmpLastState[numThreads];
-    vector<TrainDatasetResult::TimeStepState> tmpOldState[numThreads];
-    vector<TrainDatasetResult::TimeStepPlan> tmpPlan[numThreads];
+    vector<NextNavmeshResult::TimeStepState> tmpCurState[numThreads];
+    vector<NextNavmeshResult::TimeStepState> tmpNextState[numThreads];
+    vector<NextNavmeshResult::TimeStepState> tmpLastState[numThreads];
+    vector<NextNavmeshResult::TimeStepState> tmpOldState[numThreads];
+    vector<NextNavmeshResult::TimeStepPlan> tmpPlan[numThreads];
     vector<int64_t> numNavAreas(numThreads, 0);
 
 //#pragma omp parallel for
-    for (int64_t roundIndex = 0; roundIndex < std::min(5L, rounds.size); roundIndex++) {
+    for (int64_t roundIndex = 0; roundIndex < rounds.size; roundIndex++) {
         if (strcmp(games.mapName[rounds.gameId[roundIndex]], games.mapName[0]) != 0) {
             continue;
         }
@@ -92,7 +92,7 @@ TrainDatasetResult queryTrainDataset(const Games & games, const Rounds & rounds,
         string mapName = games.mapName[rounds.gameId[roundIndex]];
         const nav_mesh::nav_file & navFile = mapNavs.at(mapName);
         numNavAreas[threadNum] = navFile.m_area_count;
-        TrainDatasetResult::TimeStepState defaultTimeStepState(navFile.m_area_count);
+        NextNavmeshResult::TimeStepState defaultTimeStepState(navFile.m_area_count);
 
         // remember start in tmp vectors for plan recording
         int64_t planStartIndex = tmpCurState[threadNum].size();
@@ -145,7 +145,7 @@ TrainDatasetResult queryTrainDataset(const Games & games, const Rounds & rounds,
         }
 
         for (int64_t planIndex = planStartIndex; planIndex < tmpCurState[threadNum].size(); planIndex++) {
-            TrainDatasetResult::TimeStepPlan plan;
+            NextNavmeshResult::TimeStepPlan plan;
 
 
             plan.deltaX = tmpNextState[threadNum][planIndex].pos.x - tmpCurState[threadNum][planIndex].pos.x;
@@ -198,7 +198,7 @@ TrainDatasetResult queryTrainDataset(const Games & games, const Rounds & rounds,
         }
     }
 
-    TrainDatasetResult result;
+    NextNavmeshResult result;
     result.numNavAreas = 0;
     for (int i = 0; i < numThreads; i++) {
         result.numNavAreas = std::max(result.numNavAreas, numNavAreas[i]);
