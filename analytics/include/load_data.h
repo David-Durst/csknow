@@ -346,6 +346,7 @@ public:
     double * posX;
     double * posY;
     double * posZ;
+    double * eyePosZ;
     double * viewX;
     double * viewY;
     int16_t * team;
@@ -354,6 +355,8 @@ public:
     bool * hasHelmet;
     bool * isAlive;
     bool * isCrouching;
+    bool * isWalking;
+    bool * isScoped;
     bool * isAirborne;
     double * remainingFlashTime;
     int16_t * activeWeapon;
@@ -382,6 +385,7 @@ public:
         posX = (double *) malloc(rows * sizeof(double));
         posY = (double *) malloc(rows * sizeof(double));
         posZ = (double *) malloc(rows * sizeof(double));
+        eyePosZ = (double *) malloc(rows * sizeof(double));
         viewX = (double *) malloc(rows * sizeof(double));
         viewY = (double *) malloc(rows * sizeof(double));
         team = (int16_t *) malloc(rows * sizeof(int16_t));
@@ -390,6 +394,8 @@ public:
         hasHelmet = (bool *) malloc(rows * sizeof(bool));
         isAlive = (bool *) malloc(rows * sizeof(bool));
         isCrouching = (bool *) malloc(rows * sizeof(bool));
+        isWalking = (bool *) malloc(rows * sizeof(bool));
+        isScoped = (bool *) malloc(rows * sizeof(bool));
         isAirborne = (bool *) malloc(rows * sizeof(bool));
         remainingFlashTime = (double *) malloc(rows * sizeof(double));
         activeWeapon = (int16_t *) malloc(rows * sizeof(int16_t));
