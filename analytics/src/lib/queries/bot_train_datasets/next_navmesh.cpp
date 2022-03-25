@@ -77,7 +77,7 @@ NextNavmeshResult queryTrainDataset(const Games & games, const Rounds & rounds, 
     vector<int64_t> numNavAreas(numThreads, 0);
 
 //#pragma omp parallel for
-    for (int64_t roundIndex = 0; roundIndex < rounds.size; roundIndex++) {
+    for (int64_t roundIndex = 0; roundIndex < std::min(5L, rounds.size); roundIndex++) {
         if (strcmp(games.mapName[rounds.gameId[roundIndex]], games.mapName[0]) != 0) {
             continue;
         }
