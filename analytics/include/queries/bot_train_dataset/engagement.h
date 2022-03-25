@@ -1,7 +1,6 @@
 //
 // Created by durst on 3/24/22.
 //
-
 #ifndef CSKNOW_ENGAGEMENT_H
 #define CSKNOW_ENGAGEMENT_H
 #include "load_data.h"
@@ -22,8 +21,16 @@ using std::array;
 class EngagementResult : public QueryResult {
 public:
     struct BulletResult {
+        bool valid;
+        double secondsSinceFirst;
         bool hit;
         int64_t hitGroup;
+    };
+
+    struct ShooterTrajectory {
+        array<BulletResult, SPRAY_LOOKBACK> bulletResults;
+        Vec2 viewAngleWithActualRecoil;
+        Vec2 viewAngleWithVisualRecoil;
     };
 
     struct WeaponState {
@@ -34,8 +41,9 @@ public:
     };
 
     struct PosState {
-        array<Vec3, VELOCITY_LOOKBACK> posRelativeToShooterViewAngle;
-        array<Vec2, VELOCITY_LOOKBACK> shooterRelativeToPlayerViewAngle;
+        array<Vec3, VELOCITY_LOOKBACK> eyePosRelativeToShooter;
+        Vec3 velocityRelativeToShooter;
+        array<Vec2, VELOCITY_LOOKBACK> viewAngleRelativeToShooter;
         bool isCrouching;
         bool isWalking;
         bool isScoped;
@@ -77,6 +85,8 @@ public:
         size_t curArea;
         int32_t team;
         array<BulletResult, SPRAY_LOOKBACK> sprayState;
+        array<Vec3, VELOCITY_LOOKBACK> globalShooterEyePos;
+        array<Vec2, VELOCITY_LOOKBACK> globalShooterViewAngle;
         FriendlyPlayerState shooter;
         EnemyPlayerState target;
         array<FriendlyPlayerState, NUM_PLAYERS/2> friendlyPlayerStates;
@@ -92,6 +102,7 @@ public:
         std::stringstream result;
         result << step.curArea;
         //result << "," << step.team;
+        /*
         result << "," << step.pos.toCSV();
         for (const auto & playerState : step.playerStates) {
             result << "," << boolToString(playerState.slotFilled)
@@ -100,6 +111,7 @@ public:
                 << "," << playerState.posRelativeToShooterViewAngle.toCSV()
                 << "," << playerState.shooterRelativeToPlayerViewAngle.toCSV();
         }
+         */
         return result.str();
     }
 
