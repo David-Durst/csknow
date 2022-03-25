@@ -257,7 +257,7 @@ func processFile(unprocessedKey string, localDemName string, idState * IDState, 
 		panic(err)
 	}
 	defer playerAtTickFile.Close()
-	playerAtTickFile.WriteString("id,player_id,tick_id,pos_x,pos_y,pos_z,eye_pos_z,view_x,view_y,team,health,armor,has_helmet," +
+	playerAtTickFile.WriteString("id,player_id,tick_id,pos_x,pos_y,pos_z,eye_pos_z,vel_x,vel_y,vel_z,view_x,view_y,aim_punch_x,aim_punch_y,view_punch_x,view_punch_y,team,health,armor,has_helmet," +
 		"is_alive,is_crouching,is_walking,is_scoped,is_airborne,remaining_flash_time,active_weapon,main_weapon,primary_bullets_clip," +
 		"primary_bullets_reserve,secondary_weapon,secondary_bullets_clip,secondary_bullets_reserve,num_he,num_flash,num_smoke," +
 		"num_incendiary,num_molotov,num_decoy,num_zeus,has_defuser,has_bomb,money,ping\n")
@@ -361,14 +361,20 @@ func processFile(unprocessedKey string, localDemName string, idState * IDState, 
 			} else if player.Team == common.TeamTerrorists {
 				side = tSide
 			}
+			aimPunchAngle := player.Entity.PropertyValueMust("localdata.m_Local.m_aimPunchAngle").VectorVal
+			viewPunchAngle := player.Entity.PropertyValueMust("localdata.m_Local.m_viewPunchAngle").VectorVal
 			playerAtTickFile.WriteString(fmt.Sprintf(
 				"%d,%d,%d,%.2f,%.2f," +
-					"%.2f,%.2f,%.2f,%.2f,%d,%d,%d,%d," +
+					"%.2f,%.2f,%.2f,%.2f,%.2f," +
+					"%.2f,%.2f,%.2f,%.2f,%.2f,%.2f," +
+					"%d,%d,%d,%d," +
 					"%d,%d,%d,%d,%d,%f,%d,%d,%d," +
 					"%d,%d,%d,%d,%d,%d,%d," +
 					"%d,%d,%d,%d,%d,%d,%d,%d\n",
 				playerAtTickID, getPlayerBySteamID(&playersTracker, player), tickID, player.Position().X, player.Position().Y,
-				player.Position().Z, player.PositionEyes().Z, player.ViewDirectionX(), player.ViewDirectionY(), side, player.Health(), player.Armor(), boolToInt(player.HasHelmet()),
+				player.Position().Z, player.PositionEyes().Z, player.Velocity().X, player.Velocity().Y, player.Velocity().Z,
+				player.ViewDirectionX(), player.ViewDirectionY(), aimPunchAngle.X, aimPunchAngle.Y, viewPunchAngle.X, viewPunchAngle.Y,
+				side, player.Health(), player.Armor(), boolToInt(player.HasHelmet()),
 				boolToInt(player.IsAlive()), boolToInt(player.IsDucking() || player.IsDuckingInProgress()), boolToInt(player.IsWalking()), boolToInt(player.IsScoped()), boolToInt(player.IsAirborne()), player.FlashDuration, activeWeapon, primaryWeapon, primaryBulletsClip,
 				primaryBulletsReserve, secondaryWeapon, secondaryBulletsClip, secondaryBulletsReserve, numHE, numFlash, numSmoke,
 				numIncendiary, numMolotov, numDecoy, numZeus, boolToInt(hasBomb), boolToInt(hasDefuser), player.Money(), player.Ping()))

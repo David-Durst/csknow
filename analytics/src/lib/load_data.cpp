@@ -458,98 +458,119 @@ void loadPlayerAtTickFile(PlayerAtTick & pat, string filePath, int64_t fileRowSt
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, pat.eyePosZ[arrayEntry]);
         }
         else if (colNumber == 7) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, pat.viewX[arrayEntry]);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, pat.velX[arrayEntry]);
         }
         else if (colNumber == 8) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, pat.viewY[arrayEntry]);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, pat.velY[arrayEntry]);
         }
         else if (colNumber == 9) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, pat.team[arrayEntry]);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, pat.velZ[arrayEntry]);
         }
         else if (colNumber == 10) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, pat.health[arrayEntry]);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, pat.viewX[arrayEntry]);
         }
         else if (colNumber == 11) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, pat.armor[arrayEntry]);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, pat.viewY[arrayEntry]);
         }
         else if (colNumber == 12) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, pat.hasHelmet[arrayEntry]);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, pat.aimPunchX[arrayEntry]);
         }
         else if (colNumber == 13) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, pat.isAlive[arrayEntry]);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, pat.aimPunchY[arrayEntry]);
         }
         else if (colNumber == 14) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, pat.isCrouching[arrayEntry]);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, pat.viewPunchX[arrayEntry]);
         }
         else if (colNumber == 15) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, pat.isWalking[arrayEntry]);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, pat.viewPunchY[arrayEntry]);
         }
         else if (colNumber == 16) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, pat.isScoped[arrayEntry]);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, pat.team[arrayEntry]);
         }
         else if (colNumber == 17) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, pat.isAirborne[arrayEntry]);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, pat.health[arrayEntry]);
         }
         else if (colNumber == 18) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, pat.remainingFlashTime[arrayEntry]);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, pat.armor[arrayEntry]);
         }
         else if (colNumber == 19) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, pat.activeWeapon[arrayEntry]);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, pat.hasHelmet[arrayEntry]);
         }
         else if (colNumber == 20) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, pat.primaryWeapon[arrayEntry]);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, pat.isAlive[arrayEntry]);
         }
         else if (colNumber == 21) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, pat.primaryBulletsClip[arrayEntry]);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, pat.isCrouching[arrayEntry]);
         }
         else if (colNumber == 22) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, pat.primaryBulletsReserve[arrayEntry]);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, pat.isWalking[arrayEntry]);
         }
         else if (colNumber == 23) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, pat.secondaryWeapon[arrayEntry]);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, pat.isScoped[arrayEntry]);
         }
         else if (colNumber == 24) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, pat.secondaryBulletsClip[arrayEntry]);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, pat.isAirborne[arrayEntry]);
         }
         else if (colNumber == 25) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, pat.secondaryBulletsReserve[arrayEntry]);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, pat.remainingFlashTime[arrayEntry]);
         }
         else if (colNumber == 26) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, pat.numHe[arrayEntry]);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, pat.activeWeapon[arrayEntry]);
         }
         else if (colNumber == 27) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, pat.numFlash[arrayEntry]);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, pat.primaryWeapon[arrayEntry]);
         }
         else if (colNumber == 28) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, pat.numSmoke[arrayEntry]);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, pat.primaryBulletsClip[arrayEntry]);
         }
         else if (colNumber == 29) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, pat.numMolotov[arrayEntry]);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, pat.primaryBulletsReserve[arrayEntry]);
         }
         else if (colNumber == 30) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, pat.numIncendiary[arrayEntry]);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, pat.secondaryWeapon[arrayEntry]);
         }
         else if (colNumber == 31) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, pat.numDecoy[arrayEntry]);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, pat.secondaryBulletsClip[arrayEntry]);
         }
         else if (colNumber == 32) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, pat.numZeus[arrayEntry]);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, pat.secondaryBulletsReserve[arrayEntry]);
         }
         else if (colNumber == 33) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, pat.hasDefuser[arrayEntry]);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, pat.numHe[arrayEntry]);
         }
         else if (colNumber == 34) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, pat.hasBomb[arrayEntry]);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, pat.numFlash[arrayEntry]);
         }
         else if (colNumber == 35) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, pat.money[arrayEntry]);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, pat.numSmoke[arrayEntry]);
         }
         else if (colNumber == 36) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, pat.numMolotov[arrayEntry]);
+        }
+        else if (colNumber == 37) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, pat.numIncendiary[arrayEntry]);
+        }
+        else if (colNumber == 38) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, pat.numDecoy[arrayEntry]);
+        }
+        else if (colNumber == 39) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, pat.numZeus[arrayEntry]);
+        }
+        else if (colNumber == 40) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, pat.hasDefuser[arrayEntry]);
+        }
+        else if (colNumber == 41) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, pat.hasBomb[arrayEntry]);
+        }
+        else if (colNumber == 42) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, pat.money[arrayEntry]);
+        }
+        else if (colNumber == 43) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, pat.ping[arrayEntry]);
             rowNumber++;
             arrayEntry++;
         }
-        colNumber = (colNumber + 1) % 37;
+        colNumber = (colNumber + 1) % 44;
     }
     closeMMapFile({fd, stats, file});
 }
