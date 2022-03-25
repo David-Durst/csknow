@@ -16,45 +16,71 @@
 using std::string;
 using std::map;
 using std::array;
+#define SPRAY_LOOKBACK 30
+#define VELOCITY_LOOKBACK 3
 
 class EngagementResult : public QueryResult {
 public:
+    struct BulletResult {
+        bool hit;
+        int64_t hitGroup;
+    };
+
+    struct WeaponState {
+        int16_t currentWeapon;
+        bool haveAwp;
+        bool haveScout;
+        bool haveAutomatic;
+    };
+
+    struct PosState {
+        array<Vec3, VELOCITY_LOOKBACK> posRelativeToShooterViewAngle;
+        array<Vec2, VELOCITY_LOOKBACK> shooterRelativeToPlayerViewAngle;
+        bool isCrouching;
+        bool isWalking;
+        bool isScoped;
+        bool isAirborne;
+        double remainingFlashTime;
+    };
+
     struct FriendlyPlayerState {
         bool slotFilled;
         bool alive;
-        bool friendly = 1;
-        Vec3 posRelativeToShooterViewAngle;
-        Vec2 shooterRelativeToPlayerViewAngle;
+        PosState posState;
         int64_t money;
-        int64_t weapon;
+        WeaponState weaponState;
         int32_t health;
         int32_t armor;
-        int64_t ticksSinceLastSeen;
-        int64_t ticksSinceLastFootstep;
-        int64_t ticksSinceLastFire;
+        double secondsSinceLastFootstep;
+        double secondsSinceLastFire;
     };
 
     struct EnemyPlayerState {
         bool slotFilled;
         bool alive;
-        bool friendly = 0;
-        Vec3 posRelativeToShooterViewAngle;
-        Vec2 shooterRelativeToPlayerViewAngle;
-        int64_t money;
-        int32_t health;
-        int32_t armor;
-        int64_t ticksSinceLastSeen;
+        PosState posState;
+        bool startRoundMoneyLessThan4k;
+        bool beenHeadshotThisRound;
+        WeaponState weaponState;
+        int32_t priorTimesEngagedThisRound;
+        double secondsSinceLastRadar;
+        double secondsSinceLastFootstep;
+        double secondsSinceLastFire;
+        /*
+        int64_t ticksSinceLastRadar;
         int64_t ticksSinceLastFootstep;
         int64_t ticksSinceLastFire;
-
+         */
     };
 
     struct TimeStepState {
         size_t curArea;
         int32_t team;
-        PlayerState shooter;
-        PlayerState target;
-        array<PlayerState, NUM_PLAYERS/2-1> playerStates;
+        array<BulletResult, SPRAY_LOOKBACK> sprayState;
+        FriendlyPlayerState shooter;
+        EnemyPlayerState target;
+        array<FriendlyPlayerState, NUM_PLAYERS/2> friendlyPlayerStates;
+        array<EnemyPlayerState, NUM_PLAYERS/2> enemyPlayerStates;
         // these aren't printed, just used for bookkeeping during query
         int64_t gameId;
         int64_t roundId;
@@ -109,10 +135,13 @@ public:
 
     struct TimeStepPlan {
         // result data
-        double deltaX, deltaY;
-        bool shootDuringNextThink;
-        bool crouchDuringNextThink;
-        int32_t navTargetArea;
+        Vec3 deltaPos;
+        Vec2 deltaView;
+        bool fire;
+        bool crouch;
+        bool walk;
+        bool scope;
+        bool newlyAirborne;
     };
 
     string timeStepPlanToString(TimeStepPlan plan) {
