@@ -20,23 +20,19 @@ using std::array;
 
 class EngagementResult : public QueryResult {
 public:
-    struct BulletResult {
+    /*
+    struct FireResult {
         bool valid;
         double secondsSinceFirst;
         bool hit;
         int64_t hitGroup;
     };
-
-    struct ShooterTrajectory {
-        array<BulletResult, SPRAY_LOOKBACK> bulletResults;
-        Vec2 viewAngleWithActualRecoil;
-        Vec2 viewAngleWithVisualRecoil;
-    };
+     */
 
     struct PosState {
-        array<Vec3, VELOCITY_LOOKBACK> eyePosRelativeToShooter;
+        Vec3 eyePosRelativeToShooter;
         Vec3 velocityRelativeToShooter;
-        array<Vec2, VELOCITY_LOOKBACK> viewAngleRelativeToShooter;
+        Vec2 viewAngleRelativeToShooter;
         bool isCrouching;
         bool isWalking;
         bool isScoped;
@@ -44,17 +40,107 @@ public:
         double remainingFlashTime;
     };
 
+    string posStateToCSV(PosState posState) {
+        std::stringstream result;
+        result << posState.eyePosRelativeToShooter.toCSV();
+        result << "," << posState.velocityRelativeToShooter.toCSV();
+        result << "," << posState.viewAngleRelativeToShooter.toCSV();
+        result << "," << boolToString(posState.isCrouching);
+        result << "," << boolToString(posState.isWalking);
+        result << "," << boolToString(posState.isScoped);
+        result << "," << boolToString(posState.isAirborne);
+        result << "," << posState.remainingFlashTime;
+        return result.str();
+    }
+
+    void posStateColumns(string prefix, vector<string> & result, bool onlyOneHot = false, bool onlyMinMaxScale = false) {
+        if (!onlyOneHot) {
+            result.push_back(prefix + " eye pos rel x");
+            result.push_back(prefix + " eye pos rel y");
+            result.push_back(prefix + " eye pos rel z");
+            result.push_back(prefix + " vel rel x");
+            result.push_back(prefix + " vel rel y");
+            result.push_back(prefix + " vel rel z");
+            result.push_back(prefix + " view angle rel x");
+            result.push_back(prefix + " view angle rel y");
+            if (!onlyMinMaxScale) {
+                result.push_back(prefix + " crouching");
+                result.push_back(prefix + " walking");
+                result.push_back(prefix + " scoped");
+                result.push_back(prefix + " airborne");
+            }
+            result.push_back(prefix + " remaining flash time");
+        }
+    }
+
     struct FriendlyPlayerState {
         bool slotFilled;
         bool alive;
         PosState posState;
         int64_t money;
         int16_t currentWeapon;
+        int16_t primaryWeapon;
+        int16_t secondaryWeapon;
+        int16_t currentClipBullets;
+        int16_t primaryClipBullets;
+        int16_t secondaryClipBullets;
         int32_t health;
         int32_t armor;
         double secondsSinceLastFootstep;
         double secondsSinceLastFire;
     };
+
+    string friendlyPlayerStateToCSV(FriendlyPlayerState playerState) {
+        std::stringstream result;
+        result << boolToString(playerState.slotFilled);
+        result << "," << boolToString(playerState.alive);
+        result << "," << boolToString(playerState.alive);
+        result << "," << posStateToCSV(playerState.posState);
+        result << "," << playerState.money;
+        result << "," << playerState.currentWeapon;
+        result << "," << playerState.primaryWeapon;
+        result << "," << playerState.secondaryWeapon;
+        result << "," << playerState.currentClipBullets;
+        result << "," << playerState.primaryClipBullets;
+        result << "," << playerState.secondaryClipBullets;
+        result << "," << playerState.health;
+        result << "," << playerState.armor;
+        result << "," << playerState.secondsSinceLastFootstep;
+        result << "," << playerState.secondsSinceLastFire;
+        return result.str();
+    }
+
+    void friendlyPlayerStateColumns(string prefix, vector<string> & result,
+                                    bool onlyOneHot = false, bool onlyMinMaxScale = false) {
+        if (!onlyMinMaxScale && !onlyOneHot) {
+            result.push_back(prefix + " slot filled x");
+            result.push_back(prefix + " alive");
+        }
+        if (!onlyOneHot) {
+            posStateColumns(prefix, result, onlyOneHot, onlyMinMaxScale);
+            result.push_back(prefix + " money");
+        }
+        if (!onlyMinMaxScale) {
+            result.push_back(prefix + " current weapon");
+            result.push_back(prefix + " primary weapon");
+            result.push_back(prefix + " secondary weapon");
+        }
+        if (!onlyOneHot) {
+            result.push_back(prefix + " current clip bullets");
+            result.push_back(prefix + " primary clip bullets");
+            result.push_back(prefix + " secondary clip bullets");
+            result.push_back(prefix + " health");
+            result.push_back(prefix + " armor");
+            result.push_back(prefix + " seconds since last footstep");
+            result.push_back(prefix + " seconds since last fire");
+        }
+    }
+
+    void friendlyPlayerStateOneHotNumCategories(vector<string> & result, string equipmentIdList) {
+        result.push_back(equipmentIdList);
+        result.push_back(equipmentIdList);
+        result.push_back(equipmentIdList);
+    }
 
     struct EnemyPlayerState {
         bool slotFilled;
@@ -64,7 +150,7 @@ public:
         bool beenHeadshotThisRound;
         int16_t currentWeapon;
         int32_t priorTimesEngagedThisRound;
-        double secondsSinceLastRadar;
+        double secondsSinceLastSpotted;
         double secondsSinceLastFootstep;
         double secondsSinceLastFire;
         /*
@@ -74,12 +160,56 @@ public:
          */
     };
 
+    string enemyPlayerStateToCSV(EnemyPlayerState playerState) {
+        std::stringstream result;
+        result << boolToString(playerState.slotFilled);
+        result << "," << boolToString(playerState.alive);
+        result << "," << posStateToCSV(playerState.posState);
+        result << "," << boolToString(playerState.startRoundMoneyLessThan4k);
+        result << "," << boolToString(playerState.beenHeadshotThisRound);
+        result << "," << playerState.currentWeapon;
+        result << "," << playerState.priorTimesEngagedThisRound;
+        result << "," << playerState.secondsSinceLastSpotted;
+        result << "," << playerState.secondsSinceLastFootstep;
+        result << "," << playerState.secondsSinceLastFire;
+        return result.str();
+    }
+
+    void enemyPlayerStateColumns(string prefix, vector<string> & result,
+                                    bool onlyOneHot = false, bool onlyMinMaxScale = false) {
+        if (!onlyMinMaxScale && !onlyOneHot) {
+            result.push_back(prefix + " slot filled x");
+            result.push_back(prefix + " alive");
+        }
+        if (!onlyOneHot) {
+            posStateColumns(prefix, result, onlyOneHot, onlyMinMaxScale);
+        }
+        if (!onlyMinMaxScale && !onlyOneHot) {
+            result.push_back(prefix + " start money lt 4k");
+            result.push_back(prefix + " been hs this round");
+        }
+        if (!onlyMinMaxScale) {
+            result.push_back(prefix + " current weapon");
+        }
+        if (!onlyOneHot) {
+            result.push_back(prefix + " prior times engaged this round");
+            result.push_back(prefix + " seconds since last spotted");
+            result.push_back(prefix + " seconds since last footstep");
+            result.push_back(prefix + " seconds since last fire");
+        }
+    }
+
+    void enemyPlayerStateOneHotNumCategories(vector<string> & result, string equipmentIdList) {
+        result.push_back(equipmentIdList);
+    }
+
     struct TimeStepState {
-        size_t curArea;
         int32_t team;
-        array<BulletResult, SPRAY_LOOKBACK> sprayState;
-        array<Vec3, VELOCITY_LOOKBACK> globalShooterEyePos;
-        array<Vec2, VELOCITY_LOOKBACK> globalShooterViewAngle;
+        Vec3 globalShooterEyePos;
+        Vec3 globalShooterVelocity;
+        Vec2 globalShooterViewAngle;
+        Vec2 viewAngleWithActualRecoil;
+        Vec2 viewAngleWithVisualRecoil;
         FriendlyPlayerState shooter;
         EnemyPlayerState target;
         array<FriendlyPlayerState, NUM_PLAYERS/2> friendlyPlayerStates;
@@ -93,49 +223,61 @@ public:
 
     string timeStepStateToString(TimeStepState step) {
         std::stringstream result;
-        result << step.curArea;
-        //result << "," << step.team;
-        /*
-        result << "," << step.pos.toCSV();
-        for (const auto & playerState : step.playerStates) {
-            result << "," << boolToString(playerState.slotFilled)
-                << "," << boolToString(playerState.alive)
-                << "," << boolToString(playerState.friendly)
-                << "," << playerState.posRelativeToShooterViewAngle.toCSV()
-                << "," << playerState.shooterRelativeToPlayerViewAngle.toCSV();
+        result << step.team;
+        result << "," << step.globalShooterEyePos.toCSV();
+        result << "," << step.globalShooterVelocity.toCSV();
+        result << "," << step.globalShooterViewAngle.toCSV();
+        result << "," << step.viewAngleWithActualRecoil.toCSV();
+        result << "," << step.viewAngleWithVisualRecoil.toCSV();
+        result << "," << friendlyPlayerStateToCSV(step.shooter);
+        result << "," << enemyPlayerStateToCSV(step.target);
+        for (const auto & friendlyPlayerState : step.friendlyPlayerStates) {
+            result << "," << friendlyPlayerStateToCSV(friendlyPlayerState);
         }
-         */
+        for (const auto & enemyPlayerState : step.enemyPlayerStates) {
+            result << "," << enemyPlayerStateToCSV(enemyPlayerState);
+        }
         return result.str();
     }
 
-    void timeStepStateColumns(vector<TimeStepState> steps, string prefix, vector<string> & result,
-                              bool onlyOneHot = false, bool onlyMinMaxScale = false) {
-        if (!onlyMinMaxScale) {
-            result.push_back(prefix + " nav area");
+    void timeStepStateColumns(vector<string> & result, bool onlyOneHot = false, bool onlyMinMaxScale = false) {
+        if (!onlyMinMaxScale && !onlyOneHot) {
+            result.push_back("team");
         }
-        //result.push_back(prefix + " team");
         if (!onlyOneHot) {
-            result.push_back(prefix + " pos x");
-            result.push_back(prefix + " pos y");
-            result.push_back(prefix + " pos z");
-            if (steps.size() > 0) {
-                for (size_t i = 0; i < steps.front().playerStates.size(); i++) {
-                    result.push_back(prefix + " i " + std::to_string(i) + " slot filled");
-                    result.push_back(prefix + " i " + std::to_string(i) + " alive");
-                    result.push_back(prefix + " i " + std::to_string(i) + " friendly");
-                    result.push_back(prefix + " i " + std::to_string(i) + " relative pos x");
-                    result.push_back(prefix + " i " + std::to_string(i) + " relative pos y");
-                    result.push_back(prefix + " i " + std::to_string(i) + " relative pos z");
-                    result.push_back(prefix + " i " + std::to_string(i) + " relative view x");
-                    result.push_back(prefix + " i " + std::to_string(i) + " relative view y");
-                    result.push_back(prefix + " player " + std::to_string(i) + " enemies");
-                }
-            }
+            result.push_back("global eye pos x");
+            result.push_back("global eye pos y");
+            result.push_back("global eye pos z");
+            result.push_back("global vel x");
+            result.push_back("global vel y");
+            result.push_back("global vel z");
+            result.push_back("global view angle x");
+            result.push_back("global view angle y");
+            result.push_back("view angle actual recoil x");
+            result.push_back("view angle actual recoil y");
+            result.push_back("view angle visual recoil x");
+            result.push_back("view angle visual recoil y");
         }
+        friendlyPlayerStateColumns("shooter", result, onlyOneHot, onlyMinMaxScale);
+        enemyPlayerStateColumns("enemy", result, onlyOneHot, onlyMinMaxScale);
+        for (int i = 0; i < NUM_PLAYERS/2; i++) {
+            friendlyPlayerStateColumns("friendly " + std::to_string(i), result, onlyOneHot, onlyMinMaxScale);
+        }
+        for (int i = 0; i < NUM_PLAYERS/2; i++) {
+            enemyPlayerStateColumns("enemy " + std::to_string(i), result, onlyOneHot, onlyMinMaxScale);
+        }
+
     }
 
-    void timeStepStateOneHotNumCategories(vector<string> & result) {
-        result.push_back(std::to_string(numNavAreas));
+    void timeStepStateOneHotNumCategories(vector<string> & result, string equipmentIdList) {
+        friendlyPlayerStateOneHotNumCategories(result, equipmentIdList);
+        enemyPlayerStateOneHotNumCategories(result, equipmentIdList);
+        for (int i = 0; i < NUM_PLAYERS/2; i++) {
+            friendlyPlayerStateOneHotNumCategories(result, equipmentIdList);
+        }
+        for (int i = 0; i < NUM_PLAYERS/2; i++) {
+            enemyPlayerStateOneHotNumCategories(result, equipmentIdList);
+        }
     }
 
     struct TimeStepPlan {
@@ -151,44 +293,46 @@ public:
 
     string timeStepPlanToString(TimeStepPlan plan) {
         std::stringstream result;
-        result << plan.deltaX << "," << plan.deltaY
-               << "," << (plan.shootDuringNextThink ? "1" : "0")
-               << "," << (plan.crouchDuringNextThink ? "1" : "0")
-               << "," << plan.navTargetArea;
+        result << plan.deltaPos.toCSV()
+               << "," << plan.deltaView.toCSV()
+               << "," << boolToString(plan.fire)
+               << "," << boolToString(plan.crouch)
+               << "," << boolToString(plan.walk)
+               << "," << boolToString(plan.scope)
+               << "," << boolToString(plan.newlyAirborne);
         return result.str();
     }
 
-    void timeStepPlanColumns(vector<TimeStepPlan> plans, vector<string> & result,
-                             bool onlyOneHot = false, bool onlyMinMaxScale = false) {
+    void timeStepPlanColumns(vector<string> & result, bool onlyOneHot = false, bool onlyMinMaxScale = false) {
         if (!onlyOneHot) {
-            result.push_back("delta x");
-            result.push_back("delta y");
+            result.push_back("delta pos x");
+            result.push_back("delta pos y");
+            result.push_back("delta pos z");
+            result.push_back("delta view x");
+            result.push_back("delta view y");
+            result.push_back("delta view z");
         }
-        if (!onlyMinMaxScale) {
-            result.push_back("shoot next");
-            result.push_back("crouch next");
-            result.push_back("nav target");
+        if (!onlyOneHot && !onlyMinMaxScale) {
+            result.push_back("fire");
+            result.push_back("crouch");
+            result.push_back("walk");
+            result.push_back("scope");
+            result.push_back("newly airborne");
         }
     }
 
-    void timeStepPlanOneHotNumCategories(vector<string> & result) {
-        result.push_back("2");
-        result.push_back("2");
-        result.push_back(std::to_string(numNavAreas));
-    }
+    void timeStepPlanOneHotNumCategories(vector<string> & result) { }
 
     vector<int64_t> tickId;
     vector<int64_t> roundId;
     vector<int64_t> sourcePlayerId;
     vector<string> sourcePlayerName;
     vector<string> demoName;
-    vector<TimeStepState> curState;
-    vector<TimeStepState> lastState;
-    vector<TimeStepState> oldState;
-    vector<TimeStepPlan> plan;
-    int64_t numNavAreas;
+    vector<TimeStepState> states;
+    vector<TimeStepPlan> plans;
+    const Equipment & equipment;
 
-    NextNavmeshResult() {
+    EngagementResult(const Equipment & equipment) : equipment(equipment) {
         this->startTickColumn = -1;
         this->ticksPerEvent = 1;
     }
@@ -202,11 +346,9 @@ public:
     void oneLineToCSV(int64_t index, stringstream & ss) {
         ss << index << "," << tickId[index] << "," << roundId[index]
            << "," << sourcePlayerId[index] << "," << sourcePlayerName[index]
-           << "," << demoName[index] << "," << curState[index].team
-           << "," << timeStepStateToString(curState[index])
-           << "," << timeStepStateToString(lastState[index])
-           << "," << timeStepStateToString(lastState[index])
-           << "," << timeStepPlanToString(plan[index]) << std::endl;
+           << "," << demoName[index]
+           << "," << timeStepStateToString(states[index])
+           << "," << timeStepPlanToString(plans[index]) << std::endl;
     }
 
     vector<string> getForeignKeyNames() {
@@ -215,10 +357,8 @@ public:
 
     vector<string> getOtherColumnNames() {
         vector<string> result{"source player name", "demo name", "team"};
-        timeStepStateColumns(curState, "cur", result);
-        timeStepStateColumns(lastState, "last", result);
-        timeStepStateColumns(oldState, "old", result);
-        timeStepPlanColumns(plan, result);
+        timeStepStateColumns(result);
+        timeStepPlanColumns(result);
         return result;
     }
 
@@ -227,26 +367,25 @@ public:
         vector<string> inputCols, outputCols, inputOneHot, inputOneHotNumCategories, outputOneHot, outputOneHotNumCategories,
                 inputMinMaxScale, outputMinMaxScale;
 
-        timeStepStateColumns(curState, "cur", inputCols);
-        timeStepStateColumns(lastState, "last", inputCols);
-        timeStepStateColumns(oldState, "old", inputCols);
-        timeStepPlanColumns(plan, outputCols);
+        timeStepStateColumns(inputCols);
+        timeStepPlanColumns(outputCols);
 
-        timeStepStateColumns(curState, "cur", inputOneHot, true);
-        timeStepStateColumns(lastState, "last", inputOneHot, true);
-        timeStepStateColumns(oldState, "old", inputOneHot, true);
-        timeStepPlanColumns(plan, outputOneHot, true);
+        timeStepStateColumns(inputOneHot, true);
+        timeStepPlanColumns(outputOneHot, true);
 
         // repeat the below once for each state
-        timeStepStateOneHotNumCategories(inputOneHotNumCategories);
-        timeStepStateOneHotNumCategories(inputOneHotNumCategories);
-        timeStepStateOneHotNumCategories(inputOneHotNumCategories);
+        vector<string> equipmentIdListVec;
+        std::stringstream equipmentStream;
+        bool firstEquipment = true;
+        for (const auto id : equipment.id) {
+            equipmentIdListVec.push_back(std::to_string(id));
+        }
+        commaSeparateList(equipmentStream, equipmentIdListVec);
+        timeStepStateOneHotNumCategories(inputOneHotNumCategories, equipmentStream.str());
         timeStepPlanOneHotNumCategories(outputOneHotNumCategories);
 
-        timeStepStateColumns(curState, "cur", inputMinMaxScale, false, true);
-        timeStepStateColumns(lastState, "last", inputMinMaxScale, false, true);
-        timeStepStateColumns(oldState, "old", inputMinMaxScale, false, true);
-        timeStepPlanColumns(plan, outputMinMaxScale, false, true);
+        timeStepStateColumns(inputMinMaxScale, false, true);
+        timeStepPlanColumns(outputMinMaxScale, false, true);
 
         result << "source player id\n";
         commaSeparateList(result, inputCols);
@@ -268,7 +407,7 @@ public:
     }
 };
 
-NextNavmeshResult queryTrainDataset(const Games & games, const Rounds & rounds, const Ticks & ticks,
+EngagementResult queryEngagementDataset(const Games & games, const Rounds & rounds, const Ticks & ticks,
                                     const Players & players, const PlayerAtTick & playerAtTick,
                                     const std::map<std::string, const nav_mesh::nav_file> & mapNavs);
 

@@ -361,6 +361,8 @@ func processFile(unprocessedKey string, localDemName string, idState * IDState, 
 			} else if player.Team == common.TeamTerrorists {
 				side = tSide
 			}
+			x := player.Entity.PropertyValueMust("m_viewPunchAngle").VectorVal
+			println(x.Z)
 			aimPunchAngle := player.Entity.PropertyValueMust("localdata.m_Local.m_aimPunchAngle").VectorVal
 			viewPunchAngle := player.Entity.PropertyValueMust("localdata.m_Local.m_viewPunchAngle").VectorVal
 			playerAtTickFile.WriteString(fmt.Sprintf(

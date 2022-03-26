@@ -195,7 +195,7 @@ public:
     }
 };
 
-NextNavmeshResult queryTrainDataset(const Games & games, const Rounds & rounds, const Ticks & ticks,
+NextNavmeshResult queryNextNavmeshDataset(const Games & games, const Rounds & rounds, const Ticks & ticks,
                                     const Players & players, const PlayerAtTick & playerAtTick,
                                     const std::map<std::string, const nav_mesh::nav_file> & mapNavs);
 
