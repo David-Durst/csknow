@@ -7,7 +7,6 @@
 #define MAX_ONE_DIRECTION_ANGLE_VEL 15.0
 #define MAX_ONE_DIRECTION_ANGLE_ACCEL 5.0
 #define MAX_PITCH_MAGNITUDE 89.0
-#define INVALID_ID -1
 #include "load_data.h"
 #include "geometry.h"
 #include <iostream>

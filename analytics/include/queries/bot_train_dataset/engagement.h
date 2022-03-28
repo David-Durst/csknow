@@ -8,6 +8,7 @@
 #include "indices/spotted.h"
 #include "navmesh/nav_file.h"
 #include "geometry.h"
+#include "enum_helpers.h"
 #include <array>
 #include <string>
 #include <map>
@@ -15,8 +16,7 @@
 using std::string;
 using std::map;
 using std::array;
-#define SPRAY_LOOKBACK 30
-#define VELOCITY_LOOKBACK 3
+#define ENGAGEMENT_SECONDS_RADIUS 1.0
 
 class EngagementResult : public QueryResult {
 public:
@@ -280,8 +280,18 @@ public:
         }
     }
 
+    enum class PlanResult {
+        keepEngaging,
+        changeTarget,
+        run,
+        switchWeapon,
+        kill,
+        die,
+        NUM_PLAN_RESULTS,
+    };
+
     struct TimeStepPlan {
-        // result data
+        PlanResult planResult;
         Vec3 deltaPos;
         Vec2 deltaView;
         bool fire;
@@ -293,7 +303,8 @@ public:
 
     string timeStepPlanToString(TimeStepPlan plan) {
         std::stringstream result;
-        result << plan.deltaPos.toCSV()
+        result << enumAsInt(plan.planResult)
+               << "," << plan.deltaPos.toCSV()
                << "," << plan.deltaView.toCSV()
                << "," << boolToString(plan.fire)
                << "," << boolToString(plan.crouch)
@@ -304,6 +315,9 @@ public:
     }
 
     void timeStepPlanColumns(vector<string> & result, bool onlyOneHot = false, bool onlyMinMaxScale = false) {
+        if (!onlyMinMaxScale) {
+            result.push_back("plan result")
+        }
         if (!onlyOneHot) {
             result.push_back("delta pos x");
             result.push_back("delta pos y");
@@ -321,7 +335,9 @@ public:
         }
     }
 
-    void timeStepPlanOneHotNumCategories(vector<string> & result) { }
+    void timeStepPlanOneHotNumCategories(vector<string> & result) {
+        result.push_back(std::to_string(enumAsInt(PlanResult::NUM_PLAN_RESULTS)));
+    }
 
     vector<int64_t> tickId;
     vector<int64_t> roundId;
@@ -407,8 +423,8 @@ public:
     }
 };
 
-EngagementResult queryEngagementDataset(const Games & games, const Rounds & rounds, const Ticks & ticks,
-                                    const Players & players, const PlayerAtTick & playerAtTick,
-                                    const std::map<std::string, const nav_mesh::nav_file> & mapNavs);
+EngagementResult queryEngagementDataset(const Equipment & equipment, const Games & games, const Rounds & rounds,
+                                        const WeaponFire & weaponFire, const Hurt & hurt,
+                                        const Ticks & ticks, const Players & players, const PlayerAtTick & playerAtTick);
 
 #endif //CSKNOW_ENGAGEMENT_H

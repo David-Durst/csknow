@@ -15,6 +15,7 @@ using std::vector;
 #define CT_TEAM 0
 #define T_TEAM 1
 #define SPECTATOR 2
+#define INVALID_ID -1
 
 struct RangeIndexEntry {
     int64_t minId, maxId;
