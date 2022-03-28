@@ -147,9 +147,9 @@ public:
         bool alive;
         PosState posState;
         bool startRoundMoneyLessThan4k;
-        bool beenHeadshotThisRound;
+        //bool beenHeadshotThisRound;
         int16_t currentWeapon;
-        int32_t priorTimesEngagedThisRound;
+        //int32_t priorTimesEngagedThisRound;
         double secondsSinceLastSpotted;
         double secondsSinceLastFootstep;
         double secondsSinceLastFire;
@@ -166,9 +166,9 @@ public:
         result << "," << boolToString(playerState.alive);
         result << "," << posStateToCSV(playerState.posState);
         result << "," << boolToString(playerState.startRoundMoneyLessThan4k);
-        result << "," << boolToString(playerState.beenHeadshotThisRound);
+        //result << "," << boolToString(playerState.beenHeadshotThisRound);
         result << "," << playerState.currentWeapon;
-        result << "," << playerState.priorTimesEngagedThisRound;
+        //result << "," << playerState.priorTimesEngagedThisRound;
         result << "," << playerState.secondsSinceLastSpotted;
         result << "," << playerState.secondsSinceLastFootstep;
         result << "," << playerState.secondsSinceLastFire;
@@ -186,13 +186,13 @@ public:
         }
         if (!onlyMinMaxScale && !onlyOneHot) {
             result.push_back(prefix + " start money lt 4k");
-            result.push_back(prefix + " been hs this round");
+            //result.push_back(prefix + " been hs this round");
         }
         if (!onlyMinMaxScale) {
             result.push_back(prefix + " current weapon");
         }
         if (!onlyOneHot) {
-            result.push_back(prefix + " prior times engaged this round");
+            //result.push_back(prefix + " prior times engaged this round");
             result.push_back(prefix + " seconds since last spotted");
             result.push_back(prefix + " seconds since last footstep");
             result.push_back(prefix + " seconds since last fire");
@@ -280,18 +280,18 @@ public:
         }
     }
 
-    enum class PlanResult {
+    enum class ActionResult {
         keepEngaging,
         changeTarget,
         run,
         switchWeapon,
         kill,
         die,
-        NUM_PLAN_RESULTS,
+        NUM_ACTION_RESULTS,
     };
 
-    struct TimeStepPlan {
-        PlanResult planResult;
+    struct TimeStepAction {
+        ActionResult actionResult;
         Vec3 deltaPos;
         Vec2 deltaView;
         bool fire;
@@ -301,22 +301,22 @@ public:
         bool newlyAirborne;
     };
 
-    string timeStepPlanToString(TimeStepPlan plan) {
+    string timeStepPlanToString(TimeStepAction action) {
         std::stringstream result;
-        result << enumAsInt(plan.planResult)
-               << "," << plan.deltaPos.toCSV()
-               << "," << plan.deltaView.toCSV()
-               << "," << boolToString(plan.fire)
-               << "," << boolToString(plan.crouch)
-               << "," << boolToString(plan.walk)
-               << "," << boolToString(plan.scope)
-               << "," << boolToString(plan.newlyAirborne);
+        result << enumAsInt(action.actionResult)
+               << "," << action.deltaPos.toCSV()
+               << "," << action.deltaView.toCSV()
+               << "," << boolToString(action.fire)
+               << "," << boolToString(action.crouch)
+               << "," << boolToString(action.walk)
+               << "," << boolToString(action.scope)
+               << "," << boolToString(action.newlyAirborne);
         return result.str();
     }
 
-    void timeStepPlanColumns(vector<string> & result, bool onlyOneHot = false, bool onlyMinMaxScale = false) {
+    void timeStepActionColumns(vector<string> & result, bool onlyOneHot = false, bool onlyMinMaxScale = false) {
         if (!onlyMinMaxScale) {
-            result.push_back("plan result")
+            result.push_back("action result");
         }
         if (!onlyOneHot) {
             result.push_back("delta pos x");
@@ -335,8 +335,8 @@ public:
         }
     }
 
-    void timeStepPlanOneHotNumCategories(vector<string> & result) {
-        result.push_back(std::to_string(enumAsInt(PlanResult::NUM_PLAN_RESULTS)));
+    void timeStepActionOneHotNumCategories(vector<string> & result) {
+        result.push_back(std::to_string(enumAsInt(ActionResult::NUM_ACTION_RESULTS)));
     }
 
     vector<int64_t> tickId;
@@ -345,7 +345,7 @@ public:
     vector<string> sourcePlayerName;
     vector<string> demoName;
     vector<TimeStepState> states;
-    vector<TimeStepPlan> plans;
+    vector<TimeStepAction> actions;
     const Equipment & equipment;
 
     EngagementResult(const Equipment & equipment) : equipment(equipment) {
@@ -364,7 +364,7 @@ public:
            << "," << sourcePlayerId[index] << "," << sourcePlayerName[index]
            << "," << demoName[index]
            << "," << timeStepStateToString(states[index])
-           << "," << timeStepPlanToString(plans[index]) << std::endl;
+           << "," << timeStepPlanToString(actions[index]) << std::endl;
     }
 
     vector<string> getForeignKeyNames() {
@@ -374,7 +374,7 @@ public:
     vector<string> getOtherColumnNames() {
         vector<string> result{"source player name", "demo name", "team"};
         timeStepStateColumns(result);
-        timeStepPlanColumns(result);
+        timeStepActionColumns(result);
         return result;
     }
 
@@ -384,10 +384,10 @@ public:
                 inputMinMaxScale, outputMinMaxScale;
 
         timeStepStateColumns(inputCols);
-        timeStepPlanColumns(outputCols);
+        timeStepActionColumns(outputCols);
 
         timeStepStateColumns(inputOneHot, true);
-        timeStepPlanColumns(outputOneHot, true);
+        timeStepActionColumns(outputOneHot, true);
 
         // repeat the below once for each state
         vector<string> equipmentIdListVec;
@@ -398,10 +398,10 @@ public:
         }
         commaSeparateList(equipmentStream, equipmentIdListVec);
         timeStepStateOneHotNumCategories(inputOneHotNumCategories, equipmentStream.str());
-        timeStepPlanOneHotNumCategories(outputOneHotNumCategories);
+        timeStepActionOneHotNumCategories(outputOneHotNumCategories);
 
         timeStepStateColumns(inputMinMaxScale, false, true);
-        timeStepPlanColumns(outputMinMaxScale, false, true);
+        timeStepActionColumns(outputMinMaxScale, false, true);
 
         result << "source player id\n";
         commaSeparateList(result, inputCols);
