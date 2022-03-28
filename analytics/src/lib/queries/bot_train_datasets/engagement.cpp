@@ -168,10 +168,43 @@ void computeEngagementResults(const Rounds & rounds, const Ticks & ticks, const 
     for (int64_t tickIndex = rounds.ticksPerRound[roundId].minId;
          tickIndex != -1 && tickIndex <= rounds.ticksPerRound[roundId].maxId; tickIndex++) {
         if (tickToShooterToEngagementIds.find(tickIndex) != tickToShooterToEngagementIds.end()) {
+
+            vector<int64_t> activePlayers;
+            map<int64_t, int64_t> activePlayerPATIds;
+            map<int64_t, int16_t> activePlayerTeams;
+            // get all players on CT or T and their PAT ids in this tick
+            for (int64_t patIndex = ticks.patPerTick[tickIndex].minId;
+                 patIndex != -1 && patIndex <= ticks.patPerTick[tickIndex].maxId; patIndex++) {
+                if (playerAtTick.team[patIndex] == CT_TEAM || playerAtTick.team[patIndex] == T_TEAM) {
+                    activePlayers.push_back(playerAtTick.playerId[patIndex]);
+                    activePlayerPATIds[playerAtTick.playerId[patIndex]] = patIndex;
+                    activePlayerTeams[playerAtTick.playerId[patIndex]] = playerAtTick.team[patIndex];
+                }
+            }
+            assert(activePlayerPATIds.size() <= NUM_PLAYERS);
+            std::sort(activePlayers.begin(), activePlayers.end());
+
+
             for (const auto & [shooter, engagementIdIndices] : tickToShooterToEngagementIds[tickIndex]) {
                 assert(!engagementIds.empty());
 
-                // if more than 1 engagement for this shooter on this tick, ranking is
+                EngagementResult::TimeStepState step;
+                int64_t shooterPATId = activePlayerPATIds[shooter];
+                step.team = playerAtTick.team[shooterPATId];
+                step.globalShooterEyePos = {playerAtTick.posX[shooterPATId], playerAtTick.posY[shooterPATId],
+                                            playerAtTick.eyePosZ[shooterPATId]};
+                step.globalShooterVelocity = {playerAtTick.velX[shooterPATId], playerAtTick.velY[shooterPATId],
+                                              playerAtTick.velZ[shooterPATId]};
+                step.globalShooterViewAngle = {playerAtTick.viewX[shooterPATId], playerAtTick.viewY[shooterPATId]};
+                Vec2 aimPunchAngle = {playerAtTick.aimPunchX[shooterPATId], playerAtTick.aimPunchY[shooterPATId]};
+                Vec2 viewPunchAngle = {playerAtTick.viewPunchX[shooterPATId], playerAtTick.viewPunchY[shooterPATId]};
+                step.viewAngleWithActualRecoil = step.globalShooterViewAngle + aimPunchAngle * WEAPON_RECOIL_SCALE;
+                step.viewAngleWithVisualRecoil = step.globalShooterViewAngle + viewPunchAngle +
+                        aimPunchAngle * WEAPON_RECOIL_SCALE * VIEW_RECOIL_TRACKING;
+                step.roundId = roundId;
+                step.tickId = tickIndex;
+
+                        // if more than 1 engagement for this shooter on this tick, ranking is
                 // 1. actively shooting at target
                 // 2. number of hits landed during engagement
                 int64_t bestEngagement = 0;
@@ -190,6 +223,8 @@ void computeEngagementResults(const Rounds & rounds, const Ticks & ticks, const 
                         }
                     }
                 }
+
+                // get all players on CT or T and their PAT ids
 
             }
         }

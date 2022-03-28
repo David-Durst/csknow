@@ -17,6 +17,8 @@ using std::string;
 using std::map;
 using std::array;
 #define ENGAGEMENT_SECONDS_RADIUS 1.0
+#define WEAPON_RECOIL_SCALE 2.0
+#define VIEW_RECOIL_TRACKING 0.45
 
 class EngagementResult : public QueryResult {
 public:
@@ -218,10 +220,8 @@ public:
         array<FriendlyPlayerState, NUM_PLAYERS/2> friendlyPlayerStates;
         array<EnemyPlayerState, NUM_PLAYERS/2> enemyPlayerStates;
         // these aren't printed, just used for bookkeeping during query
-        int64_t gameId;
         int64_t roundId;
         int64_t tickId;
-        int64_t patId;
     };
 
     string timeStepStateToString(TimeStepState step) {
