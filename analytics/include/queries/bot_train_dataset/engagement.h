@@ -145,6 +145,7 @@ public:
     struct EnemyPlayerState {
         bool slotFilled;
         bool alive;
+        bool engaged;
         PosState posState;
         bool startRoundMoneyLessThan4k;
         //bool beenHeadshotThisRound;
@@ -164,6 +165,7 @@ public:
         std::stringstream result;
         result << boolToString(playerState.slotFilled);
         result << "," << boolToString(playerState.alive);
+        result << "," << boolToString(playerState.engaged);
         result << "," << posStateToCSV(playerState.posState);
         result << "," << boolToString(playerState.startRoundMoneyLessThan4k);
         //result << "," << boolToString(playerState.beenHeadshotThisRound);
@@ -180,6 +182,7 @@ public:
         if (!onlyMinMaxScale && !onlyOneHot) {
             result.push_back(prefix + " slot filled x");
             result.push_back(prefix + " alive");
+            result.push_back(prefix + " engaged");
         }
         if (!onlyOneHot) {
             posStateColumns(prefix, result, onlyOneHot, onlyMinMaxScale);
