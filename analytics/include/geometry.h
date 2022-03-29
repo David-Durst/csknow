@@ -272,17 +272,10 @@ bool pointInCompoundRegion(CompoundAABB boxes, Vec3 point) {
     return false;
 }
 
-
 static inline __attribute__((always_inline))
-Vec2 rotateViewAngles(RotationMatix3D matrix, Vec2 inputViewAngles) {
-    Vec3 inputViewVector = anglesVector(inputViewAngles);
-    Vec3 outputViewVector = matrix.rotateVec3(inputViewVector);
-    return vectorAngles(outputViewVector);
-}
-
-static inline __attribute__((always_inline))
-Vec3 translate(Vec3 origin, Vec2 target) {
-    return {target.x - origin.x, target.y - origin.y, target.z - origin.z};
+Vec3 translateThenRotate(Vec3 newOrigin, RotationMatix3D originRotationMatrix, Vec3 inputPosition) {
+    Vec3 translatedPosition = {originPosition.x - newOrigin.x, originPosition.y - newOrigin.y, originPosition.z - newOrigin.z};
+    return originRotationMatrix.rotateVec3(translatedPosition);
 }
 
 #endif //CSKNOW_GEOMETRY_H

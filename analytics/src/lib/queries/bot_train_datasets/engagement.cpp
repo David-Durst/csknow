@@ -16,6 +16,7 @@ struct EngagementIds {
     int64_t lastHurtTick;
     int64_t shooterId;
     int64_t targetId;
+    vector<int64_t> shooterWeaponFireIds;
     int32_t numHits;
 };
 
@@ -78,33 +79,35 @@ computeEngagementsPerRound(const Rounds & rounds, const Ticks & ticks, const Pla
 
             // get if player shot
             int64_t engagementFireId = INVALID_ID;
-            for (const auto & fireId : ticks.weaponFirePerTick.at(tickIndex)) {
-                if (weaponFire.shooter[fireId] == shooterPlayerId) {
-                    engagementFireId = fireId;
-                    break;
+            if (ticks.weaponFirePerTick.find(tickIndex) != ticks.weaponFirePerTick.end()) {
+                for (const auto & fireId : ticks.weaponFirePerTick.at(tickIndex)) {
+                    if (weaponFire.shooter[fireId] == shooterPlayerId) {
+                        engagementFireId = fireId;
+                        break;
+                    }
                 }
             }
-            // if didn't shoot, then continue as can't change engagement state if didn't shoot
-            if (engagementFireId == INVALID_ID) {
+            else {
+                // if didn't shoot, then continue as can't change engagement state if didn't shoot
                 continue;
             }
 
             // get if player hurt anyone
             vector<int64_t> engagementHurtIds;
             vector<int64_t> engagementTargetIds;
-            for (const auto & hurtId : ticks.hurtPerTick.at(tickIndex)) {
-                // ignoring nade damage, so have to use same weapon as fired
-                if (hurt.attacker[hurtId] == shooterPlayerId &&
-                    hurt.weapon[hurtId] == weaponFire.weapon[engagementFireId]) {
-                    engagementHurtIds.push_back(hurtId);
-                    engagementTargetIds.push_back(hurt.victim[hurtId]);
+            if (ticks.hurtPerTick.find(tickIndex) != ticks.hurtPerTick.end()) {
+                for (const auto & hurtId : ticks.hurtPerTick.at(tickIndex)) {
+                    // ignoring nade damage, so have to use same weapon as fired
+                    if (hurt.attacker[hurtId] == shooterPlayerId &&
+                        hurt.weapon[hurtId] == weaponFire.weapon[engagementFireId]) {
+                        engagementHurtIds.push_back(hurtId);
+                        engagementTargetIds.push_back(hurt.victim[hurtId]);
+                    }
                 }
             }
 
             // if shot but didn't hit anyone, only start/continue engagement is no active engagement with a target
             if (engagementHurtIds.empty()) {
-                bool haveOtherEngagements = false;
-
                 // if no engagements, then add a new one, no target to check
                 if (activeEngagementIds[shooterPlayerId].empty()) {
                     activeEngagementIds[shooterPlayerId][INVALID_ID].startTickId = tickIndex -
@@ -162,13 +165,42 @@ computeEngagementsPerRound(const Rounds & rounds, const Ticks & ticks, const Pla
     }
 }
 
+EngagementResult::PosState
+computePosState(const PlayerAtTick & playerAtTick, Vec3 shooterOrigin,
+                const RotationMatrix3D & shooterRotationMatrix, int64_t targetPATId, int64_t shooterPATId) {
+    EngagementResult::PosState result;
+    result.eyePosRelativeToShooter = translateThenRotate(shooterOrigin, shooterRotationMatrix,
+                                                         {playerAtTick.posX[targetPATId],
+                                                          playerAtTick.posY[targetPATId],
+                                                          playerAtTick.eyePosZ[targetPATId]});
+
+    result.velocityRelativeToShooter = {
+            playerAtTick.velX[targetPATId] - playerAtTick.velX[shooterPATId],
+            playerAtTick.velY[targetPATId] - playerAtTick.velY[shooterPATId],
+            playerAtTick.velZ[targetPATId] - playerAtTick.velZ[shooterPATId],
+            };
+
+    result.viewAngleRelativeToShooter = {
+            playerAtTick.viewX[targetPATId] - playerAtTick.viewX[shooterPATId],
+            playerAtTick.viewY[targetPATId] - playerAtTick.viewY[shooterPATId],
+            };
+
+    result.isCrouching = playerAtTick.isCrouching[targetPATId];
+    result.isWalking = playerAtTick.isWalking[targetPATId];
+    result.isScoped = playerAtTick.isScoped[targetPATId];
+    result.isAirborne = playerAtTick.isAirborne[targetPATId];
+    result.remainingFlashTime = playerAtTick.remainingFlashTime[targetPATId];
+
+}
+
 void computeEngagementResults(const Rounds & rounds, const Ticks & ticks, const PlayerAtTick & playerAtTick, const int64_t roundId,
                               const vector<EngagementIds> & engagementIds, map<int64_t, map<int64_t, vector<int64_t>>> tickToShooterToEngagementIds,
+                              const map<int64_t, vector<int64_t>> & shooterToWeaponFireGameTicks, const int64_t RADIUS_GAME_TICKS,
+                              const TickRates & tickRates,
                               vector<EngagementResult::TimeStepState> states, vector<EngagementResult::TimeStepAction> actions) {
     for (int64_t tickIndex = rounds.ticksPerRound[roundId].minId;
          tickIndex != -1 && tickIndex <= rounds.ticksPerRound[roundId].maxId; tickIndex++) {
         if (tickToShooterToEngagementIds.find(tickIndex) != tickToShooterToEngagementIds.end()) {
-
             vector<int64_t> activePlayers;
             map<int64_t, int64_t> activePlayerPATIds;
             map<int64_t, int16_t> activePlayerTeams;
@@ -185,47 +217,154 @@ void computeEngagementResults(const Rounds & rounds, const Ticks & ticks, const 
             std::sort(activePlayers.begin(), activePlayers.end());
 
 
-            for (const auto & [shooter, engagementIdIndices] : tickToShooterToEngagementIds[tickIndex]) {
+            for (const auto &[shooter, engagementIdIndices] : tickToShooterToEngagementIds[tickIndex]) {
                 assert(!engagementIds.empty());
 
-                EngagementResult::TimeStepState step;
+                EngagementResult::TimeStepState state;
                 int64_t shooterPATId = activePlayerPATIds[shooter];
-                step.team = playerAtTick.team[shooterPATId];
-                step.globalShooterEyePos = {playerAtTick.posX[shooterPATId], playerAtTick.posY[shooterPATId],
-                                            playerAtTick.eyePosZ[shooterPATId]};
-                step.globalShooterVelocity = {playerAtTick.velX[shooterPATId], playerAtTick.velY[shooterPATId],
-                                              playerAtTick.velZ[shooterPATId]};
-                step.globalShooterViewAngle = {playerAtTick.viewX[shooterPATId], playerAtTick.viewY[shooterPATId]};
+                state.team = playerAtTick.team[shooterPATId];
+                state.globalShooterEyePos = {playerAtTick.posX[shooterPATId], playerAtTick.posY[shooterPATId],
+                                             playerAtTick.eyePosZ[shooterPATId]};
+                state.globalShooterVelocity = {playerAtTick.velX[shooterPATId], playerAtTick.velY[shooterPATId],
+                                               playerAtTick.velZ[shooterPATId]};
+                state.globalShooterViewAngle = {playerAtTick.viewX[shooterPATId], playerAtTick.viewY[shooterPATId]};
                 Vec2 aimPunchAngle = {playerAtTick.aimPunchX[shooterPATId], playerAtTick.aimPunchY[shooterPATId]};
-                Vec2 viewPunchAngle = {playerAtTick.viewPunchX[shooterPATId], playerAtTick.viewPunchY[shooterPATId]};
-                step.viewAngleWithActualRecoil = step.globalShooterViewAngle + aimPunchAngle * WEAPON_RECOIL_SCALE;
-                step.viewAngleWithVisualRecoil = step.globalShooterViewAngle + viewPunchAngle +
-                        aimPunchAngle * WEAPON_RECOIL_SCALE * VIEW_RECOIL_TRACKING;
-                step.roundId = roundId;
-                step.tickId = tickIndex;
+                Vec2 viewPunchAngle = {playerAtTick.viewPunchX[shooterPATId],
+                                       playerAtTick.viewPunchY[shooterPATId]};
+                state.viewAngleWithActualRecoil =
+                        state.globalShooterViewAngle + aimPunchAngle * WEAPON_RECOIL_SCALE;
+                state.viewAngleWithVisualRecoil = state.globalShooterViewAngle + viewPunchAngle +
+                                                  aimPunchAngle * WEAPON_RECOIL_SCALE * VIEW_RECOIL_TRACKING;
 
-                        // if more than 1 engagement for this shooter on this tick, ranking is
+
+                int64_t priorFireGameTick = ticks.gameTickNumber[tickIndex] - RADIUS_GAME_TICKS,
+                        nextFireGameTick = ticks.gameTickNumber[tickIndex] + RADIUS_GAME_TICKS;
+                if (shooterToWeaponFireGameTicks.find(shooter) != shooterToWeaponFireGameTicks.end()) {
+                    for (size_t i = 0; i < shooterToWeaponFireGameTicks.at(shooter).size(); i++) {
+                        if (shooterToWeaponFireGameTicks.at(shooter)[i] < ticks.gameTickNumber[tickIndex] &&
+                            shooterToWeaponFireGameTicks.at(shooter)[i] > priorFireGameTick) {
+                            priorFireGameTick = shooterToWeaponFireGameTicks.at(shooter)[i];
+                        }
+                        if (shooterToWeaponFireGameTicks.at(shooter)[i] > ticks.gameTickNumber[tickIndex] &&
+                            shooterToWeaponFireGameTicks.at(shooter)[i] < nextFireGameTick) {
+                            nextFireGameTick = shooterToWeaponFireGameTicks.at(shooter)[i];
+                        }
+                    }
+                }
+                state.secondsSinceLastFire = (ticks.gameTickNumber[tickIndex] - priorFireGameTick) /
+                                             static_cast<double>(tickRates.gameTickRate);
+                double secondsUntilNextFire = (nextFireGameTick - ticks.gameTickNumber[tickIndex]) /
+                                              static_cast<double>(tickRates.gameTickRate);
+
+                state.roundId = roundId;
+                state.tickId = tickIndex;
+                state.shooterPatId = shooterPATId;
+
+                RotationMatrix3D shooterRotationMatrix(
+                        {state.globalShooterViewAngle.x, state.globalShooterViewAngle.y}, true);
+
+                // if more than 1 engagement for this shooter on this tick, ranking is
                 // 1. actively shooting at target
                 // 2. number of hits landed during engagement
-                int64_t bestEngagement = 0;
+                int64_t bestEngagementIndex = 0;
+                std::set<int64_t> engagedTargets{engagementIds[engagementIdIndices[0]].targetId};
                 if (engagementIdIndices.size() > 1) {
                     int32_t maxHits = -1;
                     bool maxInShootingRange = false;
                     for (size_t i = 0; i < engagementIdIndices.size(); i++) {
+                        engagedTargets.insert(engagementIds[engagementIdIndices[i]].targetId);
                         int32_t curHits = engagementIds[engagementIdIndices[i]].numHits;
-                        bool curInShootingRange = engagementIds[engagementIdIndices[0]].firstHurtTick <= tickIndex &&
-                                engagementIds[engagementIdIndices[0]].lastHurtTick >= tickIndex;
+                        bool curInShootingRange =
+                                engagementIds[engagementIdIndices[i]].firstHurtTick <= tickIndex &&
+                                engagementIds[engagementIdIndices[i]].lastHurtTick >= tickIndex;
                         if ((!maxInShootingRange && curInShootingRange) ||
                             (!(maxInShootingRange && !curInShootingRange) && maxHits < curHits)) {
                             maxHits = curHits;
                             maxInShootingRange = curInShootingRange;
-                            bestEngagement = i;
+                            bestEngagementIndex = engagementIdIndices[i];
                         }
                     }
                 }
 
-                // get all players on CT or T and their PAT ids
+                int8_t friendlyIndex;
+                int8_t enemyIndex;
+                for (const auto &activePlayerId : activePlayers) {
+                    int64_t activePATId = activePlayerPATIds[activePlayerId];
+                    if (playerAtTick.team[activePATId] == playerAtTick.team[shooterPATId]) {
+                        state.friendlyPlayerStates[friendlyIndex].slotFilled = true;
+                        state.friendlyPlayerStates[friendlyIndex].alive = playerAtTick.isAlive[activePATId];
+                        state.friendlyPlayerStates[friendlyIndex].posState = computePosState(playerAtTick,
+                                                                                             state.globalShooterEyePos,
+                                                                                             shooterRotationMatrix,
+                                                                                             activePATId,
+                                                                                             shooterPATId);
+                        state.friendlyPlayerStates[friendlyIndex].money = playerAtTick.money[activePATId];
+                        state.friendlyPlayerStates[friendlyIndex].activeWeapon = playerAtTick.activeWeapon[activePATId];
+                        state.friendlyPlayerStates[friendlyIndex].primaryWeapon = playerAtTick.primaryWeapon[activePATId];
+                        state.friendlyPlayerStates[friendlyIndex].secondaryWeapon = playerAtTick.secondaryWeapon[activePATId];
+                        if (playerAtTick.activeWeapon[activePATId] == playerAtTick.primaryWeapon[activePATId]) {
+                            state.friendlyPlayerStates[friendlyIndex].currentClipBullets = playerAtTick.primaryBulletsClip[activePATId];
+                        } else if (playerAtTick.activeWeapon[activePATId] ==
+                                   playerAtTick.secondaryWeapon[activePATId]) {
+                            state.friendlyPlayerStates[friendlyIndex].currentClipBullets = playerAtTick.secondaryBulletsClip[activePATId];
+                        } else {
+                            state.friendlyPlayerStates[friendlyIndex].currentClipBullets = -1;
+                        }
+                        state.friendlyPlayerStates[friendlyIndex].primaryClipBullets = playerAtTick.primaryBulletsClip[activePATId];
+                        state.friendlyPlayerStates[friendlyIndex].secondaryClipBullets = playerAtTick.primaryBulletsClip[activePATId];
+                        state.friendlyPlayerStates[friendlyIndex].health = playerAtTick.health[activePATId];
+                        state.friendlyPlayerStates[friendlyIndex].armor = playerAtTick.armor[activePATId];
+                        if (activePATId == shooterPATId) {
+                            state.shooter = state.friendlyPlayerStates[friendlyIndex];
+                        }
+                        friendlyIndex++;
+                    } else {
+                        state.enemyPlayerStates[enemyIndex].slotFilled = true;
+                        state.enemyPlayerStates[enemyIndex].alive = playerAtTick.isAlive[activePATId];
+                        state.enemyPlayerStates[enemyIndex].engaged =
+                                engagedTargets.find(activePlayerId) != engagedTargets.end();
+                        state.enemyPlayerStates[enemyIndex].posState = computePosState(playerAtTick,
+                                                                                       state.globalShooterEyePos,
+                                                                                       shooterRotationMatrix,
+                                                                                       activePATId, shooterPATId);
+                        // save if no primary weapon
+                        state.enemyPlayerStates[enemyIndex].saveRound =
+                                playerAtTick.primaryWeapon[activePATId] != INVALID_ID;
+                        state.enemyPlayerStates[enemyIndex].activeWeapon = playerAtTick.activeWeapon[activePATId];
+                        if (activePlayerId == engagementIds[bestEngagementIndex].targetId) {
+                            state.target = state.enemyPlayerStates[enemyIndex];
+                        }
+                        enemyIndex++;
+                    }
+                }
+                states.push_back(state);
 
+                EngagementResult::TimeStepAction action;
+                action.secondsUntilEngagementOver =
+                        (ticks.gameTickNumber[engagementIds[bestEngagementIndex].endTickId] -
+                         ticks.gameTickNumber[tickIndex]) /
+                        static_cast<double>(tickRates.gameTickRate);
+                // know alive next tick as tickToShooterToEngagementIds ends one tick early for each engagement
+
+                int64_t nextPATId = -1;
+                for (int64_t patIndex = ticks.patPerTick[tickIndex + 1].minId;
+                     patIndex != -1 && patIndex <= ticks.patPerTick[tickIndex].maxId; patIndex++) {
+                    if (playerAtTick.playerId[patIndex] == shooter) {
+                        nextPATId = patIndex;
+                        break;
+                    }
+                }
+                assert(nextPATId != -1);
+                action.deltaPos = Vec3{playerAtTick.posX[nextPATId], playerAtTick.posY[nextPATId], playerAtTick.posZ[nextPATId]} -
+                        Vec3{playerAtTick.posX[shooterPATId], playerAtTick.posY[shooterPATId], playerAtTick.posZ[shooterPATId]};
+                action.deltaView = Vec2{playerAtTick.viewX[nextPATId], playerAtTick.viewY[nextPATId]} -
+                                  Vec2{playerAtTick.viewX[shooterPATId], playerAtTick.viewY[shooterPATId]};
+                action.nextFireTimeSeconds = secondsUntilNextFire;
+                action.crouch = playerAtTick.isCrouching[nextPATId];
+                action.walk = playerAtTick.isWalking[nextPATId];
+                action.scope = playerAtTick.isScoped[nextPATId];
+                action.newlyAirborne = playerAtTick.isAirborne[nextPATId] && !playerAtTick.isAirborne[shooterPATId];
+                actions.push_back(action);
             }
         }
     }
@@ -257,13 +396,29 @@ EngagementResult queryEngagementDataset(const Equipment & equipment, const Games
         map<int64_t, map<int64_t, vector<int64_t>>> tickToShooterToEngagementIds;
         for (int i = 0; i < engagementIds.size(); i++) {
             const EngagementIds &oneEngagementIds = engagementIds[i];
-            for (int64_t tickId = oneEngagementIds.startTickId; tickId <= oneEngagementIds.endTickId; tickId++) {
+            // end on tick before last tick of engagement so for all ticks know alive for next one
+            // when computing results
+            for (int64_t tickId = oneEngagementIds.startTickId; tickId < oneEngagementIds.endTickId; tickId++) {
                 tickToShooterToEngagementIds[tickId][oneEngagementIds.shooterId].push_back(i);
             }
         }
 
-        computeEngagementResults(rounds, ticks, playerAtTick, roundIndex, engagementIds, tickToShooterToEngagementIds,
-                                 tmpStates[threadNum], tmpActions[threadNum]);
+        map<int64_t, vector<int64_t>> shooterToWeaponFireGameTicks;
+        for (int64_t tickIndex = rounds.ticksPerRound[roundIndex].minId;
+             tickIndex != -1 && tickIndex <= rounds.ticksPerRound[roundIndex].maxId; tickIndex++) {
+            if (ticks.weaponFirePerTick.find(tickIndex) != ticks.weaponFirePerTick.end()) {
+                for (const auto & weaponFireIndex : ticks.weaponFirePerTick.at(tickIndex)) {
+                    // ensure inserting unique values in increasing order
+                    assert(shooterToWeaponFireGameTicks[weaponFire.shooter[weaponFireIndex]].empty() ||
+                                   shooterToWeaponFireGameTicks[weaponFire.shooter[weaponFireIndex]].back() < ticks.gameTickNumber[tickIndex]);
+                    shooterToWeaponFireGameTicks[weaponFire.shooter[weaponFireIndex]].push_back(ticks.gameTickNumber[tickIndex]);
+                }
+            }
+        }
+
+        computeEngagementResults(rounds, ticks, playerAtTick, roundIndex, engagementIds,
+                                 tickToShooterToEngagementIds, shooterToWeaponFireGameTicks,
+                                 RADIUS_GAME_TICKS, tickRates,tmpStates[threadNum], tmpActions[threadNum]);
     }
 
 
@@ -272,9 +427,9 @@ EngagementResult queryEngagementDataset(const Equipment & equipment, const Games
         for (int j = 0; j < tmpStates[i].size(); j++) {
             result.tickId.push_back(tmpStates[i][j].tickId);
             result.roundId.push_back(tmpStates[i][j].roundId);
-            result.sourcePlayerId.push_back(playerAtTick.playerId[tmpStates[i][j].patId]);
+            result.sourcePlayerId.push_back(playerAtTick.playerId[tmpStates[i][j].shooterPatId]);
             result.sourcePlayerName.push_back(players.name[result.sourcePlayerId.back() + players.idOffset]);
-            result.demoName.push_back(games.demoFile[tmpStates[i][j].gameId]);
+            result.demoName.push_back(games.demoFile[rounds.gameId[tmpStates[i][j].roundId]]);
             result.states.push_back(tmpStates[i][j]);
             result.actions.push_back(tmpActions[i][j]);
         }

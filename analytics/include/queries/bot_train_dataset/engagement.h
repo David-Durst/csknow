@@ -80,7 +80,7 @@ public:
         bool alive;
         PosState posState;
         int64_t money;
-        int16_t currentWeapon;
+        int16_t activeWeapon;
         int16_t primaryWeapon;
         int16_t secondaryWeapon;
         int16_t currentClipBullets;
@@ -88,8 +88,10 @@ public:
         int16_t secondaryClipBullets;
         int32_t health;
         int32_t armor;
+        /*
         double secondsSinceLastFootstep;
         double secondsSinceLastFire;
+         */
     };
 
     string friendlyPlayerStateToCSV(FriendlyPlayerState playerState) {
@@ -99,7 +101,7 @@ public:
         result << "," << boolToString(playerState.alive);
         result << "," << posStateToCSV(playerState.posState);
         result << "," << playerState.money;
-        result << "," << playerState.currentWeapon;
+        result << "," << playerState.activeWeapon;
         result << "," << playerState.primaryWeapon;
         result << "," << playerState.secondaryWeapon;
         result << "," << playerState.currentClipBullets;
@@ -107,8 +109,10 @@ public:
         result << "," << playerState.secondaryClipBullets;
         result << "," << playerState.health;
         result << "," << playerState.armor;
+        /*
         result << "," << playerState.secondsSinceLastFootstep;
         result << "," << playerState.secondsSinceLastFire;
+         */
         return result.str();
     }
 
@@ -123,7 +127,7 @@ public:
             result.push_back(prefix + " money");
         }
         if (!onlyMinMaxScale) {
-            result.push_back(prefix + " current weapon");
+            result.push_back(prefix + " active weapon");
             result.push_back(prefix + " primary weapon");
             result.push_back(prefix + " secondary weapon");
         }
@@ -133,8 +137,10 @@ public:
             result.push_back(prefix + " secondary clip bullets");
             result.push_back(prefix + " health");
             result.push_back(prefix + " armor");
+            /*
             result.push_back(prefix + " seconds since last footstep");
             result.push_back(prefix + " seconds since last fire");
+             */
         }
     }
 
@@ -149,14 +155,14 @@ public:
         bool alive;
         bool engaged;
         PosState posState;
-        bool startRoundMoneyLessThan4k;
+        bool saveRound;
         //bool beenHeadshotThisRound;
-        int16_t currentWeapon;
+        int16_t activeWeapon;
         //int32_t priorTimesEngagedThisRound;
+        /*
         double secondsSinceLastSpotted;
         double secondsSinceLastFootstep;
         double secondsSinceLastFire;
-        /*
         int64_t ticksSinceLastRadar;
         int64_t ticksSinceLastFootstep;
         int64_t ticksSinceLastFire;
@@ -169,13 +175,15 @@ public:
         result << "," << boolToString(playerState.alive);
         result << "," << boolToString(playerState.engaged);
         result << "," << posStateToCSV(playerState.posState);
-        result << "," << boolToString(playerState.startRoundMoneyLessThan4k);
+        result << "," << boolToString(playerState.saveRound);
         //result << "," << boolToString(playerState.beenHeadshotThisRound);
-        result << "," << playerState.currentWeapon;
+        result << "," << playerState.activeWeapon;
         //result << "," << playerState.priorTimesEngagedThisRound;
+        /*
         result << "," << playerState.secondsSinceLastSpotted;
         result << "," << playerState.secondsSinceLastFootstep;
         result << "," << playerState.secondsSinceLastFire;
+         */
         return result.str();
     }
 
@@ -190,18 +198,20 @@ public:
             posStateColumns(prefix, result, onlyOneHot, onlyMinMaxScale);
         }
         if (!onlyMinMaxScale && !onlyOneHot) {
-            result.push_back(prefix + " start money lt 4k");
+            result.push_back(prefix + " save round");
             //result.push_back(prefix + " been hs this round");
         }
         if (!onlyMinMaxScale) {
-            result.push_back(prefix + " current weapon");
+            result.push_back(prefix + " active weapon");
         }
+        /*
         if (!onlyOneHot) {
-            //result.push_back(prefix + " prior times engaged this round");
+            result.push_back(prefix + " prior times engaged this round");
             result.push_back(prefix + " seconds since last spotted");
             result.push_back(prefix + " seconds since last footstep");
             result.push_back(prefix + " seconds since last fire");
         }
+         */
     }
 
     void enemyPlayerStateOneHotNumCategories(vector<string> & result, string equipmentIdList) {
@@ -215,6 +225,7 @@ public:
         Vec2 globalShooterViewAngle;
         Vec2 viewAngleWithActualRecoil;
         Vec2 viewAngleWithVisualRecoil;
+        double secondsSinceLastFire;
         FriendlyPlayerState shooter;
         EnemyPlayerState target;
         array<FriendlyPlayerState, NUM_PLAYERS/2> friendlyPlayerStates;
@@ -222,6 +233,7 @@ public:
         // these aren't printed, just used for bookkeeping during query
         int64_t roundId;
         int64_t tickId;
+        int64_t shooterPatId;
     };
 
     string timeStepStateToString(TimeStepState step) {
@@ -232,6 +244,7 @@ public:
         result << "," << step.globalShooterViewAngle.toCSV();
         result << "," << step.viewAngleWithActualRecoil.toCSV();
         result << "," << step.viewAngleWithVisualRecoil.toCSV();
+        result << "," << step.secondsSinceLastFire;
         result << "," << friendlyPlayerStateToCSV(step.shooter);
         result << "," << enemyPlayerStateToCSV(step.target);
         for (const auto & friendlyPlayerState : step.friendlyPlayerStates) {
@@ -260,6 +273,7 @@ public:
             result.push_back("view angle actual recoil y");
             result.push_back("view angle visual recoil x");
             result.push_back("view angle visual recoil y");
+            result.push_back("seconds since last fire");
         }
         friendlyPlayerStateColumns("shooter", result, onlyOneHot, onlyMinMaxScale);
         enemyPlayerStateColumns("enemy", result, onlyOneHot, onlyMinMaxScale);
@@ -283,6 +297,7 @@ public:
         }
     }
 
+    /*
     enum class ActionResult {
         keepEngaging,
         changeTarget,
@@ -292,12 +307,14 @@ public:
         die,
         NUM_ACTION_RESULTS,
     };
+     */
 
     struct TimeStepAction {
-        ActionResult actionResult;
+        //ActionResult actionResult;
+        double secondsUntilEngagementOver;
         Vec3 deltaPos;
         Vec2 deltaView;
-        bool fire;
+        double nextFireTimeSeconds;
         bool crouch;
         bool walk;
         bool scope;
@@ -306,10 +323,10 @@ public:
 
     string timeStepPlanToString(TimeStepAction action) {
         std::stringstream result;
-        result << enumAsInt(action.actionResult)
+        result << action.secondsUntilEngagementOver //enumAsInt(action.actionResult)
                << "," << action.deltaPos.toCSV()
                << "," << action.deltaView.toCSV()
-               << "," << boolToString(action.fire)
+               << "," << boolToString(action.nextFireTimeSeconds)
                << "," << boolToString(action.crouch)
                << "," << boolToString(action.walk)
                << "," << boolToString(action.scope)
@@ -318,19 +335,22 @@ public:
     }
 
     void timeStepActionColumns(vector<string> & result, bool onlyOneHot = false, bool onlyMinMaxScale = false) {
+        /*
         if (!onlyMinMaxScale) {
             result.push_back("action result");
         }
+         */
         if (!onlyOneHot) {
+            result.push_back("seconds until engagement over");
             result.push_back("delta pos x");
             result.push_back("delta pos y");
             result.push_back("delta pos z");
             result.push_back("delta view x");
             result.push_back("delta view y");
             result.push_back("delta view z");
+            result.push_back("next fire time seconds");
         }
         if (!onlyOneHot && !onlyMinMaxScale) {
-            result.push_back("fire");
             result.push_back("crouch");
             result.push_back("walk");
             result.push_back("scope");
