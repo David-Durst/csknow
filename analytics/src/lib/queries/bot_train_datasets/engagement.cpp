@@ -197,7 +197,7 @@ void computeEngagementResults(const Rounds & rounds, const Ticks & ticks, const 
                               const vector<EngagementIds> & engagementIds, map<int64_t, map<int64_t, vector<int64_t>>> tickToShooterToEngagementIds,
                               const map<int64_t, vector<int64_t>> & shooterToWeaponFireGameTicks, const int64_t RADIUS_GAME_TICKS,
                               const TickRates & tickRates,
-                              vector<EngagementResult::TimeStepState> states, vector<EngagementResult::TimeStepAction> actions) {
+                              vector<EngagementResult::TimeStepState> & states, vector<EngagementResult::TimeStepAction> & actions) {
     for (int64_t tickIndex = rounds.ticksPerRound[roundId].minId;
          tickIndex != -1 && tickIndex <= rounds.ticksPerRound[roundId].maxId; tickIndex++) {
         if (tickToShooterToEngagementIds.find(tickIndex) != tickToShooterToEngagementIds.end()) {
@@ -286,8 +286,8 @@ void computeEngagementResults(const Rounds & rounds, const Ticks & ticks, const 
                     }
                 }
 
-                int8_t friendlyIndex;
-                int8_t enemyIndex;
+                int8_t friendlyIndex = 0;
+                int8_t enemyIndex = 0;
                 for (const auto &activePlayerId : activePlayers) {
                     int64_t activePATId = activePlayerPATIds[activePlayerId];
                     if (playerAtTick.team[activePATId] == playerAtTick.team[shooterPATId]) {
@@ -348,11 +348,14 @@ void computeEngagementResults(const Rounds & rounds, const Ticks & ticks, const 
 
                 int64_t nextPATId = -1;
                 for (int64_t patIndex = ticks.patPerTick[tickIndex + 1].minId;
-                     patIndex != -1 && patIndex <= ticks.patPerTick[tickIndex].maxId; patIndex++) {
+                     patIndex != -1 && patIndex <= ticks.patPerTick[tickIndex + 1].maxId; patIndex++) {
                     if (playerAtTick.playerId[patIndex] == shooter) {
                         nextPATId = patIndex;
                         break;
                     }
+                }
+                if (nextPATId == -1) {
+                    int x = 1;
                 }
                 assert(nextPATId != -1);
                 action.deltaPos = Vec3{playerAtTick.posX[nextPATId], playerAtTick.posY[nextPATId], playerAtTick.posZ[nextPATId]} -
@@ -380,6 +383,9 @@ EngagementResult queryEngagementDataset(const Equipment & equipment, const Games
 
 //#pragma omp parallel for
     for (int64_t roundIndex = 0; roundIndex < rounds.size; roundIndex++) {
+        if (rounds.gameId[roundIndex] > 1) {
+            continue;
+        }
         int threadNum = omp_get_thread_num();
         TickRates tickRates = computeTickRates(games, rounds, roundIndex);
         const int64_t RADIUS_GAME_TICKS = ENGAGEMENT_SECONDS_RADIUS * tickRates.gameTickRate;
