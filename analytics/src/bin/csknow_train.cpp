@@ -12,6 +12,7 @@
 #include "navmesh/nav_file.h"
 #include "queries/nav_mesh.h"
 #include "queries/bot_train_dataset/next_navmesh.h"
+#include "queries/bot_train_dataset/engagement.h"
 #include "bots/manage_thinkers.h"
 #include <filesystem>
 namespace fs = std::filesystem;
@@ -23,7 +24,7 @@ using std::reference_wrapper;
 
 int main(int argc, char * argv[]) {
     if (argc != 4) {
-        std::cout << "please call this code 4 arguments: " << std::endl;
+        std::cout << "please call this code 3 arguments: " << std::endl;
         std::cout << "1. path/to/local_data" << std::endl;
         std::cout << "2. path/to/nav_meshes" << std::endl;
         std::cout << "3. path/to/output/dir" << std::endl;
@@ -103,19 +104,20 @@ int main(int argc, char * argv[]) {
     std::cout << "num elements in skillsFromFile: " << manageThinkerState.skillsFromFile.size() << std::endl;
      */
 
-    NextNavmeshResult trainDatasetResult = queryTrainDataset(games, rounds, ticks, players, playerAtTick, map_navs);
+    //NextNavmeshResult trainDatasetResult = queryTrainDataset(games, rounds, ticks, players, playerAtTick, map_navs);
+    EngagementResult engagementResult = queryEngagementDataset(equipment, games, rounds, weaponFire, hurt, ticks, players, playerAtTick);
 
     std::ofstream outputFile, configFile;
-    string outputPath = outputDir + "/train_dataset.csv";
+    string engagementOutputPath = outputDir + "/train_engagement_dataset.csv";
     string configPath = outputDir + "/train_config.csv";
     //string skillPath = outputDir + "/train_skills.csv";
 
-    std::cout << "writing train dataset with size " << trainDatasetResult.size << " to " << outputPath << std::endl;
-    outputFile.open(outputPath);
-    outputFile << trainDatasetResult.toCSV();
+    std::cout << "writing train dataset with size " << engagementResult.size << " to " << engagementOutputPath << std::endl;
+    outputFile.open(engagementOutputPath);
+    outputFile << engagementResult.toCSV();
     outputFile.close();
     configFile.open(configPath);
-    configFile << trainDatasetResult.getDataLabelRanges();
+    configFile << engagementResult.getDataLabelRanges();
     configFile.close();
     //manageThinkerState.saveSkillsDuringTraining(skillPath);
 }

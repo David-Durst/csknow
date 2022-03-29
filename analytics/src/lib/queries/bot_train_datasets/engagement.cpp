@@ -190,7 +190,7 @@ computePosState(const PlayerAtTick & playerAtTick, Vec3 shooterOrigin,
     result.isScoped = playerAtTick.isScoped[targetPATId];
     result.isAirborne = playerAtTick.isAirborne[targetPATId];
     result.remainingFlashTime = playerAtTick.remainingFlashTime[targetPATId];
-
+    return result;
 }
 
 void computeEngagementResults(const Rounds & rounds, const Ticks & ticks, const PlayerAtTick & playerAtTick, const int64_t roundId,

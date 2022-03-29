@@ -273,8 +273,8 @@ bool pointInCompoundRegion(CompoundAABB boxes, Vec3 point) {
 }
 
 static inline __attribute__((always_inline))
-Vec3 translateThenRotate(Vec3 newOrigin, RotationMatix3D originRotationMatrix, Vec3 inputPosition) {
-    Vec3 translatedPosition = {originPosition.x - newOrigin.x, originPosition.y - newOrigin.y, originPosition.z - newOrigin.z};
+Vec3 translateThenRotate(Vec3 newOrigin, RotationMatrix3D originRotationMatrix, Vec3 inputPosition) {
+    Vec3 translatedPosition = {inputPosition.x - newOrigin.x, inputPosition.y - newOrigin.y, inputPosition.z - newOrigin.z};
     return originRotationMatrix.rotateVec3(translatedPosition);
 }
 

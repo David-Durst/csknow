@@ -359,7 +359,7 @@ public:
     }
 
     void timeStepActionOneHotNumCategories(vector<string> & result) {
-        result.push_back(std::to_string(enumAsInt(ActionResult::NUM_ACTION_RESULTS)));
+        //result.push_back(std::to_string(enumAsInt(ActionResult::NUM_ACTION_RESULTS)));
     }
 
     vector<int64_t> tickId;
