@@ -247,12 +247,14 @@ public:
         result << "," << step.secondsSinceLastFire;
         result << "," << friendlyPlayerStateToCSV(step.shooter);
         result << "," << enemyPlayerStateToCSV(step.target);
+        /*
         for (const auto & friendlyPlayerState : step.friendlyPlayerStates) {
             result << "," << friendlyPlayerStateToCSV(friendlyPlayerState);
         }
         for (const auto & enemyPlayerState : step.enemyPlayerStates) {
             result << "," << enemyPlayerStateToCSV(enemyPlayerState);
         }
+         */
         return result.str();
     }
 
@@ -277,24 +279,28 @@ public:
         }
         friendlyPlayerStateColumns("shooter", result, onlyOneHot, onlyMinMaxScale);
         enemyPlayerStateColumns("enemy", result, onlyOneHot, onlyMinMaxScale);
+        /*
         for (int i = 0; i < NUM_PLAYERS/2; i++) {
             friendlyPlayerStateColumns("friendly " + std::to_string(i), result, onlyOneHot, onlyMinMaxScale);
         }
         for (int i = 0; i < NUM_PLAYERS/2; i++) {
             enemyPlayerStateColumns("enemy " + std::to_string(i), result, onlyOneHot, onlyMinMaxScale);
         }
+         */
 
     }
 
     void timeStepStateOneHotNumCategories(vector<string> & result, string equipmentIdList) {
         friendlyPlayerStateOneHotNumCategories(result, equipmentIdList);
         enemyPlayerStateOneHotNumCategories(result, equipmentIdList);
+        /*
         for (int i = 0; i < NUM_PLAYERS/2; i++) {
             friendlyPlayerStateOneHotNumCategories(result, equipmentIdList);
         }
         for (int i = 0; i < NUM_PLAYERS/2; i++) {
             enemyPlayerStateOneHotNumCategories(result, equipmentIdList);
         }
+         */
     }
 
     /*
