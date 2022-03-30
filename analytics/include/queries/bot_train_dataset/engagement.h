@@ -119,7 +119,7 @@ public:
     void friendlyPlayerStateColumns(string prefix, vector<string> & result,
                                     bool onlyOneHot = false, bool onlyMinMaxScale = false) {
         if (!onlyMinMaxScale && !onlyOneHot) {
-            result.push_back(prefix + " slot filled x");
+            result.push_back(prefix + " slot filled");
             result.push_back(prefix + " alive");
         }
         if (!onlyOneHot) {
@@ -190,7 +190,7 @@ public:
     void enemyPlayerStateColumns(string prefix, vector<string> & result,
                                     bool onlyOneHot = false, bool onlyMinMaxScale = false) {
         if (!onlyMinMaxScale && !onlyOneHot) {
-            result.push_back(prefix + " slot filled x");
+            result.push_back(prefix + " slot filled");
             result.push_back(prefix + " alive");
             result.push_back(prefix + " engaged");
         }
@@ -421,12 +421,12 @@ public:
         // repeat the below once for each state
         vector<string> equipmentIdListVec;
         std::stringstream equipmentStream;
-        bool firstEquipment = true;
         for (const auto id : equipment.id) {
             equipmentIdListVec.push_back(std::to_string(id));
         }
-        commaSeparateList(equipmentStream, equipmentIdListVec);
-        timeStepStateOneHotNumCategories(inputOneHotNumCategories, equipmentStream.str());
+        commaSeparateList(equipmentStream, equipmentIdListVec, ";");
+        string equipmentIdStr = "\"" + equipmentStream.str() + "\"";
+        timeStepStateOneHotNumCategories(inputOneHotNumCategories, equipmentIdStr);
         timeStepActionOneHotNumCategories(outputOneHotNumCategories);
 
         timeStepStateColumns(inputMinMaxScale, false, true);

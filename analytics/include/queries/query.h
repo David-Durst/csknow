@@ -79,13 +79,13 @@ public:
         ss << std::endl;
     }
 
-    void commaSeparateList(stringstream & ss, vector<string> list) {
+    void commaSeparateList(stringstream & ss, vector<string> list, const string& separator = ",") {
         if (list.size() == 0) {
             return;
         }
         ss << list[0];
         for (int i = 1; i < list.size(); i++) {
-            ss << "," << list[i];
+            ss << separator << list[i];
         }
     }
 
