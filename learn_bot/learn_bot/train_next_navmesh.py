@@ -40,7 +40,7 @@ player_id_to_ix = {player_id: i for (i, player_id) in enumerate(unique_player_id
 all_data_df = all_data_df.replace({player_id_col: player_id_to_ix})
 #all_data_df = all_data_df[all_data_df['team'] == 0]
 target_ax = all_data_df.loc[:, 'nav target'].value_counts().plot(kind='bar')
-target_ax.figure.savefig(Path(__file__).parent / '..' / 'data' / 'nav_distribution.png')
+target_ax.figure.savefig(Path(__file__).parent / '..' / 'data' / 'next_navmesh' / 'nav_distribution.png')
 
 
 # train test split on rounds with rounds weighted by number of entries in each round

@@ -12,25 +12,39 @@ from joblib import dump
 from learn_bot.model import NeuralNetwork, NNArgs
 from learn_bot.dataset import BotDataset, BotDatasetArgs
 
-all_data_df = pd.read_csv(Path(__file__).parent / '..' / 'data' / 'train_dataset.csv')
+all_data_df = pd.read_csv(Path(__file__).parent / '..' / 'data' / 'engagement' / 'train_engagement_dataset.csv')
 
 # load config
 def get_config_line(i):
     return config_lines[i].strip().split(',')
 
+def compute_one_hot_cols_nums(config_row_num):
+    result = []
+    if config_lines[config_row_num].strip() == "":
+        return result
+    one_hot_cols_nums = config_lines[config_row_num].strip().split(',')
+    for one_hot_col_nums in one_hot_cols_nums:
+        # if this is a list of nums, take the list directly
+        if one_hot_col_nums[0] == "\"":
+            one_hot_col_nums_no_quotes = one_hot_col_nums[1:-1]
+            result.append([int(num) for num in one_hot_col_nums_no_quotes.split(';')])
+        # if this a single num, expand it from from 0 to num-1
+        else:
+            result.append(list(range(int(one_hot_col_nums))))
 
-config_file = open(Path(__file__).parent / '..' / 'data' / 'train_config.csv', 'r')
+
+config_file = open(Path(__file__).parent / '..' / 'data' / 'engagement' / 'train_config.csv', 'r')
 config_lines = config_file.readlines()
 config_file.close()
 player_id_col = get_config_line(0)[0]
 non_player_id_input_cols = get_config_line(1)
 input_cols = [player_id_col] + non_player_id_input_cols
 input_one_hot_cols = get_config_line(2)
-input_one_hot_cols_num_cats = [list(range(int(i))) for i in get_config_line(3)]
+input_one_hot_cols_num_cats = compute_one_hot_cols_nums(3)
 input_min_max_cols = get_config_line(4)
 output_cols = get_config_line(5)
 output_one_hot_cols = get_config_line(6)
-output_one_hot_cols_num_cats = [list(range(int(i))) for i in get_config_line(7)]
+output_one_hot_cols_num_cats = compute_one_hot_cols_nums(7)
 output_min_max_cols = get_config_line(8)
 all_data_cols = input_cols + output_cols
 
@@ -39,9 +53,6 @@ unique_player_id = all_data_df.loc[:, player_id_col].unique()
 player_id_to_ix = {player_id: i for (i, player_id) in enumerate(unique_player_id)}
 all_data_df = all_data_df.replace({player_id_col: player_id_to_ix})
 #all_data_df = all_data_df[all_data_df['team'] == 0]
-target_ax = all_data_df.loc[:, 'nav target'].value_counts().plot(kind='bar')
-target_ax.figure.savefig(Path(__file__).parent / '..' / 'data' / 'nav_distribution.png')
-
 
 # train test split on rounds with rounds weighted by number of entries in each round
 # so 80-20 train test split on actual data with rounds kept coherent
@@ -63,17 +74,25 @@ def compute_passthrough_cols(all_cols, *non_passthrough_lists):
 
 # transform concatenates outputs in order provided, so this ensures that source player id comes first
 # as that is only pass through col
-input_ct = ColumnTransformer(transformers=[
-    ('pass', 'passthrough', compute_passthrough_cols(input_cols, input_one_hot_cols, input_min_max_cols)),
-    ('one-hot', OneHotEncoder(categories=input_one_hot_cols_num_cats), input_one_hot_cols),
-    ('zero-to-one', MinMaxScaler(), input_min_max_cols),
-], sparse_threshold=0)
-output_ct = ColumnTransformer(transformers=[
-    #('pass', 'passthrough', compute_passthrough_cols(output_cols, output_one_hot_cols, output_min_max_cols)),
-    ('one-hot', OneHotEncoder(categories=output_one_hot_cols_num_cats), output_one_hot_cols),
-    ('drop', 'drop', output_min_max_cols),
-    #('zero-to-one', MinMaxScaler(), output_min_max_cols),
-], sparse_threshold=0)
+input_transformers = []
+passthrough_input_cols = compute_passthrough_cols(input_cols, input_one_hot_cols, input_min_max_cols)
+if passthrough_input_cols:
+    input_transformers.append(('pass', 'passthrough', passthrough_input_cols))
+if input_one_hot_cols:
+    input_transformers.append(('one-hot', OneHotEncoder(categories=input_one_hot_cols_num_cats), input_one_hot_cols))
+if input_min_max_cols:
+    input_transformers.append(('zero-to-one', MinMaxScaler(), input_min_max_cols))
+input_ct = ColumnTransformer(transformers=input_transformers, sparse_threshold=0)
+
+output_transformers = []
+passthrough_output_cols = compute_passthrough_cols(output_cols, output_one_hot_cols, output_min_max_cols)
+if passthrough_output_cols:
+    output_transformers.append(('pass', 'passthrough', passthrough_output_cols))
+if output_one_hot_cols:
+    output_transformers.append(('one-hot', OneHotEncoder(categories=output_one_hot_cols_num_cats), output_one_hot_cols))
+if output_min_max_cols:
+    output_transformers.append(('zero-to-one', MinMaxScaler(), output_min_max_cols))
+output_ct = ColumnTransformer(transformers=[output_transformers], sparse_threshold=0)
 # remember: fit Y is ignored for this fitting as not SL
 input_ct.fit(all_data_df.loc[:, input_cols])
 output_ct.fit(all_data_df.loc[:, output_cols])
@@ -84,8 +103,7 @@ def get_name_range(name: str) -> slice:
         return slice(min(name_indices), max(name_indices) + 1)
     else:
         return slice(0,0)
-output_names = ['nav target', 'shoot', 'crouch']
-output_ranges = [get_name_range(name) for name in output_names]
+output_ranges = [get_name_range(name) for name in output_cols]
 
 
 dataset_args = BotDatasetArgs(input_ct, output_ct, input_cols, output_cols)
@@ -116,7 +134,7 @@ print(f"Using {device} device")
 
 # Define model
 embedding_dim = 5
-nn_args = NNArgs(player_id_to_ix, embedding_dim, input_ct, output_ct, output_names, output_ranges)
+nn_args = NNArgs(player_id_to_ix, embedding_dim, input_ct, output_ct, output_cols, output_ranges)
 model = NeuralNetwork(nn_args).to(device)
 print(model)
 params = list(model.parameters())
@@ -130,10 +148,10 @@ optimizer = torch.optim.Adam(model.parameters())
 
 # https://discuss.pytorch.org/t/how-to-combine-multiple-criterions-to-a-loss-function/348/4
 def compute_loss(pred, y):
-    move_loss = loss_fn(pred[:, output_ranges[0]], y[:, output_ranges[0]])
-    shoot_loss = loss_fn(pred[:, output_ranges[1]], y[:, output_ranges[1]])
-    crouch_loss = loss_fn(pred[:, output_ranges[2]], y[:, output_ranges[2]])
-    return move_loss + shoot_loss + crouch_loss
+    total_loss = 0
+    for i in range(len(output_cols)):
+        total_loss += loss_fn(pred[:, output_ranges[i]], y[:, output_ranges[i]])
+    return total_loss
 
 
 first_batch = True
@@ -144,7 +162,7 @@ def train(dataloader, model, optimizer):
     model.train()
     train_loss = 0
     correct = {}
-    for name in output_names:
+    for name in output_cols:
         correct[name] = 0
     for batch, (X, Y) in enumerate(dataloader):
         if first_batch:
@@ -167,11 +185,11 @@ def train(dataloader, model, optimizer):
             loss, current = batch_loss.item(), batch * len(X)
             print(f"loss: {loss:>7f}  [{current:>5d}/{size:>5d}]")
 
-        for name, r in zip(output_names, output_ranges):
+        for name, r in zip(output_cols, output_ranges):
             correct[name] += (pred[:, r].argmax(1) == Y[:, r].argmax(1)) \
                 .type(torch.float).sum().item()
     train_loss /= num_batches
-    for name in output_names:
+    for name in output_cols:
         correct[name] /= size
         correct[name] *= 100
     print(f"Epoch Train Error: Accuracy: {correct}%, Avg loss: {train_loss:>8f} \n")
@@ -183,18 +201,18 @@ def test(dataloader, model):
     model.eval()
     test_loss = 0
     correct = {}
-    for name in output_names:
+    for name in output_cols:
         correct[name] = 0
     with torch.no_grad():
         for X, Y in dataloader:
             X, Y = X.to(device), Y.to(device)
             pred = model(X)
             test_loss += compute_loss(pred, Y).item()
-            for name, r in zip(output_names, output_ranges):
+            for name, r in zip(output_cols, output_ranges):
                 correct[name] += (pred[:, r].argmax(1) == Y[:, r].argmax(1)) \
                     .type(torch.float).sum().item()
     test_loss /= num_batches
-    for name in output_names:
+    for name in output_cols:
         correct[name] /= size
         correct[name] *= 100
     print(f"Epoch Test Error: Accuracy: {correct}%, Avg loss: {test_loss:>8f} \n")
