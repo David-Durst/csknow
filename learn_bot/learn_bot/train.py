@@ -27,10 +27,11 @@ def compute_one_hot_cols_nums(config_row_num):
         # if this is a list of nums, take the list directly
         if one_hot_col_nums[0] == "\"":
             one_hot_col_nums_no_quotes = one_hot_col_nums[1:-1]
-            result.append([int(num) for num in one_hot_col_nums_no_quotes.split(';')])
+            result.append(sorted([int(num) for num in one_hot_col_nums_no_quotes.split(';')]))
         # if this a single num, expand it from from 0 to num-1
         else:
             result.append(list(range(int(one_hot_col_nums))))
+    return result
 
 
 config_file = open(Path(__file__).parent / '..' / 'data' / 'engagement' / 'train_config.csv', 'r')
