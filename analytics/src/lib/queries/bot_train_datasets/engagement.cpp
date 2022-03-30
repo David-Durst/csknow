@@ -407,7 +407,6 @@ EngagementResult queryEngagementDataset(const Equipment & equipment, const Games
         computeEngagementsPerRound(rounds, ticks, playerAtTick, weaponFire, hurt, roundIndex, engagementIds,
                                    RADIUS_GAME_TICKS, tickRates);
 
-        size_t x = engagementIds.size();
         map<int64_t, map<int64_t, vector<int64_t>>> tickToShooterToEngagementIds;
         for (int i = 0; i < engagementIds.size(); i++) {
             const EngagementIds &oneEngagementIds = engagementIds[i];
