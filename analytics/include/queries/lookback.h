@@ -70,7 +70,7 @@ static int64_t getLookforwardDemoTick(const Rounds & rounds, const Ticks & ticks
 
     int lookforwardDemoTicks = 1;
     for (; ticks.gameTickNumber[tickIndex + lookforwardDemoTicks] < ticks.gameTickNumber[tickIndex] + lookforwardGameTicks &&
-           lookforwardDemoTicks > maxLookforwardDemoTicks &&
+           lookforwardDemoTicks < maxLookforwardDemoTicks &&
            // this makes sure don't run off end, next tick is no more than max
            tickIndex + lookforwardDemoTicks < rounds.ticksPerRound[ticks.roundId[tickIndex]].maxId;
            lookforwardDemoTicks++);
