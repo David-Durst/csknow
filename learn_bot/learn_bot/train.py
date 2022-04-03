@@ -104,9 +104,9 @@ output_ct.fit(all_data_df.loc[:, output_cols])
 def get_name_range(name: str) -> slice:
     name_indices = [i for i, col_name in enumerate(output_ct.get_feature_names_out()) if name in col_name]
     if name_indices:
-        return slice(min(name_indices), max(name_indices) + 1)
+        return range(min(name_indices), max(name_indices) + 1)
     else:
-        return slice(0,0)
+        return range(0,0)
 output_ranges = [get_name_range(name) for name in output_cols]
 
 

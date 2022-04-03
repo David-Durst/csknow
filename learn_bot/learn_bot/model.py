@@ -12,8 +12,7 @@ class NNArgs:
     input_ct: ColumnTransformer
     output_ct: ColumnTransformer
     output_names: List[str]
-    output_ranges: List[slice]
-
+    output_ranges: List[range]
 
 class NeuralNetwork(nn.Module):
     args: NNArgs
@@ -30,15 +29,11 @@ class NeuralNetwork(nn.Module):
             nn.Linear(128, 128),
             nn.ReLU(),
         )
-        self.moveLayer = nn.Sequential(
-            nn.Linear(128, args.output_ranges[0].stop - args.output_ranges[0].start),
-        )
-        self.crouchLayer = nn.Sequential(
-            nn.Linear(128, 2),
-        )
-        self.shootLayer = nn.Sequential(
-            nn.Linear(128, 2),
-        )
+
+        output_layers = []
+        for output_range in args.output_ranges:
+            output_layers.append(nn.Linear(128, len(output_range)))
+        self.output_layers = nn.ModuleList(output_layers)
         #self.moveSigmoid = nn.Sigmoid()
 
     def forward(self, x):
@@ -47,8 +42,7 @@ class NeuralNetwork(nn.Module):
         embeds = self.embeddings(idx_long).view((-1, self.args.embedding_dim))
         x_all = torch.cat((embeds, x_vals), 1)
         logits = self.linear_relu_stack(x_all)
-        moveOutput = self.moveLayer(logits)
-        #moveOutput = self.moveSigmoid(self.moveLayer(logits))
-        crouchOutput = self.crouchLayer(logits)
-        shootOutput = self.shootLayer(logits)
-        return torch.cat((moveOutput, crouchOutput, shootOutput), dim=1)
+        outputs = []
+        for output_layer in self.output_layers:
+            outputs.append(output_layer(logits))
+        return torch.cat(tuple(outputs), dim=1)
