@@ -267,6 +267,9 @@ void computeEngagementResults(const Rounds & rounds, const Ticks & ticks, const 
                 state.roundId = roundId;
                 state.tickId = tickIndex;
                 state.shooterPatId = shooterPATId;
+                // start with target inactive and set to 0
+                state.target = {false, false, false,
+                                {{ 0., 0., 0.}, { 0., 0., 0.}, {0., 0.}, false, false, false, false, 0. }, false, 0};
 
                 RotationMatrix3D shooterRotationMatrix(
                         {state.globalShooterViewAngle.x, state.globalShooterViewAngle.y}, true);
