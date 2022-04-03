@@ -146,7 +146,9 @@ print("params by layer")
 for param_layer in params:
     print(param_layer.shape)
 
-loss_fn = nn.CrossEntropyLoss()
+float_loss_fn = nn.L1Loss()
+binary_loss_fn = nn.BCEWithLogitsLoss()
+classification_loss_fn = nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(model.parameters())
 #optimizer = torch.optim.SGD(model.parameters(), lr=0.001)
 
@@ -154,9 +156,24 @@ optimizer = torch.optim.Adam(model.parameters())
 def compute_loss(pred, y):
     total_loss = 0
     for i in range(len(output_cols)):
+        loss_fn = binary_loss_fn
+        if output_cols[i] in passthrough_output_cols:
+            loss_fn = float_loss_fn
+        elif output_cols[i] in output_one_hot_cols:
+            loss_fn = classification_loss_fn
         total_loss += loss_fn(pred[:, output_ranges[i]], y[:, output_ranges[i]])
     return total_loss
 
+def compute_accuracy(pred, Y, correct):
+    for name, r in zip(output_cols, output_ranges):
+        if name in passthrough_output_cols:
+            correct[name] += torch.square(pred[:, r] -  Y[:, r]).sum().item()
+        elif name in output_one_hot_cols:
+            correct[name] += (pred[:, r].argmax(1) == Y[:, r].argmax(1)) \
+                .type(torch.float).sum().item()
+        else:
+            correct[name] += (torch.le(pred[:, r], 0.5) == torch.le(Y[:, r], 0.5)) \
+                .type(torch.float).sum().item()
 
 first_batch = True
 def train(dataloader, model, optimizer):
@@ -189,9 +206,7 @@ def train(dataloader, model, optimizer):
             loss, current = batch_loss.item(), batch * len(X)
             print(f"loss: {loss:>7f}  [{current:>5d}/{size:>5d}]")
 
-        for name, r in zip(output_cols, output_ranges):
-            correct[name] += (pred[:, r].argmax(1) == Y[:, r].argmax(1)) \
-                .type(torch.float).sum().item()
+        compute_accuracy(pred, Y, correct)
     train_loss /= num_batches
     for name in output_cols:
         correct[name] /= size
@@ -212,9 +227,7 @@ def test(dataloader, model):
             X, Y = X.to(device), Y.to(device)
             pred = model(X)
             test_loss += compute_loss(pred, Y).item()
-            for name, r in zip(output_cols, output_ranges):
-                correct[name] += (pred[:, r].argmax(1) == Y[:, r].argmax(1)) \
-                    .type(torch.float).sum().item()
+            compute_accuracy(pred, Y, correct)
     test_loss /= num_batches
     for name in output_cols:
         correct[name] /= size

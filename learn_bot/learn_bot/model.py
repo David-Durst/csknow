@@ -15,6 +15,7 @@ class NNArgs:
     output_ranges: List[range]
 
 class NeuralNetwork(nn.Module):
+    internal_width = 256
     args: NNArgs
 
     def __init__(self, args):
@@ -22,17 +23,19 @@ class NeuralNetwork(nn.Module):
         self.args = args
         self.embeddings = nn.Embedding(len(args.player_id_to_ix), args.embedding_dim)
         self.linear_relu_stack = nn.Sequential(
-            nn.Linear(args.embedding_dim + args.input_ct.get_feature_names_out().size - 1, 128),
+            nn.Linear(args.embedding_dim + args.input_ct.get_feature_names_out().size - 1, self.internal_width),
             nn.ReLU(),
-            nn.Linear(128, 128),
+            nn.Linear(self.internal_width, self.internal_width),
             nn.ReLU(),
-            nn.Linear(128, 128),
+            nn.Linear(self.internal_width, self.internal_width),
+            nn.ReLU(),
+            nn.Linear(self.internal_width, self.internal_width),
             nn.ReLU(),
         )
 
         output_layers = []
         for output_range in args.output_ranges:
-            output_layers.append(nn.Linear(128, len(output_range)))
+            output_layers.append(nn.Linear(self.internal_width, len(output_range)))
         self.output_layers = nn.ModuleList(output_layers)
         #self.moveSigmoid = nn.Sigmoid()
 
