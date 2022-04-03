@@ -29,6 +29,16 @@ string boolToString(bool val) {
     }
 }
 
+static inline __attribute__((always_inline))
+uint32_t boolToInt(bool val) {
+    if (val) {
+        return 1;
+    }
+    else {
+        return 0;
+    }
+}
+
 enum DataType {
     noSrcTarget = 0,
     justSrc = 1,

@@ -47,10 +47,10 @@ public:
         result << posState.eyePosRelativeToShooter.toCSV();
         result << "," << posState.velocityRelativeToShooter.toCSV();
         result << "," << posState.viewAngleRelativeToShooter.toCSV();
-        result << "," << boolToString(posState.isCrouching);
-        result << "," << boolToString(posState.isWalking);
-        result << "," << boolToString(posState.isScoped);
-        result << "," << boolToString(posState.isAirborne);
+        result << "," << boolToInt(posState.isCrouching);
+        result << "," << boolToInt(posState.isWalking);
+        result << "," << boolToInt(posState.isScoped);
+        result << "," << boolToInt(posState.isAirborne);
         result << "," << posState.remainingFlashTime;
         return result.str();
     }
@@ -96,9 +96,9 @@ public:
 
     string friendlyPlayerStateToCSV(FriendlyPlayerState playerState) {
         std::stringstream result;
-        result << boolToString(playerState.slotFilled);
-        result << "," << boolToString(playerState.alive);
-        result << "," << boolToString(playerState.alive);
+        result << boolToInt(playerState.slotFilled);
+        result << "," << boolToInt(playerState.alive);
+        result << "," << boolToInt(playerState.alive);
         result << "," << posStateToCSV(playerState.posState);
         result << "," << playerState.money;
         result << "," << playerState.activeWeapon;
@@ -171,12 +171,12 @@ public:
 
     string enemyPlayerStateToCSV(EnemyPlayerState playerState) {
         std::stringstream result;
-        result << boolToString(playerState.slotFilled);
-        result << "," << boolToString(playerState.alive);
-        result << "," << boolToString(playerState.engaged);
+        result << boolToInt(playerState.slotFilled);
+        result << "," << boolToInt(playerState.alive);
+        result << "," << boolToInt(playerState.engaged);
         result << "," << posStateToCSV(playerState.posState);
-        result << "," << boolToString(playerState.saveRound);
-        //result << "," << boolToString(playerState.beenHeadshotThisRound);
+        result << "," << boolToInt(playerState.saveRound);
+        //result << "," << boolToInt(playerState.beenHeadshotThisRound);
         result << "," << playerState.activeWeapon;
         //result << "," << playerState.priorTimesEngagedThisRound;
         /*
@@ -332,11 +332,11 @@ public:
         result << action.secondsUntilEngagementOver //enumAsInt(action.actionResult)
                << "," << action.deltaPos.toCSV()
                << "," << action.deltaView.toCSV()
-               << "," << boolToString(action.nextFireTimeSeconds)
-               << "," << boolToString(action.crouch)
-               << "," << boolToString(action.walk)
-               << "," << boolToString(action.scope)
-               << "," << boolToString(action.newlyAirborne);
+               << "," << boolToInt(action.nextFireTimeSeconds)
+               << "," << boolToInt(action.crouch)
+               << "," << boolToInt(action.walk)
+               << "," << boolToInt(action.scope)
+               << "," << boolToInt(action.newlyAirborne);
         return result.str();
     }
 
@@ -401,7 +401,7 @@ public:
     }
 
     vector<string> getOtherColumnNames() {
-        vector<string> result{"source player name", "demo name", "team"};
+        vector<string> result{"source player name", "demo name"};
         timeStepStateColumns(result);
         timeStepActionColumns(result);
         return result;
