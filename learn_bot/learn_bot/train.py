@@ -16,7 +16,10 @@ all_data_df = pd.read_csv(Path(__file__).parent / '..' / 'data' / 'engagement' /
 
 # load config
 def get_config_line(i):
-    return config_lines[i].strip().split(',')
+    if config_lines[i] == '\n':
+        return []
+    else:
+        return config_lines[i].strip().split(',')
 
 def compute_one_hot_cols_nums(config_row_num):
     result = []
@@ -41,11 +44,11 @@ player_id_col = get_config_line(0)[0]
 non_player_id_input_cols = get_config_line(1)
 input_cols = [player_id_col] + non_player_id_input_cols
 input_one_hot_cols = get_config_line(2)
-input_one_hot_cols_num_cats = compute_one_hot_cols_nums(3)
+input_one_hot_cols_nums = compute_one_hot_cols_nums(3)
 input_min_max_cols = get_config_line(4)
 output_cols = get_config_line(5)
 output_one_hot_cols = get_config_line(6)
-output_one_hot_cols_num_cats = compute_one_hot_cols_nums(7)
+output_one_hot_cols_nums = compute_one_hot_cols_nums(7)
 output_min_max_cols = get_config_line(8)
 all_data_cols = input_cols + output_cols
 
@@ -80,7 +83,7 @@ passthrough_input_cols = compute_passthrough_cols(input_cols, input_one_hot_cols
 if passthrough_input_cols:
     input_transformers.append(('pass', 'passthrough', passthrough_input_cols))
 if input_one_hot_cols:
-    input_transformers.append(('one-hot', OneHotEncoder(categories=input_one_hot_cols_num_cats), input_one_hot_cols))
+    input_transformers.append(('one-hot', OneHotEncoder(categories=input_one_hot_cols_nums), input_one_hot_cols))
 if input_min_max_cols:
     input_transformers.append(('zero-to-one', MinMaxScaler(), input_min_max_cols))
 input_ct = ColumnTransformer(transformers=input_transformers, sparse_threshold=0)
@@ -90,10 +93,10 @@ passthrough_output_cols = compute_passthrough_cols(output_cols, output_one_hot_c
 if passthrough_output_cols:
     output_transformers.append(('pass', 'passthrough', passthrough_output_cols))
 if output_one_hot_cols:
-    output_transformers.append(('one-hot', OneHotEncoder(categories=output_one_hot_cols_num_cats), output_one_hot_cols))
+    output_transformers.append(('one-hot', OneHotEncoder(categories=output_one_hot_cols_nums), output_one_hot_cols))
 if output_min_max_cols:
     output_transformers.append(('zero-to-one', MinMaxScaler(), output_min_max_cols))
-output_ct = ColumnTransformer(transformers=[output_transformers], sparse_threshold=0)
+output_ct = ColumnTransformer(transformers=output_transformers, sparse_threshold=0)
 # remember: fit Y is ignored for this fitting as not SL
 input_ct.fit(all_data_df.loc[:, input_cols])
 output_ct.fit(all_data_df.loc[:, output_cols])
