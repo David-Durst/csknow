@@ -322,7 +322,7 @@ void computeEngagementResults(const Rounds & rounds, const Ticks & ticks, const 
                             state.friendlyPlayerStates[friendlyIndex].currentClipBullets = -1;
                         }
                         state.friendlyPlayerStates[friendlyIndex].primaryClipBullets = playerAtTick.primaryBulletsClip[activePATId];
-                        state.friendlyPlayerStates[friendlyIndex].secondaryClipBullets = playerAtTick.primaryBulletsClip[activePATId];
+                        state.friendlyPlayerStates[friendlyIndex].secondaryClipBullets = playerAtTick.secondaryBulletsClip[activePATId];
                         state.friendlyPlayerStates[friendlyIndex].health = playerAtTick.health[activePATId];
                         state.friendlyPlayerStates[friendlyIndex].armor = playerAtTick.armor[activePATId];
                         if (activePATId == shooterPATId) {

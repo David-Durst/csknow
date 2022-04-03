@@ -98,7 +98,6 @@ public:
         std::stringstream result;
         result << boolToInt(playerState.slotFilled);
         result << "," << boolToInt(playerState.alive);
-        result << "," << boolToInt(playerState.alive);
         result << "," << posStateToCSV(playerState.posState);
         result << "," << playerState.money;
         result << "," << playerState.activeWeapon;
@@ -353,7 +352,6 @@ public:
             result.push_back("delta pos z");
             result.push_back("delta view x");
             result.push_back("delta view y");
-            result.push_back("delta view z");
             result.push_back("next fire time seconds");
         }
         if (!onlyOneHot && !onlyMinMaxScale) {
