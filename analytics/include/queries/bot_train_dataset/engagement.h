@@ -32,9 +32,9 @@ public:
      */
 
     enum class ColumnTypes {
-        FloatMinMax = 0,
-        FloatIQR = 1,
-        Boolean = 2,
+        Boolean = 0,
+        FloatMinMax = 1,
+        FloatIQR = 2,
         Categorical = 3,
     };
 
@@ -318,6 +318,7 @@ public:
     }
 
     void timeStepStateOneHotNumCategories(vector<string> & result, string equipmentIdList) {
+        result.push_back("\"" + std::to_string(INTERNAL_TEAM_CT) + ";" + std::to_string(INTERNAL_TEAM_T) + "\"");
         friendlyPlayerStateOneHotNumCategories(result, equipmentIdList);
         enemyPlayerStateOneHotNumCategories(result, equipmentIdList);
         /*
@@ -461,8 +462,9 @@ public:
 
     vector<string> getOtherColumnNames() {
         vector<string> result{"source player name", "demo name"};
-        timeStepStateColumns(result);
-        timeStepActionColumns(result);
+        vector<ColumnTypes> columnTypes;
+        timeStepStateColumns(result, columnTypes);
+        timeStepActionColumns(result, columnTypes);
         return result;
     }
 
@@ -505,6 +507,7 @@ public:
         commaSeparateList(result, outputColTypesStrs);
         result << "\n";
         commaSeparateList(result, outputOneHotNumCategories);
+        result << "\n";
         return result.str();
     }
 };
