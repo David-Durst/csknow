@@ -157,8 +157,6 @@ computeEngagementsPerRound(const Rounds & rounds, const Ticks & ticks, const Pla
                         activeEngagementIds[shooterPlayerId][targetId].lastHurtTick = tickIndex;
                         activeEngagementIds[shooterPlayerId][targetId].numHits++;
                     }
-
-                    // remove any engagements with
                 }
             }
         }
@@ -299,6 +297,7 @@ void computeEngagementResults(const Rounds & rounds, const Ticks & ticks, const 
 
                 int8_t friendlyIndex = 0;
                 int8_t enemyIndex = 0;
+                int64_t targetPATId;
                 for (const auto &activePlayerId : activePlayers) {
                     int64_t activePATId = activePlayerPATIds[activePlayerId];
                     if (playerAtTick.team[activePATId] == playerAtTick.team[shooterPATId]) {
@@ -343,12 +342,12 @@ void computeEngagementResults(const Rounds & rounds, const Ticks & ticks, const 
                                 playerAtTick.primaryWeapon[activePATId] != INVALID_ID;
                         state.enemyPlayerStates[enemyIndex].activeWeapon = playerAtTick.activeWeapon[activePATId];
                         if (activePlayerId == engagementIds[bestEngagementIndex].targetId) {
+                            targetPATId = activePATId;
                             state.target = state.enemyPlayerStates[enemyIndex];
                         }
                         enemyIndex++;
                     }
                 }
-                states.push_back(state);
 
                 EngagementResult::TimeStepAction action;
                 action.secondsUntilEngagementOver =
@@ -378,7 +377,12 @@ void computeEngagementResults(const Rounds & rounds, const Ticks & ticks, const 
                 action.walk = playerAtTick.isWalking[nextPATId];
                 action.scope = playerAtTick.isScoped[nextPATId];
                 action.newlyAirborne = playerAtTick.isAirborne[nextPATId] && !playerAtTick.isAirborne[shooterPATId];
-                actions.push_back(action);
+                // filter out time steps with weird, way tooi great view angle changes
+                // remove non-target events for now
+                if (state.target.slotFilled && std::abs(action.deltaView.x) <= 5. && std::abs(action.deltaView.y) <= 5) {
+                    states.push_back(state);
+                    actions.push_back(action);
+                }
             }
         }
     }
