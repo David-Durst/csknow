@@ -157,24 +157,23 @@ def compute_loss(pred, y):
     total_loss = 0
     for i in range(len(output_cols)):
         loss_fn = float_loss_fn
-        #loss_fn = binary_loss_fn
-        #if output_cols[i] in passthrough_output_cols:
-        #    loss_fn = float_loss_fn
-        #elif output_cols[i] in output_one_hot_cols:
-        #    loss_fn = classification_loss_fn
+        if output_cols[i] in passthrough_output_cols:
+            loss_fn = binary_loss_fn
+        elif output_cols[i] in output_one_hot_cols:
+            loss_fn = classification_loss_fn
         total_loss += loss_fn(pred[:, output_ranges[i]], y[:, output_ranges[i]])
     return total_loss
 
 def compute_accuracy(pred, Y, correct):
     for name, r in zip(output_cols, output_ranges):
         if name in passthrough_output_cols:
-            correct[name] += torch.square(pred[:, r] -  Y[:, r]).sum().item()
+            correct[name] += (torch.le(pred[:, r], 0.5) == torch.le(Y[:, r], 0.5)) \
+                .type(torch.float).sum().item()
         elif name in output_one_hot_cols:
             correct[name] += (pred[:, r].argmax(1) == Y[:, r].argmax(1)) \
                 .type(torch.float).sum().item()
         else:
-            correct[name] += (torch.le(pred[:, r], 0.5) == torch.le(Y[:, r], 0.5)) \
-                .type(torch.float).sum().item()
+            correct[name] += torch.square(pred[:, r] -  Y[:, r]).sum().item()
 
 first_batch = True
 def train_or_test(dataloader, model, optimizer, train = True):
@@ -213,7 +212,9 @@ def train_or_test(dataloader, model, optimizer, train = True):
         if train and batch % 100 == 0:
             loss, current = batch_loss.item(), batch * len(X)
             print('pred')
-            print(pred[0])
+            print(pred[0:2])
+            print('y')
+            print(Y[0:2])
             print(f"loss: {loss:>7f}  [{current:>5d}/{size:>5d}]")
 
         compute_accuracy(pred, Y, correct)
