@@ -146,21 +146,22 @@ print("params by layer")
 for param_layer in params:
     print(param_layer.shape)
 
-float_loss_fn = nn.L1Loss()
+float_loss_fn = nn.MSELoss()
 binary_loss_fn = nn.BCEWithLogitsLoss()
 classification_loss_fn = nn.CrossEntropyLoss()
-optimizer = torch.optim.Adam(model.parameters())
+optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 #optimizer = torch.optim.SGD(model.parameters(), lr=0.001)
 
 # https://discuss.pytorch.org/t/how-to-combine-multiple-criterions-to-a-loss-function/348/4
 def compute_loss(pred, y):
     total_loss = 0
     for i in range(len(output_cols)):
-        loss_fn = binary_loss_fn
-        if output_cols[i] in passthrough_output_cols:
-            loss_fn = float_loss_fn
-        elif output_cols[i] in output_one_hot_cols:
-            loss_fn = classification_loss_fn
+        loss_fn = float_loss_fn
+        #loss_fn = binary_loss_fn
+        #if output_cols[i] in passthrough_output_cols:
+        #    loss_fn = float_loss_fn
+        #elif output_cols[i] in output_one_hot_cols:
+        #    loss_fn = classification_loss_fn
         total_loss += loss_fn(pred[:, output_ranges[i]], y[:, output_ranges[i]])
     return total_loss
 
@@ -176,70 +177,57 @@ def compute_accuracy(pred, Y, correct):
                 .type(torch.float).sum().item()
 
 first_batch = True
-def train(dataloader, model, optimizer):
+def train_or_test(dataloader, model, optimizer, train = True):
     global first_batch
     size = len(dataloader.dataset)
     num_batches = len(dataloader)
-    model.train()
-    train_loss = 0
+    if train:
+        model.train()
+    else:
+        model.eval()
+    cumulative_loss = 0
     correct = {}
     for name in output_cols:
         correct[name] = 0
     for batch, (X, Y) in enumerate(dataloader):
-        if first_batch:
+        if first_batch and train:
             first_batch = False
             print(X.cpu().tolist())
             print(Y.cpu().tolist())
         X, Y = X.to(device), Y.to(device)
+        #XR = torch.randn_like(X, device=device)
+        #XR[:,0] = X[:,0]
+        #YZ = torch.zeros_like(Y) + 0.1
 
         # Compute prediction error
         pred = model(X)
         batch_loss = compute_loss(pred, Y)
-        train_loss += batch_loss
+        cumulative_loss += batch_loss
 
         # Backpropagation
-        optimizer.zero_grad()
-        batch_loss.backward()
-        optimizer.step()
+        if train:
+            optimizer.zero_grad()
+            batch_loss.backward()
+            optimizer.step()
 
-        if batch % 100 == 0:
+        if train and batch % 100 == 0:
             loss, current = batch_loss.item(), batch * len(X)
+            print('pred')
+            print(pred[0])
             print(f"loss: {loss:>7f}  [{current:>5d}/{size:>5d}]")
 
         compute_accuracy(pred, Y, correct)
-    train_loss /= num_batches
+    cumulative_loss /= num_batches
     for name in output_cols:
         correct[name] /= size
-        correct[name] *= 100
-    print(f"Epoch Train Error: Accuracy: {correct}%, Avg loss: {train_loss:>8f} \n")
-
-
-def test(dataloader, model):
-    size = len(dataloader.dataset)
-    num_batches = len(dataloader)
-    model.eval()
-    test_loss = 0
-    correct = {}
-    for name in output_cols:
-        correct[name] = 0
-    with torch.no_grad():
-        for X, Y in dataloader:
-            X, Y = X.to(device), Y.to(device)
-            pred = model(X)
-            test_loss += compute_loss(pred, Y).item()
-            compute_accuracy(pred, Y, correct)
-    test_loss /= num_batches
-    for name in output_cols:
-        correct[name] /= size
-        correct[name] *= 100
-    print(f"Epoch Test Error: Accuracy: {correct}%, Avg loss: {test_loss:>8f} \n")
-
+    train_test_str = "Train" if train else "Test"
+    print(f"Epoch {train_test_str} Error: Accuracy: {correct}%, Avg loss: {cumulative_loss:>8f} \n")
 
 epochs = 5
 for t in range(epochs):
     print(f"Epoch {t+1}\n-------------------------------")
-    train(train_dataloader, model, optimizer)
-    test(test_dataloader, model)
+    train_or_test(train_dataloader, model, optimizer, True)
+    train_or_test(train_dataloader, model, None, False)
 
 dump(dataset_args, Path(__file__).parent / '..' / 'model' / 'dataset_args.joblib')
 dump(nn_args, Path(__file__).parent / '..' / 'model' / 'nn_args.joblib')

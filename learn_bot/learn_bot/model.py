@@ -48,4 +48,4 @@ class NeuralNetwork(nn.Module):
         outputs = []
         for output_layer in self.output_layers:
             outputs.append(output_layer(logits))
-        return torch.cat(tuple(outputs), dim=1)
+        return torch.cat(outputs, dim=1)
