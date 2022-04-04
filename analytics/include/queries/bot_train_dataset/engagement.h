@@ -31,6 +31,13 @@ public:
     };
      */
 
+    enum class ColumnTypes {
+        FloatMinMax = 0,
+        FloatIQR = 1,
+        Boolean = 2,
+        Categorical = 3,
+    };
+
     struct PosState {
         Vec3 eyePosRelativeToShooter;
         Vec3 velocityRelativeToShooter;
@@ -55,24 +62,33 @@ public:
         return result.str();
     }
 
-    void posStateColumns(string prefix, vector<string> & result, bool onlyOneHot = false, bool onlyMinMaxScale = false) {
-        if (!onlyOneHot) {
-            result.push_back(prefix + " eye pos rel x");
-            result.push_back(prefix + " eye pos rel y");
-            result.push_back(prefix + " eye pos rel z");
-            result.push_back(prefix + " vel rel x");
-            result.push_back(prefix + " vel rel y");
-            result.push_back(prefix + " vel rel z");
-            result.push_back(prefix + " view angle rel x");
-            result.push_back(prefix + " view angle rel y");
-            if (!onlyMinMaxScale) {
-                result.push_back(prefix + " crouching");
-                result.push_back(prefix + " walking");
-                result.push_back(prefix + " scoped");
-                result.push_back(prefix + " airborne");
-            }
-            result.push_back(prefix + " remaining flash time");
-        }
+    void posStateColumns(string prefix, vector<string> & resultNames, vector<ColumnTypes> & resultTypes) {
+        resultNames.push_back(prefix + " eye pos rel x");
+        resultTypes.push_back(ColumnTypes::FloatMinMax);
+        resultNames.push_back(prefix + " eye pos rel y");
+        resultTypes.push_back(ColumnTypes::FloatMinMax);
+        resultNames.push_back(prefix + " eye pos rel z");
+        resultTypes.push_back(ColumnTypes::FloatMinMax);
+        resultNames.push_back(prefix + " vel rel x");
+        resultTypes.push_back(ColumnTypes::FloatMinMax);
+        resultNames.push_back(prefix + " vel rel y");
+        resultTypes.push_back(ColumnTypes::FloatMinMax);
+        resultNames.push_back(prefix + " vel rel z");
+        resultTypes.push_back(ColumnTypes::FloatMinMax);
+        resultNames.push_back(prefix + " view angle rel x");
+        resultTypes.push_back(ColumnTypes::FloatMinMax);
+        resultNames.push_back(prefix + " view angle rel y");
+        resultTypes.push_back(ColumnTypes::FloatMinMax);
+        resultNames.push_back(prefix + " crouching");
+        resultTypes.push_back(ColumnTypes::Boolean);
+        resultNames.push_back(prefix + " walking");
+        resultTypes.push_back(ColumnTypes::Boolean);
+        resultNames.push_back(prefix + " scoped");
+        resultTypes.push_back(ColumnTypes::Boolean);
+        resultNames.push_back(prefix + " airborne");
+        resultTypes.push_back(ColumnTypes::Boolean);
+        resultNames.push_back(prefix + " remaining flash time");
+        resultTypes.push_back(ColumnTypes::FloatMinMax);
     }
 
     struct FriendlyPlayerState {
@@ -115,32 +131,37 @@ public:
         return result.str();
     }
 
-    void friendlyPlayerStateColumns(string prefix, vector<string> & result,
-                                    bool onlyOneHot = false, bool onlyMinMaxScale = false) {
-        if (!onlyMinMaxScale && !onlyOneHot) {
-            result.push_back(prefix + " slot filled");
-            result.push_back(prefix + " alive");
-        }
-        if (!onlyOneHot) {
-            posStateColumns(prefix, result, onlyOneHot, onlyMinMaxScale);
-            result.push_back(prefix + " money");
-        }
-        if (!onlyMinMaxScale) {
-            result.push_back(prefix + " active weapon");
-            result.push_back(prefix + " primary weapon");
-            result.push_back(prefix + " secondary weapon");
-        }
-        if (!onlyOneHot) {
-            result.push_back(prefix + " current clip bullets");
-            result.push_back(prefix + " primary clip bullets");
-            result.push_back(prefix + " secondary clip bullets");
-            result.push_back(prefix + " health");
-            result.push_back(prefix + " armor");
-            /*
-            result.push_back(prefix + " seconds since last footstep");
-            result.push_back(prefix + " seconds since last fire");
-             */
-        }
+    void friendlyPlayerStateColumns(string prefix, vector<string> & resultNames,
+                                    vector<ColumnTypes> & resultTypes) {
+        resultNames.push_back(prefix + " slot filled");
+        resultTypes.push_back(ColumnTypes::Boolean);
+        resultNames.push_back(prefix + " alive");
+        resultTypes.push_back(ColumnTypes::Boolean);
+        posStateColumns(prefix, resultNames, resultTypes);
+        resultNames.push_back(prefix + " money");
+        resultTypes.push_back(ColumnTypes::FloatMinMax);
+        resultNames.push_back(prefix + " active weapon");
+        resultTypes.push_back(ColumnTypes::Categorical);
+        resultNames.push_back(prefix + " primary weapon");
+        resultTypes.push_back(ColumnTypes::Categorical);
+        resultNames.push_back(prefix + " secondary weapon");
+        resultTypes.push_back(ColumnTypes::Categorical);
+        resultNames.push_back(prefix + " current clip bullets");
+        resultTypes.push_back(ColumnTypes::FloatMinMax);
+        resultNames.push_back(prefix + " primary clip bullets");
+        resultTypes.push_back(ColumnTypes::FloatMinMax);
+        resultNames.push_back(prefix + " secondary clip bullets");
+        resultTypes.push_back(ColumnTypes::FloatMinMax);
+        resultNames.push_back(prefix + " health");
+        resultTypes.push_back(ColumnTypes::FloatMinMax);
+        resultNames.push_back(prefix + " armor");
+        resultTypes.push_back(ColumnTypes::FloatMinMax);
+        /*
+        result.push_back(prefix + " seconds since last footstep");
+        resultTypes.push_back(ColumnTypes::FloatMinMax);
+        result.push_back(prefix + " seconds since last fire");
+        resultTypes.push_back(ColumnTypes::FloatMinMax);
+         */
     }
 
     void friendlyPlayerStateOneHotNumCategories(vector<string> & result, string equipmentIdList) {
@@ -186,23 +207,20 @@ public:
         return result.str();
     }
 
-    void enemyPlayerStateColumns(string prefix, vector<string> & result,
-                                    bool onlyOneHot = false, bool onlyMinMaxScale = false) {
-        if (!onlyMinMaxScale && !onlyOneHot) {
-            result.push_back(prefix + " slot filled");
-            result.push_back(prefix + " alive");
-            result.push_back(prefix + " engaged");
-        }
-        if (!onlyOneHot) {
-            posStateColumns(prefix, result, onlyOneHot, onlyMinMaxScale);
-        }
-        if (!onlyMinMaxScale && !onlyOneHot) {
-            result.push_back(prefix + " save round");
-            //result.push_back(prefix + " been hs this round");
-        }
-        if (!onlyMinMaxScale) {
-            result.push_back(prefix + " active weapon");
-        }
+    void enemyPlayerStateColumns(string prefix, vector<string> & resultNames,
+                                 vector<ColumnTypes> & resultTypes) {
+        resultNames.push_back(prefix + " slot filled");
+        resultTypes.push_back(ColumnTypes::Boolean);
+        resultNames.push_back(prefix + " alive");
+        resultTypes.push_back(ColumnTypes::Boolean);
+        resultNames.push_back(prefix + " engaged");
+        resultTypes.push_back(ColumnTypes::Boolean);
+        posStateColumns(prefix, resultNames, resultTypes);
+        resultNames.push_back(prefix + " save round");
+        resultTypes.push_back(ColumnTypes::Boolean);
+        //resultNames.push_back(prefix + " been hs this round");
+        resultNames.push_back(prefix + " active weapon");
+        resultTypes.push_back(ColumnTypes::Categorical);
         /*
         if (!onlyOneHot) {
             result.push_back(prefix + " prior times engaged this round");
@@ -257,33 +275,43 @@ public:
         return result.str();
     }
 
-    void timeStepStateColumns(vector<string> & result, bool onlyOneHot = false, bool onlyMinMaxScale = false) {
-        if (!onlyMinMaxScale && !onlyOneHot) {
-            result.push_back("team");
-        }
-        if (!onlyOneHot) {
-            result.push_back("global eye pos x");
-            result.push_back("global eye pos y");
-            result.push_back("global eye pos z");
-            result.push_back("global vel x");
-            result.push_back("global vel y");
-            result.push_back("global vel z");
-            result.push_back("global view angle x");
-            result.push_back("global view angle y");
-            result.push_back("view angle actual recoil x");
-            result.push_back("view angle actual recoil y");
-            result.push_back("view angle visual recoil x");
-            result.push_back("view angle visual recoil y");
-            result.push_back("seconds since last fire");
-        }
-        friendlyPlayerStateColumns("shooter", result, onlyOneHot, onlyMinMaxScale);
-        enemyPlayerStateColumns("enemy", result, onlyOneHot, onlyMinMaxScale);
+    void timeStepStateColumns(vector<string> & resultNames, vector<ColumnTypes> & resultTypes) {
+        resultNames.push_back("team");
+        resultTypes.push_back(ColumnTypes::Categorical);
+        resultNames.push_back("global eye pos x");
+        resultTypes.push_back(ColumnTypes::FloatMinMax);
+        resultNames.push_back("global eye pos y");
+        resultTypes.push_back(ColumnTypes::FloatMinMax);
+        resultNames.push_back("global eye pos z");
+        resultTypes.push_back(ColumnTypes::FloatMinMax);
+        resultNames.push_back("global vel x");
+        resultTypes.push_back(ColumnTypes::FloatMinMax);
+        resultNames.push_back("global vel y");
+        resultTypes.push_back(ColumnTypes::FloatMinMax);
+        resultNames.push_back("global vel z");
+        resultTypes.push_back(ColumnTypes::FloatMinMax);
+        resultNames.push_back("global view angle x");
+        resultTypes.push_back(ColumnTypes::FloatMinMax);
+        resultNames.push_back("global view angle y");
+        resultTypes.push_back(ColumnTypes::FloatMinMax);
+        resultNames.push_back("view angle actual recoil x");
+        resultTypes.push_back(ColumnTypes::FloatMinMax);
+        resultNames.push_back("view angle actual recoil y");
+        resultTypes.push_back(ColumnTypes::FloatMinMax);
+        resultNames.push_back("view angle visual recoil x");
+        resultTypes.push_back(ColumnTypes::FloatMinMax);
+        resultNames.push_back("view angle visual recoil y");
+        resultTypes.push_back(ColumnTypes::FloatMinMax);
+        resultNames.push_back("seconds since last fire");
+        resultTypes.push_back(ColumnTypes::FloatMinMax);
+        friendlyPlayerStateColumns("shooter", resultNames, resultTypes);
+        enemyPlayerStateColumns("enemy", resultNames, resultTypes);
         /*
         for (int i = 0; i < NUM_PLAYERS/2; i++) {
-            friendlyPlayerStateColumns("friendly " + std::to_string(i), result, onlyOneHot, onlyMinMaxScale);
+            friendlyPlayerStateColumns("friendly " + std::to_string(i), resultNames, onlyOneHot, onlyMinMaxScale);
         }
         for (int i = 0; i < NUM_PLAYERS/2; i++) {
-            enemyPlayerStateColumns("enemy " + std::to_string(i), result, onlyOneHot, onlyMinMaxScale);
+            enemyPlayerStateColumns("enemy " + std::to_string(i), resultNames, onlyOneHot, onlyMinMaxScale);
         }
          */
 
@@ -328,39 +356,72 @@ public:
 
     string timeStepPlanToString(TimeStepAction action) {
         std::stringstream result;
-        result << action.secondsUntilEngagementOver //enumAsInt(action.actionResult)
-               << "," << action.deltaPos.toCSV()
-               << "," << action.deltaView.toCSV()
+        result //<< action.secondsUntilEngagementOver //enumAsInt(action.actionResult)
+               //<< "," << action.deltaPos.toCSV()
+               //<< "," << action.deltaView.toCSV(); /*
+               << action.deltaView.toCSV(); /*
                << "," << boolToInt(action.nextFireTimeSeconds)
                << "," << boolToInt(action.crouch)
                << "," << boolToInt(action.walk)
                << "," << boolToInt(action.scope)
-               << "," << boolToInt(action.newlyAirborne);
+               << "," << boolToInt(action.newlyAirborne);*/
         return result.str();
     }
 
-    void timeStepActionColumns(vector<string> & result, bool onlyOneHot = false, bool onlyMinMaxScale = false) {
+    void timeStepActionColumns(vector<string> & resultNames, vector<ColumnTypes> & resultTypes) {
         /*
         if (!onlyMinMaxScale) {
-            result.push_back("action result");
+            resultNames.push_back("action result");
+            resultTypes.push_back(ColumnTypes::Categorical);
         }
          */
-        if (!onlyOneHot) {
-            result.push_back("seconds until engagement over");
-            result.push_back("delta pos x");
-            result.push_back("delta pos y");
-            result.push_back("delta pos z");
-            result.push_back("delta view x");
-            result.push_back("delta view y");
-            result.push_back("next fire time seconds");
-        }
-        if (!onlyOneHot && !onlyMinMaxScale) {
-            result.push_back("crouch");
-            result.push_back("walk");
-            result.push_back("scope");
-            result.push_back("newly airborne");
-        }
+        /*
+        resultNames.push_back("seconds until engagement over");
+        resultTypes.push_back(ColumnTypes::FloatMinMax);
+        resultNames.push_back("delta pos x");
+        resultTypes.push_back(ColumnTypes::FloatIQR);
+        resultNames.push_back("delta pos y");
+        resultTypes.push_back(ColumnTypes::FloatIQR);
+        resultNames.push_back("delta pos z");
+        resultTypes.push_back(ColumnTypes::FloatIQR);
+         */
+        resultNames.push_back("delta view x");
+        resultTypes.push_back(ColumnTypes::FloatIQR);
+        resultNames.push_back("delta view y");
+        resultTypes.push_back(ColumnTypes::FloatIQR);
+        /*
+        resultNames.push_back("next fire time seconds");
+        resultTypes.push_back(ColumnTypes::FloatMinMax);
+         */
+        /*
+        resultNames.push_back("crouch");
+        resultTypes.push_back(ColumnTypes::Boolean);
+        resultNames.push_back("walk");
+        resultTypes.push_back(ColumnTypes::Boolean);
+        resultNames.push_back("scope");
+        resultTypes.push_back(ColumnTypes::Boolean);
+        resultNames.push_back("newly airborne");
+        resultTypes.push_back(ColumnTypes::Boolean);
+         */
     }
+
+    /*
+    enum class LossType {
+        Binary,
+        Float,
+        Categorical
+    };
+
+    map<LossType, string> timeStepActionLossTypes() {
+        map<LossType, string> result;
+        result[LossType::Binary] = {};
+        result[LossType::Float] = {};
+        result[LossType::Categorical] = {};
+        result[LossType::Categorical}]push_back(std::to_string(enumAsInt(LossType::Float)));
+        result.push_back(std::to_string(enumAsInt(LossType::Float)));
+        return result;
+    }
+     */
 
     void timeStepActionOneHotNumCategories(vector<string> & result) {
         //result.push_back(std::to_string(enumAsInt(ActionResult::NUM_ACTION_RESULTS)));
@@ -407,14 +468,19 @@ public:
 
     string getDataLabelRanges() {
         std::stringstream result;
-        vector<string> inputCols, outputCols, inputOneHot, inputOneHotNumCategories, outputOneHot, outputOneHotNumCategories,
-                inputMinMaxScale, outputMinMaxScale;
+        vector<string> inputCols, outputCols, inputOneHotNumCategories, outputOneHotNumCategories;
+        vector<ColumnTypes> inputColTypes, outputColTypes;
 
-        timeStepStateColumns(inputCols);
-        timeStepActionColumns(outputCols);
+        timeStepStateColumns(inputCols, inputColTypes);
+        timeStepActionColumns(outputCols, outputColTypes);
 
-        timeStepStateColumns(inputOneHot, true);
-        timeStepActionColumns(outputOneHot, true);
+        vector<string> inputColTypesStrs, outputColTypesStrs;
+        for (const auto & inputColType : inputColTypes) {
+            inputColTypesStrs.push_back(std::to_string(enumAsInt(inputColType)));
+        }
+        for (const auto & outputColType : outputColTypes) {
+            outputColTypesStrs.push_back(std::to_string(enumAsInt(outputColType)));
+        }
 
         // repeat the below once for each state
         vector<string> equipmentIdListVec;
@@ -427,25 +493,18 @@ public:
         timeStepStateOneHotNumCategories(inputOneHotNumCategories, equipmentIdStr);
         timeStepActionOneHotNumCategories(outputOneHotNumCategories);
 
-        timeStepStateColumns(inputMinMaxScale, false, true);
-        timeStepActionColumns(outputMinMaxScale, false, true);
-
         result << "source player id\n";
         commaSeparateList(result, inputCols);
         result << "\n";
-        commaSeparateList(result, inputOneHot);
+        commaSeparateList(result, inputColTypesStrs);
         result << "\n";
         commaSeparateList(result, inputOneHotNumCategories);
         result << "\n";
-        commaSeparateList(result, inputMinMaxScale);
-        result << "\n";
         commaSeparateList(result, outputCols);
         result << "\n";
-        commaSeparateList(result, outputOneHot);
+        commaSeparateList(result, outputColTypesStrs);
         result << "\n";
         commaSeparateList(result, outputOneHotNumCategories);
-        result << "\n";
-        commaSeparateList(result, outputMinMaxScale);
         return result.str();
     }
 };
