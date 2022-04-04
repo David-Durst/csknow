@@ -1,18 +1,22 @@
 # https://pytorch.org/tutorials/beginner/basics/quickstart_tutorial.html
+import dataclasses
+
 import torch
 from torch import nn
 from torch.utils.data import DataLoader
 import pandas as pd
 import numpy as np
-from sklearn.preprocessing import MinMaxScaler, OneHotEncoder
+from sklearn.preprocessing import MinMaxScaler, OneHotEncoder, RobustScaler
 from sklearn.compose import ColumnTransformer
 from pathlib import Path
 from learn_bot.baseline import *
 from joblib import dump
 from learn_bot.model import NeuralNetwork, NNArgs
 from learn_bot.dataset import BotDataset, BotDatasetArgs
+from dataclasses import dataclass
 
 all_data_df = pd.read_csv(Path(__file__).parent / '..' / 'data' / 'engagement' / 'train_engagement_dataset.csv')
+
 
 # load config
 def get_config_line(i):
@@ -20,6 +24,33 @@ def get_config_line(i):
         return []
     else:
         return config_lines[i].strip().split(',')
+
+
+@dataclass
+class ColumnsByType:
+    boolean_cols: List[str]
+    float_min_max_cols: List[str]
+    float_iqr_cols: List[str]
+    categorical_cols: List[str]
+    bookkeeping_passthrough_cols: List[str]
+
+
+def set_column_types(config_line_num, all_cols, columns_by_type: ColumnsByType):
+    col_types_strs = get_config_line(config_line_num)
+    for col_idx in range(len(col_types_strs)):
+        col_type = int(col_types_strs[col_idx])
+        col_str = all_cols[col_idx]
+        if col_type == 0:
+            columns_by_type.boolean_cols.append(all_cols[col_idx])
+        elif col_type == 1:
+            columns_by_type.float_min_max_cols.append(all_cols[col_idx])
+        elif col_type == 2:
+            columns_by_type.float_iqr_cols.append(all_cols[col_idx])
+        elif col_type == 3:
+            columns_by_type.categorical_cols.append(all_cols[col_idx])
+        else:
+            print(f'''invalid col type {col_types_strs[col_idx]}''')
+
 
 def compute_one_hot_cols_nums(config_row_num):
     result = []
@@ -43,13 +74,13 @@ config_file.close()
 player_id_col = get_config_line(0)[0]
 non_player_id_input_cols = get_config_line(1)
 input_cols = [player_id_col] + non_player_id_input_cols
-input_one_hot_cols = get_config_line(2)
+input_cols_by_type = ColumnsByType([], [], [], [], [player_id_col])
+set_column_types(2, non_player_id_input_cols, input_cols_by_type)
 input_one_hot_cols_nums = compute_one_hot_cols_nums(3)
-input_min_max_cols = get_config_line(4)
-output_cols = get_config_line(5)
-output_one_hot_cols = get_config_line(6)
-output_one_hot_cols_nums = compute_one_hot_cols_nums(7)
-output_min_max_cols = get_config_line(8)
+output_cols = get_config_line(4)
+output_cols_by_type = ColumnsByType([], [], [], [], [])
+set_column_types(5, output_cols, output_cols_by_type)
+output_one_hot_cols_nums = compute_one_hot_cols_nums(6)
 all_data_cols = input_cols + output_cols
 
 # for good embeddings, make sure player indices are from 0 to max-1, makes sure missing ids aren't problem
@@ -79,24 +110,26 @@ def compute_passthrough_cols(all_cols, *non_passthrough_lists):
 # transform concatenates outputs in order provided, so this ensures that source player id comes first
 # as that is only pass through col
 input_transformers = []
-passthrough_input_cols = compute_passthrough_cols(input_cols, input_one_hot_cols, input_min_max_cols)
-if passthrough_input_cols:
-    input_transformers.append(('pass', 'passthrough', passthrough_input_cols))
-if input_one_hot_cols:
-    input_transformers.append(('one-hot', OneHotEncoder(categories=input_one_hot_cols_nums), input_one_hot_cols))
-if input_min_max_cols:
-    input_transformers.append(('zero-to-one', MinMaxScaler(), input_min_max_cols))
-input_ct = ColumnTransformer(transformers=input_transformers, sparse_threshold=0)
-
 output_transformers = []
-passthrough_output_cols = compute_passthrough_cols(output_cols, output_one_hot_cols, output_min_max_cols)
-if passthrough_output_cols:
-    output_transformers.append(('pass', 'passthrough', passthrough_output_cols))
-if output_one_hot_cols:
-    output_transformers.append(('one-hot', OneHotEncoder(categories=output_one_hot_cols_nums), output_one_hot_cols))
-if output_min_max_cols:
-    output_transformers.append(('zero-to-one', MinMaxScaler(), output_min_max_cols))
+
+
+def create_column_transformers(transformers, cols_by_type: ColumnsByType, one_hot_cols_nums):
+    if cols_by_type.boolean_cols or cols_by_type.bookkeeping_passthrough_cols:
+        transformers.append(('pass', 'passthrough', cols_by_type.bookkeeping_passthrough_cols + cols_by_type.boolean_cols))
+    if cols_by_type.categorical_cols:
+        transformers.append(
+            ('one-hot', OneHotEncoder(categories=one_hot_cols_nums), cols_by_type.categorical_cols))
+    if cols_by_type.float_min_max_cols or cols_by_type.float_iqr_cols:
+        transformers.append(('zero-to-one-min-max', MinMaxScaler(), cols_by_type.float_min_max_cols + cols_by_type.float_iqr_cols))
+    #if cols_by_type.float_iqr_cols:
+    #    transformers.append(('zero-to-one-iqr', RobustScaler(), cols_by_type.float_iqr_cols))
+
+
+create_column_transformers(input_transformers, input_cols_by_type, input_one_hot_cols_nums)
+input_ct = ColumnTransformer(transformers=input_transformers, sparse_threshold=0)
+create_column_transformers(output_transformers, output_cols_by_type, output_one_hot_cols_nums)
 output_ct = ColumnTransformer(transformers=output_transformers, sparse_threshold=0)
+
 # remember: fit Y is ignored for this fitting as not SL
 input_ct.fit(all_data_df.loc[:, input_cols])
 output_ct.fit(all_data_df.loc[:, output_cols])
@@ -157,19 +190,19 @@ def compute_loss(pred, y):
     total_loss = 0
     for i in range(len(output_cols)):
         loss_fn = float_loss_fn
-        if output_cols[i] in passthrough_output_cols:
+        if output_cols[i] in output_cols_by_type.boolean_cols:
             loss_fn = binary_loss_fn
-        elif output_cols[i] in output_one_hot_cols:
+        elif output_cols[i] in output_cols_by_type.categorical_cols:
             loss_fn = classification_loss_fn
         total_loss += loss_fn(pred[:, output_ranges[i]], y[:, output_ranges[i]])
     return total_loss
 
 def compute_accuracy(pred, Y, correct):
     for name, r in zip(output_cols, output_ranges):
-        if name in passthrough_output_cols:
+        if name in output_cols_by_type.boolean_cols:
             correct[name] += (torch.le(pred[:, r], 0.5) == torch.le(Y[:, r], 0.5)) \
                 .type(torch.float).sum().item()
-        elif name in output_one_hot_cols:
+        elif name in output_cols_by_type.categorical_cols:
             correct[name] += (pred[:, r].argmax(1) == Y[:, r].argmax(1)) \
                 .type(torch.float).sum().item()
         else:
