@@ -356,22 +356,31 @@ void computeEngagementResults(const Rounds & rounds, const Ticks & ticks, const 
                         static_cast<double>(tickRates.gameTickRate);
                 // know alive next tick as tickToShooterToEngagementIds ends one tick early for each engagement
 
-                int64_t nextPATId = -1;
-                for (int64_t patIndex = ticks.patPerTick[tickIndex + 1].minId;
-                     patIndex != -1 && patIndex <= ticks.patPerTick[tickIndex + 1].maxId; patIndex++) {
-                    if (playerAtTick.playerId[patIndex] == shooter) {
-                        nextPATId = patIndex;
-                        break;
+                vector<int64_t> nextShooterPATIdsFour, nextShooterPATIdsEight;
+                int64_t fourOffset = std::min(4L, rounds.ticksPerRound[roundId].maxId - tickIndex + 1);
+                int64_t eightOffset = std::min(8L, rounds.ticksPerRound[roundId].maxId - tickIndex + 1);
+                for (int64_t tickOffset = 1; tickOffset <= eightOffset; tickOffset++) {
+                    for (int64_t patIndex = ticks.patPerTick[tickIndex + tickOffset].minId;
+                         patIndex != -1 && patIndex <= ticks.patPerTick[tickIndex + tickOffset].maxId; patIndex++) {
+                        if (playerAtTick.playerId[patIndex] == shooter) {
+                            if (tickOffset <= fourOffset) {
+                                nextShooterPATIdsFour.push_back(patIndex);
+                            }
+                            nextShooterPATIdsEight.push_back(patIndex);
+                            break;
+                        }
                     }
                 }
-                if (nextPATId == -1) {
-                    int x = 1;
-                }
-                assert(nextPATId != -1);
+                assert(!nextShooterPATIdsEight.empty());
+                int64_t nextPATId = nextShooterPATIdsEight[0];
                 action.deltaPos = Vec3{playerAtTick.posX[nextPATId], playerAtTick.posY[nextPATId], playerAtTick.posZ[nextPATId]} -
                         Vec3{playerAtTick.posX[shooterPATId], playerAtTick.posY[shooterPATId], playerAtTick.posZ[shooterPATId]};
-                action.deltaView = Vec2{playerAtTick.viewX[nextPATId], playerAtTick.viewY[nextPATId]} -
-                                  Vec2{playerAtTick.viewX[shooterPATId], playerAtTick.viewY[shooterPATId]};
+                action.deltaView = (Vec2{playerAtTick.viewX[nextPATId], playerAtTick.viewY[nextPATId]} -
+                                  Vec2{playerAtTick.viewX[shooterPATId], playerAtTick.viewY[shooterPATId]});
+                action.deltaView4 = (Vec2{playerAtTick.viewX[nextShooterPATIdsFour.back()], playerAtTick.viewY[nextShooterPATIdsFour.back()]} -
+                                    Vec2{playerAtTick.viewX[shooterPATId], playerAtTick.viewY[shooterPATId]}) / nextShooterPATIdsFour.size();
+                action.deltaView8 = (Vec2{playerAtTick.viewX[nextShooterPATIdsEight.back()], playerAtTick.viewY[nextShooterPATIdsEight.back()]} -
+                                    Vec2{playerAtTick.viewX[shooterPATId], playerAtTick.viewY[shooterPATId]}) / nextShooterPATIdsEight.size();
                 action.nextFireTimeSeconds = secondsUntilNextFire;
                 action.crouch = playerAtTick.isCrouching[nextPATId];
                 action.walk = playerAtTick.isWalking[nextPATId];
@@ -379,7 +388,7 @@ void computeEngagementResults(const Rounds & rounds, const Ticks & ticks, const 
                 action.newlyAirborne = playerAtTick.isAirborne[nextPATId] && !playerAtTick.isAirborne[shooterPATId];
                 // filter out time steps with weird, way tooi great view angle changes
                 // remove non-target events for now
-                if (state.target.slotFilled && std::abs(action.deltaView.x) <= 5. && std::abs(action.deltaView.y) <= 5) {
+                if (state.target.slotFilled) { // && std::abs(action.deltaView.x) <= 2. && std::abs(action.deltaView.y) <= 1) {
                     states.push_back(state);
                     actions.push_back(action);
                 }

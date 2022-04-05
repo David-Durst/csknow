@@ -348,6 +348,8 @@ public:
         double secondsUntilEngagementOver;
         Vec3 deltaPos;
         Vec2 deltaView;
+        Vec2 deltaView4;
+        Vec2 deltaView8;
         double nextFireTimeSeconds;
         bool crouch;
         bool walk;
@@ -360,7 +362,9 @@ public:
         result //<< action.secondsUntilEngagementOver //enumAsInt(action.actionResult)
                //<< "," << action.deltaPos.toCSV()
                //<< "," << action.deltaView.toCSV(); /*
-               << action.deltaView.toCSV(); /*
+               << action.deltaView.toCSV()
+               << "," << action.deltaView4.toCSV()
+               << "," << action.deltaView8.toCSV(); /*
                << "," << boolToInt(action.nextFireTimeSeconds)
                << "," << boolToInt(action.crouch)
                << "," << boolToInt(action.walk)
@@ -389,6 +393,14 @@ public:
         resultNames.push_back("delta view x");
         resultTypes.push_back(ColumnTypes::FloatIQR);
         resultNames.push_back("delta view y");
+        resultTypes.push_back(ColumnTypes::FloatIQR);
+        resultNames.push_back("delta view x 4");
+        resultTypes.push_back(ColumnTypes::FloatIQR);
+        resultNames.push_back("delta view y 4");
+        resultTypes.push_back(ColumnTypes::FloatIQR);
+        resultNames.push_back("delta view x 8");
+        resultTypes.push_back(ColumnTypes::FloatIQR);
+        resultNames.push_back("delta view y 8");
         resultTypes.push_back(ColumnTypes::FloatIQR);
         /*
         resultNames.push_back("next fire time seconds");
