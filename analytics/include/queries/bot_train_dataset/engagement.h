@@ -34,7 +34,7 @@ public:
     enum class ColumnTypes {
         Boolean = 0,
         FloatMinMax = 1,
-        FloatIQR = 2,
+        FloatNonLinear = 2,
         Categorical = 3,
     };
 
@@ -263,7 +263,7 @@ public:
         result << "," << step.viewAngleWithVisualRecoil.toCSV();
         result << "," << step.secondsSinceLastFire;
         result << "," << friendlyPlayerStateToCSV(step.shooter);
-        result << "," << enemyPlayerStateToCSV(step.target);
+        //result << "," << enemyPlayerStateToCSV(step.target);
         /*
         for (const auto & friendlyPlayerState : step.friendlyPlayerStates) {
             result << "," << friendlyPlayerStateToCSV(friendlyPlayerState);
@@ -305,7 +305,7 @@ public:
         resultNames.push_back("seconds since last fire");
         resultTypes.push_back(ColumnTypes::FloatMinMax);
         friendlyPlayerStateColumns("shooter", resultNames, resultTypes);
-        enemyPlayerStateColumns("enemy", resultNames, resultTypes);
+        //enemyPlayerStateColumns("enemy", resultNames, resultTypes);
         /*
         for (int i = 0; i < NUM_PLAYERS/2; i++) {
             friendlyPlayerStateColumns("friendly " + std::to_string(i), resultNames, onlyOneHot, onlyMinMaxScale);
@@ -320,7 +320,7 @@ public:
     void timeStepStateOneHotNumCategories(vector<string> & result, string equipmentIdList) {
         result.push_back("\"" + std::to_string(INTERNAL_TEAM_CT) + ";" + std::to_string(INTERNAL_TEAM_T) + "\"");
         friendlyPlayerStateOneHotNumCategories(result, equipmentIdList);
-        enemyPlayerStateOneHotNumCategories(result, equipmentIdList);
+        //enemyPlayerStateOneHotNumCategories(result, equipmentIdList);
         /*
         for (int i = 0; i < NUM_PLAYERS/2; i++) {
             friendlyPlayerStateOneHotNumCategories(result, equipmentIdList);
@@ -347,7 +347,7 @@ public:
         //ActionResult actionResult;
         double secondsUntilEngagementOver;
         Vec3 deltaPos;
-        Vec2 deltaView;
+        Vec2 deltaView1;
         Vec2 deltaView4;
         Vec2 deltaView8;
         double nextFireTimeSeconds;
@@ -361,8 +361,8 @@ public:
         std::stringstream result;
         result //<< action.secondsUntilEngagementOver //enumAsInt(action.actionResult)
                //<< "," << action.deltaPos.toCSV()
-               //<< "," << action.deltaView.toCSV(); /*
-               << action.deltaView.toCSV()
+               //<< "," << action.deltaView1.toCSV(); /*
+               << action.deltaView1.toCSV()
                << "," << action.deltaView4.toCSV()
                << "," << action.deltaView8.toCSV(); /*
                << "," << boolToInt(action.nextFireTimeSeconds)
@@ -384,24 +384,24 @@ public:
         resultNames.push_back("seconds until engagement over");
         resultTypes.push_back(ColumnTypes::FloatMinMax);
         resultNames.push_back("delta pos x");
-        resultTypes.push_back(ColumnTypes::FloatIQR);
+        resultTypes.push_back(ColumnTypes::FloatNonLinear);
         resultNames.push_back("delta pos y");
-        resultTypes.push_back(ColumnTypes::FloatIQR);
+        resultTypes.push_back(ColumnTypes::FloatNonLinear);
         resultNames.push_back("delta pos z");
-        resultTypes.push_back(ColumnTypes::FloatIQR);
+        resultTypes.push_back(ColumnTypes::FloatNonLinear);
          */
-        resultNames.push_back("delta view x");
-        resultTypes.push_back(ColumnTypes::FloatIQR);
-        resultNames.push_back("delta view y");
-        resultTypes.push_back(ColumnTypes::FloatIQR);
+        resultNames.push_back("delta view x 1");
+        resultTypes.push_back(ColumnTypes::FloatNonLinear);
+        resultNames.push_back("delta view y 1");
+        resultTypes.push_back(ColumnTypes::FloatNonLinear);
         resultNames.push_back("delta view x 4");
-        resultTypes.push_back(ColumnTypes::FloatIQR);
+        resultTypes.push_back(ColumnTypes::FloatNonLinear);
         resultNames.push_back("delta view y 4");
-        resultTypes.push_back(ColumnTypes::FloatIQR);
+        resultTypes.push_back(ColumnTypes::FloatNonLinear);
         resultNames.push_back("delta view x 8");
-        resultTypes.push_back(ColumnTypes::FloatIQR);
+        resultTypes.push_back(ColumnTypes::FloatNonLinear);
         resultNames.push_back("delta view y 8");
-        resultTypes.push_back(ColumnTypes::FloatIQR);
+        resultTypes.push_back(ColumnTypes::FloatNonLinear);
         /*
         resultNames.push_back("next fire time seconds");
         resultTypes.push_back(ColumnTypes::FloatMinMax);
