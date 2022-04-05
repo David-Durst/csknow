@@ -136,6 +136,17 @@ output_ct = ColumnTransformer(transformers=output_transformers, sparse_threshold
 input_ct.fit(train_df.loc[:, input_cols])
 output_ct.fit(train_df.loc[:, output_cols])
 
+fig, axs = plt.subplots(3,2)
+transformed_output = pd.DataFrame(output_ct.transform(all_data_df.loc[:, output_cols]), columns=output_cols)
+transformed_output.hist('delta view x 1', ax=axs[0,0], bins=100)
+transformed_output.hist('delta view y 1', ax=axs[0,1], bins=100)
+transformed_output.hist('delta view x 4', ax=axs[1,0], bins=100)
+transformed_output.hist('delta view y 4', ax=axs[1,1], bins=100)
+transformed_output.hist('delta view x 8', ax=axs[2,0], bins=100)
+transformed_output.hist('delta view y 8', ax=axs[2,1], bins=100)
+plt.tight_layout()
+plt.show()
+
 def get_name_range(name: str) -> slice:
     name_indices = [i for i, col_name in enumerate(output_ct.get_feature_names_out()) if name in col_name]
     if name_indices:
