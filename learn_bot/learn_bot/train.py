@@ -6,7 +6,7 @@ from torch import nn
 from torch.utils.data import DataLoader
 import pandas as pd
 import numpy as np
-from sklearn.preprocessing import MinMaxScaler, OneHotEncoder, RobustScaler
+from sklearn.preprocessing import MinMaxScaler, OneHotEncoder, PowerTransformer, QuantileTransformer
 from sklearn.compose import ColumnTransformer
 from pathlib import Path
 from learn_bot.baseline import *
@@ -14,6 +14,7 @@ from joblib import dump
 from learn_bot.model import NeuralNetwork, NNArgs
 from learn_bot.dataset import BotDataset, BotDatasetArgs
 from dataclasses import dataclass
+import matplotlib.pyplot as plt
 
 all_data_df = pd.read_csv(Path(__file__).parent / '..' / 'data' / 'engagement' / 'train_engagement_dataset.csv')
 
@@ -30,7 +31,7 @@ def get_config_line(i):
 class ColumnsByType:
     boolean_cols: List[str]
     float_min_max_cols: List[str]
-    float_iqr_cols: List[str]
+    float_non_linear_cols: List[str]
     categorical_cols: List[str]
     bookkeeping_passthrough_cols: List[str]
 
@@ -45,7 +46,7 @@ def set_column_types(config_line_num, all_cols, columns_by_type: ColumnsByType):
         elif col_type == 1:
             columns_by_type.float_min_max_cols.append(all_cols[col_idx])
         elif col_type == 2:
-            columns_by_type.float_iqr_cols.append(all_cols[col_idx])
+            columns_by_type.float_non_linear_cols.append(all_cols[col_idx])
         elif col_type == 3:
             columns_by_type.categorical_cols.append(all_cols[col_idx])
         else:
@@ -113,16 +114,17 @@ input_transformers = []
 output_transformers = []
 
 
+# https://scikit-learn.org/stable/auto_examples/preprocessing/plot_all_scaling.html
 def create_column_transformers(transformers, cols_by_type: ColumnsByType, one_hot_cols_nums):
     if cols_by_type.boolean_cols or cols_by_type.bookkeeping_passthrough_cols:
         transformers.append(('pass', 'passthrough', cols_by_type.bookkeeping_passthrough_cols + cols_by_type.boolean_cols))
     if cols_by_type.categorical_cols:
         transformers.append(
             ('one-hot', OneHotEncoder(categories=one_hot_cols_nums), cols_by_type.categorical_cols))
-    if cols_by_type.float_min_max_cols or cols_by_type.float_iqr_cols:
-        transformers.append(('zero-to-one-min-max', MinMaxScaler(), cols_by_type.float_min_max_cols + cols_by_type.float_iqr_cols))
-    #if cols_by_type.float_iqr_cols:
-    #    transformers.append(('zero-to-one-iqr', RobustScaler(), cols_by_type.float_iqr_cols))
+    if cols_by_type.float_min_max_cols:
+        transformers.append(('zero-to-one-min-max', MinMaxScaler(), cols_by_type.float_min_max_cols))
+    if cols_by_type.float_non_linear_cols:
+        transformers.append(('zero-to-one-non-linear', QuantileTransformer(output_distribution='normal'), cols_by_type.float_non_linear_cols))
 
 
 create_column_transformers(input_transformers, input_cols_by_type, input_one_hot_cols_nums)
@@ -131,8 +133,8 @@ create_column_transformers(output_transformers, output_cols_by_type, output_one_
 output_ct = ColumnTransformer(transformers=output_transformers, sparse_threshold=0)
 
 # remember: fit Y is ignored for this fitting as not SL
-input_ct.fit(all_data_df.loc[:, input_cols])
-output_ct.fit(all_data_df.loc[:, output_cols])
+input_ct.fit(train_df.loc[:, input_cols])
+output_ct.fit(train_df.loc[:, output_cols])
 
 def get_name_range(name: str) -> slice:
     name_indices = [i for i, col_name in enumerate(output_ct.get_feature_names_out()) if name in col_name]
