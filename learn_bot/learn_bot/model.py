@@ -15,7 +15,7 @@ class NNArgs:
     output_ranges: List[range]
 
 class NeuralNetwork(nn.Module):
-    internal_width = 256
+    internal_width = 1024
     args: NNArgs
 
     def __init__(self, args):
