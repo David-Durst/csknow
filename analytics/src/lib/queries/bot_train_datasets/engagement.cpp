@@ -106,57 +106,48 @@ computeEngagementsPerRound(const Rounds & rounds, const Ticks & ticks, const Pla
                 }
             }
 
-            // if shot but didn't hit anyone, only start/continue engagement is no active engagement with a target
-            if (engagementHurtIds.empty()) {
-                // if no engagements, then add a new one, no target to check
-                if (activeEngagementIds[shooterPlayerId].empty()) {
-                    activeEngagementIds[shooterPlayerId][INVALID_ID].startTickId = tickIndex -
-                            getLookbackDemoTick(rounds, ticks, playerAtTick, tickIndex, tickRates, RADIUS_GAME_TICKS, 1000);
-                    activeEngagementIds[shooterPlayerId][INVALID_ID].endTickId = tickIndex +
-                            getLookforwardDemoTick(rounds, ticks, playerAtTick, tickIndex, tickRates, RADIUS_GAME_TICKS, 1000);
-                    activeEngagementIds[shooterPlayerId][INVALID_ID].firstHurtTick = INVALID_ID;
-                    activeEngagementIds[shooterPlayerId][INVALID_ID].lastHurtTick = INVALID_ID;
-                    activeEngagementIds[shooterPlayerId][INVALID_ID].shooterId = shooterPlayerId;
-                    activeEngagementIds[shooterPlayerId][INVALID_ID].targetId = INVALID_ID;
-                    activeEngagementIds[shooterPlayerId][INVALID_ID].numHits = 0;
-                }
-                // else if have engagements, if only one without a target, then extend it
-                else if (activeEngagementIds[shooterPlayerId].size() == 1 &&
-                         activeEngagementIds[shooterPlayerId].find(INVALID_ID) != activeEngagementIds[shooterPlayerId].end()){
-                    activeEngagementIds[shooterPlayerId][INVALID_ID].endTickId = tickIndex +
-                            getLookforwardDemoTick(rounds, ticks, playerAtTick, tickIndex, tickRates, RADIUS_GAME_TICKS, 1000);
-                    activeEngagementIds[shooterPlayerId][INVALID_ID].lastHurtTick = tickIndex;
-                }
+            // always track when shooting for a no-target engagement
+            // if no engagements, then add a new one, no target to check
+            if (activeEngagementIds[shooterPlayerId].empty()) {
+                activeEngagementIds[shooterPlayerId][INVALID_ID].startTickId = tickIndex -
+                        getLookbackDemoTick(rounds, ticks, playerAtTick, tickIndex, tickRates, RADIUS_GAME_TICKS, 1000);
+                activeEngagementIds[shooterPlayerId][INVALID_ID].endTickId = tickIndex +
+                        getLookforwardDemoTick(rounds, ticks, playerAtTick, tickIndex, tickRates, RADIUS_GAME_TICKS, 1000);
+                activeEngagementIds[shooterPlayerId][INVALID_ID].firstHurtTick = INVALID_ID;
+                activeEngagementIds[shooterPlayerId][INVALID_ID].lastHurtTick = INVALID_ID;
+                activeEngagementIds[shooterPlayerId][INVALID_ID].shooterId = shooterPlayerId;
+                activeEngagementIds[shooterPlayerId][INVALID_ID].targetId = INVALID_ID;
+                activeEngagementIds[shooterPlayerId][INVALID_ID].numHits = 0;
+            }
+            // else if have engagements, if only one without a target, then extend it
+            else if (activeEngagementIds[shooterPlayerId].size() == 1 &&
+                     activeEngagementIds[shooterPlayerId].find(INVALID_ID) != activeEngagementIds[shooterPlayerId].end()){
+                activeEngagementIds[shooterPlayerId][INVALID_ID].endTickId = tickIndex +
+                        getLookforwardDemoTick(rounds, ticks, playerAtTick, tickIndex, tickRates, RADIUS_GAME_TICKS, 1000);
+                activeEngagementIds[shooterPlayerId][INVALID_ID].lastHurtTick = tickIndex;
             }
             // if shot someone, then start/continue those engagements
-            else {
-                for (size_t i = 0; i < engagementHurtIds.size(); i++) {
-                    int64_t targetId = engagementTargetIds[i];
-                    int64_t newStartTickId = tickIndex -
-                            getLookbackDemoTick(rounds, ticks, playerAtTick, tickIndex, tickRates, RADIUS_GAME_TICKS, 1000);
-                    int64_t newEndTickId = tickIndex +
-                            getLookforwardDemoTick(rounds, ticks, playerAtTick, tickIndex, tickRates, RADIUS_GAME_TICKS, 1000);
-                    // if existing engagement with no target, remove it as replaced with engagement with target
-                    if (activeEngagementIds[shooterPlayerId].find(INVALID_ID) == activeEngagementIds[shooterPlayerId].end()) {
-                        activeEngagementIds[shooterPlayerId].erase(INVALID_ID);
-                    }
-
-                    // new engagement
-                    if (activeEngagementIds[shooterPlayerId].find(targetId) == activeEngagementIds[shooterPlayerId].end()) {
-                        activeEngagementIds[shooterPlayerId][targetId].startTickId = newStartTickId;
-                        activeEngagementIds[shooterPlayerId][targetId].endTickId = newEndTickId;
-                        activeEngagementIds[shooterPlayerId][targetId].firstHurtTick = tickIndex;
-                        activeEngagementIds[shooterPlayerId][targetId].lastHurtTick = tickIndex;
-                        activeEngagementIds[shooterPlayerId][targetId].shooterId = shooterPlayerId;
-                        activeEngagementIds[shooterPlayerId][targetId].targetId = targetId;
-                        activeEngagementIds[shooterPlayerId][targetId].numHits = 1;
-                    }
-                    // continuing old engagement
-                    else {
-                        activeEngagementIds[shooterPlayerId][targetId].endTickId = newEndTickId;
-                        activeEngagementIds[shooterPlayerId][targetId].lastHurtTick = tickIndex;
-                        activeEngagementIds[shooterPlayerId][targetId].numHits++;
-                    }
+            for (size_t i = 0; i < engagementHurtIds.size(); i++) {
+                int64_t targetId = engagementTargetIds[i];
+                int64_t newStartTickId = tickIndex -
+                        getLookbackDemoTick(rounds, ticks, playerAtTick, tickIndex, tickRates, RADIUS_GAME_TICKS, 1000);
+                int64_t newEndTickId = tickIndex +
+                        getLookforwardDemoTick(rounds, ticks, playerAtTick, tickIndex, tickRates, RADIUS_GAME_TICKS, 1000);
+                // new engagement
+                if (activeEngagementIds[shooterPlayerId].find(targetId) == activeEngagementIds[shooterPlayerId].end()) {
+                    activeEngagementIds[shooterPlayerId][targetId].startTickId = newStartTickId;
+                    activeEngagementIds[shooterPlayerId][targetId].endTickId = newEndTickId;
+                    activeEngagementIds[shooterPlayerId][targetId].firstHurtTick = tickIndex;
+                    activeEngagementIds[shooterPlayerId][targetId].lastHurtTick = tickIndex;
+                    activeEngagementIds[shooterPlayerId][targetId].shooterId = shooterPlayerId;
+                    activeEngagementIds[shooterPlayerId][targetId].targetId = targetId;
+                    activeEngagementIds[shooterPlayerId][targetId].numHits = 1;
+                }
+                // continuing old engagement
+                else {
+                    activeEngagementIds[shooterPlayerId][targetId].endTickId = newEndTickId;
+                    activeEngagementIds[shooterPlayerId][targetId].lastHurtTick = tickIndex;
+                    activeEngagementIds[shooterPlayerId][targetId].numHits++;
                 }
             }
         }
@@ -388,10 +379,10 @@ void computeEngagementResults(const Rounds & rounds, const Ticks & ticks, const 
                 action.newlyAirborne = playerAtTick.isAirborne[nextPATId] && !playerAtTick.isAirborne[shooterPATId];
                 // filter out time steps with weird, way tooi great view angle changes
                 // remove non-target events for now
-                if (state.target.slotFilled) { // && std::abs(action.deltaView.x) <= 2. && std::abs(action.deltaView.y) <= 1) {
+                //if (state.target.slotFilled) { // && std::abs(action.deltaView.x) <= 2. && std::abs(action.deltaView.y) <= 1) {
                     states.push_back(state);
                     actions.push_back(action);
-                }
+                //}
             }
         }
     }
