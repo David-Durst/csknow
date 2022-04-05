@@ -366,8 +366,8 @@ void computeEngagementResults(const Rounds & rounds, const Ticks & ticks, const 
                 int64_t nextPATId = nextShooterPATIdsEight[0];
                 action.deltaPos = Vec3{playerAtTick.posX[nextPATId], playerAtTick.posY[nextPATId], playerAtTick.posZ[nextPATId]} -
                         Vec3{playerAtTick.posX[shooterPATId], playerAtTick.posY[shooterPATId], playerAtTick.posZ[shooterPATId]};
-                action.deltaView = (Vec2{playerAtTick.viewX[nextPATId], playerAtTick.viewY[nextPATId]} -
-                                  Vec2{playerAtTick.viewX[shooterPATId], playerAtTick.viewY[shooterPATId]});
+                action.deltaView1 = (Vec2{playerAtTick.viewX[nextPATId], playerAtTick.viewY[nextPATId]} -
+                                     Vec2{playerAtTick.viewX[shooterPATId], playerAtTick.viewY[shooterPATId]});
                 action.deltaView4 = (Vec2{playerAtTick.viewX[nextShooterPATIdsFour.back()], playerAtTick.viewY[nextShooterPATIdsFour.back()]} -
                                     Vec2{playerAtTick.viewX[shooterPATId], playerAtTick.viewY[shooterPATId]}) / nextShooterPATIdsFour.size();
                 action.deltaView8 = (Vec2{playerAtTick.viewX[nextShooterPATIdsEight.back()], playerAtTick.viewY[nextShooterPATIdsEight.back()]} -
@@ -379,7 +379,7 @@ void computeEngagementResults(const Rounds & rounds, const Ticks & ticks, const 
                 action.newlyAirborne = playerAtTick.isAirborne[nextPATId] && !playerAtTick.isAirborne[shooterPATId];
                 // filter out time steps with weird, way tooi great view angle changes
                 // remove non-target events for now
-                //if (state.target.slotFilled) { // && std::abs(action.deltaView.x) <= 2. && std::abs(action.deltaView.y) <= 1) {
+                //if (state.target.slotFilled) { // && std::abs(action.deltaView1.x) <= 2. && std::abs(action.deltaView1.y) <= 1) {
                     states.push_back(state);
                     actions.push_back(action);
                 //}
