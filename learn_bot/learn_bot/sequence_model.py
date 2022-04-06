@@ -33,12 +33,6 @@ class SequenceNeuralNetwork(nn.Module):
             output_layers.append(nn.Linear(self.internal_width, len(output_range)))
         self.output_layers = nn.ModuleList(output_layers)
         #self.moveSigmoid = nn.Sigmoid()
-        self.hn = None
-        self.cn = None
-
-    def reset_state(self):
-        self.hn = None
-        self.cn = None
 
     def forward(self, x, lens):
         inner_most_dimension_idx = len(x.shape) - 1
@@ -48,10 +42,8 @@ class SequenceNeuralNetwork(nn.Module):
         x_all = torch.cat((embeds, x_vals), 2)
 
         x_packed = pack_padded_sequence(x_all, lens, batch_first=True, enforce_sorted=False)
-        if self.hn is not None:
-            logits_packed, (self.hn, self.cn) = self.inner_model(x_packed, (self.hn, self.cn))
-        else:
-            logits_packed, (self.hn, self.cn) = self.inner_model(x_packed)
+        # ignore inner state since doing complete sequence each time
+        logits_packed, _ = self.inner_model(x_packed)
         # ignoring output seqs since already have those from lens
         logits, _ = pad_packed_sequence(logits_packed, batch_first=True)
 

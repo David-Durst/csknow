@@ -243,19 +243,19 @@ def compute_loss(pred, y):
             loss_fn = binary_loss_fn
         elif output_cols[i] in output_cols_by_type.categorical_cols:
             loss_fn = classification_loss_fn
-        total_loss += loss_fn(pred[:, output_ranges[i]], y[:, output_ranges[i]])
+        total_loss += loss_fn(pred[:, :, output_ranges[i]], y[:, :, output_ranges[i]])
     return total_loss
 
 def compute_accuracy(pred, Y, correct):
     for name, r in zip(output_cols, output_ranges):
         if name in output_cols_by_type.boolean_cols:
-            correct[name] += (torch.le(pred[:, r], 0.5) == torch.le(Y[:, r], 0.5)) \
+            correct[name] += (torch.le(pred[:, :, r], 0.5) == torch.le(Y[:, :, r], 0.5)) \
                 .type(torch.float).sum().item()
         elif name in output_cols_by_type.categorical_cols:
-            correct[name] += (pred[:, r].argmax(1) == Y[:, r].argmax(1)) \
+            correct[name] += (pred[:, :, r].argmax(1) == Y[:, :, r].argmax(1)) \
                 .type(torch.float).sum().item()
         else:
-            correct[name] += torch.square(pred[:, r] -  Y[:, r]).sum().item()
+            correct[name] += torch.square(pred[:, :, r] -  Y[:, :, r]).sum().item()
 
 first_batch = True
 def train_or_test(dataloader, model, optimizer, train = True):
