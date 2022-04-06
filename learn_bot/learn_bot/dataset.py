@@ -1,8 +1,9 @@
+import pandas as pd
 import torch
 from torch.utils.data import Dataset
 from sklearn.compose import ColumnTransformer
 from dataclasses import dataclass
-from typing import List
+from typing import List, Optional
 
 
 @dataclass(frozen=True)
@@ -11,6 +12,7 @@ class BotDatasetArgs:
     output_ct: ColumnTransformer
     input_cols: List[str]
     output_cols: List[str]
+    sequence_map: Optional[pd.DataFrame]
 
 
 # https://androidkt.com/load-pandas-dataframe-using-dataset-and-dataloader-in-pytorch/
@@ -29,8 +31,17 @@ class BotDataset(Dataset):
         self.X = torch.tensor(args.input_ct.transform(df.loc[:, args.input_cols])).float()
         self.Y = torch.tensor(args.output_ct.transform(df.loc[:, args.output_cols])).float()
 
+        self.sequence_map = args.sequence_map
+
     def __len__(self):
-        return len(self.id)
+        if self.sequence_map is None:
+            return len(self.id)
+        else:
+            return len(self.sequence_map)
 
     def __getitem__(self, idx):
-        return self.X[idx], self.Y[idx]
+        if self.sequence_map is None:
+            return self.X[idx], self.Y[idx]
+        else:
+            s = slice(self.sequence_map.loc[idx, 'Min'], self.sequence_map.loc[idx, 'Max'] + 1)
+            return self.X[s], self.Y[s]

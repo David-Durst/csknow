@@ -4,6 +4,7 @@ import dataclasses
 import torch
 from torch import nn
 from torch.utils.data import DataLoader
+from torch.nn.utils.rnn import pack_sequence, pad_sequence, pad_packed_sequence, pack_padded_sequence
 import pandas as pd
 import numpy as np
 from sklearn.preprocessing import MinMaxScaler, OneHotEncoder, PowerTransformer, QuantileTransformer
@@ -98,8 +99,29 @@ per_round_df = all_data_df.groupby(['round id']).count()
 random_sum_rounds_df = per_round_df.sample(frac=1).cumsum()
 top_80_pct_rounds = random_sum_rounds_df[random_sum_rounds_df['id'] < 0.8 * len(all_data_df)].index.to_list()
 all_data_df_split_predicate = all_data_df['round id'].isin(top_80_pct_rounds)
-train_df = all_data_df[all_data_df_split_predicate]
-test_df = all_data_df[~all_data_df_split_predicate]
+train_df = all_data_df[all_data_df_split_predicate].copy()
+test_df = all_data_df[~all_data_df_split_predicate].copy()
+
+
+# return is a mapping from sequence
+def organize_into_sequences(df):
+    df.sort_values(['round id', 'source player id', 'tick id'], inplace=True)
+    df.loc[:, 'prior round id'] = df.loc[:, 'round id'].shift(1, fill_value=-1)
+    df.loc[:, 'prior source player id'] = df['source player id'].shift(1, fill_value=-1)
+    df.loc[:, 'prior tick id'] = df['tick id'].shift(1, fill_value=-1)
+    df.loc[:, 'new sequence'] = ((df['prior round id'] != df['round id']) |
+        (df['prior source player id'] != df['source player id']) |
+        (df['prior tick id'] + 1 != df['tick id'])).astype(int)
+    # subtract 1 so first sequence is index 0
+    df.loc[:, 'sequence number'] = df['new sequence'].cumsum() - 1
+    df.reset_index(inplace=True)
+    df.loc[:, 'index'] = df.index
+
+    return df.groupby('sequence number').agg(Min=('index', 'min'), Max=('index','max'));
+
+
+train_sequence_to_elements_df = organize_into_sequences(train_df)
+test_sequence_to_elements_df = organize_into_sequences(test_df)
 
 
 def compute_passthrough_cols(all_cols, *non_passthrough_lists):
@@ -156,23 +178,40 @@ def get_name_range(name: str) -> slice:
 output_ranges = [get_name_range(name) for name in output_cols]
 
 
-dataset_args = BotDatasetArgs(input_ct, output_ct, input_cols, output_cols)
-training_data = BotDataset(train_df, dataset_args)
-test_data = BotDataset(test_df, dataset_args)
+train_dataset_args = BotDatasetArgs(input_ct, output_ct, input_cols, output_cols, train_sequence_to_elements_df)
+training_data = BotDataset(train_df, train_dataset_args)
+test_dataset_args = BotDatasetArgs(input_ct, output_ct, input_cols, output_cols, test_sequence_to_elements_df)
+test_data = BotDataset(test_df, test_dataset_args)
 
 batch_size = 64
 
-train_dataloader = DataLoader(training_data, batch_size=batch_size, shuffle=True)
-test_dataloader = DataLoader(test_data, batch_size=batch_size, shuffle=True)
 
-for X, Y in train_dataloader:
+def pad_collator(batch):
+    # https://discuss.pytorch.org/t/why-lengths-should-be-given-in-sorted-order-in-pack-padded-sequence/3540
+    # not relevant - https://github.com/pytorch/pytorch/issues/23079
+    input_X, input_Y = zip(*batch)
+    lens = [len(x) for x in input_X]
+    X_padded = pad_sequence(input_X, batch_first=True)
+    Y_padded = pad_sequence(input_Y, batch_first=True)
+    return X_padded, Y_padded, lens
+
+
+train_dataloader = DataLoader(training_data, batch_size=batch_size, shuffle=True, collate_fn=pad_collator)
+test_dataloader = DataLoader(test_data, batch_size=batch_size, shuffle=True, collate_fn=pad_collator)
+
+for z in train_dataloader:
+    dude = 1
+
+for X, Y, lens in train_dataloader:
     print(f"Train shape of X: {X.shape} {X.dtype}")
     print(f"Train shape of Y: {Y.shape} {Y.dtype}")
+    print(f"Train lengths: {lens}")
     break
 
-for X, Y in test_dataloader:
+for X, Y, lens in test_dataloader:
     print(f"Test shape of X: {X.shape} {X.dtype}")
     print(f"Test shape of Y: {Y.shape} {Y.dtype}")
+    print(f"Test lengths: {lens}")
     break
 
 #baseline_model = BaselineBotModel(training_data.X, training_data.Y, output_names, output_ranges)
@@ -184,7 +223,7 @@ print(f"Using {device} device")
 
 # Define model
 embedding_dim = 5
-nn_args = NNArgs(player_id_to_ix, embedding_dim, input_ct, output_ct, output_cols, output_ranges)
+nn_args = NNArgs(player_id_to_ix, embedding_dim, input_ct, output_ct, output_cols, output_ranges, True)
 model = NeuralNetwork(nn_args).to(device)
 print(model)
 params = list(model.parameters())
@@ -234,7 +273,7 @@ def train_or_test(dataloader, model, optimizer, train = True):
     correct = {}
     for name in output_cols:
         correct[name] = 0
-    for batch, (X, Y) in enumerate(dataloader):
+    for batch, (X, Y, lens) in enumerate(dataloader):
         if first_batch and train:
             first_batch = False
             print(X.cpu().tolist())
@@ -276,7 +315,7 @@ for t in range(epochs):
     train_or_test(train_dataloader, model, optimizer, True)
     train_or_test(train_dataloader, model, None, False)
 
-dump(dataset_args, Path(__file__).parent / '..' / 'model' / 'dataset_args.joblib')
+dump(train_dataset_args, Path(__file__).parent / '..' / 'model' / 'dataset_args.joblib')
 dump(nn_args, Path(__file__).parent / '..' / 'model' / 'nn_args.joblib')
 torch.save(model.state_dict(), Path(__file__).parent / '..' / 'model' / 'model.pt')
 
