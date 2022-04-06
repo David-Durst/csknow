@@ -41,19 +41,21 @@ class SequenceNeuralNetwork(nn.Module):
         self.cn = None
 
     def forward(self, x, lens):
-        idx, x_vals = x.split([1, x.shape[1] - 1], dim=1)
+        inner_most_dimension_idx = len(x.shape) - 1
+        idx, x_vals = x.split([1, x.shape[inner_most_dimension_idx] - 1], dim=inner_most_dimension_idx)
         idx_long = idx.long()
-        embeds = self.embeddings(idx_long).view((-1, self.args.embedding_dim))
-        x_all = torch.cat((embeds, x_vals), 1)
+        embeds = self.embeddings(idx_long).view((idx.shape[0], idx.shape[1], self.args.embedding_dim))
+        x_all = torch.cat((embeds, x_vals), 2)
 
         x_packed = pack_padded_sequence(x_all, lens, batch_first=True, enforce_sorted=False)
         if self.hn is not None:
             logits_packed, (self.hn, self.cn) = self.inner_model(x_packed, (self.hn, self.cn))
         else:
             logits_packed, (self.hn, self.cn) = self.inner_model(x_packed)
-        logits = pad_packed_sequence(logits_packed, batch_first=True)
+        # ignoring output seqs since already have those from lens
+        logits, _ = pad_packed_sequence(logits_packed, batch_first=True)
 
         outputs = []
         for output_layer in self.output_layers:
             outputs.append(output_layer(logits))
-        return torch.cat(outputs, dim=1)
+        return torch.cat(outputs, dim=2)

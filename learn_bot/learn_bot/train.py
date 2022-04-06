@@ -12,7 +12,7 @@ from sklearn.compose import ColumnTransformer
 from pathlib import Path
 from learn_bot.baseline import *
 from joblib import dump
-from learn_bot.model import NeuralNetwork, NNArgs
+from learn_bot.sequence_model import SequenceNeuralNetwork, SNNArgs
 from learn_bot.dataset import BotDataset, BotDatasetArgs
 from dataclasses import dataclass
 import matplotlib.pyplot as plt
@@ -199,9 +199,6 @@ def pad_collator(batch):
 train_dataloader = DataLoader(training_data, batch_size=batch_size, shuffle=True, collate_fn=pad_collator)
 test_dataloader = DataLoader(test_data, batch_size=batch_size, shuffle=True, collate_fn=pad_collator)
 
-for z in train_dataloader:
-    dude = 1
-
 for X, Y, lens in train_dataloader:
     print(f"Train shape of X: {X.shape} {X.dtype}")
     print(f"Train shape of Y: {Y.shape} {Y.dtype}")
@@ -223,8 +220,8 @@ print(f"Using {device} device")
 
 # Define model
 embedding_dim = 5
-nn_args = NNArgs(player_id_to_ix, embedding_dim, input_ct, output_ct, output_cols, output_ranges, True)
-model = NeuralNetwork(nn_args).to(device)
+nn_args = SNNArgs(player_id_to_ix, embedding_dim, input_ct, output_ct, output_cols, output_ranges)
+model = SequenceNeuralNetwork(nn_args).to(device)
 print(model)
 params = list(model.parameters())
 print("params by layer")
@@ -274,17 +271,18 @@ def train_or_test(dataloader, model, optimizer, train = True):
     for name in output_cols:
         correct[name] = 0
     for batch, (X, Y, lens) in enumerate(dataloader):
-        if first_batch and train:
-            first_batch = False
-            print(X.cpu().tolist())
-            print(Y.cpu().tolist())
+        # row too big to explore by printing
+        #if first_batch and train:
+        #    first_batch = False
+        #    print(X.cpu().tolist())
+        #    print(Y.cpu().tolist())
         X, Y = X.to(device), Y.to(device)
         #XR = torch.randn_like(X, device=device)
         #XR[:,0] = X[:,0]
         #YZ = torch.zeros_like(Y) + 0.1
 
         # Compute prediction error
-        pred = model(X)
+        pred = model(X, lens)
         batch_loss = compute_loss(pred, Y)
         cumulative_loss += batch_loss
 

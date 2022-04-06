@@ -23,48 +23,29 @@ class NeuralNetwork(nn.Module):
         self.args = args
         self.embeddings = nn.Embedding(len(args.player_id_to_ix), args.embedding_dim)
 
-        if args.recurrent:
-            self.inner_model = nn.LSTM(args.embedding_dim + args.input_ct.get_feature_names_out().size - 1,
-                                       self.internal_width,
-                                       3, batch_first=True, dropout=0.5)
-        else:
-            self.inner_model = nn.Sequential(
-                nn.Linear(args.embedding_dim + args.input_ct.get_feature_names_out().size - 1, self.internal_width),
-                nn.ReLU(),
-                nn.Linear(self.internal_width, self.internal_width),
-                nn.ReLU(),
-                nn.Linear(self.internal_width, self.internal_width),
-                nn.ReLU(),
-                nn.Linear(self.internal_width, self.internal_width),
-                nn.ReLU(),
-            )
+        self.inner_model = nn.Sequential(
+            nn.Linear(args.embedding_dim + args.input_ct.get_feature_names_out().size - 1, self.internal_width),
+            nn.ReLU(),
+            nn.Linear(self.internal_width, self.internal_width),
+            nn.ReLU(),
+            nn.Linear(self.internal_width, self.internal_width),
+            nn.ReLU(),
+            nn.Linear(self.internal_width, self.internal_width),
+            nn.ReLU(),
+        )
 
         output_layers = []
         for output_range in args.output_ranges:
             output_layers.append(nn.Linear(self.internal_width, len(output_range)))
         self.output_layers = nn.ModuleList(output_layers)
         #self.moveSigmoid = nn.Sigmoid()
-        self.hn = None
-        self.cn = None
-
-    def reset_state(self):
-        self.hn = None
-        self.cn = None
 
     def forward(self, x):
         idx, x_vals = x.split([1, x.shape[1] - 1], dim=1)
         idx_long = idx.long()
         embeds = self.embeddings(idx_long).view((-1, self.args.embedding_dim))
         x_all = torch.cat((embeds, x_vals), 1)
-
-        if self.args.recurrent:
-            if self.hn is not None:
-                logits, (self.hn, self.cn) = self.inner_model(x_all, (self.hn, self.cn))
-            else:
-                logits, (self.hn, self.cn) = self.inner_model(x_all)
-        else:
-            logits = self.inner_model(x_all)
-
+        logits = self.inner_model(x_all)
         outputs = []
         for output_layer in self.output_layers:
             outputs.append(output_layer(logits))
