@@ -26,7 +26,7 @@ class SequenceNeuralNetwork(nn.Module):
 
         self.inner_model = nn.LSTM(args.embedding_dim + args.input_ct.get_feature_names_out().size - 1,
                                    self.internal_width,
-                                   3, batch_first=True, dropout=0.5)
+                                   2, batch_first=True, dropout=0.5)
 
         output_layers = []
         for output_range in args.output_ranges:
