@@ -16,7 +16,7 @@ class SNNArgs:
     output_ranges: List[range]
 
 class SequenceNeuralNetwork(nn.Module):
-    internal_width = 64
+    internal_width = 128
     args: SNNArgs
 
     def __init__(self, args: SNNArgs):

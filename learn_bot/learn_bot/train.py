@@ -315,7 +315,7 @@ def train_or_test(dataloader, model, optimizer, train = True):
             #print(pred[0:2])
             #print('y')
             #print(Y[0:2])
-            print(f"loss: {loss:>7f}  [{current:>5d}/{size:>5d}]")
+            print(f"loss: {loss:>7f}  [{current:>5d}/{len(dataloader.dataset):>5d}]")
 
         compute_accuracy(pred, Y, lens, correct)
     cumulative_loss /= num_batches
