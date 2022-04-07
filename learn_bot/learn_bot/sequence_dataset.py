@@ -37,7 +37,7 @@ class SequenceBotDataset(Dataset):
         return len(self.sequence_map)
 
     def num_elements(self):
-        return len(self.sequence_map)
+        return len(self.X)
 
     def __getitem__(self, idx):
         s = slice(self.sequence_map.loc[idx, 'Min'], self.sequence_map.loc[idx, 'Max'] + 1)
