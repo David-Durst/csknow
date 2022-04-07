@@ -16,7 +16,7 @@ class SNNArgs:
     output_ranges: List[range]
 
 class SequenceNeuralNetwork(nn.Module):
-    internal_width = 1024
+    internal_width = 64
     args: SNNArgs
 
     def __init__(self, args: SNNArgs):
@@ -26,7 +26,7 @@ class SequenceNeuralNetwork(nn.Module):
 
         self.inner_model = nn.LSTM(args.embedding_dim + args.input_ct.get_feature_names_out().size - 1,
                                    self.internal_width,
-                                   2, batch_first=True, dropout=0.5)
+                                   5, batch_first=True, dropout=0.2)
 
         output_layers = []
         for output_range in args.output_ranges:

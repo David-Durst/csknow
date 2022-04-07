@@ -13,7 +13,7 @@ from pathlib import Path
 from learn_bot.baseline import *
 from joblib import dump
 from learn_bot.sequence_model import SequenceNeuralNetwork, SNNArgs
-from learn_bot.dataset import BotDataset, BotDatasetArgs
+from learn_bot.sequence_dataset import SequenceBotDatasetArgs, SequenceBotDataset
 from dataclasses import dataclass
 import matplotlib.pyplot as plt
 
@@ -190,12 +190,12 @@ def get_name_range(name: str) -> slice:
 output_ranges = [get_name_range(name) for name in output_cols]
 
 
-train_dataset_args = BotDatasetArgs(input_ct, output_ct, input_cols, output_cols, train_sequence_to_elements_df)
-training_data = BotDataset(train_df, train_dataset_args)
-test_dataset_args = BotDatasetArgs(input_ct, output_ct, input_cols, output_cols, test_sequence_to_elements_df)
-test_data = BotDataset(test_df, test_dataset_args)
+train_dataset_args = SequenceBotDatasetArgs(input_ct, output_ct, input_cols, output_cols, train_sequence_to_elements_df)
+training_data = SequenceBotDataset(train_df, train_dataset_args)
+test_dataset_args = SequenceBotDatasetArgs(input_ct, output_ct, input_cols, output_cols, test_sequence_to_elements_df)
+test_data = SequenceBotDataset(test_df, test_dataset_args)
 
-batch_size = 64
+batch_size = 16
 
 
 def pad_collator(batch):
@@ -240,14 +240,14 @@ print("params by layer")
 for param_layer in params:
     print(param_layer.shape)
 
-float_loss_fn = nn.MSELoss()
-binary_loss_fn = nn.BCEWithLogitsLoss()
-classification_loss_fn = nn.CrossEntropyLoss()
+float_loss_fn = nn.MSELoss(reduction='none')
+binary_loss_fn = nn.BCEWithLogitsLoss(reduction='none')
+classification_loss_fn = nn.CrossEntropyLoss(reduction='none')
 optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 #optimizer = torch.optim.SGD(model.parameters(), lr=0.001)
 
 # https://discuss.pytorch.org/t/how-to-combine-multiple-criterions-to-a-loss-function/348/4
-def compute_loss(pred, y):
+def compute_loss(pred, y, lens):
     total_loss = 0
     for i in range(len(output_cols)):
         loss_fn = float_loss_fn
@@ -255,24 +255,29 @@ def compute_loss(pred, y):
             loss_fn = binary_loss_fn
         elif output_cols[i] in output_cols_by_type.categorical_cols:
             loss_fn = classification_loss_fn
-        total_loss += loss_fn(pred[:, :, output_ranges[i]], y[:, :, output_ranges[i]])
+        unmasked_loss = loss_fn(pred[:, :, output_ranges[i]], y[:, :, output_ranges[i]])
+        mask = torch.zeros_like(unmasked_loss)
+        for i, length in enumerate(lens):
+            mask[i, 0:length, :] = 1.
+        total_loss += torch.sum(unmasked_loss * mask)
     return total_loss
 
-def compute_accuracy(pred, Y, correct):
-    for name, r in zip(output_cols, output_ranges):
-        if name in output_cols_by_type.boolean_cols:
-            correct[name] += (torch.le(pred[:, :, r], 0.5) == torch.le(Y[:, :, r], 0.5)) \
-                .type(torch.float).sum().item()
-        elif name in output_cols_by_type.categorical_cols:
-            correct[name] += (pred[:, :, r].argmax(1) == Y[:, :, r].argmax(1)) \
-                .type(torch.float).sum().item()
-        else:
-            correct[name] += torch.square(pred[:, :, r] -  Y[:, :, r]).sum().item()
+def compute_accuracy(pred, Y, lens, correct):
+    for batch_index, batch_len in enumerate(lens):
+        for name, r in zip(output_cols, output_ranges):
+            if name in output_cols_by_type.boolean_cols:
+                correct[name] += (torch.le(pred[batch_index, 0:batch_len, r], 0.5) == torch.le(Y[batch_index, 0:batch_len, r], 0.5)) \
+                    .type(torch.float).sum().item()
+            elif name in output_cols_by_type.categorical_cols:
+                correct[name] += (pred[batch_index, 0:batch_len, r].argmax(1) == Y[batch_index, 0:batch_len, r].argmax(1)) \
+                    .type(torch.float).sum().item()
+            else:
+                correct[name] += torch.square(pred[batch_index, 0:batch_len, r] -  Y[batch_index, 0:batch_len, r]).sum().item()
 
 first_batch = True
 def train_or_test(dataloader, model, optimizer, train = True):
     global first_batch
-    size = len(dataloader.dataset)
+    size = dataloader.dataset.num_elements()
     num_batches = len(dataloader)
     if train:
         model.train()
@@ -295,7 +300,7 @@ def train_or_test(dataloader, model, optimizer, train = True):
 
         # Compute prediction error
         pred = model(X, lens)
-        batch_loss = compute_loss(pred, Y)
+        batch_loss = compute_loss(pred, Y, lens)
         cumulative_loss += batch_loss
 
         # Backpropagation
@@ -304,15 +309,15 @@ def train_or_test(dataloader, model, optimizer, train = True):
             batch_loss.backward()
             optimizer.step()
 
-        if train and batch % 100 == 0:
+        if train and batch % 10 == 0:
             loss, current = batch_loss.item(), batch * len(X)
-            print('pred')
-            print(pred[0:2])
-            print('y')
-            print(Y[0:2])
+            #print('pred')
+            #print(pred[0:2])
+            #print('y')
+            #print(Y[0:2])
             print(f"loss: {loss:>7f}  [{current:>5d}/{size:>5d}]")
 
-        compute_accuracy(pred, Y, correct)
+        compute_accuracy(pred, Y, lens, correct)
     cumulative_loss /= num_batches
     for name in output_cols:
         correct[name] /= size
