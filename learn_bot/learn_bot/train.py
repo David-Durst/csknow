@@ -195,7 +195,7 @@ training_data = SequenceBotDataset(train_df, train_dataset_args)
 test_dataset_args = SequenceBotDatasetArgs(input_ct, output_ct, input_cols, output_cols, test_sequence_to_elements_df)
 test_data = SequenceBotDataset(test_df, test_dataset_args)
 
-batch_size = 16
+batch_size = 2
 
 
 def pad_collator(batch):
@@ -262,6 +262,18 @@ def compute_loss(pred, y, lens):
         total_loss += torch.sum(unmasked_loss * mask)
     return total_loss
 
+def get_accuracy_metric_name():
+    metric_names = {}
+    for name in output_cols:
+        if name in output_cols_by_type.boolean_cols:
+            metric_names[name] = '0.5 Accuracy'
+        elif name in output_cols_by_type.categorical_cols:
+            metric_names[name] = 'Category Accuracy'
+        else:
+            metric_names[name] = 'MSE'
+    return metric_names
+
+
 def compute_accuracy(pred, Y, lens, correct):
     for batch_index, batch_len in enumerate(lens):
         for name, r in zip(output_cols, output_ranges):
@@ -285,6 +297,7 @@ def train_or_test(dataloader, model, optimizer, train = True):
         model.eval()
     cumulative_loss = 0
     correct = {}
+    metric_names = get_accuracy_metric_name()
     for name in output_cols:
         correct[name] = 0
     for batch, (X, Y, lens) in enumerate(dataloader):
@@ -294,8 +307,8 @@ def train_or_test(dataloader, model, optimizer, train = True):
         #    print(X.cpu().tolist())
         #    print(Y.cpu().tolist())
         X, Y = X.to(device), Y.to(device)
-        #XR = torch.randn_like(X, device=device)
-        #XR[:,0] = X[:,0]
+        #XR = torch.randn_like(X)
+        #XR[:, :, 0] = X[:, :, 0]
         #YZ = torch.zeros_like(Y) + 0.1
 
         # Compute prediction error
@@ -322,13 +335,15 @@ def train_or_test(dataloader, model, optimizer, train = True):
     for name in output_cols:
         correct[name] /= size
     train_test_str = "Train" if train else "Test"
-    print(f"Epoch {train_test_str} Error: Accuracy: {correct}%, Avg loss: {cumulative_loss:>8f} \n")
+    print(f"Epoch {train_test_str} Avg loss: {cumulative_loss:>8f}, Accuracy Metrics:")
+    for name, metric_name in metric_names.items():
+        print(f"\t{name} {metric_name}: {correct[name]}")
 
 epochs = 5
 for t in range(epochs):
     print(f"Epoch {t+1}\n-------------------------------")
     train_or_test(train_dataloader, model, optimizer, True)
-    train_or_test(train_dataloader, model, None, False)
+    train_or_test(test_dataloader, model, None, False)
 
 dump(train_dataset_args, Path(__file__).parent / '..' / 'model' / 'dataset_args.joblib')
 dump(nn_args, Path(__file__).parent / '..' / 'model' / 'nn_args.joblib')
