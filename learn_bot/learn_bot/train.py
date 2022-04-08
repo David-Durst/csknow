@@ -18,6 +18,7 @@ from dataclasses import dataclass
 import matplotlib.pyplot as plt
 
 all_data_df = pd.read_csv(Path(__file__).parent / '..' / 'data' / 'engagement' / 'train_engagement_dataset.csv')
+explore_data_df = pd.read_csv(Path(__file__).parent / '..' / 'data' / 'explore_engagements' / 'train_engagement_dataset.csv')
 
 
 # load config
@@ -123,6 +124,21 @@ def organize_into_sequences(df):
 train_sequence_to_elements_df = organize_into_sequences(train_df)
 test_sequence_to_elements_df = organize_into_sequences(test_df)
 
+explore_not_enemies_df = explore_data_df[(explore_data_df['enemy slot filled'] == 0) & (explore_data_df['shooter active weapon'] != 405)].copy()
+not_enemies_seq_df = organize_into_sequences(explore_not_enemies_df)
+not_enemies_seq_df['length'] = not_enemies_seq_df['Max'] - not_enemies_seq_df['Min']
+explore_enemies_df = explore_data_df[(explore_data_df['enemy slot filled'] == 1) & (explore_data_df['shooter active weapon'] != 405)].copy()
+enemies_seq_df = organize_into_sequences(explore_enemies_df)
+enemies_seq_df['length'] = enemies_seq_df['Max'] - enemies_seq_df['Min']
+explore_no_knife_df = explore_data_df[explore_data_df['shooter active weapon'] != 405].copy()
+no_knife_seq_df = organize_into_sequences(explore_no_knife_df)
+no_knife_seq_df['length'] = no_knife_seq_df['Max'] - no_knife_seq_df['Min']
+explore_osequence_to_elements_df = organize_into_sequences(explore_data_df)
+overlapping_sequences = {}
+#for i in range(len(enemies_seq_df)):
+#    for j in range(len(not_enemies_seq_df)):
+#        if enemies_seq_df.loc['Min'] >= not_enemies_seq_df['Min'] and ene
+x = 2
 
 def compute_passthrough_cols(all_cols, *non_passthrough_lists):
     non_passthrough_cols = []
@@ -195,7 +211,7 @@ training_data = SequenceBotDataset(train_df, train_dataset_args)
 test_dataset_args = SequenceBotDatasetArgs(input_ct, output_ct, input_cols, output_cols, test_sequence_to_elements_df)
 test_data = SequenceBotDataset(test_df, test_dataset_args)
 
-batch_size = 2
+batch_size = 16
 
 
 def pad_collator(batch):
@@ -243,13 +259,15 @@ for param_layer in params:
 float_loss_fn = nn.MSELoss(reduction='none')
 binary_loss_fn = nn.BCEWithLogitsLoss(reduction='none')
 classification_loss_fn = nn.CrossEntropyLoss(reduction='none')
-optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+optimizer = torch.optim.Adam(model.parameters(), lr=0.0001)
 #optimizer = torch.optim.SGD(model.parameters(), lr=0.001)
 
 # https://discuss.pytorch.org/t/how-to-combine-multiple-criterions-to-a-loss-function/348/4
 def compute_loss(pred, y, lens):
     total_loss = 0
     for i in range(len(output_cols)):
+        if i != 2:
+            continue
         loss_fn = float_loss_fn
         if output_cols[i] in output_cols_by_type.boolean_cols:
             loss_fn = binary_loss_fn
@@ -339,7 +357,7 @@ def train_or_test(dataloader, model, optimizer, train = True):
     for name, metric_name in metric_names.items():
         print(f"\t{name} {metric_name}: {correct[name]}")
 
-epochs = 5
+epochs = 10
 for t in range(epochs):
     print(f"Epoch {t+1}\n-------------------------------")
     train_or_test(train_dataloader, model, optimizer, True)
