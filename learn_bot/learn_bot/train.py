@@ -259,7 +259,7 @@ def compute_loss(pred, y, lens):
         mask = torch.zeros_like(unmasked_loss)
         for i, length in enumerate(lens):
             mask[i, 0:length, :] = 1.
-        total_loss += torch.sum(unmasked_loss * mask)
+        total_loss += torch.sum(unmasked_loss * mask) / sum(lens)
     return total_loss
 
 def get_accuracy_metric_name():
