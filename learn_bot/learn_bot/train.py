@@ -133,7 +133,8 @@ enemies_seq_df['length'] = enemies_seq_df['Max'] - enemies_seq_df['Min']
 explore_no_knife_df = explore_data_df[explore_data_df['shooter active weapon'] != 405].copy()
 no_knife_seq_df = organize_into_sequences(explore_no_knife_df)
 no_knife_seq_df['length'] = no_knife_seq_df['Max'] - no_knife_seq_df['Min']
-explore_osequence_to_elements_df = organize_into_sequences(explore_data_df)
+explore_sequence_to_elements_df = organize_into_sequences(explore_data_df)
+explore_sequence_to_elements_df['length'] = explore_sequence_to_elements_df['Max'] - explore_sequence_to_elements_df['Min']
 overlapping_sequences = {}
 #for i in range(len(enemies_seq_df)):
 #    for j in range(len(not_enemies_seq_df)):
