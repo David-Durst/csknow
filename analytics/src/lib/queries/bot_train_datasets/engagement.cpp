@@ -293,6 +293,8 @@ void computeEngagementResults(const Rounds & rounds, const Ticks & ticks, const 
                     }
                 }
 
+                state.bestEngagementId = bestEngagementIndex;
+
                 int8_t friendlyIndex = 0;
                 int8_t enemyIndex = 0;
                 int64_t targetPATId;
@@ -421,9 +423,70 @@ EngagementResult queryEngagementDataset(const Equipment & equipment, const Games
         computeEngagementsPerRound(rounds, ticks, playerAtTick, weaponFire, hurt, roundIndex, engagementIds,
                                    RADIUS_GAME_TICKS, tickRates);
 
+        vector<EngagementIds> validEngagementIds;
+        set<int64_t> validWeapons = {
+                //0, //UNKNOWN
+                102, //MP9
+                206, //Negev
+                309, //AWP
+                //401, //Zeus x27
+                10, //R8 Revolver
+                106, //P90
+                201, //Sawed-Off
+                302, //FAMAS
+                305, //M4A1
+                //501, //Decoy Grenade
+                //-1, //empty
+                3, //P250
+                8, //CZ75 Auto
+                104, //MAC-10
+                310, //SCAR-20
+                6, //Dual Berettas
+                203, //MAG-7
+                303, //AK-47
+                //403, //Kevlar + Helmet
+                205, //M249
+                307, //SG 553
+                //406, //Defuse Kit
+                2, //Glock-18
+                4, //Desert Eagle
+                5, //Five-SeveN
+                103, //PP-Bizon
+                105, //UMP-45
+                //506, //HE Grenade
+                311, //G3SG1
+                //402, //Kevlar Vest
+                //404, //C4
+                101, //MP7
+                202, //Nova
+                204, //XM1014
+                304, //M4A4
+                308, //AUG
+                //405, //Knife
+                //503, //Incendiary Grenade
+                //505, //Smoke Grenade
+                1, //P2000
+                7, //Tec-9
+                9, //USP-S
+                306, //SSG 08
+                502, //Molotov
+                107, //MP5-SD
+                301, //Galil AR
+                //407, //World
+                //504, //Flashbang
+        };
+
+        for (const auto & engagementId : engagementIds) {
+            for (const auto & engagementWeaponFireId : engagementId.shooterWeaponFireIds) {
+                if (validWeapons.find(weaponFire.weapon[engagementWeaponFireId]) != validWeapons.end()) {
+                    validEngagementIds.push_back(engagementId);
+                }
+            }
+        }
+
         map<int64_t, map<int64_t, vector<int64_t>>> tickToShooterToEngagementIds;
-        for (int i = 0; i < engagementIds.size(); i++) {
-            const EngagementIds &oneEngagementIds = engagementIds[i];
+        for (int i = 0; i < validEngagementIds.size(); i++) {
+            const EngagementIds &oneEngagementIds = validEngagementIds[i];
             // end on tick before last tick of engagement so for all ticks know alive for next one
             // when computing results
             for (int64_t tickId = oneEngagementIds.startTickId; tickId < oneEngagementIds.endTickId; tickId++) {
@@ -444,7 +507,7 @@ EngagementResult queryEngagementDataset(const Equipment & equipment, const Games
             }
         }
 
-        computeEngagementResults(rounds, ticks, playerAtTick, roundIndex, engagementIds,
+        computeEngagementResults(rounds, ticks, playerAtTick, roundIndex, validEngagementIds,
                                  tickToShooterToEngagementIds, shooterToWeaponFireGameTicks,
                                  RADIUS_GAME_TICKS, tickRates,tmpStates[threadNum], tmpActions[threadNum]);
     }
