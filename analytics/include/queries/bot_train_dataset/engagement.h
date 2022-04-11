@@ -263,7 +263,7 @@ public:
         result << "," << step.viewAngleWithVisualRecoil.toCSV();
         result << "," << step.secondsSinceLastFire;
         result << "," << friendlyPlayerStateToCSV(step.shooter);
-        //result << "," << enemyPlayerStateToCSV(step.target);
+        result << "," << enemyPlayerStateToCSV(step.target);
         /*
         for (const auto & friendlyPlayerState : step.friendlyPlayerStates) {
             result << "," << friendlyPlayerStateToCSV(friendlyPlayerState);
@@ -305,7 +305,7 @@ public:
         resultNames.push_back("seconds since last fire");
         resultTypes.push_back(ColumnTypes::FloatMinMax);
         friendlyPlayerStateColumns("shooter", resultNames, resultTypes);
-        //enemyPlayerStateColumns("enemy", resultNames, resultTypes);
+        enemyPlayerStateColumns("enemy", resultNames, resultTypes);
         /*
         for (int i = 0; i < NUM_PLAYERS/2; i++) {
             friendlyPlayerStateColumns("friendly " + std::to_string(i), resultNames, onlyOneHot, onlyMinMaxScale);
@@ -320,7 +320,7 @@ public:
     void timeStepStateOneHotNumCategories(vector<string> & result, string equipmentIdList) {
         result.push_back("\"" + std::to_string(INTERNAL_TEAM_CT) + ";" + std::to_string(INTERNAL_TEAM_T) + "\"");
         friendlyPlayerStateOneHotNumCategories(result, equipmentIdList);
-        //enemyPlayerStateOneHotNumCategories(result, equipmentIdList);
+        enemyPlayerStateOneHotNumCategories(result, equipmentIdList);
         /*
         for (int i = 0; i < NUM_PLAYERS/2; i++) {
             friendlyPlayerStateOneHotNumCategories(result, equipmentIdList);
@@ -443,6 +443,7 @@ public:
     vector<int64_t> tickId;
     vector<int64_t> roundId;
     vector<int64_t> sourcePlayerId;
+    vector<int64_t> gameTickNumber;
     vector<string> sourcePlayerName;
     vector<string> demoName;
     vector<TimeStepState> states;
@@ -462,8 +463,8 @@ public:
 
     void oneLineToCSV(int64_t index, stringstream & ss) {
         ss << index << "," << tickId[index] << "," << roundId[index]
-           << "," << sourcePlayerId[index] << "," << sourcePlayerName[index]
-           << "," << demoName[index]
+           << "," << sourcePlayerId[index] << "," << gameTickNumber[index]
+           << "," << sourcePlayerName[index] << "," << demoName[index]
            << "," << timeStepStateToString(states[index])
            << "," << timeStepPlanToString(actions[index]) << std::endl;
     }
@@ -473,7 +474,7 @@ public:
     }
 
     vector<string> getOtherColumnNames() {
-        vector<string> result{"source player name", "demo name"};
+        vector<string> result{"game tick number", "source player name", "demo name"};
         vector<ColumnTypes> columnTypes;
         timeStepStateColumns(result, columnTypes);
         timeStepActionColumns(result, columnTypes);
