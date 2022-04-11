@@ -16,9 +16,9 @@ from learn_bot.sequence_model import SequenceNeuralNetwork, SNNArgs
 from learn_bot.sequence_dataset import SequenceBotDatasetArgs, SequenceBotDataset
 from dataclasses import dataclass
 import matplotlib.pyplot as plt
+from learn_bot.sequence_creation import organize_into_sequences
 
 all_data_df = pd.read_csv(Path(__file__).parent / '..' / 'data' / 'engagement' / 'train_engagement_dataset.csv')
-explore_data_df = pd.read_csv(Path(__file__).parent / '..' / 'data' / 'explore_engagements' / 'train_engagement_dataset.csv')
 
 
 # load config
@@ -103,43 +103,9 @@ all_data_df_split_predicate = all_data_df['round id'].isin(top_80_pct_rounds)
 train_df = all_data_df[all_data_df_split_predicate].copy()
 test_df = all_data_df[~all_data_df_split_predicate].copy()
 
-
-# return is a mapping from sequence
-def organize_into_sequences(df):
-    df.sort_values(['round id', 'source player id', 'tick id'], inplace=True)
-    df.loc[:, 'prior round id'] = df.loc[:, 'round id'].shift(1, fill_value=-1)
-    df.loc[:, 'prior source player id'] = df['source player id'].shift(1, fill_value=-1)
-    df.loc[:, 'prior tick id'] = df['tick id'].shift(1, fill_value=-1)
-    df.loc[:, 'new sequence'] = ((df['prior round id'] != df['round id']) |
-        (df['prior source player id'] != df['source player id']) |
-        (df['prior tick id'] + 1 != df['tick id'])).astype(int)
-    # subtract 1 so first sequence is index 0
-    df.loc[:, 'sequence number'] = df['new sequence'].cumsum() - 1
-    df.reset_index(inplace=True)
-    df.loc[:, 'index'] = df.index
-
-    return df.groupby('sequence number').agg(Min=('index', 'min'), Max=('index','max'));
-
-
 train_sequence_to_elements_df = organize_into_sequences(train_df)
 test_sequence_to_elements_df = organize_into_sequences(test_df)
 
-explore_not_enemies_df = explore_data_df[(explore_data_df['enemy slot filled'] == 0) & (explore_data_df['shooter active weapon'] != 405)].copy()
-not_enemies_seq_df = organize_into_sequences(explore_not_enemies_df)
-not_enemies_seq_df['length'] = not_enemies_seq_df['Max'] - not_enemies_seq_df['Min']
-explore_enemies_df = explore_data_df[(explore_data_df['enemy slot filled'] == 1) & (explore_data_df['shooter active weapon'] != 405)].copy()
-enemies_seq_df = organize_into_sequences(explore_enemies_df)
-enemies_seq_df['length'] = enemies_seq_df['Max'] - enemies_seq_df['Min']
-explore_no_knife_df = explore_data_df[explore_data_df['shooter active weapon'] != 405].copy()
-no_knife_seq_df = organize_into_sequences(explore_no_knife_df)
-no_knife_seq_df['length'] = no_knife_seq_df['Max'] - no_knife_seq_df['Min']
-explore_sequence_to_elements_df = organize_into_sequences(explore_data_df)
-explore_sequence_to_elements_df['length'] = explore_sequence_to_elements_df['Max'] - explore_sequence_to_elements_df['Min']
-overlapping_sequences = {}
-#for i in range(len(enemies_seq_df)):
-#    for j in range(len(not_enemies_seq_df)):
-#        if enemies_seq_df.loc['Min'] >= not_enemies_seq_df['Min'] and ene
-x = 2
 
 def compute_passthrough_cols(all_cols, *non_passthrough_lists):
     non_passthrough_cols = []
