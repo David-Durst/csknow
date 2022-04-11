@@ -54,14 +54,14 @@ computeEngagementsPerRound(const Rounds & rounds, const Ticks & ticks, const Pla
                 if (targetToEngagementIds.second.endTickId < tickIndex ||
                     // engagement ends when shooter dies or disconnects
                     !(playerAlive.find(shooterToSubmap.first) != playerAlive.end() &&
-                      playerAlive[targetToEngagementIds.first]) ||
+                      playerAlive[shooterToSubmap.first]) ||
                     // engagement ends when target dies or disconnects (if target is valid)
                     !(targetToEngagementIds.first == INVALID_ID ||
                       (playerAlive.find(targetToEngagementIds.first) != playerAlive.end() &&
                        playerAlive[targetToEngagementIds.first]))) {
                     EngagementIds & finishedIds = activeEngagementIds[shooterToSubmap.first][targetToEngagementIds.first];
                     finishedIds.endTickId = std::min(finishedIds.endTickId, tickIndex);
-                    if ((finishedIds.startTickId == 353300 || finishedIds.startTickId == 353339) && finishedIds.shooterId == 7 && finishedIds.targetId == 0) {
+                    if ((finishedIds.startTickId == 353300 || finishedIds.startTickId == 353314) && finishedIds.shooterId == 7 && finishedIds.targetId == -1) {
                         int x = 1;
                     }
                     engagementIds.push_back(finishedIds);
@@ -70,7 +70,7 @@ computeEngagementsPerRound(const Rounds & rounds, const Ticks & ticks, const Pla
             }
             for (const auto & target : targetEngagementsToErase) {
                 EngagementIds e = activeEngagementIds[shooterToSubmap.first][target];
-                if ((e.startTickId == 353300 || e.startTickId == 353339) && e.shooterId == 7 && e.targetId == 0) {
+                if ((e.startTickId == 353300 || e.startTickId == 353314) && e.shooterId == 7 && e.targetId == -1) {
                     int x = 1;
                 }
                 activeEngagementIds[shooterToSubmap.first].erase(target);
@@ -130,6 +130,10 @@ computeEngagementsPerRound(const Rounds & rounds, const Ticks & ticks, const Pla
                         getLookbackDemoTick(rounds, ticks, playerAtTick, tickIndex, tickRates, RADIUS_GAME_TICKS, 1000);
                 activeEngagementIds[shooterPlayerId][INVALID_ID].endTickId = tickIndex +
                         getLookforwardDemoTick(rounds, ticks, playerAtTick, tickIndex, tickRates, RADIUS_GAME_TICKS, 1000);
+                int64_t newStartTickId = activeEngagementIds[shooterPlayerId][INVALID_ID].startTickId;
+                if ((newStartTickId == 353300 || newStartTickId == 353314) && shooterPlayerId == 7) {
+                    int x = 1;
+                }
                 activeEngagementIds[shooterPlayerId][INVALID_ID].firstHurtTick = INVALID_ID;
                 activeEngagementIds[shooterPlayerId][INVALID_ID].lastHurtTick = INVALID_ID;
                 activeEngagementIds[shooterPlayerId][INVALID_ID].shooterId = shooterPlayerId;
@@ -157,9 +161,6 @@ computeEngagementsPerRound(const Rounds & rounds, const Ticks & ticks, const Pla
                 int64_t newEndTickId = tickIndex +
                         getLookforwardDemoTick(rounds, ticks, playerAtTick, tickIndex, tickRates, RADIUS_GAME_TICKS, 1000);
                 if (newStartTickId == newEndTickId) {
-                    int x = 1;
-                }
-                if ((newStartTickId == 353300 || newStartTickId == 353339) && shooterPlayerId == 7 && targetId == 0) {
                     int x = 1;
                 }
                 // new engagement
