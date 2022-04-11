@@ -36,6 +36,7 @@ public:
         FloatMinMax = 1,
         FloatNonLinear = 2,
         Categorical = 3,
+        Drop = 4,
     };
 
     struct PosState {
@@ -236,6 +237,7 @@ public:
     }
 
     struct TimeStepState {
+        int64_t bestEngagementId;
         int32_t team;
         Vec3 globalShooterEyePos;
         Vec3 globalShooterVelocity;
@@ -255,7 +257,8 @@ public:
 
     string timeStepStateToString(TimeStepState step) {
         std::stringstream result;
-        result << step.team;
+        result << step.bestEngagementId;
+        result << "," << step.team;
         result << "," << step.globalShooterEyePos.toCSV();
         result << "," << step.globalShooterVelocity.toCSV();
         result << "," << step.globalShooterViewAngle.toCSV();
@@ -276,6 +279,8 @@ public:
     }
 
     void timeStepStateColumns(vector<string> & resultNames, vector<ColumnTypes> & resultTypes) {
+        resultNames.push_back("engagement id");
+        resultTypes.push_back(ColumnTypes::Drop);
         resultNames.push_back("team");
         resultTypes.push_back(ColumnTypes::Categorical);
         resultNames.push_back("global eye pos x");
