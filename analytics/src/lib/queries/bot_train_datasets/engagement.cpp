@@ -17,6 +17,7 @@ struct EngagementIds {
     int64_t shooterId;
     int64_t targetId;
     vector<int64_t> shooterWeaponFireIds;
+    vector<int64_t> targetHurtIds;
     int32_t numHits;
 };
 
@@ -117,6 +118,7 @@ computeEngagementsPerRound(const Rounds & rounds, const Ticks & ticks, const Pla
                 activeEngagementIds[shooterPlayerId][INVALID_ID].lastHurtTick = INVALID_ID;
                 activeEngagementIds[shooterPlayerId][INVALID_ID].shooterId = shooterPlayerId;
                 activeEngagementIds[shooterPlayerId][INVALID_ID].targetId = INVALID_ID;
+                activeEngagementIds[shooterPlayerId][INVALID_ID].shooterWeaponFireIds.push_back(engagementFireId);
                 activeEngagementIds[shooterPlayerId][INVALID_ID].numHits = 0;
             }
             // else if have engagements, if only one without a target, then extend it
@@ -125,6 +127,7 @@ computeEngagementsPerRound(const Rounds & rounds, const Ticks & ticks, const Pla
                 activeEngagementIds[shooterPlayerId][INVALID_ID].endTickId = tickIndex +
                         getLookforwardDemoTick(rounds, ticks, playerAtTick, tickIndex, tickRates, RADIUS_GAME_TICKS, 1000);
                 activeEngagementIds[shooterPlayerId][INVALID_ID].lastHurtTick = tickIndex;
+                activeEngagementIds[shooterPlayerId][INVALID_ID].shooterWeaponFireIds.push_back(engagementFireId);
             }
             // if shot someone, then start/continue those engagements
             for (size_t i = 0; i < engagementHurtIds.size(); i++) {
@@ -141,12 +144,16 @@ computeEngagementsPerRound(const Rounds & rounds, const Ticks & ticks, const Pla
                     activeEngagementIds[shooterPlayerId][targetId].lastHurtTick = tickIndex;
                     activeEngagementIds[shooterPlayerId][targetId].shooterId = shooterPlayerId;
                     activeEngagementIds[shooterPlayerId][targetId].targetId = targetId;
+                    activeEngagementIds[shooterPlayerId][targetId].shooterWeaponFireIds.push_back(engagementFireId);
+                    activeEngagementIds[shooterPlayerId][targetId].targetHurtIds.push_back(engagementHurtIds[i]);
                     activeEngagementIds[shooterPlayerId][targetId].numHits = 1;
                 }
                 // continuing old engagement
                 else {
                     activeEngagementIds[shooterPlayerId][targetId].endTickId = newEndTickId;
                     activeEngagementIds[shooterPlayerId][targetId].lastHurtTick = tickIndex;
+                    activeEngagementIds[shooterPlayerId][targetId].shooterWeaponFireIds.push_back(engagementFireId);
+                    activeEngagementIds[shooterPlayerId][targetId].targetHurtIds.push_back(engagementHurtIds[i]);
                     activeEngagementIds[shooterPlayerId][targetId].numHits++;
                 }
             }
@@ -449,6 +456,7 @@ EngagementResult queryEngagementDataset(const Equipment & equipment, const Games
             result.tickId.push_back(tmpStates[i][j].tickId);
             result.roundId.push_back(tmpStates[i][j].roundId);
             result.sourcePlayerId.push_back(playerAtTick.playerId[tmpStates[i][j].shooterPatId]);
+            result.gameTickNumber.push_back(ticks.gameTickNumber[tmpStates[i][j].tickId]);
             result.sourcePlayerName.push_back(players.name[result.sourcePlayerId.back() + players.idOffset]);
             result.demoName.push_back(games.demoFile[rounds.gameId[tmpStates[i][j].roundId]]);
             result.states.push_back(tmpStates[i][j]);
