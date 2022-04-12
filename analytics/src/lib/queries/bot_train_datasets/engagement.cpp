@@ -10,6 +10,7 @@
 #include <cassert>
 
 struct EngagementIds {
+    int64_t index;
     int64_t startTickId;
     int64_t endTickId;
     int64_t firstHurtTick;
@@ -19,6 +20,8 @@ struct EngagementIds {
     vector<int64_t> shooterWeaponFireIds;
     vector<int64_t> targetHurtIds;
     int32_t numHits;
+    // only used for engagement without a target to track all target engagements that happened during it
+    vector<int64_t> containedEngagements;
 };
 
 void
@@ -64,7 +67,8 @@ computeEngagementsPerRound(const Rounds & rounds, const Ticks & ticks, const Pla
                     if ((finishedIds.startTickId == 353300 || finishedIds.startTickId == 353314) && finishedIds.shooterId == 7 && finishedIds.targetId == -1) {
                         int x = 1;
                     }
-                    engagementIds.push_back(finishedIds);
+                    //engagementIds.push_back(finishedIds);
+                    engagementIds[finishedIds.index] = finishedIds;
                     targetEngagementsToErase.push_back(targetToEngagementIds.first);
                 }
             }
@@ -126,6 +130,9 @@ computeEngagementsPerRound(const Rounds & rounds, const Ticks & ticks, const Pla
             // always track when shooting for a no-target engagement
             // if no shooting at nothing engagement, then add a new one, no target to check
             if (activeEngagementIds[shooterPlayerId].find(INVALID_ID) == activeEngagementIds[shooterPlayerId].end()) {
+                // push back empty engagement that will be completed when this is engagement is finished
+                activeEngagementIds[shooterPlayerId][INVALID_ID].index = engagementIds.size();
+                engagementIds.push_back({});
                 activeEngagementIds[shooterPlayerId][INVALID_ID].startTickId = tickIndex -
                         getLookbackDemoTick(rounds, ticks, playerAtTick, tickIndex, tickRates, RADIUS_GAME_TICKS, 1000);
                 activeEngagementIds[shooterPlayerId][INVALID_ID].endTickId = tickIndex +
@@ -140,8 +147,9 @@ computeEngagementsPerRound(const Rounds & rounds, const Ticks & ticks, const Pla
                 activeEngagementIds[shooterPlayerId][INVALID_ID].targetId = INVALID_ID;
                 activeEngagementIds[shooterPlayerId][INVALID_ID].shooterWeaponFireIds.push_back(engagementFireId);
                 activeEngagementIds[shooterPlayerId][INVALID_ID].numHits = 0;
+                activeEngagementIds[shooterPlayerId][INVALID_ID].containedEngagements = {};
             }
-            // else extend the shooting at no target engagmeent
+                // else extend the shooting at no target engagmeent
             else {
                 activeEngagementIds[shooterPlayerId][INVALID_ID].endTickId = tickIndex +
                         getLookforwardDemoTick(rounds, ticks, playerAtTick, tickIndex, tickRates, RADIUS_GAME_TICKS, 1000);
@@ -149,6 +157,7 @@ computeEngagementsPerRound(const Rounds & rounds, const Ticks & ticks, const Pla
             }
 
             // add the weapon fire to all existing engagements with targets
+            // do this so count shots even if don't hit
             for (const auto & [targetId, engagementIdsToUpdate] : activeEngagementIds[shooterPlayerId]) {
                 activeEngagementIds[shooterPlayerId][targetId].shooterWeaponFireIds.push_back(engagementFireId);
             }
@@ -165,6 +174,9 @@ computeEngagementsPerRound(const Rounds & rounds, const Ticks & ticks, const Pla
                 }
                 // new engagement
                 if (activeEngagementIds[shooterPlayerId].find(targetId) == activeEngagementIds[shooterPlayerId].end()) {
+                    // push back empty engagement that will be completed when this is engagement is finished
+                    activeEngagementIds[shooterPlayerId][targetId].index = engagementIds.size();
+                    engagementIds.push_back({});
                     activeEngagementIds[shooterPlayerId][targetId].startTickId = newStartTickId;
                     activeEngagementIds[shooterPlayerId][targetId].endTickId = newEndTickId;
                     activeEngagementIds[shooterPlayerId][targetId].firstHurtTick = tickIndex;
@@ -174,6 +186,12 @@ computeEngagementsPerRound(const Rounds & rounds, const Ticks & ticks, const Pla
                     activeEngagementIds[shooterPlayerId][targetId].shooterWeaponFireIds.push_back(engagementFireId);
                     activeEngagementIds[shooterPlayerId][targetId].targetHurtIds.push_back(engagementHurtIds[i]);
                     activeEngagementIds[shooterPlayerId][targetId].numHits = 1;
+
+                    // there should always be an active engagement with no target (aka any time shooting)
+                    // if you shot an enemy
+                    assert(activeEngagementIds[shooterPlayerId].find(INVALID_ID) != activeEngagementIds[shooterPlayerId].end());
+                    activeEngagementIds[shooterPlayerId][INVALID_ID].containedEngagements.push_back(
+                            activeEngagementIds[shooterPlayerId][targetId].index);
                 }
                 // continuing old engagement
                 else {
@@ -196,7 +214,8 @@ computeEngagementsPerRound(const Rounds & rounds, const Ticks & ticks, const Pla
     // no need to remove from activeEngagementIds as that structure goes out of scope after this line
     for (const auto & shooterToSubmap : activeEngagementIds) {
         for (const auto targetToEngagementIds : shooterToSubmap.second) {
-            engagementIds.push_back(targetToEngagementIds.second);
+            //engagementIds.push_back(targetToEngagementIds.second);
+            engagementIds[targetToEngagementIds.second.index] = targetToEngagementIds.second;
         }
     }
 }
@@ -326,7 +345,7 @@ void computeEngagementResults(const Rounds & rounds, const Ticks & ticks, const 
                 }
 
                 for (size_t i = 0; i < engagementIdIndices.size(); i++) {
-                    if (roundId == 46 && engagementIdIndices[i] == 28) {
+                    if (roundId == 29 && engagementIdIndices[i] == 15) {
                         int x = 1;
                     }
                 }
@@ -335,7 +354,7 @@ void computeEngagementResults(const Rounds & rounds, const Ticks & ticks, const 
                     engagementIds[bestEngagementIndex].shooterId == 7) {
                     int x = 1;
                 }
-                if (roundId == 46 && bestEngagementIndex == 28) {
+                if (roundId == 29 && bestEngagementIndex == 15) {
                     int x = 1;
                 }
 
@@ -528,9 +547,11 @@ EngagementResult queryEngagementDataset(const Equipment & equipment, const Games
                 //504, //Flashbang
         };
 
+        map<int64_t, int64_t> engagementIndexToValidEngagementIndex;
         for (const auto & engagementId : engagementIds) {
             for (const auto & engagementWeaponFireId : engagementId.shooterWeaponFireIds) {
                 if (validWeapons.find(weaponFire.weapon[engagementWeaponFireId]) != validWeapons.end()) {
+                    engagementIndexToValidEngagementIndex.insert({engagementId.index, validEngagementIds.size()});
                     validEngagementIds.push_back(engagementId);
                     break;
                 }
