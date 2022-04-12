@@ -305,7 +305,7 @@ void computeEngagementResults(const Rounds & rounds, const Ticks & ticks, const 
                 // if more than 1 engagement for this shooter on this tick, ranking is
                 // 1. actively shooting at target
                 // 2. number of hits landed during engagement
-                int64_t bestEngagementIndex = 0;
+                int64_t bestEngagementIndex = engagementIdIndices[0];
                 std::set<int64_t> engagedTargets{engagementIds[engagementIdIndices[0]].targetId};
                 if (engagementIdIndices.size() > 1) {
                     int32_t maxHits = -1;
@@ -325,11 +325,17 @@ void computeEngagementResults(const Rounds & rounds, const Ticks & ticks, const 
                     }
                 }
 
+                for (size_t i = 0; i < engagementIdIndices.size(); i++) {
+                    if (roundId == 46 && engagementIdIndices[i] == 28) {
+                        int x = 1;
+                    }
+                }
+
                 if (engagementIds[bestEngagementIndex].startTickId == 353300 &&
                     engagementIds[bestEngagementIndex].shooterId == 7) {
                     int x = 1;
                 }
-                if (roundId == 23 && bestEngagementIndex == 49) {
+                if (roundId == 46 && bestEngagementIndex == 28) {
                     int x = 1;
                 }
 
@@ -537,9 +543,6 @@ EngagementResult queryEngagementDataset(const Equipment & equipment, const Games
             const EngagementIds &oneEngagementIds = validEngagementIds[i];
             // end on tick before last tick of engagement so for all ticks know alive for next one
             // when computing results
-            if (i == 127 || i == 128) {
-                int x = 1;
-            }
             if (validEngagementIds[i].startTickId == validEngagementIds[i].endTickId) {
                 int x = 1;
             }
