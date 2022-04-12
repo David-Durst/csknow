@@ -459,9 +459,6 @@ EngagementResult queryEngagementDataset(const Equipment & equipment, const Games
 
 //#pragma omp parallel for
     for (int64_t roundIndex = 0; roundIndex < rounds.size; roundIndex++) {
-        if (rounds.gameId[roundIndex] > 1) {
-            continue;
-        }
         int threadNum = omp_get_thread_num();
         TickRates tickRates = computeTickRates(games, rounds, roundIndex);
         const int64_t RADIUS_GAME_TICKS = ENGAGEMENT_SECONDS_RADIUS * tickRates.gameTickRate;
