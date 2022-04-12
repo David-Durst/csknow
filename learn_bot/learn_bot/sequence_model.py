@@ -39,7 +39,8 @@ class SequenceNeuralNetwork(nn.Module):
         idx, x_vals = x.split([1, x.shape[inner_most_dimension_idx] - 1], dim=inner_most_dimension_idx)
         idx_long = idx.long()
         embeds = self.embeddings(idx_long).view((idx.shape[0], idx.shape[1], self.args.embedding_dim))
-        x_all = torch.cat((embeds, x_vals), 2)
+        embeds_zero = torch.zeros_like(embeds)
+        x_all = torch.cat((embeds_zero, x_vals), 2)
 
         x_packed = pack_padded_sequence(x_all, lens, batch_first=True, enforce_sorted=False)
         # ignore inner state since doing complete sequence each time

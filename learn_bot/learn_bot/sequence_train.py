@@ -133,6 +133,8 @@ def create_column_transformers(transformers, cols_by_type: ColumnsByType, one_ho
         transformers.append(('zero-to-one-min-max', MinMaxScaler(), cols_by_type.float_min_max_cols))
     if cols_by_type.float_non_linear_cols:
         transformers.append(('zero-to-one-non-linear', QuantileTransformer(output_distribution='normal'), cols_by_type.float_non_linear_cols))
+    if cols_by_type.dropped_cols:
+        transformers.append(('drop', 'drop', cols_by_type.dropped_cols))
 
 
 create_column_transformers(input_transformers, input_cols_by_type, input_one_hot_cols_nums)
@@ -153,19 +155,19 @@ all_data_df.hist('delta view y 4', ax=axs[1,1], bins=100)
 all_data_df.hist('delta view x 8', ax=axs[2,0], bins=100)
 all_data_df.hist('delta view y 8', ax=axs[2,1], bins=100)
 plt.tight_layout()
-plt.show()
+plt.draw()
 
 fig, axs = plt.subplots(3,2)
 plt.suptitle('transformed values')
-transformed_output = pd.DataFrame(output_ct.transform(all_data_df.loc[:, output_cols]), columns=output_cols)
-transformed_output.hist('delta view x 1', ax=axs[0,0], bins=100)
-transformed_output.hist('delta view y 1', ax=axs[0,1], bins=100)
-transformed_output.hist('delta view x 4', ax=axs[1,0], bins=100)
-transformed_output.hist('delta view y 4', ax=axs[1,1], bins=100)
-transformed_output.hist('delta view x 8', ax=axs[2,0], bins=100)
+transformed_output = pd.DataFrame(output_ct.transform(all_data_df.loc[:, output_cols]), columns=[output_cols])
+#transformed_output.hist('delta view x 1', ax=axs[0,0], bins=100)
+#transformed_output.hist('delta view y 1', ax=axs[0,1], bins=100)
+#transformed_output.hist('delta view x 4', ax=axs[1,0], bins=100)
+#transformed_output.hist('delta view y 4', ax=axs[1,1], bins=100)
+#transformed_output.hist('delta view x 8', ax=axs[2,0], bins=100)
 transformed_output.hist('delta view y 8', ax=axs[2,1], bins=100)
 plt.tight_layout()
-plt.show()
+plt.draw()
 
 def get_name_range(name: str) -> slice:
     name_indices = [i for i, col_name in enumerate(output_ct.get_feature_names_out()) if name in col_name]
@@ -229,15 +231,13 @@ for param_layer in params:
 float_loss_fn = nn.MSELoss(reduction='none')
 binary_loss_fn = nn.BCEWithLogitsLoss(reduction='none')
 classification_loss_fn = nn.CrossEntropyLoss(reduction='none')
-optimizer = torch.optim.Adam(model.parameters(), lr=0.0001)
+optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
 #optimizer = torch.optim.SGD(model.parameters(), lr=0.001)
 
 # https://discuss.pytorch.org/t/how-to-combine-multiple-criterions-to-a-loss-function/348/4
 def compute_loss(pred, y, lens):
     total_loss = 0
     for i in range(len(output_cols)):
-        if i != 2:
-            continue
         loss_fn = float_loss_fn
         if output_cols[i] in output_cols_by_type.boolean_cols:
             loss_fn = binary_loss_fn
