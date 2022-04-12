@@ -4,6 +4,7 @@ import dataclasses
 import torch
 from torch import nn
 from torch.utils.data import DataLoader
+from torch.nn.utils.rnn import pack_sequence, pad_sequence, pad_packed_sequence, pack_padded_sequence
 import pandas as pd
 import numpy as np
 from sklearn.preprocessing import MinMaxScaler, OneHotEncoder, PowerTransformer, QuantileTransformer
@@ -11,10 +12,11 @@ from sklearn.compose import ColumnTransformer
 from pathlib import Path
 from learn_bot.baseline import *
 from joblib import dump
-from learn_bot.model import NeuralNetwork, NNArgs
-from learn_bot.dataset import BotDataset, BotDatasetArgs
+from learn_bot.sequence_model import SequenceNeuralNetwork, SNNArgs
+from learn_bot.sequence_dataset import SequenceBotDatasetArgs, SequenceBotDataset
 from dataclasses import dataclass
 import matplotlib.pyplot as plt
+from learn_bot.sequence_creation import organize_into_sequences
 
 all_data_df = pd.read_csv(Path(__file__).parent / '..' / 'data' / 'engagement' / 'train_engagement_dataset.csv')
 
@@ -101,8 +103,11 @@ per_round_df = all_data_df.groupby(['round id']).count()
 random_sum_rounds_df = per_round_df.sample(frac=1).cumsum()
 top_80_pct_rounds = random_sum_rounds_df[random_sum_rounds_df['id'] < 0.8 * len(all_data_df)].index.to_list()
 all_data_df_split_predicate = all_data_df['round id'].isin(top_80_pct_rounds)
-train_df = all_data_df[all_data_df_split_predicate]
-test_df = all_data_df[~all_data_df_split_predicate]
+train_df = all_data_df[all_data_df_split_predicate].copy()
+test_df = all_data_df[~all_data_df_split_predicate].copy()
+
+train_sequence_to_elements_df = organize_into_sequences(train_df)
+test_sequence_to_elements_df = organize_into_sequences(test_df)
 
 
 def compute_passthrough_cols(all_cols, *non_passthrough_lists):
@@ -140,6 +145,18 @@ input_ct.fit(train_df.loc[:, input_cols])
 output_ct.fit(train_df.loc[:, output_cols])
 
 fig, axs = plt.subplots(3,2)
+plt.suptitle('engine values')
+all_data_df.hist('delta view x 1', ax=axs[0,0], bins=100)
+all_data_df.hist('delta view y 1', ax=axs[0,1], bins=100)
+all_data_df.hist('delta view x 4', ax=axs[1,0], bins=100)
+all_data_df.hist('delta view y 4', ax=axs[1,1], bins=100)
+all_data_df.hist('delta view x 8', ax=axs[2,0], bins=100)
+all_data_df.hist('delta view y 8', ax=axs[2,1], bins=100)
+plt.tight_layout()
+plt.show()
+
+fig, axs = plt.subplots(3,2)
+plt.suptitle('transformed values')
 transformed_output = pd.DataFrame(output_ct.transform(all_data_df.loc[:, output_cols]), columns=output_cols)
 transformed_output.hist('delta view x 1', ax=axs[0,0], bins=100)
 transformed_output.hist('delta view y 1', ax=axs[0,1], bins=100)
@@ -159,23 +176,37 @@ def get_name_range(name: str) -> slice:
 output_ranges = [get_name_range(name) for name in output_cols]
 
 
-dataset_args = BotDatasetArgs(input_ct, output_ct, input_cols, output_cols)
-training_data = BotDataset(train_df, dataset_args)
-test_data = BotDataset(test_df, dataset_args)
+train_dataset_args = SequenceBotDatasetArgs(input_ct, output_ct, input_cols, output_cols, train_sequence_to_elements_df)
+training_data = SequenceBotDataset(train_df, train_dataset_args)
+test_dataset_args = SequenceBotDatasetArgs(input_ct, output_ct, input_cols, output_cols, test_sequence_to_elements_df)
+test_data = SequenceBotDataset(test_df, test_dataset_args)
 
-batch_size = 64
+batch_size = 16
 
-train_dataloader = DataLoader(training_data, batch_size=batch_size, shuffle=True)
-test_dataloader = DataLoader(test_data, batch_size=batch_size, shuffle=True)
 
-for X, Y in train_dataloader:
+def pad_collator(batch):
+    # https://discuss.pytorch.org/t/why-lengths-should-be-given-in-sorted-order-in-pack-padded-sequence/3540
+    # not relevant - https://github.com/pytorch/pytorch/issues/23079
+    input_X, input_Y = zip(*batch)
+    lens = [len(x) for x in input_X]
+    X_padded = pad_sequence(input_X, batch_first=True)
+    Y_padded = pad_sequence(input_Y, batch_first=True)
+    return X_padded, Y_padded, lens
+
+
+train_dataloader = DataLoader(training_data, batch_size=batch_size, shuffle=True, collate_fn=pad_collator)
+test_dataloader = DataLoader(test_data, batch_size=batch_size, shuffle=True, collate_fn=pad_collator)
+
+for X, Y, lens in train_dataloader:
     print(f"Train shape of X: {X.shape} {X.dtype}")
     print(f"Train shape of Y: {Y.shape} {Y.dtype}")
+    print(f"Train lengths: {lens}")
     break
 
-for X, Y in test_dataloader:
+for X, Y, lens in test_dataloader:
     print(f"Test shape of X: {X.shape} {X.dtype}")
     print(f"Test shape of Y: {Y.shape} {Y.dtype}")
+    print(f"Test lengths: {lens}")
     break
 
 #baseline_model = BaselineBotModel(training_data.X, training_data.Y, output_names, output_ranges)
@@ -187,47 +218,66 @@ print(f"Using {device} device")
 
 # Define model
 embedding_dim = 5
-nn_args = NNArgs(player_id_to_ix, embedding_dim, input_ct, output_ct, output_cols, output_ranges)
-model = NeuralNetwork(nn_args).to(device)
+nn_args = SNNArgs(player_id_to_ix, embedding_dim, input_ct, output_ct, output_cols, output_ranges)
+model = SequenceNeuralNetwork(nn_args).to(device)
 print(model)
 params = list(model.parameters())
 print("params by layer")
 for param_layer in params:
     print(param_layer.shape)
 
-float_loss_fn = nn.MSELoss()
-binary_loss_fn = nn.BCEWithLogitsLoss()
-classification_loss_fn = nn.CrossEntropyLoss()
-optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+float_loss_fn = nn.MSELoss(reduction='none')
+binary_loss_fn = nn.BCEWithLogitsLoss(reduction='none')
+classification_loss_fn = nn.CrossEntropyLoss(reduction='none')
+optimizer = torch.optim.Adam(model.parameters(), lr=0.0001)
 #optimizer = torch.optim.SGD(model.parameters(), lr=0.001)
 
 # https://discuss.pytorch.org/t/how-to-combine-multiple-criterions-to-a-loss-function/348/4
-def compute_loss(pred, y):
+def compute_loss(pred, y, lens):
     total_loss = 0
     for i in range(len(output_cols)):
+        if i != 2:
+            continue
         loss_fn = float_loss_fn
         if output_cols[i] in output_cols_by_type.boolean_cols:
             loss_fn = binary_loss_fn
         elif output_cols[i] in output_cols_by_type.categorical_cols:
             loss_fn = classification_loss_fn
-        total_loss += loss_fn(pred[:, output_ranges[i]], y[:, output_ranges[i]])
+        unmasked_loss = loss_fn(pred[:, :, output_ranges[i]], y[:, :, output_ranges[i]])
+        mask = torch.zeros_like(unmasked_loss)
+        for i, length in enumerate(lens):
+            mask[i, 0:length, :] = 1.
+        total_loss += torch.sum(unmasked_loss * mask) / sum(lens)
     return total_loss
 
-def compute_accuracy(pred, Y, correct):
-    for name, r in zip(output_cols, output_ranges):
+def get_accuracy_metric_name():
+    metric_names = {}
+    for name in output_cols:
         if name in output_cols_by_type.boolean_cols:
-            correct[name] += (torch.le(pred[:, r], 0.5) == torch.le(Y[:, r], 0.5)) \
-                .type(torch.float).sum().item()
+            metric_names[name] = '0.5 Accuracy'
         elif name in output_cols_by_type.categorical_cols:
-            correct[name] += (pred[:, r].argmax(1) == Y[:, r].argmax(1)) \
-                .type(torch.float).sum().item()
+            metric_names[name] = 'Category Accuracy'
         else:
-            correct[name] += torch.square(pred[:, r] -  Y[:, r]).sum().item()
+            metric_names[name] = 'MSE'
+    return metric_names
+
+
+def compute_accuracy(pred, Y, lens, correct):
+    for batch_index, batch_len in enumerate(lens):
+        for name, r in zip(output_cols, output_ranges):
+            if name in output_cols_by_type.boolean_cols:
+                correct[name] += (torch.le(pred[batch_index, 0:batch_len, r], 0.5) == torch.le(Y[batch_index, 0:batch_len, r], 0.5)) \
+                    .type(torch.float).sum().item()
+            elif name in output_cols_by_type.categorical_cols:
+                correct[name] += (pred[batch_index, 0:batch_len, r].argmax(1) == Y[batch_index, 0:batch_len, r].argmax(1)) \
+                    .type(torch.float).sum().item()
+            else:
+                correct[name] += torch.square(pred[batch_index, 0:batch_len, r] -  Y[batch_index, 0:batch_len, r]).sum().item()
 
 first_batch = True
 def train_or_test(dataloader, model, optimizer, train = True):
     global first_batch
-    size = len(dataloader.dataset)
+    size = dataloader.dataset.num_elements()
     num_batches = len(dataloader)
     if train:
         model.train()
@@ -235,21 +285,23 @@ def train_or_test(dataloader, model, optimizer, train = True):
         model.eval()
     cumulative_loss = 0
     correct = {}
+    metric_names = get_accuracy_metric_name()
     for name in output_cols:
         correct[name] = 0
-    for batch, (X, Y) in enumerate(dataloader):
-        if first_batch and train:
-            first_batch = False
-            print(X.cpu().tolist())
-            print(Y.cpu().tolist())
+    for batch, (X, Y, lens) in enumerate(dataloader):
+        # row too big to explore by printing
+        #if first_batch and train:
+        #    first_batch = False
+        #    print(X.cpu().tolist())
+        #    print(Y.cpu().tolist())
         X, Y = X.to(device), Y.to(device)
-        #XR = torch.randn_like(X, device=device)
-        #XR[:,0] = X[:,0]
+        #XR = torch.randn_like(X)
+        #XR[:, :, 0] = X[:, :, 0]
         #YZ = torch.zeros_like(Y) + 0.1
 
         # Compute prediction error
-        pred = model(X)
-        batch_loss = compute_loss(pred, Y)
+        pred = model(X, lens)
+        batch_loss = compute_loss(pred, Y, lens)
         cumulative_loss += batch_loss
 
         # Backpropagation
@@ -258,28 +310,30 @@ def train_or_test(dataloader, model, optimizer, train = True):
             batch_loss.backward()
             optimizer.step()
 
-        if train and batch % 100 == 0:
+        if train and batch % 10 == 0:
             loss, current = batch_loss.item(), batch * len(X)
-            print('pred')
-            print(pred[0:2])
-            print('y')
-            print(Y[0:2])
-            print(f"loss: {loss:>7f}  [{current:>5d}/{size:>5d}]")
+            #print('pred')
+            #print(pred[0:2])
+            #print('y')
+            #print(Y[0:2])
+            print(f"loss: {loss:>7f}  [{current:>5d}/{len(dataloader.dataset):>5d}]")
 
-        compute_accuracy(pred, Y, correct)
+        compute_accuracy(pred, Y, lens, correct)
     cumulative_loss /= num_batches
     for name in output_cols:
         correct[name] /= size
     train_test_str = "Train" if train else "Test"
-    print(f"Epoch {train_test_str} Error: Accuracy: {correct}%, Avg loss: {cumulative_loss:>8f} \n")
+    print(f"Epoch {train_test_str} Avg loss: {cumulative_loss:>8f}, Accuracy Metrics:")
+    for name, metric_name in metric_names.items():
+        print(f"\t{name} {metric_name}: {correct[name]}")
 
-epochs = 5
+epochs = 10
 for t in range(epochs):
     print(f"Epoch {t+1}\n-------------------------------")
     train_or_test(train_dataloader, model, optimizer, True)
-    train_or_test(train_dataloader, model, None, False)
+    train_or_test(test_dataloader, model, None, False)
 
-dump(dataset_args, Path(__file__).parent / '..' / 'model' / 'dataset_args.joblib')
+dump(train_dataset_args, Path(__file__).parent / '..' / 'model' / 'dataset_args.joblib')
 dump(nn_args, Path(__file__).parent / '..' / 'model' / 'nn_args.joblib')
 torch.save(model.state_dict(), Path(__file__).parent / '..' / 'model' / 'model.pt')
 
