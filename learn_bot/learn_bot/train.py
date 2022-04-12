@@ -35,6 +35,7 @@ class ColumnsByType:
     float_min_max_cols: List[str]
     float_non_linear_cols: List[str]
     categorical_cols: List[str]
+    dropped_cols: List[str]
     bookkeeping_passthrough_cols: List[str]
 
 
@@ -51,6 +52,8 @@ def set_column_types(config_line_num, all_cols, columns_by_type: ColumnsByType):
             columns_by_type.float_non_linear_cols.append(all_cols[col_idx])
         elif col_type == 3:
             columns_by_type.categorical_cols.append(all_cols[col_idx])
+        elif col_type == 4:
+            columns_by_type.dropped_cols.append(all_cols[col_idx])
         else:
             print(f'''invalid col type {col_types_strs[col_idx]}''')
 
@@ -77,11 +80,11 @@ config_file.close()
 player_id_col = get_config_line(0)[0]
 non_player_id_input_cols = get_config_line(1)
 input_cols = [player_id_col] + non_player_id_input_cols
-input_cols_by_type = ColumnsByType([], [], [], [], [player_id_col])
+input_cols_by_type = ColumnsByType([], [], [], [], [], [player_id_col])
 set_column_types(2, non_player_id_input_cols, input_cols_by_type)
 input_one_hot_cols_nums = compute_one_hot_cols_nums(3)
 output_cols = get_config_line(4)
-output_cols_by_type = ColumnsByType([], [], [], [], [])
+output_cols_by_type = ColumnsByType([], [], [], [], [], [])
 set_column_types(5, output_cols, output_cols_by_type)
 output_one_hot_cols_nums = compute_one_hot_cols_nums(6)
 all_data_cols = input_cols + output_cols
