@@ -16,7 +16,7 @@
 using std::string;
 using std::map;
 using std::array;
-#define ENGAGEMENT_SECONDS_RADIUS 1.0
+#define ENGAGEMENT_SECONDS_RADIUS 0.25
 #define WEAPON_RECOIL_SCALE 2.0
 #define VIEW_RECOIL_TRACKING 0.45
 

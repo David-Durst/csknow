@@ -543,7 +543,6 @@ EngagementResult queryEngagementDataset(const Equipment & equipment, const Games
             }
             if (numValidFires >= 3) {
                 validEngagementIds.push_back(engagementId);
-                break;
             }
         }
 
