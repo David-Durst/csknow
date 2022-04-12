@@ -311,6 +311,11 @@ void computeEngagementResults(const Rounds & rounds, const Ticks & ticks, const 
                     int32_t maxHits = -1;
                     bool maxInShootingRange = false;
                     for (size_t i = 0; i < engagementIdIndices.size(); i++) {
+                        // tmp - always take no target one
+                        if (engagementIds[engagementIdIndices[i]].targetId == INVALID_ID) {
+                            bestEngagementIndex = engagementIdIndices[i];
+                        }
+                        /*
                         engagedTargets.insert(engagementIds[engagementIdIndices[i]].targetId);
                         int32_t curHits = engagementIds[engagementIdIndices[i]].numHits;
                         bool curInShootingRange = engagementIds[engagementIdIndices[i]].firstHurtTick != INVALID_ID &&
@@ -322,6 +327,7 @@ void computeEngagementResults(const Rounds & rounds, const Ticks & ticks, const 
                             maxInShootingRange = curInShootingRange;
                             bestEngagementIndex = engagementIdIndices[i];
                         }
+                         */
                     }
                 }
 
@@ -335,7 +341,7 @@ void computeEngagementResults(const Rounds & rounds, const Ticks & ticks, const 
                     engagementIds[bestEngagementIndex].shooterId == 7) {
                     int x = 1;
                 }
-                if (roundId == 46 && bestEngagementIndex == 28) {
+                if (roundId == 29 && bestEngagementIndex == 15) {
                     int x = 1;
                 }
 
@@ -529,11 +535,15 @@ EngagementResult queryEngagementDataset(const Equipment & equipment, const Games
         };
 
         for (const auto & engagementId : engagementIds) {
+            int64_t numValidFires = 0;
             for (const auto & engagementWeaponFireId : engagementId.shooterWeaponFireIds) {
                 if (validWeapons.find(weaponFire.weapon[engagementWeaponFireId]) != validWeapons.end()) {
-                    validEngagementIds.push_back(engagementId);
-                    break;
+                    numValidFires++;
                 }
+            }
+            if (numValidFires >= 3) {
+                validEngagementIds.push_back(engagementId);
+                break;
             }
         }
 
