@@ -248,6 +248,8 @@ public:
         Vec2 priorDeltaView1;
         Vec2 priorDeltaView4;
         Vec2 priorDeltaView8;
+        Vec2 priorDeltaView16;
+        Vec2 priorDeltaView32;
         FriendlyPlayerState shooter;
         EnemyPlayerState target;
         array<FriendlyPlayerState, NUM_PLAYERS/2> friendlyPlayerStates;
@@ -271,6 +273,8 @@ public:
         result << "," << step.priorDeltaView1.toCSV();
         result << "," << step.priorDeltaView4.toCSV();
         result << "," << step.priorDeltaView8.toCSV();
+        result << "," << step.priorDeltaView16.toCSV();
+        result << "," << step.priorDeltaView32.toCSV();
         result << "," << friendlyPlayerStateToCSV(step.shooter);
         result << "," << enemyPlayerStateToCSV(step.target);
         /*
@@ -326,6 +330,14 @@ public:
         resultNames.push_back("prior delta view x 8");
         resultTypes.push_back(ColumnTypes::FloatNonLinear);
         resultNames.push_back("prior delta view y 8");
+        resultTypes.push_back(ColumnTypes::FloatNonLinear);
+        resultNames.push_back("prior delta view x 16");
+        resultTypes.push_back(ColumnTypes::FloatNonLinear);
+        resultNames.push_back("prior delta view y 16");
+        resultTypes.push_back(ColumnTypes::FloatNonLinear);
+        resultNames.push_back("prior delta view x 32");
+        resultTypes.push_back(ColumnTypes::FloatNonLinear);
+        resultNames.push_back("prior delta view y 32");
         resultTypes.push_back(ColumnTypes::FloatNonLinear);
         friendlyPlayerStateColumns("shooter", resultNames, resultTypes);
         enemyPlayerStateColumns("enemy", resultNames, resultTypes);

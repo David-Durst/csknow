@@ -413,9 +413,10 @@ void computeEngagementResults(const Rounds & rounds, const Ticks & ticks, const 
                         static_cast<double>(tickRates.gameTickRate);
                 // know alive next tick as tickToShooterToEngagementIds ends one tick early for each engagement
 
-                vector<int64_t> priorShooterPATIdsFour, priorShooterPATIdsEight;
+                vector<int64_t> priorShooterPATIdsFour, priorShooterPATIdsEight, priorShooterPATIdsSixteen, priorShooterPATIdsThirtyTwo;
                 int64_t backFourOffset = std::min(4L, tickIndex - rounds.ticksPerRound[roundId].minId);
                 int64_t backEightOffset = std::min(8L, tickIndex - rounds.ticksPerRound[roundId].minId);
+                int64_t backSixteenOffset = std::min(16L, tickIndex - rounds.ticksPerRound[roundId].minId);
                 for (int64_t tickOffset = 1; tickOffset <= backEightOffset; tickOffset++) {
                     for (int64_t patIndex = ticks.patPerTick[tickIndex - tickOffset].minId;
                          patIndex != -1 && patIndex <= ticks.patPerTick[tickIndex - tickOffset].maxId; patIndex++) {
@@ -423,7 +424,13 @@ void computeEngagementResults(const Rounds & rounds, const Ticks & ticks, const 
                             if (tickOffset <= backFourOffset) {
                                 priorShooterPATIdsFour.push_back(patIndex);
                             }
-                            priorShooterPATIdsEight.push_back(patIndex);
+                            if (tickOffset <= backEightOffset) {
+                                priorShooterPATIdsEight.push_back(patIndex);
+                            }
+                            if (tickOffset <= backSixteenOffset) {
+                                priorShooterPATIdsSixteen.push_back(patIndex);
+                            }
+                            priorShooterPATIdsThirtyTwo.push_back(patIndex);
                             break;
                         }
                     }
@@ -434,6 +441,10 @@ void computeEngagementResults(const Rounds & rounds, const Ticks & ticks, const 
                                      Vec2{playerAtTick.viewX[shooterPATId], playerAtTick.viewY[shooterPATId]}) / priorShooterPATIdsFour.size();
                 state.priorDeltaView8 = (Vec2{playerAtTick.viewX[priorShooterPATIdsEight.back()], playerAtTick.viewY[priorShooterPATIdsEight.back()]} -
                                      Vec2{playerAtTick.viewX[shooterPATId], playerAtTick.viewY[shooterPATId]}) / priorShooterPATIdsEight.size();
+                state.priorDeltaView16 = (Vec2{playerAtTick.viewX[priorShooterPATIdsSixteen.back()], playerAtTick.viewY[priorShooterPATIdsSixteen.back()]} -
+                                         Vec2{playerAtTick.viewX[shooterPATId], playerAtTick.viewY[shooterPATId]}) / priorShooterPATIdsEight.size();
+                state.priorDeltaView32 = (Vec2{playerAtTick.viewX[priorShooterPATIdsThirtyTwo.back()], playerAtTick.viewY[priorShooterPATIdsThirtyTwo.back()]} -
+                                          Vec2{playerAtTick.viewX[shooterPATId], playerAtTick.viewY[shooterPATId]}) / priorShooterPATIdsEight.size();
 
                 vector<int64_t> nextShooterPATIdsFour, nextShooterPATIdsEight;
                 int64_t fourOffset = std::min(4L, rounds.ticksPerRound[roundId].maxId - tickIndex);
