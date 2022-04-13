@@ -140,19 +140,15 @@ computeEngagementsPerRound(const Rounds & rounds, const Ticks & ticks, const Pla
                 activeEngagementIds[shooterPlayerId][INVALID_ID].lastHurtTick = INVALID_ID;
                 activeEngagementIds[shooterPlayerId][INVALID_ID].shooterId = shooterPlayerId;
                 activeEngagementIds[shooterPlayerId][INVALID_ID].targetId = INVALID_ID;
-                activeEngagementIds[shooterPlayerId][INVALID_ID].shooterWeaponFireIds.push_back(engagementFireId);
+                // will add weapon fires below
+                // activeEngagementIds[shooterPlayerId][INVALID_ID].shooterWeaponFireIds.push_back(engagementFireId);
                 activeEngagementIds[shooterPlayerId][INVALID_ID].numHits = 0;
             }
             // else extend the shooting at no target engagmeent
             else {
                 activeEngagementIds[shooterPlayerId][INVALID_ID].endTickId = tickIndex +
                         getLookforwardDemoTick(rounds, ticks, playerAtTick, tickIndex, tickRates, RADIUS_GAME_TICKS, 1000);
-                activeEngagementIds[shooterPlayerId][INVALID_ID].shooterWeaponFireIds.push_back(engagementFireId);
-            }
-
-            // add the weapon fire to all existing engagements with targets
-            for (const auto & [targetId, engagementIdsToUpdate] : activeEngagementIds[shooterPlayerId]) {
-                activeEngagementIds[shooterPlayerId][targetId].shooterWeaponFireIds.push_back(engagementFireId);
+                // activeEngagementIds[shooterPlayerId][INVALID_ID].shooterWeaponFireIds.push_back(engagementFireId);
             }
 
             // if shot someone, then start/continue those engagements
@@ -173,7 +169,7 @@ computeEngagementsPerRound(const Rounds & rounds, const Ticks & ticks, const Pla
                     activeEngagementIds[shooterPlayerId][targetId].lastHurtTick = tickIndex;
                     activeEngagementIds[shooterPlayerId][targetId].shooterId = shooterPlayerId;
                     activeEngagementIds[shooterPlayerId][targetId].targetId = targetId;
-                    activeEngagementIds[shooterPlayerId][targetId].shooterWeaponFireIds.push_back(engagementFireId);
+                    //activeEngagementIds[shooterPlayerId][targetId].shooterWeaponFireIds.push_back(engagementFireId);
                     activeEngagementIds[shooterPlayerId][targetId].targetHurtIds.push_back(engagementHurtIds[i]);
                     activeEngagementIds[shooterPlayerId][targetId].numHits = 1;
                 }
@@ -190,6 +186,11 @@ computeEngagementsPerRound(const Rounds & rounds, const Ticks & ticks, const Pla
                     activeEngagementIds[shooterPlayerId][targetId].shooterId == 7) {
                     int x = 1;
                 }
+            }
+
+            // add the weapon fire to all existing engagements with targets
+            for (const auto & [targetId, engagementIdsToUpdate] : activeEngagementIds[shooterPlayerId]) {
+                activeEngagementIds[shooterPlayerId][targetId].shooterWeaponFireIds.push_back(engagementFireId);
             }
         }
     }
@@ -311,6 +312,7 @@ void computeEngagementResults(const Rounds & rounds, const Ticks & ticks, const 
                 // 1. actively shooting at target
                 // 2. number of hits landed during engagement
                 int64_t bestEngagementIndex = engagementIdIndices[0];
+                int64_t invalidEngagementIndex = engagementIdIndices[0];
                 std::set<int64_t> engagedTargets{engagementIds[engagementIdIndices[0]].targetId};
                 if (engagementIdIndices.size() > 1) {
                     int32_t maxHits = -1;
@@ -318,9 +320,8 @@ void computeEngagementResults(const Rounds & rounds, const Ticks & ticks, const 
                     for (size_t i = 0; i < engagementIdIndices.size(); i++) {
                         // tmp - always take no target one
                         if (engagementIds[engagementIdIndices[i]].targetId == INVALID_ID) {
-                            bestEngagementIndex = engagementIdIndices[i];
+                            invalidEngagementIndex = engagementIdIndices[i];
                         }
-                        /*
                         engagedTargets.insert(engagementIds[engagementIdIndices[i]].targetId);
                         int32_t curHits = engagementIds[engagementIdIndices[i]].numHits;
                         bool curInShootingRange = engagementIds[engagementIdIndices[i]].firstHurtTick != INVALID_ID &&
@@ -332,7 +333,6 @@ void computeEngagementResults(const Rounds & rounds, const Ticks & ticks, const 
                             maxInShootingRange = curInShootingRange;
                             bestEngagementIndex = engagementIdIndices[i];
                         }
-                         */
                     }
                 }
 
@@ -346,11 +346,11 @@ void computeEngagementResults(const Rounds & rounds, const Ticks & ticks, const 
                     engagementIds[bestEngagementIndex].shooterId == 7) {
                     int x = 1;
                 }
-                if (roundId == 29 && bestEngagementIndex == 15) {
+                if (roundId == 62 && bestEngagementIndex == 19) {
                     int x = 1;
                 }
 
-                state.bestEngagementId = bestEngagementIndex;
+                state.bestEngagementId = invalidEngagementIndex;
 
                 int8_t friendlyIndex = 0;
                 int8_t enemyIndex = 0;
@@ -413,9 +413,31 @@ void computeEngagementResults(const Rounds & rounds, const Ticks & ticks, const 
                         static_cast<double>(tickRates.gameTickRate);
                 // know alive next tick as tickToShooterToEngagementIds ends one tick early for each engagement
 
+                vector<int64_t> priorShooterPATIdsFour, priorShooterPATIdsEight;
+                int64_t backFourOffset = std::min(4L, tickIndex - rounds.ticksPerRound[roundId].minId);
+                int64_t backEightOffset = std::min(8L, tickIndex - rounds.ticksPerRound[roundId].minId);
+                for (int64_t tickOffset = 1; tickOffset <= backEightOffset; tickOffset++) {
+                    for (int64_t patIndex = ticks.patPerTick[tickIndex - tickOffset].minId;
+                         patIndex != -1 && patIndex <= ticks.patPerTick[tickIndex - tickOffset].maxId; patIndex++) {
+                        if (playerAtTick.playerId[patIndex] == shooter) {
+                            if (tickOffset <= backFourOffset) {
+                                priorShooterPATIdsFour.push_back(patIndex);
+                            }
+                            priorShooterPATIdsEight.push_back(patIndex);
+                            break;
+                        }
+                    }
+                }
+                state.priorDeltaView1 = (Vec2{playerAtTick.viewX[priorShooterPATIdsFour.front()], playerAtTick.viewY[priorShooterPATIdsFour.front()]} -
+                                     Vec2{playerAtTick.viewX[shooterPATId], playerAtTick.viewY[shooterPATId]});
+                state.priorDeltaView4 = (Vec2{playerAtTick.viewX[priorShooterPATIdsFour.back()], playerAtTick.viewY[priorShooterPATIdsFour.back()]} -
+                                     Vec2{playerAtTick.viewX[shooterPATId], playerAtTick.viewY[shooterPATId]}) / priorShooterPATIdsFour.size();
+                state.priorDeltaView8 = (Vec2{playerAtTick.viewX[priorShooterPATIdsEight.back()], playerAtTick.viewY[priorShooterPATIdsEight.back()]} -
+                                     Vec2{playerAtTick.viewX[shooterPATId], playerAtTick.viewY[shooterPATId]}) / priorShooterPATIdsEight.size();
+
                 vector<int64_t> nextShooterPATIdsFour, nextShooterPATIdsEight;
-                int64_t fourOffset = std::min(4L, rounds.ticksPerRound[roundId].maxId - tickIndex + 1);
-                int64_t eightOffset = std::min(8L, rounds.ticksPerRound[roundId].maxId - tickIndex + 1);
+                int64_t fourOffset = std::min(4L, rounds.ticksPerRound[roundId].maxId - tickIndex);
+                int64_t eightOffset = std::min(8L, rounds.ticksPerRound[roundId].maxId - tickIndex);
                 for (int64_t tickOffset = 1; tickOffset <= eightOffset; tickOffset++) {
                     for (int64_t patIndex = ticks.patPerTick[tickIndex + tickOffset].minId;
                          patIndex != -1 && patIndex <= ticks.patPerTick[tickIndex + tickOffset].maxId; patIndex++) {
@@ -539,11 +561,13 @@ EngagementResult queryEngagementDataset(const Equipment & equipment, const Games
         for (const auto & engagementId : engagementIds) {
             int64_t numValidFires = 0;
             for (const auto & engagementWeaponFireId : engagementId.shooterWeaponFireIds) {
-                if (validWeapons.find(weaponFire.weapon[engagementWeaponFireId]) != validWeapons.end()) {
+                int64_t weaponNumber = weaponFire.weapon[engagementWeaponFireId];
+                if (validWeapons.find(weaponNumber) != validWeapons.end() &&
+                        (weaponNumber == 302 || weaponNumber == 305 || weaponNumber == 303 || weaponNumber == 304)) {
                     numValidFires++;
                 }
             }
-            if (numValidFires >= 3) {
+            if (numValidFires >= 3 && engagementId.targetHurtIds.size() >= 1) {
                 validEngagementIds.push_back(engagementId);
             }
         }

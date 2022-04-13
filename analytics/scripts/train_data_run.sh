@@ -21,5 +21,5 @@ cmake .. -DCMAKE_BUILD_TYPE=Release
 if make -j4; then
     mkdir -p ../csv_outputs
     ./csknow_train ${script_dir}/../../local_data ${script_dir}/../nav ../csv_outputs
-    cp ../csv_outputs/train_* ~/third_shared/
+    cp ../csv_outputs/train_* ~/third_shared/explore_dataset/
 fi

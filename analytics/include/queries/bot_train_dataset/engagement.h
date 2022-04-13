@@ -245,6 +245,9 @@ public:
         Vec2 viewAngleWithActualRecoil;
         Vec2 viewAngleWithVisualRecoil;
         double secondsSinceLastFire;
+        Vec2 priorDeltaView1;
+        Vec2 priorDeltaView4;
+        Vec2 priorDeltaView8;
         FriendlyPlayerState shooter;
         EnemyPlayerState target;
         array<FriendlyPlayerState, NUM_PLAYERS/2> friendlyPlayerStates;
@@ -265,6 +268,9 @@ public:
         result << "," << step.viewAngleWithActualRecoil.toCSV();
         result << "," << step.viewAngleWithVisualRecoil.toCSV();
         result << "," << step.secondsSinceLastFire;
+        result << "," << step.priorDeltaView1.toCSV();
+        result << "," << step.priorDeltaView4.toCSV();
+        result << "," << step.priorDeltaView8.toCSV();
         result << "," << friendlyPlayerStateToCSV(step.shooter);
         result << "," << enemyPlayerStateToCSV(step.target);
         /*
@@ -309,6 +315,18 @@ public:
         resultTypes.push_back(ColumnTypes::FloatMinMax);
         resultNames.push_back("seconds since last fire");
         resultTypes.push_back(ColumnTypes::FloatMinMax);
+        resultNames.push_back("prior delta view x 1");
+        resultTypes.push_back(ColumnTypes::FloatNonLinear);
+        resultNames.push_back("prior delta view y 1");
+        resultTypes.push_back(ColumnTypes::FloatNonLinear);
+        resultNames.push_back("prior delta view x 4");
+        resultTypes.push_back(ColumnTypes::FloatNonLinear);
+        resultNames.push_back("prior delta view y 4");
+        resultTypes.push_back(ColumnTypes::FloatNonLinear);
+        resultNames.push_back("prior delta view x 8");
+        resultTypes.push_back(ColumnTypes::FloatNonLinear);
+        resultNames.push_back("prior delta view y 8");
+        resultTypes.push_back(ColumnTypes::FloatNonLinear);
         friendlyPlayerStateColumns("shooter", resultNames, resultTypes);
         enemyPlayerStateColumns("enemy", resultNames, resultTypes);
         /*
