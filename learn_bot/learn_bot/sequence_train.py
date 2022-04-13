@@ -17,6 +17,8 @@ from learn_bot.sequence_dataset import SequenceBotDatasetArgs, SequenceBotDatase
 from dataclasses import dataclass
 import matplotlib.pyplot as plt
 from learn_bot.sequence_creation import organize_into_sequences
+from sklearn.metrics import mean_squared_error
+from sklearn.linear_model import LinearRegression
 
 all_data_df = pd.read_csv(Path(__file__).parent / '..' / 'data' / 'engagement' / 'train_engagement_dataset.csv')
 
@@ -328,5 +330,50 @@ for t in range(epochs):
 dump(train_dataset_args, Path(__file__).parent / '..' / 'model' / 'dataset_args.joblib')
 dump(nn_args, Path(__file__).parent / '..' / 'model' / 'nn_args.joblib')
 torch.save(model.state_dict(), Path(__file__).parent / '..' / 'model' / 'model.pt')
+
+# baseline test
+if True:
+    #train_dfs_by_seq = []
+    #for index, row in train_sequence_to_elements_df.iterrows():
+    #    train_dfs_by_seq.append(train_df.loc[row['Min']:row['Max']+1])
+
+    #test_dfs_by_seq = []
+    #for index, row in test_sequence_to_elements_df.iterrows():
+    #    test_dfs_by_seq.append(test_df.loc[row['Min']:row['Max']+1])
+
+
+    ## just repeating
+    #mse_repeat_x = 0.
+    #mse_repeat_y = 0.
+    #    mse_repeat_x += mean_squared_error(test_dfs_by_seq[], test_dfs_by_seq['prior delta view x 8'])
+    #    mse_repeat_y += mean_squared_error(test_dfs_by_seq['delta view y 8'], test_dfs_by_seq['prior delta view y 8'])
+
+    print(f'''delta view x 8 repeat MSE: {mean_squared_error(test_df['delta view x 8'], test_df['prior delta view x 8'])}''')
+    print(f'''delta view y 8 repeat MSE: {mean_squared_error(test_df['delta view y 8'], test_df['prior delta view y 8'])}''')
+
+    # linear regression
+    linear_x_cols = ['prior delta view x ' + str(i) for i in [1,4,8,16,32]] + ['delta view x 8']
+    train_x_input_linear_df = train_df[linear_x_cols[:-1]]
+    train_x_output_linear_df = train_df[linear_x_cols[-1]]
+    test_x_input_linear_df = test_df[linear_x_cols[:-1]]
+    test_x_output_linear_df = test_df[linear_x_cols[-1]]
+
+    x_linear_regression = LinearRegression()
+    x_linear_regression.fit(train_x_input_linear_df, train_x_output_linear_df)
+
+    pred_x_linear = x_linear_regression.predict(test_x_input_linear_df)
+    print(f'''delta view x 8 linear MSE: {mean_squared_error(test_x_output_linear_df, pred_x_linear)}''')
+
+    linear_y_cols = ['prior delta view y ' + str(i) for i in [1,4,8,16,32]] + ['delta view y 8']
+    train_y_input_linear_df = train_df[linear_y_cols[:-1]]
+    train_y_output_linear_df = train_df[linear_y_cols[-1]]
+    test_y_input_linear_df = test_df[linear_y_cols[:-1]]
+    test_y_output_linear_df = test_df[linear_y_cols[-1]]
+
+    y_linear_regression = LinearRegression()
+    y_linear_regression.fit(train_y_input_linear_df, train_y_output_linear_df)
+
+    pred_y_linear = y_linear_regression.predict(test_y_input_linear_df)
+    print(f'''delta view y 8 linear MSE: {mean_squared_error(test_y_output_linear_df, pred_y_linear)}''')
 
 print("Done")
