@@ -64,6 +64,8 @@ computeEngagementsPerRound(const Rounds & rounds, const Ticks & ticks, const Pla
                     if ((finishedIds.startTickId == 353300 || finishedIds.startTickId == 353314) && finishedIds.shooterId == 7 && finishedIds.targetId == -1) {
                         int x = 1;
                     }
+                    finishedIds.startTickId = weaponFire.tickId[finishedIds.shooterWeaponFireIds.front()];
+                    finishedIds.endTickId = weaponFire.tickId[finishedIds.shooterWeaponFireIds.back()];
                     engagementIds.push_back(finishedIds);
                     targetEngagementsToErase.push_back(targetToEngagementIds.first);
                 }
@@ -196,7 +198,10 @@ computeEngagementsPerRound(const Rounds & rounds, const Ticks & ticks, const Pla
     // no need to remove from activeEngagementIds as that structure goes out of scope after this line
     for (const auto & shooterToSubmap : activeEngagementIds) {
         for (const auto targetToEngagementIds : shooterToSubmap.second) {
-            engagementIds.push_back(targetToEngagementIds.second);
+            EngagementIds finishedIds = targetToEngagementIds.second;
+            finishedIds.startTickId = weaponFire.tickId[finishedIds.shooterWeaponFireIds.front()];
+            finishedIds.endTickId = weaponFire.tickId[finishedIds.shooterWeaponFireIds.back()];
+            engagementIds.push_back(finishedIds);
         }
     }
 }

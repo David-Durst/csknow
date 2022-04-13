@@ -51,8 +51,8 @@ def get_longest_sequences(df, name):
     return seq_df
 
 if __name__ == "__main__":
-    orig_df = pd.read_csv(Path(__file__).parent / '..' / 'data' / 'explore_engagements' / 'train_engagement_dataset.csv')
-    explore_df = pd.read_csv(Path(__file__).parent / '..' / 'data' / 'explore_engagements' / 'train_engagement_dataset.csv')
+    orig_df = pd.read_csv(Path(__file__).parent / '..' / 'data' / 'engagement' / 'train_engagement_dataset.csv')
+    explore_df = pd.read_csv(Path(__file__).parent / '..' / 'data' / 'engagement' / 'train_engagement_dataset.csv')
     explore_seq_df = get_longest_sequences(explore_df, "explore")
     explore_seq_df.hist('length', bins=100)
     plt.show()
