@@ -109,13 +109,6 @@ test_df = all_data_df[~all_data_df_split_predicate].copy()
 train_sequence_to_elements_df = organize_into_sequences(train_df)
 test_sequence_to_elements_df = organize_into_sequences(test_df)
 
-
-def compute_passthrough_cols(all_cols, *non_passthrough_lists):
-    non_passthrough_cols = []
-    for non_passthrough_list in non_passthrough_lists:
-        non_passthrough_cols += non_passthrough_list
-    return [c for c in all_cols if c not in non_passthrough_cols]
-
 # transform concatenates outputs in order provided, so this ensures that source player id comes first
 # as that is only pass through col
 input_transformers = []
@@ -167,13 +160,14 @@ transformed_output.hist('delta view y 8', ax=axs[2,1], bins=100)
 plt.tight_layout()
 plt.show()
 
-def get_name_range(name: str) -> slice:
-    name_indices = [i for i, col_name in enumerate(output_ct.get_feature_names_out()) if name in col_name]
+def get_name_range(name: str, ct: ColumnTransformer) -> slice:
+    name_indices = [i for i, col_name in enumerate(ct.get_feature_names_out()) if name in col_name]
     if name_indices:
         return range(min(name_indices), max(name_indices) + 1)
     else:
         return range(0,0)
-output_ranges = [get_name_range(name) for name in output_cols]
+input_ranges = [get_name_range(name, input_ct) for name in input_cols]
+output_ranges = [get_name_range(name, output_ct) for name in output_cols]
 
 
 train_dataset_args = SequenceBotDatasetArgs(input_ct, output_ct, input_cols, output_cols, train_sequence_to_elements_df)
@@ -236,8 +230,6 @@ optimizer = torch.optim.Adam(model.parameters(), lr=0.0001)
 def compute_loss(pred, y, lens):
     total_loss = 0
     for i in range(len(output_cols)):
-        if i != 2:
-            continue
         loss_fn = float_loss_fn
         if output_cols[i] in output_cols_by_type.boolean_cols:
             loss_fn = binary_loss_fn
