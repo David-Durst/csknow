@@ -125,7 +125,7 @@ def create_column_transformers(transformers, cols_by_type: ColumnsByType, one_ho
     if cols_by_type.float_min_max_cols:
         transformers.append(('zero-to-one-min-max', MinMaxScaler(), cols_by_type.float_min_max_cols))
     if cols_by_type.float_non_linear_cols:
-        transformers.append(('zero-to-one-non-linear', QuantileTransformer(output_distribution='normal'), cols_by_type.float_non_linear_cols))
+        transformers.append(('zero-to-one-non-linear', QuantileTransformer(), cols_by_type.float_non_linear_cols))
 
 
 create_column_transformers(input_transformers, input_cols_by_type, input_one_hot_cols_nums)
