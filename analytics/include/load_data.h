@@ -19,6 +19,10 @@ using std::vector;
 
 struct RangeIndexEntry {
     int64_t minId, maxId;
+
+    string toCSV() const {
+        return std::to_string(minId) + "," + std::to_string(maxId);
+    }
 };
 
 typedef RangeIndexEntry * RangeIndex;
