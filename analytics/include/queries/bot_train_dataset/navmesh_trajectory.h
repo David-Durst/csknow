@@ -23,6 +23,7 @@ using std::array;
 class NavmeshTrajectoryResult : public QueryResult {
 public:
     enum class TrajectoryTarget {
+        NOT_YET_KNOWN,
         A_SITE,
         B_SITE
     };
@@ -31,8 +32,9 @@ public:
         TrajectoryTarget target;
         RangeIndexEntry startEndTickIds;
         RangeIndexEntry startEndGameTickNumbers;
-        vector<size_t> navMeshArea;
-        vector<size_t> navMeshPlace;
+        vector<uint32_t> navMeshArea;
+        vector<uint16_t> navMeshPlace;
+        vector<int64_t> areaEntryPATId;
     };
 
     string trajectoryToString(Trajectory trajectory) {
@@ -61,6 +63,7 @@ public:
                 << "," << trajectory.navMeshArea[i]
                 << "," << trajectory.navMeshPlace[i]
                 << "," << navFile.m_places[trajectory.navMeshPlace[i]]
+                << "," << trajectory.areaEntryPATId[i]
                 << std::endl;
         }
         return result.str();
@@ -120,6 +123,7 @@ public:
 
 NavmeshTrajectoryResult queryNavmeshTrajectoryDataset(const Games & games, const Rounds & rounds,
                                                       const Ticks & ticks, const Players & players,
-                                                      const PlayerAtTick & playerAtTick, const nav_mesh::nav_file & navFile);
+                                                      const PlayerAtTick & playerAtTick,
+                                                      const std::map<std::string, const nav_mesh::nav_file> & mapNavs);
 
 #endif //CSKNOW_NAVMESH_TRAJECTORY_H

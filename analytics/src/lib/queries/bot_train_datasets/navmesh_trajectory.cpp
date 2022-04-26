@@ -10,187 +10,42 @@
 #include <cassert>
 
 void
-computeEngagementsPerRound(const Rounds & rounds, const Ticks & ticks, const PlayerAtTick & playerAtTick,
-                           const WeaponFire & weaponFire, const Hurt & hurt, const int64_t roundId,
-                           vector<EngagementIds> & engagementIds, const int64_t RADIUS_GAME_TICKS,
-                           const TickRates & tickRates) {
+computeTrajectoryPerRound(const Rounds & rounds, const Ticks & ticks, const PlayerAtTick & playerAtTick,
+                          const nav_mesh::nav_file & navFile, const int64_t roundId,
+                          map<int64_t, NavmeshTrajectoryResult::Trajectory> perRoundPlayerTrajectory) {
     // first key is shooter, second is target
-    map<int64_t, map<int64_t, EngagementIds>> activeEngagementIds;
     for (int64_t tickIndex = rounds.ticksPerRound[roundId].minId;
          tickIndex != -1 && tickIndex <= rounds.ticksPerRound[roundId].maxId; tickIndex++) {
-
-        // first precompute who is alive, so know target's state when computing for shooter
-        map<int64_t, bool> playerAlive;
+        int64_t gameTickNumber = ticks.gameTickNumber[tickIndex];
         for (int64_t patIndex = ticks.patPerTick[tickIndex].minId;
              patIndex != -1 && patIndex <= ticks.patPerTick[tickIndex].maxId; patIndex++) {
-            playerAlive[playerAtTick.playerId[patIndex]] = playerAtTick.isAlive[patIndex];
-        }
-        // add the players who were hurt this tick to those alive, as you get hurt on tick you die
-        if (ticks.hurtPerTick.find(tickIndex) != ticks.hurtPerTick.end()) {
-            for (const auto & hurtId : ticks.hurtPerTick.at(tickIndex)) {
-                // ignoring nade damage, so have to use same weapon as fired
-                playerAlive[hurt.victim[hurtId]] = true;
-            }
-        }
-
-        // if any of player's engagements are over, remove them
-        // remove player if no active engagements
-        vector<int64_t> shooterEngagementsToErase;
-        for (const auto & shooterToSubmap : activeEngagementIds) {
-            vector<int64_t> targetEngagementsToErase;
-            for (const auto targetToEngagementIds : shooterToSubmap.second) {
-                if (targetToEngagementIds.second.endTickId < tickIndex ||
-                    // engagement ends when shooter dies or disconnects
-                    !(playerAlive.find(shooterToSubmap.first) != playerAlive.end() &&
-                      playerAlive[shooterToSubmap.first]) ||
-                    // engagement ends when target dies or disconnects (if target is valid)
-                    !(targetToEngagementIds.first == INVALID_ID ||
-                      (playerAlive.find(targetToEngagementIds.first) != playerAlive.end() &&
-                       playerAlive[targetToEngagementIds.first]))) {
-                    EngagementIds & finishedIds = activeEngagementIds[shooterToSubmap.first][targetToEngagementIds.first];
-                    finishedIds.endTickId = std::min(finishedIds.endTickId, tickIndex);
-                    if ((finishedIds.startTickId == 353300 || finishedIds.startTickId == 353314) && finishedIds.shooterId == 7 && finishedIds.targetId == -1) {
-                        int x = 1;
-                    }
-                    finishedIds.startTickId = weaponFire.tickId[finishedIds.shooterWeaponFireIds.front()];
-                    finishedIds.endTickId = weaponFire.tickId[finishedIds.shooterWeaponFireIds.back()];
-                    engagementIds.push_back(finishedIds);
-                    targetEngagementsToErase.push_back(targetToEngagementIds.first);
+            int64_t playerId = playerAtTick.playerId[patIndex];
+            const nav_mesh::nav_area & navMeshArea = navFile.get_nearest_area_by_position(vec3Conv({
+                playerAtTick.posX[patIndex],
+                playerAtTick.posY[patIndex],
+                playerAtTick.posZ[patIndex]
+            }));
+            // update end every tick, so when die no need to do further processing
+            if (playerAtTick.isAlive[patIndex]) {
+                if (perRoundPlayerTrajectory.find(playerId) == perRoundPlayerTrajectory.end()) {
+                    perRoundPlayerTrajectory[playerId].target = NavmeshTrajectoryResult::TrajectoryTarget::NOT_YET_KNOWN;
+                    perRoundPlayerTrajectory[playerId].startEndTickIds = {tickIndex, tickIndex};
+                    perRoundPlayerTrajectory[playerId].startEndGameTickNumbers = {gameTickNumber, gameTickNumber};
+                    perRoundPlayerTrajectory[playerId].navMeshArea = {navMeshArea.get_id()};
+                    perRoundPlayerTrajectory[playerId].navMeshPlace = {navMeshArea.m_place};
+                    perRoundPlayerTrajectory[playerId].areaEntryPATId = {patIndex};
                 }
-            }
-            for (const auto & target : targetEngagementsToErase) {
-                EngagementIds e = activeEngagementIds[shooterToSubmap.first][target];
-                if ((e.startTickId == 353300 || e.startTickId == 353314) && e.shooterId == 7 && e.targetId == -1) {
-                    int x = 1;
-                }
-                activeEngagementIds[shooterToSubmap.first].erase(target);
-            }
-            if (activeEngagementIds[shooterToSubmap.first].empty()) {
-                shooterEngagementsToErase.push_back(shooterToSubmap.first);
-            }
-        }
-        for (const auto & shooter : shooterEngagementsToErase) {
-            activeEngagementIds.erase(shooter);
-        }
-
-        // now add engagements
-        for (int64_t patIndex = ticks.patPerTick[tickIndex].minId;
-             patIndex != -1 && patIndex <= ticks.patPerTick[tickIndex].maxId; patIndex++) {
-            int64_t shooterPlayerId = playerAtTick.playerId[patIndex];
-
-            // skip if not alive and not on CT or T
-            if (!playerAtTick.isAlive[patIndex] ||
-                !(playerAtTick.team[patIndex] == CT_TEAM || playerAtTick.team[patIndex] == T_TEAM)) {
-                continue;
-            }
-
-            // get if player shot
-            int64_t engagementFireId = INVALID_ID;
-            if (ticks.weaponFirePerTick.find(tickIndex) != ticks.weaponFirePerTick.end()) {
-                for (const auto & fireId : ticks.weaponFirePerTick.at(tickIndex)) {
-                    if (weaponFire.shooter[fireId] == shooterPlayerId) {
-                        engagementFireId = fireId;
-                        break;
-                    }
-                }
-            }
-            // if didn't shoot, then continue as can't change engagement state if didn't shoot
-            if (engagementFireId == INVALID_ID) {
-                continue;
-            }
-
-            // get if player hurt anyone
-            vector<int64_t> engagementHurtIds;
-            vector<int64_t> engagementTargetIds;
-            if (ticks.hurtPerTick.find(tickIndex) != ticks.hurtPerTick.end()) {
-                for (const auto & hurtId : ticks.hurtPerTick.at(tickIndex)) {
-                    // ignoring nade damage, so have to use same weapon as fired
-                    if (hurt.attacker[hurtId] == shooterPlayerId &&
-                        hurt.weapon[hurtId] == weaponFire.weapon[engagementFireId]) {
-                        engagementHurtIds.push_back(hurtId);
-                        engagementTargetIds.push_back(hurt.victim[hurtId]);
-                    }
-                }
-            }
-
-            // always track when shooting for a no-target engagement
-            // if no shooting at nothing engagement, then add a new one, no target to check
-            if (activeEngagementIds[shooterPlayerId].find(INVALID_ID) == activeEngagementIds[shooterPlayerId].end()) {
-                activeEngagementIds[shooterPlayerId][INVALID_ID].startTickId = tickIndex -
-                        getLookbackDemoTick(rounds, ticks, playerAtTick, tickIndex, tickRates, RADIUS_GAME_TICKS, 1000);
-                activeEngagementIds[shooterPlayerId][INVALID_ID].endTickId = tickIndex +
-                        getLookforwardDemoTick(rounds, ticks, playerAtTick, tickIndex, tickRates, RADIUS_GAME_TICKS, 1000);
-                int64_t newStartTickId = activeEngagementIds[shooterPlayerId][INVALID_ID].startTickId;
-                if ((newStartTickId == 353300 || newStartTickId == 353314) && shooterPlayerId == 7) {
-                    int x = 1;
-                }
-                activeEngagementIds[shooterPlayerId][INVALID_ID].firstHurtTick = INVALID_ID;
-                activeEngagementIds[shooterPlayerId][INVALID_ID].lastHurtTick = INVALID_ID;
-                activeEngagementIds[shooterPlayerId][INVALID_ID].shooterId = shooterPlayerId;
-                activeEngagementIds[shooterPlayerId][INVALID_ID].targetId = INVALID_ID;
-                // will add weapon fires below
-                // activeEngagementIds[shooterPlayerId][INVALID_ID].shooterWeaponFireIds.push_back(engagementFireId);
-                activeEngagementIds[shooterPlayerId][INVALID_ID].numHits = 0;
-            }
-            // else extend the shooting at no target engagmeent
-            else {
-                activeEngagementIds[shooterPlayerId][INVALID_ID].endTickId = tickIndex +
-                        getLookforwardDemoTick(rounds, ticks, playerAtTick, tickIndex, tickRates, RADIUS_GAME_TICKS, 1000);
-                // activeEngagementIds[shooterPlayerId][INVALID_ID].shooterWeaponFireIds.push_back(engagementFireId);
-            }
-
-            // if shot someone, then start/continue those engagements
-            for (size_t i = 0; i < engagementHurtIds.size(); i++) {
-                int64_t targetId = engagementTargetIds[i];
-                int64_t newStartTickId = tickIndex -
-                        getLookbackDemoTick(rounds, ticks, playerAtTick, tickIndex, tickRates, RADIUS_GAME_TICKS, 1000);
-                int64_t newEndTickId = tickIndex +
-                        getLookforwardDemoTick(rounds, ticks, playerAtTick, tickIndex, tickRates, RADIUS_GAME_TICKS, 1000);
-                if (newStartTickId == newEndTickId) {
-                    int x = 1;
-                }
-                // new engagement
-                if (activeEngagementIds[shooterPlayerId].find(targetId) == activeEngagementIds[shooterPlayerId].end()) {
-                    activeEngagementIds[shooterPlayerId][targetId].startTickId = newStartTickId;
-                    activeEngagementIds[shooterPlayerId][targetId].endTickId = newEndTickId;
-                    activeEngagementIds[shooterPlayerId][targetId].firstHurtTick = tickIndex;
-                    activeEngagementIds[shooterPlayerId][targetId].lastHurtTick = tickIndex;
-                    activeEngagementIds[shooterPlayerId][targetId].shooterId = shooterPlayerId;
-                    activeEngagementIds[shooterPlayerId][targetId].targetId = targetId;
-                    //activeEngagementIds[shooterPlayerId][targetId].shooterWeaponFireIds.push_back(engagementFireId);
-                    activeEngagementIds[shooterPlayerId][targetId].targetHurtIds.push_back(engagementHurtIds[i]);
-                    activeEngagementIds[shooterPlayerId][targetId].numHits = 1;
-                }
-                // continuing old engagement
                 else {
-                    activeEngagementIds[shooterPlayerId][targetId].endTickId = newEndTickId;
-                    activeEngagementIds[shooterPlayerId][targetId].lastHurtTick = tickIndex;
-                    // no need to add the weapon fire again, did it before this for loop
-                    // activeEngagementIds[shooterPlayerId][targetId].shooterWeaponFireIds.push_back(engagementFireId);
-                    activeEngagementIds[shooterPlayerId][targetId].targetHurtIds.push_back(engagementHurtIds[i]);
-                    activeEngagementIds[shooterPlayerId][targetId].numHits++;
-                }
-                if (activeEngagementIds[shooterPlayerId][targetId].startTickId == 353300 &&
-                    activeEngagementIds[shooterPlayerId][targetId].shooterId == 7) {
-                    int x = 1;
+                    perRoundPlayerTrajectory[playerId].startEndTickIds.maxId = tickIndex;
+                    perRoundPlayerTrajectory[playerId].startEndGameTickNumbers.maxId = gameTickNumber;
+                    if (perRoundPlayerTrajectory[playerId].navMeshArea.back() != navMeshArea.get_id()) {
+                        perRoundPlayerTrajectory[playerId].navMeshArea.push_back(navMeshArea.get_id());
+                        perRoundPlayerTrajectory[playerId].navMeshPlace.push_back(navMeshArea.m_place);
+                        perRoundPlayerTrajectory[playerId].areaEntryPATId.push_back(patIndex);
+                    }
                 }
             }
 
-            // add the weapon fire to all existing engagements with targets
-            for (const auto & [targetId, engagementIdsToUpdate] : activeEngagementIds[shooterPlayerId]) {
-                activeEngagementIds[shooterPlayerId][targetId].shooterWeaponFireIds.push_back(engagementFireId);
-            }
-        }
-    }
-
-    // if round ends abruptly, terminate all engagements
-    // no need to remove from activeEngagementIds as that structure goes out of scope after this line
-    for (const auto & shooterToSubmap : activeEngagementIds) {
-        for (const auto targetToEngagementIds : shooterToSubmap.second) {
-            EngagementIds finishedIds = targetToEngagementIds.second;
-            finishedIds.startTickId = weaponFire.tickId[finishedIds.shooterWeaponFireIds.front()];
-            finishedIds.endTickId = weaponFire.tickId[finishedIds.shooterWeaponFireIds.back()];
-            engagementIds.push_back(finishedIds);
         }
     }
 }
@@ -198,7 +53,8 @@ computeEngagementsPerRound(const Rounds & rounds, const Ticks & ticks, const Pla
 
 NavmeshTrajectoryResult queryNavmeshTrajectoryDataset(const Games & games, const Rounds & rounds,
                                                       const Ticks & ticks, const Players & players,
-                                                      const PlayerAtTick & playerAtTick, const nav_mesh::nav_file & navFile) {
+                                                      const PlayerAtTick & playerAtTick,
+                                                      const std::map<std::string, const nav_mesh::nav_file> & mapNavs) {
     int numThreads = omp_get_max_threads();
     // stored per trajectory
     vector<int64_t> tmpSourcePlayerId[numThreads];
@@ -213,8 +69,23 @@ NavmeshTrajectoryResult queryNavmeshTrajectoryDataset(const Games & games, const
 //#pragma omp parallel for
     for (int64_t roundIndex = 0; roundIndex < rounds.size; roundIndex++) {
         int threadNum = omp_get_thread_num();
+        string mapName = games.mapName[rounds.gameId[roundIndex]];
+        const nav_mesh::nav_file & navFile = mapNavs.at(mapName);
 
-        // first compute all the engagements
+        // find all the bombsite A and B locations
+        vector<uint32_t> aLocations, bLocations;
+        for (const auto & navMeshArea : navFile.m_areas) {
+            if (navFile.m_places[navMeshArea.m_place] == "BombsiteA") {
+                aLocations.push_back(navMeshArea.get_id());
+            }
+            else if (navFile.m_places[navMeshArea.m_place] == "BombsiteB") {
+                bLocations.push_back(navMeshArea.get_id());
+            }
+        }
+
+        // compute all the per round trajectories
+        map<int64_t, NavmeshTrajectoryResult::Trajectory> perRoundPlayerTrajectory;
+        computeTrajectoryPerRound(rounds, ticks, playerAtTick, navFile, roundIndex, perRoundPlayerTrajectory);
         // each engagement is ENGAGEMENT_SECONDS_RADIUS seconds before first shot (or round start, whichever later)
         // until ENGAGEMENT_SECONDS_RADIUS after last shot at same target (or death or round end or next engagement, whichever soonest)
         // can have multiple engagements if multiple targets
