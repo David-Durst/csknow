@@ -7,8 +7,8 @@
 class PlantTaskNode : Node {
     double aSitePreference = 0.5;
 
-    bool relevant(const ServerState & state) override {
-        if (state.roun)
+    bool relevant(const ServerState & state, int32_t curBotCSGOId) override {
+        if (state.clients[curBotCSGOId].team == T_TEAM && )
     }
 };
 

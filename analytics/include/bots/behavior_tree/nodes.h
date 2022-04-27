@@ -61,6 +61,10 @@ public:
     void onExit() override { }
 };
 
+class TreeThinker {
+    
+
+};
 RootNode buildTeamTree();
 RootNode buildPlayerTree();
 
