@@ -27,6 +27,7 @@ public:
     int32_t roundNumber;
     int32_t mapNumber;
     double tickInterval;
+    double roundTime, c4Time;
 
     struct Client {
         int32_t lastFrame;
@@ -88,6 +89,8 @@ public:
     string badPath;
     int numInputLines, numThinkLines;
     string inputsLog, thinkLog;
+
+    double roundTimeRemaining, timeSincePlant;
 
     void loadServerState(string dataPath);
     void saveBotInputs(string dataPath);
