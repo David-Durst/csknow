@@ -6,6 +6,7 @@
 #define CSKNOW_NODES_H
 
 #include "load_save_bot_data.h"
+#include "navmesh/nav_file.h"
 #include <vector>
 using std::vector;
 
@@ -13,14 +14,20 @@ struct Blackboard {
 
 };
 
+struct TreeThinker {
+    // constant values across game
+    int32_t curBotCSGOId;
+    nav_mesh::nav_file navFile;
+};
+
 class Node {
     int64_t index;
 
 public:
-    virtual bool relevant(const ServerState & state);
-    virtual bool exec(const ServerState & state);
-    virtual void onEntry();
-    virtual void onExit();
+    virtual bool relevant(const ServerState & state, const TreeThinker & treeThinker);
+    virtual bool exec(const ServerState & state, const TreeThinker & treeThinker);
+    virtual void onEntry(const TreeThinker & treeThinker);
+    virtual void onExit(const TreeThinker & treeThinker);
 };
 
 class RootNode : Node {
@@ -61,11 +68,6 @@ public:
     void onExit() override { }
 };
 
-class TreeThinker {
-    
 
-};
-RootNode buildTeamTree();
-RootNode buildPlayerTree();
 
 #endif //CSKNOW_NODES_H
