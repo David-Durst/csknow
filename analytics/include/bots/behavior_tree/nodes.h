@@ -36,16 +36,16 @@ class RootNode : Node {
 public:
     RootNode(Node node) : child(node) { };
 
-    bool relevant(const ServerState &state) override {
+    bool relevant(const ServerState &state, const TreeThinker & treeThinker) override {
         return true;
     }
 
-    bool exec(const ServerState & state) override {
-        child.exec(state);
+    bool exec(const ServerState & state, const TreeThinker & treeThinker) override {
+        child.exec(state, treeThinker);
     }
 
-    void onEntry() override { }
-    void onExit() override { }
+    void onEntry(const TreeThinker & treeThinker) override { }
+    void onExit(const TreeThinker & treeThinker) override { }
 };
 
 class ParSelectorNode : Node {
@@ -54,18 +54,18 @@ class ParSelectorNode : Node {
 public:
     ParSelectorNode(vector<Node> nodes) : children(nodes) { };
 
-    bool relevant(const ServerState &state) override {
+    bool relevant(const ServerState &state, const TreeThinker & treeThinker) override {
         return true;
     }
 
-    bool exec(const ServerState & state) override {
+    bool exec(const ServerState & state, const TreeThinker & treeThinker) override {
         for (auto & child : children) {
-            child.exec(state);
+            child.exec(state, treeThinker);
         }
     }
 
-    void onEntry() override { }
-    void onExit() override { }
+    void onEntry(const TreeThinker & treeThinker) override { }
+    void onExit(const TreeThinker & treeThinker) override { }
 };
 
 
