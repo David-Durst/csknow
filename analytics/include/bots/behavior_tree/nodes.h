@@ -11,61 +11,58 @@
 using std::vector;
 
 struct Blackboard {
-
+    nav_mesh::nav_file navFile;
 };
 
 struct TreeThinker {
     // constant values across game
-    int32_t curBotCSGOId;
+    CSGOId csgoId;
     nav_mesh::nav_file navFile;
 };
 
 class Node {
     int64_t index;
+    Blackboard & blackboard;
 
 public:
+    Node(Blackboard & blackboard) : blackboard(blackboard) { }
+
     virtual bool relevant(const ServerState & state, const TreeThinker & treeThinker);
-    virtual bool exec(const ServerState & state, const TreeThinker & treeThinker);
-    virtual void onEntry(const TreeThinker & treeThinker);
-    virtual void onExit(const TreeThinker & treeThinker);
+    virtual void exec(const ServerState & state, const TreeThinker & treeThinker);
+    virtual void onEntry(const TreeThinker & treeThinker) { }
+    virtual void onExit(const TreeThinker & treeThinker) { }
 };
 
 class RootNode : Node {
     Node child;
 
 public:
-    RootNode(Node node) : child(node) { };
+    RootNode(Blackboard & blackboard, Node node) : Node(blackboard), child(node) { };
 
     bool relevant(const ServerState &state, const TreeThinker & treeThinker) override {
         return true;
     }
 
-    bool exec(const ServerState & state, const TreeThinker & treeThinker) override {
+    void exec(const ServerState & state, const TreeThinker & treeThinker) override {
         child.exec(state, treeThinker);
     }
-
-    void onEntry(const TreeThinker & treeThinker) override { }
-    void onExit(const TreeThinker & treeThinker) override { }
 };
 
 class ParSelectorNode : Node {
     vector<Node> children;
 
 public:
-    ParSelectorNode(vector<Node> nodes) : children(nodes) { };
+    ParSelectorNode(Blackboard & blackboard, vector<Node> nodes) : Node(blackboard), children(nodes) { };
 
     bool relevant(const ServerState &state, const TreeThinker & treeThinker) override {
         return true;
     }
 
-    bool exec(const ServerState & state, const TreeThinker & treeThinker) override {
+    void exec(const ServerState & state, const TreeThinker & treeThinker) override {
         for (auto & child : children) {
             child.exec(state, treeThinker);
         }
     }
-
-    void onEntry(const TreeThinker & treeThinker) override { }
-    void onExit(const TreeThinker & treeThinker) override { }
 };
 
 

@@ -14,6 +14,8 @@
 #include <set>
 #include <utility>
 
+typedef int64_t CSKnowId;
+typedef int64_t CSGOId;
 
 class ServerState {
 private:
