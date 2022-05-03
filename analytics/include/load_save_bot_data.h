@@ -96,6 +96,7 @@ public:
 
     void loadServerState(string dataPath);
     void saveBotInputs(string dataPath);
+    Vec3 getC4Pos() const;
 };
 
 

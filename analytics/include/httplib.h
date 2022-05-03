@@ -3994,7 +3994,7 @@ inline void Response::set_chunked_content_provider(
   is_chunked_content_provider_ = true;
 }
 
-// Result implementation
+// NodeState implementation
 inline bool Result::has_request_header(const char *key) const {
   return request_headers_.find(key) != request_headers_.end();
 }

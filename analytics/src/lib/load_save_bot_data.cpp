@@ -340,3 +340,17 @@ void ServerState::saveBotInputs(string dataPath) {
     
     std::filesystem::rename(tmpInputsFilePath, inputsFilePath);
 }
+
+Vec3 ServerState::getC4Pos() const {
+    if (c4Exists) {
+        return {c4X, c4Y, c4Z};
+    }
+    else {
+        for (const auto & client : clients) {
+            if (client.hasC4) {
+                return {client.lastEyePosX, client.lastEyePosY, client.lastFootPosZ};
+            }
+        }
+        return {INVALID_ID, INVALID_ID, INVALID_ID};
+    }
+}

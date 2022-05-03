@@ -2,7 +2,7 @@
 // Created by durst on 4/26/22.
 //
 
-#include "bots/behavior_tree/nodes.h"
+#include "bots/behavior_tree/node.h"
 
 class PlantTaskNode : Node {
     double aSitePreference = 0.5;
