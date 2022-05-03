@@ -15,6 +15,7 @@ class ReachableResult : public QueryResult {
 public:
     vector<AABB> coordinate;
     vector<double> distanceMatrix;
+    int64_t numAreas;
 
     vector<int64_t> filterByForeignKey(int64_t otherTableIndex) {
         return {};
@@ -45,6 +46,10 @@ public:
             nameVector.push_back(std::to_string(i));
         }
         return nameVector;
+    }
+
+    double getDistance(int64_t src, int64_t dst) {
+        return distanceMatrix[src * numAreas + dst];
     }
 };
 

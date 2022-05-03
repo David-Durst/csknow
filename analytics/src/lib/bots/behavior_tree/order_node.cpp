@@ -17,6 +17,8 @@ NodeState D2OrderTaskNode::exec(const ServerState &state, const TreeThinker &tre
 
 
     if (this->nodeState == NodeState::Uninitialized) {
+        blackboard.reachability = queryReachable(queryMapMesh(blackboard.navFile));
+
         bool plantedA = blackboard.navFile.m_places[
                                 blackboard.navFile.get_nearest_area_by_position(vec3Conv(state.getC4Pos())).m_place] == "BombsiteA";
 
@@ -71,18 +73,22 @@ NodeState D2OrderTaskNode::exec(const ServerState &state, const TreeThinker &tre
             if (client.isAlive && client.isBot) {
                 map<string, size_t> & placesToPath = client.team == T_TEAM ? tPlacesToPath : ctPlacesToPath;
 
+                const nav_mesh::nav_area & curArea = blackboard.navFile.get_nearest_area_by_position(
+                        {client.lastEyePosX, client.lastEyePosY, client.lastFootPosZ});
+
                 // get the nearest path start for the current team
                 double minDistance = std::numeric_limits<double>::max();
                 size_t orderIndex = INVALID_ID;
 
-                for (const auto & area : treeThinker.navFile.m_areas) {
-                    double newDistance = computeDistance({client.lastEyePosX, client.lastEyePosY, client.lastFootPosZ},
-                                                         vec3tConv(area.get_center()));
+                for (const auto & area : blackboard.navFile.m_areas) {
+                    double newDistance = blackboard.reachability.getDistance(curArea.get_id(), area.get_id());
                     string newPlace = blackboard.navFile.m_places[area.m_place];
                     if (placesToPath.find(newPlace) != placesToPath.end() && newDistance < minDistance) {
                         minDistance = newDistance;
                         orderIndex = placesToPath[newPlace];
                     }
+
+                    this->blackboard.navPlaceToArea[newPlace].push_back(area.get_id());
                 }
 
                 this->blackboard.orders[orderIndex].numTeammates++;
@@ -117,12 +123,15 @@ NodeState GeneralOrderTaskNode::exec(const ServerState &state, const TreeThinker
     map<CSGOId, size_t> targetToOrderId;
     for (const auto & client : state.clients) {
         if (client.isAlive) {
-            Vec3 curPos = {client.lastEyePosX, client.lastEyePosY, client.lastFootPosZ};
+            const nav_mesh::nav_area & curArea = blackboard.navFile.get_nearest_area_by_position(
+                    {client.lastEyePosX, client.lastEyePosY, client.lastFootPosZ});
             map<CSGOId, Vec3> & idsToPositions = client.team == T_TEAM ? ctIdsToPositions : tIdsToPositions;
             double minDistance = std::numeric_limits<double>::max();
             CSGOId minCSGOId = INVALID_ID;
             for (const auto [enemyId, enemyPos] : idsToPositions) {
-                double newDistance = computeDistance(curPos, enemyPos);
+                double newDistance = blackboard.reachability.getDistance(curArea,
+                                                     blackboard.navFile.get_nearest_area_by_position(vec3Conv(enemyPos));
+);
                 if (newDistance < minDistance) {
                     minDistance = newDistance;
                     minCSGOId = enemyId;

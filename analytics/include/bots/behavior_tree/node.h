@@ -8,21 +8,27 @@
 #include "load_save_bot_data.h"
 #include "navmesh/nav_file.h"
 #include "bots/behavior_tree/order_data.h"
+#include "queries/nav_mesh.h"
+#include "queries/reachable.h"
 using std::map;
 
 struct Blackboard {
     nav_mesh::nav_file navFile;
 
+    // general map data
+    ReachableResult reachability;
+    map<string, vector<int32_t>> navPlaceToArea;
+
     // order data
     vector<Order> orders;
     map<CSGOId, int64_t> playerToOrder;
+
 
 };
 
 struct TreeThinker {
     // constant values across game
     CSGOId csgoId;
-    nav_mesh::nav_file navFile;
 };
 
 enum class NodeState {
