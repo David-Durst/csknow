@@ -35,9 +35,11 @@ NodeState D2OrderTaskNode::exec(const ServerState &state, const TreeThinker &tre
                     { "OutsideTunnel", "UpperTunnel", "BombsiteB" },
             };
         }
-        set<string> tStartPlaces;
-        for (const auto & pathPlaces : tPathPlaces) {
-            tStartPlaces.insert(pathPlaces[0]);
+        map<string, size_t> tPlacesToPath;
+        for (size_t i = 0; i < tPathPlaces.size(); i++) {
+            for (const auto & pathPlace : tPathPlaces[i]) {
+                tPlacesToPath[pathPlace] = i;
+            }
         }
 
         vector<vector<string>> ctPathPlaces;
@@ -45,43 +47,44 @@ NodeState D2OrderTaskNode::exec(const ServerState &state, const TreeThinker &tre
             vector<string> reversedPlaces(pathPlaces.rbegin(), pathPlaces.rend());
             ctPathPlaces.push_back(reversedPlaces);
         }
-        set<string> ctStartPlaces;
-        for (const auto & pathPlaces : ctPathPlaces) {
-            ctStartPlaces.insert(pathPlaces[0]);
+        map<string, size_t> ctPlacesToPath;
+        for (size_t i = 0; i < ctPathPlaces.size(); i++) {
+            for (const auto & pathPlace : ctPathPlaces[i]) {
+                ctPlacesToPath[pathPlace] = i;
+            }
         }
 
         vector<vector<string>> pathPlaces = tPathPlaces;
+        size_t ctOrderOffset = pathPlaces.size();
         pathPlaces.insert(pathPlaces.end(), ctPathPlaces.begin(), ctPathPlaces.end());
 
-        map<string, size_t> startPlaceToOrderIndex;
 
         for (const auto & pathPlace : pathPlaces) {
             vector<Waypoint> waypoints;
             for (const auto & p : pathPlace) {
                 waypoints.push_back({WaypointType::NavPlace, p, INVALID_ID});
             }
-            startPlaceToOrderIndex[pathPlace[0]] = this->blackboard.orders.size();
             this->blackboard.orders.push_back({waypoints, {}, {}, 0});
         }
 
         for (const auto & client : state.clients) {
             if (client.isAlive && client.isBot) {
-                set<string> & startPlaces = client.team == T_TEAM ? tStartPlaces : ctStartPlaces;
+                map<string, size_t> & placesToPath = client.team == T_TEAM ? tPlacesToPath : ctPlacesToPath;
 
                 // get the nearest path start for the current team
                 double minDistance = std::numeric_limits<double>::max();
-                string closestPlace;
+                size_t orderIndex = INVALID_ID;
+
                 for (const auto & area : treeThinker.navFile.m_areas) {
                     double newDistance = computeDistance({client.lastEyePosX, client.lastEyePosY, client.lastFootPosZ},
                                                          vec3tConv(area.get_center()));
                     string newPlace = blackboard.navFile.m_places[area.m_place];
-                    if (startPlaces.find(newPlace) != startPlaces.end() && newDistance < minDistance) {
+                    if (placesToPath.find(newPlace) != placesToPath.end() && newDistance < minDistance) {
                         minDistance = newDistance;
-                        closestPlace = newPlace;
+                        orderIndex = placesToPath[newPlace];
                     }
                 }
 
-                size_t orderIndex = startPlaceToOrderIndex[closestPlace];
                 this->blackboard.orders[orderIndex].numTeammates++;
                 this->blackboard.playerToOrder[client.csgoId] = orderIndex;
             }
