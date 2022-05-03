@@ -8,6 +8,7 @@
 #include "load_save_bot_data.h"
 #include "navmesh/nav_file.h"
 #include "bots/behavior_tree/order_data.h"
+#include "bots/behavior_tree/priority/priority_data.h"
 #include "queries/nav_mesh.h"
 #include "queries/reachable.h"
 using std::map;
@@ -23,12 +24,21 @@ struct Blackboard {
     vector<Order> orders;
     map<CSGOId, int64_t> playerToOrder;
 
+    // priority data
+    map<CSGOId, Priority> playerToPriority;
 
+};
+
+enum class AggressiveType {
+    Push,
+    Bait,
+    NUM_AGGESSIVE_TYPE
 };
 
 struct TreeThinker {
     // constant values across game
     CSGOId csgoId;
+    AggressiveType aggressiveType;
 };
 
 enum class NodeState {

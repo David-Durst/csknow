@@ -6,152 +6,154 @@
 #include "geometryNavConversions.h"
 #include <algorithm>
 
-/**
- * D2 assigns players to one of a couple known paths
- */
-NodeState D2OrderTaskNode::exec(const ServerState &state, const TreeThinker &treeThinker) {
-    if (state.mapName != "de_dust2") {
-        this->nodeState = NodeState::Failure;
-        return NodeState::Failure;
-    }
-
-
-    if (this->nodeState == NodeState::Uninitialized) {
-        blackboard.reachability = queryReachable(queryMapMesh(blackboard.navFile));
-
-        bool plantedA = blackboard.navFile.m_places[
-                                blackboard.navFile.get_nearest_area_by_position(vec3Conv(state.getC4Pos())).m_place] == "BombsiteA";
-
-        vector<vector<string>> tPathPlaces;
-        if (plantedA) {
-            tPathPlaces = {
-                { "LongDoors", "LongA", "ARamp", "BombsiteA" },
-                { "CTSpawn", "UnderA", "ARamp", "BombsiteA" },
-                { "Catwalk", "ShortStairs", "ExtendedA", "BombsiteA" },
-            };
+namespace order {
+    /**
+     * D2 assigns players to one of a couple known paths
+     */
+    NodeState D2TaskNode::exec(const ServerState &state, const TreeThinker &treeThinker) {
+        if (state.mapName != "de_dust2") {
+            this->nodeState = NodeState::Failure;
+            return NodeState::Failure;
         }
-        else {
-            tPathPlaces = {
-                    { "BDoors", "BombsiteB" },
-                    { "LowerTunnel", "UpperTunnel", "BombsiteB" },
-                    { "OutsideTunnel", "UpperTunnel", "BombsiteB" },
-            };
-        }
-        map<string, size_t> tPlacesToPath;
-        for (size_t i = 0; i < tPathPlaces.size(); i++) {
-            for (const auto & pathPlace : tPathPlaces[i]) {
-                tPlacesToPath[pathPlace] = i;
+
+
+        if (this->nodeState == NodeState::Uninitialized) {
+            blackboard.reachability = queryReachable(queryMapMesh(blackboard.navFile));
+
+            bool plantedA = blackboard.navFile.m_places[
+                                    blackboard.navFile.get_nearest_area_by_position(vec3Conv(state.getC4Pos())).m_place] == "BombsiteA";
+
+            vector<vector<string>> tPathPlaces;
+            if (plantedA) {
+                tPathPlaces = {
+                        { "LongDoors", "LongA", "ARamp", "BombsiteA" },
+                        { "CTSpawn", "UnderA", "ARamp", "BombsiteA" },
+                        { "Catwalk", "ShortStairs", "ExtendedA", "BombsiteA" },
+                };
             }
-        }
-
-        vector<vector<string>> ctPathPlaces;
-        for (const auto pathPlaces : tPathPlaces) {
-            vector<string> reversedPlaces(pathPlaces.rbegin(), pathPlaces.rend());
-            ctPathPlaces.push_back(reversedPlaces);
-        }
-        map<string, size_t> ctPlacesToPath;
-        for (size_t i = 0; i < ctPathPlaces.size(); i++) {
-            for (const auto & pathPlace : ctPathPlaces[i]) {
-                ctPlacesToPath[pathPlace] = i;
+            else {
+                tPathPlaces = {
+                        { "BDoors", "BombsiteB" },
+                        { "LowerTunnel", "UpperTunnel", "BombsiteB" },
+                        { "OutsideTunnel", "UpperTunnel", "BombsiteB" },
+                };
             }
-        }
-
-        vector<vector<string>> pathPlaces = tPathPlaces;
-        size_t ctOrderOffset = pathPlaces.size();
-        pathPlaces.insert(pathPlaces.end(), ctPathPlaces.begin(), ctPathPlaces.end());
-
-
-        for (const auto & pathPlace : pathPlaces) {
-            vector<Waypoint> waypoints;
-            for (const auto & p : pathPlace) {
-                waypoints.push_back({WaypointType::NavPlace, p, INVALID_ID});
+            map<string, size_t> tPlacesToPath;
+            for (size_t i = 0; i < tPathPlaces.size(); i++) {
+                for (const auto & pathPlace : tPathPlaces[i]) {
+                    tPlacesToPath[pathPlace] = i;
+                }
             }
-            this->blackboard.orders.push_back({waypoints, {}, {}, 0});
-        }
 
-        for (const auto & client : state.clients) {
-            if (client.isAlive && client.isBot) {
-                map<string, size_t> & placesToPath = client.team == T_TEAM ? tPlacesToPath : ctPlacesToPath;
+            vector<vector<string>> ctPathPlaces;
+            for (const auto pathPlaces : tPathPlaces) {
+                vector<string> reversedPlaces(pathPlaces.rbegin(), pathPlaces.rend());
+                ctPathPlaces.push_back(reversedPlaces);
+            }
+            map<string, size_t> ctPlacesToPath;
+            for (size_t i = 0; i < ctPathPlaces.size(); i++) {
+                for (const auto & pathPlace : ctPathPlaces[i]) {
+                    ctPlacesToPath[pathPlace] = i;
+                }
+            }
 
-                const nav_mesh::nav_area & curArea = blackboard.navFile.get_nearest_area_by_position(
-                        {client.lastEyePosX, client.lastEyePosY, client.lastFootPosZ});
+            vector<vector<string>> pathPlaces = tPathPlaces;
+            size_t ctOrderOffset = pathPlaces.size();
+            pathPlaces.insert(pathPlaces.end(), ctPathPlaces.begin(), ctPathPlaces.end());
 
-                // get the nearest path start for the current team
-                double minDistance = std::numeric_limits<double>::max();
-                size_t orderIndex = INVALID_ID;
 
-                for (const auto & area : blackboard.navFile.m_areas) {
-                    double newDistance = blackboard.reachability.getDistance(curArea.get_id(), area.get_id());
-                    string newPlace = blackboard.navFile.m_places[area.m_place];
-                    if (placesToPath.find(newPlace) != placesToPath.end() && newDistance < minDistance) {
-                        minDistance = newDistance;
-                        orderIndex = placesToPath[newPlace];
+            for (const auto & pathPlace : pathPlaces) {
+                vector<Waypoint> waypoints;
+                for (const auto & p : pathPlace) {
+                    waypoints.push_back({WaypointType::NavPlace, p, INVALID_ID});
+                }
+                this->blackboard.orders.push_back({waypoints, {}, {}, 0});
+            }
+
+            for (const auto & client : state.clients) {
+                if (client.isAlive && client.isBot) {
+                    map<string, size_t> & placesToPath = client.team == T_TEAM ? tPlacesToPath : ctPlacesToPath;
+
+                    const nav_mesh::nav_area & curArea = blackboard.navFile.get_nearest_area_by_position(
+                            {client.lastEyePosX, client.lastEyePosY, client.lastFootPosZ});
+
+                    // get the nearest path start for the current team
+                    double minDistance = std::numeric_limits<double>::max();
+                    size_t orderIndex = INVALID_ID;
+
+                    for (const auto & area : blackboard.navFile.m_areas) {
+                        double newDistance = blackboard.reachability.getDistance(curArea.get_id(), area.get_id());
+                        string newPlace = blackboard.navFile.m_places[area.m_place];
+                        if (placesToPath.find(newPlace) != placesToPath.end() && newDistance < minDistance) {
+                            minDistance = newDistance;
+                            orderIndex = placesToPath[newPlace];
+                        }
+
+                        this->blackboard.navPlaceToArea[newPlace].push_back(area.get_id());
                     }
 
-                    this->blackboard.navPlaceToArea[newPlace].push_back(area.get_id());
+                    this->blackboard.orders[orderIndex].numTeammates++;
+                    this->blackboard.playerToOrder[client.csgoId] = orderIndex;
+                }
+            }
+
+            this->nodeState == NodeState::Success;
+        }
+
+        return NodeState::Success;
+    }
+
+    /**
+     * General order assigns to kill
+     */
+    NodeState GeneralTaskNode::exec(const ServerState &state, const TreeThinker &treeThinker) {
+
+        map<CSGOId, Vec3> tIdsToPositions, ctIdsToPositions;
+
+        for (const auto & client : state.clients) {
+            if (client.isAlive) {
+                if (client.team == T_TEAM) {
+                    tIdsToPositions[client.csgoId] = {client.lastEyePosX, client.lastEyePosY, client.lastFootPosZ};
+                }
+                else if (client.team == CT_TEAM) {
+                    ctIdsToPositions[client.csgoId] = {client.lastEyePosX, client.lastEyePosY, client.lastFootPosZ};
+                }
+            }
+        }
+
+        map<CSGOId, size_t> targetToOrderId;
+        for (const auto & client : state.clients) {
+            if (client.isAlive) {
+                const nav_mesh::nav_area & curArea = blackboard.navFile.get_nearest_area_by_position(
+                        {client.lastEyePosX, client.lastEyePosY, client.lastFootPosZ});
+                map<CSGOId, Vec3> & idsToPositions = client.team == T_TEAM ? ctIdsToPositions : tIdsToPositions;
+                double minDistance = std::numeric_limits<double>::max();
+                CSGOId minCSGOId = INVALID_ID;
+                for (const auto [enemyId, enemyPos] : idsToPositions) {
+                    double newDistance = blackboard.reachability.getDistance(curArea.get_id(),
+                                                                             blackboard.navFile.get_nearest_area_by_position(vec3Conv(enemyPos)).get_id());
+                    if (newDistance < minDistance) {
+                        minDistance = newDistance;
+                        minCSGOId = enemyId;
+                    }
                 }
 
-                this->blackboard.orders[orderIndex].numTeammates++;
-                this->blackboard.playerToOrder[client.csgoId] = orderIndex;
+                // if a teammate already has him as a target, group them by the same order
+                if (targetToOrderId.find(minCSGOId) != targetToOrderId.end()) {
+                    size_t orderId = targetToOrderId[minCSGOId];
+                    blackboard.playerToOrder[client.csgoId] = orderId;
+                    blackboard.orders[orderId].numTeammates++;
+                }
+                else {
+                    targetToOrderId[minCSGOId] = blackboard.orders.size();
+                    blackboard.playerToOrder[client.csgoId] = blackboard.orders.size();
+                    blackboard.orders.push_back({{{WaypointType::Player,"", minCSGOId}}, {}, {}, 1});
+                }
             }
         }
 
         this->nodeState == NodeState::Success;
+        return NodeState::Success;
     }
 
-    return NodeState::Success;
-}
-
-/**
- * General order assigns to kill
- */
-NodeState GeneralOrderTaskNode::exec(const ServerState &state, const TreeThinker &treeThinker) {
-
-    map<CSGOId, Vec3> tIdsToPositions, ctIdsToPositions;
-
-    for (const auto & client : state.clients) {
-        if (client.isAlive) {
-            if (client.team == T_TEAM) {
-                tIdsToPositions[client.csgoId] = {client.lastEyePosX, client.lastEyePosY, client.lastFootPosZ};
-            }
-            else if (client.team == CT_TEAM) {
-                ctIdsToPositions[client.csgoId] = {client.lastEyePosX, client.lastEyePosY, client.lastFootPosZ};
-            }
-        }
-    }
-
-    map<CSGOId, size_t> targetToOrderId;
-    for (const auto & client : state.clients) {
-        if (client.isAlive) {
-            const nav_mesh::nav_area & curArea = blackboard.navFile.get_nearest_area_by_position(
-                    {client.lastEyePosX, client.lastEyePosY, client.lastFootPosZ});
-            map<CSGOId, Vec3> & idsToPositions = client.team == T_TEAM ? ctIdsToPositions : tIdsToPositions;
-            double minDistance = std::numeric_limits<double>::max();
-            CSGOId minCSGOId = INVALID_ID;
-            for (const auto [enemyId, enemyPos] : idsToPositions) {
-                double newDistance = blackboard.reachability.getDistance(curArea,
-                                                     blackboard.navFile.get_nearest_area_by_position(vec3Conv(enemyPos));
-);
-                if (newDistance < minDistance) {
-                    minDistance = newDistance;
-                    minCSGOId = enemyId;
-                }
-            }
-
-            // if a teammate already has him as a target, group them by the same order
-            if (targetToOrderId.find(minCSGOId) != targetToOrderId.end()) {
-                size_t orderId = targetToOrderId[minCSGOId];
-                blackboard.playerToOrder[client.csgoId] = orderId;
-                blackboard.orders[orderId].numTeammates++;
-            }
-            else {
-                targetToOrderId[minCSGOId] = blackboard.orders.size();
-                blackboard.playerToOrder[client.csgoId] = blackboard.orders.size();
-                blackboard.orders.push_back({{{WaypointType::Player,"", minCSGOId}}, {}, {}, 1});
-            }
-        }
-    }
-
-    this->nodeState == NodeState::Success;
-    return NodeState::Success;
 }
