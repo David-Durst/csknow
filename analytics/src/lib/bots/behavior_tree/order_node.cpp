@@ -17,7 +17,7 @@ namespace order {
         }
 
 
-        if (this->nodeState == NodeState::Uninitialized) {
+        if (this->nodeState != NodeState::Running) {
             blackboard.reachability = queryReachable(queryMapMesh(blackboard.navFile));
 
             bool plantedA = blackboard.navFile.m_places[
@@ -97,10 +97,12 @@ namespace order {
                 }
             }
 
+            this->nodeState == NodeState::Running;
+        }
+        else if (this->nodeState == NodeState::Running && state.roundNumber != blackboard.lastFrameState.roundNumber) {
             this->nodeState == NodeState::Success;
         }
-
-        return NodeState::Success;
+        return this->nodeState;
     }
 
     /**
@@ -108,52 +110,66 @@ namespace order {
      */
     NodeState GeneralTaskNode::exec(const ServerState &state, TreeThinker &treeThinker) {
 
-        map<CSGOId, Vec3> tIdsToPositions, ctIdsToPositions;
+        if (this->nodeState != NodeState::Running) {
+            map<CSGOId, Vec3> tIdsToPositions, ctIdsToPositions;
 
-        for (const auto & client : state.clients) {
-            if (client.isAlive) {
-                if (client.team == T_TEAM) {
-                    tIdsToPositions[client.csgoId] = {client.lastEyePosX, client.lastEyePosY, client.lastFootPosZ};
-                }
-                else if (client.team == CT_TEAM) {
-                    ctIdsToPositions[client.csgoId] = {client.lastEyePosX, client.lastEyePosY, client.lastFootPosZ};
-                }
-            }
-        }
-
-        map<CSGOId, size_t> targetToOrderId;
-        for (const auto & client : state.clients) {
-            if (client.isAlive) {
-                const nav_mesh::nav_area & curArea = blackboard.navFile.get_nearest_area_by_position(
-                        {client.lastEyePosX, client.lastEyePosY, client.lastFootPosZ});
-                map<CSGOId, Vec3> & idsToPositions = client.team == T_TEAM ? ctIdsToPositions : tIdsToPositions;
-                double minDistance = std::numeric_limits<double>::max();
-                CSGOId minCSGOId = INVALID_ID;
-                for (const auto [enemyId, enemyPos] : idsToPositions) {
-                    double newDistance = blackboard.reachability.getDistance(curArea.get_id(),
-                                                                             blackboard.navFile.get_nearest_area_by_position(vec3Conv(enemyPos)).get_id());
-                    if (newDistance < minDistance) {
-                        minDistance = newDistance;
-                        minCSGOId = enemyId;
+            for (const auto &client : state.clients) {
+                if (client.isAlive) {
+                    if (client.team == T_TEAM) {
+                        tIdsToPositions[client.csgoId] = {client.lastEyePosX, client.lastEyePosY, client.lastFootPosZ};
+                    } else if (client.team == CT_TEAM) {
+                        ctIdsToPositions[client.csgoId] = {client.lastEyePosX, client.lastEyePosY, client.lastFootPosZ};
                     }
                 }
+            }
 
-                // if a teammate already has him as a target, group them by the same order
-                if (targetToOrderId.find(minCSGOId) != targetToOrderId.end()) {
-                    size_t orderId = targetToOrderId[minCSGOId];
-                    blackboard.playerToOrder[client.csgoId] = orderId;
-                    blackboard.orders[orderId].numTeammates++;
+            map<CSGOId, size_t> targetToOrderId;
+            for (const auto &client : state.clients) {
+                if (client.isAlive) {
+                    const nav_mesh::nav_area &curArea = blackboard.navFile.get_nearest_area_by_position(
+                            {client.lastEyePosX, client.lastEyePosY, client.lastFootPosZ});
+                    map<CSGOId, Vec3> &idsToPositions = client.team == T_TEAM ? ctIdsToPositions : tIdsToPositions;
+                    double minDistance = std::numeric_limits<double>::max();
+                    CSGOId minCSGOId = INVALID_ID;
+                    for (const auto[enemyId, enemyPos] : idsToPositions) {
+                        double newDistance = blackboard.reachability.getDistance(curArea.get_id(),
+                                                                                 blackboard.navFile.get_nearest_area_by_position(
+                                                                                         vec3Conv(enemyPos)).get_id());
+                        if (newDistance < minDistance) {
+                            minDistance = newDistance;
+                            minCSGOId = enemyId;
+                        }
+                    }
+
+                    // if a teammate already has him as a target, group them by the same order
+                    if (targetToOrderId.find(minCSGOId) != targetToOrderId.end()) {
+                        size_t orderId = targetToOrderId[minCSGOId];
+                        blackboard.playerToOrder[client.csgoId] = orderId;
+                        blackboard.orders[orderId].numTeammates++;
+                    } else {
+                        targetToOrderId[minCSGOId] = blackboard.orders.size();
+                        blackboard.playerToOrder[client.csgoId] = blackboard.orders.size();
+                        blackboard.orders.push_back({{{WaypointType::Player, "", minCSGOId}}, {}, {}, 1});
+                    }
                 }
-                else {
-                    targetToOrderId[minCSGOId] = blackboard.orders.size();
-                    blackboard.playerToOrder[client.csgoId] = blackboard.orders.size();
-                    blackboard.orders.push_back({{{WaypointType::Player,"", minCSGOId}}, {}, {}, 1});
+            }
+            this->nodeState = NodeState::Running;
+        }
+        else if (this->nodeState == NodeState::Running) {
+            // finish if anyone died (as need to repick everyone's target) or if round restarted
+            if (state.clients.size() != blackboard.lastFrameState.clients.size()) {
+                this->nodeState = NodeState::Success;
+            }
+            else {
+                for (size_t i = 0; i < state.clients.size(); i++) {
+                    if (state.clients[i].isAlive != blackboard.lastFrameState.clients[i].isAlive) {
+                        this->nodeState = NodeState::Success;
+                    }
                 }
             }
         }
 
-        this->nodeState == NodeState::Success;
-        return NodeState::Success;
+        return this->nodeState;
     }
 
 }

@@ -26,7 +26,7 @@ enum class WaypointType {
 
 struct Waypoint {
     WaypointType waypointType;
-    string areaName;
+    string placeName;
     CSGOId playerId;
 };
 

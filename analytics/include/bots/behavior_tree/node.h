@@ -13,22 +13,6 @@
 #include "queries/reachable.h"
 using std::map;
 
-struct Blackboard {
-    nav_mesh::nav_file navFile;
-
-    // general map data
-    ReachableResult reachability;
-    map<string, vector<uint32_t>> navPlaceToArea;
-
-    // order data
-    vector<Order> orders;
-    map<CSGOId, int64_t> playerToOrder;
-
-    // priority data
-    map<CSGOId, Priority> playerToPriority;
-
-};
-
 enum class AggressiveType {
     Push,
     Bait,
@@ -41,6 +25,26 @@ struct TreeThinker {
     AggressiveType aggressiveType;
 
     set<string> placesInOrderVisited;
+};
+
+struct Blackboard {
+    nav_mesh::nav_file navFile;
+    ServerState lastFrameState;
+
+    // general map data
+    ReachableResult reachability;
+    map<string, vector<uint32_t>> navPlaceToArea;
+
+    // all player data
+    map<CSGOId, TreeThinker> treeThinkers;
+
+    // order data
+    vector<Order> orders;
+    map<CSGOId, int64_t> playerToOrder;
+
+    // priority data
+    map<CSGOId, Priority> playerToPriority;
+
 };
 
 enum class NodeState {
@@ -66,7 +70,7 @@ public:
         nodeState = NodeState::Uninitialized;
     }
 
-    uint32_t getNearestAreaInNextPlace(const ServerState & state, const TreeThinker & treeThinker, string nextArea);
+    uint32_t getNearestAreaInNextPlace(const ServerState & state, const TreeThinker & treeThinker, string nextPlace);
 };
 
     class RootNode : public Node {

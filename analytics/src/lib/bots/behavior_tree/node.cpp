@@ -4,14 +4,14 @@
 
 #include "bots/behavior_tree/node.h"
 
-uint32_t Node::getNearestAreaInNextPlace(const ServerState & state, const TreeThinker & treeThinker, string nextArea) {
+uint32_t Node::getNearestAreaInNextPlace(const ServerState & state, const TreeThinker & treeThinker, string nextPlace) {
     const ServerState::Client curClient = state.clients[state.csgoIdToCSKnowId[treeThinker.csgoId]];
     const nav_mesh::nav_area & curArea = blackboard.navFile.get_nearest_area_by_position(
             {curClient.lastEyePosX, curClient.lastEyePosY, curClient.lastFootPosZ});
 
     uint32_t minAreaId = INVALID_ID;
     double minDistance = std::numeric_limits<double>::max();
-    for (const uint32_t areaId : blackboard.navPlaceToArea[nextArea]) {
+    for (const uint32_t areaId : blackboard.navPlaceToArea[nextPlace]) {
         double newDistance = blackboard.reachability.getDistance(curArea.get_id(), areaId);
         if (newDistance < minDistance) {
             minAreaId = areaId;
