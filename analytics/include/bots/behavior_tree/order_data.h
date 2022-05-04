@@ -34,7 +34,7 @@ struct Order {
     vector<Waypoint> waypoints;
     vector<GrenadeThrow> grenadeThrows;
     map<CSGOId, vector<int64_t>> playerToGrenades;
-    int16_t numTeammates;
+    vector<CSGOId> followers;
 };
 
 #endif //CSKNOW_ORDER_DATA_H
