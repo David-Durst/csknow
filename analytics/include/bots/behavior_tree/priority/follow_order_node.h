@@ -9,12 +9,6 @@
 #include <map>
 
 namespace follow {
-    class SoloTaskNode : public Node {
-    public:
-        SoloTaskNode(Blackboard & blackboard) : Node(blackboard) { };
-        NodeState exec(const ServerState & state, TreeThinker &treeThinker) override;
-    };
-
     class PushTaskNode : public Node {
     public:
         PushTaskNode(Blackboard & blackboard) : Node(blackboard) { };
@@ -31,8 +25,7 @@ namespace follow {
 class FollowOrderSeqSelectorNode : public FirstSuccessSeqSelectorNode {
     vector<Node> nodes;
     FollowOrderSeqSelectorNode(Blackboard & blackboard) :
-            FirstSuccessSeqSelectorNode(blackboard, {follow::SoloTaskNode(blackboard),
-                                                     follow::PushTaskNode(blackboard),
+            FirstSuccessSeqSelectorNode(blackboard, { follow::PushTaskNode(blackboard),
                                                      follow::BaitTaskNode(blackboard)}) { };
 };
 

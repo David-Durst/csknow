@@ -6,6 +6,7 @@
 #define CSKNOW_NODE_H
 
 #include "load_save_bot_data.h"
+#include "geometryNavConversions.h"
 #include "navmesh/nav_file.h"
 #include "bots/behavior_tree/order_data.h"
 #include "bots/behavior_tree/priority/priority_data.h"
@@ -46,6 +47,10 @@ struct Blackboard {
     // priority data
     map<CSGOId, Priority> playerToPriority;
 
+    string getPlayerPlace(Vec3 pos) {
+        navFile.m_places[navFile.get_nearest_area_by_position(vec3Conv(pos)).m_place];
+    }
+
     Blackboard(string navPath) : navFile(navPath.c_str()),
         reachability(queryReachable(queryMapMesh(navFile))) {
         for (const auto & area : navFile.m_areas) {
@@ -64,11 +69,10 @@ enum class NodeState {
 };
 
 class Node {
-protected:
+public:
     Blackboard & blackboard;
     NodeState nodeState;
 
-public:
 
     Node(Blackboard & blackboard) : blackboard(blackboard), nodeState(NodeState::Uninitialized) { }
     virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker);

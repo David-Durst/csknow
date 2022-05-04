@@ -69,6 +69,14 @@ public:
         // these range from -1 to 1
         float inputAngleDeltaPctX;
         float inputAngleDeltaPctY;
+
+        Vec3 getFootPosForPlayer() const {
+            return {lastEyePosX, lastEyePosY, lastFootPosZ};
+        }
+
+        Vec3 getEyePosForPlayer() const {
+            return {lastEyePosX, lastEyePosY, lastEyePosZ};
+        }
     };
 
     vector<int> csgoIdToCSKnowId;
