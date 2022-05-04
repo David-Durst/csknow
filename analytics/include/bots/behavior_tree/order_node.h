@@ -12,13 +12,13 @@ namespace order {
     class D2TaskNode : public Node {
     public:
         D2TaskNode(Blackboard & blackboard) : Node(blackboard) { };
-        NodeState exec(const ServerState & state, const TreeThinker & treeThinker) override;
+        NodeState exec(const ServerState & state, TreeThinker &treeThinker) override;
     };
 
     class GeneralTaskNode : public Node {
     public:
         GeneralTaskNode(Blackboard & blackboard) : Node(blackboard) { };
-        NodeState exec(const ServerState & state, const TreeThinker & treeThinker) override;
+        NodeState exec(const ServerState & state, TreeThinker &treeThinker) override;
     };
 }
 

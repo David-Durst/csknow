@@ -18,7 +18,7 @@ struct Blackboard {
 
     // general map data
     ReachableResult reachability;
-    map<string, vector<int32_t>> navPlaceToArea;
+    map<string, vector<uint32_t>> navPlaceToArea;
 
     // order data
     vector<Order> orders;
@@ -39,6 +39,8 @@ struct TreeThinker {
     // constant values across game
     CSGOId csgoId;
     AggressiveType aggressiveType;
+
+    set<string> placesInOrderVisited;
 };
 
 enum class NodeState {
@@ -57,21 +59,23 @@ protected:
 public:
 
     Node(Blackboard & blackboard) : blackboard(blackboard), nodeState(NodeState::Uninitialized) { }
-    virtual NodeState exec(const ServerState & state, const TreeThinker & treeThinker);
+    virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker);
     virtual void reset() {
         blackboard.orders.clear();
         blackboard.playerToOrder.clear();
         nodeState = NodeState::Uninitialized;
     }
+
+    uint32_t getNearestAreaInNextPlace(const ServerState & state, const TreeThinker & treeThinker, string nextArea);
 };
 
-class RootNode : public Node {
+    class RootNode : public Node {
     Node child;
 
 public:
     RootNode(Blackboard & blackboard, Node node) : Node(blackboard), child(node) { };
 
-    NodeState exec(const ServerState & state, const TreeThinker & treeThinker) override {
+    NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
         return child.exec(state, treeThinker);
     }
 };
@@ -82,13 +86,20 @@ class ParSelectorNode : public Node {
 public:
     ParSelectorNode(Blackboard & blackboard, vector<Node> nodes) : Node(blackboard), children(nodes) { };
 
-    NodeState exec(const ServerState & state, const TreeThinker & treeThinker) override {
+    NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
         for (auto & child : children) {
             if (child.exec(state, treeThinker) == NodeState::Failure) {
                 return NodeState::Failure;
             }
         }
         return NodeState::Success;
+    }
+
+    void reset() override {
+        for (auto & child : children) {
+            child.reset();
+        }
+        Node::reset();
     }
 };
 
@@ -98,13 +109,20 @@ class FirstSuccessSeqSelectorNode : public Node {
 public:
     FirstSuccessSeqSelectorNode(Blackboard & blackboard, vector<Node> nodes) : Node(blackboard), children(nodes) { };
 
-    NodeState exec(const ServerState & state, const TreeThinker & treeThinker) override {
+    NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
         for (auto & child : children) {
             if (child.exec(state, treeThinker) == NodeState::Success) {
                 return NodeState::Success;
             }
         }
         return NodeState::Failure;
+    }
+
+    void reset() override {
+        for (auto & child : children) {
+            child.reset();
+        }
+        Node::reset();
     }
 };
 

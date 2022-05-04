@@ -12,19 +12,19 @@ namespace follow {
     class SoloTaskNode : public Node {
     public:
         SoloTaskNode(Blackboard & blackboard) : Node(blackboard) { };
-        NodeState exec(const ServerState & state, const TreeThinker & treeThinker) override;
+        NodeState exec(const ServerState & state, TreeThinker &treeThinker) override;
     };
 
     class PushTaskNode : public Node {
     public:
         PushTaskNode(Blackboard & blackboard) : Node(blackboard) { };
-        NodeState exec(const ServerState & state, const TreeThinker & treeThinker) override;
+        NodeState exec(const ServerState & state, TreeThinker &treeThinker) override;
     };
 
     class BaitTaskNode : public Node {
     public:
         BaitTaskNode(Blackboard & blackboard) : Node(blackboard) { };
-        NodeState exec(const ServerState & state, const TreeThinker & treeThinker) override;
+        NodeState exec(const ServerState & state, TreeThinker &treeThinker) override;
     };
 }
 

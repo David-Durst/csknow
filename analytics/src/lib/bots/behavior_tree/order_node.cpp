@@ -10,7 +10,7 @@ namespace order {
     /**
      * D2 assigns players to one of a couple known paths
      */
-    NodeState D2TaskNode::exec(const ServerState &state, const TreeThinker &treeThinker) {
+    NodeState D2TaskNode::exec(const ServerState &state, TreeThinker &treeThinker) {
         if (state.mapName != "de_dust2") {
             this->nodeState = NodeState::Failure;
             return NodeState::Failure;
@@ -106,7 +106,7 @@ namespace order {
     /**
      * General order assigns to kill
      */
-    NodeState GeneralTaskNode::exec(const ServerState &state, const TreeThinker &treeThinker) {
+    NodeState GeneralTaskNode::exec(const ServerState &state, TreeThinker &treeThinker) {
 
         map<CSGOId, Vec3> tIdsToPositions, ctIdsToPositions;
 
