@@ -7,6 +7,13 @@
 #include <algorithm>
 
 namespace order {
+    void resetTreeThinkers(Blackboard & blackboard) {
+        for (auto & [_, treeThinker] : blackboard.treeThinkers) {
+            treeThinker.orderWaypointIndex = 0;
+            treeThinker.orderGrenadeIndex = 0;
+        }
+    }
+
     /**
      * D2 assigns players to one of a couple known paths
      */
@@ -18,8 +25,7 @@ namespace order {
 
 
         if (this->nodeState != NodeState::Running) {
-            blackboard.reachability = queryReachable(queryMapMesh(blackboard.navFile));
-
+            // first setup orders to go A or B
             bool plantedA = blackboard.navFile.m_places[
                                     blackboard.navFile.get_nearest_area_by_position(vec3Conv(state.getC4Pos())).m_place] == "BombsiteA";
 
@@ -70,6 +76,7 @@ namespace order {
                 this->blackboard.orders.push_back({waypoints, {}, {}, 0});
             }
 
+            // next assign clients to orders
             for (const auto & client : state.clients) {
                 if (client.isAlive && client.isBot) {
                     map<string, size_t> & placesToPath = client.team == T_TEAM ? tPlacesToPath : ctPlacesToPath;
@@ -88,8 +95,6 @@ namespace order {
                             minDistance = newDistance;
                             orderIndex = placesToPath[newPlace];
                         }
-
-                        this->blackboard.navPlaceToArea[newPlace].push_back(area.get_id());
                     }
 
                     this->blackboard.orders[orderIndex].numTeammates++;
@@ -97,10 +102,12 @@ namespace order {
                 }
             }
 
-            this->nodeState == NodeState::Running;
+            // finally some house keeping
+            resetTreeThinkers(blackboard);
+            this->nodeState = NodeState::Running;
         }
         else if (this->nodeState == NodeState::Running && state.roundNumber != blackboard.lastFrameState.roundNumber) {
-            this->nodeState == NodeState::Success;
+            this->nodeState = NodeState::Success;
         }
         return this->nodeState;
     }
@@ -153,6 +160,8 @@ namespace order {
                     }
                 }
             }
+
+            resetTreeThinkers(blackboard);
             this->nodeState = NodeState::Running;
         }
         else if (this->nodeState == NodeState::Running) {

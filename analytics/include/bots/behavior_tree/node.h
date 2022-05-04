@@ -24,7 +24,8 @@ struct TreeThinker {
     CSGOId csgoId;
     AggressiveType aggressiveType;
 
-    set<string> placesInOrderVisited;
+    int64_t orderWaypointIndex;
+    int64_t orderGrenadeIndex;
 };
 
 struct Blackboard {
@@ -44,6 +45,13 @@ struct Blackboard {
 
     // priority data
     map<CSGOId, Priority> playerToPriority;
+
+    Blackboard(string navPath) : navFile(navPath.c_str()),
+        reachability(queryReachable(queryMapMesh(navFile))) {
+        for (const auto & area : navFile.m_areas) {
+            navPlaceToArea[navFile.m_places[area.m_place]] = area.get_id();
+        }
+    }
 
 };
 

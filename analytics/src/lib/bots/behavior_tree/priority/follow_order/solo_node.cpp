@@ -8,13 +8,16 @@ namespace follow {
     NodeState SoloTaskNode::exec(const ServerState &state, TreeThinker &treeThinker) {
         const Order & curOrder = blackboard.orders[blackboard.playerToOrder[state.csgoIdToCSKnowId[treeThinker.csgoId]]];
 
-        for (const auto & waypoint : curOrder.waypoints) {
-            // if going to
-            if (waypoint.waypointType == WaypointType::NavPlace) {
-                if (treeThinker.placesInOrderVisited.find(waypoint.placeName) != treeThinker.placesInOrderVisited.end()) {
+        if (this->nodeState != NodeState::Running) {
+            for (const auto & waypoint : curOrder.waypoints) {
+                //
+                if (waypoint.waypointType == WaypointType::NavPlace) {
+                    if (treeThinker.placesInOrderVisited.find(waypoint.placeName) != treeThinker.placesInOrderVisited.end()) {
 
+                    }
                 }
             }
+
         }
     }
 }
