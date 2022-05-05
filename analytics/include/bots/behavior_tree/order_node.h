@@ -25,7 +25,7 @@ namespace order {
 class OrderSeqSelectorNode : public FirstSuccessSeqSelectorNode {
     vector<Node> nodes;
     OrderSeqSelectorNode(Blackboard & blackboard) :
-        FirstSuccessSeqSelectorNode(blackboard, {order::D2TaskNode(blackboard), GeneralTaskNode(blackboard)}) { };
+        FirstSuccessSeqSelectorNode(blackboard, {order::D2TaskNode(blackboard), order::GeneralTaskNode(blackboard)}) { };
 };
 
 #endif //CSKNOW_ORDER_NODE_H

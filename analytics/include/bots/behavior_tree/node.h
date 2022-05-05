@@ -103,12 +103,19 @@ public:
     ParSelectorNode(Blackboard & blackboard, vector<Node> nodes) : Node(blackboard), children(nodes) { };
 
     NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
+        bool anyChildrenRunning = false;
         for (auto & child : children) {
-            if (child.exec(state, treeThinker) == NodeState::Failure) {
+            NodeState childNodeState = child.exec(state, treeThinker);
+            if (childNodeState == NodeState::Failure) {
+                nodeState = NodeState::Failure;
                 return NodeState::Failure;
             }
+            else if (childNodeState == NodeState::Running) {
+                anyChildrenRunning = true;
+            }
         }
-        return NodeState::Success;
+        nodeState = anyChildrenRunning ? NodeState::Running : NodeState::Success;
+        return nodeState;
     }
 
     void reset() override {
@@ -120,6 +127,7 @@ public:
 };
 
 class FirstSuccessSeqSelectorNode : public Node {
+protected:
     vector<Node> children;
 
 public:
@@ -127,10 +135,13 @@ public:
 
     NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
         for (auto & child : children) {
-            if (child.exec(state, treeThinker) == NodeState::Success) {
-                return NodeState::Success;
+            NodeState childNodeState = child.exec(state, treeThinker);
+            if (childNodeState != NodeState::Success) {
+                nodeState = childNodeState;
+                return nodeState;
             }
         }
+        nodeState = NodeState::Failure;
         return NodeState::Failure;
     }
 

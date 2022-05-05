@@ -27,6 +27,19 @@ class FollowOrderSeqSelectorNode : public FirstSuccessSeqSelectorNode {
     FollowOrderSeqSelectorNode(Blackboard & blackboard) :
             FirstSuccessSeqSelectorNode(blackboard, { follow::PushTaskNode(blackboard),
                                                      follow::BaitTaskNode(blackboard)}) { };
+
+    NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
+        int childIndex = 0;
+        if (treeThinker.aggressiveType == AggressiveType::Push) {
+            childIndex = 0;
+        }
+        else {
+            childIndex = 1;
+        }
+        nodeState = children[childIndex].exec(state, treeThinker);
+        return nodeState;
+    }
+
 };
 
 #endif //CSKNOW_FOLLOW_ORDER_NODE_H
