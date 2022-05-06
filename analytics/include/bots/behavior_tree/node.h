@@ -126,17 +126,17 @@ public:
     }
 };
 
-class FirstSuccessSeqSelectorNode : public Node {
+class FirstNonFailSeqSelectorNode : public Node {
 protected:
     vector<Node> children;
 
 public:
-    FirstSuccessSeqSelectorNode(Blackboard & blackboard, vector<Node> nodes) : Node(blackboard), children(nodes) { };
+    FirstNonFailSeqSelectorNode(Blackboard & blackboard, vector<Node> nodes) : Node(blackboard), children(nodes) { };
 
     NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
         for (auto & child : children) {
             NodeState childNodeState = child.exec(state, treeThinker);
-            if (childNodeState != NodeState::Success) {
+            if (childNodeState != NodeState::Failure) {
                 nodeState = childNodeState;
                 return nodeState;
             }

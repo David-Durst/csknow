@@ -22,10 +22,9 @@ namespace follow {
     };
 }
 
-class FollowOrderSeqSelectorNode : public FirstSuccessSeqSelectorNode {
-    vector<Node> nodes;
+class FollowOrderSeqSelectorNode : public FirstNonFailSeqSelectorNode {
     FollowOrderSeqSelectorNode(Blackboard & blackboard) :
-            FirstSuccessSeqSelectorNode(blackboard, { follow::PushTaskNode(blackboard),
+            FirstNonFailSeqSelectorNode(blackboard, {follow::PushTaskNode(blackboard),
                                                      follow::BaitTaskNode(blackboard)}) { };
 
     NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {

@@ -22,10 +22,10 @@ namespace order {
     };
 }
 
-class OrderSeqSelectorNode : public FirstSuccessSeqSelectorNode {
+class OrderSeqSelectorNode : public FirstNonFailSeqSelectorNode {
     vector<Node> nodes;
     OrderSeqSelectorNode(Blackboard & blackboard) :
-        FirstSuccessSeqSelectorNode(blackboard, {order::D2TaskNode(blackboard), order::GeneralTaskNode(blackboard)}) { };
+            FirstNonFailSeqSelectorNode(blackboard, {order::D2TaskNode(blackboard), order::GeneralTaskNode(blackboard)}) { };
 };
 
 #endif //CSKNOW_ORDER_NODE_H
