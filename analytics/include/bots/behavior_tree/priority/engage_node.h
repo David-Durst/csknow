@@ -14,18 +14,18 @@ namespace engage {
         NodeState exec(const ServerState & state, TreeThinker &treeThinker) override;
     };
 
-    class ShootTaskNode : public Node {
+    class FireSelectionTaskNode : public Node {
     public:
-        ShootTaskNode(Blackboard & blackboard) : Node(blackboard) { };
+        FireSelectionTaskNode(Blackboard & blackboard) : Node(blackboard) { };
         NodeState exec(const ServerState & state, TreeThinker &treeThinker) override;
     };
 }
 
-class EngageSeqSelectorNode : public ParSelectorNode {
+class EngageParSelectorNode : public ParSelectorNode {
     vector<Node> nodes;
-    EngageSeqSelectorNode(Blackboard & blackboard) :
+    EngageParSelectorNode(Blackboard & blackboard) :
             ParSelectorNode(blackboard, { engage::TargetSelectionTaskNode(blackboard),
-                                                      engage::ShootTaskNode(blackboard)}) { };
+                                                      engage::FireSelectionTaskNode(blackboard)}) { };
 
 };
 

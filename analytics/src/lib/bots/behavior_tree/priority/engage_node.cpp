@@ -22,7 +22,7 @@ namespace engage {
         }
 
         // find all visible, alive enemies
-        const ServerState::Client curClient = state.clients[state.csgoIdToCSKnowId[treeThinker.csgoId]];
+        const ServerState::Client & curClient = state.getClient(treeThinker.csgoId);
         vector<std::reference_wrapper<const ServerState::Client>> visibleEnemies;
         for (const auto & otherClient : state.clients) {
             if (otherClient.team != curClient.team && otherClient.isAlive &&
@@ -55,7 +55,7 @@ namespace engage {
     }
 
 
-    NodeState ShootTaskNode::exec(const ServerState &state, TreeThinker &treeThinker) {
+    NodeState FireSelectionTaskNode::exec(const ServerState &state, TreeThinker &treeThinker) {
         // not executing shooting if no target
         if (blackboard.playerToTarget.find(treeThinker.csgoId) == blackboard.playerToTarget.end()) {
             nodeState = NodeState::Failure;
@@ -63,9 +63,9 @@ namespace engage {
         }
 
         Priority & curPriority = blackboard.playerToPriority[treeThinker.csgoId];
-        const ServerState::Client & curClient = state.clients[state.csgoIdToCSKnowId[treeThinker.csgoId]];
+        const ServerState::Client & curClient = state.getClient(treeThinker.csgoId);
         const ServerState::Client & targetClient =
-                state.clients[state.csgoIdToCSKnowId[blackboard.playerToTarget[treeThinker.csgoId].targetPlayer]];
+                state.getClient(blackboard.playerToTarget[treeThinker.csgoId].targetPlayer);
         double distance = computeDistance(curClient.getFootPosForPlayer(), targetClient.getFootPosForPlayer());
 
         // if close enough to move and shoot, crouch

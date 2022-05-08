@@ -66,6 +66,19 @@ public:
 
         // keyboard/mouse inputs sent to game engine
         int32_t buttons;
+
+        void setButton(ServerState::Client & curClient, int32_t button, bool setTrue) {
+            if (setTrue) {
+                curClient.buttons |= button;
+            }
+            else {
+                curClient.buttons &= ~button;
+            }
+        }
+
+        bool getButton(ServerState::Client & curClient, int32_t button) {
+            return curClient.buttons & button > 0;
+        }
         // these range from -1 to 1
         float inputAngleDeltaPctX;
         float inputAngleDeltaPctY;
@@ -81,6 +94,14 @@ public:
 
     vector<int> csgoIdToCSKnowId;
     vector<Client> clients;
+    const ServerState::Client & getClient(CSGOId csgoId) const {
+        int csknowId = csgoIdToCSKnowId[csgoId];
+        return clients[csknowId];
+    }
+    ServerState::Client & getClient(CSGOId csgoId) {
+        int csknowId = csgoIdToCSKnowId[csgoId];
+        return clients[csknowId];
+    }
     vector<bool> inputsValid;
 
     // visibility state
