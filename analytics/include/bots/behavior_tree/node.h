@@ -20,13 +20,29 @@ enum class AggressiveType {
     NUM_AGGESSIVE_TYPE
 };
 
+struct EngagementParams {
+    double standDistance;
+    double moveDistance;
+    double burstDistance;
+    double sprayDistance;
+};
+
 struct TreeThinker {
     // constant values across game
     CSGOId csgoId;
     AggressiveType aggressiveType;
+    EngagementParams engagementParams;
 
     int64_t orderWaypointIndex;
     int64_t orderGrenadeIndex;
+
+    CSGOId lastTarget;
+};
+
+struct TargetPlayer {
+    CSGOId targetPlayer;
+    int64_t round;
+    int32_t firstTargetFrame;
 };
 
 struct Blackboard {
@@ -46,15 +62,16 @@ struct Blackboard {
 
     // priority data
     map<CSGOId, Priority> playerToPriority;
+    map<CSGOId, TargetPlayer> playerToTarget;
 
     string getPlayerPlace(Vec3 pos) {
-        navFile.m_places[navFile.get_nearest_area_by_position(vec3Conv(pos)).m_place];
+        return navFile.m_places[navFile.get_nearest_area_by_position(vec3Conv(pos)).m_place];
     }
 
     Blackboard(string navPath) : navFile(navPath.c_str()),
         reachability(queryReachable(queryMapMesh(navFile))) {
         for (const auto & area : navFile.m_areas) {
-            navPlaceToArea[navFile.m_places[area.m_place]] = area.get_id();
+            navPlaceToArea[navFile.m_places[area.m_place]].push_back(area.get_id());
         }
     }
 
@@ -103,18 +120,25 @@ public:
     ParSelectorNode(Blackboard & blackboard, vector<Node> nodes) : Node(blackboard), children(nodes) { };
 
     NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
-        bool anyChildrenRunning = false;
+        bool anyChildrenRunning = false, anyChildrenSuccess;
         for (auto & child : children) {
             NodeState childNodeState = child.exec(state, treeThinker);
-            if (childNodeState == NodeState::Failure) {
-                nodeState = NodeState::Failure;
-                return NodeState::Failure;
-            }
-            else if (childNodeState == NodeState::Running) {
+            if (childNodeState == NodeState::Running) {
                 anyChildrenRunning = true;
             }
+            else if (childNodeState == NodeState::Success) {
+                anyChildrenSuccess = true;
+            }
         }
-        nodeState = anyChildrenRunning ? NodeState::Running : NodeState::Success;
+        if (anyChildrenRunning) {
+            nodeState = NodeState::Running;
+        }
+        else if (anyChildrenSuccess) {
+            nodeState = NodeState::Success;
+        }
+        else {
+            nodeState = NodeState::Failure;
+        }
         return nodeState;
     }
 

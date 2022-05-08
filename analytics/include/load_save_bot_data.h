@@ -85,8 +85,11 @@ public:
 
     // visibility state
     std::set<std::pair<int32_t, int32_t>> visibilityClientPairs;
+    bool isVisible(CSGOId src, CSGOId target) const {
+        return visibilityClientPairs.find({src, target}) != visibilityClientPairs.end();
+    }
 
-    // c4 state
+        // c4 state
     // Is Planted,Pos X,Pos Y,Pos Z
     bool c4Exists;
     bool c4IsPlanted;

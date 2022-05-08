@@ -11,17 +11,16 @@ void moveToWaypoint(Node & node, const ServerState & state, TreeThinker & treeTh
     if (waypoint.waypointType == WaypointType::NavPlace) {
         curPriority.priorityType = PriorityType::NavArea;
         curPriority.areaId = node.getNearestAreaInNextPlace(state, treeThinker, waypoint.placeName);
-        curPriority.priorityMovement = PriorityMovement::Move;
     }
     else if (waypoint.waypointType == WaypointType::Player) {
         curPriority.priorityType = PriorityType::Player;
         curPriority.playerId = waypoint.playerId;
-        curPriority.priorityMovement = PriorityMovement::Move;
     }
     else if (waypoint.waypointType == WaypointType::C4) {
         curPriority.priorityType = PriorityType::C4;
-        curPriority.priorityMovement = PriorityMovement::Move;
     }
+    curPriority.movementOptions = {true, false, false};
+    curPriority.shootOptions = PriorityShootOptions::DontShoot;
 
 }
 

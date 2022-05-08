@@ -132,6 +132,7 @@ namespace order {
                 }
             }
 
+            // assign every player an enemy to attack, grouping together players with the same enemy under same order
             map<CSGOId, size_t> targetToOrderId;
             for (const auto &client : state.clients) {
                 if (client.isAlive) {
@@ -154,11 +155,11 @@ namespace order {
                     if (targetToOrderId.find(minCSGOId) != targetToOrderId.end()) {
                         size_t orderId = targetToOrderId[minCSGOId];
                         blackboard.playerToOrder[client.csgoId] = orderId;
-                        blackboard.orders[orderId].numTeammates++;
+                        blackboard.orders[orderId].followers.push_back(client.csgoId);
                     } else {
                         targetToOrderId[minCSGOId] = blackboard.orders.size();
                         blackboard.playerToOrder[client.csgoId] = blackboard.orders.size();
-                        blackboard.orders.push_back({{{WaypointType::Player, "", minCSGOId}}, {}, {}, 1});
+                        blackboard.orders.push_back({{{WaypointType::Player, "", minCSGOId}}, {}, {}, {client.csgoId}});
                     }
                 }
             }

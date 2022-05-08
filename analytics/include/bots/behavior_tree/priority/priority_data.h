@@ -13,18 +13,26 @@ enum class PriorityType {
    NUM_PRIORITY_TYPES
 };
 
-enum class PriorityMovement {
-    Wait,
-    Move,
-    Shoot,
-    ShootAndMove
+struct PriorityMovementOptions {
+    bool move;
+    bool walk;
+    bool crouch;
+};
+
+enum class PriorityShootOptions {
+    DontShoot,
+    Tap,
+    Burst,
+    Spray,
+    NUM_PRIORITY_SHOOT_OPTIONS
 };
 
 struct Priority {
     PriorityType priorityType;
     int64_t areaId;
     CSGOId playerId;
-    PriorityMovement priorityMovement;
+    PriorityMovementOptions movementOptions;
+    PriorityShootOptions shootOptions;
 
 
     Vec3 getTargetPos(const ServerState & state, const nav_mesh::nav_file & navFile) {
