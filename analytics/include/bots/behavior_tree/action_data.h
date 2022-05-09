@@ -10,6 +10,7 @@
 struct Action {
     // keyboard/mouse inputs sent to game engine
     int32_t buttons;
+    int32_t shotsInBurst;
 
     void setButton(int32_t button, bool setTrue) {
         if (setTrue) {

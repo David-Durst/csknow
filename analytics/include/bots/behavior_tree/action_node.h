@@ -20,9 +20,9 @@ namespace action {
         NodeState exec(const ServerState & state, TreeThinker &treeThinker) override;
     };
 
-    class ShootTaskNode : public Node {
+    class FireTaskNode : public Node {
     public:
-        ShootTaskNode(Blackboard & blackboard) : Node(blackboard) { };
+        FireTaskNode(Blackboard & blackboard) : Node(blackboard) { };
         NodeState exec(const ServerState & state, TreeThinker &treeThinker) override;
     };
 }
@@ -32,7 +32,7 @@ class ActionParSelectorNode : public ParSelectorNode {
     ActionParSelectorNode(Blackboard & blackboard) :
             ParSelectorNode(blackboard, { action::MovementTaskNode(blackboard),
                                           action::AimTaskNode(blackboard),
-                                          action::ShootTaskNode(blackboard)}) { };
+                                          action::FireTaskNode(blackboard)}) { };
 
 };
 
