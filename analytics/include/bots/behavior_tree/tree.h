@@ -15,10 +15,10 @@
 
 class Tree {
     // one order node overall, sets all team behavior
-    std::unique_ptr<OrderSeqSelectorNode> orderNode;
-    map<CSGOId, vector<Node>> playerToNodes;
-    map<CSGOId, TreeThinker> playerToTreeThinkers;
     std::unique_ptr<Blackboard> blackboard;
+    std::unique_ptr<OrderSeqSelectorNode> orderNode;
+    vector<Node> perPlayerRootNodes;
+    map<CSGOId, TreeThinker> playerToTreeThinkers;
     int32_t curMapNumber = INVALID_ID;
 
 public:
@@ -28,17 +28,16 @@ public:
         if (state.mapNumber != curMapNumber) {
             blackboard = std::unique_ptr<Blackboard>( new Blackboard(navPath) );
             orderNode = std::unique_ptr<OrderSeqSelectorNode>( new OrderSeqSelectorNode(*blackboard) );
-            playerToNodes.clear();
+            perPlayerRootNodes = {
+                    PriorityParNode(*blackboard),
+                    ImplementationParSelectorNode(*blackboard),
+                    ActionParSelectorNode(*blackboard)
+            };
             curMapNumber = state.mapNumber;
         }
 
         for (const auto & client : state.clients) {
-            if (client.isBot && playerToNodes.find(client.csgoId) == playerToNodes.end()) {
-                playerToNodes[client.csgoId] = {
-                        PriorityParNode(*blackboard),
-                        ImplementationParSelectorNode(*blackboard),
-                        ActionParSelectorNode(*blackboard)
-                };
+            if (client.isBot && playerToTreeThinkers.find(client.csgoId) == playerToTreeThinkers.end()) {
                 playerToTreeThinkers[client.csgoId] = {
                         client.csgoId,
                         AggressiveType::Push,
@@ -48,11 +47,11 @@ public:
             }
         }
 
-        // just take any tree thinker for general node
+        //  don't care about which player as order is for all players
         orderNode->exec(state, playerToTreeThinkers[state.clients[0].csgoId]);
         for (const auto & client : state.clients) {
             TreeThinker & treeThinker = playerToTreeThinkers[client.csgoId];
-            for (auto & node : playerToNodes[client.csgoId]) {
+            for (auto & node : perPlayerRootNodes) {
                 node.exec(state, treeThinker);
             }
         }

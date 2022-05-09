@@ -9,7 +9,7 @@
 
 class TargetSelectionTaskNode : public Node {
 public:
-    TargetSelectionTaskNode(Blackboard & blackboard) : Node(blackboard) { };
+    TargetSelectionTaskNode(Blackboard & blackboard) : Node(blackboard, "TargetSelectionTaskNode") { };
     NodeState exec(const ServerState & state, TreeThinker &treeThinker) override;
 };
 

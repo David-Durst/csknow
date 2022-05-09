@@ -19,12 +19,13 @@ namespace order {
      */
     NodeState D2TaskNode::exec(const ServerState &state, TreeThinker &treeThinker) {
         if (state.mapName != "de_dust2") {
-            this->nodeState = NodeState::Failure;
+            playerNodeState[INVALID_ID] = NodeState::Failure;
             return NodeState::Failure;
         }
 
 
-        if (this->nodeState != NodeState::Running) {
+        if (playerNodeState.find(INVALID_ID) == playerNodeState.end() ||
+            playerNodeState[INVALID_ID] != NodeState::Running) {
             // first setup orders to go A or B
             bool plantedA = blackboard.navFile.m_places[
                                     blackboard.navFile.get_nearest_area_by_position(vec3Conv(state.getC4Pos())).m_place] == "BombsiteA";
@@ -106,12 +107,12 @@ namespace order {
 
             // finally some house keeping
             resetTreeThinkers(blackboard);
-            this->nodeState = NodeState::Running;
+            playerNodeState[INVALID_ID] = NodeState::Running;
         }
-        else if (this->nodeState == NodeState::Running && state.roundNumber != blackboard.lastFrameState.roundNumber) {
-            this->nodeState = NodeState::Success;
+        else if (playerNodeState[INVALID_ID] == NodeState::Running && state.roundNumber != blackboard.lastFrameState.roundNumber) {
+            playerNodeState[INVALID_ID] = NodeState::Success;
         }
-        return this->nodeState;
+        return playerNodeState[INVALID_ID];
     }
 
     /**
@@ -119,7 +120,8 @@ namespace order {
      */
     NodeState GeneralTaskNode::exec(const ServerState &state, TreeThinker &treeThinker) {
 
-        if (this->nodeState != NodeState::Running) {
+        if (playerNodeState.find(INVALID_ID) == playerNodeState.end() ||
+            playerNodeState[INVALID_ID] != NodeState::Running) {
             map<CSGOId, Vec3> tIdsToPositions, ctIdsToPositions;
 
             for (const auto &client : state.clients) {
@@ -165,23 +167,23 @@ namespace order {
             }
 
             resetTreeThinkers(blackboard);
-            this->nodeState = NodeState::Running;
+            playerNodeState[INVALID_ID] = NodeState::Running;
         }
-        else if (this->nodeState == NodeState::Running) {
+        else if (playerNodeState[INVALID_ID] == NodeState::Running) {
             // finish if anyone died (as need to repick everyone's target) or if round restarted
             if (state.clients.size() != blackboard.lastFrameState.clients.size()) {
-                this->nodeState = NodeState::Success;
+                playerNodeState[INVALID_ID] = NodeState::Success;
             }
             else {
                 for (size_t i = 0; i < state.clients.size(); i++) {
                     if (state.clients[i].isAlive != blackboard.lastFrameState.clients[i].isAlive) {
-                        this->nodeState = NodeState::Success;
+                        playerNodeState[INVALID_ID] = NodeState::Success;
                     }
                 }
             }
         }
 
-        return this->nodeState;
+        return playerNodeState[INVALID_ID];
     }
 
 }

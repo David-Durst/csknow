@@ -10,19 +10,19 @@
 namespace action {
     class MovementTaskNode : public Node {
     public:
-        MovementTaskNode(Blackboard & blackboard) : Node(blackboard) { };
+        MovementTaskNode(Blackboard & blackboard) : Node(blackboard, "MovementTaskNode") { };
         NodeState exec(const ServerState & state, TreeThinker &treeThinker) override;
     };
 
     class AimTaskNode : public Node {
     public:
-        AimTaskNode(Blackboard & blackboard) : Node(blackboard) { };
+        AimTaskNode(Blackboard & blackboard) : Node(blackboard, "AimTaskNode") { };
         NodeState exec(const ServerState & state, TreeThinker &treeThinker) override;
     };
 
     class FireTaskNode : public Node {
     public:
-        FireTaskNode(Blackboard & blackboard) : Node(blackboard) { };
+        FireTaskNode(Blackboard & blackboard) : Node(blackboard, "FireTaskNode") { };
         NodeState exec(const ServerState & state, TreeThinker &treeThinker) override;
     };
 }
@@ -33,7 +33,8 @@ public:
     ActionParSelectorNode(Blackboard & blackboard) :
             ParSelectorNode(blackboard, { action::MovementTaskNode(blackboard),
                                           action::AimTaskNode(blackboard),
-                                          action::FireTaskNode(blackboard)}) { };
+                                          action::FireTaskNode(blackboard)},
+                            "ActionParSelectorNode") { };
 
 };
 

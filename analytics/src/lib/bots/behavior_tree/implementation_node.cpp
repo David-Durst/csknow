@@ -21,8 +21,8 @@ namespace implementation {
             }
 
             if (curPriority.targetAreaId == curPath.pathEndAreaId) {
-                nodeState = NodeState::Success;
-                return nodeState;
+                playerNodeState[treeThinker.csgoId] = NodeState::Success;
+                return playerNodeState[treeThinker.csgoId];
             }
         }
 
@@ -50,8 +50,8 @@ namespace implementation {
 
         // not executing shooting if no target
         if (curPriority.targetPlayer.playerId == INVALID_ID) {
-            nodeState = NodeState::Failure;
-            return nodeState;
+            playerNodeState[treeThinker.csgoId] = NodeState::Failure;
+            return playerNodeState[treeThinker.csgoId];
         }
 
         const ServerState::Client & curClient = state.getClient(treeThinker.csgoId);
@@ -76,8 +76,8 @@ namespace implementation {
             curPriority.movementOptions = {false, false, shouldCrouch};
             curPriority.shootOptions = PriorityShootOptions::Tap;
         }
-        nodeState = NodeState::Success;
-        return nodeState;
+        playerNodeState[treeThinker.csgoId] = NodeState::Success;
+        return playerNodeState[treeThinker.csgoId];
     }
 }
 

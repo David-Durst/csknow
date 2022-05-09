@@ -64,8 +64,9 @@ namespace action {
                 curAction.setButton(IN_ATTACK, !attackLastFrame && haveAmmo && aimingAtEnemy);
                 curAction.setButton(IN_RELOAD, !haveAmmo);
             }
-
         }
 
+        playerNodeState[treeThinker.csgoId] = curAction.getButton(IN_ATTACK) ? NodeState::Success : NodeState::Failure;
+        return playerNodeState[treeThinker.csgoId];
     }
 }

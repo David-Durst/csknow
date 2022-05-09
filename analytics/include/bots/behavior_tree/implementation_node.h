@@ -10,13 +10,13 @@
 namespace implementation {
     class PathingTaskNode : public Node {
     public:
-        PathingTaskNode(Blackboard & blackboard) : Node(blackboard) { };
+        PathingTaskNode(Blackboard & blackboard) : Node(blackboard, "PathingTaskNode") { };
         NodeState exec(const ServerState & state, TreeThinker &treeThinker) override;
     };
 
     class FireSelectionTaskNode : public Node {
     public:
-        FireSelectionTaskNode(Blackboard & blackboard) : Node(blackboard) { };
+        FireSelectionTaskNode(Blackboard & blackboard) : Node(blackboard, "FireSelectionTaskNode") { };
         NodeState exec(const ServerState & state, TreeThinker &treeThinker) override;
     };
 }
@@ -26,7 +26,8 @@ class ImplementationParSelectorNode : public ParSelectorNode {
 public:
     ImplementationParSelectorNode(Blackboard & blackboard) :
             ParSelectorNode(blackboard, { implementation::PathingTaskNode(blackboard),
-                                          implementation::FireSelectionTaskNode(blackboard)}) { };
+                                          implementation::FireSelectionTaskNode(blackboard)},
+                            "ImplementationParSelectorNode") { };
 
 };
 

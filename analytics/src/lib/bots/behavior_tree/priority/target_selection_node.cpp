@@ -14,8 +14,8 @@ NodeState TargetSelectionTaskNode::exec(const ServerState & state, TreeThinker &
             const ServerState::Client & oldTargetClient =
                     state.clients[state.csgoIdToCSKnowId[curTarget.playerId]];
             if (oldTargetClient.isAlive && state.isVisible(treeThinker.csgoId, curTarget.playerId)) {
-                nodeState = NodeState::Success;
-                return nodeState;
+                playerNodeState[treeThinker.csgoId] = NodeState::Success;
+                return playerNodeState[treeThinker.csgoId];
             }
         }
     }
@@ -49,11 +49,11 @@ NodeState TargetSelectionTaskNode::exec(const ServerState & state, TreeThinker &
     }
 
     if (curTarget.playerId == INVALID_ID) {
-        nodeState = NodeState::Failure;
+        playerNodeState[treeThinker.csgoId] = NodeState::Failure;
     }
     else {
-        nodeState = NodeState::Success;
+        playerNodeState[treeThinker.csgoId] = NodeState::Success;
     }
-    return nodeState;
+    return playerNodeState[treeThinker.csgoId];
 }
 

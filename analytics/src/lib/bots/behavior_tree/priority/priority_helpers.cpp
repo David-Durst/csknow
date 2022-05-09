@@ -31,13 +31,13 @@ void finishWaypoint(Node & node, const ServerState & state, TreeThinker & treeTh
     // trying to reach place and got there
     if (curOrder.waypoints[treeThinker.orderWaypointIndex].waypointType == WaypointType::NavPlace) {
         if (curOrder.waypoints[treeThinker.orderWaypointIndex].placeName == curPlace) {
-            node.nodeState = NodeState::Success;
+            node.playerNodeState[treeThinker.csgoId] = NodeState::Success;
         }
     }
-        // target player died
+    // target player died
     else if (curOrder.waypoints[treeThinker.orderWaypointIndex].waypointType == WaypointType::Player) {
         if (!state.clients[state.csgoIdToCSKnowId[curOrder.waypoints[treeThinker.orderWaypointIndex].playerId]].isAlive) {
-            node.nodeState = NodeState::Success;
+            node.playerNodeState[treeThinker.csgoId] = NodeState::Success;
         }
     }
     // c4 doesn't finish

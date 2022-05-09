@@ -47,8 +47,6 @@ namespace action {
             // regardless if moving, check for crouching
             curAction.setButton(IN_WALK, curPriority.movementOptions.walk);
             curAction.setButton(IN_DUCK, curPriority.movementOptions.crouch);
-            //if
-            //blackboard.playerToAction[treeThinker.csgoId].setButton()
 
         }
         // do nothing if there was an error
@@ -60,5 +58,13 @@ namespace action {
             curAction.inputAngleDeltaPctX = 0;
             curAction.inputAngleDeltaPctY = 0;
         }
+
+        bool moving = curAction.getButton(IN_FORWARD) ||
+                curAction.getButton(IN_MOVELEFT) ||
+                curAction.getButton(IN_BACK) ||
+                curAction.getButton(IN_MOVERIGHT);
+
+        playerNodeState[treeThinker.csgoId] = moving ? NodeState::Success : NodeState::Failure;
+        return playerNodeState[treeThinker.csgoId];
     }
 }

@@ -14,7 +14,8 @@ class PriorityParNode : public ParSelectorNode {
 public:
     PriorityParNode(Blackboard & blackboard) :
             ParSelectorNode(blackboard, { FollowOrderSeqSelectorNode(blackboard),
-                                          TargetSelectionTaskNode(blackboard)}) { };
+                                          TargetSelectionTaskNode(blackboard)},
+                            "PriorityParNode") { };
 
 };
 

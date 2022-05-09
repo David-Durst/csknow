@@ -11,21 +11,23 @@
 namespace follow {
     class PushTaskNode : public Node {
     public:
-        PushTaskNode(Blackboard & blackboard) : Node(blackboard) { };
+        PushTaskNode(Blackboard & blackboard) : Node(blackboard, "PushTaskNode") { };
         NodeState exec(const ServerState & state, TreeThinker &treeThinker) override;
     };
 
     class BaitTaskNode : public Node {
     public:
-        BaitTaskNode(Blackboard & blackboard) : Node(blackboard) { };
+        BaitTaskNode(Blackboard & blackboard) : Node(blackboard, "BaitTaskNode") { };
         NodeState exec(const ServerState & state, TreeThinker &treeThinker) override;
     };
 }
 
 class FollowOrderSeqSelectorNode : public FirstNonFailSeqSelectorNode {
+public:
     FollowOrderSeqSelectorNode(Blackboard & blackboard) :
             FirstNonFailSeqSelectorNode(blackboard, {follow::PushTaskNode(blackboard),
-                                                     follow::BaitTaskNode(blackboard)}) { };
+                                                     follow::BaitTaskNode(blackboard)},
+                                        "FollowOrderSeqSelectorNode") { };
 
     NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
         int childIndex = 0;
@@ -35,8 +37,13 @@ class FollowOrderSeqSelectorNode : public FirstNonFailSeqSelectorNode {
         else {
             childIndex = 1;
         }
-        nodeState = children[childIndex].exec(state, treeThinker);
-        return nodeState;
+        playerNodeState[treeThinker.csgoId] = children[childIndex].exec(state, treeThinker);
+        return playerNodeState[treeThinker.csgoId];
+    }
+
+    PrintState printState() const override {
+        PrintState printState = FirstNonFailSeqSelectorNode::printState();
+
     }
 
 };

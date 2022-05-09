@@ -77,46 +77,79 @@ struct Blackboard {
 };
 
 enum class NodeState {
-    Uninitialized,
     Success,
     Failure,
     Running,
     NUM_NODE_STATES
 };
 
+struct PrintState {
+    vector<PrintState> childrenStates;
+    string curResult;
+
+    void getStateInner(size_t depth, stringstream & ss) const {
+        for (size_t i = 0; i < depth; i++) {
+            ss << "  ";
+        }
+        ss << curResult;
+        for (const auto & childState : childrenStates) {
+            childState.getStateInner(depth + 1, ss);
+        }
+    }
+
+    string getState() const {
+        stringstream ss;
+        getStateInner(0, ss);
+        return ss.str();
+    }
+};
+
 class Node {
 public:
     Blackboard & blackboard;
-    NodeState nodeState;
+    map<CSGOId, NodeState> playerNodeState;
+    string name;
 
 
-    Node(Blackboard & blackboard) : blackboard(blackboard), nodeState(NodeState::Uninitialized) { }
+    Node(Blackboard & blackboard, string name) : blackboard(blackboard), playerNodeState({}), name(name) { }
     virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker);
     virtual void reset() {
         blackboard.orders.clear();
         blackboard.playerToOrder.clear();
-        nodeState = NodeState::Uninitialized;
+        playerNodeState.clear();
+    }
+
+    virtual PrintState printState(CSGOId playerId) const {
+        string stateString;
+        if (playerNodeState.find(playerId) == playerNodeState.end()) {
+            stateString = "Uninitialized";
+        }
+        else {
+            switch (playerNodeState[playerId]) {
+                case NodeState::Success:
+                    stateString = "Success";
+                    break;
+                case NodeState::Failure:
+                    stateString = "Failure";
+                    break;
+                case NodeState::Running:
+                    stateString = "Running";
+                    break;
+                default:
+                    stateString = "BAD NODE STATE";
+            }
+        }
+        return {{}, name + ": " + stateString};
     }
 
     uint32_t getNearestAreaInNextPlace(const ServerState & state, const TreeThinker & treeThinker, string nextPlace);
-};
-
-    class RootNode : public Node {
-    Node child;
-
-public:
-    RootNode(Blackboard & blackboard, Node node) : Node(blackboard), child(node) { };
-
-    NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
-        return child.exec(state, treeThinker);
-    }
 };
 
 class ParSelectorNode : public Node {
     vector<Node> children;
 
 public:
-    ParSelectorNode(Blackboard & blackboard, vector<Node> nodes) : Node(blackboard), children(nodes) { };
+    ParSelectorNode(Blackboard & blackboard, vector<Node> nodes, string name) : Node(blackboard, name), children(nodes) { };
 
     NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
         bool anyChildrenRunning = false, anyChildrenSuccess;
@@ -130,15 +163,15 @@ public:
             }
         }
         if (anyChildrenRunning) {
-            nodeState = NodeState::Running;
+            playerNodeState[treeThinker.csgoId] = NodeState::Running;
         }
         else if (anyChildrenSuccess) {
-            nodeState = NodeState::Success;
+            playerNodeState[treeThinker.csgoId] = NodeState::Success;
         }
         else {
-            nodeState = NodeState::Failure;
+            playerNodeState[treeThinker.csgoId] = NodeState::Failure;
         }
-        return nodeState;
+        return playerNodeState[treeThinker.csgoId];
     }
 
     void reset() override {
@@ -146,6 +179,14 @@ public:
             child.reset();
         }
         Node::reset();
+    }
+
+    virtual PrintState printState() const {
+        PrintState printState = Node::printState();
+        for (const auto & child : children) {
+            printState.childrenStates.push_back(child.printState());
+        }
+        return printState;
     }
 };
 
@@ -154,17 +195,17 @@ protected:
     vector<Node> children;
 
 public:
-    FirstNonFailSeqSelectorNode(Blackboard & blackboard, vector<Node> nodes) : Node(blackboard), children(nodes) { };
+    FirstNonFailSeqSelectorNode(Blackboard & blackboard, vector<Node> nodes, string name) : Node(blackboard, name), children(nodes) { };
 
     NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
         for (auto & child : children) {
             NodeState childNodeState = child.exec(state, treeThinker);
             if (childNodeState != NodeState::Failure) {
-                nodeState = childNodeState;
-                return nodeState;
+                playerNodeState[treeThinker.csgoId] = childNodeState;
+                return playerNodeState[treeThinker.csgoId];
             }
         }
-        nodeState = NodeState::Failure;
+        playerNodeState[treeThinker.csgoId] = NodeState::Failure;
         return NodeState::Failure;
     }
 
@@ -173,6 +214,14 @@ public:
             child.reset();
         }
         Node::reset();
+    }
+
+    virtual PrintState printState() const {
+        PrintState printState = Node::printState();
+        for (const auto & child : children) {
+            printState.childrenStates.push_back(child.printState());
+        }
+        return printState;
     }
 };
 

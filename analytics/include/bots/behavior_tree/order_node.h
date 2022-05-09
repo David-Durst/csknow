@@ -11,13 +11,13 @@
 namespace order {
     class D2TaskNode : public Node {
     public:
-        D2TaskNode(Blackboard & blackboard) : Node(blackboard) { };
+        D2TaskNode(Blackboard & blackboard) : Node(blackboard, "D2TaskNode") { };
         NodeState exec(const ServerState & state, TreeThinker &treeThinker) override;
     };
 
     class GeneralTaskNode : public Node {
     public:
-        GeneralTaskNode(Blackboard & blackboard) : Node(blackboard) { };
+        GeneralTaskNode(Blackboard & blackboard) : Node(blackboard, "GeneralTaskNode") { };
         NodeState exec(const ServerState & state, TreeThinker &treeThinker) override;
     };
 }
@@ -26,7 +26,8 @@ class OrderSeqSelectorNode : public FirstNonFailSeqSelectorNode {
     vector<Node> nodes;
 public:
     OrderSeqSelectorNode(Blackboard & blackboard) :
-            FirstNonFailSeqSelectorNode(blackboard, {order::D2TaskNode(blackboard), order::GeneralTaskNode(blackboard)}) { };
+            FirstNonFailSeqSelectorNode(blackboard, {order::D2TaskNode(blackboard), order::GeneralTaskNode(blackboard)},
+                                        "OrderSeqSelectorNode") { };
 };
 
 #endif //CSKNOW_ORDER_NODE_H

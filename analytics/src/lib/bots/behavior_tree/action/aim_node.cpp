@@ -49,7 +49,7 @@ namespace action {
         curAction.inputAngleDeltaPctX = computeAngleVelocity(deltaAngles.x, curAction.inputAngleDeltaPctX);
         curAction.inputAngleDeltaPctY = computeAngleVelocity(deltaAngles.y, curAction.inputAngleDeltaPctY);
 
-        nodeState = NodeState::Success;
-        return nodeState;
+        playerNodeState[treeThinker.csgoId] = NodeState::Success;
+        return playerNodeState[treeThinker.csgoId];
     }
 }
