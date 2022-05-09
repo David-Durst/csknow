@@ -83,6 +83,14 @@ public:
         float inputAngleDeltaPctX;
         float inputAngleDeltaPctY;
 
+
+        Vec2 getCurrentViewAnglesWithAimpunch() const {
+            return {
+                lastEyeAngleX + lastAimpunchAngleX,
+                lastEyeAngleY + lastAimpunchAngleY
+            };
+        }
+
         Vec3 getFootPosForPlayer() const {
             return {lastEyePosX, lastEyePosY, lastFootPosZ};
         }

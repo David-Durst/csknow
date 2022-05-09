@@ -6,14 +6,14 @@
 #include <functional>
 
 NodeState TargetSelectionTaskNode::exec(const ServerState & state, TreeThinker &treeThinker) {
+    Priority & curPriority = blackboard.playerToPriority[treeThinker.csgoId];
+    TargetPlayer & curTarget = curPriority.targetPlayer;
     // keep same target if from this round and still visible
-    if (blackboard.playerToTarget.find(treeThinker.csgoId) != blackboard.playerToTarget.end()) {
-        TargetPlayer & oldTarget = blackboard.playerToTarget[treeThinker.csgoId];
-        if (oldTarget.round == state.roundNumber) {
+    if (curTarget.playerId != INVALID_ID) {
+        if (curTarget.round == state.roundNumber) {
             const ServerState::Client & oldTargetClient =
-                    state.clients[state.csgoIdToCSKnowId[oldTarget.targetPlayer]];
-            if (oldTargetClient.isAlive && state.isVisible(treeThinker.csgoId, oldTarget.targetPlayer)) {
-                oldTarget.firstTargetFrame++;
+                    state.clients[state.csgoIdToCSKnowId[curTarget.playerId]];
+            if (oldTargetClient.isAlive && state.isVisible(treeThinker.csgoId, curTarget.playerId)) {
                 nodeState = NodeState::Success;
                 return nodeState;
             }
@@ -26,14 +26,13 @@ NodeState TargetSelectionTaskNode::exec(const ServerState & state, TreeThinker &
     for (const auto & otherClient : state.clients) {
         if (otherClient.team != curClient.team && otherClient.isAlive &&
             state.isVisible(treeThinker.csgoId, otherClient.csgoId)) {
-            std::reference_wrapper<const ServerState::Client> b = otherClient;
             visibleEnemies.push_back(otherClient);
         }
     }
 
     // remove from targets list if no target as none visible
     if (visibleEnemies.empty()) {
-        blackboard.playerToTarget.erase(treeThinker.csgoId);
+        curTarget.playerId = INVALID_ID;
     }
     // otherwise, assign to nearest enemy
     else {
@@ -46,7 +45,7 @@ NodeState TargetSelectionTaskNode::exec(const ServerState & state, TreeThinker &
                 closestId = visibleEnemies[i].get().csgoId;
             }
         }
-        blackboard.playerToTarget[treeThinker.csgoId] = {closestId, state.roundNumber, curClient.lastFrame};
+        curTarget = {closestId, state.roundNumber, curClient.lastFrame};
     }
 
     nodeState = NodeState::Success;

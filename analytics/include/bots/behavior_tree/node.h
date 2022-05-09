@@ -11,6 +11,7 @@
 #include "bots/behavior_tree/order_data.h"
 #include "bots/behavior_tree/priority/priority_data.h"
 #include "bots/behavior_tree/implementation_data.h"
+#include "bots/behavior_tree/action_data.h"
 #include "queries/nav_mesh.h"
 #include "queries/reachable.h"
 using std::map;
@@ -40,12 +41,6 @@ struct TreeThinker {
     CSGOId lastTarget;
 };
 
-struct TargetPlayer {
-    CSGOId targetPlayer;
-    int64_t round;
-    int32_t firstTargetFrame;
-};
-
 struct Blackboard {
     nav_mesh::nav_file navFile;
     ServerState lastFrameState;
@@ -63,10 +58,12 @@ struct Blackboard {
 
     // priority data
     map<CSGOId, Priority> playerToPriority;
-    map<CSGOId, TargetPlayer> playerToTarget;
 
     // implementation data
     map<CSGOId, Path> playerToPath;
+
+    // action data
+    map<CSGOId, Action> playerToAction;
 
     string getPlayerPlace(Vec3 pos) {
         return navFile.m_places[navFile.get_nearest_area_by_position(vec3Conv(pos)).m_place];

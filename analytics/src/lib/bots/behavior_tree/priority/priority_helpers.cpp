@@ -9,15 +9,16 @@ void moveToWaypoint(Node & node, const ServerState & state, TreeThinker & treeTh
     const Waypoint & waypoint = curOrder.waypoints[treeThinker.orderWaypointIndex];
     // if next area is a nav place, go there
     if (waypoint.waypointType == WaypointType::NavPlace) {
-        curPriority.priorityType = PriorityType::NavArea;
-        curPriority.areaId = node.getNearestAreaInNextPlace(state, treeThinker, waypoint.placeName);
+        curPriority.targetAreaId = node.getNearestAreaInNextPlace(state, treeThinker, waypoint.placeName);
+        curPriority.targetPos = vec3tConv(node.blackboard.navFile.get_area_by_id_fast(curPriority.targetAreaId).get_center());
     }
     else if (waypoint.waypointType == WaypointType::Player) {
-        curPriority.priorityType = PriorityType::Player;
-        curPriority.playerId = waypoint.playerId;
+        curPriority.targetPos = state.getClient(waypoint.playerId).getFootPosForPlayer();
+        curPriority.targetAreaId = node.blackboard.navFile.get_nearest_area_by_position(vec3Conv(curPriority.targetPos)).get_id();
     }
     else if (waypoint.waypointType == WaypointType::C4) {
-        curPriority.priorityType = PriorityType::C4;
+        curPriority.targetPos = state.getC4Pos();
+        curPriority.targetAreaId = node.blackboard.navFile.get_nearest_area_by_position(vec3Conv(curPriority.targetPos)).get_id();
     }
     curPriority.movementOptions = {true, false, false};
     curPriority.shootOptions = PriorityShootOptions::DontShoot;

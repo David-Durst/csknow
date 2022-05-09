@@ -27,7 +27,7 @@ namespace action {
     };
 }
 
-class EngageSeqSelectorNode : public ParSelectorNode {
+class ActionParSelectorNode : public ParSelectorNode {
     vector<Node> nodes;
     ActionParSelectorNode(Blackboard & blackboard) :
             ParSelectorNode(blackboard, { action::MovementTaskNode(blackboard),

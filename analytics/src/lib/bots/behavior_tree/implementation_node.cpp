@@ -12,7 +12,7 @@ namespace implementation {
         if (blackboard.playerToPath.find(treeThinker.csgoId) != blackboard.playerToPath.end()) {
             Path & curPath = blackboard.playerToPath[treeThinker.csgoId];
 
-            if (curPriority.getTargetNavArea(state, blackboard.navFile).get_id() == curPath.pathEndAreaId) {
+            if (curPriority.targetAreaId == curPath.pathEndAreaId) {
                 nodeState = NodeState::Success;
                 return nodeState;
             }
@@ -21,7 +21,7 @@ namespace implementation {
         // otherwise, either no old path or old path is out of date, so update it
         Path newPath;
         auto optionalWaypoints = blackboard.navFile.find_path(vec3Conv(state.getClient(treeThinker.csgoId).getFootPosForPlayer()),
-                                                              vec3Conv(curPriority.getTargetPos(state, blackboard.navFile)));
+                                                              vec3Conv(curPriority.targetPos));
         if (optionalWaypoints) {
             newPath.pathCallSucceeded = true;
             vector<nav_mesh::vec3_t> tmpWaypoints = optionalWaypoints.value();
@@ -37,16 +37,16 @@ namespace implementation {
     }
 
     NodeState FireSelectionTaskNode::exec(const ServerState &state, TreeThinker &treeThinker) {
+        Priority & curPriority = blackboard.playerToPriority[treeThinker.csgoId];
+
         // not executing shooting if no target
-        if (blackboard.playerToTarget.find(treeThinker.csgoId) == blackboard.playerToTarget.end()) {
+        if (curPriority.targetPlayer.playerId == INVALID_ID) {
             nodeState = NodeState::Failure;
             return nodeState;
         }
 
-        Priority & curPriority = blackboard.playerToPriority[treeThinker.csgoId];
         const ServerState::Client & curClient = state.getClient(treeThinker.csgoId);
-        const ServerState::Client & targetClient =
-                state.getClient(blackboard.playerToTarget[treeThinker.csgoId].targetPlayer);
+        const ServerState::Client & targetClient = state.getClient(curPriority.targetPlayer.playerId);
         double distance = computeDistance(curClient.getFootPosForPlayer(), targetClient.getFootPosForPlayer());
 
         // if close enough to move and shoot, crouch
