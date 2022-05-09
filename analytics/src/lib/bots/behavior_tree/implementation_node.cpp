@@ -3,14 +3,22 @@
 //
 
 #include "bots/behavior_tree/implementation_node.h"
+#include "bots/input_bits.h"
 
 namespace implementation {
     NodeState PathingTaskNode::exec(const ServerState &state, TreeThinker &treeThinker) {
         Priority & curPriority = blackboard.playerToPriority[treeThinker.csgoId];
 
-        // check if priority's nav area is same. If so, do nothing
+        // check if priority's nav area is same. If so, do nothing (except increment waypoint if necessary)
         if (blackboard.playerToPath.find(treeThinker.csgoId) != blackboard.playerToPath.end()) {
             Path & curPath = blackboard.playerToPath[treeThinker.csgoId];
+
+            if (computeDistance(state.getClient(treeThinker.csgoId).getFootPosForPlayer(), curPath.waypoints[curPath.curWaypoint]) <
+                MIN_DISTANCE_TO_NAV_POINT) {
+                if (curPath.curWaypoint < curPath.waypoints.size() - 1) {
+                    curPath.curWaypoint++;
+                }
+            }
 
             if (curPriority.targetAreaId == curPath.pathEndAreaId) {
                 nodeState = NodeState::Success;
@@ -28,6 +36,7 @@ namespace implementation {
             for (const auto & tmpWaypoint : tmpWaypoints) {
                 newPath.waypoints.push_back(vec3tConv(tmpWaypoint));
             }
+            newPath.curWaypoint = 0;
         }
         else {
             // do nothing if the pathing call succeeded

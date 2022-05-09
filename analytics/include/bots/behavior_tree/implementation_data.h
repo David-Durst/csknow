@@ -11,6 +11,7 @@ struct Path {
     bool pathCallSucceeded;
     vector<Vec3> waypoints;
     uint32_t pathEndAreaId;
+    size_t curWaypoint;
 };
 
 #endif //CSKNOW_IMPLEMENTATION_DATA_H
