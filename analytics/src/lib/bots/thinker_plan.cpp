@@ -158,7 +158,7 @@ void Thinker::updateMovementType(ServerState curState, ServerState lastState,
     if (skill.learned) {
         int64_t targetNavId =
                 pythonPlanState.GetTargetNavArea(curState.csgoIdToCSKnowId[curClient.csgoId], curState, lastState, oldState);
-        targetPosition = vec3tConv(navFile.m_areas[targetNavId].get_center());
+        targetPosition = vec3tConv(navFile.get_area_by_id_fast(targetNavId).get_center());
         //targetPosition = {targetClient.lastEyePosX, targetClient.lastEyePosY, targetClient.lastFootPosZ};
     }
     else if (targetClient.csgoId != INVALID_ID) {

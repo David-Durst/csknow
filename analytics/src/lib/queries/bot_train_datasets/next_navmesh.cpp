@@ -154,7 +154,7 @@ NextNavmeshResult queryNextNavmeshDataset(const Games & games, const Rounds & ro
 
             size_t curAreaId = tmpCurState[threadNum][planIndex].curArea,
                 nextAreaId = tmpNextState[threadNum][planIndex].curArea;
-            Vec3 curAreaCenter(vec3tConv(navFile.m_areas[curAreaId].get_center()));
+            Vec3 curAreaCenter(vec3tConv(navFile.get_area_by_id_fast(curAreaId).get_center()));
             Vec2 movementDir{plan.deltaX, plan.deltaY},
                 curAreaDir{curAreaCenter.x - tmpCurState[threadNum][planIndex].pos.x,
                            curAreaCenter.y - tmpCurState[threadNum][planIndex].pos.y};
@@ -167,7 +167,7 @@ NextNavmeshResult queryNextNavmeshDataset(const Games & games, const Rounds & ro
                 plan.navTargetArea = curAreaId;
             }
             else {
-                const nav_mesh::nav_area & startArea = navFile.m_areas[curAreaId];
+                const nav_mesh::nav_area & startArea = navFile.get_area_by_id_fast(curAreaId);
                 auto& areaConnections = startArea.get_connections( );
                 // default to not hitting anything, so just stay in current area
                 // this captures not moving

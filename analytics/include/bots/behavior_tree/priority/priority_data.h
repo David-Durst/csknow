@@ -29,7 +29,7 @@ enum class PriorityShootOptions {
 
 struct Priority {
     PriorityType priorityType;
-    int64_t areaId;
+    uint32_t areaId;
     CSGOId playerId;
     PriorityMovementOptions movementOptions;
     PriorityShootOptions shootOptions;
@@ -44,6 +44,19 @@ struct Priority {
         }
         else {
             return state.getC4Pos();
+        }
+    }
+
+    const nav_mesh::nav_area & getTargetNavArea(const ServerState & state, const nav_mesh::nav_file & navFile) {
+        if (priorityType == PriorityType::NavArea) {
+            return navFile.get_area_by_id_fast(areaId);
+        }
+        else if (priorityType == PriorityType::Player) {
+            return navFile.get_nearest_area_by_position(
+                    vec3Conv(state.clients[state.csgoIdToCSKnowId[playerId]].getFootPosForPlayer()));
+        }
+        else {
+            return navFile.get_nearest_area_by_position(vec3Conv(state.getC4Pos()));
         }
     }
 };

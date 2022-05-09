@@ -112,6 +112,10 @@ namespace nav_mesh {
         throw std::runtime_error( "nav_file::get_area_by_id: failed to find area" );
     }
 
+    const nav_area& nav_file::get_area_by_id_fast( std::uint32_t id ) const {
+        return m_areas[m_area_ids_to_indices.find(id)->second];
+    }
+
     nav_area& nav_file::get_area_by_position( vec3_t position ) {
         for ( auto& area : m_areas ) {
             if ( area.is_within( position ) )

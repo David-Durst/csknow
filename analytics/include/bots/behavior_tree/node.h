@@ -10,6 +10,7 @@
 #include "navmesh/nav_file.h"
 #include "bots/behavior_tree/order_data.h"
 #include "bots/behavior_tree/priority/priority_data.h"
+#include "bots/behavior_tree/implementation_data.h"
 #include "queries/nav_mesh.h"
 #include "queries/reachable.h"
 using std::map;
@@ -63,6 +64,9 @@ struct Blackboard {
     // priority data
     map<CSGOId, Priority> playerToPriority;
     map<CSGOId, TargetPlayer> playerToTarget;
+
+    // implementation data
+    map<CSGOId, Path> playerToPath;
 
     string getPlayerPlace(Vec3 pos) {
         return navFile.m_places[navFile.get_nearest_area_by_position(vec3Conv(pos)).m_place];

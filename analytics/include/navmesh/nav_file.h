@@ -43,6 +43,8 @@ namespace nav_mesh {
 		virtual void PrintStateInfo( void* state ) { }
 
 		const nav_area& get_area_by_id( std::uint32_t id ) const;
+		// added by durst since now have a lookup map but don't want to remove old implementaiton
+        const nav_area& get_area_by_id_fast( std::uint32_t id ) const;
 		nav_area& get_area_by_position( vec3_t position );
         float get_point_to_area_distance( vec3_t position, const nav_area& area) const;
         vec3_t get_nearest_point_in_area( vec3_t position, nav_area& area);
