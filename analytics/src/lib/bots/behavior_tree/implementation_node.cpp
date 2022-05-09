@@ -12,10 +12,28 @@ namespace implementation {
         if (blackboard.playerToPath.find(treeThinker.csgoId) != blackboard.playerToPath.end()) {
             Path & curPath = blackboard.playerToPath[treeThinker.csgoId];
 
-
-
-            if (curPriority.getTargetNavArea(state, blackboard.navFile).get_id() != blackboard.navFile.m_areas
+            if (curPriority.getTargetNavArea(state, blackboard.navFile).get_id() == curPath.pathEndAreaId) {
+                nodeState = NodeState::Success;
+                return nodeState;
+            }
         }
+
+        // otherwise, either no old path or old path is out of date, so update it
+        Path newPath;
+        auto optionalWaypoints = blackboard.navFile.find_path(vec3Conv(state.getClient(treeThinker.csgoId).getFootPosForPlayer()),
+                                                              vec3Conv(curPriority.getTargetPos(state, blackboard.navFile)));
+        if (optionalWaypoints) {
+            newPath.pathCallSucceeded = true;
+            vector<nav_mesh::vec3_t> tmpWaypoints = optionalWaypoints.value();
+            for (const auto & tmpWaypoint : tmpWaypoints) {
+                newPath.waypoints.push_back(vec3tConv(tmpWaypoint));
+            }
+        }
+        else {
+            // do nothing if the pathing call succeeded
+            newPath.pathCallSucceeded = false;
+        }
+
     }
 
     NodeState FireSelectionTaskNode::exec(const ServerState &state, TreeThinker &treeThinker) {

@@ -8,8 +8,8 @@
 #include "bots/behavior_tree/priority/priority_data.h"
 
 struct Path {
+    bool pathCallSucceeded;
     vector<Vec3> waypoints;
-    PriorityType pathEndType;
     uint32_t pathEndAreaId;
 };
 
