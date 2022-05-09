@@ -48,7 +48,12 @@ NodeState TargetSelectionTaskNode::exec(const ServerState & state, TreeThinker &
         curTarget = {closestId, state.roundNumber, curClient.lastFrame};
     }
 
-    nodeState = NodeState::Success;
+    if (curTarget.playerId == INVALID_ID) {
+        nodeState = NodeState::Failure;
+    }
+    else {
+        nodeState = NodeState::Success;
+    }
     return nodeState;
 }
 

@@ -37,8 +37,6 @@ struct TreeThinker {
 
     int64_t orderWaypointIndex;
     int64_t orderGrenadeIndex;
-
-    CSGOId lastTarget;
 };
 
 struct Blackboard {

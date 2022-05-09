@@ -24,6 +24,7 @@ namespace order {
 
 class OrderSeqSelectorNode : public FirstNonFailSeqSelectorNode {
     vector<Node> nodes;
+public:
     OrderSeqSelectorNode(Blackboard & blackboard) :
             FirstNonFailSeqSelectorNode(blackboard, {order::D2TaskNode(blackboard), order::GeneralTaskNode(blackboard)}) { };
 };

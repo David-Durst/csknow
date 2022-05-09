@@ -29,6 +29,7 @@ namespace action {
 
 class ActionParSelectorNode : public ParSelectorNode {
     vector<Node> nodes;
+public:
     ActionParSelectorNode(Blackboard & blackboard) :
             ParSelectorNode(blackboard, { action::MovementTaskNode(blackboard),
                                           action::AimTaskNode(blackboard),

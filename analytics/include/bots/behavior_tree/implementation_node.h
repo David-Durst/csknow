@@ -23,6 +23,7 @@ namespace implementation {
 
 class ImplementationParSelectorNode : public ParSelectorNode {
     vector<Node> nodes;
+public:
     ImplementationParSelectorNode(Blackboard & blackboard) :
             ParSelectorNode(blackboard, { implementation::PathingTaskNode(blackboard),
                                           implementation::FireSelectionTaskNode(blackboard)}) { };
