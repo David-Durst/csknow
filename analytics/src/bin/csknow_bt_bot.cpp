@@ -10,8 +10,8 @@
 //#define LOG_STATE
 
 int main(int argc, char * argv[]) {
-    if (argc != 3) {
-        std::cout << "please call this code with 2 or 4 (NOT 3) arguments: \n"
+    if (argc != 4) {
+        std::cout << "please call this code with 3 (NOT 3) arguments: \n"
             << "1. path/to/maps\n"
             << "2. path/to/data\n"
             << "3. path/to/log\n" << std::endl;
