@@ -46,6 +46,7 @@ target_link_libraries(csknow_lib OpenSSL::SSL)
 target_link_libraries(csknow_lib stdc++fs)
 target_link_libraries(csknow csknow_lib)
 target_link_libraries(csknow_bot csknow_lib)
+target_link_libraries(csknow_bt_bot csknow_lib)
 target_link_libraries(csknow_train csknow_lib)
 target_link_libraries(csknow_intersection csknow_lib)
 

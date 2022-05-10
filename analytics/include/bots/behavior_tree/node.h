@@ -115,7 +115,7 @@ public:
 
 
     Node(Blackboard & blackboard, string name) : blackboard(blackboard), playerNodeState({}), name(name) { }
-    virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker);
+    virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) { return NodeState::NUM_NODE_STATES; };
     virtual void reset() {
         blackboard.orders.clear();
         blackboard.playerToOrder.clear();
