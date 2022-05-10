@@ -41,7 +41,7 @@ computeTrajectoryPerRound(const Rounds & rounds, const Ticks & ticks, const Play
                     if (perRoundPlayerTrajectory[playerId].navMeshArea.back() != navMeshArea.get_id()) {
                         perRoundPlayerTrajectory[playerId].navMeshArea.push_back(navMeshArea.get_id());
                         perRoundPlayerTrajectory[playerId].navMeshPlace.push_back(navMeshArea.m_place);
-                        perRoundPlayerTrajectory[playerId].navMeshPlaceName.push_back(navFile.m_places[navMeshArea.m_place]);
+                        perRoundPlayerTrajectory[playerId].navMeshPlaceName.push_back(navFile.get_place(navMeshArea.m_place));
                         perRoundPlayerTrajectory[playerId].areaEntryPATId.push_back(patIndex);
                     }
                 }
@@ -76,10 +76,10 @@ NavmeshTrajectoryResult queryNavmeshTrajectoryDataset(const Games & games, const
         // find all the bombsite A and B locations
         vector<uint32_t> aLocations, bLocations;
         for (const auto & navMeshArea : navFile.m_areas) {
-            if (navFile.m_places[navMeshArea.m_place] == "BombsiteA") {
+            if (navFile.get_place(navMeshArea.m_place) == "BombsiteA") {
                 aLocations.push_back(navMeshArea.get_id());
             }
-            else if (navFile.m_places[navMeshArea.m_place] == "BombsiteB") {
+            else if (navFile.get_place(navMeshArea.m_place) == "BombsiteB") {
                 bLocations.push_back(navMeshArea.get_id());
             }
         }

@@ -9,7 +9,7 @@ MapMeshResult queryMapMesh(nav_mesh::nav_file & navFile) {
         result.areaToInternalId.insert({navArea.m_id, i});
         i++;
         if (navArea.m_place < navFile.m_place_count) {
-            result.placeName.push_back(navFile.m_places[navArea.m_place]);
+            result.placeName.push_back(navFile.get_place(navArea.m_place));
         }
         else {
             result.placeName.push_back("");

@@ -64,13 +64,13 @@ struct Blackboard {
     map<CSGOId, Action> playerToAction;
 
     string getPlayerPlace(Vec3 pos) {
-        return navFile.m_places[navFile.get_nearest_area_by_position(vec3Conv(pos)).m_place];
+        return navFile.get_place(navFile.get_nearest_area_by_position(vec3Conv(pos)).m_place);
     }
 
     Blackboard(string navPath) : navFile(navPath.c_str()),
         reachability(queryReachable(queryMapMesh(navFile))) {
         for (const auto & area : navFile.m_areas) {
-            navPlaceToArea[navFile.m_places[area.m_place]].push_back(area.get_id());
+            navPlaceToArea[navFile.get_place(area.m_place)].push_back(area.get_id());
         }
     }
 

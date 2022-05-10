@@ -46,17 +46,22 @@ int main(int argc, char * argv[]) {
 
         std::fstream logFile (logPath + "/bt_bot.log", std::fstream::out);
         logFile << "Num failures " << numFailures << ", last bad path: " << state.badPath << std::endl;
+        bool sleep;
         if (botTime < timePerTick) {
             logFile << "Bot compute time: " << botTime.count()
                 << "s, pct parse " << parseTime.count() / botTime.count() << std::endl;
-            std::this_thread::sleep_for(timePerTick - botTime);
+            sleep = true;
         }
         else {
             logFile << "\033[1;31mMissed Bot compute time:\033[0m " << botTime.count()
                 << "s, pct parse " << parseTime.count() / botTime.count() << std::endl;
+            sleep = false;
         }
         logFile << tree.curLog;
         logFile.close();
+        if (sleep) {
+            std::this_thread::sleep_for(timePerTick - botTime);
+        }
     }
 #pragma clang diagnostic pop
 

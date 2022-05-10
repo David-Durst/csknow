@@ -27,8 +27,8 @@ namespace order {
         if (playerNodeState.find(INVALID_ID) == playerNodeState.end() ||
             playerNodeState[INVALID_ID] != NodeState::Running) {
             // first setup orders to go A or B
-            bool plantedA = blackboard.navFile.m_places[
-                                    blackboard.navFile.get_nearest_area_by_position(vec3Conv(state.getC4Pos())).m_place] == "BombsiteA";
+            bool plantedA = blackboard.navFile.get_place(
+                                    blackboard.navFile.get_nearest_area_by_position(vec3Conv(state.getC4Pos())).m_place) == "BombsiteA";
 
             vector<vector<string>> tPathPlaces;
             if (plantedA) {
@@ -93,7 +93,7 @@ namespace order {
 
                     for (const auto & area : blackboard.navFile.m_areas) {
                         double newDistance = blackboard.reachability.getDistance(curArea.get_id(), area.get_id());
-                        string newPlace = blackboard.navFile.m_places[area.m_place];
+                        string newPlace = blackboard.navFile.get_place(area.m_place);
                         if (placesToPath.find(newPlace) != placesToPath.end() && newDistance < minDistance) {
                             minDistance = newDistance;
                             orderIndex = placesToPath[newPlace];

@@ -116,6 +116,15 @@ namespace nav_mesh {
         return m_areas[m_area_ids_to_indices.find(id)->second];
     }
 
+    std::string nav_file::get_place(std::uint16_t id) const {
+        if (id < m_places.size()) {
+            return m_places[id];
+        }
+        else {
+            return "INVALID";
+        }
+    }
+
     nav_area& nav_file::get_area_by_position( vec3_t position ) {
         for ( auto& area : m_areas ) {
             if ( area.is_within( position ) )
