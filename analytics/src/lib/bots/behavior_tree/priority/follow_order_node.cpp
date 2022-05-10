@@ -68,7 +68,7 @@ namespace follow {
             const nav_mesh::nav_area & curArea = blackboard.navFile.get_nearest_area_by_position(vec3Conv(curPos));
             const nav_mesh::nav_area & targetArea = blackboard.navFile.get_nearest_area_by_position(
                     vec3Conv(curPriority.targetPos));
-            double curDistanceToGoal = blackboard.reachability.getDistance(curArea.get_id(), targetArea.get_id());
+            double curDistanceToGoal = blackboard.getDistance(curArea.get_id(), targetArea.get_id());
             for (const auto & followerId : curOrder.followers) {
                 if (followerId == treeThinker.csgoId) {
                     continue;
@@ -77,7 +77,7 @@ namespace follow {
                     Vec3 otherPos = state.clients[state.csgoIdToCSKnowId[followerId]].getFootPosForPlayer();
                     const nav_mesh::nav_area & otherArea = blackboard.navFile.get_nearest_area_by_position(
                             vec3Conv(otherPos));
-                    double distanceDelta = blackboard.reachability.getDistance(otherArea.get_id(), targetArea.get_id()) - curDistanceToGoal;
+                    double distanceDelta = blackboard.getDistance(otherArea.get_id(), targetArea.get_id()) - curDistanceToGoal;
                     if (distanceDelta < 50.) {
                         curPriority.movementOptions.move = false;
                         break;

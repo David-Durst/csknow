@@ -92,7 +92,7 @@ namespace order {
                     size_t orderIndex = INVALID_ID;
 
                     for (const auto & area : blackboard.navFile.m_areas) {
-                        double newDistance = blackboard.reachability.getDistance(curArea.get_id(), area.get_id());
+                        double newDistance = blackboard.getDistance(curArea.get_id(), area.get_id());
                         string newPlace = blackboard.navFile.get_place(area.m_place);
                         if (placesToPath.find(newPlace) != placesToPath.end() && newDistance < minDistance) {
                             minDistance = newDistance;
@@ -144,9 +144,8 @@ namespace order {
                     double minDistance = std::numeric_limits<double>::max();
                     CSGOId minCSGOId = INVALID_ID;
                     for (const auto[enemyId, enemyPos] : idsToPositions) {
-                        double newDistance = blackboard.reachability.getDistance(curArea.get_id(),
-                                                                                 blackboard.navFile.get_nearest_area_by_position(
-                                                                                         vec3Conv(enemyPos)).get_id());
+                        double newDistance = blackboard.getDistance(curArea.get_id(),
+                                                                    blackboard.navFile.get_nearest_area_by_position(vec3Conv(enemyPos)).get_id());
                         if (newDistance < minDistance) {
                             minDistance = newDistance;
                             minCSGOId = enemyId;

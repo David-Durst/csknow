@@ -45,6 +45,7 @@ struct Blackboard {
 
     // general map data
     ReachableResult reachability;
+    map<uint32_t, map<uint32_t, double>> distanceMatrix;
     map<string, vector<uint32_t>> navPlaceToArea;
 
     // all player data
@@ -67,8 +68,14 @@ struct Blackboard {
         return navFile.get_place(navFile.get_nearest_area_by_position(vec3Conv(pos)).m_place);
     }
 
-    Blackboard(string navPath) : navFile(navPath.c_str()),
-        reachability(queryReachable(queryMapMesh(navFile))) {
+    void computeDistanceMatrix();
+    double getDistance(uint32_t srcArea, uint32_t dstArea) {
+        return computeDistance(vec3tConv(navFile.get_area_by_id_fast(srcArea).get_center()),
+                               vec3tConv(navFile.get_area_by_id_fast(dstArea).get_center()));
+    }
+
+    Blackboard(string navPath) : navFile(navPath.c_str()) {
+                                 //reachability(queryReachable(queryMapMesh(navFile))) {
         for (const auto & area : navFile.m_areas) {
             navPlaceToArea[navFile.get_place(area.m_place)].push_back(area.get_id());
         }
@@ -201,6 +208,7 @@ public:
     FirstNonFailSeqSelectorNode(Blackboard & blackboard, vector<Node> nodes, string name) : Node(blackboard, name), children(nodes) { };
 
     NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
+        Node * x = this;
         for (auto & child : children) {
             NodeState childNodeState = child.exec(state, treeThinker);
             if (childNodeState != NodeState::Failure) {
