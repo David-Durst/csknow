@@ -18,6 +18,7 @@ void Tree::tick(ServerState & state, string mapsPath) {
         curMapNumber = state.mapNumber;
     }
 
+    // insert tree thinkers for new bots
     for (const auto & client : state.clients) {
         if (client.isBot && playerToTreeThinkers.find(client.csgoId) == playerToTreeThinkers.end()) {
             playerToTreeThinkers[client.csgoId] = {
@@ -30,6 +31,7 @@ void Tree::tick(ServerState & state, string mapsPath) {
     }
 
     if (!state.clients.empty()) {
+        // update all nodes in tree
         // don't care about which player as order is for all players
         orderNode->exec(state, playerToTreeThinkers[state.clients[0].csgoId]);
         for (const auto & client : state.clients) {
@@ -39,6 +41,16 @@ void Tree::tick(ServerState & state, string mapsPath) {
             }
         }
 
+
+        // update state actions with actions per player
+        for (auto & client : state.clients) {
+            const Action & clientAction = blackboard->playerToAction[client.csgoId];
+            client.buttons = clientAction.buttons;
+            client.inputAngleDeltaPctX = clientAction.inputAngleDeltaPctX;
+            client.inputAngleDeltaPctY = clientAction.inputAngleDeltaPctY;
+        }
+
+        // log state
         vector<PrintState> printStates;
         printStates.push_back(orderNode->printState(state, state.clients[0].csgoId));
         for (const auto & client : state.clients) {

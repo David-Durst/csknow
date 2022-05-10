@@ -127,7 +127,7 @@ public:
         return visibilityClientPairs.find({src, target}) != visibilityClientPairs.end();
     }
 
-        // c4 state
+    // c4 state
     // Is Planted,Pos X,Pos Y,Pos Z
     bool c4Exists;
     bool c4IsPlanted;
