@@ -44,7 +44,7 @@ int main(int argc, char * argv[]) {
         std::chrono::duration<double> botTime = end - start;
         std::chrono::duration<double> parseTime = parseEnd - start;
 
-        std::fstream logFile (logPath + "/bt_bot.log");
+        std::fstream logFile (logPath + "/bt_bot.log", std::fstream::out);
         logFile << "Num failures " << numFailures << ", last bad path: " << state.badPath << std::endl;
         if (botTime < timePerTick) {
             logFile << "Bot compute time: " << botTime.count()
@@ -56,6 +56,7 @@ int main(int argc, char * argv[]) {
                 << "s, pct parse " << parseTime.count() / botTime.count() << std::endl;
         }
         logFile << tree.curLog;
+        logFile.close();
     }
 #pragma clang diagnostic pop
 
