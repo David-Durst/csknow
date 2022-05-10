@@ -43,6 +43,8 @@ namespace implementation {
             newPath.pathCallSucceeded = false;
         }
 
+        playerNodeState[treeThinker.csgoId] = NodeState::Running;
+        return playerNodeState[treeThinker.csgoId];
     }
 
     NodeState FireSelectionTaskNode::exec(const ServerState &state, TreeThinker &treeThinker) {

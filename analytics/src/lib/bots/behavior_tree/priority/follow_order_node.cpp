@@ -11,7 +11,7 @@ namespace follow {
             blackboard.playerToPriority[treeThinker.csgoId] = {};
             blackboard.playerToPriority[treeThinker.csgoId].targetPlayer.firstTargetFrame = INVALID_ID;
         }
-        return
+        return blackboard.playerToPriority[treeThinker.csgoId];
     }
 
 

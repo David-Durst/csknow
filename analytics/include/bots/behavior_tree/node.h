@@ -142,7 +142,7 @@ public:
                     stateString = "BAD NODE STATE";
             }
         }
-        return {{}, name + ": " + stateString};
+        return {{}, {name + ": " + stateString}};
     }
 
     uint32_t getNearestAreaInNextPlace(const ServerState & state, const TreeThinker & treeThinker, string nextPlace);

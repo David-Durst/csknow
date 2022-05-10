@@ -10,11 +10,9 @@ void Tree::tick(ServerState & state, string mapsPath) {
     if (state.mapNumber != curMapNumber) {
         blackboard = std::unique_ptr<Blackboard>( new Blackboard(navPath) );
         orderNode = std::unique_ptr<OrderSeqSelectorNode>( new OrderSeqSelectorNode(*blackboard) );
-        perPlayerRootNodes = {
-                PriorityParNode(*blackboard),
-                ImplementationParSelectorNode(*blackboard),
-                ActionParSelectorNode(*blackboard)
-        };
+        priorityNode = std::unique_ptr<PriorityParNode>( new PriorityParNode(*blackboard) );
+        implementationNode = std::unique_ptr<ImplementationParSelectorNode>( new ImplementationParSelectorNode(*blackboard) );
+        actionNode = std::unique_ptr<ActionParSelectorNode>( new ActionParSelectorNode(*blackboard) );
         curMapNumber = state.mapNumber;
     }
 
@@ -36,9 +34,9 @@ void Tree::tick(ServerState & state, string mapsPath) {
         orderNode->exec(state, playerToTreeThinkers[state.clients[0].csgoId]);
         for (const auto & client : state.clients) {
             TreeThinker & treeThinker = playerToTreeThinkers[client.csgoId];
-            for (auto & node : perPlayerRootNodes) {
-                node.exec(state, treeThinker);
-            }
+            priorityNode->exec(state, treeThinker);
+            implementationNode->exec(state, treeThinker);
+            actionNode->exec(state, treeThinker);
         }
 
 
@@ -55,9 +53,9 @@ void Tree::tick(ServerState & state, string mapsPath) {
         printStates.push_back(orderNode->printState(state, state.clients[0].csgoId));
         for (const auto & client : state.clients) {
             TreeThinker & treeThinker = playerToTreeThinkers[client.csgoId];
-            for (auto & node : perPlayerRootNodes) {
-                printStates.push_back(node.printState(state, treeThinker.csgoId));
-            }
+            printStates.push_back(priorityNode->printState(state, treeThinker.csgoId));
+            printStates.push_back(implementationNode->printState(state, treeThinker.csgoId));
+            printStates.push_back(actionNode->printState(state, treeThinker.csgoId));
         }
 
         stringstream logCollector;

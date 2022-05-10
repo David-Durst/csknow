@@ -106,7 +106,7 @@ public:
             << "," << sourcePlayerId[index]
             << "," << sourcePlayerName[index]
             << "," << demoName[index]
-            << "," << trajectoryToString(trajectory[i])
+            << "," << trajectoryToString(trajectory[index])
             << std::endl;
     }
 

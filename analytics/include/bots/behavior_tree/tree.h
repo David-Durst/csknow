@@ -17,7 +17,9 @@ class Tree {
     // one order node overall, sets all team behavior
     std::unique_ptr<Blackboard> blackboard;
     std::unique_ptr<OrderSeqSelectorNode> orderNode;
-    vector<Node> perPlayerRootNodes;
+    std::unique_ptr<PriorityParNode> priorityNode;
+    std::unique_ptr<ImplementationParSelectorNode> implementationNode;
+    std::unique_ptr<ActionParSelectorNode> actionNode;
     map<CSGOId, TreeThinker> playerToTreeThinkers;
     int32_t curMapNumber = INVALID_ID;
 
