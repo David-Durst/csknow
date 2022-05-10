@@ -17,6 +17,11 @@ public:
                                           TargetSelectionTaskNode(blackboard)},
                             "PriorityParNode") { };
 
+    PrintState printState(const ServerState & state, CSGOId playerId) const override {
+        PrintState printState = ParSelectorNode::printState(state, playerId);
+        printState.curState = {blackboard.playerToPriority[playerId].print(state)};
+        return printState;
+    }
 };
 
 #endif //CSKNOW_PRIORITY_PAR_NODE_H

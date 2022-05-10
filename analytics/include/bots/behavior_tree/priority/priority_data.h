@@ -4,14 +4,9 @@
 
 #ifndef CSKNOW_PRIORITY_DATA_H
 #define CSKNOW_PRIORITY_DATA_H
-#include "load_save_bot_data.h"
 
-enum class PriorityType {
-    NavArea,
-    Player,
-    C4,
-    NUM_PRIORITY_TYPES
-};
+#include <queries/query.h>
+#include "load_save_bot_data.h"
 
 struct PriorityMovementOptions {
     bool move;
@@ -39,6 +34,36 @@ struct Priority {
     TargetPlayer targetPlayer;
     PriorityMovementOptions movementOptions;
     PriorityShootOptions shootOptions;
+
+    string print(const ServerState & state) const {
+        stringstream result;
+
+        string shootOptionStr;
+        switch (shootOptions) {
+            case PriorityShootOptions::DontShoot:
+                shootOptionStr = "DontShoot";
+                break;
+            case PriorityShootOptions::Tap:
+                shootOptionStr = "Tap";
+                break;
+            case PriorityShootOptions::Burst:
+                shootOptionStr = "Burst";
+                break;
+            case PriorityShootOptions::Spray:
+                shootOptionStr = "Spray";
+                break;
+            default:
+                shootOptionStr = "Invalid";
+        }
+
+        result << targetAreaId << ", (" << targetPos.toString() << "), "
+            << state.getPlayerString(targetPlayer.playerId) << ", " << targetPlayer.round << ", " << targetPlayer.firstTargetFrame
+            << ", move: " << boolToString(movementOptions.move) << ", walk: " << boolToString(movementOptions.walk)
+            << ", crouch: " << boolToString(movementOptions.crouch)
+            << ", " << shootOptionStr;
+
+        return result.str();
+    }
 };
 
 #endif //CSKNOW_PRIORITY_DATA_H

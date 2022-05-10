@@ -36,6 +36,11 @@ public:
                                           action::FireTaskNode(blackboard)},
                             "ActionParSelectorNode") { };
 
+    PrintState printState(const ServerState & state, CSGOId playerId) const override {
+        PrintState printState = ParSelectorNode::printState(state, playerId);
+        printState.curState = {blackboard.playerToAction[playerId].print()};
+        return printState;
+    }
 };
 
 #endif //CSKNOW_ACTION_NODE_H

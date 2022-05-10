@@ -110,6 +110,15 @@ public:
         int csknowId = csgoIdToCSKnowId[csgoId];
         return clients[csknowId];
     }
+    string getPlayerString(CSGOId playerId) const {
+        if (playerId >= 0 && playerId < csgoIdToCSKnowId.size()) {
+            return "(" + std::to_string(playerId) + ") " + getClient(playerId).name;
+        }
+        else {
+            return "(" + std::to_string(playerId) + ") INVALID";
+        }
+    }
+
     vector<bool> inputsValid;
 
     // visibility state

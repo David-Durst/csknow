@@ -28,6 +28,20 @@ public:
     OrderSeqSelectorNode(Blackboard & blackboard) :
             FirstNonFailSeqSelectorNode(blackboard, {order::D2TaskNode(blackboard), order::GeneralTaskNode(blackboard)},
                                         "OrderSeqSelectorNode") { };
+
+
+    PrintState printState(const ServerState & state, CSGOId playerId) const override {
+        PrintState printState = FirstNonFailSeqSelectorNode::printState(state, playerId);
+
+        printState.curState.clear();
+        for (size_t i = 0; i < blackboard.orders.size(); i++) {
+            const auto & order = blackboard.orders[i];
+            vector<string> orderResult = order.print(state, i);
+            printState.curState.insert(printState.curState.end(), orderResult.begin(), orderResult.end());
+        }
+
+        return printState;
+    }
 };
 
 #endif //CSKNOW_ORDER_NODE_H

@@ -85,13 +85,16 @@ enum class NodeState {
 
 struct PrintState {
     vector<PrintState> childrenStates;
-    string curResult;
+    vector<string> curState;
 
     void getStateInner(size_t depth, stringstream & ss) const {
-        for (size_t i = 0; i < depth; i++) {
-            ss << "  ";
+        for (const auto & curStateLine : curState) {
+            for (size_t i = 0; i < depth; i++) {
+                ss << "  ";
+            }
+            ss << curStateLine;
+            ss << std::endl;
         }
-        ss << curResult;
         for (const auto & childState : childrenStates) {
             childState.getStateInner(depth + 1, ss);
         }
@@ -119,13 +122,13 @@ public:
         playerNodeState.clear();
     }
 
-    virtual PrintState printState(CSGOId playerId) const {
+    virtual PrintState printState(const ServerState & state, CSGOId playerId) const {
         string stateString;
         if (playerNodeState.find(playerId) == playerNodeState.end()) {
             stateString = "Uninitialized";
         }
         else {
-            switch (playerNodeState[playerId]) {
+            switch (playerNodeState.find(playerId)->second) {
                 case NodeState::Success:
                     stateString = "Success";
                     break;
@@ -181,10 +184,10 @@ public:
         Node::reset();
     }
 
-    virtual PrintState printState() const {
-        PrintState printState = Node::printState();
+    virtual PrintState printState(const ServerState & state, CSGOId playerId) const {
+        PrintState printState = Node::printState(state, playerId);
         for (const auto & child : children) {
-            printState.childrenStates.push_back(child.printState());
+            printState.childrenStates.push_back(child.printState(state, playerId));
         }
         return printState;
     }
@@ -216,10 +219,10 @@ public:
         Node::reset();
     }
 
-    virtual PrintState printState() const {
-        PrintState printState = Node::printState();
+    virtual PrintState printState(const ServerState & state, CSGOId playerId) const {
+        PrintState printState = Node::printState(state, playerId);
         for (const auto & child : children) {
-            printState.childrenStates.push_back(child.printState());
+            printState.childrenStates.push_back(child.printState(state, playerId));
         }
         return printState;
     }

@@ -122,7 +122,7 @@ struct Vec3 {
         return result;
     }
 
-    string toString() {
+    string toString() const {
         return "{" + std::to_string(x) + ", " + std::to_string(y)
                + ", " + std::to_string(z) + "}";
     }

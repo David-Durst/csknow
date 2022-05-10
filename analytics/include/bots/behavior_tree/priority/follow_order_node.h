@@ -30,7 +30,7 @@ public:
                                         "FollowOrderSeqSelectorNode") { };
 
     NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
-        int childIndex = 0;
+        int childIndex;
         if (treeThinker.aggressiveType == AggressiveType::Push) {
             childIndex = 0;
         }
@@ -40,12 +40,6 @@ public:
         playerNodeState[treeThinker.csgoId] = children[childIndex].exec(state, treeThinker);
         return playerNodeState[treeThinker.csgoId];
     }
-
-    PrintState printState() const override {
-        PrintState printState = FirstNonFailSeqSelectorNode::printState();
-
-    }
-
 };
 
 #endif //CSKNOW_FOLLOW_ORDER_NODE_H

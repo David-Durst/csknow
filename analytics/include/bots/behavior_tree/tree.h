@@ -22,41 +22,8 @@ class Tree {
     int32_t curMapNumber = INVALID_ID;
 
 public:
-    void tick(ServerState & state, string mapsPath) {
-        string navPath = mapsPath + "/" + state.mapName + ".nav";
-
-        if (state.mapNumber != curMapNumber) {
-            blackboard = std::unique_ptr<Blackboard>( new Blackboard(navPath) );
-            orderNode = std::unique_ptr<OrderSeqSelectorNode>( new OrderSeqSelectorNode(*blackboard) );
-            perPlayerRootNodes = {
-                    PriorityParNode(*blackboard),
-                    ImplementationParSelectorNode(*blackboard),
-                    ActionParSelectorNode(*blackboard)
-            };
-            curMapNumber = state.mapNumber;
-        }
-
-        for (const auto & client : state.clients) {
-            if (client.isBot && playerToTreeThinkers.find(client.csgoId) == playerToTreeThinkers.end()) {
-                playerToTreeThinkers[client.csgoId] = {
-                        client.csgoId,
-                        AggressiveType::Push,
-                        {100, 20, 40, 70},
-                        0, 0
-                };
-            }
-        }
-
-        //  don't care about which player as order is for all players
-        orderNode->exec(state, playerToTreeThinkers[state.clients[0].csgoId]);
-        for (const auto & client : state.clients) {
-            TreeThinker & treeThinker = playerToTreeThinkers[client.csgoId];
-            for (auto & node : perPlayerRootNodes) {
-                node.exec(state, treeThinker);
-            }
-        }
-    }
-
+    string curLog;
+    void tick(ServerState & state, string mapsPath);
 };
 
 #endif //CSKNOW_TREE_H

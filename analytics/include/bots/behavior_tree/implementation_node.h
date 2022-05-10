@@ -29,6 +29,11 @@ public:
                                           implementation::FireSelectionTaskNode(blackboard)},
                             "ImplementationParSelectorNode") { };
 
+    PrintState printState(const ServerState & state, CSGOId playerId) const override {
+        PrintState printState = ParSelectorNode::printState(state, playerId);
+        printState.curState = {blackboard.playerToPath[playerId].print(state, blackboard.navFile)};
+        return printState;
+    }
 };
 
 #endif //CSKNOW_IMPLEMENTATION_NODE_H
