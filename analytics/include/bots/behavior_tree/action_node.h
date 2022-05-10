@@ -30,9 +30,9 @@ namespace action {
 class ActionParSelectorNode : public ParSelectorNode {
 public:
     ActionParSelectorNode(Blackboard & blackboard) :
-            ParSelectorNode(blackboard, { make_unique<action::MovementTaskNode>(blackboard),
-                                          make_unique<action::AimTaskNode>(blackboard),
-                                          make_unique<action::FireTaskNode>(blackboard) },
+            ParSelectorNode(blackboard, { Node::Ptr(new action::MovementTaskNode(blackboard)),
+                                          Node::Ptr(new action::AimTaskNode(blackboard)),
+                                          Node::Ptr(new action::FireTaskNode(blackboard)) },
                             "ActionParSelectorNode") { };
 
     PrintState printState(const ServerState & state, CSGOId playerId) const override {

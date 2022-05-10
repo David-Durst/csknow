@@ -125,6 +125,7 @@ public:
 
 
     Node(Blackboard & blackboard, string name) : blackboard(blackboard), playerNodeState({}), name(name) { }
+    virtual ~Node() { };
     virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) = 0;
     virtual void reset() {
         blackboard.orders.clear();
@@ -162,7 +163,8 @@ class ParSelectorNode : public Node {
     vector<Node::Ptr> children;
 
 public:
-    ParSelectorNode(Blackboard & blackboard, vector<Node::Ptr> nodes, string name) : Node(blackboard, name), children(nodes) { };
+    ParSelectorNode(Blackboard & blackboard, vector<Node::Ptr> && nodes, string name) :
+        Node(blackboard, name), children(std::move(nodes)) { };
 
     NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
         bool anyChildrenRunning = false, anyChildrenSuccess;
@@ -197,7 +199,7 @@ public:
     virtual PrintState printState(const ServerState & state, CSGOId playerId) const {
         PrintState printState = Node::printState(state, playerId);
         for (const auto & child : children) {
-            printState.childrenStates.push_back(child.printState(state, playerId));
+            printState.childrenStates.push_back(child->printState(state, playerId));
         }
         return printState;
     }
@@ -208,7 +210,8 @@ protected:
     vector<Node::Ptr> children;
 
 public:
-    FirstNonFailSeqSelectorNode(Blackboard & blackboard, vector<Node::Ptr> nodes, string name) : Node(blackboard, name), children(nodes) { };
+    FirstNonFailSeqSelectorNode(Blackboard & blackboard, vector<Node::Ptr> nodes, string name) :
+        Node(blackboard, name), children(std::move(nodes)) { };
 
     NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
         Node * x = this;
@@ -233,7 +236,7 @@ public:
     virtual PrintState printState(const ServerState & state, CSGOId playerId) const {
         PrintState printState = Node::printState(state, playerId);
         for (const auto & child : children) {
-            printState.childrenStates.push_back(child.printState(state, playerId));
+            printState.childrenStates.push_back(child->printState(state, playerId));
         }
         return printState;
     }
