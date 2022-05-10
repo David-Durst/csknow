@@ -34,6 +34,7 @@ public:
         RangeIndexEntry startEndGameTickNumbers;
         vector<uint32_t> navMeshArea;
         vector<uint16_t> navMeshPlace;
+        vector<string> navMeshPlaceName;
         vector<int64_t> areaEntryPATId;
     };
 
@@ -62,7 +63,7 @@ public:
                 << "," << i
                 << "," << trajectory.navMeshArea[i]
                 << "," << trajectory.navMeshPlace[i]
-                << "," << navFile.m_places[trajectory.navMeshPlace[i]]
+                << "," << trajectory.navMeshPlaceName[i]
                 << "," << trajectory.areaEntryPATId[i]
                 << std::endl;
         }
@@ -74,6 +75,7 @@ public:
         result.push_back("Nav Mesh Area Id");
         result.push_back("Nav Mesh Place Id");
         result.push_back("Place Name");
+        result.push_back("area entry PAT Id");
     }
 
 
@@ -87,9 +89,8 @@ public:
     vector<string> sourcePlayerName;
     vector<string> demoName;
     vector<Trajectory> trajectory;
-    const nav_mesh::nav_file & navFile;
 
-    NavmeshTrajectoryResult(const nav_mesh::nav_file & navFile) : navFile(navFile) {
+    NavmeshTrajectoryResult() {
         this->startTickColumn = -1;
         this->ticksPerEvent = 1;
     }
