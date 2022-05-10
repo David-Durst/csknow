@@ -25,8 +25,8 @@ namespace follow {
 class FollowOrderSeqSelectorNode : public FirstNonFailSeqSelectorNode {
 public:
     FollowOrderSeqSelectorNode(Blackboard & blackboard) :
-            FirstNonFailSeqSelectorNode(blackboard, {follow::PushTaskNode(blackboard),
-                                                     follow::BaitTaskNode(blackboard)},
+            FirstNonFailSeqSelectorNode(blackboard, {make_unique<follow::PushTaskNode>(blackboard),
+                                                     make_unique<follow::BaitTaskNode>(blackboard)},
                                         "FollowOrderSeqSelectorNode") { };
 
     NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {

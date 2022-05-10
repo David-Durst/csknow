@@ -8,11 +8,11 @@ void Tree::tick(ServerState & state, string mapsPath) {
     string navPath = mapsPath + "/" + state.mapName + ".nav";
 
     if (state.mapNumber != curMapNumber) {
-        blackboard = std::unique_ptr<Blackboard>( new Blackboard(navPath) );
-        orderNode = std::unique_ptr<OrderSeqSelectorNode>( new OrderSeqSelectorNode(*blackboard) );
-        priorityNode = std::unique_ptr<PriorityParNode>( new PriorityParNode(*blackboard) );
-        implementationNode = std::unique_ptr<ImplementationParSelectorNode>( new ImplementationParSelectorNode(*blackboard) );
-        actionNode = std::unique_ptr<ActionParSelectorNode>( new ActionParSelectorNode(*blackboard) );
+        blackboard = make_unique<Blackboard>(navPath);
+        orderNode = make_unique<OrderSeqSelectorNode>(*blackboard);
+        priorityNode = make_unique<PriorityParNode>(*blackboard);
+        implementationNode = make_unique<ImplementationParSelectorNode>(*blackboard);
+        actionNode = make_unique<ActionParSelectorNode>(*blackboard);
         curMapNumber = state.mapNumber;
     }
 

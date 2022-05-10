@@ -14,7 +14,9 @@
 #include "bots/behavior_tree/action_data.h"
 #include "queries/nav_mesh.h"
 #include "queries/reachable.h"
+#include <memory>
 using std::map;
+using std::make_unique;
 
 enum class AggressiveType {
     Push,
@@ -116,13 +118,14 @@ struct PrintState {
 
 class Node {
 public:
+    using Ptr = std::unique_ptr<Node>;
     Blackboard & blackboard;
     map<CSGOId, NodeState> playerNodeState;
     string name;
 
 
     Node(Blackboard & blackboard, string name) : blackboard(blackboard), playerNodeState({}), name(name) { }
-    virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) { return NodeState::NUM_NODE_STATES; };
+    virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) = 0;
     virtual void reset() {
         blackboard.orders.clear();
         blackboard.playerToOrder.clear();
@@ -156,15 +159,15 @@ public:
 };
 
 class ParSelectorNode : public Node {
-    vector<Node> children;
+    vector<Node::Ptr> children;
 
 public:
-    ParSelectorNode(Blackboard & blackboard, vector<Node> nodes, string name) : Node(blackboard, name), children(nodes) { };
+    ParSelectorNode(Blackboard & blackboard, vector<Node::Ptr> nodes, string name) : Node(blackboard, name), children(nodes) { };
 
     NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
         bool anyChildrenRunning = false, anyChildrenSuccess;
         for (auto & child : children) {
-            NodeState childNodeState = child.exec(state, treeThinker);
+            NodeState childNodeState = child->exec(state, treeThinker);
             if (childNodeState == NodeState::Running) {
                 anyChildrenRunning = true;
             }
@@ -202,15 +205,15 @@ public:
 
 class FirstNonFailSeqSelectorNode : public Node {
 protected:
-    vector<Node> children;
+    vector<Node::Ptr> children;
 
 public:
-    FirstNonFailSeqSelectorNode(Blackboard & blackboard, vector<Node> nodes, string name) : Node(blackboard, name), children(nodes) { };
+    FirstNonFailSeqSelectorNode(Blackboard & blackboard, vector<Node::Ptr> nodes, string name) : Node(blackboard, name), children(nodes) { };
 
     NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
         Node * x = this;
         for (auto & child : children) {
-            NodeState childNodeState = child.exec(state, treeThinker);
+            NodeState childNodeState = child->exec(state, treeThinker);
             if (childNodeState != NodeState::Failure) {
                 playerNodeState[treeThinker.csgoId] = childNodeState;
                 return playerNodeState[treeThinker.csgoId];

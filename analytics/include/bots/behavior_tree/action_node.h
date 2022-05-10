@@ -28,12 +28,11 @@ namespace action {
 }
 
 class ActionParSelectorNode : public ParSelectorNode {
-    vector<Node> nodes;
 public:
     ActionParSelectorNode(Blackboard & blackboard) :
-            ParSelectorNode(blackboard, { action::MovementTaskNode(blackboard),
-                                          action::AimTaskNode(blackboard),
-                                          action::FireTaskNode(blackboard)},
+            ParSelectorNode(blackboard, { make_unique<action::MovementTaskNode>(blackboard),
+                                          make_unique<action::AimTaskNode>(blackboard),
+                                          make_unique<action::FireTaskNode>(blackboard) },
                             "ActionParSelectorNode") { };
 
     PrintState printState(const ServerState & state, CSGOId playerId) const override {

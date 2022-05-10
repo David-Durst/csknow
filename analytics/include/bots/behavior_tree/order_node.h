@@ -7,6 +7,7 @@
 
 #include "bots/behavior_tree/node.h"
 #include <map>
+#include <memory>
 
 namespace order {
     class D2TaskNode : public Node {
@@ -27,6 +28,8 @@ public:
     OrderSeqSelectorNode(Blackboard & blackboard) :
             FirstNonFailSeqSelectorNode(blackboard, {order::D2TaskNode(blackboard), order::GeneralTaskNode(blackboard)},
                                         "OrderSeqSelectorNode") {
+        std::unique_ptr<Node> www = std::make_unique<order::D2TaskNode>(blackboard);
+
         auto z = order::D2TaskNode(blackboard);
         int q = 1;
     };

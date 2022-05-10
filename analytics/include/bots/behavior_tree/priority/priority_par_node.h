@@ -10,11 +10,10 @@
 #include "bots/behavior_tree/priority/target_selection_node.h"
 
 class PriorityParNode : public ParSelectorNode {
-    vector<Node> nodes;
 public:
     PriorityParNode(Blackboard & blackboard) :
-            ParSelectorNode(blackboard, { FollowOrderSeqSelectorNode(blackboard),
-                                          TargetSelectionTaskNode(blackboard)},
+            ParSelectorNode(blackboard, { make_unique<FollowOrderSeqSelectorNode>(blackboard),
+                                          make_unique<TargetSelectionTaskNode>(blackboard)},
                             "PriorityParNode") { };
 
     PrintState printState(const ServerState & state, CSGOId playerId) const override {

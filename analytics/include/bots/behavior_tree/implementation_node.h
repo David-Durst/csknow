@@ -22,11 +22,10 @@ namespace implementation {
 }
 
 class ImplementationParSelectorNode : public ParSelectorNode {
-    vector<Node> nodes;
 public:
     ImplementationParSelectorNode(Blackboard & blackboard) :
-            ParSelectorNode(blackboard, { implementation::PathingTaskNode(blackboard),
-                                          implementation::FireSelectionTaskNode(blackboard)},
+            ParSelectorNode(blackboard, { make_unique<implementation::PathingTaskNode>(blackboard),
+                                          make_unique<implementation::FireSelectionTaskNode>(blackboard) },
                             "ImplementationParSelectorNode") { };
 
     PrintState printState(const ServerState & state, CSGOId playerId) const override {
