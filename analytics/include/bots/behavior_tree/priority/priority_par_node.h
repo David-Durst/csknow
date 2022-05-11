@@ -12,8 +12,9 @@
 class PriorityParNode : public ParSelectorNode {
 public:
     PriorityParNode(Blackboard & blackboard) :
-            ParSelectorNode(blackboard, { make_unique<FollowOrderSeqSelectorNode>(blackboard),
-                                          make_unique<TargetSelectionTaskNode>(blackboard)},
+            ParSelectorNode(blackboard, Node::makeList(
+                                                make_unique<FollowOrderSeqSelectorNode>(blackboard),
+                                                make_unique<TargetSelectionTaskNode>(blackboard)),
                             "PriorityParNode") { };
 
     PrintState printState(const ServerState & state, CSGOId playerId) const override {

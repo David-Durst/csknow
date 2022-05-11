@@ -34,15 +34,6 @@ public:
                                                 make_unique<action::MovementTaskNode>(blackboard),
                                                 make_unique<action::AimTaskNode>(blackboard),
                                                 make_unique<action::FireTaskNode>(blackboard)),
-#if 0
-                            [&blackboard]() {
-                                            vector<Node::Ptr> nodes;
-                                            nodes.emplace_back(new action::MovementTaskNode(blackboard));
-                                            nodes.emplace_back(new action::AimTaskNode(blackboard));
-                                            nodes.emplace_back(new action::FireTaskNode(blackboard));
-                                            return nodes;
-                                        }(),
-#endif
                             "ActionParSelectorNode") { };
 
     PrintState printState(const ServerState & state, CSGOId playerId) const override {

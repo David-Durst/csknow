@@ -25,8 +25,9 @@ namespace follow {
 class FollowOrderSeqSelectorNode : public FirstNonFailSeqSelectorNode {
 public:
     FollowOrderSeqSelectorNode(Blackboard & blackboard) :
-            FirstNonFailSeqSelectorNode(blackboard, {make_unique<follow::PushTaskNode>(blackboard),
-                                                     make_unique<follow::BaitTaskNode>(blackboard)},
+            FirstNonFailSeqSelectorNode(blackboard, Node::makeList(
+                                                        make_unique<follow::PushTaskNode>(blackboard),
+                                                        make_unique<follow::BaitTaskNode>(blackboard)),
                                         "FollowOrderSeqSelectorNode") { };
 
     NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
@@ -37,7 +38,7 @@ public:
         else {
             childIndex = 1;
         }
-        playerNodeState[treeThinker.csgoId] = children[childIndex].exec(state, treeThinker);
+        playerNodeState[treeThinker.csgoId] = children[childIndex]->exec(state, treeThinker);
         return playerNodeState[treeThinker.csgoId];
     }
 };

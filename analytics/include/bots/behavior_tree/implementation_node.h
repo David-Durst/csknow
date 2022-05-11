@@ -24,8 +24,9 @@ namespace implementation {
 class ImplementationParSelectorNode : public ParSelectorNode {
 public:
     ImplementationParSelectorNode(Blackboard & blackboard) :
-            ParSelectorNode(blackboard, { make_unique<implementation::PathingTaskNode>(blackboard),
-                                          make_unique<implementation::FireSelectionTaskNode>(blackboard) },
+            ParSelectorNode(blackboard, Node::makeList(
+                                            make_unique<implementation::PathingTaskNode>(blackboard),
+                                            make_unique<implementation::FireSelectionTaskNode>(blackboard)),
                             "ImplementationParSelectorNode") { };
 
     PrintState printState(const ServerState & state, CSGOId playerId) const override {

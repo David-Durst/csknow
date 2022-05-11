@@ -26,7 +26,9 @@ namespace order {
 class OrderSeqSelectorNode : public FirstNonFailSeqSelectorNode {
 public:
     OrderSeqSelectorNode(Blackboard & blackboard) :
-            FirstNonFailSeqSelectorNode(blackboard, {order::D2TaskNode(blackboard), order::GeneralTaskNode(blackboard)},
+            FirstNonFailSeqSelectorNode(blackboard, Node::makeList(
+                                                                make_unique<order::D2TaskNode>(blackboard),
+                                                                make_unique<order::D2TaskNode>(blackboard)),
                                         "OrderSeqSelectorNode") {
         std::unique_ptr<Node> www = std::make_unique<order::D2TaskNode>(blackboard);
 
