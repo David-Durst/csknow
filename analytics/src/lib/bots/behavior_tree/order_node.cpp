@@ -70,13 +70,13 @@ namespace order {
 
 
             // clear orders before setting new ones
-            this->blackboard.orders.clear();
+            blackboard.orders.clear();
             for (const auto & pathPlace : pathPlaces) {
                 vector<Waypoint> waypoints;
                 for (const auto & p : pathPlace) {
                     waypoints.push_back({WaypointType::NavPlace, p, INVALID_ID});
                 }
-                this->blackboard.orders.push_back({waypoints, {}, {}, {}});
+                blackboard.orders.push_back({waypoints, {}, {}, {}});
             }
 
             // next assign clients to orders
@@ -100,8 +100,8 @@ namespace order {
                         }
                     }
 
-                    this->blackboard.orders[orderIndex].followers.push_back(client.csgoId);
-                    this->blackboard.playerToOrder[client.csgoId] = orderIndex;
+                    blackboard.orders[orderIndex].followers.push_back(client.csgoId);
+                    blackboard.playerToOrder[client.csgoId] = orderIndex;
                 }
             }
 

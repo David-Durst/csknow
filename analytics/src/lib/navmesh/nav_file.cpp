@@ -118,7 +118,9 @@ namespace nav_mesh {
 
     std::string nav_file::get_place(std::uint16_t id) const {
         if (id < m_places.size()) {
-            return m_places[id];
+            std::string result = m_places[id];
+            result.erase(result.find('\0'));
+            return result;
         }
         else {
             return "INVALID";

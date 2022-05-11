@@ -29,12 +29,7 @@ public:
             FirstNonFailSeqSelectorNode(blackboard, Node::makeList(
                                                                 make_unique<order::D2TaskNode>(blackboard),
                                                                 make_unique<order::D2TaskNode>(blackboard)),
-                                        "OrderSeqSelectorNode") {
-        std::unique_ptr<Node> www = std::make_unique<order::D2TaskNode>(blackboard);
-
-        auto z = order::D2TaskNode(blackboard);
-        int q = 1;
-    };
+                                        "OrderSeqSelectorNode") { };
 
 
     virtual PrintState printState(const ServerState & state, CSGOId playerId) const override {

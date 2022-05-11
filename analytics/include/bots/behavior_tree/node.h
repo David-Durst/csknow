@@ -228,7 +228,6 @@ public:
         Node(blackboard, name), children(std::move(nodes)) { };
 
     NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
-        Node * x = this;
         for (auto & child : children) {
             NodeState childNodeState = child->exec(state, treeThinker);
             if (childNodeState != NodeState::Failure) {
