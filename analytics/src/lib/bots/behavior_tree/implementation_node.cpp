@@ -17,12 +17,9 @@ namespace implementation {
                 MIN_DISTANCE_TO_NAV_POINT) {
                 if (curPath.curWaypoint < curPath.waypoints.size() - 1) {
                     curPath.curWaypoint++;
+                    playerNodeState[treeThinker.csgoId] = NodeState::Running;
+                    return playerNodeState[treeThinker.csgoId];
                 }
-            }
-
-            if (curPriority.targetAreaId == curPath.pathEndAreaId) {
-                playerNodeState[treeThinker.csgoId] = NodeState::Success;
-                return playerNodeState[treeThinker.csgoId];
             }
         }
 
@@ -37,13 +34,16 @@ namespace implementation {
                 newPath.waypoints.push_back(vec3tConv(tmpWaypoint));
             }
             newPath.curWaypoint = 0;
+            newPath.pathEndAreaId =
+                    blackboard.navFile.get_nearest_area_by_position(vec3Conv(curPriority.targetPos)).get_id();
         }
         else {
             // do nothing if the pathing call succeeded
             newPath.pathCallSucceeded = false;
         }
+        blackboard.playerToPath[treeThinker.csgoId] = newPath;
 
-        playerNodeState[treeThinker.csgoId] = NodeState::Running;
+        playerNodeState[treeThinker.csgoId] = newPath.pathCallSucceeded ? NodeState::Running : NodeState::Failure;
         return playerNodeState[treeThinker.csgoId];
     }
 
