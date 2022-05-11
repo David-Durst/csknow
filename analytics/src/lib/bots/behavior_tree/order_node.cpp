@@ -30,32 +30,20 @@ namespace order {
             bool plantedA = blackboard.navFile.get_place(
                                     blackboard.navFile.get_nearest_area_by_position(vec3Conv(state.getC4Pos())).m_place) == "BombsiteA";
 
-            vector<vector<string>> tPathPlaces;
+            vector<vector<string>> ctPathPlaces;
             if (plantedA) {
-                tPathPlaces = {
+                ctPathPlaces = {
                         { "LongDoors", "LongA", "ARamp", "BombsiteA" },
                         { "CTSpawn", "UnderA", "ARamp", "BombsiteA" },
                         { "Catwalk", "ShortStairs", "ExtendedA", "BombsiteA" },
                 };
             }
             else {
-                tPathPlaces = {
+                ctPathPlaces = {
                         { "BDoors", "BombsiteB" },
                         { "LowerTunnel", "UpperTunnel", "BombsiteB" },
                         { "OutsideTunnel", "UpperTunnel", "BombsiteB" },
                 };
-            }
-            map<string, size_t> tPlacesToPath;
-            for (size_t i = 0; i < tPathPlaces.size(); i++) {
-                for (const auto & pathPlace : tPathPlaces[i]) {
-                    tPlacesToPath[pathPlace] = i;
-                }
-            }
-
-            vector<vector<string>> ctPathPlaces;
-            for (const auto pathPlaces : tPathPlaces) {
-                vector<string> reversedPlaces(pathPlaces.rbegin(), pathPlaces.rend());
-                ctPathPlaces.push_back(reversedPlaces);
             }
             map<string, size_t> ctPlacesToPath;
             for (size_t i = 0; i < ctPathPlaces.size(); i++) {
@@ -64,8 +52,21 @@ namespace order {
                 }
             }
 
+            vector<vector<string>> tPathPlaces;
+            for (const auto ctOnePathPlaces : ctPathPlaces) {
+                vector<string> reversedPlaces(ctOnePathPlaces.rbegin(), ctOnePathPlaces.rend());
+                tPathPlaces.push_back(reversedPlaces);
+            }
+            // going to combine ct and t paths, so increase the t indices for final merged list
+            size_t tIndexOffset = ctPathPlaces.size();
+            map<string, size_t> tPlacesToPath;
+            for (size_t i = 0; i < tPathPlaces.size(); i++) {
+                for (const auto & pathPlace : tPathPlaces[i]) {
+                    tPlacesToPath[pathPlace] = i + tIndexOffset;
+                }
+            }
+
             vector<vector<string>> pathPlaces = tPathPlaces;
-            size_t ctOrderOffset = pathPlaces.size();
             pathPlaces.insert(pathPlaces.end(), ctPathPlaces.begin(), ctPathPlaces.end());
 
 
@@ -82,7 +83,7 @@ namespace order {
             // next assign clients to orders
             for (const auto & client : state.clients) {
                 if (client.isAlive && client.isBot) {
-                    map<string, size_t> & placesToPath = client.team == T_TEAM ? tPlacesToPath : ctPlacesToPath;
+                    map<string, size_t> & placesToPath = client.team == ENGINE_TEAM_T ? tPlacesToPath : ctPlacesToPath;
 
                     const nav_mesh::nav_area & curArea = blackboard.navFile.get_nearest_area_by_position(
                             {client.lastEyePosX, client.lastEyePosY, client.lastFootPosZ});
@@ -126,9 +127,9 @@ namespace order {
 
             for (const auto &client : state.clients) {
                 if (client.isAlive) {
-                    if (client.team == T_TEAM) {
+                    if (client.team == ENGINE_TEAM_T) {
                         tIdsToPositions[client.csgoId] = {client.lastEyePosX, client.lastEyePosY, client.lastFootPosZ};
-                    } else if (client.team == CT_TEAM) {
+                    } else if (client.team == ENGINE_TEAM_CT) {
                         ctIdsToPositions[client.csgoId] = {client.lastEyePosX, client.lastEyePosY, client.lastFootPosZ};
                     }
                 }
