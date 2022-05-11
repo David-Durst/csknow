@@ -35,7 +35,6 @@ public:
     virtual PrintState printState(const ServerState & state, CSGOId playerId) const override {
         PrintState printState = FirstNonFailSeqSelectorNode::printState(state, playerId);
 
-        printState.curState.clear();
         for (size_t i = 0; i < blackboard.orders.size(); i++) {
             const auto & order = blackboard.orders[i];
             vector<string> orderResult = order.print(state, i);

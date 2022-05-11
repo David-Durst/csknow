@@ -38,7 +38,7 @@ public:
 
     virtual PrintState printState(const ServerState & state, CSGOId playerId) const override {
         PrintState printState = ParSelectorNode::printState(state, playerId);
-        printState.curState = {blackboard.playerToAction[playerId].print()};
+        printState.curState.push_back(blackboard.playerToAction[playerId].print());
         return printState;
     }
 };

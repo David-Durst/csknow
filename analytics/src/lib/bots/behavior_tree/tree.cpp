@@ -53,6 +53,7 @@ void Tree::tick(ServerState & state, string mapsPath) {
         printStates.push_back(orderNode->printState(state, state.clients[0].csgoId));
         for (const auto & client : state.clients) {
             TreeThinker & treeThinker = playerToTreeThinkers[client.csgoId];
+            printStates.push_back({{}, {state.getPlayerString(client.csgoId)}});
             printStates.push_back(priorityNode->printState(state, treeThinker.csgoId));
             printStates.push_back(implementationNode->printState(state, treeThinker.csgoId));
             printStates.push_back(actionNode->printState(state, treeThinker.csgoId));
