@@ -37,7 +37,7 @@ public:
     };
 
 
-    PrintState printState(const ServerState & state, CSGOId playerId) const override {
+    virtual PrintState printState(const ServerState & state, CSGOId playerId) const override {
         PrintState printState = FirstNonFailSeqSelectorNode::printState(state, playerId);
 
         printState.curState.clear();

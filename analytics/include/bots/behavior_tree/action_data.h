@@ -22,7 +22,7 @@ struct Action {
     }
 
     bool getButton(int32_t button) {
-        return buttons & button > 0;
+        return (buttons & button) > 0;
     }
     // these range from -1 to 1
     float inputAngleDeltaPctX;

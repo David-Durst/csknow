@@ -210,7 +210,7 @@ public:
         Node::reset();
     }
 
-    virtual PrintState printState(const ServerState & state, CSGOId playerId) const {
+    virtual PrintState printState(const ServerState & state, CSGOId playerId) const override {
         PrintState printState = Node::printState(state, playerId);
         for (const auto & child : children) {
             printState.childrenStates.push_back(child->printState(state, playerId));
@@ -247,7 +247,7 @@ public:
         Node::reset();
     }
 
-    virtual PrintState printState(const ServerState & state, CSGOId playerId) const {
+    virtual PrintState printState(const ServerState & state, CSGOId playerId) const override {
         PrintState printState = Node::printState(state, playerId);
         for (const auto & child : children) {
             printState.childrenStates.push_back(child->printState(state, playerId));

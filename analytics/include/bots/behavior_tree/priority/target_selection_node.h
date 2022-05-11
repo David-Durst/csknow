@@ -10,7 +10,7 @@
 class TargetSelectionTaskNode : public Node {
 public:
     TargetSelectionTaskNode(Blackboard & blackboard) : Node(blackboard, "TargetSelectionTaskNode") { };
-    NodeState exec(const ServerState & state, TreeThinker &treeThinker) override;
+    virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override;
 };
 
 #endif //CSKNOW_TARGET_SELECTION_NODE_H

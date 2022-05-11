@@ -11,13 +11,13 @@ namespace implementation {
     class PathingTaskNode : public Node {
     public:
         PathingTaskNode(Blackboard & blackboard) : Node(blackboard, "PathingTaskNode") { };
-        NodeState exec(const ServerState & state, TreeThinker &treeThinker) override;
+        virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override;
     };
 
     class FireSelectionTaskNode : public Node {
     public:
         FireSelectionTaskNode(Blackboard & blackboard) : Node(blackboard, "FireSelectionTaskNode") { };
-        NodeState exec(const ServerState & state, TreeThinker &treeThinker) override;
+        virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override;
     };
 }
 
@@ -29,7 +29,7 @@ public:
                                             make_unique<implementation::FireSelectionTaskNode>(blackboard)),
                             "ImplementationParSelectorNode") { };
 
-    PrintState printState(const ServerState & state, CSGOId playerId) const override {
+    virtual PrintState printState(const ServerState & state, CSGOId playerId) const override {
         PrintState printState = ParSelectorNode::printState(state, playerId);
         printState.curState = {blackboard.playerToPath[playerId].print(state, blackboard.navFile)};
         return printState;

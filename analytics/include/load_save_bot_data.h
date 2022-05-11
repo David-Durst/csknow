@@ -77,7 +77,7 @@ public:
         }
 
         bool getButton(ServerState::Client & curClient, int32_t button) {
-            return curClient.buttons & button > 0;
+            return (curClient.buttons & button) > 0;
         }
         // these range from -1 to 1
         float inputAngleDeltaPctX;

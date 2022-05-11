@@ -12,13 +12,13 @@ namespace follow {
     class PushTaskNode : public Node {
     public:
         PushTaskNode(Blackboard & blackboard) : Node(blackboard, "PushTaskNode") { };
-        NodeState exec(const ServerState & state, TreeThinker &treeThinker) override;
+        virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override;
     };
 
     class BaitTaskNode : public Node {
     public:
         BaitTaskNode(Blackboard & blackboard) : Node(blackboard, "BaitTaskNode") { };
-        NodeState exec(const ServerState & state, TreeThinker &treeThinker) override;
+        virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override;
     };
 }
 
@@ -30,7 +30,7 @@ public:
                                                         make_unique<follow::BaitTaskNode>(blackboard)),
                                         "FollowOrderSeqSelectorNode") { };
 
-    NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
+    virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
         int childIndex;
         if (treeThinker.aggressiveType == AggressiveType::Push) {
             childIndex = 0;

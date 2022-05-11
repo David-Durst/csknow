@@ -17,7 +17,7 @@ public:
                                                 make_unique<TargetSelectionTaskNode>(blackboard)),
                             "PriorityParNode") { };
 
-    PrintState printState(const ServerState & state, CSGOId playerId) const override {
+    virtual PrintState printState(const ServerState & state, CSGOId playerId) const override {
         PrintState printState = ParSelectorNode::printState(state, playerId);
         printState.curState = {blackboard.playerToPriority[playerId].print(state)};
         return printState;
