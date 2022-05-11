@@ -156,6 +156,20 @@ public:
         return {{}, {name + ": " + stateString}};
     }
 
+    template <typename ...Args>
+    static vector<Node::Ptr> makeList(Args ...args)
+    {
+        vector<Node::Ptr> nodes;
+        constexpr size_t n = sizeof...(Args);
+        nodes.reserve(n);
+
+        (
+            nodes.emplace_back(std::move(args)), ...
+        );
+    
+        return nodes;
+    }
+
     uint32_t getNearestAreaInNextPlace(const ServerState & state, const TreeThinker & treeThinker, string nextPlace);
 };
 
