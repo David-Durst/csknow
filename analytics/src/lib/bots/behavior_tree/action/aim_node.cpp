@@ -29,6 +29,7 @@ namespace action {
         // this should handle c4 as end of path will be c4
         if (curPriority.targetPlayer.playerId == INVALID_ID) {
             aimTarget = curPath.waypoints[curPath.curWaypoint];
+            aimTarget.z += EYE_HEIGHT;
         }
         else {
             aimTarget = state.getClient(curPriority.targetPlayer.playerId).getEyePosForPlayer();

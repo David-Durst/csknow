@@ -54,6 +54,7 @@ struct Blackboard {
     map<CSGOId, TreeThinker> treeThinkers;
 
     // order data
+    int32_t planRoundNumber = -1;
     vector<Order> orders;
     map<CSGOId, int64_t> playerToOrder;
 

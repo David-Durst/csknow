@@ -17,10 +17,11 @@ namespace implementation {
                 MIN_DISTANCE_TO_NAV_POINT) {
                 if (curPath.curWaypoint < curPath.waypoints.size() - 1) {
                     curPath.curWaypoint++;
-                    playerNodeState[treeThinker.csgoId] = NodeState::Running;
-                    return playerNodeState[treeThinker.csgoId];
                 }
             }
+
+            playerNodeState[treeThinker.csgoId] = NodeState::Running;
+            return playerNodeState[treeThinker.csgoId];
         }
 
         // otherwise, either no old path or old path is out of date, so update it

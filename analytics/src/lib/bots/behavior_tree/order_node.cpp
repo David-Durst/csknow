@@ -25,7 +25,9 @@ namespace order {
 
 
         if (playerNodeState.find(INVALID_ID) == playerNodeState.end() ||
-            playerNodeState[INVALID_ID] != NodeState::Running) {
+            playerNodeState[INVALID_ID] != NodeState::Running || state.roundNumber != blackboard.planRoundNumber) {
+            blackboard.planRoundNumber = state.roundNumber;
+
             // first setup orders to go A or B
             bool plantedA = blackboard.navFile.get_place(
                                     blackboard.navFile.get_nearest_area_by_position(vec3Conv(state.getC4Pos())).m_place) == "BombsiteA";
@@ -72,6 +74,9 @@ namespace order {
 
             // clear orders before setting new ones
             blackboard.orders.clear();
+            blackboard.playerToOrder.clear();
+            blackboard.playerToPath.clear();
+            blackboard.playerToPriority.clear();
             for (const auto & pathPlace : pathPlaces) {
                 vector<Waypoint> waypoints;
                 for (const auto & p : pathPlace) {
