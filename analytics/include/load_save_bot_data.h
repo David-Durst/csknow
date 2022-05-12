@@ -69,18 +69,6 @@ public:
         // keyboard/mouse inputs sent to game engine
         int32_t buttons;
 
-        void setButton(ServerState::Client & curClient, int32_t button, bool setTrue) {
-            if (setTrue) {
-                curClient.buttons |= button;
-            }
-            else {
-                curClient.buttons &= ~button;
-            }
-        }
-
-        bool getButton(ServerState::Client & curClient, int32_t button) {
-            return (curClient.buttons & button) > 0;
-        }
         // these range from -1 to 1
         float inputAngleDeltaPctX;
         float inputAngleDeltaPctY;
@@ -122,6 +110,19 @@ public:
     }
 
     vector<bool> inputsValid;
+    void setInputs(CSGOId csgoId, int32_t buttons, float inputAngleDeltaPctX, float inputAngleDeltaPctY) {
+        int csknowId = csgoIdToCSKnowId[csgoId];
+        Client & curClient = clients[csknowId];
+        curClient.buttons = buttons;
+        curClient.inputAngleDeltaPctX = inputAngleDeltaPctX;
+        curClient.inputAngleDeltaPctY = inputAngleDeltaPctY;
+        inputsValid[csknowId] = true;
+    }
+    void resetInputs() {
+        for (size_t i = 0; i < inputsValid.size(); i++) {
+            inputsValid[i] = false;
+        }
+    }
 
     // visibility state
     std::set<std::pair<int32_t, int32_t>> visibilityClientPairs;

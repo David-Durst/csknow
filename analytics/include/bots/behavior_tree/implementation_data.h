@@ -19,7 +19,7 @@ struct Path {
         result << boolToString(pathCallSucceeded);
         if (pathCallSucceeded) {
             result << ", ";
-            if (curWaypoint > 0 && curWaypoint < waypoints.size()) {
+            if (curWaypoint >= 0 && curWaypoint < waypoints.size()) {
                 result << waypoints[curWaypoint].toString() << ", ";
             }
             else {

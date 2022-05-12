@@ -29,30 +29,29 @@ void Tree::tick(ServerState & state, string mapsPath) {
     }
 
     if (!state.clients.empty()) {
+        vector<PrintState> printStates;
+
         // update all nodes in tree
         // don't care about which player as order is for all players
         orderNode->exec(state, playerToTreeThinkers[state.clients[0].csgoId]);
-        for (const auto & client : state.clients) {
+        printStates.push_back(orderNode->printState(state, state.clients[0].csgoId));
+
+        for (auto & client : state.clients) {
+            if (!client.isAlive || !client.isBot) {
+                continue;
+            }
             TreeThinker & treeThinker = playerToTreeThinkers[client.csgoId];
             priorityNode->exec(state, treeThinker);
             implementationNode->exec(state, treeThinker);
             actionNode->exec(state, treeThinker);
-        }
 
-
-        // update state actions with actions per player
-        for (auto & client : state.clients) {
+            // update state actions with actions per player
             const Action & clientAction = blackboard->playerToAction[client.csgoId];
-            client.buttons = clientAction.buttons;
-            client.inputAngleDeltaPctX = clientAction.inputAngleDeltaPctX;
-            client.inputAngleDeltaPctY = clientAction.inputAngleDeltaPctY;
-        }
 
-        // log state
-        vector<PrintState> printStates;
-        printStates.push_back(orderNode->printState(state, state.clients[0].csgoId));
-        for (const auto & client : state.clients) {
-            TreeThinker & treeThinker = playerToTreeThinkers[client.csgoId];
+            state.setInputs(client.csgoId, clientAction.buttons, clientAction.inputAngleDeltaPctX,
+                            clientAction.inputAngleDeltaPctY);
+
+            // log state
             printStates.push_back({{}, {state.getPlayerString(client.csgoId)}});
             printStates.push_back(priorityNode->printState(state, treeThinker.csgoId));
             printStates.push_back(implementationNode->printState(state, treeThinker.csgoId));
