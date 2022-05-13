@@ -16,16 +16,16 @@ struct Path {
     string print(const ServerState & state, const nav_mesh::nav_file & navFile) const {
         stringstream result;
 
-        result << boolToString(pathCallSucceeded);
+        result << "path call succeeded: " + boolToString(pathCallSucceeded);
         if (pathCallSucceeded) {
             result << ", ";
             if (curWaypoint >= 0 && curWaypoint < waypoints.size()) {
-                result << waypoints[curWaypoint].toString() << ", ";
+                result << "cur waypoint: " + waypoints[curWaypoint].toString() << ", ";
             }
             else {
                 result << "invalid waypoint, ";
             }
-            result << pathEndAreaId << ", " << vec3tConv(navFile.get_area_by_id_fast(pathEndAreaId).get_center()).toString();
+            result << "end waypoint: " << vec3tConv(navFile.get_area_by_id_fast(pathEndAreaId).get_center()).toString();
 
         }
 

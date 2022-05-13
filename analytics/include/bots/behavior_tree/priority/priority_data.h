@@ -56,11 +56,12 @@ struct Priority {
                 shootOptionStr = "Invalid";
         }
 
-        result << targetAreaId << ", (" << targetPos.toString() << "), "
-            << state.getPlayerString(targetPlayer.playerId) << ", " << targetPlayer.round << ", " << targetPlayer.firstTargetFrame
+        result << "target pos: (" << targetPos.toString() << "), target player id:"
+            << state.getPlayerString(targetPlayer.playerId) << ", target player round: " << targetPlayer.round
+            << ", target player first frame: " << targetPlayer.firstTargetFrame
             << ", move: " << boolToString(movementOptions.move) << ", walk: " << boolToString(movementOptions.walk)
             << ", crouch: " << boolToString(movementOptions.crouch)
-            << ", " << shootOptionStr;
+            << ", shoot option: " << shootOptionStr;
 
         return result.str();
     }

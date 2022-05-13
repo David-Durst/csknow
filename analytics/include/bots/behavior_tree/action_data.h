@@ -29,8 +29,8 @@ struct Action {
     float inputAngleDeltaPctY;
 
     string print() {
-        return std::to_string(buttons) + ", " + std::to_string(shotsInBurst)
-            + ", " + std::to_string(inputAngleDeltaPctX) + ", " + std::to_string(inputAngleDeltaPctY);
+        return "buttons: " + std::to_string(buttons) + ", shots in burst: " + std::to_string(shotsInBurst)
+            + ", mouse delta x: " + std::to_string(inputAngleDeltaPctX) + ", mouse delta y: " + std::to_string(inputAngleDeltaPctY);
     }
 };
 
