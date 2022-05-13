@@ -25,6 +25,11 @@ namespace action {
         Path & curPath = blackboard.playerToPath[treeThinker.csgoId];
         Vec3 aimTarget;
 
+        if (!curPath.pathCallSucceeded) {
+            playerNodeState[treeThinker.csgoId] = NodeState::Failure;
+            return playerNodeState[treeThinker.csgoId];
+        }
+
         // aim at target player if one exists, otherwise the next way point
         // this should handle c4 as end of path will be c4
         if (curPriority.targetPlayer.playerId == INVALID_ID) {

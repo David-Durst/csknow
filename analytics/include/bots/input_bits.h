@@ -3,7 +3,7 @@
 
 #define MAX_VELOCITY_WHEN_STOPPED 5.
 #define HEAD_ADJUSTMENT 8.
-#define MIN_DISTANCE_TO_NAV_POINT 20.
+#define MIN_DISTANCE_TO_NAV_POINT 80.
 #define RECOIL_THRESHOLD 0.01
 
 // https://github.com/ValveSoftware/source-sdk-2013/blob/0d8dceea4310fde5706b3ce1c70609d72a38efdf/sp/src/game/shared/in_buttons.h

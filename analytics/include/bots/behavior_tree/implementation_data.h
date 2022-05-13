@@ -20,12 +20,12 @@ struct Path {
         if (pathCallSucceeded) {
             result << ", ";
             if (curWaypoint >= 0 && curWaypoint < waypoints.size()) {
-                result << "cur waypoint: " + waypoints[curWaypoint].toString() << ", ";
+                result << "cur waypoint: " << curWaypoint << " " << waypoints[curWaypoint].toString() << ", ";
             }
             else {
                 result << "invalid waypoint, ";
             }
-            result << "end waypoint: " << vec3tConv(navFile.get_area_by_id_fast(pathEndAreaId).get_center()).toString();
+            result << "end waypoint: " << waypoints.size() - 1 << " " << vec3tConv(navFile.get_area_by_id_fast(pathEndAreaId).get_center()).toString();
 
         }
 

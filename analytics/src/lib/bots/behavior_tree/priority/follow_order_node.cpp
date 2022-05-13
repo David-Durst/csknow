@@ -33,6 +33,8 @@ namespace follow {
         bool finishedAndDone = false;
         // if finished waypoint,
         if (finishedWaypoint) {
+            // need to pick a new path on priority change
+            blackboard.playerToPath.erase(treeThinker.csgoId);
             // increment counter and move to next waypoint if possible
             if (treeThinker.orderWaypointIndex < curOrder.waypoints.size() - 1) {
                 treeThinker.orderWaypointIndex++;

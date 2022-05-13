@@ -7,7 +7,24 @@
 void Tree::tick(ServerState & state, string mapsPath) {
     string navPath = mapsPath + "/" + state.mapName + ".nav";
 
-    if (state.mapNumber != curMapNumber) {
+    // track when players leave to recompute all plans
+    bool samePlayers = true;
+    if (state.clients.size() != lastFramePlayers.size()) {
+        samePlayers = false;
+    }
+    else {
+        for (const auto & client : state.clients) {
+            if (lastFramePlayers.find(client.csgoId) == lastFramePlayers.end()) {
+                samePlayers = false;
+            }
+        }
+    }
+    lastFramePlayers.clear();
+    for (const auto & client : state.clients) {
+        lastFramePlayers.insert(client.csgoId);
+    }
+
+    if (state.mapNumber != curMapNumber || !samePlayers) {
         blackboard = make_unique<Blackboard>(navPath);
         orderNode = make_unique<OrderSeqSelectorNode>(*blackboard);
         priorityNode = make_unique<PriorityParNode>(*blackboard);

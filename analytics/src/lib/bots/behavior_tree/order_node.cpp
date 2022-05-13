@@ -115,9 +115,6 @@ namespace order {
             resetTreeThinkers(blackboard);
             playerNodeState[INVALID_ID] = NodeState::Running;
         }
-        else if (playerNodeState[INVALID_ID] == NodeState::Running && state.roundNumber != blackboard.lastFrameState.roundNumber) {
-            playerNodeState[INVALID_ID] = NodeState::Success;
-        }
         return playerNodeState[INVALID_ID];
     }
 
