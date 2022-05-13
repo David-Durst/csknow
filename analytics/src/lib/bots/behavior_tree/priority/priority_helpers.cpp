@@ -25,20 +25,23 @@ void moveToWaypoint(Node & node, const ServerState & state, TreeThinker & treeTh
 
 }
 
-void finishWaypoint(Node & node, const ServerState & state, TreeThinker & treeThinker,
+bool finishWaypoint(Node & node, const ServerState & state, TreeThinker & treeThinker,
                     const Order & curOrder, Priority & curPriority, string curPlace) {
     // finished with current priority if
     // trying to reach place and got there
     if (curOrder.waypoints[treeThinker.orderWaypointIndex].waypointType == WaypointType::NavPlace) {
         if (curOrder.waypoints[treeThinker.orderWaypointIndex].placeName == curPlace) {
             node.playerNodeState[treeThinker.csgoId] = NodeState::Success;
+            return true;
         }
     }
     // target player died
     else if (curOrder.waypoints[treeThinker.orderWaypointIndex].waypointType == WaypointType::Player) {
         if (!state.clients[state.csgoIdToCSKnowId[curOrder.waypoints[treeThinker.orderWaypointIndex].playerId]].isAlive) {
             node.playerNodeState[treeThinker.csgoId] = NodeState::Success;
+            return true;
         }
     }
     // c4 doesn't finish
+    return false;
 }

@@ -10,7 +10,7 @@
 void moveToWaypoint(Node & node, const ServerState & state, TreeThinker & treeThinker,
                     const Order & curOrder, Priority & curPriority);
 
-void finishWaypoint(Node & node, const ServerState & state, TreeThinker & treeThinker,
+bool finishWaypoint(Node & node, const ServerState & state, TreeThinker & treeThinker,
                     const Order & curOrder, Priority & curPriority, string curPlace);
 
 #endif //CSKNOW_PRIORITY_HELPERS_H

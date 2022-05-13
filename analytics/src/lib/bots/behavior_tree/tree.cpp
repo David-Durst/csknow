@@ -41,6 +41,9 @@ void Tree::tick(ServerState & state, string mapsPath) {
                 continue;
             }
             TreeThinker & treeThinker = playerToTreeThinkers[client.csgoId];
+            // reset all buttons before logic runs
+            blackboard->playerToAction[treeThinker.csgoId].buttons = 0;
+
             priorityNode->exec(state, treeThinker);
             implementationNode->exec(state, treeThinker);
             actionNode->exec(state, treeThinker);
@@ -54,7 +57,8 @@ void Tree::tick(ServerState & state, string mapsPath) {
             //                clientAction.inputAngleDeltaPctY);
 
             // log state
-            printStates.push_back({{}, {state.getPlayerString(client.csgoId)}});
+            printStates.push_back({{}, {state.getPlayerString(client.csgoId) +
+                ", pos: " + client.getFootPosForPlayer().toString()}});
             printStates.push_back(priorityNode->printState(state, treeThinker.csgoId));
             printStates.push_back(implementationNode->printState(state, treeThinker.csgoId));
             printStates.push_back(actionNode->printState(state, treeThinker.csgoId));

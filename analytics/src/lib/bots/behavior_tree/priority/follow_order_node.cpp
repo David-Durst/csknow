@@ -16,33 +16,42 @@ namespace follow {
 
 
     NodeState PushTaskNode::exec(const ServerState &state, TreeThinker &treeThinker) {
-        const Order & curOrder = blackboard.orders[blackboard.playerToOrder[state.csgoIdToCSKnowId[treeThinker.csgoId]]];
+        const Order & curOrder = blackboard.orders[blackboard.playerToOrder[treeThinker.csgoId]];
+        bool havePriority = blackboard.playerToPriority.find(treeThinker.csgoId) != blackboard.playerToPriority.end();
+
         // default values are set to invalid where necessary, so this is fine
         Priority & curPriority = blackboard.playerToPriority[treeThinker.csgoId];
 
-        // if no priority yet or get to current waypoint, setup next one
-        if (playerNodeState.find(treeThinker.csgoId) == playerNodeState.end() ||
-            playerNodeState[treeThinker.csgoId] != NodeState::Running) {
-            treeThinker.orderWaypointIndex++;
-            // done with waypoints if index is over max, then just return success until getting new order
-            if (treeThinker.orderWaypointIndex < curOrder.waypoints.size()) {
-                moveToWaypoint(*this, state, treeThinker, curOrder, curPriority);
-                playerNodeState[treeThinker.csgoId] = NodeState::Running;
-            }
-            else {
-                playerNodeState[treeThinker.csgoId] = NodeState::Success;
-            }
-        }
-        else {
-            string curPlace = blackboard.getPlayerPlace(state.clients[state.csgoIdToCSKnowId[treeThinker.csgoId]].getFootPosForPlayer());
-            finishWaypoint(*this, state, treeThinker, curOrder, curPriority, curPlace);
+        // if no priority yet, move to first one
+        if (!havePriority) {
+            moveToWaypoint(*this, state, treeThinker, curOrder, curPriority);
         }
 
+        string curPlace = blackboard.getPlayerPlace(state.clients[state.csgoIdToCSKnowId[treeThinker.csgoId]].getFootPosForPlayer());
+        bool finishedWaypoint = finishWaypoint(*this, state, treeThinker, curOrder, curPriority, curPlace);
+
+        bool finishedAndDone = false;
+        // if finished waypoint,
+        if (finishedWaypoint) {
+            // increment counter and move to next waypoint if possible
+            if (treeThinker.orderWaypointIndex < curOrder.waypoints.size() - 1) {
+                treeThinker.orderWaypointIndex++;
+                moveToWaypoint(*this, state, treeThinker, curOrder, curPriority);
+            }
+            else {
+                // stop moving if nothing to do
+                curPriority.movementOptions.move = false;
+                finishedAndDone = true;
+            }
+        }
+
+        playerNodeState[treeThinker.csgoId] = finishedAndDone ? NodeState::Success : NodeState::Running;
         return playerNodeState[treeThinker.csgoId];
     }
 
+    // TODO: UNIFY CODE WITH PUSH SO BOTH USE SAME SKELETON
     NodeState BaitTaskNode::exec(const ServerState &state, TreeThinker &treeThinker) {
-        const Order & curOrder = blackboard.orders[blackboard.playerToOrder[state.csgoIdToCSKnowId[treeThinker.csgoId]]];
+        const Order & curOrder = blackboard.orders[blackboard.playerToOrder[treeThinker.csgoId]];
         // default values are set to invalid where necessary, so this is fine
         Priority & curPriority = blackboard.playerToPriority[treeThinker.csgoId];
 
