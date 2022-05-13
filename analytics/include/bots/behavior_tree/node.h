@@ -51,7 +51,7 @@ struct Blackboard {
     map<string, vector<uint32_t>> navPlaceToArea;
 
     // all player data
-    map<CSGOId, TreeThinker> treeThinkers;
+    map<CSGOId, TreeThinker> playerToTreeThinkers;
 
     // order data
     int32_t planRoundNumber = -1;

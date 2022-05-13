@@ -33,7 +33,7 @@ void Blackboard::computeDistanceMatrix() {
 }
 
 uint32_t Node::getNearestAreaInNextPlace(const ServerState & state, const TreeThinker & treeThinker, string nextPlace) {
-    const ServerState::Client curClient = state.clients[state.csgoIdToCSKnowId[treeThinker.csgoId]];
+    const ServerState::Client & curClient = state.getClient(treeThinker.csgoId);
     const nav_mesh::nav_area & curArea = blackboard.navFile.get_nearest_area_by_position(
             {curClient.lastEyePosX, curClient.lastEyePosY, curClient.lastFootPosZ});
 

@@ -20,7 +20,6 @@ class Tree {
     std::unique_ptr<PriorityParNode> priorityNode;
     std::unique_ptr<ImplementationParSelectorNode> implementationNode;
     std::unique_ptr<ActionParSelectorNode> actionNode;
-    map<CSGOId, TreeThinker> playerToTreeThinkers;
     int32_t curMapNumber = INVALID_ID;
 
 public:

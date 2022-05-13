@@ -18,8 +18,8 @@ void Tree::tick(ServerState & state, string mapsPath) {
 
     // insert tree thinkers for new bots
     for (const auto & client : state.clients) {
-        if (client.isBot && playerToTreeThinkers.find(client.csgoId) == playerToTreeThinkers.end()) {
-            playerToTreeThinkers[client.csgoId] = {
+        if (client.isBot && blackboard->playerToTreeThinkers.find(client.csgoId) == blackboard->playerToTreeThinkers.end()) {
+            blackboard->playerToTreeThinkers[client.csgoId] = {
                     client.csgoId,
                     AggressiveType::Push,
                     {100, 20, 40, 70},
@@ -33,14 +33,14 @@ void Tree::tick(ServerState & state, string mapsPath) {
 
         // update all nodes in tree
         // don't care about which player as order is for all players
-        orderNode->exec(state, playerToTreeThinkers[state.clients[0].csgoId]);
+        orderNode->exec(state, blackboard->playerToTreeThinkers[state.clients[0].csgoId]);
         printStates.push_back(orderNode->printState(state, state.clients[0].csgoId));
 
         for (auto & client : state.clients) {
             if (!client.isAlive || !client.isBot) {
                 continue;
             }
-            TreeThinker & treeThinker = playerToTreeThinkers[client.csgoId];
+            TreeThinker & treeThinker = blackboard->playerToTreeThinkers[client.csgoId];
             // reset all buttons before logic runs
             blackboard->playerToAction[treeThinker.csgoId].buttons = 0;
 

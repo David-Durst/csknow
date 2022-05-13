@@ -8,7 +8,7 @@
 
 namespace order {
     void resetTreeThinkers(Blackboard & blackboard) {
-        for (auto & [_, treeThinker] : blackboard.treeThinkers) {
+        for (auto & [_, treeThinker] : blackboard.playerToTreeThinkers) {
             treeThinker.orderWaypointIndex = 0;
             treeThinker.orderGrenadeIndex = 0;
         }
