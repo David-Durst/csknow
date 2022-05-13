@@ -7,6 +7,13 @@
 #include <optional>
 
 namespace nav_mesh {
+    struct PathNode {
+        bool edgeMidpoint;
+        uint32_t area1;
+        uint32_t area2;
+        vec3_t pos;
+    };
+
 	class nav_file : public micropather::Graph {
 	public:
 		nav_file( ) { }
@@ -15,6 +22,7 @@ namespace nav_mesh {
 		void load( std::string_view nav_mesh_file );
 
         std::optional< std::vector< vec3_t > > find_path( vec3_t from, vec3_t to );
+        std::optional< std::vector< PathNode > > find_path_detailed( vec3_t from, vec3_t to );
 
 		//MicroPather implementation
 		virtual float LeastCostEstimate( void* start, void* end ) {

@@ -7,9 +7,23 @@
 #include "load_save_bot_data.h"
 #include "bots/behavior_tree/priority/priority_data.h"
 
+struct PathNode {
+    bool edgeMidpoint;
+    uint32_t area1;
+    uint32_t area2;
+    Vec3 pos;
+
+    PathNode(nav_mesh::PathNode pathNode) {
+        edgeMidpoint = pathNode.edgeMidpoint;
+        area1 = pathNode.area1;
+        area2 = pathNode.area2;
+        pos = vec3tConv(pathNode.pos);
+    }
+};
+
 struct Path {
     bool pathCallSucceeded;
-    vector<Vec3> waypoints;
+    vector<PathNode> waypoints;
     uint32_t pathEndAreaId;
     size_t curWaypoint;
 
@@ -20,7 +34,7 @@ struct Path {
         if (pathCallSucceeded) {
             result << ", ";
             if (curWaypoint >= 0 && curWaypoint < waypoints.size()) {
-                result << "cur waypoint: " << curWaypoint << " " << waypoints[curWaypoint].toString() << ", ";
+                result << "cur waypoint: " << curWaypoint << " " << waypoints[curWaypoint].pos.toString() << ", ";
             }
             else {
                 result << "invalid waypoint, ";

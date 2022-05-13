@@ -10,6 +10,16 @@ namespace nav_mesh {
         bool operator==( const vec3_t& other ) { return x == other.x && y == other.y && z == other.z; }
         bool operator!=( const vec3_t& other ) { return !operator==(other); }
 
+        float operator[](size_t index) const {
+            if (index == 0) {
+                return x;
+            } else if (index == 1) {
+                return y;
+            } else {
+                return z;
+            }
+        }
+
 		float x = 0.f, y = 0.f, z = 0.f;
 	};
 

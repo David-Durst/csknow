@@ -4,6 +4,7 @@
 #include <limits>
 #include <cmath>
 #include <csignal>
+#define PLAYER_WIDTH 32
 
 namespace nav_mesh {
     nav_file::nav_file( std::string_view nav_mesh_file ) {
@@ -86,19 +87,86 @@ namespace nav_mesh {
             // as this will have max distance on either side for player to fit through
             if ( i != 0 ) {
                 nav_area& last_area = m_areas[m_area_ids_to_indices[LO_32( path_area_ids[ i - 1 ] )]];
-                vec3_t nearest_0 = get_nearest_point_in_area(last_area.get_center(), area);
-                vec3_t nearest_1 = get_nearest_point_in_area(area.get_center(), last_area);
-                vec3_t middle = {
-                    (nearest_0.x + nearest_1.x) / 2.f,
-                    (nearest_0.y + nearest_1.y) / 2.f,
-                    (nearest_0.z + nearest_1.z) / 2.f
-                };
+                // nw is min values, se is max value, so checking if x or y is the meeting point
+                bool last_area_x_lesser = area.m_nw_corner.x == last_area.m_se_corner.x;
+                bool area_x_lesser = area.m_se_corner.x == last_area.m_nw_corner.x;
+                bool last_area_y_lesser = area.m_nw_corner.y == last_area.m_se_corner.y;
+                bool x_lesser = last_area_x_lesser || area_x_lesser;
+                vec3_t middle;
+                if (x_lesser) {
+                    middle.x = last_area_x_lesser ? area.m_nw_corner.x : last_area.m_nw_corner.x;
+                    float max_valid_y = std::min(area.m_se_corner.y, last_area.m_se_corner.y);
+                    float min_valid_y = std::min(area.m_nw_corner.y, last_area.m_nw_corner.y);
+                    middle.y = (max_valid_y + min_valid_y) / 2.f;
+                }
+                else {
+                    middle.y = last_area_y_lesser ? area.m_nw_corner.y : last_area.m_nw_corner.y;
+                    float max_valid_x = std::min(area.m_se_corner.x, last_area.m_se_corner.x);
+                    float min_valid_x = std::min(area.m_nw_corner.x, last_area.m_nw_corner.x);
+                    middle.x = (max_valid_x + min_valid_x) / 2.f;
+
+                }
+                middle.z = (area.get_center().z + last_area.get_center().z) / 2.f;
                 path.push_back( middle );
             }
             path.push_back( area.get_center( ) );
         }
 
         path.push_back( to );
+
+        return path;
+    }
+
+    std::optional< std::vector< PathNode > > nav_file::find_path_detailed( vec3_t from, vec3_t to ) {
+        auto start = reinterpret_cast< void* >( get_nearest_area_by_position( from ).get_id( ) );
+        auto end = reinterpret_cast< void* >( get_nearest_area_by_position( to ).get_id( ) );
+        std::vector< PathNode > path = { };
+        if (start == end) {
+            path.push_back( { false, get_nearest_area_by_position( to ).get_id( ), 0, to } );
+            return path;
+        }
+
+        float total_cost = 0.f;
+        micropather::MPVector< void* > path_area_ids = { };
+
+        if ( m_pather->Solve( start, end, &path_area_ids, &total_cost ) != 0 ) {
+            return {};
+        }
+
+        for ( std::size_t i = 0; i < path_area_ids.size( ); i++ ) {
+            nav_area& area = m_areas[m_area_ids_to_indices[LO_32( path_area_ids[ i ] )]];
+            // smooth paths by adding intersections between nav areas after the first
+            // chose area in between nearest location in area i from center of i-1
+            // and nearest location in area i-1 from center of i
+            // as this will have max distance on either side for player to fit through
+            if ( i != 0 ) {
+                nav_area& last_area = m_areas[m_area_ids_to_indices[LO_32( path_area_ids[ i - 1 ] )]];
+                // nw is min values, se is max value, so checking if x or y is the meeting point
+                bool last_area_x_lesser = area.m_nw_corner.x == last_area.m_se_corner.x;
+                bool area_x_lesser = area.m_se_corner.x == last_area.m_nw_corner.x;
+                bool last_area_y_lesser = area.m_nw_corner.y == last_area.m_se_corner.y;
+                bool x_lesser = last_area_x_lesser || area_x_lesser;
+                vec3_t middle;
+                if (x_lesser) {
+                    middle.x = last_area_x_lesser ? area.m_nw_corner.x : last_area.m_nw_corner.x;
+                    float max_valid_y = std::min(area.m_se_corner.y, last_area.m_se_corner.y);
+                    float min_valid_y = std::max(area.m_nw_corner.y, last_area.m_nw_corner.y);
+                    middle.y = (max_valid_y + min_valid_y) / 2.f;
+                }
+                else {
+                    middle.y = last_area_y_lesser ? area.m_nw_corner.y : last_area.m_nw_corner.y;
+                    float max_valid_x = std::min(area.m_se_corner.x, last_area.m_se_corner.x);
+                    float min_valid_x = std::max(area.m_nw_corner.x, last_area.m_nw_corner.x);
+                    middle.x = (max_valid_x + min_valid_x) / 2.f;
+
+                }
+                middle.z = (area.get_center().z + last_area.get_center().z) / 2.f;
+                path.push_back( { true, last_area.get_id(), area.get_id(), middle } );
+            }
+            path.push_back( { false, area.get_id(), 0, area.get_center( ) } );
+        }
+
+        path.push_back( { false, get_nearest_area_by_position( to ).get_id( ), 0, to } );
 
         return path;
     }

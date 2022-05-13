@@ -48,6 +48,12 @@ void Tree::tick(ServerState & state, string mapsPath) {
     if (!state.clients.empty()) {
         vector<PrintState> printStates;
 
+        // wait until plant to do anything (HACK FOR NOW)
+
+        if (!state.c4IsPlanted) {
+            return;
+        }
+
         // update all nodes in tree
         // don't care about which player as order is for all players
         orderNode->exec(state, blackboard->playerToTreeThinkers[state.clients[0].csgoId]);

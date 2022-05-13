@@ -37,7 +37,7 @@ namespace action {
             }
             else {
                 Vec2 curViewAngle = curClient.getCurrentViewAnglesWithAimpunch();
-                Vec3 targetVector = curPath.waypoints[curPath.curWaypoint] - curClient.getEyePosForPlayer();
+                Vec3 targetVector = curPath.waypoints[curPath.curWaypoint].pos - curClient.getEyePosForPlayer();
                 // add eye height since waypoints are on floor and aim is from eye
                 targetVector.z += EYE_HEIGHT;
                 Vec2 targetViewAngle = vectorAngles(targetVector);
