@@ -244,7 +244,7 @@ namespace nav_mesh {
 
         for ( size_t area_id = 0; area_id < m_areas.size(); area_id++) {
             const nav_area& area = m_areas[area_id];
-            if ( area.is_within( position ) ) {
+            if ( area.is_within_3d( position ) ) {
                 return area;
             }
             float other_distance = get_point_to_area_distance( position, area);

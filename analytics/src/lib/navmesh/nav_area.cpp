@@ -23,6 +23,28 @@ namespace nav_mesh {
 		return true;
 	}
 
+    bool nav_area::is_within_3d( vec3_t position, float z_tolerance ) const {
+        if ( position.x < m_nw_corner.x )
+            return false;
+
+        if ( position.x > m_se_corner.x )
+            return false;
+
+        if ( position.y < m_nw_corner.y )
+            return false;
+
+        if ( position.y > m_se_corner.y )
+            return false;
+
+        if ( position.z < m_nw_corner.z - z_tolerance )
+            return false;
+
+        if ( position.z > m_nw_corner.z + z_tolerance )
+            return false;
+
+        return true;
+    }
+
 	void nav_area::load( nav_buffer& buffer ) {
 		m_id = buffer.read< std::uint32_t >( );
 		m_attribute_flags = buffer.read< std::uint32_t >( );
