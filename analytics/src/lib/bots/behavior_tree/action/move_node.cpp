@@ -46,6 +46,32 @@ namespace action {
                 Vec2 deltaViewAngle = targetViewAngle - curViewAngle;
                 deltaViewAngle.makeYawNeg180To180();
                 moveInDir(curAction, deltaViewAngle);
+
+                const PathNode & curNode = curPath.waypoints[curPath.curWaypoint];
+                // jump if moving to higher navmesh area, cur area, not marked no jump, and near target navmesh
+                if (curNode.edgeMidpoint) {
+                    const nav_mesh::nav_area & srcArea = blackboard.navFile.get_area_by_id_fast(curNode.area1);
+                    const nav_mesh::nav_area & dstArea = blackboard.navFile.get_area_by_id_fast(curNode.area2);
+                    if (!srcArea.is_flag_set(NavAttributeType::NAV_MESH_NO_JUMP) && dstArea.m_nw_corner.z > srcArea.m_se_corner.z) {
+                        // make sure moving into target in 2d
+                        // check if aiming at enemy anywhere
+                        Vec3 footPos = curClient.getFootPosForPlayer(), vel = curClient.getVelocity();
+                        footPos.z = 0;
+                        vel.z = 0;
+                        Ray source{footPos, vel};
+
+                        AABB targetAABB{vec3tConv(dstArea.m_nw_corner), vec3tConv(dstArea.m_se_corner)};
+                        targetAABB.min.z = -10.;
+                        targetAABB.max.z = 10.;
+                        double hitt0, hitt1;
+                        bool movingToDst = intersectP(targetAABB, source, hitt0, hitt1);
+
+                        // make sure near target navmesh
+                        bool closeToDst = blackboard.navFile.get_point_to_area_distance(vec3Conv(footPos), dstArea) < 20.;
+
+                        curAction.setButton(IN_JUMP, movingToDst && closeToDst);
+                    }
+                }
             }
 
             // regardless if moving, check for crouching

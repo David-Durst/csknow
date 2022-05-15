@@ -118,8 +118,10 @@ namespace nav_mesh {
     }
 
     std::optional< std::vector< PathNode > > nav_file::find_path_detailed( vec3_t from, vec3_t to ) {
-        auto start = reinterpret_cast< void* >( get_nearest_area_by_position( from ).get_id( ) );
-        auto end = reinterpret_cast< void* >( get_nearest_area_by_position( to ).get_id( ) );
+        const nav_area & fromArea = get_nearest_area_by_position( from );
+        const nav_area & toArea = get_nearest_area_by_position( to );
+        auto start = reinterpret_cast< void* >( fromArea.get_id() );
+        auto end = reinterpret_cast< void* >( toArea.get_id( ) );
         std::vector< PathNode > path = { };
         if (start == end) {
             path.push_back( { false, get_nearest_area_by_position( to ).get_id( ), 0, to } );
@@ -244,6 +246,10 @@ namespace nav_mesh {
 
         for ( size_t area_id = 0; area_id < m_areas.size(); area_id++) {
             const nav_area& area = m_areas[area_id];
+            // skip bugged areas with no connections
+            if ( area.m_connections.empty() ) {
+                continue;
+            }
             if ( area.is_within_3d( position ) ) {
                 return area;
             }

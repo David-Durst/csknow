@@ -8,38 +8,45 @@
 namespace implementation {
     NodeState PathingTaskNode::exec(const ServerState &state, TreeThinker &treeThinker) {
         Priority & curPriority = blackboard.playerToPriority[treeThinker.csgoId];
+        const ServerState::Client & curClient = state.getClient(treeThinker.csgoId);
+        Vec3 curPos = curClient.getFootPosForPlayer();
+        const nav_mesh::nav_area & curArea = blackboard.navFile.get_nearest_area_by_position(vec3Conv(curPos));
 
+        // if have a path and still on it (could leave it for dodging during combat)
         // check if priority's nav area is same. If so, do nothing (except increment waypoint if necessary)
         if (blackboard.playerToPath.find(treeThinker.csgoId) != blackboard.playerToPath.end()) {
             Path & curPath = blackboard.playerToPath[treeThinker.csgoId];
-
-            Vec3 curPos = state.getClient(treeThinker.csgoId).getFootPosForPlayer();
-            const nav_mesh::nav_area & curArea = blackboard.navFile.get_nearest_area_by_position(vec3Conv(curPos));
-            PathNode curNode = curPath.waypoints[curPath.curWaypoint];
-            Vec3 targetPos = curNode.pos;
-            // ignore z since slope doesn't really matter
-            curPos.z = 0.;
-            targetPos.z = 0.;
-            if (computeDistance(curPos, targetPos) < MIN_DISTANCE_TO_NAV_POINT &&
-                (curArea.get_id() == curNode.area1 || curArea.get_id() == curNode.area2)) {
-                if (curPath.curWaypoint < curPath.waypoints.size() - 1) {
-                    curPath.curWaypoint++;
+            if (curPath.pathCallSucceeded && curPath.areas.find(curArea.get_id()) != curPath.areas.end()) {
+                PathNode curNode = curPath.waypoints[curPath.curWaypoint];
+                Vec3 targetPos = curNode.pos;
+                // ignore z since slope doesn't really matter
+                curPos.z = 0.;
+                targetPos.z = 0.;
+                if (computeDistance(curPos, targetPos) < MIN_DISTANCE_TO_NAV_POINT &&
+                    (curArea.get_id() == curNode.area1 || curArea.get_id() == curNode.area2)) {
+                    if (curPath.curWaypoint < curPath.waypoints.size() - 1) {
+                        curPath.curWaypoint++;
+                    }
                 }
-            }
 
-            playerNodeState[treeThinker.csgoId] = NodeState::Running;
-            return playerNodeState[treeThinker.csgoId];
+                playerNodeState[treeThinker.csgoId] = NodeState::Running;
+                return playerNodeState[treeThinker.csgoId];
+            }
         }
 
         // otherwise, either no old path or old path is out of date, so update it
         Path newPath;
-        auto optionalWaypoints = blackboard.navFile.find_path_detailed(vec3Conv(state.getClient(treeThinker.csgoId).getFootPosForPlayer()),
+        auto optionalWaypoints = blackboard.navFile.find_path_detailed(vec3Conv(curClient.getFootPosForPlayer()),
                                                               vec3Conv(curPriority.targetPos));
         if (optionalWaypoints) {
             newPath.pathCallSucceeded = true;
             vector<nav_mesh::PathNode> tmpWaypoints = optionalWaypoints.value();
             for (const auto & tmpWaypoint : tmpWaypoints) {
                 newPath.waypoints.push_back(tmpWaypoint);
+                newPath.areas.insert(tmpWaypoint.area1);
+                if (tmpWaypoint.edgeMidpoint) {
+                    newPath.areas.insert(tmpWaypoint.area2);
+                }
             }
             newPath.curWaypoint = 0;
             newPath.pathEndAreaId =
@@ -51,6 +58,8 @@ namespace implementation {
         else {
             // do nothing if the pathing call failed
             newPath.pathCallSucceeded = false;
+            blackboard.navFile.find_path_detailed(vec3Conv(curClient.getFootPosForPlayer()),
+                                                                           vec3Conv(curPriority.targetPos));
         }
         blackboard.playerToPath[treeThinker.csgoId] = newPath;
 

@@ -56,6 +56,9 @@ public:
         float lastEyePosY;
         float lastEyePosZ;
         float lastFootPosZ;
+        float lastVelX;
+        float lastVelY;
+        float lastVelZ;
         // I USE X FOR YAW, Y FOR PITCH, ENGINE DOES OPPOSITE
         float lastEyeAngleX;
         float lastEyeAngleY;
@@ -87,6 +90,10 @@ public:
 
         Vec3 getEyePosForPlayer() const {
             return {lastEyePosX, lastEyePosY, lastEyePosZ};
+        }
+
+        Vec3 getVelocity() const {
+            return {lastVelX, lastVelY, lastVelZ};
         }
     };
 

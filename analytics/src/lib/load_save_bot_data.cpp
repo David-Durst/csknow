@@ -128,34 +128,43 @@ void ServerState::loadClientStates(string clientStatesFilePath) {
         else if (colNumber == 21) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].lastFootPosZ);
         }
-        // Y AND X ARE INTENTIONALLY FLIPPED, I USE X FOR YAW, Y FOR PITCH, ENGINE DOES OPPOSITE
         else if (colNumber == 22) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].lastEyeAngleY);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].lastVelX);
         }
         else if (colNumber == 23) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].lastEyeAngleX);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].lastVelY);
         }
         else if (colNumber == 24) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].lastAimpunchAngleY);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].lastVelZ);
         }
+        // Y AND X ARE INTENTIONALLY FLIPPED, I USE X FOR YAW, Y FOR PITCH, ENGINE DOES OPPOSITE
         else if (colNumber == 25) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].lastAimpunchAngleX);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].lastEyeAngleY);
         }
         else if (colNumber == 26) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].lastEyeWithRecoilAngleY);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].lastEyeAngleX);
         }
         else if (colNumber == 27) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].lastEyeWithRecoilAngleX);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].lastAimpunchAngleY);
         }
         else if (colNumber == 28) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].isAlive);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].lastAimpunchAngleX);
         }
         else if (colNumber == 29) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].lastEyeWithRecoilAngleY);
+        }
+        else if (colNumber == 30) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].lastEyeWithRecoilAngleX);
+        }
+        else if (colNumber == 31) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].isAlive);
+        }
+        else if (colNumber == 32) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].isBot);
             rowNumber++;
             arrayEntry++;
         }
-        colNumber = (colNumber + 1) % 30;
+        colNumber = (colNumber + 1) % 33;
     }
     closeMMapFile({fd, stats, file});
 }
