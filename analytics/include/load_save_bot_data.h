@@ -56,6 +56,7 @@ public:
         float lastEyePosY;
         float lastEyePosZ;
         float lastFootPosZ;
+        float lastFootPosOtherZ;
         float lastVelX;
         float lastVelY;
         float lastVelZ;

@@ -37,6 +37,8 @@ namespace nav_mesh {
 		nav_area( nav_buffer& buffer );
 
 		vec3_t get_center( ) const								{ return m_center; }
+        vec3_t get_min_corner( ) const								{ return {m_nw_corner.x, m_nw_corner.y, std::min(m_nw_corner.z, m_se_corner.z)}; }
+        vec3_t get_max_corner( ) const								{ return {m_se_corner.x, m_se_corner.y, std::max(m_nw_corner.z, m_se_corner.z)}; }
 		std::uint32_t get_id( )	const							{ return m_id; }
 		
 		const std::vector< nav_connect_t >& get_connections( ) const	{ return m_connections; }

@@ -19,11 +19,11 @@ namespace implementation {
             if (curPath.pathCallSucceeded && curPath.areas.find(curArea.get_id()) != curPath.areas.end()) {
                 PathNode curNode = curPath.waypoints[curPath.curWaypoint];
                 Vec3 targetPos = curNode.pos;
-                // ignore z since slope doesn't really matter
-                curPos.z = 0.;
-                targetPos.z = 0.;
+                // ignore z since slope doesn't really matter - wups - slope does matter
+                //curPos.z = 0.;
+                //targetPos.z = 0.;
                 if (computeDistance(curPos, targetPos) < MIN_DISTANCE_TO_NAV_POINT &&
-                    (curArea.get_id() == curNode.area1 || curArea.get_id() == curNode.area2)) {
+                    ((!curNode.edgeMidpoint && curArea.get_id() == curNode.area1) || (curNode.edgeMidpoint && curArea.get_id() == curNode.area2))) {
                     if (curPath.curWaypoint < curPath.waypoints.size() - 1) {
                         curPath.curWaypoint++;
                     }

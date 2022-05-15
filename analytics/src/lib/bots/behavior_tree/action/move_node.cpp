@@ -51,25 +51,34 @@ namespace action {
                 // jump if moving to higher navmesh area, cur area, not marked no jump, and near target navmesh
                 if (curNode.edgeMidpoint) {
                     const nav_mesh::nav_area & srcArea = blackboard.navFile.get_area_by_id_fast(curNode.area1);
+                    if (srcArea.get_id() == 8654 || srcArea.get_id() == 6953 || srcArea.get_id() == 6802) {
+                        int x = 1;
+                    }
+                    if (srcArea.get_id() == 9107 || srcArea.get_id() == 9108) {
+                        int x = 1;
+                    }
                     const nav_mesh::nav_area & dstArea = blackboard.navFile.get_area_by_id_fast(curNode.area2);
-                    if (!srcArea.is_flag_set(NavAttributeType::NAV_MESH_NO_JUMP) && dstArea.m_nw_corner.z > srcArea.m_se_corner.z) {
+                    if (dstArea.get_min_corner().z > srcArea.get_max_corner().z + 30.) {
                         // make sure moving into target in 2d
                         // check if aiming at enemy anywhere
-                        Vec3 footPos = curClient.getFootPosForPlayer(), vel = curClient.getVelocity();
+                        /*
+                         * // for now, assume moving in correct direction, but in future may want a velocity check
+                        Vec3 footPos = curClient.getFootPosForPlayer(), dir = targetVector;
                         footPos.z = 0;
-                        vel.z = 0;
-                        Ray source{footPos, vel};
+                        dir.z = 0;
+                        Ray source{footPos, dir};
 
                         AABB targetAABB{vec3tConv(dstArea.m_nw_corner), vec3tConv(dstArea.m_se_corner)};
                         targetAABB.min.z = -10.;
                         targetAABB.max.z = 10.;
                         double hitt0, hitt1;
                         bool movingToDst = intersectP(targetAABB, source, hitt0, hitt1);
+                        */
 
                         // make sure near target navmesh
-                        bool closeToDst = blackboard.navFile.get_point_to_area_distance(vec3Conv(footPos), dstArea) < 20.;
+                        bool closeToDst = blackboard.navFile.get_point_to_area_distance(vec3Conv(curClient.getFootPosForPlayer()), dstArea) < 100.;
 
-                        curAction.setButton(IN_JUMP, movingToDst && closeToDst);
+                        curAction.setButton(IN_JUMP, closeToDst);
                     }
                 }
             }

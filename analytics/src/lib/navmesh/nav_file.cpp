@@ -212,8 +212,8 @@ namespace nav_mesh {
                 std::max(0.f, position.x - area.m_se_corner.x));
         float dy = std::max(area.m_nw_corner.y - position.y, 
                 std::max(0.f, position.y - area.m_se_corner.y));
-        float dz = std::max(area.m_nw_corner.z - position.z,
-                std::max(0.f, position.z - area.m_se_corner.z));
+        float dz = std::max(area.get_min_corner().z - position.z,
+                std::max(0.f, position.z - area.get_max_corner().z));
         return std::sqrt(dx * dx + dy * dy + dz * dz);
     }
 
@@ -231,10 +231,10 @@ namespace nav_mesh {
         else if (position.y > area.m_se_corner.y) {
             result.y = area.m_se_corner.y;
         }
-        if (position.z < area.m_nw_corner.z) {
+        if (position.z < area.get_min_corner().z) {
             result.z = area.m_nw_corner.z;
         }
-        else if (position.z > area.m_se_corner.z) {
+        else if (position.z > area.get_max_corner().z) {
             result.z = area.m_se_corner.z;
         }
         return result;
