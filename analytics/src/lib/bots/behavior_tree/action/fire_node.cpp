@@ -8,6 +8,7 @@ namespace action {
     NodeState FireTaskNode::exec(const ServerState &state, TreeThinker &treeThinker) {
         const ServerState::Client & curClient = state.getClient(treeThinker.csgoId);
         Action & curAction = blackboard.playerToAction[treeThinker.csgoId];
+        Action & oldAction = blackboard.lastPlayerToAction[treeThinker.csgoId];
         Priority & curPriority = blackboard.playerToPriority[treeThinker.csgoId];
         Path & curPath = blackboard.playerToPath[treeThinker.csgoId];
 
@@ -42,7 +43,7 @@ namespace action {
 
                 const ServerState::Client & targetClient = state.getClient(curPriority.targetPlayer.playerId);
 
-                bool attackLastFrame = (curAction.buttons & IN_ATTACK) > 0;
+                bool attackLastFrame = (oldAction.buttons & IN_ATTACK) > 0;
 
                 bool haveAmmo = true;
                 if (curClient.currentWeaponId == curClient.rifleId) {

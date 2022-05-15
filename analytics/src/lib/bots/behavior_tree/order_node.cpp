@@ -68,8 +68,8 @@ namespace order {
                 }
             }
 
-            vector<vector<string>> pathPlaces = tPathPlaces;
-            pathPlaces.insert(pathPlaces.end(), ctPathPlaces.begin(), ctPathPlaces.end());
+            vector<vector<string>> pathPlaces = ctPathPlaces;
+            pathPlaces.insert(pathPlaces.end(), tPathPlaces.begin(), tPathPlaces.end());
 
 
             // clear orders before setting new ones

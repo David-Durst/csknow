@@ -66,6 +66,7 @@ struct Blackboard {
 
     // action data
     map<CSGOId, Action> playerToAction;
+    map<CSGOId, Action> lastPlayerToAction;
 
     string getPlayerPlace(Vec3 pos) {
         return navFile.get_place(navFile.get_nearest_area_by_position(vec3Conv(pos)).m_place);
