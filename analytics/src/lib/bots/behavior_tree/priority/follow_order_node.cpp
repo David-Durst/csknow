@@ -42,7 +42,6 @@ namespace follow {
             }
             else {
                 // stop moving if nothing to do
-                curPriority.movementOptions.move = false;
                 finishedAndDone = true;
             }
         }
@@ -90,7 +89,6 @@ namespace follow {
                             vec3Conv(otherPos));
                     double distanceDelta = blackboard.getDistance(otherArea.get_id(), targetArea.get_id()) - curDistanceToGoal;
                     if (distanceDelta < 50.) {
-                        curPriority.movementOptions.move = false;
                         break;
                     }
                 }

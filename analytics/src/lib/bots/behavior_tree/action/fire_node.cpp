@@ -9,6 +9,7 @@ namespace action {
         const ServerState::Client & curClient = state.getClient(treeThinker.csgoId);
         Action & curAction = blackboard.playerToAction[treeThinker.csgoId];
         Priority & curPriority = blackboard.playerToPriority[treeThinker.csgoId];
+        Path & curPath = blackboard.playerToPath[treeThinker.csgoId];
 
         // don't shoot if there's no target
         if (curPriority.targetPlayer.playerId == INVALID_ID) {
@@ -23,10 +24,10 @@ namespace action {
             bool haveRecoil = (std::abs(curClient.lastEyeWithRecoilAngleX - curClient.lastEyeAngleX) > RECOIL_THRESHOLD) ||
                     (std::abs(curClient.lastEyeWithRecoilAngleY - curClient.lastEyeAngleY) > RECOIL_THRESHOLD);
             int maxBurstShots = 100;
-            if (curPriority.shootOptions == PriorityShootOptions::Tap) {
+            if (curPath.shootOptions == PathShootOptions::Tap) {
                 maxBurstShots = 1;
             }
-            else if (curPriority.shootOptions == PriorityShootOptions::Burst) {
+            else if (curPath.shootOptions == PathShootOptions::Burst) {
                 maxBurstShots = 3;
             }
 

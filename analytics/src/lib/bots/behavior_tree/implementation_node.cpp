@@ -39,17 +39,17 @@ namespace implementation {
             newPath.pathCallSucceeded = true;
             vector<nav_mesh::PathNode> tmpWaypoints = optionalWaypoints.value();
             for (const auto & tmpWaypoint : tmpWaypoints) {
-                if (tmpWaypoint.area1 == 9034 || tmpWaypoint.area1 == 9031) {
-                    int x = 1;
-                }
                 newPath.waypoints.push_back(tmpWaypoint);
             }
             newPath.curWaypoint = 0;
             newPath.pathEndAreaId =
                     blackboard.navFile.get_nearest_area_by_position(vec3Conv(curPriority.targetPos)).get_id();
+
+            newPath.movementOptions = {true, false, false};
+            newPath.shootOptions = PathShootOptions::DontShoot;
         }
         else {
-            // do nothing if the pathing call succeeded
+            // do nothing if the pathing call failed
             newPath.pathCallSucceeded = false;
         }
         blackboard.playerToPath[treeThinker.csgoId] = newPath;
@@ -60,9 +60,13 @@ namespace implementation {
 
     NodeState FireSelectionTaskNode::exec(const ServerState &state, TreeThinker &treeThinker) {
         Priority & curPriority = blackboard.playerToPriority[treeThinker.csgoId];
+        Path & curPath = blackboard.playerToPath[treeThinker.csgoId];
 
         // not executing shooting if no target
         if (curPriority.targetPlayer.playerId == INVALID_ID) {
+            curPath.movementOptions = {true, false, false};
+            curPath.shootOptions = PathShootOptions::DontShoot;
+
             playerNodeState[treeThinker.csgoId] = NodeState::Failure;
             return playerNodeState[treeThinker.csgoId];
         }
@@ -74,20 +78,20 @@ namespace implementation {
         // if close enough to move and shoot, crouch
         bool shouldCrouch = distance <= treeThinker.engagementParams.standDistance;
         if (distance <= treeThinker.engagementParams.moveDistance) {
-            curPriority.movementOptions = {true, false, true};
-            curPriority.shootOptions = PriorityShootOptions::Spray;
+            curPath.movementOptions = {true, false, true};
+            curPath.shootOptions = PathShootOptions::Spray;
         }
         else if (distance <= treeThinker.engagementParams.sprayDistance) {
-            curPriority.movementOptions = {false, false, shouldCrouch};
-            curPriority.shootOptions = PriorityShootOptions::Spray;
+            curPath.movementOptions = {false, false, shouldCrouch};
+            curPath.shootOptions = PathShootOptions::Spray;
         }
         else if (distance <= treeThinker.engagementParams.burstDistance) {
-            curPriority.movementOptions = {false, false, shouldCrouch};
-            curPriority.shootOptions = PriorityShootOptions::Burst;
+            curPath.movementOptions = {false, false, shouldCrouch};
+            curPath.shootOptions = PathShootOptions::Burst;
         }
         else {
-            curPriority.movementOptions = {false, false, shouldCrouch};
-            curPriority.shootOptions = PriorityShootOptions::Tap;
+            curPath.movementOptions = {false, false, shouldCrouch};
+            curPath.shootOptions = PathShootOptions::Tap;
         }
         playerNodeState[treeThinker.csgoId] = NodeState::Success;
         return playerNodeState[treeThinker.csgoId];

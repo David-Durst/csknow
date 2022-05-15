@@ -31,7 +31,7 @@ namespace action {
         if (curPath.pathCallSucceeded) {
 
             // don't move if move is set to false on priority
-            if (!curPriority.movementOptions.move) {
+            if (!curPath.movementOptions.move) {
                 stop(curAction);
                 // add counter strafing later
             }
@@ -49,8 +49,8 @@ namespace action {
             }
 
             // regardless if moving, check for crouching
-            curAction.setButton(IN_WALK, curPriority.movementOptions.walk);
-            curAction.setButton(IN_DUCK, curPriority.movementOptions.crouch);
+            curAction.setButton(IN_WALK, curPath.movementOptions.walk);
+            curAction.setButton(IN_DUCK, curPath.movementOptions.crouch);
 
         }
         // do nothing if there was an error
