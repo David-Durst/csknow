@@ -16,14 +16,37 @@ namespace implementation {
         // check if priority's nav area is same. If so, do nothing (except increment waypoint if necessary)
         if (blackboard.playerToPath.find(treeThinker.csgoId) != blackboard.playerToPath.end()) {
             Path & curPath = blackboard.playerToPath[treeThinker.csgoId];
-            if (curPath.pathCallSucceeded && curPath.areas.find(curArea.get_id()) != curPath.areas.end()) {
+
+            // check if player is in a nav mesh
+            // fast is point based
+            // slow is checking overlaps
+            bool onPath = curPath.areas.find(curArea.get_id()) != curPath.areas.end();
+            if (!onPath) {
+                AABB playerAABB = getAABBForPlayer(curPos);
+                for (const auto & pathAreaId : curPath.areas) {
+                    const nav_mesh::nav_area & pathArea = blackboard.navFile.get_area_by_id_fast(pathAreaId);
+                    AABB navAreaAABB = {vec3tConv(pathArea.get_min_corner()), vec3tConv(pathArea.get_max_corner())};
+                    if (aabbOverlap(playerAABB, navAreaAABB)) {
+                        onPath = true;
+                        break;
+                    }
+                }
+            }
+            if (curPath.pathCallSucceeded && onPath) {
                 PathNode curNode = curPath.waypoints[curPath.curWaypoint];
                 Vec3 targetPos = curNode.pos;
-                // ignore z since slope doesn't really matter - wups - slope does matter
-                //curPos.z = 0.;
-                //targetPos.z = 0.;
-                if (computeDistance(curPos, targetPos) < MIN_DISTANCE_TO_NAV_POINT &&
-                    ((!curNode.edgeMidpoint && curArea.get_id() == curNode.area1) || (curNode.edgeMidpoint && curArea.get_id() == curNode.area2))) {
+                // ignore z since slope doesn't really matter
+                curPos.z = 0.;
+                targetPos.z = 0.;
+                // ok if in the next area and above it
+                bool aboveNextNode = false;
+                if (curNode.edgeMidpoint) {
+                    const nav_mesh::nav_area & nextArea = blackboard.navFile.get_area_by_id_fast(curNode.area2);
+                    aboveNextNode = nextArea.is_within(vec3Conv(curPos)) && nextArea.get_max_corner().z < curClient.lastFootPosZ;
+                }
+                if (//computeDistance(curPos, targetPos) < MIN_DISTANCE_TO_NAV_POINT &&
+                    ((!curNode.edgeMidpoint && curArea.get_id() == curNode.area1) ||
+                        (curNode.edgeMidpoint && (curArea.get_id() == curNode.area2 || aboveNextNode)))) {
                     if (curPath.curWaypoint < curPath.waypoints.size() - 1) {
                         curPath.curWaypoint++;
                     }

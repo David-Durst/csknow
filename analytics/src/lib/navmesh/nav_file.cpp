@@ -144,9 +144,13 @@ namespace nav_mesh {
             if ( i != 0 ) {
                 nav_area& last_area = m_areas[m_area_ids_to_indices[LO_32( path_area_ids[ i - 1 ] )]];
                 // nw is min values, se is max value, so checking if x or y is the meeting point
-                bool last_area_x_lesser = area.m_nw_corner.x == last_area.m_se_corner.x;
-                bool area_x_lesser = area.m_se_corner.x == last_area.m_nw_corner.x;
-                bool last_area_y_lesser = area.m_nw_corner.y == last_area.m_se_corner.y;
+                bool last_area_x_lesser = last_area.get_max_corner().x <= area.get_min_corner().x;
+                bool area_x_lesser = area.get_max_corner().x <= last_area.get_min_corner().x;
+                bool last_area_y_lesser = last_area.get_max_corner().y <= area.get_min_corner().y;
+                bool area_y_lesser = area.get_max_corner().y <= last_area.get_min_corner().y;
+                if (!last_area_x_lesser && !area_x_lesser && !last_area_y_lesser && !area_y_lesser) {
+                    std::cout << "bad path from area " << last_area.get_id() << " to " << area.get_id() << std::endl;
+                }
                 bool x_lesser = last_area_x_lesser || area_x_lesser;
                 vec3_t middle;
                 if (x_lesser) {
@@ -162,7 +166,10 @@ namespace nav_mesh {
                     middle.x = (max_valid_x + min_valid_x) / 2.f;
 
                 }
-                middle.z = (area.get_center().z + last_area.get_center().z) / 2.f;
+                // if falling off cliff, never able to hit half way between top and bottom
+                // same logic if jumping
+                // take bottom z
+                middle.z = last_area.get_center().z;
                 path.push_back( { true, last_area.get_id(), area.get_id(), middle } );
             }
             path.push_back( { false, area.get_id(), 0, area.get_center( ) } );
