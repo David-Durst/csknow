@@ -56,7 +56,7 @@ namespace implementation {
                 // assuming that disjoint areas are mostly free space around them so can't get stuck in x/y coordinates
                 //computeDistance(curPos, targetPos) < MIN_DISTANCE_TO_NAV_POINT &&
                 if ((!curNode.edgeMidpoint && curArea.get_id() == curNode.area1) ||
-                        (curNode.edgeMidpoint && curArea.get_id() == curNode.area2) ||
+                        //(curNode.edgeMidpoint && curArea.get_id() == curNode.area2) ||
                         (areasDisjoint && computeDistance(curPos, targetPos) < MIN_DISTANCE_TO_NAV_POINT)) {
                     if (curPath.curWaypoint < curPath.waypoints.size() - 1) {
                         curPath.curWaypoint++;
