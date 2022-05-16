@@ -63,6 +63,7 @@ struct Blackboard {
 
     // implementation data
     map<CSGOId, Path> playerToPath;
+    map<CSGOId, uint32_t> playerToCurNavAreaId;
 
     // action data
     map<CSGOId, Action> playerToAction;

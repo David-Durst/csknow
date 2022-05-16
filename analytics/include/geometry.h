@@ -5,7 +5,6 @@
 #include <iostream>
 #include <vector>
 #include <algorithm>
-#include "geometry.h"
 #include "load_data.h"
 #include "linear_algebra.h"
 //https://github.com/ValveSoftware/source-sdk-2013/blob/master/sp/src/public/mathlib/mathlib.h#L301-L303

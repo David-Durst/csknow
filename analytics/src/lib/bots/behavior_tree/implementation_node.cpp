@@ -12,14 +12,17 @@ namespace implementation {
         Vec3 curPos = curClient.getFootPosForPlayer();
         const nav_mesh::nav_area & curArea = blackboard.navFile.get_nearest_area_by_position(vec3Conv(curPos));
 
-        // if have a path and still on it (could leave it for dodging during combat)
+        // if have a path and haven't changed nav area id
         // check if priority's nav area is same. If so, do nothing (except increment waypoint if necessary)
-        if (blackboard.playerToPath.find(treeThinker.csgoId) != blackboard.playerToPath.end()) {
+        if (blackboard.playerToPath.find(treeThinker.csgoId) != blackboard.playerToPath.end() &&
+            blackboard.playerToCurNavAreaId.find(treeThinker.csgoId) != blackboard.playerToCurNavAreaId.end() &&
+            curArea.get_id() == blackboard.playerToCurNavAreaId[treeThinker.csgoId]) {
             Path & curPath = blackboard.playerToPath[treeThinker.csgoId];
 
             // check if player is in a nav mesh
             // fast is point based
             // slow is checking overlaps
+            /*
             bool onPath = curPath.areas.find(curArea.get_id()) != curPath.areas.end();
             if (!onPath) {
                 AABB playerAABB = getAABBForPlayer(curPos);
@@ -32,6 +35,8 @@ namespace implementation {
                     }
                 }
             }
+             */
+            bool onPath = true;
             if (curPath.pathCallSucceeded && onPath) {
                 PathNode curNode = curPath.waypoints[curPath.curWaypoint];
                 Vec3 targetPos = curNode.pos;
@@ -39,14 +44,20 @@ namespace implementation {
                 curPos.z = 0.;
                 targetPos.z = 0.;
                 // ok if in the next area and above it
-                bool aboveNextNode = false;
+                bool areasDisjoint = false;
                 if (curNode.edgeMidpoint) {
+                    const nav_mesh::nav_area & priorArea = blackboard.navFile.get_area_by_id_fast(curNode.area1);
                     const nav_mesh::nav_area & nextArea = blackboard.navFile.get_area_by_id_fast(curNode.area2);
-                    aboveNextNode = nextArea.is_within(vec3Conv(curPos)) && nextArea.get_max_corner().z < curClient.lastFootPosZ;
+                    areasDisjoint = aabbOverlap(areaToAABB(priorArea), areaToAABB(nextArea));
+                    //aboveNextNode = nextArea.is_within(vec3Conv(curPos)) && nextArea.get_max_corner().z < curClient.lastFootPosZ;
                 }
-                if (//computeDistance(curPos, targetPos) < MIN_DISTANCE_TO_NAV_POINT &&
-                    ((!curNode.edgeMidpoint && curArea.get_id() == curNode.area1) ||
-                        (curNode.edgeMidpoint && (curArea.get_id() == curNode.area2 || aboveNextNode)))) {
+                // either you are in the navmesh that is the current target, you've entered the target nav mesh of an shared edge
+                // or you are in between two nav meshes that don't share an edge and just need to be close enough
+                // assuming that disjoint areas are mostly free space around them so can't get stuck in x/y coordinates
+                //computeDistance(curPos, targetPos) < MIN_DISTANCE_TO_NAV_POINT &&
+                if ((!curNode.edgeMidpoint && curArea.get_id() == curNode.area1) ||
+                        (curNode.edgeMidpoint && curArea.get_id() == curNode.area2) ||
+                        (areasDisjoint && computeDistance(curPos, targetPos) < MIN_DISTANCE_TO_NAV_POINT)) {
                     if (curPath.curWaypoint < curPath.waypoints.size() - 1) {
                         curPath.curWaypoint++;
                     }
@@ -86,6 +97,7 @@ namespace implementation {
         }
         blackboard.playerToPath[treeThinker.csgoId] = newPath;
 
+        blackboard.playerToCurNavAreaId[treeThinker.csgoId] = curArea.get_id();
         playerNodeState[treeThinker.csgoId] = newPath.pathCallSucceeded ? NodeState::Running : NodeState::Failure;
         return playerNodeState[treeThinker.csgoId];
     }
