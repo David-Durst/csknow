@@ -33,6 +33,15 @@ struct PathNode {
         area2 = pathNode.area2;
         pos = vec3tConv(pathNode.pos);
     }
+
+    string toString() const {
+        string result = boolToString(edgeMidpoint) + " " + std::to_string(area1);
+        if (edgeMidpoint) {
+            result += " -> " + std::to_string(area2);
+        }
+        result += " " + pos.toString();
+        return result;
+    }
 };
 
 struct Path {
@@ -69,7 +78,7 @@ struct Path {
         if (pathCallSucceeded) {
             result << ", ";
             if (curWaypoint >= 0 && curWaypoint < waypoints.size()) {
-                result << "cur waypoint: " << curWaypoint << " " << waypoints[curWaypoint].pos.toString() << ", ";
+                result << "cur waypoint: " << curWaypoint << " " << waypoints[curWaypoint].toString() << ", ";
             }
             else {
                 result << "invalid waypoint, ";

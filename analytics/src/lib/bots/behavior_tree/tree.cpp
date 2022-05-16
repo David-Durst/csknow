@@ -82,7 +82,8 @@ void Tree::tick(ServerState & state, string mapsPath) {
 
             // log state
             printStates.push_back({{}, {state.getPlayerString(client.csgoId) +
-                ", pos: " + client.getFootPosForPlayer().toString()}});
+                ", pos: " + client.getFootPosForPlayer().toString() +
+                ", cur nav area " + std::to_string(blackboard->navFile.get_nearest_area_by_position(vec3Conv(client.getFootPosForPlayer())).get_id())}});
             printStates.push_back(priorityNode->printState(state, treeThinker.csgoId));
             printStates.push_back(implementationNode->printState(state, treeThinker.csgoId));
             printStates.push_back(actionNode->printState(state, treeThinker.csgoId));
