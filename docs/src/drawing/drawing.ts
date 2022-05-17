@@ -354,7 +354,7 @@ export function drawTick(e: InputEvent) {
                 lastMousePosition.x <= maxCoordinate.x &&
                 lastMousePosition.y >= minCoordinate.y &&
                 lastMousePosition.y <= maxCoordinate.y) {
-                targetAreaId = cluster.id
+                targetAreaId = parseInt(cluster.otherColumnValues[1])
                 targetAreaName = cluster.otherColumnValues[0]
                 targetX = avgX
                 targetY = avgY
