@@ -135,7 +135,7 @@ public:
     // visibility state
     std::set<std::pair<int32_t, int32_t>> visibilityClientPairs;
     bool isVisible(CSGOId src, CSGOId target) const {
-        return visibilityClientPairs.find({src, target}) != visibilityClientPairs.end();
+        return visibilityClientPairs.find({std::min(src, target), std::max(src, target)}) != visibilityClientPairs.end();
     }
 
     // c4 state
