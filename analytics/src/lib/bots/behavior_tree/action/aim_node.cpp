@@ -4,10 +4,13 @@
 
 #include "bots/behavior_tree/action_node.h"
 #define MAX_LOOK_AT_C4_DISTANCE 300.
+#define K_P 0.0075
+#define K_I 0.015
+#define K_D 0
 
 namespace action {
 
-    float computeAngleVelocity(double totalDeltaAngle, double lastDeltaAngle) {
+    float computeAngleVelocityPOnly(double totalDeltaAngle, double lastDeltaAngle) {
         double newDeltaAngle = std::max(-1 * MAX_ONE_DIRECTION_ANGLE_VEL,
                                         std::min(MAX_ONE_DIRECTION_ANGLE_VEL, totalDeltaAngle / 3));
         double newAccelAngle = newDeltaAngle - lastDeltaAngle;
@@ -18,9 +21,28 @@ namespace action {
         return newDeltaAngle / MAX_ONE_DIRECTION_ANGLE_VEL;
     }
 
+    float computeAngleVelocityPID(double deltaAngle, PIDState pidState) {
+        // compute P in PID
+        double P = deltaAngle * K_P;
+
+        // compute I in PID
+        pidState.errorHistory.enqueue(deltaAngle, true);
+        double errorSum = 0.;
+        for (double error : pidState.errorHistory.getVector()) {
+            errorSum += error;
+        }
+        double I = errorSum / pidState.errorHistory.getCurSize() * K_I;
+
+        // compute D in PID
+        double D = (pidState.errorHistory.fromNewest(0) - pidState.errorHistory.fromNewest(1)) * K_D;
+
+        return P + I + D;
+    }
+
     NodeState AimTaskNode::exec(const ServerState &state, TreeThinker &treeThinker) {
         const ServerState::Client & curClient = state.getClient(treeThinker.csgoId);
         Action & curAction = blackboard.playerToAction[treeThinker.csgoId];
+        Action & oldAction = blackboard.lastPlayerToAction[treeThinker.csgoId];
         Priority & curPriority = blackboard.playerToPriority[treeThinker.csgoId];
         Path & curPath = blackboard.playerToPath[treeThinker.csgoId];
         Vec3 aimTarget;
@@ -52,8 +74,8 @@ namespace action {
         deltaAngles.makeYawNeg180To180();
 
         // TODO: use better angle velocity control
-        curAction.inputAngleDeltaPctX = computeAngleVelocity(deltaAngles.x, curAction.inputAngleDeltaPctX);
-        curAction.inputAngleDeltaPctY = computeAngleVelocity(deltaAngles.y, curAction.inputAngleDeltaPctY);
+        curAction.inputAngleDeltaPctX = computeAngleVelocityPID(deltaAngles.x, blackboard.playerToPIDStateX[treeThinker.csgoId]);
+        curAction.inputAngleDeltaPctY = computeAngleVelocityPID(deltaAngles.y, blackboard.playerToPIDStateY[treeThinker.csgoId]);
 
         playerNodeState[treeThinker.csgoId] = NodeState::Success;
         return playerNodeState[treeThinker.csgoId];

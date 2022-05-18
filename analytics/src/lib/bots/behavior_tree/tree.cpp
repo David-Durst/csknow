@@ -67,6 +67,9 @@ void Tree::tick(ServerState & state, string mapsPath) {
             // reset all buttons before logic runs
             blackboard->lastPlayerToAction = blackboard->playerToAction;
             blackboard->playerToAction[treeThinker.csgoId].buttons = 0;
+            // ensure default history
+            blackboard->playerToPIDStateX[treeThinker.csgoId].errorHistory.fill(0.);
+            blackboard->playerToPIDStateY[treeThinker.csgoId].errorHistory.fill(0.);
 
             priorityNode->exec(state, treeThinker);
             implementationNode->exec(state, treeThinker);

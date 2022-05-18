@@ -12,8 +12,8 @@ class CircularBuffer {
     size_t head = 0, tail = 0, curSize = 0;
 
 public:
-    CircularBuffer<T>(size_t max_size) : buffer(max_size) { };
-    
+    CircularBuffer<T>(size_t max_size) : buffer(max_size) { }
+
     inline size_t maxSize() { return buffer.size(); }
     inline size_t getCurSize() { return curSize; }
 
@@ -21,9 +21,15 @@ public:
     // using approach where tracking full size
     inline bool isFull() { return tail == head && curSize > 0; }
     inline bool isEmpty() { return tail == head && curSize == 0; }
+    void fill(T element) {
+        while (!isFull()) {
+            enqueue(element, true);
+        }
+    }
 
     T & fromOldest(size_t i = 0) { return buffer[(head + i) % maxSize()]; }
     T & fromNewest(size_t i = 0) { return buffer[positiveModulo(tail - i - 1, maxSize())]; }
+    const std::vector<T> & getVector() { return buffer; }
 
     void clear() { 
         head = tail;

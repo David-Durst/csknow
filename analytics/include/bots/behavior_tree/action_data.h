@@ -6,6 +6,12 @@
 #define CSKNOW_ACTION_DATA_H
 
 #include "load_save_bot_data.h"
+#include "circular_buffer.h"
+#define PID_HISTORY_LENGTH 10
+
+struct PIDState {
+    CircularBuffer<double> errorHistory{PID_HISTORY_LENGTH};
+};
 
 struct Action {
     // keyboard/mouse inputs sent to game engine
