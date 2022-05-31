@@ -60,7 +60,11 @@ namespace action {
                 if (curArea.get_id() == 9107 || curArea.get_id() == 9108) {
                     int x = 1;
                 }
-                if (dstArea.get_min_corner().z > curArea.get_max_corner().z + 30.) {
+
+                // can't compare current nav area to target nav area as current nav area max z different from current pos z
+                // (see d2 slope to A site)
+                if (blackboard.navFile.get_point_to_area_distance_2d(vec3Conv(curPos), dstArea) < 30. &&
+                    dstArea.get_min_corner().z > curPos.z + 5.) {
                     // make sure moving into target in 2d
                     // check if aiming at enemy anywhere
                     /*

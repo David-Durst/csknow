@@ -224,6 +224,14 @@ namespace nav_mesh {
         return std::sqrt(dx * dx + dy * dy + dz * dz);
     }
 
+    float nav_file::get_point_to_area_distance_2d( vec3_t position, const nav_area& area) const {
+        float dx = std::max(area.m_nw_corner.x - position.x,
+                            std::max(0.f, position.x - area.m_se_corner.x));
+        float dy = std::max(area.m_nw_corner.y - position.y,
+                            std::max(0.f, position.y - area.m_se_corner.y));
+        return std::sqrt(dx * dx + dy * dy);
+    }
+
     vec3_t nav_file::get_nearest_point_in_area( vec3_t position, nav_area& area) {
         vec3_t result = position;
         if (position.x < area.m_nw_corner.x) {
