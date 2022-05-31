@@ -99,26 +99,27 @@ namespace implementation {
 
         const Action &priorAction = blackboard.lastPlayerToAction[treeThinker.csgoId];
 
-        if (!curPath.stuck && priorAction.moving() && computeMagnitude(curClient.getVelocity()) < MOVING_THRESHOLD) {
+        if (priorAction.moving() && computeMagnitude(curClient.getVelocity()) < MOVING_THRESHOLD) {
             curPath.stuckTicks++;
-            if (curPath.stuckTicks > STUCK_TICKS_THRESHOLD) {
-                vector<uint32_t> connections;
-                for (const auto & con : curArea.m_connections) {
-                    if (con.id != curPath.waypoints[curPath.curWaypoint].area1 &&
-                        con.id != curPath.waypoints[curPath.curWaypoint].area2) {
-                        connections.push_back(con.id);
-                    }
-                }
-                std::uniform_int_distribution<> dist(0, connections.size() - 1);
-                const nav_mesh::nav_area & nextArea = blackboard.navFile.get_area_by_id_fast(connections[dist(blackboard.gen)]);
-                Path newPath = computePath(state, blackboard, nextArea.get_center(), curClient);
-                newPath.stuckTicks = 0;
-                newPath.stuck = true;
-                blackboard.playerToPath[treeThinker.csgoId] = newPath;
-            }
         }
         else {
             curPath.stuckTicks = 0;
+        }
+        
+        if (curPath.stuckTicks > STUCK_TICKS_THRESHOLD) {
+            vector<uint32_t> connections;
+            for (const auto & con : curArea.m_connections) {
+                if (con.id != curPath.waypoints[curPath.curWaypoint].area1 &&
+                    con.id != curPath.waypoints[curPath.curWaypoint].area2) {
+                    connections.push_back(con.id);
+                }
+            }
+            std::uniform_int_distribution<> dist(0, connections.size() - 1);
+            const nav_mesh::nav_area & nextArea = blackboard.navFile.get_area_by_id_fast(connections[dist(blackboard.gen)]);
+            Path newPath = computePath(state, blackboard, nextArea.get_center(), curClient);
+            newPath.stuckTicks = 0;
+            newPath.stuck = true;
+            blackboard.playerToPath[treeThinker.csgoId] = newPath;
         }
         playerNodeState[treeThinker.csgoId] = NodeState::Success;
         return playerNodeState[treeThinker.csgoId];
