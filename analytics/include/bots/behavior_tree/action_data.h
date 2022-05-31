@@ -6,6 +6,7 @@
 #define CSKNOW_ACTION_DATA_H
 
 #include "load_save_bot_data.h"
+#include "bots/input_bits.h"
 #include "circular_buffer.h"
 #define PID_HISTORY_LENGTH 10
 
@@ -27,9 +28,25 @@ struct Action {
         }
     }
 
-    bool getButton(int32_t button) {
+    bool getButton(int32_t button) const {
         return (buttons & button) > 0;
     }
+    bool movingForward() const {
+        return getButton(IN_FORWARD) && !getButton(IN_BACK);
+    }
+    bool movingBackward() const {
+        return !getButton(IN_FORWARD) && getButton(IN_BACK);
+    }
+    bool movingLeft() const {
+        return getButton(IN_LEFT) && !getButton(IN_RIGHT);
+    }
+    bool movingRight() const {
+        return !getButton(IN_LEFT) && getButton(IN_RIGHT);
+    }
+    bool moving() const {
+        return movingForward() || movingBackward() || movingLeft() || movingRight();
+    }
+
     // these range from -1 to 1
     float inputAngleDeltaPctX;
     float inputAngleDeltaPctY;

@@ -15,6 +15,7 @@
 #include "queries/nav_mesh.h"
 #include "queries/reachable.h"
 #include <memory>
+#include <random>
 using std::map;
 using std::make_unique;
 
@@ -44,6 +45,10 @@ struct TreeThinker {
 struct Blackboard {
     nav_mesh::nav_file navFile;
     ServerState lastFrameState;
+
+    // helpers
+    std::random_device rd;
+    std::mt19937 gen;
 
     // general map data
     ReachableResult reachability;
@@ -80,7 +85,7 @@ struct Blackboard {
                                vec3tConv(navFile.get_area_by_id_fast(dstArea).get_center()));
     }
 
-    Blackboard(string navPath) : navFile(navPath.c_str()) {
+    Blackboard(string navPath) : navFile(navPath.c_str()), gen(rd()) {
                                  //reachability(queryReachable(queryMapMesh(navFile))) {
         for (const auto & area : navFile.m_areas) {
             navPlaceToArea[navFile.get_place(area.m_place)].push_back(area.get_id());
@@ -175,6 +180,7 @@ public:
     }
 
     uint32_t getNearestAreaInNextPlace(const ServerState & state, const TreeThinker & treeThinker, string nextPlace);
+    uint32_t getRandomAreaInNextPlace(const ServerState & state, string nextPlace);
 };
 
 class ParSelectorNode : public Node {

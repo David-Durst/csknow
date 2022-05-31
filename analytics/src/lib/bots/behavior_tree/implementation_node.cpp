@@ -6,6 +6,37 @@
 #include "bots/input_bits.h"
 
 namespace implementation {
+    Path computePath(const ServerState &state, Blackboard & blackboard, nav_mesh::vec3_t targetPos, const ServerState::Client & curClient) {
+        Path newPath;
+        auto optionalWaypoints = blackboard.navFile.find_path_detailed(vec3Conv(curClient.getFootPosForPlayer()),
+                                                                       targetPos);
+        if (optionalWaypoints) {
+            newPath.pathCallSucceeded = true;
+            vector<nav_mesh::PathNode> tmpWaypoints = optionalWaypoints.value();
+            for (const auto & tmpWaypoint : tmpWaypoints) {
+                newPath.waypoints.push_back(tmpWaypoint);
+                newPath.areas.insert(tmpWaypoint.area1);
+                if (tmpWaypoint.edgeMidpoint) {
+                    newPath.areas.insert(tmpWaypoint.area2);
+                }
+            }
+            newPath.curWaypoint = 0;
+            newPath.pathEndAreaId =
+                    blackboard.navFile.get_nearest_area_by_position(targetPos).get_id();
+
+            newPath.movementOptions = {true, false, false};
+            newPath.shootOptions = PathShootOptions::DontShoot;
+        }
+        else {
+            // do nothing if the pathing call failed
+            newPath.pathCallSucceeded = false;
+            blackboard.navFile.find_path_detailed(vec3Conv(curClient.getFootPosForPlayer()), targetPos);
+        }
+        newPath.stuckTicks = 0;
+        newPath.stuck = false;
+        return newPath;
+    }
+
     NodeState PathingTaskNode::exec(const ServerState &state, TreeThinker &treeThinker) {
         Priority & curPriority = blackboard.playerToPriority[treeThinker.csgoId];
         const ServerState::Client & curClient = state.getClient(treeThinker.csgoId);
@@ -20,8 +51,7 @@ namespace implementation {
             curArea.get_id() == blackboard.playerToCurNavAreaId[treeThinker.csgoId]) {
             Path & curPath = blackboard.playerToPath[treeThinker.csgoId];
 
-            bool onPath = true;
-            if (curPath.pathCallSucceeded && onPath) {
+            if (curPath.pathCallSucceeded) {
                 PathNode curNode = curPath.waypoints[curPath.curWaypoint];
                 Vec3 targetPos = curNode.pos;
                 // ignore z since slope doesn't really matter
@@ -53,36 +83,44 @@ namespace implementation {
         }
 
         // otherwise, either no old path or old path is out of date, so update it
-        Path newPath;
-        auto optionalWaypoints = blackboard.navFile.find_path_detailed(vec3Conv(curClient.getFootPosForPlayer()),
-                                                              vec3Conv(curPriority.targetPos));
-        if (optionalWaypoints) {
-            newPath.pathCallSucceeded = true;
-            vector<nav_mesh::PathNode> tmpWaypoints = optionalWaypoints.value();
-            for (const auto & tmpWaypoint : tmpWaypoints) {
-                newPath.waypoints.push_back(tmpWaypoint);
-                newPath.areas.insert(tmpWaypoint.area1);
-                if (tmpWaypoint.edgeMidpoint) {
-                    newPath.areas.insert(tmpWaypoint.area2);
-                }
-            }
-            newPath.curWaypoint = 0;
-            newPath.pathEndAreaId =
-                    blackboard.navFile.get_nearest_area_by_position(vec3Conv(curPriority.targetPos)).get_id();
-
-            newPath.movementOptions = {true, false, false};
-            newPath.shootOptions = PathShootOptions::DontShoot;
-        }
-        else {
-            // do nothing if the pathing call failed
-            newPath.pathCallSucceeded = false;
-            blackboard.navFile.find_path_detailed(vec3Conv(curClient.getFootPosForPlayer()),
-                                                                           vec3Conv(curPriority.targetPos));
-        }
+        Path newPath = computePath(state, blackboard, vec3Conv(curPriority.targetPos), curClient);
         blackboard.playerToPath[treeThinker.csgoId] = newPath;
 
         blackboard.playerToCurNavAreaId[treeThinker.csgoId] = curArea.get_id();
         playerNodeState[treeThinker.csgoId] = newPath.pathCallSucceeded ? NodeState::Running : NodeState::Failure;
+        return playerNodeState[treeThinker.csgoId];
+    }
+
+    NodeState StuckTaskNode::exec(const ServerState &state, TreeThinker &treeThinker) {
+        const ServerState::Client & curClient = state.getClient(treeThinker.csgoId);
+        Path & curPath = blackboard.playerToPath[treeThinker.csgoId];
+        Vec3 curPos = curClient.getFootPosForPlayer();
+        const nav_mesh::nav_area & curArea = blackboard.navFile.get_nearest_area_by_position(vec3Conv(curPos));
+
+        const Action &priorAction = blackboard.lastPlayerToAction[treeThinker.csgoId];
+
+        if (!curPath.stuck && priorAction.moving() && computeMagnitude(curClient.getVelocity()) < MOVING_THRESHOLD) {
+            curPath.stuckTicks++;
+            if (curPath.stuckTicks > STUCK_TICKS_THRESHOLD) {
+                vector<uint32_t> connections;
+                for (const auto & con : curArea.m_connections) {
+                    if (con.id != curPath.waypoints[curPath.curWaypoint].area1 &&
+                        con.id != curPath.waypoints[curPath.curWaypoint].area2) {
+                        connections.push_back(con.id);
+                    }
+                }
+                std::uniform_int_distribution<> dist(0, connections.size() - 1);
+                const nav_mesh::nav_area & nextArea = blackboard.navFile.get_area_by_id_fast(connections[dist(blackboard.gen)]);
+                Path newPath = computePath(state, blackboard, nextArea.get_center(), curClient);
+                newPath.stuckTicks = 0;
+                newPath.stuck = true;
+                blackboard.playerToPath[treeThinker.csgoId] = newPath;
+            }
+        }
+        else {
+            curPath.stuckTicks = 0;
+        }
+        playerNodeState[treeThinker.csgoId] = NodeState::Success;
         return playerNodeState[treeThinker.csgoId];
     }
 

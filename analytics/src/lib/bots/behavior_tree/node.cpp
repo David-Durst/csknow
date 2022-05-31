@@ -49,3 +49,10 @@ uint32_t Node::getNearestAreaInNextPlace(const ServerState & state, const TreeTh
 
     return minAreaId;
 }
+
+uint32_t Node::getRandomAreaInNextPlace(const ServerState & state, string nextPlace) {
+    const vector<uint32_t> & nextAreaOptions = blackboard.navPlaceToArea[nextPlace];
+    std::uniform_int_distribution<> dist(0, nextAreaOptions.size() - 1);
+
+    return nextAreaOptions[dist(blackboard.gen)];
+}
