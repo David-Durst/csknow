@@ -12,16 +12,19 @@ namespace implementation {
         Vec3 curPos = curClient.getFootPosForPlayer();
         const nav_mesh::nav_area & curArea = blackboard.navFile.get_nearest_area_by_position(vec3Conv(curPos));
 
+        bool madeInner = false;
+        Path tmpPath;
         // if have a path and haven't changed nav area id
         // check if priority's nav area is same. If so, do nothing (except increment waypoint if necessary)
-        // also check that in nav area you expect to be in from path
+        // also check that not in an already visited area because missed a jump
         if (blackboard.playerToPath.find(treeThinker.csgoId) != blackboard.playerToPath.end() &&
             blackboard.playerToCurNavAreaId.find(treeThinker.csgoId) != blackboard.playerToCurNavAreaId.end() &&
             curArea.get_id() == blackboard.playerToCurNavAreaId[treeThinker.csgoId]) {
             Path & curPath = blackboard.playerToPath[treeThinker.csgoId];
+            madeInner = true;
+            tmpPath = curPath;
 
-            if (curPath.waypoints[curPath.curWaypoint].area1 == curArea.get_id() ||
-                    curPath.waypoints[curPath.curWaypoint].area2 == curArea.get_id()) {
+            if (true || curPath.alreadyVisitedAreas.find(curArea.get_id()) == curPath.alreadyVisitedAreas.end()) {
                 // check if player is in a nav mesh
                 // fast is point based
                 // slow is checking overlaps
@@ -86,6 +89,7 @@ namespace implementation {
                     newPath.areas.insert(tmpWaypoint.area2);
                 }
             }
+            newPath.alreadyVisitedAreas.clear();
             newPath.curWaypoint = 0;
             newPath.pathEndAreaId =
                     blackboard.navFile.get_nearest_area_by_position(vec3Conv(curPriority.targetPos)).get_id();

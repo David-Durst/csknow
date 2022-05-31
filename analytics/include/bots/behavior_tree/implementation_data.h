@@ -47,7 +47,7 @@ struct PathNode {
 struct Path {
     bool pathCallSucceeded;
     vector<PathNode> waypoints;
-    set<uint32_t> areas;
+    set<uint32_t> areas, alreadyVisitedAreas;
     uint32_t pathEndAreaId;
     size_t curWaypoint;
     PathMovementOptions movementOptions;

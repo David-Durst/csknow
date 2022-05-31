@@ -28,6 +28,8 @@ namespace action {
         Action & curAction = blackboard.playerToAction[treeThinker.csgoId];
         Priority & curPriority = blackboard.playerToPriority[treeThinker.csgoId];
         const ServerState::Client & curClient = state.getClient(treeThinker.csgoId);
+        Vec3 curPos = curClient.getFootPosForPlayer();
+        const nav_mesh::nav_area & curArea = blackboard.navFile.get_nearest_area_by_position(vec3Conv(curPos));
 
         if (curPath.pathCallSucceeded) {
 
@@ -50,38 +52,36 @@ namespace action {
 
                 const PathNode & curNode = curPath.waypoints[curPath.curWaypoint];
                 // jump if moving to higher navmesh area, cur area, not marked no jump, and near target navmesh
-                if (curNode.edgeMidpoint) {
-                    const nav_mesh::nav_area & srcArea = blackboard.navFile.get_area_by_id_fast(curNode.area1);
-                    if (srcArea.get_id() == 8654 || srcArea.get_id() == 6953 || srcArea.get_id() == 6802) {
-                        int x = 1;
-                    }
-                    if (srcArea.get_id() == 9107 || srcArea.get_id() == 9108) {
-                        int x = 1;
-                    }
-                    const nav_mesh::nav_area & dstArea = blackboard.navFile.get_area_by_id_fast(curNode.area2);
-                    if (dstArea.get_min_corner().z > srcArea.get_max_corner().z + 30.) {
-                        // make sure moving into target in 2d
-                        // check if aiming at enemy anywhere
-                        /*
-                         * // for now, assume moving in correct direction, but in future may want a velocity check
-                        Vec3 footPos = curClient.getFootPosForPlayer(), dir = targetVector;
-                        footPos.z = 0;
-                        dir.z = 0;
-                        Ray source{footPos, dir};
+                const nav_mesh::nav_area & dstArea = curNode.edgeMidpoint ? blackboard.navFile.get_area_by_id_fast(curNode.area2) :
+                                                     blackboard.navFile.get_area_by_id_fast(curNode.area1);
+                if (curArea.get_id() == 8654 || curArea.get_id() == 6953 || curArea.get_id() == 6802) {
+                    int x = 1;
+                }
+                if (curArea.get_id() == 9107 || curArea.get_id() == 9108) {
+                    int x = 1;
+                }
+                if (dstArea.get_min_corner().z > curArea.get_max_corner().z + 30.) {
+                    // make sure moving into target in 2d
+                    // check if aiming at enemy anywhere
+                    /*
+                     * // for now, assume moving in correct direction, but in future may want a velocity check
+                    Vec3 footPos = curClient.getFootPosForPlayer(), dir = targetVector;
+                    footPos.z = 0;
+                    dir.z = 0;
+                    Ray source{footPos, dir};
 
-                        AABB targetAABB{vec3tConv(dstArea.m_nw_corner), vec3tConv(dstArea.m_se_corner)};
-                        targetAABB.min.z = -10.;
-                        targetAABB.max.z = 10.;
-                        double hitt0, hitt1;
-                        bool movingToDst = intersectP(targetAABB, source, hitt0, hitt1);
-                        */
+                    AABB targetAABB{vec3tConv(dstArea.m_nw_corner), vec3tConv(dstArea.m_se_corner)};
+                    targetAABB.min.z = -10.;
+                    targetAABB.max.z = 10.;
+                    double hitt0, hitt1;
+                    bool movingToDst = intersectP(targetAABB, source, hitt0, hitt1);
+                    */
 
-                        // make sure near target navmesh
-                        bool closeToDst = blackboard.navFile.get_point_to_area_distance(vec3Conv(curClient.getFootPosForPlayer()), dstArea) < 100.;
-                        bool jumpLastFrame = (oldAction.buttons & IN_JUMP) > 0;
+                    // make sure near target navmesh
+                    bool closeToDst = blackboard.navFile.get_point_to_area_distance(vec3Conv(curClient.getFootPosForPlayer()), dstArea) < 100.;
+                    bool jumpLastFrame = (oldAction.buttons & IN_JUMP) > 0;
 
-                        curAction.setButton(IN_JUMP, closeToDst && !jumpLastFrame);
-                    }
+                    curAction.setButton(IN_JUMP, closeToDst && !jumpLastFrame);
                 }
             }
 
