@@ -105,7 +105,7 @@ namespace implementation {
         else {
             curPath.stuckTicks = 0;
         }
-        
+
         if (curPath.stuckTicks > STUCK_TICKS_THRESHOLD) {
             vector<uint32_t> connections;
             for (const auto & con : curArea.m_connections) {
