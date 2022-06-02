@@ -46,7 +46,36 @@ namespace follow {
             }
         }
 
-        playerNodeState[treeThinker.csgoId] = finishedAndDone ? NodeState::Success : NodeState::Running;
+
+        const Action &priorAction = blackboard.lastPlayerToAction[treeThinker.csgoId];
+        const ServerState::Client & curClient = state.getClient(treeThinker.csgoId);
+
+        // fail pushing if stuck
+        if (havePriority && !finishedWaypoint && priorAction.moving() && computeMagnitude(curClient.getVelocity()) < MOVING_THRESHOLD) {
+            curPriority.stuckTicks++;
+        }
+        else {
+            curPriority.stuckTicks = 0;
+        }
+
+        if (curPriority.stuckTicks > STUCK_TICKS_THRESHOLD) {
+            curPriority.stuckTicks = 0;
+            playerNodeState[treeThinker.csgoId] = NodeState::Failure;
+        }
+        else {
+            playerNodeState[treeThinker.csgoId] = finishedAndDone ? NodeState::Success : NodeState::Running;
+        }
+
+        return playerNodeState[treeThinker.csgoId];
+    }
+
+    NodeState StuckTaskNode::exec(const ServerState &state, TreeThinker &treeThinker) {
+        const Order & curOrder = blackboard.orders[blackboard.playerToOrder[treeThinker.csgoId]];
+
+        Priority & curPriority = blackboard.playerToPriority[treeThinker.csgoId];
+        curPriority.targetAreaId = getRandomAreaInNextPlace(state, curOrder.waypoints[treeThinker.orderWaypointIndex].placeName);
+        curPriority.targetPos = vec3tConv(blackboard.navFile.get_area_by_id_fast(curPriority.targetAreaId).get_center());
+        playerNodeState[treeThinker.csgoId] = NodeState::Success;
         return playerNodeState[treeThinker.csgoId];
     }
 

@@ -18,6 +18,8 @@ struct Priority {
     uint32_t targetAreaId;
     Vec3 targetPos;
     TargetPlayer targetPlayer;
+    bool stuck = false;
+    int stuckTicks = 0;
 
     string print(const ServerState & state) const {
         stringstream result;
@@ -25,6 +27,8 @@ struct Priority {
         result << "target pos: (" << targetPos.toString() << "), target player id:"
             << state.getPlayerString(targetPlayer.playerId) << ", target player round: " << targetPlayer.round
             << ", target player first frame: " << targetPlayer.firstTargetFrame;
+
+        result << ", stuck: " << boolToString(stuck) << ", stuck ticks: " << stuckTicks;
 
         return result.str();
     }

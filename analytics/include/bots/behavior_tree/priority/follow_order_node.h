@@ -8,10 +8,19 @@
 #include "bots/behavior_tree/node.h"
 #include <map>
 
+#define MOVING_THRESHOLD 0.1
+#define STUCK_TICKS_THRESHOLD 5
+
 namespace follow {
     class PushTaskNode : public Node {
     public:
         PushTaskNode(Blackboard & blackboard) : Node(blackboard, "PushTaskNode") { };
+        virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override;
+    };
+
+    class StuckTaskNode : public Node {
+    public:
+        StuckTaskNode(Blackboard & blackboard) : Node(blackboard, "StuckTaskNode") { };
         virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override;
     };
 
@@ -27,7 +36,8 @@ public:
     FollowOrderSeqSelectorNode(Blackboard & blackboard) :
             FirstNonFailSeqSelectorNode(blackboard, Node::makeList(
                                                         make_unique<follow::PushTaskNode>(blackboard),
-                                                        make_unique<follow::BaitTaskNode>(blackboard)),
+                                                        make_unique<follow::StuckTaskNode>(blackboard)),
+                                                       // make_unique<follow::BaitTaskNode>(blackboard)),
                                         "FollowOrderSeqSelectorNode") { };
 
     virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {

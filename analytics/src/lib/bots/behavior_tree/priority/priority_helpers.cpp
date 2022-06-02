@@ -20,6 +20,8 @@ void moveToWaypoint(Node & node, const ServerState & state, TreeThinker & treeTh
         curPriority.targetPos = state.getC4Pos();
         curPriority.targetAreaId = node.blackboard.navFile.get_nearest_area_by_position(vec3Conv(curPriority.targetPos)).get_id();
     }
+    curPriority.stuck = false;
+    curPriority.stuckTicks = 0;
 }
 
 bool finishWaypoint(Node & node, const ServerState & state, TreeThinker & treeThinker,

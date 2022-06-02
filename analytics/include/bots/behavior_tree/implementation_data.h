@@ -50,8 +50,6 @@ struct Path {
     set<uint32_t> areas;
     uint32_t pathEndAreaId;
     size_t curWaypoint;
-    int stuckTicks = 0;
-    bool stuck = false;
     PathMovementOptions movementOptions;
     PathShootOptions shootOptions;
 
@@ -87,8 +85,6 @@ struct Path {
             }
             result << "end waypoint: " << waypoints.size() - 1 << " " << vec3tConv(navFile.get_area_by_id_fast(pathEndAreaId).get_center()).toString();
         }
-
-        result << ", stuck: " << boolToString(stuck);
 
         result << ", move: " << boolToString(movementOptions.move) << ", walk: " << boolToString(movementOptions.walk)
             << ", crouch: " << boolToString(movementOptions.crouch) << ", shoot option: " << shootOptionStr;
