@@ -35,8 +35,8 @@ class FollowOrderSeqSelectorNode : public FirstNonFailSeqSelectorNode {
 public:
     FollowOrderSeqSelectorNode(Blackboard & blackboard) :
             FirstNonFailSeqSelectorNode(blackboard, Node::makeList(
-                                                        make_unique<follow::PushTaskNode>(blackboard),
-                                                        make_unique<follow::StuckTaskNode>(blackboard)),
+                                                        make_unique<follow::PushTaskNode>(blackboard)),
+                                                        //make_unique<follow::StuckTaskNode>(blackboard)),
                                                        // make_unique<follow::BaitTaskNode>(blackboard)),
                                         "FollowOrderSeqSelectorNode") { };
 

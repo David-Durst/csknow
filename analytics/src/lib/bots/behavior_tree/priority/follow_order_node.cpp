@@ -52,7 +52,8 @@ namespace follow {
 
         // fail pushing if stuck
         if (havePriority && !finishedWaypoint && priorAction.moving() && computeMagnitude(curClient.getVelocity()) < MOVING_THRESHOLD) {
-            curPriority.stuckTicks++;
+            //curPriority.stuckTicks++;
+            curPriority.stuckTicks = 0;
         }
         else {
             curPriority.stuckTicks = 0;

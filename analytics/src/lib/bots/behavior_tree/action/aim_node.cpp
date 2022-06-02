@@ -31,7 +31,7 @@ namespace action {
             P = deltaAngle * 0.0055;
         }
         else {
-            P = deltaAngle * 0.0015;
+            P = deltaAngle * 0.0025;
         }
 
         // compute I in PID
