@@ -40,6 +40,7 @@ public:
                                                        // make_unique<follow::BaitTaskNode>(blackboard)),
                                         "FollowOrderSeqSelectorNode") { };
 
+    /*
     virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
         int childIndex;
         if (treeThinker.aggressiveType == AggressiveType::Push) {
@@ -51,6 +52,7 @@ public:
         playerNodeState[treeThinker.csgoId] = children[childIndex]->exec(state, treeThinker);
         return playerNodeState[treeThinker.csgoId];
     }
+     */
 };
 
 #endif //CSKNOW_FOLLOW_ORDER_NODE_H

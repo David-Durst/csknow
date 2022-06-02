@@ -60,6 +60,7 @@ namespace follow {
 
         if (curPriority.stuckTicks > STUCK_TICKS_THRESHOLD) {
             curPriority.stuckTicks = 0;
+            curPriority.stuck = true;
             playerNodeState[treeThinker.csgoId] = NodeState::Failure;
         }
         else {

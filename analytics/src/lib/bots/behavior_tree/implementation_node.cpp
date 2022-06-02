@@ -42,11 +42,12 @@ namespace implementation {
         const nav_mesh::nav_area & curArea = blackboard.navFile.get_nearest_area_by_position(vec3Conv(curPos));
 
         // if have a path and haven't changed nav area id
-        // check if priority's nav area is same. If so, do nothing (except increment waypoint if necessary)
+        // check if players's nav area is same and not stuck. If so, do nothing (except increment waypoint if necessary)
         // also check that not in an already visited area because missed a jump
         if (blackboard.playerToPath.find(treeThinker.csgoId) != blackboard.playerToPath.end() &&
             blackboard.playerToCurNavAreaId.find(treeThinker.csgoId) != blackboard.playerToCurNavAreaId.end() &&
-            curArea.get_id() == blackboard.playerToCurNavAreaId[treeThinker.csgoId]) {
+            curArea.get_id() == blackboard.playerToCurNavAreaId[treeThinker.csgoId] &&
+            !curPriority.stuck) {
             Path & curPath = blackboard.playerToPath[treeThinker.csgoId];
 
             if (curPath.pathCallSucceeded) {
@@ -83,6 +84,9 @@ namespace implementation {
         // otherwise, either no old path or old path is out of date, so update it
         Path newPath = computePath(state, blackboard, vec3Conv(curPriority.targetPos), curClient);
         blackboard.playerToPath[treeThinker.csgoId] = newPath;
+        if (newPath.areas.find(9026) != newPath.areas.end() && curPriority.stuck) {
+            int x = 1;
+        }
 
         blackboard.playerToCurNavAreaId[treeThinker.csgoId] = curArea.get_id();
         playerNodeState[treeThinker.csgoId] = newPath.pathCallSucceeded ? NodeState::Running : NodeState::Failure;
