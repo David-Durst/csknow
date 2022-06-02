@@ -31,7 +31,7 @@ namespace action {
         Vec3 curPos = curClient.getFootPosForPlayer();
         const nav_mesh::nav_area & curArea = blackboard.navFile.get_nearest_area_by_position(vec3Conv(curPos));
 
-        if (curPath.pathCallSucceeded && curClient.team == ENGINE_TEAM_T) {
+        if (curPath.pathCallSucceeded) {
 
             // don't move if move is set to false on priority
             if (!curPath.movementOptions.move) {

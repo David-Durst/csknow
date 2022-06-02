@@ -63,7 +63,7 @@ namespace action {
                 bool aimingAtEnemy = intersectP(targetAABB, eyeCoordinates, hitt0, hitt1);
 
                 // TODO: AFTER ADDING VELOCITY FIELD, TRACK STOPPED TO SHOOT USING VELOCITY
-                //curAction.setButton(IN_ATTACK, !attackLastFrame && haveAmmo && aimingAtEnemy);
+                curAction.setButton(IN_ATTACK, !attackLastFrame && haveAmmo && aimingAtEnemy);
                 curAction.setButton(IN_RELOAD, !haveAmmo);
             }
         }

@@ -4,9 +4,9 @@
 
 #include "bots/behavior_tree/action_node.h"
 #define MAX_LOOK_AT_C4_DISTANCE 300.
-#define K_P 0.0075
-#define K_I 0.015
-#define K_D 0
+#define K_P 0.0025
+#define K_I 0.
+#define K_D 0.
 
 namespace action {
 
@@ -21,9 +21,18 @@ namespace action {
         return newDeltaAngle / MAX_ONE_DIRECTION_ANGLE_VEL;
     }
 
-    float computeAngleVelocityPID(double deltaAngle, PIDState pidState) {
+    float computeAngleVelocityPID(double deltaAngle, PIDState pidState, double error) {
         // compute P in PID
-        double P = deltaAngle * K_P;
+        double P;
+        if (deltaAngle > 3.0) {
+            P = deltaAngle * 0.001;
+        }
+        else if (deltaAngle > 0.5) {
+            P = deltaAngle * 0.0055;
+        }
+        else {
+            P = deltaAngle * 0.0015;
+        }
 
         // compute I in PID
         pidState.errorHistory.enqueue(deltaAngle, true);
@@ -36,7 +45,7 @@ namespace action {
         // compute D in PID
         double D = (pidState.errorHistory.fromNewest(0) - pidState.errorHistory.fromNewest(1)) * K_D;
 
-        return P + I + D;
+        return error*(P + I + D);
     }
 
     NodeState AimTaskNode::exec(const ServerState &state, TreeThinker &treeThinker) {
@@ -74,8 +83,8 @@ namespace action {
         deltaAngles.makeYawNeg180To180();
 
         // TODO: use better angle velocity control
-        curAction.inputAngleDeltaPctX = computeAngleVelocityPID(deltaAngles.x, blackboard.playerToPIDStateX[treeThinker.csgoId]);
-        curAction.inputAngleDeltaPctY = computeAngleVelocityPID(deltaAngles.y, blackboard.playerToPIDStateY[treeThinker.csgoId]);
+        curAction.inputAngleDeltaPctX = computeAngleVelocityPID(deltaAngles.x, blackboard.playerToPIDStateX[treeThinker.csgoId], blackboard.aimDis(blackboard.gen));
+        curAction.inputAngleDeltaPctY = computeAngleVelocityPID(deltaAngles.y, blackboard.playerToPIDStateY[treeThinker.csgoId], blackboard.aimDis(blackboard.gen));
 
         playerNodeState[treeThinker.csgoId] = NodeState::Success;
         return playerNodeState[treeThinker.csgoId];
