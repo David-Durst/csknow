@@ -19,6 +19,6 @@ mkdir -p ${script_dir}/../build
 cd ${script_dir}/../build
 cmake .. -DCMAKE_BUILD_TYPE=Release
 if make -j4; then
-    chmod a+x csknow_bot
+    chmod a+x csknow_bt_bot
     ${script_dir}/../build/csknow_bt_bot /home/steam/csgo-ds/csgo/maps /home/steam/csgo-ds/csgo/addons/sourcemod/bot-link-data /home/steam/csknow/analytics
 fi

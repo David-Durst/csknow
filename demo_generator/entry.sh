@@ -10,7 +10,7 @@ bash ~/csknow/analytics/scripts/bot_build_docker.sh
 
 bash ~/install_link.sh
 
-bash ~/csknow/analytics/scripts/bot_run_docker.sh >> bot.log 2>> bot.log &
+bash ~/csknow/analytics/scripts/bot_bt_run_docker.sh >> bot.log 2>> bot.log &
 
 # Believe it or not, if you don't do this srcds_run shits itself
 cd ${NONVOLUMESTEAMAPPDIR}
