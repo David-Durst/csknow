@@ -16,4 +16,4 @@ get_script_dir
 
 
 cd ${script_dir}/../build
-./csknow_bot ${NONVOLUMESTEAMAPPDIR}/csgo/maps ${NONVOLUMESTEAMAPPDIR}/csgo/addons/sourcemod/bot-link-data ${script_dir}/../
+./csknow_bt_bot ${NONVOLUMESTEAMAPPDIR}/csgo/maps ${NONVOLUMESTEAMAPPDIR}/csgo/addons/sourcemod/bot-link-data ${script_dir}/../

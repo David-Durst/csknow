@@ -15,7 +15,7 @@ get_script_dir () {
 get_script_dir
 
 
-docker build -t durst/csgo:0.3 .
+docker build -t durst/csgo:0.4 .
 #mkdir -p ${script_dir}/../analytics/build
 #cd ${script_dir}/../analytics/build
 #cmake .. -DCMAKE_BUILD_TYPE=Release
