@@ -26,6 +26,7 @@ void Tree::tick(ServerState & state, string mapsPath) {
 
     if (state.mapNumber != curMapNumber || !samePlayers) {
         blackboard = make_unique<Blackboard>(navPath);
+        blackboard->navFile.remove_incoming_edges_to_areas({6938, 9026});
         orderNode = make_unique<OrderSeqSelectorNode>(*blackboard);
         priorityNode = make_unique<PriorityParNode>(*blackboard);
         implementationNode = make_unique<ImplementationParSelectorNode>(*blackboard);

@@ -283,4 +283,15 @@ namespace nav_mesh {
         }
 
     }
+
+    void nav_file::remove_incoming_edges_to_areas( std::set<std::uint32_t> ids ) {
+        for ( size_t area_id = 0; area_id < m_areas.size(); area_id++) {
+            std::vector< nav_connect_t >& area_connections = m_areas[area_id].m_connections;
+            area_connections.erase(std::remove_if(
+                    area_connections.begin(),
+                    area_connections.end(),
+                    [&](nav_connect_t con) { return ids.find(con.id) != ids.end(); }),
+                area_connections.end());
+        }
+    }
 }

@@ -5,6 +5,8 @@
 #include <memory>
 #include <map>
 #include <optional>
+#include <set>
+#include <algorithm>
 
 namespace nav_mesh {
     struct PathNode {
@@ -60,6 +62,7 @@ namespace nav_mesh {
         float get_point_to_area_distance_2d( vec3_t position, const nav_area& area) const;
         vec3_t get_nearest_point_in_area( vec3_t position, nav_area& area);
 		const nav_area& get_nearest_area_by_position( vec3_t position ) const;
+        void remove_incoming_edges_to_areas( std::set<std::uint32_t> ids );
 
 		std::unique_ptr< micropather::MicroPather > m_pather = nullptr;
 
