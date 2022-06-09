@@ -311,5 +311,13 @@ public:
     }
 };
 
+class ConditionDecorator : public Node {
+protected:
+    Node::Ptr child;
+
+public:
+    ConditionDecorator(Blackboard & blackboard, Node::Ptr nodes, string name) :
+        Node(blackboard, name), child (std::move(nodes)) { };
+}
 
 #endif //CSKNOW_NODE_H
