@@ -96,6 +96,7 @@ struct Blackboard {
 };
 
 enum class NodeState {
+    Uninitialized,
     Success,
     Failure,
     Running,
@@ -137,10 +138,14 @@ public:
     Node(Blackboard & blackboard, string name) : blackboard(blackboard), playerNodeState({}), name(name) { }
     virtual ~Node() { };
     virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) = 0;
-    virtual void reset() {
+    virtual void clearState() {
         blackboard.orders.clear();
         blackboard.playerToOrder.clear();
         playerNodeState.clear();
+    }
+
+    virtual void restart(const TreeThinker & treeThinker) {
+        playerNodeState[treeThinker.csgoId] = NodeState::Uninitialized;
     }
 
     virtual PrintState printState(const ServerState & state, CSGOId playerId) const {
@@ -150,6 +155,9 @@ public:
         }
         else {
             switch (playerNodeState.find(playerId)->second) {
+                case NodeState::Unitialized:
+                    stateString = "Uninitialized";
+                    break;
                 case NodeState::Success:
                     stateString = "Success";
                     break;
@@ -184,26 +192,50 @@ public:
     uint32_t getRandomAreaInNextPlace(const ServerState & state, string nextPlace);
 };
 
-class ParSelectorNode : public Node {
+class SequenceNode : public Node {
     vector<Node::Ptr> children;
+    size_t curChildIndex = 0;
 
 public:
-    ParSelectorNode(Blackboard & blackboard, vector<Node::Ptr> && nodes, string name) :
+    SequenceNode(Blackboard & blackboard, vector<Node::Ptr> && nodes, string name) :
         Node(blackboard, name), children(std::move(nodes)) { };
 
     NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
         bool anyChildrenRunning = false, anyChildrenSuccess;
-        for (auto & child : children) {
-            NodeState childNodeState = child->exec(state, treeThinker);
-            if (childNodeState == NodeState::Running) {
-                anyChildrenRunning = true;
+        playerNodeState[treeThinker.csgoId] = NodeState::Running;
+        while (true) {
+            NodeState childNodeState = children[curChildIndex]->exec(state, treeThinker);
+            else if( child_status == RUNNING ) {
+                // keep same index
+                return RUNNING;
             }
-            else if (childNodeState == NodeState::Success) {
+            else if( child_status == FAILURE ) {
+                HaltAllChildren();
+                _index = 0;
+                return FAILURE;
+            }
+            if (childNodeState == NodeState::Success) {
+                curChildIndex++;
+            }
+            else if (childNodeState == NodeState::Running) {
+                playerNodeState[treeThinker.csgoId] = NodeState::Running;
+                return playerNodeState[treeThinker.csgoId];
+            }
+            else if (childNodeState == NodeState::Failure) {
+                playerNodeState[treeThinker.csgoId] = NodeState::Running;
+                return playerNodeState[treeThinker.csgoId];
+            }
+            else if (childNodeState == NodeState::Failure) {
+                reset
+                playerNodeState[treeThinker.csgoId] = NodeState::Running;
+                return playerNodeState[treeThinker.csgoId];
+            }
+
+            if (childNodeState == NodeState::Success && curChildIndex == ) {
                 anyChildrenSuccess = true;
             }
         }
         if (anyChildrenRunning) {
-            playerNodeState[treeThinker.csgoId] = NodeState::Running;
         }
         else if (anyChildrenSuccess) {
             playerNodeState[treeThinker.csgoId] = NodeState::Success;
@@ -214,11 +246,18 @@ public:
         return playerNodeState[treeThinker.csgoId];
     }
 
-    void reset() override {
+    void clearState() override {
         for (auto & child : children) {
-            child.reset();
+            child.clearState();
         }
-        Node::reset();
+        Node::clearState();
+    }
+
+    virtual void restart(const TreeThinker & treeThinker) override {
+        for (auto & child : children) {
+            child.restart(treeThinker);
+        }
+        Node::restart(treeThinker);
     }
 
     virtual PrintState printState(const ServerState & state, CSGOId playerId) const override {
@@ -250,11 +289,11 @@ public:
         return NodeState::Failure;
     }
 
-    void reset() override {
+    void clearState() override {
         for (auto & child : children) {
-            child.reset();
+            child.clearState();
         }
-        Node::reset();
+        Node::clearState();
     }
 
     virtual PrintState printState(const ServerState & state, CSGOId playerId) const override {
