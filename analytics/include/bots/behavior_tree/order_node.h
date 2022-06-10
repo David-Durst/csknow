@@ -10,26 +10,25 @@
 #include <memory>
 
 namespace order {
-    class D2TaskNode : public Node {
+    class D2OrderNode : public Node {
     public:
-        D2TaskNode(Blackboard & blackboard) : Node(blackboard, "D2TaskNode") { };
+        D2OrderNode(Blackboard & blackboard) : Node(blackboard, "D2TaskNode") { };
         virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override;
     };
 
-    class GeneralTaskNode : public Node {
+    class GeneralOrderNode : public Node {
     public:
-        GeneralTaskNode(Blackboard & blackboard) : Node(blackboard, "GeneralTaskNode") { };
+        GeneralOrderNode(Blackboard & blackboard) : Node(blackboard, "GeneralTaskNode") { };
         virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override;
     };
 }
 
-class OrderSelectorNode : public SelectorNode {
+class OrderNode : public SelectorNode {
 public:
-    OrderSelectorNode(Blackboard & blackboard) :
+    OrderNode(Blackboard & blackboard) :
             SelectorNode(blackboard, Node::makeList(
-                                                            make_unique<order::D2TaskNode>(blackboard),
-                                                            make_unique<order::D2TaskNode>(blackboard)),
-                                        "OrderSelectorNode") { };
+                                                            make_unique<order::D2OrderNode>(blackboard)),
+                                        "OrderNode") { };
 
 
     virtual PrintState printState(const ServerState & state, CSGOId playerId) const override {

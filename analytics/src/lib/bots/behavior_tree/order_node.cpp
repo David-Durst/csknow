@@ -17,7 +17,7 @@ namespace order {
     /**
      * D2 assigns players to one of a couple known paths
      */
-    NodeState D2TaskNode::exec(const ServerState &state, TreeThinker &treeThinker) {
+    NodeState D2OrderNode::exec(const ServerState &state, TreeThinker &treeThinker) {
         if (state.mapName != "de_dust2") {
             playerNodeState[INVALID_ID] = NodeState::Failure;
             return NodeState::Failure;
@@ -121,7 +121,7 @@ namespace order {
     /**
      * General order assigns to kill
      */
-    NodeState GeneralTaskNode::exec(const ServerState &state, TreeThinker &treeThinker) {
+    NodeState GeneralOrderNode::exec(const ServerState &state, TreeThinker &treeThinker) {
 
         if (playerNodeState.find(INVALID_ID) == playerNodeState.end() ||
             playerNodeState[INVALID_ID] != NodeState::Running) {

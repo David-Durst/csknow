@@ -27,10 +27,9 @@ void Tree::tick(ServerState & state, string mapsPath) {
     if (state.mapNumber != curMapNumber || !samePlayers) {
         blackboard = make_unique<Blackboard>(navPath);
         blackboard->navFile.remove_incoming_edges_to_areas({6938, 9026});
-        orderNode = make_unique<OrderSeqSelectorNode>(*blackboard);
-        priorityNode = make_unique<PriorityParNode>(*blackboard);
-        implementationNode = make_unique<ImplementationParSelectorNode>(*blackboard);
-        actionNode = make_unique<ActionParSelectorNode>(*blackboard);
+        orderNode = make_unique<OrderNode>(*blackboard);
+        priorityNode = make_unique<PriorityNode>(*blackboard);
+        actionNode = make_unique<ActionNode>(*blackboard);
         curMapNumber = state.mapNumber;
     }
 
@@ -73,7 +72,6 @@ void Tree::tick(ServerState & state, string mapsPath) {
             blackboard->playerToPIDStateY[treeThinker.csgoId].errorHistory.fill(0.);
 
             priorityNode->exec(state, treeThinker);
-            implementationNode->exec(state, treeThinker);
             actionNode->exec(state, treeThinker);
 
             // update state actions with actions per player
@@ -89,7 +87,6 @@ void Tree::tick(ServerState & state, string mapsPath) {
                 ", pos: " + client.getFootPosForPlayer().toString() +
                 ", cur nav area " + std::to_string(blackboard->navFile.get_nearest_area_by_position(vec3Conv(client.getFootPosForPlayer())).get_id())}});
             printStates.push_back(priorityNode->printState(state, treeThinker.csgoId));
-            printStates.push_back(implementationNode->printState(state, treeThinker.csgoId));
             printStates.push_back(actionNode->printState(state, treeThinker.csgoId));
         }
 

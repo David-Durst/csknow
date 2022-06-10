@@ -136,7 +136,7 @@ void Thinker::fire(ServerState::Client & curClient, const ServerState::Client & 
         return;
     }
 
-    bool attackLastFrame = priorClient.buttons & IN_ATTACK > 0;
+    bool attackLastFrame = (priorClient.buttons & IN_ATTACK) > 0;
 
     // no reloading for knives and grenades
     bool haveAmmo = true;

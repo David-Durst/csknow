@@ -148,7 +148,7 @@ class Thinker {
     }
 
     bool getButton(ServerState::Client & curClient, int32_t button) {
-        return curClient.buttons & button > 0;
+        return (curClient.buttons & button) > 0;
     }
 
     // helper functions used in planning

@@ -27,17 +27,17 @@ namespace action {
     };
 }
 
-class ActionParSelectorNode : public ParSelectorNode {
+class ActionNode : public SequenceNode {
 public:
-    ActionParSelectorNode(Blackboard & blackboard) :
-            ParSelectorNode(blackboard, Node::makeList(
+    ActionNode(Blackboard & blackboard) :
+            SequenceNode(blackboard, Node::makeList(
                                                 make_unique<action::MovementTaskNode>(blackboard),
                                                 make_unique<action::AimTaskNode>(blackboard),
                                                 make_unique<action::FireTaskNode>(blackboard)),
-                            "ActionParSelectorNode") { };
+                            "ActionNode") { };
 
     virtual PrintState printState(const ServerState & state, CSGOId playerId) const override {
-        PrintState printState = ParSelectorNode::printState(state, playerId);
+        PrintState printState = SequenceNode::printState(state, playerId);
         printState.curState.push_back(blackboard.playerToAction[playerId].print());
         return printState;
     }
