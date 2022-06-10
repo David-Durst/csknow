@@ -6,7 +6,7 @@
 #include <functional>
 
 namespace engage {
-    NodeState TargetSelectionNode::exec(const ServerState & state, TreeThinker &treeThinker) {
+    NodeState SelectTargetNode::exec(const ServerState & state, TreeThinker &treeThinker) {
         Priority & curPriority = blackboard.playerToPriority[treeThinker.csgoId];
         TargetPlayer & curTarget = curPriority.targetPlayer;
         // keep same target if from this round and still visible

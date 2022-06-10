@@ -5,7 +5,7 @@
 #include "bots/behavior_tree/priority/engage_node.h"
 
 namespace engage {
-    NodeState FireSelectionTaskNode::exec(const ServerState &state, TreeThinker &treeThinker) {
+    NodeState SelectFireModeNode::exec(const ServerState &state, TreeThinker &treeThinker) {
         Priority & curPriority = blackboard.playerToPriority[treeThinker.csgoId];
         Path & curPath = blackboard.playerToPath[treeThinker.csgoId];
 

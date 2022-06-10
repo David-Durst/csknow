@@ -15,9 +15,9 @@ namespace engage {
         virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override;
     };
 
-    class FireSelectionTaskNode : public Node {
+    class SelectFireModeNode : public Node {
     public:
-        FireSelectionTaskNode(Blackboard & blackboard) : Node(blackboard, "FireSelectionTaskNode") { };
+        SelectFireModeNode(Blackboard & blackboard) : Node(blackboard, "FireSelectionTaskNode") { };
         virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override;
     };
 }
@@ -27,7 +27,7 @@ public:
     EngageNode(Blackboard & blackboard) :
             SequenceNode(blackboard, Node::makeList(
                                  make_unique<engage::SelectTargetNode>(blackboard),
-                                 make_unique<engage::FireSelectionTaskNode>(blackboard),
+                                 make_unique<engage::SelectFireModeNode>(blackboard),
                                  make_unique<movement::WaitNode>(blackboard, 0.5)),
                          "FollowOrderSelectorNode") { };
 };

@@ -25,6 +25,7 @@ namespace nav_mesh {
 
         std::optional< std::vector< vec3_t > > find_path( vec3_t from, vec3_t to );
         std::optional< std::vector< PathNode > > find_path_detailed( vec3_t from, vec3_t to );
+        float compute_path_length( std::vector< PathNode > path);
 
 		//MicroPather implementation
 		virtual float LeastCostEstimate( void* start, void* end ) {

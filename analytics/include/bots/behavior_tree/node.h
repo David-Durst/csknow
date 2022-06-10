@@ -243,6 +243,18 @@ protected:
 public:
     ConditionDecorator(Blackboard & blackboard, Node::Ptr node, string name) :
         Node(blackboard, name), child (std::move(node)) { };
+
+    NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
+        if (valid(state, treeThinker)) {
+            playerNodeState[treeThinker.csgoId] = child->exec(state, treeThinker);
+        }
+        else {
+            playerNodeState[treeThinker.csgoId] = NodeState::Failure;
+        }
+        return playerNodeState[treeThinker.csgoId];
+    }
+
+    virtual bool valid(const ServerState & state, TreeThinker &treeThinker) = 0;
 };
 
 #endif //CSKNOW_NODE_H

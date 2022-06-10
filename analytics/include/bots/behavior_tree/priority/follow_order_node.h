@@ -9,6 +9,9 @@
 #include "bots/behavior_tree/pathing_node.h"
 #include <map>
 
+#define STUCK_TICKS_THRESHOLD 10
+#define BAIT_DISTANCE 50.f
+
 namespace follow {
     class ComputeObjectiveAreaNode : public Node {
     public:
@@ -21,7 +24,7 @@ namespace follow {
         BaitWaitNode(Blackboard & blackboard) : ConditionDecorator(blackboard,
                                                                          make_unique<movement::WaitNode>(blackboard, 0.5),
                                                                          "BaitWaitDecorator") { };
-        virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override;
+        virtual bool valid(const ServerState & state, TreeThinker &treeThinker) override;
     };
 }
 

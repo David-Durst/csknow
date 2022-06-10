@@ -180,6 +180,16 @@ namespace nav_mesh {
         return path;
     }
 
+    float compute_path_length( std::vector< PathNode > path) {
+        float total_distance = 0;
+        for (size_t i = 1; i < path.size(); i++) {
+            auto local_distance = path[i].pos - path[i-1].pos;
+            total_distance += sqrtf( local_distance.x * local_distance.x +
+                    local_distance.y * local_distance.y + local_distance.z * local_distance.z );
+        }
+        return total_distance;
+    }
+
     const nav_area& nav_file::get_area_by_id( std::uint32_t id ) const {
         for ( auto& area : m_areas ) {
             if ( area.get_id( ) == id )
