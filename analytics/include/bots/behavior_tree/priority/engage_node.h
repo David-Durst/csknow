@@ -22,9 +22,9 @@ namespace engage {
     };
 }
 
-class FollowOrderNode : public SequenceNode {
+class EngageNode : public SequenceNode {
 public:
-    FollowOrderNode(Blackboard & blackboard) :
+    EngageNode(Blackboard & blackboard) :
             SequenceNode(blackboard, Node::makeList(
                                  make_unique<engage::SelectTargetNode>(blackboard),
                                  make_unique<engage::FireSelectionTaskNode>(blackboard),
@@ -35,7 +35,7 @@ public:
 class EnemyEngageCheckNode : public ConditionDecorator {
 public:
     EnemyEngageCheckNode(Blackboard & blackboard) : ConditionDecorator(blackboard,
-                                                                        make_unique<FollowOrderNode>(blackboard),
+                                                                        make_unique<EngageNode>(blackboard),
                                                                         "EnemyEngageCheckNode") { };
     virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override;
 };

@@ -31,7 +31,6 @@ public:
     int32_t roundNumber;
     int32_t mapNumber;
     double tickInterval;
-    double roundTime, c4Time;
 
     struct Client {
         int32_t lastFrame;

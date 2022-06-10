@@ -2,10 +2,10 @@
 // Created by durst on 5/8/22.
 //
 
-#include "bots/behavior_tree/implementation_node.h"
 #include "bots/input_bits.h"
+#include "bots/behavior_tree/pathing_node.h"
 
-namespace implementation {
+namespace movement {
     Path computePath(const ServerState &state, Blackboard & blackboard, nav_mesh::vec3_t targetPos, const ServerState::Client & curClient) {
         Path newPath;
         auto optionalWaypoints = blackboard.navFile.find_path_detailed(vec3Conv(curClient.getFootPosForPlayer()),
@@ -35,7 +35,7 @@ namespace implementation {
         return newPath;
     }
 
-    NodeState PathingTaskNode::exec(const ServerState &state, TreeThinker &treeThinker) {
+    NodeState PathingNode::exec(const ServerState &state, TreeThinker &treeThinker) {
         Priority & curPriority = blackboard.playerToPriority[treeThinker.csgoId];
         const ServerState::Client & curClient = state.getClient(treeThinker.csgoId);
         Vec3 curPos = curClient.getFootPosForPlayer();
@@ -51,16 +51,16 @@ namespace implementation {
             Path & curPath = blackboard.playerToPath[treeThinker.csgoId];
 
             if (curPath.pathCallSucceeded) {
-                PathNode curNode = curPath.waypoints[curPath.curWaypoint];
-                Vec3 targetPos = curNode.pos;
+                PathNode targetNode = curPath.waypoints[curPath.curWaypoint];
+                Vec3 targetPos = targetNode.pos;
                 // ignore z since slope doesn't really matter
                 curPos.z = 0.;
                 targetPos.z = 0.;
                 // ok if in the next area and above it
                 bool areasDisjoint = false;
-                if (curNode.edgeMidpoint) {
-                    const nav_mesh::nav_area &priorArea = blackboard.navFile.get_area_by_id_fast(curNode.area1);
-                    const nav_mesh::nav_area &nextArea = blackboard.navFile.get_area_by_id_fast(curNode.area2);
+                if (targetNode.edgeMidpoint) {
+                    const nav_mesh::nav_area &priorArea = blackboard.navFile.get_area_by_id_fast(targetNode.area1);
+                    const nav_mesh::nav_area &nextArea = blackboard.navFile.get_area_by_id_fast(targetNode.area2);
                     areasDisjoint = !aabbOverlap(areaToAABB(priorArea), areaToAABB(nextArea));
                     //aboveNextNode = nextArea.is_within(vec3Conv(curPos)) && nextArea.get_max_corner().z < curClient.lastFootPosZ;
                 }
@@ -68,8 +68,8 @@ namespace implementation {
                 // or you are in between two nav meshes that don't share an edge and just need to be close enough
                 // assuming that disjoint areas are mostly free space around them so can't get stuck in x/y coordinates
                 //computeDistance(curPos, targetPos) < MIN_DISTANCE_TO_NAV_POINT &&
-                if ((!curNode.edgeMidpoint && curArea.get_id() == curNode.area1) ||
-                    (curNode.edgeMidpoint && curArea.get_id() == curNode.area2) ||
+                if ((!targetNode.edgeMidpoint && curArea.get_id() == targetNode.area1) ||
+                    (targetNode.edgeMidpoint && curArea.get_id() == targetNode.area2) ||
                     (areasDisjoint && computeDistance(curPos, targetPos) < MIN_DISTANCE_TO_NAV_POINT)) {
                     if (curPath.curWaypoint < curPath.waypoints.size() - 1) {
                         curPath.curWaypoint++;
@@ -93,43 +93,22 @@ namespace implementation {
         return playerNodeState[treeThinker.csgoId];
     }
 
-    NodeState FireSelectionTaskNode::exec(const ServerState &state, TreeThinker &treeThinker) {
-        Priority & curPriority = blackboard.playerToPriority[treeThinker.csgoId];
-        Path & curPath = blackboard.playerToPath[treeThinker.csgoId];
-
-        // not executing shooting if no target
-        if (curPriority.targetPlayer.playerId == INVALID_ID) {
-            curPath.movementOptions = {true, false, false};
-            curPath.shootOptions = PathShootOptions::DontShoot;
-
-            playerNodeState[treeThinker.csgoId] = NodeState::Failure;
-            return playerNodeState[treeThinker.csgoId];
-        }
-
+    NodeState WaitNode::exec(const ServerState &state, TreeThinker &treeThinker) {
         const ServerState::Client & curClient = state.getClient(treeThinker.csgoId);
-        const ServerState::Client & targetClient = state.getClient(curPriority.targetPlayer.playerId);
-        double distance = computeDistance(curClient.getFootPosForPlayer(), targetClient.getFootPosForPlayer());
 
-        // if close enough to move and shoot, crouch
-        bool shouldCrouch = distance <= treeThinker.engagementParams.standDistance;
-        if (distance <= treeThinker.engagementParams.moveDistance) {
-            curPath.movementOptions = {true, false, true};
-            curPath.shootOptions = PathShootOptions::Spray;
+        if (playerNodeState[treeThinker.csgoId] == NodeState::Uninitialized) {
+            startFrame[treeThinker.csgoId] = curClient.lastFrame;
         }
-        else if (distance <= treeThinker.engagementParams.sprayDistance) {
-            curPath.movementOptions = {false, false, shouldCrouch};
-            curPath.shootOptions = PathShootOptions::Spray;
-        }
-        else if (distance <= treeThinker.engagementParams.burstDistance) {
-            curPath.movementOptions = {false, false, shouldCrouch};
-            curPath.shootOptions = PathShootOptions::Burst;
+
+        double timeSinceStart = (curClient.lastFrame - startFrame[treeThinker.csgoId]) * state.tickInterval;
+        if (timeSinceStart >= waitSeconds) {
+            playerNodeState[treeThinker.csgoId] = NodeState::Success;
         }
         else {
-            curPath.movementOptions = {false, false, shouldCrouch};
-            curPath.shootOptions = PathShootOptions::Tap;
+            playerNodeState[treeThinker.csgoId] = NodeState::Running;
         }
-        playerNodeState[treeThinker.csgoId] = NodeState::Success;
         return playerNodeState[treeThinker.csgoId];
     }
+
 }
 

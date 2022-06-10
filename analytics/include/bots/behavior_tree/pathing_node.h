@@ -19,6 +19,7 @@ namespace movement {
 
     class WaitNode : public Node {
         double waitSeconds;
+        map<CSGOId, int32_t> startFrame;
     public:
         WaitNode(Blackboard & blackboard, double waitSeconds) : Node(blackboard, "WaitTaskNode"), waitSeconds(waitSeconds) { };
         virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override;
