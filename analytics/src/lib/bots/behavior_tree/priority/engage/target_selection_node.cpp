@@ -23,13 +23,8 @@ namespace engage {
 
         // find all visible, alive enemies
         const ServerState::Client & curClient = state.getClient(treeThinker.csgoId);
-        vector<std::reference_wrapper<const ServerState::Client>> visibleEnemies;
-        for (const auto & otherClient : state.clients) {
-            if (otherClient.team != curClient.team && otherClient.isAlive &&
-                state.isVisible(treeThinker.csgoId, otherClient.csgoId)) {
-                visibleEnemies.push_back(otherClient);
-            }
-        }
+        vector<std::reference_wrapper<const ServerState::Client>> visibleEnemies =
+                state.getVisibleEnemies(treeThinker.csgoId);
 
         // remove from targets list if no target as none visible
         if (visibleEnemies.empty()) {

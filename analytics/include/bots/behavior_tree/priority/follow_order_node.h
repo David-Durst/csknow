@@ -44,6 +44,9 @@ public:
                                                                make_unique<FollowOrderNode>(blackboard),
                                                                "NoEnemyOrderCheckNode") { };
     virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override;
+    virtual bool valid(const ServerState & state, TreeThinker & treeThinker) override {
+        return state.getVisibleEnemies(treeThinker.csgoId).empty();
+    }
 };
 
 #endif //CSKNOW_FOLLOW_ORDER_NODE_H

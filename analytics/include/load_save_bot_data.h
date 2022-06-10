@@ -136,6 +136,17 @@ public:
     bool isVisible(CSGOId src, CSGOId target) const {
         return visibilityClientPairs.find({std::min(src, target), std::max(src, target)}) != visibilityClientPairs.end();
     }
+    vector<std::reference_wrapper<const ServerState::Client>> getVisibleEnemies(CSGOId srcId) const {
+        const ServerState::Client & srcClient = getClient(srcId);
+        vector<std::reference_wrapper<const ServerState::Client>> visibleEnemies;
+        for (const auto & otherClient : clients) {
+            if (otherClient.team != srcClient.team && otherClient.isAlive &&
+                isVisible(srcClient.csgoId, otherClient.csgoId)) {
+                visibleEnemies.push_back(otherClient);
+            }
+        }
+        return visibleEnemies;
+    }
 
     // c4 state
     // Is Planted,Pos X,Pos Y,Pos Z
