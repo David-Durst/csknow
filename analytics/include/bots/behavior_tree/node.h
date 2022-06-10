@@ -112,7 +112,7 @@ public:
             NodeState childNodeState = children[curChildIndex[treeThinker.csgoId]]->exec(state, treeThinker);
             if (childNodeState == NodeState::Success) {
                 curChildIndex[treeThinker.csgoId]++;
-                if (curChildIndex[treeThinker.csgoId] == children.size() - 1) {
+                if (curChildIndex[treeThinker.csgoId] == children.size()) {
                     break;
                 }
             }
@@ -172,7 +172,7 @@ public:
             NodeState childNodeState = children[curChildIndex[treeThinker.csgoId]]->exec(state, treeThinker);
             if (childNodeState == NodeState::Failure) {
                 curChildIndex[treeThinker.csgoId]++;
-                if (curChildIndex[treeThinker.csgoId] == children.size() - 1) {
+                if (curChildIndex[treeThinker.csgoId] == children.size()) {
                     break;
                 }
             }
@@ -220,7 +220,7 @@ public:
     ConditionDecorator(Blackboard & blackboard, Node::Ptr node, string name) :
         Node(blackboard, name), child (std::move(node)) { };
 
-    NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
+    virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
         if (valid(state, treeThinker)) {
             playerNodeState[treeThinker.csgoId] = child->exec(state, treeThinker);
         }

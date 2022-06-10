@@ -29,24 +29,6 @@ public:
             SelectorNode(blackboard, Node::makeList(
                                                             make_unique<order::D2OrderNode>(blackboard)),
                                         "OrderNode") { };
-
-
-    virtual PrintState printState(const ServerState & state, CSGOId playerId) const override {
-        PrintState printState = SelectorNode::printState(state, playerId);
-
-        map<CSGOId, int64_t> playerToCurWaypoint;
-        for (const auto & [csgoId, treeThinker] : blackboard.playerToTreeThinkers) {
-            playerToCurWaypoint[csgoId] = treeThinker.orderWaypointIndex;
-        }
-
-        for (size_t i = 0; i < blackboard.orders.size(); i++) {
-            const auto & order = blackboard.orders[i];
-            vector<string> orderResult = order.print(playerToCurWaypoint, state, i);
-            printState.curState.insert(printState.curState.end(), orderResult.begin(), orderResult.end());
-        }
-
-        return printState;
-    }
 };
 
 #endif //CSKNOW_ORDER_NODE_H

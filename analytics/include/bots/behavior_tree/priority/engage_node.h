@@ -29,7 +29,7 @@ public:
                                  make_unique<engage::SelectTargetNode>(blackboard),
                                  make_unique<engage::SelectFireModeNode>(blackboard),
                                  make_unique<movement::WaitNode>(blackboard, 0.5)),
-                         "FollowOrderSelectorNode") { };
+                         "EngageNode") { };
 };
 
 class EnemyEngageCheckNode : public ConditionDecorator {
@@ -37,7 +37,7 @@ public:
     EnemyEngageCheckNode(Blackboard & blackboard) : ConditionDecorator(blackboard,
                                                                         make_unique<EngageNode>(blackboard),
                                                                         "EnemyEngageCheckNode") { };
-    virtual NodeState exec(const ServerState & state, TreeThinker & treeThinker) override;
+
     virtual bool valid(const ServerState & state, TreeThinker & treeThinker) override {
         return !state.getVisibleEnemies(treeThinker.csgoId).empty();
     }

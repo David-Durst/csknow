@@ -180,7 +180,7 @@ namespace nav_mesh {
         return path;
     }
 
-    float compute_path_length( std::vector< PathNode > path) {
+    float nav_file::compute_path_length( std::vector< PathNode > path) {
         float total_distance = 0;
         for (size_t i = 1; i < path.size(); i++) {
             auto local_distance = path[i].pos - path[i-1].pos;

@@ -86,6 +86,9 @@ void Tree::tick(ServerState & state, string mapsPath) {
             // log state
             vector<PrintState> blackboardPrintStates = blackboard->printPerPlayerState(state, treeThinker.csgoId);
             printStates.insert(printStates.end(), blackboardPrintStates.begin(), blackboardPrintStates.end());
+            printStates.push_back(priorityNode->printState(state, treeThinker.csgoId));
+            printStates.push_back(actionNode->printState(state, treeThinker.csgoId));
+            printStates.back().appendNewline = true;
         }
 
         stringstream logCollector;

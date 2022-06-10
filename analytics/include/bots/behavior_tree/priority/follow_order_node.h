@@ -43,7 +43,6 @@ public:
     NoEnemyOrderCheckNode(Blackboard & blackboard) : ConditionDecorator(blackboard,
                                                                make_unique<FollowOrderNode>(blackboard),
                                                                "NoEnemyOrderCheckNode") { };
-    virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override;
     virtual bool valid(const ServerState & state, TreeThinker & treeThinker) override {
         return state.getVisibleEnemies(treeThinker.csgoId).empty();
     }

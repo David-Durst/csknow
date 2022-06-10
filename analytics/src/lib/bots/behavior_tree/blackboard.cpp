@@ -32,7 +32,7 @@ vector<PrintState> Blackboard::printPerPlayerState(const ServerState &state, CSG
                                                         vec3Conv(curClient.getFootPosForPlayer())).get_id()));
     printStates.push_back(playerToPriority[playerId].print(state));
     printStates.push_back(playerToPath[playerId].print(state, navFile));
-    printStates.push_back({playerToAction[playerId].print(), true});
+    printStates.push_back(playerToAction[playerId].print());
 
     return printStates;
 }
