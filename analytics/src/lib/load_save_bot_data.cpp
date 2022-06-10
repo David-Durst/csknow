@@ -272,11 +272,22 @@ void ServerState::loadServerState(string dataPath) {
     bool visibilityExists = std::filesystem::exists(visibilityFilePath);
     bool c4Exists = std::filesystem::exists(c4FilePath);
     if (generalExists && clientStatesExists && visibilityExists && c4Exists) {
-        std::filesystem::rename(generalFilePath, tmpGeneralFilePath);
-        std::filesystem::rename(clientStatesFilePath, tmpClientStatesFilePath);
-        std::filesystem::rename(visibilityFilePath, tmpVisibilityFilePath);
-        std::filesystem::rename(c4FilePath, tmpC4FilePath);
-        loadedSuccessfully = true;
+        try {
+            std::filesystem::rename(generalFilePath, tmpGeneralFilePath);
+            std::filesystem::rename(clientStatesFilePath, tmpClientStatesFilePath);
+            std::filesystem::rename(visibilityFilePath, tmpVisibilityFilePath);
+            std::filesystem::rename(c4FilePath, tmpC4FilePath);
+            loadedSuccessfully = true;
+        }
+        catch(std::filesystem::filesystem_error const& ex) {
+            std::cout
+                    << "what():  " << ex.what() << '\n'
+                    << "path1(): " << ex.path1() << '\n'
+                    << "path2(): " << ex.path2() << '\n'
+                    << "code().value():    " << ex.code().value() << '\n'
+                    << "code().message():  " << ex.code().message() << '\n'
+                    << "code().category(): " << ex.code().category().name() << '\n';
+        }
     }
     else {
         if (!generalExists) {
