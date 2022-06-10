@@ -58,6 +58,7 @@ void Tree::tick(ServerState & state, string mapsPath) {
         // don't care about which player as order is for all players
         orderNode->exec(state, blackboard->playerToTreeThinkers[state.clients[0].csgoId]);
         printStates.push_back(orderNode->printState(state, state.clients[0].csgoId));
+        printStates.push_back(blackboard->printOrderState(state));
 
         for (auto & client : state.clients) {
             if (!client.isAlive || !client.isBot) {
@@ -83,16 +84,16 @@ void Tree::tick(ServerState & state, string mapsPath) {
             //                clientAction.inputAngleDeltaPctY);
 
             // log state
-            printStates.push_back({{}, {state.getPlayerString(client.csgoId) +
-                ", pos: " + client.getFootPosForPlayer().toString() +
-                ", cur nav area " + std::to_string(blackboard->navFile.get_nearest_area_by_position(vec3Conv(client.getFootPosForPlayer())).get_id())}});
-            printStates.push_back(priorityNode->printState(state, treeThinker.csgoId));
-            printStates.push_back(actionNode->printState(state, treeThinker.csgoId));
+            vector<PrintState> blackboardPrintStates = blackboard->printPerPlayerState(state, treeThinker.csgoId);
+            printStates.insert(printStates.end(), blackboardPrintStates.begin(), blackboardPrintStates.end());
         }
 
         stringstream logCollector;
         for (const auto & printState : printStates) {
-            logCollector << printState.getState() << std::endl;
+            logCollector << printState.getState();
+            if (printState.appendNewline) {
+                logCollector << std::endl;
+            }
         }
         curLog = logCollector.str();
     }

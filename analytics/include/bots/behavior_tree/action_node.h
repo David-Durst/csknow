@@ -36,11 +36,13 @@ public:
                                                 make_unique<action::FireTaskNode>(blackboard)),
                             "ActionNode") { };
 
+    /*
     virtual PrintState printState(const ServerState & state, CSGOId playerId) const override {
         PrintState printState = SequenceNode::printState(state, playerId);
         printState.curState.push_back(blackboard.playerToAction[playerId].print());
         return printState;
     }
+     */
 };
 
 #endif //CSKNOW_ACTION_NODE_H

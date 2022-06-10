@@ -42,6 +42,36 @@ struct TreeThinker {
     int64_t orderGrenadeIndex;
 };
 
+struct PrintState {
+    vector<PrintState> childrenStates;
+    vector<string> curState;
+    bool appendNewline = false;
+
+    void getStateInner(size_t depth, stringstream & ss) const {
+        for (const auto & curStateLine : curState) {
+            for (size_t i = 0; i < depth; i++) {
+                ss << "  ";
+            }
+            ss << curStateLine;
+            ss << std::endl;
+        }
+        for (const auto & childState : childrenStates) {
+            childState.getStateInner(depth + 1, ss);
+        }
+    }
+
+    string getState() const {
+        stringstream ss;
+        getStateInner(0, ss);
+        return ss.str();
+    }
+
+    PrintState() { }
+    PrintState(string curState, bool appendNewline = false) : curState({curState}), appendNewline(appendNewline) { }
+    PrintState(vector<PrintState> childrenStates, vector<string> curState, bool appendNewline = false) :
+        childrenStates(childrenStates), curState(curState), appendNewline(appendNewline) { }
+};
+
 struct Blackboard {
     nav_mesh::nav_file navFile;
     ServerState lastFrameState;
@@ -65,10 +95,8 @@ struct Blackboard {
 
     // priority data
     map<CSGOId, Priority> playerToPriority;
-
-    // implementation data
     map<CSGOId, Path> playerToPath;
-    map<CSGOId, uint32_t> playerToCurNavAreaId;
+    map<CSGOId, uint32_t> playerToLastPathingNavAreaId;
 
     // action data
     map<CSGOId, Action> playerToAction;
@@ -85,6 +113,9 @@ struct Blackboard {
         return computeDistance(vec3tConv(navFile.get_area_by_id_fast(srcArea).get_center()),
                                vec3tConv(navFile.get_area_by_id_fast(dstArea).get_center()));
     }
+
+    PrintState printOrderState(const ServerState & state);
+    vector<PrintState> printPerPlayerState(const ServerState & state, CSGOId playerId);
 
     Blackboard(string navPath) : navFile(navPath.c_str()), gen(rd()), aimDis(0., 2.0) {
         //reachability(queryReachable(queryMapMesh(navFile))) {

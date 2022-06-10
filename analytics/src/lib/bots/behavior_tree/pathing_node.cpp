@@ -45,8 +45,8 @@ namespace movement {
         // check if players's nav area is same and not stuck. If so, do nothing (except increment waypoint if necessary)
         // also check that not in an already visited area because missed a jump
         if (blackboard.playerToPath.find(treeThinker.csgoId) != blackboard.playerToPath.end() &&
-            blackboard.playerToCurNavAreaId.find(treeThinker.csgoId) != blackboard.playerToCurNavAreaId.end() &&
-            curArea.get_id() == blackboard.playerToCurNavAreaId[treeThinker.csgoId] &&
+            blackboard.playerToLastPathingNavAreaId.find(treeThinker.csgoId) != blackboard.playerToLastPathingNavAreaId.end() &&
+            curArea.get_id() == blackboard.playerToLastPathingNavAreaId[treeThinker.csgoId] &&
             !curPriority.stuck) {
             Path & curPath = blackboard.playerToPath[treeThinker.csgoId];
 
@@ -88,7 +88,7 @@ namespace movement {
             int x = 1;
         }
 
-        blackboard.playerToCurNavAreaId[treeThinker.csgoId] = curArea.get_id();
+        blackboard.playerToLastPathingNavAreaId[treeThinker.csgoId] = curArea.get_id();
         playerNodeState[treeThinker.csgoId] = newPath.pathCallSucceeded ? NodeState::Running : NodeState::Failure;
         return playerNodeState[treeThinker.csgoId];
     }

@@ -28,30 +28,6 @@ enum class NodeState {
     NUM_NODE_STATES
 };
 
-struct PrintState {
-    vector<PrintState> childrenStates;
-    vector<string> curState;
-
-    void getStateInner(size_t depth, stringstream & ss) const {
-        for (const auto & curStateLine : curState) {
-            for (size_t i = 0; i < depth; i++) {
-                ss << "  ";
-            }
-            ss << curStateLine;
-            ss << std::endl;
-        }
-        for (const auto & childState : childrenStates) {
-            childState.getStateInner(depth + 1, ss);
-        }
-    }
-
-    string getState() const {
-        stringstream ss;
-        getStateInner(0, ss);
-        return ss.str();
-    }
-};
-
 class Node {
 public:
     using Ptr = std::unique_ptr<Node>;
@@ -255,6 +231,12 @@ public:
     }
 
     virtual bool valid(const ServerState & state, TreeThinker &treeThinker) = 0;
+
+    virtual PrintState printState(const ServerState & state, CSGOId playerId) const override {
+        PrintState printState = Node::printState(state, playerId);
+        printState.childrenStates.push_back(child->printState(state, playerId));
+        return printState;
+    }
 };
 
 #endif //CSKNOW_NODE_H
