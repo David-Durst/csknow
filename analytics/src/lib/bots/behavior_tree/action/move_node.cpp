@@ -104,12 +104,7 @@ namespace action {
             curAction.inputAngleDeltaPctY = 0;
         }
 
-        bool moving = curAction.getButton(IN_FORWARD) ||
-                curAction.getButton(IN_MOVELEFT) ||
-                curAction.getButton(IN_BACK) ||
-                curAction.getButton(IN_MOVERIGHT);
-
-        playerNodeState[treeThinker.csgoId] = moving ? NodeState::Success : NodeState::Failure;
+        playerNodeState[treeThinker.csgoId] = curPath.pathCallSucceeded ? NodeState::Success : NodeState::Failure;
         return playerNodeState[treeThinker.csgoId];
     }
 }

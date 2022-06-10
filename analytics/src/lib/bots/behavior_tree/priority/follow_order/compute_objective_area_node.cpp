@@ -55,7 +55,7 @@ namespace follow {
             playerNodeState[treeThinker.csgoId] = NodeState::Failure;
         }
         else {
-            playerNodeState[treeThinker.csgoId] = finishedAndDone ? NodeState::Success : NodeState::Running;
+            playerNodeState[treeThinker.csgoId] = NodeState::Success;
         }
 
         return playerNodeState[treeThinker.csgoId];

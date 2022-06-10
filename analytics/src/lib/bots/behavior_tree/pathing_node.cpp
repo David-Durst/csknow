@@ -76,7 +76,7 @@ namespace movement {
                     }
                 }
 
-                playerNodeState[treeThinker.csgoId] = NodeState::Running;
+                playerNodeState[treeThinker.csgoId] = NodeState::Success;
                 return playerNodeState[treeThinker.csgoId];
             }
         }
@@ -89,7 +89,7 @@ namespace movement {
         }
 
         blackboard.playerToLastPathingNavAreaId[treeThinker.csgoId] = curArea.get_id();
-        playerNodeState[treeThinker.csgoId] = newPath.pathCallSucceeded ? NodeState::Running : NodeState::Failure;
+        playerNodeState[treeThinker.csgoId] = newPath.pathCallSucceeded ? NodeState::Success : NodeState::Failure;
         return playerNodeState[treeThinker.csgoId];
     }
 
