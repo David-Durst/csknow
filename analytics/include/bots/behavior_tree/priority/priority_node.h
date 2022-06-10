@@ -6,22 +6,24 @@
 #define CSKNOW_PRIORITY_NODE_H
 
 #include "bots/behavior_tree/node.h"
-#include "follow_order_node.h"
-#include "bots/behavior_tree/priority/target_selection_node.h"
+#include "bots/behavior_tree/priority/follow_order_node.h"
+#include "bots/behavior_tree/priority/engage_node.h"
 
-class PriorityParNode : public ParSelectorNode {
+class PriorityNode : public SelectorNode {
 public:
-    PriorityParNode(Blackboard & blackboard) :
-            ParSelectorNode(blackboard, Node::makeList(
-                                                make_unique<FollowOrderSeqSelectorNode>(blackboard),
-                                                make_unique<TargetSelectionTaskNode>(blackboard)),
-                            "PriorityParNode") { };
+    PriorityNode(Blackboard & blackboard) :
+            SelectorNode(blackboard, Node::makeList(
+                                                make_unique<EnemyEngageCheckNode>(blackboard),
+                                                make_unique<NoEnemyOrderCheckNode>(blackboard)),
+                            "PriorityNode") { };
 
+    /*
     virtual PrintState printState(const ServerState & state, CSGOId playerId) const override {
         PrintState printState = ParSelectorNode::printState(state, playerId);
         printState.curState.push_back(blackboard.playerToPriority[playerId].print(state));
         return printState;
     }
+     */
 };
 
 #endif //CSKNOW_PRIORITY_NODE_H

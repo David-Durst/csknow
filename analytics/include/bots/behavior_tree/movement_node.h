@@ -6,6 +6,7 @@
 #define CSKNOW_MOVEMENT_NODE_H
 
 #include "bots/behavior_tree/node.h"
+#include "bots/behavior_tree/movement_data.h"
 
 #define MOVING_THRESHOLD 0.1
 
