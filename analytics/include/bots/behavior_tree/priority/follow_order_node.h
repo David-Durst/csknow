@@ -6,53 +6,41 @@
 #define CSKNOW_FOLLOW_ORDER_NODE_H
 
 #include "bots/behavior_tree/node.h"
+#include "bots/behavior_tree/movement_node.h"
 #include <map>
 
-#define MOVING_THRESHOLD 0.1
-#define STUCK_TICKS_THRESHOLD 5
-
 namespace follow {
-    class PushTaskNode : public Node {
+    class ComputeObjectiveAreaNode : public Node {
     public:
-        PushTaskNode(Blackboard & blackboard) : Node(blackboard, "PushTaskNode") { };
+        ComputeObjectiveAreaNode(Blackboard & blackboard) : Node(blackboard, "ComputeObstaclesTaskNode") { };
         virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override;
     };
 
-    class StuckTaskNode : public Node {
+    class BaitWaitNode : public ConditionDecorator {
     public:
-        StuckTaskNode(Blackboard & blackboard) : Node(blackboard, "StuckTaskNode") { };
-        virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override;
-    };
-
-    class BaitTaskNode : public Node {
-    public:
-        BaitTaskNode(Blackboard & blackboard) : Node(blackboard, "BaitTaskNode") { };
+        BaitWaitNode(Blackboard & blackboard) : ConditionDecorator(blackboard,
+                                                                         make_unique<movement::WaitNode>(blackboard, 0.5),
+                                                                         "BaitWaitDecorator") { };
         virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override;
     };
 }
 
-class FollowOrderSeqSelectorNode : public FirstNonFailSeqSelectorNode {
+class FollowOrderNode : public SequenceNode {
 public:
-    FollowOrderSeqSelectorNode(Blackboard & blackboard) :
-            FirstNonFailSeqSelectorNode(blackboard, Node::makeList(
-                                                        make_unique<follow::PushTaskNode>(blackboard)),
-                                                        //make_unique<follow::StuckTaskNode>(blackboard)),
-                                                       // make_unique<follow::BaitTaskNode>(blackboard)),
-                                        "FollowOrderSeqSelectorNode") { };
+    FollowOrderNode(Blackboard & blackboard) :
+            SequenceNode(blackboard, Node::makeList(
+                                                        make_unique<follow::ComputeObjectiveAreaNode>(blackboard),
+                                                        make_unique<movement::PathingNode>(blackboard),
+                                                        make_unique<follow::BaitWaitNode>(blackboard)),
+                                        "FollowOrderSelectorNode") { };
+};
 
-    /*
-    virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
-        int childIndex;
-        if (treeThinker.aggressiveType == AggressiveType::Push) {
-            childIndex = 0;
-        }
-        else {
-            childIndex = 1;
-        }
-        playerNodeState[treeThinker.csgoId] = children[childIndex]->exec(state, treeThinker);
-        return playerNodeState[treeThinker.csgoId];
-    }
-     */
+class NoEnemyOrderCheckNode : public ConditionDecorator {
+public:
+    NoEnemyOrderCheckNode(Blackboard & blackboard) : ConditionDecorator(blackboard,
+                                                               make_unique<FollowOrderNode>(blackboard),
+                                                               "NoEnemyOrderCheckNode") { };
+    virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override;
 };
 
 #endif //CSKNOW_FOLLOW_ORDER_NODE_H

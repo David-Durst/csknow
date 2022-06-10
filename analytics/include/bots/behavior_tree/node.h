@@ -241,8 +241,8 @@ protected:
     Node::Ptr child;
 
 public:
-    ConditionDecorator(Blackboard & blackboard, Node::Ptr nodes, string name) :
-        Node(blackboard, name), child (std::move(nodes)) { };
+    ConditionDecorator(Blackboard & blackboard, Node::Ptr node, string name) :
+        Node(blackboard, name), child (std::move(node)) { };
 };
 
 #endif //CSKNOW_NODE_H
