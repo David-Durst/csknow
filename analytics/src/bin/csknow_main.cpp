@@ -165,7 +165,7 @@ int main(int argc, char * argv[]) {
 
     string runClustersPythonCmd("bash " + dataPath + "/../python_analytics/makeClusters.sh");
     exec(runClustersPythonCmd);
-    /*
+    /  *
     int clustersCmdResult = std::system(runClustersPythonCmd.c_str());
     if (clustersCmdResult != 0) {
         std::cout << "clusters cmd result: " << clustersCmdResult << std::endl;
