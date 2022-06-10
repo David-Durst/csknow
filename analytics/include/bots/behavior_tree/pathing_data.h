@@ -2,8 +2,8 @@
 // Created by durst on 5/8/22.
 //
 
-#ifndef CSKNOW_MOVEMENT_DATA_H
-#define CSKNOW_MOVEMENT_DATA_H
+#ifndef CSKNOW_PATHING_DATA_H
+#define CSKNOW_PATHING_DATA_H
 #include "load_save_bot_data.h"
 #include "bots/behavior_tree/priority/priority_data.h"
 
@@ -93,4 +93,4 @@ struct Path {
     }
 };
 
-#endif //CSKNOW_MOVEMENT_DATA_H
+#endif //CSKNOW_PATHING_DATA_H

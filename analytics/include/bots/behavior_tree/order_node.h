@@ -23,17 +23,17 @@ namespace order {
     };
 }
 
-class OrderSeqSelectorNode : public FirstNonFailSeqSelectorNode {
+class OrderSelectorNode : public SelectorNode {
 public:
-    OrderSeqSelectorNode(Blackboard & blackboard) :
-            FirstNonFailSeqSelectorNode(blackboard, Node::makeList(
-                                                                make_unique<order::D2TaskNode>(blackboard),
-                                                                make_unique<order::D2TaskNode>(blackboard)),
-                                        "OrderSeqSelectorNode") { };
+    OrderSelectorNode(Blackboard & blackboard) :
+            SelectorNode(blackboard, Node::makeList(
+                                                            make_unique<order::D2TaskNode>(blackboard),
+                                                            make_unique<order::D2TaskNode>(blackboard)),
+                                        "OrderSelectorNode") { };
 
 
     virtual PrintState printState(const ServerState & state, CSGOId playerId) const override {
-        PrintState printState = FirstNonFailSeqSelectorNode::printState(state, playerId);
+        PrintState printState = SelectorNode::printState(state, playerId);
 
         map<CSGOId, int64_t> playerToCurWaypoint;
         for (const auto & [csgoId, treeThinker] : blackboard.playerToTreeThinkers) {

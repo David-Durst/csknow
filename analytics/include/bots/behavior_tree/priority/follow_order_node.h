@@ -6,7 +6,7 @@
 #define CSKNOW_FOLLOW_ORDER_NODE_H
 
 #include "bots/behavior_tree/node.h"
-#include "bots/behavior_tree/movement_node.h"
+#include "bots/behavior_tree/pathing_node.h"
 #include <map>
 
 namespace follow {
