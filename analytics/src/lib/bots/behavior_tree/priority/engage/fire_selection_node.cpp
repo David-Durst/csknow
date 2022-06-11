@@ -11,8 +11,8 @@ namespace engage {
 
         // not executing shooting if no target
         if (curPriority.targetPlayer.playerId == INVALID_ID) {
-            curPath.movementOptions = {true, false, false};
-            curPath.shootOptions = PathShootOptions::DontShoot;
+            curPriority.moveOptions = {true, false, false};
+            curPriority.shootOptions = ShootOptions::DontShoot;
 
             playerNodeState[treeThinker.csgoId] = NodeState::Failure;
             return playerNodeState[treeThinker.csgoId];
@@ -25,20 +25,20 @@ namespace engage {
         // if close enough to move and shoot, crouch
         bool shouldCrouch = distance <= treeThinker.engagementParams.standDistance;
         if (distance <= treeThinker.engagementParams.moveDistance) {
-            curPath.movementOptions = {true, false, true};
-            curPath.shootOptions = PathShootOptions::Spray;
+            curPriority.moveOptions = {true, false, true};
+            curPriority.shootOptions = ShootOptions::Spray;
         }
         else if (distance <= treeThinker.engagementParams.sprayDistance) {
-            curPath.movementOptions = {false, false, shouldCrouch};
-            curPath.shootOptions = PathShootOptions::Spray;
+            curPriority.moveOptions = {false, false, shouldCrouch};
+            curPriority.shootOptions = ShootOptions::Spray;
         }
         else if (distance <= treeThinker.engagementParams.burstDistance) {
-            curPath.movementOptions = {false, false, shouldCrouch};
-            curPath.shootOptions = PathShootOptions::Burst;
+            curPriority.moveOptions = {false, false, shouldCrouch};
+            curPriority.shootOptions = ShootOptions::Burst;
         }
         else {
-            curPath.movementOptions = {false, false, shouldCrouch};
-            curPath.shootOptions = PathShootOptions::Tap;
+            curPriority.moveOptions = {false, false, shouldCrouch};
+            curPriority.shootOptions = ShootOptions::Tap;
         }
         playerNodeState[treeThinker.csgoId] = NodeState::Success;
         return playerNodeState[treeThinker.csgoId];

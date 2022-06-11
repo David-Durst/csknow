@@ -225,6 +225,7 @@ public:
             playerNodeState[treeThinker.csgoId] = child->exec(state, treeThinker);
         }
         else {
+            child->restart(treeThinker);
             playerNodeState[treeThinker.csgoId] = NodeState::Failure;
         }
         return playerNodeState[treeThinker.csgoId];

@@ -12,9 +12,13 @@ namespace follow {
         // default values are set to invalid where necessary, so this is fine
         Priority & curPriority = blackboard.playerToPriority[treeThinker.csgoId];
 
-        // if no priority yet, move to first one
-        if (!havePriority) {
+        // if no priority yet or switching from engagement, setup priority without a target
+        if (!havePriority || curPriority.priorityType != PriorityType::Order) {
             moveToWaypoint(*this, state, treeThinker, curOrder, curPriority);
+            curPriority.priorityType = PriorityType::Order;
+            curPriority.targetPlayer.playerId = INVALID_ID;
+            curPriority.moveOptions = {true, false, false};
+            curPriority.shootOptions = ShootOptions::DontShoot;
         }
 
         string curPlace = blackboard.getPlayerPlace(state.clients[state.csgoIdToCSKnowId[treeThinker.csgoId]].getFootPosForPlayer());

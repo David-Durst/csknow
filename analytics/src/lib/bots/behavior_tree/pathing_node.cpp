@@ -23,9 +23,6 @@ namespace movement {
             newPath.curWaypoint = 0;
             newPath.pathEndAreaId =
                     blackboard.navFile.get_nearest_area_by_position(targetPos).get_id();
-
-            newPath.movementOptions = {true, false, false};
-            newPath.shootOptions = PathShootOptions::DontShoot;
         }
         else {
             // do nothing if the pathing call failed

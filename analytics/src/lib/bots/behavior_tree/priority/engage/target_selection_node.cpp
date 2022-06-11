@@ -7,8 +7,15 @@
 
 namespace engage {
     NodeState SelectTargetNode::exec(const ServerState & state, TreeThinker &treeThinker) {
+        bool havePriority = blackboard.playerToPriority.find(treeThinker.csgoId) != blackboard.playerToPriority.end();
         Priority & curPriority = blackboard.playerToPriority[treeThinker.csgoId];
         TargetPlayer & curTarget = curPriority.targetPlayer;
+
+        // if no priority yet or switching from order, setup priority with right type
+        if (!havePriority || curPriority.priorityType != PriorityType::Engagement) {
+            curPriority.priorityType = PriorityType::Engagement;
+        }
+
         // keep same target if from this round and still visible
         if (curTarget.playerId != INVALID_ID) {
             if (curTarget.round == state.roundNumber) {

@@ -25,10 +25,10 @@ namespace action {
             bool haveRecoil = (std::abs(curClient.lastEyeWithRecoilAngleX - curClient.lastEyeAngleX) > RECOIL_THRESHOLD) ||
                     (std::abs(curClient.lastEyeWithRecoilAngleY - curClient.lastEyeAngleY) > RECOIL_THRESHOLD);
             int maxBurstShots = 100;
-            if (curPath.shootOptions == PathShootOptions::Tap) {
+            if (curPriority.shootOptions == ShootOptions::Tap) {
                 maxBurstShots = 1;
             }
-            else if (curPath.shootOptions == PathShootOptions::Burst) {
+            else if (curPriority.shootOptions == ShootOptions::Burst) {
                 maxBurstShots = 3;
             }
 
