@@ -17,6 +17,7 @@ namespace nav_mesh {
     };
 
 	class nav_file : public micropather::Graph {
+        std::set< uint32_t > m_areas_to_increase_cost;
 	public:
 		nav_file( ) { }
 		nav_file( std::string_view nav_mesh_file );
@@ -40,12 +41,23 @@ namespace nav_mesh {
 			auto& area = get_area_by_id( LO_32( state ) );
 			auto& area_connections = area.get_connections( );
 
+            float distance_adjustment = 0.f;
+
+            if ( m_areas_to_increase_cost.find(area.get_id()) != m_areas_to_increase_cost.end() ) {
+                for ( auto& connection : area_connections ) {
+                    auto &connection_area = get_area_by_id(connection.id);
+                    auto distance = connection_area.get_center() - area.get_center();
+                    float distance_magnitude = sqrtf( distance.x * distance.x + distance.y * distance.y + distance.z * distance.z );
+                    distance_adjustment = std::max(distance_magnitude, distance_adjustment);
+                }
+            }
+
 			for ( auto& connection : area_connections ) {
 				auto& connection_area = get_area_by_id( connection.id );
 				auto distance = connection_area.get_center( ) - area.get_center( );
 
 				micropather::StateCost cost = { reinterpret_cast< void* >( connection_area.get_id( ) ), 
-					sqrtf( distance.x * distance.x + distance.y * distance.y + distance.z * distance.z ) };
+					distance_adjustment * 10 + sqrtf( distance.x * distance.x + distance.y * distance.y + distance.z * distance.z ) };
 				
 				adjacent->push_back( cost );
 			}
@@ -64,6 +76,10 @@ namespace nav_mesh {
         vec3_t get_nearest_point_in_area( vec3_t position, nav_area& area);
 		const nav_area& get_nearest_area_by_position( vec3_t position ) const;
         void remove_incoming_edges_to_areas( std::set<std::uint32_t> ids );
+        void set_areas_to_increase_cost( std::set<uint32_t> new_areas ) {
+            m_areas_to_increase_cost = new_areas;
+            m_pather->Reset();
+        }
 
 		std::unique_ptr< micropather::MicroPather > m_pather = nullptr;
 

@@ -6,10 +6,26 @@
 #include "bots/behavior_tree/pathing_node.h"
 
 namespace movement {
+    void updateAreasToIncreaseCost(const ServerState &state, Blackboard & blackboard, const ServerState::Client & curClient) {
+        set<uint32_t> areasToIncreaseCost;
+        uint32_t curArea = blackboard.navFile.get_nearest_area_by_position(vec3Conv(curClient.getFootPosForPlayer())).get_id();
+        for (const auto & client : state.clients) {
+            if (client.isAlive && client.csgoId != curClient.csgoId && client.team == curClient.team) {
+                uint32_t otherArea = blackboard.navFile
+                        .get_nearest_area_by_position(vec3Conv(client.getFootPosForPlayer())).get_id();
+                if (curArea != otherArea) {
+                    areasToIncreaseCost.insert(otherArea);
+                }
+            }
+        }
+        blackboard.navFile.set_areas_to_increase_cost(areasToIncreaseCost);
+    }
+
     Path computePath(const ServerState &state, Blackboard & blackboard, nav_mesh::vec3_t targetPos, const ServerState::Client & curClient) {
         Path newPath;
-        auto optionalWaypoints = blackboard.navFile.find_path_detailed(vec3Conv(curClient.getFootPosForPlayer()),
-                                                                       targetPos);
+        //updateAreasToIncreaseCost(state, blackboard, curClient);
+        auto optionalWaypoints =
+                blackboard.navFile.find_path_detailed(vec3Conv(curClient.getFootPosForPlayer()), targetPos);
         if (optionalWaypoints) {
             newPath.pathCallSucceeded = true;
             vector<nav_mesh::PathNode> tmpWaypoints = optionalWaypoints.value();
