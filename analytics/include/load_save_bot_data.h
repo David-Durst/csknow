@@ -166,6 +166,7 @@ public:
 
     void loadServerState(string dataPath);
     void saveBotInputs(string dataPath);
+    void saveScript(string dataPath, vector<string> scriptLines);
     Vec3 getC4Pos() const;
 };
 

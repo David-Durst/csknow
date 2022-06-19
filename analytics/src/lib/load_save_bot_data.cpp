@@ -341,8 +341,6 @@ void ServerState::saveBotInputs(string dataPath) {
 
     std::stringstream inputsStream;
     inputsStream << "Player Index,Buttons,Input Angle Delta Pct Pitch,Input Angle Delta Pct Yaw\n";
-    // two lines as need to get rid of the last newline
-    numInputLines = 2;
 
     for (int i = 0; i < (int) inputsValid.size(); i++) {
         if (i < (int) clients.size() && inputsValid[i]) {
@@ -351,7 +349,6 @@ void ServerState::saveBotInputs(string dataPath) {
                 // FLIPPING TO MATCH YAW AND PITCH
                 << clients[i].inputAngleDeltaPctY << ","
                 << clients[i].inputAngleDeltaPctX << "\n";
-            numInputLines++;
         }
     }
 
@@ -362,6 +359,26 @@ void ServerState::saveBotInputs(string dataPath) {
     fsInputs.close();
     
     std::filesystem::rename(tmpInputsFilePath, inputsFilePath);
+}
+
+void saveScript(string dataPath, vector<string> scriptLines) {
+    string scriptFileName = "script.csv";
+    string scriptFilePath = dataPath + "/" + scriptFileName;
+    string tmpScriptFileName = "script.csv.tmp.write";
+    string tmpScriptFilePath = dataPath + "/" + tmpScriptFileName;
+
+    std::stringstream scriptStream;
+
+    for (const auto & scriptLine : scriptLines) {
+        scriptStream << scriptLine << std::endl;
+    }
+
+    std::ofstream fsInputs(tmpScriptFilePath);
+    fsInputs << scriptStream.str();
+    fsInputs.close();
+
+    std::filesystem::rename(tmpScriptFilePath, tmpScriptFilePath);
+
 }
 
 Vec3 ServerState::getC4Pos() const {
