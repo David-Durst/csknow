@@ -2,15 +2,15 @@
 // Created by durst on 5/9/22.
 //
 
+#ifndef CSKNOW_TREE_H
+#define CSKNOW_TREE_H
+
 #include "bots/behavior_tree/node.h"
 #include "bots/behavior_tree/order_node.h"
 #include "bots/behavior_tree/priority/priority_node.h"
 #include "bots/behavior_tree/pathing_node.h"
 #include "bots/behavior_tree/action_node.h"
 #include <memory>
-
-#ifndef CSKNOW_TREE_H
-#define CSKNOW_TREE_H
 
 
 class Tree {

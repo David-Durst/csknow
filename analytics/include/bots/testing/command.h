@@ -6,9 +6,31 @@
 #define CSKNOW_COMMAND_H
 
 #include "load_save_bot_data.h"
+#include <memory>
 
 struct Command {
+    using Ptr = std::unique_ptr<Command>;
     virtual string ToString() const = 0;
+
+    template <typename ...Args>
+    static vector<Command::Ptr> makeList(Args ...args)
+    {
+        vector<Command::Ptr> commands;
+        constexpr size_t n = sizeof...(Args);
+        commands.reserve(n);
+
+        (
+                commands.emplace_back(std::move(args)), ...
+        );
+
+        return commands;
+    }
+};
+
+struct InitTestingRound : Command {
+    virtual string ToString() const override {
+        return "sm_botDebug t; mp_freezetime 0; mp_warmup_end; sm_draw;";
+    }
 };
 
 struct SavePos : Command {
