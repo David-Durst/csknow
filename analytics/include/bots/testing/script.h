@@ -19,6 +19,8 @@ protected:
     Node::Ptr commands;
 
 public:
+    string curLog;
+
     Script(string name, vector<NeededBot> neededBots, ObserveSettings observeSettings) :
             name(name), neededBots(neededBots), observeSettings(observeSettings) { }
            //vector<Command::Ptr> && logicCommands, unique_ptr<Node> && conditions) :

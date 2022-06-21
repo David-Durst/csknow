@@ -53,13 +53,14 @@ vector<string> Script::generateCommands(ServerState & state) {
 bool Script::tick(Blackboard & blackboard, ServerState & state) {
 
     TreeThinker defaultThinker;
-    defaultThinker.csgoId = 0;
+    defaultThinker.csgoId = state.clients[0].csgoId;
 
     vector<PrintState> printStates;
     NodeState conditionResult = commands->exec(state, defaultThinker);
 
+    bool finished = true;
     if (conditionResult == NodeState::Running) {
-        return false;
+        finished = false;
     }
     else if (conditionResult == NodeState::Success) {
         std::cout << "succeeded" << std::endl;
@@ -71,5 +72,6 @@ bool Script::tick(Blackboard & blackboard, ServerState & state) {
     else {
         std::cout << "invalid state" << std::endl;
     }
-    return true;
+    curLog = commands->printState(state, defaultThinker.csgoId).getState();
+    return finished;
 }

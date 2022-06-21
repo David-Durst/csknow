@@ -16,6 +16,7 @@ struct Command : Node {
 
     virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
         state.saveScript(scriptLines);
+        playerNodeState[treeThinker.csgoId] = NodeState::Success;
         return NodeState::Success;
     }
 };

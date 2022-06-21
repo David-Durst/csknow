@@ -61,6 +61,7 @@ int main(int argc, char * argv[]) {
         std::chrono::duration<double> parseTime = parseEnd - start;
 
         std::fstream logFile (logPath + "/bt_bot.log", std::fstream::out);
+        std::fstream testLogFile (logPath + "/bt_test_bot.log", std::fstream::out);
         logFile << "Num failures " << numFailures << ", last bad path: " << state.badPath << std::endl;
         bool sleep;
         if (botTime < timePerTick) {
@@ -75,6 +76,8 @@ int main(int argc, char * argv[]) {
         }
         logFile << tree.curLog;
         logFile.close();
+        testLogFile << script.curLog;
+        testLogFile.close();
         if (sleep) {
             std::this_thread::sleep_for(timePerTick - botTime);
         }
