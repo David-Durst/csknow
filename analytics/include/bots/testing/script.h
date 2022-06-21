@@ -18,9 +18,9 @@ enum class ObserveType {
     NUM_OBSERVE_TYPE
 };
 
-struct ObserveValues {
+struct ObserveSettings {
     ObserveType observeType;
-    CSGOId targetId;
+    CSKnowId neededBotIndex;
     Vec3 cameraOrigin;
     Vec2 cameraPos;
 };
@@ -32,19 +32,26 @@ struct NeededBot {
 
 class Script {
     // children can't update blackboard
-    unique_ptr<Blackboard> blackboard;
     vector<Command::Ptr> commands;
-    TreeThinker treeThinker;
+
 protected:
+    Blackboard & blackboard;
+    string name;
     vector<NeededBot> neededBots;
+    ObserveSettings observeSettings;
     vector<Command::Ptr> logicCommands;
     unique_ptr<Node> conditions;
-    ObserveValues observeValues;
 
 public:
-    bool initialize(ServerState & state, string navPath);
+    Script(Blackboard & blackboard, string name, vector<NeededBot> neededBots, ObserveSettings observeSettings) :
+            blackboard(blackboard), name(name), neededBots(neededBots), observeSettings(observeSettings) { }
+           //vector<Command::Ptr> && logicCommands, unique_ptr<Node> && conditions) :
+           //logicCommands(std::move(logicCommands)), conditions(std::move(conditions)) { }
+
+    void initialize(ServerState & state, string navPath);
+    virtual vector<string> generateCommands(ServerState & state);
     // prints result, returns when done
-    bool tick(ServerState & state, string navPath);
+    bool tick(ServerState & state);
 };
 
 #endif //CSKNOW_SCRIPT_H

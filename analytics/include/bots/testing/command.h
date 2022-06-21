@@ -37,7 +37,7 @@ struct InitTestingRound : Command {
 struct SavePos : Command {
     string playerName;
 
-    SavePos(CSGOId playerId, ServerState serverState)
+    SavePos(CSGOId playerId, const ServerState & serverState)
             : playerName(serverState.getClient(playerId).name) { }
     SavePos(string playerName) : playerName(playerName) { }
 
@@ -65,7 +65,7 @@ struct SetPos : Command {
 struct Teleport : Command {
     string playerName;
 
-    Teleport(CSGOId playerId, ServerState serverState)
+    Teleport(CSGOId playerId, const ServerState & serverState)
         : playerName(serverState.getClient(playerId).name) { }
     Teleport(string playerName) : playerName(playerName) { }
 
@@ -79,7 +79,7 @@ struct Teleport : Command {
 struct SlayAllBut : Command {
     vector<string> playerNames;
 
-    SlayAllBut(vector<CSGOId> playerIds, ServerState serverState) {
+    SlayAllBut(vector<CSGOId> playerIds, const ServerState & serverState) {
         for (const auto & playerId : playerIds) {
             playerNames.push_back(serverState.getClient(playerId).name);
         }
@@ -100,7 +100,7 @@ struct SetArmor : Command {
     string playerName;
     int armorValue;
 
-    SetArmor(CSGOId playerId, ServerState serverState, int armorValue)
+    SetArmor(CSGOId playerId, const ServerState & serverState, int armorValue)
             : playerName(serverState.getClient(playerId).name), armorValue(armorValue) { }
     SetArmor(string playerName, int armorValue) : playerName(playerName), armorValue(armorValue) { }
 
@@ -115,7 +115,7 @@ struct SetHealth : Command {
     string playerName;
     int healthValue;
 
-    SetHealth(CSGOId playerId, ServerState serverState, int healthValue)
+    SetHealth(CSGOId playerId, const ServerState & serverState, int healthValue)
             : playerName(serverState.getClient(playerId).name), healthValue(healthValue) { }
     SetHealth(string playerName, int healthValue) : playerName(playerName), healthValue(healthValue) { }
 
@@ -130,7 +130,7 @@ struct GiveItem : Command {
     string playerName;
     string itemName;
 
-    GiveItem(CSGOId playerId, ServerState serverState, string itemName)
+    GiveItem(CSGOId playerId, const ServerState & serverState, string itemName)
             : playerName(serverState.getClient(playerId).name), itemName(itemName) { }
     GiveItem(string playerName, string itemName) : playerName(playerName), itemName(itemName) { }
 
@@ -145,7 +145,7 @@ struct SetCurrentItem : Command {
     string playerName;
     string itemName;
 
-    SetCurrentItem(CSGOId playerId, ServerState serverState, string itemName)
+    SetCurrentItem(CSGOId playerId, const ServerState & serverState, string itemName)
             : playerName(serverState.getClient(playerId).name), itemName(itemName) { }
     SetCurrentItem(string playerName, string itemName) : playerName(playerName), itemName(itemName) { }
 
@@ -161,7 +161,7 @@ struct SpecPlayerToTarget : Command {
     string targetName;
     bool thirdPerson;
 
-    SpecPlayerToTarget(CSGOId playerId, CSGOId targetId, ServerState serverState, bool thirdPerson = false)
+    SpecPlayerToTarget(CSGOId playerId, CSGOId targetId, const ServerState & serverState, bool thirdPerson = false)
             : playerName(serverState.getClient(playerId).name), targetName(serverState.getClient(targetId).name), thirdPerson(thirdPerson) { }
     SpecPlayerToTarget(string playerName, string targetName, bool thirdPerson = false) : playerName(playerName), targetName(targetName), thirdPerson(thirdPerson) { }
 
@@ -178,7 +178,7 @@ struct SpecPlayerToTarget : Command {
 struct SpecPlayerThirdPerson : Command {
     string playerName;
 
-    SpecPlayerThirdPerson(CSGOId playerId, ServerState serverState)
+    SpecPlayerThirdPerson(CSGOId playerId, const ServerState & serverState)
             : playerName(serverState.getClient(playerId).name) { }
     SpecPlayerThirdPerson(string playerName) : playerName(playerName) { }
 

@@ -1,6 +1,7 @@
 #include "load_save_bot_data.h"
 #include "bots/behavior_tree/tree.h"
 #include "bots/testing/script.h"
+#include "bots/testing/scripts/basic_nav.h"
 #include "navmesh/nav_file.h"
 #include <iostream>
 #include <thread>
@@ -12,7 +13,7 @@
 
 int main(int argc, char * argv[]) {
     if (argc != 4) {
-        std::cout << "please call this code with 3 (NOT 3) arguments: \n"
+        std::cout << "please call this code with 3 arguments: \n"
             << "1. path/to/maps\n"
             << "2. path/to/data\n"
             << "3. path/to/log\n" << std::endl;
@@ -24,6 +25,10 @@ int main(int argc, char * argv[]) {
 
     uint64_t numFailures = 0;
     Tree tree;
+    bool ranScript = false;
+    GooseToCatScript script(*tree.blackboard);
+
+
 
 #pragma clang diagnostic push
 #pragma ide diagnostic ignored "EndlessLoop"
@@ -34,6 +39,14 @@ int main(int argc, char * argv[]) {
         auto parseEnd = std::chrono::system_clock::now();
             
         if (state.loadedSuccessfully) {
+            if (state.clients.size() > 0 && !ranScript) {
+                script.initialize(state, mapsPath);
+                state.saveScript(dataPath, script.generateCommands(state));
+                ranScript = true;
+            }
+            else if (ranScript) {
+                script.tick(state);
+            }
             tree.tick(state, mapsPath);
             state.saveBotInputs(dataPath);
         }

@@ -14,6 +14,7 @@
 
 
 class Tree {
+public:
     // one order node overall, sets all team behavior
     std::unique_ptr<Blackboard> blackboard;
     std::unique_ptr<OrderNode> orderNode;
@@ -22,7 +23,6 @@ class Tree {
     set<CSGOId> lastFramePlayers;
     int32_t curMapNumber = INVALID_ID;
 
-public:
     string curLog;
     void tick(ServerState & state, string mapsPath);
 };

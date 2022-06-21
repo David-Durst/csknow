@@ -361,10 +361,10 @@ void ServerState::saveBotInputs(string dataPath) {
     std::filesystem::rename(tmpInputsFilePath, inputsFilePath);
 }
 
-void saveScript(string dataPath, vector<string> scriptLines) {
-    string scriptFileName = "script.csv";
+void ServerState::saveScript(string dataPath, vector<string> scriptLines) {
+    string scriptFileName = "script.txt";
     string scriptFilePath = dataPath + "/" + scriptFileName;
-    string tmpScriptFileName = "script.csv.tmp.write";
+    string tmpScriptFileName = "script.txt.tmp.write";
     string tmpScriptFilePath = dataPath + "/" + tmpScriptFileName;
 
     std::stringstream scriptStream;
@@ -377,7 +377,7 @@ void saveScript(string dataPath, vector<string> scriptLines) {
     fsInputs << scriptStream.str();
     fsInputs.close();
 
-    std::filesystem::rename(tmpScriptFilePath, tmpScriptFilePath);
+    std::filesystem::rename(tmpScriptFilePath, scriptFilePath);
 
 }
 
