@@ -246,7 +246,7 @@ void ServerState::loadC4State(string visibilityFilePath) {
     closeMMapFile({fd, stats, file});
 }
 
-void ServerState::loadServerState(string dataPath) {
+void ServerState::loadServerState() {
     string generalFileName = "general.csv";
     string generalFilePath = dataPath + "/" + generalFileName;
     string tmpGeneralFileName = "general.csv.tmp.read";
@@ -333,7 +333,7 @@ void ServerState::loadServerState(string dataPath) {
     }
 }
 
-void ServerState::saveBotInputs(string dataPath) {
+void ServerState::saveBotInputs() {
     string inputsFileName = "input.csv";
     string inputsFilePath = dataPath + "/" + inputsFileName;
     string tmpInputsFileName = "input.csv.tmp.write";
@@ -361,7 +361,7 @@ void ServerState::saveBotInputs(string dataPath) {
     std::filesystem::rename(tmpInputsFilePath, inputsFilePath);
 }
 
-void ServerState::saveScript(string dataPath, vector<string> scriptLines) {
+void ServerState::saveScript(vector<string> scriptLines) const {
     string scriptFileName = "script.txt";
     string scriptFilePath = dataPath + "/" + scriptFileName;
     string tmpScriptFileName = "script.txt.tmp.write";

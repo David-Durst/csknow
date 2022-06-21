@@ -14,6 +14,7 @@
 #include "bots/behavior_tree/action_data.h"
 #include "queries/nav_mesh.h"
 #include "queries/reachable.h"
+#include "bots/testing/script_data.h"
 #include <memory>
 #include <random>
 using std::map;
@@ -103,6 +104,10 @@ struct Blackboard {
     map<CSGOId, Action> lastPlayerToAction;
     map<CSGOId, PIDState> playerToPIDStateX, playerToPIDStateY;
     std::uniform_real_distribution<> aimDis;
+
+    // testing data
+    vector<NeededBot> neededBots;
+    ObserveSettings observeSettings;
 
     string getPlayerPlace(Vec3 pos) {
         return navFile.get_place(navFile.get_nearest_area_by_position(vec3Conv(pos)).m_place);

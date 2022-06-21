@@ -26,6 +26,7 @@ int main(int argc, char * argv[]) {
     }
 
     ServerState state;
+    state.dataPath = dataPath;
     //Thinker thinker(state, 3, navPath, true);
     std::list<Thinker> thinkers;
 
@@ -39,7 +40,7 @@ int main(int argc, char * argv[]) {
 
     while (true) {
         auto start = std::chrono::system_clock::now();
-        state.loadServerState(dataPath);
+        state.loadServerState();
         std::chrono::duration<double> timePerTick(state.loadedSuccessfully ? state.tickInterval : 0.1);
         auto parseEnd = std::chrono::system_clock::now();
             
@@ -66,7 +67,7 @@ int main(int argc, char * argv[]) {
             for (auto & thinker : thinkers) {
                 thinker.think();
             }
-            state.saveBotInputs(dataPath);
+            state.saveBotInputs();
 #ifdef LOG_STATE
             std::cout << state.inputsLog << state.thinkLog << std::endl;
 #endif // LOG_STATE

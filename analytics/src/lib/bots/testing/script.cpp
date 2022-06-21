@@ -5,12 +5,10 @@
 #include "bots/testing/script.h"
 #include <iterator>
 
-void Script::initialize(ServerState & state, string navPath) {
-    commands.push_back(make_unique<InitTestingRound>());
-
+void Script::initialize(Blackboard & blackboard, ServerState & state) {
     // allocate the bots to use
     set<CSGOId> usedBots;
-    for (auto &neededBot: neededBots) {
+    for (auto &neededBot: blackboard.neededBots) {
         for (const auto &client: state.clients) {
             if (client.isBot && client.team == neededBot.team &&
                 usedBots.find(client.csgoId) == usedBots.end()) {
@@ -20,24 +18,26 @@ void Script::initialize(ServerState & state, string navPath) {
     }
 }
 
+/*
 vector<string> Script::generateCommands(ServerState & state) {
+    commands.push_back(make_unique<InitTestingRound>(blackboard));
+
     for (const auto & client : state.clients) {
         if (!client.isBot) {
             if (observeSettings.observeType == ObserveType::FirstPerson) {
                 CSGOId neededBotCSGOId = neededBots[observeSettings.neededBotIndex].id;
-                commands.push_back(make_unique<SpecPlayerToTarget>(client.name, state.getClient(neededBotCSGOId).name, false));
+                commands.push_back(make_unique<SpecPlayerToTarget>(blackboard, client.name, state.getClient(neededBotCSGOId).name, false));
             }
             else if (observeSettings.observeType == ObserveType::ThirdPerson) {
                 CSGOId neededBotCSGOId = neededBots[observeSettings.neededBotIndex].id;
-                commands.push_back(make_unique<SpecPlayerToTarget>(client.name, state.getClient(neededBotCSGOId).name, true));
+                commands.push_back(make_unique<SpecPlayerToTarget>(blackboard, client.name, state.getClient(neededBotCSGOId).name, true));
             }
             else if (observeSettings.observeType == ObserveType::Absolute) {
-                commands.push_back(make_unique<SpecGoto>(client.name, observeSettings.cameraOrigin, observeSettings.cameraPos));
+                commands.push_back(make_unique<SpecGoto>(blackboard, client.name, observeSettings.cameraOrigin, observeSettings.cameraAngle));
             }
         }
     }
 
-    commands.push_back(make_unique<InitTestingRound>());
     commands.insert(commands.end(), std::make_move_iterator(logicCommands.begin()), std::make_move_iterator(logicCommands.end()));
 
     std::cout << "started " << name << std::endl;
@@ -48,14 +48,15 @@ vector<string> Script::generateCommands(ServerState & state) {
     }
     return result;
 }
+ */
 
-bool Script::tick(ServerState & state) {
+bool Script::tick(Blackboard & blackboard, ServerState & state) {
 
     TreeThinker defaultThinker;
     defaultThinker.csgoId = 0;
 
     vector<PrintState> printStates;
-    NodeState conditionResult = conditions->exec(state, defaultThinker);
+    NodeState conditionResult = commands->exec(state, defaultThinker);
 
     if (conditionResult == NodeState::Running) {
         return false;
@@ -65,7 +66,7 @@ bool Script::tick(ServerState & state) {
     }
     else if (conditionResult == NodeState::Failure) {
         std::cout << "failed: " << std::endl;
-        std::cout << conditions->printState(state, defaultThinker.csgoId).getState() << std::endl;
+        std::cout << commands->printState(state, defaultThinker.csgoId).getState() << std::endl;
     }
     else {
         std::cout << "invalid state" << std::endl;

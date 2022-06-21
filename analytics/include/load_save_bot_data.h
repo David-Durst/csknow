@@ -164,9 +164,10 @@ public:
 
     double roundTimeRemaining, timeSincePlant;
 
-    void loadServerState(string dataPath);
-    void saveBotInputs(string dataPath);
-    void saveScript(string dataPath, vector<string> scriptLines);
+    string dataPath;
+    void loadServerState();
+    void saveBotInputs();
+    void saveScript(vector<string> scriptLines) const;
     Vec3 getC4Pos() const;
 };
 

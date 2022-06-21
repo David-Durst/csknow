@@ -20,6 +20,7 @@ int main(int argc, char * argv[]) {
     string mapsPath = argv[1], dataPath = argv[2], logPath = argv[3];
 
     ServerState state;
+    state.dataPath = dataPath;
 
     uint64_t numFailures = 0;
     Tree tree;
@@ -28,13 +29,13 @@ int main(int argc, char * argv[]) {
 #pragma ide diagnostic ignored "EndlessLoop"
     while (true) {
         auto start = std::chrono::system_clock::now();
-        state.loadServerState(dataPath);
+        state.loadServerState();
         std::chrono::duration<double> timePerTick(state.loadedSuccessfully ? state.tickInterval : 0.1);
         auto parseEnd = std::chrono::system_clock::now();
             
         if (state.loadedSuccessfully) {
             tree.tick(state, mapsPath);
-            state.saveBotInputs(dataPath);
+            state.saveBotInputs();
         }
         else {
             numFailures++;

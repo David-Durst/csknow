@@ -45,20 +45,25 @@ public:
 
 class GooseToCatScript : public Script {
 public:
-    GooseToCatScript(Blackboard & blackboard) :
-        Script(blackboard, "GooseToLongScript", {{0, ENGINE_TEAM_T}}, {ObserveType::FirstPerson, 0}) { }
+    GooseToCatScript(const ServerState & state) :
+        Script("GooseToLongScript", {{0, ENGINE_TEAM_T}}, {ObserveType::FirstPerson, 0}) { }
 
-    virtual vector<string> generateCommands(ServerState & state) override {
-        logicCommands = Command::makeList(
-                make_unique<SetPos>(Vec3({1071.936035, 2972.308837, 128.762023}), Vec2({2.903987, -95.587982})),
-                make_unique<Teleport>(neededBots[0].id, state));
-
-        conditions = make_unique<SequenceNode>(blackboard, Node::makeList(
-                    make_unique<ForceTCatOrderNode>(blackboard, neededBots[0].id),
-                    make_unique<JumpedBeforeCat>(blackboard, neededBots[0].id)
-                ), "GooseToLongRootNode");
-
-        return Script::generateCommands(state);
+    virtual void initialize(Blackboard & blackboard, ServerState & state) override  {
+        blackboard.neededBots = neededBots;
+        blackboard.observeSettings = observeSettings;
+        Script::initialize(blackboard, state);
+        commands = make_unique<SequenceNode>(blackboard, Node::makeList(
+                                                     make_unique<InitTestingRound>(blackboard),
+                                                     make_unique<movement::WaitNode>(blackboard, 0.1),
+                                                     make_unique<SpecDynamic>(blackboard),
+                                                     make_unique<movement::WaitNode>(blackboard, 0.1),
+                                                     make_unique<SetPos>(blackboard, Vec3({1071.936035, 2972.308837, 128.762023}), Vec2({2.903987, -95.587982})),
+                                                     make_unique<movement::WaitNode>(blackboard, 0.1),
+                                                     make_unique<Teleport>(blackboard, blackboard.neededBots[0].id, state),
+                                                     make_unique<movement::WaitNode>(blackboard, 0.1),
+                                                     make_unique<ForceTCatOrderNode>(blackboard, blackboard.neededBots[0].id),
+                                                     make_unique<JumpedBeforeCat>(blackboard, blackboard.neededBots[0].id)),
+                                             "GooseToLongSequence");
     }
 };
 

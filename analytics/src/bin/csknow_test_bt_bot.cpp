@@ -22,11 +22,13 @@ int main(int argc, char * argv[]) {
     string mapsPath = argv[1], dataPath = argv[2], logPath = argv[3];
 
     ServerState state;
+    state.dataPath = dataPath;
 
     uint64_t numFailures = 0;
+    vector<int> x;
     Tree tree;
     bool ranScript = false;
-    GooseToCatScript script(*tree.blackboard);
+    GooseToCatScript script(state);
 
 
 
@@ -34,21 +36,21 @@ int main(int argc, char * argv[]) {
 #pragma ide diagnostic ignored "EndlessLoop"
     while (true) {
         auto start = std::chrono::system_clock::now();
-        state.loadServerState(dataPath);
+        state.loadServerState();
         std::chrono::duration<double> timePerTick(state.loadedSuccessfully ? state.tickInterval : 0.1);
         auto parseEnd = std::chrono::system_clock::now();
             
         if (state.loadedSuccessfully) {
             tree.tick(state, mapsPath);
             if (state.clients.size() > 0 && !ranScript) {
-                script.initialize(state, mapsPath);
-                state.saveScript(dataPath, script.generateCommands(state));
+                script.initialize(*tree.blackboard, state);
+                //state.saveScript(script.generateCommands(state));
                 ranScript = true;
             }
-            else if (ranScript) {
-                script.tick(state);
+            else if (state.clients.size() > 0 && ranScript) {
+                script.tick(*tree.blackboard, state);
             }
-            state.saveBotInputs(dataPath);
+            state.saveBotInputs();
         }
         else {
             numFailures++;
