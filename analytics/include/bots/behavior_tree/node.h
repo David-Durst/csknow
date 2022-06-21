@@ -126,9 +126,6 @@ public:
 };
 
 class SequenceNode : public CollectionNode {
-    vector<Node::Ptr> children;
-    map<CSGOId, size_t> curChildIndex;
-
 public:
     SequenceNode(Blackboard & blackboard, vector<Node::Ptr> && nodes, string name) :
         CollectionNode(blackboard, std::move(nodes), name) { };
@@ -160,10 +157,6 @@ public:
 };
 
 class SelectorNode : public CollectionNode {
-protected:
-    vector<Node::Ptr> children;
-    map<CSGOId, size_t> curChildIndex;
-
 public:
     SelectorNode(Blackboard & blackboard, vector<Node::Ptr> && nodes, string name) :
         CollectionNode(blackboard, std::move(nodes), name) { };
