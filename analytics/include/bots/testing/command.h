@@ -10,6 +10,7 @@
 
 struct Command {
     using Ptr = std::unique_ptr<Command>;
+    virtual ~Command() { };
     virtual string ToString() const = 0;
 
     template <typename ...Args>
@@ -36,7 +37,7 @@ struct InitTestingRound : Command {
 struct SavePos : Command {
     string playerName;
 
-    SavePos(CSKnowId playerId, ServerState serverState)
+    SavePos(CSGOId playerId, ServerState serverState)
             : playerName(serverState.getClient(playerId).name) { }
     SavePos(string playerName) : playerName(playerName) { }
 
@@ -64,7 +65,7 @@ struct SetPos : Command {
 struct Teleport : Command {
     string playerName;
 
-    Teleport(CSKnowId playerId, ServerState serverState)
+    Teleport(CSGOId playerId, ServerState serverState)
         : playerName(serverState.getClient(playerId).name) { }
     Teleport(string playerName) : playerName(playerName) { }
 
@@ -75,24 +76,10 @@ struct Teleport : Command {
     }
 };
 
-struct TeleportToPos : SetPos, Teleport {
-    TeleportToPos(Vec3 pos, Vec2 angle, CSKnowId playerId, ServerState serverState)
-            : SetPos(pos, angle), Teleport(playerId, serverState) { }
-    TeleportToPos(Vec3 pos, Vec2 angle, string playerName)
-            : SetPos(pos, angle), Teleport(playerName) { }
-
-    virtual string ToString() const override {
-        std::stringstream result;
-        result << SetPos::ToString();
-        result << Teleport::ToString();
-        return result.str();
-    }
-};
-
 struct SlayAllBut : Command {
     vector<string> playerNames;
 
-    SlayAllBut(vector<CSKnowId> playerIds, ServerState serverState) {
+    SlayAllBut(vector<CSGOId> playerIds, ServerState serverState) {
         for (const auto & playerId : playerIds) {
             playerNames.push_back(serverState.getClient(playerId).name);
         }
@@ -113,7 +100,7 @@ struct SetArmor : Command {
     string playerName;
     int armorValue;
 
-    SetArmor(CSKnowId playerId, ServerState serverState, int armorValue)
+    SetArmor(CSGOId playerId, ServerState serverState, int armorValue)
             : playerName(serverState.getClient(playerId).name), armorValue(armorValue) { }
     SetArmor(string playerName, int armorValue) : playerName(playerName), armorValue(armorValue) { }
 
@@ -128,7 +115,7 @@ struct SetHealth : Command {
     string playerName;
     int healthValue;
 
-    SetHealth(CSKnowId playerId, ServerState serverState, int healthValue)
+    SetHealth(CSGOId playerId, ServerState serverState, int healthValue)
             : playerName(serverState.getClient(playerId).name), healthValue(healthValue) { }
     SetHealth(string playerName, int healthValue) : playerName(playerName), healthValue(healthValue) { }
 
@@ -143,7 +130,7 @@ struct GiveItem : Command {
     string playerName;
     string itemName;
 
-    GiveItem(CSKnowId playerId, ServerState serverState, string itemName)
+    GiveItem(CSGOId playerId, ServerState serverState, string itemName)
             : playerName(serverState.getClient(playerId).name), itemName(itemName) { }
     GiveItem(string playerName, string itemName) : playerName(playerName), itemName(itemName) { }
 
@@ -158,7 +145,7 @@ struct SetCurrentItem : Command {
     string playerName;
     string itemName;
 
-    SetCurrentItem(CSKnowId playerId, ServerState serverState, string itemName)
+    SetCurrentItem(CSGOId playerId, ServerState serverState, string itemName)
             : playerName(serverState.getClient(playerId).name), itemName(itemName) { }
     SetCurrentItem(string playerName, string itemName) : playerName(playerName), itemName(itemName) { }
 
@@ -174,7 +161,7 @@ struct SpecPlayerToTarget : Command {
     string targetName;
     bool thirdPerson;
 
-    SpecPlayerToTarget(CSKnowId playerId, CSKnowId targetId, ServerState serverState, bool thirdPerson = false)
+    SpecPlayerToTarget(CSGOId playerId, CSGOId targetId, ServerState serverState, bool thirdPerson = false)
             : playerName(serverState.getClient(playerId).name), targetName(serverState.getClient(targetId).name), thirdPerson(thirdPerson) { }
     SpecPlayerToTarget(string playerName, string targetName, bool thirdPerson = false) : playerName(playerName), targetName(targetName), thirdPerson(thirdPerson) { }
 
@@ -191,9 +178,9 @@ struct SpecPlayerToTarget : Command {
 struct SpecPlayerThirdPerson : Command {
     string playerName;
 
-    SpecPlayerThirdPerson(CSKnowId playerId, ServerState serverState)
+    SpecPlayerThirdPerson(CSGOId playerId, ServerState serverState)
             : playerName(serverState.getClient(playerId).name) { }
-    SpecPlayerThirdPerson(string playerName, string itemName) : playerName(playerName) { }
+    SpecPlayerThirdPerson(string playerName) : playerName(playerName) { }
 
     virtual string ToString() const override {
         std::stringstream result;

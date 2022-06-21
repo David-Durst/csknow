@@ -8,6 +8,7 @@
 #include "bots/behavior_tree/node.h"
 #include "bots/testing/command.h"
 #include <memory>
+using std::unique_ptr;
 
 enum class ObserveType {
     FirstPerson,
@@ -19,22 +20,31 @@ enum class ObserveType {
 
 struct ObserveValues {
     ObserveType observeType;
-    CSKnowId targetId;
+    CSGOId targetId;
     Vec3 cameraOrigin;
     Vec2 cameraPos;
 };
 
+struct NeededBot {
+    CSGOId id;
+    int team;
+};
+
 class Script {
-    // one order node overall, sets all team behavior
-    std::unique_ptr<Blackboard> blackboard;
-    std::vector<Command::Ptr> commands;
-    std::unique_ptr<Node> conditions;
+    // children can't update blackboard
+    unique_ptr<Blackboard> blackboard;
+    vector<Command::Ptr> commands;
+    TreeThinker treeThinker;
+protected:
+    vector<NeededBot> neededBots;
+    vector<Command::Ptr> logicCommands;
+    unique_ptr<Node> conditions;
     ObserveValues observeValues;
 
 public:
-    Script(std::unique_ptr<Blackboard> && blackboard, std::vector<Command::Ptr> && commands, std::unique_ptr<Node> && conditions, ObserveValues observeValues) :
-        blackboard(std::move(blackboard)), commands(std::move(commands)), conditions(std::move(conditions)), observeValues(observeValues) { }
-    void tick(ServerState & state);
+    bool initialize(ServerState & state, string navPath);
+    // prints result, returns when done
+    bool tick(ServerState & state, string navPath);
 };
 
 #endif //CSKNOW_SCRIPT_H
