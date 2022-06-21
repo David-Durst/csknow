@@ -39,6 +39,7 @@ int main(int argc, char * argv[]) {
         auto parseEnd = std::chrono::system_clock::now();
             
         if (state.loadedSuccessfully) {
+            tree.tick(state, mapsPath);
             if (state.clients.size() > 0 && !ranScript) {
                 script.initialize(state, mapsPath);
                 state.saveScript(dataPath, script.generateCommands(state));
@@ -47,7 +48,6 @@ int main(int argc, char * argv[]) {
             else if (ranScript) {
                 script.tick(state);
             }
-            tree.tick(state, mapsPath);
             state.saveBotInputs(dataPath);
         }
         else {

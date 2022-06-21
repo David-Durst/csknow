@@ -32,9 +32,7 @@ vector<string> Script::generateCommands(ServerState & state) {
                 commands.push_back(make_unique<SpecPlayerToTarget>(client.name, state.getClient(neededBotCSGOId).name, true));
             }
             else if (observeSettings.observeType == ObserveType::Absolute) {
-                commands.push_back(make_unique<SpecPlayerThirdPerson>(client.name));
-                commands.push_back(make_unique<SetPos>(observeSettings.cameraOrigin, observeSettings.cameraPos));
-                commands.push_back(make_unique<Teleport>(client.name));
+                commands.push_back(make_unique<SpecGoto>(client.name, observeSettings.cameraOrigin, observeSettings.cameraPos));
             }
         }
     }

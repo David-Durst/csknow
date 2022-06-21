@@ -167,7 +167,7 @@ struct SpecPlayerToTarget : Command {
 
     virtual string ToString() const override {
         std::stringstream result;
-        result << "sm_setCurrentItem " << playerName << " " << targetName;
+        result << "sm_specPlayerToTarget " << playerName << " " << targetName;
         if (thirdPerson) {
             result << " t";
         }
@@ -175,16 +175,18 @@ struct SpecPlayerToTarget : Command {
     }
 };
 
-struct SpecPlayerThirdPerson : Command {
+struct SpecGoto : Command {
     string playerName;
+    Vec3 pos;
+    Vec2 angle;
 
-    SpecPlayerThirdPerson(CSGOId playerId, const ServerState & serverState)
-            : playerName(serverState.getClient(playerId).name) { }
-    SpecPlayerThirdPerson(string playerName) : playerName(playerName) { }
+    SpecGoto(CSGOId playerId, const ServerState & serverState, Vec3 pos, Vec2 angle)
+            : playerName(serverState.getClient(playerId).name), pos(pos), angle(angle) { }
+    SpecGoto(string playerName, Vec3 pos, Vec2 angle) : playerName(playerName), pos(pos), angle(angle) { }
 
     virtual string ToString() const override {
         std::stringstream result;
-        result << "sm_specPlayerThirdPerson " << playerName;
+        result << "sm_specGoto " << playerName;
         return result.str();
     }
 };
