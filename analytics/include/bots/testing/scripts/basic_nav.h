@@ -13,10 +13,19 @@ public:
     ForceTCatOrderNode(Blackboard & blackboard, CSGOId targetId) :
         Node(blackboard, "ForceTCatOrderNode"), targetId(targetId) { };
     virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
-        blackboard.orders[3].followers.clear();
-        blackboard.orders[4].followers.clear();
-        blackboard.orders[5].followers = {targetId};
-        blackboard.playerToOrder[targetId] = 5;
+        vector<string> pathPlace = { "Catwalk", "ShortStairs", "ExtendedA", "BombsiteA" };
+        vector<Waypoint> waypoints;
+        for (const auto & p : pathPlace) {
+            waypoints.push_back({WaypointType::NavPlace, p, INVALID_ID});
+        }
+        blackboard.orders.push_back({waypoints, {}, {}, {targetId}});
+        for (const auto & client : state.clients) {
+            blackboard.playerToOrder[client.csgoId] = blackboard.orders.size() - 1;
+            blackboard.playerToTreeThinkers[client.csgoId].orderWaypointIndex = 0;
+            blackboard.playerToPriority.erase(client.csgoId);
+        }
+        blackboard.navFile.remove_incoming_edges_to_areas({4048});
+        playerNodeState[treeThinker.csgoId] = NodeState::Success;
         return NodeState::Success;
     }
 };
@@ -32,12 +41,15 @@ public:
         string curPlace = blackboard.navFile.get_place(blackboard.navFile.get_area_by_id_fast(curArea).m_place);
         // fail if get to cat before jumping on the boxes
         if (curPlace == "Catwalk") {
+            playerNodeState[treeThinker.csgoId] = NodeState::Failure;
             return NodeState::Failure;
         }
         else if (curArea == 8799) {
+            playerNodeState[treeThinker.csgoId] = NodeState::Success;
             return NodeState::Success;
         }
         else {
+            playerNodeState[treeThinker.csgoId] = NodeState::Running;
             return NodeState::Running;
         }
     }
