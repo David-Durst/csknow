@@ -5,10 +5,10 @@
 #include "bots/testing/script.h"
 #include <iterator>
 
-void Script::initialize(Blackboard & blackboard, ServerState & state) {
+void Script::initialize(Tree & tree, ServerState & state) {
     // allocate the bots to use
     set<CSGOId> usedBots;
-    for (auto &neededBot: blackboard.neededBots) {
+    for (auto &neededBot: tree.blackboard->neededBots) {
         for (const auto &client: state.clients) {
             if (client.isBot && client.team == neededBot.team &&
                 usedBots.find(client.csgoId) == usedBots.end()) {
@@ -50,7 +50,7 @@ vector<string> Script::generateCommands(ServerState & state) {
 }
  */
 
-bool Script::tick(Blackboard & blackboard, ServerState & state) {
+bool Script::tick(ServerState & state) {
 
     TreeThinker defaultThinker;
     defaultThinker.csgoId = state.clients[0].csgoId;

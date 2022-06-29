@@ -187,11 +187,11 @@ public:
     }
 };
 
-class ParallelNode : public CollectionNode {
+class ParallelAndNode : public CollectionNode {
     vector<Node::Ptr> children;
 
 public:
-    ParallelNode(Blackboard & blackboard, vector<Node::Ptr> && nodes, string name) :
+    ParallelAndNode(Blackboard & blackboard, vector<Node::Ptr> && nodes, string name) :
             CollectionNode(blackboard, std::move(nodes), name) { };
 
     virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
@@ -219,6 +219,41 @@ public:
             }
         }
         playerNodeState[treeThinker.csgoId] = stillRunning ? NodeState::Running : NodeState::Success;
+        return playerNodeState[treeThinker.csgoId];
+    }
+};
+
+class ParallelFirstNode : public CollectionNode {
+    vector<Node::Ptr> children;
+
+public:
+    ParallelFirstNode(Blackboard & blackboard, vector<Node::Ptr> && nodes, string name) :
+            CollectionNode(blackboard, std::move(nodes), name) { };
+
+    virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
+        if (playerNodeState.find(treeThinker.csgoId) == playerNodeState.end() ||
+            playerNodeState[treeThinker.csgoId] != NodeState::Running) {
+            restart(treeThinker);
+        }
+        for (size_t i = 0; i < children.size(); i++) {
+            // skip all children that already succeeded
+            if (children[i]->playerNodeState[treeThinker.csgoId] == NodeState::Success) {
+                continue;
+            }
+            NodeState childNodeState = children[i]->exec(state, treeThinker);
+            if (childNodeState == NodeState::Success) {
+                playerNodeState[treeThinker.csgoId] = NodeState::Success;
+                return playerNodeState[treeThinker.csgoId];
+            }
+            else if (childNodeState == NodeState::Running) {
+                continue;
+            }
+            else if (childNodeState == NodeState::Failure) {
+                playerNodeState[treeThinker.csgoId] = NodeState::Failure;
+                return playerNodeState[treeThinker.csgoId];
+            }
+        }
+        playerNodeState[treeThinker.csgoId] = NodeState::Running;
         return playerNodeState[treeThinker.csgoId];
     }
 };

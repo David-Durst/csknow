@@ -25,12 +25,16 @@ void Tree::tick(ServerState & state, string mapsPath) {
     }
 
     if (state.mapNumber != curMapNumber || !samePlayers) {
+        newBlackboard = true;
         blackboard = make_unique<Blackboard>(navPath);
         blackboard->navFile.remove_incoming_edges_to_areas({6938, 9026});
         orderNode = make_unique<OrderNode>(*blackboard);
         priorityNode = make_unique<PriorityNode>(*blackboard);
         actionNode = make_unique<ActionNode>(*blackboard);
         curMapNumber = state.mapNumber;
+    }
+    else {
+        newBlackboard = false;
     }
 
     // insert tree thinkers for new bots

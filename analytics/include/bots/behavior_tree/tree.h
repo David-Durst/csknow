@@ -22,6 +22,7 @@ public:
     std::unique_ptr<ActionNode> actionNode;
     set<CSGOId> lastFramePlayers;
     int32_t curMapNumber = INVALID_ID;
+    bool newBlackboard = false;
 
     string curLog;
     void tick(ServerState & state, string mapsPath);

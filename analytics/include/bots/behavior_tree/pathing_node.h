@@ -20,8 +20,10 @@ namespace movement {
     class WaitNode : public Node {
         double waitSeconds;
         map<CSGOId, int32_t> startFrame;
+        bool succeedOnEnd;
     public:
-        WaitNode(Blackboard & blackboard, double waitSeconds) : Node(blackboard, "WaitTaskNode"), waitSeconds(waitSeconds) { };
+        WaitNode(Blackboard & blackboard, double waitSeconds, bool succeedOnEnd = true) :
+            Node(blackboard, "WaitTaskNode"), waitSeconds(waitSeconds), succeedOnEnd(succeedOnEnd) { };
         virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override;
     };
 }

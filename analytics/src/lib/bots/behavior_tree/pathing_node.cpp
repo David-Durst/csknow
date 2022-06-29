@@ -115,7 +115,7 @@ namespace movement {
 
         double timeSinceStart = (curClient.lastFrame - startFrame[treeThinker.csgoId]) * state.tickInterval;
         if (timeSinceStart >= waitSeconds) {
-            playerNodeState[treeThinker.csgoId] = NodeState::Success;
+            playerNodeState[treeThinker.csgoId] = succeedOnEnd ? NodeState::Success : NodeState::Failure;
         }
         else {
             playerNodeState[treeThinker.csgoId] = NodeState::Running;

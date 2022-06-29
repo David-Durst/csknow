@@ -8,6 +8,7 @@
 #include "bots/behavior_tree/node.h"
 #include "bots/testing/command.h"
 #include "bots/testing/script_data.h"
+#include "bots/behavior_tree/tree.h"
 #include <memory>
 using std::unique_ptr;
 
@@ -26,10 +27,10 @@ public:
            //vector<Command::Ptr> && logicCommands, unique_ptr<Node> && conditions) :
            //logicCommands(std::move(logicCommands)), conditions(std::move(conditions)) { }
 
-    virtual void initialize(Blackboard & blackboard, ServerState & state);
+    virtual void initialize(Tree & tree, ServerState & state);
     //virtual vector<string> generateCommands(ServerState & state);
     // prints result, returns when done
-    bool tick(Blackboard & blackboard, ServerState & state);
+    bool tick(ServerState & state);
 };
 
 #endif //CSKNOW_SCRIPT_H

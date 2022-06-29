@@ -42,13 +42,9 @@ int main(int argc, char * argv[]) {
             
         if (state.loadedSuccessfully) {
             tree.tick(state, mapsPath);
-            if (state.clients.size() > 0 && !ranScript) {
-                script.initialize(*tree.blackboard, state);
-                //state.saveScript(script.generateCommands(state));
-                ranScript = true;
-            }
-            else if (state.clients.size() > 0 && ranScript) {
-                script.tick(*tree.blackboard, state);
+            if (state.clients.size() > 0) {
+                script.initialize(tree, state);
+                script.tick(state);
             }
             state.saveBotInputs();
         }
