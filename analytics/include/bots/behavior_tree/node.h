@@ -188,8 +188,6 @@ public:
 };
 
 class ParallelAndNode : public CollectionNode {
-    vector<Node::Ptr> children;
-
 public:
     ParallelAndNode(Blackboard & blackboard, vector<Node::Ptr> && nodes, string name) :
             CollectionNode(blackboard, std::move(nodes), name) { };
@@ -224,8 +222,6 @@ public:
 };
 
 class ParallelFirstNode : public CollectionNode {
-    vector<Node::Ptr> children;
-
 public:
     ParallelFirstNode(Blackboard & blackboard, vector<Node::Ptr> && nodes, string name) :
             CollectionNode(blackboard, std::move(nodes), name) { };
@@ -236,10 +232,6 @@ public:
             restart(treeThinker);
         }
         for (size_t i = 0; i < children.size(); i++) {
-            // skip all children that already succeeded
-            if (children[i]->playerNodeState[treeThinker.csgoId] == NodeState::Success) {
-                continue;
-            }
             NodeState childNodeState = children[i]->exec(state, treeThinker);
             if (childNodeState == NodeState::Success) {
                 playerNodeState[treeThinker.csgoId] = NodeState::Success;
