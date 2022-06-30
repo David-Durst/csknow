@@ -21,11 +21,9 @@ public:
             waypoints.push_back({WaypointType::NavPlace, p, INVALID_ID});
         }
         blackboard.orders.push_back({waypoints, {}, {}, {targetId}});
-        for (const auto & client : state.clients) {
-            blackboard.playerToOrder[client.csgoId] = blackboard.orders.size() - 1;
-            blackboard.playerToTreeThinkers[client.csgoId].orderWaypointIndex = 0;
-            blackboard.playerToPriority.erase(client.csgoId);
-        }
+        blackboard.playerToOrder[targetId] = blackboard.orders.size() - 1;
+        blackboard.playerToTreeThinkers[targetId].orderWaypointIndex = 0;
+        blackboard.playerToPriority.erase(targetId);
         blackboard.navFile.remove_incoming_edges_to_areas({4048});
         playerNodeState[treeThinker.csgoId] = NodeState::Success;
         return NodeState::Success;
