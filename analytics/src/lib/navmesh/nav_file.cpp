@@ -303,5 +303,19 @@ namespace nav_mesh {
                     [&](nav_connect_t con) { return ids.find(con.id) != ids.end(); }),
                 area_connections.end());
         }
+        m_pather->Reset();
+    }
+
+    std::set<std::uint32_t> nav_file::get_sources_to_area( std::uint32_t id ) const {
+        std::set<std::uint32_t> result;
+        for ( size_t area_id = 0; area_id < m_areas.size(); area_id++) {
+            const std::vector< nav_connect_t >& area_connections = m_areas[area_id].m_connections;
+            for (const auto & con : area_connections) {
+                if (con.id == id) {
+                    result.insert(m_areas[area_id].get_id());
+                }
+            }
+        }
+        return result;
     }
 }

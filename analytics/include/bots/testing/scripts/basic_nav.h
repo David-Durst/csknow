@@ -42,6 +42,18 @@ public:
         uint32_t curArea = blackboard.navFile.get_nearest_area_by_position(vec3Conv(curClient.getFootPosForPlayer())).get_id();
         string curPlace = blackboard.navFile.get_place(blackboard.navFile.get_area_by_id_fast(curArea).m_place);
         // fail if get to cat before jumping on the boxes
+        /*
+        if (curArea == 4048) {
+            set<uint32_t> badSources = blackboard.navFile.get_sources_to_area(4048);
+            std::cout << "what happened here folks?" << std::endl;
+        }
+        for (const auto & waypoint : blackboard.playerToPath[targetId].waypoints) {
+            if (waypoint.area1 == 4048 || waypoint.area2 == 4048) {
+                set<uint32_t> badSources = blackboard.navFile.get_sources_to_area(4048);
+                std::cout << "why happened here folks?" << std::endl;
+            }
+        }
+         */
         if (curPlace == "Catwalk") {
             playerNodeState[treeThinker.csgoId] = NodeState::Failure;
             return NodeState::Failure;
