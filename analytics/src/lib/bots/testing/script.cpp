@@ -63,15 +63,38 @@ bool Script::tick(ServerState & state) {
         finished = false;
     }
     else if (conditionResult == NodeState::Success) {
-        std::cout << "succeeded" << std::endl;
+        std::cout << name << " succeeded" << std::endl;
     }
     else if (conditionResult == NodeState::Failure) {
-        std::cout << "failed: " << std::endl;
+        std::cout << name << " failed: " << std::endl;
         std::cout << commands->printState(state, defaultThinker.csgoId).getState() << std::endl;
     }
     else {
-        std::cout << "invalid state" << std::endl;
+        std::cout << name << " invalid state" << std::endl;
     }
     curLog = commands->printState(state, defaultThinker.csgoId).getState();
     return finished;
+}
+
+void ScriptsRunner::initialize(Tree & tree, ServerState & state) {
+    for (auto & script : scripts) {
+        script->initialize(tree, state);
+    }
+}
+
+bool ScriptsRunner::tick(ServerState & state) {
+    if (startingNewScript) {
+        std::cout << scripts[curScript]->name << " starting" << std::endl;
+        startingNewScript = false;
+    }
+    if (scripts[curScript]->tick(state)) {
+        curScript++;
+    }
+    if (curScript >= scripts.size()) {
+        curScript = 0;
+        return true;
+    }
+    else {
+        return false;
+    }
 }

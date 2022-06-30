@@ -8,27 +8,7 @@
 #include "bots/testing/script.h"
 #include "bots/behavior_tree/pathing_node.h"
 #include "bots/behavior_tree/tree.h"
-
-class ForceTCatOrderNode : public Node {
-    CSGOId targetId;
-public:
-    ForceTCatOrderNode(Blackboard & blackboard, CSGOId targetId) :
-        Node(blackboard, "ForceTCatOrderNode"), targetId(targetId) { };
-    virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
-        vector<string> pathPlace = { "Catwalk", "ShortStairs", "ExtendedA", "BombsiteA" };
-        vector<Waypoint> waypoints;
-        for (const auto & p : pathPlace) {
-            waypoints.push_back({WaypointType::NavPlace, p, INVALID_ID});
-        }
-        blackboard.orders.push_back({waypoints, {}, {}, {targetId}});
-        blackboard.playerToOrder[targetId] = blackboard.orders.size() - 1;
-        blackboard.playerToTreeThinkers[targetId].orderWaypointIndex = 0;
-        blackboard.playerToPriority.erase(targetId);
-        blackboard.navFile.remove_incoming_edges_to_areas({4048});
-        playerNodeState[treeThinker.csgoId] = NodeState::Success;
-        return NodeState::Success;
-    }
-};
+#include "bots/testing/blackboard_management.h"
 
 class JumpedBeforeCat : public Node {
     CSGOId targetId;
@@ -94,7 +74,7 @@ public:
                                                          make_unique<movement::WaitNode>(blackboard, 0.1),
                                                          make_unique<Teleport>(blackboard, blackboard.neededBots[0].id, state),
                                                          make_unique<movement::WaitNode>(blackboard, 0.1),
-                                                         make_unique<ForceTCatOrderNode>(blackboard, blackboard.neededBots[0].id),
+                                                         make_unique<ForceOrderNode>(blackboard, "ForceTCat", vector{blackboard.neededBots[0].id}, order::catToAPathPlace),
                                                          make_unique<ParallelFirstNode>(blackboard, Node::makeList(
                                                                                                 make_unique<JumpedBeforeCat>(blackboard, blackboard.neededBots[0].id),
                                                                                                 make_unique<movement::WaitNode>(blackboard, 20, false)),

@@ -27,14 +27,14 @@ int main(int argc, char * argv[]) {
     uint64_t numFailures = 0;
     vector<int> x;
     Tree tree;
-    bool ranScript = false;
-    GooseToCatScript script(state);
+    bool finishedTests = false;
+    ScriptsRunner scriptsRunner(Script::makeList(make_unique<GooseToCatScript>(state)));
 
 
 
 #pragma clang diagnostic push
 #pragma ide diagnostic ignored "EndlessLoop"
-    while (true) {
+    while (!finishedTests) {
         auto start = std::chrono::system_clock::now();
         state.loadServerState();
         std::chrono::duration<double> timePerTick(state.loadedSuccessfully ? state.tickInterval : 0.1);
@@ -43,8 +43,8 @@ int main(int argc, char * argv[]) {
         if (state.loadedSuccessfully) {
             tree.tick(state, mapsPath);
             if (state.clients.size() > 0) {
-                script.initialize(tree, state);
-                script.tick(state);
+                scriptsRunner.initialize(tree, state);
+                finishedTests = scriptsRunner.tick(state);
             }
             state.saveBotInputs();
         }
@@ -72,7 +72,7 @@ int main(int argc, char * argv[]) {
         }
         logFile << tree.curLog;
         logFile.close();
-        testLogFile << script.curLog;
+        testLogFile << scriptsRunner.curLog();
         testLogFile.close();
         if (sleep) {
             std::this_thread::sleep_for(timePerTick - botTime);

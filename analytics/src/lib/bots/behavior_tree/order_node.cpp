@@ -34,18 +34,10 @@ namespace order {
 
             vector<vector<string>> ctPathPlaces;
             if (plantedA) {
-                ctPathPlaces = {
-                        { "LongDoors", "LongA", "ARamp", "BombsiteA" },
-                        { "CTSpawn", "UnderA", "ARamp", "BombsiteA" },
-                        { "Catwalk", "ShortStairs", "ExtendedA", "BombsiteA" },
-                };
+                ctPathPlaces = {longToAPathPlaces, spawnToAPathPlaces, catToAPathPlace};
             }
             else {
-                ctPathPlaces = {
-                        { "BDoors", "BombsiteB" },
-                        { "LowerTunnel", "UpperTunnel", "BombsiteB" },
-                        { "OutsideTunnel", "UpperTunnel", "BombsiteB" },
-                };
+                ctPathPlaces = {bDoorsToBPathPlaces, lowerTunsToBPathPlaces, outsideTunsToBPathPlaces};
             }
             map<string, size_t> ctPlacesToPath;
             for (size_t i = 0; i < ctPathPlaces.size(); i++) {

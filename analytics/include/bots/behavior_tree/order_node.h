@@ -9,7 +9,15 @@
 #include <map>
 #include <memory>
 
+
 namespace order {
+    static vector<string> longToAPathPlaces = { "LongDoors", "LongA", "ARamp", "BombsiteA" };
+    static vector<string> spawnToAPathPlaces = { "CTSpawn", "UnderA", "ARamp", "BombsiteA" };
+    static vector<string> catToAPathPlace = { "Catwalk", "ShortStairs", "ExtendedA", "BombsiteA" };
+    static vector<string> bDoorsToBPathPlaces = { "BDoors", "BombsiteB" };
+    static vector<string> lowerTunsToBPathPlaces = { "LowerTunnel", "UpperTunnel", "BombsiteB" };
+    static vector<string> outsideTunsToBPathPlaces = { "OutsideTunnel", "UpperTunnel", "BombsiteB" };
+
     class D2OrderNode : public Node {
     public:
         D2OrderNode(Blackboard & blackboard) : Node(blackboard, "D2TaskNode") { };

@@ -16,10 +16,11 @@ class Script {
 protected:
     vector<NeededBot> neededBots;
     ObserveSettings observeSettings;
-    string name;
     Node::Ptr commands;
 
 public:
+    using Ptr = std::unique_ptr<Script>;
+    string name;
     string curLog;
 
     Script(string name, vector<NeededBot> neededBots, ObserveSettings observeSettings) :
@@ -31,6 +32,41 @@ public:
     //virtual vector<string> generateCommands(ServerState & state);
     // prints result, returns when done
     bool tick(ServerState & state);
+
+    template <typename ...Args>
+    static vector<Script::Ptr> makeList(Args ...args)
+    {
+        vector<Script::Ptr> scripts;
+        constexpr size_t n = sizeof...(Args);
+        scripts.reserve(n);
+
+        (
+                scripts.emplace_back(std::move(args)), ...
+        );
+
+        return scripts;
+    }
+};
+
+class ScriptsRunner {
+protected:
+    vector<Script::Ptr> scripts;
+    size_t curScript = 0;
+    bool startingNewScript = true;
+
+public:
+    ScriptsRunner(vector<Script::Ptr> && scripts) : scripts(std::move(scripts)) {
+        if (scripts.empty()) {
+            std::cout << "warning: scripts runner will crash with no scripts" << std::endl;
+        }
+    }
+
+    void initialize(Tree & tree, ServerState & state);
+
+    // return true when restarting
+    bool tick(ServerState & state);
+
+    string curLog() { return scripts[curScript]->curLog; }
 };
 
 #endif //CSKNOW_SCRIPT_H
