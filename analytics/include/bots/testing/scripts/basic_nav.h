@@ -34,6 +34,7 @@ public:
 
 class JumpedBeforeCat : public Node {
     CSGOId targetId;
+    bool reachedBoxed = false;
 public:
     JumpedBeforeCat(Blackboard & blackboard, CSGOId targetId) :
             Node(blackboard, "ValidConditionNod"), targetId(targetId) { };
@@ -55,17 +56,21 @@ public:
         }
          */
         if (curPlace == "Catwalk") {
-            playerNodeState[treeThinker.csgoId] = NodeState::Failure;
-            return NodeState::Failure;
-        }
-        else if (curArea == 8799) {
-            playerNodeState[treeThinker.csgoId] = NodeState::Success;
-            return NodeState::Success;
+            playerNodeState[treeThinker.csgoId] = reachedBoxed ? NodeState::Success : NodeState::Failure;
+            return playerNodeState[treeThinker.csgoId];
         }
         else {
+            if (curArea == 8799) {
+                reachedBoxed = true;
+            }
             playerNodeState[treeThinker.csgoId] = NodeState::Running;
             return NodeState::Running;
         }
+    }
+
+    virtual void restart(const TreeThinker & treeThinker) override {
+        Node::restart(treeThinker);
+        reachedBoxed = false;
     }
 };
 
@@ -94,7 +99,7 @@ public:
                                                          make_unique<ForceTCatOrderNode>(blackboard, blackboard.neededBots[0].id),
                                                          make_unique<ParallelFirstNode>(blackboard, Node::makeList(
                                                                                                 make_unique<JumpedBeforeCat>(blackboard, blackboard.neededBots[0].id),
-                                                                                                make_unique<movement::WaitNode>(blackboard, 10, false)),
+                                                                                                make_unique<movement::WaitNode>(blackboard, 20, false)),
                                                                                         "GooseToLongCondition")),
                                                  "GooseToLongSequence");
         }
