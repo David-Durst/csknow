@@ -1,0 +1,88 @@
+//
+// Created by steam on 7/1/22.
+//
+
+#ifndef CSKNOW_BASIC_AIM_H
+#define CSKNOW_BASIC_AIM_H
+
+#include "bots/testing/script.h"
+#include "bots/behavior_tree/pathing_node.h"
+#include "bots/behavior_tree/tree.h"
+#include "bots/testing/blackboard_management.h"
+
+class KilledAfterTime : public Node {
+    CSGOId targetId;
+    int32_t startFrame;
+    double minTime;
+
+public:
+    KilledAfterTime(Blackboard & blackboard, CSGOId targetId, double minTime) :
+            Node(blackboard, "ValidConditionNod"), targetId(targetId), minTime(minTime) { };
+
+    virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
+        const ServerState::Client & targetClient = state.getClient(targetId);
+        if (playerNodeState[treeThinker.csgoId] == NodeState::Uninitialized) {
+            startFrame = targetClient.lastFrame;
+        }
+
+        double timeSinceStart = (targetClient.lastFrame - startFrame) * state.tickInterval;
+        if (!targetClient.isAlive) {
+            playerNodeState[treeThinker.csgoId] = timeSinceStart > minTime ? NodeState::Success : NodeState::Failure;
+            return playerNodeState[treeThinker.csgoId];
+        }
+        playerNodeState[treeThinker.csgoId] = NodeState::Running;
+        return playerNodeState[treeThinker.csgoId];
+    }
+
+    virtual void restart(const TreeThinker & treeThinker) override {
+        Node::restart(treeThinker);
+    }
+};
+
+class AimAndKillWithinTimeCheck : public Script {
+public:
+    AimAndKillWithinTimeCheck(const ServerState & state) :
+            Script("AimAndKillWithinTimeCheck", {{0, ENGINE_TEAM_T}, {0, ENGINE_TEAM_CT}}, {ObserveType::FirstPerson, 0}) { }
+
+    virtual void initialize(Tree & tree, ServerState & state) override {
+        if (tree.newBlackboard)  {
+            Blackboard & blackboard = *tree.blackboard;
+            Script::initialize(tree, state);
+            vector<string> aToCatPathPlace(order::catToAPathPlace.rbegin(), order::catToAPathPlace.rend());
+            Node::Ptr setupCommands = make_unique<SequenceNode>(blackboard, Node::makeList(
+                                                         make_unique<InitTestingRound>(blackboard),
+                                                         make_unique<movement::WaitNode>(blackboard, 0.1),
+                                                         make_unique<SpecDynamic>(blackboard, neededBots, observeSettings),
+                                                         make_unique<movement::WaitNode>(blackboard, 0.1),
+                                                         make_unique<SlayAllBut>(blackboard, vector{neededBots[0].id, neededBots[1].id}, state),
+                                                         make_unique<movement::WaitNode>(blackboard, 0.1),
+                                                         make_unique<SetPos>(blackboard, Vec3({1415.958130, 1150.028809, 54.131088}), Vec2({-0.241982, 179.926132})),
+                                                         make_unique<movement::WaitNode>(blackboard, 0.1),
+                                                         make_unique<Teleport>(blackboard, neededBots[0].id, state),
+                                                         make_unique<movement::WaitNode>(blackboard, 0.1),
+                                                         make_unique<SetPos>(blackboard, Vec3({1418.728027, 2094.912842, 54.929855}), Vec2({-1.297983, -90.159851})),
+                                                         make_unique<movement::WaitNode>(blackboard, 0.1),
+                                                         make_unique<Teleport>(blackboard, neededBots[1].id, state),
+                                                         make_unique<movement::WaitNode>(blackboard, 0.1),
+                                                         make_unique<GiveItem>(blackboard, neededBots[0].id, state, "weapon_ak47"),
+                                                         make_unique<movement::WaitNode>(blackboard, 0.1),
+                                                         make_unique<SetCurrentItem>(blackboard, neededBots[0].id, state, "weapon_ak47"),
+                                                         make_unique<movement::WaitNode>(blackboard, 0.1)),
+                                                 "AimAndKillWithinTimeCheckSetup");
+            Node::Ptr disableAllBothDuringSetup = make_unique<ParallelFirstNode>(blackboard, Node::makeList(
+                                                        std::move(setupCommands),
+                                                        make_unique<DisableActionsNode>(blackboard, "DisableSetup", vector{neededBots[0].id, neededBots[1].id})
+                    ), "AimAndKillDisableDuringSetup");
+            commands = make_unique<SequenceNode>(blackboard, Node::makeList(
+                                                         std::move(disableAllBothDuringSetup),
+                                                         make_unique<ParallelFirstNode>(blackboard, Node::makeList(
+                                                                                                make_unique<KilledAfterTime>(blackboard, neededBots[1].id, 0.5),
+                                                                                                make_unique<DisableActionsNode>(blackboard, "DisableSetup", vector{neededBots[1].id}),
+                                                                                                make_unique<movement::WaitNode>(blackboard, 2, false)),
+                                                                                        "AimAndKillCondition")),
+                                                 "AimAndKillSequence");
+        }
+    }
+};
+
+#endif //CSKNOW_BASIC_AIM_H

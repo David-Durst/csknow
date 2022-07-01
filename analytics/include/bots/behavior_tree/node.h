@@ -278,4 +278,29 @@ public:
     }
 };
 
+class RepeatDecorator : public Node {
+protected:
+    Node::Ptr child;
+
+public:
+    RepeatDecorator(Blackboard & blackboard, Node::Ptr && node, string name) :
+            Node(blackboard, name), child(std::move(node)) { };
+
+    virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
+        if (playerNodeState.find(treeThinker.csgoId) == playerNodeState.end() ||
+            playerNodeState[treeThinker.csgoId] != NodeState::Running) {
+            restart(treeThinker);
+        }
+        NodeState childState = child->exec(state, treeThinker);
+        playerNodeState[treeThinker.csgoId] = childState == NodeState::Failure ? NodeState::Failure : NodeState::Running;
+        return playerNodeState[treeThinker.csgoId];
+    }
+
+    virtual PrintState printState(const ServerState & state, CSGOId playerId) const override {
+        PrintState printState = Node::printState(state, playerId);
+        printState.childrenStates.push_back(child->printState(state, playerId));
+        return printState;
+    }
+};
+
 #endif //CSKNOW_NODE_H
