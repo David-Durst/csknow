@@ -88,6 +88,7 @@ bool ScriptsRunner::tick(ServerState & state) {
         startingNewScript = false;
     }
     if (scripts[curScript]->tick(state)) {
+        startingNewScript = true;
         curScript++;
     }
     if (curScript >= scripts.size()) {

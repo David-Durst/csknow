@@ -32,4 +32,19 @@ public:
     }
 };
 
+class ForceAggressionNode : public Node {
+    vector<CSGOId> targetIds;
+    vector<AggressiveType> aggressiveTypes;
+public:
+    ForceAggressionNode(Blackboard & blackboard, string name, vector<CSGOId> targetIds, vector<AggressiveType> aggressiveTypes) :
+            Node(blackboard, name), targetIds(targetIds), aggressiveTypes(aggressiveTypes) { };
+    virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
+        for (size_t i = 0; i < targetIds.size(); i++) {
+            blackboard.playerToTreeThinkers[targetIds[i]].aggressiveType = aggressiveTypes[i];
+        }
+        playerNodeState[treeThinker.csgoId] = NodeState::Success;
+        return NodeState::Success;
+    }
+};
+
 #endif //CSKNOW_BLACKBOARD_MANAGEMENT_H

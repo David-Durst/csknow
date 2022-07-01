@@ -63,6 +63,7 @@ public:
             blackboard.neededBots = neededBots;
             blackboard.observeSettings = observeSettings;
             Script::initialize(tree, state);
+            vector<string> aToCatPathPlace(order::catToAPathPlace.rbegin(), order::catToAPathPlace.rend());
             commands = make_unique<SequenceNode>(blackboard, Node::makeList(
                                                          make_unique<InitTestingRound>(blackboard),
                                                          make_unique<movement::WaitNode>(blackboard, 0.1),
@@ -74,7 +75,7 @@ public:
                                                          make_unique<movement::WaitNode>(blackboard, 0.1),
                                                          make_unique<Teleport>(blackboard, blackboard.neededBots[0].id, state),
                                                          make_unique<movement::WaitNode>(blackboard, 0.1),
-                                                         make_unique<ForceOrderNode>(blackboard, "ForceTCat", vector{blackboard.neededBots[0].id}, order::catToAPathPlace),
+                                                         make_unique<ForceOrderNode>(blackboard, "ForceTCat", vector{blackboard.neededBots[0].id}, aToCatPathPlace),
                                                          make_unique<ParallelFirstNode>(blackboard, Node::makeList(
                                                                                                 make_unique<JumpedBeforeCat>(blackboard, blackboard.neededBots[0].id),
                                                                                                 make_unique<movement::WaitNode>(blackboard, 20, false)),

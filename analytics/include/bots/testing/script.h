@@ -56,7 +56,7 @@ protected:
 
 public:
     ScriptsRunner(vector<Script::Ptr> && scripts) : scripts(std::move(scripts)) {
-        if (scripts.empty()) {
+        if (this->scripts.empty()) {
             std::cout << "warning: scripts runner will crash with no scripts" << std::endl;
         }
     }

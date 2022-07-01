@@ -2,6 +2,7 @@
 #include "bots/behavior_tree/tree.h"
 #include "bots/testing/script.h"
 #include "bots/testing/scripts/basic_nav.h"
+#include "bots/testing/scripts/teamwork.h"
 #include "navmesh/nav_file.h"
 #include <iostream>
 #include <thread>
@@ -28,7 +29,10 @@ int main(int argc, char * argv[]) {
     vector<int> x;
     Tree tree;
     bool finishedTests = false;
-    ScriptsRunner scriptsRunner(Script::makeList(make_unique<GooseToCatScript>(state)));
+    ScriptsRunner scriptsRunner(Script::makeList(
+                                            make_unique<GooseToCatScript>(state),
+                                            make_unique<PushBaitGooseToCatScript>(state)
+                    ));
 
 
 
