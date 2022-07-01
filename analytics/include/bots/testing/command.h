@@ -213,23 +213,26 @@ struct SpecGoto : Command {
 };
 
 struct SpecDynamic : Command {
-    SpecDynamic(Blackboard & blackboard) : Command(blackboard, "SpecDynamic") { }
+    vector<NeededBot> neededBots;
+    ObserveSettings observeSettings;
+    SpecDynamic(Blackboard & blackboard, vector<NeededBot> neededBots, ObserveSettings observeSettings) :
+        Command(blackboard, "SpecDynamic"), neededBots(neededBots), observeSettings(observeSettings) { }
 
     virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
         std::stringstream result;
         for (const auto & client : state.clients) {
             if (!client.isBot) {
-                if (blackboard.observeSettings.observeType == ObserveType::FirstPerson) {
-                    CSGOId neededBotCSGOId = blackboard.neededBots[blackboard.observeSettings.neededBotIndex].id;
+                if (observeSettings.observeType == ObserveType::FirstPerson) {
+                    CSGOId neededBotCSGOId = neededBots[observeSettings.neededBotIndex].id;
                     result << "sm_specPlayerToTarget " << client.name << " " << state.getClient(neededBotCSGOId).name << "; ";
                 }
-                else if (blackboard.observeSettings.observeType == ObserveType::ThirdPerson) {
-                    CSGOId neededBotCSGOId = blackboard.neededBots[blackboard.observeSettings.neededBotIndex].id;
+                else if (observeSettings.observeType == ObserveType::ThirdPerson) {
+                    CSGOId neededBotCSGOId = neededBots[observeSettings.neededBotIndex].id;
                     result << "sm_specPlayerToTarget " << client.name << " " << state.getClient(neededBotCSGOId).name << "t; ";
                 }
-                else if (blackboard.observeSettings.observeType == ObserveType::Absolute) {
-                    Vec3 pos = blackboard.observeSettings.cameraOrigin;
-                    Vec2 angle = blackboard.observeSettings.cameraAngle;
+                else if (observeSettings.observeType == ObserveType::Absolute) {
+                    Vec3 pos = observeSettings.cameraOrigin;
+                    Vec2 angle = observeSettings.cameraAngle;
                     result << "sm_specGoto " << client.name << " " << pos.x << " " << pos.y << " " << pos.z << " " << angle.y << " " << angle.x << "; ";
                 }
             }

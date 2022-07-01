@@ -8,11 +8,13 @@
 void Script::initialize(Tree & tree, ServerState & state) {
     // allocate the bots to use
     set<CSGOId> usedBots;
-    for (auto &neededBot: tree.blackboard->neededBots) {
+    for (auto &neededBot: neededBots) {
         for (const auto &client: state.clients) {
             if (client.isBot && client.team == neededBot.team &&
                 usedBots.find(client.csgoId) == usedBots.end()) {
                 neededBot.id = client.csgoId;
+                usedBots.insert(client.csgoId);
+                break;
             }
         }
     }

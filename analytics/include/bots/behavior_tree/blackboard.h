@@ -105,10 +105,6 @@ struct Blackboard {
     map<CSGOId, PIDState> playerToPIDStateX, playerToPIDStateY;
     std::uniform_real_distribution<> aimDis;
 
-    // testing data
-    vector<NeededBot> neededBots;
-    ObserveSettings observeSettings;
-
     string getPlayerPlace(Vec3 pos) {
         return navFile.get_place(navFile.get_nearest_area_by_position(vec3Conv(pos)).m_place);
     }
