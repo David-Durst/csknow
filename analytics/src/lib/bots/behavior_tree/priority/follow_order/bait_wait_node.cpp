@@ -6,7 +6,14 @@
 
 namespace follow {
 
-    bool BaitWaitNode::valid(const ServerState &state, TreeThinker &treeThinker) {
+    NodeState BaitMovementNode::exec(const ServerState & state, TreeThinker &treeThinker) {
+        Priority & curPriority = blackboard.playerToPriority[treeThinker.csgoId];
+        curPriority.moveOptions.move = false;
+        playerNodeState[treeThinker.csgoId] = NodeState::Success;
+        return playerNodeState[treeThinker.csgoId];
+    }
+
+    bool BaitConditionNode::valid(const ServerState &state, TreeThinker &treeThinker) {
         if (treeThinker.aggressiveType == AggressiveType::Bait) {
             const ServerState::Client & curClient = state.getClient(treeThinker.csgoId);
             const Order & curOrder = blackboard.orders[blackboard.playerToOrder[treeThinker.csgoId]];

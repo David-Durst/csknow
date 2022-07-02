@@ -19,11 +19,20 @@ namespace follow {
         virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override;
     };
 
-    class BaitWaitNode : public ConditionDecorator {
+    class BaitMovementNode : public Node {
     public:
-        BaitWaitNode(Blackboard & blackboard) : ConditionDecorator(blackboard,
-                                                                         make_unique<movement::WaitNode>(blackboard, 0.5),
-                                                                         "BaitWaitDecorator") { };
+        BaitMovementNode(Blackboard & blackboard) : Node(blackboard, "BaitMovementNode") { };
+        virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override;
+    };
+
+    class BaitConditionNode : public ConditionDecorator {
+    public:
+        BaitConditionNode(Blackboard & blackboard) : ConditionDecorator(blackboard,make_unique<SequenceNode>(blackboard,
+                                                                                               Node::makeList(
+                                                                                                       make_unique<BaitMovementNode>(blackboard),
+                                                                                                       make_unique<movement::WaitNode>(blackboard, 0.5)
+                                                                                               ) ,"BaitNodesSequence"),
+                                                                         "BaitConditionNode") { };
         virtual bool valid(const ServerState & state, TreeThinker &treeThinker) override;
     };
 }
@@ -34,7 +43,7 @@ public:
             SequenceNode(blackboard, Node::makeList(
                                                         make_unique<follow::ComputeObjectiveAreaNode>(blackboard),
                                                         make_unique<movement::PathingNode>(blackboard),
-                                                        make_unique<follow::BaitWaitNode>(blackboard)),
+                                                        make_unique<follow::BaitConditionNode>(blackboard)),
                                         "FollowOrderSelectorNode") { };
 };
 
