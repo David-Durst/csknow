@@ -233,7 +233,7 @@ struct SpecDynamic : Command {
                 else if (observeSettings.observeType == ObserveType::Absolute) {
                     Vec3 pos = observeSettings.cameraOrigin;
                     Vec2 angle = observeSettings.cameraAngle;
-                    result << "sm_specGoto " << client.name << " " << pos.x << " " << pos.y << " " << pos.z << " " << angle.y << " " << angle.x << "; ";
+                    result << "sm_specGoto " << client.name << " " << pos.x << " " << pos.y << " " << pos.z << " " << angle.x << " " << angle.y << "; ";
                 }
             }
         }

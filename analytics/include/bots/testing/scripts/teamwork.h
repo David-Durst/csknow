@@ -39,7 +39,8 @@ public:
 class PushBaitGooseToCatScript : public Script {
 public:
     PushBaitGooseToCatScript(const ServerState & state) :
-            Script("PushBaitGooseToLongScript", {{0, ENGINE_TEAM_T}, {0, ENGINE_TEAM_T}}, {ObserveType::FirstPerson, 0}) { }
+            Script("PushBaitGooseToLongScript", {{0, ENGINE_TEAM_T}, {0, ENGINE_TEAM_T}},
+                   {ObserveType::Absolute, 0, {366.774475, 2669.538818, 239.860245}, {16.486465, -46.266056}}) { };
 
     virtual void initialize(Tree & tree, ServerState & state) override  {
         if (tree.newBlackboard)  {
