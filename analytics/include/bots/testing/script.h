@@ -28,6 +28,12 @@ public:
            //vector<Command::Ptr> && logicCommands, unique_ptr<Node> && conditions) :
            //logicCommands(std::move(logicCommands)), conditions(std::move(conditions)) { }
 
+    TreeThinker getDefaultThinker(ServerState & state) {
+        TreeThinker defaultThinker;
+        defaultThinker.csgoId = state.clients[0].csgoId;
+        return defaultThinker;
+    }
+
     virtual void initialize(Tree & tree, ServerState & state);
     //virtual vector<string> generateCommands(ServerState & state);
     // prints result, returns when done
@@ -46,6 +52,8 @@ public:
 
         return scripts;
     }
+
+    void restart(ServerState & state) { commands->restart(getDefaultThinker(state)); }
 };
 
 class ScriptsRunner {
@@ -53,9 +61,10 @@ protected:
     vector<Script::Ptr> scripts;
     size_t curScript = 0;
     bool startingNewScript = true;
+    bool restartOnFinish;
 
 public:
-    ScriptsRunner(vector<Script::Ptr> && scripts) : scripts(std::move(scripts)) {
+    ScriptsRunner(vector<Script::Ptr> && scripts, bool restartOnFinish = false) : scripts(std::move(scripts)), restartOnFinish(restartOnFinish) {
         if (this->scripts.empty()) {
             std::cout << "warning: scripts runner will crash with no scripts" << std::endl;
         }
@@ -65,6 +74,12 @@ public:
 
     // return true when restarting
     bool tick(ServerState & state);
+
+    void restart(ServerState & state) {
+        for (const auto & script : scripts) {
+            script->restart(state);
+        }
+    }
 
     string curLog() { return scripts[curScript]->curLog; }
 };

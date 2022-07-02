@@ -54,8 +54,7 @@ vector<string> Script::generateCommands(ServerState & state) {
 
 bool Script::tick(ServerState & state) {
 
-    TreeThinker defaultThinker;
-    defaultThinker.csgoId = state.clients[0].csgoId;
+    TreeThinker defaultThinker(getDefaultThinker(state));
 
     vector<PrintState> printStates;
     NodeState conditionResult = commands->exec(state, defaultThinker);
@@ -95,7 +94,13 @@ bool ScriptsRunner::tick(ServerState & state) {
     }
     if (curScript >= scripts.size()) {
         curScript = 0;
-        return true;
+        if (restartOnFinish) {
+            restart(state);
+            return false;
+        }
+        else {
+            return true;
+        }
     }
     else {
         return false;
