@@ -242,4 +242,15 @@ struct SpecDynamic : Command {
     }
 };
 
+struct Pause : Command {
+    Pause(Blackboard & blackboard) : Command(blackboard, "Pause") { }
+
+    virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
+        std::stringstream result;
+        result << "pause";
+        scriptLines = {result.str()};
+        return Command::exec(state, treeThinker);
+    }
+};
+
 #endif //CSKNOW_COMMAND_H
