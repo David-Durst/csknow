@@ -22,21 +22,18 @@ namespace follow {
         //}
 
         string curPlace = blackboard.getPlayerPlace(state.clients[state.csgoIdToCSKnowId[treeThinker.csgoId]].getFootPosForPlayer());
-        bool finishedWaypoint = finishWaypoint(*this, state, treeThinker, curOrder, curPriority, curPlace);
+        int64_t maxFinishedWaypoint = getMaxFinishedWaypoint(state, curOrder, curPriority, curPlace);
 
-        bool finishedAndDone = false;
+        bool finishedWaypoint = false;
         // if finished waypoint,
-        if (finishedWaypoint) {
+        if (maxFinishedWaypoint >= treeThinker.orderWaypointIndex) {
+            finishedWaypoint = true;
             // need to pick a new path on priority change
             blackboard.playerToPath.erase(treeThinker.csgoId);
             // increment counter and move to next waypoint if possible
-            if (treeThinker.orderWaypointIndex < curOrder.waypoints.size() - 1) {
-                treeThinker.orderWaypointIndex++;
+            if (maxFinishedWaypoint < curOrder.waypoints.size() - 1) {
+                treeThinker.orderWaypointIndex = maxFinishedWaypoint + 1;
                 moveToWaypoint(*this, state, treeThinker, curOrder, curPriority);
-            }
-            else {
-                // stop moving if nothing to do
-                finishedAndDone = true;
             }
         }
 

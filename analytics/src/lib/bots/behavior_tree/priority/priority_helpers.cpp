@@ -24,23 +24,31 @@ void moveToWaypoint(Node & node, const ServerState & state, TreeThinker & treeTh
     curPriority.stuckTicks = 0;
 }
 
-bool finishWaypoint(Node & node, const ServerState & state, TreeThinker & treeThinker,
+bool finishWaypoint(const ServerState & state, int64_t waypointIndex,
                     const Order & curOrder, Priority & curPriority, string curPlace) {
     // finished with current priority if
     // trying to reach place and got there
-    if (curOrder.waypoints[treeThinker.orderWaypointIndex].waypointType == WaypointType::NavPlace) {
-        if (curOrder.waypoints[treeThinker.orderWaypointIndex].placeName == curPlace) {
-            node.playerNodeState[treeThinker.csgoId] = NodeState::Success;
+    if (curOrder.waypoints[waypointIndex].waypointType == WaypointType::NavPlace) {
+        if (curOrder.waypoints[waypointIndex].placeName == curPlace) {
             return true;
         }
     }
     // target player died
-    else if (curOrder.waypoints[treeThinker.orderWaypointIndex].waypointType == WaypointType::Player) {
-        if (!state.clients[state.csgoIdToCSKnowId[curOrder.waypoints[treeThinker.orderWaypointIndex].playerId]].isAlive) {
-            node.playerNodeState[treeThinker.csgoId] = NodeState::Success;
+    else if (curOrder.waypoints[waypointIndex].waypointType == WaypointType::Player) {
+        if (!state.clients[state.csgoIdToCSKnowId[curOrder.waypoints[waypointIndex].playerId]].isAlive) {
             return true;
         }
     }
     // c4 doesn't finish
     return false;
+}
+
+int64_t getMaxFinishedWaypoint(const ServerState & state, const Order & curOrder, Priority & curPriority, string curPlace) {
+    int64_t maxFinishedWaypointIndex = -1;
+    for (size_t i = 0; i < curOrder.waypoints.size(); i++) {
+        if (finishWaypoint(state, i, curOrder, curPriority, curPlace)) {
+            maxFinishedWaypointIndex = i;
+        }
+    }
+    return maxFinishedWaypointIndex;
 }

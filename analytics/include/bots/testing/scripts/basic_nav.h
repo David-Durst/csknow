@@ -55,7 +55,7 @@ public:
 class GooseToCatScript : public Script {
 public:
     GooseToCatScript(const ServerState & state) :
-        Script("GooseToLongScript", {{0, ENGINE_TEAM_T}}, {ObserveType::FirstPerson, 0}) { }
+        Script("GooseToCatScript", {{0, ENGINE_TEAM_T}}, {ObserveType::FirstPerson, 0}) { }
 
     virtual void initialize(Tree & tree, ServerState & state) override  {
         if (tree.newBlackboard)  {
@@ -64,7 +64,7 @@ public:
             vector<string> aToCatPathPlace(order::catToAPathPlace.rbegin(), order::catToAPathPlace.rend());
             commands = make_unique<SequenceNode>(blackboard, Node::makeList(
                                                          make_unique<InitTestingRound>(blackboard),
-                                                         make_unique<movement::WaitNode>(blackboard, 0.1),
+                                                         make_unique<movement::WaitNode>(blackboard, 1.0),
                                                          make_unique<SpecDynamic>(blackboard, neededBots, observeSettings),
                                                          make_unique<movement::WaitNode>(blackboard, 0.1),
                                                          make_unique<SlayAllBut>(blackboard, vector{neededBots[0].id},state),
@@ -75,6 +75,57 @@ public:
                                                          make_unique<movement::WaitNode>(blackboard, 0.1),
                                                          make_unique<ForceOrderNode>(blackboard, "ForceTCat", vector{neededBots[0].id}, aToCatPathPlace),
                                                          make_unique<ParallelFirstNode>(blackboard, Node::makeList(
+                                                                                                make_unique<JumpedBeforeCat>(blackboard, neededBots[0].id),
+                                                                                                make_unique<movement::WaitNode>(blackboard, 20, false)),
+                                                                                        "GooseToLongCondition")),
+                                                 "GooseToLongSequence");
+        }
+    }
+};
+
+class DontEnterNavAreas : public Node {
+    CSGOId targetId;
+    set<uint32_t> forbiddenAreas;
+public:
+    DontEnterNavAreas(Blackboard & blackboard, CSGOId targetId, set<uint32_t> forbiddenAreas) :
+            Node(blackboard, "DontEnterNavAreas"), targetId(targetId), forbiddenAreas(forbiddenAreas) { };
+    virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
+        const ServerState::Client & curClient = state.getClient(targetId);
+        uint32_t curArea = blackboard.navFile.get_nearest_area_by_position(vec3Conv(curClient.getFootPosForPlayer())).get_id();
+        if (forbiddenAreas.find(curArea) == forbiddenAreas.end()) {
+            playerNodeState[treeThinker.csgoId] = NodeState::Running;
+        }
+        else {
+            playerNodeState[treeThinker.csgoId] = NodeState::Failure;
+        }
+        return playerNodeState[treeThinker.csgoId];
+    }
+};
+
+class GooseToCatShortScript : public Script {
+public:
+    GooseToCatShortScript(const ServerState & state) :
+            Script("GooseToCatShortScript", {{0, ENGINE_TEAM_T}}, {ObserveType::FirstPerson, 0}) { }
+
+    virtual void initialize(Tree & tree, ServerState & state) override  {
+        if (tree.newBlackboard)  {
+            Blackboard & blackboard = *tree.blackboard;
+            Script::initialize(tree, state);
+            vector<string> aToCatPathPlace(order::catToAPathPlace.rbegin(), order::catToAPathPlace.rend());
+            commands = make_unique<SequenceNode>(blackboard, Node::makeList(
+                                                         make_unique<InitTestingRound>(blackboard),
+                                                         make_unique<movement::WaitNode>(blackboard, 1.0),
+                                                         make_unique<SpecDynamic>(blackboard, neededBots, observeSettings),
+                                                         make_unique<movement::WaitNode>(blackboard, 0.1),
+                                                         make_unique<SlayAllBut>(blackboard, vector{neededBots[0].id},state),
+                                                         make_unique<movement::WaitNode>(blackboard, 0.1),
+                                                         make_unique<SetPos>(blackboard, Vec3({420.199219, 2377.000000, 159.528168}), Vec2({-0.659997, 5.090078})),
+                                                         make_unique<movement::WaitNode>(blackboard, 0.1),
+                                                         make_unique<Teleport>(blackboard, neededBots[0].id, state),
+                                                         make_unique<movement::WaitNode>(blackboard, 0.1),
+                                                         make_unique<ForceOrderNode>(blackboard, "ForceTCat", vector{neededBots[0].id}, aToCatPathPlace),
+                                                         make_unique<ParallelFirstNode>(blackboard, Node::makeList(
+                                                                                                make_unique<DontEnterNavAreas>(blackboard, neededBots[0].id, set{1722u, 1723u, 1727u}),
                                                                                                 make_unique<JumpedBeforeCat>(blackboard, neededBots[0].id),
                                                                                                 make_unique<movement::WaitNode>(blackboard, 20, false)),
                                                                                         "GooseToLongCondition")),
