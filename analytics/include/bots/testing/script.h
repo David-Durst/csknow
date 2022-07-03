@@ -37,7 +37,7 @@ public:
     virtual void initialize(Tree & tree, ServerState & state);
     //virtual vector<string> generateCommands(ServerState & state);
     // prints result, returns when done
-    bool tick(ServerState & state);
+    bool tick(Tree & tree, ServerState & state);
 
     template <typename ...Args>
     static vector<Script::Ptr> makeList(Args ...args)
@@ -73,7 +73,7 @@ public:
     void initialize(Tree & tree, ServerState & state);
 
     // return true when restarting
-    bool tick(ServerState & state);
+    bool tick(Tree & tree, ServerState & state);
 
     void restart(ServerState & state) {
         for (const auto & script : scripts) {

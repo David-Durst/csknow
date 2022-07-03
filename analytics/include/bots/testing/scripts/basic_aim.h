@@ -11,23 +11,24 @@
 #include "bots/testing/blackboard_management.h"
 
 class KilledAfterTime : public Node {
-    CSGOId targetId;
+    CSGOId sourceId, targetId;
     int32_t startFrame;
     double minTime;
 
 public:
-    KilledAfterTime(Blackboard & blackboard, CSGOId targetId, double minTime) :
-            Node(blackboard, "ValidConditionNod"), targetId(targetId), minTime(minTime) { };
+    KilledAfterTime(Blackboard & blackboard, CSGOId sourceId, CSGOId targetId, double minTime) :
+            Node(blackboard, "ValidConditionNod"), sourceId(sourceId), targetId(targetId), minTime(minTime) { };
 
     virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
+        const ServerState::Client & sourceClient = state.getClient(sourceId);
         const ServerState::Client & targetClient = state.getClient(targetId);
         if (playerNodeState[treeThinker.csgoId] == NodeState::Uninitialized) {
             startFrame = targetClient.lastFrame;
         }
 
         double timeSinceStart = (targetClient.lastFrame - startFrame) * state.tickInterval;
-        if (!targetClient.isAlive) {
-            playerNodeState[treeThinker.csgoId] = timeSinceStart > minTime ? NodeState::Success : NodeState::Failure;
+        if (!sourceClient.isAlive || !targetClient.isAlive) {
+            playerNodeState[treeThinker.csgoId] = sourceClient.isAlive && !targetClient.isAlive && timeSinceStart > minTime ? NodeState::Success : NodeState::Failure;
             return playerNodeState[treeThinker.csgoId];
         }
         playerNodeState[treeThinker.csgoId] = NodeState::Running;
@@ -76,7 +77,7 @@ public:
             commands = make_unique<SequenceNode>(blackboard, Node::makeList(
                                                          std::move(disableAllBothDuringSetup),
                                                          make_unique<ParallelFirstNode>(blackboard, Node::makeList(
-                                                                                                make_unique<KilledAfterTime>(blackboard, neededBots[1].id, 0.5),
+                                                                                                make_unique<KilledAfterTime>(blackboard, neededBots[0].id, neededBots[1].id, 0.5),
                                                                                                 make_unique<DisableActionsNode>(blackboard, "DisableSetup", vector{neededBots[1].id}),
                                                                                                 make_unique<movement::WaitNode>(blackboard, 2, false)),
                                                                                         "AimAndKillCondition")),

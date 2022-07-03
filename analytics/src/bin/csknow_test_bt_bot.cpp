@@ -32,8 +32,8 @@ int main(int argc, char * argv[]) {
     bool finishedTests = false;
     ScriptsRunner scriptsRunner(Script::makeList(
                                             //make_unique<GooseToCatScript>(state),
-                                            make_unique<GooseToCatShortScript>(state)
-                                            //make_unique<AimAndKillWithinTimeCheck>(state),
+                                            //make_unique<GooseToCatShortScript>(state),
+                                            make_unique<AimAndKillWithinTimeCheck>(state)
                                             //make_unique<PushBaitGooseToCatScript>(state),
                                             //make_unique<PushMultipleBaitGooseToCatScript>(state)
                     ), true);
@@ -52,7 +52,7 @@ int main(int argc, char * argv[]) {
             tree.tick(state, mapsPath);
             if (state.clients.size() > 0) {
                 scriptsRunner.initialize(tree, state);
-                finishedTests = scriptsRunner.tick(state);
+                finishedTests = scriptsRunner.tick(tree, state);
             }
             state.saveBotInputs();
         }

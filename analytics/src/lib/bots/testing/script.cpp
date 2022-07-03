@@ -52,12 +52,18 @@ vector<string> Script::generateCommands(ServerState & state) {
 }
  */
 
-bool Script::tick(ServerState & state) {
+bool Script::tick(Tree & tree, ServerState & state) {
 
     TreeThinker defaultThinker(getDefaultThinker(state));
 
     vector<PrintState> printStates;
     NodeState conditionResult = commands->exec(state, defaultThinker);
+
+    for (auto & client : state.clients) {
+        const Action & clientAction = tree.blackboard->playerToAction[client.csgoId];
+        state.setInputs(client.csgoId, clientAction.buttons, clientAction.inputAngleDeltaPctX,
+                        clientAction.inputAngleDeltaPctY);
+    }
 
     bool finished = true;
     if (conditionResult == NodeState::Running) {
@@ -83,12 +89,12 @@ void ScriptsRunner::initialize(Tree & tree, ServerState & state) {
     }
 }
 
-bool ScriptsRunner::tick(ServerState & state) {
+bool ScriptsRunner::tick(Tree & tree, ServerState & state) {
     if (startingNewScript) {
         std::cout << scripts[curScript]->name << " starting" << std::endl;
         startingNewScript = false;
     }
-    if (scripts[curScript]->tick(state)) {
+    if (scripts[curScript]->tick(tree, state)) {
         startingNewScript = true;
         curScript++;
     }
