@@ -19,6 +19,8 @@ namespace order {
     static vector<string> outsideTunsToBPathPlaces = { "OutsideTunnel", "UpperTunnel", "BombsiteB" };
 
     class D2OrderNode : public Node {
+        int32_t planRoundNumber = -1;
+        int32_t playersAliveLastPlan = -1;
     public:
         D2OrderNode(Blackboard & blackboard) : Node(blackboard, "D2TaskNode") { };
         virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override;
@@ -29,14 +31,21 @@ namespace order {
         GeneralOrderNode(Blackboard & blackboard) : Node(blackboard, "GeneralTaskNode") { };
         virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override;
     };
+
+    class AssignAggressionNode : public Node {
+    public:
+        AssignAggressionNode(Blackboard & blackboard) : Node(blackboard, "AssignAggressionNode") { };
+        virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override;
+    };
 }
 
 class OrderNode : public SelectorNode {
 public:
     OrderNode(Blackboard & blackboard) :
             SelectorNode(blackboard, Node::makeList(
-                                                            make_unique<order::D2OrderNode>(blackboard)),
-                                        "OrderNode") { };
+                                                            make_unique<order::D2OrderNode>(blackboard),
+                                                            make_unique<order::AssignAggressionNode>(blackboard)
+                    ), "OrderNode") { };
 };
 
 #endif //CSKNOW_ORDER_NODE_H

@@ -90,9 +90,10 @@ struct Blackboard {
     map<CSGOId, TreeThinker> playerToTreeThinkers;
 
     // order data
-    int32_t planRoundNumber = -1;
+    bool newOrderThisFrame;
     vector<Order> orders;
     map<CSGOId, int64_t> playerToOrder;
+    map<CSGOId, int32_t> playerToPushOrder;
 
     // priority data
     map<CSGOId, Priority> playerToPriority;

@@ -34,13 +34,13 @@ public:
 
 class ForceAggressionNode : public Node {
     vector<CSGOId> targetIds;
-    vector<AggressiveType> aggressiveTypes;
+    vector<int32_t> pushIndices;
 public:
-    ForceAggressionNode(Blackboard & blackboard, string name, vector<CSGOId> targetIds, vector<AggressiveType> aggressiveTypes) :
-            Node(blackboard, name), targetIds(targetIds), aggressiveTypes(aggressiveTypes) { };
+    ForceAggressionNode(Blackboard & blackboard, string name, vector<CSGOId> targetIds, vector<int32_t> pushIndices) :
+            Node(blackboard, name), targetIds(targetIds), pushIndices(pushIndices) { };
     virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
         for (size_t i = 0; i < targetIds.size(); i++) {
-            blackboard.playerToTreeThinkers[targetIds[i]].aggressiveType = aggressiveTypes[i];
+            blackboard.playerToPushOrder[targetIds[i]] = pushIndices[i];
         }
         playerNodeState[treeThinker.csgoId] = NodeState::Success;
         return NodeState::Success;

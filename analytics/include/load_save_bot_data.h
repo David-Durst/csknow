@@ -147,6 +147,15 @@ public:
         }
         return visibleEnemies;
     }
+    int numPlayersAlive() const {
+        int result = 0;
+        for (const auto & client : clients) {
+            if (client.isAlive) {
+                result++;
+            }
+        }
+        return result;
+    }
 
     // c4 state
     // Is Planted,Pos X,Pos Y,Pos Z

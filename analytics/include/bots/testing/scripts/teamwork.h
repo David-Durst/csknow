@@ -49,7 +49,7 @@ public:
             vector<string> aToCatPathPlace(order::catToAPathPlace.rbegin(), order::catToAPathPlace.rend());
             commands = make_unique<SequenceNode>(blackboard, Node::makeList(
                                                          make_unique<InitTestingRound>(blackboard),
-                                                         make_unique<movement::WaitNode>(blackboard, 0.1),
+                                                         make_unique<movement::WaitNode>(blackboard, 1.0),
                                                          make_unique<SpecDynamic>(blackboard, neededBots, observeSettings),
                                                          make_unique<movement::WaitNode>(blackboard, 0.1),
                                                          make_unique<SlayAllBut>(blackboard, vector{neededBots[0].id, neededBots[1].id},state),
@@ -65,7 +65,7 @@ public:
                                                          make_unique<ForceOrderNode>(blackboard, "ForceTCat", vector{neededBots[0].id, neededBots[1].id}, aToCatPathPlace),
                                                          make_unique<ForceAggressionNode>(blackboard, "ForcePusherBaiter",
                                                                                           vector{neededBots[0].id, neededBots[1].id},
-                                                                                          vector{AggressiveType::Push, AggressiveType::Bait}),
+                                                                                          vector{0, 1}),
                                                          make_unique<ParallelFirstNode>(blackboard, Node::makeList(
                                                                                                 make_unique<PusherReachesCatBeforeBaiter>(blackboard, neededBots[0].id, neededBots[1].id),
                                                                                                 make_unique<movement::WaitNode>(blackboard, 20, false)),
