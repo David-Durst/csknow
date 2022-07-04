@@ -152,6 +152,22 @@ struct GiveItem : Command {
     }
 };
 
+struct RemoveGuns : Command {
+    string playerName;
+
+    RemoveGuns(Blackboard & blackboard, CSGOId playerId, const ServerState & serverState) :
+            Command(blackboard, "GiveItem"), playerName(serverState.getClient(playerId).name) { }
+    RemoveGuns(Blackboard & blackboard, string playerName) :
+            Command(blackboard, "GiveItem"), playerName(playerName) { }
+
+    virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
+        std::stringstream result;
+        result << "sm_removeGuns " << playerName;
+        scriptLines = {result.str()};
+        return Command::exec(state, treeThinker);
+    }
+};
+
 struct SetCurrentItem : Command {
     string playerName;
     string itemName;
