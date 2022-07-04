@@ -31,11 +31,11 @@ int main(int argc, char * argv[]) {
     Tree tree;
     bool finishedTests = false;
     ScriptsRunner scriptsRunner(Script::makeList(
-                                            //make_unique<GooseToCatScript>(state),
-                                            //make_unique<GooseToCatShortScript>(state),
-                                            make_unique<AimAndKillWithinTimeCheck>(state)
-                                            //make_unique<PushBaitGooseToCatScript>(state),
-                                            //make_unique<PushMultipleBaitGooseToCatScript>(state)
+                                            make_unique<GooseToCatScript>(state),
+                                            make_unique<GooseToCatShortScript>(state),
+                                            make_unique<AimAndKillWithinTimeCheck>(state),
+                                            make_unique<PushBaitGooseToCatScript>(state),
+                                            make_unique<PushMultipleBaitGooseToCatScript>(state)
                     ), true);
 
 
