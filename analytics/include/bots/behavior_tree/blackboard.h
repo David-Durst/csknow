@@ -15,6 +15,7 @@
 #include "queries/nav_mesh.h"
 #include "queries/reachable.h"
 #include "bots/testing/script_data.h"
+#include "bots/behavior_tree/memory_data.h"
 #include <memory>
 #include <random>
 using std::map;
@@ -38,6 +39,7 @@ struct TreeThinker {
     CSGOId csgoId;
     AggressiveType aggressiveType;
     EngagementParams engagementParams;
+    double maxMemorySeconds;
 
     int64_t orderWaypointIndex;
     int64_t orderGrenadeIndex;
@@ -95,6 +97,12 @@ struct Blackboard {
     map<CSGOId, int64_t> playerToOrder;
     map<CSGOId, int32_t> playerToPushOrder;
 
+    // knowledge data
+    int32_t lastCommunicateFrame = -1;
+    double tMemorySeconds = 2.5, ctMemorySeconds = 2.5;
+    EnemyPositionsMemory tMemory, ctMemory;
+    map<CSGOId, EnemyPositionsMemory> playerToMemory;
+
     // priority data
     map<CSGOId, Priority> playerToPriority;
     map<CSGOId, Path> playerToPath;
@@ -124,6 +132,11 @@ struct Blackboard {
         for (const auto & area : navFile.m_areas) {
             navPlaceToArea[navFile.get_place(area.m_place)].push_back(area.get_id());
         }
+
+        tMemory.considerAllTeammates = true;
+        tMemory.team = ENGINE_TEAM_T;
+        ctMemory.considerAllTeammates = true;
+        ctMemory.team = ENGINE_TEAM_CT;
     }
 
 };

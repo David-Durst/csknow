@@ -113,7 +113,7 @@ namespace movement {
             startFrame[treeThinker.csgoId] = curClient.lastFrame;
         }
 
-        double timeSinceStart = (curClient.lastFrame - startFrame[treeThinker.csgoId]) * state.tickInterval;
+        double timeSinceStart = state.getSecondsBetweenFrames(startFrame[treeThinker.csgoId], curClient.lastFrame);
         if (timeSinceStart >= waitSeconds) {
             playerNodeState[treeThinker.csgoId] = succeedOnEnd ? NodeState::Success : NodeState::Failure;
         }

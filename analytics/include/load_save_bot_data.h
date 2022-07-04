@@ -157,6 +157,20 @@ public:
         return result;
     }
 
+    vector<CSGOId> getPlayersOnTeam(int32_t team) const {
+        vector<CSGOId> result;
+        for (const auto & client : clients) {
+            if (client.team == team) {
+                result.push_back(client.csgoId);
+            }
+        }
+        return result;
+    }
+
+    double getSecondsBetweenFrames(int32_t startFrame, int32_t endFrame) const {
+        return (endFrame - startFrame) * tickInterval;
+    }
+
     // c4 state
     // Is Planted,Pos X,Pos Y,Pos Z
     bool c4Exists;
@@ -179,6 +193,5 @@ public:
     void saveScript(vector<string> scriptLines) const;
     Vec3 getC4Pos() const;
 };
-
 
 #endif //CSKNOW_LOAD_SAVE_BOT_DATA_H

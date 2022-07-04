@@ -1,0 +1,39 @@
+//
+// Created by steam on 7/4/22.
+//
+
+#include "bots/behavior_tree/memory_data.h"
+#include "geometryNavConversions.h"
+
+void EnemyPositionsMemory::updatePositions(const ServerState & state, nav_mesh::nav_file & navFile, double maxMemorySeconds) {
+    vector<CSGOId> srcPlayers;
+
+    if (considerAllTeammates) {
+        srcPlayers = state.getPlayersOnTeam(team);
+    }
+    else {
+        srcPlayers = {srcPlayer};
+    }
+
+    for (const CSGOId srcPlayer : srcPlayers) {
+        if (state.getClient(srcPlayer).isAlive) {
+            const auto visibleEnemies = state.getVisibleEnemies(srcPlayer);
+            for (const auto & visibleEnemy : visibleEnemies) {
+                positions[visibleEnemy.get().csgoId].lastSeenFootPos = visibleEnemy.get().getFootPosForPlayer();
+                positions[visibleEnemy.get().csgoId].lastSeenFrame = visibleEnemy.get().lastFrame;
+            }
+        }
+    }
+
+    vector<CSGOId> enemiesToForget;
+    int32_t curFrame = state.getClient(srcPlayers[0]).lastFrame;
+    for (const auto & [id, position] : positions) {
+        double timeSinceSeen = state.getSecondsBetweenFrames(curFrame, position.lastSeenFrame);
+        if (timeSinceSeen > maxMemorySeconds) {
+            enemiesToForget.push_back(id);
+        }
+    }
+    for (const auto & enemyToForget : enemiesToForget) {
+        positions.erase(enemyToForget);
+    }
+}
