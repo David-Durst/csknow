@@ -10,12 +10,14 @@
 #include "bots/behavior_tree/tree.h"
 #include "bots/testing/blackboard_management.h"
 
-class PusherReachesCatBeforeBaiter : public Node {
+class PusherReachesBeforeBaiter : public Node {
     CSGOId pusherId, baiterId;
+    string pusherFinalPlace;
+    set<string> baiterValidPlaces;
 
 public:
-    PusherReachesCatBeforeBaiter(Blackboard & blackboard, CSGOId pusherId, CSGOId baiterId) :
-            Node(blackboard, "ValidConditionNod"), pusherId(pusherId), baiterId(baiterId) { };
+    PusherReachesBeforeBaiter(Blackboard & blackboard, CSGOId pusherId, CSGOId baiterId, string pusherFinalPlace, set<string> baiterValidPlaces) :
+            Node(blackboard, "ValidConditionNod"), pusherId(pusherId), baiterId(baiterId), pusherFinalPlace(pusherFinalPlace), baiterValidPlaces(baiterValidPlaces) { };
     virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
         const ServerState::Client & pusherClient = state.getClient(pusherId);
         uint32_t pusherArea = blackboard.navFile.get_nearest_area_by_position(vec3Conv(pusherClient.getFootPosForPlayer())).get_id();
@@ -25,8 +27,8 @@ public:
         uint32_t baiterArea = blackboard.navFile.get_nearest_area_by_position(vec3Conv(baiterClient.getFootPosForPlayer())).get_id();
         string baiterPlace = blackboard.navFile.get_place(blackboard.navFile.get_area_by_id_fast(baiterArea).m_place);
 
-        if (pusherPlace == "Catwalk") {
-            playerNodeState[treeThinker.csgoId] = baiterPlace == "ShortStairs" ? NodeState::Success : NodeState::Failure;
+        if (pusherPlace == pusherFinalPlace) {
+            playerNodeState[treeThinker.csgoId] = (baiterValidPlaces.find(baiterPlace) != baiterValidPlaces.end()) ? NodeState::Success : NodeState::Failure;
             return playerNodeState[treeThinker.csgoId];
         }
         else {
@@ -47,6 +49,7 @@ public:
             Blackboard & blackboard = *tree.blackboard;
             Script::initialize(tree, state);
             vector<string> aToCatPathPlace(order::catToAPathPlace.rbegin(), order::catToAPathPlace.rend());
+            set<string> baiterValidLocations{"ShortStairs"};
             commands = make_unique<SequenceNode>(blackboard, Node::makeList(
                                                          make_unique<InitTestingRound>(blackboard),
                                                          make_unique<movement::WaitNode>(blackboard, 1.0),
@@ -67,7 +70,7 @@ public:
                                                                                           vector{neededBots[0].id, neededBots[1].id},
                                                                                           vector{0, 1}),
                                                          make_unique<ParallelFirstNode>(blackboard, Node::makeList(
-                                                                                                make_unique<PusherReachesCatBeforeBaiter>(blackboard, neededBots[0].id, neededBots[1].id),
+                                                                                                make_unique<PusherReachesBeforeBaiter>(blackboard, neededBots[0].id, neededBots[1].id, "Catwalk", baiterValidLocations),
                                                                                                 make_unique<movement::WaitNode>(blackboard, 20, false)),
                                                                                         "PushBaitGooseToLongCondition")),
                                                  "PushBaitGooseToLongSequence");
@@ -86,6 +89,7 @@ public:
             Blackboard & blackboard = *tree.blackboard;
             Script::initialize(tree, state);
             vector<string> aToCatPathPlace(order::catToAPathPlace.rbegin(), order::catToAPathPlace.rend());
+            set<string> baiter0ValidLocations{"ShortStairs"}, baiter1ValidLocations{"ExtendedA", ""};
             commands = make_unique<SequenceNode>(blackboard, Node::makeList(
                                                          make_unique<InitTestingRound>(blackboard),
                                                          make_unique<movement::WaitNode>(blackboard, 1.0),
@@ -110,7 +114,10 @@ public:
                                                                                           vector{neededBots[0].id, neededBots[1].id, neededBots[2].id},
                                                                                           vector{0, 1, 2}),
                                                          make_unique<ParallelFirstNode>(blackboard, Node::makeList(
-                                                                                                make_unique<PusherReachesCatBeforeBaiter>(blackboard, neededBots[0].id, neededBots[1].id),
+                                                                                                make_unique<ParallelAndNode>(blackboard, Node::makeList(
+                                                                                                        make_unique<PusherReachesBeforeBaiter>(blackboard, neededBots[0].id, neededBots[1].id, "Catwalk", baiter0ValidLocations),
+                                                                                                        make_unique<PusherReachesBeforeBaiter>(blackboard, neededBots[1].id, neededBots[2].id, "ShortStairs", baiter1ValidLocations)
+                                                                                                        ), "PushMulitpleBaitLocations"),
                                                                                                 make_unique<movement::WaitNode>(blackboard, 20, false)),
                                                                                         "PushMultipleBaitGooseToLongCondition")),
                                                  "PushMultipleBaitGooseToLongSequence");
