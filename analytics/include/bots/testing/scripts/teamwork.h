@@ -58,7 +58,7 @@ public:
                                                          make_unique<movement::WaitNode>(blackboard, 0.1),
                                                          make_unique<Teleport>(blackboard,neededBots[0].id, state),
                                                          make_unique<movement::WaitNode>(blackboard, 0.1),
-                                                         make_unique<SetPos>(blackboard, Vec3({824.582764, 2612.630127, 158.957748}), Vec2({-1.760050, -105.049713})),
+                                                         make_unique<SetPos>(blackboard, Vec3({824.582764, 2612.630127, 95.957748}), Vec2({-1.760050, -105.049713})),
                                                          make_unique<movement::WaitNode>(blackboard, 0.1),
                                                          make_unique<Teleport>(blackboard, neededBots[1].id, state),
                                                          make_unique<movement::WaitNode>(blackboard, 0.1),
@@ -78,7 +78,7 @@ public:
 class PushMultipleBaitGooseToCatScript : public Script {
 public:
     PushMultipleBaitGooseToCatScript(const ServerState & state) :
-            Script("PushBaitGooseToLongScript", {{0, ENGINE_TEAM_T}, {0, ENGINE_TEAM_T}, {0, ENGINE_TEAM_T}},
+            Script("PushMultipleBaitGooseToLongScript", {{0, ENGINE_TEAM_CT}, {0, ENGINE_TEAM_CT}, {0, ENGINE_TEAM_CT}},
                    {ObserveType::Absolute, 0, {366.774475, 2669.538818, 239.860245}, {16.486465, -46.266056}}) { };
 
     virtual void initialize(Tree & tree, ServerState & state) override  {
@@ -97,11 +97,11 @@ public:
                                                          make_unique<movement::WaitNode>(blackboard, 0.1),
                                                          make_unique<Teleport>(blackboard,neededBots[0].id, state),
                                                          make_unique<movement::WaitNode>(blackboard, 0.1),
-                                                         make_unique<SetPos>(blackboard, Vec3({824.582764, 2612.630127, 158.957748}), Vec2({-1.760050, -105.049713})),
+                                                         make_unique<SetPos>(blackboard, Vec3({824.582764, 2612.630127, 95.957748}), Vec2({-1.760050, -105.049713})),
                                                          make_unique<movement::WaitNode>(blackboard, 0.1),
                                                          make_unique<Teleport>(blackboard, neededBots[1].id, state),
                                                          make_unique<movement::WaitNode>(blackboard, 0.1),
-                                                         make_unique<SetPos>(blackboard, Vec3({420.199219, 2377.000000, 159.528168}), Vec2({-0.659997, 5.090078})),
+                                                         make_unique<SetPos>(blackboard, Vec3({420.199219, 2377.000000, 96.528168}), Vec2({-0.659997, 5.090078})),
                                                          make_unique<movement::WaitNode>(blackboard, 0.1),
                                                          make_unique<Teleport>(blackboard, neededBots[2].id, state),
                                                          make_unique<movement::WaitNode>(blackboard, 0.1),

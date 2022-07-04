@@ -149,7 +149,9 @@ namespace nav_mesh {
                 bool last_area_y_lesser = last_area.get_max_corner().y <= area.get_min_corner().y;
                 bool area_y_lesser = area.get_max_corner().y <= last_area.get_min_corner().y;
                 if (!last_area_x_lesser && !area_x_lesser && !last_area_y_lesser && !area_y_lesser) {
-                    std::cout << "bad path from area " << last_area.get_id() << " to " << area.get_id() << std::endl;
+                    // edges of cat cause overhang, causing overlapping areas in x and y. doens't seem to be a problem
+                    // so ignore it for now
+                    // std::cout << "bad path from area " << last_area.get_id() << " to " << area.get_id() << std::endl;
                 }
                 bool x_lesser = last_area_x_lesser || area_x_lesser;
                 vec3_t middle;
