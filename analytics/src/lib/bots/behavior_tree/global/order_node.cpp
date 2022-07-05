@@ -107,11 +107,11 @@ namespace order {
 
             // finally some house keeping
             resetTreeThinkers(blackboard);
-            playerNodeState[treeThinker.csgoId] = NodeState::Success;
         }
         else {
             blackboard.newOrderThisFrame = false;
         }
+        playerNodeState[treeThinker.csgoId] = NodeState::Success;
         return playerNodeState[treeThinker.csgoId];
     }
 

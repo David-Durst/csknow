@@ -150,6 +150,9 @@ public:
                 playerNodeState[treeThinker.csgoId] = NodeState::Failure;
                 return playerNodeState[treeThinker.csgoId];
             }
+            else if (childNodeState == NodeState::Uninitialized) {
+                throw std::runtime_error("child node returned state uninitialized");
+            }
         }
         playerNodeState[treeThinker.csgoId] = NodeState::Success;
         return playerNodeState[treeThinker.csgoId];
@@ -180,6 +183,9 @@ public:
             else if (childNodeState == NodeState::Success) {
                 playerNodeState[treeThinker.csgoId] = NodeState::Success;
                 return playerNodeState[treeThinker.csgoId];
+            }
+            else if (childNodeState == NodeState::Uninitialized) {
+                throw std::runtime_error("child node returned state uninitialized");
             }
         }
         playerNodeState[treeThinker.csgoId] = NodeState::Failure;
@@ -215,6 +221,9 @@ public:
                 playerNodeState[treeThinker.csgoId] = NodeState::Failure;
                 return playerNodeState[treeThinker.csgoId];
             }
+            else if (childNodeState == NodeState::Uninitialized) {
+                throw std::runtime_error("child node returned state uninitialized");
+            }
         }
         playerNodeState[treeThinker.csgoId] = stillRunning ? NodeState::Running : NodeState::Success;
         return playerNodeState[treeThinker.csgoId];
@@ -243,6 +252,9 @@ public:
             else if (childNodeState == NodeState::Failure) {
                 playerNodeState[treeThinker.csgoId] = NodeState::Failure;
                 return playerNodeState[treeThinker.csgoId];
+            }
+            else if (childNodeState == NodeState::Uninitialized) {
+                throw std::runtime_error("child node returned state uninitialized");
             }
         }
         playerNodeState[treeThinker.csgoId] = NodeState::Running;
