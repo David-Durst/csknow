@@ -27,7 +27,7 @@ struct EnemyPositionsMemory {
 
     string print(const ServerState & state) const {
         vector<string> result;
-        stringstream enemiesStream;
+        std::stringstream enemiesStream;
 
         if (considerAllTeammates) {
             if (team == ENGINE_TEAM_T) {

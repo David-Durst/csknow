@@ -28,13 +28,13 @@ namespace communicate {
                 }
             }
         }
+        playerNodeState[treeThinker.csgoId] = NodeState::Success;
+        return playerNodeState[treeThinker.csgoId];
     }
 
     NodeState CommunicateTeamMemory::exec(const ServerState & state, TreeThinker &treeThinker) {
-        if (blackboard.lastCommunicateFrame != state.getClient(treeThinker.csgoId).lastFrame) {
-            blackboard.tMemory.updatePositions(state, blackboard.navFile, blackboard.tMemorySeconds);
-            blackboard.ctMemory.updatePositions(state, blackboard.navFile, blackboard.ctMemorySeconds);
-        }
+        blackboard.tMemory.updatePositions(state, blackboard.navFile, blackboard.tMemorySeconds);
+        blackboard.ctMemory.updatePositions(state, blackboard.navFile, blackboard.ctMemorySeconds);
         playerNodeState[treeThinker.csgoId] = NodeState::Success;
         return playerNodeState[treeThinker.csgoId];
     }

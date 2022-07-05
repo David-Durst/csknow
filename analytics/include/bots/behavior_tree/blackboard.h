@@ -98,7 +98,6 @@ struct Blackboard {
     map<CSGOId, int32_t> playerToPushOrder;
 
     // knowledge data
-    int32_t lastCommunicateFrame = -1;
     double tMemorySeconds = 1.0, ctMemorySeconds = 1.0;
     EnemyPositionsMemory tMemory, ctMemory;
     map<CSGOId, EnemyPositionsMemory> playerToMemory;

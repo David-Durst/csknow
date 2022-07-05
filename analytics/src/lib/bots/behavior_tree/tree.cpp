@@ -5,7 +5,7 @@
 #include "bots/behavior_tree/tree.h"
 #include "bots/behavior_tree/global/global_node.h"
 
-void Tree::tick(ServerState & state, string mapsPath) {
+void Tree::tick(ServerState & state, const string & mapsPath) {
     string navPath = mapsPath + "/" + state.mapName + ".nav";
 
     // track when players leave to recompute all plans
@@ -38,7 +38,7 @@ void Tree::tick(ServerState & state, string mapsPath) {
         newBlackboard = false;
     }
 
-    // insert tree thinkers for new bots
+    // insert tree thinkers and memories for new bots
     for (const auto & client : state.clients) {
         if (client.isBot && blackboard->playerToTreeThinkers.find(client.csgoId) == blackboard->playerToTreeThinkers.end()) {
             blackboard->playerToTreeThinkers[client.csgoId] = {
@@ -46,6 +46,12 @@ void Tree::tick(ServerState & state, string mapsPath) {
                     AggressiveType::Push,
                     {100, 20, 40, 70},
                     2.5, 0, 0
+            };
+            blackboard->playerToMemory[client.csgoId] = {
+                    false,
+                    client.team,
+                    client.csgoId,
+                    { }
             };
         }
     }
