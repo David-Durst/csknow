@@ -56,7 +56,7 @@ void Tree::tick(ServerState & state, const string & mapsPath) {
         }
     }
 
-    if (!state.clients.empty()) {
+    if (!blackboard->playerToTreeThinkers.empty()) {
         vector<PrintState> printStates;
 
         // wait until plant to do anything (HACK FOR NOW)
@@ -67,8 +67,8 @@ void Tree::tick(ServerState & state, const string & mapsPath) {
 
         // update all nodes in tree
         // don't care about which player as order is for all players
-        globalNode->exec(state, blackboard->playerToTreeThinkers[state.clients[0].csgoId]);
-        printStates.push_back(globalNode->printState(state, state.clients[0].csgoId));
+        globalNode->exec(state, defaultThinker);
+        printStates.push_back(globalNode->printState(state, defaultThinker.csgoId));
         printStates.push_back(blackboard->printOrderState(state));
         printStates.push_back(blackboard->printCommunicateState(state));
 

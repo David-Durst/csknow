@@ -23,6 +23,7 @@ public:
     set<CSGOId> lastFramePlayers;
     int32_t curMapNumber = INVALID_ID;
     bool newBlackboard = false;
+    TreeThinker defaultThinker{INVALID_ID};
 
     string curLog;
     void tick(ServerState & state, const string & mapsPath);
