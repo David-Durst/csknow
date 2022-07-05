@@ -19,13 +19,13 @@ namespace order {
      */
     NodeState D2OrderNode::exec(const ServerState &state, TreeThinker &treeThinker) {
         if (state.mapName != "de_dust2") {
-            playerNodeState[INVALID_ID] = NodeState::Failure;
+            playerNodeState[treeThinker.csgoId] = NodeState::Failure;
             return NodeState::Failure;
         }
 
 
-        if (playerNodeState.find(INVALID_ID) == playerNodeState.end() ||
-            playerNodeState[INVALID_ID] != NodeState::Success || state.roundNumber != planRoundNumber ||
+        if (playerNodeState.find(treeThinker.csgoId) == playerNodeState.end() ||
+            playerNodeState[treeThinker.csgoId] != NodeState::Success || state.roundNumber != planRoundNumber ||
             state.numPlayersAlive() != playersAliveLastPlan) {
             planRoundNumber = state.roundNumber;
             playersAliveLastPlan = state.numPlayersAlive();
@@ -108,12 +108,12 @@ namespace order {
 
             // finally some house keeping
             resetTreeThinkers(blackboard);
-            playerNodeState[INVALID_ID] = NodeState::Success;
+            playerNodeState[treeThinker.csgoId] = NodeState::Success;
         }
         else {
             blackboard.newOrderThisFrame = false;
         }
-        return playerNodeState[INVALID_ID];
+        return playerNodeState[treeThinker.csgoId];
     }
 
     /**
