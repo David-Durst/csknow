@@ -3,6 +3,7 @@
 //
 
 #include "bots/behavior_tree/tree.h"
+#include "bots/behavior_tree/global/global_node.h"
 
 void Tree::tick(ServerState & state, string mapsPath) {
     string navPath = mapsPath + "/" + state.mapName + ".nav";
@@ -28,7 +29,7 @@ void Tree::tick(ServerState & state, string mapsPath) {
         newBlackboard = true;
         blackboard = make_unique<Blackboard>(navPath);
         blackboard->navFile.remove_incoming_edges_to_areas({6938, 9026});
-        orderNode = make_unique<OrderNode>(*blackboard);
+        globalNode = make_unique<GlobalNode>(*blackboard);
         priorityNode = make_unique<PriorityNode>(*blackboard);
         actionNode = make_unique<ActionNode>(*blackboard);
         curMapNumber = state.mapNumber;
@@ -44,7 +45,7 @@ void Tree::tick(ServerState & state, string mapsPath) {
                     client.csgoId,
                     AggressiveType::Push,
                     {100, 20, 40, 70},
-                    0, 0
+                    2.5, 0, 0
             };
         }
     }
@@ -60,9 +61,10 @@ void Tree::tick(ServerState & state, string mapsPath) {
 
         // update all nodes in tree
         // don't care about which player as order is for all players
-        orderNode->exec(state, blackboard->playerToTreeThinkers[state.clients[0].csgoId]);
-        printStates.push_back(orderNode->printState(state, state.clients[0].csgoId));
+        globalNode->exec(state, blackboard->playerToTreeThinkers[state.clients[0].csgoId]);
+        printStates.push_back(globalNode->printState(state, state.clients[0].csgoId));
         printStates.push_back(blackboard->printOrderState(state));
+        printStates.push_back(blackboard->printCommunicateState(state));
 
         for (auto & client : state.clients) {
             if (!client.isAlive || !client.isBot) {

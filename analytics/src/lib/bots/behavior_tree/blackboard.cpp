@@ -14,9 +14,18 @@ PrintState Blackboard::printOrderState(const ServerState &state) {
 
     for (size_t i = 0; i < orders.size(); i++) {
         const auto & order = orders[i];
-        vector<string> orderResult = order.print(playerToCurWaypoint, state, i);
+        vector<string> orderResult = order.print(playerToCurWaypoint, playerToPushOrder, state, i);
         printState.curState.insert(printState.curState.end(), orderResult.begin(), orderResult.end());
     }
+
+    return printState;
+}
+
+PrintState Blackboard::printCommunicateState(const ServerState &state) {
+    PrintState printState;
+
+    printState.curState.push_back(tMemory.print(state));
+    printState.curState.push_back(ctMemory.print(state));
 
     printState.appendNewline = true;
     return printState;
@@ -33,6 +42,7 @@ vector<PrintState> Blackboard::printPerPlayerState(const ServerState &state, CSG
     printStates.push_back(playerToPriority[playerId].print(state));
     printStates.push_back(playerToPath[playerId].print(state, navFile));
     printStates.push_back(playerToAction[playerId].print());
+    printStates.push_back(playerToMemory[playerId].print(state));
 
     return printStates;
 }

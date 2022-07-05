@@ -2,7 +2,7 @@
 // Created by durst on 5/2/22.
 //
 
-#include "bots/behavior_tree/order_node.h"
+#include "bots/behavior_tree/global/order_node.h"
 #include "geometryNavConversions.h"
 #include <algorithm>
 
@@ -25,7 +25,7 @@ namespace order {
 
 
         if (playerNodeState.find(INVALID_ID) == playerNodeState.end() ||
-            playerNodeState[INVALID_ID] != NodeState::Running || state.roundNumber != planRoundNumber ||
+            playerNodeState[INVALID_ID] != NodeState::Success || state.roundNumber != planRoundNumber ||
             state.numPlayersAlive() != playersAliveLastPlan) {
             planRoundNumber = state.roundNumber;
             playersAliveLastPlan = state.numPlayersAlive();
@@ -108,7 +108,7 @@ namespace order {
 
             // finally some house keeping
             resetTreeThinkers(blackboard);
-            playerNodeState[INVALID_ID] = NodeState::Running;
+            playerNodeState[INVALID_ID] = NodeState::Success;
         }
         else {
             blackboard.newOrderThisFrame = false;
@@ -185,30 +185,4 @@ namespace order {
 
         return playerNodeState[INVALID_ID];
     }
-
-    /**
-     * Each order, assign players to push indices
-     */
-    NodeState AssignAggressionNode::exec(const ServerState &state, TreeThinker &treeThinker) {
-        if (blackboard.newOrderThisFrame) {
-            for (const auto & order : blackboard.orders) {
-                // assign one of pushers to go first, then assign rest
-                // after pushers, assign baiters
-                vector<CSGOId> baitersOnOrder;
-                int pushIndex = 0;
-                for (const CSGOId followerId : order.followers) {
-                    if (blackboard.playerToTreeThinkers[followerId].aggressiveType == AggressiveType::Push) {
-                        blackboard.playerToPushOrder[followerId] = pushIndex++;
-                    }
-                    else {
-                        baitersOnOrder.push_back(followerId);
-                    }
-                }
-                for (const CSGOId followerId : baitersOnOrder) {
-                    blackboard.playerToPushOrder[followerId] = pushIndex++;
-                }
-            }
-        }
-    }
-
 }

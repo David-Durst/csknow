@@ -8,14 +8,14 @@
 #include "load_save_bot_data.h"
 #include "geometryNavConversions.h"
 #include "navmesh/nav_file.h"
-#include "bots/behavior_tree/order_data.h"
+#include "bots/behavior_tree/global/order_data.h"
 #include "bots/behavior_tree/priority/priority_data.h"
 #include "bots/behavior_tree/pathing_data.h"
 #include "bots/behavior_tree/action_data.h"
 #include "queries/nav_mesh.h"
 #include "queries/reachable.h"
 #include "bots/testing/script_data.h"
-#include "bots/behavior_tree/memory_data.h"
+#include "bots/behavior_tree/priority/memory_data.h"
 #include <memory>
 #include <random>
 using std::map;
@@ -99,7 +99,7 @@ struct Blackboard {
 
     // knowledge data
     int32_t lastCommunicateFrame = -1;
-    double tMemorySeconds = 2.5, ctMemorySeconds = 2.5;
+    double tMemorySeconds = 1.0, ctMemorySeconds = 1.0;
     EnemyPositionsMemory tMemory, ctMemory;
     map<CSGOId, EnemyPositionsMemory> playerToMemory;
 
@@ -125,6 +125,7 @@ struct Blackboard {
     }
 
     PrintState printOrderState(const ServerState & state);
+    PrintState printCommunicateState(const ServerState & state);
     vector<PrintState> printPerPlayerState(const ServerState & state, CSGOId playerId);
 
     Blackboard(string navPath) : navFile(navPath.c_str()), gen(rd()), aimDis(0., 2.0) {

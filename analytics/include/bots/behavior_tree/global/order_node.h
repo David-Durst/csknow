@@ -31,20 +31,13 @@ namespace order {
         GeneralOrderNode(Blackboard & blackboard) : Node(blackboard, "GeneralTaskNode") { };
         virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override;
     };
-
-    class AssignAggressionNode : public Node {
-    public:
-        AssignAggressionNode(Blackboard & blackboard) : Node(blackboard, "AssignAggressionNode") { };
-        virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override;
-    };
 }
 
 class OrderNode : public SelectorNode {
 public:
     OrderNode(Blackboard & blackboard) :
             SelectorNode(blackboard, Node::makeList(
-                                                            make_unique<order::D2OrderNode>(blackboard),
-                                                            make_unique<order::AssignAggressionNode>(blackboard)
+                                                            make_unique<order::D2OrderNode>(blackboard)
                     ), "OrderNode") { };
 };
 

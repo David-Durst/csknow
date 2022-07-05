@@ -24,6 +24,29 @@ struct EnemyPositionsMemory {
     map<CSGOId, EnemyPositionMemory> positions;
 
     void updatePositions(const ServerState & state, nav_mesh::nav_file & navFile, double maxMemorySeconds);
+
+    string print(const ServerState & state) const {
+        vector<string> result;
+        stringstream enemiesStream;
+
+        if (considerAllTeammates) {
+            if (team == ENGINE_TEAM_T) {
+                enemiesStream << "T memory: ";
+            }
+            else {
+                enemiesStream << "CT memory: ";
+            }
+        }
+        else {
+            enemiesStream << state.getPlayerString(srcPlayer) << " memory: ";
+        }
+
+        for (const auto & [id, memory] : positions) {
+            enemiesStream << "<" << state.getPlayerString(id) << ", "
+                << memory.lastSeenFootPos.toString() << ", " << memory.lastSeenFrame << ">";
+        }
+        return enemiesStream.str();
+    }
 };
 
 #endif //CSKNOW_MEMORY_DATA_H

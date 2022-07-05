@@ -2,7 +2,7 @@
 // Created by steam on 7/4/22.
 //
 
-#include "bots/behavior_tree/memory_data.h"
+#include "bots/behavior_tree/priority/memory_data.h"
 #include "geometryNavConversions.h"
 
 void EnemyPositionsMemory::updatePositions(const ServerState & state, nav_mesh::nav_file & navFile, double maxMemorySeconds) {

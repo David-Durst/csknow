@@ -8,7 +8,7 @@
 #include "load_save_bot_data.h"
 #include "geometryNavConversions.h"
 #include "navmesh/nav_file.h"
-#include "bots/behavior_tree/order_data.h"
+#include "bots/behavior_tree/global/order_data.h"
 #include "bots/behavior_tree/priority/priority_data.h"
 #include "bots/behavior_tree/pathing_data.h"
 #include "bots/behavior_tree/action_data.h"
