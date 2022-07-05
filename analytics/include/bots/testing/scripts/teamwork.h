@@ -17,7 +17,7 @@ class PusherReachesBeforeBaiter : public Node {
 
 public:
     PusherReachesBeforeBaiter(Blackboard & blackboard, CSGOId pusherId, CSGOId baiterId, string pusherFinalPlace, set<string> baiterValidPlaces) :
-            Node(blackboard, "ValidConditionNod"), pusherId(pusherId), baiterId(baiterId), pusherFinalPlace(pusherFinalPlace), baiterValidPlaces(baiterValidPlaces) { };
+            Node(blackboard, "ValidConditionNode"), pusherId(pusherId), baiterId(baiterId), pusherFinalPlace(pusherFinalPlace), baiterValidPlaces(baiterValidPlaces) { };
     virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
         const ServerState::Client & pusherClient = state.getClient(pusherId);
         uint32_t pusherArea = blackboard.navFile.get_nearest_area_by_position(vec3Conv(pusherClient.getFootPosForPlayer())).get_id();

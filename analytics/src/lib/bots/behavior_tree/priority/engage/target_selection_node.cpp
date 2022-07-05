@@ -67,7 +67,7 @@ namespace engage {
                 double newDistance = computeDistance(curClient.getFootPosForPlayer(), targetOptions[i].footPos);
                 if (closestI == INVALID_ID || newDistance < closestDistance) {
                     closestDistance = newDistance;
-                    closestI = targetOptions[i].playerId;
+                    closestI = i;
                 }
             }
             curTarget = targetOptions[closestI];

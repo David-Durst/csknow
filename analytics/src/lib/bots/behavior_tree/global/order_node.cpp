@@ -25,8 +25,7 @@ namespace order {
 
 
         if (playerNodeState.find(treeThinker.csgoId) == playerNodeState.end() ||
-            playerNodeState[treeThinker.csgoId] != NodeState::Success || state.roundNumber != planRoundNumber ||
-            state.numPlayersAlive() != playersAliveLastPlan) {
+            state.roundNumber != planRoundNumber || state.numPlayersAlive() != playersAliveLastPlan) {
             planRoundNumber = state.roundNumber;
             playersAliveLastPlan = state.numPlayersAlive();
             blackboard.newOrderThisFrame = true;

@@ -15,7 +15,7 @@ class JumpedBeforeCat : public Node {
     bool reachedBoxed = false;
 public:
     JumpedBeforeCat(Blackboard & blackboard, CSGOId targetId) :
-            Node(blackboard, "ValidConditionNod"), targetId(targetId) { };
+            Node(blackboard, "ValidConditionNode"), targetId(targetId) { };
     virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
         const ServerState::Client & curClient = state.getClient(targetId);
         uint32_t curArea = blackboard.navFile.get_nearest_area_by_position(vec3Conv(curClient.getFootPosForPlayer())).get_id();

@@ -17,7 +17,7 @@ class KilledAfterTime : public Node {
 
 public:
     KilledAfterTime(Blackboard & blackboard, CSGOId sourceId, CSGOId targetId, double minTime) :
-            Node(blackboard, "ValidConditionNod"), sourceId(sourceId), targetId(targetId), minTime(minTime) { };
+            Node(blackboard, "ValidConditionNode"), sourceId(sourceId), targetId(targetId), minTime(minTime) { };
 
     virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
         const ServerState::Client & sourceClient = state.getClient(sourceId);
@@ -81,7 +81,7 @@ public:
                                                          make_unique<ParallelFirstNode>(blackboard, Node::makeList(
                                                                                                 make_unique<KilledAfterTime>(blackboard, neededBots[0].id, neededBots[1].id, 0.5),
                                                                                                 make_unique<DisableActionsNode>(blackboard, "DisableSetup", vector{neededBots[1].id}),
-                                                                                                make_unique<movement::WaitNode>(blackboard, 2, false)),
+                                                                                                make_unique<movement::WaitNode>(blackboard, 300, false)),
                                                                                         "AimAndKillCondition")),
                                                  "AimAndKillSequence");
         }
