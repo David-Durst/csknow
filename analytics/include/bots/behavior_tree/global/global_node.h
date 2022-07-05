@@ -14,7 +14,7 @@ public:
             SequenceNode(blackboard, Node::makeList(
                     make_unique<OrderNode>(blackboard),
                     make_unique<CommunicateNode>(blackboard)
-            ), "OrderNode") { };
+            ), "GlobalNode") { };
 };
 
 #endif //CSKNOW_GLOBAL_NODE_H
