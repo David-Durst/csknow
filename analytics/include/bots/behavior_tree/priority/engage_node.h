@@ -39,7 +39,10 @@ public:
                                                                         "EnemyEngageCheckNode") { };
 
     virtual bool valid(const ServerState & state, TreeThinker & treeThinker) override {
-        return !state.getVisibleEnemies(treeThinker.csgoId).empty();
+        bool enemyVisible = state.getVisibleEnemies(treeThinker.csgoId).size() > 0;
+        bool rememberEnemy = blackboard.playerToMemory[treeThinker.csgoId].positions.size() > 0;
+        bool communicatedEnemy = blackboard.getCommunicatedPlayers(state, treeThinker).positions.size() > 0;
+        return enemyVisible || rememberEnemy || communicatedEnemy;
     }
 };
 

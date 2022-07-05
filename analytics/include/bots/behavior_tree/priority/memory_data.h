@@ -10,7 +10,7 @@
 using std::map;
 
 struct EnemyPositionMemory {
-    Vec3 lastSeenFootPos;
+    Vec3 lastSeenFootPos, lastSeenEyePos;
     int32_t lastSeenFrame;
     //set<uint32_t> believedAreas;
     //map<uint32_t, int32_t> frameCouldEnterArea;
@@ -43,7 +43,7 @@ struct EnemyPositionsMemory {
 
         for (const auto & [id, memory] : positions) {
             enemiesStream << "<" << state.getPlayerString(id) << ", "
-                << memory.lastSeenFootPos.toString() << ", " << memory.lastSeenFrame << ">";
+                << memory.lastSeenEyePos.toString() << ", " << memory.lastSeenFrame << ">";
         }
         return enemiesStream.str();
     }

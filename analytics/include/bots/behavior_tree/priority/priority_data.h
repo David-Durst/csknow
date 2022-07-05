@@ -26,6 +26,9 @@ struct TargetPlayer {
     CSGOId playerId = INVALID_ID;
     int64_t round;
     int32_t firstTargetFrame;
+    Vec3 footPos;
+    Vec3 eyePos;
+    bool visible;
 };
 
 enum class PriorityType {

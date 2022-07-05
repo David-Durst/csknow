@@ -20,16 +20,18 @@ void EnemyPositionsMemory::updatePositions(const ServerState & state, nav_mesh::
             const auto visibleEnemies = state.getVisibleEnemies(srcPlayer);
             for (const auto & visibleEnemy : visibleEnemies) {
                 positions[visibleEnemy.get().csgoId].lastSeenFootPos = visibleEnemy.get().getFootPosForPlayer();
+                positions[visibleEnemy.get().csgoId].lastSeenEyePos = visibleEnemy.get().getEyePosForPlayer();
                 positions[visibleEnemy.get().csgoId].lastSeenFrame = visibleEnemy.get().lastFrame;
             }
         }
     }
 
+    // forget all enemies past length or dead
     vector<CSGOId> enemiesToForget;
     int32_t curFrame = state.getClient(srcPlayers[0]).lastFrame;
     for (const auto & [id, position] : positions) {
         double timeSinceSeen = state.getSecondsBetweenFrames(curFrame, position.lastSeenFrame);
-        if (timeSinceSeen > maxMemorySeconds) {
+        if (timeSinceSeen > maxMemorySeconds || !state.getClient(id).isAlive) {
             enemiesToForget.push_back(id);
         }
     }

@@ -68,7 +68,7 @@ namespace action {
             aimTarget.z += EYE_HEIGHT;
         }
         else {
-            aimTarget = state.getClient(curPriority.targetPlayer.playerId).getEyePosForPlayer();
+            aimTarget = curPriority.targetPlayer.eyePos;
         }
 
         Vec3 targetVector = aimTarget - curClient.getEyePosForPlayer();
