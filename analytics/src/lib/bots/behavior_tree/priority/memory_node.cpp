@@ -6,7 +6,7 @@
 
 NodeState memory::PerPlayerMemory::exec(const ServerState & state, TreeThinker &treeThinker) {
     blackboard.playerToMemory[treeThinker.csgoId].updatePositions(state, blackboard.navFile, treeThinker.maxMemorySeconds);
-    playerNodeState[treeThinker.csgoId] = NodeState::Success;
+    playerNodeState[treeThinker.csgoId] = NodeState::Running;
     return playerNodeState[treeThinker.csgoId];
 }
 

@@ -19,13 +19,13 @@ public:
                             "PriorityDecisionNode") { };
 };
 
-class PriorityNode : public SequenceNode {
+class PriorityNode : public ParallelFirstNode {
 public:
     PriorityNode(Blackboard & blackboard) :
-            SequenceNode(blackboard, Node::makeList(
+            ParallelFirstNode(blackboard, Node::makeList(
                                  make_unique<memory::PerPlayerMemory>(blackboard),
                                  make_unique<PriorityDecisionNode>(blackboard)),
-                         "PriorityNode") { };
+                         "PrioritySetupAndDecideParallelNode") { };
 };
 
 #endif //CSKNOW_PRIORITY_NODE_H
