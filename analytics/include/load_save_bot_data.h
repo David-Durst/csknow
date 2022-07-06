@@ -171,6 +171,15 @@ public:
         return (endFrame - startFrame) * tickInterval;
     }
 
+    int32_t getLastFrame() const {
+        if (clients.empty()) {
+            return INVALID_ID;
+        }
+        else {
+            return clients.front().lastFrame;
+        }
+    }
+
     // c4 state
     // Is Planted,Pos X,Pos Y,Pos Z
     bool c4Exists;

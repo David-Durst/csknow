@@ -28,7 +28,7 @@ void EnemyPositionsMemory::updatePositions(const ServerState & state, nav_mesh::
 
     // forget all enemies past length or dead
     vector<CSGOId> enemiesToForget;
-    int32_t curFrame = state.getClient(srcPlayers[0]).lastFrame;
+    int32_t curFrame = state.getLastFrame();
     for (const auto & [id, position] : positions) {
         double timeSinceSeen = state.getSecondsBetweenFrames(curFrame, position.lastSeenFrame);
         if (timeSinceSeen > maxMemorySeconds || !state.getClient(id).isAlive) {
