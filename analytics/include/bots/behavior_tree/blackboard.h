@@ -101,7 +101,7 @@ struct Blackboard {
     double tMemorySeconds = 1.0, ctMemorySeconds = 1.0;
     EnemyPositionsMemory tMemory, ctMemory;
     const EnemyPositionsMemory & getCommunicatedPlayers(const ServerState & state, TreeThinker & treeThinker) {
-        if (state.getClient(treeThinker.csgoId).csgoId == ENGINE_TEAM_T) {
+        if (state.getClient(treeThinker.csgoId).team == ENGINE_TEAM_T) {
             return tMemory;
         }
         else {

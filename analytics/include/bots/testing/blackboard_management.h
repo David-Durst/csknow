@@ -49,14 +49,17 @@ public:
 
 class DisableActionsNode : public Node {
     vector<CSGOId> targetIds;
+    bool disableMouse;
 public:
-    DisableActionsNode(Blackboard & blackboard, string name, vector<CSGOId> targetIds) :
-            Node(blackboard, name), targetIds(targetIds) { };
+    DisableActionsNode(Blackboard & blackboard, string name, vector<CSGOId> targetIds, bool disableMouse = true) :
+            Node(blackboard, name), targetIds(targetIds), disableMouse(disableMouse) { };
     virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
         for (size_t i = 0; i < targetIds.size(); i++) {
             blackboard.playerToAction[targetIds[i]].buttons = 0;
-            blackboard.playerToAction[targetIds[i]].inputAngleDeltaPctX = 0.;
-            blackboard.playerToAction[targetIds[i]].inputAngleDeltaPctY = 0.;
+            if (disableMouse) {
+                blackboard.playerToAction[targetIds[i]].inputAngleDeltaPctX = 0.;
+                blackboard.playerToAction[targetIds[i]].inputAngleDeltaPctY = 0.;
+            }
         }
         playerNodeState[treeThinker.csgoId] = NodeState::Success;
         return NodeState::Running;

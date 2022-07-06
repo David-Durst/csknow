@@ -64,6 +64,9 @@ namespace action {
 
                 // TODO: AFTER ADDING VELOCITY FIELD, TRACK STOPPED TO SHOOT USING VELOCITY
                 curAction.setButton(IN_ATTACK, !attackLastFrame && haveAmmo && aimingAtEnemy && curPriority.targetPlayer.visible);
+                if (!state.isVisible(curClient.csgoId, curPriority.targetPlayer.playerId) && curAction.getButton(IN_ATTACK)) {
+                    int x = 1;
+                }
                 curAction.setButton(IN_RELOAD, !haveAmmo);
             }
         }

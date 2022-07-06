@@ -23,13 +23,32 @@ namespace engage {
 
         // keep same target if from this round and still visible or remembered or communicated
         // forget about remembered/communicated if another enemy visible
-        if (curTarget.playerId != INVALID_ID) {
-            if (curTarget.round == state.roundNumber) {
-                const ServerState::Client & oldTargetClient =
-                        state.clients[state.csgoIdToCSKnowId[curTarget.playerId]];
-                bool targetRemembered = (rememberedEnemies.find(curTarget.playerId) != rememberedEnemies.end()) && visibleEnemies.empty();
-                bool targetCommunicated = (communicatedEnemies.find(curTarget.playerId) != communicatedEnemies.end()) && visibleEnemies.empty();
-                if (oldTargetClient.isAlive && (state.isVisible(treeThinker.csgoId, curTarget.playerId) || targetRemembered || targetCommunicated)) {
+        if (curTarget.playerId != INVALID_ID && curTarget.round == state.roundNumber) {
+            const ServerState::Client & oldTargetClient =
+                    state.clients[state.csgoIdToCSKnowId[curTarget.playerId]];
+            if (oldTargetClient.isAlive) {
+                bool continueSameTarget = false;
+                if (curTarget.visible && state.isVisible(treeThinker.csgoId, curTarget.playerId)) {
+                    curTarget.footPos = oldTargetClient.getFootPosForPlayer();
+                    curTarget.eyePos = oldTargetClient.getEyePosForPlayer();
+                    continueSameTarget = true;
+                }
+                else if (!curTarget.visible && visibleEnemies.empty() &&
+                        (rememberedEnemies.find(curTarget.playerId) != rememberedEnemies.end())) {
+                    curTarget.footPos = rememberedEnemies.find(curTarget.playerId)->second.lastSeenFootPos;
+                    if (curTarget.footPos != oldTargetClient.getFootPosForPlayer()) {
+                        int x = 1;
+                    }
+                    curTarget.eyePos = rememberedEnemies.find(curTarget.playerId)->second.lastSeenEyePos;
+                    continueSameTarget = true;
+                }
+                else if (!curTarget.visible && visibleEnemies.empty() &&
+                         (communicatedEnemies.find(curTarget.playerId) != communicatedEnemies.end())) {
+                    curTarget.footPos = communicatedEnemies.find(curTarget.playerId)->second.lastSeenFootPos;
+                    curTarget.eyePos = communicatedEnemies.find(curTarget.playerId)->second.lastSeenEyePos;
+                    continueSameTarget = true;
+                }
+                if (continueSameTarget) {
                     playerNodeState[treeThinker.csgoId] = NodeState::Success;
                     return playerNodeState[treeThinker.csgoId];
                 }

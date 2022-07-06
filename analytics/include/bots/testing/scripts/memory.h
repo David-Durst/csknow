@@ -15,7 +15,7 @@ class AimingAt : public Node {
 
 public:
     AimingAt(Blackboard & blackboard, CSGOId sourceId, CSGOId targetId) :
-            Node(blackboard, "ValidConditionNode"), sourceId(sourceId), targetId(targetId) { };
+            Node(blackboard, "AimingAtNode"), sourceId(sourceId), targetId(targetId) { };
 
     virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
         const ServerState::Client & sourceClient = state.getClient(sourceId);
@@ -49,7 +49,7 @@ class NotFiring : public Node {
 
 public:
     NotFiring(Blackboard & blackboard, CSGOId sourceId) :
-            Node(blackboard, "ValidConditionNode"), sourceId(sourceId) { };
+            Node(blackboard, "NotFiringNode"), sourceId(sourceId) { };
 
     virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
         const ServerState::Client & sourceClient = state.getClient(sourceId);
@@ -102,19 +102,19 @@ public:
                                                                         make_unique<SetPos>(blackboard, Vec3({1031.611084, 962.737915, -0.588848}), Vec2({90., 0.})),
                                                                         make_unique<movement::WaitNode>(blackboard, 0.1),
                                                                         make_unique<Teleport>(blackboard, neededBots[0].id, state),
-                                                                        make_unique<movement::WaitNode>(blackboard, 0.1)),
+                                                                        make_unique<movement::WaitNode>(blackboard, 1.0)),
                                                                 "MemorySetup");
             Node::Ptr disableAllBothDuringSetup = make_unique<ParallelFirstNode>(blackboard, Node::makeList(
                     std::move(setupCommands),
-                    make_unique<DisableActionsNode>(blackboard, "DisableSetup", vector{neededBots[0].id, neededBots[1].id})
+                    make_unique<DisableActionsNode>(blackboard, "DisableSetup", vector{neededBots[0].id, neededBots[1].id}, false)
             ), "MemoryDisableDuringSetup");
             commands = make_unique<SequenceNode>(blackboard, Node::makeList(
                                                          std::move(disableAllBothDuringSetup),
                                                          make_unique<ParallelFirstNode>(blackboard, Node::makeList(
-                                                                                                make_unique<AimingAt>(blackboard, neededBots[0].id, neededBots[1].id),
-                                                                                                make_unique<NotFiring>(blackboard, neededBots[0].id),
+                                                                                                //make_unique<AimingAt>(blackboard, neededBots[0].id, neededBots[1].id),
+                                                                                                //make_unique<NotFiring>(blackboard, neededBots[0].id),
                                                                                                 make_unique<DisableActionsNode>(blackboard, "DisableSetup", vector{neededBots[1].id}),
-                                                                                                make_unique<movement::WaitNode>(blackboard, 1.5)),
+                                                                                                make_unique<movement::WaitNode>(blackboard, 200.5)),
                                                                                         "MemoryCondition")),
                                                  "MemorySequence");
         }
