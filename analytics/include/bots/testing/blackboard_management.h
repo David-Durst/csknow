@@ -28,7 +28,7 @@ public:
         }
         blackboard.navFile.remove_incoming_edges_to_areas({4048});
         playerNodeState[treeThinker.csgoId] = NodeState::Success;
-        return NodeState::Success;
+        return playerNodeState[treeThinker.csgoId];
     }
 };
 
@@ -43,7 +43,7 @@ public:
             blackboard.playerToPushOrder[targetIds[i]] = pushIndices[i];
         }
         playerNodeState[treeThinker.csgoId] = NodeState::Success;
-        return NodeState::Success;
+        return playerNodeState[treeThinker.csgoId];
     }
 };
 
@@ -61,8 +61,23 @@ public:
                 blackboard.playerToAction[targetIds[i]].inputAngleDeltaPctY = 0.;
             }
         }
+        playerNodeState[treeThinker.csgoId] = NodeState::Running;
+        return playerNodeState[treeThinker.csgoId];
+    }
+};
+
+class ClearMemoriesAndCommunicationNode : public Node {
+public:
+    ClearMemoriesAndCommunicationNode(Blackboard & blackboard) :
+            Node(blackboard, "ClearMemoriesAndCommunication") { };
+    virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
+        blackboard.tMemory.positions.clear();
+        blackboard.ctMemory.positions.clear();
+        for (auto & [_, memory] : blackboard.playerToMemory) {
+            memory.positions.clear();
+        }
         playerNodeState[treeThinker.csgoId] = NodeState::Success;
-        return NodeState::Running;
+        return playerNodeState[treeThinker.csgoId];
     }
 };
 
