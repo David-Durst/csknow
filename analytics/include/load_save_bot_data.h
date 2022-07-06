@@ -15,9 +15,11 @@
 #include <sstream>
 #include <set>
 #include <utility>
+#include <chrono>
 
 typedef int64_t CSKnowId;
 typedef int64_t CSGOId;
+typedef std::chrono::time_point<std::chrono::system_clock> CSKnowTime;
 
 class ServerState {
 private:
@@ -31,6 +33,7 @@ public:
     int32_t roundNumber;
     int32_t mapNumber;
     double tickInterval;
+    CSKnowTime loadTime;
 
     struct Client {
         int32_t lastFrame;
@@ -167,8 +170,9 @@ public:
         return result;
     }
 
-    double getSecondsBetweenFrames(int32_t startFrame, int32_t endFrame) const {
-        return (endFrame - startFrame) * tickInterval;
+    double getSecondsBetweenTimes(CSKnowTime startTime, CSKnowTime endTime) const {
+        std::chrono::duration<double> diffTime = endTime - startTime;
+        return diffTime.count();
     }
 
     int32_t getLastFrame() const {

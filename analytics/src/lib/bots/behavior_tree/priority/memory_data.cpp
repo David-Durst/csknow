@@ -21,21 +21,23 @@ void EnemyPositionsMemory::updatePositions(const ServerState & state, nav_mesh::
             for (const auto & visibleEnemy : visibleEnemies) {
                 positions[visibleEnemy.get().csgoId].lastSeenFootPos = visibleEnemy.get().getFootPosForPlayer();
                 positions[visibleEnemy.get().csgoId].lastSeenEyePos = visibleEnemy.get().getEyePosForPlayer();
-                positions[visibleEnemy.get().csgoId].lastSeenFrame = visibleEnemy.get().lastFrame;
+                positions[visibleEnemy.get().csgoId].lastSeenTime = state.loadTime;
             }
         }
     }
 
     // forget all enemies past length or dead
     vector<CSGOId> enemiesToForget;
-    int32_t curFrame = state.getLastFrame();
     for (const auto & [id, position] : positions) {
-        double timeSinceSeen = state.getSecondsBetweenFrames(position.lastSeenFrame, curFrame);
+        double timeSinceSeen = state.getSecondsBetweenTimes(position.lastSeenTime, state.loadTime);
         if (timeSinceSeen > maxMemorySeconds || !state.getClient(id).isAlive) {
             enemiesToForget.push_back(id);
         }
     }
     for (const auto & enemyToForget : enemiesToForget) {
+        if (srcPlayers.size() == 1 && srcPlayers[0] == 3 && enemyToForget == 4) {
+            int x = 1;
+        }
         positions.erase(enemyToForget);
     }
 }

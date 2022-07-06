@@ -19,7 +19,7 @@ namespace movement {
 
     class WaitNode : public Node {
         double waitSeconds;
-        map<CSGOId, int32_t> startFrame;
+        map<CSGOId, CSKnowTime> startTime;
         bool succeedOnEnd;
     public:
         WaitNode(Blackboard & blackboard, double waitSeconds, bool succeedOnEnd = true) :

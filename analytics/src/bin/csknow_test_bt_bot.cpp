@@ -4,6 +4,7 @@
 #include "bots/testing/scripts/basic_nav.h"
 #include "bots/testing/scripts/basic_aim.h"
 #include "bots/testing/scripts/basic_memory.h"
+#include "bots/testing/scripts/basic_communication.h"
 #include "bots/testing/scripts/teamwork.h"
 #include "navmesh/nav_file.h"
 #include <iostream>
@@ -34,15 +35,17 @@ int main(int argc, char * argv[]) {
     ScriptsRunner scriptsRunner(Script::makeList(
                                             //make_unique<GooseToCatScript>(state),
                                             //make_unique<GooseToCatShortScript>(state),
-                                            //make_unique<AimAndKillWithinTimeCheck>(state),
+                                            //make_unique<AimAndKillWithinTimeCheck>(state)
                                             //make_unique<PushBaitGooseToCatScript>(state),
-                                            //make_unique<PushMultipleBaitGooseToCatScript>(state),
-                                            make_unique<MemoryAimCheck>(state),
-                                            make_unique<MemoryForgetCheck>(state)
+                                            //make_unique<PushMultipleBaitGooseToCatScript>(state)
+                                            make_unique<MemoryAimCheck>(state)
+                                            //make_unique<MemoryForgetCheck>(state),
+                                            //make_unique<CommunicationAimCheck>(state)
                     ), true);
 
 
-
+    int32_t priorFrame;
+    auto priorStart = std::chrono::system_clock::now();
 #pragma clang diagnostic push
 #pragma ide diagnostic ignored "EndlessLoop"
     while (!finishedTests) {
@@ -50,6 +53,10 @@ int main(int argc, char * argv[]) {
         state.loadServerState();
         std::chrono::duration<double> timePerTick(state.loadedSuccessfully ? state.tickInterval : 0.1);
         auto parseEnd = std::chrono::system_clock::now();
+        std::chrono::duration<double> startToStart = start - priorStart;
+        double frameDiff = (state.getLastFrame() - priorFrame) / 128.;
+        priorStart = start;
+        priorFrame = state.getLastFrame();
             
         if (state.loadedSuccessfully) {
             tree.tick(state, mapsPath);
@@ -72,15 +79,15 @@ int main(int argc, char * argv[]) {
         logFile << "Num failures " << numFailures << ", last bad path: " << state.badPath << std::endl;
         bool sleep;
         if (botTime < timePerTick) {
-            logFile << "Bot compute time: " << botTime.count()
-                << "s, pct parse " << parseTime.count() / botTime.count() << std::endl;
+            logFile << "Bot compute time: ";
             sleep = true;
         }
         else {
-            logFile << "\033[1;31mMissed Bot compute time:\033[0m " << botTime.count()
-                << "s, pct parse " << parseTime.count() / botTime.count() << std::endl;
+            logFile << "\033[1;31mMissed Bot compute time:\033[0m " ;
             sleep = false;
         }
+        logFile << botTime.count() << "s, pct parse " << parseTime.count() / botTime.count()
+            << ", frame to time ratio" << frameDiff / startToStart.count() << std::endl;
         logFile << tree.curLog;
         logFile.close();
         testLogFile << scriptsRunner.curLog();

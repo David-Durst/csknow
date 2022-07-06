@@ -107,13 +107,11 @@ namespace movement {
     }
 
     NodeState WaitNode::exec(const ServerState &state, TreeThinker &treeThinker) {
-        const ServerState::Client & curClient = state.getClient(treeThinker.csgoId);
-
         if (playerNodeState[treeThinker.csgoId] == NodeState::Uninitialized) {
-            startFrame[treeThinker.csgoId] = curClient.lastFrame;
+            startTime[treeThinker.csgoId] = state.loadTime;
         }
 
-        double timeSinceStart = state.getSecondsBetweenFrames(startFrame[treeThinker.csgoId], curClient.lastFrame);
+        double timeSinceStart = state.getSecondsBetweenTimes(startTime[treeThinker.csgoId], state.loadTime);
         if (timeSinceStart >= waitSeconds) {
             playerNodeState[treeThinker.csgoId] = succeedOnEnd ? NodeState::Success : NodeState::Failure;
         }
