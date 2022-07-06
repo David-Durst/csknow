@@ -30,7 +30,7 @@ void EnemyPositionsMemory::updatePositions(const ServerState & state, nav_mesh::
     vector<CSGOId> enemiesToForget;
     int32_t curFrame = state.getLastFrame();
     for (const auto & [id, position] : positions) {
-        double timeSinceSeen = state.getSecondsBetweenFrames(curFrame, position.lastSeenFrame);
+        double timeSinceSeen = state.getSecondsBetweenFrames(position.lastSeenFrame, curFrame);
         if (timeSinceSeen > maxMemorySeconds || !state.getClient(id).isAlive) {
             enemiesToForget.push_back(id);
         }

@@ -3,7 +3,7 @@
 #include "bots/testing/script.h"
 #include "bots/testing/scripts/basic_nav.h"
 #include "bots/testing/scripts/basic_aim.h"
-#include "bots/testing/scripts/memory.h"
+#include "bots/testing/scripts/basic_memory.h"
 #include "bots/testing/scripts/teamwork.h"
 #include "navmesh/nav_file.h"
 #include <iostream>
@@ -37,7 +37,8 @@ int main(int argc, char * argv[]) {
                                             //make_unique<AimAndKillWithinTimeCheck>(state),
                                             //make_unique<PushBaitGooseToCatScript>(state),
                                             //make_unique<PushMultipleBaitGooseToCatScript>(state),
-                                            make_unique<MemoryCheck>(state)
+                                            make_unique<MemoryAimCheck>(state),
+                                            make_unique<MemoryForgetCheck>(state)
                     ), true);
 
 
