@@ -87,7 +87,7 @@ public:
                                                                         make_unique<SetPos>(blackboard, Vec3({-420.947021, 1067.724365, -69.326324}), Vec2({-78.701942, -7.463999})),
                                                                         make_unique<movement::WaitNode>(blackboard, 0.1),
                                                                         make_unique<Teleport>(blackboard, neededBots[0].id, state),
-                                                                        make_unique<movement::WaitNode>(blackboard, 3.0)),
+                                                                        make_unique<movement::WaitNode>(blackboard, 4.0)),
                                                                 "MemoryForgetSetup");
             Node::Ptr disableAllBothDuringSetup = make_unique<ParallelFirstNode>(blackboard, Node::makeList(
                     std::move(setupCommands),
