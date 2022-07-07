@@ -91,13 +91,9 @@ public:
                                                                         make_unique<movement::WaitNode>(blackboard, 0.1),
                                                                         make_unique<Teleport>(blackboard, neededBots[2].id, state),
                                                                         make_unique<movement::WaitNode>(blackboard, 0.1),
-                                                                        make_unique<RemoveGuns>(blackboard, neededBots[0].id, state),
-                                                                        make_unique<movement::WaitNode>(blackboard, 0.1),
-                                                                        make_unique<GiveItem>(blackboard, neededBots[0].id, state, "weapon_ak47"),
-                                                                        make_unique<movement::WaitNode>(blackboard, 0.1),
-                                                                        make_unique<SetCurrentItem>(blackboard, neededBots[0].id, state, "weapon_ak47"),
-                                                                        make_unique<movement::WaitNode>(blackboard, 0.1),
                                                                         make_unique<ClearMemoriesAndCommunicationNode>(blackboard),
+                                                                        make_unique<movement::WaitNode>(blackboard, 1.0),
+                                                                        make_unique<SlayAllBut>(blackboard, vector{neededBots[0].id, neededBots[2].id}, state),
                                                                         make_unique<movement::WaitNode>(blackboard, 2.0)),
                                                                 "CommunicationForgetSetup");
             Node::Ptr disableAllBothDuringSetup = make_unique<ParallelFirstNode>(blackboard, Node::makeList(
@@ -107,7 +103,7 @@ public:
             commands = make_unique<SequenceNode>(blackboard, Node::makeList(
                                                          std::move(disableAllBothDuringSetup),
                                                          make_unique<ParallelFirstNode>(blackboard, Node::makeList(
-                                                                                                make_unique<AimingAt>(blackboard, neededBots[0].id, neededBots[2].id),
+                                                                                                make_unique<AimingAt>(blackboard, neededBots[0].id, neededBots[2].id, true),
                                                                                                 make_unique<Firing>(blackboard, neededBots[0].id, true),
                                                                                                 make_unique<DisableActionsNode>(blackboard, "DisableSetup", vector{neededBots[1].id, neededBots[2].id}),
                                                                                                 make_unique<movement::WaitNode>(blackboard, 0.8)),
