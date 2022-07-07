@@ -41,12 +41,6 @@ public:
                                                                         make_unique<movement::WaitNode>(blackboard, 0.1),
                                                                         make_unique<Teleport>(blackboard, neededBots[2].id, state),
                                                                         make_unique<movement::WaitNode>(blackboard, 0.1),
-                                                                        make_unique<RemoveGuns>(blackboard, neededBots[0].id, state),
-                                                                        make_unique<movement::WaitNode>(blackboard, 0.1),
-                                                                        make_unique<GiveItem>(blackboard, neededBots[0].id, state, "weapon_ak47"),
-                                                                        make_unique<movement::WaitNode>(blackboard, 0.1),
-                                                                        make_unique<SetCurrentItem>(blackboard, neededBots[0].id, state, "weapon_ak47"),
-                                                                        make_unique<movement::WaitNode>(blackboard, 0.1),
                                                                         make_unique<ClearMemoriesAndCommunicationNode>(blackboard),
                                                                         make_unique<movement::WaitNode>(blackboard, 2.0)),
                                                                 "CommunicationAimSetup");
