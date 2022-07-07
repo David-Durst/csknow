@@ -51,7 +51,7 @@ class Firing : public Node {
 
 public:
     Firing(Blackboard & blackboard, CSGOId sourceId, bool invert = false) :
-            Node(blackboard, "NotFiringNode"), sourceId(sourceId), invert(invert) { };
+            Node(blackboard, "FiringNode"), sourceId(sourceId), invert(invert) { };
 
     virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
         const ServerState::Client & sourceClient = state.getClient(sourceId);

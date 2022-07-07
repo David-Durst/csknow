@@ -46,9 +46,9 @@ public:
                                                                         make_unique<GiveItem>(blackboard, neededBots[0].id, state, "weapon_ak47"),
                                                                         make_unique<movement::WaitNode>(blackboard, 0.1),
                                                                         make_unique<SetCurrentItem>(blackboard, neededBots[0].id, state, "weapon_ak47"),
-                                                                        make_unique<movement::WaitNode>(blackboard, 1.0),
+                                                                        make_unique<movement::WaitNode>(blackboard, 0.1),
                                                                         make_unique<ClearMemoriesAndCommunicationNode>(blackboard),
-                                                                        make_unique<movement::WaitNode>(blackboard, 0.1)),
+                                                                        make_unique<movement::WaitNode>(blackboard, 2.0)),
                                                                 "CommunicationAimSetup");
             Node::Ptr disableAllBothDuringSetup = make_unique<ParallelFirstNode>(blackboard, Node::makeList(
                     std::move(setupCommands),
@@ -61,6 +61,7 @@ public:
                                                                                                 make_unique<Firing>(blackboard, neededBots[0].id, true),
                                                                                                 make_unique<DisableActionsNode>(blackboard, "DisableSetup", vector{neededBots[1].id, neededBots[2].id}),
                                                                                                 make_unique<movement::WaitNode>(blackboard, 0.8)),
+                                                                                        //make_unique<movement::WaitNode>(blackboard, 0.8)),
                                                                                         "CommunicationAimCondition")),
                                                  "CommunicationAimSequence");
         }

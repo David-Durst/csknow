@@ -43,9 +43,6 @@ public:
         bool enemyVisible = state.getVisibleEnemies(treeThinker.csgoId).size() > 0;
         bool rememberEnemy = blackboard.playerToMemory[treeThinker.csgoId].positions.size() > 0;
         bool communicatedEnemy = blackboard.getCommunicatedPlayers(state, treeThinker).positions.size() > 0;
-        if (!(enemyVisible || rememberEnemy || communicatedEnemy)) {
-            int x = 1;
-        }
         return enemyVisible || rememberEnemy || communicatedEnemy;
     }
 };

@@ -24,14 +24,24 @@ namespace action {
     float computeAngleVelocityPID(double deltaAngle, PIDState pidState, double error) {
         // compute P in PID
         double P;
-        if (deltaAngle > 3.0) {
-            P = deltaAngle * 0.001;
+        //P = deltaAngle * 0.001;
+        if (deltaAngle > 30.0) {
+            P = deltaAngle * 0.003;
+        }
+        else if (deltaAngle > 15.0) {
+            P = deltaAngle * 0.002;
+        }
+        else if (deltaAngle > 5.0) {
+            P = deltaAngle * 0.002;
+        }
+        else if (deltaAngle > 5.0) {
+            P = deltaAngle * 0.002;
         }
         else if (deltaAngle > 0.5) {
-            P = deltaAngle * 0.0055;
+            P = deltaAngle * 0.003;
         }
         else {
-            P = deltaAngle * 0.0025;
+            P = deltaAngle * 0.005;
         }
 
         // compute I in PID
