@@ -113,7 +113,8 @@ struct Blackboard {
     // priority data
     map<CSGOId, Priority> playerToPriority;
     map<CSGOId, Path> playerToPath;
-    map<CSGOId, uint32_t> playerToLastPathingNavAreaId;
+    map<CSGOId, uint32_t> playerToLastPathingSourceNavAreaId;
+    map<CSGOId, uint32_t> playerToLastPathingTargetNavAreaId;
 
     // action data
     map<CSGOId, Action> playerToAction;

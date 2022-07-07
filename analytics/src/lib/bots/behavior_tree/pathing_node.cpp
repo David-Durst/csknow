@@ -53,13 +53,16 @@ namespace movement {
         const ServerState::Client & curClient = state.getClient(treeThinker.csgoId);
         Vec3 curPos = curClient.getFootPosForPlayer();
         const nav_mesh::nav_area & curArea = blackboard.navFile.get_nearest_area_by_position(vec3Conv(curPos));
+        uint32_t targetAreaId = blackboard.navFile.get_nearest_area_by_position(vec3Conv(curPriority.targetPos)).get_id();
 
-        // if have a path and haven't changed nav area id
-        // check if players's nav area is same and not stuck. If so, do nothing (except increment waypoint if necessary)
+        // if have a path and haven't changed source or target nav area id and not stuck.
+        // If so, do nothing (except increment waypoint if necessary)
         // also check that not in an already visited area because missed a jump
         if (blackboard.playerToPath.find(treeThinker.csgoId) != blackboard.playerToPath.end() &&
-            blackboard.playerToLastPathingNavAreaId.find(treeThinker.csgoId) != blackboard.playerToLastPathingNavAreaId.end() &&
-            curArea.get_id() == blackboard.playerToLastPathingNavAreaId[treeThinker.csgoId] &&
+            blackboard.playerToLastPathingSourceNavAreaId.find(treeThinker.csgoId) != blackboard.playerToLastPathingSourceNavAreaId.end() &&
+            curArea.get_id() == blackboard.playerToLastPathingSourceNavAreaId[treeThinker.csgoId] &&
+            blackboard.playerToLastPathingTargetNavAreaId.find(treeThinker.csgoId) != blackboard.playerToLastPathingTargetNavAreaId.end() &&
+            targetAreaId == blackboard.playerToLastPathingTargetNavAreaId[treeThinker.csgoId] &&
             !curPriority.stuck) {
             Path & curPath = blackboard.playerToPath[treeThinker.csgoId];
 
@@ -101,7 +104,8 @@ namespace movement {
             int x = 1;
         }
 
-        blackboard.playerToLastPathingNavAreaId[treeThinker.csgoId] = curArea.get_id();
+        blackboard.playerToLastPathingSourceNavAreaId[treeThinker.csgoId] = curArea.get_id();
+        blackboard.playerToLastPathingTargetNavAreaId[treeThinker.csgoId] = targetAreaId;
         playerNodeState[treeThinker.csgoId] = newPath.pathCallSucceeded ? NodeState::Success : NodeState::Failure;
         return playerNodeState[treeThinker.csgoId];
     }

@@ -90,6 +90,7 @@ namespace engage {
                 }
             }
             curTarget = targetOptions[closestI];
+            curPriority.targetPos = curTarget.footPos;
         }
 
         if (curTarget.playerId == INVALID_ID) {
