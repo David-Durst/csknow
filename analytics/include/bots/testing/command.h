@@ -22,10 +22,11 @@ struct Command : Node {
 };
 
 struct InitTestingRound : Command {
-    InitTestingRound(Blackboard & blackboard) :
-        Command(blackboard, "InitTestingRoundCmd") { }
+    string scriptName;
+    InitTestingRound(Blackboard & blackboard, string scriptName) :
+        Command(blackboard, "InitTestingRoundCmd"), scriptName(scriptName) { }
     virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
-        scriptLines = {"sm_botDebug t; mp_warmup_end; sm_draw;"};
+        scriptLines = {"say Running Test " + scriptName + ";sm_botDebug t; mp_warmup_end; sm_draw;"};
         return Command::exec(state, treeThinker);
     }
 };

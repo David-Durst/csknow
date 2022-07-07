@@ -63,7 +63,7 @@ public:
             Script::initialize(tree, state);
             vector<string> aToCatPathPlace(order::catToAPathPlace.rbegin(), order::catToAPathPlace.rend());
             commands = make_unique<SequenceNode>(blackboard, Node::makeList(
-                                                         make_unique<InitTestingRound>(blackboard),
+                                                         make_unique<InitTestingRound>(blackboard, name),
                                                          make_unique<movement::WaitNode>(blackboard, 1.0),
                                                          make_unique<SpecDynamic>(blackboard, neededBots, observeSettings),
                                                          make_unique<movement::WaitNode>(blackboard, 0.1),
@@ -113,7 +113,7 @@ public:
             Script::initialize(tree, state);
             vector<string> aToCatPathPlace(order::catToAPathPlace.rbegin(), order::catToAPathPlace.rend());
             commands = make_unique<SequenceNode>(blackboard, Node::makeList(
-                                                         make_unique<InitTestingRound>(blackboard),
+                                                         make_unique<InitTestingRound>(blackboard, name),
                                                          make_unique<movement::WaitNode>(blackboard, 1.0),
                                                          make_unique<SpecDynamic>(blackboard, neededBots, observeSettings),
                                                          make_unique<movement::WaitNode>(blackboard, 0.1),

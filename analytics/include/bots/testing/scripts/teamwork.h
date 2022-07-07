@@ -51,7 +51,7 @@ public:
             vector<string> aToCatPathPlace(order::catToAPathPlace.rbegin(), order::catToAPathPlace.rend());
             set<string> baiterValidLocations{"ShortStairs"};
             commands = make_unique<SequenceNode>(blackboard, Node::makeList(
-                                                         make_unique<InitTestingRound>(blackboard),
+                                                         make_unique<InitTestingRound>(blackboard, name),
                                                          make_unique<movement::WaitNode>(blackboard, 1.0),
                                                          make_unique<SpecDynamic>(blackboard, neededBots, observeSettings),
                                                          make_unique<movement::WaitNode>(blackboard, 0.1),
@@ -91,7 +91,7 @@ public:
             vector<string> aToCatPathPlace(order::catToAPathPlace.rbegin(), order::catToAPathPlace.rend());
             set<string> baiter0ValidLocations{"ShortStairs"}, baiter1ValidLocations{"ExtendedA", ""};
             commands = make_unique<SequenceNode>(blackboard, Node::makeList(
-                                                         make_unique<InitTestingRound>(blackboard),
+                                                         make_unique<InitTestingRound>(blackboard, name),
                                                          make_unique<movement::WaitNode>(blackboard, 1.0),
                                                          make_unique<SpecDynamic>(blackboard, neededBots, observeSettings),
                                                          make_unique<movement::WaitNode>(blackboard, 0.1),
