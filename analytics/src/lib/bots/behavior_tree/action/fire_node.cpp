@@ -32,7 +32,8 @@ namespace action {
                 maxBurstShots = 3;
             }
 
-            if (haveRecoil && curAction.shotsInBurst > maxBurstShots) {
+            if (curPriority.shootOptions == ShootOptions::DontShoot ||
+                (haveRecoil && curAction.shotsInBurst > maxBurstShots)) {
                 curAction.setButton(IN_ATTACK, false);
             }
             else {
@@ -63,7 +64,7 @@ namespace action {
                 bool aimingAtEnemy = intersectP(targetAABB, eyeCoordinates, hitt0, hitt1);
 
                 // TODO: AFTER ADDING VELOCITY FIELD, TRACK STOPPED TO SHOOT USING VELOCITY
-                curAction.setButton(IN_ATTACK, !attackLastFrame && haveAmmo && aimingAtEnemy && curPriority.targetPlayer.visible);
+                curAction.setButton(IN_ATTACK, !attackLastFrame && haveAmmo && aimingAtEnemy);
                 if (!state.isVisible(curClient.csgoId, curPriority.targetPlayer.playerId) && curAction.getButton(IN_ATTACK)) {
                     int x = 1;
                 }
