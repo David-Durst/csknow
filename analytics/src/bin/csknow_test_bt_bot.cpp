@@ -1,11 +1,11 @@
 #include "load_save_bot_data.h"
 #include "bots/behavior_tree/tree.h"
 #include "bots/testing/script.h"
-#include "bots/testing/scripts/basic_nav.h"
-#include "bots/testing/scripts/basic_aim.h"
-#include "bots/testing/scripts/basic_memory.h"
-#include "bots/testing/scripts/basic_communication.h"
-#include "bots/testing/scripts/teamwork.h"
+#include "bots/testing/scripts/test_nav.h"
+#include "bots/testing/scripts/test_aim.h"
+#include "bots/testing/scripts/test_memory.h"
+#include "bots/testing/scripts/test_communication.h"
+#include "bots/testing/scripts/test_teamwork.h"
 #include "navmesh/nav_file.h"
 #include <iostream>
 #include <thread>
