@@ -25,6 +25,7 @@ public:
     VisPoints(const nav_mesh::nav_file & navFile) {
         for (const auto & navArea : navFile.m_areas) {
             visPoints.push_back({navArea.get_id(), vec3tConv(navArea.get_center()), {}});
+            visPoints.back().center.z += EYE_HEIGHT;
         }
         std::sort(visPoints.begin(), visPoints.end(),
                   [](const VisPoint & a, const VisPoint & b) { return a.areaId < b.areaId; });

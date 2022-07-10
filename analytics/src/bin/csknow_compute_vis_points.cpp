@@ -10,7 +10,7 @@
 //#define LOG_STATE
 
 int main(int argc, char * argv[]) {
-    if (argc != 4) {
+    if (argc != 3) {
         std::cout << "please call this code with 2 arguments: \n"
             << "1. path/to/maps\n"
             << "2. path/to/data\n" << std::endl;
@@ -23,6 +23,7 @@ int main(int argc, char * argv[]) {
 
     Tree tree;
 
+    state.loadServerState();
     if (state.loadedSuccessfully) {
         tree.tick(state, mapsPath);
         state.saveBotInputs();
