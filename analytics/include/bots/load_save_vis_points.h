@@ -14,29 +14,43 @@ typedef uint32_t AreaId;
 
 struct VisPoint {
     AreaId areaId;
+    AABB areaCoordinates;
     Vec3 center;
     vector<bool> visibleFromCurPoint;
 };
 
 class VisPoints {
     vector<VisPoint> visPoints;
+    map<AreaId, size_t> areaIdToVectorIndex;
 
 public:
     VisPoints(const nav_mesh::nav_file & navFile) {
         for (const auto & navArea : navFile.m_areas) {
-            visPoints.push_back({navArea.get_id(), vec3tConv(navArea.get_center()), {}});
+            visPoints.push_back({navArea.get_id(), {vec3tConv(navArea.get_min_corner()), vec3tConv(navArea.get_max_corner())},
+                                 vec3tConv(navArea.get_center()), {}});
             visPoints.back().center.z += EYE_HEIGHT;
         }
         std::sort(visPoints.begin(), visPoints.end(),
                   [](const VisPoint & a, const VisPoint & b) { return a.areaId < b.areaId; });
+
+        areaIdToVectorIndex = {};
+        for (size_t i = 0; i < visPoints.size(); i++) {
+            areaIdToVectorIndex[visPoints[i].areaId] = i;
+        }
     }
 
-    bool isVisible(AreaId src, AreaId target) const {
+    bool isVisibleIndex(size_t src, size_t target) const {
+        return visPoints[std::min(src, target)].visibleFromCurPoint[std::max(src, target)];
+    }
+
+    bool isVisibleAreaId(AreaId srcId, AreaId targetId) const {
+        size_t src = areaIdToVectorIndex.find(srcId)->second, target = areaIdToVectorIndex.find(targetId)->second;
         return visPoints[std::min(src, target)].visibleFromCurPoint[std::max(src, target)];
     }
 
     void launchVisPointsCommand(const ServerState & state);
     void loadVisPoints(string mapsPath);
+    const vector<VisPoint> & getVisPoints() const { return visPoints; }
 };
 
 #endif //CSKNOW_LOAD_SAVE_VIS_POINTS_H

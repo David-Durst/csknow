@@ -1,0 +1,60 @@
+//
+// Created by durst on 1/11/22.
+//
+
+#ifndef CSKNOW_REACHABLE_H
+#define CSKNOW_REACHABLE_H
+#include "queries/nav_mesh.h"
+#include "bots/load_save_vis_points.h"
+using std::string;
+using std::vector;
+using std::set;
+using std::unordered_map;
+using std::vector;
+
+class NavVisibleResult : public QueryResult {
+public:
+    vector<AABB> coordinate;
+    vector<bool> visibleMatrix;
+    int64_t numAreas;
+
+    vector<int64_t> filterByForeignKey(int64_t otherTableIndex) {
+        return {};
+    }
+
+    NavVisibleResult() {
+        this->variableLength = false;
+        this->allTicks = true;
+    };
+
+    void oneLineToCSV(int64_t index, stringstream & ss) {
+        ss << index;
+        ss << "," << coordinate[index].min.x << "," << coordinate[index].min.y << "," << coordinate[index].min.z
+           << "," << coordinate[index].max.x << "," << coordinate[index].max.y << "," << coordinate[index].max.z;
+        for (int i = 0; i < coordinate.size(); i++) {
+            // convert to 0 if visible as using similar range as distance (0 if closer/visible, 1 if farther/not visible)
+            ss << "," << (visibleMatrix[index * coordinate.size() + i] ? 0 : 1);
+        }
+        ss << std::endl;
+    }
+
+    vector<string> getForeignKeyNames() {
+        return {};
+    }
+
+    vector<string> getOtherColumnNames() {
+        vector<string> nameVector = {"min_x", "min_y", "min_z", "max_x", "max_y", "max_z"};
+        for (uint64_t i = 0; i < coordinate.size(); i++) {
+            nameVector.push_back(std::to_string(i));
+        }
+        return nameVector;
+    }
+
+    double getVisible(int64_t src, int64_t dst) {
+        return visibleMatrix[src * numAreas + dst];
+    }
+};
+
+NavVisibleResult queryNavVisible(const VisPoints & visPoints);
+
+#endif //CSKNOW_REACHABLE_H

@@ -24,6 +24,7 @@
 #include "queries/base_tables.h"
 #include "queries/position_and_wall_view.h"
 #include "indices/spotted.h"
+#include "queries/nav_visible.h"
 #define CPPHTTPLIB_OPENSSL_SUPPORT
 #include "httplib.h"
 #include <errno.h>
@@ -69,11 +70,20 @@ int main(int argc, char * argv[]) {
     outputDir = argv[4];
 
     std::map<std::string, nav_mesh::nav_file> map_navs;
-
     //Figure out from where to where you'd like to find a path
     for (const auto & entry : fs::directory_iterator(navPath)) {
-        map_navs.insert(std::pair<std::string, nav_mesh::nav_file>(entry.path().filename().replace_extension(),
-                                                                   nav_mesh::nav_file(entry.path().c_str())));
+        if (entry.path().extension() == "nav") {
+            map_navs.insert(std::pair<std::string, nav_mesh::nav_file>(entry.path().filename().replace_extension(),
+                                                                       nav_mesh::nav_file(entry.path().c_str())));
+        }
+    }
+
+    std::map<std::string, VisPoints> map_visPoints;
+    for (const auto & entry : fs::directory_iterator(navPath)) {
+        if (entry.path().extension() == "vis") {
+            string mapName = entry.path().filename().replace_extension();
+            map_visPoints.insert(std::pair<std::string, VisPoints>(mapName, VisPoints(map_navs[mapName])));
+        }
     }
 
     auto t = std::time(nullptr);
@@ -228,8 +238,10 @@ int main(int argc, char * argv[]) {
 
     string dust2MeshName = "de_dust2_mesh";
     MapMeshResult d2MeshResult = queryMapMesh(map_navs["de_dust2"]);
-    string dust2ReachableName = "de_dust2_reachable";
-    ReachableResult d2ReachableResult = queryReachable(d2MeshResult);
+    //string dust2ReachableName = "de_dust2_reachable";
+    //ReachableResult d2ReachableResult = queryReachable(d2MeshResult);
+    string dust2VisibleName = "de_dust2_visible";
+    NavVisibleResult d2NavVisibleResult = queryNavVisible(map_visPoints.find("de_dust2")->second);
     /*
     VelocityResult velocityResult = queryVelocity(position);
     std::cout << "velocity moments: " << velocityResult.positionIndex.size() << std::endl;
@@ -349,7 +361,10 @@ int main(int argc, char * argv[]) {
         }
          */
 
-    vector<string> queryNames = {"games", "rounds", "players", "ticks", "playerAtTick", dust2MeshName, dust2ReachableName};
+    vector<string> queryNames = {"games", "rounds", "players", "ticks", "playerAtTick", dust2MeshName,
+                                 dust2VisibleName
+                                 //dust2ReachableName,
+    };
     //vector<string> queryNames = {"games", "rounds", "players", "ticks", "playerAtTick", "aCatClusterSequence", "aCatClusters", "midCTClusterSequence", "midTClusters", "lookers"};
     map<string, reference_wrapper<QueryResult>> queries {
             {queryNames[0], queryGames},
@@ -358,7 +373,8 @@ int main(int argc, char * argv[]) {
             {queryNames[3], queryTicks},
             {queryNames[4], queryPlayerAtTick},
             {queryNames[5], d2MeshResult},
-            {queryNames[6], d2ReachableResult},
+            {queryNames[6], d2NavVisibleResult},
+            //{queryNames[7], d2ReachableResult},
             //{queryNames[5], aCatClusterSequence},
             //{queryNames[6], aCatPeekersClusters},
             //{queryNames[7], midCTClusterSequence},
