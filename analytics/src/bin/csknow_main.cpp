@@ -72,7 +72,7 @@ int main(int argc, char * argv[]) {
     std::map<std::string, nav_mesh::nav_file> map_navs;
     //Figure out from where to where you'd like to find a path
     for (const auto & entry : fs::directory_iterator(navPath)) {
-        if (entry.path().extension() == "nav") {
+        if (entry.path().extension() == ".nav") {
             map_navs.insert(std::pair<std::string, nav_mesh::nav_file>(entry.path().filename().replace_extension(),
                                                                        nav_mesh::nav_file(entry.path().c_str())));
         }
@@ -80,9 +80,10 @@ int main(int argc, char * argv[]) {
 
     std::map<std::string, VisPoints> map_visPoints;
     for (const auto & entry : fs::directory_iterator(navPath)) {
-        if (entry.path().extension() == "vis") {
+        if (entry.path().extension() == ".vis") {
             string mapName = entry.path().filename().replace_extension();
             map_visPoints.insert(std::pair<std::string, VisPoints>(mapName, VisPoints(map_navs[mapName])));
+            map_visPoints.find(mapName)->second.loadVisPoints(navPath, mapName);
         }
     }
 
@@ -238,8 +239,8 @@ int main(int argc, char * argv[]) {
 
     string dust2MeshName = "de_dust2_mesh";
     MapMeshResult d2MeshResult = queryMapMesh(map_navs["de_dust2"]);
-    //string dust2ReachableName = "de_dust2_reachable";
-    //ReachableResult d2ReachableResult = queryReachable(d2MeshResult);
+    string dust2ReachableName = "de_dust2_reachable";
+    ReachableResult d2ReachableResult = queryReachable(d2MeshResult);
     string dust2VisibleName = "de_dust2_visible";
     NavVisibleResult d2NavVisibleResult = queryNavVisible(map_visPoints.find("de_dust2")->second);
     /*

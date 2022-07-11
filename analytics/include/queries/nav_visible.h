@@ -2,8 +2,8 @@
 // Created by durst on 1/11/22.
 //
 
-#ifndef CSKNOW_REACHABLE_H
-#define CSKNOW_REACHABLE_H
+#ifndef CSKNOW_NAV_VISIBLE_H
+#define CSKNOW_NAV_VISIBLE_H
 #include "queries/nav_mesh.h"
 #include "bots/load_save_vis_points.h"
 using std::string;
@@ -57,4 +57,4 @@ public:
 
 NavVisibleResult queryNavVisible(const VisPoints & visPoints);
 
-#endif //CSKNOW_REACHABLE_H
+#endif //CSKNOW_NAV_VISIBLE_H

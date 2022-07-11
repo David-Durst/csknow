@@ -11,6 +11,8 @@ using std::set;
 using std::unordered_map;
 using std::vector;
 
+class TestReach { };
+
 class ReachableResult : public QueryResult {
 public:
     vector<AABB> coordinate;

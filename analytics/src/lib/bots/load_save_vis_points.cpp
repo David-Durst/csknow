@@ -26,8 +26,8 @@ void VisPoints::launchVisPointsCommand(const ServerState & state) {
     state.saveScript({"sm_queryAllVisPointPairs"});
 }
 
-void VisPoints::loadVisPoints(string mapsPath) {
-    string visValidFileName = "vis_valid.csv";
+void VisPoints::loadVisPoints(string mapsPath, string mapName) {
+    string visValidFileName = mapName + ".vis";
     string visValidFilePath = mapsPath + "/" + visValidFileName;
 
     std::ifstream fsVisValid(visValidFilePath);
