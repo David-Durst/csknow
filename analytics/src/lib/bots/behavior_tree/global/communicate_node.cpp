@@ -39,11 +39,47 @@ namespace communicate {
         return playerNodeState[treeThinker.csgoId];
     }
 
+    map<AreaId, CSKnowTime> getSpawnAreas(const ServerState & state, Blackboard & blackboard, const vector<CSGOId> & playersOnTeam) {
+        CSKnowTime curTime = state.loadTime;
+        map<AreaId, CSKnowTime> result;
+        if (!playersOnTeam.empty()) {
+            nav_mesh::vec3_t origPos = vec3Conv(state.getClient(playersOnTeam[0]).getFootPosForPlayer());
+            for (size_t i = 1; i < playersOnTeam.size(); i++) {
+                auto optionalWaypoints =
+                        blackboard.navFile.find_path_detailed(origPos, vec3Conv(state.getClient(playersOnTeam[i]).getFootPosForPlayer()));
+                if (optionalWaypoints) {
+                    for (const auto & waypoint : optionalWaypoints.value()) {
+                        result[waypoint.area1] = curTime;
+                        if (waypoint.edgeMidpoint) {
+                            result[waypoint.area2] = curTime;
+                        }
+                    }
+                }
+            }
+        }
+        return result;
+    }
+
     NodeState DiffusePositionsNode::exec(const ServerState & state, TreeThinker &treeThinker) {
         if (state.roundNumber != diffuseRoundNumber) {
-            diffuseRoundNumber = state.roundNumber;
+            const vector<CSGOId> & tPlayers = state.getPlayersOnTeam(ENGINE_TEAM_T);
+            map<AreaId, CSKnowTime> tSpawnAreas = getSpawnAreas(state, blackboard, tPlayers);
+            const vector<CSGOId> & ctPlayers = state.getPlayersOnTeam(ENGINE_TEAM_CT);
+            map<AreaId, CSKnowTime> ctSpawnAreas = getSpawnAreas(state, blackboard, ctPlayers);
+
+            // initialize nav areas to each as shortest path between all teammates, approximation of engine spawn zones
             for (const auto & client : state.clients) {
-                blackboard.possibleNavAreas[client.csgoId].clear();
+                if (client.team == ENGINE_TEAM_T) {
+                    blackboard.possibleNavAreas[client.csgoId] = tSpawnAreas;
+                }
+                else {
+                    blackboard.possibleNavAreas[client.csgoId] = ctSpawnAreas;
+                }
+            }
+
+            // rerun until get first tick of round where everyone is alive
+            if (tPlayers.size() + ctPlayers.size() == state.numPlayersAlive()) {
+                diffuseRoundNumber = state.roundNumber;
             }
         }
 
