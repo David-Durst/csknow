@@ -6,6 +6,7 @@
 #define CSKNOW_COMMUNICATE_NODE_H
 
 #include "bots/behavior_tree/priority/memory_node.h"
+#include "bots/behavior_tree/global/communicate_data.h"
 #include "bots/behavior_tree/node.h"
 #include <map>
 #include <memory>
@@ -22,6 +23,13 @@ namespace communicate {
         CommunicateTeamMemory(Blackboard & blackboard) : Node(blackboard, "CommunicateTeamMemory") { };
         virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override;
     };
+
+    class DiffusePositionsNode : public Node {
+        int32_t diffuseRoundNumber = -1;
+    public:
+        DiffusePositionsNode(Blackboard & blackboard) : Node(blackboard, "DiffiusePositionsNode") { };
+        virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override;
+    };
 }
 
 class CommunicateNode : public SequenceNode {
@@ -29,8 +37,9 @@ public:
     CommunicateNode(Blackboard & blackboard) :
             SequenceNode(blackboard, Node::makeList(
                     make_unique<communicate::AssignAggressionNode>(blackboard),
-                    make_unique<communicate::CommunicateTeamMemory>(blackboard)
-            ), "CommunicationNode") { };
+                    make_unique<communicate::CommunicateTeamMemory>(blackboard),
+                    make_unique<communicate::DiffusePositionsNode>(blackboard)
+    ), "CommunicationNode") { };
 };
 
 #endif //CSKNOW_COMMUNICATE_NODE_H

@@ -16,6 +16,7 @@
 #include "queries/reachable.h"
 #include "bots/testing/script_data.h"
 #include "bots/behavior_tree/priority/memory_data.h"
+#include "bots/behavior_tree/global/communicate_data.h"
 #include <memory>
 #include <random>
 using std::map;
@@ -109,6 +110,7 @@ struct Blackboard {
         }
     }
     map<CSGOId, EnemyPositionsMemory> playerToMemory;
+    PossibleNavAreas possibleNavAreas;
 
     // priority data
     map<CSGOId, Priority> playerToPriority;
