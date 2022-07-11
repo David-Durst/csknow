@@ -294,7 +294,7 @@ export function drawTick(e: InputEvent) {
             bottomRightCoordinate.getCanvasX() - topLeftCoordinate.getCanvasX(),
             bottomRightCoordinate.getCanvasY() - topLeftCoordinate.getCanvasY())
     }
-    if (curCluster != "none" && !curCluster.includes("mesh") && !curCluster.includes("reachable")) {
+    if (curCluster != "none" && !curCluster.includes("mesh") && !curCluster.includes("reachable") && !curCluster.includes("visible")) {
         ctx.fillStyle = green
         const clusterRows = filteredData.clusters.get(curCluster)
         const clusterLimiterText = clusterLimiter.value.split(",")
@@ -401,7 +401,7 @@ export function drawTick(e: InputEvent) {
             ctx.fillText(targetAreaId.toString() + "," + targetAreaName, targetX, targetY)
         }
     }
-    else if (curCluster.includes("reachable")) {
+    else if (curCluster.includes("reachable") || curCluster.includes("visible")) {
         ctx.fillStyle = green
         const clusterRows = filteredData.clusters.get(curCluster)
         let distances: number[] = [];
