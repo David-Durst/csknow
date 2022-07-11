@@ -14,6 +14,7 @@
 #include "bots/behavior_tree/action_data.h"
 #include "queries/nav_mesh.h"
 #include "queries/reachable.h"
+#include "bots/load_save_vis_points.h"
 #include "bots/testing/script_data.h"
 #include "bots/behavior_tree/priority/memory_data.h"
 #include "bots/behavior_tree/global/communicate_data.h"
@@ -86,7 +87,7 @@ struct Blackboard {
 
     // general map data
     ReachableResult reachability;
-    map<uint32_t, map<uint32_t, double>> distanceMatrix;
+    VisPoints visPoints;
     map<string, vector<uint32_t>> navPlaceToArea;
 
     // all player data
@@ -128,7 +129,6 @@ struct Blackboard {
         return navFile.get_place(navFile.get_nearest_area_by_position(vec3Conv(pos)).m_place);
     }
 
-    void computeDistanceMatrix();
     double getDistance(uint32_t srcArea, uint32_t dstArea) {
         return computeDistance(vec3tConv(navFile.get_area_by_id_fast(srcArea).get_center()),
                                vec3tConv(navFile.get_area_by_id_fast(dstArea).get_center()));
@@ -138,8 +138,11 @@ struct Blackboard {
     PrintState printCommunicateState(const ServerState & state);
     vector<PrintState> printPerPlayerState(const ServerState & state, CSGOId playerId);
 
-    Blackboard(string navPath) : navFile(navPath.c_str()), gen(rd()), aimDis(0., 2.0) {
-        //reachability(queryReachable(queryMapMesh(navFile))) {
+    Blackboard(string navPath, string mapName) :
+        navFile(navPath.c_str()), gen(rd()), aimDis(0., 2.0), visPoints(navFile) {
+        reachability.load(navPath, mapName);
+        visPoints.load(navPath, mapName);
+
         for (const auto & area : navFile.m_areas) {
             navPlaceToArea[navFile.get_place(area.m_place)].push_back(area.get_id());
         }

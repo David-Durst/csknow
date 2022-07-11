@@ -49,7 +49,7 @@ public:
     }
 
     void launchVisPointsCommand(const ServerState & state);
-    void loadVisPoints(string mapsPath, string mapName);
+    void load(string mapsPath, string mapName);
     const vector<VisPoint> & getVisPoints() const { return visPoints; }
 };
 

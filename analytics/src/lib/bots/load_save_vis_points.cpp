@@ -26,7 +26,7 @@ void VisPoints::launchVisPointsCommand(const ServerState & state) {
     state.saveScript({"sm_queryAllVisPointPairs"});
 }
 
-void VisPoints::loadVisPoints(string mapsPath, string mapName) {
+void VisPoints::load(string mapsPath, string mapName) {
     string visValidFileName = mapName + ".vis";
     string visValidFilePath = mapsPath + "/" + visValidFileName;
 
