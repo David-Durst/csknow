@@ -11,8 +11,6 @@ using std::set;
 using std::unordered_map;
 using std::vector;
 
-class TestReach { };
-
 class ReachableResult : public QueryResult {
 public:
     vector<AABB> coordinate;
@@ -26,6 +24,7 @@ public:
     ReachableResult() {
         this->variableLength = false;
         this->allTicks = true;
+        this->extension = ".reach";
     };
 
     void oneLineToCSV(int64_t index, stringstream & ss) {
@@ -53,6 +52,8 @@ public:
     double getDistance(int64_t src, int64_t dst) {
         return distanceMatrix[src * numAreas + dst];
     }
+
+    void load(string mapsPath, string mapName);
 };
 
 ReachableResult queryReachable(const MapMeshResult & mapMeshResult);

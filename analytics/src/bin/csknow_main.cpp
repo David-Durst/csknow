@@ -240,7 +240,10 @@ int main(int argc, char * argv[]) {
     string dust2MeshName = "de_dust2_mesh";
     MapMeshResult d2MeshResult = queryMapMesh(map_navs["de_dust2"]);
     string dust2ReachableName = "de_dust2_reachable";
-    ReachableResult d2ReachableResult = queryReachable(d2MeshResult);
+    //ReachableResult d2ReachableResult = queryReachable(d2MeshResult);
+    //d2ReachableResult.save(navPath, "de_dust2");
+    ReachableResult d2ReachableResult;
+    d2ReachableResult.load(navPath, "de_dust2");
     string dust2VisibleName = "de_dust2_visible";
     NavVisibleResult d2NavVisibleResult = queryNavVisible(map_visPoints.find("de_dust2")->second);
     /*
@@ -363,8 +366,8 @@ int main(int argc, char * argv[]) {
          */
 
     vector<string> queryNames = {"games", "rounds", "players", "ticks", "playerAtTick", dust2MeshName,
-                                 dust2VisibleName
-                                 //dust2ReachableName,
+                                 dust2VisibleName,
+                                 dust2ReachableName
     };
     //vector<string> queryNames = {"games", "rounds", "players", "ticks", "playerAtTick", "aCatClusterSequence", "aCatClusters", "midCTClusterSequence", "midTClusters", "lookers"};
     map<string, reference_wrapper<QueryResult>> queries {
@@ -375,7 +378,7 @@ int main(int argc, char * argv[]) {
             {queryNames[4], queryPlayerAtTick},
             {queryNames[5], d2MeshResult},
             {queryNames[6], d2NavVisibleResult},
-            //{queryNames[7], d2ReachableResult},
+            {queryNames[7], d2ReachableResult},
             //{queryNames[5], aCatClusterSequence},
             //{queryNames[6], aCatPeekersClusters},
             //{queryNames[7], midCTClusterSequence},

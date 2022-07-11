@@ -3,6 +3,7 @@
 #include <vector>
 #include <sstream>
 #include <string>
+#include <fstream>
 #define NOT_PLAYER_ID -1
 #define INTERNAL_TEAM_CT 0
 #define INTERNAL_TEAM_T 1
@@ -51,11 +52,21 @@ public:
     bool allTicks = false;
     int ticksPerEvent;
     int ticksColumn;
+    string extension = ".query";
     vector<int> keyPlayerColumns = {};
 //    vector<int> keysForDiff;
 
     //virtual string toCSVFiltered(const Position & position, string game) = 0;
     int64_t size;
+
+    void save(string mapsPath, string mapName) {
+        string fileName = mapName + extension;
+        string filePath = mapsPath + "/" + fileName;
+
+        std::ofstream fsQuery(filePath, std::ios::trunc);
+        fsQuery << toCSV();
+        fsQuery.close();
+    }
 
     string toCSV() {
         std::stringstream ss;

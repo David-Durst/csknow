@@ -3,6 +3,7 @@
 //
 
 #include "queries/reachable.h"
+#include <filesystem>
 
 ReachableResult queryReachable(const MapMeshResult & mapMeshResult) {
     ReachableResult result;
@@ -52,4 +53,53 @@ ReachableResult queryReachable(const MapMeshResult & mapMeshResult) {
 
     result.size = mapMeshResult.size;
     return result;
+}
+
+void ReachableResult::load(string mapsPath, string mapName) {
+    string reachableFileName = mapName + ".reach";
+    string reachableFilePath = mapsPath + "/" + reachableFileName;
+
+    if (std::filesystem::exists(reachableFilePath)) {
+        std::ifstream fsReach(reachableFilePath);
+        string reachBuf;
+        size_t index = 0;
+        getline(fsReach, reachBuf); // skip first line
+        while (getline(fsReach, reachBuf)) {
+            stringstream reachStream(reachBuf);
+            string value;
+
+            getline(reachStream, value, ','); // skip index
+
+            getline(reachStream, value, ',');
+            coordinate.push_back({});
+            coordinate[index].min.x = std::stod(value);
+
+            getline(reachStream, value, ',');
+            coordinate[index].min.y = stod(value);
+
+            getline(reachStream, value, ',');
+            coordinate[index].min.z = stod(value);
+
+            getline(reachStream, value, ',');
+            coordinate[index].max.x = stod(value);
+
+            getline(reachStream, value, ',');
+            coordinate[index].max.y = stod(value);
+
+            getline(reachStream, value, ',');
+            coordinate[index].max.z = stod(value);
+
+            while (getline(reachStream, value, ',')) {
+                distanceMatrix.push_back(stod(value));
+            }
+            index++;
+        }
+        size = coordinate.size();
+        if (index * index != distanceMatrix.size()) {
+            throw std::runtime_error("number of distances isn't square of number of nav mesh areas");
+        }
+    }
+    else {
+        throw std::runtime_error("no reachability file");
+    }
 }
