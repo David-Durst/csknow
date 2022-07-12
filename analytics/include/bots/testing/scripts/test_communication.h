@@ -41,7 +41,7 @@ public:
                                                                         make_unique<movement::WaitNode>(blackboard, 0.1),
                                                                         make_unique<Teleport>(blackboard, neededBots[2].id, state),
                                                                         make_unique<movement::WaitNode>(blackboard, 0.1),
-                                                                        make_unique<ClearMemoriesAndCommunicationNode>(blackboard),
+                                                                        make_unique<ClearMemoryCommunicationDangerNode>(blackboard),
                                                                         make_unique<movement::WaitNode>(blackboard, 2.0)),
                                                                 "CommunicationAimSetup");
             Node::Ptr disableAllBothDuringSetup = make_unique<ParallelFirstNode>(blackboard, Node::makeList(
@@ -91,7 +91,7 @@ public:
                                                                         make_unique<movement::WaitNode>(blackboard, 0.1),
                                                                         make_unique<Teleport>(blackboard, neededBots[2].id, state),
                                                                         make_unique<movement::WaitNode>(blackboard, 0.1),
-                                                                        make_unique<ClearMemoriesAndCommunicationNode>(blackboard),
+                                                                        make_unique<ClearMemoryCommunicationDangerNode>(blackboard),
                                                                         make_unique<movement::WaitNode>(blackboard, 1.0),
                                                                         make_unique<SlayAllBut>(blackboard, vector{neededBots[0].id, neededBots[2].id}, state),
                                                                         make_unique<movement::WaitNode>(blackboard, 2.0)),

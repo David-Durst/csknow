@@ -28,7 +28,7 @@ namespace communicate {
     }
 
     NodeState DiffusePositionsNode::exec(const ServerState & state, TreeThinker &treeThinker) {
-        if (state.roundNumber != diffuseRoundNumber) {
+        if (state.roundNumber != diffuseRoundNumber || blackboard.resetPossibleNavAreas) {
             const vector<CSGOId> & tPlayers = state.getPlayersOnTeam(ENGINE_TEAM_T);
             map<AreaId, CSKnowTime> tSpawnAreas = getSpawnAreas(state, blackboard, tPlayers);
             const vector<CSGOId> & ctPlayers = state.getPlayersOnTeam(ENGINE_TEAM_CT);
@@ -45,8 +45,9 @@ namespace communicate {
             }
 
             // rerun until get first tick of round where everyone is alive
-            if (tPlayers.size() + ctPlayers.size() == state.numPlayersAlive()) {
+            if (tPlayers.size() + ctPlayers.size() == state.numPlayersAlive() || blackboard.resetPossibleNavAreas) {
                 diffuseRoundNumber = state.roundNumber;
+                blackboard.resetPossibleNavAreas = false;
             }
         }
 

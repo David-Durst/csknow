@@ -114,6 +114,7 @@ struct Blackboard {
     }
     map<CSGOId, EnemyPositionsMemory> playerToMemory;
     PossibleNavAreas possibleNavAreas;
+    bool resetPossibleNavAreas = false;
 
     // priority data
     map<CSGOId, Priority> playerToPriority;

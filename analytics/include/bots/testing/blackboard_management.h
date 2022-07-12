@@ -66,16 +66,18 @@ public:
     }
 };
 
-class ClearMemoriesAndCommunicationNode : public Node {
+class ClearMemoryCommunicationDangerNode : public Node {
 public:
-    ClearMemoriesAndCommunicationNode(Blackboard & blackboard) :
-            Node(blackboard, "ClearMemoriesAndCommunication") { };
+    ClearMemoryCommunicationDangerNode(Blackboard & blackboard) :
+            Node(blackboard, "ClearMemoryCommunicationDanger") { };
     virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
         blackboard.tMemory.positions.clear();
         blackboard.ctMemory.positions.clear();
         for (auto & [_, memory] : blackboard.playerToMemory) {
             memory.positions.clear();
         }
+        blackboard.resetPossibleNavAreas = true;
+        blackboard.playerToDangerAreaId.clear();
         playerNodeState[treeThinker.csgoId] = NodeState::Success;
         return playerNodeState[treeThinker.csgoId];
     }
