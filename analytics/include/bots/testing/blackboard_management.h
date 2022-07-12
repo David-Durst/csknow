@@ -29,7 +29,9 @@ public:
             blackboard.playerToTreeThinkers[targetId].orderWaypointIndex = 0;
             blackboard.playerToPriority.erase(targetId);
         }
-        blackboard.navFile.remove_incoming_edges_to_areas({4048});
+        if (!areaIdsToRemove.empty()) {
+            blackboard.navFile.remove_incoming_edges_to_areas(areaIdsToRemove);
+        }
         playerNodeState[treeThinker.csgoId] = NodeState::Success;
         return playerNodeState[treeThinker.csgoId];
     }
