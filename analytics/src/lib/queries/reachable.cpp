@@ -95,6 +95,7 @@ void ReachableResult::load(string mapsPath, string mapName) {
             index++;
         }
         size = coordinate.size();
+        numAreas = size;
         if (index * index != distanceMatrix.size()) {
             throw std::runtime_error("number of distances isn't square of number of nav mesh areas");
         }

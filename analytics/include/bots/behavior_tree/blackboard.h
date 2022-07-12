@@ -79,6 +79,7 @@ struct PrintState {
 };
 
 struct Blackboard {
+    string navPath;
     nav_mesh::nav_file navFile;
     ServerState lastFrameState;
 
@@ -142,7 +143,7 @@ struct Blackboard {
     vector<PrintState> printPerPlayerState(const ServerState & state, CSGOId playerId);
 
     Blackboard(string navPath, string mapName) :
-        navFile(navPath.c_str()), gen(rd()), aimDis(0., 2.0), visPoints(navFile) {
+        navPath(navPath), navFile(navPath.c_str()), gen(rd()), aimDis(0., 2.0), visPoints(navFile) {
         string mapsPath = std::filesystem::path(navPath).remove_filename().string();
         reachability.load(mapsPath, mapName);
         visPoints.load(mapsPath, mapName);

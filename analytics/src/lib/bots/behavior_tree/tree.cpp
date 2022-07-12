@@ -25,7 +25,7 @@ void Tree::tick(ServerState & state, const string & mapsPath) {
         lastFramePlayers.insert(client.csgoId);
     }
 
-    if (state.mapNumber != curMapNumber || !samePlayers) {
+    if (state.mapNumber != curMapNumber || !samePlayers || resetState) {
         newBlackboard = true;
         blackboard = make_unique<Blackboard>(navPath, state.mapName);
         blackboard->navFile.remove_incoming_edges_to_areas({6938, 9026});

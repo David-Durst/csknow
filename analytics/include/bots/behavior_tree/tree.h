@@ -23,6 +23,7 @@ public:
     set<CSGOId> lastFramePlayers;
     int32_t curMapNumber = INVALID_ID;
     bool newBlackboard = false;
+    bool resetState = false;
     TreeThinker defaultThinker{INVALID_ID};
 
     string curLog;

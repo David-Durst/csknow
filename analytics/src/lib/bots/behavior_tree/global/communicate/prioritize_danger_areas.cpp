@@ -41,12 +41,13 @@ namespace communicate {
                 set<AreaId> visibleAreas = blackboard.visPoints.getAreasRelativeToSrc(curArea.get_id(), true);
                 vector<CoverEdge> coverEdges;
                 for (AreaId visibleAreaId : visibleAreas) {
+                    size_t visibleAreaIndex = blackboard.navFile.m_area_ids_to_indices[visibleAreaId];
                     for (const auto & connection : blackboard.navFile.get_area_by_id_fast(visibleAreaId).get_connections()) {
                         if (visibleAreas.find(connection.id) == visibleAreas.end()) {
                             // distance is distance to possible enemy locations
                             double minDistance = std::numeric_limits<double>::max();
                             for (const auto & possibleAreaId : getEnemiesPossiblePositions(state, treeThinker.csgoId, blackboard.possibleNavAreas)) {
-                                double tmpDistance = blackboard.reachability.getDistance(possibleAreaId, visibleAreaId);
+                                double tmpDistance = blackboard.reachability.getDistance(blackboard.navFile.m_area_ids_to_indices[possibleAreaId], visibleAreaIndex);
                                 if (tmpDistance < minDistance) {
                                     minDistance = tmpDistance;
                                 }

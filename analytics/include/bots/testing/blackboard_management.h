@@ -11,9 +11,12 @@
 class ForceOrderNode : public Node {
     vector<CSGOId> targetIds;
     vector<string> pathPlaces;
+    set<AreaId> areaIdsToRemove;
 public:
     ForceOrderNode(Blackboard & blackboard, string name, vector<CSGOId> targetIds, vector<string> pathPlaces) :
             Node(blackboard, name), targetIds(targetIds), pathPlaces(pathPlaces) { };
+    ForceOrderNode(Blackboard & blackboard, string name, vector<CSGOId> targetIds, vector<string> pathPlaces, set<AreaId> areaIdsToRemove) :
+            Node(blackboard, name), targetIds(targetIds), pathPlaces(pathPlaces), areaIdsToRemove(areaIdsToRemove) { };
     virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
         //vector<string> pathPlace = { "Catwalk", "ShortStairs", "ExtendedA", "BombsiteA" };
         vector<Waypoint> waypoints;

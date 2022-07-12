@@ -93,7 +93,12 @@ bool ScriptsRunner::tick(Tree & tree, ServerState & state) {
     if (startingNewScript) {
         std::cout << scripts[curScript]->name << " starting" << std::endl;
         startingNewScript = false;
+        tree.resetState = true;
     }
+    else {
+        tree.resetState = false;
+    }
+
     if (scripts[curScript]->tick(tree, state)) {
         startingNewScript = true;
         curScript++;
