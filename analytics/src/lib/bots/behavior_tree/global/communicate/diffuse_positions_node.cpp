@@ -10,6 +10,7 @@ namespace communicate {
         map<AreaId, CSKnowTime> result;
         if (!playersOnTeam.empty()) {
             nav_mesh::vec3_t origPos = vec3Conv(state.getClient(playersOnTeam[0]).getFootPosForPlayer());
+            result[blackboard.navFile.get_nearest_area_by_position(origPos).get_id()] = curTime;
             for (size_t i = 1; i < playersOnTeam.size(); i++) {
                 auto optionalWaypoints =
                         blackboard.navFile.find_path_detailed(origPos, vec3Conv(state.getClient(playersOnTeam[i]).getFootPosForPlayer()));
