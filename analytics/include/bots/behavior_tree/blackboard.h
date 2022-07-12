@@ -18,6 +18,7 @@
 #include "bots/testing/script_data.h"
 #include "bots/behavior_tree/priority/memory_data.h"
 #include "bots/behavior_tree/global/communicate_data.h"
+#include <filesystem>
 #include <memory>
 #include <random>
 using std::map;
@@ -141,8 +142,9 @@ struct Blackboard {
 
     Blackboard(string navPath, string mapName) :
         navFile(navPath.c_str()), gen(rd()), aimDis(0., 2.0), visPoints(navFile) {
-        reachability.load(navPath, mapName);
-        visPoints.load(navPath, mapName);
+        string mapsPath = std::filesystem::path(navPath).remove_filename().string();
+        reachability.load(mapsPath, mapName);
+        visPoints.load(mapsPath, mapName);
 
         for (const auto & area : navFile.m_areas) {
             navPlaceToArea[navFile.get_place(area.m_place)].push_back(area.get_id());
