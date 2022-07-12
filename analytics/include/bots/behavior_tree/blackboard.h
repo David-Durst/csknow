@@ -98,6 +98,7 @@ struct Blackboard {
     vector<Order> orders;
     map<CSGOId, int64_t> playerToOrder;
     map<CSGOId, int32_t> playerToPushOrder;
+    map<CSGOId, AreaId> playerToDangerAreaId;
 
     // knowledge data
     double tMemorySeconds = 1.0, ctMemorySeconds = 1.0;

@@ -10,6 +10,7 @@
 #include "bots/behavior_tree/node.h"
 #include <map>
 #include <memory>
+#define WATCHED_DISTANCE 750.
 
 namespace communicate {
     class AssignAggressionNode : public Node {
@@ -27,7 +28,13 @@ namespace communicate {
     class DiffusePositionsNode : public Node {
         int32_t diffuseRoundNumber = -1;
     public:
-        DiffusePositionsNode(Blackboard & blackboard) : Node(blackboard, "DiffiusePositionsNode") { };
+        DiffusePositionsNode(Blackboard & blackboard) : Node(blackboard, "DiffusePositionsNode") { };
+        virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override;
+    };
+
+    class PrioritizeDangerAreasNode : public Node {
+    public:
+        PrioritizeDangerAreasNode(Blackboard & blackboard) : Node(blackboard, "PrioritizeDangerAreas") { };
         virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override;
     };
 }

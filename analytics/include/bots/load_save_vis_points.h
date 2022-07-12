@@ -48,6 +48,23 @@ public:
         return visPoints[std::min(src, target)].visibleFromCurPoint[std::max(src, target)];
     }
 
+    set<AreaId> getAreasRelativeToSrc(AreaId srcId, bool visible) const {
+        set<AreaId> result;
+        size_t src = areaIdToVectorIndex.find(srcId)->second;
+        for (size_t target = 0; target < visPoints.size(); target++) {
+            if (target == src) {
+                continue;
+            }
+            else if (visible && isVisibleIndex(src, target)) {
+                result.insert(visPoints[target].areaId);
+            }
+            else if (!visible && !isVisibleIndex(src, target)) {
+                result.insert(visPoints[target].areaId);
+            }
+        }
+        return result;
+    }
+
     void launchVisPointsCommand(const ServerState & state);
     void load(string mapsPath, string mapName);
     const vector<VisPoint> & getVisPoints() const { return visPoints; }

@@ -71,14 +71,18 @@ namespace action {
             return playerNodeState[treeThinker.csgoId];
         }
 
-        // aim at target player if one exists, otherwise the next way point
+        // aim at target player if one exists, or aim at danger location, otherwise the next way point
         // this should handle c4 as end of path will be c4
-        if (curPriority.targetPlayer.playerId == INVALID_ID) {
-            aimTarget = curPath.waypoints[curPath.curWaypoint].pos;
+        if (curPriority.targetPlayer.playerId != INVALID_ID) {
+            aimTarget = curPriority.targetPlayer.eyePos;
+        }
+        else if (blackboard.playerToDangerAreaId.find(treeThinker.csgoId) != blackboard.playerToDangerAreaId.end()) {
+            aimTarget = vec3tConv(blackboard.navFile.get_area_by_id_fast(blackboard.playerToDangerAreaId[treeThinker.csgoId]).get_center());
             aimTarget.z += EYE_HEIGHT;
         }
         else {
-            aimTarget = curPriority.targetPlayer.eyePos;
+            aimTarget = curPath.waypoints[curPath.curWaypoint].pos;
+            aimTarget.z += EYE_HEIGHT;
         }
 
         Vec3 targetVector = aimTarget - curClient.getEyePosForPlayer();
