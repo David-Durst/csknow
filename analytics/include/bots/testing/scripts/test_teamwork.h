@@ -45,7 +45,7 @@ public:
                    {ObserveType::Absolute, 0, {366.774475, 2669.538818, 239.860245}, {16.486465, -46.266056}}) { };
 
     virtual void initialize(Tree & tree, ServerState & state) override  {
-        if (tree.newBlackboard)  {
+        if (tree.newBlackboard) {
             Blackboard & blackboard = *tree.blackboard;
             Script::initialize(tree, state);
             vector<string> aToCatPathPlace(order::catToAPathPlace.rbegin(), order::catToAPathPlace.rend());
@@ -85,7 +85,7 @@ public:
                    {ObserveType::Absolute, 0, {366.774475, 2669.538818, 239.860245}, {16.486465, -46.266056}}) { };
 
     virtual void initialize(Tree & tree, ServerState & state) override  {
-        if (tree.newBlackboard)  {
+        if (tree.newBlackboard) {
             Blackboard & blackboard = *tree.blackboard;
             Script::initialize(tree, state);
             vector<string> aToCatPathPlace(order::catToAPathPlace.rbegin(), order::catToAPathPlace.rend());

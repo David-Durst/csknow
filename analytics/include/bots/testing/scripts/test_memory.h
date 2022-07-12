@@ -18,7 +18,7 @@ public:
             Script("MemoryAimCheck", {{0, ENGINE_TEAM_T}, {0, ENGINE_TEAM_CT}}, {ObserveType::FirstPerson, 0}) { }
 
     virtual void initialize(Tree & tree, ServerState & state) override {
-        if (tree.newBlackboard)  {
+        if (tree.newBlackboard) {
             Blackboard & blackboard = *tree.blackboard;
             Script::initialize(tree, state);
             vector<string> aToCatPathPlace(order::catToAPathPlace.rbegin(), order::catToAPathPlace.rend());
@@ -65,7 +65,7 @@ public:
             Script("MemoryForgetCheck", {{0, ENGINE_TEAM_T}, {0, ENGINE_TEAM_CT}}, {ObserveType::FirstPerson, 0}) { }
 
     virtual void initialize(Tree & tree, ServerState & state) override {
-        if (tree.newBlackboard)  {
+        if (tree.newBlackboard) {
             Blackboard & blackboard = *tree.blackboard;
             Script::initialize(tree, state);
             vector<string> aToCatPathPlace(order::catToAPathPlace.rbegin(), order::catToAPathPlace.rend());

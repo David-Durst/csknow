@@ -30,7 +30,7 @@ public:
 
     TreeThinker getDefaultThinker(ServerState & state) {
         TreeThinker defaultThinker;
-        defaultThinker.csgoId = state.clients[0].csgoId;
+        defaultThinker.csgoId = INVALID_ID;
         return defaultThinker;
     }
 

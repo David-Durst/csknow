@@ -99,7 +99,8 @@ bool ScriptsRunner::tick(Tree & tree, ServerState & state) {
         tree.resetState = false;
     }
 
-    if (scripts[curScript]->tick(tree, state)) {
+    // wait until tree finished reseting
+    if (!tree.resetState && scripts[curScript]->tick(tree, state)) {
         startingNewScript = true;
         curScript++;
     }
