@@ -188,11 +188,12 @@ export class Parser {
     baseUrl: string;
     filterUrl: string;
     nonTemporal: boolean;
+    overlay: boolean;
 
     constructor(tableName: string, startTickColumn: string,
                 foreignKeyNames: string[], otherColumnNames: string[],
                 ticksPerEvent: string, parserType: ParserType, baseUrl: string,
-                keyPlayerColumns: string, nonTemporal: string) {
+                keyPlayerColumns: string, nonTemporal: string, overlay: string) {
         this.tableName = tableName;
         this.foreignKeyNames = foreignKeyNames;
         this.otherColumnNames = otherColumnNames;
@@ -216,6 +217,7 @@ export class Parser {
             }
         }
         this.nonTemporal = parseBool(nonTemporal)
+        this.overlay = parseBool(overlay)
     }
 
     parseOneLine(currentLine: string[]) {

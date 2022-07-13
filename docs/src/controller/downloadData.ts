@@ -33,11 +33,13 @@ export async function getTables() {
                 const numForeignKeys = parseInt(cols[numForeignKeysIndex])
                 const numOtherColsIndex = numForeignKeysIndex + numForeignKeys + 1
                 const numOtherCols = parseInt(cols[numOtherColsIndex])
-                const ticksPerEventIndex = cols.length - 3
-                const keyPlayerColumnsIndex = cols.length - 2
-                const nonTemporalIndex = cols.length - 1
+                const ticksPerEventIndex = cols.length - 4
+                const keyPlayerColumnsIndex = cols.length - 3
+                const nonTemporalIndex = cols.length - 2
                 const nonTemporal = parseBool(cols[nonTemporalIndex])
-                if (nonTemporal) {
+                const overlayIndex = cols.length - 1
+                const overlay = parseBool(cols[overlayIndex])
+                if (overlay) {
                     gameData.overlays.set(cols[0], [])
                 }
                 else {
@@ -68,14 +70,14 @@ export async function getTables() {
                         cols.slice(numOtherColsIndex + 1, numOtherColsIndex + numOtherCols + 1),
                         cols[ticksPerEventIndex], parserType,
                         remoteAddr + "query/" + cols[0],
-                        cols[keyPlayerColumnsIndex], cols[nonTemporalIndex]
+                        cols[keyPlayerColumnsIndex], cols[nonTemporalIndex], cols[overlayIndex]
                     )
                 )
                 if (!tablesNotIndexedByTick.includes(cols[0]) && !cols[nonTemporalIndex]) {
                     gameData.ticksToOtherTablesIndices.set(cols[0], new IntervalTree<number>());
                 }
                 if (!addedDownloadedOptions) {
-                    if (nonTemporal) {
+                    if (overlay) {
                         (<HTMLSelectElement> document.getElementById("overlay-type"))
                             .add(new Option(cols[0], cols[0]));
                     }
