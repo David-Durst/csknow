@@ -7,6 +7,7 @@ import {
     TickRow,
 } from "../data/tables";
 import IntervalTree from "@flatten-js/interval-tree";
+import {gameData} from "../data/data";
 
 let eventSelector: HTMLSelectElement = null
 let eventDiv: HTMLDivElement = null
@@ -77,12 +78,20 @@ export function setEventText(tickData: TickRow, gameData: GameData) {
         return
     }
     eventDiv.innerHTML = ""
-    const index = getTickToOtherTableIndex(gameData, curEvent)
-    if (index.intersect_any([tickData.id, tickData.id])) {
-        const events = index.search([tickData.id, tickData.id])
-        const eventArray = gameData.tables.get(curEvent)
-        for (let eIndex = events.length - 1; eIndex >= 0; eIndex--) {
-            eventDiv.innerHTML += eventArray[events[eIndex]].getHTML()
+    if (curEvent == playerAtTickTableName) {
+        const patRows = gameData.getPlayersAtTick(tickData)
+        for (let patRowIndex = 0; patRowIndex < patRows.length; patRowIndex++) {
+            eventDiv.innerHTML += patRows[patRowIndex].getHTML()
+        }
+    }
+    else {
+        const index = getTickToOtherTableIndex(gameData, curEvent)
+        if (index.intersect_any([tickData.id, tickData.id])) {
+            const events = index.search([tickData.id, tickData.id])
+            const eventArray = gameData.tables.get(curEvent)
+            for (let eIndex = events.length - 1; eIndex >= 0; eIndex--) {
+                eventDiv.innerHTML += eventArray[events[eIndex]].getHTML()
+            }
         }
     }
 }

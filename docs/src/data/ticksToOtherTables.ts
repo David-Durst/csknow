@@ -3,10 +3,9 @@ import {
     TickRow,
     GameData,
     playerAtTickTableName,
-    tablesNotIndexedByTick,
     tickTableName,
     RangeIndex,
-    RangeIndexEntry,
+    RangeIndexEntry, tablesNotFilteredByRound,
 } from "./tables";
 import {gameData} from "./data";
 import IntervalTree from "@flatten-js/interval-tree";
@@ -52,10 +51,10 @@ export function indexEventsForRound(gameData: GameData) {
         gameData.ticksToPlayerAtTick)
 
     for (let dataName of gameData.tableNames) {
-        let dude = tablesNotIndexedByTick
-        if (tablesNotIndexedByTick.includes(dataName)
-            || dataName == playerAtTickTableName || dataName == tickTableName
-            || gameData.overlays.has(dataName)) {
+        // skip if non-temporal, longer time scale than a round, tick data, or already indexed by ticks to PAT
+        if (tablesNotFilteredByRound.includes(dataName)
+            || dataName == tickTableName || dataName == playerAtTickTableName
+            || gameData.parsers.get(dataName).nonTemporal) {
             continue;
         }
         let getTicksPerEvent = function (index: number, tick: number): number {

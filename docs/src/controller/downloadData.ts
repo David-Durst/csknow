@@ -1,12 +1,12 @@
 import {gameData, parse} from "../data/data";
 import {
-    tablesNotIndexedByTick,
     gameTableName, Parser,
     ParserType, playerAtTickTableName, playersTableName, RoundRow,
     roundTableName, tablesNotFilteredByRound,
     tickTableName, TickRow, PlayerAtTickRow, parseBool
 } from "../data/tables";
 import IntervalTree from "@flatten-js/interval-tree";
+import {indexEventsForRound} from "../data/ticksToOtherTables";
 
 export let remoteAddr = "http://52.86.105.42:3123/"
 
@@ -73,15 +73,13 @@ export async function getTables() {
                         cols[keyPlayerColumnsIndex], cols[nonTemporalIndex], cols[overlayIndex]
                     )
                 )
-                if (!tablesNotIndexedByTick.includes(cols[0]) && !cols[nonTemporalIndex]) {
-                    gameData.ticksToOtherTablesIndices.set(cols[0], new IntervalTree<number>());
-                }
                 if (!addedDownloadedOptions) {
                     if (overlay) {
                         (<HTMLSelectElement> document.getElementById("overlay-type"))
                             .add(new Option(cols[0], cols[0]));
                     }
-                    else {
+                    // all tables that are per tick (aka per round and not tick) are events to consider
+                    else if (!tablesNotFilteredByRound.includes(cols[0]) && cols[0] != tickTableName){
                         (<HTMLSelectElement> document.getElementById("event-type"))
                             .add(new Option(cols[0], cols[0]));
                     }
@@ -148,15 +146,15 @@ export async function getPlayers(gameId: number) {
 
 export function getRoundFilteredTables(promises: Promise<any>[], curRound: RoundRow) {
     for (const downloadedDataName of gameData.tableNames) {
-        if (!tablesNotIndexedByTick.includes(downloadedDataName)) {
-            gameData.ticksToOtherTablesIndices.set(downloadedDataName,
-                new IntervalTree<number>());
-        }
         if (tablesNotFilteredByRound.includes(downloadedDataName)) {
             continue;
         }
         if (gameData.parsers.get(downloadedDataName).nonTemporal) {
             continue;
+        }
+        // if temporal, filtered by round, and not jsut the ticks table, setup interval tree for it
+        if (downloadedDataName != tickTableName) {
+            gameData.ticksToOtherTablesIndices.set(downloadedDataName, new IntervalTree<number>());
         }
         gameData.parsers.get(downloadedDataName).filterUrl = curRound.gameId.toString()
         promises.push(
