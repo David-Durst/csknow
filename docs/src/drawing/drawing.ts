@@ -228,6 +228,7 @@ function trackMouse(e: MouseEvent) {
 }
 
 export function drawTick(e: InputEvent) {
+    let ftmp = filteredData
     ctx.drawImage(minimap,0,0,minimapWidth,minimapHeight,0,0,
         canvasWidth,canvasHeight);
     ctx.textBaseline = "middle"

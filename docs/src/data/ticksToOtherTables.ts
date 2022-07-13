@@ -52,6 +52,7 @@ export function indexEventsForRound(gameData: GameData) {
         gameData.ticksToPlayerAtTick)
 
     for (let dataName of gameData.tableNames) {
+        let dude = tablesNotIndexedByTick
         if (tablesNotIndexedByTick.includes(dataName)
             || dataName == playerAtTickTableName || dataName == tickTableName
             || gameData.overlays.has(dataName)) {

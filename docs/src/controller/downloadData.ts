@@ -35,9 +35,9 @@ export async function getTables() {
                 const numOtherCols = parseInt(cols[numOtherColsIndex])
                 const ticksPerEventIndex = cols.length - 3
                 const keyPlayerColumnsIndex = cols.length - 2
-                const allTicksIndex = cols.length - 1
-                const allTicks = parseBool(cols[allTicksIndex])
-                if (allTicks) {
+                const nonTemporalIndex = cols.length - 1
+                const nonTemporal = parseBool(cols[nonTemporalIndex])
+                if (nonTemporal) {
                     gameData.overlays.set(cols[0], [])
                 }
                 else {
@@ -68,14 +68,14 @@ export async function getTables() {
                         cols.slice(numOtherColsIndex + 1, numOtherColsIndex + numOtherCols + 1),
                         cols[ticksPerEventIndex], parserType,
                         remoteAddr + "query/" + cols[0],
-                        cols[keyPlayerColumnsIndex], cols[allTicksIndex]
+                        cols[keyPlayerColumnsIndex], cols[nonTemporalIndex]
                     )
                 )
-                if (!tablesNotIndexedByTick.includes(cols[0])) {
+                if (!tablesNotIndexedByTick.includes(cols[0]) && !cols[nonTemporalIndex]) {
                     gameData.ticksToOtherTablesIndices.set(cols[0], new IntervalTree<number>());
                 }
                 if (!addedDownloadedOptions) {
-                    if (allTicks) {
+                    if (nonTemporal) {
                         (<HTMLSelectElement> document.getElementById("overlay-type"))
                             .add(new Option(cols[0], cols[0]));
                     }
@@ -153,7 +153,7 @@ export function getRoundFilteredTables(promises: Promise<any>[], curRound: Round
         if (tablesNotFilteredByRound.includes(downloadedDataName)) {
             continue;
         }
-        if (gameData.parsers.get(downloadedDataName).allTicks) {
+        if (gameData.parsers.get(downloadedDataName).nonTemporal) {
             continue;
         }
         gameData.parsers.get(downloadedDataName).filterUrl = curRound.gameId.toString()
@@ -174,9 +174,9 @@ export function getRoundFilteredTables(promises: Promise<any>[], curRound: Round
     }
 }
 
-export function getAllTicksTables(promises: Promise<any>[]) {
+export function getNonTemporalTables(promises: Promise<any>[]) {
     for (const downloadedDataName of gameData.tableNames) {
-        if (!gameData.parsers.get(downloadedDataName).allTicks) {
+        if (!gameData.parsers.get(downloadedDataName).nonTemporal) {
             continue;
         }
         gameData.parsers.get(downloadedDataName).filterUrl = ""

@@ -187,12 +187,12 @@ export class Parser {
     parserType: ParserType;
     baseUrl: string;
     filterUrl: string;
-    allTicks: boolean;
+    nonTemporal: boolean;
 
     constructor(tableName: string, startTickColumn: string,
                 foreignKeyNames: string[], otherColumnNames: string[],
                 ticksPerEvent: string, parserType: ParserType, baseUrl: string,
-                keyPlayerColumns: string, allTicks: string) {
+                keyPlayerColumns: string, nonTemporal: string) {
         this.tableName = tableName;
         this.foreignKeyNames = foreignKeyNames;
         this.otherColumnNames = otherColumnNames;
@@ -215,7 +215,7 @@ export class Parser {
                 this.keyPlayerColumns.push(parseInt(keyPlayerColumn))
             }
         }
-        this.allTicks = parseBool(allTicks)
+        this.nonTemporal = parseBool(nonTemporal)
     }
 
     parseOneLine(currentLine: string[]) {
@@ -278,7 +278,7 @@ export class Parser {
             )
         }
         // overlays last for all times
-        else if (this.allTicks) {
+        else if (this.nonTemporal) {
             gameData.overlays.get(this.tableName).push(
                 new Row(
                     id, this,
