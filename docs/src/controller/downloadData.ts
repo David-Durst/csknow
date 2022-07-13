@@ -38,7 +38,7 @@ export async function getTables() {
                 const allTicksIndex = cols.length - 1
                 const allTicks = parseBool(cols[allTicksIndex])
                 if (allTicks) {
-                    gameData.clusters.set(cols[0], [])
+                    gameData.overlays.set(cols[0], [])
                 }
                 else {
                     gameData.tables.set(cols[0], [])

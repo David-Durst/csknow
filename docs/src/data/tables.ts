@@ -277,9 +277,9 @@ export class Parser {
                 )
             )
         }
-        // clusters last for all times
+        // overlays last for all times
         else if (this.allTicks) {
-            gameData.clusters.get(this.tableName).push(
+            gameData.overlays.get(this.tableName).push(
                 new Row(
                     id, this,
                     currentLine.slice(foreignKeysStart,
@@ -336,7 +336,7 @@ export class GameData {
         new Map<string, Row[]>();
     ticksToOtherTablesIndices: Map<string, IntervalTree<number>> =
         new Map<string, IntervalTree<number>>();
-    clusters: Map<string, Row[]> =
+    overlays: Map<string, Row[]> =
         new Map<string, Row[]>();
 
     getRound(tickData: TickRow) : RoundRow {
@@ -392,7 +392,7 @@ export class GameData {
         target.ticksToPlayerAtTick = this.ticksToPlayerAtTick;
         target.tables = this.tables;
         target.ticksToOtherTablesIndices = this.ticksToOtherTablesIndices;
-        target.clusters = this.clusters;
+        target.overlays = this.overlays;
     }
 
     clear() {
@@ -408,8 +408,8 @@ export class GameData {
             this.ticksToOtherTablesIndices.set(key, new IntervalTree<number>())
         }
         this.ticksToPlayerAtTick = [];
-        for (const key of Array.from(this.clusters.keys())) {
-            this.clusters.set(key, []);
+        for (const key of Array.from(this.overlays.keys())) {
+            this.overlays.set(key, []);
         }
     }
 }

@@ -7,8 +7,7 @@ import {
 import {PlayerAtTickRow, TickRow} from "../data/tables";
 import {getPackedSettings} from "http2";
 import {
-    clusterLimiter,
-    curCluster,
+    curOverlay,
     getPlayersText,
     setEventText, setSelectionsToDraw,
     setupEventDrawing,
@@ -294,72 +293,40 @@ export function drawTick(e: InputEvent) {
             bottomRightCoordinate.getCanvasX() - topLeftCoordinate.getCanvasX(),
             bottomRightCoordinate.getCanvasY() - topLeftCoordinate.getCanvasY())
     }
-    if (curCluster != "none" && !curCluster.includes("mesh") && !curCluster.includes("reachable") && !curCluster.includes("visible")) {
+    if (curOverlay.includes("mesh")) {
         ctx.fillStyle = green
-        const clusterRows = filteredData.clusters.get(curCluster)
-        const clusterLimiterText = clusterLimiter.value.split(",")
-        const validClusters: number[] = []
-        for (const clusterLimiterEntry of clusterLimiterText) {
-            if (!clusterLimiterEntry.includes("-")) {
-                validClusters.push(parseInt(clusterLimiterEntry))
-            }
-            else {
-                const minMaxClusterLimit = clusterLimiterEntry.split("-")
-                const minLimit = parseInt(minMaxClusterLimit[0])
-                const maxLimit = parseInt(minMaxClusterLimit[1])
-                for (let i = minLimit; i <= maxLimit; i++) {
-                    validClusters.push(i)
-                }
-            }
-        }
-        for (let c = 0; c < clusterRows.length; c++) {
-            const cluster = clusterRows[c]
-            if (clusterLimiter.value != "" && !validClusters.includes(cluster.id)) {
-                continue;
-            }
-            const clusterLocation = new MapCoordinate(
-                parseFloat(cluster.otherColumnValues[0]),
-                parseFloat(cluster.otherColumnValues[1]),
-                false);
-            const zScaling = (parseFloat(cluster.otherColumnValues[2]) - minZ) /
-                (maxZ - minZ)
-            ctx.font = (((zScaling * 20 + 30)/2)*fontScale).toString() + "px Tahoma"
-            ctx.fillText(cluster.id.toString(), clusterLocation.getCanvasX(), clusterLocation.getCanvasY())
-        }
-    }
-    else if (curCluster.includes("mesh")) {
-        ctx.fillStyle = green
-        const clusterRows = filteredData.clusters.get(curCluster)
+        const overlayRows = filteredData.overlays.get(curOverlay)
         let connectionAreaIds: number[] = [];
         let targetAreaId = -1
         let targetAreaName = ""
         let targetX = -1
         let targetY = -1
         let targetFontSize = -1
-        for (let c = 0; c < clusterRows.length; c++) {
-            const cluster = clusterRows[c]
+        // draw all area outlines and compute target area
+        for (let o = 0; o < overlayRows.length; o++) {
+            const overlayRow = overlayRows[o]
             const minCoordinate = new MapCoordinate(
-                parseFloat(cluster.otherColumnValues[2]),
-                parseFloat(cluster.otherColumnValues[3]),
+                parseFloat(overlayRow.otherColumnValues[2]),
+                parseFloat(overlayRow.otherColumnValues[3]),
                 false);
             const maxCoordinate = new MapCoordinate(
-                parseFloat(cluster.otherColumnValues[5]),
-                parseFloat(cluster.otherColumnValues[6]),
+                parseFloat(overlayRow.otherColumnValues[5]),
+                parseFloat(overlayRow.otherColumnValues[6]),
                 false);
             const avgX = (minCoordinate.getCanvasX() + maxCoordinate.getCanvasX()) / 2
             const avgY = (minCoordinate.getCanvasY() + maxCoordinate.getCanvasY()) / 2
-            const avgZ = (parseFloat(cluster.otherColumnValues[4]) + parseFloat(cluster.otherColumnValues[7])) / 2;
+            const avgZ = (parseFloat(overlayRow.otherColumnValues[4]) + parseFloat(overlayRow.otherColumnValues[7])) / 2;
             const zScaling = (avgZ - minZ) / (maxZ - minZ)
             if (lastMousePosition.x >= minCoordinate.x &&
                 lastMousePosition.x <= maxCoordinate.x &&
                 lastMousePosition.y >= minCoordinate.y &&
                 lastMousePosition.y <= maxCoordinate.y) {
-                targetAreaId = parseInt(cluster.otherColumnValues[1])
-                targetAreaName = cluster.otherColumnValues[0]
+                targetAreaId = parseInt(overlayRow.otherColumnValues[1])
+                targetAreaName = overlayRow.otherColumnValues[0]
                 targetX = avgX
                 targetY = avgY
                 targetFontSize = (((zScaling * 20 + 30)/2)*fontScale)
-                connectionAreaIds = cluster.otherColumnValues[8].split(';').map(s => parseInt(s))
+                connectionAreaIds = overlayRow.otherColumnValues[8].split(';').map(s => parseInt(s))
                 ctx.fillStyle = "rgba(0, 0, 0, 0.9)";
                 ctx.fillRect(minCoordinate.getCanvasX(), minCoordinate.getCanvasY(),
                     maxCoordinate.getCanvasX() - minCoordinate.getCanvasX(),
@@ -372,22 +339,23 @@ export function drawTick(e: InputEvent) {
                 maxCoordinate.getCanvasY() - minCoordinate.getCanvasY())
 
         }
-        for (let c = 0; c < clusterRows.length; c++) {
-            const cluster = clusterRows[c]
-            if (!connectionAreaIds.includes(parseInt(cluster.otherColumnValues[1]))) {
+        // draw colored fill ins for connections for connections
+        for (let o = 0; o < overlayRows.length; o++) {
+            const overlayRow = overlayRows[o]
+            if (!connectionAreaIds.includes(parseInt(overlayRow.otherColumnValues[1]))) {
                 continue
             }
             const minCoordinate = new MapCoordinate(
-                parseFloat(cluster.otherColumnValues[2]),
-                parseFloat(cluster.otherColumnValues[3]),
+                parseFloat(overlayRow.otherColumnValues[2]),
+                parseFloat(overlayRow.otherColumnValues[3]),
                 false);
             const maxCoordinate = new MapCoordinate(
-                parseFloat(cluster.otherColumnValues[5]),
-                parseFloat(cluster.otherColumnValues[6]),
+                parseFloat(overlayRow.otherColumnValues[5]),
+                parseFloat(overlayRow.otherColumnValues[6]),
                 false);
             const avgX = (minCoordinate.getCanvasX() + maxCoordinate.getCanvasX()) / 2
             const avgY = (minCoordinate.getCanvasY() + maxCoordinate.getCanvasY()) / 2
-            const avgZ = (parseFloat(cluster.otherColumnValues[4]) + parseFloat(cluster.otherColumnValues[7])) / 2;
+            const avgZ = (parseFloat(overlayRow.otherColumnValues[4]) + parseFloat(overlayRow.otherColumnValues[7])) / 2;
             const zScaling = (avgZ - minZ) / (maxZ - minZ)
             ctx.font = (((zScaling * 20 + 30)/2)*fontScale).toString() + "px Tahoma"
             ctx.fillStyle = "rgba(255, 0, 0, 0.2)";
@@ -401,9 +369,9 @@ export function drawTick(e: InputEvent) {
             ctx.fillText(targetAreaId.toString() + "," + targetAreaName, targetX, targetY)
         }
     }
-    else if (curCluster.includes("reachable") || curCluster.includes("visible")) {
+    else if (curOverlay.includes("reachable") || curOverlay.includes("visible")) {
         ctx.fillStyle = green
-        const clusterRows = filteredData.clusters.get(curCluster)
+        const overlayRows = filteredData.overlays.get(curOverlay)
         let distances: number[] = [];
         let minDistance;
         let maxDistance;
@@ -411,29 +379,30 @@ export function drawTick(e: InputEvent) {
         let targetX = -1
         let targetY = -1
         let targetFontSize = -1
-        for (let c = 0; c < clusterRows.length; c++) {
-            const cluster = clusterRows[c]
+        // draw outlines and compute area id
+        for (let o = 0; o < overlayRows.length; o++) {
+            const overlayRow = overlayRows[o]
             const minCoordinate = new MapCoordinate(
-                parseFloat(cluster.otherColumnValues[0]),
-                parseFloat(cluster.otherColumnValues[1]),
+                parseFloat(overlayRow.otherColumnValues[0]),
+                parseFloat(overlayRow.otherColumnValues[1]),
                 false);
             const maxCoordinate = new MapCoordinate(
-                parseFloat(cluster.otherColumnValues[3]),
-                parseFloat(cluster.otherColumnValues[4]),
+                parseFloat(overlayRow.otherColumnValues[3]),
+                parseFloat(overlayRow.otherColumnValues[4]),
                 false);
             const avgX = (minCoordinate.getCanvasX() + maxCoordinate.getCanvasX()) / 2
             const avgY = (minCoordinate.getCanvasY() + maxCoordinate.getCanvasY()) / 2
-            const avgZ = (parseFloat(cluster.otherColumnValues[2]) + parseFloat(cluster.otherColumnValues[5])) / 2;
+            const avgZ = (parseFloat(overlayRow.otherColumnValues[2]) + parseFloat(overlayRow.otherColumnValues[5])) / 2;
             const zScaling = (avgZ - minZ) / (maxZ - minZ)
             if (lastMousePosition.x >= minCoordinate.x &&
                 lastMousePosition.x <= maxCoordinate.x &&
                 lastMousePosition.y >= minCoordinate.y &&
                 lastMousePosition.y <= maxCoordinate.y) {
-                targetAreaId = cluster.id
+                targetAreaId = overlayRow.id
                 targetX = avgX
                 targetY = avgY
                 targetFontSize = (((zScaling * 20 + 30)/2)*fontScale)
-                distances = cluster.otherColumnValues.slice(6).map(s => parseFloat(s))
+                distances = overlayRow.otherColumnValues.slice(6).map(s => parseFloat(s))
                 minDistance = Math.min(...distances);
                 maxDistance = Math.max(...distances);
                 ctx.fillStyle = "rgba(0, 0, 0, 0.9)";
@@ -448,20 +417,21 @@ export function drawTick(e: InputEvent) {
                 maxCoordinate.getCanvasY() - minCoordinate.getCanvasY())
 
         }
-        for (let c = 0; targetAreaId != -1 && c < clusterRows.length; c++) {
-            const cluster = clusterRows[c]
-            if (distances[c] == -1) {
+        // draw fill ins for all areas
+        for (let o = 0; targetAreaId != -1 && o < overlayRows.length; o++) {
+            const overlayRow = overlayRows[o]
+            if (distances[o] == -1) {
                 continue
             }
             const minCoordinate = new MapCoordinate(
-                parseFloat(cluster.otherColumnValues[0]),
-                parseFloat(cluster.otherColumnValues[1]),
+                parseFloat(overlayRow.otherColumnValues[0]),
+                parseFloat(overlayRow.otherColumnValues[1]),
                 false);
             const maxCoordinate = new MapCoordinate(
-                parseFloat(cluster.otherColumnValues[3]),
-                parseFloat(cluster.otherColumnValues[4]),
+                parseFloat(overlayRow.otherColumnValues[3]),
+                parseFloat(overlayRow.otherColumnValues[4]),
                 false);
-            const percentDistance = (distances[c] - minDistance) / (maxDistance - minDistance);
+            const percentDistance = (distances[o] - minDistance) / (maxDistance - minDistance);
             ctx.fillStyle = `rgba(${percentDistance * 255}, 0, ${(1 - percentDistance) * 255}, 0.5)`;
             ctx.fillRect(minCoordinate.getCanvasX(), minCoordinate.getCanvasY(),
                 maxCoordinate.getCanvasX() - minCoordinate.getCanvasX(),

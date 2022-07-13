@@ -10,10 +10,9 @@ import IntervalTree from "@flatten-js/interval-tree";
 
 let eventSelector: HTMLSelectElement = null
 let eventDiv: HTMLDivElement = null
-let clusterSelector: HTMLSelectElement = null
-export let clusterLimiter: HTMLInputElement = null
+let overlaySelector: HTMLSelectElement = null
 export let curEvent: string = "none"
-export let curCluster: string = "none"
+export let curOverlay: string = "none"
 
 function basicPlayerText(gameData: GameData, tickData: TickRow,
                          playerIndex: number): string {
@@ -90,14 +89,13 @@ export function setEventText(tickData: TickRow, gameData: GameData) {
 
 export function setSelectionsToDraw() {
     curEvent = eventSelector.value
-    curCluster = clusterSelector.value;
+    curOverlay = overlaySelector.value;
 }
 
 export function setupEventDrawing() {
     eventSelector = document.querySelector<HTMLSelectElement>("#event-type")
     curEvent = eventSelector.value;
     eventDiv = document.querySelector<HTMLDivElement>("#events")
-    clusterSelector = document.querySelector<HTMLSelectElement>("#overlay-type")
-    curCluster = clusterSelector.value;
-    clusterLimiter = document.querySelector<HTMLInputElement>("#cluster-limiter")
+    overlaySelector = document.querySelector<HTMLSelectElement>("#overlay-type")
+    curOverlay = overlaySelector.value;
 }

@@ -54,7 +54,7 @@ export function indexEventsForRound(gameData: GameData) {
     for (let dataName of gameData.tableNames) {
         if (tablesNotIndexedByTick.includes(dataName)
             || dataName == playerAtTickTableName || dataName == tickTableName
-            || gameData.clusters.has(dataName)) {
+            || gameData.overlays.has(dataName)) {
             continue;
         }
         let getTicksPerEvent = function (index: number, tick: number): number {
