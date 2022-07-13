@@ -37,7 +37,8 @@ public:
 
     MapMeshResult() {
         this->variableLength = false;
-        this->allTicks = true;
+        this->nonTemporal = true;
+        this->overlay = true;
     };
 
     void oneLineToCSV(int64_t index, stringstream & ss) {

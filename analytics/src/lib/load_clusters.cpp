@@ -3,7 +3,7 @@
 
 Cluster::Cluster(string filePath) {
     this->variableLength = false;
-    this->allTicks = true;
+    this->nonTemporal = true;
     // mmap the file
     auto [fd, stats, file] = openMMapFile(filePath);
 

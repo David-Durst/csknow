@@ -504,7 +504,9 @@ int main(int argc, char * argv[]) {
                     firstKPC = false;
                 }
                 ss << ",";
-                ss << boolToString(queryValue.allTicks);
+                ss << boolToString(queryValue.nonTemporal);
+                ss << ",";
+                ss << boolToString(queryValue.overlay);
                 ss << std::endl;
             }
             res.set_content(ss.str(), "text/plain");

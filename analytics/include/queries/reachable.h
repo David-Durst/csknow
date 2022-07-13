@@ -23,7 +23,8 @@ public:
 
     ReachableResult() {
         this->variableLength = false;
-        this->allTicks = true;
+        this->nonTemporal = true;
+        this->overlay = true;
         this->extension = ".reach";
     };
 

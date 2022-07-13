@@ -49,7 +49,8 @@ public:
 //    vector<int64_t> positionIndex;
     int startTickColumn;
     bool variableLength = false;
-    bool allTicks = false;
+    bool nonTemporal = false;
+    bool overlay = false;
     int ticksPerEvent;
     int ticksColumn;
     string extension = ".query";
