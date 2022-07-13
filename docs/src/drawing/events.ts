@@ -97,7 +97,7 @@ export function setupEventDrawing() {
     eventSelector = document.querySelector<HTMLSelectElement>("#event-type")
     curEvent = eventSelector.value;
     eventDiv = document.querySelector<HTMLDivElement>("#events")
-    clusterSelector = document.querySelector<HTMLSelectElement>("#cluster-type")
+    clusterSelector = document.querySelector<HTMLSelectElement>("#overlay-type")
     curCluster = clusterSelector.value;
     clusterLimiter = document.querySelector<HTMLInputElement>("#cluster-limiter")
 }

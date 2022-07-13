@@ -538,5 +538,5 @@ export function setupCanvasHandlers() {
     document.querySelector<HTMLInputElement>("#tick-selector").addEventListener("input", drawTick)
     //document.querySelector<HTMLButtonElement>("#clear_filter").addEventListener("click", clearFilterButton)
     document.querySelector<HTMLSelectElement>("#event-type").addEventListener("change", setEventsAndRedraw)
-    document.querySelector<HTMLSelectElement>("#cluster-type").addEventListener("change", setEventsAndRedraw)
+    document.querySelector<HTMLSelectElement>("#overlay-type").addEventListener("change", setEventsAndRedraw)
 }

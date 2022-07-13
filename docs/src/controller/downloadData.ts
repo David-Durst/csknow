@@ -76,7 +76,7 @@ export async function getTables() {
                 }
                 if (!addedDownloadedOptions) {
                     if (allTicks) {
-                        (<HTMLSelectElement> document.getElementById("cluster-type"))
+                        (<HTMLSelectElement> document.getElementById("overlay-type"))
                             .add(new Option(cols[0], cols[0]));
                     }
                     else {
