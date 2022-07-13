@@ -144,6 +144,7 @@ export async function getPlayers(gameId: number) {
         })
 }
 
+// these are all temporal tables that are filtered by round (round or longer are built in, not dynamically loaded)
 export function getRoundFilteredTables(promises: Promise<any>[], curRound: RoundRow) {
     for (const downloadedDataName of gameData.tableNames) {
         if (tablesNotFilteredByRound.includes(downloadedDataName)) {
