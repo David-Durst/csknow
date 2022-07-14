@@ -517,6 +517,10 @@ int main(int argc, char * argv[]) {
                 ss << ",";
                 ss << boolToString(queryValue.havePlayerLabels);
                 ss << ",";
+                ss << queryValue.playersToLabelColumn;
+                ss << ",";
+                ss << queryValue.playerLabelIndicesColumn;
+                ss << ",";
                 queryValue.commaSeparateList(ss, queryValue.playerLabels, ";");
                 ss << std::endl;
             }

@@ -47,13 +47,17 @@ enum DataType {
 class QueryResult {
 public:
 //    vector<int64_t> positionIndex;
+    // these are offsets relative to foreign key columns
     int startTickColumn;
     int ticksPerEvent;
     int ticksColumn;
     bool variableLength = false;
     bool nonTemporal = false;
     bool overlay = false;
-    bool havePlayerLabels = true;
+    bool havePlayerLabels = false;
+    // these are offsets relative to other columns start
+    int playersToLabelColumn = 0;
+    int playerLabelIndicesColumn = 0;
     vector<string> playerLabels;
     string extension = ".query";
     vector<int> keyPlayerColumns = {};

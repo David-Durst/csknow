@@ -50,6 +50,8 @@ public:
         ticksColumn = 2;
         havePlayerLabels = true;
         playerLabels = {"P", "B", "L"};
+        playersToLabelColumn = 0;
+        playerLabelIndicesColumn = 1;
     }
 
     vector<int64_t> filterByForeignKey(int64_t otherTableIndex) {
