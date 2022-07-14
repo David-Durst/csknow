@@ -189,11 +189,17 @@ export class Parser {
     filterUrl: string;
     nonTemporal: boolean;
     overlay: boolean;
+    havePlayerLabels: boolean;
+    playersToLabelColumn: number;
+    playerLabelIndicesColumn: number;
+    playerLabels: string[];
 
     constructor(tableName: string, startTickColumn: string,
                 foreignKeyNames: string[], otherColumnNames: string[],
                 ticksPerEvent: string, parserType: ParserType, baseUrl: string,
-                keyPlayerColumns: string, nonTemporal: string, overlay: string) {
+                keyPlayerColumns: string, nonTemporal: string, overlay: string,
+                havePlayerLabels: string, playersToLabelColumn: string,
+                playerLabelIndicesColumn: string, playerLabels: string) {
         this.tableName = tableName;
         this.foreignKeyNames = foreignKeyNames;
         this.otherColumnNames = otherColumnNames;
@@ -218,6 +224,10 @@ export class Parser {
         }
         this.nonTemporal = parseBool(nonTemporal)
         this.overlay = parseBool(overlay)
+        this.havePlayerLabels = parseBool(havePlayerLabels)
+        this.playersToLabelColumn = parseInt(playersToLabelColumn)
+        this.playerLabelIndicesColumn = parseInt(playerLabelIndicesColumn)
+        this.playerLabels = playerLabels.length > 0 ? playerLabels.split(";") : []
     }
 
     parseOneLine(currentLine: string[]) {

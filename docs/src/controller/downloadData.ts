@@ -33,12 +33,15 @@ export async function getTables() {
                 const numForeignKeys = parseInt(cols[numForeignKeysIndex])
                 const numOtherColsIndex = numForeignKeysIndex + numForeignKeys + 1
                 const numOtherCols = parseInt(cols[numOtherColsIndex])
-                const ticksPerEventIndex = cols.length - 4
-                const keyPlayerColumnsIndex = cols.length - 3
-                const nonTemporalIndex = cols.length - 2
-                const nonTemporal = parseBool(cols[nonTemporalIndex])
-                const overlayIndex = cols.length - 1
+                const ticksPerEventIndex = numOtherColsIndex + numOtherCols + 1
+                const keyPlayerColumnsIndex = ticksPerEventIndex + 1
+                const nonTemporalIndex = keyPlayerColumnsIndex + 1
+                const overlayIndex = nonTemporalIndex + 1
                 const overlay = parseBool(cols[overlayIndex])
+                const havePlayerLabelsIndex = overlayIndex + 1
+                const playersToLabelColumnIndex = havePlayerLabelsIndex + 1
+                const playerLabelIndicesColumnIndex = playersToLabelColumnIndex + 1
+                const playerLabelsIndex = playerLabelIndicesColumnIndex + 1
                 if (overlay) {
                     gameData.overlays.set(cols[0], [])
                 }
@@ -70,7 +73,9 @@ export async function getTables() {
                         cols.slice(numOtherColsIndex + 1, numOtherColsIndex + numOtherCols + 1),
                         cols[ticksPerEventIndex], parserType,
                         remoteAddr + "query/" + cols[0],
-                        cols[keyPlayerColumnsIndex], cols[nonTemporalIndex], cols[overlayIndex]
+                        cols[keyPlayerColumnsIndex], cols[nonTemporalIndex], cols[overlayIndex],
+                        cols[havePlayerLabelsIndex], cols[playersToLabelColumnIndex], cols[playerLabelIndicesColumnIndex],
+                        cols[playerLabelsIndex]
                     )
                 )
                 if (!addedDownloadedOptions) {
