@@ -247,6 +247,7 @@ int main(int argc, char * argv[]) {
     d2ReachableResult.load(navPath, "de_dust2");
     string dust2VisibleName = "de_dust2_visible";
     NavVisibleResult d2NavVisibleResult = queryNavVisible(map_visPoints.find("de_dust2")->second);
+    std::cout << "processing aggression_event" << std::endl;
     string aggressionEventName = "aggression_event";
     AggressionEventResult aggressionEventResult =
             queryAggressionRoles(games, rounds, ticks, playerAtTick, map_navs["de_dust2"], map_visPoints.find("de_dust2")->second, d2ReachableResult);

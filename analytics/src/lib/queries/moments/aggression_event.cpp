@@ -3,12 +3,14 @@
 //
 
 #include "queries/moments/aggression_event.h"
+#include "file_helpers.h"
 #include <omp.h>
+#include <atomic>
 
 void assignRolesToPlayersPerTeam(const ReachableResult & reachableResult, vector<vector<int64_t>> * tmpPlayerId,
                                  vector<vector<AggressionRole>> * tmpRole, int threadNum,
                                  const map<int64_t, AreaId> & tAreas, const set<int64_t> & tVisiblePlayers,
-                                 const set<AreaId> & tVisibleAreas) {
+                                 const set<AreaId> & tVisibleAreas, const nav_mesh::nav_file & navFile) {
     for (const auto & [tPlayerId, tAreaId] : tAreas) {
         tmpPlayerId[threadNum].back().push_back(tPlayerId);
         if (tVisiblePlayers.find(tPlayerId) != tVisiblePlayers.end()) {
@@ -17,7 +19,7 @@ void assignRolesToPlayersPerTeam(const ReachableResult & reachableResult, vector
         else {
             bool isBaiter = false;
             for (AreaId tVisibleArea : tVisibleAreas) {
-                if (reachableResult.getDistance(tAreaId, tVisibleArea) <= MAX_BAITER_DISTANCE) {
+                if (reachableResult.getDistance(tAreaId, tVisibleArea, navFile) <= MAX_BAITER_DISTANCE) {
                     tmpRole[threadNum].back().push_back(AggressionRole::Baiter);
                     isBaiter = true;
                 }
@@ -41,12 +43,13 @@ AggressionEventResult queryAggressionRoles(const Games & games, const Rounds & r
     vector<int64_t> tmpLength[numThreads];
     vector<vector<int64_t>> tmpPlayerId[numThreads];
     vector<vector<AggressionRole>> tmpRole[numThreads];
+    std::atomic<int64_t> roundsProcessed = 0;
 // for each round
         // for each player - identify current path - if in any regions of a path, or next region they will be in
         // for each time step in path - first player to shoot/be shot by enemy is pusher. baiter is everyone on same path
         // lurker is someone on different path
-//#pragma omp parallel for
-    for (int64_t roundIndex = 0; roundIndex < rounds.size; roundIndex++) {
+#pragma omp parallel for
+    for (int64_t roundIndex = 0; roundIndex < std::min(6L, rounds.size); roundIndex++) {
         int threadNum = omp_get_thread_num();
         tmpRoundIds[threadNum].push_back(roundIndex);
         tmpRoundStarts[threadNum].push_back(tmpStartTickId[threadNum].size());
@@ -93,16 +96,15 @@ AggressionEventResult queryAggressionRoles(const Games & games, const Rounds & r
             ticksSinceLastEngagement++;
             double secondsSinceLastEngagement = ticksSinceLastEngagement / games.gameTickRate[rounds.gameId[roundIndex]];
             if (anyVisiblePairs && secondsSinceLastEngagement > NOT_VISIBLE_END_SECONDS) {
-                tmpRoundIds[threadNum].push_back(tickIndex);
                 tmpStartTickId[threadNum].push_back(tickIndex);
                 tmpEndTickId[threadNum].push_back(tickIndex);
                 tmpLength[threadNum].push_back(1);
                 tmpPlayerId[threadNum].push_back({});
                 tmpRole[threadNum].push_back({});
                 assignRolesToPlayersPerTeam(reachableResult, tmpPlayerId, tmpRole, threadNum, tAreas, tVisiblePlayers,
-                                             tVisibleAreas);
+                                             tVisibleAreas, navFile);
                 assignRolesToPlayersPerTeam(reachableResult, tmpPlayerId, tmpRole, threadNum, ctAreas, ctVisiblePlayers,
-                                            ctVisibleAreas);
+                                            ctVisibleAreas, navFile);
                 ticksSinceLastEngagement = 0;
             }
             else if (anyVisiblePairs) {
@@ -113,6 +115,8 @@ AggressionEventResult queryAggressionRoles(const Games & games, const Rounds & r
         }
 
         tmpRoundSizes[threadNum].push_back(tmpStartTickId[threadNum].size() - tmpRoundStarts[threadNum].back());
+        roundsProcessed++;
+        printProgress((roundsProcessed * 1.0) / rounds.size);
     }
 
     AggressionEventResult result;
