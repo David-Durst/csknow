@@ -25,6 +25,7 @@
 #include "queries/position_and_wall_view.h"
 #include "indices/spotted.h"
 #include "queries/nav_visible.h"
+#include "queries/moments/aggression_event.h"
 #define CPPHTTPLIB_OPENSSL_SUPPORT
 #include "httplib.h"
 #include <errno.h>
@@ -246,6 +247,9 @@ int main(int argc, char * argv[]) {
     d2ReachableResult.load(navPath, "de_dust2");
     string dust2VisibleName = "de_dust2_visible";
     NavVisibleResult d2NavVisibleResult = queryNavVisible(map_visPoints.find("de_dust2")->second);
+    string aggressionEventName = "aggression_event";
+    AggressionEventResult aggressionEventResult =
+            queryAggressionRoles(games, rounds, ticks, playerAtTick, map_navs["de_dust2"], map_visPoints.find("de_dust2")->second, d2ReachableResult);
     /*
     VelocityResult velocityResult = queryVelocity(position);
     std::cout << "velocity moments: " << velocityResult.positionIndex.size() << std::endl;
@@ -367,7 +371,8 @@ int main(int argc, char * argv[]) {
 
     vector<string> queryNames = {"games", "rounds", "players", "ticks", "playerAtTick", dust2MeshName,
                                  dust2VisibleName,
-                                 dust2ReachableName
+                                 dust2ReachableName,
+                                 aggressionEventName,
     };
     //vector<string> queryNames = {"games", "rounds", "players", "ticks", "playerAtTick", "aCatClusterSequence", "aCatClusters", "midCTClusterSequence", "midTClusters", "lookers"};
     map<string, reference_wrapper<QueryResult>> queries {
@@ -379,6 +384,7 @@ int main(int argc, char * argv[]) {
             {queryNames[5], d2MeshResult},
             {queryNames[6], d2NavVisibleResult},
             {queryNames[7], d2ReachableResult},
+            {queryNames[8], aggressionEventResult},
             //{queryNames[5], aCatClusterSequence},
             //{queryNames[6], aCatPeekersClusters},
             //{queryNames[7], midCTClusterSequence},
@@ -507,6 +513,10 @@ int main(int argc, char * argv[]) {
                 ss << boolToString(queryValue.nonTemporal);
                 ss << ",";
                 ss << boolToString(queryValue.overlay);
+                ss << ",";
+                ss << boolToString(queryValue.havePlayerLabels);
+                ss << ",";
+                queryValue.commaSeparateList(ss, queryValue.playerLabels, ";");
                 ss << std::endl;
             }
             res.set_content(ss.str(), "text/plain");

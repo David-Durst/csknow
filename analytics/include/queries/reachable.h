@@ -5,6 +5,7 @@
 #ifndef CSKNOW_REACHABLE_H
 #define CSKNOW_REACHABLE_H
 #include "queries/nav_mesh.h"
+#include "bots/load_save_vis_points.h"
 using std::string;
 using std::vector;
 using std::set;
@@ -50,8 +51,14 @@ public:
         return nameVector;
     }
 
-    double getDistance(int64_t src, int64_t dst) {
+    double getDistance(int64_t src, int64_t dst) const {
         return distanceMatrix[src * numAreas + dst];
+    }
+
+    double getDistance(AreaId srcId, AreaId dstId, const nav_mesh::nav_file & navFile) const {
+        size_t src = navFile.m_area_ids_to_indices.find(srcId)->second,
+            dst = navFile.m_area_ids_to_indices.find(dstId)->second;
+        return getDistance(src, dst);
     }
 
     void load(string mapsPath, string mapName);

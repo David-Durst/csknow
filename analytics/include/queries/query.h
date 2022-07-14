@@ -48,11 +48,13 @@ class QueryResult {
 public:
 //    vector<int64_t> positionIndex;
     int startTickColumn;
+    int ticksPerEvent;
+    int ticksColumn;
     bool variableLength = false;
     bool nonTemporal = false;
     bool overlay = false;
-    int ticksPerEvent;
-    int ticksColumn;
+    bool havePlayerLabels = true;
+    vector<string> playerLabels;
     string extension = ".query";
     vector<int> keyPlayerColumns = {};
 //    vector<int> keysForDiff;
