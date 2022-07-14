@@ -32,7 +32,7 @@ export function getPlayersText(tickData: TickRow, gameData: GameData): string[] 
     const index = getTickToOtherTableIndex(gameData, curEvent)
     const players: PlayerAtTickRow[] = gameData.getPlayersAtTick(tickData)
     // if no event, do nothing special
-    if (curEvent == "none" || !index.intersect_any([tickData.demoTickNumber, tickData.demoTickNumber]) ||
+    if (curEvent == "none" || !index.intersect_any([tickData.id, tickData.id]) ||
         !gameData.parsers.get(curEvent).havePlayerLabels) {
         for (let p = 0; p < players.length; p++) {
             result.push(basicPlayerText(gameData, tickData, p))
@@ -42,7 +42,7 @@ export function getPlayersText(tickData: TickRow, gameData: GameData): string[] 
 
     // if event, get min key player number for each player
     const eventArray = gameData.tables.get(curEvent)
-    const eventsForTick = index.search([tickData.demoTickNumber, tickData.demoTickNumber])
+    const eventsForTick = index.search([tickData.id, tickData.id])
     const firstEvent = eventArray[Math.min(...eventsForTick)]
     const parser = gameData.parsers.get(curEvent)
     const playersToLabel = firstEvent.otherColumnValues[parser.playersToLabelColumn].split(";").map(x => parseInt(x))
@@ -99,8 +99,8 @@ export function setEventText(tickData: TickRow, gameData: GameData) {
     }
     else {
         const index = getTickToOtherTableIndex(gameData, curEvent)
-        if (index.intersect_any([tickData.demoTickNumber, tickData.demoTickNumber])) {
-            const events = index.search([tickData.demoTickNumber, tickData.demoTickNumber])
+        if (index.intersect_any([tickData.id, tickData.id])) {
+            const events = index.search([tickData.id, tickData.id])
             const eventArray = gameData.tables.get(curEvent)
             for (let eIndex = events.length - 1; eIndex >= 0; eIndex--) {
                 eventDiv.innerHTML += eventArray[events[eIndex]].getHTML()

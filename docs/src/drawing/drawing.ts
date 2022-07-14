@@ -510,4 +510,5 @@ export function setupCanvasHandlers() {
     //document.querySelector<HTMLButtonElement>("#clear_filter").addEventListener("click", clearFilterButton)
     document.querySelector<HTMLSelectElement>("#event-type").addEventListener("change", setEventsAndRedraw)
     document.querySelector<HTMLSelectElement>("#overlay-type").addEventListener("change", setEventsAndRedraw)
+    document.querySelector<HTMLSelectElement>("#clear_filter").addEventListener("click", clearFilterButton)
 }

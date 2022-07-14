@@ -63,7 +63,7 @@ export function indexEventsForRound(gameData: GameData) {
                     .foreignKeyValues[gameData.parsers.get(dataName).ticksColumn]
             }
             else {
-                return tick + gameData.parsers.get(dataName).ticksPerEvent
+                return gameData.parsers.get(dataName).ticksPerEvent
             }
         }
         generateTreeIndex(gameData.ticksTable,
