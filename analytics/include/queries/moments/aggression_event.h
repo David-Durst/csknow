@@ -80,6 +80,7 @@ public:
             tmp.push_back(std::to_string(enumAsInt(r)));
         }
         commaSeparateList(ss, tmp, ";");
+        ss << std::endl;
     }
 
     vector<string> getForeignKeyNames() {
