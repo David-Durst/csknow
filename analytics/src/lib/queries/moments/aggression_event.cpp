@@ -149,7 +149,7 @@ AggressionEventResult queryAggressionRoles(const Games & games, const Rounds & r
             result.playerId.push_back(tmpPlayerId[minThreadId][tmpRowId]);
             result.role.push_back(tmpRole[minThreadId][tmpRowId]);
         }
-        result.rowIndicesPerRound[minRoundId].maxId = result.startTickId.size();
+        result.rowIndicesPerRound[minRoundId].maxId = result.startTickId.size() - 1;
         roundsProcessedPerThread[minThreadId]++;
     }
     result.size = result.startTickId.size();
