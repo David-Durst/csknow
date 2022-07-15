@@ -47,6 +47,7 @@ function generateTreeIndex(ticks: TickRow[], otherTable: Row[],
 }
 
 export function indexEventsForRound(gameData: GameData) {
+    gameData.ticksToPlayerAtTick = []
     generateRangeIndex(gameData.ticksTable, gameData.playerAtTicksTable,
         gameData.ticksToPlayerAtTick)
 
@@ -66,6 +67,7 @@ export function indexEventsForRound(gameData: GameData) {
                 return gameData.parsers.get(dataName).ticksPerEvent
             }
         }
+        gameData.ticksToOtherTablesIndices.set(dataName, new IntervalTree<number>());
         generateTreeIndex(gameData.ticksTable,
             gameData.tables.get(dataName),
             gameData.ticksToOtherTablesIndices.get(dataName),

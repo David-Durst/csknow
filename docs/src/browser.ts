@@ -11,7 +11,8 @@ import {
     setupCanvas,
     setupCanvasHandlers,
     setupMatchDrawing,
-    toggleCanvasSize
+    toggleCanvasSize,
+    initFilterVars
 } from "./drawing/drawing"
 import {
     setupFilterHandlers,
@@ -111,6 +112,7 @@ async function init() {
     roundSelector.addEventListener("input", changingMatchOrRound)
     roundSelector.addEventListener("mouseup", changedMatchOrRound)
     await changedMatchOrRound();
+    initFilterVars();
     setInitialized();
     registerPlayHandlers();
     document.querySelector<HTMLSelectElement>("#download-type").addEventListener("change", setMatchAndRoundLabels)

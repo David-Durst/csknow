@@ -10,6 +10,7 @@ import {
     tickSelector
 } from "./selectors";
 import IntervalTree from "@flatten-js/interval-tree";
+import {indexEventsForRound} from "../data/ticksToOtherTables";
 
 // adding some extra entries in these arrays incase extra players in server
 // like casters
@@ -82,14 +83,14 @@ export function filterRegion(minX: number, minY: number, maxX: number,
 
 let shouldFilterEvents: boolean = false
 function filterEvent() {
+    const d1 = gameData, d2 = filteredData
     if (curEvent === "none" || !shouldFilterEvents) {
         return true;
     }
     let matchingPositions: TickRow[] = []
     const index = getTickToOtherTableIndex(filteredData, curEvent)
     for (let t = 0; t < filteredData.ticksTable.length; t++) {
-        if (index.intersect_any([filteredData.ticksTable[t].demoTickNumber,
-                filteredData.ticksTable[t].demoTickNumber])) {
+        if (index.intersect_any([filteredData.ticksTable[t].id, filteredData.ticksTable[t].id])) {
             matchingPositions.push(filteredData.ticksTable[t])
         }
     }
@@ -99,6 +100,7 @@ function filterEvent() {
     filteredData.ticksTable = matchingPositions
     setTickSelectorMax(filteredData.ticksTable.length - 1)
     setCurTickIndex(0);
+    indexEventsForRound(filteredData)
     drawTick(null)
     return true;
 }
@@ -112,16 +114,16 @@ export function stopFilteringEvents() {
     shouldFilterEvents = false
 }
 
-export function clearFilterData() {
+export function applyJustEventFilter() {
     if (filteredData.ticksTable.length === gameData.ticksTable.length) {
         return;
     }
     filteredData.ticksTable = gameData.ticksTable
     // reapply any existing event filters
     filterEvent()
-    customFilter()
-    setTickSelectorMax(filteredData.ticksTable.length - 1)
-    setCurTickIndex(0);
+    //customFilter()
+    //setTickSelectorMax(filteredData.ticksTable.length - 1)
+    //setCurTickIndex(0);
 }
 
 export function setupMatchFilters() {

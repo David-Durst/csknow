@@ -1,7 +1,7 @@
 import {gameData, initialized} from "../data/data"
 import {
     filteredData,
-    clearFilterData,
+    applyJustEventFilter,
     filterRegion, stopFilteringEvents
 } from "../controller/filter";
 import {PlayerAtTickRow, TickRow} from "../data/tables";
@@ -130,11 +130,19 @@ let emptyFilter: boolean = false
 let topLeftCoordinate: MapCoordinate = null
 let bottomRightCoordinate: MapCoordinate = null
 
+export function initFilterVars() {
+    drawingRegionFilter = false
+    definedRegionFilter = false
+    emptyFilter = false
+    topLeftCoordinate = null
+    bottomRightCoordinate = null
+}
+
 function startingRegionFilter(e: MouseEvent) {
     if (!initialized) {
         return
     }
-    clearFilterData()
+    applyJustEventFilter()
     drawingRegionFilter = true
     definedRegionFilter = false
     emptyFilter = false
@@ -167,8 +175,7 @@ function clearFilterButton() {
         return
     }
     stopFilteringEvents()
-    clearCustomFilter()
-    clearFilterData()
+    applyJustEventFilter()
     drawingRegionFilter = false
     definedRegionFilter = false
     drawTick(null)
@@ -228,7 +235,7 @@ function trackMouse(e: MouseEvent) {
 }
 
 export function drawTick(e: InputEvent) {
-    let ftmp = filteredData
+    const ftmp = filteredData
     ctx.drawImage(minimap,0,0,minimapWidth,minimapHeight,0,0,
         canvasWidth,canvasHeight);
     ctx.textBaseline = "middle"
