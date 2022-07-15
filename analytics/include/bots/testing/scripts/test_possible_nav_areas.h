@@ -39,7 +39,7 @@ public:
                                                                         make_unique<SetPos>(blackboard, player1Pos, Vec2({-89.683349, 0.746031})),
                                                                         make_unique<movement::WaitNode>(blackboard, 0.1),
                                                                         make_unique<Teleport>(blackboard, neededBots[1].id, state),
-                                                                        make_unique<movement::WaitNode>(blackboard, 2.0),
+                                                                        make_unique<movement::WaitNode>(blackboard, 3.0),
                                                                         make_unique<ClearMemoryCommunicationDangerNode>(blackboard),
                                                                         make_unique<movement::WaitTicksNode>(blackboard, 1)));
             Node::Ptr disableAllBothDuringSetup = make_unique<ParallelFirstNode>(blackboard, Node::makeList(

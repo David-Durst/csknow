@@ -41,14 +41,6 @@ namespace communicate {
             const vector<CSGOId> & ctPlayers = state.getPlayersOnTeam(ENGINE_TEAM_CT);
             map<AreaId, CSKnowTime> ctSpawnAreas = getSpawnAreas(state, blackboard, ctPlayers);
 
-            if (ctSpawnAreas.size() == 1) {
-                vector<AreaId> spawnAreas;
-                for (const auto & [areaId, _] : ctSpawnAreas) {
-                    spawnAreas.push_back(areaId);
-                }
-                int x =1;
-            }
-
             // initialize nav areas to each as shortest path between all teammates, approximation of engine spawn zones
             for (const auto & client : state.clients) {
                 if (client.team == ENGINE_TEAM_T) {

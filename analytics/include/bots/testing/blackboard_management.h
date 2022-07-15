@@ -100,10 +100,6 @@ public:
     virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
         for (size_t i = 0; i < targetIds.size(); i++) {
             // check the areas that have to be present
-            vector<AreaId> presentAreas;
-            for (const auto & [areaId, _] : blackboard.possibleNavAreas[targetIds[i]]) {
-                presentAreas.push_back(areaId);
-            }
             for (size_t j = 0; j < requiredPossibleAreas[i].size(); j++) {
                 if (blackboard.possibleNavAreas[targetIds[i]].find(requiredPossibleAreas[i][j]) ==
                     blackboard.possibleNavAreas[targetIds[i]].end()) {
