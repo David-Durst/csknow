@@ -127,7 +127,7 @@ public:
 
 class SequenceNode : public CollectionNode {
 public:
-    SequenceNode(Blackboard & blackboard, vector<Node::Ptr> && nodes, string name) :
+    SequenceNode(Blackboard & blackboard, vector<Node::Ptr> && nodes, string name = "Sequence") :
         CollectionNode(blackboard, std::move(nodes), name) { };
 
     virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
@@ -161,7 +161,7 @@ public:
 
 class SelectorNode : public CollectionNode {
 public:
-    SelectorNode(Blackboard & blackboard, vector<Node::Ptr> && nodes, string name) :
+    SelectorNode(Blackboard & blackboard, vector<Node::Ptr> && nodes, string name = "Selector") :
         CollectionNode(blackboard, std::move(nodes), name) { };
 
     virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
@@ -195,7 +195,7 @@ public:
 
 class ParallelAndNode : public CollectionNode {
 public:
-    ParallelAndNode(Blackboard & blackboard, vector<Node::Ptr> && nodes, string name) :
+    ParallelAndNode(Blackboard & blackboard, vector<Node::Ptr> && nodes, string name = "ParallelAnd") :
             CollectionNode(blackboard, std::move(nodes), name) { };
 
     virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
@@ -232,7 +232,7 @@ public:
 
 class ParallelFirstNode : public CollectionNode {
 public:
-    ParallelFirstNode(Blackboard & blackboard, vector<Node::Ptr> && nodes, string name) :
+    ParallelFirstNode(Blackboard & blackboard, vector<Node::Ptr> && nodes, string name = "ParallelFirst") :
             CollectionNode(blackboard, std::move(nodes), name) { };
 
     virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
@@ -267,7 +267,7 @@ protected:
     Node::Ptr child;
 
 public:
-    ConditionDecorator(Blackboard & blackboard, Node::Ptr && node, string name) :
+    ConditionDecorator(Blackboard & blackboard, Node::Ptr && node, string name = "Condition") :
         Node(blackboard, name), child(std::move(node)) { };
 
     virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
@@ -295,7 +295,7 @@ protected:
     Node::Ptr child;
 
 public:
-    RepeatDecorator(Blackboard & blackboard, Node::Ptr && node, string name) :
+    RepeatDecorator(Blackboard & blackboard, Node::Ptr && node, string name = "Repeat") :
             Node(blackboard, name), child(std::move(node)) { };
 
     virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {

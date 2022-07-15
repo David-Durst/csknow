@@ -88,4 +88,42 @@ public:
     }
 };
 
+class CheckPossibleLocationsNode : public Node {
+    vector<CSGOId> targetIds;
+    vector<vector<AreaId>> requiredPossibleAreas;
+    vector<vector<AreaId>> requiredNotPossibleAreas;
+public:
+    CheckPossibleLocationsNode(Blackboard & blackboard, vector<CSGOId> targetIds,
+                               vector<vector<AreaId>> requiredPossibleAreas, vector<vector<AreaId>> requiredNotPossibleAreas, string name = "CheckPossibleLocations") :
+            Node(blackboard, name), targetIds(targetIds),
+            requiredPossibleAreas(requiredPossibleAreas), requiredNotPossibleAreas(requiredNotPossibleAreas) { };
+    virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
+        for (size_t i = 0; i < targetIds.size(); i++) {
+            // check the areas that have to be present
+            vector<AreaId> presentAreas;
+            for (const auto & [areaId, _] : blackboard.possibleNavAreas[targetIds[i]]) {
+                presentAreas.push_back(areaId);
+            }
+            for (size_t j = 0; j < requiredPossibleAreas[i].size(); j++) {
+                if (blackboard.possibleNavAreas[targetIds[i]].find(requiredPossibleAreas[i][j]) ==
+                    blackboard.possibleNavAreas[targetIds[i]].end()) {
+                    playerNodeState[treeThinker.csgoId] = NodeState::Failure;
+                    return playerNodeState[treeThinker.csgoId];
+                }
+            }
+
+            // check the areas that have to not be present
+            for (size_t j = 0; j < requiredNotPossibleAreas[i].size(); j++) {
+                if (blackboard.possibleNavAreas[targetIds[i]].find(requiredNotPossibleAreas[i][j]) !=
+                    blackboard.possibleNavAreas[targetIds[i]].end()) {
+                    playerNodeState[treeThinker.csgoId] = NodeState::Failure;
+                    return playerNodeState[treeThinker.csgoId];
+                }
+            }
+        }
+        playerNodeState[treeThinker.csgoId] = NodeState::Failure;
+        return playerNodeState[treeThinker.csgoId];
+    }
+};
+
 #endif //CSKNOW_BLACKBOARD_MANAGEMENT_H

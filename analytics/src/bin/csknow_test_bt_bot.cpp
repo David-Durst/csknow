@@ -7,6 +7,7 @@
 #include "bots/testing/scripts/test_communication.h"
 #include "bots/testing/scripts/test_teamwork.h"
 #include "bots/testing/scripts/test_danger.h"
+#include "bots/testing/scripts/test_possible_nav_areas.h"
 #include "navmesh/nav_file.h"
 #include <iostream>
 #include <thread>
@@ -43,7 +44,8 @@ int main(int argc, char * argv[]) {
                                             //make_unique<MemoryForgetCheck>(state),
                                             //make_unique<CommunicationAimCheck>(state),
                                             //make_unique<CommunicationForgetCheck>(state),
-                                            make_unique<DangerCheck>(state)
+                                            //make_unique<DangerCheck>(state),
+                                            make_unique<SpawnPossibleNavAreasCheck>(state)
     ), true);
 
 

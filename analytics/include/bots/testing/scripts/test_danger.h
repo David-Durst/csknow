@@ -10,12 +10,6 @@
 #include "bots/behavior_tree/tree.h"
 #include "bots/testing/blackboard_management.h"
 #include "bots/testing/state_checks.h"
-/*
-setpos_exact
-] getpos_exact
-setpos_exact
-
- */
 
 class DangerCheck : public Script {
 public:
