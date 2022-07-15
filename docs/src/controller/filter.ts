@@ -83,20 +83,19 @@ export function filterRegion(minX: number, minY: number, maxX: number,
 
 let shouldFilterEvents: boolean = false
 function filterEvent() {
-    if (curEvent === "none" || !shouldFilterEvents) {
-        return true;
-    }
-    let matchingPositions: TickRow[] = []
-    const index = getTickToOtherTableIndex(filteredData, curEvent)
-    for (let t = 0; t < filteredData.ticksTable.length; t++) {
-        if (index.intersect_any([filteredData.ticksTable[t].id, filteredData.ticksTable[t].id])) {
-            matchingPositions.push(filteredData.ticksTable[t])
+    if (curEvent !== "none" && shouldFilterEvents) {
+        let matchingPositions: TickRow[] = []
+        const index = getTickToOtherTableIndex(filteredData, curEvent)
+        for (let t = 0; t < filteredData.ticksTable.length; t++) {
+            if (index.intersect_any([filteredData.ticksTable[t].id, filteredData.ticksTable[t].id])) {
+                matchingPositions.push(filteredData.ticksTable[t])
+            }
         }
+        if (matchingPositions.length == 0) {
+            return false;
+        }
+        filteredData.ticksTable = matchingPositions
     }
-    if (matchingPositions.length == 0) {
-        return false;
-    }
-    filteredData.ticksTable = matchingPositions
     setTickSelectorMax(filteredData.ticksTable.length - 1)
     setCurTickIndex(0);
     drawTick(null)
