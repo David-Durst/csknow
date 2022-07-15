@@ -83,7 +83,6 @@ export function filterRegion(minX: number, minY: number, maxX: number,
 
 let shouldFilterEvents: boolean = false
 function filterEvent() {
-    const d1 = gameData, d2 = filteredData
     if (curEvent === "none" || !shouldFilterEvents) {
         return true;
     }
@@ -100,7 +99,6 @@ function filterEvent() {
     filteredData.ticksTable = matchingPositions
     setTickSelectorMax(filteredData.ticksTable.length - 1)
     setCurTickIndex(0);
-    indexEventsForRound(filteredData)
     drawTick(null)
     return true;
 }

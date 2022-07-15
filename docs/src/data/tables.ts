@@ -325,7 +325,7 @@ export class RangeIndexEntry {
     minId: number;
     maxId: number;
 }
-export type RangeIndex = RangeIndexEntry[];
+export type RangeIndex = Map<number, RangeIndexEntry>;
 export const tickTableName = "ticks"
 export const gameTableName = "games"
 export const roundTableName = "rounds"
@@ -342,7 +342,7 @@ export class GameData {
     playersTable: PlayerRow[] = [];
     playerIdToIndex: Map<number, number> = new Map<number, number>();
     playerAtTicksTable: PlayerAtTickRow[];
-    ticksToPlayerAtTick: RangeIndex = [];
+    ticksToPlayerAtTick: RangeIndex = new Map<number, RangeIndexEntry>()
     tables: Map<string, Row[]> =
         new Map<string, Row[]>();
     ticksToOtherTablesIndices: Map<string, IntervalTree<number>> =
@@ -360,14 +360,13 @@ export class GameData {
     }
 
     getPlayersAtTick(tickData: TickRow) : PlayerAtTickRow[] {
-        const tickIndex = tickData.id - this.ticksTable[0].id;
-        if (tickIndex >= this.ticksToPlayerAtTick.length ||
-            this.ticksToPlayerAtTick[tickIndex].minId == -1) {
+        if (!this.ticksToPlayerAtTick.has(tickData.id) ||
+            this.ticksToPlayerAtTick.get(tickData.id).minId == -1) {
             return [];
         }
         let result: PlayerAtTickRow[] = [];
-        for (let i = this.ticksToPlayerAtTick[tickIndex].minId;
-             i <= this.ticksToPlayerAtTick[tickIndex].maxId; i++) {
+        for (let i = this.ticksToPlayerAtTick.get(tickData.id).minId;
+             i <= this.ticksToPlayerAtTick.get(tickData.id).maxId; i++) {
             result.push(this.playerAtTicksTable[i])
         }
         return result;
@@ -418,7 +417,7 @@ export class GameData {
         for (const key of Array.from(this.ticksToOtherTablesIndices.keys())) {
             this.ticksToOtherTablesIndices.set(key, new IntervalTree<number>())
         }
-        this.ticksToPlayerAtTick = [];
+        this.ticksToPlayerAtTick.clear();
         for (const key of Array.from(this.overlays.keys())) {
             this.overlays.set(key, []);
         }

@@ -15,9 +15,9 @@ function generateRangeIndex(ticks: TickRow[], otherTable: Row[],
     for (let tickIndex = 0, otherIndex = 0; tickIndex < ticks.length; tickIndex++) {
         if (otherIndex >= otherTable.length ||
             otherTable[otherIndex].getStartTick() > ticks[tickIndex].id) {
-            index.push(new RangeIndexEntry())
-            index[tickIndex].minId = -1;
-            index[tickIndex].maxId = -1;
+            index.set(ticks[tickIndex].id, new RangeIndexEntry())
+            index.get(ticks[tickIndex].id).minId = -1;
+            index.get(ticks[tickIndex].id).maxId = -1;
         }
         else {
             // sometimes have mistakes where point to 0 as uninitalized, skip entries
@@ -25,12 +25,12 @@ function generateRangeIndex(ticks: TickRow[], otherTable: Row[],
                   otherTable[otherIndex].getStartTick() < ticks[tickIndex].id;
                   otherIndex++);
 
-            index.push(new RangeIndexEntry())
-            index[tickIndex].minId = otherIndex;
+            index.set(ticks[tickIndex].id, new RangeIndexEntry())
+            index.get(ticks[tickIndex].id).minId = otherIndex;
             for (; otherIndex < otherTable.length &&
                    otherTable[otherIndex].getStartTick() == ticks[tickIndex].id;
                    otherIndex++) ;
-            index[tickIndex].maxId = otherIndex - 1;
+            index.get(ticks[tickIndex].id).maxId = otherIndex - 1;
         }
     }
 
@@ -47,7 +47,7 @@ function generateTreeIndex(ticks: TickRow[], otherTable: Row[],
 }
 
 export function indexEventsForRound(gameData: GameData) {
-    gameData.ticksToPlayerAtTick = []
+    gameData.ticksToPlayerAtTick.clear()
     generateRangeIndex(gameData.ticksTable, gameData.playerAtTicksTable,
         gameData.ticksToPlayerAtTick)
 
