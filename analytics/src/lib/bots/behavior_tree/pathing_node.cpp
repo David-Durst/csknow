@@ -125,5 +125,22 @@ namespace movement {
         return playerNodeState[treeThinker.csgoId];
     }
 
+    NodeState WaitTicksNode::exec(const ServerState &state, TreeThinker &treeThinker) {
+        if (playerNodeState[treeThinker.csgoId] == NodeState::Uninitialized) {
+            numTicksWaited[treeThinker.csgoId] = 0;
+        }
+        else {
+            numTicksWaited[treeThinker.csgoId]++;
+        }
+
+        if (numTicksWaited[treeThinker.csgoId] >= waitTicks) {
+            playerNodeState[treeThinker.csgoId] = succeedOnEnd ? NodeState::Success : NodeState::Failure;
+        }
+        else {
+            playerNodeState[treeThinker.csgoId] = NodeState::Running;
+        }
+        return playerNodeState[treeThinker.csgoId];
+    }
+
 }
 

@@ -8,12 +8,19 @@ namespace communicate {
     map<AreaId, CSKnowTime> getSpawnAreas(const ServerState & state, Blackboard & blackboard, const vector<CSGOId> & playersOnTeam) {
         CSKnowTime curTime = state.loadTime;
         map<AreaId, CSKnowTime> result;
-        if (!playersOnTeam.empty()) {
-            nav_mesh::vec3_t origPos = vec3Conv(state.getClient(playersOnTeam[0]).getFootPosForPlayer());
+        vector<CSGOId> alivePlayersOnTeam;
+        for (const auto & id : playersOnTeam) {
+            if (state.getClient(id).isAlive) {
+                alivePlayersOnTeam.push_back(id);
+            }
+        }
+
+        if (!alivePlayersOnTeam.empty()) {
+            nav_mesh::vec3_t origPos = vec3Conv(state.getClient(alivePlayersOnTeam[0]).getFootPosForPlayer());
             result[blackboard.navFile.get_nearest_area_by_position(origPos).get_id()] = curTime;
-            for (size_t i = 1; i < playersOnTeam.size(); i++) {
+            for (size_t i = 1; i < alivePlayersOnTeam.size(); i++) {
                 auto optionalWaypoints =
-                        blackboard.navFile.find_path_detailed(origPos, vec3Conv(state.getClient(playersOnTeam[i]).getFootPosForPlayer()));
+                        blackboard.navFile.find_path_detailed(origPos, vec3Conv(state.getClient(alivePlayersOnTeam[i]).getFootPosForPlayer()));
                 if (optionalWaypoints) {
                     for (const auto & waypoint : optionalWaypoints.value()) {
                         result[waypoint.area1] = curTime;
@@ -33,6 +40,14 @@ namespace communicate {
             map<AreaId, CSKnowTime> tSpawnAreas = getSpawnAreas(state, blackboard, tPlayers);
             const vector<CSGOId> & ctPlayers = state.getPlayersOnTeam(ENGINE_TEAM_CT);
             map<AreaId, CSKnowTime> ctSpawnAreas = getSpawnAreas(state, blackboard, ctPlayers);
+
+            if (ctSpawnAreas.size() == 1) {
+                vector<AreaId> spawnAreas;
+                for (const auto & [areaId, _] : ctSpawnAreas) {
+                    spawnAreas.push_back(areaId);
+                }
+                int x =1;
+            }
 
             // initialize nav areas to each as shortest path between all teammates, approximation of engine spawn zones
             for (const auto & client : state.clients) {

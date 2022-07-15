@@ -121,7 +121,7 @@ public:
                 }
             }
         }
-        playerNodeState[treeThinker.csgoId] = NodeState::Failure;
+        playerNodeState[treeThinker.csgoId] = NodeState::Success;
         return playerNodeState[treeThinker.csgoId];
     }
 };

@@ -26,6 +26,16 @@ namespace movement {
             Node(blackboard, "WaitTaskNode"), waitSeconds(waitSeconds), succeedOnEnd(succeedOnEnd) { };
         virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override;
     };
+
+    class WaitTicksNode : public Node {
+        size_t waitTicks;
+        map<CSGOId, size_t> numTicksWaited;
+        bool succeedOnEnd;
+    public:
+        WaitTicksNode(Blackboard & blackboard, size_t waitTicks, bool succeedOnEnd = true) :
+                Node(blackboard, "WaitTaskNode"), waitTicks(waitTicks), succeedOnEnd(succeedOnEnd) { };
+        virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override;
+    };
 }
 
 #endif //CSKNOW_PATHING_NODE_H
