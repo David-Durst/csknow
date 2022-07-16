@@ -50,6 +50,19 @@ public:
 
     set<AreaId> getAreasRelativeToSrc(AreaId srcId, bool visible) const {
         set<AreaId> result;
+        getAreasRelativeToSrc(srcId, visible, result);
+        return result;
+    }
+
+    set<AreaId> getAreasRelativeToSrc(set<AreaId> srcIds, bool visible) const {
+        set<AreaId> result;
+        for (const auto & srcId : srcIds) {
+            getAreasRelativeToSrc(srcId, visible, result);
+        }
+        return result;
+    }
+
+    void getAreasRelativeToSrc(AreaId srcId, bool visible, set<AreaId> & result) const {
         size_t src = areaIdToVectorIndex.find(srcId)->second;
         for (size_t target = 0; target < visPoints.size(); target++) {
             if (target == src) {
@@ -62,7 +75,6 @@ public:
                 result.insert(visPoints[target].areaId);
             }
         }
-        return result;
     }
 
     void launchVisPointsCommand(const ServerState & state);

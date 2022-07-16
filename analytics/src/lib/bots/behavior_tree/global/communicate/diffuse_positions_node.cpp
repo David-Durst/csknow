@@ -100,6 +100,41 @@ namespace communicate {
             }
         }
 
+        // for each client, for each area they could be, remove all areas that are visible to enemies
+        // first build set of visible points for each team
+        set<AreaId> tCurAreas, ctCurAreas;
+        for (const auto & client : state.clients) {
+            if (client.isAlive) {
+                AreaId curArea = blackboard.navFile.get_nearest_area_by_position(vec3Conv(client.getFootPosForPlayer())).get_id();
+                if (client.team == INTERNAL_TEAM_T) {
+                    tCurAreas.insert(curArea);
+                }
+                else if (client.team == INTERNAL_TEAM_CT) {
+                    ctCurAreas.insert(curArea);
+                }
+            }
+        }
+        set<AreaId> tVisibleAreas = blackboard.visPoints.getAreasRelativeToSrc(tCurAreas, true),
+            ctVisibleAreas = blackboard.visPoints.getAreasRelativeToSrc(ctCurAreas, true);
+        // for each player, build list of possible areas that intersect with a visible area, then remove that list
+        map<CSGOId, vector<AreaId>> areasToRemove;
+        for (const auto & client : state.clients) {
+            for (const auto & [areaId, _] : blackboard.possibleNavAreas[client.csgoId]) {
+                if (client.team == INTERNAL_TEAM_T && ctVisibleAreas.find(areaId) != ctVisibleAreas.end()) {
+                    areasToRemove[client.csgoId].push_back(areaId);
+                }
+                if (client.team == INTERNAL_TEAM_CT && tVisibleAreas.find(areaId) != tVisibleAreas.end()) {
+                    areasToRemove[client.csgoId].push_back(areaId);
+                }
+            }
+        }
+        for (const auto & [csgoId, playerAreasToRemove] : areasToRemove) {
+            for (const auto & playerAreaToRemove : playerAreasToRemove) {
+                blackboard.possibleNavAreas[csgoId].erase(playerAreaToRemove);
+            }
+        }
+
+
         playerNodeState[treeThinker.csgoId] = NodeState::Success;
         return playerNodeState[treeThinker.csgoId];
     }
