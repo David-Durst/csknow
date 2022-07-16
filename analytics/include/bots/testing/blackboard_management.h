@@ -103,6 +103,8 @@ public:
             for (size_t j = 0; j < requiredPossibleAreas[i].size(); j++) {
                 if (blackboard.possibleNavAreas[targetIds[i]].find(requiredPossibleAreas[i][j]) ==
                     blackboard.possibleNavAreas[targetIds[i]].end()) {
+                    size_t x = blackboard.possibleNavAreas[targetIds[i]].size();
+                    std::cout << x << std::endl;
                     playerNodeState[treeThinker.csgoId] = NodeState::Failure;
                     return playerNodeState[treeThinker.csgoId];
                 }
