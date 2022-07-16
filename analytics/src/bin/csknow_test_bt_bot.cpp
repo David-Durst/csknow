@@ -45,7 +45,8 @@ int main(int argc, char * argv[]) {
                                             //make_unique<CommunicationAimCheck>(state),
                                             //make_unique<CommunicationForgetCheck>(state),
                                             //make_unique<DangerCheck>(state),
-                                            make_unique<SpawnPossibleNavAreasCheck>(state)
+                                            make_unique<SpawnPossibleNavAreasCheck>(state),
+                                            make_unique<DiffusionPossibleNavAreasCheck>(state)
     ), true);
 
 
