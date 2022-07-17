@@ -67,14 +67,6 @@ int main(int argc, char * argv[]) {
             
         if (state.loadedSuccessfully) {
             tree.tick(state, mapsPath);
-            if (tree.blackboard->inTest) {
-                for (const auto & client : state.clients) {
-                    if (tree.blackboard->possibleNavAreas[client.csgoId].find(4182) != tree.blackboard->possibleNavAreas[client.csgoId].end() && client.team == INTERNAL_TEAM_T) {
-                        std::cout << "hi" << std::endl;
-                    }
-                }
-            }
-
             if (state.clients.size() > 0) {
                 scriptsRunner.initialize(tree, state);
                 finishedTests = scriptsRunner.tick(tree, state);

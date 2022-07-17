@@ -139,15 +139,6 @@ namespace communicate {
                 blackboard.possibleNavAreas[csgoId].erase(playerAreaToRemove);
             }
         }
-        if (blackboard.inTest) {
-            for (const auto & client : state.clients) {
-                if (blackboard.possibleNavAreas[client.csgoId].find(4182) != blackboard.possibleNavAreas[client.csgoId].end() && client.team == ENGINE_TEAM_T) {
-                    bool rightArea = tVisibleAreas.find(4182) != ctVisibleAreas.end();
-                    std::cout << rightArea << std::endl;
-                }
-            }
-        }
-
 
         playerNodeState[treeThinker.csgoId] = NodeState::Success;
         return playerNodeState[treeThinker.csgoId];

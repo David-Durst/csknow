@@ -92,14 +92,6 @@ namespace communicate {
             }
         }
 
-        if (blackboard.inTest) {
-            for (const auto & client : state.clients) {
-                if (blackboard.possibleNavAreas[client.csgoId].find(4182) != blackboard.possibleNavAreas[client.csgoId].end() && client.team == ENGINE_TEAM_T) {
-                    std::cout << 4182 << std::endl;
-                }
-            }
-        }
-
         playerNodeState[treeThinker.csgoId] = NodeState::Success;
         return playerNodeState[treeThinker.csgoId];
     }
