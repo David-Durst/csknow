@@ -121,7 +121,7 @@ public:
             Script::initialize(tree, state);
             Vec3 player0Pos{1417.528564, 1652.856445, -9.775691}, player1Pos{1461.081055, 2392.754639, 22.165134},
                 player2Pos{1048.873779, 2057.416016, 1.277111};
-            vector<AreaId> player0RequiredPossibleAreas{blackboard.navFile.get_nearest_area_by_position(vec3Conv(player1Pos)).get_id(), 4218, 4194},
+            vector<AreaId> player0RequiredPossibleAreas{blackboard.navFile.get_nearest_area_by_position(vec3Conv(player0Pos)).get_id(), 4218, 4194},
                 player1RequiredPossibleAreas{blackboard.navFile.get_nearest_area_by_position(vec3Conv(player1Pos)).get_id()},
                 onePlayerRequiredNotPossibleAreas{3734, 8092, 6992, 4182, 4179};
             Node::Ptr setupCommands = make_unique<SequenceNode>(blackboard, Node::makeList(

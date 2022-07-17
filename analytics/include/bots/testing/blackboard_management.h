@@ -82,6 +82,7 @@ public:
             memory.positions.clear();
         }
         blackboard.resetPossibleNavAreas = true;
+        blackboard.inTest = true;
         blackboard.playerToDangerAreaId.clear();
         playerNodeState[treeThinker.csgoId] = NodeState::Success;
         return playerNodeState[treeThinker.csgoId];
@@ -98,6 +99,14 @@ public:
             Node(blackboard, name), targetIds(targetIds),
             requiredPossibleAreas(requiredPossibleAreas), requiredNotPossibleAreas(requiredNotPossibleAreas) { };
     virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
+        if (blackboard.inTest) {
+            for (const auto & client : state.clients) {
+                if (blackboard.possibleNavAreas[client.csgoId].find(4182) != blackboard.possibleNavAreas[client.csgoId].end() && client.team == INTERNAL_TEAM_T) {
+                    std::cout << "dude" << std::endl;
+                }
+            }
+        }
+
         for (size_t i = 0; i < targetIds.size(); i++) {
             // check the areas that have to be present
             for (size_t j = 0; j < requiredPossibleAreas[i].size(); j++) {
@@ -112,6 +121,9 @@ public:
             for (size_t j = 0; j < requiredNotPossibleAreas[i].size(); j++) {
                 if (blackboard.possibleNavAreas[targetIds[i]].find(requiredNotPossibleAreas[i][j]) !=
                     blackboard.possibleNavAreas[targetIds[i]].end()) {
+                    bool x = blackboard.possibleNavAreas[targetIds[i]].find(4182) != blackboard.possibleNavAreas[targetIds[i]].end() && state.getClient(targetIds[i]).team == INTERNAL_TEAM_T;
+                    AreaId a = requiredNotPossibleAreas[i][j];
+                    auto res = blackboard.possibleNavAreas[targetIds[i]].find(a);
                     playerNodeState[treeThinker.csgoId] = NodeState::Failure;
                     return playerNodeState[treeThinker.csgoId];
                 }
