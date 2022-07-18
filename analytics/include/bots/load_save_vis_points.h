@@ -44,12 +44,12 @@ public:
     }
 
     bool isVisibleIndex(size_t src, size_t target) const {
-        return visPoints[std::min(src, target)].visibleFromCurPoint[std::max(src, target)];
+        return visPoints[src].visibleFromCurPoint[target];
     }
 
     bool isVisibleAreaId(AreaId srcId, AreaId targetId) const {
         size_t src = areaIdToVectorIndex.find(srcId)->second, target = areaIdToVectorIndex.find(targetId)->second;
-        return visPoints[std::min(src, target)].visibleFromCurPoint[std::max(src, target)];
+        return visPoints[src].visibleFromCurPoint[target];
     }
 
     set<AreaId> getAreasRelativeToSrc(AreaId srcId, bool visible) const {

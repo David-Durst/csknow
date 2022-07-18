@@ -57,5 +57,14 @@ void VisPoints::load(string mapsPath, string mapName) {
     else {
         throw std::runtime_error("no vis valid file");
     }
+
+    // after loading, max sure to or all together, want matrix to be full so can export any row
+    for (size_t i = 0; i < visPoints.size(); i++) {
+        for (size_t j = 0; j < visPoints.size(); j++) {
+            visPoints[i].visibleFromCurPoint[j] =
+                    visPoints[i].visibleFromCurPoint[j] | visPoints[j].visibleFromCurPoint[i];
+            visPoints[j].visibleFromCurPoint[i] = visPoints[i].visibleFromCurPoint[j];
+        }
+    }
 }
 
