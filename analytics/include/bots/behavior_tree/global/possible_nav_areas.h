@@ -110,13 +110,14 @@ public:
             if (playerPossiblyInArea[i]) {
                 AreaId iAreaId = navFile.m_areas[i].get_id();
                 //bool anyConsNotPossible = false;
-                for (const auto & connection : navFile.m_areas[i].get_connections()) {
-                    size_t conAreaIndex = navFile.m_area_ids_to_indices.find(connection.id)->second;
+                for (size_t j = 0; j < connectionsAreaLength[i]; j++) {
+                    size_t conAreaIndex = connections[connectionsAreaStart[i] + j];
+                    AreaId conAreaId = navFile.m_areas[conAreaIndex].get_id();
                     if (!playerPossiblyInArea[conAreaIndex] &&
                         reachability.getDistance(i, conAreaIndex) / MAX_RUN_SPEED
-                            < state.getSecondsBetweenTimes(playerEntryTime[iAreaId], state.loadTime)) {
+                        < state.getSecondsBetweenTimes(playerEntryTime[iAreaId], state.loadTime)) {
                         newAreas[conAreaIndex] = true;
-                        playerEntryTime[connection.id] = state.loadTime;
+                        playerEntryTime[conAreaId] = state.loadTime;
                     }
                     // may keep areas on boundary too long as one of their cons may be covered by a later area.
                     // this will only last until next frame, so not a big deal
