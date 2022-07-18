@@ -33,6 +33,8 @@ int main(int argc, char * argv[]) {
     uint64_t numFailures = 0;
     vector<int> x;
     Tree tree;
+    std::thread filterReceiver(&Tree::readFilterNames, &tree);
+
     bool finishedTests = false;
     ScriptsRunner scriptsRunner(Script::makeList(
                                             //make_unique<GooseToCatScript>(state),

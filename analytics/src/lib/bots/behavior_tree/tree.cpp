@@ -56,6 +56,12 @@ void Tree::tick(ServerState & state, const string & mapsPath) {
         }
     }
 
+    // compute the ids that are valid
+    if (filterMutex.try_lock()) {
+        localLogFilterNames = sharedLogFilterNames;
+        filterMutex.unlock();
+    }
+
     if (!blackboard->playerToTreeThinkers.empty()) {
         vector<PrintState> printStates;
 
@@ -96,11 +102,14 @@ void Tree::tick(ServerState & state, const string & mapsPath) {
             //                clientAction.inputAngleDeltaPctY);
 
             // log state
-            vector<PrintState> blackboardPrintStates = blackboard->printPerPlayerState(state, treeThinker.csgoId);
-            printStates.insert(printStates.end(), blackboardPrintStates.begin(), blackboardPrintStates.end());
-            printStates.push_back(priorityNode->printState(state, treeThinker.csgoId));
-            printStates.push_back(actionNode->printState(state, treeThinker.csgoId));
-            printStates.back().appendNewline = true;
+            if (localLogFilterNames.empty() || localLogFilterNames.find(state.getClient(treeThinker.csgoId).name) != localLogFilterNames.end()) {
+                vector<PrintState> blackboardPrintStates = blackboard->printPerPlayerState(state, treeThinker.csgoId);
+                printStates.insert(printStates.end(), blackboardPrintStates.begin(), blackboardPrintStates.end());
+                printStates.push_back(priorityNode->printState(state, treeThinker.csgoId));
+                printStates.push_back(actionNode->printState(state, treeThinker.csgoId));
+                printStates.back().appendNewline = true;
+
+            }
         }
 
         stringstream logCollector;
@@ -114,3 +123,27 @@ void Tree::tick(ServerState & state, const string & mapsPath) {
     }
 }
 
+void Tree::readFilterNames() {
+    string line, value;
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "EndlessLoop"
+    while (true) {
+        std::cin >> line;
+        stringstream lineStream(line);
+
+        // get lock only when have input
+        const std::lock_guard<std::mutex> lock(filterMutex);
+        sharedLogFilterNames.clear();
+        bool includeAll = false;
+        while (getline(lineStream, value, ',')) {
+            if (!value.empty()) {
+                sharedLogFilterNames.insert(value);
+            }
+            includeAll = value == "*";
+        }
+        if (includeAll) {
+            sharedLogFilterNames.clear();
+        }
+    }
+#pragma clang diagnostic pop
+}

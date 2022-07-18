@@ -11,6 +11,10 @@
 #include "bots/behavior_tree/pathing_node.h"
 #include "bots/behavior_tree/action_node.h"
 #include <memory>
+#include <atomic>
+#include <mutex>
+#include <thread>
+
 
 
 class Tree {
@@ -26,8 +30,12 @@ public:
     bool resetState = false;
     TreeThinker defaultThinker{INVALID_ID};
 
+    std::mutex filterMutex;
+    set<string> sharedLogFilterNames, localLogFilterNames;
+
     string curLog;
     void tick(ServerState & state, const string & mapsPath);
+    void readFilterNames();
 };
 
 #endif //CSKNOW_TREE_H

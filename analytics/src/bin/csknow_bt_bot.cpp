@@ -7,8 +7,8 @@
 #include <list>
 #include <map>
 #include <filesystem>
-//#define LOG_STATE
 
+//#define LOG_STATE
 int main(int argc, char * argv[]) {
     if (argc != 4) {
         std::cout << "please call this code with 3 arguments: \n"
@@ -24,6 +24,7 @@ int main(int argc, char * argv[]) {
 
     uint64_t numFailures = 0;
     Tree tree;
+    std::thread filterReceiver(&Tree::readFilterNames, &tree);
 
 #pragma clang diagnostic push
 #pragma ide diagnostic ignored "EndlessLoop"
