@@ -59,10 +59,6 @@ namespace communicate {
             }
         }
 
-        if (blackboard.inTest) {
-            int x = 1;
-        }
-
         // for each client, for each current area they could be, add all possible areas that could've been reached
         // since entering that area
         for (const auto & client : state.clients) {
@@ -71,15 +67,6 @@ namespace communicate {
             }
             else {
                 blackboard.possibleNavAreas.addNeighbors(state, blackboard.reachability, client.csgoId);
-            }
-        }
-
-        if (blackboard.inTest) {
-            for (const auto & client : state.clients) {
-                if (client.team == ENGINE_TEAM_CT && blackboard.possibleNavAreas.get(client.csgoId, 4218)) {
-                    bool z = blackboard.visPoints.isVisibleAreaId(8690, 4218);
-                    int x = 1;
-                }
             }
         }
 
@@ -94,24 +81,11 @@ namespace communicate {
                     tVisibleAreas |= blackboard.visPoints.getAreasRelativeToSrc(curArea);
                 }
                 else if (client.team == ENGINE_TEAM_CT) {
-                    if (blackboard.inTest) {
-                        auto z3 = blackboard.visPoints.getAreasRelativeToSrc(8690);
-                        AreaBits z4 = ctVisibleAreas;
-                        z4 |= z3;
-                    }
                     ctVisibleAreas |= blackboard.visPoints.getAreasRelativeToSrc(curArea);
                 }
             }
         }
         // flip visible areas to got not visible areas
-        if (blackboard.inTest) {
-            bool y = ctVisibleAreas[blackboard.navFile.m_area_ids_to_indices[4218]];
-            bool z = blackboard.visPoints.isVisibleAreaId(8690, 4218);
-            size_t a1 = blackboard.navFile.m_area_ids_to_indices[4218];
-            size_t a2 = blackboard.navFile.m_area_ids_to_indices[8690];
-            auto z2 = blackboard.visPoints.getAreasRelativeToSrc(8690);
-            int x = 1;
-        }
         tVisibleAreas.flip();
         ctVisibleAreas.flip();
 
@@ -127,8 +101,8 @@ namespace communicate {
             }
         }
 
-        CSKnowTime curTime = state.loadTime;
         // fix positions of players visible to enemies
+        CSKnowTime curTime = state.loadTime;
         for (const auto & client : state.clients) {
             const auto visibleEnemies = state.getVisibleEnemies(client.csgoId);
             for (const auto & visibleEnemy : visibleEnemies) {
@@ -136,15 +110,6 @@ namespace communicate {
                 AreaId curArea = blackboard.navFile.get_nearest_area_by_position(
                         vec3Conv(visibleEnemy.get().getFootPosForPlayer())).get_id();
                 blackboard.possibleNavAreas.set(visibleEnemy.get().csgoId, curArea, true, curTime);
-            }
-        }
-
-        if (blackboard.inTest) {
-            for (const auto & client : state.clients) {
-                if (client.team == ENGINE_TEAM_CT && blackboard.possibleNavAreas.get(client.csgoId, 4218)) {
-                    bool z = blackboard.visPoints.isVisibleAreaId(8690, 4218);
-                    int x = 1;
-                }
             }
         }
 
