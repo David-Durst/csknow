@@ -38,7 +38,7 @@ namespace communicate {
 
         for (const auto & client : state.clients) {
             if (client.isAlive && client.isBot) {
-                AreaBits teamAssignedAreas = assignedAreas.getTeamAssignedAreas(state, treeThinker);
+                AreaBits & teamAssignedAreas = assignedAreas.getTeamAssignedAreas(state, treeThinker);
 
                 const nav_mesh::nav_area & curArea =
                         blackboard.navFile.get_nearest_area_by_position(vec3Conv(client.getFootPosForPlayer()));
