@@ -72,19 +72,8 @@ namespace communicate {
 
         // for each client, for each area they could be, remove all areas that are visible to enemies
         // first get areas visible to enemies
-        AreaBits tVisibleAreas, ctVisibleAreas;
-        for (const auto & client : state.clients) {
-            if (client.isAlive) {
-                AreaId curArea =
-                        blackboard.navFile.get_nearest_area_by_position(vec3Conv(client.getFootPosForPlayer())).get_id();
-                if (client.team == ENGINE_TEAM_T) {
-                    tVisibleAreas |= blackboard.visPoints.getAreasRelativeToSrc(curArea);
-                }
-                else if (client.team == ENGINE_TEAM_CT) {
-                    ctVisibleAreas |= blackboard.visPoints.getAreasRelativeToSrc(curArea);
-                }
-            }
-        }
+        AreaBits tVisibleAreas = blackboard.getVisibleAreasByTeam(state, ENGINE_TEAM_T),
+            ctVisibleAreas = blackboard.getVisibleAreasByTeam(state, ENGINE_TEAM_CT);
         // flip visible areas to got not visible areas
         tVisibleAreas.flip();
         ctVisibleAreas.flip();

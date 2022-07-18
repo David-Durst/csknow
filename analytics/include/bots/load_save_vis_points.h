@@ -52,12 +52,6 @@ public:
         return visPoints[src].visibleFromCurPoint[target];
     }
 
-    set<AreaId> getAreasRelativeToSrc(AreaId srcId, bool visible) const {
-        set<AreaId> result;
-        //getAreasRelativeToSrc(srcId, visible, result);
-        return result;
-    }
-
     AreaBits getAreasRelativeToSrc(AreaId srcId) const {
         return visPoints[areaIdToVectorIndex.find(srcId)->second].visibleFromCurPoint;
     }

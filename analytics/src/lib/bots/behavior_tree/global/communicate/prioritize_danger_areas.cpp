@@ -3,12 +3,14 @@
 //
 
 #include "bots/behavior_tree/global/communicate_node.h"
+#include <array>
+using std::array;
 
 namespace communicate {
     struct AssignedAreas {
-        set<AreaId> tAssignedAreas, ctAssignedAreas;
+        AreaBits tAssignedAreas, ctAssignedAreas;
 
-        set<AreaId> & getTeamAssignedAreas(const ServerState &state, TreeThinker &treeThinker) {
+        AreaBits & getTeamAssignedAreas(const ServerState &state, TreeThinker &treeThinker) {
             if (state.getClient(treeThinker.csgoId).team == ENGINE_TEAM_T) {
                 return tAssignedAreas;
             }
@@ -20,7 +22,8 @@ namespace communicate {
 
     // cover edges are defined relative to another nav area
     struct CoverEdge {
-        AreaId id;
+        size_t areaIndex;
+        AreaId areaId;
         double distance;
     };
 
@@ -30,33 +33,37 @@ namespace communicate {
         // clear out assignments from prior frame
         blackboard.playerToDangerAreaId.clear();
 
+        AreaBits tVisibleAreas = blackboard.getVisibleAreasByTeam(state, ENGINE_TEAM_T),
+                ctVisibleAreas = blackboard.getVisibleAreasByTeam(state, ENGINE_TEAM_CT);
+
         for (const auto & client : state.clients) {
             if (client.isAlive && client.isBot) {
-                set<AreaId> teamAssignedAreas = assignedAreas.getTeamAssignedAreas(state, treeThinker);
+                AreaBits teamAssignedAreas = assignedAreas.getTeamAssignedAreas(state, treeThinker);
 
                 const nav_mesh::nav_area & curArea =
                         blackboard.navFile.get_nearest_area_by_position(vec3Conv(client.getFootPosForPlayer()));
 
                 // filter for cover edge - visible, but adjacent to behind cover area
-                set<AreaId> visibleAreas = blackboard.visPoints.getAreasRelativeToSrc(curArea.get_id(), true);
                 vector<CoverEdge> coverEdges;
-                for (AreaId visibleAreaId : visibleAreas) {
-                    size_t visibleAreaIndex = blackboard.navFile.m_area_ids_to_indices[visibleAreaId];
-                    for (const auto & connection : blackboard.navFile.get_area_by_id_fast(visibleAreaId).get_connections()) {
-                        if (visibleAreas.find(connection.id) == visibleAreas.end()) {
-                            // distance is distance to possible enemy locations
-                            double minDistance = std::numeric_limits<double>::max();
-                            for (const auto & possibleAreaId : blackboard.possibleNavAreas.getEnemiesPossiblePositions(state, treeThinker.csgoId)) {
-                                double tmpDistance = blackboard.reachability.getDistance(blackboard.navFile.m_area_ids_to_indices[possibleAreaId], visibleAreaIndex);
-                                if (tmpDistance < minDistance) {
-                                    minDistance = tmpDistance;
+                for (size_t i = 0; i < blackboard.navFile.m_areas.size(); i++) {
+                    if ((client.team == ENGINE_TEAM_T && tVisibleAreas[i]) || (client.team == ENGINE_TEAM_CT && ctVisibleAreas[i])) {
+                        for (size_t j = 0; j < blackboard.navFile.connections_area_length[i]; j++) {
+                            size_t conAreaIndex = blackboard.navFile.connections[blackboard.navFile.connections_area_start[i] + j];
+                            if ((client.team == ENGINE_TEAM_T && !tVisibleAreas[conAreaIndex]) || (client.team == ENGINE_TEAM_CT && !ctVisibleAreas[conAreaIndex])) {
+                                // distance is distance to possible enemy locations
+                                double minDistance = std::numeric_limits<double>::max();
+                                for (const auto & possibleAreaIndex : blackboard.possibleNavAreas.getEnemiesPossiblePositions(state, treeThinker.csgoId)) {
+                                    double tmpDistance = blackboard.reachability.getDistance(possibleAreaIndex, i);
+                                    if (tmpDistance < minDistance) {
+                                        minDistance = tmpDistance;
+                                    }
                                 }
+                                // if there are no enemies, then no need to worry about cover edges
+                                if (minDistance != std::numeric_limits<double>::max()) {
+                                    coverEdges.push_back({i, blackboard.navFile.m_areas[i].get_id(), minDistance});
+                                }
+                                break;
                             }
-                            // if there are no enemies, then no need to worry about cover edges
-                            if (minDistance == std::numeric_limits<double>::max()) {
-                                coverEdges.push_back({visibleAreaId, minDistance});
-                            }
-                            break;
                         }
                     }
                 }
@@ -74,19 +81,19 @@ namespace communicate {
                 // find first non-assigned cover edge
                 // if all already assigned, take the closest one
                 for (const auto & coverEdge : coverEdges) {
-                    if (teamAssignedAreas.find(coverEdge.id) == teamAssignedAreas.end()) {
-                        blackboard.playerToDangerAreaId[client.csgoId] = coverEdge.id;
+                    if (!teamAssignedAreas[coverEdge.areaIndex]) {
+                        blackboard.playerToDangerAreaId[client.csgoId] = coverEdge.areaId;
                     }
                 }
                 if (blackboard.playerToDangerAreaId.find(client.csgoId) == blackboard.playerToDangerAreaId.end()) {
-                    blackboard.playerToDangerAreaId[client.csgoId] = coverEdges[0].id;
+                    blackboard.playerToDangerAreaId[client.csgoId] = coverEdges[0].areaId;
                 }
 
                 size_t srcAreaIndex = blackboard.navFile.m_area_ids_to_indices[blackboard.playerToDangerAreaId[client.csgoId]];
                 // count all areas within distance to assigned one as also assigned
                 for (size_t dstAreaIndex = 0; dstAreaIndex < blackboard.navFile.m_areas.size(); dstAreaIndex++) {
                     if (blackboard.reachability.getDistance(srcAreaIndex, dstAreaIndex) < WATCHED_DISTANCE) {
-                        teamAssignedAreas.insert(blackboard.navFile.m_areas[dstAreaIndex].get_id());
+                        teamAssignedAreas[dstAreaIndex] = true;
                     }
                 }
             }

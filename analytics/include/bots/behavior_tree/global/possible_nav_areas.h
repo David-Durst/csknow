@@ -16,8 +16,7 @@ class PossibleNavAreas {
     const nav_mesh::nav_file & navFile;
 
 public:
-    PossibleNavAreas (const nav_mesh::nav_file & navFile) : navFile(navFile) {
-    }
+    PossibleNavAreas (const nav_mesh::nav_file & navFile) : navFile(navFile) { }
 
     void reset(CSGOId playerId) {
         possiblyInArea[playerId].reset();
@@ -73,7 +72,7 @@ public:
     }
 
 
-    vector<AreaId> getEnemiesPossiblePositions(const ServerState & state, CSGOId sourceId) const {
+    vector<size_t> getEnemiesPossiblePositions(const ServerState & state, CSGOId sourceId) const {
         AreaBits resultBits;
         for (const auto & client : state.clients) {
             if (client.team != state.getClient(sourceId).team && client.isAlive) {
@@ -81,10 +80,10 @@ public:
             }
         }
 
-        vector<AreaId> result;
+        vector<size_t> result;
         for (size_t i = 0; i < navFile.m_areas.size(); i++) {
             if (resultBits[i]) {
-                result.push_back(navFile.m_areas[i].get_id());
+                result.push_back(i);
             }
         }
 
