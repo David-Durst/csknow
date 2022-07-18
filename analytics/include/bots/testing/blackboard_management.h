@@ -110,7 +110,7 @@ public:
 
             // check the areas that have to not be present
             for (size_t j = 0; j < requiredNotPossibleAreas[i].size(); j++) {
-                if (blackboard.possibleNavAreas.get(targetIds[i], requiredPossibleAreas[i][j])) {
+                if (blackboard.possibleNavAreas.get(targetIds[i], requiredNotPossibleAreas[i][j])) {
                     playerNodeState[treeThinker.csgoId] = NodeState::Failure;
                     return playerNodeState[treeThinker.csgoId];
                 }

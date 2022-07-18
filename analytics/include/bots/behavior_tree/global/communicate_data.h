@@ -9,7 +9,7 @@
 #include "navmesh/nav_file.h"
 
 class PossibleNavAreas {
-    map<CSGOId, Area_Bits> possiblyInArea;
+    map<CSGOId, AreaBits> possiblyInArea;
     map<CSGOId, map<AreaId, CSKnowTime>> entryTime;
     const nav_mesh::nav_file & navFile;
 
@@ -26,7 +26,7 @@ public:
         entryTime[playerId][areaId] = time;
     }
 
-    void set(CSGOId playerId, Area_Bits playerPossiblyInArea, CSKnowTime curTime) {
+    void set(CSGOId playerId, AreaBits playerPossiblyInArea, CSKnowTime curTime) {
         possiblyInArea[playerId] = playerPossiblyInArea;
         for (size_t i = 0; i < playerPossiblyInArea.size(); i++) {
             if (playerPossiblyInArea[i]) {
@@ -40,12 +40,23 @@ public:
         return possiblyInArea.find(playerId)->second[index];
     }
 
-    void andBits(CSGOId playerId, const Area_Bits & mask) {
+    void andBits(CSGOId playerId, const AreaBits & mask) {
         possiblyInArea[playerId] &= mask;
     }
 
+    vector<AreaId> getPossibleAreas(CSGOId playerId) const {
+        vector<AreaId> result;
+        for (size_t i = 0; i < possiblyInArea.find(playerId)->second.size(); i++) {
+            if (possiblyInArea.find(playerId)->second[i]) {
+                result.push_back(navFile.m_areas[i].get_id());
+            }
+        }
+        return result;
+    }
+
+
     vector<AreaId> getEnemiesPossiblePositions(const ServerState & state, CSGOId sourceId) {
-        Area_Bits resultBits;
+        AreaBits resultBits;
         for (const auto & client : state.clients) {
             if (client.team != state.getClient(sourceId).team && client.isAlive) {
                 resultBits |= possiblyInArea[client.csgoId];
@@ -63,7 +74,7 @@ public:
     }
 
    void addNeighbors(const ServerState & state, const ReachableResult & reachability, CSGOId playerId) {
-        Area_Bits newAreas;
+        AreaBits newAreas;
         auto & playerPossiblyInArea = possiblyInArea[playerId];
         auto & playerEntryTime = entryTime[playerId];
         for (size_t i = 0; i < navFile.m_areas.size(); i++)  {

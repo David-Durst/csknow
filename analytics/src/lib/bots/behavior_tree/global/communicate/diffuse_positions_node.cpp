@@ -59,6 +59,10 @@ namespace communicate {
             }
         }
 
+        if (blackboard.inTest) {
+            int x = 1;
+        }
+
         CSKnowTime curTime = state.loadTime;
         set<CSKnowId> visibleToEnemies;
         // fix positions of players visible to enemies
@@ -86,7 +90,7 @@ namespace communicate {
 
         // for each client, for each area they could be, remove all areas that are visible to enemies
         // first get areas visible to enemies
-        Area_Bits tVisibleAreas, ctVisibleAreas;
+        AreaBits tVisibleAreas, ctVisibleAreas;
         for (const auto & client : state.clients) {
             if (client.isAlive) {
                 AreaId curArea =

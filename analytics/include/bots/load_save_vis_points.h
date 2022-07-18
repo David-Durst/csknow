@@ -14,13 +14,13 @@
 using std::map;
 using std::bitset;
 typedef uint32_t AreaId;
-typedef bitset<MAX_NAV_AREAS> Area_Bits;
+typedef bitset<MAX_NAV_AREAS> AreaBits;
 
 struct VisPoint {
     AreaId areaId;
     AABB areaCoordinates;
     Vec3 center;
-    Area_Bits visibleFromCurPoint;
+    AreaBits visibleFromCurPoint;
 };
 
 class VisPoints {
@@ -58,7 +58,7 @@ public:
         return result;
     }
 
-    Area_Bits getAreasRelativeToSrc(AreaId srcId) const {
+    AreaBits getAreasRelativeToSrc(AreaId srcId) const {
         return visPoints[areaIdToVectorIndex.find(srcId)->second].visibleFromCurPoint;
     }
 
