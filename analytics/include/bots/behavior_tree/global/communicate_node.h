@@ -6,7 +6,7 @@
 #define CSKNOW_COMMUNICATE_NODE_H
 
 #include "bots/behavior_tree/priority/memory_node.h"
-#include "bots/behavior_tree/global/communicate_data.h"
+#include "bots/behavior_tree/global/possible_nav_areas.h"
 #include "bots/behavior_tree/node.h"
 #include <map>
 #include <memory>

@@ -17,7 +17,7 @@
 #include "bots/load_save_vis_points.h"
 #include "bots/testing/script_data.h"
 #include "bots/behavior_tree/priority/memory_data.h"
-#include "bots/behavior_tree/global/communicate_data.h"
+#include "bots/behavior_tree/global/possible_nav_areas.h"
 #include <filesystem>
 #include <memory>
 #include <random>

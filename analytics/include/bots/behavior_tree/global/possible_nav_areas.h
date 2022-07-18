@@ -1,12 +1,13 @@
 //
-// Created by durst on 7/10/22.
+// Created by steam on 7/18/22.
 //
 
-#ifndef CSKNOW_COMMUNICATE_DATA_H
-#define CSKNOW_COMMUNICATE_DATA_H
+#ifndef CSKNOW_POSSIBLE_NAV_AREAS_H
+#define CSKNOW_POSSIBLE_NAV_AREAS_H
 #include "load_save_bot_data.h"
 #include "bots/load_save_vis_points.h"
 #include "navmesh/nav_file.h"
+#include "queries/reachable.h"
 
 class PossibleNavAreas {
     map<CSGOId, AreaBits> possiblyInArea;
@@ -73,7 +74,7 @@ public:
         return result;
     }
 
-   void addNeighbors(const ServerState & state, const ReachableResult & reachability, CSGOId playerId) {
+    void addNeighbors(const ServerState & state, const ReachableResult & reachability, CSGOId playerId) {
         AreaBits newAreas;
         auto & playerPossiblyInArea = possiblyInArea[playerId];
         auto & playerEntryTime = entryTime[playerId];
@@ -84,7 +85,7 @@ public:
                     size_t conAreaIndex = navFile.m_area_ids_to_indices.find(connection.id)->second;
                     if (!playerPossiblyInArea[conAreaIndex] &&
                         reachability.getDistance(i, conAreaIndex) / MAX_RUN_SPEED
-                            < state.getSecondsBetweenTimes(playerEntryTime[iAreaId], state.loadTime)) {
+                        < state.getSecondsBetweenTimes(playerEntryTime[iAreaId], state.loadTime)) {
                         newAreas[conAreaIndex] = true;
                         playerEntryTime[connection.id] = state.loadTime;
                     }
@@ -95,19 +96,5 @@ public:
         playerPossiblyInArea |= newAreas;
     };
 };
-/*
-typedef map<CSKnowId, map<AreaId, CSKnowTime>> PossibleNavAreas;
-static set<AreaId> getEnemiesPossiblePositions(const ServerState & state, CSGOId sourceId, PossibleNavAreas possibleNavAreas) {
-    set<AreaId> result;
-    for (const auto & client : state.clients) {
-        if (client.team != state.getClient(sourceId).team) {
-            for (const auto & [possibleAreaId, _] : possibleNavAreas[client.csgoId]) {
-                result.insert(possibleAreaId);
-            }
-        }
-    }
-    return result;
-}
- */
 
-#endif //CSKNOW_COMMUNICATE_DATA_H
+#endif //CSKNOW_POSSIBLE_NAV_AREAS_H
