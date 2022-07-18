@@ -40,13 +40,13 @@ void VisPoints::load(string mapsPath, string mapName) {
                 throw std::runtime_error("wrong number of cols in vis valid file's line " + std::to_string(i));
             }
 
-            visPoints[i].visibleFromCurPoint.clear();
+            visPoints[i].visibleFromCurPoint.reset();
             for (size_t j = 0; j < visValidBuf.size(); j++) {
                 if (visValidBuf[j] != 't' && visValidBuf[j] != 'f') {
                     throw std::runtime_error("invalid char " + std::to_string(visValidBuf[j]) +
                         " vis valid file's line " + std::to_string(i) + " col " + std::to_string(j));
                 }
-                visPoints[i].visibleFromCurPoint.push_back(visValidBuf[j] == 't');
+                visPoints[i].visibleFromCurPoint[j] = visValidBuf[j] == 't';
             }
             i++;
         }

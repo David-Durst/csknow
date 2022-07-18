@@ -4,15 +4,12 @@
 
 #ifndef CSKNOW_COMMUNICATE_DATA_H
 #define CSKNOW_COMMUNICATE_DATA_H
-#define MAX_NAV_AREAS 2000
 #include "load_save_bot_data.h"
 #include "bots/load_save_vis_points.h"
 #include "navmesh/nav_file.h"
-#include <bitset>
-using std::bitset;
 
 class PossibleNavAreas {
-    map<CSGOId, bitset<MAX_NAV_AREAS>> possiblyInArea;
+    map<CSGOId, Area_Bits> possiblyInArea;
     map<CSGOId, map<AreaId, CSKnowTime>> entryTime;
     const nav_mesh::nav_file & navFile;
 
@@ -29,7 +26,7 @@ public:
         entryTime[playerId][areaId] = time;
     }
 
-    void set(CSGOId playerId, bitset<MAX_NAV_AREAS> playerPossiblyInArea, CSKnowTime curTime) {
+    void set(CSGOId playerId, Area_Bits playerPossiblyInArea, CSKnowTime curTime) {
         possiblyInArea[playerId] = playerPossiblyInArea;
         for (size_t i = 0; i < playerPossiblyInArea.size(); i++) {
             if (playerPossiblyInArea[i]) {
@@ -43,8 +40,12 @@ public:
         return possiblyInArea.find(playerId)->second[index];
     }
 
+    void andBits(CSGOId playerId, const Area_Bits & mask) {
+        possiblyInArea[playerId] &= mask;
+    }
+
     vector<AreaId> getEnemiesPossiblePositions(const ServerState & state, CSGOId sourceId) {
-        bitset<MAX_NAV_AREAS> resultBits;
+        Area_Bits resultBits;
         for (const auto & client : state.clients) {
             if (client.team != state.getClient(sourceId).team && client.isAlive) {
                 resultBits |= possiblyInArea[client.csgoId];
@@ -62,7 +63,7 @@ public:
     }
 
    void addNeighbors(const ServerState & state, const ReachableResult & reachability, CSGOId playerId) {
-        bitset<MAX_NAV_AREAS> newAreas;
+        Area_Bits newAreas;
         auto & playerPossiblyInArea = possiblyInArea[playerId];
         auto & playerEntryTime = entryTime[playerId];
         for (size_t i = 0; i < navFile.m_areas.size(); i++)  {

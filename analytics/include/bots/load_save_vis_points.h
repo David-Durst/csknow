@@ -9,14 +9,18 @@
 #include "geometryNavConversions.h"
 #include "navmesh/nav_file.h"
 #include "load_save_bot_data.h"
+#include <bitset>
+#define MAX_NAV_AREAS 2000
 using std::map;
+using std::bitset;
 typedef uint32_t AreaId;
+typedef bitset<MAX_NAV_AREAS> Area_Bits;
 
 struct VisPoint {
     AreaId areaId;
     AABB areaCoordinates;
     Vec3 center;
-    vector<bool> visibleFromCurPoint;
+    Area_Bits visibleFromCurPoint;
 };
 
 class VisPoints {
@@ -26,8 +30,8 @@ class VisPoints {
 public:
     VisPoints(const nav_mesh::nav_file & navFile) {
         for (const auto & navArea : navFile.m_areas) {
-            visPoints.push_back({navArea.get_id(), {vec3tConv(navArea.get_min_corner()), vec3tConv(navArea.get_max_corner())},
-                                 vec3tConv(navArea.get_center()), {}});
+            visPoints.push_back(VisPoint{navArea.get_id(), {vec3tConv(navArea.get_min_corner()), vec3tConv(navArea.get_max_corner())},
+                                 vec3tConv(navArea.get_center())});
             visPoints.back().center.z += EYE_HEIGHT;
         }
         std::sort(visPoints.begin(), visPoints.end(),
@@ -50,31 +54,12 @@ public:
 
     set<AreaId> getAreasRelativeToSrc(AreaId srcId, bool visible) const {
         set<AreaId> result;
-        getAreasRelativeToSrc(srcId, visible, result);
+        //getAreasRelativeToSrc(srcId, visible, result);
         return result;
     }
 
-    set<AreaId> getAreasRelativeToSrc(set<AreaId> srcIds, bool visible) const {
-        set<AreaId> result;
-        for (const auto & srcId : srcIds) {
-            getAreasRelativeToSrc(srcId, visible, result);
-        }
-        return result;
-    }
-
-    void getAreasRelativeToSrc(AreaId srcId, bool visible, set<AreaId> & result) const {
-        size_t src = areaIdToVectorIndex.find(srcId)->second;
-        for (size_t target = 0; target < visPoints.size(); target++) {
-            if (target == src) {
-                continue;
-            }
-            else if (visible && isVisibleIndex(src, target)) {
-                result.insert(visPoints[target].areaId);
-            }
-            else if (!visible && !isVisibleIndex(src, target)) {
-                result.insert(visPoints[target].areaId);
-            }
-        }
+    Area_Bits getAreasRelativeToSrc(AreaId srcId) const {
+        return visPoints[srcId].visibleFromCurPoint;
     }
 
     void launchVisPointsCommand(const ServerState & state);
