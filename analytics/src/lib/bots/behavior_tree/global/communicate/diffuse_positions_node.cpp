@@ -65,10 +65,10 @@ namespace communicate {
             const auto visibleEnemies = state.getVisibleEnemies(client.csgoId);
             for (const auto & visibleEnemy : visibleEnemies) {
                 visibleToEnemies.insert(visibleEnemy.get().csgoId);
-                blackboard.possibleNavAreas[visibleEnemy.get().csgoId].clear();
+                blackboard.possibleNavAreas.reset(visibleEnemy.get().csgoId);
                 AreaId curArea = blackboard.navFile.get_nearest_area_by_position(
                         vec3Conv(visibleEnemy.get().getFootPosForPlayer())).get_id();
-                blackboard.possibleNavAreas[visibleEnemy.get().csgoId][curArea] = curTime;
+                blackboard.possibleNavAreas.set(visibleEnemy.get().csgoId, curArea, true, curTime);
             }
         }
 
@@ -76,7 +76,7 @@ namespace communicate {
         // since entering that area
         for (const auto & client : state.clients) {
             if (!client.isAlive) {
-                blackboard.possibleNavAreas[client.csgoId].clear();
+                blackboard.possibleNavAreas[client.csgoId].reset();
             }
             else {
                 auto & playerPossibleNavAreas = blackboard.possibleNavAreas[client.csgoId];
@@ -100,6 +100,7 @@ namespace communicate {
             }
         }
 
+        /*
         // for each client, for each area they could be, remove all areas that are visible to enemies
         // first build set of visible points for each team
         set<AreaId> tCurAreas, ctCurAreas;
@@ -139,6 +140,7 @@ namespace communicate {
                 blackboard.possibleNavAreas[csgoId].erase(playerAreaToRemove);
             }
         }
+         */
 
         playerNodeState[treeThinker.csgoId] = NodeState::Success;
         return playerNodeState[treeThinker.csgoId];

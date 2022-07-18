@@ -45,8 +45,8 @@ public:
             SequenceNode(blackboard, Node::makeList(
                     make_unique<communicate::AssignAggressionNode>(blackboard),
                     make_unique<communicate::CommunicateTeamMemory>(blackboard),
-                    make_unique<communicate::DiffusePositionsNode>(blackboard),
-                    make_unique<communicate::PrioritizeDangerAreasNode>(blackboard)
+                    make_unique<communicate::DiffusePositionsNode>(blackboard)
+                    //make_unique<communicate::PrioritizeDangerAreasNode>(blackboard)
     ), "CommunicationNode") { };
 };
 
