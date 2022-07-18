@@ -11,12 +11,12 @@
 #include <bitset>
 using std::bitset;
 
-struct PossibleNavAreas {
-    map<CSGOId, vector<AreaId>> initialAreas;
+class PossibleNavAreas {
     map<CSGOId, bitset<MAX_NAV_AREAS>> possiblyInArea;
     map<CSGOId, map<AreaId, CSKnowTime>> entryTime;
     const nav_mesh::nav_file & navFile;
 
+public:
     PossibleNavAreas (const nav_mesh::nav_file & navFile) : navFile(navFile) { }
 
     void reset(CSGOId playerId) {
@@ -27,6 +27,20 @@ struct PossibleNavAreas {
         size_t index = navFile.m_area_ids_to_indices.find(areaId)->second;
         possiblyInArea[playerId][index] = inArea;
         entryTime[playerId][areaId] = time;
+    }
+
+    void set(CSGOId playerId, bitset<MAX_NAV_AREAS> playerPossiblyInArea, CSKnowTime curTime) {
+        possiblyInArea[playerId] = playerPossiblyInArea;
+        for (size_t i = 0; i < playerPossiblyInArea.size(); i++) {
+            if (playerPossiblyInArea[i]) {
+                entryTime[playerId][navFile.m_areas[i].get_id()] = curTime;
+            }
+        }
+    }
+
+    bool get(CSGOId playerId, AreaId areaId) const {
+        size_t index = navFile.m_area_ids_to_indices.find(areaId)->second;
+        return possiblyInArea.find(playerId)->second[index];
     }
 
     vector<AreaId> getEnemiesPossiblePositions(const ServerState & state, CSGOId sourceId) {
@@ -47,24 +61,26 @@ struct PossibleNavAreas {
         return result;
     }
 
-   void addNeighbors(const ServerState & state, ReachableResult reachability, CSGOId playerId) {
-        bitset<MAX_NAV_AREAS> resultBits;
-        double distances[navFile.m_areas.size()];
-        const auto & playerPossiblyInArea = possiblyInArea[playerId];
+   void addNeighbors(const ServerState & state, const ReachableResult & reachability, CSGOId playerId) {
+        bitset<MAX_NAV_AREAS> newAreas;
+        auto & playerPossiblyInArea = possiblyInArea[playerId];
+        auto & playerEntryTime = entryTime[playerId];
         for (size_t i = 0; i < navFile.m_areas.size(); i++)  {
-            for (const auto & connection : navFile.m_areas[i].get_connections()) {
-                size_t areaIndex = navFile.m_area_ids_to_indices.find(connection.id)->second;
-                if (!resultBits[areaIndex] ||
-                    distances[areaIndex] / MAX_RUN_SPEED < state.getSecondsBetweenTimes(, state.loadTime)) {
-
+            if (playerPossiblyInArea[i]) {
+                AreaId iAreaId = navFile.m_areas[i].get_id();
+                for (const auto & connection : navFile.m_areas[i].get_connections()) {
+                    size_t conAreaIndex = navFile.m_area_ids_to_indices.find(connection.id)->second;
+                    if (!playerPossiblyInArea[conAreaIndex] &&
+                        reachability.getDistance(i, conAreaIndex) / MAX_RUN_SPEED
+                            < state.getSecondsBetweenTimes(playerEntryTime[iAreaId], state.loadTime)) {
+                        newAreas[conAreaIndex] = true;
+                        playerEntryTime[connection.id] = state.loadTime;
+                    }
                 }
-                resultBits[areaIndex] = true;
-                distances[] = true;
             }
         }
 
-        vector<AreaId> result;
-
+        playerPossiblyInArea |= newAreas;
     };
 };
 /*

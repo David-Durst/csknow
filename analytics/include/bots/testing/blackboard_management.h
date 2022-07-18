@@ -102,8 +102,7 @@ public:
         for (size_t i = 0; i < targetIds.size(); i++) {
             // check the areas that have to be present
             for (size_t j = 0; j < requiredPossibleAreas[i].size(); j++) {
-                if (blackboard.possibleNavAreas[targetIds[i]].find(requiredPossibleAreas[i][j]) ==
-                    blackboard.possibleNavAreas[targetIds[i]].end()) {
+                if (!blackboard.possibleNavAreas.get(targetIds[i], requiredPossibleAreas[i][j])){
                     playerNodeState[treeThinker.csgoId] = NodeState::Failure;
                     return playerNodeState[treeThinker.csgoId];
                 }
@@ -111,8 +110,7 @@ public:
 
             // check the areas that have to not be present
             for (size_t j = 0; j < requiredNotPossibleAreas[i].size(); j++) {
-                if (blackboard.possibleNavAreas[targetIds[i]].find(requiredNotPossibleAreas[i][j]) !=
-                    blackboard.possibleNavAreas[targetIds[i]].end()) {
+                if (blackboard.possibleNavAreas.get(targetIds[i], requiredPossibleAreas[i][j])) {
                     playerNodeState[treeThinker.csgoId] = NodeState::Failure;
                     return playerNodeState[treeThinker.csgoId];
                 }

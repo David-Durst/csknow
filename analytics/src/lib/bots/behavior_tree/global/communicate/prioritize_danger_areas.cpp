@@ -46,7 +46,7 @@ namespace communicate {
                         if (visibleAreas.find(connection.id) == visibleAreas.end()) {
                             // distance is distance to possible enemy locations
                             double minDistance = std::numeric_limits<double>::max();
-                            for (const auto & possibleAreaId : getEnemiesPossiblePositions(state, treeThinker.csgoId, blackboard.possibleNavAreas)) {
+                            for (const auto & possibleAreaId : blackboard.possibleNavAreas.getEnemiesPossiblePositions(state, treeThinker.csgoId)) {
                                 double tmpDistance = blackboard.reachability.getDistance(blackboard.navFile.m_area_ids_to_indices[possibleAreaId], visibleAreaIndex);
                                 if (tmpDistance < minDistance) {
                                     minDistance = tmpDistance;
