@@ -14,18 +14,9 @@ class PossibleNavAreas {
     //map<CSGOId, AreaBits> boundary; // possiblyInArea nodes connected directly to not possibly nodes
     map<CSGOId, map<AreaId, CSKnowTime>> entryTime;
     const nav_mesh::nav_file & navFile;
-    vector<size_t> connections; // store connections as a contiguous array of array indexes rather than area ids
-    vector<size_t> connectionsAreaStart, connectionsAreaLength;
 
 public:
     PossibleNavAreas (const nav_mesh::nav_file & navFile) : navFile(navFile) {
-        for (size_t i = 0; i < navFile.m_areas.size(); i++) {
-            connectionsAreaStart.push_back(connections.size());
-            for (const auto & connection : navFile.m_areas[i].get_connections()) {
-                connections.push_back(navFile.m_area_ids_to_indices.find(connection.id)->second);
-            }
-            connectionsAreaLength.push_back(connections.size() - connectionsAreaStart.back());
-        }
     }
 
     void reset(CSGOId playerId) {
@@ -110,8 +101,8 @@ public:
             if (playerPossiblyInArea[i]) {
                 AreaId iAreaId = navFile.m_areas[i].get_id();
                 //bool anyConsNotPossible = false;
-                for (size_t j = 0; j < connectionsAreaLength[i]; j++) {
-                    size_t conAreaIndex = connections[connectionsAreaStart[i] + j];
+                for (size_t j = 0; j < navFile.connections_area_length[i]; j++) {
+                    size_t conAreaIndex = navFile.connections[navFile.connections_area_start[i] + j];
                     AreaId conAreaId = navFile.m_areas[conAreaIndex].get_id();
                     if (!playerPossiblyInArea[conAreaIndex] &&
                         reachability.getDistance(i, conAreaIndex) / MAX_RUN_SPEED

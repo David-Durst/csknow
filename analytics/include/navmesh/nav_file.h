@@ -76,6 +76,7 @@ namespace nav_mesh {
         vec3_t get_nearest_point_in_area( vec3_t position, nav_area& area);
 		const nav_area& get_nearest_area_by_position( vec3_t position ) const;
         void remove_incoming_edges_to_areas( std::set<std::uint32_t> ids );
+        void build_connections_arrays( );
         std::set<std::uint32_t> get_sources_to_area( std::uint32_t id ) const;
         void set_areas_to_increase_cost( std::set<uint32_t> new_areas ) {
             m_areas_to_increase_cost = new_areas;
@@ -99,5 +100,7 @@ namespace nav_mesh {
 		std::vector< nav_area > m_areas = { };
 		std::vector< std::string > m_places = { };
         std::map< uint32_t, size_t > m_area_ids_to_indices;
+        std::vector<size_t> connections; // store connections as a contiguous array of array indexes rather than area ids
+        std::vector<size_t> connections_area_start, connections_area_length;
 	};
 }

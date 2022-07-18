@@ -61,6 +61,7 @@ namespace nav_mesh {
             m_area_ids_to_indices.insert({m_areas[area_id].get_id(), area_id});
         }
 
+        build_connections_arrays();
     }
 
     std::optional< std::vector< vec3_t > > nav_file::find_path( vec3_t from, vec3_t to ) {
@@ -305,7 +306,21 @@ namespace nav_mesh {
                     [&](nav_connect_t con) { return ids.find(con.id) != ids.end(); }),
                 area_connections.end());
         }
+        build_connections_arrays();
         m_pather->Reset();
+    }
+
+    void nav_file::build_connections_arrays() {
+        connections.clear();
+        connections_area_start.clear();
+        connections_area_length.clear();
+        for (size_t i = 0; i < m_areas.size(); i++) {
+            connections_area_start.push_back(connections.size());
+            for (const auto & connection : m_areas[i].get_connections()) {
+                connections.push_back(m_area_ids_to_indices.find(connection.id)->second);
+            }
+            connections_area_length.push_back(connections.size() - connections_area_start.back());
+        }
     }
 
     std::set<std::uint32_t> nav_file::get_sources_to_area( std::uint32_t id ) const {
