@@ -59,7 +59,7 @@ public:
     }
 
     Area_Bits getAreasRelativeToSrc(AreaId srcId) const {
-        return visPoints[srcId].visibleFromCurPoint;
+        return visPoints[areaIdToVectorIndex.find(srcId)->second].visibleFromCurPoint;
     }
 
     void launchVisPointsCommand(const ServerState & state);
