@@ -35,10 +35,16 @@ vector<PrintState> Blackboard::printPerPlayerState(const ServerState &state, CSG
     const ServerState::Client & curClient = state.getClient(playerId);
     vector<PrintState> printStates;
 
+    string dangerArea = "none";
+    if (playerToDangerAreaId.find(playerId) != playerToDangerAreaId.end()) {
+        dangerArea = std::to_string(playerToDangerAreaId.find(playerId)->second);
+    }
+
     printStates.push_back(state.getPlayerString(playerId) +
-                                ", pos: " + curClient.getFootPosForPlayer().toString() +
+                                ", pos " + curClient.getFootPosForPlayer().toString() +
                                 ", cur nav area " + std::to_string(navFile.get_nearest_area_by_position(
-                                                        vec3Conv(curClient.getFootPosForPlayer())).get_id()));
+                                                        vec3Conv(curClient.getFootPosForPlayer())).get_id()) +
+                                ", danger area " + dangerArea);
     printStates.push_back(playerToPriority[playerId].print(state));
     printStates.push_back(playerToPath[playerId].print(state, navFile));
     printStates.push_back(playerToAction[playerId].print());
