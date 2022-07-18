@@ -11,6 +11,7 @@
 
 class PossibleNavAreas {
     map<CSGOId, AreaBits> possiblyInArea;
+    map<CSGOId, AreaBits> boundary; // possiblyInArea nodes connected directly to not possibly nodes
     map<CSGOId, map<AreaId, CSKnowTime>> entryTime;
     const nav_mesh::nav_file & navFile;
 
@@ -19,16 +20,19 @@ public:
 
     void reset(CSGOId playerId) {
         possiblyInArea[playerId].reset();
+        boundary[playerId].set();
     }
 
     void set(CSGOId playerId, AreaId areaId, bool inArea, CSKnowTime time) {
         size_t index = navFile.m_area_ids_to_indices.find(areaId)->second;
         possiblyInArea[playerId][index] = inArea;
+        boundary[playerId].set();
         entryTime[playerId][areaId] = time;
     }
 
     void set(CSGOId playerId, AreaBits playerPossiblyInArea, CSKnowTime curTime) {
         possiblyInArea[playerId] = playerPossiblyInArea;
+        boundary[playerId].set();
         for (size_t i = 0; i < playerPossiblyInArea.size(); i++) {
             if (playerPossiblyInArea[i]) {
                 entryTime[playerId][navFile.m_areas[i].get_id()] = curTime;
@@ -42,6 +46,16 @@ public:
     }
 
     void andBits(CSGOId playerId, const AreaBits & mask) {
+        // any where that changed or a connection to it needs to be updated
+        AreaBits changedAreas = possiblyInArea[playerId] ^ mask;
+        for (size_t i = 0; i < navFile.m_areas.size(); i++) {
+            if (changedAreas[i]) {
+                boundary[i] = true;
+                for (const auto & connection: navFile.m_areas[i].get_connections()) {
+                    boundary[navFile.m_area_ids_to_indices.find(connection.id)->second] = true;
+                }
+            }
+        }
         possiblyInArea[playerId] &= mask;
     }
 
@@ -56,11 +70,11 @@ public:
     }
 
 
-    vector<AreaId> getEnemiesPossiblePositions(const ServerState & state, CSGOId sourceId) {
+    vector<AreaId> getEnemiesPossiblePositions(const ServerState & state, CSGOId sourceId) const {
         AreaBits resultBits;
         for (const auto & client : state.clients) {
             if (client.team != state.getClient(sourceId).team && client.isAlive) {
-                resultBits |= possiblyInArea[client.csgoId];
+                resultBits |= possiblyInArea.find(client.csgoId)->second;
             }
         }
 
@@ -76,19 +90,28 @@ public:
 
     void addNeighbors(const ServerState & state, const ReachableResult & reachability, CSGOId playerId) {
         AreaBits newAreas;
-        auto & playerPossiblyInArea = possiblyInArea[playerId];
-        auto & playerEntryTime = entryTime[playerId];
+        AreaBits & playerPossiblyInArea = possiblyInArea[playerId];
+        AreaBits & playerBoundary = boundary[playerId];
+        map<AreaId, CSKnowTime> & playerEntryTime = entryTime[playerId];
         for (size_t i = 0; i < navFile.m_areas.size(); i++)  {
-            if (playerPossiblyInArea[i]) {
+            if (playerPossiblyInArea[i] && playerBoundary[i]) {
                 AreaId iAreaId = navFile.m_areas[i].get_id();
+                bool anyConsNotPossible = false;
                 for (const auto & connection : navFile.m_areas[i].get_connections()) {
                     size_t conAreaIndex = navFile.m_area_ids_to_indices.find(connection.id)->second;
                     if (!playerPossiblyInArea[conAreaIndex] &&
                         reachability.getDistance(i, conAreaIndex) / MAX_RUN_SPEED
-                        < state.getSecondsBetweenTimes(playerEntryTime[iAreaId], state.loadTime)) {
+                            < state.getSecondsBetweenTimes(playerEntryTime[iAreaId], state.loadTime)) {
                         newAreas[conAreaIndex] = true;
                         playerEntryTime[connection.id] = state.loadTime;
                     }
+                    // may keep areas on boundary too long as one of their cons may be covered by a later area.
+                    // this will only last until next frame, so not a big deal
+                    // I think better than looping through all values twice and having to reload them into cache
+                    anyConsNotPossible |= !playerPossiblyInArea[conAreaIndex] && !newAreas[conAreaIndex];
+                }
+                if (!anyConsNotPossible) {
+                    playerBoundary[i] = false;
                 }
             }
         }
