@@ -90,6 +90,16 @@ public:
         return result;
     }
 
+    AreaBits getEnemiesPositionStatus(const ServerState & state, CSGOId sourceId) const {
+        AreaBits resultBits;
+        for (const auto & client : state.clients) {
+            if (client.team != state.getClient(sourceId).team && client.isAlive) {
+                resultBits |= possiblyInArea.find(client.csgoId)->second;
+            }
+        }
+        return resultBits;
+    }
+
     void addNeighbors(const ServerState & state, const ReachableResult & reachability, CSGOId playerId) {
         AreaBits newAreas;
         AreaBits & playerPossiblyInArea = possiblyInArea[playerId];

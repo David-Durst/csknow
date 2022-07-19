@@ -11,8 +11,8 @@ namespace communicate {
     struct AssignedAreas {
         AreaBits tAssignedAreas, ctAssignedAreas;
 
-        AreaBits & getTeamAssignedAreas(const ServerState &state, TreeThinker &treeThinker) {
-            if (state.getClient(treeThinker.csgoId).team == ENGINE_TEAM_T) {
+        AreaBits & getTeamAssignedAreas(const ServerState::Client & client) {
+            if (client.team == ENGINE_TEAM_T) {
                 return tAssignedAreas;
             }
             else {
@@ -40,8 +40,8 @@ namespace communicate {
 
         for (const auto & client : state.clients) {
             if (client.isAlive && client.isBot) {
-                AreaBits & teamAssignedAreas = assignedAreas.getTeamAssignedAreas(state, treeThinker);
-                vector<CSKnowTime> & dangerAreaLastCheckTime = blackboard.getDangerAreaLastCheckTime(state, treeThinker);
+                AreaBits & teamAssignedAreas = assignedAreas.getTeamAssignedAreas(client);
+                vector<CSKnowTime> & dangerAreaLastCheckTime = blackboard.getDangerAreaLastCheckTime(client);
 
                 const nav_mesh::nav_area & curArea =
                         blackboard.navFile.get_nearest_area_by_position(vec3Conv(client.getFootPosForPlayer()));
@@ -55,7 +55,7 @@ namespace communicate {
                             if ((client.team == ENGINE_TEAM_T && !tVisibleAreas[conAreaIndex]) || (client.team == ENGINE_TEAM_CT && !ctVisibleAreas[conAreaIndex])) {
                                 // distance is distance to possible enemy locations
                                 double minDistance = std::numeric_limits<double>::max();
-                                for (const auto & possibleAreaIndex : blackboard.possibleNavAreas.getEnemiesPossiblePositions(state, treeThinker.csgoId)) {
+                                for (const auto & possibleAreaIndex : blackboard.possibleNavAreas.getEnemiesPossiblePositions(state, client.csgoId)) {
                                     double tmpDistance = blackboard.reachability.getDistance(possibleAreaIndex, i);
                                     if (tmpDistance < minDistance) {
                                         minDistance = tmpDistance;
@@ -104,6 +104,7 @@ namespace communicate {
                     vec3tConv(blackboard.navFile.m_areas[srcAreaIndex].get_min_corner()),
                     vec3tConv(blackboard.navFile.m_areas[srcAreaIndex].get_max_corner())
                 };
+                dangerAABB.max.z += EYE_HEIGHT * 2;
                 Ray playerRay = getEyeCoordinatesForPlayerGivenEyeHeight(client.getEyePosForPlayer(), client.getCurrentViewAngles());
                 bool updateCheckTime = intersectP(dangerAABB, playerRay);
 

@@ -103,8 +103,8 @@ struct Blackboard {
     map<CSGOId, AreaId> playerToDangerAreaId;
     CSKnowTime defaultTime = std::chrono::system_clock::time_point::min();
     vector<CSKnowTime> tDangerAreaLastCheckTime, ctDangerAreaLastCheckTime;
-    vector<CSKnowTime> & getDangerAreaLastCheckTime(const ServerState & state, TreeThinker & treeThinker) {
-        if (state.getClient(treeThinker.csgoId).team == ENGINE_TEAM_T) {
+    vector<CSKnowTime> & getDangerAreaLastCheckTime(const ServerState::Client & client) {
+        if (client.team == ENGINE_TEAM_T) {
             return tDangerAreaLastCheckTime;
         }
         else {
