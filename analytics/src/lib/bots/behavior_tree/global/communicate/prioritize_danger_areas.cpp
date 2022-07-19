@@ -3,6 +3,7 @@
 //
 
 #include "bots/behavior_tree/global/communicate_node.h"
+#include "geometry.h"
 #include <array>
 using std::array;
 
@@ -25,6 +26,7 @@ namespace communicate {
         size_t areaIndex;
         AreaId areaId;
         double distance;
+        bool checkedRecently;
     };
 
     NodeState PrioritizeDangerAreasNode::exec(const ServerState &state, TreeThinker &treeThinker) {
@@ -39,6 +41,7 @@ namespace communicate {
         for (const auto & client : state.clients) {
             if (client.isAlive && client.isBot) {
                 AreaBits & teamAssignedAreas = assignedAreas.getTeamAssignedAreas(state, treeThinker);
+                vector<CSKnowTime> & dangerAreaLastCheckTime = blackboard.getDangerAreaLastCheckTime(state, treeThinker);
 
                 const nav_mesh::nav_area & curArea =
                         blackboard.navFile.get_nearest_area_by_position(vec3Conv(client.getFootPosForPlayer()));
@@ -60,7 +63,8 @@ namespace communicate {
                                 }
                                 // if there are no enemies, then no need to worry about cover edges
                                 if (minDistance != std::numeric_limits<double>::max()) {
-                                    coverEdges.push_back({i, blackboard.navFile.m_areas[i].get_id(), minDistance});
+                                    coverEdges.push_back({i, blackboard.navFile.m_areas[i].get_id(), minDistance,
+                                                          state.getSecondsBetweenTimes(dangerAreaLastCheckTime[i], state.loadTime) < RECENTLY_CHECKED_SECONDS});
                                 }
                                 break;
                             }
@@ -76,13 +80,17 @@ namespace communicate {
 
                 // sort cover edges by distance to player (nearest first)
                 std::sort(coverEdges.begin(), coverEdges.end(),
-                          [](const CoverEdge & a, const CoverEdge & b) { return a.distance < b.distance; });
+                          [](const CoverEdge & a, const CoverEdge & b) {
+                    return (!a.checkedRecently && b.checkedRecently) ||
+                        (a.checkedRecently == b.checkedRecently && a.distance < b.distance);
+                });
 
                 // find first non-assigned cover edge
                 // if all already assigned, take the closest one
                 for (const auto & coverEdge : coverEdges) {
                     if (!teamAssignedAreas[coverEdge.areaIndex]) {
                         blackboard.playerToDangerAreaId[client.csgoId] = coverEdge.areaId;
+                        break;
                     }
                 }
                 if (blackboard.playerToDangerAreaId.find(client.csgoId) == blackboard.playerToDangerAreaId.end()) {
@@ -90,9 +98,21 @@ namespace communicate {
                 }
 
                 size_t srcAreaIndex = blackboard.navFile.m_area_ids_to_indices[blackboard.playerToDangerAreaId[client.csgoId]];
+
+                // check if already looking at assigned area. If so, update looking at time
+                AABB dangerAABB{
+                    vec3tConv(blackboard.navFile.m_areas[srcAreaIndex].get_min_corner()),
+                    vec3tConv(blackboard.navFile.m_areas[srcAreaIndex].get_max_corner())
+                };
+                Ray playerRay = getEyeCoordinatesForPlayerGivenEyeHeight(client.getEyePosForPlayer(), client.getCurrentViewAngles());
+                bool updateCheckTime = intersectP(dangerAABB, playerRay);
+
                 // count all areas within distance to assigned one as also assigned
                 for (size_t dstAreaIndex = 0; dstAreaIndex < blackboard.navFile.m_areas.size(); dstAreaIndex++) {
                     if (blackboard.reachability.getDistance(srcAreaIndex, dstAreaIndex) < WATCHED_DISTANCE) {
+                        if (updateCheckTime) {
+                            dangerAreaLastCheckTime[dstAreaIndex] = state.loadTime;
+                        }
                         teamAssignedAreas[dstAreaIndex] = true;
                     }
                 }

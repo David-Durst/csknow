@@ -101,6 +101,16 @@ struct Blackboard {
     map<CSGOId, int64_t> playerToOrder;
     map<CSGOId, int32_t> playerToPushOrder;
     map<CSGOId, AreaId> playerToDangerAreaId;
+    CSKnowTime defaultTime = std::chrono::system_clock::time_point::min();
+    vector<CSKnowTime> tDangerAreaLastCheckTime, ctDangerAreaLastCheckTime;
+    vector<CSKnowTime> & getDangerAreaLastCheckTime(const ServerState & state, TreeThinker & treeThinker) {
+        if (state.getClient(treeThinker.csgoId).team == ENGINE_TEAM_T) {
+            return tDangerAreaLastCheckTime;
+        }
+        else {
+            return ctDangerAreaLastCheckTime;
+        }
+    }
 
     // knowledge data
     double tMemorySeconds = 1.0, ctMemorySeconds = 1.0;
@@ -158,7 +168,9 @@ struct Blackboard {
 
     Blackboard(string navPath, string mapName) :
         navPath(navPath), navFile(navPath.c_str()), gen(rd()), aimDis(0., 2.0),
-        visPoints(navFile), possibleNavAreas(navFile) {
+        visPoints(navFile), possibleNavAreas(navFile),
+        tDangerAreaLastCheckTime(navFile.m_areas.size(), defaultTime),
+        ctDangerAreaLastCheckTime(navFile.m_areas.size(), defaultTime) {
         string mapsPath = std::filesystem::path(navPath).remove_filename().string();
         reachability.load(mapsPath, mapName);
         visPoints.load(mapsPath, mapName);

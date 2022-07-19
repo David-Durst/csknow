@@ -208,6 +208,13 @@ bool intersectP(const AABB & box, const Ray & ray, double & hitt0, double & hitt
     return true;
 }
 
+
+static inline __attribute__((always_inline))
+bool intersectP(const AABB & box, const Ray & ray) {
+    double hitt0, hitt1;
+    return intersectP(box, ray, hitt0, hitt1);
+}
+
 static inline __attribute__((always_inline))
 Vec3 getCenter(AABB aabb) {
     return {(aabb.max.x + aabb.min.x)/2, (aabb.max.y + aabb.min.y)/2, (aabb.max.z + aabb.min.z)/2};

@@ -11,6 +11,7 @@
 #include <map>
 #include <memory>
 #define WATCHED_DISTANCE 750.
+#define RECENTLY_CHECKED_SECONDS 5.
 
 namespace communicate {
     class AssignAggressionNode : public Node {

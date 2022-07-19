@@ -79,6 +79,9 @@ public:
         float inputAngleDeltaPctX;
         float inputAngleDeltaPctY;
 
+        Vec2 getCurrentViewAngles() const {
+            return {lastEyeAngleX, lastEyeAngleY};
+        }
 
         Vec2 getCurrentViewAnglesWithAimpunch() const {
             return {
