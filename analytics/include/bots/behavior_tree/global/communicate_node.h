@@ -12,6 +12,7 @@
 #include <memory>
 #define WATCHED_DISTANCE 750.
 #define RECENTLY_CHECKED_SECONDS 5.
+#define DANGER_ATTENTION_SECONDS 1.
 
 namespace communicate {
     class AssignAggressionNode : public Node {

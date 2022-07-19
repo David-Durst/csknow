@@ -33,6 +33,7 @@ namespace communicate {
         AssignedAreas assignedAreas;
 
         // clear out assignments from prior frame
+        map<CSGOId, AreaId> oldDangerAreaIds = blackboard.playerToDangerAreaId;
         blackboard.playerToDangerAreaId.clear();
 
         AreaBits tVisibleAreas = blackboard.getVisibleAreasByTeam(state, ENGINE_TEAM_T),
@@ -54,16 +55,13 @@ namespace communicate {
                             size_t conAreaIndex = blackboard.navFile.connections[blackboard.navFile.connections_area_start[i] + j];
                             if ((client.team == ENGINE_TEAM_T && !tVisibleAreas[conAreaIndex]) || (client.team == ENGINE_TEAM_CT && !ctVisibleAreas[conAreaIndex])) {
                                 // distance is distance to possible enemy locations
-                                double minDistance = std::numeric_limits<double>::max();
+                                double sumDistance = 0.;
                                 for (const auto & possibleAreaIndex : blackboard.possibleNavAreas.getEnemiesPossiblePositions(state, client.csgoId)) {
-                                    double tmpDistance = blackboard.reachability.getDistance(possibleAreaIndex, i);
-                                    if (tmpDistance < minDistance) {
-                                        minDistance = tmpDistance;
-                                    }
+                                    sumDistance += blackboard.reachability.getDistance(possibleAreaIndex, i);
                                 }
                                 // if there are no enemies, then no need to worry about cover edges
-                                if (minDistance != std::numeric_limits<double>::max()) {
-                                    coverEdges.push_back({i, blackboard.navFile.m_areas[i].get_id(), minDistance,
+                                if (sumDistance != 0.) {
+                                    coverEdges.push_back({i, blackboard.navFile.m_areas[i].get_id(), sumDistance,
                                                           state.getSecondsBetweenTimes(dangerAreaLastCheckTime[i], state.loadTime) < RECENTLY_CHECKED_SECONDS});
                                 }
                                 break;
@@ -87,14 +85,22 @@ namespace communicate {
 
                 // find first non-assigned cover edge
                 // if all already assigned, take the closest one
-                for (const auto & coverEdge : coverEdges) {
-                    if (!teamAssignedAreas[coverEdge.areaIndex]) {
-                        blackboard.playerToDangerAreaId[client.csgoId] = coverEdge.areaId;
-                        break;
+                // only reassign every DANGER_ATTENTION_SECONDS to ensure consistency of attention
+                if (blackboard.lastDangerAssignment.find(client.csgoId) == blackboard.lastDangerAssignment.end() ||
+                    state.getSecondsBetweenTimes(blackboard.lastDangerAssignment[client.csgoId], state.loadTime) > DANGER_ATTENTION_SECONDS) {
+                    blackboard.lastDangerAssignment[client.csgoId] = state.loadTime;
+                    for (const auto & coverEdge : coverEdges) {
+                        if (!teamAssignedAreas[coverEdge.areaIndex]) {
+                            blackboard.playerToDangerAreaId[client.csgoId] = coverEdge.areaId;
+                            break;
+                        }
+                    }
+                    if (blackboard.playerToDangerAreaId.find(client.csgoId) == blackboard.playerToDangerAreaId.end()) {
+                        blackboard.playerToDangerAreaId[client.csgoId] = coverEdges[0].areaId;
                     }
                 }
-                if (blackboard.playerToDangerAreaId.find(client.csgoId) == blackboard.playerToDangerAreaId.end()) {
-                    blackboard.playerToDangerAreaId[client.csgoId] = coverEdges[0].areaId;
+                else {
+                    blackboard.playerToDangerAreaId[client.csgoId] = oldDangerAreaIds[client.csgoId];
                 }
 
                 size_t srcAreaIndex = blackboard.navFile.m_area_ids_to_indices[blackboard.playerToDangerAreaId[client.csgoId]];

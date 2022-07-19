@@ -111,6 +111,7 @@ struct Blackboard {
             return ctDangerAreaLastCheckTime;
         }
     }
+    map<CSGOId, CSKnowTime> lastDangerAssignment;
 
     // knowledge data
     double tMemorySeconds = 1.0, ctMemorySeconds = 1.0;
