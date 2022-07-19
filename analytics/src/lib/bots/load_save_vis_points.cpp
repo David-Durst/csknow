@@ -60,6 +60,8 @@ void VisPoints::load(string mapsPath, string mapName) {
 
     // after loading, max sure to or all together, want matrix to be full so can export any row
     for (size_t i = 0; i < visPoints.size(); i++) {
+        // set diagonal to true, can see yourself
+        visPoints[i].visibleFromCurPoint[i] = true;
         for (size_t j = 0; j < visPoints.size(); j++) {
             visPoints[i].visibleFromCurPoint[j] =
                     visPoints[i].visibleFromCurPoint[j] | visPoints[j].visibleFromCurPoint[i];
