@@ -106,10 +106,7 @@ namespace communicate {
                 size_t srcAreaIndex = blackboard.navFile.m_area_ids_to_indices[blackboard.playerToDangerAreaId[client.csgoId]];
 
                 // check if already looking at assigned area. If so, update looking at time
-                AABB dangerAABB{
-                    vec3tConv(blackboard.navFile.m_areas[srcAreaIndex].get_min_corner()),
-                    vec3tConv(blackboard.navFile.m_areas[srcAreaIndex].get_max_corner())
-                };
+                AABB dangerAABB(areaToAABB(blackboard.navFile.m_areas[srcAreaIndex]));
                 dangerAABB.max.z += EYE_HEIGHT * 2;
                 Ray playerRay = getEyeCoordinatesForPlayerGivenEyeHeight(client.getEyePosForPlayer(), client.getCurrentViewAngles());
                 bool updateCheckTime = intersectP(dangerAABB, playerRay);

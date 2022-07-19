@@ -53,11 +53,18 @@ public:
                     std::move(setupCommands),
                     make_unique<DisableActionsNode>(blackboard, "DisableSetup", vector{neededBots[0].id, neededBots[1].id, neededBots[2].id, neededBots[3].id}, false)
             ), "DangerDisableDuringSetup");
+
+            /*
+            Node::Ptr areasToCheck = make_unique<ParallelAndNode>(blackboard, Node::makeList(
+                    make_unique<RepeatDecorator>(blackboard, make_unique<AimingAtArea>(blackboard, neededBots[0].id, ))
+                    ))
+                    */
             commands = make_unique<SequenceNode>(blackboard, Node::makeList(
                                                          std::move(disableAllBothDuringSetup),
                                                          make_unique<ParallelFirstNode>(blackboard, Node::makeList(
                                                                                                 //make_unique<AimingAt>(blackboard, neededBots[0].id, neededBots[2].id),
                                                                                                 //make_unique<Firing>(blackboard, neededBots[0].id, true),
+                                                                                                //make_unique<RequireDifferentDangerAreasNode>(blackboard, vector{neededBots[0].id, neededBots[1].id}),
                                                                                                 make_unique<DisableActionsNode>(blackboard, "DisableSetup", vector{neededBots[2].id, neededBots[3].id}),
                                                                                                 make_unique<movement::WaitNode>(blackboard, 20)),
                                                                  //make_unique<movement::WaitNode>(blackboard, 0.8)),

@@ -293,10 +293,11 @@ public:
 class RepeatDecorator : public Node {
 protected:
     Node::Ptr child;
+    bool repeatUntilSuccess;
 
 public:
-    RepeatDecorator(Blackboard & blackboard, Node::Ptr && node, string name = "Repeat") :
-            Node(blackboard, name), child(std::move(node)) { };
+    RepeatDecorator(Blackboard & blackboard, Node::Ptr && node, bool repeatUntilSuccess, string name = "Repeat") :
+            Node(blackboard, name), child(std::move(node)), repeatUntilSuccess(repeatUntilSuccess) { };
 
     virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
         if (playerNodeState.find(treeThinker.csgoId) == playerNodeState.end() ||
@@ -304,7 +305,12 @@ public:
             restart(treeThinker);
         }
         NodeState childState = child->exec(state, treeThinker);
-        playerNodeState[treeThinker.csgoId] = childState == NodeState::Failure ? NodeState::Failure : NodeState::Running;
+        if (repeatUntilSuccess) {
+            playerNodeState[treeThinker.csgoId] = childState == NodeState::Success ? NodeState::Success : NodeState::Running;
+        }
+        else {
+            playerNodeState[treeThinker.csgoId] = childState == NodeState::Failure ? NodeState::Failure : NodeState::Running;
+        }
         return playerNodeState[treeThinker.csgoId];
     }
 

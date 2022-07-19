@@ -121,4 +121,24 @@ public:
     }
 };
 
+class RequireDifferentDangerAreasNode : public Node {
+    vector<CSGOId> targetIds;
+public:
+    RequireDifferentDangerAreasNode(Blackboard & blackboard, vector<CSGOId> targetIds, string name = "RequireDifferentDangerAreas") :
+            Node(blackboard, name), targetIds(targetIds) { };
+    virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
+        AreaBits dangerAreas;
+        for (size_t i = 0; i < targetIds.size(); i++) {
+            size_t curDangerAreaIndex = blackboard.navFile.m_area_ids_to_indices.find(blackboard.playerToDangerAreaId[targetIds[i]])->second;
+            if (dangerAreas[curDangerAreaIndex]) {
+                playerNodeState[treeThinker.csgoId] = NodeState::Failure;
+                return playerNodeState[treeThinker.csgoId];
+            }
+            dangerAreas[curDangerAreaIndex] = true;
+        }
+        playerNodeState[treeThinker.csgoId] = NodeState::Success;
+        return playerNodeState[treeThinker.csgoId];
+    }
+};
+
 #endif //CSKNOW_BLACKBOARD_MANAGEMENT_H

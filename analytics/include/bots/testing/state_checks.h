@@ -45,6 +45,42 @@ public:
     }
 };
 
+class AimingAtArea : public Node {
+    CSGOId sourceId;
+    AreaId targetId;
+    bool invert;
+
+public:
+    AimingAtArea(Blackboard & blackboard, CSGOId sourceId, AreaId targetId, bool invert = false) :
+            Node(blackboard, "AimingAtNode"), sourceId(sourceId), targetId(targetId), invert(invert) { };
+
+    virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
+        const ServerState::Client & sourceClient = state.getClient(sourceId);
+        const ServerState::Client & targetClient = state.getClient(targetId);
+
+        // check if aiming at enemy anywhere
+        Ray eyeCoordinates = getEyeCoordinatesForPlayerGivenEyeHeight(
+                sourceClient.getEyePosForPlayer(),
+                sourceClient.getCurrentViewAnglesWithAimpunch());
+
+        AABB targetAABB(areaToAABB(blackboard.navFile.get_area_by_id_fast(targetId)));
+        double hitt0, hitt1;
+        bool aimingAtTarget = intersectP(targetAABB, eyeCoordinates, hitt0, hitt1);
+
+        if ((!invert && aimingAtTarget) || (invert && !aimingAtTarget)) {
+            playerNodeState[treeThinker.csgoId] = NodeState::Running;
+        }
+        else {
+            playerNodeState[treeThinker.csgoId] = NodeState::Failure;
+        }
+        return playerNodeState[treeThinker.csgoId];
+    }
+
+    virtual void restart(const TreeThinker & treeThinker) override {
+        Node::restart(treeThinker);
+    }
+};
+
 class Firing : public Node {
     CSGOId sourceId;
     bool invert;
