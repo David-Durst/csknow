@@ -9,11 +9,11 @@
 #include "geometryNavConversions.h"
 #include "navmesh/nav_file.h"
 #include "load_save_bot_data.h"
+#include "bots/nav_file_helpers.h"
 #include <bitset>
 #define MAX_NAV_AREAS 2000
 using std::map;
 using std::bitset;
-typedef uint32_t AreaId;
 typedef bitset<MAX_NAV_AREAS> AreaBits;
 
 struct VisPoint {
@@ -36,11 +36,13 @@ public:
         }
         std::sort(visPoints.begin(), visPoints.end(),
                   [](const VisPoint & a, const VisPoint & b) { return a.areaId < b.areaId; });
-
-        areaIdToVectorIndex = {};
         for (size_t i = 0; i < visPoints.size(); i++) {
-            areaIdToVectorIndex[visPoints[i].areaId] = i;
+            if (navFile.m_areas[i].get_id() != visPoints[i].areaId) {
+                std::cout << "vis points loading order wrong" << std::endl;
+            }
         }
+
+        areaIdToVectorIndex = navFile.m_area_ids_to_indices;
     }
 
     bool isVisibleIndex(size_t src, size_t target) const {

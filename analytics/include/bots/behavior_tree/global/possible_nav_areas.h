@@ -61,14 +61,8 @@ public:
         possiblyInArea[playerId] &= mask;
     }
 
-    vector<AreaId> getPossibleAreas(CSGOId playerId) const {
-        vector<AreaId> result;
-        for (size_t i = 0; i < possiblyInArea.find(playerId)->second.size(); i++) {
-            if (possiblyInArea.find(playerId)->second[i]) {
-                result.push_back(navFile.m_areas[i].get_id());
-            }
-        }
-        return result;
+    AreaBits getPossibleAreas(CSGOId playerId) const {
+        return possiblyInArea.find(playerId)->second;
     }
 
 
