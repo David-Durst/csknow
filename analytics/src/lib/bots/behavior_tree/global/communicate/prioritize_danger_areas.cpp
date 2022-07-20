@@ -35,6 +35,18 @@ namespace communicate {
         // clear out assignments from prior frame
         map<CSGOId, AreaId> oldDangerAreaIds = blackboard.playerToDangerAreaId;
         blackboard.playerToDangerAreaId.clear();
+        AreaBits ctLastDangerAreas, tLastDangerAreas;
+        for (const auto & [playerId, dangerAreaId] : oldDangerAreaIds) {
+            const auto & client = state.getClient(playerId);
+            if (client.isAlive && client.isBot) {
+                if (client.team == ENGINE_TEAM_CT) {
+                    ctLastDangerAreas[blackboard.navFile.m_area_ids_to_indices[dangerAreaId]] = true;
+                }
+                else if (client.team == ENGINE_TEAM_T) {
+                    tLastDangerAreas[blackboard.navFile.m_area_ids_to_indices[dangerAreaId]] = true;
+                }
+            }
+        }
 
         AreaBits tVisibleAreas = blackboard.getVisibleAreasByTeam(state, ENGINE_TEAM_T),
                 ctVisibleAreas = blackboard.getVisibleAreasByTeam(state, ENGINE_TEAM_CT);
@@ -49,6 +61,7 @@ namespace communicate {
 
                 // filter for cover edge - visible, but adjacent to behind cover area
                 vector<CoverEdge> coverEdges;
+                AreaBits boolCoverEdges;
                 for (size_t i = 0; i < blackboard.navFile.m_areas.size(); i++) {
                     if ((client.team == ENGINE_TEAM_T && tVisibleAreas[i]) || (client.team == ENGINE_TEAM_CT && ctVisibleAreas[i])) {
                         for (size_t j = 0; j < blackboard.navFile.connections_area_length[i]; j++) {
@@ -63,6 +76,7 @@ namespace communicate {
                                 if (sumDistance != 0.) {
                                     coverEdges.push_back({i, blackboard.navFile.m_areas[i].get_id(), sumDistance,
                                                           state.getSecondsBetweenTimes(dangerAreaLastCheckTime[i], state.loadTime) < RECENTLY_CHECKED_SECONDS});
+                                    boolCoverEdges[i] = true;
                                 }
                                 break;
                             }
@@ -85,21 +99,29 @@ namespace communicate {
 
                 // find first non-assigned cover edge
                 // if all already assigned, take the closest one
-                // only reassign every DANGER_ATTENTION_SECONDS to ensure consistency of attention
+                // only reassign every DANGER_ATTENTION_SECONDS to ensure consistency of attention (assuming still a valid danger area)
+                const auto & lastDangerAreas = client.team == ENGINE_TEAM_CT ? ctLastDangerAreas : tLastDangerAreas;
                 if (blackboard.lastDangerAssignment.find(client.csgoId) == blackboard.lastDangerAssignment.end() ||
+                    !boolCoverEdges[blackboard.navFile.m_area_ids_to_indices[oldDangerAreaIds[client.csgoId]]] ||
                     state.getSecondsBetweenTimes(blackboard.lastDangerAssignment[client.csgoId], state.loadTime) > DANGER_ATTENTION_SECONDS) {
                     blackboard.lastDangerAssignment[client.csgoId] = state.loadTime;
                     for (const auto & coverEdge : coverEdges) {
-                        if (!teamAssignedAreas[coverEdge.areaIndex]) {
+                        if (!teamAssignedAreas[coverEdge.areaIndex] && !lastDangerAreas[coverEdge.areaIndex]) {
                             blackboard.playerToDangerAreaId[client.csgoId] = coverEdge.areaId;
                             break;
                         }
                     }
                     if (blackboard.playerToDangerAreaId.find(client.csgoId) == blackboard.playerToDangerAreaId.end()) {
                         blackboard.playerToDangerAreaId[client.csgoId] = coverEdges[0].areaId;
+                        if (blackboard.inTest) {
+                            int x = 1;
+                        }
                     }
                 }
                 else {
+                    if (blackboard.inTest && client.csgoId == 6 && oldDangerAreaIds[client.csgoId] == 4201 && blackboard.playerToDangerAreaId[3] == 4201) {
+                        int x = 1;
+                    }
                     blackboard.playerToDangerAreaId[client.csgoId] = oldDangerAreaIds[client.csgoId];
                 }
 
@@ -119,6 +141,10 @@ namespace communicate {
                         }
                         teamAssignedAreas[dstAreaIndex] = true;
                     }
+                }
+
+                if (blackboard.inTest && blackboard.playerToDangerAreaId[client.csgoId] == curArea.get_id()) {
+                    int x = 1;
                 }
             }
         }

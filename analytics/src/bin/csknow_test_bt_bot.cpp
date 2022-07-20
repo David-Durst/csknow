@@ -41,15 +41,16 @@ int main(int argc, char * argv[]) {
                                             //make_unique<GooseToCatShortScript>(state),
                                             //make_unique<AimAndKillWithinTimeCheck>(state),
                                             //make_unique<PushBaitGooseToCatScript>(state),
-                                            //make_unique<PushMultipleBaitGooseToCatScript>(state)
+                                            //make_unique<PushMultipleBaitGooseToCatScript>(state),
                                             //make_unique<MemoryAimCheck>(state),
                                             //make_unique<MemoryForgetCheck>(state),
                                             //make_unique<CommunicationAimCheck>(state),
                                             //make_unique<CommunicationForgetCheck>(state),
-                                            make_unique<DangerCheck>(state)
                                             //make_unique<SpawnPossibleNavAreasCheck>(state),
                                             //make_unique<DiffusionPossibleNavAreasCheck>(state),
-                                            //make_unique<VisibilityPossibleNavAreasCheck>(state)
+                                            //make_unique<VisibilityPossibleNavAreasCheck>(state),
+                                            //make_unique<DangerOnePlayerCheck>(state),
+                                            make_unique<DangerTwoPlayerCheck>(state)
     ), true);
 
 
