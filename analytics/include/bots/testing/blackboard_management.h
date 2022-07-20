@@ -133,8 +133,6 @@ public:
             const nav_mesh::nav_area & curArea =
                     blackboard.navFile.get_nearest_area_by_position(vec3Conv(state.getClient(targetIds[i]).getFootPosForPlayer()));
             if (dangerAreas[curDangerAreaIndex] || curDangerAreaIndex == blackboard.navFile.m_area_ids_to_indices[curArea.get_id()]) {
-                bool y = curDangerAreaIndex == blackboard.navFile.m_area_ids_to_indices[curArea.get_id()];
-                bool x = dangerAreas[curDangerAreaIndex];
                 playerNodeState[treeThinker.csgoId] = NodeState::Failure;
                 return playerNodeState[treeThinker.csgoId];
             }

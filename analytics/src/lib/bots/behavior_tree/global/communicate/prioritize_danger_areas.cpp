@@ -113,15 +113,9 @@ namespace communicate {
                     }
                     if (blackboard.playerToDangerAreaId.find(client.csgoId) == blackboard.playerToDangerAreaId.end()) {
                         blackboard.playerToDangerAreaId[client.csgoId] = coverEdges[0].areaId;
-                        if (blackboard.inTest) {
-                            int x = 1;
-                        }
                     }
                 }
                 else {
-                    if (blackboard.inTest && client.csgoId == 6 && oldDangerAreaIds[client.csgoId] == 4201 && blackboard.playerToDangerAreaId[3] == 4201) {
-                        int x = 1;
-                    }
                     blackboard.playerToDangerAreaId[client.csgoId] = oldDangerAreaIds[client.csgoId];
                 }
 
@@ -141,10 +135,6 @@ namespace communicate {
                         }
                         teamAssignedAreas[dstAreaIndex] = true;
                     }
-                }
-
-                if (blackboard.inTest && blackboard.playerToDangerAreaId[client.csgoId] == curArea.get_id()) {
-                    int x = 1;
                 }
             }
         }
