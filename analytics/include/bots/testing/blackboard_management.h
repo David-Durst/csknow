@@ -143,4 +143,32 @@ public:
     }
 };
 
+class SavePossibleVisibleOverlays : public Node {
+    vector<CSGOId> possibleAreasTargetIds;
+    bool visibleOverlay;
+public:
+    SavePossibleVisibleOverlays(Blackboard & blackboard, vector<CSGOId> possibleAreasTargetIds,
+                                    bool visibleOverlay, string name = "SavePossibleVisibleOverlays") :
+            Node(blackboard, name), possibleAreasTargetIds(possibleAreasTargetIds), visibleOverlay(visibleOverlay) { };
+    virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
+        vector<map<CSGOId, AreaBits>> overlays;
+        if (!possibleAreasTargetIds.empty()) {
+            map<CSGOId, AreaBits> playerToOverlay;
+            for (CSGOId targetId : possibleAreasTargetIds) {
+                playerToOverlay[targetId] = blackboard.possibleNavAreas.getPossibleAreas(targetId);
+            }
+            overlays.push_back(playerToOverlay);
+        }
+        if (visibleOverlay) {
+            map<CSGOId, AreaBits> teamToOverlay;
+            teamToOverlay[ENGINE_TEAM_T] = blackboard.getVisibleAreasByTeam(state, ENGINE_TEAM_T);
+            teamToOverlay[ENGINE_TEAM_CT] = blackboard.getVisibleAreasByTeam(state, ENGINE_TEAM_CT);
+            overlays.push_back(teamToOverlay);
+        }
+        blackboard.navFileOverlay.save(state, overlays)
+        playerNodeState[treeThinker.csgoId] = NodeState::Running;
+        return playerNodeState[treeThinker.csgoId];
+    }
+};
+
 #endif //CSKNOW_BLACKBOARD_MANAGEMENT_H

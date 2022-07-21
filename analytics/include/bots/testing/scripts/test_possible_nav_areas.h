@@ -49,11 +49,11 @@ public:
             commands = make_unique<SequenceNode>(blackboard, Node::makeList(
                                                          std::move(disableAllBothDuringSetup),
                                                          make_unique<ParallelFirstNode>(blackboard, Node::makeList(
+                                                                                                make_unique<SavePossibleVisibleOverlays>(blackboard, vector{neededBots[0].id, neededBots[1].id}, false),
                                                                                                 make_unique<DisableActionsNode>(blackboard, "DisableCondition", vector{neededBots[0].id, neededBots[1].id}),
                                                                                                 make_unique<CheckPossibleLocationsNode>(blackboard, vector{neededBots[0].id, neededBots[1].id},
                                                                                                                                         vector{onePlayerRequiredPossibleAreas, onePlayerRequiredPossibleAreas},
                                                                                                                                         vector{onePlayerRequiredNotPossibleAreas, onePlayerRequiredNotPossibleAreas}))
-                                                                 //make_unique<movement::WaitNode>(blackboard, 0.8)),
                                                                                         )));
         }
     }

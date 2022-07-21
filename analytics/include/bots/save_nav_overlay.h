@@ -7,10 +7,10 @@
 
 #include "bots/load_save_vis_points.h"
 #define OVERLAY_VERTICAL_BASE 5.
-#define OVERLAY_VERTICAL_OFFSET 20.
 #define OVERLAY_VERTICAL_LENGTH 5.
 #define MAX_PLAYERS_PER_OVERLAY 4
-#define MAX_OVERLAYS 5
+#define MAX_OVERLAYS 2
+#define FADE_SECONDS 0.1
 
 struct NavAreaData {
     AreaId areaId;
@@ -18,21 +18,18 @@ struct NavAreaData {
     Vec3 center;
 };
 
-static const array<string, MAX_PLAYERS_PER_OVERLAY+1> colorScheme{"b", "r", "u", "g", "w"}; // mtg color abbreviations: black, red, blue, green, white
-
-struct PlayerNavAreaOverlay {
-    map<CSGOId, AreaBits> playerToOverlay;
-    void saveOverlay(std::ofstream & stream, size_t playerIndex, size_t overlayIndex,
-                     size_t numOverlays, const vector<NavAreaData> & navAreaData);
-};
+static const array<string, 2*MAX_PLAYERS_PER_OVERLAY> colorScheme{"b", "r", "u", "g", "w", "y", "p", "c"};
 
 class NavFileOverlay {
     vector<NavAreaData> navAreaData;
-    vector<PlayerNavAreaOverlay> playerNavAreaOverlay;
     map<AreaId, size_t> areaIdToVectorIndex;
+    CSKnowTime lastCallTime = std::chrono::system_clock::time_point::min();
+
+    void saveOverlay(std::stringstream & stream, size_t overlayIndex, size_t numOverlays,
+                     const map<CSGOId, AreaBits> & playerToOverlay);
 
 public:
-    NavFileOverlay(const nav_mesh::nav_file & navFile) {
+    NavFileOverlay(const nav_mesh::nav_file & navFile, string mapsPath) {
         for (const auto & navArea : navFile.m_areas) {
             navAreaData.push_back({navArea.get_id(), {vec3tConv(navArea.get_min_corner()),
                                                       vec3tConv(navArea.get_max_corner())}, vec3tConv(navArea.get_center())});
@@ -41,9 +38,7 @@ public:
         areaIdToVectorIndex = navFile.m_area_ids_to_indices;
     }
 
-    void addOverlay();
-    void update(const map<CSGOId, AreaBits> & state, size_t overlayIndex);
-    void save(string mapsPath, string mapName);
+    void save(const ServerState & state, const vector<map<CSGOId, AreaBits>> & overlays);
 };
 
 #endif //CSKNOW_SAVE_NAV_OVERLAY_H

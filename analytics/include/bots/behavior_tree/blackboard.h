@@ -5,6 +5,7 @@
 #ifndef CSKNOW_BLACKBOARD_H
 #define CSKNOW_BLACKBOARD_H
 
+#include "bots/save_nav_overlay.h"
 #include "load_save_bot_data.h"
 #include "geometryNavConversions.h"
 #include "navmesh/nav_file.h"
@@ -86,6 +87,8 @@ struct Blackboard {
     // helpers
     std::random_device rd;
     std::mt19937 gen;
+    NavFileOverlay navFileOverlay;
+    string mapsPath;
 
     // general map data
     ReachableResult reachability;
@@ -169,10 +172,10 @@ struct Blackboard {
 
     Blackboard(string navPath, string mapName) :
         navPath(navPath), navFile(navPath.c_str()), gen(rd()), aimDis(0., 2.0),
-        visPoints(navFile), possibleNavAreas(navFile),
+        mapsPath(std::filesystem::path(navPath).remove_filename().string()),
+        navFileOverlay(navFile, mapsPath), visPoints(navFile), possibleNavAreas(navFile),
         tDangerAreaLastCheckTime(navFile.m_areas.size(), defaultTime),
         ctDangerAreaLastCheckTime(navFile.m_areas.size(), defaultTime) {
-        string mapsPath = std::filesystem::path(navPath).remove_filename().string();
         reachability.load(mapsPath, mapName);
         visPoints.load(mapsPath, mapName);
 
