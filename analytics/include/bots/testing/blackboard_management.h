@@ -7,6 +7,7 @@
 
 #include "bots/testing/script.h"
 #include "bots/behavior_tree/pathing_node.h"
+#include "bots/save_nav_overlay.h"
 
 class ForceOrderNode : public Node {
     vector<CSGOId> targetIds;
@@ -146,12 +147,15 @@ public:
 class SavePossibleVisibleOverlays : public Node {
     vector<CSGOId> possibleAreasTargetIds;
     bool visibleOverlay;
+    CSKnowTime x = std::chrono::system_clock::from_time_t(0);
 public:
     SavePossibleVisibleOverlays(Blackboard & blackboard, vector<CSGOId> possibleAreasTargetIds,
                                     bool visibleOverlay, string name = "SavePossibleVisibleOverlays") :
             Node(blackboard, name), possibleAreasTargetIds(possibleAreasTargetIds), visibleOverlay(visibleOverlay) { };
     virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
         vector<map<CSGOId, AreaBits>> overlays;
+        std::cout << "time since last save " << state.getSecondsBetweenTimes(x, state.loadTime) << std::endl;
+        x = state.loadTime;
         if (!possibleAreasTargetIds.empty()) {
             map<CSGOId, AreaBits> playerToOverlay;
             for (CSGOId targetId : possibleAreasTargetIds) {
@@ -165,7 +169,7 @@ public:
             teamToOverlay[ENGINE_TEAM_CT] = blackboard.getVisibleAreasByTeam(state, ENGINE_TEAM_CT);
             overlays.push_back(teamToOverlay);
         }
-        blackboard.navFileOverlay.save(state, overlays)
+        blackboard.navFileOverlay.save(state, overlays);
         playerNodeState[treeThinker.csgoId] = NodeState::Running;
         return playerNodeState[treeThinker.csgoId];
     }

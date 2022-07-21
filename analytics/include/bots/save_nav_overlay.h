@@ -23,13 +23,15 @@ static const array<string, 2*MAX_PLAYERS_PER_OVERLAY> colorScheme{"b", "r", "u",
 class NavFileOverlay {
     vector<NavAreaData> navAreaData;
     map<AreaId, size_t> areaIdToVectorIndex;
-    CSKnowTime lastCallTime = std::chrono::system_clock::time_point::min();
+    CSKnowTime lastCallTime = std::chrono::system_clock::from_time_t(0);
+    CSKnowTime lastCallTime2 = std::chrono::system_clock::time_point::max();
+    string mapsPath;
 
     void saveOverlay(std::stringstream & stream, size_t overlayIndex, size_t numOverlays,
                      const map<CSGOId, AreaBits> & playerToOverlay);
 
 public:
-    NavFileOverlay(const nav_mesh::nav_file & navFile, string mapsPath) {
+    NavFileOverlay(const nav_mesh::nav_file & navFile) {
         for (const auto & navArea : navFile.m_areas) {
             navAreaData.push_back({navArea.get_id(), {vec3tConv(navArea.get_min_corner()),
                                                       vec3tConv(navArea.get_max_corner())}, vec3tConv(navArea.get_center())});
@@ -38,6 +40,7 @@ public:
         areaIdToVectorIndex = navFile.m_area_ids_to_indices;
     }
 
+    void setMapsPath(string mapsPath) { this->mapsPath = mapsPath; }
     void save(const ServerState & state, const vector<map<CSGOId, AreaBits>> & overlays);
 };
 

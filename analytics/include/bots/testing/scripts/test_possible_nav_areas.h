@@ -91,7 +91,10 @@ public:
                     make_unique<Teleport>(blackboard, neededBots[1].id, state),
                     make_unique<movement::WaitNode>(blackboard, 3.0),
                     make_unique<ClearMemoryCommunicationDangerNode>(blackboard),
-                    make_unique<movement::WaitNode>(blackboard, 7.0)));
+                    make_unique<ParallelFirstNode>(blackboard, Node::makeList(
+                            make_unique<movement::WaitNode>(blackboard, 7.0),
+                            make_unique<SavePossibleVisibleOverlays>(blackboard, vector{neededBots[0].id, neededBots[1].id}, false)
+                    ))));
             Node::Ptr disableAllBothDuringSetup = make_unique<ParallelFirstNode>(blackboard, Node::makeList(
                     std::move(setupCommands),
                     make_unique<DisableActionsNode>(blackboard, "DisableSetup", vector{neededBots[0].id, neededBots[1].id}, false)

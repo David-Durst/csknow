@@ -104,7 +104,7 @@ struct Blackboard {
     map<CSGOId, int64_t> playerToOrder;
     map<CSGOId, int32_t> playerToPushOrder;
     map<CSGOId, AreaId> playerToDangerAreaId;
-    CSKnowTime defaultTime = std::chrono::system_clock::time_point::min();
+    CSKnowTime defaultTime = std::chrono::system_clock::from_time_t(0);
     vector<CSKnowTime> tDangerAreaLastCheckTime, ctDangerAreaLastCheckTime;
     vector<CSKnowTime> & getDangerAreaLastCheckTime(const ServerState::Client & client) {
         if (client.team == ENGINE_TEAM_T) {
@@ -172,10 +172,11 @@ struct Blackboard {
 
     Blackboard(string navPath, string mapName) :
         navPath(navPath), navFile(navPath.c_str()), gen(rd()), aimDis(0., 2.0),
-        mapsPath(std::filesystem::path(navPath).remove_filename().string()),
-        navFileOverlay(navFile, mapsPath), visPoints(navFile), possibleNavAreas(navFile),
+        navFileOverlay(navFile), visPoints(navFile), possibleNavAreas(navFile),
         tDangerAreaLastCheckTime(navFile.m_areas.size(), defaultTime),
         ctDangerAreaLastCheckTime(navFile.m_areas.size(), defaultTime) {
+        string mapsPath = std::filesystem::path(navPath).remove_filename().string();
+        navFileOverlay.setMapsPath(mapsPath);
         reachability.load(mapsPath, mapName);
         visPoints.load(mapsPath, mapName);
 
