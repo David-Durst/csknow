@@ -65,12 +65,11 @@ int main(int argc, char * argv[]) {
         auto parseEnd = std::chrono::system_clock::now();
         std::chrono::duration<double> startToStart = start - priorStart;
         double frameDiff = (state.getLastFrame() - priorFrame) / 128.;
-        priorStart = start;
-        priorFrame = state.getLastFrame();
-            
+
         if (state.loadedSuccessfully) {
             tree.tick(state, mapsPath);
             if (state.clients.size() > 0) {
+                //std::cout << "time since last save " << state.getSecondsBetweenTimes(start, priorStart) << std::endl;
                 scriptsRunner.initialize(tree, state);
                 finishedTests = scriptsRunner.tick(tree, state);
             }
@@ -79,6 +78,9 @@ int main(int argc, char * argv[]) {
         else {
             numFailures++;
         }
+
+        priorStart = start;
+        priorFrame = state.getLastFrame();
 
         auto end = std::chrono::system_clock::now();
         std::chrono::duration<double> botTime = end - start;
@@ -97,13 +99,13 @@ int main(int argc, char * argv[]) {
             sleep = false;
         }
         logFile << botTime.count() << "s, pct parse " << parseTime.count() / botTime.count()
+            << ", start to start " <<  startToStart.count()
             << ", frame to time ratio" << frameDiff / startToStart.count() << std::endl;
         logFile << tree.curLog;
         logFile.close();
         testLogFile << scriptsRunner.curLog();
         testLogFile.close();
         if (sleep) {
-            double x = (timePerTick - botTime).count();
             std::this_thread::sleep_for(timePerTick - botTime);
         }
     }

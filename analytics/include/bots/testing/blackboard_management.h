@@ -154,8 +154,10 @@ public:
             Node(blackboard, name), possibleAreasTargetIds(possibleAreasTargetIds), visibleOverlay(visibleOverlay) { };
     virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
         vector<map<CSGOId, AreaBits>> overlays;
-        std::cout << "time since last save " << state.getSecondsBetweenTimes(x, state.loadTime) << std::endl;
-        x = state.loadTime;
+        CSKnowTime y = std::chrono::system_clock::now();
+        std::cout << "time since last save " << state.getSecondsBetweenTimes(x, y) << std::endl;
+        x = y;
+        /*
         if (!possibleAreasTargetIds.empty()) {
             map<CSGOId, AreaBits> playerToOverlay;
             for (CSGOId targetId : possibleAreasTargetIds) {
@@ -170,6 +172,7 @@ public:
             overlays.push_back(teamToOverlay);
         }
         blackboard.navFileOverlay.save(state, overlays);
+         */
         playerNodeState[treeThinker.csgoId] = NodeState::Running;
         return playerNodeState[treeThinker.csgoId];
     }
