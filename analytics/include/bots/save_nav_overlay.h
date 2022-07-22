@@ -9,6 +9,7 @@
 #define MAX_OVERLAYS 4
 #define FADE_SECONDS 0.1
 #define MAX_DISTANCE 2500
+#define MAX_LINES 200
 
 struct NavAreaData {
     AreaId areaId;

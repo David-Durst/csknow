@@ -12,14 +12,17 @@ struct NavAreaDistance {
 
 void NavFileOverlay::saveOverlays(std::stringstream & stream, Vec3 specPos, const vector<AreaBits> & overlays) {
     vector<NavAreaDistance> sortedData;
+    size_t numLines = 0;
     for (size_t i = 0; i < navAreaData.size(); i++) {
         sortedData.push_back({i, computeDistance(specPos, navAreaData[i].center)});
     }
-    std::sort(sortedData.begin(), sortedData.end(), [](const NavAreaDistance & a, const NavAreaDistance & b) { return a.distanceToSpecPos > b.distanceToSpecPos; });
+    std::sort(sortedData.begin(), sortedData.end(),
+              // last commands remain on screen
+              [](const NavAreaDistance & a, const NavAreaDistance & b) { return a.distanceToSpecPos > b.distanceToSpecPos; });
 
     for (size_t i = 0; i < navAreaData.size(); i++) {
         NavAreaData oneAreaData = navAreaData[sortedData[i].index];
-        if (computeDistance(specPos, oneAreaData.center) > MAX_DISTANCE) {
+        if (MAX_LINES > 200 || computeDistance(specPos, oneAreaData.center) > MAX_DISTANCE) {
             continue;
         }
 
@@ -34,6 +37,7 @@ void NavFileOverlay::saveOverlays(std::stringstream & stream, Vec3 specPos, cons
         }
         stream << area.min.toCSV() << "," << area.max.toCSV() << "," << validOverlaysNumber << std::endl;
     }
+    //std::cout << "wrote " << numLines << " num lines" << std::endl;
 }
 
 void NavFileOverlay::save(const ServerState & state, const vector<AreaBits> & overlays) {
