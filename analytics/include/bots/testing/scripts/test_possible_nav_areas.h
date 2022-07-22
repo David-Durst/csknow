@@ -63,7 +63,7 @@ class DiffusionPossibleNavAreasCheck : public Script {
 public:
     DiffusionPossibleNavAreasCheck(const ServerState & state) :
             Script("DiffusionPossibleNavAreasCheck", {{0, ENGINE_TEAM_CT}, {0, ENGINE_TEAM_CT}},
-                   {ObserveType::Absolute, 0, {395.317963, 2659.722656, 559.311157}, {43.801949, -49.044704}}) { }
+                   {ObserveType::Absolute, 0, {1762., 2012., 251.}, {39., 177.}}) { }
 
     virtual void initialize(Tree & tree, ServerState & state) override {
         if (tree.newBlackboard) {
@@ -93,7 +93,7 @@ public:
                     make_unique<ClearMemoryCommunicationDangerNode>(blackboard),
                     make_unique<ParallelFirstNode>(blackboard, Node::makeList(
                             make_unique<movement::WaitNode>(blackboard, 7.0),
-                            make_unique<SavePossibleVisibleOverlays>(blackboard, vector{neededBots[0].id, neededBots[1].id}, false)
+                            make_unique<SavePossibleVisibleOverlays>(blackboard, vector{neededBots[0].id}, false)
                     ))));
             Node::Ptr disableAllBothDuringSetup = make_unique<ParallelFirstNode>(blackboard, Node::makeList(
                     std::move(setupCommands),

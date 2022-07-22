@@ -153,26 +153,22 @@ public:
                                     bool visibleOverlay, string name = "SavePossibleVisibleOverlays") :
             Node(blackboard, name), possibleAreasTargetIds(possibleAreasTargetIds), visibleOverlay(visibleOverlay) { };
     virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
-        vector<map<CSGOId, AreaBits>> overlays;
+        vector<AreaBits> overlays;
         CSKnowTime y = std::chrono::system_clock::now();
         std::cout << "time since last save " << state.getSecondsBetweenTimes(x, y) << std::endl;
         x = y;
-        /*
         if (!possibleAreasTargetIds.empty()) {
             map<CSGOId, AreaBits> playerToOverlay;
             for (CSGOId targetId : possibleAreasTargetIds) {
-                playerToOverlay[targetId] = blackboard.possibleNavAreas.getPossibleAreas(targetId);
+                overlays.push_back(blackboard.possibleNavAreas.getPossibleAreas(targetId));
             }
-            overlays.push_back(playerToOverlay);
         }
         if (visibleOverlay) {
             map<CSGOId, AreaBits> teamToOverlay;
-            teamToOverlay[ENGINE_TEAM_T] = blackboard.getVisibleAreasByTeam(state, ENGINE_TEAM_T);
-            teamToOverlay[ENGINE_TEAM_CT] = blackboard.getVisibleAreasByTeam(state, ENGINE_TEAM_CT);
-            overlays.push_back(teamToOverlay);
+            overlays.push_back(blackboard.getVisibleAreasByTeam(state, ENGINE_TEAM_T));
+            overlays.push_back(blackboard.getVisibleAreasByTeam(state, ENGINE_TEAM_CT));
         }
         blackboard.navFileOverlay.save(state, overlays);
-         */
         playerNodeState[treeThinker.csgoId] = NodeState::Running;
         return playerNodeState[treeThinker.csgoId];
     }
