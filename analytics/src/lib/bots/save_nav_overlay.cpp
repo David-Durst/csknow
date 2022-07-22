@@ -5,44 +5,34 @@
 #include "bots/save_nav_overlay.h"
 #include <filesystem>
 
+struct NavAreaDistance {
+    size_t index;
+    double distanceToSpecPos;
+};
+
 void NavFileOverlay::saveOverlays(std::stringstream & stream, Vec3 specPos, const vector<AreaBits> & overlays) {
+    vector<NavAreaDistance> sortedData;
     for (size_t i = 0; i < navAreaData.size(); i++) {
-        if (computeDistance(specPos, navAreaData[i].center) > MAX_DISTANCE) {
+        sortedData.push_back({i, computeDistance(specPos, navAreaData[i].center)});
+    }
+    std::sort(sortedData.begin(), sortedData.end(), [](const NavAreaDistance & a, const NavAreaDistance & b) { return a.distanceToSpecPos < b.distanceToSpecPos; });
+
+    for (size_t i = 0; i < navAreaData.size(); i++) {
+        const NavAreaData & oneAreaData = navAreaData[sortedData[i].index];
+        if (computeDistance(specPos, oneAreaData.center) > MAX_DISTANCE) {
             continue;
         }
 
-        AABB area = {navAreaData[i].areaCoordinates.min, navAreaData[i].areaCoordinates.max};
+        AABB area = {oneAreaData.areaCoordinates.min, oneAreaData.areaCoordinates.max};
         area.min.z = area.max.z;
-        //area.min.z = area.max.z + OVERLAY_VERTICAL_BASE;
-        //area.max.z = area.min.z + OVERLAY_VERTICAL_LENGTH;
 
+        size_t validOverlaysNumber = 0;
         for (size_t overlayIdx = 0; overlayIdx < overlays.size(); overlayIdx++) {
-            const AreaBits & overlay = overlays[overlayIdx];
-            if (!overlay[i]) {
-                continue;
+            if (overlays[overlayIdx][i]) {
+                validOverlaysNumber += 1 << overlayIdx;
             }
-            AABB overlayArea = area;
-            if (overlays.size() > 1) {
-                double avgX = (overlayArea.min.x + overlayArea.max.x) / 2., avgY = (overlayArea.min.y + overlayArea.max.y) / 2.;
-                if (overlayIdx == 0) {
-                    overlayArea.max.x = avgX;
-                    overlayArea.max.y = avgY;
-                }
-                else if (overlayIdx == 1) {
-                    overlayArea.min.x = avgX;
-                    overlayArea.max.y = avgY;
-                }
-                else if (overlayIdx == 2) {
-                    overlayArea.max.x = avgX;
-                    overlayArea.min.y = avgY;
-                }
-                else if (overlayIdx == 3) {
-                    overlayArea.min.x = avgX;
-                    overlayArea.min.y = avgY;
-                }
-            }
-            stream << overlayArea.min.toCSV() << "," << overlayArea.max.toCSV() << "," << colorScheme[overlayIdx] << std::endl;
         }
+        stream << area.min.toCSV() << "," << area.max.toCSV() << "," << validOverlaysNumber << std::endl;
     }
 }
 

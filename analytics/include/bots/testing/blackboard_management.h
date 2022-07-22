@@ -147,16 +147,16 @@ public:
 class SavePossibleVisibleOverlays : public Node {
     vector<CSGOId> possibleAreasTargetIds;
     bool visibleOverlay;
-    CSKnowTime x = std::chrono::system_clock::from_time_t(0);
+    //CSKnowTime oldTime = std::chrono::system_clock::from_time_t(0);
 public:
     SavePossibleVisibleOverlays(Blackboard & blackboard, vector<CSGOId> possibleAreasTargetIds,
                                     bool visibleOverlay, string name = "SavePossibleVisibleOverlays") :
             Node(blackboard, name), possibleAreasTargetIds(possibleAreasTargetIds), visibleOverlay(visibleOverlay) { };
     virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
         vector<AreaBits> overlays;
-        CSKnowTime y = std::chrono::system_clock::now();
-        std::cout << "time since last save " << state.getSecondsBetweenTimes(x, y) << std::endl;
-        x = y;
+        //CSKnowTime curTime = std::chrono::system_clock::now();
+        //std::cout << "time since last save " << state.getSecondsBetweenTimes(oldTime, curTime) << std::endl;
+        //oldTime = curTime;
         if (!possibleAreasTargetIds.empty()) {
             map<CSGOId, AreaBits> playerToOverlay;
             for (CSGOId targetId : possibleAreasTargetIds) {

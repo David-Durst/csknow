@@ -8,7 +8,7 @@
 #include "bots/load_save_vis_points.h"
 #define MAX_OVERLAYS 4
 #define FADE_SECONDS 0.1
-#define MAX_DISTANCE 500
+#define MAX_DISTANCE 2500
 
 struct NavAreaData {
     AreaId areaId;
