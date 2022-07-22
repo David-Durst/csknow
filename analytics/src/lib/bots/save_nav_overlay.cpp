@@ -15,10 +15,10 @@ void NavFileOverlay::saveOverlays(std::stringstream & stream, Vec3 specPos, cons
     for (size_t i = 0; i < navAreaData.size(); i++) {
         sortedData.push_back({i, computeDistance(specPos, navAreaData[i].center)});
     }
-    std::sort(sortedData.begin(), sortedData.end(), [](const NavAreaDistance & a, const NavAreaDistance & b) { return a.distanceToSpecPos < b.distanceToSpecPos; });
+    std::sort(sortedData.begin(), sortedData.end(), [](const NavAreaDistance & a, const NavAreaDistance & b) { return a.distanceToSpecPos > b.distanceToSpecPos; });
 
     for (size_t i = 0; i < navAreaData.size(); i++) {
-        const NavAreaData & oneAreaData = navAreaData[sortedData[i].index];
+        NavAreaData oneAreaData = navAreaData[sortedData[i].index];
         if (computeDistance(specPos, oneAreaData.center) > MAX_DISTANCE) {
             continue;
         }
@@ -28,7 +28,7 @@ void NavFileOverlay::saveOverlays(std::stringstream & stream, Vec3 specPos, cons
 
         size_t validOverlaysNumber = 0;
         for (size_t overlayIdx = 0; overlayIdx < overlays.size(); overlayIdx++) {
-            if (overlays[overlayIdx][i]) {
+            if (overlays[overlayIdx][sortedData[i].index]) {
                 validOverlaysNumber += 1 << overlayIdx;
             }
         }
