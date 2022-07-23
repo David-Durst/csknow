@@ -155,7 +155,7 @@ public:
     virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
         vector<AreaBits> overlays;
         CSKnowTime curTime = std::chrono::system_clock::now();
-        std::cout << "time since last save " << state.getSecondsBetweenTimes(oldTime, curTime) << std::endl;
+        //std::cout << "time since last save " << state.getSecondsBetweenTimes(oldTime, curTime) << std::endl;
         oldTime = curTime;
         if (!possibleAreasTargetIds.empty()) {
             map<CSGOId, AreaBits> playerToOverlay;

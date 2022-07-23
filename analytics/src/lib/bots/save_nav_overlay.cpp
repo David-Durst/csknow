@@ -86,8 +86,5 @@ void NavFileOverlay::save(const ServerState & state, const vector<AreaBits> & ov
         fsOverlay.close();
 
         std::filesystem::rename(tmpOverlayFilePath, overlayFilePath);
-
-        int x = 1;
-
     }
 }
