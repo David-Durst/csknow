@@ -26,7 +26,7 @@ struct InitTestingRound : Command {
     InitTestingRound(Blackboard & blackboard, string scriptName) :
         Command(blackboard, "InitTestingRoundCmd"), scriptName(scriptName) { }
     virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
-        scriptLines = {"say Running Test " + scriptName + ";sm_botDebug t; mp_warmup_end; sm_draw;"};
+        scriptLines = {"sm_refresh;say Running Test " + scriptName + ";sm_botDebug t; mp_warmup_end; sm_draw;"};
         return Command::exec(state, treeThinker);
     }
 };

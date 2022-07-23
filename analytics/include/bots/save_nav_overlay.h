@@ -10,6 +10,9 @@
 #define FADE_SECONDS 0.1
 #define MAX_DISTANCE 2500
 #define MAX_LINES 200
+// https://developer.valvesoftware.com/wiki/Temporary_Entity
+// should probably think about using this at some point
+#define MAX_LINES_PER_UPDATE 20
 
 struct NavAreaData {
     AreaId areaId;
