@@ -23,6 +23,9 @@ struct Waypoint {
     CSGOId playerId;
 };
 
+/**
+ * Order specifies how to to navigate the map as part of a strategy
+ */
 struct Order {
     vector<Waypoint> waypoints;
     vector<CSGOId> followers;
@@ -64,6 +67,10 @@ struct Order {
 
         return result;
     }
+};
+
+struct Strategy {
+
 };
 
 #endif //CSKNOW_ORDER_DATA_H

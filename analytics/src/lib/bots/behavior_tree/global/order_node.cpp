@@ -15,7 +15,7 @@ namespace order {
     }
 
     /**
-     * D2 assigns players to one of a couple known paths
+     * Assign players to one of a couple known paths
      */
     NodeState OrderNode::exec(const ServerState &state, TreeThinker &treeThinker) {
         if (state.mapName != "de_dust2") {
