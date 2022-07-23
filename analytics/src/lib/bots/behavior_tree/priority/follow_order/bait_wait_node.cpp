@@ -60,6 +60,6 @@ namespace follow {
             }
         }
         // stop if too few people are ahead
-        return numAhead < blackboard.playerToPushOrder[treeThinker.csgoId];
+        return numAhead < blackboard.playerToEntryIndex[treeThinker.csgoId];
     }
 }

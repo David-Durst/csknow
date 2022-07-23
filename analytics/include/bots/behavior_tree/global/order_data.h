@@ -30,7 +30,7 @@ struct Order {
     vector<Waypoint> waypoints;
     vector<CSGOId> followers;
 
-    vector<string> print(const map<CSGOId, int64_t> & playerToCurWaypoint, const map<CSGOId, int32_t> & playerToPushOrder, const ServerState & state, size_t orderIndex) const {
+    vector<string> print(const map<CSGOId, int64_t> & playerToCurWaypoint, const map<CSGOId, int32_t> & playerToEntryIndex, const ServerState & state, size_t orderIndex) const {
         vector<string> result;
         stringstream waypointsStream;
         waypointsStream << orderIndex << " waypoints: [";
@@ -60,7 +60,7 @@ struct Order {
         for (const auto & follower : followers) {
             followersStream << "<" << state.getPlayerString(follower) << ", "
                 << playerToCurWaypoint.find(follower)->second << ", "
-                << playerToPushOrder.find(follower)->second << ">; ";
+                << playerToEntryIndex.find(follower)->second << ">; ";
         }
         followersStream << "]";
         result.push_back(followersStream.str());

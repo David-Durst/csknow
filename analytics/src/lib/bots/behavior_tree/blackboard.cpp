@@ -14,7 +14,7 @@ PrintState Blackboard::printOrderState(const ServerState &state) {
 
     for (size_t i = 0; i < orders.size(); i++) {
         const auto & order = orders[i];
-        vector<string> orderResult = order.print(playerToCurWaypoint, playerToPushOrder, state, i);
+        vector<string> orderResult = order.print(playerToCurWaypoint, playerToEntryIndex, state, i);
         printState.curState.insert(printState.curState.end(), orderResult.begin(), orderResult.end());
     }
 

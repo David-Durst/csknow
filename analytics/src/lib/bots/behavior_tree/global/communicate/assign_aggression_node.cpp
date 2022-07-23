@@ -13,17 +13,17 @@ namespace communicate {
                 // assign one of pushers to go first, then assign rest
                 // after pushers, assign baiters
                 vector<CSGOId> baitersOnOrder;
-                int pushIndex = 0;
+                int entryIndex = 0;
                 for (const CSGOId followerId : order.followers) {
                     if (blackboard.playerToTreeThinkers[followerId].aggressiveType == AggressiveType::Push) {
-                        blackboard.playerToPushOrder[followerId] = pushIndex++;
+                        blackboard.playerToEntryIndex[followerId] = entryIndex++;
                     }
                     else {
                         baitersOnOrder.push_back(followerId);
                     }
                 }
                 for (const CSGOId followerId : baitersOnOrder) {
-                    blackboard.playerToPushOrder[followerId] = pushIndex++;
+                    blackboard.playerToEntryIndex[followerId] = entryIndex++;
                 }
             }
         }

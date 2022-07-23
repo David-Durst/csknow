@@ -102,7 +102,7 @@ struct Blackboard {
     bool newOrderThisFrame;
     vector<Order> orders;
     map<CSGOId, int64_t> playerToOrder;
-    map<CSGOId, int32_t> playerToPushOrder;
+    map<CSGOId, int32_t> playerToEntryIndex;
     map<CSGOId, AreaId> playerToDangerAreaId;
     CSKnowTime defaultTime = std::chrono::system_clock::from_time_t(0);
     vector<CSKnowTime> tDangerAreaLastCheckTime, ctDangerAreaLastCheckTime;
