@@ -10,15 +10,6 @@
 using std::stringstream;
 using std::map;
 
-struct GrenadeThrow {
-    CSGOId thrower;
-    Vec3 origin;
-    Vec2 angle;
-    Vec3 target;
-    bool thrown;
-    // for now assume always smoke
-};
-
 enum class WaypointType {
     NavPlace,
     Player,
@@ -34,8 +25,6 @@ struct Waypoint {
 
 struct Order {
     vector<Waypoint> waypoints;
-    vector<GrenadeThrow> grenadeThrows;
-    map<CSGOId, vector<int64_t>> playerToGrenades;
     vector<CSGOId> followers;
 
     vector<string> print(const map<CSGOId, int64_t> & playerToCurWaypoint, const map<CSGOId, int32_t> & playerToPushOrder, const ServerState & state, size_t orderIndex) const {

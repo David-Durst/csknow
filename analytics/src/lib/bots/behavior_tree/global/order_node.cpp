@@ -17,7 +17,7 @@ namespace order {
     /**
      * D2 assigns players to one of a couple known paths
      */
-    NodeState D2OrderNode::exec(const ServerState &state, TreeThinker &treeThinker) {
+    NodeState OrderNode::exec(const ServerState &state, TreeThinker &treeThinker) {
         if (state.mapName != "de_dust2") {
             playerNodeState[treeThinker.csgoId] = NodeState::Failure;
             return NodeState::Failure;
@@ -76,7 +76,7 @@ namespace order {
                 for (const auto & p : pathPlace) {
                     waypoints.push_back({WaypointType::NavPlace, p, INVALID_ID});
                 }
-                blackboard.orders.push_back({waypoints, {}, {}, {}});
+                blackboard.orders.push_back({waypoints, {}});
             }
 
             // next assign clients to orders
@@ -113,75 +113,5 @@ namespace order {
         }
         playerNodeState[treeThinker.csgoId] = NodeState::Success;
         return playerNodeState[treeThinker.csgoId];
-    }
-
-    /**
-     * General order assigns to kill
-     */
-    NodeState GeneralOrderNode::exec(const ServerState &state, TreeThinker &treeThinker) {
-
-        if (playerNodeState.find(INVALID_ID) == playerNodeState.end() ||
-            playerNodeState[INVALID_ID] != NodeState::Running) {
-            map<CSGOId, Vec3> tIdsToPositions, ctIdsToPositions;
-
-            for (const auto &client : state.clients) {
-                if (client.isAlive) {
-                    if (client.team == ENGINE_TEAM_T) {
-                        tIdsToPositions[client.csgoId] = {client.lastEyePosX, client.lastEyePosY, client.lastFootPosZ};
-                    } else if (client.team == ENGINE_TEAM_CT) {
-                        ctIdsToPositions[client.csgoId] = {client.lastEyePosX, client.lastEyePosY, client.lastFootPosZ};
-                    }
-                }
-            }
-
-            // assign every player an enemy to attack, grouping together players with the same enemy under same order
-            map<CSGOId, size_t> targetToOrderId;
-            for (const auto &client : state.clients) {
-                if (client.isAlive) {
-                    const nav_mesh::nav_area &curArea = blackboard.navFile.get_nearest_area_by_position(
-                            {client.lastEyePosX, client.lastEyePosY, client.lastFootPosZ});
-                    map<CSGOId, Vec3> &idsToPositions = client.team == T_TEAM ? ctIdsToPositions : tIdsToPositions;
-                    double minDistance = std::numeric_limits<double>::max();
-                    CSGOId minCSGOId = INVALID_ID;
-                    for (const auto[enemyId, enemyPos] : idsToPositions) {
-                        double newDistance = blackboard.getDistance(curArea.get_id(),
-                                                                    blackboard.navFile.get_nearest_area_by_position(vec3Conv(enemyPos)).get_id());
-                        if (newDistance < minDistance) {
-                            minDistance = newDistance;
-                            minCSGOId = enemyId;
-                        }
-                    }
-
-                    // if a teammate already has him as a target, group them by the same order
-                    if (targetToOrderId.find(minCSGOId) != targetToOrderId.end()) {
-                        size_t orderId = targetToOrderId[minCSGOId];
-                        blackboard.playerToOrder[client.csgoId] = orderId;
-                        blackboard.orders[orderId].followers.push_back(client.csgoId);
-                    } else {
-                        targetToOrderId[minCSGOId] = blackboard.orders.size();
-                        blackboard.playerToOrder[client.csgoId] = blackboard.orders.size();
-                        blackboard.orders.push_back({{{WaypointType::Player, "", minCSGOId}}, {}, {}, {client.csgoId}});
-                    }
-                }
-            }
-
-            resetTreeThinkers(blackboard);
-            playerNodeState[INVALID_ID] = NodeState::Running;
-        }
-        else if (playerNodeState[INVALID_ID] == NodeState::Running) {
-            // finish if anyone died (as need to repick everyone's target) or if round restarted
-            if (state.clients.size() != blackboard.lastFrameState.clients.size()) {
-                playerNodeState[INVALID_ID] = NodeState::Success;
-            }
-            else {
-                for (size_t i = 0; i < state.clients.size(); i++) {
-                    if (state.clients[i].isAlive != blackboard.lastFrameState.clients[i].isAlive) {
-                        playerNodeState[INVALID_ID] = NodeState::Success;
-                    }
-                }
-            }
-        }
-
-        return playerNodeState[INVALID_ID];
     }
 }

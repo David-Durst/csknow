@@ -24,7 +24,7 @@ public:
         for (const auto & p : pathPlaces) {
             waypoints.push_back({WaypointType::NavPlace, p, INVALID_ID});
         }
-        blackboard.orders.push_back({waypoints, {}, {}, targetIds});
+        blackboard.orders.push_back({waypoints, targetIds});
         for (const auto & targetId : targetIds) {
             blackboard.playerToOrder[targetId] = blackboard.orders.size() - 1;
             blackboard.playerToTreeThinkers[targetId].orderWaypointIndex = 0;
