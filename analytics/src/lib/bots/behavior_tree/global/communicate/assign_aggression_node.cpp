@@ -9,21 +9,21 @@ namespace communicate {
      */
     NodeState AssignAggressionNode::exec(const ServerState &state, TreeThinker &treeThinker) {
         if (blackboard.newOrderThisFrame) {
-            for (const auto & order : blackboard.orders) {
+            for (const auto & orderId : blackboard.strategy.getOrderIds()) {
                 // assign one of pushers to go first, then assign rest
                 // after pushers, assign baiters
                 vector<CSGOId> baitersOnOrder;
                 int entryIndex = 0;
-                for (const CSGOId followerId : order.followers) {
+                for (const CSGOId followerId : blackboard.strategy.getOrderFollowers(orderId)) {
                     if (blackboard.playerToTreeThinkers[followerId].aggressiveType == AggressiveType::Push) {
-                        blackboard.playerToEntryIndex[followerId] = entryIndex++;
+                        blackboard.strategy.playerToEntryIndex[followerId] = entryIndex++;
                     }
                     else {
                         baitersOnOrder.push_back(followerId);
                     }
                 }
                 for (const CSGOId followerId : baitersOnOrder) {
-                    blackboard.playerToEntryIndex[followerId] = entryIndex++;
+                    blackboard.strategy.playerToEntryIndex[followerId] = entryIndex++;
                 }
             }
         }

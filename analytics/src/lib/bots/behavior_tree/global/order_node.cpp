@@ -67,8 +67,7 @@ namespace order {
 
 
             // clear orders before setting new ones
-            blackboard.orders.clear();
-            blackboard.playerToOrder.clear();
+            blackboard.strategy.clear();
             blackboard.playerToPath.clear();
             blackboard.playerToPriority.clear();
             for (const auto & pathPlace : pathPlaces) {

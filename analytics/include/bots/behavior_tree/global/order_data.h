@@ -7,6 +7,7 @@
 #include "load_save_bot_data.h"
 #include "navmesh/nav_file.h"
 #include <sstream>
+#include <algorithm>
 using std::stringstream;
 using std::map;
 
@@ -95,31 +96,52 @@ class Strategy {
 
 public:
     map<CSGOId, int64_t> playerToWaypoint;
+    map<CSGOId, int32_t> playerToEntryIndex;
 
-    std::optional<std::reference_wrapper<const Order>> getOrderForPlayer(CSGOId playerId) const {
+    void clear() {
+        tOrders.clear();
+        ctOrders.clear();
+        playerToOrder.clear();
+        orderToPlayers.clear();
+        playerToWaypoint.clear();
+        playerToEntryIndex.clear();
+    }
+
+    OrderId getOrderForPlayer(CSGOId playerId) const {
         if (playerToOrder.find(playerId) != playerToOrder.end()) {
-            OrderId orderId = playerToOrder.find(playerId)->second;
-            if (orderId.team == ENGINE_TEAM_T) {
-                return tOrders[orderId.index];
-            }
-            else if (orderId.team == ENGINE_TEAM_CT) {
-                return ctOrders[orderId.index];
-            }
-            else {
-                return {};
-            }
+            return playerToOrder.find(playerId)->second;
         }
         else {
-            return {};
+            throw std::runtime_error( "getOrderForPlayer bad player id" );
         }
     }
 
-    const vector<CSGOId> & getPlayersForOrder(OrderId orderId) const {
+    const vector<CSGOId> & getOrderFollowers(OrderId orderId) const {
         if (orderToPlayers.find(orderId) != orderToPlayers.end()) {
             return orderToPlayers.find(orderId)->second;
         }
         else {
-            return {};
+            throw std::runtime_error( "getPlayersForOrder bad order id" );
+        }
+    }
+
+    const Order & getOrder(OrderId orderId) const {
+        if (orderId.team == ENGINE_TEAM_T) {
+            return tOrders[orderId.index];
+        }
+        else if (orderId.team == ENGINE_TEAM_CT) {
+            return ctOrders[orderId.index];
+        }
+        throw std::runtime_error( "getOrderForPlayer bad player id" );
+    }
+
+    const vector<OrderId> getOrderIds() const {
+        vector<OrderId> result;
+        for (size_t orderIndex = 0; orderIndex < tOrders.size(); orderIndex++) {
+            result.push_back({ENGINE_TEAM_T, static_cast<int64_t>(orderIndex)});
+        }
+        for (size_t orderIndex = 0; orderIndex < ctOrders.size(); orderIndex++) {
+            result.push_back({ENGINE_TEAM_CT, static_cast<int64_t>(orderIndex)});
         }
     }
 
@@ -137,17 +159,17 @@ public:
         return orderId;
     }
 
-    std::optional<std::reference_wrapper<const Order>> getPlayerOrder(CSGOId csgoId) {
-        OrderId orderId = playerToOrder[csgoId];
-        if (orderId.team == ENGINE_TEAM_T) {
-            return tOrders[orderId.index];
+    void assignPlayerToOrder(CSGOId playerId, OrderId orderId) {
+        // remove player from existing order if already assigned
+        if (playerToOrder.find(playerId) != playerToOrder.end()) {
+            for (const auto & orderId : getOrderIds()) {
+                vector<CSGOId> & followers = orderToPlayers[orderId];
+                followers.erase(std::remove_if(followers.begin(), followers.end(),
+                                               [playerId](CSGOId id) { return id == playerId; }));
+            }
         }
-        else if (orderId.team == ENGINE_TEAM_CT) {
-            return ctOrders[orderId.index];
-        }
-        else {
-            return {};
-        }
+        playerToOrder[playerId] = orderId;
+        orderToPlayers[orderId].push_back(playerId);
     }
 
     int64_t maxTeamWaypoint(const ServerState & state, TeamId team) {
@@ -160,8 +182,7 @@ public:
         return result;
     }
 
-    vector<string> print(const ServerState & state, const nav_mesh::nav_file & navFile,
-                         const map<CSGOId, int32_t> & playerToEntryIndex) const {
+    vector<string> print(const ServerState & state, const nav_mesh::nav_file & navFile) const {
         vector<string> result;
 
         vector<TeamId> teams{ENGINE_TEAM_T, ENGINE_TEAM_CT};

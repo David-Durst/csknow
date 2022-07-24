@@ -4,20 +4,9 @@
 
 #include "bots/behavior_tree/blackboard.h"
 
-PrintState Blackboard::printOrderState(const ServerState &state) {
+PrintState Blackboard::printStrategyState(const ServerState &state) {
     PrintState printState;
-
-    map<CSGOId, int64_t> playerToCurWaypoint;
-    for (const auto & [csgoId, treeThinker] : playerToTreeThinkers) {
-        playerToCurWaypoint[csgoId] = treeThinker.orderWaypointIndex;
-    }
-
-    for (size_t i = 0; i < orders.size(); i++) {
-        const auto & order = orders[i];
-        vector<string> orderResult = order.print(playerToCurWaypoint, playerToEntryIndex, state, i);
-        printState.curState.insert(printState.curState.end(), orderResult.begin(), orderResult.end());
-    }
-
+    vector<string> strategyResult = strategy.print(state, navFile);
     return printState;
 }
 

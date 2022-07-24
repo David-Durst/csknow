@@ -99,9 +99,13 @@ struct Blackboard {
 
     // order data
     bool newOrderThisFrame;
+    Strategy strategy;
+    /*
     vector<Order> orders;
     map<CSGOId, int64_t> playerToOrder;
-    map<CSGOId, int32_t> playerToEntryIndex;
+     */
+
+    // prediction data
     map<CSGOId, AreaId> playerToDangerAreaId;
     CSKnowTime defaultTime = std::chrono::system_clock::from_time_t(0);
     vector<CSKnowTime> tDangerAreaLastCheckTime, ctDangerAreaLastCheckTime;
@@ -165,7 +169,7 @@ struct Blackboard {
         return result;
     }
 
-    PrintState printOrderState(const ServerState & state);
+    PrintState printStrategyState(const ServerState & state);
     PrintState printCommunicateState(const ServerState & state);
     vector<PrintState> printPerPlayerState(const ServerState & state, CSGOId playerId);
 
