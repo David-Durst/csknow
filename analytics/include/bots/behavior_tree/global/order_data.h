@@ -17,8 +17,15 @@ enum class WaypointType {
     NUM_WAYPOINTS
 };
 
+union WaypointData {
+};
+
 struct Waypoint {
-    WaypointType waypointType;
+    WaypointType type;
+    WaypointData data;
+
+    // use placeName if type of NavPlace, playerId if type of is player, nothing if c4 as tracked by state
+    // not using union because that prevented automatic destructor definition, and this is trivial amount of extra data
     string placeName;
     CSGOId playerId;
 };
@@ -28,35 +35,40 @@ struct Waypoint {
  */
 struct Order {
     vector<Waypoint> waypoints;
-    vector<CSGOId> followers;
+    // what about chains of operations (like switching once plant happens)?
 
-    vector<string> print(const map<CSGOId, int64_t> & playerToCurWaypoint, const map<CSGOId, int32_t> & playerToEntryIndex, const ServerState & state, size_t orderIndex) const {
-        vector<string> result;
+    void print(const vector<CSGOId> followers, const map<CSGOId, int64_t> & playerToCurWaypoint,
+               const ServerState & state, const nav_mesh::nav_file & navFile,
+               const map<CSGOId, int32_t> & playerToEntryIndex, size_t orderIndex, vector<string> & result) const {
         stringstream waypointsStream;
         waypointsStream << orderIndex << " waypoints: [";
         for (const auto & waypoint : waypoints) {
             string typeString;
-            switch (waypoint.waypointType) {
+            string dataString;
+            switch (waypoint.type) {
                 case WaypointType::NavPlace:
-                    typeString += "NavPlace";
+                    typeString = "NavPlace";
+                    dataString = waypoint.placeName;
                     break;
                 case WaypointType::Player:
-                    typeString += "Player";
+                    typeString = "Player";
+                    dataString = state.getPlayerString(waypoint.playerId);
                     break;
                 case WaypointType::C4:
-                    typeString += "C4";
+                    typeString = "C4";
+                    dataString = navFile.get_place(navFile.get_nearest_area_by_position(
+                            vec3Conv(state.getC4Pos())).m_place);
                     break;
                 default:
-                    typeString += "INVALID_TYPE";
+                    typeString = "INVALID_TYPE";
             }
-            waypointsStream << "(" << typeString << "," << waypoint.placeName
-                            << "," << state.getPlayerString(waypoint.playerId) << ")";
+            waypointsStream << "(" << typeString << "," << dataString << "); ";
         }
         waypointsStream << "]";
         result.push_back(waypointsStream.str());
 
         stringstream followersStream;
-        followersStream << orderIndex << " followers: <follower, waypoint index, push index> : [";
+        followersStream << orderIndex << " followers: <follower, waypoint index, entry index> : [";
         for (const auto & follower : followers) {
             followersStream << "<" << state.getPlayerString(follower) << ", "
                 << playerToCurWaypoint.find(follower)->second << ", "
@@ -64,13 +76,107 @@ struct Order {
         }
         followersStream << "]";
         result.push_back(followersStream.str());
-
-        return result;
     }
 };
 
-struct Strategy {
+struct OrderId {
+    TeamId team;
+    int64_t index;
+};
 
+bool operator<(const OrderId& a, const OrderId& b) {
+    return a.team < b.team || (a.team == b.team && a.index < b.index);
+}
+
+class Strategy {
+    vector<Order> tOrders, ctOrders;
+    map<CSGOId, OrderId> playerToOrder;
+    map<OrderId, vector<CSGOId>> orderToPlayers;
+
+public:
+    map<CSGOId, int64_t> playerToWaypoint;
+
+    std::optional<std::reference_wrapper<const Order>> getOrderForPlayer(CSGOId playerId) const {
+        if (playerToOrder.find(playerId) != playerToOrder.end()) {
+            OrderId orderId = playerToOrder.find(playerId)->second;
+            if (orderId.team == ENGINE_TEAM_T) {
+                return tOrders[orderId.index];
+            }
+            else if (orderId.team == ENGINE_TEAM_CT) {
+                return ctOrders[orderId.index];
+            }
+            else {
+                return {};
+            }
+        }
+        else {
+            return {};
+        }
+    }
+
+    const vector<CSGOId> & getPlayersForOrder(OrderId orderId) const {
+        if (orderToPlayers.find(orderId) != orderToPlayers.end()) {
+            return orderToPlayers.find(orderId)->second;
+        }
+        else {
+            return {};
+        }
+    }
+
+    OrderId addOrder(TeamId team, Order order) {
+        OrderId orderId = {INVALID_ID, INVALID_ID};
+        if (team == ENGINE_TEAM_T) {
+            orderId = {ENGINE_TEAM_T, static_cast<int64_t>(tOrders.size())};
+            tOrders.push_back(order);
+        }
+        else if (team == ENGINE_TEAM_CT) {
+            orderId = {ENGINE_TEAM_CT, static_cast<int64_t>(ctOrders.size())};
+            ctOrders.push_back(order);
+        }
+        orderToPlayers[orderId] = {};
+        return orderId;
+    }
+
+    std::optional<std::reference_wrapper<const Order>> getPlayerOrder(CSGOId csgoId) {
+        OrderId orderId = playerToOrder[csgoId];
+        if (orderId.team == ENGINE_TEAM_T) {
+            return tOrders[orderId.index];
+        }
+        else if (orderId.team == ENGINE_TEAM_CT) {
+            return ctOrders[orderId.index];
+        }
+        else {
+            return {};
+        }
+    }
+
+    int64_t maxTeamWaypoint(const ServerState & state, TeamId team) {
+        int64_t result = INVALID_ID;
+        for (const auto & csgoId : state.getPlayersOnTeam(team)) {
+            if (state.getClient(csgoId).team == team && playerToWaypoint[csgoId] > result) {
+                result = playerToWaypoint[csgoId];
+            }
+        }
+        return result;
+    }
+
+    vector<string> print(const ServerState & state, const nav_mesh::nav_file & navFile,
+                         const map<CSGOId, int32_t> & playerToEntryIndex) const {
+        vector<string> result;
+
+        vector<TeamId> teams{ENGINE_TEAM_T, ENGINE_TEAM_CT};
+        vector<vector<Order>> bothTeamOrders{tOrders, ctOrders};
+
+        for (size_t teamIndex = 0; teamIndex < teams.size(); teamIndex++) {
+            for (size_t orderIndex = 0; orderIndex < bothTeamOrders[teamIndex].size(); orderIndex++) {
+                bothTeamOrders[teamIndex][orderIndex].print(orderToPlayers.find({teams[teamIndex, orderIndex]})->second,
+                                                            playerToWaypoint, state, navFile,
+                                                            playerToEntryIndex, orderIndex, result);
+            }
+        }
+
+        return result;
+    }
 };
 
 #endif //CSKNOW_ORDER_DATA_H

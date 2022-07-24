@@ -8,15 +8,15 @@ void moveToWaypoint(Node & node, const ServerState & state, TreeThinker & treeTh
                     const Order & curOrder, Priority & curPriority) {
     const Waypoint & waypoint = curOrder.waypoints[treeThinker.orderWaypointIndex];
     // if next area is a nav place, go there
-    if (waypoint.waypointType == WaypointType::NavPlace) {
+    if (waypoint.type == WaypointType::NavPlace) {
         curPriority.targetAreaId = node.getNearestAreaInNextPlace(state, treeThinker, waypoint.placeName);
         curPriority.targetPos = vec3tConv(node.blackboard.navFile.get_area_by_id_fast(curPriority.targetAreaId).get_center());
     }
-    else if (waypoint.waypointType == WaypointType::Player) {
+    else if (waypoint.type == WaypointType::Player) {
         curPriority.targetPos = state.getClient(waypoint.playerId).getFootPosForPlayer();
         curPriority.targetAreaId = node.blackboard.navFile.get_nearest_area_by_position(vec3Conv(curPriority.targetPos)).get_id();
     }
-    else if (waypoint.waypointType == WaypointType::C4) {
+    else if (waypoint.type == WaypointType::C4) {
         curPriority.targetPos = state.getC4Pos();
         curPriority.targetAreaId = node.blackboard.navFile.get_nearest_area_by_position(vec3Conv(curPriority.targetPos)).get_id();
     }
@@ -28,13 +28,13 @@ bool finishWaypoint(const ServerState & state, int64_t waypointIndex,
                     const Order & curOrder, Priority & curPriority, string curPlace) {
     // finished with current priority if
     // trying to reach place and got there
-    if (curOrder.waypoints[waypointIndex].waypointType == WaypointType::NavPlace) {
+    if (curOrder.waypoints[waypointIndex].type == WaypointType::NavPlace) {
         if (curOrder.waypoints[waypointIndex].placeName == curPlace) {
             return true;
         }
     }
     // target player died
-    else if (curOrder.waypoints[waypointIndex].waypointType == WaypointType::Player) {
+    else if (curOrder.waypoints[waypointIndex].type == WaypointType::Player) {
         if (!state.clients[state.csgoIdToCSKnowId[curOrder.waypoints[waypointIndex].playerId]].isAlive) {
             return true;
         }

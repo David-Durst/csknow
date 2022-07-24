@@ -46,7 +46,6 @@ struct TreeThinker {
     double maxMemorySeconds;
 
     int64_t orderWaypointIndex;
-    int64_t orderGrenadeIndex;
 };
 
 struct PrintState {

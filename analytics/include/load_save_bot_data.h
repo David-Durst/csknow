@@ -20,6 +20,7 @@
 
 typedef int64_t CSKnowId;
 typedef int64_t CSGOId;
+typedef int32_t TeamId;
 typedef std::chrono::time_point<std::chrono::system_clock> CSKnowTime;
 
 class ServerState {
@@ -40,7 +41,7 @@ public:
         int32_t lastFrame;
         int32_t csgoId;
         string name;
-        int32_t team;
+        TeamId team;
         int32_t currentWeaponId;
         int32_t rifleId;
         int32_t rifleClipAmmo;
