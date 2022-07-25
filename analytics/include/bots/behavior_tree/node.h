@@ -40,8 +40,7 @@ public:
     virtual ~Node() { };
     virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) = 0;
     virtual void clearState() {
-        blackboard.orders.clear();
-        blackboard.playerToOrder.clear();
+        blackboard.strategy.clear();
         playerNodeState.clear();
     }
 

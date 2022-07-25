@@ -45,7 +45,7 @@ void Tree::tick(ServerState & state, const string & mapsPath) {
                     client.csgoId,
                     AggressiveType::Push,
                     {100, 20, 40, 70},
-                    2.5, 0, 0
+                    2.5
             };
             blackboard->playerToMemory[client.csgoId] = {
                     false,

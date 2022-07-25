@@ -38,7 +38,7 @@ struct Order {
     vector<Waypoint> waypoints;
     // what about chains of operations (like switching once plant happens)?
 
-    void print(const vector<CSGOId> followers, const map<CSGOId, int64_t> & playerToCurWaypoint,
+    void print(const vector<CSGOId> followers, const map<CSGOId, int64_t> & playerToWaypointIndex,
                const ServerState & state, const nav_mesh::nav_file & navFile,
                const map<CSGOId, int32_t> & playerToEntryIndex, size_t orderIndex, vector<string> & result) const {
         stringstream waypointsStream;
@@ -75,7 +75,7 @@ struct Order {
         followersStream << orderIndex << " followers: <follower, waypoint index, entry index> : [";
         for (const auto & follower : followers) {
             followersStream << "<" << state.getPlayerString(follower) << ", "
-                << playerToCurWaypoint.find(follower)->second << ", "
+                << playerToWaypointIndex.find(follower)->second << ", "
                 << playerToEntryIndex.find(follower)->second << ">; ";
         }
         followersStream << "]";
@@ -110,7 +110,7 @@ public:
         playerToEntryIndex.clear();
     }
 
-    OrderId getOrderForPlayer(CSGOId playerId) const {
+    OrderId getOrderIdForPlayer(CSGOId playerId) const {
         if (playerToOrder.find(playerId) != playerToOrder.end()) {
             return playerToOrder.find(playerId)->second;
         }
@@ -136,6 +136,10 @@ public:
             return ctOrders[orderId.index];
         }
         throw std::runtime_error( "getOrderForPlayer bad player id" );
+    }
+
+    const Order & getOrderForPlayer(CSGOId playerId) const {
+        return getOrder(getOrderIdForPlayer(playerId));
     }
 
     const vector<OrderId> getOrderIds(bool includeT = true, bool includeCT = true) const {
@@ -184,8 +188,8 @@ public:
     int64_t maxTeamWaypoint(const ServerState & state, TeamId team) {
         int64_t result = INVALID_ID;
         for (const auto & csgoId : state.getPlayersOnTeam(team)) {
-            if (state.getClient(csgoId).team == team && playerToWaypoint[csgoId] > result) {
-                result = playerToWaypoint[csgoId];
+            if (state.getClient(csgoId).team == team && playerToWaypointIndex[csgoId] > result) {
+                result = playerToWaypointIndex[csgoId];
             }
         }
         return result;
@@ -200,7 +204,7 @@ public:
         for (size_t teamIndex = 0; teamIndex < teams.size(); teamIndex++) {
             for (size_t orderIndex = 0; orderIndex < bothTeamOrders[teamIndex].size(); orderIndex++) {
                 bothTeamOrders[teamIndex][orderIndex].print(orderToPlayers.find({teams[teamIndex, orderIndex]})->second,
-                                                            playerToWaypoint, state, navFile,
+                                                            playerToWaypointIndex, state, navFile,
                                                             playerToEntryIndex, orderIndex, result);
             }
         }

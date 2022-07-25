@@ -12,7 +12,7 @@ class GlobalNode : public SequenceNode {
 public:
     GlobalNode(Blackboard & blackboard) :
             SequenceNode(blackboard, Node::makeList(
-                    make_unique<order::OrderNode>(blackboard),
+                    make_unique<CreateStrategyNode>(blackboard),
                     make_unique<CommunicateNode>(blackboard)
             ), "GlobalNode") { };
 };

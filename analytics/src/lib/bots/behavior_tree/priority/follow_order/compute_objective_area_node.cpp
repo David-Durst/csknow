@@ -6,7 +6,7 @@
 
 namespace follow {
     NodeState ComputeObjectiveAreaNode::exec(const ServerState &state, TreeThinker &treeThinker) {
-        const Order & curOrder = blackboard.strategy.getOrder(blackboard.strategy.getOrderForPlayer(treeThinker.csgoId));
+        const Order & curOrder = blackboard.strategy.getOrderForPlayer(treeThinker.csgoId);
         bool havePriority = blackboard.playerToPriority.find(treeThinker.csgoId) != blackboard.playerToPriority.end();
 
         // default values are set to invalid where necessary, so this is fine

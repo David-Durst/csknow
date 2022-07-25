@@ -15,7 +15,8 @@ namespace follow {
 
     bool BaitConditionNode::valid(const ServerState &state, TreeThinker &treeThinker) {
         const ServerState::Client & curClient = state.getClient(treeThinker.csgoId);
-        const Order & curOrder = blackboard.orders[blackboard.playerToOrder[treeThinker.csgoId]];
+        const OrderId curOrderId = blackboard.strategy.getOrderIdForPlayer(treeThinker.csgoId);
+        const Order & curOrder = blackboard.strategy.getOrderForPlayer(treeThinker.csgoId);
         const Waypoint & lastWaypoint = curOrder.waypoints.back();
         uint32_t lastAreaId = getNearestAreaInNextPlace(state, treeThinker, lastWaypoint.placeName);
         Vec3 targetPos = vec3tConv(blackboard.navFile.get_area_by_id_fast(lastAreaId).get_center());
@@ -35,7 +36,7 @@ namespace follow {
 
         // find other order followers who are ahead, make sure num ahead matches number assigned to follow
         int numAhead = 0;
-        for (const auto & followerId : curOrder.followers) {
+        for (const auto & followerId : blackboard.strategy.getOrderFollowers(curOrderId)) {
             if (followerId == treeThinker.csgoId) {
                 continue;
             }
@@ -60,6 +61,6 @@ namespace follow {
             }
         }
         // stop if too few people are ahead
-        return numAhead < blackboard.playerToEntryIndex[treeThinker.csgoId];
+        return numAhead < blackboard.strategy.playerToEntryIndex[treeThinker.csgoId];
     }
 }
