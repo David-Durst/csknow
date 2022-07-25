@@ -8,14 +8,14 @@
 void setupBasics(DistanceToPlacesResult & result, const nav_mesh::nav_file & navFile,
                  const ReachableResult & reachableResult) {
     result.coordinate = reachableResult.coordinate;
-    for (size_t i = 0; i < result.places.size(); i++) {
+    for (size_t i = 0; i < navFile.m_places.size(); i++) {
         result.placeNameToIndex[navFile.m_places[i]] = i;
     }
     for (const auto & area : navFile.m_areas) {
         result.placeToArea[navFile.get_place(area.m_place)].push_back(area.get_id());
     }
-    for (size_t i = 0; i < result.places.size(); i++) {
-        result.areaToPlace[i] = navFile.m_areas[i].m_place;
+    for (size_t i = 0; i < navFile.m_areas.size(); i++) {
+        result.areaToPlace.push_back(navFile.m_areas[i].m_place);
     }
     result.places = navFile.m_places;
     result.numAreas = reachableResult.size;
