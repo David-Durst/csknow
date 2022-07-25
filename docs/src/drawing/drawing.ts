@@ -377,7 +377,7 @@ export function drawTick(e: InputEvent) {
             ctx.fillText(targetAreaId.toString() + "," + targetAreaName, targetX, targetY)
         }
     }
-    else if (curOverlay.includes("reachable") || curOverlay.includes("visible")) {
+    else if (curOverlay.includes("reachable") || curOverlay.includes("visible") || curOverlay.includes("distance")) {
         ctx.fillStyle = green
         const overlayRows = filteredData.overlays.get(curOverlay)
         let distances: number[] = [];
