@@ -5,7 +5,7 @@
 #ifndef CSKNOW_NODE_H
 #define CSKNOW_NODE_H
 
-#include "load_save_bot_data.h"
+#include "bots/load_save_bot_data.h"
 #include "geometryNavConversions.h"
 #include "navmesh/nav_file.h"
 #include "bots/behavior_tree/global/strategy_data.h"

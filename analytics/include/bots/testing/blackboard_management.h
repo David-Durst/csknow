@@ -7,7 +7,7 @@
 
 #include "bots/testing/script.h"
 #include "bots/behavior_tree/pathing_node.h"
-#include "bots/save_nav_overlay.h"
+#include "bots/analysis/save_nav_overlay.h"
 
 class ForceOrderNode : public Node {
     vector<CSGOId> targetIds;

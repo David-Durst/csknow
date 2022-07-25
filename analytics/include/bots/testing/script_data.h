@@ -5,7 +5,7 @@
 #ifndef CSKNOW_SCRIPT_DATA_H
 #define CSKNOW_SCRIPT_DATA_H
 
-#include "load_save_bot_data.h"
+#include "bots/load_save_bot_data.h"
 
 enum class ObserveType {
     FirstPerson,

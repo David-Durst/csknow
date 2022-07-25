@@ -6,7 +6,7 @@
 #define CSKNOW_PRIORITY_DATA_H
 
 #include <queries/query.h>
-#include "load_save_bot_data.h"
+#include "bots/load_save_bot_data.h"
 
 struct MoveOptions {
     bool move;

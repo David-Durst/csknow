@@ -2,7 +2,7 @@
 // Created by steam on 7/9/22.
 //
 
-#include "bots/load_save_vis_points.h"
+#include "bots/analysis/load_save_vis_points.h"
 #include <filesystem>
 
 void VisPoints::launchVisPointsCommand(const ServerState & state) {

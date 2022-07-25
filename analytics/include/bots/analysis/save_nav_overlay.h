@@ -5,7 +5,7 @@
 #ifndef CSKNOW_SAVE_NAV_OVERLAY_H
 #define CSKNOW_SAVE_NAV_OVERLAY_H
 
-#include "bots/load_save_vis_points.h"
+#include "bots/analysis/load_save_vis_points.h"
 #define MAX_OVERLAYS 4
 #define FADE_SECONDS 0.1
 #define MAX_DISTANCE 2500

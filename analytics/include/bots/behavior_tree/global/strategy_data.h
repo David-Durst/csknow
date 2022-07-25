@@ -4,9 +4,9 @@
 
 #ifndef CSKNOW_STRATEGY_DATA_H
 #define CSKNOW_STRATEGY_DATA_H
-#include "load_save_bot_data.h"
+#include "bots/load_save_bot_data.h"
 #include "navmesh/nav_file.h"
-#include "bots/nav_file_helpers.h"
+#include "bots/analysis/nav_file_helpers.h"
 #include <sstream>
 #include <algorithm>
 using std::stringstream;

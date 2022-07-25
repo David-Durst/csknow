@@ -4,7 +4,7 @@
 
 #ifndef CSKNOW_PATHING_DATA_H
 #define CSKNOW_PATHING_DATA_H
-#include "load_save_bot_data.h"
+#include "bots/load_save_bot_data.h"
 #include "bots/behavior_tree/priority/priority_data.h"
 
 struct PathNode {

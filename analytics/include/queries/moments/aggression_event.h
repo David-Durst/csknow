@@ -11,7 +11,7 @@
 #include <unordered_map>
 #include <list>
 #include <map>
-#include "bots/load_save_vis_points.h"
+#include "bots/analysis/load_save_vis_points.h"
 #include "navmesh/nav_file.h"
 #include "load_data.h"
 #include "queries/query.h"

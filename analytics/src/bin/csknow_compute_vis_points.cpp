@@ -1,6 +1,6 @@
-#include "load_save_bot_data.h"
+#include "bots/load_save_bot_data.h"
 #include "bots/behavior_tree/tree.h"
-#include "bots/load_save_vis_points.h"
+#include "bots/analysis/load_save_vis_points.h"
 #include <iostream>
 #include <thread>
 #include <chrono>

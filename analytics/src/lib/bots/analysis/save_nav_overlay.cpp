@@ -2,7 +2,7 @@
 // Created by steam on 7/20/22.
 //
 
-#include "bots/save_nav_overlay.h"
+#include "bots/analysis/save_nav_overlay.h"
 #include <filesystem>
 
 struct NavAreaDistance {

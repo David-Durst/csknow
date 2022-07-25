@@ -5,7 +5,7 @@
 #ifndef CSKNOW_REACHABLE_H
 #define CSKNOW_REACHABLE_H
 #include "queries/nav_mesh.h"
-#include "bots/load_save_vis_points.h"
+#include "bots/analysis/load_save_vis_points.h"
 using std::string;
 using std::vector;
 using std::set;

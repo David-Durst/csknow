@@ -2,41 +2,10 @@
 // Created by durst on 7/24/22.
 //
 #include "bots/behavior_tree/global/strategy_node.h"
-namespace order {
-    void resetTreeThinkers(Blackboard & blackboard) {
-        for (auto & [_, treeThinker] : blackboard.playerToTreeThinkers) {
-            treeThinker.orderWaypointIndex = 0;
-            treeThinker.orderGrenadeIndex = 0;
-        }
-    }
+namespace strategy {
+    NodeState AssignPlayersToOrders::exec(const ServerState &state, TreeThinker &treeThinker) {
+        if (blackboard.newOrderThisFrame) {
 
-    /**
-     * Assign players to one of a couple known paths
-     */
-    NodeState OrderNode::exec(const ServerState &state, TreeThinker &treeThinker) {
-        if (state.mapName != "de_dust2") {
-            playerNodeState[treeThinker.csgoId] = NodeState::Failure;
-            return NodeState::Failure;
-        }
-
-
-        if (playerNodeState.find(treeThinker.csgoId) == playerNodeState.end() ||
-            state.roundNumber != planRoundNumber || state.numPlayersAlive() != playersAliveLastPlan) {
-            planRoundNumber = state.roundNumber;
-            playersAliveLastPlan = state.numPlayersAlive();
-            blackboard.newOrderThisFrame = true;
-
-            // first setup orders to go A or B
-            bool plantedA = blackboard.navFile.get_place(
-                    blackboard.navFile.get_nearest_area_by_position(vec3Conv(state.getC4Pos())).m_place) == "BombsiteA";
-
-            vector<vector<string>> ctPathPlaces;
-            if (plantedA) {
-                ctPathPlaces = {longToAPathPlaces, spawnToAPathPlaces, catToAPathPlace};
-            }
-            else {
-                ctPathPlaces = {bDoorsToBPathPlaces, lowerTunsToBPathPlaces, outsideTunsToBPathPlaces};
-            }
             map<string, size_t> ctPlacesToPath;
             for (size_t i = 0; i < ctPathPlaces.size(); i++) {
                 for (const auto & pathPlace : ctPathPlaces[i]) {

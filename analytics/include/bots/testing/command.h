@@ -5,7 +5,7 @@
 #ifndef CSKNOW_COMMAND_H
 #define CSKNOW_COMMAND_H
 
-#include "load_save_bot_data.h"
+#include "bots/load_save_bot_data.h"
 #include <memory>
 
 struct Command : Node {

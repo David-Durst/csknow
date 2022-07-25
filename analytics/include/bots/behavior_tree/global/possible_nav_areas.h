@@ -4,8 +4,8 @@
 
 #ifndef CSKNOW_POSSIBLE_NAV_AREAS_H
 #define CSKNOW_POSSIBLE_NAV_AREAS_H
-#include "load_save_bot_data.h"
-#include "bots/load_save_vis_points.h"
+#include "bots/load_save_bot_data.h"
+#include "bots/analysis/load_save_vis_points.h"
 #include "navmesh/nav_file.h"
 #include "queries/reachable.h"
 

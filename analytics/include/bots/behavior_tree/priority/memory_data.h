@@ -5,7 +5,7 @@
 #ifndef CSKNOW_MEMORY_DATA_H
 #define CSKNOW_MEMORY_DATA_H
 
-#include "load_save_bot_data.h"
+#include "bots/load_save_bot_data.h"
 #include "navmesh/nav_file.h"
 using std::map;
 

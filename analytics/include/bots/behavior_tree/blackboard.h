@@ -5,8 +5,8 @@
 #ifndef CSKNOW_BLACKBOARD_H
 #define CSKNOW_BLACKBOARD_H
 
-#include "bots/save_nav_overlay.h"
-#include "load_save_bot_data.h"
+#include "bots/analysis/save_nav_overlay.h"
+#include "bots/load_save_bot_data.h"
 #include "geometryNavConversions.h"
 #include "navmesh/nav_file.h"
 #include "bots/behavior_tree/global/strategy_data.h"
@@ -15,7 +15,7 @@
 #include "bots/behavior_tree/action_data.h"
 #include "queries/nav_mesh.h"
 #include "queries/reachable.h"
-#include "bots/load_save_vis_points.h"
+#include "bots/analysis/load_save_vis_points.h"
 #include "bots/testing/script_data.h"
 #include "bots/behavior_tree/priority/memory_data.h"
 #include "bots/behavior_tree/global/possible_nav_areas.h"
