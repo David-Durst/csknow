@@ -43,7 +43,7 @@ public:
            << "," << coordinate[index].max.x << "," << coordinate[index].max.y << "," << coordinate[index].max.z;
         for (int i = 0; i < coordinate.size(); i++) {
             PlaceIndex placeIndex = areaToPlace[i];
-            if (places[placeIndex] != "" && i == getClosestArea(i, placeIndex)) {
+            if (places[placeIndex] != "" && i == getClosestArea(index, placeIndex)) {
                 ss << "," << distanceMatrix[index * numPlaces + placeIndex];
             }
             else {
