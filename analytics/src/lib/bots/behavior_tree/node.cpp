@@ -19,6 +19,11 @@ uint32_t Node::getNearestAreaInNextPlace(const ServerState & state, const TreeTh
         }
     }
 
+    if (minAreaId == INVALID_ID) {
+        auto z = blackboard.distanceToPlaces.placeToArea[nextPlace];
+        int x = 1;
+    }
+
     return minAreaId;
 }
 

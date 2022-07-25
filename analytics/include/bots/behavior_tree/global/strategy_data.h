@@ -179,7 +179,7 @@ public:
             for (const auto & orderId : getOrderIds()) {
                 vector<CSGOId> & followers = orderToPlayers[orderId];
                 followers.erase(std::remove_if(followers.begin(), followers.end(),
-                                               [playerId](CSGOId id) { return id == playerId; }));
+                                               [playerId](CSGOId id) { return id == playerId; }), followers.end());
             }
         }
         playerToOrder[playerId] = orderId;
