@@ -5,8 +5,8 @@
 #include "bots/behavior_tree/priority/priority_helpers.h"
 
 void moveToWaypoint(Node & node, const ServerState & state, TreeThinker & treeThinker,
-                    const Order & curOrder, Priority & curPriority) {
-    const Waypoint & waypoint = curOrder.waypoints[treeThinker.orderWaypointIndex];
+                    const Order & curOrder, Priority & curPriority, const Strategy & strategy) {
+    const Waypoint & waypoint = curOrder.waypoints[strategy.playerToWaypointIndex.find(treeThinker.csgoId)->second];
     // if next area is a nav place, go there
     if (waypoint.type == WaypointType::NavPlace) {
         curPriority.targetAreaId = node.getNearestAreaInNextPlace(state, treeThinker, waypoint.placeName);

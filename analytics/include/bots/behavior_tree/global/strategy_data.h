@@ -98,7 +98,7 @@ class Strategy {
     map<OrderId, vector<CSGOId>> orderToPlayers;
 
 public:
-    map<CSGOId, int64_t> playerToWaypoint;
+    map<CSGOId, int64_t> playerToWaypointIndex;
     map<CSGOId, int32_t> playerToEntryIndex;
 
     void clear() {
@@ -106,7 +106,7 @@ public:
         ctOrders.clear();
         playerToOrder.clear();
         orderToPlayers.clear();
-        playerToWaypoint.clear();
+        playerToWaypointIndex.clear();
         playerToEntryIndex.clear();
     }
 

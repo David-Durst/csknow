@@ -45,8 +45,6 @@ struct TreeThinker {
     AggressiveType aggressiveType;
     EngagementParams engagementParams;
     double maxMemorySeconds;
-
-    int64_t orderWaypointIndex;
 };
 
 struct PrintState {
@@ -151,7 +149,7 @@ struct Blackboard {
         return navFile.get_place(navFile.get_nearest_area_by_position(vec3Conv(pos)).m_place);
     }
 
-    double getDistance(uint32_t srcArea, uint32_t dstArea) {
+    double getDistance(AreaId srcArea, AreaId dstArea) {
         return computeDistance(vec3tConv(navFile.get_area_by_id_fast(srcArea).get_center()),
                                vec3tConv(navFile.get_area_by_id_fast(dstArea).get_center()));
     }

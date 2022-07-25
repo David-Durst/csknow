@@ -6,7 +6,7 @@
 
 namespace follow {
     NodeState ComputeObjectiveAreaNode::exec(const ServerState &state, TreeThinker &treeThinker) {
-        const Order & curOrder = blackboard.orders[blackboard.playerToOrder[treeThinker.csgoId]];
+        const Order & curOrder = blackboard.strategy.getOrder(blackboard.strategy.getOrderForPlayer(treeThinker.csgoId));
         bool havePriority = blackboard.playerToPriority.find(treeThinker.csgoId) != blackboard.playerToPriority.end();
 
         // default values are set to invalid where necessary, so this is fine
@@ -14,7 +14,7 @@ namespace follow {
 
         // if no priority yet or switching from engagement, setup priority without a target
         //if (!havePriority || curPriority.priorityType != PriorityType::Order) {
-            moveToWaypoint(*this, state, treeThinker, curOrder, curPriority);
+            moveToWaypoint(*this, state, treeThinker, curOrder, curPriority, blackboard.strategy);
             curPriority.priorityType = PriorityType::Order;
             curPriority.targetPlayer.playerId = INVALID_ID;
             curPriority.moveOptions = {true, false, false};
@@ -26,14 +26,14 @@ namespace follow {
 
         bool finishedWaypoint = false;
         // if finished waypoint,
-        if (maxFinishedWaypoint >= treeThinker.orderWaypointIndex) {
+        if (maxFinishedWaypoint >= blackboard.strategy.playerToWaypointIndex[treeThinker.csgoId]) {
             finishedWaypoint = true;
             // need to pick a new path on priority change
             blackboard.playerToPath.erase(treeThinker.csgoId);
             // increment counter and move to next waypoint if possible
             if (maxFinishedWaypoint < curOrder.waypoints.size() - 1) {
-                treeThinker.orderWaypointIndex = maxFinishedWaypoint + 1;
-                moveToWaypoint(*this, state, treeThinker, curOrder, curPriority);
+                blackboard.strategy.playerToWaypointIndex[treeThinker.csgoId] = maxFinishedWaypoint + 1;
+                moveToWaypoint(*this, state, treeThinker, curOrder, curPriority, blackboard.strategy);
             }
         }
 

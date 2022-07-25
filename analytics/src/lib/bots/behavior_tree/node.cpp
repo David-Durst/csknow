@@ -11,7 +11,7 @@ uint32_t Node::getNearestAreaInNextPlace(const ServerState & state, const TreeTh
 
     uint32_t minAreaId = INVALID_ID;
     double minDistance = std::numeric_limits<double>::max();
-    for (const uint32_t areaId : blackboard.navPlaceToArea[nextPlace]) {
+    for (const AreaId areaId : blackboard.distanceToPlaces.placeToArea[nextPlace]) {
         double newDistance = blackboard.getDistance(curArea.get_id(), areaId);
         if (newDistance < minDistance) {
             minAreaId = areaId;
@@ -23,7 +23,7 @@ uint32_t Node::getNearestAreaInNextPlace(const ServerState & state, const TreeTh
 }
 
 uint32_t Node::getRandomAreaInNextPlace(const ServerState & state, string nextPlace) {
-    const vector<uint32_t> & nextAreaOptions = blackboard.navPlaceToArea[nextPlace];
+    const vector<uint32_t> & nextAreaOptions = blackboard.distanceToPlaces.placeToArea[nextPlace];
     std::uniform_int_distribution<> dist(0, nextAreaOptions.size() - 1);
 
     return nextAreaOptions[dist(blackboard.gen)];
