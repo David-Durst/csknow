@@ -10,49 +10,48 @@
 #include <map>
 #include <memory>
 
-
 namespace strategy {
     // ct sequences of waypoint labels
-    static vector<Waypoint> offenseLongToAWaypoints = {
+    static Waypoints offenseLongToAWaypoints = {
             {WaypointType::NavPlace, "LongDoors"},
             {WaypointType::NavPlace, "LongA"},
             {WaypointType::NavPlace, "ARamp"},
             {WaypointType::NavPlace, "BombsiteA"},
             {WaypointType::C4, "BombSiteB"}
     };
-    static vector<Waypoint> offenseSpawnToAWaypoints = {
+    static Waypoints offenseSpawnToAWaypoints = {
             {WaypointType::NavPlace, "CTSpawn"},
             {WaypointType::NavPlace, "UnderA"},
             {WaypointType::NavPlace, "ARamp"},
             {WaypointType::NavPlace, "BombsiteA"},
             {WaypointType::C4, "BombSiteB"}
     };
-    static vector<Waypoint> offenseCatToAWaypoints = {
+    static Waypoints offenseCatToAWaypoints = {
             {WaypointType::NavPlace, "Catwalk"},
             {WaypointType::NavPlace, "ShortStairs"},
             {WaypointType::NavPlace, "ExtendedA"},
             {WaypointType::NavPlace, "BombsiteA"},
             {WaypointType::C4, "BombSiteB"}
     };
-    static vector<Waypoint> offenseBDoorsToBWaypoints = {
+    static Waypoints offenseBDoorsToBWaypoints = {
             {WaypointType::NavPlace, "MidDoors"},
             {WaypointType::NavAreas, "", "CustomBDoors", {9046, 9045, 9029, 9038}},
             {WaypointType::NavPlace, "BombsiteB"},
             {WaypointType::C4, "BombSiteB"}
     };
-    static vector<Waypoint> offenseHoleToBWaypoints = {
+    static Waypoints offenseHoleToBWaypoints = {
             {WaypointType::NavPlace, "MidDoors"},
             {WaypointType::NavPlace, "Hole"},
             {WaypointType::NavPlace, "BombsiteB"},
             {WaypointType::C4, "BombSiteB"}
     };
-    static vector<Waypoint> offenseLowerTunsToBWaypoints = {
+    static Waypoints offenseLowerTunsToBWaypoints = {
             {WaypointType::NavPlace, "LowerTunnel"},
             {WaypointType::NavPlace, "UpperTunnel"},
             {WaypointType::NavPlace, "BombsiteB"},
             {WaypointType::C4, "BombSiteB"}
     };
-    static vector<Waypoint> offenseSpawnToBWaypoints = {
+    static Waypoints offenseSpawnToBWaypoints = {
             {WaypointType::NavPlace, "OutsideTunnel"},
             {WaypointType::NavPlace, "UpperTunnel"},
             {WaypointType::NavPlace, "BombsiteB"},
@@ -65,40 +64,40 @@ namespace strategy {
                                         {offenseLowerTunsToBWaypoints}, {offenseSpawnToBWaypoints}};
 
     // t sequences of waypoint labels
-    static vector<Waypoint> defenseLongToAWaypoints = {
+    static Waypoints defenseLongToAWaypoints = {
             {WaypointType::NavPlace, "BombsiteA"},
             {WaypointType::NavPlace, "ARamp"},
             {WaypointType::NavPlace, "LongA"},
             {WaypointType::NavPlace, "LongDoors"}
     };
-    static vector<Waypoint> defenseSpawnToAWaypoints = {
+    static Waypoints defenseSpawnToAWaypoints = {
             {WaypointType::NavPlace, "BombsiteA"},
             {WaypointType::NavPlace, "ARamp"},
             {WaypointType::NavPlace, "UnderA"},
             {WaypointType::NavPlace, "CTSpawn"}
     };
-    static vector<Waypoint> defenseCatToAWaypoints = {
+    static Waypoints defenseCatToAWaypoints = {
             {WaypointType::NavPlace, "BombsiteA"},
             {WaypointType::NavPlace, "ExtendedA"},
             {WaypointType::NavPlace, "ShortStairs"},
             {WaypointType::NavPlace, "Catwalk"}
     };
-    static vector<Waypoint> defenseBDoorsToBWaypoints = {
+    static Waypoints defenseBDoorsToBWaypoints = {
             {WaypointType::NavPlace, "BombsiteB"},
             {WaypointType::NavAreas, "", "CustomBDoors", {9046, 9045, 9029, 9038}},
             {WaypointType::NavPlace, "MidDoors"}
     };
-    static vector<Waypoint> defenseHoleToBWaypoints = {
+    static Waypoints defenseHoleToBWaypoints = {
             {WaypointType::NavPlace, "BombsiteB"},
             {WaypointType::NavPlace, "Hole"},
             {WaypointType::NavPlace, "MidDoors"}
     };
-    static vector<Waypoint> defenseLowerTunsToBWaypoints = {
+    static Waypoints defenseLowerTunsToBWaypoints = {
             {WaypointType::NavPlace, "BombsiteB"},
             {WaypointType::NavPlace, "UpperTunnel"},
             {WaypointType::NavPlace, "LowerTunnel"}
     };
-    static vector<Waypoint> defenseSpawnToBWaypoints = {
+    static Waypoints defenseSpawnToBWaypoints = {
             {WaypointType::NavPlace, "BombsiteB"},
             {WaypointType::NavPlace, "UpperTunnel"},
             {WaypointType::NavPlace, "OutsideTunnel"}

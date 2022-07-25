@@ -49,7 +49,6 @@ public:
         if (tree.newBlackboard) {
             Blackboard & blackboard = *tree.blackboard;
             Script::initialize(tree, state);
-            vector<string> aToCatPathPlace(order::catToAPathPlace.rbegin(), order::catToAPathPlace.rend());
             Node::Ptr setupCommands = make_unique<SequenceNode>(blackboard, Node::makeList(
                                                          make_unique<InitTestingRound>(blackboard, name),
                                                          make_unique<movement::WaitNode>(blackboard, 1.0),

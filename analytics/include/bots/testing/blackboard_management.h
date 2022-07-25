@@ -9,25 +9,43 @@
 #include "bots/behavior_tree/pathing_node.h"
 #include "bots/analysis/save_nav_overlay.h"
 
+const static Waypoints testCatToAWaypoints = {
+        {WaypointType::NavPlace, "Catwalk"},
+        {WaypointType::NavPlace, "ShortStairs"},
+        {WaypointType::NavPlace, "ExtendedA"},
+        {WaypointType::NavPlace, "BombsiteA"}
+};
+
+const static Waypoints testAToCatWaypoints = {
+        {WaypointType::NavPlace, "BombsiteA"},
+        {WaypointType::NavPlace, "ExtendedA"},
+        {WaypointType::NavPlace, "ShortStairs"},
+        {WaypointType::NavPlace, "Catwalk"}
+};
+
 class ForceOrderNode : public Node {
     vector<CSGOId> targetIds;
-    vector<string> pathPlaces;
+    Waypoints waypoints;
     set<AreaId> areaIdsToRemove;
 public:
-    ForceOrderNode(Blackboard & blackboard, string name, vector<CSGOId> targetIds, vector<string> pathPlaces) :
-            Node(blackboard, name), targetIds(targetIds), pathPlaces(pathPlaces) { };
-    ForceOrderNode(Blackboard & blackboard, string name, vector<CSGOId> targetIds, vector<string> pathPlaces, set<AreaId> areaIdsToRemove) :
-            Node(blackboard, name), targetIds(targetIds), pathPlaces(pathPlaces), areaIdsToRemove(areaIdsToRemove) { };
+    ForceOrderNode(Blackboard & blackboard, string name, vector<CSGOId> targetIds, Waypoints waypoints) :
+            Node(blackboard, name), targetIds(targetIds), waypoints(waypoints) { };
+    ForceOrderNode(Blackboard & blackboard, string name, vector<CSGOId> targetIds, Waypoints waypoints, set<AreaId> areaIdsToRemove) :
+            Node(blackboard, name), targetIds(targetIds), waypoints(waypoints), areaIdsToRemove(areaIdsToRemove) { };
     virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
         //vector<string> pathPlace = { "Catwalk", "ShortStairs", "ExtendedA", "BombsiteA" };
-        vector<Waypoint> waypoints;
-        for (const auto & p : pathPlaces) {
-            waypoints.push_back({WaypointType::NavPlace, p, INVALID_ID});
+        if (targetIds.empty()) {
+            throw std::runtime_error("need at least one target to force order");
         }
-        blackboard.orders.push_back({waypoints, targetIds});
+        TeamId team = state.getClient(targetIds[0]).team;
+        for (size_t i = 1; i < targetIds.size(); i++) {
+            if (team != state.getClient(targetIds[i]).team) {
+                throw std::runtime_error("all targets of new order must have same team");
+            }
+        }
+        OrderId orderId = blackboard.strategy.addOrder(team, {waypoints});
         for (const auto & targetId : targetIds) {
-            blackboard.playerToOrder[targetId] = blackboard.orders.size() - 1;
-            blackboard.playerToTreeThinkers[targetId].orderWaypointIndex = 0;
+            blackboard.strategy.assignPlayerToOrder(targetId, orderId);
             blackboard.playerToPriority.erase(targetId);
         }
         if (!areaIdsToRemove.empty()) {
@@ -46,7 +64,7 @@ public:
             Node(blackboard, name), targetIds(targetIds), entryIndices(entryIndices) { };
     virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
         for (size_t i = 0; i < targetIds.size(); i++) {
-            blackboard.playerToEntryIndex[targetIds[i]] = entryIndices[i];
+            blackboard.strategy.playerToEntryIndex[targetIds[i]] = entryIndices[i];
         }
         playerNodeState[treeThinker.csgoId] = NodeState::Success;
         return playerNodeState[treeThinker.csgoId];

@@ -31,11 +31,12 @@ struct Waypoint {
     CSGOId playerId;
 };
 
+typedef vector<Waypoint> Waypoints;
 /**
  * Order specifies how to to navigate the map as part of a strategy
  */
 struct Order {
-    vector<Waypoint> waypoints;
+    Waypoints waypoints;
     // what about chains of operations (like switching once plant happens)?
 
     void print(const vector<CSGOId> followers, const map<CSGOId, int64_t> & playerToWaypointIndex,
@@ -88,7 +89,7 @@ struct OrderId {
     int64_t index;
 };
 
-bool operator<(const OrderId& a, const OrderId& b) {
+static bool operator<(const OrderId& a, const OrderId& b) {
     return a.team < b.team || (a.team == b.team && a.index < b.index);
 }
 
@@ -203,7 +204,7 @@ public:
 
         for (size_t teamIndex = 0; teamIndex < teams.size(); teamIndex++) {
             for (size_t orderIndex = 0; orderIndex < bothTeamOrders[teamIndex].size(); orderIndex++) {
-                bothTeamOrders[teamIndex][orderIndex].print(orderToPlayers.find({teams[teamIndex, orderIndex]})->second,
+                bothTeamOrders[teamIndex][orderIndex].print(orderToPlayers.find({teams[teamIndex]})->second,
                                                             playerToWaypointIndex, state, navFile,
                                                             playerToEntryIndex, orderIndex, result);
             }

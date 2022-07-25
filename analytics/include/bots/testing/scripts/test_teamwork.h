@@ -48,7 +48,6 @@ public:
         if (tree.newBlackboard) {
             Blackboard & blackboard = *tree.blackboard;
             Script::initialize(tree, state);
-            vector<string> aToCatPathPlace(order::catToAPathPlace.rbegin(), order::catToAPathPlace.rend());
             set<string> baiterValidLocations{"ShortStairs"};
             commands = make_unique<SequenceNode>(blackboard, Node::makeList(
                                                          make_unique<InitTestingRound>(blackboard, name),
@@ -65,7 +64,7 @@ public:
                                                          make_unique<movement::WaitNode>(blackboard, 0.1),
                                                          make_unique<Teleport>(blackboard, neededBots[1].id, state),
                                                          make_unique<movement::WaitNode>(blackboard, 0.1),
-                                                         make_unique<ForceOrderNode>(blackboard, "ForceTCat", vector{neededBots[0].id, neededBots[1].id}, aToCatPathPlace),
+                                                         make_unique<ForceOrderNode>(blackboard, "ForceTCat", vector{neededBots[0].id, neededBots[1].id}, testAToCatWaypoints),
                                                          make_unique<ForceAggressionNode>(blackboard, "ForcePusherBaiter",
                                                                                           vector{neededBots[0].id, neededBots[1].id},
                                                                                           vector{0, 1}),
@@ -88,7 +87,6 @@ public:
         if (tree.newBlackboard) {
             Blackboard & blackboard = *tree.blackboard;
             Script::initialize(tree, state);
-            vector<string> aToCatPathPlace(order::catToAPathPlace.rbegin(), order::catToAPathPlace.rend());
             set<string> baiter0ValidLocations{"ShortStairs"}, baiter1ValidLocations{"ExtendedA", ""};
             commands = make_unique<SequenceNode>(blackboard, Node::makeList(
                                                          make_unique<InitTestingRound>(blackboard, name),
@@ -109,7 +107,7 @@ public:
                                                          make_unique<movement::WaitNode>(blackboard, 0.1),
                                                          make_unique<Teleport>(blackboard, neededBots[2].id, state),
                                                          make_unique<movement::WaitNode>(blackboard, 0.1),
-                                                         make_unique<ForceOrderNode>(blackboard, "ForceTCat", vector{neededBots[0].id, neededBots[1].id, neededBots[2].id}, aToCatPathPlace),
+                                                         make_unique<ForceOrderNode>(blackboard, "ForceTCat", vector{neededBots[0].id, neededBots[1].id, neededBots[2].id}, testAToCatWaypoints),
                                                          make_unique<ForceAggressionNode>(blackboard, "ForcePusherBaiter",
                                                                                           vector{neededBots[0].id, neededBots[1].id, neededBots[2].id},
                                                                                           vector{0, 1, 2}),

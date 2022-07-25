@@ -21,7 +21,6 @@ public:
         if (tree.newBlackboard) {
             Blackboard & blackboard = *tree.blackboard;
             Script::initialize(tree, state);
-            vector<string> aToCatPathPlace(order::catToAPathPlace.rbegin(), order::catToAPathPlace.rend());
             Node::Ptr setupCommands = make_unique<SequenceNode>(blackboard, Node::makeList(
                                                                         make_unique<InitTestingRound>(blackboard, name),
                                                                         make_unique<movement::WaitNode>(blackboard, 1.0),
@@ -42,7 +41,7 @@ public:
                                                                         make_unique<Teleport>(blackboard, neededBots[2].id, state),
                                                                         make_unique<movement::WaitNode>(blackboard, 0.1),
                                                                         make_unique<ClearMemoryCommunicationDangerNode>(blackboard),
-                                                                        make_unique<ForceOrderNode>(blackboard, "ForceCTCat", vector{neededBots[0].id}, order::catToAPathPlace),
+                                                                        make_unique<ForceOrderNode>(blackboard, "ForceCTCat", vector{neededBots[0].id}, testCatToAWaypoints),
                                                                         make_unique<movement::WaitNode>(blackboard, 2.0)),
                                                                 "DangerSetup");
             Node::Ptr disableAllBothDuringSetup = make_unique<ParallelFirstNode>(blackboard, Node::makeList(
@@ -83,7 +82,6 @@ public:
         if (tree.newBlackboard) {
             Blackboard & blackboard = *tree.blackboard;
             Script::initialize(tree, state);
-            vector<string> aToCatPathPlace(order::catToAPathPlace.rbegin(), order::catToAPathPlace.rend());
             Node::Ptr setupCommands = make_unique<SequenceNode>(blackboard, Node::makeList(
                                                                         make_unique<InitTestingRound>(blackboard, name),
                                                                         make_unique<movement::WaitNode>(blackboard, 1.0),
@@ -108,7 +106,7 @@ public:
                                                                         make_unique<Teleport>(blackboard, neededBots[3].id, state),
                                                                         make_unique<movement::WaitNode>(blackboard, 0.1),
                                                                         make_unique<ClearMemoryCommunicationDangerNode>(blackboard),
-                                                                        make_unique<ForceOrderNode>(blackboard, "ForceCTCat", vector{neededBots[0].id, neededBots[1].id}, order::catToAPathPlace),
+                                                                        make_unique<ForceOrderNode>(blackboard, "ForceCTCat", vector{neededBots[0].id, neededBots[1].id}, testCatToAWaypoints),
                                                                         make_unique<movement::WaitNode>(blackboard, 2.0)),
                                                                 "DangerSetup");
             Node::Ptr disableAllBothDuringSetup = make_unique<ParallelFirstNode>(blackboard, Node::makeList(
