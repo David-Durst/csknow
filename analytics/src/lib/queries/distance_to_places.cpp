@@ -10,6 +10,7 @@ void setupBasics(DistanceToPlacesResult & result, const nav_mesh::nav_file & nav
     result.coordinate = reachableResult.coordinate;
     for (size_t i = 0; i < navFile.m_places.size(); i++) {
         result.placeNameToIndex[navFile.m_places[i]] = i;
+        result.places.push_back(navFile.get_place(i));
     }
     for (const auto & area : navFile.m_areas) {
         result.placeToArea[navFile.get_place(area.m_place)].push_back(area.get_id());
@@ -17,7 +18,6 @@ void setupBasics(DistanceToPlacesResult & result, const nav_mesh::nav_file & nav
     for (size_t i = 0; i < navFile.m_areas.size(); i++) {
         result.areaToPlace.push_back(navFile.m_areas[i].m_place);
     }
-    result.places = navFile.m_places;
     result.numAreas = reachableResult.size;
     result.numPlaces = navFile.m_places.size();
 
@@ -38,13 +38,13 @@ DistanceToPlacesResult queryDistanceToPlaces(const nav_mesh::nav_file & navFile,
             for (int64_t k = 0; k < areaIds.size(); k++) {
                 int64_t newAreaIndex = navFile.m_area_ids_to_indices.find(areaIds[k])->second;
                 double newDistance = reachableResult.getDistance(i, newAreaIndex);
-                if (newDistance < minDistance) {
+                if (newDistance != NOT_CLOSEST_DISTANCE && newDistance < minDistance) {
                     minDistance = newDistance;
                     minAreaIndex = newAreaIndex;
                 }
-                result.distanceMatrix[i * result.numPlaces + j] = minDistance;
-                result.closestAreaIndexMatrix[i * result.numPlaces + j] = minAreaIndex;
             }
+            result.distanceMatrix[i * result.numPlaces + j] = minDistance;
+            result.closestAreaIndexMatrix[i * result.numPlaces + j] = minAreaIndex;
         }
     }
 

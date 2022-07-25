@@ -246,7 +246,7 @@ int main(int argc, char * argv[]) {
     //d2ReachableResult.save(navPath, "de_dust2");
     ReachableResult d2ReachableResult;
     d2ReachableResult.load(navPath, "de_dust2");
-    string dust2DistanceToPlacesName = "de_dust2_dsitance_to_places";
+    string dust2DistanceToPlacesName = "de_dust2_distance_to_places";
     DistanceToPlacesResult d2DistanceToPlacesResult = queryDistanceToPlaces(map_navs["de_dust2"], d2ReachableResult);
     d2DistanceToPlacesResult.save(navPath, "de_dust2");
     //DistanceToPlacesResult d2DistanceToPlacesResult;
