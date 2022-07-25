@@ -3,74 +3,59 @@
 //
 #include "bots/behavior_tree/global/strategy_node.h"
 namespace strategy {
+    struct OrderPlaceDistance {
+        OrderId orderId;
+        string place;
+        double distance;
+    };
+
     NodeState AssignPlayersToOrders::exec(const ServerState &state, TreeThinker &treeThinker) {
         if (blackboard.newOrderThisFrame) {
-
-            map<string, size_t> ctPlacesToPath;
-            for (size_t i = 0; i < ctPathPlaces.size(); i++) {
-                for (const auto & pathPlace : ctPathPlaces[i]) {
-                    ctPlacesToPath[pathPlace] = i;
+            vector<OrderPlaceDistance> tOptions, ctOptions;
+            // build the Order Place options, will compute distance for each client
+            for (const auto & orderId : blackboard.strategy.getOrderIds(true, false)) {
+                const Order & order = blackboard.strategy.getOrder(orderId);
+                for (const auto & waypoint : order.waypoints) {
+                    if (waypoint.type == WaypointType::NavPlace || waypoint.type == WaypointType::C4) {
+                        tOptions.push_back({orderId, waypoint.placeName});
+                    }
                 }
             }
-
-            vector<vector<string>> tPathPlaces;
-            for (const auto ctOnePathPlaces : ctPathPlaces) {
-                vector<string> reversedPlaces(ctOnePathPlaces.rbegin(), ctOnePathPlaces.rend());
-                tPathPlaces.push_back(reversedPlaces);
+            if (tOptions.empty()) {
+                throw std::runtime_error("no ct orders with a nav place or c4");
             }
-            // going to combine ct and t paths, so increase the t indices for final merged list
-            size_t tIndexOffset = ctPathPlaces.size();
-            map<string, size_t> tPlacesToPath;
-            for (size_t i = 0; i < tPathPlaces.size(); i++) {
-                for (const auto & pathPlace : tPathPlaces[i]) {
-                    tPlacesToPath[pathPlace] = i + tIndexOffset;
+
+            for (const auto & orderId : blackboard.strategy.getOrderIds(false, true)) {
+                const Order & order = blackboard.strategy.getOrder(orderId);
+                for (const auto & waypoint : order.waypoints) {
+                    if (waypoint.type == WaypointType::NavPlace || waypoint.type == WaypointType::C4) {
+                        ctOptions.push_back({orderId, waypoint.placeName});
+                    }
                 }
             }
-
-            vector<vector<string>> pathPlaces = ctPathPlaces;
-            pathPlaces.insert(pathPlaces.end(), tPathPlaces.begin(), tPathPlaces.end());
-
-
-            // clear orders before setting new ones
-            blackboard.strategy.clear();
-            blackboard.playerToPath.clear();
-            blackboard.playerToPriority.clear();
-            for (const auto & pathPlace : pathPlaces) {
-                vector<Waypoint> waypoints;
-                for (const auto & p : pathPlace) {
-                    waypoints.push_back({WaypointType::NavPlace, p, INVALID_ID});
-                }
-                blackboard.orders.push_back({waypoints, {}});
+            if (ctOptions.empty()) {
+                throw std::runtime_error("no ct orders with a nav place or c4");
             }
 
-            // next assign clients to orders
+            // next compute distance to each waypoint in each order and assign player to order with closest waypoint
             for (const auto & client : state.clients) {
                 if (client.isAlive && client.isBot) {
-                    map<string, size_t> & placesToPath = client.team == ENGINE_TEAM_T ? tPlacesToPath : ctPlacesToPath;
-
                     const nav_mesh::nav_area & curArea = blackboard.navFile.get_nearest_area_by_position(
                             {client.lastEyePosX, client.lastEyePosY, client.lastFootPosZ});
 
-                    // get the nearest path start for the current team
-                    double minDistance = std::numeric_limits<double>::max();
-                    size_t orderIndex = INVALID_ID;
+                    vector<OrderPlaceDistance> & options = client.team == ENGINE_TEAM_T ? tOptions : ctOptions;
 
-                    for (const auto & area : blackboard.navFile.m_areas) {
-                        double newDistance = blackboard.getDistance(curArea.get_id(), area.get_id());
-                        string newPlace = blackboard.navFile.get_place(area.m_place);
-                        if (placesToPath.find(newPlace) != placesToPath.end() && newDistance < minDistance) {
-                            minDistance = newDistance;
-                            orderIndex = placesToPath[newPlace];
-                        }
+                    for (auto & option : options) {
+                        option.distance = blackboard.distanceToPlaces.getDistance(curArea.get_id(), option.place,
+                                                                                  blackboard.navFile);
                     }
 
-                    blackboard.orders[orderIndex].followers.push_back(client.csgoId);
-                    blackboard.playerToOrder[client.csgoId] = orderIndex;
+                    std::sort(options.begin(), options.end(),
+                              [](const OrderPlaceDistance & a, const OrderPlaceDistance & b){ return a.distance < b.distance; });
+
+                    blackboard.strategy.assignPlayerToOrder(client.csgoId, options[0].orderId);
                 }
             }
-
-            // finally some house keeping
-            resetTreeThinkers(blackboard);
         }
         else {
             blackboard.newOrderThisFrame = false;

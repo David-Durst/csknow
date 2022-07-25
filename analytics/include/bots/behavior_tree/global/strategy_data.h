@@ -23,7 +23,7 @@ enum class WaypointType {
 struct Waypoint {
     WaypointType type;
 
-    // use placeName if type of NavPlace, playerId if type of is player, nothing if c4 as tracked by state
+    // use placeName if type of NavPlace, playerId if type of is player, placeName for site if c4
     // not using union because that prevented automatic destructor definition, and this is trivial amount of extra data
     string placeName;
     string customAreasName;
@@ -61,8 +61,7 @@ struct Order {
                     break;
                 case WaypointType::C4:
                     typeString = "C4";
-                    dataString = navFile.get_place(navFile.get_nearest_area_by_position(
-                            vec3Conv(state.getC4Pos())).m_place);
+                    dataString = waypoint.placeName;
                     break;
                 default:
                     typeString = "INVALID_TYPE";
@@ -139,14 +138,20 @@ public:
         throw std::runtime_error( "getOrderForPlayer bad player id" );
     }
 
-    const vector<OrderId> getOrderIds() const {
+    const vector<OrderId> getOrderIds(bool includeT = true, bool includeCT = true) const {
         vector<OrderId> result;
-        for (size_t orderIndex = 0; orderIndex < tOrders.size(); orderIndex++) {
-            result.push_back({ENGINE_TEAM_T, static_cast<int64_t>(orderIndex)});
+        if (includeT) {
+            for (size_t orderIndex = 0; orderIndex < tOrders.size(); orderIndex++) {
+                result.push_back({ENGINE_TEAM_T, static_cast<int64_t>(orderIndex)});
+            }
         }
-        for (size_t orderIndex = 0; orderIndex < ctOrders.size(); orderIndex++) {
-            result.push_back({ENGINE_TEAM_CT, static_cast<int64_t>(orderIndex)});
+
+        if (includeCT) {
+            for (size_t orderIndex = 0; orderIndex < ctOrders.size(); orderIndex++) {
+                result.push_back({ENGINE_TEAM_CT, static_cast<int64_t>(orderIndex)});
+            }
         }
+        return result;
     }
 
     OrderId addOrder(TeamId team, Order order) {

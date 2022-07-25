@@ -15,6 +15,7 @@
 #include "bots/behavior_tree/action_data.h"
 #include "queries/nav_mesh.h"
 #include "queries/reachable.h"
+#include "queries/distance_to_places.h"
 #include "bots/analysis/load_save_vis_points.h"
 #include "bots/testing/script_data.h"
 #include "bots/behavior_tree/priority/memory_data.h"
@@ -91,6 +92,7 @@ struct Blackboard {
 
     // general map data
     ReachableResult reachability;
+    DistanceToPlacesResult distanceToPlaces;
     VisPoints visPoints;
 
     // all player data
@@ -180,6 +182,7 @@ struct Blackboard {
         string mapsPath = std::filesystem::path(navPath).remove_filename().string();
         navFileOverlay.setMapsPath(mapsPath);
         reachability.load(mapsPath, mapName);
+        distanceToPlaces.load(mapsPath, mapName, navFile, reachability);
         visPoints.load(mapsPath, mapName);
 
         tMemory.considerAllTeammates = true;

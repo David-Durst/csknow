@@ -18,45 +18,45 @@ namespace strategy {
             {WaypointType::NavPlace, "LongA"},
             {WaypointType::NavPlace, "ARamp"},
             {WaypointType::NavPlace, "BombsiteA"},
-            {WaypointType::C4}
+            {WaypointType::C4, "BombSiteB"}
     };
     static vector<Waypoint> offenseSpawnToAWaypoints = {
             {WaypointType::NavPlace, "CTSpawn"},
             {WaypointType::NavPlace, "UnderA"},
             {WaypointType::NavPlace, "ARamp"},
             {WaypointType::NavPlace, "BombsiteA"},
-            {WaypointType::C4}
+            {WaypointType::C4, "BombSiteB"}
     };
     static vector<Waypoint> offenseCatToAWaypoints = {
             {WaypointType::NavPlace, "Catwalk"},
             {WaypointType::NavPlace, "ShortStairs"},
             {WaypointType::NavPlace, "ExtendedA"},
             {WaypointType::NavPlace, "BombsiteA"},
-            {WaypointType::C4}
+            {WaypointType::C4, "BombSiteB"}
     };
     static vector<Waypoint> offenseBDoorsToBWaypoints = {
             {WaypointType::NavPlace, "MidDoors"},
             {WaypointType::NavAreas, "", "CustomBDoors", {9046, 9045, 9029, 9038}},
             {WaypointType::NavPlace, "BombsiteB"},
-            {WaypointType::C4}
+            {WaypointType::C4, "BombSiteB"}
     };
     static vector<Waypoint> offenseHoleToBWaypoints = {
             {WaypointType::NavPlace, "MidDoors"},
             {WaypointType::NavPlace, "Hole"},
             {WaypointType::NavPlace, "BombsiteB"},
-            {WaypointType::C4}
+            {WaypointType::C4, "BombSiteB"}
     };
     static vector<Waypoint> offenseLowerTunsToBWaypoints = {
             {WaypointType::NavPlace, "LowerTunnel"},
             {WaypointType::NavPlace, "UpperTunnel"},
             {WaypointType::NavPlace, "BombsiteB"},
-            {WaypointType::C4}
+            {WaypointType::C4, "BombSiteB"}
     };
     static vector<Waypoint> offenseSpawnToBWaypoints = {
             {WaypointType::NavPlace, "OutsideTunnel"},
             {WaypointType::NavPlace, "UpperTunnel"},
             {WaypointType::NavPlace, "BombsiteB"},
-            {WaypointType::C4}
+            {WaypointType::C4, "BombSiteB"}
     };
     static vector<Order> aOffenseOrders{{offenseLongToAWaypoints}, {offenseSpawnToAWaypoints},
                                         {offenseCatToAWaypoints}};
