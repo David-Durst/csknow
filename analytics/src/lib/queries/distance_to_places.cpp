@@ -101,8 +101,7 @@ void DistanceToPlacesResult::load(string mapsPath, string mapName, const nav_mes
             index++;
         }
         size = coordinate.size();
-        numAreas = size;
-        if (index * index != distanceMatrix.size()) {
+        if (index * numPlaces != distanceMatrix.size()) {
             throw std::runtime_error("distance to places matrix wrong size");
         }
     }
