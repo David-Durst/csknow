@@ -182,6 +182,7 @@ public:
                                                [playerId](CSGOId id) { return id == playerId; }), followers.end());
             }
         }
+        playerToWaypointIndex[playerId] = 0;
         playerToOrder[playerId] = orderId;
         orderToPlayers[orderId].push_back(playerId);
     }

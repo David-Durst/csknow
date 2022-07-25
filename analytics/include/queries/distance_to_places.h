@@ -65,13 +65,13 @@ public:
         return nameVector;
     }
 
-    double getDistance(int64_t srcArea, int64_t dstPlace) const {
+    double getDistance(int64_t srcArea, PlaceIndex dstPlace) const {
         return distanceMatrix[srcArea * numPlaces + dstPlace];
     }
 
     double getDistance(AreaId srcAreaId, string dstPlaceName, const nav_mesh::nav_file & navFile) const {
-        size_t srcArea = navFile.m_area_ids_to_indices.find(srcAreaId)->second,
-                dstPlace = placeNameToIndex.find(dstPlaceName)->second;
+        int64_t srcArea = navFile.m_area_ids_to_indices.find(srcAreaId)->second;
+        PlaceIndex dstPlace = placeNameToIndex.find(dstPlaceName)->second;
         return getDistance(srcArea, dstPlace);
     }
 
