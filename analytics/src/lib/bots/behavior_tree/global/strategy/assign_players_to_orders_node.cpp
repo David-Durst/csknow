@@ -1,11 +1,7 @@
 //
-// Created by durst on 5/2/22.
+// Created by durst on 7/24/22.
 //
-
-#include "bots/behavior_tree/global/order_node.h"
-#include "geometryNavConversions.h"
-#include <algorithm>
-
+#include "bots/behavior_tree/global/strategy_node.h"
 namespace order {
     void resetTreeThinkers(Blackboard & blackboard) {
         for (auto & [_, treeThinker] : blackboard.playerToTreeThinkers) {
@@ -32,7 +28,7 @@ namespace order {
 
             // first setup orders to go A or B
             bool plantedA = blackboard.navFile.get_place(
-                                    blackboard.navFile.get_nearest_area_by_position(vec3Conv(state.getC4Pos())).m_place) == "BombsiteA";
+                    blackboard.navFile.get_nearest_area_by_position(vec3Conv(state.getC4Pos())).m_place) == "BombsiteA";
 
             vector<vector<string>> ctPathPlaces;
             if (plantedA) {

@@ -5,7 +5,7 @@
 #ifndef CSKNOW_GLOBAL_NODE_H
 #define CSKNOW_GLOBAL_NODE_H
 
-#include "bots/behavior_tree/global/order_node.h"
+#include "bots/behavior_tree/global/strategy_node.h"
 #include "bots/behavior_tree/global/communicate_node.h"
 
 class GlobalNode : public SequenceNode {

@@ -2,10 +2,11 @@
 // Created by durst on 5/2/22.
 //
 
-#ifndef CSKNOW_ORDER_DATA_H
-#define CSKNOW_ORDER_DATA_H
+#ifndef CSKNOW_STRATEGY_DATA_H
+#define CSKNOW_STRATEGY_DATA_H
 #include "load_save_bot_data.h"
 #include "navmesh/nav_file.h"
+#include "bots/nav_file_helpers.h"
 #include <sstream>
 #include <algorithm>
 using std::stringstream;
@@ -13,21 +14,20 @@ using std::map;
 
 enum class WaypointType {
     NavPlace,
+    NavAreas, // sometimes want to force a collection of areas without a name
     Player,
     C4,
     NUM_WAYPOINTS
 };
 
-union WaypointData {
-};
-
 struct Waypoint {
     WaypointType type;
-    WaypointData data;
 
     // use placeName if type of NavPlace, playerId if type of is player, nothing if c4 as tracked by state
     // not using union because that prevented automatic destructor definition, and this is trivial amount of extra data
     string placeName;
+    string customAreasName;
+    set<AreaId> areaIds;
     CSGOId playerId;
 };
 
@@ -50,6 +50,10 @@ struct Order {
                 case WaypointType::NavPlace:
                     typeString = "NavPlace";
                     dataString = waypoint.placeName;
+                    break;
+                case WaypointType::NavAreas:
+                    typeString = "NavAreas";
+                    dataString = waypoint.customAreasName;
                     break;
                 case WaypointType::Player:
                     typeString = "Player";
@@ -200,4 +204,4 @@ public:
     }
 };
 
-#endif //CSKNOW_ORDER_DATA_H
+#endif //CSKNOW_STRATEGY_DATA_H
