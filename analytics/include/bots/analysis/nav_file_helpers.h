@@ -6,5 +6,6 @@
 #define CSKNOW_NAV_FILE_HELPERS_H
 #include "navmesh/nav_file.h"
 typedef uint32_t AreaId;
+typedef uint16_t PlaceIndex;
 
 #endif //CSKNOW_NAV_FILE_HELPERS_H

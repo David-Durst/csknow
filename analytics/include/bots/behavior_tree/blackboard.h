@@ -92,7 +92,6 @@ struct Blackboard {
     // general map data
     ReachableResult reachability;
     VisPoints visPoints;
-    map<string, vector<uint32_t>> navPlaceToArea;
 
     // all player data
     map<CSGOId, TreeThinker> playerToTreeThinkers;
@@ -182,10 +181,6 @@ struct Blackboard {
         navFileOverlay.setMapsPath(mapsPath);
         reachability.load(mapsPath, mapName);
         visPoints.load(mapsPath, mapName);
-
-        for (const auto & area : navFile.m_areas) {
-            navPlaceToArea[navFile.get_place(area.m_place)].push_back(area.get_id());
-        }
 
         tMemory.considerAllTeammates = true;
         tMemory.team = ENGINE_TEAM_T;
