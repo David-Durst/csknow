@@ -205,7 +205,7 @@ public:
 
         for (size_t teamIndex = 0; teamIndex < teams.size(); teamIndex++) {
             for (size_t orderIndex = 0; orderIndex < bothTeamOrders[teamIndex].size(); orderIndex++) {
-                bothTeamOrders[teamIndex][orderIndex].print(orderToPlayers.find({teams[teamIndex]})->second,
+                bothTeamOrders[teamIndex][orderIndex].print(orderToPlayers.find({teams[teamIndex], static_cast<int64_t>(orderIndex)})->second,
                                                             playerToWaypointIndex, state, navFile,
                                                             playerToEntryIndex, orderIndex, result);
             }
