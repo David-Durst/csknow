@@ -15,7 +15,7 @@
 namespace follow {
     class ComputeObjectiveAreaNode : public Node {
     public:
-        ComputeObjectiveAreaNode(Blackboard & blackboard) : Node(blackboard, "ComputeObstaclesTaskNode") { };
+        ComputeObjectiveAreaNode(Blackboard & blackboard) : Node(blackboard, "ComputeObjectiveAreaNode") { };
         virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override;
     };
 
