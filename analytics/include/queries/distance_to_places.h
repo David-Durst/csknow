@@ -16,6 +16,7 @@ using std::vector;
 class DistanceToPlacesResult : public QueryResult {
 public:
     vector<AABB> coordinate;
+    vector<AreaId> areaIndexToId;
     map<string, PlaceIndex> placeNameToIndex;
     map<string, vector<AreaId>> placeToArea;
     vector<PlaceIndex> areaToPlace;
@@ -82,7 +83,7 @@ public:
     AreaId getClosestArea(AreaId srcAreaId, string dstPlaceName, const nav_mesh::nav_file & navFile) const {
         size_t srcArea = navFile.m_area_ids_to_indices.find(srcAreaId)->second,
                 dstPlace = placeNameToIndex.find(dstPlaceName)->second;
-        return getClosestArea(srcArea, dstPlace);
+        return areaIndexToId[getClosestArea(srcArea, dstPlace)];
     }
 
     void load(string mapsPath, string mapName, const nav_mesh::nav_file & navFile,

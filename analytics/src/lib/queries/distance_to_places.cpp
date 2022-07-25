@@ -16,6 +16,7 @@ void setupBasics(DistanceToPlacesResult & result, const nav_mesh::nav_file & nav
         result.placeToArea[navFile.get_place(area.m_place)].push_back(area.get_id());
     }
     for (size_t i = 0; i < navFile.m_areas.size(); i++) {
+        result.areaIndexToId.push_back(navFile.m_areas[i].get_id());
         result.areaToPlace.push_back(navFile.m_areas[i].m_place);
     }
     result.numAreas = reachableResult.size;

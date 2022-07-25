@@ -14,7 +14,7 @@ namespace follow {
 
         // if no priority yet or switching from engagement, setup priority without a target
         //if (!havePriority || curPriority.priorityType != PriorityType::Order) {
-            moveToWaypoint(*this, state, treeThinker, curOrder, curPriority, blackboard.strategy);
+            moveToWaypoint(blackboard, state, treeThinker, curOrder, curPriority);
             curPriority.priorityType = PriorityType::Order;
             curPriority.targetPlayer.playerId = INVALID_ID;
             curPriority.moveOptions = {true, false, false};
@@ -33,7 +33,7 @@ namespace follow {
             // increment counter and move to next waypoint if possible
             if (maxFinishedWaypoint < curOrder.waypoints.size() - 1) {
                 blackboard.strategy.playerToWaypointIndex[treeThinker.csgoId] = maxFinishedWaypoint + 1;
-                moveToWaypoint(*this, state, treeThinker, curOrder, curPriority, blackboard.strategy);
+                moveToWaypoint(blackboard, state, treeThinker, curOrder, curPriority);
             }
         }
 

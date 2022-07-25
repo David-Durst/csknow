@@ -4,21 +4,23 @@
 
 #include "bots/behavior_tree/priority/priority_helpers.h"
 
-void moveToWaypoint(Node & node, const ServerState & state, TreeThinker & treeThinker,
-                    const Order & curOrder, Priority & curPriority, const Strategy & strategy) {
-    const Waypoint & waypoint = curOrder.waypoints[strategy.playerToWaypointIndex.find(treeThinker.csgoId)->second];
+void moveToWaypoint(const Blackboard & blackboard, const ServerState & state, TreeThinker & treeThinker,
+                    const Order & curOrder, Priority & curPriority) {
+    const Waypoint & waypoint = curOrder.waypoints[blackboard.strategy.playerToWaypointIndex.find(treeThinker.csgoId)->second];
     // if next area is a nav place, go there
     if (waypoint.type == WaypointType::NavPlace) {
-        curPriority.targetAreaId = node.getNearestAreaInNextPlace(state, treeThinker, waypoint.placeName);
-        curPriority.targetPos = vec3tConv(node.blackboard.navFile.get_area_by_id_fast(curPriority.targetAreaId).get_center());
+        const nav_mesh::nav_area & curArea =
+                blackboard.navFile.get_nearest_area_by_position(vec3Conv(state.getClient(treeThinker.csgoId).getFootPosForPlayer()));
+        curPriority.targetAreaId = blackboard.distanceToPlaces.getClosestArea(curArea.get_id(), waypoint.placeName, blackboard.navFile);
+        curPriority.targetPos = vec3tConv(blackboard.navFile.get_area_by_id_fast(curPriority.targetAreaId).get_center());
     }
     else if (waypoint.type == WaypointType::Player) {
         curPriority.targetPos = state.getClient(waypoint.playerId).getFootPosForPlayer();
-        curPriority.targetAreaId = node.blackboard.navFile.get_nearest_area_by_position(vec3Conv(curPriority.targetPos)).get_id();
+        curPriority.targetAreaId = blackboard.navFile.get_nearest_area_by_position(vec3Conv(curPriority.targetPos)).get_id();
     }
     else if (waypoint.type == WaypointType::C4) {
         curPriority.targetPos = state.getC4Pos();
-        curPriority.targetAreaId = node.blackboard.navFile.get_nearest_area_by_position(vec3Conv(curPriority.targetPos)).get_id();
+        curPriority.targetAreaId = blackboard.navFile.get_nearest_area_by_position(vec3Conv(curPriority.targetPos)).get_id();
     }
     curPriority.stuck = false;
     curPriority.stuckTicks = 0;

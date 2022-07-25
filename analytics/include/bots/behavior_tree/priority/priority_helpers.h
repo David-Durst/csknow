@@ -7,8 +7,8 @@
 
 #include "bots/behavior_tree/node.h"
 
-void moveToWaypoint(Node & node, const ServerState & state, TreeThinker & treeThinker,
-                    const Order & curOrder, Priority & curPriority, const Strategy & strategy);
+void moveToWaypoint(const Blackboard & blackboard, const ServerState & state, TreeThinker & treeThinker,
+                    const Order & curOrder, Priority & curPriority);
 
 bool finishWaypoint(const ServerState & state, int64_t waypointIndex,
                     const Order & curOrder, Priority & curPriority, string curPlace);

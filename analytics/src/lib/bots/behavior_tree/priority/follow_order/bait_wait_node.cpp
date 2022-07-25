@@ -15,10 +15,12 @@ namespace follow {
 
     bool BaitConditionNode::valid(const ServerState &state, TreeThinker &treeThinker) {
         const ServerState::Client & curClient = state.getClient(treeThinker.csgoId);
+        const nav_mesh::nav_area & curArea = blackboard.navFile.get_nearest_area_by_position(
+                {curClient.lastEyePosX, curClient.lastEyePosY, curClient.lastFootPosZ});
         const OrderId curOrderId = blackboard.strategy.getOrderIdForPlayer(treeThinker.csgoId);
         const Order & curOrder = blackboard.strategy.getOrderForPlayer(treeThinker.csgoId);
         const Waypoint & lastWaypoint = curOrder.waypoints.back();
-        uint32_t lastAreaId = getNearestAreaInNextPlace(state, treeThinker, lastWaypoint.placeName);
+        AreaId lastAreaId = blackboard.distanceToPlaces.getClosestArea(curArea.get_id(), lastWaypoint.placeName, blackboard.navFile);
         Vec3 targetPos = vec3tConv(blackboard.navFile.get_area_by_id_fast(lastAreaId).get_center());
 
         std::optional<vector<nav_mesh::PathNode>> curClientWaypoints =

@@ -87,9 +87,6 @@ public:
     
         return nodes;
     }
-
-    uint32_t getNearestAreaInNextPlace(const ServerState & state, const TreeThinker & treeThinker, string nextPlace);
-    uint32_t getRandomAreaInNextPlace(const ServerState & state, string nextPlace);
 };
 
 class CollectionNode : public Node {
