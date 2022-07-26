@@ -363,11 +363,16 @@ void ServerState::saveBotInputs() {
     std::filesystem::rename(tmpInputsFilePath, inputsFilePath);
 }
 
-void ServerState::saveScript(vector<string> scriptLines) const {
+bool ServerState::saveScript(vector<string> scriptLines) const {
     string scriptFileName = "script.txt";
     string scriptFilePath = dataPath + "/" + scriptFileName;
     string tmpScriptFileName = "script.txt.tmp.write";
     string tmpScriptFilePath = dataPath + "/" + tmpScriptFileName;
+
+    if (std::filesystem::exists(scriptFilePath)) {
+        // don't save script until prior one is done being processed
+        return false;
+    }
 
     std::stringstream scriptStream;
 
@@ -380,7 +385,7 @@ void ServerState::saveScript(vector<string> scriptLines) const {
     fsInputs.close();
 
     std::filesystem::rename(tmpScriptFilePath, scriptFilePath);
-
+    return true;
 }
 
 Vec3 ServerState::getC4Pos() const {

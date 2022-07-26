@@ -48,8 +48,8 @@ namespace communicate {
             }
         }
 
-        AreaBits tDangerAreas = blackboard.getDangerAreasByTeam(state, ENGINE_TEAM_T),
-                ctDangerAreas = blackboard.getDangerAreasByTeam(state, ENGINE_TEAM_CT);
+        AreaBits tVisibleAreas = blackboard.getVisibleAreasByTeam(state, ENGINE_TEAM_T),
+                ctVisibleAreas = blackboard.getVisibleAreasByTeam(state, ENGINE_TEAM_CT);
 
         for (const auto & client : state.clients) {
             if (client.isAlive && client.isBot) {
@@ -60,24 +60,32 @@ namespace communicate {
                         blackboard.navFile.get_nearest_area_by_position(vec3Conv(client.getFootPosForPlayer()));
 
                 // filter for cover edge - visible, but adjacent to behind cover area
+                // can't use precomputed danger areas by area as want to account for visibility from multiple teammates
                 vector<CoverEdge> coverEdges;
                 AreaBits boolCoverEdges;
                 for (size_t i = 0; i < blackboard.navFile.m_areas.size(); i++) {
-                    if ((client.team == ENGINE_TEAM_T && tDangerAreas[i]) || (client.team == ENGINE_TEAM_CT && ctDangerAreas[i])) {
-                        // distance is distance to possible enemy locations
-                        double sumDistance = 0.;
-                        for (const auto &possibleAreaIndex: blackboard.possibleNavAreas.getEnemiesPossiblePositions(
-                                state, client.csgoId)) {
-                            sumDistance += blackboard.reachability.getDistance(possibleAreaIndex, i);
+                    // bot can't watch an area it can't personally see
+                    if (!blackboard.visPoints.isVisibleAreaId(curArea.get_id(), blackboard.navFile.m_areas[i].get_id())) {
+                        continue;
+                    }
+                    if ((client.team == ENGINE_TEAM_T && tVisibleAreas[i]) || (client.team == ENGINE_TEAM_CT && ctVisibleAreas[i])) {
+                        for (size_t j = 0; j < blackboard.navFile.connections_area_length[i]; j++) {
+                            size_t conAreaIndex = blackboard.navFile.connections[blackboard.navFile.connections_area_start[i] + j];
+                            if ((client.team == ENGINE_TEAM_T && !tVisibleAreas[conAreaIndex]) || (client.team == ENGINE_TEAM_CT && !ctVisibleAreas[conAreaIndex])) {
+                                // distance is distance to possible enemy locations
+                                double sumDistance = 0.;
+                                for (const auto & possibleAreaIndex : blackboard.possibleNavAreas.getEnemiesPossiblePositions(state, client.csgoId)) {
+                                    sumDistance += blackboard.reachability.getDistance(possibleAreaIndex, i);
+                                }
+                                // if there are no enemies, then no need to worry about cover edges
+                                if (sumDistance != 0.) {
+                                    coverEdges.push_back({i, blackboard.navFile.m_areas[i].get_id(), sumDistance,
+                                                          state.getSecondsBetweenTimes(dangerAreaLastCheckTime[i], state.loadTime) < RECENTLY_CHECKED_SECONDS});
+                                    boolCoverEdges[i] = true;
+                                }
+                                break;
+                            }
                         }
-                        // if there are no enemies, then no need to worry about cover edges
-                        if (sumDistance != 0.) {
-                            coverEdges.push_back({i, blackboard.navFile.m_areas[i].get_id(), sumDistance,
-                                                  state.getSecondsBetweenTimes(dangerAreaLastCheckTime[i],
-                                                                               state.loadTime) < RECENTLY_CHECKED_SECONDS});
-                            boolCoverEdges[i] = true;
-                        }
-                        break;
                     }
                 }
 

@@ -210,7 +210,7 @@ public:
     string dataPath;
     void loadServerState();
     void saveBotInputs();
-    void saveScript(vector<string> scriptLines) const;
+    bool saveScript(vector<string> scriptLines) const;
     Vec3 getC4Pos() const;
 };
 

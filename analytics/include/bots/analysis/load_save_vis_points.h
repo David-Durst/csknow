@@ -71,7 +71,7 @@ public:
     }
 
     AreaBits getDangerRelativeToSrc(AreaId srcId) const {
-        return visPoints[areaIdToVectorIndex.find(srcId)->second].visibleFromCurPoint;
+        return visPoints[areaIdToVectorIndex.find(srcId)->second].dangerFromCurPoint;
     }
 
     void launchVisPointsCommand(const ServerState & state);
