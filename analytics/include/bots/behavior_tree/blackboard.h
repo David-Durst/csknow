@@ -167,6 +167,19 @@ struct Blackboard {
         }
         return result;
     }
+    AreaBits getDangerAreasByTeam(const ServerState & state, int32_t team) {
+        AreaBits result;
+        for (const auto & client : state.clients) {
+            if (client.isAlive) {
+                AreaId curArea =
+                        navFile.get_nearest_area_by_position(vec3Conv(client.getFootPosForPlayer())).get_id();
+                if (client.team == team) {
+                    result |= visPoints.getDangerRelativeToSrc(curArea);
+                }
+            }
+        }
+        return result;
+    }
 
     PrintState printStrategyState(const ServerState & state);
     PrintState printCommunicateState(const ServerState & state);
