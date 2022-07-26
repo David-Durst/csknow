@@ -1,9 +1,9 @@
 //
-// Created by durst on 1/11/22.
+// Created by steam on 7/26/22.
 //
 
-#ifndef CSKNOW_NAV_VISIBLE_H
-#define CSKNOW_NAV_VISIBLE_H
+#ifndef CSKNOW_NAV_DANGER_H
+#define CSKNOW_NAV_DANGER_H
 #include "queries/nav_mesh.h"
 #include "bots/analysis/load_save_vis_points.h"
 using std::string;
@@ -12,17 +12,17 @@ using std::set;
 using std::unordered_map;
 using std::vector;
 
-class NavVisibleResult : public QueryResult {
+class NavDangerResult : public QueryResult {
 public:
     vector<AABB> coordinate;
-    vector<bool> visibleMatrix;
+    vector<bool> dangerMatrix;
     int64_t numAreas;
 
     vector<int64_t> filterByForeignKey(int64_t otherTableIndex) {
         return {};
     }
 
-    NavVisibleResult() {
+    NavDangerResult() {
         this->variableLength = false;
         this->nonTemporal = true;
         this->overlay = true;
@@ -34,7 +34,7 @@ public:
            << "," << coordinate[index].max.x << "," << coordinate[index].max.y << "," << coordinate[index].max.z;
         for (int i = 0; i < coordinate.size(); i++) {
             // convert to 0 if visible as using similar range as distance (0 if closer/visible, 1 if farther/not visible)
-            ss << "," << (visibleMatrix[index * coordinate.size() + i] ? 0 : 1);
+            ss << "," << (dangerMatrix[index * coordinate.size() + i] ? 0 : 1);
         }
         ss << std::endl;
     }
@@ -51,11 +51,29 @@ public:
         return nameVector;
     }
 
-    bool getVisible(int64_t src, int64_t dst) {
-        return visibleMatrix[src * numAreas + dst];
+    bool getDanger(int64_t srcArea, int64_t dstArea) const {
+        return dangerMatrix[srcArea * numAreas + dstArea];
+    }
+
+    bool getDanger(AreaId srcAreaId, AreaId dstAreaId, const nav_mesh::nav_file & navFile) const {
+        size_t srcArea = navFile.m_area_ids_to_indices.find(srcAreaId)->second,
+            dstArea = navFile.m_area_ids_to_indices.find(dstAreaId)->second;
+        return getDanger(srcArea, dstArea);
+    }
+
+    AreaBits getDanger(int64_t srcArea) const {
+        AreaBits result;
+        for (int i = 0; i < coordinate.size(); i++) {
+            result[i] = dangerMatrix[srcArea * coordinate.size() + i];
+        }
+        return result;
+    }
+
+    AreaBits getDanger(AreaId srcAreaId, const nav_mesh::nav_file & navFile) const {
+        size_t srcArea = navFile.m_area_ids_to_indices.find(srcAreaId)->second;
+        return getDanger(srcArea);
     }
 };
 
-NavVisibleResult queryNavVisible(const VisPoints & visPoints);
-
-#endif //CSKNOW_NAV_VISIBLE_H
+NavDangerResult queryNavDanger(const VisPoints & visPoints, const nav_mesh::nav_file & navFile);
+#endif //CSKNOW_NAV_DANGER_H

@@ -161,7 +161,7 @@ struct Blackboard {
                 AreaId curArea =
                         navFile.get_nearest_area_by_position(vec3Conv(client.getFootPosForPlayer())).get_id();
                 if (client.team == team) {
-                    result |= visPoints.getAreasRelativeToSrc(curArea);
+                    result |= visPoints.getVisibilityRelativeToSrc(curArea);
                 }
             }
         }

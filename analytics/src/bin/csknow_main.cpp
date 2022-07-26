@@ -25,6 +25,7 @@
 #include "queries/position_and_wall_view.h"
 #include "indices/spotted.h"
 #include "queries/nav_visible.h"
+#include "queries/nav_danger.h"
 #include "queries/distance_to_places.h"
 #include "queries/moments/aggression_event.h"
 #define CPPHTTPLIB_OPENSSL_SUPPORT
@@ -85,7 +86,7 @@ int main(int argc, char * argv[]) {
         if (entry.path().extension() == ".vis") {
             string mapName = entry.path().filename().replace_extension();
             map_visPoints.insert(std::pair<std::string, VisPoints>(mapName, VisPoints(map_navs[mapName])));
-            map_visPoints.find(mapName)->second.load(navPath, mapName);
+            map_visPoints.find(mapName)->second.load(navPath, mapName, map_navs[mapName]);
         }
     }
 
@@ -253,6 +254,8 @@ int main(int argc, char * argv[]) {
     d2DistanceToPlacesResult.load(navPath, "de_dust2", map_navs["de_dust2"], d2ReachableResult);
     string dust2VisibleName = "de_dust2_visible";
     NavVisibleResult d2NavVisibleResult = queryNavVisible(map_visPoints.find("de_dust2")->second);
+    string dust2DangerName = "de_dust2_danger";
+    NavDangerResult d2NavDangerResult = queryNavDanger(map_visPoints.find("de_dust2")->second, map_navs["de_dust2"]);
     std::cout << "processing aggression_event" << std::endl;
     string aggressionEventName = "aggression_event";
     AggressionEventResult aggressionEventResult =
@@ -378,6 +381,7 @@ int main(int argc, char * argv[]) {
 
     vector<string> queryNames = {"games", "rounds", "players", "ticks", "playerAtTick", dust2MeshName,
                                  dust2VisibleName,
+                                 dust2DangerName,
                                  dust2ReachableName,
                                  dust2DistanceToPlacesName,
                                  aggressionEventName,
@@ -391,9 +395,10 @@ int main(int argc, char * argv[]) {
             {queryNames[4], queryPlayerAtTick},
             {queryNames[5], d2MeshResult},
             {queryNames[6], d2NavVisibleResult},
-            {queryNames[7], d2ReachableResult},
-            {queryNames[8], d2DistanceToPlacesResult},
-            {queryNames[9], aggressionEventResult},
+            {queryNames[7], d2NavDangerResult},
+            {queryNames[8], d2ReachableResult},
+            {queryNames[9], d2DistanceToPlacesResult},
+            {queryNames[10], aggressionEventResult},
             //{queryNames[5], aCatClusterSequence},
             //{queryNames[6], aCatPeekersClusters},
             //{queryNames[7], midCTClusterSequence},

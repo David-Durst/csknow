@@ -26,7 +26,7 @@ void VisPoints::launchVisPointsCommand(const ServerState & state) {
     state.saveScript({"sm_queryAllVisPointPairs"});
 }
 
-void VisPoints::load(string mapsPath, string mapName) {
+void VisPoints::load(string mapsPath, string mapName, const nav_mesh::nav_file & navFile) {
     string visValidFileName = mapName + ".vis";
     string visValidFilePath = mapsPath + "/" + visValidFileName;
 
@@ -66,6 +66,25 @@ void VisPoints::load(string mapsPath, string mapName) {
             visPoints[i].visibleFromCurPoint[j] =
                     visPoints[i].visibleFromCurPoint[j] | visPoints[j].visibleFromCurPoint[i];
             visPoints[j].visibleFromCurPoint[i] = visPoints[i].visibleFromCurPoint[j];
+        }
+    }
+
+    // after completing visibility, compute danger
+    setDangerPoints(navFile);
+}
+
+void VisPoints::setDangerPoints(const nav_mesh::nav_file & navFile) {
+    for (size_t srcArea = 0; srcArea < visPoints.size(); srcArea++) {
+        for (size_t dangerArea = 0; dangerArea < visPoints.size(); dangerArea++) {
+            if (isVisibleAreaId(srcArea, dangerArea)) {
+                for (size_t i = 0; i < navFile.connections_area_length[dangerArea]; i++) {
+                    size_t conAreaIndex = navFile.connections[navFile.connections_area_start[dangerArea] + i];
+                    if (!isVisibleAreaId(srcArea, conAreaIndex)) {
+                        visPoints[srcArea].dangerFromCurPoint[dangerArea] = true;
+                        break;
+                    }
+                }
+            }
         }
     }
 }

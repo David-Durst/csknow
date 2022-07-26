@@ -21,11 +21,14 @@ struct VisPoint {
     AABB areaCoordinates;
     Vec3 center;
     AreaBits visibleFromCurPoint;
+    AreaBits dangerFromCurPoint;
 };
 
 class VisPoints {
     vector<VisPoint> visPoints;
     map<AreaId, size_t> areaIdToVectorIndex;
+
+    void setDangerPoints(const nav_mesh::nav_file & navFile);
 
 public:
     VisPoints(const nav_mesh::nav_file & navFile) {
@@ -54,12 +57,25 @@ public:
         return visPoints[src].visibleFromCurPoint[target];
     }
 
-    AreaBits getAreasRelativeToSrc(AreaId srcId) const {
+    AreaBits getVisibilityRelativeToSrc(AreaId srcId) const {
+        return visPoints[areaIdToVectorIndex.find(srcId)->second].visibleFromCurPoint;
+    }
+
+    bool isDangerIndex(size_t src, size_t target) const {
+        return visPoints[src].dangerFromCurPoint[target];
+    }
+
+    bool isDangerAreaId(AreaId srcId, AreaId targetId) const {
+        size_t src = areaIdToVectorIndex.find(srcId)->second, target = areaIdToVectorIndex.find(targetId)->second;
+        return visPoints[src].dangerFromCurPoint[target];
+    }
+
+    AreaBits getDangerRelativeToSrc(AreaId srcId) const {
         return visPoints[areaIdToVectorIndex.find(srcId)->second].visibleFromCurPoint;
     }
 
     void launchVisPointsCommand(const ServerState & state);
-    void load(string mapsPath, string mapName);
+    void load(string mapsPath, string mapName, const nav_mesh::nav_file & navFile);
     const vector<VisPoint> & getVisPoints() const { return visPoints; }
 };
 
