@@ -41,8 +41,14 @@ struct Order {
 
     void print(const vector<CSGOId> followers, const map<CSGOId, int64_t> & playerToWaypointIndex,
                const ServerState & state, const nav_mesh::nav_file & navFile,
-               const map<CSGOId, int32_t> & playerToEntryIndex, size_t orderIndex, vector<string> & result) const {
+               const map<CSGOId, int32_t> & playerToEntryIndex, size_t orderIndex, TeamId team, vector<string> & result) const {
         stringstream waypointsStream;
+        if (team == ENGINE_TEAM_T) {
+            waypointsStream << "T ";
+        }
+        else if (team == ENGINE_TEAM_CT) {
+            waypointsStream << "CT ";
+        }
         waypointsStream << orderIndex << " waypoints: [";
         for (const auto & waypoint : waypoints) {
             string typeString;
@@ -73,6 +79,12 @@ struct Order {
         result.push_back(waypointsStream.str());
 
         stringstream followersStream;
+        if (team == ENGINE_TEAM_T) {
+            followersStream << "T ";
+        }
+        else if (team == ENGINE_TEAM_CT) {
+            followersStream << "CT ";
+        }
         followersStream << orderIndex << " followers: <follower, waypoint index, entry index> : [";
         for (const auto & follower : followers) {
             followersStream << "<" << state.getPlayerString(follower) << ", "
@@ -207,7 +219,7 @@ public:
             for (size_t orderIndex = 0; orderIndex < bothTeamOrders[teamIndex].size(); orderIndex++) {
                 bothTeamOrders[teamIndex][orderIndex].print(orderToPlayers.find({teams[teamIndex], static_cast<int64_t>(orderIndex)})->second,
                                                             playerToWaypointIndex, state, navFile,
-                                                            playerToEntryIndex, orderIndex, result);
+                                                            playerToEntryIndex, orderIndex, teams[teamIndex], result);
             }
         }
 
