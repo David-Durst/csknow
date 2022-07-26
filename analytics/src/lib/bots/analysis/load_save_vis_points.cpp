@@ -76,10 +76,10 @@ void VisPoints::load(string mapsPath, string mapName, const nav_mesh::nav_file &
 void VisPoints::setDangerPoints(const nav_mesh::nav_file & navFile) {
     for (size_t srcArea = 0; srcArea < visPoints.size(); srcArea++) {
         for (size_t dangerArea = 0; dangerArea < visPoints.size(); dangerArea++) {
-            if (isVisibleAreaId(srcArea, dangerArea)) {
+            if (isVisibleIndex(srcArea, dangerArea)) {
                 for (size_t i = 0; i < navFile.connections_area_length[dangerArea]; i++) {
                     size_t conAreaIndex = navFile.connections[navFile.connections_area_start[dangerArea] + i];
-                    if (!isVisibleAreaId(srcArea, conAreaIndex)) {
+                    if (!isVisibleIndex(srcArea, conAreaIndex)) {
                         visPoints[srcArea].dangerFromCurPoint[dangerArea] = true;
                         break;
                     }
