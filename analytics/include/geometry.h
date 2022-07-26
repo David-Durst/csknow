@@ -284,4 +284,9 @@ Vec3 translateThenRotate(Vec3 newOrigin, RotationMatrix3D originRotationMatrix, 
     return originRotationMatrix.rotateVec3(translatedPosition);
 }
 
+static inline __attribute__((always_inline))
+double secondsAwayAtMaxSpeed(double distance) {
+    return distance / MAX_RUN_SPEED;
+}
+
 #endif //CSKNOW_GEOMETRY_H

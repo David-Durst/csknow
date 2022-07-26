@@ -121,6 +121,7 @@ struct Blackboard {
     // knowledge data
     double tMemorySeconds = 1.0, ctMemorySeconds = 1.0;
     EnemyPositionsMemory tMemory, ctMemory;
+    map<CSGOId, map<CSGOId, EnemyPositionMemory>> playerToRelevantCommunicatedEnemies;
     const EnemyPositionsMemory & getCommunicatedPlayers(const ServerState & state, TreeThinker & treeThinker) {
         if (state.getClient(treeThinker.csgoId).team == ENGINE_TEAM_T) {
             return tMemory;

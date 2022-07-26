@@ -14,7 +14,7 @@ namespace engage {
         Priority & curPriority = blackboard.playerToPriority[treeThinker.csgoId];
         TargetPlayer & curTarget = curPriority.targetPlayer;
         const map<CSGOId, EnemyPositionMemory> & rememberedEnemies = blackboard.playerToMemory[treeThinker.csgoId].positions;
-        const map<CSGOId, EnemyPositionMemory> & communicatedEnemies = blackboard.getCommunicatedPlayers(state, treeThinker).positions;
+        const map<CSGOId, EnemyPositionMemory> & communicatedEnemies = blackboard.playerToRelevantCommunicatedEnemies[treeThinker.csgoId];
 
         // if no priority yet or switching from order, setup priority with right type
         if (!havePriority || curPriority.priorityType != PriorityType::Engagement) {

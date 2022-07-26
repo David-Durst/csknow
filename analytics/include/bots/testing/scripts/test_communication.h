@@ -115,7 +115,7 @@ public:
 class CommunicationIgnoreCheck : public Script {
 public:
     CommunicationIgnoreCheck(const ServerState & state) :
-            Script("CommunicationAimCheck", {{0, ENGINE_TEAM_T}, {0, ENGINE_TEAM_T}, {0, ENGINE_TEAM_CT}}, {ObserveType::FirstPerson, 0}) { }
+            Script("CommunicationIgnoreCheck", {{0, ENGINE_TEAM_T}, {0, ENGINE_TEAM_T}, {0, ENGINE_TEAM_CT}}, {ObserveType::FirstPerson, 0}) { }
 
     virtual void initialize(Tree & tree, ServerState & state) override {
         if (tree.newBlackboard) {
