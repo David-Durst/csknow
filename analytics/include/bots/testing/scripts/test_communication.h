@@ -3,7 +3,7 @@
 //
 
 #ifndef CSKNOW_COMMMUNICATION_H
-#define CSKNOW_COMMUNIICATION_H
+#define CSKNOW_COMMMUNICATION_H
 
 #include "bots/testing/script.h"
 #include "bots/behavior_tree/pathing_node.h"
