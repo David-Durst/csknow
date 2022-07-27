@@ -15,10 +15,27 @@
 #define DANGER_ATTENTION_SECONDS 1.
 
 namespace communicate {
-    class AssignAggressionNode : public Node {
+    namespace spacing {
+        class AssignEntryIndexNode : public Node {
+        public:
+            AssignEntryIndexNode(Blackboard & blackboard) : Node(blackboard, "AssignEntryIndexNode") { };
+            virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override;
+        };
+
+        class AssignHoldIndexNode : public Node {
+        public:
+            AssignHoldIndexNode(Blackboard & blackboard) : Node(blackboard, "AssignHoldIndexNode") { };
+            virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override;
+        };
+    }
+
+    class AssignSpacingNode : public SequenceNode {
     public:
-        AssignAggressionNode(Blackboard & blackboard) : Node(blackboard, "AssignAggressionNode") { };
-        virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override;
+        AssignSpacingNode(Blackboard & blackboard) :
+                SequenceNode(blackboard, Node::makeList(
+                        make_unique<spacing::AssignEntryIndexNode>(blackboard),
+                        make_unique<spacing::AssignHoldIndexNode>(blackboard)
+                ), "CommunicationNode") { };
     };
 
     class CommunicateTeamMemory : public Node {
@@ -45,7 +62,7 @@ class CommunicateNode : public SequenceNode {
 public:
     CommunicateNode(Blackboard & blackboard) :
             SequenceNode(blackboard, Node::makeList(
-                    make_unique<communicate::AssignAggressionNode>(blackboard),
+                    make_unique<communicate::AssignSpacingNode>(blackboard),
                     make_unique<communicate::CommunicateTeamMemory>(blackboard),
                     make_unique<communicate::DiffusePositionsNode>(blackboard),
                     make_unique<communicate::PrioritizeDangerAreasNode>(blackboard)

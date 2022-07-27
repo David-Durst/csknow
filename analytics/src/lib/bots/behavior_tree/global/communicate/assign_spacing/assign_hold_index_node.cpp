@@ -3,13 +3,13 @@
 //
 #include "bots/behavior_tree/global/communicate_node.h"
 
-namespace communicate {
+namespace communicate::spacing {
     /**
-     * Each order, assign players to push indices
+     * Each order, assign players to hold indexes for waypoints in order
      */
-    NodeState AssignAggressionNode::exec(const ServerState &state, TreeThinker &treeThinker) {
+    NodeState AssignHoldIndexNode::exec(const ServerState &state, TreeThinker &treeThinker) {
         if (blackboard.newOrderThisFrame) {
-            for (const auto & orderId : blackboard.strategy.getOrderIds()) {
+            for (const auto & orderId : blackboard.strategy.getOrderIds(true, false)) {
                 // assign one of pushers to go first, then assign rest
                 // after pushers, assign baiters
                 vector<CSGOId> baitersOnOrder;
