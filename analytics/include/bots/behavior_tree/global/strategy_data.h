@@ -15,6 +15,10 @@ using std::map;
 enum class WaypointType {
     NavPlace,
     NavAreas, // sometimes want to force a collection of areas without a name
+    ChokePlace,
+    ChokeAreas,
+    HoldPlace,
+    HoldAreas,
     Player,
     C4,
     NUM_WAYPOINTS
@@ -37,6 +41,7 @@ typedef vector<Waypoint> Waypoints;
  */
 struct Order {
     Waypoints waypoints;
+    vector<size_t> holdIndices, chokeIndices;
     // what about chains of operations (like switching once plant happens)?
 
     void print(const vector<CSGOId> followers, const map<CSGOId, int64_t> & playerToWaypointIndex,
@@ -60,6 +65,22 @@ struct Order {
                     break;
                 case WaypointType::NavAreas:
                     typeString = "NavAreas";
+                    dataString = waypoint.customAreasName;
+                    break;
+                case WaypointType::ChokePlace:
+                    typeString = "ChokePlace";
+                    dataString = waypoint.placeName;
+                    break;
+                case WaypointType::ChokeAreas:
+                    typeString = "ChokeAreas";
+                    dataString = waypoint.customAreasName;
+                    break;
+                case WaypointType::HoldPlace:
+                    typeString = "HoldPlace";
+                    dataString = waypoint.placeName;
+                    break;
+                case WaypointType::HoldAreas:
+                    typeString = "HoldAreas";
                     dataString = waypoint.customAreasName;
                     break;
                 case WaypointType::Player:
@@ -172,6 +193,14 @@ public:
     }
 
     OrderId addOrder(TeamId team, Order order) {
+        for (size_t i = 0; i < order.waypoints.size(); i++) {
+            if (order.waypoints[i].type == WaypointType::ChokePlace) {
+                order.chokeIndices.push_back(i);
+            }
+            else if (order.waypoints[i].type == WaypointType::HoldPlace) {
+                order.holdIndices.push_back(i);
+            }
+        }
         OrderId orderId = {INVALID_ID, INVALID_ID};
         if (team == ENGINE_TEAM_T) {
             orderId = {ENGINE_TEAM_T, static_cast<int64_t>(tOrders.size())};
