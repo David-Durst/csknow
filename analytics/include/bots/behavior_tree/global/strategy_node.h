@@ -65,42 +65,48 @@ namespace strategy {
 
     // t sequences of waypoint labels
     static Waypoints defenseLongToAWaypoints = {
-            {WaypointType::HoldPlace, "ARamp"},
-            {WaypointType::HoldAreas, "", "ACar", {1794, 1799}},
-            {WaypointType::HoldPlace, "LongA"},
-            {WaypointType::HoldPlace, "Pit"},
-            {WaypointType::ChokeAreas, "", "BotALong", {4170}},
-            {WaypointType::ChokePlace, "LongDoors"}
+            {WaypointType::C4, "BombsiteA"},
+            {WaypointType::HoldPlace, "ARamp", "", {}, false},
+            {WaypointType::HoldAreas, "", "ACar", {1794, 1799}, false},
+            {WaypointType::HoldPlace, "LongA", "", {}, true},
+            {WaypointType::HoldPlace, "Pit", "", {}, true},
+            {WaypointType::ChokeAreas, "", "BotALong", {4170}, false},
+            {WaypointType::ChokePlace, "LongDoors", "", {}, true}
     };
     static Waypoints defenseSpawnToAWaypoints = {
-            {WaypointType::HoldPlace, "BombsiteA"},
-            {WaypointType::HoldPlace, "LongA"},
-            {WaypointType::ChokePlace, "UnderA"},
-            {WaypointType::ChokePlace, "CTSpawn"}
+            {WaypointType::C4, "BombsiteA"},
+            {WaypointType::HoldPlace, "BombsiteA", "", {}, false},
+            {WaypointType::HoldPlace, "LongA", "", {}, true},
+            {WaypointType::ChokePlace, "UnderA", "", {}, false},
+            {WaypointType::ChokePlace, "CTSpawn", "", {}, true}
     };
     static Waypoints defenseCatToAWaypoints = {
-            {WaypointType::HoldPlace, "BombsiteA"},
-            {WaypointType::HoldPlace, "ExtendedA"},
-            {WaypointType::ChokeAreas, "", "StairsBox", {4048}},
-            {WaypointType::ChokePlace, "Catwalk"}
+            {WaypointType::C4, "BombsiteA"},
+            {WaypointType::HoldPlace, "BombsiteA", "", {}, false},
+            {WaypointType::HoldPlace, "ExtendedA", "", {}, true},
+            {WaypointType::ChokeAreas, "", "StairsBox", {4048}, false},
+            {WaypointType::ChokePlace, "Catwalk", "", {}, true}
     };
     static Waypoints defenseBDoorsToBWaypoints = {
-            {WaypointType::HoldAreas, "", "BCar", {1642}},
-            {WaypointType::HoldAreas, "", "BDoorsBox", {1911}},
-            {WaypointType::ChokePlace, "BDoors"},
-            {WaypointType::ChokePlace, "MidDoors"}
+            {WaypointType::C4, "BombsiteB"},
+            {WaypointType::HoldAreas, "", "BCar", {1642}, false},
+            {WaypointType::HoldAreas, "", "BDoorsBox", {1911}, true},
+            {WaypointType::ChokePlace, "BDoors", "", {}, false},
+            {WaypointType::ChokePlace, "MidDoors", "", {}, true}
     };
     static Waypoints defenseHoleToBWaypoints = {
-            {WaypointType::HoldPlace, "BombsiteB"},
-            {WaypointType::HoldPlace, "Hole"},
-            {WaypointType::ChokePlace, "Hole"},
-            {WaypointType::ChokePlace, "MidDoors"}
+            {WaypointType::C4, "BombsiteB"},
+            {WaypointType::HoldPlace, "BombsiteB", "", {}, false},
+            {WaypointType::HoldPlace, "Hole", "", {}, true},
+            {WaypointType::ChokePlace, "Hole", "", {}, false},
+            {WaypointType::ChokePlace, "MidDoors", "", {}, true}
     };
     static Waypoints defenseTunsToBWaypoints = {
-            {WaypointType::HoldAreas, "", "BackPlat", {4010, 6813}},
-            {WaypointType::HoldPlace, "UpperTunnel"},
-            {WaypointType::ChokePlace, "UpperTunnel"},
-            {WaypointType::ChokePlace, "TunnelStairs"}
+            {WaypointType::C4, "BombsiteB"},
+            {WaypointType::HoldAreas, "", "BackPlat", {4010, 6813}, false},
+            {WaypointType::HoldPlace, "UpperTunnel", "", {}, true},
+            {WaypointType::ChokePlace, "UpperTunnel", "", {}, false},
+            {WaypointType::ChokePlace, "TunnelStairs", "", {}, true}
     };
     static vector<Order> aDefenseOrders{{defenseLongToAWaypoints}, {defenseSpawnToAWaypoints},
                                         {defenseCatToAWaypoints}};

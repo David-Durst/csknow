@@ -32,6 +32,7 @@ struct Waypoint {
     string placeName;
     string customAreasName;
     set<AreaId> areaIds;
+    bool aggresiveDefense;
     CSGOId playerId;
 };
 
@@ -42,7 +43,21 @@ typedef vector<Waypoint> Waypoints;
 struct Order {
     Waypoints waypoints;
     vector<size_t> holdIndices, chokeIndices;
+    // multiple players can watch one choke point, one player in a hold point
+    map<size_t, CSGOId> holdIndexToPlayer;
+    map<CSGOId, size_t> playerToChokeIndex;
     // what about chains of operations (like switching once plant happens)?
+
+    void computeIndices() {
+        for (size_t i = 0; i < waypoints.size(); i++) {
+            if (waypoints[i].type == WaypointType::ChokePlace) {
+                chokeIndices.push_back(i);
+            }
+            else if (waypoints[i].type == WaypointType::HoldPlace) {
+                holdIndices.push_back(i);
+            }
+        }
+    }
 
     void print(const vector<CSGOId> followers, const map<CSGOId, int64_t> & playerToWaypointIndex,
                const ServerState & state, const nav_mesh::nav_file & navFile,
@@ -193,14 +208,7 @@ public:
     }
 
     OrderId addOrder(TeamId team, Order order) {
-        for (size_t i = 0; i < order.waypoints.size(); i++) {
-            if (order.waypoints[i].type == WaypointType::ChokePlace) {
-                order.chokeIndices.push_back(i);
-            }
-            else if (order.waypoints[i].type == WaypointType::HoldPlace) {
-                order.holdIndices.push_back(i);
-            }
-        }
+        order.computeIndices();
         OrderId orderId = {INVALID_ID, INVALID_ID};
         if (team == ENGINE_TEAM_T) {
             orderId = {ENGINE_TEAM_T, static_cast<int64_t>(tOrders.size())};
@@ -227,6 +235,26 @@ public:
         playerToOrder[playerId] = orderId;
         orderToPlayers[orderId].push_back(playerId);
     }
+
+    void clearPlayerHoldAssignments() {
+        for (Order & order : ctOrders) {
+            order.holdIndexToPlayer.clear();
+        }
+    }
+
+    vector<OrderId> getOrdersNotAssignedPlayers(TeamId team) const {
+        vector<OrderId> result;
+        const vector<Order> & orders = team == ENGINE_TEAM_T ? tOrders : ctOrders;
+        for (size_t i = 0; i < orders.size(); i++) {
+            if (orderToPlayers.find({team, static_cast<int64_t>(i)}) == orderToPlayers.end() ||
+                orderToPlayers.find({team, static_cast<int64_t>(i)})->second.empty()) {
+                result.push_back({team, static_cast<int64_t>(i)});
+            }
+        }
+        return result;
+
+    }
+
 
     int64_t maxTeamWaypoint(const ServerState & state, TeamId team) {
         int64_t result = INVALID_ID;
