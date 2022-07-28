@@ -24,7 +24,6 @@ namespace communicate::spacing {
                                            order.waypoints[order.holdIndices[i]].aggresiveDefense, 0});
                 }
 
-                int entryIndex = 0;
                 for (const CSGOId followerId : blackboard.strategy.getOrderFollowers(orderId)) {
                     if (blackboard.playerToTreeThinkers[followerId].aggressiveType == AggressiveType::Push) {
                         std::sort(holdOptions.begin(), holdOptions.end(),

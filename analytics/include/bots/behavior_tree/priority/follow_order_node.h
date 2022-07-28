@@ -9,13 +9,42 @@
 #include "bots/behavior_tree/pathing_node.h"
 #include <map>
 
+#define HOLD_DISTANCE 300.f
 #define BAIT_DISTANCE 50.f
 
 namespace follow {
-    class ComputeObjectiveAreaNode : public Node {
+    namespace compute_nav_area {
+        class ComputeEntryNavAreaNode : public Node {
+        public:
+            ComputeEntryNavAreaNode(Blackboard & blackboard) : Node(blackboard, "ComputeEntryNavAreaNode") { };
+            virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override;
+        };
+
+        class OffenseCheckNode : public ConditionDecorator {
+        public:
+            OffenseCheckNode(Blackboard & blackboard) : ConditionDecorator(blackboard,
+                                                                                make_unique<ComputeEntryNavAreaNode>(blackboard),
+                                                                                "OffenseCheckNode") { };
+            virtual bool valid(const ServerState & state, TreeThinker & treeThinker) override {
+                return state.getClient(treeThinker.csgoId).team == ENGINE_TEAM_T;
+            }
+        };
+
+        class ComputeHoldNavAreaNode : public Node {
+        public:
+            ComputeHoldNavAreaNode(Blackboard & blackboard) : Node(blackboard, "ComputeHoldNavAreaNode") { };
+            virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override;
+        };
+    }
+
+
+    class ComputeNavAreaNode : public SelectorNode {
     public:
-        ComputeObjectiveAreaNode(Blackboard & blackboard) : Node(blackboard, "ComputeObjectiveAreaNode") { };
-        virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override;
+        ComputeNavAreaNode(Blackboard & blackboard) :
+                SelectorNode(blackboard, Node::makeList(
+                                     make_unique<compute_nav_area::OffenseCheckNode>(blackboard),
+                                     make_unique<compute_nav_area::ComputeHoldNavAreaNode>(blackboard)),
+                             "ComputeNavAreaNode") { };
     };
 
     class BaitMovementNode : public Node {
@@ -40,7 +69,7 @@ class FollowOrderNode : public SequenceNode {
 public:
     FollowOrderNode(Blackboard & blackboard) :
             SequenceNode(blackboard, Node::makeList(
-                                                        make_unique<follow::ComputeObjectiveAreaNode>(blackboard),
+                                                        make_unique<follow::ComputeNavAreaNode>(blackboard),
                                                         make_unique<movement::PathingNode>(blackboard),
                                                         make_unique<follow::BaitConditionNode>(blackboard)),
                                         "FollowOrderSelectorNode") { };
