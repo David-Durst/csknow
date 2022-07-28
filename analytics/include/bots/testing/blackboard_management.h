@@ -43,7 +43,8 @@ public:
                 throw std::runtime_error("all targets of new order must have same team");
             }
         }
-        OrderId orderId = blackboard.strategy.addOrder(team, {waypoints});
+        OrderId orderId = blackboard.strategy.addOrder(team, {waypoints}, blackboard.navFile,
+                                                       blackboard.reachability, blackboard.visPoints, blackboard.distanceToPlaces);
         for (const auto & targetId : targetIds) {
             blackboard.strategy.assignPlayerToOrder(targetId, orderId);
             blackboard.playerToPriority.erase(targetId);

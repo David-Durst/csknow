@@ -27,10 +27,12 @@ namespace strategy {
                     blackboard.navFile.get_nearest_area_by_position(vec3Conv(state.getC4Pos())).m_place) == "BombsiteA";
 
             for (const auto & order : plantedA ? aOffenseOrders : bOffenseOrders) {
-                blackboard.strategy.addOrder(ENGINE_TEAM_CT, order);
+                blackboard.strategy.addOrder(ENGINE_TEAM_CT, order, blackboard.navFile, blackboard.reachability,
+                                             blackboard.visPoints, blackboard.distanceToPlaces);
             }
             for (const auto & order : plantedA ? aDefenseOrders : bDefenseOrders) {
-                blackboard.strategy.addOrder(ENGINE_TEAM_T, order);
+                blackboard.strategy.addOrder(ENGINE_TEAM_T, order, blackboard.navFile, blackboard.reachability,
+                                             blackboard.visPoints, blackboard.distanceToPlaces);
             }
         }
         else {

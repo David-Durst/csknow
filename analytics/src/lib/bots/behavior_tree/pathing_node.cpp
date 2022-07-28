@@ -62,8 +62,7 @@ namespace movement {
             blackboard.playerToLastPathingSourceNavAreaId.find(treeThinker.csgoId) != blackboard.playerToLastPathingSourceNavAreaId.end() &&
             curArea.get_id() == blackboard.playerToLastPathingSourceNavAreaId[treeThinker.csgoId] &&
             blackboard.playerToLastPathingTargetNavAreaId.find(treeThinker.csgoId) != blackboard.playerToLastPathingTargetNavAreaId.end() &&
-            targetAreaId == blackboard.playerToLastPathingTargetNavAreaId[treeThinker.csgoId] &&
-            !curPriority.stuck) {
+            targetAreaId == blackboard.playerToLastPathingTargetNavAreaId[treeThinker.csgoId]) {
             Path & curPath = blackboard.playerToPath[treeThinker.csgoId];
 
             if (curPath.pathCallSucceeded) {
@@ -100,9 +99,6 @@ namespace movement {
         // otherwise, either no old path or old path is out of date, so update it
         Path newPath = computePath(state, blackboard, vec3Conv(curPriority.targetPos), curClient);
         blackboard.playerToPath[treeThinker.csgoId] = newPath;
-        if (newPath.areas.find(9026) != newPath.areas.end() && curPriority.stuck) {
-            int x = 1;
-        }
 
         blackboard.playerToLastPathingSourceNavAreaId[treeThinker.csgoId] = curArea.get_id();
         blackboard.playerToLastPathingTargetNavAreaId[treeThinker.csgoId] = targetAreaId;
