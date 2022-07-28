@@ -14,10 +14,6 @@ void moveToWaypoint(const Blackboard & blackboard, const ServerState & state, Tr
         curPriority.targetAreaId = blackboard.distanceToPlaces.getClosestArea(curArea.get_id(), waypoint.placeName, blackboard.navFile);
         curPriority.targetPos = vec3tConv(blackboard.navFile.get_area_by_id_fast(curPriority.targetAreaId).get_center());
     }
-    else if (waypoint.type == WaypointType::Player) {
-        curPriority.targetPos = state.getClient(waypoint.playerId).getFootPosForPlayer();
-        curPriority.targetAreaId = blackboard.navFile.get_nearest_area_by_position(vec3Conv(curPriority.targetPos)).get_id();
-    }
     else if (waypoint.type == WaypointType::C4) {
         curPriority.targetPos = state.getC4Pos();
         curPriority.targetAreaId = blackboard.navFile.get_nearest_area_by_position(vec3Conv(curPriority.targetPos)).get_id();

@@ -67,8 +67,8 @@ struct Order {
 
     }
 
-    double getDistance(AreaId srcAreaId, set<AreaId> & dstAreaIds, const nav_mesh::nav_file & navFile,
-                       const ReachableResult & reachability) {
+    double getDistance(AreaId srcAreaId, const set<AreaId> & dstAreaIds, const nav_mesh::nav_file & navFile,
+                       const ReachableResult & reachability) const {
         double minDistance = std::numeric_limits<double>::max();
         for (const auto & dstAreaId : dstAreaIds) {
             minDistance = std::min(minDistance, reachability.getDistance(srcAreaId, dstAreaId));
@@ -76,8 +76,8 @@ struct Order {
         return minDistance;
     }
 
-    double getDistance(AreaId srcAreaId, Waypoint & waypoint, const nav_mesh::nav_file & navFile,
-                       const ReachableResult & reachability, const DistanceToPlacesResult & distanceToPlacesResult) {
+    double getDistance(AreaId srcAreaId, const Waypoint & waypoint, const nav_mesh::nav_file & navFile,
+                       const ReachableResult & reachability, const DistanceToPlacesResult & distanceToPlacesResult) const {
         switch (waypoint.type) {
             case WaypointType::NavPlace:
                 return distanceToPlacesResult.getDistance(srcAreaId, waypoint.placeName, navFile);
@@ -272,11 +272,12 @@ public:
         orderToPlayers[orderId].push_back(playerId);
     }
 
-    /*
-    double getDistance(Order, Waypoint & waypoint, const nav_mesh::nav_file & navFile,
+    double getDistance(AreaId srcAreaId, OrderId orderId, size_t waypointIndex, const nav_mesh::nav_file & navFile,
                        const ReachableResult & reachability, const DistanceToPlacesResult & distanceToPlacesResult) {
+        const Order & order = getOrder(orderId);
+        return order.getDistance(srcAreaId, order.waypoints[waypointIndex], navFile, reachability, distanceToPlacesResult);
+    }
 
-     */
     void assignPlayerToHoldIndex(CSGOId playerId, OrderId orderId, size_t holdIndex) {
         Order & order = ctOrders[orderId.index];
         order.playerToHoldIndex[playerId] = holdIndex;
