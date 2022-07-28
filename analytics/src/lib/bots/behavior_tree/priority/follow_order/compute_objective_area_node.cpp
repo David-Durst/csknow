@@ -41,23 +41,7 @@ namespace follow {
         const Action &priorAction = blackboard.lastPlayerToAction[treeThinker.csgoId];
         const ServerState::Client & curClient = state.getClient(treeThinker.csgoId);
 
-        // fail pushing if stuck
-        if (havePriority && !finishedWaypoint && priorAction.moving() && computeMagnitude(curClient.getVelocity()) < MOVING_THRESHOLD) {
-            //curPriority.stuckTicks++;
-            curPriority.stuckTicks = 0;
-        }
-        else {
-            curPriority.stuckTicks = 0;
-        }
-
-        if (curPriority.stuckTicks > STUCK_TICKS_THRESHOLD) {
-            curPriority.stuckTicks = 0;
-            curPriority.stuck = true;
-            playerNodeState[treeThinker.csgoId] = NodeState::Failure;
-        }
-        else {
-            playerNodeState[treeThinker.csgoId] = NodeState::Success;
-        }
+        playerNodeState[treeThinker.csgoId] = NodeState::Success;
 
         return playerNodeState[treeThinker.csgoId];
     }

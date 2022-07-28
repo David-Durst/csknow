@@ -22,8 +22,6 @@ void moveToWaypoint(const Blackboard & blackboard, const ServerState & state, Tr
         curPriority.targetPos = state.getC4Pos();
         curPriority.targetAreaId = blackboard.navFile.get_nearest_area_by_position(vec3Conv(curPriority.targetPos)).get_id();
     }
-    curPriority.stuck = false;
-    curPriority.stuckTicks = 0;
 }
 
 bool finishWaypoint(const ServerState & state, int64_t waypointIndex,

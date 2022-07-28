@@ -9,7 +9,6 @@
 #include "bots/behavior_tree/pathing_node.h"
 #include <map>
 
-#define STUCK_TICKS_THRESHOLD 10
 #define BAIT_DISTANCE 50.f
 
 namespace follow {

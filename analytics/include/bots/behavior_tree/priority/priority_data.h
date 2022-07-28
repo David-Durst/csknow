@@ -44,8 +44,6 @@ struct Priority {
     TargetPlayer targetPlayer;
     MoveOptions moveOptions;
     ShootOptions shootOptions;
-    bool stuck = false;
-    int stuckTicks = 0;
 
     string print(const ServerState & state) const {
         stringstream result;
@@ -82,8 +80,6 @@ struct Priority {
 
         result << ", move: " << boolToString(moveOptions.move) << ", walk: " << boolToString(moveOptions.walk)
                << ", crouch: " << boolToString(moveOptions.crouch) << ", shoot option: " << shootOptionStr;
-
-        result << ", stuck: " << boolToString(stuck) << ", stuck ticks: " << stuckTicks;
 
         return result.str();
     }
