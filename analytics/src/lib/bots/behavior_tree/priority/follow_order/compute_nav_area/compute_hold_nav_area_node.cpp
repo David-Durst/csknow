@@ -12,7 +12,7 @@ namespace follow::compute_nav_area {
 
         // default values are set to invalid where necessary, so this is fine
         Priority & curPriority = blackboard.playerToPriority[treeThinker.csgoId];
-        curPriority.targetAreaId = curOrder.holdIndexToAreaId.find(curOrder.playerToHoldIndex.find(treeThinker.csgoId)->second)->second;
+        curPriority.targetAreaId = curOrder.holdIndexToHoldAreaId.find(curOrder.playerToHoldIndex.find(treeThinker.csgoId)->second)->second;
         curPriority.targetPos = vec3tConv(blackboard.navFile.get_area_by_id_fast(curPriority.targetAreaId).get_center());
         curPriority.priorityType = PriorityType::Order;
         curPriority.targetPlayer.playerId = INVALID_ID;

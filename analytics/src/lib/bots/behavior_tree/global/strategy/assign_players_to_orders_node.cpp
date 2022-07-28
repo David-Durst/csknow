@@ -38,8 +38,8 @@ namespace strategy {
                 throw std::runtime_error("no ct orders with a hold place, hold area, or c4");
             }
 
-            // for T, compute distance to each waypoint in each order and assign player to order with closest waypoint
-            // for CT, same thing but also considering covering every order - nearest unassigned order, or nearest unassigned if all assigned
+            // for CT, compute distance to each waypoint in each order and assign player to order with closest waypoint
+            // for T, same thing but also considering covering every order - nearest unassigned order, or nearest unassigned if all assigned
             for (const auto & client : state.clients) {
                 if (client.isAlive && client.isBot) {
                     const nav_mesh::nav_area & curArea = blackboard.navFile.get_nearest_area_by_position(
@@ -52,11 +52,11 @@ namespace strategy {
                                                                                   blackboard.navFile);
                     }
 
-                    if (client.team == ENGINE_TEAM_T) {
+                    if (client.team == ENGINE_TEAM_CT) {
                         std::sort(options.begin(), options.end(),
                                   [](const OrderPlaceDistance & a, const OrderPlaceDistance & b){ return a.distance < b.distance; });
                     }
-                    else if (client.team == ENGINE_TEAM_CT) {
+                    else if (client.team == ENGINE_TEAM_T) {
                         std::sort(options.begin(), options.end(),
                                   [](const OrderPlaceDistance & a, const OrderPlaceDistance & b){
                             return (!a.assignedPlayer && b.assignedPlayer) || (a.assignedPlayer == b.assignedPlayer && a.distance < b.distance);

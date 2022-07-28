@@ -46,8 +46,7 @@ struct Order {
     size_t aggressiveChokeIndex, passiveChokeIndex;
     // multiple players can watch one choke point, one player in a hold point
     map<CSGOId, size_t> playerToHoldIndex;
-    map<size_t, AreaId> holdIndexToAreaId;
-    map<size_t, AreaId> holdIndexToDangerAreaId;
+    map<size_t, AreaId> holdIndexToHoldAreaId, holdIndexToDangerAreaId;
     // what about chains of operations (like switching once plant happens)?
 
     void computeIndices(const nav_mesh::nav_file & navFile, const ReachableResult & reachability,
@@ -161,7 +160,7 @@ struct Order {
                 }
             }
         }
-        holdIndexToAreaId[waypointIndex] = minAreaIndex;
+        holdIndexToHoldAreaId[waypointIndex] = navFile.m_areas[minAreaIndex].get_id();
         holdIndexToDangerAreaId[waypointIndex] = chokeAreaId;
     }
 
@@ -247,6 +246,17 @@ class Strategy {
     vector<Order> tOrders, ctOrders;
     map<CSGOId, OrderId> playerToOrder;
     map<OrderId, vector<CSGOId>> orderToPlayers;
+
+    // shouldn't need private suffix, but operator overlading isn't working for me for public op and private op
+    Order & getOrderPrivate(OrderId orderId) {
+        if (orderId.team == ENGINE_TEAM_T) {
+            return tOrders[orderId.index];
+        }
+        else if (orderId.team == ENGINE_TEAM_CT) {
+            return ctOrders[orderId.index];
+        }
+        throw std::runtime_error( "getOrderForPlayer bad player id" );
+    }
 
 public:
     map<CSGOId, int64_t> playerToWaypointIndex;
@@ -349,8 +359,10 @@ public:
         for (Order & order : ctOrders) {
             order.playerToHoldIndex.erase(playerId);
         }
-        Order & order = ctOrders[orderId.index];
-        order.playerToHoldIndex[playerId] = holdIndex;
+        for (Order & order : tOrders) {
+            order.playerToHoldIndex.erase(playerId);
+        }
+        getOrderPrivate(orderId).playerToHoldIndex[playerId] = holdIndex;
     }
 
     vector<OrderId> getOrdersNotAssignedPlayers(TeamId team) const {
