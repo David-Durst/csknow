@@ -31,7 +31,7 @@ struct Waypoint {
     // not using union because that prevented automatic destructor definition, and this is trivial amount of extra data
     string placeName;
     string customAreasName;
-    set<AreaId> areaIds;
+    vector<AreaId> areaIds;
     bool aggresiveDefense;
     CSGOId playerId;
 };
@@ -46,9 +46,12 @@ struct Order {
     size_t aggressiveChokeIndex, passiveChokeIndex;
     // multiple players can watch one choke point, one player in a hold point
     map<CSGOId, size_t> playerToHoldIndex;
+    map<size_t, AreaId> holdIndexToAreaId;
+    map<size_t, AreaId> holdIndexToDangerAreaId;
     // what about chains of operations (like switching once plant happens)?
 
-    void computeIndices() {
+    void computeIndices(const nav_mesh::nav_file & navFile, const ReachableResult & reachability,
+                        const VisPoints & visPoints, const DistanceToPlacesResult & distanceToPlacesResult) {
         holdIndices.clear();
         playerToHoldIndex.clear();
         for (size_t i = 0; i < waypoints.size(); i++) {
@@ -60,14 +63,17 @@ struct Order {
                     passiveChokeIndex = 1;
                 }
             }
-            else if (waypoints[i].type == WaypointType::HoldPlace) {
+            else if (waypoints[i].type == WaypointType::HoldPlace || waypoints[i].type == WaypointType::HoldAreas) {
                 holdIndices.push_back(i);
             }
         }
 
+        for (const auto & holdIndex : holdIndices) {
+            setClosestAreaToHideVisibleToChoke(holdIndex, navFile, reachability, visPoints, distanceToPlacesResult);
+        }
     }
 
-    double getDistance(AreaId srcAreaId, const set<AreaId> & dstAreaIds, const nav_mesh::nav_file & navFile,
+    double getDistance(AreaId srcAreaId, const vector<AreaId> & dstAreaIds, const nav_mesh::nav_file & navFile,
                        const ReachableResult & reachability) const {
         double minDistance = std::numeric_limits<double>::max();
         for (const auto & dstAreaId : dstAreaIds) {
@@ -85,7 +91,6 @@ struct Order {
                 return getDistance(srcAreaId, waypoint.areaIds, navFile, reachability);
             case WaypointType::ChokePlace:
                 return distanceToPlacesResult.getDistance(srcAreaId, waypoint.placeName, navFile);
-                break;
             case WaypointType::ChokeAreas:
                 return getDistance(srcAreaId, waypoint.areaIds, navFile, reachability);
             case WaypointType::HoldPlace:
@@ -97,6 +102,67 @@ struct Order {
             default:
                 throw std::runtime_error("invalid waypoint type for getting distance");
         }
+    }
+
+    std::optional<AreaId> isVisible(AreaId srcAreaId, const vector<AreaId> & dstAreaIds, const nav_mesh::nav_file & navFile,
+                       const VisPoints & visPoints) const {
+        for (const auto & dstAreaId : dstAreaIds) {
+            if (visPoints.isVisibleAreaId(srcAreaId, dstAreaId)) {
+                return dstAreaId;
+            }
+        }
+        return {};
+    }
+
+    std::optional<AreaId> isVisible(AreaId srcAreaId, const Waypoint & waypoint, const nav_mesh::nav_file & navFile,
+                       const VisPoints & visPoints, const DistanceToPlacesResult & distanceToPlacesResult) const {
+        switch (waypoint.type) {
+            case WaypointType::NavPlace:
+                return isVisible(srcAreaId, distanceToPlacesResult.placeToArea.find(waypoint.placeName)->second,
+                                 navFile, visPoints);
+            case WaypointType::NavAreas:
+                return isVisible(srcAreaId, waypoint.areaIds, navFile, visPoints);
+            case WaypointType::ChokePlace:
+                return isVisible(srcAreaId, distanceToPlacesResult.placeToArea.find(waypoint.placeName)->second,
+                                 navFile, visPoints);
+            case WaypointType::ChokeAreas:
+                return isVisible(srcAreaId, waypoint.areaIds, navFile, visPoints);
+            case WaypointType::HoldPlace:
+                return isVisible(srcAreaId, distanceToPlacesResult.placeToArea.find(waypoint.placeName)->second,
+                                 navFile, visPoints);
+            case WaypointType::HoldAreas:
+                return isVisible(srcAreaId, waypoint.areaIds, navFile, visPoints);
+            case WaypointType::C4:
+                return isVisible(srcAreaId, distanceToPlacesResult.placeToArea.find(waypoint.placeName)->second,
+                                 navFile, visPoints);
+            default:
+                throw std::runtime_error("invalid waypoint type for getting visibility");
+        }
+    }
+
+    void setClosestAreaToHideVisibleToChoke(size_t waypointIndex, const nav_mesh::nav_file & navFile,
+                                              const ReachableResult & reachability, const VisPoints & visPoints,
+                                              const DistanceToPlacesResult & distanceToPlacesResult) {
+        const Waypoint & waypoint = waypoints[waypointIndex];
+        const Waypoint & chokeWaypoint = waypoints[waypoint.aggresiveDefense ? aggressiveChokeIndex : passiveChokeIndex];
+        size_t minAreaIndex;
+        AreaId chokeAreaId;
+        double minDistance = std::numeric_limits<double>::max();
+        for (size_t areaIndex = 0; areaIndex < navFile.m_areas.size(); areaIndex++) {
+            AreaId areaId = navFile.m_areas[areaIndex].get_id();
+            double newDistance = getDistance(areaId, waypoint, navFile,
+                                             reachability, distanceToPlacesResult);
+            if (newDistance < minDistance) {
+                const auto optionalChokeAreaId = isVisible(areaId, chokeWaypoint, navFile, visPoints, distanceToPlacesResult);
+                if (optionalChokeAreaId) {
+                    minAreaIndex = areaIndex;
+                    minDistance = newDistance;
+                    chokeAreaId = optionalChokeAreaId.value();
+                }
+            }
+        }
+        holdIndexToAreaId[waypointIndex] = minAreaIndex;
+        playerToHoldIndex[waypointIndex] = chokeAreaId;
     }
 
     void print(const vector<CSGOId> followers, const map<CSGOId, int64_t> & playerToWaypointIndex,
@@ -243,8 +309,9 @@ public:
         return result;
     }
 
-    OrderId addOrder(TeamId team, Order order) {
-        order.computeIndices();
+    OrderId addOrder(TeamId team, Order order, const nav_mesh::nav_file & navFile, const ReachableResult & reachability,
+                     const VisPoints & visPoints, const DistanceToPlacesResult & distanceToPlacesResult) {
+        order.computeIndices(navFile, reachability, visPoints, distanceToPlacesResult);
         OrderId orderId = {INVALID_ID, INVALID_ID};
         if (team == ENGINE_TEAM_T) {
             orderId = {ENGINE_TEAM_T, static_cast<int64_t>(tOrders.size())};

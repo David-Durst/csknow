@@ -9,27 +9,24 @@ namespace follow::compute_nav_area {
         AreaId curAreaId = blackboard.navFile.get_nearest_area_by_position(
                 vec3Conv(state.getClient(treeThinker.csgoId).getFootPosForPlayer())).get_id();
         const Order & curOrder = blackboard.strategy.getOrderForPlayer(treeThinker.csgoId);
-        OrderId curOrderId = blackboard.strategy.getOrderIdForPlayer(treeThinker.csgoId);
 
         // default values are set to invalid where necessary, so this is fine
         Priority & curPriority = blackboard.playerToPriority[treeThinker.csgoId];
-
+        curPriority.targetAreaId = curOrder.holdIndexToAreaId.find(curOrder.playerToHoldIndex.find(treeThinker.csgoId)->second)->second;
+        curPriority.targetPos = vec3tConv(blackboard.navFile.get_area_by_id_fast(curPriority.targetAreaId).get_center());
         curPriority.priorityType = PriorityType::Order;
         curPriority.targetPlayer.playerId = INVALID_ID;
         curPriority.moveOptions = {true, false, false};
         curPriority.shootOptions = ShootOptions::DontShoot;
 
-
-        // for all nav areas, find the closest one to the hide place where the chokepoint is visible (break tie breakers by areaid)
-        // for each one
-        if (blackboard.strategy.getDistance(curAreaId, curOrderId,
-                                            curOrder.playerToHoldIndex.find(treeThinker.csgoId)->second,
-                                            blackboard.navFile, blackboard.reachability,
-                                            blackboard.distanceToPlaces));
-
+        // if in the target area, don't move and make danger the chokepoint
+        if (curAreaId == curPriority.targetAreaId) {
+            blackboard.playerToDangerAreaId[treeThinker.csgoId] = curOrder.holdIndexToDangerAreaId.find(
+                    curOrder.playerToHoldIndex.find(treeThinker.csgoId)->second)->second;
+            curPriority.moveOptions = {false, false, false};
+        }
 
         playerNodeState[treeThinker.csgoId] = NodeState::Success;
-
         return playerNodeState[treeThinker.csgoId];
     }
 }
