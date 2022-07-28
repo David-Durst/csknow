@@ -30,13 +30,11 @@ namespace communicate {
         };
     }
 
-    class AssignSpacingNode : public SelectorNode {
+    class AssignSpacingNode : public SequenceNode {
     public:
         AssignSpacingNode(Blackboard & blackboard) :
-                SelectorNode(blackboard, Node::makeList(
-                        make_unique<TeamConditionDecorator>(
-                                blackboard, make_unique<spacing::AssignEntryIndexNode>(blackboard),
-                                ENGINE_TEAM_T),
+                SequenceNode(blackboard, Node::makeList(
+                        make_unique<spacing::AssignEntryIndexNode>(blackboard),
                         make_unique<spacing::AssignHoldIndexNode>(blackboard)
                 ), "CommunicationNode") { };
     };

@@ -14,7 +14,7 @@ namespace communicate::spacing {
      */
     NodeState AssignHoldIndexNode::exec(const ServerState &state, TreeThinker &treeThinker) {
         if (blackboard.newOrderThisFrame) {
-            for (const auto & orderId : blackboard.strategy.getOrderIds(false, true)) {
+            for (const auto & orderId : blackboard.strategy.getOrderIds(true, false)) {
                 // assign to different hold points, prefering aggro for pushers and passive for baiters
                 const Order & order = blackboard.strategy.getOrder(orderId);
                 const Waypoints waypoints = order.waypoints;

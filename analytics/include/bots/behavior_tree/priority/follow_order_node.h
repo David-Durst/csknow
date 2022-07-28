@@ -34,7 +34,7 @@ namespace follow {
                 SelectorNode(blackboard, Node::makeList(
                                      make_unique<TeamConditionDecorator>(
                                              blackboard, make_unique<compute_nav_area::ComputeEntryNavAreaNode>(blackboard),
-                                             ENGINE_TEAM_T),
+                                             ENGINE_TEAM_CT),
                                      make_unique<compute_nav_area::ComputeHoldNavAreaNode>(blackboard)),
                              "ComputeNavAreaNode") { };
     };

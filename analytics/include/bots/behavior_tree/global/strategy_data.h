@@ -162,7 +162,7 @@ struct Order {
             }
         }
         holdIndexToAreaId[waypointIndex] = minAreaIndex;
-        playerToHoldIndex[waypointIndex] = chokeAreaId;
+        holdIndexToDangerAreaId[waypointIndex] = chokeAreaId;
     }
 
     void print(const vector<CSGOId> followers, const map<CSGOId, int64_t> & playerToWaypointIndex,
@@ -346,6 +346,9 @@ public:
     }
 
     void assignPlayerToHoldIndex(CSGOId playerId, OrderId orderId, size_t holdIndex) {
+        for (Order & order : ctOrders) {
+            order.playerToHoldIndex.erase(playerId);
+        }
         Order & order = ctOrders[orderId.index];
         order.playerToHoldIndex[playerId] = holdIndex;
     }
