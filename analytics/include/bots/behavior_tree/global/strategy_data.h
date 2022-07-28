@@ -77,7 +77,7 @@ struct Order {
                        const ReachableResult & reachability) const {
         double minDistance = std::numeric_limits<double>::max();
         for (const auto & dstAreaId : dstAreaIds) {
-            minDistance = std::min(minDistance, reachability.getDistance(srcAreaId, dstAreaId));
+            minDistance = std::min(minDistance, reachability.getDistance(srcAreaId, dstAreaId, navFile));
         }
         return minDistance;
     }

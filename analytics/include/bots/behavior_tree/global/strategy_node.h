@@ -17,21 +17,21 @@ namespace strategy {
             {WaypointType::NavPlace, "LongA"},
             {WaypointType::NavPlace, "ARamp"},
             {WaypointType::NavPlace, "BombsiteA"},
-            {WaypointType::C4, "BombsiteB"}
+            {WaypointType::C4, "BombsiteA"}
     };
     static Waypoints offenseSpawnToAWaypoints = {
             {WaypointType::NavPlace, "CTSpawn"},
             {WaypointType::NavPlace, "UnderA"},
             {WaypointType::NavPlace, "ARamp"},
             {WaypointType::NavPlace, "BombsiteA"},
-            {WaypointType::C4, "BombsiteB"}
+            {WaypointType::C4, "BombsiteA"}
     };
     static Waypoints offenseCatToAWaypoints = {
             {WaypointType::NavPlace, "Catwalk"},
             {WaypointType::NavPlace, "ShortStairs"},
             {WaypointType::NavPlace, "ExtendedA"},
             {WaypointType::NavPlace, "BombsiteA"},
-            {WaypointType::C4, "BombsiteB"}
+            {WaypointType::C4, "BombsiteA"}
     };
     static Waypoints offenseBDoorsToBWaypoints = {
             {WaypointType::NavPlace, "MidDoors"},

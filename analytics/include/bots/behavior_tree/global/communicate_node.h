@@ -10,6 +10,7 @@
 #include "bots/behavior_tree/node.h"
 #include <map>
 #include <memory>
+#include "bots/behavior_tree/condition_helper_node.h"
 #define WATCHED_DISTANCE 750.
 #define RECENTLY_CHECKED_SECONDS 5.
 #define DANGER_ATTENTION_SECONDS 1.
@@ -29,11 +30,13 @@ namespace communicate {
         };
     }
 
-    class AssignSpacingNode : public SequenceNode {
+    class AssignSpacingNode : public SelectorNode {
     public:
         AssignSpacingNode(Blackboard & blackboard) :
-                SequenceNode(blackboard, Node::makeList(
-                        make_unique<spacing::AssignEntryIndexNode>(blackboard),
+                SelectorNode(blackboard, Node::makeList(
+                        make_unique<TeamConditionDecorator>(
+                                blackboard, make_unique<spacing::AssignEntryIndexNode>(blackboard),
+                                ENGINE_TEAM_T),
                         make_unique<spacing::AssignHoldIndexNode>(blackboard)
                 ), "CommunicationNode") { };
     };

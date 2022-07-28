@@ -8,6 +8,7 @@
 #include "bots/behavior_tree/node.h"
 #include "bots/behavior_tree/pathing_node.h"
 #include <map>
+#include "bots/behavior_tree/condition_helper_node.h"
 
 #define HOLD_DISTANCE 300.f
 #define BAIT_DISTANCE 50.f
@@ -20,16 +21,6 @@ namespace follow {
             virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override;
         };
 
-        class OffenseCheckNode : public ConditionDecorator {
-        public:
-            OffenseCheckNode(Blackboard & blackboard) : ConditionDecorator(blackboard,
-                                                                                make_unique<ComputeEntryNavAreaNode>(blackboard),
-                                                                                "OffenseCheckNode") { };
-            virtual bool valid(const ServerState & state, TreeThinker & treeThinker) override {
-                return state.getClient(treeThinker.csgoId).team == ENGINE_TEAM_T;
-            }
-        };
-
         class ComputeHoldNavAreaNode : public Node {
         public:
             ComputeHoldNavAreaNode(Blackboard & blackboard) : Node(blackboard, "ComputeHoldNavAreaNode") { };
@@ -37,12 +28,13 @@ namespace follow {
         };
     }
 
-
     class ComputeNavAreaNode : public SelectorNode {
     public:
         ComputeNavAreaNode(Blackboard & blackboard) :
                 SelectorNode(blackboard, Node::makeList(
-                                     make_unique<compute_nav_area::OffenseCheckNode>(blackboard),
+                                     make_unique<TeamConditionDecorator>(
+                                             blackboard, make_unique<compute_nav_area::ComputeEntryNavAreaNode>(blackboard),
+                                             ENGINE_TEAM_T),
                                      make_unique<compute_nav_area::ComputeHoldNavAreaNode>(blackboard)),
                              "ComputeNavAreaNode") { };
     };
