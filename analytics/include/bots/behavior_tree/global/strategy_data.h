@@ -42,21 +42,29 @@ typedef vector<Waypoint> Waypoints;
  */
 struct Order {
     Waypoints waypoints;
-    vector<size_t> holdIndices, chokeIndices;
+    vector<size_t> holdIndices;
+    size_t aggressiveChokeIndex, passiveChokeIndex;
     // multiple players can watch one choke point, one player in a hold point
-    map<size_t, CSGOId> holdIndexToPlayer;
-    map<CSGOId, size_t> playerToChokeIndex;
+    map<CSGOId, size_t> playerToHoldIndex;
     // what about chains of operations (like switching once plant happens)?
 
     void computeIndices() {
+        holdIndices.clear();
+        playerToHoldIndex.clear();
         for (size_t i = 0; i < waypoints.size(); i++) {
-            if (waypoints[i].type == WaypointType::ChokePlace) {
-                chokeIndices.push_back(i);
+            if (waypoints[i].type == WaypointType::ChokePlace || waypoints[i].type == WaypointType::ChokeAreas) {
+                if (waypoints[i].aggresiveDefense) {
+                    aggressiveChokeIndex = i;
+                }
+                else {
+                    passiveChokeIndex = 1;
+                }
             }
             else if (waypoints[i].type == WaypointType::HoldPlace) {
                 holdIndices.push_back(i);
             }
         }
+
     }
 
     void print(const vector<CSGOId> followers, const map<CSGOId, int64_t> & playerToWaypointIndex,
@@ -236,10 +244,13 @@ public:
         orderToPlayers[orderId].push_back(playerId);
     }
 
-    void clearPlayerHoldAssignments() {
-        for (Order & order : ctOrders) {
-            order.holdIndexToPlayer.clear();
-        }
+    void getUnassignedHoldIndices(bool aggressive = true) {
+
+    }
+
+    void assignPlayerToHoldIndex(CSGOId playerId, OrderId orderId, size_t holdIndex) {
+        Order & order = ctOrders[orderId.index];
+        order.playerToHoldIndex[playerId] = holdIndex;
     }
 
     vector<OrderId> getOrdersNotAssignedPlayers(TeamId team) const {

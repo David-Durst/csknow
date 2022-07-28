@@ -26,7 +26,6 @@ namespace strategy {
                 throw std::runtime_error("no ct orders with a nav place, nav area, or c4");
             }
 
-            blackboard.strategy.clearPlayerHoldAssignments();
             for (const auto & orderId : blackboard.strategy.getOrderIds(false, true)) {
                 const Order & order = blackboard.strategy.getOrder(orderId);
                 for (const auto & waypoint : order.waypoints) {

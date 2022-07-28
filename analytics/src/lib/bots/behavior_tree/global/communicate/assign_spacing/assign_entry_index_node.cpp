@@ -9,8 +9,8 @@ namespace communicate::spacing {
      */
     NodeState AssignEntryIndexNode::exec(const ServerState &state, TreeThinker &treeThinker) {
         if (blackboard.newOrderThisFrame) {
-            for (const auto & orderId : blackboard.strategy.getOrderIds(false, true)) {
-                // assign pushers to push hold points, assign baiters to bait hold points
+            for (const auto & orderId : blackboard.strategy.getOrderIds(true, false)) {
+                // assign one of pushers to go first, then assign rest
                 // after pushers, assign baiters
                 vector<CSGOId> baitersOnOrder;
                 int entryIndex = 0;
