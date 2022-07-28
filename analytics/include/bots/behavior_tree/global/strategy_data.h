@@ -7,6 +7,7 @@
 #include "bots/load_save_bot_data.h"
 #include "navmesh/nav_file.h"
 #include "bots/analysis/nav_file_helpers.h"
+#include "queries/distance_to_places.h"
 #include <sstream>
 #include <algorithm>
 using std::stringstream;
@@ -19,7 +20,6 @@ enum class WaypointType {
     ChokeAreas,
     HoldPlace,
     HoldAreas,
-    Player,
     C4,
     NUM_WAYPOINTS
 };
@@ -67,6 +67,38 @@ struct Order {
 
     }
 
+    double getDistance(AreaId srcAreaId, set<AreaId> & dstAreaIds, const nav_mesh::nav_file & navFile,
+                       const ReachableResult & reachability) {
+        double minDistance = std::numeric_limits<double>::max();
+        for (const auto & dstAreaId : dstAreaIds) {
+            minDistance = std::min(minDistance, reachability.getDistance(srcAreaId, dstAreaId));
+        }
+        return minDistance;
+    }
+
+    double getDistance(AreaId srcAreaId, Waypoint & waypoint, const nav_mesh::nav_file & navFile,
+                       const ReachableResult & reachability, const DistanceToPlacesResult & distanceToPlacesResult) {
+        switch (waypoint.type) {
+            case WaypointType::NavPlace:
+                return distanceToPlacesResult.getDistance(srcAreaId, waypoint.placeName, navFile);
+            case WaypointType::NavAreas:
+                return getDistance(srcAreaId, waypoint.areaIds, navFile, reachability);
+            case WaypointType::ChokePlace:
+                return distanceToPlacesResult.getDistance(srcAreaId, waypoint.placeName, navFile);
+                break;
+            case WaypointType::ChokeAreas:
+                return getDistance(srcAreaId, waypoint.areaIds, navFile, reachability);
+            case WaypointType::HoldPlace:
+                return distanceToPlacesResult.getDistance(srcAreaId, waypoint.placeName, navFile);
+            case WaypointType::HoldAreas:
+                return getDistance(srcAreaId, waypoint.areaIds, navFile, reachability);
+            case WaypointType::C4:
+                return distanceToPlacesResult.getDistance(srcAreaId, waypoint.placeName, navFile);
+            default:
+                throw std::runtime_error("invalid waypoint type for getting distance");
+        }
+    }
+
     void print(const vector<CSGOId> followers, const map<CSGOId, int64_t> & playerToWaypointIndex,
                const ServerState & state, const nav_mesh::nav_file & navFile,
                const map<CSGOId, int32_t> & playerToEntryIndex, size_t orderIndex, TeamId team, vector<string> & result) const {
@@ -105,10 +137,6 @@ struct Order {
                 case WaypointType::HoldAreas:
                     typeString = "HoldAreas";
                     dataString = waypoint.customAreasName;
-                    break;
-                case WaypointType::Player:
-                    typeString = "Player";
-                    dataString = state.getPlayerString(waypoint.playerId);
                     break;
                 case WaypointType::C4:
                     typeString = "C4";
@@ -244,10 +272,11 @@ public:
         orderToPlayers[orderId].push_back(playerId);
     }
 
-    void getUnassignedHoldIndices(bool aggressive = true) {
+    /*
+    double getDistance(Order, Waypoint & waypoint, const nav_mesh::nav_file & navFile,
+                       const ReachableResult & reachability, const DistanceToPlacesResult & distanceToPlacesResult) {
 
-    }
-
+     */
     void assignPlayerToHoldIndex(CSGOId playerId, OrderId orderId, size_t holdIndex) {
         Order & order = ctOrders[orderId.index];
         order.playerToHoldIndex[playerId] = holdIndex;

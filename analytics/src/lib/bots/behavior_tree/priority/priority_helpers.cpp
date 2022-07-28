@@ -25,28 +25,29 @@ void moveToWaypoint(const Blackboard & blackboard, const ServerState & state, Tr
 }
 
 bool finishWaypoint(const ServerState & state, int64_t waypointIndex,
-                    const Order & curOrder, Priority & curPriority, string curPlace) {
+                    const Order & curOrder, Priority & curPriority, string curPlace, AreaId curAreaId) {
     // finished with current priority if
     // trying to reach place and got there
-    if (curOrder.waypoints[waypointIndex].type == WaypointType::NavPlace) {
+    if (curOrder.waypoints[waypointIndex].type == WaypointType::NavPlace || curOrder.waypoints[waypointIndex].type == WaypointType::C4) {
         if (curOrder.waypoints[waypointIndex].placeName == curPlace) {
             return true;
         }
     }
-    // target player died
-    else if (curOrder.waypoints[waypointIndex].type == WaypointType::Player) {
-        if (!state.clients[state.csgoIdToCSKnowId[curOrder.waypoints[waypointIndex].playerId]].isAlive) {
-            return true;
+    else if (curOrder.waypoints[waypointIndex].type == WaypointType::NavAreas) {
+        for (const auto & areaId : curOrder.waypoints[waypointIndex].areaIds) {
+            if (areaId == curAreaId) {
+                return true;
+            }
         }
     }
-    // c4 doesn't finish
     return false;
 }
 
-int64_t getMaxFinishedWaypoint(const ServerState & state, const Order & curOrder, Priority & curPriority, string curPlace) {
+int64_t getMaxFinishedWaypoint(const ServerState & state, const Order & curOrder, Priority & curPriority,
+                               string curPlace, AreaId curAreaId) {
     int64_t maxFinishedWaypointIndex = -1;
     for (size_t i = 0; i < curOrder.waypoints.size(); i++) {
-        if (finishWaypoint(state, i, curOrder, curPriority, curPlace)) {
+        if (finishWaypoint(state, i, curOrder, curPriority, curPlace, curAreaId)) {
             maxFinishedWaypointIndex = i;
         }
     }

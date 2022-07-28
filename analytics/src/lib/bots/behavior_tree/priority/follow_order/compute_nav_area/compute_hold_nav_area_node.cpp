@@ -15,8 +15,8 @@ namespace follow::compute_nav_area {
         curPriority.targetPlayer.playerId = INVALID_ID;
         curPriority.moveOptions = {true, false, false};
         curPriority.shootOptions = ShootOptions::DontShoot;
-        
-        if ()
+
+        if (blackboard.strategy.di)
 
 
         playerNodeState[treeThinker.csgoId] = NodeState::Success;

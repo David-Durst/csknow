@@ -11,8 +11,9 @@ void moveToWaypoint(const Blackboard & blackboard, const ServerState & state, Tr
                     const Order & curOrder, Priority & curPriority);
 
 bool finishWaypoint(const ServerState & state, int64_t waypointIndex,
-                    const Order & curOrder, Priority & curPriority, string curPlace);
+                    const Order & curOrder, Priority & curPriority, string curPlace, AreaId curAreaId);
 
-int64_t getMaxFinishedWaypoint(const ServerState & state, const Order & curOrder, Priority & curPriority, string curPlace);
+int64_t getMaxFinishedWaypoint(const ServerState & state, const Order & curOrder, Priority & curPriority,
+                               string curPlace, AreaId curAreaId);
 
 #endif //CSKNOW_PRIORITY_HELPERS_H
