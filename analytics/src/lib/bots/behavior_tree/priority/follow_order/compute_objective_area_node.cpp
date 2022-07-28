@@ -35,8 +35,11 @@ namespace follow {
                 blackboard.strategy.playerToWaypointIndex[treeThinker.csgoId] = maxFinishedWaypoint + 1;
                 moveToWaypoint(blackboard, state, treeThinker, curOrder, curPriority);
             }
+            // otherwise, stop
+            else {
+                curPriority.moveOptions.move = false;
+            }
         }
-
 
         const Action &priorAction = blackboard.lastPlayerToAction[treeThinker.csgoId];
         const ServerState::Client & curClient = state.getClient(treeThinker.csgoId);
