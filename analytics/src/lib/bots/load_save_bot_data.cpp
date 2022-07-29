@@ -164,10 +164,13 @@ void ServerState::loadClientStates(string clientStatesFilePath) {
         }
         else if (colNumber == 33) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].isBot);
+        }
+        else if (colNumber == 34) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].isAirbone);
             rowNumber++;
             arrayEntry++;
         }
-        colNumber = (colNumber + 1) % 34;
+        colNumber = (colNumber + 1) % 35;
     }
     closeMMapFile({fd, stats, file});
 }

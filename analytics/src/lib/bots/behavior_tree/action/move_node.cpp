@@ -91,7 +91,8 @@ namespace action {
 
             // regardless if moving, check for crouching
             curAction.setButton(IN_WALK, curPriority.moveOptions.walk);
-            curAction.setButton(IN_DUCK, curPriority.moveOptions.crouch);
+            // always crouch when airborne to get to max area
+            curAction.setButton(IN_DUCK, curPriority.moveOptions.crouch || curClient.isAirbone);
 
         }
         // do nothing if there was an error

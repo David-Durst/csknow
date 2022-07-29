@@ -33,9 +33,11 @@ namespace follow::compute_nav_area {
                 blackboard.strategy.playerToWaypointIndex[treeThinker.csgoId] = maxFinishedWaypoint + 1;
                 moveToWaypoint(blackboard, state, treeThinker, curOrder, curPriority);
             }
-            // otherwise, stop
+            // otherwise, stop (if in air, could be landing, so keep going forward then)
             else {
-                curPriority.moveOptions.move = false;
+                if (!state.getClient(treeThinker.csgoId).isAirbone) {
+                    curPriority.moveOptions.move = false;
+                }
             }
         }
 
