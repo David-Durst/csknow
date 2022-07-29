@@ -76,9 +76,9 @@ public:
 class ForceHoldIndexNode : public Node {
     vector<CSGOId> targetIds;
     vector<int> holdIndices;
-    OrderId orderId;
+    OrderId & orderId;
 public:
-    ForceHoldIndexNode(Blackboard & blackboard, string name, vector<CSGOId> targetIds, vector<int> holdIndices, OrderId orderId) :
+    ForceHoldIndexNode(Blackboard & blackboard, string name, vector<CSGOId> targetIds, vector<int> holdIndices, OrderId & orderId) :
             Node(blackboard, name), targetIds(targetIds), holdIndices(holdIndices), orderId(orderId) { };
     virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
         for (size_t i = 0; i < targetIds.size(); i++) {

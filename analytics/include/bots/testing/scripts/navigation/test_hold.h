@@ -16,7 +16,7 @@ public:
     OrderId addedOrderId;
 
     HoldLongScript(const ServerState & state) :
-        Script("GooseToCatScript", {{0, ENGINE_TEAM_T}}, {ObserveType::FirstPerson, 0}) { }
+        Script("HoldLongScript", {{0, ENGINE_TEAM_T}}, {ObserveType::FirstPerson, 0}) { }
 
     virtual void initialize(Tree & tree, ServerState & state) override  {
         if (tree.newBlackboard) {
