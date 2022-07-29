@@ -195,4 +195,22 @@ public:
     }
 };
 
+class StandingStill : public Node {
+    vector<CSGOId> sourceIds;
+
+public:
+    StandingStill(Blackboard & blackboard, vector<CSGOId> sourceIds) :
+            Node(blackboard, "StandingStill"), sourceIds(sourceIds) { };
+
+    virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
+        bool allStill = true;
+        for (const auto & sourceId : sourceIds) {
+            const ServerState::Client & sourceClient = state.getClient(sourceId);
+            allStill &= sourceClient.lastVelX == 0. && sourceClient.lastVelY == 0. && sourceClient.lastVelZ == 0.;
+        }
+        playerNodeState[treeThinker.csgoId] = allStill ? NodeState::Success : NodeState::Failure;
+        return playerNodeState[treeThinker.csgoId];
+    }
+};
+
 #endif //CSKNOW_STATE_CHECKS_H

@@ -31,6 +31,11 @@ public:
                                                                          1000.),
                                               make_unique<AimingAtArea>(blackboard, vector{neededBots[0].id}, 3653))),
                                               false);
+            Node::Ptr stillAndLookingAtChoke = make_unique<RepeatDecorator>(blackboard,
+                                                                            make_unique<SequenceNode>(blackboard, Node::makeList(
+                                                                                    make_unique<StandingStill>(blackboard, vector{neededBots[0].id}),
+                                                                                    make_unique<AimingAtArea>(blackboard, vector{neededBots[0].id}, 3653))),
+                                                                true);
             commands = make_unique<SequenceNode>(blackboard, Node::makeList(
                                                          make_unique<InitTestingRound>(blackboard, name),
                                                          make_unique<movement::WaitNode>(blackboard, 1.0),
@@ -46,7 +51,8 @@ public:
                                                          make_unique<ForceHoldIndexNode>(blackboard, "ForceAggroLong", vector{neededBots[0].id}, vector{4}, addedOrderId),
                                                          make_unique<ParallelFirstNode>(blackboard, Node::makeList(
                                                                  std::move(aimAtChoke),
-                                                                 make_unique<movement::WaitNode>(blackboard, 14, true)),
+                                                                 std::move(stillAndLookingAtChoke),
+                                                                 make_unique<movement::WaitNode>(blackboard, 14, false)),
                                                             "HoldLongCondition")),
                                                  "HoldLongSequence");
         }
