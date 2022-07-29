@@ -29,7 +29,7 @@ public:
                                               make_unique<PosConstraint>(blackboard, neededBots[0].id,
                                                                          PosConstraintDimension::Y, PosConstraintOp::GT,
                                                                          1000.),
-                                              make_unique<AimingAtArea>(blackboard, vector{neededBots[0].id}, 4170))),
+                                              make_unique<AimingAtArea>(blackboard, vector{neededBots[0].id}, 3653))),
                                               false);
             commands = make_unique<SequenceNode>(blackboard, Node::makeList(
                                                          make_unique<InitTestingRound>(blackboard, name),
@@ -46,7 +46,7 @@ public:
                                                          make_unique<ForceHoldIndexNode>(blackboard, "ForceAggroLong", vector{neededBots[0].id}, vector{4}, addedOrderId),
                                                          make_unique<ParallelFirstNode>(blackboard, Node::makeList(
                                                                  std::move(aimAtChoke),
-                                                                 make_unique<movement::WaitNode>(blackboard, 20, false)),
+                                                                 make_unique<movement::WaitNode>(blackboard, 14, true)),
                                                             "HoldLongCondition")),
                                                  "HoldLongSequence");
         }
