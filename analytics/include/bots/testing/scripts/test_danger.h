@@ -13,6 +13,8 @@
 
 class DangerOnePlayerCheck : public Script {
 public:
+    OrderId addedOrderId;
+
     DangerOnePlayerCheck(const ServerState & state) :
             Script("DangerOnePlayerCheck", {{0, ENGINE_TEAM_CT}, {0, ENGINE_TEAM_T}, {0, ENGINE_TEAM_T}},
                    {ObserveType::Absolute, 0, {395.317963, 2659.722656, 559.311157}, {43.801949, -49.044704}}) { }
@@ -41,7 +43,7 @@ public:
                                                                         make_unique<Teleport>(blackboard, neededBots[2].id, state),
                                                                         make_unique<movement::WaitNode>(blackboard, 0.1),
                                                                         make_unique<ClearMemoryCommunicationDangerNode>(blackboard),
-                                                                        make_unique<ForceOrderNode>(blackboard, "ForceCTCat", vector{neededBots[0].id}, testCatToAWaypoints),
+                                                                        make_unique<ForceOrderNode>(blackboard, "ForceCTCat", vector{neededBots[0].id}, testCatToAWaypoints, addedOrderId),
                                                                         make_unique<movement::WaitNode>(blackboard, 2.0)),
                                                                 "DangerSetup");
             Node::Ptr disableAllBothDuringSetup = make_unique<ParallelFirstNode>(blackboard, Node::makeList(
@@ -74,6 +76,8 @@ public:
 
 class DangerTwoPlayerCheck : public Script {
 public:
+    OrderId addedOrderId;
+
     DangerTwoPlayerCheck(const ServerState & state) :
             Script("DangerTwoPlayerCheck", {{0, ENGINE_TEAM_CT}, {0, ENGINE_TEAM_CT}, {0, ENGINE_TEAM_T}, {0, ENGINE_TEAM_T}},
                    {ObserveType::Absolute, 0, {395.317963, 2659.722656, 559.311157}, {43.801949, -49.044704}}) { }
@@ -106,7 +110,7 @@ public:
                                                                         make_unique<Teleport>(blackboard, neededBots[3].id, state),
                                                                         make_unique<movement::WaitNode>(blackboard, 0.1),
                                                                         make_unique<ClearMemoryCommunicationDangerNode>(blackboard),
-                                                                        make_unique<ForceOrderNode>(blackboard, "ForceCTCat", vector{neededBots[0].id, neededBots[1].id}, testCatToAWaypoints),
+                                                                        make_unique<ForceOrderNode>(blackboard, "ForceCTCat", vector{neededBots[0].id, neededBots[1].id}, testCatToAWaypoints, addedOrderId),
                                                                         make_unique<movement::WaitNode>(blackboard, 2.0)),
                                                                 "DangerSetup");
             Node::Ptr disableAllBothDuringSetup = make_unique<ParallelFirstNode>(blackboard, Node::makeList(
