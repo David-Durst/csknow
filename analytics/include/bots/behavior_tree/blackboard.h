@@ -96,8 +96,8 @@ struct Blackboard {
     // all player data
     map<CSGOId, TreeThinker> playerToTreeThinkers;
 
-    // order data
-    bool newOrderThisFrame;
+    // order data (movedC4 is for debugging, need to reset orders)
+    bool newOrderThisFrame, recomputeOrders = false;
     Strategy strategy;
     /*
     vector<Order> orders;

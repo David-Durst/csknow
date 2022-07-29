@@ -40,7 +40,8 @@ int main(int argc, char * argv[]) {
     ScriptsRunner scriptsRunner(Script::makeList(
                                             //make_unique<GooseToCatScript>(state),
                                             //make_unique<GooseToCatShortScript>(state),
-                                            make_unique<HoldLongScript>(state)
+                                            //make_unique<HoldLongScript>(state),
+                                            make_unique<HoldASiteScript>(state)
                                             //make_unique<AimAndKillWithinTimeCheck>(state),
                                             //make_unique<PushBaitGooseToCatScript>(state),
                                             //make_unique<PushMultipleBaitGooseToCatScript>(state),

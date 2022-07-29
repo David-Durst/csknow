@@ -127,6 +127,17 @@ public:
     }
 };
 
+class RecomputeOrdersNode : public Node {
+public:
+    RecomputeOrdersNode(Blackboard & blackboard) :
+            Node(blackboard, "RecomputeOrders") { };
+    virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
+        blackboard.recomputeOrders = true;
+        playerNodeState[treeThinker.csgoId] = NodeState::Success;
+        return playerNodeState[treeThinker.csgoId];
+    }
+};
+
 class CheckPossibleLocationsNode : public Node {
     vector<CSGOId> targetIds;
     vector<vector<AreaId>> requiredPossibleAreas;

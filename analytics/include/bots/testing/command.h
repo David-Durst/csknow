@@ -83,6 +83,18 @@ struct Teleport : Command {
     }
 };
 
+struct TeleportPlantedC4 : Command {
+    TeleportPlantedC4(Blackboard & blackboard) :
+            Command(blackboard, "TeleportPlantedC4Cmd") { }
+
+    virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
+        std::stringstream result;
+        result << "sm_teleportPlantedC4";
+        scriptLines = {result.str()};
+        return Command::exec(state, treeThinker);
+    }
+};
+
 struct SlayAllBut : Command {
     vector<string> playerNames;
 
