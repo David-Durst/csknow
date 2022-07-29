@@ -81,6 +81,9 @@ public:
     }
 
     AreaId getClosestArea(AreaId srcAreaId, string dstPlaceName, const nav_mesh::nav_file & navFile) const {
+        if (dstPlaceName == "") {
+            return srcAreaId;
+        }
         size_t srcArea = navFile.m_area_ids_to_indices.find(srcAreaId)->second,
                 dstPlace = placeNameToIndex.find(dstPlaceName)->second;
         return areaIndexToId[getClosestArea(srcArea, dstPlace)];
