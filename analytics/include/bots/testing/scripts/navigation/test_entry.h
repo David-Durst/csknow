@@ -2,8 +2,8 @@
 // Created by steam on 6/20/22.
 //
 
-#ifndef CSKNOW_BASIC_NAV_H
-#define CSKNOW_BASIC_NAV_H
+#ifndef CSKNOW_ENTRY_H
+#define CSKNOW_ENTRY_H
 
 #include "bots/testing/script.h"
 #include "bots/behavior_tree/pathing_node.h"
@@ -55,7 +55,7 @@ public:
 class GooseToCatScript : public Script {
 public:
     GooseToCatScript(const ServerState & state) :
-        Script("GooseToCatScript", {{0, ENGINE_TEAM_CT}}, {ObserveType::FirstPerson, 0}) { }
+            Script("GooseToCatScript", {{0, ENGINE_TEAM_CT}}, {ObserveType::FirstPerson, 0}) { }
 
     virtual void initialize(Tree & tree, ServerState & state) override  {
         if (tree.newBlackboard) {
@@ -134,4 +134,4 @@ public:
     }
 };
 
-#endif //CSKNOW_BASIC_NAV_H
+#endif //CSKNOW_ENTRY_H

@@ -1,7 +1,8 @@
 #include "bots/load_save_bot_data.h"
 #include "bots/behavior_tree/tree.h"
 #include "bots/testing/script.h"
-#include "bots/testing/scripts/test_nav.h"
+#include "bots/testing/scripts/navigation/test_entry.h"
+#include "bots/testing/scripts/navigation/test_hold.h"
 #include "bots/testing/scripts/test_aim.h"
 #include "bots/testing/scripts/test_memory.h"
 #include "bots/testing/scripts/test_communication.h"
@@ -39,6 +40,7 @@ int main(int argc, char * argv[]) {
     ScriptsRunner scriptsRunner(Script::makeList(
                                             //make_unique<GooseToCatScript>(state),
                                             //make_unique<GooseToCatShortScript>(state),
+                                            make_unique<HoldLongScript>(state)
                                             //make_unique<AimAndKillWithinTimeCheck>(state),
                                             //make_unique<PushBaitGooseToCatScript>(state),
                                             //make_unique<PushMultipleBaitGooseToCatScript>(state),
@@ -50,8 +52,8 @@ int main(int argc, char * argv[]) {
                                             //make_unique<SpawnPossibleNavAreasCheck>(state),
                                             //make_unique<DiffusionPossibleNavAreasCheck>(state),
                                             //make_unique<VisibilityPossibleNavAreasCheck>(state),
-                                            make_unique<DangerOnePlayerCheck>(state),
-                                            make_unique<DangerTwoPlayerCheck>(state)
+                                            //make_unique<DangerOnePlayerCheck>(state),
+                                            //make_unique<DangerTwoPlayerCheck>(state)
     ), true);
 
 
