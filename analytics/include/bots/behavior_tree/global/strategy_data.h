@@ -29,6 +29,7 @@ struct Waypoint {
 
     // use placeName if type of NavPlace, playerId if type of is player, placeName for site if c4
     // not using union because that prevented automatic destructor definition, and this is trivial amount of extra data
+    // if placeName and areaIds are set, areaIds and invalid areas in place
     string placeName;
     string customAreasName;
     vector<AreaId> areaIds;
@@ -147,8 +148,15 @@ struct Order {
         size_t minAreaIndex;
         AreaId chokeAreaId;
         double minDistance = std::numeric_limits<double>::max();
+        set<AreaId> invalidAreaIds;
+        if (waypoint.type == WaypointType::HoldPlace) {
+            invalidAreaIds.insert(waypoint.areaIds.begin(), waypoint.areaIds.end());
+        }
         for (size_t areaIndex = 0; areaIndex < navFile.m_areas.size(); areaIndex++) {
             AreaId areaId = navFile.m_areas[areaIndex].get_id();
+            if (invalidAreaIds.find(areaId) != invalidAreaIds.end()) {
+                continue;
+            }
             double newDistance = getDistance(areaId, waypoint, navFile,
                                              reachability, distanceToPlacesResult);
             if (newDistance < minDistance) {
