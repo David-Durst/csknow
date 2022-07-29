@@ -255,7 +255,7 @@ class Strategy {
         else if (orderId.team == ENGINE_TEAM_CT) {
             return ctOrders[orderId.index];
         }
-        throw std::runtime_error( "getOrderForPlayer bad player id" );
+        throw std::runtime_error( "getOrderPrivate bad order id" );
     }
 
 public:
@@ -285,7 +285,7 @@ public:
             return orderToPlayers.find(orderId)->second;
         }
         else {
-            throw std::runtime_error( "getPlayersForOrder bad order id" );
+            throw std::runtime_error( "getOrderFollowers bad order id" );
         }
     }
 
@@ -296,7 +296,7 @@ public:
         else if (orderId.team == ENGINE_TEAM_CT) {
             return ctOrders[orderId.index];
         }
-        throw std::runtime_error( "getOrderForPlayer bad player id" );
+        throw std::runtime_error( "getOrder bad order id" );
     }
 
     const Order & getOrderForPlayer(CSGOId playerId) const {
