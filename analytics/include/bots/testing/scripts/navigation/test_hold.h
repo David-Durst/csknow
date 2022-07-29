@@ -36,6 +36,8 @@ public:
                                                          make_unique<ForceOrderNode>(blackboard, "ForceLongDefense", vector{neededBots[0].id}, strategy::defenseLongToAWaypoints, addedOrderId),
                                                          make_unique<ForceHoldIndexNode>(blackboard, "ForceAggroLong", vector{neededBots[0].id}, vector{4}, addedOrderId),
                                                          make_unique<ParallelFirstNode>(blackboard, Node::makeList(
+                                                                 // verify that looking at danger area before get to pit (y < 1000)
+                                                                 // repeat cheacking that velocity is 0, that in pit
                                                                                                 //make_unique<JumpedBeforeCat>(blackboard, neededBots[0].id),
                                                                                                 make_unique<movement::WaitNode>(blackboard, 20, false)),
                                                                                         "HoldLongCondition")),

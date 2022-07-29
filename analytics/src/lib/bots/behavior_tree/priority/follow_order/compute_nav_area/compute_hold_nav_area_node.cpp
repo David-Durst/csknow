@@ -19,11 +19,16 @@ namespace follow::compute_nav_area {
         curPriority.moveOptions = {true, false, false};
         curPriority.shootOptions = ShootOptions::DontShoot;
 
-        // if in the target area, don't move and make danger the chokepoint
+        // if in the target area, don't move
         if (curAreaId == curPriority.targetAreaId) {
-            blackboard.playerToDangerAreaId[treeThinker.csgoId] = curOrder.holdIndexToDangerAreaId.find(
-                    curOrder.playerToHoldIndex.find(treeThinker.csgoId)->second)->second;
             curPriority.moveOptions = {false, false, false};
+        }
+
+        // aim at danger area if visible
+        AreaId dangerAreaId = curOrder.holdIndexToDangerAreaId.find(
+            curOrder.playerToHoldIndex.find(treeThinker.csgoId)->second)->second;
+        if (blackboard.visPoints.isVisibleAreaId(curAreaId, dangerAreaId)) {
+            blackboard.playerToDangerAreaId[treeThinker.csgoId] = dangerAreaId;
         }
 
         playerNodeState[treeThinker.csgoId] = NodeState::Success;

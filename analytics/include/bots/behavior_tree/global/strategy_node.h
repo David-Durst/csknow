@@ -71,7 +71,7 @@ namespace strategy {
             {WaypointType::HoldPlace, "LongA", "", {}, true},
             {WaypointType::HoldPlace, "Pit", "", {}, true},
             {WaypointType::ChokeAreas, "", "BotALong", {4170}, false},
-            {WaypointType::ChokePlace, "LongDoors", "", {}, true}
+            {WaypointType::ChokeAreas, "", "LongDoorDumpster", {3653}, true}
     };
     static Waypoints defenseSpawnToAWaypoints = {
             {WaypointType::C4, "BombsiteA"},
