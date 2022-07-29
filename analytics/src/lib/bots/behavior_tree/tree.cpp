@@ -28,7 +28,10 @@ void Tree::tick(ServerState & state, const string & mapsPath) {
     if (state.mapNumber != curMapNumber || !samePlayers || resetState) {
         newBlackboard = true;
         blackboard = make_unique<Blackboard>(navPath, state.mapName);
-        blackboard->navFile.remove_incoming_edges_to_areas({6938, 9026});
+
+        blackboard->navFile.remove_incoming_edges_to_areas({
+            6938, 9026, // these are barrels on A that I get stuck on
+        });
         globalNode = make_unique<GlobalNode>(*blackboard);
         priorityNode = make_unique<PriorityNode>(*blackboard);
         actionNode = make_unique<ActionNode>(*blackboard);
