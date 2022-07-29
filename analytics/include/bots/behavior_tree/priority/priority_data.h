@@ -56,9 +56,15 @@ struct Priority {
             result << "Engagement, ";
         }
 
-        result << "target pos: (" << targetPos.toString() << "), target player id:"
-            << state.getPlayerString(targetPlayer.playerId) << ", target player round: " << targetPlayer.round
-            << ", target player first frame: " << targetPlayer.firstTargetFrame;
+        result << "target pos: (" << targetPos.toString() << "),";
+        if (targetPlayer.playerId != INVALID_ID) {
+            result << " target player id:" << state.getPlayerString(targetPlayer.playerId);
+        }
+        else {
+            result << " target area id:" << targetAreaId;
+        }
+        result << ", target player round: " << targetPlayer.round
+                << ", target player first frame: " << targetPlayer.firstTargetFrame;
 
         string shootOptionStr;
         switch (shootOptions) {

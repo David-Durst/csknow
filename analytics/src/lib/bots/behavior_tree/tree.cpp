@@ -31,6 +31,7 @@ void Tree::tick(ServerState & state, const string & mapsPath) {
 
         blackboard->navFile.remove_incoming_edges_to_areas({
             6938, 9026, // these are barrels on A that I get stuck on
+            8251, // this one is under t spawn
         });
         globalNode = make_unique<GlobalNode>(*blackboard);
         priorityNode = make_unique<PriorityNode>(*blackboard);

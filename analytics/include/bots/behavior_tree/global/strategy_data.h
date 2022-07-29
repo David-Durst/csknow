@@ -159,7 +159,7 @@ struct Order {
             }
             double newDistance = getDistance(areaId, waypoint, navFile,
                                              reachability, distanceToPlacesResult);
-            if (newDistance < minDistance) {
+            if (newDistance != NOT_CLOSEST_DISTANCE && newDistance < minDistance) {
                 const auto optionalChokeAreaId = isVisible(areaId, chokeWaypoint, navFile, visPoints, distanceToPlacesResult);
                 if (optionalChokeAreaId) {
                     minAreaIndex = areaIndex;
