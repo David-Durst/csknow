@@ -13,6 +13,8 @@
 
 class HoldLongScript : public Script {
 public:
+    OrderId addedOrderId;
+
     HoldLongScript(const ServerState & state) :
         Script("GooseToCatScript", {{0, ENGINE_TEAM_T}}, {ObserveType::FirstPerson, 0}) { }
 
@@ -31,7 +33,8 @@ public:
                                                          make_unique<movement::WaitNode>(blackboard, 0.1),
                                                          make_unique<Teleport>(blackboard, neededBots[0].id, state),
                                                          make_unique<movement::WaitNode>(blackboard, 0.1),
-                                                         make_unique<ForceOrderNode>(blackboard, "ForceLongDefense", vector{neededBots[0].id}, strategy::defenseLongToAWaypoints),
+                                                         make_unique<ForceOrderNode>(blackboard, "ForceLongDefense", vector{neededBots[0].id}, strategy::defenseLongToAWaypoints, addedOrderId),
+                                                         make_unique<ForceHoldIndexNode>(blackboard, "ForceAggroLong", vector{neededBots[0].id}, vector{4}, addedOrderId),
                                                          make_unique<ParallelFirstNode>(blackboard, Node::makeList(
                                                                                                 //make_unique<JumpedBeforeCat>(blackboard, neededBots[0].id),
                                                                                                 make_unique<movement::WaitNode>(blackboard, 20, false)),

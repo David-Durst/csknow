@@ -27,11 +27,12 @@ class ForceOrderNode : public Node {
     vector<CSGOId> targetIds;
     Waypoints waypoints;
     set<AreaId> areaIdsToRemove;
+    OrderId & orderId;
 public:
-    ForceOrderNode(Blackboard & blackboard, string name, vector<CSGOId> targetIds, Waypoints waypoints) :
-            Node(blackboard, name), targetIds(targetIds), waypoints(waypoints) { };
-    ForceOrderNode(Blackboard & blackboard, string name, vector<CSGOId> targetIds, Waypoints waypoints, set<AreaId> areaIdsToRemove) :
-            Node(blackboard, name), targetIds(targetIds), waypoints(waypoints), areaIdsToRemove(areaIdsToRemove) { };
+    ForceOrderNode(Blackboard & blackboard, string name, vector<CSGOId> targetIds, Waypoints waypoints, OrderId & orderId) :
+            Node(blackboard, name), targetIds(targetIds), waypoints(waypoints), orderId(orderId) { };
+    ForceOrderNode(Blackboard & blackboard, string name, vector<CSGOId> targetIds, Waypoints waypoints, set<AreaId> areaIdsToRemove, OrderId & orderId) :
+            Node(blackboard, name), targetIds(targetIds), waypoints(waypoints), areaIdsToRemove(areaIdsToRemove), orderId(orderId) { };
     virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
         //vector<string> pathPlace = { "Catwalk", "ShortStairs", "ExtendedA", "BombsiteA" };
         if (targetIds.empty()) {
@@ -43,8 +44,8 @@ public:
                 throw std::runtime_error("all targets of new order must have same team");
             }
         }
-        OrderId orderId = blackboard.strategy.addOrder(team, {waypoints}, blackboard.navFile,
-                                                       blackboard.reachability, blackboard.visPoints, blackboard.distanceToPlaces);
+        orderId = blackboard.strategy.addOrder(team, {waypoints}, blackboard.navFile,
+                                               blackboard.reachability, blackboard.visPoints, blackboard.distanceToPlaces);
         for (const auto & targetId : targetIds) {
             blackboard.strategy.assignPlayerToOrder(targetId, orderId);
             blackboard.playerToPriority.erase(targetId);
@@ -57,15 +58,32 @@ public:
     }
 };
 
-class ForceAggressionNode : public Node {
+class ForceEntryIndexNode : public Node {
     vector<CSGOId> targetIds;
     vector<int32_t> entryIndices;
 public:
-    ForceAggressionNode(Blackboard & blackboard, string name, vector<CSGOId> targetIds, vector<int32_t> entryIndices) :
+    ForceEntryIndexNode(Blackboard & blackboard, string name, vector<CSGOId> targetIds, vector<int32_t> entryIndices) :
             Node(blackboard, name), targetIds(targetIds), entryIndices(entryIndices) { };
     virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
         for (size_t i = 0; i < targetIds.size(); i++) {
             blackboard.strategy.playerToEntryIndex[targetIds[i]] = entryIndices[i];
+        }
+        playerNodeState[treeThinker.csgoId] = NodeState::Success;
+        return playerNodeState[treeThinker.csgoId];
+    }
+};
+
+class ForceHoldIndexNode : public Node {
+    vector<CSGOId> targetIds;
+    vector<int> holdIndices;
+    OrderId orderId;
+public:
+    ForceHoldIndexNode(Blackboard & blackboard, string name, vector<CSGOId> targetIds, vector<int> holdIndices, OrderId orderId) :
+            Node(blackboard, name), targetIds(targetIds), holdIndices(holdIndices), orderId(orderId) { };
+    virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
+        for (size_t i = 0; i < targetIds.size(); i++) {
+            // intentional int to size_t mismatch so easier to create test vectors, not gonna have more then 1000 waypoints anyway
+            blackboard.strategy.assignPlayerToHoldIndex(targetIds[i], orderId, holdIndices[i]);
         }
         playerNodeState[treeThinker.csgoId] = NodeState::Success;
         return playerNodeState[treeThinker.csgoId];

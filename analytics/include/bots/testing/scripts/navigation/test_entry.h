@@ -54,6 +54,8 @@ public:
 
 class GooseToCatScript : public Script {
 public:
+    OrderId addedOrderId;
+
     GooseToCatScript(const ServerState & state) :
             Script("GooseToCatScript", {{0, ENGINE_TEAM_CT}}, {ObserveType::FirstPerson, 0}) { }
 
@@ -73,7 +75,7 @@ public:
                                                          make_unique<movement::WaitNode>(blackboard, 0.1),
                                                          make_unique<Teleport>(blackboard, neededBots[0].id, state),
                                                          make_unique<movement::WaitNode>(blackboard, 0.1),
-                                                         make_unique<ForceOrderNode>(blackboard, "ForceTCat", vector{neededBots[0].id}, testAToCatWaypoints, areasToRemove),
+                                                         make_unique<ForceOrderNode>(blackboard, "ForceTCat", vector{neededBots[0].id}, testAToCatWaypoints, areasToRemove, addedOrderId),
                                                          make_unique<ParallelFirstNode>(blackboard, Node::makeList(
                                                                                                 make_unique<JumpedBeforeCat>(blackboard, neededBots[0].id),
                                                                                                 make_unique<movement::WaitNode>(blackboard, 20, false)),
@@ -104,6 +106,8 @@ public:
 
 class GooseToCatShortScript : public Script {
 public:
+    OrderId addedOrderId;
+
     GooseToCatShortScript(const ServerState & state) :
             Script("GooseToCatShortScript", {{0, ENGINE_TEAM_CT}}, {ObserveType::FirstPerson, 0}) { }
 
@@ -123,7 +127,7 @@ public:
                                                          make_unique<movement::WaitNode>(blackboard, 0.1),
                                                          make_unique<Teleport>(blackboard, neededBots[0].id, state),
                                                          make_unique<movement::WaitNode>(blackboard, 0.1),
-                                                         make_unique<ForceOrderNode>(blackboard, "ForceTCat", vector{neededBots[0].id}, testAToCatWaypoints, areasToRemove),
+                                                         make_unique<ForceOrderNode>(blackboard, "ForceTCat", vector{neededBots[0].id}, testAToCatWaypoints, areasToRemove, addedOrderId),
                                                          make_unique<ParallelFirstNode>(blackboard, Node::makeList(
                                                                                                 make_unique<DontEnterNavAreas>(blackboard, neededBots[0].id, set{1722u, 1723u, 1727u}),
                                                                                                 make_unique<JumpedBeforeCat>(blackboard, neededBots[0].id),

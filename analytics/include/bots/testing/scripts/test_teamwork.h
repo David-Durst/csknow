@@ -40,6 +40,8 @@ public:
 
 class PushBaitGooseToCatScript : public Script {
 public:
+    OrderId addedOrderId;
+
     PushBaitGooseToCatScript(const ServerState & state) :
             Script("PushBaitGooseToLongScript", {{0, ENGINE_TEAM_CT}, {0, ENGINE_TEAM_CT}},
                    {ObserveType::Absolute, 0, {366.774475, 2669.538818, 239.860245}, {16.486465, -46.266056}}) { };
@@ -64,8 +66,8 @@ public:
                                                          make_unique<movement::WaitNode>(blackboard, 0.1),
                                                          make_unique<Teleport>(blackboard, neededBots[1].id, state),
                                                          make_unique<movement::WaitNode>(blackboard, 0.1),
-                                                         make_unique<ForceOrderNode>(blackboard, "ForceTCat", vector{neededBots[0].id, neededBots[1].id}, testAToCatWaypoints),
-                                                         make_unique<ForceAggressionNode>(blackboard, "ForcePusherBaiter",
+                                                         make_unique<ForceOrderNode>(blackboard, "ForceTCat", vector{neededBots[0].id, neededBots[1].id}, testAToCatWaypoints, addedOrderId),
+                                                         make_unique<ForceEntryIndexNode>(blackboard, "ForcePusherBaiter",
                                                                                           vector{neededBots[0].id, neededBots[1].id},
                                                                                           vector{0, 1}),
                                                          make_unique<ParallelFirstNode>(blackboard, Node::makeList(
@@ -79,6 +81,8 @@ public:
 
 class PushMultipleBaitGooseToCatScript : public Script {
 public:
+    OrderId addedOrderId;
+
     PushMultipleBaitGooseToCatScript(const ServerState & state) :
             Script("PushMultipleBaitGooseToLongScript", {{0, ENGINE_TEAM_CT}, {0, ENGINE_TEAM_CT}, {0, ENGINE_TEAM_CT}},
                    {ObserveType::Absolute, 0, {366.774475, 2669.538818, 239.860245}, {16.486465, -46.266056}}) { };
@@ -107,8 +111,8 @@ public:
                                                          make_unique<movement::WaitNode>(blackboard, 0.1),
                                                          make_unique<Teleport>(blackboard, neededBots[2].id, state),
                                                          make_unique<movement::WaitNode>(blackboard, 0.1),
-                                                         make_unique<ForceOrderNode>(blackboard, "ForceTCat", vector{neededBots[0].id, neededBots[1].id, neededBots[2].id}, testAToCatWaypoints),
-                                                         make_unique<ForceAggressionNode>(blackboard, "ForcePusherBaiter",
+                                                         make_unique<ForceOrderNode>(blackboard, "ForceTCat", vector{neededBots[0].id, neededBots[1].id, neededBots[2].id}, testAToCatWaypoints, addedOrderId),
+                                                         make_unique<ForceEntryIndexNode>(blackboard, "ForcePusherBaiter",
                                                                                           vector{neededBots[0].id, neededBots[1].id, neededBots[2].id},
                                                                                           vector{0, 1, 2}),
                                                          make_unique<ParallelFirstNode>(blackboard, Node::makeList(
