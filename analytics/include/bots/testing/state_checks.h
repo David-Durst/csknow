@@ -39,10 +39,6 @@ public:
         }
         return playerNodeState[treeThinker.csgoId];
     }
-
-    virtual void restart(const TreeThinker & treeThinker) override {
-        Node::restart(treeThinker);
-    }
 };
 
 class AimingAtArea : public Node {
@@ -89,10 +85,6 @@ public:
         }
         return playerNodeState[treeThinker.csgoId];
     }
-
-    virtual void restart(const TreeThinker & treeThinker) override {
-        Node::restart(treeThinker);
-    }
 };
 
 class Firing : public Node {
@@ -115,9 +107,91 @@ public:
         }
         return playerNodeState[treeThinker.csgoId];
     }
+};
 
-    virtual void restart(const TreeThinker & treeThinker) override {
-        Node::restart(treeThinker);
+enum class PosConstraintDimension {
+    X,
+    Y,
+    Z
+};
+
+enum class PosConstraintOp {
+   LT,
+   LTE,
+   GT,
+   GTE,
+   EQ
+};
+
+string posConstraintOpToString(const PosConstraintOp & op) {
+    switch (op) {
+        case PosConstraintOp::LT:
+            return "<";
+        case PosConstraintOp::LTE:
+            return "<=";
+        case PosConstraintOp::GT:
+            return ">";
+        case PosConstraintOp::GTE:
+            return ">=";
+        case PosConstraintOp::EQ:
+            return "==";
+        default:
+            throw std::runtime_error("invalid pos constraint in to string");
+    }
+
+}
+
+class PosConstraint : public Node {
+    CSGOId playerId;
+    PosConstraintDimension dim;
+    PosConstraintOp op;
+    double value;
+
+public:
+    PosConstraint(Blackboard & blackboard, CSGOId playerId, PosConstraintDimension dim, PosConstraintOp op, double value) :
+            Node(blackboard, "PosConstraint" + posConstraintOpToString(op) + std::to_string(value)), playerId(playerId),
+            dim(dim), op(op), value(value) { };
+
+    virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
+        const ServerState::Client & sourceClient = state.getClient(playerId);
+
+        double testValue;
+        switch (dim) {
+            case PosConstraintDimension::X:
+                testValue = sourceClient.getFootPosForPlayer().x;
+                break;
+            case PosConstraintDimension::Y:
+                testValue = sourceClient.getFootPosForPlayer().y;
+                break;
+            case PosConstraintDimension::Z:
+                testValue = sourceClient.getFootPosForPlayer().z;
+                break;
+            default:
+                throw std::runtime_error("invalid dim in pos constraint");
+        }
+
+        switch (op) {
+            case PosConstraintOp::LT:
+                playerNodeState[treeThinker.csgoId] = testValue < value ? NodeState::Success : NodeState::Failure;
+                break;
+            case PosConstraintOp::LTE:
+                playerNodeState[treeThinker.csgoId] = testValue <= value ? NodeState::Success : NodeState::Failure;
+                break;
+            case PosConstraintOp::GT:
+                playerNodeState[treeThinker.csgoId] = testValue > value ? NodeState::Success : NodeState::Failure;
+                break;
+            case PosConstraintOp::GTE:
+                playerNodeState[treeThinker.csgoId] = testValue >= value ? NodeState::Success : NodeState::Failure;
+                break;
+            case PosConstraintOp::EQ:
+                playerNodeState[treeThinker.csgoId] = testValue == value ? NodeState::Success : NodeState::Failure;
+                break;
+            default:
+                throw std::runtime_error("invalid op in pos constraint");
+
+        }
+
+        return playerNodeState[treeThinker.csgoId];
     }
 };
 

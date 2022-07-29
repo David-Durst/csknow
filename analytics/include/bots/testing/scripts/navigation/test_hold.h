@@ -9,6 +9,8 @@
 #include "bots/behavior_tree/pathing_node.h"
 #include "bots/behavior_tree/tree.h"
 #include "bots/testing/blackboard_management.h"
+#include "bots/testing/state_checks.h"
+
 
 
 class HoldLongScript : public Script {
@@ -22,6 +24,13 @@ public:
         if (tree.newBlackboard) {
             Blackboard & blackboard = *tree.blackboard;
             Script::initialize(tree, state);
+            Node::Ptr aimAtChoke = make_unique<RepeatDecorator>(blackboard,
+                    make_unique<SelectorNode>(blackboard, Node::makeList(
+                                              make_unique<PosConstraint>(blackboard, neededBots[0].id,
+                                                                         PosConstraintDimension::Y, PosConstraintOp::GT,
+                                                                         1000.),
+                                              make_unique<AimingAtArea>(blackboard, vector{neededBots[0].id}, 4170))),
+                                              false);
             commands = make_unique<SequenceNode>(blackboard, Node::makeList(
                                                          make_unique<InitTestingRound>(blackboard, name),
                                                          make_unique<movement::WaitNode>(blackboard, 1.0),
@@ -36,11 +45,9 @@ public:
                                                          make_unique<ForceOrderNode>(blackboard, "ForceLongDefense", vector{neededBots[0].id}, strategy::defenseLongToAWaypoints, addedOrderId),
                                                          make_unique<ForceHoldIndexNode>(blackboard, "ForceAggroLong", vector{neededBots[0].id}, vector{4}, addedOrderId),
                                                          make_unique<ParallelFirstNode>(blackboard, Node::makeList(
-                                                                 // verify that looking at danger area before get to pit (y < 1000)
-                                                                 // repeat cheacking that velocity is 0, that in pit
-                                                                                                //make_unique<JumpedBeforeCat>(blackboard, neededBots[0].id),
-                                                                                                make_unique<movement::WaitNode>(blackboard, 20, false)),
-                                                                                        "HoldLongCondition")),
+                                                                 std::move(aimAtChoke),
+                                                                 make_unique<movement::WaitNode>(blackboard, 20, false)),
+                                                            "HoldLongCondition")),
                                                  "HoldLongSequence");
         }
     }
