@@ -55,7 +55,7 @@ public:
 class GooseToCatScript : public Script {
 public:
     GooseToCatScript(const ServerState & state) :
-        Script("GooseToCatScript", {{0, ENGINE_TEAM_T}}, {ObserveType::FirstPerson, 0}) { }
+        Script("GooseToCatScript", {{0, ENGINE_TEAM_CT}}, {ObserveType::FirstPerson, 0}) { }
 
     virtual void initialize(Tree & tree, ServerState & state) override  {
         if (tree.newBlackboard) {
@@ -105,7 +105,7 @@ public:
 class GooseToCatShortScript : public Script {
 public:
     GooseToCatShortScript(const ServerState & state) :
-            Script("GooseToCatShortScript", {{0, ENGINE_TEAM_T}}, {ObserveType::FirstPerson, 0}) { }
+            Script("GooseToCatShortScript", {{0, ENGINE_TEAM_CT}}, {ObserveType::FirstPerson, 0}) { }
 
     virtual void initialize(Tree & tree, ServerState & state) override  {
         if (tree.newBlackboard) {
