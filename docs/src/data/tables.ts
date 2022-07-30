@@ -189,6 +189,7 @@ export class Parser {
     filterUrl: string;
     nonTemporal: boolean;
     overlay: boolean;
+    overlayLabels: boolean;
     havePlayerLabels: boolean;
     playersToLabelColumn: number;
     playerLabelIndicesColumn: number;
@@ -197,7 +198,7 @@ export class Parser {
     constructor(tableName: string, startTickColumn: string,
                 foreignKeyNames: string[], otherColumnNames: string[],
                 ticksPerEvent: string, parserType: ParserType, baseUrl: string,
-                keyPlayerColumns: string, nonTemporal: string, overlay: string,
+                keyPlayerColumns: string, nonTemporal: string, overlay: string, overlayLabels: string,
                 havePlayerLabels: string, playersToLabelColumn: string,
                 playerLabelIndicesColumn: string, playerLabels: string) {
         this.tableName = tableName;
@@ -224,6 +225,7 @@ export class Parser {
         }
         this.nonTemporal = parseBool(nonTemporal)
         this.overlay = parseBool(overlay)
+        this.overlayLabels = parseBool(overlayLabels)
         this.havePlayerLabels = parseBool(havePlayerLabels)
         this.playersToLabelColumn = parseInt(playersToLabelColumn)
         this.playerLabelIndicesColumn = parseInt(playerLabelIndicesColumn)
@@ -349,6 +351,7 @@ export class GameData {
         new Map<string, IntervalTree<number>>();
     overlays: Map<string, Row[]> =
         new Map<string, Row[]>();
+    overlayLabels: string;
 
     getRound(tickData: TickRow) : RoundRow {
         if (this.roundIdToIndex.size == 0) {

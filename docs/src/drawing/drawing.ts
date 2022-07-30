@@ -304,9 +304,10 @@ export function drawTick(e: InputEvent) {
     if (curOverlay.includes("mesh")) {
         ctx.fillStyle = green
         const overlayRows = filteredData.overlays.get(curOverlay)
+        const overlayLabelsRows = filteredData.overlays.get(gameData.overlayLabels)
         let connectionAreaIds: number[] = [];
         let targetAreaId = -1
-        let targetAreaName = ""
+        let targetPlaceName = ""
         let targetX = -1
         let targetY = -1
         let targetFontSize = -1
@@ -329,8 +330,8 @@ export function drawTick(e: InputEvent) {
                 lastMousePosition.x <= maxCoordinate.x &&
                 lastMousePosition.y >= minCoordinate.y &&
                 lastMousePosition.y <= maxCoordinate.y) {
-                targetAreaId = parseInt(overlayRow.otherColumnValues[1])
-                targetAreaName = overlayRow.otherColumnValues[0]
+                targetAreaId = parseInt(overlayLabelsRows[o].otherColumnValues[1])
+                targetPlaceName = overlayLabelsRows[o].otherColumnValues[0]
                 targetX = avgX
                 targetY = avgY
                 targetFontSize = (((zScaling * 20 + 30)/2)*fontScale)
@@ -374,17 +375,19 @@ export function drawTick(e: InputEvent) {
         if (targetAreaId != -1) {
             ctx.fillStyle = 'green'
             ctx.font = targetFontSize.toString() + "px Tahoma"
-            ctx.fillText(targetAreaId.toString() + "," + targetAreaName, targetX, targetY)
+            ctx.fillText(targetAreaId.toString() + "," + targetPlaceName, targetX, targetY)
         }
     }
     else if (curOverlay.includes("reachable") || curOverlay.includes("visible") || curOverlay.includes("distance") ||
              curOverlay.includes("danger")) {
         ctx.fillStyle = green
         const overlayRows = filteredData.overlays.get(curOverlay)
+        const overlayLabelsRows = filteredData.overlays.get(gameData.overlayLabels)
         let distances: number[] = [];
         let minDistance;
         let maxDistance;
         let targetAreaId = -1
+        let targetPlaceName = ""
         let targetX = -1
         let targetY = -1
         let targetFontSize = -1
@@ -407,7 +410,8 @@ export function drawTick(e: InputEvent) {
                 lastMousePosition.x <= maxCoordinate.x &&
                 lastMousePosition.y >= minCoordinate.y &&
                 lastMousePosition.y <= maxCoordinate.y) {
-                targetAreaId = overlayRow.id
+                targetAreaId = parseInt(overlayLabelsRows[o].otherColumnValues[1])
+                targetPlaceName = overlayLabelsRows[o].otherColumnValues[0]
                 targetX = avgX
                 targetY = avgY
                 targetFontSize = (((zScaling * 20 + 30)/2)*fontScale)
@@ -449,7 +453,7 @@ export function drawTick(e: InputEvent) {
         if (targetAreaId != -1) {
             ctx.fillStyle = 'green'
             ctx.font = targetFontSize.toString() + "px Tahoma"
-            ctx.fillText(targetAreaId.toString(), targetX, targetY)
+            ctx.fillText(targetAreaId.toString() + "," + targetPlaceName, targetX, targetY)
         }
     }
     setEventText(tickData, filteredData)
