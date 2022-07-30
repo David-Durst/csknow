@@ -59,8 +59,6 @@ public:
 
 class HoldASiteScript : public Script {
 public:
-    OrderId addedOrderId;
-
     HoldASiteScript(const ServerState & state) :
             Script("HoldASiteScript", {{0, ENGINE_TEAM_T}, {0, ENGINE_TEAM_T}, {0, ENGINE_TEAM_T}},
                    {ObserveType::Absolute, 0, {395.317963, 2659.722656, 559.311157}, {43.801949, -49.044704}}) { }
@@ -114,8 +112,6 @@ public:
 
 class HoldBSiteScript : public Script {
 public:
-    OrderId addedOrderId;
-
     HoldBSiteScript(const ServerState & state) :
             Script("HoldBSiteScript", {{0, ENGINE_TEAM_T}, {0, ENGINE_TEAM_T}, {0, ENGINE_TEAM_T}},
                    {ObserveType::Absolute, 0, {-2092., 3050., 710.}, {56., -68.}}) { }

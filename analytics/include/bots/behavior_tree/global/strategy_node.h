@@ -69,7 +69,7 @@ namespace strategy {
             {WaypointType::HoldPlace, "ARamp", "", {}, false},
             {WaypointType::HoldAreas, "", "ACar", {1794, 1799}, false},
             {WaypointType::HoldAreas, "", "LongACorner", {4170}, true},
-            {WaypointType::HoldPlace, "Pit", "", {5211}, true},
+            {WaypointType::HoldPlace, "Pit", "", {5211, 8286, 8287}, true},
             {WaypointType::ChokeAreas, "", "BotALong", {4170}, false},
             {WaypointType::ChokeAreas, "", "LongDoorDumpster", {3653}, true}
     };
