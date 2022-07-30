@@ -68,7 +68,7 @@ namespace strategy {
             {WaypointType::C4, "BombsiteA"},
             {WaypointType::HoldPlace, "ARamp", "", {}, false},
             {WaypointType::HoldAreas, "", "ACar", {1794, 1799}, false},
-            {WaypointType::HoldPlace, "LongA", "", {}, true},
+            {WaypointType::HoldAreas, "", "LongACorner", {4170}, true},
             {WaypointType::HoldPlace, "Pit", "", {5211}, true},
             {WaypointType::ChokeAreas, "", "BotALong", {4170}, false},
             {WaypointType::ChokeAreas, "", "LongDoorDumpster", {3653}, true}
