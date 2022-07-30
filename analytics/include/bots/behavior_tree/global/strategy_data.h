@@ -109,9 +109,6 @@ struct Order {
         bool foundVisibleArea = false;
         double maxDistance = -1 * std::numeric_limits<double>::max();
         AreaId farthestAreaId;
-        if (srcAreaId == 1642) {
-            int z =1;
-        }
         for (const auto & dstAreaId : dstAreaIds) {
             if (visPoints.isVisibleAreaId(srcAreaId, dstAreaId)) {
                 if (farthest) {
