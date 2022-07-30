@@ -120,7 +120,6 @@ public:
             memory.positions.clear();
         }
         blackboard.resetPossibleNavAreas = true;
-        blackboard.inTest = true;
         blackboard.playerToDangerAreaId.clear();
         playerNodeState[treeThinker.csgoId] = NodeState::Success;
         return playerNodeState[treeThinker.csgoId];

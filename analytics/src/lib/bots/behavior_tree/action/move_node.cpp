@@ -62,7 +62,7 @@ namespace action {
 
                 // can't compare current nav area to target nav area as current nav area max z different from current pos z
                 // (see d2 slope to A site)
-                if (blackboard.navFile.get_point_to_area_distance_2d(vec3Conv(curPos), dstArea) < 50. &&
+                if (blackboard.navFile.get_point_to_area_distance_2d(vec3Conv(curPos), dstArea) < 40. &&
                     dstArea.get_min_corner().z > curPos.z + 10.) {
                     // make sure moving into target in 2d
                     // check if aiming at enemy anywhere
@@ -95,7 +95,7 @@ namespace action {
             // regardless if moving, check for crouching
             curAction.setButton(IN_WALK, curPriority.moveOptions.walk);
             // always crouch when airborne to get to max area
-            curAction.setButton(IN_DUCK, curPriority.moveOptions.crouch || curClient.isAirbone);
+            curAction.setButton(IN_DUCK, curPriority.moveOptions.crouch || curClient.isAirborne);
 
         }
         // do nothing if there was an error

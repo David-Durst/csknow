@@ -35,7 +35,7 @@ namespace follow::compute_nav_area {
             }
             // otherwise, stop (if in air, could be landing, so keep going forward then)
             else {
-                if (!state.getClient(treeThinker.csgoId).isAirbone) {
+                if (!state.getClient(treeThinker.csgoId).isAirborne) {
                     curPriority.moveOptions.move = false;
                 }
             }

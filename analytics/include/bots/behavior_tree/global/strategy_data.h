@@ -60,7 +60,7 @@ struct Order {
                     aggressiveChokeIndex = i;
                 }
                 else {
-                    passiveChokeIndex = 1;
+                    passiveChokeIndex = i;
                 }
             }
             else if (waypoints[i].type == WaypointType::HoldPlace || waypoints[i].type == WaypointType::HoldAreas) {

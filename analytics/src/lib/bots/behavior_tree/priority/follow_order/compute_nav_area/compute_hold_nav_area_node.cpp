@@ -19,6 +19,10 @@ namespace follow::compute_nav_area {
         curPriority.moveOptions = {true, false, false};
         curPriority.shootOptions = ShootOptions::DontShoot;
 
+        if (blackboard.inTest) {
+            int x = 1;
+        }
+
         // if in the target area, don't move
         if (curAreaId == curPriority.targetAreaId) {
             curPriority.moveOptions = {false, false, false};

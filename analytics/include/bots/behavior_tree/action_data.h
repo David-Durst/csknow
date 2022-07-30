@@ -20,6 +20,7 @@ struct Action {
     CSKnowTime lastJumpTime = defaultTime;
     int32_t buttons;
     int32_t shotsInBurst;
+    bool keepCrouching = false;
 
     void setButton(int32_t button, bool setTrue) {
         if (setTrue) {

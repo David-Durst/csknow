@@ -75,7 +75,7 @@ public:
         float lastEyeWithRecoilAngleY;
         bool isAlive;
         bool isBot;
-        bool isAirbone;
+        bool isAirborne;
 
         // keyboard/mouse inputs sent to game engine
         int32_t buttons;

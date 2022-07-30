@@ -166,7 +166,7 @@ void ServerState::loadClientStates(string clientStatesFilePath) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].isBot);
         }
         else if (colNumber == 34) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].isAirbone);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].isAirborne);
             rowNumber++;
             arrayEntry++;
         }
