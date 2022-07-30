@@ -38,10 +38,10 @@ struct Action {
         return !getButton(IN_FORWARD) && getButton(IN_BACK);
     }
     bool movingLeft() const {
-        return getButton(IN_LEFT) && !getButton(IN_RIGHT);
+        return getButton(IN_MOVELEFT) && !getButton(IN_MOVERIGHT);
     }
     bool movingRight() const {
-        return !getButton(IN_LEFT) && getButton(IN_RIGHT);
+        return !getButton(IN_MOVELEFT) && getButton(IN_MOVERIGHT);
     }
     bool moving() const {
         return movingForward() || movingBackward() || movingLeft() || movingRight();
