@@ -69,6 +69,15 @@ public:
         if (tree.newBlackboard) {
             Blackboard & blackboard = *tree.blackboard;
             Script::initialize(tree, state);
+
+            Node::Ptr stillAndLookingAtChoke = make_unique<RepeatDecorator>(blackboard,
+                                                                            make_unique<SequenceNode>(blackboard, Node::makeList(
+                                                                                    make_unique<StandingStill>(blackboard, vector{neededBots[0].id, neededBots[1].id, neededBots[2].id}),
+                                                                                    make_unique<AimingAtArea>(blackboard, vector{neededBots[0].id}, 3653),
+                                                                                    make_unique<AimingAtArea>(blackboard, vector{neededBots[1].id}, 1384),
+                                                                                    make_unique<AimingAtArea>(blackboard, vector{neededBots[2].id}, 4051))),
+                                                                            true);
+
             commands = make_unique<SequenceNode>(blackboard, Node::makeList(
                                                          make_unique<InitTestingRound>(blackboard, name),
                                                          make_unique<movement::WaitNode>(blackboard, 1.0),
@@ -95,6 +104,7 @@ public:
                                                          make_unique<RecomputeOrdersNode>(blackboard),
                                                          make_unique<movement::WaitNode>(blackboard, 0.1),
                                                          make_unique<ParallelFirstNode>(blackboard, Node::makeList(
+                                                                                                std::move(stillAndLookingAtChoke),
                                                                                                 make_unique<movement::WaitNode>(blackboard, 14, false)),
                                                                                         "HoldASiteCondition")),
                                                  "HoldASiteSequence");
