@@ -128,9 +128,9 @@ public:
             Node::Ptr stillAndLookingAtChoke = make_unique<RepeatDecorator>(blackboard,
                                                                             make_unique<SequenceNode>(blackboard, Node::makeList(
                                                                                     make_unique<StandingStill>(blackboard, vector{neededBots[0].id, neededBots[1].id, neededBots[2].id}),
-                                                                                    make_unique<AimingAtArea>(blackboard, vector{neededBots[0].id}, 3653),
-                                                                                    make_unique<AimingAtArea>(blackboard, vector{neededBots[1].id}, 1384),
-                                                                                    make_unique<AimingAtArea>(blackboard, vector{neededBots[2].id}, 4051))),
+                                                                                    make_unique<AimingAtArea>(blackboard, vector{neededBots[0].id}, 1841),
+                                                                                    make_unique<AimingAtArea>(blackboard, vector{neededBots[1].id}, 8307),
+                                                                                    make_unique<AimingAtArea>(blackboard, vector{neededBots[2].id}, 505))),
                                                                             true);
 
             commands = make_unique<SequenceNode>(blackboard, Node::makeList(
