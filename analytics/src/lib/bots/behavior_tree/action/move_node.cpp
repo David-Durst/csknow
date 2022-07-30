@@ -63,7 +63,7 @@ namespace action {
 
                 // can't compare current nav area to target nav area as current nav area max z different from current pos z
                 // (see d2 slope to A site)
-                if (blackboard.navFile.get_point_to_area_distance_2d(vec3Conv(curPos), dstArea) < 30. &&
+                if (blackboard.navFile.get_point_to_area_distance_2d(vec3Conv(curPos), dstArea) < 50. &&
                     dstArea.get_min_corner().z > curPos.z + 10.) {
                     // make sure moving into target in 2d
                     // check if aiming at enemy anywhere

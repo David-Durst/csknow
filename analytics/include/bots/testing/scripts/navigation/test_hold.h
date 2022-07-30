@@ -111,4 +111,59 @@ public:
         }
     }
 };
+
+class HoldBSiteScript : public Script {
+public:
+    OrderId addedOrderId;
+
+    HoldBSiteScript(const ServerState & state) :
+            Script("HoldBSiteScript", {{0, ENGINE_TEAM_T}, {0, ENGINE_TEAM_T}, {0, ENGINE_TEAM_T}},
+                   {ObserveType::Absolute, 0, {-2092., 3050., 710.}, {56., -68.}}) { }
+
+    virtual void initialize(Tree & tree, ServerState & state) override  {
+        if (tree.newBlackboard) {
+            Blackboard & blackboard = *tree.blackboard;
+            Script::initialize(tree, state);
+
+            Node::Ptr stillAndLookingAtChoke = make_unique<RepeatDecorator>(blackboard,
+                                                                            make_unique<SequenceNode>(blackboard, Node::makeList(
+                                                                                    make_unique<StandingStill>(blackboard, vector{neededBots[0].id, neededBots[1].id, neededBots[2].id}),
+                                                                                    make_unique<AimingAtArea>(blackboard, vector{neededBots[0].id}, 3653),
+                                                                                    make_unique<AimingAtArea>(blackboard, vector{neededBots[1].id}, 1384),
+                                                                                    make_unique<AimingAtArea>(blackboard, vector{neededBots[2].id}, 4051))),
+                                                                            true);
+
+            commands = make_unique<SequenceNode>(blackboard, Node::makeList(
+                                                         make_unique<InitTestingRound>(blackboard, name),
+                                                         make_unique<movement::WaitNode>(blackboard, 1.0),
+                                                         make_unique<SpecDynamic>(blackboard, neededBots, observeSettings),
+                                                         make_unique<movement::WaitNode>(blackboard, 0.1),
+                                                         make_unique<SlayAllBut>(blackboard, vector{neededBots[0].id, neededBots[1].id, neededBots[2].id},state),
+                                                         make_unique<movement::WaitNode>(blackboard, 0.1),
+                                                         make_unique<SetPos>(blackboard, Vec3({-1574., 2638., 38.}), Vec2({0., 0.})),
+                                                         make_unique<movement::WaitNode>(blackboard, 0.1),
+                                                         make_unique<TeleportPlantedC4>(blackboard),
+                                                         make_unique<movement::WaitNode>(blackboard, 0.1),
+                                                         make_unique<SetPos>(blackboard, Vec3({-1990., 2644., 93.6}), Vec2({2.903987, -95.587982})),
+                                                         make_unique<movement::WaitNode>(blackboard, 0.1),
+                                                         make_unique<Teleport>(blackboard,neededBots[0].id, state),
+                                                         make_unique<movement::WaitNode>(blackboard, 0.1),
+                                                         make_unique<SetPos>(blackboard, Vec3({-1438., 2461., 65.5}), Vec2({-1.760050, -105.049713})),
+                                                         make_unique<movement::WaitNode>(blackboard, 0.1),
+                                                         make_unique<Teleport>(blackboard,neededBots[1].id, state),
+                                                         make_unique<movement::WaitNode>(blackboard, 0.1),
+                                                         make_unique<SetPos>(blackboard, Vec3({-1750., 1868., 64.2}), Vec2({-89.683349, 0.746031})),
+                                                         make_unique<movement::WaitNode>(blackboard, 0.1),
+                                                         make_unique<Teleport>(blackboard, neededBots[2].id, state),
+                                                         make_unique<movement::WaitNode>(blackboard, 0.1),
+                                                         make_unique<RecomputeOrdersNode>(blackboard),
+                                                         make_unique<movement::WaitNode>(blackboard, 0.1),
+                                                         make_unique<ParallelFirstNode>(blackboard, Node::makeList(
+                                                                                                std::move(stillAndLookingAtChoke),
+                                                                                                make_unique<movement::WaitNode>(blackboard, 14, false)),
+                                                                                        "HoldASiteCondition")),
+                                                 "HoldASiteSequence");
+        }
+    }
+};
 #endif //CSKNOW_HOLD_H
