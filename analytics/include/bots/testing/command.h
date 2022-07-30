@@ -6,6 +6,7 @@
 #define CSKNOW_COMMAND_H
 
 #include "bots/load_save_bot_data.h"
+#include "bots/testing/script_data.h"
 #include <memory>
 
 struct Command : Node {
