@@ -29,6 +29,7 @@ public:
     bool newBlackboard = false;
     bool resetState = false;
     TreeThinker defaultThinker{INVALID_ID};
+    map<CSGOId, AggressiveType> testForceThinkerAggressiveType;
 
     std::mutex filterMutex;
     set<string> sharedLogFilterNames, localLogFilterNames;

@@ -54,6 +54,8 @@ public:
     }
 
     void restart(ServerState & state) { commands->restart(getDefaultThinker(state)); }
+
+    const vector<NeededBot> & getNeededBots() { return neededBots; }
 };
 
 class ScriptsRunner {

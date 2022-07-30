@@ -17,7 +17,6 @@
 #include "queries/reachable.h"
 #include "queries/distance_to_places.h"
 #include "bots/analysis/load_save_vis_points.h"
-#include "bots/testing/script_data.h"
 #include "bots/behavior_tree/priority/memory_data.h"
 #include "bots/behavior_tree/global/possible_nav_areas.h"
 #include <filesystem>

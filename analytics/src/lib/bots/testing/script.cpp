@@ -94,6 +94,10 @@ bool ScriptsRunner::tick(Tree & tree, ServerState & state) {
         std::cout << scripts[curScript]->name << " starting" << std::endl;
         startingNewScript = false;
         tree.resetState = true;
+        tree.testForceThinkerAggressiveType.clear();
+        for (const auto & neededBot : scripts[curScript]->getNeededBots()) {
+            tree.testForceThinkerAggressiveType[neededBot.id] = neededBot.type;
+        }
     }
     else {
         tree.resetState = false;

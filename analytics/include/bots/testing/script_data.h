@@ -6,6 +6,7 @@
 #define CSKNOW_SCRIPT_DATA_H
 
 #include "bots/load_save_bot_data.h"
+#include "bots/behavior_tree/blackboard.h"
 
 enum class ObserveType {
     FirstPerson,
@@ -25,6 +26,7 @@ struct ObserveSettings {
 struct NeededBot {
     CSGOId id;
     int team;
+    AggressiveType type = AggressiveType::Push;
 };
 
 #endif //CSKNOW_SCRIPT_DATA_H

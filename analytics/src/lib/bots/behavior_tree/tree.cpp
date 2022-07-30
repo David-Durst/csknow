@@ -46,6 +46,10 @@ void Tree::tick(ServerState & state, const string & mapsPath) {
     // insert tree thinkers and memories for new bots
     for (const auto & client : state.clients) {
         if (client.isBot && blackboard->playerToTreeThinkers.find(client.csgoId) == blackboard->playerToTreeThinkers.end()) {
+            AggressiveType aggressiveType = AggressiveType::Push;
+            if (testForceThinkerAggressiveType.find(client.csgoId) != testForceThinkerAggressiveType.end()) {
+                aggressiveType = testForceThinkerAggressiveType[client.csgoId];
+            }
             blackboard->playerToTreeThinkers[client.csgoId] = {
                     client.csgoId,
                     AggressiveType::Push,
