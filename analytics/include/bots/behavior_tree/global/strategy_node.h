@@ -85,7 +85,7 @@ namespace strategy {
             {WaypointType::HoldPlace, "BombsiteA", "", {}, false},
             {WaypointType::HoldPlace, "ExtendedA", "", {}, true},
             {WaypointType::ChokeAreas, "", "StairsBox", {4048}, false},
-            {WaypointType::ChokePlace, "Catwalk", "", {}, true}
+            {WaypointType::ChokePlace, "ShortStairs", "", {}, true}
     };
     static Waypoints defenseBDoorsToBWaypoints = {
             {WaypointType::C4, "BombsiteB"},

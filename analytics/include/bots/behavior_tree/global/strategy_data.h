@@ -140,36 +140,41 @@ struct Order {
         }
     }
 
+
     void setClosestAreaToHideVisibleToChoke(size_t waypointIndex, const nav_mesh::nav_file & navFile,
                                               const ReachableResult & reachability, const VisPoints & visPoints,
                                               const DistanceToPlacesResult & distanceToPlacesResult) {
         const Waypoint & waypoint = waypoints[waypointIndex];
         const Waypoint & chokeWaypoint = waypoints[waypoint.aggresiveDefense ? aggressiveChokeIndex : passiveChokeIndex];
-        size_t minAreaIndex;
-        AreaId chokeAreaId;
-        double minDistance = std::numeric_limits<double>::max();
         set<AreaId> invalidAreaIds;
         if (waypoint.type == WaypointType::HoldPlace) {
             invalidAreaIds.insert(waypoint.areaIds.begin(), waypoint.areaIds.end());
         }
+        struct AreaOption {
+            AreaId holdAreaId, chokeAreaId;
+            double holdDistance;
+            double chokeDistance;
+        };
+        vector<AreaOption> options;
         for (size_t areaIndex = 0; areaIndex < navFile.m_areas.size(); areaIndex++) {
             AreaId areaId = navFile.m_areas[areaIndex].get_id();
             if (invalidAreaIds.find(areaId) != invalidAreaIds.end()) {
                 continue;
             }
-            double newDistance = getDistance(areaId, waypoint, navFile,
+            double newHoldDistance = getDistance(areaId, waypoint, navFile,
                                              reachability, distanceToPlacesResult);
-            if (newDistance != NOT_CLOSEST_DISTANCE && newDistance < minDistance) {
-                const auto optionalChokeAreaId = isVisible(areaId, chokeWaypoint, navFile, visPoints, distanceToPlacesResult);
-                if (optionalChokeAreaId) {
-                    minAreaIndex = areaIndex;
-                    minDistance = newDistance;
-                    chokeAreaId = optionalChokeAreaId.value();
-                }
+            double newChokeDistance = getDistance(areaId, waypoint, navFile,
+                                                 reachability, distanceToPlacesResult);
+            const auto optionalChokeAreaId = isVisible(areaId, chokeWaypoint, navFile, visPoints, distanceToPlacesResult);
+            if (newHoldDistance != NOT_CLOSEST_DISTANCE && optionalChokeAreaId) {
+                options.push_back({areaId, optionalChokeAreaId.value(), newHoldDistance, newChokeDistance});
             }
         }
-        holdIndexToHoldAreaId[waypointIndex] = navFile.m_areas[minAreaIndex].get_id();
-        holdIndexToDangerAreaId[waypointIndex] = chokeAreaId;
+        std::sort(options.begin(), options.end(), [](const AreaOption & a, const AreaOption & b) {
+            return a.holdDistance < b.holdDistance || (a.holdDistance == b.holdDistance && a.chokeDistance > b.chokeDistance);
+        });
+        holdIndexToHoldAreaId[waypointIndex] = options.front().holdAreaId;
+        holdIndexToDangerAreaId[waypointIndex] = options.front().chokeAreaId;
     }
 
     void print(const vector<CSGOId> followers, const map<CSGOId, int64_t> & playerToWaypointIndex,
