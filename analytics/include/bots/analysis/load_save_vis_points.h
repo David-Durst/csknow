@@ -9,7 +9,6 @@
 #include "geometryNavConversions.h"
 #include "navmesh/nav_file.h"
 #include "bots/load_save_bot_data.h"
-#include "nav_file_helpers.h"
 #include <bitset>
 #define MAX_NAV_AREAS 2000
 using std::map;

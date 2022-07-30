@@ -6,7 +6,7 @@
 #define CSKNOW_STRATEGY_DATA_H
 #include "bots/load_save_bot_data.h"
 #include "navmesh/nav_file.h"
-#include "bots/analysis/nav_file_helpers.h"
+#include "geometryNavConversions.h"
 #include "queries/distance_to_places.h"
 #include <sstream>
 #include <algorithm>
@@ -105,36 +105,57 @@ struct Order {
     }
 
     std::optional<AreaId> isVisible(AreaId srcAreaId, const vector<AreaId> & dstAreaIds, const nav_mesh::nav_file & navFile,
-                       const VisPoints & visPoints) const {
+                       const VisPoints & visPoints, bool farthest = false) const {
+        bool foundVisibleArea = false;
+        double maxDistance = -1 * std::numeric_limits<double>::max();
+        AreaId farthestAreaId;
+        if (srcAreaId == 1642) {
+            int z =1;
+        }
         for (const auto & dstAreaId : dstAreaIds) {
             if (visPoints.isVisibleAreaId(srcAreaId, dstAreaId)) {
-                return dstAreaId;
+                if (farthest) {
+                    foundVisibleArea = true;
+                    double newDistance = computeDistance(srcAreaId, dstAreaId, navFile);
+                    if (newDistance > maxDistance) {
+                        maxDistance = newDistance;
+                        farthestAreaId = dstAreaId;
+                    }
+                }
+                else {
+                    return dstAreaId;
+                }
             }
         }
-        return {};
+        if (foundVisibleArea) {
+            return farthestAreaId;
+        }
+        else {
+            return {};
+        }
     }
 
     std::optional<AreaId> isVisible(AreaId srcAreaId, const Waypoint & waypoint, const nav_mesh::nav_file & navFile,
-                       const VisPoints & visPoints, const DistanceToPlacesResult & distanceToPlacesResult) const {
+                       const VisPoints & visPoints, const DistanceToPlacesResult & distanceToPlacesResult, bool farthest = false) const {
         switch (waypoint.type) {
             case WaypointType::NavPlace:
                 return isVisible(srcAreaId, distanceToPlacesResult.placeToArea.find(waypoint.placeName)->second,
-                                 navFile, visPoints);
+                                 navFile, visPoints, farthest);
             case WaypointType::NavAreas:
-                return isVisible(srcAreaId, waypoint.areaIds, navFile, visPoints);
+                return isVisible(srcAreaId, waypoint.areaIds, navFile, visPoints, farthest);
             case WaypointType::ChokePlace:
                 return isVisible(srcAreaId, distanceToPlacesResult.placeToArea.find(waypoint.placeName)->second,
-                                 navFile, visPoints);
+                                 navFile, visPoints, farthest);
             case WaypointType::ChokeAreas:
-                return isVisible(srcAreaId, waypoint.areaIds, navFile, visPoints);
+                return isVisible(srcAreaId, waypoint.areaIds, navFile, visPoints, farthest);
             case WaypointType::HoldPlace:
                 return isVisible(srcAreaId, distanceToPlacesResult.placeToArea.find(waypoint.placeName)->second,
-                                 navFile, visPoints);
+                                 navFile, visPoints, farthest);
             case WaypointType::HoldAreas:
-                return isVisible(srcAreaId, waypoint.areaIds, navFile, visPoints);
+                return isVisible(srcAreaId, waypoint.areaIds, navFile, visPoints, farthest);
             case WaypointType::C4:
                 return isVisible(srcAreaId, distanceToPlacesResult.placeToArea.find(waypoint.placeName)->second,
-                                 navFile, visPoints);
+                                 navFile, visPoints, farthest);
             default:
                 throw std::runtime_error("invalid waypoint type for getting visibility");
         }
@@ -163,10 +184,11 @@ struct Order {
             }
             double newHoldDistance = getDistance(areaId, waypoint, navFile,
                                              reachability, distanceToPlacesResult);
-            double newChokeDistance = getDistance(areaId, waypoint, navFile,
-                                                 reachability, distanceToPlacesResult);
-            const auto optionalChokeAreaId = isVisible(areaId, chokeWaypoint, navFile, visPoints, distanceToPlacesResult);
+            const auto optionalChokeAreaId = isVisible(areaId, chokeWaypoint, navFile,
+                                                       visPoints, distanceToPlacesResult, true);
             if (newHoldDistance != NOT_CLOSEST_DISTANCE && optionalChokeAreaId) {
+                // 3D distance (not walking distance) for visibility
+                double newChokeDistance = computeDistance(areaId, optionalChokeAreaId.value(), navFile);
                 options.push_back({areaId, optionalChokeAreaId.value(), newHoldDistance, newChokeDistance});
             }
         }
