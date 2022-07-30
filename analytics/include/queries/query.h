@@ -54,6 +54,7 @@ public:
     bool variableLength = false;
     bool nonTemporal = false;
     bool overlay = false;
+    bool overlayLabels = false;
     bool havePlayerLabels = false;
     // these are offsets relative to other columns start
     int playersToLabelColumn = 0;

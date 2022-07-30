@@ -528,6 +528,8 @@ int main(int argc, char * argv[]) {
                 ss << ",";
                 ss << boolToString(queryValue.overlay);
                 ss << ",";
+                ss << boolToString(queryValue.overlayLabels);
+                ss << ",";
                 ss << boolToString(queryValue.havePlayerLabels);
                 ss << ",";
                 ss << queryValue.playersToLabelColumn;

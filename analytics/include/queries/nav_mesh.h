@@ -39,6 +39,7 @@ public:
         this->variableLength = false;
         this->nonTemporal = true;
         this->overlay = true;
+        this->overlayLabels = true;
     };
 
     void oneLineToCSV(int64_t index, stringstream & ss) {
