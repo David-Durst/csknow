@@ -22,6 +22,7 @@ typedef int64_t CSKnowId;
 typedef int64_t CSGOId;
 typedef int32_t TeamId;
 typedef std::chrono::time_point<std::chrono::system_clock> CSKnowTime;
+constexpr CSKnowTime defaultTime = std::chrono::system_clock::time_point();
 
 class ServerState {
 private:
@@ -36,6 +37,7 @@ public:
     int32_t mapNumber;
     double tickInterval;
     CSKnowTime loadTime;
+    //const static CSKnowTime defaultTime = std::chrono::system_clock::from_time_t(0);
 
     struct Client {
         int32_t lastFrame;

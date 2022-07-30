@@ -106,7 +106,6 @@ struct Blackboard {
 
     // prediction data
     map<CSGOId, AreaId> playerToDangerAreaId;
-    CSKnowTime defaultTime = std::chrono::system_clock::from_time_t(0);
     vector<CSKnowTime> tDangerAreaLastCheckTime, ctDangerAreaLastCheckTime;
     vector<CSKnowTime> & getDangerAreaLastCheckTime(const ServerState::Client & client) {
         if (client.team == ENGINE_TEAM_T) {
@@ -178,6 +177,7 @@ struct Blackboard {
         navFileOverlay(navFile), visPoints(navFile), possibleNavAreas(navFile),
         tDangerAreaLastCheckTime(navFile.m_areas.size(), defaultTime),
         ctDangerAreaLastCheckTime(navFile.m_areas.size(), defaultTime) {
+
         string mapsPath = std::filesystem::path(navPath).remove_filename().string();
         navFileOverlay.setMapsPath(mapsPath);
         reachability.load(mapsPath, mapName);

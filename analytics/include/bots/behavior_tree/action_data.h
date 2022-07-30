@@ -9,6 +9,7 @@
 #include "bots/input_bits.h"
 #include "circular_buffer.h"
 #define PID_HISTORY_LENGTH 10
+#define MIN_JUMP_RESET_SECONDS 0.5
 
 struct PIDState {
     CircularBuffer<double> errorHistory{PID_HISTORY_LENGTH};
@@ -16,6 +17,7 @@ struct PIDState {
 
 struct Action {
     // keyboard/mouse inputs sent to game engine
+    CSKnowTime lastJumpTime = defaultTime;
     int32_t buttons;
     int32_t shotsInBurst;
 

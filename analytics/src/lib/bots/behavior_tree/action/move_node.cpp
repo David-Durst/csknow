@@ -24,7 +24,6 @@ namespace action {
 
     NodeState MovementTaskNode::exec(const ServerState &state, TreeThinker &treeThinker) {
         Path & curPath = blackboard.playerToPath[treeThinker.csgoId];
-        Action & oldAction = blackboard.lastPlayerToAction[treeThinker.csgoId];
         Action & curAction = blackboard.playerToAction[treeThinker.csgoId];
         Priority & curPriority = blackboard.playerToPriority[treeThinker.csgoId];
         const ServerState::Client & curClient = state.getClient(treeThinker.csgoId);
@@ -83,9 +82,13 @@ namespace action {
 
                     // make sure near target navmesh
                     bool closeToDst = blackboard.navFile.get_point_to_area_distance(vec3Conv(curClient.getFootPosForPlayer()), dstArea) < 100.;
-                    bool jumpLastFrame = (oldAction.buttons & IN_JUMP) > 0;
+                    bool jumpResetTimePassed = state.getSecondsBetweenTimes(curAction.lastJumpTime, state.loadTime) > MIN_JUMP_RESET_SECONDS;
+                    bool shouldJump = closeToDst && jumpResetTimePassed;
 
-                    curAction.setButton(IN_JUMP, closeToDst && !jumpLastFrame);
+                    if (shouldJump) {
+                        curAction.lastJumpTime = state.loadTime;
+                    }
+                    curAction.setButton(IN_JUMP, shouldJump);
                 }
             }
 
