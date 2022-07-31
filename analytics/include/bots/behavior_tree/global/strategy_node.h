@@ -114,7 +114,7 @@ namespace strategy {
                                         {defenseTunsToBWaypoints}};
 
     class CreateOrdersNode : public Node {
-        int32_t planRoundNumber = -1;
+        RoundNumber planRoundNumber = -1;
         int32_t playersAliveLastPlan = -1;
     public:
         CreateOrdersNode(Blackboard & blackboard) : Node(blackboard, "CreateOrdersNode") { };

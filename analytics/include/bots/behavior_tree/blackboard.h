@@ -131,6 +131,7 @@ struct Blackboard {
     map<CSGOId, EnemyPositionsMemory> playerToMemory;
     PossibleNavAreas possibleNavAreas;
     bool resetPossibleNavAreas = false, inTest = false; // inTest just for debugging, setting break points once test setup
+    map<TeamId, bool> teamToLastRoundSawEnemy;
 
     // priority data
     map<CSGOId, Priority> playerToPriority;

@@ -21,6 +21,7 @@
 typedef int64_t CSKnowId;
 typedef int64_t CSGOId;
 typedef int32_t TeamId;
+typedef int32_t RoundNumber;
 typedef std::chrono::time_point<std::chrono::system_clock> CSKnowTime;
 constexpr CSKnowTime defaultTime = std::chrono::system_clock::time_point();
 
@@ -33,7 +34,7 @@ private:
 
 public:
     string mapName;
-    int32_t roundNumber;
+    RoundNumber roundNumber;
     int32_t mapNumber;
     double tickInterval;
     CSKnowTime loadTime;

@@ -11,7 +11,6 @@
 #include "bots/behavior_tree/condition_helper_node.h"
 
 #define HOLD_DISTANCE 300.f
-#define BAIT_DISTANCE 50.f
 
 namespace follow {
     namespace compute_nav_area {
@@ -39,22 +38,37 @@ namespace follow {
                              "ComputeNavAreaNode") { };
     };
 
-    class BaitMovementNode : public Node {
-    public:
-        BaitMovementNode(Blackboard & blackboard) : Node(blackboard, "BaitMovementNode") { };
-        virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override;
-    };
+    namespace spacing {
+        class NoMovementNode : public Node {
+        public:
+            NoMovementNode(Blackboard & blackboard) : Node(blackboard, "NoMovementNode") { };
+            virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override;
+        };
 
-    class BaitConditionNode : public ConditionDecorator {
-    public:
-        BaitConditionNode(Blackboard & blackboard) : ConditionDecorator(blackboard,make_unique<SequenceNode>(blackboard,
-                                                                                               Node::makeList(
-                                                                                                       make_unique<BaitMovementNode>(blackboard),
-                                                                                                       make_unique<movement::WaitNode>(blackboard, 0.5)
-                                                                                               ) ,"BaitNodesSequence"),
-                                                                         "BaitConditionNode") { };
-        virtual bool valid(const ServerState & state, TreeThinker &treeThinker) override;
-    };
+        class BaitConditionNode : public ConditionDecorator {
+        public:
+            BaitConditionNode(Blackboard & blackboard) :
+                    ConditionDecorator(blackboard,make_unique<SequenceNode>(blackboard,
+                                                                            Node::makeList(
+                                                                                    make_unique<NoMovementNode>(blackboard),
+                                                                                    make_unique<movement::WaitNode>(blackboard, 0.5)
+                                                                            ) ,"BaitNodesSequence"),
+                                       "BaitConditionNode") { };
+            virtual bool valid(const ServerState & state, TreeThinker &treeThinker) override;
+        };
+
+        class LurkConditionNode : public ConditionDecorator {
+        public:
+            LurkConditionNode(Blackboard & blackboard) :
+                    ConditionDecorator(blackboard,make_unique<SequenceNode>(blackboard,
+                                                                            Node::makeList(
+                                                                                    make_unique<NoMovementNode>(blackboard),
+                                                                                    make_unique<movement::WaitNode>(blackboard, 0.5)
+                                                                            ) ,"LurkNodesSequence"),
+                                       "LurkConditionNode") { };
+            virtual bool valid(const ServerState & state, TreeThinker &treeThinker) override;
+        };
+    }
 }
 
 class FollowOrderNode : public SequenceNode {

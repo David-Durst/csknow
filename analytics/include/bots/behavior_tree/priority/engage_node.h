@@ -10,6 +10,12 @@
 #define COMMUNICATED_ENEMY_RELEVANT_TIME 2.0
 
 namespace engage {
+    class RecordEngagementRound : public Node {
+    public:
+        RecordEngagementRound(Blackboard & blackboard) : Node(blackboard, "RecordEngagement") { };
+        virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override;
+    };
+
     class SelectTargetNode : public Node {
     public:
         SelectTargetNode(Blackboard & blackboard) : Node(blackboard, "SelectTargetNode") { };
@@ -27,6 +33,7 @@ class EngageNode : public SequenceNode {
 public:
     EngageNode(Blackboard & blackboard) :
             SequenceNode(blackboard, Node::makeList(
+                                 make_unique<engage::RecordEngagementRound>(blackboard),
                                  make_unique<engage::SelectTargetNode>(blackboard),
                                  make_unique<engage::SelectFireModeNode>(blackboard),
                                  make_unique<movement::PathingNode>(blackboard),
