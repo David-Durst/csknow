@@ -46,8 +46,9 @@ int main(int argc, char * argv[]) {
                                             //make_unique<HoldBSitePushScript>(state),
                                             //make_unique<HoldBSiteBaitScript>(state),
                                             //make_unique<AimAndKillWithinTimeCheck>(state),
-                                            make_unique<PushBaitGooseToCatScript>(state),
-                                            make_unique<PushMultipleBaitGooseToCatScript>(state)
+                                            //make_unique<PushBaitGooseToCatScript>(state),
+                                            //make_unique<PushMultipleBaitGooseToCatScript>(state)
+                                            make_unique<TmpPushMultipleBaitGooseToCatScript>(state)
                                             //make_unique<MemoryAimCheck>(state),
                                             //make_unique<MemoryForgetCheck>(state),
                                             //make_unique<CommunicationAimCheck>(state),

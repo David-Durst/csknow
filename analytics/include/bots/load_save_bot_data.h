@@ -35,6 +35,7 @@ private:
 public:
     string mapName;
     RoundNumber roundNumber;
+    int32_t tScore, ctScore;
     int32_t mapNumber;
     double tickInterval;
     CSKnowTime loadTime;

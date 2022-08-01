@@ -69,6 +69,7 @@ bool Script::tick(Tree & tree, ServerState & state) {
     if (conditionResult == NodeState::Running) {
         finished = false;
     }
+    else if (initScript) { } // don't print for init script
     else if (conditionResult == NodeState::Success) {
         std::cout << name << " succeeded" << std::endl;
     }
@@ -91,7 +92,10 @@ void ScriptsRunner::initialize(Tree & tree, ServerState & state) {
 
 bool ScriptsRunner::tick(Tree & tree, ServerState & state) {
     if (startingNewScript) {
-        std::cout << scripts[curScript]->name << " starting" << std::endl;
+        // skip init printing
+        if (curScript > 0) {
+            std::cout << scripts[curScript]->name << " starting" << std::endl;
+        }
         startingNewScript = false;
         tree.resetState = true;
         tree.testForceThinkerAggressiveType.clear();

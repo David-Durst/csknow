@@ -26,13 +26,23 @@ struct Command : Node {
     }
 };
 
+struct PreTestingInit : Command {
+    PreTestingInit(Blackboard & blackboard) :
+            Command(blackboard, "PreTestingInitmd") { }
+    virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
+        blackboard.inTest = true;
+        scriptLines = {"sm_allHumansSpec; sm_botDebug f; sm_skipFirstRound;"};
+        return Command::exec(state, treeThinker);
+    }
+};
+
 struct InitTestingRound : Command {
     string scriptName;
     InitTestingRound(Blackboard & blackboard, string scriptName) :
         Command(blackboard, "InitTestingRoundCmd"), scriptName(scriptName) { }
     virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
         blackboard.inTest = true;
-        scriptLines = {"sm_refresh;say Running Test " + scriptName + ";sm_botDebug t; mp_warmup_end; sm_draw;"};
+        scriptLines = {"sm_refresh;say Running Test " + scriptName + "; sm_skipFirstRound; sm_botDebug t; mp_warmup_end; sm_draw;"};
         return Command::exec(state, treeThinker);
     }
 };

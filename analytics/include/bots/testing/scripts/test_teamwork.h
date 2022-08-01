@@ -127,4 +127,52 @@ public:
     }
 };
 
+
+class TmpPushMultipleBaitGooseToCatScript : public Script {
+public:
+    OrderId addedOrderId;
+
+    TmpPushMultipleBaitGooseToCatScript(const ServerState & state) :
+            Script("TmpPushMultipleBaitGooseToLongScript", {{0, ENGINE_TEAM_CT}, {0, ENGINE_TEAM_CT}, {0, ENGINE_TEAM_CT}},
+                   {ObserveType::Absolute, 0, {366.774475, 2669.538818, 239.860245}, {16.486465, -46.266056}}) { };
+
+    virtual void initialize(Tree & tree, ServerState & state) override  {
+        if (tree.newBlackboard) {
+            Blackboard & blackboard = *tree.blackboard;
+            Script::initialize(tree, state);
+            set<string> baiter0ValidLocations{"ShortStairs"}, baiter1ValidLocations{"ExtendedA", ""};
+            Node::Ptr setupCommands = make_unique<SequenceNode>(blackboard, Node::makeList(
+                                                         make_unique<InitTestingRound>(blackboard, name),
+                                                         make_unique<movement::WaitNode>(blackboard, 1.0),
+                                                         make_unique<SpecDynamic>(blackboard, neededBots, observeSettings),
+                                                         make_unique<movement::WaitNode>(blackboard, 0.1),
+                                                         make_unique<SlayAllBut>(blackboard, vector{neededBots[0].id, neededBots[1].id, neededBots[2].id},state),
+                                                         make_unique<movement::WaitNode>(blackboard, 0.1),
+                                                         make_unique<SetPos>(blackboard, Vec3({420., 2100., 97.}), Vec2({2.903987, -95.587982})),
+                                                         make_unique<movement::WaitNode>(blackboard, 0.1),
+                                                         make_unique<Teleport>(blackboard,neededBots[0].id, state),
+                                                         make_unique<movement::WaitNode>(blackboard, 0.1),
+                                                         make_unique<SetPos>(blackboard, Vec3({420., 2300., 97.}), Vec2({-1.760050, -105.049713})),
+                                                         make_unique<movement::WaitNode>(blackboard, 0.1),
+                                                         make_unique<Teleport>(blackboard, neededBots[1].id, state),
+                                                         make_unique<movement::WaitNode>(blackboard, 0.1),
+                                                         make_unique<SetPos>(blackboard, Vec3({420., 2500., 97.}), Vec2({-0.659997, 5.090078})),
+                                                         make_unique<movement::WaitNode>(blackboard, 0.1),
+                                                         make_unique<Teleport>(blackboard, neededBots[2].id, state),
+                                                         make_unique<movement::WaitNode>(blackboard, 0.1),
+                                                         make_unique<ForceOrderNode>(blackboard, "ForceTCat", vector{neededBots[0].id, neededBots[1].id, neededBots[2].id}, testAToCatWaypoints, addedOrderId),
+                                                         make_unique<ForceEntryIndexNode>(blackboard, "ForcePusherBaiter",
+                                                                                          vector{neededBots[0].id, neededBots[1].id, neededBots[2].id},
+                                                                                          vector{0, 1, 2}),
+                                                         make_unique<movement::WaitNode>(blackboard, 5.)),
+                                                 "tmp");
+            commands = make_unique<ParallelFirstNode>(blackboard, Node::makeList(
+                        std::move(setupCommands),
+                        make_unique<DisableActionsNode>(blackboard, "DisableCondition",
+                                                        vector{neededBots[0].id, neededBots[1].id, neededBots[2].id})),
+                  "TmpPushMultiple"
+            );
+        }
+    }
+};
 #endif //CSKNOW_TEAMWORK_H
