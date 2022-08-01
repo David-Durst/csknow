@@ -8,7 +8,9 @@
 namespace follow::spacing {
     bool PushConditionNode::valid(const ServerState &state, TreeThinker &treeThinker) {
         const ServerState::Client & curClient = state.getClient(treeThinker.csgoId);
-        const Order & curOrder = blackboard.strategy.getOrderForPlayer(treeThinker.csgoId);
+        OrderId curOrderId = blackboard.strategy.getOrderIdForPlayer(treeThinker.csgoId);
+        const Order & curOrder = blackboard.strategy.getOrder(curOrderId);
+        const vector<CSGOId> & curOrderFollowers = blackboard.strategy.getOrderFollowers(curOrderId);
 
         // stop if T team, not entering
         if (curClient.team == ENGINE_TEAM_T) {
@@ -23,7 +25,7 @@ namespace follow::spacing {
 
         NumAheadResult numAheadResult = computeNumAhead(blackboard, state, curClient);
         // stop if reached first waypoint and first
-        bool readyToExecute = numAheadResult.numAhead == 0 &&
+        bool readyToExecute = numAheadResult.numBehind == curOrderFollowers.size() - 1 &&
                 blackboard.strategy.playerToWaypointIndex[treeThinker.csgoId] > 0;
         if (readyToExecute) {
             blackboard.strategy.playerReady(treeThinker.csgoId);
@@ -32,7 +34,7 @@ namespace follow::spacing {
             // this will ignore execute -> setup transition, so fine to call many times
             blackboard.strategy.playerSetup(treeThinker.csgoId);
         }
-        // when executing, just go, or when setting up
-        return blackboard.strategy.playerNotReady(treeThinker.csgoId);
+        // stop only when ready and not setting up or executing
+        return blackboard.strategy.isPlayerReady(treeThinker.csgoId);
     }
 }

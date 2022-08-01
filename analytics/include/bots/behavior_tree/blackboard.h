@@ -101,7 +101,8 @@ struct Blackboard {
 
     bool executeIfAllFinishedSetup(const ServerState & state) {
         for (const auto & [playerId, treeThinker] : playerToTreeThinkers) {
-            if (state.getClient(playerId).team != ENGINE_TEAM_CT) {
+            const auto & curClient = state.getClient(playerId);
+            if (curClient.team != ENGINE_TEAM_CT || !curClient.isBot || !curClient.isAlive) {
                 continue;
             }
             if (!strategy.playerFinishedSetup(playerId)) {
@@ -109,7 +110,8 @@ struct Blackboard {
             }
         }
         for (const auto & [playerId, treeThinker] : playerToTreeThinkers) {
-            if (state.getClient(playerId).team != ENGINE_TEAM_CT) {
+            const auto & curClient = state.getClient(playerId);
+            if (curClient.team != ENGINE_TEAM_CT || !curClient.isBot || !curClient.isAlive) {
                 continue;
             }
             strategy.playerExecuting(playerId);

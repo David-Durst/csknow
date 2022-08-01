@@ -472,9 +472,14 @@ public:
             playerToExecuteStatus.find(playerId)->second != ExecuteStatus::Setup;
     }
 
-    bool playerNotReady(CSGOId playerId) {
-        return playerToExecuteStatus.find(playerId) == playerToExecuteStatus.end() ||
-               playerToExecuteStatus.find(playerId)->second != ExecuteStatus::Ready;
+    bool isPlayerReady(CSGOId playerId) {
+        return playerToExecuteStatus.find(playerId) != playerToExecuteStatus.end() &&
+               playerToExecuteStatus.find(playerId)->second == ExecuteStatus::Ready;
+    }
+
+    bool isPlayerExecuting(CSGOId playerId) {
+        return playerToExecuteStatus.find(playerId) != playerToExecuteStatus.end() &&
+               playerToExecuteStatus.find(playerId)->second == ExecuteStatus::Executing;
     }
 
     vector<string> print(const ServerState & state, const nav_mesh::nav_file & navFile) const {

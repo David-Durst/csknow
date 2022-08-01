@@ -34,7 +34,8 @@ namespace follow::spacing {
             // this will ignore execute -> setup transition, so fine to call many times
             blackboard.strategy.playerSetup(treeThinker.csgoId);
         }
-        return blackboard.strategy.playerNotReady(treeThinker.csgoId) &&
-            blackboard.teamToLastRoundSawEnemy[curClient.team] != state.roundNumber;
+        return blackboard.strategy.isPlayerReady(treeThinker.csgoId) ||
+                (blackboard.strategy.isPlayerExecuting(treeThinker.csgoId) &&
+                    blackboard.teamToLastRoundSawEnemy[curClient.team] != state.roundNumber);
     }
 }

@@ -4,7 +4,7 @@
 #include "bots/behavior_tree/priority/spacing_helpers.h"
 
 NumAheadResult computeNumAhead(Blackboard & blackboard, const ServerState & state, const ServerState::Client & curClient) {
-    NumAheadResult result{0, std::numeric_limits<double>::max()};
+    NumAheadResult result{0, 0, std::numeric_limits<double>::max()};
     const nav_mesh::nav_area & curArea = blackboard.navFile.get_nearest_area_by_position(
             {curClient.lastEyePosX, curClient.lastEyePosY, curClient.lastFootPosZ});
     const OrderId curOrderId = blackboard.strategy.getOrderIdForPlayer(curClient.csgoId);
@@ -50,6 +50,9 @@ NumAheadResult computeNumAhead(Blackboard & blackboard, const ServerState & stat
             if (distanceInFront > MIN_BAIT_DISTANCE) {
                 result.numAhead++;
                 result.nearestInFront = std::min(result.nearestInFront, distanceInFront);
+            }
+            else if (distanceInFront < -1 * MIN_BAIT_DISTANCE) {
+                result.numBehind++;
             }
         }
     }

@@ -81,7 +81,18 @@ namespace follow {
             virtual bool valid(const ServerState & state, TreeThinker &treeThinker) override;
         };
     }
+
+    class SpacingNode : public SelectorNode {
+    public:
+        SpacingNode(Blackboard & blackboard) :
+            SelectorNode(blackboard, Node::makeList(
+                make_unique<spacing::BaitConditionNode>(blackboard),
+                make_unique<spacing::LurkConditionNode>(blackboard),
+                make_unique<spacing::PushConditionNode>(blackboard)),
+        "SpacingSelectorNode") { };
+    };
 }
+
 
 class FollowOrderNode : public SequenceNode {
 public:
@@ -89,10 +100,8 @@ public:
             SequenceNode(blackboard, Node::makeList(
                                                         make_unique<follow::ComputeNavAreaNode>(blackboard),
                                                         make_unique<movement::PathingNode>(blackboard),
-                                                        make_unique<follow::spacing::BaitConditionNode>(blackboard),
-                                                        make_unique<follow::spacing::LurkConditionNode>(blackboard),
-                                                        make_unique<follow::spacing::PushConditionNode>(blackboard)),
-                                        "FollowOrderSelectorNode") { };
+                                                        make_unique<follow::SpacingNode>(blackboard)),
+                                        "FollowOrderSequenceNode") { };
 };
 
 class NoEnemyOrderCheckNode : public ConditionDecorator {
