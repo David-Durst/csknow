@@ -60,6 +60,18 @@ public:
         return visPoints[areaIdToVectorIndex.find(srcId)->second].visibleFromCurPoint;
     }
 
+    bool isVisiblePlace(AreaId srcId, string placeName, const map<string, vector<AreaId>> & placeToArea) {
+        AreaBits visibleAreasInPlace;
+        if (placeToArea.find(placeName) == placeToArea.end()) {
+            return false;
+        }
+        for (const auto & areaId : placeToArea.find(placeName)->second) {
+            visibleAreasInPlace[areaIdToVectorIndex[areaId]] = true;
+        }
+        visibleAreasInPlace &= getVisibilityRelativeToSrc(srcId);
+        return visibleAreasInPlace.any();
+    }
+
     bool isDangerIndex(size_t src, size_t target) const {
         return visPoints[src].dangerFromCurPoint[target];
     }

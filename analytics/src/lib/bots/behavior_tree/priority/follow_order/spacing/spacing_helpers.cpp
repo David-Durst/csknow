@@ -3,7 +3,8 @@
 //
 #include "bots/behavior_tree/priority/spacing_helpers.h"
 
-int computeNumAhead(Blackboard & blackboard, const ServerState & state, const ServerState::Client & curClient) {
+NumAheadResult computeNumAhead(Blackboard & blackboard, const ServerState & state, const ServerState::Client & curClient) {
+    NumAheadResult result{0, std::numeric_limits<double>::max()};
     const nav_mesh::nav_area & curArea = blackboard.navFile.get_nearest_area_by_position(
             {curClient.lastEyePosX, curClient.lastEyePosY, curClient.lastFootPosZ});
     const OrderId curOrderId = blackboard.strategy.getOrderIdForPlayer(curClient.csgoId);
@@ -22,11 +23,10 @@ int computeNumAhead(Blackboard & blackboard, const ServerState & state, const Se
         curClientDistanceToTarget = blackboard.navFile.compute_path_length(curClientWaypoints.value());
     }
     else {
-        return 0;
+        return result;
     }
 
     // find other order followers who are ahead, make sure num ahead matches number assigned to follow
-    int numAhead = 0;
     for (const auto & followerId : blackboard.strategy.getOrderFollowers(curOrderId)) {
         if (followerId == curClient.csgoId) {
             continue;
@@ -46,10 +46,12 @@ int computeNumAhead(Blackboard & blackboard, const ServerState & state, const Se
                 continue;
             }
             // other person ahead if you are more than BAIT_DISTANCE behind them
-            if (curClientDistanceToTarget - otherClientDistanceToTarget > BAIT_DISTANCE) {
-                numAhead++;
+            double distanceInFront = curClientDistanceToTarget - otherClientDistanceToTarget;
+            if (distanceInFront > MIN_BAIT_DISTANCE) {
+                result.numAhead++;
+                result.nearestInFront = std::min(result.nearestInFront, distanceInFront);
             }
         }
     }
-    return numAhead;
+    return result;
 }

@@ -13,6 +13,12 @@
 using std::stringstream;
 using std::map;
 
+enum class ExecuteStatus {
+    Setup,
+    Ready,
+    Executing
+};
+
 enum class WaypointType {
     NavPlace,
     NavAreas, // sometimes want to force a collection of areas without a name
@@ -198,7 +204,8 @@ struct Order {
 
     void print(const vector<CSGOId> followers, const map<CSGOId, int64_t> & playerToWaypointIndex,
                const ServerState & state, const nav_mesh::nav_file & navFile,
-               const map<CSGOId, int32_t> & playerToEntryIndex, size_t orderIndex, TeamId team, vector<string> & result) const {
+               const map<CSGOId, int32_t> & playerToEntryIndex, const map<CSGOId, ExecuteStatus> & playerToExecuteStatus,
+               size_t orderIndex, TeamId team, vector<string> & result) const {
         stringstream waypointsStream;
         if (team == ENGINE_TEAM_T) {
             waypointsStream << "T ";
@@ -258,7 +265,25 @@ struct Order {
         for (const auto & follower : followers) {
             followersStream << "<" << state.getPlayerString(follower) << ", "
                 << playerToWaypointIndex.find(follower)->second << ", "
-                << playerToEntryIndex.find(follower)->second << ">; ";
+                << playerToEntryIndex.find(follower)->second;
+            if (team == ENGINE_TEAM_CT && playerToExecuteStatus.find(follower) != playerToExecuteStatus.end()) {
+                followersStream << ", ";
+                ExecuteStatus status = playerToExecuteStatus.find(follower)->second;
+                switch (status) {
+                    case ExecuteStatus::Setup:
+                        followersStream << "Setup";
+                        break;
+                    case ExecuteStatus::Ready:
+                        followersStream << "Ready";
+                        break;
+                    case ExecuteStatus::Executing:
+                        followersStream << "Executing";
+                        break;
+                    default:
+                        followersStream << "INVALID";
+                }
+            }
+            followersStream << ">; ";
         }
         followersStream << "]";
         result.push_back(followersStream.str());
@@ -278,6 +303,7 @@ class Strategy {
     vector<Order> tOrders, ctOrders;
     map<CSGOId, OrderId> playerToOrder;
     map<OrderId, vector<CSGOId>> orderToPlayers;
+    map<CSGOId, ExecuteStatus> playerToExecuteStatus;
 
     // shouldn't need private suffix, but operator overlading isn't working for me for public op and private op
     Order & getOrderPrivate(OrderId orderId) {
@@ -301,6 +327,7 @@ public:
         orderToPlayers.clear();
         playerToWaypointIndex.clear();
         playerToEntryIndex.clear();
+        playerToExecuteStatus.clear();
     }
 
     OrderId getOrderIdForPlayer(CSGOId playerId) const {
@@ -410,7 +437,6 @@ public:
 
     }
 
-
     int64_t maxTeamWaypoint(const ServerState & state, TeamId team) {
         int64_t result = INVALID_ID;
         for (const auto & csgoId : state.getPlayersOnTeam(team)) {
@@ -419,6 +445,36 @@ public:
             }
         }
         return result;
+    }
+
+    void playerSetup(CSGOId playerId) {
+        // only allow swapping between ready and setup, once executing it's game time
+        if (playerToExecuteStatus.find(playerId) == playerToExecuteStatus.end() ||
+            playerToExecuteStatus.find(playerId)->second == ExecuteStatus::Ready) {
+            playerToExecuteStatus[playerId] = ExecuteStatus::Setup;
+        }
+    }
+
+    void playerReady(CSGOId playerId) {
+        // only allow swapping between ready and setup, once executing it's game time
+        if (playerToExecuteStatus.find(playerId) == playerToExecuteStatus.end() ||
+            playerToExecuteStatus.find(playerId)->second == ExecuteStatus::Setup) {
+            playerToExecuteStatus[playerId] = ExecuteStatus::Ready;
+        }
+    }
+
+    void playerExecuting(CSGOId playerId) {
+        playerToExecuteStatus[playerId] = ExecuteStatus::Executing;
+    }
+
+    bool playerFinishedSetup(CSGOId playerId) {
+        return playerToExecuteStatus.find(playerId) != playerToExecuteStatus.end() &&
+            playerToExecuteStatus.find(playerId)->second != ExecuteStatus::Setup;
+    }
+
+    bool playerNotReady(CSGOId playerId) {
+        return playerToExecuteStatus.find(playerId) == playerToExecuteStatus.end() ||
+               playerToExecuteStatus.find(playerId)->second != ExecuteStatus::Ready;
     }
 
     vector<string> print(const ServerState & state, const nav_mesh::nav_file & navFile) const {
@@ -431,7 +487,7 @@ public:
             for (size_t orderIndex = 0; orderIndex < bothTeamOrders[teamIndex].size(); orderIndex++) {
                 bothTeamOrders[teamIndex][orderIndex].print(orderToPlayers.find({teams[teamIndex], static_cast<int64_t>(orderIndex)})->second,
                                                             playerToWaypointIndex, state, navFile,
-                                                            playerToEntryIndex, orderIndex, teams[teamIndex], result);
+                                                            playerToEntryIndex, playerToExecuteStatus, orderIndex, teams[teamIndex], result);
             }
         }
 

@@ -20,6 +20,7 @@ namespace strategy {
             {WaypointType::C4, "BombsiteA"}
     };
     static Waypoints offenseSpawnToAWaypoints = {
+            {WaypointType::NavPlace, "MidDoors"},
             {WaypointType::NavPlace, "CTSpawn"},
             {WaypointType::NavPlace, "UnderA"},
             {WaypointType::NavPlace, "ARamp"},

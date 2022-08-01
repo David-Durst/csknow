@@ -50,8 +50,8 @@ namespace follow {
             BaitConditionNode(Blackboard & blackboard) :
                     ConditionDecorator(blackboard,make_unique<SequenceNode>(blackboard,
                                                                             Node::makeList(
-                                                                                    make_unique<NoMovementNode>(blackboard),
-                                                                                    make_unique<movement::WaitNode>(blackboard, 0.5)
+                                                                                    make_unique<NoMovementNode>(blackboard)//,
+                                                                                    //make_unique<movement::WaitNode>(blackboard, 0.5)
                                                                             ) ,"BaitNodesSequence"),
                                        "BaitConditionNode") { };
             virtual bool valid(const ServerState & state, TreeThinker &treeThinker) override;
@@ -62,10 +62,22 @@ namespace follow {
             LurkConditionNode(Blackboard & blackboard) :
                     ConditionDecorator(blackboard,make_unique<SequenceNode>(blackboard,
                                                                             Node::makeList(
-                                                                                    make_unique<NoMovementNode>(blackboard),
-                                                                                    make_unique<movement::WaitNode>(blackboard, 0.5)
+                                                                                    make_unique<NoMovementNode>(blackboard)//,
+                                                                                    //make_unique<movement::WaitNode>(blackboard, 0.5)
                                                                             ) ,"LurkNodesSequence"),
                                        "LurkConditionNode") { };
+            virtual bool valid(const ServerState & state, TreeThinker &treeThinker) override;
+        };
+
+        class PushConditionNode : public ConditionDecorator {
+        public:
+            PushConditionNode(Blackboard & blackboard) :
+                    ConditionDecorator(blackboard,make_unique<SequenceNode>(blackboard,
+                                                                            Node::makeList(
+                                                                                    make_unique<NoMovementNode>(blackboard)//,
+                                                                                    //make_unique<movement::WaitNode>(blackboard, 0.5)
+                                                                            ) ,"PushNodesSequence"),
+                                       "PushConditionNode") { };
             virtual bool valid(const ServerState & state, TreeThinker &treeThinker) override;
         };
     }
@@ -77,7 +89,9 @@ public:
             SequenceNode(blackboard, Node::makeList(
                                                         make_unique<follow::ComputeNavAreaNode>(blackboard),
                                                         make_unique<movement::PathingNode>(blackboard),
-                                                        make_unique<follow::BaitConditionNode>(blackboard)),
+                                                        make_unique<follow::spacing::BaitConditionNode>(blackboard),
+                                                        make_unique<follow::spacing::LurkConditionNode>(blackboard),
+                                                        make_unique<follow::spacing::PushConditionNode>(blackboard)),
                                         "FollowOrderSelectorNode") { };
 };
 

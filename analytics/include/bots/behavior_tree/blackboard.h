@@ -98,6 +98,24 @@ struct Blackboard {
     // order data (movedC4 is for debugging, need to reset orders)
     bool newOrderThisFrame, recomputeOrders = false;
     Strategy strategy;
+
+    bool executeIfAllFinishedSetup(const ServerState & state) {
+        for (const auto & [playerId, treeThinker] : playerToTreeThinkers) {
+            if (state.getClient(playerId).team != ENGINE_TEAM_CT) {
+                continue;
+            }
+            if (!strategy.playerFinishedSetup(playerId)) {
+                return false;
+            }
+        }
+        for (const auto & [playerId, treeThinker] : playerToTreeThinkers) {
+            if (state.getClient(playerId).team != ENGINE_TEAM_CT) {
+                continue;
+            }
+            strategy.playerExecuting(playerId);
+        }
+        return true;
+    }
     /*
     vector<Order> orders;
     map<CSGOId, int64_t> playerToOrder;

@@ -27,6 +27,7 @@ namespace communicate::spacing {
                 }
             }
         }
+        blackboard.executeIfAllFinishedSetup(state);
         playerNodeState[treeThinker.csgoId] = NodeState::Success;
         return playerNodeState[treeThinker.csgoId];
     }
