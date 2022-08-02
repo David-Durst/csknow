@@ -22,9 +22,7 @@ namespace follow::spacing {
         }
 
         NumAheadResult numAheadResult = computeNumAhead(blackboard, state, curClient);
-        // stop if reached first waypoint (aka on to second/number 1 by 0 indexing)
-        // first in stack
-        // but pusher hasn't seen anyone
+        // ready if reached first waypoint (aka on to second/number 1 by 0 indexing) and in front
         bool readyToExecute = numAheadResult.numAhead == 0 &&
                 blackboard.strategy.playerToWaypointIndex[treeThinker.csgoId] > 0;
         if (readyToExecute) {
@@ -34,7 +32,9 @@ namespace follow::spacing {
             // this will ignore execute -> setup transition, so fine to call many times
             blackboard.strategy.playerSetup(treeThinker.csgoId);
         }
-        return blackboard.strategy.isPlayerReady(treeThinker.csgoId) ||
+        // stop only when ready and too far ahead (so this player is not the problem, need to wait for others to catch up)
+        // or pusher hasn't seen anyone
+        return (blackboard.strategy.isPlayerReady(treeThinker.csgoId) && numAheadResult.nearestBehind > MAX_PUSH_DISTANCE) ||
                 (blackboard.strategy.isPlayerExecuting(treeThinker.csgoId) &&
                     blackboard.teamToLastRoundSawEnemy[curClient.team] != state.roundNumber);
     }
