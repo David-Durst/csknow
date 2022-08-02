@@ -16,6 +16,7 @@ namespace follow::compute_nav_area {
         moveToWaypoint(blackboard, state, treeThinker, curOrder, curPriority);
         curPriority.priorityType = PriorityType::Order;
         curPriority.targetPlayer.playerId = INVALID_ID;
+        curPriority.nonDangerAimArea = {};
         curPriority.moveOptions = {true, false, false};
         curPriority.shootOptions = ShootOptions::DontShoot;
 
@@ -42,7 +43,6 @@ namespace follow::compute_nav_area {
         }
 
         playerNodeState[treeThinker.csgoId] = NodeState::Success;
-
         return playerNodeState[treeThinker.csgoId];
     }
 }

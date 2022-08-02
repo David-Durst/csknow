@@ -16,12 +16,9 @@ namespace follow::compute_nav_area {
         curPriority.targetPos = vec3tConv(blackboard.navFile.get_area_by_id_fast(curPriority.targetAreaId).get_center());
         curPriority.priorityType = PriorityType::Order;
         curPriority.targetPlayer.playerId = INVALID_ID;
+        curPriority.nonDangerAimArea = {};
         curPriority.moveOptions = {true, false, false};
         curPriority.shootOptions = ShootOptions::DontShoot;
-
-        if (blackboard.inTest) {
-            int x = 1;
-        }
 
         // if in the target area, don't move
         if (curAreaId == curPriority.targetAreaId) {
@@ -29,10 +26,10 @@ namespace follow::compute_nav_area {
         }
 
         // aim at danger area if visible
-        AreaId dangerAreaId = curOrder.holdIndexToDangerAreaId.find(
+        AreaId chokeAreaId = curOrder.holdIndexToChokeAreaId.find(
             curOrder.playerToHoldIndex.find(treeThinker.csgoId)->second)->second;
-        if (blackboard.visPoints.isVisibleAreaId(curAreaId, dangerAreaId)) {
-            blackboard.playerToDangerAreaId[treeThinker.csgoId] = dangerAreaId;
+        if (blackboard.visPoints.isVisibleAreaId(curAreaId, chokeAreaId)) {
+            curPriority.nonDangerAimArea = chokeAreaId;
         }
 
         playerNodeState[treeThinker.csgoId] = NodeState::Success;

@@ -53,7 +53,7 @@ struct Order {
     size_t aggressiveChokeIndex, passiveChokeIndex;
     // multiple players can watch one choke point, one player in a hold point
     map<CSGOId, size_t> playerToHoldIndex;
-    map<size_t, AreaId> holdIndexToHoldAreaId, holdIndexToDangerAreaId;
+    map<size_t, AreaId> holdIndexToHoldAreaId, holdIndexToChokeAreaId;
     // what about chains of operations (like switching once plant happens)?
 
     void computeIndices(const nav_mesh::nav_file & navFile, const ReachableResult & reachability,
@@ -199,7 +199,7 @@ struct Order {
             return a.holdDistance < b.holdDistance || (a.holdDistance == b.holdDistance && a.chokeDistance > b.chokeDistance);
         });
         holdIndexToHoldAreaId[waypointIndex] = options.front().holdAreaId;
-        holdIndexToDangerAreaId[waypointIndex] = options.front().chokeAreaId;
+        holdIndexToChokeAreaId[waypointIndex] = options.front().chokeAreaId;
     }
 
     void print(const vector<CSGOId> followers, const map<CSGOId, int64_t> & playerToWaypointIndex,

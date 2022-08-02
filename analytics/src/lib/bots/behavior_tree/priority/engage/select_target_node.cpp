@@ -13,6 +13,7 @@ namespace engage {
         bool havePriority = blackboard.playerToPriority.find(treeThinker.csgoId) != blackboard.playerToPriority.end();
         Priority & curPriority = blackboard.playerToPriority[treeThinker.csgoId];
         TargetPlayer & curTarget = curPriority.targetPlayer;
+        curPriority.nonDangerAimArea = {};
         const map<CSGOId, EnemyPositionMemory> & rememberedEnemies = blackboard.playerToMemory[treeThinker.csgoId].positions;
         const map<CSGOId, EnemyPositionMemory> & communicatedEnemies = blackboard.playerToRelevantCommunicatedEnemies[treeThinker.csgoId];
 

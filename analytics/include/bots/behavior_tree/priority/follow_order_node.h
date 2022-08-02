@@ -38,6 +38,12 @@ namespace follow {
                              "ComputeNavAreaNode") { };
     };
 
+    class ComputeNonDangerAimAreaNode : public Node {
+    public:
+        ComputeNonDangerAimAreaNode(Blackboard & blackboard) : Node(blackboard, "ComputeNonDangerAimAreaNode") { };
+        virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override;
+    };
+
     namespace spacing {
         class NoMovementNode : public Node {
         public:
@@ -99,6 +105,7 @@ public:
     FollowOrderNode(Blackboard & blackboard) :
             SequenceNode(blackboard, Node::makeList(
                                                         make_unique<follow::ComputeNavAreaNode>(blackboard),
+                                                        make_unique<follow::ComputeNonDangerAimAreaNode>(blackboard),
                                                         make_unique<movement::PathingNode>(blackboard),
                                                         make_unique<follow::SpacingNode>(blackboard)),
                                         "FollowOrderSequenceNode") { };
