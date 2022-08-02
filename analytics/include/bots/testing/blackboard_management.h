@@ -92,17 +92,21 @@ public:
 
 class DisableActionsNode : public Node {
     vector<CSGOId> targetIds;
-    bool disableMouse;
+    bool disableMouse, disableFiring, disableMove;
 public:
-    DisableActionsNode(Blackboard & blackboard, string name, vector<CSGOId> targetIds, bool disableMouse = true) :
-            Node(blackboard, name), targetIds(targetIds), disableMouse(disableMouse) { };
+    DisableActionsNode(Blackboard & blackboard, string name, vector<CSGOId> targetIds, bool disableMouse = true, bool disableFiring = true, bool disableMove = true) :
+            Node(blackboard, name), targetIds(targetIds), disableMouse(disableMouse), disableFiring(disableFiring), disableMove(disableMove) { };
     virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
         for (size_t i = 0; i < targetIds.size(); i++) {
-            blackboard.playerToAction[targetIds[i]].buttons = 0;
+            bool oldFireValue = blackboard.playerToAction[targetIds[i]].getButton(IN_ATTACK);
+            if (disableMove) {
+                blackboard.playerToAction[targetIds[i]].buttons = 0;
+            }
             if (disableMouse) {
                 blackboard.playerToAction[targetIds[i]].inputAngleDeltaPctX = 0.;
                 blackboard.playerToAction[targetIds[i]].inputAngleDeltaPctY = 0.;
             }
+            blackboard.playerToAction[targetIds[i]].setButton(IN_ATTACK, disableFiring ? false : oldFireValue);
         }
         playerNodeState[treeThinker.csgoId] = NodeState::Running;
         return playerNodeState[treeThinker.csgoId];
@@ -119,6 +123,7 @@ public:
         for (auto & [_, memory] : blackboard.playerToMemory) {
             memory.positions.clear();
         }
+        blackboard.teamToLastRoundSawEnemy.clear();
         blackboard.resetPossibleNavAreas = true;
         blackboard.playerToDangerAreaId.clear();
         playerNodeState[treeThinker.csgoId] = NodeState::Success;

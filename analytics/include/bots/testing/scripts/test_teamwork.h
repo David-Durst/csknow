@@ -207,6 +207,9 @@ public:
                                                                         make_unique<ClearMemoryCommunicationDangerNode>(blackboard),
                                                                         make_unique<ForceOrderNode>(blackboard, "ForceCTLongCat", vector{neededBots[0].id, neededBots[1].id}, strategy::offenseLongToAWaypoints, lurkAddedOrderId),
                                                                         make_unique<ForceOrderNode>(blackboard, "ForceCTCat", vector{neededBots[2].id}, strategy::offenseCatToAWaypoints, pushAddedOrderId),
+                                                                        make_unique<ForceEntryIndexNode>(blackboard, "ForcePusherBaiter",
+                                                                                                         vector{neededBots[0].id, neededBots[1].id, neededBots[2].id},
+                                                                                                         vector{0, 1, 0}),
                                                                         make_unique<movement::WaitNode>(blackboard, 2.0)),
                                                                 "Setup");
             Node::Ptr disableAllBothDuringSetup = make_unique<ParallelFirstNode>(blackboard, Node::makeList(
@@ -217,7 +220,8 @@ public:
             commands = make_unique<SequenceNode>(blackboard, Node::makeList(
                                                          std::move(disableAllBothDuringSetup),
                                                          make_unique<ParallelFirstNode>(blackboard, Node::makeList(
-                                                                                                make_unique<DisableActionsNode>(blackboard, "DisableMain", vector{neededBots[3].id}),
+                                                                                                make_unique<DisableActionsNode>(blackboard, "DisableEnemy", vector{neededBots[3].id}),
+                                                                                                make_unique<DisableActionsNode>(blackboard, "DisablePush", vector{neededBots[2].id}, false, true, false),
                                                                                                 // if the inner node doesn't finish in 15 seconds, fail right after
                                                                                                 make_unique<movement::WaitNode>(blackboard, 16, false)),
                                                                                         "PushLurkBaitCondition")),

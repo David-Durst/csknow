@@ -151,7 +151,11 @@ struct Blackboard {
     map<CSGOId, EnemyPositionsMemory> playerToMemory;
     PossibleNavAreas possibleNavAreas;
     bool resetPossibleNavAreas = false, inTest = false; // inTest just for debugging, setting break points once test setup
-    map<TeamId, bool> teamToLastRoundSawEnemy;
+    map<TeamId, RoundNumber> teamToLastRoundSawEnemy;
+    bool sawEnemyThisRound(const ServerState & state, TeamId team) {
+        return teamToLastRoundSawEnemy.find(team) != teamToLastRoundSawEnemy.end() &&
+                teamToLastRoundSawEnemy[team] == state.roundNumber;
+    }
 
     // priority data
     map<CSGOId, Priority> playerToPriority;
