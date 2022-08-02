@@ -173,10 +173,13 @@ void ServerState::loadClientStates(string clientStatesFilePath) {
         }
         else if (colNumber == 34) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].isAirborne);
+        }
+        else if (colNumber == 35) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].isScoped);
             rowNumber++;
             arrayEntry++;
         }
-        colNumber = (colNumber + 1) % 35;
+        colNumber = (colNumber + 1) % 36;
     }
     closeMMapFile({fd, stats, file});
 }

@@ -12,12 +12,24 @@ namespace action {
         Priority & curPriority = blackboard.playerToPriority[treeThinker.csgoId];
         Path & curPath = blackboard.playerToPath[treeThinker.csgoId];
 
+        bool scopeResetTimePassed = state.getSecondsBetweenTimes(curAction.lastScopeTime, state.loadTime) > MIN_JUMP_RESET_SECONDS;
+
         // don't shoot if there's no target
         if (curPriority.targetPlayer.playerId == INVALID_ID) {
             curAction.shotsInBurst = 0;
             curAction.setButton(IN_ATTACK, false);
+            // un scope if not scoped in and haven't pressed scope button recently
+            if (scopeResetTimePassed && curClient.isScoped) {
+                curAction.lastScopeTime = state.loadTime;
+                curAction.setButton(IN_ATTACK2, true);
+            }
         }
         else {
+            // scope in if not scoped and haven't pressed scoped in recently
+            if (scopeResetTimePassed && !curClient.isScoped) {
+                curAction.lastScopeTime = state.loadTime;
+                curAction.setButton(IN_ATTACK2, true);
+            }
             // shoot if the target is in our sights and recoil is sufficiently reset and have ammo and didn't fire
             // last frame (for pistols)
 

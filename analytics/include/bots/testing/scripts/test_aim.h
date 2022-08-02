@@ -14,10 +14,12 @@ class KilledAfterTime : public Node {
     CSGOId sourceId, targetId;
     int32_t startFrame;
     double minTime;
+    bool testScoped;
 
 public:
-    KilledAfterTime(Blackboard & blackboard, CSGOId sourceId, CSGOId targetId, double minTime) :
-            Node(blackboard, "ValidConditionNode"), sourceId(sourceId), targetId(targetId), minTime(minTime) { };
+    KilledAfterTime(Blackboard & blackboard, CSGOId sourceId, CSGOId targetId, double minTime, bool testScoped = false) :
+            Node(blackboard, "ValidConditionNode"), sourceId(sourceId), targetId(targetId),
+            minTime(minTime), testScoped(testScoped) { };
 
     virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
         const ServerState::Client & sourceClient = state.getClient(sourceId);
@@ -26,9 +28,11 @@ public:
             startFrame = targetClient.lastFrame;
         }
 
+        bool scopeCheck = !testScoped || sourceClient.isScoped;
         double timeSinceStart = (targetClient.lastFrame - startFrame) * state.tickInterval;
         if (!sourceClient.isAlive || !targetClient.isAlive) {
-            playerNodeState[treeThinker.csgoId] = sourceClient.isAlive && !targetClient.isAlive && timeSinceStart > minTime ? NodeState::Success : NodeState::Failure;
+            playerNodeState[treeThinker.csgoId] = sourceClient.isAlive && !targetClient.isAlive &&
+                    timeSinceStart > minTime && scopeCheck ? NodeState::Success : NodeState::Failure;
             return playerNodeState[treeThinker.csgoId];
         }
         playerNodeState[treeThinker.csgoId] = NodeState::Running;
@@ -83,6 +87,53 @@ public:
                                                                                                 make_unique<movement::WaitNode>(blackboard, 3, false)),
                                                                                         "AimAndKillCondition")),
                                                  "AimAndKillSequence");
+        }
+    }
+};
+
+class ScopedAimAndKillWithinTimeCheck : public Script {
+public:
+    ScopedAimAndKillWithinTimeCheck(const ServerState & state) :
+            Script("ScopedAimAndKillWithinTimeCheck", {{0, ENGINE_TEAM_T}, {0, ENGINE_TEAM_CT}}, {ObserveType::FirstPerson, 0}) { }
+
+    virtual void initialize(Tree & tree, ServerState & state) override {
+        if (tree.newBlackboard) {
+            Blackboard & blackboard = *tree.blackboard;
+            Script::initialize(tree, state);
+            Node::Ptr setupCommands = make_unique<SequenceNode>(blackboard, Node::makeList(
+                                                                        make_unique<InitTestingRound>(blackboard, name),
+                                                                        make_unique<movement::WaitNode>(blackboard, 1.0),
+                                                                        make_unique<SpecDynamic>(blackboard, neededBots, observeSettings),
+                                                                        make_unique<movement::WaitNode>(blackboard, 0.1),
+                                                                        make_unique<SlayAllBut>(blackboard, vector{neededBots[0].id, neededBots[1].id}, state),
+                                                                        make_unique<movement::WaitNode>(blackboard, 0.1),
+                                                                        make_unique<SetPos>(blackboard, Vec3({1440.059204, 1112.913574, -8.766550}), Vec2({-178.035400, -1.805965})),
+                                                                        make_unique<movement::WaitNode>(blackboard, 0.1),
+                                                                        make_unique<Teleport>(blackboard, neededBots[0].id, state),
+                                                                        make_unique<movement::WaitNode>(blackboard, 0.1),
+                                                                        make_unique<SetPos>(blackboard, Vec3({1417.528564, 1652.856445, -9.775691}), Vec2({-89.683349, 0.746031})),
+                                                                        make_unique<movement::WaitNode>(blackboard, 0.1),
+                                                                        make_unique<Teleport>(blackboard, neededBots[1].id, state),
+                                                                        make_unique<movement::WaitNode>(blackboard, 0.1),
+                                                                        make_unique<RemoveGuns>(blackboard, neededBots[0].id, state),
+                                                                        make_unique<movement::WaitNode>(blackboard, 0.1),
+                                                                        make_unique<GiveItem>(blackboard, neededBots[0].id, state, "weapon_awp"),
+                                                                        make_unique<movement::WaitNode>(blackboard, 0.1),
+                                                                        make_unique<SetCurrentItem>(blackboard, neededBots[0].id, state, "weapon_awp"),
+                                                                        make_unique<movement::WaitNode>(blackboard, 0.1)),
+                                                                "ScopedAimAndKillWithinTimeCheckSetup");
+            Node::Ptr disableAllBothDuringSetup = make_unique<ParallelFirstNode>(blackboard, Node::makeList(
+                    std::move(setupCommands),
+                    make_unique<DisableActionsNode>(blackboard, "DisableSetup", vector{neededBots[0].id, neededBots[1].id})
+            ), "ScopedAimAndKillDisableDuringSetup");
+            commands = make_unique<SequenceNode>(blackboard, Node::makeList(
+                                                         std::move(disableAllBothDuringSetup),
+                                                         make_unique<ParallelFirstNode>(blackboard, Node::makeList(
+                                                                                                make_unique<KilledAfterTime>(blackboard, neededBots[0].id, neededBots[1].id, 0.5, true),
+                                                                                                make_unique<DisableActionsNode>(blackboard, "DisableSetup", vector{neededBots[1].id}),
+                                                                                                make_unique<movement::WaitNode>(blackboard, 3, false)),
+                                                                                        "ScopedAimAndKillCondition")),
+                                                 "ScopedAimAndKillSequence");
         }
     }
 };

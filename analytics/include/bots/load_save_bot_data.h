@@ -78,6 +78,7 @@ public:
         bool isAlive;
         bool isBot;
         bool isAirborne;
+        bool isScoped;
 
         // keyboard/mouse inputs sent to game engine
         int32_t buttons;

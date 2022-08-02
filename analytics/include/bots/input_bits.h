@@ -34,4 +34,10 @@
 #define IN_GRENADE2		(1 << 24)	// grenade 2
 #define	IN_ATTACK3		(1 << 25)
 
+// https://tf2b.com/itemlist.php?gid=730
+#define AWP_ID           9
+#define GSG_ID           11
+#define SCAR_ID          38
+#define SCOUT_ID         40
+
 #endif //CSKNOW_BOT_INPUT_BITS_H
