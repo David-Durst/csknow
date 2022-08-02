@@ -36,8 +36,7 @@ public:
                                  make_unique<engage::RecordEngagementRound>(blackboard),
                                  make_unique<engage::SelectTargetNode>(blackboard),
                                  make_unique<engage::SelectFireModeNode>(blackboard),
-                                 make_unique<movement::PathingNode>(blackboard),
-                                 make_unique<movement::WaitNode>(blackboard, 0.5)),
+                                 make_unique<movement::PathingNode>(blackboard)),
                          "EngageNode") { };
 };
 

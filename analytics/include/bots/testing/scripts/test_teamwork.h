@@ -174,7 +174,7 @@ public:
 
     PushLurkBaitASiteScript(const ServerState & state) :
             Script("PushLurkBaitASiteScript", {{0, ENGINE_TEAM_CT, AggressiveType::Bait}, {0, ENGINE_TEAM_CT, AggressiveType::Bait}, {0, ENGINE_TEAM_CT, AggressiveType::Push}, {0, ENGINE_TEAM_T}},
-                   {ObserveType::Absolute, 0, {366.774475, 2669.538818, 239.860245}, {16.486465, -46.266056}}) { };
+                   {ObserveType::FirstPerson, 0}) { };
 
     virtual void initialize(Tree & tree, ServerState & state) override  {
         if (tree.newBlackboard) {
@@ -223,7 +223,7 @@ public:
                                                                                                 make_unique<DisableActionsNode>(blackboard, "DisableEnemy", vector{neededBots[3].id}),
                                                                                                 make_unique<DisableActionsNode>(blackboard, "DisablePush", vector{neededBots[2].id}, false, true, false),
                                                                                                 // if the inner node doesn't finish in 15 seconds, fail right after
-                                                                                                make_unique<movement::WaitNode>(blackboard, 24, false)),
+                                                                                                make_unique<movement::WaitNode>(blackboard, 40, false)),
                                                                                         "PushLurkBaitCondition")),
                                                  "PushLurkBaitSequence");
         }

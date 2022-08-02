@@ -40,7 +40,7 @@ int main(int argc, char * argv[]) {
     ScriptsRunner scriptsRunner(Script::makeList(
                                             //make_unique<GooseToCatScript>(state),
                                             //make_unique<GooseToCatShortScript>(state),
-                                            make_unique<CTPushLongScript>(state)
+                                            //make_unique<CTPushLongScript>(state)
                                             //make_unique<HoldLongScript>(state),
                                             //make_unique<HoldASitePushScript>(state),
                                             //make_unique<HoldASiteBaitScript>(state),
@@ -50,7 +50,7 @@ int main(int argc, char * argv[]) {
                                             //make_unique<PushBaitGooseToCatScript>(state),
                                             //make_unique<PushWaitForBaitGooseToCatScript>(state),
                                             //make_unique<PushMultipleBaitGooseToCatScript>(state)
-                                            //make_unique<PushLurkBaitASiteScript>(state)
+                                            make_unique<PushLurkBaitASiteScript>(state)
                                             //make_unique<MemoryAimCheck>(state),
                                             //make_unique<MemoryForgetCheck>(state),
                                             //make_unique<CommunicationAimCheck>(state),
