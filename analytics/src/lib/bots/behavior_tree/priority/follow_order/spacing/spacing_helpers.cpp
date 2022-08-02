@@ -52,9 +52,9 @@ NumAheadResult computeNumAhead(Blackboard & blackboard, const ServerState & stat
                 result.numAhead++;
                 result.nearestInFront = std::min(result.nearestInFront, distanceInFront);
             }
-            else if (distanceInFront < -1 * MIN_BAIT_DISTANCE) {
+            else if (-1 * distanceInFront > MIN_BAIT_DISTANCE) {
                 result.numBehind++;
-                result.nearestInFront = std::max(result.nearestInFront, distanceInFront);
+                result.nearestBehind = std::max(result.nearestBehind, -1 * distanceInFront);
             }
         }
     }
