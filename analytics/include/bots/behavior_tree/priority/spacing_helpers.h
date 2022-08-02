@@ -8,8 +8,8 @@
 #include "bots/behavior_tree/pathing_node.h"
 #define MIN_BAIT_DISTANCE 200.f
 //#define START_BAIT_DISTANCE 200.f
-#define MAX_PUSH_DISTANCE 1500.f
-#define MAX_BAIT_DISTANCE 2000.f
+#define MAX_PUSH_DISTANCE 800.f
+#define MAX_BAIT_DISTANCE 1000.f
 
 struct NumAheadResult {
     int numAhead;
