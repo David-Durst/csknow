@@ -127,7 +127,7 @@ public:
     }
 };
 
-
+/*
 class TmpPushMultipleBaitGooseToCatScript : public Script {
 public:
     OrderId addedOrderId;
@@ -148,15 +148,15 @@ public:
                                                          make_unique<movement::WaitNode>(blackboard, 0.1),
                                                          make_unique<SlayAllBut>(blackboard, vector{neededBots[0].id, neededBots[1].id, neededBots[2].id},state),
                                                          make_unique<movement::WaitNode>(blackboard, 0.1),
-                                                         make_unique<SetPos>(blackboard, Vec3({420., 2100., 97.}), Vec2({2.903987, -95.587982})),
+                                                         make_unique<SetPos>(blackboard, Vec3({471.375, 2112.14, 96.02}), Vec2({2.903987, -95.587982})),
                                                          make_unique<movement::WaitNode>(blackboard, 0.1),
                                                          make_unique<Teleport>(blackboard,neededBots[0].id, state),
                                                          make_unique<movement::WaitNode>(blackboard, 0.1),
-                                                         make_unique<SetPos>(blackboard, Vec3({420., 2300., 97.}), Vec2({-1.760050, -105.049713})),
+                                                         make_unique<SetPos>(blackboard, Vec3({440.58, 2259.15, 95.93}), Vec2({-1.760050, -105.049713})),
                                                          make_unique<movement::WaitNode>(blackboard, 0.1),
                                                          make_unique<Teleport>(blackboard, neededBots[1].id, state),
                                                          make_unique<movement::WaitNode>(blackboard, 0.1),
-                                                         make_unique<SetPos>(blackboard, Vec3({420., 2500., 97.}), Vec2({-0.659997, 5.090078})),
+                                                         make_unique<SetPos>(blackboard, Vec3({420.199219, 2377.000000, 96.528168}), Vec2({-0.659997, 5.090078})),
                                                          make_unique<movement::WaitNode>(blackboard, 0.1),
                                                          make_unique<Teleport>(blackboard, neededBots[2].id, state),
                                                          make_unique<movement::WaitNode>(blackboard, 0.1),
@@ -164,7 +164,7 @@ public:
                                                          make_unique<ForceEntryIndexNode>(blackboard, "ForcePusherBaiter",
                                                                                           vector{neededBots[0].id, neededBots[1].id, neededBots[2].id},
                                                                                           vector{0, 1, 2}),
-                                                         make_unique<movement::WaitNode>(blackboard, 5.)),
+                                                         make_unique<movement::WaitNode>(blackboard, 20.)),
                                                  "tmp");
             commands = make_unique<ParallelFirstNode>(blackboard, Node::makeList(
                         std::move(setupCommands),
@@ -175,4 +175,6 @@ public:
         }
     }
 };
+*/
+
 #endif //CSKNOW_TEAMWORK_H

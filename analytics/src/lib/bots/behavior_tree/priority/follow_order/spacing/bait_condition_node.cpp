@@ -22,8 +22,9 @@ namespace follow::spacing {
 
         NumAheadResult numAheadResult = computeNumAhead(blackboard, state, curClient);
         // ready to execute if enough people ahead and near enough to next person in stack
+        // if not moving, use start bait distance. if moving, allow buffer region for smaller min bait distance
         bool readyToExecute = numAheadResult.numAhead >= blackboard.strategy.playerToEntryIndex[treeThinker.csgoId] &&
-                numAheadResult.nearestInFront < MAX_BAIT_DISTANCE;
+                numAheadResult.nearestInFront < MAX_BAIT_DISTANCE;//(blackboard.strategy.isPlayerReady(treeThinker.csgoId) ? START_BAIT_DISTANCE : MIN_BAIT_DISTANCE);
         if (readyToExecute) {
             blackboard.strategy.playerReady(treeThinker.csgoId);
         }

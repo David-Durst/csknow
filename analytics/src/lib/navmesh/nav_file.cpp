@@ -193,6 +193,11 @@ namespace nav_mesh {
         return total_distance;
     }
 
+    float nav_file::compute_path_length_from_origin( vec3_t origin, std::vector< PathNode > path) {
+        path.push_back({ false, 0, 0, origin });
+        return compute_path_length(path);
+    }
+
     const nav_area& nav_file::get_area_by_id( std::uint32_t id ) const {
         for ( auto& area : m_areas ) {
             if ( area.get_id( ) == id )
