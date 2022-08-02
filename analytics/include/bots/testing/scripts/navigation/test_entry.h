@@ -9,6 +9,7 @@
 #include "bots/behavior_tree/pathing_node.h"
 #include "bots/behavior_tree/tree.h"
 #include "bots/testing/blackboard_management.h"
+#include "bots/testing/state_checks.h"
 
 class JumpedBeforeCat : public Node {
     CSGOId targetId;
@@ -134,6 +135,39 @@ public:
                                                                                                 make_unique<movement::WaitNode>(blackboard, 20, false)),
                                                                                         "GooseToLongCondition")),
                                                  "GooseToLongSequence");
+        }
+    }
+};
+
+class CTPushLongScript : public Script {
+public:
+    OrderId addedOrderId;
+
+    CTPushLongScript(const ServerState & state) :
+            Script("CTPushLongScript", {{0, ENGINE_TEAM_CT}}, {ObserveType::FirstPerson, 0}) { }
+
+    virtual void initialize(Tree & tree, ServerState & state) override  {
+        if (tree.newBlackboard) {
+            Blackboard & blackboard = *tree.blackboard;
+            Script::initialize(tree, state);
+            set<AreaId> areasToRemove{4048};
+            commands = make_unique<SequenceNode>(blackboard, Node::makeList(
+                                                         make_unique<InitTestingRound>(blackboard, name),
+                                                         make_unique<movement::WaitNode>(blackboard, 1.0),
+                                                         make_unique<SpecDynamic>(blackboard, neededBots, observeSettings),
+                                                         make_unique<movement::WaitNode>(blackboard, 0.1),
+                                                         make_unique<SlayAllBut>(blackboard, vector{neededBots[0].id},state),
+                                                         make_unique<movement::WaitNode>(blackboard, 0.1),
+                                                         make_unique<SetPos>(blackboard, Vec3({593., 282., 2.}), Vec2({2.903987, -95.587982})),
+                                                         make_unique<movement::WaitNode>(blackboard, 0.1),
+                                                         make_unique<Teleport>(blackboard, neededBots[0].id, state),
+                                                         make_unique<movement::WaitNode>(blackboard, 0.1),
+                                                         make_unique<ForceOrderNode>(blackboard, "ForceCTLong", vector{neededBots[0].id}, strategy::offenseLongToAWaypoints, areasToRemove, addedOrderId),
+                                                         make_unique<ParallelFirstNode>(blackboard, Node::makeList(
+                                                                 make_unique<RepeatDecorator>(blackboard, make_unique<InPlace>(blackboard, neededBots[0].id, "BombsiteA"), true),
+                                                                 make_unique<movement::WaitNode>(blackboard, 20, false))
+                                                                 ))
+                                                );
         }
     }
 };

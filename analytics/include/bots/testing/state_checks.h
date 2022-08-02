@@ -87,6 +87,52 @@ public:
     }
 };
 
+class InArea : public Node {
+    CSGOId sourceId;
+    AreaId areaId;
+
+public:
+    InArea(Blackboard & blackboard, CSGOId sourceId, AreaId areaId) :
+            Node(blackboard, "FiringNode"), sourceId(sourceId), areaId(areaId) { };
+
+    virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
+        const ServerState::Client & sourceClient = state.getClient(sourceId);
+        AreaId srcAreaId =
+                blackboard.navFile.get_nearest_area_by_position(vec3Conv(sourceClient.getFootPosForPlayer())).get_id();
+
+        if (srcAreaId == areaId) {
+            playerNodeState[treeThinker.csgoId] = NodeState::Success;
+        }
+        else {
+            playerNodeState[treeThinker.csgoId] = NodeState::Failure;
+        }
+        return playerNodeState[treeThinker.csgoId];
+    }
+};
+
+class InPlace : public Node {
+    CSGOId sourceId;
+    string place;
+
+public:
+    InPlace(Blackboard & blackboard, CSGOId sourceId, string place) :
+            Node(blackboard, "FiringNode"), sourceId(sourceId), place(place) { };
+
+    virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
+        const ServerState::Client & sourceClient = state.getClient(sourceId);
+        const nav_mesh::nav_area & srcArea =
+                blackboard.navFile.get_nearest_area_by_position(vec3Conv(sourceClient.getFootPosForPlayer()));
+
+        if (place == blackboard.navFile.get_place(srcArea.m_place)) {
+            playerNodeState[treeThinker.csgoId] = NodeState::Success;
+        }
+        else {
+            playerNodeState[treeThinker.csgoId] = NodeState::Failure;
+        }
+        return playerNodeState[treeThinker.csgoId];
+    }
+};
+
 class Firing : public Node {
     CSGOId sourceId;
     bool invert;
