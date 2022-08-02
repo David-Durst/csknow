@@ -5,6 +5,8 @@
 #include "bots/behavior_tree/action_node.h"
 
 namespace action {
+    const set<int32_t> scopedWeaponIds{AWP_ID, GSG_ID, SCAR_ID, SCOUT_ID};
+
     NodeState FireTaskNode::exec(const ServerState &state, TreeThinker &treeThinker) {
         const ServerState::Client & curClient = state.getClient(treeThinker.csgoId);
         Action & curAction = blackboard.playerToAction[treeThinker.csgoId];
@@ -12,24 +14,30 @@ namespace action {
         Priority & curPriority = blackboard.playerToPriority[treeThinker.csgoId];
         Path & curPath = blackboard.playerToPath[treeThinker.csgoId];
 
-        bool scopeResetTimePassed = state.getSecondsBetweenTimes(curAction.lastScopeTime, state.loadTime) > MIN_JUMP_RESET_SECONDS;
+        //bool scopeResetTimePassed = state.getSecondsBetweenTimes(curAction.lastScopeTime, state.loadTime) > MIN_SCOPE_RESET_SECONDS;
 
         // don't shoot if there's no target
         if (curPriority.targetPlayer.playerId == INVALID_ID) {
             curAction.shotsInBurst = 0;
             curAction.setButton(IN_ATTACK, false);
+            /*
             // un scope if not scoped in and haven't pressed scope button recently
             if (scopeResetTimePassed && curClient.isScoped) {
                 curAction.lastScopeTime = state.loadTime;
                 curAction.setButton(IN_ATTACK2, true);
             }
+            */
         }
         else {
+            /*
             // scope in if not scoped and haven't pressed scoped in recently
-            if (scopeResetTimePassed && !curClient.isScoped) {
+            if (scopeResetTimePassed && !curClient.isScoped &&
+                scopedWeaponIds.find(curClient.currentWeaponId) != scopedWeaponIds.end()) {
                 curAction.lastScopeTime = state.loadTime;
                 curAction.setButton(IN_ATTACK2, true);
+                std::cout << "scoping in" << std::endl;
             }
+             */
             // shoot if the target is in our sights and recoil is sufficiently reset and have ammo and didn't fire
             // last frame (for pistols)
 

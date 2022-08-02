@@ -91,6 +91,7 @@ public:
     }
 };
 
+// scoping takes time (need to wait for scope animation to happen, need to predict aim), not gonna deal with it now
 class ScopedAimAndKillWithinTimeCheck : public Script {
 public:
     ScopedAimAndKillWithinTimeCheck(const ServerState & state) :
@@ -120,7 +121,7 @@ public:
                                                                         make_unique<GiveItem>(blackboard, neededBots[0].id, state, "weapon_awp"),
                                                                         make_unique<movement::WaitNode>(blackboard, 0.1),
                                                                         make_unique<SetCurrentItem>(blackboard, neededBots[0].id, state, "weapon_awp"),
-                                                                        make_unique<movement::WaitNode>(blackboard, 0.1)),
+                                                                        make_unique<movement::WaitNode>(blackboard, 1.0)),
                                                                 "ScopedAimAndKillWithinTimeCheckSetup");
             Node::Ptr disableAllBothDuringSetup = make_unique<ParallelFirstNode>(blackboard, Node::makeList(
                     std::move(setupCommands),
