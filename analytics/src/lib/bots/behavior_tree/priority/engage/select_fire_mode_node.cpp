@@ -25,7 +25,7 @@ namespace engage {
         // if close enough to move and shoot, crouch
         bool shouldCrouch = distance <= treeThinker.engagementParams.standDistance;
         if (!curPriority.targetPlayer.visible) {
-            curPriority.moveOptions = {true, false, true};
+            curPriority.moveOptions = {true, false, false};
             curPriority.shootOptions = ShootOptions::DontShoot;
         }
         else if (distance <= treeThinker.engagementParams.moveDistance) {

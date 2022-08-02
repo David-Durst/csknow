@@ -223,7 +223,7 @@ public:
                                                                                                 make_unique<DisableActionsNode>(blackboard, "DisableEnemy", vector{neededBots[3].id}),
                                                                                                 make_unique<DisableActionsNode>(blackboard, "DisablePush", vector{neededBots[2].id}, false, true, false),
                                                                                                 // if the inner node doesn't finish in 15 seconds, fail right after
-                                                                                                make_unique<movement::WaitNode>(blackboard, 16, false)),
+                                                                                                make_unique<movement::WaitNode>(blackboard, 24, false)),
                                                                                         "PushLurkBaitCondition")),
                                                  "PushLurkBaitSequence");
         }
