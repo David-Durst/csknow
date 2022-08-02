@@ -6,7 +6,7 @@
 #define CSKNOW_SPACING_HELPERS_H
 #include "bots/behavior_tree/node.h"
 #include "bots/behavior_tree/pathing_node.h"
-#define MIN_BAIT_DISTANCE 200.f
+#define MIN_BAIT_DISTANCE 400.f
 //#define START_BAIT_DISTANCE 200.f
 #define MAX_PUSH_DISTANCE 800.f
 #define MAX_BAIT_DISTANCE 1000.f
