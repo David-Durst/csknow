@@ -217,13 +217,28 @@ public:
                     make_unique<DisableActionsNode>(blackboard, "DisableSetup",
                                                     vector{neededBots[0].id, neededBots[1].id, neededBots[2].id, neededBots[3].id}, false)
             ), "DisableDuringSetup");
+            Node::Ptr pusherSeesEnemyBeforeLurkerMoves = make_unique<ParallelAndNode>(blackboard, Node::makeList(
+                    make_unique<RepeatDecorator>(blackboard, make_unique<InPlace>(blackboard, neededBots[0].id, "LongDoors"), true),
+                    make_unique<RepeatDecorator>(blackboard, make_unique<InPlace>(blackboard, neededBots[1].id, "OutsideLong"), true),
+                    make_unique<RepeatDecorator>(blackboard, make_unique<InPlace>(blackboard, neededBots[2].id, "ExtendedA"), true)
+            ));
+            Node::Ptr pusherHoldsLurkerReachesLongBaiterFollows = make_unique<ParallelAndNode>(blackboard, Node::makeList(
+                    make_unique<RepeatDecorator>(blackboard, make_unique<InPlace>(blackboard, neededBots[0].id, "LongA"), true),
+                    make_unique<RepeatDecorator>(blackboard, make_unique<InPlace>(blackboard, neededBots[1].id, "LongA"), true),
+                    make_unique<RepeatDecorator>(blackboard, make_unique<InPlace>(blackboard, neededBots[2].id, "ExtendedA"), true)
+            ));
+            Node::Ptr placeChecks = make_unique<SequenceNode>(blackboard, Node::makeList(
+                    std::move(pusherSeesEnemyBeforeLurkerMoves),
+                    std::move(pusherHoldsLurkerReachesLongBaiterFollows)
+            ));
             commands = make_unique<SequenceNode>(blackboard, Node::makeList(
                                                          std::move(disableAllBothDuringSetup),
                                                          make_unique<ParallelFirstNode>(blackboard, Node::makeList(
                                                                                                 make_unique<DisableActionsNode>(blackboard, "DisableEnemy", vector{neededBots[3].id}),
                                                                                                 make_unique<DisableActionsNode>(blackboard, "DisablePush", vector{neededBots[2].id}, false, true, false),
                                                                                                 // if the inner node doesn't finish in 15 seconds, fail right after
-                                                                                                make_unique<movement::WaitNode>(blackboard, 40, false)),
+                                                                                                std::move(placeChecks),
+                                                                                                make_unique<movement::WaitNode>(blackboard, 30, false)),
                                                                                         "PushLurkBaitCondition")),
                                                  "PushLurkBaitSequence");
         }

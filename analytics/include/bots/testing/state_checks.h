@@ -93,7 +93,7 @@ class InArea : public Node {
 
 public:
     InArea(Blackboard & blackboard, CSGOId sourceId, AreaId areaId) :
-            Node(blackboard, "FiringNode"), sourceId(sourceId), areaId(areaId) { };
+            Node(blackboard, "InArea_" + std::to_string(areaId)), sourceId(sourceId), areaId(areaId) { };
 
     virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
         const ServerState::Client & sourceClient = state.getClient(sourceId);
@@ -116,7 +116,7 @@ class InPlace : public Node {
 
 public:
     InPlace(Blackboard & blackboard, CSGOId sourceId, string place) :
-            Node(blackboard, "FiringNode"), sourceId(sourceId), place(place) { };
+            Node(blackboard, "InPlace_" + place), sourceId(sourceId), place(place) { };
 
     virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
         const ServerState::Client & sourceClient = state.getClient(sourceId);
