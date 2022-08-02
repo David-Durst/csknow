@@ -168,6 +168,63 @@ public:
     }
 };
 
+class PushLurkBaitASiteScript : public Script {
+public:
+    OrderId pushAddedOrderId, lurkAddedOrderId;
+
+    PushLurkBaitASiteScript(const ServerState & state) :
+            Script("PushLurkBaitASiteScript", {{0, ENGINE_TEAM_CT, AggressiveType::Bait}, {0, ENGINE_TEAM_CT, AggressiveType::Bait}, {0, ENGINE_TEAM_CT, AggressiveType::Push}, {0, ENGINE_TEAM_T}},
+                   {ObserveType::Absolute, 0, {366.774475, 2669.538818, 239.860245}, {16.486465, -46.266056}}) { };
+
+    virtual void initialize(Tree & tree, ServerState & state) override  {
+        if (tree.newBlackboard) {
+            Blackboard & blackboard = *tree.blackboard;
+            Script::initialize(tree, state);
+            Node::Ptr setupCommands = make_unique<SequenceNode>(blackboard, Node::makeList(
+                                                                        make_unique<InitTestingRound>(blackboard, name),
+                                                                        make_unique<movement::WaitNode>(blackboard, 1.0),
+                                                                        make_unique<SpecDynamic>(blackboard, neededBots, observeSettings),
+                                                                        make_unique<movement::WaitNode>(blackboard, 0.1),
+                                                                        make_unique<SlayAllBut>(blackboard, vector{neededBots[0].id, neededBots[1].id, neededBots[2].id, neededBots[3].id}, state),
+                                                                        make_unique<movement::WaitNode>(blackboard, 0.3),
+                                                                                //;setang -1.012000 67.385880
+                                                                        make_unique<SetPos>(blackboard, Vec3({473.290436, -67.194908, 59.092133}), Vec2({-78.701942, -7.463999})),
+                                                                        make_unique<movement::WaitNode>(blackboard, 0.1),
+                                                                        make_unique<Teleport>(blackboard, neededBots[0].id, state),
+                                                                        make_unique<movement::WaitNode>(blackboard, 0.1),
+                                                                        make_unique<SetPos>(blackboard, Vec3({-14.934761, -817.601318, 62.097897}), Vec2({-89.683349, 0.746031})),
+                                                                        make_unique<movement::WaitNode>(blackboard, 0.1),
+                                                                        make_unique<Teleport>(blackboard, neededBots[1].id, state),
+                                                                        make_unique<movement::WaitNode>(blackboard, 0.1),
+                                                                        make_unique<SetPos>(blackboard, Vec3({-421.860260, 856.695313, 42.407509}), Vec2({-89.683349, 0.746031})),
+                                                                        make_unique<movement::WaitNode>(blackboard, 0.1),
+                                                                        make_unique<Teleport>(blackboard, neededBots[2].id, state),
+                                                                        make_unique<movement::WaitNode>(blackboard, 0.1),
+                                                                        make_unique<SetPos>(blackboard, Vec3({883.084106, 2491.471436, 160.187653}), Vec2({-89.683349, 0.746031})),
+                                                                        make_unique<movement::WaitNode>(blackboard, 0.1),
+                                                                        make_unique<Teleport>(blackboard, neededBots[3].id, state),
+                                                                        make_unique<movement::WaitNode>(blackboard, 0.1),
+                                                                        make_unique<ClearMemoryCommunicationDangerNode>(blackboard),
+                                                                        make_unique<ForceOrderNode>(blackboard, "ForceCTLongCat", vector{neededBots[0].id, neededBots[1].id}, strategy::offenseLongToAWaypoints, lurkAddedOrderId),
+                                                                        make_unique<ForceOrderNode>(blackboard, "ForceCTCat", vector{neededBots[2].id}, strategy::offenseCatToAWaypoints, pushAddedOrderId),
+                                                                        make_unique<movement::WaitNode>(blackboard, 2.0)),
+                                                                "Setup");
+            Node::Ptr disableAllBothDuringSetup = make_unique<ParallelFirstNode>(blackboard, Node::makeList(
+                    std::move(setupCommands),
+                    make_unique<DisableActionsNode>(blackboard, "DisableSetup",
+                                                    vector{neededBots[0].id, neededBots[1].id, neededBots[2].id, neededBots[3].id}, false)
+            ), "DisableDuringSetup");
+            commands = make_unique<SequenceNode>(blackboard, Node::makeList(
+                                                         std::move(disableAllBothDuringSetup),
+                                                         make_unique<ParallelFirstNode>(blackboard, Node::makeList(
+                                                                                                make_unique<DisableActionsNode>(blackboard, "DisableMain", vector{neededBots[3].id}),
+                                                                                                // if the inner node doesn't finish in 15 seconds, fail right after
+                                                                                                make_unique<movement::WaitNode>(blackboard, 16, false)),
+                                                                                        "PushLurkBaitCondition")),
+                                                 "PushLurkBaitSequence");
+        }
+    }
+};
 /*
 class TmpPushMultipleBaitGooseToCatScript : public Script {
 public:
