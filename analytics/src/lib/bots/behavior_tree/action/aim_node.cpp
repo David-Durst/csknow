@@ -90,8 +90,14 @@ namespace action {
             aimTarget.z += EYE_HEIGHT;
         }
 
-        mouseController.resetStateIfDesync(vectorAngles(curClient.getEyePosForPlayer()));
-        Vec2 targetViewAngle = vectorAngles(aimTarget);
+        Vec3 targetVector = aimTarget - curClient.getEyePosForPlayer();
+        Vec2 targetViewAngle = vectorAngles(targetVector);
+        targetViewAngle.makePitchNeg90To90();
+        // clamp within max of -89 to 89
+        targetViewAngle.y = std::max(-1 * MAX_PITCH_MAGNITUDE,
+                                     std::min(MAX_PITCH_MAGNITUDE, targetViewAngle.y));
+        targetViewAngle.makeYawNeg180To180();
+
         Vec2 newViewAngle = mouseController.update(state.getSecondsBetweenTimes(curAction.lastActionTime,
                                                                                 state.loadTime), targetViewAngle);
         curAction.lastActionTime = state.loadTime;

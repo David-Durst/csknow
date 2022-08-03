@@ -27,14 +27,6 @@ public:
         yd = {0., 0.};
     }
 
-    void resetStateIfDesync(Vec2 x0) {
-        if (std::abs(computeMagnitude(y - x0)) > 0.1) {
-            xp = x0;
-            y = x0;
-            yd = {0., 0.};
-        }
-    }
-
     Vec2 update(double T, Vec2 x, optional<Vec2> xd = {}) {
         if (!xd) { // estimate velocity
             xd = (x - xp) / T;
