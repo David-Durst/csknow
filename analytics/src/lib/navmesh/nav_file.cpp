@@ -303,13 +303,29 @@ namespace nav_mesh {
     }
 
     void nav_file::remove_incoming_edges_to_areas( std::set<std::uint32_t> ids ) {
-        for ( size_t area_id = 0; area_id < m_areas.size(); area_id++) {
-            std::vector< nav_connect_t >& area_connections = m_areas[area_id].m_connections;
+        for ( size_t area_index = 0; area_index < m_areas.size(); area_index++) {
+            std::vector< nav_connect_t >& area_connections = m_areas[area_index].m_connections;
             area_connections.erase(std::remove_if(
                     area_connections.begin(),
                     area_connections.end(),
                     [&](nav_connect_t con) { return ids.find(con.id) != ids.end(); }),
                 area_connections.end());
+        }
+        build_connections_arrays();
+        m_pather->Reset();
+    }
+
+    void nav_file::remove_edges( std::set<std::pair<std::uint32_t, std::uint32_t>> ids ) {
+        for ( size_t area_index = 0; area_index < m_areas.size(); area_index++) {
+            std::vector< nav_connect_t >& area_connections = m_areas[area_index].m_connections;
+            std::int32_t srcId = m_areas[area_index].get_id();
+            area_connections.erase(std::remove_if(
+                                           area_connections.begin(),
+                                           area_connections.end(),
+                                           [&](nav_connect_t con) {
+                                               return ids.find({srcId, con.id}) != ids.end() || ids.find({con.id, srcId}) != ids.end();
+                                           }),
+                                   area_connections.end());
         }
         build_connections_arrays();
         m_pather->Reset();

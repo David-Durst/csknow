@@ -34,6 +34,10 @@ void Tree::tick(ServerState & state, const string & mapsPath) {
             8251, // this one is under t spawn
             8631, // this one is on cat next to boxes, weird
         });
+        blackboard->navFile.remove_edges({
+            {1650, 1644}, // wall near b car clips into end of 1650 preventing getting to 1644
+            {1650, 1683}, // wall near b car clips into end of 1650 preventing getting to 1644
+        });
         globalNode = make_unique<GlobalNode>(*blackboard);
         priorityNode = make_unique<PriorityNode>(*blackboard);
         actionNode = make_unique<ActionNode>(*blackboard);

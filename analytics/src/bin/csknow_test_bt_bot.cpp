@@ -45,13 +45,13 @@ int main(int argc, char * argv[]) {
                                             //make_unique<HoldASitePushScript>(state),
                                             //make_unique<HoldASiteBaitScript>(state),
                                             //make_unique<HoldBSitePushScript>(state),
-                                            //make_unique<HoldBSiteBaitScript>(state),
+                                            make_unique<HoldBSiteBaitScript>(state)
                                             //make_unique<AimAndKillWithinTimeCheck>(state),
                                             //make_unique<PushBaitGooseToCatScript>(state),
                                             //make_unique<PushWaitForBaitGooseToCatScript>(state),
                                             //make_unique<PushMultipleBaitGooseToCatScript>(state),
                                             //make_unique<PushLurkBaitASiteScript>(state),
-                                            make_unique<MemoryAimCheck>(state)
+                                            //make_unique<MemoryAimCheck>(state),
                                             //make_unique<MemoryForgetCheck>(state),
                                             //make_unique<CommunicationAimCheck>(state),
                                             //make_unique<CommunicationForgetCheck>(state),
