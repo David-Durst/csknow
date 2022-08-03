@@ -24,6 +24,7 @@ void setupBasics(DistanceToPlacesResult & result, const nav_mesh::nav_file & nav
 
     result.distanceMatrix.resize(result.numAreas * result.numPlaces, NOT_CLOSEST_DISTANCE);
     result.closestAreaIndexMatrix.resize(result.numAreas * result.numPlaces, INVALID_ID);
+    result.medianAreaIndexMatrix.resize(result.numAreas * result.numPlaces, INVALID_ID);
 }
 
 DistanceToPlacesResult queryDistanceToPlaces(const nav_mesh::nav_file & navFile,
@@ -35,17 +36,24 @@ DistanceToPlacesResult queryDistanceToPlaces(const nav_mesh::nav_file & navFile,
         for (int64_t j = 0; j < result.numPlaces; j++) {
             double minDistance = std::numeric_limits<double>::max();
             int64_t minAreaIndex = INVALID_ID;
+            struct AreaDistance {
+                AreaId areaId;
+                double distance;
+            };
             const vector<AreaId> & areaIds = result.placeToArea[result.places[j]];
+            vector<AreaDistance> areaDistances;
             for (int64_t k = 0; k < areaIds.size(); k++) {
                 int64_t newAreaIndex = navFile.m_area_ids_to_indices.find(areaIds[k])->second;
                 double newDistance = reachableResult.getDistance(i, newAreaIndex);
-                if (newDistance != NOT_CLOSEST_DISTANCE && newDistance < minDistance) {
-                    minDistance = newDistance;
-                    minAreaIndex = newAreaIndex;
-                }
+                areaDistances.push_back({areaIds[k], newDistance});
             }
-            result.distanceMatrix[i * result.numPlaces + j] = minDistance;
-            result.closestAreaIndexMatrix[i * result.numPlaces + j] = minAreaIndex;
+            std::sort(areaDistances.begin(), areaDistances.end(),
+                      [](const AreaDistance & a, const AreaDistance & b) { return a.distance < b.distance; });
+            result.closestDistanceMatrix[i * result.numPlaces + j] = areaDistances[0].distance;
+            result.closestAreaIndexMatrix[i * result.numPlaces + j] = areaDistances[0].areaId;
+            int median = std::max(0, static_cast<int>(areaDistances.size()/2.) - 1);
+            result.closestDistanceMatrix[i * result.numPlaces + j] = areaDistances[median].distance;
+            result.medianAreaIndexMatrix[i * result.numPlaces + j] = areaDistances[median].areaId;
         }
     }
 
@@ -91,18 +99,37 @@ void DistanceToPlacesResult::load(string mapsPath, string mapName, const nav_mes
             coordinate[index].max.z = stod(value);
 
             int64_t areaIndex = 0;
+            bool gotFirstValue = false;
+            double firstDistance = 0;
             while (getline(distStream, value, ',')) {
                 double distance = stod(value);
                 if (distance != NOT_CLOSEST_DISTANCE) {
-                    distanceMatrix[index * numPlaces + areaToPlace[areaIndex]] = distance;
-                    closestAreaIndexMatrix[index * numPlaces + areaToPlace[areaIndex]] = areaIndex;
+                    size_t matrixIndex = index * numPlaces + areaToPlace[areaIndex];
+                    if (!gotFirstValue) {
+                        closestDistanceMatrix[matrixIndex] = distance;
+                        closestAreaIndexMatrix[matrixIndex] = areaIndex;
+                        medianDistanceMatrix[matrixIndex] = distance;
+                        medianAreaIndexMatrix[matrixIndex] = areaIndex;
+                        firstDistance = distance;
+                        gotFirstValue = true;
+                    }
+                    else {
+                        if (distance < firstDistance) {
+                            closestDistanceMatrix[matrixIndex] = distance;
+                            closestAreaIndexMatrix[matrixIndex] = areaIndex;
+                        }
+                        else {
+                            medianDistanceMatrix[matrixIndex] = distance;
+                            medianAreaIndexMatrix[matrixIndex] = areaIndex;
+                        }
+                    }
                 }
                 areaIndex++;
             }
             index++;
         }
         size = coordinate.size();
-        if (index * numPlaces != distanceMatrix.size()) {
+        if (index * numPlaces != closestDistanceMatrix.size()) {
             throw std::runtime_error("distance to places matrix wrong size");
         }
     }

@@ -21,9 +21,11 @@ public:
     map<string, vector<AreaId>> placeToArea;
     vector<PlaceIndex> areaToPlace;
     vector<string> places;
-    vector<double> distanceMatrix;
+    vector<double> closestDistanceMatrix;
+    vector<double> medianDistanceMatrix;
     // closest area id for each place
     vector<AreaId> closestAreaIndexMatrix;
+    vector<AreaId> medianAreaIndexMatrix;
     int64_t numAreas;
     int64_t numPlaces;
 
@@ -45,7 +47,10 @@ public:
         for (int i = 0; i < coordinate.size(); i++) {
             PlaceIndex placeIndex = areaToPlace[i];
             if (places[placeIndex] != "" && i == getClosestArea(index, placeIndex)) {
-                ss << "," << distanceMatrix[index * numPlaces + placeIndex];
+                ss << "," << closestDistanceMatrix[index * numPlaces + placeIndex];
+            }
+            else if (places[placeIndex] != "" && i == getMedianArea(index, placeIndex)) {
+                ss << "," << medianDistanceMatrix[index * numPlaces + placeIndex];
             }
             else {
                 ss << "," << NOT_CLOSEST_DISTANCE;
@@ -66,14 +71,14 @@ public:
         return nameVector;
     }
 
-    double getDistance(int64_t srcArea, PlaceIndex dstPlace) const {
-        return distanceMatrix[srcArea * numPlaces + dstPlace];
+    double getClosestDistance(int64_t srcArea, PlaceIndex dstPlace) const {
+        return closestDistanceMatrix[srcArea * numPlaces + dstPlace];
     }
 
-    double getDistance(AreaId srcAreaId, string dstPlaceName, const nav_mesh::nav_file & navFile) const {
+    double getClosestDistance(AreaId srcAreaId, string dstPlaceName, const nav_mesh::nav_file & navFile) const {
         int64_t srcArea = navFile.m_area_ids_to_indices.find(srcAreaId)->second;
         PlaceIndex dstPlace = placeNameToIndex.find(dstPlaceName)->second;
-        return getDistance(srcArea, dstPlace);
+        return getClosestDistance(srcArea, dstPlace);
     }
 
     int64_t getClosestArea(int64_t srcArea, int64_t dstPlace) const {
@@ -87,6 +92,29 @@ public:
         size_t srcArea = navFile.m_area_ids_to_indices.find(srcAreaId)->second,
                 dstPlace = placeNameToIndex.find(dstPlaceName)->second;
         return areaIndexToId[getClosestArea(srcArea, dstPlace)];
+    }
+
+    double getMedianDistance(int64_t srcArea, PlaceIndex dstPlace) const {
+        return medianDistanceMatrix[srcArea * numPlaces + dstPlace];
+    }
+
+    double getMedianDistance(AreaId srcAreaId, string dstPlaceName, const nav_mesh::nav_file & navFile) const {
+        int64_t srcArea = navFile.m_area_ids_to_indices.find(srcAreaId)->second;
+        PlaceIndex dstPlace = placeNameToIndex.find(dstPlaceName)->second;
+        return getMedianDistance(srcArea, dstPlace);
+    }
+
+    int64_t getMedianArea(int64_t srcArea, int64_t dstPlace) const {
+        return medianAreaIndexMatrix[srcArea * numPlaces + dstPlace];
+    }
+
+    AreaId getMedianArea(AreaId srcAreaId, string dstPlaceName, const nav_mesh::nav_file & navFile) const {
+        if (dstPlaceName == "") {
+            return srcAreaId;
+        }
+        size_t srcArea = navFile.m_area_ids_to_indices.find(srcAreaId)->second,
+                dstPlace = placeNameToIndex.find(dstPlaceName)->second;
+        return areaIndexToId[getMedianArea(srcArea, dstPlace)];
     }
 
     void load(string mapsPath, string mapName, const nav_mesh::nav_file & navFile,
