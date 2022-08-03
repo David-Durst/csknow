@@ -248,10 +248,10 @@ int main(int argc, char * argv[]) {
     ReachableResult d2ReachableResult;
     d2ReachableResult.load(navPath, "de_dust2");
     string dust2DistanceToPlacesName = "de_dust2_distance_to_places";
-    //DistanceToPlacesResult d2DistanceToPlacesResult = queryDistanceToPlaces(map_navs["de_dust2"], d2ReachableResult);
-    //d2DistanceToPlacesResult.save(navPath, "de_dust2");
-    DistanceToPlacesResult d2DistanceToPlacesResult;
-    d2DistanceToPlacesResult.load(navPath, "de_dust2", map_navs["de_dust2"], d2ReachableResult);
+    DistanceToPlacesResult d2DistanceToPlacesResult = queryDistanceToPlaces(map_navs["de_dust2"], d2ReachableResult);
+    d2DistanceToPlacesResult.save(navPath, "de_dust2");
+    //DistanceToPlacesResult d2DistanceToPlacesResult;
+    //d2DistanceToPlacesResult.load(navPath, "de_dust2", map_navs["de_dust2"], d2ReachableResult);
     string dust2VisibleName = "de_dust2_visible";
     NavVisibleResult d2NavVisibleResult = queryNavVisible(map_visPoints.find("de_dust2")->second);
     string dust2DangerName = "de_dust2_danger";

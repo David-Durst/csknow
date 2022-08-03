@@ -21,11 +21,11 @@ namespace follow {
                 double distance;
             };
             vector<VisDistance> visDistances;
-            AreaId lastAreaId = blackboard.distanceToPlaces.getClosestArea(curAreaId, lastWaypoint.placeName, blackboard.navFile);
+            AreaId lastAreaId = blackboard.distanceToPlaces.getMedianArea(curAreaId, lastWaypoint.placeName, blackboard.navFile);
             size_t lastAreaIndex = blackboard.navFile.m_area_ids_to_indices[lastAreaId];
             for (size_t i = 0; i < visibleAreas.size(); i++) {
                 if (visibleAreas[i]) {
-                    visDistances.push_back({i, blackboard.distanceToPlaces.getDistance(i, lastAreaIndex)});
+                    visDistances.push_back({i, blackboard.reachability.getDistance(i, lastAreaIndex)});
                 }
             }
 

@@ -24,8 +24,8 @@ public:
     vector<double> closestDistanceMatrix;
     vector<double> medianDistanceMatrix;
     // closest area id for each place
-    vector<AreaId> closestAreaIndexMatrix;
-    vector<AreaId> medianAreaIndexMatrix;
+    vector<int64_t> closestAreaIndexMatrix;
+    vector<int64_t> medianAreaIndexMatrix;
     int64_t numAreas;
     int64_t numPlaces;
 

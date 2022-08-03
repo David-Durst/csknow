@@ -92,19 +92,19 @@ struct Order {
                        const ReachableResult & reachability, const DistanceToPlacesResult & distanceToPlacesResult) const {
         switch (waypoint.type) {
             case WaypointType::NavPlace:
-                return distanceToPlacesResult.getDistance(srcAreaId, waypoint.placeName, navFile);
+                return distanceToPlacesResult.getClosestDistance(srcAreaId, waypoint.placeName, navFile);
             case WaypointType::NavAreas:
                 return getDistance(srcAreaId, waypoint.areaIds, navFile, reachability);
             case WaypointType::ChokePlace:
-                return distanceToPlacesResult.getDistance(srcAreaId, waypoint.placeName, navFile);
+                return distanceToPlacesResult.getClosestDistance(srcAreaId, waypoint.placeName, navFile);
             case WaypointType::ChokeAreas:
                 return getDistance(srcAreaId, waypoint.areaIds, navFile, reachability);
             case WaypointType::HoldPlace:
-                return distanceToPlacesResult.getDistance(srcAreaId, waypoint.placeName, navFile);
+                return distanceToPlacesResult.getClosestDistance(srcAreaId, waypoint.placeName, navFile);
             case WaypointType::HoldAreas:
                 return getDistance(srcAreaId, waypoint.areaIds, navFile, reachability);
             case WaypointType::C4:
-                return distanceToPlacesResult.getDistance(srcAreaId, waypoint.placeName, navFile);
+                return distanceToPlacesResult.getClosestDistance(srcAreaId, waypoint.placeName, navFile);
             default:
                 throw std::runtime_error("invalid waypoint type for getting distance");
         }

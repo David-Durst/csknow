@@ -22,7 +22,8 @@ void setupBasics(DistanceToPlacesResult & result, const nav_mesh::nav_file & nav
     result.numAreas = reachableResult.size;
     result.numPlaces = navFile.m_places.size();
 
-    result.distanceMatrix.resize(result.numAreas * result.numPlaces, NOT_CLOSEST_DISTANCE);
+    result.closestDistanceMatrix.resize(result.numAreas * result.numPlaces, NOT_CLOSEST_DISTANCE);
+    result.medianDistanceMatrix.resize(result.numAreas * result.numPlaces, NOT_CLOSEST_DISTANCE);
     result.closestAreaIndexMatrix.resize(result.numAreas * result.numPlaces, INVALID_ID);
     result.medianAreaIndexMatrix.resize(result.numAreas * result.numPlaces, INVALID_ID);
 }
@@ -37,7 +38,7 @@ DistanceToPlacesResult queryDistanceToPlaces(const nav_mesh::nav_file & navFile,
             double minDistance = std::numeric_limits<double>::max();
             int64_t minAreaIndex = INVALID_ID;
             struct AreaDistance {
-                AreaId areaId;
+                int64_t areaIndex;
                 double distance;
             };
             const vector<AreaId> & areaIds = result.placeToArea[result.places[j]];
@@ -45,15 +46,15 @@ DistanceToPlacesResult queryDistanceToPlaces(const nav_mesh::nav_file & navFile,
             for (int64_t k = 0; k < areaIds.size(); k++) {
                 int64_t newAreaIndex = navFile.m_area_ids_to_indices.find(areaIds[k])->second;
                 double newDistance = reachableResult.getDistance(i, newAreaIndex);
-                areaDistances.push_back({areaIds[k], newDistance});
+                areaDistances.push_back({k, newDistance});
             }
             std::sort(areaDistances.begin(), areaDistances.end(),
                       [](const AreaDistance & a, const AreaDistance & b) { return a.distance < b.distance; });
             result.closestDistanceMatrix[i * result.numPlaces + j] = areaDistances[0].distance;
-            result.closestAreaIndexMatrix[i * result.numPlaces + j] = areaDistances[0].areaId;
+            result.closestAreaIndexMatrix[i * result.numPlaces + j] = areaDistances[0].areaIndex;
             int median = std::max(0, static_cast<int>(areaDistances.size()/2.) - 1);
             result.closestDistanceMatrix[i * result.numPlaces + j] = areaDistances[median].distance;
-            result.medianAreaIndexMatrix[i * result.numPlaces + j] = areaDistances[median].areaId;
+            result.medianAreaIndexMatrix[i * result.numPlaces + j] = areaDistances[median].areaIndex;
         }
     }
 

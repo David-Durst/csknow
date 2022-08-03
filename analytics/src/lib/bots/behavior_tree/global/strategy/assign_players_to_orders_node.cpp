@@ -48,7 +48,7 @@ namespace strategy {
                     vector<OrderPlaceDistance> & options = client.team == ENGINE_TEAM_T ? tOptions : ctOptions;
 
                     for (auto & option : options) {
-                        option.distance = blackboard.distanceToPlaces.getDistance(curArea.get_id(), option.place,
+                        option.distance = blackboard.distanceToPlaces.getClosestDistance(curArea.get_id(), option.place,
                                                                                   blackboard.navFile);
                     }
 
