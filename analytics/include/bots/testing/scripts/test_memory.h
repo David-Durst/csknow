@@ -50,7 +50,7 @@ public:
                                                          make_unique<ParallelFirstNode>(blackboard, Node::makeList(
                                                                                                 make_unique<AimingAt>(blackboard, neededBots[0].id, neededBots[1].id),
                                                                                                 make_unique<Firing>(blackboard, neededBots[0].id, true),
-                                                                                                make_unique<DisableActionsNode>(blackboard, "DisableSetup", vector{neededBots[1].id}),
+                                                                                                make_unique<DisableActionsNode>(blackboard, "DisableSetup", vector{neededBots[0].id, neededBots[1].id}, false),
                                                                                                 make_unique<movement::WaitNode>(blackboard, 1.5)),
                                                                                         "MemoryAimCondition")),
                                                  "MemoryAimSequence");
