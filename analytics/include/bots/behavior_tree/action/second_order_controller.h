@@ -5,7 +5,9 @@
 #ifndef CSKNOW_SECOND_ORDER_CONTROLLER_H
 #define CSKNOW_SECOND_ORDER_CONTROLLER_H
 
-#include "bots/behavior_tree/node.h"
+#include "geometry.h"
+#include <optional>
+using std::optional;
 
 // https://www.youtube.com/watch?v=KPoeNZZ6H4s (13:26)
 class SecondOrderController {
