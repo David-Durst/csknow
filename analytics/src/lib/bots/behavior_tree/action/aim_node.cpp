@@ -2,7 +2,7 @@
 // Created by durst on 5/8/22.
 //
 
-#include "bots/behavior_tree/action_node.h"
+#include "bots/behavior_tree/action/action_node.h"
 #define MAX_LOOK_AT_C4_DISTANCE 300.
 #define K_P 0.0025
 #define K_I 0.

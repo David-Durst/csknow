@@ -2,7 +2,7 @@
 // Created by durst on 5/8/22.
 //
 #include "bots/input_bits.h"
-#include "bots/behavior_tree/action_node.h"
+#include "bots/behavior_tree/action/action_node.h"
 
 namespace action {
     const set<int32_t> scopedWeaponIds{AWP_ID, GSG_ID, SCAR_ID, SCOUT_ID};

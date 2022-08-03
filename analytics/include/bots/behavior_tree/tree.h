@@ -9,7 +9,7 @@
 #include "bots/behavior_tree/global/global_node.h"
 #include "bots/behavior_tree/priority/priority_node.h"
 #include "bots/behavior_tree/pathing_node.h"
-#include "bots/behavior_tree/action_node.h"
+#include "bots/behavior_tree/action/action_node.h"
 #include <memory>
 #include <atomic>
 #include <mutex>

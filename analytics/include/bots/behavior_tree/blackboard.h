@@ -12,7 +12,7 @@
 #include "bots/behavior_tree/global/strategy_data.h"
 #include "bots/behavior_tree/priority/priority_data.h"
 #include "bots/behavior_tree/pathing_data.h"
-#include "bots/behavior_tree/action_data.h"
+#include "bots/behavior_tree/action/action_data.h"
 #include "queries/nav_mesh.h"
 #include "queries/reachable.h"
 #include "queries/distance_to_places.h"

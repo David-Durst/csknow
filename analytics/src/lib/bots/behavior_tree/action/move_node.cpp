@@ -3,7 +3,7 @@
 //
 
 #include "bots/input_bits.h"
-#include "bots/behavior_tree/action_node.h"
+#include "bots/behavior_tree/action/action_node.h"
 
 namespace action {
     void stop(Action & curAction) {
