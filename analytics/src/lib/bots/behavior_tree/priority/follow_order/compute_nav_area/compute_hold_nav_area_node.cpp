@@ -31,6 +31,9 @@ namespace follow::compute_nav_area {
         if (blackboard.visPoints.isVisibleAreaId(curAreaId, chokeAreaId)) {
             curPriority.nonDangerAimArea = chokeAreaId;
         }
+        else {
+            curPriority.nonDangerAimArea = curPriority.targetAreaId;
+        }
 
         playerNodeState[treeThinker.csgoId] = NodeState::Success;
         return playerNodeState[treeThinker.csgoId];
