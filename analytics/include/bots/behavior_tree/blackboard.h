@@ -19,6 +19,7 @@
 #include "bots/analysis/load_save_vis_points.h"
 #include "bots/behavior_tree/priority/memory_data.h"
 #include "bots/behavior_tree/global/possible_nav_areas.h"
+#include "bots/behavior_tree/action/second_order_controller.h"
 #include <filesystem>
 #include <memory>
 #include <random>
@@ -164,6 +165,7 @@ struct Blackboard {
     map<CSGOId, uint32_t> playerToLastPathingTargetNavAreaId;
 
     // action data
+    map<CSGOId, SecondOrderController> playerToMouseController;
     map<CSGOId, Action> playerToAction;
     map<CSGOId, Action> lastPlayerToAction;
     map<CSGOId, PIDState> playerToPIDStateX, playerToPIDStateY;

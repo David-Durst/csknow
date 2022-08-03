@@ -60,6 +60,7 @@ namespace action {
 
     NodeState AimTaskNode::exec(const ServerState &state, TreeThinker &treeThinker) {
         const ServerState::Client & curClient = state.getClient(treeThinker.csgoId);
+        SecondOrderController & mouseController = blackboard.playerToMouseController.find(treeThinker.csgoId)->second;
         Action & curAction = blackboard.playerToAction[treeThinker.csgoId];
         Action & oldAction = blackboard.lastPlayerToAction[treeThinker.csgoId];
         Priority & curPriority = blackboard.playerToPriority[treeThinker.csgoId];
@@ -89,6 +90,15 @@ namespace action {
             aimTarget.z += EYE_HEIGHT;
         }
 
+        mouseController.resetStateIfDesync(vectorAngles(curClient.getEyePosForPlayer()));
+        Vec2 targetViewAngle = vectorAngles(aimTarget);
+        Vec2 newViewAngle = mouseController.update(state.getSecondsBetweenTimes(curAction.lastActionTime,
+                                                                                state.loadTime), targetViewAngle);
+        curAction.lastActionTime = state.loadTime;
+        curAction.inputAngleDeltaPctX = newViewAngle.x;
+        curAction.inputAngleDeltaPctY = newViewAngle.y;
+
+        /*
         Vec3 targetVector = aimTarget - curClient.getEyePosForPlayer();
         Vec2 targetViewAngle = vectorAngles(targetVector);
         targetViewAngle.makePitchNeg90To90();
@@ -103,6 +113,7 @@ namespace action {
         // TODO: use better angle velocity control
         curAction.inputAngleDeltaPctX = computeAngleVelocityPID(deltaAngles.x, blackboard.playerToPIDStateX[treeThinker.csgoId], blackboard.aimDis(blackboard.gen));
         curAction.inputAngleDeltaPctY = computeAngleVelocityPID(deltaAngles.y, blackboard.playerToPIDStateY[treeThinker.csgoId], blackboard.aimDis(blackboard.gen));
+         */
 
         playerNodeState[treeThinker.csgoId] = NodeState::Success;
         return playerNodeState[treeThinker.csgoId];

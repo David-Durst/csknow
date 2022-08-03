@@ -18,7 +18,7 @@ struct PIDState {
 
 struct Action {
     // keyboard/mouse inputs sent to game engine
-    CSKnowTime lastJumpTime = defaultTime, lastScopeTime = defaultTime;
+    CSKnowTime lastJumpTime = defaultTime, lastScopeTime = defaultTime, lastActionTime = defaultTime;
     int32_t buttons;
     int32_t shotsInBurst;
     bool keepCrouching = false;
