@@ -69,7 +69,7 @@ namespace action {
             return noise*(P + I + D);
         }
         else {
-            return 0.005 * noise + (P + I + D);
+            return 5 * noise * (P + I + D);
         }
     }
 

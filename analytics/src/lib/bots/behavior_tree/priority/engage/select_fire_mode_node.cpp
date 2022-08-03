@@ -6,6 +6,7 @@
 
 namespace engage {
     NodeState SelectFireModeNode::exec(const ServerState &state, TreeThinker &treeThinker) {
+        const OrderId & curOrderId = blackboard.strategy.getOrderIdForPlayer(treeThinker.csgoId);
         Priority & curPriority = blackboard.playerToPriority[treeThinker.csgoId];
         Path & curPath = blackboard.playerToPath[treeThinker.csgoId];
 
@@ -44,6 +45,16 @@ namespace engage {
             curPriority.moveOptions = {false, false, shouldCrouch};
             curPriority.shootOptions = ShootOptions::Tap;
         }
+
+        if (curClient.team == ENGINE_TEAM_CT) {
+            for (const CSGOId followerId : blackboard.strategy.getOrderFollowers(curOrderId)) {
+                if (followerId != treeThinker.csgoId && !state.isVisible(followerId, targetClient.csgoId)) {
+                    curPriority.moveOptions.move = true;
+                    curPriority.shootOptions = ShootOptions::Tap;
+                }
+            }
+        }
+
         playerNodeState[treeThinker.csgoId] = NodeState::Success;
         return playerNodeState[treeThinker.csgoId];
     }

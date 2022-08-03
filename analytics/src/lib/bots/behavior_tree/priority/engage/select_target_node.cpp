@@ -91,6 +91,7 @@ namespace engage {
                 }
             }
             curTarget = targetOptions[closestI];
+            // pick random nearby area for target pos
             curPriority.targetPos = curTarget.footPos;
         }
 

@@ -9,6 +9,7 @@
 #include "bots/testing/scripts/test_teamwork.h"
 #include "bots/testing/scripts/test_danger.h"
 #include "bots/testing/scripts/test_possible_nav_areas.h"
+#include "bots/testing/scripts/test_engage_spacing.h"
 #include "navmesh/nav_file.h"
 #include <iostream>
 #include <thread>
@@ -46,7 +47,8 @@ int main(int argc, char * argv[]) {
                                             //make_unique<HoldASiteBaitScript>(state),
                                             //make_unique<HoldBSitePushScript>(state),
                                             //make_unique<HoldBSiteBaitScript>(state)
-                                            make_unique<AimAndKillWithinTimeCheck>(state)
+                                            //make_unique<AimAndKillWithinTimeCheck>(state),
+                                            make_unique<CTEngageSpacingScript>(state)
                                             //make_unique<PushBaitGooseToCatScript>(state),
                                             //make_unique<PushWaitForBaitGooseToCatScript>(state),
                                             //make_unique<PushMultipleBaitGooseToCatScript>(state),

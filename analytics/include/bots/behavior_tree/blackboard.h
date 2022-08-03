@@ -162,6 +162,7 @@ struct Blackboard {
     map<CSGOId, Path> playerToPath;
     map<CSGOId, uint32_t> playerToLastPathingSourceNavAreaId;
     map<CSGOId, uint32_t> playerToLastPathingTargetNavAreaId;
+    std::uniform_real_distribution<> standDis;
 
     // action data
     map<CSGOId, Action> playerToAction;
@@ -197,7 +198,7 @@ struct Blackboard {
     vector<PrintState> printPerPlayerState(const ServerState & state, CSGOId playerId);
 
     Blackboard(string navPath, string mapName) :
-        navPath(navPath), navFile(navPath.c_str()), gen(rd()), aimDis(0., 2.0),
+        navPath(navPath), navFile(navPath.c_str()), gen(rd()), aimDis(0., 2.0), standDis(0, 100.0),
         navFileOverlay(navFile), visPoints(navFile), possibleNavAreas(navFile),
         tDangerAreaLastCheckTime(navFile.m_areas.size(), defaultTime),
         ctDangerAreaLastCheckTime(navFile.m_areas.size(), defaultTime) {
