@@ -21,7 +21,7 @@ namespace action {
         return newDeltaAngle / MAX_ONE_DIRECTION_ANGLE_VEL;
     }
 
-    float computeAngleVelocityPID(double deltaAngle, PIDState pidState, double error) {
+    float computeAngleVelocityPID(double deltaAngle, PIDState pidState, double noise) {
         // compute P in PID
         double P;
         //P = deltaAngle * 0.001;
@@ -53,9 +53,24 @@ namespace action {
         double I = errorSum / pidState.errorHistory.getCurSize() * K_I;
 
         // compute D in PID
-        double D = (pidState.errorHistory.fromNewest(0) - pidState.errorHistory.fromNewest(1)) * K_D;
+        /*
+        double K_DT;
+        //P = deltaAngle * 0.001;
+        if (deltaAngle > 0.1) {
+            K_DT = 0;
+        }
+        else {
+            K_DT = 0.005;
+        }
+         */
+        double D = (pidState.errorHistory.fromNewest(0) - pidState.errorHistory.fromOldest(0)) * K_D;
 
-        return error*(P + I + D);
+        if (deltaAngle > 0.01) {
+            return noise*(P + I + D);
+        }
+        else {
+            return 0.005 * noise + (P + I + D);
+        }
     }
 
     NodeState AimTaskNode::exec(const ServerState &state, TreeThinker &treeThinker) {
@@ -103,6 +118,9 @@ namespace action {
         // TODO: use better angle velocity control
         curAction.inputAngleDeltaPctX = computeAngleVelocityPID(deltaAngles.x, blackboard.playerToPIDStateX[treeThinker.csgoId], blackboard.aimDis(blackboard.gen));
         curAction.inputAngleDeltaPctY = computeAngleVelocityPID(deltaAngles.y, blackboard.playerToPIDStateY[treeThinker.csgoId], blackboard.aimDis(blackboard.gen));
+
+        curAction.inputAngleDeltaPctX = curAction.inputAngleDeltaPctX * 0.5 + oldAction.inputAngleDeltaPctX * 0.5;
+        curAction.inputAngleDeltaPctY = curAction.inputAngleDeltaPctY * 0.5 + oldAction.inputAngleDeltaPctY * 0.5;
 
         playerNodeState[treeThinker.csgoId] = NodeState::Success;
         return playerNodeState[treeThinker.csgoId];

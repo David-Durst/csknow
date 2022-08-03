@@ -38,15 +38,15 @@ int main(int argc, char * argv[]) {
 
     bool finishedTests = false;
     ScriptsRunner scriptsRunner(Script::makeList(
-                                            //make_unique<GooseToCatScript>(state),
+                                            //make_unique<GooseToCatScript>(state)
                                             //make_unique<GooseToCatShortScript>(state),
                                             //make_unique<CTPushLongScript>(state),
                                             //make_unique<HoldLongScript>(state),
                                             //make_unique<HoldASitePushScript>(state),
                                             //make_unique<HoldASiteBaitScript>(state),
                                             //make_unique<HoldBSitePushScript>(state),
-                                            make_unique<HoldBSiteBaitScript>(state)
-                                            //make_unique<AimAndKillWithinTimeCheck>(state),
+                                            //make_unique<HoldBSiteBaitScript>(state)
+                                            make_unique<AimAndKillWithinTimeCheck>(state)
                                             //make_unique<PushBaitGooseToCatScript>(state),
                                             //make_unique<PushWaitForBaitGooseToCatScript>(state),
                                             //make_unique<PushMultipleBaitGooseToCatScript>(state),
