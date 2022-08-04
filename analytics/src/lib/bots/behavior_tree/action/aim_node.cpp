@@ -73,8 +73,13 @@ namespace action {
         }
     }
 
+    Vec2 makeAngleToDeltaPct(Vec2 newAngle, Vec2 oldAngle){
+        return (newAngle - oldAngle) / MAX_ONE_DIRECTION_ANGLE_VEL;
+    }
+
     NodeState AimTaskNode::exec(const ServerState &state, TreeThinker &treeThinker) {
         const ServerState::Client & curClient = state.getClient(treeThinker.csgoId);
+        SecondOrderController & mouseController = blackboard.playerToMouseController.find(treeThinker.csgoId)->second;
         const Order & curOrder = blackboard.strategy.getOrderForPlayer(treeThinker.csgoId);
         Action & curAction = blackboard.playerToAction[treeThinker.csgoId];
         Action & oldAction = blackboard.lastPlayerToAction[treeThinker.csgoId];
@@ -115,7 +120,16 @@ namespace action {
         // clamp within max of -89 to 89
         targetViewAngle.y = std::max(-1 * MAX_PITCH_MAGNITUDE,
                                   std::min(MAX_PITCH_MAGNITUDE, targetViewAngle.y));
+        targetViewAngle.makeYawNeg180To180();
+        Vec2 newAngle = mouseController.update(state.getSecondsBetweenTimes(curAction.lastActionTime, state.loadTime),
+                                                  targetViewAngle, curClient.getCurrentViewAnglesWithAimpunch());
+        //newAngle = {0., 0.};
+        Vec2 deltaAnglePct = makeAngleToDeltaPct(newAngle, curClient.getCurrentViewAnglesWithAimpunch());
+        curAction.inputAngleDeltaPctX = deltaAnglePct.x;
+        curAction.inputAngleDeltaPctY = deltaAnglePct.y;
+        curAction.lastActionTime = state.loadTime;
 
+        /*
         // https://stackoverflow.com/a/7428771
         Vec2 deltaAngles = targetViewAngle - curClient.getCurrentViewAnglesWithAimpunch();
         deltaAngles.makeYawNeg180To180();
@@ -126,6 +140,7 @@ namespace action {
 
         curAction.inputAngleDeltaPctX = curAction.inputAngleDeltaPctX * 0.5 + oldAction.inputAngleDeltaPctX * 0.5;
         curAction.inputAngleDeltaPctY = curAction.inputAngleDeltaPctY * 0.5 + oldAction.inputAngleDeltaPctY * 0.5;
+         */
 
         playerNodeState[treeThinker.csgoId] = NodeState::Success;
         return playerNodeState[treeThinker.csgoId];

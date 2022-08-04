@@ -67,6 +67,7 @@ void Tree::tick(ServerState & state, const string & mapsPath) {
                     client.csgoId,
                     { }
             };
+            blackboard->playerToMouseController.insert({client.csgoId, SecondOrderController(1.0, 0.75, 1.3)});
         }
     }
 
