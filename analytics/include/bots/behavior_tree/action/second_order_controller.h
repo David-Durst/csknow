@@ -37,7 +37,12 @@ public:
         return y;
     }
 
-    bool ydReset() {
+    void reset() {
+        yd = {0., 0.};
+        xp = {0., 0.};
+    };
+
+    bool isYDReset() {
         return computeMagnitude(yd) < 1;
     };
 };

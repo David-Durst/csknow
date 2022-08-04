@@ -147,16 +147,21 @@ namespace action {
             Vec2 newDeltaAnglePct = makeAngleToPct(newDeltaAngle);
             curAction.inputAngleDeltaPctX = newDeltaAnglePct.x;
             curAction.inputAngleDeltaPctY = newDeltaAnglePct.y;
-            curAction.lastActionTime = state.loadTime;
             double velocity = std::abs(computeMagnitude(newDeltaAnglePct));
             curAction.rollingAvgMouseVelocity = curAction.rollingAvgMouseVelocity * 0.5 + velocity * 0.5;
             double absAccel = std::abs(velocity  - curAction.rollingAvgMouseVelocity);
-            if (absAccel < 0.01 && velocity < 0.01 && mouseController.ydReset()) {
+            if (absAccel < 0.01 && velocity < 0.01 && mouseController.isYDReset()) {
+                mouseController.reset();
+                // do computation a second time with reset values
+                Vec2 newDeltaAnglePct = makeAngleToPct(newDeltaAngle);
+                curAction.inputAngleDeltaPctX = newDeltaAnglePct.x;
+                curAction.inputAngleDeltaPctY = newDeltaAnglePct.y;
                 curAction.enableSecondOrder = true;
             }
-            else if (velocity > 0.9 && absAccel > 0.4) {
+            else if (absAccel > 0.4 && velocity > 0.9) {
                 curAction.enableSecondOrder = false;
             }
+            curAction.lastActionTime = state.loadTime;
         }
 
         if (!SECOND_ORDER || !curAction.enableSecondOrder) { //|| computeMagnitude(deltaAngle) > 40) {
