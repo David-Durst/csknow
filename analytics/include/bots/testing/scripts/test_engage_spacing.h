@@ -16,7 +16,7 @@ public:
     OrderId addedOrderId;
 
     CTEngageSpacingScript(const ServerState & state) :
-            Script("PushLurkBaitASiteScript", {{0, ENGINE_TEAM_CT, AggressiveType::Push}, {0, ENGINE_TEAM_CT, AggressiveType::Push}, {0, ENGINE_TEAM_T}},
+            Script("CTEngageSpacingScript", {{0, ENGINE_TEAM_CT, AggressiveType::Push}, {0, ENGINE_TEAM_CT, AggressiveType::Push}, {0, ENGINE_TEAM_T}},
                    {ObserveType::FirstPerson, 1}) { };
 
     virtual void initialize(Tree & tree, ServerState & state) override  {
@@ -55,8 +55,8 @@ public:
                                                     vector{neededBots[0].id, neededBots[1].id, neededBots[2].id}, false)
             ), "DisableDuringSetup");
             Node::Ptr attackersDifferentPlaces = make_unique<ParallelAndNode>(blackboard, Node::makeList(
-                    make_unique<RepeatDecorator>(blackboard, make_unique<InPlace>(blackboard, neededBots[0].id, "LongA"), true),
-                    make_unique<RepeatDecorator>(blackboard, make_unique<InPlace>(blackboard, neededBots[1].id, "LongDoors"), true)
+                    make_unique<RepeatDecorator>(blackboard, make_unique<PosConstraint>(blackboard, neededBots[0].id, PosConstraintDimension::Y, PosConstraintOp::GT, 1350.), true),
+                    make_unique<RepeatDecorator>(blackboard, make_unique<PosConstraint>(blackboard, neededBots[1].id, PosConstraintDimension::Y, PosConstraintOp::LT, 1300.), true)
             ));
             commands = make_unique<SequenceNode>(blackboard, Node::makeList(
                                                          std::move(disableAllBothDuringSetup),
