@@ -4,7 +4,7 @@
 
 #include "bots/behavior_tree/action/action_node.h"
 #define MAX_LOOK_AT_C4_DISTANCE 300.
-#define SECOND_ORDER true
+#define SECOND_ORDER false
 #define K_P 0.0025
 #define K_I 0.
 #define K_D 0.
@@ -169,8 +169,8 @@ namespace action {
             curAction.inputAngleDeltaPctX = computeAngleVelocityPID(deltaAngle.x, blackboard.playerToPIDStateX[treeThinker.csgoId], blackboard.aimDis(blackboard.gen));
             curAction.inputAngleDeltaPctY = computeAngleVelocityPID(deltaAngle.y, blackboard.playerToPIDStateY[treeThinker.csgoId], blackboard.aimDis(blackboard.gen));
 
-            curAction.inputAngleDeltaPctX = curAction.inputAngleDeltaPctX * 0.5 + oldAction.inputAngleDeltaPctX * 0.5;
-            curAction.inputAngleDeltaPctY = curAction.inputAngleDeltaPctY * 0.5 + oldAction.inputAngleDeltaPctY * 0.5;
+            curAction.inputAngleDeltaPctX = curAction.inputAngleDeltaPctX * 0.2 + oldAction.inputAngleDeltaPctX * 0.8;
+            curAction.inputAngleDeltaPctY = curAction.inputAngleDeltaPctY * 0.2 + oldAction.inputAngleDeltaPctY * 0.8;
 
         }
 
