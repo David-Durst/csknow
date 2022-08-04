@@ -81,7 +81,7 @@ namespace communicate {
                                     minDistance = std::min(minDistance, newDistance);
                                 }
                                 // if there are no enemies or none nearby, then no need to worry about cover edges
-                                if (sumDistance != 0. && secondsAwayAtMaxSpeed(minDistance) < 5.0) {
+                                if (sumDistance != 0. && secondsAwayAtMaxSpeed(minDistance) < 1.0) {
                                     coverEdges.push_back({i, blackboard.navFile.m_areas[i].get_id(), sumDistance,
                                                           secondsAwayAtMaxSpeed(minDistance),
                                                           state.getSecondsBetweenTimes(dangerAreaLastCheckTime[i], state.loadTime) < RECENTLY_CHECKED_SECONDS});

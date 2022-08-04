@@ -63,6 +63,7 @@ public:
                                                          make_unique<ParallelFirstNode>(blackboard, Node::makeList(
                                                                                                 make_unique<DisableActionsNode>(blackboard, "DisableEnemy", vector{neededBots[2].id}),
                                                                                                 make_unique<DisableActionsNode>(blackboard, "DisablePush", vector{neededBots[0].id, neededBots[1].id}, false, true, false),
+                                                                                                make_unique<SavePossibleVisibleOverlays>(blackboard, vector{neededBots[2].id}, false),
                                                                                                 // if the inner node doesn't finish in 15 seconds, fail right after
                                                                                                 std::move(attackersDifferentPlaces),
                                                                                                 make_unique<movement::WaitNode>(blackboard, 30, false)),
