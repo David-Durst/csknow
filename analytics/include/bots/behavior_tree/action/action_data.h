@@ -19,6 +19,8 @@ struct PIDState {
 struct Action {
     // keyboard/mouse inputs sent to game engine
     CSKnowTime lastJumpTime = defaultTime, lastScopeTime = defaultTime, lastActionTime = defaultTime;
+    double rollingAvgMouseVelocity;
+    bool enableSecondOrder;
     int32_t buttons;
     int32_t shotsInBurst;
     bool keepCrouching = false;
@@ -57,7 +59,9 @@ struct Action {
 
     string print() {
         return "buttons: " + std::to_string(buttons) + ", shots in burst: " + std::to_string(shotsInBurst)
-            + ", mouse delta x: " + std::to_string(inputAngleDeltaPctX) + ", mouse delta y: " + std::to_string(inputAngleDeltaPctY);
+            + ", mouse delta x: " + std::to_string(inputAngleDeltaPctX) +
+            ", mouse delta y: " + std::to_string(inputAngleDeltaPctY) +
+            ", enable second order: " + boolToString(enableSecondOrder);
     }
 };
 

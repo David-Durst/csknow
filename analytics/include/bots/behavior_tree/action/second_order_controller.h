@@ -36,6 +36,10 @@ public:
         yd = yd + (x + xd.value()*k3 - y - yd*k1) * T / k2_stable;
         return y;
     }
+
+    bool ydBad() {
+        return computeMagnitude(yd) > 100;
+    };
 };
 
 

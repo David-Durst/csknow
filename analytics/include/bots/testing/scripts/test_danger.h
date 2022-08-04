@@ -137,7 +137,7 @@ public:
             commands = make_unique<SequenceNode>(blackboard, Node::makeList(
                                                          std::move(disableAllBothDuringSetup),
                                                          make_unique<ParallelFirstNode>(blackboard, Node::makeList(
-                                                                                                std::move(lastLongEnoughForDifferentDangerNodes),
+                                                                                                //std::move(lastLongEnoughForDifferentDangerNodes),
                                                                                                 make_unique<DisableActionsNode>(blackboard, "DisableSetup", vector{neededBots[2].id, neededBots[3].id}),
                                                                                                 // if the inner node doesn't finish in 15 seconds, fail right after
                                                                                                 make_unique<movement::WaitNode>(blackboard, 16, false)),

@@ -4,6 +4,7 @@
 
 #include "bots/behavior_tree/action/action_node.h"
 #define MAX_LOOK_AT_C4_DISTANCE 300.
+#define SECOND_ORDER true
 #define K_P 0.0025
 #define K_I 0.
 #define K_D 0.
@@ -149,7 +150,7 @@ namespace action {
         //targetViewAngle.makeYawNeg180To180();
 
         // https://stackoverflow.com/a/7428771
-        Vec2 deltaAngle = targetViewAngle - curClient.getCurrentViewAnglesWithAimpunch();
+        Vec2 deltaAngle = targetViewAngle - curViewAngle;
         deltaAngle.makeYawNeg180To180();
 
         /*
@@ -160,25 +161,30 @@ namespace action {
         //targetViewAngle.normalizeYawPitchRelativeToOther(curViewAngle);
         //curViewAngle.normalizeYawPitchRelativeToOther(targetViewAngle);
 
-        /*
-        Vec2 newDeltaAngle = mouseController.update(state.getSecondsBetweenTimes(curAction.lastActionTime, state.loadTime),
-                                                  deltaAngle, {0., 0.});
-                                                  */
-        //newAngle.makePitchNeg90To90();
-        //newAngle = {0., 0.};
-        /*
-        Vec2 newDeltaAnglePct = makeAngleToDeltaPct(newDeltaAngle, curClient.getCurrentViewAnglesWithAimpunch());
-        curAction.inputAngleDeltaPctX = deltaAnglePct.x;
-        curAction.inputAngleDeltaPctY = deltaAnglePct.y;
-        curAction.lastActionTime = state.loadTime;
-         */
+        if (SECOND_ORDER) {
+            Vec2 newDeltaAngle = mouseController.update(state.getSecondsBetweenTimes(curAction.lastActionTime, state.loadTime),
+                                                        deltaAngle, {0., 0.});
+            Vec2 newDeltaAnglePct = makeAngleToPct(newDeltaAngle);
+            curAction.inputAngleDeltaPctX = newDeltaAnglePct.x;
+            curAction.inputAngleDeltaPctY = newDeltaAnglePct.y;
+            curAction.lastActionTime = state.loadTime;
+            curAction.rollingAvgMouseVelocity = curAction.rollingAvgMouseVelocity * 0.5 + computeMagnitude(newDeltaAnglePct) * 0.5;
+        }
+        if (curAction.rollingAvgMouseVelocity < 0.1) {
+            curAction.enableSecondOrder = true;
+        }
+        else if (curAction.rollingAvgMouseVelocity > 0.9) {
+            curAction.enableSecondOrder = false;
+        }
+        if (!SECOND_ORDER || !curAction.enableSecondOrder) { //|| computeMagnitude(deltaAngle) > 40) {
+            // TODO: use better angle velocity control
+            curAction.inputAngleDeltaPctX = computeAngleVelocityPID(deltaAngle.x, blackboard.playerToPIDStateX[treeThinker.csgoId], blackboard.aimDis(blackboard.gen));
+            curAction.inputAngleDeltaPctY = computeAngleVelocityPID(deltaAngle.y, blackboard.playerToPIDStateY[treeThinker.csgoId], blackboard.aimDis(blackboard.gen));
 
-        // TODO: use better angle velocity control
-        curAction.inputAngleDeltaPctX = computeAngleVelocityPID(deltaAngle.x, blackboard.playerToPIDStateX[treeThinker.csgoId], blackboard.aimDis(blackboard.gen));
-        curAction.inputAngleDeltaPctY = computeAngleVelocityPID(deltaAngle.y, blackboard.playerToPIDStateY[treeThinker.csgoId], blackboard.aimDis(blackboard.gen));
+            curAction.inputAngleDeltaPctX = curAction.inputAngleDeltaPctX * 0.5 + oldAction.inputAngleDeltaPctX * 0.5;
+            curAction.inputAngleDeltaPctY = curAction.inputAngleDeltaPctY * 0.5 + oldAction.inputAngleDeltaPctY * 0.5;
 
-        curAction.inputAngleDeltaPctX = curAction.inputAngleDeltaPctX * 0.5 + oldAction.inputAngleDeltaPctX * 0.5;
-        curAction.inputAngleDeltaPctY = curAction.inputAngleDeltaPctY * 0.5 + oldAction.inputAngleDeltaPctY * 0.5;
+        }
 
         playerNodeState[treeThinker.csgoId] = NodeState::Success;
         return playerNodeState[treeThinker.csgoId];

@@ -72,7 +72,7 @@ public:
                                                          make_unique<movement::WaitNode>(blackboard, 0.1),
                                                          make_unique<SlayAllBut>(blackboard, vector{neededBots[0].id},state),
                                                          make_unique<movement::WaitNode>(blackboard, 0.1),
-                                                         make_unique<SetPos>(blackboard, Vec3({1071.936035, 2972.308837, 128.762023}), Vec2({2.903987, -95.587982})),
+                                                         make_unique<SetPos>(blackboard, Vec3({1071.936035, 2972.308837, 128.762023}), Vec2({-84.903987, -95.587982})),
                                                          make_unique<movement::WaitNode>(blackboard, 0.1),
                                                          make_unique<Teleport>(blackboard, neededBots[0].id, state),
                                                          make_unique<movement::WaitNode>(blackboard, 1.0),
