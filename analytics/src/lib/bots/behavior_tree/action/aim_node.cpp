@@ -74,9 +74,23 @@ namespace action {
     }
 
     Vec2 makeAngleToDeltaPct(Vec2 newAngle, Vec2 oldAngle) {
-        Vec2 deltaAngle = newAngle - oldAngle;
+        //Vec2 deltaAngle = newAngle - oldAngle;
+        /*
+        if (std::abs(newAngle.x - oldAngle.x) <= 180.) {
+            deltaAngle.x = newAngle.x - oldAngle.x;
+        }
+        else {
+            deltaAngle.x = oldAngle.x - newAngle.x;
+        }
+        if (std::abs(newAngle.y - oldAngle.x) <= 90.) {
+            deltaAngle.y = newAngle.y - oldAngle.y;
+        }
+        else {
+            deltaAngle.y = oldAngle.y - newAngle.y;
+        }
+         */
         //deltaAngle.makeYawNeg180To180();
-        return deltaAngle / MAX_ONE_DIRECTION_ANGLE_VEL;
+        return /*deltaAngle*/ newAngle / MAX_ONE_DIRECTION_ANGLE_VEL;
     }
 
     NodeState AimTaskNode::exec(const ServerState &state, TreeThinker &treeThinker) {
@@ -126,21 +140,24 @@ namespace action {
                                   std::min(MAX_PITCH_MAGNITUDE, targetViewAngle.y));
         // https://stackoverflow.com/a/7428771
          */
-        //Vec2 deltaAngle = targetViewAngle - curClient.getCurrentViewAnglesWithAimpunch();
-        //deltaAngle.makeYawNeg180To180();
         /*
         if (curViewAngle.x > 180 || curViewAngle.x < -180) {
             int x = 1;
         }
          */
         targetViewAngle.makePitchNeg90To90();
-        targetViewAngle.makeYawNeg180To180();
+        //targetViewAngle.makeYawNeg180To180();
+
+        Vec2 deltaAngle = targetViewAngle - curClient.getCurrentViewAnglesWithAimpunch();
+        deltaAngle.makeYawNeg180To180();
+
         if (std::abs(targetViewAngle.x - curViewAngle.x) > 180) {
             int x = 1;
         }
         //targetViewAngle.normalizeYawPitchRelativeToOther(curViewAngle);
+        //curViewAngle.normalizeYawPitchRelativeToOther(targetViewAngle);
         Vec2 newAngle = mouseController.update(state.getSecondsBetweenTimes(curAction.lastActionTime, state.loadTime),
-                                                  targetViewAngle, curViewAngle);
+                                                  deltaAngle, {0., 0.});
         //newAngle.makePitchNeg90To90();
         //newAngle = {0., 0.};
         Vec2 deltaAnglePct = makeAngleToDeltaPct(newAngle, curClient.getCurrentViewAnglesWithAimpunch());
