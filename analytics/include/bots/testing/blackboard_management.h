@@ -182,10 +182,14 @@ public:
     virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
         AreaBits dangerAreas;
         for (size_t i = 0; i < targetIds.size(); i++) {
+            if (blackboard.playerToDangerAreaId.find(targetIds[i]) == blackboard.playerToDangerAreaId.end()) {
+                continue;
+            }
             size_t curDangerAreaIndex = blackboard.navFile.m_area_ids_to_indices.find(blackboard.playerToDangerAreaId[targetIds[i]])->second;
             const nav_mesh::nav_area & curArea =
                     blackboard.navFile.get_nearest_area_by_position(vec3Conv(state.getClient(targetIds[i]).getFootPosForPlayer()));
-            if (dangerAreas[curDangerAreaIndex] || curDangerAreaIndex == blackboard.navFile.m_area_ids_to_indices[curArea.get_id()]) {
+            if ((dangerAreas[curDangerAreaIndex] ||
+                curDangerAreaIndex == blackboard.navFile.m_area_ids_to_indices[curArea.get_id()])) {
                 playerNodeState[treeThinker.csgoId] = NodeState::Failure;
                 return playerNodeState[treeThinker.csgoId];
             }

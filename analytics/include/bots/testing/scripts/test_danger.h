@@ -123,9 +123,8 @@ public:
 
             Node::Ptr areasToCheck = make_unique<ParallelAndNode>(blackboard, Node::makeList(
                     make_unique<RepeatDecorator>(blackboard, make_unique<AimingAtArea>(blackboard, vector{neededBots[0].id, neededBots[1].id}, 4201), true),
-                    make_unique<RepeatDecorator>(blackboard, make_unique<AimingAtArea>(blackboard, vector{neededBots[0].id, neededBots[1].id}, 1836), true),
-                    make_unique<RepeatDecorator>(blackboard, make_unique<AimingAtArea>(blackboard, vector{neededBots[0].id, neededBots[1].id}, 1399), true),
-                    make_unique<RepeatDecorator>(blackboard, make_unique<AimingAtArea>(blackboard, vector{neededBots[0].id, neededBots[1].id}, 66), true)
+                    make_unique<RepeatDecorator>(blackboard, make_unique<AimingAtArea>(blackboard, vector{neededBots[0].id, neededBots[1].id}, 8672), true),
+                    make_unique<RepeatDecorator>(blackboard, make_unique<AimingAtArea>(blackboard, vector{neededBots[0].id, neededBots[1].id}, 1399), true)
             ), "areasToCheck");
             Node::Ptr lastLongEnoughForDifferentDangerNodes = make_unique<ParallelAndNode>(blackboard, Node::makeList(
                     std::move(areasToCheck),
