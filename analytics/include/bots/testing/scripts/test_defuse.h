@@ -59,7 +59,7 @@ public:
                                                          std::move(disableAllBothDuringSetup),
                                                          make_unique<ParallelFirstNode>(blackboard, Node::makeList(
                                                                  make_unique<RepeatDecorator>(blackboard, make_unique<C4Defused>(blackboard), true),
-                                                                 make_unique<movement::WaitNode>(blackboard, 16, false)),
+                                                                 make_unique<movement::WaitNode>(blackboard, 26, false)),
                                                             "DefuserCondition")),
                                                  "DefuserSequence");
         }

@@ -33,7 +33,7 @@ void Tree::tick(ServerState & state, const string & mapsPath) {
             6938, 9026, // these are barrels on A that I get stuck on
             8251, // this one is under t spawn
             8631, // this one is on cat next to boxes, weird
-            4417, // bad box on long corner
+            4232, 4417 // bad wall and box on long
         });
         blackboard->navFile.remove_edges({
             {1650, 1644}, // wall near b car clips into end of 1650 preventing getting to 1644
