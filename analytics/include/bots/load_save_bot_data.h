@@ -202,6 +202,7 @@ public:
     bool c4Exists;
     bool c4IsPlanted;
     bool c4IsDropped;
+    bool c4IsDefused;
     float c4X, c4Y, c4Z;
 
 

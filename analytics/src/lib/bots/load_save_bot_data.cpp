@@ -243,17 +243,20 @@ void ServerState::loadC4State(string visibilityFilePath) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, c4IsDropped);
         }
         else if (colNumber == 2) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, c4X);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, c4IsDefused);
         }
         else if (colNumber == 3) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, c4Y);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, c4X);
         }
         else if (colNumber == 4) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, c4Y);
+        }
+        else if (colNumber == 5) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, c4Z);
             rowNumber++;
             arrayEntry++;
         }
-        colNumber = (colNumber + 1) % 5;
+        colNumber = (colNumber + 1) % 6;
     }
     closeMMapFile({fd, stats, file});
 }

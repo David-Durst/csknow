@@ -156,6 +156,10 @@ struct Blackboard {
         return teamToLastRoundSawEnemy.find(team) != teamToLastRoundSawEnemy.end() &&
                 teamToLastRoundSawEnemy[team] == state.roundNumber;
     }
+    optional<CSGOId> defuserId;
+    bool isPlayerDefuser(CSGOId playerId) const {
+        return defuserId && defuserId.value() == playerId;
+    }
 
     // priority data
     map<CSGOId, Priority> playerToPriority;

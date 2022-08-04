@@ -20,12 +20,20 @@ void moveToWaypoint(const Blackboard & blackboard, const ServerState & state, Tr
     }
 }
 
-bool finishWaypoint(const ServerState & state, int64_t waypointIndex,
-                    const Order & curOrder, Priority & curPriority, string curPlace, AreaId curAreaId) {
+bool finishWaypoint(const Blackboard & blackboard, const ServerState & state, int64_t waypointIndex,
+                    const Order & curOrder, Priority & curPriority,
+                    CSGOId playerId, string curPlace, AreaId curAreaId) {
+    bool amDefuser = blackboard.isPlayerDefuser(playerId);
     // finished with current priority if
     // trying to reach place and got there
-    if (curOrder.waypoints[waypointIndex].type == WaypointType::NavPlace || curOrder.waypoints[waypointIndex].type == WaypointType::C4) {
+    if (curOrder.waypoints[waypointIndex].type == WaypointType::NavPlace ||
+        (curOrder.waypoints[waypointIndex].type == WaypointType::C4 && !amDefuser)) {
         if (curOrder.waypoints[waypointIndex].placeName == curPlace) {
+            return true;
+        }
+    }
+    else if (curOrder.waypoints[waypointIndex].type == WaypointType::C4 && amDefuser) {
+        if (computeDistance(state.getC4Pos(), state.getClient(playerId).getFootPosForPlayer()) < DEFUSE_DISTANCE) {
             return true;
         }
     }
@@ -39,11 +47,12 @@ bool finishWaypoint(const ServerState & state, int64_t waypointIndex,
     return false;
 }
 
-int64_t getMaxFinishedWaypoint(const ServerState & state, const Order & curOrder, Priority & curPriority,
-                               string curPlace, AreaId curAreaId) {
+int64_t getMaxFinishedWaypoint(const Blackboard & blackboard, const ServerState & state,
+                               const Order & curOrder, Priority & curPriority,
+                               CSGOId playerId, string curPlace, AreaId curAreaId) {
     int64_t maxFinishedWaypointIndex = -1;
     for (size_t i = 0; i < curOrder.waypoints.size(); i++) {
-        if (finishWaypoint(state, i, curOrder, curPriority, curPlace, curAreaId)) {
+        if (finishWaypoint(blackboard, state, i, curOrder, curPriority, playerId, curPlace, curAreaId)) {
             maxFinishedWaypointIndex = i;
         }
     }

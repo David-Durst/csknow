@@ -75,6 +75,7 @@ namespace action {
 
     NodeState AimTaskNode::exec(const ServerState &state, TreeThinker &treeThinker) {
         const ServerState::Client & curClient = state.getClient(treeThinker.csgoId);
+        const Order & curOrder = blackboard.strategy.getOrderForPlayer(treeThinker.csgoId);
         Action & curAction = blackboard.playerToAction[treeThinker.csgoId];
         Action & oldAction = blackboard.lastPlayerToAction[treeThinker.csgoId];
         Priority & curPriority = blackboard.playerToPriority[treeThinker.csgoId];
@@ -90,6 +91,10 @@ namespace action {
         // this should handle c4 as end of path will be c4
         if (curPriority.targetPlayer.playerId != INVALID_ID) {
             aimTarget = curPriority.targetPlayer.eyePos;
+        }
+        else if (blackboard.isPlayerDefuser(treeThinker.csgoId) &&
+            curOrder.waypoints[blackboard.strategy.playerToWaypointIndex[treeThinker.csgoId]].type == WaypointType::C4) {
+            aimTarget = state.getC4Pos();
         }
         else if (blackboard.playerToDangerAreaId.find(treeThinker.csgoId) != blackboard.playerToDangerAreaId.end()) {
             aimTarget = vec3tConv(blackboard.navFile.get_area_by_id_fast(blackboard.playerToDangerAreaId[treeThinker.csgoId]).get_center());

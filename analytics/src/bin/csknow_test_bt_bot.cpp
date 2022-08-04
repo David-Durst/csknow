@@ -10,6 +10,7 @@
 #include "bots/testing/scripts/test_danger.h"
 #include "bots/testing/scripts/test_possible_nav_areas.h"
 #include "bots/testing/scripts/test_engage_spacing.h"
+#include "bots/testing/scripts/test_defuse.h"
 #include "navmesh/nav_file.h"
 #include <iostream>
 #include <thread>
@@ -42,6 +43,7 @@ int main(int argc, char * argv[]) {
                                             //make_unique<GooseToCatScript>(state)
                                             //make_unique<GooseToCatShortScript>(state),
                                             //make_unique<CTPushLongScript>(state),
+                                            make_unique<DefuseScript>(state)
                                             //make_unique<HoldLongScript>(state),
                                             //make_unique<HoldASitePushScript>(state),
                                             //make_unique<HoldASiteBaitScript>(state),
@@ -61,8 +63,8 @@ int main(int argc, char * argv[]) {
                                             //make_unique<SpawnPossibleNavAreasCheck>(state),
                                             //make_unique<DiffusionPossibleNavAreasCheck>(state),
                                             //make_unique<VisibilityPossibleNavAreasCheck>(state),
-                                            //make_unique<DangerOnePlayerCheck>(state)
-                                            make_unique<DangerTwoPlayerCheck>(state)
+                                            //make_unique<DangerOnePlayerCheck>(state),
+                                            //make_unique<DangerTwoPlayerCheck>(state)
     ), true);
 
 

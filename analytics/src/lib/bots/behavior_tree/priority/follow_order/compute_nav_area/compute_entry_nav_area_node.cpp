@@ -23,7 +23,7 @@ namespace follow::compute_nav_area {
         AreaId curAreaId = blackboard.navFile.get_nearest_area_by_position(
                 vec3Conv(state.clients[state.csgoIdToCSKnowId[treeThinker.csgoId]].getFootPosForPlayer())).get_id();
         string curPlace = blackboard.getPlayerPlace(state.clients[state.csgoIdToCSKnowId[treeThinker.csgoId]].getFootPosForPlayer());
-        int64_t maxFinishedWaypoint = getMaxFinishedWaypoint(state, curOrder, curPriority, curPlace, curAreaId);
+        int64_t maxFinishedWaypoint = getMaxFinishedWaypoint(blackboard, state, curOrder, curPriority, treeThinker.csgoId, curPlace, curAreaId);
 
         // if finished waypoint,
         if (maxFinishedWaypoint >= blackboard.strategy.playerToWaypointIndex[treeThinker.csgoId]) {

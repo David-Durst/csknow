@@ -91,6 +91,9 @@ namespace action {
                 curAction.setButton(IN_RELOAD, !haveAmmo);
             }
         }
+        if (blackboard.isPlayerDefuser(treeThinker.csgoId) && computeDistance(state.getC4Pos(), curClient.getFootPosForPlayer()) < DEFUSE_DISTANCE) {
+            curAction.setButton(IN_USE, true);
+        }
 
         playerNodeState[treeThinker.csgoId] = curAction.getButton(IN_ATTACK) ? NodeState::Success : NodeState::Failure;
         return playerNodeState[treeThinker.csgoId];

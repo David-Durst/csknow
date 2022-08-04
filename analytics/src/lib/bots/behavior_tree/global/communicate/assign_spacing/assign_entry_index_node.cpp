@@ -17,6 +17,9 @@ namespace communicate::spacing {
                 for (const CSGOId followerId : blackboard.strategy.getOrderFollowers(orderId)) {
                     if (blackboard.playerToTreeThinkers[followerId].aggressiveType == AggressiveType::Push) {
                         blackboard.strategy.playerToEntryIndex[followerId] = entryIndex++;
+                        if (!blackboard.defuserId) {
+                            blackboard.defuserId = followerId;
+                        }
                     }
                     else {
                         baitersOnOrder.push_back(followerId);

@@ -90,6 +90,18 @@ public:
     }
 };
 
+class ForceDefuser : public Node {
+    CSGOId targetId;
+public:
+    ForceDefuser(Blackboard & blackboard, CSGOId targetId, string name = "ForceDefuser") :
+            Node(blackboard, name), targetId(targetId) { };
+    virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
+        blackboard.defuserId = targetId;
+        playerNodeState[treeThinker.csgoId] = NodeState::Success;
+        return playerNodeState[treeThinker.csgoId];
+    }
+};
+
 class DisableActionsNode : public Node {
     vector<CSGOId> targetIds;
     bool disableMouse, disableFiring, disableMove;

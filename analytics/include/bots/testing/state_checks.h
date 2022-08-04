@@ -259,4 +259,14 @@ public:
     }
 };
 
+class C4Defused : public Node {
+public:
+    C4Defused(Blackboard & blackboard) :
+            Node(blackboard, "C4Defused") { };
+
+    virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
+        playerNodeState[treeThinker.csgoId] = state.c4IsDefused ? NodeState::Success : NodeState::Failure;
+        return playerNodeState[treeThinker.csgoId];
+    }
+};
 #endif //CSKNOW_STATE_CHECKS_H
