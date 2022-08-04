@@ -134,32 +134,12 @@ namespace action {
         Vec2 curViewAngle = curClient.getCurrentViewAnglesWithAimpunch();
         Vec3 targetVector = aimTarget - curClient.getEyePosForPlayer();
         Vec2 targetViewAngle = vectorAngles(targetVector);
-        /*
+
         targetViewAngle.makePitchNeg90To90();
-        // clamp within max of -89 to 89
-        targetViewAngle.y = std::max(-1 * MAX_PITCH_MAGNITUDE,
-                                  std::min(MAX_PITCH_MAGNITUDE, targetViewAngle.y));
-        // https://stackoverflow.com/a/7428771
-         */
-        /*
-        if (curViewAngle.x > 180 || curViewAngle.x < -180) {
-            int x = 1;
-        }
-         */
-        targetViewAngle.makePitchNeg90To90();
-        //targetViewAngle.makeYawNeg180To180();
 
         // https://stackoverflow.com/a/7428771
         Vec2 deltaAngle = targetViewAngle - curViewAngle;
         deltaAngle.makeYawNeg180To180();
-
-        /*
-        if (std::abs(targetViewAngle.x - curViewAngle.x) > 180) {
-            int x = 1;
-        }
-         */
-        //targetViewAngle.normalizeYawPitchRelativeToOther(curViewAngle);
-        //curViewAngle.normalizeYawPitchRelativeToOther(targetViewAngle);
 
         if (SECOND_ORDER) {
             Vec2 newDeltaAngle = mouseController.update(state.getSecondsBetweenTimes(curAction.lastActionTime, state.loadTime),
