@@ -58,7 +58,7 @@ void Tree::tick(ServerState & state, const string & mapsPath) {
             blackboard->playerToTreeThinkers[client.csgoId] = {
                     client.csgoId,
                     aggressiveType,
-                    {100, 20, 40, 70},
+                    {100, 60, 700, 350},
                     2.5
             };
             blackboard->playerToMemory[client.csgoId] = {

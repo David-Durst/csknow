@@ -46,7 +46,8 @@ namespace engage {
             curPriority.shootOptions = ShootOptions::Tap;
         }
 
-        if (curClient.team == ENGINE_TEAM_CT) {
+        // handle how a visible player entering a site deals with enemy that other players on team can't see
+        if (curClient.team == ENGINE_TEAM_CT && curPriority.targetPlayer.visible) {
             for (const CSGOId followerId : blackboard.strategy.getOrderFollowers(curOrderId)) {
                 if (followerId != treeThinker.csgoId && !state.isVisible(followerId, targetClient.csgoId)) {
                     curPriority.moveOptions.move = true;

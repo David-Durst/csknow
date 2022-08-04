@@ -58,7 +58,7 @@ namespace action {
             }
             else {
                 // reset burst if no recoil
-                if (!haveRecoil) {
+                if (curAction.shotsInBurst > 0 && !haveRecoil) {
                     curAction.shotsInBurst = 0;
                 }
 
@@ -85,6 +85,9 @@ namespace action {
 
                 // TODO: AFTER ADDING VELOCITY FIELD, TRACK STOPPED TO SHOOT USING VELOCITY
                 curAction.setButton(IN_ATTACK, !attackLastFrame && haveAmmo && aimingAtEnemy);
+                if (curAction.getButton(IN_ATTACK)) {
+                    curAction.shotsInBurst++;
+                }
                 if (!state.isVisible(curClient.csgoId, curPriority.targetPlayer.playerId) && curAction.getButton(IN_ATTACK)) {
                     int x = 1;
                 }

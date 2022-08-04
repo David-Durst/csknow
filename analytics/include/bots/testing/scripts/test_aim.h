@@ -84,7 +84,7 @@ public:
                                                          make_unique<ParallelFirstNode>(blackboard, Node::makeList(
                                                                                                 make_unique<KilledAfterTime>(blackboard, neededBots[0].id, neededBots[1].id, 0.5),
                                                                                                 make_unique<DisableActionsNode>(blackboard, "DisableSetup", vector{neededBots[1].id}),
-                                                                                                make_unique<movement::WaitNode>(blackboard, 3, false)),
+                                                                                                make_unique<movement::WaitNode>(blackboard, 4, false)),
                                                                                         "AimAndKillCondition")),
                                                  "AimAndKillSequence");
         }
