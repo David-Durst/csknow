@@ -11,7 +11,7 @@ void moveToWaypoint(const Blackboard & blackboard, const ServerState & state, Tr
     if (waypoint.type == WaypointType::NavPlace) {
         const nav_mesh::nav_area & curArea =
                 blackboard.navFile.get_nearest_area_by_position(vec3Conv(state.getClient(treeThinker.csgoId).getFootPosForPlayer()));
-        curPriority.targetAreaId = blackboard.distanceToPlaces.getClosestArea(curArea.get_id(), waypoint.placeName, blackboard.navFile);
+        curPriority.targetAreaId = blackboard.distanceToPlaces.getMedianArea(curArea.get_id(), waypoint.placeName, blackboard.navFile);
         curPriority.targetPos = vec3tConv(blackboard.navFile.get_area_by_id_fast(curPriority.targetAreaId).get_center());
     }
     else if (waypoint.type == WaypointType::C4) {
