@@ -73,7 +73,7 @@ namespace action {
         }
     }
 
-    Vec2 makeAngleToDeltaPct(Vec2 newAngle, Vec2 oldAngle) {
+    Vec2 makeAngleToPct(Vec2 deltaAngle) {
         //Vec2 deltaAngle = newAngle - oldAngle;
         /*
         if (std::abs(newAngle.x - oldAngle.x) <= 180.) {
@@ -90,7 +90,7 @@ namespace action {
         }
          */
         //deltaAngle.makeYawNeg180To180();
-        return /*deltaAngle*/ newAngle / MAX_ONE_DIRECTION_ANGLE_VEL;
+        return deltaAngle / MAX_ONE_DIRECTION_ANGLE_VEL;
     }
 
     NodeState AimTaskNode::exec(const ServerState &state, TreeThinker &treeThinker) {
@@ -148,35 +148,37 @@ namespace action {
         targetViewAngle.makePitchNeg90To90();
         //targetViewAngle.makeYawNeg180To180();
 
+        // https://stackoverflow.com/a/7428771
         Vec2 deltaAngle = targetViewAngle - curClient.getCurrentViewAnglesWithAimpunch();
         deltaAngle.makeYawNeg180To180();
 
+        /*
         if (std::abs(targetViewAngle.x - curViewAngle.x) > 180) {
             int x = 1;
         }
+         */
         //targetViewAngle.normalizeYawPitchRelativeToOther(curViewAngle);
         //curViewAngle.normalizeYawPitchRelativeToOther(targetViewAngle);
-        Vec2 newAngle = mouseController.update(state.getSecondsBetweenTimes(curAction.lastActionTime, state.loadTime),
+
+        /*
+        Vec2 newDeltaAngle = mouseController.update(state.getSecondsBetweenTimes(curAction.lastActionTime, state.loadTime),
                                                   deltaAngle, {0., 0.});
+                                                  */
         //newAngle.makePitchNeg90To90();
         //newAngle = {0., 0.};
-        Vec2 deltaAnglePct = makeAngleToDeltaPct(newAngle, curClient.getCurrentViewAnglesWithAimpunch());
+        /*
+        Vec2 newDeltaAnglePct = makeAngleToDeltaPct(newDeltaAngle, curClient.getCurrentViewAnglesWithAimpunch());
         curAction.inputAngleDeltaPctX = deltaAnglePct.x;
         curAction.inputAngleDeltaPctY = deltaAnglePct.y;
         curAction.lastActionTime = state.loadTime;
-
-        /*
-        // https://stackoverflow.com/a/7428771
-        Vec2 deltaAngles = targetViewAngle - curClient.getCurrentViewAnglesWithAimpunch();
-        deltaAngles.makeYawNeg180To180();
+         */
 
         // TODO: use better angle velocity control
-        curAction.inputAngleDeltaPctX = computeAngleVelocityPID(deltaAngles.x, blackboard.playerToPIDStateX[treeThinker.csgoId], blackboard.aimDis(blackboard.gen));
-        curAction.inputAngleDeltaPctY = computeAngleVelocityPID(deltaAngles.y, blackboard.playerToPIDStateY[treeThinker.csgoId], blackboard.aimDis(blackboard.gen));
+        curAction.inputAngleDeltaPctX = computeAngleVelocityPID(deltaAngle.x, blackboard.playerToPIDStateX[treeThinker.csgoId], blackboard.aimDis(blackboard.gen));
+        curAction.inputAngleDeltaPctY = computeAngleVelocityPID(deltaAngle.y, blackboard.playerToPIDStateY[treeThinker.csgoId], blackboard.aimDis(blackboard.gen));
 
         curAction.inputAngleDeltaPctX = curAction.inputAngleDeltaPctX * 0.5 + oldAction.inputAngleDeltaPctX * 0.5;
         curAction.inputAngleDeltaPctY = curAction.inputAngleDeltaPctY * 0.5 + oldAction.inputAngleDeltaPctY * 0.5;
-         */
 
         playerNodeState[treeThinker.csgoId] = NodeState::Success;
         return playerNodeState[treeThinker.csgoId];
