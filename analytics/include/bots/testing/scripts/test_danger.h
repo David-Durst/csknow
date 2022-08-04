@@ -126,18 +126,22 @@ public:
                     make_unique<RepeatDecorator>(blackboard, make_unique<AimingAtArea>(blackboard, vector{neededBots[0].id, neededBots[1].id}, 8672), true),
                     make_unique<RepeatDecorator>(blackboard, make_unique<AimingAtArea>(blackboard, vector{neededBots[0].id, neededBots[1].id}, 1399), true)
             ), "areasToCheck");
+            // different areas check is wonky
             Node::Ptr lastLongEnoughForDifferentDangerNodes = make_unique<ParallelAndNode>(blackboard, Node::makeList(
                     std::move(areasToCheck),
+                    /*
                     make_unique<ParallelFirstNode>(blackboard, Node::makeList(
                             make_unique<RepeatDecorator>(blackboard, make_unique<RequireDifferentDangerAreasNode>(blackboard, vector{neededBots[0].id, neededBots[1].id}), false),
                             // this is just to keep this node running, outer time is for failing if don't complete
                             make_unique<movement::WaitNode>(blackboard, 15)
-                    ))
+                    )),
+                     */
+                    make_unique<movement::WaitNode>(blackboard, 15)
             ), "lastForDifferentDangerAreasCheck");
             commands = make_unique<SequenceNode>(blackboard, Node::makeList(
                                                          std::move(disableAllBothDuringSetup),
                                                          make_unique<ParallelFirstNode>(blackboard, Node::makeList(
-                                                                                                //std::move(lastLongEnoughForDifferentDangerNodes),
+                                                                                                std::move(lastLongEnoughForDifferentDangerNodes),
                                                                                                 make_unique<DisableActionsNode>(blackboard, "DisableSetup", vector{neededBots[2].id, neededBots[3].id}),
                                                                                                 // if the inner node doesn't finish in 15 seconds, fail right after
                                                                                                 make_unique<movement::WaitNode>(blackboard, 16, false)),
