@@ -102,22 +102,18 @@ void DistanceToPlacesResult::load(string mapsPath, string mapName, const nav_mes
             coordinate[index].max.z = stod(value);
 
             int64_t areaIndex = 0;
-            bool gotFirstValue = false;
-            double firstDistance = 0;
             while (getline(distStream, value, ',')) {
                 double distance = stod(value);
                 if (distance != NOT_CLOSEST_DISTANCE) {
                     size_t matrixIndex = index * numPlaces + areaToPlace[areaIndex];
-                    if (!gotFirstValue) {
+                    if (closestDistanceMatrix[matrixIndex] == NOT_CLOSEST_DISTANCE) {
                         closestDistanceMatrix[matrixIndex] = distance;
                         closestAreaIndexMatrix[matrixIndex] = areaIndex;
                         medianDistanceMatrix[matrixIndex] = distance;
                         medianAreaIndexMatrix[matrixIndex] = areaIndex;
-                        firstDistance = distance;
-                        gotFirstValue = true;
                     }
                     else {
-                        if (distance < firstDistance) {
+                        if (distance < closestDistanceMatrix[matrixIndex]) {
                             closestDistanceMatrix[matrixIndex] = distance;
                             closestAreaIndexMatrix[matrixIndex] = areaIndex;
                         }
