@@ -10,18 +10,6 @@
 #define K_D 0.
 
 namespace action {
-
-    float computeAngleVelocityPOnly(double totalDeltaAngle, double lastDeltaAngle) {
-        double newDeltaAngle = std::max(-1 * MAX_ONE_DIRECTION_ANGLE_VEL,
-                                        std::min(MAX_ONE_DIRECTION_ANGLE_VEL, totalDeltaAngle / 3));
-        double newAccelAngle = newDeltaAngle - lastDeltaAngle;
-        if (std::abs(newAccelAngle) > MAX_ONE_DIRECTION_ANGLE_ACCEL) {
-            newDeltaAngle = lastDeltaAngle +
-                            copysign(MAX_ONE_DIRECTION_ANGLE_ACCEL, newAccelAngle);
-        }
-        return newDeltaAngle / MAX_ONE_DIRECTION_ANGLE_VEL;
-    }
-
     float computeAngleVelocityPID(double deltaAngle, PIDState pidState, double noise) {
         // compute P in PID
         double P;
@@ -75,22 +63,6 @@ namespace action {
     }
 
     Vec2 makeAngleToPct(Vec2 deltaAngle) {
-        //Vec2 deltaAngle = newAngle - oldAngle;
-        /*
-        if (std::abs(newAngle.x - oldAngle.x) <= 180.) {
-            deltaAngle.x = newAngle.x - oldAngle.x;
-        }
-        else {
-            deltaAngle.x = oldAngle.x - newAngle.x;
-        }
-        if (std::abs(newAngle.y - oldAngle.x) <= 90.) {
-            deltaAngle.y = newAngle.y - oldAngle.y;
-        }
-        else {
-            deltaAngle.y = oldAngle.y - newAngle.y;
-        }
-         */
-        //deltaAngle.makeYawNeg180To180();
         return deltaAngle / MAX_ONE_DIRECTION_ANGLE_VEL;
     }
 
