@@ -134,8 +134,11 @@ namespace action {
         }
          */
         targetViewAngle.makePitchNeg90To90();
-        //targetViewAngle.makeYawNeg180To180();
-        targetViewAngle.normalizeYawPitchRelativeToOther(curViewAngle);
+        targetViewAngle.makeYawNeg180To180();
+        if (std::abs(targetViewAngle.x - curViewAngle.x) > 180) {
+            int x = 1;
+        }
+        //targetViewAngle.normalizeYawPitchRelativeToOther(curViewAngle);
         Vec2 newAngle = mouseController.update(state.getSecondsBetweenTimes(curAction.lastActionTime, state.loadTime),
                                                   targetViewAngle, curViewAngle);
         //newAngle.makePitchNeg90To90();
