@@ -46,7 +46,7 @@ DistanceToPlacesResult queryDistanceToPlaces(const nav_mesh::nav_file & navFile,
             for (int64_t k = 0; k < areaIds.size(); k++) {
                 int64_t newAreaIndex = navFile.m_area_ids_to_indices.find(areaIds[k])->second;
                 double newDistance = reachableResult.getDistance(i, newAreaIndex);
-                areaDistances.push_back({k, newDistance});
+                areaDistances.push_back({newAreaIndex, newDistance});
             }
             std::sort(areaDistances.begin(), areaDistances.end(),
                       [](const AreaDistance & a, const AreaDistance & b) { return a.distance < b.distance; });
