@@ -67,6 +67,11 @@ namespace strategy {
                     options[0].assignedPlayer = true;
                 }
             }
+            for (const auto & client : state.clients) {
+                if (client.isAlive && client.isBot) {
+                    blackboard.strategy.getOrderIdForPlayer(client.csgoId);
+                }
+            }
 
 
         }
