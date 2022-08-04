@@ -141,8 +141,8 @@ namespace action {
             curAction.inputAngleDeltaPctX = computeAngleVelocityPID(deltaAngle.x, blackboard.playerToPIDStateX[treeThinker.csgoId], blackboard.aimDis(blackboard.gen));
             curAction.inputAngleDeltaPctY = computeAngleVelocityPID(deltaAngle.y, blackboard.playerToPIDStateY[treeThinker.csgoId], blackboard.aimDis(blackboard.gen));
 
-            curAction.inputAngleDeltaPctX = curAction.inputAngleDeltaPctX * 0.2 + oldAction.inputAngleDeltaPctX * 0.8;
-            curAction.inputAngleDeltaPctY = curAction.inputAngleDeltaPctY * 0.2 + oldAction.inputAngleDeltaPctY * 0.8;
+            curAction.inputAngleDeltaPctX = curAction.inputAngleDeltaPctX * 0.35 + oldAction.inputAngleDeltaPctX * 0.65;
+            curAction.inputAngleDeltaPctY = curAction.inputAngleDeltaPctY * 0.35 + oldAction.inputAngleDeltaPctY * 0.65;
 
         }
 
