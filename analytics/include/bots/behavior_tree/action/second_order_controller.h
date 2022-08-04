@@ -37,8 +37,8 @@ public:
         return y;
     }
 
-    bool ydBad() {
-        return computeMagnitude(yd) > 100;
+    bool ydReset() {
+        return computeMagnitude(yd) < 1;
     };
 };
 

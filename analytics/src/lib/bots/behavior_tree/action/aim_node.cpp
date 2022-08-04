@@ -168,14 +168,17 @@ namespace action {
             curAction.inputAngleDeltaPctX = newDeltaAnglePct.x;
             curAction.inputAngleDeltaPctY = newDeltaAnglePct.y;
             curAction.lastActionTime = state.loadTime;
-            curAction.rollingAvgMouseVelocity = curAction.rollingAvgMouseVelocity * 0.5 + computeMagnitude(newDeltaAnglePct) * 0.5;
+            double velocity = std::abs(computeMagnitude(newDeltaAnglePct));
+            curAction.rollingAvgMouseVelocity = curAction.rollingAvgMouseVelocity * 0.5 + velocity * 0.5;
+            double absAccel = std::abs(velocity  - curAction.rollingAvgMouseVelocity);
+            if (absAccel < 0.01 && velocity < 0.01 && mouseController.ydReset()) {
+                curAction.enableSecondOrder = true;
+            }
+            else if (velocity > 0.9 && absAccel > 0.4) {
+                curAction.enableSecondOrder = false;
+            }
         }
-        if (curAction.rollingAvgMouseVelocity < 0.1) {
-            curAction.enableSecondOrder = true;
-        }
-        else if (curAction.rollingAvgMouseVelocity > 0.9) {
-            curAction.enableSecondOrder = false;
-        }
+
         if (!SECOND_ORDER || !curAction.enableSecondOrder) { //|| computeMagnitude(deltaAngle) > 40) {
             // TODO: use better angle velocity control
             curAction.inputAngleDeltaPctX = computeAngleVelocityPID(deltaAngle.x, blackboard.playerToPIDStateX[treeThinker.csgoId], blackboard.aimDis(blackboard.gen));
