@@ -48,7 +48,7 @@ int main(int argc, char * argv[]) {
                                             //make_unique<HoldBSitePushScript>(state),
                                             //make_unique<HoldBSiteBaitScript>(state)
                                             //make_unique<AimAndKillWithinTimeCheck>(state),
-                                            make_unique<CTEngageSpacingScript>(state)
+                                            //make_unique<CTEngageSpacingScript>(state)
                                             //make_unique<PushBaitGooseToCatScript>(state),
                                             //make_unique<PushWaitForBaitGooseToCatScript>(state),
                                             //make_unique<PushMultipleBaitGooseToCatScript>(state),
@@ -61,8 +61,8 @@ int main(int argc, char * argv[]) {
                                             //make_unique<SpawnPossibleNavAreasCheck>(state),
                                             //make_unique<DiffusionPossibleNavAreasCheck>(state),
                                             //make_unique<VisibilityPossibleNavAreasCheck>(state),
-                                            //make_unique<DangerOnePlayerCheck>(state),
-                                            //make_unique<DangerTwoPlayerCheck>(state)
+                                            make_unique<DangerOnePlayerCheck>(state),
+                                            make_unique<DangerTwoPlayerCheck>(state)
     ), true);
 
 

@@ -26,6 +26,7 @@ namespace communicate {
         size_t areaIndex;
         AreaId areaId;
         double distance;
+        double minTimeToEnemy;
         bool checkedRecently;
     };
 
@@ -73,13 +74,16 @@ namespace communicate {
                             size_t conAreaIndex = blackboard.navFile.connections[blackboard.navFile.connections_area_start[i] + j];
                             if ((client.team == ENGINE_TEAM_T && !tVisibleAreas[conAreaIndex]) || (client.team == ENGINE_TEAM_CT && !ctVisibleAreas[conAreaIndex])) {
                                 // distance is distance to possible enemy locations
-                                double sumDistance = 0.;
+                                double sumDistance = 0., minDistance = std::numeric_limits<double>::max();
                                 for (const auto & possibleAreaIndex : blackboard.possibleNavAreas.getEnemiesPossiblePositions(state, client.csgoId)) {
-                                    sumDistance += blackboard.reachability.getDistance(possibleAreaIndex, i);
+                                    double newDistance = blackboard.reachability.getDistance(possibleAreaIndex, i);
+                                    sumDistance += newDistance;
+                                    minDistance = std::min(minDistance, newDistance);
                                 }
-                                // if there are no enemies, then no need to worry about cover edges
-                                if (sumDistance != 0.) {
+                                // if there are no enemies or none nearby, then no need to worry about cover edges
+                                if (sumDistance != 0. && secondsAwayAtMaxSpeed(minDistance) < 5.0) {
                                     coverEdges.push_back({i, blackboard.navFile.m_areas[i].get_id(), sumDistance,
+                                                          secondsAwayAtMaxSpeed(minDistance),
                                                           state.getSecondsBetweenTimes(dangerAreaLastCheckTime[i], state.loadTime) < RECENTLY_CHECKED_SECONDS});
                                     boolCoverEdges[i] = true;
                                 }
