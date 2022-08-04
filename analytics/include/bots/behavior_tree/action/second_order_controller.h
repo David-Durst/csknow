@@ -33,8 +33,8 @@ public:
         }
         double k2_stable = std::max(k2, 1.1 * (T*T/4 + T*k1/2));
         Vec2 y = yp + yd * T;
-        yd = yd + (x + xd.value()*k3 - y - yd*k1) * T / k2_stable;
-        return y;
+        yd = yd + (x + xd.value()*k3 - y - yd*k1).normalize() * T / k2_stable;
+        return y.normalize();
     }
 };
 

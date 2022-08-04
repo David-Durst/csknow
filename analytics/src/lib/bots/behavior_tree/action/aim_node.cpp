@@ -73,8 +73,10 @@ namespace action {
         }
     }
 
-    Vec2 makeAngleToDeltaPct(Vec2 newAngle, Vec2 oldAngle){
-        return (newAngle - oldAngle) / MAX_ONE_DIRECTION_ANGLE_VEL;
+    Vec2 makeAngleToDeltaPct(Vec2 newAngle, Vec2 oldAngle) {
+        Vec2 deltaAngle = newAngle - oldAngle;
+        //deltaAngle.makeYawNeg180To180();
+        return deltaAngle / MAX_ONE_DIRECTION_ANGLE_VEL;
     }
 
     NodeState AimTaskNode::exec(const ServerState &state, TreeThinker &treeThinker) {
@@ -114,15 +116,29 @@ namespace action {
             aimTarget.z += EYE_HEIGHT;
         }
 
+        Vec2 curViewAngle = curClient.getCurrentViewAnglesWithAimpunch();
         Vec3 targetVector = aimTarget - curClient.getEyePosForPlayer();
         Vec2 targetViewAngle = vectorAngles(targetVector);
+        /*
         targetViewAngle.makePitchNeg90To90();
         // clamp within max of -89 to 89
         targetViewAngle.y = std::max(-1 * MAX_PITCH_MAGNITUDE,
                                   std::min(MAX_PITCH_MAGNITUDE, targetViewAngle.y));
-        targetViewAngle.makeYawNeg180To180();
+        // https://stackoverflow.com/a/7428771
+         */
+        //Vec2 deltaAngle = targetViewAngle - curClient.getCurrentViewAnglesWithAimpunch();
+        //deltaAngle.makeYawNeg180To180();
+        /*
+        if (curViewAngle.x > 180 || curViewAngle.x < -180) {
+            int x = 1;
+        }
+         */
+        targetViewAngle.makePitchNeg90To90();
+        //targetViewAngle.makeYawNeg180To180();
+        targetViewAngle.normalizeYawPitchRelativeToOther(curViewAngle);
         Vec2 newAngle = mouseController.update(state.getSecondsBetweenTimes(curAction.lastActionTime, state.loadTime),
-                                                  targetViewAngle, curClient.getCurrentViewAnglesWithAimpunch());
+                                                  targetViewAngle, curViewAngle);
+        //newAngle.makePitchNeg90To90();
         //newAngle = {0., 0.};
         Vec2 deltaAnglePct = makeAngleToDeltaPct(newAngle, curClient.getCurrentViewAnglesWithAimpunch());
         curAction.inputAngleDeltaPctX = deltaAnglePct.x;

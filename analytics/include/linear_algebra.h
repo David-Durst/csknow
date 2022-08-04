@@ -214,6 +214,27 @@ struct Vec2 {
         }
     }
 
+    void normalizeYawPitchRelativeToOther(Vec2 other) {
+        if (x > other.x + 180.) {
+            x -= 360.;
+        }
+        else if (x + 180. < other.x) {
+            x += 360.;
+        }
+        if (y > other.y + 90.) {
+            y -= 180.;
+        }
+        else if (y + 90. < other.y) {
+            y += 180.;
+        }
+    }
+
+    Vec2 & normalize() {
+        makeYawNeg180To180();
+        makePitchNeg90To90();
+        return *this;
+    }
+
     string toString() {
         return "{" + std::to_string(x) + ", " + std::to_string(y) + "}";
     }
