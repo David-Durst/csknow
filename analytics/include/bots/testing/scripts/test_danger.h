@@ -53,7 +53,7 @@ public:
 
             Node::Ptr areasToCheck = make_unique<ParallelAndNode>(blackboard, Node::makeList(
                     make_unique<RepeatDecorator>(blackboard, make_unique<AimingAtArea>(blackboard, vector{neededBots[0].id}, 4201), true),
-                    make_unique<RepeatDecorator>(blackboard, make_unique<AimingAtArea>(blackboard, vector{neededBots[0].id}, 1836), true),
+                    make_unique<RepeatDecorator>(blackboard, make_unique<AimingAtArea>(blackboard, vector{neededBots[0].id}, 8672), true),
                     make_unique<RepeatDecorator>(blackboard, make_unique<AimingAtArea>(blackboard, vector{neededBots[0].id}, 1399), true)
             ), "areasToCheck");
             Node::Ptr lastLongEnoughForDifferentDangerNodes = make_unique<ParallelAndNode>(blackboard, Node::makeList(
@@ -111,6 +111,9 @@ public:
                                                                         make_unique<movement::WaitNode>(blackboard, 0.1),
                                                                         make_unique<ClearMemoryCommunicationDangerNode>(blackboard),
                                                                         make_unique<ForceOrderNode>(blackboard, "ForceCTCat", vector{neededBots[0].id, neededBots[1].id}, testCatToAWaypoints, addedOrderId),
+                                                                        make_unique<ForceEntryIndexNode>(blackboard, "ForcePusherBaiter",
+                                                                                                         vector{neededBots[0].id, neededBots[1].id},
+                                                                                                         vector{0, 1}),
                                                                         make_unique<movement::WaitNode>(blackboard, 2.0)),
                                                                 "DangerSetup");
             Node::Ptr disableAllBothDuringSetup = make_unique<ParallelFirstNode>(blackboard, Node::makeList(

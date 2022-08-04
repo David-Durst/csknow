@@ -61,8 +61,8 @@ int main(int argc, char * argv[]) {
                                             //make_unique<SpawnPossibleNavAreasCheck>(state),
                                             //make_unique<DiffusionPossibleNavAreasCheck>(state),
                                             //make_unique<VisibilityPossibleNavAreasCheck>(state),
-                                            make_unique<DangerOnePlayerCheck>(state),
-                                            make_unique<DangerTwoPlayerCheck>(state)
+                                            make_unique<DangerOnePlayerCheck>(state)
+                                            //make_unique<DangerTwoPlayerCheck>(state)
     ), true);
 
 
