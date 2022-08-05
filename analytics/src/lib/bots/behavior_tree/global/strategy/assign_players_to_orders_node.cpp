@@ -14,28 +14,28 @@ namespace strategy {
         if (blackboard.newOrderThisFrame) {
             vector<OrderPlaceDistance> tOptions, ctOptions;
             // build the Order Place options, will compute distance for each client
-            for (const auto & orderId : blackboard.strategy.getOrderIds(true, false)) {
-                const Order & order = blackboard.strategy.getOrder(orderId);
-                for (const auto & waypoint : order.waypoints) {
-                    if (waypoint.type == WaypointType::NavPlace || waypoint.type == WaypointType::NavAreas || waypoint.type == WaypointType::C4) {
-                        tOptions.push_back({orderId, waypoint.placeName});
-                    }
-                }
-            }
-            if (tOptions.empty()) {
-                throw std::runtime_error("no ct orders with a nav place, nav area, or c4");
-            }
-
             for (const auto & orderId : blackboard.strategy.getOrderIds(false, true)) {
                 const Order & order = blackboard.strategy.getOrder(orderId);
                 for (const auto & waypoint : order.waypoints) {
-                    if (waypoint.type == WaypointType::HoldPlace || waypoint.type == WaypointType::HoldAreas || waypoint.type == WaypointType::C4) {
+                    if (waypoint.type == WaypointType::NavPlace || waypoint.type == WaypointType::NavAreas || waypoint.type == WaypointType::C4) {
                         ctOptions.push_back({orderId, waypoint.placeName});
                     }
                 }
             }
             if (ctOptions.empty()) {
-                throw std::runtime_error("no ct orders with a hold place, hold area, or c4");
+                throw std::runtime_error("no ct orders with a nav place, nav area, or c4");
+            }
+
+            for (const auto & orderId : blackboard.strategy.getOrderIds(true, false)) {
+                const Order & order = blackboard.strategy.getOrder(orderId);
+                for (const auto & waypoint : order.waypoints) {
+                    if (waypoint.type == WaypointType::HoldPlace || waypoint.type == WaypointType::HoldAreas || waypoint.type == WaypointType::C4) {
+                        tOptions.push_back({orderId, waypoint.placeName});
+                    }
+                }
+            }
+            if (tOptions.empty()) {
+                throw std::runtime_error("no t orders with a hold place, hold area, or c4");
             }
 
             // for CT, compute distance to each waypoint in each order and assign player to order with closest waypoint
