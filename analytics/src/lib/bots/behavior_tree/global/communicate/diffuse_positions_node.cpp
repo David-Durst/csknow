@@ -74,6 +74,26 @@ namespace communicate {
         // first get areas visible to enemies
         AreaBits tVisibleAreas = blackboard.getVisibleAreasByTeam(state, ENGINE_TEAM_T),
             ctVisibleAreas = blackboard.getVisibleAreasByTeam(state, ENGINE_TEAM_CT);
+
+        // also get areas reachable from cur area in one step
+        // if reachable in one step, at least part of it must be visible
+        for (const auto & client : state.clients) {
+            if (client.isAlive) {
+                AreaId areaId = blackboard.getPlayerNavArea(client).get_id();
+                size_t areaIndex = blackboard.navFile.m_area_ids_to_indices[areaId];
+                for (size_t i = 0; i < blackboard.navFile.connections_area_length[areaIndex]; i++) {
+                    size_t conAreaIndex = blackboard.navFile.connections[
+                            blackboard.navFile.connections_area_start[areaIndex] + i];
+                    if (client.team == ENGINE_TEAM_T) {
+                        tVisibleAreas[conAreaIndex] = true;
+                    }
+                    else if (client.team == ENGINE_TEAM_CT) {
+                        ctVisibleAreas[conAreaIndex] = true;
+                    }
+                }
+            }
+        }
+
         // flip visible areas to got not visible areas
         tVisibleAreas.flip();
         ctVisibleAreas.flip();

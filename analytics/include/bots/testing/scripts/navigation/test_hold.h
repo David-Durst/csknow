@@ -166,7 +166,7 @@ public:
 class HoldBSitePushScript : public Script {
 public:
     HoldBSitePushScript(const ServerState & state) :
-            Script("HoldBSitePushScript", {{0, ENGINE_TEAM_T}, {0, ENGINE_TEAM_T}, {0, ENGINE_TEAM_T}},
+            Script("HoldBSitePushScript", {{0, ENGINE_TEAM_T}, {0, ENGINE_TEAM_T}, {0, ENGINE_TEAM_T}, {0, ENGINE_TEAM_CT}, {0, ENGINE_TEAM_CT}},
                    {ObserveType::Absolute, 0, {-2092., 3050., 710.}, {56., -68.}}) { }
 
     virtual void initialize(Tree & tree, ServerState & state) override  {
@@ -182,12 +182,20 @@ public:
                                                                                     make_unique<AimingAtArea>(blackboard, vector{neededBots[2].id}, 556))),
                                                                             true);
 
+            vector<AreaId> emptyVector{}, onePlayerRequiredNotPossibleAreas{8083};
+            Node::Ptr validConditions = make_unique<ParallelAndNode>(blackboard, Node::makeList(
+                    std::move(stillAndLookingAtChoke),
+                    make_unique<CheckPossibleLocationsNode>(blackboard, vector{neededBots[3].id, neededBots[4].id},
+                                                            vector{emptyVector, emptyVector}, // just checking that nothing slips by bot, see https://www.youtube.com/watch?v=wJEu_NLne40 for example
+                                                            vector{onePlayerRequiredNotPossibleAreas, onePlayerRequiredNotPossibleAreas})
+                ));
+
             commands = make_unique<SequenceNode>(blackboard, Node::makeList(
                                                          make_unique<InitTestingRound>(blackboard, name),
                                                          make_unique<movement::WaitNode>(blackboard, 1.0),
                                                          make_unique<SpecDynamic>(blackboard, neededBots, observeSettings),
                                                          make_unique<movement::WaitNode>(blackboard, 0.1),
-                                                         make_unique<SlayAllBut>(blackboard, vector{neededBots[0].id, neededBots[1].id, neededBots[2].id},state),
+                                                         make_unique<SlayAllBut>(blackboard, vector{neededBots[0].id, neededBots[1].id, neededBots[2].id, neededBots[3].id, neededBots[4].id},state),
                                                          make_unique<movement::WaitNode>(blackboard, 0.1),
                                                          make_unique<SetPos>(blackboard, Vec3({-1574., 2638., 38.}), Vec2({0., 0.})),
                                                          make_unique<movement::WaitNode>(blackboard, 0.1),
@@ -205,11 +213,26 @@ public:
                                                          make_unique<movement::WaitNode>(blackboard, 0.1),
                                                          make_unique<Teleport>(blackboard, neededBots[2].id, state),
                                                          make_unique<movement::WaitNode>(blackboard, 0.1),
+                                                         make_unique<SetPos>(blackboard, Vec3({-516., 1733., -14.}), Vec2({-89.683349, 0.746031})),
+                                                         make_unique<movement::WaitNode>(blackboard, 0.1),
+                                                         make_unique<Teleport>(blackboard, neededBots[3].id, state),
+                                                         make_unique<movement::WaitNode>(blackboard, 0.1),
+                                                         make_unique<SetPos>(blackboard, Vec3({-1591., 200., 129.}), Vec2({-89.683349, 0.746031})),
+                                                         make_unique<movement::WaitNode>(blackboard, 0.1),
+                                                         make_unique<Teleport>(blackboard, neededBots[4].id, state),
+                                                         make_unique<movement::WaitNode>(blackboard, 0.1),
                                                          make_unique<RecomputeOrdersNode>(blackboard),
                                                          make_unique<movement::WaitNode>(blackboard, 0.1),
+                                                         make_unique<ClearMemoryCommunicationDangerNode>(blackboard),
+                                                         make_unique<movement::WaitNode>(blackboard, 0.1),
                                                          make_unique<ParallelFirstNode>(blackboard, Node::makeList(
-                                                                                                std::move(stillAndLookingAtChoke),
-                                                                                                make_unique<movement::WaitNode>(blackboard, 14, false)),
+                                                                                                make_unique<DisableActionsNode>(blackboard, "disableAll", vector{neededBots[0].id, neededBots[1].id, neededBots[2].id, neededBots[3].id, neededBots[4].id}),
+                                                                                                make_unique<movement::WaitNode>(blackboard, 2.0))),
+                                                         make_unique<ParallelFirstNode>(blackboard, Node::makeList(
+                                                                                                make_unique<DisableActionsNode>(blackboard, "disableOffense", vector{neededBots[3].id, neededBots[4].id}),
+                                                                                                make_unique<SavePossibleVisibleOverlays>(blackboard, vector{neededBots[3].id, neededBots[4].id}, false),
+                                                                                                std::move(validConditions),
+                                                                                                make_unique<movement::WaitNode>(blackboard, 28, false)),
                                                                                         "HoldBSitePushCondition")),
                                                  "HoldBSitePushSequence");
         }

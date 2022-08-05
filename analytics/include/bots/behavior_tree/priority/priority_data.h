@@ -38,6 +38,12 @@ enum class PriorityType {
     NUM_PRIORITY_TYPES
 };
 
+enum class NonDangerAimAreaType {
+    Hold,
+    Push,
+    NUM_PRIORITY_TYPES
+};
+
 struct Priority {
     PriorityType priorityType;
     uint32_t targetAreaId;
