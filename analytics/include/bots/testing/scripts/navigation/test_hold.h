@@ -232,7 +232,7 @@ public:
                                                                                                 make_unique<DisableActionsNode>(blackboard, "disableOffense", vector{neededBots[3].id, neededBots[4].id}),
                                                                                                 make_unique<SavePossibleVisibleOverlays>(blackboard, vector{neededBots[3].id, neededBots[4].id}, false),
                                                                                                 std::move(validConditions),
-                                                                                                make_unique<movement::WaitNode>(blackboard, 28, false)),
+                                                                                                make_unique<movement::WaitNode>(blackboard, 14, false)),
                                                                                         "HoldBSitePushCondition")),
                                                  "HoldBSitePushSequence");
         }

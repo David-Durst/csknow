@@ -34,6 +34,7 @@ namespace follow::compute_nav_area {
         else {
             curPriority.nonDangerAimArea = curPriority.targetAreaId;
         }
+        curPriority.nonDangerAimAreaType = NonDangerAimAreaType::Hold;
 
         playerNodeState[treeThinker.csgoId] = NodeState::Success;
         return playerNodeState[treeThinker.csgoId];

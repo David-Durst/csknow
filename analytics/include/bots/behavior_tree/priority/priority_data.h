@@ -40,7 +40,7 @@ enum class PriorityType {
 
 enum class NonDangerAimAreaType {
     Hold,
-    Push,
+    Entry,
     NUM_PRIORITY_TYPES
 };
 
@@ -49,6 +49,7 @@ struct Priority {
     uint32_t targetAreaId;
     Vec3 targetPos;
     TargetPlayer targetPlayer;
+    NonDangerAimAreaType nonDangerAimAreaType;
     optional<AreaId> nonDangerAimArea;
     MoveOptions moveOptions;
     ShootOptions shootOptions;
