@@ -17,7 +17,6 @@ namespace follow::compute_nav_area {
         curPriority.priorityType = PriorityType::Order;
         curPriority.targetPlayer.playerId = INVALID_ID;
         curPriority.nonDangerAimArea = {};
-        curPriority.nonDangerAimAreaType = NonDangerAimAreaType::Entry;
         curPriority.moveOptions = {true, false, false};
         curPriority.shootOptions = ShootOptions::DontShoot;
 

@@ -32,7 +32,7 @@ namespace follow {
             std::sort(visDistances.begin(), visDistances.end(),
                       [](const VisDistance & a, const VisDistance & b) { return a.distance < b.distance; });
             curPriority.nonDangerAimArea = blackboard.navFile.m_areas[visDistances[0].areaIndex].get_id();
-
+            curPriority.nonDangerAimAreaType = NonDangerAimAreaType::Path;
         }
 
         playerNodeState[treeThinker.csgoId] = NodeState::Success;

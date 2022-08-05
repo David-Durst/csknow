@@ -30,11 +30,8 @@ namespace follow::compute_nav_area {
             curOrder.playerToHoldIndex.find(treeThinker.csgoId)->second)->second;
         if (blackboard.visPoints.isVisibleAreaId(curAreaId, chokeAreaId)) {
             curPriority.nonDangerAimArea = chokeAreaId;
+            curPriority.nonDangerAimAreaType = NonDangerAimAreaType::Hold;
         }
-        else {
-            curPriority.nonDangerAimArea = curPriority.targetAreaId;
-        }
-        curPriority.nonDangerAimAreaType = NonDangerAimAreaType::Hold;
 
         playerNodeState[treeThinker.csgoId] = NodeState::Success;
         return playerNodeState[treeThinker.csgoId];

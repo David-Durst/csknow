@@ -40,7 +40,7 @@ enum class PriorityType {
 
 enum class NonDangerAimAreaType {
     Hold,
-    Entry,
+    Path,
     NUM_PRIORITY_TYPES
 };
 
