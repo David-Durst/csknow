@@ -27,7 +27,6 @@ namespace strategy {
             {WaypointType::C4, "BombsiteA"}
     };
     static Waypoints offenseCatToAWaypoints = {
-            {WaypointType::NavPlace, "Catwalk"},
             {WaypointType::NavPlace, "ShortStairs"},
             {WaypointType::NavPlace, "ExtendedA"},
             {WaypointType::NavPlace, "BombsiteA"},

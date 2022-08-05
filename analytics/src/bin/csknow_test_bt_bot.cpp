@@ -55,7 +55,7 @@ int main(int argc, char * argv[]) {
                                             //make_unique<PushWaitForBaitGooseToCatScript>(state)
                                             //make_unique<PushMultipleBaitGooseToCatScript>(state),
                                             //make_unique<PushLurkBaitASiteScript>(state),
-                                            make_unique<PushBaitMidToCatScript>(state)
+                                            make_unique<PushATwoOrdersScript>(state)
                                             //make_unique<MemoryAimCheck>(state),
                                             //make_unique<MemoryForgetCheck>(state),
                                             //make_unique<CommunicationAimCheck>(state),

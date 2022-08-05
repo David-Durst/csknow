@@ -245,19 +245,19 @@ public:
     }
 };
 
-class PushBaitMidToCatScript : public Script {
+class PushATwoOrdersScript : public Script {
 public:
     OrderId addedOrderId;
 
-    PushBaitMidToCatScript(const ServerState & state) :
-            Script("PushBaitMidToLongScript", {{0, ENGINE_TEAM_CT}, {0, ENGINE_TEAM_CT}},
-                   {ObserveType::Absolute, 0, {366.774475, 2669.538818, 239.860245}, {16.486465, -46.266056}}) { };
+    PushATwoOrdersScript(const ServerState & state) :
+            Script("PushATwoOrdersScript", {{0, ENGINE_TEAM_CT}, {0, ENGINE_TEAM_CT}},
+                   {ObserveType::FirstPerson, 1}) { };
 
     virtual void initialize(Tree & tree, ServerState & state) override  {
         if (tree.newBlackboard) {
             Blackboard & blackboard = *tree.blackboard;
             Script::initialize(tree, state);
-            set<string> baiterValidLocations{"Middle"};
+            set<string> baiterValidLocations{"ShortStairs", "ExtendedA"};
             commands = make_unique<SequenceNode>(blackboard, Node::makeList(
                                                          make_unique<InitTestingRound>(blackboard, name),
                                                          make_unique<movement::WaitNode>(blackboard, 1.0),
@@ -280,7 +280,7 @@ public:
                                                          make_unique<ClearMemoryCommunicationDangerNode>(blackboard),
                                                          make_unique<RecomputeOrdersNode>(blackboard),
                                                          make_unique<ParallelFirstNode>(blackboard, Node::makeList(
-                                                                                                //make_unique<PusherReachesBeforeBaiter>(blackboard, neededBots[0].id, neededBots[1].id, "Catwalk", baiterValidLocations),
+                                                                                                make_unique<PusherReachesBeforeBaiter>(blackboard, neededBots[1].id, neededBots[0].id, "UnderA", baiterValidLocations),
                                                                                                 make_unique<movement::WaitNode>(blackboard, 20, false))
                                                                                         ))
                                                  );
