@@ -85,26 +85,32 @@ namespace action {
         // this should handle c4 as end of path will be c4
         if (curPriority.targetPlayer.playerId != INVALID_ID) {
             aimTarget = curPriority.targetPlayer.eyePos;
+            curAction.aimTargetType = AimTargetType::Player;
         }
         else if (blackboard.isPlayerDefuser(treeThinker.csgoId) &&
             curOrder.waypoints[blackboard.strategy.playerToWaypointIndex[treeThinker.csgoId]].type == WaypointType::C4) {
             aimTarget = state.getC4Pos();
+            curAction.aimTargetType = AimTargetType::C4;
         }
         else if (curPriority.nonDangerAimArea && curPriority.nonDangerAimAreaType == NonDangerAimAreaType::Hold) {
             aimTarget = vec3tConv(blackboard.navFile.get_area_by_id_fast(curPriority.nonDangerAimArea.value()).get_center());
             aimTarget.z += EYE_HEIGHT;
+            curAction.aimTargetType = AimTargetType::HoldNonDangerArea;
         }
         else if (blackboard.playerToDangerAreaId.find(treeThinker.csgoId) != blackboard.playerToDangerAreaId.end()) {
             aimTarget = vec3tConv(blackboard.navFile.get_area_by_id_fast(blackboard.playerToDangerAreaId[treeThinker.csgoId]).get_center());
             aimTarget.z += EYE_HEIGHT;
+            curAction.aimTargetType = AimTargetType::DangerArea;
         }
         else if (curPriority.nonDangerAimArea && curPriority.nonDangerAimAreaType == NonDangerAimAreaType::Path) {
             aimTarget = vec3tConv(blackboard.navFile.get_area_by_id_fast(curPriority.nonDangerAimArea.value()).get_center());
             aimTarget.z += EYE_HEIGHT;
+            curAction.aimTargetType = AimTargetType::PathNonDangerArea;
         }
         else {
             aimTarget = curPath.waypoints[curPath.curWaypoint].pos;
             aimTarget.z += EYE_HEIGHT;
+            curAction.aimTargetType = AimTargetType::Waypoint;
         }
 
         Vec2 curViewAngle = curClient.getCurrentViewAnglesWithAimpunch();

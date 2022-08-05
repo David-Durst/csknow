@@ -16,6 +16,15 @@ struct PIDState {
     CircularBuffer<double> errorHistory{PID_HISTORY_LENGTH};
 };
 
+enum class AimTargetType {
+    Player,
+    C4,
+    HoldNonDangerArea,
+    DangerArea,
+    PathNonDangerArea,
+    Waypoint
+};
+
 struct Action {
     // keyboard/mouse inputs sent to game engine
     CSKnowTime lastJumpTime = defaultTime, lastScopeTime = defaultTime, lastActionTime = defaultTime;
@@ -24,6 +33,25 @@ struct Action {
     int32_t buttons;
     int32_t shotsInBurst;
     bool keepCrouching = false;
+    AimTargetType aimTargetType;
+    string aimTargetTypeToString(AimTargetType type) {
+        switch (type) {
+            case AimTargetType::Player:
+                return "Player";
+            case AimTargetType::C4:
+                return "C4";
+            case AimTargetType::HoldNonDangerArea:
+                return "HoldNonDangerArea";
+            case AimTargetType::DangerArea:
+                return "DangerArea";
+            case AimTargetType::PathNonDangerArea:
+                return "PathNonDangerArea";
+            case AimTargetType::Waypoint:
+                return "Waypoint";
+            default:
+                return "invalid";
+        }
+    }
 
     void setButton(int32_t button, bool setTrue) {
         if (setTrue) {
@@ -61,7 +89,8 @@ struct Action {
         return "buttons: " + std::to_string(buttons) + ", shots in burst: " + std::to_string(shotsInBurst)
             + ", mouse delta x: " + std::to_string(inputAngleDeltaPctX) +
             ", mouse delta y: " + std::to_string(inputAngleDeltaPctY) +
-            ", enable second order: " + boolToString(enableSecondOrder);
+            ", enable second order: " + boolToString(enableSecondOrder) +
+            ", aim target type: " + aimTargetTypeToString(aimTargetType);
     }
 };
 

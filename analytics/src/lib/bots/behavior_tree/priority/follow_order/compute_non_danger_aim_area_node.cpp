@@ -33,7 +33,10 @@ namespace follow {
             size_t lastAreaIndex = blackboard.navFile.m_area_ids_to_indices[lastAreaId];
             for (size_t i = 0; i < visibleAreas.size(); i++) {
                 if (visibleAreas[i]) {
-                    visDistances.push_back({i, blackboard.reachability.getDistance(i, lastAreaIndex)});
+                    double areaDistance = blackboard.reachability.getDistance(i, lastAreaIndex);
+                    if (areaDistance != NOT_CLOSEST_DISTANCE) {
+                        visDistances.push_back({i, areaDistance});
+                    }
                 }
             }
 

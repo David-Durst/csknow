@@ -72,6 +72,9 @@ struct Priority {
         else {
             result << " target area id:" << targetAreaId;
         }
+        if (nonDangerAimArea) {
+            result << " non danger aim area id:" << nonDangerAimArea.value();
+        }
         result << ", target player round: " << targetPlayer.round
                 << ", target player first frame: " << targetPlayer.firstTargetFrame;
 

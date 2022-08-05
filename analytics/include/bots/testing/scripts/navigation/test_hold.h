@@ -50,7 +50,7 @@ public:
                                                          make_unique<ParallelFirstNode>(blackboard, Node::makeList(
                                                                  std::move(aimAtChoke),
                                                                  std::move(stillAndLookingAtChoke),
-                                                                 make_unique<movement::WaitNode>(blackboard, 14, false)),
+                                                                 make_unique<movement::WaitNode>(blackboard, 20, false)),
                                                             "HoldLongCondition")),
                                                  "HoldLongSequence");
         }
