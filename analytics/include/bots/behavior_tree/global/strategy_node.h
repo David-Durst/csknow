@@ -34,13 +34,11 @@ namespace strategy {
             {WaypointType::C4, "BombsiteA"}
     };
     static Waypoints offenseBDoorsToBWaypoints = {
-            {WaypointType::NavPlace, "BDoors"},
             {WaypointType::NavAreas, "", "CustomBDoors", {9046, 9045, 9029, 9038}},
             {WaypointType::NavPlace, "BombsiteB"},
             {WaypointType::C4, "BombsiteB"}
     };
     static Waypoints offenseHoleToBWaypoints = {
-            {WaypointType::NavPlace, "BDoors"},
             {WaypointType::NavPlace, "Hole"},
             {WaypointType::NavPlace, "BombsiteB"},
             {WaypointType::C4, "BombsiteB"}

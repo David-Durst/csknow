@@ -11,6 +11,9 @@
 #define MOVING_THRESHOLD 0.1
 
 namespace movement {
+    Path computePath(const ServerState &state, Blackboard & blackboard, nav_mesh::vec3_t preCheckTargetPos,
+                     const ServerState::Client & curClient);
+
     class PathingNode : public Node {
     public:
         PathingNode(Blackboard & blackboard) : Node(blackboard, "PathingTaskNode") { };
