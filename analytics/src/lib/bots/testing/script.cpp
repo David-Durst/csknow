@@ -85,8 +85,13 @@ bool Script::tick(Tree & tree, ServerState & state) {
 }
 
 void ScriptsRunner::initialize(Tree & tree, ServerState & state) {
-    for (auto & script : scripts) {
-        script->initialize(tree, state);
+    if (curScript > 0) {
+        for (auto & script : scripts) {
+            script->initialize(tree, state);
+        }
+    }
+    else {
+        scripts[0]->initialize(tree, state);
     }
 }
 

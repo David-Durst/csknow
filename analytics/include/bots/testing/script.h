@@ -69,15 +69,56 @@ struct NeedPreTestingInitNode : Node {
             playerNodeState[treeThinker.csgoId] = NodeState::Success;
             return playerNodeState[treeThinker.csgoId];
         }
+        int numBots = 0;
         // need preinit testing if any humans aren't spectators
         for (const auto & client : state.clients) {
             if (!client.isBot && client.team != ENGINE_TEAM_SPEC) {
                 playerNodeState[treeThinker.csgoId] = NodeState::Success;
                 return playerNodeState[treeThinker.csgoId];
             }
+            if (client.isBot) {
+                numBots++;
+            }
+        }
+        // another human team check
+        if (numBots < 7) {
+            playerNodeState[treeThinker.csgoId] = NodeState::Success;
+            return playerNodeState[treeThinker.csgoId];
         }
         // otherwise don't need score
         playerNodeState[treeThinker.csgoId] = NodeState::Failure;
+        return playerNodeState[treeThinker.csgoId];
+    }
+};
+
+struct PreTestingInitFinishedNode : Node {
+    PreTestingInitFinishedNode(Blackboard & blackboard) :
+            Node(blackboard, "PreTestingInitFinishedNode") { }
+    virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
+        blackboard.inTest = true;
+        // need preinit testing if score is 0 0
+        if (state.tScore == 0 && state.ctScore == 0) {
+            playerNodeState[treeThinker.csgoId] = NodeState::Running;
+            return playerNodeState[treeThinker.csgoId];
+        }
+        int numBots = 0;
+        // need preinit testing if any humans aren't spectators
+        for (const auto & client : state.clients) {
+            if (!client.isBot && client.team != ENGINE_TEAM_SPEC) {
+                playerNodeState[treeThinker.csgoId] = NodeState::Running;
+                return playerNodeState[treeThinker.csgoId];
+            }
+            if (client.isBot) {
+                numBots++;
+            }
+        }
+        // another human team check
+        if (numBots < 7) {
+            playerNodeState[treeThinker.csgoId] = NodeState::Running;
+            return playerNodeState[treeThinker.csgoId];
+        }
+        // otherwise don't need score
+        playerNodeState[treeThinker.csgoId] = NodeState::Success;
         return playerNodeState[treeThinker.csgoId];
     }
 };
@@ -93,7 +134,9 @@ public:
             commands = make_unique<SequenceNode>(blackboard, Node::makeList(
                     make_unique<NeedPreTestingInitNode>(blackboard),
                     make_unique<PreTestingInit>(blackboard),
-                    make_unique<movement::WaitNode>(blackboard, 0.5)),
+                    make_unique<PreTestingInitFinishedNode>(blackboard),
+                    make_unique<Draw>(blackboard),
+                    make_unique<PreTestingInitFinishedNode>(blackboard)),
                  "InitScript");
         }
     }

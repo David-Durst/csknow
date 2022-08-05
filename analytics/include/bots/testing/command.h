@@ -36,6 +36,16 @@ struct PreTestingInit : Command {
     }
 };
 
+struct Draw : Command {
+    Draw(Blackboard & blackboard) :
+            Command(blackboard, "Draw") { }
+    virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
+        blackboard.inTest = true;
+        scriptLines = {"sm_draw;"};
+        return Command::exec(state, treeThinker);
+    }
+};
+
 struct InitTestingRound : Command {
     string scriptName;
     InitTestingRound(Blackboard & blackboard, string scriptName) :
