@@ -34,6 +34,9 @@ NumAheadResult computeNumAhead(Blackboard & blackboard, const ServerState & stat
         }
         else {
             Vec3 otherPos = state.clients[state.csgoIdToCSKnowId[followerId]].getFootPosForPlayer();
+            AreaId otherAreaId = blackboard.navFile.get_nearest_area_by_position(vec3Conv(otherPos)).get_id();
+            AreaId otherLastAreaId = blackboard.distanceToPlaces.getClosestArea(otherAreaId, lastWaypoint.placeName, blackboard.navFile);
+            Vec3 targetPos = vec3tConv(blackboard.navFile.get_area_by_id_fast(otherLastAreaId).get_center());
 
             std::optional<vector<nav_mesh::PathNode>> otherClientWaypoints =
                     blackboard.navFile.find_path_detailed(vec3Conv(otherPos), vec3Conv(targetPos));
@@ -50,10 +53,14 @@ NumAheadResult computeNumAhead(Blackboard & blackboard, const ServerState & stat
             double distanceInFront = curClientDistanceToTarget - otherClientDistanceToTarget;
             if (distanceInFront > MIN_BAIT_DISTANCE) {
                 result.numAhead++;
-                result.nearestInFront = std::min(result.nearestInFront, distanceInFront);
             }
             else if (-1 * distanceInFront > MIN_BAIT_DISTANCE) {
                 result.numBehind++;
+            }
+            if (distanceInFront > 0) {
+                result.nearestInFront = std::min(result.nearestInFront, distanceInFront);
+            }
+            else {
                 result.nearestBehind = std::max(result.nearestBehind, -1 * distanceInFront);
             }
         }
