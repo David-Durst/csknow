@@ -6,11 +6,19 @@
 
 namespace follow {
     NodeState ComputeNonDangerAimAreaNode::exec(const ServerState &state, TreeThinker &treeThinker) {
+        const ServerState::Client & curClient = state.getClient(treeThinker.csgoId);
         const Order & curOrder = blackboard.strategy.getOrderForPlayer(treeThinker.csgoId);
         Priority & curPriority = blackboard.playerToPriority[treeThinker.csgoId];
         AreaId curAreaId = blackboard.navFile.get_nearest_area_by_position(
                 vec3Conv(state.clients[state.csgoIdToCSKnowId[treeThinker.csgoId]].getFootPosForPlayer())).get_id();
-        const Waypoint & lastWaypoint = curOrder.waypoints.back();
+        size_t lastWaypointIndex;
+        if (curClient.team == ENGINE_TEAM_CT) {
+            lastWaypointIndex = curOrder.waypoints.size() - 1;
+        }
+        else {
+            lastWaypointIndex = curOrder.playerToHoldIndex.find(treeThinker.csgoId)->second;
+        }
+        const Waypoint & lastWaypoint = curOrder.waypoints[lastWaypointIndex];
 
         // set non danger aim area equal to visible area closest to destination if not already set by
         // computing hold nav area
