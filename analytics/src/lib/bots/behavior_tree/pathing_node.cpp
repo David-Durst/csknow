@@ -21,9 +21,19 @@ namespace movement {
         blackboard.navFile.set_areas_to_increase_cost(areasToIncreaseCost);
     }
 
-    Path computePath(const ServerState &state, Blackboard & blackboard, nav_mesh::vec3_t targetPos, const ServerState::Client & curClient) {
+    Path computePath(const ServerState &state, Blackboard & blackboard, nav_mesh::vec3_t preCheckTargetPos,
+                     const ServerState::Client & curClient) {
         Path newPath;
         //updateAreasToIncreaseCost(state, blackboard, curClient);
+        AreaId targetAreaId = blackboard.navFile.get_nearest_area_by_position(preCheckTargetPos).get_id();
+        nav_mesh::vec3_t targetPos;
+        if (blackboard.removedAreas.find(targetAreaId) != blackboard.removedAreas.end()) {
+            targetPos = blackboard.navFile.get_area_by_id_fast(blackboard.removedAreaAlternatives[targetAreaId]).get_center();
+        }
+        else {
+            targetPos = preCheckTargetPos;
+        }
+
         auto optionalWaypoints =
                 blackboard.navFile.find_path_detailed(vec3Conv(curClient.getFootPosForPlayer()), targetPos);
         if (optionalWaypoints) {

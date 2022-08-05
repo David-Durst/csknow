@@ -29,13 +29,29 @@ void Tree::tick(ServerState & state, const string & mapsPath) {
         newBlackboard = true;
         blackboard = make_unique<Blackboard>(navPath, state.mapName);
 
-        blackboard->navFile.remove_incoming_edges_to_areas({
-            6938, 9026, // these are barrels on A that I get stuck on
-            8251, // this one is under t spawn
-            8631, // this one is on cat next to boxes, weird
-            4232, 4417, // bad wall and box on long
-            8531, // mid doors ct side
-        });
+        blackboard->removedAreas = {
+                6938, 9026, // these are barrels on A that I get stuck on
+                8251, // this one is under t spawn
+                8631, // this one is on cat next to boxes, weird
+                4232, 4417, // bad wall and box on long
+                8531, // mid doors ct side
+        };
+        // get a connection for each area that isn't also invalid
+        for (const auto & areaId : blackboard->removedAreas) {
+            blackboard->removedAreaAlternatives[areaId] = INVALID_ID;
+        }
+        for (const auto & areaId : blackboard->removedAreas) {
+            size_t areaIndex = blackboard->navFile.m_area_ids_to_indices[areaId];
+            for (size_t j = 0; j < blackboard->navFile.connections_area_length[areaIndex]; j++) {
+                size_t conAreaIndex = blackboard->navFile.connections[blackboard->navFile.connections_area_start[areaIndex] + j];
+                AreaId conAreaId = blackboard->navFile.m_areas[conAreaIndex].get_id();
+                if (blackboard->removedAreaAlternatives.find(conAreaId) == blackboard->removedAreaAlternatives.end()) {
+                    blackboard->removedAreaAlternatives[areaId] = conAreaId;
+                    break;
+                }
+            }
+        }
+        blackboard->navFile.remove_incoming_edges_to_areas(blackboard->removedAreas);
         blackboard->navFile.remove_edges({
             {1650, 1644}, // wall near b car clips into end of 1650 preventing getting to 1644
             {1650, 1683}, // wall near b car clips into end of 1650 preventing getting to 1644

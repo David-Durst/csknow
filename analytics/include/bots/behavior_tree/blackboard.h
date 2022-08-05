@@ -80,6 +80,8 @@ struct PrintState {
 struct Blackboard {
     string navPath;
     nav_mesh::nav_file navFile;
+    set<AreaId> removedAreas;
+    map<AreaId, AreaId> removedAreaAlternatives;
     ServerState lastFrameState;
 
     // helpers

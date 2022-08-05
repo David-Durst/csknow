@@ -9,6 +9,7 @@ namespace communicate::spacing {
      */
     NodeState AssignEntryIndexNode::exec(const ServerState &state, TreeThinker &treeThinker) {
         if (blackboard.newOrderThisFrame) {
+            blackboard.defuserId = {};
             for (const auto & orderId : blackboard.strategy.getOrderIds(false, true)) {
                 // assign one of pushers to go first, then assign rest
                 // after pushers, assign baiters

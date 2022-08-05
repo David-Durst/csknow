@@ -261,7 +261,11 @@ struct Order {
         else if (team == ENGINE_TEAM_CT) {
             followersStream << "CT ";
         }
-        followersStream << orderIndex << " followers: <follower, waypoint index, entry index> : [";
+        followersStream << orderIndex << " followers: <follower, waypoint index, entry index";
+        if (team == ENGINE_TEAM_CT) {
+            followersStream << ", execute status";
+        }
+        followersStream << "> : [";
         for (const auto & follower : followers) {
             followersStream << "<" << state.getPlayerString(follower) << ", "
                 << playerToWaypointIndex.find(follower)->second << ", "
