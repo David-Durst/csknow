@@ -38,6 +38,7 @@ void Tree::tick(ServerState & state, const string & mapsPath) {
         blackboard->navFile.remove_edges({
             {1650, 1644}, // wall near b car clips into end of 1650 preventing getting to 1644
             {1650, 1683}, // wall near b car clips into end of 1650 preventing getting to 1644
+            {3743, 3745}, // box near b doors
         });
         globalNode = make_unique<GlobalNode>(*blackboard);
         priorityNode = make_unique<PriorityNode>(*blackboard);
