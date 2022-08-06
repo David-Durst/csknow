@@ -300,7 +300,7 @@ public:
         if (tree.newBlackboard) {
             Blackboard & blackboard = *tree.blackboard;
             Script::initialize(tree, state);
-            set<string> baiterValidLocations{"ShortStairs", "ExtendedA"};
+            set<string> baiterValidLocations{"BDoors", "BombsiteB"};
             Node::Ptr setupCommands = make_unique<SequenceNode>(blackboard, Node::makeList(
                     make_unique<InitTestingRound>(blackboard, name),
                     make_unique<movement::WaitNode>(blackboard, 1.0),
@@ -330,8 +330,8 @@ public:
             commands = make_unique<SequenceNode>(blackboard, Node::makeList(
                     std::move(disableAllDuringSetup),
                     make_unique<ParallelFirstNode>(blackboard, Node::makeList(
-                            make_unique<PusherReachesBeforeBaiter>(blackboard, neededBots[1].id, neededBots[0].id, "UnderA", baiterValidLocations),
-                            make_unique<movement::WaitNode>(blackboard, 10, false))
+                            make_unique<PusherReachesBeforeBaiter>(blackboard, neededBots[1].id, neededBots[0].id, "BombsiteB", baiterValidLocations),
+                            make_unique<movement::WaitNode>(blackboard, 15, false))
                     ))
             );
         }

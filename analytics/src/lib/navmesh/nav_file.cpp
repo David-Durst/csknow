@@ -279,9 +279,6 @@ namespace nav_mesh {
 
         for ( size_t area_id = 0; area_id < m_areas.size(); area_id++) {
             const nav_area& area = m_areas[area_id];
-            if (area.get_id() == 1085 || area.get_id() == 8964) {
-                int x = 1;
-            }
             // skip bugged areas with no connections
             if ( area.m_connections.empty() ) {
                 continue;
