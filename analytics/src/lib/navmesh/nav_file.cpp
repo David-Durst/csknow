@@ -276,20 +276,36 @@ namespace nav_mesh {
     const nav_area& nav_file::get_nearest_area_by_position( vec3_t position ) const {
         float nearest_area_distance = std::numeric_limits<float>::max();        
         size_t nearest_area_id = -1;
+        std::vector<float> zChecks = {10., 20., 40., 50.};
+        int withinZCheckIndex = zChecks.size();
 
         for ( size_t area_id = 0; area_id < m_areas.size(); area_id++) {
             const nav_area& area = m_areas[area_id];
+            if (area.get_id() == 1085 || area.get_id() == 8964) {
+                int x = 1;
+            }
             // skip bugged areas with no connections
             if ( area.m_connections.empty() ) {
                 continue;
             }
-            if ( area.is_within_3d( position ) ) {
-                return area;
+            // find nearest within reason overlapping in all but z
+            // since can have near in x/y but not z
+            for (size_t i = 0; i < withinZCheckIndex; i++) {
+                if ( area.is_within_3d( position, zChecks[i]) ) {
+                    withinZCheckIndex = i;
+                    nearest_area_id = area_id;
+                    break;
+                }
             }
-            float other_distance = get_point_to_area_distance( position, area);
-            if ( other_distance < nearest_area_distance ) {
-                nearest_area_distance = other_distance;
-                nearest_area_id = area_id;
+            if (withinZCheckIndex == 0) {
+                break;
+            }
+            if (withinZCheckIndex == zChecks.size()) {
+                float other_distance = get_point_to_area_distance( position, area);
+                if ( other_distance < nearest_area_distance ) {
+                    nearest_area_distance = other_distance;
+                    nearest_area_id = area_id;
+                }
             }
         }
 
