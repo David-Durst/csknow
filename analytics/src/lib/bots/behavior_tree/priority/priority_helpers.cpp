@@ -7,11 +7,22 @@
 void moveToWaypoint(const Blackboard & blackboard, const ServerState & state, TreeThinker & treeThinker,
                     const Order & curOrder, Priority & curPriority) {
     const Waypoint & waypoint = curOrder.waypoints[blackboard.strategy.playerToWaypointIndex.find(treeThinker.csgoId)->second];
+    const nav_mesh::nav_area & curArea =
+            blackboard.navFile.get_nearest_area_by_position(vec3Conv(state.getClient(treeThinker.csgoId).getFootPosForPlayer()));
     // if next area is a nav place, go there
     if (waypoint.type == WaypointType::NavPlace) {
-        const nav_mesh::nav_area & curArea =
-                blackboard.navFile.get_nearest_area_by_position(vec3Conv(state.getClient(treeThinker.csgoId).getFootPosForPlayer()));
         curPriority.targetAreaId = blackboard.distanceToPlaces.getMedianArea(curArea.get_id(), waypoint.placeName, blackboard.navFile);
+        curPriority.targetPos = vec3tConv(blackboard.navFile.get_area_by_id_fast(curPriority.targetAreaId).get_center());
+    }
+    else if (waypoint.type == WaypointType::NavAreas) {
+        double minDistance = std::numeric_limits<double>::max();
+        AreaId minAreaId = INVALID_ID;
+        for (const auto & dstAreaId : waypoint.areaIds) {
+            if (blackboard.reachability.getDistance(curArea.get_id(), dstAreaId, blackboard.navFile) < minDistance) {
+                minAreaId = dstAreaId;
+            }
+        }
+        curPriority.targetAreaId = minAreaId;
         curPriority.targetPos = vec3tConv(blackboard.navFile.get_area_by_id_fast(curPriority.targetAreaId).get_center());
     }
     else if (waypoint.type == WaypointType::C4) {
