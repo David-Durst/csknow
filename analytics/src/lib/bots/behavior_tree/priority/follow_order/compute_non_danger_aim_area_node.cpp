@@ -29,7 +29,15 @@ namespace follow {
                 double distance;
             };
             vector<VisDistance> visDistances;
-            AreaId lastAreaId = blackboard.distanceToPlaces.getMedianArea(curAreaId, lastWaypoint.placeName, blackboard.navFile);
+            AreaId lastAreaId;
+            // TODO: handle when last waypoint isn't a C4
+            if (curClient.team == ENGINE_TEAM_CT) {
+                lastAreaId = blackboard.distanceToPlaces.getMedianArea(curAreaId, lastWaypoint.placeName, blackboard.navFile);
+            }
+            else {
+                // ok to just use target area as T is always just pathing to hold point
+                lastAreaId = curPriority.targetAreaId;
+            }
             size_t lastAreaIndex = blackboard.navFile.m_area_ids_to_indices[lastAreaId];
             for (size_t i = 0; i < visibleAreas.size(); i++) {
                 if (visibleAreas[i]) {
