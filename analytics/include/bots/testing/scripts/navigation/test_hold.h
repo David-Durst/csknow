@@ -68,12 +68,13 @@ public:
             Blackboard & blackboard = *tree.blackboard;
             Script::initialize(tree, state);
 
+            auto neededBotIds = vector{neededBots[0].id, neededBots[1].id, neededBots[2].id};
             Node::Ptr stillAndLookingAtChoke = make_unique<RepeatDecorator>(blackboard,
                                                                             make_unique<SequenceNode>(blackboard, Node::makeList(
                                                                                     make_unique<StandingStill>(blackboard, vector{neededBots[0].id, neededBots[1].id, neededBots[2].id}),
-                                                                                    make_unique<AimingAtArea>(blackboard, vector{neededBots[0].id}, 3653),
-                                                                                    make_unique<AimingAtArea>(blackboard, vector{neededBots[1].id}, 1384),
-                                                                                    make_unique<AimingAtArea>(blackboard, vector{neededBots[2].id}, 4051))),
+                                                                                    make_unique<AimingAtArea>(blackboard, neededBotIds, 3653),
+                                                                                    make_unique<AimingAtArea>(blackboard, neededBotIds, 1384),
+                                                                                    make_unique<AimingAtArea>(blackboard, neededBotIds, 4051))),
                                                                             true);
 
             commands = make_unique<SequenceNode>(blackboard, Node::makeList(
@@ -121,12 +122,13 @@ public:
             Blackboard & blackboard = *tree.blackboard;
             Script::initialize(tree, state);
 
+            auto neededBotIds = vector{neededBots[0].id, neededBots[1].id, neededBots[2].id};
             Node::Ptr stillAndLookingAtChoke = make_unique<RepeatDecorator>(blackboard,
                                                                             make_unique<SequenceNode>(blackboard, Node::makeList(
                                                                                     make_unique<StandingStill>(blackboard, vector{neededBots[0].id, neededBots[1].id, neededBots[2].id}),
-                                                                                    make_unique<AimingAtArea>(blackboard, vector{neededBots[0].id}, 4170),
-                                                                                    make_unique<AimingAtArea>(blackboard, vector{neededBots[1].id}, 9018),
-                                                                                    make_unique<AimingAtArea>(blackboard, vector{neededBots[2].id}, 4048))),
+                                                                                    make_unique<AimingAtArea>(blackboard, neededBotIds, 4170),
+                                                                                    make_unique<AimingAtArea>(blackboard, neededBotIds, 9018),
+                                                                                    make_unique<AimingAtArea>(blackboard, neededBotIds, 4048))),
                                                                             true);
 
             commands = make_unique<SequenceNode>(blackboard, Node::makeList(
@@ -174,12 +176,13 @@ public:
             Blackboard & blackboard = *tree.blackboard;
             Script::initialize(tree, state);
 
+            auto neededBotIds = vector{neededBots[0].id, neededBots[1].id, neededBots[2].id};
             Node::Ptr stillAndLookingAtChoke = make_unique<RepeatDecorator>(blackboard,
                                                                             make_unique<SequenceNode>(blackboard, Node::makeList(
                                                                                     make_unique<StandingStill>(blackboard, vector{neededBots[0].id, neededBots[1].id, neededBots[2].id}),
-                                                                                    make_unique<AimingAtArea>(blackboard, vector{neededBots[0].id}, 1896),
-                                                                                    make_unique<AimingAtArea>(blackboard, vector{neededBots[1].id}, 8489),
-                                                                                    make_unique<AimingAtArea>(blackboard, vector{neededBots[2].id}, 556))),
+                                                                                    make_unique<AimingAtArea>(blackboard, neededBotIds, 1896),
+                                                                                    make_unique<AimingAtArea>(blackboard, neededBotIds, 8489),
+                                                                                    make_unique<AimingAtArea>(blackboard, neededBotIds, 556))),
                                                                             true);
 
             vector<AreaId> emptyVector{}, onePlayerRequiredNotPossibleAreas{8083};
@@ -250,12 +253,13 @@ public:
             Blackboard & blackboard = *tree.blackboard;
             Script::initialize(tree, state);
 
+            auto neededBotIds = vector{neededBots[0].id, neededBots[1].id, neededBots[2].id};
             Node::Ptr stillAndLookingAtChoke = make_unique<RepeatDecorator>(blackboard,
                                                                             make_unique<SequenceNode>(blackboard, Node::makeList(
                                                                                     make_unique<StandingStill>(blackboard, vector{neededBots[0].id, neededBots[1].id, neededBots[2].id}),
-                                                                                    make_unique<AimingAtArea>(blackboard, vector{neededBots[0].id}, 7533),
-                                                                                    make_unique<AimingAtArea>(blackboard, vector{neededBots[1].id}, 8666),
-                                                                                    make_unique<AimingAtArea>(blackboard, vector{neededBots[2].id}, 8212))),
+                                                                                    make_unique<AimingAtArea>(blackboard, neededBotIds, 7533),
+                                                                                    make_unique<AimingAtArea>(blackboard, neededBotIds, 8666),
+                                                                                    make_unique<AimingAtArea>(blackboard, neededBotIds, 8212))),
                                                                             true);
 
             commands = make_unique<SequenceNode>(blackboard, Node::makeList(
