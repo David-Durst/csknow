@@ -8,6 +8,7 @@
 #include "bots/behavior_tree/pathing_node.h"
 #include <map>
 #define COMMUNICATED_ENEMY_RELEVANT_TIME 2.0
+#define MIN_ENGAGE_FRIENDLY_DISTANCE 100.
 
 namespace engage {
     class RecordEngagementRound : public Node {

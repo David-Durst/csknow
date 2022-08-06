@@ -54,9 +54,10 @@ public:
                     make_unique<DisableActionsNode>(blackboard, "DisableSetup",
                                                     vector{neededBots[0].id, neededBots[1].id, neededBots[2].id}, false)
             ), "DisableDuringSetup");
-            Node::Ptr attackersDifferentPlaces = make_unique<ParallelAndNode>(blackboard, Node::makeList(
-                    make_unique<RepeatDecorator>(blackboard, make_unique<PosConstraint>(blackboard, neededBots[0].id, PosConstraintDimension::Y, PosConstraintOp::GT, 1350.), true),
-                    make_unique<RepeatDecorator>(blackboard, make_unique<PosConstraint>(blackboard, neededBots[1].id, PosConstraintDimension::Y, PosConstraintOp::LT, 1300.), true)
+            Node::Ptr attackersDifferentPlaces = make_unique<SequenceNode>(blackboard, Node::makeList(
+                    make_unique<RepeatDecorator>(blackboard, make_unique<PosConstraint>(blackboard, neededBots[0].id, PosConstraintDimension::Y, PosConstraintOp::GT, 1120.), true),
+                    make_unique<RepeatDecorator>(blackboard, make_unique<DistanceConstraint>(blackboard, neededBots[0].id, neededBots[1].id, PosConstraintOp::GT, 50.), true),
+                    make_unique<RepeatDecorator>(blackboard, make_unique<StandingStill>(blackboard, vector{neededBots[0].id, neededBots[1].id}), true)
             ));
             commands = make_unique<SequenceNode>(blackboard, Node::makeList(
                                                          std::move(disableAllBothDuringSetup),

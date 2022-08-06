@@ -49,7 +49,9 @@ namespace engage {
         // handle how a visible player entering a site deals with enemy that other players on team can't see
         if (curClient.team == ENGINE_TEAM_CT && curPriority.targetPlayer.visible) {
             for (const CSGOId followerId : blackboard.strategy.getOrderFollowers(curOrderId)) {
-                if (followerId != treeThinker.csgoId && !state.isVisible(followerId, targetClient.csgoId)) {
+                if (followerId != treeThinker.csgoId &&
+                    computeDistance(curClient.getFootPosForPlayer(), state.getClient(followerId).getFootPosForPlayer()) < MIN_ENGAGE_FRIENDLY_DISTANCE &&
+                    blackboard.strategy.playerToEntryIndex[curClient.csgoId] < blackboard.strategy.playerToEntryIndex[followerId]) {
                     curPriority.moveOptions.move = true;
                     curPriority.shootOptions = ShootOptions::Tap;
                 }

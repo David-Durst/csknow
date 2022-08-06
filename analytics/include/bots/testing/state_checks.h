@@ -259,6 +259,46 @@ public:
     }
 };
 
+class DistanceConstraint : public Node {
+    CSGOId srcId, dstId;
+    PosConstraintOp op;
+    double value;
+
+public:
+    DistanceConstraint(Blackboard & blackboard, CSGOId srcId, CSGOId dstId, PosConstraintOp op, double value) :
+            Node(blackboard, "DistanceConstraint" + posConstraintOpToString(op) + std::to_string(value)), srcId(srcId),
+            dstId(dstId), op(op), value(value) { };
+
+    virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
+
+        double testValue = computeDistance(state.getClient(srcId).getFootPosForPlayer(),
+                                           state.getClient(dstId).getFootPosForPlayer());
+
+        switch (op) {
+            case PosConstraintOp::LT:
+                playerNodeState[treeThinker.csgoId] = testValue < value ? NodeState::Success : NodeState::Failure;
+                break;
+            case PosConstraintOp::LTE:
+                playerNodeState[treeThinker.csgoId] = testValue <= value ? NodeState::Success : NodeState::Failure;
+                break;
+            case PosConstraintOp::GT:
+                playerNodeState[treeThinker.csgoId] = testValue > value ? NodeState::Success : NodeState::Failure;
+                break;
+            case PosConstraintOp::GTE:
+                playerNodeState[treeThinker.csgoId] = testValue >= value ? NodeState::Success : NodeState::Failure;
+                break;
+            case PosConstraintOp::EQ:
+                playerNodeState[treeThinker.csgoId] = testValue == value ? NodeState::Success : NodeState::Failure;
+                break;
+            default:
+                throw std::runtime_error("invalid op in distance constraint");
+
+        }
+
+        return playerNodeState[treeThinker.csgoId];
+    }
+};
+
 class C4Defused : public Node {
 public:
     C4Defused(Blackboard & blackboard) :
