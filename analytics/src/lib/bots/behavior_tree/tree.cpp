@@ -35,6 +35,7 @@ void Tree::tick(ServerState & state, const string & mapsPath) {
                 8631, // this one is on cat next to boxes, weird
                 4232, 4417, // bad wall and box on long
                 8531, // mid doors ct side
+                8753, // b car
         };
         // get a connection for each area that isn't also invalid
         for (const auto & areaId : blackboard->removedAreas) {
@@ -55,6 +56,7 @@ void Tree::tick(ServerState & state, const string & mapsPath) {
         blackboard->navFile.remove_edges({
             {1650, 1644}, // wall near b car clips into end of 1650 preventing getting to 1644
             {1650, 1683}, // wall near b car clips into end of 1650 preventing getting to 1644
+            {8547, 7911}, // b car annoying
             {3743, 3745}, // box near b doors
         });
         globalNode = make_unique<GlobalNode>(*blackboard);
@@ -70,9 +72,6 @@ void Tree::tick(ServerState & state, const string & mapsPath) {
     for (const auto & client : state.clients) {
         if (client.isBot && blackboard->playerToTreeThinkers.find(client.csgoId) == blackboard->playerToTreeThinkers.end()) {
             AggressiveType aggressiveType = AggressiveType::Push;
-            if (testForceThinkerAggressiveType.find(client.csgoId) != testForceThinkerAggressiveType.end()) {
-                aggressiveType = testForceThinkerAggressiveType[client.csgoId];
-            }
             blackboard->playerToTreeThinkers[client.csgoId] = {
                     client.csgoId,
                     aggressiveType,

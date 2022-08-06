@@ -103,13 +103,14 @@ bool ScriptsRunner::tick(Tree & tree, ServerState & state) {
         }
         startingNewScript = false;
         tree.resetState = true;
-        tree.testForceThinkerAggressiveType.clear();
-        for (const auto & neededBot : scripts[curScript]->getNeededBots()) {
-            tree.testForceThinkerAggressiveType[neededBot.id] = neededBot.type;
-        }
     }
     else {
         tree.resetState = false;
+    }
+    for (const auto & neededBot : scripts[curScript]->getNeededBots()) {
+        if (tree.blackboard->playerToTreeThinkers.find(neededBot.id) != tree.blackboard->playerToTreeThinkers.end()) {
+            tree.blackboard->playerToTreeThinkers[neededBot.id].aggressiveType = neededBot.type;
+        }
     }
 
     // wait until tree finished reseting
