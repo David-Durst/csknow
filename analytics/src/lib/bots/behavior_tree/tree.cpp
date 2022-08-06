@@ -27,7 +27,17 @@ void Tree::tick(ServerState & state, const string & mapsPath) {
 
     if (state.mapNumber != curMapNumber || !samePlayers || resetState) {
         newBlackboard = true;
-        blackboard = make_unique<Blackboard>(navPath, state.mapName);
+        // occasionally nav file fails to load, just reload it (happens infrequently so this hack is ok)
+        bool makeBlackboardSuccesfully = false;
+        while (!makeBlackboardSuccesfully) {
+            try {
+                blackboard = make_unique<Blackboard>(navPath, state.mapName);
+                makeBlackboardSuccesfully = true;
+            }
+            catch (const std::exception & ex) {
+                std::cout << "what():  " << ex.what() << std::endl;
+            }
+        }
 
         blackboard->removedAreas = {
                 6938, 9026, // these are barrels on A that I get stuck on

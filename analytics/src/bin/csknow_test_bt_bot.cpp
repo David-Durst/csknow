@@ -44,7 +44,7 @@ int main(int argc, char * argv[]) {
                                             //make_unique<GooseToCatShortScript>(state),
                                             //make_unique<CTPushLongScript>(state),
                                             //make_unique<CTPushBDoorsScript>(state),
-                                            make_unique<CTPushBHoleScript>(state)
+                                            //make_unique<CTPushBHoleScript>(state),
                                             //make_unique<DefuseScript>(state),
                                             //make_unique<HoldLongScript>(state)
                                             //make_unique<HoldASitePushScript>(state),
@@ -58,6 +58,7 @@ int main(int argc, char * argv[]) {
                                             //make_unique<PushMultipleBaitGooseToCatScript>(state),
                                             //make_unique<PushLurkBaitASiteScript>(state),
                                             //make_unique<PushATwoOrdersScript>(state)
+                                            make_unique<PushTwoBDoorsScript>(state)
                                             //make_unique<MemoryAimCheck>(state),
                                             //make_unique<MemoryForgetCheck>(state),
                                             //make_unique<CommunicationAimCheck>(state),

@@ -42,14 +42,7 @@ namespace strategy {
             {WaypointType::NavPlace, "BombsiteB"},
             {WaypointType::C4, "BombsiteB"}
     };
-    static Waypoints offenseLowerTunsToBWaypoints = {
-            {WaypointType::NavPlace, "LowerTunnel"},
-            {WaypointType::NavPlace, "UpperTunnel"},
-            {WaypointType::NavPlace, "BombsiteB"},
-            {WaypointType::C4, "BombsiteB"}
-    };
-    static Waypoints offenseSpawnToBWaypoints = {
-            {WaypointType::NavPlace, "OutsideTunnel"},
+    static Waypoints offenseTunsToBWaypoints = {
             {WaypointType::NavPlace, "UpperTunnel"},
             {WaypointType::NavPlace, "BombsiteB"},
             {WaypointType::C4, "BombsiteB"}
@@ -58,7 +51,7 @@ namespace strategy {
                                         {offenseCatToAWaypoints}};
 
     static vector<Order> bOffenseOrders{{offenseBDoorsToBWaypoints}, {offenseHoleToBWaypoints},
-                                        {offenseLowerTunsToBWaypoints}, {offenseSpawnToBWaypoints}};
+                                        {offenseTunsToBWaypoints}};
 
     // t sequences of waypoint labels
     static Waypoints defenseLongToAWaypoints = {

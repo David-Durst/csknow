@@ -7,6 +7,14 @@
 
 #include "bots/behavior_tree/node.h"
 
+struct NearestArea {
+    AreaId targetAreaId;
+    Vec3 targetPos;
+};
+
+NearestArea getNearestAreaInWaypoint(const Blackboard & blackboard, const ServerState & state,
+                                     const nav_mesh::nav_area & curArea, const Waypoint & waypoint);
+
 void moveToWaypoint(const Blackboard & blackboard, const ServerState & state, TreeThinker & treeThinker,
                     const Order & curOrder, Priority & curPriority);
 

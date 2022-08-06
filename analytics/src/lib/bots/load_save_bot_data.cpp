@@ -374,8 +374,11 @@ void ServerState::saveBotInputs() {
     std::ofstream fsInputs(tmpInputsFilePath);
     fsInputs << inputsLog;
     fsInputs.close();
-    
-    std::filesystem::rename(tmpInputsFilePath, inputsFilePath);
+
+    try {
+        std::filesystem::rename(tmpInputsFilePath, inputsFilePath);
+    }
+    catch(std::filesystem::filesystem_error const& ex) { }
 }
 
 bool ServerState::saveScript(vector<string> scriptLines) const {
@@ -399,7 +402,10 @@ bool ServerState::saveScript(vector<string> scriptLines) const {
     fsInputs << scriptStream.str();
     fsInputs.close();
 
-    std::filesystem::rename(tmpScriptFilePath, scriptFilePath);
+    try  {
+        std::filesystem::rename(tmpScriptFilePath, scriptFilePath);
+    }
+    catch(std::filesystem::filesystem_error const& ex) { }
     return true;
 }
 

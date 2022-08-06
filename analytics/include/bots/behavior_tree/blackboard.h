@@ -100,6 +100,9 @@ struct Blackboard {
     const nav_mesh::nav_area & getPlayerNavArea(const ServerState::Client & client) {
         return navFile.get_nearest_area_by_position(vec3Conv(client.getFootPosForPlayer()));
     }
+    const nav_mesh::nav_area & getC4NavArea(const ServerState & state) {
+        return navFile.get_nearest_area_by_position(vec3Conv(state.getC4Pos()));
+    }
 
     // order data (movedC4 is for debugging, need to reset orders)
     bool newOrderThisFrame, recomputeOrders = false;

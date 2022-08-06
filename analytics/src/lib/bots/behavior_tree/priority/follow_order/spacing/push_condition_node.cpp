@@ -34,8 +34,8 @@ namespace follow::spacing {
             // this will ignore execute -> setup transition, so fine to call many times
             blackboard.strategy.playerSetup(treeThinker.csgoId);
         }
-        // stop only when ready and too far ahead (so this player is not the problem, need to wait for others to catch up)
 
+        // stop only when ready and too far ahead (so this player is not the problem, need to wait for others to catch up)
         return blackboard.strategy.isPlayerReady(treeThinker.csgoId) ||
                (blackboard.strategy.isPlayerExecuting(treeThinker.csgoId) &&
                 numAheadResult.nearestBehind > MAX_PUSH_DISTANCE);

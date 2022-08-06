@@ -287,6 +287,49 @@ public:
         }
     }
 };
+
+class PushTwoBDoorsScript : public Script {
+public:
+    OrderId addedOrderId;
+
+    PushTwoBDoorsScript(const ServerState & state) :
+            Script("PushTwoBDoorsScript", {{0, ENGINE_TEAM_CT}, {0, ENGINE_TEAM_CT}},
+                   {ObserveType::FirstPerson, 1}) { };
+
+    virtual void initialize(Tree & tree, ServerState & state) override  {
+        if (tree.newBlackboard) {
+            Blackboard & blackboard = *tree.blackboard;
+            Script::initialize(tree, state);
+            set<string> baiterValidLocations{"ShortStairs", "ExtendedA"};
+            commands = make_unique<SequenceNode>(blackboard, Node::makeList(
+                    make_unique<InitTestingRound>(blackboard, name),
+                    make_unique<movement::WaitNode>(blackboard, 1.0),
+                    make_unique<SpecDynamic>(blackboard, neededBots, observeSettings),
+                    make_unique<movement::WaitNode>(blackboard, 0.1),
+                    make_unique<SlayAllBut>(blackboard, vector{neededBots[0].id, neededBots[1].id},state),
+                    make_unique<movement::WaitNode>(blackboard, 0.1),
+                    make_unique<SetPos>(blackboard, Vec3({-87., 1380., 64.}), Vec2({2.903987, -95.587982})),
+                    make_unique<movement::WaitNode>(blackboard, 0.1),
+                    make_unique<Teleport>(blackboard,neededBots[0].id, state),
+                    make_unique<movement::WaitNode>(blackboard, 0.1),
+                    make_unique<SetPos>(blackboard, Vec3({344., 2292., -118.}), Vec2({-1.760050, -105.049713})),
+                    make_unique<movement::WaitNode>(blackboard, 0.1),
+                    make_unique<Teleport>(blackboard, neededBots[1].id, state),
+                    make_unique<movement::WaitNode>(blackboard, 0.1),
+                    make_unique<SetPos>(blackboard, Vec3({-1463., 2489., 46.}), Vec2({0., 0.})),
+                    make_unique<movement::WaitNode>(blackboard, 0.1),
+                    make_unique<TeleportPlantedC4>(blackboard),
+                    make_unique<movement::WaitNode>(blackboard, 0.1),
+                    make_unique<ClearMemoryCommunicationDangerNode>(blackboard),
+                    make_unique<RecomputeOrdersNode>(blackboard),
+                    make_unique<ParallelFirstNode>(blackboard, Node::makeList(
+                            make_unique<PusherReachesBeforeBaiter>(blackboard, neededBots[1].id, neededBots[0].id, "UnderA", baiterValidLocations),
+                            make_unique<movement::WaitNode>(blackboard, 20, false))
+                    ))
+            );
+        }
+    }
+};
 /*
 class TmpPushMultipleBaitGooseToCatScript : public Script {
 public:

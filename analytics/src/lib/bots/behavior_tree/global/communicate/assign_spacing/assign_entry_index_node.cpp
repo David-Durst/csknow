@@ -15,19 +15,22 @@ namespace communicate::spacing {
                 // after pushers, assign baiters
                 vector<CSGOId> baitersOnOrder;
                 int entryIndex = 0;
-                for (const CSGOId followerId : blackboard.strategy.getOrderFollowers(orderId)) {
-                    if (blackboard.playerToTreeThinkers[followerId].aggressiveType == AggressiveType::Push) {
-                        blackboard.strategy.playerToEntryIndex[followerId] = entryIndex++;
-                        if (!blackboard.defuserId) {
-                            blackboard.defuserId = followerId;
-                        }
-                    }
-                    else {
-                        baitersOnOrder.push_back(followerId);
-                    }
-                }
                 for (const CSGOId followerId : baitersOnOrder) {
                     blackboard.strategy.playerToEntryIndex[followerId] = entryIndex++;
+                }
+            }
+        }
+
+        if (!blackboard.defuserId) {
+            for (const CSGOId playerId : state.getPlayersOnTeam(ENGINE_TEAM_CT)) {
+                const ServerState::Client & client = state.getClient(playerId);
+                if (client.isAlive && client.isBot) {
+                    const nav_mesh::nav_area & playerNavArea = blackboard.getPlayerNavArea(client);
+                    const nav_mesh::nav_area & c4NavArea = blackboard.getC4NavArea(state);
+                    if (c4NavArea.m_place == playerNavArea.m_place) {
+                        blackboard.defuserId = playerId;
+                        break;
+                    }
                 }
             }
         }
