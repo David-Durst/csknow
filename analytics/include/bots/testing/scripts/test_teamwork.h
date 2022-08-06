@@ -330,7 +330,7 @@ public:
             commands = make_unique<SequenceNode>(blackboard, Node::makeList(
                     std::move(disableAllDuringSetup),
                     make_unique<ParallelFirstNode>(blackboard, Node::makeList(
-                            make_unique<PusherReachesBeforeBaiter>(blackboard, neededBots[1].id, neededBots[0].id, "BombsiteB", baiterValidLocations),
+                            make_unique<RepeatDecorator>(blackboard, make_unique<DistanceConstraint>(blackboard, neededBots[0].id, neededBots[1].id, PosConstraintOp::LT, 300.), true),
                             make_unique<movement::WaitNode>(blackboard, 15, false))
                     ))
             );

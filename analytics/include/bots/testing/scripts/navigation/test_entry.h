@@ -127,7 +127,7 @@ public:
                                                          make_unique<SetPos>(blackboard, Vec3({420.199219, 2377.000000, 159.528168}), Vec2({-0.659997, 5.090078})),
                                                          make_unique<movement::WaitNode>(blackboard, 0.1),
                                                          make_unique<Teleport>(blackboard, neededBots[0].id, state),
-                                                         make_unique<movement::WaitNode>(blackboard, 0.1),
+                                                         make_unique<movement::WaitNode>(blackboard, 1.0),
                                                          make_unique<ForceOrderNode>(blackboard, "ForceTCat", vector{neededBots[0].id}, testAToCatWaypoints, areasToRemove, addedOrderId),
                                                          make_unique<ParallelFirstNode>(blackboard, Node::makeList(
                                                                                                 make_unique<DontEnterNavAreas>(blackboard, neededBots[0].id, set{1722u, 1723u, 1727u}),
