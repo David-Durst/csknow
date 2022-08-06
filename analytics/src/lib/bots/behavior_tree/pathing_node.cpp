@@ -110,6 +110,15 @@ namespace movement {
 
         // otherwise, either no old path or old path is out of date, so update it
         Path newPath = computePath(state, blackboard, vec3Conv(curPriority.targetPos), curClient);
+        if (blackboard.playerToPath.find(treeThinker.csgoId) != blackboard.playerToPath.end()) {
+            Path oldPath = blackboard.playerToPath[treeThinker.csgoId];
+            double z = blackboard.navFile.get_point_to_area_distance(vec3Conv(curClient.getFootPosForPlayer()), blackboard.navFile.get_area_by_id_fast(1085));
+            double y = blackboard.navFile.get_point_to_area_distance(vec3Conv(curClient.getFootPosForPlayer()), blackboard.navFile.get_area_by_id_fast(8964));
+            if (oldPath.waypoints[0].area1 == 8964 && newPath.waypoints[2].area1 == 8964) {
+                int x = 1;
+                const nav_mesh::nav_area & curArea = blackboard.navFile.get_nearest_area_by_position(vec3Conv(curPos));
+            }
+        }
         blackboard.playerToPath[treeThinker.csgoId] = newPath;
 
         blackboard.playerToLastPathingSourceNavAreaId[treeThinker.csgoId] = curArea.get_id();

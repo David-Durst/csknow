@@ -232,21 +232,21 @@ namespace nav_mesh {
     }
 
     // https://stackoverflow.com/questions/5254838/calculating-distance-between-a-point-and-a-rectangular-box-nearest-point
-    float nav_file::get_point_to_area_distance( vec3_t position, const nav_area& area) const {
-        float dx = std::max(area.m_nw_corner.x - position.x,
-                std::max(0.f, position.x - area.m_se_corner.x));
-        float dy = std::max(area.m_nw_corner.y - position.y, 
-                std::max(0.f, position.y - area.m_se_corner.y));
+    float nav_file::get_point_to_area_distance( vec3_t position, const nav_area& area, float z_scaling) const {
+        float dx = std::max(area.get_min_corner().x - position.x,
+                std::max(0.f, position.x - area.get_max_corner().x));
+        float dy = std::max(area.get_min_corner().y - position.y,
+                std::max(0.f, position.y - area.get_max_corner().y));
         float dz = std::max(area.get_min_corner().z - position.z,
-                std::max(0.f, position.z - area.get_max_corner().z));
+                std::max(0.f, position.z - area.get_max_corner().z)) * z_scaling;
         return std::sqrt(dx * dx + dy * dy + dz * dz);
     }
 
     float nav_file::get_point_to_area_distance_2d( vec3_t position, const nav_area& area) const {
-        float dx = std::max(area.m_nw_corner.x - position.x,
-                            std::max(0.f, position.x - area.m_se_corner.x));
-        float dy = std::max(area.m_nw_corner.y - position.y,
-                            std::max(0.f, position.y - area.m_se_corner.y));
+        float dx = std::max(area.get_min_corner().x - position.x,
+                            std::max(0.f, position.x - area.get_max_corner().x));
+        float dy = std::max(area.get_min_corner().y - position.y,
+                            std::max(0.f, position.y - area.get_max_corner().y));
         return std::sqrt(dx * dx + dy * dy);
     }
 
@@ -279,6 +279,9 @@ namespace nav_mesh {
 
         for ( size_t area_id = 0; area_id < m_areas.size(); area_id++) {
             const nav_area& area = m_areas[area_id];
+            if (area.get_id() == 1085 || area.get_id() == 8964) {
+                int x = 1;
+            }
             // skip bugged areas with no connections
             if ( area.m_connections.empty() ) {
                 continue;

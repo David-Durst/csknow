@@ -45,7 +45,8 @@ namespace nav_mesh {
 		
 		bool is_within( vec3_t position ) const;
 
-        bool is_within_3d( vec3_t position, float z_tolerance = 50. ) const;
+        // max obstacle distance is 18 - https://developer.valvesoftware.com/wiki/Dimensions#Ground_Obstacle_Height
+        bool is_within_3d( vec3_t position, float z_tolerance = 18. ) const;
 
         void load( nav_buffer& buffer );
 

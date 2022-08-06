@@ -14,9 +14,11 @@ namespace strategy {
     NodeState AssignPlayersToOrders::exec(const ServerState &state, TreeThinker &treeThinker) {
         if (blackboard.newOrderThisFrame) {
             map<string, OrderId> ctOptions;
+            OrderId defaultCTOption;
             vector<OrderPlaceDistance> tOptions;
             // build the Order Place options, will compute distance for each client
             for (const auto & orderId : blackboard.strategy.getOrderIds(false, true)) {
+                defaultCTOption = orderId;
                 const Order & order = blackboard.strategy.getOrder(orderId);
                 for (const auto & waypoint : order.waypoints) {
                     if (waypoint.type == WaypointType::NavPlace) {
@@ -66,17 +68,21 @@ namespace strategy {
             for (const auto & client : state.clients) {
                 if (client.isAlive && client.isBot) {
                     if (client.team == ENGINE_TEAM_CT) {
-                        if (blackboard.inTest && client.name == "Adam") {
-                            int x = 1;
-                        }
                         Path pathToC4 = movement::computePath(state, blackboard, vec3Conv(state.getC4Pos()), client);
+                        bool foundPath = false;
                         for (PathNode pathNode : pathToC4.waypoints) {
                             string placeName = blackboard.navFile.get_place(
                                     blackboard.navFile.get_area_by_id_fast(pathNode.area1).m_place);
                             if (ctOptions.find(placeName) != ctOptions.end()) {
                                 blackboard.strategy.assignPlayerToOrder(client.csgoId, ctOptions[placeName]);
+                                foundPath = true;
                                 break;
                             }
+                        }
+                        // in brief situations (like a restart), can have mismatch between c4 position and orders
+                        // so just pick any order in this case
+                        if (!foundPath) {
+                            blackboard.strategy.assignPlayerToOrder(client.csgoId, defaultCTOption);
                         }
                     }
 

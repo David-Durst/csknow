@@ -72,7 +72,7 @@ namespace nav_mesh {
         // added by durst for maps that don't have places
         std::string get_place( std::uint16_t id ) const;
 		nav_area& get_area_by_position( vec3_t position );
-        float get_point_to_area_distance( vec3_t position, const nav_area& area) const;
+        float get_point_to_area_distance( vec3_t position, const nav_area& area, float z_scaling = 1.) const;
         float get_point_to_area_distance_2d( vec3_t position, const nav_area& area) const;
         vec3_t get_nearest_point_in_area( vec3_t position, nav_area& area);
 		const nav_area& get_nearest_area_by_position( vec3_t position ) const;

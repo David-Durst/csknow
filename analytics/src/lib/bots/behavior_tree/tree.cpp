@@ -69,6 +69,8 @@ void Tree::tick(ServerState & state, const string & mapsPath) {
             {8547, 7911}, // b car annoying
             {3743, 3745}, // box near b doors
             {9034, 9031}, // mid to b doors
+            {5241, 6714}, // x box
+            {5241, 6700}, // x box
         });
         globalNode = make_unique<GlobalNode>(*blackboard);
         priorityNode = make_unique<PriorityNode>(*blackboard);

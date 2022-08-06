@@ -7,6 +7,8 @@
 #include "bots/load_save_bot_data.h"
 #include "bots/behavior_tree/priority/priority_data.h"
 
+#define MIN_PATH_SECONDS 0.1
+
 struct PathNode {
     bool edgeMidpoint;
     uint32_t area1;

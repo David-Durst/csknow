@@ -4,6 +4,7 @@
 
 #include "bots/input_bits.h"
 #include "bots/behavior_tree/action/action_node.h"
+#include "bots/behavior_tree/pathing_node.h"
 
 namespace action {
     void stop(Action & curAction) {
@@ -63,7 +64,7 @@ namespace action {
                 // can't compare current nav area to target nav area as current nav area max z different from current pos z
                 // (see d2 slope to A site)
                 if (blackboard.navFile.get_point_to_area_distance_2d(vec3Conv(curPos), dstArea) < 40. &&
-                    dstArea.get_min_corner().z > curPos.z + 10.) {
+                    dstArea.get_min_corner().z > curPos.z + MAX_OBSTACLE_SIZE) {
                     // make sure moving into target in 2d
                     // check if aiming at enemy anywhere
                     /*
@@ -83,7 +84,7 @@ namespace action {
                     // make sure near target navmesh
                     bool closeToDst = blackboard.navFile.get_point_to_area_distance(vec3Conv(curClient.getFootPosForPlayer()), dstArea) < 100.;
                     bool jumpResetTimePassed = state.getSecondsBetweenTimes(curAction.lastJumpTime, state.loadTime) > MIN_JUMP_RESET_SECONDS;
-                    bool shouldJump = closeToDst && jumpResetTimePassed && curClient.lastVelX < 1. && curClient.lastVelY < 1.;
+                    bool shouldJump = closeToDst && jumpResetTimePassed && curClient.lastVelX < 5. && curClient.lastVelY < 5.;
 
                     if (shouldJump) {
                         curAction.lastJumpTime = state.loadTime;
