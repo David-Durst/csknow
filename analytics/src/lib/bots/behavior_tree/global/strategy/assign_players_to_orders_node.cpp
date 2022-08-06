@@ -37,8 +37,10 @@ namespace strategy {
                 throw std::runtime_error("no ct orders with a nav place or nav area");
             }
 
+            map<OrderId, size_t> tPlayersPerOrder;
             for (const auto & orderId : blackboard.strategy.getOrderIds(true, false)) {
                 const Order & order = blackboard.strategy.getOrder(orderId);
+                tPlayersPerOrder[orderId] = 0;
                 for (const auto & waypoint : order.waypoints) {
                     if (waypoint.type == WaypointType::HoldPlace) {
                         tOptions.push_back({orderId, waypoint.placeName});
@@ -90,7 +92,13 @@ namespace strategy {
                             return (!a.assignedPlayer && b.assignedPlayer) || (a.assignedPlayer == b.assignedPlayer && a.distance < b.distance);
                         });
                         blackboard.strategy.assignPlayerToOrder(client.csgoId, tOptions[0].orderId);
-                        tOptions[0].assignedPlayer = true;
+                        if (tOptions[0].assignedPlayer) {
+                            int x =1;
+                        }
+                        tPlayersPerOrder[tOptions[0].orderId]++;
+                        for (size_t i = 0; i < tOptions.size(); i++) {
+                            tOptions[i].assignedPlayer = tPlayersPerOrder[tOptions[i].orderId] > 0;
+                        }
                     }
                 }
             }

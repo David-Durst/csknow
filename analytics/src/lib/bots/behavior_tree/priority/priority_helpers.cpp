@@ -11,19 +11,36 @@ void moveToWaypoint(const Blackboard & blackboard, const ServerState & state, Tr
             blackboard.navFile.get_nearest_area_by_position(vec3Conv(state.getClient(treeThinker.csgoId).getFootPosForPlayer()));
     // if next area is a nav place, go there
     if (waypoint.type == WaypointType::NavPlace) {
-        curPriority.targetAreaId = blackboard.distanceToPlaces.getMedianArea(curArea.get_id(), waypoint.placeName, blackboard.navFile);
-        curPriority.targetPos = vec3tConv(blackboard.navFile.get_area_by_id_fast(curPriority.targetAreaId).get_center());
+        bool alreadyGoingToWaypoint = false;
+        if (blackboard.navFile.m_area_ids_to_indices.find(curPriority.targetAreaId) != blackboard.navFile.m_area_ids_to_indices.end()) {
+            size_t targetAreaIndex = blackboard.navFile.m_area_ids_to_indices.find(curPriority.targetAreaId)->second;
+            string place = blackboard.navFile.get_place(blackboard.navFile.m_areas[targetAreaIndex].m_place);
+            if (place == waypoint.placeName) {
+                alreadyGoingToWaypoint = true;
+            }
+        }
+        if (!alreadyGoingToWaypoint) {
+            curPriority.targetAreaId = blackboard.distanceToPlaces.getMedianArea(curArea.get_id(), waypoint.placeName, blackboard.navFile);
+            curPriority.targetPos = vec3tConv(blackboard.navFile.get_area_by_id_fast(curPriority.targetAreaId).get_center());
+        }
     }
     else if (waypoint.type == WaypointType::NavAreas) {
         double minDistance = std::numeric_limits<double>::max();
         AreaId minAreaId = INVALID_ID;
+        bool alreadyGoingToWaypoint = false;
         for (const auto & dstAreaId : waypoint.areaIds) {
+            if (dstAreaId == curPriority.targetAreaId) {
+                alreadyGoingToWaypoint = true;
+                break;
+            }
             if (blackboard.reachability.getDistance(curArea.get_id(), dstAreaId, blackboard.navFile) < minDistance) {
                 minAreaId = dstAreaId;
             }
         }
-        curPriority.targetAreaId = minAreaId;
-        curPriority.targetPos = vec3tConv(blackboard.navFile.get_area_by_id_fast(curPriority.targetAreaId).get_center());
+        if (!alreadyGoingToWaypoint) {
+            curPriority.targetAreaId = minAreaId;
+            curPriority.targetPos = vec3tConv(blackboard.navFile.get_area_by_id_fast(curPriority.targetAreaId).get_center());
+        }
     }
     else if (waypoint.type == WaypointType::C4) {
         curPriority.targetPos = state.getC4Pos();

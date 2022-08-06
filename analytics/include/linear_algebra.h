@@ -114,6 +114,22 @@ struct Vec3 {
         return result;
     }
 
+    Vec3 operator+(double offset) const {
+        Vec3 result = *this;
+        result.x += offset;
+        result.y += offset;
+        result.z += offset;
+        return result;
+    }
+
+    Vec3 operator-(double offset) const {
+        Vec3 result = *this;
+        result.x -= offset;
+        result.y -= offset;
+        result.z -= offset;
+        return result;
+    }
+
     Vec3 operator*(double scale) const {
         Vec3 result = *this;
         result.x *= scale;

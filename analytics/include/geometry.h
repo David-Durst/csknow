@@ -51,6 +51,11 @@ struct AABB {
         max.z = std::numeric_limits<double>::infinity();
     }
 
+    void expand(double amount) {
+        min = min - amount;
+        max = max + amount;
+    }
+
     string toString() {
         return "{" + min.toString() + ", " + max.toString() + "}";
     }

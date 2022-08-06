@@ -86,7 +86,9 @@ namespace movement {
                 if (targetNode.edgeMidpoint) {
                     const nav_mesh::nav_area &priorArea = blackboard.navFile.get_area_by_id_fast(targetNode.area1);
                     const nav_mesh::nav_area &nextArea = blackboard.navFile.get_area_by_id_fast(targetNode.area2);
-                    areasDisjoint = !aabbOverlap(areaToAABB(priorArea), areaToAABB(nextArea));
+                    AABB curAABB = areaToAABB(priorArea), nextAABB = areaToAABB(nextArea);
+                    curAABB.expand(OBSTACLE_SIZE);
+                    areasDisjoint = !aabbOverlap(curAABB, nextAABB);
                     //aboveNextNode = nextArea.is_within(vec3Conv(curPos)) && nextArea.get_max_corner().z < curClient.lastFootPosZ;
                 }
                 // either you are in the navmesh that is the current target, you've entered the target nav mesh of an shared edge
