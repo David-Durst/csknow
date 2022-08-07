@@ -22,7 +22,7 @@ namespace follow::spacing {
 
         NumAheadResult numAheadResult = computeNumAhead(blackboard, state, curClient);
         // ready to execute if enough people ahead and near enough to next person in stack
-        bool readyToExecute = numAheadResult.numAhead <= blackboard.strategy.playerToEntryIndex[treeThinker.csgoId] &&
+        bool readyToExecute = numAheadResult.numAhead == blackboard.strategy.playerToEntryIndex[treeThinker.csgoId] &&
                 numAheadResult.nearestInFront < MAX_BAIT_DISTANCE;
         if (readyToExecute) {
             blackboard.strategy.playerReady(treeThinker.csgoId);
@@ -31,7 +31,8 @@ namespace follow::spacing {
             // this will ignore execute -> setup transition, so fine to call many times
             blackboard.strategy.playerSetup(treeThinker.csgoId);
         }
-        return numAheadResult.numAhead <= blackboard.strategy.playerToEntryIndex[treeThinker.csgoId] &&
-                              numAheadResult.nearestInFront < MIN_BAIT_DISTANCE;
+        return numAheadResult.numAhead < blackboard.strategy.playerToEntryIndex[treeThinker.csgoId] ||
+                (numAheadResult.numAhead == blackboard.strategy.playerToEntryIndex[treeThinker.csgoId] &&
+                numAheadResult.nearestInFront < MIN_BAIT_DISTANCE);
     }
 }

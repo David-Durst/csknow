@@ -43,7 +43,7 @@ public:
     OrderId addedOrderId;
 
     PushBaitGooseToCatScript(const ServerState & state) :
-            Script("PushBaitGooseToLongScript", {{0, ENGINE_TEAM_CT}, {0, ENGINE_TEAM_CT}},
+            Script("PushBaitGooseToCatScript", {{0, ENGINE_TEAM_CT}, {0, ENGINE_TEAM_CT}},
                    {ObserveType::Absolute, 0, {366.774475, 2669.538818, 239.860245}, {16.486465, -46.266056}}) { };
 
     virtual void initialize(Tree & tree, ServerState & state) override  {
@@ -84,7 +84,7 @@ public:
     OrderId addedOrderId;
 
     PushWaitForBaitGooseToCatScript(const ServerState & state) :
-            Script("PushWaitForBaitGooseToLongScript", {{0, ENGINE_TEAM_CT}, {0, ENGINE_TEAM_CT}},
+            Script("PushWaitForBaitGooseToCatScript", {{0, ENGINE_TEAM_CT}, {0, ENGINE_TEAM_CT}},
                    {ObserveType::Absolute, 0, {366.774475, 2669.538818, 239.860245}, {16.486465, -46.266056}}) { };
 
     virtual void initialize(Tree & tree, ServerState & state) override  {
@@ -125,7 +125,7 @@ public:
     OrderId addedOrderId;
 
     PushMultipleBaitGooseToCatScript(const ServerState & state) :
-            Script("PushMultipleBaitGooseToLongScript", {{0, ENGINE_TEAM_CT}, {0, ENGINE_TEAM_CT}, {0, ENGINE_TEAM_CT}},
+            Script("PushMultipleBaitGooseToCatScript", {{0, ENGINE_TEAM_CT}, {0, ENGINE_TEAM_CT}, {0, ENGINE_TEAM_CT}},
                    {ObserveType::Absolute, 0, {366.774475, 2669.538818, 239.860245}, {16.486465, -46.266056}}) { };
 
     virtual void initialize(Tree & tree, ServerState & state) override  {

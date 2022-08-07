@@ -8,7 +8,9 @@
 namespace follow::spacing {
     bool LurkConditionNode::valid(const ServerState &state, TreeThinker &treeThinker) {
         const ServerState::Client & curClient = state.getClient(treeThinker.csgoId);
-        const Order & curOrder = blackboard.strategy.getOrderForPlayer(treeThinker.csgoId);
+        OrderId curOrderId = blackboard.strategy.getOrderIdForPlayer(treeThinker.csgoId);
+        const Order & curOrder = blackboard.strategy.getOrder(curOrderId);
+        const vector<CSGOId> & curOrderFollowers = blackboard.strategy.getOrderFollowers(curOrderId);
 
         // stop if T team, not entering
         if (curClient.team == ENGINE_TEAM_T) {
@@ -23,8 +25,9 @@ namespace follow::spacing {
 
         NumAheadResult numAheadResult = computeNumAhead(blackboard, state, curClient);
         // ready if reached first waypoint (aka on to second/number 1 by 0 indexing) and in front
-        bool readyToExecute = numAheadResult.numAhead == 0 &&
-                blackboard.strategy.playerToWaypointIndex[treeThinker.csgoId] > 0;
+        bool readyToExecute = numAheadResult.numBehind == curOrderFollowers.size() - 1 &&
+                              numAheadResult.nearestBehind > MIN_BAIT_DISTANCE &&
+                              blackboard.strategy.playerToWaypointIndex[treeThinker.csgoId] > 0;
         if (readyToExecute) {
             blackboard.strategy.playerReady(treeThinker.csgoId);
         }
@@ -39,7 +42,8 @@ namespace follow::spacing {
             int x= 1;
         }
         return blackboard.strategy.isPlayerReady(treeThinker.csgoId) ||
-                (blackboard.strategy.isPlayerExecuting(treeThinker.csgoId) &&
-                    !blackboard.sawEnemyThisRound(state, curClient.team));
+                (blackboard.strategy.isPlayerExecuting(treeThinker.csgoId) && (
+                        (curOrderFollowers.size() > 1 && numAheadResult.nearestBehind > MAX_PUSH_DISTANCE) ||
+                        !blackboard.sawEnemyThisRound(state, curClient.team)));
     }
 }
