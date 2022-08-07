@@ -9,8 +9,8 @@
 #include "bots/behavior_tree/pathing_data.h"
 
 // max is 18, this is based on that - https://developer.valvesoftware.com/wiki/Dimensions#Ground_Obstacle_Height
-#define OBSTACLE_SIZE 10
 #define MAX_OBSTACLE_SIZE 18
+#define OVERLAP_SIZE 3
 #define MOVING_THRESHOLD 0.1
 
 namespace movement {

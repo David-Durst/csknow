@@ -87,7 +87,9 @@ namespace movement {
                     const nav_mesh::nav_area &priorArea = blackboard.navFile.get_area_by_id_fast(targetNode.area1);
                     const nav_mesh::nav_area &nextArea = blackboard.navFile.get_area_by_id_fast(targetNode.area2);
                     AABB curAABB = areaToAABB(priorArea), nextAABB = areaToAABB(nextArea);
-                    curAABB.expand(OBSTACLE_SIZE);
+                    // overlap big enough that small AABB on B hole connect, but small enough that ledge on A to A ramp
+                    // doesn't
+                    curAABB.expand(OVERLAP_SIZE);
                     areasDisjoint = !aabbOverlap(curAABB, nextAABB);
                     //aboveNextNode = nextArea.is_within(vec3Conv(curPos)) && nextArea.get_max_corner().z < curClient.lastFootPosZ;
                 }
