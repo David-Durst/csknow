@@ -290,8 +290,6 @@ public:
 
 class PushTwoBDoorsScript : public Script {
 public:
-    OrderId addedOrderId;
-
     PushTwoBDoorsScript(const ServerState & state) :
             Script("PushTwoBDoorsScript", {{0, ENGINE_TEAM_CT}, {0, ENGINE_TEAM_CT}},
                    {ObserveType::FirstPerson, 0}) { };
@@ -332,6 +330,60 @@ public:
                     make_unique<ParallelFirstNode>(blackboard, Node::makeList(
                             make_unique<RepeatDecorator>(blackboard, make_unique<DistanceConstraint>(blackboard, neededBots[0].id, neededBots[1].id, PosConstraintOp::LT, 300.), true),
                             make_unique<movement::WaitNode>(blackboard, 15, false))
+                    ))
+            );
+        }
+    }
+};
+
+class PushThreeBScript : public Script {
+public:
+    PushThreeBScript(const ServerState & state) :
+            Script("PushThreeBScript", {{0, ENGINE_TEAM_CT}, {0, ENGINE_TEAM_CT}, {0, ENGINE_TEAM_CT}},
+                   {ObserveType::FirstPerson, 0}) { };
+
+    virtual void initialize(Tree & tree, ServerState & state) override  {
+        if (tree.newBlackboard) {
+            Blackboard & blackboard = *tree.blackboard;
+            Script::initialize(tree, state);
+            set<string> baiterValidLocations{"BDoors", "BombsiteB"};
+            Node::Ptr setupCommands = make_unique<SequenceNode>(blackboard, Node::makeList(
+                    make_unique<InitTestingRound>(blackboard, name),
+                    make_unique<movement::WaitNode>(blackboard, 1.0),
+                    make_unique<SpecDynamic>(blackboard, neededBots, observeSettings),
+                    make_unique<movement::WaitNode>(blackboard, 0.1),
+                    make_unique<SlayAllBut>(blackboard, vector{neededBots[0].id, neededBots[1].id, neededBots[2].id},state),
+                    make_unique<movement::WaitNode>(blackboard, 0.1),
+                    //make_unique<SetPos>(blackboard, Vec3({-157., 1380., 64.}), Vec2({2.903987, -95.587982})),
+                    make_unique<SetPos>(blackboard, Vec3({-224., 1225., 66.}), Vec2({2.903987, -95.587982})),
+                    make_unique<movement::WaitNode>(blackboard, 0.1),
+                    make_unique<Teleport>(blackboard,neededBots[0].id, state),
+                    make_unique<movement::WaitNode>(blackboard, 0.1),
+                    make_unique<SetPos>(blackboard, Vec3({344., 2292., -118.}), Vec2({-1.760050, -105.049713})),
+                    make_unique<movement::WaitNode>(blackboard, 0.1),
+                    make_unique<Teleport>(blackboard, neededBots[1].id, state),
+                    make_unique<movement::WaitNode>(blackboard, 0.1),
+                    make_unique<SetPos>(blackboard, Vec3({-1591., 200., 129.}), Vec2({-89.683349, 0.746031})),
+                    make_unique<movement::WaitNode>(blackboard, 0.1),
+                    make_unique<Teleport>(blackboard, neededBots[2].id, state),
+                    make_unique<movement::WaitNode>(blackboard, 0.1),
+                    make_unique<SetPos>(blackboard, Vec3({-1463., 2489., 46.}), Vec2({0., 0.})),
+                    make_unique<movement::WaitNode>(blackboard, 0.1),
+                    make_unique<TeleportPlantedC4>(blackboard),
+                    make_unique<movement::WaitNode>(blackboard, 0.1),
+                    make_unique<ClearMemoryCommunicationDangerNode>(blackboard),
+                    make_unique<RecomputeOrdersNode>(blackboard)));
+            Node::Ptr disableAllDuringSetup = make_unique<ParallelFirstNode>(blackboard, Node::makeList(
+                    std::move(setupCommands),
+                    make_unique<DisableActionsNode>(blackboard, "DisableSetup", vector{neededBots[0].id, neededBots[1].id})
+            ), "DisableDuringSetup");
+            commands = make_unique<SequenceNode>(blackboard, Node::makeList(
+                    std::move(disableAllDuringSetup),
+                    make_unique<ParallelFirstNode>(blackboard, Node::makeList(
+                            make_unique<RepeatDecorator>(blackboard, make_unique<InPlace>(blackboard, neededBots[0].id, "BombsiteB"), true),
+                            make_unique<RepeatDecorator>(blackboard, make_unique<InPlace>(blackboard, neededBots[1].id, "BombsiteB"), true),
+                            make_unique<RepeatDecorator>(blackboard, make_unique<InPlace>(blackboard, neededBots[2].id, "BombsiteB"), true),
+                            make_unique<movement::WaitNode>(blackboard, 35, false))
                     ))
             );
         }

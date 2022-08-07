@@ -15,6 +15,14 @@ namespace communicate::spacing {
                 // after pushers, assign baiters
                 vector<CSGOId> baitersOnOrder;
                 int entryIndex = 0;
+                for (const CSGOId followerId : blackboard.strategy.getOrderFollowers(orderId)) {
+                    if (blackboard.playerToTreeThinkers[followerId].aggressiveType == AggressiveType::Push) {
+                        blackboard.strategy.playerToEntryIndex[followerId] = entryIndex++;
+                    }
+                    else {
+                        baitersOnOrder.push_back(followerId);
+                    }
+                }
                 for (const CSGOId followerId : baitersOnOrder) {
                     blackboard.strategy.playerToEntryIndex[followerId] = entryIndex++;
                 }

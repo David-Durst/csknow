@@ -43,7 +43,7 @@ namespace strategy {
             {WaypointType::C4, "BombsiteB"}
     };
     static Waypoints offenseTunsToBWaypoints = {
-            {WaypointType::NavPlace, "UpperTunnel"},
+            {WaypointType::NavAreas, "", "CustomUpperTunnel", {1229, 1230, 1226}},
             {WaypointType::NavPlace, "BombsiteB"},
             {WaypointType::C4, "BombsiteB"}
     };
