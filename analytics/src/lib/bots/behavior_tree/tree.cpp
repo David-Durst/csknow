@@ -82,9 +82,27 @@ void Tree::tick(ServerState & state, const string & mapsPath) {
     }
 
     // insert tree thinkers and memories for new bots
+    bool haveCTPusher = false;
+    for (const auto & [playerId, thinker] : blackboard->playerToTreeThinkers) {
+        if (state.getClient(playerId).team == ENGINE_TEAM_CT && thinker.aggressiveType == AggressiveType::Push) {
+            haveCTPusher = true;
+        }
+    }
     for (const auto & client : state.clients) {
         if (client.isBot && blackboard->playerToTreeThinkers.find(client.csgoId) == blackboard->playerToTreeThinkers.end()) {
-            AggressiveType aggressiveType = AggressiveType::Push;
+            AggressiveType aggressiveType;
+            if (ALL_PUSH) {
+                aggressiveType = AggressiveType::Push;
+            }
+            else {
+                if (client.team == ENGINE_TEAM_CT && !haveCTPusher) {
+                    aggressiveType = AggressiveType::Push;
+                }
+                else {
+                    aggressiveType = blackboard->aggressionDis(blackboard->gen) < 0.5 ?
+                            AggressiveType::Push : AggressiveType::Bait;
+                }
+            }
             blackboard->playerToTreeThinkers[client.csgoId] = {
                     client.csgoId,
                     aggressiveType,

@@ -103,6 +103,7 @@ struct Blackboard {
     const nav_mesh::nav_area & getC4NavArea(const ServerState & state) {
         return navFile.get_nearest_area_by_position(vec3Conv(state.getC4Pos()));
     }
+    std::uniform_real_distribution<> aggressionDis;
 
     // order data (movedC4 is for debugging, need to reset orders)
     bool newOrderThisFrame, recomputeOrders = false;
@@ -212,7 +213,8 @@ struct Blackboard {
     vector<PrintState> printPerPlayerState(const ServerState & state, CSGOId playerId);
 
     Blackboard(string navPath, string mapName) :
-        navPath(navPath), navFile(navPath.c_str()), gen(rd()), aimDis(0., 2.0), standDis(0, 100.0),
+        navPath(navPath), navFile(navPath.c_str()),
+        gen(rd()), aimDis(0., 2.0), standDis(0, 100.0), aggressionDis(0., 1.),
         navFileOverlay(navFile), visPoints(navFile), possibleNavAreas(navFile),
         tDangerAreaLastCheckTime(navFile.m_areas.size(), defaultTime),
         ctDangerAreaLastCheckTime(navFile.m_areas.size(), defaultTime) {

@@ -34,7 +34,6 @@ int main(int argc, char * argv[]) {
     state.dataPath = dataPath;
 
     uint64_t numFailures = 0;
-    vector<int> x;
     Tree tree;
     std::thread filterReceiver(&Tree::readFilterNames, &tree);
 

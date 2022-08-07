@@ -14,8 +14,7 @@
 #include <atomic>
 #include <mutex>
 #include <thread>
-
-
+#define ALL_PUSH false
 
 class Tree {
 public:
