@@ -5,7 +5,7 @@
 
 NumAheadResult computeNumAhead(Blackboard & blackboard, const ServerState & state, const ServerState::Client & curClient) {
     NumAheadResult result{0, 0, std::numeric_limits<double>::max(),
-                          std::numeric_limits<double>::max() * -1};
+                          std::numeric_limits<double>::max()};
     const nav_mesh::nav_area & curArea = blackboard.navFile.get_nearest_area_by_position(
             {curClient.lastEyePosX, curClient.lastEyePosY, curClient.lastFootPosZ});
     const OrderId curOrderId = blackboard.strategy.getOrderIdForPlayer(curClient.csgoId);
@@ -61,7 +61,7 @@ NumAheadResult computeNumAhead(Blackboard & blackboard, const ServerState & stat
                 result.nearestInFront = std::min(result.nearestInFront, distanceInFront);
             }
             else {
-                result.nearestBehind = std::max(result.nearestBehind, -1 * distanceInFront);
+                result.nearestBehind = std::min(result.nearestBehind, -1 * distanceInFront);
             }
         }
     }
