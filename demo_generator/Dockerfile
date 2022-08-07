@@ -20,7 +20,7 @@ USER $USER
 ADD ./install_sourcemod.sh ${HOMEDIR}/install_sourcemod.sh
 RUN ${HOMEDIR}/install_sourcemod.sh ${NONVOLUMESTEAMAPPDIR}/csgo
 USER root
-RUN mdkir -p ${NONVOLUMESTEAMAPPDIR}/csgo/addons/sourcemod/bot-link-data/
+RUN mkdir -p ${NONVOLUMESTEAMAPPDIR}/csgo/addons/sourcemod/bot-link-data/
 RUN mount -t tmpfs -o size=512m tmpfs ${NONVOLUMESTEAMAPPDIR}/csgo/addons/sourcemod/bot-link-data/
 RUN chmod 777 ${NONVOLUMESTEAMAPPDIR}/csgo/addons/sourcemod/bot-link-data/
 USER $USER
