@@ -55,10 +55,10 @@ int main(int argc, char * argv[]) {
                                             //make_unique<PushBaitGooseToCatScript>(state),
                                             //make_unique<PushWaitForBaitGooseToCatScript>(state),
                                             //make_unique<PushMultipleBaitGooseToCatScript>(state),
-                                            //make_unique<PushLurkBaitASiteScript>(state),
+                                            make_unique<PushLurkBaitASiteScript>(state)
                                             //make_unique<PushATwoOrdersScript>(state),
                                             //make_unique<PushTwoBDoorsScript>(state),
-                                            make_unique<PushThreeBScript>(state)
+                                            //make_unique<PushThreeBScript>(state),
                                             //make_unique<MemoryAimCheck>(state),
                                             //make_unique<MemoryForgetCheck>(state),
                                             //make_unique<CommunicationAimCheck>(state),

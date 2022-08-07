@@ -51,6 +51,7 @@ NumAheadResult computeNumAhead(Blackboard & blackboard, const ServerState & stat
             }
             // other person ahead if you are more than BAIT_DISTANCE behind them
             double distanceInFront = curClientDistanceToTarget - otherClientDistanceToTarget;
+            // allow tolerance since can have different paths
             if (distanceInFront > MIN_BAIT_DISTANCE) {
                 result.numAhead++;
             }
