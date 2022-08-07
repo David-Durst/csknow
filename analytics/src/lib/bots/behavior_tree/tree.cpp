@@ -45,7 +45,7 @@ void Tree::tick(ServerState & state, const string & mapsPath) {
                 8631, // this one is on cat next to boxes, weird
                 4232, 4417, // bad wall and box on long
                 8531, // mid doors ct side
-                8753, 8550, // b car
+                8753, 8550, 8574, // b car
         };
         // get a connection for each area that isn't also invalid
         for (const auto & areaId : blackboard->removedAreas) {
