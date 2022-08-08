@@ -10,11 +10,12 @@
 
 //#define LOG_STATE
 int main(int argc, char * argv[]) {
-    if (argc != 4) {
-        std::cout << "please call this code with 3 arguments: \n"
+    if (argc != 4 && argc != 5) {
+        std::cout << "please call this code with 3 or 4 arguments: \n"
             << "1. path/to/maps\n"
             << "2. path/to/data\n"
-            << "3. path/to/log\n" << std::endl;
+            << "3. path/to/log\n"
+            << "4. any value disables read filter names thread\n" << std::endl;
         return 1;
     }
     string mapsPath = argv[1], dataPath = argv[2], logPath = argv[3];
@@ -24,7 +25,9 @@ int main(int argc, char * argv[]) {
 
     uint64_t numFailures = 0;
     Tree tree;
-    std::thread filterReceiver(&Tree::readFilterNames, &tree);
+    if (argc == 4) {
+        std::thread filterReceiver(&Tree::readFilterNames, &tree);
+    }
 
 #pragma clang diagnostic push
 #pragma ide diagnostic ignored "EndlessLoop"
