@@ -12,7 +12,7 @@ import {
     setupCanvasHandlers,
     setupMatchDrawing,
     toggleCanvasSize,
-    initFilterVars, setupSmallOrLargeMode
+    initFilterVars, setupSmallOrLargeMode, smallMode
 } from "./drawing/drawing"
 import {
     setupFilterHandlers,
@@ -101,7 +101,12 @@ async function init() {
     // While loop that runs until response.truncated is false
     downloadSelect = document.querySelector<HTMLSelectElement>("#download-type")
     remoteAddrSelect = document.querySelector<HTMLSelectElement>("#remote-addr")
-    setRemoteAddr(remoteAddrSelect.value)
+    if (smallMode) {
+        setRemoteAddr(path.parse(document.URL).dir + "/bot_example_data/")
+    }
+    else {
+        setRemoteAddr(remoteAddrSelect.value)
+    }
     setupCanvas()
     createGameData();
     await getTables();
