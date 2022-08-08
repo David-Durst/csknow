@@ -57,7 +57,7 @@ const dark_red = "rgba(209,0,0,1.0)";
 const light_red = "rgba(255,143,143,1.0)";
 const yellow = "rgb(252,198,102)";
 const green = "rgba(0,150,0,1.0)";
-export let smallMode: boolean = true
+export let smallMode: boolean = false
 
 let demoURL: string = ""
 export function setDemoURL(newUrl: string) {
