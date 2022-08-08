@@ -25,8 +25,10 @@ int main(int argc, char * argv[]) {
 
     uint64_t numFailures = 0;
     Tree tree;
+    std::thread filterReceiver;
     if (argc == 4) {
-        std::thread filterReceiver(&Tree::readFilterNames, &tree);
+        std::thread tmpThread(&Tree::readFilterNames, &tree);
+        filterReceiver.swap(tmpThread);
     }
 
 #pragma clang diagnostic push
