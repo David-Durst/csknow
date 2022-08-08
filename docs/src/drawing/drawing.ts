@@ -138,7 +138,7 @@ export function initFilterVars() {
 }
 
 function startingRegionFilter(e: MouseEvent) {
-    if (!initialized) {
+    if (!initialized || smallMode) {
         return
     }
     applyJustEventFilter()
@@ -151,7 +151,7 @@ function startingRegionFilter(e: MouseEvent) {
 }
 
 function finishedRegionFilter(e: MouseEvent) {
-    if (!initialized) {
+    if (!initialized || smallMode) {
         return
     }
     drawingRegionFilter = false
