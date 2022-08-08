@@ -25,5 +25,6 @@ docker run --name durst_csgo_${map} \
     --rm \
     -e RUNNING_IN_EC2=1 -e ROLE=${iam_role} -e MAP=${map} -e GSLT=${gslt} \
     -p 27015:27015/tcp -p 27015:27015/udp \
+    --tmpfs /home/steam/csgo-dedicated-non-volume/csgo/addons/sourcemod/bot-link-data \
     durst/csgo:0.4
 
