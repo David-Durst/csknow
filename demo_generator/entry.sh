@@ -6,6 +6,7 @@ python3 -u upload_logs.py >> upload.log 2>> upload.log &
 # had problems getting csknow to update itself, so just forcing it here
 cd ~/csknow
 git pull
+git checkout v0.1.1
 bash ~/csknow/analytics/scripts/bot_build_docker.sh
 
 bash ~/install_link.sh
