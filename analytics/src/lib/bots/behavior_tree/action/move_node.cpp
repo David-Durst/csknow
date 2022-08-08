@@ -84,7 +84,7 @@ namespace action {
                     // make sure near target navmesh
                     bool closeToDst = blackboard.navFile.get_point_to_area_distance(vec3Conv(curClient.getFootPosForPlayer()), dstArea) < 100.;
                     bool jumpResetTimePassed = state.getSecondsBetweenTimes(curAction.lastJumpTime, state.loadTime) > MIN_JUMP_RESET_SECONDS;
-                    bool shouldJump = closeToDst && jumpResetTimePassed && curClient.lastVelX < 2. && curClient.lastVelY < 2.;
+                    bool shouldJump = closeToDst && jumpResetTimePassed && std::abs(curClient.lastVelX) < 5. && std::abs(curClient.lastVelY) < 5.;
 
                     if (shouldJump) {
                         curAction.lastJumpTime = state.loadTime;
