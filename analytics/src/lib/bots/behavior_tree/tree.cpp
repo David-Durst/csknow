@@ -101,7 +101,7 @@ void Tree::tick(ServerState & state, const string & mapsPath) {
                 else {
                     aggressiveType = blackboard->aggressionDis(blackboard->gen) < 0.5 ?
                             AggressiveType::Push : AggressiveType::Bait;
-                    if (aggressiveType == AggressiveType::Push) {
+                    if (client.team == ENGINE_TEAM_CT && aggressiveType == AggressiveType::Push) {
                         haveCTPusher = true;
                     }
                 }
