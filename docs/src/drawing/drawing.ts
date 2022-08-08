@@ -34,7 +34,7 @@ let fontScale = 1.0
 export let canvas: HTMLCanvasElement = null;
 export let ctx: CanvasRenderingContext2D = null;
 export const minimap = new Image();
-minimap.src = "de_dust2_radar_upsampled_all_labels.png";
+minimap.src = "vis_images/de_dust2_radar_upsampled_all_labels.png";
 let xMapLabel: HTMLLabelElement = null;
 let yMapLabel: HTMLLabelElement = null;
 let xCanvasLabel: HTMLLabelElement = null;
@@ -57,6 +57,7 @@ const dark_red = "rgba(209,0,0,1.0)";
 const light_red = "rgba(255,143,143,1.0)";
 const yellow = "rgb(252,198,102)";
 const green = "rgba(0,150,0,1.0)";
+export let smallMode: boolean = true
 
 let demoURL: string = ""
 export function setDemoURL(newUrl: string) {
@@ -521,4 +522,21 @@ export function setupCanvasHandlers() {
     document.querySelector<HTMLSelectElement>("#event-type").addEventListener("change", setEventsAndRedraw)
     document.querySelector<HTMLSelectElement>("#overlay-type").addEventListener("change", setEventsAndRedraw)
     document.querySelector<HTMLSelectElement>("#clear_filter").addEventListener("click", clearFilterButton)
+}
+
+export function setupSmallOrLargeMode() {
+    if (smallMode) {
+        document.getElementById("button_rwd").style.display = "none"
+        document.getElementById("button_play").style.display = "none"
+        document.getElementById("button_ff").style.display = "none"
+        document.getElementById("event-type-label").style.display = "none"
+        document.getElementById("event-type").style.display = "none"
+        document.getElementById("large-controls").style.display = "none"
+        document.getElementById("canvas-data").style.display = "none"
+        document.getElementById("canvas-data").style.display = "none"
+        document.getElementById("copy_text").style.display = "none"
+        document.getElementById("copy_button").style.display = "none"
+        document.getElementById("match-info").style.display = "none"
+        document.getElementById("round-info").style.display = "none"
+    }
 }

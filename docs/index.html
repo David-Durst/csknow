@@ -27,15 +27,15 @@
                     <span class="label">game tick:</span>
                     <span id="game-tick">NaN</span>
                     <button type="button" id="button_rwd" class="btn btn-secondary playButton">
-                        <img src="images/skip-backward.svg" id="rwd_img" alt="Bootstrap" width="32" height="32">
+                        <img src="vis_images/skip-backward.svg" id="rwd_img" alt="Bootstrap" width="32" height="32">
                     </button>
                     <button type="button" id="button_play" class="btn btn-secondary playButton">
-                        <img src="images/play-fill.svg" id="play_img" alt="Bootstrap" width="32" height="32">
+                        <img src="vis_images/play-fill.svg" id="play_img" alt="Bootstrap" width="32" height="32">
                     </button>
                     <button type="button" id="button_ff" class="btn btn-secondary playButton">
-                        <img src="images/skip-forward.svg" id="ff_img" alt="Bootstrap" width="32" height="32">
+                        <img src="vis_images/skip-forward.svg" id="ff_img" alt="Bootstrap" width="32" height="32">
                     </button>
-                    <span class="label">target event type: </span>
+                    <span id="event-type-label" class="label">target event type: </span>
                     <select id="event-type">
                         <option value="none">None</option>
                     </select>
@@ -43,26 +43,27 @@
                     <select id="overlay-type">
                         <option value="none">None</option>
                     </select>
-                    <button type="button" id="event_filter" class="btn btn-info playButton">
-                        apply event filter
-                    </button>
-                    <button type="button" id="clear_filter" class="btn btn-info playButton">
-                        clear filters
-                    </button>
-                    <select id="remote-addr">
-                        <option value="http://localhost:3123/">localhost</option>
-                        <option value="http://52.86.105.42:3123/">real</option>
-                    </select>
-                    <button type="button" id="canvas_size" class="btn btn-info playButton">
-                        toggle canvas size
-                    </button>
+                    <span id="large-controls">
+                        <button type="button" id="event_filter" class="btn btn-info playButton">
+                            apply event filter
+                        </button>
+                        <button type="button" id="clear_filter" class="btn btn-info playButton">
+                            clear filters
+                        </button>
+                        <select id="remote-addr">
+                            <option value="http://localhost:3123/">localhost</option>
+                            <option value="http://52.86.105.42:3123/">real</option>
+                        </select>
+                        <button type="button" id="canvas_size" class="btn btn-info playButton">
+                            toggle canvas size
+                        </button>
+                    </span>
                     <input type="range" min="0" max="24" value="0" class="slider"
                            id="tick-selector">
                 </div>
 
 
                 <div class="mb-3">
-                    <span class="label">General Details:</span>
                     <span class="entry first-entry">
                         <span class="label">ct score:</span> <span id="ct_score">NaN</span>
                     </span>
@@ -78,12 +79,14 @@
                         <span class="label">Y:</span> <span id="yposMap">NaN</span>
                     </span>
 
-                    <span class="label">Canvas Coordinates:</span>
-                    <span class="entry first-entry">
-                        <span class="label">x:</span> <span id="xposCanvas">NaN</span>
-                    </span>
-                    <span class="entry">
-                        <span class="label">Y:</span> <span id="yposCanvas">NaN</span>
+                    <span id="canvas-data">
+                        <span class="label">Canvas Coordinates:</span>
+                        <span class="entry first-entry">
+                            <span class="label">x:</span> <span id="xposCanvas">NaN</span>
+                        </span>
+                        <span class="entry">
+                            <span class="label">Y:</span> <span id="yposCanvas">NaN</span>
+                        </span>
                     </span>
 
                     <span class="label">Player:</span>
@@ -97,14 +100,14 @@
                     </button>
                 </div>
 
-                <div class="slidecontainer mb-3">
+                <div id="match-info" class="slidecontainer mb-3">
                     <span class="label">Current Match:</span>
                     <span id="cur-match">Not Yet Loaded</span>
                     <input type="range" min="0" max="99" value="0" class="slider"
                            id="match-selector">
                 </div>
 
-                <div class="slidecontainer mb-3">
+                <div id="round-info" class="slidecontainer mb-3">
                     <span class="label">Current Round:</span>
                     <span id="cur-round">Not Yet Loaded</span>
                     <span class="label">Download Type:</span>

@@ -12,7 +12,7 @@ import {
     setupCanvasHandlers,
     setupMatchDrawing,
     toggleCanvasSize,
-    initFilterVars
+    initFilterVars, setupSmallOrLargeMode
 } from "./drawing/drawing"
 import {
     setupFilterHandlers,
@@ -97,6 +97,7 @@ async function init() {
     let truncated = true;
     // Declare a variable that we will assign the key of the last element in the response to
     let pageMarker;
+    setupSmallOrLargeMode();
     // While loop that runs until response.truncated is false
     downloadSelect = document.querySelector<HTMLSelectElement>("#download-type")
     remoteAddrSelect = document.querySelector<HTMLSelectElement>("#remote-addr")
