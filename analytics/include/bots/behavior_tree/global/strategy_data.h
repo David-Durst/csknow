@@ -334,6 +334,10 @@ public:
         playerToExecuteStatus.clear();
     }
 
+    bool haveOrderIdForPlayer(CSGOId playerId) const {
+        return playerToOrder.find(playerId) != playerToOrder.end();
+    }
+
     OrderId getOrderIdForPlayer(CSGOId playerId) const {
         if (playerToOrder.find(playerId) != playerToOrder.end()) {
             return playerToOrder.find(playerId)->second;

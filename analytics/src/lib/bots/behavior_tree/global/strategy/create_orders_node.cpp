@@ -11,10 +11,18 @@ namespace strategy {
             return NodeState::Failure;
         }
 
+        bool botNeedsAnOrder = false;
+        for (const auto & client : state.clients) {
+            if (client.isAlive && client.isBot && !blackboard.strategy.haveOrderIdForPlayer(client.csgoId)) {
+                botNeedsAnOrder = true;
+                break;
+            }
+        }
 
         if (playerNodeState.find(treeThinker.csgoId) == playerNodeState.end() ||
             state.roundNumber != planRoundNumber || state.numPlayersAlive() != playersAliveLastPlan ||
             state.getPlayersOnTeam(ENGINE_TEAM_CT) != ctPlayers || state.getPlayersOnTeam(ENGINE_TEAM_T) != tPlayers ||
+            botNeedsAnOrder ||
             blackboard.recomputeOrders) {
             planRoundNumber = state.roundNumber;
             playersAliveLastPlan = state.numPlayersAlive();
