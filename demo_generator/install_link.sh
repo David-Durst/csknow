@@ -12,7 +12,7 @@ if [ ! -d ${csgo_link_path} ]; then
 fi
 
 cd ${home_link_path}
-git pull
+git pull --tags
 echo "${NONVOLUMESTEAMAPPDIR}" > .csgo_path
 
 cd ${csgo_link_path}/..
