@@ -3,7 +3,6 @@ home_link_path=~/bot-link
 if [ ! -d ${home_link_path} ]; then
     cd ~
     git clone https://github.com/David-Durst/bot-link.git
-    git checkout v0.1.1
 fi
 
 csgo_link_path=${NONVOLUMESTEAMAPPDIR}/csgo/addons/sourcemod/scripting/bot-link
@@ -13,6 +12,7 @@ fi
 
 cd ${home_link_path}
 git pull --tags
+git checkout v0.1.4
 echo "${NONVOLUMESTEAMAPPDIR}" > .csgo_path
 
 cd ${csgo_link_path}/..
