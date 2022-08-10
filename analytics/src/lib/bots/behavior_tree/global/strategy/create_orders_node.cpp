@@ -14,9 +14,12 @@ namespace strategy {
 
         if (playerNodeState.find(treeThinker.csgoId) == playerNodeState.end() ||
             state.roundNumber != planRoundNumber || state.numPlayersAlive() != playersAliveLastPlan ||
+            state.getPlayersOnTeam(ENGINE_TEAM_CT) != ctPlayers || state.getPlayersOnTeam(ENGINE_TEAM_T) != tPlayers ||
             blackboard.recomputeOrders) {
             planRoundNumber = state.roundNumber;
             playersAliveLastPlan = state.numPlayersAlive();
+            ctPlayers = state.getPlayersOnTeam(ENGINE_TEAM_CT);
+            tPlayers = state.getPlayersOnTeam(ENGINE_TEAM_T);
             blackboard.newOrderThisFrame = true;
             blackboard.recomputeOrders = false;
 

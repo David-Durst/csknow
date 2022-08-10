@@ -106,6 +106,7 @@ namespace strategy {
     class CreateOrdersNode : public Node {
         RoundNumber planRoundNumber = -1;
         int32_t playersAliveLastPlan = -1;
+        vector<CSGOId> ctPlayers = {}, tPlayers = {};
     public:
         CreateOrdersNode(Blackboard & blackboard) : Node(blackboard, "CreateOrdersNode") { };
         virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override;
