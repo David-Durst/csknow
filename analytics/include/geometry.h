@@ -14,6 +14,8 @@
 // https://counterstrike.fandom.com/wiki/Movement
 #define MAX_RUN_SPEED 250.0
 #define TICKS_PER_SECOND 32
+#define HEAD_FORWARD_AMOUNT 9.0
+#define DUCK_HEAD_UP_AMOUNT 3.0
 
 class Ray {
 public:

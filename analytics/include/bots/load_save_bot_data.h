@@ -64,7 +64,6 @@ public:
         float lastEyePosY;
         float lastEyePosZ;
         float lastFootPosZ;
-        float lastFootPosOtherZ;
         float lastVelX;
         float lastVelY;
         float lastVelZ;
@@ -79,6 +78,7 @@ public:
         bool isBot;
         bool isAirborne;
         bool isScoped;
+        float duckAmount;
 
         // keyboard/mouse inputs sent to game engine
         int32_t buttons;
