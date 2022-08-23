@@ -10,6 +10,10 @@
 using std::vector;
 using std::array;
 
+#define DEG2RAD(angleInDegrees) ((angleInDegrees) * M_PI / 180.0)
+#define RAD2DEG(angleInRadians) ((angleInRadians) * 180.0 / M_PI)
+
+
 struct IVec3 {
     int64_t x;
     int64_t y;

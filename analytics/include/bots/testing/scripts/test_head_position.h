@@ -42,7 +42,7 @@ class HeadTrackingScript : public Script {
 public:
     HeadTrackingScript(const ServerState & state) :
             Script("HeadTrackingScript", {{0, ENGINE_TEAM_T}},
-                   {ObserveType::Absolute, 0, {1417.528564, 1412.913574, 54.766550}, {0., 90.}}) { }
+                   {ObserveType::Absolute, 0, {1417.528564, 1562.913574, 54.766550}, {0., 90.}}) { }
 
     virtual void initialize(Tree & tree, ServerState & state) override {
         if (tree.newBlackboard) {

@@ -14,8 +14,10 @@
 // https://counterstrike.fandom.com/wiki/Movement
 #define MAX_RUN_SPEED 250.0
 #define TICKS_PER_SECOND 32
-#define HEAD_FORWARD_AMOUNT 9.0
-#define DUCK_HEAD_UP_AMOUNT 3.0
+#define HEAD_FORWARD_AMOUNT 11.75
+#define NECK_DOWN_AMOUNT 8.0
+#define HEAD_ANGLE_ADJUSTMENT_ADD 2.5
+#define HEAD_ANGLE_ADJUSTMENT_MUL 1.1
 
 class Ray {
 public:
@@ -181,11 +183,20 @@ Ray getEyeCoordinatesForPlayerGivenEyeHeight(Vec3 pos, Vec2 view) {
 
 static inline __attribute__((always_inline))
 Vec3 getCenterHeadCoordinatesForPlayer(Vec3 eyePos, Vec2 view) {
-    Vec3 viewVec = angleVectors({view.x, view.y});
-    Vec3 unitViewVec = viewVec / computeMagnitude(viewVec);
-    // same as above, but the pos.z is eye, not foot
-    return {eyePos.x + HEAD_FORWARD_AMOUNT * unitViewVec.x,
-                eyePos.y + HEAD_FORWARD_AMOUNT * unitViewVec.y, eyePos.z};
+    // no z factor if pitch is 90 (looking down), all z factor and no x/y factor if pitch is -90 (looking up)
+    // scale looking down is 0 and up is 90, perfect for sin/cos function where head makes quarter circle
+    // also adjust by head angle amount since head is flat when looking down (0 deg after transformation) but back a little
+    // when looking up (90 deg after transformation)
+    double adjustedPitch = (view.y * -1. + 90.) / 2. * HEAD_ANGLE_ADJUSTMENT_MUL + HEAD_ANGLE_ADJUSTMENT_ADD;
+    // get unit vec of just x and y (z already handled)
+    Vec3 unitViewVec = angleVectors({view.x, view.y});
+    unitViewVec.z = 0.;
+    unitViewVec = unitViewVec / computeMagnitude(unitViewVec);
+    double t1 = std::sin(DEG2RAD(adjustedPitch));
+    double t2 = std::cos(DEG2RAD(adjustedPitch));
+    return {eyePos.x + std::cos(DEG2RAD(adjustedPitch)) * unitViewVec.x * HEAD_FORWARD_AMOUNT,
+            eyePos.y + std::cos(DEG2RAD(adjustedPitch)) * unitViewVec.y * HEAD_FORWARD_AMOUNT,
+            eyePos.z - NECK_DOWN_AMOUNT + std::sin(DEG2RAD(adjustedPitch)) * HEAD_FORWARD_AMOUNT};
 }
 
 
