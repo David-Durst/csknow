@@ -180,12 +180,12 @@ Ray getEyeCoordinatesForPlayerGivenEyeHeight(Vec3 pos, Vec2 view) {
 }
 
 static inline __attribute__((always_inline))
-Ray getCenterHeadCoordinatesForPlayer(Vec3 eyePos, Vec2 view) {
+Vec3 getCenterHeadCoordinatesForPlayer(Vec3 eyePos, Vec2 view) {
     Vec3 viewVec = angleVectors({view.x, view.y});
     Vec3 unitViewVec = viewVec / computeMagnitude(viewVec);
     // same as above, but the pos.z is eye, not foot
-    return Ray({eyePos.x + HEAD_FORWARD_AMOUNT * unitViewVec.x,
-                eyePos.y + HEAD_FORWARD_AMOUNT * unitViewVec.y, eyePos.z}, viewVec);
+    return {eyePos.x + HEAD_FORWARD_AMOUNT * unitViewVec.x,
+                eyePos.y + HEAD_FORWARD_AMOUNT * unitViewVec.y, eyePos.z};
 }
 
 
