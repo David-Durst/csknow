@@ -82,6 +82,25 @@ public:
                     make_unique<Teleport>(blackboard, neededBots[0].id, state),
                     make_unique<movement::WaitNode>(blackboard, 0.1),
                     make_unique<DrawHeadPos>(blackboard, neededBots[0].id),
+                    make_unique<movement::WaitNode>(blackboard, 5.0),
+                    // angled
+                    make_unique<SetPos>(blackboard, Vec3({1417.528564, 1652.856445, -7.28}), Vec2({-45., -88.})),
+                    make_unique<movement::WaitNode>(blackboard, 0.1),
+                    make_unique<Teleport>(blackboard, neededBots[0].id, state),
+                    make_unique<movement::WaitNode>(blackboard, 0.1),
+                    make_unique<DrawHeadPos>(blackboard, neededBots[0].id),
+                    make_unique<movement::WaitNode>(blackboard, 5.0),
+                    make_unique<SetPos>(blackboard, Vec3({1417.528564, 1652.856445, -7.28}), Vec2({-45., 0.})),
+                    make_unique<movement::WaitNode>(blackboard, 0.1),
+                    make_unique<Teleport>(blackboard, neededBots[0].id, state),
+                    make_unique<movement::WaitNode>(blackboard, 0.1),
+                    make_unique<DrawHeadPos>(blackboard, neededBots[0].id),
+                    make_unique<movement::WaitNode>(blackboard, 5.0),
+                    make_unique<SetPos>(blackboard, Vec3({1417.528564, 1652.856445, -7.28}), Vec2({-45., 88.})),
+                    make_unique<movement::WaitNode>(blackboard, 0.1),
+                    make_unique<Teleport>(blackboard, neededBots[0].id, state),
+                    make_unique<movement::WaitNode>(blackboard, 0.1),
+                    make_unique<DrawHeadPos>(blackboard, neededBots[0].id),
                     make_unique<movement::WaitNode>(blackboard, 5.0)
             ), "MoveHead");
             commands = make_unique<SequenceNode>(blackboard, Node::makeList(
