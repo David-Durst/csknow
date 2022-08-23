@@ -14,8 +14,8 @@
 // https://counterstrike.fandom.com/wiki/Movement
 #define MAX_RUN_SPEED 250.0
 #define TICKS_PER_SECOND 32
-#define HEAD_FORWARD_AMOUNT 11.75
-#define NECK_DOWN_AMOUNT 8.0
+#define HEAD_FORWARD_AMOUNT 12.5
+#define NECK_DOWN_AMOUNT 8.5
 #define HEAD_ANGLE_ADJUSTMENT_ADD 2.5
 #define HEAD_ANGLE_ADJUSTMENT_MUL 1.1
 

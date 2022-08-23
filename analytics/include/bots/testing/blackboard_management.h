@@ -125,6 +125,21 @@ public:
     }
 };
 
+class ForceActionsNode : public Node {
+    vector<CSGOId> targetIds;
+    int32_t inputBits;
+public:
+    ForceActionsNode(Blackboard & blackboard, vector<CSGOId> targetIds, int32_t inputBits, string name = "ForceActionsNode") :
+            Node(blackboard, name), targetIds(targetIds), inputBits(inputBits) { };
+    virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
+        for (size_t i = 0; i < targetIds.size(); i++) {
+            blackboard.playerToAction[targetIds[i]].buttons |= inputBits;
+        }
+        playerNodeState[treeThinker.csgoId] = NodeState::Running;
+        return playerNodeState[treeThinker.csgoId];
+    }
+};
+
 class ClearMemoryCommunicationDangerNode : public Node {
 public:
     ClearMemoryCommunicationDangerNode(Blackboard & blackboard) :
