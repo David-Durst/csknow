@@ -179,6 +179,15 @@ Ray getEyeCoordinatesForPlayerGivenEyeHeight(Vec3 pos, Vec2 view) {
     return Ray({pos.x, pos.y, pos.z}, angleVectors({view.x, view.y}));
 }
 
+static inline __attribute__((always_inline))
+Ray getCenterHeadCoordinatesForPlayer(Vec3 eyePos, Vec2 view) {
+    Vec3 viewVec = angleVectors({view.x, view.y});
+    Vec3 unitViewVec = viewVec / computeMagnitude(viewVec);
+    // same as above, but the pos.z is eye, not foot
+    return Ray({eyePos.x + HEAD_FORWARD_AMOUNT * unitViewVec.x,
+                eyePos.y + HEAD_FORWARD_AMOUNT * unitViewVec.y, eyePos.z}, viewVec);
+}
+
 
 // https://github.com/mmp/pbrt-v4/blob/master/src/pbrt/util/pstd.h#L26-L31
 #define MachineEpsilon std::numeric_limits<double>::epsilon() * 0.5
@@ -225,24 +234,6 @@ bool intersectP(const AABB & box, const Ray & ray) {
 static inline __attribute__((always_inline))
 Vec3 getCenter(AABB aabb) {
     return {(aabb.max.x + aabb.min.x)/2, (aabb.max.y + aabb.min.y)/2, (aabb.max.z + aabb.min.z)/2};
-}
-
-static inline __attribute__((always_inline))
-double computeDistance(Vec3 v1, Vec3 v2) {
-    double xDistance = v1.x - v2.x;
-    double yDistance = v1.y - v2.y;
-    double zDistance = v1.z - v2.z;
-    return sqrt(xDistance * xDistance + yDistance * yDistance + zDistance * zDistance);
-}
-
-static inline __attribute__((always_inline))
-double computeMagnitude(Vec3 v) {
-    return computeDistance(v, {0, 0, 0});
-}
-
-static inline __attribute__((always_inline))
-double computeMagnitude(Vec2 v) {
-    return computeDistance({v.x, v.y, 0}, {0, 0, 0});
 }
 
 static inline __attribute__((always_inline))

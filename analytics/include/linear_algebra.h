@@ -138,6 +138,14 @@ struct Vec3 {
         return result;
     }
 
+    Vec3 operator/(double scale) const {
+        Vec3 result = *this;
+        result.x /= scale;
+        result.y /= scale;
+        result.z /= scale;
+        return result;
+    }
+
     string toString() const {
         return "{" + std::to_string(x) + ", " + std::to_string(y)
                + ", " + std::to_string(z) + "}";
@@ -163,6 +171,19 @@ Vec3 max(Vec3 a, Vec3 b) {
     result.y = std::max(a.y, b.y);
     result.z = std::max(a.z, b.z);
     return result;
+}
+
+static inline __attribute__((always_inline))
+double computeDistance(Vec3 v1, Vec3 v2) {
+    double xDistance = v1.x - v2.x;
+    double yDistance = v1.y - v2.y;
+    double zDistance = v1.z - v2.z;
+    return sqrt(xDistance * xDistance + yDistance * yDistance + zDistance * zDistance);
+}
+
+static inline __attribute__((always_inline))
+double computeMagnitude(Vec3 v) {
+    return computeDistance(v, {0, 0, 0});
 }
 
 struct Vec2 {
@@ -274,6 +295,11 @@ Vec2 max(Vec2 a, Vec2 b) {
     result.x = std::max(a.x, b.x);
     result.y = std::max(a.y, b.y);
     return result;
+}
+
+static inline __attribute__((always_inline))
+double computeMagnitude(Vec2 v) {
+    return computeDistance({v.x, v.y, 0}, {0, 0, 0});
 }
 
 struct RotationMatrix3D {
