@@ -14,10 +14,14 @@
 // https://counterstrike.fandom.com/wiki/Movement
 #define MAX_RUN_SPEED 250.0
 #define TICKS_PER_SECOND 32
-#define HEAD_FORWARD_AMOUNT 12.5
-#define NECK_DOWN_AMOUNT 8.5
-#define HEAD_ANGLE_ADJUSTMENT_ADD 2.5
-#define HEAD_ANGLE_ADJUSTMENT_MUL 1.1
+#define STANDING_HEAD_FORWARD_AMOUNT 12.5
+#define DUCKING_HEAD_FORWARD_AMOUNT 11.0
+#define STANDING_NECK_DOWN_AMOUNT 8.5
+#define DUCKING_NECK_DOWN_AMOUNT 3.5
+#define STANDING_HEAD_ANGLE_ADJUSTMENT_ADD 2.5
+#define CROUCHING_HEAD_ANGLE_ADJUSTMENT_ADD 17.5
+#define STANDING_HEAD_ANGLE_ADJUSTMENT_MUL 1.1
+#define CROUCHING_HEAD_ANGLE_ADJUSTMENT_MUL 0.75
 
 class Ray {
 public:
@@ -182,21 +186,25 @@ Ray getEyeCoordinatesForPlayerGivenEyeHeight(Vec3 pos, Vec2 view) {
 }
 
 static inline __attribute__((always_inline))
-Vec3 getCenterHeadCoordinatesForPlayer(Vec3 eyePos, Vec2 view) {
+Vec3 getCenterHeadCoordinatesForPlayer(Vec3 eyePos, Vec2 view, double duckAmount) {
     // no z factor if pitch is 90 (looking down), all z factor and no x/y factor if pitch is -90 (looking up)
     // scale looking down is 0 and up is 90, perfect for sin/cos function where head makes quarter circle
     // also adjust by head angle amount since head is flat when looking down (0 deg after transformation) but back a little
     // when looking up (90 deg after transformation)
-    double adjustedPitch = (view.y * -1. + 90.) / 2. * HEAD_ANGLE_ADJUSTMENT_MUL + HEAD_ANGLE_ADJUSTMENT_ADD;
+    double headAngleAdjustmentAdd = duckAmount * CROUCHING_HEAD_ANGLE_ADJUSTMENT_ADD +
+            (1-duckAmount) * STANDING_HEAD_ANGLE_ADJUSTMENT_ADD;
+    double headAngleAdjustmentMul = duckAmount * CROUCHING_HEAD_ANGLE_ADJUSTMENT_MUL +
+                                    (1-duckAmount) * STANDING_HEAD_ANGLE_ADJUSTMENT_MUL;
+    double adjustedPitch = (view.y * -1. + 90.) / 2. * headAngleAdjustmentMul + headAngleAdjustmentAdd;
     // get unit vec of just x and y (z already handled)
     Vec3 unitViewVec = angleVectors({view.x, view.y});
     unitViewVec.z = 0.;
     unitViewVec = unitViewVec / computeMagnitude(unitViewVec);
-    double t1 = std::sin(DEG2RAD(adjustedPitch));
-    double t2 = std::cos(DEG2RAD(adjustedPitch));
-    return {eyePos.x + std::cos(DEG2RAD(adjustedPitch)) * unitViewVec.x * HEAD_FORWARD_AMOUNT,
-            eyePos.y + std::cos(DEG2RAD(adjustedPitch)) * unitViewVec.y * HEAD_FORWARD_AMOUNT,
-            eyePos.z - NECK_DOWN_AMOUNT + std::sin(DEG2RAD(adjustedPitch)) * HEAD_FORWARD_AMOUNT};
+    double neckDownAmount = duckAmount * DUCKING_NECK_DOWN_AMOUNT + (1-duckAmount) * STANDING_NECK_DOWN_AMOUNT;
+    double headForwardAmount = duckAmount * DUCKING_HEAD_FORWARD_AMOUNT + (1-duckAmount) * STANDING_HEAD_FORWARD_AMOUNT;
+    return {eyePos.x + std::cos(DEG2RAD(adjustedPitch)) * unitViewVec.x * headForwardAmount,
+            eyePos.y + std::cos(DEG2RAD(adjustedPitch)) * unitViewVec.y * headForwardAmount,
+            eyePos.z - neckDownAmount + std::sin(DEG2RAD(adjustedPitch)) * headForwardAmount};
 }
 
 

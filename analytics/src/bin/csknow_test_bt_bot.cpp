@@ -75,7 +75,7 @@ int main(int argc, char * argv[]) {
      */
     // visualization scripts rather than actual tests
     ScriptsRunner scriptsRunner(Script::makeList(
-            make_unique<HeadTrackingScript>(state),
+            //make_unique<HeadTrackingScript>(state),
             make_unique<CrouchedHeadTrackingScript>(state)
     ), true);
 

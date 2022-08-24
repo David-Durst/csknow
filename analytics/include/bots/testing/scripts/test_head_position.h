@@ -25,7 +25,7 @@ public:
 
         const ServerState::Client & client = state.getClient(playerId);
         Vec3 headCoordinates =
-                getCenterHeadCoordinatesForPlayer(client.getEyePosForPlayer(), client.getCurrentViewAngles());
+                getCenterHeadCoordinatesForPlayer(client.getEyePosForPlayer(), client.getCurrentViewAngles(), client.duckAmount);
         result << headCoordinates.x - radius + visOffset.x << " "
             << headCoordinates.y - radius + visOffset.y << " "
             << headCoordinates.z - radius + visOffset.z << " "
@@ -57,7 +57,8 @@ Node::Ptr getMoveHeadNode(Blackboard & blackboard, ServerState & state, const ve
             make_unique<Teleport>(blackboard, neededBots[0].id, state),
             make_unique<movement::WaitNode>(blackboard, 0.1),
             make_unique<DrawHeadPos>(blackboard, neededBots[0].id),
-            make_unique<movement::WaitNode>(blackboard, 5.0),
+            make_unique<movement::WaitNode>(blackboard, 5.0)
+                    /*
             // angled
             make_unique<SetPos>(blackboard, Vec3({1417.528564, 1652.856445, -7.28}), Vec2({-45., -88.})),
             make_unique<movement::WaitNode>(blackboard, 0.1),
@@ -96,7 +97,7 @@ Node::Ptr getMoveHeadNode(Blackboard & blackboard, ServerState & state, const ve
             make_unique<movement::WaitNode>(blackboard, 0.1),
             make_unique<DrawHeadPos>(blackboard, neededBots[0].id),
             make_unique<movement::WaitNode>(blackboard, 5.0)
-
+*/
     ), "MoveHead");
 }
 
@@ -131,9 +132,8 @@ public:
                                                          std::move(disableDuringSetup),
                                                          make_unique<ParallelFirstNode>(blackboard, Node::makeList(
                                                                                                 make_unique<DisableActionsNode>(blackboard, "DisableSetup", vector{neededBots[0].id}),
-                                                                                                make_unique<RepeatDecorator>(blackboard, std::move(moveHead), false),
-                                                                                                make_unique<movement::WaitNode>(blackboard, 30, true)),
-                                                                                        "HeadTrackingCondition")),
+                                                                                                std::move(moveHead)
+                                                         ), "HeadTrackingCondition")),
                                                  "HeadTrackingSequence");
         }
     }
@@ -144,7 +144,7 @@ class CrouchedHeadTrackingScript : public Script {
 public:
     CrouchedHeadTrackingScript(const ServerState & state) :
             Script("CrouchedHeadTrackingScript", {{0, ENGINE_TEAM_T}},
-                   {ObserveType::Absolute, 0, {1417.528564, 1562.913574, 54.766550}, {0., 90.}}) { }
+                   {ObserveType::Absolute, 0, {1417.528564, 1562.913574, 44.766550}, {0., 90.}}) { }
 
     virtual void initialize(Tree & tree, ServerState & state) override {
         if (tree.newBlackboard) {
@@ -171,10 +171,9 @@ public:
                                                          std::move(disableDuringSetup),
                                                          make_unique<ParallelFirstNode>(blackboard, Node::makeList(
                                                                                                 make_unique<DisableActionsNode>(blackboard, "DisableSetup", vector{neededBots[0].id}),
-                                                                                                make_unique<RepeatDecorator>(blackboard, std::move(moveCrouchedHead), false),
-                                                                                                make_unique<ForceActionsNode>(blackboard, vector{neededBots[0].id}, IN_DUCK),
-                                                                                                make_unique<movement::WaitNode>(blackboard, 600, true)),
-                                                                                        "CrouchedHeadTrackingCondition")),
+                                                                                                std::move(moveCrouchedHead),
+                                                                                                make_unique<ForceActionsNode>(blackboard, vector{neededBots[0].id}, IN_DUCK)
+                                                                                        ), "CrouchedHeadTrackingCondition")),
                                                  "CrouchedHeadTrackingSequence");
         }
     }
