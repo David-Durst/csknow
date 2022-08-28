@@ -197,7 +197,7 @@ Vec3 getCenterHeadCoordinatesForPlayer(Vec3 eyePos, Vec2 view, double duckAmount
                                     (1-duckAmount) * STANDING_HEAD_ANGLE_ADJUSTMENT_MUL;
     double adjustedPitch = (view.y * -1. + 90.) / 2. * headAngleAdjustmentMul + headAngleAdjustmentAdd;
     // get unit vec of just x and y (z already handled)
-    Vec3 unitViewVec = angleVectors({view.x, view.y});
+    Vec3 unitViewVec = angleVectors(view);
     unitViewVec.z = 0.;
     unitViewVec = unitViewVec / computeMagnitude(unitViewVec);
     double neckDownAmount = duckAmount * DUCKING_NECK_DOWN_AMOUNT + (1-duckAmount) * STANDING_NECK_DOWN_AMOUNT;
