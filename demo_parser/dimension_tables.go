@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/markus-wa/demoinfocs-golang/v2/pkg/demoinfocs/common"
+	"github.com/markus-wa/demoinfocs-golang/v3/pkg/demoinfocs/common"
 	"os"
 )
 

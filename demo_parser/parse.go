@@ -3,9 +3,9 @@ package main
 import (
 	"fmt"
 	"github.com/golang/geo/r3"
-	"github.com/markus-wa/demoinfocs-golang/v2/pkg/demoinfocs"
-	"github.com/markus-wa/demoinfocs-golang/v2/pkg/demoinfocs/common"
-	"github.com/markus-wa/demoinfocs-golang/v2/pkg/demoinfocs/events"
+	"github.com/markus-wa/demoinfocs-golang/v3/pkg/demoinfocs"
+	"github.com/markus-wa/demoinfocs-golang/v3/pkg/demoinfocs/common"
+	"github.com/markus-wa/demoinfocs-golang/v3/pkg/demoinfocs/events"
 	"os"
 	"path"
 	"sort"
@@ -13,77 +13,77 @@ import (
 )
 
 type RoundTracker struct {
-	valid bool
-	id int64
-	gameID int64
-	startTick int64
-	endTick int64
-	warmup bool
-	freezeTimeEnd int64
-	roundNumber int
+	valid          bool
+	id             int64
+	gameID         int64
+	startTick      int64
+	endTick        int64
+	warmup         bool
+	freezeTimeEnd  int64
+	roundNumber    int
 	roundEndReason int
-	winner int
-	tWins int
-	ctWins int
+	winner         int
+	tWins          int
+	ctWins         int
 }
 
 type GrenadeTracker struct {
-	id int64
-	thrower int64
+	id          int64
+	thrower     int64
 	grenadeType common.EquipmentType
-	throwTick int64
-	activeTick int64
+	throwTick   int64
+	activeTick  int64
 	expiredTick int64
 	destroyTick int64
-	expired bool
-	destroyed bool
-	trajectory []r3.Vector
+	expired     bool
+	destroyed   bool
+	trajectory  []r3.Vector
 }
 
 type PlantTracker struct {
 	//will reset to not valid at end of round
-	id int64
-	startTick int64
-	endTick int64
-	planter int64
+	id         int64
+	startTick  int64
+	endTick    int64
+	planter    int64
 	successful bool
-	written bool
+	written    bool
 }
 
 type DefusalTracker struct {
 	//will reset to not valid at end of round
-	id int64
-	plantID int64
-	startTick int64
-	endTick int64
-	defuser int64
+	id         int64
+	plantID    int64
+	startTick  int64
+	endTick    int64
+	defuser    int64
 	successful bool
 }
 
 type IDState struct {
-	nextGame int64
-	nextPlayer int64
-	nextRound int64
-	nextTick int64
-	nextPlayerAtTick int64
-	nextSpotted int64
-	nextFootstep int64
-	nextWeaponFire int64
-	nextKill int64
-	nextPlayerHurt int64
-	nextGrenade int64
+	nextGame              int64
+	nextPlayer            int64
+	nextRound             int64
+	nextTick              int64
+	nextPlayerAtTick      int64
+	nextSpotted           int64
+	nextFootstep          int64
+	nextWeaponFire        int64
+	nextKill              int64
+	nextPlayerHurt        int64
+	nextGrenade           int64
 	nextGrenadeTrajectory int64
-	nextPlayerFlashed int64
-	nextPlant int64
-	nextDefusal int64
-	nextExplosion int64
+	nextPlayerFlashed     int64
+	nextPlant             int64
+	nextDefusal           int64
+	nextExplosion         int64
 }
 
 type SourceTarget struct {
 	source, target int64
 }
 
-func getPlayerBySteamID(playersTracker * map[int]int64, player * common.Player) int64 {
+func getPlayerBySteamID(playersTracker *map[int]int64, player *common.Player) int64 {
 	if player == nil {
 		return -1
 	} else {
@@ -92,12 +92,12 @@ func getPlayerBySteamID(playersTracker * map[int]int64, player * common.Player) 
 }
 
 const (
-	ctSide = 0
-	tSide = 1
+	ctSide    = 0
+	tSide     = 1
 	spectator = 2
 )
 
-func finishGarbageRound(round * RoundTracker, idState IDState, tWins int, ctWins int) {
+func finishGarbageRound(round *RoundTracker, idState IDState, tWins int, ctWins int) {
 	round.endTick = idState.nextTick - 1
 	round.warmup = true
 	round.roundEndReason = -1
@@ -106,7 +106,7 @@ func finishGarbageRound(round * RoundTracker, idState IDState, tWins int, ctWins
 	round.ctWins = ctWins
 }
 
-func processFile(unprocessedKey string, localDemName string, idState * IDState, firstRun bool, gameType int) {
+func processFile(unprocessedKey string, localDemName string, idState *IDState, firstRun bool, gameType int) {
 	demFilePath := path.Base(unprocessedKey)
 	fmt.Printf("localDemName: %s\n", localDemName)
 	f, err := os.Open(localDemName)
@@ -124,7 +124,7 @@ func processFile(unprocessedKey string, localDemName string, idState * IDState, 
 	}
 
 	// create games table if it didn't exist, and append header if first run
-	flags := os.O_CREATE|os.O_WRONLY
+	flags := os.O_CREATE | os.O_WRONLY
 	if firstRun {
 		flags = flags | os.O_TRUNC
 	} else {
@@ -141,7 +141,7 @@ func processFile(unprocessedKey string, localDemName string, idState * IDState, 
 	curGameID := idState.nextGame
 
 	// setup trackers for logs that cross multiple events
-	curRound := RoundTracker{false, idState.nextRound,0,0,0,false, 0,0,0,0, 0, 0}
+	curRound := RoundTracker{false, idState.nextRound, 0, 0, 0, false, 0, 0, 0, 0, 0, 0}
 	// save finished rounds, write them at end so can update warmups if necessary
 	var finishedRounds []RoundTracker
 	// creating list as flashes thrown back to back will have same id.
@@ -191,8 +191,8 @@ func processFile(unprocessedKey string, localDemName string, idState * IDState, 
 			return
 		}
 		// flip rounds before adding next win as you flip after hitting 15 rounds
-		maxRounds, _ := strconv.Atoi(p.GameState().ConVars()["mp_maxrounds"])
-		if tWins + ctWins == maxRounds / 2 {
+		maxRounds, _ := strconv.Atoi(p.GameState().Rules().ConVars()["mp_maxrounds"])
+		if tWins+ctWins == maxRounds/2 {
 			oldCTWins := ctWins
 			ctWins = tWins
 			tWins = oldCTWins
@@ -300,7 +300,7 @@ func processFile(unprocessedKey string, localDemName string, idState * IDState, 
 		var carrierID int64
 		carrierID = getPlayerBySteamID(&playersTracker, gs.Bomb().Carrier)
 		ticksFile.WriteString(fmt.Sprintf("%d,%d,%d,%d,%d,%d,%.2f,%.2f,%.2f\n",
-			tickID,curRound.id,p.CurrentTime().Milliseconds(), p.CurrentFrame(), gs.IngameTick(),
+			tickID, curRound.id, p.CurrentTime().Milliseconds(), p.CurrentFrame(), gs.IngameTick(),
 			carrierID, gs.Bomb().Position().X, gs.Bomb().Position().Y, gs.Bomb().Position().Z))
 
 		for _, player := range players {
@@ -364,12 +364,12 @@ func processFile(unprocessedKey string, localDemName string, idState * IDState, 
 			aimPunchAngle := player.Entity.PropertyValueMust("localdata.m_Local.m_aimPunchAngle").VectorVal
 			viewPunchAngle := player.Entity.PropertyValueMust("localdata.m_Local.m_viewPunchAngle").VectorVal
 			playerAtTickFile.WriteString(fmt.Sprintf(
-				"%d,%d,%d,%.2f,%.2f," +
-					"%.2f,%.2f,%.2f,%.2f,%.2f," +
-					"%.2f,%.2f,%.2f,%.2f,%.2f,%.2f," +
-					"%d,%d,%d,%d," +
-					"%d,%d,%d,%d,%d,%f,%d,%d,%d," +
-					"%d,%d,%d,%d,%d,%d,%d," +
+				"%d,%d,%d,%.2f,%.2f,"+
+					"%.2f,%.2f,%.2f,%.2f,%.2f,"+
+					"%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,"+
+					"%d,%d,%d,%d,"+
+					"%d,%d,%d,%d,%d,%f,%d,%d,%d,"+
+					"%d,%d,%d,%d,%d,%d,%d,"+
 					"%d,%d,%d,%d,%d,%d,%d,%d\n",
 				playerAtTickID, getPlayerBySteamID(&playersTracker, player), tickID, player.Position().X, player.Position().Y,
 				player.Position().Z, player.PositionEyes().Z, player.Velocity().X, player.Velocity().Y, player.Velocity().Z,
@@ -381,7 +381,6 @@ func processFile(unprocessedKey string, localDemName string, idState * IDState, 
 		}
 		idState.nextTick++
 	})
-
 
 	spottedFile, err := os.Create(localSpottedCSVName)
 	if err != nil {
@@ -662,7 +661,7 @@ func processFile(unprocessedKey string, localDemName string, idState * IDState, 
 		if oldTick, ok := lastFlash[lastFlashKey]; ok && oldTick == idState.nextTick {
 			return
 		}
-		lastFlash[lastFlashKey]	= idState.nextTick
+		lastFlash[lastFlashKey] = idState.nextTick
 
 		curID := idState.nextPlayerFlashed
 		idState.nextPlayerFlashed++
@@ -673,7 +672,6 @@ func processFile(unprocessedKey string, localDemName string, idState * IDState, 
 				getPlayerBySteamID(&playersTracker, e.Player)))
 		}
 	})
-
 
 	plantsFile, err := os.Create(localPlantsCSVName)
 	if err != nil {
@@ -820,4 +818,3 @@ func boolToInt(b bool) int {
 		return 0
 	}
 }
-
