@@ -1,8 +1,8 @@
-package main
+package internal
 
 import (
 	"fmt"
-	"github.com/golang/geo/r3"
+	c "github.com/David-Durst/csknow/demo_parser/internal/constants"
 	"github.com/markus-wa/demoinfocs-golang/v3/pkg/demoinfocs"
 	"github.com/markus-wa/demoinfocs-golang/v3/pkg/demoinfocs/common"
 	"github.com/markus-wa/demoinfocs-golang/v3/pkg/demoinfocs/events"
@@ -11,73 +11,6 @@ import (
 	"sort"
 	"strconv"
 )
-
-type RoundTracker struct {
-	valid          bool
-	id             int64
-	gameID         int64
-	startTick      int64
-	endTick        int64
-	warmup         bool
-	freezeTimeEnd  int64
-	roundNumber    int
-	roundEndReason int
-	winner         int
-	tWins          int
-	ctWins         int
-}
-
-type GrenadeTracker struct {
-	id          int64
-	thrower     int64
-	grenadeType common.EquipmentType
-	throwTick   int64
-	activeTick  int64
-	expiredTick int64
-	destroyTick int64
-	expired     bool
-	destroyed   bool
-	trajectory  []r3.Vector
-}
-
-type PlantTracker struct {
-	//will reset to not valid at end of round
-	id         int64
-	startTick  int64
-	endTick    int64
-	planter    int64
-	successful bool
-	written    bool
-}
-
-type DefusalTracker struct {
-	//will reset to not valid at end of round
-	id         int64
-	plantID    int64
-	startTick  int64
-	endTick    int64
-	defuser    int64
-	successful bool
-}
-
-type IDState struct {
-	nextGame              int64
-	nextPlayer            int64
-	nextRound             int64
-	nextTick              int64
-	nextPlayerAtTick      int64
-	nextSpotted           int64
-	nextFootstep          int64
-	nextWeaponFire        int64
-	nextKill              int64
-	nextPlayerHurt        int64
-	nextGrenade           int64
-	nextGrenadeTrajectory int64
-	nextPlayerFlashed     int64
-	nextPlant             int64
-	nextDefusal           int64
-	nextExplosion         int64
-}
 
 type SourceTarget struct {
 	source, target int64
@@ -97,7 +30,7 @@ const (
 	spectator = 2
 )
 
-func finishGarbageRound(round *RoundTracker, idState IDState, tWins int, ctWins int) {
+func finishGarbageRound(round *roundRow, idState IDState, tWins int, ctWins int) {
 	round.endTick = idState.nextTick - 1
 	round.warmup = true
 	round.roundEndReason = -1
@@ -106,7 +39,7 @@ func finishGarbageRound(round *RoundTracker, idState IDState, tWins int, ctWins 
 	round.ctWins = ctWins
 }
 
-func processFile(unprocessedKey string, localDemName string, idState *IDState, firstRun bool, gameType int) {
+func processFile(unprocessedKey string, localDemName string, idState *IDState, firstRun bool, gameType c.GameType) {
 	demFilePath := path.Base(unprocessedKey)
 	fmt.Printf("localDemName: %s\n", localDemName)
 	f, err := os.Open(localDemName)
@@ -120,7 +53,7 @@ func processFile(unprocessedKey string, localDemName string, idState *IDState, f
 
 	// generate fact tables (and save if necessary) after parser init
 	if firstRun {
-		saveEquipmentFile()
+		SaveEquipmentFile()
 	}
 
 	// create games table if it didn't exist, and append header if first run
@@ -136,21 +69,21 @@ func processFile(unprocessedKey string, localDemName string, idState *IDState, f
 	}
 	defer gamesFile.Close()
 	if firstRun {
-		gamesFile.WriteString("id,demo_file,demo_tick_rate,game_tick_rate,map_name,game_type\n")
+		gamesFile.WriteString(gamesHeader)
 	}
 	curGameID := idState.nextGame
 
 	// setup trackers for logs that cross multiple events
-	curRound := RoundTracker{false, idState.nextRound, 0, 0, 0, false, 0, 0, 0, 0, 0, 0}
+	curRound := roundRow{false, idState.nextRound, 0, 0, 0, false, 0, 0, 0, 0, 0, 0}
 	// save finished rounds, write them at end so can update warmups if necessary
-	var finishedRounds []RoundTracker
+	var finishedRounds []roundRow
 	// creating list as flashes thrown back to back will have same id.
 	// this could introduce bugs if flashes fuse is impacted by factor other than time thrown, but don't think that is case right now
-	grenadesTracker := make(map[int64][]GrenadeTracker)
-	lastFlashExplosion := make(map[int64]GrenadeTracker)
+	grenadesTracker := make(map[int64][]grenadeRow)
+	lastFlashExplosion := make(map[int64]grenadeRow)
 	playerToLastFireGrenade := make(map[int64]int64)
-	curPlant := PlantTracker{0, 0, 0, 0, false, true}
-	curDefusal := DefusalTracker{0, 0, 0, 0, 0, false}
+	curPlant := plantRow{0, 0, 0, 0, false, true}
+	curDefusal := defusalRow{0, 0, 0, 0, 0, false}
 	playersTracker := make(map[int]int64)
 	lastFlash := make(map[SourceTarget]int64)
 	ticksProcessed := 0
@@ -162,7 +95,7 @@ func processFile(unprocessedKey string, localDemName string, idState *IDState, f
 		panic(err)
 	}
 	defer roundsFile.Close()
-	roundsFile.WriteString("id,game_id,start_tick,end_tick,warmup,freeze_time_end,round_number,round_end_reason,winner,t_wins,ct_wins\n")
+	roundsFile.WriteString(roundsHeader)
 
 	ctWins := 0
 	tWins := 0
@@ -181,7 +114,7 @@ func processFile(unprocessedKey string, localDemName string, idState *IDState, f
 
 		curID := idState.nextRound
 		idState.nextRound++
-		curRound = RoundTracker{true, curID, curGameID, idState.nextTick, 0, false, -1, roundsProcessed, 0, 0, 0, 0}
+		curRound = roundRow{true, curID, curGameID, idState.nextTick, 0, false, -1, roundsProcessed, 0, 0, 0, 0}
 		roundsProcessed++
 	})
 
@@ -239,7 +172,7 @@ func processFile(unprocessedKey string, localDemName string, idState *IDState, f
 		panic(err)
 	}
 	defer playersFile.Close()
-	playersFile.WriteString("id,game_id,name,steam_id\n")
+	playersFile.WriteString(playersHeader)
 	// add -1 player at start of first players file
 	if idState.nextPlayer == 0 {
 		playersFile.WriteString("-1,\\N,invalid,0\n")
@@ -250,17 +183,14 @@ func processFile(unprocessedKey string, localDemName string, idState *IDState, f
 		panic(err)
 	}
 	defer ticksFile.Close()
-	ticksFile.WriteString("id,round_id,game_time,demo_tick_number,game_tick_number,bomb_carrier,bomb_x,bomb_y,bomb_z\n")
+	ticksFile.WriteString(ticksHeader)
 
 	playerAtTickFile, err := os.Create(localPlayerAtTickCSVName)
 	if err != nil {
 		panic(err)
 	}
 	defer playerAtTickFile.Close()
-	playerAtTickFile.WriteString("id,player_id,tick_id,pos_x,pos_y,pos_z,eye_pos_z,vel_x,vel_y,vel_z,view_x,view_y,aim_punch_x,aim_punch_y,view_punch_x,view_punch_y,team,health,armor,has_helmet," +
-		"is_alive,is_crouching,is_walking,is_scoped,is_airborne,remaining_flash_time,active_weapon,main_weapon,primary_bullets_clip," +
-		"primary_bullets_reserve,secondary_weapon,secondary_bullets_clip,secondary_bullets_reserve,num_he,num_flash,num_smoke," +
-		"num_incendiary,num_molotov,num_decoy,num_zeus,has_defuser,has_bomb,money,ping\n")
+	playerAtTickFile.WriteString(playerAtTicksHeader)
 
 	p.RegisterEventHandler(func(e events.FrameDone) {
 		gs := p.GameState()
@@ -387,7 +317,7 @@ func processFile(unprocessedKey string, localDemName string, idState *IDState, f
 		panic(err)
 	}
 	defer spottedFile.Close()
-	spottedFile.WriteString("id,tick_id,spotted_player,spotter_player,is_spotted\n")
+	spottedFile.WriteString(spottedHeader)
 
 	p.RegisterEventHandler(func(e events.PlayerSpottersChanged) {
 		players := getPlayers(&p)
@@ -403,17 +333,17 @@ func processFile(unprocessedKey string, localDemName string, idState *IDState, f
 		}
 	})
 
-	heardFile, err := os.Create(localFootstepCSVName)
+	footstepFile, err := os.Create(localFootstepCSVName)
 	if err != nil {
 		panic(err)
 	}
-	defer heardFile.Close()
-	heardFile.WriteString("id,tick_id,stepping_player\n")
+	defer footstepFile.Close()
+	footstepFile.WriteString(footstepHeader)
 
 	p.RegisterEventHandler(func(e events.Footstep) {
 		curID := idState.nextFootstep
 		idState.nextFootstep++
-		heardFile.WriteString(fmt.Sprintf("%d,%d,%d\n",
+		footstepFile.WriteString(fmt.Sprintf("%d,%d,%d\n",
 			curID, idState.nextTick, getPlayerBySteamID(&playersTracker, e.Player)))
 	})
 
@@ -422,7 +352,7 @@ func processFile(unprocessedKey string, localDemName string, idState *IDState, f
 		panic(err)
 	}
 	defer weaponFireFile.Close()
-	weaponFireFile.WriteString("id,tick_id,shooter,weapon\n")
+	weaponFireFile.WriteString(weaponFireHeader)
 
 	p.RegisterEventHandler(func(e events.WeaponFire) {
 		curID := idState.nextWeaponFire
@@ -436,7 +366,7 @@ func processFile(unprocessedKey string, localDemName string, idState *IDState, f
 		panic(err)
 	}
 	defer hurtFile.Close()
-	hurtFile.WriteString("id,tick_id,victim,attacker,weapon,armor_damage,armor,health_damage,health,hit_group\n")
+	hurtFile.WriteString(hurtHeader)
 
 	p.RegisterEventHandler(func(e events.PlayerHurt) {
 		curID := idState.nextPlayerHurt
@@ -455,7 +385,7 @@ func processFile(unprocessedKey string, localDemName string, idState *IDState, f
 		panic(err)
 	}
 	defer killsFile.Close()
-	killsFile.WriteString("id,tick_id,killer,victim,weapon,assister,is_headshot,is_wallbang,penetrated_objects\n")
+	killsFile.WriteString(hurtHeader)
 
 	p.RegisterEventHandler(func(e events.Kill) {
 		curID := idState.nextKill
@@ -471,21 +401,21 @@ func processFile(unprocessedKey string, localDemName string, idState *IDState, f
 		panic(err)
 	}
 	defer grenadesFile.Close()
-	grenadesFile.WriteString("id,thrower,grenade_type,throw_tick,active_tick,expired_tick,destroy_tick\n")
+	grenadesFile.WriteString(grenadeHeader)
 
 	grenadeTrajectoriesFile, err := os.Create(localGrenadeTrajectoriesCSVName)
 	if err != nil {
 		panic(err)
 	}
 	defer grenadeTrajectoriesFile.Close()
-	grenadeTrajectoriesFile.WriteString("id,grenade_id,id_per_grenade,pos_x,pos_y,pos_z\n")
+	grenadeTrajectoriesFile.WriteString(grenadeTrajectoryHeader)
 
 	p.RegisterEventHandler(func(e events.GrenadeProjectileThrow) {
 		curID := idState.nextGrenade
 		idState.nextGrenade++
 
 		grenadesTracker[e.Projectile.WeaponInstance.UniqueID()] =
-			append(grenadesTracker[e.Projectile.WeaponInstance.UniqueID()], GrenadeTracker{curID,
+			append(grenadesTracker[e.Projectile.WeaponInstance.UniqueID()], grenadeRow{curID,
 				getPlayerBySteamID(&playersTracker, e.Projectile.Thrower),
 				e.Projectile.WeaponInstance.Type,
 				idState.nextTick,
@@ -650,7 +580,7 @@ func processFile(unprocessedKey string, localDemName string, idState *IDState, f
 		panic(err)
 	}
 	defer playerFlashedFile.Close()
-	playerFlashedFile.WriteString("id,tick_id,grenade_id,thrower,victim\n")
+	playerFlashedFile.WriteString(playerFlashedHeader)
 
 	p.RegisterEventHandler(func(e events.PlayerFlashed) {
 		source := getPlayerBySteamID(&playersTracker, e.Attacker)
@@ -678,13 +608,13 @@ func processFile(unprocessedKey string, localDemName string, idState *IDState, f
 		panic(err)
 	}
 	defer plantsFile.Close()
-	plantsFile.WriteString("id,start_tick,end_tick,planter,successful\n")
+	plantsFile.WriteString(plantHeader)
 
 	p.RegisterEventHandler(func(e events.BombPlantBegin) {
 		curID := idState.nextPlant
 		idState.nextPlant++
 
-		curPlant = PlantTracker{curID,
+		curPlant = plantRow{curID,
 			idState.nextTick,
 			0,
 			getPlayerBySteamID(&playersTracker, e.Player),
@@ -722,13 +652,13 @@ func processFile(unprocessedKey string, localDemName string, idState *IDState, f
 		panic(err)
 	}
 	defer defusalsFile.Close()
-	defusalsFile.WriteString("id,plant_id,start_tick,end_tick,defuser,successful\n")
+	defusalsFile.WriteString(defusalHeader)
 
 	p.RegisterEventHandler(func(e events.BombDefuseStart) {
 		curID := idState.nextDefusal
 		idState.nextDefusal++
 
-		curDefusal = DefusalTracker{curID,
+		curDefusal = defusalRow{curID,
 			curPlant.id,
 			idState.nextTick,
 			0,
@@ -756,7 +686,7 @@ func processFile(unprocessedKey string, localDemName string, idState *IDState, f
 		panic(err)
 	}
 	defer explosionsFile.Close()
-	explosionsFile.WriteString("id,plant_id,tick_id\n")
+	explosionsFile.WriteString(explosionHeader)
 
 	p.RegisterEventHandler(func(e events.BombExplode) {
 		curID := idState.nextExplosion

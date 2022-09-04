@@ -1,4 +1,4 @@
-package main
+package internal
 
 import (
 	"fmt"
@@ -6,8 +6,8 @@ import (
 	"os"
 )
 
-// function rather than make on init as need parser to init it's table
-func saveEquipmentFile() {
+// SaveEquipmentFile function rather than make on init as need parser to init it's table
+func SaveEquipmentFile() {
 	equipmentToName := make(map[common.EquipmentType]string)
 	equipmentToName[-1] = "empty"
 	equipmentToName[common.EqUnknown] = common.EqUnknown.String()
@@ -91,7 +91,7 @@ func saveEquipmentFile() {
 	}
 }
 
-func saveGameTypesFile() {
+func SaveGameTypesFile() {
 	gameTypeFactTable, err := os.Create(localGameTypeDimTable)
 	if err != nil {
 		panic(err)
@@ -104,7 +104,7 @@ func saveGameTypesFile() {
 	}
 }
 
-func saveHitGroupsFile() {
+func SaveHitGroupsFile() {
 	hitGroupFactTable, err := os.Create(localHitGroupDimTable)
 	if err != nil {
 		panic(err)

@@ -1,0 +1,407 @@
+package internal
+
+import (
+	"fmt"
+	c "github.com/David-Durst/csknow/demo_parser/internal/constants"
+	"github.com/golang/geo/r3"
+	"github.com/markus-wa/demoinfocs-golang/v3/pkg/demoinfocs/common"
+	"github.com/markus-wa/demoinfocs-golang/v3/pkg/demoinfocs/events"
+)
+
+type RowIndex int64
+
+const InvalidId RowIndex = -1
+
+// IDState the next id to use for each fact table
+type IDState struct {
+	nextGame              RowIndex
+	nextPlayer            RowIndex
+	nextRound             RowIndex
+	nextTick              RowIndex
+	nextPlayerAtTick      RowIndex
+	nextSpotted           RowIndex
+	nextFootstep          RowIndex
+	nextWeaponFire        RowIndex
+	nextKill              RowIndex
+	nextPlayerHurt        RowIndex
+	nextGrenade           RowIndex
+	nextGrenadeTrajectory RowIndex
+	nextPlayerFlashed     RowIndex
+	nextPlant             RowIndex
+	nextDefusal           RowIndex
+	nextExplosion         RowIndex
+}
+
+type tableRow interface {
+	toString() string
+}
+
+type table[T tableRow] struct {
+	rows []T
+}
+
+// GAMES TABLE
+
+const gamesHeader = "id,demo_file,demo_tick_rate,game_tick_rate,map_name,game_type\n"
+
+type gameRow struct {
+	id           RowIndex
+	demoFile     string
+	demoTickRate float64
+	gameTickRate float64
+	mapName      string
+	gameType     c.GameType
+}
+
+func (g gameRow) toString() string {
+	return fmt.Sprintf("%d,%s,%f,%f,%s,%d\n",
+		g.id, g.demoFile, g.demoTickRate, g.gameTickRate, g.mapName, g.gameType)
+}
+
+var curGameRow gameRow
+
+// PLAYERS TABLE
+
+const playersHeader = "id,game_id,name,steam_id\n"
+
+type playerRow struct {
+	id      RowIndex
+	gameId  RowIndex
+	name    string
+	steamID uint64
+}
+
+var defaultPlayer = playerRow{InvalidId, InvalidId, "invalid", 0}
+
+func (p playerRow) toString() string {
+	return fmt.Sprintf("%d,%d,%s,%d\n", p.id, p.gameId, p.name, p.steamID)
+}
+
+var playersTable table[playerRow]
+
+// ROUNDS TABLE
+
+const roundsHeader = "id,game_id,start_tick,end_tick,warmup," +
+	"freeze_time_end,round_number,round_end_reason,winner,t_wins,ct_wins\n"
+
+type roundRow struct {
+	valid          bool
+	id             RowIndex
+	gameID         RowIndex
+	startTick      RowIndex
+	endTick        RowIndex
+	warmup         bool
+	freezeTimeEnd  RowIndex
+	roundNumber    int
+	roundEndReason int
+	winner         int
+	tWins          int
+	ctWins         int
+}
+
+func (r roundRow) toString() string {
+	return fmt.Sprintf("%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d\n",
+		r.id, r.gameID, r.startTick, r.endTick, boolToInt(r.warmup), r.freezeTimeEnd,
+		r.roundNumber, r.roundEndReason, r.winner, r.tWins, r.ctWins)
+}
+
+var roundsTable table[roundRow]
+
+// TICKS TABLE
+
+const ticksHeader = "id,round_id,game_time,demo_tick_number,game_tick_number,bomb_carrier,bomb_x,bomb_y,bomb_z\n"
+
+type tickRow struct {
+	id             RowIndex
+	roundId        RowIndex
+	gameTime       int64
+	demoTickNumber int64
+	gameTickNumber int64
+	bombCarrier    RowIndex
+	bombX          float64
+	bombY          float64
+	bombZ          float64
+}
+
+func (t tickRow) toString() string {
+	return fmt.Sprintf("%d,%d,%d,%d,%d,%d,%.2f,%.2f,%.2f\n",
+		t.id, t.roundId, t.gameTime, t.demoTickNumber, t.gameTickNumber,
+		t.bombCarrier, t.bombX, t.bombY, t.bombZ)
+}
+
+var ticksTable table[tickRow]
+
+// PLAYERATTICKS TABLE
+
+const playerAtTicksHeader = "id,player_id,tick_id,pos_x,pos_y,pos_z,eye_pos_z,vel_x,vel_y,vel_z,view_x,view_y,aim_punch_x,aim_punch_y," +
+	"view_punch_x,view_punch_y,team,health,armor,has_helmet,is_alive,duck_amount,is_walking,is_scoped," +
+	"is_airborne,remaining_flash_time,active_weapon,main_weapon,primary_bullets_clip," +
+	"primary_bullets_reserve,secondary_weapon,secondary_bullets_clip,secondary_bullets_reserve,num_he," +
+	"num_flash,num_smoke,num_incendiary,num_molotov,num_decoy,num_zeus,has_defuser,has_bomb,money,ping\n"
+
+type playerAtTickRow struct {
+	id                      RowIndex
+	playerId                RowIndex
+	tickId                  RowIndex
+	posX                    float64
+	posY                    float64
+	posZ                    float64
+	eyePosZ                 float64
+	velX                    float64
+	velY                    float64
+	velZ                    float64
+	viewX                   float64
+	viewY                   float64
+	aimPunchX               float64
+	aimPunchY               float64
+	viewPunchX              float64
+	viewPunchY              float64
+	team                    int
+	health                  int
+	armor                   int
+	hasHelmet               bool
+	isAlive                 bool
+	duckAmount              float64
+	isWalking               bool
+	isScoped                bool
+	isAirborne              bool
+	flashDuration           float64
+	activeWeapon            common.EquipmentType
+	primaryWeapon           common.EquipmentType
+	primaryBulletsClip      int
+	primaryBulletsReserve   int
+	secondaryWeapon         common.EquipmentType
+	secondaryBulletsClip    int
+	secondaryBulletsReserve int
+	numHE                   int
+	numFlash                int
+	numSmoke                int
+	numIncendiary           int
+	numMolotov              int
+	numDecoy                int
+	numZeus                 int
+	hasDefuser              bool
+	hasBomb                 bool
+	money                   int
+	ping                    int
+}
+
+func (p playerAtTickRow) toString() string {
+	return fmt.Sprintf(
+		"%d,%d,%d,%.2f,%.2f,%.2f,%.2f,"+
+			"%.2f,%.2f,%.2f,"+
+			"%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,"+
+			"%d,%d,%d,%d,"+
+			"%d,%.2f,%d,%d,%d,"+
+			"%f,%d,%d,%d,"+
+			"%d,%d,%d,%d,"+
+			"%d,%d,%d,%d,%d,%d,%d,"+
+			"%d,%d,%d,%d\n",
+		p.id, p.playerId, p.tickId, p.posX, p.posY, p.posZ, p.eyePosZ,
+		p.velX, p.velY, p.velZ,
+		p.viewX, p.viewY, p.aimPunchX, p.aimPunchY, p.viewPunchX, p.viewPunchY,
+		p.team, p.health, p.armor, boolToInt(p.hasHelmet),
+		boolToInt(p.isAlive), p.duckAmount, boolToInt(p.isWalking), boolToInt(p.isScoped), boolToInt(p.isAirborne),
+		p.flashDuration, p.activeWeapon, p.primaryWeapon, p.primaryBulletsClip,
+		p.primaryBulletsReserve, p.secondaryWeapon, p.secondaryBulletsClip, p.secondaryBulletsReserve,
+		p.numHE, p.numFlash, p.numSmoke, p.numIncendiary, p.numMolotov, p.numDecoy, p.numZeus,
+		boolToInt(p.hasDefuser), boolToInt(p.hasBomb), p.money, p.ping)
+}
+
+var playerAtTicksTable table[playerAtTickRow]
+
+// SPOTTED TABLE
+
+const spottedHeader = "id,tick_id,spotted_player,spotter_player,is_spotted\n"
+
+type spottedRow struct {
+	id            RowIndex
+	tickId        RowIndex
+	spottedPlayer RowIndex
+	spotterPlayer RowIndex
+	isSpotted     bool
+}
+
+func (s spottedRow) toString() string {
+	return fmt.Sprintf("%d,%d,%d,%d,%d\n",
+		s.id, s.tickId, s.spottedPlayer, s.spotterPlayer, boolToInt(s.isSpotted))
+}
+
+var spottedTable table[spottedRow]
+
+// FOOTSTEP TABLE
+
+const footstepHeader = "id,tick_id,stepping_player\n"
+
+type footstepRow struct {
+	id             RowIndex
+	tickId         RowIndex
+	steppingPlayer RowIndex
+}
+
+func (f footstepRow) toString() string {
+	return fmt.Sprintf("%d,%d,%d\n", f.id, f.tickId, f.steppingPlayer)
+}
+
+var footstepTable table[footstepRow]
+
+// WEAPONFIRE TABLE
+
+const weaponFireHeader = "id,tick_id,shooter,weapon\n"
+
+type weaponFireRow struct {
+	id      RowIndex
+	tickId  RowIndex
+	shooter RowIndex
+	weapon  common.EquipmentType
+}
+
+func (w weaponFireRow) toString() string {
+	return fmt.Sprintf("%d,%d,%d,%d\n", w.id, w.tickId, w.shooter, w.weapon)
+}
+
+var weaponFireTable table[weaponFireRow]
+
+// HURT TABLE
+
+const hurtHeader = "id,tick_id,victim,attacker,weapon,armor_damage,armor,health_damage,health,hit_group\n"
+
+type hurtRow struct {
+	id           RowIndex
+	tickId       RowIndex
+	victim       RowIndex
+	attacker     RowIndex
+	weapon       common.EquipmentType
+	armorDamage  int
+	armor        int
+	healthDamage int
+	health       int
+	hitGroup     events.HitGroup
+}
+
+func (h hurtRow) toString() string {
+	return fmt.Sprintf(
+		"%d,%d,%d,%d,"+
+			"%d,%d,%d,%d,%d,%d\n",
+		h.id, h.tickId, h.victim, h.attacker,
+		h.weapon, h.armorDamage, h.armor, h.healthDamage, h.health, h.hitGroup)
+}
+
+var hurtTable table[hurtRow]
+
+// GRENADE TABLE
+
+const grenadeHeader = "id,thrower,grenade_type,throw_tick,active_tick,expired_tick,destroy_tick\n"
+
+type grenadeRow struct {
+	id          RowIndex
+	thrower     RowIndex
+	grenadeType common.EquipmentType
+	throwTick   RowIndex
+	activeTick  RowIndex
+	expiredTick RowIndex
+	destroyTick RowIndex
+	trajectory  []r3.Vector
+}
+
+func (g grenadeRow) toString() string {
+	return fmt.Sprintf("%d,%d,%d,%d,%d,%d,%d,%d\n",
+		g.id, g.thrower, g.grenadeType, g.throwTick, g.activeTick, g.expiredTick, g.expiredTick, g.destroyTick)
+}
+
+var grenadeTable table[grenadeRow]
+
+// GRENADETRAJECTORY TABLE
+
+const grenadeTrajectoryHeader = "id,grenade_id,id_per_grenade,pos_x,pos_y,pos_z\n"
+
+type grenadeTrajectoryRow struct {
+	id           RowIndex
+	grenadeId    RowIndex
+	idPerGrenade RowIndex
+	posX         float64
+	posY         float64
+	posZ         float64
+}
+
+func (g grenadeTrajectoryRow) toString() string {
+	return fmt.Sprintf("%d,%d,%d,%.2f,%.2f,%.2f\n",
+		g.id, g.grenadeId, g.idPerGrenade, g.posX, g.posY, g.posZ)
+}
+
+var grenadeTrajectoryTable table[grenadeTrajectoryRow]
+
+// PLAYERFLASHED TABLE
+
+const playerFlashedHeader = "id,tick_id,grenade_id,thrower,victim\n"
+
+type playerFlashedRow struct {
+	id        RowIndex
+	tickId    RowIndex
+	grenadeId RowIndex
+	thrower   RowIndex
+	victim    RowIndex
+}
+
+func (p playerFlashedRow) toString() string {
+	return fmt.Sprintf("%d,%d,%d,%d,%d\n",
+		p.id, p.tickId, p.grenadeId, p.thrower, p.victim)
+}
+
+var playerFlashedTable table[playerFlashedRow]
+
+// PLANT TABLE
+
+const plantHeader = "id,start_tick,end_tick,planter,successful\n"
+
+type plantRow struct {
+	//will reset to not valid at end of round
+	id         RowIndex
+	startTick  RowIndex
+	endTick    RowIndex
+	planter    RowIndex
+	successful bool
+}
+
+func (p plantRow) toString() string {
+	return fmt.Sprintf("%d,%d,%d,%d,%d\n",
+		p.id, p.startTick, p.endTick, p.planter, boolToInt(p.successful))
+}
+
+var plantTable table[plantRow]
+
+// DEFUSAL TABLE
+
+const defusalHeader = "id,plant_id,start_tick,end_tick,defuser,successful\n"
+
+type defusalRow struct {
+	id         RowIndex
+	plantId    RowIndex
+	startTick  RowIndex
+	endTick    RowIndex
+	defuser    RowIndex
+	successful bool
+}
+
+func (d defusalRow) toString() string {
+	return fmt.Sprintf("%d,%d,%d,%d,%d,%d\n",
+		d.id, d.plantId, d.startTick, d.endTick, d.defuser, boolToInt(d.successful))
+}
+
+var defusalTable table[defusalRow]
+
+// EXPLOSION TABLE
+
+const explosionHeader = "id,plant_id,tick_id\n"
+
+type explosionRow struct {
+	id      RowIndex
+	plantId RowIndex
+	tickId  RowIndex
+}
+
+func (e explosionRow) toString() string {
+	return fmt.Sprintf("%d,%d,%d\n", e.id, e.plantId, e.tickId)
+}
+
+var explosionTable table[explosionRow]
