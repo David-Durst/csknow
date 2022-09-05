@@ -2,6 +2,7 @@ package internal
 
 import (
 	"fmt"
+	c "github.com/David-Durst/csknow/demo_parser/internal/constants"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
@@ -9,7 +10,9 @@ import (
 	"path"
 )
 
-func downloadFile(downloader *s3manager.Downloader, fileKey string, localFileName string) {
+const BucketName = "csknow"
+
+func DownloadFile(downloader *s3manager.Downloader, fileKey string, localFileName string) {
 	// Create a file to write the S3 Object contents to.
 	awsF, err := os.Create(localFileName)
 	if err != nil {
@@ -20,7 +23,7 @@ func downloadFile(downloader *s3manager.Downloader, fileKey string, localFileNam
 
 	// Write the contents of S3 Object to the file
 	_, err = downloader.Download(awsF, &s3.GetObjectInput{
-		Bucket: aws.String(bucketName),
+		Bucket: aws.String(BucketName),
 		Key:    aws.String(fileKey),
 	})
 	if err != nil {
@@ -29,7 +32,7 @@ func downloadFile(downloader *s3manager.Downloader, fileKey string, localFileNam
 	}
 }
 
-func uploadFile(uploader *s3manager.Uploader, csvPath string, fileKey string, csvPrefix string) {
+func UploadFile(uploader *s3manager.Uploader, csvPath string, fileKey string, csvPrefix string) {
 	csvFile, err := os.Open(csvPath)
 	if err != nil {
 		panic(err)
@@ -37,7 +40,7 @@ func uploadFile(uploader *s3manager.Uploader, csvPath string, fileKey string, cs
 	defer csvFile.Close()
 
 	_, err = uploader.Upload(&s3manager.UploadInput{
-		Bucket: aws.String(bucketName),
+		Bucket: aws.String(BucketName),
 		Key:    aws.String(csvPrefix + path.Base(fileKey) + ".csv"),
 		Body:   csvFile,
 	})
@@ -47,20 +50,20 @@ func uploadFile(uploader *s3manager.Uploader, csvPath string, fileKey string, cs
 	}
 }
 
-func uploadCSVs(uploader *s3manager.Uploader, fileKey string) {
-	uploadFile(uploader, localRoundsCSVName, fileKey+"_rounds", csvPrefixLocal)
-	uploadFile(uploader, localPlayersCSVName, fileKey+"_players", csvPrefixLocal)
-	uploadFile(uploader, localTicksCSVName, fileKey+"_ticks", csvPrefixLocal)
-	uploadFile(uploader, localPlayerAtTickCSVName, fileKey+"_player_at_tick", csvPrefixLocal)
-	uploadFile(uploader, localSpottedCSVName, fileKey+"_spotted", csvPrefixLocal)
-	uploadFile(uploader, localFootstepCSVName, fileKey+"_footstep", csvPrefixLocal)
-	uploadFile(uploader, localWeaponFireCSVName, fileKey+"_weapon_fire", csvPrefixLocal)
-	uploadFile(uploader, localHurtCSVName, fileKey+"_hurt", csvPrefixLocal)
-	uploadFile(uploader, localGrenadesCSVName, fileKey+"_grenades", csvPrefixLocal)
-	uploadFile(uploader, localGrenadeTrajectoriesCSVName, fileKey+"_grenade_trajectories", csvPrefixLocal)
-	uploadFile(uploader, localPlayerFlashedCSVName, fileKey+"_flashed", csvPrefixLocal)
-	uploadFile(uploader, localPlantsCSVName, fileKey+"_plants", csvPrefixLocal)
-	uploadFile(uploader, localDefusalsCSVName, fileKey+"_defusals", csvPrefixLocal)
-	uploadFile(uploader, localExplosionsCSVName, fileKey+"_explosions", csvPrefixLocal)
-	uploadFile(uploader, localKillsCSVName, fileKey+"_kills", csvPrefixLocal)
+func UploadCSVs(uploader *s3manager.Uploader, fileKey string, csvPrefixLocal string) {
+	UploadFile(uploader, c.LocalRoundsCSVName, fileKey+"_rounds", csvPrefixLocal)
+	UploadFile(uploader, c.LocalPlayersCSVName, fileKey+"_players", csvPrefixLocal)
+	UploadFile(uploader, c.LocalTicksCSVName, fileKey+"_ticks", csvPrefixLocal)
+	UploadFile(uploader, c.LocalPlayerAtTickCSVName, fileKey+"_player_at_tick", csvPrefixLocal)
+	UploadFile(uploader, c.LocalSpottedCSVName, fileKey+"_spotted", csvPrefixLocal)
+	UploadFile(uploader, c.LocalFootstepCSVName, fileKey+"_footstep", csvPrefixLocal)
+	UploadFile(uploader, c.LocalWeaponFireCSVName, fileKey+"_weapon_fire", csvPrefixLocal)
+	UploadFile(uploader, c.LocalHurtCSVName, fileKey+"_hurt", csvPrefixLocal)
+	UploadFile(uploader, c.LocalGrenadesCSVName, fileKey+"_grenades", csvPrefixLocal)
+	UploadFile(uploader, c.LocalGrenadeTrajectoriesCSVName, fileKey+"_grenade_trajectories", csvPrefixLocal)
+	UploadFile(uploader, c.LocalPlayerFlashedCSVName, fileKey+"_flashed", csvPrefixLocal)
+	UploadFile(uploader, c.LocalPlantsCSVName, fileKey+"_plants", csvPrefixLocal)
+	UploadFile(uploader, c.LocalDefusalsCSVName, fileKey+"_defusals", csvPrefixLocal)
+	UploadFile(uploader, c.LocalExplosionsCSVName, fileKey+"_explosions", csvPrefixLocal)
+	UploadFile(uploader, c.LocalKillsCSVName, fileKey+"_kills", csvPrefixLocal)
 }

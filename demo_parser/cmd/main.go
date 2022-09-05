@@ -1,19 +1,16 @@
 package main
 
 import (
-	"bufio"
 	"flag"
 	"fmt"
-	i "github.com/David-Durst/csknow/demo_parser/internal"
+	d "github.com/David-Durst/csknow/demo_parser/internal"
 	c "github.com/David-Durst/csknow/demo_parser/internal/constants"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
-	"log"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 )
 
@@ -28,6 +25,7 @@ const trainUnprocessedPrefix = "demos/train_data/unprocessed/"
 const trainProcessedPrefix = "demos/train_data/processed/"
 const trainCsvPrefixBase = "demos/train_data/csvs/"
 
+// paths to CSVs in AWS
 var csvPrefixLocal string
 var csvPrefixGlobal string
 
@@ -36,44 +34,8 @@ func updatePrefixs() {
 	csvPrefixGlobal = csvPrefixBase + "global/"
 }
 
-const bucketName = "csknow"
-
-func parseInputStateCSV() i.IDState {
-	idStateFile, err := os.Open(i.inputStateCSVName)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer idStateFile.Close()
-
-	var values []int64
-	scanner := bufio.NewScanner(idStateFile)
-	for scanner.Scan() {
-		// drop all the labels, save the values
-		valueStr := strings.Split(scanner.Text(), ",")[1]
-		i, _ := strconv.ParseInt(valueStr, 10, 64)
-		values = append(values, i)
-	}
-	return internal.IDState{values[0], values[1], values[2], values[3], values[4], values[5], values[6],
-		values[7], values[8], values[9], values[10], values[11], values[12], values[13], values[14], values[15]}
-}
-
-func saveOutputStateCSV(idState *i.IDState) {
-	idStateFile, err := os.Create(i.outputStateCSVName)
-	if err != nil {
-		panic(err)
-	}
-	defer idStateFile.Close()
-	idStateFile.WriteString(fmt.Sprintf(
-		"nextGame,%d\nnextPlayer,%d\nnextRound,%d\nnextTick,%d\n"+
-			"nextPlayerAtTick,%d\nnextSpotted,%d\nnextFootstep,%d\nnextWeaponFire,%d\nnextKill,%d\nnextPlayerHurt,%d\n"+
-			"nextGrenade,%d\nnextGrenadeTrajectory,%d\nnextPlayerFlashed,%d\nnextPlant,%d\nnextDefusal,%d\nnextExplosion,%d\n",
-		idState.nextGame, idState.nextPlayer, idState.nextRound, idState.nextTick,
-		idState.nextPlayerAtTick, idState.nextSpotted, idState.nextFootstep, idState.nextWeaponFire, idState.nextKill, idState.nextPlayerHurt,
-		idState.nextGrenade, idState.nextGrenadeTrajectory, idState.nextPlayerFlashed, idState.nextPlant, idState.nextDefusal, idState.nextExplosion))
-}
-
 func main() {
-	startIDState := i.IDState{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+	startIDState := d.DefaultIDState()
 
 	trainDataFlag := flag.Bool("t", true, "set if not using bot training data")
 	// if reprocessing, don't move the demos
@@ -90,14 +52,14 @@ func main() {
 		os.Exit(0)
 	}
 
-	i.SaveGameTypesFile()
-	i.SaveHitGroupsFile()
+	d.SaveGameTypesFile()
+	d.SaveHitGroupsFile()
 	if *localFlag {
 		if !firstRun {
-			startIDState = parseInputStateCSV()
+			startIDState = d.ParseInputStateCSV()
 		}
-		processFile(*localDemName, *localDemName, &startIDState, firstRun, 1)
-		saveOutputStateCSV(&startIDState)
+		d.ProcessFile(*localDemName, *localDemName, &startIDState, firstRun, 1)
+		d.SaveOutputStateCSV(&startIDState)
 		os.Exit(0)
 	}
 
@@ -126,9 +88,9 @@ func main() {
 		sourcePrefix = processedSmallPrefix
 	}
 
-	idStateAWS := csvPrefixBase + baseStateCSVName
+	idStateAWS := csvPrefixBase + c.BaseStateCSVName
 	result, err := svc.ListObjectsV2(&s3.ListObjectsV2Input{
-		Bucket: aws.String(bucketName),
+		Bucket: aws.String(d.BucketName),
 		Prefix: &idStateAWS,
 	})
 	if err != nil {
@@ -137,15 +99,15 @@ func main() {
 
 	// if not reprocessing and already have an id state, start from there
 	if *result.KeyCount == 1 && !*reprocessFlag && !*subsetReprocessFlag {
-		downloadFile(downloader, *result.Contents[0].Key, inputStateCSVName)
-		startIDState = parseInputStateCSV()
+		d.DownloadFile(downloader, *result.Contents[0].Key, c.InputStateCSVName)
+		startIDState = d.ParseInputStateCSV()
 		// set first run to false since found an old state and not reprocessing
 		firstRun = false
 	}
 
-	gamesAWS := csvPrefixGlobal + gamesCSVName
+	gamesAWS := csvPrefixGlobal + c.GamesCSVName
 	gamesResult, gamesErr := svc.ListObjectsV2(&s3.ListObjectsV2Input{
-		Bucket: aws.String(bucketName),
+		Bucket: aws.String(d.BucketName),
 		Prefix: &gamesAWS,
 	})
 	if gamesErr != nil {
@@ -154,7 +116,7 @@ func main() {
 
 	// if not reprocessing and already have an games file, start from there
 	if *gamesResult.KeyCount == 1 && !*reprocessFlag && !*subsetReprocessFlag {
-		downloadFile(downloader, *gamesResult.Contents[0].Key, gamesCSVName)
+		d.DownloadFile(downloader, *gamesResult.Contents[0].Key, c.GamesCSVName)
 	}
 
 	i := 0
@@ -162,7 +124,7 @@ func main() {
 	for gameTypeIndex, gameTypeString := range localGameTypes {
 		sourcePrefixWithType := sourcePrefix + gameTypeString + "/"
 		svc.ListObjectsV2Pages(&s3.ListObjectsV2Input{
-			Bucket: aws.String(bucketName),
+			Bucket: aws.String(d.BucketName),
 			Prefix: aws.String(sourcePrefixWithType),
 		}, func(p *s3.ListObjectsV2Output, last bool) bool {
 			fmt.Printf("Processing page %d\n", i)
@@ -173,10 +135,10 @@ func main() {
 					continue
 				}
 				fmt.Printf("Handling file: %s\n", *obj.Key)
-				downloadFile(downloader, *obj.Key, *localDemName)
-				processFile(*obj.Key, *localDemName, &startIDState, firstRun, gameTypeIndex)
+				d.DownloadFile(downloader, *obj.Key, *localDemName)
+				d.ProcessFile(*obj.Key, *localDemName, &startIDState, firstRun, c.GameType(gameTypeIndex))
 				firstRun = false
-				uploadCSVs(uploader, *obj.Key)
+				d.UploadCSVs(uploader, *obj.Key, csvPrefixLocal)
 				filesToMove = append(filesToMove, *obj.Key)
 				destinationAppendix = append(destinationAppendix, gameTypeString+"/")
 			}
@@ -189,24 +151,24 @@ func main() {
 		os.Exit(0)
 	}
 
-	uploadFile(uploader, gamesCSVName, "global_games", csvPrefixGlobal)
-	uploadFile(uploader, localEquipmentDimTable, "dimension_table_equipment", csvPrefixGlobal)
-	uploadFile(uploader, localGameTypeDimTable, "dimension_table_game_types", csvPrefixGlobal)
-	uploadFile(uploader, localHitGroupDimTable, "dimension_table_hit_groups", csvPrefixGlobal)
+	d.UploadFile(uploader, c.GamesCSVName, "global_games", csvPrefixGlobal)
+	d.UploadFile(uploader, c.LocalEquipmentDimTable, "dimension_table_equipment", csvPrefixGlobal)
+	d.UploadFile(uploader, c.LocalGameTypeDimTable, "dimension_table_game_types", csvPrefixGlobal)
+	d.UploadFile(uploader, c.LocalHitGroupDimTable, "dimension_table_hit_groups", csvPrefixGlobal)
 
 	// save the id state
-	saveOutputStateCSV(&startIDState)
-	uploadFile(uploader, outputStateCSVName, "global_id_state", csvPrefixBase)
+	d.SaveOutputStateCSV(&startIDState)
+	d.UploadFile(uploader, c.OutputStateCSVName, "global_id_state", csvPrefixBase)
 
 	if !*reprocessFlag && !*subsetReprocessFlag {
 		for i, fileName := range filesToMove {
 			svc.CopyObject(&s3.CopyObjectInput{
-				CopySource: aws.String(bucketName + "/" + fileName),
-				Bucket:     aws.String(bucketName),
+				CopySource: aws.String(d.BucketName + "/" + fileName),
+				Bucket:     aws.String(d.BucketName),
 				Key:        aws.String(processedPrefix + destinationAppendix[i] + filepath.Base(fileName)),
 			})
 			svc.DeleteObject(&s3.DeleteObjectInput{
-				Bucket: aws.String(bucketName),
+				Bucket: aws.String(d.BucketName),
 				Key:    aws.String(fileName),
 			})
 		}

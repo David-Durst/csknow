@@ -32,6 +32,10 @@ type IDState struct {
 	nextExplosion         RowIndex
 }
 
+func DefaultIDState() IDState {
+	return IDState{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+}
+
 type tableRow interface {
 	toString() string
 }

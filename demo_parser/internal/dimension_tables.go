@@ -2,6 +2,7 @@ package internal
 
 import (
 	"fmt"
+	c "github.com/David-Durst/csknow/demo_parser/internal/constants"
 	"github.com/markus-wa/demoinfocs-golang/v3/pkg/demoinfocs/common"
 	"os"
 )
@@ -79,7 +80,7 @@ func SaveEquipmentFile() {
 	equipmentToName[common.EqSmoke] = common.EqSmoke.String()
 	equipmentToName[common.EqHE] = common.EqHE.String()
 
-	equipmentFactTable, err := os.Create(localEquipmentDimTable)
+	equipmentFactTable, err := os.Create(c.LocalEquipmentDimTable)
 	if err != nil {
 		panic(err)
 	}
@@ -92,20 +93,20 @@ func SaveEquipmentFile() {
 }
 
 func SaveGameTypesFile() {
-	gameTypeFactTable, err := os.Create(localGameTypeDimTable)
+	gameTypeFactTable, err := os.Create(c.LocalGameTypeDimTable)
 	if err != nil {
 		panic(err)
 	}
 	defer gameTypeFactTable.Close()
 	gameTypeFactTable.WriteString("id,table_type\n")
 
-	for id, name := range gameTypes {
-		gameTypeFactTable.WriteString(fmt.Sprintf("%d,%s\n", id, name))
+	for i := 0; i < int(c.NUM_GAME_TYPES); i++ {
+		gameTypeFactTable.WriteString(fmt.Sprintf("%d,%s\n", i, c.GameTypeIntToString(i)))
 	}
 }
 
 func SaveHitGroupsFile() {
-	hitGroupFactTable, err := os.Create(localHitGroupDimTable)
+	hitGroupFactTable, err := os.Create(c.LocalHitGroupDimTable)
 	if err != nil {
 		panic(err)
 	}

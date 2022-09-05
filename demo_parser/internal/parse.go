@@ -39,7 +39,7 @@ func finishGarbageRound(round *roundRow, idState IDState, tWins int, ctWins int)
 	round.ctWins = ctWins
 }
 
-func processFile(unprocessedKey string, localDemName string, idState *IDState, firstRun bool, gameType c.GameType) {
+func ProcessFile(unprocessedKey string, localDemName string, idState *IDState, firstRun bool, gameType c.GameType) {
 	demFilePath := path.Base(unprocessedKey)
 	fmt.Printf("localDemName: %s\n", localDemName)
 	f, err := os.Open(localDemName)
