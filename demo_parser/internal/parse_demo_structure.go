@@ -123,27 +123,25 @@ func ProcessStructure(unprocessedKey string, localDemName string, idState *IDSta
 	}
 }
 
-func ableToClinchOT(teamAScore int, teamBScore int, i int) bool {
-	divisibleRounds := (teamAScore-c.HalfRegulationRounds)%c.HalfOTRounds == 0
-	enoughRounds := teamAScore > teamBScore+1
-	return divisibleRounds && enoughRounds
-}
-
 // period is regulation, OT 0, OT 1, etc
 type periodIndices struct {
-	lastFirstHalfStartIndex int
-	candidateFirstHalfStartIndex int
-	lastFirstHalfEndIndex int
-	lastSecondHalfStartIndex int
+	lastFirstHalfStartIndex       int
+	candidateFirstHalfStartIndex  int
+	lastFirstHalfEndIndex         int
+	lastSecondHalfStartIndex      int
 	candidateSecondHalfStartIndex int
-	lastSecondHalfEndIndex int
+	lastSecondHalfEndIndex        int
 }
 
+var defaultIndices periodIndices = periodIndices{
+	InvalidInt, InvalidInt, InvalidInt,
+	InvalidInt, InvalidInt, InvalidInt}
+
 func computePeriodIndices(lastIndices periodIndices, regulation bool, otNumber int) periodIndices {
-	var resultIndices periodIndices
+	resultIndices := defaultIndices
 	otStartScore := 0
 	if !regulation {
-		otStartScore = c.HalfRegulationRounds + otNumber * c.HalfOTRounds
+		otStartScore = c.HalfRegulationRounds + otNumber*c.HalfOTRounds
 	}
 	halfPeriodRounds := c.HalfRegulationRounds
 	if !regulation {
@@ -156,7 +154,8 @@ func computePeriodIndices(lastIndices periodIndices, regulation bool, otNumber i
 		if ctPeriodWins == 0 && tPeriodWins == 0 {
 			resultIndices.candidateFirstHalfStartIndex = i
 		}
-		if ctPeriodWins + tPeriodWins + 1 == halfPeriodRounds {
+		// end half when rounds are half total period rounds
+		if ctPeriodWins+tPeriodWins+1 == halfPeriodRounds {
 			resultIndices.lastFirstHalfStartIndex = resultIndices.candidateFirstHalfStartIndex
 			resultIndices.lastFirstHalfEndIndex = i
 		}
@@ -164,20 +163,23 @@ func computePeriodIndices(lastIndices periodIndices, regulation bool, otNumber i
 	for i := 0; i < filteredRoundsTable.len(); i++ {
 		ctPeriodWins := filteredRoundsTable.rows[i].ctWins - otStartScore
 		tPeriodWins := filteredRoundsTable.rows[i].tWins - otStartScore
-		if ctPeriodWins + tPeriodWins == halfPeriodRounds {
+		if ctPeriodWins+tPeriodWins == halfPeriodRounds {
 			resultIndices.candidateSecondHalfStartIndex = i
 		}
-		// in OT once both teams have 15 rounds
+		// last round where a team hasn't clinched is last round of the period
 		if (ctPeriodWins == halfPeriodRounds || tPeriodWins == halfPeriodRounds) &&
 			(ctPeriodWins < halfPeriodRounds || tPeriodWins < halfPeriodRounds) {
 			resultIndices.lastSecondHalfStartIndex = resultIndices.candidateSecondHalfStartIndex
 			resultIndices.lastSecondHalfEndIndex = i
 		}
 	}
+
+	return resultIndices
 }
 
 func FilterRounds(idState *IDState) {
-	filteredRoundsTable = unfilteredRoundsTable
+	filteredRoundsTable.rows = make([]roundRow, unfilteredRoundsTable.len())
+	copy(filteredRoundsTable.rows, unfilteredRoundsTable.rows)
 	if filteredRoundsTable.len() == 0 {
 		return
 	}
@@ -194,76 +196,46 @@ func FilterRounds(idState *IDState) {
 		}
 	}
 	filteredRoundsTable.rows = filteredRoundsTable.rows[:newRoundIndex]
+	var indices []periodIndices
 
-	defaultIndices := periodIndices{
-		InvalidInt, InvalidInt, InvalidInt,
-		InvalidInt, InvalidInt, InvalidInt
-	}
 	// next, grab the first half
 	// 319_titan-epsilon_de_dust2.dem is example of warmup using sourcemod plugin
 	// so not marked as warmup but is warmup
 	// only way I've come up with to remove these is to look for last first half
-	regulationIndices := defaultIndices
-	for i := 0; i < filteredRoundsTable.len(); i++ {
-		if filteredRoundsTable.rows[i].ctWins == 0 && filteredRoundsTable.rows[i].tWins == 0 {
-			regulationIndices.candidateFirstHalfStartIndex = i
-		}
-		if filteredRoundsTable.rows[i].ctWins+filteredRoundsTable.rows[i].tWins+1 == c.HalfRegulationRounds {
-			regulationIndices.lastFirstHalfStartIndex = regulationIndices.candidateFirstHalfStartIndex
-			regulationIndices.lastFirstHalfEndIndex = i
-		}
-	}
-	for i := 0; i < filteredRoundsTable.len(); i++ {
-		if filteredRoundsTable.rows[i].ctWins+filteredRoundsTable.rows[i].tWins == c.HalfRegulationRounds {
-			regulationIndices.candidateSecondHalfStartIndex = i
-		}
-		// in OT once both teams have 15 rounds
-		if (filteredRoundsTable.rows[i].ctWins == 15 || filteredRoundsTable.rows[i].tWins == 15) &&
-			(filteredRoundsTable.rows[i].ctWins < 15 || filteredRoundsTable.rows[i].tWins < 15) {
-			regulationIndices.lastSecondHalfStartIndex = regulationIndices.candidateSecondHalfStartIndex
-			regulationIndices.lastSecondHalfEndIndex = i
+	indices = append(indices, computePeriodIndices(defaultIndices, true, 0))
+
+	for otNumber := 0; true; otNumber++ {
+		tmpIndices := computePeriodIndices(indices[len(indices)-1], false, otNumber)
+		if tmpIndices.lastSecondHalfEndIndex != InvalidInt {
+			indices = append(indices, tmpIndices)
+		} else {
+			break
 		}
 	}
 
-	// get each OT, OTs can be separate
-	// allow breaks between OT halfs
-	var otsIndices []periodIndices
-	// search for all possible starts of OT, can have downtime between regulation and OT
-	// no demo of it, but I've had it happen in my games
-	for i := regulationIndices.lastSecondHalfEndIndex + 1; i < filteredRoundsTable.len(); i++ {
-		curOTNumber := len(otsIndices)
-		// first half of each OT
-		ctCurOTWins := filteredRoundsTable.rows[i].ctWins - (c.HalfRegulationRounds + curOTNumber * c.HalfOTRounds)
-		tCurOTWins := filteredRoundsTable.rows[i].tWins - (c.HalfRegulationRounds + curOTNumber * c.HalfOTRounds)
-		if ctCurOTWins == 0 && tCurOTWins == 0 {
-			if len(otsIndices) == curOTNumber {
-				otsIndices = append(otsIndices, defaultIndices)
-			} else {
-				otsIndices[curOTNumber].candidateFirstHalfStartIndex = i
+	// merge periods and mark OT rounds
+	tmpRounds := make([]roundRow, 0)
+	for i := 0; i < len(indices); i++ {
+		for j := indices[i].lastFirstHalfStartIndex; j <= indices[i].lastFirstHalfEndIndex; j++ {
+			if i > 0 {
+				filteredRoundsTable.rows[j].overtime = true
 			}
+			tmpRounds = append(tmpRounds, filteredRoundsTable.rows[j])
 		}
-		if ctCurOTWins + tCurOTWins +
-		// get at least one half of OT (aka min to clinch OT win) with appropriate score board round increases,
-		// then have real OT
-		// subtract 1 from target sum of scores as record score during round, not score after round
-		if ableToClinchOT(filteredRoundsTable.rows[i].ctWins, filteredRoundsTable.rows[i].tWins, i) ||
-			ableToClinchOT(filteredRoundsTable.rows[i].tWins, filteredRoundsTable.rows[i].ctWins, i) {
-			haveOT = true
-			lastOTStartIndex = candidateOTStartIndex
-			lastOTEndIndex = i
+		for j := indices[i].lastSecondHalfStartIndex; j <= indices[i].lastSecondHalfEndIndex; j++ {
+			if i > 0 {
+				filteredRoundsTable.rows[j].overtime = true
+			}
+			// 2351898_128353_g2-vs-ence-m3-dust2_5f2f16a6-292a-11ec-8e27-0a58a9feac02.dem
+			// end of OT has no officila round end as using plugin to manage OT, just ends as soon as round over
+			// so if official round end invalid at end of period, just make it equal to regular round end
+			if filteredRoundsTable.rows[j].endOfficialTick == InvalidId {
+				filteredRoundsTable.rows[j].endOfficialTick = filteredRoundsTable.rows[j].endTick
+			}
+			tmpRounds = append(tmpRounds, filteredRoundsTable.rows[j])
 		}
 	}
-
-	// merge halfs
-	tmpHalfs := make([]roundRow, 0,
-		lastFirstHalfEndIndex-lastFirstHalfStartIndex+1+lastSecondHalfEndIndex-lastSecondHalfStartIndex+1)
-	for i := lastFirstHalfStartIndex; i <= lastFirstHalfEndIndex; i++ {
-		tmpHalfs = append(tmpHalfs, filteredRoundsTable.rows[i])
-	}
-	for i := lastSecondHalfStartIndex; i <= lastSecondHalfEndIndex; i++ {
-		tmpHalfs = append(tmpHalfs, filteredRoundsTable.rows[i])
-	}
-	filteredRoundsTable.rows = tmpHalfs
+	filteredRoundsTable.rows = tmpRounds
 
 	// first round ids/numbers
 	for i := 0; i < filteredRoundsTable.len(); i++ {
