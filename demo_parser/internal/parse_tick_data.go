@@ -1,30 +1,20 @@
 package internal
 
 import (
+	"fmt"
+	"github.com/markus-wa/demoinfocs-golang/v3/pkg/demoinfocs"
 	"github.com/markus-wa/demoinfocs-golang/v3/pkg/demoinfocs/common"
+	"github.com/markus-wa/demoinfocs-golang/v3/pkg/demoinfocs/events"
+	"os"
+	"sort"
+	"strconv"
 )
 
-type SourceTarget struct {
-	source, target int64
+func getPlayers(p *demoinfocs.Parser) []*common.Player {
+	return (*p).GameState().Participants().Playing()
 }
 
-func getPlayerBySteamID(playersTracker *map[int]int64, player *common.Player) int64 {
-	if player == nil {
-		return -1
-	} else {
-		return (*playersTracker)[player.UserID]
-	}
-}
-
-const (
-	ctSide    = 0
-	tSide     = 1
-	spectator = 2
-)
-
-/*
-func ProcessFile(unprocessedKey string, localDemName string, idState *IDState, firstRun bool, gameType c.GameType) {
-	demFilePath := path.Base(unprocessedKey)
+func ProcessTickData(unprocessedKey string, localDemName string, idState *IDState) {
 	fmt.Printf("localDemName: %s\n", localDemName)
 	f, err := os.Open(localDemName)
 	if err != nil {
@@ -35,188 +25,27 @@ func ProcessFile(unprocessedKey string, localDemName string, idState *IDState, f
 	p := demoinfocs.NewParser(f)
 	defer p.Close()
 
-	// generate fact tables (and save if necessary) after parser init
-	if firstRun {
-		SaveEquipmentFile()
-	}
-
-	// create games table if it didn't exist, and append header if first run
-	flags := os.O_CREATE | os.O_WRONLY
-	if firstRun {
-		flags = flags | os.O_TRUNC
-	} else {
-		flags = flags | os.O_APPEND
-	}
-	gamesFile, err := os.OpenFile(gamesCSVName, flags, 0644)
-	if err != nil {
-		panic(err)
-	}
-	defer gamesFile.Close()
-	if firstRun {
-		gamesFile.WriteString(gamesHeader)
-	}
-	curGameID := idState.nextGame
-
-	// setup trackers for logs that cross multiple events
-	curRound := roundRow{false, idState.nextRound, 0, 0, 0, false, 0, 0, 0, 0, 0, 0}
-	// save finished rounds, write them at end so can update warmups if necessary
-	var finishedRounds []roundRow
-	// creating list as flashes thrown back to back will have same id.
-	// this could introduce bugs if flashes fuse is impacted by factor other than time thrown, but don't think that is case right now
-	grenadesTracker := make(map[int64][]grenadeRow)
-	lastFlashExplosion := make(map[int64]grenadeRow)
-	playerToLastFireGrenade := make(map[int64]int64)
-	curPlant := plantRow{0, 0, 0, 0, false, true}
-	curDefusal := defusalRow{0, 0, 0, 0, 0, false}
-	playersTracker := make(map[int]int64)
-	lastFlash := make(map[SourceTarget]int64)
 	ticksProcessed := 0
-	roundsProcessed := 0
-	lastInGameTick := 0
-
-	roundsFile, err := os.Create(localRoundsCSVName)
-	if err != nil {
-		panic(err)
-	}
-	defer roundsFile.Close()
-	roundsFile.WriteString(roundsHeader)
-
-	ctWins := 0
-	tWins := 0
-	p.RegisterEventHandler(func(e events.RoundStart) {
-		// can have a round start at end of game, ignore them
-		if roundsProcessed > 10 && p.GameState().TeamCounterTerrorists().Score() == 0 &&
-			p.GameState().TeamTerrorists().Score() == 0 {
-			return
-		}
-		// warmup can end wihtout a roundend call, so save repeated round starts
-		// restarts also seem to start without a round end (like live on 3) - set all to warmup
-		if curRound.valid {
-			finishGarbageRound(&curRound, *idState, tWins, ctWins)
-			finishedRounds = append(finishedRounds, curRound)
-		}
-
-		curID := idState.nextRound
-		idState.nextRound++
-		curRound = roundRow{true, curID, curGameID, idState.nextTick, 0, false, -1, roundsProcessed, 0, 0, 0, 0}
-		roundsProcessed++
-	})
-
-	p.RegisterEventHandler(func(e events.RoundEnd) {
-		// skip round ends on first tick, these are worthless
-		if idState.nextTick == 0 {
-			return
-		}
-		// flip rounds before adding next win as you flip after hitting 15 rounds
-		maxRounds, _ := strconv.Atoi(p.GameState().Rules().ConVars()["mp_maxrounds"])
-		if tWins+ctWins == maxRounds/2 {
-			oldCTWins := ctWins
-			ctWins = tWins
-			tWins = oldCTWins
-		}
-		curRound.roundEndReason = int(e.Reason)
-		if e.Winner == common.TeamCounterTerrorists {
-			curRound.winner = ctSide
-			ctWins++
-		} else if e.Winner == common.TeamTerrorists {
-			curRound.winner = tSide
-			tWins++
-		} else {
-			curRound.winner = spectator
-		}
-		curRound.endTick = idState.nextTick
-		// handle demos that start after first round start or just miss a round start event
-		if !curRound.valid {
-			curRound.gameID = curGameID
-			curRound.id = idState.nextRound
-			idState.nextRound++
-			curRound.roundNumber = roundsProcessed
-			roundsProcessed++
-			// can have short pre-warmup round that ends without round start, so mark that as warmup
-			if curRound.roundNumber == 0 {
-				curRound.warmup = true
-			} else {
-				// if normal state but just missed round start event, we'll just make this round really short
-				curRound.startTick = curRound.endTick
-			}
-		}
-		curRound.tWins = tWins
-		curRound.ctWins = ctWins
-		finishedRounds = append(finishedRounds, curRound)
-		curRound.valid = false
-		curRound.warmup = false
-	})
-
-	p.RegisterEventHandler(func(e events.RoundFreezetimeEnd) {
-		curRound.freezeTimeEnd = idState.nextTick
-	})
-
-	playersFile, err := os.Create(localPlayersCSVName)
-	if err != nil {
-		panic(err)
-	}
-	defer playersFile.Close()
-	playersFile.WriteString(playersHeader)
-	// add -1 player at start of first players file
-	if idState.nextPlayer == 0 {
-		playersFile.WriteString("-1,\\N,invalid,0\n")
-	}
-
-	ticksFile, err := os.Create(localTicksCSVName)
-	if err != nil {
-		panic(err)
-	}
-	defer ticksFile.Close()
-	ticksFile.WriteString(ticksHeader)
-
-	playerAtTickFile, err := os.Create(localPlayerAtTickCSVName)
-	if err != nil {
-		panic(err)
-	}
-	defer playerAtTickFile.Close()
-	playerAtTickFile.WriteString(playerAtTicksHeader)
-
 	p.RegisterEventHandler(func(e events.FrameDone) {
 		gs := p.GameState()
-		if gs.IngameTick() < 1 || (ticksProcessed == 0 && gs.IngameTick() > 100000 && !gs.IsMatchStarted()) {
-			return
-		}
-		// on the first tick save the game state
-		if ticksProcessed == 0 {
-			header := p.Header()
-			gamesFile.WriteString(fmt.Sprintf("%d,%s,%f,%f,%s,%d\n",
-				curGameID, demFilePath, (&header).FrameRate(), p.TickRate(), (&header).MapName, gameType))
-			idState.nextGame++
-		}
 		if ticksProcessed != 0 {
-			if lastInGameTick >= gs.IngameTick() {
+			if ticksTable.tail().gameTickNumber >= gs.IngameTick() {
 				print("bad in game tick")
 			}
 		}
-		lastInGameTick = gs.IngameTick()
-		ticksProcessed++
-		if gs.IsWarmupPeriod() {
-			curRound.warmup = true
-		}
-		tickID := idState.nextTick
-		players := getPlayers(&p)
-		sort.Slice(players, func(i int, j int) bool {
-			return players[i].Name < players[j].Name
-		})
-		for _, player := range players {
-			if _, ok := playersTracker[player.UserID]; !ok {
-				playersFile.WriteString(fmt.Sprintf("%d,%d,%s,%d\n",
-					idState.nextPlayer, curGameID, player.Name, player.SteamID64))
-				playersTracker[player.UserID] = idState.nextPlayer
-				idState.nextPlayer++
-			}
-		}
-		var carrierID int64
-		carrierID = getPlayerBySteamID(&playersTracker, gs.Bomb().Carrier)
-		ticksFile.WriteString(fmt.Sprintf("%d,%d,%d,%d,%d,%d,%.2f,%.2f,%.2f\n",
-			tickID, curRound.id, p.CurrentTime().Milliseconds(), p.CurrentFrame(), gs.IngameTick(),
-			carrierID, gs.Bomb().Position().X, gs.Bomb().Position().Y, gs.Bomb().Position().Z))
 
+		//lastInGameTick = gs.IngameTick()
+		ticksProcessed++
+
+		tickID := idState.nextTick
+		ticksTable.append(tickRow{
+			idState.nextTick, curRound.id, p.CurrentTime().Milliseconds(),
+			p.CurrentFrame(), gs.IngameTick(),
+			playersTracker.getPlayerIdFromGameData(gs.Bomb().Carrier),
+			gs.Bomb().Position().X, gs.Bomb().Position().Y, gs.Bomb().Position().Z,
+		})
+
+		players := getPlayers(&p)
 		for _, player := range players {
 			playerAtTickID := idState.nextPlayerAtTick
 			idState.nextPlayerAtTick++
@@ -683,49 +512,5 @@ func ProcessFile(unprocessedKey string, localDemName string, idState *IDState, f
 	if err != nil {
 		fmt.Printf("Error in parsing. T score %d, CT score %d, progress: %f, error:\n %s\n",
 			p.GameState().TeamTerrorists().Score(), p.GameState().TeamCounterTerrorists().Score(), p.Progress(), err.Error())
-	}
-	// update warmups
-	lastWarmupRound := -1
-	for i := range finishedRounds {
-		if finishedRounds[i].warmup {
-			lastWarmupRound = i
-		}
-	}
-	for i := 0; i < lastWarmupRound; i++ {
-		finishedRounds[i].warmup = true
-	}
-	// if extra round at end, make it a warmup round and finish it
-	if curRound.valid {
-		finishGarbageRound(&curRound, *idState, tWins, ctWins)
-		finishedRounds = append(finishedRounds, curRound)
-	}
-	for _, round := range finishedRounds {
-		roundsFile.WriteString(fmt.Sprintf("%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d\n",
-			round.id, round.gameID, round.startTick, round.endTick, boolToInt(round.warmup), round.freezeTimeEnd,
-			round.roundNumber, round.roundEndReason, round.winner, round.tWins, round.ctWins,
-		))
-	}
-}
-*/
-
-func teamToNum(team common.Team) int {
-	switch team {
-	case common.TeamUnassigned:
-		return 0
-	case common.TeamSpectators:
-		return 1
-	case common.TeamTerrorists:
-		return 2
-	case common.TeamCounterTerrorists:
-		return 3
-	}
-	return -1
-}
-
-func boolToInt(b bool) int {
-	if b {
-		return 1
-	} else {
-		return 0
 	}
 }

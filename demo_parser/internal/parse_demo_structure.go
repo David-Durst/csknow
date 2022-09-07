@@ -27,7 +27,7 @@ func addNewRound(idState *IDState, nextTickId RowIndex, roundsTable *table[round
 	idState.nextRound++
 }
 
-func ProcessStructure(unprocessedKey string, localDemName string, idState *IDState, firstRun bool, gameType c.GameType) {
+func ProcessStructure(unprocessedKey string, localDemName string, idState *IDState, gameType c.GameType) {
 	curGameRow.id = idState.nextGame
 	// increment this locally as won't actually record ticks until after past processing sturcture
 	nextTickId := idState.nextTick
@@ -83,7 +83,6 @@ func ProcessStructure(unprocessedKey string, localDemName string, idState *IDSta
 		unfilteredRoundsTable.tail().finished = true
 	})
 
-	var playersTracker playersTrackerT
 	playersTracker.init()
 	if idState.nextPlayer == 0 {
 		playersTable.append(playerRow{InvalidId, InvalidId, "invalid", 0})

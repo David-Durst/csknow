@@ -133,6 +133,16 @@ func (p *playersTrackerT) alreadyAddedPlayer(gameUserId int) bool {
 	return ok
 }
 
+func (p *playersTrackerT) getPlayerIdFromGameData(player *common.Player) RowIndex {
+	if tableId, ok := p.gameIdToTableId[player.UserID]; ok {
+		return tableId
+	} else {
+		return InvalidId
+	}
+}
+
+var playersTracker playersTrackerT
+
 // ROUNDS TABLE
 
 const roundsHeader = "id,game_id,start_tick,end_tick,end_official_tick,warmup,overtime," +
@@ -178,8 +188,8 @@ type tickRow struct {
 	id             RowIndex
 	roundId        RowIndex
 	gameTime       int64
-	demoTickNumber int64
-	gameTickNumber int64
+	demoTickNumber int
+	gameTickNumber int
 	bombCarrier    RowIndex
 	bombX          float64
 	bombY          float64
