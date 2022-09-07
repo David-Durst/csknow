@@ -6,11 +6,15 @@ import (
 	"github.com/golang/geo/r3"
 	"github.com/markus-wa/demoinfocs-golang/v3/pkg/demoinfocs/common"
 	"github.com/markus-wa/demoinfocs-golang/v3/pkg/demoinfocs/events"
+	"os"
+	"path/filepath"
+	"strings"
 )
 
 type RowIndex int64
 
 const InvalidId RowIndex = -1
+const InvalidInt int = -1
 
 // IDState the next id to use for each fact table
 type IDState struct {
@@ -33,7 +37,9 @@ type IDState struct {
 }
 
 func DefaultIDState() IDState {
-	return IDState{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+	return IDState{0, 0, 0, 0, 0, 0, 0,
+		0, 0, 0, 0, 0, 0, 0,
+		0, 0}
 }
 
 type tableRow interface {
@@ -42,6 +48,31 @@ type tableRow interface {
 
 type table[T tableRow] struct {
 	rows []T
+}
+
+func (t *table[T]) tail() *T {
+	return &t.rows[len(t.rows)-1]
+}
+
+func (t *table[T]) append(e T) {
+	t.rows = append(t.rows, e)
+}
+
+func (t *table[T]) len() int {
+	return len(t.rows)
+}
+
+func (t *table[T]) saveToFile(fileName string) {
+	file, err := os.Create(filepath.Join(c.TmpDir, fileName))
+	if err != nil {
+		panic(err)
+	}
+	defer file.Close()
+	var sb strings.Builder
+	for _, element := range t.rows {
+		sb.WriteString(element.toString())
+	}
+	file.WriteString(sb.String())
 }
 
 // GAMES TABLE
@@ -83,29 +114,47 @@ func (p playerRow) toString() string {
 
 var playersTable table[playerRow]
 
+type playersTrackerT struct {
+	gameIdToTableId map[int]RowIndex
+}
+
+func (p *playersTrackerT) addPlayer(pr playerRow, gameUserId int) {
+	p.gameIdToTableId[gameUserId] = pr.id
+	playersTable.append(pr)
+}
+
+func (p *playersTrackerT) alreadyAddedPlayer(gameUserId int) bool {
+	_, ok := p.gameIdToTableId[gameUserId]
+	return ok
+}
+
 // ROUNDS TABLE
 
 const roundsHeader = "id,game_id,start_tick,end_tick,warmup," +
 	"freeze_time_end,round_number,round_end_reason,winner,t_wins,ct_wins\n"
 
 type roundRow struct {
-	valid          bool
+	finished       bool
 	id             RowIndex
-	gameID         RowIndex
+	gameId         RowIndex
 	startTick      RowIndex
 	endTick        RowIndex
 	warmup         bool
 	freezeTimeEnd  RowIndex
 	roundNumber    int
 	roundEndReason int
-	winner         int
+	winner         common.Team
 	tWins          int
 	ctWins         int
 }
 
+var defaultRound = roundRow{false, InvalidId, InvalidId, InvalidId, InvalidId,
+	true, InvalidId, 0, InvalidInt,
+	common.TeamUnassigned, InvalidInt, InvalidInt}
+
 func (r roundRow) toString() string {
 	return fmt.Sprintf("%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d\n",
-		r.id, r.gameID, r.startTick, r.endTick, boolToInt(r.warmup), r.freezeTimeEnd,
+		r.id, r.gameId, r.startTick, r.endTick, boolToInt(r.warmup), r.freezeTimeEnd,
 		r.roundNumber, r.roundEndReason, r.winner, r.tWins, r.ctWins)
 }
 

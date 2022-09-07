@@ -4,7 +4,7 @@ const (
 	BaseStateCSVName                = "global_id_state.csv"
 	InputStateCSVName               = "input_" + BaseStateCSVName
 	OutputStateCSVName              = "output_" + BaseStateCSVName
-	GamesCSVName                    = "global_games.csv"
+	GlobalGamesCSVName              = "global_games.csv"
 	LocalRoundsCSVName              = "local_rounds.csv"
 	LocalPlayersCSVName             = "local_players.csv"
 	LocalTicksCSVName               = "local_ticks.csv"
@@ -23,4 +23,5 @@ const (
 	LocalEquipmentDimTable          = "dimension_table_equipment.csv"
 	LocalGameTypeDimTable           = "dimension_table_game_types.csv"
 	LocalHitGroupDimTable           = "dimension_table_hit_groups.csv"
+	TmpDir                          = "csv_outputs"
 )

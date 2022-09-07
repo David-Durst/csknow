@@ -1,15 +1,8 @@
 package internal
 
 import (
-	"fmt"
-	c "github.com/David-Durst/csknow/demo_parser/internal/constants"
 	"github.com/markus-wa/demoinfocs-golang/v3/pkg/demoinfocs"
 	"github.com/markus-wa/demoinfocs-golang/v3/pkg/demoinfocs/common"
-	"github.com/markus-wa/demoinfocs-golang/v3/pkg/demoinfocs/events"
-	"os"
-	"path"
-	"sort"
-	"strconv"
 )
 
 type SourceTarget struct {
@@ -30,15 +23,7 @@ const (
 	spectator = 2
 )
 
-func finishGarbageRound(round *roundRow, idState IDState, tWins int, ctWins int) {
-	round.endTick = idState.nextTick - 1
-	round.warmup = true
-	round.roundEndReason = -1
-	round.winner = spectator
-	round.tWins = tWins
-	round.ctWins = ctWins
-}
-
+/*
 func ProcessFile(unprocessedKey string, localDemName string, idState *IDState, firstRun bool, gameType c.GameType) {
 	demFilePath := path.Base(unprocessedKey)
 	fmt.Printf("localDemName: %s\n", localDemName)
@@ -722,6 +707,7 @@ func ProcessFile(unprocessedKey string, localDemName string, idState *IDState, f
 		))
 	}
 }
+*/
 
 func getPlayers(p *demoinfocs.Parser) []*common.Player {
 	return (*p).GameState().Participants().Playing()

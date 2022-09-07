@@ -58,7 +58,8 @@ func main() {
 		if !firstRun {
 			startIDState = d.ParseInputStateCSV()
 		}
-		d.ProcessFile(*localDemName, *localDemName, &startIDState, firstRun, 1)
+		d.ProcessStructure(*localDemName, *localDemName, &startIDState, firstRun, 1)
+		d.SaveStructure(&startIDState, firstRun)
 		d.SaveOutputStateCSV(&startIDState)
 		os.Exit(0)
 	}
@@ -105,7 +106,7 @@ func main() {
 		firstRun = false
 	}
 
-	gamesAWS := csvPrefixGlobal + c.GamesCSVName
+	gamesAWS := csvPrefixGlobal + c.GlobalGamesCSVName
 	gamesResult, gamesErr := svc.ListObjectsV2(&s3.ListObjectsV2Input{
 		Bucket: aws.String(d.BucketName),
 		Prefix: &gamesAWS,
@@ -116,7 +117,7 @@ func main() {
 
 	// if not reprocessing and already have an games file, start from there
 	if *gamesResult.KeyCount == 1 && !*reprocessFlag && !*subsetReprocessFlag {
-		d.DownloadFile(downloader, *gamesResult.Contents[0].Key, c.GamesCSVName)
+		d.DownloadFile(downloader, *gamesResult.Contents[0].Key, c.GlobalGamesCSVName)
 	}
 
 	i := 0
@@ -136,7 +137,8 @@ func main() {
 				}
 				fmt.Printf("Handling file: %s\n", *obj.Key)
 				d.DownloadFile(downloader, *obj.Key, *localDemName)
-				d.ProcessFile(*obj.Key, *localDemName, &startIDState, firstRun, c.GameType(gameTypeIndex))
+				d.ProcessStructure(*obj.Key, *localDemName, &startIDState, firstRun, c.GameType(gameTypeIndex))
+				d.SaveStructure(&startIDState, firstRun)
 				firstRun = false
 				d.UploadCSVs(uploader, *obj.Key, csvPrefixLocal)
 				filesToMove = append(filesToMove, *obj.Key)
@@ -151,7 +153,7 @@ func main() {
 		os.Exit(0)
 	}
 
-	d.UploadFile(uploader, c.GamesCSVName, "global_games", csvPrefixGlobal)
+	d.UploadFile(uploader, c.GlobalGamesCSVName, "global_games", csvPrefixGlobal)
 	d.UploadFile(uploader, c.LocalEquipmentDimTable, "dimension_table_equipment", csvPrefixGlobal)
 	d.UploadFile(uploader, c.LocalGameTypeDimTable, "dimension_table_game_types", csvPrefixGlobal)
 	d.UploadFile(uploader, c.LocalHitGroupDimTable, "dimension_table_hit_groups", csvPrefixGlobal)
