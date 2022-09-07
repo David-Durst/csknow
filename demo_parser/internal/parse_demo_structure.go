@@ -70,7 +70,7 @@ func ProcessStructure(unprocessedKey string, localDemName string, idState *IDSta
 	})
 
 	p.RegisterEventHandler(func(e events.RoundFreezetimeEnd) {
-		// only update once per round round, as can fire duplicate event at end of last round of match
+		// only update once per round, as can fire duplicate event at end of last round of match
 		if roundsTable.tail().freezeTimeEnd == InvalidId {
 			roundsTable.tail().freezeTimeEnd = nextTickId
 		}
