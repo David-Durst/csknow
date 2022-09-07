@@ -12,7 +12,7 @@ import (
 	"sort"
 )
 
-func addNewRound(idState *IDState) {
+func addNewRound(idState *IDState, nextTickId RowIndex) {
 	// finish last round if one exists
 	if roundsTable.len() > 0 {
 		roundsTable.tail().finished = true
@@ -21,14 +21,16 @@ func addNewRound(idState *IDState) {
 	roundsTable.append(defaultRound)
 	roundsTable.tail().id = idState.nextRound
 	roundsTable.tail().gameId = curGameRow.id
-	roundsTable.tail().roundNumber = roundsTable.len() - 1
-	roundsTable.tail().endTick = idState.nextTick - 1
+	roundsTable.tail().startTick = nextTickId
 	roundsTable.tail().warmup = true
+	roundsTable.tail().roundNumber = roundsTable.len() - 1
 	idState.nextRound++
 }
 
 func ProcessStructure(unprocessedKey string, localDemName string, idState *IDState, firstRun bool, gameType c.GameType) {
 	curGameRow.id = idState.nextGame
+	// increment this locally as won't actually record ticks until after past processing sturcture
+	nextTickId := idState.nextTick
 	fmt.Printf("localDemName: %s\n", localDemName)
 	f, err := os.Open(localDemName)
 	if err != nil {
@@ -40,27 +42,26 @@ func ProcessStructure(unprocessedKey string, localDemName string, idState *IDSta
 	defer p.Close()
 
 	p.RegisterEventHandler(func(e events.RoundStart) {
-
 		// for now, adding all rounds, so can examine again garbage at end of match
 		// initializing as warmup, will fix to non-warmup when get a round end call
-		addNewRound(idState)
+		addNewRound(idState, nextTickId)
 	})
 
 	p.RegisterEventHandler(func(e events.RoundEnd) {
 		// skip round ends on first tick, these are worthless
-		if idState.nextTick == 0 {
+		if nextTickId == 0 {
 			return
 		}
 
 		if roundsTable.len() > 0 && !roundsTable.tail().finished {
 			roundsTable.tail().roundEndReason = int(e.Reason)
 			roundsTable.tail().winner = e.Winner
-			roundsTable.tail().endTick = idState.nextTick
+			roundsTable.tail().endTick = nextTickId
 			roundsTable.tail().warmup = false
 		} else {
 			// handle demos that start after first round start or just miss a round start event
 			// assume bogus rounds are warmups
-			addNewRound(idState)
+			addNewRound(idState, nextTickId)
 		}
 
 		roundsTable.tail().tWins = p.GameState().Team(common.TeamTerrorists).Score()
@@ -69,16 +70,20 @@ func ProcessStructure(unprocessedKey string, localDemName string, idState *IDSta
 	})
 
 	p.RegisterEventHandler(func(e events.RoundFreezetimeEnd) {
-		roundsTable.tail().freezeTimeEnd = idState.nextTick
+		// only update once per round round, as can fire duplicate event at end of last round of match
+		if roundsTable.tail().freezeTimeEnd == InvalidId {
+			roundsTable.tail().freezeTimeEnd = nextTickId
+		}
 	})
 
 	var playersTracker playersTrackerT
+	playersTracker.init()
 	if idState.nextPlayer == 0 {
 		playersTable.append(playerRow{InvalidId, InvalidId, "invalid", 0})
 	}
 	p.RegisterEventHandler(func(e events.FrameDone) {
 		// on the first tick save the game state
-		if ticksTable.len() == 0 {
+		if nextTickId == idState.nextTick {
 			header := p.Header()
 			curGameRow.demoFile = path.Base(unprocessedKey)
 			curGameRow.demoTickRate = header.FrameRate()
@@ -94,14 +99,14 @@ func ProcessStructure(unprocessedKey string, localDemName string, idState *IDSta
 			return players[i].Name < players[j].Name
 		})
 		for _, player := range players {
-			if playersTracker.alreadyAddedPlayer(player.UserID) {
+			if !playersTracker.alreadyAddedPlayer(player.UserID) {
 				playersTracker.addPlayer(
 					playerRow{idState.nextPlayer, curGameRow.id, player.Name, player.SteamID64},
 					player.UserID)
 				idState.nextPlayer++
 			}
 		}
-
+		nextTickId++
 	})
 	/*
 
@@ -655,8 +660,8 @@ func SaveStructure(idState *IDState, firstRun bool) {
 	gamesFile.WriteString(curGameRow.toString())
 
 	// WRITE ROUNDS
-	roundsTable.saveToFile(c.LocalRoundsCSVName)
+	roundsTable.saveToFile(c.LocalRoundsCSVName, roundsHeader)
 
 	// WRITE PLAYERS
-	playersTable.saveToFile(c.LocalPlayersCSVName)
+	playersTable.saveToFile(c.LocalPlayersCSVName, playersHeader)
 }

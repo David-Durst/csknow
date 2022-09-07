@@ -62,13 +62,14 @@ func (t *table[T]) len() int {
 	return len(t.rows)
 }
 
-func (t *table[T]) saveToFile(fileName string) {
+func (t *table[T]) saveToFile(fileName string, header string) {
 	file, err := os.Create(filepath.Join(c.TmpDir, fileName))
 	if err != nil {
 		panic(err)
 	}
 	defer file.Close()
 	var sb strings.Builder
+	sb.WriteString(header)
 	for _, element := range t.rows {
 		sb.WriteString(element.toString())
 	}
@@ -116,6 +117,10 @@ var playersTable table[playerRow]
 
 type playersTrackerT struct {
 	gameIdToTableId map[int]RowIndex
+}
+
+func (p *playersTrackerT) init() {
+	p.gameIdToTableId = make(map[int]RowIndex)
 }
 
 func (p *playersTrackerT) addPlayer(pr playerRow, gameUserId int) {
