@@ -22,18 +22,23 @@ const localEquipmentDimTable = "dimension_table_equipment.csv"
 const localGameTypeDimTable = "dimension_table_game_types.csv"
 const localHitGroupDimTable = "dimension_table_hit_groups.csv"
 const alreadyDownloadedFileName = "../local_data/already_downloaded.txt"
+
 var processedPrefix = "demos/processed2/"
 var processedSmallPrefix = "demos/processed2_small/"
 var csvPrefixBase = "demos/csvs3/"
+
 // these will be used to replace the prefixes if using bot train data set
 const trainProcessedPrefix = "demos/train_data/processed/"
 const trainCsvPrefixBase = "demos/train_data/csvs/"
+
 var csvPrefixLocal string
 var csvPrefixGlobal string
+
 func updatePrefixs() {
 	csvPrefixLocal = csvPrefixBase + "local/"
 	csvPrefixGlobal = csvPrefixBase + "global/"
 }
+
 const bucketName = "csknow"
 
 func fillAlreadyDownloaded(alreadyDownloaded *map[string]struct{}) {
@@ -91,8 +96,8 @@ func downloadFile(downloader *s3manager.Downloader, fileKey string, localFileNam
 }
 
 func downloadCSVForDemo(downloader *s3manager.Downloader, demKey string, csvType string, mustDownload bool) {
-	localPath := path.Join("..", "local_data", csvType, demKey + "_" + csvType + ".csv")
-	downloadFile(downloader, csvPrefixLocal + demKey + "_" + csvType + ".csv", localPath, mustDownload)
+	localPath := path.Join("..", "local_data", csvType, demKey+"_"+csvType+".csv")
+	downloadFile(downloader, csvPrefixLocal+demKey+"_"+csvType+".csv", localPath, mustDownload)
 }
 
 func main() {
@@ -153,7 +158,8 @@ func main() {
 			if _, ok := alreadyDownloaded[localKey]; !ok {
 				needToDownload = append(needToDownload, localKey)
 			}
-			downloadCSVForDemo(downloader, localKey, "rounds", true)
+			downloadCSVForDemo(downloader, localKey, "unfiltered_rounds", true)
+			downloadCSVForDemo(downloader, localKey, "filtered_rounds", true)
 			downloadCSVForDemo(downloader, localKey, "players", true)
 			downloadCSVForDemo(downloader, localKey, "ticks", true)
 			downloadCSVForDemo(downloader, localKey, "player_at_tick", true)
@@ -176,10 +182,10 @@ func main() {
 	})
 
 	localDir := "../local_data/"
-	downloadFile(downloader, csvPrefixGlobal + "global_games.csv", localDir + gamesCSVName, true)
-	downloadFile(downloader, csvPrefixGlobal + "dimension_table_equipment.csv", localDir + localEquipmentDimTable, true)
-	downloadFile(downloader, csvPrefixGlobal + "dimension_table_game_types.csv", localDir + localGameTypeDimTable, true)
-	downloadFile(downloader, csvPrefixGlobal + "dimension_table_hit_groups.csv", localDir + localHitGroupDimTable, true)
+	downloadFile(downloader, csvPrefixGlobal+"global_games.csv", localDir+gamesCSVName, true)
+	downloadFile(downloader, csvPrefixGlobal+"dimension_table_equipment.csv", localDir+localEquipmentDimTable, true)
+	downloadFile(downloader, csvPrefixGlobal+"dimension_table_game_types.csv", localDir+localGameTypeDimTable, true)
+	downloadFile(downloader, csvPrefixGlobal+"dimension_table_hit_groups.csv", localDir+localHitGroupDimTable, true)
 
 	saveNewlyDownloaded(needToDownload)
 
@@ -192,7 +198,7 @@ func main() {
 
 	if *localFlag {
 		fmt.Printf("executing first_lines_games.sh")
-		firstLinesGamesOut, err := exec.Command("/bin/bash", "first_lines_games.sh", strconv.Itoa(1 + numDownloaded)).Output()
+		firstLinesGamesOut, err := exec.Command("/bin/bash", "first_lines_games.sh", strconv.Itoa(1+numDownloaded)).Output()
 		if err != nil {
 			log.Fatal(err)
 		}

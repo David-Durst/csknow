@@ -102,7 +102,7 @@ int main(int argc, char * argv[]) {
     HitGroups hitGroups;
     Games games;
     Players players;
-    Rounds rounds;
+    Rounds unfilteredRounds, filteredRounds;
     Ticks ticks;
     PlayerAtTick playerAtTick;
     Spotted spotted;
@@ -119,9 +119,9 @@ int main(int argc, char * argv[]) {
     CoverEdges coverEdges;
     CoverOrigins coverOrigins;
 
-    loadData(equipment, gameTypes, hitGroups, games, players, rounds, ticks, playerAtTick, spotted, footstep, weaponFire,
+    loadData(equipment, gameTypes, hitGroups, games, players, unfilteredRounds, filteredRounds, ticks, playerAtTick, spotted, footstep, weaponFire,
              kills, hurt, grenades, flashed, grenadeTrajectories, plants, defusals, explosions, dataPath);
-    buildIndexes(equipment, gameTypes, hitGroups, games, players, rounds, ticks, playerAtTick, spotted, footstep, weaponFire,
+    buildIndexes(equipment, gameTypes, hitGroups, games, players, filteredRounds, ticks, playerAtTick, spotted, footstep, weaponFire,
                  kills, hurt, grenades, flashed, grenadeTrajectories, plants, defusals, explosions);
     //std::printf("GLIBCXX: %d\n",__GLIBCXX__);
     std::cout << "num elements in equipment: " << equipment.size << std::endl;
@@ -129,7 +129,8 @@ int main(int argc, char * argv[]) {
     std::cout << "num elements in hit_groups: " << hitGroups.size << std::endl;
     std::cout << "num elements in games: " << games.size << std::endl;
     std::cout << "num elements in players: " << players.size << std::endl;
-    std::cout << "num elements in rounds: " << rounds.size << std::endl;
+    std::cout << "num elements in unfiltered_rounds: " << unfilteredRounds.size << std::endl;
+    std::cout << "num elements in filtered_rounds: " << filteredRounds.size << std::endl;
     std::cout << "num elements in ticks: " << ticks.size << std::endl;
     std::cout << "num elements in playerAtTick: " << playerAtTick.size << std::endl;
     std::cout << "num elements in spotted: " << spotted.size << std::endl;
@@ -151,10 +152,10 @@ int main(int argc, char * argv[]) {
     std::cout << "num elements in cover edges: " << coverEdges.size << std::endl;
 
     QueryGames queryGames(games);
-    QueryRounds queryRounds(games, rounds);
+    QueryRounds queryRounds(games, filteredRounds);
     QueryPlayers queryPlayers(games, players);
-    QueryTicks queryTicks(rounds, ticks);
-    QueryPlayerAtTick queryPlayerAtTick(rounds, ticks, playerAtTick);
+    QueryTicks queryTicks(filteredRounds, ticks);
+    QueryPlayerAtTick queryPlayerAtTick(filteredRounds, ticks, playerAtTick);
 
     /*
     // record locations and view angles
@@ -220,7 +221,7 @@ int main(int argc, char * argv[]) {
      */
 
     string lookerName = "lookers";
-    LookingResult lookersResult = queryLookers(games, rounds, ticks, playerAtTick);
+    LookingResult lookersResult = queryLookers(games, filteredRounds, ticks, playerAtTick);
     std::cout << "looker entries: " << lookersResult.tickId.size() << std::endl;
 
     /*
@@ -259,7 +260,7 @@ int main(int argc, char * argv[]) {
     std::cout << "processing aggression_event" << std::endl;
     string aggressionEventName = "aggression_event";
     AggressionEventResult aggressionEventResult =
-            queryAggressionRoles(games, rounds, ticks, playerAtTick, map_navs["de_dust2"], map_visPoints.find("de_dust2")->second, d2ReachableResult);
+            queryAggressionRoles(games, filteredRounds, ticks, playerAtTick, map_navs["de_dust2"], map_visPoints.find("de_dust2")->second, d2ReachableResult);
     /*
     VelocityResult velocityResult = queryVelocity(position);
     std::cout << "velocity moments: " << velocityResult.positionIndex.size() << std::endl;

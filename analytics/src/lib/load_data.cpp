@@ -302,36 +302,47 @@ void loadRoundsFile(Rounds & rounds, string filePath, int64_t fileRowStart, int3
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, rounds.endTick[arrayEntry]);
         }
         else if (colNumber == 4) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, rounds.warmup[arrayEntry]);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, rounds.endOfficialTick[arrayEntry]);
         }
         else if (colNumber == 5) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, rounds.freezeTimeEnd[arrayEntry]);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, rounds.warmup[arrayEntry]);
         }
         else if (colNumber == 6) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, rounds.roundNumber[arrayEntry]);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, rounds.overtime[arrayEntry]);
         }
         else if (colNumber == 7) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, rounds.roundEndReason[arrayEntry]);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, rounds.freezeTimeEnd[arrayEntry]);
         }
         else if (colNumber == 8) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, rounds.winner[arrayEntry]);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, rounds.roundNumber[arrayEntry]);
         }
         else if (colNumber == 9) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, rounds.tWins[arrayEntry]);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, rounds.roundEndReason[arrayEntry]);
         }
         else if (colNumber == 10) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, rounds.winner[arrayEntry]);
+        }
+        else if (colNumber == 11) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, rounds.tWins[arrayEntry]);
+        }
+        else if (colNumber == 12) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, rounds.ctWins[arrayEntry]);
             rowNumber++;
             arrayEntry++;
         }
-        colNumber = (colNumber + 1) % 11;
+        colNumber = (colNumber + 1) % 13;
     }
     closeMMapFile({fd, stats, file});
 }
 
-void loadRounds(Rounds & rounds, string dataPath) {
+void loadRounds(Rounds & rounds, string dataPath, bool filtered) {
     vector<string> filePaths;
-    getFilesInDirectory(dataPath + "/rounds", filePaths);
+    if (filtered) {
+        getFilesInDirectory(dataPath + "/filtered_rounds", filePaths);
+    }
+    else {
+        getFilesInDirectory(dataPath + "/unfiltered_rounds", filePaths);
+    }
 
     std::cout << "determining array size" << std::endl;
     vector<int64_t> startingPointPerFile = getFileStartingRows(filePaths);
@@ -1250,7 +1261,7 @@ void loadExplosions(Explosions & explosions, string dataPath) {
 }
 
 void loadData(Equipment & equipment, GameTypes & gameTypes, HitGroups & hitGroups, Games & games, Players & players,
-              Rounds & rounds, Ticks & ticks, PlayerAtTick & playerAtTick, Spotted & spotted, Footstep & footstep, WeaponFire & weaponFire,
+              Rounds & unfilteredRounds, Rounds & filteredRounds, Ticks & ticks, PlayerAtTick & playerAtTick, Spotted & spotted, Footstep & footstep, WeaponFire & weaponFire,
               Kills & kills, Hurt & hurt, Grenades & grenades, Flashed & flashed, GrenadeTrajectories & grenadeTrajectories,
               Plants & plants, Defusals & defusals, Explosions & explosions, string dataPath) {
     std::cout << "loading equipment" << std::endl;
@@ -1263,8 +1274,10 @@ void loadData(Equipment & equipment, GameTypes & gameTypes, HitGroups & hitGroup
     loadGames(games, dataPath);
     std::cout << "loading players" << std::endl;
     loadPlayers(players, dataPath);
-    std::cout << "loading rounds" << std::endl;
-    loadRounds(rounds, dataPath);
+    std::cout << "loading unfiltered_rounds" << std::endl;
+    loadRounds(unfilteredRounds, dataPath, false);
+    std::cout << "loading filtered_rounds" << std::endl;
+    loadRounds(filteredRounds, dataPath, true);
     std::cout << "loading ticks" << std::endl;
     loadTicks(ticks, dataPath);
     std::cout << "loading player_at_tick" << std::endl;

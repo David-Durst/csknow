@@ -5,7 +5,8 @@ cp local_flashed.csv ../local_data/flashed/
 cp local_grenades.csv ../local_data/grenades/ 
 cp local_kills.csv ../local_data/kills/
 cp local_player_at_tick.csv ../local_data/player_at_tick/ 
-cp local_rounds.csv ../local_data/rounds/
+cp local_filtered_rounds.csv ../local_data/filtered_rounds/
+cp local_unfiltered_rounds.csv ../local_data/unfiltered_rounds/
 cp local_ticks.csv ../local_data/ticks/
 cp local_explosions.csv ../local_data/explosions/ 
 cp local_grenade_trajectories.csv ../local_data/grenade_trajectories/

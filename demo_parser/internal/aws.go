@@ -51,7 +51,8 @@ func UploadFile(uploader *s3manager.Uploader, csvPath string, fileKey string, cs
 }
 
 func UploadCSVs(uploader *s3manager.Uploader, fileKey string, csvPrefixLocal string) {
-	UploadFile(uploader, c.LocalRoundsCSVName, fileKey+"_rounds", csvPrefixLocal)
+	UploadFile(uploader, c.LocalUnfilteredRoundsCSVName, fileKey+"_unfiltered_rounds", csvPrefixLocal)
+	UploadFile(uploader, c.LocalFilteredRoundsCSVName, fileKey+"_filtered_rounds", csvPrefixLocal)
 	UploadFile(uploader, c.LocalPlayersCSVName, fileKey+"_players", csvPrefixLocal)
 	UploadFile(uploader, c.LocalTicksCSVName, fileKey+"_ticks", csvPrefixLocal)
 	UploadFile(uploader, c.LocalPlayerAtTickCSVName, fileKey+"_player_at_tick", csvPrefixLocal)

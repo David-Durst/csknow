@@ -12,7 +12,7 @@ import (
 	"sort"
 )
 
-func addNewRound(idState *IDState, nextTickId RowIndex) {
+func addNewRound(idState *IDState, nextTickId RowIndex, roundsTable *table[roundRow]) {
 	// finish last round if one exists
 	if roundsTable.len() > 0 {
 		roundsTable.tail().finished = true
@@ -44,36 +44,43 @@ func ProcessStructure(unprocessedKey string, localDemName string, idState *IDSta
 	p.RegisterEventHandler(func(e events.RoundStart) {
 		// for now, adding all rounds, so can examine again garbage at end of match
 		// initializing as warmup, will fix to non-warmup when get a round end call
-		addNewRound(idState, nextTickId)
+		addNewRound(idState, nextTickId, &unfilteredRoundsTable)
+	})
+
+	p.RegisterEventHandler(func(e events.RoundFreezetimeEnd) {
+		// only update once per round, as can fire duplicate event at end of last round of match
+		if unfilteredRoundsTable.tail().freezeTimeEnd == InvalidId {
+			unfilteredRoundsTable.tail().freezeTimeEnd = nextTickId
+		}
 	})
 
 	p.RegisterEventHandler(func(e events.RoundEnd) {
+		// this is when the round objective is completed, RoundEndOfficial is when the walk around time ends
 		// skip round ends on first tick, these are worthless
 		if nextTickId == 0 {
 			return
 		}
 
-		if roundsTable.len() > 0 && !roundsTable.tail().finished {
-			roundsTable.tail().roundEndReason = int(e.Reason)
-			roundsTable.tail().winner = e.Winner
-			roundsTable.tail().endTick = nextTickId
-			roundsTable.tail().warmup = false
+		if unfilteredRoundsTable.len() > 0 && !unfilteredRoundsTable.tail().finished {
+			unfilteredRoundsTable.tail().roundEndReason = int(e.Reason)
+			unfilteredRoundsTable.tail().winner = e.Winner
+			unfilteredRoundsTable.tail().endTick = nextTickId
+			unfilteredRoundsTable.tail().warmup = false
 		} else {
 			// handle demos that start after first round start or just miss a round start event
 			// assume bogus rounds are warmups
-			addNewRound(idState, nextTickId)
+			addNewRound(idState, nextTickId, &unfilteredRoundsTable)
 		}
 
-		roundsTable.tail().tWins = p.GameState().Team(common.TeamTerrorists).Score()
-		roundsTable.tail().ctWins = p.GameState().Team(common.TeamCounterTerrorists).Score()
-		roundsTable.tail().finished = true
+		unfilteredRoundsTable.tail().tWins = p.GameState().Team(common.TeamTerrorists).Score()
+		unfilteredRoundsTable.tail().ctWins = p.GameState().Team(common.TeamCounterTerrorists).Score()
 	})
 
-	p.RegisterEventHandler(func(e events.RoundFreezetimeEnd) {
-		// only update once per round, as can fire duplicate event at end of last round of match
-		if roundsTable.tail().freezeTimeEnd == InvalidId {
-			roundsTable.tail().freezeTimeEnd = nextTickId
-		}
+	p.RegisterEventHandler(func(e events.RoundEndOfficial) {
+		// this event seems to fire the tick when you are in the next round,
+		// step back 1 tick to make sure this is ending round and not the starting round
+		unfilteredRoundsTable.tail().endOfficialTick = nextTickId - 1
+		unfilteredRoundsTable.tail().finished = true
 	})
 
 	var playersTracker playersTrackerT
@@ -108,526 +115,6 @@ func ProcessStructure(unprocessedKey string, localDemName string, idState *IDSta
 		}
 		nextTickId++
 	})
-	/*
-
-			ticksFile, err := os.Create(localTicksCSVName)
-		if err != nil {
-			panic(err)
-		}
-		defer ticksFile.Close()
-		ticksFile.WriteString(ticksHeader)
-
-		playerAtTickFile, err := os.Create(localPlayerAtTickCSVName)
-		if err != nil {
-			panic(err)
-		}
-		defer playerAtTickFile.Close()
-		playerAtTickFile.WriteString(playerAtTicksHeader)
-
-		p.RegisterEventHandler(func(e events.FrameDone) {
-			gs := p.GameState()
-			if gs.IngameTick() < 1 || (ticksProcessed == 0 && gs.IngameTick() > 100000 && !gs.IsMatchStarted()) {
-				return
-			}
-			// on the first tick save the game state
-			if ticksProcessed == 0 {
-				header := p.Header()
-				gamesFile.WriteString(fmt.Sprintf("%d,%s,%f,%f,%s,%d\n",
-					curGameID, demFilePath, (&header).FrameRate(), p.TickRate(), (&header).MapName, gameType))
-				idState.nextGame++
-			}
-			if ticksProcessed != 0 {
-				if lastInGameTick >= gs.IngameTick() {
-					print("bad in game tick")
-				}
-			}
-			lastInGameTick = gs.IngameTick()
-			ticksProcessed++
-			if gs.IsWarmupPeriod() {
-				curRound.warmup = true
-			}
-			tickID := idState.nextTick
-			players := getPlayers(&p)
-			sort.Slice(players, func(i int, j int) bool {
-				return players[i].Name < players[j].Name
-			})
-			for _, player := range players {
-				if _, ok := playersTracker[player.UserID]; !ok {
-					playersFile.WriteString(fmt.Sprintf("%d,%d,%s,%d\n",
-						idState.nextPlayer, curGameID, player.Name, player.SteamID64))
-					playersTracker[player.UserID] = idState.nextPlayer
-					idState.nextPlayer++
-				}
-			}
-			var carrierID int64
-			carrierID = getPlayerBySteamID(&playersTracker, gs.Bomb().Carrier)
-			ticksFile.WriteString(fmt.Sprintf("%d,%d,%d,%d,%d,%d,%.2f,%.2f,%.2f\n",
-				tickID, curRound.id, p.CurrentTime().Milliseconds(), p.CurrentFrame(), gs.IngameTick(),
-				carrierID, gs.Bomb().Position().X, gs.Bomb().Position().Y, gs.Bomb().Position().Z))
-
-			for _, player := range players {
-				playerAtTickID := idState.nextPlayerAtTick
-				idState.nextPlayerAtTick++
-				primaryWeapon := -1
-				primaryBulletsClip := 0
-				primaryBulletsReserve := 0
-				secondaryWeapon := -1
-				secondaryBulletsClip := 0
-				secondaryBulletsReserve := 0
-				numHE := 0
-				numFlash := 0
-				numSmoke := 0
-				numIncendiary := 0
-				numMolotov := 0
-				numDecoy := 0
-				numZeus := 0
-				hasDefuser := false
-				hasBomb := false
-				for _, weapon := range player.Weapons() {
-					if weapon.Class() == common.EqClassPistols {
-						secondaryWeapon = int(weapon.Type)
-						secondaryBulletsClip = weapon.AmmoInMagazine()
-						secondaryBulletsReserve = weapon.AmmoReserve()
-					} else if weapon.Class() == common.EqClassSMG || weapon.Class() == common.EqClassHeavy ||
-						weapon.Class() == common.EqClassRifle {
-						primaryWeapon = int(weapon.Type)
-						primaryBulletsClip = weapon.AmmoInMagazine()
-						primaryBulletsReserve = weapon.AmmoReserve()
-					} else if weapon.Type == common.EqHE {
-						numHE = weapon.AmmoReserve() + weapon.AmmoInMagazine()
-					} else if weapon.Type == common.EqFlash {
-						numFlash = weapon.AmmoReserve() + weapon.AmmoInMagazine()
-					} else if weapon.Type == common.EqSmoke {
-						numSmoke = weapon.AmmoReserve() + weapon.AmmoInMagazine()
-					} else if weapon.Type == common.EqMolotov {
-						numMolotov = weapon.AmmoReserve() + weapon.AmmoInMagazine()
-					} else if weapon.Type == common.EqIncendiary {
-						numIncendiary = weapon.AmmoReserve() + weapon.AmmoInMagazine()
-					} else if weapon.Type == common.EqDecoy {
-						numDecoy = weapon.AmmoReserve() + weapon.AmmoInMagazine()
-					} else if weapon.Type == common.EqZeus {
-						numZeus = weapon.AmmoReserve() + weapon.AmmoInMagazine()
-					} else if weapon.Type == common.EqDefuseKit {
-						hasDefuser = true
-					} else if weapon.Type == common.EqBomb {
-						hasBomb = true
-					}
-				}
-				activeWeapon := -1
-				if player.ActiveWeapon() != nil {
-					activeWeapon = int(player.ActiveWeapon().Type)
-				}
-				side := spectator
-				if player.Team == common.TeamCounterTerrorists {
-					side = ctSide
-				} else if player.Team == common.TeamTerrorists {
-					side = tSide
-				}
-				aimPunchAngle := player.Entity.PropertyValueMust("localdata.m_Local.m_aimPunchAngle").VectorVal
-				viewPunchAngle := player.Entity.PropertyValueMust("localdata.m_Local.m_viewPunchAngle").VectorVal
-				playerAtTickFile.WriteString(fmt.Sprintf(
-					"%d,%d,%d,%.2f,%.2f,"+
-						"%.2f,%.2f,%.2f,%.2f,%.2f,"+
-						"%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,"+
-						"%d,%d,%d,%d,"+
-						"%d,%d,%d,%d,%d,%f,%d,%d,%d,"+
-						"%d,%d,%d,%d,%d,%d,%d,"+
-						"%d,%d,%d,%d,%d,%d,%d,%d\n",
-					playerAtTickID, getPlayerBySteamID(&playersTracker, player), tickID, player.Position().X, player.Position().Y,
-					player.Position().Z, player.PositionEyes().Z, player.Velocity().X, player.Velocity().Y, player.Velocity().Z,
-					player.ViewDirectionX(), player.ViewDirectionY(), aimPunchAngle.X, aimPunchAngle.Y, viewPunchAngle.X, viewPunchAngle.Y,
-					side, player.Health(), player.Armor(), boolToInt(player.HasHelmet()),
-					boolToInt(player.IsAlive()), boolToInt(player.IsDucking() || player.IsDuckingInProgress()), boolToInt(player.IsWalking()), boolToInt(player.IsScoped()), boolToInt(player.IsAirborne()), player.FlashDuration, activeWeapon, primaryWeapon, primaryBulletsClip,
-					primaryBulletsReserve, secondaryWeapon, secondaryBulletsClip, secondaryBulletsReserve, numHE, numFlash, numSmoke,
-					numIncendiary, numMolotov, numDecoy, numZeus, boolToInt(hasBomb), boolToInt(hasDefuser), player.Money(), player.Ping()))
-			}
-			idState.nextTick++
-		})
-
-		spottedFile, err := os.Create(localSpottedCSVName)
-		if err != nil {
-			panic(err)
-		}
-		defer spottedFile.Close()
-		spottedFile.WriteString(spottedHeader)
-
-		p.RegisterEventHandler(func(e events.PlayerSpottersChanged) {
-			players := getPlayers(&p)
-			sort.Slice(players, func(i int, j int) bool {
-				return players[i].Name < players[j].Name
-			})
-			for _, possibleSpotter := range players {
-				curID := idState.nextSpotted
-				idState.nextSpotted++
-				spottedFile.WriteString(fmt.Sprintf("%d,%d,%d,%d,%d\n",
-					curID, idState.nextTick, getPlayerBySteamID(&playersTracker, e.Spotted), getPlayerBySteamID(&playersTracker, possibleSpotter),
-					boolToInt(e.Spotted.IsSpottedBy(possibleSpotter))))
-			}
-		})
-
-		footstepFile, err := os.Create(localFootstepCSVName)
-		if err != nil {
-			panic(err)
-		}
-		defer footstepFile.Close()
-		footstepFile.WriteString(footstepHeader)
-
-		p.RegisterEventHandler(func(e events.Footstep) {
-			curID := idState.nextFootstep
-			idState.nextFootstep++
-			footstepFile.WriteString(fmt.Sprintf("%d,%d,%d\n",
-				curID, idState.nextTick, getPlayerBySteamID(&playersTracker, e.Player)))
-		})
-
-		weaponFireFile, err := os.Create(localWeaponFireCSVName)
-		if err != nil {
-			panic(err)
-		}
-		defer weaponFireFile.Close()
-		weaponFireFile.WriteString(weaponFireHeader)
-
-		p.RegisterEventHandler(func(e events.WeaponFire) {
-			curID := idState.nextWeaponFire
-			idState.nextWeaponFire++
-			weaponFireFile.WriteString(fmt.Sprintf("%d,%d,%d,%d\n",
-				curID, idState.nextTick, getPlayerBySteamID(&playersTracker, e.Shooter), int(e.Weapon.Type)))
-		})
-
-		hurtFile, err := os.Create(localHurtCSVName)
-		if err != nil {
-			panic(err)
-		}
-		defer hurtFile.Close()
-		hurtFile.WriteString(hurtHeader)
-
-		p.RegisterEventHandler(func(e events.PlayerHurt) {
-			curID := idState.nextPlayerHurt
-			idState.nextPlayerHurt++
-			hitGroup := int(e.HitGroup)
-			if hitGroup < 0 || (hitGroup > 7 && hitGroup != 10) {
-				hitGroup = -1
-			}
-			hurtFile.WriteString(fmt.Sprintf("%d,%d,%d,%d,%d,%d,%d,%d,%d,%d\n",
-				curID, idState.nextTick, getPlayerBySteamID(&playersTracker, e.Player), getPlayerBySteamID(&playersTracker, e.Attacker),
-				int(e.Weapon.Type), e.ArmorDamage, e.Armor, e.HealthDamage, e.Health, hitGroup))
-		})
-
-		killsFile, err := os.Create(localKillsCSVName)
-		if err != nil {
-			panic(err)
-		}
-		defer killsFile.Close()
-		killsFile.WriteString(hurtHeader)
-
-		p.RegisterEventHandler(func(e events.Kill) {
-			curID := idState.nextKill
-			idState.nextKill++
-			killsFile.WriteString(fmt.Sprintf("%d,%d,%d,%d,%d,%d,%d,%d,%d\n",
-				curID, idState.nextTick, getPlayerBySteamID(&playersTracker, e.Killer), getPlayerBySteamID(&playersTracker, e.Victim),
-				int(e.Weapon.Type), getPlayerBySteamID(&playersTracker, e.Assister), boolToInt(e.IsHeadshot), boolToInt(e.IsWallBang()),
-				e.PenetratedObjects))
-		})
-
-		grenadesFile, err := os.Create(localGrenadesCSVName)
-		if err != nil {
-			panic(err)
-		}
-		defer grenadesFile.Close()
-		grenadesFile.WriteString(grenadeHeader)
-
-		grenadeTrajectoriesFile, err := os.Create(localGrenadeTrajectoriesCSVName)
-		if err != nil {
-			panic(err)
-		}
-		defer grenadeTrajectoriesFile.Close()
-		grenadeTrajectoriesFile.WriteString(grenadeTrajectoryHeader)
-
-		p.RegisterEventHandler(func(e events.GrenadeProjectileThrow) {
-			curID := idState.nextGrenade
-			idState.nextGrenade++
-
-			grenadesTracker[e.Projectile.WeaponInstance.UniqueID()] =
-				append(grenadesTracker[e.Projectile.WeaponInstance.UniqueID()], grenadeRow{curID,
-					getPlayerBySteamID(&playersTracker, e.Projectile.Thrower),
-					e.Projectile.WeaponInstance.Type,
-					idState.nextTick,
-					0,
-					0,
-					0,
-					false,
-					false,
-					nil,
-				})
-
-			if e.Projectile.WeaponInstance.Type == common.EqMolotov ||
-				e.Projectile.WeaponInstance.Type == common.EqIncendiary {
-				playerToLastFireGrenade[getPlayerBySteamID(&playersTracker, e.Projectile.Thrower)] =
-					e.Projectile.WeaponInstance.UniqueID()
-			}
-		})
-
-		saveGrenade := func(id int64) {
-			// molotovs and incendiaries are destoryed before effect ends so only save grenade once
-			// both have happened
-			curGrenade := grenadesTracker[id][0]
-			if curGrenade.destroyed && curGrenade.expired {
-				activeString := strconv.FormatInt(curGrenade.activeTick, 10)
-				if curGrenade.activeTick == 0 {
-					activeString = "\\N"
-				}
-				expiredString := strconv.FormatInt(curGrenade.expiredTick, 10)
-				if curGrenade.expiredTick == 0 {
-					expiredString = "\\N"
-				}
-				destoryString := strconv.FormatInt(curGrenade.destroyTick, 10)
-				if curGrenade.destroyTick == 0 {
-					destoryString = "\\N"
-				}
-				grenadesFile.WriteString(fmt.Sprintf("%d,%d,%d,%d,%s,%s,%s\n",
-					curGrenade.id, curGrenade.thrower, curGrenade.grenadeType,
-					curGrenade.throwTick, activeString, expiredString, destoryString))
-
-				for i := range curGrenade.trajectory {
-					curTrajectoryID := idState.nextGrenadeTrajectory
-					idState.nextGrenadeTrajectory++
-					grenadeTrajectoriesFile.WriteString(fmt.Sprintf("%d,%d,%d,%.2f,%.2f,%.2f\n",
-						curTrajectoryID, curGrenade.id, i,
-						curGrenade.trajectory[i].X, curGrenade.trajectory[i].Y, curGrenade.trajectory[i].Z))
-				}
-
-				grenadesTracker[id] = grenadesTracker[id][1:]
-				if len(grenadesTracker[id]) == 0 {
-					delete(grenadesTracker, id)
-				}
-			}
-		}
-
-		p.RegisterEventHandler(func(e events.HeExplode) {
-			if _, ok := grenadesTracker[e.Grenade.UniqueID()]; !ok {
-				return
-			}
-			curGrenade := grenadesTracker[e.Grenade.UniqueID()][0]
-			curGrenade.activeTick = idState.nextTick
-			curGrenade.expiredTick = idState.nextTick
-			curGrenade.expired = true
-			grenadesTracker[e.Grenade.UniqueID()][0] = curGrenade
-		})
-
-		p.RegisterEventHandler(func(e events.FlashExplode) {
-			if _, ok := grenadesTracker[e.Grenade.UniqueID()]; !ok {
-				return
-			}
-			curGrenade := grenadesTracker[e.Grenade.UniqueID()][0]
-			curGrenade.activeTick = idState.nextTick
-			curGrenade.expiredTick = idState.nextTick
-			curGrenade.expired = true
-			grenadesTracker[e.Grenade.UniqueID()][0] = curGrenade
-			lastFlashExplosion[e.Grenade.UniqueID()] = curGrenade
-		})
-
-		p.RegisterEventHandler(func(e events.DecoyStart) {
-			if _, ok := grenadesTracker[e.Grenade.UniqueID()]; !ok {
-				return
-			}
-			curGrenade := grenadesTracker[e.Grenade.UniqueID()][0]
-			curGrenade.activeTick = idState.nextTick
-			grenadesTracker[e.Grenade.UniqueID()][0] = curGrenade
-		})
-
-		p.RegisterEventHandler(func(e events.DecoyExpired) {
-			if _, ok := grenadesTracker[e.Grenade.UniqueID()]; !ok {
-				return
-			}
-			curGrenade := grenadesTracker[e.Grenade.UniqueID()][0]
-			curGrenade.expiredTick = idState.nextTick
-			curGrenade.expired = true
-			grenadesTracker[e.Grenade.UniqueID()][0] = curGrenade
-		})
-
-		p.RegisterEventHandler(func(e events.SmokeStart) {
-			if e.Grenade == nil {
-				return
-			}
-			if _, ok := grenadesTracker[e.Grenade.UniqueID()]; !ok {
-				return
-			}
-			curGrenade := grenadesTracker[e.Grenade.UniqueID()][0]
-			curGrenade.activeTick = idState.nextTick
-			grenadesTracker[e.Grenade.UniqueID()][0] = curGrenade
-		})
-
-		p.RegisterEventHandler(func(e events.SmokeExpired) {
-			if e.Grenade == nil {
-				return
-			}
-			if _, ok := grenadesTracker[e.Grenade.UniqueID()]; !ok {
-				return
-			}
-			curGrenade := grenadesTracker[e.Grenade.UniqueID()][0]
-			curGrenade.expiredTick = idState.nextTick
-			curGrenade.expired = true
-			grenadesTracker[e.Grenade.UniqueID()][0] = curGrenade
-		})
-
-		p.RegisterEventHandler(func(e events.InfernoStart) {
-			grenadeUniqueID := playerToLastFireGrenade[getPlayerBySteamID(&playersTracker, e.Inferno.Thrower())]
-			if _, ok := grenadesTracker[grenadeUniqueID]; !ok {
-				return
-			}
-			curGrenade := grenadesTracker[grenadeUniqueID][0]
-			curGrenade.activeTick = idState.nextTick
-			grenadesTracker[grenadeUniqueID][0] = curGrenade
-		})
-
-		p.RegisterEventHandler(func(e events.InfernoExpired) {
-			grenadeUniqueID := playerToLastFireGrenade[getPlayerBySteamID(&playersTracker, e.Inferno.Thrower())]
-			if _, ok := grenadesTracker[grenadeUniqueID]; !ok {
-				return
-			}
-			curGrenade := grenadesTracker[grenadeUniqueID][0]
-			curGrenade.expiredTick = idState.nextTick
-			curGrenade.expired = true
-			grenadesTracker[grenadeUniqueID][0] = curGrenade
-			saveGrenade(grenadeUniqueID)
-		})
-
-		p.RegisterEventHandler(func(e events.GrenadeProjectileDestroy) {
-			if _, ok := grenadesTracker[e.Projectile.WeaponInstance.UniqueID()]; !ok {
-				return
-			}
-			// he grenade destroy happens when smoke from after explosion fades
-			// still some smoke left, but totally visible, when smoke grenade expires
-			// fire grenades are destroyed as soon as land, then burn for a while
-			//fmt.Printf("destroying uid: %d\n", e.Projectile.WeaponInstance.UniqueID())
-			curGrenade := grenadesTracker[e.Projectile.WeaponInstance.UniqueID()][0]
-			curGrenade.destroyTick = idState.nextTick
-			curGrenade.destroyed = true
-			curGrenade.trajectory = e.Projectile.Trajectory
-			grenadesTracker[e.Projectile.WeaponInstance.UniqueID()][0] = curGrenade
-			saveGrenade(e.Projectile.WeaponInstance.UniqueID())
-		})
-
-		playerFlashedFile, err := os.Create(localPlayerFlashedCSVName)
-		if err != nil {
-			panic(err)
-		}
-		defer playerFlashedFile.Close()
-		playerFlashedFile.WriteString(playerFlashedHeader)
-
-		p.RegisterEventHandler(func(e events.PlayerFlashed) {
-			source := getPlayerBySteamID(&playersTracker, e.Attacker)
-			target := getPlayerBySteamID(&playersTracker, e.Player)
-			// this handles player flashed event firing twice
-			lastFlashKey := SourceTarget{source, target}
-
-			if oldTick, ok := lastFlash[lastFlashKey]; ok && oldTick == idState.nextTick {
-				return
-			}
-			lastFlash[lastFlashKey] = idState.nextTick
-
-			curID := idState.nextPlayerFlashed
-			idState.nextPlayerFlashed++
-			// filter for flashes whose explosion wasn't recorded
-			if grenade, ok := lastFlashExplosion[e.Projectile.WeaponInstance.UniqueID()]; ok {
-				playerFlashedFile.WriteString(fmt.Sprintf("%d,%d,%d,%d,%d\n",
-					curID, idState.nextTick, grenade.id, getPlayerBySteamID(&playersTracker, e.Attacker),
-					getPlayerBySteamID(&playersTracker, e.Player)))
-			}
-		})
-
-		plantsFile, err := os.Create(localPlantsCSVName)
-		if err != nil {
-			panic(err)
-		}
-		defer plantsFile.Close()
-		plantsFile.WriteString(plantHeader)
-
-		p.RegisterEventHandler(func(e events.BombPlantBegin) {
-			curID := idState.nextPlant
-			idState.nextPlant++
-
-			curPlant = plantRow{curID,
-				idState.nextTick,
-				0,
-				getPlayerBySteamID(&playersTracker, e.Player),
-				false,
-				false,
-			}
-		})
-
-		p.RegisterEventHandler(func(e events.BombPlantAborted) {
-			// plants interrupted by end of round may fire twice, ignore second firing
-			if curPlant.written {
-				return
-			}
-			curPlant.endTick = idState.nextTick
-			curPlant.successful = false
-			plantsFile.WriteString(fmt.Sprintf("%d,%d,%d,%d,%d\n",
-				curPlant.id, curPlant.startTick, curPlant.endTick, curPlant.planter, boolToInt(false)))
-			curPlant.written = true
-		})
-
-		p.RegisterEventHandler(func(e events.BombPlanted) {
-			// plants interrupted by end of round may fire twice, ignore second firing
-			if curPlant.written {
-				return
-			}
-			curPlant.endTick = idState.nextTick
-			curPlant.successful = true
-			plantsFile.WriteString(fmt.Sprintf("%d,%d,%d,%d,%d\n",
-				curPlant.id, curPlant.startTick, curPlant.endTick, curPlant.planter, boolToInt(true)))
-			curPlant.written = true
-		})
-
-		defusalsFile, err := os.Create(localDefusalsCSVName)
-		if err != nil {
-			panic(err)
-		}
-		defer defusalsFile.Close()
-		defusalsFile.WriteString(defusalHeader)
-
-		p.RegisterEventHandler(func(e events.BombDefuseStart) {
-			curID := idState.nextDefusal
-			idState.nextDefusal++
-
-			curDefusal = defusalRow{curID,
-				curPlant.id,
-				idState.nextTick,
-				0,
-				getPlayerBySteamID(&playersTracker, e.Player),
-				false,
-			}
-		})
-
-		p.RegisterEventHandler(func(e events.BombDefuseAborted) {
-			curDefusal.endTick = idState.nextTick
-			curDefusal.successful = false
-			defusalsFile.WriteString(fmt.Sprintf("%d,%d,%d,%d,%d,%d\n",
-				curDefusal.id, curDefusal.plantID, curDefusal.startTick, curDefusal.endTick, curDefusal.defuser, boolToInt(false)))
-		})
-
-		p.RegisterEventHandler(func(e events.BombDefused) {
-			curDefusal.endTick = idState.nextTick
-			curDefusal.successful = true
-			defusalsFile.WriteString(fmt.Sprintf("%d,%d,%d,%d,%d,%d\n",
-				curDefusal.id, curDefusal.plantID, curDefusal.startTick, curDefusal.endTick, curDefusal.defuser, boolToInt(true)))
-		})
-
-		explosionsFile, err := os.Create(localExplosionsCSVName)
-		if err != nil {
-			panic(err)
-		}
-		defer explosionsFile.Close()
-		explosionsFile.WriteString(explosionHeader)
-
-		p.RegisterEventHandler(func(e events.BombExplode) {
-			curID := idState.nextExplosion
-			idState.nextExplosion++
-
-			explosionsFile.WriteString(fmt.Sprintf("%d,%d,%d\n", curID, curPlant.id, idState.nextTick))
-		})
-
-	*/
 
 	err = p.ParseToEnd()
 	if err != nil {
@@ -636,50 +123,134 @@ func ProcessStructure(unprocessedKey string, localDemName string, idState *IDSta
 	}
 }
 
+func ableToClinchOT(teamAScore int, teamBScore int, i int) bool {
+	divisibleRounds := (teamAScore-c.HalfRegulationRounds)%c.HalfOTRounds == 0
+	enoughRounds := teamAScore > teamBScore+1
+	return divisibleRounds && enoughRounds
+}
+
+// period is regulation, OT 0, OT 1, etc
+type periodIndices struct {
+	lastFirstHalfStartIndex int
+	candidateFirstHalfStartIndex int
+	lastFirstHalfEndIndex int
+	lastSecondHalfStartIndex int
+	candidateSecondHalfStartIndex int
+	lastSecondHalfEndIndex int
+}
+
+func computePeriodIndices(lastIndices periodIndices, regulation bool, otNumber int) periodIndices {
+	var resultIndices periodIndices
+	otStartScore := 0
+	if !regulation {
+		otStartScore = c.HalfRegulationRounds + otNumber * c.HalfOTRounds
+	}
+	halfPeriodRounds := c.HalfRegulationRounds
+	if !regulation {
+		halfPeriodRounds = c.HalfOTRounds
+	}
+
+	for i := lastIndices.lastSecondHalfEndIndex + 1; i < filteredRoundsTable.len(); i++ {
+		ctPeriodWins := filteredRoundsTable.rows[i].ctWins - otStartScore
+		tPeriodWins := filteredRoundsTable.rows[i].tWins - otStartScore
+		if ctPeriodWins == 0 && tPeriodWins == 0 {
+			resultIndices.candidateFirstHalfStartIndex = i
+		}
+		if ctPeriodWins + tPeriodWins + 1 == halfPeriodRounds {
+			resultIndices.lastFirstHalfStartIndex = resultIndices.candidateFirstHalfStartIndex
+			resultIndices.lastFirstHalfEndIndex = i
+		}
+	}
+	for i := 0; i < filteredRoundsTable.len(); i++ {
+		ctPeriodWins := filteredRoundsTable.rows[i].ctWins - otStartScore
+		tPeriodWins := filteredRoundsTable.rows[i].tWins - otStartScore
+		if ctPeriodWins + tPeriodWins == halfPeriodRounds {
+			resultIndices.candidateSecondHalfStartIndex = i
+		}
+		// in OT once both teams have 15 rounds
+		if (ctPeriodWins == halfPeriodRounds || tPeriodWins == halfPeriodRounds) &&
+			(ctPeriodWins < halfPeriodRounds || tPeriodWins < halfPeriodRounds) {
+			resultIndices.lastSecondHalfStartIndex = resultIndices.candidateSecondHalfStartIndex
+			resultIndices.lastSecondHalfEndIndex = i
+		}
+	}
+}
+
 func FilterRounds(idState *IDState) {
-	if roundsTable.len() == 0 {
+	filteredRoundsTable = unfilteredRoundsTable
+	if filteredRoundsTable.len() == 0 {
 		return
 	}
 
 	// save first id to continue based on, will need it since modifying table, possibly dropping first round
-	curRoundId := roundsTable.rows[0].id
+	curRoundId := filteredRoundsTable.rows[0].id
 
 	// first get rid of the easy stuff: warmup rounds
 	newRoundIndex := 0
-	for i := 0; i < roundsTable.len(); i++ {
-		if !roundsTable.rows[i].warmup {
-			roundsTable.rows[newRoundIndex] = roundsTable.rows[i]
+	for i := 0; i < filteredRoundsTable.len(); i++ {
+		if !filteredRoundsTable.rows[i].warmup {
+			filteredRoundsTable.rows[newRoundIndex] = filteredRoundsTable.rows[i]
 			newRoundIndex++
 		}
 	}
-	roundsTable.rows = roundsTable.rows[:newRoundIndex]
+	filteredRoundsTable.rows = filteredRoundsTable.rows[:newRoundIndex]
 
+	defaultIndices := periodIndices{
+		InvalidInt, InvalidInt, InvalidInt,
+		InvalidInt, InvalidInt, InvalidInt
+	}
 	// next, grab the first half
 	// 319_titan-epsilon_de_dust2.dem is example of warmup using sourcemod plugin
 	// so not marked as warmup but is warmup
 	// only way I've come up with to remove these is to look for last first half
-	lastFirstHalfStartIndex := InvalidInt
-	candidateFirstHalfStartIndex := InvalidInt
-	lastFirstHalfEndIndex := InvalidInt
-	for i := 0; i < roundsTable.len(); i++ {
-		if roundsTable.rows[i].ctWins == 0 && roundsTable.rows[i].tWins == 0 {
-			candidateFirstHalfStartIndex = i
+	regulationIndices := defaultIndices
+	for i := 0; i < filteredRoundsTable.len(); i++ {
+		if filteredRoundsTable.rows[i].ctWins == 0 && filteredRoundsTable.rows[i].tWins == 0 {
+			regulationIndices.candidateFirstHalfStartIndex = i
 		}
-		if roundsTable.rows[i].ctWins+roundsTable.rows[i].tWins+1 == 15 {
-			lastFirstHalfStartIndex = candidateFirstHalfStartIndex
-			lastFirstHalfEndIndex = i
+		if filteredRoundsTable.rows[i].ctWins+filteredRoundsTable.rows[i].tWins+1 == c.HalfRegulationRounds {
+			regulationIndices.lastFirstHalfStartIndex = regulationIndices.candidateFirstHalfStartIndex
+			regulationIndices.lastFirstHalfEndIndex = i
 		}
 	}
-	lastSecondHalfStartIndex := InvalidInt
-	candidateSecondHalfStartIndex := InvalidInt
-	lastSecondHalfEndIndex := InvalidInt
-	for i := 0; i < roundsTable.len(); i++ {
-		if roundsTable.rows[i].ctWins+roundsTable.rows[i].tWins == 15 {
-			candidateSecondHalfStartIndex = i
+	for i := 0; i < filteredRoundsTable.len(); i++ {
+		if filteredRoundsTable.rows[i].ctWins+filteredRoundsTable.rows[i].tWins == c.HalfRegulationRounds {
+			regulationIndices.candidateSecondHalfStartIndex = i
 		}
-		if roundsTable.rows[i].ctWins == 15 || roundsTable.rows[i].tWins == 15 {
-			lastSecondHalfStartIndex = candidateSecondHalfStartIndex
-			lastSecondHalfEndIndex = i
+		// in OT once both teams have 15 rounds
+		if (filteredRoundsTable.rows[i].ctWins == 15 || filteredRoundsTable.rows[i].tWins == 15) &&
+			(filteredRoundsTable.rows[i].ctWins < 15 || filteredRoundsTable.rows[i].tWins < 15) {
+			regulationIndices.lastSecondHalfStartIndex = regulationIndices.candidateSecondHalfStartIndex
+			regulationIndices.lastSecondHalfEndIndex = i
+		}
+	}
+
+	// get each OT, OTs can be separate
+	// allow breaks between OT halfs
+	var otsIndices []periodIndices
+	// search for all possible starts of OT, can have downtime between regulation and OT
+	// no demo of it, but I've had it happen in my games
+	for i := regulationIndices.lastSecondHalfEndIndex + 1; i < filteredRoundsTable.len(); i++ {
+		curOTNumber := len(otsIndices)
+		// first half of each OT
+		ctCurOTWins := filteredRoundsTable.rows[i].ctWins - (c.HalfRegulationRounds + curOTNumber * c.HalfOTRounds)
+		tCurOTWins := filteredRoundsTable.rows[i].tWins - (c.HalfRegulationRounds + curOTNumber * c.HalfOTRounds)
+		if ctCurOTWins == 0 && tCurOTWins == 0 {
+			if len(otsIndices) == curOTNumber {
+				otsIndices = append(otsIndices, defaultIndices)
+			} else {
+				otsIndices[curOTNumber].candidateFirstHalfStartIndex = i
+			}
+		}
+		if ctCurOTWins + tCurOTWins +
+		// get at least one half of OT (aka min to clinch OT win) with appropriate score board round increases,
+		// then have real OT
+		// subtract 1 from target sum of scores as record score during round, not score after round
+		if ableToClinchOT(filteredRoundsTable.rows[i].ctWins, filteredRoundsTable.rows[i].tWins, i) ||
+			ableToClinchOT(filteredRoundsTable.rows[i].tWins, filteredRoundsTable.rows[i].ctWins, i) {
+			haveOT = true
+			lastOTStartIndex = candidateOTStartIndex
+			lastOTEndIndex = i
 		}
 	}
 
@@ -687,16 +258,16 @@ func FilterRounds(idState *IDState) {
 	tmpHalfs := make([]roundRow, 0,
 		lastFirstHalfEndIndex-lastFirstHalfStartIndex+1+lastSecondHalfEndIndex-lastSecondHalfStartIndex+1)
 	for i := lastFirstHalfStartIndex; i <= lastFirstHalfEndIndex; i++ {
-		tmpHalfs = append(tmpHalfs, roundsTable.rows[i])
+		tmpHalfs = append(tmpHalfs, filteredRoundsTable.rows[i])
 	}
 	for i := lastSecondHalfStartIndex; i <= lastSecondHalfEndIndex; i++ {
-		tmpHalfs = append(tmpHalfs, roundsTable.rows[i])
+		tmpHalfs = append(tmpHalfs, filteredRoundsTable.rows[i])
 	}
-	roundsTable.rows = tmpHalfs
+	filteredRoundsTable.rows = tmpHalfs
 
 	// first round ids/numbers
-	for i := 0; i < roundsTable.len(); i++ {
-		roundsTable.rows[i].id = curRoundId
+	for i := 0; i < filteredRoundsTable.len(); i++ {
+		filteredRoundsTable.rows[i].id = curRoundId
 		curRoundId++
 	}
 	idState.nextRound = curRoundId
@@ -726,7 +297,8 @@ func SaveStructure(idState *IDState, firstRun bool) {
 	gamesFile.WriteString(curGameRow.toString())
 
 	// WRITE ROUNDS
-	roundsTable.saveToFile(c.LocalRoundsCSVName, roundsHeader)
+	unfilteredRoundsTable.saveToFile(c.LocalUnfilteredRoundsCSVName, roundsHeader)
+	filteredRoundsTable.saveToFile(c.LocalFilteredRoundsCSVName, roundsHeader)
 
 	// WRITE PLAYERS
 	playersTable.saveToFile(c.LocalPlayersCSVName, playersHeader)

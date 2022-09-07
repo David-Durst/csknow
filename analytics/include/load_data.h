@@ -200,8 +200,12 @@ class Rounds : public ColStore {
 public:
     int64_t * gameId;
     int64_t * startTick;
+    // tick when objective accomplished
     int64_t * endTick;
+    // tick when run around time ends
+    int64_t * endOfficialTick;
     bool * warmup;
+    bool * overtime;
     int64_t * freezeTimeEnd;
     int16_t * roundNumber;
     int16_t * roundEndReason;
@@ -217,7 +221,9 @@ public:
         gameId = (int64_t *) malloc(rows * sizeof(int64_t));
         startTick = (int64_t *) malloc(rows * sizeof(int64_t));
         endTick = (int64_t *) malloc(rows * sizeof(int64_t));
+        endOfficialTick = (int64_t *) malloc(rows * sizeof(int64_t));
         warmup = (bool *) malloc(rows * sizeof(bool));
+        overtime = (bool *) malloc(rows * sizeof(bool));
         freezeTimeEnd = (int64_t *) malloc(rows * sizeof(int64_t));
         roundNumber = (int16_t *) malloc(rows * sizeof(int16_t));
         roundEndReason = (int16_t *) malloc(rows * sizeof(int16_t));
@@ -236,7 +242,9 @@ public:
         free(gameId);
         free(startTick);
         free(endTick);
+        free(endOfficialTick);
         free(warmup);
+        free(overtime);
         free(freezeTimeEnd);
         free(roundNumber);
         free(roundEndReason);
@@ -895,7 +903,7 @@ public:
 };
 
 void loadData(Equipment & equipment, GameTypes & gameTypes, HitGroups & hitGroups, Games & games, Players & players,
-              Rounds & rounds, Ticks & ticks, PlayerAtTick & playerAtTick, Spotted & spotted, Footstep & footstep, WeaponFire & weaponFire,
+              Rounds & unfilteredRounds, Rounds & filteredRounds, Ticks & ticks, PlayerAtTick & playerAtTick, Spotted & spotted, Footstep & footstep, WeaponFire & weaponFire,
               Kills & kills, Hurt & hurt, Grenades & grenades, Flashed & flashed, GrenadeTrajectories & grenadeTrajectories,
               Plants & plants, Defusals & defusals, Explosions & explosions, string dataPath);
 

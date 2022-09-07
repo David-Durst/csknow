@@ -5,7 +5,8 @@ const (
 	InputStateCSVName               = "input_" + BaseStateCSVName
 	OutputStateCSVName              = "output_" + BaseStateCSVName
 	GlobalGamesCSVName              = "global_games.csv"
-	LocalRoundsCSVName              = "local_rounds.csv"
+	LocalFilteredRoundsCSVName      = "local_filtered_rounds.csv"
+	LocalUnfilteredRoundsCSVName    = "local_unfiltered_rounds.csv"
 	LocalPlayersCSVName             = "local_players.csv"
 	LocalTicksCSVName               = "local_ticks.csv"
 	LocalPlayerAtTickCSVName        = "local_player_at_tick.csv"

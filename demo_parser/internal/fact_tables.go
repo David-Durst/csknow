@@ -135,35 +135,40 @@ func (p *playersTrackerT) alreadyAddedPlayer(gameUserId int) bool {
 
 // ROUNDS TABLE
 
-const roundsHeader = "id,game_id,start_tick,end_tick,warmup," +
+const roundsHeader = "id,game_id,start_tick,end_tick,end_official_tick,warmup,overtime," +
 	"freeze_time_end,round_number,round_end_reason,winner,t_wins,ct_wins\n"
 
 type roundRow struct {
-	finished       bool
-	id             RowIndex
-	gameId         RowIndex
-	startTick      RowIndex
-	endTick        RowIndex
-	warmup         bool
-	freezeTimeEnd  RowIndex
-	roundNumber    int
-	roundEndReason int
-	winner         common.Team
-	tWins          int
-	ctWins         int
+	finished        bool
+	id              RowIndex
+	gameId          RowIndex
+	startTick       RowIndex
+	endTick         RowIndex
+	endOfficialTick RowIndex
+	warmup          bool
+	overtime        bool
+	freezeTimeEnd   RowIndex
+	roundNumber     int
+	roundEndReason  int
+	winner          common.Team
+	tWins           int
+	ctWins          int
 }
 
 var defaultRound = roundRow{false, InvalidId, InvalidId, InvalidId, InvalidId,
-	true, InvalidId, 0, InvalidInt,
+	InvalidId, true, false, InvalidId, 0, InvalidInt,
 	common.TeamUnassigned, InvalidInt, InvalidInt}
 
 func (r roundRow) toString() string {
-	return fmt.Sprintf("%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d\n",
-		r.id, r.gameId, r.startTick, r.endTick, boolToInt(r.warmup), r.freezeTimeEnd,
-		r.roundNumber, r.roundEndReason, r.winner, r.tWins, r.ctWins)
+	return fmt.Sprintf(
+		"%d,%d,%d,%d,%d,%d,%d,"+
+			"%d,%d,%d,%d,%d,%d\n",
+		r.id, r.gameId, r.startTick, r.endTick, r.endOfficialTick, boolToInt(r.warmup), boolToInt(r.overtime),
+		r.freezeTimeEnd, r.roundNumber, r.roundEndReason, r.winner, r.tWins, r.ctWins)
 }
 
-var roundsTable table[roundRow]
+var unfilteredRoundsTable table[roundRow]
+var filteredRoundsTable table[roundRow]
 
 // TICKS TABLE
 

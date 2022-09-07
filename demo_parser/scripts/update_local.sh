@@ -6,8 +6,9 @@ mv ../local_data/flashed/local_flashed.csv  ../local_data/flashed/local_flashed$
 mv ../local_data/grenades/local_grenades.csv  ../local_data/grenades/local_grenades$padded_num.csv 
 mv ../local_data/kills/local_kills.csv  ../local_data/kills/local_kills$padded_num.csv 
 mv ../local_data/player_at_tick/local_player_at_tick.csv   ../local_data/player_at_tick/local_player_at_tick$padded_num.csv  
-mv ../local_data/rounds/local_rounds.csv  ../local_data/rounds/local_rounds$padded_num.csv 
-mv ../local_data/ticks/local_ticks.csv  ../local_data/ticks/local_ticks$padded_num.csv 
+mv ../local_data/rounds/local_filtered_rounds.csv  ../local_data/rounds/local_filtered_rounds$padded_num.csv
+mv ../local_data/rounds/local_unfiltered_rounds.csv  ../local_data/rounds/local_unfiltered_rounds$padded_num.csv
+mv ../local_data/ticks/local_ticks.csv  ../local_data/ticks/local_ticks$padded_num.csv
 mv ../local_data/explosions/local_explosions.csv  ../local_data/explosions/local_explosions$padded_num.csv 
 mv ../local_data/grenade_trajectories/local_grenade_trajectories.csv  ../local_data/grenade_trajectories/local_grenade_trajectories$padded_num.csv 
 mv ../local_data/hurt/local_hurt.csv  ../local_data/hurt/local_hurt$padded_num.csv 
