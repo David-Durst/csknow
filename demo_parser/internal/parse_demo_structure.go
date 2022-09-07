@@ -636,6 +636,72 @@ func ProcessStructure(unprocessedKey string, localDemName string, idState *IDSta
 	}
 }
 
+func FilterRounds(idState *IDState) {
+	if roundsTable.len() == 0 {
+		return
+	}
+
+	// save first id to continue based on, will need it since modifying table, possibly dropping first round
+	curRoundId := roundsTable.rows[0].id
+
+	// first get rid of the easy stuff: warmup rounds
+	newRoundIndex := 0
+	for i := 0; i < roundsTable.len(); i++ {
+		if !roundsTable.rows[i].warmup {
+			roundsTable.rows[newRoundIndex] = roundsTable.rows[i]
+			newRoundIndex++
+		}
+	}
+	roundsTable.rows = roundsTable.rows[:newRoundIndex]
+
+	// next, grab the first half
+	// 319_titan-epsilon_de_dust2.dem is example of warmup using sourcemod plugin
+	// so not marked as warmup but is warmup
+	// only way I've come up with to remove these is to look for last first half
+	lastFirstHalfStartIndex := InvalidInt
+	candidateFirstHalfStartIndex := InvalidInt
+	lastFirstHalfEndIndex := InvalidInt
+	for i := 0; i < roundsTable.len(); i++ {
+		if roundsTable.rows[i].ctWins == 0 && roundsTable.rows[i].tWins == 0 {
+			candidateFirstHalfStartIndex = i
+		}
+		if roundsTable.rows[i].ctWins+roundsTable.rows[i].tWins+1 == 15 {
+			lastFirstHalfStartIndex = candidateFirstHalfStartIndex
+			lastFirstHalfEndIndex = i
+		}
+	}
+	lastSecondHalfStartIndex := InvalidInt
+	candidateSecondHalfStartIndex := InvalidInt
+	lastSecondHalfEndIndex := InvalidInt
+	for i := 0; i < roundsTable.len(); i++ {
+		if roundsTable.rows[i].ctWins+roundsTable.rows[i].tWins == 15 {
+			candidateSecondHalfStartIndex = i
+		}
+		if roundsTable.rows[i].ctWins == 15 || roundsTable.rows[i].tWins == 15 {
+			lastSecondHalfStartIndex = candidateSecondHalfStartIndex
+			lastSecondHalfEndIndex = i
+		}
+	}
+
+	// merge halfs
+	tmpHalfs := make([]roundRow, 0,
+		lastFirstHalfEndIndex-lastFirstHalfStartIndex+1+lastSecondHalfEndIndex-lastSecondHalfStartIndex+1)
+	for i := lastFirstHalfStartIndex; i <= lastFirstHalfEndIndex; i++ {
+		tmpHalfs = append(tmpHalfs, roundsTable.rows[i])
+	}
+	for i := lastSecondHalfStartIndex; i <= lastSecondHalfEndIndex; i++ {
+		tmpHalfs = append(tmpHalfs, roundsTable.rows[i])
+	}
+	roundsTable.rows = tmpHalfs
+
+	// first round ids/numbers
+	for i := 0; i < roundsTable.len(); i++ {
+		roundsTable.rows[i].id = curRoundId
+		curRoundId++
+	}
+	idState.nextRound = curRoundId
+}
+
 func SaveStructure(idState *IDState, firstRun bool) {
 	if firstRun {
 		SaveEquipmentFile()

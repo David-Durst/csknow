@@ -59,6 +59,7 @@ func main() {
 			startIDState = d.ParseInputStateCSV()
 		}
 		d.ProcessStructure(*localDemName, *localDemName, &startIDState, firstRun, 1)
+		d.FilterRounds(&startIDState)
 		d.SaveStructure(&startIDState, firstRun)
 		d.SaveOutputStateCSV(&startIDState)
 		os.Exit(0)
@@ -138,6 +139,7 @@ func main() {
 				fmt.Printf("Handling file: %s\n", *obj.Key)
 				d.DownloadFile(downloader, *obj.Key, *localDemName)
 				d.ProcessStructure(*obj.Key, *localDemName, &startIDState, firstRun, c.GameType(gameTypeIndex))
+				d.FilterRounds(&startIDState)
 				d.SaveStructure(&startIDState, firstRun)
 				firstRun = false
 				d.UploadCSVs(uploader, *obj.Key, csvPrefixLocal)
