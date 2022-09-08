@@ -195,9 +195,12 @@ func ProcessTickData(unprocessedKey string, localDemName string, idState *IDStat
 		curID := idState.nextGrenade
 		idState.nextGrenade++
 
+		gs := p.GameState()
+		gs.IngameTick()
+		if curID == 32 || curID == 33 {
+			print("hi")
+		}
 		/*
-			gs := p.GameState()
-			gs.IngameTick()
 			TODO: reenable when unique ids are working better
 			if grenadeTracker.alreadyAddedGrenade(e.Projectile.WeaponInstance) {
 				fmt.Printf("Adding grenade id twice %d", e.Projectile.WeaponInstance.UniqueID2())
