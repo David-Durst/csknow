@@ -227,7 +227,7 @@ computePosState(const PlayerAtTick & playerAtTick, Vec3 shooterOrigin,
             playerAtTick.viewY[targetPATId] - playerAtTick.viewY[shooterPATId],
             };
 
-    result.isCrouching = playerAtTick.isCrouching[targetPATId];
+    result.isCrouching = playerAtTick.duckingKeyPressed[targetPATId];
     result.isWalking = playerAtTick.isWalking[targetPATId];
     result.isScoped = playerAtTick.isScoped[targetPATId];
     result.isAirborne = playerAtTick.isAirborne[targetPATId];
@@ -472,7 +472,7 @@ void computeEngagementResults(const Rounds & rounds, const Ticks & ticks, const 
                 action.deltaView8 = (Vec2{playerAtTick.viewX[nextShooterPATIdsEight.back()], playerAtTick.viewY[nextShooterPATIdsEight.back()]} -
                                     Vec2{playerAtTick.viewX[shooterPATId], playerAtTick.viewY[shooterPATId]}) / nextShooterPATIdsEight.size();
                 action.nextFireTimeSeconds = secondsUntilNextFire;
-                action.crouch = playerAtTick.isCrouching[nextPATId];
+                action.crouch = playerAtTick.duckingKeyPressed[nextPATId];
                 action.walk = playerAtTick.isWalking[nextPATId];
                 action.scope = playerAtTick.isScoped[nextPATId];
                 action.newlyAirborne = playerAtTick.isAirborne[nextPATId] && !playerAtTick.isAirborne[shooterPATId];

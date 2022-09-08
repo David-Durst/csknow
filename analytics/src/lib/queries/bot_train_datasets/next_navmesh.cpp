@@ -192,7 +192,7 @@ NextNavmeshResult queryNextNavmeshDataset(const Games & games, const Rounds & ro
 
             plan.shootDuringNextThink = playerAtTick.primaryBulletsClip[tmpNextState[threadNum][planIndex].patId] !=
                     playerAtTick.primaryBulletsClip[tmpCurState[threadNum][planIndex].patId];
-            plan.crouchDuringNextThink = playerAtTick.isCrouching[tmpNextState[threadNum][planIndex].patId];
+            plan.crouchDuringNextThink = playerAtTick.duckingKeyPressed[tmpNextState[threadNum][planIndex].patId];
 
             tmpPlan[threadNum].push_back(plan);
         }

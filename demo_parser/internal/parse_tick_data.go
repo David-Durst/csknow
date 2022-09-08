@@ -6,7 +6,6 @@ import (
 	"github.com/markus-wa/demoinfocs-golang/v3/pkg/demoinfocs/common"
 	"github.com/markus-wa/demoinfocs-golang/v3/pkg/demoinfocs/events"
 	"os"
-	"sort"
 	"strconv"
 )
 
@@ -34,12 +33,19 @@ func ProcessTickData(unprocessedKey string, localDemName string, idState *IDStat
 			}
 		}
 
-		//lastInGameTick = gs.IngameTick()
 		ticksProcessed++
+
+		curRound := InvalidId
+		for _, el := range filteredRoundsTable.rows {
+			if idState.nextTick >= el.startTick && idState.nextTick <= el.endOfficialTick {
+				curRound = el.id
+				break
+			}
+		}
 
 		tickID := idState.nextTick
 		ticksTable.append(tickRow{
-			idState.nextTick, curRound.id, p.CurrentTime().Milliseconds(),
+			idState.nextTick, curRound, p.CurrentTime().Milliseconds(),
 			p.CurrentFrame(), gs.IngameTick(),
 			playersTracker.getPlayerIdFromGameData(gs.Bomb().Carrier),
 			gs.Bomb().Position().X, gs.Bomb().Position().Y, gs.Bomb().Position().Z,
@@ -49,10 +55,10 @@ func ProcessTickData(unprocessedKey string, localDemName string, idState *IDStat
 		for _, player := range players {
 			playerAtTickID := idState.nextPlayerAtTick
 			idState.nextPlayerAtTick++
-			primaryWeapon := -1
+			primaryWeapon := common.EqUnknown
 			primaryBulletsClip := 0
 			primaryBulletsReserve := 0
-			secondaryWeapon := -1
+			secondaryWeapon := common.EqUnknown
 			secondaryBulletsClip := 0
 			secondaryBulletsReserve := 0
 			numHE := 0
@@ -66,12 +72,12 @@ func ProcessTickData(unprocessedKey string, localDemName string, idState *IDStat
 			hasBomb := false
 			for _, weapon := range player.Weapons() {
 				if weapon.Class() == common.EqClassPistols {
-					secondaryWeapon = int(weapon.Type)
+					secondaryWeapon = weapon.Type
 					secondaryBulletsClip = weapon.AmmoInMagazine()
 					secondaryBulletsReserve = weapon.AmmoReserve()
 				} else if weapon.Class() == common.EqClassSMG || weapon.Class() == common.EqClassHeavy ||
 					weapon.Class() == common.EqClassRifle {
-					primaryWeapon = int(weapon.Type)
+					primaryWeapon = weapon.Type
 					primaryBulletsClip = weapon.AmmoInMagazine()
 					primaryBulletsReserve = weapon.AmmoReserve()
 				} else if weapon.Type == common.EqHE {
@@ -94,9 +100,9 @@ func ProcessTickData(unprocessedKey string, localDemName string, idState *IDStat
 					hasBomb = true
 				}
 			}
-			activeWeapon := -1
+			activeWeapon := common.EqUnknown
 			if player.ActiveWeapon() != nil {
-				activeWeapon = int(player.ActiveWeapon().Type)
+				activeWeapon = player.ActiveWeapon().Type
 			}
 			side := spectator
 			if player.Team == common.TeamCounterTerrorists {
@@ -106,122 +112,76 @@ func ProcessTickData(unprocessedKey string, localDemName string, idState *IDStat
 			}
 			aimPunchAngle := player.Entity.PropertyValueMust("localdata.m_Local.m_aimPunchAngle").VectorVal
 			viewPunchAngle := player.Entity.PropertyValueMust("localdata.m_Local.m_viewPunchAngle").VectorVal
-			playerAtTickFile.WriteString(fmt.Sprintf(
-				"%d,%d,%d,%.2f,%.2f,"+
-					"%.2f,%.2f,%.2f,%.2f,%.2f,"+
-					"%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,"+
-					"%d,%d,%d,%d,"+
-					"%d,%d,%d,%d,%d,%f,%d,%d,%d,"+
-					"%d,%d,%d,%d,%d,%d,%d,"+
-					"%d,%d,%d,%d,%d,%d,%d,%d\n",
-				playerAtTickID, getPlayerBySteamID(&playersTracker, player), tickID, player.Position().X, player.Position().Y,
-				player.Position().Z, player.PositionEyes().Z, player.Velocity().X, player.Velocity().Y, player.Velocity().Z,
-				player.ViewDirectionX(), player.ViewDirectionY(), aimPunchAngle.X, aimPunchAngle.Y, viewPunchAngle.X, viewPunchAngle.Y,
-				side, player.Health(), player.Armor(), boolToInt(player.HasHelmet()),
-				boolToInt(player.IsAlive()), boolToInt(player.IsDucking() || player.IsDuckingInProgress()), boolToInt(player.IsWalking()), boolToInt(player.IsScoped()), boolToInt(player.IsAirborne()), player.FlashDuration, activeWeapon, primaryWeapon, primaryBulletsClip,
-				primaryBulletsReserve, secondaryWeapon, secondaryBulletsClip, secondaryBulletsReserve, numHE, numFlash, numSmoke,
-				numIncendiary, numMolotov, numDecoy, numZeus, boolToInt(hasBomb), boolToInt(hasDefuser), player.Money(), player.Ping()))
+			duckAmount := player.Entity.PropertyValueMust("m_flDuckAmount").FloatVal
+			playerAtTicksTable.append(playerAtTickRow{
+				playerAtTickID, playersTracker.getPlayerIdFromGameData(player), tickID,
+				player.Position().X, player.Position().Y, player.Position().Z, player.PositionEyes().Z,
+				player.Velocity().X, player.Velocity().Y, player.Velocity().Z,
+				player.ViewDirectionX(), player.ViewDirectionY(),
+				aimPunchAngle.X, aimPunchAngle.Y, viewPunchAngle.X, viewPunchAngle.Y,
+				side, player.Health(), player.Armor(), player.HasHelmet(),
+				player.IsAlive(), player.Flags().DuckingKeyPressed(), duckAmount,
+				player.IsWalking(), player.IsScoped(), player.IsAirborne(),
+				player.FlashDuration, activeWeapon,
+				primaryWeapon, primaryBulletsClip, primaryBulletsReserve,
+				secondaryWeapon, secondaryBulletsClip, secondaryBulletsReserve,
+				numHE, numFlash, numSmoke, numIncendiary, numMolotov,
+				numDecoy, numZeus, hasBomb, hasDefuser, player.Money(), player.Ping(),
+			})
 		}
 		idState.nextTick++
 	})
 
-	spottedFile, err := os.Create(localSpottedCSVName)
-	if err != nil {
-		panic(err)
-	}
-	defer spottedFile.Close()
-	spottedFile.WriteString(spottedHeader)
-
 	p.RegisterEventHandler(func(e events.PlayerSpottersChanged) {
 		players := getPlayers(&p)
-		sort.Slice(players, func(i int, j int) bool {
-			return players[i].Name < players[j].Name
-		})
 		for _, possibleSpotter := range players {
 			curID := idState.nextSpotted
 			idState.nextSpotted++
-			spottedFile.WriteString(fmt.Sprintf("%d,%d,%d,%d,%d\n",
-				curID, idState.nextTick, getPlayerBySteamID(&playersTracker, e.Spotted), getPlayerBySteamID(&playersTracker, possibleSpotter),
-				boolToInt(e.Spotted.IsSpottedBy(possibleSpotter))))
-		}
+			spottedTable.append(spottedRow{
+				curID, idState.nextTick, playersTracker.getPlayerIdFromGameData(e.Spotted),
+				playersTracker.getPlayerIdFromGameData(possibleSpotter),
+				e.Spotted.IsSpottedBy(possibleSpotter),
+		})
 	})
-
-	footstepFile, err := os.Create(localFootstepCSVName)
-	if err != nil {
-		panic(err)
-	}
-	defer footstepFile.Close()
-	footstepFile.WriteString(footstepHeader)
 
 	p.RegisterEventHandler(func(e events.Footstep) {
 		curID := idState.nextFootstep
 		idState.nextFootstep++
-		footstepFile.WriteString(fmt.Sprintf("%d,%d,%d\n",
-			curID, idState.nextTick, getPlayerBySteamID(&playersTracker, e.Player)))
+		footstepTable.append(footstepRow{
+			curID, idState.nextTick, playersTracker.getPlayerIdFromGameData(e.Player),
+		})
 	})
-
-	weaponFireFile, err := os.Create(localWeaponFireCSVName)
-	if err != nil {
-		panic(err)
-	}
-	defer weaponFireFile.Close()
-	weaponFireFile.WriteString(weaponFireHeader)
 
 	p.RegisterEventHandler(func(e events.WeaponFire) {
 		curID := idState.nextWeaponFire
 		idState.nextWeaponFire++
-		weaponFireFile.WriteString(fmt.Sprintf("%d,%d,%d,%d\n",
-			curID, idState.nextTick, getPlayerBySteamID(&playersTracker, e.Shooter), int(e.Weapon.Type)))
+		weaponFireTable.append(weaponFireRow{
+			curID, idState.nextTick,
+			playersTracker.getPlayerIdFromGameData(e.Shooter), e.Weapon.Type,
+		})
 	})
-
-	hurtFile, err := os.Create(localHurtCSVName)
-	if err != nil {
-		panic(err)
-	}
-	defer hurtFile.Close()
-	hurtFile.WriteString(hurtHeader)
 
 	p.RegisterEventHandler(func(e events.PlayerHurt) {
 		curID := idState.nextPlayerHurt
 		idState.nextPlayerHurt++
-		hitGroup := int(e.HitGroup)
-		if hitGroup < 0 || (hitGroup > 7 && hitGroup != 10) {
-			hitGroup = -1
-		}
-		hurtFile.WriteString(fmt.Sprintf("%d,%d,%d,%d,%d,%d,%d,%d,%d,%d\n",
-			curID, idState.nextTick, getPlayerBySteamID(&playersTracker, e.Player), getPlayerBySteamID(&playersTracker, e.Attacker),
-			int(e.Weapon.Type), e.ArmorDamage, e.Armor, e.HealthDamage, e.Health, hitGroup))
+		hurtTable.append(hurtRow{
+			curID, idState.nextTick, playersTracker.getPlayerIdFromGameData(e.Player),
+			playersTracker.getPlayerIdFromGameData(e.Attacker),
+			e.Weapon.Type, e.ArmorDamage, e.Armor,
+			e.HealthDamage, e.Health, e.HitGroup,
+		})
 	})
-
-	killsFile, err := os.Create(localKillsCSVName)
-	if err != nil {
-		panic(err)
-	}
-	defer killsFile.Close()
-	killsFile.WriteString(hurtHeader)
 
 	p.RegisterEventHandler(func(e events.Kill) {
 		curID := idState.nextKill
 		idState.nextKill++
-		killsFile.WriteString(fmt.Sprintf("%d,%d,%d,%d,%d,%d,%d,%d,%d\n",
-			curID, idState.nextTick, getPlayerBySteamID(&playersTracker, e.Killer), getPlayerBySteamID(&playersTracker, e.Victim),
-			int(e.Weapon.Type), getPlayerBySteamID(&playersTracker, e.Assister), boolToInt(e.IsHeadshot), boolToInt(e.IsWallBang()),
-			e.PenetratedObjects))
+		killTable.append(killRow{
+			curID, idState.nextTick, playersTracker.getPlayerIdFromGameData(e.Killer),
+			playersTracker.getPlayerIdFromGameData(e.Victim), e.Weapon.Type,
+			playersTracker.getPlayerIdFromGameData(e.Assister), e.IsHeadshot, e.IsWallBang(),
+			e.PenetratedObjects,
+		})
 	})
-
-	grenadesFile, err := os.Create(localGrenadesCSVName)
-	if err != nil {
-		panic(err)
-	}
-	defer grenadesFile.Close()
-	grenadesFile.WriteString(grenadeHeader)
-
-	grenadeTrajectoriesFile, err := os.Create(localGrenadeTrajectoriesCSVName)
-	if err != nil {
-		panic(err)
-	}
-	defer grenadeTrajectoriesFile.Close()
-	grenadeTrajectoriesFile.WriteString(grenadeTrajectoryHeader)
 
 	p.RegisterEventHandler(func(e events.GrenadeProjectileThrow) {
 		curID := idState.nextGrenade

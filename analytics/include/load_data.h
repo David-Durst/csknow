@@ -374,7 +374,8 @@ public:
     double * armor;
     bool * hasHelmet;
     bool * isAlive;
-    bool * isCrouching;
+    bool * duckingKeyPressed;
+    double * duckAmount;
     bool * isWalking;
     bool * isScoped;
     bool * isAirborne;
@@ -420,7 +421,8 @@ public:
         armor = (double *) malloc(rows * sizeof(double));
         hasHelmet = (bool *) malloc(rows * sizeof(bool));
         isAlive = (bool *) malloc(rows * sizeof(bool));
-        isCrouching = (bool *) malloc(rows * sizeof(bool));
+        duckingKeyPressed = (bool *) malloc(rows * sizeof(bool));
+        duckAmount = (double *) malloc(rows * sizeof(double));
         isWalking = (bool *) malloc(rows * sizeof(bool));
         isScoped = (bool *) malloc(rows * sizeof(bool));
         isAirborne = (bool *) malloc(rows * sizeof(bool));
@@ -480,7 +482,8 @@ public:
         free(armor);
         free(hasHelmet);
         free(isAlive);
-        free(isCrouching);
+        free(duckingKeyPressed);
+        free(duckAmount);
         free(isWalking);
         free(isScoped);
         free(isAirborne);

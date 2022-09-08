@@ -207,7 +207,7 @@ var ticksTable table[tickRow]
 // PLAYERATTICKS TABLE
 
 const playerAtTicksHeader = "id,player_id,tick_id,pos_x,pos_y,pos_z,eye_pos_z,vel_x,vel_y,vel_z,view_x,view_y,aim_punch_x,aim_punch_y," +
-	"view_punch_x,view_punch_y,team,health,armor,has_helmet,is_alive,duck_amount,is_walking,is_scoped," +
+	"view_punch_x,view_punch_y,team,health,armor,has_helmet,is_alive,ducking_key_pressed,duck_amount,is_walking,is_scoped," +
 	"is_airborne,remaining_flash_time,active_weapon,main_weapon,primary_bullets_clip," +
 	"primary_bullets_reserve,secondary_weapon,secondary_bullets_clip,secondary_bullets_reserve,num_he," +
 	"num_flash,num_smoke,num_incendiary,num_molotov,num_decoy,num_zeus,has_defuser,has_bomb,money,ping\n"
@@ -223,8 +223,8 @@ type playerAtTickRow struct {
 	velX                    float64
 	velY                    float64
 	velZ                    float64
-	viewX                   float64
-	viewY                   float64
+	viewX                   float32
+	viewY                   float32
 	aimPunchX               float64
 	aimPunchY               float64
 	viewPunchX              float64
@@ -234,11 +234,12 @@ type playerAtTickRow struct {
 	armor                   int
 	hasHelmet               bool
 	isAlive                 bool
-	duckAmount              float64
+	duckingKeyPressed       bool
+	duckAmount              float32
 	isWalking               bool
 	isScoped                bool
 	isAirborne              bool
-	flashDuration           float64
+	flashDuration           float32
 	activeWeapon            common.EquipmentType
 	primaryWeapon           common.EquipmentType
 	primaryBulletsClip      int
@@ -265,7 +266,7 @@ func (p playerAtTickRow) toString() string {
 			"%.2f,%.2f,%.2f,"+
 			"%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,"+
 			"%d,%d,%d,%d,"+
-			"%d,%.2f,%d,%d,%d,"+
+			"%d,%d,%.2f,%d,%d,%d,"+
 			"%f,%d,%d,%d,"+
 			"%d,%d,%d,%d,"+
 			"%d,%d,%d,%d,%d,%d,%d,"+
@@ -274,7 +275,7 @@ func (p playerAtTickRow) toString() string {
 		p.velX, p.velY, p.velZ,
 		p.viewX, p.viewY, p.aimPunchX, p.aimPunchY, p.viewPunchX, p.viewPunchY,
 		p.team, p.health, p.armor, boolToInt(p.hasHelmet),
-		boolToInt(p.isAlive), p.duckAmount, boolToInt(p.isWalking), boolToInt(p.isScoped), boolToInt(p.isAirborne),
+		boolToInt(p.isAlive), boolToInt(p.duckingKeyPressed), p.duckAmount, boolToInt(p.isWalking), boolToInt(p.isScoped), boolToInt(p.isAirborne),
 		p.flashDuration, p.activeWeapon, p.primaryWeapon, p.primaryBulletsClip,
 		p.primaryBulletsReserve, p.secondaryWeapon, p.secondaryBulletsClip, p.secondaryBulletsReserve,
 		p.numHE, p.numFlash, p.numSmoke, p.numIncendiary, p.numMolotov, p.numDecoy, p.numZeus,
@@ -361,6 +362,32 @@ func (h hurtRow) toString() string {
 }
 
 var hurtTable table[hurtRow]
+
+// KILL TABLE
+
+const killHeader = "id,tick_id,killer,victim,weapon,assister,is_headshot,is_wallbang,penetrated_objects\n"
+
+type killRow struct {
+	id                RowIndex
+	tickId            RowIndex
+	killer            RowIndex
+	victim            RowIndex
+	weapon            common.EquipmentType
+	assister          RowIndex
+	isHeadshot        bool
+	isWallbang        bool
+	penetratedObjects int
+}
+
+func (h killRow) toString() string {
+	return fmt.Sprintf(
+		"%d,%d,%d,%d,%d,"+
+			"%d,%d,%d,%d\n",
+		h.id, h.tickId, h.killer, h.victim, h.weapon,
+		h.assister, boolToInt(h.isHeadshot), boolToInt(h.isWallbang), h.penetratedObjects)
+}
+
+var killTable table[killRow]
 
 // GRENADE TABLE
 
