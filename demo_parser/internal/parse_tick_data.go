@@ -6,6 +6,7 @@ import (
 	"github.com/markus-wa/demoinfocs-golang/v3/pkg/demoinfocs"
 	"github.com/markus-wa/demoinfocs-golang/v3/pkg/demoinfocs/common"
 	"github.com/markus-wa/demoinfocs-golang/v3/pkg/demoinfocs/events"
+	"github.com/oklog/ulid/v2"
 	"os"
 )
 
@@ -26,10 +27,16 @@ func ProcessTickData(unprocessedKey string, localDemName string, idState *IDStat
 	ticksProcessed := 0
 	p.RegisterEventHandler(func(e events.FrameDone) {
 		gs := p.GameState()
-		if ticksProcessed != 0 {
-			if ticksTable.tail().gameTickNumber >= gs.IngameTick() {
-				print("bad in game tick")
-			}
+		players := getPlayers(&p)
+
+		// skip ticks until at least one player is connected
+		if len(players) == 0 {
+			return
+		}
+
+		if ticksProcessed != 0 && ticksTable.tail().gameTickNumber >= gs.IngameTick() {
+			fmt.Printf("bad in game tick: id %d, tick procesed %d, demo tick %d, in-game tick %d\n",
+				idState.nextTick, ticksProcessed, p.CurrentFrame(), gs.IngameTick())
 		}
 
 		ticksProcessed++
@@ -43,14 +50,16 @@ func ProcessTickData(unprocessedKey string, localDemName string, idState *IDStat
 		}
 
 		tickID := idState.nextTick
+		carrierId := InvalidId
+		if gs.Bomb().Carrier != nil {
+			carrierId = playersTracker.getPlayerIdFromGameData(gs.Bomb().Carrier)
+		}
 		ticksTable.append(tickRow{
 			idState.nextTick, curRound, p.CurrentTime().Milliseconds(),
-			p.CurrentFrame(), gs.IngameTick(),
-			playersTracker.getPlayerIdFromGameData(gs.Bomb().Carrier),
+			p.CurrentFrame(), gs.IngameTick(), carrierId,
 			gs.Bomb().Position().X, gs.Bomb().Position().Y, gs.Bomb().Position().Z,
 		})
 
-		players := getPlayers(&p)
 		for _, player := range players {
 			playerAtTickID := idState.nextPlayerAtTick
 			idState.nextPlayerAtTick++
@@ -105,7 +114,12 @@ func ProcessTickData(unprocessedKey string, localDemName string, idState *IDStat
 			}
 			aimPunchAngle := player.Entity.PropertyValueMust("localdata.m_Local.m_aimPunchAngle").VectorVal
 			viewPunchAngle := player.Entity.PropertyValueMust("localdata.m_Local.m_viewPunchAngle").VectorVal
-			duckAmount := player.Entity.PropertyValueMust("m_flDuckAmount").FloatVal
+			// old demos (like 319_titan-epsilon_de_dust2.dem) don't track duck amount (probably not networked at that
+			// time), so just put invalid value, database should assume ducking is instantaneous for those cases
+			duckAmount := InvalidFloat
+			if duckAmountProperty, ok := player.Entity.PropertyValue("m_flDuckAmount"); ok {
+				duckAmount = duckAmountProperty.FloatVal
+			}
 			playerAtTicksTable.append(playerAtTickRow{
 				playerAtTickID, playersTracker.getPlayerIdFromGameData(player), tickID,
 				player.Position().X, player.Position().Y, player.Position().Z, player.PositionEyes().Z,
@@ -177,93 +191,104 @@ func ProcessTickData(unprocessedKey string, localDemName string, idState *IDStat
 		})
 	})
 
+	lastID := ulid.Make()
 	// https://github.com/markus-wa/demoinfocs-golang/issues/160#issuecomment-556075640 shows sequence of events
 	p.RegisterEventHandler(func(e events.GrenadeProjectileThrow) {
-		curID := idState.nextGrenade
-		idState.nextGrenade++
+		/*
+			curID := idState.nextGrenade
+			idState.nextGrenade++
+			gs := p.GameState()
+			gs.IngameTick()
 
-		if grenadeTracker.alreadyAddedGrenade(e.Projectile.UniqueID()) {
-			fmt.Printf("Adding grenade id twice %d", e.Projectile.UniqueID())
+				if grenadeTracker.alreadyAddedGrenade(e.Projectile.WeaponInstance) {
+					fmt.Printf("Adding grenade id twice %d", e.Projectile.WeaponInstance.UniqueID2())
+				}
+		*/
+		if lastID == e.Projectile.WeaponInstance.UniqueID2() {
+			fmt.Printf("duplicate unique ids")
 		}
 
-		grenadeTracker.addGrenade(grenadeRow{
-			curID, playersTracker.getPlayerIdFromGameData(e.Projectile.Thrower),
-			e.Projectile.WeaponInstance.Type, idState.nextTick,
-			InvalidId, InvalidId, InvalidId, nil,
-		}, e.Projectile.UniqueID())
+		/*
+			grenadeTracker.addGrenade(grenadeRow{
+				curID, playersTracker.getPlayerIdFromGameData(e.Projectile.Thrower),
+				e.Projectile.WeaponInstance.Type, idState.nextTick,
+				InvalidId, InvalidId, InvalidId, nil,
+			}, e.Projectile.WeaponInstance)
+		*/
+		lastID = e.Projectile.WeaponInstance.UniqueID2()
 	})
 
 	p.RegisterEventHandler(func(e events.HeExplode) {
-		if !grenadeTracker.alreadyAddedGrenade(e.Grenade.UniqueID()) {
+		if !grenadeTracker.alreadyAddedGrenade(e.Grenade) {
 			return
 		}
-		curGrenade := grenadeTable.get(grenadeTracker.getGrenadeIdFromGameData(e.Grenade.UniqueID()))
+		curGrenade := grenadeTable.get(grenadeTracker.getGrenadeIdFromGameData(e.Grenade))
 		curGrenade.activeTick = idState.nextTick
 		curGrenade.expiredTick = idState.nextTick
 	})
 
 	p.RegisterEventHandler(func(e events.FlashExplode) {
-		if !grenadeTracker.alreadyAddedGrenade(e.Grenade.UniqueID()) {
+		if !grenadeTracker.alreadyAddedGrenade(e.Grenade) {
 			return
 		}
-		curGrenade := grenadeTable.get(grenadeTracker.getGrenadeIdFromGameData(e.Grenade.UniqueID()))
+		curGrenade := grenadeTable.get(grenadeTracker.getGrenadeIdFromGameData(e.Grenade))
 		curGrenade.activeTick = idState.nextTick
 		curGrenade.expiredTick = idState.nextTick
 	})
 
 	p.RegisterEventHandler(func(e events.DecoyStart) {
-		if !grenadeTracker.alreadyAddedGrenade(e.Grenade.UniqueID()) {
+		if !grenadeTracker.alreadyAddedGrenade(e.Grenade) {
 			return
 		}
-		curGrenade := grenadeTable.get(grenadeTracker.getGrenadeIdFromGameData(e.Grenade.UniqueID()))
+		curGrenade := grenadeTable.get(grenadeTracker.getGrenadeIdFromGameData(e.Grenade))
 		curGrenade.activeTick = idState.nextTick
 	})
 
 	p.RegisterEventHandler(func(e events.DecoyExpired) {
-		if !grenadeTracker.alreadyAddedGrenade(e.Grenade.UniqueID()) {
+		if !grenadeTracker.alreadyAddedGrenade(e.Grenade) {
 			return
 		}
-		curGrenade := grenadeTable.get(grenadeTracker.getGrenadeIdFromGameData(e.Grenade.UniqueID()))
+		curGrenade := grenadeTable.get(grenadeTracker.getGrenadeIdFromGameData(e.Grenade))
 		curGrenade.expiredTick = idState.nextTick
 	})
 
 	p.RegisterEventHandler(func(e events.SmokeStart) {
-		if !grenadeTracker.alreadyAddedGrenade(e.Grenade.UniqueID()) {
+		if !grenadeTracker.alreadyAddedGrenade(e.Grenade) {
 			return
 		}
-		curGrenade := grenadeTable.get(grenadeTracker.getGrenadeIdFromGameData(e.Grenade.UniqueID()))
+		curGrenade := grenadeTable.get(grenadeTracker.getGrenadeIdFromGameData(e.Grenade))
 		curGrenade.activeTick = idState.nextTick
 	})
 
 	p.RegisterEventHandler(func(e events.SmokeExpired) {
-		if !grenadeTracker.alreadyAddedGrenade(e.Grenade.UniqueID()) {
+		if !grenadeTracker.alreadyAddedGrenade(e.Grenade) {
 			return
 		}
-		curGrenade := grenadeTable.get(grenadeTracker.getGrenadeIdFromGameData(e.Grenade.UniqueID()))
+		curGrenade := grenadeTable.get(grenadeTracker.getGrenadeIdFromGameData(e.Grenade))
 		curGrenade.expiredTick = idState.nextTick
 	})
 
 	p.RegisterEventHandler(func(e events.FireGrenadeStart) {
-		if !grenadeTracker.alreadyAddedGrenade(e.Grenade.UniqueID()) {
+		if !grenadeTracker.alreadyAddedGrenade(e.Grenade) {
 			return
 		}
-		curGrenade := grenadeTable.get(grenadeTracker.getGrenadeIdFromGameData(e.Grenade.UniqueID()))
+		curGrenade := grenadeTable.get(grenadeTracker.getGrenadeIdFromGameData(e.Grenade))
 		curGrenade.activeTick = idState.nextTick
 	})
 
 	p.RegisterEventHandler(func(e events.FireGrenadeExpired) {
-		if !grenadeTracker.alreadyAddedGrenade(e.Grenade.UniqueID()) {
+		if !grenadeTracker.alreadyAddedGrenade(e.Grenade) {
 			return
 		}
-		curGrenade := grenadeTable.get(grenadeTracker.getGrenadeIdFromGameData(e.Grenade.UniqueID()))
+		curGrenade := grenadeTable.get(grenadeTracker.getGrenadeIdFromGameData(e.Grenade))
 		curGrenade.expiredTick = idState.nextTick
 	})
 
 	p.RegisterEventHandler(func(e events.GrenadeProjectileDestroy) {
-		if !grenadeTracker.alreadyAddedGrenade(e.Projectile.WeaponInstance.UniqueID()) {
+		if !grenadeTracker.alreadyAddedGrenade(e.Projectile.WeaponInstance) {
 			return
 		}
-		curGrenade := grenadeTable.get(grenadeTracker.getGrenadeIdFromGameData(e.Projectile.WeaponInstance.UniqueID()))
+		curGrenade := grenadeTable.get(grenadeTracker.getGrenadeIdFromGameData(e.Projectile.WeaponInstance))
 		// he grenade destroy happens when smoke from after explosion fades
 		// still some smoke left, but totally visible, when smoke grenade expires
 		// fire grenades are destroyed as soon as land, then burn for a while
@@ -296,7 +321,7 @@ func ProcessTickData(unprocessedKey string, localDemName string, idState *IDStat
 		idState.nextPlayerFlashed++
 		playerFlashedTable.append(playerFlashedRow{
 			curID, idState.nextTick,
-			grenadeTracker.getGrenadeIdFromGameData(e.Projectile.WeaponInstance.UniqueID()),
+			grenadeTracker.getGrenadeIdFromGameData(e.Projectile.WeaponInstance),
 			thrower, victim,
 		})
 	})

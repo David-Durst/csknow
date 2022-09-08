@@ -5,8 +5,31 @@ import (
 	c "github.com/David-Durst/csknow/demo_parser/internal/constants"
 )
 
+func InitTablesTrackers() {
+	playersTable.init()
+	unfilteredRoundsTable.init()
+	filteredRoundsTable.init()
+	ticksTable.init()
+	playerAtTicksTable.init()
+	spottedTable.init()
+	footstepTable.init()
+	weaponFireTable.init()
+	killTable.init()
+	hurtTable.init()
+	grenadeTable.init()
+	grenadeTrajectoryTable.init()
+	playerFlashedTable.init()
+	plantTable.init()
+	defusalTable.init()
+	explosionTable.init()
+
+	playersTracker.init()
+	grenadeTracker.init()
+}
+
 func ParseDemo(unprocessedKey string, localDemName string, idState *IDState, firstRun bool, gameType c.GameType) {
 	fmt.Printf("localDemName: %s\n", localDemName)
+	InitTablesTrackers()
 	ProcessStructure(unprocessedKey, localDemName, idState, gameType)
 	FilterRounds(idState)
 	SaveStructure(idState, firstRun)

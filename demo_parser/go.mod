@@ -5,7 +5,8 @@ go 1.18
 require (
 	github.com/aws/aws-sdk-go v1.44.86
 	github.com/golang/geo v0.0.0-20210211234256-740aa86cb551
-	github.com/markus-wa/demoinfocs-golang/v3 v3.0.0
+	github.com/markus-wa/demoinfocs-golang/v3 v3.0.2-0.20220908193112-50f55785b7a0
+	github.com/oklog/ulid/v2 v2.1.0
 )
 
 require (

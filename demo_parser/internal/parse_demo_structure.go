@@ -104,10 +104,10 @@ func ProcessStructure(unprocessedKey string, localDemName string, idState *IDSta
 			return players[i].Name < players[j].Name
 		})
 		for _, player := range players {
-			if !playersTracker.alreadyAddedPlayer(player.UserID) {
+			if !playersTracker.alreadyAddedPlayer(player) {
 				playersTracker.addPlayer(
-					playerRow{idState.nextPlayer, curGameRow.id, player.Name, player.SteamID64},
-					player.UserID)
+					playerRow{idState.nextPlayer, curGameRow.id, player.Name,
+						player.SteamID64}, player)
 				idState.nextPlayer++
 			}
 		}

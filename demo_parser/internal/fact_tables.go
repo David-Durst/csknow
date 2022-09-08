@@ -6,6 +6,7 @@ import (
 	"github.com/golang/geo/r3"
 	"github.com/markus-wa/demoinfocs-golang/v3/pkg/demoinfocs/common"
 	"github.com/markus-wa/demoinfocs-golang/v3/pkg/demoinfocs/events"
+	"github.com/oklog/ulid/v2"
 	"os"
 	"path/filepath"
 	"strings"
@@ -15,6 +16,7 @@ type RowIndex int64
 
 const InvalidId RowIndex = -1
 const InvalidInt int = -1
+const InvalidFloat float32 = -1.
 
 func boolToInt(b bool) int {
 	if b {
@@ -56,6 +58,10 @@ type tableRow interface {
 
 type table[T tableRow] struct {
 	rows []T
+}
+
+func (t *table[T]) init() {
+	t.rows = make([]T, 0)
 }
 
 func (t *table[T]) tail() *T {
@@ -135,17 +141,21 @@ func (p *playersTrackerT) init() {
 	p.gameIdToTableId = make(map[int]RowIndex)
 }
 
-func (p *playersTrackerT) addPlayer(pr playerRow, gameUserId int) {
-	p.gameIdToTableId[gameUserId] = pr.id
+func (p *playersTrackerT) addPlayer(pr playerRow, player *common.Player) {
+	p.gameIdToTableId[player.UserID] = pr.id
 	playersTable.append(pr)
 }
 
-func (p *playersTrackerT) alreadyAddedPlayer(gameUserId int) bool {
-	_, ok := p.gameIdToTableId[gameUserId]
+func (p *playersTrackerT) alreadyAddedPlayer(player *common.Player) bool {
+	_, ok := p.gameIdToTableId[player.UserID]
 	return ok
 }
 
 func (p *playersTrackerT) getPlayerIdFromGameData(player *common.Player) RowIndex {
+	if player == nil {
+		return InvalidId
+	}
+
 	if tableId, ok := p.gameIdToTableId[player.UserID]; ok {
 		return tableId
 	} else {
@@ -424,25 +434,29 @@ func (g grenadeRow) toString() string {
 var grenadeTable table[grenadeRow]
 
 type grenadeTrackerT struct {
-	uniqueIdToTableId map[int64]RowIndex
+	uniqueIdToTableId map[ulid.ULID]RowIndex
 }
 
 func (g *grenadeTrackerT) init() {
-	g.uniqueIdToTableId = make(map[int64]RowIndex)
+	g.uniqueIdToTableId = make(map[ulid.ULID]RowIndex)
 }
 
-func (g *grenadeTrackerT) addGrenade(gr grenadeRow, uniqueId int64) {
-	g.uniqueIdToTableId[uniqueId] = gr.id
+func (g *grenadeTrackerT) addGrenade(gr grenadeRow, grenade *common.Equipment) {
+	g.uniqueIdToTableId[grenade.UniqueID2()] = gr.id
 	grenadeTable.append(gr)
 }
 
-func (g *grenadeTrackerT) alreadyAddedGrenade(uniqueId int64) bool {
-	_, ok := g.uniqueIdToTableId[uniqueId]
+func (g *grenadeTrackerT) alreadyAddedGrenade(grenade *common.Equipment) bool {
+	// smoke grenades can be nil (319_titan-epsilon_de_dust2.dem)
+	if grenade == nil {
+		return false
+	}
+	_, ok := g.uniqueIdToTableId[grenade.UniqueID2()]
 	return ok
 }
 
-func (g *grenadeTrackerT) getGrenadeIdFromGameData(uniqueId int64) RowIndex {
-	if tableId, ok := g.uniqueIdToTableId[uniqueId]; ok {
+func (g *grenadeTrackerT) getGrenadeIdFromGameData(grenade *common.Equipment) RowIndex {
+	if tableId, ok := g.uniqueIdToTableId[grenade.UniqueID2()]; ok {
 		return tableId
 	} else {
 		return InvalidId
