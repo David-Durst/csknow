@@ -54,6 +54,10 @@ func (t *table[T]) tail() *T {
 	return &t.rows[len(t.rows)-1]
 }
 
+func (t *table[T]) get(i RowIndex) *T {
+	return &t.rows[i]
+}
+
 func (t *table[T]) append(e T) {
 	t.rows = append(t.rows, e)
 }
@@ -411,6 +415,34 @@ func (g grenadeRow) toString() string {
 
 var grenadeTable table[grenadeRow]
 
+type grenadeTrackerT struct {
+	uniqueIdToTableId map[int64]RowIndex
+}
+
+func (g *grenadeTrackerT) init() {
+	g.uniqueIdToTableId = make(map[int64]RowIndex)
+}
+
+func (g *grenadeTrackerT) addGrenade(gr grenadeRow, uniqueId int64) {
+	g.uniqueIdToTableId[uniqueId] = gr.id
+	grenadeTable.append(gr)
+}
+
+func (g *grenadeTrackerT) alreadyAddedGrenade(uniqueId int64) bool {
+	_, ok := g.uniqueIdToTableId[uniqueId]
+	return ok
+}
+
+func (g *grenadeTrackerT) getGrenadeIdFromGameData(uniqueId int64) RowIndex {
+	if tableId, ok := g.uniqueIdToTableId[uniqueId]; ok {
+		return tableId
+	} else {
+		return InvalidId
+	}
+}
+
+var grenadeTracker grenadeTrackerT
+
 // GRENADETRAJECTORY TABLE
 
 const grenadeTrajectoryHeader = "id,grenade_id,id_per_grenade,pos_x,pos_y,pos_z\n"
@@ -418,7 +450,7 @@ const grenadeTrajectoryHeader = "id,grenade_id,id_per_grenade,pos_x,pos_y,pos_z\
 type grenadeTrajectoryRow struct {
 	id           RowIndex
 	grenadeId    RowIndex
-	idPerGrenade RowIndex
+	idPerGrenade int
 	posX         float64
 	posY         float64
 	posZ         float64

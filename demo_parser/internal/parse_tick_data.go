@@ -2,11 +2,11 @@ package internal
 
 import (
 	"fmt"
+	c "github.com/David-Durst/csknow/demo_parser/internal/constants"
 	"github.com/markus-wa/demoinfocs-golang/v3/pkg/demoinfocs"
 	"github.com/markus-wa/demoinfocs-golang/v3/pkg/demoinfocs/common"
 	"github.com/markus-wa/demoinfocs-golang/v3/pkg/demoinfocs/events"
 	"os"
-	"strconv"
 )
 
 func getPlayers(p *demoinfocs.Parser) []*common.Player {
@@ -141,7 +141,8 @@ func ProcessTickData(unprocessedKey string, localDemName string, idState *IDStat
 				curID, idState.nextTick, playersTracker.getPlayerIdFromGameData(e.Spotted),
 				playersTracker.getPlayerIdFromGameData(possibleSpotter),
 				e.Spotted.IsSpottedBy(possibleSpotter),
-		})
+			})
+		}
 	})
 
 	p.RegisterEventHandler(func(e events.Footstep) {
@@ -183,289 +184,190 @@ func ProcessTickData(unprocessedKey string, localDemName string, idState *IDStat
 		})
 	})
 
+	// https://github.com/markus-wa/demoinfocs-golang/issues/160#issuecomment-556075640 shows sequence of events
 	p.RegisterEventHandler(func(e events.GrenadeProjectileThrow) {
 		curID := idState.nextGrenade
 		idState.nextGrenade++
 
-		grenadesTracker[e.Projectile.WeaponInstance.UniqueID()] =
-			append(grenadesTracker[e.Projectile.WeaponInstance.UniqueID()], grenadeRow{curID,
-				getPlayerBySteamID(&playersTracker, e.Projectile.Thrower),
-				e.Projectile.WeaponInstance.Type,
-				idState.nextTick,
-				0,
-				0,
-				0,
-				false,
-				false,
-				nil,
-			})
-
-		if e.Projectile.WeaponInstance.Type == common.EqMolotov ||
-			e.Projectile.WeaponInstance.Type == common.EqIncendiary {
-			playerToLastFireGrenade[getPlayerBySteamID(&playersTracker, e.Projectile.Thrower)] =
-				e.Projectile.WeaponInstance.UniqueID()
+		if grenadeTracker.alreadyAddedGrenade(e.Projectile.UniqueID()) {
+			fmt.Printf("Adding grenade id twice %d", e.Projectile.UniqueID())
 		}
+
+		grenadeTracker.addGrenade(grenadeRow{
+			curID, playersTracker.getPlayerIdFromGameData(e.Projectile.Thrower),
+			e.Projectile.WeaponInstance.Type, idState.nextTick,
+			InvalidId, InvalidId, InvalidId, nil,
+		}, e.Projectile.UniqueID())
 	})
 
 	saveGrenade := func(id int64) {
-		// molotovs and incendiaries are destoryed before effect ends so only save grenade once
+		if !grenadeTracker.alreadyAddedGrenade(id) {
+			fmt.Printf("Can't save grenade never added %d", id)
+		}
+		// molotovs and incendiaries are destoryed before effect ends so only save grenade trajectory once
 		// both have happened
-		curGrenade := grenadesTracker[id][0]
-		if curGrenade.destroyed && curGrenade.expired {
-			activeString := strconv.FormatInt(curGrenade.activeTick, 10)
-			if curGrenade.activeTick == 0 {
-				activeString = "\\N"
-			}
-			expiredString := strconv.FormatInt(curGrenade.expiredTick, 10)
-			if curGrenade.expiredTick == 0 {
-				expiredString = "\\N"
-			}
-			destoryString := strconv.FormatInt(curGrenade.destroyTick, 10)
-			if curGrenade.destroyTick == 0 {
-				destoryString = "\\N"
-			}
-			grenadesFile.WriteString(fmt.Sprintf("%d,%d,%d,%d,%s,%s,%s\n",
-				curGrenade.id, curGrenade.thrower, curGrenade.grenadeType,
-				curGrenade.throwTick, activeString, expiredString, destoryString))
-
+		curGrenade := grenadeTable.rows[grenadeTracker.getGrenadeIdFromGameData(id)]
+		if curGrenade.destroyTick != InvalidId && curGrenade.expiredTick != InvalidId {
 			for i := range curGrenade.trajectory {
 				curTrajectoryID := idState.nextGrenadeTrajectory
 				idState.nextGrenadeTrajectory++
-				grenadeTrajectoriesFile.WriteString(fmt.Sprintf("%d,%d,%d,%.2f,%.2f,%.2f\n",
+				grenadeTrajectoryTable.append(grenadeTrajectoryRow{
 					curTrajectoryID, curGrenade.id, i,
-					curGrenade.trajectory[i].X, curGrenade.trajectory[i].Y, curGrenade.trajectory[i].Z))
-			}
-
-			grenadesTracker[id] = grenadesTracker[id][1:]
-			if len(grenadesTracker[id]) == 0 {
-				delete(grenadesTracker, id)
+					curGrenade.trajectory[i].X, curGrenade.trajectory[i].Y, curGrenade.trajectory[i].Z,
+				})
 			}
 		}
 	}
 
 	p.RegisterEventHandler(func(e events.HeExplode) {
-		if _, ok := grenadesTracker[e.Grenade.UniqueID()]; !ok {
+		if !grenadeTracker.alreadyAddedGrenade(e.Grenade.UniqueID()) {
 			return
 		}
-		curGrenade := grenadesTracker[e.Grenade.UniqueID()][0]
+		curGrenade := grenadeTable.get(grenadeTracker.getGrenadeIdFromGameData(e.Grenade.UniqueID()))
 		curGrenade.activeTick = idState.nextTick
 		curGrenade.expiredTick = idState.nextTick
-		curGrenade.expired = true
-		grenadesTracker[e.Grenade.UniqueID()][0] = curGrenade
 	})
 
 	p.RegisterEventHandler(func(e events.FlashExplode) {
-		if _, ok := grenadesTracker[e.Grenade.UniqueID()]; !ok {
+		if !grenadeTracker.alreadyAddedGrenade(e.Grenade.UniqueID()) {
 			return
 		}
-		curGrenade := grenadesTracker[e.Grenade.UniqueID()][0]
+		curGrenade := grenadeTable.get(grenadeTracker.getGrenadeIdFromGameData(e.Grenade.UniqueID()))
 		curGrenade.activeTick = idState.nextTick
 		curGrenade.expiredTick = idState.nextTick
-		curGrenade.expired = true
-		grenadesTracker[e.Grenade.UniqueID()][0] = curGrenade
-		lastFlashExplosion[e.Grenade.UniqueID()] = curGrenade
 	})
 
 	p.RegisterEventHandler(func(e events.DecoyStart) {
-		if _, ok := grenadesTracker[e.Grenade.UniqueID()]; !ok {
+		if !grenadeTracker.alreadyAddedGrenade(e.Grenade.UniqueID()) {
 			return
 		}
-		curGrenade := grenadesTracker[e.Grenade.UniqueID()][0]
+		curGrenade := grenadeTable.get(grenadeTracker.getGrenadeIdFromGameData(e.Grenade.UniqueID()))
 		curGrenade.activeTick = idState.nextTick
-		grenadesTracker[e.Grenade.UniqueID()][0] = curGrenade
 	})
 
 	p.RegisterEventHandler(func(e events.DecoyExpired) {
-		if _, ok := grenadesTracker[e.Grenade.UniqueID()]; !ok {
+		if !grenadeTracker.alreadyAddedGrenade(e.Grenade.UniqueID()) {
 			return
 		}
-		curGrenade := grenadesTracker[e.Grenade.UniqueID()][0]
+		curGrenade := grenadeTable.get(grenadeTracker.getGrenadeIdFromGameData(e.Grenade.UniqueID()))
 		curGrenade.expiredTick = idState.nextTick
-		curGrenade.expired = true
-		grenadesTracker[e.Grenade.UniqueID()][0] = curGrenade
 	})
 
 	p.RegisterEventHandler(func(e events.SmokeStart) {
-		if e.Grenade == nil {
+		if !grenadeTracker.alreadyAddedGrenade(e.Grenade.UniqueID()) {
 			return
 		}
-		if _, ok := grenadesTracker[e.Grenade.UniqueID()]; !ok {
-			return
-		}
-		curGrenade := grenadesTracker[e.Grenade.UniqueID()][0]
+		curGrenade := grenadeTable.get(grenadeTracker.getGrenadeIdFromGameData(e.Grenade.UniqueID()))
 		curGrenade.activeTick = idState.nextTick
-		grenadesTracker[e.Grenade.UniqueID()][0] = curGrenade
 	})
 
 	p.RegisterEventHandler(func(e events.SmokeExpired) {
-		if e.Grenade == nil {
+		if !grenadeTracker.alreadyAddedGrenade(e.Grenade.UniqueID()) {
 			return
 		}
-		if _, ok := grenadesTracker[e.Grenade.UniqueID()]; !ok {
-			return
-		}
-		curGrenade := grenadesTracker[e.Grenade.UniqueID()][0]
+		curGrenade := grenadeTable.get(grenadeTracker.getGrenadeIdFromGameData(e.Grenade.UniqueID()))
 		curGrenade.expiredTick = idState.nextTick
-		curGrenade.expired = true
-		grenadesTracker[e.Grenade.UniqueID()][0] = curGrenade
 	})
 
-	p.RegisterEventHandler(func(e events.InfernoStart) {
-		grenadeUniqueID := playerToLastFireGrenade[getPlayerBySteamID(&playersTracker, e.Inferno.Thrower())]
-		if _, ok := grenadesTracker[grenadeUniqueID]; !ok {
+	p.RegisterEventHandler(func(e events.FireGrenadeStart) {
+		if !grenadeTracker.alreadyAddedGrenade(e.Grenade.UniqueID()) {
 			return
 		}
-		curGrenade := grenadesTracker[grenadeUniqueID][0]
+		curGrenade := grenadeTable.get(grenadeTracker.getGrenadeIdFromGameData(e.Grenade.UniqueID()))
 		curGrenade.activeTick = idState.nextTick
-		grenadesTracker[grenadeUniqueID][0] = curGrenade
 	})
 
-	p.RegisterEventHandler(func(e events.InfernoExpired) {
-		grenadeUniqueID := playerToLastFireGrenade[getPlayerBySteamID(&playersTracker, e.Inferno.Thrower())]
-		if _, ok := grenadesTracker[grenadeUniqueID]; !ok {
+	p.RegisterEventHandler(func(e events.FireGrenadeExpired) {
+		if !grenadeTracker.alreadyAddedGrenade(e.Grenade.UniqueID()) {
 			return
 		}
-		curGrenade := grenadesTracker[grenadeUniqueID][0]
+		curGrenade := grenadeTable.get(grenadeTracker.getGrenadeIdFromGameData(e.Grenade.UniqueID()))
 		curGrenade.expiredTick = idState.nextTick
-		curGrenade.expired = true
-		grenadesTracker[grenadeUniqueID][0] = curGrenade
-		saveGrenade(grenadeUniqueID)
 	})
 
 	p.RegisterEventHandler(func(e events.GrenadeProjectileDestroy) {
-		if _, ok := grenadesTracker[e.Projectile.WeaponInstance.UniqueID()]; !ok {
+		if !grenadeTracker.alreadyAddedGrenade(e.Projectile.WeaponInstance.UniqueID()) {
 			return
 		}
+		curGrenade := grenadeTable.get(grenadeTracker.getGrenadeIdFromGameData(e.Projectile.WeaponInstance.UniqueID()))
 		// he grenade destroy happens when smoke from after explosion fades
 		// still some smoke left, but totally visible, when smoke grenade expires
 		// fire grenades are destroyed as soon as land, then burn for a while
 		//fmt.Printf("destroying uid: %d\n", e.Projectile.WeaponInstance.UniqueID())
-		curGrenade := grenadesTracker[e.Projectile.WeaponInstance.UniqueID()][0]
 		curGrenade.destroyTick = idState.nextTick
-		curGrenade.destroyed = true
 		curGrenade.trajectory = e.Projectile.Trajectory
-		grenadesTracker[e.Projectile.WeaponInstance.UniqueID()][0] = curGrenade
 		saveGrenade(e.Projectile.WeaponInstance.UniqueID())
 	})
 
-	playerFlashedFile, err := os.Create(localPlayerFlashedCSVName)
-	if err != nil {
-		panic(err)
-	}
-	defer playerFlashedFile.Close()
-	playerFlashedFile.WriteString(playerFlashedHeader)
-
 	p.RegisterEventHandler(func(e events.PlayerFlashed) {
-		source := getPlayerBySteamID(&playersTracker, e.Attacker)
-		target := getPlayerBySteamID(&playersTracker, e.Player)
-		// this handles player flashed event firing twice
-		lastFlashKey := SourceTarget{source, target}
+		thrower := playersTracker.getPlayerIdFromGameData(e.Attacker)
+		victim := playersTracker.getPlayerIdFromGameData(e.Player)
 
-		if oldTick, ok := lastFlash[lastFlashKey]; ok && oldTick == idState.nextTick {
+		// this handles player flashed event firing twice
+		if playerFlashedTable.len() > 0 && playerFlashedTable.tail().thrower == thrower &&
+			playerFlashedTable.tail().victim == victim && playerFlashedTable.tail().tickId == idState.nextTick {
 			return
 		}
-		lastFlash[lastFlashKey] = idState.nextTick
 
 		curID := idState.nextPlayerFlashed
 		idState.nextPlayerFlashed++
-		// filter for flashes whose explosion wasn't recorded
-		if grenade, ok := lastFlashExplosion[e.Projectile.WeaponInstance.UniqueID()]; ok {
-			playerFlashedFile.WriteString(fmt.Sprintf("%d,%d,%d,%d,%d\n",
-				curID, idState.nextTick, grenade.id, getPlayerBySteamID(&playersTracker, e.Attacker),
-				getPlayerBySteamID(&playersTracker, e.Player)))
-		}
+		playerFlashedTable.append(playerFlashedRow{
+			curID, idState.nextTick,
+			grenadeTracker.getGrenadeIdFromGameData(e.Projectile.WeaponInstance.UniqueID()),
+			thrower, victim,
+		})
 	})
-
-	plantsFile, err := os.Create(localPlantsCSVName)
-	if err != nil {
-		panic(err)
-	}
-	defer plantsFile.Close()
-	plantsFile.WriteString(plantHeader)
 
 	p.RegisterEventHandler(func(e events.BombPlantBegin) {
 		curID := idState.nextPlant
 		idState.nextPlant++
 
-		curPlant = plantRow{curID,
-			idState.nextTick,
-			0,
-			getPlayerBySteamID(&playersTracker, e.Player),
-			false,
-			false,
-		}
+		plantTable.append(plantRow{
+			curID, idState.nextTick, InvalidId,
+			playersTracker.getPlayerIdFromGameData(e.Player), false,
+		})
 	})
 
 	p.RegisterEventHandler(func(e events.BombPlantAborted) {
-		// plants interrupted by end of round may fire twice, ignore second firing
-		if curPlant.written {
-			return
-		}
-		curPlant.endTick = idState.nextTick
-		curPlant.successful = false
-		plantsFile.WriteString(fmt.Sprintf("%d,%d,%d,%d,%d\n",
-			curPlant.id, curPlant.startTick, curPlant.endTick, curPlant.planter, boolToInt(false)))
-		curPlant.written = true
+		// plants interrupted by end of round may fire twice, this will just take latest result
+		plant := plantTable.tail()
+		plant.endTick = idState.nextTick
+		plant.successful = false
 	})
 
 	p.RegisterEventHandler(func(e events.BombPlanted) {
-		// plants interrupted by end of round may fire twice, ignore second firing
-		if curPlant.written {
-			return
-		}
-		curPlant.endTick = idState.nextTick
-		curPlant.successful = true
-		plantsFile.WriteString(fmt.Sprintf("%d,%d,%d,%d,%d\n",
-			curPlant.id, curPlant.startTick, curPlant.endTick, curPlant.planter, boolToInt(true)))
-		curPlant.written = true
+		// plants interrupted by end of round may fire twice, this will just take latest result
+		plant := plantTable.tail()
+		plant.endTick = idState.nextTick
+		plant.successful = true
 	})
-
-	defusalsFile, err := os.Create(localDefusalsCSVName)
-	if err != nil {
-		panic(err)
-	}
-	defer defusalsFile.Close()
-	defusalsFile.WriteString(defusalHeader)
 
 	p.RegisterEventHandler(func(e events.BombDefuseStart) {
 		curID := idState.nextDefusal
 		idState.nextDefusal++
 
-		curDefusal = defusalRow{curID,
-			curPlant.id,
-			idState.nextTick,
-			0,
-			getPlayerBySteamID(&playersTracker, e.Player),
-			false,
-		}
+		defusalTable.append(defusalRow{
+			curID, plantTable.tail().id, idState.nextTick, InvalidId,
+			playersTracker.getPlayerIdFromGameData(e.Player), false,
+		})
 	})
 
 	p.RegisterEventHandler(func(e events.BombDefuseAborted) {
-		curDefusal.endTick = idState.nextTick
-		curDefusal.successful = false
-		defusalsFile.WriteString(fmt.Sprintf("%d,%d,%d,%d,%d,%d\n",
-			curDefusal.id, curDefusal.plantID, curDefusal.startTick, curDefusal.endTick, curDefusal.defuser, boolToInt(false)))
+		defusal := defusalTable.tail()
+		defusal.endTick = idState.nextTick
+		defusal.successful = false
 	})
 
 	p.RegisterEventHandler(func(e events.BombDefused) {
-		curDefusal.endTick = idState.nextTick
-		curDefusal.successful = true
-		defusalsFile.WriteString(fmt.Sprintf("%d,%d,%d,%d,%d,%d\n",
-			curDefusal.id, curDefusal.plantID, curDefusal.startTick, curDefusal.endTick, curDefusal.defuser, boolToInt(true)))
+		defusal := defusalTable.tail()
+		defusal.endTick = idState.nextTick
+		defusal.successful = true
 	})
-
-	explosionsFile, err := os.Create(localExplosionsCSVName)
-	if err != nil {
-		panic(err)
-	}
-	defer explosionsFile.Close()
-	explosionsFile.WriteString(explosionHeader)
 
 	p.RegisterEventHandler(func(e events.BombExplode) {
 		curID := idState.nextExplosion
 		idState.nextExplosion++
-
-		explosionsFile.WriteString(fmt.Sprintf("%d,%d,%d\n", curID, curPlant.id, idState.nextTick))
+		explosionTable.append(explosionRow{curID, plantTable.tail().id, idState.nextTick})
 	})
 
 	err = p.ParseToEnd()
@@ -473,4 +375,20 @@ func ProcessTickData(unprocessedKey string, localDemName string, idState *IDStat
 		fmt.Printf("Error in parsing. T score %d, CT score %d, progress: %f, error:\n %s\n",
 			p.GameState().TeamTerrorists().Score(), p.GameState().TeamCounterTerrorists().Score(), p.Progress(), err.Error())
 	}
+}
+
+func SaveTickData(idState *IDState) {
+	ticksTable.saveToFile(c.LocalTicksCSVName, ticksHeader)
+	playerAtTicksTable.saveToFile(c.LocalPlayerAtTickCSVName, playerAtTicksHeader)
+	spottedTable.saveToFile(c.LocalSpottedCSVName, spottedHeader)
+	footstepTable.saveToFile(c.LocalFootstepCSVName, footstepHeader)
+	weaponFireTable.saveToFile(c.LocalWeaponFireCSVName, weaponFireHeader)
+	hurtTable.saveToFile(c.LocalHurtCSVName, hurtHeader)
+	killTable.saveToFile(c.LocalKillsCSVName, killHeader)
+	grenadeTable.saveToFile(c.LocalGrenadesCSVName, grenadeHeader)
+	grenadeTrajectoryTable.saveToFile(c.LocalGrenadeTrajectoriesCSVName, grenadeTrajectoryHeader)
+	playerFlashedTable.saveToFile(c.LocalPlayerFlashedCSVName, playerFlashedHeader)
+	plantTable.saveToFile(c.LocalPlantsCSVName, plantHeader)
+	defusalTable.saveToFile(c.LocalDefusalsCSVName, defusalHeader)
+	explosionTable.saveToFile(c.LocalExplosionsCSVName, explosionHeader)
 }
