@@ -6,7 +6,6 @@ import (
 	"github.com/markus-wa/demoinfocs-golang/v3/pkg/demoinfocs"
 	"github.com/markus-wa/demoinfocs-golang/v3/pkg/demoinfocs/common"
 	"github.com/markus-wa/demoinfocs-golang/v3/pkg/demoinfocs/events"
-	"github.com/oklog/ulid/v2"
 	"os"
 )
 
@@ -191,31 +190,25 @@ func ProcessTickData(unprocessedKey string, localDemName string, idState *IDStat
 		})
 	})
 
-	lastID := ulid.Make()
 	// https://github.com/markus-wa/demoinfocs-golang/issues/160#issuecomment-556075640 shows sequence of events
 	p.RegisterEventHandler(func(e events.GrenadeProjectileThrow) {
+		curID := idState.nextGrenade
+		idState.nextGrenade++
+
 		/*
-			curID := idState.nextGrenade
-			idState.nextGrenade++
 			gs := p.GameState()
 			gs.IngameTick()
-
-				if grenadeTracker.alreadyAddedGrenade(e.Projectile.WeaponInstance) {
-					fmt.Printf("Adding grenade id twice %d", e.Projectile.WeaponInstance.UniqueID2())
-				}
+			TODO: reenable when unique ids are working better
+			if grenadeTracker.alreadyAddedGrenade(e.Projectile.WeaponInstance) {
+				fmt.Printf("Adding grenade id twice %d", e.Projectile.WeaponInstance.UniqueID2())
+			}
 		*/
-		if lastID == e.Projectile.WeaponInstance.UniqueID2() {
-			fmt.Printf("duplicate unique ids")
-		}
 
-		/*
-			grenadeTracker.addGrenade(grenadeRow{
-				curID, playersTracker.getPlayerIdFromGameData(e.Projectile.Thrower),
-				e.Projectile.WeaponInstance.Type, idState.nextTick,
-				InvalidId, InvalidId, InvalidId, nil,
-			}, e.Projectile.WeaponInstance)
-		*/
-		lastID = e.Projectile.WeaponInstance.UniqueID2()
+		grenadeTracker.addGrenade(grenadeRow{
+			curID, playersTracker.getPlayerIdFromGameData(e.Projectile.Thrower),
+			e.Projectile.WeaponInstance.Type, idState.nextTick,
+			InvalidId, InvalidId, InvalidId, nil,
+		}, e.Projectile.WeaponInstance)
 	})
 
 	p.RegisterEventHandler(func(e events.HeExplode) {
