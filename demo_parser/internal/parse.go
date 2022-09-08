@@ -1,7 +1,25 @@
 package internal
 
 import (
+	"fmt"
+	c "github.com/David-Durst/csknow/demo_parser/internal/constants"
+)
+
+func ParseDemo(unprocessedKey string, localDemName string, idState *IDState, firstRun bool, gameType c.GameType) {
+	fmt.Printf("localDemName: %s\n", localDemName)
+	ProcessStructure(unprocessedKey, localDemName, idState, gameType)
+	FilterRounds(idState)
+	SaveStructure(idState, firstRun)
+	ProcessTickData(unprocessedKey, localDemName, idState)
+	SaveTickData(idState)
+}
+
+/*
+import (
+	"fmt"
+	c "github.com/David-Durst/csknow/demo_parser/internal/constants"
 	"github.com/markus-wa/demoinfocs-golang/v3/pkg/demoinfocs/common"
+	"path"
 )
 
 type SourceTarget struct {
@@ -22,7 +40,6 @@ const (
 	spectator = 2
 )
 
-/*
 func ProcessFile(unprocessedKey string, localDemName string, idState *IDState, firstRun bool, gameType c.GameType) {
 	demFilePath := path.Base(unprocessedKey)
 	fmt.Printf("localDemName: %s\n", localDemName)
@@ -706,7 +723,6 @@ func ProcessFile(unprocessedKey string, localDemName string, idState *IDState, f
 		))
 	}
 }
-*/
 
 func teamToNum(team common.Team) int {
 	switch team {
@@ -721,11 +737,4 @@ func teamToNum(team common.Team) int {
 	}
 	return -1
 }
-
-func boolToInt(b bool) int {
-	if b {
-		return 1
-	} else {
-		return 0
-	}
-}
+*/

@@ -15,19 +15,21 @@ import (
 )
 
 var localDemName string
-var unprocessedPrefix = "demos/unprocessed2/"
-var processedPrefix = "demos/processed2/"
-var processedSmallPrefix = "demos/processed2_small/"
-var csvPrefixBase = "demos/csvs3/"
 
-// these will be used to replace the prefixes if using bot train data set
-const trainUnprocessedPrefix = "demos/train_data/unprocessed/"
-const trainProcessedPrefix = "demos/train_data/processed/"
-const trainCsvPrefixBase = "demos/train_data/csvs/"
+// prefixes for paths to demos on AWS S3
+var demoUnprocessedPrefix = "demos/unprocessed2/"
+var demoProcessedPrefix = "demos/processed2/"
+var demoProcessedSmallPrefix = "demos/processed2_small/"
 
 // paths to CSVs in AWS
+var csvPrefixBase = "demos/csvs3/"
 var csvPrefixLocal string
 var csvPrefixGlobal string
+
+// these will be used to replace the AWS S3 prefixes if using bot train data set
+const trainDemoUnprocessedPrefix = "demos/train_data/unprocessed/"
+const trainDemoProcessedPrefix = "demos/train_data/processed/"
+const trainCSVPrefixBase = "demos/train_data/csvs/"
 
 func updatePrefixs() {
 	csvPrefixLocal = csvPrefixBase + "local/"
@@ -58,17 +60,15 @@ func main() {
 		if !firstRun {
 			startIDState = d.ParseInputStateCSV()
 		}
-		d.ProcessStructure(*localDemName, *localDemName, &startIDState, firstRun, 1)
-		d.FilterRounds(&startIDState)
-		d.SaveStructure(&startIDState, firstRun)
+		d.ParseDemo(*localDemName, *localDemName, &startIDState, firstRun, c.Pro)
 		d.SaveOutputStateCSV(&startIDState)
 		os.Exit(0)
 	}
 
 	if *trainDataFlag {
-		unprocessedPrefix = trainUnprocessedPrefix
-		processedPrefix = trainProcessedPrefix
-		csvPrefixBase = trainCsvPrefixBase
+		demoUnprocessedPrefix = trainDemoUnprocessedPrefix
+		demoProcessedPrefix = trainDemoProcessedPrefix
+		csvPrefixBase = trainCSVPrefixBase
 		updatePrefixs()
 	}
 
@@ -83,11 +83,11 @@ func main() {
 
 	var filesToMove []string
 	var destinationAppendix []string
-	sourcePrefix := unprocessedPrefix
+	sourcePrefix := demoUnprocessedPrefix
 	if *reprocessFlag {
-		sourcePrefix = processedPrefix
+		sourcePrefix = demoProcessedPrefix
 	} else if *subsetReprocessFlag {
-		sourcePrefix = processedSmallPrefix
+		sourcePrefix = demoProcessedSmallPrefix
 	}
 
 	idStateAWS := csvPrefixBase + c.BaseStateCSVName
@@ -138,9 +138,7 @@ func main() {
 				}
 				fmt.Printf("Handling file: %s\n", *obj.Key)
 				d.DownloadFile(downloader, *obj.Key, *localDemName)
-				d.ProcessStructure(*obj.Key, *localDemName, &startIDState, firstRun, c.GameType(gameTypeIndex))
-				d.FilterRounds(&startIDState)
-				d.SaveStructure(&startIDState, firstRun)
+				d.ParseDemo(*obj.Key, *localDemName, &startIDState, firstRun, c.GameType(gameTypeIndex))
 				firstRun = false
 				d.UploadCSVs(uploader, *obj.Key, csvPrefixLocal)
 				filesToMove = append(filesToMove, *obj.Key)
@@ -169,7 +167,7 @@ func main() {
 			svc.CopyObject(&s3.CopyObjectInput{
 				CopySource: aws.String(d.BucketName + "/" + fileName),
 				Bucket:     aws.String(d.BucketName),
-				Key:        aws.String(processedPrefix + destinationAppendix[i] + filepath.Base(fileName)),
+				Key:        aws.String(demoProcessedPrefix + destinationAppendix[i] + filepath.Base(fileName)),
 			})
 			svc.DeleteObject(&s3.DeleteObjectInput{
 				Bucket: aws.String(d.BucketName),

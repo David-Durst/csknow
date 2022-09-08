@@ -31,7 +31,6 @@ func ProcessStructure(unprocessedKey string, localDemName string, idState *IDSta
 	curGameRow.id = idState.nextGame
 	// increment this locally as won't actually record ticks until after past processing sturcture
 	nextTickId := idState.nextTick
-	fmt.Printf("localDemName: %s\n", localDemName)
 	f, err := os.Open(localDemName)
 	if err != nil {
 		panic(err)

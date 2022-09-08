@@ -14,7 +14,6 @@ func getPlayers(p *demoinfocs.Parser) []*common.Player {
 }
 
 func ProcessTickData(unprocessedKey string, localDemName string, idState *IDState) {
-	fmt.Printf("localDemName: %s\n", localDemName)
 	f, err := os.Open(localDemName)
 	if err != nil {
 		panic(err)
@@ -104,12 +103,6 @@ func ProcessTickData(unprocessedKey string, localDemName string, idState *IDStat
 			if player.ActiveWeapon() != nil {
 				activeWeapon = player.ActiveWeapon().Type
 			}
-			side := spectator
-			if player.Team == common.TeamCounterTerrorists {
-				side = ctSide
-			} else if player.Team == common.TeamTerrorists {
-				side = tSide
-			}
 			aimPunchAngle := player.Entity.PropertyValueMust("localdata.m_Local.m_aimPunchAngle").VectorVal
 			viewPunchAngle := player.Entity.PropertyValueMust("localdata.m_Local.m_viewPunchAngle").VectorVal
 			duckAmount := player.Entity.PropertyValueMust("m_flDuckAmount").FloatVal
@@ -119,7 +112,7 @@ func ProcessTickData(unprocessedKey string, localDemName string, idState *IDStat
 				player.Velocity().X, player.Velocity().Y, player.Velocity().Z,
 				player.ViewDirectionX(), player.ViewDirectionY(),
 				aimPunchAngle.X, aimPunchAngle.Y, viewPunchAngle.X, viewPunchAngle.Y,
-				side, player.Health(), player.Armor(), player.HasHelmet(),
+				int(player.Team), player.Health(), player.Armor(), player.HasHelmet(),
 				player.IsAlive(), player.Flags().DuckingKeyPressed(), duckAmount,
 				player.IsWalking(), player.IsScoped(), player.IsAirborne(),
 				player.FlashDuration, activeWeapon,
@@ -200,25 +193,6 @@ func ProcessTickData(unprocessedKey string, localDemName string, idState *IDStat
 		}, e.Projectile.UniqueID())
 	})
 
-	saveGrenade := func(id int64) {
-		if !grenadeTracker.alreadyAddedGrenade(id) {
-			fmt.Printf("Can't save grenade never added %d", id)
-		}
-		// molotovs and incendiaries are destoryed before effect ends so only save grenade trajectory once
-		// both have happened
-		curGrenade := grenadeTable.rows[grenadeTracker.getGrenadeIdFromGameData(id)]
-		if curGrenade.destroyTick != InvalidId && curGrenade.expiredTick != InvalidId {
-			for i := range curGrenade.trajectory {
-				curTrajectoryID := idState.nextGrenadeTrajectory
-				idState.nextGrenadeTrajectory++
-				grenadeTrajectoryTable.append(grenadeTrajectoryRow{
-					curTrajectoryID, curGrenade.id, i,
-					curGrenade.trajectory[i].X, curGrenade.trajectory[i].Y, curGrenade.trajectory[i].Z,
-				})
-			}
-		}
-	}
-
 	p.RegisterEventHandler(func(e events.HeExplode) {
 		if !grenadeTracker.alreadyAddedGrenade(e.Grenade.UniqueID()) {
 			return
@@ -296,7 +270,16 @@ func ProcessTickData(unprocessedKey string, localDemName string, idState *IDStat
 		//fmt.Printf("destroying uid: %d\n", e.Projectile.WeaponInstance.UniqueID())
 		curGrenade.destroyTick = idState.nextTick
 		curGrenade.trajectory = e.Projectile.Trajectory
-		saveGrenade(e.Projectile.WeaponInstance.UniqueID())
+		// ok to do this just in destroy instead of also in expired like before
+		// because destroy is end of projectile, expired is about fire and not projectile creating fire
+		for i := range curGrenade.trajectory {
+			curTrajectoryID := idState.nextGrenadeTrajectory
+			idState.nextGrenadeTrajectory++
+			grenadeTrajectoryTable.append(grenadeTrajectoryRow{
+				curTrajectoryID, curGrenade.id, i,
+				curGrenade.trajectory[i].X, curGrenade.trajectory[i].Y, curGrenade.trajectory[i].Z,
+			})
+		}
 	})
 
 	p.RegisterEventHandler(func(e events.PlayerFlashed) {

@@ -16,6 +16,14 @@ type RowIndex int64
 const InvalidId RowIndex = -1
 const InvalidInt int = -1
 
+func boolToInt(b bool) int {
+	if b {
+		return 1
+	} else {
+		return 0
+	}
+}
+
 // IDState the next id to use for each fact table
 type IDState struct {
 	nextGame              RowIndex
