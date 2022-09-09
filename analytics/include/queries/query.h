@@ -5,8 +5,6 @@
 #include <string>
 #include <fstream>
 #define NOT_PLAYER_ID -1
-#define INTERNAL_TEAM_CT 0
-#define INTERNAL_TEAM_T 1
 using std::vector;
 using std::stringstream;
 using std::string;

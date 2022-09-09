@@ -353,7 +353,7 @@ public:
     }
 
     void timeStepStateOneHotNumCategories(vector<string> & result, string equipmentIdList) {
-        result.push_back("\"" + std::to_string(INTERNAL_TEAM_CT) + ";" + std::to_string(INTERNAL_TEAM_T) + "\"");
+        result.push_back("\"" + std::to_string(ENGINE_TEAM_CT) + ";" + std::to_string(ENGINE_TEAM_T) + "\"");
         friendlyPlayerStateOneHotNumCategories(result, equipmentIdList);
         enemyPlayerStateOneHotNumCategories(result, equipmentIdList);
         /*

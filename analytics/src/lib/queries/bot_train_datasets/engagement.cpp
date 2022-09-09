@@ -92,7 +92,7 @@ computeEngagementsPerRound(const Rounds & rounds, const Ticks & ticks, const Pla
 
             // skip if not alive and not on CT or T
             if (!playerAtTick.isAlive[patIndex] ||
-                !(playerAtTick.team[patIndex] == CT_TEAM || playerAtTick.team[patIndex] == T_TEAM)) {
+                !(playerAtTick.team[patIndex] == ENGINE_TEAM_CT || playerAtTick.team[patIndex] == ENGINE_TEAM_T)) {
                 continue;
             }
 
@@ -249,7 +249,7 @@ void computeEngagementResults(const Rounds & rounds, const Ticks & ticks, const 
             // get all players on CT or T and their PAT ids in this tick
             for (int64_t patIndex = ticks.patPerTick[tickIndex].minId;
                  patIndex != -1 && patIndex <= ticks.patPerTick[tickIndex].maxId; patIndex++) {
-                if (playerAtTick.team[patIndex] == CT_TEAM || playerAtTick.team[patIndex] == T_TEAM) {
+                if (playerAtTick.team[patIndex] == ENGINE_TEAM_CT || playerAtTick.team[patIndex] == ENGINE_TEAM_T) {
                     activePlayers.push_back(playerAtTick.playerId[patIndex]);
                     activePlayerPATIds[playerAtTick.playerId[patIndex]] = patIndex;
                     activePlayerTeams[playerAtTick.playerId[patIndex]] = playerAtTick.team[patIndex];

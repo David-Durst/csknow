@@ -34,11 +34,11 @@ addStepStatesForTick(const Ticks & ticks, const PlayerAtTick & playerAtTick, con
         assert(navId < timeStepStateCT.navStates.size());
         assert(navId < timeStepStateT.navStates.size());
 
-        if (playerAtTick.team[patIndex] == INTERNAL_TEAM_CT) {
+        if (playerAtTick.team[patIndex] == ENGINE_TEAM_CT) {
             timeStepStateCT.navStates[navId].numFriends++;
             timeStepStateT.navStates[navId].numEnemies++;
         }
-        else if (playerAtTick.team[patIndex] == INTERNAL_TEAM_T) {
+        else if (playerAtTick.team[patIndex] == ENGINE_TEAM_T) {
             timeStepStateCT.navStates[navId].numEnemies++;
             timeStepStateT.navStates[navId].numFriends++;
         }
@@ -46,12 +46,12 @@ addStepStatesForTick(const Ticks & ticks, const PlayerAtTick & playerAtTick, con
 
     for (const auto & [playerId, aabbAndPATId] : playerIdToAABBAndPATId) {
         if (!playerAtTick.isAlive[aabbAndPATId.second] ||
-            (playerAtTick.team[aabbAndPATId.second] != INTERNAL_TEAM_CT &&
-                playerAtTick.team[aabbAndPATId.second] != INTERNAL_TEAM_T)) {
+            (playerAtTick.team[aabbAndPATId.second] != ENGINE_TEAM_CT &&
+                playerAtTick.team[aabbAndPATId.second] != ENGINE_TEAM_T)) {
             continue;
         }
 
-        NextNavmeshResult::TimeStepState timeStepStateForPlayer = playerAtTick.team[aabbAndPATId.second] == INTERNAL_TEAM_CT ?
+        NextNavmeshResult::TimeStepState timeStepStateForPlayer = playerAtTick.team[aabbAndPATId.second] == ENGINE_TEAM_CT ?
                                                                   timeStepStateCT : timeStepStateT;
         timeStepStateForPlayer.curArea = aabbAndPATId.first;
         timeStepStateForPlayer.patId = aabbAndPATId.second;

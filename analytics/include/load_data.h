@@ -12,9 +12,10 @@ using std::vector;
 using std::set;
 using std::unordered_map;
 using std::vector;
-#define CT_TEAM 0
-#define T_TEAM 1
-#define SPECTATOR 2
+#define ENGINE_TEAM_UNASSIGNED 0
+#define ENGINE_TEAM_SPEC 1
+#define ENGINE_TEAM_T 2
+#define ENGINE_TEAM_CT 3
 #define INVALID_ID -1
 
 struct RangeIndexEntry {

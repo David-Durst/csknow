@@ -67,10 +67,10 @@ AggressionEventResult queryAggressionRoles(const Games & games, const Rounds & r
                     AreaId areaId = navFile.get_nearest_area_by_position(
                             vec3Conv({playerAtTick.posX[patIndex], playerAtTick.posY[patIndex], playerAtTick.posZ[patIndex]}))
                                     .get_id();
-                    if (playerAtTick.team[patIndex] == T_TEAM) {
+                    if (playerAtTick.team[patIndex] == ENGINE_TEAM_T) {
                         tAreas[playerAtTick.playerId[patIndex]] = areaId;
                     }
-                    else if (playerAtTick.team[patIndex] == CT_TEAM) {
+                    else if (playerAtTick.team[patIndex] == ENGINE_TEAM_CT) {
                         ctAreas[playerAtTick.playerId[patIndex]] = areaId;
                     }
                 }
