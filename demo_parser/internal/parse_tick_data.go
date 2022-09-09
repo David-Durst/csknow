@@ -211,7 +211,7 @@ func ProcessTickData(unprocessedKey string, localDemName string, idState *IDStat
 		grenadeTracker.addGrenade(grenadeRow{
 			curID, playersTracker.getPlayerIdFromGameData(e.Projectile.Thrower),
 			e.Projectile.WeaponInstance.Type, idState.nextTick,
-			InvalidId, InvalidId, InvalidId, nil,
+			InvalidId, InvalidId, InvalidId,
 		}, e.Projectile.WeaponInstance)
 	})
 
@@ -291,15 +291,14 @@ func ProcessTickData(unprocessedKey string, localDemName string, idState *IDStat
 		// fire grenades are destroyed as soon as land, then burn for a while
 		//fmt.Printf("destroying uid: %d\n", e.Projectile.WeaponInstance.UniqueID())
 		curGrenade.destroyTick = idState.nextTick
-		curGrenade.trajectory = e.Projectile.Trajectory
 		// ok to do this just in destroy instead of also in expired like before
 		// because destroy is end of projectile, expired is about fire and not projectile creating fire
-		for i := range curGrenade.trajectory {
+		for i, el := range e.Projectile.Trajectory {
 			curTrajectoryID := idState.nextGrenadeTrajectory
 			idState.nextGrenadeTrajectory++
 			grenadeTrajectoryTable.append(grenadeTrajectoryRow{
 				curTrajectoryID, curGrenade.id, i,
-				curGrenade.trajectory[i].X, curGrenade.trajectory[i].Y, curGrenade.trajectory[i].Z,
+				el.X, el.Y, el.Z,
 			})
 		}
 	})

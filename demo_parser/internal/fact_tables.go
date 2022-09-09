@@ -3,7 +3,6 @@ package internal
 import (
 	"fmt"
 	c "github.com/David-Durst/csknow/demo_parser/internal/constants"
-	"github.com/golang/geo/r3"
 	"github.com/markus-wa/demoinfocs-golang/v3/pkg/demoinfocs/common"
 	"github.com/markus-wa/demoinfocs-golang/v3/pkg/demoinfocs/events"
 	"github.com/oklog/ulid/v2"
@@ -481,12 +480,11 @@ type grenadeRow struct {
 	activeTick  RowIndex
 	expiredTick RowIndex
 	destroyTick RowIndex
-	trajectory  []r3.Vector
 }
 
 func (g grenadeRow) toString() string {
-	return fmt.Sprintf("%d,%d,%d,%d,%d,%d,%d,%d\n",
-		g.id, g.thrower, g.grenadeType, g.throwTick, g.activeTick, g.expiredTick, g.expiredTick, g.destroyTick)
+	return fmt.Sprintf("%d,%d,%d,%d,%d,%d,%d\n",
+		g.id, g.thrower, g.grenadeType, g.throwTick, g.activeTick, g.expiredTick, g.destroyTick)
 }
 
 func (g grenadeRow) ID() RowIndex {
