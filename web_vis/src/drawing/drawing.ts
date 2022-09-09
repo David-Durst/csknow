@@ -250,7 +250,7 @@ export function drawTick(e: InputEvent) {
     for (let p = 0; p < players.length; p++) {
         let playerText = playersText[p]
         ctx.fillStyle = dark_blue
-        if (players[p].team == 0) {
+        if (players[p].team == 3) {
             if (p == selectedPlayer) {
                 ctx.fillStyle = purple
             }
