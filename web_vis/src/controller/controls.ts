@@ -39,7 +39,7 @@ function playXSpeed(speed: number, isPlayButton: boolean = false) {
     stopPlaying()
     if (isPlayButton && isPlaying) {
         playSpeed = 0
-        playImg.src = "images/play-fill.svg"
+        playImg.src = "vis_images/play-fill.svg"
         playButton.className = "btn btn-secondary playButton"
         rwdButton.className = "btn btn-secondary playButton"
         ffButton.className = "btn btn-secondary playButton"
@@ -48,7 +48,7 @@ function playXSpeed(speed: number, isPlayButton: boolean = false) {
     }
     else {
         playSpeed = speed
-        playImg.src = "images/pause-fill.svg"
+        playImg.src = "vis_images/pause-fill.svg"
         curInterval = window.setInterval(incrementTick, Math.max(1, 1000 / Math.abs(playSpeed)))
         playButton.className = "btn btn-green playButton"
         isPlaying = true

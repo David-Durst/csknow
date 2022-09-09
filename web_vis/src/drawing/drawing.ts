@@ -225,7 +225,7 @@ function trackMouse(e: MouseEvent) {
             playerCoordinate.getCanvasY() + 10 >= minimapCoordinate.getCanvasY()) {
             playerNameLabel.innerHTML = gameData.getPlayerName(players[p].playerId)
             setPosition(players[p].posX, players[p].posY, players[p].posZ)
-            selectedPlayer = p;
+            selectedPlayer = players[p].playerId;
             drawTick(null)
             return
         }
@@ -251,7 +251,7 @@ export function drawTick(e: InputEvent) {
         let playerText = playersText[p]
         ctx.fillStyle = dark_blue
         if (players[p].team == 3) {
-            if (p == selectedPlayer) {
+            if (players[p].playerId == selectedPlayer) {
                 ctx.fillStyle = purple
             }
             else if (playerText == "t" || playerText == "s") {
@@ -260,7 +260,7 @@ export function drawTick(e: InputEvent) {
         }
         else {
             ctx.fillStyle = dark_red
-            if (p == selectedPlayer) {
+            if (players[p].playerId == selectedPlayer) {
                 ctx.fillStyle = yellow
             }
             else if (playerText == "t" || playerText == "s") {
