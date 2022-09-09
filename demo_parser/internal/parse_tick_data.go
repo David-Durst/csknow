@@ -140,11 +140,19 @@ func ProcessTickData(unprocessedKey string, localDemName string, idState *IDStat
 
 	p.RegisterEventHandler(func(e events.PlayerSpottersChanged) {
 		players := getPlayers(&p)
+		spottedPlayer := playersTracker.getPlayerIdFromGameData(e.Spotted)
+
+		// victim may be invalid if they are in the server but spectating
+		// I dont track these players
+		if spottedPlayer == InvalidId {
+			return
+		}
+
 		for _, possibleSpotter := range players {
 			curID := idState.nextSpotted
 			idState.nextSpotted++
 			spottedTable.append(spottedRow{
-				curID, idState.nextTick, playersTracker.getPlayerIdFromGameData(e.Spotted),
+				curID, idState.nextTick, spottedPlayer,
 				playersTracker.getPlayerIdFromGameData(possibleSpotter),
 				e.Spotted.IsSpottedBy(possibleSpotter),
 			})
@@ -303,6 +311,12 @@ func ProcessTickData(unprocessedKey string, localDemName string, idState *IDStat
 	p.RegisterEventHandler(func(e events.PlayerFlashed) {
 		thrower := playersTracker.getPlayerIdFromGameData(e.Attacker)
 		victim := playersTracker.getPlayerIdFromGameData(e.Player)
+
+		// victim may be invalid if they are in the server but spectating
+		// I dont track these players
+		if thrower == InvalidId || victim == InvalidId {
+			return
+		}
 
 		// this handles player flashed event firing twice
 		if playerFlashedTable.len() > 0 && playerFlashedTable.tail().thrower == thrower &&
