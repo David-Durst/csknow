@@ -148,8 +148,8 @@ int main(int argc, char * argv[]) {
     //loadCover(coverOrigins, coverEdges, dataPath);
     //buildCoverIndex(coverOrigins, coverEdges);
 
-    std::cout << "num elements in cover origins: " << coverOrigins.size << std::endl;
-    std::cout << "num elements in cover edges: " << coverEdges.size << std::endl;
+    //std::cout << "num elements in cover origins: " << coverOrigins.size << std::endl;
+    //std::cout << "num elements in cover edges: " << coverEdges.size << std::endl;
 
     QueryGames queryGames(games);
     QueryRounds queryRounds(games, filteredRounds);

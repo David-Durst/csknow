@@ -5,6 +5,7 @@ import (
 	c "github.com/David-Durst/csknow/demo_parser/internal/constants"
 	"github.com/markus-wa/demoinfocs-golang/v3/pkg/demoinfocs/common"
 	"os"
+	"path/filepath"
 )
 
 // SaveEquipmentFile function rather than make on init as need parser to init it's table
@@ -80,7 +81,7 @@ func SaveEquipmentFile() {
 	equipmentToName[common.EqSmoke] = common.EqSmoke.String()
 	equipmentToName[common.EqHE] = common.EqHE.String()
 
-	equipmentFactTable, err := os.Create(c.LocalEquipmentDimTable)
+	equipmentFactTable, err := os.Create(filepath.Join(c.TmpDir, c.LocalEquipmentDimTable))
 	if err != nil {
 		panic(err)
 	}
@@ -93,7 +94,7 @@ func SaveEquipmentFile() {
 }
 
 func SaveGameTypesFile() {
-	gameTypeFactTable, err := os.Create(c.LocalGameTypeDimTable)
+	gameTypeFactTable, err := os.Create(filepath.Join(c.TmpDir, c.LocalGameTypeDimTable))
 	if err != nil {
 		panic(err)
 	}
@@ -106,7 +107,7 @@ func SaveGameTypesFile() {
 }
 
 func SaveHitGroupsFile() {
-	hitGroupFactTable, err := os.Create(c.LocalHitGroupDimTable)
+	hitGroupFactTable, err := os.Create(filepath.Join(c.TmpDir, c.LocalHitGroupDimTable))
 	if err != nil {
 		panic(err)
 	}

@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"os"
 	"path"
+	"path/filepath"
 )
 
 const BucketName = "csknow"
@@ -33,7 +34,7 @@ func DownloadFile(downloader *s3manager.Downloader, fileKey string, localFileNam
 }
 
 func UploadFile(uploader *s3manager.Uploader, csvPath string, fileKey string, csvPrefix string) {
-	csvFile, err := os.Open(csvPath)
+	csvFile, err := os.Open(filepath.Join(c.TmpDir, csvPath))
 	if err != nil {
 		panic(err)
 	}

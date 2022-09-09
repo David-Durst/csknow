@@ -1,6 +1,6 @@
 dir_path=../local_data
 
-for name in players rounds ticks player_at_tick spotted footstep weapon_fire kills hurt grenades flashed grenade_trajectories plants defusals explosions visibilities visibilities_unadjusted actions skill
+for name in players filtered_rounds unfiltered_rounds ticks player_at_tick spotted footstep weapon_fire kills hurt grenades flashed grenade_trajectories plants defusals explosions visibilities visibilities_unadjusted actions skill
 do
     touch ${dir_path}/${name}.csv
     awk 'FNR > 1' ${dir_path}/${name}/*.csv > ${dir_path}/${name}.csv
