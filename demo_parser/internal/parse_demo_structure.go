@@ -243,9 +243,11 @@ func FilterRounds(idState *IDState) {
 	idState.nextRound = curRoundId
 }
 
-func SaveStructure(idState *IDState, firstRun bool) {
+func FlushStructure(firstRun bool) {
 	if firstRun {
 		SaveEquipmentFile()
+		SaveGameTypesFile()
+		SaveHitGroupsFile()
 	}
 
 	// WRITE GAME
@@ -267,9 +269,9 @@ func SaveStructure(idState *IDState, firstRun bool) {
 	gamesFile.WriteString(curGameRow.toString())
 
 	// WRITE ROUNDS
-	unfilteredRoundsTable.saveToFile(c.LocalUnfilteredRoundsCSVName, roundsHeader)
-	filteredRoundsTable.saveToFile(c.LocalFilteredRoundsCSVName, roundsHeader)
+	unfilteredRoundsTable.flush(true)
+	filteredRoundsTable.flush(true)
 
 	// WRITE PLAYERS
-	playersTable.saveToFile(c.LocalPlayersCSVName, playersHeader)
+	playersTable.flush(true)
 }

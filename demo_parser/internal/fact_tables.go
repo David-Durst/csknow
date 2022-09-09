@@ -53,15 +53,25 @@ func DefaultIDState() IDState {
 }
 
 type tableRow interface {
+	ID() RowIndex
 	toString() string
 }
 
 type table[T tableRow] struct {
-	rows []T
+	rows            []T
+	lastRowPreFlush T
+	firstRowID      RowIndex
+	file            *os.File
 }
 
-func (t *table[T]) init() {
+func (t *table[T]) init(fileName string, header string) {
 	t.rows = make([]T, 0)
+	file, err := os.Create(filepath.Join(c.TmpDir, fileName))
+	if err != nil {
+		panic(err)
+	}
+	t.file = file
+	t.file.WriteString(header)
 }
 
 func (t *table[T]) tail() *T {
@@ -69,10 +79,14 @@ func (t *table[T]) tail() *T {
 }
 
 func (t *table[T]) get(i RowIndex) *T {
-	return &t.rows[i]
+	return &t.rows[i-t.firstRowID]
 }
 
 func (t *table[T]) append(e T) {
+	if len(t.rows) == 0 {
+		t.firstRowID = e.ID()
+	}
+
 	t.rows = append(t.rows, e)
 }
 
@@ -80,18 +94,16 @@ func (t *table[T]) len() int {
 	return len(t.rows)
 }
 
-func (t *table[T]) saveToFile(fileName string, header string) {
-	file, err := os.Create(filepath.Join(c.TmpDir, fileName))
-	if err != nil {
-		panic(err)
-	}
-	defer file.Close()
+func (t *table[T]) flush(close bool) {
 	var sb strings.Builder
-	sb.WriteString(header)
 	for _, element := range t.rows {
 		sb.WriteString(element.toString())
 	}
-	file.WriteString(sb.String())
+	t.file.WriteString(sb.String())
+	t.rows = make([]T, 0)
+	if close {
+		t.file.Close()
+	}
 }
 
 // GAMES TABLE
@@ -129,6 +141,10 @@ var defaultPlayer = playerRow{InvalidId, InvalidId, "invalid", 0}
 
 func (p playerRow) toString() string {
 	return fmt.Sprintf("%d,%d,%s,%d\n", p.id, p.gameId, p.name, p.steamID)
+}
+
+func (p playerRow) ID() RowIndex {
+	return p.id
 }
 
 var playersTable table[playerRow]
@@ -199,6 +215,10 @@ func (r roundRow) toString() string {
 		r.freezeTimeEnd, r.roundNumber, r.roundEndReason, r.winner, r.tWins, r.ctWins)
 }
 
+func (r roundRow) ID() RowIndex {
+	return r.id
+}
+
 var unfilteredRoundsTable table[roundRow]
 var filteredRoundsTable table[roundRow]
 
@@ -222,6 +242,10 @@ func (t tickRow) toString() string {
 	return fmt.Sprintf("%d,%d,%d,%d,%d,%d,%.2f,%.2f,%.2f\n",
 		t.id, t.roundId, t.gameTime, t.demoTickNumber, t.gameTickNumber,
 		t.bombCarrier, t.bombX, t.bombY, t.bombZ)
+}
+
+func (t tickRow) ID() RowIndex {
+	return t.id
 }
 
 var ticksTable table[tickRow]
@@ -304,6 +328,10 @@ func (p playerAtTickRow) toString() string {
 		boolToInt(p.hasDefuser), boolToInt(p.hasBomb), p.money, p.ping)
 }
 
+func (p playerAtTickRow) ID() RowIndex {
+	return p.id
+}
+
 var playerAtTicksTable table[playerAtTickRow]
 
 // SPOTTED TABLE
@@ -323,6 +351,10 @@ func (s spottedRow) toString() string {
 		s.id, s.tickId, s.spottedPlayer, s.spotterPlayer, boolToInt(s.isSpotted))
 }
 
+func (s spottedRow) ID() RowIndex {
+	return s.id
+}
+
 var spottedTable table[spottedRow]
 
 // FOOTSTEP TABLE
@@ -337,6 +369,10 @@ type footstepRow struct {
 
 func (f footstepRow) toString() string {
 	return fmt.Sprintf("%d,%d,%d\n", f.id, f.tickId, f.steppingPlayer)
+}
+
+func (f footstepRow) ID() RowIndex {
+	return f.id
 }
 
 var footstepTable table[footstepRow]
@@ -354,6 +390,10 @@ type weaponFireRow struct {
 
 func (w weaponFireRow) toString() string {
 	return fmt.Sprintf("%d,%d,%d,%d\n", w.id, w.tickId, w.shooter, w.weapon)
+}
+
+func (w weaponFireRow) ID() RowIndex {
+	return w.id
 }
 
 var weaponFireTable table[weaponFireRow]
@@ -383,6 +423,10 @@ func (h hurtRow) toString() string {
 		h.weapon, h.armorDamage, h.armor, h.healthDamage, h.health, h.hitGroup)
 }
 
+func (h hurtRow) ID() RowIndex {
+	return h.id
+}
+
 var hurtTable table[hurtRow]
 
 // KILL TABLE
@@ -409,6 +453,10 @@ func (h killRow) toString() string {
 		h.assister, boolToInt(h.isHeadshot), boolToInt(h.isWallbang), h.penetratedObjects)
 }
 
+func (k killRow) ID() RowIndex {
+	return k.id
+}
+
 var killTable table[killRow]
 
 // GRENADE TABLE
@@ -429,6 +477,10 @@ type grenadeRow struct {
 func (g grenadeRow) toString() string {
 	return fmt.Sprintf("%d,%d,%d,%d,%d,%d,%d,%d\n",
 		g.id, g.thrower, g.grenadeType, g.throwTick, g.activeTick, g.expiredTick, g.expiredTick, g.destroyTick)
+}
+
+func (g grenadeRow) ID() RowIndex {
+	return g.id
 }
 
 var grenadeTable table[grenadeRow]
@@ -483,6 +535,10 @@ func (g grenadeTrajectoryRow) toString() string {
 		g.id, g.grenadeId, g.idPerGrenade, g.posX, g.posY, g.posZ)
 }
 
+func (g grenadeTrajectoryRow) ID() RowIndex {
+	return g.id
+}
+
 var grenadeTrajectoryTable table[grenadeTrajectoryRow]
 
 // PLAYERFLASHED TABLE
@@ -500,6 +556,10 @@ type playerFlashedRow struct {
 func (p playerFlashedRow) toString() string {
 	return fmt.Sprintf("%d,%d,%d,%d,%d\n",
 		p.id, p.tickId, p.grenadeId, p.thrower, p.victim)
+}
+
+func (p playerFlashedRow) ID() RowIndex {
+	return p.id
 }
 
 var playerFlashedTable table[playerFlashedRow]
@@ -522,6 +582,10 @@ func (p plantRow) toString() string {
 		p.id, p.startTick, p.endTick, p.planter, boolToInt(p.successful))
 }
 
+func (p plantRow) ID() RowIndex {
+	return p.id
+}
+
 var plantTable table[plantRow]
 
 // DEFUSAL TABLE
@@ -542,6 +606,10 @@ func (d defusalRow) toString() string {
 		d.id, d.plantId, d.startTick, d.endTick, d.defuser, boolToInt(d.successful))
 }
 
+func (d defusalRow) ID() RowIndex {
+	return d.id
+}
+
 var defusalTable table[defusalRow]
 
 // EXPLOSION TABLE
@@ -556,6 +624,10 @@ type explosionRow struct {
 
 func (e explosionRow) toString() string {
 	return fmt.Sprintf("%d,%d,%d\n", e.id, e.plantId, e.tickId)
+}
+
+func (e explosionRow) ID() RowIndex {
+	return e.id
 }
 
 var explosionTable table[explosionRow]

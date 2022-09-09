@@ -6,22 +6,22 @@ import (
 )
 
 func InitTablesTrackers() {
-	playersTable.init()
-	unfilteredRoundsTable.init()
-	filteredRoundsTable.init()
-	ticksTable.init()
-	playerAtTicksTable.init()
-	spottedTable.init()
-	footstepTable.init()
-	weaponFireTable.init()
-	killTable.init()
-	hurtTable.init()
-	grenadeTable.init()
-	grenadeTrajectoryTable.init()
-	playerFlashedTable.init()
-	plantTable.init()
-	defusalTable.init()
-	explosionTable.init()
+	playersTable.init(c.LocalPlayersCSVName, playersHeader)
+	unfilteredRoundsTable.init(c.LocalUnfilteredRoundsCSVName, roundsHeader)
+	filteredRoundsTable.init(c.LocalFilteredRoundsCSVName, roundsHeader)
+	ticksTable.init(c.LocalTicksCSVName, ticksHeader)
+	playerAtTicksTable.init(c.LocalPlayerAtTickCSVName, playerAtTicksHeader)
+	spottedTable.init(c.LocalSpottedCSVName, spottedHeader)
+	footstepTable.init(c.LocalFootstepCSVName, footstepHeader)
+	weaponFireTable.init(c.LocalWeaponFireCSVName, weaponFireHeader)
+	hurtTable.init(c.LocalHurtCSVName, hurtHeader)
+	killTable.init(c.LocalKillsCSVName, killHeader)
+	grenadeTable.init(c.LocalGrenadesCSVName, grenadeHeader)
+	grenadeTrajectoryTable.init(c.LocalGrenadeTrajectoriesCSVName, grenadeTrajectoryHeader)
+	playerFlashedTable.init(c.LocalPlayerFlashedCSVName, playerFlashedHeader)
+	plantTable.init(c.LocalPlantsCSVName, plantHeader)
+	defusalTable.init(c.LocalDefusalsCSVName, defusalHeader)
+	explosionTable.init(c.LocalExplosionsCSVName, explosionHeader)
 
 	playersTracker.init()
 	grenadeTracker.init()
@@ -32,9 +32,11 @@ func ParseDemo(unprocessedKey string, localDemName string, idState *IDState, fir
 	InitTablesTrackers()
 	ProcessStructure(unprocessedKey, localDemName, idState, gameType)
 	FilterRounds(idState)
-	SaveStructure(idState, firstRun)
 	ProcessTickData(unprocessedKey, localDemName, idState)
-	SaveTickData(idState)
+	// this only needs to be called once, so it always closes
+	FlushStructure(firstRun)
+	// this data is big, so flush during run multiple times, close once after done demo
+	FlushTickData(true)
 }
 
 /*

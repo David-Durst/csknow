@@ -54,8 +54,6 @@ func main() {
 		os.Exit(0)
 	}
 
-	d.SaveGameTypesFile()
-	d.SaveHitGroupsFile()
 	if *localFlag {
 		if !firstRun {
 			startIDState = d.ParseInputStateCSV()

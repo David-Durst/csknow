@@ -1052,6 +1052,9 @@ void loadGrenadeTrajectoriesFile(GrenadeTrajectories & grenadeTrajectories, stri
     for (size_t curStart = firstRow + 1, curDelimiter = getNextDelimiter(file, curStart, stats.st_size);
          curDelimiter < stats.st_size;
          curStart = curDelimiter + 1, curDelimiter = getNextDelimiter(file, curStart, stats.st_size)) {
+        if (rowNumber == 29) {
+            int x = 2;
+        }
         if (colNumber == 0) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, grenadeTrajectories.id[arrayEntry]);
         }

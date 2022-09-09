@@ -2,7 +2,6 @@ package internal
 
 import (
 	"fmt"
-	c "github.com/David-Durst/csknow/demo_parser/internal/constants"
 	"github.com/markus-wa/demoinfocs-golang/v3/pkg/demoinfocs"
 	"github.com/markus-wa/demoinfocs-golang/v3/pkg/demoinfocs/common"
 	"github.com/markus-wa/demoinfocs-golang/v3/pkg/demoinfocs/events"
@@ -23,7 +22,6 @@ func ProcessTickData(unprocessedKey string, localDemName string, idState *IDStat
 	p := demoinfocs.NewParser(f)
 	defer p.Close()
 
-	ticksProcessed := 0
 	p.RegisterEventHandler(func(e events.FrameDone) {
 		gs := p.GameState()
 		players := getPlayers(&p)
@@ -33,12 +31,10 @@ func ProcessTickData(unprocessedKey string, localDemName string, idState *IDStat
 			return
 		}
 
-		if ticksProcessed != 0 && ticksTable.tail().gameTickNumber >= gs.IngameTick() {
-			fmt.Printf("bad in game tick: id %d, tick procesed %d, demo tick %d, in-game tick %d\n",
-				idState.nextTick, ticksProcessed, p.CurrentFrame(), gs.IngameTick())
+		if ticksTable.len() > 0 && ticksTable.tail().gameTickNumber >= gs.IngameTick() {
+			fmt.Printf("bad in game tick: id %d, demo tick %d, in-game tick %d\n",
+				idState.nextTick, p.CurrentFrame(), gs.IngameTick())
 		}
-
-		ticksProcessed++
 
 		curRound := InvalidId
 		for _, el := range filteredRoundsTable.rows {
@@ -385,6 +381,10 @@ func ProcessTickData(unprocessedKey string, localDemName string, idState *IDStat
 		explosionTable.append(explosionRow{curID, plantTable.tail().id, idState.nextTick})
 	})
 
+	p.RegisterEventHandler(func(e events.RoundEndOfficial) {
+		FlushTickData(false)
+	})
+
 	err = p.ParseToEnd()
 	if err != nil {
 		fmt.Printf("Error in parsing. T score %d, CT score %d, progress: %f, error:\n %s\n",
@@ -392,18 +392,18 @@ func ProcessTickData(unprocessedKey string, localDemName string, idState *IDStat
 	}
 }
 
-func SaveTickData(idState *IDState) {
-	ticksTable.saveToFile(c.LocalTicksCSVName, ticksHeader)
-	playerAtTicksTable.saveToFile(c.LocalPlayerAtTickCSVName, playerAtTicksHeader)
-	spottedTable.saveToFile(c.LocalSpottedCSVName, spottedHeader)
-	footstepTable.saveToFile(c.LocalFootstepCSVName, footstepHeader)
-	weaponFireTable.saveToFile(c.LocalWeaponFireCSVName, weaponFireHeader)
-	hurtTable.saveToFile(c.LocalHurtCSVName, hurtHeader)
-	killTable.saveToFile(c.LocalKillsCSVName, killHeader)
-	grenadeTable.saveToFile(c.LocalGrenadesCSVName, grenadeHeader)
-	grenadeTrajectoryTable.saveToFile(c.LocalGrenadeTrajectoriesCSVName, grenadeTrajectoryHeader)
-	playerFlashedTable.saveToFile(c.LocalPlayerFlashedCSVName, playerFlashedHeader)
-	plantTable.saveToFile(c.LocalPlantsCSVName, plantHeader)
-	defusalTable.saveToFile(c.LocalDefusalsCSVName, defusalHeader)
-	explosionTable.saveToFile(c.LocalExplosionsCSVName, explosionHeader)
+func FlushTickData(close bool) {
+	ticksTable.flush(close)
+	playerAtTicksTable.flush(close)
+	spottedTable.flush(close)
+	footstepTable.flush(close)
+	weaponFireTable.flush(close)
+	hurtTable.flush(close)
+	killTable.flush(close)
+	grenadeTable.flush(close)
+	grenadeTrajectoryTable.flush(close)
+	playerFlashedTable.flush(close)
+	plantTable.flush(close)
+	defusalTable.flush(close)
+	explosionTable.flush(close)
 }
