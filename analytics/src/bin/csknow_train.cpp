@@ -55,7 +55,7 @@ int main(int argc, char * argv[]) {
     HitGroups hitGroups;
     Games games;
     Players players;
-    Rounds rounds;
+    Rounds unfilteredRounds, filteredRounds;
     Ticks ticks;
     PlayerAtTick playerAtTick;
     Spotted spotted;
@@ -72,9 +72,9 @@ int main(int argc, char * argv[]) {
     CoverEdges coverEdges;
     CoverOrigins coverOrigins;
 
-    loadData(equipment, gameTypes, hitGroups, games, players, rounds, ticks, playerAtTick, spotted, footstep, weaponFire,
+    loadData(equipment, gameTypes, hitGroups, games, players, unfilteredRounds, filteredRounds, ticks, playerAtTick, spotted, footstep, weaponFire,
              kills, hurt, grenades, flashed, grenadeTrajectories, plants, defusals, explosions, dataPath);
-    buildIndexes(equipment, gameTypes, hitGroups, games, players, rounds, ticks, playerAtTick, spotted, footstep, weaponFire,
+    buildIndexes(equipment, gameTypes, hitGroups, games, players, filteredRounds, ticks, playerAtTick, spotted, footstep, weaponFire,
                  kills, hurt, grenades, flashed, grenadeTrajectories, plants, defusals, explosions);
     //std::printf("GLIBCXX: %d\n",__GLIBCXX__);
     std::cout << "num elements in equipment: " << equipment.size << std::endl;
@@ -82,7 +82,7 @@ int main(int argc, char * argv[]) {
     std::cout << "num elements in hit_groups: " << hitGroups.size << std::endl;
     std::cout << "num elements in games: " << games.size << std::endl;
     std::cout << "num elements in players: " << players.size << std::endl;
-    std::cout << "num elements in rounds: " << rounds.size << std::endl;
+    std::cout << "num elements in rounds: " << filteredRounds.size << std::endl;
     std::cout << "num elements in ticks: " << ticks.size << std::endl;
     std::cout << "num elements in playerAtTick: " << playerAtTick.size << std::endl;
     std::cout << "num elements in spotted: " << spotted.size << std::endl;
@@ -105,7 +105,7 @@ int main(int argc, char * argv[]) {
      */
 
     //NextNavmeshResult trainDatasetResult = queryTrainDataset(games, rounds, ticks, players, playerAtTick, map_navs);
-    EngagementResult engagementResult = queryEngagementDataset(equipment, games, rounds, weaponFire, hurt, ticks, players, playerAtTick);
+    EngagementResult engagementResult = queryEngagementDataset(equipment, games, filteredRounds, weaponFire, hurt, ticks, players, playerAtTick);
 
     std::ofstream outputFile, configFile;
     string engagementOutputPath = outputDir + "/train_engagement_dataset.csv";
