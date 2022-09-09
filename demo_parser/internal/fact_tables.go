@@ -58,10 +58,9 @@ type tableRow interface {
 }
 
 type table[T tableRow] struct {
-	rows            []T
-	lastRowPreFlush T
-	firstRowID      RowIndex
-	file            *os.File
+	rows       []T
+	firstRowID RowIndex
+	file       *os.File
 }
 
 func (t *table[T]) init(fileName string, header string) {
@@ -96,13 +95,24 @@ func (t *table[T]) len() int {
 
 func (t *table[T]) flush(close bool) {
 	var sb strings.Builder
-	for _, element := range t.rows {
-		sb.WriteString(element.toString())
+	// save last row if not closing
+	var lastRow T
+	savedValue := false
+	if t.len() > 0 {
+		lastRow = *t.tail()
+		savedValue = true
+	}
+	for i, element := range t.rows {
+		if close || i < len(t.rows)-1 {
+			sb.WriteString(element.toString())
+		}
 	}
 	t.file.WriteString(sb.String())
 	t.rows = make([]T, 0)
 	if close {
 		t.file.Close()
+	} else if savedValue {
+		t.append(lastRow)
 	}
 }
 
