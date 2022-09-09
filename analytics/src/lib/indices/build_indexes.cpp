@@ -58,8 +58,9 @@ void buildIndexes(Equipment & equipment, GameTypes & gameTypes, HitGroups & hitG
     buildRangeIndex(ticks.id, ticks.size, playerAtTick.tickId, playerAtTick.size, ticks.patPerTick, "ticks", "playerAtTick");
     buildRangeIndex(ticks.id, ticks.size, spotted.tickId, spotted.size, ticks.spottedPerTick, "ticks", "spotted");
     buildRangeIndex(ticks.id, ticks.size, footstep.tickId, footstep.size, ticks.footstepPerTick, "ticks", "footstep");
-    buildRangeIndex(grenades.id, grenades.size, flashed.grenadeId, flashed.size, grenades.flashedPerGrenade, "grenades", "flashed");
-    buildRangeIndex(grenades.id, grenades.size, grenadeTrajectories.grenadeId, grenadeTrajectories.size, grenades.trajectoryPerGrenade, "grenades", "grenadeTrajectories");
+    // TODO: reenable when golang parser UniqueID2 works so indices are fixed
+    //buildRangeIndex(grenades.id, grenades.size, flashed.grenadeId, flashed.size, grenades.flashedPerGrenade, "grenades", "flashed");
+    //buildRangeIndex(grenades.id, grenades.size, grenadeTrajectories.grenadeId, grenadeTrajectories.size, grenades.trajectoryPerGrenade, "grenades", "grenadeTrajectories");
     buildRangeIndex(plants.id, plants.size, defusals.plantId, defusals.size, plants.defusalsPerGrenade, "plants", "defusals");
     buildRangeIndex(plants.id, plants.size, explosions.plantId, explosions.size, plants.explosionsPerGrenade, "plants", "explosions");
 
