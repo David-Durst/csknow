@@ -14,23 +14,27 @@ import {indexEventsForRound} from "../data/ticksToOtherTables";
 
 // adding some extra entries in these arrays incase extra players in server
 // like casters
-let lastPlayerXs = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
-let lastPlayerYs = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
-let lastPlayerZs = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+let lastPlayerPos = new Map<number, Array<number>>()
 function fixAfterDeath() {
     for (let t = 1; t < gameData.ticksTable.length; t++) {
         const tickData = gameData.ticksTable[t]
         const players = gameData.getPlayersAtTick(tickData)
         for (let p = 0; p < players.length; p++) {
+            const playerId = players[p].playerId
             if (!players[p].isAlive) {
-                players[p].posX = lastPlayerXs[p];
-                players[p].posY = lastPlayerYs[p];
-                players[p].posZ = lastPlayerZs[p];
+                if (lastPlayerPos.has(playerId)) {
+                    players[p].posX = lastPlayerPos.get(playerId)[0]
+                    players[p].posY = lastPlayerPos.get(playerId)[1]
+                    players[p].posZ = lastPlayerPos.get(playerId)[2]
+                }
+                else {
+                    players[p].posX = 0
+                    players[p].posY = 0
+                    players[p].posZ = 0
+                }
             }
             else {
-                lastPlayerXs[p] = players[p].posX
-                lastPlayerYs[p] = players[p].posY
-                lastPlayerZs[p] = players[p].posZ
+                lastPlayerPos.set(playerId, [players[p].posX, players[p].posY, players[p].posZ])
             }
         }
     }
