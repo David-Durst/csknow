@@ -131,6 +131,7 @@ export function setupMatchFilters() {
     gameData.clone(filteredData)
     alwaysFilter()
     setTickSelectorMax(filteredData.ticksTable.length - 1)
+    setCurTickIndex(0);
 }
 
 export function setupFilterHandlers() {
