@@ -17,7 +17,7 @@ get_script_dir () {
 get_script_dir
 
 
-iam_role=$(cat ${script_dir}/../private/.aws_csgo_server_role)
+iam_role=$(cat ${script_dir}/../../private/.aws_csgo_server_role)
 
 docker run --name durst_csgo_demo_parser \
     --rm \

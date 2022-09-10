@@ -72,9 +72,11 @@ public:
         ss << ",";
 
         tmp.clear();
+        /*
         for (AggressionRole r : role[index]) {
             tmp.push_back(std::to_string(enumAsInt(r)));
         }
+         */
         commaSeparateList(ss, tmp, ";");
         ss << std::endl;
     }
@@ -89,8 +91,10 @@ public:
 };
 
 
+/*
 AggressionEventResult queryAggressionRoles(const Games & games, const Rounds & rounds, const Ticks & ticks,
                                            const PlayerAtTick & playerAtTick,
                                            const nav_mesh::nav_file & navFile, const VisPoints & visPoints, const ReachableResult & reachableResult);
 
+ */
 #endif //CSKNOW_ENGAGEMENT_H
