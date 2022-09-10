@@ -67,7 +67,7 @@ public:
     ClusterSequencesByRound() {
         this->variableLength = true;
         this->startTickColumn = 3;
-        this->ticksColumn = 5;
+        this->perEventLengthColumn = 5;
         this->keyPlayerColumns = {1};
     }
 

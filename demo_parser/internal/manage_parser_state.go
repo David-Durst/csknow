@@ -6,12 +6,13 @@ import (
 	c "github.com/David-Durst/csknow/demo_parser/internal/constants"
 	"log"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 )
 
 func ParseInputStateCSV() IDState {
-	idStateFile, err := os.Open(c.InputStateCSVName)
+	idStateFile, err := os.Open(filepath.Join(c.TmpDir, c.InputStateCSVName))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -30,7 +31,7 @@ func ParseInputStateCSV() IDState {
 }
 
 func SaveOutputStateCSV(idState *IDState) {
-	idStateFile, err := os.Create(c.OutputStateCSVName)
+	idStateFile, err := os.Create(filepath.Join(c.TmpDir, c.OutputStateCSVName))
 	if err != nil {
 		panic(err)
 	}

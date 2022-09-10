@@ -27,7 +27,7 @@ public:
                                    vector<bool> stillGrouped) {
         targetNames = {"member 1", "member 2", "member 3"};
         variableLength = true;
-        ticksColumn = 5;
+        perEventLengthColumn = 5;
         keysForDiff = {0, 1, 2, 3, 4, 5};
         this->sequenceOfRegions = sequenceOfRegions;
         this->wantToReachRegions = wantToReachRegions;

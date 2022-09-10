@@ -48,7 +48,7 @@ public:
     // these are offsets relative to foreign key columns
     int startTickColumn;
     int ticksPerEvent;
-    int ticksColumn;
+    int perEventLengthColumn;
     bool variableLength = false;
     bool nonTemporal = false;
     bool overlay = false;

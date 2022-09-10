@@ -43,7 +43,7 @@ public:
         this->size = rounds.size;
         this->startTickColumn = 1;
         this->variableLength = true;
-        this->ticksColumn = 3;
+        this->perEventLengthColumn = 3;
     }
 
     vector<int64_t> filterByForeignKey(int64_t otherTableIndex) {

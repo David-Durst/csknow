@@ -2,8 +2,8 @@
 // Created by durst on 7/6/22.
 //
 
-#ifndef CSKNOW_AGGRESSION_EVENT_H
-#define CSKNOW_AGGRESSION_EVENT_H
+#ifndef CSKNOW_ENGAGEMENT_H
+#define CSKNOW_ENGAGEMENT_H
 #include <string>
 #include <set>
 #include <vector>
@@ -15,11 +15,8 @@
 #include "navmesh/nav_file.h"
 #include "load_data.h"
 #include "queries/query.h"
-#include "queries/reachable.h"
 #include "geometry.h"
 #include "enum_helpers.h"
-#define NOT_VISIBLE_END_SECONDS 5.
-#define MAX_BAITER_DISTANCE 750.
 using std::string;
 using std::vector;
 using std::set;
@@ -27,11 +24,10 @@ using std::unordered_map;
 using std::vector;
 using std::map;
 
-enum class AggressionRole {
-    Pusher,
-    Baiter,
-    Lurker,
-    NUM_AGGRESSION_ROLES
+enum class EngagementRole {
+    Engaged,
+    NotEngaged,
+    NUM_ENGAGEMENT_ROLES
 };
 
 class AggressionEventResult : public QueryResult {
@@ -41,7 +37,7 @@ public:
     vector<int64_t> endTickId;
     vector<int64_t> tickLength;
     vector<vector<int64_t>> playerId;
-    vector<vector<AggressionRole>> role;
+    vector<vector<EngagementRole>> role;
 
 
     AggressionEventResult() {
@@ -49,7 +45,7 @@ public:
         startTickColumn = 0;
         perEventLengthColumn = 2;
         havePlayerLabels = true;
-        playerLabels = {"P", "B", "L"};
+        playerLabels = {"E", "N"};
         playersToLabelColumn = 0;
         playerLabelIndicesColumn = 1;
     }
@@ -97,4 +93,4 @@ AggressionEventResult queryAggressionRoles(const Games & games, const Rounds & r
                                            const PlayerAtTick & playerAtTick,
                                            const nav_mesh::nav_file & navFile, const VisPoints & visPoints, const ReachableResult & reachableResult);
 
-#endif //CSKNOW_AGGRESSION_EVENT_H
+#endif //CSKNOW_ENGAGEMENT_H

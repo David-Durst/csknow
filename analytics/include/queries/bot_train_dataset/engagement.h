@@ -1,8 +1,8 @@
 //
 // Created by durst on 3/24/22.
 //
-#ifndef CSKNOW_ENGAGEMENT_H
-#define CSKNOW_ENGAGEMENT_H
+#ifndef CSKNOW_TRAIN_ENGAGEMENT_H
+#define CSKNOW_TRAIN_ENGAGEMENT_H
 #include "load_data.h"
 #include "queries/query.h"
 #include "indices/spotted.h"
@@ -564,4 +564,4 @@ EngagementResult queryEngagementDataset(const Equipment & equipment, const Games
                                         const WeaponFire & weaponFire, const Hurt & hurt,
                                         const Ticks & ticks, const Players & players, const PlayerAtTick & playerAtTick);
 
-#endif //CSKNOW_ENGAGEMENT_H
+#endif //CSKNOW_TRAIN_ENGAGEMENT_H

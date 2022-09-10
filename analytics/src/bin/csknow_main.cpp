@@ -510,7 +510,7 @@ int main(int argc, char * argv[]) {
                     ss << extraColName << ",";
                 }
                 if (queryValue.variableLength) {
-                    ss << "c" << queryValue.ticksColumn;
+                    ss << "c" << queryValue.perEventLengthColumn;
                 }
                 else {
                     ss << queryValue.ticksPerEvent;
