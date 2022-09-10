@@ -77,8 +77,11 @@ func ProcessStructure(unprocessedKey string, localDemName string, idState *IDSta
 
 	p.RegisterEventHandler(func(e events.RoundEndOfficial) {
 		// this event seems to fire the tick when you are in the next round,
-		// step back 1 tick to make sure this is ending round and not the starting round
-		unfilteredRoundsTable.tail().endOfficialTick = nextTickId - 1
+		// step back 30 ticks to make sure this is end of current round and not starting the next round
+		unfilteredRoundsTable.tail().endOfficialTick = nextTickId - 30
+		if unfilteredRoundsTable.tail().endOfficialTick < unfilteredRoundsTable.tail().endTick {
+			unfilteredRoundsTable.tail().endOfficialTick = unfilteredRoundsTable.tail().endTick
+		}
 		unfilteredRoundsTable.tail().finished = true
 	})
 

@@ -32,7 +32,7 @@ func ParseDemo(unprocessedKey string, localDemName string, idState *IDState, fir
 	InitTablesTrackers()
 	ProcessStructure(unprocessedKey, localDemName, idState, gameType)
 	FilterRounds(idState)
-	ProcessTickData(unprocessedKey, localDemName, idState)
+	ProcessTickData(localDemName, idState)
 	// this only needs to be called once, so it always closes
 	FlushStructure(firstRun)
 	// this data is big, so flush during run multiple times, close once after done demo

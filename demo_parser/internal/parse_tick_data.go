@@ -12,7 +12,7 @@ func getPlayers(p *demoinfocs.Parser) []*common.Player {
 	return (*p).GameState().Participants().Playing()
 }
 
-func ProcessTickData(unprocessedKey string, localDemName string, idState *IDState) {
+func ProcessTickData(localDemName string, idState *IDState) {
 	f, err := os.Open(localDemName)
 	if err != nil {
 		panic(err)
