@@ -262,6 +262,9 @@ int main(int argc, char * argv[]) {
     string aggressionEventName = "aggression_event";
     AggressionEventResult aggressionEventResult =
             queryAggressionRoles(games, filteredRounds, ticks, playerAtTick, map_navs["de_dust2"], map_visPoints.find("de_dust2")->second, d2ReachableResult);
+    std::cout << "processing engagements" << std::endl;
+    string engagementName = "engagement";
+    EngagementResult engagementResult = queryEngagementResult(games, filteredRounds, ticks, playerAtTick, hurt);
     /*
     VelocityResult velocityResult = queryVelocity(position);
     std::cout << "velocity moments: " << velocityResult.positionIndex.size() << std::endl;
@@ -381,26 +384,20 @@ int main(int argc, char * argv[]) {
         }
          */
 
-    vector<string> queryNames = {"games", "rounds", "players", "ticks", "playerAtTick", dust2MeshName,
-                                 dust2VisibleName,
-                                 dust2DangerName,
-                                 dust2ReachableName,
-                                 dust2DistanceToPlacesName,
-                                 aggressionEventName,
-    };
     //vector<string> queryNames = {"games", "rounds", "players", "ticks", "playerAtTick", "aCatClusterSequence", "aCatClusters", "midCTClusterSequence", "midTClusters", "lookers"};
     map<string, reference_wrapper<QueryResult>> queries {
-            {queryNames[0], queryGames},
-            {queryNames[1], queryRounds},
-            {queryNames[2], queryPlayers},
-            {queryNames[3], queryTicks},
-            {queryNames[4], queryPlayerAtTick},
-            {queryNames[5], d2MeshResult},
-            {queryNames[6], d2NavVisibleResult},
-            {queryNames[7], d2NavDangerResult},
-            {queryNames[8], d2ReachableResult},
-            {queryNames[9], d2DistanceToPlacesResult},
-            {queryNames[10], aggressionEventResult},
+            {"games", queryGames},
+            {"rounds", queryRounds},
+            {"players", queryPlayers},
+            {"ticks", queryTicks},
+            {"playerAtTick", queryPlayerAtTick},
+            {dust2MeshName, d2MeshResult},
+            {dust2VisibleName, d2NavVisibleResult},
+            {dust2DangerName, d2NavDangerResult},
+            {dust2ReachableName, d2ReachableResult},
+            {dust2DistanceToPlacesName, d2DistanceToPlacesResult},
+            {aggressionEventName, aggressionEventResult},
+            {engagementName, engagementResult},
             //{queryNames[5], aCatClusterSequence},
             //{queryNames[6], aCatPeekersClusters},
             //{queryNames[7], midCTClusterSequence},
@@ -500,7 +497,7 @@ int main(int argc, char * argv[]) {
         // list schema is: name, num foreign keys, list of foreign key column names, other columns, other column names
         svr.Get("/list", [&](const httplib::Request & req, httplib::Response &res) {
             std::stringstream ss;
-            for (const auto queryName : queryNames) {
+            for (const auto [queryName, _] : queries) {
                 QueryResult & queryValue = queries.find(queryName)->second.get();
                 ss << queryName << "," << queryValue.startTickColumn << "," << queryValue.getForeignKeyNames().size() << ",";
                 for (const auto & keyName : queryValue.getForeignKeyNames()) {
