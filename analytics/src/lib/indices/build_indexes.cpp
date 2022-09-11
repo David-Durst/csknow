@@ -6,6 +6,9 @@
 using std::cout;
 using std::endl;
 
+// this is for dense one-to-many relationships (one row in primary column matches many in foreign column)
+// dense as have a relationship for every row in primary column (like PAT showing playing position for ever tick)
+// since dense, wnat to iterate over times (as will have event for every time)
 void buildRangeIndex(const vector<int64_t> &primaryKeyCol, int64_t primarySize, const int64_t * foreignKeyCol,
                           int64_t foreignSize, RangeIndex rangeIndexCol,
                           string primaryName, string foreignName) {
@@ -32,6 +35,9 @@ void buildRangeIndex(const vector<int64_t> &primaryKeyCol, int64_t primarySize, 
     }
 }
 
+// this is for sparse many-to-many relationships (like grenades, one grenade corresponds to many ticks and many grenades at one tick)
+// sparse like kills, most rows don't have a kill
+// since sparse, want to iterate over the events rather than times when events occur
 void buildHashmapIndex(const vector<int64_t *> foreignKeyCols, int64_t foreignSize, HashmapIndex & hashIndexCol) {
     for (int64_t foreignIndex = 0; foreignIndex < foreignSize; foreignIndex++) {
         // collect all primary key entries that are in range the foreign keys

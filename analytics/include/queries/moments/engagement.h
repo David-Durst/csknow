@@ -27,8 +27,8 @@ using std::vector;
 using std::map;
 
 enum class EngagementRole {
-    Engaged,
-    NotEngaged,
+    Attacker,
+    Victim,
     NUM_ENGAGEMENT_ROLES
 };
 
