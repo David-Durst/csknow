@@ -28,6 +28,7 @@
 #include "queries/nav_danger.h"
 #include "queries/distance_to_places.h"
 #include "queries/moments/aggression_event.h"
+#include "queries/moments/engagement.h"
 #define CPPHTTPLIB_OPENSSL_SUPPORT
 #include "httplib.h"
 #include <errno.h>

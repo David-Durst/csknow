@@ -17,6 +17,8 @@
 #include "queries/query.h"
 #include "geometry.h"
 #include "enum_helpers.h"
+#define PRE_ENGAGEMENT_SECONDS 1.0
+#define POST_ENGAGEMENT_SECONDS 0.2
 using std::string;
 using std::vector;
 using std::set;
@@ -30,7 +32,7 @@ enum class EngagementRole {
     NUM_ENGAGEMENT_ROLES
 };
 
-class AggressionEventResult : public QueryResult {
+class EngagementResult : public QueryResult {
 public:
     vector<RangeIndexEntry> rowIndicesPerRound;
     vector<int64_t> startTickId;
@@ -40,12 +42,12 @@ public:
     vector<vector<EngagementRole>> role;
 
 
-    AggressionEventResult() {
+    EngagementResult() {
         variableLength = true;
         startTickColumn = 0;
         perEventLengthColumn = 2;
         havePlayerLabels = true;
-        playerLabels = {"E", "N"};
+        playerLabels = {"A", "V"};
         playersToLabelColumn = 0;
         playerLabelIndicesColumn = 1;
     }
@@ -91,10 +93,7 @@ public:
 };
 
 
-/*
-AggressionEventResult queryAggressionRoles(const Games & games, const Rounds & rounds, const Ticks & ticks,
-                                           const PlayerAtTick & playerAtTick,
-                                           const nav_mesh::nav_file & navFile, const VisPoints & visPoints, const ReachableResult & reachableResult);
+EngagementResult queryEngagementResult(const Games & games, const Rounds & rounds, const Ticks & ticks,
+                                       const PlayerAtTick & playerAtTick, const Hurt & hurt);
 
- */
 #endif //CSKNOW_ENGAGEMENT_H

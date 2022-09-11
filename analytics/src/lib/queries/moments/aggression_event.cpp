@@ -120,39 +120,15 @@ AggressionEventResult queryAggressionRoles(const Games & games, const Rounds & r
     }
 
     AggressionEventResult result;
-    vector<int64_t> roundsProcessedPerThread(numThreads, 0);
-    while (true) {
-        bool roundToProcess = false;
-        int64_t minThreadId = -1;
-        int64_t minRoundId = -1;
-        for (int64_t threadId = 0; threadId < numThreads; threadId++) {
-            if (roundsProcessedPerThread[threadId] < tmpRoundIds[threadId].size()) {
-                roundToProcess = true;
-                if (minThreadId == -1 || tmpRoundIds[threadId][roundsProcessedPerThread[threadId]] < minRoundId) {
-                    minThreadId = threadId;
-                    minRoundId = tmpRoundIds[minThreadId][roundsProcessedPerThread[minThreadId]];
-                }
-
-            }
-        }
-        if (!roundToProcess) {
-            break;
-        }
-        result.rowIndicesPerRound.push_back({});
-        result.rowIndicesPerRound[minRoundId].minId = result.startTickId.size();
-        int64_t roundStart = tmpRoundStarts[minThreadId][roundsProcessedPerThread[minThreadId]];
-        int64_t roundEnd = roundStart + tmpRoundSizes[minThreadId][roundsProcessedPerThread[minThreadId]];
-        for (int tmpRowId = roundStart; tmpRowId < roundEnd; tmpRowId++) {
-            result.startTickId.push_back(tmpStartTickId[minThreadId][tmpRowId]);
-            result.endTickId.push_back(tmpEndTickId[minThreadId][tmpRowId]);
-            result.tickLength.push_back(tmpLength[minThreadId][tmpRowId]);
-            result.playerId.push_back(tmpPlayerId[minThreadId][tmpRowId]);
-            result.role.push_back(tmpRole[minThreadId][tmpRowId]);
-        }
-        result.rowIndicesPerRound[minRoundId].maxId = result.startTickId.size() - 1;
-        roundsProcessedPerThread[minThreadId]++;
-    }
-    result.size = result.startTickId.size();
+    mergeThreadResults(numThreads, result.rowIndicesPerRound, tmpRoundIds, tmpRoundStarts, tmpRoundSizes,
+                       result.startTickId, result.size,
+                       [&](int64_t minThreadId, int64_t tmpRowId) {
+                           result.startTickId.push_back(tmpStartTickId[minThreadId][tmpRowId]);
+                           result.endTickId.push_back(tmpEndTickId[minThreadId][tmpRowId]);
+                           result.tickLength.push_back(tmpLength[minThreadId][tmpRowId]);
+                           result.playerId.push_back(tmpPlayerId[minThreadId][tmpRowId]);
+                           result.role.push_back(tmpRole[minThreadId][tmpRowId]);
+    });
     return result;
 }
 
