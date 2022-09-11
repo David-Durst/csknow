@@ -86,4 +86,16 @@ EngagementResult queryEngagementResult(const Games & games, const Rounds & round
         }
 
     }
+
+    EngagementResult result;
+    mergeThreadResults(numThreads, result.rowIndicesPerRound, tmpRoundIds, tmpRoundStarts, tmpRoundSizes,
+                       result.startTickId, result.size,
+                       [&](int64_t minThreadId, int64_t tmpRowId) {
+                           result.startTickId.push_back(tmpStartTickId[minThreadId][tmpRowId]);
+                           result.endTickId.push_back(tmpEndTickId[minThreadId][tmpRowId]);
+                           result.tickLength.push_back(tmpLength[minThreadId][tmpRowId]);
+                           result.playerId.push_back(tmpPlayerId[minThreadId][tmpRowId]);
+                           result.role.push_back(tmpRole[minThreadId][tmpRowId]);
+                       });
+    return result;
 }
