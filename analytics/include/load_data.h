@@ -7,6 +7,7 @@
 #include <iostream>
 #include <unordered_map>
 #include <list>
+#include "IntervalTree.h"
 using std::string;
 using std::vector;
 using std::set;
@@ -27,7 +28,7 @@ struct RangeIndexEntry {
 };
 
 typedef RangeIndexEntry * RangeIndex;
-typedef unordered_map<int64_t, vector<int64_t>> HashmapIndex;
+typedef IntervalTree<int64_t, int64_t> IntervalIndex;
 
 class ColStore {
 public:
@@ -272,22 +273,22 @@ public:
     RangeIndex patPerTick;
     RangeIndex spottedPerTick;
     RangeIndex footstepPerTick;
-    HashmapIndex weaponFirePerTick;
-    HashmapIndex killsPerTick;
-    HashmapIndex hurtPerTick;
-    HashmapIndex grenadesPerTick;
-    HashmapIndex grenadesThrowPerTick;
-    HashmapIndex grenadesActivePerTick;
-    HashmapIndex grenadesExpiredPerTick;
-    HashmapIndex grenadesDestroyedPerTick;
-    HashmapIndex flashedPerTick;
-    HashmapIndex plantsPerTick;
-    HashmapIndex plantsStartPerTick;
-    HashmapIndex plantsEndPerTick;
-    HashmapIndex defusalsPerTick;
-    HashmapIndex defusalsStartPerTick;
-    HashmapIndex defusalsEndPerTick;
-    HashmapIndex explosionsPerTick;
+    IntervalIndex weaponFirePerTick;
+    IntervalIndex killsPerTick;
+    IntervalIndex hurtPerTick;
+    IntervalIndex grenadesPerTick;
+    IntervalIndex grenadesThrowPerTick;
+    IntervalIndex grenadesActivePerTick;
+    IntervalIndex grenadesExpiredPerTick;
+    IntervalIndex grenadesDestroyedPerTick;
+    IntervalIndex flashedPerTick;
+    IntervalIndex plantsPerTick;
+    IntervalIndex plantsStartPerTick;
+    IntervalIndex plantsEndPerTick;
+    IntervalIndex defusalsPerTick;
+    IntervalIndex defusalsStartPerTick;
+    IntervalIndex defusalsEndPerTick;
+    IntervalIndex explosionsPerTick;
 
     void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) {
         ColStore::init(rows, numFiles, gameStarts);

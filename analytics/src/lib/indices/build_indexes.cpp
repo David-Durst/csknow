@@ -38,7 +38,8 @@ void buildRangeIndex(const vector<int64_t> &primaryKeyCol, int64_t primarySize, 
 // this is for sparse many-to-many relationships (like grenades, one grenade corresponds to many ticks and many grenades at one tick)
 // sparse like kills, most rows don't have a kill
 // since sparse, want to iterate over the events rather than times when events occur
-void buildHashmapIndex(const vector<int64_t *> foreignKeyCols, int64_t foreignSize, HashmapIndex & hashIndexCol) {
+IntervalIndex buildIntervalIndex(const vector<int64_t *> foreignKeyCols, int64_t foreignSize) {
+    vector<Interval<int64_t, int64_t>> eventIntervals;
     for (int64_t foreignIndex = 0; foreignIndex < foreignSize; foreignIndex++) {
         // collect all primary key entries that are in range the foreign keys
         int64_t minPrimaryIndex = foreignKeyCols[0][foreignIndex], maxPrimaryIndex = foreignKeyCols[0][foreignIndex];
@@ -46,11 +47,9 @@ void buildHashmapIndex(const vector<int64_t *> foreignKeyCols, int64_t foreignSi
             minPrimaryIndex = std::min(minPrimaryIndex, foreignKeyCols[col][foreignIndex]);
             maxPrimaryIndex = std::max(maxPrimaryIndex, foreignKeyCols[col][foreignIndex]);
         }
-        // insert into all key cols in range
-        for (int64_t primaryIndex = minPrimaryIndex; primaryIndex <= maxPrimaryIndex; primaryIndex++) {
-            hashIndexCol[primaryIndex].push_back(foreignIndex);
-        }
+        eventIntervals.push_back({minPrimaryIndex, maxPrimaryIndex, foreignIndex});
     }
+    return IntervalTree<int64_t, int64_t>(std::move(eventIntervals));
 }
 
 void buildIndexes(Equipment & equipment, GameTypes & gameTypes, HitGroups & hitGroups, Games & games,
@@ -71,22 +70,22 @@ void buildIndexes(Equipment & equipment, GameTypes & gameTypes, HitGroups & hitG
     buildRangeIndex(plants.id, plants.size, explosions.plantId, explosions.size, plants.explosionsPerGrenade, "plants", "explosions");
 
     cout << "building hashmap indexes" << endl;
-    buildHashmapIndex({weaponFire.tickId}, weaponFire.size, ticks.weaponFirePerTick);
-    buildHashmapIndex({kills.tickId}, kills.size, ticks.killsPerTick);
-    buildHashmapIndex({hurt.tickId}, hurt.size, ticks.hurtPerTick);
-    buildHashmapIndex({grenades.throwTick, grenades.activeTick, grenades.expiredTick, grenades.destroyTick}, grenades.size, ticks.grenadesPerTick);
-    buildHashmapIndex({grenades.throwTick}, grenades.size, ticks.grenadesThrowPerTick);
-    buildHashmapIndex({grenades.activeTick}, grenades.size, ticks.grenadesActivePerTick);
-    buildHashmapIndex({grenades.expiredTick}, grenades.size, ticks.grenadesExpiredPerTick);
-    buildHashmapIndex({grenades.activeTick}, grenades.size, ticks.grenadesActivePerTick);
-    buildHashmapIndex({flashed.tickId}, flashed.size, ticks.flashedPerTick);
-    buildHashmapIndex({plants.startTick, plants.endTick}, plants.size, ticks.plantsPerTick);
-    buildHashmapIndex({plants.startTick}, plants.size, ticks.plantsStartPerTick);
-    buildHashmapIndex({plants.endTick}, plants.size, ticks.plantsEndPerTick);
-    buildHashmapIndex({defusals.startTick, defusals.endTick}, defusals.size, ticks.defusalsPerTick);
-    buildHashmapIndex({defusals.startTick}, defusals.size, ticks.defusalsStartPerTick);
-    buildHashmapIndex({defusals.endTick}, defusals.size, ticks.defusalsEndPerTick);
-    buildHashmapIndex({explosions.tickId}, explosions.size, ticks.explosionsPerTick);
+    ticks.weaponFirePerTick = buildIntervalIndex({weaponFire.tickId}, weaponFire.size);
+    ticks.killsPerTick = buildIntervalIndex({kills.tickId}, kills.size);
+    ticks.hurtPerTick = buildIntervalIndex({hurt.tickId}, hurt.size);
+    ticks.grenadesPerTick = buildIntervalIndex({grenades.throwTick, grenades.activeTick, grenades.expiredTick, grenades.destroyTick}, grenades.size);
+    ticks.grenadesThrowPerTick = buildIntervalIndex({grenades.throwTick}, grenades.size);
+    ticks.grenadesActivePerTick = buildIntervalIndex({grenades.activeTick}, grenades.size);
+    ticks.grenadesExpiredPerTick = buildIntervalIndex({grenades.expiredTick}, grenades.size);
+    ticks.grenadesActivePerTick = buildIntervalIndex({grenades.activeTick}, grenades.size);
+    ticks.flashedPerTick = buildIntervalIndex({flashed.tickId}, flashed.size);
+    ticks.plantsPerTick = buildIntervalIndex({plants.startTick, plants.endTick}, plants.size);
+    ticks.plantsStartPerTick = buildIntervalIndex({plants.startTick}, plants.size);
+    ticks.plantsEndPerTick = buildIntervalIndex({plants.endTick}, plants.size);
+    ticks.defusalsPerTick = buildIntervalIndex({defusals.startTick, defusals.endTick}, defusals.size);
+    ticks.defusalsStartPerTick = buildIntervalIndex({defusals.startTick}, defusals.size);
+    ticks.defusalsEndPerTick = buildIntervalIndex({defusals.endTick}, defusals.size);
+    ticks.explosionsPerTick = buildIntervalIndex({explosions.tickId}, explosions.size);
 }
 
 void buildGridIndex(const vector<int64_t> &primaryKeyCol, const Vec3 * points, GridIndex &index) {

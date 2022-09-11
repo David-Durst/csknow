@@ -50,7 +50,8 @@ EngagementResult queryEngagementResult(const Games & games, const Rounds & round
 
         for (int64_t tickIndex = rounds.ticksPerRound[roundIndex].minId;
              tickIndex <= rounds.ticksPerRound[roundIndex].maxId; tickIndex++) {
-            for (int64_t hurtIndex : ticks.hurtPerTick.at(tickIndex)) {
+            for (const auto & [_0, _1, hurtIndex] :
+                ticks.hurtPerTick.findOverlapping(tickIndex, tickIndex)) {
                 EngagementPlayers curPair{hurt.attacker[hurtIndex], hurt.victim[hurtIndex]};
 
                 // start new engagement if none present

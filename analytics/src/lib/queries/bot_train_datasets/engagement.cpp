@@ -26,6 +26,7 @@ computeEngagementsPerRound(const Rounds & rounds, const Ticks & ticks, const Pla
                            const WeaponFire & weaponFire, const Hurt & hurt, const int64_t roundId,
                            vector<EngagementIds> & engagementIds, const int64_t RADIUS_GAME_TICKS,
                            const TickRates & tickRates) {
+    /*
     // first key is shooter, second is target
     map<int64_t, map<int64_t, EngagementIds>> activeEngagementIds;
     for (int64_t tickIndex = rounds.ticksPerRound[roundId].minId;
@@ -38,11 +39,9 @@ computeEngagementsPerRound(const Rounds & rounds, const Ticks & ticks, const Pla
             playerAlive[playerAtTick.playerId[patIndex]] = playerAtTick.isAlive[patIndex];
         }
         // add the players who were hurt this tick to those alive, as you get hurt on tick you die
-        if (ticks.hurtPerTick.find(tickIndex) != ticks.hurtPerTick.end()) {
-            for (const auto & hurtId : ticks.hurtPerTick.at(tickIndex)) {
-                // ignoring nade damage, so have to use same weapon as fired
-                playerAlive[hurt.victim[hurtId]] = true;
-            }
+        for (const auto & hurtId : ticks.hurtPerTick.findOverlapping(tickIndex, tickIndex)) {
+            // ignoring nade damage, so have to use same weapon as fired
+            playerAlive[hurt.victim[hurtId.value]] = true;
         }
 
         // if any of player's engagements are over, remove them
@@ -205,6 +204,7 @@ computeEngagementsPerRound(const Rounds & rounds, const Ticks & ticks, const Pla
             engagementIds.push_back(finishedIds);
         }
     }
+     */
 }
 
 EngagementResult::PosState
@@ -602,6 +602,7 @@ EngagementResult queryEngagementDataset(const Equipment & equipment, const Games
         }
 
         map<int64_t, vector<int64_t>> shooterToWeaponFireGameTicks;
+        /*
         for (int64_t tickIndex = rounds.ticksPerRound[roundIndex].minId;
              tickIndex != -1 && tickIndex <= rounds.ticksPerRound[roundIndex].maxId; tickIndex++) {
             if (ticks.weaponFirePerTick.find(tickIndex) != ticks.weaponFirePerTick.end()) {
@@ -613,6 +614,7 @@ EngagementResult queryEngagementDataset(const Equipment & equipment, const Games
                 }
             }
         }
+         */
 
         computeEngagementResults(rounds, ticks, playerAtTick, roundIndex, validEngagementIds,
                                  tickToShooterToEngagementIds, shooterToWeaponFireGameTicks,
