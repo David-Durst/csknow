@@ -1,5 +1,6 @@
 import {GameData, Parser} from "./tables";
 
+export const INVALID_ID = -1
 const utf8Decoder = new TextDecoder("utf-8");
 
 

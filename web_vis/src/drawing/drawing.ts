@@ -8,9 +8,8 @@ import {PlayerAtTickRow, TickRow} from "../data/tables";
 import {getPackedSettings} from "http2";
 import {
     curOverlay,
-    getPlayersText,
-    setEventText, setSelectionsToDraw,
-    setupEventDrawing,
+    getPlayersText, setEventsOverlaysToDraw,
+    setEventText, setupEventDrawing, updateEventIdAndSelector,
 } from "./events";
 import {clearCustomFilter} from "../controller/ide_filters";
 import {getCurTickIndex, setTickLabel} from "../controller/selectors";
@@ -245,6 +244,8 @@ export function drawTick(e: InputEvent) {
     const tickData: TickRow = filteredData.ticksTable[curTickIndex]
     tScoreLabel.innerHTML = gameData.getRound(tickData).tWins.toString()
     ctScoreLabel.innerHTML = gameData.getRound(tickData).ctWins.toString()
+    // need to update event id before getting players text as need to know current event to set player text
+    updateEventIdAndSelector(tickData)
     let playersText = getPlayersText(tickData, filteredData)
     const players = gameData.getPlayersAtTick(tickData)
     for (let p = 0; p < players.length; p++) {
@@ -511,16 +512,17 @@ export function setupCanvas() {
     setupEventDrawing()
 }
 
-function setEventsAndRedraw() {
-    setSelectionsToDraw()
+function setEventsOverlaysAndRedraw() {
+    setEventsOverlaysToDraw()
     drawTick(null)
 }
 
 export function setupCanvasHandlers() {
     document.querySelector<HTMLInputElement>("#tick-selector").addEventListener("input", drawTick)
     //document.querySelector<HTMLButtonElement>("#clear_filter").addEventListener("click", clearFilterButton)
-    document.querySelector<HTMLSelectElement>("#event-type").addEventListener("change", setEventsAndRedraw)
-    document.querySelector<HTMLSelectElement>("#overlay-type").addEventListener("change", setEventsAndRedraw)
+    document.querySelector<HTMLSelectElement>("#event-type").addEventListener("change", setEventsOverlaysAndRedraw)
+    document.querySelector<HTMLSelectElement>("#event-id-selector").addEventListener("change", setEventsOverlaysAndRedraw)
+    document.querySelector<HTMLSelectElement>("#overlay-type").addEventListener("change", setEventsOverlaysAndRedraw)
     document.querySelector<HTMLSelectElement>("#clear_filter").addEventListener("click", clearFilterButton)
 }
 

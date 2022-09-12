@@ -7,12 +7,15 @@ import {
     TickRow,
 } from "../data/tables";
 import IntervalTree from "@flatten-js/interval-tree";
-import {gameData} from "../data/data";
+import {gameData, INVALID_ID} from "../data/data";
 
 let eventSelector: HTMLSelectElement = null
 let eventDiv: HTMLDivElement = null
+let eventIdSelector: HTMLSelectElement = null
+let eventIdLabel: HTMLSpanElement = null
 let overlaySelector: HTMLSelectElement = null
 export let curEvent: string = "none"
+export let curEventId: number = INVALID_ID
 export let curOverlay: string = "none"
 
 function basicPlayerText(gameData: GameData, tickData: TickRow,
@@ -43,7 +46,10 @@ export function getPlayersText(tickData: TickRow, gameData: GameData): string[] 
     // if event, get min key player number for each player
     const eventArray = gameData.tables.get(curEvent)
     const eventsForTick = index.search([tickData.id, tickData.id])
-    const firstEvent = eventArray[Math.min(...eventsForTick)]
+    // see updateEventId for how curEventId is set
+    const firstEvent = curEventId == INVALID_ID ?
+        eventArray[Math.min(...eventsForTick)] :
+        eventArray[curEventId]
     const parser = gameData.parsers.get(curEvent)
     const playersToLabel = firstEvent.otherColumnValues[parser.playersToLabelColumn].split(";").map(x => parseInt(x))
     const playerLabelIndices = firstEvent.otherColumnValues[parser.playerLabelIndicesColumn].split(";").map(x => parseInt(x))
@@ -109,8 +115,44 @@ export function setEventText(tickData: TickRow, gameData: GameData) {
     }
 }
 
-export function setSelectionsToDraw() {
+export function updateEventIdAndSelector(tickData: TickRow) {
+    if (curEvent == "none") {
+        eventIdLabel.style.display = "none"
+        eventIdSelector.style.display = "none"
+        eventIdSelector.options.length = 0
+        eventIdSelector.options.add(new Option("default", "-1"))
+    }
+    else {
+        eventIdLabel.style.display = "inline"
+        eventIdSelector.style.display = "inline-block"
+        eventIdSelector.options.length = 0
+        eventIdSelector.options.add(new Option("default", "-1"))
+        const index = getTickToOtherTableIndex(gameData, curEvent)
+        const eventArray = gameData.tables.get(curEvent)
+        const eventsForTick = index.search([tickData.id, tickData.id])
+        const parser = gameData.parsers.get(curEvent)
+        // default to non-valid eventId index
+        let eventIdIndex = 0
+        for (let i = 0; i < eventsForTick.length; i++) {
+            const curEventRow = eventArray[eventsForTick[i]]
+            if (curEventRow.id == curEventId) {
+                // plus 1 as need to account for default value
+                eventIdIndex = i + 1
+            }
+            let eventName = curEventRow.otherColumnValues[parser.playersToLabelColumn]
+            eventIdSelector.options.add(new Option(eventName, curEventRow.id.toString()))
+        }
+        eventIdSelector.selectedIndex = eventIdIndex
+        // if old selected event id no longer value, just go with default setting
+        if (eventIdIndex == 0) {
+            curEventId = INVALID_ID
+        }
+    }
+}
+
+export function setEventsOverlaysToDraw() {
     curEvent = eventSelector.value
+    curEventId = parseInt(eventIdSelector.value)
     curOverlay = overlaySelector.value;
 }
 
@@ -118,6 +160,8 @@ export function setupEventDrawing() {
     eventSelector = document.querySelector<HTMLSelectElement>("#event-type")
     curEvent = eventSelector.value;
     eventDiv = document.querySelector<HTMLDivElement>("#events")
+    eventIdSelector = document.querySelector<HTMLSelectElement>("#event-id-selector")
+    eventIdLabel = document.querySelector<HTMLSelectElement>("#event-id-label")
     overlaySelector = document.querySelector<HTMLSelectElement>("#overlay-type")
     curOverlay = overlaySelector.value;
 }

@@ -35,9 +35,13 @@
                     <button type="button" id="button_ff" class="btn btn-secondary playButton">
                         <img src="vis_images/skip-forward.svg" id="ff_img" alt="Bootstrap" width="32" height="32">
                     </button>
-                    <span id="event-type-label" class="label">target event type: </span>
+                    <span id="event-type-label" class="label">event type: </span>
                     <select id="event-type">
                         <option value="none">None</option>
+                    </select>
+                    <span style="display: none" id="event-id-label" class="label">event id: </span>
+                    <select id="event-id-selector" style="display: none">
+                        <option value="-1">Default</option>
                     </select>
                     <span class="label">overlay type: </span>
                     <select id="overlay-type">
