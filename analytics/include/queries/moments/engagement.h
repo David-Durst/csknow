@@ -40,12 +40,15 @@ public:
     vector<int64_t> tickLength;
     vector<vector<int64_t>> playerId;
     vector<vector<EngagementRole>> role;
+    vector<int64_t> firstHurtTickId;
+    vector<int64_t> lastHurtTickId;
+    vector<int16_t> numHits;
 
 
     EngagementResult() {
         variableLength = true;
         startTickColumn = 0;
-        perEventLengthColumn = 2;
+        perEventLengthColumn = 4;
         havePlayerLabels = true;
         playerLabels = {"A", "V"};
         playersToLabelColumn = 0;
@@ -64,7 +67,8 @@ public:
     }
 
     void oneLineToCSV(int64_t index, stringstream & ss) {
-        ss << index << "," << startTickId[index] << "," << endTickId[index] << "," << tickLength[index] << ",";
+        ss << index << "," << startTickId[index] << "," << endTickId[index] << ","
+            << firstHurtTickId[index] << "," << lastHurtTickId[index] << "," << tickLength[index] << ",";
 
         vector<string> tmp;
         for (int64_t pId : playerId[index]) {
@@ -78,15 +82,17 @@ public:
             tmp.push_back(std::to_string(enumAsInt(r)));
         }
         commaSeparateList(ss, tmp, ";");
+
+        ss << "," << numHits[index];
         ss << std::endl;
     }
 
     vector<string> getForeignKeyNames() {
-        return {"start tick id", "end tick id", "length"};
+        return {"start tick id", "end tick id", "first hurt tick id", "last hurt tick id", "length"};
     }
 
     vector<string> getOtherColumnNames() {
-        return {"player ids", "roles"};
+        return {"player ids", "roles", "number of hits"};
     }
 };
 
