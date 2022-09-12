@@ -74,11 +74,9 @@ public:
         ss << ",";
 
         tmp.clear();
-        /*
-        for (AggressionRole r : role[index]) {
+        for (EngagementRole r : role[index]) {
             tmp.push_back(std::to_string(enumAsInt(r)));
         }
-         */
         commaSeparateList(ss, tmp, ";");
         ss << std::endl;
     }

@@ -74,7 +74,7 @@ static int64_t getLookbackDemoTick(const Rounds & rounds, const Ticks & ticks, c
            // this makes sure don't run off end, next tick is no less than min
            tickIndex - lookbackDemoTicks > rounds.ticksPerRound[ticks.roundId[tickIndex]].minId;
            lookbackDemoTicks++);
-    return lookbackDemoTicks;
+    return tickIndex - lookbackDemoTicks;
 }
 /**
  * Convert number of game ticks forward to number of demo ticks back
@@ -107,7 +107,7 @@ static int64_t getLookforwardDemoTick(const Rounds & rounds, const Ticks & ticks
            // this makes sure don't run off end, next tick is no more than max
            tickIndex + lookforwardDemoTicks < rounds.ticksPerRound[ticks.roundId[tickIndex]].maxId;
            lookforwardDemoTicks++);
-    return lookforwardDemoTicks;
+    return tickIndex + lookforwardDemoTicks;
 }
 
 #endif //CSKNOW_LOOKBACK_H

@@ -20,6 +20,25 @@ struct EngagementTimes {
     int64_t startTick, endTick;
 };
 
+void finishEngagement(const Rounds &rounds, const Ticks &ticks, const PlayerAtTick &playerAtTick,
+                      vector<int64_t> tmpStartTickId[], vector<int64_t> tmpEndTickId[],
+                      vector<int64_t> tmpLength[], vector<vector<int64_t>> tmpPlayerId[],
+                      vector<vector<EngagementRole>> tmpRole[], int threadNum, const TickRates &tickRates,
+                      const EngagementPlayers &curPair, const EngagementTimes &lastTimes) {
+    // use pre and post periods to track behavior around engagement
+    int64_t preEngagementStart = getLookbackDemoTick(rounds, ticks, playerAtTick,
+                                                     lastTimes.startTick, tickRates,
+                                                     PRE_ENGAGEMENT_SECONDS);
+    int64_t postEngagementEnd = getLookforwardDemoTick(rounds, ticks, playerAtTick,
+                                                     lastTimes.endTick, tickRates,
+                                                     POST_ENGAGEMENT_SECONDS);
+    tmpStartTickId[threadNum].push_back(preEngagementStart);
+    tmpEndTickId[threadNum].push_back(postEngagementEnd);
+    tmpLength[threadNum].push_back(postEngagementEnd - preEngagementStart + 1);
+    tmpPlayerId[threadNum].push_back({curPair.attacker, curPair.victim});
+    tmpRole[threadNum].push_back({EngagementRole::Attacker, EngagementRole::Victim});
+}
+
 EngagementResult queryEngagementResult(const Games & games, const Rounds & rounds, const Ticks & ticks,
                                        const PlayerAtTick & playerAtTick, const Hurt & hurt) {
 
@@ -38,7 +57,7 @@ EngagementResult queryEngagementResult(const Games & games, const Rounds & round
     // track events for each pairs of player.
     // start a new event for a pair when hurt event with no prior one or far away prior one
     // clear out all hurt events on end of round
-#pragma omp parallel for
+//#pragma omp parallel for
     for (int64_t roundIndex = 0; roundIndex < rounds.size; roundIndex++) {
         int threadNum = omp_get_thread_num();
         tmpRoundIds[threadNum].push_back(roundIndex);
@@ -67,25 +86,23 @@ EngagementResult queryEngagementResult(const Games & games, const Rounds & round
                     }
                     // if current engagement ended, finish it and start new one
                     else {
-                        // use pre and post periods to track behavior around engagement
-
-                        int64_t preEngagementStart = getLookbackDemoTick(rounds, ticks, playerAtTick,
-                                                                         lastTimes.startTick, tickRates,
-                                                                         PRE_ENGAGEMENT_SECONDS);
-                        int64_t postEngagementEnd = getLookforwardDemoTick(rounds, ticks, playerAtTick,
-                                                                         lastTimes.startTick, tickRates,
-                                                                         POST_ENGAGEMENT_SECONDS);
-                        tmpStartTickId[threadNum].push_back(preEngagementStart);
-                        tmpEndTickId[threadNum].push_back(postEngagementEnd);
-                        tmpLength[threadNum].push_back(postEngagementEnd - preEngagementStart + 1);
-                        tmpPlayerId[threadNum].push_back({curPair.attacker, curPair.victim});
-                        tmpRole[threadNum].push_back({EngagementRole::Attacker, EngagementRole::Victim});
+                        finishEngagement(rounds, ticks, playerAtTick, tmpStartTickId, tmpEndTickId, tmpLength,
+                                         tmpPlayerId, tmpRole, threadNum, tickRates,
+                                         curPair, lastTimes);
+                        lastTimes = {tickIndex, tickIndex};
                     }
                 }
             }
-            tmpRoundSizes[threadNum].push_back(tmpStartTickId[threadNum].size() - tmpRoundStarts[threadNum].back());
         }
 
+        // at end of round, clear all engagements
+        for (const auto engagement : curEngagements) {
+            finishEngagement(rounds, ticks, playerAtTick, tmpStartTickId, tmpEndTickId, tmpLength,
+                             tmpPlayerId, tmpRole, threadNum, tickRates,
+                             engagement.first, engagement.second);
+        }
+
+        tmpRoundSizes[threadNum].push_back(tmpStartTickId[threadNum].size() - tmpRoundStarts[threadNum].back());
     }
 
     EngagementResult result;
