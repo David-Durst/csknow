@@ -116,7 +116,8 @@ export function setEventText(tickData: TickRow, gameData: GameData) {
 }
 
 export function updateEventIdAndSelector(tickData: TickRow) {
-    if (curEvent == "none") {
+    const parser = gameData.parsers.get(curEvent)
+    if (curEvent == "none" || !parser.havePlayerLabels) {
         eventIdLabel.style.display = "none"
         eventIdSelector.style.display = "none"
         eventIdSelector.options.length = 0
@@ -130,7 +131,6 @@ export function updateEventIdAndSelector(tickData: TickRow) {
         const index = getTickToOtherTableIndex(gameData, curEvent)
         const eventArray = gameData.tables.get(curEvent)
         const eventsForTick = index.search([tickData.id, tickData.id])
-        const parser = gameData.parsers.get(curEvent)
         // default to non-valid eventId index
         let eventIdIndex = 0
         for (let i = 0; i < eventsForTick.length; i++) {
