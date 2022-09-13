@@ -6,35 +6,46 @@ Chart.register(...registerables);
 let kymographChart: Chart = null
 let scatterChart: Chart = null
 type datasetType = {datasets: {label: string, data: {x: number, y: number}[], backgroundColor: string}[]}
-const exampleDataSet = {
-    datasets: [{
-        label: 'Scatter Dataset',
-        data: [{
-            x: -10,
-            y: 0
-        }, {
-            x: 0,
-            y: 10
-        }, {
-            x: 10,
-            y: 5
-        }, {
-            x: 0.5,
-            y: 5.5
-        }],
-        backgroundColor: 'rgb(255, 99, 132)'
-    }],
-};
+// need separate values since updates replace data field
+function getExampleDataSet() {
+    return {
+        datasets: [{
+            label: 'Scatter Dataset',
+            data: [{
+                x: -10,
+                y: 0
+            }, {
+                x: 0,
+                y: 10
+            }, {
+                x: 10,
+                y: 5
+            }, {
+                x: 0.5,
+                y: 5.5
+            }],
+            backgroundColor: 'rgb(255, 99, 132)'
+        }]
+    }
+}
+
 export function createCharts(kymographCtx: CanvasRenderingContext2D, scatterCtx: CanvasRenderingContext2D) {
     kymographChart = new Chart(kymographCtx, {
         type: 'scatter',
-        data: exampleDataSet,
+        data: getExampleDataSet(),
         options: {
             animation: false,
             scales: {
                 x: {
                     type: 'linear',
                     position: 'bottom'
+                }
+            },
+            responsive: false,
+            showLine: true,
+            elements: {
+                point: {
+                    radius: 1
                 }
             }
         }
@@ -42,7 +53,7 @@ export function createCharts(kymographCtx: CanvasRenderingContext2D, scatterCtx:
     kymographChart.data.datasets[0].label = "Mouse Speed"
     scatterChart = new Chart(scatterCtx, {
         type: 'scatter',
-        data: exampleDataSet,
+        data: getExampleDataSet(),
         options: {
             animation: false,
             scales: {
@@ -50,25 +61,24 @@ export function createCharts(kymographCtx: CanvasRenderingContext2D, scatterCtx:
                     type: 'linear',
                     position: 'bottom'
                 }
+            },
+            responsive: false,
+            showLine: true,
+            elements: {
+                point: {
+                    radius: 1
+                }
             }
         }
     });
     scatterChart.data.datasets[0].label = "Mouse Delta"
 }
 
-//https://www.chartjs.org/docs/latest/developers/updates.html
+//https://www.chartjs.org/docs/latest/developers/updates.html - but this actually isn't very good
 function addData(chart: Chart, data: ScatterDataPoint[]) {
-    for (const dataPoint of data) {
-        chart.data.datasets[0].data.push(dataPoint)
-    }
+    chart.data.datasets[0].data = data
+    chart.update()
 }
-
-function removeData(chart: Chart) {
-    chart.data.datasets.forEach((dataset) => {
-        dataset.data.pop();
-    });
-}
-
 
 export function drawMouseData(kymographCanvas: HTMLCanvasElement,
                               scatterCanvas: HTMLCanvasElement,
@@ -85,21 +95,19 @@ export function drawMouseData(kymographCanvas: HTMLCanvasElement,
             const curAimData = aimData[aimDataForEvent[i]]
             if (curAimData.getStartTick() <= tickData.id) {
                 speedData.push({
-                    x: parseInt(eventData.otherColumnValues[4]),
-                    y: parseInt(eventData.otherColumnValues[3])
+                    x: parseInt(curAimData.otherColumnValues[4]),
+                    y: parseFloat(curAimData.otherColumnValues[3])
                 })
                 deltaData.push({
-                    x: parseInt(eventData.otherColumnValues[1]),
-                    y: parseInt(eventData.otherColumnValues[2])
+                    x: parseFloat(curAimData.otherColumnValues[1]),
+                    y: parseFloat(curAimData.otherColumnValues[2])
                 })
             }
             else {
                 break
             }
         }
-        removeData(kymographChart)
         addData(kymographChart, speedData)
-        removeData(scatterChart)
         addData(scatterChart, deltaData)
     }
     else {
