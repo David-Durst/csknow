@@ -30,8 +30,12 @@ export const minimapHeight = 2048
 // when the input file was 1024x1024
 export const minimapScale = 4.4 * 1024 / minimapHeight
 let fontScale = 1.0
-export let canvas: HTMLCanvasElement = null;
-export let ctx: CanvasRenderingContext2D = null;
+export let mainCanvas: HTMLCanvasElement = null;
+export let mainCtx: CanvasRenderingContext2D = null;
+export let kymographCanvas: HTMLCanvasElement = null;
+export let kymographCtx: CanvasRenderingContext2D = null;
+export let gridCanvas: HTMLCanvasElement = null;
+export let gridCtx: CanvasRenderingContext2D = null;
 export const minimap = new Image();
 minimap.src = "vis_images/de_dust2_radar_upsampled_all_labels.png";
 let xMapLabel: HTMLLabelElement = null;
@@ -81,8 +85,8 @@ export function toggleCanvasSize() {
 function resizeCanvas(newSize: number) {
     canvasWidth = newSize
     canvasHeight = newSize
-    canvas.width = newSize
-    canvas.height = newSize
+    mainCanvas.width = newSize
+    mainCanvas.height = newSize
     fontScale = newSize / defaultCanvasSize
 }
 
@@ -116,7 +120,7 @@ class MapCoordinate {
 }
 
 function getMouseCoordinate(e: MouseEvent) {
-    const rect = canvas.getBoundingClientRect();
+    const rect = mainCanvas.getBoundingClientRect();
     const xCanvas = (e.clientX - rect.left)
     const yCanvas = (e.clientY - rect.top)
     return new MapCoordinate(xCanvas, yCanvas, true)
@@ -234,10 +238,10 @@ function trackMouse(e: MouseEvent) {
 
 export function drawTick(e: InputEvent) {
     const ftmp = filteredData
-    ctx.drawImage(minimap,0,0,minimapWidth,minimapHeight,0,0,
+    mainCtx.drawImage(minimap,0,0,minimapWidth,minimapHeight,0,0,
         canvasWidth,canvasHeight);
-    ctx.textBaseline = "middle"
-    ctx.textAlign = "center"
+    mainCtx.textBaseline = "middle"
+    mainCtx.textAlign = "center"
     const curTickIndex = getCurTickIndex()
     setTickLabel(filteredData.ticksTable[curTickIndex].demoTickNumber,
         filteredData.ticksTable[curTickIndex].gameTickNumber)
@@ -250,22 +254,22 @@ export function drawTick(e: InputEvent) {
     const players = gameData.getPlayersAtTick(tickData)
     for (let p = 0; p < players.length; p++) {
         let playerText = playersText[p]
-        ctx.fillStyle = dark_blue
+        mainCtx.fillStyle = dark_blue
         if (players[p].team == 3) {
             if (players[p].playerId == selectedPlayer) {
-                ctx.fillStyle = purple
+                mainCtx.fillStyle = purple
             }
             else if (playerText == "t" || playerText == "s") {
-                ctx.fillStyle = light_blue
+                mainCtx.fillStyle = light_blue
             }
         }
         else {
-            ctx.fillStyle = dark_red
+            mainCtx.fillStyle = dark_red
             if (players[p].playerId == selectedPlayer) {
-                ctx.fillStyle = yellow
+                mainCtx.fillStyle = yellow
             }
             else if (playerText == "t" || playerText == "s") {
-                ctx.fillStyle = light_red
+                mainCtx.fillStyle = light_red
             }
         }
         const location = new MapCoordinate(
@@ -273,36 +277,36 @@ export function drawTick(e: InputEvent) {
             players[p].posY,
             false);
         const zScaling = (players[p].posZ - minZ) / (maxZ - minZ)
-        ctx.font = ((zScaling * 20 + 30) * fontScale).toString() + "px Arial"
-        ctx.fillText(playerText, location.getCanvasX(), location.getCanvasY())
-        ctx.save()
-        ctx.translate(location.getCanvasX(), location.getCanvasY())
-        ctx.rotate((90-players[p].viewX)/180*Math.PI)
+        mainCtx.font = ((zScaling * 20 + 30) * fontScale).toString() + "px Arial"
+        mainCtx.fillText(playerText, location.getCanvasX(), location.getCanvasY())
+        mainCtx.save()
+        mainCtx.translate(location.getCanvasX(), location.getCanvasY())
+        mainCtx.rotate((90-players[p].viewX)/180*Math.PI)
         // divide by -90 as brighter means up and < 0 is looking up
         const yNeg1To1 = players[p].viewY / -90
         const yLogistic = 2 / (1 + Math.pow(Math.E, -8 * yNeg1To1))
-        ctx.filter = "brightness(" + yLogistic + ")"
+        mainCtx.filter = "brightness(" + yLogistic + ")"
         if (players[p].isAlive) {
             //ctx.fillText("^", 0, 0)
-            ctx.fillRect(-2 * fontScale, (-13 + -7 * zScaling) * fontScale, 4 * fontScale, 10 * fontScale)
+            mainCtx.fillRect(-2 * fontScale, (-13 + -7 * zScaling) * fontScale, 4 * fontScale, 10 * fontScale)
         }
-        ctx.restore()
+        mainCtx.restore()
         //ctx.fillRect(location.getCanvasX(), location.getCanvasY(), 1, 1)
     }
     if (drawingRegionFilter || definedRegionFilter) {
         if (emptyFilter) {
-            ctx.strokeStyle = dark_red
+            mainCtx.strokeStyle = dark_red
         }
         else {
-            ctx.strokeStyle = green
+            mainCtx.strokeStyle = green
         }
-        ctx.lineWidth = 3.0
-        ctx.strokeRect(topLeftCoordinate.getCanvasX(), topLeftCoordinate.getCanvasY(),
+        mainCtx.lineWidth = 3.0
+        mainCtx.strokeRect(topLeftCoordinate.getCanvasX(), topLeftCoordinate.getCanvasY(),
             bottomRightCoordinate.getCanvasX() - topLeftCoordinate.getCanvasX(),
             bottomRightCoordinate.getCanvasY() - topLeftCoordinate.getCanvasY())
     }
     if (curOverlay.includes("mesh")) {
-        ctx.fillStyle = green
+        mainCtx.fillStyle = green
         const overlayRows = filteredData.overlays.get(curOverlay)
         const overlayLabelsRows = filteredData.overlays.get(gameData.overlayLabels)
         let connectionAreaIds: number[] = [];
@@ -336,14 +340,14 @@ export function drawTick(e: InputEvent) {
                 targetY = avgY
                 targetFontSize = (((zScaling * 20 + 30)/2)*fontScale)
                 connectionAreaIds = overlayRow.otherColumnValues[8].split(';').map(s => parseInt(s))
-                ctx.fillStyle = "rgba(0, 0, 0, 0.9)";
-                ctx.fillRect(minCoordinate.getCanvasX(), minCoordinate.getCanvasY(),
+                mainCtx.fillStyle = "rgba(0, 0, 0, 0.9)";
+                mainCtx.fillRect(minCoordinate.getCanvasX(), minCoordinate.getCanvasY(),
                     maxCoordinate.getCanvasX() - minCoordinate.getCanvasX(),
                     maxCoordinate.getCanvasY() - minCoordinate.getCanvasY())
             }
-            ctx.lineWidth = 0.5
-            ctx.strokeStyle = "black";
-            ctx.strokeRect(minCoordinate.getCanvasX(), minCoordinate.getCanvasY(),
+            mainCtx.lineWidth = 0.5
+            mainCtx.strokeStyle = "black";
+            mainCtx.strokeRect(minCoordinate.getCanvasX(), minCoordinate.getCanvasY(),
                 maxCoordinate.getCanvasX() - minCoordinate.getCanvasX(),
                 maxCoordinate.getCanvasY() - minCoordinate.getCanvasY())
 
@@ -366,21 +370,21 @@ export function drawTick(e: InputEvent) {
             const avgY = (minCoordinate.getCanvasY() + maxCoordinate.getCanvasY()) / 2
             const avgZ = (parseFloat(overlayRow.otherColumnValues[4]) + parseFloat(overlayRow.otherColumnValues[7])) / 2;
             const zScaling = (avgZ - minZ) / (maxZ - minZ)
-            ctx.font = (((zScaling * 20 + 30)/2)*fontScale).toString() + "px Tahoma"
-            ctx.fillStyle = "rgba(255, 0, 0, 0.2)";
-            ctx.fillRect(minCoordinate.getCanvasX(), minCoordinate.getCanvasY(),
+            mainCtx.font = (((zScaling * 20 + 30)/2)*fontScale).toString() + "px Tahoma"
+            mainCtx.fillStyle = "rgba(255, 0, 0, 0.2)";
+            mainCtx.fillRect(minCoordinate.getCanvasX(), minCoordinate.getCanvasY(),
                 maxCoordinate.getCanvasX() - minCoordinate.getCanvasX(),
                 maxCoordinate.getCanvasY() - minCoordinate.getCanvasY())
         }
         if (targetAreaId != -1) {
-            ctx.fillStyle = 'green'
-            ctx.font = targetFontSize.toString() + "px Tahoma"
-            ctx.fillText(targetAreaId.toString() + "," + targetPlaceName, targetX, targetY)
+            mainCtx.fillStyle = 'green'
+            mainCtx.font = targetFontSize.toString() + "px Tahoma"
+            mainCtx.fillText(targetAreaId.toString() + "," + targetPlaceName, targetX, targetY)
         }
     }
     else if (curOverlay.includes("reachable") || curOverlay.includes("visible") || curOverlay.includes("distance") ||
              curOverlay.includes("danger")) {
-        ctx.fillStyle = green
+        mainCtx.fillStyle = green
         const overlayRows = filteredData.overlays.get(curOverlay)
         const overlayLabelsRows = filteredData.overlays.get(gameData.overlayLabels)
         let distances: number[] = [];
@@ -418,14 +422,14 @@ export function drawTick(e: InputEvent) {
                 distances = overlayRow.otherColumnValues.slice(6).map(s => parseFloat(s))
                 minDistance = Math.min(...distances);
                 maxDistance = Math.max(...distances);
-                ctx.fillStyle = "rgba(0, 0, 0, 0.9)";
-                ctx.fillRect(minCoordinate.getCanvasX(), minCoordinate.getCanvasY(),
+                mainCtx.fillStyle = "rgba(0, 0, 0, 0.9)";
+                mainCtx.fillRect(minCoordinate.getCanvasX(), minCoordinate.getCanvasY(),
                     maxCoordinate.getCanvasX() - minCoordinate.getCanvasX(),
                     maxCoordinate.getCanvasY() - minCoordinate.getCanvasY())
             }
-            ctx.lineWidth = 0.5
-            ctx.strokeStyle = "black";
-            ctx.strokeRect(minCoordinate.getCanvasX(), minCoordinate.getCanvasY(),
+            mainCtx.lineWidth = 0.5
+            mainCtx.strokeStyle = "black";
+            mainCtx.strokeRect(minCoordinate.getCanvasX(), minCoordinate.getCanvasY(),
                 maxCoordinate.getCanvasX() - minCoordinate.getCanvasX(),
                 maxCoordinate.getCanvasY() - minCoordinate.getCanvasY())
 
@@ -445,15 +449,15 @@ export function drawTick(e: InputEvent) {
                 parseFloat(overlayRow.otherColumnValues[4]),
                 false);
             const percentDistance = (distances[o] - minDistance) / (maxDistance - minDistance);
-            ctx.fillStyle = `rgba(${percentDistance * 255}, 0, ${(1 - percentDistance) * 255}, 0.5)`;
-            ctx.fillRect(minCoordinate.getCanvasX(), minCoordinate.getCanvasY(),
+            mainCtx.fillStyle = `rgba(${percentDistance * 255}, 0, ${(1 - percentDistance) * 255}, 0.5)`;
+            mainCtx.fillRect(minCoordinate.getCanvasX(), minCoordinate.getCanvasY(),
                 maxCoordinate.getCanvasX() - minCoordinate.getCanvasX(),
                 maxCoordinate.getCanvasY() - minCoordinate.getCanvasY())
         }
         if (targetAreaId != -1) {
-            ctx.fillStyle = 'green'
-            ctx.font = targetFontSize.toString() + "px Tahoma"
-            ctx.fillText(targetAreaId.toString() + "," + targetPlaceName, targetX, targetY)
+            mainCtx.fillStyle = 'green'
+            mainCtx.font = targetFontSize.toString() + "px Tahoma"
+            mainCtx.fillText(targetAreaId.toString() + "," + targetPlaceName, targetX, targetY)
         }
     }
     setEventText(tickData, filteredData)
@@ -491,8 +495,12 @@ export function setupMatchDrawing() {
 }
 
 export function setupCanvas() {
-    canvas = <HTMLCanvasElement> document.querySelector("#myCanvas")
-    ctx = canvas.getContext('2d')
+    mainCanvas = <HTMLCanvasElement> document.querySelector("#mainCanvas")
+    mainCtx = mainCanvas.getContext('2d')
+    kymographCanvas = <HTMLCanvasElement> document.querySelector("#kymographCanvas")
+    kymographCtx = kymographCanvas.getContext('2d')
+    gridCanvas = <HTMLCanvasElement> document.querySelector("#gridCanvas")
+    gridCtx = gridCanvas.getContext('2d')
     xMapLabel = document.querySelector<HTMLLabelElement>("#xposMap")
     yMapLabel = document.querySelector<HTMLLabelElement>("#yposMap")
     xCanvasLabel = document.querySelector<HTMLLabelElement>("#xposCanvas")
@@ -506,9 +514,9 @@ export function setupCanvas() {
     configClientButton = document.querySelector<HTMLAnchorElement>("#download_client")
     toggleCanvasSizeButton = document.querySelector<HTMLButtonElement>("#canvas_size")
     toggleCanvasSizeButton.addEventListener("click", toggleCanvasSize)
-    canvas.addEventListener("mousemove", trackMouse)
-    canvas.addEventListener("mousedown", startingRegionFilter)
-    canvas.addEventListener("mouseup", finishedRegionFilter)
+    mainCanvas.addEventListener("mousemove", trackMouse)
+    mainCanvas.addEventListener("mousedown", startingRegionFilter)
+    mainCanvas.addEventListener("mouseup", finishedRegionFilter)
     setupEventDrawing()
 }
 

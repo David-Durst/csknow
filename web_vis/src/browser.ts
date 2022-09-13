@@ -2,7 +2,7 @@ import {createGameData, gameData, parse, setInitialized} from "./data/data";
 import {
     canvasHeight,
     canvasWidth,
-    ctx,
+    mainCtx,
     minimap,
     minimapHeight,
     minimapWidth,
@@ -128,10 +128,10 @@ async function init() {
 }
 
 function changingMatchOrRound() {
-    ctx.drawImage(minimap,0,0,minimapWidth,minimapHeight,0,0,
+    mainCtx.drawImage(minimap,0,0,minimapWidth,minimapHeight,0,0,
         canvasWidth,canvasHeight);
-    ctx.fillStyle = lightGray;
-    ctx.fillRect(0, 0, canvasWidth, canvasHeight)
+    mainCtx.fillStyle = lightGray;
+    mainCtx.fillRect(0, 0, canvasWidth, canvasHeight)
     setMatchAndRoundLabels();
 }
 

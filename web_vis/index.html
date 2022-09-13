@@ -13,8 +13,14 @@
 <div class="container-fluid">
     <div class="row justify-content-md-center">
         <div class="col-12">
-            <canvas style="margin:auto;display:block" id="myCanvas" width="700" height="700">
+            <canvas style="margin:auto;display:block" id="mainCanvas" width="700" height="700">
             </canvas>
+            <div style="text-align:center; padding:10px" id="graphs">
+                <canvas style="display:none" id="kymographCanvas" width="450" height="100">
+                </canvas>
+                <canvas style="display:none" id="squareGridCanvas" width="200" height="200">
+                </canvas>
+            </div>
         </div>
     </div>
 
