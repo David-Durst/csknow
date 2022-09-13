@@ -23,6 +23,7 @@ EngagementPerTickAimResult queryEngagementPerTickAim(const Games & games, const 
     vector<double> tmpSecondsToHit[numThreads];
     vector<Vec2> tmpDeltaViewAngle[numThreads];
     vector<double> tmpRawViewAngleSpeed[numThreads];
+    vector<int64_t> tmpGameTickNumber[numThreads];
     std::atomic<int64_t> roundsProcessed = 0;
 
     // for each round
@@ -115,6 +116,7 @@ EngagementPerTickAimResult queryEngagementPerTickAim(const Games & games, const 
                 else {
                     tmpRawViewAngleSpeed[threadNum].push_back(0.);
                 }
+                tmpGameTickNumber[threadNum].push_back(ticks.gameTickNumber[tickIndex]);
             }
         }
 
@@ -132,6 +134,7 @@ EngagementPerTickAimResult queryEngagementPerTickAim(const Games & games, const 
                            result.secondsToHit.push_back(tmpSecondsToHit[minThreadId][tmpRowId]);
                            result.deltaViewAngle.push_back(tmpDeltaViewAngle[minThreadId][tmpRowId]);
                            result.rawViewAngleSpeed.push_back(tmpRawViewAngleSpeed[minThreadId][tmpRowId]);
+                           result.gameTickNumber.push_back(tmpGameTickNumber[minThreadId][tmpRowId]);
                        });
     return result;
 }

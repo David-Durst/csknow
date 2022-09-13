@@ -88,6 +88,7 @@ public:
             tmp.push_back(std::to_string(hId));
         }
         commaSeparateList(ss, tmp, ";");
+        ss << ",";
 
         tmp.clear();
         for (int64_t hId : hurtIds[index]) {

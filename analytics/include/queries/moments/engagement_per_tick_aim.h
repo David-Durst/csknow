@@ -35,6 +35,7 @@ public:
     vector<double> secondsToHit;
     vector<Vec2> deltaViewAngle;
     vector<double> rawViewAngleSpeed;
+    vector<int64_t> gameTickNumber;
 
 
     EngagementPerTickAimResult() {
@@ -57,7 +58,8 @@ public:
     void oneLineToCSV(int64_t index, stringstream & ss) {
         ss << index << "," << tickId[index] << "," << engagementId[index] << ","
             << attackerPlayerId[index] << "," << victimPlayerId[index] << "," << secondsToHit[index] << ","
-            << deltaViewAngle[index].x << "," << deltaViewAngle[index].y << "," << rawViewAngleSpeed[index];
+            << deltaViewAngle[index].x << "," << deltaViewAngle[index].y << "," << rawViewAngleSpeed[index] << ","
+            << gameTickNumber[index];
         ss << std::endl;
     }
 
@@ -66,7 +68,7 @@ public:
     }
 
     vector<string> getOtherColumnNames() {
-        return {"seconds to hit",  "delta view angle x", "delta view angle y", "raw view angle speed"};
+        return {"seconds to hit",  "delta view angle x", "delta view angle y", "raw view angle speed", "game tick number"};
     }
 };
 
