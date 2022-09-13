@@ -56,7 +56,7 @@ public:
 
     void oneLineToCSV(int64_t index, stringstream & ss) {
         ss << index << "," << tickId[index] << "," << engagementId[index] << ","
-            << attackerPlayerId[index] << "," << victimPlayerId[index] << "," << secondsToHit[index]
+            << attackerPlayerId[index] << "," << victimPlayerId[index] << "," << secondsToHit[index] << ","
             << deltaViewAngle[index].x << "," << deltaViewAngle[index].y << ","
             << rawViewAngleVelocity[index].x << "," << rawViewAngleVelocity[index].y;
         ss << std::endl;
@@ -67,8 +67,8 @@ public:
     }
 
     vector<string> getOtherColumnNames() {
-        return {"seconds to hit",  "actual view angle x", "actual view angle y",
-                "actual view angle x", "actual view angle y"};
+        return {"seconds to hit",  "delta view angle x", "delta view angle y",
+                "raw view angle velocity x", "raw view angle velocity y"};
     }
 };
 

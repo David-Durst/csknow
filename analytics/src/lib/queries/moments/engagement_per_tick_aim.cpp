@@ -51,7 +51,6 @@ EngagementPerTickAimResult queryEngagementPerTickAim(const Games & games, const 
 
             for (const auto & [_0, _1, engagementIndex] :
                 engagementResult.engagementsPerTick.findOverlapping(tickIndex, tickIndex)) {
-
                 tmpTickId[threadNum].push_back(tickIndex);
                 tmpEngagementId[threadNum].push_back(engagementIndex);
 

@@ -267,6 +267,7 @@ int main(int argc, char * argv[]) {
     std::cout << "processing engagements" << std::endl;
     string engagementName = "engagement";
     EngagementResult engagementResult = queryEngagementResult(games, filteredRounds, ticks, playerAtTick, hurt);
+    std::cout << "processing engagements per tick aim" << std::endl;
     string engagementPerTickAimName = "engagementPerTickAim";
     EngagementPerTickAimResult engagementPerTickAimResult =
             queryEngagementPerTickAim(games, filteredRounds, ticks, playerAtTick, weaponFire, hurt, engagementResult);
