@@ -270,8 +270,8 @@ int main(int argc, char * argv[]) {
     string engagementPerTickAimName = "engagementPerTickAim";
     EngagementPerTickAimResult engagementPerTickAimResult =
             queryEngagementPerTickAim(games, filteredRounds, ticks, playerAtTick, weaponFire, hurt, engagementResult);
-    engagementResult.havePerTickMouseTable = true;
-    engagementResult.perTickMouseTable = engagementPerTickAimName;
+    engagementResult.havePerTickAimTable = true;
+    engagementResult.perTickAimTable = engagementPerTickAimName;
     /*
     VelocityResult velocityResult = queryVelocity(position);
     std::cout << "velocity moments: " << velocityResult.positionIndex.size() << std::endl;
@@ -545,9 +545,9 @@ int main(int argc, char * argv[]) {
                 ss << ",";
                 queryValue.commaSeparateList(ss, queryValue.playerLabels, ";");
                 ss << ",";
-                ss << boolToString(queryValue.havePerTickMouseTable);
+                ss << boolToString(queryValue.havePerTickAimTable);
                 ss << ",";
-                ss << queryValue.perTickMouseTable;
+                ss << queryValue.perTickAimTable;
                 ss << std::endl;
             }
             res.set_content(ss.str(), "text/plain");
