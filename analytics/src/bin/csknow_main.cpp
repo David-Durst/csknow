@@ -548,6 +548,8 @@ int main(int argc, char * argv[]) {
                 ss << boolToString(queryValue.havePerTickAimTable);
                 ss << ",";
                 ss << queryValue.perTickAimTable;
+                ss << ",";
+                ss << queryValue.eventIdColumn;
                 ss << std::endl;
             }
             res.set_content(ss.str(), "text/plain");

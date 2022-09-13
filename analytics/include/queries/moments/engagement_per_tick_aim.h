@@ -39,6 +39,7 @@ public:
 
     EngagementPerTickAimResult() {
         this->startTickColumn = 0;
+        this->eventIdColumn = 1;
         this->ticksPerEvent = 1;
     }
 

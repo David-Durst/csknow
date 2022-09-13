@@ -62,6 +62,7 @@ public:
     vector<string> playerLabels;
     bool havePerTickAimTable = false;
     string perTickAimTable;
+    int eventIdColumn = -1;
     string extension = ".query";
     vector<int> keyPlayerColumns = {};
 //    vector<int> keysForDiff;
