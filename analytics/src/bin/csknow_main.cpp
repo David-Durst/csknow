@@ -8,6 +8,7 @@
 #include <iomanip>
 #include <ctime>
 #include "load_data.h"
+#include "indices/build_indexes.h"
 #include "load_cover.h"
 #include "load_clusters.h"
 #include "queries/velocity.h"
@@ -29,6 +30,7 @@
 #include "queries/distance_to_places.h"
 #include "queries/moments/aggression_event.h"
 #include "queries/moments/engagement.h"
+#include "queries/moments/engagement_per_tick_aim.h"
 #define CPPHTTPLIB_OPENSSL_SUPPORT
 #include "httplib.h"
 #include <errno.h>
@@ -265,6 +267,11 @@ int main(int argc, char * argv[]) {
     std::cout << "processing engagements" << std::endl;
     string engagementName = "engagement";
     EngagementResult engagementResult = queryEngagementResult(games, filteredRounds, ticks, playerAtTick, hurt);
+    string engagementPerTickAimName = "engagementPerTickAim";
+    EngagementPerTickAimResult engagementPerTickAimResult =
+            queryEngagementPerTickAim(games, filteredRounds, ticks, playerAtTick, weaponFire, hurt, engagementResult);
+    engagementResult.havePerTickMouseTable = true;
+    engagementResult.perTickMouseTable = engagementPerTickAimName;
     /*
     VelocityResult velocityResult = queryVelocity(position);
     std::cout << "velocity moments: " << velocityResult.positionIndex.size() << std::endl;
@@ -398,6 +405,7 @@ int main(int argc, char * argv[]) {
             {dust2DistanceToPlacesName, d2DistanceToPlacesResult},
             {aggressionEventName, aggressionEventResult},
             {engagementName, engagementResult},
+            {engagementPerTickAimName, engagementPerTickAimResult},
             //{queryNames[5], aCatClusterSequence},
             //{queryNames[6], aCatPeekersClusters},
             //{queryNames[7], midCTClusterSequence},
@@ -536,6 +544,10 @@ int main(int argc, char * argv[]) {
                 ss << queryValue.playerLabelIndicesColumn;
                 ss << ",";
                 queryValue.commaSeparateList(ss, queryValue.playerLabels, ";");
+                ss << ",";
+                ss << boolToString(queryValue.havePerTickMouseTable);
+                ss << ",";
+                ss << queryValue.perTickMouseTable;
                 ss << std::endl;
             }
             res.set_content(ss.str(), "text/plain");

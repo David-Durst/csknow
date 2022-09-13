@@ -60,6 +60,8 @@ public:
     int playersToLabelColumn = 0;
     int playerLabelIndicesColumn = 0;
     vector<string> playerLabels;
+    bool havePerTickMouseTable = false;
+    string perTickMouseTable;
     string extension = ".query";
     vector<int> keyPlayerColumns = {};
 //    vector<int> keysForDiff;

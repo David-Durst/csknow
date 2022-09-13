@@ -11,6 +11,7 @@
 // max time you can look back in ms
 // this assumes tick in demo for every tick in game
 const int clInterp = 31;
+const double CL_INTERP_SECONDS = 0.031;
 
 struct TickRates {
     int demoTickRate;

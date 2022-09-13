@@ -4,8 +4,8 @@
 
 #include "queries/moments/engagement.h"
 #include "queries/lookback.h"
+#include "indices/build_indexes.h"
 #include <omp.h>
-#include <atomic>
 
 struct EngagementPlayers {
     int64_t attacker, victim;
@@ -18,14 +18,14 @@ struct EngagementPlayers {
 
 struct EngagementData {
     int64_t startTick, endTick;
-    int16_t numHits;
+    vector<int64_t> hurtTickIds, hurtIds;
 };
 
 void finishEngagement(const Rounds &rounds, const Ticks &ticks, const PlayerAtTick &playerAtTick,
                       vector<int64_t> tmpStartTickId[], vector<int64_t> tmpEndTickId[],
-                      vector<int64_t> tmpFirstHurtTickId[], vector<int64_t> tmpLastHurtTickId[],
                       vector<int64_t> tmpLength[], vector<vector<int64_t>> tmpPlayerId[],
-                      vector<vector<EngagementRole>> tmpRole[], vector<int16_t> tmpNumHits[],
+                      vector<vector<EngagementRole>> tmpRole[],
+                      vector<vector<int64_t>> tmpHurtTickIds[], vector<vector<int64_t>> tmpHurtIds[],
                       int threadNum, const TickRates &tickRates,
                       const EngagementPlayers &curPair, const EngagementData &eData) {
     // use pre and post periods to track behavior around engagement
@@ -37,12 +37,11 @@ void finishEngagement(const Rounds &rounds, const Ticks &ticks, const PlayerAtTi
                                                        POST_ENGAGEMENT_SECONDS);
     tmpStartTickId[threadNum].push_back(preEngagementStart);
     tmpEndTickId[threadNum].push_back(postEngagementEnd);
-    tmpFirstHurtTickId[threadNum].push_back(eData.startTick);
-    tmpLastHurtTickId[threadNum].push_back(eData.endTick);
     tmpLength[threadNum].push_back(postEngagementEnd - preEngagementStart + 1);
     tmpPlayerId[threadNum].push_back({curPair.attacker, curPair.victim});
     tmpRole[threadNum].push_back({EngagementRole::Attacker, EngagementRole::Victim});
-    tmpNumHits[threadNum].push_back(eData.numHits);
+    tmpHurtTickIds[threadNum].push_back(eData.hurtTickIds);
+    tmpHurtIds[threadNum].push_back(eData.hurtIds);
 }
 
 EngagementResult queryEngagementResult(const Games & games, const Rounds & rounds, const Ticks & ticks,
@@ -54,13 +53,11 @@ EngagementResult queryEngagementResult(const Games & games, const Rounds & round
     vector<int64_t> tmpRoundSizes[numThreads];
     vector<int64_t> tmpStartTickId[numThreads];
     vector<int64_t> tmpEndTickId[numThreads];
-    vector<int64_t> tmpFirstHurtTickId[numThreads];
-    vector<int64_t> tmpLastHurtTickId[numThreads];
     vector<int64_t> tmpLength[numThreads];
     vector<vector<int64_t>> tmpPlayerId[numThreads];
     vector<vector<EngagementRole>> tmpRole[numThreads];
-    vector<int16_t> tmpNumHits[numThreads];
-    std::atomic<int64_t> roundsProcessed = 0;
+    vector<vector<int64_t>> tmpHurtTickIds[numThreads];
+    vector<vector<int64_t>> tmpHurtIds[numThreads];
 
     // for each round
     // track events for each pairs of player.
@@ -84,7 +81,8 @@ EngagementResult queryEngagementResult(const Games & games, const Rounds & round
 
                 // start new engagement if none present
                 if (curEngagements.find(curPair) == curEngagements.end()) {
-                    curEngagements[curPair] = {tickIndex, tickIndex, 1};
+                    curEngagements[curPair] = {tickIndex, tickIndex,
+                                               {tickIndex}, {hurtIndex}};
                 }
                 else {
                     EngagementData & eData = curEngagements[curPair];
@@ -95,15 +93,17 @@ EngagementResult queryEngagementResult(const Games & games, const Rounds & round
                     if (secondsBetweenTicks(ticks, tickRates, eData.endTick, tickIndex)
                         <= PRE_ENGAGEMENT_SECONDS + POST_ENGAGEMENT_SECONDS) {
                         eData.endTick = tickIndex;
-                        eData.numHits++;
+                        eData.hurtTickIds.push_back(tickIndex);
+                        eData.hurtIds.push_back(hurtIndex);
                     }
                     // if current engagement ended, finish it and start new one
                     else {
                         finishEngagement(rounds, ticks, playerAtTick, tmpStartTickId, tmpEndTickId,
-                                         tmpFirstHurtTickId, tmpLastHurtTickId, tmpLength,
-                                         tmpPlayerId, tmpRole, tmpNumHits, threadNum, tickRates,
+                                         tmpLength, tmpPlayerId, tmpRole,
+                                         tmpHurtTickIds, tmpHurtIds, threadNum, tickRates,
                                          curPair, eData);
-                        eData = {tickIndex, tickIndex, 1};
+                        eData = {tickIndex, tickIndex,
+                                 {tickIndex}, {hurtIndex}};
                     }
                 }
             }
@@ -112,8 +112,8 @@ EngagementResult queryEngagementResult(const Games & games, const Rounds & round
         // at end of round, clear all engagements
         for (const auto engagement : curEngagements) {
             finishEngagement(rounds, ticks, playerAtTick, tmpStartTickId, tmpEndTickId,
-                             tmpFirstHurtTickId, tmpLastHurtTickId, tmpLength,
-                             tmpPlayerId, tmpRole, tmpNumHits, threadNum, tickRates,
+                             tmpLength, tmpPlayerId, tmpRole,
+                             tmpHurtTickIds, tmpHurtIds, threadNum, tickRates,
                              engagement.first, engagement.second);
         }
 
@@ -126,12 +126,13 @@ EngagementResult queryEngagementResult(const Games & games, const Rounds & round
                        [&](int64_t minThreadId, int64_t tmpRowId) {
                            result.startTickId.push_back(tmpStartTickId[minThreadId][tmpRowId]);
                            result.endTickId.push_back(tmpEndTickId[minThreadId][tmpRowId]);
-                           result.firstHurtTickId.push_back(tmpFirstHurtTickId[minThreadId][tmpRowId]);
-                           result.lastHurtTickId.push_back(tmpLastHurtTickId[minThreadId][tmpRowId]);
                            result.tickLength.push_back(tmpLength[minThreadId][tmpRowId]);
                            result.playerId.push_back(tmpPlayerId[minThreadId][tmpRowId]);
                            result.role.push_back(tmpRole[minThreadId][tmpRowId]);
-                           result.numHits.push_back(tmpNumHits[minThreadId][tmpRowId]);
+                           result.hurtTickIds.push_back(tmpHurtTickIds[minThreadId][tmpRowId]);
+                           result.hurtIds.push_back(tmpHurtIds[minThreadId][tmpRowId]);
                        });
+    result.engagementsPerTick = buildIntervalIndex({result.startTickId.data(), result.endTickId.data()},
+                                                   result.size);
     return result;
 }

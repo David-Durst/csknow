@@ -912,9 +912,4 @@ void loadData(Equipment & equipment, GameTypes & gameTypes, HitGroups & hitGroup
               Kills & kills, Hurt & hurt, Grenades & grenades, Flashed & flashed, GrenadeTrajectories & grenadeTrajectories,
               Plants & plants, Defusals & defusals, Explosions & explosions, string dataPath);
 
-void buildIndexes(Equipment & equipment, GameTypes & gameTypes, HitGroups & hitGroups, Games & games,
-                       Players & players, Rounds & rounds, Ticks & ticks, PlayerAtTick & playerAtTick, Spotted & spotted, Footstep & footstep,
-                       WeaponFire & weaponFire, Kills & kills, Hurt & hurt, Grenades & grenades, Flashed & flashed,
-                       GrenadeTrajectories & grenadeTrajectories, Plants & plants, Defusals & defusals, Explosions & explosions);
-
 #endif //CSKNOW_LOAD_DATA_H
