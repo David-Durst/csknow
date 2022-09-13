@@ -39,6 +39,7 @@ export function createCharts(kymographCtx: CanvasRenderingContext2D, scatterCtx:
             }
         }
     });
+    kymographChart.data.datasets[0].label = "Mouse Speed"
     scatterChart = new Chart(scatterCtx, {
         type: 'scatter',
         data: exampleDataSet,
@@ -52,6 +53,7 @@ export function createCharts(kymographCtx: CanvasRenderingContext2D, scatterCtx:
             }
         }
     });
+    scatterChart.data.datasets[0].label = "Mouse Delta"
 }
 
 //https://www.chartjs.org/docs/latest/developers/updates.html
