@@ -7,6 +7,7 @@ import {
 import {PlayerAtTickRow, TickRow} from "../data/tables";
 import {getPackedSettings} from "http2";
 import {
+    activeEvent,
     curOverlay,
     getPlayersText, setEventsOverlaysToDraw,
     setEventText, setupEventDrawing, updateEventIdAndSelector,
@@ -15,6 +16,7 @@ import {clearCustomFilter} from "../controller/ide_filters";
 import {getCurTickIndex, setTickLabel} from "../controller/selectors";
 import {start} from "repl";
 import {match} from "assert";
+import {createCharts, drawMouseData} from "./mouseDrawing";
 
 export const d2_top_left_x = -2476
 export const d2_top_left_y = 3239
@@ -34,8 +36,8 @@ export let mainCanvas: HTMLCanvasElement = null;
 export let mainCtx: CanvasRenderingContext2D = null;
 export let kymographCanvas: HTMLCanvasElement = null;
 export let kymographCtx: CanvasRenderingContext2D = null;
-export let gridCanvas: HTMLCanvasElement = null;
-export let gridCtx: CanvasRenderingContext2D = null;
+export let scatterCanvas: HTMLCanvasElement = null;
+export let scatterCtx: CanvasRenderingContext2D = null;
 export const minimap = new Image();
 minimap.src = "vis_images/de_dust2_radar_upsampled_all_labels.png";
 let xMapLabel: HTMLLabelElement = null;
@@ -252,6 +254,7 @@ export function drawTick(e: InputEvent) {
     updateEventIdAndSelector(tickData)
     let playersText = getPlayersText(tickData, filteredData)
     const players = gameData.getPlayersAtTick(tickData)
+    drawMouseData(kymographCanvas, scatterCanvas, gameData, tickData, activeEvent)
     for (let p = 0; p < players.length; p++) {
         let playerText = playersText[p]
         mainCtx.fillStyle = dark_blue
@@ -499,8 +502,8 @@ export function setupCanvas() {
     mainCtx = mainCanvas.getContext('2d')
     kymographCanvas = <HTMLCanvasElement> document.querySelector("#kymographCanvas")
     kymographCtx = kymographCanvas.getContext('2d')
-    gridCanvas = <HTMLCanvasElement> document.querySelector("#gridCanvas")
-    gridCtx = gridCanvas.getContext('2d')
+    scatterCanvas = <HTMLCanvasElement> document.querySelector("#scatterCanvas")
+    scatterCtx = scatterCanvas.getContext('2d')
     xMapLabel = document.querySelector<HTMLLabelElement>("#xposMap")
     yMapLabel = document.querySelector<HTMLLabelElement>("#yposMap")
     xCanvasLabel = document.querySelector<HTMLLabelElement>("#xposCanvas")
@@ -518,6 +521,7 @@ export function setupCanvas() {
     mainCanvas.addEventListener("mousedown", startingRegionFilter)
     mainCanvas.addEventListener("mouseup", finishedRegionFilter)
     setupEventDrawing()
+    createCharts(kymographCtx, scatterCtx)
 }
 
 function setEventsOverlaysAndRedraw() {

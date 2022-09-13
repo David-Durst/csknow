@@ -15,7 +15,8 @@ let eventIdSelector: HTMLSelectElement = null
 let eventIdLabel: HTMLSpanElement = null
 let overlaySelector: HTMLSelectElement = null
 export let curEvent: string = "none"
-export let curEventId: number = INVALID_ID
+export let selectedEventId: number = INVALID_ID
+export let activeEvent: Row = null
 export let curOverlay: string = "none"
 
 function basicPlayerText(gameData: GameData, tickData: TickRow,
@@ -40,6 +41,7 @@ export function getPlayersText(tickData: TickRow, gameData: GameData): string[] 
         for (let p = 0; p < players.length; p++) {
             result.push(basicPlayerText(gameData, tickData, p))
         }
+        activeEvent = null
         return result
     }
 
@@ -47,12 +49,12 @@ export function getPlayersText(tickData: TickRow, gameData: GameData): string[] 
     const eventArray = gameData.tables.get(curEvent)
     const eventsForTick = index.search([tickData.id, tickData.id])
     // see updateEventId for how curEventId is set
-    const firstEvent = curEventId == INVALID_ID ?
+    activeEvent = selectedEventId == INVALID_ID ?
         eventArray[Math.min(...eventsForTick)] :
-        eventArray[curEventId]
+        eventArray[selectedEventId]
     const parser = gameData.parsers.get(curEvent)
-    const playersToLabel = firstEvent.otherColumnValues[parser.playersToLabelColumn].split(";").map(x => parseInt(x))
-    const playerLabelIndices = firstEvent.otherColumnValues[parser.playerLabelIndicesColumn].split(";").map(x => parseInt(x))
+    const playersToLabel = activeEvent.otherColumnValues[parser.playersToLabelColumn].split(";").map(x => parseInt(x))
+    const playerLabelIndices = activeEvent.otherColumnValues[parser.playerLabelIndicesColumn].split(";").map(x => parseInt(x))
     for (let p = 0; p < players.length; p++) {
         const indexOfPlayerInLabelsArray = playersToLabel.indexOf(players[p].playerId)
         if (players[p].isAlive && indexOfPlayerInLabelsArray != -1) {
@@ -135,7 +137,7 @@ export function updateEventIdAndSelector(tickData: TickRow) {
         let eventIdIndex = 0
         for (let i = 0; i < eventsForTick.length; i++) {
             const curEventRow = eventArray[eventsForTick[i]]
-            if (curEventRow.id == curEventId) {
+            if (curEventRow.id == selectedEventId) {
                 // plus 1 as need to account for default value
                 eventIdIndex = i + 1
             }
@@ -145,14 +147,14 @@ export function updateEventIdAndSelector(tickData: TickRow) {
         eventIdSelector.selectedIndex = eventIdIndex
         // if old selected event id no longer value, just go with default setting
         if (eventIdIndex == 0) {
-            curEventId = INVALID_ID
+            selectedEventId = INVALID_ID
         }
     }
 }
 
 export function setEventsOverlaysToDraw() {
     curEvent = eventSelector.value
-    curEventId = parseInt(eventIdSelector.value)
+    selectedEventId = parseInt(eventIdSelector.value)
     curOverlay = overlaySelector.value;
 }
 
