@@ -36,13 +36,24 @@ function generateRangeIndex(ticks: TickRow[], otherTable: Row[],
 
 }
 
-function generateTreeIndex(ticks: TickRow[], otherTable: Row[],
-                              index: IntervalTree<number>,
+function generateTreeIndex(otherTable: Row[], index: IntervalTree<number>,
                               getEventLength: (index: number, tick:number) => number) {
     for (let otherIndex = 0; otherIndex < otherTable.length; otherIndex++) {
         let curEvent = otherTable[otherIndex]
         let endTick = curEvent.getStartTick() + getEventLength(otherIndex, curEvent.id);
         index.insert([curEvent.getStartTick(), endTick], otherIndex)
+    }
+}
+
+function generatePerTickAimIndex(eventTable: Row[], perTickAimTable: Row[], eventIdColIndex: number,
+                                 index: Map<number, number[]>) {
+    // first generate array for every event
+    for (let eventIndex = 0; eventIndex < eventTable.length; eventIndex++) {
+        index.set(eventIndex, [])
+    }
+    for (let perTickAimIndex = 0; perTickAimIndex < perTickAimTable.length; perTickAimIndex++) {
+        const aimPerEvent = index.get(perTickAimTable[perTickAimIndex].foreignKeyValues[eventIdColIndex])
+        aimPerEvent.push(perTickAimIndex)
     }
 }
 
@@ -52,25 +63,32 @@ export function indexEventsForRound(gameData: GameData) {
         gameData.ticksToPlayerAtTick)
 
     for (let dataName of gameData.tableNames) {
+        const curParser = gameData.parsers.get(dataName)
         // skip if non-temporal, longer time scale than a round, tick data, or already indexed by ticks to PAT
         if (tablesNotFilteredByRound.includes(dataName)
             || dataName == tickTableName || dataName == playerAtTickTableName
-            || gameData.parsers.get(dataName).nonTemporal) {
+            || curParser.nonTemporal) {
             continue;
         }
         let getTicksPerEvent = function (index: number, tick: number): number {
             if (gameData.parsers.get(dataName).variableLength) {
                 return gameData.tables.get(dataName)[index]
-                    .foreignKeyValues[gameData.parsers.get(dataName).ticksColumn]
+                    .foreignKeyValues[curParser.ticksColumn]
             }
             else {
-                return gameData.parsers.get(dataName).ticksPerEvent
+                return curParser.ticksPerEvent
             }
         }
         gameData.ticksToOtherTablesIndices.set(dataName, new IntervalTree<number>());
-        generateTreeIndex(gameData.ticksTable,
-            gameData.tables.get(dataName),
+        generateTreeIndex(gameData.tables.get(dataName),
             gameData.ticksToOtherTablesIndices.get(dataName),
             getTicksPerEvent)
+        // if have a per tick aim table, create index for that
+        if (curParser.havePerTickAimTable) {
+            gameData.eventToPerTickAimTablesIndices.set(dataName, new Map<number, number[]>());
+            generatePerTickAimIndex(gameData.tables.get(dataName), gameData.tables.get(curParser.perTickAimTable),
+                gameData.parsers.get(curParser.perTickAimTable).eventIdColumn,
+                gameData.eventToPerTickAimTablesIndices.get(dataName))
+        }
     }
 }

@@ -44,6 +44,9 @@ export async function getTables() {
                 const playersToLabelColumnIndex = havePlayerLabelsIndex + 1
                 const playerLabelIndicesColumnIndex = playersToLabelColumnIndex + 1
                 const playerLabelsIndex = playerLabelIndicesColumnIndex + 1
+                const havePerTickAimTable = playerLabelsIndex + 1
+                const perTickAimTable = havePerTickAimTable + 1
+                const eventIdColumn = perTickAimTable + 1
                 if (overlay) {
                     gameData.overlays.set(cols[0], [])
                 }
@@ -77,9 +80,10 @@ export async function getTables() {
                         remoteAddr + "query/" + cols[0],
                         cols[keyPlayerColumnsIndex], cols[nonTemporalIndex], cols[overlayIndex], cols[overlayLabelsIndex],
                         cols[havePlayerLabelsIndex], cols[playersToLabelColumnIndex], cols[playerLabelIndicesColumnIndex],
-                        cols[playerLabelsIndex]
+                        cols[playerLabelsIndex], cols[havePerTickAimTable], cols[perTickAimTable], cols[eventIdColumn]
                     )
                 )
+                // the first overlay (the regular mesh) sets the labels for all other overlays
                 if (overlayLabels) {
                     gameData.overlayLabels = cols[0]
                 }

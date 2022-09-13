@@ -194,13 +194,17 @@ export class Parser {
     playersToLabelColumn: number;
     playerLabelIndicesColumn: number;
     playerLabels: string[];
+    havePerTickAimTable: boolean;
+    perTickAimTable: string;
+    eventIdColumn: number;
 
     constructor(tableName: string, startTickColumn: string,
                 foreignKeyNames: string[], otherColumnNames: string[],
                 ticksPerEvent: string, parserType: ParserType, baseUrl: string,
                 keyPlayerColumns: string, nonTemporal: string, overlay: string, overlayLabels: string,
                 havePlayerLabels: string, playersToLabelColumn: string,
-                playerLabelIndicesColumn: string, playerLabels: string) {
+                playerLabelIndicesColumn: string, playerLabels: string,
+                havePerTickAimTable: string, perTickAimTable: string, eventIdColumn: string) {
         this.tableName = tableName;
         this.foreignKeyNames = foreignKeyNames;
         this.otherColumnNames = otherColumnNames;
@@ -230,6 +234,9 @@ export class Parser {
         this.playersToLabelColumn = parseInt(playersToLabelColumn)
         this.playerLabelIndicesColumn = parseInt(playerLabelIndicesColumn)
         this.playerLabels = playerLabels.length > 0 ? playerLabels.split(";") : []
+        this.havePerTickAimTable = parseBool(havePerTickAimTable)
+        this.perTickAimTable = perTickAimTable
+        this.eventIdColumn = parseInt(eventIdColumn)
     }
 
     parseOneLine(currentLine: string[]) {
@@ -349,6 +356,10 @@ export class GameData {
         new Map<string, Row[]>();
     ticksToOtherTablesIndices: Map<string, IntervalTree<number>> =
         new Map<string, IntervalTree<number>>();
+    // name here is for the event, from that can figure out name of per tick aim table
+    // inner map is from event id to row indices per tick
+    eventToPerTickAimTablesIndices: Map<string, Map<number, number[]>> =
+        new Map<string, Map<number, number[]>>();
     overlays: Map<string, Row[]> =
         new Map<string, Row[]>();
     overlayLabels: string;
