@@ -38,7 +38,7 @@ void buildRangeIndex(const vector<int64_t> &primaryKeyCol, int64_t primarySize, 
 // this is for sparse many-to-many relationships (like grenades, one grenade corresponds to many ticks and many grenades at one tick)
 // sparse like kills, most rows don't have a kill
 // since sparse, want to iterate over the events rather than times when events occur
-IntervalIndex buildIntervalIndex(const vector<const int64_t *> foreignKeyCols, int64_t foreignSize) {
+IntervalIndex buildIntervalIndex(const vector<const int64_t *> &foreignKeyCols, int64_t foreignSize) {
     vector<Interval<int64_t, int64_t>> eventIntervals;
     for (int64_t foreignIndex = 0; foreignIndex < foreignSize; foreignIndex++) {
         // collect all primary key entries that are in range the foreign keys

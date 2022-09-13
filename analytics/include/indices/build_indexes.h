@@ -10,7 +10,7 @@
 void buildRangeIndex(const vector<int64_t> &primaryKeyCol, int64_t primarySize, const int64_t * foreignKeyCol,
                      int64_t foreignSize, RangeIndex rangeIndexCol, string primaryName, string foreignName);
 
-IntervalIndex buildIntervalIndex(const vector<int64_t *> foreignKeyCols, int64_t foreignSize);
+IntervalIndex buildIntervalIndex(const vector<const int64_t *> &foreignKeyCols, int64_t foreignSize);
 
 void buildIndexes(Equipment & equipment, GameTypes & gameTypes, HitGroups & hitGroups, Games & games,
                   Players & players, Rounds & rounds, Ticks & ticks, PlayerAtTick & playerAtTick, Spotted & spotted, Footstep & footstep,

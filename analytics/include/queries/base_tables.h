@@ -176,6 +176,7 @@ public:
     }
 };
 
+static
 map<int64_t, int64_t> getPATIdForPlayerId(const Ticks & ticks, const PlayerAtTick & playerAtTick, int64_t tickIndex) {
     map<int64_t, int64_t> playerIdToPatID;
     for (int64_t patIndex = ticks.patPerTick[tickIndex].minId;

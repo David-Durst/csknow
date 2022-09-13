@@ -132,7 +132,7 @@ EngagementResult queryEngagementResult(const Games & games, const Rounds & round
                            result.hurtTickIds.push_back(tmpHurtTickIds[minThreadId][tmpRowId]);
                            result.hurtIds.push_back(tmpHurtIds[minThreadId][tmpRowId]);
                        });
-    result.engagementsPerTick = buildIntervalIndex({result.startTickId.data(), result.endTickId.data()},
-                                                   result.size);
+    vector<const int64_t *> foreignKeyCols{result.startTickId.data(), result.endTickId.data()};
+    result.engagementsPerTick = buildIntervalIndex(foreignKeyCols, result.size);
     return result;
 }
