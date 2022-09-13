@@ -22,7 +22,7 @@ EngagementPerTickAimResult queryEngagementPerTickAim(const Games & games, const 
     vector<int64_t> tmpVictimPlayerId[numThreads];
     vector<double> tmpSecondsToHit[numThreads];
     vector<Vec2> tmpDeltaViewAngle[numThreads];
-    vector<Vec2> tmpRawViewAngleVelocity[numThreads];
+    vector<double> tmpRawViewAngleSpeed[numThreads];
     std::atomic<int64_t> roundsProcessed = 0;
 
     // for each round
@@ -107,13 +107,13 @@ EngagementPerTickAimResult queryEngagementPerTickAim(const Games & games, const 
 
                 // compute view angle velocity if there is a prior tick in the round
                 if (tickIndex > rounds.ticksPerRound[roundIndex].minId) {
-                    tmpRawViewAngleVelocity[threadNum].push_back({
+                    tmpRawViewAngleSpeed[threadNum].push_back(computeMagnitude(Vec2{
                         playerAtTick.viewX[curPlayerToPAT[attackerId]] - playerAtTick.viewX[priorPlayerToPAT[attackerId]],
                         playerAtTick.viewY[curPlayerToPAT[attackerId]] - playerAtTick.viewY[priorPlayerToPAT[attackerId]],
-                    });
+                    }));
                 }
                 else {
-                    tmpRawViewAngleVelocity[threadNum].push_back({0., 0.});
+                    tmpRawViewAngleSpeed[threadNum].push_back(0.);
                 }
             }
         }
@@ -131,7 +131,7 @@ EngagementPerTickAimResult queryEngagementPerTickAim(const Games & games, const 
                            result.victimPlayerId.push_back(tmpVictimPlayerId[minThreadId][tmpRowId]);
                            result.secondsToHit.push_back(tmpSecondsToHit[minThreadId][tmpRowId]);
                            result.deltaViewAngle.push_back(tmpDeltaViewAngle[minThreadId][tmpRowId]);
-                           result.rawViewAngleVelocity.push_back(tmpRawViewAngleVelocity[minThreadId][tmpRowId]);
+                           result.rawViewAngleSpeed.push_back(tmpRawViewAngleSpeed[minThreadId][tmpRowId]);
                        });
     return result;
 }
