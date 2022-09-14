@@ -1,32 +1,90 @@
 import {GameData, Parser, Row, TickRow} from "../data/tables";
 import {curEvent} from "./events";
-import {Chart, registerables, ScatterDataPoint} from 'chart.js';
+import {Chart, Plugin, registerables, ScatterDataPoint} from 'chart.js';
+import {AnyObject, EmptyObject} from "chart.js/types/basic";
 Chart.register(...registerables);
+import annotationPlugin, {AnnotationOptions, PartialEventContext} from 'chartjs-plugin-annotation';
+Chart.register(annotationPlugin)
 
 let kymographChart: Chart = null
 let scatterChart: Chart = null
 type datasetType = {datasets: {label: string, data: {x: number, y: number}[], backgroundColor: string}[]}
 // need separate values since updates replace data field
-function getExampleDataSet() {
+function getExampleDataSet()  {
     return {
-        datasets: [{
-            label: 'Scatter Dataset',
-            data: [{
-                x: -10,
-                y: 0
-            }, {
-                x: 0,
-                y: 10
-            }, {
-                x: 10,
-                y: 5
-            }, {
-                x: 0.5,
-                y: 5.5
-            }],
-            backgroundColor: 'rgb(255, 99, 132)'
-        }]
+        datasets: [
+            {
+                label: 'Past',
+                pointRadius: 1,
+                data: [{
+                    x: -10,
+                    y: 0
+                }, {
+                    x: 0,
+                    y: 10
+                }, {
+                    x: 10,
+                    y: 5
+                }, {
+                    x: 0.5,
+                    y: 5.5
+                }],
+                backgroundColor: 'rgb(0,73,189)'
+            },
+            {
+                label: 'Present',
+                pointRadius: 5,
+                data: [{
+                    x: -10,
+                    y: 0
+                }, {
+                    x: 0,
+                    y: 10
+                }, {
+                    x: 10,
+                    y: 5
+                }, {
+                    x: 0.5,
+                    y: 5.5
+                }],
+                backgroundColor: 'rgb(255,0,0)'
+            },
+            {
+                label: 'Future',
+                pointRadius: 1,
+                data: [{
+                    x: -10,
+                    y: 0
+                }, {
+                    x: 0,
+                    y: 10
+                }, {
+                    x: 10,
+                    y: 5
+                }, {
+                    x: 0.5,
+                    y: 5.5
+                }],
+                backgroundColor: 'rgb(114,114,114)'
+            },
+        ]
     }
+}
+
+function getLineXPoint(context: PartialEventContext, options: AnnotationOptions): number {
+    let dataPoint = context.chart.data.datasets[1].data[0] as ScatterDataPoint
+    // take last past point if no current one
+    if (dataPoint == null) {
+        const length = context.chart.data.datasets[0].data.length
+        if (length > 0) {
+            dataPoint = context.chart.data.datasets[0].data[length - 1] as ScatterDataPoint
+        }
+    }
+    // take first future point if no current one
+    if (dataPoint == null) {
+        dataPoint = context.chart.data.datasets[2].data[0] as ScatterDataPoint
+    }
+    return dataPoint.x
 }
 
 export function createCharts(kymographCtx: CanvasRenderingContext2D, scatterCtx: CanvasRenderingContext2D) {
@@ -38,7 +96,17 @@ export function createCharts(kymographCtx: CanvasRenderingContext2D, scatterCtx:
             scales: {
                 x: {
                     type: 'linear',
-                    position: 'bottom'
+                    position: 'bottom',
+                    title: {
+                        display: true,
+                        text: "Time Since Event Start (s)"
+                    }
+                },
+                y: {
+                    title: {
+                        display: true,
+                        text: "View Angle Speed (deg)"
+                    }
                 }
             },
             responsive: false,
@@ -47,10 +115,27 @@ export function createCharts(kymographCtx: CanvasRenderingContext2D, scatterCtx:
                 point: {
                     radius: 1
                 }
+            },
+            plugins: {
+                title: {
+                    display: true,
+                    text: "View Angle Speed During Event"
+                },
+                annotation: {
+                    annotations: {
+                        curTimeLine: {
+                            type: 'line',
+                            drawTime: 'beforeDatasetsDraw',
+                            xMin: getLineXPoint,
+                            xMax: getLineXPoint,
+                            borderColor: 'rgb(255, 99, 132)',
+                            borderWidth: 2,
+                        }
+                    }
+                }
             }
         }
     });
-    kymographChart.data.datasets[0].label = "Mouse Speed"
     scatterChart = new Chart(scatterCtx, {
         type: 'scatter',
         data: getExampleDataSet(),
@@ -59,24 +144,37 @@ export function createCharts(kymographCtx: CanvasRenderingContext2D, scatterCtx:
             scales: {
                 x: {
                     type: 'linear',
-                    position: 'bottom'
+                    position: 'bottom',
+                    title: {
+                        display: true,
+                        text: "Yaw Delta (deg)"
+                    }
+                },
+                y: {
+                    title: {
+                        display: true,
+                        text: "Pitch Delta (deg)"
+                    }
                 }
             },
             responsive: false,
             showLine: true,
-            elements: {
-                point: {
-                    radius: 1
+            plugins: {
+                title: {
+                    display: true,
+                    text: "View Angle Delta Relative To Aiming At Enemy Head"
                 }
             }
         }
     });
-    scatterChart.data.datasets[0].label = "Mouse Delta"
 }
 
 //https://www.chartjs.org/docs/latest/developers/updates.html - but this actually isn't very good
-function addData(chart: Chart, data: ScatterDataPoint[]) {
-    chart.data.datasets[0].data = data
+function addData(chart: Chart, pastData: ScatterDataPoint[],
+                 presentData: ScatterDataPoint[], futureData: ScatterDataPoint[]) {
+    chart.data.datasets[0].data = pastData
+    chart.data.datasets[1].data = presentData
+    chart.data.datasets[2].data = futureData
     chart.update()
 }
 
@@ -89,26 +187,37 @@ export function drawMouseData(kymographCanvas: HTMLCanvasElement,
         scatterCanvas.style.display = "inline-block"
         const aimDataForEvent = gameData.eventToPerTickAimTablesIndices.get(curEvent).get(eventData.id)
         const aimData = gameData.tables.get(parser.perTickAimTable)
-        const speedData: ScatterDataPoint[] = []
-        const deltaData: ScatterDataPoint[] = []
+        const pastSpeedData: ScatterDataPoint[] = [], presentSpeedData: ScatterDataPoint[] = [],
+            futureSpeedData: ScatterDataPoint[] = []
+        const pastDeltaData: ScatterDataPoint[] = [], presentDeltaData: ScatterDataPoint[] = [],
+            futureDeltaData: ScatterDataPoint[] = []
         for (let i = 0; i < aimDataForEvent.length; i++) {
             const curAimData = aimData[aimDataForEvent[i]]
-            if (curAimData.getStartTick() <= tickData.id) {
-                speedData.push({
-                    x: parseInt(curAimData.otherColumnValues[4]),
-                    y: parseFloat(curAimData.otherColumnValues[3])
-                })
-                deltaData.push({
-                    x: parseFloat(curAimData.otherColumnValues[1]),
-                    y: parseFloat(curAimData.otherColumnValues[2])
-                })
+            let speedData: ScatterDataPoint[] = null
+            let deltaData: ScatterDataPoint[] = null
+            if (curAimData.getStartTick() < tickData.id) {
+                speedData = pastSpeedData
+                deltaData = pastDeltaData
+            }
+            else if (curAimData.getStartTick() == tickData.id) {
+                speedData = presentSpeedData
+                deltaData = presentDeltaData
             }
             else {
-                break
+                speedData = futureSpeedData
+                deltaData = futureDeltaData
             }
+            speedData.push({
+                x: parseFloat(curAimData.otherColumnValues[4]),
+                y: parseFloat(curAimData.otherColumnValues[3])
+            })
+            deltaData.push({
+                x: parseFloat(curAimData.otherColumnValues[1]),
+                y: parseFloat(curAimData.otherColumnValues[2])
+            })
         }
-        addData(kymographChart, speedData)
-        addData(scatterChart, deltaData)
+        addData(kymographChart, pastSpeedData, presentSpeedData, futureSpeedData)
+        addData(scatterChart, pastDeltaData, presentDeltaData, futureDeltaData)
     }
     else {
         kymographCanvas.style.display = "none"
