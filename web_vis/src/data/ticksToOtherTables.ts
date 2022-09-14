@@ -49,7 +49,7 @@ function generatePerTickAimIndex(eventTable: Row[], perTickAimTable: Row[], even
                                  index: Map<number, number[]>) {
     // first generate array for every event
     for (let eventIndex = 0; eventIndex < eventTable.length; eventIndex++) {
-        index.set(eventIndex, [])
+        index.set(eventTable[eventIndex].id, [])
     }
     for (let perTickAimIndex = 0; perTickAimIndex < perTickAimTable.length; perTickAimIndex++) {
         const aimPerEvent = index.get(perTickAimTable[perTickAimIndex].foreignKeyValues[eventIdColIndex])

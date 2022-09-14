@@ -49,9 +49,16 @@ export function getPlayersText(tickData: TickRow, gameData: GameData): string[] 
     const eventArray = gameData.tables.get(curEvent)
     const eventsForTick = index.search([tickData.id, tickData.id])
     // see updateEventId for how curEventId is set
-    activeEvent = selectedEventId == INVALID_ID ?
-        eventArray[Math.min(...eventsForTick)] :
-        eventArray[selectedEventId]
+    if (selectedEventId == INVALID_ID) {
+        activeEvent = eventArray[Math.min(...eventsForTick)]
+    }
+    else {
+        for (let i = 0; i < eventArray.length; i++) {
+            if (selectedEventId == eventArray[i].id) {
+                activeEvent = eventArray[i]
+            }
+        }
+    }
     const parser = gameData.parsers.get(curEvent)
     const playersToLabel = activeEvent.otherColumnValues[parser.playersToLabelColumn].split(";").map(x => parseInt(x))
     const playerLabelIndices = activeEvent.otherColumnValues[parser.playerLabelIndicesColumn].split(";").map(x => parseInt(x))
