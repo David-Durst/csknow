@@ -25,6 +25,8 @@ using std::unordered_map;
 using std::vector;
 using std::map;
 
+#define STOPPED_THRESHOLD 0.1
+
 class NonEngagementTrajectoryResult : public QueryResult {
 public:
     vector<RangeIndexEntry> rowIndicesPerRound;
