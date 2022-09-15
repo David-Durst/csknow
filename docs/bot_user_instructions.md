@@ -1,12 +1,12 @@
 # Bot User Instructions
 These are instructions for using CSKnow bots: running a server that you can play
 against. If you want to modify bot logic, please see
-[my dev instructions](https://github.com/David-Durst/csknow/tree/docs/bot_dev_instructions.md)
+[my dev instructions](https://github.com/David-Durst/csknow/blob/master/docs/dev_setup_guide.md)
 for how to setup the complete development environment.
 
 These instructions assume Ubuntu 22.04 OS with sufficient space to install a
 CSGO server (~30 GB). If your personal computer doesn't match these
-specifications, I recommend creating a machine on AWS using [my guide](https://github.com/David-Durst/csknow/tree/docs/aws_machine_creation_instructions.md).
+specifications, I recommend creating a machine on AWS using [my guide](https://github.com/David-Durst/csknow/blob/master/docs/aws_machine_creation_guide.md).
 
 ## Warning
 These instructions require creating a GSLT token. Make sure to follow these
