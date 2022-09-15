@@ -31,6 +31,7 @@
 #include "queries/moments/aggression_event.h"
 #include "queries/moments/engagement.h"
 #include "queries/moments/engagement_per_tick_aim.h"
+#include "queries/moments/non_engagement_trajectory.h"
 #define CPPHTTPLIB_OPENSSL_SUPPORT
 #include "httplib.h"
 #include <errno.h>
@@ -273,6 +274,9 @@ int main(int argc, char * argv[]) {
             queryEngagementPerTickAim(games, filteredRounds, ticks, playerAtTick, weaponFire, hurt, engagementResult);
     engagementResult.havePerTickAimTable = true;
     engagementResult.perTickAimTable = engagementPerTickAimName;
+    string nonEngagementTrajectoryName = "nonEngagementTrajectory";
+    NonEngagementTrajectoryResult nonEngagementTrajectoryResult =
+            queryNonEngagementTrajectory(games, filteredRounds, ticks, playerAtTick, engagementResult);
     /*
     VelocityResult velocityResult = queryVelocity(position);
     std::cout << "velocity moments: " << velocityResult.positionIndex.size() << std::endl;
@@ -407,6 +411,7 @@ int main(int argc, char * argv[]) {
             {aggressionEventName, aggressionEventResult},
             {engagementName, engagementResult},
             {engagementPerTickAimName, engagementPerTickAimResult},
+            {nonEngagementTrajectoryName, nonEngagementTrajectoryResult},
             //{queryNames[5], aCatClusterSequence},
             //{queryNames[6], aCatPeekersClusters},
             //{queryNames[7], midCTClusterSequence},
