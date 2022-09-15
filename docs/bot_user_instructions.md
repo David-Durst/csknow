@@ -4,6 +4,7 @@ against. If you want to modify bot logic, please see
 [my dev instructions](https://github.com/David-Durst/csknow/blob/master/docs/dev_setup_guide.md)
 for how to setup the complete development environment.
 
+## Prerequisites
 These instructions assume Ubuntu 22.04 OS with sufficient space to install a
 CSGO server (~30 GB). If your personal computer doesn't match these
 specifications, I recommend creating a machine on AWS using [my guide](https://github.com/David-Durst/csknow/blob/master/docs/aws_machine_creation_guide.md).
@@ -15,7 +16,7 @@ use your Steam account through your GSLT token.
 
 ## Instructions
 1. Checkout the CSKnow repo with Git
-1. Open a terminal in the CSKnow `demo_generator` folder
+1. Open a terminal in the CSKnow `demo_generator` directory
 2. Install docker: Run `docker_setup.sh`. 
    1. **Note:** run this script as your normal user, it will request sudo access when necessary
 3. Build the docker image: Run `build.sh` 

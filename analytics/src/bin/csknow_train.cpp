@@ -74,8 +74,10 @@ int main(int argc, char * argv[]) {
 
     loadData(equipment, gameTypes, hitGroups, games, players, unfilteredRounds, filteredRounds, ticks, playerAtTick, spotted, footstep, weaponFire,
              kills, hurt, grenades, flashed, grenadeTrajectories, plants, defusals, explosions, dataPath);
+    /*
     buildIndexes(equipment, gameTypes, hitGroups, games, players, filteredRounds, ticks, playerAtTick, spotted, footstep, weaponFire,
                  kills, hurt, grenades, flashed, grenadeTrajectories, plants, defusals, explosions);
+    */
     //std::printf("GLIBCXX: %d\n",__GLIBCXX__);
     std::cout << "num elements in equipment: " << equipment.size << std::endl;
     std::cout << "num elements in game_types: " << gameTypes.size << std::endl;
