@@ -1,8 +1,8 @@
 # Bot User Instructions
 These are instructions for using CSKnow bots: running a server that you can play
-against. Please see
-[`docs/dev_instructions.md`](https://github.com/David-Durst/csknow/tree/docs/bot_dev_instructions.md)
-for instructions on how to setup the complete developmeent environment, which includes how to run bot development.
+against. If you want to modify bot logic, please see
+[my dev instructions](https://github.com/David-Durst/csknow/tree/docs/bot_dev_instructions.md)
+for how to setup the complete development environment.
 
 These instructions assume Ubuntu 22.04 OS with sufficient space to install a
 CSGO server (~30 GB). If your personal computer doesn't match these
