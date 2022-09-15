@@ -21,7 +21,7 @@ guide](https://github.com/David-Durst/csknow/blob/master/docs/aws_machine_creati
    `demo_parser/scripts/install_dependencies.sh` to install goenv to `/opt`,
    Go 1.19 to a location in your home directory, and jq via the package manager
    (jq used to get latest goenv version).
-    3. **Note:** Running this script with the y flag
+    1. **Note:** Running this script with the y flag
        (`demo_parser/scripts/install_dependencies.sh y`) will add goenv and
        go to your path. Otherwise, it will print instructions for you to add
        them to the path in `~/.profile`.
