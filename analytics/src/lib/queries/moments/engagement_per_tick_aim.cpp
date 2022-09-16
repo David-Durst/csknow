@@ -110,6 +110,8 @@ EngagementPerTickAimResult queryEngagementPerTickAim(const Games & games, const 
                 Vec2 targetViewAngle = vectorAngles(targetVector);
                 // want to be + if too large, - if too small, so do current - target
                 Vec2 deltaViewAngle = curViewAngle - targetViewAngle;
+                // invert so bigger pitch is aiming up
+                deltaViewAngle.y *= -1;
                 deltaViewAngle.makePitchNeg90To90();
                 deltaViewAngle.makeYawNeg180To180();
 

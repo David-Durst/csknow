@@ -1,6 +1,6 @@
 import {GameData, Parser, Row, TickRow} from "../data/tables";
 import {curEvent, displayMouseData} from "./events";
-import {Chart, Plugin, registerables, ScatterDataPoint} from 'chart.js';
+import {Chart, Plugin, PointStyle, registerables, ScatterDataPoint, ScriptableContext} from 'chart.js';
 import {AnyObject, EmptyObject} from "chart.js/types/basic";
 Chart.register(...registerables);
 import annotationPlugin, {AnnotationOptions, PartialEventContext} from 'chartjs-plugin-annotation';
@@ -29,7 +29,7 @@ function getExampleDataSet()  {
                     x: 0.5,
                     y: 5.5
                 }],
-                backgroundColor: 'rgb(0,73,189)'
+                backgroundColor: 'rgb(0,213,250)'
             },
             {
                 label: 'Present',
@@ -87,6 +87,16 @@ function getLineXPoint(context: PartialEventContext, options: AnnotationOptions)
     return dataPoint.x
 }
 
+const hurtDataIndices: Set<number>  = new Set<number>()
+function getPointStyle(context: ScriptableContext<any>, options: AnyObject): PointStyle {
+    if (hurtDataIndices.has(context.dataIndex)) {
+        return "crossRot"
+    }
+    else {
+        return "circle"
+    }
+}
+
 
 export function createCharts(kymographCtx: CanvasRenderingContext2D, scatterCtx: CanvasRenderingContext2D) {
     kymographChart = new Chart(kymographCtx, {
@@ -114,7 +124,8 @@ export function createCharts(kymographCtx: CanvasRenderingContext2D, scatterCtx:
             showLine: true,
             elements: {
                 point: {
-                    radius: 1
+                    radius: 1,
+                    pointStyle: getPointStyle
                 }
             },
             plugins: {
@@ -154,7 +165,7 @@ export function createCharts(kymographCtx: CanvasRenderingContext2D, scatterCtx:
                 y: {
                     title: {
                         display: true,
-                        text: "Pitch Delta (deg)"
+                        text: "Inverted Pitch Delta (deg)"
                     }
                 }
             },
@@ -176,6 +187,7 @@ function addData(chart: Chart, pastData: ScatterDataPoint[],
     chart.data.datasets[0].data = pastData
     chart.data.datasets[1].data = presentData
     chart.data.datasets[2].data = futureData
+    chart.config.data.datasets[1].data[1]
     chart.update()
 }
 
@@ -192,6 +204,8 @@ export function drawMouseData(kymographCanvas: HTMLCanvasElement,
             futureSpeedData: ScatterDataPoint[] = []
         const pastDeltaData: ScatterDataPoint[] = [], presentDeltaData: ScatterDataPoint[] = [],
             futureDeltaData: ScatterDataPoint[] = []
+        const hurtTickIds = new Set(eventData.otherColumnValues[2].split(";").map(x => parseInt(x)))
+        hurtDataIndices.clear()
         for (let i = 0; i < aimDataForEvent.length; i++) {
             const curAimData = aimData[aimDataForEvent[i]]
             let speedData: ScatterDataPoint[] = null
@@ -216,6 +230,9 @@ export function drawMouseData(kymographCanvas: HTMLCanvasElement,
                 x: parseFloat(curAimData.otherColumnValues[1]),
                 y: parseFloat(curAimData.otherColumnValues[2])
             })
+            if (hurtTickIds.has(curAimData.foreignKeyValues[0])) {
+                hurtDataIndices.add(i)
+            }
         }
         addData(kymographChart, pastSpeedData, presentSpeedData, futureSpeedData)
         addData(scatterChart, pastDeltaData, presentDeltaData, futureDeltaData)
