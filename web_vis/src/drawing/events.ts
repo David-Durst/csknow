@@ -22,27 +22,29 @@ export let curOverlay: string = "none"
 export let displayMouseData = true
 let mouseDataDisplayButton: HTMLButtonElement = null
 
+export const DEFAULT_ALIVE_STRING = "o"
+export const DEFAULT_DEAD_STRING = "x"
 function basicPlayerText(gameData: GameData, tickData: TickRow,
                          playerIndex: number): string {
     if (gameData.getPlayersAtTick(tickData)[playerIndex].isAlive) {
-        return "o"
+        return DEFAULT_ALIVE_STRING
     }
     else {
-        return "x"
+        return DEFAULT_DEAD_STRING
     }
 }
 
-export function getPlayersText(tickData: TickRow, gameData: GameData): string[] {
+export function getPlayersText(tickData: TickRow, gameData: GameData): Map<number, string> {
     // would be great if could draw more than 1 player
     // but 2 players can shoot each other same tick and not able to visualize that right now
-    let result: string[] = []
+    let result: Map<number, string> = new Map()
     const index = getTickToOtherTableIndex(gameData, curEvent)
     const players: PlayerAtTickRow[] = gameData.getPlayersAtTick(tickData)
     // if no event, do nothing special
     if (curEvent == "none" || !index.intersect_any([tickData.id, tickData.id]) ||
         !gameData.parsers.get(curEvent).havePlayerLabels) {
         for (let p = 0; p < players.length; p++) {
-            result.push(basicPlayerText(gameData, tickData, p))
+            result.set(players[p].playerId, basicPlayerText(gameData, tickData, p))
         }
         activeEvent = null
         return result
@@ -68,10 +70,10 @@ export function getPlayersText(tickData: TickRow, gameData: GameData): string[] 
     for (let p = 0; p < players.length; p++) {
         const indexOfPlayerInLabelsArray = playersToLabel.indexOf(players[p].playerId)
         if (players[p].isAlive && indexOfPlayerInLabelsArray != -1) {
-            result.push(parser.playerLabels[playerLabelIndices[indexOfPlayerInLabelsArray]])
+            result.set(players[p].playerId, parser.playerLabels[playerLabelIndices[indexOfPlayerInLabelsArray]])
         }
         else {
-            result.push(basicPlayerText(gameData, tickData, p))
+            result.set(players[p].playerId, basicPlayerText(gameData, tickData, p))
         }
     }
     /*

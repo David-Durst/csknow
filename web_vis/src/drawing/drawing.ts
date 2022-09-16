@@ -4,11 +4,11 @@ import {
     applyJustEventFilter,
     filterRegion, stopFilteringEvents
 } from "../controller/filter";
-import {PlayerAtTickRow, TickRow} from "../data/tables";
+import {PlayerAtTickRow, PlayerRow, TickRow} from "../data/tables";
 import {getPackedSettings} from "http2";
 import {
     activeEvent,
-    curOverlay,
+    curOverlay, DEFAULT_ALIVE_STRING,
     getPlayersText, setEventsOverlaysToDraw,
     setEventText, setupEventDrawing, updateEventIdAndSelector,
 } from "./events";
@@ -238,6 +238,22 @@ function trackMouse(e: MouseEvent) {
     drawTick(null)
 }
 
+// three levels of priority
+// level 2: special state for event
+// level 1: alive, no special state
+// level 0: dead
+function assignPriority(pat: PlayerAtTickRow, renderString: string): number {
+    if (!pat.isAlive) {
+        return 0
+    }
+    else if (renderString == DEFAULT_ALIVE_STRING) {
+        return 1
+    }
+    else {
+        return 2
+    }
+}
+
 export function drawTick(e: InputEvent) {
     const ftmp = filteredData
     mainCtx.drawImage(minimap,0,0,minimapWidth,minimapHeight,0,0,
@@ -255,8 +271,20 @@ export function drawTick(e: InputEvent) {
     let playersText = getPlayersText(tickData, filteredData)
     const players = gameData.getPlayersAtTick(tickData)
     drawMouseData(kymographCanvas, scatterCanvas, gameData, tickData, activeEvent)
+    // sorting prevents flickering as players drawn in same order always
+    // sort by priority, then by id if same priority
+    players.sort((a: PlayerAtTickRow, b:PlayerAtTickRow) => {
+        let aPriority = assignPriority(a, playersText.get(a.playerId))
+        let bPriority = assignPriority(b, playersText.get(b.playerId))
+        if (aPriority != bPriority) {
+            return aPriority - bPriority
+        }
+        else {
+            return a.playerId - b.playerId
+        }
+    })
     for (let p = 0; p < players.length; p++) {
-        let playerText = playersText[p]
+        let playerText = playersText.get(players[p].playerId)
         mainCtx.fillStyle = dark_blue
         if (players[p].team == 3) {
             if (players[p].playerId == selectedPlayer) {
