@@ -84,22 +84,22 @@ EngagementPerTickAimResult queryEngagementPerTickAim(const Games & games, const 
                         getPATIdForPlayerId(ticks, playerAtTick, hurt.tickId[soonestHurtId]);
 
                 Vec3 attackerEyePos = {
-                        playerAtTick.posX[nextHurtPlayerToPAT[attackerId]],
-                        playerAtTick.posY[nextHurtPlayerToPAT[attackerId]],
-                        playerAtTick.eyePosZ[nextHurtPlayerToPAT[attackerId]]
+                        playerAtTick.posX[curPlayerToPAT[attackerId]],
+                        playerAtTick.posY[curPlayerToPAT[attackerId]],
+                        playerAtTick.eyePosZ[curPlayerToPAT[attackerId]]
                 };
 
                 Vec3 victimHeadPos = getCenterHeadCoordinatesForPlayer(
                         {
-                            playerAtTick.posX[nextHurtPlayerToPAT[victimId]],
-                            playerAtTick.posY[nextHurtPlayerToPAT[victimId]],
-                            playerAtTick.eyePosZ[nextHurtPlayerToPAT[victimId]]
+                            playerAtTick.posX[curPlayerToPAT[victimId]],
+                            playerAtTick.posY[curPlayerToPAT[victimId]],
+                            playerAtTick.eyePosZ[curPlayerToPAT[victimId]]
                         },
                         {
-                            playerAtTick.viewX[nextHurtPlayerToPAT[victimId]],
-                            playerAtTick.viewY[nextHurtPlayerToPAT[victimId]]
+                            playerAtTick.viewX[curPlayerToPAT[victimId]],
+                            playerAtTick.viewY[curPlayerToPAT[victimId]]
                         },
-                        playerAtTick.duckAmount[nextHurtPlayerToPAT[victimId]]
+                        playerAtTick.duckAmount[curPlayerToPAT[victimId]]
                 );
 
                 Vec2 curViewAngle = {
