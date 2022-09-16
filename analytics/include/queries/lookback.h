@@ -75,9 +75,10 @@ static int64_t getLookbackDemoTick(const Rounds & rounds, const Ticks & ticks, c
                                    const TickRates & tickRates, double lookBackTime) {
     int lookbackGameTicks = secondsToGameTicks(tickRates, lookBackTime);
 
-    int lookbackDemoTicks = 1;
+    int lookbackDemoTicks = 0;
     for (; ticks.gameTickNumber[tickIndex - lookbackDemoTicks] > ticks.gameTickNumber[tickIndex] - lookbackGameTicks &&
            // this makes sure don't run off end, next tick is no less than min
+           // last tick will be equal here or above, abort loop and return
            tickIndex - lookbackDemoTicks > rounds.ticksPerRound[ticks.roundId[tickIndex]].minId;
            lookbackDemoTicks++);
     return tickIndex - lookbackDemoTicks;
@@ -108,7 +109,7 @@ static int64_t getLookforwardDemoTick(const Rounds & rounds, const Ticks & ticks
                                       const TickRates & tickRates, double lookForwardTime) {
     int lookforwardGameTicks = secondsToGameTicks(tickRates, lookForwardTime);
 
-    int lookforwardDemoTicks = 1;
+    int lookforwardDemoTicks = 0;
     for (; ticks.gameTickNumber[tickIndex + lookforwardDemoTicks] < ticks.gameTickNumber[tickIndex] + lookforwardGameTicks &&
            // this makes sure don't run off end, next tick is no more than max
            tickIndex + lookforwardDemoTicks < rounds.ticksPerRound[ticks.roundId[tickIndex]].maxId;

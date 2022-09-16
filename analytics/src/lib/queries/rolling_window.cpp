@@ -16,7 +16,7 @@ map<int64_t, int64_t> getPATIdForPlayerId(const Ticks & ticks, const PlayerAtTic
 map<int64_t, vector<int64_t>> getPerPlayerPATIdsInTemporalRange(const Rounds & rounds, const Ticks & ticks,
                                                                 const PlayerAtTick & playerAtTick, int64_t curTick,
                                                                 const TickRates & tickRates,
-                                                                double secondsBefore, double secondsAfter, int64_t playerId) {
+                                                                double secondsBefore, double secondsAfter) {
     map<int64_t, vector<int64_t>> result;
     int64_t startTick = getLookbackDemoTick(rounds, ticks, playerAtTick, curTick, tickRates, secondsBefore),
         endTick = getLookforwardDemoTick(rounds, ticks, playerAtTick, curTick, tickRates, secondsAfter);

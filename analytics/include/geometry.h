@@ -77,6 +77,8 @@ bool aabbOverlap(AABB b0, AABB b1) {
             (b0.min.z <= b1.max.z && b1.min.z <= b0.max.z);
 }
 
+#define PLAYER_HEIGHT 72
+#define PLAYER_WIDTH 32
 const int HEIGHT = 72;
 const int WIDTH = 32;
 static inline __attribute__((always_inline))

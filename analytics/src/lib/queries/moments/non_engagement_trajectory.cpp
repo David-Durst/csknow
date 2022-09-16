@@ -5,6 +5,7 @@
 #include "queries/lookback.h"
 #include "queries/base_tables.h"
 #include "queries/rolling_window.h"
+#include "file_helpers.h"
 #include <omp.h>
 #include <atomic>
 
@@ -44,6 +45,8 @@ NonEngagementTrajectoryResult queryNonEngagementTrajectory(const Games & games, 
 
         map<int64_t, TrajectoryData> playerToCurTrajectory;
 
+        double maxDistance = -1 * std::numeric_limits<double>::max();
+
         for (int64_t tickIndex = rounds.ticksPerRound[roundIndex].minId;
              tickIndex <= rounds.ticksPerRound[roundIndex].maxId; tickIndex++) {
 
@@ -57,34 +60,53 @@ NonEngagementTrajectoryResult queryNonEngagementTrajectory(const Games & games, 
                 }
             }
 
-
             if (tickIndex - 1 >= rounds.ticksPerRound[roundIndex].minId) {
-                map<int64_t, int64_t> tminus1PlayerToPAT = getPATIdForPlayerId(ticks, playerAtTick, tickIndex - 1);
+                map<int64_t, vector<int64_t>> windowPlayerToPAT =
+                        getPerPlayerPATIdsInTemporalRange(rounds, ticks, playerAtTick, tickIndex, tickRates, 0,
+                                                          STOPPING_PERIOD_SECONDS);
 
                 for (int64_t patIndex = ticks.patPerTick[tickIndex].minId;
                      patIndex <= ticks.patPerTick[tickIndex].maxId; patIndex++) {
                     int64_t playerId = playerAtTick.playerId[patIndex];
-                    int64_t tminus1PatIndex = tminus1PlayerToPAT[playerId];
-                    Vec3 tminus1Pos = {playerAtTick.posX[tminus1PatIndex], playerAtTick.posY[tminus1PatIndex],
-                                       playerAtTick.posZ[tminus1PatIndex]};
-                    Vec3 curPos = {playerAtTick.posX[patIndex], playerAtTick.posY[patIndex],
-                                   playerAtTick.posZ[patIndex]};
-                    double speed = computeMagnitude(curPos - tminus1Pos);
-                    maxSpeed = std::max(speed, maxSpeed);
-                    if (speed < stoppedPerTickSpeed && playerToCurTrajectory.find(playerId) != playerToCurTrajectory.end()) {
+
+                    double minX = std::numeric_limits<double>::max(),
+                        minY = std::numeric_limits<double>::max(),
+                        minZ = std::numeric_limits<double>::max();
+                    double maxX = -1 * std::numeric_limits<double>::max(),
+                            maxY = -1 * std::numeric_limits<double>::max(),
+                            maxZ = -1 * std::numeric_limits<double>::max();
+
+                    for (const auto windowPatIndex : windowPlayerToPAT[playerId]) {
+                        minX = std::min(minX, playerAtTick.posX[windowPatIndex]);
+                        minY = std::min(minY, playerAtTick.posY[windowPatIndex]);
+                        minZ = std::min(minZ, playerAtTick.posZ[windowPatIndex]);
+                        maxX = std::max(maxX, playerAtTick.posX[windowPatIndex]);
+                        maxY = std::max(maxY, playerAtTick.posY[windowPatIndex]);
+                        maxZ = std::max(maxZ, playerAtTick.posZ[windowPatIndex]);
+                    }
+
+                    maxDistance = std::max(maxDistance, computeDistance({minX, minY}, {maxX, maxY}));
+
+                    bool stopped = computeDistance({minX, minY}, {maxX, maxY}) < STOPPED_AABB_MAX_SIZE_2D &&
+                            (maxZ - minZ) < STOPPED_AABB_HEIGHT;
+                    bool started = computeDistance({minX, minY}, {maxX, maxY}) > STARTED_AABB_MAX_SIZE_2D ||
+                                   (maxZ - minZ) < STARTED_AABB_HEIGHT;
+                    if (stopped && playerToCurTrajectory.find(playerId) != playerToCurTrajectory.end()) {
                         tmpStartTickId[threadNum].push_back(playerToCurTrajectory[playerId].startTickId);
                         tmpEndTickId[threadNum].push_back(tickIndex);
                         tmpLength[threadNum].push_back(tmpEndTickId[threadNum].back() - tmpStartTickId[threadNum].back() + 1);
                         tmpPlayerId[threadNum].push_back(playerId);
                         playerToCurTrajectory.erase(playerId);
                     }
-                    else if (speed > startPerTickSpeed && playerToCurTrajectory.find(playerId) == playerToCurTrajectory.end()) {
+                    else if (started && playerToCurTrajectory.find(playerId) == playerToCurTrajectory.end()) {
                         playerToCurTrajectory[playerId] = {tickIndex};
                     }
                 }
             }
         }
         tmpRoundSizes[threadNum].push_back(tmpStartTickId[threadNum].size() - tmpRoundStarts[threadNum].back());
+        roundsProcessed++;
+        printProgress((roundsProcessed * 1.0) / rounds.size);
     }
 
     NonEngagementTrajectoryResult result;

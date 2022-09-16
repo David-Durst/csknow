@@ -25,6 +25,11 @@ using std::unordered_map;
 using std::vector;
 using std::map;
 
+#define STOPPING_PERIOD_SECONDS 1.0
+#define STOPPED_AABB_MAX_SIZE_2D PLAYER_WIDTH*PLAYER_WIDTH
+#define STOPPED_AABB_HEIGHT PLAYER_HEIGHT
+#define STARTED_AABB_MAX_SIZE_2D PLAYER_WIDTH*PLAYER_WIDTH
+#define STARTED_AABB_HEIGHT PLAYER_HEIGHT
 // https://old.reddit.com/r/GlobalOffensive/comments/a28h8r/movement_speed_chart/
 #define STOPPED_SPEED_THRESHOLD 10.0
 #define START_SPEED_THRESHOLD 50.0
