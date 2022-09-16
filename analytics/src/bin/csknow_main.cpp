@@ -274,6 +274,7 @@ int main(int argc, char * argv[]) {
             queryEngagementPerTickAim(games, filteredRounds, ticks, playerAtTick, weaponFire, hurt, engagementResult);
     engagementResult.havePerTickAimTable = true;
     engagementResult.perTickAimTable = engagementPerTickAimName;
+    std::cout << "processing non engagement trajectory" << std::endl;
     string nonEngagementTrajectoryName = "nonEngagementTrajectory";
     NonEngagementTrajectoryResult nonEngagementTrajectoryResult =
             queryNonEngagementTrajectory(games, filteredRounds, ticks, playerAtTick, engagementResult);

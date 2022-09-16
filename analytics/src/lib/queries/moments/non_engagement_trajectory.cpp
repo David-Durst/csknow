@@ -4,6 +4,7 @@
 #include "queries/moments/non_engagement_trajectory.h"
 #include "queries/lookback.h"
 #include "queries/base_tables.h"
+#include "queries/rolling_window.h"
 #include <omp.h>
 #include <atomic>
 
@@ -23,6 +24,7 @@ NonEngagementTrajectoryResult queryNonEngagementTrajectory(const Games & games, 
     vector<int64_t> tmpLength[numThreads];
     vector<int64_t> tmpPlayerId[numThreads];
     std::atomic<int64_t> roundsProcessed = 0;
+    double maxSpeed = -1;
 
     // for each round
     // for each tick
@@ -35,6 +37,10 @@ NonEngagementTrajectoryResult queryNonEngagementTrajectory(const Games & games, 
         int threadNum = omp_get_thread_num();
         tmpRoundIds[threadNum].push_back(roundIndex);
         tmpRoundStarts[threadNum].push_back(tmpStartTickId[threadNum].size());
+
+        TickRates tickRates = computeTickRates(games, rounds, roundIndex);
+        double stoppedPerTickSpeed = perSecondRateToPerDemoTickRate(tickRates, STOPPED_SPEED_THRESHOLD);
+        double startPerTickSpeed = perSecondRateToPerDemoTickRate(tickRates, START_SPEED_THRESHOLD);
 
         map<int64_t, TrajectoryData> playerToCurTrajectory;
 
@@ -53,7 +59,7 @@ NonEngagementTrajectoryResult queryNonEngagementTrajectory(const Games & games, 
 
 
             if (tickIndex - 1 >= rounds.ticksPerRound[roundIndex].minId) {
-                map<int64_t, int64_t> tminus1PlayerToPAT = getPATIdForPlayerId(ticks, playerAtTick, tickIndex);
+                map<int64_t, int64_t> tminus1PlayerToPAT = getPATIdForPlayerId(ticks, playerAtTick, tickIndex - 1);
 
                 for (int64_t patIndex = ticks.patPerTick[tickIndex].minId;
                      patIndex <= ticks.patPerTick[tickIndex].maxId; patIndex++) {
@@ -64,13 +70,15 @@ NonEngagementTrajectoryResult queryNonEngagementTrajectory(const Games & games, 
                     Vec3 curPos = {playerAtTick.posX[patIndex], playerAtTick.posY[patIndex],
                                    playerAtTick.posZ[patIndex]};
                     double speed = computeMagnitude(curPos - tminus1Pos);
-                    if (speed < STOPPED_THRESHOLD) {
-                        if (playerToCurTrajectory.find(playerId) != playerToCurTrajectory.end()) {
-                            tmpStartTickId[threadNum].push_back(playerToCurTrajectory[playerId].startTickId);
-                            tmpEndTickId[threadNum].push_back(tickIndex);
-                            tmpLength[threadNum].push_back(tmpEndTickId[threadNum].back() - tmpStartTickId[threadNum].back() + 1);
-                            tmpPlayerId[threadNum].push_back(playerId);
-                        }
+                    maxSpeed = std::max(speed, maxSpeed);
+                    if (speed < stoppedPerTickSpeed && playerToCurTrajectory.find(playerId) != playerToCurTrajectory.end()) {
+                        tmpStartTickId[threadNum].push_back(playerToCurTrajectory[playerId].startTickId);
+                        tmpEndTickId[threadNum].push_back(tickIndex);
+                        tmpLength[threadNum].push_back(tmpEndTickId[threadNum].back() - tmpStartTickId[threadNum].back() + 1);
+                        tmpPlayerId[threadNum].push_back(playerId);
+                        playerToCurTrajectory.erase(playerId);
+                    }
+                    else if (speed > startPerTickSpeed && playerToCurTrajectory.find(playerId) == playerToCurTrajectory.end()) {
                         playerToCurTrajectory[playerId] = {tickIndex};
                     }
                 }

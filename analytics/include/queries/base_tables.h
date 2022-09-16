@@ -176,14 +176,4 @@ public:
     }
 };
 
-static
-map<int64_t, int64_t> getPATIdForPlayerId(const Ticks & ticks, const PlayerAtTick & playerAtTick, int64_t tickIndex) {
-    map<int64_t, int64_t> playerIdToPatID;
-    for (int64_t patIndex = ticks.patPerTick[tickIndex].minId;
-         patIndex <= ticks.patPerTick[tickIndex].maxId; patIndex++) {
-        playerIdToPatID[playerAtTick.playerId[patIndex]] = patIndex;
-    }
-    return playerIdToPatID;
-}
-
 #endif //CSKNOW_BASE_TABLES_H

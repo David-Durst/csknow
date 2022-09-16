@@ -25,7 +25,9 @@ using std::unordered_map;
 using std::vector;
 using std::map;
 
-#define STOPPED_THRESHOLD 0.1
+// https://old.reddit.com/r/GlobalOffensive/comments/a28h8r/movement_speed_chart/
+#define STOPPED_SPEED_THRESHOLD 10.0
+#define START_SPEED_THRESHOLD 50.0
 
 class NonEngagementTrajectoryResult : public QueryResult {
 public:
@@ -58,7 +60,7 @@ public:
 
     void oneLineToCSV(int64_t index, stringstream & ss) {
         ss << index << "," << startTickId[index] << "," << endTickId[index] << "," << tickLength[index] << ","
-            << playerId[index] << "," << playerLabels[0];
+            << playerId[index] << "," << 0;
 
         ss << std::endl;
     }

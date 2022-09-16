@@ -5,6 +5,7 @@
 #include "queries/moments/engagement_per_tick_aim.h"
 #include "queries/lookback.h"
 #include "queries/base_tables.h"
+#include "queries/rolling_window.h"
 #include <omp.h>
 #include <atomic>
 
