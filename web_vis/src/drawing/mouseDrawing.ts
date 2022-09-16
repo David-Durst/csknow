@@ -1,5 +1,5 @@
 import {GameData, Parser, Row, TickRow} from "../data/tables";
-import {curEvent} from "./events";
+import {curEvent, displayMouseData} from "./events";
 import {Chart, Plugin, registerables, ScatterDataPoint} from 'chart.js';
 import {AnyObject, EmptyObject} from "chart.js/types/basic";
 Chart.register(...registerables);
@@ -86,6 +86,7 @@ function getLineXPoint(context: PartialEventContext, options: AnnotationOptions)
     }
     return dataPoint.x
 }
+
 
 export function createCharts(kymographCtx: CanvasRenderingContext2D, scatterCtx: CanvasRenderingContext2D) {
     kymographChart = new Chart(kymographCtx, {
@@ -182,7 +183,7 @@ export function drawMouseData(kymographCanvas: HTMLCanvasElement,
                               scatterCanvas: HTMLCanvasElement,
                               gameData: GameData, tickData: TickRow, eventData: Row) {
     const parser = gameData.parsers.get(curEvent)
-    if (parser != null && parser.havePerTickAimTable && eventData != null) {
+    if (parser != null && parser.havePerTickAimTable && eventData != null && displayMouseData) {
         kymographCanvas.style.display = "inline-block"
         scatterCanvas.style.display = "inline-block"
         const aimDataForEvent = gameData.eventToPerTickAimTablesIndices.get(curEvent).get(eventData.id)

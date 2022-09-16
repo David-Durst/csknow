@@ -8,6 +8,7 @@ import {
 } from "../data/tables";
 import IntervalTree from "@flatten-js/interval-tree";
 import {gameData, INVALID_ID} from "../data/data";
+import {drawTick} from "../drawing/drawing";
 
 let eventSelector: HTMLSelectElement = null
 let eventDiv: HTMLDivElement = null
@@ -18,6 +19,8 @@ export let curEvent: string = "none"
 export let selectedEventId: number = INVALID_ID
 export let activeEvent: Row = null
 export let curOverlay: string = "none"
+export let displayMouseData = true
+let mouseDataDisplayButton: HTMLButtonElement = null
 
 function basicPlayerText(gameData: GameData, tickData: TickRow,
                          playerIndex: number): string {
@@ -124,6 +127,18 @@ export function setEventText(tickData: TickRow, gameData: GameData) {
     }
 }
 
+function toggleMouseDisplay() {
+    if (displayMouseData) {
+        displayMouseData = false
+        mouseDataDisplayButton.innerText = "show aim data"
+    }
+    else {
+        displayMouseData = true
+        mouseDataDisplayButton.innerText = "hide aim data"
+    }
+    drawTick(null)
+}
+
 export function updateEventIdAndSelector(tickData: TickRow) {
     const parser = gameData.parsers.get(curEvent)
     if (curEvent == "none" || !parser.havePlayerLabels) {
@@ -131,6 +146,7 @@ export function updateEventIdAndSelector(tickData: TickRow) {
         eventIdSelector.style.display = "none"
         eventIdSelector.options.length = 0
         eventIdSelector.options.add(new Option("default", "-1"))
+        mouseDataDisplayButton.style.display = "none"
     }
     else {
         eventIdLabel.style.display = "inline"
@@ -156,6 +172,9 @@ export function updateEventIdAndSelector(tickData: TickRow) {
         if (eventIdIndex == 0) {
             selectedEventId = INVALID_ID
         }
+        if (parser.havePerTickAimTable) {
+            mouseDataDisplayButton.style.display = "inline-block"
+        }
     }
 }
 
@@ -173,4 +192,6 @@ export function setupEventDrawing() {
     eventIdLabel = document.querySelector<HTMLSelectElement>("#event-id-label")
     overlaySelector = document.querySelector<HTMLSelectElement>("#overlay-type")
     curOverlay = overlaySelector.value;
+    mouseDataDisplayButton = document.querySelector<HTMLButtonElement>("#event-mouse-display")
+    mouseDataDisplayButton.addEventListener("click", toggleMouseDisplay)
 }
