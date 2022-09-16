@@ -15,56 +15,23 @@ function getExampleDataSet()  {
         datasets: [
             {
                 label: 'Past',
-                pointRadius: 1,
-                data: [{
-                    x: -10,
-                    y: 0
-                }, {
-                    x: 0,
-                    y: 10
-                }, {
-                    x: 10,
-                    y: 5
-                }, {
-                    x: 0.5,
-                    y: 5.5
-                }],
+                pointRadius: getPointRadius,
+                pointStyle: getPointStyle,
+                data: [{ x: -10, y: 0 }],
                 backgroundColor: 'rgb(0,213,250)'
             },
             {
                 label: 'Present',
-                pointRadius: 5,
-                data: [{
-                    x: -10,
-                    y: 0
-                }, {
-                    x: 0,
-                    y: 10
-                }, {
-                    x: 10,
-                    y: 5
-                }, {
-                    x: 0.5,
-                    y: 5.5
-                }],
-                backgroundColor: 'rgb(255,0,0)'
+                pointRadius: getPointRadius,
+                pointStyle: getPointStyle,
+                data: [{ x: -10, y: 0 }],
+                backgroundColor: 'rgb(255,0,0)',
             },
             {
                 label: 'Future',
-                pointRadius: 1,
-                data: [{
-                    x: -10,
-                    y: 0
-                }, {
-                    x: 0,
-                    y: 10
-                }, {
-                    x: 10,
-                    y: 5
-                }, {
-                    x: 0.5,
-                    y: 5.5
-                }],
+                pointRadius: getPointRadius,
+                pointStyle: getPointStyle,
+                data: [{ x: -10, y: 0 }],
                 backgroundColor: 'rgb(114,114,114)'
             },
         ]
@@ -87,16 +54,27 @@ function getLineXPoint(context: PartialEventContext, options: AnnotationOptions)
     return dataPoint.x
 }
 
-const hurtDataIndices: Set<number>  = new Set<number>()
+const hurtDataIndices: Set<number>[] = [new Set<number>(), new Set<number>(), new Set<number>()]
 function getPointStyle(context: ScriptableContext<any>, options: AnyObject): PointStyle {
-    if (hurtDataIndices.has(context.dataIndex)) {
-        return "crossRot"
+    if (hurtDataIndices[context.datasetIndex].has(context.dataIndex)) {
+        return "rectRot"
     }
     else {
         return "circle"
     }
 }
 
+function getPointRadius(context: ScriptableContext<any>, options: AnyObject): number {
+    if (context.datasetIndex == 1 && hurtDataIndices[context.datasetIndex].has(context.dataIndex)) {
+        return 8
+    }
+    if (context.datasetIndex == 1 || hurtDataIndices[context.datasetIndex].has(context.dataIndex)) {
+        return 5
+    }
+    else {
+        return 1
+    }
+}
 
 export function createCharts(kymographCtx: CanvasRenderingContext2D, scatterCtx: CanvasRenderingContext2D) {
     kymographChart = new Chart(kymographCtx, {
@@ -124,7 +102,6 @@ export function createCharts(kymographCtx: CanvasRenderingContext2D, scatterCtx:
             showLine: true,
             elements: {
                 point: {
-                    radius: 1,
                     pointStyle: getPointStyle
                 }
             },
@@ -205,22 +182,31 @@ export function drawMouseData(kymographCanvas: HTMLCanvasElement,
         const pastDeltaData: ScatterDataPoint[] = [], presentDeltaData: ScatterDataPoint[] = [],
             futureDeltaData: ScatterDataPoint[] = []
         const hurtTickIds = new Set(eventData.otherColumnValues[2].split(";").map(x => parseInt(x)))
-        hurtDataIndices.clear()
+        hurtDataIndices[0].clear()
+        hurtDataIndices[1].clear()
+        hurtDataIndices[2].clear()
         for (let i = 0; i < aimDataForEvent.length; i++) {
             const curAimData = aimData[aimDataForEvent[i]]
             let speedData: ScatterDataPoint[] = null
             let deltaData: ScatterDataPoint[] = null
+            let dataSetIndex = 0
+            let dataIndex = 0
             if (curAimData.getStartTick() < tickData.id) {
                 speedData = pastSpeedData
                 deltaData = pastDeltaData
+                dataIndex = pastSpeedData.length
             }
             else if (curAimData.getStartTick() == tickData.id) {
                 speedData = presentSpeedData
                 deltaData = presentDeltaData
+                dataSetIndex = 1
+                dataIndex = presentSpeedData.length
             }
             else {
                 speedData = futureSpeedData
                 deltaData = futureDeltaData
+                dataSetIndex = 2
+                dataIndex = futureSpeedData.length
             }
             speedData.push({
                 x: parseFloat(curAimData.otherColumnValues[4]),
@@ -231,7 +217,7 @@ export function drawMouseData(kymographCanvas: HTMLCanvasElement,
                 y: parseFloat(curAimData.otherColumnValues[2])
             })
             if (hurtTickIds.has(curAimData.foreignKeyValues[0])) {
-                hurtDataIndices.add(i)
+                hurtDataIndices[dataSetIndex].add(dataIndex)
             }
         }
         addData(kymographChart, pastSpeedData, presentSpeedData, futureSpeedData)
