@@ -8,6 +8,7 @@
 #include <unordered_map>
 #include <list>
 #include "IntervalTree.h"
+#include "queries/parser_constants.h"
 using std::string;
 using std::vector;
 using std::set;
@@ -669,7 +670,7 @@ public:
     int64_t * tickId;
     int64_t * victim;
     int64_t * attacker;
-    int16_t * weapon;
+    DemoEquipmentType * weapon;
     int32_t * armorDamage;
     int32_t * armor;
     int32_t * healthDamage;
@@ -681,7 +682,7 @@ public:
         tickId = (int64_t *) malloc(rows * sizeof(int64_t));
         victim = (int64_t *) malloc(rows * sizeof(int64_t));
         attacker = (int64_t *) malloc(rows * sizeof(int64_t));
-        weapon = (int16_t *) malloc(rows * sizeof(int16_t));
+        weapon = (DemoEquipmentType *) malloc(rows * sizeof(int16_t));
         armorDamage = (int32_t *) malloc(rows * sizeof(int32_t));
         armor = (int32_t *) malloc(rows * sizeof(int32_t));
         healthDamage = (int32_t *) malloc(rows * sizeof(int32_t));

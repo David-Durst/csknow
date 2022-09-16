@@ -6,6 +6,7 @@
 #include "queries/lookback.h"
 #include "indices/build_indexes.h"
 #include <omp.h>
+#include "queries/parser_constants.h"
 
 struct EngagementPlayers {
     int64_t attacker, victim;
@@ -77,6 +78,9 @@ EngagementResult queryEngagementResult(const Games & games, const Rounds & round
              tickIndex <= rounds.ticksPerRound[roundIndex].maxId; tickIndex++) {
             for (const auto & [_0, _1, hurtIndex] :
                 ticks.hurtPerTick.findOverlapping(tickIndex, tickIndex)) {
+                if (!isDemoEquipmentAGun(hurt.weapon[hurtIndex])) {
+                    continue;
+                }
                 EngagementPlayers curPair{hurt.attacker[hurtIndex], hurt.victim[hurtIndex]};
 
                 // start new engagement if none present

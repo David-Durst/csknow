@@ -873,7 +873,8 @@ void loadHurtFile(Hurt & hurt, string filePath, int64_t fileRowStart, int32_t fi
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, hurt.attacker[arrayEntry]);
         }
         else if (colNumber == 4) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, hurt.weapon[arrayEntry]);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber,
+                    reinterpret_cast<int16_t &>(hurt.weapon[arrayEntry]));
         }
         else if (colNumber == 5) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, hurt.armorDamage[arrayEntry]);
