@@ -113,6 +113,8 @@ namespace action {
             curAction.aimTargetType = AimTargetType::Waypoint;
         }
 
+        // don't need to change pitch here because engine stores pitch in -90 to 90 (I think)
+        // while conversion function below uses 360-270 for -90-0
         Vec2 curViewAngle = curClient.getCurrentViewAnglesWithAimpunch();
         Vec3 targetVector = aimTarget - curClient.getEyePosForPlayer();
         Vec2 targetViewAngle = vectorAngles(targetVector);

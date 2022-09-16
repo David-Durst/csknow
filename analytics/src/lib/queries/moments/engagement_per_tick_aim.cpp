@@ -102,13 +102,17 @@ EngagementPerTickAimResult queryEngagementPerTickAim(const Games & games, const 
                         playerAtTick.duckAmount[nextHurtPlayerToPAT[victimId]]
                 );
 
+                Vec2 curViewAngle = {
+                        playerAtTick.viewX[curPlayerToPAT[attackerId]],
+                        playerAtTick.viewY[curPlayerToPAT[attackerId]]
+                };
                 Vec3 targetVector = victimHeadPos - attackerEyePos;
                 Vec2 targetViewAngle = vectorAngles(targetVector);
                 // want to be + if too large, - if too small, so do current - target
-                Vec2 deltaViewAngle = {
-                        playerAtTick.viewX[curPlayerToPAT[attackerId]] - targetViewAngle.x,
-                        playerAtTick.viewY[curPlayerToPAT[attackerId]] - targetViewAngle.y,
-                };
+                Vec2 deltaViewAngle = curViewAngle - targetViewAngle;
+                deltaViewAngle.makePitchNeg90To90();
+                deltaViewAngle.makeYawNeg180To180();
+
                 tmpDeltaViewAngle[threadNum].push_back(deltaViewAngle);
 
                 // compute view angle velocity if there is a prior tick in the round
