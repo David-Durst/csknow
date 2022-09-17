@@ -80,8 +80,10 @@ EngagementPerTickAimResult queryEngagementPerTickAim(const Games & games, const 
                 // compute ideal view angle at time of hurt
                 // should account for network latency in future, as attack aim at enemy's position in past
                 // player stands at CL_INTERP back and sees enemy and CL_INTERP * 2 + LAG back
-                map<int64_t, int64_t> nextHurtPlayerToPAT =
-                        getPATIdForPlayerId(ticks, playerAtTick, hurt.tickId[soonestHurtId]);
+                int64_t laggedTickId = getLookbackDemoTick(rounds, ticks, playerAtTick, tickIndex, tickRates,
+                                                           playerAtTick.ping[curPlayerToPAT[attackerId]] / 1000. + CL_INTERP_SECONDS);
+                map<int64_t, int64_t> laggedPlayerToPAT =
+                        getPATIdForPlayerId(ticks, playerAtTick, laggedTickId);
 
                 Vec3 attackerEyePos = {
                         playerAtTick.posX[curPlayerToPAT[attackerId]],
@@ -91,15 +93,15 @@ EngagementPerTickAimResult queryEngagementPerTickAim(const Games & games, const 
 
                 Vec3 victimHeadPos = getCenterHeadCoordinatesForPlayer(
                         {
-                            playerAtTick.posX[curPlayerToPAT[victimId]],
-                            playerAtTick.posY[curPlayerToPAT[victimId]],
-                            playerAtTick.eyePosZ[curPlayerToPAT[victimId]]
+                            playerAtTick.posX[laggedPlayerToPAT[victimId]],
+                            playerAtTick.posY[laggedPlayerToPAT[victimId]],
+                            playerAtTick.eyePosZ[laggedPlayerToPAT[victimId]]
                         },
                         {
-                            playerAtTick.viewX[curPlayerToPAT[victimId]],
-                            playerAtTick.viewY[curPlayerToPAT[victimId]]
+                            playerAtTick.viewX[laggedPlayerToPAT[victimId]],
+                            playerAtTick.viewY[laggedPlayerToPAT[victimId]]
                         },
-                        playerAtTick.duckAmount[curPlayerToPAT[victimId]]
+                        playerAtTick.duckAmount[laggedPlayerToPAT[victimId]]
                 );
 
                 Vec2 curViewAngle = {
@@ -111,9 +113,9 @@ EngagementPerTickAimResult queryEngagementPerTickAim(const Games & games, const 
                 // normalize by view angle from top of AABB to bottom of AABB
 
                 Vec3 victimBotPos = {
-                        playerAtTick.posX[curPlayerToPAT[attackerId]],
-                        playerAtTick.posY[curPlayerToPAT[attackerId]],
-                        playerAtTick.posZ[curPlayerToPAT[attackerId]]
+                        playerAtTick.posX[laggedPlayerToPAT[attackerId]],
+                        playerAtTick.posY[laggedPlayerToPAT[attackerId]],
+                        playerAtTick.posZ[laggedPlayerToPAT[attackerId]]
                 };
                 Vec2 viewAngleToBotPos = vectorAngles(victimBotPos - attackerEyePos);
                 Vec3 victimTopPos = victimBotPos;
