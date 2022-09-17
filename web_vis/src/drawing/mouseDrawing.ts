@@ -95,7 +95,9 @@ export function createCharts(kymographCtx: CanvasRenderingContext2D, scatterCtx:
                     title: {
                         display: true,
                         text: "View Angle Speed (deg)"
-                    }
+                    },
+                    min: 0.,
+                    max: 2.
                 }
             },
             responsive: false,
@@ -108,7 +110,7 @@ export function createCharts(kymographCtx: CanvasRenderingContext2D, scatterCtx:
             plugins: {
                 title: {
                     display: true,
-                    text: "View Angle Speed During Event"
+                    text: "Smoothed View Angle Speed During Event"
                 },
                 annotation: {
                     annotations: {
@@ -136,14 +138,19 @@ export function createCharts(kymographCtx: CanvasRenderingContext2D, scatterCtx:
                     position: 'bottom',
                     title: {
                         display: true,
-                        text: "Yaw Delta (deg)"
-                    }
+                        text: "Yaw Delta (deg / target height deg)"
+                    },
+                    min: -0.1,
+                    max: 0.1,
+                    reverse: true,
                 },
                 y: {
                     title: {
                         display: true,
-                        text: "Inverted Pitch Delta (deg)"
-                    }
+                        text: "Pitch Delta (deg / player height deg)"
+                    },
+                    min: -0.08,
+                    max: 0.04,
                 }
             },
             responsive: false,
@@ -151,7 +158,7 @@ export function createCharts(kymographCtx: CanvasRenderingContext2D, scatterCtx:
             plugins: {
                 title: {
                     display: true,
-                    text: "View Angle Delta Relative To Aiming At Enemy Head"
+                    text: "Normalized View Angle Delta Relative To Aiming At Enemy Head"
                 }
             }
         }

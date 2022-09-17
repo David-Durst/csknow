@@ -170,6 +170,19 @@ Vec2 vectorAngles(const Vec3 &forward)
     return angles;
 }
 
+static inline __attribute__((always_inline))
+Vec2 deltaViewFromOriginToDest(Vec3 origin, Vec3 dest, Vec2 curViewAngle) {
+    Vec3 targetVector = dest - origin;
+    Vec2 targetViewAngle = vectorAngles(targetVector);
+    // want to be + if too large, - if too small, so do current - target
+    Vec2 deltaViewAngle = curViewAngle - targetViewAngle;
+    // invert so bigger pitch is aiming up
+    deltaViewAngle.y *= -1;
+    deltaViewAngle.makePitchNeg90To90();
+    deltaViewAngle.makeYawNeg180To180();
+    return deltaViewAngle;
+}
+
 
 const int EYE_HEIGHT = 64;
 static inline __attribute__((always_inline))

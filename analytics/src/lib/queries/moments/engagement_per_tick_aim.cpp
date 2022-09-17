@@ -106,14 +106,22 @@ EngagementPerTickAimResult queryEngagementPerTickAim(const Games & games, const 
                         playerAtTick.viewX[curPlayerToPAT[attackerId]],
                         playerAtTick.viewY[curPlayerToPAT[attackerId]]
                 };
-                Vec3 targetVector = victimHeadPos - attackerEyePos;
-                Vec2 targetViewAngle = vectorAngles(targetVector);
-                // want to be + if too large, - if too small, so do current - target
-                Vec2 deltaViewAngle = curViewAngle - targetViewAngle;
-                // invert so bigger pitch is aiming up
-                deltaViewAngle.y *= -1;
-                deltaViewAngle.makePitchNeg90To90();
-                deltaViewAngle.makeYawNeg180To180();
+                Vec2 deltaViewAngle = deltaViewFromOriginToDest(attackerEyePos, victimHeadPos, curViewAngle);
+
+                // normalize by view angle from top of AABB to bottom of AABB
+
+                Vec3 victimBotPos = {
+                        playerAtTick.posX[curPlayerToPAT[attackerId]],
+                        playerAtTick.posY[curPlayerToPAT[attackerId]],
+                        playerAtTick.posZ[curPlayerToPAT[attackerId]]
+                };
+                Vec2 viewAngleToBotPos = vectorAngles(victimBotPos - attackerEyePos);
+                Vec3 victimTopPos = victimBotPos;
+                victimTopPos.z += PLAYER_HEIGHT;
+                Vec2 topVsBotViewAngle = deltaViewFromOriginToDest(attackerEyePos, victimTopPos, viewAngleToBotPos);
+
+                deltaViewAngle.x /= std::abs(topVsBotViewAngle.y);
+                deltaViewAngle.y /= std::abs(topVsBotViewAngle.y);
 
                 tmpDeltaViewAngle[threadNum].push_back(deltaViewAngle);
 
