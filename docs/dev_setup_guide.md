@@ -47,7 +47,7 @@ guide](https://github.com/David-Durst/csknow/blob/master/docs/aws_machine_creati
     1. `cd` into `web_vis`
     2. Install nvm (the npm version manager) `./scripts/install_nvm.sh`
     2. Close and reopen your terminal for the installation to take effect.
-    3. Install npm/node by running `./scripts/install_node.sh` 
+    3. Install npm/node by running `source ./scripts/install_node.sh` 
     4. Install the package by running `npm install`
     5. Continuously rebuild the visualization system as code changes by running
        `npm run watch` (**note:** must run this at least once, even if not making

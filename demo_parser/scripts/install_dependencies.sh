@@ -13,8 +13,8 @@ sudo chmod a+x /opt/goenv/goenv
 
 if [[ -n "$1" ]] && [[ "$1" == "y" ]]; then
     echo -e "\n\n# Added By CSKnow" >> ~/.profile
-    echo 'export PATH="$HOME/.goenv/shims:/opt/goenv"$PATH' >> ~/.profile
+    echo 'export PATH="$HOME/.goenv/shims:/opt/goenv:"$PATH' >> ~/.profile
 else
-    echo add \"'export PATH="$HOME/.goenv/shims:/opt/goenv"$PATH'\" to ~/.profile
+    echo add \"'export PATH="$HOME/.goenv/shims:/opt/goenv:"$PATH'\" to ~/.profile
 fi
 
