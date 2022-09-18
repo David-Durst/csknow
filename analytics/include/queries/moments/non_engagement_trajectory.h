@@ -41,6 +41,7 @@ public:
     vector<int64_t> endTickId;
     vector<int64_t> tickLength;
     vector<int64_t> playerId;
+    IntervalIndex trajectoriesPerTick;
 
     NonEngagementTrajectoryResult() {
         variableLength = true;

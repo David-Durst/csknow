@@ -32,6 +32,7 @@
 #include "queries/moments/engagement.h"
 #include "queries/moments/engagement_per_tick_aim.h"
 #include "queries/moments/non_engagement_trajectory.h"
+#include "queries/moments/trajectory_segments.h"
 #define CPPHTTPLIB_OPENSSL_SUPPORT
 #include "httplib.h"
 #include <errno.h>

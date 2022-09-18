@@ -1,55 +1,44 @@
 //
-// Created by durst on 9/15/22.
+// Created by durst on 9/18/22.
 //
-#include "queries/moments/non_engagement_trajectory.h"
+
+#include "queries/moments/trajectory_segments.h"
 #include "queries/lookback.h"
-#include "queries/base_tables.h"
 #include "queries/rolling_window.h"
-#include "indices/build_indexes.h"
 #include <omp.h>
 #include <atomic>
 
 struct TrajectoryData {
-    int64_t startTickId;
+    int64_t segmentStartTickId;
+    Vec2 segmentStart2DPos;
 };
 
-void finishEngagement(vector<int64_t> tmpStartTickId[], vector<int64_t> tmpEndTickId[],
-                      vector<int64_t> tmpLength[], vector<int64_t> tmpPlayerId[],
-                      int threadNum, int64_t tickIndex, int64_t playerId, const TrajectoryData &tData,
-                      map<int64_t, TrajectoryData> & playerToCurTrajectory, bool remove = true) {
-    tmpStartTickId[threadNum].push_back(playerToCurTrajectory[playerId].startTickId);
-    tmpEndTickId[threadNum].push_back(tickIndex);
-    tmpLength[threadNum].push_back(tmpEndTickId[threadNum].back() - tmpStartTickId[threadNum].back() + 1);
-    tmpPlayerId[threadNum].push_back(playerId);
-    if (remove) {
-        playerToCurTrajectory.erase(playerId);
-    }
-}
-
-NonEngagementTrajectoryResult queryNonEngagementTrajectory(const Games & games, const Rounds & rounds, const Ticks & ticks,
-                                                           const PlayerAtTick & playerAtTick,
-                                                           const EngagementResult & engagementResult) {
+TrajectorySegmentResult queryAllTrajectories(const Games & games, const Rounds & rounds, const Ticks & ticks,
+                                             const PlayerAtTick & playerAtTick,
+                                             const NonEngagementTrajectoryResult & nonEngagementTrajectoryResult) {
     int numThreads = omp_get_max_threads();
     vector<int64_t> tmpRoundIds[numThreads];
     vector<int64_t> tmpRoundStarts[numThreads];
     vector<int64_t> tmpRoundSizes[numThreads];
-    vector<int64_t> tmpStartTickId[numThreads];
-    vector<int64_t> tmpEndTickId[numThreads];
+    vector<int64_t> tmpSegmentStartTickId[numThreads];
+    vector<int64_t> tmpSegmentEndTickId[numThreads];
     vector<int64_t> tmpLength[numThreads];
     vector<int64_t> tmpPlayerId[numThreads];
+    vector<string> tmpPlayerName[numThreads];
+    vector<Vec2> tmpSegmentStart2DPos;
+    vector<Vec2> tmpSegmentEnd2DPos;
     std::atomic<int64_t> roundsProcessed = 0;
-    double maxSpeed = -1;
 
     // for each round
     // for each tick
-    // record all players in engagement
-    // if a player is in engagement, then terminate their trajectory (if one was in progress) without recording
-    // otherwise, terminate trajectory on end of round
+    // if a player is in trajectory, start a segment for them if no active segment
+    // if a player is in a segment, end it if past segment time
+    // clear out at end of round with early termination
 //#pragma omp parallel for
     for (int64_t roundIndex = 0; roundIndex < rounds.size; roundIndex++) {
         int threadNum = omp_get_thread_num();
         tmpRoundIds[threadNum].push_back(roundIndex);
-        tmpRoundStarts[threadNum].push_back(tmpStartTickId[threadNum].size());
+        tmpRoundStarts[threadNum].push_back(tmpSegmentStartTickId[threadNum].size());
 
         TickRates tickRates = computeTickRates(games, rounds, roundIndex);
 
@@ -59,21 +48,27 @@ NonEngagementTrajectoryResult queryNonEngagementTrajectory(const Games & games, 
         for (int64_t tickIndex = rounds.ticksPerRound[roundIndex].minId;
              tickIndex <= rounds.ticksPerRound[roundIndex].maxId; tickIndex++) {
 
-            std::set<int64_t> inEngagement;
-            for (const auto & [_0, _1, engagementIndex] :
-                    engagementResult.engagementsPerTick.findOverlapping(tickIndex, tickIndex)) {
-                for (const auto playerId : engagementResult.playerId[engagementIndex]) {
-                    if (playerToCurTrajectory.find(playerId) != playerToCurTrajectory.end()) {
-                        finishEngagement(tmpStartTickId, tmpEndTickId, tmpLength, tmpPlayerId, threadNum, tickIndex,
-                                         playerId, playerToCurTrajectory.find(playerId)->second, playerToCurTrajectory);
+            map<int64_t, int64_t> curPlayerToPAT = getPATIdForPlayerId(ticks, playerAtTick, tickIndex);
+
+            for (const auto & [_0, _1, trajectoryIndex] :
+                    nonEngagementTrajectoryResult.trajectoriesPerTick.findOverlapping(tickIndex, tickIndex)) {
+                int64_t curPlayerId = nonEngagementTrajectoryResult.playerId[trajectoryIndex];
+                if (playerToCurTrajectory.find(curPlayerId) != playerToCurTrajectory.end()) {
+                    int64_t curPATId = curPlayerToPAT[curPlayerId];
+                    // probably not necessary, but just be defensive
+                    if (playerAtTick.isAlive[curPATId]) {
+                        playerToCurTrajectory[nonEngagementTrajectoryResult.playerId[trajectoryIndex]] = {
+                                tickIndex,
+                                {playerAtTick.posX[curPATId], playerAtTick.posY[curPATId]}
+                        };
                     }
-                    inEngagement.insert(playerId);
                 }
             }
 
             for (int64_t patIndex = ticks.patPerTick[tickIndex].minId;
                  patIndex <= ticks.patPerTick[tickIndex].maxId; patIndex++) {
                 int64_t playerId = playerAtTick.playerId[patIndex];
+                // write if dead
                 if (playerAtTick.isAlive[playerId] && playerToCurTrajectory.find(playerId) == playerToCurTrajectory.end() &&
                     inEngagement.find(playerId) == inEngagement.end()) {
                     playerToCurTrajectory[playerId] = {tickIndex};
@@ -100,7 +95,7 @@ NonEngagementTrajectoryResult queryNonEngagementTrajectory(const Games & games, 
                            result.tickLength.push_back(tmpLength[minThreadId][tmpRowId]);
                            result.playerId.push_back(tmpPlayerId[minThreadId][tmpRowId]);
                        });
-    vector<const int64_t *> foreignKeyCols{result.startTickId.data(), result.endTickId.data()};
-    result.trajectoriesPerTick = buildIntervalIndex(foreignKeyCols, result.size);
     return result;
+
+
 }
