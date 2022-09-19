@@ -13,6 +13,11 @@ struct SegmentData {
     Vec2 segmentStart2DPos;
 };
 
+struct SegmentData2 {
+    int64_t segmentStartTickId;
+    double x,y;
+};
+
 void finishSegment(vector<int64_t> tmpSegmentStartTickId[], vector<int64_t> tmpSegmentEndTickId[],
                    vector<int64_t> tmpLength[], vector<int64_t> tmpPlayerId[], vector<string> tmpPlayerName[],
                    vector<Vec2> tmpSegmentStart2DPos[], vector<Vec2> tmpSegmentEnd2DPos[],
@@ -60,7 +65,7 @@ TrajectorySegmentResult queryAllTrajectories(const Players & players, const Game
 
         TickRates tickRates = computeTickRates(games, rounds, roundIndex);
 
-        map<int64_t, SegmentData> playerToCurTrajectory;
+        map<int64_t, SegmentData2> playerToCurTrajectory;
         map<int64_t, int64_t> hi;
 
 
@@ -83,9 +88,14 @@ TrajectorySegmentResult queryAllTrajectories(const Players & players, const Game
                     }
                     if (playerAtTick.isAlive[curPATId]) {
                         //playerToCurTrajectory[curPlayerId];
-                        std::cout << "hi" << std::endl;
                         hi.insert({1, 1});
-                        playerToCurTrajectory.insert({curPlayerId, {tickIndex, {}}});
+                        auto dude = playerToCurTrajectory.size();
+                        playerToCurTrajectory[curPlayerId] = {
+                                tickIndex,
+                                playerAtTick.posX[curPATId], playerAtTick.posY[curPATId]
+                        };
+                        //playerToCurTrajectory.insert({curPlayerId, {1}});
+                        //playerToCurTrajectory.insert({curPlayerId, {tickIndex, {}}});
                         /*
                         playerToCurTrajectory[curPlayerId] = {
                                 tickIndex, {}
