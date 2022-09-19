@@ -8,13 +8,31 @@
 #include <omp.h>
 #include <atomic>
 
-struct TrajectoryData {
+struct SegmentData {
     int64_t segmentStartTickId;
     Vec2 segmentStart2DPos;
 };
 
-TrajectorySegmentResult queryAllTrajectories(const Games & games, const Rounds & rounds, const Ticks & ticks,
-                                             const PlayerAtTick & playerAtTick,
+void finishSegment(vector<int64_t> tmpSegmentStartTickId[], vector<int64_t> tmpSegmentEndTickId[],
+                   vector<int64_t> tmpLength[], vector<int64_t> tmpPlayerId[], vector<string> tmpPlayerName[],
+                   vector<Vec2> tmpSegmentStart2DPos[], vector<Vec2> tmpSegmentEnd2DPos[],
+                   int threadNum, int64_t tickIndex, int64_t playerId, int64_t patIndex,
+                   const Players & players, const PlayerAtTick & playerAtTick, const SegmentData & sData,
+                   map<int64_t, SegmentData> & playerToCurTrajectory, bool remove = true) {
+    tmpSegmentStartTickId[threadNum].push_back(sData.segmentStartTickId);
+    tmpSegmentEndTickId[threadNum].push_back(tickIndex);
+    tmpLength[threadNum].push_back(tmpSegmentEndTickId[threadNum].back() - tmpSegmentStartTickId[threadNum].back() + 1);
+    tmpPlayerId[threadNum].push_back(playerId);
+    tmpPlayerName[threadNum].push_back(players.name[playerId]);
+    tmpSegmentStart2DPos[threadNum].push_back({sData.segmentStart2DPos});
+    tmpSegmentEnd2DPos[threadNum].push_back({playerAtTick.posX[patIndex], playerAtTick.posY[patIndex]});
+    if (remove) {
+        playerToCurTrajectory.erase(playerId);
+    }
+}
+
+TrajectorySegmentResult queryAllTrajectories(const Players & players, const Games & games, const Rounds & rounds,
+                                             const Ticks & ticks, const PlayerAtTick & playerAtTick,
                                              const NonEngagementTrajectoryResult & nonEngagementTrajectoryResult) {
     int numThreads = omp_get_max_threads();
     vector<int64_t> tmpRoundIds[numThreads];
@@ -25,8 +43,8 @@ TrajectorySegmentResult queryAllTrajectories(const Games & games, const Rounds &
     vector<int64_t> tmpLength[numThreads];
     vector<int64_t> tmpPlayerId[numThreads];
     vector<string> tmpPlayerName[numThreads];
-    vector<Vec2> tmpSegmentStart2DPos;
-    vector<Vec2> tmpSegmentEnd2DPos;
+    vector<Vec2> tmpSegmentStart2DPos[numThreads];
+    vector<Vec2> tmpSegmentEnd2DPos[numThreads];
     std::atomic<int64_t> roundsProcessed = 0;
 
     // for each round
@@ -42,7 +60,7 @@ TrajectorySegmentResult queryAllTrajectories(const Games & games, const Rounds &
 
         TickRates tickRates = computeTickRates(games, rounds, roundIndex);
 
-        map<int64_t, TrajectoryData> playerToCurTrajectory;
+        map<int64_t, SegmentData> playerToCurTrajectory;
 
 
         for (int64_t tickIndex = rounds.ticksPerRound[roundIndex].minId;
@@ -53,11 +71,12 @@ TrajectorySegmentResult queryAllTrajectories(const Games & games, const Rounds &
             for (const auto & [_0, _1, trajectoryIndex] :
                     nonEngagementTrajectoryResult.trajectoriesPerTick.findOverlapping(tickIndex, tickIndex)) {
                 int64_t curPlayerId = nonEngagementTrajectoryResult.playerId[trajectoryIndex];
-                if (playerToCurTrajectory.find(curPlayerId) != playerToCurTrajectory.end()) {
+                if (playerToCurTrajectory.find(curPlayerId) == playerToCurTrajectory.end()) {
                     int64_t curPATId = curPlayerToPAT[curPlayerId];
                     // probably not necessary, but just be defensive
                     if (playerAtTick.isAlive[curPATId]) {
-                        playerToCurTrajectory[nonEngagementTrajectoryResult.playerId[trajectoryIndex]] = {
+                        playerToCurTrajectory[curPlayerId];
+                        playerToCurTrajectory[curPlayerId] = {
                                 tickIndex,
                                 {playerAtTick.posX[curPATId], playerAtTick.posY[curPATId]}
                         };
@@ -68,32 +87,51 @@ TrajectorySegmentResult queryAllTrajectories(const Games & games, const Rounds &
             for (int64_t patIndex = ticks.patPerTick[tickIndex].minId;
                  patIndex <= ticks.patPerTick[tickIndex].maxId; patIndex++) {
                 int64_t playerId = playerAtTick.playerId[patIndex];
-                // write if dead
-                if (playerAtTick.isAlive[playerId] && playerToCurTrajectory.find(playerId) == playerToCurTrajectory.end() &&
-                    inEngagement.find(playerId) == inEngagement.end()) {
-                    playerToCurTrajectory[playerId] = {tickIndex};
+                if (playerToCurTrajectory.find(playerId) != playerToCurTrajectory.end()) {
+                    // write if dead or finished a segment
+                    double secondsSinceSegmentStart =
+                            secondsBetweenTicks(ticks, tickRates,
+                                                playerToCurTrajectory.find(playerId)->second.segmentStartTickId,
+                                                tickIndex);
+                    if (!playerAtTick.isAlive[playerId] || secondsSinceSegmentStart > SEGMENT_SECONDS) {
+                        finishSegment(tmpSegmentStartTickId, tmpSegmentEndTickId,
+                                      tmpLength, tmpPlayerId, tmpPlayerName,
+                                      tmpSegmentStart2DPos, tmpSegmentEnd2DPos,
+                                      threadNum, tickIndex, playerId, patIndex,
+                                      players, playerAtTick, playerToCurTrajectory[playerId],
+                                      playerToCurTrajectory);
+                    }
                 }
             }
         }
 
+        int64_t maxTickInRound = rounds.ticksPerRound[roundIndex].maxId;
+        map<int64_t, int64_t> endPlayerToPAT = getPATIdForPlayerId(ticks, playerAtTick, maxTickInRound);
         for (const auto [playerId, tData] : playerToCurTrajectory) {
-            finishEngagement(tmpStartTickId, tmpEndTickId, tmpLength, tmpPlayerId, threadNum, rounds.ticksPerRound[roundIndex].maxId,
-                             playerId, playerToCurTrajectory.find(playerId)->second, playerToCurTrajectory, false);
+            finishSegment(tmpSegmentStartTickId, tmpSegmentEndTickId,
+                          tmpLength, tmpPlayerId, tmpPlayerName,
+                          tmpSegmentStart2DPos, tmpSegmentEnd2DPos,
+                          threadNum, maxTickInRound, playerId, endPlayerToPAT[playerId],
+                          players, playerAtTick, playerToCurTrajectory[playerId],
+                          playerToCurTrajectory);
 
         }
-        tmpRoundSizes[threadNum].push_back(tmpStartTickId[threadNum].size() - tmpRoundStarts[threadNum].back());
+        tmpRoundSizes[threadNum].push_back(tmpSegmentStartTickId[threadNum].size() - tmpRoundStarts[threadNum].back());
         //roundsProcessed++;
         //printProgress((roundsProcessed * 1.0) / rounds.size);
     }
 
-    NonEngagementTrajectoryResult result;
+    TrajectorySegmentResult result;
     mergeThreadResults(numThreads, result.rowIndicesPerRound, tmpRoundIds, tmpRoundStarts, tmpRoundSizes,
-                       result.startTickId, result.size,
+                       result.segmentStartTickId, result.size,
                        [&](int64_t minThreadId, int64_t tmpRowId) {
-                           result.startTickId.push_back(tmpStartTickId[minThreadId][tmpRowId]);
-                           result.endTickId.push_back(tmpEndTickId[minThreadId][tmpRowId]);
+                           result.segmentStartTickId.push_back(tmpSegmentStartTickId[minThreadId][tmpRowId]);
+                           result.segmentEndTickId.push_back(tmpSegmentEndTickId[minThreadId][tmpRowId]);
                            result.tickLength.push_back(tmpLength[minThreadId][tmpRowId]);
                            result.playerId.push_back(tmpPlayerId[minThreadId][tmpRowId]);
+                           result.playerName.push_back(tmpPlayerName[minThreadId][tmpRowId]);
+                           result.segmentStart2DPos.push_back(tmpSegmentStart2DPos[minThreadId][tmpRowId]);
+                           result.segmentEnd2DPos.push_back(tmpSegmentEnd2DPos[minThreadId][tmpRowId]);
                        });
     return result;
 

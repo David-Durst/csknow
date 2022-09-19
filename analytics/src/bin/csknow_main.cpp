@@ -279,6 +279,11 @@ int main(int argc, char * argv[]) {
     string nonEngagementTrajectoryName = "nonEngagementTrajectory";
     NonEngagementTrajectoryResult nonEngagementTrajectoryResult =
             queryNonEngagementTrajectory(games, filteredRounds, ticks, playerAtTick, engagementResult);
+    std::cout << "processing trajectory segments" << std::endl;
+    string trajectorySegmentName = "trajectorySegment";
+    TrajectorySegmentResult trajectorySegmentResult =
+            queryAllTrajectories(players, games, filteredRounds, ticks, playerAtTick, nonEngagementTrajectoryResult);
+    std::cout << "size: " << trajectorySegmentResult.size << std::endl;
     /*
     VelocityResult velocityResult = queryVelocity(position);
     std::cout << "velocity moments: " << velocityResult.positionIndex.size() << std::endl;
@@ -414,6 +419,7 @@ int main(int argc, char * argv[]) {
             {engagementName, engagementResult},
             {engagementPerTickAimName, engagementPerTickAimResult},
             {nonEngagementTrajectoryName, nonEngagementTrajectoryResult},
+            {trajectorySegmentName, trajectorySegmentResult},
             //{queryNames[5], aCatClusterSequence},
             //{queryNames[6], aCatPeekersClusters},
             //{queryNames[7], midCTClusterSequence},

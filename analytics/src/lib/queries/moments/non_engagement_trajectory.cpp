@@ -9,14 +9,14 @@
 #include <omp.h>
 #include <atomic>
 
-struct TrajectoryData {
+struct SegmentData {
     int64_t startTickId;
 };
 
 void finishEngagement(vector<int64_t> tmpStartTickId[], vector<int64_t> tmpEndTickId[],
                       vector<int64_t> tmpLength[], vector<int64_t> tmpPlayerId[],
-                      int threadNum, int64_t tickIndex, int64_t playerId, const TrajectoryData &tData,
-                      map<int64_t, TrajectoryData> & playerToCurTrajectory, bool remove = true) {
+                      int threadNum, int64_t tickIndex, int64_t playerId, const SegmentData &tData,
+                      map<int64_t, SegmentData> & playerToCurTrajectory, bool remove = true) {
     tmpStartTickId[threadNum].push_back(playerToCurTrajectory[playerId].startTickId);
     tmpEndTickId[threadNum].push_back(tickIndex);
     tmpLength[threadNum].push_back(tmpEndTickId[threadNum].back() - tmpStartTickId[threadNum].back() + 1);
@@ -53,7 +53,7 @@ NonEngagementTrajectoryResult queryNonEngagementTrajectory(const Games & games, 
 
         TickRates tickRates = computeTickRates(games, rounds, roundIndex);
 
-        map<int64_t, TrajectoryData> playerToCurTrajectory;
+        map<int64_t, SegmentData> playerToCurTrajectory;
 
 
         for (int64_t tickIndex = rounds.ticksPerRound[roundIndex].minId;
@@ -77,6 +77,11 @@ NonEngagementTrajectoryResult queryNonEngagementTrajectory(const Games & games, 
                 if (playerAtTick.isAlive[playerId] && playerToCurTrajectory.find(playerId) == playerToCurTrajectory.end() &&
                     inEngagement.find(playerId) == inEngagement.end()) {
                     playerToCurTrajectory[playerId] = {tickIndex};
+                }
+                // if player somehow dies without being in engagement (like from nade), end trajectory
+                if (!playerAtTick.isAlive[playerId] && playerToCurTrajectory.find(playerId) != playerToCurTrajectory.end()) {
+                    finishEngagement(tmpStartTickId, tmpEndTickId, tmpLength, tmpPlayerId, threadNum, tickIndex,
+                                     playerId, playerToCurTrajectory.find(playerId)->second, playerToCurTrajectory);
                 }
             }
         }

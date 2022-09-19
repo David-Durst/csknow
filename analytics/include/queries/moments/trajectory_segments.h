@@ -45,7 +45,7 @@ public:
     }
 
     vector<int64_t> filterByForeignKey(int64_t otherTableIndex) {
-        {};
+        return {};
     }
 
     void oneLineToCSV(int64_t index, stringstream & ss) {
@@ -68,8 +68,8 @@ public:
 };
 
 
-TrajectorySegmentResult queryAllTrajectories(const Games & games, const Rounds & rounds, const Ticks & ticks,
-                                             const PlayerAtTick & playerAtTick,
+TrajectorySegmentResult queryAllTrajectories(const Players & players, const Games & games, const Rounds & rounds,
+                                             const Ticks & ticks, const PlayerAtTick & playerAtTick,
                                              const NonEngagementTrajectoryResult & nonEngagementTrajectoryResult);
 
 #endif //CSKNOW_NON_ENGAGEMENT_TRAJECTORY_H
