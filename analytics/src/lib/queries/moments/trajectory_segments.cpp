@@ -13,9 +13,11 @@ struct SegmentData {
     Vec2 segmentStart2DPos;
 };
 
+struct OtherVec2 { double x, y; };
+
 struct SegmentData2 {
     int64_t segmentStartTickId;
-    double x,y;
+    OtherVec2 segmentStart2DPos;
 };
 
 void finishSegment(vector<int64_t> tmpSegmentStartTickId[], vector<int64_t> tmpSegmentEndTickId[],
@@ -92,7 +94,7 @@ TrajectorySegmentResult queryAllTrajectories(const Players & players, const Game
                         auto dude = playerToCurTrajectory.size();
                         playerToCurTrajectory[curPlayerId] = {
                                 tickIndex,
-                                playerAtTick.posX[curPATId], playerAtTick.posY[curPATId]
+                                {playerAtTick.posX[curPATId], playerAtTick.posY[curPATId]}
                         };
                         //playerToCurTrajectory.insert({curPlayerId, {1}});
                         //playerToCurTrajectory.insert({curPlayerId, {tickIndex, {}}});
