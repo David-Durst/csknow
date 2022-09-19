@@ -23,7 +23,7 @@ void finishSegment(vector<int64_t> tmpSegmentStartTickId[], vector<int64_t> tmpS
     tmpSegmentEndTickId[threadNum].push_back(tickIndex);
     tmpLength[threadNum].push_back(tmpSegmentEndTickId[threadNum].back() - tmpSegmentStartTickId[threadNum].back() + 1);
     tmpPlayerId[threadNum].push_back(playerId);
-    tmpPlayerName[threadNum].push_back(players.name[playerId]);
+    tmpPlayerName[threadNum].push_back(players.name[players.idOffset + playerId]);
     tmpSegmentStart2DPos[threadNum].push_back({sData.segmentStart2DPos});
     tmpSegmentEnd2DPos[threadNum].push_back({playerAtTick.posX[patIndex], playerAtTick.posY[patIndex]});
     if (remove) {
@@ -72,18 +72,33 @@ TrajectorySegmentResult queryAllTrajectories(const Players & players, const Game
                     nonEngagementTrajectoryResult.trajectoriesPerTick.findOverlapping(tickIndex, tickIndex)) {
                 int64_t curPlayerId = nonEngagementTrajectoryResult.playerId[trajectoryIndex];
                 if (playerToCurTrajectory.find(curPlayerId) == playerToCurTrajectory.end()) {
+                    if (curPlayerToPAT.find(curPlayerId) == curPlayerToPAT.end()) {
+                        int x = 1;
+                    }
                     int64_t curPATId = curPlayerToPAT[curPlayerId];
                     // probably not necessary, but just be defensive
+                    if (curPATId < 0 || curPATId >= playerAtTick.size) {
+                        int x = 1;
+                    }
                     if (playerAtTick.isAlive[curPATId]) {
-                        playerToCurTrajectory[curPlayerId];
+                        //playerToCurTrajectory[curPlayerId];
+                        playerToCurTrajectory.insert({curPlayerId, {tickIndex, {}}});
+                        /*
+                        playerToCurTrajectory[curPlayerId] = {
+                                tickIndex, {}
+                        };
+                         */
+                        /*
                         playerToCurTrajectory[curPlayerId] = {
                                 tickIndex,
                                 {playerAtTick.posX[curPATId], playerAtTick.posY[curPATId]}
                         };
+                         */
                     }
                 }
             }
 
+            /*
             for (int64_t patIndex = ticks.patPerTick[tickIndex].minId;
                  patIndex <= ticks.patPerTick[tickIndex].maxId; patIndex++) {
                 int64_t playerId = playerAtTick.playerId[patIndex];
@@ -103,17 +118,20 @@ TrajectorySegmentResult queryAllTrajectories(const Players & players, const Game
                     }
                 }
             }
+             */
         }
 
         int64_t maxTickInRound = rounds.ticksPerRound[roundIndex].maxId;
         map<int64_t, int64_t> endPlayerToPAT = getPATIdForPlayerId(ticks, playerAtTick, maxTickInRound);
         for (const auto [playerId, tData] : playerToCurTrajectory) {
+            /*
             finishSegment(tmpSegmentStartTickId, tmpSegmentEndTickId,
                           tmpLength, tmpPlayerId, tmpPlayerName,
                           tmpSegmentStart2DPos, tmpSegmentEnd2DPos,
                           threadNum, maxTickInRound, playerId, endPlayerToPAT[playerId],
                           players, playerAtTick, playerToCurTrajectory[playerId],
-                          playerToCurTrajectory);
+                          playerToCurTrajectory, false);
+                          */
 
         }
         tmpRoundSizes[threadNum].push_back(tmpSegmentStartTickId[threadNum].size() - tmpRoundStarts[threadNum].back());

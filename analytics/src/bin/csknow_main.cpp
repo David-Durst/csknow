@@ -269,16 +269,19 @@ int main(int argc, char * argv[]) {
     std::cout << "processing engagements" << std::endl;
     string engagementName = "engagement";
     EngagementResult engagementResult = queryEngagementResult(games, filteredRounds, ticks, playerAtTick, hurt);
+    std::cout << "size: " << engagementResult.size << std::endl;
     std::cout << "processing engagements per tick aim" << std::endl;
     string engagementPerTickAimName = "engagementPerTickAim";
     EngagementPerTickAimResult engagementPerTickAimResult =
             queryEngagementPerTickAim(games, filteredRounds, ticks, playerAtTick, weaponFire, hurt, engagementResult);
     engagementResult.havePerTickAimTable = true;
     engagementResult.perTickAimTable = engagementPerTickAimName;
+    std::cout << "size: " << engagementPerTickAimResult.size << std::endl;
     std::cout << "processing non engagement trajectory" << std::endl;
     string nonEngagementTrajectoryName = "nonEngagementTrajectory";
     NonEngagementTrajectoryResult nonEngagementTrajectoryResult =
             queryNonEngagementTrajectory(games, filteredRounds, ticks, playerAtTick, engagementResult);
+    std::cout << "size: " << nonEngagementTrajectoryResult.size << std::endl;
     std::cout << "processing trajectory segments" << std::endl;
     string trajectorySegmentName = "trajectorySegment";
     TrajectorySegmentResult trajectorySegmentResult =

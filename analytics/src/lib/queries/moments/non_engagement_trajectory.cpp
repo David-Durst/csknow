@@ -59,6 +59,17 @@ NonEngagementTrajectoryResult queryNonEngagementTrajectory(const Games & games, 
         for (int64_t tickIndex = rounds.ticksPerRound[roundIndex].minId;
              tickIndex <= rounds.ticksPerRound[roundIndex].maxId; tickIndex++) {
 
+            // round 17 (after halftime), k0nfig disappears for round start time. Remove a player without writing
+            // trajectory if this happens
+            map<int64_t, int64_t> curPlayerToPAT = getPATIdForPlayerId(ticks, playerAtTick, tickIndex);
+            vector<int64_t> disappearingPlayers;
+            for (const auto & [playerId, _] : playerToCurTrajectory) {
+                disappearingPlayers.push_back(playerId);
+            }
+            for (const auto disappearingPlayer : disappearingPlayers) {
+                playerToCurTrajectory.erase(disappearingPlayer);
+            }
+
             std::set<int64_t> inEngagement;
             for (const auto & [_0, _1, engagementIndex] :
                     engagementResult.engagementsPerTick.findOverlapping(tickIndex, tickIndex)) {
