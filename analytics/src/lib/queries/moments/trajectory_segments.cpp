@@ -61,6 +61,7 @@ TrajectorySegmentResult queryAllTrajectories(const Players & players, const Game
         TickRates tickRates = computeTickRates(games, rounds, roundIndex);
 
         map<int64_t, SegmentData> playerToCurTrajectory;
+        map<int64_t, int64_t> hi;
 
 
         for (int64_t tickIndex = rounds.ticksPerRound[roundIndex].minId;
@@ -82,19 +83,20 @@ TrajectorySegmentResult queryAllTrajectories(const Players & players, const Game
                     }
                     if (playerAtTick.isAlive[curPATId]) {
                         //playerToCurTrajectory[curPlayerId];
+                        std::cout << "hi" << std::endl;
+                        hi.insert({1, 1});
                         playerToCurTrajectory.insert({curPlayerId, {tickIndex, {}}});
                         /*
                         playerToCurTrajectory[curPlayerId] = {
                                 tickIndex, {}
                         };
-                         */
-                        /*
                         playerToCurTrajectory[curPlayerId] = {
                                 tickIndex,
                                 {playerAtTick.posX[curPATId], playerAtTick.posY[curPATId]}
                         };
                          */
                     }
+
                 }
             }
 
@@ -132,7 +134,6 @@ TrajectorySegmentResult queryAllTrajectories(const Players & players, const Game
                           players, playerAtTick, playerToCurTrajectory[playerId],
                           playerToCurTrajectory, false);
                           */
-
         }
         tmpRoundSizes[threadNum].push_back(tmpSegmentStartTickId[threadNum].size() - tmpRoundStarts[threadNum].back());
         //roundsProcessed++;
