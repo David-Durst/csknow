@@ -17,6 +17,8 @@ include(GNUInstallDirs)
 find_package(OpenMP REQUIRED)
 find_package(OpenSSL REQUIRED)
 
+add_compile_options(-Wall -Wextra)
+
 include_directories(${PROJECT_BINARY_DIR}/include)
 include_directories(${PROJECT_SOURCE_DIR}/include)
 file(GLOB_RECURSE CSKNOW_SOURCES ${PROJECT_SOURCE_DIR}/src/lib/*.cpp)

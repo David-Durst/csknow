@@ -13,11 +13,107 @@ struct SegmentData {
     Vec2 segmentStart2DPos;
 };
 
-struct OtherVec2 { double x, y; };
+struct OtherVec2 { double x, y;
+
+    double& operator[](size_t index) {
+        if (index == 0) {
+            return x;
+        } else {
+            return y;
+        }
+    }
+
+    OtherVec2 operator+(const Vec2 & other) const {
+        OtherVec2 result = *this;
+        result.x += other.x;
+        result.y += other.y;
+        return result;
+    }
+
+    OtherVec2 operator-(const Vec2 & other) const {
+        OtherVec2 result = *this;
+        result.x -= other.x;
+        result.y -= other.y;
+        return result;
+    }
+
+    OtherVec2 operator/(double scale) const {
+        OtherVec2 result = *this;
+        result.x /= scale;
+        result.y /= scale;
+        return result;
+    }
+
+    OtherVec2 operator*(double scale) const {
+        OtherVec2 result = *this;
+        result.x *= scale;
+        result.y *= scale;
+        return result;
+    }
+
+    double dot(const OtherVec2 & other) const {
+        return (this->x * other.x) + (this->y * other.y);
+    }
+
+    void makeYawNeg180To180() {
+        this->x = positiveModulo(this->x, 360.);
+        if (this->x > 180.) {
+            this->x -= 360.;
+        }
+    }
+
+    void makePitch0To360() {
+        this->y = positiveModulo(this->y, 360.);
+        if (this->y < 0.) {
+            this->y += 360.;
+        }
+    }
+
+    void makePitchNeg90To90() {
+        this->y = positiveModulo(this->y, 360.);
+        if (this->y > 260.) {
+            this->y -= 360.;
+        }
+    }
+
+    void normalizeYawPitchRelativeToOther(OtherVec2 other) {
+        if (x > other.x + 180.) {
+            x -= 360.;
+        }
+        else if (x + 180. < other.x) {
+            x += 360.;
+        }
+        if (y > other.y + 90.) {
+            //y -= 180.;
+        }
+        else if (y + 90. < other.y) {
+            //y += 180.;
+        }
+    }
+
+    OtherVec2 & normalize() {
+        makeYawNeg180To180();
+        makePitchNeg90To90();
+        return *this;
+    }
+
+    string toString() {
+        return "{" + std::to_string(x) + ", " + std::to_string(y) + "}";
+    }
+
+    string toCSV() const {
+        return std::to_string(x) + "," + std::to_string(y);
+    }
+};
 
 struct SegmentData2 {
     int64_t segmentStartTickId;
     OtherVec2 segmentStart2DPos;
+};
+
+struct SegmentData3 {
+    int64_t segmentStartTickId;
+    Vec2 segmentStart2DPos;
 };
 
 void finishSegment(vector<int64_t> tmpSegmentStartTickId[], vector<int64_t> tmpSegmentEndTickId[],
@@ -42,17 +138,21 @@ TrajectorySegmentResult queryAllTrajectories(const Players & players, const Game
                                              const Ticks & ticks, const PlayerAtTick & playerAtTick,
                                              const NonEngagementTrajectoryResult & nonEngagementTrajectoryResult) {
     int numThreads = omp_get_max_threads();
-    vector<int64_t> tmpRoundIds[numThreads];
-    vector<int64_t> tmpRoundStarts[numThreads];
-    vector<int64_t> tmpRoundSizes[numThreads];
-    vector<int64_t> tmpSegmentStartTickId[numThreads];
-    vector<int64_t> tmpSegmentEndTickId[numThreads];
-    vector<int64_t> tmpLength[numThreads];
-    vector<int64_t> tmpPlayerId[numThreads];
-    vector<string> tmpPlayerName[numThreads];
-    vector<Vec2> tmpSegmentStart2DPos[numThreads];
-    vector<Vec2> tmpSegmentEnd2DPos[numThreads];
+    vector<vector<int64_t>> tmpRoundIds(numThreads);
+    vector<vector<int64_t>> tmpRoundStarts(numThreads);
+    vector<vector<int64_t>> tmpRoundSizes(numThreads);
+    vector<vector<int64_t>> tmpSegmentStartTickId(numThreads);
+    vector<vector<int64_t>> tmpSegmentEndTickId(numThreads);
+    vector<vector<int64_t>> tmpLength(numThreads);
+    vector<vector<int64_t>> tmpPlayerId(numThreads);
+    vector<vector<string>> tmpPlayerName(numThreads);
+    vector<vector<Vec2>> tmpSegmentStart2DPos(numThreads);
+    vector<vector<Vec2>> tmpSegmentEnd2DPos(numThreads);
     std::atomic<int64_t> roundsProcessed = 0;
+    std::cout << sizeof(OtherVec2) << std::endl;
+    std::cout << sizeof(Vec2) << std::endl;
+    std::cout << sizeof(std::pair<int64_t, SegmentData2>) << std::endl;
+    std::cout << sizeof(std::pair<int64_t, SegmentData>) << std::endl;
 
     // for each round
     // for each tick
@@ -67,7 +167,7 @@ TrajectorySegmentResult queryAllTrajectories(const Players & players, const Game
 
         TickRates tickRates = computeTickRates(games, rounds, roundIndex);
 
-        map<int64_t, SegmentData2> playerToCurTrajectory;
+        map<int64_t, SegmentData> playerToCurTrajectory;
         map<int64_t, int64_t> hi;
 
 
@@ -92,10 +192,17 @@ TrajectorySegmentResult queryAllTrajectories(const Players & players, const Game
                         //playerToCurTrajectory[curPlayerId];
                         hi.insert({1, 1});
                         auto dude = playerToCurTrajectory.size();
+                        //std::pair<int64_t , SegmentData> x = {curPlayerId, {tickIndex, {playerAtTick.posX[curPATId], playerAtTick.posY[curPATId]}}};
+                        //playerToCurTrajectory.insert(x);
+                        playerToCurTrajectory[curPlayerId];
+                        //std::pair<int64_t , SegmentData> x = {curPlayerId, {tickIndex, {playerAtTick.posX[curPATId], playerAtTick.posY[curPATId]}}};
+                        //playerToCurTrajectory.insert(x);
+                        /*
                         playerToCurTrajectory[curPlayerId] = {
                                 tickIndex,
                                 {playerAtTick.posX[curPATId], playerAtTick.posY[curPATId]}
                         };
+                         */
                         //playerToCurTrajectory.insert({curPlayerId, {1}});
                         //playerToCurTrajectory.insert({curPlayerId, {tickIndex, {}}});
                         /*
@@ -153,6 +260,7 @@ TrajectorySegmentResult queryAllTrajectories(const Players & players, const Game
     }
 
     TrajectorySegmentResult result;
+    /*
     mergeThreadResults(numThreads, result.rowIndicesPerRound, tmpRoundIds, tmpRoundStarts, tmpRoundSizes,
                        result.segmentStartTickId, result.size,
                        [&](int64_t minThreadId, int64_t tmpRowId) {
@@ -164,6 +272,7 @@ TrajectorySegmentResult queryAllTrajectories(const Players & players, const Game
                            result.segmentStart2DPos.push_back(tmpSegmentStart2DPos[minThreadId][tmpRowId]);
                            result.segmentEnd2DPos.push_back(tmpSegmentEnd2DPos[minThreadId][tmpRowId]);
                        });
+                       */
     return result;
 
 
