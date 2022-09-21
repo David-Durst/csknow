@@ -29,7 +29,7 @@ using std::make_unique;
 enum class AggressiveType {
     Push,
     Bait,
-    NUM_AGGESSIVE_TYPE
+    NUM_AGGESSIVE_TYPE [[maybe_unused]]
 };
 
 struct EngagementParams {
@@ -65,15 +65,17 @@ struct PrintState {
         }
     }
 
+    [[nodiscard]]
     string getState() const {
         stringstream ss;
         getStateInner(0, ss);
         return ss.str();
     }
 
-    PrintState() { }
-    PrintState(string curState, bool appendNewline = false) : curState({curState}), appendNewline(appendNewline) { }
-    PrintState(vector<PrintState> childrenStates, vector<string> curState, bool appendNewline = false) :
+    PrintState() = default;
+    explicit PrintState(const string & curState, bool appendNewline = false) :
+        curState({curState}), appendNewline(appendNewline) { }
+    PrintState(const vector<PrintState> & childrenStates, const vector<string> & curState, bool appendNewline = false) :
         childrenStates(childrenStates), curState(curState), appendNewline(appendNewline) { }
 };
 
@@ -97,10 +99,12 @@ struct Blackboard {
 
     // all player data
     map<CSGOId, TreeThinker> playerToTreeThinkers;
-    const nav_mesh::nav_area & getPlayerNavArea(const ServerState::Client & client) {
+    [[nodiscard]]
+    const nav_mesh::nav_area & getPlayerNavArea(const ServerState::Client & client) const {
         return navFile.get_nearest_area_by_position(vec3Conv(client.getFootPosForPlayer()));
     }
-    const nav_mesh::nav_area & getC4NavArea(const ServerState & state) {
+    [[nodiscard]]
+    const nav_mesh::nav_area & getC4NavArea(const ServerState & state) const {
         return navFile.get_nearest_area_by_position(vec3Conv(state.getC4Pos()));
     }
     std::uniform_real_distribution<> aggressionDis;
@@ -150,7 +154,8 @@ struct Blackboard {
     double tMemorySeconds = 1.0, ctMemorySeconds = 1.0;
     EnemyPositionsMemory tMemory, ctMemory;
     map<CSGOId, map<CSGOId, EnemyPositionMemory>> playerToRelevantCommunicatedEnemies;
-    const EnemyPositionsMemory & getCommunicatedPlayers(const ServerState & state, TreeThinker & treeThinker) {
+    [[nodiscard]]
+    const EnemyPositionsMemory & getCommunicatedPlayers(const ServerState & state, TreeThinker & treeThinker) const {
         if (state.getClient(treeThinker.csgoId).team == ENGINE_TEAM_T) {
             return tMemory;
         }
@@ -160,13 +165,16 @@ struct Blackboard {
     }
     map<CSGOId, EnemyPositionsMemory> playerToMemory;
     PossibleNavAreas possibleNavAreas;
-    bool resetPossibleNavAreas = false, inTest = false; // inTest just for debugging, setting break points once test setup
+    bool resetPossibleNavAreas = false;
+    [[maybe_unused]]
+    bool inTest = false; // inTest just for debugging, setting break points once test setup
     map<TeamId, RoundNumber> teamToLastRoundSawEnemy;
     bool sawEnemyThisRound(const ServerState & state, TeamId team) {
         return teamToLastRoundSawEnemy.find(team) != teamToLastRoundSawEnemy.end() &&
                 teamToLastRoundSawEnemy[team] == state.roundNumber;
     }
     optional<CSGOId> defuserId;
+    [[nodiscard]]
     bool isPlayerDefuser(CSGOId playerId) const {
         return defuserId && defuserId.value() == playerId;
     }
@@ -185,16 +193,19 @@ struct Blackboard {
     map<CSGOId, PIDState> playerToPIDStateX, playerToPIDStateY;
     std::uniform_real_distribution<> aimDis;
 
-    string getPlayerPlace(Vec3 pos) {
+    [[nodiscard]]
+    string getPlayerPlace(Vec3 pos) const {
         return navFile.get_place(navFile.get_nearest_area_by_position(vec3Conv(pos)).m_place);
     }
 
-    double getDistance(AreaId srcArea, AreaId dstArea) {
+    [[nodiscard]] [[maybe_unused]]
+    double getDistance(AreaId srcArea, AreaId dstArea) const {
         return computeDistance(vec3tConv(navFile.get_area_by_id_fast(srcArea).get_center()),
                                vec3tConv(navFile.get_area_by_id_fast(dstArea).get_center()));
     }
 
-    AreaBits getVisibleAreasByTeam(const ServerState & state, int32_t team) {
+    [[nodiscard]]
+    AreaBits getVisibleAreasByTeam(const ServerState & state, int32_t team) const {
         AreaBits result;
         for (const auto & client : state.clients) {
             if (client.isAlive) {
@@ -212,7 +223,7 @@ struct Blackboard {
     PrintState printCommunicateState(const ServerState & state);
     vector<PrintState> printPerPlayerState(const ServerState & state, CSGOId playerId);
 
-    Blackboard(string navPath, string mapName) :
+    Blackboard(const string & navPath, const string & mapName) :
         navPath(navPath), navFile(navPath.c_str()),
         gen(rd()), aimDis(0., 2.0), standDis(0, 100.0), aggressionDis(0., 1.),
         navFileOverlay(navFile), visPoints(navFile), possibleNavAreas(navFile),
