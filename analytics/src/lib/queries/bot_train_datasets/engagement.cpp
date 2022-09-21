@@ -1,7 +1,7 @@
 //
 // Created by durst on 3/24/22.
 //
-
+#ifdef false
 #include "queries/bot_train_dataset/engagement.h"
 #include "queries/lookback.h"
 #include "geometryNavConversions.h"
@@ -638,3 +638,5 @@ EngagementResult queryEngagementDataset(const Equipment & equipment, const Games
     result.size = result.tickId.size();
     return result;
 }
+
+#endif

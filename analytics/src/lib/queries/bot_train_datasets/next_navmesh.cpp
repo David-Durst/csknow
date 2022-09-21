@@ -1,10 +1,11 @@
 //
 // Created by durst on 2/21/22.
 //
+#ifdef false
 #include "queries/lookback.h"
 #include "queries/bot_train_dataset/next_navmesh.h"
 #include "geometryNavConversions.h"
-#include "bots/thinker.h"
+#include "bots/input_bits.h"
 #include <utility>
 #include <cassert>
 
@@ -217,3 +218,5 @@ NextNavmeshResult queryNextNavmeshDataset(const Games & games, const Rounds & ro
     result.size = result.tickId.size();
     return result;
 }
+
+#endif

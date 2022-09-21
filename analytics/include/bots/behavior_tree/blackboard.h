@@ -90,7 +90,6 @@ struct Blackboard {
     std::random_device rd;
     std::mt19937 gen;
     NavFileOverlay navFileOverlay;
-    string mapsPath;
 
     // general map data
     ReachableResult reachability;

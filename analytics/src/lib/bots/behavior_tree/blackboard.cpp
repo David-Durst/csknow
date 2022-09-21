@@ -41,16 +41,16 @@ vector<PrintState> Blackboard::printPerPlayerState(const ServerState &state, CSG
             aggressiveTypeString = "invalid";
     }
 
-    printStates.push_back(state.getPlayerString(playerId) +
+    printStates.emplace_back(state.getPlayerString(playerId) +
                                   ", aggressive type " + aggressiveTypeString +
                                   ", pos " + curClient.getFootPosForPlayer().toString() +
                                   ", cur nav area " + std::to_string(navFile.get_nearest_area_by_position(
                                           vec3Conv(curClient.getFootPosForPlayer())).get_id()) +
                                   ", danger area " + dangerArea);
-    printStates.push_back(playerToPriority[playerId].print(state));
-    printStates.push_back(playerToPath[playerId].print(state, navFile));
-    printStates.push_back(playerToAction[playerId].print());
-    printStates.push_back(playerToMemory[playerId].print(state));
+    printStates.emplace_back(playerToPriority[playerId].print(state));
+    printStates.emplace_back(playerToPath[playerId].print(state, navFile));
+    printStates.emplace_back(playerToAction[playerId].print());
+    printStates.emplace_back(playerToMemory[playerId].print(state));
 
     return printStates;
 }

@@ -1,3 +1,4 @@
+#ifdef false
 #ifndef CSKNOW_DATAST_GENERATION_H
 #define CSKNOW_DATAST_GENERATION_H
 #include "load_data.h"
@@ -200,3 +201,5 @@ NextNavmeshResult queryNextNavmeshDataset(const Games & games, const Rounds & ro
                                     const std::map<std::string, const nav_mesh::nav_file> & mapNavs);
 
 #endif //CSKNOW_DATAST_GENERATION_H
+
+#endif

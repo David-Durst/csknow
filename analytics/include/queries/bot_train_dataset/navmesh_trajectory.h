@@ -1,6 +1,7 @@
 //
 // Created by durst on 3/24/22.
 //
+#ifdef false
 #ifndef CSKNOW_NAVMESH_TRAJECTORY_H
 #define CSKNOW_NAVMESH_TRAJECTORY_H
 #include "load_data.h"
@@ -128,3 +129,4 @@ NavmeshTrajectoryResult queryNavmeshTrajectoryDataset(const Games & games, const
                                                       const std::map<std::string, const nav_mesh::nav_file> & mapNavs);
 
 #endif //CSKNOW_NAVMESH_TRAJECTORY_H
+#endif

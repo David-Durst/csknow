@@ -1,3 +1,4 @@
+#ifdef false
 #include <iostream>
 #include <unistd.h>
 #include <map>
@@ -123,3 +124,5 @@ int main(int argc, char * argv[]) {
     configFile.close();
     //manageThinkerState.saveSkillsDuringTraining(skillPath);
 }
+
+#endif

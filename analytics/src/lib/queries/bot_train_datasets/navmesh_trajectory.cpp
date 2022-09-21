@@ -1,7 +1,7 @@
 //
 // Created by durst on 3/24/22.
 //
-
+#ifdef false
 #include "queries/bot_train_dataset/navmesh_trajectory.h"
 #include "queries/lookback.h"
 #include "geometryNavConversions.h"
@@ -125,3 +125,4 @@ NavmeshTrajectoryResult queryNavmeshTrajectoryDataset(const Games & games, const
     result.size = result.roundId.size();
     return result;
 }
+#endif
