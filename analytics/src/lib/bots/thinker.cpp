@@ -1,3 +1,4 @@
+#ifdef false
 #include "bots/thinker.h"
 #include <limits>
 
@@ -316,3 +317,5 @@ void Thinker::defuse(ServerState::Client & curClient, const ServerState::Client 
             targetClient.csgoId == INVALID_ID && liveState.c4IsPlanted &&
             computeDistance(curPos, c4Pos) < 50.);
 }
+
+#endif

@@ -1,6 +1,7 @@
 //
 // Created by durst on 2/20/22.
 //
+#ifdef false
 #include "bots/manage_thinkers.h"
 #include <algorithm>
 #include <file_helpers.h>
@@ -305,3 +306,4 @@ Skill ManageThinkerState::findMostSimilarSkillFromTraining(Skill inputSkill) {
     return resultSkill;
 }
 
+#endif //false

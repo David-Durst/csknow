@@ -1,6 +1,7 @@
 //
 // Created by durst on 3/1/22.
 //
+#ifdef false
 #include "bots/load_save_bot_data.h"
 #include "bots/python_model_interface.h"
 #include "geometryNavConversions.h"
@@ -132,3 +133,5 @@ void PythonModelInterface::CommunicateWithPython() {
         lk.unlock();
     }
 }
+
+#endif

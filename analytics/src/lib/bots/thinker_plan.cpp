@@ -1,3 +1,5 @@
+#ifdef false
+
 #include "bots/thinker.h"
 #include <string>
 #include <functional>
@@ -277,3 +279,5 @@ void Thinker::updateMovementType(ServerState curState, ServerState lastState,
     }
     developingPlan.log += logStream.str();
 }
+
+#endif //false
