@@ -1,3 +1,4 @@
+#ifdef false
 #include "bots/load_save_bot_data.h"
 #include "bots/thinker.h"
 #include "bots/manage_thinkers.h"
@@ -100,3 +101,5 @@ int main(int argc, char * argv[]) {
 
     return 0;
 }
+
+#endif //false

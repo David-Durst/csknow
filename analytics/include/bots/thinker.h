@@ -1,6 +1,6 @@
 // Created by durst on 1/25/22.
 //
-
+#ifdef false
 #ifndef CSKNOW_THINKER_H
 #define CSKNOW_THINKER_H
 #define SECONDS_BETWEEN_PLAN_CHANGES std::chrono::milliseconds(250)
@@ -176,3 +176,4 @@ public:
 
 #endif //CSKNOW_THINKER_H
 
+#endif //false

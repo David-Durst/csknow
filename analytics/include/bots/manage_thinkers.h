@@ -1,6 +1,7 @@
 //
 // Created by durst on 2/20/22.
 //
+#ifdef false
 #include "load_save_bot_data.h"
 #include "bots/thinker.h"
 #include <iostream>
@@ -43,3 +44,5 @@ struct ManageThinkerState {
 };
 
 #endif //CSKNOW_MANAGE_THINKERS_H
+
+#endif //false

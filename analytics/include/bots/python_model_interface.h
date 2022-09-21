@@ -1,6 +1,8 @@
 //
 // Created by durst on 3/1/22.
 //
+#ifdef false
+
 #ifndef CSKNOW_MODEL_PLAN_H
 #define CSKNOW_MODEL_PLAN_H
 #include "load_save_bot_data.h"
@@ -49,3 +51,5 @@ public:
 };
 
 #endif //CSKNOW_MODEL_PLAN_H
+
+#endif //false
