@@ -31,15 +31,15 @@ namespace nav_mesh {
 
 		//MicroPather implementation
 		virtual float LeastCostEstimate( void* start, void* end ) {
-			auto& start_area = get_area_by_id( LO_32( start ) );
-			auto& end_area = get_area_by_id( LO_32( end ) );
+			auto& start_area = get_area_by_id( start );
+			auto& end_area = get_area_by_id( end );
 			auto distance = start_area.get_center( ) - end_area.get_center( );
 
 			return sqrtf( distance.x * distance.x + distance.y * distance.y + distance.z * distance.z );
 		}
 
 		virtual void AdjacentCost( void* state, micropather::MPVector< micropather::StateCost >* adjacent ) {
-			auto& area = get_area_by_id( LO_32( state ) );
+			auto& area = get_area_by_id( state );
 			auto& area_connections = area.get_connections( );
 
             float distance_adjustment = 0.f;
@@ -67,6 +67,8 @@ namespace nav_mesh {
 		virtual void PrintStateInfo( void* state ) { }
 
 		const nav_area& get_area_by_id( std::uint32_t id ) const;
+        // added by durst to be both fast and not use void* to uint32_t conversion
+        const nav_area& get_area_by_id( void* id ) const;
 		// added by durst since now have a lookup map but don't want to remove old implementaiton
         const nav_area& get_area_by_id_fast( std::uint32_t id ) const;
         // added by durst for maps that don't have places
@@ -102,6 +104,7 @@ namespace nav_mesh {
 		std::vector< nav_area > m_areas = { };
 		std::vector< std::string > m_places = { };
         std::map< uint32_t, size_t > m_area_ids_to_indices;
+        std::map< void*, size_t > m_area_ptr_ids_to_indices;
         std::vector<size_t> connections; // store connections as a contiguous array of array indexes rather than area ids
         std::vector<size_t> connections_area_start, connections_area_length;
 	};

@@ -59,6 +59,8 @@ namespace nav_mesh {
 
         for ( size_t area_id = 0; area_id < m_areas.size(); area_id++ ) {
             m_area_ids_to_indices.insert({m_areas[area_id].get_id(), area_id});
+            // navfile.h AdjacentCost does same cast to work with micropather, so as long I do same cast, should be fine?
+            m_area_ptr_ids_to_indices.insert({reinterpret_cast<void*>(m_areas[area_id].get_id()), area_id});
         }
 
         build_connections_arrays();
@@ -81,13 +83,13 @@ namespace nav_mesh {
         }
 
         for ( std::size_t i = 0; i < path_area_ids.size( ); i++ ) {
-            nav_area& area = m_areas[m_area_ids_to_indices[LO_32( path_area_ids[ i ] )]];
+            nav_area& area = m_areas[m_area_ptr_ids_to_indices[path_area_ids[ i ]]];
             // smooth paths by adding intersections between nav areas after the first 
             // chose area in between nearest location in area i from center of i-1
             // and nearest location in area i-1 from center of i
             // as this will have max distance on either side for player to fit through
             if ( i != 0 ) {
-                nav_area& last_area = m_areas[m_area_ids_to_indices[LO_32( path_area_ids[ i - 1 ] )]];
+                nav_area& last_area = m_areas[m_area_ptr_ids_to_indices[path_area_ids[ i - 1 ]]];
                 // nw is min values, se is max value, so checking if x or y is the meeting point
                 bool last_area_x_lesser = area.m_nw_corner.x == last_area.m_se_corner.x;
                 bool area_x_lesser = area.m_se_corner.x == last_area.m_nw_corner.x;
@@ -137,13 +139,13 @@ namespace nav_mesh {
         }
 
         for ( std::size_t i = 0; i < path_area_ids.size( ); i++ ) {
-            nav_area& area = m_areas[m_area_ids_to_indices[LO_32( path_area_ids[ i ] )]];
+            nav_area& area = m_areas[m_area_ptr_ids_to_indices[path_area_ids[ i ]]];
             // smooth paths by adding intersections between nav areas after the first
             // chose area in between nearest location in area i from center of i-1
             // and nearest location in area i-1 from center of i
             // as this will have max distance on either side for player to fit through
             if ( i != 0 ) {
-                nav_area& last_area = m_areas[m_area_ids_to_indices[LO_32( path_area_ids[ i - 1 ] )]];
+                nav_area& last_area = m_areas[m_area_ptr_ids_to_indices[path_area_ids[ i - 1 ]]];
                 // nw is min values, se is max value, so checking if x or y is the meeting point
                 bool last_area_x_lesser = last_area.get_max_corner().x <= area.get_min_corner().x;
                 bool area_x_lesser = area.get_max_corner().x <= last_area.get_min_corner().x;
@@ -205,6 +207,16 @@ namespace nav_mesh {
         }
 
         throw std::runtime_error( "nav_file::get_area_by_id: failed to find area" );
+    }
+
+    const nav_area& nav_file::get_area_by_id( void* id ) const {
+        auto indexResult = m_area_ptr_ids_to_indices.find(id);
+        if (indexResult != m_area_ptr_ids_to_indices.end()) {
+            return m_areas[indexResult->second];
+        }
+        else {
+            throw std::runtime_error( "nav_file::get_area_by_id: failed to find area by uintptr_t" );
+        }
     }
 
     const nav_area& nav_file::get_area_by_id_fast( std::uint32_t id ) const {

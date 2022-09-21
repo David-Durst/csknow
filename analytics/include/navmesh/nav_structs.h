@@ -1,5 +1,4 @@
 #pragma once
-#define LO_32(x) (*( (uint32_t *) &x))
 
 namespace nav_mesh {
 	class vec3_t {

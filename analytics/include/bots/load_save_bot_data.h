@@ -84,10 +84,12 @@ public:
         float inputAngleDeltaPctX;
         float inputAngleDeltaPctY;
 
+        [[nodiscard]]
         Vec2 getCurrentViewAngles() const {
             return {lastEyeAngleX, lastEyeAngleY};
         }
 
+        [[nodiscard]]
         Vec2 getCurrentViewAnglesWithAimpunch() const {
             return {
                 lastEyeAngleX + lastAimpunchAngleX,
@@ -95,14 +97,17 @@ public:
             };
         }
 
+        [[nodiscard]]
         Vec3 getFootPosForPlayer() const {
             return {lastEyePosX, lastEyePosY, lastFootPosZ};
         }
 
+        [[nodiscard]]
         Vec3 getEyePosForPlayer() const {
             return {lastEyePosX, lastEyePosY, lastEyePosZ};
         }
 
+        [[maybe_unused]] [[nodiscard]]
         Vec3 getVelocity() const {
             return {lastVelX, lastVelY, lastVelZ};
         }
@@ -110,16 +115,19 @@ public:
 
     vector<int> csgoIdToCSKnowId;
     vector<Client> clients;
+    [[nodiscard]]
     const ServerState::Client & getClient(CSGOId csgoId) const {
         int csknowId = csgoIdToCSKnowId[csgoId];
         return clients[csknowId];
     }
+    [[nodiscard]]
     ServerState::Client & getClient(CSGOId csgoId) {
         int csknowId = csgoIdToCSKnowId[csgoId];
         return clients[csknowId];
     }
+    [[nodiscard]]
     string getPlayerString(CSGOId playerId) const {
-        if (playerId >= 0 && playerId < csgoIdToCSKnowId.size()) {
+        if (playerId >= 0 && playerId < static_cast<int64_t>(csgoIdToCSKnowId.size())) {
             return "(" + std::to_string(playerId) + ") " + getClient(playerId).name;
         }
         else {
@@ -136,17 +144,14 @@ public:
         curClient.inputAngleDeltaPctY = inputAngleDeltaPctY;
         inputsValid[csknowId] = true;
     }
-    void resetInputs() {
-        for (size_t i = 0; i < inputsValid.size(); i++) {
-            inputsValid[i] = false;
-        }
-    }
 
     // visibility state
     std::set<std::pair<int32_t, int32_t>> visibilityClientPairs;
+    [[nodiscard]]
     bool isVisible(CSGOId src, CSGOId target) const {
         return visibilityClientPairs.find({std::min(src, target), std::max(src, target)}) != visibilityClientPairs.end();
     }
+    [[nodiscard]]
     vector<std::reference_wrapper<const ServerState::Client>> getVisibleEnemies(CSGOId srcId) const {
         const ServerState::Client & srcClient = getClient(srcId);
         vector<std::reference_wrapper<const ServerState::Client>> visibleEnemies;
@@ -160,6 +165,8 @@ public:
         }
         return visibleEnemies;
     }
+
+    [[nodiscard]]
     int numPlayersAlive() const {
         int result = 0;
         for (const auto & client : clients) {
@@ -170,6 +177,7 @@ public:
         return result;
     }
 
+    [[nodiscard]]
     vector<CSGOId> getPlayersOnTeam(int32_t team) const {
         vector<CSGOId> result;
         for (const auto & client : clients) {
@@ -180,11 +188,13 @@ public:
         return result;
     }
 
-    double getSecondsBetweenTimes(CSKnowTime startTime, CSKnowTime endTime) const {
+    [[nodiscard]] static
+    double getSecondsBetweenTimes(CSKnowTime startTime, CSKnowTime endTime) {
         std::chrono::duration<double> diffTime = endTime - startTime;
         return diffTime.count();
     }
 
+    [[nodiscard]]
     int32_t getLastFrame() const {
         if (clients.empty()) {
             return INVALID_ID;
@@ -209,13 +219,11 @@ public:
     int numInputLines, numThinkLines;
     string inputsLog, thinkLog;
 
-    double roundTimeRemaining, timeSincePlant;
-
     string dataPath;
     void loadServerState();
     void saveBotInputs();
-    bool saveScript(vector<string> scriptLines) const;
-    Vec3 getC4Pos() const;
+    [[nodiscard]] bool saveScript(vector<string> scriptLines) const;
+    [[nodiscard]] Vec3 getC4Pos() const;
 };
 
 #endif //CSKNOW_LOAD_SAVE_BOT_DATA_H
