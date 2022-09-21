@@ -18,7 +18,7 @@ public:
     vector<double> distanceMatrix;
     int64_t numAreas;
 
-    vector<int64_t> filterByForeignKey(int64_t otherTableIndex) {
+    vector<int64_t> filterByForeignKey(int64_t) override {
         return {};
     }
 
@@ -27,23 +27,24 @@ public:
         this->nonTemporal = true;
         this->overlay = true;
         this->extension = ".reach";
+        this->numAreas = 0;
     };
 
-    void oneLineToCSV(int64_t index, stringstream & ss) {
+    void oneLineToCSV(int64_t index, stringstream & ss) override {
         ss << index;
         ss << "," << coordinate[index].min.x << "," << coordinate[index].min.y << "," << coordinate[index].min.z
            << "," << coordinate[index].max.x << "," << coordinate[index].max.y << "," << coordinate[index].max.z;
-        for (int i = 0; i < coordinate.size(); i++) {
+        for (size_t i = 0; i < coordinate.size(); i++) {
             ss << "," << distanceMatrix[index * coordinate.size() + i];
         }
         ss << std::endl;
     }
 
-    vector<string> getForeignKeyNames() {
+    vector<string> getForeignKeyNames() override {
         return {};
     }
 
-    vector<string> getOtherColumnNames() {
+    vector<string> getOtherColumnNames() override {
         vector<string> nameVector = {"min_x", "min_y", "min_z", "max_x", "max_y", "max_z"};
         for (uint64_t i = 0; i < coordinate.size(); i++) {
             nameVector.push_back(std::to_string(i));
@@ -51,19 +52,21 @@ public:
         return nameVector;
     }
 
+    [[nodiscard]]
     double getDistance(int64_t src, int64_t dst) const {
         return distanceMatrix[src * numAreas + dst];
     }
 
+    [[nodiscard]]
     double getDistance(AreaId srcId, AreaId dstId, const nav_mesh::nav_file & navFile) const {
         size_t src = navFile.m_area_ids_to_indices.find(srcId)->second,
             dst = navFile.m_area_ids_to_indices.find(dstId)->second;
-        return getDistance(src, dst);
+        return getDistance(static_cast<int64_t>(src), static_cast<int64_t>(dst));
     }
 
     void load(string mapsPath, string mapName);
 };
 
-ReachableResult queryReachable(const MapMeshResult & mapMeshResult);
+[[maybe_unused]] ReachableResult queryReachable(const MapMeshResult & mapMeshResult);
 
 #endif //CSKNOW_REACHABLE_H

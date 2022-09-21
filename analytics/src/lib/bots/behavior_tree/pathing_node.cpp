@@ -40,7 +40,7 @@ namespace movement {
             newPath.pathCallSucceeded = true;
             vector<nav_mesh::PathNode> tmpWaypoints = optionalWaypoints.value();
             for (const auto & tmpWaypoint : tmpWaypoints) {
-                newPath.waypoints.push_back(tmpWaypoint);
+                newPath.waypoints.emplace_back(tmpWaypoint);
                 newPath.areas.insert(tmpWaypoint.area1);
                 if (tmpWaypoint.edgeMidpoint) {
                     newPath.areas.insert(tmpWaypoint.area2);

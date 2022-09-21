@@ -6,17 +6,9 @@
 #include <fstream>
 #include <functional>
 #include "load_data.h"
-#define NOT_PLAYER_ID -1
 using std::vector;
 using std::stringstream;
 using std::string;
-
-static inline __attribute__((always_inline))
-string doubleToString(double val) {
-    int64_t valInt = val;
-    int64_t valFrac = (((int64_t) val) * 100) - 100 * valInt;
-    return std::to_string((int64_t) val) + "." + std::to_string(valFrac);
-}
 
 static inline __attribute__((always_inline))
 string boolToString(bool val) {
@@ -38,12 +30,14 @@ uint32_t boolToInt(bool val) {
     }
 }
 
+/*
 enum DataType {
     noSrcTarget = 0,
     justSrc = 1,
     justTarget = 2,
     srcAndTarget = 3
 };
+ */
 class QueryResult {
 public:
 //    vector<int64_t> positionIndex;
@@ -70,7 +64,7 @@ public:
     //virtual string toCSVFiltered(const Position & position, string game) = 0;
     int64_t size;
 
-    void save(string mapsPath, string mapName) {
+    void save(const string & mapsPath, const string & mapName) {
         string fileName = mapName + extension;
         string filePath = mapsPath + "/" + fileName;
 
@@ -109,12 +103,13 @@ public:
         ss << std::endl;
     }
 
+    static
     void commaSeparateList(stringstream & ss, vector<string> list, const string& separator = ",") {
-        if (list.size() == 0) {
+        if (list.empty()) {
             return;
         }
         ss << list[0];
-        for (int i = 1; i < list.size(); i++) {
+        for (size_t i = 1; i < list.size(); i++) {
             ss << separator << list[i];
         }
     }

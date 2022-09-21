@@ -27,7 +27,7 @@ enum class WaypointType {
     HoldPlace,
     HoldAreas,
     C4,
-    NUM_WAYPOINTS
+    NUM_WAYPOINTS [[maybe_unused]]
 };
 
 struct Waypoint {
@@ -79,8 +79,9 @@ struct Order {
         }
     }
 
+    [[nodiscard]] static
     double getDistance(AreaId srcAreaId, const vector<AreaId> & dstAreaIds, const nav_mesh::nav_file & navFile,
-                       const ReachableResult & reachability) const {
+                       const ReachableResult & reachability) {
         double minDistance = std::numeric_limits<double>::max();
         for (const auto & dstAreaId : dstAreaIds) {
             minDistance = std::min(minDistance, reachability.getDistance(srcAreaId, dstAreaId, navFile));
@@ -88,8 +89,9 @@ struct Order {
         return minDistance;
     }
 
+    [[nodiscard]] static
     double getDistance(AreaId srcAreaId, const Waypoint & waypoint, const nav_mesh::nav_file & navFile,
-                       const ReachableResult & reachability, const DistanceToPlacesResult & distanceToPlacesResult) const {
+                       const ReachableResult & reachability, const DistanceToPlacesResult & distanceToPlacesResult) {
         switch (waypoint.type) {
             case WaypointType::NavPlace:
                 return distanceToPlacesResult.getClosestDistance(srcAreaId, waypoint.placeName, navFile);
@@ -110,8 +112,9 @@ struct Order {
         }
     }
 
+    [[nodiscard]] static
     std::optional<AreaId> isVisible(AreaId srcAreaId, const vector<AreaId> & dstAreaIds, const nav_mesh::nav_file & navFile,
-                       const VisPoints & visPoints, bool farthest = false) const {
+                       const VisPoints & visPoints, bool farthest = false) {
         bool foundVisibleArea = false;
         double maxDistance = -1 * std::numeric_limits<double>::max();
         AreaId farthestAreaId;
@@ -138,8 +141,9 @@ struct Order {
         }
     }
 
+    [[nodiscard]] static
     std::optional<AreaId> isVisible(AreaId srcAreaId, const Waypoint & waypoint, const nav_mesh::nav_file & navFile,
-                       const VisPoints & visPoints, const DistanceToPlacesResult & distanceToPlacesResult, bool farthest = false) const {
+                       const VisPoints & visPoints, const DistanceToPlacesResult & distanceToPlacesResult, bool farthest = false) {
         switch (waypoint.type) {
             case WaypointType::NavPlace:
                 return isVisible(srcAreaId, distanceToPlacesResult.placeToArea.find(waypoint.placeName)->second,
@@ -202,8 +206,8 @@ struct Order {
         holdIndexToChokeAreaId[waypointIndex] = options.front().chokeAreaId;
     }
 
-    void print(const vector<CSGOId> followers, const map<CSGOId, int64_t> & playerToWaypointIndex,
-               const ServerState & state, const nav_mesh::nav_file & navFile,
+    void print(const vector<CSGOId> & followers, const map<CSGOId, int64_t> & playerToWaypointIndex,
+               const ServerState & state,
                const map<CSGOId, int32_t> & playerToEntryIndex, const map<CSGOId, ExecuteStatus> & playerToExecuteStatus,
                size_t orderIndex, TeamId team, vector<string> & result) const {
         stringstream waypointsStream;
@@ -334,10 +338,12 @@ public:
         playerToExecuteStatus.clear();
     }
 
+    [[nodiscard]]
     bool haveOrderIdForPlayer(CSGOId playerId) const {
         return playerToOrder.find(playerId) != playerToOrder.end();
     }
 
+    [[nodiscard]]
     OrderId getOrderIdForPlayer(CSGOId playerId) const {
         if (playerToOrder.find(playerId) != playerToOrder.end()) {
             return playerToOrder.find(playerId)->second;
@@ -347,6 +353,7 @@ public:
         }
     }
 
+    [[nodiscard]]
     const vector<CSGOId> & getOrderFollowers(OrderId orderId) const {
         if (orderToPlayers.find(orderId) != orderToPlayers.end()) {
             return orderToPlayers.find(orderId)->second;
@@ -356,6 +363,7 @@ public:
         }
     }
 
+    [[nodiscard]]
     const Order & getOrder(OrderId orderId) const {
         if (orderId.team == ENGINE_TEAM_T) {
             return tOrders[orderId.index];
@@ -366,11 +374,13 @@ public:
         throw std::runtime_error( "getOrder bad order id" );
     }
 
+    [[nodiscard]]
     const Order & getOrderForPlayer(CSGOId playerId) const {
         return getOrder(getOrderIdForPlayer(playerId));
     }
 
-    const vector<OrderId> getOrderIds(bool includeT = true, bool includeCT = true) const {
+    [[nodiscard]]
+    vector<OrderId> getOrderIds(bool includeT = true, bool includeCT = true) const {
         vector<OrderId> result;
         if (includeT) {
             for (size_t orderIndex = 0; orderIndex < tOrders.size(); orderIndex++) {
@@ -402,7 +412,7 @@ public:
         return orderId;
     }
 
-    void assignPlayerToOrder(CSGOId playerId, OrderId orderId) {
+    void assignPlayerToOrder(CSGOId playerId, OrderId newOrderId) {
         // remove player from existing order if already assigned
         if (playerToOrder.find(playerId) != playerToOrder.end()) {
             for (const auto & orderId : getOrderIds()) {
@@ -412,14 +422,15 @@ public:
             }
         }
         playerToWaypointIndex[playerId] = 0;
-        playerToOrder[playerId] = orderId;
-        orderToPlayers[orderId].push_back(playerId);
+        playerToOrder[playerId] = newOrderId;
+        orderToPlayers[newOrderId].push_back(playerId);
     }
 
+    [[nodiscard]] [[maybe_unused]]
     double getDistance(AreaId srcAreaId, OrderId orderId, size_t waypointIndex, const nav_mesh::nav_file & navFile,
-                       const ReachableResult & reachability, const DistanceToPlacesResult & distanceToPlacesResult) {
+                       const ReachableResult & reachability, const DistanceToPlacesResult & distanceToPlacesResult) const {
         const Order & order = getOrder(orderId);
-        return order.getDistance(srcAreaId, order.waypoints[waypointIndex], navFile, reachability, distanceToPlacesResult);
+        return Order::getDistance(srcAreaId, order.waypoints[waypointIndex], navFile, reachability, distanceToPlacesResult);
     }
 
     void assignPlayerToHoldIndex(CSGOId playerId, OrderId orderId, size_t holdIndex) {
@@ -432,6 +443,7 @@ public:
         getOrderPrivate(orderId).playerToHoldIndex[playerId] = holdIndex;
     }
 
+    [[nodiscard]] [[maybe_unused]]
     vector<OrderId> getOrdersNotAssignedPlayers(TeamId team) const {
         vector<OrderId> result;
         const vector<Order> & orders = team == ENGINE_TEAM_T ? tOrders : ctOrders;
@@ -445,6 +457,7 @@ public:
 
     }
 
+    [[nodiscard]][[maybe_unused]]
     int64_t maxTeamWaypoint(const ServerState & state, TeamId team) {
         int64_t result = INVALID_ID;
         for (const auto & csgoId : state.getPlayersOnTeam(team)) {
@@ -490,7 +503,8 @@ public:
                playerToExecuteStatus.find(playerId)->second == ExecuteStatus::Executing;
     }
 
-    vector<string> print(const ServerState & state, const nav_mesh::nav_file & navFile) const {
+    [[nodiscard]]
+    vector<string> print(const ServerState & state) const {
         vector<string> result;
 
         vector<TeamId> teams{ENGINE_TEAM_T, ENGINE_TEAM_CT};
@@ -499,7 +513,7 @@ public:
         for (size_t teamIndex = 0; teamIndex < teams.size(); teamIndex++) {
             for (size_t orderIndex = 0; orderIndex < bothTeamOrders[teamIndex].size(); orderIndex++) {
                 bothTeamOrders[teamIndex][orderIndex].print(orderToPlayers.find({teams[teamIndex], static_cast<int64_t>(orderIndex)})->second,
-                                                            playerToWaypointIndex, state, navFile,
+                                                            playerToWaypointIndex, state,
                                                             playerToEntryIndex, playerToExecuteStatus, orderIndex, teams[teamIndex], result);
             }
         }

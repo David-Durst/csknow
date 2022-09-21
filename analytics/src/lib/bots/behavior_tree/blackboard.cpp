@@ -6,7 +6,7 @@
 
 PrintState Blackboard::printStrategyState(const ServerState &state) {
     PrintState printState;
-    printState.curState = strategy.print(state, navFile);
+    printState.curState = strategy.print(state);
     return printState;
 }
 

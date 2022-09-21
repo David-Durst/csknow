@@ -107,7 +107,7 @@ public:
             return {lastEyePosX, lastEyePosY, lastEyePosZ};
         }
 
-        [[maybe_unused]] [[nodiscard]]
+        [[nodiscard]]
         Vec3 getVelocity() const {
             return {lastVelX, lastVelY, lastVelZ};
         }
@@ -222,7 +222,7 @@ public:
     string dataPath;
     void loadServerState();
     void saveBotInputs();
-    [[nodiscard]] bool saveScript(vector<string> scriptLines) const;
+    bool saveScript(vector<string> scriptLines) const;
     [[nodiscard]] Vec3 getC4Pos() const;
 };
 

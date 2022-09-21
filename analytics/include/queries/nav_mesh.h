@@ -31,7 +31,7 @@ public:
     vector<vector<int64_t>> connectionAreaIds;
     map<int64_t, int64_t> areaToInternalId;
 
-    vector<int64_t> filterByForeignKey(int64_t otherTableIndex) {
+    vector<int64_t> filterByForeignKey(int64_t) override {
         return {};
     }
 
@@ -42,19 +42,19 @@ public:
         this->overlayLabels = true;
     };
 
-    void oneLineToCSV(int64_t index, stringstream & ss) {
+    void oneLineToCSV(int64_t index, stringstream & ss) override {
         ss << id[index] << ",";
         // skip empty strings that just have null terminator
         if (placeName[index].size() > 1) {
-            int lastNotNull = placeName[index].size() - 1;
+            size_t lastNotNull = placeName[index].size() - 1;
             if (placeName[index][lastNotNull] == '\0') {
                 lastNotNull--;
             }
-            ss.write(placeName[index].c_str(), lastNotNull + 1);
+            ss.write(placeName[index].c_str(), static_cast<std::streamsize>(lastNotNull + 1));
         }
         ss << "," << areaId[index] << "," << coordinate[index].min.x << "," << coordinate[index].min.y << "," << coordinate[index].min.z
             << "," << coordinate[index].max.x << "," << coordinate[index].max.y << "," << coordinate[index].max.z << ",";
-        for (int i = 0; i < connectionAreaIds[index].size(); i++) {
+        for (size_t i = 0; i < connectionAreaIds[index].size(); i++) {
             if (i > 0) {
                 ss << ";";
             }
@@ -63,11 +63,11 @@ public:
         ss << std::endl;
     }
 
-    vector<string> getForeignKeyNames() {
+    vector<string> getForeignKeyNames() override {
         return {};
     }
 
-    vector<string> getOtherColumnNames() {
+    vector<string> getOtherColumnNames() override {
         return {"placeName", "areaId", "min_x", "min_y", "min_z", "max_x", "max_y", "max_z", "connectionAreaIds"};
     }
 };

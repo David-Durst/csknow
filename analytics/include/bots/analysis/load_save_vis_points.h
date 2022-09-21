@@ -19,8 +19,8 @@ struct VisPoint {
     AreaId areaId;
     AABB areaCoordinates;
     Vec3 center;
-    AreaBits visibleFromCurPoint;
-    AreaBits dangerFromCurPoint;
+    AreaBits visibleFromCurPoint = 0;
+    AreaBits dangerFromCurPoint = 0;
 };
 
 class VisPoints {
@@ -30,6 +30,7 @@ class VisPoints {
     void setDangerPoints(const nav_mesh::nav_file & navFile);
 
 public:
+    explicit
     VisPoints(const nav_mesh::nav_file & navFile) {
         for (const auto & navArea : navFile.m_areas) {
             visPoints.push_back(VisPoint{navArea.get_id(), {vec3tConv(navArea.get_min_corner()), vec3tConv(navArea.get_max_corner())},
@@ -47,20 +48,24 @@ public:
         areaIdToVectorIndex = navFile.m_area_ids_to_indices;
     }
 
+    [[nodiscard]]
     bool isVisibleIndex(size_t src, size_t target) const {
         return visPoints[src].visibleFromCurPoint[target];
     }
 
+    [[nodiscard]]
     bool isVisibleAreaId(AreaId srcId, AreaId targetId) const {
         size_t src = areaIdToVectorIndex.find(srcId)->second, target = areaIdToVectorIndex.find(targetId)->second;
         return visPoints[src].visibleFromCurPoint[target];
     }
 
+    [[nodiscard]]
     AreaBits getVisibilityRelativeToSrc(AreaId srcId) const {
         return visPoints[areaIdToVectorIndex.find(srcId)->second].visibleFromCurPoint;
     }
 
-    bool isVisiblePlace(AreaId srcId, string placeName, const map<string, vector<AreaId>> & placeToArea) {
+    [[maybe_unused]]
+    bool isVisiblePlace(AreaId srcId, const string & placeName, const map<string, vector<AreaId>> & placeToArea) {
         AreaBits visibleAreasInPlace;
         if (placeToArea.find(placeName) == placeToArea.end()) {
             return false;
@@ -72,22 +77,25 @@ public:
         return visibleAreasInPlace.any();
     }
 
+    [[nodiscard]]
     bool isDangerIndex(size_t src, size_t target) const {
         return visPoints[src].dangerFromCurPoint[target];
     }
 
+    [[nodiscard]] [[maybe_unused]]
     bool isDangerAreaId(AreaId srcId, AreaId targetId) const {
         size_t src = areaIdToVectorIndex.find(srcId)->second, target = areaIdToVectorIndex.find(targetId)->second;
         return visPoints[src].dangerFromCurPoint[target];
     }
 
+    [[nodiscard]]
     AreaBits getDangerRelativeToSrc(AreaId srcId) const {
         return visPoints[areaIdToVectorIndex.find(srcId)->second].dangerFromCurPoint;
     }
 
     void launchVisPointsCommand(const ServerState & state);
     void load(string mapsPath, string mapName, const nav_mesh::nav_file & navFile);
-    const vector<VisPoint> & getVisPoints() const { return visPoints; }
+    [[nodiscard]] const vector<VisPoint> & getVisPoints() const { return visPoints; }
 };
 
 #endif //CSKNOW_LOAD_SAVE_VIS_POINTS_H

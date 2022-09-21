@@ -64,7 +64,7 @@ namespace nav_mesh {
 			}
 		}
 
-		virtual void PrintStateInfo( void* state ) { }
+		virtual void PrintStateInfo( void* ) { }
 
 		const nav_area& get_area_by_id( std::uint32_t id ) const;
         // added by durst to be both fast and not use void* to uint32_t conversion

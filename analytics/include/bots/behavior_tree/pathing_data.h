@@ -7,21 +7,19 @@
 #include "bots/load_save_bot_data.h"
 #include "bots/behavior_tree/priority/priority_data.h"
 
-#define MIN_PATH_SECONDS 0.1
-
 struct PathNode {
     bool edgeMidpoint;
     uint32_t area1;
     uint32_t area2;
     Vec3 pos;
 
-    PathNode(nav_mesh::PathNode pathNode) {
-        edgeMidpoint = pathNode.edgeMidpoint;
-        area1 = pathNode.area1;
-        area2 = pathNode.area2;
-        pos = vec3tConv(pathNode.pos);
-    }
+    explicit PathNode(nav_mesh::PathNode pathNode) :
+        edgeMidpoint(pathNode.edgeMidpoint),
+        area1(pathNode.area1),
+        area2(pathNode.area2),
+        pos(vec3tConv(pathNode.pos)) { }
 
+    [[nodiscard]]
     string toString() const {
         string result = boolToString(edgeMidpoint) + " " + std::to_string(area1);
         if (edgeMidpoint) {
@@ -39,13 +37,14 @@ struct Path {
     uint32_t pathEndAreaId;
     size_t curWaypoint;
 
-    string print(const ServerState & state, const nav_mesh::nav_file & navFile) const {
+    [[nodiscard]]
+    string print(const ServerState &, const nav_mesh::nav_file & navFile) const {
         stringstream result;
 
         result << "path call succeeded: " + boolToString(pathCallSucceeded);
         if (pathCallSucceeded) {
             result << ", ";
-            if (curWaypoint >= 0 && curWaypoint < waypoints.size()) {
+            if (curWaypoint < waypoints.size()) {
                 result << "cur waypoint: " << curWaypoint << " " << waypoints[curWaypoint].toString() << ", ";
             }
             else {
