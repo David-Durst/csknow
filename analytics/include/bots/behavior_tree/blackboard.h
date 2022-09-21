@@ -165,8 +165,9 @@ struct Blackboard {
     map<CSGOId, EnemyPositionsMemory> playerToMemory;
     PossibleNavAreas possibleNavAreas;
     bool resetPossibleNavAreas = false;
-    [[maybe_unused]]
-    bool inTest = false; // inTest just for debugging, setting break points once test setup
+#pragma GCC diagnostic ignored "-Wattributes"
+    [[maybe_unused]] bool inTest = false; // inTest just for debugging, setting break points once test setup
+#pragma GCC diagnostic pop
     map<TeamId, RoundNumber> teamToLastRoundSawEnemy;
     bool sawEnemyThisRound(const ServerState & state, TeamId team) {
         return teamToLastRoundSawEnemy.find(team) != teamToLastRoundSawEnemy.end() &&
@@ -224,10 +225,11 @@ struct Blackboard {
 
     Blackboard(const string & navPath, const string & mapName) :
         navPath(navPath), navFile(navPath.c_str()),
-        gen(rd()), aimDis(0., 2.0), standDis(0, 100.0), aggressionDis(0., 1.),
-        navFileOverlay(navFile), visPoints(navFile), possibleNavAreas(navFile),
+        gen(rd()), navFileOverlay(navFile), visPoints(navFile), aggressionDis(0., 1.),
         tDangerAreaLastCheckTime(navFile.m_areas.size(), defaultTime),
-        ctDangerAreaLastCheckTime(navFile.m_areas.size(), defaultTime) {
+        ctDangerAreaLastCheckTime(navFile.m_areas.size(), defaultTime),
+        possibleNavAreas(navFile),
+        standDis(0, 100.0), aimDis(0., 2.0) {
 
         string mapsPath = std::filesystem::path(navPath).remove_filename().string();
         navFileOverlay.setMapsPath(mapsPath);
