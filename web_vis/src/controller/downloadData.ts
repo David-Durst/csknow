@@ -84,7 +84,8 @@ export async function getTables() {
                     )
                 )
                 // the first overlay (the regular mesh) sets the labels for all other overlays
-                if (overlayLabels) {
+                // TODO: enable multiple overlay labels
+                if (overlayLabels && cols[0] == "de_dust2_mesh") {
                     gameData.overlayLabels = cols[0]
                 }
                 if (!addedDownloadedOptions) {
