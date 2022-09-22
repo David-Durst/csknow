@@ -191,7 +191,8 @@ void Tree::tick(ServerState & state, const string & mapsPath) {
 
 void Tree::readFilterNames() {
     string line, value;
-#pragma clang diagnostic push
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunknown-pragmas"
 #pragma ide diagnostic ignored "EndlessLoop"
     while (true) {
         std::cin >> line;
@@ -211,5 +212,5 @@ void Tree::readFilterNames() {
             sharedLogFilterNames.clear();
         }
     }
-#pragma clang diagnostic pop
+#pragma GCC diagnostic pop
 }

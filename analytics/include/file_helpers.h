@@ -26,7 +26,7 @@ using std::vector;
 void printProgress(double progress);
 
 const string placeholderFileName = ".placeholder";
-void getFilesInDirectory(string path, vector<string> & files);
+void getFilesInDirectory(const string & path, vector<string> & files);
 
 struct MMapFile {
     int fd;
@@ -34,7 +34,7 @@ struct MMapFile {
     const char * file;
 };
 
-MMapFile openMMapFile(string filePath);
+MMapFile openMMapFile(const string & filePath);
 
 void closeMMapFile(MMapFile mMapFile);
 
@@ -42,9 +42,9 @@ size_t getNextDelimiter(const char * file, size_t curEntryStart, size_t fileLeng
 
 size_t getNewline(const char * file, size_t curEntryStart, size_t fileLength);
 
-int64_t getRows(string filePath);
+int64_t getRows(const string & filePath);
 
-vector<int64_t> getFileStartingRows(vector<string> filePaths, bool printProgressBar = false) ;
+vector<int64_t> getFileStartingRows(const vector<string> & filePaths, bool printProgressBar = false) ;
 
 static inline __attribute__((always_inline))
 void printParsingError(std::errc ec, int64_t rowNumber, int64_t colNumber) {

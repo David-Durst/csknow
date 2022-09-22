@@ -5,7 +5,7 @@
 #include "bots/testing/script.h"
 #include <iterator>
 
-void Script::initialize(Tree & tree, ServerState & state) {
+void Script::initialize(Tree &, ServerState & state) {
     // allocate the bots to use
     set<CSGOId> usedBots;
     for (auto &neededBot: neededBots) {
@@ -54,7 +54,7 @@ vector<string> Script::generateCommands(ServerState & state) {
 
 bool Script::tick(Tree & tree, ServerState & state) {
 
-    TreeThinker defaultThinker(getDefaultThinker(state));
+    TreeThinker defaultThinker(getDefaultThinker());
 
     vector<PrintState> printStates;
     NodeState conditionResult = commands->exec(state, defaultThinker);
@@ -121,7 +121,7 @@ bool ScriptsRunner::tick(Tree & tree, ServerState & state) {
     if (curScript >= scripts.size()) {
         curScript = 0;
         if (restartOnFinish) {
-            restart(state);
+            restart();
             return false;
         }
         else {

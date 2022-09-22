@@ -66,8 +66,7 @@ void moveToWaypoint(const Blackboard & blackboard, const ServerState & state, Tr
 }
 
 bool finishWaypoint(const Blackboard & blackboard, const ServerState & state, int64_t waypointIndex,
-                    const Order & curOrder, Priority & curPriority,
-                    CSGOId playerId, string curPlace, AreaId curAreaId) {
+                    const Order & curOrder, CSGOId playerId, string curPlace, AreaId curAreaId) {
     bool amDefuser = blackboard.isPlayerDefuser(playerId);
     // finished with current priority if
     // trying to reach place and got there
@@ -93,11 +92,11 @@ bool finishWaypoint(const Blackboard & blackboard, const ServerState & state, in
 }
 
 int64_t getMaxFinishedWaypoint(const Blackboard & blackboard, const ServerState & state,
-                               const Order & curOrder, Priority & curPriority,
+                               const Order & curOrder,
                                CSGOId playerId, string curPlace, AreaId curAreaId) {
     int64_t maxFinishedWaypointIndex = -1;
     for (size_t i = 0; i < curOrder.waypoints.size(); i++) {
-        if (finishWaypoint(blackboard, state, i, curOrder, curPriority, playerId, curPlace, curAreaId)) {
+        if (finishWaypoint(blackboard, state, i, curOrder, playerId, curPlace, curAreaId)) {
             maxFinishedWaypointIndex = i;
         }
     }

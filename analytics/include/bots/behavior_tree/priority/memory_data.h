@@ -23,7 +23,7 @@ struct EnemyPositionsMemory {
     CSGOId srcPlayer;
     map<CSGOId, EnemyPositionMemory> positions;
 
-    void updatePositions(const ServerState & state, nav_mesh::nav_file & navFile, double maxMemorySeconds);
+    void updatePositions(const ServerState & state, double maxMemorySeconds);
 
     string print(const ServerState & state) const {
         vector<string> result;

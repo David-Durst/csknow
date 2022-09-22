@@ -25,13 +25,13 @@ public:
     string curLog;
 
     Script(string name, vector<NeededBot> neededBots, ObserveSettings observeSettings, bool initScript = false) :
-            name(name), neededBots(neededBots), observeSettings(observeSettings), initScript(initScript) { }
+            neededBots(std::move(neededBots)), observeSettings(observeSettings),
+            initScript(initScript), name(std::move(name)) { }
            //vector<Command::Ptr> && logicCommands, unique_ptr<Node> && conditions) :
            //logicCommands(std::move(logicCommands)), conditions(std::move(conditions)) { }
 
-    TreeThinker getDefaultThinker(ServerState & state) {
-        TreeThinker defaultThinker;
-        defaultThinker.csgoId = INVALID_ID;
+    static TreeThinker getDefaultThinker() {
+        TreeThinker defaultThinker{INVALID_ID, AggressiveType::Push};
         return defaultThinker;
     }
 
@@ -54,7 +54,7 @@ public:
         return scripts;
     }
 
-    void restart(ServerState & state) { commands->restart(getDefaultThinker(state)); }
+    void restart() { commands->restart(getDefaultThinker()); }
 
     const vector<NeededBot> & getNeededBots() { return neededBots; }
 };
@@ -162,9 +162,9 @@ public:
     // return true when restarting
     bool tick(Tree & tree, ServerState & state);
 
-    void restart(ServerState & state) {
+    void restart() {
         for (const auto & script : scripts) {
-            script->restart(state);
+            script->restart();
         }
     }
 

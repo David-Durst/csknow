@@ -8,7 +8,7 @@
 namespace follow::spacing {
     bool BaitConditionNode::valid(const ServerState &state, TreeThinker &treeThinker) {
         const ServerState::Client & curClient = state.getClient(treeThinker.csgoId);
-        const Order & curOrder = blackboard.strategy.getOrderForPlayer(treeThinker.csgoId);
+        //const Order & curOrder = blackboard.strategy.getOrderForPlayer(treeThinker.csgoId);
 
         // stop if T team, not entering
         if (curClient.team == ENGINE_TEAM_T) {

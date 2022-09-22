@@ -23,14 +23,14 @@ namespace follow::compute_nav_area {
         AreaId curAreaId = blackboard.navFile.get_nearest_area_by_position(
                 vec3Conv(state.clients[state.csgoIdToCSKnowId[treeThinker.csgoId]].getFootPosForPlayer())).get_id();
         string curPlace = blackboard.getPlayerPlace(state.clients[state.csgoIdToCSKnowId[treeThinker.csgoId]].getFootPosForPlayer());
-        int64_t maxFinishedWaypoint = getMaxFinishedWaypoint(blackboard, state, curOrder, curPriority, treeThinker.csgoId, curPlace, curAreaId);
+        int64_t maxFinishedWaypoint = getMaxFinishedWaypoint(blackboard, state, curOrder, treeThinker.csgoId, curPlace, curAreaId);
 
         // if finished waypoint,
         if (maxFinishedWaypoint >= blackboard.strategy.playerToWaypointIndex[treeThinker.csgoId]) {
             // need to pick a new path on priority change
             blackboard.playerToPath.erase(treeThinker.csgoId);
             // increment counter and move to next waypoint if possible
-            if (maxFinishedWaypoint < curOrder.waypoints.size() - 1) {
+            if (maxFinishedWaypoint < static_cast<int64_t>(curOrder.waypoints.size()) - 1) {
                 blackboard.strategy.playerToWaypointIndex[treeThinker.csgoId] = maxFinishedWaypoint + 1;
                 moveToWaypoint(blackboard, state, treeThinker, curOrder, curPriority);
             }

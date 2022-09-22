@@ -165,6 +165,7 @@ struct Blackboard {
     map<CSGOId, EnemyPositionsMemory> playerToMemory;
     PossibleNavAreas possibleNavAreas;
     bool resetPossibleNavAreas = false;
+#pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wattributes"
     [[maybe_unused]] bool inTest = false; // inTest just for debugging, setting break points once test setup
 #pragma GCC diagnostic pop

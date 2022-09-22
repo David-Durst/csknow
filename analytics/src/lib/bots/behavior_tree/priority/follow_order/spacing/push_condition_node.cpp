@@ -9,7 +9,7 @@ namespace follow::spacing {
     bool PushConditionNode::valid(const ServerState &state, TreeThinker &treeThinker) {
         const ServerState::Client & curClient = state.getClient(treeThinker.csgoId);
         OrderId curOrderId = blackboard.strategy.getOrderIdForPlayer(treeThinker.csgoId);
-        const Order & curOrder = blackboard.strategy.getOrder(curOrderId);
+        //const Order & curOrder = blackboard.strategy.getOrder(curOrderId);
         const vector<CSGOId> & curOrderFollowers = blackboard.strategy.getOrderFollowers(curOrderId);
 
         // stop if T team, not entering
@@ -25,7 +25,7 @@ namespace follow::spacing {
 
         NumAheadResult numAheadResult = computeNumAhead(blackboard, state, curClient);
         // ready if reached first waypoint and in front
-        bool readyToExecute = numAheadResult.numBehind == curOrderFollowers.size() - 1 &&
+        bool readyToExecute = numAheadResult.numBehind == static_cast<int>(curOrderFollowers.size()) - 1 &&
                 numAheadResult.nearestBehind > MIN_BAIT_DISTANCE &&
                 blackboard.strategy.playerToWaypointIndex[treeThinker.csgoId] > 0;
         if (readyToExecute) {

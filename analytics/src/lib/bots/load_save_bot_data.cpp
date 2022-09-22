@@ -9,7 +9,7 @@
 #include <filesystem>
 #include <fstream>
 
-void ServerState::loadGeneralState(string generalFilePath) {
+void ServerState::loadGeneralState(const string& generalFilePath) {
     // mmap the file
     auto [fd, stats, file] = openMMapFile(generalFilePath);
 
@@ -21,10 +21,9 @@ void ServerState::loadGeneralState(string generalFilePath) {
     int64_t colNumber = 0;
 
     // track location for insertion
-    int64_t arrayEntry = 0;
 
     for (size_t curStart = firstRow + 1, curDelimiter = getNextDelimiter(file, curStart, stats.st_size);
-         curDelimiter < stats.st_size;
+         curDelimiter < static_cast<size_t>(stats.st_size);
          curStart = curDelimiter + 1, curDelimiter = getNextDelimiter(file, curStart, stats.st_size)) {
         if (colNumber == 0) {
             readCol(file, curStart, curDelimiter, mapName);
@@ -44,14 +43,13 @@ void ServerState::loadGeneralState(string generalFilePath) {
         else if (colNumber == 5) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, tickInterval);
             rowNumber++;
-            arrayEntry++;
         }
         colNumber = (colNumber + 1) % 6;
     }
     closeMMapFile({fd, stats, file});
 }
 
-void ServerState::loadClientStates(string clientStatesFilePath) {
+void ServerState::loadClientStates(const string& clientStatesFilePath) {
     // mmap the file
     auto [fd, stats, file] = openMMapFile(clientStatesFilePath);
 
@@ -66,7 +64,7 @@ void ServerState::loadClientStates(string clientStatesFilePath) {
     int64_t arrayEntry = 0;
 
     for (size_t curStart = firstRow + 1, curDelimiter = getNextDelimiter(file, curStart, stats.st_size);
-         curDelimiter < stats.st_size;
+         curDelimiter < static_cast<size_t>(stats.st_size);
          curStart = curDelimiter + 1, curDelimiter = getNextDelimiter(file, curStart, stats.st_size)) {
         if (colNumber == 0) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].lastFrame);
@@ -184,7 +182,7 @@ void ServerState::loadClientStates(string clientStatesFilePath) {
     closeMMapFile({fd, stats, file});
 }
 
-void ServerState::loadVisibilityClientPairs(string visibilityFilePath) {
+void ServerState::loadVisibilityClientPairs(const string& visibilityFilePath) {
     // mmap the file
     auto [fd, stats, file] = openMMapFile(visibilityFilePath);
 
@@ -195,28 +193,24 @@ void ServerState::loadVisibilityClientPairs(string visibilityFilePath) {
     int64_t rowNumber = 0;
     int64_t colNumber = 0;
 
-    // track location for insertion
-    int64_t arrayEntry = 0;
-
-    int32_t clients[2];
+    int32_t visClients[2];
     for (size_t curStart = firstRow + 1, curDelimiter = getNextDelimiter(file, curStart, stats.st_size);
-         curDelimiter < stats.st_size;
+         curDelimiter < static_cast<size_t>(stats.st_size);
          curStart = curDelimiter + 1, curDelimiter = getNextDelimiter(file, curStart, stats.st_size)) {
         if (colNumber == 0) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[0]);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, visClients[0]);
         }
         else if (colNumber == 1) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[1]);
-            visibilityClientPairs.insert({clients[0], clients[1]});
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, visClients[1]);
+            visibilityClientPairs.insert({visClients[0], visClients[1]});
             rowNumber++;
-            arrayEntry++;
         }
         colNumber = (colNumber + 1) % 2;
     }
     closeMMapFile({fd, stats, file});
 }
 
-void ServerState::loadC4State(string visibilityFilePath) {
+void ServerState::loadC4State(const string& visibilityFilePath) {
     // mmap the file
     auto [fd, stats, file] = openMMapFile(visibilityFilePath);
 
@@ -227,13 +221,10 @@ void ServerState::loadC4State(string visibilityFilePath) {
     int64_t rowNumber = 0;
     int64_t colNumber = 0;
 
-    // track location for insertion
-    int64_t arrayEntry = 0;
-
     c4Exists = false;
 
     for (size_t curStart = firstRow + 1, curDelimiter = getNextDelimiter(file, curStart, stats.st_size);
-         curDelimiter < stats.st_size;
+         curDelimiter < static_cast<size_t>(stats.st_size);
          curStart = curDelimiter + 1, curDelimiter = getNextDelimiter(file, curStart, stats.st_size)) {
         if (colNumber == 0) {
             c4Exists = true;
@@ -254,7 +245,6 @@ void ServerState::loadC4State(string visibilityFilePath) {
         else if (colNumber == 5) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, c4Z);
             rowNumber++;
-            arrayEntry++;
         }
         colNumber = (colNumber + 1) % 6;
     }
@@ -287,8 +277,8 @@ void ServerState::loadServerState() {
     bool generalExists = std::filesystem::exists(generalFilePath);
     bool clientStatesExists = std::filesystem::exists(clientStatesFilePath);
     bool visibilityExists = std::filesystem::exists(visibilityFilePath);
-    bool c4Exists = std::filesystem::exists(c4FilePath);
-    if (generalExists && clientStatesExists && visibilityExists && c4Exists) {
+    bool c4FileExists = std::filesystem::exists(c4FilePath);
+    if (generalExists && clientStatesExists && visibilityExists && c4FileExists) {
         try {
             std::filesystem::rename(generalFilePath, tmpGeneralFilePath);
             std::filesystem::rename(clientStatesFilePath, tmpClientStatesFilePath);
@@ -381,7 +371,7 @@ void ServerState::saveBotInputs() {
     catch(std::filesystem::filesystem_error const& ex) { }
 }
 
-bool ServerState::saveScript(vector<string> scriptLines) const {
+bool ServerState::saveScript(const vector<string>& scriptLines) const {
     string scriptFileName = "script.txt";
     string scriptFilePath = dataPath + "/" + scriptFileName;
     string tmpScriptFileName = "script.txt.tmp.write";

@@ -4,16 +4,12 @@
 #include <iostream>
 #include <dirent.h>
 #include <string>
-#include <iostream>
 #include <atomic>
-#include <fstream>
 #include <fcntl.h>
 #include <unistd.h>
-#include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/mman.h>
-#include <errno.h>
-#include <charconv>
+#include <cerrno>
 #include <vector>
 
 using std::to_string;
@@ -25,7 +21,7 @@ void printProgress(double progress) {
     int barWidth = 70;
 
     std::cout << "[";
-    int pos = barWidth * progress;
+    int pos = static_cast<int>(barWidth * progress);
     for (int i = 0; i < barWidth; ++i) {
         if (i < pos) std::cout << "=";
         else if (i == pos) std::cout << ">";
@@ -35,13 +31,13 @@ void printProgress(double progress) {
     std::cout.flush();
 }
 
-void getFilesInDirectory(string path, vector<string> & files) {
+void getFilesInDirectory(const string & path, vector<string> & files) {
     DIR * dir;
     struct dirent * en;
     dir = opendir(path.c_str());
     if (dir) {
-        while ((en = readdir(dir)) != NULL) {
-            if (en->d_type == DT_REG && placeholderFileName.compare(en->d_name) != 0) {
+        while ((en = readdir(dir)) != nullptr) {
+            if (en->d_type == DT_REG && placeholderFileName != en->d_name) {
                 files.push_back(path + "/" + en->d_name);
             }
         }
@@ -50,7 +46,7 @@ void getFilesInDirectory(string path, vector<string> & files) {
     std::sort(files.begin(), files.end());
 }
 
-MMapFile openMMapFile(string filePath) {
+MMapFile openMMapFile(const string & filePath) {
     int fd = open(filePath.c_str(), O_RDONLY);
     if (fd < 0)
     {
@@ -59,7 +55,7 @@ MMapFile openMMapFile(string filePath) {
     }
     struct stat stats;
     fstat(fd, &stats);
-    const char * file = (char *) mmap(NULL, stats.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
+    const char * file = (char *) mmap(nullptr, stats.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
     return {fd, stats, file};
 }
 
@@ -86,7 +82,7 @@ size_t getNewline(const char * file, size_t curEntryStart, size_t fileLength) {
     return fileLength;
 }
 
-int64_t getRows(string filePath) {
+int64_t getRows(const string & filePath) {
     int fd = open(filePath.c_str(), O_RDONLY);
     if (fd < 0)
     {
@@ -95,18 +91,19 @@ int64_t getRows(string filePath) {
     }
     struct stat stats;
     fstat(fd, &stats);
-    const char * file = (char *) mmap(NULL, stats.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
+    const char * file = (char *) mmap(nullptr, stats.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
 
     // -2 to skip header and because going to increment once at end of file
     int64_t numRows = -2;
-    for (size_t size = 0; size < stats.st_size; numRows++, size = getNewline(file, size+1, stats.st_size)) ;
+    for (size_t size = 0; size < static_cast<size_t>(stats.st_size);
+        numRows++, size = getNewline(file, size+1, stats.st_size)) ;
 
     munmap((void *) file, stats.st_size);
     close(fd);
     return numRows;
 }
 
-vector<int64_t> getFileStartingRows(vector<string> filePaths, bool printProgressBar) {
+vector<int64_t> getFileStartingRows(const vector<string> & filePaths, bool printProgressBar) {
     vector<int64_t> startingPointPerFile;
     startingPointPerFile.resize(filePaths.size()+1);
     std::atomic<int64_t> filesProcessed = 0;
@@ -114,27 +111,27 @@ vector<int64_t> getFileStartingRows(vector<string> filePaths, bool printProgress
 
     if (filePaths.size() > 1) {
 #pragma omp parallel for
-        for (int64_t fileIndex = 0; fileIndex < filePaths.size(); fileIndex++) {
+        for (size_t fileIndex = 0; fileIndex < filePaths.size(); fileIndex++) {
             startingPointPerFile[fileIndex+1] = getRows(filePaths[fileIndex]);
             filesProcessed++;
             if (printProgressBar) {
-                printProgress((filesProcessed * 1.0) / filePaths.size());
+                printProgress(static_cast<double>(filesProcessed.load()) / static_cast<double>(filePaths.size()));
             }
         }
     }
     else {
-        for (int64_t fileIndex = 0; fileIndex < filePaths.size(); fileIndex++) {
+        for (size_t fileIndex = 0; fileIndex < filePaths.size(); fileIndex++) {
             startingPointPerFile[fileIndex+1] = getRows(filePaths[fileIndex]);
             filesProcessed++;
             if (printProgressBar) {
-                printProgress((filesProcessed * 1.0) / filePaths.size());
+                printProgress(static_cast<double>(filesProcessed.load()) / static_cast<double>(filePaths.size()));
             }
         }
     }
     if (printProgressBar) {
         std::cout << std::endl;
     }
-    for (int64_t fileIndex = 0; fileIndex < filePaths.size(); fileIndex++) {
+    for (size_t fileIndex = 0; fileIndex < filePaths.size(); fileIndex++) {
         startingPointPerFile[fileIndex+1] += startingPointPerFile[fileIndex];
     }
     return startingPointPerFile;

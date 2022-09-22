@@ -24,10 +24,10 @@ constexpr CSKnowTime defaultTime = std::chrono::system_clock::time_point();
 
 class ServerState {
 private:
-    void loadGeneralState(string generalFilePath);
-    void loadClientStates(string clientStatesFilePath);
-    void loadVisibilityClientPairs(string visibilityFilePath);
-    void loadC4State(string c4FilePath);
+    void loadGeneralState(const string& generalFilePath);
+    void loadClientStates(const string& clientStatesFilePath);
+    void loadVisibilityClientPairs(const string& visibilityFilePath);
+    void loadC4State(const string& c4FilePath);
 
 public:
     string mapName;
@@ -222,7 +222,7 @@ public:
     string dataPath;
     void loadServerState();
     void saveBotInputs();
-    bool saveScript(vector<string> scriptLines) const;
+    bool saveScript(const vector<string>& scriptLines) const;
     [[nodiscard]] Vec3 getC4Pos() const;
 };
 

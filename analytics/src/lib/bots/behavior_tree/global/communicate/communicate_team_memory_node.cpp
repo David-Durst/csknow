@@ -6,9 +6,9 @@
 
 namespace communicate {
     NodeState CommunicateTeamMemory::exec(const ServerState & state, TreeThinker &treeThinker) {
-        blackboard.tMemory.updatePositions(state, blackboard.navFile, blackboard.tMemorySeconds);
-        blackboard.ctMemory.updatePositions(state, blackboard.navFile, blackboard.ctMemorySeconds);
+        blackboard.tMemory.updatePositions(state, blackboard.tMemorySeconds);
+        blackboard.ctMemory.updatePositions(state, blackboard.ctMemorySeconds);
         playerNodeState[treeThinker.csgoId] = NodeState::Success;
         return playerNodeState[treeThinker.csgoId];
     }
-};
+}

@@ -9,7 +9,7 @@ namespace follow::spacing {
     bool LurkConditionNode::valid(const ServerState &state, TreeThinker &treeThinker) {
         const ServerState::Client & curClient = state.getClient(treeThinker.csgoId);
         OrderId curOrderId = blackboard.strategy.getOrderIdForPlayer(treeThinker.csgoId);
-        const Order & curOrder = blackboard.strategy.getOrder(curOrderId);
+        //const Order & curOrder = blackboard.strategy.getOrder(curOrderId);
         const vector<CSGOId> & curOrderFollowers = blackboard.strategy.getOrderFollowers(curOrderId);
 
         // stop if T team, not entering
@@ -25,7 +25,7 @@ namespace follow::spacing {
 
         NumAheadResult numAheadResult = computeNumAhead(blackboard, state, curClient);
         // ready if reached first waypoint (aka on to second/number 1 by 0 indexing) and in front
-        bool readyToExecute = numAheadResult.numBehind == curOrderFollowers.size() - 1 &&
+        bool readyToExecute = numAheadResult.numBehind == static_cast<int>(curOrderFollowers.size()) - 1 &&
                               numAheadResult.nearestBehind > MIN_BAIT_DISTANCE &&
                               blackboard.strategy.playerToWaypointIndex[treeThinker.csgoId] > 0;
         if (readyToExecute) {
@@ -37,10 +37,12 @@ namespace follow::spacing {
         }
         // stop only when ready and too far ahead (so this player is not the problem, need to wait for others to catch up)
         // or pusher hasn't seen anyone
-        bool sawEnemyThisRound = blackboard.sawEnemyThisRound(state, curClient.team);
+        //bool sawEnemyThisRound = blackboard.sawEnemyThisRound(state, curClient.team);
+        /*
         if (blackboard.strategy.isPlayerExecuting(treeThinker.csgoId)) {
             int x= 1;
         }
+         */
         return blackboard.strategy.isPlayerReady(treeThinker.csgoId) ||
                 (blackboard.strategy.isPlayerExecuting(treeThinker.csgoId) && (
                         (curOrderFollowers.size() > 1 && numAheadResult.nearestBehind > MAX_PUSH_DISTANCE) ||

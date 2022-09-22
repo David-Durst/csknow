@@ -27,7 +27,7 @@ public:
     int32_t curMapNumber = INVALID_ID;
     bool newBlackboard = false;
     bool resetState = false;
-    TreeThinker defaultThinker{INVALID_ID};
+    TreeThinker defaultThinker{INVALID_ID, AggressiveType::Push};
 
     std::mutex filterMutex;
     set<string> sharedLogFilterNames, localLogFilterNames;

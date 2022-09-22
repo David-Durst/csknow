@@ -17,7 +17,7 @@ include(GNUInstallDirs)
 find_package(OpenMP REQUIRED)
 find_package(OpenSSL REQUIRED)
 
-add_compile_options(-Wall -Wextra -Wno-unused-function)
+add_compile_options(-Wall -Wextra -Wno-unused-function -Wno-unknown-pragmas)
 
 include_directories(${PROJECT_BINARY_DIR}/include)
 include_directories(${PROJECT_SOURCE_DIR}/include)
