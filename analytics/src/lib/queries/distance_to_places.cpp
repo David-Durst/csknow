@@ -83,23 +83,26 @@ void DistanceToPlacesResult::load(string mapsPath, string mapName, const nav_mes
             getline(distStream, value, ','); // skip index
 
             getline(distStream, value, ',');
+            // read coordinates table but don't use it, already getting it from reachable result
+            /*
             coordinate.push_back({});
             coordinate[index].min.x = std::stod(value);
+             */
 
             getline(distStream, value, ',');
-            coordinate[index].min.y = stod(value);
+            //coordinate[index].min.y = stod(value);
 
             getline(distStream, value, ',');
-            coordinate[index].min.z = stod(value);
+            //coordinate[index].min.z = stod(value);
 
             getline(distStream, value, ',');
-            coordinate[index].max.x = stod(value);
+            //coordinate[index].max.x = stod(value);
 
             getline(distStream, value, ',');
-            coordinate[index].max.y = stod(value);
+            //coordinate[index].max.y = stod(value);
 
             getline(distStream, value, ',');
-            coordinate[index].max.z = stod(value);
+            //coordinate[index].max.z = stod(value);
 
             int64_t areaIndex = 0;
             while (getline(distStream, value, ',')) {

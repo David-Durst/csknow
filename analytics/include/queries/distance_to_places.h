@@ -48,7 +48,8 @@ public:
            << "," << coordinate[index].max.x << "," << coordinate[index].max.y << "," << coordinate[index].max.z;
         for (size_t i = 0; i < coordinate.size(); i++) {
             PlaceIndex placeIndex = areaToPlace[i];
-            if (!places[placeIndex].empty() &&
+            // -1 for invalid place gets cast to max value
+            if (placeIndex > places.size() || !places[placeIndex].empty() &&
                 static_cast<int64_t>(i) == getClosestArea(index, placeIndex)) {
                 ss << "," << closestDistanceMatrix[index * numPlaces + placeIndex];
             }
