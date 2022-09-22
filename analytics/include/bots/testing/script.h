@@ -31,7 +31,7 @@ public:
            //logicCommands(std::move(logicCommands)), conditions(std::move(conditions)) { }
 
     static TreeThinker getDefaultThinker() {
-        TreeThinker defaultThinker{INVALID_ID, AggressiveType::Push};
+        TreeThinker defaultThinker{INVALID_ID, AggressiveType::Push, {0., 0., 0., 0.}, 0.};
         return defaultThinker;
     }
 
@@ -60,9 +60,9 @@ public:
 };
 
 struct NeedPreTestingInitNode : Node {
-    NeedPreTestingInitNode(Blackboard & blackboard) :
+    explicit NeedPreTestingInitNode(Blackboard & blackboard) :
             Node(blackboard, "NeedPreTestingInitNode") { }
-    virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
+    NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
         blackboard.inTest = true;
         // need preinit testing if score is 0 0
         if (state.tScore == 0 && state.ctScore == 0) {
@@ -92,9 +92,9 @@ struct NeedPreTestingInitNode : Node {
 };
 
 struct PreTestingInitFinishedNode : Node {
-    PreTestingInitFinishedNode(Blackboard & blackboard) :
+    explicit PreTestingInitFinishedNode(Blackboard & blackboard) :
             Node(blackboard, "PreTestingInitFinishedNode") { }
-    virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
+    NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
         blackboard.inTest = true;
         // need preinit testing if score is 0 0
         if (state.tScore == 0 && state.ctScore == 0) {
@@ -127,7 +127,7 @@ class InitScript : public Script {
 public:
     InitScript() : Script("InitScript", {}, {}, true) { };
 
-    virtual void initialize(Tree & tree, ServerState & state) override  {
+    void initialize(Tree & tree, ServerState & state) override  {
         if (tree.newBlackboard) {
             Blackboard & blackboard = *tree.blackboard;
             Script::initialize(tree, state);
@@ -150,7 +150,8 @@ protected:
     bool restartOnFinish;
 
 public:
-    ScriptsRunner(vector<Script::Ptr> && scripts, bool restartOnFinish = false) : scripts(std::move(scripts)), restartOnFinish(restartOnFinish) {
+    explicit ScriptsRunner(vector<Script::Ptr> && scripts, bool restartOnFinish = false) :
+        scripts(std::move(scripts)), restartOnFinish(restartOnFinish) {
         this->scripts.insert(this->scripts.begin(), make_unique<InitScript>());
         if (this->scripts.empty()) {
             std::cout << "warning: scripts runner will crash with no scripts" << std::endl;
