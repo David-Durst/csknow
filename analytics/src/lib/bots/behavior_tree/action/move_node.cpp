@@ -54,12 +54,16 @@ namespace action {
                 // jump if moving to higher navmesh area, cur area, not marked no jump, and near target navmesh
                 const nav_mesh::nav_area & dstArea = curNode.edgeMidpoint ? blackboard.navFile.get_area_by_id_fast(curNode.area2) :
                                                      blackboard.navFile.get_area_by_id_fast(curNode.area1);
+                /*
                 if (curArea.get_id() == 8654 || curArea.get_id() == 6953 || curArea.get_id() == 6802) {
                     int x = 1;
                 }
+                 */
+                /*
                 if (curArea.get_id() == 9107 || curArea.get_id() == 9108) {
                     int x = 1;
                 }
+                 */
 
                 // can't compare current nav area to target nav area as current nav area max z different from current pos z
                 // (see d2 slope to A site)
@@ -83,7 +87,7 @@ namespace action {
 
                     // make sure near target navmesh
                     bool closeToDst = blackboard.navFile.get_point_to_area_distance(vec3Conv(curClient.getFootPosForPlayer()), dstArea) < 100.;
-                    bool jumpResetTimePassed = state.getSecondsBetweenTimes(curAction.lastJumpTime, state.loadTime) > MIN_JUMP_RESET_SECONDS;
+                    bool jumpResetTimePassed = ServerState::getSecondsBetweenTimes(curAction.lastJumpTime, state.loadTime) > MIN_JUMP_RESET_SECONDS;
                     bool shouldJump = closeToDst && jumpResetTimePassed && std::abs(curClient.lastVelX) < 5. && std::abs(curClient.lastVelY) < 5.;
 
                     if (shouldJump) {

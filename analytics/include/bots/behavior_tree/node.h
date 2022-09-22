@@ -25,7 +25,7 @@ enum class NodeState {
     Success,
     Failure,
     Running,
-    NUM_NODE_STATES
+    NUM_NODE_STATES [[maybe_unused]]
 };
 
 class Node {
@@ -36,8 +36,8 @@ public:
     string name;
 
 
-    Node(Blackboard & blackboard, string name) : blackboard(blackboard), playerNodeState({}), name(name) { }
-    virtual ~Node() { };
+    Node(Blackboard & blackboard, string name) : blackboard(blackboard), playerNodeState({}), name(std::move(name)) { }
+    virtual ~Node() = default;
     virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) = 0;
     virtual void clearState() {
         blackboard.strategy.clear();
@@ -48,7 +48,8 @@ public:
         playerNodeState[treeThinker.csgoId] = NodeState::Uninitialized;
     }
 
-    virtual PrintState printState(const ServerState & state, CSGOId playerId) const {
+    [[nodiscard]]
+    virtual PrintState printState(const ServerState &, CSGOId playerId) const {
         string stateString;
         if (playerNodeState.find(playerId) == playerNodeState.end()) {
             stateString = "Uninitialized";
@@ -95,24 +96,25 @@ protected:
     map<CSGOId, size_t> curChildIndex;
 
 public:
-    CollectionNode(Blackboard & blackboard, vector<Node::Ptr> && nodes, string name) :
+    CollectionNode(Blackboard & blackboard, vector<Node::Ptr> && nodes, const string & name) :
         Node(blackboard, name), children(std::move(nodes)) { };
 
-    virtual void clearState() override {
+    void clearState() override {
         for (auto & child : children) {
             child->clearState();
         }
         Node::clearState();
     }
 
-    virtual void restart(const TreeThinker & treeThinker) override {
+    void restart(const TreeThinker & treeThinker) override {
         for (auto & child : children) {
             child->restart(treeThinker);
         }
         Node::restart(treeThinker);
     }
 
-    virtual PrintState printState(const ServerState & state, CSGOId playerId) const override {
+    [[nodiscard]]
+    PrintState printState(const ServerState & state, CSGOId playerId) const override {
         PrintState printState = Node::printState(state, playerId);
         for (const auto & child : children) {
             printState.childrenStates.push_back(child->printState(state, playerId));
@@ -123,10 +125,10 @@ public:
 
 class SequenceNode : public CollectionNode {
 public:
-    SequenceNode(Blackboard & blackboard, vector<Node::Ptr> && nodes, string name = "Sequence") :
+    SequenceNode(Blackboard & blackboard, vector<Node::Ptr> && nodes, const string & name = "Sequence") :
         CollectionNode(blackboard, std::move(nodes), name) { };
 
-    virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
+    NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
         if (playerNodeState.find(treeThinker.csgoId) == playerNodeState.end() ||
             playerNodeState[treeThinker.csgoId] != NodeState::Running) {
             curChildIndex[treeThinker.csgoId] = 0;
@@ -157,10 +159,10 @@ public:
 
 class SelectorNode : public CollectionNode {
 public:
-    SelectorNode(Blackboard & blackboard, vector<Node::Ptr> && nodes, string name = "Selector") :
+    SelectorNode(Blackboard & blackboard, vector<Node::Ptr> && nodes, const string & name = "Selector") :
         CollectionNode(blackboard, std::move(nodes), name) { };
 
-    virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
+    NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
         if (playerNodeState.find(treeThinker.csgoId) == playerNodeState.end() ||
             playerNodeState[treeThinker.csgoId] != NodeState::Running) {
             curChildIndex[treeThinker.csgoId] = 0;
@@ -191,10 +193,10 @@ public:
 
 class ParallelAndNode : public CollectionNode {
 public:
-    ParallelAndNode(Blackboard & blackboard, vector<Node::Ptr> && nodes, string name = "ParallelAnd") :
+    ParallelAndNode(Blackboard & blackboard, vector<Node::Ptr> && nodes, const string & name = "ParallelAnd") :
             CollectionNode(blackboard, std::move(nodes), name) { };
 
-    virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
+    NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
         if (playerNodeState.find(treeThinker.csgoId) == playerNodeState.end() ||
             playerNodeState[treeThinker.csgoId] != NodeState::Running) {
             restart(treeThinker);
@@ -228,10 +230,10 @@ public:
 
 class ParallelFirstNode : public CollectionNode {
 public:
-    ParallelFirstNode(Blackboard & blackboard, vector<Node::Ptr> && nodes, string name = "ParallelFirst") :
+    ParallelFirstNode(Blackboard & blackboard, vector<Node::Ptr> && nodes, const string & name = "ParallelFirst") :
             CollectionNode(blackboard, std::move(nodes), name) { };
 
-    virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
+    NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
         if (playerNodeState.find(treeThinker.csgoId) == playerNodeState.end() ||
             playerNodeState[treeThinker.csgoId] != NodeState::Running) {
             restart(treeThinker);
@@ -264,9 +266,9 @@ protected:
 
 public:
     ConditionDecorator(Blackboard & blackboard, Node::Ptr && node, string name = "Condition") :
-        Node(blackboard, name), child(std::move(node)) { };
+        Node(blackboard, std::move(name)), child(std::move(node)) { };
 
-    virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
+    NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
         if (valid(state, treeThinker)) {
             playerNodeState[treeThinker.csgoId] = child->exec(state, treeThinker);
         }
@@ -279,7 +281,8 @@ public:
 
     virtual bool valid(const ServerState & state, TreeThinker &treeThinker) = 0;
 
-    virtual PrintState printState(const ServerState & state, CSGOId playerId) const override {
+    [[nodiscard]]
+    PrintState printState(const ServerState & state, CSGOId playerId) const override {
         PrintState printState = Node::printState(state, playerId);
         printState.childrenStates.push_back(child->printState(state, playerId));
         return printState;
@@ -293,9 +296,9 @@ protected:
 
 public:
     RepeatDecorator(Blackboard & blackboard, Node::Ptr && node, bool repeatUntilSuccess, string name = "Repeat") :
-            Node(blackboard, name), child(std::move(node)), repeatUntilSuccess(repeatUntilSuccess) { };
+            Node(blackboard, std::move(name)), child(std::move(node)), repeatUntilSuccess(repeatUntilSuccess) { };
 
-    virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
+    NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
         if (playerNodeState.find(treeThinker.csgoId) == playerNodeState.end() ||
             playerNodeState[treeThinker.csgoId] != NodeState::Running) {
             restart(treeThinker);
@@ -310,7 +313,8 @@ public:
         return playerNodeState[treeThinker.csgoId];
     }
 
-    virtual PrintState printState(const ServerState & state, CSGOId playerId) const override {
+    [[nodiscard]]
+    PrintState printState(const ServerState & state, CSGOId playerId) const override {
         PrintState printState = Node::printState(state, playerId);
         printState.childrenStates.push_back(child->printState(state, playerId));
         return printState;

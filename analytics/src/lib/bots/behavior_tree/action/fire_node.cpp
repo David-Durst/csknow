@@ -5,7 +5,7 @@
 #include "bots/behavior_tree/action/action_node.h"
 
 namespace action {
-    const set<int32_t> scopedWeaponIds{AWP_ID, GSG_ID, SCAR_ID, SCOUT_ID};
+    // const set<int32_t> scopedWeaponIds{AWP_ID, GSG_ID, SCAR_ID, SCOUT_ID};
 
     NodeState FireTaskNode::exec(const ServerState &state, TreeThinker &treeThinker) {
         const ServerState::Client & curClient = state.getClient(treeThinker.csgoId);
@@ -88,9 +88,11 @@ namespace action {
                 if (curAction.getButton(IN_ATTACK)) {
                     curAction.shotsInBurst++;
                 }
+                /*
                 if (!state.isVisible(curClient.csgoId, curPriority.targetPlayer.playerId) && curAction.getButton(IN_ATTACK)) {
                     int x = 1;
                 }
+                 */
                 curAction.setButton(IN_RELOAD, !haveAmmo);
             }
         }

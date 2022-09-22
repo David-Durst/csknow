@@ -6,7 +6,6 @@
 
 namespace communicate {
     bitset<MAX_NAV_AREAS> getSpawnAreas(const ServerState & state, Blackboard & blackboard, const vector<CSGOId> & playersOnTeam) {
-        CSKnowTime curTime = state.loadTime;
         bitset<MAX_NAV_AREAS> result;
         vector<CSGOId> alivePlayersOnTeam;
         for (const auto & id : playersOnTeam) {
@@ -53,7 +52,8 @@ namespace communicate {
             }
 
             // rerun until get first tick of round where everyone is alive
-            if (tPlayers.size() + ctPlayers.size() == state.numPlayersAlive() || blackboard.resetPossibleNavAreas) {
+            if (tPlayers.size() + ctPlayers.size() == static_cast<size_t>(state.numPlayersAlive()) ||
+                blackboard.resetPossibleNavAreas) {
                 diffuseRoundNumber = state.roundNumber;
                 blackboard.resetPossibleNavAreas = false;
             }
@@ -126,4 +126,4 @@ namespace communicate {
         return playerNodeState[treeThinker.csgoId];
     }
 
-};
+}

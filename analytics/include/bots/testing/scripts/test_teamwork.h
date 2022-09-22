@@ -205,7 +205,7 @@ public:
                                                                         make_unique<Teleport>(blackboard, neededBots[3].id, state),
                                                                         make_unique<movement::WaitNode>(blackboard, 0.1),
                                                                         make_unique<ClearMemoryCommunicationDangerNode>(blackboard),
-                                                                        make_unique<ForceOrderNode>(blackboard, "ForceCTLongCat", vector{neededBots[0].id, neededBots[1].id}, strategy::offenseLongToAWaypoints, lurkAddedOrderId),
+                                                                        make_unique<ForceOrderNode>(blackboard, "ForceCTLongCat", vector{neededBots[0].id, neededBots[1].id}, strategy::offenseLongToAWaypoints(), lurkAddedOrderId),
                                                                         make_unique<ForceOrderNode>(blackboard, "ForceCTCat", vector{neededBots[2].id}, strategy::offenseCatToAWaypoints, pushAddedOrderId),
                                                                         make_unique<ForceEntryIndexNode>(blackboard, "ForcePusherBaiter",
                                                                                                          vector{neededBots[0].id, neededBots[1].id, neededBots[2].id},

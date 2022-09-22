@@ -46,4 +46,4 @@ namespace communicate::spacing {
         playerNodeState[treeThinker.csgoId] = NodeState::Success;
         return playerNodeState[treeThinker.csgoId];
     }
-};
+}

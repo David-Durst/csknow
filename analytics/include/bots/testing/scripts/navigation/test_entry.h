@@ -162,7 +162,7 @@ public:
                                                          make_unique<movement::WaitNode>(blackboard, 0.1),
                                                          make_unique<Teleport>(blackboard, neededBots[0].id, state),
                                                          make_unique<movement::WaitNode>(blackboard, 0.1),
-                                                         make_unique<ForceOrderNode>(blackboard, "ForceCTLong", vector{neededBots[0].id}, strategy::offenseLongToAWaypoints, areasToRemove, addedOrderId),
+                                                         make_unique<ForceOrderNode>(blackboard, "ForceCTLong", vector{neededBots[0].id}, strategy::offenseLongToAWaypoints(), areasToRemove, addedOrderId),
                                                          make_unique<ParallelFirstNode>(blackboard, Node::makeList(
                                                                  make_unique<RepeatDecorator>(blackboard, make_unique<InPlace>(blackboard, neededBots[0].id, "BombsiteA"), true),
                                                                  make_unique<movement::WaitNode>(blackboard, 20, false))

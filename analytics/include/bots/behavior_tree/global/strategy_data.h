@@ -36,11 +36,11 @@ struct Waypoint {
     // use placeName if type of NavPlace, playerId if type of is player, placeName for site if c4
     // not using union because that prevented automatic destructor definition, and this is trivial amount of extra data
     // if placeName and areaIds are set, areaIds and invalid areas in place
-    string placeName;
-    string customAreasName;
-    vector<AreaId> areaIds;
-    bool aggresiveDefense;
-    CSGOId playerId;
+    string placeName = "";
+    string customAreasName = "";
+    vector<AreaId> areaIds = {};
+    bool aggresiveDefense = true;
+    CSGOId playerId = INVALID_ID;
 };
 
 typedef vector<Waypoint> Waypoints;
@@ -49,11 +49,11 @@ typedef vector<Waypoint> Waypoints;
  */
 struct Order {
     Waypoints waypoints;
-    vector<size_t> holdIndices;
-    size_t aggressiveChokeIndex, passiveChokeIndex;
+    vector<size_t> holdIndices = {};
+    size_t aggressiveChokeIndex = 0, passiveChokeIndex = 0;
     // multiple players can watch one choke point, one player in a hold point
-    map<CSGOId, size_t> playerToHoldIndex;
-    map<size_t, AreaId> holdIndexToHoldAreaId, holdIndexToChokeAreaId;
+    map<CSGOId, size_t> playerToHoldIndex = {};
+    map<size_t, AreaId> holdIndexToHoldAreaId = {}, holdIndexToChokeAreaId = {};
     // what about chains of operations (like switching once plant happens)?
 
     void computeIndices(const nav_mesh::nav_file & navFile, const ReachableResult & reachability,
