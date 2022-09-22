@@ -29,7 +29,7 @@ namespace action {
         Priority & curPriority = blackboard.playerToPriority[treeThinker.csgoId];
         const ServerState::Client & curClient = state.getClient(treeThinker.csgoId);
         Vec3 curPos = curClient.getFootPosForPlayer();
-        const nav_mesh::nav_area & curArea = blackboard.navFile.get_nearest_area_by_position(vec3Conv(curPos));
+        //const nav_mesh::nav_area & curArea = blackboard.navFile.get_nearest_area_by_position(vec3Conv(curPos));
 
         if (curPath.pathCallSucceeded) {
 

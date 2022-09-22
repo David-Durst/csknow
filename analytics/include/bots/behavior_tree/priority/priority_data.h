@@ -20,28 +20,28 @@ enum class ShootOptions {
     Tap,
     Burst,
     Spray,
-    NUM_PRIORITY_SHOOT_OPTIONS
+    NUM_PRIORITY_SHOOT_OPTIONS [[maybe_unused]]
 };
 
 struct TargetPlayer {
     CSGOId playerId = INVALID_ID;
-    int64_t round;
-    int32_t firstTargetFrame;
-    Vec3 footPos;
-    Vec3 eyePos;
-    bool visible;
+    int64_t round = INVALID_ID;
+    int32_t firstTargetFrame = INVALID_ID;
+    Vec3 footPos = {};
+    Vec3 eyePos = {};
+    bool visible = false;
 };
 
 enum class PriorityType {
     Order,
     Engagement,
-    NUM_PRIORITY_TYPES
+    NUM_PRIORITY_TYPES [[maybe_unused]]
 };
 
 enum class NonDangerAimAreaType {
     Hold,
     Path,
-    NUM_PRIORITY_TYPES
+    NUM_PRIORITY_TYPES [[maybe_unused]]
 };
 
 struct Priority {
@@ -54,6 +54,7 @@ struct Priority {
     MoveOptions moveOptions;
     ShootOptions shootOptions;
 
+    [[nodiscard]]
     string print(const ServerState & state) const {
         stringstream result;
 

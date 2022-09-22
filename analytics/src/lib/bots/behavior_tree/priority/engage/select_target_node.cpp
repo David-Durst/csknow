@@ -37,9 +37,11 @@ namespace engage {
                 else if (!curTarget.visible && visibleEnemies.empty() &&
                         (rememberedEnemies.find(curTarget.playerId) != rememberedEnemies.end())) {
                     curTarget.footPos = rememberedEnemies.find(curTarget.playerId)->second.lastSeenFootPos;
+                    /*
                     if (curTarget.footPos != oldTargetClient.getFootPosForPlayer()) {
                         int x = 1;
                     }
+                    */
                     curTarget.eyePos = rememberedEnemies.find(curTarget.playerId)->second.lastSeenEyePos;
                     continueSameTarget = true;
                 }
@@ -81,13 +83,13 @@ namespace engage {
         }
         // otherwise, assign to nearest enemy
         else {
-            size_t closestI = INVALID_ID;
+            int64_t closestI = INVALID_ID;
             double closestDistance = std::numeric_limits<double>::max();
             for (size_t i = 0; i < targetOptions.size(); i++) {
                 double newDistance = computeDistance(curClient.getFootPosForPlayer(), targetOptions[i].footPos);
                 if (closestI == INVALID_ID || newDistance < closestDistance) {
                     closestDistance = newDistance;
-                    closestI = i;
+                    closestI = static_cast<int64_t>(i);
                 }
             }
             curTarget = targetOptions[closestI];

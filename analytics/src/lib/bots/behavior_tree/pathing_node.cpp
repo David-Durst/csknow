@@ -6,6 +6,7 @@
 #include "bots/behavior_tree/pathing_node.h"
 
 namespace movement {
+    /*
     void updateAreasToIncreaseCost(const ServerState &state, Blackboard & blackboard, const ServerState::Client & curClient) {
         set<uint32_t> areasToIncreaseCost;
         uint32_t curArea = blackboard.navFile.get_nearest_area_by_position(vec3Conv(curClient.getFootPosForPlayer())).get_id();
@@ -20,8 +21,9 @@ namespace movement {
         }
         blackboard.navFile.set_areas_to_increase_cost(areasToIncreaseCost);
     }
+     */
 
-    Path computePath(const ServerState &state, Blackboard & blackboard, nav_mesh::vec3_t preCheckTargetPos,
+    Path computePath(Blackboard & blackboard, nav_mesh::vec3_t preCheckTargetPos,
                      const ServerState::Client & curClient) {
         Path newPath;
         //updateAreasToIncreaseCost(state, blackboard, curClient);
@@ -111,7 +113,7 @@ namespace movement {
         }
 
         // otherwise, either no old path or old path is out of date, so update it
-        Path newPath = computePath(state, blackboard, vec3Conv(curPriority.targetPos), curClient);
+        Path newPath = computePath(blackboard, vec3Conv(curPriority.targetPos), curClient);
         /*
         // IF LOOPING, LOOK HERE FOR CYCLES
         if (blackboard.playerToPath.find(treeThinker.csgoId) != blackboard.playerToPath.end()) {
@@ -136,7 +138,7 @@ namespace movement {
             startTime[treeThinker.csgoId] = state.loadTime;
         }
 
-        double timeSinceStart = state.getSecondsBetweenTimes(startTime[treeThinker.csgoId], state.loadTime);
+        double timeSinceStart = ServerState::getSecondsBetweenTimes(startTime[treeThinker.csgoId], state.loadTime);
         if (timeSinceStart >= waitSeconds) {
             playerNodeState[treeThinker.csgoId] = succeedOnEnd ? NodeState::Success : NodeState::Failure;
         }
@@ -146,7 +148,7 @@ namespace movement {
         return playerNodeState[treeThinker.csgoId];
     }
 
-    NodeState WaitTicksNode::exec(const ServerState &state, TreeThinker &treeThinker) {
+    NodeState WaitTicksNode::exec(const ServerState &, TreeThinker &treeThinker) {
         if (playerNodeState[treeThinker.csgoId] == NodeState::Uninitialized) {
             numTicksWaited[treeThinker.csgoId] = 0;
         }

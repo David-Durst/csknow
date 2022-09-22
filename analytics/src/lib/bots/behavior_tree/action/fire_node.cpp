@@ -12,7 +12,7 @@ namespace action {
         Action & curAction = blackboard.playerToAction[treeThinker.csgoId];
         Action & oldAction = blackboard.lastPlayerToAction[treeThinker.csgoId];
         Priority & curPriority = blackboard.playerToPriority[treeThinker.csgoId];
-        Path & curPath = blackboard.playerToPath[treeThinker.csgoId];
+        //Path & curPath = blackboard.playerToPath[treeThinker.csgoId];
 
         //bool scopeResetTimePassed = state.getSecondsBetweenTimes(curAction.lastScopeTime, state.loadTime) > MIN_SCOPE_RESET_SECONDS;
 

@@ -8,7 +8,7 @@ namespace engage {
     NodeState SelectFireModeNode::exec(const ServerState &state, TreeThinker &treeThinker) {
         const OrderId & curOrderId = blackboard.strategy.getOrderIdForPlayer(treeThinker.csgoId);
         Priority & curPriority = blackboard.playerToPriority[treeThinker.csgoId];
-        Path & curPath = blackboard.playerToPath[treeThinker.csgoId];
+        //Path & curPath = blackboard.playerToPath[treeThinker.csgoId];
 
         // not executing shooting if no target
         if (curPriority.targetPlayer.playerId == INVALID_ID) {

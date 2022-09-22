@@ -7,14 +7,14 @@ namespace strategy {
     struct OrderPlaceDistance {
         OrderId orderId;
         string place;
-        double distance;
+        double distance = -1.;
         bool assignedPlayer = false;
     };
 
     NodeState AssignPlayersToOrders::exec(const ServerState &state, TreeThinker &treeThinker) {
         if (blackboard.newOrderThisFrame) {
             map<string, OrderId> ctOptions;
-            OrderId defaultCTOption;
+            OrderId defaultCTOption{INVALID_ID, INVALID_ID};
             vector<OrderPlaceDistance> tOptions;
             // build the Order Place options, will compute distance for each client
             for (const auto & orderId : blackboard.strategy.getOrderIds(false, true)) {
@@ -28,7 +28,7 @@ namespace strategy {
                         for (const auto & areaId : waypoint.areaIds) {
                             string placeName = blackboard.navFile.get_place(
                                     blackboard.navFile.get_area_by_id_fast(areaId).m_place);
-                            if (placeName != "") {
+                            if (!placeName.empty()) {
                                 ctOptions[placeName] = orderId;
                             }
                         }
@@ -51,7 +51,7 @@ namespace strategy {
                         for (const auto & areaId : waypoint.areaIds) {
                             string placeName = blackboard.navFile.get_place(
                                     blackboard.navFile.get_area_by_id_fast(areaId).m_place);
-                            if (placeName != "") {
+                            if (!placeName.empty()) {
                                 // ok to push same placename multiple times, sort will just take first
                                 tOptions.push_back({orderId, placeName});
                             }
@@ -68,7 +68,7 @@ namespace strategy {
             for (const auto & client : state.clients) {
                 if (client.isAlive && client.isBot) {
                     if (client.team == ENGINE_TEAM_CT) {
-                        Path pathToC4 = movement::computePath(state, blackboard, vec3Conv(state.getC4Pos()), client);
+                        Path pathToC4 = movement::computePath(blackboard, vec3Conv(state.getC4Pos()), client);
                         bool foundPath = false;
                         for (PathNode pathNode : pathToC4.waypoints) {
                             string placeName = blackboard.navFile.get_place(
@@ -98,9 +98,11 @@ namespace strategy {
                             return (!a.assignedPlayer && b.assignedPlayer) || (a.assignedPlayer == b.assignedPlayer && a.distance < b.distance);
                         });
                         blackboard.strategy.assignPlayerToOrder(client.csgoId, tOptions[0].orderId);
+                        /*
                         if (tOptions[0].assignedPlayer) {
                             int x =1;
                         }
+                         */
                         tPlayersPerOrder[tOptions[0].orderId]++;
                         for (size_t i = 0; i < tOptions.size(); i++) {
                             tOptions[i].assignedPlayer = tPlayersPerOrder[tOptions[i].orderId] > 0;
@@ -108,11 +110,13 @@ namespace strategy {
                     }
                 }
             }
+            /*
             for (const auto & client : state.clients) {
                 if (client.isAlive && client.isBot) {
                     blackboard.strategy.getOrderIdForPlayer(client.csgoId);
                 }
             }
+             */
 
 
         }
