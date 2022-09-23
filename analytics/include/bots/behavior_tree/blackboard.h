@@ -43,8 +43,8 @@ struct TreeThinker {
     // constant values across game
     CSGOId csgoId;
     AggressiveType aggressiveType;
-    EngagementParams engagementParams;
-    double maxMemorySeconds;
+    EngagementParams engagementParams = {INVALID_ID, INVALID_ID, INVALID_ID, INVALID_ID};
+    double maxMemorySeconds = INVALID_ID;
 };
 
 struct PrintState {

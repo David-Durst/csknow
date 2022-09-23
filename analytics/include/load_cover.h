@@ -17,6 +17,7 @@ struct GridIndex {
     Vec3 maxValues;
     Vec3 * values;
 
+    [[nodiscard]]
     IVec3 getCellCoordinates(Vec3 v) const {
         return {
             (int64_t) std::floor((v.x - minValues.x) / cellSizes.x),
@@ -25,6 +26,7 @@ struct GridIndex {
         };
     }
 
+    [[nodiscard]]
     int64_t getCellIndex(IVec3 v) const {
         return v.x * numCells.y * numCells.z + v.y * numCells.z + v.z;
     }
@@ -63,7 +65,7 @@ struct GridIndex {
 struct GridComparator {
     GridIndex & gridIndex;
 
-    GridComparator(GridIndex & gridIndex) : gridIndex(gridIndex) {}
+    explicit GridComparator(GridIndex & gridIndex) : gridIndex(gridIndex) {}
 
     bool operator() (const int64_t& lhs_index, const int64_t& rhs_index) const
     {

@@ -2,7 +2,7 @@
 #include "load_cover.h"
 #include <algorithm>
 #include <iostream>
-#include <assert.h>
+#include <cassert>
 using std::cout;
 using std::endl;
 
@@ -11,7 +11,7 @@ using std::endl;
 // since dense, wnat to iterate over times (as will have event for every time)
 void buildRangeIndex(const vector<int64_t> &primaryKeyCol, int64_t primarySize, const int64_t * foreignKeyCol,
                           int64_t foreignSize, RangeIndex rangeIndexCol,
-                          string primaryName, string foreignName) {
+                          const string & primaryName, const string & foreignName) {
     for (int64_t primaryIndex = 0, foreignIndex = 0; primaryIndex < primarySize; primaryIndex++) {
         if (foreignIndex >= foreignSize || foreignKeyCol[foreignIndex] > primaryKeyCol[primaryIndex]) {
             rangeIndexCol[primaryIndex].minId = -1;
@@ -43,19 +43,19 @@ IntervalIndex buildIntervalIndex(const vector<const int64_t *> &foreignKeyCols, 
     for (int64_t foreignIndex = 0; foreignIndex < foreignSize; foreignIndex++) {
         // collect all primary key entries that are in range the foreign keys
         int64_t minPrimaryIndex = foreignKeyCols[0][foreignIndex], maxPrimaryIndex = foreignKeyCols[0][foreignIndex];
-        for (int col = 1; col < foreignKeyCols.size(); col++) {
+        for (size_t col = 1; col < foreignKeyCols.size(); col++) {
             minPrimaryIndex = std::min(minPrimaryIndex, foreignKeyCols[col][foreignIndex]);
             maxPrimaryIndex = std::max(maxPrimaryIndex, foreignKeyCols[col][foreignIndex]);
         }
         eventIntervals.push_back({minPrimaryIndex, maxPrimaryIndex, foreignIndex});
     }
-    return IntervalTree<int64_t, int64_t>(std::move(eventIntervals));
+    return {std::move(eventIntervals)};
 }
 
-void buildIndexes(Equipment & equipment, GameTypes & gameTypes, HitGroups & hitGroups, Games & games,
+void buildIndexes(Equipment & equipment [[maybe_unused]], GameTypes & gameTypes [[maybe_unused]], HitGroups & hitGroups [[maybe_unused]], Games & games,
                        Players & players, Rounds & rounds, Ticks & ticks, PlayerAtTick & playerAtTick, Spotted & spotted, Footstep & footstep,
                        WeaponFire & weaponFire, Kills & kills, Hurt & hurt, Grenades & grenades, Flashed & flashed,
-                       GrenadeTrajectories & grenadeTrajectories, Plants & plants, Defusals & defusals, Explosions & explosions) {
+                       GrenadeTrajectories & grenadeTrajectories [[maybe_unused]], Plants & plants, Defusals & defusals, Explosions & explosions) {
     cout << "building range indexes" << endl;
     buildRangeIndex(games.id, games.size, rounds.gameId, rounds.size, games.roundsPerGame, "games", "rounds");
     buildRangeIndex(games.id, games.size, players.gameId, players.size, games.playersPerGame, "games", "players");
@@ -92,7 +92,7 @@ void buildGridIndex(const vector<int64_t> &primaryKeyCol, const Vec3 * points, G
     // get min and max values
     index.minValues = points[0];
     index.maxValues = points[0];
-    for (int64_t i = 0; i < primaryKeyCol.size(); i++) {
+    for (size_t i = 0; i < primaryKeyCol.size(); i++) {
         index.minValues = min(points[i], index.minValues);
         index.maxValues = max(points[i], index.maxValues);
     }
@@ -113,19 +113,19 @@ void buildGridIndex(const vector<int64_t> &primaryKeyCol, const Vec3 * points, G
 
     // get ranges within each cell
     IVec3 curCell{-1, -1, -1};
-    for (int64_t idIndex = 0; idIndex < index.sortedIds.size(); idIndex++) {
+    for (size_t idIndex = 0; idIndex < index.sortedIds.size(); idIndex++) {
         const int64_t id = index.sortedIds[idIndex];
         IVec3 newCell = index.getCellCoordinates(points[id]);
         int64_t cellIndex = index.getCellIndex(newCell);
         if (curCell != newCell) {
             curCell = newCell;
-            index.minIdIndex[cellIndex] = idIndex;
+            index.minIdIndex[cellIndex] = static_cast<int64_t>(idIndex);
         }
         index.numIds[cellIndex]++;
     }
 }
 
-void buildAABBIndex(const RangeIndex rangeIndex, int64_t rangeSize, const AABB * aabbCol, AABBIndex aabbIndexCol) {
+void buildAABBIndex(RangeIndex rangeIndex, int64_t rangeSize, const AABB * aabbCol, AABBIndex aabbIndexCol) {
     for (int64_t rangeId = 0; rangeId < rangeSize; rangeId++) {
         bool firstAABB = true;
         for (int64_t aabbId = rangeIndex[rangeId].minId; aabbId != -1 && aabbId <= rangeIndex[rangeId].maxId;
@@ -143,6 +143,7 @@ void buildAABBIndex(const RangeIndex rangeIndex, int64_t rangeSize, const AABB *
     }
 }
 
+[[maybe_unused]]
 void buildCoverIndex(CoverOrigins & origins, CoverEdges & edges) {
     cout << "building cover indexes" << endl;
     buildGridIndex(origins.id, origins.origins, origins.originsGrid);

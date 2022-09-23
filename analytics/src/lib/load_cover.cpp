@@ -21,7 +21,7 @@ void loadCoverEdgesFile(CoverEdges & coverEdges, string filePath) {
     int64_t arrayEntry = 0;
 
     for (size_t curStart = firstRow + 1, curDelimiter = getNextDelimiter(file, curStart, stats.st_size);
-         curDelimiter < stats.st_size;
+         curDelimiter < static_cast<size_t>(stats.st_size);
          curStart = curDelimiter + 1, curDelimiter = getNextDelimiter(file, curStart, stats.st_size)) {
         if (colNumber == 0) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, coverEdges.id[arrayEntry]);
@@ -88,7 +88,7 @@ void loadCoverOriginsFile(CoverOrigins & coverOrigins, string filePath) {
     int64_t arrayEntry = 0;
 
     for (size_t curStart = firstRow + 1, curDelimiter = getNextDelimiter(file, curStart, stats.st_size);
-         curDelimiter < stats.st_size;
+         curDelimiter < static_cast<size_t>(stats.st_size);
          curStart = curDelimiter + 1, curDelimiter = getNextDelimiter(file, curStart, stats.st_size)) {
         if (colNumber == 0) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, coverOrigins.id[arrayEntry]);

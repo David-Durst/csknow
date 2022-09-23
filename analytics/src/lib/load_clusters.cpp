@@ -1,7 +1,8 @@
 #include "load_clusters.h"
 #include "file_helpers.h"
 
-Cluster::Cluster(string filePath) {
+[[maybe_unused]]
+Cluster::Cluster(const string & filePath) {
     this->variableLength = false;
     this->nonTemporal = true;
     // mmap the file
@@ -14,11 +15,8 @@ Cluster::Cluster(string filePath) {
     int64_t rowNumber = 0;
     int64_t colNumber = 0;
 
-    // track location for insertion
-    int64_t arrayEntry = 0;
-
     for (size_t curStart = firstRow + 1, curDelimiter = getNextDelimiter(file, curStart, stats.st_size);
-         curDelimiter < stats.st_size;
+         curDelimiter < static_cast<size_t>(stats.st_size);
          curStart = curDelimiter + 1, curDelimiter = getNextDelimiter(file, curStart, stats.st_size)) {
         if (colNumber == 0) {
             this->id.push_back(0);
@@ -40,7 +38,6 @@ Cluster::Cluster(string filePath) {
             this->z.push_back(0);
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, this->z[this->z.size() - 1]);
             rowNumber++;
-            arrayEntry++;
         }
         colNumber = (colNumber + 1) % 5;
     }

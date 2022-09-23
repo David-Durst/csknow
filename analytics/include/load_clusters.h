@@ -22,7 +22,7 @@ public:
     vector<double> y;
     vector<double> z;
 
-    vector<int64_t> filterByForeignKey(int64_t otherTableIndex) {
+    vector<int64_t> filterByForeignKey(int64_t) override {
         // no indexes on results
         return {};
     }
@@ -31,17 +31,17 @@ public:
         this->variableLength = false;
         this->nonTemporal = true;
     };
-    Cluster(string filePath);
+    [[maybe_unused]] explicit Cluster(const string & filePath);
 
-    void oneLineToCSV(int64_t index, stringstream & ss) {
+    void oneLineToCSV(int64_t index, stringstream & ss) override {
         ss << id[index] << "," << wallId[index] << "," << x[index] << "," << y[index] << "," << z[index] << std::endl;
     }
 
-    vector<string> getForeignKeyNames() {
+    vector<string> getForeignKeyNames() override {
         return {"wall id"};
     }
 
-    vector<string> getOtherColumnNames() {
+    vector<string> getOtherColumnNames() override {
         return {"x", "y", "z"};
     }
 };
