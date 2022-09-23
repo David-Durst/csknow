@@ -1,3 +1,4 @@
+#ifdef false
 //
 // Created by durst on 5/18/21.
 //
@@ -110,3 +111,5 @@ ClusterSequencesByRound analyzeViewClusters(const Rounds & rounds, const Players
 
 
 #endif //CSKNOW_POSITION_AND_WALL_VIEW_H
+
+#endif //false

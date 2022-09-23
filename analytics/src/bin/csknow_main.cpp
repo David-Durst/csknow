@@ -261,7 +261,7 @@ int main(int argc, char * argv[]) {
     string dust2VisibleName = "de_dust2_visible";
     NavVisibleResult d2NavVisibleResult = queryNavVisible(map_visPoints.find("de_dust2")->second);
     string dust2DangerName = "de_dust2_danger";
-    NavDangerResult d2NavDangerResult = queryNavDanger(map_visPoints.find("de_dust2")->second, map_navs["de_dust2"]);
+    NavDangerResult d2NavDangerResult = queryNavDanger(map_visPoints.find("de_dust2")->second);
     std::cout << "processing aggression_event" << std::endl;
     string aggressionEventName = "aggression_event";
     AggressionEventResult aggressionEventResult =

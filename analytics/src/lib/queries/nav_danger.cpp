@@ -4,9 +4,9 @@
 
 #include "queries/nav_danger.h"
 
-NavDangerResult queryNavDanger(const VisPoints & visPoints, const nav_mesh::nav_file & navFile) {
+NavDangerResult queryNavDanger(const VisPoints & visPoints) {
     NavDangerResult result;
-    result.numAreas = visPoints.getVisPoints().size();
+    result.numAreas = static_cast<int64_t>(visPoints.getVisPoints().size());
     result.coordinate = {};
     for (const auto & visPoint : visPoints.getVisPoints()) {
         result.coordinate.push_back(visPoint.areaCoordinates);
