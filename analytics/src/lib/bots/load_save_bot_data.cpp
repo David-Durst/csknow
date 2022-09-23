@@ -155,29 +155,35 @@ void ServerState::loadClientStates(const string& clientStatesFilePath) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].lastAimpunchAngleX);
         }
         else if (colNumber == 29) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].lastEyeWithRecoilAngleY);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].lastViewpunchAngleY);
         }
         else if (colNumber == 30) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].lastEyeWithRecoilAngleX);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].lastViewpunchAngleX);
         }
         else if (colNumber == 31) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].isAlive);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].lastEyeWithRecoilAngleY);
         }
         else if (colNumber == 32) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].isBot);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].lastEyeWithRecoilAngleX);
         }
         else if (colNumber == 33) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].isAirborne);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].isAlive);
         }
         else if (colNumber == 34) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].isScoped);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].isBot);
         }
         else if (colNumber == 35) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].isAirborne);
+        }
+        else if (colNumber == 36) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].isScoped);
+        }
+        else if (colNumber == 37) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].duckAmount);
             rowNumber++;
             arrayEntry++;
         }
-        colNumber = (colNumber + 1) % 36;
+        colNumber = (colNumber + 1) % 38;
     }
     closeMMapFile({fd, stats, file});
 }

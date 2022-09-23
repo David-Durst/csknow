@@ -111,24 +111,43 @@ EngagementPerTickAimResult queryEngagementPerTickAim(const Games & games, const 
                         playerAtTick.viewX[curPlayerToPAT[attackerId]],
                         playerAtTick.viewY[curPlayerToPAT[attackerId]]
                 };
+
+                /*
+                double visualRecoilScalingFactor = WEAPON_RECOIL_SCALE * VIEW_RECOIL_TRACKING;
+                int64_t curAttackerPAT = curPlayerToPAT[attackerId];
+                Vec2 curCrosshairAngle = Vec2 {
+                    curViewAngle.x + playerAtTick.viewPunchX[curPlayerToPAT[attackerId]] +
+                        playerAtTick.aimPunchX[curPlayerToPAT[attackerId]] * visualRecoilScalingFactor,
+                    curViewAngle.y + playerAtTick.viewPunchY[curPlayerToPAT[attackerId]] +
+                        playerAtTick.aimPunchY[curPlayerToPAT[attackerId]] * visualRecoilScalingFactor
+                };
+                 */
                 Vec2 deltaViewAngle = deltaViewFromOriginToDest(attackerEyePos, victimHeadPos, curViewAngle);
 
                 // normalize by view angle from top of AABB to bottom of AABB
 
                 Vec3 victimBotPos = {
-                        playerAtTick.posX[curPlayerToPAT[attackerId]],
-                        playerAtTick.posY[curPlayerToPAT[attackerId]],
-                        playerAtTick.posZ[curPlayerToPAT[attackerId]]
+                        playerAtTick.posX[curPlayerToPAT[victimId]],
+                        playerAtTick.posY[curPlayerToPAT[victimId]],
+                        playerAtTick.posZ[curPlayerToPAT[victimId]]
                 };
                 Vec2 viewAngleToBotPos = vectorAngles(victimBotPos - attackerEyePos);
                 Vec3 victimTopPos = victimBotPos;
                 victimTopPos.z += PLAYER_HEIGHT;
                 Vec2 topVsBotViewAngle = deltaViewFromOriginToDest(attackerEyePos, victimTopPos, viewAngleToBotPos);
 
-                deltaViewAngle.x /= std::abs(topVsBotViewAngle.y);
-                deltaViewAngle.y /= std::abs(topVsBotViewAngle.y);
+                Vec2 scaledDeltaViewAngle {
+                    deltaViewAngle.x / std::abs(topVsBotViewAngle.y),
+                    deltaViewAngle.y / std::abs(topVsBotViewAngle.y)
+                };
 
-                tmpDeltaViewAngle[threadNum].push_back(deltaViewAngle);
+                /*
+                if (victimId == 9 && tickIndex > 146230 && tickIndex < 146422 && ticks.gameTickNumber[tickIndex] == 146710) {
+                    int dude = 1;
+                }
+                 */
+
+                tmpDeltaViewAngle[threadNum].push_back(scaledDeltaViewAngle);
 
                 // compute view angle velocity if there is a prior tick in the round
                 if (tickIndex > rounds.ticksPerRound[roundIndex].minId) {

@@ -19,6 +19,8 @@ using std::vector;
 #define ENGINE_TEAM_T 2
 #define ENGINE_TEAM_CT 3
 #define INVALID_ID -1
+#define WEAPON_RECOIL_SCALE 2.0
+#define VIEW_RECOIL_TRACKING 0.45
 
 struct RangeIndexEntry {
     int64_t minId, maxId;

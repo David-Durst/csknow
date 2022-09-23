@@ -69,6 +69,8 @@ public:
         float lastEyeAngleY;
         float lastAimpunchAngleX;
         float lastAimpunchAngleY;
+        float lastViewpunchAngleX;
+        float lastViewpunchAngleY;
         float lastEyeWithRecoilAngleX;
         float lastEyeWithRecoilAngleY;
         bool isAlive;

@@ -120,7 +120,8 @@ func ProcessTickData(localDemName string, idState *IDState) {
 				player.Position().X, player.Position().Y, player.Position().Z, player.PositionEyes().Z,
 				player.Velocity().X, player.Velocity().Y, player.Velocity().Z,
 				player.ViewDirectionX(), player.ViewDirectionY(),
-				aimPunchAngle.X, aimPunchAngle.Y, viewPunchAngle.X, viewPunchAngle.Y,
+				// flipping so match demo parser's assigner of yaw to x and pitch to y
+				aimPunchAngle.Y, aimPunchAngle.X, viewPunchAngle.Y, viewPunchAngle.X,
 				int(player.Team), player.Health(), player.Armor(), player.HasHelmet(),
 				player.IsAlive(), player.Flags().DuckingKeyPressed(), duckAmount,
 				player.IsWalking(), player.IsScoped(), player.IsAirborne(),

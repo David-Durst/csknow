@@ -49,11 +49,11 @@ public:
         for (size_t i = 0; i < coordinate.size(); i++) {
             PlaceIndex placeIndex = areaToPlace[i];
             // -1 for invalid place gets cast to max value
-            if (placeIndex > places.size() || !places[placeIndex].empty() &&
+            if (placeIndex < places.size() && !places[placeIndex].empty() &&
                 static_cast<int64_t>(i) == getClosestArea(index, placeIndex)) {
                 ss << "," << closestDistanceMatrix[index * numPlaces + placeIndex];
             }
-            else if (!places[placeIndex].empty() &&
+            else if (placeIndex < places.size() && !places[placeIndex].empty() &&
                 static_cast<int64_t>(i) == getMedianArea(index, placeIndex)) {
                 ss << "," << medianDistanceMatrix[index * numPlaces + placeIndex];
             }
