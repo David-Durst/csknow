@@ -124,7 +124,7 @@ public:
 void mergeThreadResults(int numThreads, vector<RangeIndexEntry> &rowIndicesPerRound, const vector<int64_t> tmpRoundIds[],
                         const vector<int64_t> tmpRoundStarts[], const vector<int64_t> tmpRoundSizes[],
                         vector<int64_t> & resultStartTickId,  int64_t & resultSize,
-                        std::function<void(int64_t, int64_t)> appendToResult);
+                        const std::function<void(int64_t, int64_t)> & appendToResult);
 
 /*
 class NoSourceTargetQuery : public QueryResult {

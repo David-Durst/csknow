@@ -15,10 +15,10 @@ class HoldLongScript : public Script {
 public:
     OrderId addedOrderId;
 
-    HoldLongScript(const ServerState & state) :
+    explicit HoldLongScript(const ServerState &) :
         Script("HoldLongScript", {{0, ENGINE_TEAM_T}}, {ObserveType::FirstPerson, 0}) { }
 
-    virtual void initialize(Tree & tree, ServerState & state) override  {
+    void initialize(Tree & tree, ServerState & state) override  {
         if (tree.newBlackboard) {
             Blackboard & blackboard = *tree.blackboard;
             Script::initialize(tree, state);
@@ -59,11 +59,11 @@ public:
 
 class HoldASitePushScript : public Script {
 public:
-    HoldASitePushScript(const ServerState & state) :
+    explicit HoldASitePushScript(const ServerState &) :
             Script("HoldASitePushScript", {{0, ENGINE_TEAM_T}, {0, ENGINE_TEAM_T}, {0, ENGINE_TEAM_T}},
                    {ObserveType::Absolute, 0, {395.317963, 2659.722656, 559.311157}, {43.801949, -49.044704}}) { }
 
-    virtual void initialize(Tree & tree, ServerState & state) override  {
+    void initialize(Tree & tree, ServerState & state) override  {
         if (tree.newBlackboard) {
             Blackboard & blackboard = *tree.blackboard;
             Script::initialize(tree, state);
@@ -113,11 +113,11 @@ public:
 
 class HoldASiteBaitScript : public Script {
 public:
-    HoldASiteBaitScript(const ServerState & state) :
+    explicit HoldASiteBaitScript(const ServerState &) :
             Script("HoldASiteBaitScript", {{0, ENGINE_TEAM_T, AggressiveType::Bait}, {0, ENGINE_TEAM_T, AggressiveType::Bait}, {0, ENGINE_TEAM_T, AggressiveType::Bait}},
                    {ObserveType::Absolute, 0, {395.317963, 2659.722656, 559.311157}, {43.801949, -49.044704}}) { }
 
-    virtual void initialize(Tree & tree, ServerState & state) override  {
+    void initialize(Tree & tree, ServerState & state) override  {
         if (tree.newBlackboard) {
             Blackboard & blackboard = *tree.blackboard;
             Script::initialize(tree, state);
@@ -167,11 +167,11 @@ public:
 
 class HoldBSitePushScript : public Script {
 public:
-    HoldBSitePushScript(const ServerState & state) :
+    explicit HoldBSitePushScript(const ServerState &) :
             Script("HoldBSitePushScript", {{0, ENGINE_TEAM_T}, {0, ENGINE_TEAM_T}, {0, ENGINE_TEAM_T}, {0, ENGINE_TEAM_CT}, {0, ENGINE_TEAM_CT}},
                    {ObserveType::Absolute, 0, {-2092., 3050., 710.}, {56., -68.}}) { }
 
-    virtual void initialize(Tree & tree, ServerState & state) override  {
+    void initialize(Tree & tree, ServerState & state) override  {
         if (tree.newBlackboard) {
             Blackboard & blackboard = *tree.blackboard;
             Script::initialize(tree, state);
@@ -244,11 +244,11 @@ public:
 
 class HoldBSiteBaitScript : public Script {
 public:
-    HoldBSiteBaitScript(const ServerState & state) :
+    explicit HoldBSiteBaitScript(const ServerState &) :
             Script("HoldBSiteBaitScript", {{0, ENGINE_TEAM_T, AggressiveType::Bait}, {0, ENGINE_TEAM_T, AggressiveType::Bait}, {0, ENGINE_TEAM_T, AggressiveType::Bait}},
                    {ObserveType::Absolute, 0, {-2092., 3050., 710.}, {56., -68.}}) { }
 
-    virtual void initialize(Tree & tree, ServerState & state) override  {
+    void initialize(Tree & tree, ServerState & state) override {
         if (tree.newBlackboard) {
             Blackboard & blackboard = *tree.blackboard;
             Script::initialize(tree, state);

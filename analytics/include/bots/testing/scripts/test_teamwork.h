@@ -5,6 +5,8 @@
 #ifndef CSKNOW_TEAMWORK_H
 #define CSKNOW_TEAMWORK_H
 
+#include <utility>
+
 #include "bots/testing/script.h"
 #include "bots/behavior_tree/pathing_node.h"
 #include "bots/behavior_tree/tree.h"
@@ -17,8 +19,8 @@ class PusherReachesBeforeBaiter : public Node {
 
 public:
     PusherReachesBeforeBaiter(Blackboard & blackboard, CSGOId pusherId, CSGOId baiterId, string pusherFinalPlace, set<string> baiterValidPlaces) :
-            Node(blackboard, "ValidConditionNode"), pusherId(pusherId), baiterId(baiterId), pusherFinalPlace(pusherFinalPlace), baiterValidPlaces(baiterValidPlaces) { };
-    virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
+            Node(blackboard, "ValidConditionNode"), pusherId(pusherId), baiterId(baiterId), pusherFinalPlace(std::move(pusherFinalPlace)), baiterValidPlaces(std::move(baiterValidPlaces)) { };
+    NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
         const ServerState::Client & pusherClient = state.getClient(pusherId);
         uint32_t pusherArea = blackboard.navFile.get_nearest_area_by_position(vec3Conv(pusherClient.getFootPosForPlayer())).get_id();
         string pusherPlace = blackboard.navFile.get_place(blackboard.navFile.get_area_by_id_fast(pusherArea).m_place);
@@ -42,11 +44,11 @@ class PushBaitGooseToCatScript : public Script {
 public:
     OrderId addedOrderId;
 
-    PushBaitGooseToCatScript(const ServerState & state) :
+    explicit PushBaitGooseToCatScript(const ServerState &) :
             Script("PushBaitGooseToCatScript", {{0, ENGINE_TEAM_CT}, {0, ENGINE_TEAM_CT}},
                    {ObserveType::Absolute, 0, {366.774475, 2669.538818, 239.860245}, {16.486465, -46.266056}}) { };
 
-    virtual void initialize(Tree & tree, ServerState & state) override  {
+    void initialize(Tree & tree, ServerState & state) override {
         if (tree.newBlackboard) {
             Blackboard & blackboard = *tree.blackboard;
             Script::initialize(tree, state);
@@ -83,11 +85,11 @@ class PushWaitForBaitGooseToCatScript : public Script {
 public:
     OrderId addedOrderId;
 
-    PushWaitForBaitGooseToCatScript(const ServerState & state) :
+    explicit PushWaitForBaitGooseToCatScript(const ServerState &) :
             Script("PushWaitForBaitGooseToCatScript", {{0, ENGINE_TEAM_CT}, {0, ENGINE_TEAM_CT}},
                    {ObserveType::Absolute, 0, {366.774475, 2669.538818, 239.860245}, {16.486465, -46.266056}}) { };
 
-    virtual void initialize(Tree & tree, ServerState & state) override  {
+    void initialize(Tree & tree, ServerState & state) override {
         if (tree.newBlackboard) {
             Blackboard & blackboard = *tree.blackboard;
             Script::initialize(tree, state);
@@ -124,11 +126,11 @@ class PushMultipleBaitGooseToCatScript : public Script {
 public:
     OrderId addedOrderId;
 
-    PushMultipleBaitGooseToCatScript(const ServerState & state) :
+    explicit PushMultipleBaitGooseToCatScript(const ServerState &) :
             Script("PushMultipleBaitGooseToCatScript", {{0, ENGINE_TEAM_CT}, {0, ENGINE_TEAM_CT}, {0, ENGINE_TEAM_CT}},
                    {ObserveType::Absolute, 0, {366.774475, 2669.538818, 239.860245}, {16.486465, -46.266056}}) { };
 
-    virtual void initialize(Tree & tree, ServerState & state) override  {
+    void initialize(Tree & tree, ServerState & state) override {
         if (tree.newBlackboard) {
             Blackboard & blackboard = *tree.blackboard;
             Script::initialize(tree, state);
@@ -172,11 +174,11 @@ class PushLurkBaitASiteScript : public Script {
 public:
     OrderId pushAddedOrderId, lurkAddedOrderId;
 
-    PushLurkBaitASiteScript(const ServerState & state) :
+    explicit PushLurkBaitASiteScript(const ServerState &) :
             Script("PushLurkBaitASiteScript", {{0, ENGINE_TEAM_CT, AggressiveType::Bait}, {0, ENGINE_TEAM_CT, AggressiveType::Bait}, {0, ENGINE_TEAM_CT, AggressiveType::Push}, {0, ENGINE_TEAM_T}},
                    {ObserveType::FirstPerson, 0}) { };
 
-    virtual void initialize(Tree & tree, ServerState & state) override  {
+    void initialize(Tree & tree, ServerState & state) override {
         if (tree.newBlackboard) {
             Blackboard & blackboard = *tree.blackboard;
             Script::initialize(tree, state);
@@ -247,13 +249,11 @@ public:
 
 class PushATwoOrdersScript : public Script {
 public:
-    OrderId addedOrderId;
-
-    PushATwoOrdersScript(const ServerState & state) :
+    explicit PushATwoOrdersScript(const ServerState &) :
             Script("PushATwoOrdersScript", {{0, ENGINE_TEAM_CT}, {0, ENGINE_TEAM_CT}},
                    {ObserveType::FirstPerson, 1}) { };
 
-    virtual void initialize(Tree & tree, ServerState & state) override  {
+    void initialize(Tree & tree, ServerState & state) override {
         if (tree.newBlackboard) {
             Blackboard & blackboard = *tree.blackboard;
             Script::initialize(tree, state);
@@ -290,11 +290,11 @@ public:
 
 class PushTwoBDoorsScript : public Script {
 public:
-    PushTwoBDoorsScript(const ServerState & state) :
+    explicit PushTwoBDoorsScript(const ServerState &) :
             Script("PushTwoBDoorsScript", {{0, ENGINE_TEAM_CT}, {0, ENGINE_TEAM_CT}},
                    {ObserveType::FirstPerson, 0}) { };
 
-    virtual void initialize(Tree & tree, ServerState & state) override  {
+    void initialize(Tree & tree, ServerState & state) override {
         if (tree.newBlackboard) {
             Blackboard & blackboard = *tree.blackboard;
             Script::initialize(tree, state);
@@ -338,11 +338,11 @@ public:
 
 class PushThreeBScript : public Script {
 public:
-    PushThreeBScript(const ServerState & state) :
+    explicit PushThreeBScript(const ServerState &) :
             Script("PushThreeBScript", {{0, ENGINE_TEAM_CT}, {0, ENGINE_TEAM_CT}, {0, ENGINE_TEAM_CT}},
                    {ObserveType::FirstPerson, 0}) { };
 
-    virtual void initialize(Tree & tree, ServerState & state) override  {
+    void initialize(Tree & tree, ServerState & state) override {
         if (tree.newBlackboard) {
             Blackboard & blackboard = *tree.blackboard;
             Script::initialize(tree, state);

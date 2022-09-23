@@ -13,11 +13,11 @@
 
 class SpawnPossibleNavAreasCheck : public Script {
 public:
-    SpawnPossibleNavAreasCheck(const ServerState & state) :
+    explicit SpawnPossibleNavAreasCheck(const ServerState &) :
             Script("SpawnPossibleNavAreasCheck", {{0, ENGINE_TEAM_CT}, {0, ENGINE_TEAM_CT}},
                    {ObserveType::Absolute, 0, {1762., 2012., 251.}, {39., 177.}}) { }
 
-    virtual void initialize(Tree & tree, ServerState & state) override {
+    void initialize(Tree & tree, ServerState & state) override {
         if (tree.newBlackboard) {
             Blackboard & blackboard = *tree.blackboard;
             Script::initialize(tree, state);
@@ -61,11 +61,11 @@ public:
 
 class DiffusionPossibleNavAreasCheck : public Script {
 public:
-    DiffusionPossibleNavAreasCheck(const ServerState & state) :
+    explicit DiffusionPossibleNavAreasCheck(const ServerState &) :
             Script("DiffusionPossibleNavAreasCheck", {{0, ENGINE_TEAM_CT}, {0, ENGINE_TEAM_CT}},
                    {ObserveType::Absolute, 0, {1762., 2012., 251.}, {39., 177.}}) { }
 
-    virtual void initialize(Tree & tree, ServerState & state) override {
+    void initialize(Tree & tree, ServerState & state) override {
         if (tree.newBlackboard) {
             Blackboard & blackboard = *tree.blackboard;
             Script::initialize(tree, state);
@@ -114,11 +114,11 @@ public:
 
 class VisibilityPossibleNavAreasCheck : public Script {
 public:
-    VisibilityPossibleNavAreasCheck(const ServerState & state) :
+    explicit VisibilityPossibleNavAreasCheck(const ServerState &) :
             Script("VisibilityPossibleNavAreasCheck", {{0, ENGINE_TEAM_CT}, {0, ENGINE_TEAM_CT}, {0, ENGINE_TEAM_T}},
                    {ObserveType::Absolute, 0, {1762., 2012., 251.}, {39., 177.}}) { }
 
-    virtual void initialize(Tree & tree, ServerState & state) override {
+    void initialize(Tree & tree, ServerState & state) override {
         if (tree.newBlackboard) {
             Blackboard & blackboard = *tree.blackboard;
             Script::initialize(tree, state);

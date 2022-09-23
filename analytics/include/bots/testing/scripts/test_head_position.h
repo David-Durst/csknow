@@ -19,7 +19,7 @@ public:
     DrawHeadPos(Blackboard & blackboard, CSGOId playerId, Vec3 visOffset = {0., -10., 0.}, double radius = 2.) :
             Command(blackboard, "DrawHeadPos"), playerId(playerId), visOffset(visOffset), radius(radius) { };
 
-    virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
+    NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
         std::stringstream result;
         result << "sm_drawAABB 3.5 ";
 
@@ -101,11 +101,11 @@ Node::Ptr getMoveHeadNode(Blackboard & blackboard, ServerState & state, const ve
 
 class HeadTrackingScript : public Script {
 public:
-    HeadTrackingScript(const ServerState & state) :
+    explicit HeadTrackingScript(const ServerState &) :
             Script("HeadTrackingScript", {{0, ENGINE_TEAM_T}},
                    {ObserveType::Absolute, 0, {1417.528564, 1562.913574, 54.766550}, {0., 90.}}) { }
 
-    virtual void initialize(Tree & tree, ServerState & state) override {
+    void initialize(Tree & tree, ServerState & state) override {
         if (tree.newBlackboard) {
             Blackboard & blackboard = *tree.blackboard;
             Script::initialize(tree, state);
@@ -140,11 +140,11 @@ public:
 
 class CrouchedHeadTrackingScript : public Script {
 public:
-    CrouchedHeadTrackingScript(const ServerState & state) :
+    explicit CrouchedHeadTrackingScript(const ServerState &) :
             Script("CrouchedHeadTrackingScript", {{0, ENGINE_TEAM_T}},
                    {ObserveType::Absolute, 0, {1417.528564, 1562.913574, 44.766550}, {0., 90.}}) { }
 
-    virtual void initialize(Tree & tree, ServerState & state) override {
+    void initialize(Tree & tree, ServerState & state) override {
         if (tree.newBlackboard) {
             Blackboard & blackboard = *tree.blackboard;
             Script::initialize(tree, state);

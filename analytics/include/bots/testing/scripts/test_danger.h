@@ -15,11 +15,11 @@ class DangerOnePlayerCheck : public Script {
 public:
     OrderId addedOrderId;
 
-    DangerOnePlayerCheck(const ServerState & state) :
+    explicit DangerOnePlayerCheck(const ServerState &) :
             Script("DangerOnePlayerCheck", {{0, ENGINE_TEAM_CT}, {0, ENGINE_TEAM_T}, {0, ENGINE_TEAM_T}},
                    {ObserveType::Absolute, 0, {395.317963, 2659.722656, 559.311157}, {43.801949, -49.044704}}) { }
 
-    virtual void initialize(Tree & tree, ServerState & state) override {
+    void initialize(Tree & tree, ServerState & state) override {
         if (tree.newBlackboard) {
             Blackboard & blackboard = *tree.blackboard;
             Script::initialize(tree, state);
@@ -78,11 +78,11 @@ class DangerTwoPlayerCheck : public Script {
 public:
     OrderId addedOrderId;
 
-    DangerTwoPlayerCheck(const ServerState & state) :
+    explicit DangerTwoPlayerCheck(const ServerState &) :
             Script("DangerTwoPlayerCheck", {{0, ENGINE_TEAM_CT}, {0, ENGINE_TEAM_CT}, {0, ENGINE_TEAM_T}, {0, ENGINE_TEAM_T}},
                    {ObserveType::Absolute, 0, {395.317963, 2659.722656, 559.311157}, {43.801949, -49.044704}}) { }
 
-    virtual void initialize(Tree & tree, ServerState & state) override {
+    void initialize(Tree & tree, ServerState & state) override {
         if (tree.newBlackboard) {
             Blackboard & blackboard = *tree.blackboard;
             Script::initialize(tree, state);

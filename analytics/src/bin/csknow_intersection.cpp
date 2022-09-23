@@ -1,3 +1,4 @@
+#ifdef false
 #include "geometry.h"
 #include <iostream>
 
@@ -22,3 +23,4 @@ int main(int argc, char * argv[]) {
               << ", y " << cheaterRay.orig[1] + cheaterRay.dir[1] * hitt1
               << ", z " << cheaterRay.orig[2] + cheaterRay.dir[2] * hitt1 << std::endl;
 }
+#endif

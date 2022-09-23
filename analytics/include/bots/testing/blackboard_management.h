@@ -5,6 +5,8 @@
 #ifndef CSKNOW_BLACKBOARD_MANAGEMENT_H
 #define CSKNOW_BLACKBOARD_MANAGEMENT_H
 
+#include <utility>
+
 #include "bots/testing/script.h"
 #include "bots/behavior_tree/pathing_node.h"
 #include "bots/analysis/save_nav_overlay.h"
@@ -30,10 +32,10 @@ class ForceOrderNode : public Node {
     OrderId & orderId;
 public:
     ForceOrderNode(Blackboard & blackboard, string name, vector<CSGOId> targetIds, Waypoints waypoints, OrderId & orderId) :
-            Node(blackboard, name), targetIds(targetIds), waypoints(waypoints), orderId(orderId) { };
+            Node(blackboard, std::move(name)), targetIds(std::move(targetIds)), waypoints(std::move(waypoints)), orderId(orderId) { };
     ForceOrderNode(Blackboard & blackboard, string name, vector<CSGOId> targetIds, Waypoints waypoints, set<AreaId> areaIdsToRemove, OrderId & orderId) :
-            Node(blackboard, name), targetIds(targetIds), waypoints(waypoints), areaIdsToRemove(areaIdsToRemove), orderId(orderId) { };
-    virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
+            Node(blackboard, std::move(name)), targetIds(std::move(targetIds)), waypoints(std::move(waypoints)), areaIdsToRemove(std::move(areaIdsToRemove)), orderId(orderId) { };
+    NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
         //vector<string> pathPlace = { "Catwalk", "ShortStairs", "ExtendedA", "BombsiteA" };
         if (targetIds.empty()) {
             throw std::runtime_error("need at least one target to force order");
@@ -63,8 +65,8 @@ class ForceEntryIndexNode : public Node {
     vector<int32_t> entryIndices;
 public:
     ForceEntryIndexNode(Blackboard & blackboard, string name, vector<CSGOId> targetIds, vector<int32_t> entryIndices) :
-            Node(blackboard, name), targetIds(targetIds), entryIndices(entryIndices) { };
-    virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
+            Node(blackboard, std::move(name)), targetIds(std::move(targetIds)), entryIndices(std::move(entryIndices)) { };
+    NodeState exec(const ServerState &, TreeThinker &treeThinker) override {
         for (size_t i = 0; i < targetIds.size(); i++) {
             blackboard.strategy.playerToEntryIndex[targetIds[i]] = entryIndices[i];
         }
@@ -79,8 +81,8 @@ class ForceHoldIndexNode : public Node {
     OrderId & orderId;
 public:
     ForceHoldIndexNode(Blackboard & blackboard, string name, vector<CSGOId> targetIds, vector<int> holdIndices, OrderId & orderId) :
-            Node(blackboard, name), targetIds(targetIds), holdIndices(holdIndices), orderId(orderId) { };
-    virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
+            Node(blackboard, std::move(name)), targetIds(std::move(targetIds)), holdIndices(std::move(holdIndices)), orderId(orderId) { };
+    NodeState exec(const ServerState &, TreeThinker &treeThinker) override {
         for (size_t i = 0; i < targetIds.size(); i++) {
             // intentional int to size_t mismatch so easier to create test vectors, not gonna have more then 1000 waypoints anyway
             blackboard.strategy.assignPlayerToHoldIndex(targetIds[i], orderId, holdIndices[i]);
@@ -94,8 +96,8 @@ class ForceDefuser : public Node {
     CSGOId targetId;
 public:
     ForceDefuser(Blackboard & blackboard, CSGOId targetId, string name = "ForceDefuser") :
-            Node(blackboard, name), targetId(targetId) { };
-    virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
+            Node(blackboard, std::move(name)), targetId(targetId) { };
+    NodeState exec(const ServerState &, TreeThinker &treeThinker) override {
         blackboard.defuserId = targetId;
         playerNodeState[treeThinker.csgoId] = NodeState::Success;
         return playerNodeState[treeThinker.csgoId];
@@ -107,8 +109,8 @@ class DisableActionsNode : public Node {
     bool disableMouse, disableFiring, disableMove;
 public:
     DisableActionsNode(Blackboard & blackboard, string name, vector<CSGOId> targetIds, bool disableMouse = true, bool disableFiring = true, bool disableMove = true) :
-            Node(blackboard, name), targetIds(targetIds), disableMouse(disableMouse), disableFiring(disableFiring), disableMove(disableMove) { };
-    virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
+            Node(blackboard, std::move(name)), targetIds(std::move(targetIds)), disableMouse(disableMouse), disableFiring(disableFiring), disableMove(disableMove) { };
+    NodeState exec(const ServerState &, TreeThinker &treeThinker) override {
         for (size_t i = 0; i < targetIds.size(); i++) {
             bool oldFireValue = blackboard.playerToAction[targetIds[i]].getButton(IN_ATTACK);
             if (disableMove) {
@@ -130,8 +132,8 @@ class ForceActionsNode : public Node {
     int32_t inputBits;
 public:
     ForceActionsNode(Blackboard & blackboard, vector<CSGOId> targetIds, int32_t inputBits, string name = "ForceActionsNode") :
-            Node(blackboard, name), targetIds(targetIds), inputBits(inputBits) { };
-    virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
+            Node(blackboard, std::move(name)), targetIds(std::move(targetIds)), inputBits(inputBits) { };
+    NodeState exec(const ServerState &, TreeThinker &treeThinker) override {
         for (size_t i = 0; i < targetIds.size(); i++) {
             blackboard.playerToAction[targetIds[i]].buttons |= inputBits;
         }
@@ -142,9 +144,9 @@ public:
 
 class ClearMemoryCommunicationDangerNode : public Node {
 public:
-    ClearMemoryCommunicationDangerNode(Blackboard & blackboard) :
+    explicit ClearMemoryCommunicationDangerNode(Blackboard & blackboard) :
             Node(blackboard, "ClearMemoryCommunicationDanger") { };
-    virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
+    NodeState exec(const ServerState &, TreeThinker &treeThinker) override {
         blackboard.tMemory.positions.clear();
         blackboard.ctMemory.positions.clear();
         for (auto & [_, memory] : blackboard.playerToMemory) {
@@ -160,9 +162,9 @@ public:
 
 class RecomputeOrdersNode : public Node {
 public:
-    RecomputeOrdersNode(Blackboard & blackboard) :
+    explicit RecomputeOrdersNode(Blackboard & blackboard) :
             Node(blackboard, "RecomputeOrders") { };
-    virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
+    NodeState exec(const ServerState &, TreeThinker &treeThinker) override {
         blackboard.recomputeOrders = true;
         playerNodeState[treeThinker.csgoId] = NodeState::Success;
         return playerNodeState[treeThinker.csgoId];
@@ -176,9 +178,9 @@ class CheckPossibleLocationsNode : public Node {
 public:
     CheckPossibleLocationsNode(Blackboard & blackboard, vector<CSGOId> targetIds,
                                vector<vector<AreaId>> requiredPossibleAreas, vector<vector<AreaId>> requiredNotPossibleAreas, string name = "CheckPossibleLocations") :
-            Node(blackboard, name), targetIds(targetIds),
-            requiredPossibleAreas(requiredPossibleAreas), requiredNotPossibleAreas(requiredNotPossibleAreas) { };
-    virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
+            Node(blackboard, std::move(name)), targetIds(std::move(targetIds)),
+            requiredPossibleAreas(std::move(requiredPossibleAreas)), requiredNotPossibleAreas(std::move(requiredNotPossibleAreas)) { };
+    NodeState exec(const ServerState &, TreeThinker &treeThinker) override {
         for (size_t i = 0; i < targetIds.size(); i++) {
             // check the areas that have to be present
             for (size_t j = 0; j < requiredPossibleAreas[i].size(); j++) {
@@ -205,8 +207,8 @@ class RequireDifferentDangerAreasNode : public Node {
     vector<CSGOId> targetIds;
 public:
     RequireDifferentDangerAreasNode(Blackboard & blackboard, vector<CSGOId> targetIds, string name = "RequireDifferentDangerAreas") :
-            Node(blackboard, name), targetIds(targetIds) { };
-    virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
+            Node(blackboard, std::move(name)), targetIds(std::move(targetIds)) { };
+    NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
         AreaBits dangerAreas;
         for (size_t i = 0; i < targetIds.size(); i++) {
             if (blackboard.playerToDangerAreaId.find(targetIds[i]) == blackboard.playerToDangerAreaId.end()) {
@@ -234,8 +236,8 @@ class SavePossibleVisibleOverlays : public Node {
 public:
     SavePossibleVisibleOverlays(Blackboard & blackboard, vector<CSGOId> possibleAreasTargetIds,
                                     bool visibleOverlay, string name = "SavePossibleVisibleOverlays") :
-            Node(blackboard, name), possibleAreasTargetIds(possibleAreasTargetIds), visibleOverlay(visibleOverlay) { };
-    virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
+            Node(blackboard, std::move(name)), possibleAreasTargetIds(std::move(possibleAreasTargetIds)), visibleOverlay(visibleOverlay) { };
+    NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
         vector<AreaBits> overlays;
         CSKnowTime curTime = std::chrono::system_clock::now();
         //std::cout << "time since last save " << state.getSecondsBetweenTimes(oldTime, curTime) << std::endl;

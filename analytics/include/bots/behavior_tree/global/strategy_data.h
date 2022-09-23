@@ -299,8 +299,8 @@ struct Order {
 };
 
 struct OrderId {
-    TeamId team;
-    int64_t index;
+    TeamId team = INVALID_ID;
+    int64_t index = INVALID_ID;
 };
 
 static bool operator<(const OrderId& a, const OrderId& b) {

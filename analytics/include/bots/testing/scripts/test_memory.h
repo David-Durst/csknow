@@ -14,10 +14,10 @@
 
 class MemoryAimCheck : public Script {
 public:
-    MemoryAimCheck(const ServerState & state) :
+    explicit MemoryAimCheck(const ServerState &) :
             Script("MemoryAimCheck", {{0, ENGINE_TEAM_T}, {0, ENGINE_TEAM_CT}}, {ObserveType::FirstPerson, 0}) { }
 
-    virtual void initialize(Tree & tree, ServerState & state) override {
+    void initialize(Tree & tree, ServerState & state) override {
         if (tree.newBlackboard) {
             Blackboard & blackboard = *tree.blackboard;
             Script::initialize(tree, state);
@@ -60,10 +60,10 @@ public:
 
 class MemoryForgetCheck : public Script {
 public:
-    MemoryForgetCheck(const ServerState & state) :
+    explicit MemoryForgetCheck(const ServerState &) :
             Script("MemoryForgetCheck", {{0, ENGINE_TEAM_T}, {0, ENGINE_TEAM_CT}}, {ObserveType::FirstPerson, 0}) { }
 
-    virtual void initialize(Tree & tree, ServerState & state) override {
+    void initialize(Tree & tree, ServerState & state) override {
         if (tree.newBlackboard) {
             Blackboard & blackboard = *tree.blackboard;
             Script::initialize(tree, state);

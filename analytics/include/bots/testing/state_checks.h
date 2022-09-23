@@ -5,6 +5,8 @@
 #ifndef CSKNOW_STATE_CHECKS_H
 #define CSKNOW_STATE_CHECKS_H
 
+#include <utility>
+
 #include "bots/testing/script.h"
 #include "bots/behavior_tree/pathing_node.h"
 #include "bots/behavior_tree/tree.h"
@@ -18,7 +20,7 @@ public:
     AimingAt(Blackboard & blackboard, CSGOId sourceId, CSGOId targetId, bool invert = false) :
             Node(blackboard, "AimingAtNode"), sourceId(sourceId), targetId(targetId), invert(invert) { };
 
-    virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
+    NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
         const ServerState::Client & sourceClient = state.getClient(sourceId);
         const ServerState::Client & targetClient = state.getClient(targetId);
 
@@ -48,9 +50,9 @@ class AimingAtArea : public Node {
 
 public:
     AimingAtArea(Blackboard & blackboard, vector<CSGOId> sourceIds, AreaId targetId, bool invert = false, bool requireVisible = true) :
-            Node(blackboard, "AimingAtNode"), sourceIds(sourceIds), targetId(targetId), invert(invert), requireVisible(requireVisible) { };
+            Node(blackboard, "AimingAtNode"), sourceIds(std::move(sourceIds)), targetId(targetId), invert(invert), requireVisible(requireVisible) { };
 
-    virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
+    NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
         bool aimingAtTarget = false;
 
         for (const auto & sourceId : sourceIds) {
@@ -62,9 +64,11 @@ public:
                 continue;
             }
 
+            /*
             if (targetId == 3777) {
                 int x = 1;
             }
+             */
 
             // check if aiming at enemy anywhere
             Ray eyeCoordinates = getEyeCoordinatesForPlayerGivenEyeHeight(
@@ -95,7 +99,7 @@ public:
     InArea(Blackboard & blackboard, CSGOId sourceId, AreaId areaId) :
             Node(blackboard, "InArea_" + std::to_string(areaId)), sourceId(sourceId), areaId(areaId) { };
 
-    virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
+    NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
         const ServerState::Client & sourceClient = state.getClient(sourceId);
         AreaId srcAreaId =
                 blackboard.navFile.get_nearest_area_by_position(vec3Conv(sourceClient.getFootPosForPlayer())).get_id();
@@ -115,10 +119,10 @@ class InPlace : public Node {
     string place;
 
 public:
-    InPlace(Blackboard & blackboard, CSGOId sourceId, string place) :
+    InPlace(Blackboard & blackboard, CSGOId sourceId, const string& place) :
             Node(blackboard, "InPlace_" + place), sourceId(sourceId), place(place) { };
 
-    virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
+    NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
         const ServerState::Client & sourceClient = state.getClient(sourceId);
         const nav_mesh::nav_area & srcArea =
                 blackboard.navFile.get_nearest_area_by_position(vec3Conv(sourceClient.getFootPosForPlayer()));
@@ -141,8 +145,8 @@ public:
     Firing(Blackboard & blackboard, CSGOId sourceId, bool invert = false) :
             Node(blackboard, "FiringNode"), sourceId(sourceId), invert(invert) { };
 
-    virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
-        const ServerState::Client & sourceClient = state.getClient(sourceId);
+    NodeState exec(const ServerState &, TreeThinker &treeThinker) override {
+        //const ServerState::Client & sourceClient = state.getClient(sourceId);
 
         if ((!invert && blackboard.playerToAction[sourceId].getButton(IN_ATTACK)) ||
             (invert && !blackboard.playerToAction[sourceId].getButton(IN_ATTACK))) {
@@ -198,7 +202,7 @@ public:
             Node(blackboard, "PosConstraint" + posConstraintOpToString(op) + std::to_string(value)), playerId(playerId),
             dim(dim), op(op), value(value) { };
 
-    virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
+    NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
         const ServerState::Client & sourceClient = state.getClient(playerId);
 
         double testValue;
@@ -246,9 +250,9 @@ class StandingStill : public Node {
 
 public:
     StandingStill(Blackboard & blackboard, vector<CSGOId> sourceIds) :
-            Node(blackboard, "StandingStill"), sourceIds(sourceIds) { };
+            Node(blackboard, "StandingStill"), sourceIds(std::move(sourceIds)) { };
 
-    virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
+    NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
         bool allStill = true;
         for (const auto & sourceId : sourceIds) {
             const ServerState::Client & sourceClient = state.getClient(sourceId);
@@ -269,7 +273,7 @@ public:
             Node(blackboard, "DistanceConstraint" + posConstraintOpToString(op) + std::to_string(value)), srcId(srcId),
             dstId(dstId), op(op), value(value) { };
 
-    virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
+    NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
 
         double testValue = computeDistance(state.getClient(srcId).getFootPosForPlayer(),
                                            state.getClient(dstId).getFootPosForPlayer());
@@ -301,10 +305,10 @@ public:
 
 class C4Defused : public Node {
 public:
-    C4Defused(Blackboard & blackboard) :
+    explicit C4Defused(Blackboard & blackboard) :
             Node(blackboard, "C4Defused") { };
 
-    virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
+    NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
         playerNodeState[treeThinker.csgoId] = state.c4IsDefused ? NodeState::Success : NodeState::Failure;
         return playerNodeState[treeThinker.csgoId];
     }

@@ -15,11 +15,11 @@ class CTEngageSpacingScript : public Script {
 public:
     OrderId addedOrderId;
 
-    CTEngageSpacingScript(const ServerState & state) :
+    explicit CTEngageSpacingScript(const ServerState &) :
             Script("CTEngageSpacingScript", {{0, ENGINE_TEAM_CT, AggressiveType::Push}, {0, ENGINE_TEAM_CT, AggressiveType::Push}, {0, ENGINE_TEAM_T}},
                    {ObserveType::FirstPerson, 1}) { };
 
-    virtual void initialize(Tree & tree, ServerState & state) override  {
+    void initialize(Tree & tree, ServerState & state) override  {
         if (tree.newBlackboard) {
             Blackboard & blackboard = *tree.blackboard;
             Script::initialize(tree, state);

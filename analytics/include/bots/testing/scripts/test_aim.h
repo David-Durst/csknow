@@ -12,7 +12,7 @@
 
 class KilledAfterTime : public Node {
     CSGOId sourceId, targetId;
-    int32_t startFrame;
+    int32_t startFrame = INVALID_ID;
     double minTime;
     bool testScoped;
 
@@ -21,7 +21,7 @@ public:
             Node(blackboard, "ValidConditionNode"), sourceId(sourceId), targetId(targetId),
             minTime(minTime), testScoped(testScoped) { };
 
-    virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
+    NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
         const ServerState::Client & sourceClient = state.getClient(sourceId);
         const ServerState::Client & targetClient = state.getClient(targetId);
         if (playerNodeState[treeThinker.csgoId] == NodeState::Uninitialized) {
@@ -39,17 +39,17 @@ public:
         return playerNodeState[treeThinker.csgoId];
     }
 
-    virtual void restart(const TreeThinker & treeThinker) override {
+    void restart(const TreeThinker & treeThinker) override {
         Node::restart(treeThinker);
     }
 };
 
 class AimAndKillWithinTimeCheck : public Script {
 public:
-    AimAndKillWithinTimeCheck(const ServerState & state) :
+    explicit AimAndKillWithinTimeCheck(const ServerState &) :
             Script("AimAndKillWithinTimeCheck", {{0, ENGINE_TEAM_T}, {0, ENGINE_TEAM_CT}}, {ObserveType::FirstPerson, 0}) { }
 
-    virtual void initialize(Tree & tree, ServerState & state) override {
+    void initialize(Tree & tree, ServerState & state) override {
         if (tree.newBlackboard) {
             Blackboard & blackboard = *tree.blackboard;
             Script::initialize(tree, state);
@@ -94,10 +94,10 @@ public:
 // scoping takes time (need to wait for scope animation to happen, need to predict aim), not gonna deal with it now
 class ScopedAimAndKillWithinTimeCheck : public Script {
 public:
-    ScopedAimAndKillWithinTimeCheck(const ServerState & state) :
+    explicit ScopedAimAndKillWithinTimeCheck(const ServerState &) :
             Script("ScopedAimAndKillWithinTimeCheck", {{0, ENGINE_TEAM_T}, {0, ENGINE_TEAM_CT}}, {ObserveType::FirstPerson, 0}) { }
 
-    virtual void initialize(Tree & tree, ServerState & state) override {
+    void initialize(Tree & tree, ServerState & state) override {
         if (tree.newBlackboard) {
             Blackboard & blackboard = *tree.blackboard;
             Script::initialize(tree, state);

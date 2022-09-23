@@ -15,11 +15,11 @@ class DefuseScript : public Script {
 public:
     OrderId addedOrderId;
 
-    DefuseScript(const ServerState & state) :
+    explicit DefuseScript(const ServerState &) :
             Script("DefuseScript", {{0, ENGINE_TEAM_CT}, {0, ENGINE_TEAM_CT}},
                    {ObserveType::Absolute, 0, {395.317963, 2659.722656, 559.311157}, {43.801949, -49.044704}}) { }
 
-    virtual void initialize(Tree & tree, ServerState & state) override {
+    void initialize(Tree & tree, ServerState & state) override {
         if (tree.newBlackboard) {
             Blackboard & blackboard = *tree.blackboard;
             Script::initialize(tree, state);

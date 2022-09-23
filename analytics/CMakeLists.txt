@@ -44,7 +44,7 @@ add_executable(csknow_bt_bot ${PROJECT_SOURCE_DIR}/src/bin/csknow_bt_bot.cpp)
 add_executable(csknow_test_bt_bot ${PROJECT_SOURCE_DIR}/src/bin/csknow_test_bt_bot.cpp)
 add_executable(csknow_compute_vis_points ${PROJECT_SOURCE_DIR}/src/bin/csknow_compute_vis_points.cpp)
 #add_executable(csknow_train ${PROJECT_SOURCE_DIR}/src/bin/csknow_train.cpp)
-add_executable(csknow_intersection ${PROJECT_SOURCE_DIR}/src/bin/csknow_intersection.cpp)
+#add_executable(csknow_intersection ${PROJECT_SOURCE_DIR}/src/bin/csknow_intersection.cpp)
 target_link_libraries(csknow_lib OpenMP::OpenMP_CXX)
 target_link_libraries(csknow_lib OpenSSL::SSL)
 target_link_libraries(csknow_lib stdc++fs)
@@ -54,7 +54,7 @@ target_link_libraries(csknow_bt_bot csknow_lib)
 target_link_libraries(csknow_test_bt_bot csknow_lib)
 target_link_libraries(csknow_compute_vis_points csknow_lib)
 #target_link_libraries(csknow_train csknow_lib)
-target_link_libraries(csknow_intersection csknow_lib)
+#target_link_libraries(csknow_intersection csknow_lib)
 
 # add this to enable debug printing statements
 
@@ -62,7 +62,7 @@ set_target_properties(csknow_lib PROPERTIES VERSION ${PROJECT_VERSION})
 
 # add the install targets
 install (TARGETS csknow DESTINATION bin)
-install (TARGETS csknow_intersection DESTINATION bin)
+#install (TARGETS csknow_intersection DESTINATION bin)
 install (TARGETS csknow_lib
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
         INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDERDIR})

@@ -5,6 +5,8 @@
 #ifndef CSKNOW_ENTRY_H
 #define CSKNOW_ENTRY_H
 
+#include <utility>
+
 #include "bots/testing/script.h"
 #include "bots/behavior_tree/pathing_node.h"
 #include "bots/behavior_tree/tree.h"
@@ -17,7 +19,7 @@ class JumpedBeforeCat : public Node {
 public:
     JumpedBeforeCat(Blackboard & blackboard, CSGOId targetId) :
             Node(blackboard, "ValidConditionNode"), targetId(targetId) { };
-    virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
+    NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
         const ServerState::Client & curClient = state.getClient(targetId);
         uint32_t curArea = blackboard.navFile.get_nearest_area_by_position(vec3Conv(curClient.getFootPosForPlayer())).get_id();
         string curPlace = blackboard.navFile.get_place(blackboard.navFile.get_area_by_id_fast(curArea).m_place);
@@ -47,7 +49,7 @@ public:
         }
     }
 
-    virtual void restart(const TreeThinker & treeThinker) override {
+    void restart(const TreeThinker & treeThinker) override {
         Node::restart(treeThinker);
         reachedBoxed = false;
     }
@@ -57,10 +59,10 @@ class GooseToCatScript : public Script {
 public:
     OrderId addedOrderId;
 
-    GooseToCatScript(const ServerState & state) :
+    explicit GooseToCatScript(const ServerState &) :
             Script("GooseToCatScript", {{0, ENGINE_TEAM_CT}}, {ObserveType::FirstPerson, 0}) { }
 
-    virtual void initialize(Tree & tree, ServerState & state) override  {
+    void initialize(Tree & tree, ServerState & state) override  {
         if (tree.newBlackboard) {
             Blackboard & blackboard = *tree.blackboard;
             Script::initialize(tree, state);
@@ -91,8 +93,8 @@ class DontEnterNavAreas : public Node {
     set<uint32_t> forbiddenAreas;
 public:
     DontEnterNavAreas(Blackboard & blackboard, CSGOId targetId, set<uint32_t> forbiddenAreas) :
-            Node(blackboard, "DontEnterNavAreas"), targetId(targetId), forbiddenAreas(forbiddenAreas) { };
-    virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
+            Node(blackboard, "DontEnterNavAreas"), targetId(targetId), forbiddenAreas(std::move(forbiddenAreas)) { };
+    NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
         const ServerState::Client & curClient = state.getClient(targetId);
         uint32_t curArea = blackboard.navFile.get_nearest_area_by_position(vec3Conv(curClient.getFootPosForPlayer())).get_id();
         if (forbiddenAreas.find(curArea) == forbiddenAreas.end()) {
@@ -109,10 +111,10 @@ class GooseToCatShortScript : public Script {
 public:
     OrderId addedOrderId;
 
-    GooseToCatShortScript(const ServerState & state) :
+    explicit GooseToCatShortScript(const ServerState &) :
             Script("GooseToCatShortScript", {{0, ENGINE_TEAM_CT}}, {ObserveType::FirstPerson, 0}) { }
 
-    virtual void initialize(Tree & tree, ServerState & state) override  {
+    void initialize(Tree & tree, ServerState & state) override  {
         if (tree.newBlackboard) {
             Blackboard & blackboard = *tree.blackboard;
             Script::initialize(tree, state);
@@ -143,10 +145,10 @@ class CTPushLongScript : public Script {
 public:
     OrderId addedOrderId;
 
-    CTPushLongScript(const ServerState & state) :
+    explicit CTPushLongScript(const ServerState &) :
             Script("CTPushLongScript", {{0, ENGINE_TEAM_CT}}, {ObserveType::FirstPerson, 0}) { }
 
-    virtual void initialize(Tree & tree, ServerState & state) override  {
+    void initialize(Tree & tree, ServerState & state) override  {
         if (tree.newBlackboard) {
             Blackboard & blackboard = *tree.blackboard;
             Script::initialize(tree, state);
@@ -176,10 +178,10 @@ class CTPushBDoorsScript : public Script {
 public:
     OrderId addedOrderId;
 
-    CTPushBDoorsScript(const ServerState & state) :
+    explicit CTPushBDoorsScript(const ServerState &) :
             Script("CTPushBDoorsScript", {{0, ENGINE_TEAM_CT}}, {ObserveType::FirstPerson, 0}) { }
 
-    virtual void initialize(Tree & tree, ServerState & state) override  {
+    void initialize(Tree & tree, ServerState & state) override  {
         if (tree.newBlackboard) {
             Blackboard & blackboard = *tree.blackboard;
             Script::initialize(tree, state);
@@ -209,10 +211,10 @@ class CTPushBHoleScript : public Script {
 public:
     OrderId addedOrderId;
 
-    CTPushBHoleScript(const ServerState & state) :
+    explicit CTPushBHoleScript(const ServerState &) :
             Script("CTPushBHoleScript", {{0, ENGINE_TEAM_CT}}, {ObserveType::FirstPerson, 0}) { }
 
-    virtual void initialize(Tree & tree, ServerState & state) override  {
+    void initialize(Tree & tree, ServerState & state) override  {
         if (tree.newBlackboard) {
             Blackboard & blackboard = *tree.blackboard;
             Script::initialize(tree, state);

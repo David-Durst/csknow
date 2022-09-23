@@ -14,10 +14,10 @@
 
 class CommunicationAimCheck : public Script {
 public:
-    CommunicationAimCheck(const ServerState & state) :
+    explicit CommunicationAimCheck(const ServerState &) :
             Script("CommunicationAimCheck", {{0, ENGINE_TEAM_T}, {0, ENGINE_TEAM_T}, {0, ENGINE_TEAM_CT}}, {ObserveType::FirstPerson, 0}) { }
 
-    virtual void initialize(Tree & tree, ServerState & state) override {
+    void initialize(Tree & tree, ServerState & state) override {
         if (tree.newBlackboard) {
             Blackboard & blackboard = *tree.blackboard;
             Script::initialize(tree, state);
@@ -63,10 +63,10 @@ public:
 
 class CommunicationForgetCheck : public Script {
 public:
-    CommunicationForgetCheck(const ServerState & state) :
+    explicit CommunicationForgetCheck(const ServerState &) :
             Script("CommunicationForgetCheck", {{0, ENGINE_TEAM_T}, {0, ENGINE_TEAM_T}, {0, ENGINE_TEAM_CT}}, {ObserveType::FirstPerson, 0}) { }
 
-    virtual void initialize(Tree & tree, ServerState & state) override {
+    void initialize(Tree & tree, ServerState & state) override {
         if (tree.newBlackboard) {
             Blackboard & blackboard = *tree.blackboard;
             Script::initialize(tree, state);
@@ -114,10 +114,10 @@ public:
 
 class CommunicationIgnoreCheck : public Script {
 public:
-    CommunicationIgnoreCheck(const ServerState & state) :
+    explicit CommunicationIgnoreCheck(const ServerState &) :
             Script("CommunicationIgnoreCheck", {{0, ENGINE_TEAM_T}, {0, ENGINE_TEAM_T}, {0, ENGINE_TEAM_CT}}, {ObserveType::FirstPerson, 0}) { }
 
-    virtual void initialize(Tree & tree, ServerState & state) override {
+    void initialize(Tree & tree, ServerState & state) override {
         if (tree.newBlackboard) {
             Blackboard & blackboard = *tree.blackboard;
             Script::initialize(tree, state);

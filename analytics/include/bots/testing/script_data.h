@@ -19,8 +19,8 @@ enum class ObserveType {
 struct ObserveSettings {
     ObserveType observeType;
     CSKnowId neededBotIndex;
-    Vec3 cameraOrigin;
-    Vec2 cameraAngle;
+    Vec3 cameraOrigin = {0., 0., 0.};
+    Vec2 cameraAngle = {0., 0.};
 };
 
 struct NeededBot {
