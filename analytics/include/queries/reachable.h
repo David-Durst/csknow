@@ -64,7 +64,7 @@ public:
         return getDistance(static_cast<int64_t>(src), static_cast<int64_t>(dst));
     }
 
-    void load(string mapsPath, string mapName);
+    void load(const string & mapsPath, const string & mapName);
 };
 
 [[maybe_unused]] ReachableResult queryReachable(const MapMeshResult & mapMeshResult);

@@ -25,6 +25,7 @@ using std::unordered_map;
 using std::vector;
 using std::map;
 
+/*
 #define STOPPING_PERIOD_SECONDS 1.0
 #define STOPPED_AABB_MAX_SIZE_2D PLAYER_WIDTH*PLAYER_WIDTH
 #define STOPPED_AABB_HEIGHT PLAYER_HEIGHT
@@ -33,6 +34,7 @@ using std::map;
 // https://old.reddit.com/r/GlobalOffensive/comments/a28h8r/movement_speed_chart/
 #define STOPPED_SPEED_THRESHOLD 10.0
 #define START_SPEED_THRESHOLD 50.0
+ */
 
 class NonEngagementTrajectoryResult : public QueryResult {
 public:
@@ -53,9 +55,9 @@ public:
         playerLabelIndicesColumn = 1;
     }
 
-    vector<int64_t> filterByForeignKey(int64_t otherTableIndex) {
+    vector<int64_t> filterByForeignKey(int64_t otherTableIndex) override {
         vector<int64_t> result;
-        for (int i = rowIndicesPerRound[otherTableIndex].minId; i <= rowIndicesPerRound[otherTableIndex].maxId; i++) {
+        for (int64_t i = rowIndicesPerRound[otherTableIndex].minId; i <= rowIndicesPerRound[otherTableIndex].maxId; i++) {
             if (i == -1) {
                 continue;
             }
@@ -64,24 +66,26 @@ public:
         return result;
     }
 
-    void oneLineToCSV(int64_t index, stringstream & ss) {
+    void oneLineToCSV(int64_t index, stringstream & ss) override {
         ss << index << "," << startTickId[index] << "," << endTickId[index] << "," << tickLength[index] << ","
             << playerId[index] << "," << 0;
 
         ss << std::endl;
     }
 
-    vector<string> getForeignKeyNames() {
+    [[nodiscard]]
+    vector<string> getForeignKeyNames() override {
         return {"start tick id", "end tick id", "length"};
     }
 
-    vector<string> getOtherColumnNames() {
+    [[nodiscard]]
+    vector<string> getOtherColumnNames() override {
         return {"player ids", "roles"};
     }
 };
 
 
-NonEngagementTrajectoryResult queryNonEngagementTrajectory(const Games & games, const Rounds & rounds, const Ticks & ticks,
+NonEngagementTrajectoryResult queryNonEngagementTrajectory(const Rounds & rounds, const Ticks & ticks,
                                                            const PlayerAtTick & playerAtTick,
                                                            const EngagementResult & engagementResult);
 

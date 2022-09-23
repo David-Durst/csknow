@@ -44,9 +44,9 @@ public:
         this->ticksPerEvent = 1;
     }
 
-    vector<int64_t> filterByForeignKey(int64_t otherTableIndex) {
+    vector<int64_t> filterByForeignKey(int64_t otherTableIndex) override {
         vector<int64_t> result;
-        for (int i = rowIndicesPerRound[otherTableIndex].minId; i <= rowIndicesPerRound[otherTableIndex].maxId; i++) {
+        for (int64_t i = rowIndicesPerRound[otherTableIndex].minId; i <= rowIndicesPerRound[otherTableIndex].maxId; i++) {
             if (i == -1) {
                 continue;
             }
@@ -55,7 +55,7 @@ public:
         return result;
     }
 
-    void oneLineToCSV(int64_t index, stringstream & ss) {
+    void oneLineToCSV(int64_t index, stringstream & ss) override {
         ss << index << "," << tickId[index] << "," << engagementId[index] << ","
             << attackerPlayerId[index] << "," << victimPlayerId[index] << "," << secondsToHit[index] << ","
             << deltaViewAngle[index].x << "," << deltaViewAngle[index].y << "," << rawViewAngleSpeed[index] << ","
@@ -63,18 +63,18 @@ public:
         ss << std::endl;
     }
 
-    vector<string> getForeignKeyNames() {
+    vector<string> getForeignKeyNames() override {
         return {"tick id", "engagement id", "attacker player id", "victim player id"};
     }
 
-    vector<string> getOtherColumnNames() {
+    vector<string> getOtherColumnNames() override {
         return {"seconds to hit",  "delta view angle x", "delta view angle y", "raw view angle speed", "seconds since engagement start"};
     }
 };
 
 
 EngagementPerTickAimResult queryEngagementPerTickAim(const Games & games, const Rounds & rounds, const Ticks & ticks,
-                                       const PlayerAtTick & playerAtTick, const WeaponFire & first, const Hurt & hurt,
+                                       const PlayerAtTick & playerAtTick, const Hurt & hurt,
                                        const EngagementResult & engagementResult);
 
 #endif //CSKNOW_ENGAGEMENT_PER_TICK_AIM_H

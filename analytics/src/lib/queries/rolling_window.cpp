@@ -20,7 +20,7 @@ map<int64_t, vector<int64_t>> getPerPlayerPATIdsInTemporalRange(const Rounds & r
     map<int64_t, vector<int64_t>> result;
     int64_t startTick = getLookbackDemoTick(rounds, ticks, curTick, tickRates, secondsBefore),
         endTick = getLookforwardDemoTick(rounds, ticks, curTick, tickRates, secondsAfter);
-    for (size_t tickIndex = startTick; tickIndex <= endTick; tickIndex++) {
+    for (int64_t tickIndex = startTick; tickIndex <= endTick; tickIndex++) {
         map<int64_t, int64_t> playerToPAT = getPATIdForPlayerId(ticks, playerAtTick, tickIndex - 1);
         for (const auto [playerId, patId] : playerToPAT) {
             result[playerId].push_back(patId);

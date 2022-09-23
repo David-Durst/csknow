@@ -29,10 +29,10 @@ public:
         this->ticksPerEvent = 1;
     }
 
-    vector<int64_t> filterByForeignKey(int64_t otherTableIndex) {
+    vector<int64_t> filterByForeignKey(int64_t otherTableIndex) override {
         // no indexes on results
         vector<int64_t> result;
-        for (int i = playerInCoverEdgePerRound[otherTableIndex].minId; i <= playerInCoverEdgePerRound[otherTableIndex].maxId; i++) {
+        for (int64_t i = playerInCoverEdgePerRound[otherTableIndex].minId; i <= playerInCoverEdgePerRound[otherTableIndex].maxId; i++) {
             if (i == -1) {
                 continue;
             }
@@ -41,20 +41,22 @@ public:
         return result;
     }
 
-    void oneLineToCSV(int64_t index, stringstream & ss) {
+    void oneLineToCSV(int64_t index, stringstream & ss) override {
         ss << index << "," << tickId[index] << "," << lookerPlayerAtTickId[index] << "," << lookerPlayerId[index] << ","
            << lookedAtPlayerAtTickId[index] << "," << lookedAtPlayerId[index] << ","
            << nearestOriginId[index] << "," << coverEdgeId[index] << std::endl;
     }
 
-    vector<string> getForeignKeyNames() {
+    [[nodiscard]]
+    vector<string> getForeignKeyNames() override {
         return {"tick id",
                 "looker player at tick id", "looker player id",
                 "looked at player at tick id", "looked at player id",
                 "nearest origin id", "cover edge id"};
     }
 
-    vector<string> getOtherColumnNames() {
+    [[nodiscard]]
+    vector<string> getOtherColumnNames() override {
         return {};
     }
 };

@@ -7,14 +7,13 @@
 
 ReachableResult queryReachable(const MapMeshResult & mapMeshResult) {
     ReachableResult result;
-    int64_t i = 0;
     result.numAreas = mapMeshResult.size;
     result.coordinate = mapMeshResult.coordinate;
     result.distanceMatrix.resize(result.numAreas * result.numAreas, std::numeric_limits<double>::max());
 
     // setup initial connections in reachability matrix
     for (int64_t i = 0; i < result.numAreas; i++) { Vec3 curCenter = getCenter(mapMeshResult.coordinate[i]);
-        for (int64_t j = 0; j < mapMeshResult.connectionAreaIds[i].size(); j++) {
+        for (int64_t j = 0; j < static_cast<int64_t>(mapMeshResult.connectionAreaIds[i].size()); j++) {
             int64_t destId = mapMeshResult.areaToInternalId.at(mapMeshResult.connectionAreaIds[i][j]);
             Vec3 destCenter = getCenter(mapMeshResult.coordinate[destId]);
             result.distanceMatrix[i * result.numAreas + destId] = computeDistance(curCenter, destCenter);
@@ -55,7 +54,7 @@ ReachableResult queryReachable(const MapMeshResult & mapMeshResult) {
     return result;
 }
 
-void ReachableResult::load(string mapsPath, string mapName) {
+void ReachableResult::load(const string & mapsPath, const string & mapName) {
     string reachableFileName = mapName + ".reach";
     string reachableFilePath = mapsPath + "/" + reachableFileName;
 
@@ -94,7 +93,7 @@ void ReachableResult::load(string mapsPath, string mapName) {
             }
             index++;
         }
-        size = coordinate.size();
+        size = static_cast<int64_t>(coordinate.size());
         numAreas = size;
         if (index * index != distanceMatrix.size()) {
             throw std::runtime_error("number of distances isn't square of number of nav mesh areas");

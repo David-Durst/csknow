@@ -165,7 +165,7 @@ TrajectorySegmentResult queryAllTrajectories(const Players & players, const Game
         tmpRoundIds[threadNum].push_back(roundIndex);
         tmpRoundStarts[threadNum].push_back(tmpSegmentStartTickId[threadNum].size());
 
-        TickRates tickRates = computeTickRates(games, rounds, roundIndex);
+        //TickRates tickRates = computeTickRates(games, rounds, roundIndex);
 
         map<int64_t, SegmentData> playerToCurTrajectory;
         map<int64_t, int64_t> hi;
@@ -244,7 +244,7 @@ TrajectorySegmentResult queryAllTrajectories(const Players & players, const Game
 
         int64_t maxTickInRound = rounds.ticksPerRound[roundIndex].maxId;
         map<int64_t, int64_t> endPlayerToPAT = getPATIdForPlayerId(ticks, playerAtTick, maxTickInRound);
-        for (const auto [playerId, tData] : playerToCurTrajectory) {
+        for (const auto & [playerId, tData] : playerToCurTrajectory) {
             /*
             finishSegment(tmpSegmentStartTickId, tmpSegmentEndTickId,
                           tmpLength, tmpPlayerId, tmpPlayerName,

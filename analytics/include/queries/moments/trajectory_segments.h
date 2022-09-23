@@ -24,7 +24,7 @@ using std::set;
 using std::unordered_map;
 using std::vector;
 using std::map;
-#define SEGMENT_SECONDS 1.0
+//#define SEGMENT_SECONDS 1.0
 
 class TrajectorySegmentResult : public QueryResult {
 public:
@@ -44,11 +44,11 @@ public:
         overlayLabels = true;
     }
 
-    vector<int64_t> filterByForeignKey(int64_t otherTableIndex) {
+    vector<int64_t> filterByForeignKey(int64_t) override {
         return {};
     }
 
-    void oneLineToCSV(int64_t index, stringstream & ss) {
+    void oneLineToCSV(int64_t index, stringstream & ss) override {
         ss << index << "," << segmentStartTickId[index] << "," << segmentEndTickId[index] << ","
            << tickLength[index] << "," << playerId[index] << "," << playerName[index] << ","
            << segmentStart2DPos[index].x << "," << segmentStart2DPos[index].y << ","
@@ -57,11 +57,13 @@ public:
         ss << std::endl;
     }
 
-    vector<string> getForeignKeyNames() {
+    [[nodiscard]]
+    vector<string> getForeignKeyNames() override {
         return {"start tick id", "end tick id", "length", "player id"};
     }
 
-    vector<string> getOtherColumnNames() {
+    [[nodiscard]]
+    vector<string> getOtherColumnNames() override {
         return {"player name", "segment start 2d pos x", "segment start 2d pos y",
                 "segment end 2d pos x", "segment end 2d pos y"};
     }
@@ -72,4 +74,4 @@ TrajectorySegmentResult queryAllTrajectories(const Players & players, const Game
                                              const Ticks & ticks, const PlayerAtTick & playerAtTick,
                                              const NonEngagementTrajectoryResult & nonEngagementTrajectoryResult);
 
-#endif //CSKNOW_NON_ENGAGEMENT_TRAJECTORY_H
+#endif //CSKNOW_TRAJECTORY_SEGMENTS_H

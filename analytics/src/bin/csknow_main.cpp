@@ -35,7 +35,7 @@
 #include "queries/moments/trajectory_segments.h"
 #define CPPHTTPLIB_OPENSSL_SUPPORT
 #include "httplib.h"
-#include <errno.h>
+#include <cerrno>
 #include "navmesh/nav_file.h"
 #include "queries/nav_mesh.h"
 #include "queries/reachable.h"
@@ -46,7 +46,7 @@ using std::map;
 using std::string;
 using std::reference_wrapper;
 
-void exec(string cmd) {
+void exec(const string & cmd) {
     std::array<char, 128> buffer;
     std::string result;
     std::string cmdWithPipe = cmd + " 2>&1";
@@ -74,7 +74,7 @@ int main(int argc, char * argv[]) {
     string dataPath = argv[1];
     string navPath = argv[2];
     bool runServer = argv[3][0] == 'y';
-    string outputDir = "";
+    string outputDir;
     outputDir = argv[4];
 
     std::map<std::string, nav_mesh::nav_file> map_navs;
@@ -268,19 +268,19 @@ int main(int argc, char * argv[]) {
             queryAggressionRoles(games, filteredRounds, ticks, playerAtTick, map_navs["de_dust2"], map_visPoints.find("de_dust2")->second, d2ReachableResult);
     std::cout << "processing engagements" << std::endl;
     string engagementName = "engagement";
-    EngagementResult engagementResult = queryEngagementResult(games, filteredRounds, ticks, playerAtTick, hurt);
+    EngagementResult engagementResult = queryEngagementResult(games, filteredRounds, ticks, hurt);
     std::cout << "size: " << engagementResult.size << std::endl;
     std::cout << "processing engagements per tick aim" << std::endl;
     string engagementPerTickAimName = "engagementPerTickAim";
     EngagementPerTickAimResult engagementPerTickAimResult =
-            queryEngagementPerTickAim(games, filteredRounds, ticks, playerAtTick, weaponFire, hurt, engagementResult);
+            queryEngagementPerTickAim(games, filteredRounds, ticks, playerAtTick, hurt, engagementResult);
     engagementResult.havePerTickAimTable = true;
     engagementResult.perTickAimTable = engagementPerTickAimName;
     std::cout << "size: " << engagementPerTickAimResult.size << std::endl;
     std::cout << "processing non engagement trajectory" << std::endl;
     string nonEngagementTrajectoryName = "nonEngagementTrajectory";
     NonEngagementTrajectoryResult nonEngagementTrajectoryResult =
-            queryNonEngagementTrajectory(games, filteredRounds, ticks, playerAtTick, engagementResult);
+            queryNonEngagementTrajectory(filteredRounds, ticks, playerAtTick, engagementResult);
     std::cout << "size: " << nonEngagementTrajectoryResult.size << std::endl;
     std::cout << "processing trajectory segments" << std::endl;
     string trajectorySegmentName = "trajectorySegment";
@@ -521,9 +521,9 @@ int main(int argc, char * argv[]) {
          */
 
         // list schema is: name, num foreign keys, list of foreign key column names, other columns, other column names
-        svr.Get("/list", [&](const httplib::Request & req, httplib::Response &res) {
+        svr.Get("/list", [&](const httplib::Request &, httplib::Response &res) {
             std::stringstream ss;
-            for (const auto [queryName, _] : queries) {
+            for (const auto & [queryName, _] : queries) {
                 QueryResult & queryValue = queries.find(queryName)->second.get();
                 ss << queryName << "," << queryValue.startTickColumn << "," << queryValue.getForeignKeyNames().size() << ",";
                 for (const auto & keyName : queryValue.getForeignKeyNames()) {
@@ -561,7 +561,7 @@ int main(int argc, char * argv[]) {
                 ss << ",";
                 ss << queryValue.playerLabelIndicesColumn;
                 ss << ",";
-                queryValue.commaSeparateList(ss, queryValue.playerLabels, ";");
+                QueryResult::commaSeparateList(ss, queryValue.playerLabels, ";");
                 ss << ",";
                 ss << boolToString(queryValue.havePerTickAimTable);
                 ss << ",";

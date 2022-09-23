@@ -2,7 +2,6 @@
 // Created by durst on 9/15/22.
 //
 #include "queries/moments/non_engagement_trajectory.h"
-#include "queries/lookback.h"
 #include "queries/base_tables.h"
 #include "queries/rolling_window.h"
 #include "indices/build_indexes.h"
@@ -15,7 +14,7 @@ struct SegmentData {
 
 void finishEngagement(vector<int64_t> tmpStartTickId[], vector<int64_t> tmpEndTickId[],
                       vector<int64_t> tmpLength[], vector<int64_t> tmpPlayerId[],
-                      int threadNum, int64_t tickIndex, int64_t playerId, const SegmentData &tData,
+                      int threadNum, int64_t tickIndex, int64_t playerId,
                       map<int64_t, SegmentData> & playerToCurTrajectory, bool remove = true) {
     tmpStartTickId[threadNum].push_back(playerToCurTrajectory[playerId].startTickId);
     tmpEndTickId[threadNum].push_back(tickIndex);
@@ -26,7 +25,7 @@ void finishEngagement(vector<int64_t> tmpStartTickId[], vector<int64_t> tmpEndTi
     }
 }
 
-NonEngagementTrajectoryResult queryNonEngagementTrajectory(const Games & games, const Rounds & rounds, const Ticks & ticks,
+NonEngagementTrajectoryResult queryNonEngagementTrajectory(const Rounds & rounds, const Ticks & ticks,
                                                            const PlayerAtTick & playerAtTick,
                                                            const EngagementResult & engagementResult) {
     int numThreads = omp_get_max_threads();
@@ -37,8 +36,6 @@ NonEngagementTrajectoryResult queryNonEngagementTrajectory(const Games & games, 
     vector<int64_t> tmpEndTickId[numThreads];
     vector<int64_t> tmpLength[numThreads];
     vector<int64_t> tmpPlayerId[numThreads];
-    std::atomic<int64_t> roundsProcessed = 0;
-    double maxSpeed = -1;
 
     // for each round
     // for each tick
@@ -49,9 +46,9 @@ NonEngagementTrajectoryResult queryNonEngagementTrajectory(const Games & games, 
     for (int64_t roundIndex = 0; roundIndex < rounds.size; roundIndex++) {
         int threadNum = omp_get_thread_num();
         tmpRoundIds[threadNum].push_back(roundIndex);
-        tmpRoundStarts[threadNum].push_back(tmpStartTickId[threadNum].size());
+        tmpRoundStarts[threadNum].push_back(static_cast<int64_t>(tmpStartTickId[threadNum].size()));
 
-        TickRates tickRates = computeTickRates(games, rounds, roundIndex);
+        //TickRates tickRates = computeTickRates(games, rounds, roundIndex);
 
         map<int64_t, SegmentData> playerToCurTrajectory;
 
@@ -76,7 +73,7 @@ NonEngagementTrajectoryResult queryNonEngagementTrajectory(const Games & games, 
                 for (const auto playerId : engagementResult.playerId[engagementIndex]) {
                     if (playerToCurTrajectory.find(playerId) != playerToCurTrajectory.end()) {
                         finishEngagement(tmpStartTickId, tmpEndTickId, tmpLength, tmpPlayerId, threadNum, tickIndex,
-                                         playerId, playerToCurTrajectory.find(playerId)->second, playerToCurTrajectory);
+                                         playerId, playerToCurTrajectory);
                     }
                     inEngagement.insert(playerId);
                 }
@@ -92,17 +89,17 @@ NonEngagementTrajectoryResult queryNonEngagementTrajectory(const Games & games, 
                 // if player somehow dies without being in engagement (like from nade), end trajectory
                 if (!playerAtTick.isAlive[playerId] && playerToCurTrajectory.find(playerId) != playerToCurTrajectory.end()) {
                     finishEngagement(tmpStartTickId, tmpEndTickId, tmpLength, tmpPlayerId, threadNum, tickIndex,
-                                     playerId, playerToCurTrajectory.find(playerId)->second, playerToCurTrajectory);
+                                     playerId, playerToCurTrajectory);
                 }
             }
         }
 
         for (const auto [playerId, tData] : playerToCurTrajectory) {
             finishEngagement(tmpStartTickId, tmpEndTickId, tmpLength, tmpPlayerId, threadNum, rounds.ticksPerRound[roundIndex].maxId,
-                             playerId, playerToCurTrajectory.find(playerId)->second, playerToCurTrajectory, false);
+                             playerId, playerToCurTrajectory, false);
 
         }
-        tmpRoundSizes[threadNum].push_back(tmpStartTickId[threadNum].size() - tmpRoundStarts[threadNum].back());
+        tmpRoundSizes[threadNum].push_back(static_cast<int64_t>(tmpStartTickId[threadNum].size()) - tmpRoundStarts[threadNum].back());
         //roundsProcessed++;
         //printProgress((roundsProcessed * 1.0) / rounds.size);
     }

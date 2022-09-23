@@ -78,16 +78,16 @@ LookingResult queryLookers(const Games & games, const Rounds & rounds, const Tic
     LookingResult result;
     for (int i = 0; i < numThreads; i++) {
         result.lookersPerRound.push_back({});
-        result.lookersPerRound[i].minId = result.tickId.size();
-        for (int j = 0; j < tmpTickId[i].size(); j++) {
+        result.lookersPerRound[i].minId = static_cast<int64_t>(result.tickId.size());
+        for (size_t j = 0; j < tmpTickId[i].size(); j++) {
             result.tickId.push_back(tmpTickId[i][j]);
             result.lookerPlayerAtTickId.push_back(tmpLookerPlayerAtTickIds[i][j]);
             result.lookerPlayerId.push_back(tmpLookerPlayerIds[i][j]);
             result.lookedAtPlayerAtTickId.push_back(tmpLookedAtPlayerAtTickIds[i][j]);
             result.lookedAtPlayerId.push_back(tmpLookedAtPlayerIds[i][j]);
         }
-        result.lookersPerRound[i].maxId = result.tickId.size();
+        result.lookersPerRound[i].maxId = static_cast<int64_t>(result.tickId.size());
     }
-    result.size = result.lookerPlayerId.size();
+    result.size = static_cast<int64_t>(result.lookerPlayerId.size());
     return result;
 }

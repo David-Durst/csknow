@@ -7,13 +7,14 @@
 #include <optional>
 #include <set>
 #include <algorithm>
+#define NAV_INVALID (-1)
 
 namespace nav_mesh {
     struct PathNode {
         bool edgeMidpoint;
-        uint32_t area1 = INVALID_ID;
-        uint32_t area2 = INVALID_ID;
-        vec3_t pos = {INVALID_ID, INVALID_ID, INVALID_ID};
+        uint32_t area1 = NAV_INVALID;
+        uint32_t area2 = NAV_INVALID;
+        vec3_t pos = {NAV_INVALID, NAV_INVALID, NAV_INVALID};
     };
 
 	class nav_file : public micropather::Graph {

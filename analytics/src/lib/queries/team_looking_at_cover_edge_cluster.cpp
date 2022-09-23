@@ -8,7 +8,6 @@
 #include "file_helpers.h"
 #include <omp.h>
 #include <set>
-#include <map>
 #include "cmath"
 
 TeamLookingAtCoverEdgeCluster
@@ -32,7 +31,7 @@ queryTeamLookingAtCoverEdgeCluster(const Games & games, const Rounds & rounds, c
     for (int64_t roundIndex = 0; roundIndex < rounds.size; roundIndex++) {
         int threadNum = omp_get_thread_num();
         tmpRoundIds[threadNum].push_back(roundIndex);
-        tmpRoundStarts[threadNum].push_back(tmpTickId[threadNum].size());
+        tmpRoundStarts[threadNum].push_back(static_cast<int64_t>(tmpTickId[threadNum].size()));
         TickRates tickRates = computeTickRates(games, rounds, roundIndex);
         int64_t lookbackGameTicks = tickRates.gameTickRate;
 
@@ -41,7 +40,7 @@ queryTeamLookingAtCoverEdgeCluster(const Games & games, const Rounds & rounds, c
             int64_t originIndex = nearestOriginResult.originId[nearestOriginIndex];
             int64_t tickIndex = nearestOriginResult.tickId[nearestOriginIndex];
             int64_t startLookingTickIndex =
-                    tickIndex - getLookbackDemoTick(rounds, ticks, playerAtTick, tickIndex, tickRates, lookbackGameTicks);
+                    tickIndex - getLookbackDemoTick(rounds, ticks, tickIndex, tickRates, lookbackGameTicks);
             std::set<int64_t> coveredClusters;
 
             for (int64_t lookingPatIndex = ticks.patPerTick[startLookingTickIndex].minId;
@@ -80,9 +79,9 @@ queryTeamLookingAtCoverEdgeCluster(const Games & games, const Rounds & rounds, c
             }
 
         }
-        tmpRoundSizes[threadNum].push_back(tmpTickId[threadNum].size() - tmpRoundStarts[threadNum].back());
+        tmpRoundSizes[threadNum].push_back(static_cast<int64_t>(tmpTickId[threadNum].size()) - tmpRoundStarts[threadNum].back());
         roundsProcessed++;
-        printProgress((roundsProcessed * 1.0) / rounds.size);
+        printProgress(roundsProcessed, rounds.size);
     }
 
     TeamLookingAtCoverEdgeCluster result;
@@ -92,7 +91,7 @@ queryTeamLookingAtCoverEdgeCluster(const Games & games, const Rounds & rounds, c
         int64_t minThreadId = -1;
         int64_t minRoundId = -1;
         for (int64_t threadId = 0; threadId < numThreads; threadId++) {
-            if (roundsProcessedPerThread[threadId] < tmpRoundIds[threadId].size()) {
+            if (roundsProcessedPerThread[threadId] < static_cast<int64_t>(tmpRoundIds[threadId].size())) {
                 roundToProcess = true;
                 if (minThreadId == -1 || tmpRoundIds[threadId][roundsProcessedPerThread[threadId]] < minRoundId) {
                     minThreadId = threadId;
@@ -105,10 +104,10 @@ queryTeamLookingAtCoverEdgeCluster(const Games & games, const Rounds & rounds, c
             break;
         }
         result.teamLookingAtCoverEdgeClusterPerRound.push_back({});
-        result.teamLookingAtCoverEdgeClusterPerRound[minRoundId].minId = result.tickId.size();
+        result.teamLookingAtCoverEdgeClusterPerRound[minRoundId].minId = static_cast<int64_t>(result.tickId.size());
         int64_t roundStart = tmpRoundStarts[minThreadId][roundsProcessedPerThread[minThreadId]];
         int64_t roundEnd = roundStart + tmpRoundSizes[minThreadId][roundsProcessedPerThread[minThreadId]];
-        for (int tmpRowId = roundStart; tmpRowId < roundEnd; tmpRowId++) {
+        for (int64_t tmpRowId = roundStart; tmpRowId < roundEnd; tmpRowId++) {
             result.tickId.push_back(tmpTickId[minThreadId][tmpRowId]);
             result.originPlayerAtTickId.push_back(tmpOriginPlayerAtTickIds[minThreadId][tmpRowId]);
             result.originPlayerId.push_back(tmpOriginPlayerIds[minThreadId][tmpRowId]);
@@ -117,9 +116,9 @@ queryTeamLookingAtCoverEdgeCluster(const Games & games, const Rounds & rounds, c
             result.nearestOriginId.push_back(tmpNearestOriginIds[minThreadId][tmpRowId]);
             result.coverEdgeClusterId.push_back(tmpCoverEdgeClusterIds[minThreadId][tmpRowId]);
         }
-        result.teamLookingAtCoverEdgeClusterPerRound[minRoundId].maxId = result.tickId.size();
+        result.teamLookingAtCoverEdgeClusterPerRound[minRoundId].maxId = static_cast<int64_t>(result.tickId.size());
         roundsProcessedPerThread[minThreadId]++;
     }
-    result.size = result.tickId.size();
+    result.size = static_cast<int64_t>(result.tickId.size());
     return result;
 }

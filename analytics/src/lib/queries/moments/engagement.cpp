@@ -18,11 +18,11 @@ struct EngagementPlayers {
 };
 
 struct EngagementData {
-    int64_t startTick, endTick;
+    int64_t startTick = INVALID_ID, endTick = INVALID_ID;
     vector<int64_t> hurtTickIds, hurtIds;
 };
 
-void finishEngagement(const Rounds &rounds, const Ticks &ticks, const PlayerAtTick &playerAtTick,
+void finishEngagement(const Rounds &rounds, const Ticks &ticks,
                       vector<int64_t> tmpStartTickId[], vector<int64_t> tmpEndTickId[],
                       vector<int64_t> tmpLength[], vector<vector<int64_t>> tmpPlayerId[],
                       vector<vector<EngagementRole>> tmpRole[],
@@ -46,7 +46,7 @@ void finishEngagement(const Rounds &rounds, const Ticks &ticks, const PlayerAtTi
 }
 
 EngagementResult queryEngagementResult(const Games & games, const Rounds & rounds, const Ticks & ticks,
-                                       const PlayerAtTick & playerAtTick, const Hurt & hurt) {
+                                       const Hurt & hurt) {
 
     int numThreads = omp_get_max_threads();
     vector<int64_t> tmpRoundIds[numThreads];
@@ -68,7 +68,7 @@ EngagementResult queryEngagementResult(const Games & games, const Rounds & round
     for (int64_t roundIndex = 0; roundIndex < rounds.size; roundIndex++) {
         int threadNum = omp_get_thread_num();
         tmpRoundIds[threadNum].push_back(roundIndex);
-        tmpRoundStarts[threadNum].push_back(tmpStartTickId[threadNum].size());
+        tmpRoundStarts[threadNum].push_back(static_cast<int64_t>(tmpStartTickId[threadNum].size()));
 
         TickRates tickRates = computeTickRates(games, rounds, roundIndex);
 
@@ -102,7 +102,7 @@ EngagementResult queryEngagementResult(const Games & games, const Rounds & round
                     }
                     // if current engagement ended, finish it and start new one
                     else {
-                        finishEngagement(rounds, ticks, playerAtTick, tmpStartTickId, tmpEndTickId,
+                        finishEngagement(rounds, ticks, tmpStartTickId, tmpEndTickId,
                                          tmpLength, tmpPlayerId, tmpRole,
                                          tmpHurtTickIds, tmpHurtIds, threadNum, tickRates,
                                          curPair, eData);
@@ -114,14 +114,14 @@ EngagementResult queryEngagementResult(const Games & games, const Rounds & round
         }
 
         // at end of round, clear all engagements
-        for (const auto engagement : curEngagements) {
-            finishEngagement(rounds, ticks, playerAtTick, tmpStartTickId, tmpEndTickId,
+        for (const auto & engagement : curEngagements) {
+            finishEngagement(rounds, ticks, tmpStartTickId, tmpEndTickId,
                              tmpLength, tmpPlayerId, tmpRole,
                              tmpHurtTickIds, tmpHurtIds, threadNum, tickRates,
                              engagement.first, engagement.second);
         }
 
-        tmpRoundSizes[threadNum].push_back(tmpStartTickId[threadNum].size() - tmpRoundStarts[threadNum].back());
+        tmpRoundSizes[threadNum].push_back(static_cast<int64_t>(tmpStartTickId[threadNum].size()) - tmpRoundStarts[threadNum].back());
     }
 
     EngagementResult result;

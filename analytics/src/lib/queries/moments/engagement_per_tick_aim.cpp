@@ -10,7 +10,7 @@
 #include <atomic>
 
 EngagementPerTickAimResult queryEngagementPerTickAim(const Games & games, const Rounds & rounds, const Ticks & ticks,
-                                                     const PlayerAtTick & playerAtTick, const WeaponFire & first,
+                                                     const PlayerAtTick & playerAtTick,
                                                      const Hurt & hurt, const EngagementResult & engagementResult) {
 
     int numThreads = omp_get_max_threads();
@@ -25,7 +25,6 @@ EngagementPerTickAimResult queryEngagementPerTickAim(const Games & games, const 
     vector<Vec2> tmpDeltaViewAngle[numThreads];
     vector<double> tmpRawViewAngleSpeed[numThreads];
     vector<double> tmpSecondsSinceEngagementStart[numThreads];
-    std::atomic<int64_t> roundsProcessed = 0;
 
     // for each round
     // for each tick
@@ -36,7 +35,7 @@ EngagementPerTickAimResult queryEngagementPerTickAim(const Games & games, const 
     for (int64_t roundIndex = 0; roundIndex < rounds.size; roundIndex++) {
         int threadNum = omp_get_thread_num();
         tmpRoundIds[threadNum].push_back(roundIndex);
-        tmpRoundStarts[threadNum].push_back(tmpTickId[threadNum].size());
+        tmpRoundStarts[threadNum].push_back(static_cast<int64_t>(tmpTickId[threadNum].size()));
 
         TickRates tickRates = computeTickRates(games, rounds, roundIndex);
 
@@ -71,7 +70,6 @@ EngagementPerTickAimResult queryEngagementPerTickAim(const Games & games, const 
                 for (const auto hurtId : engagementResult.hurtIds[engagementIndex]) {
                     double secondsToHurt = secondsBetweenTicks(ticks, tickRates, tickIndex, hurt.tickId[hurtId]);
                     if (secondsToHurt > 0 && secondsToHurt < secondsToSoonestHurtId) {
-                        soonestHurtId = hurtId;
                         secondsToSoonestHurtId = secondsToHurt;
                     }
                 }
@@ -155,8 +153,6 @@ EngagementPerTickAimResult queryEngagementPerTickAim(const Games & games, const 
                                              playerAtTick.viewY[tminus2PlayerToPAT[attackerId]]};
                     Vec2 tminus1ViewAngle = {playerAtTick.viewX[tminus1PlayerToPAT[attackerId]],
                                              playerAtTick.viewY[tminus1PlayerToPAT[attackerId]]};
-                    Vec2 curViewAngle = {playerAtTick.viewX[curPlayerToPAT[attackerId]],
-                                         playerAtTick.viewY[curPlayerToPAT[attackerId]]};
                     Vec2 tplus1ViewAngle = {playerAtTick.viewX[tplus1PlayerToPAT[attackerId]],
                                              playerAtTick.viewY[tplus1PlayerToPAT[attackerId]]};
                     double minus1Speed = computeMagnitude(tminus1ViewAngle - tminus2ViewAngle);
@@ -175,7 +171,7 @@ EngagementPerTickAimResult queryEngagementPerTickAim(const Games & games, const 
             }
         }
 
-        tmpRoundSizes[threadNum].push_back(tmpTickId[threadNum].size() - tmpRoundStarts[threadNum].back());
+        tmpRoundSizes[threadNum].push_back(static_cast<int64_t>(tmpTickId[threadNum].size()) - tmpRoundStarts[threadNum].back());
     }
 
     EngagementPerTickAimResult result;

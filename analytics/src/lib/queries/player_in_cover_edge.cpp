@@ -6,9 +6,6 @@
 #include "geometry.h"
 #include "file_helpers.h"
 #include <omp.h>
-#include <set>
-#include <map>
-#include "cmath"
 #include <atomic>
 
 PlayerInCoverEdgeResult queryPlayerInCoverEdge(const Rounds & rounds, const Ticks & ticks, const PlayerAtTick & playerAtTick,
@@ -32,7 +29,7 @@ PlayerInCoverEdgeResult queryPlayerInCoverEdge(const Rounds & rounds, const Tick
     for (int64_t roundIndex = 0; roundIndex < rounds.size; roundIndex++) {
         int threadNum = omp_get_thread_num();
         tmpRoundIds[threadNum].push_back(roundIndex);
-        tmpRoundStarts[threadNum].push_back(tmpTickId[threadNum].size());
+        tmpRoundStarts[threadNum].push_back(static_cast<int64_t>(tmpTickId[threadNum].size()));
 
         for (int64_t nearestOriginIndex = nearestOriginResult.nearestOriginPerRound[roundIndex].minId;
              nearestOriginIndex <= nearestOriginResult.nearestOriginPerRound[roundIndex].maxId; nearestOriginIndex++) {
@@ -67,9 +64,9 @@ PlayerInCoverEdgeResult queryPlayerInCoverEdge(const Rounds & rounds, const Tick
             }
 
         }
-        tmpRoundSizes[threadNum].push_back(tmpTickId[threadNum].size() - tmpRoundStarts[threadNum].back());
+        tmpRoundSizes[threadNum].push_back(static_cast<int64_t>(tmpTickId[threadNum].size()) - tmpRoundStarts[threadNum].back());
         roundsProcessed++;
-        printProgress((roundsProcessed * 1.0) / rounds.size);
+        printProgress(roundsProcessed, rounds.size);
     }
 
     PlayerInCoverEdgeResult result;
@@ -79,7 +76,7 @@ PlayerInCoverEdgeResult queryPlayerInCoverEdge(const Rounds & rounds, const Tick
         int64_t minThreadId = -1;
         int64_t minRoundId = -1;
         for (int64_t threadId = 0; threadId < numThreads; threadId++) {
-            if (roundsProcessedPerThread[threadId] < tmpRoundIds[threadId].size()) {
+            if (roundsProcessedPerThread[threadId] < static_cast<int64_t>(tmpRoundIds[threadId].size())) {
                 roundToProcess = true;
                 if (minThreadId == -1 || tmpRoundIds[threadId][roundsProcessedPerThread[threadId]] < minRoundId) {
                     minThreadId = threadId;
@@ -92,10 +89,10 @@ PlayerInCoverEdgeResult queryPlayerInCoverEdge(const Rounds & rounds, const Tick
             break;
         }
         result.playerInCoverEdgePerRound.push_back({});
-        result.playerInCoverEdgePerRound[minRoundId].minId = result.tickId.size();
+        result.playerInCoverEdgePerRound[minRoundId].minId = static_cast<int64_t>(result.tickId.size());
         int64_t roundStart = tmpRoundStarts[minThreadId][roundsProcessedPerThread[minThreadId]];
         int64_t roundEnd = roundStart + tmpRoundSizes[minThreadId][roundsProcessedPerThread[minThreadId]];
-        for (int tmpRowId = roundStart; tmpRowId < roundEnd; tmpRowId++) {
+        for (int64_t tmpRowId = roundStart; tmpRowId < roundEnd; tmpRowId++) {
             result.tickId.push_back(tmpTickId[minThreadId][tmpRowId]);
             result.lookerPlayerAtTickId.push_back(tmpLookerPlayerAtTickIds[minThreadId][tmpRowId]);
             result.lookerPlayerId.push_back(tmpLookerPlayerIds[minThreadId][tmpRowId]);
@@ -104,9 +101,9 @@ PlayerInCoverEdgeResult queryPlayerInCoverEdge(const Rounds & rounds, const Tick
             result.nearestOriginId.push_back(tmpNearestOriginIds[minThreadId][tmpRowId]);
             result.coverEdgeId.push_back(tmpCoverEdgeIds[minThreadId][tmpRowId]);
         }
-        result.playerInCoverEdgePerRound[minRoundId].maxId = result.tickId.size();
+        result.playerInCoverEdgePerRound[minRoundId].maxId = static_cast<int64_t>(result.tickId.size());
         roundsProcessedPerThread[minThreadId]++;
     }
-    result.size = result.tickId.size();
+    result.size = static_cast<int64_t>(result.tickId.size());
     return result;
 }

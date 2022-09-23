@@ -31,7 +31,7 @@ enum class AggressionRole {
     Pusher,
     Baiter,
     Lurker,
-    NUM_AGGRESSION_ROLES
+    NUM_AGGRESSION_ROLES [[maybe_unused]]
 };
 
 class AggressionEventResult : public QueryResult {
@@ -54,13 +54,13 @@ public:
         playerLabelIndicesColumn = 1;
     }
 
-    vector<int64_t> filterByForeignKey(int64_t otherTableIndex) {
+    vector<int64_t> filterByForeignKey(int64_t otherTableIndex) override {
         vector<int64_t> result;
         // Normally would segfault, but this query is slow so I don't run for all rounds in debug cases
-        if (otherTableIndex >= rowIndicesPerRound.size()) {
+        if (otherTableIndex >= static_cast<int64_t>(rowIndicesPerRound.size())) {
             return result;
         }
-        for (int i = rowIndicesPerRound[otherTableIndex].minId; i <= rowIndicesPerRound[otherTableIndex].maxId; i++) {
+        for (int64_t i = rowIndicesPerRound[otherTableIndex].minId; i <= rowIndicesPerRound[otherTableIndex].maxId; i++) {
             if (i == -1) {
                 continue;
             }
@@ -69,7 +69,7 @@ public:
         return result;
     }
 
-    void oneLineToCSV(int64_t index, stringstream & ss) {
+    void oneLineToCSV(int64_t index, stringstream & ss) override {
         ss << index << "," << startTickId[index] << "," << endTickId[index] << "," << tickLength[index] << ",";
 
         vector<string> tmp;
@@ -87,11 +87,13 @@ public:
         ss << std::endl;
     }
 
-    vector<string> getForeignKeyNames() {
+    [[nodiscard]]
+    vector<string> getForeignKeyNames() override {
         return {"start tick id", "end tick id", "length"};
     }
 
-    vector<string> getOtherColumnNames() {
+    [[nodiscard]]
+    vector<string> getOtherColumnNames() override {
         return {"player ids", "roles"};
     }
 };

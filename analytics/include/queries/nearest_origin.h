@@ -25,10 +25,10 @@ public:
         this->ticksPerEvent = 1;
     }
 
-    vector<int64_t> filterByForeignKey(int64_t otherTableIndex) {
+    vector<int64_t> filterByForeignKey(int64_t otherTableIndex) override {
         // no indexes on results
         vector<int64_t> result;
-        for (int i = nearestOriginPerRound[otherTableIndex].minId; i <= nearestOriginPerRound[otherTableIndex].maxId; i++) {
+        for (int64_t i = nearestOriginPerRound[otherTableIndex].minId; i <= nearestOriginPerRound[otherTableIndex].maxId; i++) {
             if (i == -1) {
                 continue;
             }
@@ -37,22 +37,23 @@ public:
         return result;
     }
 
-    void oneLineToCSV(int64_t index, stringstream & ss) {
+    void oneLineToCSV(int64_t index, stringstream & ss) override {
         ss << index << "," << tickId[index] << "," << playerAtTickId[index] << "," << playerId[index] << ","
            << originId[index] << std::endl;
     }
 
-    vector<string> getForeignKeyNames() {
+    vector<string> getForeignKeyNames() override {
         return {"tick id",
                 "player at tick id", "player id",
                 "origin id"};
     }
 
-    vector<string> getOtherColumnNames() {
+    vector<string> getOtherColumnNames() override {
         return {};
     }
 };
 
+[[maybe_unused]]
 NearestOriginResult queryNearestOrigin(const Rounds & rounds, const Ticks & ticks, const PlayerAtTick & playerAtTick,
                                        const CoverOrigins & coverOrigins);
 
