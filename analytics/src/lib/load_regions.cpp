@@ -1,3 +1,4 @@
+#ifdef false
 #include "load_regions.h"
 #include <limits>
 
@@ -85,3 +86,5 @@ Regions loadRegions(string filePath) {
     free(name);
     return result;
 }
+
+#endif //false

@@ -17,6 +17,10 @@ using std::string;
 using std::string_view;
 using std::vector;
 
+void printProgress(const atomic<int64_t> & numFinished, size_t numToComplete) {
+    printProgress(static_cast<double>(numFinished.load()) / static_cast<double>(numToComplete));
+}
+
 void printProgress(double progress) {
     int barWidth = 70;
 

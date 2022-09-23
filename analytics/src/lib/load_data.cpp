@@ -1,28 +1,17 @@
 #include "load_data.h"
 #include "file_helpers.h"
-#include "fast_float/fast_float.h"
 #include <algorithm>
 #include <iostream>
-#include <dirent.h>
 #include <string>
-#include <iostream>
 #include <atomic>
-#include <fstream>
-#include <fcntl.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/stat.h>
 #include <sys/mman.h>
-#include <errno.h>
-#include <charconv>
-#include <omp.h>
 
 using std::to_string;
 using std::string;
 using std::string_view;
 
 
-void loadEquipmentFile(Equipment & equipment, string filePath) {
+void loadEquipmentFile(Equipment & equipment, const string & filePath) {
     // mmap the file
     auto [fd, stats, file] = openMMapFile(filePath);
 
@@ -37,7 +26,7 @@ void loadEquipmentFile(Equipment & equipment, string filePath) {
     int64_t arrayEntry = 0;
 
     for (size_t curStart = firstRow + 1, curDelimiter = getNextDelimiter(file, curStart, stats.st_size);
-         curDelimiter < stats.st_size;
+         curDelimiter < static_cast<size_t>(stats.st_size);
          curStart = curDelimiter + 1, curDelimiter = getNextDelimiter(file, curStart, stats.st_size)) {
         if (colNumber == 0) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, equipment.id[arrayEntry]);
@@ -52,7 +41,7 @@ void loadEquipmentFile(Equipment & equipment, string filePath) {
     closeMMapFile({fd, stats, file});
 }
 
-void loadEquipment(Equipment & equipment, string dataPath) {
+void loadEquipment(Equipment & equipment, const string & dataPath) {
     string fileName = "dimension_table_equipment.csv";
     string filePath = dataPath + "/" + fileName;
 
@@ -68,7 +57,7 @@ void loadEquipment(Equipment & equipment, string dataPath) {
     loadEquipmentFile(equipment, filePath);
 }
 
-void loadGameTypesFile(GameTypes & gameTypes, string filePath) {
+void loadGameTypesFile(GameTypes & gameTypes, const string & filePath) {
     // mmap the file
     auto [fd, stats, file] = openMMapFile(filePath);
 
@@ -83,7 +72,7 @@ void loadGameTypesFile(GameTypes & gameTypes, string filePath) {
     int64_t arrayEntry = 0;
 
     for (size_t curStart = firstRow + 1, curDelimiter = getNextDelimiter(file, curStart, stats.st_size);
-         curDelimiter < stats.st_size;
+         curDelimiter < static_cast<size_t>(stats.st_size);
          curStart = curDelimiter + 1, curDelimiter = getNextDelimiter(file, curStart, stats.st_size)) {
         if (colNumber == 0) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, gameTypes.id[arrayEntry]);
@@ -98,7 +87,7 @@ void loadGameTypesFile(GameTypes & gameTypes, string filePath) {
     closeMMapFile({fd, stats, file});
 }
 
-void loadGameTypes(GameTypes & gameTypes, string dataPath) {
+void loadGameTypes(GameTypes & gameTypes, const string & dataPath) {
     string fileName = "dimension_table_game_types.csv";
     string filePath = dataPath + "/" + fileName;
 
@@ -114,7 +103,7 @@ void loadGameTypes(GameTypes & gameTypes, string dataPath) {
     loadGameTypesFile(gameTypes, filePath);
 }
 
-void loadHitGroupsFile(HitGroups & hitGroups, string filePath) {
+void loadHitGroupsFile(HitGroups & hitGroups, const string & filePath) {
     // mmap the file
     auto [fd, stats, file] = openMMapFile(filePath);
 
@@ -129,7 +118,7 @@ void loadHitGroupsFile(HitGroups & hitGroups, string filePath) {
     int64_t arrayEntry = 0;
 
     for (size_t curStart = firstRow + 1, curDelimiter = getNextDelimiter(file, curStart, stats.st_size);
-         curDelimiter < stats.st_size;
+         curDelimiter < static_cast<size_t>(stats.st_size);
          curStart = curDelimiter + 1, curDelimiter = getNextDelimiter(file, curStart, stats.st_size)) {
         if (colNumber == 0) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, hitGroups.id[arrayEntry]);
@@ -144,7 +133,7 @@ void loadHitGroupsFile(HitGroups & hitGroups, string filePath) {
     closeMMapFile({fd, stats, file});
 }
 
-void loadHitGroups(HitGroups & hitGroups, string dataPath) {
+void loadHitGroups(HitGroups & hitGroups, const string & dataPath) {
     string fileName = "dimension_table_hit_groups.csv";
     string filePath = dataPath + "/" + fileName;
 
@@ -160,7 +149,7 @@ void loadHitGroups(HitGroups & hitGroups, string dataPath) {
     loadHitGroupsFile(hitGroups, filePath);
 }
 
-void loadGamesFile(Games & games, string filePath) {
+void loadGamesFile(Games & games, const string & filePath) {
     // mmap the file
     auto [fd, stats, file] = openMMapFile(filePath);
 
@@ -175,7 +164,7 @@ void loadGamesFile(Games & games, string filePath) {
     int64_t arrayEntry = 0;
 
     for (size_t curStart = firstRow + 1, curDelimiter = getNextDelimiter(file, curStart, stats.st_size);
-         curDelimiter < stats.st_size;
+         curDelimiter < static_cast<size_t>(stats.st_size);
          curStart = curDelimiter + 1, curDelimiter = getNextDelimiter(file, curStart, stats.st_size)) {
         if (colNumber == 0) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, games.id[arrayEntry]);
@@ -202,7 +191,7 @@ void loadGamesFile(Games & games, string filePath) {
     closeMMapFile({fd, stats, file});
 }
 
-void loadGames(Games & games, string dataPath) {
+void loadGames(Games & games, const string & dataPath) {
     string fileName = "global_games.csv";
     string filePath = dataPath + "/" + fileName;
 
@@ -218,7 +207,7 @@ void loadGames(Games & games, string dataPath) {
     loadGamesFile(games, filePath);
 }
 
-void loadPlayersFile(Players & players, string filePath, int64_t fileRowStart, int32_t fileNumber) {
+void loadPlayersFile(Players & players, const string & filePath, int64_t fileRowStart) {
     // mmap the file
     auto [fd, stats, file] = openMMapFile(filePath);
 
@@ -233,7 +222,7 @@ void loadPlayersFile(Players & players, string filePath, int64_t fileRowStart, i
     int64_t arrayEntry = fileRowStart;
 
     for (size_t curStart = firstRow + 1, curDelimiter = getNextDelimiter(file, curStart, stats.st_size);
-         curDelimiter < stats.st_size;
+         curDelimiter < static_cast<size_t>(stats.st_size);
          curStart = curDelimiter + 1, curDelimiter = getNextDelimiter(file, curStart, stats.st_size)) {
         if (colNumber == 0) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, players.id[arrayEntry]);
@@ -254,7 +243,7 @@ void loadPlayersFile(Players & players, string filePath, int64_t fileRowStart, i
     closeMMapFile({fd, stats, file});
 }
 
-void loadPlayers(Players & players, string dataPath) {
+void loadPlayers(Players & players, const string & dataPath) {
     vector<string> filePaths;
     getFilesInDirectory(dataPath + "/players", filePaths);
 
@@ -263,16 +252,16 @@ void loadPlayers(Players & players, string dataPath) {
     int64_t rows = startingPointPerFile[filePaths.size()];
 
     std::cout << "allocating arrays" << std::endl;
-    players.init(rows, filePaths.size(), startingPointPerFile);
+    players.init(rows, static_cast<int64_t>(filePaths.size()), startingPointPerFile);
 
     std::cout << "loading players off disk" << std::endl;
 #pragma omp parallel for
-    for (int64_t fileIndex = 0; fileIndex < filePaths.size(); fileIndex++) {
-        loadPlayersFile(players, filePaths[fileIndex], startingPointPerFile[fileIndex], fileIndex);
+    for (size_t fileIndex = 0; fileIndex < filePaths.size(); fileIndex++) {
+        loadPlayersFile(players, filePaths[fileIndex], startingPointPerFile[fileIndex]);
     }
 }
 
-void loadRoundsFile(Rounds & rounds, string filePath, int64_t fileRowStart, int32_t fileNumber) {
+void loadRoundsFile(Rounds & rounds, const string & filePath, int64_t fileRowStart) {
     // mmap the file
     auto [fd, stats, file] = openMMapFile(filePath);
 
@@ -287,7 +276,7 @@ void loadRoundsFile(Rounds & rounds, string filePath, int64_t fileRowStart, int3
     int64_t arrayEntry = fileRowStart;
 
     for (size_t curStart = firstRow + 1, curDelimiter = getNextDelimiter(file, curStart, stats.st_size);
-         curDelimiter < stats.st_size;
+         curDelimiter < static_cast<size_t>(stats.st_size);
          curStart = curDelimiter + 1, curDelimiter = getNextDelimiter(file, curStart, stats.st_size)) {
         if (colNumber == 0) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, rounds.id[arrayEntry]);
@@ -335,7 +324,7 @@ void loadRoundsFile(Rounds & rounds, string filePath, int64_t fileRowStart, int3
     closeMMapFile({fd, stats, file});
 }
 
-void loadRounds(Rounds & rounds, string dataPath, bool filtered) {
+void loadRounds(Rounds & rounds, const string & dataPath, bool filtered) {
     vector<string> filePaths;
     if (filtered) {
         getFilesInDirectory(dataPath + "/filtered_rounds", filePaths);
@@ -349,16 +338,16 @@ void loadRounds(Rounds & rounds, string dataPath, bool filtered) {
     int64_t rows = startingPointPerFile[filePaths.size()];
 
     std::cout << "allocating arrays" << std::endl;
-    rounds.init(rows, filePaths.size(), startingPointPerFile);
+    rounds.init(rows, static_cast<int64_t>(filePaths.size()), startingPointPerFile);
 
     std::cout << "loading rounds off disk" << std::endl;
 #pragma omp parallel for
-    for (int64_t fileIndex = 0; fileIndex < filePaths.size(); fileIndex++) {
-        loadRoundsFile(rounds, filePaths[fileIndex], startingPointPerFile[fileIndex], fileIndex);
+    for (size_t fileIndex = 0; fileIndex < filePaths.size(); fileIndex++) {
+        loadRoundsFile(rounds, filePaths[fileIndex], startingPointPerFile[fileIndex]);
     }
 }
 
-void loadTicksFile(Ticks & ticks, string filePath, int64_t fileRowStart, int32_t fileNumber) {
+void loadTicksFile(Ticks & ticks, const string & filePath, int64_t fileRowStart) {
     // mmap the file
     auto [fd, stats, file] = openMMapFile(filePath);
 
@@ -373,7 +362,7 @@ void loadTicksFile(Ticks & ticks, string filePath, int64_t fileRowStart, int32_t
     int64_t arrayEntry = fileRowStart;
 
     for (size_t curStart = firstRow + 1, curDelimiter = getNextDelimiter(file, curStart, stats.st_size);
-         curDelimiter < stats.st_size;
+         curDelimiter < static_cast<size_t>(stats.st_size);
          curStart = curDelimiter + 1, curDelimiter = getNextDelimiter(file, curStart, stats.st_size)) {
         if (colNumber == 0) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, ticks.id[arrayEntry]);
@@ -409,7 +398,7 @@ void loadTicksFile(Ticks & ticks, string filePath, int64_t fileRowStart, int32_t
     closeMMapFile({fd, stats, file});
 }
 
-void loadTicks(Ticks & ticks, string dataPath) {
+void loadTicks(Ticks & ticks, const string & dataPath) {
     vector<string> filePaths;
     getFilesInDirectory(dataPath + "/ticks", filePaths);
 
@@ -418,19 +407,19 @@ void loadTicks(Ticks & ticks, string dataPath) {
     int64_t rows = startingPointPerFile[filePaths.size()];
 
     std::cout << "allocating arrays" << std::endl;
-    ticks.init(rows, filePaths.size(), startingPointPerFile);
+    ticks.init(rows, static_cast<int64_t>(filePaths.size()), startingPointPerFile);
 
     std::cout << "loading ticks off disk" << std::endl;
-    std::atomic<int> filesProcessed = 0;
+    std::atomic<int64_t> filesProcessed = 0;
 #pragma omp parallel for
-    for (int64_t fileIndex = 0; fileIndex < filePaths.size(); fileIndex++) {
-        loadTicksFile(ticks, filePaths[fileIndex], startingPointPerFile[fileIndex], fileIndex);
+    for (size_t fileIndex = 0; fileIndex < filePaths.size(); fileIndex++) {
+        loadTicksFile(ticks, filePaths[fileIndex], startingPointPerFile[fileIndex]);
         filesProcessed++;
-        printProgress((filesProcessed * 1.0) / filePaths.size());
+        printProgress(filesProcessed, filePaths.size());
     }
 }
 
-void loadPlayerAtTickFile(PlayerAtTick & pat, string filePath, int64_t fileRowStart, int32_t fileNumber) {
+void loadPlayerAtTickFile(PlayerAtTick & pat, const string & filePath, int64_t fileRowStart) {
     // mmap the file
     auto [fd, stats, file] = openMMapFile(filePath);
 
@@ -445,7 +434,7 @@ void loadPlayerAtTickFile(PlayerAtTick & pat, string filePath, int64_t fileRowSt
     int64_t arrayEntry = fileRowStart;
 
     for (size_t curStart = firstRow + 1, curDelimiter = getNextDelimiter(file, curStart, stats.st_size);
-         curDelimiter < stats.st_size;
+         curDelimiter < static_cast<size_t>(stats.st_size);
          curStart = curDelimiter + 1, curDelimiter = getNextDelimiter(file, curStart, stats.st_size)) {
         if (colNumber == 0) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, pat.id[arrayEntry]);
@@ -589,7 +578,7 @@ void loadPlayerAtTickFile(PlayerAtTick & pat, string filePath, int64_t fileRowSt
     closeMMapFile({fd, stats, file});
 }
 
-void loadPlayerAtTick(PlayerAtTick & pat, string dataPath) {
+void loadPlayerAtTick(PlayerAtTick & pat, const string & dataPath) {
     vector<string> filePaths;
     getFilesInDirectory(dataPath + "/player_at_tick", filePaths);
 
@@ -598,21 +587,21 @@ void loadPlayerAtTick(PlayerAtTick & pat, string dataPath) {
     int64_t rows = startingPointPerFile[filePaths.size()];
 
     std::cout << "allocating arrays" << std::endl;
-    pat.init(rows, filePaths.size(), startingPointPerFile);
+    pat.init(rows, static_cast<int64_t>(filePaths.size()), startingPointPerFile);
 
     std::cout << "loading player_at_tick off disk" << std::endl;
-    std::atomic<int> filesProcessed = 0;
+    std::atomic<int64_t> filesProcessed = 0;
 #pragma omp parallel for
-    for (int64_t fileIndex = 0; fileIndex < filePaths.size(); fileIndex++) {
-        loadPlayerAtTickFile(pat, filePaths[fileIndex], startingPointPerFile[fileIndex], fileIndex);
+    for (size_t fileIndex = 0; fileIndex < filePaths.size(); fileIndex++) {
+        loadPlayerAtTickFile(pat, filePaths[fileIndex], startingPointPerFile[fileIndex]);
         filesProcessed++;
-        printProgress((filesProcessed * 1.0) / filePaths.size());
+        printProgress(filesProcessed, filePaths.size());
     }
 
     pat.makePitchNeg90To90();
 }
 
-void loadSpottedFile(Spotted & spotted, string filePath, int64_t fileRowStart, int32_t fileNumber) {
+void loadSpottedFile(Spotted & spotted, const string & filePath, int64_t fileRowStart) {
     // mmap the file
     auto [fd, stats, file] = openMMapFile(filePath);
 
@@ -627,7 +616,7 @@ void loadSpottedFile(Spotted & spotted, string filePath, int64_t fileRowStart, i
     int64_t arrayEntry = fileRowStart;
 
     for (size_t curStart = firstRow + 1, curDelimiter = getNextDelimiter(file, curStart, stats.st_size);
-         curDelimiter < stats.st_size;
+         curDelimiter < static_cast<size_t>(stats.st_size);
          curStart = curDelimiter + 1, curDelimiter = getNextDelimiter(file, curStart, stats.st_size)) {
         if (colNumber == 0) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, spotted.id[arrayEntry]);
@@ -651,7 +640,7 @@ void loadSpottedFile(Spotted & spotted, string filePath, int64_t fileRowStart, i
     closeMMapFile({fd, stats, file});
 }
 
-void loadSpotted(Spotted & spotted, string dataPath) {
+void loadSpotted(Spotted & spotted, const string & dataPath) {
     vector<string> filePaths;
     getFilesInDirectory(dataPath + "/spotted", filePaths);
 
@@ -660,16 +649,16 @@ void loadSpotted(Spotted & spotted, string dataPath) {
     int64_t rows = startingPointPerFile[filePaths.size()];
 
     std::cout << "allocating arrays" << std::endl;
-    spotted.init(rows, filePaths.size(), startingPointPerFile);
+    spotted.init(rows, static_cast<int64_t>(filePaths.size()), startingPointPerFile);
 
     std::cout << "loading spotted off disk" << std::endl;
 #pragma omp parallel for
-    for (int64_t fileIndex = 0; fileIndex < filePaths.size(); fileIndex++) {
-        loadSpottedFile(spotted, filePaths[fileIndex], startingPointPerFile[fileIndex], fileIndex);
+    for (size_t fileIndex = 0; fileIndex < filePaths.size(); fileIndex++) {
+        loadSpottedFile(spotted, filePaths[fileIndex], startingPointPerFile[fileIndex]);
     }
 }
 
-void loadFootstepFile(Footstep & footstep, string filePath, int64_t fileRowStart, int32_t fileNumber) {
+void loadFootstepFile(Footstep & footstep, const string & filePath, int64_t fileRowStart) {
     // mmap the file
     auto [fd, stats, file] = openMMapFile(filePath);
 
@@ -684,7 +673,7 @@ void loadFootstepFile(Footstep & footstep, string filePath, int64_t fileRowStart
     int64_t arrayEntry = fileRowStart;
 
     for (size_t curStart = firstRow + 1, curDelimiter = getNextDelimiter(file, curStart, stats.st_size);
-         curDelimiter < stats.st_size;
+         curDelimiter < static_cast<size_t>(stats.st_size);
          curStart = curDelimiter + 1, curDelimiter = getNextDelimiter(file, curStart, stats.st_size)) {
         if (colNumber == 0) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, footstep.id[arrayEntry]);
@@ -702,7 +691,7 @@ void loadFootstepFile(Footstep & footstep, string filePath, int64_t fileRowStart
     closeMMapFile({fd, stats, file});
 }
 
-void loadFootstep(Footstep & footstep, string dataPath) {
+void loadFootstep(Footstep & footstep, const string & dataPath) {
     vector<string> filePaths;
     getFilesInDirectory(dataPath + "/footstep", filePaths);
 
@@ -711,16 +700,16 @@ void loadFootstep(Footstep & footstep, string dataPath) {
     int64_t rows = startingPointPerFile[filePaths.size()];
 
     std::cout << "allocating arrays" << std::endl;
-    footstep.init(rows, filePaths.size(), startingPointPerFile);
+    footstep.init(rows, static_cast<int64_t>(filePaths.size()), startingPointPerFile);
 
     std::cout << "loading spotted off disk" << std::endl;
 #pragma omp parallel for
-    for (int64_t fileIndex = 0; fileIndex < filePaths.size(); fileIndex++) {
-        loadFootstepFile(footstep, filePaths[fileIndex], startingPointPerFile[fileIndex], fileIndex);
+    for (size_t fileIndex = 0; fileIndex < filePaths.size(); fileIndex++) {
+        loadFootstepFile(footstep, filePaths[fileIndex], startingPointPerFile[fileIndex]);
     }
 }
 
-void loadWeaponFireFile(WeaponFire & weaponFire, string filePath, int64_t fileRowStart, int32_t fileNumber) {
+void loadWeaponFireFile(WeaponFire & weaponFire, const string & filePath, int64_t fileRowStart) {
     // mmap the file
     auto [fd, stats, file] = openMMapFile(filePath);
 
@@ -735,7 +724,7 @@ void loadWeaponFireFile(WeaponFire & weaponFire, string filePath, int64_t fileRo
     int64_t arrayEntry = fileRowStart;
 
     for (size_t curStart = firstRow + 1, curDelimiter = getNextDelimiter(file, curStart, stats.st_size);
-         curDelimiter < stats.st_size;
+         curDelimiter < static_cast<size_t>(stats.st_size);
          curStart = curDelimiter + 1, curDelimiter = getNextDelimiter(file, curStart, stats.st_size)) {
         if (colNumber == 0) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, weaponFire.id[arrayEntry]);
@@ -756,7 +745,7 @@ void loadWeaponFireFile(WeaponFire & weaponFire, string filePath, int64_t fileRo
     closeMMapFile({fd, stats, file});
 }
 
-void loadWeaponFire(WeaponFire & weaponFire, string dataPath) {
+void loadWeaponFire(WeaponFire & weaponFire, const string & dataPath) {
     vector<string> filePaths;
     getFilesInDirectory(dataPath + "/weapon_fire", filePaths);
 
@@ -765,16 +754,16 @@ void loadWeaponFire(WeaponFire & weaponFire, string dataPath) {
     int64_t rows = startingPointPerFile[filePaths.size()];
 
     std::cout << "allocating arrays" << std::endl;
-    weaponFire.init(rows, filePaths.size(), startingPointPerFile);
+    weaponFire.init(rows, static_cast<int64_t>(filePaths.size()), startingPointPerFile);
 
     std::cout << "loading weapon_fire off disk" << std::endl;
 #pragma omp parallel for
-    for (int64_t fileIndex = 0; fileIndex < filePaths.size(); fileIndex++) {
-        loadWeaponFireFile(weaponFire, filePaths[fileIndex], startingPointPerFile[fileIndex], fileIndex);
+    for (size_t fileIndex = 0; fileIndex < filePaths.size(); fileIndex++) {
+        loadWeaponFireFile(weaponFire, filePaths[fileIndex], startingPointPerFile[fileIndex]);
     }
 }
 
-void loadKillsFile(Kills & kills, string filePath, int64_t fileRowStart, int32_t fileNumber) {
+void loadKillsFile(Kills & kills, const string & filePath, int64_t fileRowStart) {
     // mmap the file
     auto [fd, stats, file] = openMMapFile(filePath);
 
@@ -789,7 +778,7 @@ void loadKillsFile(Kills & kills, string filePath, int64_t fileRowStart, int32_t
     int64_t arrayEntry = fileRowStart;
 
     for (size_t curStart = firstRow + 1, curDelimiter = getNextDelimiter(file, curStart, stats.st_size);
-         curDelimiter < stats.st_size;
+         curDelimiter < static_cast<size_t>(stats.st_size);
          curStart = curDelimiter + 1, curDelimiter = getNextDelimiter(file, curStart, stats.st_size)) {
         if (colNumber == 0) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, kills.id[arrayEntry]);
@@ -825,7 +814,7 @@ void loadKillsFile(Kills & kills, string filePath, int64_t fileRowStart, int32_t
     closeMMapFile({fd, stats, file});
 }
 
-void loadKills(Kills & kills, string dataPath) {
+void loadKills(Kills & kills, const string & dataPath) {
     vector<string> filePaths;
     getFilesInDirectory(dataPath + "/kills", filePaths);
 
@@ -834,16 +823,16 @@ void loadKills(Kills & kills, string dataPath) {
     int64_t rows = startingPointPerFile[filePaths.size()];
 
     std::cout << "allocating arrays" << std::endl;
-    kills.init(rows, filePaths.size(), startingPointPerFile);
+    kills.init(rows, static_cast<int64_t>(filePaths.size()), startingPointPerFile);
 
     std::cout << "loading kills off disk" << std::endl;
 #pragma omp parallel for
-    for (int64_t fileIndex = 0; fileIndex < filePaths.size(); fileIndex++) {
-        loadKillsFile(kills, filePaths[fileIndex], startingPointPerFile[fileIndex], fileIndex);
+    for (size_t fileIndex = 0; fileIndex < filePaths.size(); fileIndex++) {
+        loadKillsFile(kills, filePaths[fileIndex], startingPointPerFile[fileIndex]);
     }
 }
 
-void loadHurtFile(Hurt & hurt, string filePath, int64_t fileRowStart, int32_t fileNumber) {
+void loadHurtFile(Hurt & hurt, const string & filePath, int64_t fileRowStart) {
     // mmap the file
     auto [fd, stats, file] = openMMapFile(filePath);
 
@@ -858,7 +847,7 @@ void loadHurtFile(Hurt & hurt, string filePath, int64_t fileRowStart, int32_t fi
     int64_t arrayEntry = fileRowStart;
 
     for (size_t curStart = firstRow + 1, curDelimiter = getNextDelimiter(file, curStart, stats.st_size);
-         curDelimiter < stats.st_size;
+         curDelimiter < static_cast<size_t>(stats.st_size);
          curStart = curDelimiter + 1, curDelimiter = getNextDelimiter(file, curStart, stats.st_size)) {
         if (colNumber == 0) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, hurt.id[arrayEntry]);
@@ -898,7 +887,7 @@ void loadHurtFile(Hurt & hurt, string filePath, int64_t fileRowStart, int32_t fi
     closeMMapFile({fd, stats, file});
 }
 
-void loadHurt(Hurt & hurt, string dataPath) {
+void loadHurt(Hurt & hurt, const string & dataPath) {
     vector<string> filePaths;
     getFilesInDirectory(dataPath + "/hurt", filePaths);
 
@@ -907,16 +896,16 @@ void loadHurt(Hurt & hurt, string dataPath) {
     int64_t rows = startingPointPerFile[filePaths.size()];
 
     std::cout << "allocating arrays" << std::endl;
-    hurt.init(rows, filePaths.size(), startingPointPerFile);
+    hurt.init(rows, static_cast<int64_t>(filePaths.size()), startingPointPerFile);
 
     std::cout << "loading hurt off disk" << std::endl;
 #pragma omp parallel for
-    for (int64_t fileIndex = 0; fileIndex < filePaths.size(); fileIndex++) {
-        loadHurtFile(hurt, filePaths[fileIndex], startingPointPerFile[fileIndex], fileIndex);
+    for (size_t fileIndex = 0; fileIndex < filePaths.size(); fileIndex++) {
+        loadHurtFile(hurt, filePaths[fileIndex], startingPointPerFile[fileIndex]);
     }
 }
 
-void loadGrenadesFile(Grenades & grenades, string filePath, int64_t fileRowStart, int32_t fileNumber) {
+void loadGrenadesFile(Grenades & grenades, const string & filePath, int64_t fileRowStart) {
     // mmap the file
     auto [fd, stats, file] = openMMapFile(filePath);
 
@@ -931,7 +920,7 @@ void loadGrenadesFile(Grenades & grenades, string filePath, int64_t fileRowStart
     int64_t arrayEntry = fileRowStart;
 
     for (size_t curStart = firstRow + 1, curDelimiter = getNextDelimiter(file, curStart, stats.st_size);
-         curDelimiter < stats.st_size;
+         curDelimiter < static_cast<size_t>(stats.st_size);
          curStart = curDelimiter + 1, curDelimiter = getNextDelimiter(file, curStart, stats.st_size)) {
         if (colNumber == 0) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, grenades.id[arrayEntry]);
@@ -961,7 +950,7 @@ void loadGrenadesFile(Grenades & grenades, string filePath, int64_t fileRowStart
     closeMMapFile({fd, stats, file});
 }
 
-void loadGrenades(Grenades & grenades, string dataPath) {
+void loadGrenades(Grenades & grenades, const string & dataPath) {
     vector<string> filePaths;
     getFilesInDirectory(dataPath + "/grenades", filePaths);
 
@@ -970,16 +959,16 @@ void loadGrenades(Grenades & grenades, string dataPath) {
     int64_t rows = startingPointPerFile[filePaths.size()];
 
     std::cout << "allocating arrays" << std::endl;
-    grenades.init(rows, filePaths.size(), startingPointPerFile);
+    grenades.init(rows, static_cast<int64_t>(filePaths.size()), startingPointPerFile);
 
     std::cout << "loading grenades off disk" << std::endl;
 #pragma omp parallel for
-    for (int64_t fileIndex = 0; fileIndex < filePaths.size(); fileIndex++) {
-        loadGrenadesFile(grenades, filePaths[fileIndex], startingPointPerFile[fileIndex], fileIndex);
+    for (size_t fileIndex = 0; fileIndex < filePaths.size(); fileIndex++) {
+        loadGrenadesFile(grenades, filePaths[fileIndex], startingPointPerFile[fileIndex]);
     }
 }
 
-void loadFlashedFile(Flashed & flashed, string filePath, int64_t fileRowStart, int32_t fileNumber) {
+void loadFlashedFile(Flashed & flashed, const string & filePath, int64_t fileRowStart) {
     // mmap the file
     auto [fd, stats, file] = openMMapFile(filePath);
 
@@ -994,7 +983,7 @@ void loadFlashedFile(Flashed & flashed, string filePath, int64_t fileRowStart, i
     int64_t arrayEntry = fileRowStart;
 
     for (size_t curStart = firstRow + 1, curDelimiter = getNextDelimiter(file, curStart, stats.st_size);
-         curDelimiter < stats.st_size;
+         curDelimiter < static_cast<size_t>(stats.st_size);
          curStart = curDelimiter + 1, curDelimiter = getNextDelimiter(file, curStart, stats.st_size)) {
         if (colNumber == 0) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, flashed.id[arrayEntry]);
@@ -1018,7 +1007,7 @@ void loadFlashedFile(Flashed & flashed, string filePath, int64_t fileRowStart, i
     closeMMapFile({fd, stats, file});
 }
 
-void loadFlashed(Flashed & flashed, string dataPath) {
+void loadFlashed(Flashed & flashed, const string & dataPath) {
     vector<string> filePaths;
     getFilesInDirectory(dataPath + "/flashed", filePaths);
 
@@ -1027,16 +1016,16 @@ void loadFlashed(Flashed & flashed, string dataPath) {
     int64_t rows = startingPointPerFile[filePaths.size()];
 
     std::cout << "allocating arrays" << std::endl;
-    flashed.init(rows, filePaths.size(), startingPointPerFile);
+    flashed.init(rows, static_cast<int64_t>(filePaths.size()), startingPointPerFile);
 
     std::cout << "loading flashed off disk" << std::endl;
 #pragma omp parallel for
-    for (int64_t fileIndex = 0; fileIndex < filePaths.size(); fileIndex++) {
-        loadFlashedFile(flashed, filePaths[fileIndex], startingPointPerFile[fileIndex], fileIndex);
+    for (size_t fileIndex = 0; fileIndex < filePaths.size(); fileIndex++) {
+        loadFlashedFile(flashed, filePaths[fileIndex], startingPointPerFile[fileIndex]);
     }
 }
 
-void loadGrenadeTrajectoriesFile(GrenadeTrajectories & grenadeTrajectories, string filePath, int64_t fileRowStart, int32_t fileNumber) {
+void loadGrenadeTrajectoriesFile(GrenadeTrajectories & grenadeTrajectories, const string & filePath, int64_t fileRowStart) {
     // mmap the file
     auto [fd, stats, file] = openMMapFile(filePath);
 
@@ -1051,7 +1040,7 @@ void loadGrenadeTrajectoriesFile(GrenadeTrajectories & grenadeTrajectories, stri
     int64_t arrayEntry = fileRowStart;
 
     for (size_t curStart = firstRow + 1, curDelimiter = getNextDelimiter(file, curStart, stats.st_size);
-         curDelimiter < stats.st_size;
+         curDelimiter < static_cast<size_t>(stats.st_size);
          curStart = curDelimiter + 1, curDelimiter = getNextDelimiter(file, curStart, stats.st_size)) {
         if (colNumber == 0) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, grenadeTrajectories.id[arrayEntry]);
@@ -1078,7 +1067,7 @@ void loadGrenadeTrajectoriesFile(GrenadeTrajectories & grenadeTrajectories, stri
     closeMMapFile({fd, stats, file});
 }
 
-void loadGrenadeTrajectories(GrenadeTrajectories & grenadeTrajectories, string dataPath) {
+void loadGrenadeTrajectories(GrenadeTrajectories & grenadeTrajectories, const string & dataPath) {
     vector<string> filePaths;
     getFilesInDirectory(dataPath + "/grenade_trajectories", filePaths);
 
@@ -1087,16 +1076,16 @@ void loadGrenadeTrajectories(GrenadeTrajectories & grenadeTrajectories, string d
     int64_t rows = startingPointPerFile[filePaths.size()];
 
     std::cout << "allocating arrays" << std::endl;
-    grenadeTrajectories.init(rows, filePaths.size(), startingPointPerFile);
+    grenadeTrajectories.init(rows, static_cast<int64_t>(filePaths.size()), startingPointPerFile);
 
     std::cout << "loading grenade_trajectories off disk" << std::endl;
 #pragma omp parallel for
-    for (int64_t fileIndex = 0; fileIndex < filePaths.size(); fileIndex++) {
-        loadGrenadeTrajectoriesFile(grenadeTrajectories, filePaths[fileIndex], startingPointPerFile[fileIndex], fileIndex);
+    for (size_t fileIndex = 0; fileIndex < filePaths.size(); fileIndex++) {
+        loadGrenadeTrajectoriesFile(grenadeTrajectories, filePaths[fileIndex], startingPointPerFile[fileIndex]);
     }
 }
 
-void loadPlantsFile(Plants & plants, string filePath, int64_t fileRowStart, int32_t fileNumber) {
+void loadPlantsFile(Plants & plants, const string & filePath, int64_t fileRowStart) {
     // mmap the file
     auto [fd, stats, file] = openMMapFile(filePath);
 
@@ -1111,7 +1100,7 @@ void loadPlantsFile(Plants & plants, string filePath, int64_t fileRowStart, int3
     int64_t arrayEntry = fileRowStart;
 
     for (size_t curStart = firstRow + 1, curDelimiter = getNextDelimiter(file, curStart, stats.st_size);
-         curDelimiter < stats.st_size;
+         curDelimiter < static_cast<size_t>(stats.st_size);
          curStart = curDelimiter + 1, curDelimiter = getNextDelimiter(file, curStart, stats.st_size)) {
         if (colNumber == 0) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, plants.id[arrayEntry]);
@@ -1135,7 +1124,7 @@ void loadPlantsFile(Plants & plants, string filePath, int64_t fileRowStart, int3
     closeMMapFile({fd, stats, file});
 }
 
-void loadPlants(Plants & plants, string dataPath) {
+void loadPlants(Plants & plants, const string & dataPath) {
     vector<string> filePaths;
     getFilesInDirectory(dataPath + "/plants", filePaths);
 
@@ -1144,16 +1133,16 @@ void loadPlants(Plants & plants, string dataPath) {
     int64_t rows = startingPointPerFile[filePaths.size()];
 
     std::cout << "allocating arrays" << std::endl;
-    plants.init(rows, filePaths.size(), startingPointPerFile);
+    plants.init(rows, static_cast<int64_t>(filePaths.size()), startingPointPerFile);
 
     std::cout << "loading grenade_trajectories off disk" << std::endl;
 #pragma omp parallel for
-    for (int64_t fileIndex = 0; fileIndex < filePaths.size(); fileIndex++) {
-        loadPlantsFile(plants, filePaths[fileIndex], startingPointPerFile[fileIndex], fileIndex);
+    for (size_t fileIndex = 0; fileIndex < filePaths.size(); fileIndex++) {
+        loadPlantsFile(plants, filePaths[fileIndex], startingPointPerFile[fileIndex]);
     }
 }
 
-void loadDefusalsFile(Defusals & defusals, string filePath, int64_t fileRowStart, int32_t fileNumber) {
+void loadDefusalsFile(Defusals & defusals, const string & filePath, int64_t fileRowStart) {
     // mmap the file
     auto [fd, stats, file] = openMMapFile(filePath);
 
@@ -1168,7 +1157,7 @@ void loadDefusalsFile(Defusals & defusals, string filePath, int64_t fileRowStart
     int64_t arrayEntry = fileRowStart;
 
     for (size_t curStart = firstRow + 1, curDelimiter = getNextDelimiter(file, curStart, stats.st_size);
-         curDelimiter < stats.st_size;
+         curDelimiter < static_cast<size_t>(stats.st_size);
          curStart = curDelimiter + 1, curDelimiter = getNextDelimiter(file, curStart, stats.st_size)) {
         if (colNumber == 0) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, defusals.id[arrayEntry]);
@@ -1195,7 +1184,7 @@ void loadDefusalsFile(Defusals & defusals, string filePath, int64_t fileRowStart
     closeMMapFile({fd, stats, file});
 }
 
-void loadDefusals(Defusals & defusals, string dataPath) {
+void loadDefusals(Defusals & defusals, const string & dataPath) {
     vector<string> filePaths;
     getFilesInDirectory(dataPath + "/defusals", filePaths);
 
@@ -1204,16 +1193,16 @@ void loadDefusals(Defusals & defusals, string dataPath) {
     int64_t rows = startingPointPerFile[filePaths.size()];
 
     std::cout << "allocating arrays" << std::endl;
-    defusals.init(rows, filePaths.size(), startingPointPerFile);
+    defusals.init(rows, static_cast<int64_t>(filePaths.size()), startingPointPerFile);
 
     std::cout << "loading defusals off disk" << std::endl;
 #pragma omp parallel for
-    for (int64_t fileIndex = 0; fileIndex < filePaths.size(); fileIndex++) {
-        loadDefusalsFile(defusals, filePaths[fileIndex], startingPointPerFile[fileIndex], fileIndex);
+    for (size_t fileIndex = 0; fileIndex < filePaths.size(); fileIndex++) {
+        loadDefusalsFile(defusals, filePaths[fileIndex], startingPointPerFile[fileIndex]);
     }
 }
 
-void loadExplosionsFile(Explosions & explosions, string filePath, int64_t fileRowStart, int32_t fileNumber) {
+void loadExplosionsFile(Explosions & explosions, const string & filePath, int64_t fileRowStart) {
     // mmap the file
     auto [fd, stats, file] = openMMapFile(filePath);
 
@@ -1228,7 +1217,7 @@ void loadExplosionsFile(Explosions & explosions, string filePath, int64_t fileRo
     int64_t arrayEntry = fileRowStart;
 
     for (size_t curStart = firstRow + 1, curDelimiter = getNextDelimiter(file, curStart, stats.st_size);
-         curDelimiter < stats.st_size;
+         curDelimiter < static_cast<size_t>(stats.st_size);
          curStart = curDelimiter + 1, curDelimiter = getNextDelimiter(file, curStart, stats.st_size)) {
         if (colNumber == 0) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, explosions.id[arrayEntry]);
@@ -1246,7 +1235,7 @@ void loadExplosionsFile(Explosions & explosions, string filePath, int64_t fileRo
     closeMMapFile({fd, stats, file});
 }
 
-void loadExplosions(Explosions & explosions, string dataPath) {
+void loadExplosions(Explosions & explosions, const string & dataPath) {
     vector<string> filePaths;
     getFilesInDirectory(dataPath + "/explosions", filePaths);
 
@@ -1255,19 +1244,19 @@ void loadExplosions(Explosions & explosions, string dataPath) {
     int64_t rows = startingPointPerFile[filePaths.size()];
 
     std::cout << "allocating arrays" << std::endl;
-    explosions.init(rows, filePaths.size(), startingPointPerFile);
+    explosions.init(rows, static_cast<int64_t>(filePaths.size()), startingPointPerFile);
 
     std::cout << "loading explosions off disk" << std::endl;
 #pragma omp parallel for
-    for (int64_t fileIndex = 0; fileIndex < filePaths.size(); fileIndex++) {
-        loadExplosionsFile(explosions, filePaths[fileIndex], startingPointPerFile[fileIndex], fileIndex);
+    for (size_t fileIndex = 0; fileIndex < filePaths.size(); fileIndex++) {
+        loadExplosionsFile(explosions, filePaths[fileIndex], startingPointPerFile[fileIndex]);
     }
 }
 
 void loadData(Equipment & equipment, GameTypes & gameTypes, HitGroups & hitGroups, Games & games, Players & players,
               Rounds & unfilteredRounds, Rounds & filteredRounds, Ticks & ticks, PlayerAtTick & playerAtTick, Spotted & spotted, Footstep & footstep, WeaponFire & weaponFire,
               Kills & kills, Hurt & hurt, Grenades & grenades, Flashed & flashed, GrenadeTrajectories & grenadeTrajectories,
-              Plants & plants, Defusals & defusals, Explosions & explosions, string dataPath) {
+              Plants & plants, Defusals & defusals, Explosions & explosions, const string & dataPath) {
     std::cout << "loading equipment" << std::endl;
     loadEquipment(equipment, dataPath);
     std::cout << "loading game_types" << std::endl;

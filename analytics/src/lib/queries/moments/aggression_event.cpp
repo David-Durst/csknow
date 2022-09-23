@@ -52,7 +52,7 @@ AggressionEventResult queryAggressionRoles(const Games & games, const Rounds & r
     for (int64_t roundIndex = 0; roundIndex < std::min(6L, rounds.size); roundIndex++) {
         int threadNum = omp_get_thread_num();
         tmpRoundIds[threadNum].push_back(roundIndex);
-        tmpRoundStarts[threadNum].push_back(tmpStartTickId[threadNum].size());
+        tmpRoundStarts[threadNum].push_back(static_cast<int64_t>(tmpStartTickId[threadNum].size()));
 
         int64_t ticksSinceLastEngagement = 10000; // just some large number that will enable first engagement in each round
         // assuming first position is less than first kills
@@ -94,7 +94,8 @@ AggressionEventResult queryAggressionRoles(const Games & games, const Rounds & r
 
             // determine if in engagement, if newly in one assign roles
             ticksSinceLastEngagement++;
-            double secondsSinceLastEngagement = ticksSinceLastEngagement / games.gameTickRate[rounds.gameId[roundIndex]];
+            double secondsSinceLastEngagement = static_cast<double>(ticksSinceLastEngagement) /
+                games.gameTickRate[rounds.gameId[roundIndex]];
             if (anyVisiblePairs && secondsSinceLastEngagement > NOT_VISIBLE_END_SECONDS) {
                 tmpStartTickId[threadNum].push_back(tickIndex);
                 tmpEndTickId[threadNum].push_back(tickIndex);
@@ -114,9 +115,10 @@ AggressionEventResult queryAggressionRoles(const Games & games, const Rounds & r
             }
         }
 
-        tmpRoundSizes[threadNum].push_back(tmpStartTickId[threadNum].size() - tmpRoundStarts[threadNum].back());
+        tmpRoundSizes[threadNum].push_back(static_cast<int64_t>(tmpStartTickId[threadNum].size()) -
+            tmpRoundStarts[threadNum].back());
         roundsProcessed++;
-        printProgress((roundsProcessed * 1.0) / rounds.size);
+        printProgress(roundsProcessed, rounds.size);
     }
 
     AggressionEventResult result;

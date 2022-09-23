@@ -1,3 +1,4 @@
+#ifdef false
 #ifndef CSKNOW_LOAD_REGIONS_H
 #define CSKNOW_LOAD_REGIONS_H
 #include "file_helpers.h"
@@ -17,3 +18,4 @@ struct Regions {
 Regions loadRegions(string filePath);
 
 #endif //CSKNOW_LOAD_REGIONS_H
+#endif //false

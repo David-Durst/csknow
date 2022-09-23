@@ -1,3 +1,6 @@
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wsign-compare"
+#pragma GCC diagnostic ignored "-Wclass-memaccess"
 /*
 Copyright (c) 2000-2009 Lee Thomason (www.grinninglizard.com)
 
@@ -1012,3 +1015,4 @@ int MicroPather::SolveForNearStates( void* startState, MP_VECTOR< StateCost >* n
 
 
 
+#pragma GCC diagnostic pop

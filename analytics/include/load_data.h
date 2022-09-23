@@ -18,13 +18,14 @@ using std::vector;
 #define ENGINE_TEAM_SPEC 1
 #define ENGINE_TEAM_T 2
 #define ENGINE_TEAM_CT 3
-#define INVALID_ID -1
+#define INVALID_ID (-1)
 #define WEAPON_RECOIL_SCALE 2.0
 #define VIEW_RECOIL_TRACKING 0.45
 
 struct RangeIndexEntry {
     int64_t minId, maxId;
 
+    [[nodiscard]]
     string toCSV() const {
         return std::to_string(minId) + "," + std::to_string(maxId);
     }
@@ -36,7 +37,7 @@ typedef IntervalTree<int64_t, int64_t> IntervalIndex;
 class ColStore {
 public:
     bool beenInitialized = false;
-    int64_t size;
+    int64_t size = INVALID_ID;
     vector<string> fileNames;
     vector<int64_t> gameStarts;
     vector<int64_t> id;
@@ -44,7 +45,7 @@ public:
         beenInitialized = true;
         size = rows;
         fileNames.resize(numFiles);
-        this->gameStarts = gameStarts;
+        this->gameStarts = std::move(gameStarts);
         this->id.resize(rows);
     }
 };
@@ -54,12 +55,12 @@ class Equipment : public ColStore {
 public:
     char ** name;
 
-    void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) {
+    void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) override {
         ColStore::init(rows, numFiles, gameStarts);
         name = (char **) malloc(rows * sizeof(char*));
     }
 
-    Equipment() { };
+    Equipment() = default;
     ~Equipment() {
         if (!beenInitialized){
             return;
@@ -78,12 +79,12 @@ class GameTypes : public ColStore {
 public:
     char ** tableType;
 
-    void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) {
+    void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) override {
         ColStore::init(rows, numFiles, gameStarts);
         tableType = (char **) malloc(rows * sizeof(char*));
     }
 
-    GameTypes() { };
+    GameTypes() = default;
     ~GameTypes() {
         if (!beenInitialized){
             return;
@@ -102,12 +103,12 @@ class HitGroups : public ColStore {
 public:
     char ** groupName;
 
-    void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) {
+    void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) override {
         ColStore::init(rows, numFiles, gameStarts);
         groupName = (char **) malloc(rows * sizeof(char*));
     }
 
-    HitGroups() { };
+    HitGroups() = default;
     ~HitGroups() {
         if (!beenInitialized){
             return;
@@ -132,7 +133,7 @@ public:
     RangeIndex roundsPerGame;
     RangeIndex playersPerGame;
 
-    void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) {
+    void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) override {
         ColStore::init(rows, numFiles, gameStarts);
         demoFile = (char **) malloc(rows * sizeof(char*));
         demoTickRate = (double *) malloc(rows * sizeof(double));
@@ -143,7 +144,7 @@ public:
         playersPerGame = (RangeIndexEntry *) malloc(rows * sizeof(RangeIndexEntry));
     }
 
-    Games() { };
+    Games() = default;
     ~Games() {
         if (!beenInitialized){
             return;
@@ -176,14 +177,14 @@ public:
     // add this offset to id to get the row entry
     int64_t idOffset = 1;
 
-    void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) {
+    void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) override {
         ColStore::init(rows, numFiles, gameStarts);
         gameId = (int64_t *) malloc(rows * sizeof(int64_t));
         name = (char **) malloc(rows * sizeof(char*));
         steamId = (int64_t *) malloc(rows * sizeof(int64_t));
     }
 
-    Players() { };
+    Players() = default;
     ~Players() {
         if (!beenInitialized){
             return;
@@ -221,7 +222,7 @@ public:
     // add this offset to id to get the row entry
     int64_t idOffset = 1;
 
-    void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) {
+    void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) override {
         ColStore::init(rows, numFiles, gameStarts);
         gameId = (int64_t *) malloc(rows * sizeof(int64_t));
         startTick = (int64_t *) malloc(rows * sizeof(int64_t));
@@ -238,7 +239,7 @@ public:
         ticksPerRound = (RangeIndexEntry *) malloc(rows * sizeof(RangeIndexEntry));
     }
 
-    Rounds() { };
+    Rounds() = default;
     ~Rounds() {
         if (!beenInitialized){
             return;
@@ -293,7 +294,7 @@ public:
     IntervalIndex defusalsEndPerTick;
     IntervalIndex explosionsPerTick;
 
-    void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) {
+    void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) override {
         ColStore::init(rows, numFiles, gameStarts);
         roundId = (int64_t *) malloc(rows * sizeof(int64_t));
         gameTime = (int64_t *) malloc(rows * sizeof(int64_t));
@@ -308,7 +309,7 @@ public:
         footstepPerTick = (RangeIndexEntry *) malloc(rows * sizeof(RangeIndexEntry));
     }
 
-    Ticks() { };
+    Ticks() = default;
     ~Ticks() {
         if (!beenInitialized){
             return;
@@ -404,7 +405,7 @@ public:
     int32_t * money;
     int32_t * ping;
 
-    void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) {
+    void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) override {
         ColStore::init(rows, numFiles, gameStarts);
         playerId = (int64_t *) malloc(rows * sizeof(int64_t));
         tickId = (int64_t *) malloc(rows * sizeof(int64_t));
@@ -462,7 +463,7 @@ public:
     }
 
 
-    PlayerAtTick() { };
+    PlayerAtTick() = default;
     ~PlayerAtTick() {
         if (!beenInitialized){
             return;
@@ -551,7 +552,7 @@ public:
     int64_t * spotterPlayer;
     bool * isSpotted;
 
-    void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) {
+    void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) override {
         ColStore::init(rows, numFiles, gameStarts);
         tickId = (int64_t *) malloc(rows * sizeof(int64_t));
         spottedPlayer = (int64_t *) malloc(rows * sizeof(int64_t));
@@ -559,7 +560,7 @@ public:
         isSpotted = (bool *) malloc(rows * sizeof(bool));
     }
 
-    Spotted() { };
+    Spotted() = default;
     ~Spotted() {
         if (!beenInitialized){
             return;
@@ -579,13 +580,13 @@ public:
     int64_t * tickId;
     int64_t * steppingPlayer;
 
-    void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) {
+    void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) override {
         ColStore::init(rows, numFiles, gameStarts);
         tickId = (int64_t *) malloc(rows * sizeof(int64_t));
         steppingPlayer = (int64_t *) malloc(rows * sizeof(int64_t));
     }
 
-    Footstep() { };
+    Footstep() = default;
     ~Footstep() {
         if (!beenInitialized){
             return;
@@ -604,14 +605,14 @@ public:
     int64_t * shooter;
     int16_t * weapon;
 
-    void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) {
+    void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) override {
         ColStore::init(rows, numFiles, gameStarts);
         tickId = (int64_t *) malloc(rows * sizeof(int64_t));
         shooter = (int64_t *) malloc(rows * sizeof(int64_t));
         weapon = (int16_t *) malloc(rows * sizeof(int16_t));
     }
 
-    WeaponFire() { };
+    WeaponFire() = default;
     ~WeaponFire() {
         if (!beenInitialized){
             return;
@@ -636,7 +637,7 @@ public:
     bool * isWallbang;
     int32_t * penetratedObjects;
 
-    void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) {
+    void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) override {
         ColStore::init(rows, numFiles, gameStarts);
         tickId = (int64_t *) malloc(rows * sizeof(int64_t));
         killer = (int64_t *) malloc(rows * sizeof(int64_t));
@@ -648,7 +649,7 @@ public:
         penetratedObjects = (int32_t *) malloc(rows * sizeof(int32_t));
     }
 
-    Kills() { };
+    Kills() = default;
     ~Kills() {
         if (!beenInitialized){
             return;
@@ -679,7 +680,7 @@ public:
     int32_t * health;
     int64_t * hitGroup;
 
-    void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) {
+    void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) override {
         ColStore::init(rows, numFiles, gameStarts);
         tickId = (int64_t *) malloc(rows * sizeof(int64_t));
         victim = (int64_t *) malloc(rows * sizeof(int64_t));
@@ -692,7 +693,7 @@ public:
         hitGroup = (int64_t *) malloc(rows * sizeof(int64_t));
     }
 
-    Hurt() { };
+    Hurt() = default;
     ~Hurt() {
         if (!beenInitialized){
             return;
@@ -723,7 +724,7 @@ public:
     RangeIndex flashedPerGrenade;
     RangeIndex trajectoryPerGrenade;
 
-    void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) {
+    void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) override {
         ColStore::init(rows, numFiles, gameStarts);
         thrower = (int64_t *) malloc(rows * sizeof(int64_t));
         grenadeType = (int16_t *) malloc(rows * sizeof(int16_t));
@@ -735,7 +736,7 @@ public:
         trajectoryPerGrenade = (RangeIndexEntry *) malloc(rows * sizeof(RangeIndexEntry));
     }
 
-    Grenades() { };
+    Grenades() = default;
     ~Grenades() {
         if (!beenInitialized){
             return;
@@ -761,7 +762,7 @@ public:
     int64_t * thrower;
     int64_t * victim;
 
-    void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) {
+    void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) override {
         ColStore::init(rows, numFiles, gameStarts);
         tickId = (int64_t *) malloc(rows * sizeof(int64_t));
         grenadeId = (int64_t *) malloc(rows * sizeof(int64_t));
@@ -769,7 +770,7 @@ public:
         victim = (int64_t *) malloc(rows * sizeof(int64_t));
     }
 
-    Flashed() { };
+    Flashed() = default;
     ~Flashed() {
         if (!beenInitialized){
             return;
@@ -792,7 +793,7 @@ public:
     double * posY;
     double * posZ;
 
-    void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) {
+    void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) override {
         ColStore::init(rows, numFiles, gameStarts);
         grenadeId = (int64_t *) malloc(rows * sizeof(int64_t));
         idPerGrenade = (int32_t *) malloc(rows * sizeof(int32_t));
@@ -801,7 +802,7 @@ public:
         posZ = (double *) malloc(rows * sizeof(double));
     }
 
-    GrenadeTrajectories() { };
+    GrenadeTrajectories() = default;
     ~GrenadeTrajectories() {
         if (!beenInitialized){
             return;
@@ -826,7 +827,7 @@ public:
     RangeIndex defusalsPerGrenade;
     RangeIndex explosionsPerGrenade;
 
-    void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) {
+    void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) override {
         ColStore::init(rows, numFiles, gameStarts);
         startTick = (int64_t *) malloc(rows * sizeof(int64_t));
         endTick = (int64_t *) malloc(rows * sizeof(int64_t));
@@ -836,7 +837,7 @@ public:
         explosionsPerGrenade = (RangeIndexEntry *) malloc(rows * sizeof(RangeIndexEntry));
     }
 
-    Plants() { };
+    Plants() = default;
     ~Plants() {
         if (!beenInitialized){
             return;
@@ -861,7 +862,7 @@ public:
     int64_t * defuser;
     bool * succesful;
 
-    void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) {
+    void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) override {
         ColStore::init(rows, numFiles, gameStarts);
         plantId = (int64_t *) malloc(rows * sizeof(int64_t));
         startTick = (int64_t *) malloc(rows * sizeof(int64_t));
@@ -870,7 +871,7 @@ public:
         succesful = (bool *) malloc(rows * sizeof(bool));
     }
 
-    Defusals() { };
+    Defusals() = default;
     ~Defusals() {
         if (!beenInitialized){
             return;
@@ -891,13 +892,13 @@ public:
     int64_t * plantId;
     int64_t * tickId;
 
-    void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) {
+    void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) override {
         ColStore::init(rows, numFiles, gameStarts);
         plantId = (int64_t *) malloc(rows * sizeof(int64_t));
         tickId = (int64_t *) malloc(rows * sizeof(int64_t));
     }
 
-    Explosions() { };
+    Explosions() = default;
     ~Explosions() {
         if (!beenInitialized){
             return;
@@ -913,6 +914,6 @@ public:
 void loadData(Equipment & equipment, GameTypes & gameTypes, HitGroups & hitGroups, Games & games, Players & players,
               Rounds & unfilteredRounds, Rounds & filteredRounds, Ticks & ticks, PlayerAtTick & playerAtTick, Spotted & spotted, Footstep & footstep, WeaponFire & weaponFire,
               Kills & kills, Hurt & hurt, Grenades & grenades, Flashed & flashed, GrenadeTrajectories & grenadeTrajectories,
-              Plants & plants, Defusals & defusals, Explosions & explosions, string dataPath);
+              Plants & plants, Defusals & defusals, Explosions & explosions, const string & dataPath);
 
 #endif //CSKNOW_LOAD_DATA_H
