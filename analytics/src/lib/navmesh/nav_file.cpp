@@ -305,7 +305,7 @@ namespace nav_mesh {
             }
         }
 
-        if ( nearest_area_id == -1) {
+        if ( nearest_area_id == static_cast<size_t>(-1)) {
             throw std::runtime_error( "nav_file::get_nearest_area_by_position: no areas" );
         }
         else {

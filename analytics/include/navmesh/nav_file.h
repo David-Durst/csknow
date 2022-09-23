@@ -1,7 +1,7 @@
 #pragma once
 #include "nav_area.h"
 #include "micropather.h"
-#include <math.h>
+#include <cmath>
 #include <memory>
 #include <map>
 #include <optional>
@@ -11,9 +11,9 @@
 namespace nav_mesh {
     struct PathNode {
         bool edgeMidpoint;
-        uint32_t area1;
-        uint32_t area2;
-        vec3_t pos;
+        uint32_t area1 = INVALID_ID;
+        uint32_t area2 = INVALID_ID;
+        vec3_t pos = {INVALID_ID, INVALID_ID, INVALID_ID};
     };
 
 	class nav_file : public micropather::Graph {

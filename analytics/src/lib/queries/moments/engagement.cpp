@@ -30,10 +30,10 @@ void finishEngagement(const Rounds &rounds, const Ticks &ticks, const PlayerAtTi
                       int threadNum, const TickRates &tickRates,
                       const EngagementPlayers &curPair, const EngagementData &eData) {
     // use pre and post periods to track behavior around engagement
-    int64_t preEngagementStart = getLookbackDemoTick(rounds, ticks, playerAtTick,
+    int64_t preEngagementStart = getLookbackDemoTick(rounds, ticks,
                                                      eData.startTick, tickRates,
                                                      PRE_ENGAGEMENT_SECONDS);
-    int64_t postEngagementEnd = getLookforwardDemoTick(rounds, ticks, playerAtTick,
+    int64_t postEngagementEnd = getLookforwardDemoTick(rounds, ticks,
                                                        eData.endTick, tickRates,
                                                        POST_ENGAGEMENT_SECONDS);
     tmpStartTickId[threadNum].push_back(preEngagementStart);

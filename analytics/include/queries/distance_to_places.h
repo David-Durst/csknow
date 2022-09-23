@@ -130,7 +130,7 @@ public:
         return areaIndexToId[getMedianArea(static_cast<int64_t>(srcArea), static_cast<int64_t>(dstPlace))];
     }
 
-    void load(string mapsPath, string mapName, const nav_mesh::nav_file & navFile,
+    void load(const string & mapsPath, const string & mapName, const nav_mesh::nav_file & navFile,
               const ReachableResult & reachableResult);
 };
 

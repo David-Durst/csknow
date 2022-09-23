@@ -58,7 +58,7 @@ static double secondsBetweenTicks(const Ticks & ticks, TickRates tickRates, int6
  * @param tickRates tick rates for the game
  * @return
  */
-static int64_t getLookbackDemoTick(const Rounds & rounds, const Ticks & ticks, const PlayerAtTick & playerAtTick, const int64_t tickIndex,
+static int64_t getLookbackDemoTick(const Rounds & rounds, const Ticks & ticks, const int64_t tickIndex,
                             const TickRates & tickRates, const int64_t lookbackGameTicks, int maxLookBackTime = 300) {
     int maxLookBackDemoTicks = computeMaxLookDemoTicks(tickRates, maxLookBackTime);
 
@@ -71,7 +71,7 @@ static int64_t getLookbackDemoTick(const Rounds & rounds, const Ticks & ticks, c
     return lookbackDemoTicks;
 }
 
-static int64_t getLookbackDemoTick(const Rounds & rounds, const Ticks & ticks, const PlayerAtTick & playerAtTick, int64_t tickIndex,
+static int64_t getLookbackDemoTick(const Rounds & rounds, const Ticks & ticks, int64_t tickIndex,
                                    const TickRates & tickRates, double lookBackTime) {
     int lookbackGameTicks = secondsToGameTicks(tickRates, lookBackTime);
 
@@ -92,7 +92,7 @@ static int64_t getLookbackDemoTick(const Rounds & rounds, const Ticks & ticks, c
  * @param tickRates tick rates for the game
  * @return
  */
-static int64_t getLookforwardDemoTick(const Rounds & rounds, const Ticks & ticks, const PlayerAtTick & playerAtTick, const int64_t tickIndex,
+static int64_t getLookforwardDemoTick(const Rounds & rounds, const Ticks & ticks, const int64_t tickIndex,
                                    const TickRates & tickRates, const int64_t lookforwardGameTicks, int maxLookForwardTime = 300) {
     int maxLookforwardDemoTicks = computeMaxLookDemoTicks(tickRates, maxLookForwardTime);
 
@@ -105,7 +105,7 @@ static int64_t getLookforwardDemoTick(const Rounds & rounds, const Ticks & ticks
     return lookforwardDemoTicks;
 }
 
-static int64_t getLookforwardDemoTick(const Rounds & rounds, const Ticks & ticks, const PlayerAtTick & playerAtTick, int64_t tickIndex,
+static int64_t getLookforwardDemoTick(const Rounds & rounds, const Ticks & ticks, int64_t tickIndex,
                                       const TickRates & tickRates, double lookForwardTime) {
     int lookforwardGameTicks = secondsToGameTicks(tickRates, lookForwardTime);
 

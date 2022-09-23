@@ -82,7 +82,7 @@ EngagementPerTickAimResult queryEngagementPerTickAim(const Games & games, const 
                 // player stands at CL_INTERP back and sees enemy and CL_INTERP + LAG back
                 // this actually didn't make much of a difference, going with simpler approach
                 /*
-                int64_t laggedTickId = getLookbackDemoTick(rounds, ticks, playerAtTick, tickIndex, tickRates,
+                int64_t laggedTickId = getLookbackDemoTick(rounds, ticks, tickIndex, tickRates,
                                                            playerAtTick.ping[curPlayerToPAT[attackerId]] / 1000. + CL_INTERP_SECONDS);
                 map<int64_t, int64_t> nextHurtPlayerToPAT =
                         getPATIdForPlayerId(ticks, playerAtTick, hurt.tickId[soonestHurtId]);

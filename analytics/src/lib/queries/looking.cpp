@@ -45,7 +45,7 @@ LookingResult queryLookers(const Games & games, const Rounds & rounds, const Tic
                 int64_t lookbackGameTicks = (int64_t) std::ceil(
                         std::max(1.0, tickRates.gameTickRate * (clInterp + playerAtTick.ping[lookerPatIndex]) / 1000.0));
                 int64_t lookedAtTickId =
-                        tickIndex - getLookbackDemoTick(rounds, ticks, playerAtTick, tickIndex, tickRates, lookbackGameTicks);
+                        tickIndex - getLookbackDemoTick(rounds, ticks, tickIndex, tickRates, lookbackGameTicks);
 
                 for (int64_t lookedAtPatIndex = ticks.patPerTick[lookedAtTickId].minId;
                      lookedAtPatIndex != -1 && lookedAtPatIndex <= ticks.patPerTick[lookedAtTickId].maxId;
