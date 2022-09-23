@@ -140,17 +140,20 @@ export function createCharts(kymographCtx: CanvasRenderingContext2D, scatterCtx:
                         display: true,
                         text: "Yaw Delta (deg / target height deg)"
                     },
-                    min: -0.1,
-                    max: 0.1,
+                    min: -1.5,
+                    max: 1.5,
                     reverse: true,
+                    ticks: {
+                        stepSize: 0.5
+                    }
                 },
                 y: {
                     title: {
                         display: true,
                         text: "Pitch Delta (deg / player height deg)"
                     },
-                    min: -0.08,
-                    max: 0.04,
+                    min: -1.5,
+                    max: 1.0,
                 }
             },
             responsive: false,
