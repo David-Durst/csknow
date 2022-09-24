@@ -40,11 +40,30 @@
 #include "queries/nav_mesh.h"
 #include "queries/reachable.h"
 #include <filesystem>
+namespace fs = std::filesystem;
 
-//
-// Created by durst on 9/23/22.
-//
+using std::map;
+using std::string;
+using std::reference_wrapper;
+
+void exec(const string & cmd) {
+    std::array<char, 128> buffer;
+    std::string result;
+    std::string cmdWithPipe = cmd + " 2>&1";
+    std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmdWithPipe.c_str(), "r"), pclose);
+    if (!pipe) {
+        std::cerr << "error code: " << strerror(errno) << std::endl;
+        throw std::runtime_error("popen() failed!");
+    }
+    while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
+        result += buffer.data();
+    }
+    std::cout << result;
+}
+
 int main(int argc, char * argv[]) {
     makeMapBasic();
-    std::cout << "hi" << std::endl;
+    NonEngagementTrajectoryResult nonEngagementTrajectoryResult =
+            queryNonEngagementTrajectory(filteredRounds, ticks, playerAtTick, engagementResult);
+    return 0;
 }

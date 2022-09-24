@@ -248,6 +248,7 @@ int main(int argc, char * argv[]) {
     */
 
     makeMapBasic();
+    /*
     string dust2MeshName = "de_dust2_mesh";
     MapMeshResult d2MeshResult = queryMapMesh(map_navs["de_dust2"]);
     string dust2ReachableName = "de_dust2_reachable";
@@ -268,6 +269,7 @@ int main(int argc, char * argv[]) {
     string aggressionEventName = "aggression_event";
     AggressionEventResult aggressionEventResult =
             queryAggressionRoles(games, filteredRounds, ticks, playerAtTick, map_navs["de_dust2"], map_visPoints.find("de_dust2")->second, d2ReachableResult);
+     */
     std::cout << "processing engagements" << std::endl;
     string engagementName = "engagement";
     EngagementResult engagementResult = queryEngagementResult(games, filteredRounds, ticks, hurt);
@@ -280,9 +282,11 @@ int main(int argc, char * argv[]) {
     engagementResult.perTickAimTable = engagementPerTickAimName;
     std::cout << "size: " << engagementPerTickAimResult.size << std::endl;
     std::cout << "processing non engagement trajectory" << std::endl;
+    // hi
     string nonEngagementTrajectoryName = "nonEngagementTrajectory";
     NonEngagementTrajectoryResult nonEngagementTrajectoryResult =
             queryNonEngagementTrajectory(filteredRounds, ticks, playerAtTick, engagementResult);
+#ifdef false
     std::cout << "size: " << nonEngagementTrajectoryResult.size << std::endl;
     std::cout << "processing trajectory segments" << std::endl;
     string trajectorySegmentName = "trajectorySegment";
@@ -584,4 +588,5 @@ int main(int argc, char * argv[]) {
     }
      */
     return 0;
+#endif //false
 }
