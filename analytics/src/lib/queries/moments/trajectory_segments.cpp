@@ -13,112 +13,9 @@ struct SegmentData {
     Vec2 segmentStart2DPos;
 };
 
-struct OtherVec2 { double x, y;
-
-    double& operator[](size_t index) {
-        if (index == 0) {
-            return x;
-        } else {
-            return y;
-        }
-    }
-
-    OtherVec2 operator+(const Vec2 & other) const {
-        OtherVec2 result = *this;
-        result.x += other.x;
-        result.y += other.y;
-        return result;
-    }
-
-    OtherVec2 operator-(const Vec2 & other) const {
-        OtherVec2 result = *this;
-        result.x -= other.x;
-        result.y -= other.y;
-        return result;
-    }
-
-    OtherVec2 operator/(double scale) const {
-        OtherVec2 result = *this;
-        result.x /= scale;
-        result.y /= scale;
-        return result;
-    }
-
-    OtherVec2 operator*(double scale) const {
-        OtherVec2 result = *this;
-        result.x *= scale;
-        result.y *= scale;
-        return result;
-    }
-
-    double dot(const OtherVec2 & other) const {
-        return (this->x * other.x) + (this->y * other.y);
-    }
-
-    void makeYawNeg180To180() {
-        this->x = positiveModulo(this->x, 360.);
-        if (this->x > 180.) {
-            this->x -= 360.;
-        }
-    }
-
-    void makePitch0To360() {
-        this->y = positiveModulo(this->y, 360.);
-        if (this->y < 0.) {
-            this->y += 360.;
-        }
-    }
-
-    void makePitchNeg90To90() {
-        this->y = positiveModulo(this->y, 360.);
-        if (this->y > 260.) {
-            this->y -= 360.;
-        }
-    }
-
-    void normalizeYawPitchRelativeToOther(OtherVec2 other) {
-        if (x > other.x + 180.) {
-            x -= 360.;
-        }
-        else if (x + 180. < other.x) {
-            x += 360.;
-        }
-        if (y > other.y + 90.) {
-            //y -= 180.;
-        }
-        else if (y + 90. < other.y) {
-            //y += 180.;
-        }
-    }
-
-    OtherVec2 & normalize() {
-        makeYawNeg180To180();
-        makePitchNeg90To90();
-        return *this;
-    }
-
-    string toString() {
-        return "{" + std::to_string(x) + ", " + std::to_string(y) + "}";
-    }
-
-    string toCSV() const {
-        return std::to_string(x) + "," + std::to_string(y);
-    }
-};
-
-struct SegmentData2 {
-    int64_t segmentStartTickId;
-    OtherVec2 segmentStart2DPos;
-};
-
-struct SegmentData3 {
-    int64_t segmentStartTickId;
-    Vec2 segmentStart2DPos;
-};
-
-void finishSegment(vector<int64_t> tmpSegmentStartTickId[], vector<int64_t> tmpSegmentEndTickId[],
-                   vector<int64_t> tmpLength[], vector<int64_t> tmpPlayerId[], vector<string> tmpPlayerName[],
-                   vector<Vec2> tmpSegmentStart2DPos[], vector<Vec2> tmpSegmentEnd2DPos[],
+void finishSegment(vector<vector<int64_t>> & tmpSegmentStartTickId, vector<vector<int64_t>> & tmpSegmentEndTickId,
+                   vector<vector<int64_t>> & tmpLength, vector<vector<int64_t>> & tmpPlayerId, vector<vector<string>> & tmpPlayerName,
+                   vector<vector<Vec2>> & tmpSegmentStart2DPos, vector<vector<Vec2>> & tmpSegmentEnd2DPos,
                    int threadNum, int64_t tickIndex, int64_t playerId, int64_t patIndex,
                    const Players & players, const PlayerAtTick & playerAtTick, const SegmentData & sData,
                    map<int64_t, SegmentData> & playerToCurTrajectory, bool remove = true) {
@@ -148,11 +45,6 @@ TrajectorySegmentResult queryAllTrajectories(const Players & players, const Game
     vector<vector<string>> tmpPlayerName(numThreads);
     vector<vector<Vec2>> tmpSegmentStart2DPos(numThreads);
     vector<vector<Vec2>> tmpSegmentEnd2DPos(numThreads);
-    std::atomic<int64_t> roundsProcessed = 0;
-    std::cout << sizeof(OtherVec2) << std::endl;
-    std::cout << sizeof(Vec2) << std::endl;
-    std::cout << sizeof(std::pair<int64_t, SegmentData2>) << std::endl;
-    std::cout << sizeof(std::pair<int64_t, SegmentData>) << std::endl;
 
     // for each round
     // for each tick
@@ -194,9 +86,9 @@ TrajectorySegmentResult queryAllTrajectories(const Players & players, const Game
                         auto dude = playerToCurTrajectory.size();
                         //std::pair<int64_t , SegmentData> x = {curPlayerId, {tickIndex, {playerAtTick.posX[curPATId], playerAtTick.posY[curPATId]}}};
                         //playerToCurTrajectory.insert(x);
-                        playerToCurTrajectory[curPlayerId];
-                        //std::pair<int64_t , SegmentData> x = {curPlayerId, {tickIndex, {playerAtTick.posX[curPATId], playerAtTick.posY[curPATId]}}};
-                        //playerToCurTrajectory.insert(x);
+                        //playerToCurTrajectory[curPlayerId];
+                        std::pair<int64_t , SegmentData> x = {curPlayerId, {tickIndex, {playerAtTick.posX[curPATId], playerAtTick.posY[curPATId]}}};
+                        playerToCurTrajectory.insert(x);
                         /*
                         playerToCurTrajectory[curPlayerId] = {
                                 tickIndex,

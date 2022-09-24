@@ -284,8 +284,8 @@ int main(int argc, char * argv[]) {
     std::cout << "size: " << nonEngagementTrajectoryResult.size << std::endl;
     std::cout << "processing trajectory segments" << std::endl;
     string trajectorySegmentName = "trajectorySegment";
-    TrajectorySegmentResult trajectorySegmentResult;// =
-            //queryAllTrajectories(players, games, filteredRounds, ticks, playerAtTick, nonEngagementTrajectoryResult);
+    TrajectorySegmentResult trajectorySegmentResult =
+            queryAllTrajectories(players, games, filteredRounds, ticks, playerAtTick, nonEngagementTrajectoryResult);
     trajectorySegmentResult.size = 0;
     std::cout << "size: " << trajectorySegmentResult.size << std::endl;
     /*
@@ -581,4 +581,5 @@ int main(int argc, char * argv[]) {
         usleep(1e6);
     }
      */
+    return 0;
 }
