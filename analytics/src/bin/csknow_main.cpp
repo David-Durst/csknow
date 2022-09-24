@@ -282,8 +282,8 @@ int main(int argc, char * argv[]) {
     std::cout << "processing non engagement trajectory" << std::endl;
     // hi
     string nonEngagementTrajectoryName = "nonEngagementTrajectory";
-    NonEngagementTrajectoryResult nonEngagementTrajectoryResult;// =
-            //queryNonEngagementTrajectory(filteredRounds, ticks, playerAtTick, engagementResult);
+    NonEngagementTrajectoryResult nonEngagementTrajectoryResult =
+            queryNonEngagementTrajectory(filteredRounds, ticks, playerAtTick, engagementResult);
     std::cout << "size: " << nonEngagementTrajectoryResult.size << std::endl;
     std::cout << "processing trajectory segments" << std::endl;
     string trajectorySegmentName = "trajectorySegment";
