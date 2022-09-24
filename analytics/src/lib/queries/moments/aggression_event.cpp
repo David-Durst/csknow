@@ -7,8 +7,8 @@
 #include <omp.h>
 #include <atomic>
 
-void assignRolesToPlayersPerTeam(const ReachableResult & reachableResult, vector<vector<int64_t>> * tmpPlayerId,
-                                 vector<vector<AggressionRole>> * tmpRole, int threadNum,
+void assignRolesToPlayersPerTeam(const ReachableResult & reachableResult, vector<vector<vector<int64_t>>> & tmpPlayerId,
+                                 vector<vector<vector<AggressionRole>>> & tmpRole, int threadNum,
                                  const map<int64_t, AreaId> & tAreas, const set<int64_t> & tVisiblePlayers,
                                  const set<AreaId> & tVisibleAreas, const nav_mesh::nav_file & navFile) {
     for (const auto & [tPlayerId, tAreaId] : tAreas) {
@@ -35,14 +35,14 @@ AggressionEventResult queryAggressionRoles(const Games & games, const Rounds & r
                                            const PlayerAtTick & playerAtTick,
                                            const nav_mesh::nav_file & navFile, const VisPoints & visPoints, const ReachableResult & reachableResult) {
     int numThreads = omp_get_max_threads();
-    vector<int64_t> tmpRoundIds[numThreads];
-    vector<int64_t> tmpRoundStarts[numThreads];
-    vector<int64_t> tmpRoundSizes[numThreads];
-    vector<int64_t> tmpStartTickId[numThreads];
-    vector<int64_t> tmpEndTickId[numThreads];
-    vector<int64_t> tmpLength[numThreads];
-    vector<vector<int64_t>> tmpPlayerId[numThreads];
-    vector<vector<AggressionRole>> tmpRole[numThreads];
+    vector<vector<int64_t>> tmpRoundIds(numThreads);
+    vector<vector<int64_t>> tmpRoundStarts(numThreads);
+    vector<vector<int64_t>> tmpRoundSizes(numThreads);
+    vector<vector<int64_t>> tmpStartTickId(numThreads);
+    vector<vector<int64_t>> tmpEndTickId(numThreads);
+    vector<vector<int64_t>> tmpLength(numThreads);
+    vector<vector<vector<int64_t>>> tmpPlayerId(numThreads);
+    vector<vector<vector<AggressionRole>>> tmpRole(numThreads);
     std::atomic<int64_t> roundsProcessed = 0;
 // for each round
         // for each player - identify current path - if in any regions of a path, or next region they will be in

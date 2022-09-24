@@ -23,10 +23,10 @@ struct EngagementData {
 };
 
 void finishEngagement(const Rounds &rounds, const Ticks &ticks,
-                      vector<int64_t> tmpStartTickId[], vector<int64_t> tmpEndTickId[],
-                      vector<int64_t> tmpLength[], vector<vector<int64_t>> tmpPlayerId[],
-                      vector<vector<EngagementRole>> tmpRole[],
-                      vector<vector<int64_t>> tmpHurtTickIds[], vector<vector<int64_t>> tmpHurtIds[],
+                      vector<vector<int64_t>> & tmpStartTickId, vector<vector<int64_t>> & tmpEndTickId,
+                      vector<vector<int64_t>> & tmpLength, vector<vector<vector<int64_t>>> & tmpPlayerId,
+                      vector<vector<vector<EngagementRole>>> & tmpRole,
+                      vector<vector<vector<int64_t>>> & tmpHurtTickIds, vector<vector<vector<int64_t>>> & tmpHurtIds,
                       int threadNum, const TickRates &tickRates,
                       const EngagementPlayers &curPair, const EngagementData &eData) {
     // use pre and post periods to track behavior around engagement
@@ -45,20 +45,19 @@ void finishEngagement(const Rounds &rounds, const Ticks &ticks,
     tmpHurtIds[threadNum].push_back(eData.hurtIds);
 }
 
-EngagementResult queryEngagementResult(const Games & games, const Rounds & rounds, const Ticks & ticks,
-                                       const Hurt & hurt) {
+EngagementResult queryEngagementResult(const Games & games, const Rounds & rounds, const Ticks & ticks, const Hurt & hurt) {
 
     int numThreads = omp_get_max_threads();
-    vector<int64_t> tmpRoundIds[numThreads];
-    vector<int64_t> tmpRoundStarts[numThreads];
-    vector<int64_t> tmpRoundSizes[numThreads];
-    vector<int64_t> tmpStartTickId[numThreads];
-    vector<int64_t> tmpEndTickId[numThreads];
-    vector<int64_t> tmpLength[numThreads];
-    vector<vector<int64_t>> tmpPlayerId[numThreads];
-    vector<vector<EngagementRole>> tmpRole[numThreads];
-    vector<vector<int64_t>> tmpHurtTickIds[numThreads];
-    vector<vector<int64_t>> tmpHurtIds[numThreads];
+    vector<vector<int64_t>> tmpRoundIds(numThreads);
+    vector<vector<int64_t>> tmpRoundStarts(numThreads);
+    vector<vector<int64_t>> tmpRoundSizes(numThreads);
+    vector<vector<int64_t>> tmpStartTickId(numThreads);
+    vector<vector<int64_t>> tmpEndTickId(numThreads);
+    vector<vector<int64_t>> tmpLength(numThreads);
+    vector<vector<vector<int64_t>>> tmpPlayerId(numThreads);
+    vector<vector<vector<EngagementRole>>> tmpRole(numThreads);
+    vector<vector<vector<int64_t>>> tmpHurtTickIds(numThreads);
+    vector<vector<vector<int64_t>>> tmpHurtIds(numThreads);
 
     // for each round
     // track events for each pairs of player.

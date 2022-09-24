@@ -12,8 +12,8 @@ struct SegmentData {
     int64_t startTickId;
 };
 
-void finishEngagement(vector<int64_t> tmpStartTickId[], vector<int64_t> tmpEndTickId[],
-                      vector<int64_t> tmpLength[], vector<int64_t> tmpPlayerId[],
+void finishEngagement(vector<vector<int64_t>> & tmpStartTickId, vector<vector<int64_t>> & tmpEndTickId,
+                      vector<vector<int64_t>> & tmpLength, vector<vector<int64_t>> & tmpPlayerId,
                       int threadNum, int64_t tickIndex, int64_t playerId,
                       map<int64_t, SegmentData> & playerToCurTrajectory, bool remove = true) {
     tmpStartTickId[threadNum].push_back(playerToCurTrajectory[playerId].startTickId);
@@ -29,13 +29,13 @@ NonEngagementTrajectoryResult queryNonEngagementTrajectory(const Rounds & rounds
                                                            const PlayerAtTick & playerAtTick,
                                                            const EngagementResult & engagementResult) {
     int numThreads = omp_get_max_threads();
-    vector<int64_t> tmpRoundIds[numThreads];
-    vector<int64_t> tmpRoundStarts[numThreads];
-    vector<int64_t> tmpRoundSizes[numThreads];
-    vector<int64_t> tmpStartTickId[numThreads];
-    vector<int64_t> tmpEndTickId[numThreads];
-    vector<int64_t> tmpLength[numThreads];
-    vector<int64_t> tmpPlayerId[numThreads];
+    vector<vector<int64_t>> tmpRoundIds(numThreads);
+    vector<vector<int64_t>> tmpRoundStarts(numThreads);
+    vector<vector<int64_t>> tmpRoundSizes(numThreads);
+    vector<vector<int64_t>> tmpStartTickId(numThreads);
+    vector<vector<int64_t>> tmpEndTickId(numThreads);
+    vector<vector<int64_t>> tmpLength(numThreads);
+    vector<vector<int64_t>> tmpPlayerId(numThreads);
 
     // for each round
     // for each tick

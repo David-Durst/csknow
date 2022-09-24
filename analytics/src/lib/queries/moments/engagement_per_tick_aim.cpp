@@ -14,17 +14,17 @@ EngagementPerTickAimResult queryEngagementPerTickAim(const Games & games, const 
                                                      const Hurt & hurt, const EngagementResult & engagementResult) {
 
     int numThreads = omp_get_max_threads();
-    vector<int64_t> tmpRoundIds[numThreads];
-    vector<int64_t> tmpRoundStarts[numThreads];
-    vector<int64_t> tmpRoundSizes[numThreads];
-    vector<int64_t> tmpTickId[numThreads];
-    vector<int64_t> tmpEngagementId[numThreads];
-    vector<int64_t> tmpAttackerPlayerId[numThreads];
-    vector<int64_t> tmpVictimPlayerId[numThreads];
-    vector<double> tmpSecondsToHit[numThreads];
-    vector<Vec2> tmpDeltaViewAngle[numThreads];
-    vector<double> tmpRawViewAngleSpeed[numThreads];
-    vector<double> tmpSecondsSinceEngagementStart[numThreads];
+    vector<vector<int64_t>> tmpRoundIds(numThreads);
+    vector<vector<int64_t>> tmpRoundStarts(numThreads);
+    vector<vector<int64_t>> tmpRoundSizes(numThreads);
+    vector<vector<int64_t>> tmpTickId(numThreads);
+    vector<vector<int64_t>> tmpEngagementId(numThreads);
+    vector<vector<int64_t>> tmpAttackerPlayerId(numThreads);
+    vector<vector<int64_t>> tmpVictimPlayerId(numThreads);
+    vector<vector<double>> tmpSecondsToHit(numThreads);
+    vector<vector<Vec2>> tmpDeltaViewAngle(numThreads);
+    vector<vector<double>> tmpRawViewAngleSpeed(numThreads);
+    vector<vector<double>> tmpSecondsSinceEngagementStart(numThreads);
 
     // for each round
     // for each tick

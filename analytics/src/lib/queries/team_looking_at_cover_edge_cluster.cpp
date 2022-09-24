@@ -15,16 +15,16 @@ queryTeamLookingAtCoverEdgeCluster(const Games & games, const Rounds & rounds, c
                                    const PlayerAtTick & playerAtTick, const CoverOrigins & coverOrigins,
                                    const CoverEdges & coverEdges, const NearestOriginResult & nearestOriginResult) {
     int numThreads = omp_get_max_threads();
-    vector<int64_t> tmpTickId[numThreads];
-    vector<int64_t> tmpOriginPlayerAtTickIds[numThreads];
-    vector<int64_t> tmpOriginPlayerIds[numThreads];
-    vector<int64_t> tmpLookingPlayerAtTickIds[numThreads];
-    vector<int64_t> tmpLookingPlayerIds[numThreads];
-    vector<int64_t> tmpNearestOriginIds[numThreads];
-    vector<int64_t> tmpCoverEdgeClusterIds[numThreads];
-    vector<int64_t> tmpRoundIds[numThreads];
-    vector<int64_t> tmpRoundStarts[numThreads];
-    vector<int64_t> tmpRoundSizes[numThreads];
+    vector<vector<int64_t>> tmpTickId(numThreads);
+    vector<vector<int64_t>> tmpOriginPlayerAtTickIds(numThreads);
+    vector<vector<int64_t>> tmpOriginPlayerIds(numThreads);
+    vector<vector<int64_t>> tmpLookingPlayerAtTickIds(numThreads);
+    vector<vector<int64_t>> tmpLookingPlayerIds(numThreads);
+    vector<vector<int64_t>> tmpNearestOriginIds(numThreads);
+    vector<vector<int64_t>> tmpCoverEdgeClusterIds(numThreads);
+    vector<vector<int64_t>> tmpRoundIds(numThreads);
+    vector<vector<int64_t>> tmpRoundStarts(numThreads);
+    vector<vector<int64_t>> tmpRoundSizes(numThreads);
     std::atomic<int64_t> roundsProcessed = 0;
 
 #pragma omp parallel for

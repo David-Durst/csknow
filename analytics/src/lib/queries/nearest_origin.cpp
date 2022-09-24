@@ -12,13 +12,13 @@ NearestOriginResult queryNearestOrigin(const Rounds & rounds, const Ticks & tick
                                        const CoverOrigins & coverOrigins) {
 
     int numThreads = omp_get_max_threads();
-    vector<int64_t> tmpTickId[numThreads];
-    vector<int64_t> tmpPlayerAtTickIds[numThreads];
-    vector<int64_t> tmpPlayerIds[numThreads];
-    vector<int64_t> tmpOriginIds[numThreads];
-    vector<int64_t> tmpRoundIds[numThreads];
-    vector<int64_t> tmpRoundStarts[numThreads];
-    vector<int64_t> tmpRoundSizes[numThreads];
+    vector<vector<int64_t>> tmpTickId(numThreads);
+    vector<vector<int64_t>> tmpPlayerAtTickIds(numThreads);
+    vector<vector<int64_t>> tmpPlayerIds(numThreads);
+    vector<vector<int64_t>> tmpOriginIds(numThreads);
+    vector<vector<int64_t>> tmpRoundIds(numThreads);
+    vector<vector<int64_t>> tmpRoundStarts(numThreads);
+    vector<vector<int64_t>> tmpRoundSizes(numThreads);
     std::atomic<int64_t> roundsProcessed = 0;
 
 #pragma omp parallel

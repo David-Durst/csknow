@@ -11,11 +11,11 @@ using std::map;
 
 LookingResult queryLookers(const Games & games, const Rounds & rounds, const Ticks & ticks, const PlayerAtTick & playerAtTick) {
     int numThreads = omp_get_max_threads();
-    vector<int64_t> tmpTickId[numThreads];
-    vector<int64_t> tmpLookerPlayerAtTickIds[numThreads];
-    vector<int64_t> tmpLookerPlayerIds[numThreads];
-    vector<int64_t> tmpLookedAtPlayerAtTickIds[numThreads];
-    vector<int64_t> tmpLookedAtPlayerIds[numThreads];
+    vector<vector<int64_t>> tmpTickId(numThreads);
+    vector<vector<int64_t>> tmpLookerPlayerAtTickIds(numThreads);
+    vector<vector<int64_t>> tmpLookerPlayerIds(numThreads);
+    vector<vector<int64_t>> tmpLookedAtPlayerAtTickIds(numThreads);
+    vector<vector<int64_t>> tmpLookedAtPlayerIds(numThreads);
 
 //#pragma omp parallel for
     for (int64_t roundIndex = 0; roundIndex < rounds.size; roundIndex++) {
