@@ -84,12 +84,14 @@ NonEngagementTrajectoryResult queryNonEngagementTrajectory(const Rounds & rounds
             for (int64_t patIndex = ticks.patPerTick[tickIndex].minId;
                  patIndex <= ticks.patPerTick[tickIndex].maxId; patIndex++) {
                 int64_t playerId = playerAtTick.playerId[patIndex];
-                if (playerAtTick.isAlive[playerId] && playerToCurTrajectory.find(playerId) == playerToCurTrajectory.end() &&
+                if (playerAtTick.isAlive[patIndex] &&
+                    playerToCurTrajectory.find(playerId) == playerToCurTrajectory.end() &&
                     inEngagement.find(playerId) == inEngagement.end()) {
                     playerToCurTrajectory[playerId] = {tickIndex};
                 }
                 // if player somehow dies without being in engagement (like from nade), end trajectory
-                if (!playerAtTick.isAlive[playerId] && playerToCurTrajectory.find(playerId) != playerToCurTrajectory.end()) {
+                if (!playerAtTick.isAlive[patIndex] &&
+                    playerToCurTrajectory.find(playerId) != playerToCurTrajectory.end()) {
                     finishEngagement(tmpStartTickId, tmpEndTickId, tmpLength, tmpPlayerId, threadNum, tickIndex,
                                      playerId, playerToCurTrajectory);
                 }
