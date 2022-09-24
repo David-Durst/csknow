@@ -22,7 +22,7 @@ using std::set;
 using std::unordered_map;
 using std::vector;
 using std::map;
-//#define SEGMENT_SECONDS 1.0
+#define SEGMENT_SECONDS 1.0
 
 class TrajectorySegmentResult : public QueryResult {
 public:
@@ -66,8 +66,6 @@ public:
                 "segment end 2d pos x", "segment end 2d pos y"};
     }
 };
-
-void makeMapBasic();
 
 TrajectorySegmentResult queryAllTrajectories(const Players & players, const Games & games, const Rounds & rounds,
                                              const Ticks & ticks, const PlayerAtTick & playerAtTick,

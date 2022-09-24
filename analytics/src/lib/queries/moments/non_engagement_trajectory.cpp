@@ -61,7 +61,9 @@ NonEngagementTrajectoryResult queryNonEngagementTrajectory(const Rounds & rounds
             map<int64_t, int64_t> curPlayerToPAT = getPATIdForPlayerId(ticks, playerAtTick, tickIndex);
             vector<int64_t> disappearingPlayers;
             for (const auto & [playerId, _] : playerToCurTrajectory) {
-                disappearingPlayers.push_back(playerId);
+                if (curPlayerToPAT.find(playerId) == curPlayerToPAT.end()) {
+                    disappearingPlayers.push_back(playerId);
+                }
             }
             for (const auto disappearingPlayer : disappearingPlayers) {
                 playerToCurTrajectory.erase(disappearingPlayer);

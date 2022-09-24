@@ -5,7 +5,7 @@
 #include "queries/moments/trajectory_segments.h"
 #include "queries/lookback.h"
 #include "queries/rolling_window.h"
-//#include <omp.h>
+#include <omp.h>
 #include <atomic>
 
 struct TSData {
@@ -31,18 +31,10 @@ void finishSegment(vector<vector<int64_t>> & tmpSegmentStartTickId, vector<vecto
     }
 }
 
-void makeMapBasic() {
-    std::pair<int64_t, TSData> x = {-1, {-1, {0., 0.}}};
-    map<int64_t, TSData> playerToCurTrajectory;
-    playerToCurTrajectory.insert(x);
-}
-
-
 TrajectorySegmentResult queryAllTrajectories(const Players & players, const Games & games, const Rounds & rounds,
                                              const Ticks & ticks, const PlayerAtTick & playerAtTick,
                                              const NonEngagementTrajectoryResult & nonEngagementTrajectoryResult) {
-    makeMapBasic();
-    int numThreads = 1;//omp_get_max_threads();
+    int numThreads = omp_get_max_threads();
     vector<vector<int64_t>> tmpRoundIds(numThreads);
     vector<vector<int64_t>> tmpRoundStarts(numThreads);
     vector<vector<int64_t>> tmpRoundSizes(numThreads);
@@ -61,15 +53,13 @@ TrajectorySegmentResult queryAllTrajectories(const Players & players, const Game
     // clear out at end of round with early termination
 //#pragma omp parallel for
     for (int64_t roundIndex = 0; roundIndex < rounds.size; roundIndex++) {
-        int threadNum = 0;//omp_get_thread_num();
+        int threadNum = omp_get_thread_num();
         tmpRoundIds[threadNum].push_back(roundIndex);
         tmpRoundStarts[threadNum].push_back(tmpSegmentStartTickId[threadNum].size());
 
-        //TickRates tickRates = computeTickRates(games, rounds, roundIndex);
+        TickRates tickRates = computeTickRates(games, rounds, roundIndex);
 
         map<int64_t, TSData> playerToCurTrajectory;
-        map<int64_t, int64_t> hi;
-
 
         for (int64_t tickIndex = rounds.ticksPerRound[roundIndex].minId;
              tickIndex <= rounds.ticksPerRound[roundIndex].maxId; tickIndex++) {
@@ -82,44 +72,24 @@ TrajectorySegmentResult queryAllTrajectories(const Players & players, const Game
                 if (playerToCurTrajectory.find(curPlayerId) == playerToCurTrajectory.end()) {
                     if (curPlayerToPAT.find(curPlayerId) == curPlayerToPAT.end()) {
                         int x = 1;
+                        (void) x;
                     }
                     int64_t curPATId = curPlayerToPAT[curPlayerId];
                     // probably not necessary, but just be defensive
                     if (curPATId < 0 || curPATId >= playerAtTick.size) {
                         int x = 1;
+                        (void) x;
                     }
                     if (playerAtTick.isAlive[curPATId]) {
-                        //playerToCurTrajectory[curPlayerId];
-                        hi.insert({1, 1});
-                        auto dude = playerToCurTrajectory.size();
-                        //std::pair<int64_t , SegmentData> x = {curPlayerId, {tickIndex, {playerAtTick.posX[curPATId], playerAtTick.posY[curPATId]}}};
-                        //playerToCurTrajectory.insert(x);
-                        //playerToCurTrajectory[curPlayerId];
-                        std::pair<int64_t, TSData> x = {curPlayerId, {tickIndex, {playerAtTick.posX[curPATId], playerAtTick.posY[curPATId]}}};
-                        playerToCurTrajectory.insert(x);
-                        /*
                         playerToCurTrajectory[curPlayerId] = {
-                                tickIndex,
-                                {playerAtTick.posX[curPATId], playerAtTick.posY[curPATId]}
+                            tickIndex,
+                            {playerAtTick.posX[curPATId], playerAtTick.posY[curPATId]}
                         };
-                         */
-                        //playerToCurTrajectory.insert({curPlayerId, {1}});
-                        //playerToCurTrajectory.insert({curPlayerId, {tickIndex, {}}});
-                        /*
-                        playerToCurTrajectory[curPlayerId] = {
-                                tickIndex, {}
-                        };
-                        playerToCurTrajectory[curPlayerId] = {
-                                tickIndex,
-                                {playerAtTick.posX[curPATId], playerAtTick.posY[curPATId]}
-                        };
-                         */
                     }
 
                 }
             }
 
-            /*
             for (int64_t patIndex = ticks.patPerTick[tickIndex].minId;
                  patIndex <= ticks.patPerTick[tickIndex].maxId; patIndex++) {
                 int64_t playerId = playerAtTick.playerId[patIndex];
@@ -139,20 +109,21 @@ TrajectorySegmentResult queryAllTrajectories(const Players & players, const Game
                     }
                 }
             }
-             */
+            if (!playerToCurTrajectory.empty()) {
+                int x = 1;
+                (void) x;
+            }
         }
 
         int64_t maxTickInRound = rounds.ticksPerRound[roundIndex].maxId;
         map<int64_t, int64_t> endPlayerToPAT = getPATIdForPlayerId(ticks, playerAtTick, maxTickInRound);
         for (const auto & [playerId, tData] : playerToCurTrajectory) {
-            /*
             finishSegment(tmpSegmentStartTickId, tmpSegmentEndTickId,
                           tmpLength, tmpPlayerId, tmpPlayerName,
                           tmpSegmentStart2DPos, tmpSegmentEnd2DPos,
                           threadNum, maxTickInRound, playerId, endPlayerToPAT[playerId],
                           players, playerAtTick, playerToCurTrajectory[playerId],
                           playerToCurTrajectory, false);
-                          */
         }
         tmpRoundSizes[threadNum].push_back(tmpSegmentStartTickId[threadNum].size() - tmpRoundStarts[threadNum].back());
         //roundsProcessed++;

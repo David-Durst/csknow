@@ -62,7 +62,6 @@ void exec(const string & cmd) {
 }
 
 int main(int argc, char * argv[]) {
-    makeMapBasic();
     if (argc != 5) {
         std::cout << "please call this code 4 arguments: " << std::endl;
         std::cout << "1. path/to/local_data" << std::endl;
@@ -247,7 +246,6 @@ int main(int argc, char * argv[]) {
     std::cout << "team_looking_at_cover_edge_cluster entries: " << teamLookingAtCoverEdgeClusterResult.tickId.size() << std::endl;
     */
 
-    makeMapBasic();
     string dust2MeshName = "de_dust2_mesh";
     MapMeshResult d2MeshResult = queryMapMesh(map_navs["de_dust2"]);
     string dust2ReachableName = "de_dust2_reachable";
