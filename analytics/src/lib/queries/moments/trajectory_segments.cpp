@@ -31,9 +31,17 @@ void finishSegment(vector<vector<int64_t>> & tmpSegmentStartTickId, vector<vecto
     }
 }
 
+void makeMapBasic() {
+    std::pair<int64_t , SegmentData> x = {-1, {-1, {0., 0.}}};
+    map<int64_t, SegmentData> playerToCurTrajectory;
+    playerToCurTrajectory.insert(x);
+}
+
+
 TrajectorySegmentResult queryAllTrajectories(const Players & players, const Games & games, const Rounds & rounds,
                                              const Ticks & ticks, const PlayerAtTick & playerAtTick,
                                              const NonEngagementTrajectoryResult & nonEngagementTrajectoryResult) {
+    makeMapBasic();
     int numThreads = omp_get_max_threads();
     vector<vector<int64_t>> tmpRoundIds(numThreads);
     vector<vector<int64_t>> tmpRoundStarts(numThreads);

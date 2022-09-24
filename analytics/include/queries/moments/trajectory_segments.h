@@ -69,6 +69,7 @@ public:
     }
 };
 
+void makeMapBasic();
 
 TrajectorySegmentResult queryAllTrajectories(const Players & players, const Games & games, const Rounds & rounds,
                                              const Ticks & ticks, const PlayerAtTick & playerAtTick,
