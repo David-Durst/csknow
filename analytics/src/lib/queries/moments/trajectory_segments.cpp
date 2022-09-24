@@ -74,7 +74,7 @@ TrajectorySegmentResult queryAllTrajectories(const Players & players, const Game
         for (int64_t tickIndex = rounds.ticksPerRound[roundIndex].minId;
              tickIndex <= rounds.ticksPerRound[roundIndex].maxId; tickIndex++) {
 
-            map<int64_t, int64_t> curPlayerToPAT;// = getPATIdForPlayerId(ticks, playerAtTick, tickIndex);
+            map<int64_t, int64_t> curPlayerToPAT = getPATIdForPlayerId(ticks, playerAtTick, tickIndex);
 
             for (const auto & [_0, _1, trajectoryIndex] :
                     nonEngagementTrajectoryResult.trajectoriesPerTick.findOverlapping(tickIndex, tickIndex)) {
@@ -143,7 +143,7 @@ TrajectorySegmentResult queryAllTrajectories(const Players & players, const Game
         }
 
         int64_t maxTickInRound = rounds.ticksPerRound[roundIndex].maxId;
-        map<int64_t, int64_t> endPlayerToPAT; // = getPATIdForPlayerId(ticks, playerAtTick, maxTickInRound);
+        map<int64_t, int64_t> endPlayerToPAT = getPATIdForPlayerId(ticks, playerAtTick, maxTickInRound);
         for (const auto & [playerId, tData] : playerToCurTrajectory) {
             /*
             finishSegment(tmpSegmentStartTickId, tmpSegmentEndTickId,
@@ -160,7 +160,6 @@ TrajectorySegmentResult queryAllTrajectories(const Players & players, const Game
     }
 
     TrajectorySegmentResult result;
-    /*
     mergeThreadResults(numThreads, result.rowIndicesPerRound, tmpRoundIds, tmpRoundStarts, tmpRoundSizes,
                        result.segmentStartTickId, result.size,
                        [&](int64_t minThreadId, int64_t tmpRowId) {
@@ -172,7 +171,6 @@ TrajectorySegmentResult queryAllTrajectories(const Players & players, const Game
                            result.segmentStart2DPos.push_back(tmpSegmentStart2DPos[minThreadId][tmpRowId]);
                            result.segmentEnd2DPos.push_back(tmpSegmentEnd2DPos[minThreadId][tmpRowId]);
                        });
-                       */
     return result;
 
 

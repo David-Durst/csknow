@@ -5,7 +5,7 @@
 #include "queries/base_tables.h"
 #include "queries/rolling_window.h"
 #include "indices/build_indexes.h"
-//#include <omp.h>
+#include <omp.h>
 #include <atomic>
 
 struct NETData {
@@ -28,7 +28,7 @@ void finishEngagement(vector<vector<int64_t>> & tmpStartTickId, vector<vector<in
 NonEngagementTrajectoryResult queryNonEngagementTrajectory(const Rounds & rounds, const Ticks & ticks,
                                                            const PlayerAtTick & playerAtTick,
                                                            const EngagementResult & engagementResult) {
-    int numThreads = 1;//omp_get_max_threads();
+    int numThreads = omp_get_max_threads();
     vector<vector<int64_t>> tmpRoundIds(numThreads);
     vector<vector<int64_t>> tmpRoundStarts(numThreads);
     vector<vector<int64_t>> tmpRoundSizes(numThreads);
@@ -44,7 +44,7 @@ NonEngagementTrajectoryResult queryNonEngagementTrajectory(const Rounds & rounds
     // otherwise, terminate trajectory on end of round
 //#pragma omp parallel for
     for (int64_t roundIndex = 0; roundIndex < rounds.size; roundIndex++) {
-        int threadNum = 0;//omp_get_thread_num();
+        int threadNum = omp_get_thread_num();
         tmpRoundIds[threadNum].push_back(roundIndex);
         tmpRoundStarts[threadNum].push_back(static_cast<int64_t>(tmpStartTickId[threadNum].size()));
 
@@ -58,7 +58,7 @@ NonEngagementTrajectoryResult queryNonEngagementTrajectory(const Rounds & rounds
 
             // round 17 (after halftime), k0nfig disappears for round start time. Remove a player without writing
             // trajectory if this happens
-            map<int64_t, int64_t> curPlayerToPAT; // = getPATIdForPlayerId(ticks, playerAtTick, tickIndex);
+            map<int64_t, int64_t> curPlayerToPAT = getPATIdForPlayerId(ticks, playerAtTick, tickIndex);
             vector<int64_t> disappearingPlayers;
             for (const auto & [playerId, _] : playerToCurTrajectory) {
                 disappearingPlayers.push_back(playerId);
@@ -105,7 +105,6 @@ NonEngagementTrajectoryResult queryNonEngagementTrajectory(const Rounds & rounds
     }
 
     NonEngagementTrajectoryResult result;
-    /*
     mergeThreadResults(numThreads, result.rowIndicesPerRound, tmpRoundIds, tmpRoundStarts, tmpRoundSizes,
                        result.startTickId, result.size,
                        [&](int64_t minThreadId, int64_t tmpRowId) {
@@ -116,6 +115,5 @@ NonEngagementTrajectoryResult queryNonEngagementTrajectory(const Rounds & rounds
                        });
     vector<const int64_t *> foreignKeyCols{result.startTickId.data(), result.endTickId.data()};
     result.trajectoriesPerTick = buildIntervalIndex(foreignKeyCols, result.size);
-     */
     return result;
 }
