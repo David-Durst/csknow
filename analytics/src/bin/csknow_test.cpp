@@ -6,6 +6,7 @@
 
 int main([[maybe_unused]] int argc, [[maybe_unused]] char * argv[]) {
     makeMapBasic();
+    /*
     std::cout << "Hi" << std::endl;
     Rounds filteredRounds;
     Ticks ticks;
@@ -13,5 +14,6 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char * argv[]) {
     EngagementResult engagementResult;
     NonEngagementTrajectoryResult nonEngagementTrajectoryResult =
             queryNonEngagementTrajectory(filteredRounds, ticks, playerAtTick, engagementResult);
+            */
     return 0;
 }

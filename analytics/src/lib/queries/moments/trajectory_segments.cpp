@@ -5,7 +5,7 @@
 #include "queries/moments/trajectory_segments.h"
 #include "queries/lookback.h"
 #include "queries/rolling_window.h"
-#include <omp.h>
+//#include <omp.h>
 #include <atomic>
 
 struct SegmentData {
@@ -42,7 +42,7 @@ TrajectorySegmentResult queryAllTrajectories(const Players & players, const Game
                                              const Ticks & ticks, const PlayerAtTick & playerAtTick,
                                              const NonEngagementTrajectoryResult & nonEngagementTrajectoryResult) {
     makeMapBasic();
-    int numThreads = omp_get_max_threads();
+    int numThreads = 1;//omp_get_max_threads();
     vector<vector<int64_t>> tmpRoundIds(numThreads);
     vector<vector<int64_t>> tmpRoundStarts(numThreads);
     vector<vector<int64_t>> tmpRoundSizes(numThreads);
@@ -61,7 +61,7 @@ TrajectorySegmentResult queryAllTrajectories(const Players & players, const Game
     // clear out at end of round with early termination
 //#pragma omp parallel for
     for (int64_t roundIndex = 0; roundIndex < rounds.size; roundIndex++) {
-        int threadNum = omp_get_thread_num();
+        int threadNum = 0;//omp_get_thread_num();
         tmpRoundIds[threadNum].push_back(roundIndex);
         tmpRoundStarts[threadNum].push_back(tmpSegmentStartTickId[threadNum].size());
 
@@ -74,7 +74,7 @@ TrajectorySegmentResult queryAllTrajectories(const Players & players, const Game
         for (int64_t tickIndex = rounds.ticksPerRound[roundIndex].minId;
              tickIndex <= rounds.ticksPerRound[roundIndex].maxId; tickIndex++) {
 
-            map<int64_t, int64_t> curPlayerToPAT = getPATIdForPlayerId(ticks, playerAtTick, tickIndex);
+            map<int64_t, int64_t> curPlayerToPAT;// = getPATIdForPlayerId(ticks, playerAtTick, tickIndex);
 
             for (const auto & [_0, _1, trajectoryIndex] :
                     nonEngagementTrajectoryResult.trajectoriesPerTick.findOverlapping(tickIndex, tickIndex)) {
@@ -143,7 +143,7 @@ TrajectorySegmentResult queryAllTrajectories(const Players & players, const Game
         }
 
         int64_t maxTickInRound = rounds.ticksPerRound[roundIndex].maxId;
-        map<int64_t, int64_t> endPlayerToPAT = getPATIdForPlayerId(ticks, playerAtTick, maxTickInRound);
+        map<int64_t, int64_t> endPlayerToPAT; // = getPATIdForPlayerId(ticks, playerAtTick, maxTickInRound);
         for (const auto & [playerId, tData] : playerToCurTrajectory) {
             /*
             finishSegment(tmpSegmentStartTickId, tmpSegmentEndTickId,
