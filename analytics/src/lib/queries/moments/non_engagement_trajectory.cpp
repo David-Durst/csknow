@@ -8,14 +8,14 @@
 //#include <omp.h>
 #include <atomic>
 
-struct SegmentData {
+struct NETData {
     int64_t startTickId;
 };
 
 void finishEngagement(vector<vector<int64_t>> & tmpStartTickId, vector<vector<int64_t>> & tmpEndTickId,
                       vector<vector<int64_t>> & tmpLength, vector<vector<int64_t>> & tmpPlayerId,
                       int threadNum, int64_t tickIndex, int64_t playerId,
-                      map<int64_t, SegmentData> & playerToCurTrajectory, bool remove = true) {
+                      map<int64_t, NETData> & playerToCurTrajectory, bool remove = true) {
     tmpStartTickId[threadNum].push_back(playerToCurTrajectory[playerId].startTickId);
     tmpEndTickId[threadNum].push_back(tickIndex);
     tmpLength[threadNum].push_back(tmpEndTickId[threadNum].back() - tmpStartTickId[threadNum].back() + 1);
@@ -50,7 +50,7 @@ NonEngagementTrajectoryResult queryNonEngagementTrajectory(const Rounds & rounds
 
         //TickRates tickRates = computeTickRates(games, rounds, roundIndex);
 
-        map<int64_t, SegmentData> playerToCurTrajectory;
+        map<int64_t, NETData> playerToCurTrajectory;
 
 
         for (int64_t tickIndex = rounds.ticksPerRound[roundIndex].minId;

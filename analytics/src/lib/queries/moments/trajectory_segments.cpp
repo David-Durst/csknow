@@ -8,7 +8,7 @@
 //#include <omp.h>
 #include <atomic>
 
-struct SegmentData {
+struct TSData {
     int64_t segmentStartTickId;
     Vec2 segmentStart2DPos;
 };
@@ -17,8 +17,8 @@ void finishSegment(vector<vector<int64_t>> & tmpSegmentStartTickId, vector<vecto
                    vector<vector<int64_t>> & tmpLength, vector<vector<int64_t>> & tmpPlayerId, vector<vector<string>> & tmpPlayerName,
                    vector<vector<Vec2>> & tmpSegmentStart2DPos, vector<vector<Vec2>> & tmpSegmentEnd2DPos,
                    int threadNum, int64_t tickIndex, int64_t playerId, int64_t patIndex,
-                   const Players & players, const PlayerAtTick & playerAtTick, const SegmentData & sData,
-                   map<int64_t, SegmentData> & playerToCurTrajectory, bool remove = true) {
+                   const Players & players, const PlayerAtTick & playerAtTick, const TSData & sData,
+                   map<int64_t, TSData> & playerToCurTrajectory, bool remove = true) {
     tmpSegmentStartTickId[threadNum].push_back(sData.segmentStartTickId);
     tmpSegmentEndTickId[threadNum].push_back(tickIndex);
     tmpLength[threadNum].push_back(tmpSegmentEndTickId[threadNum].back() - tmpSegmentStartTickId[threadNum].back() + 1);
@@ -32,8 +32,8 @@ void finishSegment(vector<vector<int64_t>> & tmpSegmentStartTickId, vector<vecto
 }
 
 void makeMapBasic() {
-    std::pair<int64_t , SegmentData> x = {-1, {-1, {0., 0.}}};
-    map<int64_t, SegmentData> playerToCurTrajectory;
+    std::pair<int64_t, TSData> x = {-1, {-1, {0., 0.}}};
+    map<int64_t, TSData> playerToCurTrajectory;
     playerToCurTrajectory.insert(x);
 }
 
@@ -67,7 +67,7 @@ TrajectorySegmentResult queryAllTrajectories(const Players & players, const Game
 
         //TickRates tickRates = computeTickRates(games, rounds, roundIndex);
 
-        map<int64_t, SegmentData> playerToCurTrajectory;
+        map<int64_t, TSData> playerToCurTrajectory;
         map<int64_t, int64_t> hi;
 
 
@@ -95,7 +95,7 @@ TrajectorySegmentResult queryAllTrajectories(const Players & players, const Game
                         //std::pair<int64_t , SegmentData> x = {curPlayerId, {tickIndex, {playerAtTick.posX[curPATId], playerAtTick.posY[curPATId]}}};
                         //playerToCurTrajectory.insert(x);
                         //playerToCurTrajectory[curPlayerId];
-                        std::pair<int64_t , SegmentData> x = {curPlayerId, {tickIndex, {playerAtTick.posX[curPATId], playerAtTick.posY[curPATId]}}};
+                        std::pair<int64_t, TSData> x = {curPlayerId, {tickIndex, {playerAtTick.posX[curPATId], playerAtTick.posY[curPATId]}}};
                         playerToCurTrajectory.insert(x);
                         /*
                         playerToCurTrajectory[curPlayerId] = {
