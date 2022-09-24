@@ -1,6 +1,5 @@
 #include <iostream>
 #include "load_data.h"
-#include "queries/position_and_wall_view.h"
 #include "queries/moments/engagement.h"
 #include "queries/moments/non_engagement_trajectory.h"
 #include "queries/moments/trajectory_segments.h"
