@@ -287,7 +287,6 @@ int main(int argc, char * argv[]) {
     string trajectorySegmentName = "trajectorySegment";
     TrajectorySegmentResult trajectorySegmentResult =
             queryAllTrajectories(players, games, filteredRounds, ticks, playerAtTick, nonEngagementTrajectoryResult);
-    trajectorySegmentResult.size = 0;
     std::cout << "size: " << trajectorySegmentResult.size << std::endl;
     /*
     VelocityResult velocityResult = queryVelocity(position);

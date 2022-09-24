@@ -62,7 +62,7 @@ public:
 //    vector<int> keysForDiff;
 
     //virtual string toCSVFiltered(const Position & position, string game) = 0;
-    int64_t size;
+    int64_t size = 0;
 
     void save(const string & mapsPath, const string & mapName) {
         string fileName = mapName + extension;
