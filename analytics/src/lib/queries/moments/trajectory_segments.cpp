@@ -10,12 +10,12 @@
 
 struct TSData {
     int64_t segmentStartTickId;
-    Vec2 segmentStart2DPos;
+    Vec3 segmentStart2DPos;
 };
 
 void finishSegment(vector<vector<int64_t>> & tmpSegmentStartTickId, vector<vector<int64_t>> & tmpSegmentEndTickId,
                    vector<vector<int64_t>> & tmpLength, vector<vector<int64_t>> & tmpPlayerId, vector<vector<string>> & tmpPlayerName,
-                   vector<vector<Vec2>> & tmpSegmentStart2DPos, vector<vector<Vec2>> & tmpSegmentEnd2DPos,
+                   vector<vector<Vec3>> & tmpSegmentStart2DPos, vector<vector<Vec3>> & tmpSegmentEnd2DPos,
                    int threadNum, int64_t tickIndex, int64_t playerId, int64_t patIndex,
                    const Players & players, const PlayerAtTick & playerAtTick, const TSData & sData,
                    map<int64_t, TSData> & playerToCurTrajectory, bool remove = true) {
@@ -25,7 +25,8 @@ void finishSegment(vector<vector<int64_t>> & tmpSegmentStartTickId, vector<vecto
     tmpPlayerId[threadNum].push_back(playerId);
     tmpPlayerName[threadNum].push_back(players.name[players.idOffset + playerId]);
     tmpSegmentStart2DPos[threadNum].push_back({sData.segmentStart2DPos});
-    tmpSegmentEnd2DPos[threadNum].push_back({playerAtTick.posX[patIndex], playerAtTick.posY[patIndex]});
+    tmpSegmentEnd2DPos[threadNum].push_back({playerAtTick.posX[patIndex], playerAtTick.posY[patIndex],
+                                             playerAtTick.posZ[patIndex]});
     if (remove) {
         playerToCurTrajectory.erase(playerId);
     }
@@ -43,8 +44,8 @@ TrajectorySegmentResult queryAllTrajectories(const Players & players, const Game
     vector<vector<int64_t>> tmpLength(numThreads);
     vector<vector<int64_t>> tmpPlayerId(numThreads);
     vector<vector<string>> tmpPlayerName(numThreads);
-    vector<vector<Vec2>> tmpSegmentStart2DPos(numThreads);
-    vector<vector<Vec2>> tmpSegmentEnd2DPos(numThreads);
+    vector<vector<Vec3>> tmpSegmentStart2DPos(numThreads);
+    vector<vector<Vec3>> tmpSegmentEnd2DPos(numThreads);
 
     // for each round
     // for each tick
@@ -66,40 +67,52 @@ TrajectorySegmentResult queryAllTrajectories(const Players & players, const Game
 
             map<int64_t, int64_t> curPlayerToPAT = getPATIdForPlayerId(ticks, playerAtTick, tickIndex);
 
+            set<int64_t> playerInTrajectory;
+
             for (const auto & [_0, _1, trajectoryIndex] :
                     nonEngagementTrajectoryResult.trajectoriesPerTick.findOverlapping(tickIndex, tickIndex)) {
                 int64_t curPlayerId = nonEngagementTrajectoryResult.playerId[trajectoryIndex];
+                playerInTrajectory.insert(curPlayerId);
                 if (playerToCurTrajectory.find(curPlayerId) == playerToCurTrajectory.end()) {
-                    if (curPlayerToPAT.find(curPlayerId) == curPlayerToPAT.end()) {
-                        int x = 1;
-                        (void) x;
-                    }
                     int64_t curPATId = curPlayerToPAT[curPlayerId];
                     // probably not necessary, but just be defensive
-                    if (curPATId < 0 || curPATId >= playerAtTick.size) {
-                        int x = 1;
-                        (void) x;
-                    }
                     if (playerAtTick.isAlive[curPATId]) {
                         playerToCurTrajectory[curPlayerId] = {
                             tickIndex,
-                            {playerAtTick.posX[curPATId], playerAtTick.posY[curPATId]}
+                            {playerAtTick.posX[curPATId], playerAtTick.posY[curPATId],
+                                              playerAtTick.posZ[curPATId]}
                         };
                     }
 
                 }
             }
 
+            // write if trajectory ended
+            vector<int64_t> playerEndingTrajectory;
+            for (const auto & [playerId, _] : playerToCurTrajectory) {
+                if (playerInTrajectory.find(playerId) == playerInTrajectory.end()) {
+                    playerEndingTrajectory.push_back(playerId);
+                }
+            }
+            for (const auto & playerId : playerEndingTrajectory) {
+                finishSegment(tmpSegmentStartTickId, tmpSegmentEndTickId,
+                              tmpLength, tmpPlayerId, tmpPlayerName,
+                              tmpSegmentStart2DPos, tmpSegmentEnd2DPos,
+                              threadNum, tickIndex, playerId, curPlayerToPAT[playerId],
+                              players, playerAtTick, playerToCurTrajectory[playerId],
+                              playerToCurTrajectory);
+            }
+
+            // write if dead or finished a segment
             for (int64_t patIndex = ticks.patPerTick[tickIndex].minId;
                  patIndex <= ticks.patPerTick[tickIndex].maxId; patIndex++) {
                 int64_t playerId = playerAtTick.playerId[patIndex];
                 if (playerToCurTrajectory.find(playerId) != playerToCurTrajectory.end()) {
-                    // write if dead or finished a segment
                     double secondsSinceSegmentStart =
                             secondsBetweenTicks(ticks, tickRates,
                                                 playerToCurTrajectory.find(playerId)->second.segmentStartTickId,
                                                 tickIndex);
-                    if (!playerAtTick.isAlive[playerId] || secondsSinceSegmentStart > SEGMENT_SECONDS) {
+                    if (!playerAtTick.isAlive[patIndex] || secondsSinceSegmentStart > SEGMENT_SECONDS) {
                         finishSegment(tmpSegmentStartTickId, tmpSegmentEndTickId,
                                       tmpLength, tmpPlayerId, tmpPlayerName,
                                       tmpSegmentStart2DPos, tmpSegmentEnd2DPos,
@@ -108,10 +121,6 @@ TrajectorySegmentResult queryAllTrajectories(const Players & players, const Game
                                       playerToCurTrajectory);
                     }
                 }
-            }
-            if (!playerToCurTrajectory.empty()) {
-                int x = 1;
-                (void) x;
             }
         }
 

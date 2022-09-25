@@ -32,14 +32,13 @@ public:
     vector<int64_t> tickLength;
     vector<int64_t> playerId;
     vector<string> playerName;
-    vector<Vec2> segmentStart2DPos;
-    vector<Vec2> segmentEnd2DPos;
+    vector<Vec3> segmentStart2DPos;
+    vector<Vec3> segmentEnd2DPos;
 
     TrajectorySegmentResult() {
         variableLength = false;
         nonTemporal = true;
         overlay = true;
-        overlayLabels = true;
     }
 
     vector<int64_t> filterByForeignKey(int64_t) override {
@@ -49,8 +48,8 @@ public:
     void oneLineToCSV(int64_t index, stringstream & ss) override {
         ss << index << "," << segmentStartTickId[index] << "," << segmentEndTickId[index] << ","
            << tickLength[index] << "," << playerId[index] << "," << playerName[index] << ","
-           << segmentStart2DPos[index].x << "," << segmentStart2DPos[index].y << ","
-           << segmentEnd2DPos[index].x << "," << segmentEnd2DPos[index].y;
+           << segmentStart2DPos[index].x << "," << segmentStart2DPos[index].y << "," << segmentStart2DPos[index].z << ","
+           << segmentEnd2DPos[index].x << "," << segmentEnd2DPos[index].y << "," << segmentEnd2DPos[index].z;
 
         ss << std::endl;
     }
