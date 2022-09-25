@@ -27,6 +27,7 @@ using std::map;
 class TrajectorySegmentResult : public QueryResult {
 public:
     vector<RangeIndexEntry> rowIndicesPerRound;
+    vector<int64_t> trajectoryId;
     vector<int64_t> segmentStartTickId;
     vector<int64_t> segmentEndTickId;
     vector<int64_t> tickLength;
@@ -46,7 +47,7 @@ public:
     }
 
     void oneLineToCSV(int64_t index, stringstream & ss) override {
-        ss << index << "," << segmentStartTickId[index] << "," << segmentEndTickId[index] << ","
+        ss << index << "," << trajectoryId[index] << "," << segmentStartTickId[index] << "," << segmentEndTickId[index] << ","
            << tickLength[index] << "," << playerId[index] << "," << playerName[index] << ","
            << segmentStart2DPos[index].x << "," << segmentStart2DPos[index].y << "," << segmentStart2DPos[index].z << ","
            << segmentEnd2DPos[index].x << "," << segmentEnd2DPos[index].y << "," << segmentEnd2DPos[index].z;
@@ -56,7 +57,7 @@ public:
 
     [[nodiscard]]
     vector<string> getForeignKeyNames() override {
-        return {"start tick id", "end tick id", "length", "player id"};
+        return {"trajectory id", "start tick id", "end tick id", "length", "player id"};
     }
 
     [[nodiscard]]
