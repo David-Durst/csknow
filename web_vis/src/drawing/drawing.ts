@@ -491,6 +491,38 @@ export function drawTick(e: InputEvent) {
             mainCtx.fillText(targetAreaId.toString() + "," + targetPlaceName, targetX, targetY)
         }
     }
+    else if (curOverlay.includes("trajectory")) {
+        mainCtx.fillStyle = green
+        const overlayRows = filteredData.overlays.get(curOverlay)
+        let curTrajectoryId = -1
+        // draw lines and get player name
+        for (let o = 0; o < overlayRows.length; o++) {
+            const overlayRow = overlayRows[o]
+            const fstCoordinate = new MapCoordinate(
+                parseFloat(overlayRow.otherColumnValues[1]),
+                parseFloat(overlayRow.otherColumnValues[2]),
+                false);
+            const sndCoordinate = new MapCoordinate(
+                parseFloat(overlayRow.otherColumnValues[4]),
+                parseFloat(overlayRow.otherColumnValues[5]),
+                false);
+            const avgX = (fstCoordinate.getCanvasX() + sndCoordinate.getCanvasX()) / 2
+            const avgY = (fstCoordinate.getCanvasY() + sndCoordinate.getCanvasY()) / 2
+            const avgZ = (parseFloat(overlayRow.otherColumnValues[3]) + parseFloat(overlayRow.otherColumnValues[6])) / 2;
+            const zScaling = (avgZ - minZ) / (maxZ - minZ)
+            mainCtx.lineWidth = 0.5
+            mainCtx.strokeStyle = 'rgba(24,255,0,0.2)'
+            if (overlayRow.foreignKeyValues[0] != curTrajectoryId) {
+                curTrajectoryId = overlayRow.foreignKeyValues[0]
+                mainCtx.stroke()
+                mainCtx.beginPath()
+                mainCtx.moveTo(fstCoordinate.getCanvasX(), fstCoordinate.getCanvasY())
+            }
+            mainCtx.lineTo(sndCoordinate.getCanvasX(), sndCoordinate.getCanvasY())
+        }
+        // close last line
+        mainCtx.stroke()
+    }
     setEventText(tickData, filteredData)
     // setup client config for this tick
     let startDemoTick = tickData.gameTickNumber - 100

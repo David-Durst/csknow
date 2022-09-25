@@ -83,9 +83,8 @@ export async function getTables() {
                         cols[playerLabelsIndex], cols[havePerTickAimTable], cols[perTickAimTable], cols[eventIdColumn]
                     )
                 )
-                // the first overlay (the regular mesh) sets the labels for all other overlays
-                // TODO: enable multiple overlay labels
-                if (overlayLabels && cols[0] == "de_dust2_mesh") {
+                // the overlay with labels sets the labels for all other overlays
+                if (overlayLabels) {
                     gameData.overlayLabels = cols[0]
                 }
                 if (!addedDownloadedOptions) {
