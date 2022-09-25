@@ -5,7 +5,7 @@
 #include "queries/moments/trajectory_segments.h"
 
 int main([[maybe_unused]] int argc, [[maybe_unused]] char * argv[]) {
-    makeMapBasic();
+    //makeMapBasic();
     Rounds filteredRounds;
     Ticks ticks;
     PlayerAtTick playerAtTick;
