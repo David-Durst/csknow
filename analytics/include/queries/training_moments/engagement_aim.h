@@ -36,8 +36,8 @@ public:
     vector<int64_t> engagementId;
     vector<int64_t> attackerPlayerId;
     vector<int64_t> victimPlayerId;
-    array<vector<Vec2>, NUM_TICKS> deltaViewAngle;
-    array<vector<double>, NUM_TICKS> headToHeadDistance;
+    vector<array<Vec2, NUM_TICKS>> deltaViewAngle;
+    vector<array<double, NUM_TICKS>> eyeToHeadDistance;
 
 
     EngagementAimResult() {
@@ -64,7 +64,7 @@ public:
             ss << "," << deltaViewAngle[index][i].x << "," << deltaViewAngle[index][i].y;
         }
         for (size_t i = 0; i < NUM_TICKS; i++) {
-            ss << "," << headToHeadDistance[index][i];
+            ss << "," << eyeToHeadDistance[index][i];
         }
 
         ss << std::endl;
@@ -75,7 +75,7 @@ public:
     }
 
     vector<string> getOtherColumnNames() override {
-        return {"delta view angle x", "delta view angle y", "head-to-head distance"};
+        return {"delta view angle x", "delta view angle y", "eye-to-head distance"};
     }
 };
 

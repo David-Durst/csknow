@@ -49,6 +49,8 @@ public:
 
     void readNextTick();
 
+    int64_t lastReadTickId() { return nextReadTickId - 1; };
+
     [[nodiscard]]
     const PlayerToPATWindows & getWindows() { return playerToPatWindows; }
 };
