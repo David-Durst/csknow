@@ -49,39 +49,22 @@ static double secondsBetweenTicks(const Ticks & ticks, TickRates tickRates, int6
     return (ticks.gameTickNumber[endTick] - ticks.gameTickNumber[startTick]) / static_cast<double>(tickRates.gameTickRate);
 }
 
-/**
- * Convert number of game ticks back to number of demo ticks back
- * @param ticks vector of demo ticks
- * @param playerAtTick vector of player at ticks
- * @param tickIndex current demo tick index
- * @param patIndex current player at tick index
- * @param tickRates tick rates for the game
- * @return
- */
-static int64_t getLookbackDemoTick(const Rounds & rounds, const Ticks & ticks, const int64_t tickIndex,
-                            const TickRates & tickRates, const int64_t lookbackGameTicks, int maxLookBackTime = 300) {
-    int maxLookBackDemoTicks = computeMaxLookDemoTicks(tickRates, maxLookBackTime);
-
-    int lookbackDemoTicks = 1;
-    for (; ticks.gameTickNumber[tickIndex - lookbackDemoTicks] > ticks.gameTickNumber[tickIndex] - lookbackGameTicks &&
-           lookbackDemoTicks < maxLookBackDemoTicks &&
-           // this makes sure don't run off end, next tick is no less than min
-           tickIndex - lookbackDemoTicks > rounds.ticksPerRound[ticks.roundId[tickIndex]].minId;
-           lookbackDemoTicks++);
-    return lookbackDemoTicks;
-}
-
 static int64_t getLookbackDemoTick(const Rounds & rounds, const Ticks & ticks, int64_t tickIndex,
-                                   const TickRates & tickRates, double lookBackTime) {
-    int lookbackGameTicks = secondsToGameTicks(tickRates, lookBackTime);
-
+                                   int64_t lookbackGameTicks, int64_t bufferTicks = 0) {
     int lookbackDemoTicks = 0;
     for (; ticks.gameTickNumber[tickIndex - lookbackDemoTicks] > ticks.gameTickNumber[tickIndex] - lookbackGameTicks &&
            // this makes sure don't run off end, next tick is no less than min
            // last tick will be equal here or above, abort loop and return
-           tickIndex - lookbackDemoTicks > rounds.ticksPerRound[ticks.roundId[tickIndex]].minId;
+           // subtract buffer ticks for buffer to end early on
+           tickIndex - lookbackDemoTicks - bufferTicks > rounds.ticksPerRound[ticks.roundId[tickIndex]].minId;
            lookbackDemoTicks++);
     return tickIndex - lookbackDemoTicks;
+}
+
+static int64_t getLookbackDemoTick(const Rounds & rounds, const Ticks & ticks, int64_t tickIndex,
+                                   const TickRates & tickRates, double lookBackTime, int64_t bufferTicks = 0) {
+    int lookbackGameTicks = secondsToGameTicks(tickRates, lookBackTime);
+    return getLookbackDemoTick(rounds, ticks, tickIndex, lookbackGameTicks, bufferTicks);
 }
 /**
  * Convert number of game ticks forward to number of demo ticks back
@@ -92,29 +75,21 @@ static int64_t getLookbackDemoTick(const Rounds & rounds, const Ticks & ticks, i
  * @param tickRates tick rates for the game
  * @return
  */
-static int64_t getLookforwardDemoTick(const Rounds & rounds, const Ticks & ticks, const int64_t tickIndex,
-                                   const TickRates & tickRates, const int64_t lookforwardGameTicks, int maxLookForwardTime = 300) {
-    int maxLookforwardDemoTicks = computeMaxLookDemoTicks(tickRates, maxLookForwardTime);
-
-    int lookforwardDemoTicks = 1;
-    for (; ticks.gameTickNumber[tickIndex + lookforwardDemoTicks] < ticks.gameTickNumber[tickIndex] + lookforwardGameTicks &&
-           lookforwardDemoTicks < maxLookforwardDemoTicks &&
-           // this makes sure don't run off end, next tick is no more than max
-           tickIndex + lookforwardDemoTicks < rounds.ticksPerRound[ticks.roundId[tickIndex]].maxId;
-           lookforwardDemoTicks++);
-    return lookforwardDemoTicks;
-}
-
 static int64_t getLookforwardDemoTick(const Rounds & rounds, const Ticks & ticks, int64_t tickIndex,
-                                      const TickRates & tickRates, double lookForwardTime) {
-    int lookforwardGameTicks = secondsToGameTicks(tickRates, lookForwardTime);
-
+                                      int64_t lookforwardGameTicks, int64_t bufferTicks = 0) {
     int lookforwardDemoTicks = 0;
     for (; ticks.gameTickNumber[tickIndex + lookforwardDemoTicks] < ticks.gameTickNumber[tickIndex] + lookforwardGameTicks &&
            // this makes sure don't run off end, next tick is no more than max
-           tickIndex + lookforwardDemoTicks < rounds.ticksPerRound[ticks.roundId[tickIndex]].maxId;
+           // add buffer ticks for buffer to end early on
+           tickIndex + lookforwardDemoTicks + bufferTicks < rounds.ticksPerRound[ticks.roundId[tickIndex]].maxId;
            lookforwardDemoTicks++);
     return tickIndex + lookforwardDemoTicks;
+}
+
+static int64_t getLookforwardDemoTick(const Rounds & rounds, const Ticks & ticks, int64_t tickIndex,
+                                      const TickRates & tickRates, double lookForwardTime, int64_t bufferTicks = 0) {
+    int lookforwardGameTicks = secondsToGameTicks(tickRates, lookForwardTime);
+    return getLookforwardDemoTick(rounds, ticks, tickIndex, lookforwardGameTicks, bufferTicks);
 }
 
 #endif //CSKNOW_LOOKBACK_H

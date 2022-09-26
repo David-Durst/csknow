@@ -36,7 +36,7 @@ public:
         curSize = 0;
     }
 
-    void enqueue (T item, bool overwrite) {
+    void enqueue (T item, bool overwrite = true) {
         if (isFull()) {
             if (overwrite) {
                 dequeue();

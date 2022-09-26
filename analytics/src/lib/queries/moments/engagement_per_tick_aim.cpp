@@ -38,19 +38,20 @@ EngagementPerTickAimResult queryEngagementPerTickAim(const Games & games, const 
         tmpRoundStarts[threadNum].push_back(static_cast<int64_t>(tmpTickId[threadNum].size()));
 
         TickRates tickRates = computeTickRates(games, rounds, roundIndex);
+        RollingWindow rollingWindow(rounds, ticks, playerAtTick);
 
         for (int64_t tickIndex = rounds.ticksPerRound[roundIndex].minId;
              tickIndex <= rounds.ticksPerRound[roundIndex].maxId; tickIndex++) {
 
-            map<int64_t, int64_t> curPlayerToPAT = getPATIdForPlayerId(ticks, playerAtTick, tickIndex);
+            map<int64_t, int64_t> curPlayerToPAT = rollingWindow.getPATIdForPlayerId(tickIndex);
 
             // for view angle velocity, only defined if there's a prior tick in the round
             map<int64_t, int64_t> tminus2PlayerToPAT, tminus1PlayerToPAT, tplus1PlayerToPAT;
             if (tickIndex - 2 >= rounds.ticksPerRound[roundIndex].minId &&
                 tickIndex + 2 <= rounds.ticksPerRound[roundIndex].maxId) {
-                tminus2PlayerToPAT = getPATIdForPlayerId(ticks, playerAtTick, tickIndex - 2);
-                tminus1PlayerToPAT = getPATIdForPlayerId(ticks, playerAtTick, tickIndex - 1);
-                tplus1PlayerToPAT = getPATIdForPlayerId(ticks, playerAtTick, tickIndex + 1);
+                tminus2PlayerToPAT = rollingWindow.getPATIdForPlayerId(tickIndex - 2);
+                tminus1PlayerToPAT = rollingWindow.getPATIdForPlayerId(tickIndex - 1);
+                tplus1PlayerToPAT = rollingWindow.getPATIdForPlayerId(tickIndex + 1);
             }
 
             for (const auto & [_0, _1, engagementIndex] :
@@ -83,7 +84,7 @@ EngagementPerTickAimResult queryEngagementPerTickAim(const Games & games, const 
                 int64_t laggedTickId = getLookbackDemoTick(rounds, ticks, tickIndex, tickRates,
                                                            playerAtTick.ping[curPlayerToPAT[attackerId]] / 1000. + CL_INTERP_SECONDS);
                 map<int64_t, int64_t> nextHurtPlayerToPAT =
-                        getPATIdForPlayerId(ticks, playerAtTick, hurt.tickId[soonestHurtId]);
+                        rollingWindow.getPATIdForPlayerId(ticks, playerAtTick, hurt.tickId[soonestHurtId]);
                 */
 
                 Vec3 attackerEyePos = {

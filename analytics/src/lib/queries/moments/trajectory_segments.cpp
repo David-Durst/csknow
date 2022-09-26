@@ -78,11 +78,12 @@ TrajectorySegmentResult queryAllTrajectories(const Players & players, const Game
 
         map<int64_t, TSData> playerToCurTrajectory;
         vector<TSData> finishedSegmentPerRound;
+        RollingWindow rollingWindow(rounds, ticks, playerAtTick);
 
         for (int64_t tickIndex = rounds.ticksPerRound[roundIndex].minId;
              tickIndex <= rounds.ticksPerRound[roundIndex].maxId; tickIndex++) {
 
-            map<int64_t, int64_t> curPlayerToPAT = getPATIdForPlayerId(ticks, playerAtTick, tickIndex);
+            map<int64_t, int64_t> curPlayerToPAT = rollingWindow.getPATIdForPlayerId(tickIndex);
 
             set<int64_t> playerInTrajectory;
 
@@ -134,8 +135,9 @@ TrajectorySegmentResult queryAllTrajectories(const Players & players, const Game
             }
         }
 
+        // write all segments at end of round, then sort all in round and write actual results
         int64_t maxTickInRound = rounds.ticksPerRound[roundIndex].maxId;
-        map<int64_t, int64_t> endPlayerToPAT = getPATIdForPlayerId(ticks, playerAtTick, maxTickInRound);
+        map<int64_t, int64_t> endPlayerToPAT = rollingWindow.getPATIdForPlayerId(maxTickInRound);
         for (const auto & [playerId, tData] : playerToCurTrajectory) {
             finishSegment(playerId, maxTickInRound, endPlayerToPAT[playerId],
                           playerToCurTrajectory, finishedSegmentPerRound, false);

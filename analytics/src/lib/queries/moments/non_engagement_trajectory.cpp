@@ -51,14 +51,14 @@ NonEngagementTrajectoryResult queryNonEngagementTrajectory(const Rounds & rounds
         //TickRates tickRates = computeTickRates(games, rounds, roundIndex);
 
         map<int64_t, NETData> playerToCurTrajectory;
-
+        RollingWindow rollingWindow(rounds, ticks, playerAtTick);
 
         for (int64_t tickIndex = rounds.ticksPerRound[roundIndex].minId;
              tickIndex <= rounds.ticksPerRound[roundIndex].maxId; tickIndex++) {
 
             // round 17 (after halftime), k0nfig disappears for round start time. Remove a player without writing
             // trajectory if this happens
-            map<int64_t, int64_t> curPlayerToPAT = getPATIdForPlayerId(ticks, playerAtTick, tickIndex);
+            map<int64_t, int64_t> curPlayerToPAT = rollingWindow.getPATIdForPlayerId(tickIndex);
             vector<int64_t> disappearingPlayers;
             for (const auto & [playerId, _] : playerToCurTrajectory) {
                 if (curPlayerToPAT.find(playerId) == curPlayerToPAT.end()) {
