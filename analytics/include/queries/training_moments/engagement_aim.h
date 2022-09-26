@@ -61,10 +61,8 @@ public:
            << attackerPlayerId[index] << "," << victimPlayerId[index];
 
         for (size_t i = 0; i < NUM_TICKS; i++) {
-            ss << "," << deltaViewAngle[index][i].x << "," << deltaViewAngle[index][i].y;
-        }
-        for (size_t i = 0; i < NUM_TICKS; i++) {
-            ss << "," << eyeToHeadDistance[index][i];
+            ss << "," << deltaViewAngle[index][i].x << "," << deltaViewAngle[index][i].y
+               << "," << eyeToHeadDistance[index][i];
         }
 
         ss << std::endl;
@@ -75,7 +73,13 @@ public:
     }
 
     vector<string> getOtherColumnNames() override {
-        return {"delta view angle x", "delta view angle y", "eye-to-head distance"};
+        vector<string> result;
+        for (int i = 0; i < NUM_TICKS; i++) {
+            result.push_back("delta view angle x (t - " + std::to_string(i) + ")");
+            result.push_back("delta view angle y (t - " + std::to_string(i) + ")");
+            result.push_back("eye-to-eye distance (t - " + std::to_string(i) + ")");
+        }
+        return result;
     }
 };
 

@@ -289,6 +289,11 @@ int main(int argc, char * argv[]) {
     TrajectorySegmentResult trajectorySegmentResult =
             queryAllTrajectories(players, games, filteredRounds, ticks, playerAtTick, nonEngagementTrajectoryResult);
     std::cout << "size: " << trajectorySegmentResult.size << std::endl;
+    std::cout << "processing engagement aim training data set" << std::endl;
+    string engagementAimName = "engagementAim";
+    EngagementAimResult engagementAimResult =
+        queryEngagementAim(games, filteredRounds, ticks, playerAtTick, engagementResult);
+    std::cout << "size: " << engagementAimResult.size << std::endl;
     /*
     VelocityResult velocityResult = queryVelocity(position);
     std::cout << "velocity moments: " << velocityResult.positionIndex.size() << std::endl;
@@ -351,7 +356,8 @@ int main(int argc, char * argv[]) {
     };
      */
     map<string, reference_wrapper<QueryResult>> analyses {
-            {lookerName,                        lookersResult},
+            {lookerName, lookersResult},
+            {engagementAimName, engagementAimResult}                   ,
             //{nearestOriginName,                 nearestOriginResult},
             //{playerInCoverEdgeName,             playerInCoverEdgeResult},
             //{teamLookingAtCoverEdgeClusterName, teamLookingAtCoverEdgeClusterResult},

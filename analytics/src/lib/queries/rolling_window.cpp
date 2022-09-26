@@ -49,6 +49,7 @@ void RollingWindow::setTemporalRange(int64_t curTick, const TickRates &tickRates
         playersToCover.insert(playerId);
     }
 
+    nextReadTickId = startTick;
     for (int64_t tickIndex = startTick; tickIndex <= endTick; tickIndex++) {
         readNextTick();
     }
