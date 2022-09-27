@@ -1,7 +1,7 @@
 #include <vector>
 
 static inline __attribute__((always_inline))
-size_t positiveModulo(size_t x, size_t y) {
+int64_t positiveModulo(int64_t x, int64_t y) {
     return ((x % y) + y) % y;
 }
 
@@ -9,13 +9,13 @@ size_t positiveModulo(size_t x, size_t y) {
 template <class T>
 class CircularBuffer {
     std::vector<T> buffer;
-    size_t head = 0, tail = 0, curSize = 0;
+    int64_t head = 0, tail = 0, curSize = 0;
 
 public:
-    CircularBuffer<T>(size_t max_size) : buffer(max_size) { }
+    CircularBuffer<T>(int64_t max_size) : buffer(max_size) { }
 
-    inline size_t maxSize() const { return buffer.size(); }
-    inline size_t getCurSize() const { return curSize; }
+    inline int64_t maxSize() const { return buffer.size(); }
+    inline int64_t getCurSize() const { return curSize; }
 
     // https://embeddedartistry.com/blog/2017/05/17/creating-a-circular-buffer-in-c-and-c/
     // using approach where tracking full size
@@ -27,10 +27,10 @@ public:
         }
     }
 
-    T & fromOldest(size_t i = 0) { return buffer[(head + i) % maxSize()]; }
-    const T & fromOldest(size_t i = 0) const { return buffer[(head + i) % maxSize()]; }
-    T & fromNewest(size_t i = 0) { return buffer[positiveModulo(tail - i - 1, maxSize())]; }
-    const T & fromNewest(size_t i = 0) const { return buffer[positiveModulo(tail - i - 1, maxSize())]; }
+    T & fromOldest(int64_t i = 0) { return buffer[(head + i) % maxSize()]; }
+    const T & fromOldest(int64_t i = 0) const { return buffer[(head + i) % maxSize()]; }
+    T & fromNewest(int64_t i = 0) { return buffer[positiveModulo(tail - i - 1, maxSize())]; }
+    const T & fromNewest(int64_t i = 0) const { return buffer[positiveModulo(tail - i - 1, maxSize())]; }
     const std::vector<T> & getVector() { return buffer; }
 
     void clear() { 
