@@ -27,7 +27,7 @@ using std::vector;
 using std::array;
 using std::map;
 
-constexpr int NUM_TICKS = 5;
+constexpr int NUM_TICKS = 6;
 
 class EngagementAimResult : public QueryResult {
 public:
