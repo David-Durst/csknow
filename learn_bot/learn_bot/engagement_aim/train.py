@@ -18,7 +18,6 @@ from learn_bot.engagement_aim.linear_model import LinearModel
 
 all_data_df = pd.read_csv(Path(__file__).parent / '..' / '..' / 'data' / 'engagement_aim.csv')
 
-
 # train test split on rounds with rounds weighted by number of entries in each round
 # so 80-20 train test split on actual data with rounds kept coherent
 # split by rounds, weight rounds by number of values in each round
@@ -95,6 +94,7 @@ optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 output_cols = column_transformers.output_types.get_all_columns()
 output_ranges = column_transformers.get_output_name_ranges()
 
+
 # https://discuss.pytorch.org/t/how-to-combine-multiple-criterions-to-a-loss-function/348/4
 def compute_loss(pred, y):
     total_loss = 0
@@ -107,6 +107,7 @@ def compute_loss(pred, y):
         total_loss += loss_fn(pred[:, output_ranges[i]], y[:, output_ranges[i]])
     return total_loss
 
+
 def compute_accuracy(pred, Y, correct):
     for name, r in zip(output_cols, output_ranges):
         if name in column_transformers.output_types.boolean_cols:
@@ -118,6 +119,8 @@ def compute_accuracy(pred, Y, correct):
         else:
             correct[name] += torch.square(pred[:, r] -  Y[:, r]).sum().item()
 
+
+# train and test the model
 first_batch = True
 def train_or_test(dataloader, model, optimizer, train = True):
     global first_batch
@@ -173,7 +176,8 @@ for t in range(epochs):
     train_or_test(train_dataloader, model, optimizer, True)
     train_or_test(train_dataloader, model, None, False)
 
-dump(column_transformers, Path(__file__).parent / '..' / 'model' / 'column_transformers.joblib')
-torch.save(model.state_dict(), Path(__file__).parent / '..' / 'model' / 'model.pt')
+dump(column_transformers, Path(__file__).parent / '..' / '..' / 'models' / 'engagement_aim_model' /
+     'column_transformers.joblib')
+torch.save(model.state_dict(), Path(__file__).parent / '..' / '..' / 'models' / 'engagement_aim_model' / 'model.pt')
 
 print("Done")
