@@ -16,7 +16,7 @@ import matplotlib.pyplot as plt
 from learn_bot.engagement_aim.column_management import IOColumnTransformers, ColumnTypes
 from learn_bot.engagement_aim.linear_model import LinearModel
 
-all_data_df = pd.read_csv(Path(__file__).parent / '..' / 'data' / 'engagement' / 'train_engagement_dataset.csv')
+all_data_df = pd.read_csv(Path(__file__).parent / '..' / '..' / 'data' / 'engagement_aim.csv')
 
 
 # train test split on rounds with rounds weighted by number of entries in each round
