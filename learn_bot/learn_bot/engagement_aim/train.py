@@ -36,9 +36,11 @@ input_column_types = ColumnTypes(["delta view angle x (t - 1)", "delta view angl
                                   "delta view angle x (t - 2)", "delta view angle y (t - 2)", "eye-to-eye distance (t - 2)",
                                   "delta view angle x (t - 3)", "delta view angle y (t - 3)", "eye-to-eye distance (t - 3)",
                                   "delta view angle x (t - 4)", "delta view angle y (t - 4)", "eye-to-eye distance (t - 4)",
-                                  "delta view angle x (t - 5)", "delta view angle y (t - 5)", "eye-to-eye distance (t - 5)"])
+                                  "delta view angle x (t - 5)", "delta view angle y (t - 5)", "eye-to-eye distance (t - 5)"],
+                                 [], [], [], [], [])
 
-output_column_types = ColumnTypes(["delta view angle x (t - 0)","delta view angle y (t - 0)"])
+output_column_types = ColumnTypes(["delta view angle x (t - 0)","delta view angle y (t - 0)"],
+                                  [], [], [], [], [])
 
 column_transformers = IOColumnTransformers(input_column_types, output_column_types, all_data_df)
 
@@ -47,8 +49,8 @@ fig, axs = plt.subplots(1,2)
 transformed_output = pd.DataFrame(
     column_transformers.output_ct.transform(all_data_df.loc[:, output_column_types.get_all_columns()]),
     columns=output_column_types.get_all_columns())
-transformed_output.hist('delta view angle x (t - 0)', ax=axs[0, 0], bins=100)
-transformed_output.hist('delta view angle x (t - 0)', ax=axs[0, 1], bins=100)
+transformed_output.hist('delta view angle x (t - 0)', ax=axs[0], bins=100)
+transformed_output.hist('delta view angle x (t - 0)', ax=axs[1], bins=100)
 plt.tight_layout()
 plt.show()
 
@@ -72,7 +74,7 @@ for X, Y in test_dataloader:
     break
 
 # Get cpu or gpu device for training.
-device = "cuda" if torch.cuda.is_available() else "cpu"
+device: str = "cuda" if torch.cuda.is_available() else "cpu"
 print(f"Using {device} device")
 
 # Define model

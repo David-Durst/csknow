@@ -13,11 +13,13 @@ class LinearModel(nn.Module):
         super(LinearModel, self).__init__()
         self.cts = cts
         self.inner_model = nn.Sequential(
-            nn.Linear(cts.input_ct.get_feature_names_out().size, len(self.internal_width))
+            nn.Linear(cts.input_ct.get_feature_names_out().size, self.internal_width)
         )
 
+        output_layers = []
         for output_range in cts.get_output_name_ranges():
-            self.output_layers.append(nn.Linear(self.internal_width, len(output_range)))
+            output_layers.append(nn.Linear(self.internal_width, len(output_range)))
+        self.output_layers = nn.ModuleList(output_layers)
 
     def forward(self, x):
         logits = self.inner_model(x)

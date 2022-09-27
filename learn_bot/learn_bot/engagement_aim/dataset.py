@@ -14,9 +14,8 @@ class AimDataset(Dataset):
         self.id = df.loc[:, 'id']
         self.tick_id = df.loc[:, 'tick id']
         self.round_id = df.loc[:, 'engagement id']
-        self.attacker_player_id = df.loc[:, 'source player id']
+        self.attacker_player_id = df.loc[:, 'attacker player id']
         self.victim_player_id = df.loc[:, 'victim player id']
-        self.team = df.loc[:, 'team']
 
         # convert player id's to indexes
         self.X = torch.tensor(cts.input_ct.transform(df.loc[:, cts.input_types.get_all_columns()])).float()
