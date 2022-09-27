@@ -1,16 +1,8 @@
-from torch import nn
-from learn_bot.model import *
-from learn_bot.dataset import BotDatasetArgs, BotDataset
+from learn_bot.old_bot_models.model import *
 from joblib import load
 from pathlib import Path
 import matplotlib.pyplot as plt
-from typing import Dict
-from time import sleep
 import pandas as pd
-import numpy as np
-import re
-import sys
-from io import StringIO
 import seaborn as sns
 
 nn_args: NNArgs = load(Path(__file__).parent / '..' / 'model' / 'nn_args.joblib')

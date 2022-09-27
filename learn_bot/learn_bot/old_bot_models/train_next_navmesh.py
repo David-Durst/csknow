@@ -3,14 +3,12 @@ import torch
 from torch import nn
 from torch.utils.data import DataLoader
 import pandas as pd
-import numpy as np
 from sklearn.preprocessing import MinMaxScaler, OneHotEncoder
 from sklearn.compose import ColumnTransformer
 from pathlib import Path
-from learn_bot.baseline import *
 from joblib import dump
-from learn_bot.model import NeuralNetwork, NNArgs
-from learn_bot.dataset import BotDataset, BotDatasetArgs
+from learn_bot.old_bot_models.model import NeuralNetwork, NNArgs
+from learn_bot.old_bot_models.dataset import BotDataset, BotDatasetArgs
 
 all_data_df = pd.read_csv(Path(__file__).parent / '..' / 'data' / 'train_dataset.csv')
 

@@ -1,7 +1,7 @@
 from typing import List
 from torch import nn
 import torch
-from column_management import IOColumnTransformers
+from learn_bot.engagement_aim.column_management import IOColumnTransformers
 
 
 class LinearModel(nn.Module):

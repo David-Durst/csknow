@@ -13,8 +13,8 @@ from dataset import *
 from joblib import dump
 from dataclasses import dataclass
 import matplotlib.pyplot as plt
-from column_management import IOColumnTransformers, ColumnTypes
-from linear_model import LinearModel
+from learn_bot.engagement_aim.column_management import IOColumnTransformers, ColumnTypes
+from learn_bot.engagement_aim.linear_model import LinearModel
 
 all_data_df = pd.read_csv(Path(__file__).parent / '..' / 'data' / 'engagement' / 'train_engagement_dataset.csv')
 

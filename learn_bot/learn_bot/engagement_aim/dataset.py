@@ -5,7 +5,7 @@ from sklearn.compose import ColumnTransformer
 from dataclasses import dataclass
 from typing import List, Optional
 
-from column_management import IOColumnTransformers
+from learn_bot.engagement_aim.column_management import IOColumnTransformers
 
 
 # https://androidkt.com/load-pandas-dataframe-using-dataset-and-dataloader-in-pytorch/

@@ -1,11 +1,8 @@
-from torch import nn
 from torch.utils.data import DataLoader
-from sklearn.preprocessing import MinMaxScaler, OneHotEncoder
-from learn_bot.model import *
-from learn_bot.dataset import BotDatasetArgs, BotDataset
+from learn_bot.old_bot_models.model import *
+from learn_bot.old_bot_models.dataset import BotDatasetArgs, BotDataset
 from joblib import load
 from pathlib import Path
-from typing import Dict
 from time import sleep
 import pandas as pd
 import re
