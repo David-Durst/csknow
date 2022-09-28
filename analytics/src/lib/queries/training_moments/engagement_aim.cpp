@@ -85,24 +85,7 @@ EngagementAimResult queryEngagementAim(const Games & games, const Rounds & round
 
                     Vec2 deltaViewAngle = deltaViewFromOriginToDest(attackerEyePos, victimHeadPos, curViewAngle);
 
-                    // normalize by view angle from top of AABB to bottom of AABB
-
-                    Vec3 victimBotPos = {
-                        playerAtTick.posX[victimPATId],
-                        playerAtTick.posY[victimPATId],
-                        playerAtTick.posZ[victimPATId]
-                    };
-                    Vec2 viewAngleToBotPos = vectorAngles(victimBotPos - attackerEyePos);
-                    Vec3 victimTopPos = victimBotPos;
-                    victimTopPos.z += PLAYER_HEIGHT;
-                    Vec2 topVsBotViewAngle = deltaViewFromOriginToDest(attackerEyePos, victimTopPos, viewAngleToBotPos);
-
-                    Vec2 scaledDeltaViewAngle {
-                        deltaViewAngle.x / std::abs(topVsBotViewAngle.y),
-                        deltaViewAngle.y / std::abs(topVsBotViewAngle.y)
-                    };
-
-                    tmpDeltaViewAngle[threadNum].back()[i] = scaledDeltaViewAngle;
+                    tmpDeltaViewAngle[threadNum].back()[i] = deltaViewAngle;
                     tmpEyeToHeadDistance[threadNum].back()[i] = computeDistance(attackerEyePos, victimHeadPos);
                 }
             }
