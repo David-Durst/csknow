@@ -50,7 +50,7 @@ transformed_output = pd.DataFrame(
     column_transformers.output_ct.transform(all_data_df.loc[:, output_column_types.get_all_columns()]),
     columns=output_column_types.get_all_columns())
 transformed_output.hist('delta view angle x (t - 0)', ax=axs[0], bins=100)
-transformed_output.hist('delta view angle x (t - 0)', ax=axs[1], bins=100)
+transformed_output.hist('delta view angle y (t - 0)', ax=axs[1], bins=100)
 plt.tight_layout()
 plt.show()
 
