@@ -13,10 +13,10 @@ from dataset import *
 from joblib import dump
 from dataclasses import dataclass
 import matplotlib.pyplot as plt
-from learn_bot.engagement_aim.column_management import IOColumnTransformers, ColumnTypes
+from learn_bot.engagement_aim.column_management import IOColumnTransformers, ColumnTypes, get_params
 from learn_bot.engagement_aim.linear_model import LinearModel
 
-all_data_df = pd.read_csv(Path(__file__).parent / '..' / '..' / 'data' / 'engagementAim.csv')
+all_data_df = pd.read_csv(Path(__file__).parent / '..' / '..' / 'data' / 'engagement_aim' / 'engagementAim.csv')
 
 # train test split on rounds with rounds weighted by number of entries in each round
 # so 80-20 train test split on actual data with rounds kept coherent
@@ -157,7 +157,7 @@ def train_or_test(dataloader, model, optimizer, train = True):
             batch_loss.backward()
             optimizer.step()
 
-        if train and batch % 100 == 0:
+        if False and train and batch % 100 == 0:
             loss, current = batch_loss.item(), batch * len(X)
             print('pred')
             print(pred[0:2])
@@ -181,5 +181,8 @@ for t in range(epochs):
 dump(column_transformers, Path(__file__).parent / '..' / '..' / 'models' / 'engagement_aim_model' /
      'column_transformers.joblib')
 torch.save(model.state_dict(), Path(__file__).parent / '..' / '..' / 'models' / 'engagement_aim_model' / 'model.pt')
+with open(Path(__file__).parent / '..' / '..' / 'models' / 'engagement_aim_model' / 'transforms.csv', 'w') as f:
+    f.writelines([get_params(column_transformers.input_types, column_transformers.input_ct) + '\n',
+                  get_params(column_transformers.output_types, column_transformers.output_ct) + '\n'])
 
 print("Done")

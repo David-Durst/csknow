@@ -18,7 +18,6 @@ class ColumnTypes:
         return self.float_standard_cols + self.float_min_max_cols + self.float_non_linear_cols + \
                self.categorical_cols + self.boolean_cols + self.bookkeeping_passthrough_cols
 
-
 @dataclass
 class IOColumnTransformers:
     input_types: ColumnTypes
@@ -63,3 +62,20 @@ class IOColumnTransformers:
 
     def get_output_name_ranges(self) -> List[range]:
         return [self.get_output_name_range(name) for name in self.output_types.get_all_columns()]
+
+
+def get_params(types: ColumnTypes, ct: ColumnTransformer) -> str:
+    results = []
+    if types.boolean_cols or types.bookkeeping_passthrough_cols:
+        NotImplementedError
+    if types.categorical_cols:
+        NotImplementedError
+    if types.float_standard_cols:
+        for i, col_name in enumerate(types.float_standard_cols):
+            transformer = ct.named_transformers_['standard-scaler']
+            results.append(f'''standard-scaler;{col_name};{transformer.scale_[i]};{transformer.mean_[i]}''')
+    if types.float_min_max_cols:
+        NotImplementedError
+    if types.float_non_linear_cols:
+        NotImplementedError
+    return ",".join(results)
