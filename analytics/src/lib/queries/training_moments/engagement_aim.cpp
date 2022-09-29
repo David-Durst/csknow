@@ -7,6 +7,7 @@
 #include "queries/base_tables.h"
 #include "queries/rolling_window.h"
 #include <omp.h>
+#include <torch/script.h>
 
 EngagementAimResult queryEngagementAim(const Games & games, const Rounds & rounds, const Ticks & ticks,
                                        const PlayerAtTick & playerAtTick,

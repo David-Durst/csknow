@@ -14,8 +14,35 @@ set(CMAKE_C_EXTENSIONS OFF)
 
 project (csknow VERSION "0.1")
 include(GNUInstallDirs)
+include(FetchContent)
 find_package(OpenMP REQUIRED)
 find_package(OpenSSL REQUIRED)
+
+list(APPEND CMAKE_PREFIX_PATH "${CMAKE_SOURCE_DIR}/external/libtorch")
+foreach(path ${CMAKE_PREFIX_PATH})
+    message("Path: " ${path})
+endforeach(path)
+find_package(Torch REQUIRED)
+# https://github.com/Maverobot/libtorch_examples/blob/master/CMakeLists.txt
+#if(NOT Torch_FOUND)
+#    message(STATUS "libtorch ${libtorch_VERSION} - not found")
+#    message(STATUS "Fetching libtorch")
+#    include(FetchContent)
+#    FetchContent_Declare(
+#            libtorch
+#            URL https://download.pytorch.org/libtorch/cpu/libtorch-shared-with-deps-1.12.1%2Bcpu.zip
+#            SOURCE_DIR libtorch)
+#    FetchContent_GetProperties(libtorch)
+#    FetchContent_MakeAvailable()
+#    #if(NOT libtorch_POPULATED)
+#    #    unset(FETCHCONTENT_QUIET CACHE)
+#    #    FetchContent_Populate(libtorch)
+#    #    list(APPEND CMAKE_PREFIX_PATH ${CMAKE_BINARY_DIR}/libtorch)
+#    #endif()
+#    find_package(Torch ${libtorch_VERSION} EXACT CONFIG REQUIRED)
+#else()
+#    message(STATUS "libtorch ${libtorch_VERSION} - found")
+#endif()
 
 add_compile_options(-Wall -Wextra -Wpedantic -Wno-unused-function -Wno-unknown-pragmas)
 
@@ -48,6 +75,7 @@ add_executable(csknow_compute_vis_points ${PROJECT_SOURCE_DIR}/src/bin/csknow_co
 #add_executable(csknow_intersection ${PROJECT_SOURCE_DIR}/src/bin/csknow_intersection.cpp)
 target_link_libraries(csknow_lib OpenMP::OpenMP_CXX)
 target_link_libraries(csknow_lib OpenSSL::SSL)
+target_link_libraries(csknow_lib "${TORCH_LIBRARIES}")
 target_link_libraries(csknow csknow_lib)
 target_link_libraries(csknow_test csknow_lib)
 #target_link_libraries(csknow_bot csknow_lib)

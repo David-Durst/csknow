@@ -4,3 +4,4 @@ build/
 scripts/bin/
 csv_outputs
 bt_*.log
+external/
