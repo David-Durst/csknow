@@ -436,6 +436,7 @@ int main(int argc, char * argv[]) {
             {aggressionEventName, aggressionEventResult},
             {engagementName, engagementResult},
             {engagementPerTickAimName, engagementPerTickAimResult},
+            {inferenceEngagementAimName, inferenceEngagementAimResult},
             {nonEngagementTrajectoryName, nonEngagementTrajectoryResult},
             {trajectorySegmentName, trajectorySegmentResult},
             //{queryNames[5], aCatClusterSequence},

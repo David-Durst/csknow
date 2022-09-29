@@ -106,8 +106,6 @@ InferenceEngagementAimResult queryInferenceEngagementAimResult(const string & mo
             static_cast<double>(output[0][0].item<float>()),
             static_cast<double>(output[0][1].item<float>())
         });
-        int x = 1;
-        (void) x;
     }
 
     return result;
