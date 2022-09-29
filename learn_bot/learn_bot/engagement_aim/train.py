@@ -6,8 +6,6 @@ from torch import nn
 from torch.utils.data import DataLoader
 import pandas as pd
 import numpy as np
-from sklearn.preprocessing import MinMaxScaler, OneHotEncoder, PowerTransformer, QuantileTransformer
-from sklearn.compose import ColumnTransformer
 from pathlib import Path
 from dataset import *
 from joblib import dump
