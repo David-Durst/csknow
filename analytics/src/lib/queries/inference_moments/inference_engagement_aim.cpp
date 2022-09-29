@@ -22,6 +22,7 @@ struct StandardScalarParams {
 };
 
 InferenceEngagementAimResult queryInferenceEngagementAimResult(const string & modelsDir,
+                                                               const EngagementResult & engagementResult,
                                                                const TrainingEngagementAimResult & trainingEngagementAimResult) {
     InferenceEngagementAimResult result(trainingEngagementAimResult);
     result.size = trainingEngagementAimResult.size;
@@ -83,6 +84,12 @@ InferenceEngagementAimResult queryInferenceEngagementAimResult(const string & mo
     }
 
     auto options = torch::TensorOptions().dtype(at::kFloat);
+    for (const auto & [engagementId, tickIdRange] :
+        engagementResult.engagementsPerTick.eventToInterval) {
+        for (int64_t tickId = tickIdRange.minId; tickId <= tickIdRange.maxId; tickId++) {
+            
+        }
+    }
     for (int64_t i = 0; i < result.trainingEngagementAimResult.size; i++) {
 
         // Create a vector of inputs.

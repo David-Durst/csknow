@@ -299,7 +299,7 @@ int main(int argc, char * argv[]) {
     std::cout << "processing inference engagement aim training data set" << std::endl;
     string inferenceEngagementAimName = "engagementAim";
     InferenceEngagementAimResult inferenceEngagementAimResult =
-        queryInferenceEngagementAimResult(modelsDir, engagementAimResult);
+        queryInferenceEngagementAimResult(modelsDir, engagementResult, engagementAimResult);
     std::cout << "size: " << inferenceEngagementAimResult.size << std::endl;
     /*
     VelocityResult velocityResult = queryVelocity(position);

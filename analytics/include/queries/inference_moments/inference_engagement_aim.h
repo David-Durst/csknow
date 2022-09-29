@@ -58,6 +58,7 @@ public:
 
 
 InferenceEngagementAimResult queryInferenceEngagementAimResult(const string & modelsDir,
+                                                               const EngagementResult & engagementResult,
                                                                const TrainingEngagementAimResult & trainingEngagementAimResult);
 
 #endif //CSKNOW_INFERENCE_ENGAGEMENT_AIM_H
