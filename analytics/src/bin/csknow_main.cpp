@@ -33,7 +33,7 @@
 #include "queries/moments/engagement_per_tick_aim.h"
 #include "queries/moments/non_engagement_trajectory.h"
 #include "queries/moments/trajectory_segments.h"
-#include "queries/training_moments/engagement_aim.h"
+#include "queries/training_moments/training_engagement_aim.h"
 #define CPPHTTPLIB_OPENSSL_SUPPORT
 #include "httplib.h"
 #include <cerrno>
@@ -291,7 +291,7 @@ int main(int argc, char * argv[]) {
     std::cout << "size: " << trajectorySegmentResult.size << std::endl;
     std::cout << "processing engagement aim training data set" << std::endl;
     string engagementAimName = "engagementAim";
-    EngagementAimResult engagementAimResult =
+    TrainingEngagementAimResult engagementAimResult =
         queryEngagementAim(games, filteredRounds, ticks, playerAtTick, engagementResult);
     std::cout << "size: " << engagementAimResult.size << std::endl;
     /*

@@ -2,8 +2,8 @@
 // Created by durst on 9/26/22.
 //
 
-#ifndef CSKNOW_ENGAGEMENT_AIM_H
-#define CSKNOW_ENGAGEMENT_AIM_H
+#ifndef CSKNOW_TRAINING_ENGAGEMENT_AIM_H
+#define CSKNOW_TRAINING_ENGAGEMENT_AIM_H
 
 #include <string>
 #include <set>
@@ -29,7 +29,7 @@ using std::map;
 
 constexpr int NUM_TICKS = 6;
 
-class EngagementAimResult : public QueryResult {
+class TrainingEngagementAimResult : public QueryResult {
 public:
     vector<RangeIndexEntry> rowIndicesPerRound;
     vector<int64_t> tickId;
@@ -38,9 +38,10 @@ public:
     vector<int64_t> victimPlayerId;
     vector<array<Vec2, NUM_TICKS>> deltaViewAngle;
     vector<array<double, NUM_TICKS>> eyeToHeadDistance;
+    vector<Vec2> predictedDeltaViewAngle;
 
 
-    EngagementAimResult() {
+    TrainingEngagementAimResult() {
         startTickColumn = 0;
         ticksPerEvent = 1;
     }
@@ -84,8 +85,8 @@ public:
 };
 
 
-EngagementAimResult queryEngagementAim(const Games & games, const Rounds & rounds, const Ticks & ticks,
-                                       const PlayerAtTick & playerAtTick,
-                                       const EngagementResult & engagementResult);
+TrainingEngagementAimResult queryEngagementAim(const Games & games, const Rounds & rounds, const Ticks & ticks,
+                                               const PlayerAtTick & playerAtTick,
+                                               const EngagementResult & engagementResult);
 
-#endif //CSKNOW_ENGAGEMENT_AIM_H
+#endif //CSKNOW_TRAINING_ENGAGEMENT_AIM_H

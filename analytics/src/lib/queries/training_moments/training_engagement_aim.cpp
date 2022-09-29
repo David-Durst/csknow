@@ -2,16 +2,15 @@
 // Created by durst on 9/26/22.
 //
 
-#include "queries/training_moments/engagement_aim.h"
+#include "queries/training_moments/training_engagement_aim.h"
 #include "queries/lookback.h"
 #include "queries/base_tables.h"
 #include "queries/rolling_window.h"
 #include <omp.h>
-#include <torch/script.h>
 
-EngagementAimResult queryEngagementAim(const Games & games, const Rounds & rounds, const Ticks & ticks,
-                                       const PlayerAtTick & playerAtTick,
-                                       const EngagementResult & engagementResult) {
+TrainingEngagementAimResult queryEngagementAim(const Games & games, const Rounds & rounds, const Ticks & ticks,
+                                               const PlayerAtTick & playerAtTick,
+                                               const EngagementResult & engagementResult) {
     int numThreads = omp_get_max_threads();
     vector<vector<int64_t>> tmpRoundIds(numThreads);
     vector<vector<int64_t>> tmpRoundStarts(numThreads);
@@ -95,7 +94,7 @@ EngagementAimResult queryEngagementAim(const Games & games, const Rounds & round
         tmpRoundSizes[threadNum].push_back(static_cast<int64_t>(tmpTickId[threadNum].size()) - tmpRoundStarts[threadNum].back());
     }
 
-    EngagementAimResult result;
+    TrainingEngagementAimResult result;
     mergeThreadResults(numThreads, result.rowIndicesPerRound, tmpRoundIds, tmpRoundStarts, tmpRoundSizes,
                        result.tickId, result.size,
                        [&](int64_t minThreadId, int64_t tmpRowId) {
