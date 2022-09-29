@@ -8,9 +8,9 @@
 #include "queries/rolling_window.h"
 #include <omp.h>
 
-TrainingEngagementAimResult queryEngagementAim(const Games & games, const Rounds & rounds, const Ticks & ticks,
-                                               const PlayerAtTick & playerAtTick,
-                                               const EngagementResult & engagementResult) {
+TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, const Rounds & rounds, const Ticks & ticks,
+                                                       const PlayerAtTick & playerAtTick,
+                                                       const EngagementResult & engagementResult) {
     int numThreads = omp_get_max_threads();
     vector<vector<int64_t>> tmpRoundIds(numThreads);
     vector<vector<int64_t>> tmpRoundStarts(numThreads);

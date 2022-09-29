@@ -18,7 +18,8 @@ get_script_dir
 mkdir -p ${script_dir}/../build
 cd ${script_dir}/../build
 cmake .. -DCMAKE_BUILD_TYPE=Release
-make -j4
-mkdir -p ../csv_outputs
-./csknow ${script_dir}/../../local_data ${script_dir}/../nav y ../csv_outputs
-
+if make -j4; then
+    chmod a+x csknow_bt_bot
+    mkdir -p ${script_dir}/../csv_outputs
+    ${script_dir}/../build/csknow ${script_dir}/../../local_data ${script_dir}/../nav y ${script_dir}/../csv_outputs ${script_dir}/../../learn_bot/models
+fi

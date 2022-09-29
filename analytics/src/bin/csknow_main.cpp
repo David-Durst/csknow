@@ -34,6 +34,7 @@
 #include "queries/moments/non_engagement_trajectory.h"
 #include "queries/moments/trajectory_segments.h"
 #include "queries/training_moments/training_engagement_aim.h"
+#include "queries/inference_moments/inference_engagement_aim.h"
 #define CPPHTTPLIB_OPENSSL_SUPPORT
 #include "httplib.h"
 #include <cerrno>
@@ -63,20 +64,21 @@ void exec(const string & cmd) {
 }
 
 int main(int argc, char * argv[]) {
-    if (argc != 5) {
-        std::cout << "please call this code 4 arguments: " << std::endl;
+    if (argc != 6) {
+        std::cout << "please call this code 5 arguments: " << std::endl;
         std::cout << "1. path/to/local_data" << std::endl;
         std::cout << "2. path/to/nav_meshes" << std::endl;
         std::cout << "3. run server (y or n)" << std::endl;
         std::cout << "4. path/to/output/dir" << std::endl;
+        std::cout << "5. path/to/models/dir" << std::endl;
         return 1;
     }
 
     string dataPath = argv[1];
     string navPath = argv[2];
     bool runServer = argv[3][0] == 'y';
-    string outputDir;
-    outputDir = argv[4];
+    string outputDir = argv[4];
+    string modelsDir = argv[5];
 
     std::map<std::string, nav_mesh::nav_file> map_navs;
     //Figure out from where to where you'd like to find a path
@@ -289,11 +291,16 @@ int main(int argc, char * argv[]) {
     TrajectorySegmentResult trajectorySegmentResult =
             queryAllTrajectories(players, games, filteredRounds, ticks, playerAtTick, nonEngagementTrajectoryResult);
     std::cout << "size: " << trajectorySegmentResult.size << std::endl;
-    std::cout << "processing engagement aim training data set" << std::endl;
+    std::cout << "processing training engagement aim training data set" << std::endl;
     string engagementAimName = "engagementAim";
     TrainingEngagementAimResult engagementAimResult =
-        queryEngagementAim(games, filteredRounds, ticks, playerAtTick, engagementResult);
+        queryTrainingEngagementAim(games, filteredRounds, ticks, playerAtTick, engagementResult);
     std::cout << "size: " << engagementAimResult.size << std::endl;
+    std::cout << "processing inference engagement aim training data set" << std::endl;
+    string inferenceEngagementAimName = "engagementAim";
+    InferenceEngagementAimResult inferenceEngagementAimResult =
+        queryInferenceEngagementAimResult(modelsDir, engagementAimResult);
+    std::cout << "size: " << inferenceEngagementAimResult.size << std::endl;
     /*
     VelocityResult velocityResult = queryVelocity(position);
     std::cout << "velocity moments: " << velocityResult.positionIndex.size() << std::endl;

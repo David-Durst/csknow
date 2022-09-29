@@ -38,7 +38,6 @@ public:
     vector<int64_t> victimPlayerId;
     vector<array<Vec2, NUM_TICKS>> deltaViewAngle;
     vector<array<double, NUM_TICKS>> eyeToHeadDistance;
-    vector<Vec2> predictedDeltaViewAngle;
 
 
     TrainingEngagementAimResult() {
@@ -85,8 +84,8 @@ public:
 };
 
 
-TrainingEngagementAimResult queryEngagementAim(const Games & games, const Rounds & rounds, const Ticks & ticks,
-                                               const PlayerAtTick & playerAtTick,
-                                               const EngagementResult & engagementResult);
+TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, const Rounds & rounds, const Ticks & ticks,
+                                                       const PlayerAtTick & playerAtTick,
+                                                       const EngagementResult & engagementResult);
 
 #endif //CSKNOW_TRAINING_ENGAGEMENT_AIM_H
