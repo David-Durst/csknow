@@ -124,8 +124,9 @@ def compute_accuracy(pred, Y, correct):
 
 # train and test the model
 first_batch = True
+first_row: torch.Tensor
 def train_or_test(dataloader, model, optimizer, train = True):
-    global first_batch
+    global first_batch, first_row
     size = len(dataloader.dataset)
     num_batches = len(dataloader)
     if train:
@@ -141,6 +142,7 @@ def train_or_test(dataloader, model, optimizer, train = True):
             first_batch = False
             print(X.cpu().tolist())
             print(Y.cpu().tolist())
+            first_row = X[0:1,:]
         X, Y = X.to(device), Y.to(device)
         #XR = torch.randn_like(X, device=device)
         #XR[:,0] = X[:,0]
@@ -181,6 +183,9 @@ for t in range(epochs):
 dump(column_transformers, Path(__file__).parent / '..' / '..' / 'models' / 'engagement_aim_model' /
      'column_transformers.joblib')
 torch.save(model.state_dict(), Path(__file__).parent / '..' / '..' / 'models' / 'engagement_aim_model' / 'model.pt')
+cpu_model = model.to('cpu')
+script_model = torch.jit.trace(cpu_model, first_row)
+script_model.save(Path(__file__).parent / '..' / '..' / 'models' / 'engagement_aim_model' / 'script_model.pt')
 with open(Path(__file__).parent / '..' / '..' / 'models' / 'engagement_aim_model' / 'transforms.csv', 'w') as f:
     f.writelines([get_params(column_transformers.input_types, column_transformers.input_ct) + '\n',
                   get_params(column_transformers.output_types, column_transformers.output_ct) + '\n'])
