@@ -76,7 +76,7 @@ EngagementResult queryEngagementResult(const Games & games, const Rounds & round
         for (int64_t tickIndex = rounds.ticksPerRound[roundIndex].minId;
              tickIndex <= rounds.ticksPerRound[roundIndex].maxId; tickIndex++) {
             for (const auto & [_0, _1, hurtIndex] :
-                ticks.hurtPerTick.findOverlapping(tickIndex, tickIndex)) {
+                ticks.hurtPerTick.intervalToEvent.findOverlapping(tickIndex, tickIndex)) {
                 if (!isDemoEquipmentAGun(hurt.weapon[hurtIndex])) {
                     continue;
                 }

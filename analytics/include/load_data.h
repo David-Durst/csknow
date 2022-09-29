@@ -14,6 +14,7 @@ using std::vector;
 using std::set;
 using std::unordered_map;
 using std::vector;
+using std::pair;
 #define ENGINE_TEAM_UNASSIGNED 0
 #define ENGINE_TEAM_SPEC 1
 #define ENGINE_TEAM_T 2
@@ -32,7 +33,11 @@ struct RangeIndexEntry {
 };
 
 typedef RangeIndexEntry * RangeIndex;
-typedef IntervalTree<int64_t, int64_t> IntervalIndex;
+//typedef IntervalTree<int64_t, int64_t> IntervalIndex;
+struct IntervalIndex {
+    IntervalTree<int64_t, int64_t> intervalToEvent;
+    unordered_map<int64_t, RangeIndexEntry> eventToInterval;
+};
 
 class ColStore {
 public:

@@ -42,7 +42,7 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
         for (int64_t tickIndex = rollingWindow.lastReadTickId();
              tickIndex <= rounds.ticksPerRound[roundIndex].maxId; tickIndex++, rollingWindow.readNextTick()) {
             for (const auto & [_0, _1, engagementIndex] :
-                engagementResult.engagementsPerTick.findOverlapping(tickIndex, tickIndex)) {
+                engagementResult.engagementsPerTick.intervalToEvent.findOverlapping(tickIndex, tickIndex)) {
                 tmpTickId[threadNum].push_back(tickIndex);
                 tmpEngagementId[threadNum].push_back(engagementIndex);
 

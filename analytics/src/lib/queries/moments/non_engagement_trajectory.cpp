@@ -71,7 +71,7 @@ NonEngagementTrajectoryResult queryNonEngagementTrajectory(const Rounds & rounds
 
             std::set<int64_t> inEngagement;
             for (const auto & [_0, _1, engagementIndex] :
-                    engagementResult.engagementsPerTick.findOverlapping(tickIndex, tickIndex)) {
+                    engagementResult.engagementsPerTick.intervalToEvent.findOverlapping(tickIndex, tickIndex)) {
                 for (const auto playerId : engagementResult.playerId[engagementIndex]) {
                     if (playerToCurTrajectory.find(playerId) != playerToCurTrajectory.end()) {
                         finishEngagement(tmpStartTickId, tmpEndTickId, tmpLength, tmpPlayerId, threadNum, tickIndex,

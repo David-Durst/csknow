@@ -40,6 +40,7 @@ void buildRangeIndex(const vector<int64_t> &primaryKeyCol, int64_t primarySize, 
 // since sparse, want to iterate over the events rather than times when events occur
 IntervalIndex buildIntervalIndex(const vector<const int64_t *> &foreignKeyCols, int64_t foreignSize) {
     vector<Interval<int64_t, int64_t>> eventIntervals;
+    unordered_map<int64_t, RangeIndexEntry> eventToInterval;
     for (int64_t foreignIndex = 0; foreignIndex < foreignSize; foreignIndex++) {
         // collect all primary key entries that are in range the foreign keys
         int64_t minPrimaryIndex = foreignKeyCols[0][foreignIndex], maxPrimaryIndex = foreignKeyCols[0][foreignIndex];
@@ -48,8 +49,9 @@ IntervalIndex buildIntervalIndex(const vector<const int64_t *> &foreignKeyCols, 
             maxPrimaryIndex = std::max(maxPrimaryIndex, foreignKeyCols[col][foreignIndex]);
         }
         eventIntervals.push_back({minPrimaryIndex, maxPrimaryIndex, foreignIndex});
+        eventToInterval[foreignIndex] = {minPrimaryIndex, maxPrimaryIndex};
     }
-    return {std::move(eventIntervals)};
+    return {IntervalTree{std::move(eventIntervals)}, std::move(eventToInterval)};
 }
 
 void buildIndexes(Equipment & equipment [[maybe_unused]], GameTypes & gameTypes [[maybe_unused]], HitGroups & hitGroups [[maybe_unused]], Games & games,
