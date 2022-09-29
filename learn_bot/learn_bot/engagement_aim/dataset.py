@@ -18,8 +18,8 @@ class AimDataset(Dataset):
         self.victim_player_id = df.loc[:, 'victim player id']
 
         # convert player id's to indexes
-        self.X = torch.tensor(cts.input_ct.transform(df.loc[:, cts.input_types.get_all_columns()])).float()
-        self.Y = torch.tensor(cts.output_ct.transform(df.loc[:, cts.output_types.get_all_columns()])).float()
+        self.X = torch.tensor(df.loc[:, cts.input_types.column_names()].values).float()
+        self.Y = torch.tensor(df.loc[:, cts.output_types.column_names()].values).float()
 
     def __len__(self):
         return len(self.id)

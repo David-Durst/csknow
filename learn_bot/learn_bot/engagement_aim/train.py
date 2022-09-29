@@ -42,13 +42,22 @@ output_column_types = ColumnTypes(["delta view angle x (t - 0)","delta view angl
 
 column_transformers = IOColumnTransformers(input_column_types, output_column_types, all_data_df)
 
+# plot untransformed output
+fig, axs = plt.subplots(1,2)
+all_data_df.hist('delta view angle x (t - 0)', ax=axs[0], bins=100)
+all_data_df.hist('delta view angle y (t - 0)', ax=axs[1], bins=100)
+plt.suptitle('untransformed')
+plt.tight_layout()
+plt.show()
+
 # plot transformed output so it looks reasonable
 fig, axs = plt.subplots(1,2)
 transformed_output = pd.DataFrame(
-    column_transformers.output_ct.transform(all_data_df.loc[:, output_column_types.get_all_columns()]),
-    columns=output_column_types.get_all_columns())
+    column_transformers.output_ct.transform(all_data_df.loc[:, output_column_types.column_names()]),
+    columns=output_column_types.column_names())
 transformed_output.hist('delta view angle x (t - 0)', ax=axs[0], bins=100)
 transformed_output.hist('delta view angle y (t - 0)', ax=axs[1], bins=100)
+plt.suptitle('transformed')
 plt.tight_layout()
 plt.show()
 
@@ -91,8 +100,8 @@ classification_loss_fn = nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 #optimizer = torch.optim.SGD(model.parameters(), lr=0.001)
 
-output_cols = column_transformers.output_types.get_all_columns()
-output_ranges = column_transformers.get_output_name_ranges()
+output_cols = column_transformers.output_types.column_names()
+output_ranges = column_transformers.get_name_ranges(False)
 
 
 # https://discuss.pytorch.org/t/how-to-combine-multiple-criterions-to-a-loss-function/348/4
@@ -109,15 +118,17 @@ def compute_loss(pred, y):
 
 
 def compute_accuracy(pred, Y, correct):
-    for name, r in zip(output_cols, output_ranges):
+    for name, unadjusted_r in zip(output_cols, output_ranges):
+        # compute accuracy using unnormalized outputs on end
+        r = range(unadjusted_r.start + len(output_cols), unadjusted_r.stop + len(output_cols))
         if name in column_transformers.output_types.boolean_cols:
-            correct[name] += (torch.le(pred[:, r], 0.5) == torch.le(Y[:, r], 0.5)) \
+            correct[name] += (torch.le(pred[:, r], 0.5) == torch.le(Y[:, unadjusted_r], 0.5)) \
                 .type(torch.float).sum().item()
         elif name in column_transformers.output_types.categorical_cols:
-            correct[name] += (pred[:, r].argmax(1) == Y[:, r].argmax(1)) \
+            correct[name] += (pred[:, r].argmax(1) == Y[:, unadjusted_r].argmax(1)) \
                 .type(torch.float).sum().item()
         else:
-            correct[name] += torch.square(pred[:, r] -  Y[:, r]).sum().item()
+            correct[name] += torch.square(pred[:, r] -  Y[:, unadjusted_r]).sum().item()
 
 
 # train and test the model
@@ -148,7 +159,7 @@ def train_or_test(dataloader, model, optimizer, train = True):
 
         # Compute prediction error
         pred = model(X)
-        batch_loss = compute_loss(pred, Y)
+        batch_loss = compute_loss(pred, model.convert_output_labels_for_loss(Y))
         cumulative_loss += batch_loss
 
         # Backpropagation
@@ -170,7 +181,7 @@ def train_or_test(dataloader, model, optimizer, train = True):
     for name in output_cols:
         correct[name] /= size
     train_test_str = "Train" if train else "Test"
-    print(f"Epoch {train_test_str} Error: Accuracy: {correct}%, Avg loss: {cumulative_loss:>8f} \n")
+    print(f"Epoch {train_test_str} Error: Untransformed Accuracy: {correct}%, Transformed Avg Loss: {cumulative_loss:>8f}")
 
 epochs = 5
 for t in range(epochs):
