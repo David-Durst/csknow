@@ -13,6 +13,7 @@ from dataclasses import dataclass
 import matplotlib.pyplot as plt
 from learn_bot.engagement_aim.column_management import IOColumnTransformers, ColumnTypes, get_params
 from learn_bot.engagement_aim.linear_model import LinearModel
+from typing import Dict
 
 all_data_df = pd.read_csv(Path(__file__).parent / '..' / '..' / 'data' / 'engagement_aim' / 'engagementAim.csv')
 
@@ -42,23 +43,31 @@ output_column_types = ColumnTypes(["delta view angle x (t - 0)","delta view angl
 
 column_transformers = IOColumnTransformers(input_column_types, output_column_types, all_data_df)
 
-# plot untransformed output
-fig, axs = plt.subplots(1,2)
-all_data_df.hist('delta view angle x (t - 0)', ax=axs[0], bins=100)
-all_data_df.hist('delta view angle y (t - 0)', ax=axs[1], bins=100)
-plt.suptitle('untransformed')
-plt.tight_layout()
-plt.show()
+# plot untransformed and transformed outputs
+fig = plt.figure(constrained_layout=True)
+subfigs = fig.subfigures(nrows=2, ncols=1)
 
-# plot transformed output so it looks reasonable
-fig, axs = plt.subplots(1,2)
+# untransformed
+axs = subfigs[0].subplots(1,2)
+subfigs[0].suptitle('untransformed')
+all_data_df.hist('delta view angle x (t - 0)', ax=axs[0], bins=100)
+axs[0].set_xlabel('yaw degree')
+axs[0].set_ylabel('num points')
+all_data_df.hist('delta view angle y (t - 0)', ax=axs[1], bins=100)
+axs[1].set_xlabel('pitch degree')
+
+# transformed
+axs = subfigs[1].subplots(1,2)
+subfigs[1].suptitle('transformed')
 transformed_output = pd.DataFrame(
     column_transformers.output_ct.transform(all_data_df.loc[:, output_column_types.column_names()]),
     columns=output_column_types.column_names())
 transformed_output.hist('delta view angle x (t - 0)', ax=axs[0], bins=100)
+axs[0].set_xlabel('standardized yaw degree')
+axs[0].set_ylabel('num points')
 transformed_output.hist('delta view angle y (t - 0)', ax=axs[1], bins=100)
-plt.suptitle('transformed')
-plt.tight_layout()
+axs[1].set_xlabel('standardized pitch degree')
+#plt.tight_layout()
 plt.show()
 
 # create data sets
@@ -131,10 +140,19 @@ def compute_accuracy(pred, Y, correct):
             correct[name] += torch.square(pred[:, r] -  Y[:, unadjusted_r]).sum().item()
 
 
+@dataclass
+class Outputs:
+
+
+def record_outputs(outputs):
+    for name, unadjusted_r in zip(output_cols, output_ranges):
+        outputs
+
+
 # train and test the model
 first_batch = True
 first_row: torch.Tensor
-def train_or_test(dataloader, model, optimizer, train = True):
+def train_or_test(dataloader, model, optimizer, outputs, train = True):
     global first_batch, first_row
     size = len(dataloader.dataset)
     num_batches = len(dataloader)
@@ -177,17 +195,21 @@ def train_or_test(dataloader, model, optimizer, train = True):
             print(f"loss: {loss:>7f}  [{current:>5d}/{size:>5d}]")
 
         compute_accuracy(pred, Y, correct)
+
     cumulative_loss /= num_batches
     for name in output_cols:
         correct[name] /= size
     train_test_str = "Train" if train else "Test"
     print(f"Epoch {train_test_str} Error: Untransformed Accuracy: {correct}%, Transformed Avg Loss: {cumulative_loss:>8f}")
 
+
 epochs = 5
+train_outputs: Dict[str, List[float]] = {}
+test_outputs: Dict[str, List[float]] = {}
 for t in range(epochs):
-    print(f"Epoch {t+1}\n-------------------------------")
-    train_or_test(train_dataloader, model, optimizer, True)
-    train_or_test(train_dataloader, model, None, False)
+    print(f"\nEpoch {t+1}\n-------------------------------")
+    train_or_test(train_dataloader, model, optimizer, train_outputs, True)
+    train_or_test(train_dataloader, model, None, test_outputs, False)
 
 dump(column_transformers, Path(__file__).parent / '..' / '..' / 'models' / 'engagement_aim_model' /
      'column_transformers.joblib')
@@ -195,8 +217,5 @@ torch.save(model.state_dict(), Path(__file__).parent / '..' / '..' / 'models' / 
 cpu_model = model.to('cpu')
 script_model = torch.jit.trace(cpu_model, first_row)
 script_model.save(Path(__file__).parent / '..' / '..' / 'models' / 'engagement_aim_model' / 'script_model.pt')
-with open(Path(__file__).parent / '..' / '..' / 'models' / 'engagement_aim_model' / 'transforms.csv', 'w') as f:
-    f.writelines([get_params(column_transformers.input_types, column_transformers.input_ct) + '\n',
-                  get_params(column_transformers.output_types, column_transformers.output_ct) + '\n'])
 
 print("Done")
