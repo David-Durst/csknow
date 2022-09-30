@@ -88,7 +88,7 @@ TrajectorySegmentResult queryAllTrajectories(const Players & players, const Game
             set<int64_t> playerInTrajectory;
 
             for (const auto & [_0, _1, trajectoryIndex] :
-                    nonEngagementTrajectoryResult.trajectoriesPerTick.findOverlapping(tickIndex, tickIndex)) {
+                    nonEngagementTrajectoryResult.trajectoriesPerTick.intervalToEvent.findOverlapping(tickIndex, tickIndex)) {
                 int64_t curPlayerId = nonEngagementTrajectoryResult.playerId[trajectoryIndex];
                 playerInTrajectory.insert(curPlayerId);
                 if (playerToCurTrajectory.find(curPlayerId) == playerToCurTrajectory.end()) {
