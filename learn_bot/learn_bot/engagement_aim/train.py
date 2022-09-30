@@ -15,6 +15,7 @@ from learn_bot.engagement_aim.column_management import IOColumnTransformers, Col
 from learn_bot.engagement_aim.linear_model import LinearModel
 from learn_bot.engagement_aim.output_plotting import plot_untransformed_and_transformed, ModelOutputRecording
 from typing import Dict
+from math import sqrt
 
 all_data_df = pd.read_csv(Path(__file__).parent / '..' / '..' / 'data' / 'engagement_aim' / 'engagementAim.csv')
 
@@ -44,9 +45,8 @@ output_column_types = ColumnTypes(["delta view angle x (t - 0)","delta view angl
 
 column_transformers = IOColumnTransformers(input_column_types, output_column_types, all_data_df)
 
-# plot data sets with and without transformers
-plot_untransformed_and_transformed(column_transformers, train_df)
-plot_untransformed_and_transformed(column_transformers, test_df)
+# plot data set with and without transformers
+plot_untransformed_and_transformed('train+test labels', column_transformers, all_data_df)
 
 # create data sets for pytorch
 training_data = AimDataset(train_df, column_transformers)
@@ -104,18 +104,42 @@ def compute_loss(pred, y):
     return total_loss
 
 
-def compute_accuracy(pred, Y, correct):
-    for name, unadjusted_r in zip(output_cols, output_ranges):
+def compute_accuracy(pred, Y, accuracy):
+    for name, r in zip(output_cols, output_ranges):
         # compute accuracy using unnormalized outputs on end
-        r = range(unadjusted_r.start + len(output_cols), unadjusted_r.stop + len(output_cols))
-        if name in column_transformers.output_types.boolean_cols:
-            correct[name] += (torch.le(pred[:, r], 0.5) == torch.le(Y[:, unadjusted_r], 0.5)) \
+        untransformed_r = range(r.start + len(output_cols), r.stop + len(output_cols))
+        if name in column_transformers.output_types.float_standard_cols or \
+                name in column_transformers.output_types.float_min_max_cols or \
+                name in column_transformers.output_types.float_non_linear_cols:
+            accuracy[name] += torch.square(pred[:, untransformed_r] - Y[:, r]).sum().item()
+        elif name in column_transformers.output_types.boolean_cols:
+            accuracy[name] += (torch.le(pred[:, untransformed_r], 0.5) == torch.le(Y[:, r], 0.5)) \
                 .type(torch.float).sum().item()
         elif name in column_transformers.output_types.categorical_cols:
-            correct[name] += (pred[:, r].argmax(1) == Y[:, unadjusted_r].argmax(1)) \
+            accuracy[name] += (pred[:, untransformed_r].argmax(1) == Y[:, r].argmax(1)) \
                 .type(torch.float).sum().item()
         else:
-            correct[name] += torch.square(pred[:, r] -  Y[:, unadjusted_r]).sum().item()
+            raise "Invalid Column Type For compute_accuracy"
+
+
+def finish_accuracy(accuracy):
+    accuracy_string = ""
+    for name, unadjusted_r in zip(output_cols, output_ranges):
+        # make float accuracy into rmse
+        if name in column_transformers.output_types.float_standard_cols or \
+                name in column_transformers.output_types.float_min_max_cols or \
+                name in column_transformers.output_types.float_non_linear_cols:
+            accuracy[name] = sqrt(accuracy[name])
+            accuracy_string += f'''{name}: {accuracy[name]} rmse'''
+        # record top-1 accuracy for tohers
+        elif name in column_transformers.output_types.boolean_cols:
+            accuracy_string += f'''{name}: {accuracy[name]} bool eq'''
+        elif name in column_transformers.output_types.categorical_cols:
+            accuracy_string += f'''{name}: {accuracy[name]} % cat top 1 acc'''
+        else:
+            raise "Invalid Column Type For finish_accuracy"
+        accuracy_string += "; "
+    return accuracy_string
 
 # train and test the model
 first_batch = True
@@ -130,23 +154,24 @@ def train_or_test(dataloader, model, optimizer, train = True):
     else:
         model.eval()
     cumulative_loss = 0
-    correct = {}
+    accuracy = {}
     for name in output_cols:
-        correct[name] = 0
+        accuracy[name] = 0
     for batch, (X, Y) in enumerate(dataloader):
         if first_batch and train:
             first_batch = False
-            print(X.cpu().tolist())
-            print(Y.cpu().tolist())
+            #print(X.cpu().tolist())
+            #print(Y.cpu().tolist())
             first_row = X[0:1,:]
         X, Y = X.to(device), Y.to(device)
+        transformed_Y = model.convert_output_labels_for_loss(Y)
         #XR = torch.randn_like(X, device=device)
         #XR[:,0] = X[:,0]
         #YZ = torch.zeros_like(Y) + 0.1
 
         # Compute prediction error
         pred = model(X)
-        batch_loss = compute_loss(pred, model.convert_output_labels_for_loss(Y))
+        batch_loss = compute_loss(pred, transformed_Y)
         cumulative_loss += batch_loss
 
         # Backpropagation
@@ -163,21 +188,22 @@ def train_or_test(dataloader, model, optimizer, train = True):
             print(Y[0:2])
             print(f"loss: {loss:>7f}  [{current:>5d}/{size:>5d}]")
 
-        compute_accuracy(pred, Y, correct)
-        model_output_recording.record_output(column_transformers, pred, train)
+        compute_accuracy(pred, Y, accuracy)
+        model_output_recording.record_output(column_transformers, pred, Y, transformed_Y, train)
 
     cumulative_loss /= num_batches
     for name in output_cols:
-        correct[name] /= size
+        accuracy[name] /= size
+    accuracy_string = finish_accuracy(accuracy)
     train_test_str = "Train" if train else "Test"
-    print(f"Epoch {train_test_str} Error: Untransformed Accuracy: {correct}%, Transformed Avg Loss: {cumulative_loss:>8f}")
+    print(f"Epoch {train_test_str} Accuracy: {accuracy_string}, Transformed Avg Loss: {cumulative_loss:>8f}")
 
 
 epochs = 5
 for t in range(epochs):
     print(f"\nEpoch {t+1}\n-------------------------------")
     train_or_test(train_dataloader, model, optimizer, True)
-    train_or_test(train_dataloader, model, None, False)
+    train_or_test(test_dataloader, model, None, False)
 
 model_output_recording.plot(column_transformers)
 
