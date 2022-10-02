@@ -11,7 +11,7 @@
 class InferenceEngagementAimResult : public QueryResult {
 public:
     const TrainingEngagementAimResult & trainingEngagementAimResult;
-    vector<Vec2> predictedDeltaViewAngle;
+    vector<Vec2> predictedDeltaViewAngle, normalizedPredictedDeltaViewAngle;
 
 
     explicit InferenceEngagementAimResult(const TrainingEngagementAimResult & trainingEngagementAimResult) :
@@ -39,7 +39,9 @@ public:
             << trainingEngagementAimResult.attackerPlayerId[index] << ","
             << trainingEngagementAimResult.victimPlayerId[index] << ","
             << predictedDeltaViewAngle[index].x << ","
-            << predictedDeltaViewAngle[index].y;
+            << predictedDeltaViewAngle[index].y << ","
+            << normalizedPredictedDeltaViewAngle[index].x << ","
+            << normalizedPredictedDeltaViewAngle[index].y;
 
         ss << std::endl;
     }
@@ -49,10 +51,8 @@ public:
     }
 
     vector<string> getOtherColumnNames() override {
-        vector<string> result;
-        result.push_back("predicted delta view angle x");
-        result.push_back("predicted delta view angle y");
-        return result;
+        return {"predicted delta view angle x", "predicted delta view angle y",
+                "normalized predicted delta view angle x", "normalized predicted delta view angle y"};
     }
 };
 

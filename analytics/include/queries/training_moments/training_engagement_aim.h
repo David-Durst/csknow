@@ -38,6 +38,7 @@ public:
     vector<int64_t> victimPlayerId;
     vector<array<Vec2, NUM_TICKS>> deltaViewAngle;
     vector<array<double, NUM_TICKS>> eyeToHeadDistance;
+    vector<double> distanceNormalization;
 
 
     TrainingEngagementAimResult() {

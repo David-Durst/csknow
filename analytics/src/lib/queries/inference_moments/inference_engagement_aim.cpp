@@ -95,6 +95,10 @@ InferenceEngagementAimResult queryInferenceEngagementAimResult(const string & mo
             static_cast<double>(output[0][2].item<float>()),
             static_cast<double>(output[0][3].item<float>())
         });
+        result.normalizedPredictedDeltaViewAngle.push_back({
+            result.predictedDeltaViewAngle.back().x / result.trainingEngagementAimResult.distanceNormalization[engagementAimId],
+            result.predictedDeltaViewAngle.back().y / result.trainingEngagementAimResult.distanceNormalization[engagementAimId]
+        });
 
         // if last tick for engagement, remove it from actives. Otherwise rotate the current prediction into prior deltas
         if (result.trainingEngagementAimResult.tickId[engagementAimId] == engagementTickRange.maxId) {

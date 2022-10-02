@@ -21,6 +21,7 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
     vector<vector<int64_t>> tmpVictimPlayerId(numThreads);
     vector<vector<array<Vec2, NUM_TICKS>>> tmpDeltaViewAngle(numThreads);
     vector<vector<array<double, NUM_TICKS>>> tmpEyeToHeadDistance(numThreads);
+    vector<vector<double>> tmpDistanceNormalization(numThreads);
 
     // for each round
     // for each tick
@@ -88,6 +89,27 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
                     tmpDeltaViewAngle[threadNum].back()[i] = deltaViewAngle;
                     tmpEyeToHeadDistance[threadNum].back()[i] = computeDistance(attackerEyePos, victimHeadPos);
                 }
+
+                // compute normalization constants, used to visualize inference
+                const int64_t & curAttackerPATId = playerToPatWindows.at(attackerId).fromNewest(0);
+                const int64_t & curVictimPATId = playerToPatWindows.at(victimId).fromNewest(0);
+
+                Vec3 curAttackerEyePos = {
+                    playerAtTick.posX[curAttackerPATId],
+                    playerAtTick.posY[curAttackerPATId],
+                    playerAtTick.eyePosZ[curAttackerPATId]
+                };
+
+                Vec3 victimBotPos = {
+                    playerAtTick.posX[curVictimPATId],
+                    playerAtTick.posY[curVictimPATId],
+                    playerAtTick.posZ[curVictimPATId]
+                };
+                Vec2 viewAngleToBotPos = vectorAngles(victimBotPos - curAttackerEyePos);
+                Vec3 victimTopPos = victimBotPos;
+                victimTopPos.z += PLAYER_HEIGHT;
+                Vec2 topVsBotViewAngle = deltaViewFromOriginToDest(curAttackerEyePos, victimTopPos, viewAngleToBotPos);
+                tmpDistanceNormalization[threadNum].push_back(std::abs(topVsBotViewAngle.y));
             }
         }
 
@@ -104,6 +126,7 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
                            result.victimPlayerId.push_back(tmpVictimPlayerId[minThreadId][tmpRowId]);
                            result.deltaViewAngle.push_back(tmpDeltaViewAngle[minThreadId][tmpRowId]);
                            result.eyeToHeadDistance.push_back(tmpEyeToHeadDistance[minThreadId][tmpRowId]);
+                           result.distanceNormalization.push_back(tmpDistanceNormalization[minThreadId][tmpRowId]);
                        });
     return result;
 }
