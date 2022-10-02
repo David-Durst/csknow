@@ -4,10 +4,12 @@ import {Chart, Plugin, PointStyle, registerables, ScatterDataPoint, ScriptableCo
 import {AnyObject, EmptyObject} from "chart.js/types/basic";
 Chart.register(...registerables);
 import annotationPlugin, {AnnotationOptions, PartialEventContext} from 'chartjs-plugin-annotation';
+import {inferenceCtx} from "./drawing";
 Chart.register(annotationPlugin)
 
 let kymographChart: Chart = null
 let scatterChart: Chart = null
+let inferenceChart: Chart = null
 type datasetType = {datasets: {label: string, data: {x: number, y: number}[], backgroundColor: string}[]}
 // need separate values since updates replace data field
 function getExampleDataSet()  {
@@ -76,7 +78,8 @@ function getPointRadius(context: ScriptableContext<any>, options: AnyObject): nu
     }
 }
 
-export function createCharts(kymographCtx: CanvasRenderingContext2D, scatterCtx: CanvasRenderingContext2D) {
+export function createCharts(kymographCtx: CanvasRenderingContext2D, scatterCtx: CanvasRenderingContext2D,
+                             inferenceCtx: CanvasRenderingContext2D) {
     kymographChart = new Chart(kymographCtx, {
         type: 'scatter',
         data: getExampleDataSet(),
@@ -166,6 +169,45 @@ export function createCharts(kymographCtx: CanvasRenderingContext2D, scatterCtx:
             }
         }
     });
+    inferenceChart = new Chart(inferenceCtx, {
+        type: 'scatter',
+        data: getExampleDataSet(),
+        options: {
+            animation: false,
+            scales: {
+                x: {
+                    type: 'linear',
+                    position: 'bottom',
+                    title: {
+                        display: true,
+                        text: "Yaw Delta (deg / target height deg)"
+                    },
+                    min: -1.5,
+                    max: 1.5,
+                    reverse: true,
+                    ticks: {
+                        stepSize: 0.5
+                    }
+                },
+                y: {
+                    title: {
+                        display: true,
+                        text: "Pitch Delta (deg / player height deg)"
+                    },
+                    min: -1.5,
+                    max: 1.0,
+                }
+            },
+            responsive: false,
+            showLine: true,
+            plugins: {
+                title: {
+                    display: true,
+                    text: "Inference Delta View Angle ..."
+                }
+            }
+        }
+    });
 }
 
 //https://www.chartjs.org/docs/latest/developers/updates.html - but this actually isn't very good
@@ -180,6 +222,7 @@ function addData(chart: Chart, pastData: ScatterDataPoint[],
 
 export function drawMouseData(kymographCanvas: HTMLCanvasElement,
                               scatterCanvas: HTMLCanvasElement,
+                              inferenceCanvas: HTMLCanvasElement,
                               gameData: GameData, tickData: TickRow, eventData: Row) {
     const parser = gameData.parsers.get(curEvent)
     if (parser != null && parser.havePerTickAimTable && eventData != null && displayMouseData) {
@@ -236,5 +279,51 @@ export function drawMouseData(kymographCanvas: HTMLCanvasElement,
     else {
         kymographCanvas.style.display = "none"
         scatterCanvas.style.display = "none"
+    }
+
+    // TODO: rename prediction to inference, integrate code better with real data code
+    if (parser != null && parser.havePerTickAimPredictionTable && eventData != null && displayMouseData) {
+        inferenceCanvas.style.display = "inline-block"
+        const aimPredictionDataForEvent = gameData.eventToPerTickAimPredictionTablesIndices
+            .get(curEvent).get(eventData.id)
+        const aimPredictionData = gameData.tables.get(parser.perTickAimPredictionTable)
+        const pastPredictionDeltaData: ScatterDataPoint[] = [],
+            presentPredictionDeltaData: ScatterDataPoint[] = [],
+            futurePredictionDeltaData: ScatterDataPoint[] = []
+        const hurtTickIds = new Set(eventData.otherColumnValues[2].split(";").map(x => parseInt(x)))
+        hurtDataIndices[0].clear()
+        hurtDataIndices[1].clear()
+        hurtDataIndices[2].clear()
+        for (let i = 0; i < aimPredictionDataForEvent.length; i++) {
+            const curAimData = aimPredictionData[aimPredictionDataForEvent[i]]
+            let predictionDeltaData: ScatterDataPoint[] = null
+            let dataSetIndex = 0
+            let dataIndex = 0
+            if (curAimData.getStartTick() < tickData.id) {
+                predictionDeltaData = pastPredictionDeltaData
+                dataIndex = pastPredictionDeltaData.length
+            }
+            else if (curAimData.getStartTick() == tickData.id) {
+                predictionDeltaData = pastPredictionDeltaData
+                dataSetIndex = 1
+                dataIndex = presentPredictionDeltaData.length
+            }
+            else {
+                predictionDeltaData = futurePredictionDeltaData
+                dataSetIndex = 2
+                dataIndex = futurePredictionDeltaData.length
+            }
+            predictionDeltaData.push({
+                x: parseFloat(curAimData.otherColumnValues[0]),
+                y: parseFloat(curAimData.otherColumnValues[1])
+            })
+            if (hurtTickIds.has(curAimData.foreignKeyValues[0])) {
+                hurtDataIndices[dataSetIndex].add(dataIndex)
+            }
+        }
+        addData(inferenceChart, pastPredictionDeltaData, presentPredictionDeltaData, futurePredictionDeltaData)
+    }
+    else {
+        inferenceCanvas.style.display = "none"
     }
 }

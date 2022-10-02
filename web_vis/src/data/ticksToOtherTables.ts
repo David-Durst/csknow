@@ -90,5 +90,11 @@ export function indexEventsForRound(gameData: GameData) {
                 gameData.parsers.get(curParser.perTickAimTable).eventIdColumn,
                 gameData.eventToPerTickAimTablesIndices.get(dataName))
         }
+        if (curParser.havePerTickAimPredictionTable) {
+            gameData.eventToPerTickAimPredictionTablesIndices.set(dataName, new Map<number, number[]>());
+            generatePerTickAimIndex(gameData.tables.get(dataName), gameData.tables.get(curParser.perTickAimPredictionTable),
+                gameData.parsers.get(curParser.perTickAimPredictionTable).eventIdColumn,
+                gameData.eventToPerTickAimPredictionTablesIndices.get(dataName))
+        }
     }
 }

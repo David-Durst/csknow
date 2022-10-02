@@ -196,6 +196,8 @@ export class Parser {
     playerLabels: string[];
     havePerTickAimTable: boolean;
     perTickAimTable: string;
+    havePerTickAimPredictionTable: boolean;
+    perTickAimPredictionTable: string;
     eventIdColumn: number;
 
     constructor(tableName: string, startTickColumn: string,
@@ -204,7 +206,9 @@ export class Parser {
                 keyPlayerColumns: string, nonTemporal: string, overlay: string, overlayLabels: string,
                 havePlayerLabels: string, playersToLabelColumn: string,
                 playerLabelIndicesColumn: string, playerLabels: string,
-                havePerTickAimTable: string, perTickAimTable: string, eventIdColumn: string) {
+                havePerTickAimTable: string, perTickAimTable: string,
+                havePerTickAimPredictionTable: string, perTickAimPredictionTable: string,
+                eventIdColumn: string) {
         this.tableName = tableName;
         this.foreignKeyNames = foreignKeyNames;
         this.otherColumnNames = otherColumnNames;
@@ -236,6 +240,8 @@ export class Parser {
         this.playerLabels = playerLabels.length > 0 ? playerLabels.split(";") : []
         this.havePerTickAimTable = parseBool(havePerTickAimTable)
         this.perTickAimTable = perTickAimTable
+        this.havePerTickAimPredictionTable = parseBool(havePerTickAimPredictionTable)
+        this.perTickAimPredictionTable = perTickAimPredictionTable
         this.eventIdColumn = parseInt(eventIdColumn)
     }
 
@@ -359,6 +365,8 @@ export class GameData {
     // name here is for the event, from that can figure out name of per tick aim table
     // inner map is from event id to row indices per tick
     eventToPerTickAimTablesIndices: Map<string, Map<number, number[]>> =
+        new Map<string, Map<number, number[]>>();
+    eventToPerTickAimPredictionTablesIndices: Map<string, Map<number, number[]>> =
         new Map<string, Map<number, number[]>>();
     overlays: Map<string, Row[]> =
         new Map<string, Row[]>();

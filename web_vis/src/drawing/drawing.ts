@@ -38,6 +38,8 @@ export let kymographCanvas: HTMLCanvasElement = null;
 export let kymographCtx: CanvasRenderingContext2D = null;
 export let scatterCanvas: HTMLCanvasElement = null;
 export let scatterCtx: CanvasRenderingContext2D = null;
+export let inferenceCanvas: HTMLCanvasElement = null;
+export let inferenceCtx: CanvasRenderingContext2D = null;
 export const minimap = new Image();
 minimap.src = "vis_images/de_dust2_radar_upsampled_all_labels.png";
 let xMapLabel: HTMLLabelElement = null;
@@ -270,7 +272,7 @@ export function drawTick(e: InputEvent) {
     updateEventIdAndSelector(tickData)
     let playersText = getPlayersText(tickData, filteredData)
     const players = gameData.getPlayersAtTick(tickData)
-    drawMouseData(kymographCanvas, scatterCanvas, gameData, tickData, activeEvent)
+    drawMouseData(kymographCanvas, scatterCanvas, inferenceCanvas, gameData, tickData, activeEvent)
     // sorting prevents flickering as players drawn in same order always
     // sort by priority, then by id if same priority
     players.sort((a: PlayerAtTickRow, b:PlayerAtTickRow) => {
@@ -564,6 +566,8 @@ export function setupCanvas() {
     kymographCtx = kymographCanvas.getContext('2d')
     scatterCanvas = <HTMLCanvasElement> document.querySelector("#scatterCanvas")
     scatterCtx = scatterCanvas.getContext('2d')
+    inferenceCanvas = <HTMLCanvasElement> document.querySelector("#inferenceCanvas")
+    inferenceCtx = inferenceCanvas.getContext('2d')
     xMapLabel = document.querySelector<HTMLLabelElement>("#xposMap")
     yMapLabel = document.querySelector<HTMLLabelElement>("#yposMap")
     xCanvasLabel = document.querySelector<HTMLLabelElement>("#xposCanvas")
@@ -581,7 +585,7 @@ export function setupCanvas() {
     mainCanvas.addEventListener("mousedown", startingRegionFilter)
     mainCanvas.addEventListener("mouseup", finishedRegionFilter)
     setupEventDrawing()
-    createCharts(kymographCtx, scatterCtx)
+    createCharts(kymographCtx, scatterCtx, inferenceCtx)
 }
 
 function setEventsOverlaysAndRedraw() {
