@@ -584,6 +584,10 @@ int main(int argc, char * argv[]) {
                 ss << ",";
                 ss << queryValue.perTickAimTable;
                 ss << ",";
+                ss << boolToString(queryValue.havePerTickAimPredictionTable);
+                ss << ",";
+                ss << queryValue.perTickPredictionAimTable;
+                ss << ",";
                 ss << queryValue.eventIdColumn;
                 ss << std::endl;
             }
