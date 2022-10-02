@@ -301,6 +301,8 @@ int main(int argc, char * argv[]) {
     InferenceEngagementAimResult inferenceEngagementAimResult =
         queryInferenceEngagementAimResult(modelsDir, engagementResult, engagementAimResult);
     std::cout << "size: " << inferenceEngagementAimResult.size << std::endl;
+    engagementResult.havePerTickAimPredictionTable = true;
+    engagementResult.perTickPredictionAimTable = inferenceEngagementAimName;
     /*
     VelocityResult velocityResult = queryVelocity(position);
     std::cout << "velocity moments: " << velocityResult.positionIndex.size() << std::endl;

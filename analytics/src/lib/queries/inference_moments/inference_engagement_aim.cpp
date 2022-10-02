@@ -3,6 +3,7 @@
 //
 
 #include "queries/inference_moments/inference_engagement_aim.h"
+#include "queries/rolling_window.h"
 #include <torch/script.h>
 #include <filesystem>
 
@@ -32,20 +33,58 @@ InferenceEngagementAimResult queryInferenceEngagementAimResult(const string & mo
     /*
     for (const auto & [engagementId, tickIdRange] :
         engagementResult.engagementsPerTick.eventToInterval) {
-        for (int64_t tickId = tickIdRange.minId; tickId <= tickIdRange.maxId; tickId++) {
+        RollingWindow rollingWindow(rounds, ticks, playerAtTick);
+        // minus 1 as need to include current tick in window size
+        int64_t roundIndex = ticks.roundId[tickIdRange.minId];
+        TickRates tickRates = computeTickRates(games, rounds, roundIndex);
+        rollingWindow.setTemporalRange(tickIdRange.minId, tickRates,
+                                       {DurationType::Ticks, 0, 0, 0, 0});
+        for (int64_t tickId = rollingWindow.lastReadTickId(); tickId <= tickIdRange.maxId; tickId++) {
+            // Create a vector of inputs.
+            std::vector<torch::jit::IValue> inputs;
+            std::vector<float> rowCPP;
+            // all but cur tick are inputs
+            for (size_t j = 1; j < NUM_TICKS; j++) {
+                rowCPP.push_back(static_cast<float>(trainingEngagementAimResult.deltaViewAngle[i][j].x));
+                rowCPP.push_back(static_cast<float>(trainingEngagementAimResult.deltaViewAngle[i][j].y));
+                rowCPP.push_back(static_cast<float>(trainingEngagementAimResult.eyeToHeadDistance[i][j]));
+            }
+            torch::Tensor rowPT = torch::from_blob(rowCPP.data(), {1, static_cast<long>(rowCPP.size())}, options).clone();
+            inputs.push_back(rowPT);
 
+            // Execute the model and turn its output into a tensor.
+            at::Tensor output = module.forward(inputs).toTensor();
+            result.predictedDeltaViewAngle.push_back({
+                                                         static_cast<double>(output[0][2].item<float>()),
+                                                         static_cast<double>(output[0][3].item<float>())
+                                                     });
         }
     }
      */
-    for (int64_t i = 0; i < result.trainingEngagementAimResult.size; i++) {
+    // NUM_TICKS stores cur tick and prior ticks in window, shrink by 1 for just prior ticks
+    map<int64_t, array<Vec2, NUM_TICKS-1>> activeEngagementsPriorDeltas;
+    for (int64_t engagementAimId = 0; engagementAimId < result.trainingEngagementAimResult.size; engagementAimId++) {
+        int64_t engagementId = result.trainingEngagementAimResult.engagementId[engagementAimId];
+        array<Vec2, NUM_TICKS-1> & priorDeltas = activeEngagementsPriorDeltas[engagementId];
+
+        // add old deltas if in engagement's firs tick, otherwise use delta prior earlier predictions
+        const RangeIndexEntry & engagementTickRange =
+            engagementResult.engagementsPerTick.eventToInterval.at(engagementId);
+        if (result.trainingEngagementAimResult.tickId[engagementAimId] == engagementTickRange.minId) {
+            for (size_t priorTickNum = 0; priorTickNum < NUM_TICKS - 1; priorTickNum++) {
+                priorDeltas[priorTickNum] =
+                    result.trainingEngagementAimResult.deltaViewAngle[engagementAimId][priorTickNum + 1];
+            }
+        }
+
         // Create a vector of inputs.
         std::vector<torch::jit::IValue> inputs;
         std::vector<float> rowCPP;
         // all but cur tick are inputs
-        for (size_t j = 1; j < NUM_TICKS; j++) {
-            rowCPP.push_back(static_cast<float>(trainingEngagementAimResult.deltaViewAngle[i][j].x));
-            rowCPP.push_back(static_cast<float>(trainingEngagementAimResult.deltaViewAngle[i][j].y));
-            rowCPP.push_back(static_cast<float>(trainingEngagementAimResult.eyeToHeadDistance[i][j]));
+        for (size_t priorDeltaNum = 0; priorDeltaNum < priorDeltas.size(); priorDeltaNum++) {
+            rowCPP.push_back(static_cast<float>(priorDeltas[priorDeltaNum].x));
+            rowCPP.push_back(static_cast<float>(priorDeltas[priorDeltaNum].y));
+            rowCPP.push_back(static_cast<float>(trainingEngagementAimResult.eyeToHeadDistance[engagementAimId][priorDeltaNum+1]));
         }
         torch::Tensor rowPT = torch::from_blob(rowCPP.data(), {1, static_cast<long>(rowCPP.size())}, options).clone();
         inputs.push_back(rowPT);
@@ -56,6 +95,17 @@ InferenceEngagementAimResult queryInferenceEngagementAimResult(const string & mo
             static_cast<double>(output[0][2].item<float>()),
             static_cast<double>(output[0][3].item<float>())
         });
+
+        // if last tick for engagement, remove it from actives. Otherwise rotate the current prediction into prior deltas
+        if (result.trainingEngagementAimResult.tickId[engagementAimId] == engagementTickRange.maxId) {
+            activeEngagementsPriorDeltas.erase(engagementId);
+        }
+        else {
+            for (size_t priorDeltaNum = priorDeltas.size() - 1; priorDeltaNum > 0; priorDeltaNum--) {
+                priorDeltas[priorDeltaNum] = priorDeltas[priorDeltaNum - 1];
+            }
+            priorDeltas[0] = result.predictedDeltaViewAngle.back();
+        }
     }
 
     return result;
