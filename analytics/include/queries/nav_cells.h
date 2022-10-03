@@ -1,9 +1,10 @@
 //
-// Created by durst on 11/4/21.
+// Created by durst on 10/2/22.
 //
 
-#ifndef CSKNOW_NAV_MESH_H
-#define CSKNOW_NAV_MESH_H
+#ifndef CSKNOW_NAV_CELLS_H
+#define CSKNOW_NAV_CELLS_H
+
 #include <string>
 #include <set>
 #include <vector>
@@ -11,9 +12,9 @@
 #include <unordered_map>
 #include <list>
 #include <map>
-#include "navmesh/nav_file.h"
 #include "load_data.h"
 #include "queries/query.h"
+#include "bots/analysis/load_save_vis_points.h"
 #include "geometry.h"
 using std::string;
 using std::vector;
@@ -22,24 +23,23 @@ using std::unordered_map;
 using std::vector;
 using std::map;
 
-class MapMeshResult : public QueryResult {
+class MapCellsResult : public QueryResult {
 public:
     vector<int64_t> id;
     vector<int64_t> areaId;
     vector<string> placeName;
     vector<AABB> coordinate;
     vector<vector<int64_t>> connectionAreaIds;
-    map<int64_t, int64_t> areaToInternalId;
 
     vector<int64_t> filterByForeignKey(int64_t) override {
         return {};
     }
 
-    MapMeshResult(const string & queryName) {
-        this->variableLength = false;
-        this->nonTemporal = true;
-        this->overlay = true;
-        this->overlayLabelsQuery = queryName;
+    MapCellsResult(const string & queryName) {
+        variableLength = false;
+        nonTemporal = true;
+        overlay = true;
+        overlayLabelsQuery = queryName;
     };
 
     void oneLineToCSV(int64_t index, stringstream & ss) override {
@@ -64,6 +64,5 @@ public:
     }
 };
 
-MapMeshResult queryMapMesh(nav_mesh::nav_file & navFile, const string & queryName);
-
-#endif //CSKNOW_NAV_MESH_H
+MapCellsResult queryMapCells(const VisPoints & visPoints, const nav_mesh::nav_file & navFile, const string & queryName);
+#endif //CSKNOW_NAV_CELLS_H

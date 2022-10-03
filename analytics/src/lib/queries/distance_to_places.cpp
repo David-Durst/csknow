@@ -30,8 +30,9 @@ void setupBasics(DistanceToPlacesResult & result, const nav_mesh::nav_file & nav
 
 [[maybe_unused]]
 DistanceToPlacesResult queryDistanceToPlaces(const nav_mesh::nav_file & navFile,
-                                             const ReachableResult & reachableResult) {
-    DistanceToPlacesResult result;
+                                             const ReachableResult & reachableResult,
+                                             const string & overlayLabelsQuery) {
+    DistanceToPlacesResult result(overlayLabelsQuery);
     setupBasics(result, navFile, reachableResult);
 
     for (int64_t i = 0; i < result.numAreas; i++) {

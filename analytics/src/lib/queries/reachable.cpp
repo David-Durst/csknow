@@ -5,8 +5,8 @@
 #include "queries/reachable.h"
 #include <filesystem>
 
-ReachableResult queryReachable(const MapMeshResult & mapMeshResult) {
-    ReachableResult result;
+ReachableResult queryReachable(const MapMeshResult & mapMeshResult, const string & overlayLabelsQuery) {
+    ReachableResult result(overlayLabelsQuery);
     result.numAreas = mapMeshResult.size;
     result.coordinate = mapMeshResult.coordinate;
     result.distanceMatrix.resize(result.numAreas * result.numAreas, std::numeric_limits<double>::max());

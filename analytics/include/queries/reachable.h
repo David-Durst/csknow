@@ -22,12 +22,14 @@ public:
         return {};
     }
 
-    ReachableResult() {
-        this->variableLength = false;
-        this->nonTemporal = true;
-        this->overlay = true;
-        this->extension = ".reach";
-        this->numAreas = 0;
+    explicit
+    ReachableResult(const string & overlayLabelsQuery) {
+        variableLength = false;
+        nonTemporal = true;
+        overlay = true;
+        extension = ".reach";
+        numAreas = 0;
+        this->overlayLabelsQuery = overlayLabelsQuery;
     };
 
     void oneLineToCSV(int64_t index, stringstream & ss) override {
@@ -67,6 +69,6 @@ public:
     void load(const string & mapsPath, const string & mapName);
 };
 
-[[maybe_unused]] ReachableResult queryReachable(const MapMeshResult & mapMeshResult);
+[[maybe_unused]] ReachableResult queryReachable(const MapMeshResult & mapMeshResult, const string & overlayLabelsQuery);
 
 #endif //CSKNOW_REACHABLE_H

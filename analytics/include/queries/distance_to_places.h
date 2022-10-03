@@ -33,13 +33,15 @@ public:
         return {};
     }
 
-    DistanceToPlacesResult() {
-        this->variableLength = false;
-        this->nonTemporal = true;
-        this->overlay = true;
-        this->extension = ".place_dist";
+    explicit
+    DistanceToPlacesResult(const string & overlayLabelsQuery) {
+        variableLength = false;
+        nonTemporal = true;
+        overlay = true;
+        extension = ".place_dist";
         numAreas = 0;
         numPlaces = 0;
+        this->overlayLabelsQuery = overlayLabelsQuery;
     };
 
     void oneLineToCSV(int64_t index, stringstream & ss) override {
@@ -136,6 +138,7 @@ public:
 
 [[maybe_unused]]
 DistanceToPlacesResult queryDistanceToPlaces(const nav_mesh::nav_file & navFile,
-                                             const ReachableResult & reachableResult);
+                                             const ReachableResult & reachableResult,
+                                             const string & overlayLabelsQuery);
 
 #endif //CSKNOW_DISTANCE_TO_PLACES_H

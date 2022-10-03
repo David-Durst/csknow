@@ -4,8 +4,8 @@
 
 #include "queries/nav_visible.h"
 
-NavVisibleResult queryNavVisible(const VisPoints & visPoints) {
-    NavVisibleResult result;
+NavVisibleResult queryNavVisible(const VisPoints & visPoints, const string & overlayLabelsQuery) {
+    NavVisibleResult result(overlayLabelsQuery);
     result.numAreas = static_cast<int64_t>(visPoints.getVisPoints().size());
     result.coordinate = {};
     for (const auto & visPoint : visPoints.getVisPoints()) {

@@ -22,11 +22,12 @@ public:
         return {};
     }
 
-    NavDangerResult() {
+    NavDangerResult(const string & overlayLabelsQuery) {
         variableLength = false;
         nonTemporal = true;
         overlay = true;
         numAreas = INVALID_ID;
+        this->overlayLabelsQuery = overlayLabelsQuery
     };
 
     void oneLineToCSV(int64_t index, stringstream & ss) override {
@@ -80,5 +81,5 @@ public:
     }
 };
 
-NavDangerResult queryNavDanger(const VisPoints & visPoints);
+NavDangerResult queryNavDanger(const VisPoints & visPoints, const string & overlayLabelsQuery);
 #endif //CSKNOW_NAV_DANGER_H

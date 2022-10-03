@@ -27,6 +27,7 @@
 #include "indices/spotted.h"
 #include "queries/nav_visible.h"
 #include "queries/nav_danger.h"
+#include "queries/nav_cells.h"
 #include "queries/distance_to_places.h"
 #include "queries/moments/aggression_event.h"
 #include "queries/moments/engagement.h"
@@ -250,21 +251,23 @@ int main(int argc, char * argv[]) {
     */
 
     string dust2MeshName = "de_dust2_mesh";
-    MapMeshResult d2MeshResult = queryMapMesh(map_navs["de_dust2"]);
+    MapMeshResult d2MeshResult = queryMapMesh(map_navs["de_dust2"], dust2MeshName);
+    string dust2CellsName = "de_dust2_cells";
+    MapCellsResult d2CellsResult = queryMapCells(map_visPoints.at("de_dust2"), map_navs["de_dust2"], dust2CellsName);
     string dust2ReachableName = "de_dust2_reachable";
-    //ReachableResult d2ReachableResult = queryReachable(d2MeshResult);
+    //ReachableResult d2ReachableResult = queryReachable(d2MeshResult, dust2MeshName);
     //d2ReachableResult.save(navPath, "de_dust2");
-    ReachableResult d2ReachableResult;
+    ReachableResult d2ReachableResult(dust2MeshName);
     d2ReachableResult.load(navPath, "de_dust2");
     string dust2DistanceToPlacesName = "de_dust2_distance_to_places";
-    //DistanceToPlacesResult d2DistanceToPlacesResult = queryDistanceToPlaces(map_navs["de_dust2"], d2ReachableResult);
+    //DistanceToPlacesResult d2DistanceToPlacesResult = queryDistanceToPlaces(map_navs["de_dust2"], d2ReachableResult, dust2MeshName);
     //d2DistanceToPlacesResult.save(navPath, "de_dust2");
-    DistanceToPlacesResult d2DistanceToPlacesResult;
+    DistanceToPlacesResult d2DistanceToPlacesResult(dust2MeshName);
     d2DistanceToPlacesResult.load(navPath, "de_dust2", map_navs["de_dust2"], d2ReachableResult);
     string dust2VisibleName = "de_dust2_visible";
-    NavVisibleResult d2NavVisibleResult = queryNavVisible(map_visPoints.find("de_dust2")->second);
+    NavVisibleResult d2NavVisibleResult = queryNavVisible(map_visPoints.find("de_dust2")->second, dust2VisibleName);
     string dust2DangerName = "de_dust2_danger";
-    NavDangerResult d2NavDangerResult = queryNavDanger(map_visPoints.find("de_dust2")->second);
+    NavDangerResult d2NavDangerResult = queryNavDanger(map_visPoints.find("de_dust2")->second, dust2DangerName);
     std::cout << "processing aggression_event" << std::endl;
     string aggressionEventName = "aggression_event";
     AggressionEventResult aggressionEventResult =
@@ -281,7 +284,6 @@ int main(int argc, char * argv[]) {
     engagementResult.perTickAimTable = engagementPerTickAimName;
     std::cout << "size: " << engagementPerTickAimResult.size << std::endl;
     std::cout << "processing non engagement trajectory" << std::endl;
-    // hi
     string nonEngagementTrajectoryName = "nonEngagementTrajectory";
     NonEngagementTrajectoryResult nonEngagementTrajectoryResult =
             queryNonEngagementTrajectory(filteredRounds, ticks, playerAtTick, engagementResult);
@@ -431,6 +433,7 @@ int main(int argc, char * argv[]) {
             {"ticks", queryTicks},
             {"playerAtTick", queryPlayerAtTick},
             {dust2MeshName, d2MeshResult},
+            {dust2CellsName, d2CellsResult},
             {dust2VisibleName, d2NavVisibleResult},
             {dust2DangerName, d2NavDangerResult},
             {dust2ReachableName, d2ReachableResult},
@@ -570,7 +573,7 @@ int main(int argc, char * argv[]) {
                 ss << ",";
                 ss << boolToString(queryValue.overlay);
                 ss << ",";
-                ss << boolToString(queryValue.overlayLabels);
+                ss << queryValue.overlayLabelsQuery;
                 ss << ",";
                 ss << boolToString(queryValue.havePlayerLabels);
                 ss << ",";

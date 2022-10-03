@@ -1,7 +1,7 @@
 #include "queries/nav_mesh.h"
 
-MapMeshResult queryMapMesh(nav_mesh::nav_file & navFile) {
-    MapMeshResult result;
+MapMeshResult queryMapMesh(nav_mesh::nav_file & navFile, const string & queryName) {
+    MapMeshResult result(queryName);
     int64_t i = 0;
     for (const auto & navArea : navFile.m_areas) {
         result.areaId.push_back(navArea.m_id);

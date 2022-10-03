@@ -37,6 +37,9 @@ void VisPoints::createCellVisPoints() {
 
     // for every nav aera, find the nav cells aligned based on area bounds
     for (const auto & areaVisPoint : areaVisPoints) {
+        // extend areaVisPoint height by player height so get vis points up to player height
+        AABB extendedAABB = areaVisPoint.areaCoordinates;
+        extendedAABB.max.z += PLAYER_HEIGHT;
         // get smallest and largest cell mins that overlap with area
         IVec3 minCellMinInArea = vec3ToIVec3((areaVisPoint.areaCoordinates.min - areaBounds.min) / CELL_DIM_SIZE);
         IVec3 maxCellMinInArea = vec3ToIVec3((areaVisPoint.areaCoordinates.max - areaBounds.min) / CELL_DIM_SIZE);
@@ -45,11 +48,11 @@ void VisPoints::createCellVisPoints() {
         for (int64_t curXId = minCellMinInArea.x; curXId <= maxCellMinInArea.x; curXId++) {
             for (int64_t curYId = minCellMinInArea.y; curYId <= maxCellMinInArea.y; curYId++) {
                 for (int64_t curZId = minCellMinInArea.z; curZId <= maxCellMinInArea.z; curZId++) {
-                    Vec3 cellMin = areaVisPoint.areaCoordinates.min +
+                    Vec3 cellMin = areaBounds.min +
                         Vec3{CELL_DIM_SIZE * curXId, CELL_DIM_SIZE * curYId, CELL_DIM_SIZE * curZId};
                     Vec3 cellMax = cellMin + CELL_DIM_SIZE;
                     Vec3 cellCenter = (cellMin + cellMax) / 2.;
-                    if (pointInRegion(areaVisPoint.areaCoordinates, cellCenter)) {
+                    if (pointInRegion(extendedAABB, cellCenter)) {
                         cellVisPoints.push_back({
                             areaVisPoint.areaId,
                             static_cast<CellId>(cellVisPoints.size()),

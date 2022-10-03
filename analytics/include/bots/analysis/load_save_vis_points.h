@@ -11,7 +11,7 @@
 #include "bots/load_save_bot_data.h"
 #include <bitset>
 #define MAX_NAV_AREAS 2000
-#define MAX_NAV_CELLS 270000
+#define MAX_NAV_CELLS 30000
 #define CELL_DIM_SIZE 16.
 using std::map;
 using std::bitset;
@@ -102,6 +102,7 @@ public:
     void launchVisPointsCommand(const ServerState & state, bool areas);
     void load(const string & mapsPath, const string & mapName, const nav_mesh::nav_file & navFile);
     [[nodiscard]] const vector<AreaVisPoint> & getVisPoints() const { return areaVisPoints; }
+    [[nodiscard]] const vector<CellVisPoint> & getCellVisPoints() const { return cellVisPoints; }
 };
 
 #endif //CSKNOW_LOAD_SAVE_VIS_POINTS_H

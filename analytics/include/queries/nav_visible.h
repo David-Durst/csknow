@@ -22,11 +22,13 @@ public:
         return {};
     }
 
-    NavVisibleResult() {
+    explicit
+    NavVisibleResult(const string & overlayLabelsQuery) {
         variableLength = false;
         nonTemporal = true;
         overlay = true;
         numAreas = INVALID_ID;
+        this->overlayLabelsQuery = overlayLabelsQuery
     };
 
     void oneLineToCSV(int64_t index, stringstream & ss) override {
@@ -58,6 +60,6 @@ public:
     }
 };
 
-NavVisibleResult queryNavVisible(const VisPoints & visPoints);
+NavVisibleResult queryNavVisible(const VisPoints & visPoints, const string & overlayLabelsQuery);
 
 #endif //CSKNOW_NAV_VISIBLE_H
