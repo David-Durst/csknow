@@ -19,5 +19,6 @@ MapCellsResult queryMapCells(const VisPoints & visPoints, const nav_mesh::nav_fi
         result.coordinate.push_back(navCell.cellCoordinates);
         result.connectionAreaIds.push_back({});
     }
+    result.size = visPoints.getCellVisPoints().size();
     return result;
 }
