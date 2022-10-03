@@ -226,11 +226,11 @@ struct Blackboard {
 
     Blackboard(const string & navPath, const string & mapName) :
         navPath(navPath), navFile(navPath.c_str()),
-        gen(rd()), navFileOverlay(navFile), visPoints(navFile), aggressionDis(0., 1.),
+        gen(rd()), navFileOverlay(navFile), reachability(""), distanceToPlaces(""),
+        visPoints(navFile), aggressionDis(0., 1.),
         tDangerAreaLastCheckTime(navFile.m_areas.size(), defaultTime),
         ctDangerAreaLastCheckTime(navFile.m_areas.size(), defaultTime),
-        possibleNavAreas(navFile),
-        standDis(0, 100.0), aimDis(0., 2.0) {
+        possibleNavAreas(navFile), standDis(0, 100.0), aimDis(0., 2.0) {
 
         string mapsPath = std::filesystem::path(navPath).remove_filename().string();
         navFileOverlay.setMapsPath(mapsPath);

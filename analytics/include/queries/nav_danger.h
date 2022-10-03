@@ -22,12 +22,13 @@ public:
         return {};
     }
 
+    explicit
     NavDangerResult(const string & overlayLabelsQuery) {
         variableLength = false;
         nonTemporal = true;
         overlay = true;
         numAreas = INVALID_ID;
-        this->overlayLabelsQuery = overlayLabelsQuery
+        this->overlayLabelsQuery = overlayLabelsQuery;
     };
 
     void oneLineToCSV(int64_t index, stringstream & ss) override {
