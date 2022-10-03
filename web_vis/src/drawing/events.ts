@@ -20,7 +20,9 @@ export let selectedEventId: number = INVALID_ID
 export let activeEvent: Row = null
 export let curOverlay: string = "none"
 export let displayMouseData = true
+export let zoomMouseData = true
 let mouseDataDisplayButton: HTMLButtonElement = null
+let mouseDataZoomButton: HTMLButtonElement = null
 
 export const DEFAULT_ALIVE_STRING = "o"
 export const DEFAULT_DEAD_STRING = "x"
@@ -141,6 +143,18 @@ function toggleMouseDisplay() {
     drawTick(null)
 }
 
+function toggleMouseZoom() {
+    if (zoomMouseData) {
+        zoomMouseData = false
+        mouseDataZoomButton.innerText = "zoom view angle"
+    }
+    else {
+        zoomMouseData = true
+        mouseDataZoomButton.innerText = "unzoom view angle"
+    }
+    drawTick(null)
+}
+
 export function updateEventIdAndSelector(tickData: TickRow) {
     const parser = gameData.parsers.get(curEvent)
     if (curEvent == "none" || !parser.havePlayerLabels) {
@@ -149,6 +163,7 @@ export function updateEventIdAndSelector(tickData: TickRow) {
         eventIdSelector.options.length = 0
         eventIdSelector.options.add(new Option("default", "-1"))
         mouseDataDisplayButton.style.display = "none"
+        mouseDataZoomButton.style.display = "none"
     }
     else {
         eventIdLabel.style.display = "inline"
@@ -177,6 +192,9 @@ export function updateEventIdAndSelector(tickData: TickRow) {
         if (parser.havePerTickAimTable) {
             mouseDataDisplayButton.style.display = "inline-block"
         }
+        if (parser.havePerTickAimTable && parser.havePerTickAimPredictionTable) {
+            mouseDataZoomButton.style.display = "inline-block"
+        }
     }
 }
 
@@ -196,4 +214,6 @@ export function setupEventDrawing() {
     curOverlay = overlaySelector.value;
     mouseDataDisplayButton = document.querySelector<HTMLButtonElement>("#event-mouse-display")
     mouseDataDisplayButton.addEventListener("click", toggleMouseDisplay)
+    mouseDataZoomButton = document.querySelector<HTMLButtonElement>("#event-mouse-zoom")
+    mouseDataZoomButton.addEventListener("click", toggleMouseZoom)
 }

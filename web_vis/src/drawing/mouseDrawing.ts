@@ -1,5 +1,5 @@
 import {GameData, Parser, Row, TickRow} from "../data/tables";
-import {curEvent, displayMouseData} from "./events";
+import {curEvent, displayMouseData, zoomMouseData} from "./events";
 import {Chart, Plugin, PointStyle, registerables, ScatterDataPoint, ScriptableContext} from 'chart.js';
 import {AnyObject, EmptyObject} from "chart.js/types/basic";
 Chart.register(...registerables);
@@ -225,6 +225,26 @@ export function drawMouseData(kymographCanvas: HTMLCanvasElement,
                               inferenceCanvas: HTMLCanvasElement,
                               gameData: GameData, tickData: TickRow, eventData: Row) {
     const parser = gameData.parsers.get(curEvent)
+    if (zoomMouseData) {
+        scatterChart.options.scales.x.min = -1.5
+        scatterChart.options.scales.x.max = 1.5
+        scatterChart.options.scales.y.min = -1.5
+        scatterChart.options.scales.y.max = 1.0
+        inferenceChart.options.scales.x.min = -1.5
+        inferenceChart.options.scales.x.max = 1.0
+        inferenceChart.options.scales.y.min = -1.5
+        inferenceChart.options.scales.y.max = 1.0
+    }
+    else {
+        scatterChart.options.scales.x.min = -3.0
+        scatterChart.options.scales.x.max = 3.0
+        scatterChart.options.scales.y.min = -3.0
+        scatterChart.options.scales.y.max = 2.0
+        inferenceChart.options.scales.x.min = -3.0
+        inferenceChart.options.scales.x.max = 3.0
+        inferenceChart.options.scales.y.min = -3.0
+        inferenceChart.options.scales.y.max = 2.0
+    }
     if (parser != null && parser.havePerTickAimTable && eventData != null && displayMouseData) {
         kymographCanvas.style.display = "inline-block"
         scatterCanvas.style.display = "inline-block"
