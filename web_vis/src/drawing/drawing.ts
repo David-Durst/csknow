@@ -338,10 +338,10 @@ export function drawTick(e: InputEvent) {
             bottomRightCoordinate.getCanvasX() - topLeftCoordinate.getCanvasX(),
             bottomRightCoordinate.getCanvasY() - topLeftCoordinate.getCanvasY())
     }
-    if (curOverlay.includes("mesh")) {
+    if (curOverlay.includes("mesh") || curOverlay.includes("cells")) {
         mainCtx.fillStyle = green
         const overlayRows = filteredData.overlays.get(curOverlay)
-        const overlayLabelsRows = filteredData.overlays.get(gameData.overlayLabels)
+        const overlayLabelsRows = filteredData.overlays.get(filteredData.parsers.get(curOverlay).overlayLabelsQuery)
         let connectionAreaIds: number[] = [];
         let targetAreaId = -1
         let targetPlaceName = ""
@@ -419,7 +419,7 @@ export function drawTick(e: InputEvent) {
              curOverlay.includes("danger")) {
         mainCtx.fillStyle = green
         const overlayRows = filteredData.overlays.get(curOverlay)
-        const overlayLabelsRows = filteredData.overlays.get(gameData.overlayLabels)
+        const overlayLabelsRows = filteredData.overlays.get(filteredData.parsers.get(curOverlay).overlayLabelsQuery)
         let distances: number[] = [];
         let minDistance;
         let maxDistance;

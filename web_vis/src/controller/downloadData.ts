@@ -38,9 +38,8 @@ export async function getTables() {
                 const nonTemporalIndex = keyPlayerColumnsIndex + 1
                 const overlayIndex = nonTemporalIndex + 1
                 const overlay = parseBool(cols[overlayIndex])
-                const overlayLabelsIndex = overlayIndex + 1
-                const overlayLabels = parseBool(cols[overlayLabelsIndex])
-                const havePlayerLabelsIndex = overlayLabelsIndex + 1
+                const overlayLabelsQueryIndex = overlayIndex + 1
+                const havePlayerLabelsIndex = overlayLabelsQueryIndex + 1
                 const playersToLabelColumnIndex = havePlayerLabelsIndex + 1
                 const playerLabelIndicesColumnIndex = playersToLabelColumnIndex + 1
                 const playerLabelsIndex = playerLabelIndicesColumnIndex + 1
@@ -80,16 +79,12 @@ export async function getTables() {
                         cols.slice(numOtherColsIndex + 1, numOtherColsIndex + numOtherCols + 1),
                         cols[ticksPerEventIndex], parserType,
                         remoteAddr + "query/" + cols[0],
-                        cols[keyPlayerColumnsIndex], cols[nonTemporalIndex], cols[overlayIndex], cols[overlayLabelsIndex],
+                        cols[keyPlayerColumnsIndex], cols[nonTemporalIndex], cols[overlayIndex], cols[overlayLabelsQueryIndex],
                         cols[havePlayerLabelsIndex], cols[playersToLabelColumnIndex], cols[playerLabelIndicesColumnIndex],
                         cols[playerLabelsIndex], cols[havePerTickAimTable], cols[perTickAimTable],
                         cols[havePerTickPredictionAimTable], cols[perTickPredictionAimTable], cols[eventIdColumn]
                     )
                 )
-                // the overlay with labels sets the labels for all other overlays
-                if (overlayLabels) {
-                    gameData.overlayLabels = cols[0]
-                }
                 if (!addedDownloadedOptions) {
                     if (overlay) {
                         (<HTMLSelectElement> document.getElementById("overlay-type"))
