@@ -8,6 +8,7 @@
 #include "geometry.h"
 
 typedef uint32_t AreaId;
+typedef uint32_t CellId;
 typedef uint16_t PlaceIndex;
 
 static nav_mesh::vec3_t vec3Conv(Vec3 vec) {

@@ -11,11 +11,14 @@
 #include "bots/load_save_bot_data.h"
 #include <bitset>
 #define MAX_NAV_AREAS 2000
+#define MAX_NAV_CELLS 270000
+#define CELL_DIM_SIZE 16.
 using std::map;
 using std::bitset;
 typedef bitset<MAX_NAV_AREAS> AreaBits;
+typedef bitset<MAX_NAV_CELLS> CellBits;
 
-struct VisPoint {
+struct AreaVisPoint {
     AreaId areaId;
     AABB areaCoordinates;
     Vec3 center;
@@ -23,45 +26,48 @@ struct VisPoint {
     AreaBits dangerFromCurPoint = 0;
 };
 
+struct CellVisPoint {
+    AreaId areaId;
+    CellId cellId;
+    AABB cellCoordinates;
+    Vec3 center;
+    CellBits visibleFromCurPoint = 0;
+    CellBits dangerFromCurPoint = 0;
+};
+
 class VisPoints {
-    vector<VisPoint> visPoints;
+    vector<AreaVisPoint> areaVisPoints;
+    vector<CellVisPoint> cellVisPoints;
     map<AreaId, size_t> areaIdToVectorIndex;
+    AABB areaBounds;
+
+    void createAreaVisPoints(const nav_mesh::nav_file & navFile);
+    void createCellVisPoints();
 
     void setDangerPoints(const nav_mesh::nav_file & navFile);
 
 public:
     explicit
     VisPoints(const nav_mesh::nav_file & navFile) {
-        for (const auto & navArea : navFile.m_areas) {
-            visPoints.push_back(VisPoint{navArea.get_id(), {vec3tConv(navArea.get_min_corner()), vec3tConv(navArea.get_max_corner())},
-                                 vec3tConv(navArea.get_center())});
-            visPoints.back().center.z += EYE_HEIGHT;
-        }
-        std::sort(visPoints.begin(), visPoints.end(),
-                  [](const VisPoint & a, const VisPoint & b) { return a.areaId < b.areaId; });
-        for (size_t i = 0; i < visPoints.size(); i++) {
-            if (navFile.m_areas[i].get_id() != visPoints[i].areaId) {
-                std::cout << "vis points loading order wrong" << std::endl;
-            }
-        }
-
+        createAreaVisPoints(navFile);
+        createCellVisPoints();
         areaIdToVectorIndex = navFile.m_area_ids_to_indices;
     }
 
     [[nodiscard]]
     bool isVisibleIndex(size_t src, size_t target) const {
-        return visPoints[src].visibleFromCurPoint[target];
+        return areaVisPoints[src].visibleFromCurPoint[target];
     }
 
     [[nodiscard]]
     bool isVisibleAreaId(AreaId srcId, AreaId targetId) const {
         size_t src = areaIdToVectorIndex.find(srcId)->second, target = areaIdToVectorIndex.find(targetId)->second;
-        return visPoints[src].visibleFromCurPoint[target];
+        return areaVisPoints[src].visibleFromCurPoint[target];
     }
 
     [[nodiscard]]
     AreaBits getVisibilityRelativeToSrc(AreaId srcId) const {
-        return visPoints[areaIdToVectorIndex.find(srcId)->second].visibleFromCurPoint;
+        return areaVisPoints[areaIdToVectorIndex.find(srcId)->second].visibleFromCurPoint;
     }
 
     [[maybe_unused]]
@@ -79,23 +85,23 @@ public:
 
     [[nodiscard]]
     bool isDangerIndex(size_t src, size_t target) const {
-        return visPoints[src].dangerFromCurPoint[target];
+        return areaVisPoints[src].dangerFromCurPoint[target];
     }
 
     [[nodiscard]] [[maybe_unused]]
     bool isDangerAreaId(AreaId srcId, AreaId targetId) const {
         size_t src = areaIdToVectorIndex.find(srcId)->second, target = areaIdToVectorIndex.find(targetId)->second;
-        return visPoints[src].dangerFromCurPoint[target];
+        return areaVisPoints[src].dangerFromCurPoint[target];
     }
 
     [[nodiscard]]
     AreaBits getDangerRelativeToSrc(AreaId srcId) const {
-        return visPoints[areaIdToVectorIndex.find(srcId)->second].dangerFromCurPoint;
+        return areaVisPoints[areaIdToVectorIndex.find(srcId)->second].dangerFromCurPoint;
     }
 
-    void launchVisPointsCommand(const ServerState & state);
-    void load(string mapsPath, string mapName, const nav_mesh::nav_file & navFile);
-    [[nodiscard]] const vector<VisPoint> & getVisPoints() const { return visPoints; }
+    void launchVisPointsCommand(const ServerState & state, bool areas);
+    void load(const string & mapsPath, const string & mapName, const nav_mesh::nav_file & navFile);
+    [[nodiscard]] const vector<AreaVisPoint> & getVisPoints() const { return areaVisPoints; }
 };
 
 #endif //CSKNOW_LOAD_SAVE_VIS_POINTS_H

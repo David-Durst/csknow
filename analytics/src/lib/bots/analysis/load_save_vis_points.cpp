@@ -5,7 +5,67 @@
 #include "bots/analysis/load_save_vis_points.h"
 #include <filesystem>
 
-void VisPoints::launchVisPointsCommand(const ServerState & state) {
+void VisPoints::createAreaVisPoints(const nav_mesh::nav_file & navFile) {
+    for (const auto & navArea : navFile.m_areas) {
+        areaVisPoints.push_back(AreaVisPoint{navArea.get_id(), {vec3tConv(navArea.get_min_corner()), vec3tConv(navArea.get_max_corner())},
+                                             vec3tConv(navArea.get_center())});
+        areaVisPoints.back().center.z += EYE_HEIGHT;
+    }
+    std::sort(areaVisPoints.begin(), areaVisPoints.end(),
+              [](const AreaVisPoint & a, const AreaVisPoint & b) { return a.areaId < b.areaId; });
+    for (size_t i = 0; i < areaVisPoints.size(); i++) {
+        if (navFile.m_areas[i].get_id() != areaVisPoints[i].areaId) {
+            std::cout << "vis points loading order wrong" << std::endl;
+        }
+    }
+}
+
+void VisPoints::createCellVisPoints() {
+    areaBounds = {{
+        std::numeric_limits<double>::max(),
+        std::numeric_limits<double>::max(),
+        std::numeric_limits<double>::max()
+    }, {
+        -1. * std::numeric_limits<double>::max(),
+        -1. * std::numeric_limits<double>::max(),
+        -1. * std::numeric_limits<double>::max()
+    }};
+    for (const auto & areaVisPoint : areaVisPoints) {
+        areaBounds.min = min(areaBounds.min, areaVisPoint.areaCoordinates.min);
+        areaBounds.max = max(areaBounds.max, areaVisPoint.areaCoordinates.max);
+    }
+
+    // for every nav aera, find the nav cells aligned based on area bounds
+    for (const auto & areaVisPoint : areaVisPoints) {
+        // get smallest and largest cell mins that overlap with area
+        IVec3 minCellMinInArea = vec3ToIVec3((areaVisPoint.areaCoordinates.min - areaBounds.min) / CELL_DIM_SIZE);
+        IVec3 maxCellMinInArea = vec3ToIVec3((areaVisPoint.areaCoordinates.max - areaBounds.min) / CELL_DIM_SIZE);
+
+        // then core all cells in between, if center is in area, then assign it to this area
+        for (int64_t curXId = minCellMinInArea.x; curXId <= maxCellMinInArea.x; curXId++) {
+            for (int64_t curYId = minCellMinInArea.y; curYId <= maxCellMinInArea.y; curYId++) {
+                for (int64_t curZId = minCellMinInArea.z; curZId <= maxCellMinInArea.z; curZId++) {
+                    Vec3 cellMin = areaVisPoint.areaCoordinates.min +
+                        Vec3{CELL_DIM_SIZE * curXId, CELL_DIM_SIZE * curYId, CELL_DIM_SIZE * curZId};
+                    Vec3 cellMax = cellMin + CELL_DIM_SIZE;
+                    Vec3 cellCenter = (cellMin + cellMax) / 2.;
+                    if (pointInRegion(areaVisPoint.areaCoordinates, cellCenter)) {
+                        cellVisPoints.push_back({
+                            areaVisPoint.areaId,
+                            static_cast<CellId>(cellVisPoints.size()),
+                            {cellMin, cellMax},
+                            cellCenter,
+                        });
+                    }
+                }
+            }
+        }
+
+    }
+
+}
+
+void VisPoints::launchVisPointsCommand(const ServerState & state, bool areas) {
     string visPointsFileName = "vis_points.csv";
     string visPointsFilePath = state.dataPath + "/" + visPointsFileName;
     string tmpVisPointsFileName = "vis_points.csv.tmp.write";
@@ -13,8 +73,15 @@ void VisPoints::launchVisPointsCommand(const ServerState & state) {
 
     std::stringstream visPointsStream;
 
-    for (const auto & visPoint : visPoints) {
-        visPointsStream << visPoint.center.toCSV() << std::endl;
+    if (areas) {
+        for (const auto & visPoint : areaVisPoints) {
+            visPointsStream << visPoint.center.toCSV() << std::endl;
+        }
+    }
+    else {
+        for (const auto & visPoint : cellVisPoints) {
+            visPointsStream << visPoint.center.toCSV() << std::endl;
+        }
     }
 
     std::ofstream fsVisPoints(tmpVisPointsFilePath);
@@ -26,7 +93,7 @@ void VisPoints::launchVisPointsCommand(const ServerState & state) {
     state.saveScript({"sm_queryAllVisPointPairs"});
 }
 
-void VisPoints::load(string mapsPath, string mapName, const nav_mesh::nav_file & navFile) {
+void VisPoints::load(const string & mapsPath, const string & mapName, const nav_mesh::nav_file & navFile) {
     string visValidFileName = mapName + ".vis";
     string visValidFilePath = mapsPath + "/" + visValidFileName;
 
@@ -36,21 +103,21 @@ void VisPoints::load(string mapsPath, string mapName, const nav_mesh::nav_file &
         string visValidBuf;
         size_t i = 0;
         while (getline(fsVisValid, visValidBuf)) {
-            if (visValidBuf.size() != visPoints.size()) {
+            if (visValidBuf.size() != areaVisPoints.size()) {
                 throw std::runtime_error("wrong number of cols in vis valid file's line " + std::to_string(i));
             }
 
-            visPoints[i].visibleFromCurPoint.reset();
+            areaVisPoints[i].visibleFromCurPoint.reset();
             for (size_t j = 0; j < visValidBuf.size(); j++) {
                 if (visValidBuf[j] != 't' && visValidBuf[j] != 'f') {
                     throw std::runtime_error("invalid char " + std::to_string(visValidBuf[j]) +
                         " vis valid file's line " + std::to_string(i) + " col " + std::to_string(j));
                 }
-                visPoints[i].visibleFromCurPoint[j] = visValidBuf[j] == 't';
+                areaVisPoints[i].visibleFromCurPoint[j] = visValidBuf[j] == 't';
             }
             i++;
         }
-        if (i != visPoints.size()) {
+        if (i != areaVisPoints.size()) {
             throw std::runtime_error("wrong number of rows in vis valid file");
         }
     }
@@ -59,13 +126,13 @@ void VisPoints::load(string mapsPath, string mapName, const nav_mesh::nav_file &
     }
 
     // after loading, max sure to or all together, want matrix to be full so can export any row
-    for (size_t i = 0; i < visPoints.size(); i++) {
+    for (size_t i = 0; i < areaVisPoints.size(); i++) {
         // set diagonal to true, can see yourself
-        visPoints[i].visibleFromCurPoint[i] = true;
-        for (size_t j = 0; j < visPoints.size(); j++) {
-            visPoints[i].visibleFromCurPoint[j] =
-                    visPoints[i].visibleFromCurPoint[j] | visPoints[j].visibleFromCurPoint[i];
-            visPoints[j].visibleFromCurPoint[i] = visPoints[i].visibleFromCurPoint[j];
+        areaVisPoints[i].visibleFromCurPoint[i] = true;
+        for (size_t j = 0; j < areaVisPoints.size(); j++) {
+            areaVisPoints[i].visibleFromCurPoint[j] =
+                areaVisPoints[i].visibleFromCurPoint[j] | areaVisPoints[j].visibleFromCurPoint[i];
+            areaVisPoints[j].visibleFromCurPoint[i] = areaVisPoints[i].visibleFromCurPoint[j];
         }
     }
 
@@ -74,13 +141,13 @@ void VisPoints::load(string mapsPath, string mapName, const nav_mesh::nav_file &
 }
 
 void VisPoints::setDangerPoints(const nav_mesh::nav_file & navFile) {
-    for (size_t srcArea = 0; srcArea < visPoints.size(); srcArea++) {
-        for (size_t dangerArea = 0; dangerArea < visPoints.size(); dangerArea++) {
+    for (size_t srcArea = 0; srcArea < areaVisPoints.size(); srcArea++) {
+        for (size_t dangerArea = 0; dangerArea < areaVisPoints.size(); dangerArea++) {
             if (isVisibleIndex(srcArea, dangerArea)) {
                 for (size_t i = 0; i < navFile.connections_area_length[dangerArea]; i++) {
                     size_t conAreaIndex = navFile.connections[navFile.connections_area_start[dangerArea] + i];
                     if (!isVisibleIndex(srcArea, conAreaIndex)) {
-                        visPoints[srcArea].dangerFromCurPoint[dangerArea] = true;
+                        areaVisPoints[srcArea].dangerFromCurPoint[dangerArea] = true;
                         break;
                     }
                 }

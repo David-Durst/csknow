@@ -190,6 +190,11 @@ double computeMagnitude(Vec3 v) {
     return computeDistance(v, {0, 0, 0});
 }
 
+static inline __attribute__((always_inline))
+IVec3 vec3ToIVec3(Vec3 a) {
+    return {static_cast<int64_t>(a.x), static_cast<int64_t>(a.y), static_cast<int64_t>(a.z)};
+}
+
 struct Vec2 {
     double x;
     double y;

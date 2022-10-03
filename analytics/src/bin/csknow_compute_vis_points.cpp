@@ -2,12 +2,6 @@
 #include "bots/behavior_tree/tree.h"
 #include "bots/analysis/load_save_vis_points.h"
 #include <iostream>
-#include <thread>
-#include <chrono>
-#include <list>
-#include <map>
-#include <filesystem>
-//#define LOG_STATE
 
 int main(int argc, char * argv[]) {
     if (argc != 3) {
@@ -33,7 +27,7 @@ int main(int argc, char * argv[]) {
     }
 
     VisPoints visPoints(tree.blackboard->navFile);
-    visPoints.launchVisPointsCommand(state);
+    visPoints.launchVisPointsCommand(state, false);
 
     return 0;
 }
