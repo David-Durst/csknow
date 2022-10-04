@@ -31,38 +31,48 @@ void setupBasics(DistanceToPlacesResult & result, const nav_mesh::nav_file & nav
 [[maybe_unused]]
 DistanceToPlacesResult queryDistanceToPlaces(const nav_mesh::nav_file & navFile,
                                              const ReachableResult & reachableResult,
-                                             const string & overlayLabelsQuery) {
+                                             const string & overlayLabelsQuery,
+                                             const string & mapsPath, const string & mapName) {
     DistanceToPlacesResult result(overlayLabelsQuery);
-    setupBasics(result, navFile, reachableResult);
+    string distToPlacesFileName = mapName + result.extension;
+    string distToPlacesFilePath = mapsPath + "/" + distToPlacesFileName;
 
-    for (int64_t i = 0; i < result.numAreas; i++) {
-        for (int64_t j = 0; j < result.numPlaces; j++) {
-            struct AreaDistance {
-                int64_t areaIndex;
-                double distance;
-            };
-            const vector<AreaId> & areaIds = result.placeToArea[result.places[j]];
-            vector<AreaDistance> areaDistances;
-            for (size_t k = 0; k < areaIds.size(); k++) {
-                int64_t newAreaIndex = static_cast<int64_t>(navFile.m_area_ids_to_indices.find(areaIds[k])->second);
-                double newDistance = reachableResult.getDistance(i, newAreaIndex);
-                if (newDistance != NOT_CLOSEST_DISTANCE) {
-                    areaDistances.push_back({newAreaIndex, newDistance});
+    if (std::filesystem::exists(distToPlacesFilePath)) {
+        result.load(mapsPath, mapName, navFile, reachableResult);
+    }
+    else {
+        setupBasics(result, navFile, reachableResult);
+
+        for (int64_t i = 0; i < result.numAreas; i++) {
+            for (int64_t j = 0; j < result.numPlaces; j++) {
+                struct AreaDistance {
+                    int64_t areaIndex;
+                    double distance;
+                };
+                const vector<AreaId> & areaIds = result.placeToArea[result.places[j]];
+                vector<AreaDistance> areaDistances;
+                for (size_t k = 0; k < areaIds.size(); k++) {
+                    int64_t newAreaIndex = static_cast<int64_t>(navFile.m_area_ids_to_indices.find(areaIds[k])->second);
+                    double newDistance = reachableResult.getDistance(i, newAreaIndex);
+                    if (newDistance != NOT_CLOSEST_DISTANCE) {
+                        areaDistances.push_back({newAreaIndex, newDistance});
+                    }
+                }
+                if (!areaDistances.empty()) {
+                    std::sort(areaDistances.begin(), areaDistances.end(),
+                              [](const AreaDistance & a, const AreaDistance & b) { return a.distance < b.distance; });
+                    result.closestDistanceMatrix[i * result.numPlaces + j] = areaDistances[0].distance;
+                    result.closestAreaIndexMatrix[i * result.numPlaces + j] = areaDistances[0].areaIndex;
+                    int median = std::max(0, static_cast<int>(static_cast<double>(areaDistances.size())/2.) - 1);
+                    result.medianDistanceMatrix[i * result.numPlaces + j] = areaDistances[median].distance;
+                    result.medianAreaIndexMatrix[i * result.numPlaces + j] = areaDistances[median].areaIndex;
                 }
             }
-            if (!areaDistances.empty()) {
-                std::sort(areaDistances.begin(), areaDistances.end(),
-                          [](const AreaDistance & a, const AreaDistance & b) { return a.distance < b.distance; });
-                result.closestDistanceMatrix[i * result.numPlaces + j] = areaDistances[0].distance;
-                result.closestAreaIndexMatrix[i * result.numPlaces + j] = areaDistances[0].areaIndex;
-                int median = std::max(0, static_cast<int>(static_cast<double>(areaDistances.size())/2.) - 1);
-                result.medianDistanceMatrix[i * result.numPlaces + j] = areaDistances[median].distance;
-                result.medianAreaIndexMatrix[i * result.numPlaces + j] = areaDistances[median].areaIndex;
-            }
         }
-    }
 
-    result.size = reachableResult.size;
+        result.size = reachableResult.size;
+        result.save(mapsPath, mapName);
+    }
     return result;
 }
 

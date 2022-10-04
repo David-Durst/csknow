@@ -139,6 +139,7 @@ public:
 [[maybe_unused]]
 DistanceToPlacesResult queryDistanceToPlaces(const nav_mesh::nav_file & navFile,
                                              const ReachableResult & reachableResult,
-                                             const string & overlayLabelsQuery);
+                                             const string & overlayLabelsQuery,
+                                             const string & mapsPath, const string & mapName);
 
 #endif //CSKNOW_DISTANCE_TO_PLACES_H

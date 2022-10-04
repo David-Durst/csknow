@@ -69,6 +69,7 @@ public:
     void load(const string & mapsPath, const string & mapName);
 };
 
-[[maybe_unused]] ReachableResult queryReachable(const MapMeshResult & mapMeshResult, const string & overlayLabelsQuery);
+[[maybe_unused]] ReachableResult queryReachable(const MapMeshResult & mapMeshResult, const string & overlayLabelsQuery,
+                                                const string & mapsPath, const string & mapName);
 
 #endif //CSKNOW_REACHABLE_H
