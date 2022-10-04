@@ -4,7 +4,7 @@ import {
     applyJustEventFilter,
     filterRegion, stopFilteringEvents
 } from "../controller/filter";
-import {parseBool, PlayerAtTickRow, PlayerRow, TickRow} from "../data/tables";
+import {parseBool, PlayerAtTickRow, PlayerRow, Row, TickRow} from "../data/tables";
 import {getPackedSettings} from "http2";
 import {
     activeEvent,
@@ -251,6 +251,7 @@ function trackMouse(e: MouseEvent) {
     drawTick(null)
 }
 
+let layerToDraw: number = 9
 let altPressed: boolean = false
 let controlPressed: boolean = false
 let shiftPressed: boolean = false
@@ -260,6 +261,9 @@ function trackKeyDown(e: KeyboardEvent) {
     altPressed = e.altKey
     controlPressed = e.ctrlKey
     shiftPressed = e.shiftKey
+    if (!Number.isNaN(parseInt(e.key))) {
+        layerToDraw = parseInt(e.key)
+    }
     if (controlPressed) {
         drawTick(null)
     }
@@ -285,6 +289,27 @@ function assignPriority(pat: PlayerAtTickRow, renderString: string): number {
     }
     else {
         return 2
+    }
+}
+
+class TargetAreaData {
+    index: number;
+    avgX: number;
+    avgY: number;
+    avgZ: number;
+    row: Row;
+    minCoordinate: MapCoordinate;
+    maxCoordinate: MapCoordinate;
+
+    constructor(index: number, avgX: number, avgY: number, avgZ: number, row: Row,
+                minCoordinate: MapCoordinate, maxCoordinate: MapCoordinate) {
+        this.index = index
+        this.avgX = avgX
+        this.avgY = avgY
+        this.avgZ = avgZ
+        this.row = row
+        this.minCoordinate = minCoordinate
+        this.maxCoordinate = maxCoordinate
     }
 }
 
@@ -394,6 +419,7 @@ export function drawTick(e: InputEvent) {
         const overlayRows = filteredData.overlays.get(curOverlay)
         const overlayLabelsRows = filteredData.overlays.get(filteredData.parsers.get(curOverlay).overlayLabelsQuery)
         let connectionAreaIds: number[] = [];
+        let possibleTargetAreas: TargetAreaData[] = []
         let targetAreaId = -1
         let targetPlaceName = ""
         let targetX = -1
@@ -412,21 +438,12 @@ export function drawTick(e: InputEvent) {
             const avgX = (minCoordinate.getCanvasX() + maxCoordinate.getCanvasX()) / 2
             const avgY = (minCoordinate.getCanvasY() + maxCoordinate.getCanvasY()) / 2
             const avgZ = (parseFloat(overlayRow.otherColumnValues[4]) + parseFloat(overlayRow.otherColumnValues[7])) / 2;
-            const zScaling = (avgZ - minZ) / (maxZ - minZ)
             if (lastMousePosition.x >= minCoordinate.x &&
                 lastMousePosition.x <= maxCoordinate.x &&
                 lastMousePosition.y >= minCoordinate.y &&
                 lastMousePosition.y <= maxCoordinate.y) {
-                targetAreaId = parseInt(overlayLabelsRows[o].otherColumnValues[1])
-                targetPlaceName = overlayLabelsRows[o].otherColumnValues[0]
-                targetX = avgX
-                targetY = avgY
-                targetFontSize = (((zScaling * 20 + 30)/2)*fontScale)
-                connectionAreaIds = overlayRow.otherColumnValues[8].split(';').map(s => parseInt(s))
-                cacheTargetCtx.fillStyle = "rgba(0,42,255,0.9)";
-                cacheTargetCtx.fillRect(minCoordinate.getCanvasX(), minCoordinate.getCanvasY(),
-                    maxCoordinate.getCanvasX() - minCoordinate.getCanvasX(),
-                    maxCoordinate.getCanvasY() - minCoordinate.getCanvasY())
+                possibleTargetAreas.push(new TargetAreaData(o, avgX, avgY, avgZ, overlayRow,
+                    minCoordinate, maxCoordinate))
             }
             if (drawOutlines) {
                 cacheGridCtx.lineWidth = 0.25
@@ -435,8 +452,25 @@ export function drawTick(e: InputEvent) {
                     maxCoordinate.getCanvasX() - minCoordinate.getCanvasX(),
                     maxCoordinate.getCanvasY() - minCoordinate.getCanvasY())
             }
-
         }
+
+        if (possibleTargetAreas.length > 0)
+        {
+            possibleTargetAreas.sort((a, b) => {return a.avgZ - b.avgZ});
+            const possibleTargetArea = possibleTargetAreas[Math.min(possibleTargetAreas.length - 1, layerToDraw)]
+            targetAreaId = parseInt(possibleTargetArea.row.otherColumnValues[1])
+            targetPlaceName = possibleTargetArea.row.otherColumnValues[0]
+            targetX = possibleTargetArea.avgX
+            targetY = possibleTargetArea.avgY
+            const zScaling = (possibleTargetArea.avgZ - minZ) / (maxZ - minZ)
+            targetFontSize = (((zScaling * 20 + 30)/2)*fontScale)
+            connectionAreaIds = possibleTargetArea.row.otherColumnValues[8].split(';').map(s => parseInt(s))
+            cacheTargetCtx.fillStyle = "rgba(0,42,255,0.9)";
+            cacheTargetCtx.fillRect(possibleTargetArea.minCoordinate.getCanvasX(), possibleTargetArea.minCoordinate.getCanvasY(),
+                possibleTargetArea.maxCoordinate.getCanvasX() - possibleTargetArea.minCoordinate.getCanvasX(),
+                possibleTargetArea.maxCoordinate.getCanvasY() - possibleTargetArea.minCoordinate.getCanvasY())
+        }
+
         mainCtx.drawImage(cacheGridCanvas, 0, 0);
         // draw colored fill ins for connections for connections
         for (let o = 0; drawTarget && targetAreaId != -1 && o < overlayRows.length; o++) {
@@ -452,8 +486,6 @@ export function drawTick(e: InputEvent) {
                 parseFloat(overlayRow.otherColumnValues[5]),
                 parseFloat(overlayRow.otherColumnValues[6]),
                 false);
-            const avgX = (minCoordinate.getCanvasX() + maxCoordinate.getCanvasX()) / 2
-            const avgY = (minCoordinate.getCanvasY() + maxCoordinate.getCanvasY()) / 2
             const avgZ = (parseFloat(overlayRow.otherColumnValues[4]) + parseFloat(overlayRow.otherColumnValues[7])) / 2;
             const zScaling = (avgZ - minZ) / (maxZ - minZ)
             cacheTargetCtx.font = (((zScaling * 20 + 30)/2)*fontScale).toString() + "px Tahoma"
@@ -477,6 +509,7 @@ export function drawTick(e: InputEvent) {
         let distances: number[] = [];
         let minDistance;
         let maxDistance;
+        let possibleTargetAreas: TargetAreaData[] = []
         let targetAreaId = -1
         let targetPlaceName = ""
         let targetX = -1
@@ -495,23 +528,12 @@ export function drawTick(e: InputEvent) {
             const avgX = (minCoordinate.getCanvasX() + maxCoordinate.getCanvasX()) / 2
             const avgY = (minCoordinate.getCanvasY() + maxCoordinate.getCanvasY()) / 2
             const avgZ = (parseFloat(overlayRow.otherColumnValues[2]) + parseFloat(overlayRow.otherColumnValues[5])) / 2;
-            const zScaling = (avgZ - minZ) / (maxZ - minZ)
             if (lastMousePosition.x >= minCoordinate.x &&
                 lastMousePosition.x <= maxCoordinate.x &&
                 lastMousePosition.y >= minCoordinate.y &&
                 lastMousePosition.y <= maxCoordinate.y) {
-                targetAreaId = parseInt(overlayLabelsRows[o].otherColumnValues[1])
-                targetPlaceName = overlayLabelsRows[o].otherColumnValues[0]
-                targetX = avgX
-                targetY = avgY
-                targetFontSize = (((zScaling * 20 + 30)/2)*fontScale)
-                distances = overlayRow.otherColumnValues.slice(6).map(s => parseFloat(s))
-                minDistance = Math.min(...distances);
-                maxDistance = Math.max(...distances);
-                cacheTargetCtx.fillStyle = "rgba(0, 0, 0, 0.9)";
-                cacheTargetCtx.fillRect(minCoordinate.getCanvasX(), minCoordinate.getCanvasY(),
-                    maxCoordinate.getCanvasX() - minCoordinate.getCanvasX(),
-                    maxCoordinate.getCanvasY() - minCoordinate.getCanvasY())
+                possibleTargetAreas.push(new TargetAreaData(o, avgX, avgY, avgZ, overlayRow,
+                    minCoordinate, maxCoordinate))
             }
             if (drawOutlines) {
                 cacheGridCtx.lineWidth = 0.5
@@ -521,6 +543,26 @@ export function drawTick(e: InputEvent) {
                     maxCoordinate.getCanvasY() - minCoordinate.getCanvasY())
             }
         }
+
+        if (possibleTargetAreas.length > 0)
+        {
+            possibleTargetAreas.sort((a, b) => {return a.avgZ - b.avgZ});
+            const possibleTargetArea = possibleTargetAreas[Math.min(possibleTargetAreas.length - 1, layerToDraw)]
+            targetAreaId = parseInt(overlayLabelsRows[possibleTargetArea.index].otherColumnValues[1])
+            targetPlaceName = overlayLabelsRows[possibleTargetArea.index].otherColumnValues[0]
+            targetX = possibleTargetArea.avgX
+            targetY = possibleTargetArea.avgY
+            const zScaling = (possibleTargetArea.avgZ - minZ) / (maxZ - minZ)
+            targetFontSize = (((zScaling * 20 + 30)/2)*fontScale)
+            distances = possibleTargetArea.row.otherColumnValues.slice(6).map(s => parseFloat(s))
+            minDistance = Math.min(...distances);
+            maxDistance = Math.max(...distances);
+            cacheTargetCtx.fillStyle = "rgba(0, 0, 0, 0.9)";
+            cacheTargetCtx.fillRect(possibleTargetArea.minCoordinate.getCanvasX(), possibleTargetArea.minCoordinate.getCanvasY(),
+                possibleTargetArea.maxCoordinate.getCanvasX() - possibleTargetArea.minCoordinate.getCanvasX(),
+                possibleTargetArea.maxCoordinate.getCanvasY() - possibleTargetArea.minCoordinate.getCanvasY())
+        }
+
         mainCtx.drawImage(cacheGridCanvas, 0, 0);
         // draw fill ins for all areas
         for (let o = 0; drawTarget && targetAreaId != -1 && o < overlayRows.length; o++) {
@@ -545,7 +587,7 @@ export function drawTick(e: InputEvent) {
         if (drawTarget && targetAreaId != -1) {
             cacheTargetCtx.fillStyle = 'green'
             cacheTargetCtx.font = targetFontSize.toString() + "px Tahoma"
-            cacheTargetCtx.fillText(targetAreaId.toString() + "," + targetPlaceName, targetX, targetY)
+            cacheTargetCtx.fillText(targetAreaId.toString() + "," + targetPlaceName, targetX, targetY - 5.)
         }
         mainCtx.drawImage(cacheTargetCanvas, 0, 0);
     }
