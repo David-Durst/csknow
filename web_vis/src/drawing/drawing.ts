@@ -39,7 +39,6 @@ let cacheGridCtx: CanvasRenderingContext2D = null;
 let cacheTargetCanvas: HTMLCanvasElement = null;
 let cacheTargetCtx: CanvasRenderingContext2D = null;
 let lastCacheOverlay: string = null;
-let lastTargetAreaId: number = -1;
 export let kymographCanvas: HTMLCanvasElement = null;
 export let kymographCtx: CanvasRenderingContext2D = null;
 export let scatterCanvas: HTMLCanvasElement = null;
@@ -368,6 +367,7 @@ export function drawTick(e: InputEvent) {
             drawOutlines = true
             cacheGridCtx.clearRect(0, 0, cacheGridCanvas.width, cacheGridCanvas.height)
         }
+        // draw target only after mouse stops moving and in new box, no need to dynamically update it every time
         let drawTarget = lastMousePosition != secondToLastMousePosition
         if (drawOutlines || drawTarget) {
             cacheTargetCtx.clearRect(0, 0, cacheTargetCanvas.width, cacheTargetCanvas.height)
