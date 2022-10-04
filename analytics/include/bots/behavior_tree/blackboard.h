@@ -80,7 +80,7 @@ struct PrintState {
 };
 
 struct Blackboard {
-    string navPath;
+    string navPath, mapsPath;
     nav_mesh::nav_file navFile;
     set<AreaId> removedAreas;
     map<AreaId, AreaId> removedAreaAlternatives;
@@ -92,6 +92,7 @@ struct Blackboard {
     NavFileOverlay navFileOverlay;
 
     // general map data
+    MapMeshResult mapMeshResult;
     ReachableResult reachability;
     DistanceToPlacesResult distanceToPlaces;
     VisPoints visPoints;
@@ -225,17 +226,17 @@ struct Blackboard {
     vector<PrintState> printPerPlayerState(const ServerState & state, CSGOId playerId);
 
     Blackboard(const string & navPath, const string & mapName) :
-        navPath(navPath), navFile(navPath.c_str()),
-        gen(rd()), navFileOverlay(navFile), reachability(""), distanceToPlaces(""),
+        navPath(navPath), mapsPath(std::filesystem::path(navPath).remove_filename().string()),
+        navFile(navPath.c_str()),
+        gen(rd()), navFileOverlay(navFile), mapMeshResult(queryMapMesh(navFile, "")),
+        reachability(queryReachable(mapMeshResult, "", mapsPath, mapName)),
+        distanceToPlaces(queryDistanceToPlaces(navFile, reachability, "", mapsPath, mapName)),
         visPoints(navFile), aggressionDis(0., 1.),
         tDangerAreaLastCheckTime(navFile.m_areas.size(), defaultTime),
         ctDangerAreaLastCheckTime(navFile.m_areas.size(), defaultTime),
         possibleNavAreas(navFile), standDis(0, 100.0), aimDis(0., 2.0) {
 
-        string mapsPath = std::filesystem::path(navPath).remove_filename().string();
         navFileOverlay.setMapsPath(mapsPath);
-        reachability.load(mapsPath, mapName);
-        distanceToPlaces.load(mapsPath, mapName, navFile, reachability);
         visPoints.load(mapsPath, mapName, navFile);
 
         tMemory.considerAllTeammates = true;
