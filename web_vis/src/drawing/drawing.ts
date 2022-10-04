@@ -273,6 +273,7 @@ export function drawTick(e: InputEvent) {
         canvasWidth,canvasHeight);
     mainCtx.textBaseline = "middle"
     mainCtx.textAlign = "center"
+    cacheTargetCtx.textAlign = "center"
     const curTickIndex = getCurTickIndex()
     setTickLabel(filteredData.ticksTable[curTickIndex].demoTickNumber,
         filteredData.ticksTable[curTickIndex].gameTickNumber)
@@ -368,7 +369,12 @@ export function drawTick(e: InputEvent) {
             cacheGridCtx.clearRect(0, 0, cacheGridCanvas.width, cacheGridCanvas.height)
         }
         // draw target only after mouse stops moving and in new box, no need to dynamically update it every time
-        let drawTarget = lastMousePosition != secondToLastMousePosition
+        // remove all movements outside canvas
+        let drawTarget = lastMousePosition != secondToLastMousePosition &&
+            lastMousePosition.getCanvasX() > 0. &&
+            lastMousePosition.getCanvasX() < mainCanvas.width &&
+            lastMousePosition.getCanvasY() > 0. &&
+            lastMousePosition.getCanvasY() < mainCanvas.height;
         if (drawOutlines || drawTarget) {
             cacheTargetCtx.clearRect(0, 0, cacheTargetCanvas.width, cacheTargetCanvas.height)
         }
@@ -435,7 +441,7 @@ export function drawTick(e: InputEvent) {
                 maxCoordinate.getCanvasX() - minCoordinate.getCanvasX(),
                 maxCoordinate.getCanvasY() - minCoordinate.getCanvasY())
         }
-        if (targetAreaId != -1) {
+        if (drawTarget && targetAreaId != -1) {
             cacheTargetCtx.fillStyle = 'green'
             cacheTargetCtx.font = targetFontSize.toString() + "px Tahoma"
             cacheTargetCtx.fillText(targetAreaId.toString() + "," + targetPlaceName, targetX, targetY)
