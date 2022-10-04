@@ -34,6 +34,10 @@ export const minimapScale = 4.4 * 1024 / minimapHeight
 let fontScale = 1.0
 export let mainCanvas: HTMLCanvasElement = null;
 export let mainCtx: CanvasRenderingContext2D = null;
+let cacheCanvas: HTMLCanvasElement = null;
+let cacheCtx: CanvasRenderingContext2D = null;
+let lastCacheOverlay: string = null;
+let lastTargetAreaId: number = -1;
 export let kymographCanvas: HTMLCanvasElement = null;
 export let kymographCtx: CanvasRenderingContext2D = null;
 export let scatterCanvas: HTMLCanvasElement = null;
@@ -91,6 +95,8 @@ function resizeCanvas(newSize: number) {
     canvasHeight = newSize
     mainCanvas.width = newSize
     mainCanvas.height = newSize
+    cacheCanvas.width = newSize
+    cacheCanvas.height = newSize
     fontScale = newSize / defaultCanvasSize
 }
 
@@ -348,7 +354,14 @@ export function drawTick(e: InputEvent) {
         let targetX = -1
         let targetY = -1
         let targetFontSize = -1
+        // if not already cached
         // draw all area outlines and compute target area
+        let drawOutlines = false
+        if (lastCacheOverlay == null || lastCacheOverlay != curOverlay) {
+            lastCacheOverlay = curOverlay
+            drawOutlines = true
+            cacheCtx.clearRect(0, 0, cacheCanvas.width, cacheCanvas.height)
+        }
         for (let o = 0; o < overlayRows.length; o++) {
             const overlayRow = overlayRows[o]
             const minCoordinate = new MapCoordinate(
@@ -378,13 +391,16 @@ export function drawTick(e: InputEvent) {
                     maxCoordinate.getCanvasX() - minCoordinate.getCanvasX(),
                     maxCoordinate.getCanvasY() - minCoordinate.getCanvasY())
             }
-            mainCtx.lineWidth = 0.5
-            mainCtx.strokeStyle = "black";
-            mainCtx.strokeRect(minCoordinate.getCanvasX(), minCoordinate.getCanvasY(),
-                maxCoordinate.getCanvasX() - minCoordinate.getCanvasX(),
-                maxCoordinate.getCanvasY() - minCoordinate.getCanvasY())
+            if (drawOutlines) {
+                cacheCtx.lineWidth = 0.5
+                cacheCtx.strokeStyle = "black";
+                cacheCtx.strokeRect(minCoordinate.getCanvasX(), minCoordinate.getCanvasY(),
+                    maxCoordinate.getCanvasX() - minCoordinate.getCanvasX(),
+                    maxCoordinate.getCanvasY() - minCoordinate.getCanvasY())
+            }
 
         }
+        mainCtx.drawImage(cacheCanvas, 0, 0);
         // draw colored fill ins for connections for connections
         for (let o = 0; o < overlayRows.length; o++) {
             const overlayRow = overlayRows[o]
@@ -428,7 +444,14 @@ export function drawTick(e: InputEvent) {
         let targetX = -1
         let targetY = -1
         let targetFontSize = -1
-        // draw outlines and compute area id
+        // if not already cached
+        // draw all area outlines and compute target area
+        let drawOutlines = false
+        if (lastCacheOverlay == null || lastCacheOverlay != curOverlay) {
+            lastCacheOverlay = curOverlay
+            drawOutlines = true
+            cacheCtx.clearRect(0, 0, cacheCanvas.width, cacheCanvas.height)
+        }
         for (let o = 0; o < overlayRows.length; o++) {
             const overlayRow = overlayRows[o]
             const minCoordinate = new MapCoordinate(
@@ -460,13 +483,15 @@ export function drawTick(e: InputEvent) {
                     maxCoordinate.getCanvasX() - minCoordinate.getCanvasX(),
                     maxCoordinate.getCanvasY() - minCoordinate.getCanvasY())
             }
-            mainCtx.lineWidth = 0.5
-            mainCtx.strokeStyle = "black";
-            mainCtx.strokeRect(minCoordinate.getCanvasX(), minCoordinate.getCanvasY(),
-                maxCoordinate.getCanvasX() - minCoordinate.getCanvasX(),
-                maxCoordinate.getCanvasY() - minCoordinate.getCanvasY())
-
+            if (drawOutlines) {
+                cacheCtx.lineWidth = 0.5
+                cacheCtx.strokeStyle = "black";
+                cacheCtx.strokeRect(minCoordinate.getCanvasX(), minCoordinate.getCanvasY(),
+                    maxCoordinate.getCanvasX() - minCoordinate.getCanvasX(),
+                    maxCoordinate.getCanvasY() - minCoordinate.getCanvasY())
+            }
         }
+        mainCtx.drawImage(cacheCanvas, 0, 0);
         // draw fill ins for all areas
         for (let o = 0; targetAreaId != -1 && o < overlayRows.length; o++) {
             const overlayRow = overlayRows[o]
@@ -497,7 +522,14 @@ export function drawTick(e: InputEvent) {
         mainCtx.fillStyle = green
         const overlayRows = filteredData.overlays.get(curOverlay)
         let curTrajectoryId = -1
-        // draw lines and get player name
+        // if not already cached
+        // draw all lines
+        let drawLines = false
+        if (lastCacheOverlay == null || lastCacheOverlay != curOverlay) {
+            lastCacheOverlay = curOverlay
+            drawLines = true
+            cacheCtx.clearRect(0, 0, cacheCanvas.width, cacheCanvas.height)
+        }
         for (let o = 0; o < overlayRows.length; o++) {
             const overlayRow = overlayRows[o]
             const fstCoordinate = new MapCoordinate(
@@ -512,18 +544,23 @@ export function drawTick(e: InputEvent) {
             const avgY = (fstCoordinate.getCanvasY() + sndCoordinate.getCanvasY()) / 2
             const avgZ = (parseFloat(overlayRow.otherColumnValues[3]) + parseFloat(overlayRow.otherColumnValues[6])) / 2;
             const zScaling = (avgZ - minZ) / (maxZ - minZ)
-            mainCtx.lineWidth = 0.5
-            mainCtx.strokeStyle = 'rgba(24,255,0,0.2)'
-            if (overlayRow.foreignKeyValues[0] != curTrajectoryId) {
-                curTrajectoryId = overlayRow.foreignKeyValues[0]
-                mainCtx.stroke()
-                mainCtx.beginPath()
-                mainCtx.moveTo(fstCoordinate.getCanvasX(), fstCoordinate.getCanvasY())
+            if (drawLines) {
+                cacheCtx.lineWidth = 0.5
+                cacheCtx.strokeStyle = 'rgba(24,255,0,0.2)'
+                if (overlayRow.foreignKeyValues[0] != curTrajectoryId) {
+                    curTrajectoryId = overlayRow.foreignKeyValues[0]
+                    cacheCtx.stroke()
+                    cacheCtx.beginPath()
+                    cacheCtx.moveTo(fstCoordinate.getCanvasX(), fstCoordinate.getCanvasY())
+                }
+                cacheCtx.lineTo(sndCoordinate.getCanvasX(), sndCoordinate.getCanvasY())
             }
-            mainCtx.lineTo(sndCoordinate.getCanvasX(), sndCoordinate.getCanvasY())
         }
         // close last line
-        mainCtx.stroke()
+        if (drawLines) {
+            cacheCtx.stroke()
+        }
+        mainCtx.drawImage(cacheCanvas, 0, 0);
     }
     setEventText(tickData, filteredData)
     // setup client config for this tick
@@ -562,6 +599,10 @@ export function setupMatchDrawing() {
 export function setupCanvas() {
     mainCanvas = <HTMLCanvasElement> document.querySelector("#mainCanvas")
     mainCtx = mainCanvas.getContext('2d')
+    cacheCanvas = <HTMLCanvasElement> document.createElement("canvas")
+    cacheCtx = cacheCanvas.getContext('2d')
+    cacheCanvas.width = mainCanvas.width
+    cacheCanvas.height = mainCanvas.width
     kymographCanvas = <HTMLCanvasElement> document.querySelector("#kymographCanvas")
     kymographCtx = kymographCanvas.getContext('2d')
     scatterCanvas = <HTMLCanvasElement> document.querySelector("#scatterCanvas")
