@@ -19,6 +19,6 @@ mkdir -p ${script_dir}/../build
 cd ${script_dir}/../build
 cmake .. -DCMAKE_BUILD_TYPE=Release
 if make -j4; then
-    chmod a+x compute_vis_points
-    ${script_dir}/../build/compute_vis_points /home/steam/csgo-ds/csgo/maps /home/steam/csgo-ds/csgo/addons/sourcemod/bot-link-data
+    chmod a+x csknow_compute_vis_points
+    ${script_dir}/../build/csknow_compute_vis_points /home/steam/csgo-ds/csgo/maps /home/steam/csgo-ds/csgo/addons/sourcemod/bot-link-data
 fi
