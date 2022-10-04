@@ -122,6 +122,13 @@ bool pointInRegion(AABB box, Vec3 point) {
            point.z > box.min.z && point.z < box.max.z;
 }
 
+static inline __attribute__((always_inline))
+bool pointInRegionMaxInclusive(AABB box, Vec3 point) {
+    return point.x > box.min.x && point.x <= box.max.x &&
+           point.y > box.min.y && point.y <= box.max.y &&
+           point.z > box.min.z && point.z <= box.max.z;
+}
+
 // https://github.com/ValveSoftware/source-sdk-2013/blob/master/sp/src/mathlib/mathlib_base.cpp#L901-L914
 // https://developer.valvesoftware.com/wiki/QAngle - QAngle is just a regular Euler angle
 static inline __attribute__((always_inline))

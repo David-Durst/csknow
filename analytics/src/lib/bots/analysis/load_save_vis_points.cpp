@@ -34,25 +34,39 @@ void VisPoints::createCellVisPoints() {
         areaBounds.min = min(areaBounds.min, areaVisPoint.areaCoordinates.min);
         areaBounds.max = max(areaBounds.max, areaVisPoint.areaCoordinates.max);
     }
+    // increment max z by player height so get cells up to player height
+    areaBounds.max.z += PLAYER_HEIGHT;
 
-    // for every nav aera, find the nav cells aligned based on area bounds
+    // for every nav area, find the nav cells aligned based on area bounds
     for (const auto & areaVisPoint : areaVisPoints) {
         // extend areaVisPoint height by player height so get vis points up to player height
         AABB extendedAABB = areaVisPoint.areaCoordinates;
         extendedAABB.max.z += PLAYER_HEIGHT;
         // get smallest and largest cell mins that overlap with area
-        IVec3 minCellMinInArea = vec3ToIVec3((areaVisPoint.areaCoordinates.min - areaBounds.min) / CELL_DIM_SIZE);
-        IVec3 maxCellMinInArea = vec3ToIVec3((areaVisPoint.areaCoordinates.max - areaBounds.min) / CELL_DIM_SIZE);
+        IVec3 minCellMinInArea = vec3ToIVec3((extendedAABB.min - areaBounds.min));
+        minCellMinInArea.x /= CELL_DIM_WIDTH_DEPTH;
+        minCellMinInArea.y /= CELL_DIM_WIDTH_DEPTH;
+        minCellMinInArea.z /= CELL_DIM_HEIGHT;
+        IVec3 maxCellMinInArea = vec3ToIVec3((extendedAABB.max - areaBounds.min));
+        maxCellMinInArea.x /= CELL_DIM_WIDTH_DEPTH;
+        maxCellMinInArea.y /= CELL_DIM_WIDTH_DEPTH;
+        maxCellMinInArea.z /= CELL_DIM_HEIGHT;
 
         // then core all cells in between, if center is in area, then assign it to this area
         for (int64_t curXId = minCellMinInArea.x; curXId <= maxCellMinInArea.x; curXId++) {
             for (int64_t curYId = minCellMinInArea.y; curYId <= maxCellMinInArea.y; curYId++) {
                 for (int64_t curZId = minCellMinInArea.z; curZId <= maxCellMinInArea.z; curZId++) {
                     Vec3 cellMin = areaBounds.min +
-                        Vec3{CELL_DIM_SIZE * curXId, CELL_DIM_SIZE * curYId, CELL_DIM_SIZE * curZId};
-                    Vec3 cellMax = cellMin + CELL_DIM_SIZE;
+                        Vec3{CELL_DIM_WIDTH_DEPTH * curXId, CELL_DIM_WIDTH_DEPTH * curYId, CELL_DIM_HEIGHT * curZId};
+                    Vec3 cellMax = cellMin + Vec3{CELL_DIM_WIDTH_DEPTH, CELL_DIM_WIDTH_DEPTH, CELL_DIM_HEIGHT};
                     Vec3 cellCenter = (cellMin + cellMax) / 2.;
-                    if (pointInRegion(extendedAABB, cellCenter)) {
+                    /*
+                    if (pointInRegionMaxInclusive(AABB{cellMin, cellMax}, {378.619, 226., cellCenter.z})) {
+                        int x = 1;
+                        (void) x;
+                    }
+                     */
+                    if (pointInRegionMaxInclusive(extendedAABB, cellCenter)) {
                         cellVisPoints.push_back({
                             areaVisPoint.areaId,
                             static_cast<CellId>(cellVisPoints.size()),

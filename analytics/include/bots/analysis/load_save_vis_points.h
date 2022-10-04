@@ -11,8 +11,9 @@
 #include "bots/load_save_bot_data.h"
 #include <bitset>
 #define MAX_NAV_AREAS 2000
-#define MAX_NAV_CELLS 30000
-#define CELL_DIM_SIZE 16.
+#define MAX_NAV_CELLS 71000
+#define CELL_DIM_WIDTH_DEPTH 16.
+#define CELL_DIM_HEIGHT 36.
 using std::map;
 using std::bitset;
 typedef bitset<MAX_NAV_AREAS> AreaBits;

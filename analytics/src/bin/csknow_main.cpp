@@ -265,9 +265,9 @@ int main(int argc, char * argv[]) {
     DistanceToPlacesResult d2DistanceToPlacesResult(dust2MeshName);
     d2DistanceToPlacesResult.load(navPath, "de_dust2", map_navs["de_dust2"], d2ReachableResult);
     string dust2VisibleName = "de_dust2_visible";
-    NavVisibleResult d2NavVisibleResult = queryNavVisible(map_visPoints.find("de_dust2")->second, dust2VisibleName);
+    NavVisibleResult d2NavVisibleResult = queryNavVisible(map_visPoints.find("de_dust2")->second, dust2MeshName);
     string dust2DangerName = "de_dust2_danger";
-    NavDangerResult d2NavDangerResult = queryNavDanger(map_visPoints.find("de_dust2")->second, dust2DangerName);
+    NavDangerResult d2NavDangerResult = queryNavDanger(map_visPoints.find("de_dust2")->second, dust2MeshName);
     std::cout << "processing aggression_event" << std::endl;
     string aggressionEventName = "aggression_event";
     AggressionEventResult aggressionEventResult =
