@@ -138,6 +138,6 @@ void DistanceToPlacesResult::load(const string & mapsPath, const string & mapNam
         }
     }
     else {
-        throw std::runtime_error("no reachability file");
+        throw std::runtime_error("no distance to places file");
     }
 }
