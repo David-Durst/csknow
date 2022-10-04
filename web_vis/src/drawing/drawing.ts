@@ -34,8 +34,10 @@ export const minimapScale = 4.4 * 1024 / minimapHeight
 let fontScale = 1.0
 export let mainCanvas: HTMLCanvasElement = null;
 export let mainCtx: CanvasRenderingContext2D = null;
-let cacheCanvas: HTMLCanvasElement = null;
-let cacheCtx: CanvasRenderingContext2D = null;
+let cacheGridCanvas: HTMLCanvasElement = null;
+let cacheGridCtx: CanvasRenderingContext2D = null;
+let cacheTargetCanvas: HTMLCanvasElement = null;
+let cacheTargetCtx: CanvasRenderingContext2D = null;
 let lastCacheOverlay: string = null;
 let lastTargetAreaId: number = -1;
 export let kymographCanvas: HTMLCanvasElement = null;
@@ -95,8 +97,10 @@ function resizeCanvas(newSize: number) {
     canvasHeight = newSize
     mainCanvas.width = newSize
     mainCanvas.height = newSize
-    cacheCanvas.width = newSize
-    cacheCanvas.height = newSize
+    cacheGridCanvas.width = newSize
+    cacheGridCanvas.height = newSize
+    cacheTargetCanvas.width = newSize
+    cacheTargetCanvas.height = newSize
     fontScale = newSize / defaultCanvasSize
 }
 
@@ -211,12 +215,14 @@ function copyPosition() {
 }
 
 let selectedPlayer = -1
+let secondToLastMousePosition = new MapCoordinate(0, 0, true);
 let lastMousePosition = new MapCoordinate(0, 0, true);
 function trackMouse(e: MouseEvent) {
     if (!initialized) {
         return
     }
     const minimapCoordinate = getMouseCoordinate(e)
+    secondToLastMousePosition = lastMousePosition
     lastMousePosition = minimapCoordinate;
     if (drawingRegionFilter) {
         bottomRightCoordinate = minimapCoordinate
@@ -360,9 +366,13 @@ export function drawTick(e: InputEvent) {
         if (lastCacheOverlay == null || lastCacheOverlay != curOverlay) {
             lastCacheOverlay = curOverlay
             drawOutlines = true
-            cacheCtx.clearRect(0, 0, cacheCanvas.width, cacheCanvas.height)
+            cacheGridCtx.clearRect(0, 0, cacheGridCanvas.width, cacheGridCanvas.height)
         }
-        for (let o = 0; o < overlayRows.length; o++) {
+        let drawTarget = lastMousePosition != secondToLastMousePosition
+        if (drawOutlines || drawTarget) {
+            cacheTargetCtx.clearRect(0, 0, cacheTargetCanvas.width, cacheTargetCanvas.height)
+        }
+        for (let o = 0; (drawOutlines || drawTarget) && o < overlayRows.length; o++) {
             const overlayRow = overlayRows[o]
             const minCoordinate = new MapCoordinate(
                 parseFloat(overlayRow.otherColumnValues[2]),
@@ -386,23 +396,23 @@ export function drawTick(e: InputEvent) {
                 targetY = avgY
                 targetFontSize = (((zScaling * 20 + 30)/2)*fontScale)
                 connectionAreaIds = overlayRow.otherColumnValues[8].split(';').map(s => parseInt(s))
-                mainCtx.fillStyle = "rgba(0, 0, 0, 0.9)";
-                mainCtx.fillRect(minCoordinate.getCanvasX(), minCoordinate.getCanvasY(),
+                cacheTargetCtx.fillStyle = "rgba(0, 0, 0, 0.9)";
+                cacheTargetCtx.fillRect(minCoordinate.getCanvasX(), minCoordinate.getCanvasY(),
                     maxCoordinate.getCanvasX() - minCoordinate.getCanvasX(),
                     maxCoordinate.getCanvasY() - minCoordinate.getCanvasY())
             }
             if (drawOutlines) {
-                cacheCtx.lineWidth = 0.5
-                cacheCtx.strokeStyle = "black";
-                cacheCtx.strokeRect(minCoordinate.getCanvasX(), minCoordinate.getCanvasY(),
+                cacheGridCtx.lineWidth = 0.5
+                cacheGridCtx.strokeStyle = "black";
+                cacheGridCtx.strokeRect(minCoordinate.getCanvasX(), minCoordinate.getCanvasY(),
                     maxCoordinate.getCanvasX() - minCoordinate.getCanvasX(),
                     maxCoordinate.getCanvasY() - minCoordinate.getCanvasY())
             }
 
         }
-        mainCtx.drawImage(cacheCanvas, 0, 0);
+        mainCtx.drawImage(cacheGridCanvas, 0, 0);
         // draw colored fill ins for connections for connections
-        for (let o = 0; o < overlayRows.length; o++) {
+        for (let o = 0; drawTarget && o < overlayRows.length; o++) {
             const overlayRow = overlayRows[o]
             if (!connectionAreaIds.includes(parseInt(overlayRow.otherColumnValues[1]))) {
                 continue
@@ -419,17 +429,18 @@ export function drawTick(e: InputEvent) {
             const avgY = (minCoordinate.getCanvasY() + maxCoordinate.getCanvasY()) / 2
             const avgZ = (parseFloat(overlayRow.otherColumnValues[4]) + parseFloat(overlayRow.otherColumnValues[7])) / 2;
             const zScaling = (avgZ - minZ) / (maxZ - minZ)
-            mainCtx.font = (((zScaling * 20 + 30)/2)*fontScale).toString() + "px Tahoma"
-            mainCtx.fillStyle = "rgba(255, 0, 0, 0.2)";
-            mainCtx.fillRect(minCoordinate.getCanvasX(), minCoordinate.getCanvasY(),
+            cacheTargetCtx.font = (((zScaling * 20 + 30)/2)*fontScale).toString() + "px Tahoma"
+            cacheTargetCtx.fillStyle = "rgba(255, 0, 0, 0.2)";
+            cacheTargetCtx.fillRect(minCoordinate.getCanvasX(), minCoordinate.getCanvasY(),
                 maxCoordinate.getCanvasX() - minCoordinate.getCanvasX(),
                 maxCoordinate.getCanvasY() - minCoordinate.getCanvasY())
         }
         if (targetAreaId != -1) {
-            mainCtx.fillStyle = 'green'
-            mainCtx.font = targetFontSize.toString() + "px Tahoma"
-            mainCtx.fillText(targetAreaId.toString() + "," + targetPlaceName, targetX, targetY)
+            cacheTargetCtx.fillStyle = 'green'
+            cacheTargetCtx.font = targetFontSize.toString() + "px Tahoma"
+            cacheTargetCtx.fillText(targetAreaId.toString() + "," + targetPlaceName, targetX, targetY)
         }
+        mainCtx.drawImage(cacheTargetCanvas, 0, 0);
     }
     else if (curOverlay.includes("reachable") || curOverlay.includes("visible") || curOverlay.includes("distance") ||
              curOverlay.includes("danger")) {
@@ -450,7 +461,7 @@ export function drawTick(e: InputEvent) {
         if (lastCacheOverlay == null || lastCacheOverlay != curOverlay) {
             lastCacheOverlay = curOverlay
             drawOutlines = true
-            cacheCtx.clearRect(0, 0, cacheCanvas.width, cacheCanvas.height)
+            cacheGridCtx.clearRect(0, 0, cacheGridCanvas.width, cacheGridCanvas.height)
         }
         for (let o = 0; o < overlayRows.length; o++) {
             const overlayRow = overlayRows[o]
@@ -484,14 +495,14 @@ export function drawTick(e: InputEvent) {
                     maxCoordinate.getCanvasY() - minCoordinate.getCanvasY())
             }
             if (drawOutlines) {
-                cacheCtx.lineWidth = 0.5
-                cacheCtx.strokeStyle = "black";
-                cacheCtx.strokeRect(minCoordinate.getCanvasX(), minCoordinate.getCanvasY(),
+                cacheGridCtx.lineWidth = 0.5
+                cacheGridCtx.strokeStyle = "black";
+                cacheGridCtx.strokeRect(minCoordinate.getCanvasX(), minCoordinate.getCanvasY(),
                     maxCoordinate.getCanvasX() - minCoordinate.getCanvasX(),
                     maxCoordinate.getCanvasY() - minCoordinate.getCanvasY())
             }
         }
-        mainCtx.drawImage(cacheCanvas, 0, 0);
+        mainCtx.drawImage(cacheGridCanvas, 0, 0);
         // draw fill ins for all areas
         for (let o = 0; targetAreaId != -1 && o < overlayRows.length; o++) {
             const overlayRow = overlayRows[o]
@@ -528,7 +539,7 @@ export function drawTick(e: InputEvent) {
         if (lastCacheOverlay == null || lastCacheOverlay != curOverlay) {
             lastCacheOverlay = curOverlay
             drawLines = true
-            cacheCtx.clearRect(0, 0, cacheCanvas.width, cacheCanvas.height)
+            cacheGridCtx.clearRect(0, 0, cacheGridCanvas.width, cacheGridCanvas.height)
         }
         for (let o = 0; o < overlayRows.length; o++) {
             const overlayRow = overlayRows[o]
@@ -545,22 +556,22 @@ export function drawTick(e: InputEvent) {
             const avgZ = (parseFloat(overlayRow.otherColumnValues[3]) + parseFloat(overlayRow.otherColumnValues[6])) / 2;
             const zScaling = (avgZ - minZ) / (maxZ - minZ)
             if (drawLines) {
-                cacheCtx.lineWidth = 0.5
-                cacheCtx.strokeStyle = 'rgba(24,255,0,0.2)'
+                cacheGridCtx.lineWidth = 0.5
+                cacheGridCtx.strokeStyle = 'rgba(24,255,0,0.2)'
                 if (overlayRow.foreignKeyValues[0] != curTrajectoryId) {
                     curTrajectoryId = overlayRow.foreignKeyValues[0]
-                    cacheCtx.stroke()
-                    cacheCtx.beginPath()
-                    cacheCtx.moveTo(fstCoordinate.getCanvasX(), fstCoordinate.getCanvasY())
+                    cacheGridCtx.stroke()
+                    cacheGridCtx.beginPath()
+                    cacheGridCtx.moveTo(fstCoordinate.getCanvasX(), fstCoordinate.getCanvasY())
                 }
-                cacheCtx.lineTo(sndCoordinate.getCanvasX(), sndCoordinate.getCanvasY())
+                cacheGridCtx.lineTo(sndCoordinate.getCanvasX(), sndCoordinate.getCanvasY())
             }
         }
         // close last line
         if (drawLines) {
-            cacheCtx.stroke()
+            cacheGridCtx.stroke()
         }
-        mainCtx.drawImage(cacheCanvas, 0, 0);
+        mainCtx.drawImage(cacheGridCanvas, 0, 0);
     }
     setEventText(tickData, filteredData)
     // setup client config for this tick
@@ -599,10 +610,14 @@ export function setupMatchDrawing() {
 export function setupCanvas() {
     mainCanvas = <HTMLCanvasElement> document.querySelector("#mainCanvas")
     mainCtx = mainCanvas.getContext('2d')
-    cacheCanvas = <HTMLCanvasElement> document.createElement("canvas")
-    cacheCtx = cacheCanvas.getContext('2d')
-    cacheCanvas.width = mainCanvas.width
-    cacheCanvas.height = mainCanvas.width
+    cacheGridCanvas = <HTMLCanvasElement> document.createElement("canvas")
+    cacheGridCtx = cacheGridCanvas.getContext('2d')
+    cacheGridCanvas.width = mainCanvas.width
+    cacheGridCanvas.height = mainCanvas.width
+    cacheTargetCanvas = <HTMLCanvasElement> document.createElement("canvas")
+    cacheTargetCtx = cacheTargetCanvas.getContext('2d')
+    cacheTargetCanvas.width = mainCanvas.width
+    cacheTargetCanvas.height = mainCanvas.width
     kymographCanvas = <HTMLCanvasElement> document.querySelector("#kymographCanvas")
     kymographCtx = kymographCanvas.getContext('2d')
     scatterCanvas = <HTMLCanvasElement> document.querySelector("#scatterCanvas")
