@@ -4,7 +4,7 @@ import {
     applyJustEventFilter,
     filterRegion, stopFilteringEvents
 } from "../controller/filter";
-import {PlayerAtTickRow, PlayerRow, TickRow} from "../data/tables";
+import {parseBool, PlayerAtTickRow, PlayerRow, TickRow} from "../data/tables";
 import {getPackedSettings} from "http2";
 import {
     activeEvent,
@@ -251,6 +251,27 @@ function trackMouse(e: MouseEvent) {
     drawTick(null)
 }
 
+let altPressed: boolean = false
+let controlPressed: boolean = false
+let shiftPressed: boolean = false
+let activeKeys: Set<string> = new Set<string>()
+function trackKeyDown(e: KeyboardEvent) {
+    activeKeys.add(e.key)
+    altPressed = e.altKey
+    controlPressed = e.ctrlKey
+    shiftPressed = e.shiftKey
+    if (controlPressed) {
+        drawTick(null)
+    }
+}
+
+function trackKeyUp(e: KeyboardEvent) {
+    activeKeys.delete(e.key)
+    altPressed = e.altKey
+    controlPressed = e.ctrlKey
+    shiftPressed = e.shiftKey
+}
+
 // three levels of priority
 // level 2: special state for event
 // level 1: alive, no special state
@@ -374,7 +395,8 @@ export function drawTick(e: InputEvent) {
             lastMousePosition.getCanvasX() > 0. &&
             lastMousePosition.getCanvasX() < mainCanvas.width &&
             lastMousePosition.getCanvasY() > 0. &&
-            lastMousePosition.getCanvasY() < mainCanvas.height;
+            lastMousePosition.getCanvasY() < mainCanvas.height &&
+            controlPressed;
         if (drawOutlines || drawTarget) {
             cacheTargetCtx.clearRect(0, 0, cacheTargetCanvas.width, cacheTargetCanvas.height)
         }
@@ -408,7 +430,7 @@ export function drawTick(e: InputEvent) {
                     maxCoordinate.getCanvasY() - minCoordinate.getCanvasY())
             }
             if (drawOutlines) {
-                cacheGridCtx.lineWidth = 0.5
+                cacheGridCtx.lineWidth = 0.25
                 cacheGridCtx.strokeStyle = "black";
                 cacheGridCtx.strokeRect(minCoordinate.getCanvasX(), minCoordinate.getCanvasY(),
                     maxCoordinate.getCanvasX() - minCoordinate.getCanvasX(),
@@ -444,7 +466,7 @@ export function drawTick(e: InputEvent) {
         if (drawTarget && targetAreaId != -1) {
             cacheTargetCtx.fillStyle = 'green'
             cacheTargetCtx.font = targetFontSize.toString() + "px Tahoma"
-            cacheTargetCtx.fillText(targetAreaId.toString() + "," + targetPlaceName, targetX, targetY)
+            cacheTargetCtx.fillText(targetAreaId.toString() + "," + targetPlaceName, targetX, targetY - 5.)
         }
         mainCtx.drawImage(cacheTargetCanvas, 0, 0);
     }
@@ -646,6 +668,8 @@ export function setupCanvas() {
     mainCanvas.addEventListener("mousemove", trackMouse)
     mainCanvas.addEventListener("mousedown", startingRegionFilter)
     mainCanvas.addEventListener("mouseup", finishedRegionFilter)
+    document.addEventListener('keydown', trackKeyDown)
+    document.addEventListener('keyup', trackKeyUp)
     setupEventDrawing()
     createCharts(kymographCtx, scatterCtx, inferenceCtx)
 }
