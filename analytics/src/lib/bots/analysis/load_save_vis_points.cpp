@@ -60,12 +60,6 @@ void VisPoints::createCellVisPoints() {
                         Vec3{CELL_DIM_WIDTH_DEPTH * curXId, CELL_DIM_WIDTH_DEPTH * curYId, CELL_DIM_HEIGHT * curZId};
                     Vec3 cellMax = cellMin + Vec3{CELL_DIM_WIDTH_DEPTH, CELL_DIM_WIDTH_DEPTH, CELL_DIM_HEIGHT};
                     Vec3 cellCenter = (cellMin + cellMax) / 2.;
-                    /*
-                    if (pointInRegionMaxInclusive(AABB{cellMin, cellMax}, {378.619, 226., cellCenter.z})) {
-                        int x = 1;
-                        (void) x;
-                    }
-                     */
                     if (pointInRegionMaxInclusive(extendedAABB, cellCenter)) {
                         cellVisPoints.push_back({
                             areaVisPoint.areaId,

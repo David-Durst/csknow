@@ -95,7 +95,8 @@ int main(int argc, char * argv[]) {
         if (entry.path().extension() == ".vis") {
             string mapName = entry.path().filename().replace_extension();
             map_visPoints.insert(std::pair<std::string, VisPoints>(mapName, VisPoints(map_navs[mapName])));
-            map_visPoints.find(mapName)->second.load(navPath, mapName, map_navs[mapName]);
+            std::cout << mapName << " num cells: " << map_visPoints.at(mapName).getCellVisPoints().size() << std::endl;
+            map_visPoints.at(mapName).load(navPath, mapName, map_navs[mapName]);
         }
     }
 
