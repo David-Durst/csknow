@@ -12,13 +12,15 @@ def plot_untransformed_and_transformed(title: str, cts: IOColumnTransformers, df
     subfigs = fig.subfigures(nrows=2, ncols=1)
 
     # untransformed
-    axs = subfigs[0].subplots(1, 2)
+    axs = subfigs[0].subplots(1, 3)
     subfigs[0].suptitle('untransformed')
-    df.hist('delta view angle x (t - 0)', ax=axs[0], bins=100)
+    df.hist('delta view angle x (t - 1)', ax=axs[0], bins=100)
     axs[0].set_xlabel('yaw degree')
     axs[0].set_ylabel('num points')
-    df.hist('delta view angle y (t - 0)', ax=axs[1], bins=100)
+    df.hist('delta view angle y (t - 1)', ax=axs[1], bins=100)
     axs[1].set_xlabel('pitch degree')
+    df.hist('eye-to-eye distance (t - 1)', ax=axs[2], bins=100)
+    axs[2].set_xlabel('distance (hammer units)')
 
     # transformed
     axs = subfigs[1].subplots(1, 2)
@@ -27,11 +29,13 @@ def plot_untransformed_and_transformed(title: str, cts: IOColumnTransformers, df
         transformed_df = pd.DataFrame(
             cts.output_ct.transform(df.loc[:, cts.output_types.column_names()]),
             columns=cts.output_types.column_names())
-    transformed_df.hist('delta view angle x (t - 0)', ax=axs[0], bins=100)
+    transformed_df.hist('delta view angle x (t - 1)', ax=axs[0], bins=100)
     axs[0].set_xlabel('standardized yaw degree')
     axs[0].set_ylabel('num points')
-    transformed_df.hist('delta view angle y (t - 0)', ax=axs[1], bins=100)
+    transformed_df.hist('delta view angle y (t - 1)', ax=axs[1], bins=100)
     axs[1].set_xlabel('standardized pitch degree')
+    transformed_df.hist('eye-to-eye distance (t - 1)', ax=axs[2], bins=100)
+    axs[2].set_xlabel('distance (hammer units)')
     # plt.tight_layout()
     plt.show()
 

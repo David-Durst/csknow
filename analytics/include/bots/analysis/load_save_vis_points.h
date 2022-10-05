@@ -114,10 +114,10 @@ public:
     [[nodiscard]] const vector<CellVisPoint> & getCellVisPoints() const { return cellVisPoints; }
 };
 
-template <size_t _Nb>
-vector<uint32_t> bitsetToSparseIds(const bitset<_Nb> & bits);
+template <size_t sz>
+vector<uint32_t> bitsetToSparseIds(const bitset<sz> & bits);
 
-template <size_t _Nb>
-void sparseIdsToBitset(const vector<uint32_t> & sparseIds, bitset<_Nb> & result);
+template <size_t sz>
+void sparseIdsToBitset(const vector<uint32_t> & sparseIds, bitset<sz> & result);
 
 #endif //CSKNOW_LOAD_SAVE_VIS_POINTS_H
