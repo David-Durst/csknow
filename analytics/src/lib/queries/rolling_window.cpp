@@ -25,6 +25,9 @@ void RollingWindow::setTemporalRange(int64_t curTick, const TickRates &tickRates
         startTick = getLookbackDemoTick(rounds, ticks, curTick, duration.ticksBefore);
         endTick = getLookforwardDemoTick(rounds, ticks, curTick, duration.ticksAfter);
     }
+    curDuration = duration;
+    curDuration.ticksBefore = curTick - startTick;
+    curDuration.ticksAfter = endTick - curTick;
     numTicks = endTick - startTick + 1;
 
     // get all players that appear anywhere in ticks
@@ -55,7 +58,7 @@ void RollingWindow::setTemporalRange(int64_t curTick, const TickRates &tickRates
     }
 }
 
-void RollingWindow::readNextTick() {
+int64_t RollingWindow::readNextTick() {
     set<int64_t> playersCurTick;
     for (int64_t patIndex = ticks.patPerTick[nextReadTickId].minId;
          patIndex <= ticks.patPerTick[nextReadTickId].maxId; patIndex++) {
@@ -85,4 +88,5 @@ void RollingWindow::readNextTick() {
         playerToPatWindows.at(playerId).enqueue(lastValidPATId[playerId]);
     }
     nextReadTickId++;
+    return lastReadTickId();
 }

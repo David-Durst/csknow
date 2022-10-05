@@ -21,6 +21,7 @@ enum class DemoEquipmentType : int16_t {
     EqCZ = 8,
     EqUSP = 9,
     EqRevolver = 10,
+    EQ_PISTOL_END = 11,
 
     // SMGs
     EqMP7 = 101,
@@ -30,6 +31,7 @@ enum class DemoEquipmentType : int16_t {
     EqUMP = 105,
     EqP90 = 106,
     EqMP5 = 107,
+    EQ_SMG_END = 108,
 
     // Heavy
     EqSawedOff = 201,
@@ -39,6 +41,7 @@ enum class DemoEquipmentType : int16_t {
     EqXM1014 = 204,
     EqM249 = 205,
     EqNegev = 206,
+    EQ_HEAVY_END = 207,
 
     // Rifles
     EqGalil = 301,
@@ -54,6 +57,7 @@ enum class DemoEquipmentType : int16_t {
     EqAWP = 309,
     EqScar20 = 310,
     EqG3SG1 = 311,
+    EQ_RIFLE_END = 312,
 
     // Equipment
     EqZeus = 401,

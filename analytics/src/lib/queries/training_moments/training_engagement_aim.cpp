@@ -19,9 +19,12 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
     vector<vector<int64_t>> tmpEngagementId(numThreads);
     vector<vector<int64_t>> tmpAttackerPlayerId(numThreads);
     vector<vector<int64_t>> tmpVictimPlayerId(numThreads);
-    vector<vector<array<Vec2, NUM_TICKS>>> tmpDeltaViewAngle(numThreads);
-    vector<vector<array<double, NUM_TICKS>>> tmpEyeToHeadDistance(numThreads);
+    vector<vector<array<Vec2, TOTAL_AIM_TICKS>>> tmpDeltaViewAngle(numThreads);
+    vector<vector<array<Vec2, TOTAL_AIM_TICKS>>> tmpRecoilAngle(numThreads);
+    vector<vector<array<Vec2, TOTAL_AIM_TICKS>>> tmpDeltaViewAngleRecoilAdjusted(numThreads);
+    vector<vector<array<double, TOTAL_AIM_TICKS>>> tmpEyeToHeadDistance(numThreads);
     vector<vector<double>> tmpDistanceNormalization(numThreads);
+    vector<vector<AimWeaponType>> tmpWeaponType(numThreads);
 
     // for each round
     // for each tick
@@ -36,12 +39,13 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
         TickRates tickRates = computeTickRates(games, rounds, roundIndex);
         RollingWindow rollingWindow(rounds, ticks, playerAtTick);
         // minus 1 as need to include current tick in window size
-        rollingWindow.setTemporalRange(rounds.ticksPerRound[roundIndex].minId + NUM_TICKS - 1, tickRates,
-                                       {DurationType::Ticks, 0, 0, NUM_TICKS - 1, 0});
+        rollingWindow.setTemporalRange(rounds.ticksPerRound[roundIndex].minId + PAST_AIM_TICKS, tickRates,
+                                       {DurationType::Ticks, 0, 0, PAST_AIM_TICKS, FUTURE_AIM_TICKS});
         const PlayerToPATWindows & playerToPatWindows = rollingWindow.getWindows();
 
-        for (int64_t tickIndex = rollingWindow.lastReadTickId();
-             tickIndex <= rounds.ticksPerRound[roundIndex].maxId; tickIndex++, rollingWindow.readNextTick()) {
+        for (int64_t windowEndTickIndex = rollingWindow.lastReadTickId();
+             windowEndTickIndex <= rounds.ticksPerRound[roundIndex].maxId; windowEndTickIndex = rollingWindow.readNextTick()) {
+            int64_t tickIndex = rollingWindow.lastCurTickId();
             for (const auto & [_0, _1, engagementIndex] :
                 engagementResult.engagementsPerTick.intervalToEvent.findOverlapping(tickIndex, tickIndex)) {
                 tmpTickId[threadNum].push_back(tickIndex);
@@ -53,14 +57,16 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
                 tmpVictimPlayerId[threadNum].push_back(victimId);
 
                 tmpDeltaViewAngle[threadNum].push_back({});
+                tmpRecoilAngle[threadNum].push_back({});
+                tmpDeltaViewAngleRecoilAdjusted[threadNum].push_back({});
                 tmpEyeToHeadDistance[threadNum].push_back({});
 
-                for (size_t i = 0; i < NUM_TICKS; i++) {
+                for (size_t i = 0; i < TOTAL_AIM_TICKS; i++) {
 
                     const int64_t & attackerPATId = playerToPatWindows.at(attackerId).fromNewest(i);
                     const int64_t & victimPATId = playerToPatWindows.at(victimId).fromNewest(i);
 
-                    Vec3 attackerEyePos = {
+                    Vec3 attackerEyePos {
                         playerAtTick.posX[attackerPATId],
                         playerAtTick.posY[attackerPATId],
                         playerAtTick.eyePosZ[attackerPATId]
@@ -79,7 +85,7 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
                         playerAtTick.duckAmount[victimPATId]
                     );
 
-                    Vec2 curViewAngle = {
+                    Vec2 curViewAngle {
                         playerAtTick.viewX[attackerPATId],
                         playerAtTick.viewY[attackerPATId]
                     };
@@ -88,6 +94,14 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
 
                     tmpDeltaViewAngle[threadNum].back()[i] = deltaViewAngle;
                     tmpEyeToHeadDistance[threadNum].back()[i] = computeDistance(attackerEyePos, victimHeadPos);
+
+                    Vec2 recoil {
+                        playerAtTick.aimPunchX[attackerPATId],
+                        playerAtTick.aimPunchY[attackerPATId]
+                    };
+
+                    tmpRecoilAngle[threadNum].back()[i] = recoil;
+                    tmpDeltaViewAngleRecoilAdjusted[threadNum].back()[i] = deltaViewAngle + recoil * WEAPON_RECOIL_SCALE;
                 }
 
                 // compute normalization constants, used to visualize inference
@@ -110,6 +124,32 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
                 victimTopPos.z += PLAYER_HEIGHT;
                 Vec2 topVsBotViewAngle = deltaViewFromOriginToDest(curAttackerEyePos, victimTopPos, viewAngleToBotPos);
                 tmpDistanceNormalization[threadNum].push_back(std::abs(topVsBotViewAngle.y));
+
+                // assume attacker has same weapon for all ticks
+                AimWeaponType aimWeaponType;
+                DemoEquipmentType demoEquipmentType =
+                        static_cast<DemoEquipmentType>(playerAtTick.activeWeapon[curAttackerPATId]);
+                if (demoEquipmentType < DemoEquipmentType::EQ_PISTOL_END) {
+                    aimWeaponType = AimWeaponType::Pistol;
+                }
+                else if (demoEquipmentType < DemoEquipmentType::EQ_SMG_END) {
+                    aimWeaponType = AimWeaponType::SMG;
+                }
+                else if (demoEquipmentType < DemoEquipmentType::EQ_HEAVY_END) {
+                    aimWeaponType = AimWeaponType::Heavy;
+                }
+                else if (demoEquipmentType < DemoEquipmentType::EQ_RIFLE_END) {
+                    if (demoEquipmentType == DemoEquipmentType::EqScout || demoEquipmentType == DemoEquipmentType::EqAWP) {
+                        aimWeaponType = AimWeaponType::Sniper;
+                    }
+                    else {
+                        aimWeaponType = AimWeaponType::AR;
+                    }
+                }
+                else {
+                    aimWeaponType = AimWeaponType::Unknown;
+                }
+                tmpWeaponType[threadNum].push_back(aimWeaponType);
             }
         }
 
@@ -125,8 +165,11 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
                            result.attackerPlayerId.push_back(tmpAttackerPlayerId[minThreadId][tmpRowId]);
                            result.victimPlayerId.push_back(tmpVictimPlayerId[minThreadId][tmpRowId]);
                            result.deltaViewAngle.push_back(tmpDeltaViewAngle[minThreadId][tmpRowId]);
+                           result.recoilAngle.push_back(tmpRecoilAngle[minThreadId][tmpRowId]);
+                           result.deltaViewAngleRecoilAdjusted.push_back(tmpDeltaViewAngleRecoilAdjusted[minThreadId][tmpRowId]);
                            result.eyeToHeadDistance.push_back(tmpEyeToHeadDistance[minThreadId][tmpRowId]);
                            result.distanceNormalization.push_back(tmpDistanceNormalization[minThreadId][tmpRowId]);
+                           result.weaponType.push_back(tmpWeaponType[minThreadId][tmpRowId]);
                        });
     return result;
 }

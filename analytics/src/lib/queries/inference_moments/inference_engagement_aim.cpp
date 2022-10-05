@@ -26,10 +26,11 @@ void InferenceEngagementAimResult::runQuery(const string & modelsDir, const Enga
 
     auto options = torch::TensorOptions().dtype(at::kFloat);
     // NUM_TICKS stores cur tick and prior ticks in window, shrink by 1 for just prior ticks
-    map<int64_t, array<Vec2, NUM_TICKS-1>> activeEngagementsPriorDeltas;
+    /*
+    map<int64_t, array<Vec2, PAST_AIM_TICKS>> activeEngagementsPriorDeltas;
     for (int64_t engagementAimId = 0; engagementAimId < trainingEngagementAimResult.size; engagementAimId++) {
         int64_t engagementId = trainingEngagementAimResult.engagementId[engagementAimId];
-        array<Vec2, NUM_TICKS-1> & priorDeltas = activeEngagementsPriorDeltas[engagementId];
+        array<Vec2, PAST_AIM_TICKS> & priorDeltas = activeEngagementsPriorDeltas[engagementId];
 
         // add old deltas if in engagement's firs tick, otherwise use delta prior earlier predictions
         const RangeIndexEntry & engagementTickRange =
@@ -74,4 +75,5 @@ void InferenceEngagementAimResult::runQuery(const string & modelsDir, const Enga
             priorDeltas[0] = predictedDeltaViewAngle.back();
         }
     }
+     */
 }

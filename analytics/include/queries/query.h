@@ -106,6 +106,17 @@ public:
     }
 
     static
+    string toSignedIntString(int64_t i) {
+        if (i < 0) {
+            return std::to_string(i);
+        }
+        else {
+            return "+" + std::to_string(i);
+
+        }
+    }
+
+    static
     void commaSeparateList(stringstream & ss, vector<string> list, const string& separator = ",") {
         if (list.empty()) {
             return;

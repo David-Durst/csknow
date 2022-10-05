@@ -36,6 +36,7 @@ class RollingWindow {
     map<int64_t, int64_t> lastValidTickId;
     int64_t nextReadTickId = INVALID_ID;
     int64_t numTicks = INVALID_ID;
+    WindowDuration curDuration;
 
 
 public:
@@ -47,9 +48,11 @@ public:
 
     void setTemporalRange(int64_t curTick, const TickRates & tickRates, WindowDuration duration);
 
-    void readNextTick();
+    int64_t readNextTick();
 
     int64_t lastReadTickId() { return nextReadTickId - 1; };
+
+    int64_t lastCurTickId() { return nextReadTickId - 1 - curDuration.ticksAfter; };
 
     [[nodiscard]]
     const PlayerToPATWindows & getWindows() { return playerToPatWindows; }

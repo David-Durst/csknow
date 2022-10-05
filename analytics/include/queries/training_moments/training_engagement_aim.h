@@ -27,7 +27,20 @@ using std::vector;
 using std::array;
 using std::map;
 
-constexpr int NUM_TICKS = 6;
+constexpr int PAST_AIM_TICKS = 12;
+constexpr int FUTURE_AIM_TICKS = 6;
+constexpr int CUR_AIM_TICK = 1;
+constexpr int TOTAL_AIM_TICKS = PAST_AIM_TICKS + FUTURE_AIM_TICKS + CUR_AIM_TICK;
+
+enum class AimWeaponType {
+    Pistol = 0,
+    SMG,
+    Heavy,
+    AR,
+    Sniper,
+    Unknown,
+    AIM_WEAPON_TYPE_COUNT [[maybe_unused]]
+};
 
 class TrainingEngagementAimResult : public QueryResult {
 public:
@@ -36,8 +49,11 @@ public:
     vector<int64_t> engagementId;
     vector<int64_t> attackerPlayerId;
     vector<int64_t> victimPlayerId;
-    vector<array<Vec2, NUM_TICKS>> deltaViewAngle;
-    vector<array<double, NUM_TICKS>> eyeToHeadDistance;
+    vector<array<Vec2, TOTAL_AIM_TICKS>> deltaViewAngle;
+    vector<array<Vec2, TOTAL_AIM_TICKS>> recoilAngle;
+    vector<array<Vec2, TOTAL_AIM_TICKS>> deltaViewAngleRecoilAdjusted;
+    vector<array<double, TOTAL_AIM_TICKS>> eyeToHeadDistance;
+    vector<AimWeaponType> weaponType;
     vector<double> distanceNormalization;
 
 
@@ -61,10 +77,14 @@ public:
         ss << index << "," << tickId[index] << "," << engagementId[index] << ","
            << attackerPlayerId[index] << "," << victimPlayerId[index];
 
-        for (size_t i = 0; i < NUM_TICKS; i++) {
+        for (size_t i = 0; i < TOTAL_AIM_TICKS; i++) {
             ss << "," << deltaViewAngle[index][i].x << "," << deltaViewAngle[index][i].y
+               << "," << recoilAngle[index][i].x << "," << recoilAngle[index][i].y
+               << "," << deltaViewAngleRecoilAdjusted[index][i].x << "," << deltaViewAngleRecoilAdjusted[index][i].y
                << "," << eyeToHeadDistance[index][i];
         }
+
+        ss << "," << enumAsInt(weaponType[index]);
 
         ss << std::endl;
     }
@@ -75,11 +95,16 @@ public:
 
     vector<string> getOtherColumnNames() override {
         vector<string> result;
-        for (int i = 0; i < NUM_TICKS; i++) {
-            result.push_back("delta view angle x (t - " + std::to_string(i) + ")");
-            result.push_back("delta view angle y (t - " + std::to_string(i) + ")");
-            result.push_back("eye-to-eye distance (t - " + std::to_string(i) + ")");
+        for (int i = 0; i < TOTAL_AIM_TICKS; i++) {
+            result.push_back("delta view angle x (t" + toSignedIntString(i) + ")");
+            result.push_back("delta view angle y (t" + toSignedIntString(i) + ")");
+            result.push_back("recoil angle x (t" + toSignedIntString(i) + ")");
+            result.push_back("recoil angle y (t" + toSignedIntString(i) + ")");
+            result.push_back("delta view angle recoil adjusted x (t" + toSignedIntString(i) + ")");
+            result.push_back("delta view angle recoil adjusted y (t" + toSignedIntString(i) + ")");
+            result.push_back("eye-to-eye distance (t" + toSignedIntString(i) + ")");
         }
+        result.push_back("weapon type");
         return result;
     }
 };
