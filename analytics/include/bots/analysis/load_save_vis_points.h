@@ -16,6 +16,7 @@
 #define CELL_DIM_HEIGHT 36.
 using std::map;
 using std::bitset;
+using std::byte;
 typedef bitset<MAX_NAV_AREAS> AreaBits;
 typedef bitset<MAX_NAV_CELLS> CellBits;
 
@@ -36,6 +37,11 @@ struct CellVisPoint {
     CellBits dangerFromCurPoint = 0;
 };
 
+struct VisCommandRange {
+    size_t startRow;
+    size_t numRows;
+};
+
 class VisPoints {
     vector<AreaVisPoint> areaVisPoints;
     vector<CellVisPoint> cellVisPoints;
@@ -45,7 +51,7 @@ class VisPoints {
     void createAreaVisPoints(const nav_mesh::nav_file & navFile);
     void createCellVisPoints();
 
-    void setDangerPoints(const nav_mesh::nav_file & navFile);
+    void setDangerPoints(const nav_mesh::nav_file & navFile, bool area);
 
 public:
     explicit
@@ -100,10 +106,18 @@ public:
         return areaVisPoints[areaIdToVectorIndex.find(srcId)->second].dangerFromCurPoint;
     }
 
-    void launchVisPointsCommand(const ServerState & state, bool areas);
-    void load(const string & mapsPath, const string & mapName, const nav_mesh::nav_file & navFile);
+    bool launchVisPointsCommand(const ServerState & state, bool areas, std::optional<VisCommandRange> range = {});
+    bool readVisPointsCommandResult(const ServerState & state, bool areas, std::optional<VisCommandRange> range = {});
+    void save(const string & mapsPath, const string & mapName, bool area);
+    void load(const string & mapsPath, const string & mapName, bool area, const nav_mesh::nav_file & navFile);
     [[nodiscard]] const vector<AreaVisPoint> & getVisPoints() const { return areaVisPoints; }
     [[nodiscard]] const vector<CellVisPoint> & getCellVisPoints() const { return cellVisPoints; }
 };
+
+template <size_t _Nb>
+vector<uint32_t> bitsetToSparseIds(const bitset<_Nb> & bits);
+
+template <size_t _Nb>
+void sparseIdsToBitset(const vector<uint32_t> & sparseIds, bitset<_Nb> & result);
 
 #endif //CSKNOW_LOAD_SAVE_VIS_POINTS_H
