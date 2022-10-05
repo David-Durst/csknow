@@ -17,7 +17,7 @@ from learn_bot.engagement_aim.output_plotting import plot_untransformed_and_tran
 from typing import Dict
 from math import sqrt
 
-all_data_df = pd.read_csv(Path(__file__).parent / '..' / '..' / 'data' / 'engagement_aim' / 'engagementAim.csv')
+all_data_df = pd.read_csv(Path(__file__).parent / '..' / '..' / '..' / 'analytics' / 'csv_outputs' / 'engagementAim.csv')
 
 # train test split on rounds with rounds weighted by number of entries in each round
 # so 80-20 train test split on actual data with rounds kept coherent
