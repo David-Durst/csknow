@@ -65,13 +65,13 @@ void exec(const string & cmd) {
 }
 
 int main(int argc, char * argv[]) {
-    if (argc != 6) {
+    if (argc != 5 && argc != 6) {
         std::cout << "please call this code 5 arguments: " << std::endl;
         std::cout << "1. path/to/local_data" << std::endl;
         std::cout << "2. path/to/nav_meshes" << std::endl;
         std::cout << "3. run server (y or n)" << std::endl;
         std::cout << "4. path/to/output/dir" << std::endl;
-        std::cout << "5. path/to/models/dir" << std::endl;
+        std::cout << "5. path/to/models/dir (optional)" << std::endl;
         return 1;
     }
 
@@ -79,7 +79,12 @@ int main(int argc, char * argv[]) {
     string navPath = argv[2];
     bool runServer = argv[3][0] == 'y';
     string outputDir = argv[4];
-    string modelsDir = argv[5];
+    bool haveModels = false;
+    string modelsDir = "";
+    if (argc == 6) {
+        haveModels = true;
+        modelsDir = argv[5];
+    }
 
     std::map<std::string, nav_mesh::nav_file> map_navs;
     //Figure out from where to where you'd like to find a path
@@ -96,7 +101,7 @@ int main(int argc, char * argv[]) {
             string mapName = entry.path().filename().replace_extension();
             map_visPoints.insert(std::pair<std::string, VisPoints>(mapName, VisPoints(map_navs[mapName])));
             std::cout << mapName << " num cells: " << map_visPoints.at(mapName).getCellVisPoints().size() << std::endl;
-            map_visPoints.at(mapName).load(navPath, mapName, map_navs[mapName]);
+            map_visPoints.at(mapName).load(navPath, mapName, false, map_navs[mapName]);
         }
     }
 
@@ -297,8 +302,10 @@ int main(int argc, char * argv[]) {
     std::cout << "size: " << engagementAimResult.size << std::endl;
     std::cout << "processing inference engagement aim training data set" << std::endl;
     string inferenceEngagementAimName = "engagementAim";
-    InferenceEngagementAimResult inferenceEngagementAimResult =
-        queryInferenceEngagementAimResult(modelsDir, engagementResult, engagementAimResult);
+    InferenceEngagementAimResult inferenceEngagementAimResult(engagementAimResult);
+    if (haveModels) {
+        inferenceEngagementAimResult.runQuery(modelsDir, engagementResult);
+    }
     std::cout << "size: " << inferenceEngagementAimResult.size << std::endl;
     engagementResult.havePerTickAimPredictionTable = true;
     engagementResult.perTickPredictionAimTable = inferenceEngagementAimName;

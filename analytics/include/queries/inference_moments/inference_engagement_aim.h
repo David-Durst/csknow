@@ -54,11 +54,8 @@ public:
         return {"predicted delta view angle x", "predicted delta view angle y",
                 "normalized predicted delta view angle x", "normalized predicted delta view angle y"};
     }
+
+    void runQuery(const string & modelsDir, const EngagementResult & engagementResult);
 };
-
-
-InferenceEngagementAimResult queryInferenceEngagementAimResult(const string & modelsDir,
-                                                               const EngagementResult & engagementResult,
-                                                               const TrainingEngagementAimResult & trainingEngagementAimResult);
 
 #endif //CSKNOW_INFERENCE_ENGAGEMENT_AIM_H

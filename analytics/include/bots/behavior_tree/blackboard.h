@@ -237,7 +237,7 @@ struct Blackboard {
         possibleNavAreas(navFile), standDis(0, 100.0), aimDis(0., 2.0) {
 
         navFileOverlay.setMapsPath(mapsPath);
-        visPoints.load(mapsPath, mapName, navFile);
+        visPoints.load(mapsPath, mapName, false, navFile);
 
         tMemory.considerAllTeammates = true;
         tMemory.team = ENGINE_TEAM_T;
