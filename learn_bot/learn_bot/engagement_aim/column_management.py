@@ -5,6 +5,7 @@ import pandas as pd
 from typing import List, Dict
 from enum import Enum
 from functools import cache
+from abc import abstractmethod
 
 class ColumnTransformerType(Enum):
     FLOAT_STANDARD = 0
@@ -19,16 +20,21 @@ class ColumnTypes:
     float_min_max_cols: List[str]
     float_non_linear_cols: List[str]
     categorical_cols: List[str]
+    num_cats_per_col: Dict[str, int]
     boolean_cols: List[str]
     bookkeeping_passthrough_cols: List[str]
 
     def __init__(self, float_standard_cols: List[str] = [], float_min_max_cols: List[str] = [],
                  float_non_linear_cols: List[str] = [], categorical_cols: List[str] = [],
+                 num_cats_per_col: List[int] = [],
                  boolean_cols: List[str] = [], bookkeeping_passthrough_cols: List[str] = []):
         self.float_standard_cols = float_standard_cols
         self.float_min_max_cols = float_min_max_cols
         self.float_non_linear_cols = float_non_linear_cols
         self.categorical_cols = categorical_cols
+        self.num_cats_per_col = {}
+        for cat, num_cats in zip(categorical_cols, num_cats_per_col):
+            self.num_cats_per_col[cat] = num_cats
         self.boolean_cols = boolean_cols
         self.bookkeeping_passthrough_cols = bookkeeping_passthrough_cols
 
@@ -60,32 +66,45 @@ class ColumnTypes:
         return self.all_cols_
 
 
-@dataclass
 class PTColumnTransformer:
     pt_ct_type: ColumnTransformerType
 
+    @abstractmethod
+    def convert(self, value):
+        pass
+
+    @abstractmethod
+    def inverse(self, value):
+        pass
+
+
+@dataclass
+class PTMeanStdColumnTransformer(PTColumnTransformer):
     # FLOAT_STANDARD data
     mean: float
     standard_deviation: float
 
+    pt_ct_type: ColumnTransformerType = ColumnTransformerType.FLOAT_STANDARD
+
+    def convert(self, value):
+        return (value - self.mean) / self.standard_deviation
+
+    def inverse(self, value):
+        return (value * self.standard_deviation) + self.mean
+
+
+@dataclass
+class PTOneHotColumnTransformer(PTColumnTransformer):
     # CATEGORICAL data
     num_cols: int
 
+    pt_ct_type: ColumnTransformerType = ColumnTransformerType.CATEGORICAL
+
     def convert(self, value):
-        if self.pt_ct_type == ColumnTransformerType.FLOAT_STANDARD:
-            return (value - self.mean) / self.standard_deviation
-        elif self.pt_ct_type == ColumnTransformerType.CATEGORICAL:
-            NotImplementedError
-        else:
-            NotImplementedError
+        NotImplementedError
 
     def inverse(self, value):
-        if self.pt_ct_type == ColumnTransformerType.FLOAT_STANDARD:
-            return (value * self.standard_deviation) + self.mean
-        elif self.pt_ct_type == ColumnTransformerType.CATEGORICAL:
-            NotImplementedError
-        else:
-            NotImplementedError
+        NotImplementedError
 
 
 class IOColumnTransformers:
@@ -106,6 +125,7 @@ class IOColumnTransformers:
         self.output_ct = self.create_column_transformer(self.output_types)
 
         # remember: fit Y is ignored for this fitting as not supervised learning
+        x = all_data_df.loc[:, self.input_types.column_names()[0:1]]
         self.input_ct.fit(all_data_df.loc[:, self.input_types.column_names()])
         self.output_ct.fit(all_data_df.loc[:, self.output_types.column_names()])
 
@@ -121,22 +141,21 @@ class IOColumnTransformers:
             transformers.append(('zero-to-one-min-max', MinMaxScaler(), types.float_min_max_cols))
         if types.float_non_linear_cols:
             transformers.append(('zero-to-one-non-linear', QuantileTransformer(), types.float_non_linear_cols))
-        if types.categorical_cols:
-            transformers.append(
-                ('one-hot', OneHotEncoder(), types.categorical_cols))
-        if types.boolean_cols or types.bookkeeping_passthrough_cols:
-            transformers.append(('pass', 'passthrough', types.bookkeeping_passthrough_cols + types.boolean_cols))
+        if types.categorical_cols or types.boolean_cols or types.bookkeeping_passthrough_cols:
+            transformers.append(('pass', 'passthrough', types.bookkeeping_passthrough_cols + types.boolean_cols +
+                                 types.categorical_cols))
         return ColumnTransformer(transformers=transformers, sparse_threshold=0)
 
     def create_pytorch_column_transformers(self, types: ColumnTypes, ct: ColumnTransformer) -> List[PTColumnTransformer]:
         result: List[PTColumnTransformer] = []
         standard_scaler_ct = ct.named_transformers_['standard-scaler']
-        standard_scaler_ct = ct.named_transformers_['standard-scaler']
         for name, type in zip(types.column_names(), types.column_types()):
             if type == ColumnTransformerType.FLOAT_STANDARD:
                 col_index = list(standard_scaler_ct.feature_names_in_).index(name)
-                result.append(PTColumnTransformer(type, standard_scaler_ct.mean_[col_index].item(),
-                                                  standard_scaler_ct.scale_[col_index].item()))
+                result.append(PTMeanStdColumnTransformer(standard_scaler_ct.mean_[col_index].item(),
+                                                         standard_scaler_ct.scale_[col_index].item()))
+            if type == ColumnTransformerType.CATEGORICAL:
+                result.append(PTOneHotColumnTransformer(types.num_cats_per_col[name]))
             else:
                 NotImplementedError
         return result
