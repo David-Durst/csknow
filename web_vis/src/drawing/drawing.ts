@@ -88,6 +88,7 @@ export function toggleCanvasSize() {
     else {
         resizeCanvas(defaultCanvasSize)
     }
+    lastCacheOverlay = null
     drawTick(null)
 }
 
