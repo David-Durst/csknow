@@ -56,9 +56,9 @@ class VisPoints {
 public:
     explicit
     VisPoints(const nav_mesh::nav_file & navFile) {
+        areaIdToVectorIndex = navFile.m_area_ids_to_indices;
         createAreaVisPoints(navFile);
         createCellVisPoints();
-        areaIdToVectorIndex = navFile.m_area_ids_to_indices;
     }
 
     [[nodiscard]]

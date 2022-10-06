@@ -76,6 +76,25 @@ void VisPoints::createCellVisPoints() {
 
     }
 
+#if false
+    // checks that nav cells are non-overlapping
+    for (size_t i = 0; i < cellVisPoints.size(); i++) {
+        for (size_t j = i+1; j < cellVisPoints.size(); j++) {
+            // https://www.youtube.com/watch?v=tBoRp5K8HU0
+            if (cellVisPoints[i].areaId == 8251 || cellVisPoints[j].areaId == 8251) {
+                continue;
+            }
+            if (aabbOverlapExclusive(cellVisPoints[i].cellCoordinates, cellVisPoints[j].cellCoordinates)) {
+                size_t areaIndexI = areaIdToVectorIndex[cellVisPoints[i].areaId];
+                size_t areaIndexJ = areaIdToVectorIndex[cellVisPoints[j].areaId];
+                AreaVisPoint ai = areaVisPoints[areaIndexI];
+                AreaVisPoint aj = areaVisPoints[areaIndexJ];
+                std::cout << "found overlapping nav cells" << std::endl;
+            }
+        }
+    }
+#endif // false
+
 }
 
 bool VisPoints::launchVisPointsCommand(const ServerState & state, bool areas, std::optional<VisCommandRange> range) {

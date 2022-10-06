@@ -77,6 +77,14 @@ bool aabbOverlap(AABB b0, AABB b1) {
             (b0.min.z <= b1.max.z && b1.min.z <= b0.max.z);
 }
 
+static inline __attribute__((always_inline))
+bool aabbOverlapExclusive(AABB b0, AABB b1) {
+    return
+        (b0.min.x < b1.max.x && b1.min.x < b0.max.x) &&
+        (b0.min.y < b1.max.y && b1.min.y < b0.max.y) &&
+        (b0.min.z < b1.max.z && b1.min.z < b0.max.z);
+}
+
 #define PLAYER_HEIGHT 72
 #define PLAYER_WIDTH 32
 const int HEIGHT = 72;
