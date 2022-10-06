@@ -13,7 +13,7 @@ class LinearModel(nn.Module):
         super(LinearModel, self).__init__()
         self.cts = cts
         self.inner_model = nn.Sequential(
-            nn.Linear(cts.input_ct.get_feature_names_out().size, self.internal_width)
+            nn.Linear(cts.get_name_ranges(True)[-1].stop, self.internal_width)
         )
 
         output_layers = []
@@ -31,7 +31,9 @@ class LinearModel(nn.Module):
         # transform inputs
         xs_transformed = []
         for i, input_range in enumerate(self.cts.get_name_ranges(True)):
-            xs_transformed.append(self.cts.input_ct_pts[i].convert(x[:, input_range]))
+            if i == 84:
+                dude = 1
+            xs_transformed.append(self.cts.input_ct_pts[i].convert(x[:, i:i+1]))
         x_transformed = torch.cat(xs_transformed, dim=1)
 
         # run model except last layer

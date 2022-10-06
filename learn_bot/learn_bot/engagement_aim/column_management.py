@@ -6,6 +6,8 @@ from typing import List, Dict
 from enum import Enum
 from functools import cache
 from abc import abstractmethod
+from torch.nn import functional as F
+import torch
 
 class ColumnTransformerType(Enum):
     FLOAT_STANDARD = 0
@@ -96,12 +98,14 @@ class PTMeanStdColumnTransformer(PTColumnTransformer):
 @dataclass
 class PTOneHotColumnTransformer(PTColumnTransformer):
     # CATEGORICAL data
-    num_cols: int
+    num_classes: int
 
     pt_ct_type: ColumnTransformerType = ColumnTransformerType.CATEGORICAL
 
-    def convert(self, value):
-        NotImplementedError
+    def convert(self, value: torch.Tensor):
+        one_hot_result =  F.one_hot(value.to(torch.int64), num_classes=self.num_classes)
+        one_hot_float_result = one_hot_result.to(value.dtype)
+        return torch.flatten(one_hot_float_result, start_dim=1)
 
     def inverse(self, value):
         NotImplementedError
@@ -160,31 +164,16 @@ class IOColumnTransformers:
                 NotImplementedError
         return result
 
-    def get_name_range(self, name: str, input: bool) -> range:
-        ct = self.input_ct if input else self.output_ct
-        name_indices = [i for i, col_name in enumerate(ct.get_feature_names_out()) if name in col_name]
-        if name_indices:
-            return range(min(name_indices), max(name_indices) + 1)
-        else:
-            return range(0, 0)
-
     def get_name_ranges(self, input: bool) -> List[range]:
-        types = self.input_types if input else self.output_types
-        return [self.get_name_range(name, input) for name in types.column_names()]
-
-
-def get_params(types: ColumnTypes, ct: ColumnTransformer) -> str:
-    results = []
-    if types.boolean_cols or types.bookkeeping_passthrough_cols:
-        NotImplementedError
-    if types.categorical_cols:
-        NotImplementedError
-    if types.float_standard_cols:
-        for i, col_name in enumerate(types.float_standard_cols):
-            transformer = ct.named_transformers_['standard-scaler']
-            results.append(f'''standard-scaler;{col_name};{transformer.scale_[i]};{transformer.mean_[i]}''')
-    if types.float_min_max_cols:
-        NotImplementedError
-    if types.float_non_linear_cols:
-        NotImplementedError
-    return ",".join(results)
+        result: List[range] = []
+        cur_start: int = 0
+        cts: List[PTColumnTransformer] = self.input_ct_pts if input else self.output_ct_pts
+        for ct in cts:
+            if ct.pt_ct_type == ColumnTransformerType.FLOAT_STANDARD:
+                result.append(range(cur_start, cur_start + 1))
+            elif ct.pt_ct_type == ColumnTransformerType.CATEGORICAL:
+                result.append(range(cur_start, cur_start + ct.num_classes))
+            else:
+                NotImplementedError
+            cur_start = result[-1].stop
+        return result

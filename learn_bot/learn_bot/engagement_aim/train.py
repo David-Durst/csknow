@@ -11,7 +11,7 @@ from dataset import *
 from joblib import dump
 from dataclasses import dataclass
 import matplotlib.pyplot as plt
-from learn_bot.engagement_aim.column_management import IOColumnTransformers, ColumnTypes, get_params
+from learn_bot.engagement_aim.column_management import IOColumnTransformers, ColumnTypes
 from learn_bot.engagement_aim.linear_model import LinearModel
 from learn_bot.engagement_aim.output_plotting import plot_untransformed_and_transformed, ModelOutputRecording
 from typing import Dict, List
@@ -218,7 +218,7 @@ def train_or_test(dataloader, model, optimizer, train = True):
             print(f"loss: {loss:>7f}  [{current:>5d}/{size:>5d}]")
 
         compute_accuracy(pred, Y, accuracy)
-        model_output_recording.record_output(column_transformers, pred, Y, transformed_Y, train)
+        #model_output_recording.record_output(column_transformers, pred, Y, transformed_Y, train)
 
     cumulative_loss /= num_batches
     for name in output_cols:
