@@ -5,14 +5,14 @@ from typing import Dict
 from learn_bot.engagement_aim.column_management import IOColumnTransformers
 
 
-def plot_untransformed_and_transformed(title: str, cts: IOColumnTransformers, df, transformed_df=None):
+def plot_untransformed_and_transformed_(title: str, cts: IOColumnTransformers, df, float_cols, int_cols, transformed_df=None):
     # plot untransformed and transformed outputs
     fig = plt.figure(constrained_layout=True)
     fig.suptitle(title)
     subfigs = fig.subfigures(nrows=2, ncols=1)
 
     # untransformed
-    axs = subfigs[0].subplots(1, 3)
+    axs = subfigs[0].subplots(1, len(float_cols) + len(int_cols))
     subfigs[0].suptitle('untransformed')
     df.hist('delta view angle x (t - 1)', ax=axs[0], bins=100)
     axs[0].set_xlabel('yaw degree')
@@ -79,11 +79,11 @@ class ModelOutputRecording:
                 self.test_errors_transformed[name] \
                     .extend((pred[:, r] - transformed_Y[:, r]).reshape(-1).tolist())
 
-    def plot(self, cts: IOColumnTransformers):
+    def plot(self, cts: IOColumnTransformers, float_cols):
         test_df = pd.DataFrame.from_dict(self.test_outputs_untransformed)
         transformed_test_df = pd.DataFrame.from_dict(self.test_outputs_transformed)
-        plot_untransformed_and_transformed('test predictions', cts, test_df, transformed_test_df)
+        plot_untransformed_and_transformed('test predictions', cts, test_df, float_cols, transformed_test_df)
 
         test_errors_df = pd.DataFrame.from_dict(self.test_errors_untransformed)
         transformed_test_errors_df = pd.DataFrame.from_dict(self.test_errors_transformed)
-        plot_untransformed_and_transformed('test errors', cts, test_errors_df, transformed_test_errors_df)
+        plot_untransformed_and_transformed('test errors', cts, test_errors_df, float_cols, transformed_test_errors_df)

@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 from learn_bot.engagement_aim.column_management import IOColumnTransformers, ColumnTypes, get_params
 from learn_bot.engagement_aim.linear_model import LinearModel
 from learn_bot.engagement_aim.output_plotting import plot_untransformed_and_transformed, ModelOutputRecording
-from typing import Dict
+from typing import Dict, List
 from math import sqrt
 
 all_data_df = pd.read_csv(Path(__file__).parent / '..' / '..' / '..' / 'analytics' / 'csv_outputs' / 'engagementAim.csv')
@@ -31,22 +31,33 @@ all_data_df_split_predicate = all_data_df['engagement id'].isin(top_80_pct_round
 train_df = all_data_df[all_data_df_split_predicate]
 test_df = all_data_df[~all_data_df_split_predicate]
 
+base_float_columns: List[str] = ["delta view angle x ", "delta view angle y ",
+                                 "recoil view angle x ", "recoil view angle x ",
+                                 "delta view angle recoil adjusted x ", "delta view angle recoil adjusted y ",
+                                 "eye-to-eye distance "]
+
+input_float_columns: List[str] = []
+PRIOR_TICKS = -12
+FUTURE_TICKS = 6
+CUR_TICK = 1
+for i in range(PRIOR_TICKS, FUTURE_TICKS+CUR_TICK):
+    if i == 0:
+        continue
+    for base_col in base_float_columns:
+        offset_str = "(t" + ("-" if i < 0 else "+") + str(i) + ")"
+        input_float_columns.append(base_col + offset_str)
 
 # transform input and output
-input_column_types = ColumnTypes(["delta view angle x (t - 1)", "delta view angle y (t - 1)", "eye-to-eye distance (t - 1)",
-                                  "delta view angle x (t - 2)", "delta view angle y (t - 2)", "eye-to-eye distance (t - 2)",
-                                  "delta view angle x (t - 3)", "delta view angle y (t - 3)", "eye-to-eye distance (t - 3)",
-                                  "delta view angle x (t - 4)", "delta view angle y (t - 4)", "eye-to-eye distance (t - 4)",
-                                  "delta view angle x (t - 5)", "delta view angle y (t - 5)", "eye-to-eye distance (t - 5)"],
-                                 [], [], [], [], [])
+input_column_types = ColumnTypes(input_float_columns, [], [], ["weapon type"], [], [])
 
-output_column_types = ColumnTypes(["delta view angle x (t - 0)","delta view angle y (t - 0)"],
-                                  [], [], [], [], [])
+
+output_float_columns: List[str] = ["delta view angle x (t)", "delta view angle y (t)"]
+output_column_types = ColumnTypes(output_float_columns, [], [], [], [], [])
 
 column_transformers = IOColumnTransformers(input_column_types, output_column_types, all_data_df)
 
 # plot data set with and without transformers
-plot_untransformed_and_transformed('train+test labels', column_transformers, all_data_df)
+plot_untransformed_and_transformed('train+test labels', column_transformers, all_data_df, input_float_columns)
 
 # create data sets for pytorch
 training_data = AimDataset(train_df, column_transformers)
@@ -205,7 +216,7 @@ for t in range(epochs):
     train_or_test(train_dataloader, model, optimizer, True)
     train_or_test(test_dataloader, model, None, False)
 
-model_output_recording.plot(column_transformers)
+model_output_recording.plot(column_transformers, output_float_columns)
 
 dump(column_transformers, Path(__file__).parent / '..' / '..' / 'models' / 'engagement_aim_model' /
      'column_transformers.joblib')

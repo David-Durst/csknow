@@ -68,15 +68,22 @@ class PTColumnTransformer:
     mean: float
     standard_deviation: float
 
+    # CATEGORICAL data
+    num_cols: int
+
     def convert(self, value):
         if self.pt_ct_type == ColumnTransformerType.FLOAT_STANDARD:
             return (value - self.mean) / self.standard_deviation
+        elif self.pt_ct_type == ColumnTransformerType.CATEGORICAL:
+            NotImplementedError
         else:
             NotImplementedError
 
     def inverse(self, value):
         if self.pt_ct_type == ColumnTransformerType.FLOAT_STANDARD:
             return (value * self.standard_deviation) + self.mean
+        elif self.pt_ct_type == ColumnTransformerType.CATEGORICAL:
+            NotImplementedError
         else:
             NotImplementedError
 
@@ -123,6 +130,7 @@ class IOColumnTransformers:
 
     def create_pytorch_column_transformers(self, types: ColumnTypes, ct: ColumnTransformer) -> List[PTColumnTransformer]:
         result: List[PTColumnTransformer] = []
+        standard_scaler_ct = ct.named_transformers_['standard-scaler']
         standard_scaler_ct = ct.named_transformers_['standard-scaler']
         for name, type in zip(types.column_names(), types.column_types()):
             if type == ColumnTransformerType.FLOAT_STANDARD:

@@ -96,13 +96,13 @@ public:
     vector<string> getOtherColumnNames() override {
         vector<string> result;
         for (int i = 0; i < TOTAL_AIM_TICKS; i++) {
-            result.push_back("delta view angle x (t" + toSignedIntString(i) + ")");
-            result.push_back("delta view angle y (t" + toSignedIntString(i) + ")");
-            result.push_back("recoil angle x (t" + toSignedIntString(i) + ")");
-            result.push_back("recoil angle y (t" + toSignedIntString(i) + ")");
-            result.push_back("delta view angle recoil adjusted x (t" + toSignedIntString(i) + ")");
-            result.push_back("delta view angle recoil adjusted y (t" + toSignedIntString(i) + ")");
-            result.push_back("eye-to-eye distance (t" + toSignedIntString(i) + ")");
+            result.push_back("delta view angle x (t" + toSignedIntString(i, true) + ")");
+            result.push_back("delta view angle y (t" + toSignedIntString(i, true) + ")");
+            result.push_back("recoil angle x (t" + toSignedIntString(i, true) + ")");
+            result.push_back("recoil angle y (t" + toSignedIntString(i, true) + ")");
+            result.push_back("delta view angle recoil adjusted x (t" + toSignedIntString(i, true) + ")");
+            result.push_back("delta view angle recoil adjusted y (t" + toSignedIntString(i, true) + ")");
+            result.push_back("eye-to-eye distance (t" + toSignedIntString(i, true) + ")");
         }
         result.push_back("weapon type");
         return result;

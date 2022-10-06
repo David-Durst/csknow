@@ -106,7 +106,10 @@ public:
     }
 
     static
-    string toSignedIntString(int64_t i) {
+    string toSignedIntString(int64_t i, bool dropZero = false) {
+        if (dropZero && i == 0) {
+            return "";
+        }
         if (i < 0) {
             return std::to_string(i);
         }
