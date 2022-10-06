@@ -421,6 +421,7 @@ export function drawTick(e: InputEvent) {
         let connectionAreaIds: number[] = [];
         let possibleTargetAreas: TargetAreaData[] = []
         let targetAreaId = -1
+        let targetId = -1
         let targetPlaceName = ""
         let targetX = -1
         let targetY = -1
@@ -459,6 +460,7 @@ export function drawTick(e: InputEvent) {
             possibleTargetAreas.sort((a, b) => {return a.avgZ - b.avgZ});
             const possibleTargetArea = possibleTargetAreas[Math.min(possibleTargetAreas.length - 1, layerToDraw)]
             targetAreaId = parseInt(possibleTargetArea.row.otherColumnValues[1])
+            targetId = possibleTargetArea.row.id
             targetPlaceName = possibleTargetArea.row.otherColumnValues[0]
             targetX = possibleTargetArea.avgX
             targetY = possibleTargetArea.avgY
@@ -497,7 +499,7 @@ export function drawTick(e: InputEvent) {
         if (drawTarget && targetAreaId != -1) {
             cacheTargetCtx.fillStyle = 'green'
             cacheTargetCtx.font = targetFontSize.toString() + "px Tahoma"
-            cacheTargetCtx.fillText(targetAreaId.toString() + "," + targetPlaceName, targetX, targetY - 5.)
+            cacheTargetCtx.fillText(targetId.toString() + "," + targetAreaId.toString() + "," + targetPlaceName, targetX, targetY - 5.)
         }
         mainCtx.drawImage(cacheTargetCanvas, 0, 0);
     }
