@@ -2,12 +2,13 @@ from sklearn.preprocessing import StandardScaler, MinMaxScaler, OneHotEncoder, Q
 from dataclasses import dataclass
 from sklearn.compose import ColumnTransformer
 import pandas as pd
-from typing import List, Dict
+from typing import List, Dict, Set
 from enum import Enum
 from functools import cache
 from abc import abstractmethod
 from torch.nn import functional as F
 import torch
+
 
 class ColumnTransformerType(Enum):
     FLOAT_STANDARD = 0
@@ -16,6 +17,12 @@ class ColumnTransformerType(Enum):
     CATEGORICAL = 3
     BOOLEAN = 4
     BOOKKEEPING_PASSTHROUGH = 5
+
+
+ALL_TYPES: Set[ColumnTransformerType] = {ColumnTransformerType.FLOAT_STANDARD, ColumnTransformerType.FLOAT_MIN_MAX,
+                                         ColumnTransformerType.FLOAT_NON_LINEAR, ColumnTransformerType.CATEGORICAL,
+                                         ColumnTransformerType.BOOLEAN, ColumnTransformerType.BOOKKEEPING_PASSTHROUGH}
+
 
 class ColumnTypes:
     float_standard_cols: List[str]
@@ -40,9 +47,10 @@ class ColumnTypes:
         self.boolean_cols = boolean_cols
         self.bookkeeping_passthrough_cols = bookkeeping_passthrough_cols
 
-    #caching values
+    # caching values
     column_types_ = None
     all_cols_ = None
+    float_cols_ = None
 
     def column_types(self) -> List[ColumnTransformerType]:
         if self.column_types_ is None:
@@ -103,7 +111,7 @@ class PTOneHotColumnTransformer(PTColumnTransformer):
     pt_ct_type: ColumnTransformerType = ColumnTransformerType.CATEGORICAL
 
     def convert(self, value: torch.Tensor):
-        one_hot_result =  F.one_hot(value.to(torch.int64), num_classes=self.num_classes)
+        one_hot_result = F.one_hot(value.to(torch.int64), num_classes=self.num_classes)
         one_hot_float_result = one_hot_result.to(value.dtype)
         return torch.flatten(one_hot_float_result, start_dim=1)
 
@@ -150,7 +158,8 @@ class IOColumnTransformers:
                                  types.categorical_cols))
         return ColumnTransformer(transformers=transformers, sparse_threshold=0)
 
-    def create_pytorch_column_transformers(self, types: ColumnTypes, ct: ColumnTransformer) -> List[PTColumnTransformer]:
+    def create_pytorch_column_transformers(self, types: ColumnTypes, ct: ColumnTransformer) -> List[
+        PTColumnTransformer]:
         result: List[PTColumnTransformer] = []
         standard_scaler_ct = ct.named_transformers_['standard-scaler']
         for name, type in zip(types.column_names(), types.column_types()):
@@ -164,16 +173,20 @@ class IOColumnTransformers:
                 NotImplementedError
         return result
 
-    def get_name_ranges(self, input: bool) -> List[range]:
+    def get_name_ranges(self, input: bool, types: Set[ColumnTransformerType] = ALL_TYPES) -> List[range]:
         result: List[range] = []
         cur_start: int = 0
         cts: List[PTColumnTransformer] = self.input_ct_pts if input else self.output_ct_pts
         for ct in cts:
-            if ct.pt_ct_type == ColumnTransformerType.FLOAT_STANDARD:
+            if ct.pt_ct_type == ColumnTransformerType.FLOAT_STANDARD and \
+                    ct.pt_ct_type in types:
                 result.append(range(cur_start, cur_start + 1))
-            elif ct.pt_ct_type == ColumnTransformerType.CATEGORICAL:
+            elif ct.pt_ct_type == ColumnTransformerType.CATEGORICAL and \
+                    ct.pt_ct_type in types:
                 result.append(range(cur_start, cur_start + ct.num_classes))
             else:
                 NotImplementedError
-            cur_start = result[-1].stop
+            # this handles empty categories
+            if result:
+                cur_start = result[-1].stop
         return result

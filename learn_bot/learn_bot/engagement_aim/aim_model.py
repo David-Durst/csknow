@@ -4,16 +4,23 @@ import torch
 from learn_bot.engagement_aim.column_management import IOColumnTransformers
 
 
-class LinearModel(nn.Module):
+class AimModel(nn.Module):
     internal_width = 1024
     cts: IOColumnTransformers
     output_layers: List[nn.Module]
 
     def __init__(self, cts: IOColumnTransformers):
-        super(LinearModel, self).__init__()
+        super(AimModel, self).__init__()
         self.cts = cts
         self.inner_model = nn.Sequential(
-            nn.Linear(cts.get_name_ranges(True)[-1].stop, self.internal_width)
+            nn.Linear(cts.get_name_ranges(True)[-1].stop, self.internal_width),
+            nn.ReLU(),
+            nn.Linear(self.internal_width, self.internal_width),
+            nn.ReLU(),
+            nn.Linear(self.internal_width, self.internal_width),
+            nn.ReLU(),
+            nn.Linear(self.internal_width, self.internal_width),
+            nn.ReLU(),
         )
 
         output_layers = []
@@ -31,8 +38,6 @@ class LinearModel(nn.Module):
         # transform inputs
         xs_transformed = []
         for i, input_range in enumerate(self.cts.get_name_ranges(True)):
-            if i == 84:
-                dude = 1
             xs_transformed.append(self.cts.input_ct_pts[i].convert(x[:, i:i+1]))
         x_transformed = torch.cat(xs_transformed, dim=1)
 

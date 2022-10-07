@@ -11,8 +11,8 @@ from dataset import *
 from joblib import dump
 from dataclasses import dataclass
 import matplotlib.pyplot as plt
-from learn_bot.engagement_aim.column_management import IOColumnTransformers, ColumnTypes
-from learn_bot.engagement_aim.linear_model import LinearModel
+from learn_bot.engagement_aim.column_management import IOColumnTransformers, ColumnTypes, ColumnTransformerType
+from learn_bot.engagement_aim.aim_model import AimModel
 from learn_bot.engagement_aim.output_plotting import plot_untransformed_and_transformed, ModelOutputRecording
 from typing import Dict, List
 from math import sqrt
@@ -97,12 +97,14 @@ for X, Y in test_dataloader:
     break
 
 # Get cpu or gpu device for training.
-device: str = "cuda" if torch.cuda.is_available() else "cpu"
+CPU_DEVICE_STR = "cpu"
+CUDA_DEVICE_STR = "cuda"
+device: str = CUDA_DEVICE_STR if torch.cuda.is_available() else CPU_DEVICE_STR
 print(f"Using {device} device")
 
 # Define model
 embedding_dim = 5
-model = LinearModel(column_transformers).to(device)
+model = AimModel(column_transformers).to(device)
 print(model)
 params = list(model.parameters())
 print("params by layer")
@@ -117,43 +119,55 @@ optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 #optimizer = torch.optim.SGD(model.parameters(), lr=0.001)
 
 output_cols = column_transformers.output_types.column_names()
-output_ranges = column_transformers.get_name_ranges(False)
 
 
 # https://discuss.pytorch.org/t/how-to-combine-multiple-criterions-to-a-loss-function/348/4
 def compute_loss(pred, y):
     total_loss = 0
-    for i in range(len(output_cols)):
-        loss_fn = float_loss_fn
-        if output_cols[i] in column_transformers.output_types.boolean_cols:
-            loss_fn = binary_loss_fn
-        elif output_cols[i] in column_transformers.output_types.categorical_cols:
-            loss_fn = classification_loss_fn
-        total_loss += loss_fn(pred[:, output_ranges[i]], y[:, output_ranges[i]])
+    if column_transformers.output_types.float_standard_cols:
+        col_ranges = column_transformers.get_name_ranges(False, {ColumnTransformerType.FLOAT_STANDARD})
+        col_range = range(col_ranges[0].start, col_ranges[-1].stop)
+        total_loss += float_loss_fn(pred[:, col_range], y[:, col_range])
+    if column_transformers.output_types.boolean_cols:
+        col_ranges = column_transformers.get_name_ranges(False, {ColumnTransformerType.BOOLEAN})
+        col_range = range(col_ranges[0].start, col_ranges[-1].stop)
+        total_loss += binary_loss_fn(pred[:, col_range], y[:, col_range])
+    if column_transformers.output_types.categorical_cols:
+        col_ranges = column_transformers.get_name_ranges(False, {ColumnTransformerType.CATEGORICAL})
+        col_range = range(col_ranges[0].start, col_ranges[-1].stop)
+        total_loss += classification_loss_fn(pred[:, col_range], y[:, col_range])
     return total_loss
 
 
 def compute_accuracy(pred, Y, accuracy):
-    for name, r in zip(output_cols, output_ranges):
+    if column_transformers.output_types.float_standard_cols:
+        col_ranges = column_transformers.get_name_ranges(False, {ColumnTransformerType.FLOAT_STANDARD})
+        col_range = range(col_ranges[0].start, col_ranges[-1].stop)
+        untransformed_col_ranges = range(col_range.start + len(output_cols), col_range.stop + len(output_cols))
+        squared_errors = torch.square(pred[:, untransformed_col_ranges] - Y[:, col_range]).sum(dim=0).to(CPU_DEVICE_STR)
+        for i, name in enumerate(column_transformers.output_types.float_standard_cols):
+            accuracy[name] += squared_errors[i].item()
+
+    if column_transformers.output_types.boolean_cols:
+        col_ranges = column_transformers.get_name_ranges(False, {ColumnTransformerType.BOOLEAN})
+        col_range = range(col_ranges[0].start, col_ranges[-1].stop)
+        untransformed_col_ranges = range(col_range.start + len(output_cols), col_range.stop + len(output_cols))
+        correct_vals = (torch.le(pred[:, untransformed_col_ranges], 0.5) == torch.le(Y[:, col_range], 0.5)) \
+            .type(torch.float).sum(dim=0).to(CPU_DEVICE_STR)
+        for name, i in enumerate(column_transformers.output_types.boolean_cols):
+            accuracy[name] += correct_vals[i].item()
+
+    for name, col_range in zip(column_transformers.output_types.categorical_cols,
+                               column_transformers.get_name_ranges(False, {ColumnTransformerType.CATEGORICAL})):
         # compute accuracy using unnormalized outputs on end
-        untransformed_r = range(r.start + len(output_cols), r.stop + len(output_cols))
-        if name in column_transformers.output_types.float_standard_cols or \
-                name in column_transformers.output_types.float_min_max_cols or \
-                name in column_transformers.output_types.float_non_linear_cols:
-            accuracy[name] += torch.square(pred[:, untransformed_r] - Y[:, r]).sum().item()
-        elif name in column_transformers.output_types.boolean_cols:
-            accuracy[name] += (torch.le(pred[:, untransformed_r], 0.5) == torch.le(Y[:, r], 0.5)) \
-                .type(torch.float).sum().item()
-        elif name in column_transformers.output_types.categorical_cols:
-            accuracy[name] += (pred[:, untransformed_r].argmax(1) == Y[:, r].argmax(1)) \
-                .type(torch.float).sum().item()
-        else:
-            raise "Invalid Column Type For compute_accuracy"
+        untransformed_col_range = range(col_range.start + len(output_cols), col_range.stop + len(output_cols))
+        accuracy[name] += (pred[:, untransformed_col_range].argmax(1) == Y[:, col_range].argmax(1)) \
+            .type(torch.float).sum().item()
 
 
 def finish_accuracy(accuracy):
     accuracy_string = ""
-    for name, unadjusted_r in zip(output_cols, output_ranges):
+    for name, unadjusted_r in zip(output_cols, column_transformers.get_name_ranges(False)):
         # make float accuracy into rmse
         if name in column_transformers.output_types.float_standard_cols or \
                 name in column_transformers.output_types.float_min_max_cols or \
@@ -174,7 +188,7 @@ def finish_accuracy(accuracy):
 first_batch = True
 first_row: torch.Tensor
 model_output_recording: ModelOutputRecording = ModelOutputRecording(column_transformers)
-def train_or_test(dataloader, model, optimizer, train = True):
+def train_or_test(dataloader, model, optimizer, epoch_num, train = True):
     global first_batch, first_row, model_output_recording
     size = len(dataloader.dataset)
     num_batches = len(dataloader)
@@ -218,7 +232,8 @@ def train_or_test(dataloader, model, optimizer, train = True):
             print(f"loss: {loss:>7f}  [{current:>5d}/{size:>5d}]")
 
         compute_accuracy(pred, Y, accuracy)
-        #model_output_recording.record_output(column_transformers, pred, Y, transformed_Y, train)
+        if epoch_num == epochs - 1:
+            model_output_recording.record_output(column_transformers, pred, Y, transformed_Y, train)
 
     cumulative_loss /= num_batches
     for name in output_cols:
@@ -228,12 +243,13 @@ def train_or_test(dataloader, model, optimizer, train = True):
     print(f"Epoch {train_test_str} Accuracy: {accuracy_string}, Transformed Avg Loss: {cumulative_loss:>8f}")
 
 
-epochs = 5
-for t in range(epochs):
-    print(f"\nEpoch {t+1}\n-------------------------------")
-    train_or_test(train_dataloader, model, optimizer, True)
-    train_or_test(test_dataloader, model, None, False)
+epochs = 1
+for epoch_num in range(epochs):
+    print(f"\nEpoch {epoch_num+1}\n-------------------------------")
+    train_or_test(train_dataloader, model, optimizer, epoch_num, True)
+    train_or_test(test_dataloader, model, None, epoch_num, False)
 
+exit(0)
 model_output_recording.plot(column_transformers, output_float_columns)
 
 dump(column_transformers, Path(__file__).parent / '..' / '..' / 'models' / 'engagement_aim_model' /
