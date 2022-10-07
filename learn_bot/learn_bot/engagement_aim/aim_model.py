@@ -42,7 +42,7 @@ class AimModel(nn.Module):
 
         # produce untransformed outputs
         out_transformed = torch.cat(outputs, dim=1)
-        out_untransformed = self.cts.transform_columns(False, out_transformed)
+        out_untransformed = self.cts.untransform_columns(False, out_transformed)
         return torch.cat([out_transformed, out_untransformed], dim=1)
 
     def get_transformed_outputs(self, x: torch.Tensor) -> torch.Tensor:

@@ -79,8 +79,11 @@ class PTMeanStdColumnTransformer(PTColumnTransformer):
             return (value - self.means) / self.standard_deviations
 
     def inverse(self, value):
-        return (value * self.standard_deviations) + self.means
-
+        if value.device.type == CPU_DEVICE_STR:
+            return (value * self.standard_deviations.to(CPU_DEVICE_STR)) + self.means.to(CPU_DEVICE_STR)
+        else:
+            return (value * self.standard_deviations) + self.means
+        
 
 @dataclass
 class PTOneHotColumnTransformer(PTColumnTransformer):
