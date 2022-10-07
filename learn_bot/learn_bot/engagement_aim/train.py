@@ -65,19 +65,15 @@ input_categorical_columns: List[str] = ["weapon type"]
 vis_categorical_columns: List[str] = input_categorical_columns
 
 # transform input and output
-input_column_types = ColumnTypes(input_float_columns, [], [], input_categorical_columns, [6], [], [])
+input_column_types = ColumnTypes(input_float_columns, input_categorical_columns, [6])
 
-output_column_types = ColumnTypes(output_float_columns, [], [], [], [], [], [])
+output_column_types = ColumnTypes(output_float_columns, [], [])
 
 column_transformers = IOColumnTransformers(input_column_types, output_column_types, all_data_df)
 
-vis_float_cols_transformed_df = pd.DataFrame(
-    column_transformers.output_ct.transform(all_data_df.loc[:, output_column_types.column_names()]),
-    columns=output_column_types.column_names())
-
 # plot data set with and without transformers
 plot_untransformed_and_transformed('train+test labels', column_transformers, all_data_df, vis_float_columns,
-                                   input_categorical_columns, vis_float_cols_transformed_df)
+                                   input_categorical_columns)
 
 # create data sets for pytorch
 training_data = AimDataset(train_df, column_transformers)
@@ -140,7 +136,7 @@ def train_or_test(dataloader, model, optimizer, epoch_num, train = True):
             #print(Y.cpu().tolist())
             first_row = X[0:1,:]
         X, Y = X.to(device), Y.to(device)
-        transformed_Y = model.convert_output_labels_for_loss(Y)
+        transformed_Y = column_transformers.transform_columns(False, Y)
         #XR = torch.randn_like(X, device=device)
         #XR[:,0] = X[:,0]
         #YZ = torch.zeros_like(Y) + 0.1
@@ -176,7 +172,7 @@ def train_or_test(dataloader, model, optimizer, epoch_num, train = True):
     print(f"Epoch {train_test_str} Accuracy: {accuracy_string}, Transformed Avg Loss: {cumulative_loss:>8f}")
 
 
-epochs = 1
+epochs = 5
 for epoch_num in range(epochs):
     print(f"\nEpoch {epoch_num+1}\n-------------------------------")
     train_or_test(train_dataloader, model, optimizer, epoch_num, True)

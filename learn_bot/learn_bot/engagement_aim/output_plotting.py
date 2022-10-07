@@ -18,11 +18,13 @@ INCH_PER_FIG = 4
 
 
 def plot_untransformed_and_transformed(title: str, cts: IOColumnTransformers, df, float_cols, cat_cols,
-                                       transformed_df):
+                                       transformed_df = None):
     # plot untransformed and transformed outputs
     fig = plt.figure(figsize=(INCH_PER_FIG * len(float_cols), 3.5 * INCH_PER_FIG), constrained_layout=True)
     fig.suptitle(title)
-    num_rows = 2
+    num_rows = 1
+    if transformed_df is not None:
+        num_rows += 1
     if cat_cols:
         num_rows += 1
     subfigs = fig.subfigures(nrows=num_rows, ncols=1)
@@ -36,18 +38,18 @@ def plot_untransformed_and_transformed(title: str, cts: IOColumnTransformers, df
         axs[0][i].set_xlabel(float_column_x_axes[i % len(float_column_x_axes)])
 
     # transformed
-    axs = subfigs[1].subplots(1, len(float_cols), squeeze=False)
-    subfigs[1].suptitle('float transformed')
-    axs[0][0].set_ylabel('num points')
-    for i in range(len(float_cols)):
-        transformed_df.hist(float_cols[i], ax=axs[0][i], bins=100)
-        axs[0][i].set_xlabel(float_column_x_axes[i % len(float_column_x_axes)] + ' standardized')
-    # plt.tight_layout()
+    if transformed_df is not None:
+        axs = subfigs[1].subplots(1, len(float_cols), squeeze=False)
+        subfigs[1].suptitle('float transformed')
+        axs[0][0].set_ylabel('num points')
+        for i in range(len(float_cols)):
+            transformed_df.hist(float_cols[i], ax=axs[0][i], bins=100)
+            axs[0][i].set_xlabel(float_column_x_axes[i % len(float_column_x_axes)] + ' standardized')
 
     # categorical
     if cat_cols:
-        axs = subfigs[2].subplots(1, len(cat_cols), squeeze=False)
-        subfigs[2].suptitle('categorical')
+        axs = subfigs[num_rows-1].subplots(1, len(cat_cols), squeeze=False)
+        subfigs[num_rows-1].suptitle('categorical')
         axs[0][0].set_ylabel('num points')
         for i in range(len(cat_cols)):
             axs[0][i].set_xlabel(cat_column_x_axes[i % len(cat_column_x_axes)])

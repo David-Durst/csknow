@@ -1,78 +1,51 @@
-from sklearn.preprocessing import StandardScaler, MinMaxScaler, OneHotEncoder, QuantileTransformer
 from dataclasses import dataclass
-from sklearn.compose import ColumnTransformer
 import pandas as pd
 from typing import List, Dict, Set
 from enum import Enum
-from functools import cache
 from abc import abstractmethod
 from torch.nn import functional as F
 import torch
 
+CPU_DEVICE_STR = "cpu"
+CUDA_DEVICE_STR = "cuda"
 
 class ColumnTransformerType(Enum):
     FLOAT_STANDARD = 0
-    FLOAT_MIN_MAX = 1
-    FLOAT_NON_LINEAR = 2
-    CATEGORICAL = 3
-    BOOLEAN = 4
-    BOOKKEEPING_PASSTHROUGH = 5
+    CATEGORICAL = 1
 
 
-ALL_TYPES: Set[ColumnTransformerType] = {ColumnTransformerType.FLOAT_STANDARD, ColumnTransformerType.FLOAT_MIN_MAX,
-                                         ColumnTransformerType.FLOAT_NON_LINEAR, ColumnTransformerType.CATEGORICAL,
-                                         ColumnTransformerType.BOOLEAN, ColumnTransformerType.BOOKKEEPING_PASSTHROUGH}
+ALL_TYPES: Set[ColumnTransformerType] = {ColumnTransformerType.FLOAT_STANDARD,ColumnTransformerType.CATEGORICAL}
 
 
 class ColumnTypes:
     float_standard_cols: List[str]
-    float_min_max_cols: List[str]
-    float_non_linear_cols: List[str]
     categorical_cols: List[str]
     num_cats_per_col: Dict[str, int]
-    boolean_cols: List[str]
-    bookkeeping_passthrough_cols: List[str]
 
-    def __init__(self, float_standard_cols: List[str] = [], float_min_max_cols: List[str] = [],
-                 float_non_linear_cols: List[str] = [], categorical_cols: List[str] = [],
-                 num_cats_per_col: List[int] = [],
-                 boolean_cols: List[str] = [], bookkeeping_passthrough_cols: List[str] = []):
+    def __init__(self, float_standard_cols: List[str] = [], categorical_cols: List[str] = [],
+                 num_cats_per_col: List[int] = []):
         self.float_standard_cols = float_standard_cols
-        self.float_min_max_cols = float_min_max_cols
-        self.float_non_linear_cols = float_non_linear_cols
         self.categorical_cols = categorical_cols
         self.num_cats_per_col = {}
         for cat, num_cats in zip(categorical_cols, num_cats_per_col):
             self.num_cats_per_col[cat] = num_cats
-        self.boolean_cols = boolean_cols
-        self.bookkeeping_passthrough_cols = bookkeeping_passthrough_cols
 
     # caching values
     column_types_ = None
     all_cols_ = None
-    float_cols_ = None
 
     def column_types(self) -> List[ColumnTransformerType]:
         if self.column_types_ is None:
             self.column_types_ = []
             for _ in self.float_standard_cols:
                 self.column_types_.append(ColumnTransformerType.FLOAT_STANDARD)
-            for _ in self.float_min_max_cols:
-                self.column_types_.append(ColumnTransformerType.FLOAT_MIN_MAX)
-            for _ in self.float_non_linear_cols:
-                self.column_types_.append(ColumnTransformerType.FLOAT_NON_LINEAR)
             for _ in self.categorical_cols:
                 self.column_types_.append(ColumnTransformerType.CATEGORICAL)
-            for _ in self.boolean_cols:
-                self.column_types_.append(ColumnTransformerType.BOOLEAN)
-            for _ in self.bookkeeping_passthrough_cols:
-                self.column_types_.append(ColumnTransformerType.BOOKKEEPING_PASSTHROUGH)
         return self.column_types_
 
     def column_names(self) -> List[str]:
         if self.all_cols_ is None:
-            self.all_cols_ = self.float_standard_cols + self.float_min_max_cols + self.float_non_linear_cols + \
-                             self.categorical_cols + self.boolean_cols + self.bookkeeping_passthrough_cols
+            self.all_cols_ = self.float_standard_cols + self.categorical_cols
         return self.all_cols_
 
 
@@ -88,19 +61,25 @@ class PTColumnTransformer:
         pass
 
 
-@dataclass
 class PTMeanStdColumnTransformer(PTColumnTransformer):
     # FLOAT_STANDARD data
-    mean: float
-    standard_deviation: float
+    means: torch.Tensor
+    standard_deviations: torch.Tensor
 
     pt_ct_type: ColumnTransformerType = ColumnTransformerType.FLOAT_STANDARD
 
+    def __init__(self, means: torch.Tensor, standard_deviations: torch.Tensor):
+        self.means = means.to(CUDA_DEVICE_STR).view(1,-1)
+        self.standard_deviations = standard_deviations.to(CUDA_DEVICE_STR).view(1,-1)
+
     def convert(self, value):
-        return (value - self.mean) / self.standard_deviation
+        if value.device.type == CPU_DEVICE_STR:
+            return (value - self.means.to(CPU_DEVICE_STR)) / self.standard_deviations.to(CPU_DEVICE_STR)
+        else:
+            return (value - self.means) / self.standard_deviations
 
     def inverse(self, value):
-        return (value * self.standard_deviation) + self.mean
+        return (value * self.standard_deviations) + self.means
 
 
 @dataclass
@@ -123,9 +102,6 @@ class IOColumnTransformers:
     input_types: ColumnTypes
     output_types: ColumnTypes
 
-    input_ct: ColumnTransformer
-    output_ct: ColumnTransformer
-
     input_ct_pts: List[PTColumnTransformer]
     output_ct_pts: List[PTColumnTransformer]
 
@@ -133,60 +109,69 @@ class IOColumnTransformers:
         self.input_types = input_types
         self.output_types = output_types
 
-        self.input_ct = self.create_column_transformer(self.input_types)
-        self.output_ct = self.create_column_transformer(self.output_types)
+        self.input_ct_pts = self.create_pytorch_column_transformers(self.input_types, all_data_df)
+        self.output_ct_pts = self.create_pytorch_column_transformers(self.output_types, all_data_df)
 
-        # remember: fit Y is ignored for this fitting as not supervised learning
-        x = all_data_df.loc[:, self.input_types.column_names()[0:1]]
-        self.input_ct.fit(all_data_df.loc[:, self.input_types.column_names()])
-        self.output_ct.fit(all_data_df.loc[:, self.output_types.column_names()])
-
-        self.input_ct_pts = self.create_pytorch_column_transformers(self.input_types, self.input_ct)
-        self.output_ct_pts = self.create_pytorch_column_transformers(self.output_types, self.output_ct)
-
-    # https://scikit-learn.org/stable/auto_examples/preprocessing/plot_all_scaling.html
-    def create_column_transformer(self, types: ColumnTypes):
-        transformers = []
-        if types.float_standard_cols:
-            transformers.append(('standard-scaler', StandardScaler(), types.float_standard_cols))
-        if types.float_min_max_cols:
-            transformers.append(('zero-to-one-min-max', MinMaxScaler(), types.float_min_max_cols))
-        if types.float_non_linear_cols:
-            transformers.append(('zero-to-one-non-linear', QuantileTransformer(), types.float_non_linear_cols))
-        if types.categorical_cols or types.boolean_cols or types.bookkeeping_passthrough_cols:
-            transformers.append(('pass', 'passthrough', types.bookkeeping_passthrough_cols + types.boolean_cols +
-                                 types.categorical_cols))
-        return ColumnTransformer(transformers=transformers, sparse_threshold=0)
-
-    def create_pytorch_column_transformers(self, types: ColumnTypes, ct: ColumnTransformer) -> List[
-        PTColumnTransformer]:
+    def create_pytorch_column_transformers(self, types: ColumnTypes, all_data_df: pd.DataFrame) -> \
+            List[PTColumnTransformer]:
         result: List[PTColumnTransformer] = []
-        standard_scaler_ct = ct.named_transformers_['standard-scaler']
-        for name, type in zip(types.column_names(), types.column_types()):
-            if type == ColumnTransformerType.FLOAT_STANDARD:
-                col_index = list(standard_scaler_ct.feature_names_in_).index(name)
-                result.append(PTMeanStdColumnTransformer(standard_scaler_ct.mean_[col_index].item(),
-                                                         standard_scaler_ct.scale_[col_index].item()))
-            if type == ColumnTransformerType.CATEGORICAL:
-                result.append(PTOneHotColumnTransformer(types.num_cats_per_col[name]))
-            else:
-                NotImplementedError
+        result.append(PTMeanStdColumnTransformer(
+            torch.Tensor(all_data_df.loc[:, types.float_standard_cols].mean()),
+            torch.Tensor(all_data_df.loc[:, types.float_standard_cols].std()),
+        ))
+        for name in types.categorical_cols:
+            result.append(PTOneHotColumnTransformer(types.num_cats_per_col[name]))
         return result
 
-    def get_name_ranges(self, input: bool, types: Set[ColumnTransformerType] = ALL_TYPES) -> List[range]:
+    def get_name_ranges(self, input: bool, transformed: bool, types: Set[ColumnTransformerType] = ALL_TYPES) -> List[range]:
         result: List[range] = []
         cur_start: int = 0
+
+        column_types: ColumnTypes = self.input_types if input else self.output_types
         cts: List[PTColumnTransformer] = self.input_ct_pts if input else self.output_ct_pts
-        for ct in cts:
-            if ct.pt_ct_type == ColumnTransformerType.FLOAT_STANDARD and \
-                    ct.pt_ct_type in types:
+
+        for _ in column_types.float_standard_cols:
+            if ColumnTransformerType.FLOAT_STANDARD in types:
                 result.append(range(cur_start, cur_start + 1))
-            elif ct.pt_ct_type == ColumnTransformerType.CATEGORICAL and \
-                    ct.pt_ct_type in types:
-                result.append(range(cur_start, cur_start + ct.num_classes))
-            else:
-                NotImplementedError
-            # this handles empty categories
-            if result:
-                cur_start = result[-1].stop
+            cur_start += 1
+
+        for ct in cts:
+            if ct.pt_ct_type == ColumnTransformerType.CATEGORICAL:
+                if transformed:
+                    if ColumnTransformerType.CATEGORICAL in types:
+                        result.append(range(cur_start, cur_start + ct.num_classes))
+                    cur_start += ct.num_classes
+                else:
+                    if ColumnTransformerType.CATEGORICAL in types:
+                        result.append(range(cur_start, cur_start + 1))
+                    cur_start += 1
+
         return result
+
+    def transform_columns(self, input: bool, x: torch.Tensor) -> torch.Tensor:
+        uncat_result: List[torch.Tensor] = []
+
+        ct_pts = self.input_ct_pts if input else self.output_ct_pts
+
+        x_float_name_ranges = self.get_name_ranges(input, False, {ColumnTransformerType.FLOAT_STANDARD})
+        x_floats = x[:, x_float_name_ranges[0].start:x_float_name_ranges[-1].stop]
+        uncat_result.append(ct_pts[0].convert(x_floats))
+
+        x_categorical_name_ranges = self.get_name_ranges(input, False, {ColumnTransformerType.CATEGORICAL})
+        for i, categorical_name_range in enumerate(x_categorical_name_ranges):
+            uncat_result.append(ct_pts[i+1].convert(x[:, categorical_name_range]))
+
+        return torch.cat(uncat_result, dim=1)
+
+    def untransform_columns(self, input: bool, x: torch.Tensor) -> torch.Tensor:
+        uncat_result: List[torch.Tensor] = []
+
+        x_float_name_ranges = self.get_name_ranges(input, True, {ColumnTransformerType.FLOAT_STANDARD})
+        x_floats = x[:, x_float_name_ranges[0].start:x_float_name_ranges[-1].stop]
+        uncat_result.append(self.output_ct_pts[0].inverse(x_floats))
+
+        x_categorical_name_ranges = self.get_name_ranges(input, True, {ColumnTransformerType.CATEGORICAL})
+        if x_categorical_name_ranges:
+            NotImplementedError
+
+        return torch.cat(uncat_result, dim=1)
