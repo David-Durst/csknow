@@ -2,7 +2,6 @@
 import dataclasses
 
 import torch
-from torch import nn
 from torch.utils.data import DataLoader
 import pandas as pd
 import numpy as np
@@ -11,6 +10,9 @@ from dataset import *
 from joblib import dump
 from dataclasses import dataclass
 import matplotlib.pyplot as plt
+
+from learn_bot.engagement_aim.accuracy_and_loss import compute_loss, compute_accuracy, finish_accuracy, CUDA_DEVICE_STR, \
+    CPU_DEVICE_STR
 from learn_bot.engagement_aim.column_management import IOColumnTransformers, ColumnTypes, ColumnTransformerType
 from learn_bot.engagement_aim.aim_model import AimModel
 from learn_bot.engagement_aim.output_plotting import plot_untransformed_and_transformed, ModelOutputRecording
@@ -97,8 +99,6 @@ for X, Y in test_dataloader:
     break
 
 # Get cpu or gpu device for training.
-CPU_DEVICE_STR = "cpu"
-CUDA_DEVICE_STR = "cuda"
 device: str = CUDA_DEVICE_STR if torch.cuda.is_available() else CPU_DEVICE_STR
 print(f"Using {device} device")
 
@@ -112,77 +112,10 @@ for param_layer in params:
     print(param_layer.shape)
 
 # define losses
-float_loss_fn = nn.MSELoss()
-binary_loss_fn = nn.BCEWithLogitsLoss()
-classification_loss_fn = nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 #optimizer = torch.optim.SGD(model.parameters(), lr=0.001)
 
 output_cols = column_transformers.output_types.column_names()
-
-
-# https://discuss.pytorch.org/t/how-to-combine-multiple-criterions-to-a-loss-function/348/4
-def compute_loss(pred, y):
-    total_loss = 0
-    if column_transformers.output_types.float_standard_cols:
-        col_ranges = column_transformers.get_name_ranges(False, {ColumnTransformerType.FLOAT_STANDARD})
-        col_range = range(col_ranges[0].start, col_ranges[-1].stop)
-        total_loss += float_loss_fn(pred[:, col_range], y[:, col_range])
-    if column_transformers.output_types.boolean_cols:
-        col_ranges = column_transformers.get_name_ranges(False, {ColumnTransformerType.BOOLEAN})
-        col_range = range(col_ranges[0].start, col_ranges[-1].stop)
-        total_loss += binary_loss_fn(pred[:, col_range], y[:, col_range])
-    if column_transformers.output_types.categorical_cols:
-        col_ranges = column_transformers.get_name_ranges(False, {ColumnTransformerType.CATEGORICAL})
-        col_range = range(col_ranges[0].start, col_ranges[-1].stop)
-        total_loss += classification_loss_fn(pred[:, col_range], y[:, col_range])
-    return total_loss
-
-
-def compute_accuracy(pred, Y, accuracy):
-    if column_transformers.output_types.float_standard_cols:
-        col_ranges = column_transformers.get_name_ranges(False, {ColumnTransformerType.FLOAT_STANDARD})
-        col_range = range(col_ranges[0].start, col_ranges[-1].stop)
-        untransformed_col_ranges = range(col_range.start + len(output_cols), col_range.stop + len(output_cols))
-        squared_errors = torch.square(pred[:, untransformed_col_ranges] - Y[:, col_range]).sum(dim=0).to(CPU_DEVICE_STR)
-        for i, name in enumerate(column_transformers.output_types.float_standard_cols):
-            accuracy[name] += squared_errors[i].item()
-
-    if column_transformers.output_types.boolean_cols:
-        col_ranges = column_transformers.get_name_ranges(False, {ColumnTransformerType.BOOLEAN})
-        col_range = range(col_ranges[0].start, col_ranges[-1].stop)
-        untransformed_col_ranges = range(col_range.start + len(output_cols), col_range.stop + len(output_cols))
-        correct_vals = (torch.le(pred[:, untransformed_col_ranges], 0.5) == torch.le(Y[:, col_range], 0.5)) \
-            .type(torch.float).sum(dim=0).to(CPU_DEVICE_STR)
-        for name, i in enumerate(column_transformers.output_types.boolean_cols):
-            accuracy[name] += correct_vals[i].item()
-
-    for name, col_range in zip(column_transformers.output_types.categorical_cols,
-                               column_transformers.get_name_ranges(False, {ColumnTransformerType.CATEGORICAL})):
-        # compute accuracy using unnormalized outputs on end
-        untransformed_col_range = range(col_range.start + len(output_cols), col_range.stop + len(output_cols))
-        accuracy[name] += (pred[:, untransformed_col_range].argmax(1) == Y[:, col_range].argmax(1)) \
-            .type(torch.float).sum().item()
-
-
-def finish_accuracy(accuracy):
-    accuracy_string = ""
-    for name, unadjusted_r in zip(output_cols, column_transformers.get_name_ranges(False)):
-        # make float accuracy into rmse
-        if name in column_transformers.output_types.float_standard_cols or \
-                name in column_transformers.output_types.float_min_max_cols or \
-                name in column_transformers.output_types.float_non_linear_cols:
-            accuracy[name] = sqrt(accuracy[name])
-            accuracy_string += f'''{name}: {accuracy[name]} rmse'''
-        # record top-1 accuracy for tohers
-        elif name in column_transformers.output_types.boolean_cols:
-            accuracy_string += f'''{name}: {accuracy[name]} bool eq'''
-        elif name in column_transformers.output_types.categorical_cols:
-            accuracy_string += f'''{name}: {accuracy[name]} % cat top 1 acc'''
-        else:
-            raise "Invalid Column Type For finish_accuracy"
-        accuracy_string += "; "
-    return accuracy_string
 
 # train and test the model
 first_batch = True
@@ -198,7 +131,7 @@ def train_or_test(dataloader, model, optimizer, epoch_num, train = True):
         model.eval()
     cumulative_loss = 0
     accuracy = {}
-    for name in output_cols:
+    for name in column_transformers.output_types.column_names():
         accuracy[name] = 0
     for batch, (X, Y) in enumerate(dataloader):
         if first_batch and train:
@@ -214,7 +147,7 @@ def train_or_test(dataloader, model, optimizer, epoch_num, train = True):
 
         # Compute prediction error
         pred = model(X)
-        batch_loss = compute_loss(pred, transformed_Y)
+        batch_loss = compute_loss(pred, transformed_Y, column_transformers)
         cumulative_loss += batch_loss
 
         # Backpropagation
@@ -231,14 +164,14 @@ def train_or_test(dataloader, model, optimizer, epoch_num, train = True):
             print(Y[0:2])
             print(f"loss: {loss:>7f}  [{current:>5d}/{size:>5d}]")
 
-        compute_accuracy(pred, Y, accuracy)
+        compute_accuracy(pred, Y, accuracy, column_transformers)
         if epoch_num == epochs - 1:
             model_output_recording.record_output(column_transformers, pred, Y, transformed_Y, train)
 
     cumulative_loss /= num_batches
-    for name in output_cols:
+    for name in column_transformers.output_types.column_names():
         accuracy[name] /= size
-    accuracy_string = finish_accuracy(accuracy)
+    accuracy_string = finish_accuracy(accuracy, column_transformers)
     train_test_str = "Train" if train else "Test"
     print(f"Epoch {train_test_str} Accuracy: {accuracy_string}, Transformed Avg Loss: {cumulative_loss:>8f}")
 
