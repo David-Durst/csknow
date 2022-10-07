@@ -120,7 +120,7 @@ output_cols = column_transformers.output_types.column_names()
 # train and test the model
 first_batch = True
 first_row: torch.Tensor
-model_output_recording: ModelOutputRecording = ModelOutputRecording(column_transformers)
+model_output_recording: ModelOutputRecording = ModelOutputRecording(model)
 def train_or_test(dataloader, model, optimizer, epoch_num, train = True):
     global first_batch, first_row, model_output_recording
     size = len(dataloader.dataset)
@@ -166,7 +166,7 @@ def train_or_test(dataloader, model, optimizer, epoch_num, train = True):
 
         compute_accuracy(pred, Y, accuracy, column_transformers)
         if epoch_num == epochs - 1:
-            model_output_recording.record_output(column_transformers, pred, Y, transformed_Y, train)
+            model_output_recording.record_output(pred, Y, transformed_Y, train)
 
     cumulative_loss /= num_batches
     for name in column_transformers.output_types.column_names():
@@ -182,14 +182,9 @@ for epoch_num in range(epochs):
     train_or_test(train_dataloader, model, optimizer, epoch_num, True)
     train_or_test(test_dataloader, model, None, epoch_num, False)
 
-exit(0)
-model_output_recording.plot(column_transformers, output_float_columns)
+model_output_recording.plot(column_transformers, vis_float_columns)
 
-dump(column_transformers, Path(__file__).parent / '..' / '..' / 'models' / 'engagement_aim_model' /
-     'column_transformers.joblib')
-torch.save(model.state_dict(), Path(__file__).parent / '..' / '..' / 'models' / 'engagement_aim_model' / 'model.pt')
-cpu_model = model.to('cpu')
-script_model = torch.jit.trace(cpu_model, first_row)
+script_model = torch.jit.trace(model.to(CPU_DEVICE_STR), first_row)
 script_model.save(Path(__file__).parent / '..' / '..' / 'models' / 'engagement_aim_model' / 'script_model.pt')
 
 print("Done")

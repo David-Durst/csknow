@@ -1,7 +1,7 @@
 from typing import List
 from torch import nn
 import torch
-from learn_bot.engagement_aim.column_management import IOColumnTransformers
+from learn_bot.engagement_aim.column_management import IOColumnTransformers, ColumnTypes
 
 
 class AimModel(nn.Module):
@@ -54,3 +54,11 @@ class AimModel(nn.Module):
             outputs.append(self.cts.output_ct_pts[i].inverse(outputs[i]))
 
         return torch.cat(outputs, dim=1)
+
+    def get_transformed_outputs(self, x: torch.Tensor) -> torch.Tensor:
+        return x[:, :len(self.cts.output_types.column_names())]
+
+    def get_untransformed_outputs(self, x: torch.Tensor):
+        return x[:, len(self.cts.output_types.column_names()):]
+
+
