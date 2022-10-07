@@ -19,8 +19,6 @@ class AimModel(nn.Module):
             nn.ReLU(),
             nn.Linear(self.internal_width, self.internal_width),
             nn.ReLU(),
-            nn.Linear(self.internal_width, self.internal_width),
-            nn.ReLU(),
         )
 
         output_layers = []
