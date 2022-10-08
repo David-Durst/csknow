@@ -95,7 +95,7 @@ public:
 
     vector<string> getOtherColumnNames() override {
         vector<string> result;
-        for (int i = PAST_AIM_TICKS; i <= FUTURE_AIM_TICKS; i++) {
+        for (int i = -1*PAST_AIM_TICKS; i <= FUTURE_AIM_TICKS; i++) {
             result.push_back("delta view angle x (t" + toSignedIntString(i, true) + ")");
             result.push_back("delta view angle y (t" + toSignedIntString(i, true) + ")");
             result.push_back("recoil angle x (t" + toSignedIntString(i, true) + ")");
