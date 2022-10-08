@@ -17,6 +17,12 @@ cat_column_x_axes: List[str] = ['weapon type']
 INCH_PER_FIG = 4
 
 
+def filter_df(df: pd.DataFrame, col_name) -> pd.DataFrame:
+    q_low = df[col_name].quantile(0.01)
+    q_hi = df[col_name].quantile(0.99)
+    return df[(df[col_name] < q_hi) & (df[col_name] > q_low)]
+
+
 def plot_untransformed_and_transformed(title: str, cts: IOColumnTransformers, df, float_cols, cat_cols,
                                        transformed_df = None):
     # plot untransformed and transformed outputs
@@ -34,7 +40,8 @@ def plot_untransformed_and_transformed(title: str, cts: IOColumnTransformers, df
     subfigs[0].suptitle('float untransformed')
     axs[0][0].set_ylabel('num points')
     for i in range(len(float_cols)):
-        df.hist(float_cols[i], ax=axs[0][i], bins=100)
+        df_filtered = filter_df(df, float_cols[i])
+        df_filtered.hist(float_cols[i], ax=axs[0][i], bins=100)
         axs[0][i].set_xlabel(float_column_x_axes[i % len(float_column_x_axes)])
 
     # transformed
@@ -43,7 +50,8 @@ def plot_untransformed_and_transformed(title: str, cts: IOColumnTransformers, df
         subfigs[1].suptitle('float transformed')
         axs[0][0].set_ylabel('num points')
         for i in range(len(float_cols)):
-            transformed_df.hist(float_cols[i], ax=axs[0][i], bins=100)
+            transformed_df_filtered = filter_df(transformed_df, float_cols[i])
+            transformed_df_filtered.hist(float_cols[i], ax=axs[0][i], bins=100)
             axs[0][i].set_xlabel(float_column_x_axes[i % len(float_column_x_axes)] + ' standardized')
 
     # categorical
