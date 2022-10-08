@@ -52,6 +52,7 @@ public:
     vector<array<Vec2, TOTAL_AIM_TICKS>> deltaViewAngle;
     vector<array<Vec2, TOTAL_AIM_TICKS>> recoilAngle;
     vector<array<Vec2, TOTAL_AIM_TICKS>> deltaViewAngleRecoilAdjusted;
+    vector<array<Vec3, TOTAL_AIM_TICKS>> deltaPosition;
     vector<array<double, TOTAL_AIM_TICKS>> eyeToHeadDistance;
     vector<AimWeaponType> weaponType;
     vector<double> distanceNormalization;
@@ -81,6 +82,7 @@ public:
             ss << "," << deltaViewAngle[index][i].x << "," << deltaViewAngle[index][i].y
                << "," << recoilAngle[index][i].x << "," << recoilAngle[index][i].y
                << "," << deltaViewAngleRecoilAdjusted[index][i].x << "," << deltaViewAngleRecoilAdjusted[index][i].y
+               << "," << deltaPosition[index][i].x << "," << deltaPosition[index][i].y << "," << deltaPosition[index][i].z
                << "," << eyeToHeadDistance[index][i];
         }
 
@@ -102,7 +104,10 @@ public:
             result.push_back("recoil angle y (t" + toSignedIntString(i, true) + ")");
             result.push_back("delta view angle recoil adjusted x (t" + toSignedIntString(i, true) + ")");
             result.push_back("delta view angle recoil adjusted y (t" + toSignedIntString(i, true) + ")");
-            result.push_back("eye-to-eye distance (t" + toSignedIntString(i, true) + ")");
+            result.push_back("delta position x (t" + toSignedIntString(i, true) + ")");
+            result.push_back("delta position y (t" + toSignedIntString(i, true) + ")");
+            result.push_back("delta position z (t" + toSignedIntString(i, true) + ")");
+            result.push_back("eye-to-head distance (t" + toSignedIntString(i, true) + ")");
         }
         result.push_back("weapon type");
         return result;

@@ -22,6 +22,7 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
     vector<vector<array<Vec2, TOTAL_AIM_TICKS>>> tmpDeltaViewAngle(numThreads);
     vector<vector<array<Vec2, TOTAL_AIM_TICKS>>> tmpRecoilAngle(numThreads);
     vector<vector<array<Vec2, TOTAL_AIM_TICKS>>> tmpDeltaViewAngleRecoilAdjusted(numThreads);
+    vector<vector<array<Vec3, TOTAL_AIM_TICKS>>> tmpDeltaPosition(numThreads);
     vector<vector<array<double, TOTAL_AIM_TICKS>>> tmpEyeToHeadDistance(numThreads);
     vector<vector<double>> tmpDistanceNormalization(numThreads);
     vector<vector<AimWeaponType>> tmpWeaponType(numThreads);
@@ -60,6 +61,7 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
                 tmpRecoilAngle[threadNum].push_back({});
                 tmpDeltaViewAngleRecoilAdjusted[threadNum].push_back({});
                 tmpEyeToHeadDistance[threadNum].push_back({});
+                tmpDeltaPosition[threadNum].push_back({});
 
                 for (size_t i = 0; i < TOTAL_AIM_TICKS; i++) {
 
@@ -72,12 +74,14 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
                         playerAtTick.eyePosZ[attackerPATId]
                     };
 
+                    Vec3 victimEyePos {
+                        playerAtTick.posX[victimPATId],
+                        playerAtTick.posY[victimPATId],
+                        playerAtTick.eyePosZ[victimPATId]
+                    };
+
                     Vec3 victimHeadPos = getCenterHeadCoordinatesForPlayer(
-                        {
-                            playerAtTick.posX[victimPATId],
-                            playerAtTick.posY[victimPATId],
-                            playerAtTick.eyePosZ[victimPATId]
-                        },
+                        victimEyePos,
                         {
                             playerAtTick.viewX[victimPATId],
                             playerAtTick.viewY[victimPATId]
@@ -94,6 +98,7 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
 
                     tmpDeltaViewAngle[threadNum].back()[i] = deltaViewAngle;
                     tmpEyeToHeadDistance[threadNum].back()[i] = computeDistance(attackerEyePos, victimHeadPos);
+                    tmpDeltaPosition[threadNum].back()[i] = attackerEyePos - victimEyePos;
 
                     // mul recoil by -1 as flipping all angles internally
                     Vec2 recoil {
@@ -168,6 +173,7 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
                            result.deltaViewAngle.push_back(tmpDeltaViewAngle[minThreadId][tmpRowId]);
                            result.recoilAngle.push_back(tmpRecoilAngle[minThreadId][tmpRowId]);
                            result.deltaViewAngleRecoilAdjusted.push_back(tmpDeltaViewAngleRecoilAdjusted[minThreadId][tmpRowId]);
+                           result.deltaPosition.push_back(tmpDeltaPosition[minThreadId][tmpRowId]);
                            result.eyeToHeadDistance.push_back(tmpEyeToHeadDistance[minThreadId][tmpRowId]);
                            result.distanceNormalization.push_back(tmpDistanceNormalization[minThreadId][tmpRowId]);
                            result.weaponType.push_back(tmpWeaponType[minThreadId][tmpRowId]);

@@ -13,6 +13,7 @@ struct EngagementAimInferenceTickData {
     Vec2 deltaViewAngle;
     Vec2 recoilAngle;
     Vec2 deltaViewAngleRecoilAdjusted;
+    Vec3 deltaPosition;
     double eyeToHeadDistance;
     AimWeaponType weaponType;
 };
@@ -52,6 +53,8 @@ void InferenceEngagementAimResult::runQuery(const string & modelsDir, const Enga
                     trainingEngagementAimResult.deltaViewAngleRecoilAdjusted[engagementAimId][priorTickNum];
                 priorData[priorTickNum].eyeToHeadDistance =
                     trainingEngagementAimResult.eyeToHeadDistance[engagementAimId][priorTickNum];
+                priorData[priorTickNum].deltaPosition =
+                    trainingEngagementAimResult.deltaPosition[engagementAimId][priorTickNum];
                 priorData[priorTickNum].weaponType =
                     trainingEngagementAimResult.weaponType[engagementAimId];
             }
@@ -68,6 +71,9 @@ void InferenceEngagementAimResult::runQuery(const string & modelsDir, const Enga
             rowCPP.push_back(static_cast<float>(priorData[priorDeltaNum].recoilAngle.y));
             rowCPP.push_back(static_cast<float>(priorData[priorDeltaNum].deltaViewAngleRecoilAdjusted.x));
             rowCPP.push_back(static_cast<float>(priorData[priorDeltaNum].deltaViewAngleRecoilAdjusted.y));
+            rowCPP.push_back(static_cast<float>(priorData[priorDeltaNum].deltaPosition.x));
+            rowCPP.push_back(static_cast<float>(priorData[priorDeltaNum].deltaPosition.y));
+            rowCPP.push_back(static_cast<float>(priorData[priorDeltaNum].deltaPosition.z));
             rowCPP.push_back(static_cast<float>(priorData[priorDeltaNum].eyeToHeadDistance));
         }
         rowCPP.push_back(static_cast<float>(priorData[0].weaponType));
@@ -90,14 +96,16 @@ void InferenceEngagementAimResult::runQuery(const string & modelsDir, const Enga
             activeEngagementsPriorTickData.erase(engagementId);
         }
         else {
-            for (size_t priorDeltaNum = 1; priorDeltaNum < activeEngagementsPriorTickData.size(); priorDeltaNum++) {
-                activeEngagementsPriorTickData[priorDeltaNum - 1] = activeEngagementsPriorTickData[priorDeltaNum];
+            for (size_t priorDeltaNum = 1; priorDeltaNum < PAST_AIM_TICKS; priorDeltaNum++) {
+                priorData[priorDeltaNum - 1] = priorData[priorDeltaNum];
             }
             priorData[PAST_AIM_TICKS - 1].deltaViewAngle = predictedDeltaViewAngle.back();
             priorData[PAST_AIM_TICKS - 1].recoilAngle =
                 trainingEngagementAimResult.recoilAngle[engagementAimId][PAST_AIM_TICKS];
             priorData[PAST_AIM_TICKS - 1].deltaViewAngleRecoilAdjusted =
                 priorData[PAST_AIM_TICKS - 1].deltaViewAngle + priorData[PAST_AIM_TICKS - 1].recoilAngle * WEAPON_RECOIL_SCALE;
+            priorData[PAST_AIM_TICKS - 1].deltaPosition =
+                trainingEngagementAimResult.deltaPosition[engagementAimId][PAST_AIM_TICKS];
             priorData[PAST_AIM_TICKS - 1].eyeToHeadDistance =
                 trainingEngagementAimResult.eyeToHeadDistance[engagementAimId][PAST_AIM_TICKS];
             priorData[PAST_AIM_TICKS - 1].weaponType =
