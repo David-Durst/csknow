@@ -34,7 +34,6 @@ void InferenceEngagementAimResult::runQuery(const string & modelsDir, const Enga
 
     auto options = torch::TensorOptions().dtype(at::kFloat);
     // NUM_TICKS stores cur tick and prior ticks in window, shrink by 1 for just prior ticks
-    /*
     map<int64_t, array<EngagementAimInferenceTickData, PAST_AIM_TICKS>> activeEngagementsPriorTickData;
     for (int64_t engagementAimId = 0; engagementAimId < trainingEngagementAimResult.size; engagementAimId++) {
         int64_t engagementId = trainingEngagementAimResult.engagementId[engagementAimId];
@@ -71,14 +70,15 @@ void InferenceEngagementAimResult::runQuery(const string & modelsDir, const Enga
             rowCPP.push_back(static_cast<float>(priorData[priorDeltaNum].deltaViewAngleRecoilAdjusted.y));
             rowCPP.push_back(static_cast<float>(priorData[priorDeltaNum].eyeToHeadDistance));
         }
+        rowCPP.push_back(static_cast<float>(priorData[0].weaponType));
         torch::Tensor rowPT = torch::from_blob(rowCPP.data(), {1, static_cast<long>(rowCPP.size())}, options).clone();
         inputs.push_back(rowPT);
 
         // Execute the model and turn its output into a tensor.
         at::Tensor output = module.forward(inputs).toTensor();
         predictedDeltaViewAngle.push_back({
-            static_cast<double>(output[0][output[0].size(1) / 2].item<float>()),
-            static_cast<double>(output[0][output[0].size(1) / 2 + 1].item<float>())
+            static_cast<double>(output[0][output[0].size(0) / 2].item<float>()),
+            static_cast<double>(output[0][output[0].size(0) / 2 + 1].item<float>())
         });
         normalizedPredictedDeltaViewAngle.push_back({
             predictedDeltaViewAngle.back().x / trainingEngagementAimResult.distanceNormalization[engagementAimId],
@@ -94,17 +94,15 @@ void InferenceEngagementAimResult::runQuery(const string & modelsDir, const Enga
                 activeEngagementsPriorTickData[priorDeltaNum - 1] = activeEngagementsPriorTickData[priorDeltaNum];
             }
             priorData[PAST_AIM_TICKS - 1].deltaViewAngle = predictedDeltaViewAngle.back();
-            priorData[PAST_AIM_TICKS - 1].deltaViewAngle =
-                trainingEngagementAimResult.deltaViewAngle[engagementAimId][PAST_AIM_TICKS];
             priorData[PAST_AIM_TICKS - 1].recoilAngle =
                 trainingEngagementAimResult.recoilAngle[engagementAimId][PAST_AIM_TICKS];
             priorData[PAST_AIM_TICKS - 1].deltaViewAngleRecoilAdjusted =
-                trainingEngagementAimResult.deltaViewAngleRecoilAdjusted[engagementAimId][PAST_AIM_TICKS];
+                priorData[PAST_AIM_TICKS - 1].deltaViewAngle + priorData[PAST_AIM_TICKS - 1].recoilAngle * WEAPON_RECOIL_SCALE;
             priorData[PAST_AIM_TICKS - 1].eyeToHeadDistance =
                 trainingEngagementAimResult.eyeToHeadDistance[engagementAimId][PAST_AIM_TICKS];
             priorData[PAST_AIM_TICKS - 1].weaponType =
                 trainingEngagementAimResult.weaponType[engagementAimId];
         }
     }
-     */
+    size = trainingEngagementAimResult.size;
 }
