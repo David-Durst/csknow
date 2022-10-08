@@ -36,7 +36,8 @@ test_df = all_data_df[~all_data_df_split_predicate]
 base_float_columns: List[str] = ["delta view angle x ", "delta view angle y ",
                                  "recoil angle x ", "recoil angle y ",
                                  "delta view angle recoil adjusted x ", "delta view angle recoil adjusted y ",
-                                 "eye-to-eye distance "]
+                                 'delta position x ', 'delta position y ', 'delta position z ',
+                                 "eye-to-head distance "]
 
 input_float_columns: List[str] = []
 output_float_columns: List[str] = []
@@ -172,7 +173,7 @@ def train_or_test(dataloader, model, optimizer, epoch_num, train = True):
     print(f"Epoch {train_test_str} Accuracy: {accuracy_string}, Transformed Avg Loss: {cumulative_loss:>8f}")
 
 
-epochs = 5
+epochs = 10
 for epoch_num in range(epochs):
     print(f"\nEpoch {epoch_num+1}\n-------------------------------")
     train_or_test(train_dataloader, model, optimizer, epoch_num, True)

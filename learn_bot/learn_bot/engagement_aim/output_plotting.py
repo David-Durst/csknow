@@ -10,7 +10,8 @@ from learn_bot.engagement_aim.aim_model import AimModel
 from learn_bot.engagement_aim.column_management import IOColumnTransformers
 
 float_column_x_axes: List[str] = ['yaw degree', 'pitch degree', 'yaw degree', 'pitch degree',
-                                  'yaw degree', 'pitch degree', 'hammer units']
+                                  'yaw degree', 'pitch degree',
+                                  'hammer units', 'hammer units', 'hammer units', 'hammer units']
 
 cat_column_x_axes: List[str] = ['weapon type']
 
