@@ -63,8 +63,8 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
 
                 for (size_t i = 0; i < TOTAL_AIM_TICKS; i++) {
 
-                    const int64_t & attackerPATId = playerToPatWindows.at(attackerId).fromNewest(i);
-                    const int64_t & victimPATId = playerToPatWindows.at(victimId).fromNewest(i);
+                    const int64_t & attackerPATId = playerToPatWindows.at(attackerId).fromOldest(i);
+                    const int64_t & victimPATId = playerToPatWindows.at(victimId).fromOldest(i);
 
                     Vec3 attackerEyePos {
                         playerAtTick.posX[attackerPATId],
@@ -105,8 +105,8 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
                 }
 
                 // compute normalization constants, used to visualize inference
-                const int64_t & curAttackerPATId = playerToPatWindows.at(attackerId).fromNewest(0);
-                const int64_t & curVictimPATId = playerToPatWindows.at(victimId).fromNewest(0);
+                const int64_t & curAttackerPATId = playerToPatWindows.at(attackerId).fromNewest(FUTURE_AIM_TICKS);
+                const int64_t & curVictimPATId = playerToPatWindows.at(victimId).fromNewest(FUTURE_AIM_TICKS);
 
                 Vec3 curAttackerEyePos = {
                     playerAtTick.posX[curAttackerPATId],
