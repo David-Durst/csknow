@@ -63,24 +63,28 @@ class PTColumnTransformer:
 
 class PTMeanStdColumnTransformer(PTColumnTransformer):
     # FLOAT_STANDARD data
+    cpu_means: torch.Tensor
+    cpu_standard_deviations: torch.Tensor
     means: torch.Tensor
     standard_deviations: torch.Tensor
 
     pt_ct_type: ColumnTransformerType = ColumnTransformerType.FLOAT_STANDARD
 
     def __init__(self, means: torch.Tensor, standard_deviations: torch.Tensor):
-        self.means = means.to(CUDA_DEVICE_STR).view(1,-1)
-        self.standard_deviations = standard_deviations.to(CUDA_DEVICE_STR).view(1,-1)
+        self.cpu_means = means.view(1,-1)
+        self.cpu_standard_deviations = standard_deviations.view(1,-1)
+        self.means = self.cpu_means.to(CUDA_DEVICE_STR)
+        self.standard_deviations = self.cpu_standard_deviations.to(CUDA_DEVICE_STR)
 
     def convert(self, value):
         if value.device.type == CPU_DEVICE_STR:
-            return (value - self.means.to(CPU_DEVICE_STR)) / self.standard_deviations.to(CPU_DEVICE_STR)
+            return (value - self.cpu_means) / self.cpu_standard_deviations
         else:
             return (value - self.means) / self.standard_deviations
 
     def inverse(self, value):
         if value.device.type == CPU_DEVICE_STR:
-            return (value * self.standard_deviations.to(CPU_DEVICE_STR)) + self.means.to(CPU_DEVICE_STR)
+            return (value * self.cpu_standard_deviations) + self.cpu_means
         else:
             return (value * self.standard_deviations) + self.means
 
