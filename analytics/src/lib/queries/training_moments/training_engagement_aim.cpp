@@ -95,9 +95,10 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
                     tmpDeltaViewAngle[threadNum].back()[i] = deltaViewAngle;
                     tmpEyeToHeadDistance[threadNum].back()[i] = computeDistance(attackerEyePos, victimHeadPos);
 
+                    // mul recoil by -1 as flipping all angles internally
                     Vec2 recoil {
                         playerAtTick.aimPunchX[attackerPATId],
-                        playerAtTick.aimPunchY[attackerPATId]
+                        -1 * playerAtTick.aimPunchY[attackerPATId]
                     };
 
                     tmpRecoilAngle[threadNum].back()[i] = recoil;
