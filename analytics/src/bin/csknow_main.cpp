@@ -305,7 +305,7 @@ int main(int argc, char * argv[]) {
     string inferenceEngagementAimName = "engagementAim";
     InferenceEngagementAimResult inferenceEngagementAimResult(engagementAimResult);
     if (haveModels) {
-        inferenceEngagementAimResult.runQuery(modelsDir, engagementResult);
+        inferenceEngagementAimResult.runQuery(filteredRounds, modelsDir, engagementResult);
     }
     std::cout << "size: " << inferenceEngagementAimResult.size << std::endl;
     engagementResult.havePerTickAimPredictionTable = true;

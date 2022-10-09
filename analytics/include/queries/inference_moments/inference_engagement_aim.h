@@ -55,7 +55,7 @@ public:
                 "normalized predicted delta view angle x", "normalized predicted delta view angle y"};
     }
 
-    void runQuery(const string & modelsDir, const EngagementResult & engagementResult);
+    void runQuery(const Rounds & rounds, const string & modelsDir, const EngagementResult & engagementResult);
 };
 
 #endif //CSKNOW_INFERENCE_ENGAGEMENT_AIM_H
