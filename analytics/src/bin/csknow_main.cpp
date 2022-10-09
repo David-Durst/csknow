@@ -300,6 +300,7 @@ int main(int argc, char * argv[]) {
     TrainingEngagementAimResult engagementAimResult =
         queryTrainingEngagementAim(games, filteredRounds, ticks, playerAtTick, engagementResult);
     std::cout << "size: " << engagementAimResult.size << std::endl;
+    engagementAimResult.analyzeRollingWindowDifferences(filteredRounds, ticks, engagementPerTickAimResult);
     std::cout << "processing inference engagement aim training data set" << std::endl;
     string inferenceEngagementAimName = "engagementAim";
     InferenceEngagementAimResult inferenceEngagementAimResult(engagementAimResult);
