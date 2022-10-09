@@ -10,11 +10,11 @@ from dataset import *
 from joblib import dump
 from dataclasses import dataclass
 import matplotlib.pyplot as plt
-
 from learn_bot.engagement_aim.accuracy_and_loss import compute_loss, compute_accuracy, finish_accuracy, CUDA_DEVICE_STR, \
     CPU_DEVICE_STR
-from learn_bot.engagement_aim.column_management import IOColumnTransformers, ColumnTypes, ColumnTransformerType
-from learn_bot.engagement_aim.aim_model import AimModel
+from learn_bot.engagement_aim.column_management import IOColumnTransformers, ColumnTypes, ColumnTransformerType, \
+    PRIOR_TICKS, FUTURE_TICKS, CUR_TICK
+from learn_bot.engagement_aim.mlp_aim_model import MLPAimModel
 from learn_bot.engagement_aim.output_plotting import plot_untransformed_and_transformed, ModelOutputRecording
 from typing import Dict, List
 from math import sqrt
@@ -42,9 +42,6 @@ base_float_columns: List[str] = ["delta view angle x ", "delta view angle y ",
 input_float_columns: List[str] = []
 output_float_columns: List[str] = []
 vis_float_columns: List[str] = []
-PRIOR_TICKS = -12
-FUTURE_TICKS = 6
-CUR_TICK = 1
 for i in range(PRIOR_TICKS, FUTURE_TICKS+CUR_TICK):
     offset_str = "(t"
     if i < 0:
@@ -101,7 +98,7 @@ print(f"Using {device} device")
 
 # Define model
 embedding_dim = 5
-model = AimModel(column_transformers).to(device)
+model = MLPAimModel(column_transformers).to(device)
 print(model)
 params = list(model.parameters())
 print("params by layer")

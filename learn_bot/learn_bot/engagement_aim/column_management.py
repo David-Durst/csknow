@@ -9,6 +9,10 @@ import torch
 CPU_DEVICE_STR = "cpu"
 CUDA_DEVICE_STR = "cuda"
 
+PRIOR_TICKS = -12
+FUTURE_TICKS = 6
+CUR_TICK = 1
+
 class ColumnTransformerType(Enum):
     FLOAT_STANDARD = 0
     CATEGORICAL = 1

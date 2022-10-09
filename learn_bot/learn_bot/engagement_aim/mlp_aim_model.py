@@ -4,13 +4,13 @@ import torch
 from learn_bot.engagement_aim.column_management import IOColumnTransformers, ColumnTypes
 
 
-class AimModel(nn.Module):
+class MLPAimModel(nn.Module):
     internal_width = 1024
     cts: IOColumnTransformers
     output_layers: List[nn.Module]
 
     def __init__(self, cts: IOColumnTransformers):
-        super(AimModel, self).__init__()
+        super(MLPAimModel, self).__init__()
         self.cts = cts
         self.inner_model = nn.Sequential(
             nn.Linear(cts.get_name_ranges(True, True)[-1].stop, self.internal_width),
