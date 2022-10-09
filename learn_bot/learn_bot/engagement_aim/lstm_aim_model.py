@@ -119,7 +119,7 @@ class LSTMAimModel(nn.Module):
         # no constant output predictions, so no conversion necessary, cat will just combine all outputs
 
         # produce untransformed outputs
-        out_transformed = torch.cat(outputs, dim=1).squeeze()
+        out_transformed = torch.cat(outputs, dim=1).squeeze(dim=2)
         out_untransformed = self.cts.untransform_columns(False, out_transformed)
         return torch.cat([out_transformed, out_untransformed], dim=1)
 

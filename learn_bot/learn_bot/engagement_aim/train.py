@@ -169,7 +169,7 @@ def train_or_test(dataloader, model, optimizer, epoch_num, train = True):
     print(f"Epoch {train_test_str} Accuracy: {accuracy_string}, Transformed Avg Loss: {cumulative_loss:>8f}")
 
 
-epochs = 1
+epochs = 10
 for epoch_num in range(epochs):
     print(f"\nEpoch {epoch_num+1}\n-------------------------------")
     train_or_test(train_dataloader, model, optimizer, epoch_num, True)
