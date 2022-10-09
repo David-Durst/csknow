@@ -1,15 +1,10 @@
 # https://pytorch.org/tutorials/beginner/basics/quickstart_tutorial.html
 import dataclasses
 
-import torch
 from torch.utils.data import DataLoader
 import pandas as pd
-import numpy as np
 from pathlib import Path
 from dataset import *
-from joblib import dump
-from dataclasses import dataclass
-import matplotlib.pyplot as plt
 from learn_bot.engagement_aim.accuracy_and_loss import compute_loss, compute_accuracy, finish_accuracy, CUDA_DEVICE_STR, \
     CPU_DEVICE_STR
 from learn_bot.engagement_aim.column_management import IOColumnTransformers, ColumnTypes, ColumnTransformerType, \
@@ -18,7 +13,7 @@ from learn_bot.engagement_aim.lstm_aim_model import LSTMAimModel
 from learn_bot.engagement_aim.mlp_aim_model import MLPAimModel
 from learn_bot.engagement_aim.output_plotting import plot_untransformed_and_transformed, ModelOutputRecording
 from typing import Dict, List
-from math import sqrt
+from progress.bar import Bar
 
 all_data_df = pd.read_csv(Path(__file__).parent / '..' / '..' / '..' / 'analytics' / 'csv_outputs' / 'engagementAim.csv')
 
@@ -127,6 +122,7 @@ def train_or_test(dataloader, model, optimizer, epoch_num, train = True):
         model.eval()
     cumulative_loss = 0
     accuracy = {}
+    #bar = Bar('Processing', max=size)
     for name in column_transformers.output_types.column_names():
         accuracy[name] = 0
     for batch, (X, Y) in enumerate(dataloader):
@@ -163,6 +159,7 @@ def train_or_test(dataloader, model, optimizer, epoch_num, train = True):
         compute_accuracy(pred, Y, accuracy, column_transformers)
         if epoch_num == epochs - 1:
             model_output_recording.record_output(pred, Y, transformed_Y, train)
+        #bar.next(X.shape[0])
 
     cumulative_loss /= num_batches
     for name in column_transformers.output_types.column_names():
@@ -172,7 +169,7 @@ def train_or_test(dataloader, model, optimizer, epoch_num, train = True):
     print(f"Epoch {train_test_str} Accuracy: {accuracy_string}, Transformed Avg Loss: {cumulative_loss:>8f}")
 
 
-epochs = 10
+epochs = 1
 for epoch_num in range(epochs):
     print(f"\nEpoch {epoch_num+1}\n-------------------------------")
     train_or_test(train_dataloader, model, optimizer, epoch_num, True)
