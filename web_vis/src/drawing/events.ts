@@ -17,6 +17,7 @@ let eventIdLabel: HTMLSpanElement = null
 let overlaySelector: HTMLSelectElement = null
 export let curEvent: string = "none"
 export let selectedEventId: number = INVALID_ID
+let priorEventId: number = INVALID_ID
 export let activeEvent: Row = null
 export let curOverlay: string = "none"
 export let displayMouseData = true
@@ -55,17 +56,29 @@ export function getPlayersText(tickData: TickRow, gameData: GameData): Map<numbe
     // if event, get min key player number for each player
     const eventArray = gameData.tables.get(curEvent)
     const eventsForTick = index.search([tickData.id, tickData.id])
-    // see updateEventId for how curEventId is set
-    if (selectedEventId == INVALID_ID) {
-        activeEvent = eventArray[Math.min(...eventsForTick)]
-    }
-    else {
-        for (let i = 0; i < eventArray.length; i++) {
-            if (selectedEventId == eventArray[i].id) {
-                activeEvent = eventArray[i]
+
+    // default value for active event
+    activeEvent = eventArray[Math.min(...eventsForTick)]
+    // use selected to override if that set, or prior is that is set as backup
+    // see updateEventId for how selectEventId is set
+    if (selectedEventId != INVALID_ID) {
+        for (let i = 0; i < eventsForTick.length; i++) {
+            const eventIndex = eventsForTick[i]
+            if (selectedEventId == eventArray[eventIndex].id) {
+                activeEvent = eventArray[eventIndex]
             }
         }
     }
+    else if (priorEventId != INVALID_ID) {
+        for (let i = 0; i < eventsForTick.length; i++) {
+            const eventIndex = eventsForTick[i]
+            if (priorEventId == eventArray[eventIndex].id) {
+                activeEvent = eventArray[eventIndex]
+            }
+        }
+    }
+    priorEventId = activeEvent.id;
+
     const parser = gameData.parsers.get(curEvent)
     const playersToLabel = activeEvent.otherColumnValues[parser.playersToLabelColumn].split(";").map(x => parseInt(x))
     const playerLabelIndices = activeEvent.otherColumnValues[parser.playerLabelIndicesColumn].split(";").map(x => parseInt(x))
