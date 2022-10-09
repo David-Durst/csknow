@@ -14,6 +14,7 @@ from learn_bot.engagement_aim.accuracy_and_loss import compute_loss, compute_acc
     CPU_DEVICE_STR
 from learn_bot.engagement_aim.column_management import IOColumnTransformers, ColumnTypes, ColumnTransformerType, \
     PRIOR_TICKS, FUTURE_TICKS, CUR_TICK
+from learn_bot.engagement_aim.lstm_aim_model import LSTMAimModel
 from learn_bot.engagement_aim.mlp_aim_model import MLPAimModel
 from learn_bot.engagement_aim.output_plotting import plot_untransformed_and_transformed, ModelOutputRecording
 from typing import Dict, List
@@ -98,7 +99,8 @@ print(f"Using {device} device")
 
 # Define model
 embedding_dim = 5
-model = MLPAimModel(column_transformers).to(device)
+#model = MLPAimModel(column_transformers).to(device)
+model = LSTMAimModel(column_transformers).to(device)
 print(model)
 params = list(model.parameters())
 print("params by layer")
