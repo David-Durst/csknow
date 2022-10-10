@@ -44,7 +44,7 @@ class Decoder(nn.Module):
         return output, hidden, cell
 
 class LSTMAimModel(nn.Module):
-    internal_width = 1024
+    internal_width = 256
     cts: IOColumnTransformers
     output_layers: List[nn.Module]
     num_categorical_transformed_features: int
@@ -62,8 +62,8 @@ class LSTMAimModel(nn.Module):
         self.input_temporal_data_per_tick = int(self.num_input_temporal_features / self.num_prior_ticks)
 
         self.encoder = Encoder(self.input_temporal_data_per_tick + self.num_categorical_transformed_features,
-                               self.internal_width, 2, 0.2)
-        self.decoder = Decoder(self.internal_width, 2, 0.2)
+                               self.internal_width, 1, 0.2)
+        self.decoder = Decoder(self.internal_width, 1, 0.2)
 
         assert self.encoder.hid_dim == self.decoder.hid_dim, \
             "Hidden dimensions of encoder and decoder must be equal!"
