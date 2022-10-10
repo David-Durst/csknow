@@ -96,10 +96,8 @@ void InferenceEngagementAimResult::runQuery(const Rounds & rounds, const string 
                 static_cast<double>(output[0][output[0].size(0) / 2].item<float>()),
                 static_cast<double>(output[0][output[0].size(0) / 2 + 1].item<float>())
             };
-            normalizedPredictedDeltaViewAngle[engagementAimId] = {
-                predictedDeltaViewAngle.back().x / trainingEngagementAimResult.distanceNormalization[engagementAimId],
-                predictedDeltaViewAngle.back().y / trainingEngagementAimResult.distanceNormalization[engagementAimId]
-            };
+            normalizedPredictedDeltaViewAngle[engagementAimId] = predictedDeltaViewAngle[engagementAimId] /
+                trainingEngagementAimResult.distanceNormalization[engagementAimId];
 
             // if last tick for engagement, remove it from actives. Otherwise rotate the current prediction into prior deltas
             if (trainingEngagementAimResult.tickId[engagementAimId] == engagementTickRange.maxId) {
