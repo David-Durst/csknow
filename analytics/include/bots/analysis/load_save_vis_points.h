@@ -106,6 +106,7 @@ public:
         return areaVisPoints[areaIdToVectorIndex.find(srcId)->second].dangerFromCurPoint;
     }
 
+    void clearFiles(const ServerState & state);
     bool launchVisPointsCommand(const ServerState & state, bool areas, std::optional<VisCommandRange> range = {});
     bool readVisPointsCommandResult(const ServerState & state, bool areas, std::optional<VisCommandRange> range = {});
     void save(const string & mapsPath, const string & mapName, bool area);

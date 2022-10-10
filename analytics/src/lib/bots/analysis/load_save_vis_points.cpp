@@ -97,6 +97,16 @@ void VisPoints::createCellVisPoints() {
 
 }
 
+void VisPoints::clearFiles(const ServerState & state) {
+    string visValidFileName = "vis_valid.csv";
+    string visValidFilePath = state.dataPath + "/" + visValidFileName;
+    string tmpVisValidFileName = "vis_valid.csv.tmp.read";
+    string tmpVisValidFilePath = state.dataPath + "/" + tmpVisValidFileName;
+
+    std::filesystem::remove(visValidFilePath);
+    std::filesystem::remove(tmpVisValidFilePath);
+}
+
 bool VisPoints::launchVisPointsCommand(const ServerState & state, bool areas, std::optional<VisCommandRange> range) {
     string visPointsFileName = "vis_points.csv";
     string visPointsFilePath = state.dataPath + "/" + visPointsFileName;
@@ -145,12 +155,14 @@ bool VisPoints::launchVisPointsCommand(const ServerState & state, bool areas, st
 bool VisPoints::readVisPointsCommandResult(const ServerState &state, bool areas, std::optional<VisCommandRange> range) {
     string visValidFileName = "vis_valid.csv";
     string visValidFilePath = state.dataPath + "/" + visValidFileName;
-    string tmpVisValidFileName = "vis_valid.csv.tmp.write";
+    string tmpVisValidFileName = "vis_valid.csv.tmp.read";
     string tmpVisValidFilePath = state.dataPath + "/" + tmpVisValidFileName;
 
-    std::ifstream fsVisValid(visValidFilePath);
-
     if (std::filesystem::exists(visValidFilePath)) {
+        std::filesystem::rename(visValidFilePath, tmpVisValidFilePath);
+
+        std::ifstream fsVisValid(tmpVisValidFilePath);
+
         string visValidBuf;
         while (getline(fsVisValid, visValidBuf)) {
             std::stringstream visValidLineStream(visValidBuf);
