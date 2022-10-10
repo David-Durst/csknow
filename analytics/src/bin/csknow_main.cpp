@@ -304,7 +304,7 @@ int main(int argc, char * argv[]) {
     std::cout << "processing inference engagement aim training data set" << std::endl;
     string inferenceEngagementAimName = "engagementAim";
     InferenceEngagementAimResult inferenceEngagementAimResult(engagementAimResult);
-    if (haveModels) {
+    if (false && haveModels) {
         inferenceEngagementAimResult.runQuery(filteredRounds, modelsDir, engagementResult);
     }
     std::cout << "size: " << inferenceEngagementAimResult.size << std::endl;

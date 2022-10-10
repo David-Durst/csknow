@@ -37,6 +37,20 @@ void VisPoints::createCellVisPoints() {
     // increment max z by player height so get cells up to player height
     areaBounds.max.z += PLAYER_HEIGHT;
 
+    Vec3 deltaAreaBounds = areaBounds.max - areaBounds.min;
+    array<int64_t, 3> maxCellNumbersByDim{
+        static_cast<int64_t>(deltaAreaBounds.x / CELL_DIM_WIDTH_DEPTH),
+        static_cast<int64_t>(deltaAreaBounds.y / CELL_DIM_WIDTH_DEPTH),
+        static_cast<int64_t>(deltaAreaBounds.z / CELL_DIM_HEIGHT)
+    };
+
+    // track valid cells that are in exactly one cell and that cell is single wide but aren't assigned
+    // this filters out edge cases of cells near walls, but keeps ledges
+    vector<int8_t> numAreasContainingCell(
+        maxCellNumbersByDim[0] * maxCellNumbersByDim[1] * maxCellNumbersByDim[2], 0);
+    vector<int64_t> singleWideAreaContainingCell(
+        maxCellNumbersByDim[0] * maxCellNumbersByDim[1] * maxCellNumbersByDim[2], INVALID_ID);
+
     // for every nav area, find the nav cells aligned based on area bounds
     for (const auto & areaVisPoint : areaVisPoints) {
         // extend areaVisPoint height by player height so get vis points up to player height
@@ -70,10 +84,50 @@ void VisPoints::createCellVisPoints() {
                             cellCenter,
                         });
                     }
+                    else {
+                        int64_t linearCellAddress = curXId * maxCellNumbersByDim[1] * maxCellNumbersByDim[2] +
+                                                    curYId * maxCellNumbersByDim[2] + curZId;
+                        numAreasContainingCell[linearCellAddress]++;
+                        // every area is at least half player width, so every area should be at least size 1
+                        // removing double hits from both start and end
+                        if ((maxCellMinInArea.x - minCellMinInArea.x == 1 && curXId == minCellMinInArea.x) ||
+                            (maxCellMinInArea.y - minCellMinInArea.y == 1 && curYId == minCellMinInArea.y) ||
+                            (maxCellMinInArea.z - minCellMinInArea.z == 1 && curZId == minCellMinInArea.z)) {
+                            singleWideAreaContainingCell[linearCellAddress] = static_cast<int64_t>(areaVisPoint.areaId);
+                        }
+                    }
                 }
             }
         }
 
+    }
+
+    // add missing cells
+    for (int64_t curXId = 0; curXId < maxCellNumbersByDim[0]; curXId++) {
+        for (int64_t curYId = 0; curYId < maxCellNumbersByDim[1]; curYId++) {
+            for (int64_t curZId = 0; curZId <= maxCellNumbersByDim[2]; curZId++) {
+                int64_t linearCellAddress = curXId * maxCellNumbersByDim[1] * maxCellNumbersByDim[2] +
+                                            curYId * maxCellNumbersByDim[2] + curZId;
+                if (numAreasContainingCell[linearCellAddress] == 1 &&
+                    singleWideAreaContainingCell[linearCellAddress] != INVALID_ID) {
+                    const AreaVisPoint & areaVisPoint =
+                        areaVisPoints[areaIdToVectorIndex[
+                            static_cast<AreaId>(singleWideAreaContainingCell[linearCellAddress])]];
+                    Vec3 cellMin = areaBounds.min +
+                                   Vec3{CELL_DIM_WIDTH_DEPTH * static_cast<double>(curXId),
+                                        CELL_DIM_WIDTH_DEPTH * static_cast<double>(curYId),
+                                        CELL_DIM_HEIGHT * static_cast<double>(curZId)};
+                    Vec3 cellMax = cellMin + Vec3{CELL_DIM_WIDTH_DEPTH, CELL_DIM_WIDTH_DEPTH, CELL_DIM_HEIGHT};
+                    Vec3 cellCenter = (cellMin + cellMax) / 2.;
+                    cellVisPoints.push_back({
+                        areaVisPoint.areaId,
+                        static_cast<CellId>(cellVisPoints.size()),
+                        {cellMin, cellMax},
+                        cellCenter
+                    });
+                }
+            }
+        }
     }
 
 #if false

@@ -22,6 +22,9 @@ public:
     }
 
     vector<int64_t> filterByForeignKey(int64_t otherTableIndex) override {
+        if (size == 0) {
+            return {};
+        }
         vector<int64_t> result;
         for (int64_t i = trainingEngagementAimResult.rowIndicesPerRound[otherTableIndex].minId;
              i <= trainingEngagementAimResult.rowIndicesPerRound[otherTableIndex].maxId; i++) {
