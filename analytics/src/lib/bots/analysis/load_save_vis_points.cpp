@@ -214,7 +214,7 @@ void VisPoints::save(const string & mapsPath, const string & mapName, bool area)
     fsVisValid.close();
 }
 
-void VisPoints::load(const string & mapsPath, const string & mapName, bool area, const nav_mesh::nav_file & navFile) {
+void VisPoints::new_load(const string & mapsPath, const string & mapName, bool area, const nav_mesh::nav_file & navFile) {
     string visValidFileName = mapName + (area ? "_area" : "_cell") + ".vis";
     string visValidFilePath = mapsPath + "/" + visValidFileName;
 
@@ -246,6 +246,54 @@ void VisPoints::load(const string & mapsPath, const string & mapName, bool area,
     // after completing visibility, compute danger
     setDangerPoints(navFile, area);
 }
+
+void VisPoints::load(const string & mapsPath, const string & mapName, bool area, const nav_mesh::nav_file & navFile) {
+    string visValidFileName = mapName + ".vis";
+    string visValidFilePath = mapsPath + "/" + visValidFileName;
+
+    std::ifstream fsVisValid(visValidFilePath);
+
+    if (std::filesystem::exists(visValidFilePath)) {
+        string visValidBuf;
+        size_t i = 0;
+        while (getline(fsVisValid, visValidBuf)) {
+            if (visValidBuf.size() != areaVisPoints.size()) {
+                throw std::runtime_error("wrong number of cols in vis valid file's line " + std::to_string(i));
+            }
+
+            areaVisPoints[i].visibleFromCurPoint.reset();
+            for (size_t j = 0; j < visValidBuf.size(); j++) {
+                if (visValidBuf[j] != 't' && visValidBuf[j] != 'f') {
+                    throw std::runtime_error("invalid char " + std::to_string(visValidBuf[j]) +
+                                             " vis valid file's line " + std::to_string(i) + " col " + std::to_string(j));
+                }
+                areaVisPoints[i].visibleFromCurPoint[j] = visValidBuf[j] == 't';
+            }
+            i++;
+        }
+        if (i != areaVisPoints.size()) {
+            throw std::runtime_error("wrong number of rows in vis valid file");
+        }
+    }
+    else {
+        throw std::runtime_error("no vis valid file");
+    }
+
+    // after loading, max sure to or all together, want matrix to be full so can export any row
+    for (size_t i = 0; i < areaVisPoints.size(); i++) {
+        // set diagonal to true, can see yourself
+        areaVisPoints[i].visibleFromCurPoint[i] = true;
+        for (size_t j = 0; j < areaVisPoints.size(); j++) {
+            areaVisPoints[i].visibleFromCurPoint[j] =
+                areaVisPoints[i].visibleFromCurPoint[j] | areaVisPoints[j].visibleFromCurPoint[i];
+            areaVisPoints[j].visibleFromCurPoint[i] = areaVisPoints[i].visibleFromCurPoint[j];
+        }
+    }
+
+    // after completing visibility, compute danger
+    setDangerPoints(navFile, true);
+}
+
 
 void VisPoints::setDangerPoints(const nav_mesh::nav_file & navFile, bool area) {
     if (area) {
