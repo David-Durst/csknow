@@ -257,26 +257,21 @@ void VisPoints::save(const string & mapsPath, const string & mapName, bool area)
     string visValidFileName = mapName + (area ? "_area" : "_cell") + ".vis";
     string visValidFilePath = mapsPath + "/" + visValidFileName;
 
-    std::ofstream fsVisValid(visValidFilePath, std::ios::out | std::ios::binary);
+    std::stringstream validStream;
+
     if (area) {
         for (const auto & areaVisPoint : areaVisPoints) {
-            vector<uint32_t> visibleSparseIds = bitsetToSparseIds(areaVisPoint.visibleFromCurPoint);
-            fsVisValid.write(reinterpret_cast<const char*>(visibleSparseIds.size()),
-                             static_cast<std::streamsize>(sizeof(size_t)));
-            fsVisValid.write(reinterpret_cast<const char*>(visibleSparseIds.data()),
-                             static_cast<std::streamsize>(visibleSparseIds.size() * sizeof(uint32_t)));
+            validStream << bitsetToBase64(areaVisPoint.visibleFromCurPoint) << std::endl;
         }
     }
     else {
         for (const auto & cellVisPoint : cellVisPoints) {
-            vector<uint32_t> visibleSparseIds = bitsetToSparseIds(cellVisPoint.visibleFromCurPoint);
-            size_t size = visibleSparseIds.size();
-            fsVisValid.write(reinterpret_cast<const char*>(&size),
-                             static_cast<std::streamsize>(sizeof(size_t)));
-            fsVisValid.write(reinterpret_cast<const char*>(visibleSparseIds.data()),
-                             static_cast<std::streamsize>(visibleSparseIds.size() * sizeof(uint32_t)));
+            validStream << bitsetToBase64(cellVisPoint.visibleFromCurPoint) << std::endl;
         }
     }
+
+    std::ofstream fsVisValid(visValidFilePath, std::ios::out);
+    fsVisValid << validStream.str();
     fsVisValid.close();
 }
 
@@ -285,26 +280,17 @@ void VisPoints::new_load(const string & mapsPath, const string & mapName, bool a
     string visValidFilePath = mapsPath + "/" + visValidFileName;
 
     std::ifstream fsVisValid(visValidFilePath, std::ios::in | std::ios::binary);
+    string visBuf;
     if (area) {
         for (auto & areaVisPoint : areaVisPoints) {
-            size_t size;
-            fsVisValid.read(reinterpret_cast<char*>(&size),
-                            static_cast<std::streamsize>(sizeof(size_t)));
-            vector<uint32_t> visibleSparseIds(size);
-            fsVisValid.read(reinterpret_cast<char*>(visibleSparseIds.data()),
-                            static_cast<std::streamsize>(size * sizeof(uint32_t)));
-            sparseIdsToBitset(visibleSparseIds, areaVisPoint.visibleFromCurPoint);
+            getline(fsVisValid, visBuf); // skip first line
+            base64ToBitset(visBuf, areaVisPoint.visibleFromCurPoint);
         }
     }
     else {
         for (auto & cellVisPoint : cellVisPoints) {
-            size_t size;
-            fsVisValid.read(reinterpret_cast<char*>(&size),
-                            static_cast<std::streamsize>(sizeof(size_t)));
-            vector<uint32_t> visibleSparseIds(size);
-            fsVisValid.read(reinterpret_cast<char*>(visibleSparseIds.data()),
-                            static_cast<std::streamsize>(size * sizeof(uint32_t)));
-            sparseIdsToBitset(visibleSparseIds, cellVisPoint.visibleFromCurPoint);
+            getline(fsVisValid, visBuf); // skip first line
+            base64ToBitset(visBuf, cellVisPoint.visibleFromCurPoint);
         }
     }
     fsVisValid.close();
@@ -399,20 +385,24 @@ void VisPoints::setDangerPoints(const nav_mesh::nav_file & navFile, bool area) {
 
 
 template <size_t SZ>
-vector<uint32_t> bitsetToSparseIds(const bitset<SZ> & bits) {
-    vector<uint32_t> result;
-    for (size_t i = 0; i < bits.size(); i++) {
-        if (bits[i]) {
-            result.push_back(static_cast<uint32_t>(i));
-        }
+string bitsetToBase64(const bitset<SZ> & bits) {
+    bitset<SZ> firstByteMask(255);
+    vector<base64::byte> result;
+    for (size_t i = 0; i < bits.size() / 8; i += 8) {
+        bitset<SZ> masked((bits << i) & firstByteMask);
+        result.push_back(static_cast<base64::byte>(masked.to_ulong()));
     }
-    return result;
+    return base64::encode(result);
 }
 
 template <size_t SZ>
-void sparseIdsToBitset(const vector<uint32_t> & sparseIds, bitset<SZ> & result) {
-    result = 0;
-    for (const auto & id : sparseIds) {
-        result[id] = true;
+void base64ToBitset(const string & base64Input, bitset<SZ> & bits) {
+    vector<base64::byte> input = base64::decode(base64Input);
+    for (int64_t i = static_cast<int64_t>(input.size()) - 1; i >= 0; i--) {
+        bitset<SZ> curVal(input[i]);
+        bits |= curVal;
+        if (i != 0) {
+            bits >>= 8;
+        }
     }
 }

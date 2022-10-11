@@ -28,30 +28,31 @@ int main(int argc, char * argv[]) {
     }
 
     bool ready = true;
-    size_t curStartPoint = 0;
     VisPoints visPoints(tree.blackboard->navFile);
-    constexpr size_t RAYS_PER_CELL = MAX_NAV_CELLS;
     constexpr size_t RAYS_PER_ITERATION = 750000;
-    constexpr size_t CELLS_PER_ITERATION = RAYS_PER_ITERATION / RAYS_PER_CELL;
-    VisCommandRange range{0, CELLS_PER_ITERATION};
+    VisCommandRange range{0, 0};
     bool area = false;
     size_t pointsSize = area ? visPoints.getVisPoints().size() : visPoints.getCellVisPoints().size();
     visPoints.clearFiles(state);
     while (range.startRow < pointsSize) {
         auto start = std::chrono::system_clock::now();
-        std::chrono::duration<double> timePerTick(0.5);
+        std::chrono::duration<double> timePerTick(0.1);
 
         if (ready) {
+            size_t numRays = 0;
+            for (range.numRows = 1; range.startRow + range.numRows < pointsSize; range.numRows++) {
+                numRays += pointsSize - (range.startRow + range.numRows);
+                if (numRays >= RAYS_PER_ITERATION) {
+                    break;
+                }
+            }
             visPoints.launchVisPointsCommand(state, area, range);
             ready = false;
         }
         else if (visPoints.readVisPointsCommandResult(state, area, range)) {
             range.startRow += range.numRows;
-            if (range.startRow + range.numRows > pointsSize) {
-                range.numRows = pointsSize - range.startRow;
-            }
             ready = true;
-            printProgress(curStartPoint, visPoints.getCellVisPoints().size());
+            printProgress(range.startRow, visPoints.getCellVisPoints().size());
         }
 
         auto end = std::chrono::system_clock::now();
@@ -61,6 +62,10 @@ int main(int argc, char * argv[]) {
             std::this_thread::sleep_for(timePerTick - botTime);
         }
     }
+
+    visPoints.save(mapsPath, "de_dust2", false);
+    VisPoints visPointsCompare(tree.blackboard->navFile);
+    visPointsCompare.new_load(mapsPath, "de_dust2", false, tree.blackboard->navFile);
 
     return 0;
 }

@@ -9,6 +9,7 @@
 #include "geometryNavConversions.h"
 #include "navmesh/nav_file.h"
 #include "bots/load_save_bot_data.h"
+#include "base64.hpp"
 #include <bitset>
 #define MAX_NAV_AREAS 2000
 #define MAX_NAV_CELLS 22000
@@ -116,10 +117,10 @@ public:
     [[nodiscard]] const vector<CellVisPoint> & getCellVisPoints() const { return cellVisPoints; }
 };
 
-template <size_t sz>
-vector<uint32_t> bitsetToSparseIds(const bitset<sz> & bits);
+template <size_t SZ>
+string bitsetToBase64(const bitset<SZ> & bits);
 
-template <size_t sz>
-void sparseIdsToBitset(const vector<uint32_t> & sparseIds, bitset<sz> & result);
+template <size_t SZ>
+void base64ToBitset(const string & base64Input, bitset<SZ> & bits);
 
 #endif //CSKNOW_LOAD_SAVE_VIS_POINTS_H
