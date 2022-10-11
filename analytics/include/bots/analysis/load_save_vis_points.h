@@ -118,9 +118,28 @@ public:
 };
 
 template <size_t SZ>
-string bitsetToBase64(const bitset<SZ> & bits);
+string bitsetToBase64(const bitset<SZ> & bits) {
+    bitset<SZ> firstByteMask(255);
+    vector<base64::byte> result;
+    result.resize(bits.size() / 8);
+    for (size_t i = 0; i < bits.size(); i += 8) {
+        bitset<SZ> masked((bits >> i) & firstByteMask);
+        result[i / 8] = static_cast<base64::byte>(masked.to_ulong());
+    }
+    return base64::encode(result);
+}
 
 template <size_t SZ>
-void base64ToBitset(const string & base64Input, bitset<SZ> & bits);
+void base64ToBitset(const string & base64Input, bitset<SZ> & bits) {
+    vector<base64::byte> input = base64::decode(base64Input);
+    for (size_t i = 0; i < input.size(); i++) {
+        for (size_t j = 0; j < 8; j++) {
+            bits[i * 8 + j] = ((input[i] >> j) & 1) != 0;
+        }
+        bitset<SZ> curVal(input[i]);
+        curVal <<= i*8;
+        bits |= curVal;
+    }
+}
 
 #endif //CSKNOW_LOAD_SAVE_VIS_POINTS_H

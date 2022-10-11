@@ -382,27 +382,3 @@ void VisPoints::setDangerPoints(const nav_mesh::nav_file & navFile, bool area) {
          */
     }
 }
-
-
-template <size_t SZ>
-string bitsetToBase64(const bitset<SZ> & bits) {
-    bitset<SZ> firstByteMask(255);
-    vector<base64::byte> result;
-    for (size_t i = 0; i < bits.size() / 8; i += 8) {
-        bitset<SZ> masked((bits << i) & firstByteMask);
-        result.push_back(static_cast<base64::byte>(masked.to_ulong()));
-    }
-    return base64::encode(result);
-}
-
-template <size_t SZ>
-void base64ToBitset(const string & base64Input, bitset<SZ> & bits) {
-    vector<base64::byte> input = base64::decode(base64Input);
-    for (int64_t i = static_cast<int64_t>(input.size()) - 1; i >= 0; i--) {
-        bitset<SZ> curVal(input[i]);
-        bits |= curVal;
-        if (i != 0) {
-            bits >>= 8;
-        }
-    }
-}

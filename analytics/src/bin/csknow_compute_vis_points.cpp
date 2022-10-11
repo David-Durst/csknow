@@ -34,7 +34,7 @@ int main(int argc, char * argv[]) {
     bool area = false;
     size_t pointsSize = area ? visPoints.getVisPoints().size() : visPoints.getCellVisPoints().size();
     visPoints.clearFiles(state);
-    while (range.startRow < pointsSize) {
+    while (range.startRow < 500) {//pointsSize) {
         auto start = std::chrono::system_clock::now();
         std::chrono::duration<double> timePerTick(0.1);
 
