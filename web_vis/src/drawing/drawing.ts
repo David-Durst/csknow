@@ -58,6 +58,8 @@ let playerCopyButton: HTMLButtonElement = null;
 let playerCopyText: HTMLInputElement = null;
 let configClientButton: HTMLAnchorElement = null;
 let toggleCanvasSizeButton: HTMLButtonElement = null;
+let togglePlayersButton: HTMLButtonElement = null;
+let showPlayers = true;
 let minZ = 0;
 let maxZ = 0;
 const black = "rgba(0,0,0,1.0)";
@@ -89,6 +91,17 @@ export function toggleCanvasSize() {
         resizeCanvas(defaultCanvasSize)
     }
     lastCacheOverlay = null
+    drawTick(null)
+}
+
+export function togglePlayers() {
+    if (showPlayers) {
+        togglePlayersButton.innerText = "show players"
+    }
+    else {
+        togglePlayersButton.innerText = "hide players"
+    }
+    showPlayers = !showPlayers
     drawTick(null)
 }
 
@@ -344,7 +357,7 @@ export function drawTick(e: InputEvent) {
             return a.playerId - b.playerId
         }
     })
-    for (let p = 0; p < players.length; p++) {
+    for (let p = 0; p < players.length && showPlayers; p++) {
         let playerText = playersText.get(players[p].playerId)
         mainCtx.fillStyle = dark_blue
         if (players[p].team == 3) {
@@ -694,6 +707,8 @@ export function setupCanvas() {
     configClientButton = document.querySelector<HTMLAnchorElement>("#download_client")
     toggleCanvasSizeButton = document.querySelector<HTMLButtonElement>("#canvas_size")
     toggleCanvasSizeButton.addEventListener("click", toggleCanvasSize)
+    togglePlayersButton = document.querySelector<HTMLButtonElement>("#players_toggle")
+    togglePlayersButton.addEventListener("click", togglePlayers)
     mainCanvas.addEventListener("mousemove", trackMouse)
     mainCanvas.addEventListener("mousedown", startingRegionFilter)
     mainCanvas.addEventListener("mouseup", finishedRegionFilter)
