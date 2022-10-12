@@ -462,6 +462,13 @@ int main(int argc, char * argv[]) {
     if (runServer) {
         std::cout << "starting server" << std::endl;
         httplib::Server svr;
+        // Mount / to ./www directory
+        auto ret = svr.set_mount_point("/nav/", navPath);
+        if (!ret) {
+            // The specified base directory doesn't exist...
+            throw std::runtime_error("nav directory doesn't exist");
+        }
+
         svr.Get("/query/(\\w+)", [&](const httplib::Request & req, httplib::Response &res) {
             string resultType = req.matches[1];
             std::stringstream ss;

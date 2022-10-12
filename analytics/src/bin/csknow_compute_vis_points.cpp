@@ -3,6 +3,7 @@
 #include "bots/analysis/load_save_vis_points.h"
 #include "file_helpers.h"
 #include <iostream>
+#include <cstdlib>
 
 int main(int argc, char * argv[]) {
     if (argc != 3) {
@@ -72,6 +73,7 @@ int main(int argc, char * argv[]) {
     auto end = std::chrono::system_clock::now();
     std::chrono::duration<double> botTime = end - start;
     std::cout << "end" << botTime.count() << std::endl;
+
 
     return 0;
 }

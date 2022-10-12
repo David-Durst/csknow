@@ -273,11 +273,17 @@ void VisPoints::save(const string & mapsPath, const string & mapName, bool area)
     std::ofstream fsVisValid(visValidFilePath, std::ios::out);
     fsVisValid << validStream.str();
     fsVisValid.close();
+
+    string gzipCommand = "gzip " + visValidFilePath;
+    std::system(gzipCommand.c_str());
 }
 
 void VisPoints::new_load(const string & mapsPath, const string & mapName, bool area, const nav_mesh::nav_file & navFile) {
     string visValidFileName = mapName + (area ? "_area" : "_cell") + ".vis";
     string visValidFilePath = mapsPath + "/" + visValidFileName;
+
+    string gzipCommand = "gzip -dk " + visValidFilePath + ".gz";
+    std::system(gzipCommand.c_str());
 
     std::ifstream fsVisValid(visValidFilePath, std::ios::in | std::ios::binary);
     string visBuf;

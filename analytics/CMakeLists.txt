@@ -23,26 +23,19 @@ foreach(path ${CMAKE_PREFIX_PATH})
     message("Path: " ${path})
 endforeach(path)
 find_package(Torch REQUIRED)
-# https://github.com/Maverobot/libtorch_examples/blob/master/CMakeLists.txt
-#if(NOT Torch_FOUND)
-#    message(STATUS "libtorch ${libtorch_VERSION} - not found")
-#    message(STATUS "Fetching libtorch")
-#    include(FetchContent)
-#    FetchContent_Declare(
-#            libtorch
-#            URL https://download.pytorch.org/libtorch/cpu/libtorch-shared-with-deps-1.12.1%2Bcpu.zip
-#            SOURCE_DIR libtorch)
-#    FetchContent_GetProperties(libtorch)
-#    FetchContent_MakeAvailable()
-#    #if(NOT libtorch_POPULATED)
-#    #    unset(FETCHCONTENT_QUIET CACHE)
-#    #    FetchContent_Populate(libtorch)
-#    #    list(APPEND CMAKE_PREFIX_PATH ${CMAKE_BINARY_DIR}/libtorch)
-#    #endif()
-#    find_package(Torch ${libtorch_VERSION} EXACT CONFIG REQUIRED)
-#else()
-#    message(STATUS "libtorch ${libtorch_VERSION} - found")
-#endif()
+
+find_program(GZIP_LOCATION gzip DOC "Path to gzip program required.")
+if(GZIP_LOCATION)
+    set(UNZIP_COMMAND ${GZIP_LOCATION} -dc)
+else()
+    #cause the searches to be repeated
+    unset(GZIP_LOCATION CACHE)
+    if(WIN32)
+        message(SEND_ERROR "gzip is required, but was not found.  Please install gzip and set GZIP_LOCATION to the gzip.")
+    else()
+        message(SEND_ERROR "gzip is required, but was not found.  Please install gzip.")
+    endif()
+endif()
 
 add_compile_options(-Wall -Wextra -Wpedantic -Wno-unused-function -Wno-unknown-pragmas)
 
