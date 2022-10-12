@@ -243,7 +243,7 @@ bool VisPoints::readVisPointsCommandResult(const ServerState &state, bool areas,
                 areaVisPoints[visPoints[0]].visibleFromCurPoint[visPoints[1]] = true;
             }
             else {
-                cellVisPoints[visPoints[0]].visibleFromCurPoint[visPoints[1]] = true;
+                cellVisPoints[visPoints[0]].visibleFromCurPoint.set(visPoints[1], true);
             }
         }
         return true;

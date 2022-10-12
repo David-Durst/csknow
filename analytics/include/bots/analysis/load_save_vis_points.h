@@ -11,6 +11,7 @@
 #include "bots/load_save_bot_data.h"
 #include "base64.hpp"
 #include <bitset>
+#include "bitset.h"
 #define MAX_NAV_AREAS 2000
 #define MAX_NAV_CELLS 22000
 #define CELL_DIM_WIDTH_DEPTH 32.
@@ -19,7 +20,8 @@ using std::map;
 using std::bitset;
 using std::byte;
 typedef bitset<MAX_NAV_AREAS> AreaBits;
-typedef bitset<MAX_NAV_CELLS> CellBits;
+constexpr size_t NUM_CELL_UINT8 = MAX_NAV_CELLS / sizeof(uint8_t);
+typedef csknow::Bitset<MAX_NAV_CELLS> CellBits;
 
 struct AreaVisPoint {
     AreaId areaId;
@@ -34,8 +36,8 @@ struct CellVisPoint {
     CellId cellId;
     AABB cellCoordinates;
     Vec3 center;
-    CellBits visibleFromCurPoint = 0;
-    CellBits dangerFromCurPoint = 0;
+    CellBits visibleFromCurPoint;
+    CellBits dangerFromCurPoint;
 };
 
 struct VisCommandRange {
@@ -121,12 +123,18 @@ template <size_t SZ>
 string bitsetToBase64(const bitset<SZ> & bits) {
     bitset<SZ> firstByteMask(255);
     vector<base64::byte> result;
-    result.resize(bits.size() / 8);
+    result.resize(bits.size() / 8, 0);
     for (size_t i = 0; i < bits.size(); i += 8) {
-        bitset<SZ> masked((bits >> i) & firstByteMask);
-        result[i / 8] = static_cast<base64::byte>(masked.to_ulong());
+        for (size_t j = 0; j < 8; j++) {
+            result[i / 8] |= static_cast<uint8_t>(bits[i + j]) << j;
+        }
     }
     return base64::encode(result);
+}
+
+template <size_t SZ>
+string bitsetToBase64(const csknow::Bitset<SZ> & bits) {
+    return base64::encode(bits.getInternal());
 }
 
 template <size_t SZ>
@@ -136,10 +144,12 @@ void base64ToBitset(const string & base64Input, bitset<SZ> & bits) {
         for (size_t j = 0; j < 8; j++) {
             bits[i * 8 + j] = ((input[i] >> j) & 1) != 0;
         }
-        bitset<SZ> curVal(input[i]);
-        curVal <<= i*8;
-        bits |= curVal;
     }
+}
+
+template <size_t SZ>
+void base64ToBitset(const string & base64Input, csknow::Bitset<SZ> & bits) {
+    bits = base64::decode(base64Input);
 }
 
 #endif //CSKNOW_LOAD_SAVE_VIS_POINTS_H

@@ -34,7 +34,8 @@ int main(int argc, char * argv[]) {
     bool area = false;
     size_t pointsSize = area ? visPoints.getVisPoints().size() : visPoints.getCellVisPoints().size();
     visPoints.clearFiles(state);
-    while (range.startRow < 500) {//pointsSize) {
+    while (range.startRow < 50) {//pointsSize) {
+        std::cout << "range: " << range.startRow << std::endl;
         auto start = std::chrono::system_clock::now();
         std::chrono::duration<double> timePerTick(0.1);
 
@@ -63,9 +64,15 @@ int main(int argc, char * argv[]) {
         }
     }
 
+
+    std::cout << "start" << std::endl;
+    auto start = std::chrono::system_clock::now();
     visPoints.save(mapsPath, "de_dust2", false);
     VisPoints visPointsCompare(tree.blackboard->navFile);
     visPointsCompare.new_load(mapsPath, "de_dust2", false, tree.blackboard->navFile);
+    auto end = std::chrono::system_clock::now();
+    std::chrono::duration<double> botTime = end - start;
+    std::cout << "end" << botTime.count() << std::endl;
 
     return 0;
 }
