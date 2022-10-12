@@ -337,7 +337,7 @@ void VisPoints::load(const string & mapsPath, const string & mapName, bool area,
         areaVisPoints[i].visibleFromCurPoint[i] = true;
         for (size_t j = 0; j < areaVisPoints.size(); j++) {
             areaVisPoints[i].visibleFromCurPoint[j] =
-                areaVisPoints[i].visibleFromCurPoint[j] | areaVisPoints[j].visibleFromCurPoint[i];
+                areaVisPoints[i].visibleFromCurPoint[j] || areaVisPoints[j].visibleFromCurPoint[i];
             areaVisPoints[j].visibleFromCurPoint[i] = areaVisPoints[i].visibleFromCurPoint[j];
         }
     }

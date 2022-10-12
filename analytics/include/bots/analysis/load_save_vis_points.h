@@ -36,8 +36,8 @@ struct CellVisPoint {
     CellId cellId;
     AABB cellCoordinates;
     Vec3 center;
-    CellBits visibleFromCurPoint;
-    CellBits dangerFromCurPoint;
+    CellBits visibleFromCurPoint = CellBits();
+    CellBits dangerFromCurPoint = CellBits();
 };
 
 struct VisCommandRange {
@@ -109,7 +109,7 @@ public:
         return areaVisPoints[areaIdToVectorIndex.find(srcId)->second].dangerFromCurPoint;
     }
 
-    void clearFiles(const ServerState & state);
+    static void clearFiles(const ServerState & state);
     bool launchVisPointsCommand(const ServerState & state, bool areas, std::optional<VisCommandRange> range = {});
     bool readVisPointsCommandResult(const ServerState & state, bool areas, std::optional<VisCommandRange> range = {});
     void save(const string & mapsPath, const string & mapName, bool area);
