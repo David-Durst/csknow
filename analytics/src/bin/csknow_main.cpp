@@ -266,8 +266,10 @@ int main(int argc, char * argv[]) {
     DistanceToPlacesResult d2DistanceToPlacesResult = queryDistanceToPlaces(map_navs["de_dust2"], d2ReachableResult,
                                                                             dust2MeshName, navPath, "de_dust2");
     d2DistanceToPlacesResult.load(navPath, "de_dust2", map_navs["de_dust2"], d2ReachableResult);
-    string dust2VisibleName = "de_dust2_visible";
-    NavVisibleResult d2NavVisibleResult = queryNavVisible(map_visPoints.find("de_dust2")->second, dust2MeshName);
+    string dust2AreaVisibleName = "de_dust2_area_visible";
+    NavVisibleResult d2AreaVisibleResult = queryNavVisible(map_visPoints.find("de_dust2")->second, dust2MeshName, true);
+    string dust2CellVisibleName = "de_dust2_cell_visible";
+    NavVisibleResult d2CellVisibleResult = queryNavVisible(map_visPoints.find("de_dust2")->second, dust2CellsName, false);
     string dust2DangerName = "de_dust2_danger";
     NavDangerResult d2NavDangerResult = queryNavDanger(map_visPoints.find("de_dust2")->second, dust2MeshName);
     std::cout << "processing aggression_event" << std::endl;
@@ -439,7 +441,8 @@ int main(int argc, char * argv[]) {
             {"playerAtTick", queryPlayerAtTick},
             {dust2MeshName, d2MeshResult},
             {dust2CellsName, d2CellsResult},
-            {dust2VisibleName, d2NavVisibleResult},
+            {dust2AreaVisibleName, d2AreaVisibleResult},
+            {dust2CellVisibleName, d2CellVisibleResult},
             {dust2DangerName, d2NavDangerResult},
             {dust2ReachableName, d2ReachableResult},
             {dust2DistanceToPlacesName, d2DistanceToPlacesResult},

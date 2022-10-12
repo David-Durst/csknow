@@ -4,21 +4,22 @@
 
 #include "queries/nav_visible.h"
 
-NavVisibleResult queryNavVisible(const VisPoints & visPoints, const string & overlayLabelsQuery) {
-    NavVisibleResult result(overlayLabelsQuery);
-    result.numAreas = static_cast<int64_t>(visPoints.getVisPoints().size());
+NavVisibleResult queryNavVisible(const VisPoints & visPoints, const string & overlayLabelsQuery, bool area) {
+    NavVisibleResult result(overlayLabelsQuery, area, visPoints);
     result.coordinate = {};
-    for (const auto & visPoint : visPoints.getVisPoints()) {
-        result.coordinate.push_back(visPoint.areaCoordinates);
-    }
-    result.visibleMatrix.resize(result.numAreas * result.numAreas, false);
-
-    for (int64_t i = 0; i < result.numAreas; i++) {
-        for (int64_t j = 0; j < result.numAreas; j++) {
-            result.visibleMatrix[i * result.numAreas + j] = visPoints.isVisibleIndex(i, j);
+    if (area) {
+        result.numPoints = static_cast<int64_t>(visPoints.getVisPoints().size());
+        for (const auto & visPoint : visPoints.getVisPoints()) {
+            result.coordinate.push_back(visPoint.areaCoordinates);
         }
     }
-
-    result.size = result.numAreas;
+    else {
+        result.numPoints = static_cast<int64_t>(visPoints.getCellVisPoints().size());
+        for (const auto & visPoint : visPoints.getCellVisPoints()) {
+            result.coordinate.push_back(visPoint.cellCoordinates);
+        }
+    }
+    result.visibleMatrix.resize(result.numPoints * result.numPoints, false);
+    result.size = result.numPoints;
     return result;
 }

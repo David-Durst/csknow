@@ -14,20 +14,23 @@ using std::vector;
 
 class NavVisibleResult : public QueryResult {
 public:
+    bool area;
     vector<AABB> coordinate;
     vector<bool> visibleMatrix;
-    int64_t numAreas;
+    int64_t numPoints;
+    const VisPoints & visPoints;
 
     vector<int64_t> filterByForeignKey(int64_t) override {
         return {};
     }
 
     explicit
-    NavVisibleResult(const string & overlayLabelsQuery) {
+    NavVisibleResult(const string & overlayLabelsQuery, bool area, const VisPoints & visPoints) :
+        area(area), visPoints(visPoints) {
         variableLength = false;
         nonTemporal = true;
         overlay = true;
-        numAreas = INVALID_ID;
+        numPoints = INVALID_ID;
         this->overlayLabelsQuery = overlayLabelsQuery;
     };
 
@@ -35,9 +38,11 @@ public:
         ss << index;
         ss << "," << coordinate[index].min.x << "," << coordinate[index].min.y << "," << coordinate[index].min.z
            << "," << coordinate[index].max.x << "," << coordinate[index].max.y << "," << coordinate[index].max.z;
-        for (size_t i = 0; i < coordinate.size(); i++) {
-            // convert to 0 if visible as using similar range as distance (0 if closer/visible, 1 if farther/not visible)
-            ss << "," << (visibleMatrix[index * coordinate.size() + i] ? 0 : 1);
+        if (area) {
+            ss << "," << bitsetToBase64(visPoints.getVisPoints()[index].visibleFromCurPoint);
+        }
+        else {
+            ss << "," << bitsetToBase64(visPoints.getCellVisPoints()[index].visibleFromCurPoint);
         }
         ss << std::endl;
     }
@@ -56,10 +61,10 @@ public:
 
     [[maybe_unused]]
     bool getVisible(int64_t src, int64_t dst) {
-        return visibleMatrix[src * numAreas + dst];
+        return visibleMatrix[src * numPoints + dst];
     }
 };
 
-NavVisibleResult queryNavVisible(const VisPoints & visPoints, const string & overlayLabelsQuery);
+NavVisibleResult queryNavVisible(const VisPoints & visPoints, const string & overlayLabelsQuery, bool area);
 
 #endif //CSKNOW_NAV_VISIBLE_H

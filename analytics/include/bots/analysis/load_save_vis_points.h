@@ -65,8 +65,13 @@ public:
     }
 
     [[nodiscard]]
-    bool isVisibleIndex(size_t src, size_t target) const {
-        return areaVisPoints[src].visibleFromCurPoint[target];
+    bool isVisibleIndex(size_t src, size_t target, bool area = true) const {
+        if (area) {
+            return areaVisPoints[src].visibleFromCurPoint[target];
+        }
+        else {
+            return cellVisPoints[src].visibleFromCurPoint[target];
+        }
     }
 
     [[nodiscard]]
