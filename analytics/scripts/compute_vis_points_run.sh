@@ -20,5 +20,5 @@ cd ${script_dir}/../build
 cmake .. -DCMAKE_BUILD_TYPE=Release
 if make -j4; then
     chmod a+x csknow_compute_vis_points
-    ${script_dir}/../build/csknow_compute_vis_points ${script_dir}/../maps /home/steam/csgo-ds/csgo/addons/sourcemod/bot-link-data
+    ${script_dir}/../build/csknow_compute_vis_points ${script_dir}/../nav /home/steam/csgo-ds/csgo/addons/sourcemod/bot-link-data
 fi
