@@ -275,7 +275,9 @@ void VisPoints::save(const string & mapsPath, const string & mapName, bool area)
     fsVisValid.close();
 
     string gzipCommand = "gzip " + visValidFilePath;
-    std::system(gzipCommand.c_str());
+    if (std::system(gzipCommand.c_str()) != 0) {
+        std::cerr << "save gzip failed" << std::endl;
+    }
 }
 
 void VisPoints::new_load(const string & mapsPath, const string & mapName, bool area, const nav_mesh::nav_file & navFile) {
@@ -283,7 +285,9 @@ void VisPoints::new_load(const string & mapsPath, const string & mapName, bool a
     string visValidFilePath = mapsPath + "/" + visValidFileName;
 
     string gzipCommand = "gzip -dk " + visValidFilePath + ".gz";
-    std::system(gzipCommand.c_str());
+    if (std::system(gzipCommand.c_str()) != 0) {
+        std::cerr << "load gzip failed" << std::endl;
+    }
 
     std::ifstream fsVisValid(visValidFilePath, std::ios::in | std::ios::binary);
     string visBuf;
