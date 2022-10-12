@@ -11,7 +11,7 @@
 #include "bots/load_save_bot_data.h"
 #include "base64.hpp"
 #include <bitset>
-#include "bitset.h"
+#include "indices/bitset.h"
 #define MAX_NAV_AREAS 2000
 #define MAX_NAV_CELLS 22000
 #define CELL_DIM_WIDTH_DEPTH 32.
