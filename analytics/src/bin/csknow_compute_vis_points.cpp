@@ -65,7 +65,8 @@ int main(int argc, char * argv[]) {
     }
 
 
-    std::cout << "start" << std::endl;
+
+    std::cout << std::endl << "start" << std::endl;
     auto start = std::chrono::system_clock::now();
     visPoints.save(mapsPath, "de_dust2", false);
     VisPoints visPointsCompare(tree.blackboard->navFile);

@@ -289,8 +289,10 @@ void VisPoints::new_load(const string & mapsPath, const string & mapName, bool a
         std::cerr << "load gzip failed" << std::endl;
     }
 
+
     std::ifstream fsVisValid(visValidFilePath, std::ios::in | std::ios::binary);
-    string visBuf;
+    std::stringstream visBuf;
+    visBuf << fsVisValid.rdbuf();
     if (area) {
         for (auto & areaVisPoint : areaVisPoints) {
             getline(fsVisValid, visBuf); // skip first line
