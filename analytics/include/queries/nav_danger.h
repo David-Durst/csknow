@@ -70,7 +70,7 @@ public:
     AreaBits getDanger(int64_t srcArea) const {
         AreaBits result;
         for (size_t i = 0; i < coordinate.size(); i++) {
-            result[i] = dangerMatrix[srcArea * coordinate.size() + i];
+            result.set(i, dangerMatrix[srcArea * coordinate.size() + i]);
         }
         return result;
     }

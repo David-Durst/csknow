@@ -5,8 +5,8 @@
 #include "bots/behavior_tree/global/communicate_node.h"
 
 namespace communicate {
-    bitset<MAX_NAV_AREAS> getSpawnAreas(const ServerState & state, Blackboard & blackboard, const vector<CSGOId> & playersOnTeam) {
-        bitset<MAX_NAV_AREAS> result;
+    AreaBits getSpawnAreas(const ServerState & state, Blackboard & blackboard, const vector<CSGOId> & playersOnTeam) {
+        AreaBits result;
         vector<CSGOId> alivePlayersOnTeam;
         for (const auto & id : playersOnTeam) {
             if (state.getClient(id).isAlive) {
@@ -17,15 +17,15 @@ namespace communicate {
         if (!alivePlayersOnTeam.empty()) {
             nav_mesh::vec3_t origPos = vec3Conv(state.getClient(alivePlayersOnTeam[0]).getFootPosForPlayer());
             AreaId origId = blackboard.navFile.get_nearest_area_by_position(origPos).get_id();
-            result[blackboard.navFile.m_area_ids_to_indices[origId]] = true;
+            result.set(blackboard.navFile.m_area_ids_to_indices[origId], true);
             for (size_t i = 1; i < alivePlayersOnTeam.size(); i++) {
                 auto optionalWaypoints =
                         blackboard.navFile.find_path_detailed(origPos, vec3Conv(state.getClient(alivePlayersOnTeam[i]).getFootPosForPlayer()));
                 if (optionalWaypoints) {
                     for (const auto & waypoint : optionalWaypoints.value()) {
-                        result[blackboard.navFile.m_area_ids_to_indices[waypoint.area1]] = true;
+                        result.set(blackboard.navFile.m_area_ids_to_indices[waypoint.area1], true);
                         if (waypoint.edgeMidpoint) {
-                            result[blackboard.navFile.m_area_ids_to_indices[waypoint.area2]] = true;
+                            result.set(blackboard.navFile.m_area_ids_to_indices[waypoint.area2], true);
                         }
                     }
                 }
@@ -37,9 +37,9 @@ namespace communicate {
     NodeState DiffusePositionsNode::exec(const ServerState & state, TreeThinker &treeThinker) {
         if (state.roundNumber != diffuseRoundNumber || blackboard.resetPossibleNavAreas) {
             const vector<CSGOId> & tPlayers = state.getPlayersOnTeam(ENGINE_TEAM_T);
-            bitset<MAX_NAV_AREAS> tSpawnAreas = getSpawnAreas(state, blackboard, tPlayers);
+            AreaBits tSpawnAreas = getSpawnAreas(state, blackboard, tPlayers);
             const vector<CSGOId> & ctPlayers = state.getPlayersOnTeam(ENGINE_TEAM_CT);
-            bitset<MAX_NAV_AREAS> ctSpawnAreas = getSpawnAreas(state, blackboard, ctPlayers);
+            AreaBits ctSpawnAreas = getSpawnAreas(state, blackboard, ctPlayers);
 
             // initialize nav areas to each as shortest path between all teammates, approximation of engine spawn zones
             for (const auto & client : state.clients) {
@@ -85,10 +85,10 @@ namespace communicate {
                     size_t conAreaIndex = blackboard.navFile.connections[
                             blackboard.navFile.connections_area_start[areaIndex] + i];
                     if (client.team == ENGINE_TEAM_T) {
-                        tVisibleAreas[conAreaIndex] = true;
+                        tVisibleAreas.set(conAreaIndex, true);
                     }
                     else if (client.team == ENGINE_TEAM_CT) {
-                        ctVisibleAreas[conAreaIndex] = true;
+                        ctVisibleAreas.set(conAreaIndex, true);
                     }
                 }
             }

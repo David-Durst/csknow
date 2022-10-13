@@ -25,7 +25,7 @@ public:
 
     void set(CSGOId playerId, AreaId areaId, bool inArea, CSKnowTime time) {
         size_t index = navFile.m_area_ids_to_indices.find(areaId)->second;
-        possiblyInArea[playerId][index] = inArea;
+        possiblyInArea[playerId].set(index, inArea);
         //boundary[playerId].set();
         entryTime[playerId][areaId] = time;
     }
@@ -110,7 +110,7 @@ public:
                     if (!playerPossiblyInArea[conAreaIndex] &&
                         reachability.getDistance(i, conAreaIndex) / MAX_RUN_SPEED
                         < state.getSecondsBetweenTimes(playerEntryTime[iAreaId], state.loadTime)) {
-                        newAreas[conAreaIndex] = true;
+                        newAreas.set(conAreaIndex, true);
                         playerEntryTime[conAreaId] = state.loadTime;
                     }
                     // may keep areas on boundary too long as one of their cons may be covered by a later area.

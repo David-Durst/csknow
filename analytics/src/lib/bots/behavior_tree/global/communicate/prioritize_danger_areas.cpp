@@ -41,10 +41,10 @@ namespace communicate {
             const auto & client = state.getClient(playerId);
             if (client.isAlive && client.isBot) {
                 if (client.team == ENGINE_TEAM_CT) {
-                    ctLastDangerAreas[blackboard.navFile.m_area_ids_to_indices[dangerAreaId]] = true;
+                    ctLastDangerAreas.set(blackboard.navFile.m_area_ids_to_indices[dangerAreaId], true);
                 }
                 else if (client.team == ENGINE_TEAM_T) {
-                    tLastDangerAreas[blackboard.navFile.m_area_ids_to_indices[dangerAreaId]] = true;
+                    tLastDangerAreas.set(blackboard.navFile.m_area_ids_to_indices[dangerAreaId], true);
                 }
             }
         }
@@ -85,7 +85,7 @@ namespace communicate {
                                     coverEdges.push_back({i, blackboard.navFile.m_areas[i].get_id(), sumDistance,
                                                           secondsAwayAtMaxSpeed(minDistance),
                                                           state.getSecondsBetweenTimes(dangerAreaLastCheckTime[i], state.loadTime) < RECENTLY_CHECKED_SECONDS});
-                                    boolCoverEdges[i] = true;
+                                    boolCoverEdges.set(i, true);
                                 }
                                 break;
                             }
@@ -142,7 +142,7 @@ namespace communicate {
                         if (updateCheckTime) {
                             dangerAreaLastCheckTime[dstAreaIndex] = state.loadTime;
                         }
-                        teamAssignedAreas[dstAreaIndex] = true;
+                        teamAssignedAreas.set(dstAreaIndex, true);
                     }
                 }
             }

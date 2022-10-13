@@ -45,8 +45,7 @@ namespace csknow {
         };
 
 
-        Bitset & operator|=(const Bitset & other) {
-            assert(data.size() == other.data.size());
+        Bitset & operator|=(const Bitset<N> & other) {
 #pragma omp for simd
             for (size_t i = 0; i < data.size(); i++) {
                 data[i] |= other.data[i];
@@ -54,13 +53,49 @@ namespace csknow {
             return *this;
         }
 
-        Bitset & operator&=(const Bitset & other) {
-            assert(data.size() == other.data.size());
+        Bitset & operator&=(const Bitset<N> & other) {
 #pragma omp for simd
             for (size_t i = 0; i < data.size(); i++) {
                 data[i] &= other.data[i];
             }
             return *this;
+        }
+
+        bool any() {
+            for (size_t i = 0; i < data.size(); i++) {
+                if (data[i] != 0) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        bool all() {
+            for (size_t i = 0; i < data.size(); i++) {
+                if (data[i] != 255) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        void flip() {
+#pragma omp for simd
+            for (size_t i = 0; i < data.size(); i++) {
+                data[i] = ~data[i];
+            }
+        }
+
+        void reset() {
+            std::fill(data.begin(), data.end(), 0);
+        }
+
+        size_t size() { return N; }
+
+        void assignSlice(const vector<uint8_t> & source, size_t startByte) {
+            data.clear();
+            std::copy(source.begin() + startByte, source.begin() + startByte + data.size(),
+                      std::back_inserter(data));
         }
 
         const vector<uint8_t> & getInternal() const { return data; }

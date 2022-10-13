@@ -240,7 +240,7 @@ bool VisPoints::readVisPointsCommandResult(const ServerState &state, bool areas,
             }
 
             if (areas) {
-                areaVisPoints[visPoints[0]].visibleFromCurPoint[visPoints[1]] = true;
+                areaVisPoints[visPoints[0]].visibleFromCurPoint.set(visPoints[1], true);
             }
             else {
                 cellVisPoints[visPoints[0]].visibleFromCurPoint.set(visPoints[1], true);
@@ -289,23 +289,24 @@ void VisPoints::new_load(const string & mapsPath, const string & mapName, bool a
         std::cerr << "load gzip failed" << std::endl;
     }
 
-
-    std::ifstream fsVisValid(visValidFilePath, std::ios::in | std::ios::binary);
+    std::ifstream fsVisValid(visValidFilePath, std::ios::in);
     std::stringstream visBuf;
     visBuf << fsVisValid.rdbuf();
+    fsVisValid.close();
+    vector<std::uint8_t> visBytes = base64::decode(visBuf.str());
+    size_t visBytesOffset = 0;
     if (area) {
         for (auto & areaVisPoint : areaVisPoints) {
-            getline(fsVisValid, visBuf); // skip first line
-            base64ToBitset(visBuf, areaVisPoint.visibleFromCurPoint);
+            areaVisPoint.visibleFromCurPoint.assignSlice(visBytes, visBytesOffset);
+            visBytesOffset += areaVisPoint.visibleFromCurPoint.getInternal().size();
         }
     }
     else {
         for (auto & cellVisPoint : cellVisPoints) {
-            getline(fsVisValid, visBuf); // skip first line
-            base64ToBitset(visBuf, cellVisPoint.visibleFromCurPoint);
+            cellVisPoint.visibleFromCurPoint.assignSlice(visBytes, visBytesOffset);
+            visBytesOffset += cellVisPoint.visibleFromCurPoint.getInternal().size();
         }
     }
-    fsVisValid.close();
 
     // after completing visibility, compute danger
     setDangerPoints(navFile, area);
@@ -331,7 +332,7 @@ void VisPoints::load(const string & mapsPath, const string & mapName, bool area,
                     throw std::runtime_error("invalid char " + std::to_string(visValidBuf[j]) +
                                              " vis valid file's line " + std::to_string(i) + " col " + std::to_string(j));
                 }
-                areaVisPoints[i].visibleFromCurPoint[j] = visValidBuf[j] == 't';
+                areaVisPoints[i].visibleFromCurPoint.set(j, visValidBuf[j] == 't');
             }
             i++;
         }
@@ -346,11 +347,11 @@ void VisPoints::load(const string & mapsPath, const string & mapName, bool area,
     // after loading, max sure to or all together, want matrix to be full so can export any row
     for (size_t i = 0; i < areaVisPoints.size(); i++) {
         // set diagonal to true, can see yourself
-        areaVisPoints[i].visibleFromCurPoint[i] = true;
+        areaVisPoints[i].visibleFromCurPoint.set(i, true);
         for (size_t j = 0; j < areaVisPoints.size(); j++) {
-            areaVisPoints[i].visibleFromCurPoint[j] =
-                areaVisPoints[i].visibleFromCurPoint[j] || areaVisPoints[j].visibleFromCurPoint[i];
-            areaVisPoints[j].visibleFromCurPoint[i] = areaVisPoints[i].visibleFromCurPoint[j];
+            areaVisPoints[i].visibleFromCurPoint.set(j,
+                areaVisPoints[i].visibleFromCurPoint[j] || areaVisPoints[j].visibleFromCurPoint[i]);
+            areaVisPoints[j].visibleFromCurPoint.set(i, areaVisPoints[i].visibleFromCurPoint[j]);
         }
     }
 
@@ -367,7 +368,7 @@ void VisPoints::setDangerPoints(const nav_mesh::nav_file & navFile, bool area) {
                     for (size_t i = 0; i < navFile.connections_area_length[dangerArea]; i++) {
                         size_t conAreaIndex = navFile.connections[navFile.connections_area_start[dangerArea] + i];
                         if (!isVisibleIndex(srcArea, conAreaIndex)) {
-                            areaVisPoints[srcArea].dangerFromCurPoint[dangerArea] = true;
+                            areaVisPoints[srcArea].dangerFromCurPoint.set(dangerArea, true);
                             break;
                         }
                     }

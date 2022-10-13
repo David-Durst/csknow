@@ -19,7 +19,7 @@
 using std::map;
 using std::bitset;
 using std::byte;
-typedef bitset<MAX_NAV_AREAS> AreaBits;
+typedef csknow::Bitset<MAX_NAV_AREAS> AreaBits;
 constexpr size_t NUM_CELL_UINT8 = MAX_NAV_CELLS / sizeof(uint8_t);
 typedef csknow::Bitset<MAX_NAV_CELLS> CellBits;
 
@@ -27,8 +27,8 @@ struct AreaVisPoint {
     AreaId areaId;
     AABB areaCoordinates;
     Vec3 center;
-    AreaBits visibleFromCurPoint = 0;
-    AreaBits dangerFromCurPoint = 0;
+    AreaBits visibleFromCurPoint = AreaBits();
+    AreaBits dangerFromCurPoint = AreaBits();
 };
 
 struct CellVisPoint {
@@ -92,7 +92,7 @@ public:
             return false;
         }
         for (const auto & areaId : placeToArea.find(placeName)->second) {
-            visibleAreasInPlace[areaIdToVectorIndex[areaId]] = true;
+            visibleAreasInPlace.set(areaIdToVectorIndex[areaId], true);
         }
         visibleAreasInPlace &= getVisibilityRelativeToSrc(srcId);
         return visibleAreasInPlace.any();
