@@ -66,15 +66,27 @@ int main(int argc, char * argv[]) {
 
 
 
-    std::cout << std::endl << "start" << std::endl;
-    auto start = std::chrono::system_clock::now();
+    std::cout << std::endl << "start write" << std::endl;
+    auto startWrite = std::chrono::system_clock::now();
     visPoints.save(mapsPath, "de_dust2", false);
+    auto endWrite = std::chrono::system_clock::now();
+    std::chrono::duration<double> writeTime = endWrite - startWrite;
+    std::cout << "end write " << writeTime.count() << std::endl;
+
+    std::cout << std::endl << "start read" << std::endl;
+    auto startRead = std::chrono::system_clock::now();
     VisPoints visPointsCompare(tree.blackboard->navFile);
     visPointsCompare.new_load(mapsPath, "de_dust2", false, tree.blackboard->navFile);
-    auto end = std::chrono::system_clock::now();
-    std::chrono::duration<double> botTime = end - start;
-    std::cout << "end" << botTime.count() << std::endl;
+    auto endRead = std::chrono::system_clock::now();
+    std::chrono::duration<double> readTime = endRead - startRead;
+    std::cout << "end read " << readTime.count() << std::endl;
 
+    for (size_t i = 0; i < visPoints.getCellVisPoints().size(); i++) {
+        if (visPoints.getCellVisPoints()[i].visibleFromCurPoint !=
+            visPointsCompare.getCellVisPoints()[i].visibleFromCurPoint) {
+            std::cout << "row mismatch: " << i << std::endl;
+        }
+    }
 
     return 0;
 }

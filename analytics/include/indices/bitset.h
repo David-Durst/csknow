@@ -61,6 +61,19 @@ namespace csknow {
             return *this;
         }
 
+        bool operator==(const Bitset<N> & other) const {
+            for (size_t i = 0; i < data.size(); i++) {
+                if (data[i] != other.data[i]) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        bool operator!=(const Bitset<N> & other) const {
+            return !operator==(other);
+        }
+
         bool any() {
             for (size_t i = 0; i < data.size(); i++) {
                 if (data[i] != 0) {
@@ -92,10 +105,15 @@ namespace csknow {
 
         size_t size() { return N; }
 
-        void assignSlice(const vector<uint8_t> & source, size_t startByte) {
+        void assignSlice(const vector<uint8_t> & src, size_t startByte) {
             data.clear();
-            std::copy(source.begin() + startByte, source.begin() + startByte + data.size(),
-                      std::back_inserter(data));
+            data.insert(data.end(), src.begin() + startByte, src.begin() + startByte + data.size());
+
+        }
+
+        void exportSlice(vector<uint8_t> & dst, size_t startByte) {
+            data.clear();
+            dst.insert(dst.begin() + startByte, data.begin(), data.end());
         }
 
         const vector<uint8_t> & getInternal() const { return data; }

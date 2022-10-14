@@ -257,24 +257,34 @@ void VisPoints::save(const string & mapsPath, const string & mapName, bool area)
     string visValidFileName = mapName + (area ? "_area" : "_cell") + ".vis";
     string visValidFilePath = mapsPath + "/" + visValidFileName;
 
-    std::stringstream validStream;
-
+    size_t visBytesSize;
     if (area) {
-        for (const auto & areaVisPoint : areaVisPoints) {
-            validStream << bitsetToBase64(areaVisPoint.visibleFromCurPoint) << std::endl;
+        visBytesSize = areaVisPoints.front().visibleFromCurPoint.internalLength() * areaVisPoints.size();
+    }
+    else {
+        visBytesSize = cellVisPoints.front().visibleFromCurPoint.internalLength() * cellVisPoints.size();
+
+    }
+    vector<std::uint8_t> visBytes(visBytesSize, 0);
+    size_t visBytesOffset = 0;
+    if (area) {
+        for (auto & areaVisPoint : areaVisPoints) {
+            areaVisPoint.visibleFromCurPoint.exportSlice(visBytes, visBytesOffset);
+            visBytesOffset += areaVisPoint.visibleFromCurPoint.getInternal().size();
         }
     }
     else {
-        for (const auto & cellVisPoint : cellVisPoints) {
-            validStream << bitsetToBase64(cellVisPoint.visibleFromCurPoint) << std::endl;
+        for (auto & cellVisPoint : cellVisPoints) {
+            cellVisPoint.visibleFromCurPoint.exportSlice(visBytes, visBytesOffset);
+            visBytesOffset += cellVisPoint.visibleFromCurPoint.getInternal().size();
         }
     }
 
-    std::ofstream fsVisValid(visValidFilePath, std::ios::out);
-    fsVisValid << validStream.str();
+    std::ofstream fsVisValid(visValidFilePath, std::ios::out | std::ios::binary);
+    fsVisValid.write(reinterpret_cast<const char*>(visBytes.data()), visBytes.size());
     fsVisValid.close();
 
-    string gzipCommand = "gzip " + visValidFilePath;
+    string gzipCommand = "gzip -f " + visValidFilePath;
     if (std::system(gzipCommand.c_str()) != 0) {
         std::cerr << "save gzip failed" << std::endl;
     }
@@ -284,16 +294,25 @@ void VisPoints::new_load(const string & mapsPath, const string & mapName, bool a
     string visValidFileName = mapName + (area ? "_area" : "_cell") + ".vis";
     string visValidFilePath = mapsPath + "/" + visValidFileName;
 
-    string gzipCommand = "gzip -dk " + visValidFilePath + ".gz";
-    if (std::system(gzipCommand.c_str()) != 0) {
-        std::cerr << "load gzip failed" << std::endl;
+    if (!std::filesystem::exists(visValidFilePath)) {
+        string gzipCommand = "gzip -dfk " + visValidFilePath + ".gz";
+        if (std::system(gzipCommand.c_str()) != 0) {
+            std::cerr << "load gzip failed" << std::endl;
+        }
     }
 
-    std::ifstream fsVisValid(visValidFilePath, std::ios::in);
-    std::stringstream visBuf;
-    visBuf << fsVisValid.rdbuf();
-    fsVisValid.close();
-    vector<std::uint8_t> visBytes = base64::decode(visBuf.str());
+    size_t visBytesSize;
+    if (area) {
+        visBytesSize = areaVisPoints.front().visibleFromCurPoint.internalLength() * areaVisPoints.size();
+    }
+    else {
+        visBytesSize = cellVisPoints.front().visibleFromCurPoint.internalLength() * cellVisPoints.size();
+
+    }
+    vector<std::uint8_t> visBytes(visBytesSize, 0);
+
+    std::ifstream fsVisValid(visValidFilePath, std::ios::in | std::ios::binary);
+    fsVisValid.read(reinterpret_cast<char*>(visBytes.data()), visBytes.size());
     size_t visBytesOffset = 0;
     if (area) {
         for (auto & areaVisPoint : areaVisPoints) {
