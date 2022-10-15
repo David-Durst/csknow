@@ -5,34 +5,15 @@
 #include <iostream>
 #include <cstdlib>
 
-int main(int argc, char * argv[]) {
-    if (argc != 3) {
-        std::cout << "please call this code with 2 arguments: \n"
-            << "1. path/to/maps\n"
-            << "2. path/to/data\n" << std::endl;
-        return 1;
-    }
-    string mapsPath = argv[1], dataPath = argv[2];
+constexpr size_t RAYS_PER_ITERATION = 750000;
 
-    ServerState state;
-    state.dataPath = dataPath;
-
-    Tree tree;
-
-    state.loadServerState();
-    if (state.loadedSuccessfully) {
-        tree.tick(state, mapsPath);
-        state.saveBotInputs();
-    }
-    else {
-        throw std::runtime_error("failed to load server state");
-    }
+void computeVisPoints(const ServerState & state, const Tree & tree, bool area, const string & mapsPath) {
+    std::cout << std::endl << "start compute " << (area ? "area" : "cells") << std::endl;
+    auto startCompute = std::chrono::system_clock::now();
 
     bool ready = true;
     VisPoints visPoints(tree.blackboard->navFile);
-    constexpr size_t RAYS_PER_ITERATION = 750000;
     VisCommandRange range{0, 0};
-    bool area = false;
     size_t pointsSize = area ? visPoints.getVisPoints().size() : visPoints.getCellVisPoints().size();
     visPoints.clearFiles(state);
     while (range.startRow < pointsSize) {
@@ -63,8 +44,9 @@ int main(int argc, char * argv[]) {
             std::this_thread::sleep_for(timePerTick - botTime);
         }
     }
-
-
+    auto endCompute = std::chrono::system_clock::now();
+    std::chrono::duration<double> computeTime = endCompute - startCompute;
+    std::cout << "end compute " << computeTime.count() << std::endl;
 
     std::cout << std::endl << "start write" << std::endl;
     auto startWrite = std::chrono::system_clock::now();
@@ -87,6 +69,34 @@ int main(int argc, char * argv[]) {
             std::cout << "row mismatch: " << i << std::endl;
         }
     }
+
+}
+
+int main(int argc, char * argv[]) {
+    if (argc != 3) {
+        std::cout << "please call this code with 2 arguments: \n"
+            << "1. path/to/maps\n"
+            << "2. path/to/data\n" << std::endl;
+        return 1;
+    }
+    string mapsPath = argv[1], dataPath = argv[2];
+
+    ServerState state;
+    state.dataPath = dataPath;
+
+    Tree tree;
+
+    state.loadServerState();
+    if (state.loadedSuccessfully) {
+        tree.tick(state, mapsPath);
+        state.saveBotInputs();
+    }
+    else {
+        throw std::runtime_error("failed to load server state");
+    }
+
+    computeVisPoints(state, tree, true, mapsPath);
+    computeVisPoints(state, tree, false, mapsPath);
 
     return 0;
 }
