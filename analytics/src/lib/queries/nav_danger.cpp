@@ -6,9 +6,9 @@
 
 NavDangerResult queryNavDanger(const VisPoints & visPoints, const string & overlayLabelsQuery) {
     NavDangerResult result(overlayLabelsQuery);
-    result.numAreas = static_cast<int64_t>(visPoints.getVisPoints().size());
+    result.numAreas = static_cast<int64_t>(visPoints.getAreaVisPoints().size());
     result.coordinate = {};
-    for (const auto & visPoint : visPoints.getVisPoints()) {
+    for (const auto & visPoint : visPoints.getAreaVisPoints()) {
         result.coordinate.push_back(visPoint.areaCoordinates);
     }
     result.dangerMatrix.resize(result.numAreas * result.numAreas, false);

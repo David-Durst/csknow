@@ -14,7 +14,7 @@ void computeVisPoints(const ServerState & state, const Tree & tree, bool area, c
     bool ready = true;
     VisPoints visPoints(tree.blackboard->navFile);
     VisCommandRange range{0, 0};
-    size_t pointsSize = area ? visPoints.getVisPoints().size() : visPoints.getCellVisPoints().size();
+    size_t pointsSize = area ? visPoints.getAreaVisPoints().size() : visPoints.getCellVisPoints().size();
     visPoints.clearFiles(state);
     while (range.startRow < pointsSize) {
         auto start = std::chrono::system_clock::now();
@@ -63,10 +63,20 @@ void computeVisPoints(const ServerState & state, const Tree & tree, bool area, c
     std::chrono::duration<double> readTime = endRead - startRead;
     std::cout << "end read " << readTime.count() << std::endl;
 
-    for (size_t i = 0; i < visPoints.getCellVisPoints().size(); i++) {
-        if (visPoints.getCellVisPoints()[i].visibleFromCurPoint !=
-            visPointsCompare.getCellVisPoints()[i].visibleFromCurPoint) {
-            std::cout << "row mismatch: " << i << std::endl;
+    if (area) {
+        for (size_t i = 0; i < visPoints.getAreaVisPoints().size(); i++) {
+            if (visPoints.getAreaVisPoints()[i].visibleFromCurPoint !=
+                visPointsCompare.getAreaVisPoints()[i].visibleFromCurPoint) {
+                std::cout << "row mismatch: " << i << std::endl;
+            }
+        }
+    }
+    else {
+        for (size_t i = 0; i < visPoints.getCellVisPoints().size(); i++) {
+            if (visPoints.getCellVisPoints()[i].visibleFromCurPoint !=
+                visPointsCompare.getCellVisPoints()[i].visibleFromCurPoint) {
+                std::cout << "row mismatch: " << i << std::endl;
+            }
         }
     }
 

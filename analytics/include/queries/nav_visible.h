@@ -39,7 +39,7 @@ public:
         ss << "," << coordinate[index].min.x << "," << coordinate[index].min.y << "," << coordinate[index].min.z
            << "," << coordinate[index].max.x << "," << coordinate[index].max.y << "," << coordinate[index].max.z;
         if (area) {
-            ss << "," << bitsetToBase64(visPoints.getVisPoints()[index].visibleFromCurPoint);
+            ss << "," << bitsetToBase64(visPoints.getAreaVisPoints()[index].visibleFromCurPoint);
         }
         else {
             ss << "," << bitsetToBase64(visPoints.getCellVisPoints()[index].visibleFromCurPoint);

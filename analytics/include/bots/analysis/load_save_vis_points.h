@@ -120,7 +120,7 @@ public:
     void save(const string & mapsPath, const string & mapName, bool area);
     void new_load(const string & mapsPath, const string & mapName, bool area, const nav_mesh::nav_file & navFile);
     void load(const string & mapsPath, const string & mapName, bool area, const nav_mesh::nav_file & navFile);
-    [[nodiscard]] const vector<AreaVisPoint> & getVisPoints() const { return areaVisPoints; }
+    [[nodiscard]] const vector<AreaVisPoint> & getAreaVisPoints() const { return areaVisPoints; }
     [[nodiscard]] const vector<CellVisPoint> & getCellVisPoints() const { return cellVisPoints; }
 };
 

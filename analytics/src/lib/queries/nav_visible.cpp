@@ -8,8 +8,8 @@ NavVisibleResult queryNavVisible(const VisPoints & visPoints, const string & ove
     NavVisibleResult result(overlayLabelsQuery, area, visPoints);
     result.coordinate = {};
     if (area) {
-        result.numPoints = static_cast<int64_t>(visPoints.getVisPoints().size());
-        for (const auto & visPoint : visPoints.getVisPoints()) {
+        result.numPoints = static_cast<int64_t>(visPoints.getAreaVisPoints().size());
+        for (const auto & visPoint : visPoints.getAreaVisPoints()) {
             result.coordinate.push_back(visPoint.areaCoordinates);
         }
     }
