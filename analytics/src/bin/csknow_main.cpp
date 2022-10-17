@@ -267,9 +267,9 @@ int main(int argc, char * argv[]) {
                                                                             dust2MeshName, navPath, "de_dust2");
     d2DistanceToPlacesResult.load(navPath, "de_dust2", map_navs["de_dust2"], d2ReachableResult);
     string dust2AreaVisibleName = "de_dust2_area_visible";
-    NavVisibleResult d2AreaVisibleResult = queryNavVisible(map_visPoints.find("de_dust2")->second, dust2MeshName, true);
+    NavVisibleResult d2AreaVisibleResult(dust2CellsName, true, map_visPoints.find("de_dust2")->second, "de_dust2");
     string dust2CellVisibleName = "de_dust2_cell_visible";
-    NavVisibleResult d2CellVisibleResult = queryNavVisible(map_visPoints.find("de_dust2")->second, dust2CellsName, false);
+    NavVisibleResult d2CellVisibleResult(dust2CellsName, false, map_visPoints.find("de_dust2")->second, "de_dust2");
     string dust2DangerName = "de_dust2_danger";
     NavDangerResult d2NavDangerResult = queryNavDanger(map_visPoints.find("de_dust2")->second, dust2MeshName);
     std::cout << "processing aggression_event" << std::endl;
@@ -464,6 +464,10 @@ int main(int argc, char * argv[]) {
         httplib::Server svr;
         // Mount / to ./www directory
         auto ret = svr.set_mount_point("/nav/", navPath);
+        svr.set_default_headers({
+            {"Accept-Encoding", "gzip, deflate"},
+            {"Access-Control-Allow-Origin", "*"},
+        });
         if (!ret) {
             // The specified base directory doesn't exist...
             throw std::runtime_error("nav directory doesn't exist");
@@ -478,13 +482,11 @@ int main(int argc, char * argv[]) {
             else {
                 res.status = 404;
             }
-            res.set_header("Access-Control-Allow-Origin", "*");
         });
 
         svr.Get("/query/(\\w+)/(\\d+)", [&](const httplib::Request & req, httplib::Response &res) {
             string resultType = req.matches[1];
             int64_t filter = std::stol(req.matches[2].str());
-            res.set_header("Access-Control-Allow-Origin", "*");
             if (queries.find(resultType) != queries.end()) {
                 res.set_content(queries.find(resultType)->second.get().toCSV(filter), "text/csv");
             }
@@ -607,10 +609,15 @@ int main(int argc, char * argv[]) {
                 ss << queryValue.perTickPredictionAimTable;
                 ss << ",";
                 ss << queryValue.eventIdColumn;
+                ss << ",";
+                ss << queryValue.haveBlob;
+                ss << ",";
+                ss << queryValue.blobFileName;
+                ss << ",";
+                ss << queryValue.blobBytesPerRow;
                 ss << std::endl;
             }
             res.set_content(ss.str(), "text/plain");
-            res.set_header("Access-Control-Allow-Origin", "*");
         });
 
         svr.listen("0.0.0.0", 3123);

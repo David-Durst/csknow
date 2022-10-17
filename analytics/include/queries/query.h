@@ -59,6 +59,9 @@ public:
     bool havePerTickAimPredictionTable = false;
     string perTickPredictionAimTable;
     int eventIdColumn = -1;
+    bool haveBlob = false;
+    string blobFileName = "";
+    int blobBytesPerRow = INVALID_ID;
     string extension = ".query";
     vector<int> keyPlayerColumns = {};
 //    vector<int> keysForDiff;

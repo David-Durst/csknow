@@ -254,7 +254,7 @@ bool VisPoints::readVisPointsCommandResult(const ServerState &state, bool areas,
 }
 
 void VisPoints::save(const string & mapsPath, const string & mapName, bool area) {
-    string visValidFileName = mapName + (area ? "_area" : "_cell") + ".vis";
+    string visValidFileName = getVisFileName(mapName, area, false);
     string visValidFilePath = mapsPath + "/" + visValidFileName;
 
     size_t visBytesSize;
@@ -291,7 +291,7 @@ void VisPoints::save(const string & mapsPath, const string & mapName, bool area)
 }
 
 void VisPoints::new_load(const string & mapsPath, const string & mapName, bool area, const nav_mesh::nav_file & navFile) {
-    string visValidFileName = mapName + (area ? "_area" : "_cell") + ".vis";
+    string visValidFileName = getVisFileName(mapName, area, false);
     string visValidFilePath = mapsPath + "/" + visValidFileName;
 
     if (!std::filesystem::exists(visValidFilePath)) {

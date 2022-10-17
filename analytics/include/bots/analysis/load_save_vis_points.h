@@ -122,6 +122,9 @@ public:
     void load(const string & mapsPath, const string & mapName, bool area, const nav_mesh::nav_file & navFile);
     [[nodiscard]] const vector<AreaVisPoint> & getAreaVisPoints() const { return areaVisPoints; }
     [[nodiscard]] const vector<CellVisPoint> & getCellVisPoints() const { return cellVisPoints; }
+    [[nodiscard]] string getVisFileName(const string & mapName, bool area, bool compressed) const {
+        return mapName + (area ? "_area" : "_cell") + ".vis" + (compressed ? ".gz" : "");
+    }
 };
 
 template <size_t SZ>

@@ -25,26 +25,22 @@ public:
     }
 
     explicit
-    NavVisibleResult(const string & overlayLabelsQuery, bool area, const VisPoints & visPoints) :
+    NavVisibleResult(const string & overlayLabelsQuery, bool area, const VisPoints & visPoints,
+                     const string & mapName) :
         area(area), visPoints(visPoints) {
         variableLength = false;
         nonTemporal = true;
         overlay = true;
         numPoints = INVALID_ID;
         this->overlayLabelsQuery = overlayLabelsQuery;
+        haveBlob = true;
+        blobFileName = visPoints.getVisFileName(mapName, area, true);
+        blobBytesPerRow = area ? visPoints.getAreaVisPoints().front().visibleFromCurPoint.getInternal().size() :
+            visPoints.getCellVisPoints().front().visibleFromCurPoint.getInternal().size();
     };
 
     void oneLineToCSV(int64_t index, stringstream & ss) override {
-        ss << index;
-        ss << "," << coordinate[index].min.x << "," << coordinate[index].min.y << "," << coordinate[index].min.z
-           << "," << coordinate[index].max.x << "," << coordinate[index].max.y << "," << coordinate[index].max.z;
-        if (area) {
-            ss << "," << bitsetToBase64(visPoints.getAreaVisPoints()[index].visibleFromCurPoint);
-        }
-        else {
-            ss << "," << bitsetToBase64(visPoints.getCellVisPoints()[index].visibleFromCurPoint);
-        }
-        ss << std::endl;
+        ss << index << std::endl;
     }
 
     vector<string> getForeignKeyNames() override {
@@ -52,11 +48,7 @@ public:
     }
 
     vector<string> getOtherColumnNames() override {
-        vector<string> nameVector = {"min_x", "min_y", "min_z", "max_x", "max_y", "max_z"};
-        for (uint64_t i = 0; i < coordinate.size(); i++) {
-            nameVector.push_back(std::to_string(i));
-        }
-        return nameVector;
+        return {};
     }
 
     [[maybe_unused]]
@@ -64,7 +56,5 @@ public:
         return visibleMatrix[src * numPoints + dst];
     }
 };
-
-NavVisibleResult queryNavVisible(const VisPoints & visPoints, const string & overlayLabelsQuery, bool area);
 
 #endif //CSKNOW_NAV_VISIBLE_H
