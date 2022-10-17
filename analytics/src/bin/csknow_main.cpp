@@ -267,7 +267,7 @@ int main(int argc, char * argv[]) {
                                                                             dust2MeshName, navPath, "de_dust2");
     d2DistanceToPlacesResult.load(navPath, "de_dust2", map_navs["de_dust2"], d2ReachableResult);
     string dust2AreaVisibleName = "de_dust2_area_visible";
-    NavVisibleResult d2AreaVisibleResult(dust2CellsName, true, map_visPoints.find("de_dust2")->second, "de_dust2");
+    NavVisibleResult d2AreaVisibleResult(dust2MeshName, true, map_visPoints.find("de_dust2")->second, "de_dust2");
     string dust2CellVisibleName = "de_dust2_cell_visible";
     NavVisibleResult d2CellVisibleResult(dust2CellsName, false, map_visPoints.find("de_dust2")->second, "de_dust2");
     string dust2DangerName = "de_dust2_danger";
@@ -462,12 +462,17 @@ int main(int argc, char * argv[]) {
     if (runServer) {
         std::cout << "starting server" << std::endl;
         httplib::Server svr;
+        svr.set_default_headers({
+            {"Access-Control-Allow-Origin", "*"}
+        });
         // Mount / to ./www directory
         auto ret = svr.set_mount_point("/nav/", navPath);
-        svr.set_default_headers({
-            {"Accept-Encoding", "gzip, deflate"},
-            {"Access-Control-Allow-Origin", "*"},
+        /*
+        svr.set_file_request_handler([](const httplib::Request &, httplib::Response &res) {
+            res.set_header("Content-Encoding", "gzip");
         });
+        svr.set_file_extension_and_mimetype_mapping("gz", "application/octet-stream");
+         */
         if (!ret) {
             // The specified base directory doesn't exist...
             throw std::runtime_error("nav directory doesn't exist");
