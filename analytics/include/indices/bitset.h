@@ -111,8 +111,8 @@ namespace csknow {
 
         }
 
-        void exportSlice(vector<uint8_t> & dst, size_t startByte) {
-            dst.insert(dst.begin() + startByte, data.begin(), data.end());
+        void exportSlice(vector<uint8_t> & dst) {
+            dst.insert(dst.end(), data.begin(), data.end());
         }
 
         const vector<uint8_t> & getInternal() const { return data; }

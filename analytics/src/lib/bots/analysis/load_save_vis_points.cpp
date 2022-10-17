@@ -265,18 +265,16 @@ void VisPoints::save(const string & mapsPath, const string & mapName, bool area)
         visBytesSize = cellVisPoints.front().visibleFromCurPoint.internalLength() * cellVisPoints.size();
 
     }
-    vector<std::uint8_t> visBytes(visBytesSize, 0);
-    size_t visBytesOffset = 0;
+    vector<std::uint8_t> visBytes;
+    visBytes.reserve(visBytesSize);
     if (area) {
         for (auto & areaVisPoint : areaVisPoints) {
-            areaVisPoint.visibleFromCurPoint.exportSlice(visBytes, visBytesOffset);
-            visBytesOffset += areaVisPoint.visibleFromCurPoint.getInternal().size();
+            areaVisPoint.visibleFromCurPoint.exportSlice(visBytes);
         }
     }
     else {
         for (auto & cellVisPoint : cellVisPoints) {
-            cellVisPoint.visibleFromCurPoint.exportSlice(visBytes, visBytesOffset);
-            visBytesOffset += cellVisPoint.visibleFromCurPoint.getInternal().size();
+            cellVisPoint.visibleFromCurPoint.exportSlice(visBytes);
         }
     }
 
