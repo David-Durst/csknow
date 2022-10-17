@@ -427,7 +427,7 @@ export function drawTick(e: InputEvent) {
     if (drawOutlines || drawTarget) {
         cacheTargetCtx.clearRect(0, 0, cacheTargetCanvas.width, cacheTargetCanvas.height)
     }
-    if (curOverlay.includes("mesh") || curOverlay.includes("cells")) {
+    if ((curOverlay.includes("mesh") || curOverlay.includes("cells")) && !curOverlay.includes("visible")) {
         mainCtx.fillStyle = green
         const overlayRows = filteredData.overlays.get(curOverlay)
         const overlayLabelsRows = filteredData.overlays.get(filteredData.parsers.get(curOverlay).overlayLabelsQuery)
@@ -535,16 +535,16 @@ export function drawTick(e: InputEvent) {
         for (let o = 0; (drawOutlines || drawTarget) && o < overlayLabelsRows.length; o++) {
             const overlayLabelsRow = overlayLabelsRows[o]
             const minCoordinate = new MapCoordinate(
-                parseFloat(overlayLabelsRow.otherColumnValues[0]),
-                parseFloat(overlayLabelsRow.otherColumnValues[1]),
+                parseFloat(overlayLabelsRow.otherColumnValues[2]),
+                parseFloat(overlayLabelsRow.otherColumnValues[3]),
                 false);
             const maxCoordinate = new MapCoordinate(
-                parseFloat(overlayLabelsRow.otherColumnValues[3]),
-                parseFloat(overlayLabelsRow.otherColumnValues[4]),
+                parseFloat(overlayLabelsRow.otherColumnValues[5]),
+                parseFloat(overlayLabelsRow.otherColumnValues[6]),
                 false);
             const avgX = (minCoordinate.getCanvasX() + maxCoordinate.getCanvasX()) / 2
             const avgY = (minCoordinate.getCanvasY() + maxCoordinate.getCanvasY()) / 2
-            const avgZ = (parseFloat(overlayLabelsRow.otherColumnValues[2]) + parseFloat(overlayLabelsRow.otherColumnValues[5])) / 2;
+            const avgZ = (parseFloat(overlayLabelsRow.otherColumnValues[4]) + parseFloat(overlayLabelsRow.otherColumnValues[7])) / 2;
             if (lastMousePosition.x >= minCoordinate.x &&
                 lastMousePosition.x <= maxCoordinate.x &&
                 lastMousePosition.y >= minCoordinate.y &&
@@ -553,7 +553,7 @@ export function drawTick(e: InputEvent) {
                     minCoordinate, maxCoordinate))
             }
             if (drawOutlines) {
-                cacheGridCtx.lineWidth = 0.5
+                cacheGridCtx.lineWidth = 0.25
                 cacheGridCtx.strokeStyle = "black";
                 cacheGridCtx.strokeRect(minCoordinate.getCanvasX(), minCoordinate.getCanvasY(),
                     maxCoordinate.getCanvasX() - minCoordinate.getCanvasX(),
@@ -583,7 +583,7 @@ export function drawTick(e: InputEvent) {
 
         mainCtx.drawImage(cacheGridCanvas, 0, 0);
         // draw fill ins for all areas
-        for (let o = 0; drawTarget && targetAreaId != -1 && o < overlayRows.length; o++) {
+        for (let o = 0; drawTarget && targetAreaId != -1 && o < overlayLabelsRows.length; o++) {
             if (curOverlay.includes("visible")) {
                 const startBytes = targetAreaIndex * curParser.blobBytesPerRow;
                 const addedBytes = o / 8;
@@ -591,12 +591,12 @@ export function drawTick(e: InputEvent) {
                     cacheTargetCtx.fillStyle = `rgba(0, 0, 255, 0.5)`;
                     const overlayLabelsRow = overlayLabelsRows[o]
                     const minCoordinate = new MapCoordinate(
-                        parseFloat(overlayLabelsRow.otherColumnValues[0]),
-                        parseFloat(overlayLabelsRow.otherColumnValues[1]),
+                        parseFloat(overlayLabelsRow.otherColumnValues[2]),
+                        parseFloat(overlayLabelsRow.otherColumnValues[3]),
                         false);
                     const maxCoordinate = new MapCoordinate(
-                        parseFloat(overlayLabelsRow.otherColumnValues[3]),
-                        parseFloat(overlayLabelsRow.otherColumnValues[4]),
+                        parseFloat(overlayLabelsRow.otherColumnValues[5]),
+                        parseFloat(overlayLabelsRow.otherColumnValues[6]),
                         false);
                     cacheTargetCtx.fillRect(minCoordinate.getCanvasX(), minCoordinate.getCanvasY(),
                         maxCoordinate.getCanvasX() - minCoordinate.getCanvasX(),
@@ -604,17 +604,17 @@ export function drawTick(e: InputEvent) {
                 }
             }
             else {
-                const overlayRow = overlayRows[o]
+                const overlayLabelsRow = overlayLabelsRows[o]
                 if (distances[o] == -1) {
                     continue
                 }
                 const minCoordinate = new MapCoordinate(
-                    parseFloat(overlayRow.otherColumnValues[0]),
-                    parseFloat(overlayRow.otherColumnValues[1]),
+                    parseFloat(overlayLabelsRow.otherColumnValues[2]),
+                    parseFloat(overlayLabelsRow.otherColumnValues[3]),
                     false);
                 const maxCoordinate = new MapCoordinate(
-                    parseFloat(overlayRow.otherColumnValues[3]),
-                    parseFloat(overlayRow.otherColumnValues[4]),
+                    parseFloat(overlayLabelsRow.otherColumnValues[5]),
+                    parseFloat(overlayLabelsRow.otherColumnValues[6]),
                     false);
                 const percentDistance = (distances[o] - minDistance) / (maxDistance - minDistance);
                 cacheTargetCtx.fillStyle = `rgba(${percentDistance * 255}, 0, ${(1 - percentDistance) * 255}, 0.5)`;
