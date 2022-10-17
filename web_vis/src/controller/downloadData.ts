@@ -208,3 +208,25 @@ export function getNonTemporalTables(promises: Promise<any>[]) {
         );
     }
 }
+
+export function getNonTemporalTables(promises: Promise<any>[]) {
+    for (const downloadedDataName of gameData.tableNames) {
+        if (!gameData.parsers.get(downloadedDataName).nonTemporal) {
+            continue;
+        }
+        gameData.parsers.get(downloadedDataName).filterUrl = ""
+        promises.push(
+            fetch(remoteAddr + "query/" + downloadedDataName)
+                .then((response: Response) => {
+                    gameData.parsers.get(downloadedDataName)
+                        .setReader(response.body.getReader(),)
+                    return gameData.parsers.get(downloadedDataName).reader.read();
+                })
+                .then(parse(gameData.parsers.get(downloadedDataName), true))
+                .catch(e => {
+                    console.log("error downloading " + downloadedDataName)
+                    console.log(e)
+                })
+        );
+    }
+}
