@@ -107,12 +107,11 @@ namespace csknow {
 
         void assignSlice(const vector<uint8_t> & src, size_t startByte) {
             data.clear();
-            data.insert(data.end(), src.begin() + startByte, src.begin() + startByte + data.size());
+            data.insert(data.end(), src.begin() + startByte, src.begin() + startByte + internalLength());
 
         }
 
         void exportSlice(vector<uint8_t> & dst, size_t startByte) {
-            data.clear();
             dst.insert(dst.begin() + startByte, data.begin(), data.end());
         }
 

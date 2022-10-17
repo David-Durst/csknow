@@ -101,7 +101,7 @@ int main(int argc, char * argv[]) {
             string mapName = entry.path().filename().replace_extension();
             map_visPoints.insert(std::pair<std::string, VisPoints>(mapName, VisPoints(map_navs[mapName])));
             std::cout << mapName << " num cells: " << map_visPoints.at(mapName).getCellVisPoints().size() << std::endl;
-            map_visPoints.at(mapName).load(navPath, mapName, false, map_navs[mapName]);
+            map_visPoints.at(mapName).new_load(navPath, mapName, false, map_navs[mapName]);
         }
     }
 
@@ -467,12 +467,10 @@ int main(int argc, char * argv[]) {
         });
         // Mount / to ./www directory
         auto ret = svr.set_mount_point("/nav/", navPath);
-        /*
         svr.set_file_request_handler([](const httplib::Request &, httplib::Response &res) {
             res.set_header("Content-Encoding", "gzip");
         });
         svr.set_file_extension_and_mimetype_mapping("gz", "application/octet-stream");
-         */
         if (!ret) {
             // The specified base directory doesn't exist...
             throw std::runtime_error("nav directory doesn't exist");
