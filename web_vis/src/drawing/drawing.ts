@@ -328,7 +328,6 @@ class TargetAreaData {
 }
 
 export function drawTick(e: InputEvent) {
-    const ftmp = filteredData
     mainCtx.drawImage(minimap,0,0,minimapWidth,minimapHeight,0,0,
         canvasWidth,canvasHeight);
     mainCtx.textBaseline = "middle"
@@ -522,33 +521,35 @@ export function drawTick(e: InputEvent) {
         mainCtx.fillStyle = green
         const overlayRows = filteredData.overlays.get(curOverlay)
         const overlayLabelsRows = filteredData.overlays.get(filteredData.parsers.get(curOverlay).overlayLabelsQuery)
+        const curParser = filteredData.parsers.get(curOverlay)
         let distances: number[] = [];
         let minDistance;
         let maxDistance;
         let possibleTargetAreas: TargetAreaData[] = []
         let targetAreaId = -1
+        let targetAreaIndex = -1
         let targetPlaceName = ""
         let targetX = -1
         let targetY = -1
         let targetFontSize = -1
-        for (let o = 0; (drawOutlines || drawTarget) && o < overlayRows.length; o++) {
-            const overlayRow = overlayRows[o]
+        for (let o = 0; (drawOutlines || drawTarget) && o < overlayLabelsRows.length; o++) {
+            const overlayLabelsRow = overlayLabelsRows[o]
             const minCoordinate = new MapCoordinate(
-                parseFloat(overlayRow.otherColumnValues[0]),
-                parseFloat(overlayRow.otherColumnValues[1]),
+                parseFloat(overlayLabelsRow.otherColumnValues[0]),
+                parseFloat(overlayLabelsRow.otherColumnValues[1]),
                 false);
             const maxCoordinate = new MapCoordinate(
-                parseFloat(overlayRow.otherColumnValues[3]),
-                parseFloat(overlayRow.otherColumnValues[4]),
+                parseFloat(overlayLabelsRow.otherColumnValues[3]),
+                parseFloat(overlayLabelsRow.otherColumnValues[4]),
                 false);
             const avgX = (minCoordinate.getCanvasX() + maxCoordinate.getCanvasX()) / 2
             const avgY = (minCoordinate.getCanvasY() + maxCoordinate.getCanvasY()) / 2
-            const avgZ = (parseFloat(overlayRow.otherColumnValues[2]) + parseFloat(overlayRow.otherColumnValues[5])) / 2;
+            const avgZ = (parseFloat(overlayLabelsRow.otherColumnValues[2]) + parseFloat(overlayLabelsRow.otherColumnValues[5])) / 2;
             if (lastMousePosition.x >= minCoordinate.x &&
                 lastMousePosition.x <= maxCoordinate.x &&
                 lastMousePosition.y >= minCoordinate.y &&
                 lastMousePosition.y <= maxCoordinate.y) {
-                possibleTargetAreas.push(new TargetAreaData(o, avgX, avgY, avgZ, overlayRow,
+                possibleTargetAreas.push(new TargetAreaData(o, avgX, avgY, avgZ, overlayLabelsRow,
                     minCoordinate, maxCoordinate))
             }
             if (drawOutlines) {
@@ -565,6 +566,7 @@ export function drawTick(e: InputEvent) {
             possibleTargetAreas.sort((a, b) => {return a.avgZ - b.avgZ});
             const possibleTargetArea = possibleTargetAreas[Math.min(possibleTargetAreas.length - 1, layerToDraw)]
             targetAreaId = parseInt(overlayLabelsRows[possibleTargetArea.index].otherColumnValues[1])
+            targetAreaIndex = possibleTargetArea.index
             targetPlaceName = overlayLabelsRows[possibleTargetArea.index].otherColumnValues[0]
             targetX = possibleTargetArea.avgX
             targetY = possibleTargetArea.avgY
@@ -582,23 +584,44 @@ export function drawTick(e: InputEvent) {
         mainCtx.drawImage(cacheGridCanvas, 0, 0);
         // draw fill ins for all areas
         for (let o = 0; drawTarget && targetAreaId != -1 && o < overlayRows.length; o++) {
-            const overlayRow = overlayRows[o]
-            if (distances[o] == -1) {
-                continue
+            if (curOverlay.includes("visible")) {
+                const startBytes = targetAreaIndex * curParser.blobBytesPerRow;
+                const addedBytes = o / 8;
+                if ((curParser.blob[startBytes + addedBytes] & (1 << (o % 8))) != 0) {
+                    cacheTargetCtx.fillStyle = `rgba(0, 0, 255, 0.5)`;
+                    const overlayLabelsRow = overlayLabelsRows[o]
+                    const minCoordinate = new MapCoordinate(
+                        parseFloat(overlayLabelsRow.otherColumnValues[0]),
+                        parseFloat(overlayLabelsRow.otherColumnValues[1]),
+                        false);
+                    const maxCoordinate = new MapCoordinate(
+                        parseFloat(overlayLabelsRow.otherColumnValues[3]),
+                        parseFloat(overlayLabelsRow.otherColumnValues[4]),
+                        false);
+                    cacheTargetCtx.fillRect(minCoordinate.getCanvasX(), minCoordinate.getCanvasY(),
+                        maxCoordinate.getCanvasX() - minCoordinate.getCanvasX(),
+                        maxCoordinate.getCanvasY() - minCoordinate.getCanvasY())
+                }
             }
-            const minCoordinate = new MapCoordinate(
-                parseFloat(overlayRow.otherColumnValues[0]),
-                parseFloat(overlayRow.otherColumnValues[1]),
-                false);
-            const maxCoordinate = new MapCoordinate(
-                parseFloat(overlayRow.otherColumnValues[3]),
-                parseFloat(overlayRow.otherColumnValues[4]),
-                false);
-            const percentDistance = (distances[o] - minDistance) / (maxDistance - minDistance);
-            cacheTargetCtx.fillStyle = `rgba(${percentDistance * 255}, 0, ${(1 - percentDistance) * 255}, 0.5)`;
-            cacheTargetCtx.fillRect(minCoordinate.getCanvasX(), minCoordinate.getCanvasY(),
-                maxCoordinate.getCanvasX() - minCoordinate.getCanvasX(),
-                maxCoordinate.getCanvasY() - minCoordinate.getCanvasY())
+            else {
+                const overlayRow = overlayRows[o]
+                if (distances[o] == -1) {
+                    continue
+                }
+                const minCoordinate = new MapCoordinate(
+                    parseFloat(overlayRow.otherColumnValues[0]),
+                    parseFloat(overlayRow.otherColumnValues[1]),
+                    false);
+                const maxCoordinate = new MapCoordinate(
+                    parseFloat(overlayRow.otherColumnValues[3]),
+                    parseFloat(overlayRow.otherColumnValues[4]),
+                    false);
+                const percentDistance = (distances[o] - minDistance) / (maxDistance - minDistance);
+                cacheTargetCtx.fillStyle = `rgba(${percentDistance * 255}, 0, ${(1 - percentDistance) * 255}, 0.5)`;
+                cacheTargetCtx.fillRect(minCoordinate.getCanvasX(), minCoordinate.getCanvasY(),
+                    maxCoordinate.getCanvasX() - minCoordinate.getCanvasX(),
+                    maxCoordinate.getCanvasY() - minCoordinate.getCanvasY())
+            }
         }
         if (drawTarget && targetAreaId != -1) {
             cacheTargetCtx.fillStyle = 'green'

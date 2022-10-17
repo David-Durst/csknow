@@ -199,6 +199,10 @@ export class Parser {
     havePerTickAimPredictionTable: boolean;
     perTickAimPredictionTable: string;
     eventIdColumn: number;
+    haveBlob: boolean;
+    blobFileName: string;
+    blob: Uint8Array;
+    blobBytesPerRow: number;
 
     constructor(tableName: string, startTickColumn: string,
                 foreignKeyNames: string[], otherColumnNames: string[],
@@ -208,7 +212,7 @@ export class Parser {
                 playerLabelIndicesColumn: string, playerLabels: string,
                 havePerTickAimTable: string, perTickAimTable: string,
                 havePerTickAimPredictionTable: string, perTickAimPredictionTable: string,
-                eventIdColumn: string) {
+                eventIdColumn: string, haveBlob: string, blobFileName: string, blobBytesPerRow: string) {
         this.tableName = tableName;
         this.foreignKeyNames = foreignKeyNames;
         this.otherColumnNames = otherColumnNames;
@@ -243,6 +247,9 @@ export class Parser {
         this.havePerTickAimPredictionTable = parseBool(havePerTickAimPredictionTable)
         this.perTickAimPredictionTable = perTickAimPredictionTable
         this.eventIdColumn = parseInt(eventIdColumn)
+        this.haveBlob = parseBool(haveBlob)
+        this.blobFileName = blobFileName
+        this.blobBytesPerRow = parseInt(blobBytesPerRow)
     }
 
     parseOneLine(currentLine: string[]) {

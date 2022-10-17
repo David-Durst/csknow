@@ -48,6 +48,9 @@ export async function getTables() {
                 const havePerTickPredictionAimTable = perTickAimTable + 1
                 const perTickPredictionAimTable = havePerTickPredictionAimTable + 1
                 const eventIdColumn = perTickPredictionAimTable + 1
+                const haveBlobColumnIndex = eventIdColumn + 1
+                const blobFileNameColumnIndex = haveBlobColumnIndex + 1
+                const blobBytesPerRowColumnIndex = blobFileNameColumnIndex + 1
                 if (overlay) {
                     gameData.overlays.set(cols[0], [])
                 }
@@ -82,7 +85,8 @@ export async function getTables() {
                         cols[keyPlayerColumnsIndex], cols[nonTemporalIndex], cols[overlayIndex], cols[overlayLabelsQueryIndex],
                         cols[havePlayerLabelsIndex], cols[playersToLabelColumnIndex], cols[playerLabelIndicesColumnIndex],
                         cols[playerLabelsIndex], cols[havePerTickAimTable], cols[perTickAimTable],
-                        cols[havePerTickPredictionAimTable], cols[perTickPredictionAimTable], cols[eventIdColumn]
+                        cols[havePerTickPredictionAimTable], cols[perTickPredictionAimTable], cols[eventIdColumn],
+                        cols[haveBlobColumnIndex], cols[blobFileNameColumnIndex], cols[blobBytesPerRowColumnIndex]
                     )
                 )
                 if (!addedDownloadedOptions) {
@@ -209,22 +213,20 @@ export function getNonTemporalTables(promises: Promise<any>[]) {
     }
 }
 
-export function getNonTemporalTables(promises: Promise<any>[]) {
+export function getBlob(promises: Promise<any>[]) {
     for (const downloadedDataName of gameData.tableNames) {
-        if (!gameData.parsers.get(downloadedDataName).nonTemporal) {
+        if (!gameData.parsers.get(downloadedDataName).haveBlob) {
             continue;
         }
-        gameData.parsers.get(downloadedDataName).filterUrl = ""
         promises.push(
-            fetch(remoteAddr + "query/" + downloadedDataName)
+            fetch(remoteAddr + "nav/" + gameData.parsers.get(downloadedDataName).blobFileName)
                 .then((response: Response) => {
-                    gameData.parsers.get(downloadedDataName)
-                        .setReader(response.body.getReader(),)
-                    return gameData.parsers.get(downloadedDataName).reader.read();
+                    return response.body.getReader().read()
                 })
-                .then(parse(gameData.parsers.get(downloadedDataName), true))
+                .then((result: ReadableStreamDefaultReadResult<Uint8Array>) =>
+                    gameData.parsers.get(downloadedDataName).blob = result.value)
                 .catch(e => {
-                    console.log("error downloading " + downloadedDataName)
+                    console.log("error downloading " + downloadedDataName + " blob")
                     console.log(e)
                 })
         );

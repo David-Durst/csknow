@@ -39,7 +39,7 @@ import {
     getTables,
     remoteAddr,
     setRemoteAddr,
-    getRoundFilteredTables, getNonTemporalTables
+    getRoundFilteredTables, getNonTemporalTables, getBlob
 } from "./controller/downloadData";
 import {
     setupSelectors,
@@ -222,6 +222,7 @@ async function changedMatchOrRound() {
     await getPlayers(curGame.id);
     getRoundFilteredTables(promises, curRound);
     getNonTemporalTables(promises);
+    getBlob(promises);
 
     await Promise.all(promises)
     indexEventsForRound(gameData)
