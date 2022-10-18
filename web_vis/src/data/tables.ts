@@ -351,6 +351,11 @@ export class Parser {
         this.blobReader = readerInput
     }
 
+    blobAsMatrixValue(src: number, dst: number): boolean {
+        const startBytes = src * this.blobBytesPerRow;
+        return ((this.blob[startBytes + Math.trunc(dst/8)] >> (dst%8)) & 1) != 0;
+    }
+
 }
 
 export class RangeIndexEntry {

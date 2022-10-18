@@ -585,9 +585,9 @@ export function drawTick(e: InputEvent) {
         // draw fill ins for all areas
         for (let o = 0; drawTarget && targetAreaId != -1 && o < overlayLabelsRows.length; o++) {
             if (curOverlay.includes("visible")) {
-                const startBytes = targetAreaIndex * curParser.blobBytesPerRow;
-                const addedBytes = o / 8;
-                if ((curParser.blob[startBytes + addedBytes] & (1 << (o % 8))) != 0) {
+                const visDirA = curParser.blobAsMatrixValue(targetAreaIndex, o);
+                const visDirB = curParser.blobAsMatrixValue(o, targetAreaIndex);
+                if (visDirA || visDirB) {
                     cacheTargetCtx.fillStyle = `rgba(0, 0, 255, 0.5)`;
                     const overlayLabelsRow = overlayLabelsRows[o]
                     const minCoordinate = new MapCoordinate(
