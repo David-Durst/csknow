@@ -125,11 +125,14 @@ void VisPoints::createCellVisPoints() {
                                         CELL_DIM_HEIGHT * static_cast<double>(curZId)};
                     Vec3 cellMax = cellMin + Vec3{CELL_DIM_WIDTH_DEPTH, CELL_DIM_WIDTH_DEPTH, CELL_DIM_HEIGHT};
                     Vec3 cellCenter = (cellMin + cellMax) / 2.;
+                    Vec3 cellTopCenter = cellCenter;
+                    cellTopCenter.z = cellMax.z;
                     cellVisPoints.push_back({
                         areaVisPoint.areaId,
                         static_cast<CellId>(cellVisPoints.size()),
                         {cellMin, cellMax},
-                        cellCenter
+                        cellCenter,
+                        cellTopCenter,
                     });
                 }
             }
