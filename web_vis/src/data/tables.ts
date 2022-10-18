@@ -203,6 +203,8 @@ export class Parser {
     blobFileName: string;
     blob: Uint8Array;
     blobBytesPerRow: number;
+    blobTotalBytes: number;
+    blobWrittenBytes: number;
 
     constructor(tableName: string, startTickColumn: string,
                 foreignKeyNames: string[], otherColumnNames: string[],
@@ -212,7 +214,8 @@ export class Parser {
                 playerLabelIndicesColumn: string, playerLabels: string,
                 havePerTickAimTable: string, perTickAimTable: string,
                 havePerTickAimPredictionTable: string, perTickAimPredictionTable: string,
-                eventIdColumn: string, haveBlob: string, blobFileName: string, blobBytesPerRow: string) {
+                eventIdColumn: string, haveBlob: string, blobFileName: string, blobBytesPerRow: string,
+                blobTotalBytes: string) {
         this.tableName = tableName;
         this.foreignKeyNames = foreignKeyNames;
         this.otherColumnNames = otherColumnNames;
@@ -250,6 +253,8 @@ export class Parser {
         this.haveBlob = parseBool(haveBlob)
         this.blobFileName = blobFileName
         this.blobBytesPerRow = parseInt(blobBytesPerRow)
+        this.blobTotalBytes = parseInt(blobTotalBytes);
+        this.blobWrittenBytes = 0;
     }
 
     parseOneLine(currentLine: string[]) {
@@ -339,6 +344,11 @@ export class Parser {
     reader: any = null
     setReader(readerInput: any) {
         this.reader = readerInput
+    }
+
+    blobReader: any = null
+    setBlobReader(readerInput: any) {
+        this.blobReader = readerInput
     }
 
 }

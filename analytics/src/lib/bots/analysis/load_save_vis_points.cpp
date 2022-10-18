@@ -292,11 +292,9 @@ void VisPoints::new_load(const string & mapsPath, const string & mapName, bool a
     string visValidFileName = getVisFileName(mapName, area, false);
     string visValidFilePath = mapsPath + "/" + visValidFileName;
 
-    if (!std::filesystem::exists(visValidFilePath)) {
-        string gzipCommand = "gzip -dfk " + visValidFilePath + ".gz";
-        if (std::system(gzipCommand.c_str()) != 0) {
-            std::cerr << "load gzip failed" << std::endl;
-        }
+    string gzipCommand = "gzip -dfk " + visValidFilePath + ".gz";
+    if (std::system(gzipCommand.c_str()) != 0) {
+        std::cerr << "load gzip failed" << std::endl;
     }
 
     size_t visBytesSize;

@@ -62,6 +62,7 @@ public:
     bool haveBlob = false;
     string blobFileName = "";
     int blobBytesPerRow = INVALID_ID;
+    int64_t blobTotalBytes = INVALID_ID;
     string extension = ".query";
     vector<int> keyPlayerColumns = {};
 //    vector<int> keysForDiff;

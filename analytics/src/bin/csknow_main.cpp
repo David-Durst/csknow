@@ -97,10 +97,15 @@ int main(int argc, char * argv[]) {
 
     std::map<std::string, VisPoints> map_visPoints;
     for (const auto & entry : fs::directory_iterator(navPath)) {
-        if (entry.path().extension() == ".vis") {
-            string mapName = entry.path().filename().replace_extension();
+        string filename = entry.path().filename();
+        // ignore the cells file, will cover both when hit area
+        size_t extensionLocation = filename.find(".area.vis.gz");
+        if (extensionLocation != string::npos) {
+            string mapName = filename.substr(0, filename.find(".area.vis.gz"));
+            string extension = filename.substr(filename.find(".area.vis.gz"));
             map_visPoints.insert(std::pair<std::string, VisPoints>(mapName, VisPoints(map_navs[mapName])));
             std::cout << mapName << " num cells: " << map_visPoints.at(mapName).getCellVisPoints().size() << std::endl;
+            map_visPoints.at(mapName).new_load(navPath, mapName, true, map_navs[mapName]);
             map_visPoints.at(mapName).new_load(navPath, mapName, false, map_navs[mapName]);
         }
     }
@@ -618,6 +623,8 @@ int main(int argc, char * argv[]) {
                 ss << queryValue.blobFileName;
                 ss << ",";
                 ss << queryValue.blobBytesPerRow;
+                ss << ",";
+                ss << queryValue.blobTotalBytes;
                 ss << std::endl;
             }
             res.set_content(ss.str(), "text/plain");

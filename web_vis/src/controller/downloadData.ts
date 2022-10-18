@@ -51,6 +51,7 @@ export async function getTables() {
                 const haveBlobColumnIndex = eventIdColumn + 1
                 const blobFileNameColumnIndex = haveBlobColumnIndex + 1
                 const blobBytesPerRowColumnIndex = blobFileNameColumnIndex + 1
+                const blobTotalBytesColumnIndex = blobBytesPerRowColumnIndex + 1
                 if (overlay) {
                     gameData.overlays.set(cols[0], [])
                 }
@@ -86,7 +87,8 @@ export async function getTables() {
                         cols[havePlayerLabelsIndex], cols[playersToLabelColumnIndex], cols[playerLabelIndicesColumnIndex],
                         cols[playerLabelsIndex], cols[havePerTickAimTable], cols[perTickAimTable],
                         cols[havePerTickPredictionAimTable], cols[perTickPredictionAimTable], cols[eventIdColumn],
-                        cols[haveBlobColumnIndex], cols[blobFileNameColumnIndex], cols[blobBytesPerRowColumnIndex]
+                        cols[haveBlobColumnIndex], cols[blobFileNameColumnIndex], cols[blobBytesPerRowColumnIndex],
+                        cols[blobTotalBytesColumnIndex]
                     )
                 )
                 if (!addedDownloadedOptions) {
@@ -221,10 +223,35 @@ export function getBlob(promises: Promise<any>[]) {
         promises.push(
             fetch(remoteAddr + "nav/" + gameData.parsers.get(downloadedDataName).blobFileName)
                 .then((response: Response) => {
-                    return response.body.getReader().read()
+                    const reader = response.body.getReader();
+                    return new ReadableStream({
+                        start(controller) {
+                            return pump();
+                            // @ts-ignore
+                            function pump() {
+                                return reader.read().then(({done, value}) => {
+                                    // When no more data needs to be consumed, close the stream
+                                    if (done) {
+                                        controller.close();
+                                        return;
+                                    }
+                                    // Enqueue the next data chunk into our target stream
+                                    controller.enqueue(value);
+                                    return pump();
+                                });
+                            }
+                        }
+                    })
                 })
-                .then((result: ReadableStreamDefaultReadResult<Uint8Array>) =>
-                    gameData.parsers.get(downloadedDataName).blob = result.value)
+                // Create a new response out of the stream
+                .then((stream) => new Response(stream))
+                // Create an object URL for the response
+                .then((response) => response.blob())
+                .then((blob) => blob.arrayBuffer())
+                .then((arr) => {
+                    gameData.parsers.get(downloadedDataName).blob = new Uint8Array(arr)
+                    console.log(gameData.parsers.get(downloadedDataName).blob.length)
+                })
                 .catch(e => {
                     console.log("error downloading " + downloadedDataName + " blob")
                     console.log(e)

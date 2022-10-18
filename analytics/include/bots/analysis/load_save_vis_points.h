@@ -123,7 +123,7 @@ public:
     [[nodiscard]] const vector<AreaVisPoint> & getAreaVisPoints() const { return areaVisPoints; }
     [[nodiscard]] const vector<CellVisPoint> & getCellVisPoints() const { return cellVisPoints; }
     [[nodiscard]] string getVisFileName(const string & mapName, bool area, bool compressed) const {
-        return mapName + (area ? "_area" : "_cell") + ".vis" + (compressed ? ".gz" : "");
+        return mapName + (area ? ".area" : ".cell") + ".vis" + (compressed ? ".gz" : "");
     }
 };
 

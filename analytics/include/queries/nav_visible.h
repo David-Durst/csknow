@@ -35,8 +35,14 @@ public:
         this->overlayLabelsQuery = overlayLabelsQuery;
         haveBlob = true;
         blobFileName = visPoints.getVisFileName(mapName, area, true);
-        blobBytesPerRow = area ? visPoints.getAreaVisPoints().front().visibleFromCurPoint.getInternal().size() :
-            visPoints.getCellVisPoints().front().visibleFromCurPoint.getInternal().size();
+        blobBytesPerRow = static_cast<int>(area ?
+                visPoints.getAreaVisPoints().front().visibleFromCurPoint.getInternal().size() :
+                visPoints.getCellVisPoints().front().visibleFromCurPoint.getInternal().size());
+        blobTotalBytes = static_cast<int64_t>(area ?
+                visPoints.getAreaVisPoints().front().visibleFromCurPoint.getInternal().size() *
+                    visPoints.getAreaVisPoints().size() :
+                visPoints.getCellVisPoints().front().visibleFromCurPoint.getInternal().size() *
+                    visPoints.getCellVisPoints().size());
     };
 
     void oneLineToCSV(int64_t index, stringstream & ss) override {
