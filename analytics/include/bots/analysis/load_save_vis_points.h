@@ -36,6 +36,7 @@ struct CellVisPoint {
     CellId cellId;
     AABB cellCoordinates;
     Vec3 center;
+    Vec3 topCenter;
     CellBits visibleFromCurPoint = CellBits();
     CellBits dangerFromCurPoint = CellBits();
 };

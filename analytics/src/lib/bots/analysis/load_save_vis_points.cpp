@@ -79,12 +79,15 @@ void VisPoints::createCellVisPoints() {
                              CELL_DIM_HEIGHT * static_cast<double>(curZId)};
                     Vec3 cellMax = cellMin + Vec3{CELL_DIM_WIDTH_DEPTH, CELL_DIM_WIDTH_DEPTH, CELL_DIM_HEIGHT};
                     Vec3 cellCenter = (cellMin + cellMax) / 2.;
+                    Vec3 cellTopCenter = cellCenter;
+                    cellTopCenter.z = cellMax.z;
                     if (pointInRegionMaxInclusive(extendedAABB, cellCenter)) {
                         cellVisPoints.push_back({
                             areaVisPoint.areaId,
                             static_cast<CellId>(cellVisPoints.size()),
                             {cellMin, cellMax},
                             cellCenter,
+                            cellTopCenter,
                         });
                     }
                     else {
@@ -180,7 +183,7 @@ bool VisPoints::launchVisPointsCommand(const ServerState & state, bool areas, st
         }
         else {
             for (const auto & visPoint : cellVisPoints) {
-                visPointsStream << visPoint.center.toCSV() << std::endl;
+                visPointsStream << visPoint.topCenter.toCSV() << std::endl;
             }
         }
 
