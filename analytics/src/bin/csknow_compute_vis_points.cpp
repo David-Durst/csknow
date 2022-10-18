@@ -34,7 +34,12 @@ void computeVisPoints(const ServerState & state, const Tree & tree, bool area, c
         else if (visPoints.readVisPointsCommandResult(state, area, range)) {
             range.startRow += range.numRows;
             ready = true;
-            printProgress(range.startRow, visPoints.getCellVisPoints().size());
+            if (area) {
+                printProgress(range.startRow, visPoints.getAreaVisPoints().size());
+            }
+            else {
+                printProgress(range.startRow, visPoints.getCellVisPoints().size());
+            }
         }
 
         auto end = std::chrono::system_clock::now();
