@@ -67,9 +67,12 @@ void VisPoints::createCellVisPoints() {
         maxCellMinInArea.z /= CELL_DIM_HEIGHT;
 
         // then core all cells in between, if center is in area, then assign it to this area
-        for (int64_t curXId = minCellMinInArea.x; curXId <= maxCellMinInArea.x; curXId++) {
-            for (int64_t curYId = minCellMinInArea.y; curYId <= maxCellMinInArea.y; curYId++) {
-                for (int64_t curZId = minCellMinInArea.z; curZId <= maxCellMinInArea.z; curZId++) {
+        for (int64_t curXId = minCellMinInArea.x; curXId <= maxCellMinInArea.x && curXId < maxCellNumbersByDim[0];
+             curXId++) {
+            for (int64_t curYId = minCellMinInArea.y; curYId <= maxCellMinInArea.y && curYId < maxCellNumbersByDim[1];
+                 curYId++) {
+                for (int64_t curZId = minCellMinInArea.z; curZId <= maxCellMinInArea.z && curZId < maxCellNumbersByDim[2];
+                     curZId++) {
                     Vec3 cellMin = areaBounds.min +
                         Vec3{CELL_DIM_WIDTH_DEPTH * static_cast<double>(curXId),
                              CELL_DIM_WIDTH_DEPTH * static_cast<double>(curYId),
@@ -279,7 +282,7 @@ void VisPoints::save(const string & mapsPath, const string & mapName, bool area)
     }
 
     std::ofstream fsVisValid(visValidFilePath, std::ios::out | std::ios::binary);
-    fsVisValid.write(reinterpret_cast<const char*>(visBytes.data()), visBytes.size());
+    fsVisValid.write(reinterpret_cast<const char*>(visBytes.data()), static_cast<std::streamsize>(visBytes.size()));
     fsVisValid.close();
 
     string gzipCommand = "gzip -f " + visValidFilePath;
@@ -308,7 +311,7 @@ void VisPoints::new_load(const string & mapsPath, const string & mapName, bool a
     vector<std::uint8_t> visBytes(visBytesSize, 0);
 
     std::ifstream fsVisValid(visValidFilePath, std::ios::in | std::ios::binary);
-    fsVisValid.read(reinterpret_cast<char*>(visBytes.data()), visBytes.size());
+    fsVisValid.read(reinterpret_cast<char*>(visBytes.data()), static_cast<std::streamsize>(visBytes.size()));
     size_t visBytesOffset = 0;
     if (area) {
         for (auto & areaVisPoint : areaVisPoints) {
