@@ -222,7 +222,7 @@ public:
                 playerNodeState[treeThinker.csgoId] = NodeState::Failure;
                 return playerNodeState[treeThinker.csgoId];
             }
-            dangerAreas[curDangerAreaIndex] = true;
+            dangerAreas.set(curDangerAreaIndex, true);
         }
         playerNodeState[treeThinker.csgoId] = NodeState::Success;
         return playerNodeState[treeThinker.csgoId];
