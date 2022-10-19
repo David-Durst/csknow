@@ -49,7 +49,7 @@ AggressionEventResult queryAggressionRoles(const Games & games, const Rounds & r
         // for each time step in path - first player to shoot/be shot by enemy is pusher. baiter is everyone on same path
         // lurker is someone on different path
 #pragma omp parallel for
-    for (int64_t roundIndex = 0; roundIndex < std::min(6L, rounds.size); roundIndex++) {
+    for (int64_t roundIndex = 0; roundIndex < std::min(static_cast<int64_t>(6), rounds.size); roundIndex++) {
         int threadNum = omp_get_thread_num();
         tmpRoundIds[threadNum].push_back(roundIndex);
         tmpRoundStarts[threadNum].push_back(static_cast<int64_t>(tmpStartTickId[threadNum].size()));
