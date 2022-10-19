@@ -105,8 +105,8 @@ int main(int argc, char * argv[]) {
             string extension = filename.substr(filename.find(".area.vis.gz"));
             map_visPoints.insert(std::pair<std::string, VisPoints>(mapName, VisPoints(map_navs[mapName])));
             std::cout << mapName << " num cells: " << map_visPoints.at(mapName).getCellVisPoints().size() << std::endl;
-            map_visPoints.at(mapName).new_load(navPath, mapName, true, map_navs[mapName]);
-            map_visPoints.at(mapName).new_load(navPath, mapName, false, map_navs[mapName]);
+            map_visPoints.at(mapName).new_load(navPath, mapName, true, map_navs[mapName], true);
+            map_visPoints.at(mapName).new_load(navPath, mapName, false, map_navs[mapName], true);
         }
     }
 

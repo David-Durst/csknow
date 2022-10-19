@@ -119,7 +119,8 @@ public:
     bool launchVisPointsCommand(const ServerState & state, bool areas, std::optional<VisCommandRange> range = {});
     bool readVisPointsCommandResult(const ServerState & state, bool areas, std::optional<VisCommandRange> range = {});
     void save(const string & mapsPath, const string & mapName, bool area);
-    void new_load(const string & mapsPath, const string & mapName, bool area, const nav_mesh::nav_file & navFile);
+    void new_load(const string & mapsPath, const string & mapName, bool area, const nav_mesh::nav_file & navFile, bool fixSymmetry = false);
+    void fix_symmetry(bool area);
     void load(const string & mapsPath, const string & mapName, bool area, const nav_mesh::nav_file & navFile);
     [[nodiscard]] const vector<AreaVisPoint> & getAreaVisPoints() const { return areaVisPoints; }
     [[nodiscard]] const vector<CellVisPoint> & getCellVisPoints() const { return cellVisPoints; }
@@ -127,38 +128,5 @@ public:
         return mapName + (area ? ".area" : ".cell") + ".vis" + (compressed ? ".gz" : "");
     }
 };
-
-template <size_t SZ>
-string bitsetToBase64(const bitset<SZ> & bits) {
-    bitset<SZ> firstByteMask(255);
-    vector<base64::byte> result;
-    result.resize(bits.size() / 8, 0);
-    for (size_t i = 0; i < bits.size(); i += 8) {
-        for (size_t j = 0; j < 8; j++) {
-            result[i / 8] |= static_cast<uint8_t>(bits[i + j]) << j;
-        }
-    }
-    return base64::encode(result);
-}
-
-template <size_t SZ>
-string bitsetToBase64(const csknow::Bitset<SZ> & bits) {
-    return base64::encode(bits.getInternal());
-}
-
-template <size_t SZ>
-void base64ToBitset(const string & base64Input, bitset<SZ> & bits) {
-    vector<base64::byte> input = base64::decode(base64Input);
-    for (size_t i = 0; i < input.size(); i++) {
-        for (size_t j = 0; j < 8; j++) {
-            bits[i * 8 + j] = ((input[i] >> j) & 1) != 0;
-        }
-    }
-}
-
-template <size_t SZ>
-void base64ToBitset(const string & base64Input, csknow::Bitset<SZ> & bits) {
-    bits = base64::decode(base64Input);
-}
 
 #endif //CSKNOW_LOAD_SAVE_VIS_POINTS_H

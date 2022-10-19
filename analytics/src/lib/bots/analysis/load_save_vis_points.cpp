@@ -297,7 +297,8 @@ void VisPoints::save(const string & mapsPath, const string & mapName, bool area)
     }
 }
 
-void VisPoints::new_load(const string & mapsPath, const string & mapName, bool area, const nav_mesh::nav_file & navFile) {
+void VisPoints::new_load(const string & mapsPath, const string & mapName, bool area, const nav_mesh::nav_file & navFile,
+                         bool fixSymmetry) {
     string visValidFileName = getVisFileName(mapName, area, false);
     string visValidFilePath = mapsPath + "/" + visValidFileName;
 
@@ -332,8 +333,32 @@ void VisPoints::new_load(const string & mapsPath, const string & mapName, bool a
         }
     }
 
+    if (fixSymmetry) {
+        fix_symmetry(area);
+    }
+
     // after completing visibility, compute danger
     setDangerPoints(navFile, area);
+}
+
+void VisPoints::fix_symmetry(bool area) {
+    if (area) {
+        for (size_t i = 0; i < areaVisPoints.size(); i++) {
+            for (size_t j = 0; j <= i; j++) {
+                areaVisPoints[i].visibleFromCurPoint.set(j, i == j ||
+                    areaVisPoints[i].visibleFromCurPoint[j] || areaVisPoints[j].visibleFromCurPoint[i]);
+            }
+        }
+    }
+    else {
+#pragma omp parallel for
+        for (size_t i = 0; i < cellVisPoints.size(); i++) {
+            for (size_t j = 0; j <= i; j++) {
+                cellVisPoints[i].visibleFromCurPoint.set(j, i == j ||
+                    cellVisPoints[i].visibleFromCurPoint[j] || cellVisPoints[j].visibleFromCurPoint[i]);
+            }
+        }
+    }
 }
 
 void VisPoints::load(const string & mapsPath, const string & mapName, bool area, const nav_mesh::nav_file & navFile) {
