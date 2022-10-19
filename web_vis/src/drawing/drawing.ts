@@ -311,17 +311,19 @@ class TargetAreaData {
     avgX: number;
     avgY: number;
     avgZ: number;
-    row: Row;
+    overlayRow: Row;
+    overlayLabelsRow: Row;
     minCoordinate: MapCoordinate;
     maxCoordinate: MapCoordinate;
 
-    constructor(index: number, avgX: number, avgY: number, avgZ: number, row: Row,
+    constructor(index: number, avgX: number, avgY: number, avgZ: number, overlayRow: Row, overlayLabelsRow: Row,
                 minCoordinate: MapCoordinate, maxCoordinate: MapCoordinate) {
         this.index = index
         this.avgX = avgX
         this.avgY = avgY
         this.avgZ = avgZ
-        this.row = row
+        this.overlayRow = overlayRow
+        this.overlayLabelsRow = overlayLabelsRow
         this.minCoordinate = minCoordinate
         this.maxCoordinate = maxCoordinate
     }
@@ -441,6 +443,7 @@ export function drawTick(e: InputEvent) {
         let targetFontSize = -1
         for (let o = 0; (drawOutlines || drawTarget) && o < overlayRows.length; o++) {
             const overlayRow = overlayRows[o]
+            const overlayLabelsRow = overlayLabelsRows[o]
             const minCoordinate = new MapCoordinate(
                 parseFloat(overlayRow.otherColumnValues[2]),
                 parseFloat(overlayRow.otherColumnValues[3]),
@@ -456,7 +459,7 @@ export function drawTick(e: InputEvent) {
                 lastMousePosition.x <= maxCoordinate.x &&
                 lastMousePosition.y >= minCoordinate.y &&
                 lastMousePosition.y <= maxCoordinate.y) {
-                possibleTargetAreas.push(new TargetAreaData(o, avgX, avgY, avgZ, overlayRow,
+                possibleTargetAreas.push(new TargetAreaData(o, avgX, avgY, avgZ, overlayRow, overlayLabelsRow,
                     minCoordinate, maxCoordinate))
             }
             if (drawOutlines) {
@@ -472,14 +475,14 @@ export function drawTick(e: InputEvent) {
         {
             possibleTargetAreas.sort((a, b) => {return a.avgZ - b.avgZ});
             const possibleTargetArea = possibleTargetAreas[Math.min(possibleTargetAreas.length - 1, layerToDraw)]
-            targetAreaId = parseInt(possibleTargetArea.row.otherColumnValues[1])
-            targetId = possibleTargetArea.row.id
-            targetPlaceName = possibleTargetArea.row.otherColumnValues[0]
+            targetAreaId = parseInt(possibleTargetArea.overlayRow.otherColumnValues[1])
+            targetId = possibleTargetArea.overlayRow.id
+            targetPlaceName = possibleTargetArea.overlayRow.otherColumnValues[0]
             targetX = possibleTargetArea.avgX
             targetY = possibleTargetArea.avgY
             const zScaling = (possibleTargetArea.avgZ - minZ) / (maxZ - minZ)
             targetFontSize = (((zScaling * 20 + 30)/2)*fontScale)
-            connectionAreaIds = possibleTargetArea.row.otherColumnValues[8].split(';').map(s => parseInt(s))
+            connectionAreaIds = possibleTargetArea.overlayRow.otherColumnValues[8].split(';').map(s => parseInt(s))
             cacheTargetCtx.fillStyle = "rgba(0,42,255,0.9)";
             cacheTargetCtx.fillRect(possibleTargetArea.minCoordinate.getCanvasX(), possibleTargetArea.minCoordinate.getCanvasY(),
                 possibleTargetArea.maxCoordinate.getCanvasX() - possibleTargetArea.minCoordinate.getCanvasX(),
@@ -522,9 +525,9 @@ export function drawTick(e: InputEvent) {
         const overlayRows = filteredData.overlays.get(curOverlay)
         const overlayLabelsRows = filteredData.overlays.get(filteredData.parsers.get(curOverlay).overlayLabelsQuery)
         const curParser = filteredData.parsers.get(curOverlay)
-        let distances: number[] = [];
-        let minDistance;
-        let maxDistance;
+        let valuesForColor: number[] = [];
+        let minValueForColor;
+        let maxValueForColor;
         let possibleTargetAreas: TargetAreaData[] = []
         let targetAreaId = -1
         let targetAreaIndex = -1
@@ -533,6 +536,7 @@ export function drawTick(e: InputEvent) {
         let targetY = -1
         let targetFontSize = -1
         for (let o = 0; (drawOutlines || drawTarget) && o < overlayLabelsRows.length; o++) {
+            const overlayRow = overlayRows[o]
             const overlayLabelsRow = overlayLabelsRows[o]
             const minCoordinate = new MapCoordinate(
                 parseFloat(overlayLabelsRow.otherColumnValues[2]),
@@ -549,7 +553,7 @@ export function drawTick(e: InputEvent) {
                 lastMousePosition.x <= maxCoordinate.x &&
                 lastMousePosition.y >= minCoordinate.y &&
                 lastMousePosition.y <= maxCoordinate.y) {
-                possibleTargetAreas.push(new TargetAreaData(o, avgX, avgY, avgZ, overlayLabelsRow,
+                possibleTargetAreas.push(new TargetAreaData(o, avgX, avgY, avgZ, overlayRow, overlayLabelsRow,
                     minCoordinate, maxCoordinate))
             }
             if (drawOutlines) {
@@ -572,9 +576,11 @@ export function drawTick(e: InputEvent) {
             targetY = possibleTargetArea.avgY
             const zScaling = (possibleTargetArea.avgZ - minZ) / (maxZ - minZ)
             targetFontSize = (((zScaling * 20 + 30)/2)*fontScale)
-            distances = possibleTargetArea.row.otherColumnValues.slice(6).map(s => parseFloat(s))
-            minDistance = Math.min(...distances);
-            maxDistance = Math.max(...distances);
+            if (!curOverlay.includes("visible")) {
+                valuesForColor = possibleTargetArea.overlayRow.otherColumnValues.slice(6).map(s => parseFloat(s))
+                minValueForColor = Math.min(...valuesForColor);
+                maxValueForColor = Math.max(...valuesForColor);
+            }
             cacheTargetCtx.fillStyle = "rgba(0, 0, 0, 0.9)";
             cacheTargetCtx.fillRect(possibleTargetArea.minCoordinate.getCanvasX(), possibleTargetArea.minCoordinate.getCanvasY(),
                 possibleTargetArea.maxCoordinate.getCanvasX() - possibleTargetArea.minCoordinate.getCanvasX(),
@@ -605,7 +611,7 @@ export function drawTick(e: InputEvent) {
             }
             else {
                 const overlayLabelsRow = overlayLabelsRows[o]
-                if (distances[o] == -1) {
+                if (valuesForColor[o] == -1) {
                     continue
                 }
                 const minCoordinate = new MapCoordinate(
@@ -616,7 +622,7 @@ export function drawTick(e: InputEvent) {
                     parseFloat(overlayLabelsRow.otherColumnValues[5]),
                     parseFloat(overlayLabelsRow.otherColumnValues[6]),
                     false);
-                const percentDistance = (distances[o] - minDistance) / (maxDistance - minDistance);
+                const percentDistance = (valuesForColor[o] - minValueForColor) / (maxValueForColor - minValueForColor);
                 cacheTargetCtx.fillStyle = `rgba(${percentDistance * 255}, 0, ${(1 - percentDistance) * 255}, 0.5)`;
                 cacheTargetCtx.fillRect(minCoordinate.getCanvasX(), minCoordinate.getCanvasY(),
                     maxCoordinate.getCanvasX() - minCoordinate.getCanvasX(),

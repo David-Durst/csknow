@@ -248,10 +248,7 @@ export function getBlob(promises: Promise<any>[]) {
                 // Create an object URL for the response
                 .then((response) => response.blob())
                 .then((blob) => blob.arrayBuffer())
-                .then((arr) => {
-                    gameData.parsers.get(downloadedDataName).blob = new Uint8Array(arr)
-                    console.log(gameData.parsers.get(downloadedDataName).blob.length)
-                })
+                .then((arr) => gameData.parsers.get(downloadedDataName).blob = new Uint8Array(arr))
                 .catch(e => {
                     console.log("error downloading " + downloadedDataName + " blob")
                     console.log(e)
