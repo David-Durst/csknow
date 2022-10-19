@@ -231,7 +231,7 @@ export function drawMouseData(kymographCanvas: HTMLCanvasElement,
         scatterChart.options.scales.y.min = -1.5
         scatterChart.options.scales.y.max = 1.0
         inferenceChart.options.scales.x.min = -1.5
-        inferenceChart.options.scales.x.max = 1.0
+        inferenceChart.options.scales.x.max = 1.5
         inferenceChart.options.scales.y.min = -1.5
         inferenceChart.options.scales.y.max = 1.0
     }
@@ -324,7 +324,7 @@ export function drawMouseData(kymographCanvas: HTMLCanvasElement,
                 dataIndex = pastPredictionDeltaData.length
             }
             else if (curAimData.getStartTick() == tickData.id) {
-                predictionDeltaData = pastPredictionDeltaData
+                predictionDeltaData = presentPredictionDeltaData
                 dataSetIndex = 1
                 dataIndex = presentPredictionDeltaData.length
             }

@@ -17,6 +17,7 @@ struct EngagementAimInferenceTickData {
     Vec3 deltaPosition;
     double eyeToHeadDistance;
     AimWeaponType weaponType;
+    int warmupTicksUsed;
 };
 
 void InferenceEngagementAimResult::runQuery(const Rounds & rounds, const string & modelsDir,
@@ -67,35 +68,43 @@ void InferenceEngagementAimResult::runQuery(const Rounds & rounds, const string 
                     priorData[priorTickNum].weaponType =
                         trainingEngagementAimResult.weaponType[engagementAimId];
                 }
+                // only need the last prior data entry's warmup tracker
+                priorData[PAST_AIM_TICKS - 1].warmupTicksUsed = 0;
             }
 
-            // Create a vector of inputs.
-            std::vector<torch::jit::IValue> inputs;
-            std::vector<float> rowCPP;
-            // all but cur tick are inputs
-            for (size_t priorDeltaNum = 0; priorDeltaNum < priorData.size(); priorDeltaNum++) {
-                rowCPP.push_back(static_cast<float>(priorData[priorDeltaNum].deltaViewAngle.x));
-                rowCPP.push_back(static_cast<float>(priorData[priorDeltaNum].deltaViewAngle.y));
-                rowCPP.push_back(static_cast<float>(priorData[priorDeltaNum].recoilAngle.x));
-                rowCPP.push_back(static_cast<float>(priorData[priorDeltaNum].recoilAngle.y));
-                rowCPP.push_back(static_cast<float>(priorData[priorDeltaNum].deltaViewAngleRecoilAdjusted.x));
-                rowCPP.push_back(static_cast<float>(priorData[priorDeltaNum].deltaViewAngleRecoilAdjusted.y));
-                rowCPP.push_back(static_cast<float>(priorData[priorDeltaNum].deltaPosition.x));
-                rowCPP.push_back(static_cast<float>(priorData[priorDeltaNum].deltaPosition.y));
-                rowCPP.push_back(static_cast<float>(priorData[priorDeltaNum].deltaPosition.z));
-                rowCPP.push_back(static_cast<float>(priorData[priorDeltaNum].eyeToHeadDistance));
-            }
-            rowCPP.push_back(static_cast<float>(priorData[0].weaponType));
-            torch::Tensor rowPT = torch::from_blob(rowCPP.data(), {1, static_cast<long>(rowCPP.size())},
-                                                   options).clone();
-            inputs.push_back(rowPT);
+            if (priorData[PAST_AIM_TICKS - 1].warmupTicksUsed >= WARMUP_TICKS) {
+                // Create a vector of inputs.
+                std::vector<torch::jit::IValue> inputs;
+                std::vector<float> rowCPP;
+                // all but cur tick are inputs
+                for (size_t priorDeltaNum = 0; priorDeltaNum < priorData.size(); priorDeltaNum++) {
+                    rowCPP.push_back(static_cast<float>(priorData[priorDeltaNum].deltaViewAngle.x));
+                    rowCPP.push_back(static_cast<float>(priorData[priorDeltaNum].deltaViewAngle.y));
+                    rowCPP.push_back(static_cast<float>(priorData[priorDeltaNum].recoilAngle.x));
+                    rowCPP.push_back(static_cast<float>(priorData[priorDeltaNum].recoilAngle.y));
+                    rowCPP.push_back(static_cast<float>(priorData[priorDeltaNum].deltaViewAngleRecoilAdjusted.x));
+                    rowCPP.push_back(static_cast<float>(priorData[priorDeltaNum].deltaViewAngleRecoilAdjusted.y));
+                    rowCPP.push_back(static_cast<float>(priorData[priorDeltaNum].deltaPosition.x));
+                    rowCPP.push_back(static_cast<float>(priorData[priorDeltaNum].deltaPosition.y));
+                    rowCPP.push_back(static_cast<float>(priorData[priorDeltaNum].deltaPosition.z));
+                    rowCPP.push_back(static_cast<float>(priorData[priorDeltaNum].eyeToHeadDistance));
+                }
+                rowCPP.push_back(static_cast<float>(priorData[0].weaponType));
+                torch::Tensor rowPT = torch::from_blob(rowCPP.data(), {1, static_cast<long>(rowCPP.size())},
+                                                       options).clone();
+                inputs.push_back(rowPT);
 
-            // Execute the model and turn its output into a tensor.
-            at::Tensor output = module.forward(inputs).toTensor();
-            predictedDeltaViewAngle[engagementAimId] = {
-                static_cast<double>(output[0][output[0].size(0) / 2].item<float>()),
-                static_cast<double>(output[0][output[0].size(0) / 2 + 1].item<float>())
-            };
+                // Execute the model and turn its output into a tensor.
+                at::Tensor output = module.forward(inputs).toTensor();
+                predictedDeltaViewAngle[engagementAimId] = {
+                        static_cast<double>(output[0][output[0].size(0) / 2].item<float>()),
+                        static_cast<double>(output[0][output[0].size(0) / 2 + 1].item<float>())
+                };
+            }
+            else {
+                predictedDeltaViewAngle[engagementAimId] =
+                        trainingEngagementAimResult.deltaViewAngle[engagementAimId][PAST_AIM_TICKS];
+            }
             normalizedPredictedDeltaViewAngle[engagementAimId] = predictedDeltaViewAngle[engagementAimId] /
                 trainingEngagementAimResult.distanceNormalization[engagementAimId];
 
@@ -118,6 +127,7 @@ void InferenceEngagementAimResult::runQuery(const Rounds & rounds, const string 
                     trainingEngagementAimResult.eyeToHeadDistance[engagementAimId][PAST_AIM_TICKS];
                 priorData[PAST_AIM_TICKS - 1].weaponType =
                     trainingEngagementAimResult.weaponType[engagementAimId];
+                priorData[PAST_AIM_TICKS - 1].warmupTicksUsed++;
             }
         }
         roundsProcessed++;
