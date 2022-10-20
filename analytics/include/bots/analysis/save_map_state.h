@@ -12,10 +12,19 @@ namespace fs = std::filesystem;
 
 namespace csknow {
     constexpr int CONV_SIZE = 3;
+    typedef array<array<uint8_t, CONV_SIZE>, CONV_SIZE> conv_matrix;
     class MapState {
         array<array<uint8_t, NAV_CELLS_PER_ROW>, NAV_CELLS_PER_ROW> data;
+
+    public:
         MapState(const VisPoints & visPoints);
         void saveMapState(const fs::path & path);
+        [[maybe_unused]] MapState & operator+=(const MapState & value);
+        [[maybe_unused]] MapState & operator+=(const uint8_t & value);
+        [[maybe_unused]] MapState & operator-=(const uint8_t & value);
+        [[maybe_unused]] MapState & operator*=(const uint8_t & value);
+        [[maybe_unused]] MapState & operator/=(const uint8_t & value);
+        [[maybe_unused]] MapState & conv(const conv_matrix & mat);
     };
 }
 

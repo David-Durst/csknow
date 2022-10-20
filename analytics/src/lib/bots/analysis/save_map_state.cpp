@@ -3,7 +3,7 @@
 //
 
 #include "bots/analysis/save_map_state.h"
-#include <png.h>
+#include <opencv2/opencv.hpp>
 
 namespace csknow {
 
@@ -15,73 +15,81 @@ namespace csknow {
     }
 
     void MapState::saveMapState(const fs::path &path) {
-        // http://zarb.org/~gc/html/libpng.html
-        /* create file */
-        FILE *fp = fopen(path.c_str(), "wb");
-        if (!fp) {
-            throw std::runtime_error("[write_png_file] File could not be opened for writing: " + path.string());
+        cv::Mat cvMapState = cv::Mat(NAV_CELLS_PER_ROW, NAV_CELLS_PER_ROW, CV_8U, data[0].data());
+        cv::imwrite(path.string(), cvMapState);
+    }
+
+    MapState & MapState::operator+=(const MapState & value) {
+        for (size_t i = 0; i < data.size(); i++) {
+            for (size_t j = 0; j < data[i].size(); j++) {
+                data[i][j] += value.data[i][j];
+            }
         }
+        return *this;
+    }
 
-        //int x, y;
-
-        //int width, height;
-        //png_byte color_type;
-        //png_byte bit_depth;
-
-        //png_infop info_ptr;
-        //int number_of_passes;
-        //png_bytep * row_pointers;
-
-        /* initialize stuff */
-        png_structp png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
-
-        if (!png_ptr) {
-            throw std::runtime_error("[write_png_file] png_create_write_struct failed");
+    MapState & MapState::operator+=(const uint8_t & value) {
+        for (size_t i = 0; i < data.size(); i++) {
+            for (size_t j = 0; j < data[i].size(); j++) {
+                data[i][j] += value;
+            }
         }
+        return *this;
+    }
 
-        png_infop info_ptr = png_create_info_struct(png_ptr);
-        if (!info_ptr) {
-            throw std::runtime_error("[write_png_file] png_create_info_struct failed");
+    MapState & MapState::operator-=(const uint8_t & value) {
+        for (size_t i = 0; i < data.size(); i++) {
+            for (size_t j = 0; j < data[i].size(); j++) {
+                data[i][j] -= value;
+            }
         }
+        return *this;
+    }
 
-        if (setjmp(png_jmpbuf(png_ptr))) {
-            throw std::runtime_error("[write_png_file] Error during init_io");
+    MapState & MapState::operator*=(const uint8_t & value) {
+        for (size_t i = 0; i < data.size(); i++) {
+            for (size_t j = 0; j < data[i].size(); j++) {
+                data[i][j] *= value;
+            }
         }
+        return *this;
+    }
 
-        png_init_io(png_ptr, fp);
-
-
-        /* write header */
-        if (setjmp(png_jmpbuf(png_ptr))) {
-            throw std::runtime_error("[write_png_file] Error during writing header");
+    MapState & MapState::operator/=(const uint8_t & value) {
+        for (size_t i = 0; i < data.size(); i++) {
+            for (size_t j = 0; j < data[i].size(); j++) {
+                data[i][j] /= value;
+            }
         }
+        return *this;
+    }
 
-        png_set_IHDR(png_ptr, info_ptr, NAV_CELLS_PER_ROW, NAV_CELLS_PER_ROW,
-                     8, PNG_COLOR_TYPE_GRAY, PNG_INTERLACE_NONE,
-                     PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
-
-        png_write_info(png_ptr, info_ptr);
-
-
-        /* write bytes */
-        if (setjmp(png_jmpbuf(png_ptr))) {
-            throw std::runtime_error("[write_png_file] Error during writing bytes");
+    MapState & MapState::conv(const conv_matrix & mat) {
+        auto oldData(data);
+        uint16_t norm = 0;
+        for (int64_t i = 0; i < CONV_SIZE; i++) {
+            for (int64_t j = 0; j < CONV_SIZE; j++) {
+                norm += mat[i][j];
+            }
         }
-
-        png_write_image(png_ptr, reinterpret_cast<png_bytep>(data[0].data()));
-
-
-        /* end write */
-        if (setjmp(png_jmpbuf(png_ptr))) {
-            throw std::runtime_error("[write_png_file] Error during end of write");
+        for (int64_t i = 0; i < static_cast<int64_t>(mat.size()); i++) {
+            for (int64_t j = 0; j < static_cast<int64_t>(mat[i].size()); j++) {
+                data[i][j] = 0;
+                for (int64_t ii = (-1 * CONV_SIZE / 2); ii <= CONV_SIZE / 2; ii++) {
+                    for (int64_t jj = (-1 * CONV_SIZE / 2); jj <= CONV_SIZE / 2; jj++) {
+                        int64_t sum_i = i + ii;
+                        int64_t sum_j = j + jj;
+                        if (sum_i < 0 || sum_i > static_cast<int64_t>(mat.size()) ||
+                            sum_j < 0 || sum_j > static_cast<int64_t>(mat[i].size())) {
+                            data[i][j] += 0;
+                        }
+                        else {
+                            data[i][j] += oldData[sum_i][sum_j] * mat[ii + CONV_SIZE / 2][jj + CONV_SIZE / 2];
+                        }
+                    }
+                }
+                data[i][j] /= norm;
+            }
         }
-
-        png_write_end(png_ptr, NULL);
-
-        /* cleanup heap allocation */
-        for (y=0; y<height; y++)
-            free(row_pointers[y]);
-        free(row_pointers);
-
-        fclose(fp);    }
+    }
 }
