@@ -63,7 +63,7 @@ void computeVisPoints(const ServerState & state, const Tree & tree, bool area, c
     std::cout << std::endl << "start read" << std::endl;
     auto startRead = std::chrono::system_clock::now();
     VisPoints visPointsCompare(tree.blackboard->navFile);
-    visPointsCompare.new_load(mapsPath, "de_dust2", area, tree.blackboard->navFile);
+    visPointsCompare.load(mapsPath, "de_dust2", area, tree.blackboard->navFile);
     auto endRead = std::chrono::system_clock::now();
     std::chrono::duration<double> readTime = endRead - startRead;
     std::cout << "end read " << readTime.count() << std::endl;

@@ -20,7 +20,6 @@
 #include "enum_helpers.h"
 #include "queries/moments/trajectory_segments.h"
 
-/*
 using std::string;
 using std::vector;
 using std::set;
@@ -29,12 +28,12 @@ using std::vector;
 using std::array;
 using std::map;
 
-constexpr int PAST_AIM_TICKS = 12;
-constexpr int FUTURE_AIM_TICKS = 6;
-constexpr int CUR_AIM_TICK = 1;
-constexpr int TOTAL_AIM_TICKS = PAST_AIM_TICKS + FUTURE_AIM_TICKS + CUR_AIM_TICK;
-constexpr int WARMUP_TICKS = 80;
+namespace csknow {
+    namespace navigation {
+        constexpr double NEXT_SECONDS = 0.1;
+        constexpr double FUTURE_SECONDS = 5.0;
 
+/*
 enum class AimWeaponType {
     Pistol = 0,
     SMG,
@@ -149,5 +148,9 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
                                                        const PlayerAtTick & playerAtTick,
                                                        const EngagementResult & engagementResult);
                                                        */
+
+    }
+
+}
 
 #endif //CSKNOW_TRAINING_NAVIGATION_H

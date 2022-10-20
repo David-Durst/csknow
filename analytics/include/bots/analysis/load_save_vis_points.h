@@ -51,6 +51,7 @@ class VisPoints {
     vector<CellVisPoint> cellVisPoints;
     map<AreaId, size_t> areaIdToVectorIndex;
     AABB areaBounds;
+    array<int64_t, 3> maxCellNumbersByDim;
 
     void createAreaVisPoints(const nav_mesh::nav_file & navFile);
     void createCellVisPoints();
@@ -59,7 +60,7 @@ class VisPoints {
 
 public:
     explicit
-    VisPoints(const nav_mesh::nav_file & navFile) {
+    VisPoints(const nav_mesh::nav_file & navFile) : areaBounds{}, maxCellNumbersByDim{} {
         areaIdToVectorIndex = navFile.m_area_ids_to_indices;
         createAreaVisPoints(navFile);
         createCellVisPoints();
@@ -119,14 +120,16 @@ public:
     bool launchVisPointsCommand(const ServerState & state, bool areas, std::optional<VisCommandRange> range = {});
     bool readVisPointsCommandResult(const ServerState & state, bool areas, std::optional<VisCommandRange> range = {});
     void save(const string & mapsPath, const string & mapName, bool area);
-    void new_load(const string & mapsPath, const string & mapName, bool area, const nav_mesh::nav_file & navFile, bool fixSymmetry = false);
+    void load(const string & mapsPath, const string & mapName, bool area, const nav_mesh::nav_file & navFile,
+              bool fixSymmetry = false);
     void fix_symmetry(bool area);
-    void load(const string & mapsPath, const string & mapName, bool area, const nav_mesh::nav_file & navFile);
     [[nodiscard]] const vector<AreaVisPoint> & getAreaVisPoints() const { return areaVisPoints; }
     [[nodiscard]] const vector<CellVisPoint> & getCellVisPoints() const { return cellVisPoints; }
     [[nodiscard]] string getVisFileName(const string & mapName, bool area, bool compressed) const {
         return mapName + (area ? ".area" : ".cell") + ".vis" + (compressed ? ".gz" : "");
     }
+    [[nodiscard]] const AABB & getAreaBounds() { return areaBounds; };
+    [[nodiscard]] const array<int64_t, 3> & getMaxCellNumbersByDim() { return maxCellNumbersByDim; };
 };
 
 #endif //CSKNOW_LOAD_SAVE_VIS_POINTS_H
