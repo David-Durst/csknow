@@ -17,6 +17,7 @@ include(GNUInstallDirs)
 include(FetchContent)
 find_package(OpenMP REQUIRED)
 find_package(OpenSSL REQUIRED)
+find_package(PNG REQUIRED)
 
 list(APPEND CMAKE_PREFIX_PATH "${CMAKE_SOURCE_DIR}/external/libtorch")
 foreach(path ${CMAKE_PREFIX_PATH})

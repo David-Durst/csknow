@@ -12,16 +12,17 @@
 #include "base64.hpp"
 #include <bitset>
 #include "indices/bitset.h"
-#define MAX_NAV_AREAS 2000
-#define MAX_NAV_CELLS 22000
-#define CELL_DIM_WIDTH_DEPTH 32.
-#define CELL_DIM_HEIGHT 36.
+constexpr size_t MAX_NAV_AREAS = 2000;
+constexpr size_t MAX_NAV_CELLS = 22000;
+constexpr size_t NAV_CELLS_PER_ROW = 256;
+constexpr double CELL_DIM_WIDTH_DEPTH = 32.;
+constexpr double CELL_DIM_HEIGHT = 36.;
 using std::map;
 using std::bitset;
 using std::byte;
 typedef csknow::Bitset<MAX_NAV_AREAS> AreaBits;
-constexpr size_t NUM_CELL_UINT8 = MAX_NAV_CELLS / sizeof(uint8_t);
 typedef csknow::Bitset<MAX_NAV_CELLS> CellBits;
+typedef array<int64_t, 3> CellDiscreteCoord;
 
 struct AreaVisPoint {
     AreaId areaId;
@@ -34,6 +35,7 @@ struct AreaVisPoint {
 struct CellVisPoint {
     AreaId areaId;
     CellId cellId;
+    CellDiscreteCoord cellDiscreteCoordinates;
     AABB cellCoordinates;
     Vec3 center;
     Vec3 topCenter;
@@ -51,7 +53,7 @@ class VisPoints {
     vector<CellVisPoint> cellVisPoints;
     map<AreaId, size_t> areaIdToVectorIndex;
     AABB areaBounds;
-    array<int64_t, 3> maxCellNumbersByDim;
+    CellDiscreteCoord maxCellNumbersByDim;
 
     void createAreaVisPoints(const nav_mesh::nav_file & navFile);
     void createCellVisPoints();
@@ -128,8 +130,8 @@ public:
     [[nodiscard]] string getVisFileName(const string & mapName, bool area, bool compressed) const {
         return mapName + (area ? ".area" : ".cell") + ".vis" + (compressed ? ".gz" : "");
     }
-    [[nodiscard]] const AABB & getAreaBounds() { return areaBounds; };
-    [[nodiscard]] const array<int64_t, 3> & getMaxCellNumbersByDim() { return maxCellNumbersByDim; };
+    [[nodiscard]] const AABB & getAreaBounds() const { return areaBounds; };
+    [[nodiscard]] const CellDiscreteCoord & getMaxCellNumbersByDim() const { return maxCellNumbersByDim; };
 };
 
 #endif //CSKNOW_LOAD_SAVE_VIS_POINTS_H
