@@ -17,12 +17,17 @@ CellBits getCellsInFOV(const VisPoints & visPoints, const Vec3 & pos, const Vec2
     View = glm::rotate(View, viewAngle.toGLM().y, glm::vec3(-1.0f, 0.0f, 0.0f));
     View = glm::rotate(View, viewAngle.toGLM().x, glm::vec3(0.0f, 1.0f, 0.0f));
     glm::mat4 projMat = Projection * View;
+    //16659->16673
 
     for (const auto & cellVisPoint : visPoints.getCellVisPoints()) {
         glm::vec3 glmCellPos = cellVisPoint.topCenter.toGLM();
         glm::vec4 homogenousCellPos{glmCellPos.x, glmCellPos.y, glmCellPos.z, 1};
         glm::vec4 cellPosScreenSpace = projMat * homogenousCellPos;
         glm::vec3 projCellPosScreenSpace = glm::vec3(cellPosScreenSpace) / cellPosScreenSpace.w;
+        if (cellVisPoint.cellId == 16673) {
+            int x = 1;
+            (void) x;
+        }
         if (projCellPosScreenSpace.x >= -1.f && projCellPosScreenSpace.x <= 1.f &&
             projCellPosScreenSpace.y >= -1.f && projCellPosScreenSpace.y <= 1.f &&
             projCellPosScreenSpace.z > 0) {
