@@ -23,7 +23,7 @@ namespace csknow {
             }
             mapState = all1s;
             mapState.saveMapState("/home/durst/dev/csknow/analytics/test2.png");
-            CellBits viewAngle = getCellsInFOV(visPoints, visPoints.getCellVisPoints()[16659].topCenter, {0.15, 2.8});
+            CellBits viewAngle = getCellsInFOV(visPoints, visPoints.getCellVisPoints()[16659].topCenter, {0., 0.});
             mapState = viewAngle;
             mapState.saveMapState("/home/durst/dev/csknow/analytics/testViewAngle.png");
 

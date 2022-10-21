@@ -12,8 +12,8 @@
 
 CellBits getCellsInFOV(const VisPoints & visPoints, const Vec3 & pos, const Vec2 & viewAngle) {
     CellBits result;
-    glm::mat4 Projection = glm::perspective(verticalFOV, aspectRatio, 0.1f, 100000.f);
-    glm::mat4 View = glm::translate(glm::mat4(1.0f), pos.toGLM());
+    glm::mat4 Projection = glm::perspective(glm::radians(verticalFOV), aspectRatio, 1.f, 1000.f);
+    glm::mat4 View = glm::translate(glm::mat4(1.0f), (pos * -1).toGLM());
     View = glm::rotate(View, viewAngle.toGLM().y, glm::vec3(-1.0f, 0.0f, 0.0f));
     View = glm::rotate(View, viewAngle.toGLM().x, glm::vec3(0.0f, 1.0f, 0.0f));
     glm::mat4 projMat = Projection * View;
@@ -24,6 +24,7 @@ CellBits getCellsInFOV(const VisPoints & visPoints, const Vec3 & pos, const Vec2
         glm::vec4 homogenousCellPos{glmCellPos.x, glmCellPos.y, glmCellPos.z, 1};
         glm::vec4 cellPosScreenSpace = projMat * homogenousCellPos;
         glm::vec3 projCellPosScreenSpace = glm::vec3(cellPosScreenSpace) / cellPosScreenSpace.w;
+        glm::vec4 justTranslate = View * homogenousCellPos;
         if (cellVisPoint.cellId == 16673) {
             int x = 1;
             (void) x;
