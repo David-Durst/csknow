@@ -7,6 +7,8 @@
 #include <cmath>
 #include <vector>
 #include <array>
+#include <glm/vec2.hpp> // glm::vec3
+#include <glm/vec3.hpp> // glm::vec3
 using std::vector;
 using std::array;
 
@@ -157,6 +159,9 @@ struct Vec3 {
     string toCSV() const {
         return std::to_string(x) + "," + std::to_string(y) + "," + std::to_string(z);
     }
+    glm::vec3 toGLM() const {
+        return {static_cast<float>(x), static_cast<float>(y), static_cast<float>(z)};
+    };
 };
 
 static inline __attribute__((always_inline))
@@ -293,6 +298,10 @@ struct Vec2 {
     string toCSV() const {
         return std::to_string(x) + "," + std::to_string(y);
     }
+
+    glm::vec2 toGLM() const {
+        return {static_cast<float>(x), static_cast<float>(y)};
+    };
 };
 
 static inline __attribute__((always_inline))

@@ -4,6 +4,7 @@
 
 #include "queries/training_moments/training_navigation.h"
 #include "bots/analysis/save_map_state.h"
+#include "bots/analysis/vis_geometry.h"
 
 namespace csknow {
     namespace navigation {
@@ -22,6 +23,9 @@ namespace csknow {
             }
             mapState = all1s;
             mapState.saveMapState("/home/durst/dev/csknow/analytics/test2.png");
+            CellBits viewAngle = getCellsInFOV(visPoints, {508., 1.4, 60.}, {0.15, 2.8});
+            mapState = viewAngle;
+            mapState.saveMapState("/home/durst/dev/csknow/analytics/testViewAngle.png");
 
 
             return result;

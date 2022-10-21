@@ -8,8 +8,9 @@
 #include "bots/analysis/load_save_vis_points.h"
 #include "geometry.h"
 
-constexpr double horizontalFOV = 90.;
-constexpr double verticalFOV = horizontalFOV * 9. / 16.;
+constexpr float aspectRatio = 16. / 9.;
+constexpr float horizontalFOV = 90.;
+constexpr float verticalFOV = horizontalFOV / aspectRatio;
 constexpr Vec2 FOV{horizontalFOV, verticalFOV};
 
 CellBits getCellsInFOV(const VisPoints & visPoints, const Vec3 & pos, const Vec2 & viewAngle);

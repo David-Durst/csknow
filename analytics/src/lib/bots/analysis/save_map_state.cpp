@@ -13,6 +13,7 @@ namespace csknow {
     }
 
     MapState & MapState::operator=(const CellBits & value) {
+        memset(data.data(), 0, data.size() * data[0].size());
         const auto & cellVisPoints = visPoints.getCellVisPoints();
         double maxYNum = visPoints.getMaxCellNumbersByDim()[1];
         for (size_t i = 0; i < cellVisPoints.size(); i++) {
