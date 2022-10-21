@@ -30,127 +30,107 @@ using std::map;
 
 namespace csknow {
     namespace navigation {
-        constexpr double NEXT_SECONDS = 0.1;
+        constexpr int PAST_NAV_TICKS = 10;
+        constexpr double PAST_NAV_TICKS_SECONDS_DELTA = 0.1;
+        constexpr int CUR_NAV_TICK = 1;
+        constexpr int FUTURE_NAV_TICKS = 1;
         constexpr double FUTURE_SECONDS = 5.0;
+        constexpr int TOTAL_NAV_TICKS = PAST_NAV_TICKS + CUR_NAV_TICK + FUTURE_NAV_TICKS;
 
-/*
-enum class AimWeaponType {
-    Pistol = 0,
-    SMG,
-    Heavy,
-    AR,
-    Sniper,
-    Unknown,
-    AIM_WEAPON_TYPE_COUNT [[maybe_unused]]
-};
+        struct TemporalImageNames {
+            string playerPos;
+            string friendlyPos;
+            string playerVis;
+            string friendlyVis;
+            string visEnemies;
+            string distanceMap;
+            string c4Pos;
+        };
 
-class TrainingEngagementAimResult : public QueryResult {
-public:
-    vector<RangeIndexEntry> rowIndicesPerRound;
-    vector<int64_t> tickId;
-    vector<int64_t> engagementId;
-    vector<int64_t> attackerPlayerId;
-    vector<int64_t> victimPlayerId;
-    vector<array<Vec2, TOTAL_AIM_TICKS>> deltaViewAngle;
-    vector<array<Vec2, TOTAL_AIM_TICKS>> recoilAngle;
-    vector<array<Vec2, TOTAL_AIM_TICKS>> deltaViewAngleRecoilAdjusted;
-    vector<array<Vec3, TOTAL_AIM_TICKS>> deltaPosition;
-    vector<array<double, TOTAL_AIM_TICKS>> eyeToHeadDistance;
-    vector<AimWeaponType> weaponType;
-    vector<double> distanceNormalization;
+        class TrainingNavigationResult : public QueryResult {
+        public:
+            vector<RangeIndexEntry> rowIndicesPerRound;
+            vector<int64_t> tickId;
+            vector<int64_t> navId;
+            vector<int64_t> segmentStartTickId;
+            vector<int64_t> segmentNextTickId;
+            vector<int64_t> segmentFutureTickId;
+            vector<int64_t> tickLength;
+            vector<int64_t> playerId;
+            vector<string> playerName;
+            vector<array<Vec3, TOTAL_NAV_TICKS>> playerViewDir;
+            vector<array<double, TOTAL_NAV_TICKS>> health;
+            vector<array<double, TOTAL_NAV_TICKS>> armor;
+            vector<array<TemporalImageNames, TOTAL_NAV_TICKS>> imgNames;
+            vector<string> goalRegionImgName;
 
-
-    TrainingEngagementAimResult() {
-        startTickColumn = 0;
-        ticksPerEvent = 1;
-    }
-
-    vector<int64_t> filterByForeignKey(int64_t otherTableIndex) override {
-        vector<int64_t> result;
-        for (int64_t i = rowIndicesPerRound[otherTableIndex].minId; i <= rowIndicesPerRound[otherTableIndex].maxId; i++) {
-            if (i == -1) {
-                continue;
+            TrainingNavigationResult() {
+                variableLength = false;
+                nonTemporal = true;
+                overlay = true;
             }
-            result.push_back(i);
-        }
-        return result;
-    }
 
-    void oneLineToCSV(int64_t index, stringstream & ss) override {
-        ss << index << "," << tickId[index] << "," << engagementId[index] << ","
-           << attackerPlayerId[index] << "," << victimPlayerId[index];
-
-        for (size_t i = 0; i < TOTAL_AIM_TICKS; i++) {
-            ss << "," << deltaViewAngle[index][i].x << "," << deltaViewAngle[index][i].y
-               << "," << recoilAngle[index][i].x << "," << recoilAngle[index][i].y
-               << "," << deltaViewAngleRecoilAdjusted[index][i].x << "," << deltaViewAngleRecoilAdjusted[index][i].y
-               << "," << deltaPosition[index][i].x << "," << deltaPosition[index][i].y << "," << deltaPosition[index][i].z
-               << "," << eyeToHeadDistance[index][i];
-        }
-
-        ss << "," << enumAsInt(weaponType[index]);
-
-        ss << std::endl;
-    }
-
-    vector<string> getForeignKeyNames() override {
-        return {"tick id", "engagement id", "attacker player id", "victim player id"};
-    }
-
-    vector<string> getOtherColumnNames() override {
-        vector<string> result;
-        for (int i = -1*PAST_AIM_TICKS; i <= FUTURE_AIM_TICKS; i++) {
-            result.push_back("delta view angle x (t" + toSignedIntString(i, true) + ")");
-            result.push_back("delta view angle y (t" + toSignedIntString(i, true) + ")");
-            result.push_back("recoil angle x (t" + toSignedIntString(i, true) + ")");
-            result.push_back("recoil angle y (t" + toSignedIntString(i, true) + ")");
-            result.push_back("delta view angle recoil adjusted x (t" + toSignedIntString(i, true) + ")");
-            result.push_back("delta view angle recoil adjusted y (t" + toSignedIntString(i, true) + ")");
-            result.push_back("delta position x (t" + toSignedIntString(i, true) + ")");
-            result.push_back("delta position y (t" + toSignedIntString(i, true) + ")");
-            result.push_back("delta position z (t" + toSignedIntString(i, true) + ")");
-            result.push_back("eye-to-head distance (t" + toSignedIntString(i, true) + ")");
-        }
-        result.push_back("weapon type");
-        return result;
-    }
-
-    void analyzeRollingWindowDifferences(const Rounds & rounds, const Ticks & ticks,
-                                         const EngagementPerTickAimResult & engagementPerTickAimResult) const {
-        int64_t numDifferencesDueToWindowRange = 0;
-        for (int64_t i = 0, j = 0; i < engagementPerTickAimResult.size; i++) {
-            if (engagementPerTickAimResult.tickId[i] == tickId[j]) {
-                j++;
-            }
-            else {
-                int64_t distanceToRoundEnd = rounds.endTick[ticks.roundId[engagementPerTickAimResult.tickId[i]]] -
-                                             engagementPerTickAimResult.tickId[i];
-#if false
-                std::cout << "per tick i " << i << " per tick aim tick id " << engagementPerTickAimResult.tickId[i]
-                          << " per tick aim engagmenet id " << engagementPerTickAimResult.engagementId[i]
-                          << " distance to round end " << distanceToRoundEnd
-                          << " training j " << j
-                          << " training tick id " << tickId[j]
-                          << " training engagement id " << engagementId[j] << std::endl;
-#endif //false
-                if (distanceToRoundEnd < FUTURE_AIM_TICKS) {
-                    numDifferencesDueToWindowRange++;
+            vector<int64_t> filterByForeignKey(int64_t otherTableIndex) override {
+                vector<int64_t> result;
+                for (int64_t i = rowIndicesPerRound[otherTableIndex].minId; i <= rowIndicesPerRound[otherTableIndex].maxId; i++) {
+                    if (i == -1) {
+                        continue;
+                    }
+                    result.push_back(i);
                 }
+                return result;
             }
-        }
-        std::cout << "missing ticks: " << engagementPerTickAimResult.size - size
-                  << " missing ticks due to end of round/window range " << numDifferencesDueToWindowRange << std::endl;
+
+            void oneLineToCSV(int64_t index, stringstream & ss) override {
+                ss << index << "," << tickId[index] << "," << navId[index] << ","
+                   << playerId[index];
+
+                for (size_t i = 0; i < TOTAL_NAV_TICKS; i++) {
+                    ss << "," << playerViewDir[index][i].x << "," << playerViewDir[index][i].y
+                       << "," << playerViewDir[index][i].z
+                       << "," << health[index][i] << "," << armor[index][i]
+                       << "," << imgNames[index][i].playerPos
+                       << "," << imgNames[index][i].friendlyPos
+                       << "," << imgNames[index][i].playerVis
+                       << "," << imgNames[index][i].friendlyVis
+                       << "," << imgNames[index][i].visEnemies
+                       << "," << imgNames[index][i].distanceMap
+                       << "," << imgNames[index][i].c4Pos;
+                }
+                ss << "," << goalRegionImgName[index];
+
+                ss << std::endl;
+            }
+
+            vector<string> getForeignKeyNames() override {
+                return {"tick id", "nav id", "player id"};
+            }
+
+            vector<string> getOtherColumnNames() override {
+                vector<string> result;
+                for (int i = -1*PAST_NAV_TICKS; i <= FUTURE_NAV_TICKS; i++) {
+                    result.push_back("player view dir x (t" + toSignedIntString(i, true) + ")");
+                    result.push_back("player view dir y (t" + toSignedIntString(i, true) + ")");
+                    result.push_back("player view dir z (t" + toSignedIntString(i, true) + ")");
+                    result.push_back("health (t" + toSignedIntString(i, true) + ")");
+                    result.push_back("armor (t" + toSignedIntString(i, true) + ")");
+                    result.push_back("player pos img name (t" + toSignedIntString(i, true) + ")");
+                    result.push_back("friendly pos img name (t" + toSignedIntString(i, true) + ")");
+                    result.push_back("player vis img name (t" + toSignedIntString(i, true) + ")");
+                    result.push_back("friendly vis img name (t" + toSignedIntString(i, true) + ")");
+                    result.push_back("vis enemies img name (t" + toSignedIntString(i, true) + ")");
+                    result.push_back("distance map img name (t" + toSignedIntString(i, true) + ")");
+                    result.push_back("c4 pos img name (t" + toSignedIntString(i, true) + ")");
+                }
+                result.push_back("goal region img name");
+                return result;
+            }
+
+            TrainingNavigationResult queryTrainingNavigation(const Players & players, const Games & games, const Rounds & rounds,
+                                                             const Ticks & ticks, const PlayerAtTick & playerAtTick,
+                                                             const NonEngagementTrajectoryResult & nonEngagementTrajectoryResult);
+        };
     }
-};
-
-
-TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, const Rounds & rounds, const Ticks & ticks,
-                                                       const PlayerAtTick & playerAtTick,
-                                                       const EngagementResult & engagementResult);
-                                                       */
-
-    }
-
 }
 
 #endif //CSKNOW_TRAINING_NAVIGATION_H
