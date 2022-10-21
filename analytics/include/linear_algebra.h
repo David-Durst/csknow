@@ -191,6 +191,11 @@ double computeMagnitude(Vec3 v) {
 }
 
 static inline __attribute__((always_inline))
+Vec3 unitize(Vec3 v) {
+    return v / computeMagnitude(v);
+}
+
+static inline __attribute__((always_inline))
 IVec3 vec3ToIVec3(Vec3 a) {
     return {static_cast<int64_t>(a.x), static_cast<int64_t>(a.y), static_cast<int64_t>(a.z)};
 }
@@ -309,6 +314,11 @@ Vec2 max(Vec2 a, Vec2 b) {
 static inline __attribute__((always_inline))
 double computeMagnitude(Vec2 v) {
     return computeDistance({v.x, v.y, 0}, {0, 0, 0});
+}
+
+static inline __attribute__((always_inline))
+Vec2 unitize(Vec2 v) {
+    return v / computeMagnitude(v);
 }
 
 struct RotationMatrix3D {
