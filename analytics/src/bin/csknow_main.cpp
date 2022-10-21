@@ -36,6 +36,7 @@
 #include "queries/moments/trajectory_segments.h"
 #include "queries/training_moments/training_engagement_aim.h"
 #include "queries/inference_moments/inference_engagement_aim.h"
+#include "queries/training_moments/training_navigation.h"
 #define CPPHTTPLIB_OPENSSL_SUPPORT
 #include "httplib.h"
 #include <cerrno>
@@ -308,6 +309,12 @@ int main(int argc, char * argv[]) {
         queryTrainingEngagementAim(games, filteredRounds, ticks, playerAtTick, engagementResult);
     std::cout << "size: " << engagementAimResult.size << std::endl;
     engagementAimResult.analyzeRollingWindowDifferences(filteredRounds, ticks, engagementPerTickAimResult);
+    std::cout << "processing training navigation data set" << std::endl;
+    string trainingNavigationName = "engagementAim";
+    csknow::navigation::TrainingNavigationResult trainingNavigationResult =
+        csknow::navigation::queryTrainingNavigation(map_visPoints.at("de_dust2"), players, games,
+                                                    filteredRounds, ticks, playerAtTick, nonEngagementTrajectoryResult);
+    std::cout << "size: " << trainingNavigationResult.size << std::endl;
     std::cout << "processing inference engagement aim training data set" << std::endl;
     string inferenceEngagementAimName = "engagementAim";
     InferenceEngagementAimResult inferenceEngagementAimResult(engagementAimResult);

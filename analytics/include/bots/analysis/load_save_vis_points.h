@@ -54,6 +54,7 @@ class VisPoints {
     map<AreaId, size_t> areaIdToVectorIndex;
     AABB areaBounds;
     CellDiscreteCoord maxCellNumbersByDim;
+    const nav_mesh::nav_file & navFile;
 
     void createAreaVisPoints(const nav_mesh::nav_file & navFile);
     void createCellVisPoints();
@@ -62,7 +63,7 @@ class VisPoints {
 
 public:
     explicit
-    VisPoints(const nav_mesh::nav_file & navFile) : areaBounds{}, maxCellNumbersByDim{} {
+    VisPoints(const nav_mesh::nav_file & navFile) : areaBounds{}, maxCellNumbersByDim{}, navFile(navFile) {
         areaIdToVectorIndex = navFile.m_area_ids_to_indices;
         createAreaVisPoints(navFile);
         createCellVisPoints();

@@ -131,6 +131,7 @@ void VisPoints::createCellVisPoints() {
                     cellVisPoints.push_back({
                         areaVisPoint.areaId,
                         static_cast<CellId>(cellVisPoints.size()),
+                        {curXId, curYId, curZId},
                         {cellMin, cellMax},
                         cellCenter,
                         cellTopCenter,

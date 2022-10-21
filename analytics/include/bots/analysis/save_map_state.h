@@ -15,10 +15,12 @@ namespace csknow {
     typedef array<array<uint8_t, CONV_SIZE>, CONV_SIZE> conv_matrix;
     class MapState {
         array<array<uint8_t, NAV_CELLS_PER_ROW>, NAV_CELLS_PER_ROW> data;
+        const VisPoints & visPoints;
 
     public:
-        MapState(const VisPoints & visPoints);
+        MapState(const VisPoints & visPoints) : data{}, visPoints(visPoints) {};
         void saveMapState(const fs::path & path);
+        MapState & operator=(const CellBits & value);
         [[maybe_unused]] MapState & operator+=(const MapState & value);
         [[maybe_unused]] MapState & operator+=(const uint8_t & value);
         [[maybe_unused]] MapState & operator-=(const uint8_t & value);

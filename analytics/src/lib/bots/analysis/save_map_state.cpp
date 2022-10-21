@@ -7,16 +7,20 @@
 
 namespace csknow {
 
-    MapState::MapState(const VisPoints & visPoints) : data{} {
-        for (const auto & cellVisPoint : visPoints.getCellVisPoints()) {
-            data[cellVisPoint.cellDiscreteCoordinates[0]][cellVisPoint.cellDiscreteCoordinates[1]] =
-                std::numeric_limits<uint8_t>::max();
-        }
-    }
-
     void MapState::saveMapState(const fs::path &path) {
         cv::Mat cvMapState = cv::Mat(NAV_CELLS_PER_ROW, NAV_CELLS_PER_ROW, CV_8U, data[0].data());
         cv::imwrite(path.string(), cvMapState);
+    }
+
+    MapState & MapState::operator=(const CellBits & value) {
+        const auto & cellVisPoints = visPoints.getCellVisPoints();
+        for (size_t i = 0; i < cellVisPoints.size(); i++) {
+            if (value[i]) {
+                data[cellVisPoints[i].cellDiscreteCoordinates[0]][cellVisPoints[i].cellDiscreteCoordinates[1]] =
+                    std::numeric_limits<uint8_t>::max();
+            }
+        }
+        return *this;
     }
 
     MapState & MapState::operator+=(const MapState & value) {
@@ -91,5 +95,6 @@ namespace csknow {
                 data[i][j] /= norm;
             }
         }
+        return *this;
     }
 }
