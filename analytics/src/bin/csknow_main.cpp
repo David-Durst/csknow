@@ -110,6 +110,8 @@ int main(int argc, char * argv[]) {
             map_visPoints.at(mapName).load(navPath, mapName, false, map_navs[mapName], true);
         }
     }
+    csknow::navigation::TrainingNavigationResult trainingNavigationResult =
+        csknow::navigation::queryTrainingNavigation(map_visPoints.at("de_dust2"));
 
     auto t = std::time(nullptr);
     auto tm = *std::localtime(&t);
@@ -311,10 +313,12 @@ int main(int argc, char * argv[]) {
     engagementAimResult.analyzeRollingWindowDifferences(filteredRounds, ticks, engagementPerTickAimResult);
     std::cout << "processing training navigation data set" << std::endl;
     string trainingNavigationName = "engagementAim";
+    /*
     csknow::navigation::TrainingNavigationResult trainingNavigationResult =
         csknow::navigation::queryTrainingNavigation(map_visPoints.at("de_dust2"), players, games,
                                                     filteredRounds, ticks, playerAtTick, nonEngagementTrajectoryResult);
     std::cout << "size: " << trainingNavigationResult.size << std::endl;
+     */
     std::cout << "processing inference engagement aim training data set" << std::endl;
     string inferenceEngagementAimName = "engagementAim";
     InferenceEngagementAimResult inferenceEngagementAimResult(engagementAimResult);

@@ -7,10 +7,10 @@
 
 namespace csknow {
     namespace navigation {
-        TrainingNavigationResult queryTrainingNavigation(const VisPoints & visPoints, const Players & players,
+        TrainingNavigationResult queryTrainingNavigation(const VisPoints & visPoints /*, const Players & players,
                                                          const Games & games, const Rounds & rounds,
                                                          const Ticks & ticks, const PlayerAtTick & playerAtTick,
-                                                         const NonEngagementTrajectoryResult & nonEngagementTrajectoryResult) {
+                                                         const NonEngagementTrajectoryResult & nonEngagementTrajectoryResult*/) {
             TrainingNavigationResult result;
 
             MapState mapState(visPoints);

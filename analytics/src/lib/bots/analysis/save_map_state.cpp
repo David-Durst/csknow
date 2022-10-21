@@ -14,10 +14,11 @@ namespace csknow {
 
     MapState & MapState::operator=(const CellBits & value) {
         const auto & cellVisPoints = visPoints.getCellVisPoints();
+        double maxYNum = visPoints.getMaxCellNumbersByDim()[1];
         for (size_t i = 0; i < cellVisPoints.size(); i++) {
             if (value[i]) {
-                data[cellVisPoints[i].cellDiscreteCoordinates[0]][cellVisPoints[i].cellDiscreteCoordinates[1]] =
-                    std::numeric_limits<uint8_t>::max();
+                data[maxYNum - cellVisPoints[i].cellDiscreteCoordinates[1]]
+                    [cellVisPoints[i].cellDiscreteCoordinates[0]] = std::numeric_limits<uint8_t>::max();
             }
         }
         return *this;

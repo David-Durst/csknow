@@ -14,7 +14,7 @@
 #include "indices/bitset.h"
 constexpr size_t MAX_NAV_AREAS = 2000;
 constexpr size_t MAX_NAV_CELLS = 22000;
-constexpr size_t NAV_CELLS_PER_ROW = 256;
+constexpr size_t NAV_CELLS_PER_ROW = 160;
 constexpr double CELL_DIM_WIDTH_DEPTH = 32.;
 constexpr double CELL_DIM_HEIGHT = 36.;
 using std::map;
