@@ -1,0 +1,3 @@
+[submodule "analytics/external/glm"]
+	path = analytics/external/glm
+	url = git@github.com:g-truc/glm.git
