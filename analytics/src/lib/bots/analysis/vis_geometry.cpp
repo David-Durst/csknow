@@ -41,8 +41,8 @@ static inline glm::mat4 makeViewMatrix(const glm::vec3 &position,
 
 CellBits getCellsInFOV(const VisPoints & visPoints, const Vec3 & pos, const Vec2 & viewAngle) {
     CellBits result;
-    //glm::mat4 Projection = makePerspectiveMatrix(horizontalFOV, aspectRatio, 0.001f, 100000.f);
-    glm::mat4 Projection = glm::perspective(verticalFOV, aspectRatio, 0.001f, 100000.f);
+    glm::mat4 Projection = makePerspectiveMatrix(horizontalFOV, aspectRatio, 0.001f, 100000.f);
+    //glm::mat4 Projection = glm::perspective(verticalFOV, aspectRatio, 0.001f, 100000.f);
     /*
     glm::mat4 View = glm::translate(glm::mat4(1.0f), (pos * -1).toGLM());
     View = glm::rotate(View, viewAngle.toGLM().y, glm::vec3(0.0f, -1.0f, 0.0f));
@@ -65,13 +65,13 @@ CellBits getCellsInFOV(const VisPoints & visPoints, const Vec3 & pos, const Vec2
         glm::vec4 cellPosScreenSpace = projMat * homogenousCellPos;
         glm::vec3 projCellPosScreenSpace = glm::vec3(cellPosScreenSpace) / cellPosScreenSpace.w;
         glm::vec4 justTranslate = View * homogenousCellPos;
-        if (cellVisPoint.cellId == 16673) {
+        if (cellVisPoint.cellId == 16117 || cellVisPoint.cellId == 16149) {//16673) {
             int x = 1;
             (void) x;
         }
         if (projCellPosScreenSpace.x >= -1.f && projCellPosScreenSpace.x <= 1.f &&
             projCellPosScreenSpace.y >= -1.f && projCellPosScreenSpace.y <= 1.f &&
-            projCellPosScreenSpace.z > 0) {
+            projCellPosScreenSpace.z <= 1.f) {
             result.set(cellVisPoint.cellId, true);
         }
     }
