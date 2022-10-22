@@ -28,6 +28,7 @@ struct AreaVisPoint {
     AreaId areaId;
     AABB areaCoordinates;
     Vec3 center;
+    vector<CellId> cells = {};
     AreaBits visibleFromCurPoint = AreaBits();
     AreaBits dangerFromCurPoint = AreaBits();
 };
@@ -133,6 +134,7 @@ public:
     }
     [[nodiscard]] const AABB & getAreaBounds() const { return areaBounds; };
     [[nodiscard]] const CellDiscreteCoord & getMaxCellNumbersByDim() const { return maxCellNumbersByDim; };
+    [[nodiscard]] const CellVisPoint & getNearestCellVisPoint(const Vec3 & pos);
 };
 
 #endif //CSKNOW_LOAD_SAVE_VIS_POINTS_H

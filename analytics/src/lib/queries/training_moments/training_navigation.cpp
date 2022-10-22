@@ -11,8 +11,33 @@ namespace csknow {
         TrainingNavigationResult queryTrainingNavigation(const VisPoints & visPoints, const Players & players,
                                                          const Games & games, const Rounds & rounds,
                                                          const Ticks & ticks, const PlayerAtTick & playerAtTick,
-                                                         const NonEngagementTrajectoryResult & nonEngagementTrajectoryResult) {
+                                                         const NonEngagementTrajectoryResult & nonEngagementTrajectoryResult,
+                                                         const string & outputDir) {
             TrainingNavigationResult result;
+            string trainNavData = outputDir + "/trainNavData";
+
+            // create a fresh directory to save to
+            if (!fs::exists(trainNavData)) {
+                fs::create_directory(trainNavData);
+            }
+            for (auto& path: fs::directory_iterator(trainNavData)) {
+                fs::remove(path);
+            }
+
+            int numThreads = omp_get_max_threads();
+            vector<vector<int64_t>> tmpTickId;
+            vector<vector<int64_t>> tmpNavId;
+            vector<vector<int64_t>> tmpSegmentStartTickId;
+            vector<vector<int64_t>> tmpSegmentNextTickId;
+            vector<vector<int64_t>> tmpSegmentFutureTickId;
+            vector<vector<int64_t>> tmpTickLength;
+            vector<vector<int64_t>> tmpPlayerId;
+            vector<vector<string>> tmpPlayerName;
+            vector<vector<array<Vec3, TOTAL_NAV_TICKS>>> tmpPlayerViewDir;
+            vector<vector<array<double, TOTAL_NAV_TICKS>>> tmpHealth;
+            vector<vector<array<double, TOTAL_NAV_TICKS>>> tmpArmor;
+            vector<vector<array<TemporalImageNames, TOTAL_NAV_TICKS>>> tmpImgNames;
+            vector<vector<string>> tmpGoalRegionImgName;
 
 
             return result;

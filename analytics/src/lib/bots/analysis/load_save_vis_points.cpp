@@ -52,7 +52,7 @@ void VisPoints::createCellVisPoints() {
         maxCellNumbersByDim[0] * maxCellNumbersByDim[1] * maxCellNumbersByDim[2], INVALID_ID);
 
     // for every nav area, find the nav cells aligned based on area bounds
-    for (const auto & areaVisPoint : areaVisPoints) {
+    for (auto & areaVisPoint : areaVisPoints) {
         // extend areaVisPoint height by player height so get vis points up to player height
         AABB extendedAABB = areaVisPoint.areaCoordinates;
         extendedAABB.max.z += PLAYER_HEIGHT;
@@ -82,6 +82,7 @@ void VisPoints::createCellVisPoints() {
                     Vec3 cellTopCenter = cellCenter;
                     cellTopCenter.z = cellMax.z;
                     if (pointInRegionMaxInclusive(extendedAABB, cellCenter)) {
+                        areaVisPoint.cells.push_back(static_cast<CellId>(cellVisPoints.size()));
                         cellVisPoints.push_back({
                             areaVisPoint.areaId,
                             static_cast<CellId>(cellVisPoints.size()),
@@ -117,7 +118,7 @@ void VisPoints::createCellVisPoints() {
                                             curYId * maxCellNumbersByDim[2] + curZId;
                 if (numAreasContainingCell[linearCellAddress] == 1 &&
                     singleWideAreaContainingCell[linearCellAddress] != INVALID_ID) {
-                    const AreaVisPoint & areaVisPoint =
+                    AreaVisPoint & areaVisPoint =
                         areaVisPoints[areaIdToVectorIndex[
                             static_cast<AreaId>(singleWideAreaContainingCell[linearCellAddress])]];
                     Vec3 cellMin = areaBounds.min +
@@ -128,6 +129,7 @@ void VisPoints::createCellVisPoints() {
                     Vec3 cellCenter = (cellMin + cellMax) / 2.;
                     Vec3 cellTopCenter = cellCenter;
                     cellTopCenter.z = cellMax.z;
+                    areaVisPoint.cells.push_back(static_cast<CellId>(cellVisPoints.size()));
                     cellVisPoints.push_back({
                         areaVisPoint.areaId,
                         static_cast<CellId>(cellVisPoints.size()),
@@ -398,4 +400,56 @@ void VisPoints::setDangerPoints(const nav_mesh::nav_file & navFile, bool area) {
         }
          */
     }
+}
+
+namespace vis_point_helpers {
+// https://stackoverflow.com/questions/5254838/calculating-distance-between-a-point-and-a-rectangular-box-nearest-point
+    float get_point_to_aabb_distance( Vec3 position, const AABB& area) {
+        float dx = std::max(area.min.x - position.x, std::max(0., position.x - area.max.x));
+        float dy = std::max(area.min.y - position.y, std::max(0., position.y - area.max.y));
+        float dz = std::max(area.min.z - position.z, std::max(0., position.z - area.max.z));
+        return std::sqrt(dx * dx + dy * dy + dz * dz);
+    }
+
+    bool is_within_3d( const AABB & area, const Vec3 & position) {
+        if ( position.x < area.min.x )
+            return false;
+
+        if ( position.x > area.max.x )
+            return false;
+
+        if ( position.y < area.min.y )
+            return false;
+
+        if ( position.y > area.max.y )
+            return false;
+
+        if ( position.z < area.min.z )
+            return false;
+
+        if ( position.z > area.max.z )
+            return false;
+
+        return true;
+    }
+}
+
+const CellVisPoint & VisPoints::getNearestCellVisPoint(const Vec3 & pos) {
+    const nav_mesh::nav_area & nearestArea = navFile.get_nearest_area_by_position(vec3Conv(pos));
+    const AreaVisPoint & areaVisPoint = areaVisPoints[areaIdToVectorIndex[nearestArea.get_id()]];
+
+    float nearestCellDistance = std::numeric_limits<double>::max();
+    size_t nearestCellId = INVALID_ID;
+    for (const auto & cellId : areaVisPoint.cells) {
+        const CellVisPoint & cellVisPoint = cellVisPoints[cellId];
+        if ( vis_point_helpers::is_within_3d( cellVisPoint.cellCoordinates, pos ) ) {
+            return cellVisPoint;
+        }
+        float otherDistance = vis_point_helpers::get_point_to_aabb_distance(pos, cellVisPoint.cellCoordinates);
+        if (otherDistance < nearestCellDistance) {
+            nearestCellDistance = otherDistance;
+            nearestCellId = cellId;
+        }
+    }
+    return cellVisPoints[nearestCellId];
 }
