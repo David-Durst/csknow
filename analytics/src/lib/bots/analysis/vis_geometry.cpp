@@ -7,7 +7,6 @@
 #include <glm/vec4.hpp> // glm::vec4
 #include <glm/mat4x4.hpp> // glm::mat4
 #include <glm/ext/matrix_transform.hpp> // glm::translate, glm::rotate, glm::scale
-#include <glm/ext/matrix_clip_space.hpp> // glm::perspective
 #include <glm/gtc/quaternion.hpp>
 
 static glm::mat4 makePerspectiveMatrix(float vfov, float aspect, float near) {
@@ -61,15 +60,7 @@ CellBits getCellsInFOV(const VisPoints & visPoints, const Vec3 & pos, const Vec2
                                     rotation * glm::vec3(0, -1, 0));
     glm::vec3 forwardMine = angleVectors(viewAngle).toGLM();
     glm::vec3 forwardBrennan = rotation * glm::vec3(1, 0, 0);
-                                        /*
-    glm::mat4 View = glm::lookAt(
-        pos.toGLM(), // Camera is at (4,3,3), in World Space
-        (pos + angleVectors(viewAngle)).toGLM(), // and looks at the origin
-        up  // Head is up (set to 0,-1,0 to look upside-down)
-    );
-                                         */
     glm::mat4 projMat = Projection * View;
-    //16659->16673
 
     for (const auto & cellVisPoint : visPoints.getCellVisPoints()) {
         glm::vec3 glmCellPos = cellVisPoint.topCenter.toGLM();
@@ -77,10 +68,6 @@ CellBits getCellsInFOV(const VisPoints & visPoints, const Vec3 & pos, const Vec2
         glm::vec4 cellPosScreenSpace = projMat * homogenousCellPos;
         glm::vec3 projCellPosScreenSpace = glm::vec3(cellPosScreenSpace) / cellPosScreenSpace.w;
         glm::vec4 justTranslate = View * homogenousCellPos;
-        if (cellVisPoint.cellId == 12562) {//16117 || cellVisPoint.cellId == 16149) {//16673) {
-            int x = 1;
-            (void) x;
-        }
         if (projCellPosScreenSpace.x >= -1.f && projCellPosScreenSpace.x <= 1.f &&
             projCellPosScreenSpace.y >= -1.f && projCellPosScreenSpace.y <= 1.f &&
             projCellPosScreenSpace.z >= 0.f) {
