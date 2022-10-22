@@ -10,11 +10,11 @@
 #include <glm/ext/matrix_clip_space.hpp> // glm::perspective
 #include <glm/gtc/quaternion.hpp>
 
-static glm::mat4 makePerspectiveMatrix(float hfov, float aspect, float near) {
-    float half_tan = tan(glm::radians(hfov) / 2.f);
+static glm::mat4 makePerspectiveMatrix(float vfov, float aspect, float near) {
+    float half_tan = tan(glm::radians(vfov) / 2.f);
 
-    return glm::mat4(1.f / half_tan, 0.f,                      0.f,                       0.f, 
-                     0.f,            1.f / (half_tan / aspect),       0.f,                       0.f,
+    return glm::mat4(1.f / (aspect * half_tan), 0.f,                      0.f,                       0.f, 
+                     0.f,            1.f / half_tan,       0.f,                       0.f,
                      0.f,            0.f,                      0,                         -1.f,
                      0.f,            0.f,                      near,                      0.f);
 
@@ -48,7 +48,7 @@ CellBits getCellsInFOV(const VisPoints & visPoints, const Vec3 & pos, const Vec2
     // http://www.opengl-tutorial.org/beginners-tutorials/tutorial-3-matrices/
     // https://thxforthefish.com/posts/reverse_z/
 
-    glm::mat4 Projection = makePerspectiveMatrix(horizontalFOV, aspectRatio, 0.001f);
+    glm::mat4 Projection = makePerspectiveMatrix(verticalFOV, aspectRatio, 0.001f);
     // Camera matrix
     // quaternion = way to represent a rotation
     glm::quat rotation =
