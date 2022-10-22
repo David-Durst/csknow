@@ -16,34 +16,34 @@ namespace csknow {
 
             MapState mapState(visPoints);
             mapState = visPoints.getCellVisPoints()[16695].visibleFromCurPoint;
-            mapState.saveMapState("/home/durst/dev/csknow/analytics/test.png");
+            mapState.saveMapState("/tmp/test.png");
             CellBits all1s;
             for (const auto & cellVisPoint : visPoints.getCellVisPoints()) {
                 all1s.set(cellVisPoint.cellId, true);
             }
             mapState = all1s;
-            mapState.saveMapState("/home/durst/dev/csknow/analytics/test2.png");
+            mapState.saveMapState("/tmp/test2.png");
             CellBits viewAngle = getCellsInFOV(visPoints, visPoints.getCellVisPoints()[16133].topCenter, {0., 0.});
             mapState = viewAngle;
-            mapState.saveMapState("/home/durst/dev/csknow/analytics/testViewAngle.png");
+            mapState.saveMapState("/tmp/testViewAngle.png");
 
             CellBits leftViewAngle = getCellsInFOV(visPoints, visPoints.getCellVisPoints()[2418].topCenter, {90., 0.});
             mapState = leftViewAngle;
-            mapState.saveMapState("/home/durst/dev/csknow/analytics/leftTestViewAngle.png");
+            mapState.saveMapState("/tmp/leftTestViewAngle.png");
 
             CellBits upViewAngle = getCellsInFOV(visPoints, visPoints.getCellVisPoints()[2418].topCenter, {90., -27.});
             mapState = upViewAngle;
-            mapState.saveMapState("/home/durst/dev/csknow/analytics/upTestViewAngle.png");
+            mapState.saveMapState("/tmp/upTestViewAngle.png");
 
             Vec3 downPos = visPoints.getCellVisPoints()[16133].topCenter;
             downPos.z += 90;
             CellBits straightDownViewAngle = getCellsInFOV(visPoints, downPos, {90., 90.});
             mapState = straightDownViewAngle;
-            mapState.saveMapState("/home/durst/dev/csknow/analytics/straightDownTestViewAngle.png");
+            mapState.saveMapState("/tmp/straightDownTestViewAngle.png");
 
             CellBits straightUpViewAngle = getCellsInFOV(visPoints, downPos, {90., -90.});
             mapState = straightUpViewAngle;
-            mapState.saveMapState("/home/durst/dev/csknow/analytics/straightUpTestViewAngle.png");
+            mapState.saveMapState("/tmp/straightUpTestViewAngle.png");
 
 
             return result;
