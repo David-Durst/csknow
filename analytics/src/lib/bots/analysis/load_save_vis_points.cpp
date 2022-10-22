@@ -112,7 +112,7 @@ void VisPoints::createCellVisPoints() {
     // add missing cells
     for (int64_t curXId = 0; curXId < maxCellNumbersByDim[0]; curXId++) {
         for (int64_t curYId = 0; curYId < maxCellNumbersByDim[1]; curYId++) {
-            for (int64_t curZId = 0; curZId <= maxCellNumbersByDim[2]; curZId++) {
+            for (int64_t curZId = 0; curZId < maxCellNumbersByDim[2]; curZId++) {
                 int64_t linearCellAddress = curXId * maxCellNumbersByDim[1] * maxCellNumbersByDim[2] +
                                             curYId * maxCellNumbersByDim[2] + curZId;
                 if (numAreasContainingCell[linearCellAddress] == 1 &&

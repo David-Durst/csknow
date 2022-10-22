@@ -46,7 +46,6 @@ namespace csknow {
 
 
         Bitset & operator|=(const Bitset<N> & other) {
-#pragma omp for simd
             for (size_t i = 0; i < data.size(); i++) {
                 data[i] |= other.data[i];
             }
@@ -54,7 +53,6 @@ namespace csknow {
         }
 
         Bitset & operator&=(const Bitset<N> & other) {
-#pragma omp for simd
             for (size_t i = 0; i < data.size(); i++) {
                 data[i] &= other.data[i];
             }
