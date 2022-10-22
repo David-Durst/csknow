@@ -31,7 +31,7 @@ namespace csknow {
             mapState = leftViewAngle;
             mapState.saveMapState("/tmp/leftTestViewAngle.png");
 
-            CellBits upViewAngle = getCellsInFOV(visPoints, visPoints.getCellVisPoints()[2418].topCenter, {90., -27.});
+            CellBits upViewAngle = getCellsInFOV(visPoints, visPoints.getCellVisPoints()[2418].topCenter, {90., -32.});
             mapState = upViewAngle;
             mapState.saveMapState("/tmp/upTestViewAngle.png");
 
