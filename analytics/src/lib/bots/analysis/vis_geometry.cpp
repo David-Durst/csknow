@@ -10,12 +10,14 @@
 #include <glm/ext/matrix_clip_space.hpp> // glm::perspective
 #include <glm/gtc/quaternion.hpp>
 
-static glm::mat4 makePerspectiveMatrix(float hfov, float aspect, float near, float far) {
+static glm::mat4 makePerspectiveMatrix(float hfov, float aspect, float near) {
     float half_tan = tan(glm::radians(hfov) / 2.f);
 
-    return glm::mat4(1.f / half_tan, 0.f, 0.f, 0.f, 0.f, -aspect / half_tan,
-                     0.f, 0.f, 0.f, 0.f, far / (near - far), -1.f, 0.f, 0.f,
-                     far * near / (near - far), 0.f);
+    return glm::mat4(1.f / half_tan, 0.f,                      0.f,                       0.f, 
+                     0.f,            -aspect / half_tan,       0.f,                       0.f,
+                     0.f,            0.f,                      0,                         -1.f,
+                     0.f,            0.f,                      near,                      0.f);
+
 }
 
 static inline glm::mat4 makeViewMatrix(const glm::vec3 &position,
@@ -41,21 +43,15 @@ static inline glm::mat4 makeViewMatrix(const glm::vec3 &position,
 
 CellBits getCellsInFOV(const VisPoints & visPoints, const Vec3 & pos, const Vec2 & viewAngle) {
     CellBits result;
-    glm::mat4 Projection = makePerspectiveMatrix(horizontalFOV, aspectRatio, 0.001f, 100000.f);
-    //glm::mat4 Projection = glm::perspective(verticalFOV, aspectRatio, 0.001f, 100000.f);
-    /*
-    glm::mat4 View = glm::translate(glm::mat4(1.0f), (pos * -1).toGLM());
-    View = glm::rotate(View, viewAngle.toGLM().y, glm::vec3(0.0f, -1.0f, 0.0f));
-    View = glm::rotate(View, viewAngle.toGLM().x, glm::vec3(0.0f, 0.0f, -1.0f));
-     */
+    glm::mat4 Projection = makePerspectiveMatrix(horizontalFOV, aspectRatio, 0.001f);
     // Camera matrix
     // quaternion = way to represent a rotation
-    glm::quat quat =
+    glm::quat rotation =
         glm::angleAxis(glm::radians(static_cast<float>(viewAngle.x)), glm::vec3{0.f, 0.f, 1.f}) *
-        glm::angleAxis(glm::radians(static_cast<float>(viewAngle.y)), glm::vec3{0.f, -1.f, 0.f});
-    glm::vec3 up = quat * glm::vec3(0, 0, 1);
+        glm::angleAxis(glm::radians(static_cast<float>(viewAngle.y)), glm::vec3{0.f, 1.f, 0.f});
+    glm::vec3 up = rotation * glm::vec3(0, 0, 1);
     glm::mat4 View = makeViewMatrix(pos.toGLM(),
-                                    quat * glm::vec3(-1, 0, 0),
+                                    quat * glm::vec3(1, 0, 0),
                                     quat * glm::vec3(0, 0, 1),
                                     quat * glm::vec3(0, -1, 0));
     glm::vec3 forwardMine = angleVectors(viewAngle).toGLM();
