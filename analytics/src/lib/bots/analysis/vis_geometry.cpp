@@ -51,11 +51,11 @@ CellBits getCellsInFOV(const VisPoints & visPoints, const Vec3 & pos, const Vec2
         glm::angleAxis(glm::radians(static_cast<float>(viewAngle.y)), glm::vec3{0.f, 1.f, 0.f});
     glm::vec3 up = rotation * glm::vec3(0, 0, 1);
     glm::mat4 View = makeViewMatrix(pos.toGLM(),
-                                    quat * glm::vec3(1, 0, 0),
-                                    quat * glm::vec3(0, 0, 1),
-                                    quat * glm::vec3(0, -1, 0));
+                                    rotation * glm::vec3(1, 0, 0),
+                                    rotation * glm::vec3(0, 0, 1),
+                                    rotation * glm::vec3(0, -1, 0));
     glm::vec3 forwardMine = angleVectors(viewAngle).toGLM();
-    glm::vec3 forwardBrennan = quat * glm::vec3(1, 0, 0);
+    glm::vec3 forwardBrennan = rotation * glm::vec3(1, 0, 0);
                                         /*
     glm::mat4 View = glm::lookAt(
         pos.toGLM(), // Camera is at (4,3,3), in World Space
