@@ -45,6 +45,8 @@ CellBits getCellsInFOV(const VisPoints & visPoints, const Vec3 & pos, const Vec2
     CellBits result;
     // https://github.com/perilouswithadollarsign/cstrike15_src/blob/f82112a2388b841d72cb62ca48ab1846dfcc11c8/mathlib/camera.cpp
     // https://old.reddit.com/r/GlobalOffensive/comments/e4q8sd/whats_the_default_csgo_fov_horizontal_or_vertical/
+    // http://www.opengl-tutorial.org/beginners-tutorials/tutorial-3-matrices/
+    // https://thxforthefish.com/posts/reverse_z/
 
     glm::mat4 Projection = makePerspectiveMatrix(horizontalFOV, aspectRatio, 0.001f);
     // Camera matrix
