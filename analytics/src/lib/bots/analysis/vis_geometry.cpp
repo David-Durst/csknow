@@ -49,13 +49,24 @@ CellBits getCellsInFOV(const VisPoints & visPoints, const Vec3 & pos, const Vec2
     View = glm::rotate(View, viewAngle.toGLM().x, glm::vec3(0.0f, 0.0f, -1.0f));
      */
     // Camera matrix
-    glm::vec3 up = glm::angleAxis(static_cast<float>(viewAngle.x), glm::vec3{0.f, 0.f, 1.f}) *
-        glm::angleAxis(static_cast<float>(viewAngle.y), glm::vec3{0, -1, 0}) * glm::vec3(0, 0, 1);
+    // quaternion = way to represent a rotation
+    glm::quat quat =
+        glm::angleAxis(glm::radians(static_cast<float>(viewAngle.x)), glm::vec3{0.f, 0.f, 1.f}) *
+        glm::angleAxis(glm::radians(static_cast<float>(viewAngle.y)), glm::vec3{0.f, -1.f, 0.f});
+    glm::vec3 up = quat * glm::vec3(0, 0, 1);
+    glm::mat4 View = makeViewMatrix(pos.toGLM(),
+                                    quat * glm::vec3(-1, 0, 0),
+                                    quat * glm::vec3(0, 0, 1),
+                                    quat * glm::vec3(0, -1, 0));
+    glm::vec3 forwardMine = angleVectors(viewAngle).toGLM();
+    glm::vec3 forwardBrennan = quat * glm::vec3(1, 0, 0);
+                                        /*
     glm::mat4 View = glm::lookAt(
         pos.toGLM(), // Camera is at (4,3,3), in World Space
         (pos + angleVectors(viewAngle)).toGLM(), // and looks at the origin
         up  // Head is up (set to 0,-1,0 to look upside-down)
     );
+                                         */
     glm::mat4 projMat = Projection * View;
     //16659->16673
 
@@ -71,7 +82,7 @@ CellBits getCellsInFOV(const VisPoints & visPoints, const Vec3 & pos, const Vec2
         }
         if (projCellPosScreenSpace.x >= -1.f && projCellPosScreenSpace.x <= 1.f &&
             projCellPosScreenSpace.y >= -1.f && projCellPosScreenSpace.y <= 1.f &&
-            projCellPosScreenSpace.z <= 1.f) {
+            projCellPosScreenSpace.z >= 0.f) {
             result.set(cellVisPoint.cellId, true);
         }
     }

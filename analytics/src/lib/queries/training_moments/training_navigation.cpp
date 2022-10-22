@@ -27,11 +27,11 @@ namespace csknow {
             mapState = viewAngle;
             mapState.saveMapState("/home/durst/dev/csknow/analytics/testViewAngle.png");
 
-            CellBits leftViewAngle = getCellsInFOV(visPoints, visPoints.getCellVisPoints()[16133].topCenter, {90., 0.});
+            CellBits leftViewAngle = getCellsInFOV(visPoints, visPoints.getCellVisPoints()[2418].topCenter, {90., 0.});
             mapState = leftViewAngle;
             mapState.saveMapState("/home/durst/dev/csknow/analytics/leftTestViewAngle.png");
 
-            CellBits upViewAngle = getCellsInFOV(visPoints, visPoints.getCellVisPoints()[16133].topCenter, {90., -10.});
+            CellBits upViewAngle = getCellsInFOV(visPoints, visPoints.getCellVisPoints()[2418].topCenter, {90., -27.});
             mapState = upViewAngle;
             mapState.saveMapState("/home/durst/dev/csknow/analytics/upTestViewAngle.png");
 
