@@ -9,7 +9,6 @@
 #include "geometry.h"
 
 constexpr float aspectRatio = 16. / 9.;
-constexpr float horizontalFOV = 104.;
 constexpr float verticalFOV = 74.;
 
 CellBits getCellsInFOV(const VisPoints & visPoints, const Vec3 & pos, const Vec2 & viewAngle);
