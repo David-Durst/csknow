@@ -8,7 +8,7 @@
 #include <glm/mat4x4.hpp> // glm::mat4
 #include <glm/ext/matrix_transform.hpp> // glm::translate, glm::rotate, glm::scale
 #include <glm/ext/matrix_clip_space.hpp> // glm::perspective
-#include <glm/ext/scalar_constants.hpp> // glm::pi
+#include <glm/gtc/quaternion.hpp>
 
 static glm::mat4 makePerspectiveMatrix(float hfov, float aspect, float near, float far) {
     float half_tan = tan(glm::radians(hfov) / 2.f);
@@ -18,12 +18,44 @@ static glm::mat4 makePerspectiveMatrix(float hfov, float aspect, float near, flo
                      far * near / (near - far), 0.f);
 }
 
+static inline glm::mat4 makeViewMatrix(const glm::vec3 &position,
+                                       const glm::vec3 &fwd,
+                                       const glm::vec3 &up,
+                                       const glm::vec3 &right) {
+    glm::mat4 v(1.f);
+    v[0][0] = right.x;
+    v[1][0] = right.y;
+    v[2][0] = right.z;
+    v[0][1] = up.x;
+    v[1][1] = up.y;
+    v[2][1] = up.z;
+    v[0][2] = -fwd.x;
+    v[1][2] = -fwd.y;
+    v[2][2] = -fwd.z;
+    v[3][0] = -glm::dot(right, position);
+    v[3][1] = -glm::dot(up, position);
+    v[3][2] = glm::dot(fwd, position);
+
+    return v;
+}
+
 CellBits getCellsInFOV(const VisPoints & visPoints, const Vec3 & pos, const Vec2 & viewAngle) {
     CellBits result;
-    glm::mat4 Projection = makePerspectiveMatrix(horizontalFOV, aspectRatio, 0.001f, 100000.f);
+    //glm::mat4 Projection = makePerspectiveMatrix(horizontalFOV, aspectRatio, 0.001f, 100000.f);
+    glm::mat4 Projection = glm::perspective(verticalFOV, aspectRatio, 0.001f, 100000.f);
+    /*
     glm::mat4 View = glm::translate(glm::mat4(1.0f), (pos * -1).toGLM());
-    View = glm::rotate(View, viewAngle.toGLM().y, glm::vec3(-1.0f, 0.0f, 0.0f));
-    View = glm::rotate(View, viewAngle.toGLM().x, glm::vec3(0.0f, 1.0f, 0.0f));
+    View = glm::rotate(View, viewAngle.toGLM().y, glm::vec3(0.0f, -1.0f, 0.0f));
+    View = glm::rotate(View, viewAngle.toGLM().x, glm::vec3(0.0f, 0.0f, -1.0f));
+     */
+    // Camera matrix
+    glm::vec3 up = glm::angleAxis(static_cast<float>(viewAngle.x), glm::vec3{0.f, 0.f, 1.f}) *
+        glm::angleAxis(static_cast<float>(viewAngle.y), glm::vec3{0, -1, 0}) * glm::vec3(0, 0, 1);
+    glm::mat4 View = glm::lookAt(
+        pos.toGLM(), // Camera is at (4,3,3), in World Space
+        (pos + angleVectors(viewAngle)).toGLM(), // and looks at the origin
+        up  // Head is up (set to 0,-1,0 to look upside-down)
+    );
     glm::mat4 projMat = Projection * View;
     //16659->16673
 
