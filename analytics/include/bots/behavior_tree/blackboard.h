@@ -92,10 +92,10 @@ struct Blackboard {
     NavFileOverlay navFileOverlay;
 
     // general map data
+    VisPoints visPoints;
     MapMeshResult mapMeshResult;
     ReachableResult reachability;
     DistanceToPlacesResult distanceToPlaces;
-    VisPoints visPoints;
 
     // all player data
     map<CSGOId, TreeThinker> playerToTreeThinkers;
@@ -229,9 +229,10 @@ struct Blackboard {
         navPath(navPath), mapsPath(std::filesystem::path(navPath).remove_filename().string()),
         navFile(navPath.c_str()),
         gen(rd()), navFileOverlay(navFile), mapMeshResult(queryMapMesh(navFile, "")),
-        reachability(queryReachable(mapMeshResult, "", mapsPath, mapName)),
+        visPoints(navFile),
+        reachability(queryReachable(visPoints, mapMeshResult, "", mapsPath, mapName)),
         distanceToPlaces(queryDistanceToPlaces(navFile, reachability, "", mapsPath, mapName)),
-        visPoints(navFile), aggressionDis(0., 1.),
+        aggressionDis(0., 1.),
         tDangerAreaLastCheckTime(navFile.m_areas.size(), defaultTime),
         ctDangerAreaLastCheckTime(navFile.m_areas.size(), defaultTime),
         possibleNavAreas(navFile), standDis(0, 100.0), aimDis(0., 2.0) {

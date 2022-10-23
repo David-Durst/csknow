@@ -12,6 +12,11 @@ namespace csknow {
         saveMapState(path);
     }
 
+    void MapState::saveNewMapState(const vector<uint8_t> & value, const fs::path & path) {
+        *this = value;
+        saveMapState(path);
+    }
+
     void MapState::saveMapState(const fs::path &path) {
         cv::Mat cvMapState = cv::Mat(NAV_CELLS_PER_ROW, NAV_CELLS_PER_ROW, CV_8U, data[0].data());
         cv::imwrite(path.string(), cvMapState);
@@ -26,6 +31,17 @@ namespace csknow {
                 data[maxYNum - cellVisPoints[i].cellDiscreteCoordinates[1]]
                     [cellVisPoints[i].cellDiscreteCoordinates[0]] = std::numeric_limits<uint8_t>::max();
             }
+        }
+        return *this;
+    }
+
+    MapState & MapState::operator=(const vector<uint8_t> & value) {
+        memset(data.data(), 0, data.size() * data[0].size());
+        const auto & cellVisPoints = visPoints.getCellVisPoints();
+        double maxYNum = visPoints.getMaxCellNumbersByDim()[1];
+        for (size_t i = 0; i < cellVisPoints.size(); i++) {
+            data[maxYNum - cellVisPoints[i].cellDiscreteCoordinates[1]]
+            [cellVisPoints[i].cellDiscreteCoordinates[0]] = value[i];
         }
         return *this;
     }

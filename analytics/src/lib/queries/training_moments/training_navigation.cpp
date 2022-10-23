@@ -49,7 +49,8 @@ namespace csknow {
             }
         }
 
-        TrainingNavigationResult queryTrainingNavigation(const VisPoints & visPoints, const Players & players,
+        TrainingNavigationResult queryTrainingNavigation(const VisPoints & visPoints, const ReachableResult & reachableResult,
+                                                         const Players & players,
                                                          const Games & games, const Rounds & rounds,
                                                          const Ticks & ticks, const PlayerAtTick & playerAtTick,
                                                          const NonEngagementTrajectoryResult & nonEngagementTrajectoryResult,
@@ -170,9 +171,19 @@ namespace csknow {
                                 // save view pos
                                 mapState.saveNewMapState(playerVisAreas[playerId], imgNames.playerVis);
 
+                                // save distance matrix
+                                mapState.saveNewMapState(reachableResult.scaledCellDistanceMatrix[playerCellVisPoint.cellId],
+                                                         imgNames.distanceMap);
                             }
                         }
                     }
+
+
+                    // compute the maps for each individual team
+
+                    // for each player compute their invidiual data that needs other team data (aka if visible to other team)
+
+                    // compute the maps that combine both team data (aka visibility of enemies to current team)
 
                 }
 

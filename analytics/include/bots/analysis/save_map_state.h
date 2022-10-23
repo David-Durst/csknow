@@ -20,8 +20,10 @@ namespace csknow {
     public:
         MapState(const VisPoints & visPoints) : data{}, visPoints(visPoints) {};
         void saveNewMapState(const CellBits & value, const fs::path & path);
+        void saveNewMapState(const vector<uint8_t> & value, const fs::path & path);
         void saveMapState(const fs::path & path);
         MapState & operator=(const CellBits & value);
+        MapState & operator=(const vector<uint8_t> & value);
         [[maybe_unused]] MapState & operator+=(const MapState & value);
         [[maybe_unused]] MapState & operator+=(const uint8_t & value);
         [[maybe_unused]] MapState & operator-=(const uint8_t & value);

@@ -5,9 +5,9 @@
 #include "queries/reachable.h"
 #include <filesystem>
 
-ReachableResult queryReachable(const MapMeshResult & mapMeshResult, const string & overlayLabelsQuery,
+ReachableResult queryReachable(const VisPoints & visPoints, const MapMeshResult & mapMeshResult, const string & overlayLabelsQuery,
                                const string & mapsPath, const string & mapName) {
-    ReachableResult result(overlayLabelsQuery);
+    ReachableResult result(overlayLabelsQuery, visPoints);
     string reachableFileName = mapName + ".reach";
     string reachableFilePath = mapsPath + "/" + reachableFileName;
 
@@ -61,6 +61,7 @@ ReachableResult queryReachable(const MapMeshResult & mapMeshResult, const string
         result.size = mapMeshResult.size;
         result.save(mapsPath, mapName);
     }
+    result.computeCellDistances();
     return result;
 }
 
@@ -111,5 +112,31 @@ void ReachableResult::load(const string & mapsPath, const string & mapName) {
     }
     else {
         throw std::runtime_error("no reachability file");
+    }
+}
+
+void ReachableResult::computeCellDistances() {
+    double maxDistance = -1*std::numeric_limits<double>::max(),
+        minDistance = std::numeric_limits<double>::max();
+    for (const auto & srcCellVisPoint : visPoints.getCellVisPoints()) {
+        for (const auto & dstCellVisPoint : visPoints.getCellVisPoints()) {
+            cellDistanceMatrix.push_back(getDistance(srcCellVisPoint.areaId, dstCellVisPoint.areaId, visPoints));
+            if (cellDistanceMatrix.back() > maxDistance) {
+                maxDistance = cellDistanceMatrix.back();
+            }
+            if (cellDistanceMatrix.back() < minDistance) {
+                minDistance = cellDistanceMatrix.back();
+            }
+        }
+    }
+
+    size_t numCells = visPoints.getCellVisPoints().size();
+    for (size_t i = 0; i < numCells; i++) {
+        scaledCellDistanceMatrix.push_back({});
+        for (size_t j = 0; j < numCells; j++) {
+            scaledCellDistanceMatrix[i].push_back(
+                static_cast<uint8_t>(255 * (cellDistanceMatrix[i * numCells + j] - minDistance) / (maxDistance - minDistance))
+            );
+        }
     }
 }

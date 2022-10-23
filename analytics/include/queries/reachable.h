@@ -16,14 +16,16 @@ class ReachableResult : public QueryResult {
 public:
     vector<AABB> coordinate;
     vector<double> distanceMatrix;
+    const VisPoints & visPoints;
+    vector<double> cellDistanceMatrix;
+    vector<vector<uint8_t>> scaledCellDistanceMatrix;
     int64_t numAreas;
 
     vector<int64_t> filterByForeignKey(int64_t) override {
         return {};
     }
 
-    explicit
-    ReachableResult(const string & overlayLabelsQuery) {
+    ReachableResult(const string & overlayLabelsQuery, const VisPoints & visPoints) : visPoints(visPoints) {
         variableLength = false;
         nonTemporal = true;
         overlay = true;
@@ -66,10 +68,19 @@ public:
         return getDistance(static_cast<int64_t>(src), static_cast<int64_t>(dst));
     }
 
+    [[nodiscard]]
+    double getDistance(AreaId srcId, AreaId dstId, const VisPoints & visPoints) const {
+        size_t src = visPoints.areaIdToIndex(srcId),
+            dst = visPoints.areaIdToIndex(dstId);
+        return getDistance(static_cast<int64_t>(src), static_cast<int64_t>(dst));
+    }
+
     void load(const string & mapsPath, const string & mapName);
+    void computeCellDistances();
 };
 
-[[maybe_unused]] ReachableResult queryReachable(const MapMeshResult & mapMeshResult, const string & overlayLabelsQuery,
+[[maybe_unused]] ReachableResult queryReachable(const VisPoints & visPoints, const MapMeshResult & mapMeshResult,
+                                                const string & overlayLabelsQuery,
                                                 const string & mapsPath, const string & mapName);
 
 #endif //CSKNOW_REACHABLE_H

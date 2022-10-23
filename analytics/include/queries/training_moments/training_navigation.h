@@ -19,6 +19,7 @@
 #include "geometry.h"
 #include "enum_helpers.h"
 #include "queries/moments/trajectory_segments.h"
+#include "queries/reachable.h"
 
 using std::string;
 using std::vector;
@@ -142,7 +143,8 @@ namespace csknow {
 
         };
 
-        TrainingNavigationResult queryTrainingNavigation(const VisPoints & visPoints, const Players & players,
+        TrainingNavigationResult queryTrainingNavigation(const VisPoints & visPoints, const ReachableResult & reachableResult,
+                                                         const Players & players,
                                                          const Games & games, const Rounds & rounds,
                                                          const Ticks & ticks, const PlayerAtTick & playerAtTick,
                                                          const NonEngagementTrajectoryResult & nonEngagementTrajectoryResult,

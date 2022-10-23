@@ -268,7 +268,7 @@ int main(int argc, char * argv[]) {
     string dust2CellsName = "de_dust2_cells";
     MapCellsResult d2CellsResult = queryMapCells(map_visPoints.at("de_dust2"), map_navs["de_dust2"], dust2CellsName);
     string dust2ReachableName = "de_dust2_reachable";
-    ReachableResult d2ReachableResult = queryReachable(d2MeshResult, dust2MeshName, navPath, "de_dust2");
+    ReachableResult d2ReachableResult = queryReachable(map_visPoints.at("de_dust2"), d2MeshResult, dust2MeshName, navPath, "de_dust2");
     string dust2DistanceToPlacesName = "de_dust2_distance_to_places";
     DistanceToPlacesResult d2DistanceToPlacesResult = queryDistanceToPlaces(map_navs["de_dust2"], d2ReachableResult,
                                                                             dust2MeshName, navPath, "de_dust2");
@@ -314,7 +314,8 @@ int main(int argc, char * argv[]) {
     string trainingNavigationName = "engagementAim";
     csknow::navigation::TrainingNavigationResult trainingNavigationResult =
         csknow::navigation::queryTrainingNavigation(map_visPoints.at("de_dust2"), players, games,
-                                                    filteredRounds, ticks, playerAtTick, nonEngagementTrajectoryResult);
+                                                    filteredRounds, ticks, playerAtTick, nonEngagementTrajectoryResult,
+                                                    outputDir);
     std::cout << "size: " << trainingNavigationResult.size << std::endl;
     std::cout << "processing inference engagement aim training data set" << std::endl;
     string inferenceEngagementAimName = "engagementAim";
