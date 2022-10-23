@@ -264,7 +264,7 @@ namespace csknow {
                     CellBits c4Pos;
                     c4Pos.set(c4CellVisPoint.cellId, true);
                     c4PosForT = c4Pos;
-                    if (lastTickC4SeenByCT = INVALID_ID || ctVis[c4CellVisPoint.cellId]) {
+                    if (lastTickC4SeenByCT == INVALID_ID || ctVis[c4CellVisPoint.cellId]) {
                         lastTickC4SeenByCT = tickIndex;
                         c4PosForCT = c4Pos;
                     }
