@@ -30,8 +30,8 @@ using std::map;
 
 namespace csknow {
     namespace navigation {
-        constexpr int PAST_NAV_TICKS = 10;
-        constexpr double PAST_NAV_TICKS_SECONDS_DELTA = 0.1;
+        constexpr int PAST_NAV_TICKS = 4;
+        constexpr double PAST_NAV_TICKS_SECONDS_DELTA = 0.250;
         constexpr int CUR_NAV_TICK = 1;
         constexpr int FUTURE_NAV_TICKS = 1;
         constexpr double FUTURE_SECONDS = 5.0;
@@ -53,8 +53,9 @@ namespace csknow {
             vector<int64_t> tickId;
             vector<int64_t> navId;
             vector<int64_t> segmentStartTickId;
-            vector<int64_t> segmentNextTickId;
+            vector<int64_t> segmentCurTickId;
             vector<int64_t> segmentFutureTickId;
+            vector<vector<int64_t>> segmentTickIds;
             vector<int64_t> tickLength;
             vector<int64_t> playerId;
             vector<string> playerName;
