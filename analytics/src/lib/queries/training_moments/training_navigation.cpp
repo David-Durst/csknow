@@ -259,6 +259,12 @@ namespace csknow {
                 fs::remove(path);
             }
 
+            // this has to save sync ticks
+            // then during window, I can just check if i'm on a sync tick and skip otherwise
+            // rolling window doesn't work here as that assumes adjacent ticks, i need spaces in between ticks
+            // create navigation images will generate my ticks
+            // i could do a rolling window where I know the window is larger than the sync ticks
+            // then I iterate through window to check if matching a sync tick
             createNavigationImages(visPoints, reachableResult, players, games, rounds, ticks, playerAtTick, outputDir);
 
             int numThreads = omp_get_max_threads();
@@ -296,10 +302,24 @@ namespace csknow {
                 map<int64_t, NavTSData> playerToCurTrajectory;
                 vector<NavTSData> finishedSegmentPerRound;
                 RollingWindow rollingWindow(rounds, ticks, playerAtTick);
+                // skip first two seconds just for saftey
+                rollingWindow.setTemporalRange(rounds.ticksPerRound[roundIndex].minId + 2 * tickRates.gameTickRate, tickRates,
+                                               {DurationType::Seconds, PAST_NAV_SECONDS, FUTURE_NAV_SECONDS, 0, 0});
+                const PlayerToPATWindows & playerToPatWindows = rollingWindow.getWindows();
 
-                for (int64_t tickIndex = rounds.ticksPerRound[roundIndex].minId;
-                     tickIndex <= rounds.ticksPerRound[roundIndex].maxId; tickIndex++) {
-                    map<int64_t, int64_t> curPlayerToPAT = rollingWindow.getPATIdForPlayerId(tickIndex);
+                // options - 1. rolling window - means you can think of offets from current tick, but harder to have conditional
+                // logic if early termination
+                // 2. transactions - starting and ending events on differnt ticks - means you have to track event over multiple ticks,
+                // but easier to express conditional logic if early termination
+
+                for (int64_t windowEndTickIndex = rollingWindow.lastReadTickId();
+                     windowEndTickIndex <= rounds.ticksPerRound[roundIndex].maxId; windowEndTickIndex = rollingWindow.readNextTick()) {
+                    int64_t tickIndex = rollingWindow.lastCurTickId();
+                    for (const auto & [_0, _1, engagementIndex] :
+                        nonEngagementTrajectoryResult.trajectoriesPerTick.intervalToEvent.findOverlapping(tickIndex, tickIndex)) {
+                        tmpTickId[threadNum].push_back(tickIndex);
+                        tmpEngagementId[threadNum].push_back(engagementIndex);
+                    }
 
 
                 }

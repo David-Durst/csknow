@@ -33,9 +33,10 @@ namespace csknow {
     namespace navigation {
         constexpr int PAST_NAV_TICKS = 4;
         constexpr double PAST_NAV_TICKS_SECONDS_DELTA = 0.250;
+        constexpr double PAST_NAV_SECONDS = PAST_NAV_TICKS_SECONDS_DELTA * PAST_NAV_TICKS;
         constexpr int CUR_NAV_TICK = 1;
         constexpr int FUTURE_NAV_TICKS = 1;
-        constexpr double FUTURE_SECONDS = 5.0;
+        constexpr double FUTURE_NAV_SECONDS = 5.0;
         constexpr int TOTAL_NAV_TICKS = PAST_NAV_TICKS + CUR_NAV_TICK + FUTURE_NAV_TICKS;
 
         struct TemporalImageNames {
