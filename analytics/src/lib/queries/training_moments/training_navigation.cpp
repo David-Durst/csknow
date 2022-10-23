@@ -49,48 +49,14 @@ namespace csknow {
             }
         }
 
-        TrainingNavigationResult queryTrainingNavigation(const VisPoints & visPoints, const ReachableResult & reachableResult,
-                                                         const Players & players,
-                                                         const Games & games, const Rounds & rounds,
-                                                         const Ticks & ticks, const PlayerAtTick & playerAtTick,
-                                                         const NonEngagementTrajectoryResult & nonEngagementTrajectoryResult,
-                                                         const string & outputDir) {
-            TrainingNavigationResult result;
-            string trainNavData = outputDir + "/trainNavData";
-
-            // create a fresh directory to save to
-            if (!fs::exists(trainNavData)) {
-                fs::create_directory(trainNavData);
-            }
-            for (auto& path: fs::directory_iterator(trainNavData)) {
-                fs::remove(path);
-            }
-
+        void createNavigationImages(const VisPoints & visPoints, const ReachableResult & reachableResult,
+                                    const Players & players, const Games & games, const Rounds & rounds,
+                                    const Ticks & ticks, const PlayerAtTick & playerAtTick,
+                                    const string & outputDir) {
             int numThreads = omp_get_max_threads();
-            vector<vector<int64_t>> tmpTickId;
-            vector<vector<int64_t>> tmpRoundIds(numThreads);
-            vector<vector<int64_t>> tmpRoundStarts(numThreads);
-            vector<vector<int64_t>> tmpRoundSizes(numThreads);
-            vector<vector<int64_t>> tmpNavId;
-            vector<vector<int64_t>> tmpSegmentStartTickId;
-            vector<vector<vector<int64_t>>> tmpSegmentPastTickId;
-            vector<vector<int64_t>> tmpSegmentCurTickId;
-            vector<vector<int64_t>> tmpSegmentFutureTickId;
-            vector<vector<int64_t>> tmpTickLength;
-            vector<vector<int64_t>> tmpPlayerId;
-            vector<vector<string>> tmpPlayerName;
-            vector<vector<array<Vec3, TOTAL_NAV_TICKS>>> tmpPlayerViewDir;
-            vector<vector<array<double, TOTAL_NAV_TICKS>>> tmpHealth;
-            vector<vector<array<double, TOTAL_NAV_TICKS>>> tmpArmor;
-            vector<vector<array<TemporalImageNames, TOTAL_NAV_TICKS>>> tmpImgNames;
-            vector<vector<string>> tmpGoalRegionImgName;
-
             // for each round
             // for each tick
             // check when each player is in a region visible to enemy team
-            // check when c4 is visible to ct (if not planted)
-            // going to sync clock for all players (if you started your trajectory off clock, tough luck, not doing anything until next period)
-            // for each sync'd tick:
             //      save all alive player pos
             //      save what each alive player can see
             //      combine all alive players per team, save what each team can see
@@ -98,19 +64,13 @@ namespace csknow {
             //      save distance map from each player pos to all other points
             //      for t's, save c4 pos. For ct's, save c4 pos if seen recently. otehrwise keep blurring and save
             //          future: handle bomb planted impact on pos knowledge
-            // if a player is in trajectory, start a segment for them if no active segment
-            // if a player is in a segment, end it if past segment time
-            // clear out at end of round with early termination
-//#pragma omp parallel for
+            //      only save state when on a sync clock for all players (if you started your trajectory off clock,
+            //      tough luck, not doing anything until next period)
             for (int64_t roundIndex = 0; roundIndex < rounds.size; roundIndex++) {
                 int threadNum = omp_get_thread_num();
-                tmpRoundIds[threadNum].push_back(roundIndex);
-                tmpRoundStarts[threadNum].push_back(static_cast<int64_t>(tmpSegmentStartTickId[threadNum].size()));
 
                 TickRates tickRates = computeTickRates(games, rounds, roundIndex);
 
-                map<int64_t, NavTSData> playerToCurTrajectory;
-                vector<NavTSData> finishedSegmentPerRound;
                 RollingWindow rollingWindow(rounds, ticks, playerAtTick);
                 int64_t lastSyncTickId = INVALID_ID;
 
@@ -138,7 +98,7 @@ namespace csknow {
                     bool syncTick = false;
                     if (lastSyncTickId == INVALID_ID ||
                         secondsBetweenTicks(ticks, tickRates, lastSyncTickId, tickIndex) >=
-                            PAST_NAV_TICKS_SECONDS_DELTA) {
+                        PAST_NAV_TICKS_SECONDS_DELTA) {
                         lastSyncTickId = tickIndex;
                         syncTick = true;
                         syncToImageNames.push_back({});
@@ -257,10 +217,10 @@ namespace csknow {
 
                     // c4 vis
                     const CellVisPoint & c4CellVisPoint = visPoints.getNearestCellVisPoint({
-                        ticks.bombX[tickIndex],
-                        ticks.bombY[tickIndex],
-                        ticks.bombZ[tickIndex]
-                    });
+                                                                                               ticks.bombX[tickIndex],
+                                                                                               ticks.bombY[tickIndex],
+                                                                                               ticks.bombZ[tickIndex]
+                                                                                           });
                     CellBits c4Pos;
                     c4Pos.set(c4CellVisPoint.cellId, true);
                     c4PosForT = c4Pos;
@@ -275,6 +235,72 @@ namespace csknow {
                         c4PosForCT.saveMapState(ctImgNames.c4Pos);
                         c4PosForT.saveMapState(tImgNames.c4Pos);
                     }
+
+                }
+
+            }
+
+        }
+
+        TrainingNavigationResult queryTrainingNavigation(const VisPoints & visPoints, const ReachableResult & reachableResult,
+                                                         const Players & players,
+                                                         const Games & games, const Rounds & rounds,
+                                                         const Ticks & ticks, const PlayerAtTick & playerAtTick,
+                                                         const NonEngagementTrajectoryResult & nonEngagementTrajectoryResult,
+                                                         const string & outputDir) {
+            TrainingNavigationResult result;
+            string trainNavData = outputDir + "/trainNavData";
+
+            // create a fresh directory to save to
+            if (!fs::exists(trainNavData)) {
+                fs::create_directory(trainNavData);
+            }
+            for (auto& path: fs::directory_iterator(trainNavData)) {
+                fs::remove(path);
+            }
+
+            createNavigationImages(visPoints, reachableResult, players, games, rounds, ticks, playerAtTick, outputDir);
+
+            int numThreads = omp_get_max_threads();
+            vector<vector<int64_t>> tmpTickId;
+            vector<vector<int64_t>> tmpRoundIds(numThreads);
+            vector<vector<int64_t>> tmpRoundStarts(numThreads);
+            vector<vector<int64_t>> tmpRoundSizes(numThreads);
+            vector<vector<int64_t>> tmpNavId;
+            vector<vector<int64_t>> tmpSegmentStartTickId;
+            vector<vector<vector<int64_t>>> tmpSegmentPastTickId;
+            vector<vector<int64_t>> tmpSegmentCurTickId;
+            vector<vector<int64_t>> tmpSegmentFutureTickId;
+            vector<vector<int64_t>> tmpTickLength;
+            vector<vector<int64_t>> tmpPlayerId;
+            vector<vector<string>> tmpPlayerName;
+            vector<vector<array<Vec3, TOTAL_NAV_TICKS>>> tmpPlayerViewDir;
+            vector<vector<array<double, TOTAL_NAV_TICKS>>> tmpHealth;
+            vector<vector<array<double, TOTAL_NAV_TICKS>>> tmpArmor;
+            vector<vector<array<TemporalImageNames, TOTAL_NAV_TICKS>>> tmpImgNames;
+            vector<vector<string>> tmpGoalRegionImgName;
+
+            // for each round
+            // for each tick
+            // if a player is in trajectory, start a segment for them if no active segment
+            // if a player is in a segment, end it if past segment time
+            // clear out at end of round with early termination
+//#pragma omp parallel for
+            for (int64_t roundIndex = 0; roundIndex < rounds.size; roundIndex++) {
+                int threadNum = omp_get_thread_num();
+                tmpRoundIds[threadNum].push_back(roundIndex);
+                tmpRoundStarts[threadNum].push_back(static_cast<int64_t>(tmpSegmentStartTickId[threadNum].size()));
+
+                TickRates tickRates = computeTickRates(games, rounds, roundIndex);
+
+                map<int64_t, NavTSData> playerToCurTrajectory;
+                vector<NavTSData> finishedSegmentPerRound;
+                RollingWindow rollingWindow(rounds, ticks, playerAtTick);
+
+                for (int64_t tickIndex = rounds.ticksPerRound[roundIndex].minId;
+                     tickIndex <= rounds.ticksPerRound[roundIndex].maxId; tickIndex++) {
+                    map<int64_t, int64_t> curPlayerToPAT = rollingWindow.getPATIdForPlayerId(tickIndex);
+
 
                 }
 

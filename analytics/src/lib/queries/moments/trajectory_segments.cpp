@@ -86,7 +86,7 @@ TrajectorySegmentResult queryAllTrajectories(const Players & players, const Game
             map<int64_t, int64_t> curPlayerToPAT = rollingWindow.getPATIdForPlayerId(tickIndex);
 
             // this tracks if a player is in a trajectory from non-engagemnet trajectory result
-            // compared to internal playerToCurTrajectory/finsihedSegmentPerRound to determine how to update internal
+            // compared to internal playerToCurTrajectory/finishedSegmentPerRound to determine how to update internal
             // values
             set<int64_t> playerInTrajectory;
 
