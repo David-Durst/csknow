@@ -13,6 +13,7 @@ namespace fs = std::filesystem;
 namespace csknow {
     constexpr int CONV_SIZE = 3;
     typedef array<array<uint8_t, CONV_SIZE>, CONV_SIZE> conv_matrix;
+    constexpr conv_matrix UNIFORM_BLUR_MATRIX = {{{1, 1, 1}, {1, 1, 1}, {1, 1, 1}}};
     class MapState {
         array<array<uint8_t, NAV_CELLS_PER_ROW>, NAV_CELLS_PER_ROW> data;
         const VisPoints & visPoints;
@@ -24,6 +25,7 @@ namespace csknow {
         void saveMapState(const fs::path & path);
         MapState & operator=(const CellBits & value);
         MapState & operator=(const vector<uint8_t> & value);
+        [[maybe_unused]] MapState & operator|=(const MapState & value);
         [[maybe_unused]] MapState & operator+=(const MapState & value);
         [[maybe_unused]] MapState & operator+=(const uint8_t & value);
         [[maybe_unused]] MapState & operator-=(const uint8_t & value);

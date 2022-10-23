@@ -46,6 +46,15 @@ namespace csknow {
         return *this;
     }
 
+    MapState & MapState::operator|=(const MapState & value) {
+        for (size_t i = 0; i < data.size(); i++) {
+            for (size_t j = 0; j < data[i].size(); j++) {
+                data[i][j] = std::max(data[i][j], value.data[i][j]);
+            }
+        }
+        return *this;
+    }
+
     MapState & MapState::operator+=(const MapState & value) {
         for (size_t i = 0; i < data.size(); i++) {
             for (size_t j = 0; j < data[i].size(); j++) {

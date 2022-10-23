@@ -96,7 +96,8 @@ namespace csknow {
             //      combine all alive players per team, save what each team can see
             //      blur each player if not seen since last sync, otherwise make them a point, then save || combo of enemies
             //      save distance map from each player pos to all other points
-            //      for t's, save c4 pos. For ct's, save c4 pos if seen recently or planted. otehrwise keep blurring and save
+            //      for t's, save c4 pos. For ct's, save c4 pos if seen recently. otehrwise keep blurring and save
+            //          future: handle bomb planted impact on pos knowledge
             // if a player is in trajectory, start a segment for them if no active segment
             // if a player is in a segment, end it if past segment time
             // clear out at end of round with early termination
@@ -118,14 +119,20 @@ namespace csknow {
 
                 // data updated every tick
                 map<int64_t, int64_t> lastTickPlayerSeenByEnemies;
-                map<TeamId, int64_t> lastTickC4SeenOrPlantedByTeam;
+                map<int64_t, MapState> playerPosForEnemies;
+                int64_t lastTickC4SeenByCT = INVALID_ID;
+                MapState c4PosForCT(visPoints), c4PosForT(visPoints);
 
                 for (int64_t tickIndex = rounds.ticksPerRound[roundIndex].minId;
                      tickIndex <= rounds.ticksPerRound[roundIndex].maxId; tickIndex++) {
                     map<int64_t, int64_t> curPlayerToPAT = rollingWindow.getPATIdForPlayerId(tickIndex);
 
                     // need to track these every tick
-                    map<int64_t, CellBits> playerVisAreas;
+                    map<int64_t, CellId> playerCellIds;
+                    map<int64_t, CellBits> playerPos;
+                    map<int64_t, CellBits> playerVis;
+                    CellBits ctPos, tPos;
+                    CellBits ctVis, tVis;
 
                     // check if sync tick
                     bool syncTick = false;
@@ -137,53 +144,137 @@ namespace csknow {
                         syncToImageNames.push_back({});
                     }
 
-                    // compute everything that is only per player on pass 1
+                    // need to remember one CT and one T players paths so can save team data
+                    TemporalImageNames ctImgNames, tImgNames;
+
+                    // pass 1: compute everything that is only per player or per one team
                     for (int64_t patIndex = ticks.patPerTick[tickIndex].minId;
                          patIndex <= ticks.patPerTick[tickIndex].maxId; patIndex++) {
                         if (playerAtTick.isAlive[patIndex]) {
                             int64_t playerId = playerAtTick.playerId[patIndex];
+                            TeamId teamId = playerAtTick.team[patIndex];
+
+                            // compute player pos
                             const CellVisPoint & playerCellVisPoint = visPoints.getNearestCellVisPoint({
                                 playerAtTick.posX[patIndex],
                                 playerAtTick.posY[patIndex],
                                 playerAtTick.eyePosZ[patIndex]
                             });
+                            playerCellIds[playerId] = playerCellVisPoint.cellId;
+                            CellBits localPos;
+                            localPos.set(playerCellVisPoint.cellId, true);
+                            playerPos[playerId] = localPos;
+
+                            // compute player vis
                             // might want to consider recoil here at some point, but such a minor factor, no in first
                             // pass
                             Vec2 playerViewAngle{
                                 playerAtTick.viewX[patIndex],
                                 playerAtTick.viewY[patIndex]
                             };
-                            playerVisAreas[playerId] =
+                            playerVis[playerId] =
                                 getCellsInFOV(visPoints, playerCellVisPoint.topCenter, playerViewAngle);
-                            playerVisAreas[playerId] &= playerCellVisPoint.visibleFromCurPoint;
+                            playerVis[playerId] &= playerCellVisPoint.visibleFromCurPoint;
+
+                            // add to team pos
+                            if (teamId == ENGINE_TEAM_CT) {
+                                ctPos |= localPos;
+                            }
+                            else {
+                                tPos |= localPos;
+                            }
+
+                            // add to team vis
+                            if (teamId == ENGINE_TEAM_CT) {
+                                ctVis |= playerVis[playerId];
+                            }
+                            else {
+                                tVis |= playerVis[playerId];
+                            }
 
                             MapState mapState(visPoints);
                             if (syncTick) {
                                 const TemporalImageNames & imgNames = TemporalImageNames(tickIndex, players.name[playerId],
-                                                                                         playerAtTick.team[patIndex],
-                                                                                         outputDir);
+                                                                                         teamId, outputDir);
                                 syncToImageNames.back()[playerId] = imgNames;
                                 // save pos
-                                CellBits posBits;
-                                posBits.set(playerCellVisPoint.cellId, true);
-                                mapState.saveNewMapState(posBits, imgNames.playerPos);
-
+                                mapState.saveNewMapState(localPos, imgNames.playerPos);
                                 // save view pos
-                                mapState.saveNewMapState(playerVisAreas[playerId], imgNames.playerVis);
-
+                                mapState.saveNewMapState(playerVis[playerId], imgNames.playerVis);
                                 // save distance matrix
                                 mapState.saveNewMapState(reachableResult.scaledCellDistanceMatrix[playerCellVisPoint.cellId],
                                                          imgNames.distanceMap);
+
+                                if (teamId == ENGINE_TEAM_CT) {
+                                    ctImgNames = imgNames;
+                                }
+                                else {
+                                    tImgNames = imgNames;
+                                }
                             }
                         }
                     }
 
+                    // pass 2 for each player compute their individual data that needs other team data (aka if visible to other team)
+                    MapState ctVisToEnemies(visPoints), tVisToEnemies(visPoints);
+                    for (int64_t patIndex = ticks.patPerTick[tickIndex].minId;
+                         patIndex <= ticks.patPerTick[tickIndex].maxId; patIndex++) {
+                        if (playerAtTick.isAlive[patIndex]) {
+                            int64_t playerId = playerAtTick.playerId[patIndex];
+                            TeamId teamId = playerAtTick.team[patIndex];
+                            const CellVisPoint & playerCellId = visPoints.getCellVisPoints()[playerCellIds[playerId]];
+                            // assume seen on first tick
+                            if (lastTickPlayerSeenByEnemies.find(playerId) == lastTickPlayerSeenByEnemies.end() ||
+                                (teamId == ENGINE_TEAM_CT && tVis[playerCellIds[playerId]]) ||
+                                (teamId == ENGINE_TEAM_T && ctVis[playerCellIds[playerId]])) {
+                                lastTickPlayerSeenByEnemies[playerId] = tickIndex;
+                                MapState posStateForEnemies(visPoints);
+                                posStateForEnemies = playerPos[playerId];
+                                playerPosForEnemies.insert({playerId, std::move(posStateForEnemies)});
+                            }
+                            else {
+                                playerPosForEnemies.at(playerId).conv(UNIFORM_BLUR_MATRIX);
+                            }
+                            if (teamId == ENGINE_TEAM_CT) {
+                                ctVisToEnemies |= playerPosForEnemies.at(playerId);
+                            }
+                            else {
+                                tVisToEnemies |= playerPosForEnemies.at(playerId);
+                            }
+                        }
+                    }
 
-                    // compute the maps for each individual team
+                    // save the maps that combine both team data (aka visibility of enemies and c4 to current team)
+                    if (syncTick) {
+                        MapState teamMapState(visPoints);
+                        teamMapState.saveNewMapState(ctPos, ctImgNames.friendlyPos);
+                        teamMapState.saveNewMapState(tPos, tImgNames.friendlyPos);
+                        teamMapState.saveNewMapState(ctVis, ctImgNames.friendlyVis);
+                        teamMapState.saveNewMapState(tVis, tImgNames.friendlyVis);
+                        ctVisToEnemies.saveMapState(tImgNames.visEnemies);
+                        tVisToEnemies.saveMapState(ctImgNames.visEnemies);
+                    }
 
-                    // for each player compute their invidiual data that needs other team data (aka if visible to other team)
-
-                    // compute the maps that combine both team data (aka visibility of enemies to current team)
+                    // c4 vis
+                    const CellVisPoint & c4CellVisPoint = visPoints.getNearestCellVisPoint({
+                        ticks.bombX[tickIndex],
+                        ticks.bombY[tickIndex],
+                        ticks.bombZ[tickIndex]
+                    });
+                    CellBits c4Pos;
+                    c4Pos.set(c4CellVisPoint.cellId, true);
+                    c4PosForT = c4Pos;
+                    if (lastTickC4SeenByCT = INVALID_ID || ctVis[c4CellVisPoint.cellId]) {
+                        lastTickC4SeenByCT = tickIndex;
+                        c4PosForCT = c4Pos;
+                    }
+                    else {
+                        c4PosForCT.conv(UNIFORM_BLUR_MATRIX);
+                    }
+                    if (syncTick) {
+                        c4PosForCT.saveMapState(ctImgNames.c4Pos);
+                        c4PosForT.saveMapState(tImgNames.c4Pos);
+                    }
 
                 }
 
