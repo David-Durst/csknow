@@ -22,6 +22,10 @@ using std::pair;
 #define INVALID_ID (-1)
 #define WEAPON_RECOIL_SCALE 2.0
 #define VIEW_RECOIL_TRACKING 0.45
+constexpr char TEAM_UNASSIGNED_NAME[] = "unassigned";
+constexpr char TEAM_SPEC_NAME[] = "spectator";
+constexpr char TEAM_T_NAME[] = "T";
+constexpr char TEAM_CT_NAME[] = "CT";
 
 struct RangeIndexEntry {
     int64_t minId, maxId;

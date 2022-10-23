@@ -134,7 +134,7 @@ public:
     }
     [[nodiscard]] const AABB & getAreaBounds() const { return areaBounds; };
     [[nodiscard]] const CellDiscreteCoord & getMaxCellNumbersByDim() const { return maxCellNumbersByDim; };
-    [[nodiscard]] const CellVisPoint & getNearestCellVisPoint(const Vec3 & pos);
+    [[nodiscard]] const CellVisPoint & getNearestCellVisPoint(const Vec3 & pos) const;
 };
 
 #endif //CSKNOW_LOAD_SAVE_VIS_POINTS_H

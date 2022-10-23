@@ -7,6 +7,11 @@
 
 namespace csknow {
 
+    void MapState::saveNewMapState(const CellBits & value, const fs::path & path) {
+        *this = value;
+        saveMapState(path);
+    }
+
     void MapState::saveMapState(const fs::path &path) {
         cv::Mat cvMapState = cv::Mat(NAV_CELLS_PER_ROW, NAV_CELLS_PER_ROW, CV_8U, data[0].data());
         cv::imwrite(path.string(), cvMapState);

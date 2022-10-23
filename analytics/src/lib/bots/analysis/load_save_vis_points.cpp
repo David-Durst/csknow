@@ -434,9 +434,9 @@ namespace vis_point_helpers {
     }
 }
 
-const CellVisPoint & VisPoints::getNearestCellVisPoint(const Vec3 & pos) {
+const CellVisPoint & VisPoints::getNearestCellVisPoint(const Vec3 & pos) const {
     const nav_mesh::nav_area & nearestArea = navFile.get_nearest_area_by_position(vec3Conv(pos));
-    const AreaVisPoint & areaVisPoint = areaVisPoints[areaIdToVectorIndex[nearestArea.get_id()]];
+    const AreaVisPoint & areaVisPoint = areaVisPoints[areaIdToVectorIndex.at(nearestArea.get_id())];
 
     float nearestCellDistance = std::numeric_limits<double>::max();
     size_t nearestCellId = INVALID_ID;

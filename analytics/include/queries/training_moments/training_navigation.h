@@ -38,13 +38,26 @@ namespace csknow {
         constexpr int TOTAL_NAV_TICKS = PAST_NAV_TICKS + CUR_NAV_TICK + FUTURE_NAV_TICKS;
 
         struct TemporalImageNames {
+            // known purely from one player's data
             string playerPos;
-            string friendlyPos;
             string playerVis;
+            string distanceMap;
+            // require either all players on one or both teams
+            string friendlyPos;
             string friendlyVis;
             string visEnemies;
-            string distanceMap;
             string c4Pos;
+            TemporalImageNames() {};
+            TemporalImageNames(int64_t tickIndex, const string & playerName, TeamId teamId, const string & outputDir) {
+                string teamName = teamId == ENGINE_TEAM_T ? TEAM_T_NAME : TEAM_CT_NAME;
+                playerPos = outputDir + "/playerPos_" + playerName + "_" + std::to_string(tickIndex) + ".png";
+                playerVis = outputDir + "/playerVis_" + playerName + "_" + std::to_string(tickIndex) + ".png";
+                distanceMap = outputDir + "/visEnemies_" + playerName + "_" + std::to_string(tickIndex) + ".png";
+                friendlyPos = outputDir + "/friendlyPos_" + teamName + "_" + std::to_string(tickIndex) + ".png";
+                friendlyVis = outputDir + "/friendlyVis_" + teamName + "_" + std::to_string(tickIndex) + ".png";
+                visEnemies = outputDir + "/visEnemies_" + teamName + "_" + std::to_string(tickIndex) + ".png";
+                c4Pos = outputDir + "/c4Pos_" + teamName + "_" + std::to_string(tickIndex) + ".png";
+            }
         };
 
         class TrainingNavigationResult : public QueryResult {

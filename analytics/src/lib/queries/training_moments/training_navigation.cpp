@@ -112,19 +112,67 @@ namespace csknow {
                 RollingWindow rollingWindow(rounds, ticks, playerAtTick);
                 int64_t lastSyncTickId = INVALID_ID;
 
-                vector<map<int64_t, string>> syncToPosImageNames;
-                vector<map<int64_t, string>> syncToVisImageNames;
-                vector<map<TeamId, string>> syncToTeamVisImageNames;
-                vector<map<int64_t, string>> syncToPosForEnemiesImageNames;
-                vector<map<int64_t, string>> syncToDistanceMapImageNames;
-                vector<map<TeamId, string>> syncToTeamC4ImageNames;
+                // images created every sync tick
+                vector<map<int64_t, TemporalImageNames>> syncToImageNames;
 
+                // data updated every tick
                 map<int64_t, int64_t> lastTickPlayerSeenByEnemies;
-                map<int64_t, int64_t>
+                map<TeamId, int64_t> lastTickC4SeenOrPlantedByTeam;
 
                 for (int64_t tickIndex = rounds.ticksPerRound[roundIndex].minId;
                      tickIndex <= rounds.ticksPerRound[roundIndex].maxId; tickIndex++) {
                     map<int64_t, int64_t> curPlayerToPAT = rollingWindow.getPATIdForPlayerId(tickIndex);
+
+                    // need to track these every tick
+                    map<int64_t, CellBits> playerVisAreas;
+
+                    // check if sync tick
+                    bool syncTick = false;
+                    if (lastSyncTickId == INVALID_ID ||
+                        secondsBetweenTicks(ticks, tickRates, lastSyncTickId, tickIndex) >=
+                            PAST_NAV_TICKS_SECONDS_DELTA) {
+                        lastSyncTickId = tickIndex;
+                        syncTick = true;
+                        syncToImageNames.push_back({});
+                    }
+
+                    // compute everything that is only per player on pass 1
+                    for (int64_t patIndex = ticks.patPerTick[tickIndex].minId;
+                         patIndex <= ticks.patPerTick[tickIndex].maxId; patIndex++) {
+                        if (playerAtTick.isAlive[patIndex]) {
+                            int64_t playerId = playerAtTick.playerId[patIndex];
+                            const CellVisPoint & playerCellVisPoint = visPoints.getNearestCellVisPoint({
+                                playerAtTick.posX[patIndex],
+                                playerAtTick.posY[patIndex],
+                                playerAtTick.eyePosZ[patIndex]
+                            });
+                            // might want to consider recoil here at some point, but such a minor factor, no in first
+                            // pass
+                            Vec2 playerViewAngle{
+                                playerAtTick.viewX[patIndex],
+                                playerAtTick.viewY[patIndex]
+                            };
+                            playerVisAreas[playerId] =
+                                getCellsInFOV(visPoints, playerCellVisPoint.topCenter, playerViewAngle);
+                            playerVisAreas[playerId] &= playerCellVisPoint.visibleFromCurPoint;
+
+                            MapState mapState(visPoints);
+                            if (syncTick) {
+                                const TemporalImageNames & imgNames = TemporalImageNames(tickIndex, players.name[playerId],
+                                                                                         playerAtTick.team[patIndex],
+                                                                                         outputDir);
+                                syncToImageNames.back()[playerId] = imgNames;
+                                // save pos
+                                CellBits posBits;
+                                posBits.set(playerCellVisPoint.cellId, true);
+                                mapState.saveNewMapState(posBits, imgNames.playerPos);
+
+                                // save view pos
+                                mapState.saveNewMapState(playerVisAreas[playerId], imgNames.playerVis);
+
+                            }
+                        }
+                    }
 
                 }
 
