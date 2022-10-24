@@ -124,7 +124,7 @@ void ReachableResult::computeCellDistances() {
     for (size_t i = 0; i < visPoints.getAreaVisPoints().size(); i++) {
         const auto & srcAreaVisPoint = visPoints.getAreaVisPoints()[i];
         for (const auto & dstAreaVisPoint : visPoints.getAreaVisPoints()) {
-            double distance = getDistance(srcAreaVisPoint.areaId, srcAreaVisPoint.areaId, visPoints);
+            double distance = getDistance(srcAreaVisPoint.areaId, dstAreaVisPoint.areaId, visPoints);
             if (distance > maxDistance) {
                 maxDistance = distance;
             }
