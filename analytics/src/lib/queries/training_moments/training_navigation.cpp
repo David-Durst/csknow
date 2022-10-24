@@ -7,10 +7,12 @@
 #include "bots/analysis/vis_geometry.h"
 #include "queries/lookback.h"
 #include "queries/rolling_window.h"
+#include <atomic>
+#include "file_helpers.h"
 
 namespace csknow::navigation {
     struct NavTrajData {
-        int64_t trajectoryId, playerId;
+        int64_t trajectoryId = INVALID_ID, playerId = INVALID_ID;
         vector<int64_t> tickIds, patIds;
     };
 
@@ -21,7 +23,7 @@ namespace csknow::navigation {
                         vector<vector<vector<int64_t>>> &tmpSegmentTickIds,
                         vector<vector<int64_t>> &tmpLength, vector<vector<int64_t>> &tmpPlayerId,
                         vector<vector<string>> &tmpPlayerName,
-                        vector<vector<array<Vec3, TOTAL_NAV_TICKS>>> &tmpPlayerViewDir,
+                        vector<vector<array<Vec2, TOTAL_NAV_TICKS>>> &tmpPlayerViewDir,
                         vector<vector<array<double, TOTAL_NAV_TICKS>>> &tmpHealth,
                         vector<vector<array<double, TOTAL_NAV_TICKS>>> &tmpArmor,
                         vector<vector<array<TemporalImageNames, TOTAL_NAV_TICKS>>> &tmpImgNames,
@@ -86,9 +88,11 @@ namespace csknow::navigation {
     }
 
     void createNavigationImages(const VisPoints &visPoints, const ReachableResult &reachableResult,
-                                const Players &players, const Games &games, const Rounds &rounds,
+                                const Players &players, const Rounds &rounds,
                                 const Ticks &ticks, const PlayerAtTick &playerAtTick,
                                 const string &outputDir, const vector<set<int64_t>> & roundSyncTicks) {
+        std::cout << "creating training nav images" << std::endl;
+        std::atomic<int64_t> roundsProcessed = 0;
         // for each round
         // for each tick
         // check when each player is in a region visible to enemy team
@@ -103,8 +107,6 @@ namespace csknow::navigation {
         //      tough luck, not doing anything until next period)
 //#pragma omp parallel for
         for (int64_t roundIndex = 0; roundIndex < rounds.size; roundIndex++) {
-            TickRates tickRates = computeTickRates(games, rounds, roundIndex);
-
             RollingWindow rollingWindow(rounds, ticks, playerAtTick);
 
             // images created every sync tick
@@ -216,7 +218,6 @@ namespace csknow::navigation {
                     if (playerAtTick.isAlive[patIndex]) {
                         int64_t playerId = playerAtTick.playerId[patIndex];
                         TeamId teamId = playerAtTick.team[patIndex];
-                        const CellVisPoint &playerCellId = visPoints.getCellVisPoints()[playerCellIds[playerId]];
                         // assume seen on first tick
                         if (lastTickPlayerSeenByEnemies.find(playerId) == lastTickPlayerSeenByEnemies.end() ||
                             (teamId == ENGINE_TEAM_CT && tVis[playerCellIds[playerId]]) ||
@@ -224,7 +225,7 @@ namespace csknow::navigation {
                             lastTickPlayerSeenByEnemies[playerId] = tickIndex;
                             MapState posStateForEnemies(visPoints);
                             posStateForEnemies = playerPos[playerId];
-                            playerPosForEnemies.insert({playerId, std::move(posStateForEnemies)});
+                            playerPosForEnemies.insert({playerId, posStateForEnemies});
                         } else {
                             playerPosForEnemies.at(playerId).conv(UNIFORM_BLUR_MATRIX);
                         }
@@ -269,8 +270,9 @@ namespace csknow::navigation {
 
             }
 
+            roundsProcessed++;
+            printProgress(roundsProcessed, rounds.size);
         }
-
     }
 
     TrainingNavigationResult queryTrainingNavigation(const VisPoints &visPoints, const ReachableResult &reachableResult,
@@ -290,25 +292,27 @@ namespace csknow::navigation {
         }
 
         int numThreads = omp_get_max_threads();
-        vector<vector<int64_t>> tmpTickId;
         vector<vector<int64_t>> tmpRoundIds(numThreads);
         vector<vector<int64_t>> tmpRoundStarts(numThreads);
         vector<vector<int64_t>> tmpRoundSizes(numThreads);
-        vector<vector<int64_t>> tmpTrajectoryId;
-        vector<vector<int64_t>> tmpSegmentStartTickId;
-        vector<vector<int64_t>> tmpSegmentCurTickId;
-        vector<vector<int64_t>> tmpSegmentFutureTickId;
-        vector<vector<vector<int64_t>>> tmpSegmentTickIds;
-        vector<vector<int64_t>> tmpTickLength;
-        vector<vector<int64_t>> tmpPlayerId;
-        vector<vector<string>> tmpPlayerName;
-        vector<vector<array<Vec3, TOTAL_NAV_TICKS>>> tmpPlayerViewDir;
-        vector<vector<array<double, TOTAL_NAV_TICKS>>> tmpHealth;
-        vector<vector<array<double, TOTAL_NAV_TICKS>>> tmpArmor;
-        vector<vector<array<TemporalImageNames, TOTAL_NAV_TICKS>>> tmpImgNames;
-        vector<vector<string>> tmpGoalRegionImgName;
+        vector<vector<int64_t>> tmpTrajectoryId(numThreads);
+        vector<vector<int64_t>> tmpSegmentStartTickId(numThreads);
+        vector<vector<int64_t>> tmpSegmentCurTickId(numThreads);
+        vector<vector<int64_t>> tmpSegmentFutureTickId(numThreads);
+        vector<vector<vector<int64_t>>> tmpSegmentTickIds(numThreads);
+        vector<vector<int64_t>> tmpTickLength(numThreads);
+        vector<vector<int64_t>> tmpPlayerId(numThreads);
+        vector<vector<string>> tmpPlayerName(numThreads);
+        vector<vector<array<Vec2, TOTAL_NAV_TICKS>>> tmpPlayerViewDir(numThreads);
+        vector<vector<array<double, TOTAL_NAV_TICKS>>> tmpHealth(numThreads);
+        vector<vector<array<double, TOTAL_NAV_TICKS>>> tmpArmor(numThreads);
+        vector<vector<array<TemporalImageNames, TOTAL_NAV_TICKS>>> tmpImgNames(numThreads);
+        vector<vector<string>> tmpGoalRegionImgName(numThreads);
 
         vector<set<int64_t>> roundSyncTicks(rounds.size, set<int64_t>{});
+
+        std::cout << "creating training nav trajectories" << std::endl;
+        std::atomic<int64_t> roundsProcessed = 0;
 
         // another function call below will handle creating images, this just has to make
         // the trajectories and record the sync ticks
@@ -328,7 +332,7 @@ namespace csknow::navigation {
 
             // first compute sync ticks
             vector<int64_t> syncTickIds;
-            int64_t lastSyncTickId;
+            int64_t lastSyncTickId = INVALID_ID;
             for (int64_t tickIndex = rounds.ticksPerRound[roundIndex].minId;
                  tickIndex <= rounds.ticksPerRound[roundIndex].maxId; tickIndex++) {
                 if (lastSyncTickId == INVALID_ID ||
@@ -394,7 +398,7 @@ namespace csknow::navigation {
             // finish all trajectories active at end of round
             for (const auto &[playerId, tData]: playerToCurTrajectory) {
                 finishedSegmentPerRound.push_back(playerToCurTrajectory[playerId]);
-                playerToCurTrajectory.erase(playerId);
+                // no need to erase, this whole map will get dropped at end of round
             }
             std::sort(finishedSegmentPerRound.begin(), finishedSegmentPerRound.end(),
                       [](const NavTrajData & a, const NavTrajData & b) {
@@ -418,6 +422,8 @@ namespace csknow::navigation {
                            finishedSegmentPerRound);
             tmpRoundSizes[threadNum].push_back(static_cast<int64_t>(tmpSegmentStartTickId[threadNum].size()) -
                                                tmpRoundStarts[threadNum].back());
+            roundsProcessed++;
+            printProgress(roundsProcessed, rounds.size);
         }
 
         TrainingNavigationResult result;
@@ -444,8 +450,8 @@ namespace csknow::navigation {
         // create navigation images will generate my ticks
         // i could do a rolling window where I know the window is larger than the sync ticks
         // then I iterate through window to check if matching a sync tick
-        createNavigationImages(visPoints, reachableResult, players, games, rounds, ticks,
-                               playerAtTick, outputDir, roundSyncTicks);
+        createNavigationImages(visPoints, reachableResult, players, rounds, ticks,
+                               playerAtTick, trainNavData, roundSyncTicks);
         return result;
     }
 

@@ -312,13 +312,11 @@ int main(int argc, char * argv[]) {
     engagementAimResult.analyzeRollingWindowDifferences(filteredRounds, ticks, engagementPerTickAimResult);
     std::cout << "processing training navigation data set" << std::endl;
     string trainingNavigationName = "engagementAim";
-    /*
     csknow::navigation::TrainingNavigationResult trainingNavigationResult =
         csknow::navigation::queryTrainingNavigation(map_visPoints.at("de_dust2"), d2ReachableResult, players, games,
                                                     filteredRounds, ticks, playerAtTick, nonEngagementTrajectoryResult,
                                                     outputDir);
     std::cout << "size: " << trainingNavigationResult.size << std::endl;
-     */
     std::cout << "processing inference engagement aim training data set" << std::endl;
     string inferenceEngagementAimName = "engagementAim";
     InferenceEngagementAimResult inferenceEngagementAimResult(engagementAimResult);

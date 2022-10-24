@@ -79,7 +79,7 @@ namespace csknow {
             vector<int64_t> tickLength;
             vector<int64_t> playerId;
             vector<string> playerName;
-            vector<array<Vec3, TOTAL_NAV_TICKS>> playerViewDir;
+            vector<array<Vec2, TOTAL_NAV_TICKS>> playerViewDir;
             vector<array<double, TOTAL_NAV_TICKS>> health;
             vector<array<double, TOTAL_NAV_TICKS>> armor;
             vector<array<TemporalImageNames, TOTAL_NAV_TICKS>> imgNames;
@@ -107,7 +107,6 @@ namespace csknow {
 
                 for (size_t i = 0; i < TOTAL_NAV_TICKS; i++) {
                     ss << "," << playerViewDir[index][i].x << "," << playerViewDir[index][i].y
-                       << "," << playerViewDir[index][i].z
                        << "," << health[index][i] << "," << armor[index][i]
                        << "," << imgNames[index][i].playerPos
                        << "," << imgNames[index][i].friendlyPos
@@ -130,7 +129,6 @@ namespace csknow {
                 for (int i = -1*PAST_NAV_TICKS; i <= FUTURE_NAV_TICKS; i++) {
                     result.push_back("player view dir x (t" + toSignedIntString(i, true) + ")");
                     result.push_back("player view dir y (t" + toSignedIntString(i, true) + ")");
-                    result.push_back("player view dir z (t" + toSignedIntString(i, true) + ")");
                     result.push_back("health (t" + toSignedIntString(i, true) + ")");
                     result.push_back("armor (t" + toSignedIntString(i, true) + ")");
                     result.push_back("player pos img name (t" + toSignedIntString(i, true) + ")");
