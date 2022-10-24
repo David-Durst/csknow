@@ -31,6 +31,7 @@ void InferenceEngagementAimResult::runQuery(const Rounds & rounds, const string 
         module = torch::jit::load(modelPath);
     }
     catch (const c10::Error& e) {
+        size = 0;
         std::cerr << "error loading engagement aim model\n";
         return;
     }

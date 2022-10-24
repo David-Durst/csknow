@@ -26,7 +26,7 @@ typedef array<int64_t, 3> CellDiscreteCoord;
 
 struct AreaVisPoint {
     AreaId areaId;
-    PlaceIndex placeIndex,
+    PlaceIndex placeIndex;
     AABB areaCoordinates;
     Vec3 center;
     vector<CellId> cells = {};
