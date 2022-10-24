@@ -70,6 +70,9 @@ namespace csknow {
 
         class TrainingNavigationResult : public QueryResult {
         public:
+            const Players & players;
+            string trainNavDir = "/tmp/trainNavData";
+
             vector<RangeIndexEntry> rowIndicesPerRound;
             vector<int64_t> trajectoryId;
             vector<int64_t> segmentStartTickId;
@@ -79,12 +82,12 @@ namespace csknow {
             vector<array<int64_t, TOTAL_NAV_TICKS>> segmentPATIds;
             vector<int64_t> tickLength;
             vector<int64_t> playerId;
-            vector<string> playerName;
+            vector<int64_t> teamId;
             vector<array<Vec2, TOTAL_NAV_TICKS>> playerViewDir;
             vector<array<double, TOTAL_NAV_TICKS>> health;
             vector<array<double, TOTAL_NAV_TICKS>> armor;
 
-            TrainingNavigationResult() {
+            TrainingNavigationResult(const Players & players) : players(players) {
                 variableLength = false;
                 nonTemporal = true;
                 overlay = true;
@@ -106,15 +109,18 @@ namespace csknow {
                    << playerId[index];
 
                 for (size_t i = 0; i < TOTAL_NAV_TICKS; i++) {
+                    // empty output dir as may load result from different directory
+                    TemporalImageNames imgNames(segmentTickIds[index][i], players.name[playerId[index]],
+                                               teamId[index], trainNavDir);
                     ss << "," << playerViewDir[index][i].x << "," << playerViewDir[index][i].y
                        << "," << health[index][i] << "," << armor[index][i]
-                       << "," << imgNames[index][i].playerPos
-                       << "," << imgNames[index][i].friendlyPos
-                       << "," << imgNames[index][i].playerVis
-                       << "," << imgNames[index][i].friendlyVis
-                       << "," << imgNames[index][i].visEnemies
-                       << "," << imgNames[index][i].distanceMap
-                       << "," << imgNames[index][i].c4Pos;
+                       << "," << imgNames.playerPos
+                       << "," << imgNames.friendlyPos
+                       << "," << imgNames.playerVis
+                       << "," << imgNames.friendlyVis
+                       << "," << imgNames.visEnemies
+                       << "," << imgNames.distanceMap
+                       << "," << imgNames.c4Pos;
                 }
 
                 ss << std::endl;

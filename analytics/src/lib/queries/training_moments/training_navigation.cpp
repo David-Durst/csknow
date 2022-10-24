@@ -20,13 +20,13 @@ namespace csknow::navigation {
                         vector<vector<int64_t>> &tmpSegmentStartTickId,
                         vector<vector<int64_t>> &tmpSegmentCurTickId,
                         vector<vector<int64_t>> &tmpSegmentFutureTickId,
-                        vector<vector<vector<int64_t>>> &tmpSegmentTickIds,
+                        vector<vector<array<int64_t, TOTAL_NAV_TICKS>>> &tmpSegmentTickIds,
+                        vector<vector<array<int64_t, TOTAL_NAV_TICKS>>> &tmpSegmentPATIds,
                         vector<vector<int64_t>> &tmpLength, vector<vector<int64_t>> &tmpPlayerId,
-                        vector<vector<string>> &tmpPlayerName,
+                        vector<vector<int64_t>> &tmpTeamId,
                         vector<vector<array<Vec2, TOTAL_NAV_TICKS>>> &tmpPlayerViewDir,
                         vector<vector<array<double, TOTAL_NAV_TICKS>>> &tmpHealth,
                         vector<vector<array<double, TOTAL_NAV_TICKS>>> &tmpArmor,
-                        vector<vector<array<TemporalImageNames, TOTAL_NAV_TICKS>>> &tmpImgNames,
                         int threadNum, const Players & players, const PlayerAtTick & playerAtTick,
                         const Ticks & ticks, const TickRates & tickRates,
                         const vector<NavTrajData> &finishedSegmentPerRound) {
@@ -54,11 +54,9 @@ namespace csknow::navigation {
                 tmpLength[threadNum].push_back(
                     tmpSegmentFutureTickId[threadNum].back() - tmpSegmentStartTickId[threadNum].back() + 1);
                 tmpPlayerId[threadNum].push_back(ntData.playerId);
-                tmpPlayerName[threadNum].push_back(players.name[players.idOffset + ntData.playerId]);
                 tmpPlayerViewDir[threadNum].push_back({});
                 tmpHealth[threadNum].push_back({});
                 tmpArmor[threadNum].push_back({});
-                tmpImgNames[threadNum].push_back({});
 
                 vector<int64_t> patIds;
                 tmpSegmentTickIds[threadNum].push_back({});
@@ -66,9 +64,10 @@ namespace csknow::navigation {
                     tmpSegmentTickIds[threadNum].back().push_back(ntData.tickIds[pastNTTickNum]);
                     patIds.push_back(ntData.patIds[pastNTTickNum]);
                 }
-                tmpSegmentTickIds[threadNum].back().push_back(ntData.tickIds[ntTickNum]);
+                tmpSegmentTickIds[threadNum].back()[PAST_NAV_TICKS] = ntData.tickIds[ntTickNum];
                 patIds.push_back(ntData.patIds[ntTickNum]);
-                tmpSegmentTickIds[threadNum].back().push_back(futureTickId);
+                tmpTeamId[threadNum].push_back(playerAtTick.team[ntData.patIds[ntTickNum]]);
+                tmpSegmentTickIds[threadNum].back()[PAST_NAV_TICKS + CUR_NAV_TICK] = futureTickId;
                 patIds.push_back(futurePATId);
 
                 for (size_t i = 0; i < TOTAL_NAV_TICKS; i++) {
@@ -79,7 +78,6 @@ namespace csknow::navigation {
                     tmpHealth[threadNum].back()[i] = playerAtTick.health[patIds[i]];
                     tmpArmor[threadNum].back()[i] = playerAtTick.armor[patIds[i]];
                     tmpImgNames[threadNum].back()[i] =
-                        // empty output dir as may load result from different directory
                         TemporalImageNames(tmpSegmentTickIds[threadNum].back()[i], tmpPlayerName[threadNum].back(),
                                            playerAtTick.team[patIds[i]], "");
                 }
@@ -282,14 +280,14 @@ namespace csknow::navigation {
                                                      const Ticks &ticks, const PlayerAtTick &playerAtTick,
                                                      const NonEngagementTrajectoryResult &nonEngagementTrajectoryResult,
                                                      const string &outputDir, bool createImages) {
-        string trainNavData = outputDir + "/trainNavData";
+        string trainNavDir = outputDir + "/trainNavData";
 
         // create a fresh directory to save to
         if (createImages) {
-            if (!fs::exists(trainNavData)) {
-                fs::create_directory(trainNavData);
+            if (!fs::exists(trainNavDir)) {
+                fs::create_directory(trainNavDir);
             }
-            for (auto &path: fs::directory_iterator(trainNavData)) {
+            for (auto &path: fs::directory_iterator(trainNavDir)) {
                 fs::remove(path);
             }
         }
@@ -302,15 +300,14 @@ namespace csknow::navigation {
         vector<vector<int64_t>> tmpSegmentStartTickId(numThreads);
         vector<vector<int64_t>> tmpSegmentCurTickId(numThreads);
         vector<vector<int64_t>> tmpSegmentFutureTickId(numThreads);
-        vector<vector<vector<int64_t>>> tmpSegmentTickIds(numThreads);
+        vector<vector<array<int64_t, TOTAL_NAV_TICKS>>> tmpSegmentTickIds(numThreads);
+        vector<vector<array<int64_t, TOTAL_NAV_TICKS>>> tmpSegmentPATIds(numThreads);
         vector<vector<int64_t>> tmpTickLength(numThreads);
         vector<vector<int64_t>> tmpPlayerId(numThreads);
         vector<vector<string>> tmpPlayerName(numThreads);
         vector<vector<array<Vec2, TOTAL_NAV_TICKS>>> tmpPlayerViewDir(numThreads);
         vector<vector<array<double, TOTAL_NAV_TICKS>>> tmpHealth(numThreads);
         vector<vector<array<double, TOTAL_NAV_TICKS>>> tmpArmor(numThreads);
-        vector<vector<array<TemporalImageNames, TOTAL_NAV_TICKS>>> tmpImgNames(numThreads);
-        vector<vector<string>> tmpGoalRegionImgName(numThreads);
 
         vector<set<int64_t>> roundSyncTicks(rounds.size, set<int64_t>{});
 
@@ -413,13 +410,12 @@ namespace csknow::navigation {
                            tmpSegmentStartTickId,
                            tmpSegmentCurTickId,
                            tmpSegmentFutureTickId,
-                           tmpSegmentTickIds,
+                           tmpSegmentTickIds, tmpSegmentPATIds,
                            tmpTickLength, tmpPlayerId,
                            tmpPlayerName,
                            tmpPlayerViewDir,
                            tmpHealth,
                            tmpArmor,
-                           tmpImgNames,
                            threadNum, players, playerAtTick,
                            ticks, tickRates,
                            finishedSegmentPerRound);
@@ -438,13 +434,13 @@ namespace csknow::navigation {
                                result.segmentCurTickId.push_back(tmpSegmentCurTickId[minThreadId][tmpRowId]);
                                result.segmentFutureTickId.push_back(tmpSegmentFutureTickId[minThreadId][tmpRowId]);
                                result.segmentTickIds.push_back(tmpSegmentTickIds[minThreadId][tmpRowId]);
+                               result.segmentPATIds.push_back(tmpSegmentPATIds[minThreadId][tmpRowId]);
                                result.tickLength.push_back(tmpTickLength[minThreadId][tmpRowId]);
                                result.playerId.push_back(tmpPlayerId[minThreadId][tmpRowId]);
                                result.playerName.push_back(tmpPlayerName[minThreadId][tmpRowId]);
                                result.playerViewDir.push_back(tmpPlayerViewDir[minThreadId][tmpRowId]);
                                result.health.push_back(tmpHealth[minThreadId][tmpRowId]);
                                result.armor.push_back(tmpArmor[minThreadId][tmpRowId]);
-                               result.imgNames.push_back(tmpImgNames[minThreadId][tmpRowId]);
                            });
 
         // this has to save sync ticks
@@ -455,8 +451,9 @@ namespace csknow::navigation {
         // then I iterate through window to check if matching a sync tick
         if (createImages) {
             createNavigationImages(visPoints, reachableResult, players, rounds, ticks,
-                                   playerAtTick, trainNavData, roundSyncTicks);
+                                   playerAtTick, trainNavDir, roundSyncTicks);
         }
+        result.trainNavDir = trainNavDir;
         return result;
     }
 
