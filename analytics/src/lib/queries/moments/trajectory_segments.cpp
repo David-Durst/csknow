@@ -126,29 +126,7 @@ TrajectorySegmentResult queryAllTrajectories(const Players & players, const Game
                             secondsBetweenTicks(ticks, tickRates,
                                                 playerToCurTrajectory.find(playerId)->second.segmentStartTickId,
                                                 tickIndex);
-                        if (!playerAtTick.isAlive[patIndex] || secondsSinceSegmentStart > SEGMENT_SECONDS) {
-                            if (!playerAtTick.isAlive[patIndex]) {
-                                Vec2 priorView{
-                                    playerAtTick.viewX[priorPlayerToPAT[playerId]],
-                                    playerAtTick.viewY[priorPlayerToPAT[playerId]],
-                                };
-                                Vec3 priorPos{
-                                    playerAtTick.posX[priorPlayerToPAT[playerId]],
-                                    playerAtTick.posY[priorPlayerToPAT[playerId]],
-                                    playerAtTick.posZ[priorPlayerToPAT[playerId]]
-                                };
-                                Vec2 curView{
-                                    playerAtTick.viewX[curPlayerToPAT[playerId]],
-                                    playerAtTick.viewY[curPlayerToPAT[playerId]],
-                                };
-                                Vec3 curPos{
-                                    playerAtTick.posX[curPlayerToPAT[playerId]],
-                                    playerAtTick.posY[curPlayerToPAT[playerId]],
-                                    playerAtTick.posZ[curPlayerToPAT[playerId]]
-                                };
-                                int x = 1;
-                                (void) x;
-                            }
+                        if (secondsSinceSegmentStart > SEGMENT_SECONDS) {
                             finishSegment(playerId, tickIndex, curPlayerToPAT[playerId],
                                           playerToCurTrajectory, finishedSegmentPerRound);
                         }
