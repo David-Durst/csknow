@@ -51,24 +51,26 @@ namespace csknow {
             string visEnemies;
             string c4Pos;
             TemporalImageNames() {};
-            TemporalImageNames(int64_t tickIndex, int64_t goalIndexOffset, const string & playerName, TeamId teamId,
-                               const string & outputDir) {
+            TemporalImageNames(int64_t tickIndex, const string & playerName, TeamId teamId,
+                                string outputDir) {
+                if (outputDir != "") {
+                    outputDir += "/";
+                }
                 string teamName = teamId == ENGINE_TEAM_T ? TEAM_T_NAME : TEAM_CT_NAME;
-                playerPos = outputDir + "/playerPos_" + playerName + "_" + std::to_string(tickIndex) + ".png";
-                playerVis = outputDir + "/playerVis_" + playerName + "_" + std::to_string(tickIndex) + ".png";
-                distanceMap = outputDir + "/distanceMap_" + playerName + "_" + std::to_string(tickIndex) + ".png";
-                goalPos = outputDir + "/goalPos_" + playerName + "_" + std::to_string(tickIndex + goalIndexOffset) + ".png";
-                friendlyPos = outputDir + "/friendlyPos_" + teamName + "_" + std::to_string(tickIndex) + ".png";
-                friendlyVis = outputDir + "/friendlyVis_" + teamName + "_" + std::to_string(tickIndex) + ".png";
-                visEnemies = outputDir + "/visEnemies_" + teamName + "_" + std::to_string(tickIndex) + ".png";
-                c4Pos = outputDir + "/c4Pos_" + teamName + "_" + std::to_string(tickIndex) + ".png";
+                playerPos = outputDir + "playerPos_" + playerName + "_" + std::to_string(tickIndex) + ".png";
+                playerVis = outputDir + "playerVis_" + playerName + "_" + std::to_string(tickIndex) + ".png";
+                distanceMap = outputDir + "distanceMap_" + playerName + "_" + std::to_string(tickIndex) + ".png";
+                goalPos = outputDir + "goalPos_" + playerName + "_" + std::to_string(tickIndex) + ".png";
+                friendlyPos = outputDir + "friendlyPos_" + teamName + "_" + std::to_string(tickIndex) + ".png";
+                friendlyVis = outputDir + "friendlyVis_" + teamName + "_" + std::to_string(tickIndex) + ".png";
+                visEnemies = outputDir + "visEnemies_" + teamName + "_" + std::to_string(tickIndex) + ".png";
+                c4Pos = outputDir + "c4Pos_" + teamName + "_" + std::to_string(tickIndex) + ".png";
             }
         };
 
         class TrainingNavigationResult : public QueryResult {
         public:
             vector<RangeIndexEntry> rowIndicesPerRound;
-            vector<int64_t> tickId;
             vector<int64_t> trajectoryId;
             vector<int64_t> segmentStartTickId;
             vector<int64_t> segmentCurTickId;
@@ -81,7 +83,6 @@ namespace csknow {
             vector<array<double, TOTAL_NAV_TICKS>> health;
             vector<array<double, TOTAL_NAV_TICKS>> armor;
             vector<array<TemporalImageNames, TOTAL_NAV_TICKS>> imgNames;
-            vector<string> goalRegionImgName;
 
             TrainingNavigationResult() {
                 variableLength = false;
@@ -101,7 +102,7 @@ namespace csknow {
             }
 
             void oneLineToCSV(int64_t index, stringstream & ss) override {
-                ss << index << "," << tickId[index] << "," << trajectoryId[index] << ","
+                ss << index << "," << segmentCurTickId[index] << "," << trajectoryId[index] << ","
                    << playerId[index];
 
                 for (size_t i = 0; i < TOTAL_NAV_TICKS; i++) {
@@ -116,13 +117,12 @@ namespace csknow {
                        << "," << imgNames[index][i].distanceMap
                        << "," << imgNames[index][i].c4Pos;
                 }
-                ss << "," << goalRegionImgName[index];
 
                 ss << std::endl;
             }
 
             vector<string> getForeignKeyNames() override {
-                return {"tick id", "trajectory id", "player id"};
+                return {"cur tick id", "trajectory id", "player id"};
             }
 
             vector<string> getOtherColumnNames() override {
@@ -141,7 +141,6 @@ namespace csknow {
                     result.push_back("distance map img name (t" + toSignedIntString(i, true) + ")");
                     result.push_back("c4 pos img name (t" + toSignedIntString(i, true) + ")");
                 }
-                result.push_back("goal region img name");
                 return result;
             }
 

@@ -9,7 +9,7 @@
 #include "queries/rolling_window.h"
 
 namespace csknow::navigation {
-    struct NavTSData {
+    struct NavTrajData {
         int64_t trajectoryId, playerId;
         vector<int64_t> tickIds, patIds;
     };
@@ -18,33 +18,69 @@ namespace csknow::navigation {
                         vector<vector<int64_t>> &tmpSegmentStartTickId,
                         vector<vector<int64_t>> &tmpSegmentCurTickId,
                         vector<vector<int64_t>> &tmpSegmentFutureTickId,
-                        vector<vector<vector<int64_t>>> tmpSegmentTickIds,
+                        vector<vector<vector<int64_t>>> &tmpSegmentTickIds,
                         vector<vector<int64_t>> &tmpLength, vector<vector<int64_t>> &tmpPlayerId,
                         vector<vector<string>> &tmpPlayerName,
                         vector<vector<array<Vec3, TOTAL_NAV_TICKS>>> &tmpPlayerViewDir,
                         vector<vector<array<double, TOTAL_NAV_TICKS>>> &tmpHealth,
                         vector<vector<array<double, TOTAL_NAV_TICKS>>> &tmpArmor,
                         vector<vector<array<TemporalImageNames, TOTAL_NAV_TICKS>>> &tmpImgNames,
-                        vector<vector<string>> &tmpGoalRegionImgName,
-                        int threadNum, const Players &players, const PlayerAtTick &playerAtTick,
-                        const vector<NavTSData> &finishedSegmentPerRound) {
-        for (const auto &tsData: finishedSegmentPerRound) {
-            tmpTrajectoryId[threadNum].push_back(tsData.trajectoryId);
-            tmpSegmentStartTickId[threadNum].push_back(tsData.segmentStartTickId);
-            tmpSegmentCurTickId[threadNum].push_back(tsData.segmentCurTickId);
-            tmpSegmentFutureTickId[threadNum].push_back(tsData.segmentFutureTickId);
-            tmpLength[threadNum].push_back(
-                tmpSegmentFutureTickId[threadNum].back() - tmpSegmentStartTickId[threadNum].back() + 1);
-            tmpPlayerId[threadNum].push_back(tsData.playerId);
-            tmpPlayerName[threadNum].push_back(players.name[players.idOffset + tsData.playerId]);
-            tmpSegmentTickIds[threadNum].push_back(tsData.segmentTickIds);
-            tmpPlayerViewDir[threadNum].push_back({});
-            tmpHealth[threadNum].push_back({});
-            tmpArmor[threadNum].push_back({});
-            tmpImgNames[threadNum].push_back({});
-            for (size_t i = 0; i < TOTAL_NAV_TICKS; i++) {
-                tmpHealth[threadNum].back()[i] = playerAtTick.health[tsData.segmentPATIds[i]];
-                tmpArmor[threadNum].back()[i] = playerAtTick.armor[tsData.segmentPATIds[i]];
+                        int threadNum, const Players & players, const PlayerAtTick & playerAtTick,
+                        const Ticks & ticks, const TickRates & tickRates,
+                        const vector<NavTrajData> &finishedSegmentPerRound) {
+        for (const auto &ntData: finishedSegmentPerRound) {
+            // ensure enough past and future space by adding to start and removing end
+            for (size_t ntTickNum = PAST_NAV_TICKS; ntTickNum < ntData.tickIds.size(); ntTickNum++) {
+                // find the future tick id or break as finished creating training points from this trajectory
+                int64_t futureTickId = INVALID_ID;
+                int64_t futurePATId = INVALID_ID;
+                for (size_t futureNTTickNum = ntTickNum + 1; futureNTTickNum < ntData.tickIds.size(); futureNTTickNum++) {
+                    if (secondsBetweenTicks(ticks, tickRates, ntData.tickIds[ntTickNum],
+                                            ntData.tickIds[futureNTTickNum]) >= FUTURE_NAV_SECONDS) {
+                        futureTickId = ntData.tickIds[futureNTTickNum];
+                        futurePATId = ntData.patIds[futureNTTickNum];
+                    }
+                }
+                if (futureTickId == INVALID_ID) {
+                    break;
+                }
+
+                tmpTrajectoryId[threadNum].push_back(ntData.trajectoryId);
+                tmpSegmentStartTickId[threadNum].push_back(ntData.tickIds[ntTickNum - PAST_NAV_TICKS]);
+                tmpSegmentCurTickId[threadNum].push_back(ntData.tickIds[ntTickNum]);
+                tmpSegmentFutureTickId[threadNum].push_back(futureTickId);
+                tmpLength[threadNum].push_back(
+                    tmpSegmentFutureTickId[threadNum].back() - tmpSegmentStartTickId[threadNum].back() + 1);
+                tmpPlayerId[threadNum].push_back(ntData.playerId);
+                tmpPlayerName[threadNum].push_back(players.name[players.idOffset + ntData.playerId]);
+                tmpPlayerViewDir[threadNum].push_back({});
+                tmpHealth[threadNum].push_back({});
+                tmpArmor[threadNum].push_back({});
+                tmpImgNames[threadNum].push_back({});
+
+                vector<int64_t> patIds;
+                tmpSegmentTickIds[threadNum].push_back({});
+                for (size_t pastNTTickNum = ntTickNum - PAST_NAV_TICKS; pastNTTickNum < ntTickNum; pastNTTickNum++) {
+                    tmpSegmentTickIds[threadNum].back().push_back(ntData.tickIds[pastNTTickNum]);
+                    patIds.push_back(ntData.patIds[pastNTTickNum]);
+                }
+                tmpSegmentTickIds[threadNum].back().push_back(ntData.tickIds[ntTickNum]);
+                patIds.push_back(ntData.patIds[ntTickNum]);
+                tmpSegmentTickIds[threadNum].back().push_back(futureTickId);
+                patIds.push_back(futurePATId);
+
+                for (size_t i = 0; i < TOTAL_NAV_TICKS; i++) {
+                    tmpPlayerViewDir[threadNum].back()[i] = {
+                        playerAtTick.viewX[patIds[i]],
+                        playerAtTick.viewY[patIds[i]]
+                    };
+                    tmpHealth[threadNum].back()[i] = playerAtTick.health[patIds[i]];
+                    tmpArmor[threadNum].back()[i] = playerAtTick.armor[patIds[i]];
+                    tmpImgNames[threadNum].back()[i] =
+                        // empty output dir as may load result from different directory
+                        TemporalImageNames(tmpSegmentTickIds[threadNum].back()[i], tmpPlayerName[threadNum].back(),
+                                           playerAtTick.team[patIds[i]], "");
+                }
             }
         }
     }
@@ -145,7 +181,7 @@ namespace csknow::navigation {
 
                         MapState mapState(visPoints);
                         if (syncTick) {
-                            const TemporalImageNames &imgNames = TemporalImageNames(tickIndex, 0, players.name[playerId],
+                            const TemporalImageNames &imgNames = TemporalImageNames(tickIndex, players.name[playerId],
                                                                                     teamId, outputDir);
                             syncToImageNames.back()[playerId] = imgNames;
                             mapState.saveNewMapState(playerPos[playerId], imgNames.playerPos);
@@ -243,7 +279,6 @@ namespace csknow::navigation {
                                                      const Ticks &ticks, const PlayerAtTick &playerAtTick,
                                                      const NonEngagementTrajectoryResult &nonEngagementTrajectoryResult,
                                                      const string &outputDir) {
-        TrainingNavigationResult result;
         string trainNavData = outputDir + "/trainNavData";
 
         // create a fresh directory to save to
@@ -259,11 +294,11 @@ namespace csknow::navigation {
         vector<vector<int64_t>> tmpRoundIds(numThreads);
         vector<vector<int64_t>> tmpRoundStarts(numThreads);
         vector<vector<int64_t>> tmpRoundSizes(numThreads);
-        vector<vector<int64_t>> tmpNavId;
+        vector<vector<int64_t>> tmpTrajectoryId;
         vector<vector<int64_t>> tmpSegmentStartTickId;
-        vector<vector<vector<int64_t>>> tmpSegmentPastTickId;
         vector<vector<int64_t>> tmpSegmentCurTickId;
         vector<vector<int64_t>> tmpSegmentFutureTickId;
+        vector<vector<vector<int64_t>>> tmpSegmentTickIds;
         vector<vector<int64_t>> tmpTickLength;
         vector<vector<int64_t>> tmpPlayerId;
         vector<vector<string>> tmpPlayerName;
@@ -305,8 +340,8 @@ namespace csknow::navigation {
             }
             roundSyncTicks[roundIndex] = set<int64_t>(syncTickIds.begin(), syncTickIds.end());
 
-            map<int64_t, NavTSData> playerToCurTrajectory;
-            vector<NavTSData> finishedSegmentPerRound;
+            map<int64_t, NavTrajData> playerToCurTrajectory;
+            vector<NavTrajData> finishedSegmentPerRound;
             RollingWindow rollingWindow(rounds, ticks, playerAtTick);
 
 
@@ -362,14 +397,46 @@ namespace csknow::navigation {
                 playerToCurTrajectory.erase(playerId);
             }
             std::sort(finishedSegmentPerRound.begin(), finishedSegmentPerRound.end(),
-                      [](const NavTSData & a, const NavTSData & b) {
+                      [](const NavTrajData & a, const NavTrajData & b) {
                           return a.trajectoryId < b.trajectoryId ||
                                  (a.trajectoryId == b.trajectoryId && a.tickIds[0] < b.tickIds[0]);
             });
+
+            recordSegments(tmpTrajectoryId,
+                           tmpSegmentStartTickId,
+                           tmpSegmentCurTickId,
+                           tmpSegmentFutureTickId,
+                           tmpSegmentTickIds,
+                           tmpTickLength, tmpPlayerId,
+                           tmpPlayerName,
+                           tmpPlayerViewDir,
+                           tmpHealth,
+                           tmpArmor,
+                           tmpImgNames,
+                           threadNum, players, playerAtTick,
+                           ticks, tickRates,
+                           finishedSegmentPerRound);
             tmpRoundSizes[threadNum].push_back(static_cast<int64_t>(tmpSegmentStartTickId[threadNum].size()) -
                                                tmpRoundStarts[threadNum].back());
         }
 
+        TrainingNavigationResult result;
+        mergeThreadResults(numThreads, result.rowIndicesPerRound, tmpRoundIds, tmpRoundStarts, tmpRoundSizes,
+                           result.segmentStartTickId, result.size,
+                           [&](int64_t minThreadId, int64_t tmpRowId) {
+                               result.trajectoryId.push_back(tmpTrajectoryId[minThreadId][tmpRowId]);
+                               result.segmentStartTickId.push_back(tmpSegmentStartTickId[minThreadId][tmpRowId]);
+                               result.segmentCurTickId.push_back(tmpSegmentCurTickId[minThreadId][tmpRowId]);
+                               result.segmentFutureTickId.push_back(tmpSegmentFutureTickId[minThreadId][tmpRowId]);
+                               result.segmentTickIds.push_back(tmpSegmentTickIds[minThreadId][tmpRowId]);
+                               result.tickLength.push_back(tmpTickLength[minThreadId][tmpRowId]);
+                               result.playerId.push_back(tmpPlayerId[minThreadId][tmpRowId]);
+                               result.playerName.push_back(tmpPlayerName[minThreadId][tmpRowId]);
+                               result.playerViewDir.push_back(tmpPlayerViewDir[minThreadId][tmpRowId]);
+                               result.health.push_back(tmpHealth[minThreadId][tmpRowId]);
+                               result.armor.push_back(tmpArmor[minThreadId][tmpRowId]);
+                               result.imgNames.push_back(tmpImgNames[minThreadId][tmpRowId]);
+                           });
 
         // this has to save sync ticks
         // then during window, I can just check if i'm on a sync tick and skip otherwise
@@ -377,10 +444,8 @@ namespace csknow::navigation {
         // create navigation images will generate my ticks
         // i could do a rolling window where I know the window is larger than the sync ticks
         // then I iterate through window to check if matching a sync tick
-        /*
         createNavigationImages(visPoints, reachableResult, players, games, rounds, ticks,
                                playerAtTick, outputDir, roundSyncTicks);
-        */
         return result;
     }
 
