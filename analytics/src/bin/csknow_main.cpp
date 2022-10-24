@@ -240,13 +240,11 @@ int main(int argc, char * argv[]) {
     /*
     SpottedIndex spottedIndex(position, spotted);
     std::cout << "built spotted index" << std::endl;
-     */
 
     string lookerName = "lookers";
     LookingResult lookersResult = queryLookers(games, filteredRounds, ticks, playerAtTick);
     std::cout << "looker entries: " << lookersResult.tickId.size() << std::endl;
 
-    /*
     string nearestOriginName = "nearest_origin";
     NearestOriginResult nearestOriginResult = queryNearestOrigin(rounds, ticks, playerAtTick, coverOrigins);
     std::cout << "nearest_origin entries: " << nearestOriginResult.tickId.size() << std::endl;
@@ -279,10 +277,12 @@ int main(int argc, char * argv[]) {
     NavVisibleResult d2CellVisibleResult(dust2CellsName, false, map_visPoints.find("de_dust2")->second, "de_dust2");
     string dust2DangerName = "de_dust2_danger";
     NavDangerResult d2NavDangerResult = queryNavDanger(map_visPoints.find("de_dust2")->second, dust2MeshName);
+    /*
     std::cout << "processing aggression_event" << std::endl;
     string aggressionEventName = "aggression_event";
     AggressionEventResult aggressionEventResult =
             queryAggressionRoles(games, filteredRounds, ticks, playerAtTick, map_navs["de_dust2"], map_visPoints.find("de_dust2")->second, d2ReachableResult);
+            */
     std::cout << "processing engagements" << std::endl;
     string engagementName = "engagement";
     EngagementResult engagementResult = queryEngagementResult(games, filteredRounds, ticks, hurt);
@@ -388,8 +388,8 @@ int main(int argc, char * argv[]) {
     };
      */
     map<string, reference_wrapper<QueryResult>> analyses {
-            {lookerName, lookersResult},
-            {engagementAimName, engagementAimResult}                   ,
+            //{lookerName, lookersResult},
+            {engagementAimName, engagementAimResult},
             //{nearestOriginName,                 nearestOriginResult},
             //{playerInCoverEdgeName,             playerInCoverEdgeResult},
             //{teamLookingAtCoverEdgeClusterName, teamLookingAtCoverEdgeClusterResult},
@@ -397,11 +397,14 @@ int main(int argc, char * argv[]) {
 
     // create the output files and the metadata describing files
     for (const auto & [name, result] : analyses) {
+        /*
+        std::ofstream fsTimed;
         std::cout << "writing " << outputDir + "/" + timestamp + "_" + name + ".csv" << std::endl;
-        std::ofstream fsTimed, fsOverride;
         fsTimed.open(outputDir + "/" + timestamp + "_" + name + ".csv");
         fsTimed << result.get().toCSV();
         fsTimed.close();
+         */
+        std::ofstream fsOverride;
         std::cout << "writing " << outputDir + "/" + name + ".csv" << std::endl;
         fsOverride.open(outputDir + "/" + name + ".csv");
         fsOverride << result.get().toCSV();
@@ -460,7 +463,7 @@ int main(int argc, char * argv[]) {
             {dust2DangerName, d2NavDangerResult},
             {dust2ReachableName, d2ReachableResult},
             {dust2DistanceToPlacesName, d2DistanceToPlacesResult},
-            {aggressionEventName, aggressionEventResult},
+            //{aggressionEventName, aggressionEventResult},
             {engagementName, engagementResult},
             {engagementPerTickAimName, engagementPerTickAimResult},
             {inferenceEngagementAimName, inferenceEngagementAimResult},
