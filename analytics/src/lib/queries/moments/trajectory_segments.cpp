@@ -108,33 +108,51 @@ TrajectorySegmentResult queryAllTrajectories(const Players & players, const Game
                 }
             }
 
-            // write if trajectory ended (i.e. player disappeared, or just no trajectory)
-            // this handles situations where a player disappears suddenly, so loop over PAT won't catch them
-            vector<int64_t> playerEndingTrajectory;
-            for (const auto & [playerId, _] : playerToCurTrajectory) {
-                if (playerInTrajectory.find(playerId) == playerInTrajectory.end()) {
-                    playerEndingTrajectory.push_back(playerId);
-                }
-            }
-            for (const auto & playerId : playerEndingTrajectory) {
-                finishSegment(playerId, tickIndex-1, priorPlayerToPAT[playerId],
-                              playerToCurTrajectory, finishedSegmentPerRound);
-
-            }
-
+            // write if trajectory ended
             // write if trajectory continued but ending segment (i.e. dead or finished a segment)
-            // note: dead shouldn't happen, but just be defensive
+            // no need to worry about players that disappear or are dead
+            // as non_engagement_trajectory filters out those trajectories
             for (int64_t patIndex = ticks.patPerTick[tickIndex].minId;
                  patIndex <= ticks.patPerTick[tickIndex].maxId; patIndex++) {
                 int64_t playerId = playerAtTick.playerId[patIndex];
                 if (playerToCurTrajectory.find(playerId) != playerToCurTrajectory.end()) {
-                    double secondsSinceSegmentStart =
+                    // handle ended trajectory
+                    if (playerInTrajectory.find(playerId) == playerInTrajectory.end()) {
+                        finishSegment(playerId, tickIndex, curPlayerToPAT[playerId],
+                                      playerToCurTrajectory, finishedSegmentPerRound);
+                    }
+                    else {
+                        double secondsSinceSegmentStart =
                             secondsBetweenTicks(ticks, tickRates,
                                                 playerToCurTrajectory.find(playerId)->second.segmentStartTickId,
                                                 tickIndex);
-                    if (!playerAtTick.isAlive[patIndex] || secondsSinceSegmentStart > SEGMENT_SECONDS) {
-                        finishSegment(playerId, tickIndex-1, priorPlayerToPAT[playerId],
-                                      playerToCurTrajectory, finishedSegmentPerRound);
+                        if (!playerAtTick.isAlive[patIndex] || secondsSinceSegmentStart > SEGMENT_SECONDS) {
+                            if (!playerAtTick.isAlive[patIndex]) {
+                                Vec2 priorView{
+                                    playerAtTick.viewX[priorPlayerToPAT[playerId]],
+                                    playerAtTick.viewY[priorPlayerToPAT[playerId]],
+                                };
+                                Vec3 priorPos{
+                                    playerAtTick.posX[priorPlayerToPAT[playerId]],
+                                    playerAtTick.posY[priorPlayerToPAT[playerId]],
+                                    playerAtTick.posZ[priorPlayerToPAT[playerId]]
+                                };
+                                Vec2 curView{
+                                    playerAtTick.viewX[curPlayerToPAT[playerId]],
+                                    playerAtTick.viewY[curPlayerToPAT[playerId]],
+                                };
+                                Vec3 curPos{
+                                    playerAtTick.posX[curPlayerToPAT[playerId]],
+                                    playerAtTick.posY[curPlayerToPAT[playerId]],
+                                    playerAtTick.posZ[curPlayerToPAT[playerId]]
+                                };
+                                int x = 1;
+                                (void) x;
+                            }
+                            finishSegment(playerId, tickIndex, curPlayerToPAT[playerId],
+                                          playerToCurTrajectory, finishedSegmentPerRound);
+                        }
+
                     }
                 }
             }

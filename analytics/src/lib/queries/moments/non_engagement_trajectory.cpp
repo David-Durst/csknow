@@ -89,10 +89,11 @@ NonEngagementTrajectoryResult queryNonEngagementTrajectory(const Rounds & rounds
                     inEngagement.find(playerId) == inEngagement.end()) {
                     playerToCurTrajectory[playerId] = {tickIndex};
                 }
-                // if player somehow dies without being in engagement (like from nade), end trajectory
+                // if player somehow dies without being in engagement (like from nade), end trajectory on prior tick
+                // when they were last alive
                 if (!playerAtTick.isAlive[patIndex] &&
                     playerToCurTrajectory.find(playerId) != playerToCurTrajectory.end()) {
-                    finishEngagement(tmpStartTickId, tmpEndTickId, tmpLength, tmpPlayerId, threadNum, tickIndex,
+                    finishEngagement(tmpStartTickId, tmpEndTickId, tmpLength, tmpPlayerId, threadNum, tickIndex - 1,
                                      playerId, playerToCurTrajectory);
                 }
             }
