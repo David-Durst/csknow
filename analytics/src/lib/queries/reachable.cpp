@@ -116,27 +116,40 @@ void ReachableResult::load(const string & mapsPath, const string & mapName) {
 }
 
 void ReachableResult::computeCellDistances() {
+    std::cout << "startign cell distances" << std::endl;
     double maxDistance = -1*std::numeric_limits<double>::max(),
         minDistance = std::numeric_limits<double>::max();
-    for (const auto & srcCellVisPoint : visPoints.getCellVisPoints()) {
-        for (const auto & dstCellVisPoint : visPoints.getCellVisPoints()) {
-            cellDistanceMatrix.push_back(getDistance(srcCellVisPoint.areaId, dstCellVisPoint.areaId, visPoints));
-            if (cellDistanceMatrix.back() > maxDistance) {
-                maxDistance = cellDistanceMatrix.back();
+    size_t numCells = visPoints.getCellVisPoints().size();
+#pragma omp parallel for
+    for (size_t i = 0; i < visPoints.getAreaVisPoints().size(); i++) {
+        const auto & srcAreaVisPoint = visPoints.getAreaVisPoints()[i];
+        for (const auto & dstAreaVisPoint : visPoints.getAreaVisPoints()) {
+            double distance = getDistance(srcAreaVisPoint.areaId, srcAreaVisPoint.areaId, visPoints);
+            if (distance > maxDistance) {
+                maxDistance = distance;
             }
-            if (cellDistanceMatrix.back() < minDistance) {
-                minDistance = cellDistanceMatrix.back();
+            if (distance < minDistance && distance >= 0.) {
+                minDistance = distance;
             }
         }
     }
 
-    size_t numCells = visPoints.getCellVisPoints().size();
     for (size_t i = 0; i < numCells; i++) {
-        scaledCellDistanceMatrix.push_back({});
-        for (size_t j = 0; j < numCells; j++) {
-            scaledCellDistanceMatrix[i].push_back(
-                static_cast<uint8_t>(255 * (cellDistanceMatrix[i * numCells + j] - minDistance) / (maxDistance - minDistance))
-            );
+        scaledCellDistanceMatrix.push_back(vector<uint8_t>(numCells, 0));
+    }
+
+#pragma omp parallel for
+    for (size_t i = 0; i < visPoints.getAreaVisPoints().size(); i++) {
+        const auto & srcAreaVisPoint = visPoints.getAreaVisPoints()[i];
+        for (const auto & dstAreaVisPoint : visPoints.getAreaVisPoints()) {
+            double distance = getDistance(srcAreaVisPoint.areaId, srcAreaVisPoint.areaId, visPoints);
+            for (const auto & srcCellId : srcAreaVisPoint.cells) {
+                for (const auto & dstCellId : dstAreaVisPoint.cells) {
+                    scaledCellDistanceMatrix[srcCellId][dstCellId] =
+                        static_cast<uint8_t>(255 * (distance - minDistance) / (maxDistance - minDistance));
+                }
+            }
         }
     }
+    std::cout << "ending cell distances" << std::endl;
 }

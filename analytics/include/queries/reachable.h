@@ -17,7 +17,6 @@ public:
     vector<AABB> coordinate;
     vector<double> distanceMatrix;
     const VisPoints & visPoints;
-    vector<double> cellDistanceMatrix;
     vector<vector<uint8_t>> scaledCellDistanceMatrix;
     int64_t numAreas;
 
