@@ -53,13 +53,10 @@ CellBits getCellsInFOV(const VisPoints & visPoints, const Vec3 & pos, const Vec2
     glm::quat rotation =
         glm::angleAxis(glm::radians(static_cast<float>(viewAngle.x)), glm::vec3{0.f, 0.f, 1.f}) *
         glm::angleAxis(glm::radians(static_cast<float>(viewAngle.y)), glm::vec3{0.f, 1.f, 0.f});
-    glm::vec3 up = rotation * glm::vec3(0, 0, 1);
     glm::mat4 View = makeViewMatrix(pos.toGLM(),
                                     rotation * glm::vec3(1, 0, 0),
                                     rotation * glm::vec3(0, 0, 1),
                                     rotation * glm::vec3(0, -1, 0));
-    glm::vec3 forwardMine = angleVectors(viewAngle).toGLM();
-    glm::vec3 forwardBrennan = rotation * glm::vec3(1, 0, 0);
     glm::mat4 projMat = Projection * View;
 
     for (const auto & cellVisPoint : visPoints.getCellVisPoints()) {
@@ -67,7 +64,6 @@ CellBits getCellsInFOV(const VisPoints & visPoints, const Vec3 & pos, const Vec2
         glm::vec4 homogenousCellPos{glmCellPos.x, glmCellPos.y, glmCellPos.z, 1};
         glm::vec4 cellPosScreenSpace = projMat * homogenousCellPos;
         glm::vec3 projCellPosScreenSpace = glm::vec3(cellPosScreenSpace) / cellPosScreenSpace.w;
-        glm::vec4 justTranslate = View * homogenousCellPos;
         if (projCellPosScreenSpace.x >= -1.f && projCellPosScreenSpace.x <= 1.f &&
             projCellPosScreenSpace.y >= -1.f && projCellPosScreenSpace.y <= 1.f &&
             projCellPosScreenSpace.z >= 0.f) {

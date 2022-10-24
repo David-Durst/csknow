@@ -105,11 +105,11 @@ TrajectorySegmentResult queryAllTrajectories(const Players & players, const Game
                             curPATId, INVALID_ID
                         };
                     }
-
                 }
             }
 
-            // write if trajectory ended
+            // write if trajectory ended (i.e. player disappeared, or just no trajectory)
+            // this handles situations where a player disappears suddenly, so loop over PAT won't catch them
             vector<int64_t> playerEndingTrajectory;
             for (const auto & [playerId, _] : playerToCurTrajectory) {
                 if (playerInTrajectory.find(playerId) == playerInTrajectory.end()) {
@@ -122,7 +122,8 @@ TrajectorySegmentResult queryAllTrajectories(const Players & players, const Game
 
             }
 
-            // write if dead or finished a segment
+            // write if trajectory continued but ending segment (i.e. dead or finished a segment)
+            // note: dead shouldn't happen, but just be defensive
             for (int64_t patIndex = ticks.patPerTick[tickIndex].minId;
                  patIndex <= ticks.patPerTick[tickIndex].maxId; patIndex++) {
                 int64_t playerId = playerAtTick.playerId[patIndex];

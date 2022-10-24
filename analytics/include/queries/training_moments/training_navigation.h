@@ -66,7 +66,7 @@ namespace csknow {
         public:
             vector<RangeIndexEntry> rowIndicesPerRound;
             vector<int64_t> tickId;
-            vector<int64_t> navId;
+            vector<int64_t> trajectoryId;
             vector<int64_t> segmentStartTickId;
             vector<int64_t> segmentCurTickId;
             vector<int64_t> segmentFutureTickId;
@@ -98,7 +98,7 @@ namespace csknow {
             }
 
             void oneLineToCSV(int64_t index, stringstream & ss) override {
-                ss << index << "," << tickId[index] << "," << navId[index] << ","
+                ss << index << "," << tickId[index] << "," << trajectoryId[index] << ","
                    << playerId[index];
 
                 for (size_t i = 0; i < TOTAL_NAV_TICKS; i++) {
@@ -119,7 +119,7 @@ namespace csknow {
             }
 
             vector<string> getForeignKeyNames() override {
-                return {"tick id", "nav id", "player id"};
+                return {"tick id", "trajectory id", "player id"};
             }
 
             vector<string> getOtherColumnNames() override {

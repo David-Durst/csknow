@@ -145,8 +145,13 @@ void ReachableResult::computeCellDistances() {
             double distance = getDistance(srcAreaVisPoint.areaId, srcAreaVisPoint.areaId, visPoints);
             for (const auto & srcCellId : srcAreaVisPoint.cells) {
                 for (const auto & dstCellId : dstAreaVisPoint.cells) {
-                    scaledCellDistanceMatrix[srcCellId][dstCellId] =
-                        static_cast<uint8_t>(255 * (distance - minDistance) / (maxDistance - minDistance));
+                    if (distance < 0) {
+                        scaledCellDistanceMatrix[srcCellId][dstCellId] = 255;
+                    }
+                    else {
+                        scaledCellDistanceMatrix[srcCellId][dstCellId] =
+                            static_cast<uint8_t>(255 * (distance - minDistance) / (maxDistance - minDistance));
+                    }
                 }
             }
         }
