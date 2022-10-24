@@ -49,11 +49,15 @@ namespace csknow {
             }
         }
 
+        struct RoundSyncTickData {
+            int64_t firstSyncTick, syncTickSpacing;
+        };
+
         void createNavigationImages(const VisPoints & visPoints, const ReachableResult & reachableResult,
                                     const Players & players, const Games & games, const Rounds & rounds,
                                     const Ticks & ticks, const PlayerAtTick & playerAtTick,
-                                    const string & outputDir) {
-            int numThreads = omp_get_max_threads();
+                                    const string & outputDir, vector<RoundSyncTickData> & roundSyncTickData) {
+            roundSyncTickData.resize(rounds.size);
             // for each round
             // for each tick
             // check when each player is in a region visible to enemy team
@@ -66,13 +70,13 @@ namespace csknow {
             //          future: handle bomb planted impact on pos knowledge
             //      only save state when on a sync clock for all players (if you started your trajectory off clock,
             //      tough luck, not doing anything until next period)
+//#pragma omp parallel for
             for (int64_t roundIndex = 0; roundIndex < rounds.size; roundIndex++) {
-                int threadNum = omp_get_thread_num();
-
                 TickRates tickRates = computeTickRates(games, rounds, roundIndex);
 
                 RollingWindow rollingWindow(rounds, ticks, playerAtTick);
                 int64_t lastSyncTickId = INVALID_ID;
+                //roundSyncTickData[roundIndex] = {rounds.ticksPerRound[roundIndex].minId, tickRates};
 
                 // images created every sync tick
                 vector<map<int64_t, TemporalImageNames>> syncToImageNames;
@@ -265,7 +269,7 @@ namespace csknow {
             // create navigation images will generate my ticks
             // i could do a rolling window where I know the window is larger than the sync ticks
             // then I iterate through window to check if matching a sync tick
-            createNavigationImages(visPoints, reachableResult, players, games, rounds, ticks, playerAtTick, outputDir);
+            //createNavigationImages(visPoints, reachableResult, players, games, rounds, ticks, playerAtTick, outputDir);
 
             int numThreads = omp_get_max_threads();
             vector<vector<int64_t>> tmpTickId;
@@ -318,7 +322,7 @@ namespace csknow {
                     for (const auto & [_0, _1, engagementIndex] :
                         nonEngagementTrajectoryResult.trajectoriesPerTick.intervalToEvent.findOverlapping(tickIndex, tickIndex)) {
                         tmpTickId[threadNum].push_back(tickIndex);
-                        tmpEngagementId[threadNum].push_back(engagementIndex);
+                        //tmpEngagementId[threadNum].push_back(engagementIndex);
                     }
 
 

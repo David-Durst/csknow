@@ -65,8 +65,8 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
 
                 for (size_t i = 0; i < TOTAL_AIM_TICKS; i++) {
 
-                    const int64_t & attackerPATId = playerToPatWindows.at(attackerId).fromOldest(i);
-                    const int64_t & victimPATId = playerToPatWindows.at(victimId).fromOldest(i);
+                    const int64_t & attackerPATId = playerToPatWindows.at(attackerId).fromOldest(static_cast<int64_t>(i));
+                    const int64_t & victimPATId = playerToPatWindows.at(victimId).fromOldest(static_cast<int64_t>(i));
 
                     Vec3 attackerEyePos {
                         playerAtTick.posX[attackerPATId],

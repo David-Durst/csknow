@@ -80,10 +80,11 @@ TrajectorySegmentResult queryAllTrajectories(const Players & players, const Game
         vector<TSData> finishedSegmentPerRound;
         RollingWindow rollingWindow(rounds, ticks, playerAtTick);
 
-        for (int64_t tickIndex = rounds.ticksPerRound[roundIndex].minId;
+        for (int64_t tickIndex = rounds.ticksPerRound[roundIndex].minId + 1;
              tickIndex <= rounds.ticksPerRound[roundIndex].maxId; tickIndex++) {
 
             map<int64_t, int64_t> curPlayerToPAT = rollingWindow.getPATIdForPlayerId(tickIndex);
+            map<int64_t, int64_t> priorPlayerToPAT = rollingWindow.getPATIdForPlayerId(tickIndex-1);
 
             // this tracks if a player is in a trajectory from non-engagemnet trajectory result
             // compared to internal playerToCurTrajectory/finishedSegmentPerRound to determine how to update internal
@@ -116,7 +117,7 @@ TrajectorySegmentResult queryAllTrajectories(const Players & players, const Game
                 }
             }
             for (const auto & playerId : playerEndingTrajectory) {
-                finishSegment(playerId, tickIndex, curPlayerToPAT[playerId],
+                finishSegment(playerId, tickIndex-1, priorPlayerToPAT[playerId],
                               playerToCurTrajectory, finishedSegmentPerRound);
 
             }
@@ -131,7 +132,7 @@ TrajectorySegmentResult queryAllTrajectories(const Players & players, const Game
                                                 playerToCurTrajectory.find(playerId)->second.segmentStartTickId,
                                                 tickIndex);
                     if (!playerAtTick.isAlive[patIndex] || secondsSinceSegmentStart > SEGMENT_SECONDS) {
-                        finishSegment(playerId, tickIndex, curPlayerToPAT[playerId],
+                        finishSegment(playerId, tickIndex-1, priorPlayerToPAT[playerId],
                                       playerToCurTrajectory, finishedSegmentPerRound);
                     }
                 }
