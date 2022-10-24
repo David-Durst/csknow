@@ -387,6 +387,7 @@ int main(int argc, char * argv[]) {
             {analysisNames[4], lookersResult},
     };
      */
+    /*
     map<string, reference_wrapper<QueryResult>> analyses {
             //{lookerName, lookersResult},
             {engagementAimName, engagementAimResult},
@@ -397,19 +398,18 @@ int main(int argc, char * argv[]) {
 
     // create the output files and the metadata describing files
     for (const auto & [name, result] : analyses) {
-        /*
         std::ofstream fsTimed;
         std::cout << "writing " << outputDir + "/" + timestamp + "_" + name + ".csv" << std::endl;
         fsTimed.open(outputDir + "/" + timestamp + "_" + name + ".csv");
         fsTimed << result.get().toCSV();
         fsTimed.close();
-         */
         std::ofstream fsOverride;
         std::cout << "writing " << outputDir + "/" + name + ".csv" << std::endl;
         fsOverride.open(outputDir + "/" + name + ".csv");
         fsOverride << result.get().toCSV();
         fsOverride.close();
     }
+    */
 
         /*
         // data sets describes types of data sets
