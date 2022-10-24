@@ -195,7 +195,7 @@ int main(int argc, char * argv[]) {
     csknow::navigation::TrainingNavigationResult trainingNavigationResult =
         csknow::navigation::queryTrainingNavigation(map_visPoints.at("de_dust2"), d2ReachableResult, players, games,
                                                     filteredRounds, ticks, playerAtTick, nonEngagementTrajectoryResult,
-                                                    outputDir);
+                                                    outputDir, true);
     std::cout << "size: " << trainingNavigationResult.size << std::endl;
 
 

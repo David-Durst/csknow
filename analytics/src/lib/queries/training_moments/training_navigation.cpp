@@ -106,7 +106,7 @@ namespace csknow::navigation {
         //      only save state when on a sync clock for all players (if you started your trajectory off clock,
         //      tough luck, not doing anything until next period)
 //#pragma omp parallel for
-        for (int64_t roundIndex = 0; roundIndex < rounds.size; roundIndex++) {
+        for (int64_t roundIndex = 0; roundIndex < 1LL /*rounds.size*/; roundIndex++) {
             RollingWindow rollingWindow(rounds, ticks, playerAtTick);
 
             // images created every sync tick
@@ -183,7 +183,8 @@ namespace csknow::navigation {
 
                         MapState mapState(visPoints);
                         if (syncTick) {
-                            const TemporalImageNames &imgNames = TemporalImageNames(tickIndex, players.name[playerId],
+                            const TemporalImageNames &imgNames = TemporalImageNames(tickIndex,
+                                                                                    players.name[players.idOffset + playerId],
                                                                                     teamId, outputDir);
                             syncToImageNames.back()[playerId] = imgNames;
                             mapState.saveNewMapState(playerPos[playerId], imgNames.playerPos);
@@ -280,15 +281,17 @@ namespace csknow::navigation {
                                                      const Games &games, const Rounds &rounds,
                                                      const Ticks &ticks, const PlayerAtTick &playerAtTick,
                                                      const NonEngagementTrajectoryResult &nonEngagementTrajectoryResult,
-                                                     const string &outputDir) {
+                                                     const string &outputDir, bool createImages) {
         string trainNavData = outputDir + "/trainNavData";
 
         // create a fresh directory to save to
-        if (!fs::exists(trainNavData)) {
-            fs::create_directory(trainNavData);
-        }
-        for (auto &path: fs::directory_iterator(trainNavData)) {
-            fs::remove(path);
+        if (createImages) {
+            if (!fs::exists(trainNavData)) {
+                fs::create_directory(trainNavData);
+            }
+            for (auto &path: fs::directory_iterator(trainNavData)) {
+                fs::remove(path);
+            }
         }
 
         int numThreads = omp_get_max_threads();
@@ -450,8 +453,10 @@ namespace csknow::navigation {
         // create navigation images will generate my ticks
         // i could do a rolling window where I know the window is larger than the sync ticks
         // then I iterate through window to check if matching a sync tick
-        createNavigationImages(visPoints, reachableResult, players, rounds, ticks,
-                               playerAtTick, trainNavData, roundSyncTicks);
+        if (createImages) {
+            createNavigationImages(visPoints, reachableResult, players, rounds, ticks,
+                                   playerAtTick, trainNavData, roundSyncTicks);
+        }
         return result;
     }
 

@@ -75,14 +75,14 @@ namespace csknow {
             vector<int64_t> segmentStartTickId;
             vector<int64_t> segmentCurTickId;
             vector<int64_t> segmentFutureTickId;
-            vector<vector<int64_t>> segmentTickIds;
+            vector<array<int64_t, TOTAL_NAV_TICKS>> segmentTickIds;
+            vector<array<int64_t, TOTAL_NAV_TICKS>> segmentPATIds;
             vector<int64_t> tickLength;
             vector<int64_t> playerId;
             vector<string> playerName;
             vector<array<Vec2, TOTAL_NAV_TICKS>> playerViewDir;
             vector<array<double, TOTAL_NAV_TICKS>> health;
             vector<array<double, TOTAL_NAV_TICKS>> armor;
-            vector<array<TemporalImageNames, TOTAL_NAV_TICKS>> imgNames;
 
             TrainingNavigationResult() {
                 variableLength = false;
@@ -149,7 +149,7 @@ namespace csknow {
                                                          const Games & games, const Rounds & rounds,
                                                          const Ticks & ticks, const PlayerAtTick & playerAtTick,
                                                          const NonEngagementTrajectoryResult & nonEngagementTrajectoryResult,
-                                                         const string & outputDir);
+                                                         const string & outputDir, bool createImages);
         void testNavImages(const VisPoints & visPoints, const string & outputDir);
     }
 }
