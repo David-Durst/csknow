@@ -117,8 +117,9 @@ TrajectorySegmentResult queryAllTrajectories(const Players & players, const Game
                 int64_t playerId = playerAtTick.playerId[patIndex];
                 if (playerToCurTrajectory.find(playerId) != playerToCurTrajectory.end()) {
                     // handle ended trajectory
+                    // since no trajectory, use last tick of trajectory
                     if (playerInTrajectory.find(playerId) == playerInTrajectory.end()) {
-                        finishSegment(playerId, tickIndex, curPlayerToPAT[playerId],
+                        finishSegment(playerId, tickIndex - 1, priorPlayerToPAT[playerId],
                                       playerToCurTrajectory, finishedSegmentPerRound);
                     }
                     else {
@@ -127,6 +128,7 @@ TrajectorySegmentResult queryAllTrajectories(const Players & players, const Game
                                                 playerToCurTrajectory.find(playerId)->second.segmentStartTickId,
                                                 tickIndex);
                         if (secondsSinceSegmentStart > SEGMENT_SECONDS) {
+                            // since trajectory still valid (player alive), use current tick of trajectory
                             finishSegment(playerId, tickIndex, curPlayerToPAT[playerId],
                                           playerToCurTrajectory, finishedSegmentPerRound);
                         }

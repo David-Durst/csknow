@@ -26,6 +26,7 @@ typedef array<int64_t, 3> CellDiscreteCoord;
 
 struct AreaVisPoint {
     AreaId areaId;
+    PlaceIndex placeIndex,
     AABB areaCoordinates;
     Vec3 center;
     vector<CellId> cells = {};
@@ -50,6 +51,7 @@ struct VisCommandRange {
 };
 
 class VisPoints {
+    map<PlaceIndex, vector<AreaId>> placeIdToAreaIds;
     vector<AreaVisPoint> areaVisPoints;
     vector<CellVisPoint> cellVisPoints;
     map<AreaId, size_t> areaIdToVectorIndex;
@@ -127,6 +129,7 @@ public:
     void load(const string & mapsPath, const string & mapName, bool area, const nav_mesh::nav_file & navFile,
               bool fixSymmetry = false);
     void fix_symmetry(bool area);
+    [[nodiscard]] const map<PlaceIndex, vector<AreaId>> & getPlacesToAreas() const { return placeIdToAreaIds; }
     [[nodiscard]] const vector<AreaVisPoint> & getAreaVisPoints() const { return areaVisPoints; }
     [[nodiscard]] const vector<CellVisPoint> & getCellVisPoints() const { return cellVisPoints; }
     [[nodiscard]] string getVisFileName(const string & mapName, bool area, bool compressed) const {
@@ -136,6 +139,7 @@ public:
     [[nodiscard]] const CellDiscreteCoord & getMaxCellNumbersByDim() const { return maxCellNumbersByDim; };
     [[nodiscard]] const CellVisPoint & getNearestCellVisPoint(const Vec3 & pos) const;
     [[nodiscard]] const size_t & areaIdToIndex(AreaId areaId) const { return areaIdToVectorIndex.at(areaId); };
+    [[nodiscard]] const AreaVisPoint & getAreaVisPoint(AreaId areaId) const { return areaVisPoints[areaIdToIndex(areaId)]; }
 };
 
 #endif //CSKNOW_LOAD_SAVE_VIS_POINTS_H

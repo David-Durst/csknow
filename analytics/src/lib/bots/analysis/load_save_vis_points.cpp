@@ -7,9 +7,11 @@
 
 void VisPoints::createAreaVisPoints(const nav_mesh::nav_file & navFile) {
     for (const auto & navArea : navFile.m_areas) {
-        areaVisPoints.push_back(AreaVisPoint{navArea.get_id(), {vec3tConv(navArea.get_min_corner()), vec3tConv(navArea.get_max_corner())},
+        areaVisPoints.push_back(AreaVisPoint{navArea.get_id(), navArea.m_place,
+                                             {vec3tConv(navArea.get_min_corner()), vec3tConv(navArea.get_max_corner())},
                                              vec3tConv(navArea.get_center())});
         areaVisPoints.back().center.z += EYE_HEIGHT;
+        placeIdToAreaIds[navArea.m_place].push_back(navArea.get_id());
     }
     std::sort(areaVisPoints.begin(), areaVisPoints.end(),
               [](const AreaVisPoint & a, const AreaVisPoint & b) { return a.areaId < b.areaId; });

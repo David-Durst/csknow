@@ -11,9 +11,9 @@
 namespace csknow::navigation {
     struct NavTSData {
         int64_t trajectoryId, playerId;
-        vector<int64_t> tickIds, PATIds;
+        vector<int64_t> tickIds, patIds;
     };
-/*
+
     void recordSegments(vector<vector<int64_t>> &tmpTrajectoryId,
                         vector<vector<int64_t>> &tmpSegmentStartTickId,
                         vector<vector<int64_t>> &tmpSegmentCurTickId,
@@ -48,15 +48,11 @@ namespace csknow::navigation {
             }
         }
     }
-*/
-    struct RoundSyncTickData {
-        int64_t firstSyncTick, syncTickSpacing;
-    };
 
     void createNavigationImages(const VisPoints &visPoints, const ReachableResult &reachableResult,
                                 const Players &players, const Games &games, const Rounds &rounds,
                                 const Ticks &ticks, const PlayerAtTick &playerAtTick,
-                                const string &outputDir, const vector<set<int64_t>> &roundSyncTicks) {
+                                const string &outputDir, const vector<set<int64_t>> & roundSyncTicks) {
         // for each round
         // for each tick
         // check when each player is in a region visible to enemy team
@@ -149,7 +145,7 @@ namespace csknow::navigation {
 
                         MapState mapState(visPoints);
                         if (syncTick) {
-                            const TemporalImageNames &imgNames = TemporalImageNames(tickIndex, players.name[playerId],
+                            const TemporalImageNames &imgNames = TemporalImageNames(tickIndex, 0, players.name[playerId],
                                                                                     teamId, outputDir);
                             syncToImageNames.back()[playerId] = imgNames;
                             mapState.saveNewMapState(playerPos[playerId], imgNames.playerPos);
@@ -163,6 +159,16 @@ namespace csknow::navigation {
                             } else {
                                 tImgNames = imgNames;
                             }
+
+                            CellBits goalPos;
+                            const AreaVisPoint & playerAreaVisPoint = visPoints.getAreaVisPoint(playerCellVisPoint.areaId);
+                            for (const auto & areaId : visPoints.getPlacesToAreas().at(playerAreaVisPoint.placeIndex)) {
+                                const AreaVisPoint & placeAreaVisPoint = visPoints.getAreaVisPoint(areaId);
+                                for (const auto & cellId : placeAreaVisPoint.cells) {
+                                    goalPos.set(cellId, true);
+                                }
+                            }
+                            mapState.saveNewMapState(goalPos, imgNames.goalPos);
                         }
                     }
                 }
@@ -274,7 +280,8 @@ namespace csknow::navigation {
         // for each round
         // for each tick
         // if a player is in trajectory, start a segment for them if no active segment
-        // if a player is in a segment, end it if past segment time
+        // record all sync ticks for players in trajectories
+        // save trajectries on when they end
         // clear out at end of round with early termination
 //#pragma omp parallel for
         for (int64_t roundIndex = 0; roundIndex < rounds.size; roundIndex++) {
@@ -304,24 +311,9 @@ namespace csknow::navigation {
 
 
             // then use sync ticks to compute trajectories
-
-            // options - 1. rolling window - means you can think of offets from current tick, but harder to have conditional
-            // logic if early termination
-            // 2. transactions - starting and ending events on differnt ticks - means you have to track event over multiple ticks,
-            // but easier to express conditional logic if early termination, and also easier to have dynamic spacing between ticks based on time
-            /*
-            if (lastSyncTickId == INVALID_ID ||
-                secondsBetweenTicks(ticks, tickRates, lastSyncTickId, tickIndex) >=
-                PAST_NAV_TICKS_SECONDS_DELTA) {
-                */
-
-            // skip first sync id so have prior one to look at
-            for (size_t syncId = 1; syncId < syncTickIds.size(); syncId++) {
+            for (size_t syncId = 0; syncId < syncTickIds.size(); syncId++) {
                 int64_t tickIndex = syncTickIds[syncId];
-                int64_t priorTickIndex = syncTickIds[syncId - 1];
-
                 map<int64_t, int64_t> curPlayerToPAT = rollingWindow.getPATIdForPlayerId(tickIndex);
-                map<int64_t, int64_t> priorPlayerToPAT = rollingWindow.getPATIdForPlayerId(priorTickIndex);
 
                 // this tracks if a player is in a trajectory from non-engagemnet trajectory result
                 // compared to internal playerToCurTrajectory/finishedSegmentPerRound to determine how to update internal
@@ -344,42 +336,39 @@ namespace csknow::navigation {
                     }
                 }
 
-                // write if trajectory ended (i.e. player disappeared, or just no trajectory)
-                // this handles situations where a player disappears suddenly, so loop over PAT won't catch them
-                vector<int64_t> playerEndingTrajectory;
-                for (const auto & [playerId, _] : playerToCurTrajectory) {
-                    if (playerInTrajectory.find(playerId) == playerInTrajectory.end()) {
-                        playerEndingTrajectory.push_back(playerId);
-                    }
-                }
-                for (const auto & playerId : playerEndingTrajectory) {
-                    finishedSegmentPerRound.push_back(playerToCurTrajectory[playerId]);
-                    playerToCurTrajectory.erase(playerId);
-
-                }
-
-                // write if trajectory continued but ending segment (i.e. dead or finished a segment)
-                // note: dead shouldn't happen, but just be defensive
-                // if not ending
+                // write if trajectory ended
+                // no need to worry about players that disappear or are dead
+                // as non_engagement_trajectory filters out those trajectories
+                // add cur sync tick is not ended
                 for (int64_t patIndex = ticks.patPerTick[tickIndex].minId;
                      patIndex <= ticks.patPerTick[tickIndex].maxId; patIndex++) {
                     int64_t playerId = playerAtTick.playerId[patIndex];
                     if (playerToCurTrajectory.find(playerId) != playerToCurTrajectory.end()) {
-                        /*
-                        double secondsSinceSegmentStart =
-                            secondsBetweenTicks(ticks, tickRates,
-                                                playerToCurTrajectory.find(playerId)->second.segmentStartTickId,
-                                                tickIndex);
-                        if (!playerAtTick.isAlive[patIndex] || secondsSinceSegmentStart > SEGMENT_SECONDS) {
-                            finishSegment(playerId, tickIndex-1, priorPlayerToPAT[playerId],
-                                          playerToCurTrajectory, finishedSegmentPerRound);
-                                          */
+                        // handle ended trajectory
+                        if (playerInTrajectory.find(playerId) == playerInTrajectory.end()) {
+                            finishedSegmentPerRound.push_back(playerToCurTrajectory[playerId]);
+                            playerToCurTrajectory.erase(playerId);
+                        } else {
+                            playerToCurTrajectory[playerId].tickIds.push_back(tickIndex);
+                            playerToCurTrajectory[playerId].patIds.push_back(patIndex);
                         }
                     }
                 }
-
-
             }
+
+            // finish all trajectories active at end of round
+            for (const auto &[playerId, tData]: playerToCurTrajectory) {
+                finishedSegmentPerRound.push_back(playerToCurTrajectory[playerId]);
+                playerToCurTrajectory.erase(playerId);
+            }
+            std::sort(finishedSegmentPerRound.begin(), finishedSegmentPerRound.end(),
+                      [](const NavTSData & a, const NavTSData & b) {
+                          return a.trajectoryId < b.trajectoryId ||
+                                 (a.trajectoryId == b.trajectoryId && a.tickIds[0] < b.tickIds[0]);
+            });
+            tmpRoundSizes[threadNum].push_back(static_cast<int64_t>(tmpSegmentStartTickId[threadNum].size()) -
+                                               tmpRoundStarts[threadNum].back());
+        }
 
 
         // this has to save sync ticks
