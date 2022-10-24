@@ -116,7 +116,7 @@ void ReachableResult::load(const string & mapsPath, const string & mapName) {
 }
 
 void ReachableResult::computeCellDistances() {
-    std::cout << "startign cell distances" << std::endl;
+    std::cout << "starting cell distances" << std::endl;
     double maxDistance = -1*std::numeric_limits<double>::max(),
         minDistance = std::numeric_limits<double>::max();
     size_t numCells = visPoints.getCellVisPoints().size();
