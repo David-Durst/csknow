@@ -111,21 +111,19 @@ namespace csknow {
         }
         for (int64_t i = 0; i < static_cast<int64_t>(data.size()); i++) {
             for (int64_t j = 0; j < static_cast<int64_t>(data[i].size()); j++) {
-                data[i][j] = 0;
+                uint16_t tmpData = 0;
                 for (int64_t ii = (-1 * CONV_SIZE / 2); ii <= CONV_SIZE / 2; ii++) {
                     for (int64_t jj = (-1 * CONV_SIZE / 2); jj <= CONV_SIZE / 2; jj++) {
                         int64_t sum_i = i + ii;
                         int64_t sum_j = j + jj;
-                        if (sum_i < 0 || sum_i > static_cast<int64_t>(data.size()) ||
-                            sum_j < 0 || sum_j > static_cast<int64_t>(data[i].size())) {
-                            data[i][j] += 0;
-                        }
-                        else {
-                            data[i][j] += oldData[sum_i][sum_j] * mat[ii + CONV_SIZE / 2][jj + CONV_SIZE / 2];
+                        if (sum_i >= 0 && sum_i < static_cast<int64_t>(data.size()) &&
+                            sum_j >= 0 && sum_j < static_cast<int64_t>(data[i].size())) {
+                            tmpData += static_cast<uint16_t>(oldData[sum_i][sum_j]) *
+                                mat[ii + CONV_SIZE / 2][jj + CONV_SIZE / 2];
                         }
                     }
                 }
-                data[i][j] /= norm;
+                data[i][j] = tmpData / norm;
             }
         }
         return *this;

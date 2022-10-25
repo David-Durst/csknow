@@ -230,7 +230,7 @@ namespace csknow::navigation {
                             posStateForEnemies = playerPos[playerId];
                             playerPosForEnemies.insert({playerId, posStateForEnemies});
                         } else {
-                            playerPosForEnemies.at(playerId).conv(UNIFORM_BLUR_MATRIX);
+                            playerPosForEnemies.at(playerId).conv(GAUSSIAN_BLUR_MATRIX);
                         }
                         if (teamId == ENGINE_TEAM_CT) {
                             ctVisToEnemies |= playerPosForEnemies.at(playerId);
@@ -264,7 +264,7 @@ namespace csknow::navigation {
                     lastTickC4SeenByCT = tickIndex;
                     c4PosForCT = c4Pos;
                 } else {
-                    c4PosForCT.conv(UNIFORM_BLUR_MATRIX);
+                    c4PosForCT.conv(GAUSSIAN_BLUR_MATRIX);
                 }
                 if (syncTick) {
                     c4PosForCT.saveMapState(ctImgNames.c4Pos);
@@ -506,5 +506,24 @@ namespace csknow::navigation {
         CellBits straightUpViewAngle = getCellsInFOV(visPoints, downPos, {90., -90.});
         mapState = straightUpViewAngle;
         mapState.saveMapState(outputDir + "/straightUpTestViewAngle.png");
+
+        CellBits onePoint;
+        onePoint.set(2418, true);
+        mapState = onePoint;
+        mapState.saveMapState(outputDir + "/midBlur0.png");
+        mapState.conv(GAUSSIAN_BLUR_MATRIX);
+        mapState.saveMapState(outputDir + "/midBlur1.png");
+        mapState.conv(GAUSSIAN_BLUR_MATRIX);
+        mapState.saveMapState(outputDir + "/midBlur2.png");
+        mapState.conv(GAUSSIAN_BLUR_MATRIX);
+        mapState.conv(GAUSSIAN_BLUR_MATRIX);
+        mapState.conv(GAUSSIAN_BLUR_MATRIX);
+        mapState.saveMapState(outputDir + "/midBlur5.png");
+        mapState.conv(GAUSSIAN_BLUR_MATRIX);
+        mapState.conv(GAUSSIAN_BLUR_MATRIX);
+        mapState.conv(GAUSSIAN_BLUR_MATRIX);
+        mapState.conv(GAUSSIAN_BLUR_MATRIX);
+        mapState.conv(GAUSSIAN_BLUR_MATRIX);
+        mapState.saveMapState(outputDir + "/midBlur10.png");
     }
 }
