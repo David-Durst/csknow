@@ -216,6 +216,7 @@ namespace csknow::navigation {
 
                 // pass 2 for each player compute their individual data that needs other team data (aka if visible to other team)
                 MapState ctVisToEnemies(visPoints), tVisToEnemies(visPoints);
+                MapState ctVisMapState(visPoints, ctVis), tVisMapState(visPoints, tVis);
                 for (int64_t patIndex = ticks.patPerTick[tickIndex].minId;
                      patIndex <= ticks.patPerTick[tickIndex].maxId; patIndex++) {
                     if (playerAtTick.isAlive[patIndex]) {
@@ -230,7 +231,12 @@ namespace csknow::navigation {
                             posStateForEnemies = playerPos[playerId];
                             playerPosForEnemies.insert({playerId, posStateForEnemies});
                         } else {
-                            playerPosForEnemies.at(playerId).conv(BLUR_MATRIX);
+                            if (teamId == ENGINE_TEAM_CT) {
+                                playerPosForEnemies.at(playerId).spread(tVisMapState);
+                            }
+                            else {
+                                playerPosForEnemies.at(playerId).spread(ctVisMapState);
+                            }
                         }
                         if (teamId == ENGINE_TEAM_CT) {
                             ctVisToEnemies |= playerPosForEnemies.at(playerId);
@@ -245,8 +251,8 @@ namespace csknow::navigation {
                     MapState teamMapState(visPoints);
                     teamMapState.saveNewMapState(ctPos, ctImgNames.friendlyPos);
                     teamMapState.saveNewMapState(tPos, tImgNames.friendlyPos);
-                    teamMapState.saveNewMapState(ctVis, ctImgNames.friendlyVis);
-                    teamMapState.saveNewMapState(tVis, tImgNames.friendlyVis);
+                    ctVisMapState.saveMapState(ctImgNames.friendlyVis);
+                    tVisMapState.saveMapState(tImgNames.friendlyVis);
                     ctVisToEnemies.saveMapState(tImgNames.visEnemies);
                     tVisToEnemies.saveMapState(ctImgNames.visEnemies);
                 }
@@ -264,7 +270,7 @@ namespace csknow::navigation {
                     lastTickC4SeenByCT = tickIndex;
                     c4PosForCT = c4Pos;
                 } else {
-                    c4PosForCT.conv(BLUR_MATRIX);
+                    c4PosForCT.spread(ctVisMapState);
                 }
                 if (syncTick) {
                     c4PosForCT.saveMapState(ctImgNames.c4Pos);
@@ -507,27 +513,31 @@ namespace csknow::navigation {
         mapState = straightUpViewAngle;
         mapState.saveMapState(outputDir + "/straightUpTestViewAngle.png");
 
+        MapState emptyMapState(visPoints);
         CellBits onePoint;
         onePoint.set(2418, true);
         mapState = onePoint;
         mapState.saveMapState(outputDir + "/midBlur0.png");
-        mapState.conv(BLUR_MATRIX);
+        mapState.spread(emptyMapState);
         mapState.saveMapState(outputDir + "/midBlur0_250.png");
-        mapState.conv(BLUR_MATRIX);
+        mapState.spread(emptyMapState);
         mapState.saveMapState(outputDir + "/midBlur0_500.png");
-        mapState.conv(BLUR_MATRIX);
-        mapState.conv(BLUR_MATRIX);
+        mapState.spread(emptyMapState);
+        mapState.spread(emptyMapState);
         mapState.saveMapState(outputDir + "/midBlur1_000.png");
-        mapState.conv(BLUR_MATRIX);
-        mapState.conv(BLUR_MATRIX);
-        mapState.conv(BLUR_MATRIX);
-        mapState.conv(BLUR_MATRIX);
+        mapState.spread(emptyMapState);
+        mapState.saveMapState(outputDir + "/midBlur1_250.png");
+        mapState.spread(emptyMapState);
+        mapState.saveMapState(outputDir + "/midBlur1_500.png");
+        mapState.spread(emptyMapState);
+        mapState.saveMapState(outputDir + "/midBlur1_750.png");
+        mapState.spread(emptyMapState);
         mapState.saveMapState(outputDir + "/midBlur2_000.png");
         for (size_t i = 0; i < 5; i++) {
             for (size_t j = 0; j < 40; j++) {
-                mapState.conv(BLUR_MATRIX);
+                mapState.spread(emptyMapState);
             }
-            mapState.saveMapState(outputDir + "/midBlur" + std::to_string(2 + 10*i) + "_000.png");
+            mapState.saveMapState(outputDir + "/midBlur" + std::to_string(2 + 10*(i+1)) + "_000.png");
         }
         std::cout << "finished test nav images" << std::endl;
     }

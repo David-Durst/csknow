@@ -133,4 +133,40 @@ namespace csknow {
         }
         return *this;
     }
+
+    MapState & MapState::spread(const MapState & barrier, float decayValue, uint8_t floorValue) {
+        auto oldData(data);
+        for (int64_t i = 0; i < static_cast<int64_t>(data.size()); i++) {
+            for (int64_t j = 0; j < static_cast<int64_t>(data[i].size()); j++) {
+                if (barrier.data[i][j] > 0) {
+                    data[i][j] = 0;
+                }
+                else {
+                    uint8_t tmpData = 0;
+                    for (int64_t ii = (-1 * CONV_SIZE / 2); ii <= CONV_SIZE / 2; ii++) {
+                        for (int64_t jj = (-1 * CONV_SIZE / 2); jj <= CONV_SIZE / 2; jj++) {
+                            int64_t sum_i = i + ii;
+                            int64_t sum_j = j + jj;
+                            if (sum_i >= 0 && sum_i < static_cast<int64_t>(data.size()) &&
+                                sum_j >= 0 && sum_j < static_cast<int64_t>(data[i].size())) {
+                                if (ii == 0 && jj == 0) {
+                                    tmpData = std::max(tmpData, oldData[sum_i][sum_j]);
+                                }
+                                else {
+                                    tmpData = std::max(tmpData, static_cast<uint8_t>(std::pow(oldData[sum_i][sum_j], decayValue)));
+                                }
+                            }
+                        }
+                    }
+                    if (tmpData < floorValue) {
+                        data[i][j] = tmpData;
+                    }
+                    else {
+                        data[i][j] = std::max(floorValue, static_cast<uint8_t>(std::pow(tmpData, decayValue)));
+                    }
+                }
+            }
+        }
+        return *this;
+    }
 }
