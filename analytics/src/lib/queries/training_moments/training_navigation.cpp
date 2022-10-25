@@ -107,8 +107,8 @@ namespace csknow::navigation {
         //          future: handle bomb planted impact on pos knowledge
         //      only save state when on a sync clock for all players (if you started your trajectory off clock,
         //      tough luck, not doing anything until next period)
-//#pragma omp parallel for
-        for (int64_t roundIndex = 0; roundIndex < 1LL /*rounds.size*/; roundIndex++) {
+#pragma omp parallel for
+        for (int64_t roundIndex = 0; roundIndex < rounds.size; roundIndex++) {
             RollingWindow rollingWindow(rounds, ticks, playerAtTick);
 
             // images created every sync tick
@@ -138,7 +138,10 @@ namespace csknow::navigation {
                 }
 
                 // need to remember one CT and one T players paths so can save team data
-                TemporalImageNames ctImgNames, tImgNames;
+                const TemporalImageNames ctImgNames = TemporalImageNames(tickIndex, "", ENGINE_TEAM_CT,
+                                                                         outputDir);
+                const TemporalImageNames tImgNames = TemporalImageNames(tickIndex, "", ENGINE_TEAM_T,
+                                                                        outputDir);
 
                 // pass 1: compute everything that is only per player or per one team
                 for (int64_t patIndex = ticks.patPerTick[tickIndex].minId;
@@ -189,21 +192,15 @@ namespace csknow::navigation {
 
                         MapState mapState(visPoints);
                         if (syncTick) {
-                            const TemporalImageNames &imgNames = TemporalImageNames(tickIndex,
-                                                                                    players.name[players.idOffset + playerId],
-                                                                                    teamId, outputDir);
+                            TemporalImageNames imgNames = TemporalImageNames(tickIndex,
+                                                                             players.name[players.idOffset + playerId],
+                                                                             teamId, outputDir);
                             syncToImageNames.back()[playerId] = imgNames;
                             mapState.saveNewMapState(playerPos[playerId], imgNames.playerPos);
                             mapState.saveNewMapState(playerVis[playerId], imgNames.playerVis);
                             mapState.saveNewMapState(
                                 reachableResult.scaledCellDistanceMatrix[playerCellVisPoint.cellId],
                                 imgNames.distanceMap);
-
-                            if (teamId == ENGINE_TEAM_CT) {
-                                ctImgNames = imgNames;
-                            } else {
-                                tImgNames = imgNames;
-                            }
 
                             CellBits goalPos;
                             const AreaVisPoint & playerAreaVisPoint = visPoints.getAreaVisPoint(playerCellVisPoint.areaId);
