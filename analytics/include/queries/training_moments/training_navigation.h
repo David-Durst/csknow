@@ -82,7 +82,7 @@ namespace csknow {
             vector<array<int64_t, TOTAL_NAV_TICKS>> segmentPATIds;
             vector<int64_t> tickLength;
             vector<int64_t> playerId;
-            vector<int64_t> teamId;
+            vector<TeamId> teamId;
             vector<array<Vec2, TOTAL_NAV_TICKS>> playerViewDir;
             vector<array<double, TOTAL_NAV_TICKS>> health;
             vector<array<double, TOTAL_NAV_TICKS>> armor;

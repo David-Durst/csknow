@@ -23,11 +23,11 @@ namespace csknow::navigation {
                         vector<vector<array<int64_t, TOTAL_NAV_TICKS>>> &tmpSegmentTickIds,
                         vector<vector<array<int64_t, TOTAL_NAV_TICKS>>> &tmpSegmentPATIds,
                         vector<vector<int64_t>> &tmpLength, vector<vector<int64_t>> &tmpPlayerId,
-                        vector<vector<int64_t>> &tmpTeamId,
+                        vector<vector<TeamId>> &tmpTeamId,
                         vector<vector<array<Vec2, TOTAL_NAV_TICKS>>> &tmpPlayerViewDir,
                         vector<vector<array<double, TOTAL_NAV_TICKS>>> &tmpHealth,
                         vector<vector<array<double, TOTAL_NAV_TICKS>>> &tmpArmor,
-                        int threadNum, const Players & players, const PlayerAtTick & playerAtTick,
+                        int threadNum, const PlayerAtTick & playerAtTick,
                         const Ticks & ticks, const TickRates & tickRates,
                         const vector<NavTrajData> &finishedSegmentPerRound) {
         for (const auto &ntData: finishedSegmentPerRound) {
@@ -47,6 +47,7 @@ namespace csknow::navigation {
                     break;
                 }
 
+                // handle everything thats individual ticks
                 tmpTrajectoryId[threadNum].push_back(ntData.trajectoryId);
                 tmpSegmentStartTickId[threadNum].push_back(ntData.tickIds[ntTickNum - PAST_NAV_TICKS]);
                 tmpSegmentCurTickId[threadNum].push_back(ntData.tickIds[ntTickNum]);
@@ -54,32 +55,35 @@ namespace csknow::navigation {
                 tmpLength[threadNum].push_back(
                     tmpSegmentFutureTickId[threadNum].back() - tmpSegmentStartTickId[threadNum].back() + 1);
                 tmpPlayerId[threadNum].push_back(ntData.playerId);
+
+                // record the array of ticks
+                tmpSegmentTickIds[threadNum].push_back({});
+                tmpSegmentPATIds[threadNum].push_back({});
+                size_t arrayId = 0;
+                for (size_t pastNTTickNum = ntTickNum - PAST_NAV_TICKS; pastNTTickNum < ntTickNum; pastNTTickNum++) {
+                    tmpSegmentTickIds[threadNum].back()[arrayId] = ntData.tickIds[pastNTTickNum];
+                    tmpSegmentPATIds[threadNum].back()[arrayId] = ntData.patIds[pastNTTickNum];
+                    arrayId++;
+                }
+                tmpSegmentTickIds[threadNum].back()[arrayId] = ntData.tickIds[ntTickNum];
+                tmpSegmentPATIds[threadNum].back()[arrayId] = ntData.patIds[ntTickNum];
+                tmpTeamId[threadNum].push_back(playerAtTick.team[ntData.patIds[ntTickNum]]);
+                arrayId++;
+                tmpSegmentTickIds[threadNum].back()[arrayId] = futureTickId;
+                tmpSegmentPATIds[threadNum].back()[arrayId] = futurePATId;
+
+                // record the per tick data
                 tmpPlayerViewDir[threadNum].push_back({});
                 tmpHealth[threadNum].push_back({});
                 tmpArmor[threadNum].push_back({});
-
-                vector<int64_t> patIds;
-                tmpSegmentTickIds[threadNum].push_back({});
-                for (size_t pastNTTickNum = ntTickNum - PAST_NAV_TICKS; pastNTTickNum < ntTickNum; pastNTTickNum++) {
-                    tmpSegmentTickIds[threadNum].back().push_back(ntData.tickIds[pastNTTickNum]);
-                    patIds.push_back(ntData.patIds[pastNTTickNum]);
-                }
-                tmpSegmentTickIds[threadNum].back()[PAST_NAV_TICKS] = ntData.tickIds[ntTickNum];
-                patIds.push_back(ntData.patIds[ntTickNum]);
-                tmpTeamId[threadNum].push_back(playerAtTick.team[ntData.patIds[ntTickNum]]);
-                tmpSegmentTickIds[threadNum].back()[PAST_NAV_TICKS + CUR_NAV_TICK] = futureTickId;
-                patIds.push_back(futurePATId);
-
                 for (size_t i = 0; i < TOTAL_NAV_TICKS; i++) {
+                    int64_t patId = tmpSegmentPATIds[threadNum].back()[i];
                     tmpPlayerViewDir[threadNum].back()[i] = {
-                        playerAtTick.viewX[patIds[i]],
-                        playerAtTick.viewY[patIds[i]]
+                        playerAtTick.viewX[patId],
+                        playerAtTick.viewY[patId]
                     };
-                    tmpHealth[threadNum].back()[i] = playerAtTick.health[patIds[i]];
-                    tmpArmor[threadNum].back()[i] = playerAtTick.armor[patIds[i]];
-                    tmpImgNames[threadNum].back()[i] =
-                        TemporalImageNames(tmpSegmentTickIds[threadNum].back()[i], tmpPlayerName[threadNum].back(),
-                                           playerAtTick.team[patIds[i]], "");
+                    tmpHealth[threadNum].back()[i] = playerAtTick.health[patId];
+                    tmpArmor[threadNum].back()[i] = playerAtTick.armor[patId];
                 }
             }
         }
@@ -304,7 +308,7 @@ namespace csknow::navigation {
         vector<vector<array<int64_t, TOTAL_NAV_TICKS>>> tmpSegmentPATIds(numThreads);
         vector<vector<int64_t>> tmpTickLength(numThreads);
         vector<vector<int64_t>> tmpPlayerId(numThreads);
-        vector<vector<string>> tmpPlayerName(numThreads);
+        vector<vector<TeamId>> tmpTeamId(numThreads);
         vector<vector<array<Vec2, TOTAL_NAV_TICKS>>> tmpPlayerViewDir(numThreads);
         vector<vector<array<double, TOTAL_NAV_TICKS>>> tmpHealth(numThreads);
         vector<vector<array<double, TOTAL_NAV_TICKS>>> tmpArmor(numThreads);
@@ -412,11 +416,11 @@ namespace csknow::navigation {
                            tmpSegmentFutureTickId,
                            tmpSegmentTickIds, tmpSegmentPATIds,
                            tmpTickLength, tmpPlayerId,
-                           tmpPlayerName,
+                           tmpTeamId,
                            tmpPlayerViewDir,
                            tmpHealth,
                            tmpArmor,
-                           threadNum, players, playerAtTick,
+                           threadNum, playerAtTick,
                            ticks, tickRates,
                            finishedSegmentPerRound);
             tmpRoundSizes[threadNum].push_back(static_cast<int64_t>(tmpSegmentStartTickId[threadNum].size()) -
@@ -425,7 +429,7 @@ namespace csknow::navigation {
             printProgress(roundsProcessed, rounds.size);
         }
 
-        TrainingNavigationResult result;
+        TrainingNavigationResult result(players);
         mergeThreadResults(numThreads, result.rowIndicesPerRound, tmpRoundIds, tmpRoundStarts, tmpRoundSizes,
                            result.segmentStartTickId, result.size,
                            [&](int64_t minThreadId, int64_t tmpRowId) {
@@ -437,7 +441,6 @@ namespace csknow::navigation {
                                result.segmentPATIds.push_back(tmpSegmentPATIds[minThreadId][tmpRowId]);
                                result.tickLength.push_back(tmpTickLength[minThreadId][tmpRowId]);
                                result.playerId.push_back(tmpPlayerId[minThreadId][tmpRowId]);
-                               result.playerName.push_back(tmpPlayerName[minThreadId][tmpRowId]);
                                result.playerViewDir.push_back(tmpPlayerViewDir[minThreadId][tmpRowId]);
                                result.health.push_back(tmpHealth[minThreadId][tmpRowId]);
                                result.armor.push_back(tmpArmor[minThreadId][tmpRowId]);
