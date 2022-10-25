@@ -198,9 +198,8 @@ namespace csknow::navigation {
                             syncToImageNames.back()[playerId] = imgNames;
                             mapState.saveNewMapState(playerPos[playerId], imgNames.playerPos);
                             mapState.saveNewMapState(playerVis[playerId], imgNames.playerVis);
-                            mapState.saveNewMapState(
-                                reachableResult.scaledCellDistanceMatrix[playerCellVisPoint.cellId],
-                                imgNames.distanceMap);
+                            mapState = reachableResult.scaledCellClosenessMatrix[playerCellVisPoint.cellId];
+                            mapState.saveMapState( imgNames.distanceMap);
 
                             CellBits goalPos;
                             const AreaVisPoint & playerAreaVisPoint = visPoints.getAreaVisPoint(playerCellVisPoint.areaId);

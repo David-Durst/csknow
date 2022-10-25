@@ -17,7 +17,8 @@ public:
     vector<AABB> coordinate;
     vector<double> distanceMatrix;
     const VisPoints & visPoints;
-    vector<vector<uint8_t>> scaledCellDistanceMatrix;
+    // want to have brighter/bigger value = closer for drawing distance maps
+    vector<vector<uint8_t>> scaledCellClosenessMatrix;
     int64_t numAreas;
 
     vector<int64_t> filterByForeignKey(int64_t) override {

@@ -117,6 +117,8 @@ void ReachableResult::load(const string & mapsPath, const string & mapName) {
 
 void ReachableResult::computeCellDistances() {
     std::cout << "starting cell distances" << std::endl;
+    // since scaling across all distances in map, won't have a max distance from every src cell
+    // will have a min distance since every area is 0 distance to itself
     double maxDistance = -1*std::numeric_limits<double>::max(),
         minDistance = std::numeric_limits<double>::max();
     size_t numCells = visPoints.getCellVisPoints().size();
@@ -135,22 +137,22 @@ void ReachableResult::computeCellDistances() {
     }
 
     for (size_t i = 0; i < numCells; i++) {
-        scaledCellDistanceMatrix.push_back(vector<uint8_t>(numCells, 0));
+        scaledCellClosenessMatrix.push_back(vector<uint8_t>(numCells, 0));
     }
 
 #pragma omp parallel for
     for (size_t i = 0; i < visPoints.getAreaVisPoints().size(); i++) {
         const auto & srcAreaVisPoint = visPoints.getAreaVisPoints()[i];
         for (const auto & dstAreaVisPoint : visPoints.getAreaVisPoints()) {
-            double distance = getDistance(srcAreaVisPoint.areaId, srcAreaVisPoint.areaId, visPoints);
+            double distance = getDistance(srcAreaVisPoint.areaId, dstAreaVisPoint.areaId, visPoints);
             for (const auto & srcCellId : srcAreaVisPoint.cells) {
                 for (const auto & dstCellId : dstAreaVisPoint.cells) {
                     if (distance < 0) {
-                        scaledCellDistanceMatrix[srcCellId][dstCellId] = 255;
+                        scaledCellClosenessMatrix[srcCellId][dstCellId] = 0;
                     }
                     else {
-                        scaledCellDistanceMatrix[srcCellId][dstCellId] =
-                            static_cast<uint8_t>(255 * (distance - minDistance) / (maxDistance - minDistance));
+                        scaledCellClosenessMatrix[srcCellId][dstCellId] =
+                            static_cast<uint8_t>(255 * (1 - (distance - minDistance) / (maxDistance - minDistance)));
                     }
                 }
             }

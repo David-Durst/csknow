@@ -40,8 +40,9 @@ namespace csknow {
         const auto & cellVisPoints = visPoints.getCellVisPoints();
         double maxYNum = visPoints.getMaxCellNumbersByDim()[1];
         for (size_t i = 0; i < cellVisPoints.size(); i++) {
-            data[maxYNum - cellVisPoints[i].cellDiscreteCoordinates[1]]
-            [cellVisPoints[i].cellDiscreteCoordinates[0]] = value[i];
+            int64_t yCoord = maxYNum - cellVisPoints[i].cellDiscreteCoordinates[1];
+            int64_t xCoord = cellVisPoints[i].cellDiscreteCoordinates[0];
+            data[yCoord][xCoord] = std::max(data[yCoord][xCoord], value[i]);
         }
         return *this;
     }
@@ -108,15 +109,15 @@ namespace csknow {
                 norm += mat[i][j];
             }
         }
-        for (int64_t i = 0; i < static_cast<int64_t>(mat.size()); i++) {
-            for (int64_t j = 0; j < static_cast<int64_t>(mat[i].size()); j++) {
+        for (int64_t i = 0; i < static_cast<int64_t>(data.size()); i++) {
+            for (int64_t j = 0; j < static_cast<int64_t>(data[i].size()); j++) {
                 data[i][j] = 0;
                 for (int64_t ii = (-1 * CONV_SIZE / 2); ii <= CONV_SIZE / 2; ii++) {
                     for (int64_t jj = (-1 * CONV_SIZE / 2); jj <= CONV_SIZE / 2; jj++) {
                         int64_t sum_i = i + ii;
                         int64_t sum_j = j + jj;
-                        if (sum_i < 0 || sum_i > static_cast<int64_t>(mat.size()) ||
-                            sum_j < 0 || sum_j > static_cast<int64_t>(mat[i].size())) {
+                        if (sum_i < 0 || sum_i > static_cast<int64_t>(data.size()) ||
+                            sum_j < 0 || sum_j > static_cast<int64_t>(data[i].size())) {
                             data[i][j] += 0;
                         }
                         else {
