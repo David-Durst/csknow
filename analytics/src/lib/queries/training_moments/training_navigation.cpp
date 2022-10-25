@@ -278,24 +278,10 @@ namespace csknow::navigation {
         }
     }
 
-    TrainingNavigationResult queryTrainingNavigation(const VisPoints &visPoints, const ReachableResult &reachableResult,
-                                                     const Players &players,
-                                                     const Games &games, const Rounds &rounds,
-                                                     const Ticks &ticks, const PlayerAtTick &playerAtTick,
-                                                     const NonEngagementTrajectoryResult &nonEngagementTrajectoryResult,
-                                                     const string &outputDir, bool createImages) {
-        string trainNavDir = outputDir + "/trainNavData";
-
-        // create a fresh directory to save to
-        if (createImages) {
-            if (!fs::exists(trainNavDir)) {
-                fs::create_directory(trainNavDir);
-            }
-            for (auto &path: fs::directory_iterator(trainNavDir)) {
-                fs::remove(path);
-            }
-        }
-
+    vector<set<int64_t>> createNavResult(const Games &games, const Rounds &rounds,
+                                         const Ticks &ticks, const PlayerAtTick & playerAtTick,
+                                         const NonEngagementTrajectoryResult & nonEngagementTrajectoryResult,
+                                         TrainingNavigationResult & result) {
         int numThreads = omp_get_max_threads();
         vector<vector<int64_t>> tmpRoundIds(numThreads);
         vector<vector<int64_t>> tmpRoundStarts(numThreads);
@@ -408,7 +394,7 @@ namespace csknow::navigation {
                       [](const NavTrajData & a, const NavTrajData & b) {
                           return a.trajectoryId < b.trajectoryId ||
                                  (a.trajectoryId == b.trajectoryId && a.tickIds[0] < b.tickIds[0]);
-            });
+                      });
 
             recordSegments(tmpTrajectoryId,
                            tmpSegmentStartTickId,
@@ -429,7 +415,6 @@ namespace csknow::navigation {
             printProgress(roundsProcessed, rounds.size);
         }
 
-        TrainingNavigationResult result(players);
         mergeThreadResults(numThreads, result.rowIndicesPerRound, tmpRoundIds, tmpRoundStarts, tmpRoundSizes,
                            result.segmentStartTickId, result.size,
                            [&](int64_t minThreadId, int64_t tmpRowId) {
@@ -445,7 +430,31 @@ namespace csknow::navigation {
                                result.health.push_back(tmpHealth[minThreadId][tmpRowId]);
                                result.armor.push_back(tmpArmor[minThreadId][tmpRowId]);
                            });
+        return roundSyncTicks;
+    }
 
+    TrainingNavigationResult queryTrainingNavigation(const VisPoints &visPoints, const ReachableResult &reachableResult,
+                                                     const Players &players,
+                                                     const Games &games, const Rounds &rounds,
+                                                     const Ticks &ticks, const PlayerAtTick &playerAtTick,
+                                                     const NonEngagementTrajectoryResult &nonEngagementTrajectoryResult,
+                                                     const string &outputDir, bool createImages) {
+        string trainNavDir = outputDir + "/trainNavData";
+
+        // create a fresh directory to save to
+        if (createImages) {
+            if (!fs::exists(trainNavDir)) {
+                fs::create_directory(trainNavDir);
+            }
+            for (auto &path: fs::directory_iterator(trainNavDir)) {
+                fs::remove(path);
+            }
+        }
+
+
+        TrainingNavigationResult result(players);
+        vector<set<int64_t>> roundSyncTicks =
+            createNavResult(games, rounds, ticks, playerAtTick, nonEngagementTrajectoryResult, result);
         // this has to save sync ticks
         // then during window, I can just check if i'm on a sync tick and skip otherwise
         // rolling window doesn't work here as that assumes adjacent ticks, i need spaces in between ticks
