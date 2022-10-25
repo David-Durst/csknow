@@ -13,7 +13,7 @@ namespace fs = std::filesystem;
 namespace csknow {
     constexpr int CONV_SIZE = 3;
     typedef array<array<uint16_t, CONV_SIZE>, CONV_SIZE> conv_matrix;
-    constexpr conv_matrix GAUSSIAN_BLUR_MATRIX = {{{1, 2, 1}, {2, 4, 2}, {1, 2, 1}}};
+    constexpr conv_matrix BLUR_MATRIX = {{{1, 1, 1}, {1, 1, 1}, {1, 1, 1}}};
     class MapState {
         array<array<uint8_t, NAV_CELLS_PER_ROW>, NAV_CELLS_PER_ROW> data;
         const VisPoints & visPoints;
@@ -31,7 +31,7 @@ namespace csknow {
         [[maybe_unused]] MapState & operator-=(const uint8_t & value);
         [[maybe_unused]] MapState & operator*=(const uint8_t & value);
         [[maybe_unused]] MapState & operator/=(const uint8_t & value);
-        [[maybe_unused]] MapState & conv(const conv_matrix & mat);
+        [[maybe_unused]] MapState & conv(const conv_matrix & mat, uint16_t floorValue = 60);
     };
 }
 

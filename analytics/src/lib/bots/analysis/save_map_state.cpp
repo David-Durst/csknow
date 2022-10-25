@@ -101,7 +101,7 @@ namespace csknow {
         return *this;
     }
 
-    MapState & MapState::conv(const conv_matrix & mat) {
+    MapState & MapState::conv(const conv_matrix & mat, uint16_t floorValue) {
         auto oldData(data);
         uint16_t norm = 0;
         for (int64_t i = 0; i < CONV_SIZE; i++) {
@@ -123,7 +123,12 @@ namespace csknow {
                         }
                     }
                 }
-                data[i][j] = tmpData / norm;
+                if (oldData[i][j] < floorValue) {
+                    data[i][j] = tmpData / norm;
+                }
+                else {
+                    data[i][j] = std::max(floorValue, static_cast<uint16_t>(tmpData / norm));
+                }
             }
         }
         return *this;

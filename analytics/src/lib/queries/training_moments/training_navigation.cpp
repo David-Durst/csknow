@@ -230,7 +230,7 @@ namespace csknow::navigation {
                             posStateForEnemies = playerPos[playerId];
                             playerPosForEnemies.insert({playerId, posStateForEnemies});
                         } else {
-                            playerPosForEnemies.at(playerId).conv(GAUSSIAN_BLUR_MATRIX);
+                            playerPosForEnemies.at(playerId).conv(BLUR_MATRIX);
                         }
                         if (teamId == ENGINE_TEAM_CT) {
                             ctVisToEnemies |= playerPosForEnemies.at(playerId);
@@ -264,7 +264,7 @@ namespace csknow::navigation {
                     lastTickC4SeenByCT = tickIndex;
                     c4PosForCT = c4Pos;
                 } else {
-                    c4PosForCT.conv(GAUSSIAN_BLUR_MATRIX);
+                    c4PosForCT.conv(BLUR_MATRIX);
                 }
                 if (syncTick) {
                     c4PosForCT.saveMapState(ctImgNames.c4Pos);
@@ -511,19 +511,24 @@ namespace csknow::navigation {
         onePoint.set(2418, true);
         mapState = onePoint;
         mapState.saveMapState(outputDir + "/midBlur0.png");
-        mapState.conv(GAUSSIAN_BLUR_MATRIX);
-        mapState.saveMapState(outputDir + "/midBlur1.png");
-        mapState.conv(GAUSSIAN_BLUR_MATRIX);
-        mapState.saveMapState(outputDir + "/midBlur2.png");
-        mapState.conv(GAUSSIAN_BLUR_MATRIX);
-        mapState.conv(GAUSSIAN_BLUR_MATRIX);
-        mapState.conv(GAUSSIAN_BLUR_MATRIX);
-        mapState.saveMapState(outputDir + "/midBlur5.png");
-        mapState.conv(GAUSSIAN_BLUR_MATRIX);
-        mapState.conv(GAUSSIAN_BLUR_MATRIX);
-        mapState.conv(GAUSSIAN_BLUR_MATRIX);
-        mapState.conv(GAUSSIAN_BLUR_MATRIX);
-        mapState.conv(GAUSSIAN_BLUR_MATRIX);
-        mapState.saveMapState(outputDir + "/midBlur10.png");
+        mapState.conv(BLUR_MATRIX);
+        mapState.saveMapState(outputDir + "/midBlur0_250.png");
+        mapState.conv(BLUR_MATRIX);
+        mapState.saveMapState(outputDir + "/midBlur0_500.png");
+        mapState.conv(BLUR_MATRIX);
+        mapState.conv(BLUR_MATRIX);
+        mapState.saveMapState(outputDir + "/midBlur1_000.png");
+        mapState.conv(BLUR_MATRIX);
+        mapState.conv(BLUR_MATRIX);
+        mapState.conv(BLUR_MATRIX);
+        mapState.conv(BLUR_MATRIX);
+        mapState.saveMapState(outputDir + "/midBlur2_000.png");
+        for (size_t i = 0; i < 5; i++) {
+            for (size_t j = 0; j < 40; j++) {
+                mapState.conv(BLUR_MATRIX);
+            }
+            mapState.saveMapState(outputDir + "/midBlur" + std::to_string(2 + 10*i) + "_000.png");
+        }
+        std::cout << "finished test nav images" << std::endl;
     }
 }
