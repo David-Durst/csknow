@@ -17,6 +17,11 @@ namespace nav_mesh {
         vec3_t pos = {NAV_INVALID, NAV_INVALID, NAV_INVALID};
     };
 
+    struct AreaDistance {
+        uint32_t areaId;
+        float distance;
+    };
+
 	class nav_file : public micropather::Graph {
         std::set< uint32_t > m_areas_to_increase_cost;
 	public:
@@ -79,6 +84,7 @@ namespace nav_mesh {
         float get_point_to_area_distance_2d( vec3_t position, const nav_area& area) const;
         vec3_t get_nearest_point_in_area( vec3_t position, nav_area& area);
 		const nav_area& get_nearest_area_by_position( vec3_t position ) const;
+        std::vector<AreaDistance> get_area_distances_to_position( vec3_t position ) const;
         void remove_incoming_edges_to_areas( std::set<std::uint32_t> ids );
         void remove_edges( std::set<std::pair<std::uint32_t, std::uint32_t>> ids );
         void build_connections_arrays( );

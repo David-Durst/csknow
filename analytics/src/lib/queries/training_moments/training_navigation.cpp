@@ -143,6 +143,10 @@ namespace csknow::navigation {
                 // pass 1: compute everything that is only per player or per one team
                 for (int64_t patIndex = ticks.patPerTick[tickIndex].minId;
                      patIndex <= ticks.patPerTick[tickIndex].maxId; patIndex++) {
+                    if (patIndex == 38175) {
+                        int x = 1;
+                        (void) x;
+                    }
                     if (playerAtTick.isAlive[patIndex]) {
                         int64_t playerId = playerAtTick.playerId[patIndex];
                         TeamId teamId = playerAtTick.team[patIndex];

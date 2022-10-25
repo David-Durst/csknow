@@ -314,6 +314,22 @@ namespace nav_mesh {
 
     }
 
+    std::vector<AreaDistance> nav_file::get_area_distances_to_position( vec3_t position ) const {
+        std::vector<AreaDistance> result;
+        for ( size_t area_id = 0; area_id < m_areas.size(); area_id++) {
+            const nav_area& area = m_areas[area_id];
+            // skip bugged areas with no connections
+            if ( area.m_connections.empty() ) {
+                continue;
+            }
+            result.push_back({area.get_id(), get_point_to_area_distance( position, area)});
+        }
+        std::sort(result.begin(), result.end(), [](const AreaDistance & a, const AreaDistance & b) {
+            return a.distance < b.distance;
+        });
+        return result;
+    }
+
     void nav_file::remove_incoming_edges_to_areas( std::set<std::uint32_t> ids ) {
         for ( size_t area_index = 0; area_index < m_areas.size(); area_index++) {
             std::vector< nav_connect_t >& area_connections = m_areas[area_index].m_connections;

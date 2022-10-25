@@ -437,8 +437,15 @@ namespace vis_point_helpers {
 }
 
 const CellVisPoint & VisPoints::getNearestCellVisPoint(const Vec3 & pos) const {
-    const nav_mesh::nav_area & nearestArea = navFile.get_nearest_area_by_position(vec3Conv(pos));
-    const AreaVisPoint & areaVisPoint = areaVisPoints[areaIdToVectorIndex.at(nearestArea.get_id())];
+    vector<nav_mesh::AreaDistance> areaDistances = navFile.get_area_distances_to_position(vec3Conv(pos));
+    // a small number of areas have no cells, pick the area that's closest and has cells
+    AreaId nearestAreaIdWithCell = INVALID_ID;
+    for (const auto & areaDistance : areaDistances) {
+        if (!areaVisPoints[areaIdToIndex(areaDistance.areaId)].cells.empty()) {
+            nearestAreaIdWithCell = areaDistance.areaId;
+        }
+    }
+    const AreaVisPoint & areaVisPoint = areaVisPoints[areaIdToVectorIndex.at(nearestAreaIdWithCell)];
 
     float nearestCellDistance = std::numeric_limits<double>::max();
     size_t nearestCellId = INVALID_ID;
