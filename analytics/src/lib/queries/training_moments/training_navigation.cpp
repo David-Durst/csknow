@@ -427,6 +427,7 @@ namespace csknow::navigation {
                                result.segmentPATIds.push_back(tmpSegmentPATIds[minThreadId][tmpRowId]);
                                result.tickLength.push_back(tmpTickLength[minThreadId][tmpRowId]);
                                result.playerId.push_back(tmpPlayerId[minThreadId][tmpRowId]);
+                               result.teamId.push_back(tmpTeamId[minThreadId][tmpRowId]);
                                result.playerViewDir.push_back(tmpPlayerViewDir[minThreadId][tmpRowId]);
                                result.health.push_back(tmpHealth[minThreadId][tmpRowId]);
                                result.armor.push_back(tmpArmor[minThreadId][tmpRowId]);

@@ -443,6 +443,7 @@ const CellVisPoint & VisPoints::getNearestCellVisPoint(const Vec3 & pos) const {
     for (const auto & areaDistance : areaDistances) {
         if (!areaVisPoints[areaIdToIndex(areaDistance.areaId)].cells.empty()) {
             nearestAreaIdWithCell = areaDistance.areaId;
+            break;
         }
     }
     const AreaVisPoint & areaVisPoint = areaVisPoints[areaIdToVectorIndex.at(nearestAreaIdWithCell)];
