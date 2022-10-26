@@ -42,6 +42,17 @@ else()
     endif()
 endif()
 
+find_program(TAR_LOCATION tar DOC "Path to tar program required.")
+if(NOT TAR_LOCATION)
+    #cause the searches to be repeated
+    unset(TAR_LOCATION CACHE)
+    if(WIN32)
+        message(SEND_ERROR "tar is required, but was not found.  Please install tar and set TAR_LOCATION to the gzip.")
+    else()
+        message(SEND_ERROR "tar is required, but was not found.  Please install tar.")
+    endif()
+endif()
+
 add_compile_options(-Wall -Wextra -Wpedantic -Wno-unused-function -Wno-unknown-pragmas)
 
 include_directories(${PROJECT_BINARY_DIR}/include)
