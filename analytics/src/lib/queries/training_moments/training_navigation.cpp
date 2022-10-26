@@ -289,7 +289,7 @@ namespace csknow::navigation {
 
             }
 
-            string subDirCommand = "mkdir " + roundOutputDir + "/trainNavData && mv " + roundOutputDir + "/*.png " + roundOutputDir + "/trainNavData/";
+            string subDirCommand = "mkdir " + roundOutputDir + "/trainNavData && echo " + roundOutputDir + "/*.png | xargs mv -t " + roundOutputDir + "/trainNavData/ --";
             if (system(subDirCommand.c_str()) != 0) {
                 std::cerr << "create sub dir failed" << std::endl;
             }
@@ -301,7 +301,7 @@ namespace csknow::navigation {
             if (system(tarCommand.c_str()) != 0) {
                 std::cerr << "tar failed" << std::endl;
             }
-            string removeSubDirCommand = "rm -f " + roundOutputDir + "/trainNavData/* && rmdir " + roundOutputDir + "/trainNavData && rmdir " + roundOutputDir;
+            string removeSubDirCommand = "echo " + roundOutputDir + "/trainNavData/* | xargs rm -- && rmdir " + roundOutputDir + "/trainNavData && rmdir " + roundOutputDir;
             if (system(removeSubDirCommand.c_str()) != 0) {
                 std::cerr << "remove sub dir failed" << std::endl;
             }
