@@ -17,6 +17,9 @@
 #include <errno.h>
 #include <charconv>
 #include <vector>
+#include <filesystem>
+
+namespace fs = std::filesystem;
 
 using std::to_string;
 using std::string;
@@ -29,6 +32,8 @@ void printProgress(double progress);
 
 const string placeholderFileName = ".placeholder";
 void getFilesInDirectory(const string & path, vector<string> & files);
+
+void createAndEmptyDirectory(const string & dir);
 
 struct MMapFile {
     int fd;

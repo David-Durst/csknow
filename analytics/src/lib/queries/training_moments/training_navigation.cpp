@@ -116,6 +116,9 @@ namespace csknow::navigation {
         //      tough luck, not doing anything until next period)
 #pragma omp parallel for
         for (int64_t roundIndex = 0; roundIndex < rounds.size; roundIndex++) {
+            string roundOutputDir = outputDir + "_" + std::to_string(roundIndex);
+            createAndEmptyDirectory(roundOutputDir);
+
             RollingWindow rollingWindow(rounds, ticks, playerAtTick);
 
             // images created every sync tick
@@ -146,9 +149,9 @@ namespace csknow::navigation {
 
                 // need to remember one CT and one T players paths so can save team data
                 const TemporalImageNames ctImgNames = TemporalImageNames(tickIndex, "", ENGINE_TEAM_CT,
-                                                                         outputDir);
+                                                                         roundOutputDir);
                 const TemporalImageNames tImgNames = TemporalImageNames(tickIndex, "", ENGINE_TEAM_T,
-                                                                        outputDir);
+                                                                        roundOutputDir);
 
                 // pass 1: compute everything that is only per player or per one team
                 for (int64_t patIndex = ticks.patPerTick[tickIndex].minId;
@@ -201,7 +204,7 @@ namespace csknow::navigation {
                         if (syncTick) {
                             TemporalImageNames imgNames = TemporalImageNames(tickIndex,
                                                                              players.name[players.idOffset + playerId],
-                                                                             teamId, outputDir);
+                                                                             teamId, roundOutputDir);
                             syncToImageNames.back()[playerId] = imgNames;
                             mapState.saveNewMapState(playerPos[playerId], imgNames.playerPos);
                             mapState.saveNewMapState(playerVis[playerId], imgNames.playerVis);
@@ -286,8 +289,42 @@ namespace csknow::navigation {
 
             }
 
+            string subDirCommand = "mkdir " + roundOutputDir + "/trainNavData && mv " + roundOutputDir + "/*.png " + roundOutputDir + "/trainNavData/";
+            if (system(subDirCommand.c_str()) != 0) {
+                std::cerr << "create sub dir failed" << std::endl;
+            }
+            string removeOldTar = "rm -f " + roundOutputDir + ".tar";
+            if (system(removeOldTar.c_str()) != 0) {
+                std::cerr << "remove old tar failed" << std::endl;
+            }
+            string tarCommand = "tar -cf " + roundOutputDir + ".tar -C " + roundOutputDir + " trainNavData/";
+            if (system(tarCommand.c_str()) != 0) {
+                std::cerr << "tar failed" << std::endl;
+            }
+            string removeSubDirCommand = "rm -rf " + roundOutputDir;
+            if (system(removeSubDirCommand.c_str()) != 0) {
+                std::cerr << "remove sub dir failed" << std::endl;
+            }
+
             roundsProcessed++;
             printProgress(roundsProcessed, rounds.size);
+        }
+
+        string removeOldMainTarCommand = "rm -f " + outputDir + ".tar";
+        if (system(removeOldMainTarCommand.c_str()) != 0) {
+            std::cerr << "remove old main tar failed" << std::endl;
+        }
+        string makeMainTarCommand = "mv " + outputDir + "_0.tar " + outputDir + ".tar";
+        if (system(makeMainTarCommand.c_str()) != 0) {
+            std::cerr << "make main tar failed" << std::endl;
+        }
+        string combineTars = "tar --concatenate --file=" + outputDir + ".tar " + outputDir + "_*";
+        if (system(combineTars.c_str()) != 0) {
+            std::cerr << "combine tars failed" << std::endl;
+        }
+        string removeExtraTars = "rm " + outputDir + "_*";
+        if (system(removeExtraTars.c_str()) != 0) {
+            std::cerr << "remove extra tars failed" << std::endl;
         }
     }
 
@@ -455,17 +492,6 @@ namespace csknow::navigation {
                                                      const string &outputDir, bool createImages) {
         string trainNavDir = outputDir + "/trainNavData";
 
-        // create a fresh directory to save to
-        if (createImages) {
-            if (!fs::exists(trainNavDir)) {
-                fs::create_directory(trainNavDir);
-            }
-            for (auto &path: fs::directory_iterator(trainNavDir)) {
-                fs::remove(path);
-            }
-        }
-
-
         TrainingNavigationResult result(players);
         vector<set<int64_t>> roundSyncTicks =
             createNavResult(games, rounds, ticks, playerAtTick, nonEngagementTrajectoryResult, result);
@@ -487,12 +513,7 @@ namespace csknow::navigation {
         string basicTestNavDir = outputDir + "/basicTestNavData";
 
         // create a fresh directory to save to
-        if (!fs::exists(basicTestNavDir)) {
-            fs::create_directory(basicTestNavDir);
-        }
-        for (auto &path: fs::directory_iterator(basicTestNavDir)) {
-            fs::remove(path);
-        }
+        createAndEmptyDirectory(basicTestNavDir);
 
         MapState mapState(visPoints);
         mapState = visPoints.getCellVisPoints()[2418].visibleFromCurPoint;

@@ -54,6 +54,22 @@ void getFilesInDirectory(const string & path, vector<string> & files) {
     std::sort(files.begin(), files.end());
 }
 
+void createAndEmptyDirectory(const string & dir) {
+    if (!fs::exists(dir)) {
+        fs::create_directory(dir);
+    }
+    for (auto &path: fs::directory_iterator(dir)) {
+        fs::remove(path);
+    }
+}
+
+void removeDirectory(const string & dir) {
+    for (auto &path: fs::directory_iterator(dir)) {
+        fs::remove(path);
+    }
+    fs::remove(dir);
+}
+
 MMapFile openMMapFile(const string & filePath) {
     int fd = open(filePath.c_str(), O_RDONLY);
     if (fd < 0)
