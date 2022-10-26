@@ -134,11 +134,14 @@ namespace csknow {
         return *this;
     }
 
-    MapState & MapState::spread(const MapState & barrier, float decayValue, uint8_t floorValue) {
+    MapState & MapState::spread(const MapState & bounds, const MapState & barrier, float decayValue, uint8_t floorValue) {
         auto oldData(data);
         for (int64_t i = 0; i < static_cast<int64_t>(data.size()); i++) {
             for (int64_t j = 0; j < static_cast<int64_t>(data[i].size()); j++) {
-                if (barrier.data[i][j] > 0) {
+                if (bounds.data[i][j] == 0) {
+                    data[i][j] = 0;
+                }
+                else if (barrier.data[i][j] > 0) {
                     data[i][j] = 0;
                 }
                 else {
@@ -158,8 +161,11 @@ namespace csknow {
                             }
                         }
                     }
-                    if (tmpData < floorValue) {
-                        data[i][j] = tmpData;
+                    if (tmpData == 0) {
+                        data[i][j] = 0;
+                    }
+                    else if (tmpData < floorValue) {
+                        data[i][j] = floorValue;
                     }
                     else {
                         data[i][j] = std::max(floorValue, static_cast<uint8_t>(std::pow(tmpData, decayValue)));

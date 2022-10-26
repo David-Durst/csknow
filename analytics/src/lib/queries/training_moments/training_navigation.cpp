@@ -95,6 +95,13 @@ namespace csknow::navigation {
                                 const string &outputDir, const vector<set<int64_t>> & roundSyncTicks) {
         std::cout << "creating training nav images" << std::endl;
         std::atomic<int64_t> roundsProcessed = 0;
+
+        CellBits bounds;
+        for (const auto &cellVisPoint: visPoints.getCellVisPoints()) {
+            bounds.set(cellVisPoint.cellId, true);
+        }
+        MapState boundsState(visPoints, bounds);
+
         // for each round
         // for each tick
         // check when each player is in a region visible to enemy team
@@ -232,10 +239,10 @@ namespace csknow::navigation {
                             playerPosForEnemies.insert({playerId, posStateForEnemies});
                         } else {
                             if (teamId == ENGINE_TEAM_CT) {
-                                playerPosForEnemies.at(playerId).spread(tVisMapState);
+                                playerPosForEnemies.at(playerId).spread(boundsState, tVisMapState);
                             }
                             else {
-                                playerPosForEnemies.at(playerId).spread(ctVisMapState);
+                                playerPosForEnemies.at(playerId).spread(boundsState, ctVisMapState);
                             }
                         }
                         if (teamId == ENGINE_TEAM_CT) {
@@ -270,7 +277,7 @@ namespace csknow::navigation {
                     lastTickC4SeenByCT = tickIndex;
                     c4PosForCT = c4Pos;
                 } else {
-                    c4PosForCT.spread(ctVisMapState);
+                    c4PosForCT.spread(boundsState, ctVisMapState);
                 }
                 if (syncTick) {
                     c4PosForCT.saveMapState(ctImgNames.c4Pos);
@@ -477,67 +484,85 @@ namespace csknow::navigation {
     }
 
     void testNavImages(const VisPoints &visPoints, const string &outputDir) {
+        string basicTestNavDir = outputDir + "/basicTestNavData";
+
+        // create a fresh directory to save to
+        if (!fs::exists(basicTestNavDir)) {
+            fs::create_directory(basicTestNavDir);
+        }
+        for (auto &path: fs::directory_iterator(basicTestNavDir)) {
+            fs::remove(path);
+        }
+
         MapState mapState(visPoints);
         mapState = visPoints.getCellVisPoints()[2418].visibleFromCurPoint;
-        mapState.saveMapState(outputDir + "/visibleFromMid.png");
+        mapState.saveMapState(basicTestNavDir + "/visibleFromMid.png");
         CellBits all1s;
         for (const auto &cellVisPoint: visPoints.getCellVisPoints()) {
             all1s.set(cellVisPoint.cellId, true);
         }
-        mapState = all1s;
-        mapState.saveMapState(outputDir + "/wholeMap.png");
+        MapState all1sState(visPoints, all1s);
+        all1sState.saveMapState(basicTestNavDir + "/wholeMap.png");
         CellBits viewAngle = getCellsInFOV(visPoints, visPoints.getCellVisPoints()[16133].topCenter, {0., 0.});
         mapState = viewAngle;
-        mapState.saveMapState(outputDir + "/BSideTSpawnToASide.png");
+        mapState.saveMapState(basicTestNavDir + "/BSideTSpawnToASide.png");
 
         CellBits leftViewAngle = getCellsInFOV(visPoints, visPoints.getCellVisPoints()[2418].topCenter, {90., 0.});
         mapState = leftViewAngle;
-        mapState.saveMapState(outputDir + "/midLeft.png");
+        mapState.saveMapState(basicTestNavDir + "/midLeft.png");
 
         CellBits leftVisibleViewAngle = leftViewAngle;
         leftVisibleViewAngle &= visPoints.getCellVisPoints()[2418].visibleFromCurPoint;
-        mapState = leftVisibleViewAngle;
-        mapState.saveMapState(outputDir + "/midLeftVisible.png");
+        MapState leftVisibleState(visPoints, leftVisibleViewAngle);
+        leftVisibleState.saveMapState(basicTestNavDir + "/midLeftVisible.png");
 
         CellBits upViewAngle = getCellsInFOV(visPoints, visPoints.getCellVisPoints()[2418].topCenter, {90., -32.});
         mapState = upViewAngle;
-        mapState.saveMapState(outputDir + "/midLeftUp.png");
+        mapState.saveMapState(basicTestNavDir + "/midLeftUp.png");
 
         Vec3 downPos = visPoints.getCellVisPoints()[16133].topCenter;
         downPos.z += 90;
         CellBits straightDownViewAngle = getCellsInFOV(visPoints, downPos, {90., 90.});
         mapState = straightDownViewAngle;
-        mapState.saveMapState(outputDir + "/straightDownTestViewAngle.png");
+        mapState.saveMapState(basicTestNavDir + "/straightDownTestViewAngle.png");
 
         CellBits straightUpViewAngle = getCellsInFOV(visPoints, downPos, {90., -90.});
         mapState = straightUpViewAngle;
-        mapState.saveMapState(outputDir + "/straightUpTestViewAngle.png");
+        mapState.saveMapState(basicTestNavDir + "/straightUpTestViewAngle.png");
 
         MapState emptyMapState(visPoints);
         CellBits onePoint;
-        onePoint.set(2418, true);
-        mapState = onePoint;
-        mapState.saveMapState(outputDir + "/midBlur0.png");
-        mapState.spread(emptyMapState);
-        mapState.saveMapState(outputDir + "/midBlur0_250.png");
-        mapState.spread(emptyMapState);
-        mapState.saveMapState(outputDir + "/midBlur0_500.png");
-        mapState.spread(emptyMapState);
-        mapState.spread(emptyMapState);
-        mapState.saveMapState(outputDir + "/midBlur1_000.png");
-        mapState.spread(emptyMapState);
-        mapState.saveMapState(outputDir + "/midBlur1_250.png");
-        mapState.spread(emptyMapState);
-        mapState.saveMapState(outputDir + "/midBlur1_500.png");
-        mapState.spread(emptyMapState);
-        mapState.saveMapState(outputDir + "/midBlur1_750.png");
-        mapState.spread(emptyMapState);
-        mapState.saveMapState(outputDir + "/midBlur2_000.png");
-        for (size_t i = 0; i < 5; i++) {
-            for (size_t j = 0; j < 40; j++) {
-                mapState.spread(emptyMapState);
+        onePoint.set(16133, true);
+        MapState noBarrierState(visPoints), barrierState(visPoints);
+        noBarrierState = onePoint;
+        barrierState = onePoint;
+        int numSeconds = 0;
+        int numMS = 0;
+        noBarrierState.saveMapState(basicTestNavDir + "/nobarrier_spread0_000.png");
+        barrierState.saveMapState(basicTestNavDir + "/barrier_spread0_000.png");
+        for (size_t i = 0; i < 4*40; i++) {
+            numMS++;
+            numMS %= 4;
+            if (numMS == 0) {
+                numSeconds++;
             }
-            mapState.saveMapState(outputDir + "/midBlur" + std::to_string(2 + 10*(i+1)) + "_000.png");
+            noBarrierState.spread(all1sState, emptyMapState);
+            barrierState.spread(all1sState, leftVisibleState);
+            string msString;
+            if (numMS == 0) {
+                msString = "000";
+            }
+            else if (numMS == 1) {
+                msString = "250";
+            }
+            else if (numMS == 2) {
+                msString = "500";
+            }
+            else {
+                msString = "750";
+            }
+            noBarrierState.saveMapState(basicTestNavDir + "/nobarrier_spread" + std::to_string(numSeconds) + "_" + msString + ".png");
+            barrierState.saveMapState(basicTestNavDir + "/barrier_spread" + std::to_string(numSeconds) + "_" + msString + ".png");
         }
         std::cout << "finished test nav images" << std::endl;
     }

@@ -35,7 +35,7 @@ namespace csknow {
         [[maybe_unused]] MapState & operator*=(const uint8_t & value);
         [[maybe_unused]] MapState & operator/=(const uint8_t & value);
         [[maybe_unused]] MapState & conv(const conv_matrix & mat, uint16_t floorValue = 60);
-        [[maybe_unused]] MapState & spread(const MapState & barrier, float decayValue = 0.99, uint8_t floorValue = 30);
+        [[maybe_unused]] MapState & spread(const MapState & bounds, const MapState & barrier, float decayValue = 0.993, uint8_t floorValue = 30);
     };
 }
 
