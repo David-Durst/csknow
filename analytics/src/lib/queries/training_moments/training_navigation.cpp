@@ -301,7 +301,7 @@ namespace csknow::navigation {
             if (system(tarCommand.c_str()) != 0) {
                 std::cerr << "tar failed" << std::endl;
             }
-            string removeSubDirCommand = "rm -rf " + roundOutputDir;
+            string removeSubDirCommand = "rm -f " + roundOutputDir + "/trainNavData/* && rmdir " + roundOutputDir + "/trainNavData && rmdir " + roundOutputDir;
             if (system(removeSubDirCommand.c_str()) != 0) {
                 std::cerr << "remove sub dir failed" << std::endl;
             }
