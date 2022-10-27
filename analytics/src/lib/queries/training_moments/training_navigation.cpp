@@ -41,6 +41,7 @@ namespace csknow::navigation {
                                             ntData.tickIds[futureNTTickNum]) >= FUTURE_NAV_SECONDS) {
                         futureTickId = ntData.tickIds[futureNTTickNum];
                         futurePATId = ntData.patIds[futureNTTickNum];
+                        break;
                     }
                 }
                 if (futureTickId == INVALID_ID) {
