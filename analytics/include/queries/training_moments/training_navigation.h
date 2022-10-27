@@ -111,7 +111,7 @@ namespace csknow {
                 for (size_t i = 0; i < TOTAL_NAV_TICKS; i++) {
                     // empty output dir as may load result from different directory
                     TemporalImageNames imgNames(segmentTickIds[index][i], players.name[playerId[index]],
-                                               teamId[index], trainNavDir);
+                                               teamId[index], "");
                     ss << "," << playerViewDir[index][i].x << "," << playerViewDir[index][i].y
                        << "," << health[index][i] << "," << armor[index][i]
                        << "," << imgNames.playerPos
