@@ -115,7 +115,7 @@ namespace csknow::navigation {
         //      only save state when on a sync clock for all players (if you started your trajectory off clock,
         //      tough luck, not doing anything until next period)
 #pragma omp parallel for
-        for (int64_t roundIndex = 0; roundIndex < rounds.size; roundIndex++) {
+        for (int64_t roundIndex = 0; roundIndex < 1LL/*rounds.size*/; roundIndex++) {
             string roundOutputDir = outputDir + "_" + std::to_string(roundIndex);
             createAndEmptyDirectory(roundOutputDir);
 
@@ -156,10 +156,6 @@ namespace csknow::navigation {
                 // pass 1: compute everything that is only per player or per one team
                 for (int64_t patIndex = ticks.patPerTick[tickIndex].minId;
                      patIndex <= ticks.patPerTick[tickIndex].maxId; patIndex++) {
-                    if (patIndex == 38175) {
-                        int x = 1;
-                        (void) x;
-                    }
                     if (playerAtTick.isAlive[patIndex]) {
                         int64_t playerId = playerAtTick.playerId[patIndex];
                         TeamId teamId = playerAtTick.team[patIndex];
@@ -237,10 +233,8 @@ namespace csknow::navigation {
                             (teamId == ENGINE_TEAM_CT && tVis[playerCellIds[playerId]]) ||
                             (teamId == ENGINE_TEAM_T && ctVis[playerCellIds[playerId]])) {
                             lastTickPlayerSeenByEnemies[playerId] = tickIndex;
-                            MapState posStateForEnemies(visPoints);
-                            posStateForEnemies = playerPos[playerId];
-                            playerPosForEnemies.insert({playerId, posStateForEnemies});
-                        } else {
+                            playerPosForEnemies.insert({playerId, MapState(visPoints, playerPos[playerId])});
+                        } else if (syncTick){
                             if (teamId == ENGINE_TEAM_CT) {
                                 playerPosForEnemies.at(playerId).spread(boundsState, tVisMapState);
                             }
@@ -279,7 +273,7 @@ namespace csknow::navigation {
                 if (lastTickC4SeenByCT == INVALID_ID || ctVis[c4CellVisPoint.cellId]) {
                     lastTickC4SeenByCT = tickIndex;
                     c4PosForCT = c4Pos;
-                } else {
+                } else if (syncTick) {
                     c4PosForCT.spread(boundsState, ctVisMapState);
                 }
                 if (syncTick) {

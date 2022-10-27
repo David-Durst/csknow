@@ -24,16 +24,11 @@ namespace csknow {
             *this = value;
         };
         void saveNewMapState(const CellBits & value, const fs::path & path);
-        void saveNewMapState(const vector<uint8_t> & value, const fs::path & path);
+        [[maybe_unused]] void saveNewMapState(const vector<uint8_t> & value, const fs::path & path);
         void saveMapState(const fs::path & path);
         MapState & operator=(const CellBits & value);
         MapState & operator=(const vector<uint8_t> & value);
         [[maybe_unused]] MapState & operator|=(const MapState & value);
-        [[maybe_unused]] MapState & operator+=(const MapState & value);
-        [[maybe_unused]] MapState & operator+=(const uint8_t & value);
-        [[maybe_unused]] MapState & operator-=(const uint8_t & value);
-        [[maybe_unused]] MapState & operator*=(const uint8_t & value);
-        [[maybe_unused]] MapState & operator/=(const uint8_t & value);
         [[maybe_unused]] MapState & conv(const conv_matrix & mat, uint16_t floorValue = 60);
         [[maybe_unused]] MapState & spread(const MapState & bounds, const MapState & barrier, float decayValue = 0.993, uint8_t floorValue = 30);
     };

@@ -56,51 +56,6 @@ namespace csknow {
         return *this;
     }
 
-    MapState & MapState::operator+=(const MapState & value) {
-        for (size_t i = 0; i < data.size(); i++) {
-            for (size_t j = 0; j < data[i].size(); j++) {
-                data[i][j] += value.data[i][j];
-            }
-        }
-        return *this;
-    }
-
-    MapState & MapState::operator+=(const uint8_t & value) {
-        for (size_t i = 0; i < data.size(); i++) {
-            for (size_t j = 0; j < data[i].size(); j++) {
-                data[i][j] += value;
-            }
-        }
-        return *this;
-    }
-
-    MapState & MapState::operator-=(const uint8_t & value) {
-        for (size_t i = 0; i < data.size(); i++) {
-            for (size_t j = 0; j < data[i].size(); j++) {
-                data[i][j] -= value;
-            }
-        }
-        return *this;
-    }
-
-    MapState & MapState::operator*=(const uint8_t & value) {
-        for (size_t i = 0; i < data.size(); i++) {
-            for (size_t j = 0; j < data[i].size(); j++) {
-                data[i][j] *= value;
-            }
-        }
-        return *this;
-    }
-
-    MapState & MapState::operator/=(const uint8_t & value) {
-        for (size_t i = 0; i < data.size(); i++) {
-            for (size_t j = 0; j < data[i].size(); j++) {
-                data[i][j] /= value;
-            }
-        }
-        return *this;
-    }
-
     MapState & MapState::conv(const conv_matrix & mat, uint16_t floorValue) {
         auto oldData(data);
         uint16_t norm = 0;
