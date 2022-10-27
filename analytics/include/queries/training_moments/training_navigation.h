@@ -38,11 +38,13 @@ namespace csknow {
         constexpr int FUTURE_NAV_TICKS = 1;
         constexpr double FUTURE_NAV_SECONDS = 5.0;
         constexpr int TOTAL_NAV_TICKS = PAST_NAV_TICKS + CUR_NAV_TICK + FUTURE_NAV_TICKS;
+        constexpr double POS_DELTA_THRESHOLD = 5.;
 
         struct TemporalImageNames {
             // known purely from one player's data
             string playerPos;
             string playerVis;
+            string playerVisFrom;
             string distanceMap;
             string goalPos;
             // require either all players on one or both teams
@@ -59,6 +61,7 @@ namespace csknow {
                 string teamName = teamId == ENGINE_TEAM_T ? TEAM_T_NAME : TEAM_CT_NAME;
                 playerPos = outputDir + "playerPos_" + playerName + "_" + std::to_string(tickIndex) + ".png";
                 playerVis = outputDir + "playerVis_" + playerName + "_" + std::to_string(tickIndex) + ".png";
+                playerVisFrom = outputDir + "playerVisFrom_" + playerName + "_" + std::to_string(tickIndex) + ".png";
                 distanceMap = outputDir + "distanceMap_" + playerName + "_" + std::to_string(tickIndex) + ".png";
                 goalPos = outputDir + "goalPos_" + playerName + "_" + std::to_string(tickIndex) + ".png";
                 friendlyPos = outputDir + "friendlyPos_" + teamName + "_" + std::to_string(tickIndex) + ".png";
@@ -66,6 +69,16 @@ namespace csknow {
                 visEnemies = outputDir + "visEnemies_" + teamName + "_" + std::to_string(tickIndex) + ".png";
                 c4Pos = outputDir + "c4Pos_" + teamName + "_" + std::to_string(tickIndex) + ".png";
             }
+        };
+
+        enum class MovementBins {
+            DECREASE = -1,
+            CONSTANT = 0,
+            INCREASE = 1,
+            NUM_MOVEMENT_BINS
+        };
+        struct MovementResult {
+            MovementBins xResult, yResult;
         };
 
         class TrainingNavigationResult : public QueryResult {
@@ -86,6 +99,7 @@ namespace csknow {
             vector<array<Vec2, TOTAL_NAV_TICKS>> playerViewDir;
             vector<array<double, TOTAL_NAV_TICKS>> health;
             vector<array<double, TOTAL_NAV_TICKS>> armor;
+            vector<MovementResult> movementResult;
 
             TrainingNavigationResult(const Players & players) : players(players) {
                 variableLength = false;
@@ -115,19 +129,23 @@ namespace csknow {
                     ss << "," << playerViewDir[index][i].x << "," << playerViewDir[index][i].y
                        << "," << health[index][i] << "," << armor[index][i]
                        << "," << imgNames.playerPos
-                       << "," << imgNames.friendlyPos
                        << "," << imgNames.playerVis
+                       << "," << imgNames.playerVisFrom
+                       << "," << imgNames.distanceMap
+                       << "," << imgNames.goalPos
+                       << "," << imgNames.friendlyPos
                        << "," << imgNames.friendlyVis
                        << "," << imgNames.visEnemies
-                       << "," << imgNames.distanceMap
                        << "," << imgNames.c4Pos;
                 }
+                ss << "," << enumAsInt(movementResult[index].xResult)
+                   << "," << enumAsInt(movementResult[index].yResult);
 
                 ss << std::endl;
             }
 
             vector<string> getForeignKeyNames() override {
-                return {"cur tick id", "trajectory id", "player id"};
+                return {"tick id", "trajectory id", "player id"};
             }
 
             vector<string> getOtherColumnNames() override {
@@ -137,14 +155,18 @@ namespace csknow {
                     result.push_back("player view dir y (t" + toSignedIntString(i, true) + ")");
                     result.push_back("health (t" + toSignedIntString(i, true) + ")");
                     result.push_back("armor (t" + toSignedIntString(i, true) + ")");
-                    result.push_back("player pos img name (t" + toSignedIntString(i, true) + ")");
-                    result.push_back("friendly pos img name (t" + toSignedIntString(i, true) + ")");
-                    result.push_back("player vis img name (t" + toSignedIntString(i, true) + ")");
-                    result.push_back("friendly vis img name (t" + toSignedIntString(i, true) + ")");
-                    result.push_back("vis enemies img name (t" + toSignedIntString(i, true) + ")");
-                    result.push_back("distance map img name (t" + toSignedIntString(i, true) + ")");
-                    result.push_back("c4 pos img name (t" + toSignedIntString(i, true) + ")");
+                    result.push_back("player pos (t" + toSignedIntString(i, true) + ")");
+                    result.push_back("player vis (t" + toSignedIntString(i, true) + ")");
+                    result.push_back("player vis from (t" + toSignedIntString(i, true) + ")");
+                    result.push_back("distance map (t" + toSignedIntString(i, true) + ")");
+                    result.push_back("goal pos (t" + toSignedIntString(i, true) + ")");
+                    result.push_back("friendly pos (t" + toSignedIntString(i, true) + ")");
+                    result.push_back("friendly vis (t" + toSignedIntString(i, true) + ")");
+                    result.push_back("vis enemies (t" + toSignedIntString(i, true) + ")");
+                    result.push_back("c4 pos (t" + toSignedIntString(i, true) + ")");
                 }
+                result.push_back("movement result x");
+                result.push_back("movement result y");
                 return result;
             }
 

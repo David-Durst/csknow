@@ -27,6 +27,7 @@ namespace csknow::navigation {
                         vector<vector<array<Vec2, TOTAL_NAV_TICKS>>> &tmpPlayerViewDir,
                         vector<vector<array<double, TOTAL_NAV_TICKS>>> &tmpHealth,
                         vector<vector<array<double, TOTAL_NAV_TICKS>>> &tmpArmor,
+                        vector<vector<MovementResult>> &tmpMovementResult,
                         int threadNum, const PlayerAtTick & playerAtTick,
                         const Ticks & ticks, const TickRates & tickRates,
                         const vector<NavTrajData> &finishedSegmentPerRound) {
@@ -69,6 +70,8 @@ namespace csknow::navigation {
                 tmpSegmentTickIds[threadNum].back()[arrayId] = ntData.tickIds[ntTickNum];
                 tmpSegmentPATIds[threadNum].back()[arrayId] = ntData.patIds[ntTickNum];
                 tmpTeamId[threadNum].push_back(playerAtTick.team[ntData.patIds[ntTickNum]]);
+                int64_t curPAT = tmpSegmentPATIds[threadNum].back()[arrayId];
+                int64_t priorPAT = tmpSegmentPATIds[threadNum].back()[arrayId-1];
                 arrayId++;
                 tmpSegmentTickIds[threadNum].back()[arrayId] = futureTickId;
                 tmpSegmentPATIds[threadNum].back()[arrayId] = futurePATId;
@@ -85,6 +88,29 @@ namespace csknow::navigation {
                     };
                     tmpHealth[threadNum].back()[i] = playerAtTick.health[patId];
                     tmpArmor[threadNum].back()[i] = playerAtTick.armor[patId];
+                }
+
+                // record the result
+                double xPosDelta = playerAtTick.posX[curPAT] - playerAtTick.posX[priorPAT];
+                double yPosDelta = playerAtTick.posY[curPAT] - playerAtTick.posY[priorPAT];
+                tmpMovementResult[threadNum].push_back({});
+                if (std::abs(xPosDelta) < POS_DELTA_THRESHOLD) {
+                    tmpMovementResult[threadNum].back().xResult = MovementBins::CONSTANT;
+                }
+                else if (xPosDelta < 0) {
+                    tmpMovementResult[threadNum].back().xResult = MovementBins::DECREASE;
+                }
+                else {
+                    tmpMovementResult[threadNum].back().xResult = MovementBins::INCREASE;
+                }
+                if (std::abs(yPosDelta) < POS_DELTA_THRESHOLD) {
+                    tmpMovementResult[threadNum].back().yResult = MovementBins::CONSTANT;
+                }
+                else if (yPosDelta < 0) {
+                    tmpMovementResult[threadNum].back().yResult = MovementBins::DECREASE;
+                }
+                else {
+                    tmpMovementResult[threadNum].back().yResult = MovementBins::INCREASE;
                 }
             }
         }
@@ -205,6 +231,7 @@ namespace csknow::navigation {
                             syncToImageNames.back()[playerId] = imgNames;
                             mapState.saveNewMapState(playerPos[playerId], imgNames.playerPos);
                             mapState.saveNewMapState(playerVis[playerId], imgNames.playerVis);
+                            mapState.saveNewMapState(playerCellVisPoint.visibleFromCurPoint, imgNames.playerVisFrom);
                             mapState = reachableResult.scaledCellClosenessMatrix[playerCellVisPoint.cellId];
                             mapState.saveMapState( imgNames.distanceMap);
 
@@ -343,6 +370,7 @@ namespace csknow::navigation {
         vector<vector<array<Vec2, TOTAL_NAV_TICKS>>> tmpPlayerViewDir(numThreads);
         vector<vector<array<double, TOTAL_NAV_TICKS>>> tmpHealth(numThreads);
         vector<vector<array<double, TOTAL_NAV_TICKS>>> tmpArmor(numThreads);
+        vector<vector<MovementResult>> tmpMovementResult(numThreads);
 
         vector<set<int64_t>> roundSyncTicks(rounds.size, set<int64_t>{});
 
@@ -451,6 +479,7 @@ namespace csknow::navigation {
                            tmpPlayerViewDir,
                            tmpHealth,
                            tmpArmor,
+                           tmpMovementResult,
                            threadNum, playerAtTick,
                            ticks, tickRates,
                            finishedSegmentPerRound);
@@ -475,6 +504,7 @@ namespace csknow::navigation {
                                result.playerViewDir.push_back(tmpPlayerViewDir[minThreadId][tmpRowId]);
                                result.health.push_back(tmpHealth[minThreadId][tmpRowId]);
                                result.armor.push_back(tmpArmor[minThreadId][tmpRowId]);
+                               result.movementResult.push_back(tmpMovementResult[minThreadId][tmpRowId]);
                            });
         return roundSyncTicks;
     }
