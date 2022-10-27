@@ -24,7 +24,7 @@ def filter_df(df: pd.DataFrame, col_name) -> pd.DataFrame:
     return df[(df[col_name] < q_hi) & (df[col_name] > q_low)]
 
 
-def plot_untransformed_and_transformed(title: str, cts: IOColumnTransformers, df, float_cols, cat_cols,
+def plot_untransformed_and_transformed(title: str, df, float_cols, cat_cols,
                                        transformed_df = None):
     # plot untransformed and transformed outputs
     fig = plt.figure(figsize=(INCH_PER_FIG * len(float_cols), 3.5 * INCH_PER_FIG), constrained_layout=True)
@@ -119,12 +119,12 @@ class ModelOutputRecording:
                                columns=cts.output_types.column_names())
         transformed_test_df = pd.DataFrame(self.test_outputs_transformed.to(CPU_DEVICE_STR),
                                            columns=cts.output_types.column_names())
-        plot_untransformed_and_transformed('test predictions', cts, test_df, vis_float_columns, [],
+        plot_untransformed_and_transformed('test predictions', test_df, vis_float_columns, [],
                                            transformed_test_df)
 
         test_errors_df = pd.DataFrame(self.test_errors_untransformed.to(CPU_DEVICE_STR),
                                       columns=cts.output_types.column_names())
         transformed_test_errors_df = pd.DataFrame(self.test_errors_transformed.to(CPU_DEVICE_STR),
                                                   columns=cts.output_types.column_names())
-        plot_untransformed_and_transformed('test errors', cts, test_errors_df, vis_float_columns, [],
+        plot_untransformed_and_transformed('test errors', test_errors_df, vis_float_columns, [],
                                            transformed_test_errors_df)

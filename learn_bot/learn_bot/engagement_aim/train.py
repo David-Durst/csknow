@@ -16,50 +16,33 @@ from learn_bot.libs.df_grouping import train_test_split_by_col
 from typing import Dict, List
 from progress.bar import Bar
 
+from learn_bot.libs.temporal_column_names import TemporalIOColumnNames
+
 all_data_df = pd.read_csv(Path(__file__).parent / '..' / '..' / '..' / 'analytics' / 'csv_outputs' / 'engagementAim.csv')
 
 train_test_split = train_test_split_by_col(all_data_df, 'engagement id')
 train_df = train_test_split.train_df
 test_df = train_test_split.test_df
 
-base_float_columns: List[str] = ["delta view angle x ", "delta view angle y ",
-                                 "recoil angle x ", "recoil angle y ",
-                                 "delta view angle recoil adjusted x ", "delta view angle recoil adjusted y ",
-                                 'delta position x ', 'delta position y ', 'delta position z ',
-                                 "eye-to-head distance "]
+base_float_columns: List[str] = ["delta view angle x", "delta view angle y",
+                                 "recoil angle x", "recoil angle y",
+                                 "delta view angle recoil adjusted x", "delta view angle recoil adjusted y",
+                                 "delta position x", "delta position y", "delta position z",
+                                 "eye-to-head distance"]
 
-input_float_columns: List[str] = []
-output_float_columns: List[str] = []
-vis_float_columns: List[str] = []
-for i in range(PRIOR_TICKS, FUTURE_TICKS+CUR_TICK):
-    offset_str = "(t"
-    if i < 0:
-        offset_str += str(i)
-    elif i > 0:
-        offset_str += "+" + str(i)
-    offset_str += ")"
-
-    if i < 0:
-        for base_col in base_float_columns:
-            input_float_columns.append(base_col + offset_str)
-    else:
-        for base_col in base_float_columns:
-            if i == 0:
-                vis_float_columns.append(base_col + offset_str)
-            output_float_columns.append(base_col + offset_str)
+temporal_io_float_column_names = TemporalIOColumnNames(base_float_columns, PRIOR_TICKS, CUR_TICK, FUTURE_TICKS)
 
 input_categorical_columns: List[str] = ["weapon type"]
-vis_categorical_columns: List[str] = input_categorical_columns
 
 # transform input and output
-input_column_types = ColumnTypes(input_float_columns, input_categorical_columns, [6])
+input_column_types = ColumnTypes(temporal_io_float_column_names.input_columns, input_categorical_columns, [6])
 
-output_column_types = ColumnTypes(output_float_columns, [], [])
+output_column_types = ColumnTypes(temporal_io_float_column_names.output_columns, [], [])
 
 column_transformers = IOColumnTransformers(input_column_types, output_column_types, all_data_df)
 
 # plot data set with and without transformers
-plot_untransformed_and_transformed('train+test labels', column_transformers, all_data_df, vis_float_columns,
+plot_untransformed_and_transformed('train+test labels', all_data_df, temporal_io_float_column_names.vis_columns,
                                    input_categorical_columns)
 
 # create data sets for pytorch
@@ -168,7 +151,7 @@ for epoch_num in range(epochs):
     train_or_test(train_dataloader, model, optimizer, epoch_num, True)
     train_or_test(test_dataloader, model, None, epoch_num, False)
 
-model_output_recording.plot(column_transformers, vis_float_columns)
+model_output_recording.plot(column_transformers, temporal_io_float_column_names.vis_columns)
 
 script_model = torch.jit.trace(model.to(CPU_DEVICE_STR), first_row)
 script_model.save(Path(__file__).parent / '..' / '..' / 'models' / 'engagement_aim_model' / 'script_model.pt')
