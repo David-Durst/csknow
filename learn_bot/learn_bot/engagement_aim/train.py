@@ -12,22 +12,15 @@ from learn_bot.engagement_aim.column_management import IOColumnTransformers, Col
 from learn_bot.engagement_aim.lstm_aim_model import LSTMAimModel
 from learn_bot.engagement_aim.mlp_aim_model import MLPAimModel
 from learn_bot.engagement_aim.output_plotting import plot_untransformed_and_transformed, ModelOutputRecording
+from learn_bot.libs.df_grouping import train_test_split_by_col
 from typing import Dict, List
 from progress.bar import Bar
 
 all_data_df = pd.read_csv(Path(__file__).parent / '..' / '..' / '..' / 'analytics' / 'csv_outputs' / 'engagementAim.csv')
 
-# train test split on rounds with rounds weighted by number of entries in each round
-# so 80-20 train test split on actual data with rounds kept coherent
-# split by rounds, weight rounds by number of values in each round
-per_round_df = all_data_df.groupby(['engagement id']).count()
-# sample frac = 1 to shuffle
-random_sum_rounds_df = per_round_df.sample(frac=1).cumsum()
-# top 80% of engagements (summing by ticks per engagement to weight by ticks) are training data, rest are test
-top_80_pct_rounds = random_sum_rounds_df[random_sum_rounds_df['id'] < 0.8 * len(all_data_df)].index.to_list()
-all_data_df_split_predicate = all_data_df['engagement id'].isin(top_80_pct_rounds)
-train_df = all_data_df[all_data_df_split_predicate]
-test_df = all_data_df[~all_data_df_split_predicate]
+train_test_split = train_test_split_by_col(all_data_df, 'engagement id')
+train_df = train_test_split.train_df
+test_df = train_test_split.test_df
 
 base_float_columns: List[str] = ["delta view angle x ", "delta view angle y ",
                                  "recoil angle x ", "recoil angle y ",
