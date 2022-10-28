@@ -27,7 +27,7 @@ imgs = nav_dataset.__getitem__(0)
 #This creates the main window of an application
 window = tk.Tk()
 window.title("Nav Images")
-window.geometry("600x600")
+window.geometry("600x650")
 window.configure(background='grey')
 
 # cur player's images
@@ -83,6 +83,45 @@ def tick_slider_changed(cur_tick_index):
     global cur_tick
     cur_tick = ticks[int(cur_tick_index)]
     tick_id_text_var.set("Tick ID: " + str(cur_tick))
+
+
+def step_back_clicked():
+    cur_tick_index = int(tick_slider.get())
+    if cur_tick_index > 0:
+        cur_tick_index -= 1
+        tick_slider.set(cur_tick_index)
+        tick_slider_changed(cur_tick_index)
+
+
+play_active: bool = False
+num_play_updates_sleeping: int = 0
+def play_clicked():
+    global play_active, num_play_updates_sleeping
+    play_active = not play_active
+    if play_active:
+        play_button.configure(bg='green')
+        # technically not sleeping, but need to increment by 1 so -= 1 math works out
+        num_play_updates_sleeping += 1
+        play_update()
+    else:
+        play_button.configure(bg=orig_player_button_color)
+
+
+def play_update():
+    global num_play_updates_sleeping
+    num_play_updates_sleeping -= 1
+    if play_active and num_play_updates_sleeping == 0:
+        step_forward_clicked()
+        num_play_updates_sleeping += 1
+        play_button.after(250, play_update)
+
+
+def step_forward_clicked():
+    cur_tick_index = int(tick_slider.get())
+    if cur_tick_index < len(ticks) - 1:
+        cur_tick_index += 1
+        tick_slider.set(cur_tick_index)
+        tick_slider_changed(cur_tick_index)
 
 
 # state setters
@@ -153,6 +192,17 @@ tick_slider = tk.Scale(
     command=tick_slider_changed
 )
 tick_slider.pack(side="left")
+
+# creating tick play/pause/step buttons
+tick_step_frame = tk.Frame(window)
+tick_step_frame.pack(pady=5)
+back_step_button = tk.Button(tick_step_frame, text="⏪", command=step_back_clicked)
+back_step_button.pack(side="left")
+play_button = tk.Button(tick_step_frame, text="⏯", command=play_clicked)
+orig_player_button_color = play_button.cget("background")
+play_button.pack(side="left")
+forward_step_button = tk.Button(tick_step_frame, text="⏩", command=step_forward_clicked)
+forward_step_button.pack(side="left")
 
 # initial value settings
 change_player_dependent_data()
