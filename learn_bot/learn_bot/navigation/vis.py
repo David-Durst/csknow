@@ -3,8 +3,9 @@ from pathlib import Path
 
 from learn_bot.libs.temporal_column_names import TemporalIOColumnNames
 from learn_bot.navigation.dataset import NavDataset
-from typing import List
+from typing import List, Dict
 
+from dataclasses import dataclass
 import tkinter as tk
 from tkinter import ttk
 from PIL import Image, ImageTk
@@ -22,9 +23,15 @@ temporal_column_names = TemporalIOColumnNames(base_vis_columns, 0, 1, 0)
 
 nav_dataset = NavDataset(non_img_df, csv_outputs_path / 'trainNavData.tar', temporal_column_names.vis_columns)
 
-tick_index_to_nav_index = {}
-for nav_index, tick_index in non_img_df.loc[:, 'tick id'].items():
-    tick_index_to_nav_index[tick_index] = nav_index
+@dataclass(frozen=True)
+class PlayerAndTick:
+    player_name: str
+    tick_index: int
+
+player_tick_index_to_nav_index: Dict[PlayerAndTick, int] = {}
+for nav_index, row in non_img_df.iterrows():
+    player_tick_index_to_nav_index[PlayerAndTick(row['player name'], row['tick id'])] = \
+        nav_index
 
 
 #This creates the main window of an application
@@ -86,7 +93,8 @@ def tick_slider_changed(cur_tick_index):
     global cur_tick
     cur_tick = ticks[int(cur_tick_index)]
     tick_id_text_var.set("Tick ID: " + str(cur_tick))
-    new_img = ImageTk.PhotoImage(nav_dataset.get_image_grid(tick_index_to_nav_index[cur_tick]))
+    new_img = ImageTk.PhotoImage(nav_dataset.get_image_grid(
+        player_tick_index_to_nav_index[PlayerAndTick(selected_player, cur_tick)]))
     grid_img_label.configure(image=new_img)
     grid_img_label.image = new_img
 
