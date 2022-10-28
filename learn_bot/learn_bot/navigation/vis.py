@@ -25,15 +25,27 @@ imgs = nav_dataset.__getitem__(0)
 
 #This creates the main window of an application
 window = tk.Tk()
-window.title("Test Image")
+window.title("Nav Images")
 window.geometry("800x800")
 window.configure(background='grey')
 
+# cur player's images
 img = ImageTk.PhotoImage(nav_dataset.get_image_grid(0))
 panel = tk.Label(window, image = img)
-panel.pack(side="bottom", fill="both", expand="yes")
+panel.pack(side="top")
+
+players = nav_dataset.player_id.unique()
+def slider_changed(event):
+    print(slider.get())
+
+slider = tk.Scale(
+    window,
+    from_=0,
+    to=100,
+    orient='horizontal',
+    variable=current_value
+    command=slider_changed
+)
 
 #Start the GUI
 window.mainloop()
-
-x = 1

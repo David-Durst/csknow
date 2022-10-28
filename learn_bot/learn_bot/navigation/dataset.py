@@ -31,6 +31,7 @@ class NavDataset(Dataset):
         self.id = df.loc[:, 'id']
         self.tick_id = df.loc[:, 'tick id']
         self.player_id = df.loc[:, 'player id']
+        self.player_id = df.loc[:, 'player name']
         self.img_cols_names = img_cols_names
         self.img_cols = {}
         for img_col_name in img_cols_names:

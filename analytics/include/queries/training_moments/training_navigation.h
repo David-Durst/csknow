@@ -120,7 +120,7 @@ namespace csknow {
 
             void oneLineToCSV(int64_t index, stringstream & ss) override {
                 ss << index << "," << segmentCurTickId[index] << "," << trajectoryId[index] << ","
-                   << playerId[index];
+                   << playerId[index] << "," << players.name[players.idOffset + playerId[index]];
 
                 for (size_t i = 0; i < TOTAL_NAV_TICKS; i++) {
                     // empty output dir as may load result from different directory
@@ -150,6 +150,7 @@ namespace csknow {
 
             vector<string> getOtherColumnNames() override {
                 vector<string> result;
+                result.push_back("player name");
                 for (int i = -1*PAST_NAV_TICKS; i <= FUTURE_NAV_TICKS; i++) {
                     result.push_back("player view dir x (t" + toSignedIntString(i, true) + ")");
                     result.push_back("player view dir y (t" + toSignedIntString(i, true) + ")");
