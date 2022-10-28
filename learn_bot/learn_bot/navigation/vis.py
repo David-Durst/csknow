@@ -63,9 +63,9 @@ def check_combo_players(event):
         players_combo_box.configure(style='Invalid.TCombobox')
 
 
-def round_changed(new_round):
+def round_changed(cur_round_index):
     global cur_round
-    cur_round = int(new_round)
+    cur_round = rounds[int(cur_round_index)]
     round_id_text_var.set("Round ID: " + str(cur_round))
 
 
@@ -82,7 +82,7 @@ def change_player():
     selected_df = non_img_df.loc[non_img_df['player name'] == selected_player]
     rounds = list(selected_df.loc[:, 'round id'].unique())
     rounds_slider.configure(to=len(rounds)-1)
-    round_changed(0)
+    rounds_slider.set(0)
 
 
 
@@ -97,11 +97,11 @@ players_combo_box['values'] = players
 players_combo_box.current(0)
 players_combo_box.bind('<KeyRelease>', check_combo_players)
 players_combo_box.bind("<<ComboboxSelected>>", update_selected_players)
-players_combo_box.pack()
+players_combo_box.pack(pady=5)
 
 # creating round slider and label
 round_frame = tk.Frame(window)
-round_frame.pack()
+round_frame.pack(pady=5)
 
 round_id_text_var = tk.StringVar()
 round_id_label = tk.Label(round_frame, textvariable=round_id_text_var)
@@ -116,7 +116,9 @@ rounds_slider = tk.Scale(
 )
 rounds_slider.pack(side="left")
 
+# initial value settings
 change_player()
+round_changed(0)
 
 #Start the GUI
 window.mainloop()
