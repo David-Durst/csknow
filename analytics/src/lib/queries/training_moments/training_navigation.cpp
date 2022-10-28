@@ -20,6 +20,7 @@ namespace csknow::navigation {
                         vector<vector<int64_t>> &tmpTrajectoryId,
                         vector<vector<int64_t>> &tmpSegmentStartTickId,
                         vector<vector<int64_t>> &tmpSegmentCurTickId,
+                        vector<vector<int64_t>> &tmpSegmentCurDemoTickId,
                         vector<vector<int64_t>> &tmpSegmentFutureTickId,
                         vector<vector<array<int64_t, TOTAL_NAV_TICKS>>> &tmpSegmentTickIds,
                         vector<vector<array<int64_t, TOTAL_NAV_TICKS>>> &tmpSegmentPATIds,
@@ -55,6 +56,7 @@ namespace csknow::navigation {
                 tmpTrajectoryId[threadNum].push_back(ntData.trajectoryId);
                 tmpSegmentStartTickId[threadNum].push_back(ntData.tickIds[ntTickNum - PAST_NAV_TICKS]);
                 tmpSegmentCurTickId[threadNum].push_back(ntData.tickIds[ntTickNum]);
+                tmpSegmentCurDemoTickId[threadNum].push_back(ticks.demoTickNumber[tmpSegmentCurTickId[threadNum].back()]);
                 tmpSegmentFutureTickId[threadNum].push_back(futureTickId);
                 tmpLength[threadNum].push_back(
                     tmpSegmentFutureTickId[threadNum].back() - tmpSegmentStartTickId[threadNum].back() + 1);
@@ -143,7 +145,7 @@ namespace csknow::navigation {
         //          future: handle bomb planted impact on pos knowledge
         //      only save state when on a sync clock for all players (if you started your trajectory off clock,
         //      tough luck, not doing anything until next period)
-#pragma omp parallel for
+//#pragma omp parallel for
         for (int64_t roundIndex = 0; roundIndex < 2LL/*rounds.size*/; roundIndex++) {
             string roundOutputDir = outputDir + "_" + std::to_string(roundIndex);
             createAndEmptyDirectory(roundOutputDir);
@@ -161,6 +163,12 @@ namespace csknow::navigation {
 
             for (int64_t tickIndex = rounds.ticksPerRound[roundIndex].minId;
                  tickIndex <= rounds.ticksPerRound[roundIndex].maxId; tickIndex++) {
+                /*
+                if (ticks.demoTickNumber[tickIndex] != 5195) {
+                    continue;
+                }
+                 */
+
                 map<int64_t, int64_t> curPlayerToPAT = rollingWindow.getPATIdForPlayerId(tickIndex);
 
                 // need to track these every tick
@@ -253,6 +261,10 @@ namespace csknow::navigation {
                 // pass 2 for each player compute their individual data that needs other team data (aka if visible to other team)
                 MapState ctVisToEnemies(visPoints), tVisToEnemies(visPoints);
                 MapState ctVisMapState(visPoints, ctVis), tVisMapState(visPoints, tVis);
+                if (tickIndex == 5131) {
+                    int y = 1;
+                    (void) y;
+                }
                 for (int64_t patIndex = ticks.patPerTick[tickIndex].minId;
                      patIndex <= ticks.patPerTick[tickIndex].maxId; patIndex++) {
                     if (playerAtTick.isAlive[patIndex]) {
@@ -261,7 +273,15 @@ namespace csknow::navigation {
                         // assume seen on first tick
                         if (lastTickPlayerSeenByEnemies.find(playerId) == lastTickPlayerSeenByEnemies.end() ||
                             (teamId == ENGINE_TEAM_CT && tVis[playerCellIds[playerId]]) ||
-                            (teamId == ENGINE_TEAM_T && ctVis[playerCellIds[playerId]])) {
+                            (teamId == ENGINE_TEAM_T && ctVis[playerCellIds[playerId]]) ||
+                             tickIndex <= rounds.freezeTimeEnd[roundIndex]) {
+                            if ((teamId == ENGINE_TEAM_CT && tVis[playerCellIds[playerId]]) ||
+                                (teamId == ENGINE_TEAM_T && ctVis[playerCellIds[playerId]])) {
+                                std::cout << "player " << players.name[players.idOffset + playerId] << " visible by other team " <<
+                                    " on tick id " << tickIndex << " and demo tick id " << ticks.demoTickNumber[tickIndex] << std::endl;
+                                int x = 1;
+                                (void) x;
+                            }
                             lastTickPlayerSeenByEnemies[playerId] = tickIndex;
                             playerPosForEnemies.insert({playerId, MapState(visPoints, playerPos[playerId])});
                         } else if (syncTick){
@@ -300,7 +320,8 @@ namespace csknow::navigation {
                 CellBits c4Pos;
                 c4Pos.set(c4CellVisPoint.cellId, true);
                 c4PosForT = c4Pos;
-                if (lastTickC4SeenByCT == INVALID_ID || ctVis[c4CellVisPoint.cellId]) {
+                if (lastTickC4SeenByCT == INVALID_ID || ctVis[c4CellVisPoint.cellId] ||
+                    tickIndex <= rounds.freezeTimeEnd[roundIndex]) {
                     lastTickC4SeenByCT = tickIndex;
                     c4PosForCT = c4Pos;
                 } else if (syncTick) {
@@ -364,6 +385,7 @@ namespace csknow::navigation {
         vector<vector<int64_t>> tmpTrajectoryId(numThreads);
         vector<vector<int64_t>> tmpSegmentStartTickId(numThreads);
         vector<vector<int64_t>> tmpSegmentCurTickId(numThreads);
+        vector<vector<int64_t>> tmpSegmentCurDemoTickId(numThreads);
         vector<vector<int64_t>> tmpSegmentFutureTickId(numThreads);
         vector<vector<array<int64_t, TOTAL_NAV_TICKS>>> tmpSegmentTickIds(numThreads);
         vector<vector<array<int64_t, TOTAL_NAV_TICKS>>> tmpSegmentPATIds(numThreads);
@@ -476,6 +498,7 @@ namespace csknow::navigation {
                            tmpTrajectoryId,
                            tmpSegmentStartTickId,
                            tmpSegmentCurTickId,
+                           tmpSegmentCurDemoTickId,
                            tmpSegmentFutureTickId,
                            tmpSegmentTickIds, tmpSegmentPATIds,
                            tmpTickLength, tmpPlayerId,
@@ -500,6 +523,7 @@ namespace csknow::navigation {
                                result.trajectoryId.push_back(tmpTrajectoryId[minThreadId][tmpRowId]);
                                result.segmentStartTickId.push_back(tmpSegmentStartTickId[minThreadId][tmpRowId]);
                                result.segmentCurTickId.push_back(tmpSegmentCurTickId[minThreadId][tmpRowId]);
+                               result.segmentCurDemoTickId.push_back(tmpSegmentCurDemoTickId[minThreadId][tmpRowId]);
                                result.segmentFutureTickId.push_back(tmpSegmentFutureTickId[minThreadId][tmpRowId]);
                                result.segmentTickIds.push_back(tmpSegmentTickIds[minThreadId][tmpRowId]);
                                result.segmentPATIds.push_back(tmpSegmentPATIds[minThreadId][tmpRowId]);
