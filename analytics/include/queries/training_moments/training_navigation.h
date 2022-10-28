@@ -87,6 +87,7 @@ namespace csknow {
             string trainNavDir = "/tmp/trainNavData";
 
             vector<RangeIndexEntry> rowIndicesPerRound;
+            vector<int64_t> roundId;
             vector<int64_t> trajectoryId;
             vector<int64_t> segmentStartTickId;
             vector<int64_t> segmentCurTickId;
@@ -119,12 +120,12 @@ namespace csknow {
             }
 
             void oneLineToCSV(int64_t index, stringstream & ss) override {
-                ss << index << "," << segmentCurTickId[index] << "," << trajectoryId[index] << ","
+                ss << index << "," << segmentCurTickId[index] << "," << roundId[index] << "," << trajectoryId[index] << ","
                    << playerId[index] << "," << players.name[players.idOffset + playerId[index]];
 
                 for (size_t i = 0; i < TOTAL_NAV_TICKS; i++) {
                     // empty output dir as may load result from different directory
-                    TemporalImageNames imgNames(segmentTickIds[index][i], players.name[playerId[index]],
+                    TemporalImageNames imgNames(segmentTickIds[index][i], players.name[players.idOffset + playerId[index]],
                                                teamId[index], "");
                     ss << "," << playerViewDir[index][i].x << "," << playerViewDir[index][i].y
                        << "," << health[index][i] << "," << armor[index][i]
@@ -145,7 +146,7 @@ namespace csknow {
             }
 
             vector<string> getForeignKeyNames() override {
-                return {"tick id", "trajectory id", "player id"};
+                return {"tick id", "round id", "trajectory id", "player id"};
             }
 
             vector<string> getOtherColumnNames() override {

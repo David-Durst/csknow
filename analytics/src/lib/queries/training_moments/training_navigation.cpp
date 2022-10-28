@@ -12,11 +12,12 @@
 
 namespace csknow::navigation {
     struct NavTrajData {
-        int64_t trajectoryId = INVALID_ID, playerId = INVALID_ID;
+        int64_t roundId = INVALID_ID, trajectoryId = INVALID_ID, playerId = INVALID_ID;
         vector<int64_t> tickIds, patIds;
     };
 
-    void recordSegments(vector<vector<int64_t>> &tmpTrajectoryId,
+    void recordSegments(vector<vector<int64_t>> &tmpRoundId,
+                        vector<vector<int64_t>> &tmpTrajectoryId,
                         vector<vector<int64_t>> &tmpSegmentStartTickId,
                         vector<vector<int64_t>> &tmpSegmentCurTickId,
                         vector<vector<int64_t>> &tmpSegmentFutureTickId,
@@ -50,6 +51,7 @@ namespace csknow::navigation {
                 }
 
                 // handle everything thats individual ticks
+                tmpRoundId[threadNum].push_back(ntData.roundId);
                 tmpTrajectoryId[threadNum].push_back(ntData.trajectoryId);
                 tmpSegmentStartTickId[threadNum].push_back(ntData.tickIds[ntTickNum - PAST_NAV_TICKS]);
                 tmpSegmentCurTickId[threadNum].push_back(ntData.tickIds[ntTickNum]);
@@ -142,7 +144,7 @@ namespace csknow::navigation {
         //      only save state when on a sync clock for all players (if you started your trajectory off clock,
         //      tough luck, not doing anything until next period)
 #pragma omp parallel for
-        for (int64_t roundIndex = 0; roundIndex < 1LL/*rounds.size*/; roundIndex++) {
+        for (int64_t roundIndex = 0; roundIndex < 2LL/*rounds.size*/; roundIndex++) {
             string roundOutputDir = outputDir + "_" + std::to_string(roundIndex);
             createAndEmptyDirectory(roundOutputDir);
 
@@ -358,6 +360,7 @@ namespace csknow::navigation {
         vector<vector<int64_t>> tmpRoundIds(numThreads);
         vector<vector<int64_t>> tmpRoundStarts(numThreads);
         vector<vector<int64_t>> tmpRoundSizes(numThreads);
+        vector<vector<int64_t>> tmpRoundIdPerTrajectory(numThreads);
         vector<vector<int64_t>> tmpTrajectoryId(numThreads);
         vector<vector<int64_t>> tmpSegmentStartTickId(numThreads);
         vector<vector<int64_t>> tmpSegmentCurTickId(numThreads);
@@ -432,7 +435,7 @@ namespace csknow::navigation {
                         // probably not necessary, but just be defensive
                         if (playerAtTick.isAlive[curPATId]) {
                             playerToCurTrajectory[curPlayerId] = {
-                                trajectoryIndex, curPlayerId, {}, {}
+                                roundIndex, trajectoryIndex, curPlayerId, {}, {}
                             };
                         }
                     }
@@ -469,7 +472,8 @@ namespace csknow::navigation {
                                  (a.trajectoryId == b.trajectoryId && a.tickIds[0] < b.tickIds[0]);
                       });
 
-            recordSegments(tmpTrajectoryId,
+            recordSegments(tmpRoundIdPerTrajectory,
+                           tmpTrajectoryId,
                            tmpSegmentStartTickId,
                            tmpSegmentCurTickId,
                            tmpSegmentFutureTickId,
@@ -492,6 +496,7 @@ namespace csknow::navigation {
         mergeThreadResults(numThreads, result.rowIndicesPerRound, tmpRoundIds, tmpRoundStarts, tmpRoundSizes,
                            result.segmentStartTickId, result.size,
                            [&](int64_t minThreadId, int64_t tmpRowId) {
+                               result.roundId.push_back(tmpRoundIdPerTrajectory[minThreadId][tmpRowId]);
                                result.trajectoryId.push_back(tmpTrajectoryId[minThreadId][tmpRowId]);
                                result.segmentStartTickId.push_back(tmpSegmentStartTickId[minThreadId][tmpRowId]);
                                result.segmentCurTickId.push_back(tmpSegmentCurTickId[minThreadId][tmpRowId]);
