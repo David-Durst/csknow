@@ -22,10 +22,11 @@ temporal_column_names = TemporalIOColumnNames(base_vis_columns, 0, 1, 0)
 nav_dataset = NavDataset(non_img_df, csv_outputs_path / 'trainNavData.tar', temporal_column_names.vis_columns)
 imgs = nav_dataset.__getitem__(0)
 
+
 #This creates the main window of an application
 window = tk.Tk()
 window.title("Test Image")
-window.geometry("1000x1000")
+window.geometry("800x800")
 window.configure(background='grey')
 
 img = ImageTk.PhotoImage(nav_dataset.get_image_grid(0))

@@ -4,7 +4,7 @@ import pandas as pd
 import torch
 from torch.utils.data import Dataset
 import tarfile
-from PIL import Image
+from PIL import Image, ImageDraw
 from pathlib import Path
 from typing import List
 from torchvision import transforms
@@ -52,11 +52,20 @@ class NavDataset(Dataset):
     def get_image_grid(self, index):
         images_tensor = self[index]
         num_images = images_tensor.shape[0]
-        height = images_tensor.shape[1] + 100
+        height = images_tensor.shape[1]
         width = images_tensor.shape[2]
         cols = int(math.ceil(math.sqrt(num_images)))
         grid = Image.new('L', size=(cols * width, cols * height))
 
         for i in range(num_images):
             grid.paste(tensor_to_pil(images_tensor[i]), box=(i % cols * width, i // cols * height))
+
+        draw = ImageDraw.Draw(grid)
+        for i in range(num_images):
+            text_width, text_height = draw.textsize(self.img_cols_names[i])
+            draw.text(
+                (i % cols * width + width * 0.5 - text_width / 2, i // cols * height + 10 - text_height / 2),
+                self.img_cols_names[i],
+                255
+            )
         return grid
