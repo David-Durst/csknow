@@ -21,7 +21,7 @@ def tensor_to_pil(tensor: Tensor) -> Image:
 
 # https://gist.github.com/rwightman/5a7c9232eb57da20afa80cedb8ac2d38
 class NavDataset(Dataset):
-    root: Path = Path("trainNavData")
+    root: str = "trainNavData"
 
     def __init__(self, df: pd.DataFrame, tar_path: Path, img_cols_names: List[str]):
         self.tar_path = tar_path
@@ -42,7 +42,7 @@ class NavDataset(Dataset):
             self.tarfile = tarfile.open(self.tar_path)
         imgs_tensors = []
         for img_col_name, img_col in self.img_cols.items():
-            tarinfo = self.tarfile.getmember(str(self.root / img_col[index]))
+            tarinfo = self.tarfile.getmember(self.root + "/" + img_col[index])
             iob = self.tarfile.extractfile(tarinfo)
             imgs_tensors.append(pil_to_tensor(Image.open(iob)))
         return torch.stack(imgs_tensors)
