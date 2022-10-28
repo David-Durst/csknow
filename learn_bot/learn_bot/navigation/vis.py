@@ -9,6 +9,9 @@ from dataclasses import dataclass
 import tkinter as tk
 from tkinter import ttk
 from PIL import Image, ImageTk
+import time
+
+start_time = time.perf_counter()
 
 csv_outputs_path = Path(__file__).parent / '..' / '..' / '..' / 'analytics' / 'csv_outputs'
 
@@ -23,6 +26,8 @@ temporal_column_names = TemporalIOColumnNames(base_vis_columns, 0, 1, 0)
 
 nav_dataset = NavDataset(non_img_df, csv_outputs_path / 'trainNavData.tar', temporal_column_names.vis_columns)
 
+end_non_img_load_time = time.perf_counter()
+
 @dataclass(frozen=True)
 class PlayerAndTick:
     player_name: str
@@ -33,6 +38,7 @@ for nav_index, row in non_img_df.iterrows():
     player_tick_index_to_nav_index[PlayerAndTick(row['player name'], row['tick id'])] = \
         nav_index
 
+player_dict_created_time = time.perf_counter()
 
 #This creates the main window of an application
 window = tk.Tk()
@@ -44,6 +50,8 @@ window.configure(background='grey')
 img = ImageTk.PhotoImage(nav_dataset.get_image_grid(0))
 grid_img_label = tk.Label(window, image=img)
 grid_img_label.pack(side="top")
+
+first_image_creation_time = time.perf_counter()
 
 players = list(nav_dataset.player_name.unique())
 selected_player = players[0]
@@ -222,6 +230,14 @@ forward_step_button.pack(side="left")
 change_player_dependent_data()
 round_slider_changed(0)
 tick_slider_changed(0)
+
+ready_time = time.perf_counter()
+
+print(f"non img load time {end_non_img_load_time - start_time: 0.4f}")
+print(f"player dict creation time {player_dict_created_time - end_non_img_load_time: 0.4f}")
+print(f"first image creation time {first_image_creation_time - player_dict_created_time: 0.4f}")
+print(f"ready time {ready_time - first_image_creation_time: 0.4f}")
+print(f"total time {ready_time - start_time: 0.4f}")
 
 # Start the GUI
 window.mainloop()
