@@ -21,7 +21,10 @@ base_vis_columns: List[str] = ["player pos", "player vis", "player vis from",
 temporal_column_names = TemporalIOColumnNames(base_vis_columns, 0, 1, 0)
 
 nav_dataset = NavDataset(non_img_df, csv_outputs_path / 'trainNavData.tar', temporal_column_names.vis_columns)
-imgs = nav_dataset.__getitem__(0)
+
+tick_index_to_nav_index = {}
+for nav_index, tick_index in non_img_df.loc[:, 'tick id'].items():
+    tick_index_to_nav_index[tick_index] = nav_index
 
 
 #This creates the main window of an application
@@ -83,6 +86,9 @@ def tick_slider_changed(cur_tick_index):
     global cur_tick
     cur_tick = ticks[int(cur_tick_index)]
     tick_id_text_var.set("Tick ID: " + str(cur_tick))
+    new_img = ImageTk.PhotoImage(nav_dataset.get_image_grid(tick_index_to_nav_index[cur_tick]))
+    grid_img_label.configure(image=new_img)
+    grid_img_label.image = new_img
 
 
 def step_back_clicked():
