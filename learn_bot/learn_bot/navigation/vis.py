@@ -57,6 +57,7 @@ players = list(nav_dataset.player_name.unique())
 selected_player = players[0]
 rounds = []
 ticks = []
+demo_ticks = []
 cur_round: int = -1
 cur_tick: int = -1
 selected_df: pd.DataFrame = non_img_df
@@ -100,7 +101,9 @@ def round_slider_changed(cur_round_index):
 def tick_slider_changed(cur_tick_index):
     global cur_tick
     cur_tick = ticks[int(cur_tick_index)]
+    cur_demo_tick = demo_ticks[int(cur_tick_index)]
     tick_id_text_var.set("Tick ID: " + str(cur_tick))
+    tick_demo_id_text_var.set("Demo Tick ID: " + str(cur_demo_tick))
     new_img = ImageTk.PhotoImage(nav_dataset.get_image_grid(
         player_tick_index_to_nav_index[PlayerAndTick(selected_player, cur_tick)]))
     grid_img_label.configure(image=new_img)
@@ -157,10 +160,11 @@ def change_player_dependent_data():
 
 
 def change_round_dependent_data():
-    global selected_df, cur_round, ticks
+    global selected_df, cur_round, ticks, demo_ticks
     selected_df = non_img_df.loc[(non_img_df['player name'] == selected_player) &
                                  (non_img_df['round id'] == cur_round)]
     ticks = list(selected_df.loc[:, 'tick id'])
+    demo_ticks = list(selected_df.loc[:, 'demo tick id'])
     tick_slider.configure(to=len(ticks)-1)
     tick_slider.set(0)
     tick_slider_changed(0)
@@ -198,19 +202,27 @@ round_slider = tk.Scale(
 round_slider.pack(side="left")
 
 # creating tick slider and label
-tick_frame = tk.Frame(window)
-tick_frame.pack(pady=5)
+tick_id_frame = tk.Frame(window)
+tick_id_frame.pack(pady=5)
 
 tick_id_text_var = tk.StringVar()
-tick_id_label = tk.Label(tick_frame, textvariable=tick_id_text_var)
+tick_id_label = tk.Label(tick_id_frame, textvariable=tick_id_text_var)
 tick_id_label.pack(side="left")
+
+tick_demo_id_text_var = tk.StringVar()
+tick_demo_id_label = tk.Label(tick_id_frame, textvariable=tick_demo_id_text_var)
+tick_demo_id_label.pack(side="left")
+
+tick_slider_frame = tk.Frame(window)
+tick_slider_frame.pack(pady=5)
+
 tick_slider = tk.Scale(
-    tick_frame,
+    tick_slider_frame,
     from_=0,
     to=100,
     orient='horizontal',
     showvalue=0,
-    length=400,
+    length=500,
     command=tick_slider_changed
 )
 tick_slider.pack(side="left")

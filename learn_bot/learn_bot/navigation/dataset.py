@@ -30,6 +30,7 @@ class NavDataset(Dataset):
 
         self.id = df.loc[:, 'id']
         self.tick_id = df.loc[:, 'tick id']
+        self.tick_id = df.loc[:, 'demo tick id']
         self.round_id = df.loc[:, 'round id']
         self.player_id = df.loc[:, 'player id']
         self.player_name = df.loc[:, 'player name']
