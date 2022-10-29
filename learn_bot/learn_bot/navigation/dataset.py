@@ -58,7 +58,8 @@ class NavDataset(Dataset):
         height = images_tensor.shape[1]
         width = images_tensor.shape[2]
         cols = int(math.ceil(math.sqrt(num_images)))
-        grid = Image.new('L', size=(cols * width, cols * height))
+        rows = math.ceil(num_images / cols)
+        grid = Image.new('L', size=(cols * width, rows * height))
 
         for i in range(num_images):
             grid.paste(tensor_to_pil(images_tensor[i]), box=(i % cols * width, i // cols * height))

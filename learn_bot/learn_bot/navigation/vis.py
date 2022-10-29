@@ -18,9 +18,9 @@ csv_outputs_path = Path(__file__).parent / '..' / '..' / '..' / 'analytics' / 'c
 non_img_df = pd.read_csv(csv_outputs_path / 'trainNav.csv')
 
 base_vis_columns: List[str] = ["player pos", "player vis", "player vis from",
-                          "distance map", "goal pos",
-                          "friendly pos", "friendly vis",
-                          "vis enemies", "c4 pos"]
+                               "distance map", "goal pos",
+                               "friendly pos", "friendly vis", "friendly vis from",
+                               "vis enemies", "vis from enemies", "c4 pos"]
 
 temporal_column_names = TemporalIOColumnNames(base_vis_columns, 0, 1, 0)
 
@@ -43,7 +43,7 @@ player_dict_created_time = time.perf_counter()
 #This creates the main window of an application
 window = tk.Tk()
 window.title("Nav Images")
-window.geometry("600x700")
+window.geometry("700x700")
 window.configure(background='grey')
 
 # cur player's images
@@ -58,6 +58,7 @@ selected_player = players[0]
 rounds = []
 ticks = []
 demo_ticks = []
+game_ticks = []
 cur_round: int = -1
 cur_tick: int = -1
 selected_df: pd.DataFrame = non_img_df
@@ -102,8 +103,10 @@ def tick_slider_changed(cur_tick_index):
     global cur_tick
     cur_tick = ticks[int(cur_tick_index)]
     cur_demo_tick = demo_ticks[int(cur_tick_index)]
+    cur_game_tick = game_ticks[int(cur_tick_index)]
     tick_id_text_var.set("Tick ID: " + str(cur_tick))
     tick_demo_id_text_var.set("Demo Tick ID: " + str(cur_demo_tick))
+    tick_game_id_text_var.set("Game Tick ID: " + str(cur_game_tick))
     nav_index = player_tick_index_to_nav_index[PlayerAndTick(selected_player, cur_tick)]
     new_img = ImageTk.PhotoImage(nav_dataset.get_image_grid(nav_index))
     cur_row = non_img_df.loc[nav_index]
@@ -164,11 +167,12 @@ def change_player_dependent_data():
 
 
 def change_round_dependent_data():
-    global selected_df, cur_round, ticks, demo_ticks
+    global selected_df, cur_round, ticks, demo_ticks, game_ticks
     selected_df = non_img_df.loc[(non_img_df['player name'] == selected_player) &
                                  (non_img_df['round id'] == cur_round)]
     ticks = list(selected_df.loc[:, 'tick id'])
     demo_ticks = list(selected_df.loc[:, 'demo tick id'])
+    game_ticks = list(selected_df.loc[:, 'game tick id'])
     tick_slider.configure(to=len(ticks)-1)
     tick_slider.set(0)
     tick_slider_changed(0)
@@ -216,6 +220,10 @@ tick_id_label.pack(side="left")
 tick_demo_id_text_var = tk.StringVar()
 tick_demo_id_label = tk.Label(tick_id_frame, textvariable=tick_demo_id_text_var)
 tick_demo_id_label.pack(side="left")
+
+tick_game_id_text_var = tk.StringVar()
+tick_game_id_label = tk.Label(tick_id_frame, textvariable=tick_game_id_text_var)
+tick_game_id_label.pack(side="left")
 
 tick_slider_frame = tk.Frame(window)
 tick_slider_frame.pack(pady=5)
