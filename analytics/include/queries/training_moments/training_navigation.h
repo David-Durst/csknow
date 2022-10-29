@@ -50,7 +50,9 @@ namespace csknow {
             // require either all players on one or both teams
             string friendlyPos;
             string friendlyVis;
+            string friendlyVisFrom;
             string visEnemies;
+            string visFromEnemies;
             string c4Pos;
             TemporalImageNames() {};
             TemporalImageNames(int64_t tickIndex, const string & playerName, TeamId teamId,
@@ -66,7 +68,9 @@ namespace csknow {
                 goalPos = outputDir + "goalPos_" + playerName + "_" + std::to_string(tickIndex) + ".png";
                 friendlyPos = outputDir + "friendlyPos_" + teamName + "_" + std::to_string(tickIndex) + ".png";
                 friendlyVis = outputDir + "friendlyVis_" + teamName + "_" + std::to_string(tickIndex) + ".png";
+                friendlyVisFrom = outputDir + "friendlyVisFrom_" + teamName + "_" + std::to_string(tickIndex) + ".png";
                 visEnemies = outputDir + "visEnemies_" + teamName + "_" + std::to_string(tickIndex) + ".png";
+                visFromEnemies = outputDir + "visFromEnemies_" + teamName + "_" + std::to_string(tickIndex) + ".png";
                 c4Pos = outputDir + "c4Pos_" + teamName + "_" + std::to_string(tickIndex) + ".png";
             }
         };
@@ -139,7 +143,9 @@ namespace csknow {
                        << "," << imgNames.goalPos
                        << "," << imgNames.friendlyPos
                        << "," << imgNames.friendlyVis
+                        << "," << imgNames.friendlyVisFrom
                        << "," << imgNames.visEnemies
+                        << "," << imgNames.visFromEnemies
                        << "," << imgNames.c4Pos;
                 }
                 ss << "," << enumAsInt(movementResult[index].xResult)
@@ -167,7 +173,9 @@ namespace csknow {
                     result.push_back("goal pos (t" + toSignedIntString(i, true) + ")");
                     result.push_back("friendly pos (t" + toSignedIntString(i, true) + ")");
                     result.push_back("friendly vis (t" + toSignedIntString(i, true) + ")");
+                    result.push_back("friendly vis from (t" + toSignedIntString(i, true) + ")");
                     result.push_back("vis enemies (t" + toSignedIntString(i, true) + ")");
+                    result.push_back("vis from enemies (t" + toSignedIntString(i, true) + ")");
                     result.push_back("c4 pos (t" + toSignedIntString(i, true) + ")");
                 }
                 result.push_back("movement result x");

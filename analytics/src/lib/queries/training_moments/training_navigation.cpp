@@ -134,6 +134,7 @@ namespace csknow::navigation {
             bounds.set(cellVisPoint.cellId, true);
         }
         MapState boundsState(visPoints, bounds);
+        MapState noBarrierState(visPoints);
 
         // for each round
         // for each tick
@@ -158,8 +159,10 @@ namespace csknow::navigation {
             vector<map<int64_t, TemporalImageNames>> syncToImageNames;
 
             // data updated every tick
-            map<int64_t, int64_t> lastTickPlayerSeenByEnemies;
-            map<int64_t, MapState> playerPosForEnemies;
+            map<int64_t, int64_t> lastTickPlayerVisByEnemies;
+            map<int64_t, int64_t> lastTickPlayerVisFromByEnemies;
+            map<int64_t, MapState> playerPosForEnemiesVis;
+            map<int64_t, MapState> playerPosForEnemiesVisFrom;
             int64_t lastTickC4SeenByCT = INVALID_ID;
             MapState c4PosForCT(visPoints), c4PosForT(visPoints);
 
@@ -182,8 +185,10 @@ namespace csknow::navigation {
                 map<int64_t, CellId> secondPlayerCellIds;
                 map<int64_t, CellBits> playerPos;
                 map<int64_t, CellBits> playerVis;
+                map<int64_t, CellBits> playerVisFrom;
                 CellBits ctPos, tPos;
                 CellBits ctVis, tVis;
+                CellBits ctVisFrom, tVisFrom;
 
                 // check if sync tick
                 bool syncTick = roundSyncTicks[roundIndex].find(tickIndex) != roundSyncTicks[roundIndex].end();
@@ -236,9 +241,9 @@ namespace csknow::navigation {
                             getCellsInFOV(visPoints, playerCellVisPoint.topCenter, playerViewAngle);
                         playerVis[playerId] |=
                             getCellsInFOV(visPoints, secondPlayerCellVisPoint.topCenter, playerViewAngle);
-                        CellBits eitherPosVisFrom = playerCellVisPoint.visibleFromCurPoint;
-                        eitherPosVisFrom |= secondPlayerCellVisPoint.visibleFromCurPoint;
-                        playerVis[playerId] &= eitherPosVisFrom;
+                        playerVisFrom[playerId] = playerCellVisPoint.visibleFromCurPoint;
+                        playerVisFrom[playerId] |= secondPlayerCellVisPoint.visibleFromCurPoint;
+                        playerVis[playerId] &= playerVisFrom[playerId];
 
                         // add to team pos
                         if (teamId == ENGINE_TEAM_CT) {
@@ -250,8 +255,10 @@ namespace csknow::navigation {
                         // add to team vis
                         if (teamId == ENGINE_TEAM_CT) {
                             ctVis |= playerVis[playerId];
+                            ctVisFrom |= playerVisFrom[playerId];
                         } else {
                             tVis |= playerVis[playerId];
+                            tVisFrom |= playerVisFrom[playerId];
                         }
 
                         MapState mapState(visPoints);
@@ -262,66 +269,76 @@ namespace csknow::navigation {
                             syncToImageNames.back()[playerId] = imgNames;
                             mapState.saveNewMapState(playerPos[playerId], imgNames.playerPos);
                             mapState.saveNewMapState(playerVis[playerId], imgNames.playerVis);
-                            mapState.saveNewMapState(eitherPosVisFrom, imgNames.playerVisFrom);
+                            mapState.saveNewMapState(playerVisFrom[playerId], imgNames.playerVisFrom);
                             mapState = reachableResult.scaledCellClosenessMatrix[playerCellVisPoint.cellId];
                             mapState.saveMapState( imgNames.distanceMap);
 
-                            CellBits goalPos;
-                            const AreaVisPoint & playerAreaVisPoint = visPoints.getAreaVisPoint(playerCellVisPoint.areaId);
-                            for (const auto & areaId : visPoints.getPlacesToAreas().at(playerAreaVisPoint.placeIndex)) {
-                                const AreaVisPoint & placeAreaVisPoint = visPoints.getAreaVisPoint(areaId);
-                                for (const auto & cellId : placeAreaVisPoint.cells) {
-                                    goalPos.set(cellId, true);
-                                }
-                            }
-                            mapState.saveNewMapState(goalPos, imgNames.goalPos);
+                            CellBits goalPos = localPos;
+                            MapState goalState(visPoints, goalPos);
+                            goalState.spread(boundsState, noBarrierState);
+                            goalState.spread(boundsState, noBarrierState);
+                            goalState.spread(boundsState, noBarrierState);
+                            goalState.spread(boundsState, noBarrierState);
+                            goalState.saveMapState(imgNames.goalPos);
                         }
                     }
                 }
 
                 // pass 2 for each player compute their individual data that needs other team data (aka if visible to other team)
+                // vis data
                 MapState ctVisToEnemies(visPoints), tVisToEnemies(visPoints);
                 MapState ctVisMapState(visPoints, ctVis), tVisMapState(visPoints, tVis);
-                if (tickIndex == 5131) {
-                    int y = 1;
-                    (void) y;
-                }
+                // vis from data
+                MapState ctVisFromEnemies(visPoints), tVisFromEnemies(visPoints);
+                MapState ctVisFromMapState(visPoints, ctVisFrom), tVisFromMapState(visPoints, tVisFrom);
                 for (int64_t patIndex = ticks.patPerTick[tickIndex].minId;
                      patIndex <= ticks.patPerTick[tickIndex].maxId; patIndex++) {
                     if (playerAtTick.isAlive[patIndex]) {
                         int64_t playerId = playerAtTick.playerId[patIndex];
                         TeamId teamId = playerAtTick.team[patIndex];
                         // assume seen on first tick
-                        if (lastTickPlayerSeenByEnemies.find(playerId) == lastTickPlayerSeenByEnemies.end() ||
+                        // vis to logic
+                        if (lastTickPlayerVisByEnemies.find(playerId) == lastTickPlayerVisByEnemies.end() ||
                             (teamId == ENGINE_TEAM_CT && (tVis[playerCellIds[playerId]] || tVis[secondPlayerCellIds[playerId]])) ||
                             (teamId == ENGINE_TEAM_T && (ctVis[playerCellIds[playerId]] || ctVis[secondPlayerCellIds[playerId]])) ||
                              tickIndex <= rounds.freezeTimeEnd[roundIndex]) {
-                            /*
-                            if ((teamId == ENGINE_TEAM_CT && tVis[playerCellIds[playerId]]) ||
-                                (teamId == ENGINE_TEAM_T && ctVis[playerCellIds[playerId]])) {
-                                std::cout << "player " << players.name[players.idOffset + playerId] << " visible by other team " <<
-                                    " on tick id " << tickIndex << " and demo tick id " << ticks.demoTickNumber[tickIndex] << std::endl;
-                                int x = 1;
-                                (void) x;
+                            lastTickPlayerVisByEnemies[playerId] = tickIndex;
+                            if (playerPosForEnemiesVis.find(playerId) != playerPosForEnemiesVis.end()) {
+                                playerPosForEnemiesVis.erase(playerId);
                             }
-                             */
-                            lastTickPlayerSeenByEnemies[playerId] = tickIndex;
-                            if (playerPosForEnemies.find(playerId) != playerPosForEnemies.end()) {
-                                playerPosForEnemies.erase(playerId);
-                            }
-                            playerPosForEnemies.insert({playerId, MapState(visPoints, playerPos[playerId])});
+                            playerPosForEnemiesVis.insert({playerId, MapState(visPoints, playerPos[playerId])});
                         } else if (syncTick){
                             if (teamId == ENGINE_TEAM_CT) {
-                                playerPosForEnemies.at(playerId).spread(boundsState, tVisMapState);
+                                playerPosForEnemiesVis.at(playerId).spread(boundsState, tVisMapState);
                             }
                             else {
-                                playerPosForEnemies.at(playerId).spread(boundsState, ctVisMapState);
+                                playerPosForEnemiesVis.at(playerId).spread(boundsState, ctVisMapState);
+                            }
+                        }
+                        // same logic for vis from
+                        if (lastTickPlayerVisFromByEnemies.find(playerId) == lastTickPlayerVisFromByEnemies.end() ||
+                            (teamId == ENGINE_TEAM_CT && (tVisFrom[playerCellIds[playerId]] || tVisFrom[secondPlayerCellIds[playerId]])) ||
+                            (teamId == ENGINE_TEAM_T && (ctVisFrom[playerCellIds[playerId]] || ctVisFrom[secondPlayerCellIds[playerId]])) ||
+                            tickIndex <= rounds.freezeTimeEnd[roundIndex]) {
+                            lastTickPlayerVisFromByEnemies[playerId] = tickIndex;
+                            if (playerPosForEnemiesVisFrom.find(playerId) != playerPosForEnemiesVisFrom.end()) {
+                                playerPosForEnemiesVisFrom.erase(playerId);
+                            }
+                            playerPosForEnemiesVisFrom.insert({playerId, MapState(visPoints, playerPos[playerId])});
+                        } else if (syncTick){
+                            if (teamId == ENGINE_TEAM_CT) {
+                                playerPosForEnemiesVisFrom.at(playerId).spread(boundsState, tVisFromMapState);
+                            }
+                            else {
+                                playerPosForEnemiesVisFrom.at(playerId).spread(boundsState, ctVisFromMapState);
                             }
                         }
                         if (teamId == ENGINE_TEAM_CT) {
-                            ctVisToEnemies |= playerPosForEnemies.at(playerId);
+                            ctVisToEnemies |= playerPosForEnemiesVis.at(playerId);
+                            ctVisFromEnemies |= playerPosForEnemiesVisFrom.at(playerId);
                         } else {
-                            tVisToEnemies |= playerPosForEnemies.at(playerId);
+                            tVisToEnemies |= playerPosForEnemiesVis.at(playerId);
+                            tVisFromEnemies |= playerPosForEnemiesVisFrom.at(playerId);
                         }
                     }
                 }
@@ -335,6 +352,10 @@ namespace csknow::navigation {
                     tVisMapState.saveMapState(tImgNames.friendlyVis);
                     ctVisToEnemies.saveMapState(tImgNames.visEnemies);
                     tVisToEnemies.saveMapState(ctImgNames.visEnemies);
+                    ctVisFromMapState.saveMapState(ctImgNames.friendlyVisFrom);
+                    tVisFromMapState.saveMapState(tImgNames.friendlyVisFrom);
+                    ctVisFromEnemies.saveMapState(tImgNames.visFromEnemies);
+                    tVisFromEnemies.saveMapState(ctImgNames.visFromEnemies);
                 }
 
                 // c4 vis
