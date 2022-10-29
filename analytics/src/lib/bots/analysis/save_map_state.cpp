@@ -101,8 +101,8 @@ namespace csknow {
                 }
                 else {
                     uint8_t tmpData = 0;
-                    for (int64_t ii = (-1 * CONV_SIZE / 2); ii <= CONV_SIZE / 2; ii++) {
-                        for (int64_t jj = (-1 * CONV_SIZE / 2); jj <= CONV_SIZE / 2; jj++) {
+                    for (int64_t ii = (-1 * SPREAD_SIZE / 2); ii <= SPREAD_SIZE / 2; ii++) {
+                        for (int64_t jj = (-1 * SPREAD_SIZE / 2); jj <= SPREAD_SIZE / 2; jj++) {
                             int64_t sum_i = i + ii;
                             int64_t sum_j = j + jj;
                             if (sum_i >= 0 && sum_i < static_cast<int64_t>(data.size()) &&

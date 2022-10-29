@@ -12,6 +12,7 @@ namespace fs = std::filesystem;
 
 namespace csknow {
     constexpr int CONV_SIZE = 3;
+    constexpr int SPREAD_SIZE = 5;
     typedef array<array<uint16_t, CONV_SIZE>, CONV_SIZE> conv_matrix;
     constexpr conv_matrix BLUR_MATRIX = {{{1, 1, 1}, {1, 1, 1}, {1, 1, 1}}};
     class MapState {
