@@ -92,6 +92,7 @@ namespace csknow {
             vector<int64_t> segmentStartTickId;
             vector<int64_t> segmentCurTickId;
             vector<int64_t> segmentCurDemoTickId;
+            vector<int64_t> segmentCurGameTickId;
             vector<int64_t> segmentFutureTickId;
             vector<array<int64_t, TOTAL_NAV_TICKS>> segmentTickIds;
             vector<array<int64_t, TOTAL_NAV_TICKS>> segmentPATIds;
@@ -122,7 +123,7 @@ namespace csknow {
 
             void oneLineToCSV(int64_t index, stringstream & ss) override {
                 ss << index << "," << segmentCurTickId[index] << "," << segmentCurDemoTickId[index] << ","
-                   << roundId[index] << "," << trajectoryId[index] << ","
+                   << segmentCurGameTickId[index] << "," << roundId[index] << "," << trajectoryId[index] << ","
                    << playerId[index] << "," << players.name[players.idOffset + playerId[index]];
 
                 for (size_t i = 0; i < TOTAL_NAV_TICKS; i++) {
@@ -148,7 +149,7 @@ namespace csknow {
             }
 
             vector<string> getForeignKeyNames() override {
-                return {"tick id", "demo tick id", "round id", "trajectory id", "player id"};
+                return {"tick id", "demo tick id", "game tick id", "round id", "trajectory id", "player id"};
             }
 
             vector<string> getOtherColumnNames() override {

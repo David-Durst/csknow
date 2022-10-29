@@ -21,6 +21,7 @@ namespace csknow::navigation {
                         vector<vector<int64_t>> &tmpSegmentStartTickId,
                         vector<vector<int64_t>> &tmpSegmentCurTickId,
                         vector<vector<int64_t>> &tmpSegmentCurDemoTickId,
+                        vector<vector<int64_t>> &tmpSegmentCurGameTickId,
                         vector<vector<int64_t>> &tmpSegmentFutureTickId,
                         vector<vector<array<int64_t, TOTAL_NAV_TICKS>>> &tmpSegmentTickIds,
                         vector<vector<array<int64_t, TOTAL_NAV_TICKS>>> &tmpSegmentPATIds,
@@ -57,6 +58,7 @@ namespace csknow::navigation {
                 tmpSegmentStartTickId[threadNum].push_back(ntData.tickIds[ntTickNum - PAST_NAV_TICKS]);
                 tmpSegmentCurTickId[threadNum].push_back(ntData.tickIds[ntTickNum]);
                 tmpSegmentCurDemoTickId[threadNum].push_back(ticks.demoTickNumber[tmpSegmentCurTickId[threadNum].back()]);
+                tmpSegmentCurGameTickId[threadNum].push_back(ticks.gameTickNumber[tmpSegmentCurTickId[threadNum].back()]);
                 tmpSegmentFutureTickId[threadNum].push_back(futureTickId);
                 tmpLength[threadNum].push_back(
                     tmpSegmentFutureTickId[threadNum].back() - tmpSegmentStartTickId[threadNum].back() + 1);
@@ -164,6 +166,10 @@ namespace csknow::navigation {
             for (int64_t tickIndex = rounds.ticksPerRound[roundIndex].minId;
                  tickIndex <= rounds.ticksPerRound[roundIndex].maxId; tickIndex++) {
                 /*
+                if (tickIndex != 4209) {
+                    continue;
+                }
+                std::cout << tickIndex << std::endl;
                 if (ticks.demoTickNumber[tickIndex] != 5195) {
                     continue;
                 }
@@ -173,6 +179,7 @@ namespace csknow::navigation {
 
                 // need to track these every tick
                 map<int64_t, CellId> playerCellIds;
+                map<int64_t, CellId> secondPlayerCellIds;
                 map<int64_t, CellBits> playerPos;
                 map<int64_t, CellBits> playerVis;
                 CellBits ctPos, tPos;
@@ -198,14 +205,24 @@ namespace csknow::navigation {
                         TeamId teamId = playerAtTick.team[patIndex];
 
                         // compute player pos
-                        const CellVisPoint &playerCellVisPoint = visPoints.getNearestCellVisPoint({
+                        vector<CellIdAndDistance> cellIdsByDistances = visPoints.getCellVisPointsByDistance({
                             playerAtTick.posX[patIndex],
                             playerAtTick.posY[patIndex],
                             playerAtTick.eyePosZ[patIndex]
                         });
+                        const CellVisPoint & playerCellVisPoint =
+                            visPoints.getCellVisPoints()[cellIdsByDistances[0].cellId];
                         playerCellIds[playerId] = playerCellVisPoint.cellId;
+                        bool skipCrouchedNextCell = playerCellVisPoint.cellDiscreteCoordinates[0] ==
+                            visPoints.getCellVisPoints()[cellIdsByDistances[1].cellId].cellDiscreteCoordinates[0] &&
+                            playerCellVisPoint.cellDiscreteCoordinates[1] ==
+                            visPoints.getCellVisPoints()[cellIdsByDistances[1].cellId].cellDiscreteCoordinates[1];
+                        const CellVisPoint & secondPlayerCellVisPoint =
+                            visPoints.getCellVisPoints()[cellIdsByDistances[skipCrouchedNextCell ? 2 : 1].cellId];
+                        secondPlayerCellIds[playerId] = secondPlayerCellVisPoint.cellId;
                         CellBits localPos;
                         localPos.set(playerCellVisPoint.cellId, true);
+                        localPos.set(secondPlayerCellVisPoint.cellId, true);
                         playerPos[playerId] = localPos;
 
                         // compute player vis
@@ -217,7 +234,11 @@ namespace csknow::navigation {
                         };
                         playerVis[playerId] =
                             getCellsInFOV(visPoints, playerCellVisPoint.topCenter, playerViewAngle);
-                        playerVis[playerId] &= playerCellVisPoint.visibleFromCurPoint;
+                        playerVis[playerId] |=
+                            getCellsInFOV(visPoints, secondPlayerCellVisPoint.topCenter, playerViewAngle);
+                        CellBits eitherPosVisFrom = playerCellVisPoint.visibleFromCurPoint;
+                        eitherPosVisFrom |= secondPlayerCellVisPoint.visibleFromCurPoint;
+                        playerVis[playerId] &= eitherPosVisFrom;
 
                         // add to team pos
                         if (teamId == ENGINE_TEAM_CT) {
@@ -241,7 +262,7 @@ namespace csknow::navigation {
                             syncToImageNames.back()[playerId] = imgNames;
                             mapState.saveNewMapState(playerPos[playerId], imgNames.playerPos);
                             mapState.saveNewMapState(playerVis[playerId], imgNames.playerVis);
-                            mapState.saveNewMapState(playerCellVisPoint.visibleFromCurPoint, imgNames.playerVisFrom);
+                            mapState.saveNewMapState(eitherPosVisFrom, imgNames.playerVisFrom);
                             mapState = reachableResult.scaledCellClosenessMatrix[playerCellVisPoint.cellId];
                             mapState.saveMapState( imgNames.distanceMap);
 
@@ -272,9 +293,10 @@ namespace csknow::navigation {
                         TeamId teamId = playerAtTick.team[patIndex];
                         // assume seen on first tick
                         if (lastTickPlayerSeenByEnemies.find(playerId) == lastTickPlayerSeenByEnemies.end() ||
-                            (teamId == ENGINE_TEAM_CT && tVis[playerCellIds[playerId]]) ||
-                            (teamId == ENGINE_TEAM_T && ctVis[playerCellIds[playerId]]) ||
+                            (teamId == ENGINE_TEAM_CT && (tVis[playerCellIds[playerId]] || tVis[secondPlayerCellIds[playerId]])) ||
+                            (teamId == ENGINE_TEAM_T && (ctVis[playerCellIds[playerId]] || ctVis[secondPlayerCellIds[playerId]])) ||
                              tickIndex <= rounds.freezeTimeEnd[roundIndex]) {
+                            /*
                             if ((teamId == ENGINE_TEAM_CT && tVis[playerCellIds[playerId]]) ||
                                 (teamId == ENGINE_TEAM_T && ctVis[playerCellIds[playerId]])) {
                                 std::cout << "player " << players.name[players.idOffset + playerId] << " visible by other team " <<
@@ -282,6 +304,7 @@ namespace csknow::navigation {
                                 int x = 1;
                                 (void) x;
                             }
+                             */
                             lastTickPlayerSeenByEnemies[playerId] = tickIndex;
                             if (playerPosForEnemies.find(playerId) != playerPosForEnemies.end()) {
                                 playerPosForEnemies.erase(playerId);
@@ -315,11 +338,12 @@ namespace csknow::navigation {
                 }
 
                 // c4 vis
-                const CellVisPoint &c4CellVisPoint = visPoints.getNearestCellVisPoint({
-                                                                                          ticks.bombX[tickIndex],
-                                                                                          ticks.bombY[tickIndex],
-                                                                                          ticks.bombZ[tickIndex]
-                                                                                      });
+                const CellVisPoint &c4CellVisPoint = visPoints.getCellVisPoints()[
+                    visPoints.getCellVisPointsByDistance({
+                        ticks.bombX[tickIndex],
+                        ticks.bombY[tickIndex],
+                        ticks.bombZ[tickIndex]
+                    })[0].cellId];
                 CellBits c4Pos;
                 c4Pos.set(c4CellVisPoint.cellId, true);
                 c4PosForT = c4Pos;
@@ -389,6 +413,7 @@ namespace csknow::navigation {
         vector<vector<int64_t>> tmpSegmentStartTickId(numThreads);
         vector<vector<int64_t>> tmpSegmentCurTickId(numThreads);
         vector<vector<int64_t>> tmpSegmentCurDemoTickId(numThreads);
+        vector<vector<int64_t>> tmpSegmentCurGameTickId(numThreads);
         vector<vector<int64_t>> tmpSegmentFutureTickId(numThreads);
         vector<vector<array<int64_t, TOTAL_NAV_TICKS>>> tmpSegmentTickIds(numThreads);
         vector<vector<array<int64_t, TOTAL_NAV_TICKS>>> tmpSegmentPATIds(numThreads);
@@ -502,6 +527,7 @@ namespace csknow::navigation {
                            tmpSegmentStartTickId,
                            tmpSegmentCurTickId,
                            tmpSegmentCurDemoTickId,
+                           tmpSegmentCurGameTickId,
                            tmpSegmentFutureTickId,
                            tmpSegmentTickIds, tmpSegmentPATIds,
                            tmpTickLength, tmpPlayerId,
@@ -527,6 +553,7 @@ namespace csknow::navigation {
                                result.segmentStartTickId.push_back(tmpSegmentStartTickId[minThreadId][tmpRowId]);
                                result.segmentCurTickId.push_back(tmpSegmentCurTickId[minThreadId][tmpRowId]);
                                result.segmentCurDemoTickId.push_back(tmpSegmentCurDemoTickId[minThreadId][tmpRowId]);
+                               result.segmentCurGameTickId.push_back(tmpSegmentCurGameTickId[minThreadId][tmpRowId]);
                                result.segmentFutureTickId.push_back(tmpSegmentFutureTickId[minThreadId][tmpRowId]);
                                result.segmentTickIds.push_back(tmpSegmentTickIds[minThreadId][tmpRowId]);
                                result.segmentPATIds.push_back(tmpSegmentPATIds[minThreadId][tmpRowId]);

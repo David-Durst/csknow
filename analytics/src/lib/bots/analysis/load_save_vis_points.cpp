@@ -436,30 +436,34 @@ namespace vis_point_helpers {
     }
 }
 
-const CellVisPoint & VisPoints::getNearestCellVisPoint(const Vec3 & pos) const {
+vector<CellIdAndDistance> VisPoints::getCellVisPointsByDistance(const Vec3 &pos) const {
     vector<nav_mesh::AreaDistance> areaDistances = navFile.get_area_distances_to_position(vec3Conv(pos));
-    // a small number of areas have no cells, pick the area that's closest and has cells
-    AreaId nearestAreaIdWithCell = INVALID_ID;
+    // a small number of areas have no cells, pick at least first two area that's closest and enough that at least
+    // three cells
+    // this ensures having coverage on an area boundary and being between two cells that aren't from different
+    // crouching heights
+    size_t numAreasToConsider = 0;
+    size_t numCellsToConsider = 0;
     for (const auto & areaDistance : areaDistances) {
-        if (!areaVisPoints[areaIdToIndex(areaDistance.areaId)].cells.empty()) {
-            nearestAreaIdWithCell = areaDistance.areaId;
+        numAreasToConsider++;
+        numCellsToConsider += areaVisPoints[areaIdToIndex(areaDistance.areaId)].cells.size();
+        if (numAreasToConsider >= 2 && numCellsToConsider >= 3) {
             break;
         }
     }
-    const AreaVisPoint & areaVisPoint = areaVisPoints[areaIdToVectorIndex.at(nearestAreaIdWithCell)];
 
-    float nearestCellDistance = std::numeric_limits<double>::max();
-    size_t nearestCellId = INVALID_ID;
-    for (const auto & cellId : areaVisPoint.cells) {
-        const CellVisPoint & cellVisPoint = cellVisPoints[cellId];
-        if ( vis_point_helpers::is_within_3d( cellVisPoint.cellCoordinates, pos ) ) {
-            return cellVisPoint;
-        }
-        float otherDistance = vis_point_helpers::get_point_to_aabb_distance(pos, cellVisPoint.cellCoordinates);
-        if (otherDistance < nearestCellDistance) {
-            nearestCellDistance = otherDistance;
-            nearestCellId = cellId;
+    vector<CellIdAndDistance> result;
+    for (size_t i = 0; i < numAreasToConsider; i++) {
+        const AreaVisPoint & areaVisPoint = areaVisPoints[areaIdToVectorIndex.at(areaDistances[i].areaId)];
+        for (const auto & cellId : areaVisPoint.cells) {
+            result.push_back({
+                cellId,
+                vis_point_helpers::get_point_to_aabb_distance(pos, cellVisPoints[cellId].cellCoordinates)
+            });
         }
     }
-    return cellVisPoints[nearestCellId];
+    std::sort(result.begin(), result.end(), [](const CellIdAndDistance & a, const CellIdAndDistance & b) {
+        return a.distance < b.distance;
+    });
+    return result;
 }
