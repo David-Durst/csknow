@@ -59,16 +59,16 @@ class NavDataset(Dataset):
         width = images_tensor.shape[2]
         cols = int(math.ceil(math.sqrt(num_images)))
         rows = math.ceil(num_images / cols)
-        grid = Image.new('L', size=(cols * width, rows * height))
+        grid = Image.new('L', size=(cols * width, rows * (height+20)))
 
         for i in range(num_images):
-            grid.paste(tensor_to_pil(images_tensor[i]), box=(i % cols * width, i // cols * height))
+            grid.paste(tensor_to_pil(images_tensor[i]), box=(i % cols * width, i // cols * (height+20) + 20))
 
         draw = ImageDraw.Draw(grid)
         for i in range(num_images):
             text_width, text_height = draw.textsize(self.img_cols_names[i])
             draw.text(
-                (i % cols * width + width * 0.5 - text_width / 2, i // cols * height + 10 - text_height / 2),
+                (i % cols * width + width * 0.5 - text_width / 2, i // cols * (height+20) + 10 - text_height / 2),
                 self.img_cols_names[i],
                 255
             )

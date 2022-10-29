@@ -43,7 +43,7 @@ player_dict_created_time = time.perf_counter()
 #This creates the main window of an application
 window = tk.Tk()
 window.title("Nav Images")
-window.geometry("700x700")
+window.geometry("700x780")
 window.configure(background='grey')
 
 # cur player's images
