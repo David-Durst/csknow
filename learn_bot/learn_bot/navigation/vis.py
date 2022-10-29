@@ -43,7 +43,7 @@ player_dict_created_time = time.perf_counter()
 #This creates the main window of an application
 window = tk.Tk()
 window.title("Nav Images")
-window.geometry("600x650")
+window.geometry("600x700")
 window.configure(background='grey')
 
 # cur player's images
@@ -104,8 +104,12 @@ def tick_slider_changed(cur_tick_index):
     cur_demo_tick = demo_ticks[int(cur_tick_index)]
     tick_id_text_var.set("Tick ID: " + str(cur_tick))
     tick_demo_id_text_var.set("Demo Tick ID: " + str(cur_demo_tick))
-    new_img = ImageTk.PhotoImage(nav_dataset.get_image_grid(
-        player_tick_index_to_nav_index[PlayerAndTick(selected_player, cur_tick)]))
+    nav_index = player_tick_index_to_nav_index[PlayerAndTick(selected_player, cur_tick)]
+    new_img = ImageTk.PhotoImage(nav_dataset.get_image_grid(nav_index))
+    cur_row = non_img_df.loc[nav_index]
+    text_data_text_var.set(f"view dir ({cur_row['player view dir x (t)']}, "
+                           f"{cur_row['player view dir y (t)']}), "
+                           f"health {cur_row['health (t)']}, armor {cur_row['armor (t)']}")
     grid_img_label.configure(image=new_img)
     grid_img_label.image = new_img
 
@@ -237,6 +241,14 @@ orig_player_button_color = play_button.cget("background")
 play_button.pack(side="left")
 forward_step_button = tk.Button(tick_step_frame, text="⏩", command=step_forward_clicked)
 forward_step_button.pack(side="left")
+
+# creating text label
+text_data_frame = tk.Frame(window)
+text_data_frame.pack(pady=5)
+
+text_data_text_var = tk.StringVar()
+text_data_label = tk.Label(text_data_frame, textvariable=text_data_text_var)
+text_data_label.pack(side="left")
 
 # initial value settings
 change_player_dependent_data()
