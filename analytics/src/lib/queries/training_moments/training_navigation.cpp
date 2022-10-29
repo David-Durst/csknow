@@ -283,6 +283,9 @@ namespace csknow::navigation {
                                 (void) x;
                             }
                             lastTickPlayerSeenByEnemies[playerId] = tickIndex;
+                            if (playerPosForEnemies.find(playerId) != playerPosForEnemies.end()) {
+                                playerPosForEnemies.erase(playerId);
+                            }
                             playerPosForEnemies.insert({playerId, MapState(visPoints, playerPos[playerId])});
                         } else if (syncTick){
                             if (teamId == ENGINE_TEAM_CT) {
