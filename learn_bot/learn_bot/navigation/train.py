@@ -1,7 +1,14 @@
 import pandas as pd
 from pathlib import Path
+
+import torch
+from torch.utils.data import DataLoader
+
+from learn_bot.engagement_aim.column_management import CUDA_DEVICE_STR, CPU_DEVICE_STR
+from learn_bot.libs.accuracy_and_loss import finish_accuracy
 from learn_bot.libs.df_grouping import train_test_split_by_col
 from learn_bot.libs.temporal_column_names import TemporalIOColumnNames
+from learn_bot.navigation.cnn_nav_model import CNNNavModel
 from learn_bot.navigation.dataset import NavDataset
 from learn_bot.navigation.io_transforms import PRIOR_TICKS, CUR_TICK, FUTURE_TICKS, ColumnTypes, \
     IOColumnAndImageTransformers
@@ -51,23 +58,116 @@ output_column_types = ColumnTypes([], cur_temporal_cat_columns.output_columns, [
 # but data set needs column transformers during train/inference time
 # so make data set without transformers, then use dataset during transformer creation, then pass
 # transformers to dataset
-nav_dataset = NavDataset(non_img_df, csv_outputs_path / 'trainNavData.tar', temporal_img_column_names.vis_columns)
-column_transformers = IOColumnAndImageTransformers(input_column_types, output_column_types, non_img_df, )
+train_nav_dataset = NavDataset(train_df, csv_outputs_path / 'trainNavData', temporal_img_column_names.vis_columns)
+column_transformers = IOColumnAndImageTransformers(input_column_types, output_column_types, train_df,
+                                                   train_nav_dataset.get_img_sample())
+train_nav_dataset.add_column_transformers(column_transformers)
+
+test_nav_dataset = NavDataset(test_df, csv_outputs_path / 'trainNavData', temporal_img_column_names.vis_columns)
+test_nav_dataset.add_column_transformers(column_transformers)
 
 
-# make all the columns input/vis, since looking into future
+batch_size = 64
+
+train_dataloader = DataLoader(train_nav_dataset, batch_size=batch_size, shuffle=True)
+test_dataloader = DataLoader(test_nav_dataset, batch_size=batch_size, shuffle=True)
+
+for X, Y in train_dataloader:
+    print(f"Train shape of X: {X.shape} {X.dtype}")
+    print(f"Train shape of Y: {Y.shape} {Y.dtype}")
+    break
+
+for X, Y in test_dataloader:
+    print(f"Test shape of X: {X.shape} {X.dtype}")
+    print(f"Test shape of Y: {Y.shape} {Y.dtype}")
+    break
+
+# Get cpu or gpu device for training.
+device: str = CUDA_DEVICE_STR if torch.cuda.is_available() else CPU_DEVICE_STR
+print(f"Using {device} device")
+
+# Define model
+embedding_dim = 5
+model = CNNNavModel(column_transformers).to(device)
+print(model)
+params = list(model.parameters())
+print("params by layer")
+for param_layer in params:
+    print(param_layer.shape)
+
+# define losses
+optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+#optimizer = torch.optim.SGD(model.parameters(), lr=0.001)
+
+output_cols = column_transformers.output_types.column_names()
+
+# train and test the model
+first_batch = True
+first_row: torch.Tensor
+def train_or_test(dataloader, model, optimizer, epoch_num, train = True):
+    global first_batch, first_row, model_output_recording
+    size = len(dataloader.dataset)
+    num_batches = len(dataloader)
+    if train:
+        model.train()
+    else:
+        model.eval()
+    cumulative_loss = 0
+    accuracy = {}
+    #bar = Bar('Processing', max=size)
+    for name in column_transformers.output_types.column_names():
+        accuracy[name] = 0
+    for batch, (X, Y) in enumerate(dataloader):
+        if first_batch and train:
+            first_batch = False
+            #print(X.cpu().tolist())
+            #print(Y.cpu().tolist())
+            first_row = X[0:1,:]
+        X, Y = X.to(device), Y.to(device)
+        transformed_Y = column_transformers.transform_columns(False, Y)
+        #XR = torch.randn_like(X, device=device)
+        #XR[:,0] = X[:,0]
+        #YZ = torch.zeros_like(Y) + 0.1
+
+        # Compute prediction error
+        pred = model(X)
+        batch_loss = compute_loss(pred, transformed_Y, column_transformers)
+        cumulative_loss += batch_loss
+
+        # Backpropagation
+        if train:
+            optimizer.zero_grad()
+            batch_loss.backward()
+            optimizer.step()
+
+        if False and train and batch % 100 == 0:
+            loss, current = batch_loss.item(), batch * len(X)
+            print('pred')
+            print(pred[0:2])
+            print('y')
+            print(Y[0:2])
+            print(f"loss: {loss:>7f}  [{current:>5d}/{size:>5d}]")
+
+        compute_accuracy(pred, Y, accuracy, column_transformers)
+        if epoch_num == epochs - 1:
+            model_output_recording.record_output(pred, Y, transformed_Y, train)
+        #bar.next(X.shape[0])
+
+    cumulative_loss /= num_batches
+    for name in column_transformers.output_types.column_names():
+        accuracy[name] /= size
+    accuracy_string = finish_accuracy(accuracy, column_transformers)
+    train_test_str = "Train" if train else "Test"
+    print(f"Epoch {train_test_str} Accuracy: {accuracy_string}, Transformed Avg Loss: {cumulative_loss:>8f}")
 
 
+epochs = 10
+for epoch_num in range(epochs):
+    print(f"\nEpoch {epoch_num+1}\n-------------------------------")
+    train_or_test(train_dataloader, model, optimizer, epoch_num, True)
+    train_or_test(test_dataloader, model, None, epoch_num, False)
 
+script_model = torch.jit.trace(model.to(CPU_DEVICE_STR), first_row)
+script_model.save(Path(__file__).parent / '..' / '..' / 'models' / 'nav_model' / 'script_model.pt')
 
-base_float_columns: List[str] = ["delta view angle x", "delta view angle y",
-                                 "recoil angle x", "recoil angle y",
-                                 "delta view angle recoil adjusted x", "delta view angle recoil adjusted y",
-                                 "delta position x", "delta position y", "delta position z",
-                                 "eye-to-head distance"]
-
-temporal_io_float_column_names = TemporalIOColumnNames(base_float_columns, 0, 0, 0)
-
-train_dataset = NavDataset(train_df, csv_outputs_path / 'trainNavData.tar')
-train_dataset.__getitem__(0)
-test_dataset = NavDataset(test_df)
+print("Done")

@@ -10,6 +10,7 @@ from typing import List
 from torchvision import transforms
 from torch import Tensor
 from dataclasses import dataclass
+import random
 
 from learn_bot.navigation.io_transforms import IOColumnAndImageTransformers
 
@@ -30,11 +31,11 @@ class NavDataAndLabel():
 
 # https://gist.github.com/rwightman/5a7c9232eb57da20afa80cedb8ac2d38
 class NavDataset(Dataset):
-    root: str = "trainNavData"
+    root = "trainNavData"
 
     def __init__(self, df: pd.DataFrame, tar_path: Path, img_cols_names: List[str]):
         self.tar_path = tar_path
-        self.tarfile = None  # lazy init in __getitem__
+        self.tarfiles = {}  # lazy init in __getitem__
         self.df = df
 
         self.id = df.loc[:, 'id']
@@ -48,6 +49,7 @@ class NavDataset(Dataset):
         self.non_img_X = None
         self.Y = None
 
+        self.img_cols_names = img_cols_names
         self.img_cols = {}
         for img_col_name in img_cols_names:
             self.img_cols[img_col_name] = df.loc[:, img_col_name]
@@ -59,12 +61,13 @@ class NavDataset(Dataset):
     # https://stackoverflow.com/questions/67416496/does-pytorch-dataset-getitem-have-to-return-a-dict
     # no strict API for __getitem__ to implement
     def __getitem__(self, index) -> NavDataAndLabel:
-        if self.tarfile is None:
-            self.tarfile = tarfile.open(self.tar_path)
+        round_id = self.round_id[index]
+        if round_id not in self.tarfiles:
+            self.tarfiles[round_id] = tarfile.open(Path(self.tar_path) / (self.root + "_" + str(round_id) + ".tar"))
         imgs_tensors = []
         for img_col_name, img_col in self.img_cols.items():
-            tarinfo = self.tarfile.getmember(self.root + "/" + img_col[index])
-            iob = self.tarfile.extractfile(tarinfo)
+            tarinfo = self.tarfiles[round_id].getmember(img_col[index])
+            iob = self.tarfiles[round_id].extractfile(tarinfo)
             imgs_tensors.append(pil_to_tensor(Image.open(iob)))
         if self.non_img_X is None:
             return NavDataAndLabel(None, torch.stack(imgs_tensors), None)
@@ -95,3 +98,8 @@ class NavDataset(Dataset):
                 255
             )
         return grid
+
+    def get_img_sample(self) -> torch.Tensor:
+        sample_indices = random.sample(range(len(self)), 30)
+        images_list = [self[i].img_data for i in sample_indices]
+        return torch.stack(images_list)

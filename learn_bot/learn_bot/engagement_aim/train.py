@@ -1,20 +1,16 @@
 # https://pytorch.org/tutorials/beginner/basics/quickstart_tutorial.html
-import dataclasses
 
 from torch.utils.data import DataLoader
 import pandas as pd
 from pathlib import Path
 from dataset import *
-from learn_bot.engagement_aim.accuracy_and_loss import compute_loss, compute_accuracy, finish_accuracy, CUDA_DEVICE_STR, \
+from learn_bot.libs.accuracy_and_loss import compute_loss, compute_accuracy, finish_accuracy, CUDA_DEVICE_STR, \
     CPU_DEVICE_STR
-from learn_bot.engagement_aim.column_management import IOColumnTransformers, ColumnTypes, ColumnTransformerType, \
-    PRIOR_TICKS, FUTURE_TICKS, CUR_TICK
+from learn_bot.engagement_aim.column_management import IOColumnTransformers, ColumnTypes, PRIOR_TICKS, FUTURE_TICKS, CUR_TICK
 from learn_bot.engagement_aim.lstm_aim_model import LSTMAimModel
-from learn_bot.engagement_aim.mlp_aim_model import MLPAimModel
 from learn_bot.engagement_aim.output_plotting import plot_untransformed_and_transformed, ModelOutputRecording
 from learn_bot.libs.df_grouping import train_test_split_by_col
-from typing import Dict, List
-from progress.bar import Bar
+from typing import List
 
 from learn_bot.libs.temporal_column_names import TemporalIOColumnNames
 

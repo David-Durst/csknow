@@ -24,7 +24,7 @@ base_vis_columns: List[str] = ["player pos", "player vis", "player vis from",
 
 temporal_column_names = TemporalIOColumnNames(base_vis_columns, 0, 1, 0)
 
-nav_dataset = NavDataset(non_img_df, csv_outputs_path / 'trainNavData.tar', temporal_column_names.vis_columns)
+nav_dataset = NavDataset(non_img_df, csv_outputs_path / 'trainNavData', temporal_column_names.vis_columns)
 
 end_non_img_load_time = time.perf_counter()
 
