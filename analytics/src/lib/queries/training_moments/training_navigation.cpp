@@ -148,8 +148,8 @@ namespace csknow::navigation {
         //          future: handle bomb planted impact on pos knowledge
         //      only save state when on a sync clock for all players (if you started your trajectory off clock,
         //      tough luck, not doing anything until next period)
-//#pragma omp parallel for
-        for (int64_t roundIndex = 0; roundIndex < 2LL/*rounds.size*/; roundIndex++) {
+#pragma omp parallel for
+        for (int64_t roundIndex = 0; roundIndex < rounds.size; roundIndex++) {
             string roundOutputDir = outputDir + "_" + std::to_string(roundIndex);
             createAndEmptyDirectory(roundOutputDir);
 
@@ -411,9 +411,12 @@ namespace csknow::navigation {
         if (system(makeMainTarCommand.c_str()) != 0) {
             std::cerr << "make main tar failed" << std::endl;
         }
-        string combineTars = "tar --concatenate --file=" + outputDir + ".tar " + outputDir + "_*";
-        if (system(combineTars.c_str()) != 0) {
-            std::cerr << "combine tars failed" << std::endl;
+        for (int64_t i = 1; i < rounds.size; i++) {
+            string combineTars = "tar --concatenate --file=" + outputDir + ".tar " +
+                outputDir + "_" + std::to_string(i) + ".tar";
+            if (system(combineTars.c_str()) != 0) {
+                std::cerr << "combine tars failed" << std::endl;
+            }
         }
         string removeExtraTars = "rm " + outputDir + "_*";
         if (system(removeExtraTars.c_str()) != 0) {
