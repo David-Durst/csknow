@@ -9,7 +9,9 @@ from pathlib import Path
 from typing import List
 from torchvision import transforms
 from torch import Tensor
+from dataclasses import dataclass
 
+from learn_bot.navigation.io_transforms import IOColumnAndImageTransformers
 
 def pil_to_tensor(img: Image) -> Tensor:
     return transforms.ToTensor()(img).squeeze_(0)
@@ -17,6 +19,13 @@ def pil_to_tensor(img: Image) -> Tensor:
 
 def tensor_to_pil(tensor: Tensor) -> Image:
     return transforms.ToPILImage()(tensor.unsqueeze_(0))
+
+
+@dataclass(frozen=True)
+class NavDataAndLabel():
+    non_img_data: torch.Tensor
+    img_data: torch.Tensor
+    label: torch.Tensor
 
 
 # https://gist.github.com/rwightman/5a7c9232eb57da20afa80cedb8ac2d38
@@ -34,12 +43,22 @@ class NavDataset(Dataset):
         self.round_id = df.loc[:, 'round id']
         self.player_id = df.loc[:, 'player id']
         self.player_name = df.loc[:, 'player name']
-        self.img_cols_names = img_cols_names
+
+        # none is used for vis mode, no need to create all training columns
+        self.non_img_X = None
+        self.Y = None
+
         self.img_cols = {}
         for img_col_name in img_cols_names:
             self.img_cols[img_col_name] = df.loc[:, img_col_name]
 
-    def __getitem__(self, index):
+    def add_column_transformers(self, cts: IOColumnAndImageTransformers = None):
+        self.non_img_X = torch.tensor(self.df.loc[:, cts.input_types.column_names()].values).float()
+        self.Y = torch.tensor(self.df.loc[:, cts.output_types.column_names()].values).float()
+
+    # https://stackoverflow.com/questions/67416496/does-pytorch-dataset-getitem-have-to-return-a-dict
+    # no strict API for __getitem__ to implement
+    def __getitem__(self, index) -> NavDataAndLabel:
         if self.tarfile is None:
             self.tarfile = tarfile.open(self.tar_path)
         imgs_tensors = []
@@ -47,13 +66,16 @@ class NavDataset(Dataset):
             tarinfo = self.tarfile.getmember(self.root + "/" + img_col[index])
             iob = self.tarfile.extractfile(tarinfo)
             imgs_tensors.append(pil_to_tensor(Image.open(iob)))
-        return torch.stack(imgs_tensors)
+        if self.non_img_X is None:
+            return NavDataAndLabel(None, torch.stack(imgs_tensors), None)
+        else:
+            return NavDataAndLabel(self.non_img_X[index], torch.stack(imgs_tensors), self.Y[index])
 
     def __len__(self):
         return len(self.df)
 
     def get_image_grid(self, index):
-        images_tensor = self[index]
+        images_tensor = self[index].img_data
         num_images = images_tensor.shape[0]
         height = images_tensor.shape[1]
         width = images_tensor.shape[2]
