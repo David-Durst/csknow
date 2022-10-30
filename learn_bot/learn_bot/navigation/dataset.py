@@ -65,17 +65,10 @@ class NavDataset(Dataset):
     def __getitem__(self, index) -> NavDataAndLabel:
         round_id = self.round_id[index]
         if round_id not in self.tarfiles:
-            rounds_to_load = []
             for inner_round_id in self.round_id.unique().tolist():
                 tar_path = Path(self.tar_path) / (self.root + "_" + str(inner_round_id) + ".tar")
                 if exists(tar_path):
                     self.tarfiles[inner_round_id] = tarfile.open(tar_path)
-                    rounds_to_load.append(inner_round_id)
-            def load_file_i(i):
-                self.tarfiles[i].getmembers()
-            with parallel_backend('threading', n_jobs=4):
-                Parallel()(delayed(load_file_i)(i) for i in rounds_to_load)
-                #self.tarfiles[inner_round_id].getmembers()
         imgs_tensors = []
         for img_col_name, img_col in self.img_cols.items():
             tarinfo = self.tarfiles[round_id].getmember(img_col[index])
@@ -88,6 +81,10 @@ class NavDataset(Dataset):
 
     def __len__(self):
         return len(self.df)
+
+    def precache_all_tars(self):
+        for round_id in self.tarfiles.keys():
+            self.tarfiles[round_id].getmembers()
 
     def get_image_grid(self, index):
         images_tensor = self[index].img_data
