@@ -29,6 +29,8 @@ using std::vector;
 using std::array;
 using std::map;
 
+constexpr char trainNavDir[] = "trainNavData";
+
 namespace csknow {
     namespace navigation {
         constexpr int PAST_NAV_TICKS = 4;
@@ -88,7 +90,6 @@ namespace csknow {
         class TrainingNavigationResult : public QueryResult {
         public:
             const Players & players;
-            string trainNavDir = "/tmp/trainNavData";
 
             vector<RangeIndexEntry> rowIndicesPerRound;
             vector<int64_t> roundId;
@@ -133,7 +134,7 @@ namespace csknow {
                 for (size_t i = 0; i < TOTAL_NAV_TICKS; i++) {
                     // empty output dir as may load result from different directory
                     TemporalImageNames imgNames(segmentTickIds[index][i], players.name[players.idOffset + playerId[index]],
-                                               teamId[index], "");
+                                               teamId[index], string(trainNavDir) + "_" + std::to_string(roundId[index]));
                     ss << "," << playerViewDir[index][i].x << "," << playerViewDir[index][i].y
                        << "," << health[index][i] << "," << armor[index][i]
                        << "," << imgNames.playerPos

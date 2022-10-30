@@ -124,8 +124,8 @@ namespace csknow::navigation {
 
     void createNavigationImages(const VisPoints &visPoints, const ReachableResult &reachableResult,
                                 const Players &players, const Rounds &rounds,
-                                const Ticks &ticks, const PlayerAtTick &playerAtTick,
-                                const string &outputDir, const vector<set<int64_t>> & roundSyncTicks) {
+                                const Ticks &ticks, const PlayerAtTick &playerAtTick, const string &outputDir,
+                                const vector<set<int64_t>> & roundSyncTicks) {
         std::cout << "creating training nav images" << std::endl;
         std::atomic<int64_t> roundsProcessed = 0;
 
@@ -149,8 +149,8 @@ namespace csknow::navigation {
         //      only save state when on a sync clock for all players (if you started your trajectory off clock,
         //      tough luck, not doing anything until next period)
 #pragma omp parallel for
-        for (int64_t roundIndex = 0; roundIndex < rounds.size; roundIndex++) {
-            string roundOutputDir = outputDir + "_" + std::to_string(roundIndex);
+        for (int64_t roundIndex = 0; roundIndex < 9LL/*rounds.size*/; roundIndex++) {
+            string roundOutputDir = outputDir + "/" + trainNavDir + "_" + std::to_string(roundIndex);
             createAndEmptyDirectory(roundOutputDir);
 
             RollingWindow rollingWindow(rounds, ticks, playerAtTick);
@@ -382,19 +382,22 @@ namespace csknow::navigation {
 
             }
 
-            string subDirCommand = "mkdir " + roundOutputDir + "/trainNavData && echo " + roundOutputDir + "/*.png | xargs mv -t " + roundOutputDir + "/trainNavData/ --";
+            /*
+            string subDirCommand = "mkdir " + roundOutputDir + "/trainNavData && echo " + roundOutputDir + "*.png | xargs mv -t " + roundOutputDir + "/trainNavData/ --";
             if (system(subDirCommand.c_str()) != 0) {
                 std::cerr << "create sub dir failed" << std::endl;
             }
+             */
             string removeOldTar = "rm -f " + roundOutputDir + ".tar";
             if (system(removeOldTar.c_str()) != 0) {
                 std::cerr << "remove old tar failed" << std::endl;
             }
-            string tarCommand = "tar -cf " + roundOutputDir + ".tar -C " + roundOutputDir + " trainNavData/";
+            string tarCommand = "tar -cf " + roundOutputDir + ".tar -C " + outputDir +
+                " trainNavData_" + to_string(roundIndex);
             if (system(tarCommand.c_str()) != 0) {
                 std::cerr << "tar failed" << std::endl;
             }
-            string removeSubDirCommand = "echo " + roundOutputDir + "/trainNavData/* | xargs rm -- && rmdir " + roundOutputDir + "/trainNavData && rmdir " + roundOutputDir;
+            string removeSubDirCommand = "echo " + roundOutputDir + "/* | xargs rm -- && rmdir " + roundOutputDir;
             if (system(removeSubDirCommand.c_str()) != 0) {
                 std::cerr << "remove sub dir failed" << std::endl;
             }
@@ -403,22 +406,23 @@ namespace csknow::navigation {
             printProgress(roundsProcessed, rounds.size);
         }
 
-        string removeOldMainTarCommand = "rm -f " + outputDir + ".tar";
+        string tarNoRoundNoFilename = outputDir + "/" + trainNavDir;
+        string removeOldMainTarCommand = "rm -f " + tarNoRoundNoFilename + ".tar";
         if (system(removeOldMainTarCommand.c_str()) != 0) {
             std::cerr << "remove old main tar failed" << std::endl;
         }
-        string makeMainTarCommand = "mv " + outputDir + "_0.tar " + outputDir + ".tar";
+        string makeMainTarCommand = "mv " + tarNoRoundNoFilename + "_0.tar " + tarNoRoundNoFilename + ".tar";
         if (system(makeMainTarCommand.c_str()) != 0) {
             std::cerr << "make main tar failed" << std::endl;
         }
-        for (int64_t i = 1; i < rounds.size; i++) {
-            string combineTars = "tar --concatenate --file=" + outputDir + ".tar " +
-                outputDir + "_" + std::to_string(i) + ".tar";
+        for (int64_t i = 1; i < 9LL/*rounds.size*/; i++) {
+            string combineTars = "tar --concatenate --file=" + tarNoRoundNoFilename + ".tar " +
+                                 tarNoRoundNoFilename + "_" + std::to_string(i) + ".tar";
             if (system(combineTars.c_str()) != 0) {
                 std::cerr << "combine tars failed" << std::endl;
             }
         }
-        string removeExtraTars = "rm " + outputDir + "_*";
+        string removeExtraTars = "rm " + tarNoRoundNoFilename + "_*";
         if (system(removeExtraTars.c_str()) != 0) {
             std::cerr << "remove extra tars failed" << std::endl;
         }
@@ -598,8 +602,6 @@ namespace csknow::navigation {
                                                      const Ticks &ticks, const PlayerAtTick &playerAtTick,
                                                      const NonEngagementTrajectoryResult &nonEngagementTrajectoryResult,
                                                      const string &outputDir, bool createImages) {
-        string trainNavDir = outputDir + "/trainNavData";
-
         TrainingNavigationResult result(players);
         vector<set<int64_t>> roundSyncTicks =
             createNavResult(games, rounds, ticks, playerAtTick, nonEngagementTrajectoryResult, result);
@@ -611,9 +613,8 @@ namespace csknow::navigation {
         // then I iterate through window to check if matching a sync tick
         if (createImages) {
             createNavigationImages(visPoints, reachableResult, players, rounds, ticks,
-                                   playerAtTick, trainNavDir, roundSyncTicks);
+                                   playerAtTick, outputDir, roundSyncTicks);
         }
-        result.trainNavDir = trainNavDir;
         return result;
     }
 
