@@ -149,7 +149,7 @@ namespace csknow::navigation {
         //      only save state when on a sync clock for all players (if you started your trajectory off clock,
         //      tough luck, not doing anything until next period)
 #pragma omp parallel for
-        for (int64_t roundIndex = 0; roundIndex < 9LL/*rounds.size*/; roundIndex++) {
+        for (int64_t roundIndex = 0; roundIndex < rounds.size; roundIndex++) {
             string roundOutputDir = outputDir + "/" + trainNavDir + "_" + std::to_string(roundIndex);
             createAndEmptyDirectory(roundOutputDir);
 
@@ -407,15 +407,20 @@ namespace csknow::navigation {
         }
 
         string tarNoRoundNoFilename = outputDir + "/" + trainNavDir;
-        string removeOldMainTarCommand = "rm -f " + tarNoRoundNoFilename + ".tar";
-        if (system(removeOldMainTarCommand.c_str()) != 0) {
-            std::cerr << "remove old main tar failed" << std::endl;
+        string removeOldTarFolderCommand = "rm -f " + tarNoRoundNoFilename + "/*";
+        if (system(removeOldTarFolderCommand.c_str()) != 0) {
+            std::cerr << "remove old tar folder failed" << std::endl;
         }
-        string makeMainTarCommand = "mv " + tarNoRoundNoFilename + "_0.tar " + tarNoRoundNoFilename + ".tar";
+        string makeTarFolderCommand = "mkdir -p " + tarNoRoundNoFilename;
+        if (system(makeTarFolderCommand.c_str()) != 0) {
+            std::cerr << "make tar folder failed" << std::endl;
+        }
+        string makeMainTarCommand = "mv " + tarNoRoundNoFilename + "_*.tar " + tarNoRoundNoFilename + "/";
         if (system(makeMainTarCommand.c_str()) != 0) {
             std::cerr << "make main tar failed" << std::endl;
         }
-        for (int64_t i = 1; i < 9LL/*rounds.size*/; i++) {
+        /*
+        for (int64_t i = 1; i < 9LL/ *rounds.size* /; i++) {
             string combineTars = "tar --concatenate --file=" + tarNoRoundNoFilename + ".tar " +
                                  tarNoRoundNoFilename + "_" + std::to_string(i) + ".tar";
             if (system(combineTars.c_str()) != 0) {
@@ -426,6 +431,7 @@ namespace csknow::navigation {
         if (system(removeExtraTars.c_str()) != 0) {
             std::cerr << "remove extra tars failed" << std::endl;
         }
+        */
     }
 
     vector<set<int64_t>> createNavResult(const Games &games, const Rounds &rounds,
