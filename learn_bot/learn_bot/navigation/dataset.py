@@ -13,6 +13,7 @@ from dataclasses import dataclass
 from os.path import exists
 import random
 from joblib import parallel_backend, Parallel, delayed
+import time
 
 from learn_bot.navigation.io_transforms import IOColumnAndImageTransformers
 
@@ -77,6 +78,7 @@ class NavDataset(Dataset):
     # https://stackoverflow.com/questions/67416496/does-pytorch-dataset-getitem-have-to-return-a-dict
     # no strict API for __getitem__ to implement
     def __getitem__(self, index) -> List:
+        #start_time = time.perf_counter()
         round_id = self.round_id.iloc[index]
         if round_id not in self.tarfiles:
             self.tarfiles[round_id] = tarfile.open(self.tar_path /
@@ -85,8 +87,11 @@ class NavDataset(Dataset):
         for img_col_name, img_col in self.img_cols.items():
             iob = self.tarfiles[round_id].extractfile(self.tar_infos[img_col.iloc[index]])
             imgs_tensors.append(pil_to_tensor(Image.open(iob)))
+        #end_time = time.perf_counter()
+        tmpStack = torch.stack(imgs_tensors)
+        #print(f"stack load time {end_time - start_time: 0.4f}")
         if self.non_img_X is None:
-            return [None, torch.stack(imgs_tensors), None]
+            return [None, tmpStack, None]
         else:
             return [self.non_img_X[index], torch.stack(imgs_tensors), self.Y[index]]
 

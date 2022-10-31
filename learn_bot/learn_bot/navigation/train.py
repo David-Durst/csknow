@@ -22,7 +22,7 @@ csv_outputs_path = Path(__file__).parent / '..' / '..' / '..' / 'analytics' / 'c
 
 non_img_df = pd.read_csv(csv_outputs_path / 'trainNav.csv')
 
-#non_img_df = non_img_df.head(n=10000)
+non_img_df = non_img_df.head(n=10000)
 
 train_test_split = train_test_split_by_col(non_img_df, 'trajectory id')
 train_df = train_test_split.train_df
@@ -69,8 +69,7 @@ test_nav_dataset.add_column_transformers(column_transformers)
 
 batch_size = 64
 
-train_dataloader = DataLoader(train_nav_dataset, batch_size=batch_size, shuffle=True)
-test_dataloader = DataLoader(test_nav_dataset, batch_size=batch_size, shuffle=True)
+train_dataloader = DataLoader(train_nav_dataset, batch_size=batch_size, shuffle=True, num_workers=4)
 
 for non_img_X, img_X, Y in train_dataloader:
     print(f"Train shape of non_img_X: {non_img_X.shape} {non_img_X.dtype}")
@@ -78,6 +77,7 @@ for non_img_X, img_X, Y in train_dataloader:
     print(f"Train shape of Y: {Y.shape} {Y.dtype}")
     break
 
+test_dataloader = DataLoader(test_nav_dataset, batch_size=batch_size, shuffle=True, num_workers=4)
 for non_img_X, img_X, Y in test_dataloader:
     print(f"Test shape of non_img_X: {non_img_X.shape} {non_img_X.dtype}")
     print(f"Test shape of img_X: {img_X.shape} {img_X.dtype}")

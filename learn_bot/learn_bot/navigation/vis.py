@@ -28,6 +28,15 @@ end_non_img_load_time = time.perf_counter()
 
 nav_dataset = NavDataset(non_img_df, csv_outputs_path / 'trainNavData', temporal_column_names.vis_columns)
 
+for i in range(len(nav_dataset)):
+    if i >= 60000:
+        break
+    if i % 10000 == 0:
+        print(i)
+    nav_dataset[i]
+
+exit(0)
+
 img_dataset_init_time = time.perf_counter()
 
 @dataclass(frozen=True)
