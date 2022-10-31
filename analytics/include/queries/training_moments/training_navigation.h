@@ -78,9 +78,9 @@ namespace csknow {
         };
 
         enum class MovementBins {
-            DECREASE = -1,
-            CONSTANT = 0,
-            INCREASE = 1,
+            DECREASE = 0,
+            CONSTANT = 1,
+            INCREASE = 2,
             NUM_MOVEMENT_BINS
         };
         struct MovementResult {
