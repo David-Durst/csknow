@@ -80,12 +80,10 @@ class NavDataset(Dataset):
     def __getitem__(self, index) -> List:
         #start_time = time.perf_counter()
         round_id = self.round_id.iloc[index]
-        if round_id not in self.tarfiles:
-            self.tarfiles[round_id] = tarfile.open(self.tar_path /
-                                                   (self.root + "_" + str(round_id) + ".tar"))
+        tf = tarfile.open(self.tar_path / (self.root + "_" + str(round_id) + ".tar"))
         imgs_tensors = []
         for img_col_name, img_col in self.img_cols.items():
-            iob = self.tarfiles[round_id].extractfile(self.tar_infos[img_col.iloc[index]])
+            iob = tf.extractfile(self.tar_infos[img_col.iloc[index]])
             imgs_tensors.append(pil_to_tensor(Image.open(iob)))
         #end_time = time.perf_counter()
         tmpStack = torch.stack(imgs_tensors)
