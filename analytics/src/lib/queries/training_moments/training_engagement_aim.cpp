@@ -59,7 +59,8 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
             int64_t tickIndex = rollingWindow.lastCurTickId();
             map<int64_t, int64_t> playerToFirePerTick;
             for (const auto & [_0, _1, fireIndex] :
-                ticks.weaponFirePerTick.intervalToEvent.findOverlapping(tickIndex, tickIndex)) {
+                // use the prior tick for fire data so respecting causality
+                ticks.weaponFirePerTick.intervalToEvent.findOverlapping(tickIndex-1, tickIndex-1)) {
                 playerToFirePerTick[weaponFire.shooter[fireIndex]] = fireIndex;
             }
             for (const auto & [_0, _1, engagementIndex] :

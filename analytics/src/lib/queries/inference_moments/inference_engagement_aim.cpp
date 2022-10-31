@@ -16,7 +16,6 @@ struct EngagementAimInferenceTickData {
     Vec2 deltaViewAngleRecoilAdjusted;
     Vec3 deltaPosition;
     double eyeToHeadDistance;
-    AimWeaponType weaponType;
     int warmupTicksUsed;
 };
 
@@ -66,8 +65,6 @@ void InferenceEngagementAimResult::runQuery(const Rounds & rounds, const string 
                         trainingEngagementAimResult.eyeToHeadDistance[engagementAimId][priorTickNum];
                     priorData[priorTickNum].deltaPosition =
                         trainingEngagementAimResult.deltaPosition[engagementAimId][priorTickNum];
-                    priorData[priorTickNum].weaponType =
-                        trainingEngagementAimResult.weaponType[engagementAimId];
                 }
                 // only need the last prior data entry's warmup tracker
                 priorData[PAST_AIM_TICKS - 1].warmupTicksUsed = 0;
@@ -90,7 +87,9 @@ void InferenceEngagementAimResult::runQuery(const Rounds & rounds, const string 
                     rowCPP.push_back(static_cast<float>(priorData[priorDeltaNum].deltaPosition.z));
                     rowCPP.push_back(static_cast<float>(priorData[priorDeltaNum].eyeToHeadDistance));
                 }
-                rowCPP.push_back(static_cast<float>(priorData[0].weaponType));
+                rowCPP.push_back(static_cast<float>(trainingEngagementAimResult.numShotsFired[engagementAimId]));
+                rowCPP.push_back(static_cast<float>(trainingEngagementAimResult.ticksSinceLastFire[engagementAimId]));
+                rowCPP.push_back(static_cast<float>(trainingEngagementAimResult.weaponType[engagementAimId]));
                 torch::Tensor rowPT = torch::from_blob(rowCPP.data(), {1, static_cast<long>(rowCPP.size())},
                                                        options).clone();
                 inputs.push_back(rowPT);
@@ -126,8 +125,6 @@ void InferenceEngagementAimResult::runQuery(const Rounds & rounds, const string 
                     trainingEngagementAimResult.deltaPosition[engagementAimId][PAST_AIM_TICKS];
                 priorData[PAST_AIM_TICKS - 1].eyeToHeadDistance =
                     trainingEngagementAimResult.eyeToHeadDistance[engagementAimId][PAST_AIM_TICKS];
-                priorData[PAST_AIM_TICKS - 1].weaponType =
-                    trainingEngagementAimResult.weaponType[engagementAimId];
                 priorData[PAST_AIM_TICKS - 1].warmupTicksUsed++;
             }
         }
