@@ -24,9 +24,11 @@ base_vis_columns: List[str] = ["player pos", "player vis", "player vis from",
 
 temporal_column_names = TemporalIOColumnNames(base_vis_columns, 0, 1, 0)
 
+end_non_img_load_time = time.perf_counter()
+
 nav_dataset = NavDataset(non_img_df, csv_outputs_path / 'trainNavData', temporal_column_names.vis_columns)
 
-end_non_img_load_time = time.perf_counter()
+img_dataset_init_time = time.perf_counter()
 
 @dataclass(frozen=True)
 class PlayerAndTick:
@@ -266,7 +268,8 @@ tick_slider_changed(0)
 ready_time = time.perf_counter()
 
 print(f"non img load time {end_non_img_load_time - start_time: 0.4f}")
-print(f"player dict creation time {player_dict_created_time - end_non_img_load_time: 0.4f}")
+print(f"img data set init time {img_dataset_init_time - end_non_img_load_time: 0.4f}")
+print(f"player dict creation time {player_dict_created_time - img_dataset_init_time: 0.4f}")
 print(f"first image creation time {first_image_creation_time - player_dict_created_time: 0.4f}")
 print(f"ready time {ready_time - first_image_creation_time: 0.4f}")
 print(f"total time {ready_time - start_time: 0.4f}")

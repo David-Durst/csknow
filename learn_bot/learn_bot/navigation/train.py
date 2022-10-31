@@ -121,6 +121,8 @@ def train_or_test(dataloader, model, optimizer, epoch_num, train = True):
     for name in column_transformers.output_types.column_names():
         accuracy[name] = 0
     for batch, (non_img_X, img_X, Y) in enumerate(dataloader):
+        if batch == 15:
+            exit(0)
         if first_batch and train:
             first_batch = False
             #print(X.cpu().tolist())

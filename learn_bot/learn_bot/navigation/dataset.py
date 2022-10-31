@@ -60,6 +60,16 @@ class NavDataset(Dataset):
         for img_col_name in img_cols_names:
             self.img_cols[img_col_name] = df.loc[:, img_col_name]
 
+        self.tar_infos = {}
+        for inner_round_id in self.round_id.unique().tolist():
+            tar_path = Path(self.tar_path) / (self.root + "_" + str(inner_round_id) + ".tar")
+            if exists(tar_path):
+                with tarfile.open(tar_path) as tf:
+                    for tar_info in tf.getmembers():
+                        if not tar_info.isfile():
+                            continue
+                        self.tar_infos[tar_info.path] = tar_info
+
     def add_column_transformers(self, cts: IOColumnAndImageTransformers = None):
         self.non_img_X = torch.tensor(self.df.loc[:, cts.input_types.column_names()].values).float()
         self.Y = torch.tensor(self.df.loc[:, cts.output_types.column_names()].values).float()
@@ -69,15 +79,11 @@ class NavDataset(Dataset):
     def __getitem__(self, index) -> List:
         round_id = self.round_id.iloc[index]
         if round_id not in self.tarfiles:
-            for inner_round_id in self.round_id.unique().tolist():
-                tar_path = Path(self.tar_path) / (self.root + "_" + str(inner_round_id) + ".tar")
-                if exists(tar_path):
-                    self.tarfiles[inner_round_id] = tarfile.open(tar_path)
-                    self.tarfiles[inner_round_id].getmembers()
+            self.tarfiles[round_id] = tarfile.open(self.tar_path /
+                                                   (self.root + "_" + str(round_id) + ".tar"))
         imgs_tensors = []
         for img_col_name, img_col in self.img_cols.items():
-            tarinfo = self.tarfiles[round_id].getmember(img_col.iloc[index])
-            iob = self.tarfiles[round_id].extractfile(tarinfo)
+            iob = self.tarfiles[round_id].extractfile(self.tar_infos[img_col.iloc[index]])
             imgs_tensors.append(pil_to_tensor(Image.open(iob)))
         if self.non_img_X is None:
             return [None, torch.stack(imgs_tensors), None]
