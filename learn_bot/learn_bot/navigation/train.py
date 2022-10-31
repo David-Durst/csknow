@@ -22,7 +22,7 @@ csv_outputs_path = Path(__file__).parent / '..' / '..' / '..' / 'analytics' / 'c
 
 non_img_df = pd.read_csv(csv_outputs_path / 'trainNav.csv')
 
-non_img_df = non_img_df.head(n=5000)
+#non_img_df = non_img_df.head(n=10000)
 
 train_test_split = train_test_split_by_col(non_img_df, 'trajectory id')
 train_df = train_test_split.train_df
@@ -120,9 +120,8 @@ def train_or_test(dataloader, model, optimizer, epoch_num, train = True):
     #bar = Bar('Processing', max=size)
     for name in column_transformers.output_types.column_names():
         accuracy[name] = 0
+    next_pct_print = 0.1
     for batch, (non_img_X, img_X, Y) in enumerate(dataloader):
-        if batch == 15:
-            exit(0)
         if first_batch and train:
             first_batch = False
             #print(X.cpu().tolist())
@@ -146,6 +145,11 @@ def train_or_test(dataloader, model, optimizer, epoch_num, train = True):
             batch_loss.backward()
             optimizer.step()
 
+        if batch / len(dataloader) >= next_pct_print:
+            next_pct_print += 0.1
+            print(f"{batch / len(dataloader) * 100}%,", end=" ")
+
+        print(f"batch {batch}")
         compute_accuracy(pred, Y, accuracy, column_transformers)
 
     cumulative_loss /= num_batches
@@ -156,7 +160,7 @@ def train_or_test(dataloader, model, optimizer, epoch_num, train = True):
     print(f"Epoch {train_test_str} Accuracy: {accuracy_string}, Transformed Avg Loss: {cumulative_loss:>8f}")
 
 
-epochs = 10
+epochs = 5
 for epoch_num in range(epochs):
     print(f"\nEpoch {epoch_num+1}\n-------------------------------")
     train_or_test(train_dataloader, model, optimizer, epoch_num, True)
