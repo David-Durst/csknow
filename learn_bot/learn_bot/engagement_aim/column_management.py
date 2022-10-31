@@ -165,12 +165,15 @@ class IOColumnTransformers:
         ct_pts = self.input_ct_pts if input else self.output_ct_pts
 
         x_float_name_ranges = self.get_name_ranges(input, False, {ColumnTransformerType.FLOAT_STANDARD})
-        x_floats = x[:, x_float_name_ranges[0].start:x_float_name_ranges[-1].stop]
-        uncat_result.append(ct_pts[0].convert(x_floats))
+        ct_offset = 0
+        if x_float_name_ranges:
+            x_floats = x[:, x_float_name_ranges[0].start:x_float_name_ranges[-1].stop]
+            uncat_result.append(ct_pts[0].convert(x_floats))
+            ct_offset += 1
 
         x_categorical_name_ranges = self.get_name_ranges(input, False, {ColumnTransformerType.CATEGORICAL})
         for i, categorical_name_range in enumerate(x_categorical_name_ranges):
-            uncat_result.append(ct_pts[i+1].convert(x[:, categorical_name_range]))
+            uncat_result.append(ct_pts[i+ct_offset].convert(x[:, categorical_name_range]))
 
         return torch.cat(uncat_result, dim=1)
 

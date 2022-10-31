@@ -30,6 +30,7 @@ class IOColumnAndImageTransformers(IOColumnTransformers):
     input_img_transformer: PTImageTransformer
     input_ct_pts: List[PTColumnTransformer]
     output_ct_pts: List[PTColumnTransformer]
+    num_img_channels: int
 
     def __init__(self, input_types: ColumnTypes, output_types: ColumnTypes, non_img_df: pd.DataFrame,
                  sample_images_tensor: torch.tensor = torch.empty((1,1))):
@@ -40,6 +41,7 @@ class IOColumnAndImageTransformers(IOColumnTransformers):
         channels_to_reduce = [len(sample_images_tensor.shape) - 2, len(sample_images_tensor.shape) - 1]
         img_std, img_mean = torch.std_mean(sample_images_tensor, dim=channels_to_reduce, keepdim=True)
         self.input_img_transformer = PTImageTransformer(img_mean, img_std)
+        self.num_img_channels = sample_images_tensor.shape[1]
 
     def transform_images_and_columns(self, input: bool, non_img_tensor: torch.Tensor,
                                      img_tensor: torch.Tensor) -> torch.Tensor:

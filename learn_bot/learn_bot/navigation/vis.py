@@ -48,7 +48,6 @@ window.configure(background='grey')
 
 # cur player's images
 img = ImageTk.PhotoImage(nav_dataset.get_image_grid(0))
-nav_dataset.precache_all_tars()
 grid_img_label = tk.Label(window, image=img)
 grid_img_label.pack(side="top")
 

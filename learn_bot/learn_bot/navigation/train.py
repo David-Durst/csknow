@@ -22,6 +22,8 @@ csv_outputs_path = Path(__file__).parent / '..' / '..' / '..' / 'analytics' / 'c
 
 non_img_df = pd.read_csv(csv_outputs_path / 'trainNav.csv')
 
+non_img_df = non_img_df.head(n=500)
+
 train_test_split = train_test_split_by_col(non_img_df, 'trajectory id')
 train_df = train_test_split.train_df
 test_df = train_test_split.test_df
@@ -65,7 +67,6 @@ train_nav_dataset.add_column_transformers(column_transformers)
 test_nav_dataset = NavDataset(test_df, csv_outputs_path / 'trainNavData', temporal_img_column_names.vis_columns)
 test_nav_dataset.add_column_transformers(column_transformers)
 
-
 batch_size = 64
 
 train_dataloader = DataLoader(train_nav_dataset, batch_size=batch_size, shuffle=True)
@@ -104,9 +105,10 @@ output_cols = column_transformers.output_types.column_names()
 
 # train and test the model
 first_batch = True
-first_row: torch.Tensor
+first_row_non_img: torch.Tensor
+first_row_img: torch.Tensor
 def train_or_test(dataloader, model, optimizer, epoch_num, train = True):
-    global first_batch, first_row, model_output_recording
+    global first_batch, first_row_non_img, first_row_img, model_output_recording
     size = len(dataloader.dataset)
     num_batches = len(dataloader)
     if train:
@@ -118,20 +120,21 @@ def train_or_test(dataloader, model, optimizer, epoch_num, train = True):
     #bar = Bar('Processing', max=size)
     for name in column_transformers.output_types.column_names():
         accuracy[name] = 0
-    for batch, (X, Y) in enumerate(dataloader):
+    for batch, (non_img_X, img_X, Y) in enumerate(dataloader):
         if first_batch and train:
             first_batch = False
             #print(X.cpu().tolist())
             #print(Y.cpu().tolist())
-            first_row = X[0:1,:]
-        X, Y = X.to(device), Y.to(device)
+            first_row_non_img = non_img_X[0:1,:]
+            first_row_img = img_X[0:1, :]
+        non_img_X, img_X, Y = non_img_X.to(device), img_X.to(device), Y.to(device)
         transformed_Y = column_transformers.transform_columns(False, Y)
         #XR = torch.randn_like(X, device=device)
         #XR[:,0] = X[:,0]
         #YZ = torch.zeros_like(Y) + 0.1
 
         # Compute prediction error
-        pred = model(X)
+        pred = model(non_img_X, img_X)
         batch_loss = compute_loss(pred, transformed_Y, column_transformers)
         cumulative_loss += batch_loss
 
@@ -168,7 +171,7 @@ for epoch_num in range(epochs):
     train_or_test(train_dataloader, model, optimizer, epoch_num, True)
     train_or_test(test_dataloader, model, None, epoch_num, False)
 
-script_model = torch.jit.trace(model.to(CPU_DEVICE_STR), first_row)
+script_model = torch.jit.trace(model.to(CPU_DEVICE_STR), (first_row_non_img, first_row_img))
 script_model.save(Path(__file__).parent / '..' / '..' / 'models' / 'nav_model' / 'script_model.pt')
 
 print("Done")

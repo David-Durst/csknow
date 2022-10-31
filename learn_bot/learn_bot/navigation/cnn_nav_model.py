@@ -14,8 +14,17 @@ class CNNNavModel(nn.Module):
         self.cts = cts
         # https://pytorch.org/tutorials/beginner/blitz/cifar10_tutorial.html
         # need to call this once I have the CT, use those dims to implement conv dims
-        raise NotImplementedError
+        num_channels = cts.get_name_ranges(True, True)[-1].stop + cts.num_img_channels
         self.inner_model = nn.Sequential(
+            nn.Conv2d(num_channels, num_channels, 5),
+            nn.MaxPool2d(2,2),
+            nn.ReLU(),
+            nn.Conv2d(num_channels, num_channels, 5),
+            nn.MaxPool2d(2,2),
+            nn.ReLU(),
+            nn.Conv2d(num_channels, num_channels, 5),
+            nn.MaxPool2d(2,2),
+            nn.ReLU(),
             #nn.Linear(cts.get_name_ranges(True, True)[-1].stop, self.internal_width),
             #nn.ReLU(),
             #nn.Linear(self.internal_width, self.internal_width),

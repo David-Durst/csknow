@@ -73,6 +73,7 @@ class NavDataset(Dataset):
                 tar_path = Path(self.tar_path) / (self.root + "_" + str(inner_round_id) + ".tar")
                 if exists(tar_path):
                     self.tarfiles[inner_round_id] = tarfile.open(tar_path)
+                    self.tarfiles[inner_round_id].getmembers()
         imgs_tensors = []
         for img_col_name, img_col in self.img_cols.items():
             tarinfo = self.tarfiles[round_id].getmember(img_col.iloc[index])
@@ -85,10 +86,6 @@ class NavDataset(Dataset):
 
     def __len__(self):
         return len(self.df)
-
-    def precache_all_tars(self):
-        for round_id in self.tarfiles.keys():
-            self.tarfiles[round_id].getmembers()
 
     def get_image_grid(self, index):
         images_tensor = NavDataAndLabel(self[index]).img_data
