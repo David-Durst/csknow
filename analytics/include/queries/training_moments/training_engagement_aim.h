@@ -51,6 +51,9 @@ public:
     vector<int64_t> engagementId;
     vector<int64_t> attackerPlayerId;
     vector<int64_t> victimPlayerId;
+    vector<int16_t> numShotsFired;
+    vector<int16_t> ticksSinceLastFire;
+    vector<int64_t> lastShotFiredTickId;
     vector<array<Vec2, TOTAL_AIM_TICKS>> deltaViewAngle;
     vector<array<Vec2, TOTAL_AIM_TICKS>> recoilAngle;
     vector<array<Vec2, TOTAL_AIM_TICKS>> deltaViewAngleRecoilAdjusted;
@@ -78,7 +81,10 @@ public:
 
     void oneLineToCSV(int64_t index, stringstream & ss) override {
         ss << index << "," << tickId[index] << "," << engagementId[index] << ","
-           << attackerPlayerId[index] << "," << victimPlayerId[index];
+           << attackerPlayerId[index] << "," << victimPlayerId[index] << ",";
+
+        ss << numShotsFired[index] << "," << ticksSinceLastFire[index] << ","
+           << lastShotFiredTickId[index];
 
         for (size_t i = 0; i < TOTAL_AIM_TICKS; i++) {
             ss << "," << deltaViewAngle[index][i].x << "," << deltaViewAngle[index][i].y
@@ -99,6 +105,9 @@ public:
 
     vector<string> getOtherColumnNames() override {
         vector<string> result;
+        result.push_back("num shots fired");
+        result.push_back("ticks since last fire");
+        result.push_back("last fire tick id");
         for (int i = -1*PAST_AIM_TICKS; i <= FUTURE_AIM_TICKS; i++) {
             result.push_back("delta view angle x (t" + toSignedIntString(i, true) + ")");
             result.push_back("delta view angle y (t" + toSignedIntString(i, true) + ")");
@@ -145,7 +154,7 @@ public:
 
 
 TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, const Rounds & rounds, const Ticks & ticks,
-                                                       const PlayerAtTick & playerAtTick,
+                                                       const PlayerAtTick & playerAtTick, const WeaponFire & weaponFire,
                                                        const EngagementResult & engagementResult);
 
 #endif //CSKNOW_TRAINING_ENGAGEMENT_AIM_H
