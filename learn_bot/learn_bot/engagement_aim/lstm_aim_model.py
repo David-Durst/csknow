@@ -52,16 +52,17 @@ class LSTMAimModel(nn.Module):
     num_input_temporal_features: int
     input_temporal_data_per_tick: int
 
-    def __init__(self, cts: IOColumnTransformers):
+    def __init__(self, cts: IOColumnTransformers, num_input_temporal_features: int, num_input_non_temporal_floats: int):
         super(LSTMAimModel, self).__init__()
         self.cts = cts
         self.num_categorical_transformed_features = \
             len(self.cts.get_name_ranges(True, True, {ColumnTransformerType.CATEGORICAL})[-1])
         self.num_prior_ticks = -1 * PRIOR_TICKS
-        self.num_input_temporal_features = len(self.cts.input_types.float_standard_cols)
+        self.num_input_temporal_features = num_input_temporal_features
+        self.num_input_non_temporal_floats = num_input_non_temporal_floats
         self.input_temporal_data_per_tick = int(self.num_input_temporal_features / self.num_prior_ticks)
-
-        self.encoder = Encoder(self.input_temporal_data_per_tick + self.num_categorical_transformed_features,
+        self.encoder = Encoder(self.input_temporal_data_per_tick + self.num_categorical_transformed_features +
+                               self.num_input_non_temporal_floats,
                                self.internal_width, 1, 0.2)
         self.decoder = Decoder(self.internal_width, 1, 0.2)
 
@@ -90,7 +91,7 @@ class LSTMAimModel(nn.Module):
         #x_transformed_all_data[:, :, :input_temporal_data_per_batch] = x_transformed_temporal_per_tick
         x_transformed_non_temporal = x_transformed[:, self.num_input_temporal_features:]
         x_transformed_non_temporal_duplicated = \
-            x_transformed_non_temporal.reshape(-1, 1, self.num_categorical_transformed_features) \
+            x_transformed_non_temporal.reshape(-1, 1, x_transformed.shape[1] - self.num_input_temporal_features) \
             .expand([-1, self.num_prior_ticks, -1])
         x_transformed_all_data = torch.cat([x_transformed_temporal_per_tick, x_transformed_non_temporal_duplicated], dim=2)
 

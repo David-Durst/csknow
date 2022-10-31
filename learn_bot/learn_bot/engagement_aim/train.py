@@ -28,17 +28,20 @@ base_float_columns: List[str] = ["delta view angle x", "delta view angle y",
 
 temporal_io_float_column_names = TemporalIOColumnNames(base_float_columns, PRIOR_TICKS, CUR_TICK, FUTURE_TICKS)
 
+non_temporal_float_columns = ["num shots fired", "ticks since last fire"]
+
 input_categorical_columns: List[str] = ["weapon type"]
 
 # transform input and output
-input_column_types = ColumnTypes(temporal_io_float_column_names.input_columns, input_categorical_columns, [6])
+input_column_types = ColumnTypes(temporal_io_float_column_names.input_columns + non_temporal_float_columns,
+                                input_categorical_columns, [6])
 
 output_column_types = ColumnTypes(temporal_io_float_column_names.output_columns, [], [])
 
 column_transformers = IOColumnTransformers(input_column_types, output_column_types, all_data_df)
 
 # plot data set with and without transformers
-plot_untransformed_and_transformed('train+test labels', all_data_df, temporal_io_float_column_names.vis_columns,
+plot_untransformed_and_transformed('train+test labels', all_data_df, temporal_io_float_column_names.vis_columns + non_temporal_float_columns,
                                    input_categorical_columns)
 
 # create data sets for pytorch
@@ -67,7 +70,8 @@ print(f"Using {device} device")
 # Define model
 embedding_dim = 5
 #model = MLPAimModel(column_transformers).to(device)
-model = LSTMAimModel(column_transformers).to(device)
+model = LSTMAimModel(column_transformers,
+                     len(temporal_io_float_column_names.input_columns), len(non_temporal_float_columns)).to(device)
 print(model)
 params = list(model.parameters())
 print("params by layer")
@@ -141,7 +145,7 @@ def train_or_test(dataloader, model, optimizer, epoch_num, train = True):
     print(f"Epoch {train_test_str} Accuracy: {accuracy_string}, Transformed Avg Loss: {cumulative_loss:>8f}")
 
 
-epochs = 10
+epochs = 5
 for epoch_num in range(epochs):
     print(f"\nEpoch {epoch_num+1}\n-------------------------------")
     train_or_test(train_dataloader, model, optimizer, epoch_num, True)
