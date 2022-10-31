@@ -5,7 +5,7 @@ import torch
 from torch.utils.data import DataLoader
 
 from learn_bot.engagement_aim.column_management import CUDA_DEVICE_STR, CPU_DEVICE_STR
-from learn_bot.libs.accuracy_and_loss import finish_accuracy
+from learn_bot.libs.accuracy_and_loss import finish_accuracy, compute_loss, compute_accuracy
 from learn_bot.libs.df_grouping import train_test_split_by_col
 from learn_bot.libs.temporal_column_names import TemporalIOColumnNames
 from learn_bot.navigation.cnn_nav_model import CNNNavModel
@@ -22,7 +22,7 @@ csv_outputs_path = Path(__file__).parent / '..' / '..' / '..' / 'analytics' / 'c
 
 non_img_df = pd.read_csv(csv_outputs_path / 'trainNav.csv')
 
-non_img_df = non_img_df.head(n=500)
+non_img_df = non_img_df.head(n=5000)
 
 train_test_split = train_test_split_by_col(non_img_df, 'trajectory id')
 train_df = train_test_split.train_df
@@ -144,18 +144,7 @@ def train_or_test(dataloader, model, optimizer, epoch_num, train = True):
             batch_loss.backward()
             optimizer.step()
 
-        if False and train and batch % 100 == 0:
-            loss, current = batch_loss.item(), batch * len(X)
-            print('pred')
-            print(pred[0:2])
-            print('y')
-            print(Y[0:2])
-            print(f"loss: {loss:>7f}  [{current:>5d}/{size:>5d}]")
-
         compute_accuracy(pred, Y, accuracy, column_transformers)
-        if epoch_num == epochs - 1:
-            model_output_recording.record_output(pred, Y, transformed_Y, train)
-        #bar.next(X.shape[0])
 
     cumulative_loss /= num_batches
     for name in column_transformers.output_types.column_names():

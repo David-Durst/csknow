@@ -36,17 +36,26 @@ class IOColumnAndImageTransformers(IOColumnTransformers):
                  sample_images_tensor: torch.tensor = torch.empty((1,1))):
         super().__init__(input_types, output_types, non_img_df)
 
+        # first dim is for different samples, so reduce over that
         # last two dims of image are ones to reduce, as computing mean per channel
         # last two chanels are row/width after channel counter
-        channels_to_reduce = [len(sample_images_tensor.shape) - 2, len(sample_images_tensor.shape) - 1]
+        channels_to_reduce = [0, len(sample_images_tensor.shape) - 2, len(sample_images_tensor.shape) - 1]
         img_std, img_mean = torch.std_mean(sample_images_tensor, dim=channels_to_reduce, keepdim=True)
         self.input_img_transformer = PTImageTransformer(img_mean, img_std)
         self.num_img_channels = sample_images_tensor.shape[1]
 
     def transform_images_and_columns(self, input: bool, non_img_tensor: torch.Tensor,
                                      img_tensor: torch.Tensor) -> torch.Tensor:
-        super().transform_columns(input, non_img_tensor)
+        non_img_transformed = super().transform_columns(input, non_img_tensor)
+        img_transformed = self.input_img_transformer.convert(img_tensor)
+        # add last two channels to repeat across (for width/height of image)
+        non_img_expanded = torch.unsqueeze(torch.unsqueeze(non_img_transformed, -1), -1)
+        non_img_expanded_shape = list(non_img_expanded.shape)
+        non_img_expanded_shape[-2] = img_tensor.shape[-2]
+        non_img_expanded_shape[-1] = img_tensor.shape[-1]
+        non_img_expanded = non_img_expanded.expand(*non_img_expanded_shape)
+
         # fix this when I call it, need to broadcast non_image_tensor to all parts of img_tensor
-        raise NotImplementedError
+        return torch.cat([img_transformed, non_img_expanded], dim=1)
 
     # for now, assuming no images out, so can just call parent untransform_columns

@@ -80,13 +80,13 @@ class PTMeanStdColumnTransformer(PTColumnTransformer):
         self.means = self.cpu_means.to(CUDA_DEVICE_STR)
         self.standard_deviations = self.cpu_standard_deviations.to(CUDA_DEVICE_STR)
 
-    def convert(self, value):
+    def convert(self, value: torch.Tensor):
         if value.device.type == CPU_DEVICE_STR:
             return (value - self.cpu_means) / self.cpu_standard_deviations
         else:
             return (value - self.means) / self.standard_deviations
 
-    def inverse(self, value):
+    def inverse(self, value: torch.Tensor):
         if value.device.type == CPU_DEVICE_STR:
             return (value * self.cpu_standard_deviations) + self.cpu_means
         else:
@@ -105,8 +105,8 @@ class PTOneHotColumnTransformer(PTColumnTransformer):
         one_hot_float_result = one_hot_result.to(value.dtype)
         return torch.flatten(one_hot_float_result, start_dim=1)
 
-    def inverse(self, value):
-        raise NotImplementedError
+    def inverse(self, value: torch.Tensor):
+        return torch.argmax(value, -1, keepdim=True)
 
 
 class IOColumnTransformers:
@@ -126,10 +126,11 @@ class IOColumnTransformers:
     def create_pytorch_column_transformers(self, types: ColumnTypes, all_data_df: pd.DataFrame) -> \
             List[PTColumnTransformer]:
         result: List[PTColumnTransformer] = []
-        result.append(PTMeanStdColumnTransformer(
-            torch.Tensor(all_data_df.loc[:, types.float_standard_cols].mean()),
-            torch.Tensor(all_data_df.loc[:, types.float_standard_cols].std()),
-        ))
+        if types.float_standard_cols:
+            result.append(PTMeanStdColumnTransformer(
+                torch.Tensor(all_data_df.loc[:, types.float_standard_cols].mean()),
+                torch.Tensor(all_data_df.loc[:, types.float_standard_cols].std()),
+            ))
         for name in types.categorical_cols:
             result.append(PTOneHotColumnTransformer(types.num_cats_per_col[name]))
         return result
@@ -181,11 +182,14 @@ class IOColumnTransformers:
         uncat_result: List[torch.Tensor] = []
 
         x_float_name_ranges = self.get_name_ranges(input, True, {ColumnTransformerType.FLOAT_STANDARD})
-        x_floats = x[:, x_float_name_ranges[0].start:x_float_name_ranges[-1].stop]
-        uncat_result.append(self.output_ct_pts[0].inverse(x_floats))
+        ct_offset = 0
+        if x_float_name_ranges:
+            x_floats = x[:, x_float_name_ranges[0].start:x_float_name_ranges[-1].stop]
+            uncat_result.append(self.output_ct_pts[0].inverse(x_floats))
+            ct_offset += 1
 
         x_categorical_name_ranges = self.get_name_ranges(input, True, {ColumnTransformerType.CATEGORICAL})
-        if x_categorical_name_ranges:
-            raise NotImplementedError
+        for i, categorical_name_range in enumerate(x_categorical_name_ranges):
+            uncat_result.append(self.output_ct_pts[i+ct_offset].inverse(x[:, categorical_name_range]))
 
         return torch.cat(uncat_result, dim=1)

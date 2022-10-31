@@ -3,9 +3,8 @@ from torch import nn
 import torch
 from learn_bot.navigation.io_transforms import IOColumnAndImageTransformers, ColumnTypes
 
-
 class CNNNavModel(nn.Module):
-    internal_width = 1024
+    img_width = 160
     cts: IOColumnAndImageTransformers
     output_layers: List[nn.Module]
 
@@ -25,25 +24,23 @@ class CNNNavModel(nn.Module):
             nn.Conv2d(num_channels, num_channels, 5),
             nn.MaxPool2d(2,2),
             nn.ReLU(),
-            #nn.Linear(cts.get_name_ranges(True, True)[-1].stop, self.internal_width),
-            #nn.ReLU(),
-            #nn.Linear(self.internal_width, self.internal_width),
-            #nn.ReLU(),
-            #nn.Linear(self.internal_width, self.internal_width),
-            #nn.ReLU(),
+            nn.Flatten(1, -1)
         )
 
         output_layers = []
         for output_range in cts.get_name_ranges(False, True):
-            output_layers.append(nn.Linear(self.internal_width, len(output_range)))
+            output_layers.append(nn.Sequential(
+                # computed experimentally
+                nn.Linear(14336, len(output_range)),
+                nn.Softmax(-1)
+            ))
         self.output_layers = nn.ModuleList(output_layers)
 
     # https://github.com/pytorch/pytorch/issues/18337
     # accepting multiple inputs is fine in C++ side too
     def forward(self, non_img_x, img_x):
         # transform inputs
-        x_transformed = self.cts.transform_images_and_columns(True,non_img_x, img_x)
-        raise NotImplementedError
+        x_transformed = self.cts.transform_images_and_columns(True, non_img_x, img_x)
 
         # run model except last layer
         logits = self.inner_model(x_transformed)
