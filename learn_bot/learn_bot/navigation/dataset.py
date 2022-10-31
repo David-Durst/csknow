@@ -24,11 +24,15 @@ def tensor_to_pil(tensor: Tensor) -> Image:
     return transforms.ToPILImage()(tensor.unsqueeze_(0))
 
 
-@dataclass(frozen=True)
-class NavDataAndLabel():
+class NavDataAndLabel:
     non_img_data: torch.Tensor
     img_data: torch.Tensor
     label: torch.Tensor
+
+    def __init__(self, args: List):
+        self.non_img_data = args[0]
+        self.img_data = args[1]
+        self.label = args[2]
 
 
 # https://gist.github.com/rwightman/5a7c9232eb57da20afa80cedb8ac2d38
@@ -62,8 +66,8 @@ class NavDataset(Dataset):
 
     # https://stackoverflow.com/questions/67416496/does-pytorch-dataset-getitem-have-to-return-a-dict
     # no strict API for __getitem__ to implement
-    def __getitem__(self, index) -> NavDataAndLabel:
-        round_id = self.round_id[index]
+    def __getitem__(self, index) -> List:
+        round_id = self.round_id.iloc[index]
         if round_id not in self.tarfiles:
             for inner_round_id in self.round_id.unique().tolist():
                 tar_path = Path(self.tar_path) / (self.root + "_" + str(inner_round_id) + ".tar")
@@ -71,13 +75,13 @@ class NavDataset(Dataset):
                     self.tarfiles[inner_round_id] = tarfile.open(tar_path)
         imgs_tensors = []
         for img_col_name, img_col in self.img_cols.items():
-            tarinfo = self.tarfiles[round_id].getmember(img_col[index])
+            tarinfo = self.tarfiles[round_id].getmember(img_col.iloc[index])
             iob = self.tarfiles[round_id].extractfile(tarinfo)
             imgs_tensors.append(pil_to_tensor(Image.open(iob)))
         if self.non_img_X is None:
-            return NavDataAndLabel(None, torch.stack(imgs_tensors), None)
+            return [None, torch.stack(imgs_tensors), None]
         else:
-            return NavDataAndLabel(self.non_img_X[index], torch.stack(imgs_tensors), self.Y[index])
+            return [self.non_img_X[index], torch.stack(imgs_tensors), self.Y[index]]
 
     def __len__(self):
         return len(self.df)
@@ -87,7 +91,7 @@ class NavDataset(Dataset):
             self.tarfiles[round_id].getmembers()
 
     def get_image_grid(self, index):
-        images_tensor = self[index].img_data
+        images_tensor = NavDataAndLabel(self[index]).img_data
         num_images = images_tensor.shape[0]
         height = images_tensor.shape[1]
         width = images_tensor.shape[2]
@@ -109,6 +113,7 @@ class NavDataset(Dataset):
         return grid
 
     def get_img_sample(self) -> torch.Tensor:
+        #sample_indices = [self.round_id.index[i] for i in random.sample(range(len(self)), 30)]
         sample_indices = random.sample(range(len(self)), 30)
-        images_list = [self[i].img_data for i in sample_indices]
+        images_list = [NavDataAndLabel(self[i]).img_data for i in sample_indices]
         return torch.stack(images_list)

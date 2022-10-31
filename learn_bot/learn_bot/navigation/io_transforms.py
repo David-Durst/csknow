@@ -45,6 +45,6 @@ class IOColumnAndImageTransformers(IOColumnTransformers):
                                      img_tensor: torch.Tensor) -> torch.Tensor:
         super().transform_columns(input, non_img_tensor)
         # fix this when I call it, need to broadcast non_image_tensor to all parts of img_tensor
-        NotImplementedError
+        raise NotImplementedError
 
     # for now, assuming no images out, so can just call parent untransform_columns

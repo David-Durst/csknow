@@ -37,7 +37,7 @@ base_future_img_columns: List[str] = ["goal pos"]
 future_temporal_img_columns = TemporalIOColumnNames(base_prior_img_columns, PRIOR_TICKS, 0, 0)
 
 # looking into the future for goal region (higher level model will give us this)
-temporal_img_column_names = TemporalIOColumnNames()
+temporal_img_column_names = TemporalIOColumnNames([], 0, 0, 0)
 temporal_img_column_names.input_columns = prior_temporal_img_columns.input_columns + \
                                           future_temporal_img_columns.output_columns
 temporal_img_column_names.vis_columns = temporal_img_column_names.input_columns
@@ -46,13 +46,12 @@ temporal_img_column_names.output_columns = []
 base_prior_float_columns: List[str] = ["player view dir x", "player view dir y", "health", "armor"]
 prior_temporal_float_columns = TemporalIOColumnNames(base_prior_float_columns, PRIOR_TICKS, 0, 0)
 
-base_cur_cat_columns: List[str] = ["movement result x", "movement result y"]
-cur_temporal_cat_columns = TemporalIOColumnNames(base_cur_cat_columns, 0, CUR_TICK, 0)
+cur_cat_columns: List[str] = ["movement result x", "movement result y"]
 
 # transform input and output
 input_column_types = ColumnTypes(prior_temporal_float_columns.input_columns, [], [])
 
-output_column_types = ColumnTypes([], cur_temporal_cat_columns.output_columns, [3, 3])
+output_column_types = ColumnTypes([], cur_cat_columns, [3, 3])
 
 # weird dance as column transformers need data set to compute mean/std dev
 # but data set needs column transformers during train/inference time
@@ -72,13 +71,15 @@ batch_size = 64
 train_dataloader = DataLoader(train_nav_dataset, batch_size=batch_size, shuffle=True)
 test_dataloader = DataLoader(test_nav_dataset, batch_size=batch_size, shuffle=True)
 
-for X, Y in train_dataloader:
-    print(f"Train shape of X: {X.shape} {X.dtype}")
+for non_img_X, img_X, Y in train_dataloader:
+    print(f"Train shape of non_img_X: {non_img_X.shape} {non_img_X.dtype}")
+    print(f"Train shape of img_X: {img_X.shape} {img_X.dtype}")
     print(f"Train shape of Y: {Y.shape} {Y.dtype}")
     break
 
-for X, Y in test_dataloader:
-    print(f"Test shape of X: {X.shape} {X.dtype}")
+for non_img_X, img_X, Y in test_dataloader:
+    print(f"Test shape of non_img_X: {non_img_X.shape} {non_img_X.dtype}")
+    print(f"Test shape of img_X: {img_X.shape} {img_X.dtype}")
     print(f"Test shape of Y: {Y.shape} {Y.dtype}")
     break
 

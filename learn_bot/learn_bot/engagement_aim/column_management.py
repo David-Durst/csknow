@@ -106,7 +106,7 @@ class PTOneHotColumnTransformer(PTColumnTransformer):
         return torch.flatten(one_hot_float_result, start_dim=1)
 
     def inverse(self, value):
-        NotImplementedError
+        raise NotImplementedError
 
 
 class IOColumnTransformers:
@@ -183,6 +183,6 @@ class IOColumnTransformers:
 
         x_categorical_name_ranges = self.get_name_ranges(input, True, {ColumnTransformerType.CATEGORICAL})
         if x_categorical_name_ranges:
-            NotImplementedError
+            raise NotImplementedError
 
         return torch.cat(uncat_result, dim=1)

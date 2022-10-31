@@ -7,11 +7,6 @@ class TemporalIOColumnNames:
     output_columns: List[str]
     vis_columns: List[str]
 
-    def __init__(self):
-        self.input_columns = []
-        self.output_columns = []
-        self.vis_columns = []
-
     def __init__(self, base_columns: List[str], prior_ticks: int, cur_tick: int, future_ticks: int):
         self.input_columns = []
         self.output_columns = []

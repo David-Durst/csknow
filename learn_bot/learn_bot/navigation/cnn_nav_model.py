@@ -14,7 +14,7 @@ class CNNNavModel(nn.Module):
         self.cts = cts
         # https://pytorch.org/tutorials/beginner/blitz/cifar10_tutorial.html
         # need to call this once I have the CT, use those dims to implement conv dims
-        NotImplementedError
+        raise NotImplementedError
         self.inner_model = nn.Sequential(
             #nn.Linear(cts.get_name_ranges(True, True)[-1].stop, self.internal_width),
             #nn.ReLU(),
@@ -34,7 +34,7 @@ class CNNNavModel(nn.Module):
     def forward(self, non_img_x, img_x):
         # transform inputs
         x_transformed = self.cts.transform_images_and_columns(True,non_img_x, img_x)
-        NotImplementedError
+        raise NotImplementedError
 
         # run model except last layer
         logits = self.inner_model(x_transformed)
