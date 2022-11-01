@@ -139,7 +139,7 @@ class LSTMAimModel(nn.Module):
                 col_index = i
                 break
 
-        return x[0, num_output_cols + col_ranges[col_index].start]
+        return x[0, num_output_cols + col_ranges[col_index].start].item()
 
     def set_untransformed_output(self, x: torch.Tensor, col_name: str, value: float):
         col_ranges = self.cts.get_name_ranges(True, False)

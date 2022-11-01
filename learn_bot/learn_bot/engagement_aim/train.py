@@ -190,8 +190,6 @@ def train():
         with torch.no_grad():
             with alive_bar(len(dataset), force_tty=True) as bar:
                 for i in range(len(dataset)):
-                    if i >= 4000:
-                        break
                     if prior_row_round_id != dataset.round_id.iloc[i]:
                         round_df = pd.DataFrame.from_dict(agg_dicts)
                         if inner_agg_df is not None:
