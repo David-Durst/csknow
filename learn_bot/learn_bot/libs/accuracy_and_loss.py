@@ -1,4 +1,4 @@
-from dataset import *
+from learn_bot.engagement_aim.dataset import *
 from learn_bot.engagement_aim.column_management import IOColumnTransformers, ColumnTransformerType, CPU_DEVICE_STR, CUDA_DEVICE_STR
 from math import sqrt
 from torch import nn

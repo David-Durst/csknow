@@ -82,4 +82,8 @@ dependencies:
   - xz=5.2.5=h62dcd97_0
   - zlib=1.2.11=h8cc25b3_4
   - zstd=1.4.9=h19a0ad4_0
+  - pip:
+    - about-time==3.1.1
+    - alive-progress==2.4.1
+    - grapheme==0.6.0
 prefix: C:\Users\David\miniconda3\envs\learn_bot

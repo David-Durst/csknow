@@ -7,8 +7,9 @@ from learn_bot.engagement_aim.column_management import IOColumnTransformers
 class AimDataset(Dataset):
     def __init__(self, df, cts: IOColumnTransformers):
         self.id = df.loc[:, 'id']
+        self.round_id = df.loc[:, 'round id']
         self.tick_id = df.loc[:, 'tick id']
-        self.round_id = df.loc[:, 'engagement id']
+        self.engagement_id = df.loc[:, 'engagement id']
         self.attacker_player_id = df.loc[:, 'attacker player id']
         self.victim_player_id = df.loc[:, 'victim player id']
         self.num_shots_fired = df.loc[:, 'num shots fired']
