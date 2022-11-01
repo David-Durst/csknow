@@ -177,8 +177,9 @@ def train():
             self.input_tensor = new_input_tensor
             agg_dicts.append(self.row_dict)
 
-    def on_policy_inference(dataset: AimDataset, orig_df: pd.DataFrame, model: LSTMAimModel) -> List[Dict]:
+    def on_policy_inference(dataset: AimDataset, orig_df: pd.DataFrame, model: LSTMAimModel) -> pd.DataFrame:
         agg_dicts = []
+        inner_agg_df = None
         model.eval()
         prior_row_round_id = -1
         # this tracks history so it can produce inputs
@@ -187,7 +188,15 @@ def train():
         last_output_per_engagement: Dict[int, PolicyOutput] = {}
         with alive_bar(len(dataset), force_tty=True) as bar:
             for i in range(len(dataset)):
+                if i >= 4000:
+                    break
                 if prior_row_round_id != dataset.round_id.iloc[i]:
+                    round_df = pd.DataFrame.from_dict(agg_dicts)
+                    if inner_agg_df is not None:
+                        inner_agg_df = pd.concat([inner_agg_df, round_df], ignore_index=True)
+                    else:
+                        inner_agg_df = round_df
+                    agg_dicts = []
                     history_per_engagement = {}
                     last_output_per_engagement = {}
                 prior_row_round_id = dataset.round_id.iloc[i]
@@ -204,23 +213,23 @@ def train():
                     history_per_engagement[engagement_id] = PolicyHistory(
                         orig_df.iloc[i].to_dict(), torch.unsqueeze(dataset[i][0], dim=0))
                 X_rolling = history_per_engagement[engagement_id].input_tensor
-                pred = model(X_rolling)
+                pred = model(X_rolling.to(CUDA_DEVICE_STR)).to(CPU_DEVICE_STR)
                 # need to add output to data set
                 last_output_per_engagement[engagement_id] = PolicyOutput(
                     model.get_untransformed_output(pred, "delta view angle x (t)"),
                     model.get_untransformed_output(pred, "delta view angle y (t)")
                 )
                 bar()
-        return agg_dicts
+        return agg_df
 
-    agg_dicts = []
-    agg_train_df = train_df
+    agg_df = None
+    total_train_df = train_df
     dad_iters = 4
     for dad_num in range(dad_iters):
         print(f"DaD Iter {dad_num + 1}\n-------------------------------")
         # step 1: train model
         # create data sets for pytorch
-        training_data = AimDataset(agg_train_df, column_transformers)
+        training_data = AimDataset(total_train_df, column_transformers)
         test_data = AimDataset(test_df, column_transformers)
 
         batch_size = 64
@@ -245,12 +254,14 @@ def train():
         train_and_test_SL(model, train_dataloader, test_dataloader)
 
         # step 2: inference and result collection
-        new_agg_dicts = on_policy_inference(training_data, agg_train_df, model.to(CPU_DEVICE_STR))
-        agg_dicts = agg_dicts + new_agg_dicts
+        new_agg_df = on_policy_inference(training_data, train_df, model)
 
         # step 3: create new training data set
-        new_agg_df = pd.DataFrame.from_dict(agg_dicts)
-        agg_train_df = pd.concat([train_df, new_agg_df], ignore_index=True)
+        if agg_df is None:
+            agg_df = new_agg_df
+        else:
+            agg_df = pd.concat([agg_df, new_agg_df], ignore_index=True)
+        total_train_df = pd.concat([train_df, new_agg_df], ignore_index=True)
 
 
 
