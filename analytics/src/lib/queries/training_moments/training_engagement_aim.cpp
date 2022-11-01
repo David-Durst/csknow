@@ -21,6 +21,7 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
     vector<vector<int64_t>> tmpRoundIds(numThreads);
     vector<vector<int64_t>> tmpRoundStarts(numThreads);
     vector<vector<int64_t>> tmpRoundSizes(numThreads);
+    vector<vector<int64_t>> tmpRoundId(numThreads);
     vector<vector<int64_t>> tmpTickId(numThreads);
     vector<vector<int64_t>> tmpEngagementId(numThreads);
     vector<vector<int64_t>> tmpAttackerPlayerId(numThreads);
@@ -65,6 +66,7 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
             }
             for (const auto & [_0, _1, engagementIndex] :
                 engagementResult.engagementsPerTick.intervalToEvent.findOverlapping(tickIndex, tickIndex)) {
+                tmpRoundId[threadNum].push_back(roundIndex);
                 tmpTickId[threadNum].push_back(tickIndex);
                 tmpEngagementId[threadNum].push_back(engagementIndex);
                 if (engagementToFireData.find(engagementIndex) == engagementToFireData.end()) {
@@ -198,6 +200,7 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
     mergeThreadResults(numThreads, result.rowIndicesPerRound, tmpRoundIds, tmpRoundStarts, tmpRoundSizes,
                        result.tickId, result.size,
                        [&](int64_t minThreadId, int64_t tmpRowId) {
+                           result.roundId.push_back(tmpTickId[minThreadId][tmpRowId]);
                            result.tickId.push_back(tmpTickId[minThreadId][tmpRowId]);
                            result.engagementId.push_back(tmpEngagementId[minThreadId][tmpRowId]);
                            result.attackerPlayerId.push_back(tmpAttackerPlayerId[minThreadId][tmpRowId]);

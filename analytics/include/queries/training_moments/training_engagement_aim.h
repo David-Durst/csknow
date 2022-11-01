@@ -47,6 +47,7 @@ enum class AimWeaponType {
 class TrainingEngagementAimResult : public QueryResult {
 public:
     vector<RangeIndexEntry> rowIndicesPerRound;
+    vector<int64_t> roundId;
     vector<int64_t> tickId;
     vector<int64_t> engagementId;
     vector<int64_t> attackerPlayerId;
@@ -80,7 +81,7 @@ public:
     }
 
     void oneLineToCSV(int64_t index, stringstream & ss) override {
-        ss << index << "," << tickId[index] << "," << engagementId[index] << ","
+        ss << index << "," << roundId[index] << "," << tickId[index] << "," << engagementId[index] << ","
            << attackerPlayerId[index] << "," << victimPlayerId[index] << ",";
 
         ss << numShotsFired[index] << "," << ticksSinceLastFire[index] << ","
@@ -100,7 +101,7 @@ public:
     }
 
     vector<string> getForeignKeyNames() override {
-        return {"tick id", "engagement id", "attacker player id", "victim player id"};
+        return {"round id", "tick id", "engagement id", "attacker player id", "victim player id"};
     }
 
     vector<string> getOtherColumnNames() override {
