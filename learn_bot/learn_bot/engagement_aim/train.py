@@ -14,6 +14,7 @@ from typing import List, Dict, Deque
 from dataclasses import dataclass
 from collections import deque
 from alive_progress import alive_bar
+from learn_bot.libs.profiling import *
 
 from learn_bot.libs.temporal_column_names import TemporalIOColumnNames
 
@@ -186,41 +187,42 @@ def train():
         history_per_engagement: Dict[int, PolicyHistory] = {}
         # this tracks last output, as output only used as input when hit next input
         last_output_per_engagement: Dict[int, PolicyOutput] = {}
-        with alive_bar(len(dataset), force_tty=True) as bar:
-            for i in range(len(dataset)):
-                if i >= 4000:
-                    break
-                if prior_row_round_id != dataset.round_id.iloc[i]:
-                    round_df = pd.DataFrame.from_dict(agg_dicts)
-                    if inner_agg_df is not None:
-                        inner_agg_df = pd.concat([inner_agg_df, round_df], ignore_index=True)
+        with torch.no_grad():
+            with alive_bar(len(dataset), force_tty=True) as bar:
+                for i in range(len(dataset)):
+                    if i >= 4000:
+                        break
+                    if prior_row_round_id != dataset.round_id.iloc[i]:
+                        round_df = pd.DataFrame.from_dict(agg_dicts)
+                        if inner_agg_df is not None:
+                            inner_agg_df = pd.concat([inner_agg_df, round_df], ignore_index=True)
+                        else:
+                            inner_agg_df = round_df
+                        agg_dicts = []
+                        history_per_engagement = {}
+                        last_output_per_engagement = {}
+                    prior_row_round_id = dataset.round_id.iloc[i]
+                    engagement_id = dataset.engagement_id.iloc[i]
+                    if engagement_id in history_per_engagement:
+                        history_per_engagement[engagement_id].add_row(
+                            last_output_per_engagement[engagement_id],
+                            model,
+                            orig_df.iloc[i].to_dict(),
+                            torch.unsqueeze(dataset[i][0], dim=0).detach(),
+                            agg_dicts
+                        )
                     else:
-                        inner_agg_df = round_df
-                    agg_dicts = []
-                    history_per_engagement = {}
-                    last_output_per_engagement = {}
-                prior_row_round_id = dataset.round_id.iloc[i]
-                engagement_id = dataset.engagement_id.iloc[i]
-                if engagement_id in history_per_engagement:
-                    history_per_engagement[engagement_id].add_row(
-                        last_output_per_engagement[engagement_id],
-                        model,
-                        orig_df.iloc[i].to_dict(),
-                        torch.unsqueeze(dataset[i][0], dim=0),
-                        agg_dicts
+                        history_per_engagement[engagement_id] = PolicyHistory(
+                            orig_df.iloc[i].to_dict(), torch.unsqueeze(dataset[i][0], dim=0).detach())
+                    X_rolling = history_per_engagement[engagement_id].input_tensor
+                    pred = model(X_rolling.to(CUDA_DEVICE_STR)).to(CPU_DEVICE_STR).detach()
+                    # need to add output to data set
+                    last_output_per_engagement[engagement_id] = PolicyOutput(
+                        model.get_untransformed_output(pred, "delta view angle x (t)"),
+                        model.get_untransformed_output(pred, "delta view angle y (t)")
                     )
-                else:
-                    history_per_engagement[engagement_id] = PolicyHistory(
-                        orig_df.iloc[i].to_dict(), torch.unsqueeze(dataset[i][0], dim=0))
-                X_rolling = history_per_engagement[engagement_id].input_tensor
-                pred = model(X_rolling.to(CUDA_DEVICE_STR)).to(CPU_DEVICE_STR)
-                # need to add output to data set
-                last_output_per_engagement[engagement_id] = PolicyOutput(
-                    model.get_untransformed_output(pred, "delta view angle x (t)"),
-                    model.get_untransformed_output(pred, "delta view angle y (t)")
-                )
-                bar()
-        return agg_df
+                    bar()
+        return inner_agg_df
 
     agg_df = None
     total_train_df = train_df
