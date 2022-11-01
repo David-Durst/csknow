@@ -200,7 +200,7 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
     mergeThreadResults(numThreads, result.rowIndicesPerRound, tmpRoundIds, tmpRoundStarts, tmpRoundSizes,
                        result.tickId, result.size,
                        [&](int64_t minThreadId, int64_t tmpRowId) {
-                           result.roundId.push_back(tmpTickId[minThreadId][tmpRowId]);
+                           result.roundId.push_back(tmpRoundId[minThreadId][tmpRowId]);
                            result.tickId.push_back(tmpTickId[minThreadId][tmpRowId]);
                            result.engagementId.push_back(tmpEngagementId[minThreadId][tmpRowId]);
                            result.attackerPlayerId.push_back(tmpAttackerPlayerId[minThreadId][tmpRowId]);
