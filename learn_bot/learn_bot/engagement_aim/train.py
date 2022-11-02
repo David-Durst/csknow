@@ -1,4 +1,6 @@
 # https://pytorch.org/tutorials/beginner/basics/quickstart_tutorial.html
+import copy
+
 import torch
 from torch.utils.data import DataLoader
 import pandas as pd
@@ -10,15 +12,16 @@ from learn_bot.engagement_aim.column_management import IOColumnTransformers, Col
 from learn_bot.engagement_aim.lstm_aim_model import LSTMAimModel
 from learn_bot.engagement_aim.output_plotting import plot_untransformed_and_transformed, ModelOutputRecording
 from learn_bot.libs.df_grouping import train_test_split_by_col
-from typing import List, Dict, Deque
-from dataclasses import dataclass
-from collections import deque
-from alive_progress import alive_bar
-from learn_bot.libs.profiling import *
+from typing import List
+import multiprocessing as mp
 
 from learn_bot.libs.temporal_column_names import TemporalIOColumnNames
+from learn_bot.navigation.dad import on_policy_inference
+from tqdm import tqdm
+
 
 def train():
+    global shared_model
     all_data_df = pd.read_csv(Path(__file__).parent / '..' / '..' / '..' / 'analytics' / 'csv_outputs' / 'engagementAim.csv')
 
     #all_data_df = all_data_df[all_data_df['num shots fired'] > 0]
@@ -53,6 +56,7 @@ def train():
 
     # Get cpu or gpu device for training.
     device: str = CUDA_DEVICE_STR if torch.cuda.is_available() else CPU_DEVICE_STR
+    #device = CPU_DEVICE_STR
     print(f"Using {device} device")
 
     # Define model
@@ -88,38 +92,39 @@ def train():
         #bar = Bar('Processing', max=size)
         for name in column_transformers.output_types.column_names():
             accuracy[name] = 0
-        for batch, (X, Y) in enumerate(dataloader):
-            if batch == 0 and epoch_num == 0 and train:
-                first_row = X[0:1,:]
-            X, Y = X.to(device), Y.to(device)
-            transformed_Y = column_transformers.transform_columns(False, Y)
-            #XR = torch.randn_like(X, device=device)
-            #XR[:,0] = X[:,0]
-            #YZ = torch.zeros_like(Y) + 0.1
+        with tqdm(total=len(dataloader), disable=False) as pbar:
+            for batch, (X, Y) in enumerate(dataloader):
+                if batch == 0 and epoch_num == 0 and train:
+                    first_row = X[0:1,:]
+                X, Y = X.to(device), Y.to(device)
+                transformed_Y = column_transformers.transform_columns(False, Y)
+                #XR = torch.randn_like(X, device=device)
+                #XR[:,0] = X[:,0]
+                #YZ = torch.zeros_like(Y) + 0.1
 
-            # Compute prediction error
-            pred = model(X)
-            batch_loss = compute_loss(pred, transformed_Y, column_transformers)
-            cumulative_loss += batch_loss
+                # Compute prediction error
+                pred = model(X)
+                batch_loss = compute_loss(pred, transformed_Y, column_transformers)
+                cumulative_loss += batch_loss
 
-            # Backpropagation
-            if train:
-                optimizer.zero_grad()
-                batch_loss.backward()
-                optimizer.step()
+                # Backpropagation
+                if train:
+                    optimizer.zero_grad()
+                    batch_loss.backward()
+                    optimizer.step()
 
-            if False and train and batch % 100 == 0:
-                loss, current = batch_loss.item(), batch * len(X)
-                print('pred')
-                print(pred[0:2])
-                print('y')
-                print(Y[0:2])
-                print(f"loss: {loss:>7f}  [{current:>5d}/{size:>5d}]")
+                if False and train and batch % 100 == 0:
+                    loss, current = batch_loss.item(), batch * len(X)
+                    print('pred')
+                    print(pred[0:2])
+                    print('y')
+                    print(Y[0:2])
+                    print(f"loss: {loss:>7f}  [{current:>5d}/{size:>5d}]")
 
-            compute_accuracy(pred, Y, accuracy, column_transformers)
-            if epoch_num == epochs - 1:
-                model_output_recording.record_output(pred, Y, transformed_Y, train)
-            #bar.next(X.shape[0])
+                compute_accuracy(pred, Y, accuracy, column_transformers)
+                if epoch_num == epochs - 1:
+                    model_output_recording.record_output(pred, Y, transformed_Y, train)
+                pbar.update(1)
 
         cumulative_loss /= num_batches
         for name in column_transformers.output_types.column_names():
@@ -134,110 +139,26 @@ def train():
         for epoch_num in range(epochs):
             print(f"\nEpoch {epoch_num+1}\n-------------------------------")
             train_or_test_SL_epoch(train_dataloader, model, optimizer, epoch_num, True)
-            train_or_test_SL_epoch(test_dataloader, model, None, epoch_num, False)
-
-    @dataclass
-    class PolicyOutput:
-        delta_view_angle_x: float
-        delta_view_angle_y: float
-
-    class PolicyHistory:
-        # generate the input tensor for the next policy iteration
-        # create the dict for inserting a new training data point into the data frame
-        def get_x_field_str(self, tick: int = -1):
-            return f"delta view angle x (t-{abs(tick)})"
-        def get_y_field_str(self, tick: int = -1):
-            return f"delta view angle y (t-{abs(tick)})"
-
-        row_dict: Dict
-        input_tensor: torch.Tensor
-
-        def __init__(self, row_dict: Dict, input_tensor: torch.Tensor):
-            self.row_dict = row_dict
-            self.input_tensor = input_tensor
-
-        def add_row(self, policy_output: PolicyOutput, model: LSTMAimModel, new_row_dict: Dict,
-                    new_input_tensor: torch.Tensor, agg_dicts: List[Dict]):
-            # update new input_tensor and row_dict by setting the view angles from old input_tensor
-            # most recent values are form policy_output
-            for i in range(PRIOR_TICKS, -1):
-                new_row_dict[self.get_x_field_str(i)] = self.row_dict[self.get_x_field_str(i+1)]
-                new_row_dict[self.get_y_field_str(i)] = self.row_dict[self.get_y_field_str(i+1)]
-
-                model.set_untransformed_output(new_input_tensor, self.get_x_field_str(i),
-                                               model.get_untransformed_output(self.input_tensor, self.get_x_field_str(i+1)))
-                model.set_untransformed_output(new_input_tensor, self.get_y_field_str(i),
-                                               model.get_untransformed_output(self.input_tensor, self.get_y_field_str(i+1)))
-
-            new_row_dict[self.get_x_field_str()] = policy_output.delta_view_angle_x
-            new_row_dict[self.get_y_field_str()] = policy_output.delta_view_angle_y
-            model.set_untransformed_output(new_input_tensor, self.get_x_field_str(), policy_output.delta_view_angle_x)
-            model.set_untransformed_output(new_input_tensor, self.get_y_field_str(), policy_output.delta_view_angle_y)
-
-            self.row_dict = new_row_dict
-            self.input_tensor = new_input_tensor
-            agg_dicts.append(self.row_dict)
-
-    def on_policy_inference(dataset: AimDataset, orig_df: pd.DataFrame, model: LSTMAimModel) -> pd.DataFrame:
-        agg_dicts = []
-        inner_agg_df = None
-        model.eval()
-        prior_row_round_id = -1
-        # this tracks history so it can produce inputs
-        history_per_engagement: Dict[int, PolicyHistory] = {}
-        # this tracks last output, as output only used as input when hit next input
-        last_output_per_engagement: Dict[int, PolicyOutput] = {}
-        with torch.no_grad():
-            with alive_bar(len(dataset), force_tty=True) as bar:
-                for i in range(len(dataset)):
-                    if prior_row_round_id != dataset.round_id.iloc[i]:
-                        round_df = pd.DataFrame.from_dict(agg_dicts)
-                        if inner_agg_df is not None:
-                            inner_agg_df = pd.concat([inner_agg_df, round_df], ignore_index=True)
-                        else:
-                            inner_agg_df = round_df
-                        agg_dicts = []
-                        history_per_engagement = {}
-                        last_output_per_engagement = {}
-                    prior_row_round_id = dataset.round_id.iloc[i]
-                    engagement_id = dataset.engagement_id.iloc[i]
-                    if engagement_id in history_per_engagement:
-                        history_per_engagement[engagement_id].add_row(
-                            last_output_per_engagement[engagement_id],
-                            model,
-                            orig_df.iloc[i].to_dict(),
-                            torch.unsqueeze(dataset[i][0], dim=0).detach(),
-                            agg_dicts
-                        )
-                    else:
-                        history_per_engagement[engagement_id] = PolicyHistory(
-                            orig_df.iloc[i].to_dict(), torch.unsqueeze(dataset[i][0], dim=0).detach())
-                    X_rolling = history_per_engagement[engagement_id].input_tensor
-                    pred = model(X_rolling.to(CUDA_DEVICE_STR)).to(CPU_DEVICE_STR).detach()
-                    # need to add output to data set
-                    last_output_per_engagement[engagement_id] = PolicyOutput(
-                        model.get_untransformed_output(pred, "delta view angle x (t)"),
-                        model.get_untransformed_output(pred, "delta view angle y (t)")
-                    )
-                    bar()
-        return inner_agg_df
+            with torch.no_grad():
+                train_or_test_SL_epoch(test_dataloader, model, None, epoch_num, False)
 
     agg_df = None
     total_train_df = train_df
     dad_iters = 4
+    train_data = AimDataset(train_df, column_transformers)
+    test_data = AimDataset(test_df, column_transformers)
     for dad_num in range(dad_iters):
         print(f"DaD Iter {dad_num + 1}\n-------------------------------")
         # step 1: train model
         # create data sets for pytorch
-        training_data = AimDataset(total_train_df, column_transformers)
-        test_data = AimDataset(test_df, column_transformers)
+        total_train_data = AimDataset(total_train_df, column_transformers)
 
         batch_size = 64
 
-        train_dataloader = DataLoader(training_data, batch_size=batch_size, shuffle=True)
+        train_dataloader = DataLoader(total_train_data, batch_size=batch_size, shuffle=True)
         test_dataloader = DataLoader(test_data, batch_size=batch_size, shuffle=True)
 
-        print(f"num train examples: {len(training_data)}")
+        print(f"num train examples: {len(total_train_data)}")
         print(f"num test examples: {len(test_data)}")
 
         if dad_num == 0:
@@ -253,15 +174,37 @@ def train():
 
         train_and_test_SL(model, train_dataloader, test_dataloader)
 
+        num_processes = 3
+        rounds_per_process = [set() for _ in range(num_processes)]
+        for i in range(len(train_data.rounds)):
+            rounds_per_process[i % num_processes].add(train_data.rounds[i])
+
         # step 2: inference and result collection
-        new_agg_df = on_policy_inference(training_data, train_df, model)
+        processes = []
+        manager = mp.Manager()
+        lock = manager.Lock()
+        return_dict = manager.dict()
+        #model.to(CPU_DEVICE_STR)
+        model_copy = copy.deepcopy(model)
+        model_copy.to(CPU_DEVICE_STR)
+        for pid in range(num_processes):
+            p = mp.Process(target=on_policy_inference,
+                           args=(train_data, train_df, model_copy, rounds_per_process[pid], pid, lock, return_dict))
+            p.start()
+            processes.append(p)
+        for p in processes:
+            p.join()
+        #on_policy_inference(train_data, train_df, model, set([0]), 0, lock, return_dict)
+        #model.to(CUDA_DEVICE_STR)
 
         # step 3: create new training data set
-        if agg_df is None:
-            agg_df = new_agg_df
-        else:
-            agg_df = pd.concat([agg_df, new_agg_df], ignore_index=True)
-        total_train_df = pd.concat([train_df, new_agg_df], ignore_index=True)
+        df_to_agg = []
+        if agg_df is not None:
+            df_to_agg.append(agg_df)
+        for pid in range(num_processes):
+            df_to_agg.append(return_dict[pid])
+        agg_df = pd.concat(df_to_agg, ignore_index=True)
+        total_train_df = pd.concat([train_df, agg_df], ignore_index=True)
 
 
 
@@ -274,4 +217,5 @@ def train():
     print("Done")
 
 if __name__ == "__main__":
+    mp.freeze_support()
     train()

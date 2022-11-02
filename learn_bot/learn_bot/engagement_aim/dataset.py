@@ -15,6 +15,8 @@ class AimDataset(Dataset):
         self.num_shots_fired = df.loc[:, 'num shots fired']
         self.ticks_since_last_fire = df.loc[:, 'last fire tick id']
 
+        self.rounds = df.loc[:, 'round id'].unique().tolist()
+
         # convert player id's to indexes
         self.X = torch.tensor(df.loc[:, cts.input_types.column_names()].values).float()
         self.Y = torch.tensor(df.loc[:, cts.output_types.column_names()].values).float()

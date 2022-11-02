@@ -124,7 +124,7 @@ def train():
             accuracy[name] = 0
         next_pct_print = 0.1
         for batch, (non_img_X, img_X, Y) in enumerate(dataloader):
-            if first_batch and train:
+            if batch == 0 and epoch_num == 0:
                 first_batch = False
                 # print(X.cpu().tolist())
                 # print(Y.cpu().tolist())
