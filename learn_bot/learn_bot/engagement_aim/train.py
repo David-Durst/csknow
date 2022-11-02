@@ -8,7 +8,8 @@ from pathlib import Path
 from dataset import *
 from learn_bot.libs.accuracy_and_loss import compute_loss, compute_accuracy, finish_accuracy, CUDA_DEVICE_STR, \
     CPU_DEVICE_STR
-from learn_bot.engagement_aim.column_management import IOColumnTransformers, ColumnTypes, PRIOR_TICKS, FUTURE_TICKS, CUR_TICK
+from learn_bot.engagement_aim.column_management import IOColumnTransformers, ColumnTypes, PRIOR_TICKS, FUTURE_TICKS, \
+    CUR_TICK
 from learn_bot.engagement_aim.lstm_aim_model import LSTMAimModel
 from learn_bot.engagement_aim.output_plotting import plot_untransformed_and_transformed, ModelOutputRecording
 from learn_bot.libs.df_grouping import train_test_split_by_col
@@ -22,9 +23,10 @@ from tqdm import tqdm
 
 def train():
     global shared_model
-    all_data_df = pd.read_csv(Path(__file__).parent / '..' / '..' / '..' / 'analytics' / 'csv_outputs' / 'engagementAim.csv')
+    all_data_df = pd.read_csv(
+        Path(__file__).parent / '..' / '..' / '..' / 'analytics' / 'csv_outputs' / 'engagementAim.csv')
 
-    #all_data_df = all_data_df[all_data_df['num shots fired'] > 0]
+    # all_data_df = all_data_df[all_data_df['num shots fired'] > 0]
 
     train_test_split = train_test_split_by_col(all_data_df, 'engagement id')
     train_df = train_test_split.train_df
@@ -44,24 +46,25 @@ def train():
 
     # transform input and output
     input_column_types = ColumnTypes(temporal_io_float_column_names.input_columns + non_temporal_float_columns,
-                                    input_categorical_columns, [6])
+                                     input_categorical_columns, [6])
 
     output_column_types = ColumnTypes(temporal_io_float_column_names.output_columns, [], [])
 
     column_transformers = IOColumnTransformers(input_column_types, output_column_types, all_data_df)
 
     # plot data set with and without transformers
-    plot_untransformed_and_transformed('train+test labels', all_data_df, temporal_io_float_column_names.vis_columns + non_temporal_float_columns,
+    plot_untransformed_and_transformed('train+test labels', all_data_df,
+                                       temporal_io_float_column_names.vis_columns + non_temporal_float_columns,
                                        input_categorical_columns)
 
     # Get cpu or gpu device for training.
     device: str = CUDA_DEVICE_STR if torch.cuda.is_available() else CPU_DEVICE_STR
-    #device = CPU_DEVICE_STR
+    # device = CPU_DEVICE_STR
     print(f"Using {device} device")
 
     # Define model
     embedding_dim = 5
-    #model = MLPAimModel(column_transformers).to(device)
+    # model = MLPAimModel(column_transformers).to(device)
     model = LSTMAimModel(column_transformers,
                          len(temporal_io_float_column_names.input_columns), len(non_temporal_float_columns)).to(device)
     print(model)
@@ -72,14 +75,15 @@ def train():
 
     # define losses
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
-    #optimizer = torch.optim.SGD(model.parameters(), lr=0.001)
+    # optimizer = torch.optim.SGD(model.parameters(), lr=0.001)
 
     output_cols = column_transformers.output_types.column_names()
 
     # train and test the model
     first_row: torch.Tensor
     model_output_recording: ModelOutputRecording = ModelOutputRecording(model)
-    def train_or_test_SL_epoch(dataloader, model, optimizer, epoch_num, train = True):
+
+    def train_or_test_SL_epoch(dataloader, model, optimizer, epoch_num, train=True):
         nonlocal first_row, model_output_recording
         size = len(dataloader.dataset)
         num_batches = len(dataloader)
@@ -89,18 +93,18 @@ def train():
             model.eval()
         cumulative_loss = 0
         accuracy = {}
-        #bar = Bar('Processing', max=size)
+        # bar = Bar('Processing', max=size)
         for name in column_transformers.output_types.column_names():
             accuracy[name] = 0
         with tqdm(total=len(dataloader), disable=False) as pbar:
             for batch, (X, Y) in enumerate(dataloader):
                 if batch == 0 and epoch_num == 0 and train:
-                    first_row = X[0:1,:]
+                    first_row = X[0:1, :]
                 X, Y = X.to(device), Y.to(device)
                 transformed_Y = column_transformers.transform_columns(False, Y)
-                #XR = torch.randn_like(X, device=device)
-                #XR[:,0] = X[:,0]
-                #YZ = torch.zeros_like(Y) + 0.1
+                # XR = torch.randn_like(X, device=device)
+                # XR[:,0] = X[:,0]
+                # YZ = torch.zeros_like(Y) + 0.1
 
                 # Compute prediction error
                 pred = model(X)
@@ -133,11 +137,11 @@ def train():
         train_test_str = "Train" if train else "Test"
         print(f"Epoch {train_test_str} Accuracy: {accuracy_string}, Transformed Avg Loss: {cumulative_loss:>8f}")
 
-
     epochs = 1
+
     def train_and_test_SL(model, train_dataloader, test_dataloader):
         for epoch_num in range(epochs):
-            print(f"\nEpoch {epoch_num+1}\n-------------------------------")
+            print(f"\nEpoch {epoch_num + 1}\n-------------------------------")
             train_or_test_SL_epoch(train_dataloader, model, optimizer, epoch_num, True)
             with torch.no_grad():
                 train_or_test_SL_epoch(test_dataloader, model, None, epoch_num, False)
@@ -184,18 +188,24 @@ def train():
         manager = mp.Manager()
         lock = manager.Lock()
         return_dict = manager.dict()
-        #model.to(CPU_DEVICE_STR)
-        model_copy = copy.deepcopy(model)
-        model_copy.to(CPU_DEVICE_STR)
+        model.to(CPU_DEVICE_STR)
+        model_copy = \
+            LSTMAimModel(column_transformers,
+                         len(temporal_io_float_column_names.input_columns), len(non_temporal_float_columns)) \
+                .to(CPU_DEVICE_STR)
+        model_copy.load_state_dict(model.state_dict())
+        model.to(CUDA_DEVICE_STR)
         for pid in range(num_processes):
             p = mp.Process(target=on_policy_inference,
-                           args=(train_data, train_df, model_copy, rounds_per_process[pid], pid, lock, return_dict))
+                           args=(train_data, train_df,
+                                 [column_transformers, len(temporal_io_float_column_names.input_columns), len(non_temporal_float_columns), model.state_dict()]
+                                 , rounds_per_process[pid], pid, lock, return_dict))
             p.start()
             processes.append(p)
         for p in processes:
             p.join()
-        #on_policy_inference(train_data, train_df, model, set([0]), 0, lock, return_dict)
-        #model.to(CUDA_DEVICE_STR)
+        # on_policy_inference(train_data, train_df, model, set([0]), 0, lock, return_dict)
+        # model.to(CUDA_DEVICE_STR)
 
         # step 3: create new training data set
         df_to_agg = []
@@ -206,15 +216,13 @@ def train():
         agg_df = pd.concat(df_to_agg, ignore_index=True)
         total_train_df = pd.concat([train_df, agg_df], ignore_index=True)
 
-
-
-
     model_output_recording.plot(column_transformers, temporal_io_float_column_names.vis_columns)
 
     script_model = torch.jit.trace(model.to(CPU_DEVICE_STR), first_row)
     script_model.save(Path(__file__).parent / '..' / '..' / 'models' / 'engagement_aim_model' / 'script_model.pt')
 
     print("Done")
+
 
 if __name__ == "__main__":
     mp.freeze_support()

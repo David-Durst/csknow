@@ -63,6 +63,8 @@ class PolicyHistory:
 
 def on_policy_inference(dataset: AimDataset, orig_df: pd.DataFrame, model: LSTMAimModel, rounds, pid,
                         lock, return_dict) -> pd.DataFrame:
+    model = LSTMAimModel(model[0], model[1], model[2]) .to(CPU_DEVICE_STR)
+    model.load_state_dict(model[3])
     agg_dicts = []
     inner_agg_df = pd.DataFrame()
     model.eval()
