@@ -15,8 +15,9 @@ class AimDataset(Dataset):
         self.num_shots_fired = df.loc[:, 'num shots fired']
         self.ticks_since_last_fire = df.loc[:, 'last fire tick id']
 
-        self.round_starts = df.loc[:, 'round id'].groupby().first('id').loc[:, 'id']
-        self.round_ends = df.loc[:, 'round id'].groupby().last('id').loc[:, 'id']
+        round_starts = df.loc[:, 'round id'].groupby().first('index').loc[:, 'index'].rename({'index': 'start index'})
+        round_ends = df.loc[:, 'round id'].groupby().last('index').loc[:, 'index'].rename({'index': 'end index'})
+        self.round_starts_ends = round_starts.merge(round_ends, 'round id')
 
         # convert player id's to indexes
         self.X = torch.tensor(df.loc[:, cts.input_types.column_names()].values).float()

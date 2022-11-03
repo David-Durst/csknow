@@ -62,64 +62,63 @@ class PolicyHistory:
 
 @dataclass
 class RoundPolicyData:
-    round_start: int
-    round_end: int
+    round_start_index: int
+    round_end_index: int
+    cur_index: int
+    # this tracks history so it can produce inputs
+    history_per_engagement: Dict[int, PolicyHistory]
+    # this tracks last output, as output only used as input when hit next input
+    last_output_per_engagement: Dict[int, PolicyOutput]
+    # this tracks dicts (one dict per new row) for data points to add to data ste
+    agg_dicts: Dict
 
 
 def on_policy_inference(dataset: AimDataset, orig_df: pd.DataFrame, model: LSTMAimModel) -> pd.DataFrame:
-    model = LSTMAimModel(model[0], model[1], model[2]) .to(CPU_DEVICE_STR)
-    model.load_state_dict(model[3])
     agg_dicts = []
     inner_agg_df = pd.DataFrame()
     model.eval()
-    prior_row_round_id = -1
-    # this tracks history so it can produce inputs
-    history_per_engagement: Dict[int, PolicyHistory] = {}
-    # this tracks last output, as output only used as input when hit next input
-    last_output_per_engagement: Dict[int, PolicyOutput] = {}
-    torch.set_num_threads(1)
-    round_to_tick = {}
-    for round_id, round_start in dataset.round_starts:
-        round_to_tick[round_id] = RoundStartEnd(round_start, -1)
-    for round_id, round_end in dataset.round_ends:
-        round_to_tick[round_id].round_end = round_end
+    rounds_policy_data: Dict[int, RoundPolicyData] = {}
+    for index, row in dataset.round_starts_ends.iterrows():
+        rounds_policy_data[row['round id']] = RoundPolicyData(row['start index'], row['end index'], row['start index'],
+                                                              {}, {}, {})
     with torch.no_grad():
         with tqdm(total=len(dataset), disable=False) as pbar:
-            while true:
-            for i in range(len(dataset)):
-                if dataset.round_id.iloc[i] not in rounds:
-                    continue
-                if prior_row_round_id != dataset.round_id.iloc[i]:
-                    round_df = pd.DataFrame.from_dict(agg_dicts)
-                    inner_agg_df = pd.concat([inner_agg_df, round_df], ignore_index=True)
-                    agg_dicts = []
-                    history_per_engagement = {}
-                    last_output_per_engagement = {}
-                    if i != 0:
-                        break
-                prior_row_round_id = dataset.round_id.iloc[i]
-                engagement_id = dataset.engagement_id.iloc[i]
-                if engagement_id in history_per_engagement:
-                    history_per_engagement[engagement_id].add_row(
-                        last_output_per_engagement[engagement_id],
-                        model,
-                        orig_df.iloc[i].to_dict(),
-                        torch.unsqueeze(dataset[i][0], dim=0).detach(),
-                        agg_dicts
-                    )
-                else:
-                    history_per_engagement[engagement_id] = PolicyHistory(
-                        orig_df.iloc[i].to_dict(), torch.unsqueeze(dataset[i][0], dim=0).detach())
-                X_rolling = history_per_engagement[engagement_id].input_tensor
-                #pred = model(X_rolling.to(CUDA_DEVICE_STR)).to(CPU_DEVICE_STR).detach()
-                pred = model(X_rolling).detach()
+            while True:
+                # collect valid rounds, end if no rounds left to analyze
+                valid_rounds = []
+                for round_id, round_policy_data in rounds_policy_data.items():
+                    if round_policy_data.cur_id <= round_policy_data.round_end:
+                        valid_rounds.append(round_id)
+                if len(valid_rounds) == 0:
+                    break
+
+                round_row_tensors = []
+                for valid_round_id in valid_rounds:
+                    cur_index = rounds_policy_data[valid_round_id].cur_index
+                    engagement_id = dataset.engagement_id.loc[cur_index]
+                    if engagement_id in rounds_policy_data[valid_round_id].history_per_engagement:
+                        rounds_policy_data[valid_round_id].history_per_engagement[engagement_id].add_row(
+                            rounds_policy_data[valid_round_id].last_output_per_engagement[engagement_id],
+                            model,
+                            orig_df.loc[cur_index].to_dict(),
+                            dataset[cur_index][0],
+                            agg_dicts
+                        )
+                    else:
+                        rounds_policy_data[valid_round_id].history_per_engagement[engagement_id] = PolicyHistory(
+                            orig_df.loc[cur_index].to_dict(), dataset[cur_index][0])
+                    round_row_tensors.append(rounds_policy_data[valid_round_id]
+                                             .history_per_engagement[engagement_id].input_tensor)
+                X_rolling = torch.stack(round_row_tensors, dim=0)
+                pred = model(X_rolling.to(CUDA_DEVICE_STR)).to(CPU_DEVICE_STR).detach()
+                #pred = model(X_rolling).detach()
                 # need to add output to data set
-                last_output_per_engagement[engagement_id] = PolicyOutput(
-                    model.get_untransformed_output(pred, "delta view angle x (t)"),
-                    model.get_untransformed_output(pred, "delta view angle y (t)")
-                )
-                with lock:
-                    pbar.update(1)
+                for i, valid_round_id in enumerate(valid_rounds):
+                    rounds_policy_data[valid_round_id].last_output_per_engagement[engagement_id] = PolicyOutput(
+                        model.get_untransformed_output(pred[i], "delta view angle x (t)"),
+                        model.get_untransformed_output(pred[i], "delta view angle y (t)")
+                    )
+                pbar.update(len(valid_rounds))
 
     # get last round worth of data
     round_df = pd.DataFrame.from_dict(agg_dicts)

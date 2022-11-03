@@ -30,7 +30,11 @@ def train():
 
     train_test_split = train_test_split_by_col(all_data_df, 'engagement id')
     train_df = train_test_split.train_df
+    train_df.reset_index(inplace=True, drop=True)
+    train_df.reset_index(inplace=True, drop=False)
     test_df = train_test_split.test_df
+    test_df.reset_index(inplace=True, drop=True)
+    test_df.reset_index(inplace=True, drop=False)
 
     base_float_columns: List[str] = ["delta view angle x", "delta view angle y",
                                      "recoil angle x", "recoil angle y",
