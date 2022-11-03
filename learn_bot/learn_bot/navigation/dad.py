@@ -8,7 +8,6 @@ from learn_bot.engagement_aim.column_management import IOColumnTransformers, Col
 from learn_bot.engagement_aim.lstm_aim_model import LSTMAimModel
 from typing import List, Dict
 from dataclasses import dataclass
-from alive_progress import alive_bar
 import pandas as pd
 import torch.multiprocessing as mp
 from tqdm import tqdm
@@ -61,8 +60,13 @@ class PolicyHistory:
         agg_dicts.append(self.row_dict)
 
 
-def on_policy_inference(dataset: AimDataset, orig_df: pd.DataFrame, model: LSTMAimModel, rounds, pid,
-                        lock, return_dict) -> pd.DataFrame:
+@dataclass
+class RoundPolicyData:
+    round_start: int
+    round_end: int
+
+
+def on_policy_inference(dataset: AimDataset, orig_df: pd.DataFrame, model: LSTMAimModel) -> pd.DataFrame:
     model = LSTMAimModel(model[0], model[1], model[2]) .to(CPU_DEVICE_STR)
     model.load_state_dict(model[3])
     agg_dicts = []
@@ -73,10 +77,15 @@ def on_policy_inference(dataset: AimDataset, orig_df: pd.DataFrame, model: LSTMA
     history_per_engagement: Dict[int, PolicyHistory] = {}
     # this tracks last output, as output only used as input when hit next input
     last_output_per_engagement: Dict[int, PolicyOutput] = {}
-    num_rounds = dataset.round_id.isin(rounds).sum()
     torch.set_num_threads(1)
+    round_to_tick = {}
+    for round_id, round_start in dataset.round_starts:
+        round_to_tick[round_id] = RoundStartEnd(round_start, -1)
+    for round_id, round_end in dataset.round_ends:
+        round_to_tick[round_id].round_end = round_end
     with torch.no_grad():
-        with tqdm(total=num_rounds, disable=False, position=pid) as pbar:
+        with tqdm(total=len(dataset), disable=False) as pbar:
+            while true:
             for i in range(len(dataset)):
                 if dataset.round_id.iloc[i] not in rounds:
                     continue

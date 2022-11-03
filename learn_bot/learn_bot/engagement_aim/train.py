@@ -204,7 +204,7 @@ def train():
             processes.append(p)
         for p in processes:
             p.join()
-        # on_policy_inference(train_data, train_df, model, set([0]), 0, lock, return_dict)
+        on_policy_inference(train_data, train_df, model, set([0]), 0, lock, return_dict)
         # model.to(CUDA_DEVICE_STR)
 
         # step 3: create new training data set
