@@ -75,19 +75,18 @@ class RoundPolicyData:
 
 def on_policy_inference(dataset: AimDataset, orig_df: pd.DataFrame, model: LSTMAimModel) -> pd.DataFrame:
     agg_dicts = []
-    inner_agg_df = pd.DataFrame()
     model.eval()
     rounds_policy_data: Dict[int, RoundPolicyData] = {}
-    for index, row in dataset.round_starts_ends.iterrows():
-        rounds_policy_data[row['round id']] = RoundPolicyData(row['start index'], row['end index'], row['start index'],
-                                                              {}, {}, {})
+    for round_index, row in dataset.round_starts_ends.iterrows():
+        rounds_policy_data[round_index] = RoundPolicyData(row['start index'], row['end index'], row['start index'],
+                                                          {}, {}, {})
     with torch.no_grad():
         with tqdm(total=len(dataset), disable=False) as pbar:
             while True:
                 # collect valid rounds, end if no rounds left to analyze
                 valid_rounds = []
                 for round_id, round_policy_data in rounds_policy_data.items():
-                    if round_policy_data.cur_id <= round_policy_data.round_end:
+                    if round_policy_data.cur_index <= round_policy_data.round_end_index:
                         valid_rounds.append(round_id)
                 if len(valid_rounds) == 0:
                     break
@@ -114,15 +113,17 @@ def on_policy_inference(dataset: AimDataset, orig_df: pd.DataFrame, model: LSTMA
                 #pred = model(X_rolling).detach()
                 # need to add output to data set
                 for i, valid_round_id in enumerate(valid_rounds):
+                    cur_index = rounds_policy_data[valid_round_id].cur_index
+                    engagement_id = dataset.engagement_id.loc[cur_index]
                     rounds_policy_data[valid_round_id].last_output_per_engagement[engagement_id] = PolicyOutput(
                         model.get_untransformed_output(pred[i], "delta view angle x (t)"),
                         model.get_untransformed_output(pred[i], "delta view angle y (t)")
                     )
+                    rounds_policy_data[valid_round_id].cur_index += 1
                 pbar.update(len(valid_rounds))
 
     # get last round worth of data
-    round_df = pd.DataFrame.from_dict(agg_dicts)
-    inner_agg_df = pd.concat([inner_agg_df, round_df], ignore_index=True)
+    agg_df = pd.DataFrame.from_dict(agg_dicts)
+    return agg_df
 
-    return_dict[pid] = inner_agg_df
 

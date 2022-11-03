@@ -141,7 +141,7 @@ def train():
         train_test_str = "Train" if train else "Test"
         print(f"Epoch {train_test_str} Accuracy: {accuracy_string}, Transformed Avg Loss: {cumulative_loss:>8f}")
 
-    epochs = 1
+    epochs = 5
 
     def train_and_test_SL(model, train_dataloader, test_dataloader):
         for epoch_num in range(epochs):
@@ -182,42 +182,42 @@ def train():
 
         train_and_test_SL(model, train_dataloader, test_dataloader)
 
-        num_processes = 3
-        rounds_per_process = [set() for _ in range(num_processes)]
-        for i in range(len(train_data.rounds)):
-            rounds_per_process[i % num_processes].add(train_data.rounds[i])
+        #num_processes = 3
+        #rounds_per_process = [set() for _ in range(num_processes)]
+        #for i in range(len(train_data.rounds)):
+        #    rounds_per_process[i % num_processes].add(train_data.rounds[i])
 
         # step 2: inference and result collection
-        processes = []
-        manager = mp.Manager()
-        lock = manager.Lock()
-        return_dict = manager.dict()
-        model.to(CPU_DEVICE_STR)
-        model_copy = \
-            LSTMAimModel(column_transformers,
-                         len(temporal_io_float_column_names.input_columns), len(non_temporal_float_columns)) \
-                .to(CPU_DEVICE_STR)
-        model_copy.load_state_dict(model.state_dict())
-        model.to(CUDA_DEVICE_STR)
-        for pid in range(num_processes):
-            p = mp.Process(target=on_policy_inference,
-                           args=(train_data, train_df,
-                                 [column_transformers, len(temporal_io_float_column_names.input_columns), len(non_temporal_float_columns), model.state_dict()]
-                                 , rounds_per_process[pid], pid, lock, return_dict))
-            p.start()
-            processes.append(p)
-        for p in processes:
-            p.join()
-        on_policy_inference(train_data, train_df, model, set([0]), 0, lock, return_dict)
+        #processes = []
+        #manager = mp.Manager()
+        #lock = manager.Lock()
+        #return_dict = manager.dict()
+        #model.to(CPU_DEVICE_STR)
+        #model_copy = \
+        #    LSTMAimModel(column_transformers,
+        #                 len(temporal_io_float_column_names.input_columns), len(non_temporal_float_columns)) \
+        #        .to(CPU_DEVICE_STR)
+        #model_copy.load_state_dict(model.state_dict())
+        #model.to(CUDA_DEVICE_STR)
+        #for pid in range(num_processes):
+        #    p = mp.Process(target=on_policy_inference,
+        #                   args=(train_data, train_df,
+        #                         [column_transformers, len(temporal_io_float_column_names.input_columns), len(non_temporal_float_columns), model.state_dict()]
+        #                         , rounds_per_process[pid], pid, lock, return_dict))
+        #    p.start()
+        #    processes.append(p)
+        #for p in processes:
+        #    p.join()
+        agg_df = on_policy_inference(train_data, train_df, model)
         # model.to(CUDA_DEVICE_STR)
 
         # step 3: create new training data set
-        df_to_agg = []
-        if agg_df is not None:
-            df_to_agg.append(agg_df)
-        for pid in range(num_processes):
-            df_to_agg.append(return_dict[pid])
-        agg_df = pd.concat(df_to_agg, ignore_index=True)
+        #df_to_agg = []
+        #if agg_df is not None:
+        #    df_to_agg.append(agg_df)
+        #for pid in range(num_processes):
+        #    df_to_agg.append(return_dict[pid])
+        #agg_df = pd.concat(df_to_agg, ignore_index=True)
         total_train_df = pd.concat([train_df, agg_df], ignore_index=True)
 
     model_output_recording.plot(column_transformers, temporal_io_float_column_names.vis_columns)
