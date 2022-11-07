@@ -1,6 +1,9 @@
 import torch
 from torch.utils.data import Dataset
-from learn_bot.engagement_aim.column_management import IOColumnTransformers
+from learn_bot.engagement_aim.column_management import IOColumnTransformers, ColumnTypes, PRIOR_TICKS, FUTURE_TICKS, \
+    CUR_TICK
+from typing import List
+from learn_bot.libs.temporal_column_names import TemporalIOColumnNames
 
 
 # https://androidkt.com/load-pandas-dataframe-using-dataset-and-dataloader-in-pytorch/
@@ -28,3 +31,21 @@ class AimDataset(Dataset):
 
     def __getitem__(self, idx):
         return self.X[idx], self.Y[idx]
+
+
+base_float_columns: List[str] = ["delta view angle x", "delta view angle y",
+                                 "recoil angle x", "recoil angle y",
+                                 "delta view angle recoil adjusted x", "delta view angle recoil adjusted y",
+                                 "delta position x", "delta position y", "delta position z",
+                                 "eye-to-head distance"]
+
+non_temporal_float_columns = ["num shots fired", "ticks since last fire"]
+
+input_categorical_columns: List[str] = ["weapon type"]
+
+temporal_io_float_column_names = TemporalIOColumnNames(base_float_columns, PRIOR_TICKS, CUR_TICK, FUTURE_TICKS)
+
+input_column_types = ColumnTypes(temporal_io_float_column_names.input_columns + non_temporal_float_columns,
+                                 input_categorical_columns, [6])
+
+output_column_types = ColumnTypes(temporal_io_float_column_names.output_columns, [], [])

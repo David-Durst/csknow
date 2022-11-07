@@ -8,15 +8,12 @@ from pathlib import Path
 from dataset import *
 from learn_bot.libs.accuracy_and_loss import compute_loss, compute_accuracy, finish_accuracy, CUDA_DEVICE_STR, \
     CPU_DEVICE_STR
-from learn_bot.engagement_aim.column_management import IOColumnTransformers, ColumnTypes, PRIOR_TICKS, FUTURE_TICKS, \
-    CUR_TICK
 from learn_bot.engagement_aim.lstm_aim_model import LSTMAimModel
 from learn_bot.engagement_aim.output_plotting import plot_untransformed_and_transformed, ModelOutputRecording
-from learn_bot.libs.df_grouping import train_test_split_by_col
+from learn_bot.libs.df_grouping import train_test_split_by_col, make_index_column
 from typing import List
 import multiprocessing as mp
 
-from learn_bot.libs.temporal_column_names import TemporalIOColumnNames
 from learn_bot.navigation.dad import on_policy_inference
 from tqdm import tqdm
 
@@ -30,30 +27,13 @@ def train():
 
     train_test_split = train_test_split_by_col(all_data_df, 'engagement id')
     train_df = train_test_split.train_df
+    make_index_column(train_df)
     train_df.reset_index(inplace=True, drop=True)
     train_df.reset_index(inplace=True, drop=False)
     test_df = train_test_split.test_df
-    test_df.reset_index(inplace=True, drop=True)
-    test_df.reset_index(inplace=True, drop=False)
-
-    base_float_columns: List[str] = ["delta view angle x", "delta view angle y",
-                                     "recoil angle x", "recoil angle y",
-                                     "delta view angle recoil adjusted x", "delta view angle recoil adjusted y",
-                                     "delta position x", "delta position y", "delta position z",
-                                     "eye-to-head distance"]
-
-    temporal_io_float_column_names = TemporalIOColumnNames(base_float_columns, PRIOR_TICKS, CUR_TICK, FUTURE_TICKS)
-
-    non_temporal_float_columns = ["num shots fired", "ticks since last fire"]
-
-    input_categorical_columns: List[str] = ["weapon type"]
+    make_index_column(test_df)
 
     # transform input and output
-    input_column_types = ColumnTypes(temporal_io_float_column_names.input_columns + non_temporal_float_columns,
-                                     input_categorical_columns, [6])
-
-    output_column_types = ColumnTypes(temporal_io_float_column_names.output_columns, [], [])
-
     column_transformers = IOColumnTransformers(input_column_types, output_column_types, all_data_df)
 
     # plot data set with and without transformers

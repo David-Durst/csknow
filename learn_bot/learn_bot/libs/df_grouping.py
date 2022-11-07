@@ -21,3 +21,10 @@ def train_test_split_by_col(df: pd.DataFrame, group_col: str) -> TrainTestSplit:
     top_80_pct_rounds = random_sum_rounds_df[random_sum_rounds_df['id'] < 0.8 * len(df)].index.to_list()
     all_data_df_split_predicate = df[group_col].isin(top_80_pct_rounds)
     return TrainTestSplit(df[all_data_df_split_predicate], df[~all_data_df_split_predicate])
+
+
+def make_index_column(df: pd.DataFrame):
+    # creates a new index based on columns (index can be invalid if produced by train/test)
+    df.reset_index(inplace=True, drop=True)
+    # makes new index into column
+    df.reset_index(inplace=True, drop=False)
