@@ -23,6 +23,8 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
     vector<vector<int64_t>> tmpRoundSizes(numThreads);
     vector<vector<int64_t>> tmpRoundId(numThreads);
     vector<vector<int64_t>> tmpTickId(numThreads);
+    vector<vector<int64_t>> tmpDemoTickId(numThreads);
+    vector<vector<int64_t>> tmpGameTickId(numThreads);
     vector<vector<int64_t>> tmpEngagementId(numThreads);
     vector<vector<int64_t>> tmpAttackerPlayerId(numThreads);
     vector<vector<int64_t>> tmpVictimPlayerId(numThreads);
@@ -68,6 +70,8 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
                 engagementResult.engagementsPerTick.intervalToEvent.findOverlapping(tickIndex, tickIndex)) {
                 tmpRoundId[threadNum].push_back(roundIndex);
                 tmpTickId[threadNum].push_back(tickIndex);
+                tmpDemoTickId[threadNum].push_back(ticks.demoTickNumber[tickIndex]);
+                tmpGameTickId[threadNum].push_back(ticks.gameTickNumber[tickIndex]);
                 tmpEngagementId[threadNum].push_back(engagementIndex);
                 if (engagementToFireData.find(engagementIndex) == engagementToFireData.end()) {
                     engagementToFireData[engagementIndex] = {
@@ -202,6 +206,8 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
                        [&](int64_t minThreadId, int64_t tmpRowId) {
                            result.roundId.push_back(tmpRoundId[minThreadId][tmpRowId]);
                            result.tickId.push_back(tmpTickId[minThreadId][tmpRowId]);
+                           result.demoTickId.push_back(tmpDemoTickId[minThreadId][tmpRowId]);
+                           result.gameTickId.push_back(tmpGameTickId[minThreadId][tmpRowId]);
                            result.engagementId.push_back(tmpEngagementId[minThreadId][tmpRowId]);
                            result.attackerPlayerId.push_back(tmpAttackerPlayerId[minThreadId][tmpRowId]);
                            result.victimPlayerId.push_back(tmpVictimPlayerId[minThreadId][tmpRowId]);

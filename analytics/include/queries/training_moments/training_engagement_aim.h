@@ -49,6 +49,8 @@ public:
     vector<RangeIndexEntry> rowIndicesPerRound;
     vector<int64_t> roundId;
     vector<int64_t> tickId;
+    vector<int64_t> demoTickId;
+    vector<int64_t> gameTickId;
     vector<int64_t> engagementId;
     vector<int64_t> attackerPlayerId;
     vector<int64_t> victimPlayerId;
@@ -81,8 +83,9 @@ public:
     }
 
     void oneLineToCSV(int64_t index, stringstream & ss) override {
-        ss << index << "," << roundId[index] << "," << tickId[index] << "," << engagementId[index] << ","
-           << attackerPlayerId[index] << "," << victimPlayerId[index] << ",";
+        ss << index << "," << roundId[index] << "," << tickId[index] << ","
+           << demoTickId[index] << "," << gameTickId[index] << ","
+           << engagementId[index] << "," << attackerPlayerId[index] << "," << victimPlayerId[index] << ",";
 
         ss << numShotsFired[index] << "," << ticksSinceLastFire[index] << ","
            << lastShotFiredTickId[index];
@@ -101,7 +104,8 @@ public:
     }
 
     vector<string> getForeignKeyNames() override {
-        return {"round id", "tick id", "engagement id", "attacker player id", "victim player id"};
+        return {"round id", "tick id", "demo tick id", "game tick id",
+                "engagement id", "attacker player id", "victim player id"};
     }
 
     vector<string> getOtherColumnNames() override {
