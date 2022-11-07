@@ -4,7 +4,7 @@ from pathlib import Path
 from learn_bot.libs.df_grouping import make_index_column
 from learn_bot.libs.temporal_column_names import TemporalIOColumnNames
 from learn_bot.engagement_aim.dataset import *
-from typing import List, Dict
+from typing import List, Dict, Optional
 
 from dataclasses import dataclass
 import tkinter as tk
@@ -17,50 +17,6 @@ from matplotlib.figure import Figure
 import numpy as np
 
 def vis():
-    root = tk.Tk()
-    root.wm_title("Embedding in Tk")
-
-    fig = Figure(figsize=(5, 5), dpi=100)
-    t = np.arange(0, 3, .01)
-    ax = fig.add_subplot()
-    line, = ax.plot(t, 2 * np.sin(2 * np.pi * t))
-    ax.set_xlabel("time [s]")
-    ax.set_ylabel("f(t)")
-    ax.set_aspect('equal', adjustable='box')
-
-    canvas = FigureCanvasTkAgg(fig, master=root)  # A tk.DrawingArea.
-    canvas.draw()
-
-    # pack_toolbar=False will make it easier to use a layout manager later on.
-    toolbar = NavigationToolbar2Tk(canvas, root, pack_toolbar=False)
-    toolbar.update()
-
-    def update_frequency(new_val):
-        # retrieve frequency
-        f = float(new_val)
-
-        # update data
-        y = 2 * np.sin(2 * np.pi * f * t)
-        line.set_data(t, y)
-
-        # required to update canvas and attached toolbar!
-        canvas.draw()
-
-    slider_update = tk.Scale(root, from_=1, to=5, orient=tk.HORIZONTAL,
-                                  command=update_frequency, label="Frequency [Hz]")
-
-    # Packing order is important. Widgets are processed sequentially and if there
-    # is no space left, because the window is too small, they are not displayed.
-    # The canvas is rather flexible in its size, so we pack it last which makes
-    # sure the UI controls are displayed as long as possible.
-    slider_update.pack(side=tk.BOTTOM)
-    toolbar.pack(side=tk.BOTTOM, fill=tk.X)
-    canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
-
-    root.mainloop()
-
-
-
     start_time = time.perf_counter()
 
     all_data_df = pd.read_csv(
@@ -82,75 +38,93 @@ def vis():
     window.geometry("700x780")
     window.configure(background='grey')
 
-    # cur player's images
-    img = ImageTk.PhotoImage(nav_dataset.get_image_grid(0))
-    grid_img_label = tk.Label(window, image=img)
-    grid_img_label.pack(side="top")
+    # cur
+    fig = Figure(figsize=(5, 5), dpi=100)
+    ax = fig.add_subplot()
+    prior_line = None
+    prior_future_x_column = temporal_io_float_column_names.vis_columns[0]
+    prior_future_y_column = temporal_io_float_column_names.vis_columns[1]
+    present_line = None
+    present_x_columns = temporal_io_float_column_names.get_matching_cols(base_float_columns[0])
+    present_y_columns = temporal_io_float_column_names.get_matching_cols(base_float_columns[1])
+    future_line = None
+    ax.set_xlabel("Yaw Delta (deg / target height deg)")
+    ax.set_ylabel("Pitch Delta (deg / target height deg)")
+    ax.set_aspect('equal', adjustable='box')
 
-    first_image_creation_time = time.perf_counter()
+    canvas = FigureCanvasTkAgg(fig, master=window)  # A tk.DrawingArea.
+    canvas.draw()
+    canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 
-    players = list(nav_dataset.player_name.unique())
-    selected_player = players[0]
-    rounds = []
+    # pack_toolbar=False will make it easier to use a layout manager later on.
+    toolbar = NavigationToolbar2Tk(canvas, window, pack_toolbar=False)
+    toolbar.update()
+    toolbar.pack(side=tk.BOTTOM, fill=tk.X)
+
+    def update_aim_plot(data_df, cur_index):
+        nonlocal prior_line, present_line, future_line
+
+        prior_df = data_df[data_df['index'] < cur_index]
+        prior_x_np = prior_df.loc[:, prior_future_x_column].to_numpy()
+        prior_y_np = prior_df.loc[:, prior_future_y_column].to_numpy()
+
+        present_series = data_df[data_df['index'] == cur_index].iloc[0, :]
+        present_x_np = present_series.loc[present_x_columns].to_numpy()
+        present_y_np = present_series.loc[present_y_columns].to_numpy()
+
+        future_df = data_df[data_df['index'] > cur_index]
+        future_x_np = future_df.loc[:, prior_future_x_column].to_numpy()
+        future_y_np = future_df.loc[:, prior_future_y_column].to_numpy()
+
+        if prior_line is None:
+            # ax1.plot(x, y,color='#FF0000', linewidth=2.2, label='Example line',
+            #           marker='o', mfc='black', mec='black', ms=10)
+            line_gray = (0.87, 0.87, 0.87, 1)
+            prior_blue = "#00D5FAFF"
+            prior_line, = ax.plot(prior_x_np, prior_y_np, color=line_gray, label="Past",
+                                  marker='o', mfc=prior_blue, mec=prior_blue)
+            present_red = "#FF0000FF"
+            present_line, = ax.plot(present_x_np, present_y_np, color=line_gray, label="Present",
+                                    marker='o', mfc=present_red, mec=present_red)
+            future_gray = "#727272FF"
+            future_line, = ax.plot(future_x_np, future_y_np, color=line_gray, label="Future",
+                                   marker='o', mfc=future_gray, mec=future_gray)
+        else:
+            prior_line.set_data(prior_x_np, prior_y_np)
+            present_line.set_data(present_x_np, present_y_np)
+            future_line.set_data(future_x_np, future_y_np)
+
+        # required to update canvas and attached toolbar!
+        canvas.draw()
+
+    engagements = all_data_df.loc[:, 'engagement id'].unique().tolist()
     ticks = []
     demo_ticks = []
     game_ticks = []
-    cur_round: int = -1
+    cur_engagement: int = -1
     cur_tick: int = -1
-    selected_df: pd.DataFrame = non_img_df
-
-    # GUI callback functions
-    def check_combo_players(event):
-        global selected_player
-        value = event.widget.get()
-
-        if value == '':
-            players_combo_box['values'] = players
-        else:
-            data = []
-            for item in players:
-                if value.lower() in item.lower():
-                    data.append(item)
-
-            players_combo_box['values'] = data
-        if value in players:
-            selected_player = value
-            players_combo_box.configure(style='Valid.TCombobox')
-            change_player_dependent_data()
-        else:
-            players_combo_box.configure(style='Invalid.TCombobox')
+    selected_df: pd.DataFrame = all_data_df
 
 
-    def update_selected_players(event):
-        global selected_player
-        selected_player = event.widget.get()
-        players_combo_box.configure(style='Valid.TCombobox')
-        change_player_dependent_data()
+    def engagement_slider_changed(cur_engagement_index):
+        nonlocal cur_engagement
+        cur_engagement = engagements[int(cur_engagement_index)]
+        engagement_id_text_var.set("Engagement ID: " + str(cur_engagement))
+        change_engagement_dependent_data()
 
 
-    def round_slider_changed(cur_round_index):
-        global cur_round
-        cur_round = rounds[int(cur_round_index)]
-        round_id_text_var.set("Round ID: " + str(cur_round))
-        change_round_dependent_data()
-
-
-    def tick_slider_changed(cur_tick_index):
+    def tick_slider_changed(cur_tick_index_str):
         global cur_tick
-        cur_tick = ticks[int(cur_tick_index)]
-        cur_demo_tick = demo_ticks[int(cur_tick_index)]
-        cur_game_tick = game_ticks[int(cur_tick_index)]
+        cur_tick_index = int(cur_tick_index_str)
+        cur_tick = ticks[cur_tick_index]
+        cur_demo_tick = demo_ticks[cur_tick_index]
+        cur_game_tick = game_ticks[cur_tick_index]
         tick_id_text_var.set("Tick ID: " + str(cur_tick))
         tick_demo_id_text_var.set("Demo Tick ID: " + str(cur_demo_tick))
         tick_game_id_text_var.set("Game Tick ID: " + str(cur_game_tick))
-        nav_index = player_tick_index_to_nav_index[PlayerAndTick(selected_player, cur_tick)]
-        new_img = ImageTk.PhotoImage(nav_dataset.get_image_grid(nav_index))
-        cur_row = non_img_df.loc[nav_index]
-        text_data_text_var.set(f"view dir ({cur_row['player view dir x (t)']}, "
-                               f"{cur_row['player view dir y (t)']}), "
-                               f"health {cur_row['health (t)']}, armor {cur_row['armor (t)']}")
-        grid_img_label.configure(image=new_img)
-        grid_img_label.image = new_img
+        update_aim_plot(selected_df, cur_tick_index)
+        text_data_text_var.set(f"cur view: ({selected_df.loc[cur_tick_index, prior_future_x_column].item()}, "
+                               f"{selected_df.loc[cur_tick_index, prior_future_y_column].item()})")
 
 
     def step_back_clicked():
@@ -193,22 +167,13 @@ def vis():
 
 
     # state setters
-    def change_player_dependent_data():
-        global selected_df, rounds
-        selected_df = non_img_df.loc[non_img_df['player name'] == selected_player]
-        rounds = list(selected_df.loc[:, 'round id'].unique())
-        round_slider.configure(to=len(rounds)-1)
-        round_slider.set(0)
-        round_slider_changed(0)
+    def change_engagement_dependent_data():
+        nonlocal selected_df, cur_engagement, ticks, demo_ticks, game_ticks
+        selected_df = all_data_df.loc[all_data_df['engagement id'] == cur_engagement]
 
-
-    def change_round_dependent_data():
-        global selected_df, cur_round, ticks, demo_ticks, game_ticks
-        selected_df = non_img_df.loc[(non_img_df['player name'] == selected_player) &
-                                     (non_img_df['round id'] == cur_round)]
-        ticks = list(selected_df.loc[:, 'tick id'])
-        demo_ticks = list(selected_df.loc[:, 'demo tick id'])
-        game_ticks = list(selected_df.loc[:, 'game tick id'])
+        ticks = selected_df.loc[:, 'tick id'].tolist()
+        demo_ticks = selected_df.loc[:, 'demo tick id'].tolist()
+        game_ticks = selected_df.loc[:, 'game tick id'].tolist()
         tick_slider.configure(to=len(ticks)-1)
         tick_slider.set(0)
         tick_slider_changed(0)
@@ -216,34 +181,23 @@ def vis():
 
     s = ttk.Style()
     s.theme_use('alt')
-    s.configure('Valid.TCombobox', fieldbackground='white')
-    s.configure('Invalid.TCombobox', fieldbackground='#cfcfcf')
+    # creating engagement slider and label
+    engagement_frame = tk.Frame(window)
+    engagement_frame.pack(pady=5)
 
-    # creating player combobox
-    players_combo_box = ttk.Combobox(window, style='Valid.TCombobox')
-    players_combo_box['values'] = players
-    players_combo_box.current(0)
-    players_combo_box.bind('<KeyRelease>', check_combo_players)
-    players_combo_box.bind("<<ComboboxSelected>>", update_selected_players)
-    players_combo_box.pack(pady=5)
-
-    # creating round slider and label
-    round_frame = tk.Frame(window)
-    round_frame.pack(pady=5)
-
-    round_id_text_var = tk.StringVar()
-    round_id_label = tk.Label(round_frame, textvariable=round_id_text_var)
-    round_id_label.pack(side="left")
-    round_slider = tk.Scale(
-        round_frame,
+    engagement_id_text_var = tk.StringVar()
+    engagement_id_label = tk.Label(engagement_frame, textvariable=engagement_id_text_var)
+    engagement_id_label.pack(side="left")
+    engagement_slider = tk.Scale(
+        engagement_frame,
         from_=0,
-        to=100,
+        to=len(engagements)-1,
         orient='horizontal',
         showvalue=0,
         length=400,
-        command=round_slider_changed
+        command=engagement_slider_changed
     )
-    round_slider.pack(side="left")
+    engagement_slider.pack(side="left")
 
     # creating tick slider and label
     tick_id_frame = tk.Frame(window)
@@ -295,18 +249,8 @@ def vis():
     text_data_label.pack(side="left")
 
     # initial value settings
-    change_player_dependent_data()
-    round_slider_changed(0)
+    engagement_slider_changed(0)
     tick_slider_changed(0)
-
-    ready_time = time.perf_counter()
-
-    print(f"non img load time {end_non_img_load_time - start_time: 0.4f}")
-    print(f"img data set init time {img_dataset_init_time - end_non_img_load_time: 0.4f}")
-    print(f"player dict creation time {player_dict_created_time - img_dataset_init_time: 0.4f}")
-    print(f"first image creation time {first_image_creation_time - player_dict_created_time: 0.4f}")
-    print(f"ready time {ready_time - first_image_creation_time: 0.4f}")
-    print(f"total time {ready_time - start_time: 0.4f}")
 
     # Start the GUI
     window.mainloop()

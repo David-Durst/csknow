@@ -28,3 +28,7 @@ class TemporalIOColumnNames:
                     if i == 0:
                         self.vis_columns.append(base_col + offset_str)
                     self.output_columns.append(base_col + offset_str)
+
+    def get_matching_cols(self, match_str):
+        return [c for c in self.input_columns if match_str in c] + \
+               [c for c in self.output_columns if match_str in c]
