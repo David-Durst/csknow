@@ -9,7 +9,6 @@ from typing import List, Dict
 from dataclasses import dataclass
 import tkinter as tk
 from tkinter import ttk
-from PIL import Image, ImageDraw, ImageTk
 import time
 
 from matplotlib.backends.backend_tkagg import (
@@ -17,29 +16,17 @@ from matplotlib.backends.backend_tkagg import (
 from matplotlib.figure import Figure
 import numpy as np
 
-def create_image():
-    # create an image
-    out = Image.new("RGB", (300, 300), (255, 255, 255))
-
-    # get a font
-    d = ImageDraw.Draw(out)
-
-    # draw multiline text
-    d.multiline_text((10, 10), "Hello\nWorld", font=fnt, fill=(0, 0, 0))
-
-    out.show()
-
-
 def vis():
     root = tk.Tk()
     root.wm_title("Embedding in Tk")
 
-    fig = Figure(figsize=(5, 4), dpi=100)
+    fig = Figure(figsize=(5, 5), dpi=100)
     t = np.arange(0, 3, .01)
     ax = fig.add_subplot()
     line, = ax.plot(t, 2 * np.sin(2 * np.pi * t))
     ax.set_xlabel("time [s]")
     ax.set_ylabel("f(t)")
+    ax.set_aspect('equal', adjustable='box')
 
     canvas = FigureCanvasTkAgg(fig, master=root)  # A tk.DrawingArea.
     canvas.draw()
