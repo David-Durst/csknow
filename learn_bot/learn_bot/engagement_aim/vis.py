@@ -61,18 +61,21 @@ def vis():
     toolbar.update()
     toolbar.pack(side=tk.BOTTOM, fill=tk.X)
 
-    def update_aim_plot(data_df, cur_index):
+    def update_aim_plot(data_df, tick_id):
         nonlocal prior_line, present_line, future_line
 
-        prior_df = data_df[data_df['index'] < cur_index]
+        prior_df = data_df[data_df['tick id'] < tick_id]
         prior_x_np = prior_df.loc[:, prior_future_x_column].to_numpy()
         prior_y_np = prior_df.loc[:, prior_future_y_column].to_numpy()
 
-        present_series = data_df[data_df['index'] == cur_index].iloc[0, :]
-        present_x_np = present_series.loc[present_x_columns].to_numpy()
-        present_y_np = present_series.loc[present_y_columns].to_numpy()
+        #present_series = data_df[data_df['tick id'] == tick_id].iloc[0, :]
+        #present_x_np = present_series.loc[present_x_columns].to_numpy()
+        #present_y_np = present_series.loc[present_y_columns].to_numpy()
+        present_series = data_df[data_df['tick id'] == tick_id]
+        present_x_np = present_series.loc[:, prior_future_x_column].to_numpy()
+        present_y_np = present_series.loc[:, prior_future_y_column].to_numpy()
 
-        future_df = data_df[data_df['index'] > cur_index]
+        future_df = data_df[data_df['tick id'] > tick_id]
         future_x_np = future_df.loc[:, prior_future_x_column].to_numpy()
         future_y_np = future_df.loc[:, prior_future_y_column].to_numpy()
 
@@ -83,12 +86,13 @@ def vis():
             prior_blue = "#00D5FAFF"
             prior_line, = ax.plot(prior_x_np, prior_y_np, color=line_gray, label="Past",
                                   marker='o', mfc=prior_blue, mec=prior_blue)
-            present_red = (1., 0., 0., 0.5)
-            present_line, = ax.plot(present_x_np, present_y_np, color=line_gray, label="Present",
-                                    marker='o', mfc=present_red, mec=present_red)
             future_gray = "#727272FF"
             future_line, = ax.plot(future_x_np, future_y_np, color=line_gray, label="Future",
                                    marker='o', mfc=future_gray, mec=future_gray)
+            # plot present last for overlay effect
+            present_red = (1., 0., 0., 0.5)
+            present_line, = ax.plot(present_x_np, present_y_np, color=line_gray, label="Present",
+                                    marker='o', mfc=present_red, mec=present_red)
         else:
             prior_line.set_data(prior_x_np, prior_y_np)
             present_line.set_data(present_x_np, present_y_np)
@@ -122,7 +126,7 @@ def vis():
         tick_id_text_var.set("Tick ID: " + str(cur_tick))
         tick_demo_id_text_var.set("Demo Tick ID: " + str(cur_demo_tick))
         tick_game_id_text_var.set("Game Tick ID: " + str(cur_game_tick))
-        update_aim_plot(selected_df, cur_tick_index)
+        update_aim_plot(selected_df, cur_tick)
         text_data_text_var.set(f"cur view: ({selected_df.loc[cur_tick_index, prior_future_x_column].item()}, "
                                f"{selected_df.loc[cur_tick_index, prior_future_y_column].item()})")
 
