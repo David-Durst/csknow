@@ -25,7 +25,7 @@ def vis():
     # transform input and output
     column_transformers = IOColumnTransformers(input_column_types, output_column_types, all_data_df)
 
-    all_data_df = all_data_df.sort_values('engagement id')
+    all_data_df = all_data_df.sort_values(['engagement id', 'tick id'])
     make_index_column(all_data_df)
     engagement_start_ends = all_data_df.groupby('engagement id').agg(
         engagement_id=('engagement id', 'first'),
@@ -83,7 +83,7 @@ def vis():
             prior_blue = "#00D5FAFF"
             prior_line, = ax.plot(prior_x_np, prior_y_np, color=line_gray, label="Past",
                                   marker='o', mfc=prior_blue, mec=prior_blue)
-            present_red = "#FF0000FF"
+            present_red = (1., 0., 0., 0.5)
             present_line, = ax.plot(present_x_np, present_y_np, color=line_gray, label="Present",
                                     marker='o', mfc=present_red, mec=present_red)
             future_gray = "#727272FF"
