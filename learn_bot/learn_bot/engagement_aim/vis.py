@@ -47,6 +47,7 @@ def vis():
     prior_future_x_column = temporal_io_float_column_names.vis_columns[0]
     prior_future_y_column = temporal_io_float_column_names.vis_columns[1]
     present_line = None
+    present_series_line = None
     present_x_columns = temporal_io_float_column_names.get_matching_cols(base_float_columns[0])
     present_y_columns = temporal_io_float_column_names.get_matching_cols(base_float_columns[1])
     future_line = None
@@ -65,18 +66,20 @@ def vis():
     toolbar.pack(side=tk.BOTTOM, fill=tk.X)
 
     def update_aim_plot(data_df, tick_id):
-        nonlocal all_line, prior_line, present_line, future_line
+        nonlocal all_line, prior_line, present_line, present_series_line, future_line
 
         prior_df = data_df[data_df['tick id'] < tick_id]
         prior_x_np = prior_df.loc[:, prior_future_x_column].to_numpy()
         prior_y_np = prior_df.loc[:, prior_future_y_column].to_numpy()
 
-        #present_series = data_df[data_df['tick id'] == tick_id].iloc[0, :]
-        #present_x_np = present_series.loc[present_x_columns].to_numpy()
-        #present_y_np = present_series.loc[present_y_columns].to_numpy()
-        present_series = data_df[data_df['tick id'] == tick_id]
-        present_x_np = present_series.loc[:, prior_future_x_column].to_numpy()
-        present_y_np = present_series.loc[:, prior_future_y_column].to_numpy()
+        present_df = data_df[data_df['tick id'] == tick_id]
+        present_x_np = present_df.loc[:, prior_future_x_column].to_numpy()
+        present_y_np = present_df.loc[:, prior_future_y_column].to_numpy()
+
+        # shows series used in prediction, not sust single point
+        present_series_df = data_df[data_df['tick id'] == tick_id].iloc[0, :]
+        present_series_x_np = present_series_df.loc[present_x_columns].to_numpy()
+        present_series_y_np = present_series_df.loc[present_y_columns].to_numpy()
 
         future_df = data_df[data_df['tick id'] > tick_id]
         future_x_np = future_df.loc[:, prior_future_x_column].to_numpy()
@@ -89,27 +92,33 @@ def vis():
             # ax1.plot(x, y,color='#FF0000', linewidth=2.2, label='Example line',
             #           marker='o', mfc='black', mec='black', ms=10)
             line_gray = (0.87, 0.87, 0.87, 1)
-            all_line, = ax.plot(all_x_np, all_y_np, color=line_gray)
+            all_line, = ax.plot(all_x_np, all_y_np, color=line_gray, label="_nolegend_")
+            present_series_yellow = "#A89932FF"
+            present_series_line, = ax.plot(present_series_x_np, present_series_y_np,
+                                           linestyle="None", label="Model Feature",
+                                           marker='o', mfc="None", mec=present_series_yellow,
+                                           markersize=10)
             prior_blue = "#00D5FAFF"
             prior_line, = ax.plot(prior_x_np, prior_y_np, linestyle="None", label="Past",
                                   marker='o', mfc=prior_blue, mec=prior_blue)
             future_gray = "#727272FF"
             future_line, = ax.plot(future_x_np, future_y_np, linestyle="None", label="Future",
                                    marker='o', mfc=future_gray, mec=future_gray)
-            # plot present last for overlay effect
             present_red = (1., 0., 0., 0.5)
             present_line, = ax.plot(present_x_np, present_y_np, linestyle="None", label="Present",
                                     marker='o', mfc=present_red, mec=present_red)
         else:
             all_line.set_data(all_x_np, all_y_np)
+            present_series_line.set_data(present_series_x_np, present_series_y_np)
             prior_line.set_data(prior_x_np, prior_y_np)
-            present_line.set_data(present_x_np, present_y_np)
             future_line.set_data(future_x_np, future_y_np)
+            present_line.set_data(present_x_np, present_y_np)
 
         # recompute the ax.dataLim
         ax.relim()
         # update ax.viewLim using the new dataLim
         ax.autoscale()
+        ax.legend()
         xmax, xmin = ax.get_xlim()
         ymin, ymax = ax.get_ylim()
         lim_min = min([xmin, ymin])
