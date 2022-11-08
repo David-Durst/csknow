@@ -30,7 +30,8 @@ def vis():
     engagement_start_ends = all_data_df.groupby('engagement id').agg(
         engagement_id=('engagement id', 'first'),
         start_index=('index', 'first'),
-        end_index=('index', 'last'))
+        end_index=('index', 'last'),
+        round_id=('round id', 'first'))
 
     #This creates the main window of an application
     window = tk.Tk()
@@ -41,6 +42,7 @@ def vis():
     # cur
     fig = Figure(figsize=(5, 5), dpi=100)
     ax = fig.add_subplot()
+    all_line = None
     prior_line = None
     prior_future_x_column = temporal_io_float_column_names.vis_columns[0]
     prior_future_y_column = temporal_io_float_column_names.vis_columns[1]
@@ -51,6 +53,7 @@ def vis():
     ax.set_xlabel("Yaw Delta (deg / target height deg)")
     ax.set_ylabel("Pitch Delta (deg / target height deg)")
     ax.set_aspect('equal', adjustable='box')
+    ax.invert_xaxis()
 
     canvas = FigureCanvasTkAgg(fig, master=window)  # A tk.DrawingArea.
     canvas.draw()
@@ -62,7 +65,7 @@ def vis():
     toolbar.pack(side=tk.BOTTOM, fill=tk.X)
 
     def update_aim_plot(data_df, tick_id):
-        nonlocal prior_line, present_line, future_line
+        nonlocal all_line, prior_line, present_line, future_line
 
         prior_df = data_df[data_df['tick id'] < tick_id]
         prior_x_np = prior_df.loc[:, prior_future_x_column].to_numpy()
@@ -79,29 +82,47 @@ def vis():
         future_x_np = future_df.loc[:, prior_future_x_column].to_numpy()
         future_y_np = future_df.loc[:, prior_future_y_column].to_numpy()
 
+        all_x_np = data_df.loc[:, prior_future_x_column].to_numpy()
+        all_y_np = data_df.loc[:, prior_future_y_column].to_numpy()
+
         if prior_line is None:
             # ax1.plot(x, y,color='#FF0000', linewidth=2.2, label='Example line',
             #           marker='o', mfc='black', mec='black', ms=10)
             line_gray = (0.87, 0.87, 0.87, 1)
+            all_line, = ax.plot(all_x_np, all_y_np, color=line_gray)
             prior_blue = "#00D5FAFF"
-            prior_line, = ax.plot(prior_x_np, prior_y_np, color=line_gray, label="Past",
+            prior_line, = ax.plot(prior_x_np, prior_y_np, linestyle="None", label="Past",
                                   marker='o', mfc=prior_blue, mec=prior_blue)
             future_gray = "#727272FF"
-            future_line, = ax.plot(future_x_np, future_y_np, color=line_gray, label="Future",
+            future_line, = ax.plot(future_x_np, future_y_np, linestyle="None", label="Future",
                                    marker='o', mfc=future_gray, mec=future_gray)
             # plot present last for overlay effect
             present_red = (1., 0., 0., 0.5)
-            present_line, = ax.plot(present_x_np, present_y_np, color=line_gray, label="Present",
+            present_line, = ax.plot(present_x_np, present_y_np, linestyle="None", label="Present",
                                     marker='o', mfc=present_red, mec=present_red)
         else:
+            all_line.set_data(all_x_np, all_y_np)
             prior_line.set_data(prior_x_np, prior_y_np)
             present_line.set_data(present_x_np, present_y_np)
             future_line.set_data(future_x_np, future_y_np)
+
+        # recompute the ax.dataLim
+        ax.relim()
+        # update ax.viewLim using the new dataLim
+        ax.autoscale()
+        xmax, xmin = ax.get_xlim()
+        ymin, ymax = ax.get_ylim()
+        lim_min = min([xmin, ymin])
+        lim_max = max([xmax, ymax])
+        # inverted xaxis so need to flip
+        ax.set_xlim(lim_max, lim_min)
+        ax.set_ylim(lim_min, lim_max)
 
         # required to update canvas and attached toolbar!
         canvas.draw()
 
     engagements = all_data_df.loc[:, 'engagement id'].unique().tolist()
+    indices = []
     ticks = []
     demo_ticks = []
     game_ticks = []
@@ -113,13 +134,26 @@ def vis():
     def engagement_slider_changed(cur_engagement_index):
         nonlocal cur_engagement
         cur_engagement = engagements[int(cur_engagement_index)]
-        engagement_id_text_var.set("Engagement ID: " + str(cur_engagement))
         change_engagement_dependent_data()
 
+    def engagement_back_clicked():
+        cur_engagement_index = int(engagement_slider.get())
+        if cur_engagement_index > 0:
+            cur_engagement_index -= 1
+            engagement_slider.set(cur_engagement_index)
+            engagement_slider_changed(cur_engagement_index)
+
+    def engagement_forward_clicked():
+        cur_engagement_index = int(engagement_slider.get())
+        if cur_engagement_index < len(engagements) - 1:
+            cur_engagement_index += 1
+            engagement_slider.set(cur_engagement_index)
+            engagement_slider_changed(cur_engagement_index)
 
     def tick_slider_changed(cur_tick_index_str):
         global cur_tick
         cur_tick_index = int(cur_tick_index_str)
+        cur_index = indices[cur_tick_index]
         cur_tick = ticks[cur_tick_index]
         cur_demo_tick = demo_ticks[cur_tick_index]
         cur_game_tick = game_ticks[cur_tick_index]
@@ -127,8 +161,13 @@ def vis():
         tick_demo_id_text_var.set("Demo Tick ID: " + str(cur_demo_tick))
         tick_game_id_text_var.set("Game Tick ID: " + str(cur_game_tick))
         update_aim_plot(selected_df, cur_tick)
-        text_data_text_var.set(f"cur view: ({selected_df.loc[cur_tick_index, prior_future_x_column].item()}, "
-                               f"{selected_df.loc[cur_tick_index, prior_future_y_column].item()})")
+        cur_row = selected_df.loc[cur_index, :]
+        engagement_id_text_var.set(f"Round ID: {int(cur_row.loc['round id'])}, "
+                                   f"Engagement ID: {cur_engagement}")
+        text_data_text_var.set(f"attacker: {int(cur_row.loc['attacker player id'].item())}, "
+                               f"victim: {int(cur_row.loc['victim player id'].item())}, "
+                               f"cur view: ({cur_row.loc[prior_future_x_column].item()}, "
+                               f"{cur_row.loc[prior_future_y_column].item()})")
 
 
     def step_back_clicked():
@@ -172,9 +211,10 @@ def vis():
 
     # state setters
     def change_engagement_dependent_data():
-        nonlocal selected_df, cur_engagement, ticks, demo_ticks, game_ticks
+        nonlocal selected_df, cur_engagement, indices, ticks, demo_ticks, game_ticks
         selected_df = all_data_df.loc[all_data_df['engagement id'] == cur_engagement]
 
+        indices = selected_df.loc[:, 'index'].tolist()
         ticks = selected_df.loc[:, 'tick id'].tolist()
         demo_ticks = selected_df.loc[:, 'demo tick id'].tolist()
         game_ticks = selected_df.loc[:, 'game tick id'].tolist()
@@ -186,22 +226,33 @@ def vis():
     s = ttk.Style()
     s.theme_use('alt')
     # creating engagement slider and label
+    engagement_id_frame = tk.Frame(window)
+    engagement_id_frame.pack(pady=5)
+    engagement_id_text_var = tk.StringVar()
+    engagement_id_label = tk.Label(engagement_id_frame, textvariable=engagement_id_text_var)
+    engagement_id_label.pack(side="left")
+
     engagement_frame = tk.Frame(window)
     engagement_frame.pack(pady=5)
 
-    engagement_id_text_var = tk.StringVar()
-    engagement_id_label = tk.Label(engagement_frame, textvariable=engagement_id_text_var)
-    engagement_id_label.pack(side="left")
     engagement_slider = tk.Scale(
         engagement_frame,
         from_=0,
         to=len(engagements)-1,
         orient='horizontal',
         showvalue=0,
-        length=400,
+        length=500,
         command=engagement_slider_changed
     )
     engagement_slider.pack(side="left")
+
+    # engagegment id stepper
+    engagement_step_frame = tk.Frame(window)
+    engagement_step_frame.pack(pady=5)
+    back_engagement_button = tk.Button(engagement_step_frame, text="⏪", command=engagement_back_clicked)
+    back_engagement_button.pack(side="left")
+    forward_engagement_button = tk.Button(engagement_step_frame, text="⏩", command=engagement_forward_clicked)
+    forward_engagement_button.pack(side="left")
 
     # creating tick slider and label
     tick_id_frame = tk.Frame(window)
