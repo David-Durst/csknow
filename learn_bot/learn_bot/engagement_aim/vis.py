@@ -163,8 +163,8 @@ def vis(all_data_df: pd.DataFrame):
                                    f"Engagement ID: {cur_engagement}")
         text_data_text_var.set(f"attacker: {int(cur_row.loc['attacker player id'].item())}, "
                                f"victim: {int(cur_row.loc['victim player id'].item())}, "
-                               f"cur view: ({cur_row.loc[prior_future_x_column].item()}, "
-                               f"{cur_row.loc[prior_future_y_column].item()})")
+                               f"cur view: ({cur_row.loc[prior_future_x_column].item():.2f}, "
+                               f"{cur_row.loc[prior_future_y_column].item():.2f})")
 
 
     def step_back_clicked():

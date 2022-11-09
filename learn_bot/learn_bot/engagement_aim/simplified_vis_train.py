@@ -18,7 +18,7 @@ class AimEngagementExample:
     mouse_xy: List[Point2D]
 
 
-straight_line_example = AimEngagementExample([Point2D(0., i * 0.1) for i in range(11)])
+straight_line_example = AimEngagementExample([Point2D(0., i * -0.1) for i in range(11)])
 engagement_examples = [straight_line_example]
 
 
@@ -38,6 +38,7 @@ def build_aim_df(example_row_df: Dict) -> pd.DataFrame:
             new_dict['delta view angle x (t)'] = engagement_examples[engagement_id].mouse_xy[tick_in_engagement].x
             new_dict['delta view angle y (t)'] = engagement_examples[engagement_id].mouse_xy[tick_in_engagement].y
             result_dicts.append(new_dict)
+            tick_id += 1
     return pd.DataFrame(result_dicts)
 
 
