@@ -1,7 +1,5 @@
 # https://pytorch.org/tutorials/beginner/basics/quickstart_tutorial.html
-import copy
 
-import torch
 from torch.utils.data import DataLoader
 import pandas as pd
 from pathlib import Path
@@ -11,18 +9,11 @@ from learn_bot.libs.accuracy_and_loss import compute_loss, compute_accuracy, fin
 from learn_bot.engagement_aim.lstm_aim_model import LSTMAimModel
 from learn_bot.engagement_aim.output_plotting import plot_untransformed_and_transformed, ModelOutputRecording
 from learn_bot.libs.df_grouping import train_test_split_by_col, make_index_column
-from typing import List
-import multiprocessing as mp
-
-from learn_bot.navigation.dad import on_policy_inference
+from learn_bot.engagement_aim.dad import on_policy_inference
 from tqdm import tqdm
 
 
-def train():
-    global shared_model
-    all_data_df = pd.read_csv(
-        Path(__file__).parent / '..' / '..' / '..' / 'analytics' / 'csv_outputs' / 'engagementAim.csv')
-
+def train(all_data_df: pd.DataFrame):
     # all_data_df = all_data_df[all_data_df['num shots fired'] > 0]
 
     train_test_split = train_test_split_by_col(all_data_df, 'engagement id')
@@ -178,5 +169,6 @@ def train():
 
 
 if __name__ == "__main__":
-    mp.freeze_support()
-    train()
+    all_data_df = pd.read_csv(
+        Path(__file__).parent / '..' / '..' / '..' / 'analytics' / 'csv_outputs' / 'engagementAim.csv')
+    train(all_data_df)

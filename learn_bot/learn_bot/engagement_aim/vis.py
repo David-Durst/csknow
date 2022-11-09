@@ -2,26 +2,14 @@ import pandas as pd
 from pathlib import Path
 
 from learn_bot.libs.df_grouping import make_index_column
-from learn_bot.libs.temporal_column_names import TemporalIOColumnNames
 from learn_bot.engagement_aim.dataset import *
-from typing import List, Dict, Optional
-
-from dataclasses import dataclass
 import tkinter as tk
 from tkinter import ttk
-import time
-
 from matplotlib.backends.backend_tkagg import (
     FigureCanvasTkAgg, NavigationToolbar2Tk)
 from matplotlib.figure import Figure
-import numpy as np
 
-def vis():
-    start_time = time.perf_counter()
-
-    all_data_df = pd.read_csv(
-        Path(__file__).parent / '..' / '..' / '..' / 'analytics' / 'csv_outputs' / 'engagementAim.csv')
-
+def vis(all_data_df: pd.DataFrame):
     # transform input and output
     column_transformers = IOColumnTransformers(input_column_types, output_column_types, all_data_df)
 
@@ -320,4 +308,6 @@ def vis():
     window.mainloop()
 
 if __name__ == "__main__":
-    vis()
+    all_data_df = pd.read_csv(
+        Path(__file__).parent / '..' / '..' / '..' / 'analytics' / 'csv_outputs' / 'engagementAim.csv')
+    vis(all_data_df)
