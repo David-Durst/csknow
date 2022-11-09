@@ -308,6 +308,5 @@ def vis(all_data_df: pd.DataFrame):
     window.mainloop()
 
 if __name__ == "__main__":
-    all_data_df = pd.read_csv(
-        Path(__file__).parent / '..' / '..' / '..' / 'analytics' / 'csv_outputs' / 'engagementAim.csv')
+    all_data_df = pd.read_csv(data_path)
     vis(all_data_df)

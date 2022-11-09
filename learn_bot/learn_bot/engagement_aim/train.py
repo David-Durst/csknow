@@ -13,7 +13,7 @@ from learn_bot.engagement_aim.dad import on_policy_inference
 from tqdm import tqdm
 
 
-def train(all_data_df: pd.DataFrame):
+def train(all_data_df: pd.DataFrame, dad_iters=4, save=True):
     # all_data_df = all_data_df[all_data_df['num shots fired'] > 0]
 
     train_test_split = train_test_split_by_col(all_data_df, 'engagement id')
@@ -123,10 +123,9 @@ def train(all_data_df: pd.DataFrame):
 
     agg_df = None
     total_train_df = train_df
-    dad_iters = 4
     train_data = AimDataset(train_df, column_transformers)
     test_data = AimDataset(test_df, column_transformers)
-    for dad_num in range(dad_iters):
+    for dad_num in range(dad_iters + 1):
         print(f"DaD Iter {dad_num + 1}\n-------------------------------")
         # step 1: train model
         # create data sets for pytorch
@@ -153,22 +152,23 @@ def train(all_data_df: pd.DataFrame):
 
         train_and_test_SL(model, train_dataloader, test_dataloader)
 
-        # step 2: inference and result collection
-        agg_df = on_policy_inference(train_data, train_df, model)
-        # model.to(CUDA_DEVICE_STR)
+        if dad_num < dad_iters:
+            # step 2: inference and result collection
+            agg_df = on_policy_inference(train_data, train_df, model)
+            # model.to(CUDA_DEVICE_STR)
 
-        # step 3: create new training data set
-        total_train_df = pd.concat([total_train_df, agg_df], ignore_index=True)
+            # step 3: create new training data set
+            total_train_df = pd.concat([total_train_df, agg_df], ignore_index=True)
 
     model_output_recording.plot(column_transformers, temporal_io_float_column_names.vis_columns)
 
-    script_model = torch.jit.trace(model.to(CPU_DEVICE_STR), first_row)
-    script_model.save(Path(__file__).parent / '..' / '..' / 'models' / 'engagement_aim_model' / 'script_model.pt')
+    if save:
+        script_model = torch.jit.trace(model.to(CPU_DEVICE_STR), first_row)
+        script_model.save(Path(__file__).parent / '..' / '..' / 'models' / 'engagement_aim_model' / 'script_model.pt')
 
-    print("Done")
+    return model
 
 
 if __name__ == "__main__":
-    all_data_df = pd.read_csv(
-        Path(__file__).parent / '..' / '..' / '..' / 'analytics' / 'csv_outputs' / 'engagementAim.csv')
+    all_data_df = pd.read_csv(data_path)
     train(all_data_df)

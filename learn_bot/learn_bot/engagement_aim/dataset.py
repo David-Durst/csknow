@@ -4,7 +4,9 @@ from learn_bot.engagement_aim.column_management import IOColumnTransformers, Col
     CUR_TICK
 from typing import List
 from learn_bot.libs.temporal_column_names import TemporalIOColumnNames
+from pathlib import Path
 
+data_path = Path(__file__).parent / '..' / '..' / '..' / 'analytics' / 'csv_outputs' / 'engagementAim.csv'
 
 # https://androidkt.com/load-pandas-dataframe-using-dataset-and-dataloader-in-pytorch/
 class AimDataset(Dataset):
