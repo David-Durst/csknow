@@ -21,7 +21,7 @@ class AimEngagementExample:
 
 SEQUENCE_LENGTH = 50 + FUTURE_TICKS + PRIOR_TICKS_POS
 straight_line_example = AimEngagementExample([Point2D(0., i * -0.1) for i in range(SEQUENCE_LENGTH)])
-engagement_examples = [straight_line_example, straight_line_example]
+engagement_examples = [straight_line_example]
 
 def build_aim_df(example_row_df: Dict) -> pd.DataFrame:
     result_dicts = []
@@ -57,14 +57,13 @@ def build_aim_df(example_row_df: Dict) -> pd.DataFrame:
 
     return pd.DataFrame(result_dicts)
 
-
 def vis_train():
     all_data_df = pd.read_csv(data_path)
     all_data_df = all_data_df.sort_values(['engagement id', 'tick id'])
     example_row = all_data_df.iloc[0, :].to_dict()
     simple_df = build_aim_df(example_row)
     #vis(simple_df)
-    train(simple_df, 0, 500, False)
+    model = train(simple_df, 0, 500, False, False)
 
 
 if __name__ == "__main__":

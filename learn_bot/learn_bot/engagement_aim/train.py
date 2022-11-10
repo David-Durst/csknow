@@ -14,16 +14,22 @@ from learn_bot.engagement_aim.dad import on_policy_inference
 from tqdm import tqdm
 
 
-def train(all_data_df: pd.DataFrame, dad_iters=4, num_epochs=5, save=True):
+def train(all_data_df: pd.DataFrame, dad_iters=4, num_epochs=5, save=True, diff_train_test=True):
     # all_data_df = all_data_df[all_data_df['num shots fired'] > 0]
 
-    train_test_split = train_test_split_by_col(all_data_df, 'engagement id')
-    train_df = train_test_split.train_df
-    make_index_column(train_df)
-    train_df.reset_index(inplace=True, drop=True)
-    train_df.reset_index(inplace=True, drop=False)
-    test_df = train_test_split.test_df
-    make_index_column(test_df)
+    if diff_train_test:
+        train_test_split = train_test_split_by_col(all_data_df, 'engagement id')
+        train_df = train_test_split.train_df
+        make_index_column(train_df)
+        train_df.reset_index(inplace=True, drop=True)
+        train_df.reset_index(inplace=True, drop=False)
+        test_df = train_test_split.test_df
+        make_index_column(test_df)
+    else:
+        make_index_column(all_data_df)
+        train_df = all_data_df
+        test_df = all_data_df
+
 
     # transform input and output
     column_transformers = IOColumnTransformers(input_column_types, output_column_types, all_data_df)
