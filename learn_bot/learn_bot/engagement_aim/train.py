@@ -4,6 +4,7 @@ from torch.utils.data import DataLoader
 import pandas as pd
 from pathlib import Path
 from dataset import *
+from learn_bot.engagement_aim.mlp_aim_model import MLPAimModel
 from learn_bot.libs.accuracy_and_loss import compute_loss, compute_accuracy, finish_accuracy, CUDA_DEVICE_STR, \
     CPU_DEVICE_STR
 from learn_bot.engagement_aim.lstm_aim_model import LSTMAimModel
@@ -13,7 +14,7 @@ from learn_bot.engagement_aim.dad import on_policy_inference
 from tqdm import tqdm
 
 
-def train(all_data_df: pd.DataFrame, dad_iters=4, save=True):
+def train(all_data_df: pd.DataFrame, dad_iters=4, num_epochs=5, save=True):
     # all_data_df = all_data_df[all_data_df['num shots fired'] > 0]
 
     train_test_split = train_test_split_by_col(all_data_df, 'engagement id')
@@ -39,9 +40,9 @@ def train(all_data_df: pd.DataFrame, dad_iters=4, save=True):
 
     # Define model
     embedding_dim = 5
-    # model = MLPAimModel(column_transformers).to(device)
-    model = LSTMAimModel(column_transformers,
-                         len(temporal_io_float_column_names.input_columns), len(non_temporal_float_columns)).to(device)
+    model = MLPAimModel(column_transformers).to(device)
+    # model = LSTMAimModel(column_transformers, len(temporal_io_float_column_names.input_columns), len(non_temporal_float_columns)).to(device)
+
     print(model)
     params = list(model.parameters())
     print("params by layer")
@@ -49,7 +50,7 @@ def train(all_data_df: pd.DataFrame, dad_iters=4, save=True):
         print(param_layer.shape)
 
     # define losses
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.0001)
     # optimizer = torch.optim.SGD(model.parameters(), lr=0.001)
 
     output_cols = column_transformers.output_types.column_names()
@@ -101,7 +102,7 @@ def train(all_data_df: pd.DataFrame, dad_iters=4, save=True):
                     print(f"loss: {loss:>7f}  [{current:>5d}/{size:>5d}]")
 
                 compute_accuracy(pred, Y, accuracy, column_transformers)
-                if epoch_num == epochs - 1:
+                if epoch_num == num_epochs - 1:
                     model_output_recording.record_output(pred, Y, transformed_Y, train)
                 pbar.update(1)
 
@@ -112,10 +113,8 @@ def train(all_data_df: pd.DataFrame, dad_iters=4, save=True):
         train_test_str = "Train" if train else "Test"
         print(f"Epoch {train_test_str} Accuracy: {accuracy_string}, Transformed Avg Loss: {cumulative_loss:>8f}")
 
-    epochs = 1
-
     def train_and_test_SL(model, train_dataloader, test_dataloader):
-        for epoch_num in range(epochs):
+        for epoch_num in range(num_epochs):
             print(f"\nEpoch {epoch_num + 1}\n-------------------------------")
             train_or_test_SL_epoch(train_dataloader, model, optimizer, epoch_num, True)
             with torch.no_grad():
@@ -131,7 +130,7 @@ def train(all_data_df: pd.DataFrame, dad_iters=4, save=True):
         # create data sets for pytorch
         total_train_data = AimDataset(total_train_df, column_transformers)
 
-        batch_size = 64
+        batch_size = min([64, len(total_train_data), len(test_data)])
 
         train_dataloader = DataLoader(total_train_data, batch_size=batch_size, shuffle=True)
         test_dataloader = DataLoader(test_data, batch_size=batch_size, shuffle=True)
