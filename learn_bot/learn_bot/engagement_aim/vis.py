@@ -107,13 +107,21 @@ def vis(all_data_df: pd.DataFrame):
         # update ax.viewLim using the new dataLim
         ax.autoscale()
         ax.legend()
-        xmax, xmin = ax.get_xlim()
-        ymin, ymax = ax.get_ylim()
-        lim_min = min([xmin, ymin])
-        lim_max = max([xmax, ymax])
+        x_max, x_min = ax.get_xlim()
+        y_min, y_max = ax.get_ylim()
+        x_range = x_max - x_min
+        y_range = y_max - y_min
+        if x_range < y_range:
+            range_diff = y_range - x_range
+            x_min -= range_diff / 2.
+            x_max += range_diff / 2.
+        elif y_range < x_range:
+            range_diff = x_range - y_range
+            y_min -= range_diff / 2.
+            y_max += range_diff / 2.
         # inverted xaxis so need to flip
-        ax.set_xlim(lim_max, lim_min)
-        ax.set_ylim(lim_min, lim_max)
+        ax.set_xlim(x_max, x_min)
+        ax.set_ylim(y_min, y_max)
 
         # required to update canvas and attached toolbar!
         canvas.draw()
@@ -160,7 +168,7 @@ def vis(all_data_df: pd.DataFrame):
         update_aim_plot(selected_df, cur_tick)
         cur_row = selected_df.loc[cur_index, :]
         engagement_id_text_var.set(f"Round ID: {int(cur_row.loc['round id'])}, "
-                                   f"Engagement ID: {cur_engagement}")
+                                   f"Engagement ID: {int(cur_engagement)}")
         text_data_text_var.set(f"attacker: {int(cur_row.loc['attacker player id'].item())}, "
                                f"victim: {int(cur_row.loc['victim player id'].item())}, "
                                f"cur view: ({cur_row.loc[prior_future_x_column].item():.2f}, "

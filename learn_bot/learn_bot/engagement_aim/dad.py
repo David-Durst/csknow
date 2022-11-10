@@ -19,15 +19,23 @@ class PolicyOutput:
     delta_view_angle_y: float
 
 
-class PolicyHistory:
-    # generate the input tensor for the next policy iteration
-    # create the dict for inserting a new training data point into the data frame
-    def get_x_field_str(self, tick: int = -1):
+# generate the input tensor for the next policy iteration
+# create the dict for inserting a new training data point into the data frame
+def get_x_field_str(tick: int = -1):
+    if tick < 0:
         return f"delta view angle x (t-{abs(tick)})"
+    else:
+        return f"delta view angle x (t+{tick})"
 
-    def get_y_field_str(self, tick: int = -1):
+
+def get_y_field_str(tick: int = -1):
+    if tick < 0:
         return f"delta view angle y (t-{abs(tick)})"
+    else:
+        return f"delta view angle y (t+{tick})"
 
+
+class PolicyHistory:
     row_dict: Dict
     input_tensor: torch.Tensor
 
@@ -40,20 +48,20 @@ class PolicyHistory:
         # update new input_tensor and row_dict by setting the view angles from old input_tensor
         # most recent values are form policy_output
         for i in range(PRIOR_TICKS, -1):
-            new_row_dict[self.get_x_field_str(i)] = self.row_dict[self.get_x_field_str(i + 1)]
-            new_row_dict[self.get_y_field_str(i)] = self.row_dict[self.get_y_field_str(i + 1)]
+            new_row_dict[get_x_field_str(i)] = self.row_dict[get_x_field_str(i + 1)]
+            new_row_dict[get_y_field_str(i)] = self.row_dict[get_y_field_str(i + 1)]
 
-            model.set_untransformed_output(new_input_tensor, self.get_x_field_str(i),
+            model.set_untransformed_output(new_input_tensor, get_x_field_str(i),
                                            model.get_untransformed_output(self.input_tensor,
-                                                                          self.get_x_field_str(i + 1)))
-            model.set_untransformed_output(new_input_tensor, self.get_y_field_str(i),
+                                                                          get_x_field_str(i + 1)))
+            model.set_untransformed_output(new_input_tensor, get_y_field_str(i),
                                            model.get_untransformed_output(self.input_tensor,
-                                                                          self.get_y_field_str(i + 1)))
+                                                                          get_y_field_str(i + 1)))
 
-        new_row_dict[self.get_x_field_str()] = policy_output.delta_view_angle_x
-        new_row_dict[self.get_y_field_str()] = policy_output.delta_view_angle_y
-        model.set_untransformed_output(new_input_tensor, self.get_x_field_str(), policy_output.delta_view_angle_x)
-        model.set_untransformed_output(new_input_tensor, self.get_y_field_str(), policy_output.delta_view_angle_y)
+        new_row_dict[get_x_field_str()] = policy_output.delta_view_angle_x
+        new_row_dict[get_y_field_str()] = policy_output.delta_view_angle_y
+        model.set_untransformed_output(new_input_tensor, get_x_field_str(), policy_output.delta_view_angle_x)
+        model.set_untransformed_output(new_input_tensor, get_y_field_str(), policy_output.delta_view_angle_y)
 
         self.row_dict = new_row_dict
         self.input_tensor = new_input_tensor

@@ -1,3 +1,5 @@
+from learn_bot.engagement_aim.column_management import PRIOR_TICKS, FUTURE_TICKS, PRIOR_TICKS_POS, CUR_TICK
+from learn_bot.engagement_aim.dad import get_x_field_str, get_y_field_str
 from learn_bot.engagement_aim.train import train
 from learn_bot.engagement_aim.vis import vis
 import pandas as pd
@@ -17,10 +19,9 @@ class Point2D:
 class AimEngagementExample:
     mouse_xy: List[Point2D]
 
-
-straight_line_example = AimEngagementExample([Point2D(0., i * -0.1) for i in range(11)])
+SEQUENCE_LENGTH = 50 + FUTURE_TICKS + PRIOR_TICKS_POS
+straight_line_example = AimEngagementExample([Point2D(0., i * -0.1) for i in range(SEQUENCE_LENGTH)])
 engagement_examples = [straight_line_example]
-
 
 def build_aim_df(example_row_df: Dict) -> pd.DataFrame:
     result_dicts = []
@@ -29,16 +30,30 @@ def build_aim_df(example_row_df: Dict) -> pd.DataFrame:
         example_row_df[k] = 0.
     tick_id = 0
     for engagement_id in range(len(engagement_examples)):
+        engagement_dicts = []
         for tick_in_engagement in range(len(engagement_examples[engagement_id].mouse_xy)):
             new_dict = copy.deepcopy(example_row_df)
             new_dict['id'] = tick_id
             new_dict['tick id'] = tick_id
-            new_dict['game tick id'] = tick_id
             new_dict['demo tick id'] = tick_id
+            new_dict['game tick id'] = tick_id + PRIOR_TICKS
             new_dict['delta view angle x (t)'] = engagement_examples[engagement_id].mouse_xy[tick_in_engagement].x
             new_dict['delta view angle y (t)'] = engagement_examples[engagement_id].mouse_xy[tick_in_engagement].y
-            result_dicts.append(new_dict)
+            for time_offset in range(PRIOR_TICKS, CUR_TICK + FUTURE_TICKS):
+                if time_offset == 0:
+                    continue
+                tick_with_time_offset = tick_in_engagement + time_offset
+                if tick_with_time_offset < 0 or \
+                        tick_with_time_offset >= len(engagement_examples[engagement_id].mouse_xy):
+                    continue
+                new_dict[get_x_field_str(time_offset)] = engagement_examples[engagement_id] \
+                    .mouse_xy[tick_with_time_offset].x
+                new_dict[get_y_field_str(time_offset)] = engagement_examples[engagement_id] \
+                    .mouse_xy[tick_with_time_offset].y
+            engagement_dicts.append(new_dict)
             tick_id += 1
+        result_dicts.extend(engagement_dicts[PRIOR_TICKS_POS:-1 * FUTURE_TICKS])
+
     return pd.DataFrame(result_dicts)
 
 
