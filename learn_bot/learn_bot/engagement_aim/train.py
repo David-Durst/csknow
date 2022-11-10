@@ -1,5 +1,5 @@
 # https://pytorch.org/tutorials/beginner/basics/quickstart_tutorial.html
-
+from torch import nn
 from torch.utils.data import DataLoader
 import pandas as pd
 from pathlib import Path
@@ -12,9 +12,19 @@ from learn_bot.engagement_aim.output_plotting import plot_untransformed_and_tran
 from learn_bot.libs.df_grouping import train_test_split_by_col, make_index_column
 from learn_bot.engagement_aim.dad import on_policy_inference
 from tqdm import tqdm
+from dataclasses import dataclass
 
 
-def train(all_data_df: pd.DataFrame, dad_iters=4, num_epochs=5, save=True, diff_train_test=True):
+@dataclass(frozen=True)
+class TrainResult:
+    train_dataset: AimDataset
+    test_dataset: AimDataset
+    column_transformers: IOColumnTransformers
+    model: nn.Module
+
+
+def train(all_data_df: pd.DataFrame, dad_iters=4, num_epochs=5, save=True,
+          diff_train_test=True) -> TrainResult:
     # all_data_df = all_data_df[all_data_df['num shots fired'] > 0]
 
     if diff_train_test:
@@ -159,7 +169,7 @@ def train(all_data_df: pd.DataFrame, dad_iters=4, num_epochs=5, save=True, diff_
 
         if dad_num < dad_iters:
             # step 2: inference and result collection
-            agg_df = on_policy_inference(train_data, train_df, model)
+            agg_df = on_policy_inference(train_data, train_df, model, column_transformers)
             # model.to(CUDA_DEVICE_STR)
 
             # step 3: create new training data set
@@ -171,7 +181,7 @@ def train(all_data_df: pd.DataFrame, dad_iters=4, num_epochs=5, save=True, diff_
         script_model = torch.jit.trace(model.to(CPU_DEVICE_STR), first_row)
         script_model.save(Path(__file__).parent / '..' / '..' / 'models' / 'engagement_aim_model' / 'script_model.pt')
 
-    return model
+    return TrainResult(train_data, test_data, column_transformers, model)
 
 
 if __name__ == "__main__":

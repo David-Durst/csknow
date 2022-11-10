@@ -130,23 +130,3 @@ class LSTMAimModel(nn.Module):
     def get_untransformed_outputs(self, x: torch.Tensor):
         return x[:, len(self.cts.output_types.column_names()):]
 
-    def get_untransformed_output(self, x: torch.Tensor, col_name: str) -> float:
-        num_output_cols = len(self.cts.output_types.column_names())
-        col_ranges = self.cts.get_name_ranges(False, False)
-        col_index = 0
-        for i, col_name_ in enumerate(self.cts.output_types.column_names()):
-            if col_name_ == col_name:
-                col_index = i
-                break
-
-        return x[num_output_cols + col_ranges[col_index].start].item()
-
-    def set_untransformed_output(self, x: torch.Tensor, col_name: str, value: float):
-        col_ranges = self.cts.get_name_ranges(True, False)
-        col_index = 0
-        for i, col_name_ in enumerate(self.cts.output_types.column_names()):
-            if col_name_ == col_name:
-                col_index = i
-                break
-
-        x[col_ranges[col_index].start] = value

@@ -1,5 +1,7 @@
 import copy
 
+from torch import nn
+
 from dataset import *
 from learn_bot.engagement_aim.dataset import AimDataset
 from learn_bot.libs.accuracy_and_loss import compute_loss, compute_accuracy, finish_accuracy, CUDA_DEVICE_STR, \
@@ -43,7 +45,7 @@ class PolicyHistory:
         self.row_dict = row_dict
         self.input_tensor = input_tensor
 
-    def add_row(self, policy_output: PolicyOutput, model: LSTMAimModel, new_row_dict: Dict,
+    def add_row(self, policy_output: PolicyOutput, cts: IOColumnTransformers, new_row_dict: Dict,
                 new_input_tensor: torch.Tensor, agg_dicts: List[Dict]):
         # update new input_tensor and row_dict by setting the view angles from old input_tensor
         # most recent values are form policy_output
@@ -51,17 +53,17 @@ class PolicyHistory:
             new_row_dict[get_x_field_str(i)] = self.row_dict[get_x_field_str(i + 1)]
             new_row_dict[get_y_field_str(i)] = self.row_dict[get_y_field_str(i + 1)]
 
-            model.set_untransformed_output(new_input_tensor, get_x_field_str(i),
-                                           model.get_untransformed_output(self.input_tensor,
-                                                                          get_x_field_str(i + 1)))
-            model.set_untransformed_output(new_input_tensor, get_y_field_str(i),
-                                           model.get_untransformed_output(self.input_tensor,
-                                                                          get_y_field_str(i + 1)))
+            cts.set_untransformed_output(new_input_tensor, get_x_field_str(i),
+                                         cts.get_untransformed_output(self.input_tensor,
+                                                                      get_x_field_str(i + 1)))
+            cts.set_untransformed_output(new_input_tensor, get_y_field_str(i),
+                                         cts.get_untransformed_output(self.input_tensor,
+                                                                      get_y_field_str(i + 1)))
 
         new_row_dict[get_x_field_str()] = policy_output.delta_view_angle_x
         new_row_dict[get_y_field_str()] = policy_output.delta_view_angle_y
-        model.set_untransformed_output(new_input_tensor, get_x_field_str(), policy_output.delta_view_angle_x)
-        model.set_untransformed_output(new_input_tensor, get_y_field_str(), policy_output.delta_view_angle_y)
+        cts.set_untransformed_output(new_input_tensor, get_x_field_str(), policy_output.delta_view_angle_x)
+        cts.set_untransformed_output(new_input_tensor, get_y_field_str(), policy_output.delta_view_angle_y)
 
         self.row_dict = new_row_dict
         self.input_tensor = new_input_tensor
@@ -81,7 +83,8 @@ class RoundPolicyData:
     agg_dicts: Dict
 
 
-def on_policy_inference(dataset: AimDataset, orig_df: pd.DataFrame, model: LSTMAimModel) -> pd.DataFrame:
+def on_policy_inference(dataset: AimDataset, orig_df: pd.DataFrame, model: nn.Module,
+                        cts: IOColumnTransformers) -> pd.DataFrame:
     agg_dicts = []
     model.eval()
     rounds_policy_data: Dict[int, RoundPolicyData] = {}
@@ -108,7 +111,7 @@ def on_policy_inference(dataset: AimDataset, orig_df: pd.DataFrame, model: LSTMA
                     if engagement_id in rounds_policy_data[valid_round_id].history_per_engagement:
                         rounds_policy_data[valid_round_id].history_per_engagement[engagement_id].add_row(
                             rounds_policy_data[valid_round_id].last_output_per_engagement[engagement_id],
-                            model,
+                            cts,
                             orig_df.loc[cur_index].to_dict(),
                             dataset[cur_index][0],
                             agg_dicts
@@ -126,8 +129,8 @@ def on_policy_inference(dataset: AimDataset, orig_df: pd.DataFrame, model: LSTMA
                     cur_index = rounds_policy_data[valid_round_id].cur_index
                     engagement_id = dataset.engagement_id.loc[cur_index]
                     rounds_policy_data[valid_round_id].last_output_per_engagement[engagement_id] = PolicyOutput(
-                        model.get_untransformed_output(pred[i], "delta view angle x (t)"),
-                        model.get_untransformed_output(pred[i], "delta view angle y (t)")
+                        cts.get_untransformed_output(pred[i], "delta view angle x (t)"),
+                        cts.get_untransformed_output(pred[i], "delta view angle y (t)")
                     )
                     rounds_policy_data[valid_round_id].cur_index += 1
                 pbar.update(len(valid_rounds))

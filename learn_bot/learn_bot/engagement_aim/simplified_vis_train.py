@@ -1,9 +1,10 @@
-from learn_bot.engagement_aim.column_management import PRIOR_TICKS, FUTURE_TICKS, PRIOR_TICKS_POS, CUR_TICK
-from learn_bot.engagement_aim.dad import get_x_field_str, get_y_field_str
+from learn_bot.engagement_aim.column_management import PRIOR_TICKS, FUTURE_TICKS, PRIOR_TICKS_POS, CUR_TICK, \
+    IOColumnTransformers
+from learn_bot.engagement_aim.dad import get_x_field_str, get_y_field_str, on_policy_inference
 from learn_bot.engagement_aim.train import train
 from learn_bot.engagement_aim.vis import vis
 import pandas as pd
-from learn_bot.engagement_aim.dataset import data_path
+from learn_bot.engagement_aim.dataset import data_path, AimDataset, input_column_types, output_column_types
 from dataclasses import dataclass
 from typing import Tuple, List, Dict
 import copy
@@ -19,9 +20,11 @@ class Point2D:
 class AimEngagementExample:
     mouse_xy: List[Point2D]
 
+
 SEQUENCE_LENGTH = 50 + FUTURE_TICKS + PRIOR_TICKS_POS
 straight_line_example = AimEngagementExample([Point2D(0., i * -0.1) for i in range(SEQUENCE_LENGTH)])
 engagement_examples = [straight_line_example]
+
 
 def build_aim_df(example_row_df: Dict) -> pd.DataFrame:
     result_dicts = []
@@ -54,16 +57,20 @@ def build_aim_df(example_row_df: Dict) -> pd.DataFrame:
             engagement_dicts.append(new_dict)
             tick_id += 1
         result_dicts.extend(engagement_dicts[PRIOR_TICKS_POS:-1 * FUTURE_TICKS])
-
     return pd.DataFrame(result_dicts)
+
 
 def vis_train():
     all_data_df = pd.read_csv(data_path)
     all_data_df = all_data_df.sort_values(['engagement id', 'tick id'])
     example_row = all_data_df.iloc[0, :].to_dict()
     simple_df = build_aim_df(example_row)
-    #vis(simple_df)
-    model = train(simple_df, 0, 500, False, False)
+    # vis(simple_df)
+    train_result = train(simple_df, 0, 500, False, False)
+    simple_pred_df = on_policy_inference(train_result.train_dataset, simple_df,
+                                         train_result.model, train_result.column_transformers)
+    vis(simple_pred_df)
+
 
 
 if __name__ == "__main__":
