@@ -20,7 +20,7 @@ INCH_PER_FIG = 4
 def filter_df(df: pd.DataFrame, col_name) -> pd.DataFrame:
     q_low = df[col_name].quantile(0.01)
     q_hi = df[col_name].quantile(0.99)
-    return df[(df[col_name] < q_hi) & (df[col_name] > q_low)]
+    return df[(df[col_name] <= q_hi) & (df[col_name] >= q_low)]
 
 
 def plot_untransformed_and_transformed(title: str, df, float_cols, cat_cols,
