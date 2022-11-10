@@ -8,6 +8,7 @@ from learn_bot.engagement_aim.dataset import data_path, AimDataset, input_column
 from dataclasses import dataclass
 from typing import Tuple, List, Dict
 import copy
+import numpy as np
 
 
 @dataclass(frozen=True)
@@ -26,11 +27,14 @@ straight_line_example = AimEngagementExample([Point2D(0., i * -0.1) for i in ran
 engagement_examples = [straight_line_example]
 
 
-def build_aim_df(example_row_df: Dict) -> pd.DataFrame:
+def build_aim_df(example_df: pd.DataFrame, example_row_df: Dict) -> pd.DataFrame:
     result_dicts = []
     # 0 everything in dict
-    for k in example_row_df.keys():
-        example_row_df[k] = 0.
+    for k, dtype in zip(example_row_df.keys(), example_df.dtypes):
+        if dtype == np.int64:
+            example_row_df[k] = 0
+        else:
+            example_row_df[k] = 0.
     tick_id = 0
     for engagement_id in range(len(engagement_examples)):
         engagement_dicts = []
@@ -64,7 +68,7 @@ def vis_train():
     all_data_df = pd.read_csv(data_path)
     all_data_df = all_data_df.sort_values(['engagement id', 'tick id'])
     example_row = all_data_df.iloc[0, :].to_dict()
-    simple_df = build_aim_df(example_row)
+    simple_df = build_aim_df(all_data_df, example_row)
     # vis(simple_df)
     train_result = train(simple_df, 0, 500, False, False)
     simple_pred_df = on_policy_inference(train_result.train_dataset, simple_df,

@@ -99,8 +99,6 @@ def on_policy_inference(dataset: AimDataset, orig_df: pd.DataFrame, model: nn.Mo
                 for round_id, round_policy_data in rounds_policy_data.items():
                     if round_policy_data.cur_index <= round_policy_data.round_end_index:
                         valid_rounds.append(round_id)
-                if rounds_policy_data[0].cur_index > 20:
-                    break
                 if len(valid_rounds) == 0:
                     break
 
