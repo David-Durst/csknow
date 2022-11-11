@@ -1,5 +1,5 @@
 import pandas as pd
-from typing import Tuple
+from typing import Dict
 from dataclasses import dataclass
 
 @dataclass(frozen=True)
@@ -28,3 +28,11 @@ def make_index_column(df: pd.DataFrame):
     df.reset_index(inplace=True, drop=True)
     # makes new index into column
     df.reset_index(inplace=True, drop=False)
+
+
+def get_row_as_dict_iloc(df: pd.DataFrame, row_index: int) -> Dict:
+    return df.iloc[[row_index], :].to_dict(orient='records')[0]
+
+
+def get_row_as_dict_loc(df: pd.DataFrame, row_index: int) -> Dict:
+    return df.loc[[row_index], :].to_dict(orient='records')[0]

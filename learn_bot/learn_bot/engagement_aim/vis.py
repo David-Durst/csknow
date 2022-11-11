@@ -39,8 +39,8 @@ def vis(all_data_df: pd.DataFrame):
     present_x_columns = temporal_io_float_column_names.get_matching_cols(base_float_columns[0])
     present_y_columns = temporal_io_float_column_names.get_matching_cols(base_float_columns[1])
     future_line = None
-    ax.set_xlabel("Yaw Delta (deg / target height deg)")
-    ax.set_ylabel("Pitch Delta (deg / target height deg)")
+    ax.set_xlabel("Yaw Delta (deg)")
+    ax.set_ylabel("Pitch Delta (deg)")
     ax.set_aspect('equal', adjustable='box')
     ax.invert_xaxis()
 

@@ -1,5 +1,6 @@
 import copy
 
+import torch
 from torch import nn
 
 from dataset import *
@@ -14,6 +15,8 @@ import pandas as pd
 import torch.multiprocessing as mp
 from tqdm import tqdm
 
+from learn_bot.libs.df_grouping import get_row_as_dict_loc
+
 
 @dataclass
 class PolicyOutput:
@@ -26,6 +29,8 @@ class PolicyOutput:
 def get_x_field_str(tick: int = -1):
     if tick < 0:
         return f"delta view angle x (t-{abs(tick)})"
+    elif tick == 0:
+        return f"delta view angle x (t)"
     else:
         return f"delta view angle x (t+{tick})"
 
@@ -33,6 +38,8 @@ def get_x_field_str(tick: int = -1):
 def get_y_field_str(tick: int = -1):
     if tick < 0:
         return f"delta view angle y (t-{abs(tick)})"
+    elif tick == 0:
+        return f"delta view angle y (t)"
     else:
         return f"delta view angle y (t+{tick})"
 
@@ -45,11 +52,12 @@ class PolicyHistory:
         self.row_dict = row_dict
         self.input_tensor = input_tensor
 
-    def add_row(self, policy_output: PolicyOutput, cts: IOColumnTransformers, new_row_dict: Dict,
-                new_input_tensor: torch.Tensor, agg_dicts: List[Dict]):
+    # for moving to next tick
+    def add_row(self, cts: IOColumnTransformers, new_row_dict: Dict, new_input_tensor: torch.Tensor):
         # update new input_tensor and row_dict by setting the view angles from old input_tensor
         # most recent values are form policy_output
-        for i in range(PRIOR_TICKS, -1):
+        # -1 value is set to last prediction since finish_row updates self.row_dict on last tick
+        for i in range(PRIOR_TICKS, 0):
             new_row_dict[get_x_field_str(i)] = self.row_dict[get_x_field_str(i + 1)]
             new_row_dict[get_y_field_str(i)] = self.row_dict[get_y_field_str(i + 1)]
 
@@ -60,13 +68,17 @@ class PolicyHistory:
                                          cts.get_untransformed_output(self.input_tensor,
                                                                       get_y_field_str(i + 1)))
 
-        new_row_dict[get_x_field_str()] = policy_output.delta_view_angle_x
-        new_row_dict[get_y_field_str()] = policy_output.delta_view_angle_y
-        cts.set_untransformed_output(new_input_tensor, get_x_field_str(), policy_output.delta_view_angle_x)
-        cts.set_untransformed_output(new_input_tensor, get_y_field_str(), policy_output.delta_view_angle_y)
-
         self.row_dict = new_row_dict
         self.input_tensor = new_input_tensor
+
+    # for finishing cur tick
+    def finish_row(self, pred: torch.Tensor, cts: IOColumnTransformers, agg_dicts: List[Dict]):
+        # finish cur input_tensor by setting all the outputs
+        # TODO: handle outputs other than aim
+        for i in range(0, CUR_TICK + FUTURE_TICKS):
+            self.row_dict[get_x_field_str(i)] = cts.get_untransformed_output(pred, get_x_field_str(i))
+            self.row_dict[get_y_field_str(i)] = cts.get_untransformed_output(pred, get_y_field_str(i))
+
         agg_dicts.append(self.row_dict)
 
 
@@ -75,12 +87,8 @@ class RoundPolicyData:
     round_start_index: int
     round_end_index: int
     cur_index: int
-    # this tracks history so it can produce inputs
+    # this tracks history so it can produce inputs and save outputs
     history_per_engagement: Dict[int, PolicyHistory]
-    # this tracks last output, as output only used as input when hit next input
-    last_output_per_engagement: Dict[int, PolicyOutput]
-    # this tracks dicts (one dict per new row) for data points to add to data ste
-    agg_dicts: Dict
 
 
 def on_policy_inference(dataset: AimDataset, orig_df: pd.DataFrame, model: nn.Module,
@@ -89,8 +97,7 @@ def on_policy_inference(dataset: AimDataset, orig_df: pd.DataFrame, model: nn.Mo
     model.eval()
     rounds_policy_data: Dict[int, RoundPolicyData] = {}
     for round_index, row in dataset.round_starts_ends.iterrows():
-        rounds_policy_data[round_index] = RoundPolicyData(row['start index'], row['end index'], row['start index'],
-                                                          {}, {}, {})
+        rounds_policy_data[round_index] = RoundPolicyData(row['start index'], row['end index'], row['start index'], {})
     with torch.no_grad():
         with tqdm(total=len(dataset), disable=False) as pbar:
             while True:
@@ -107,16 +114,16 @@ def on_policy_inference(dataset: AimDataset, orig_df: pd.DataFrame, model: nn.Mo
                     cur_index = rounds_policy_data[valid_round_id].cur_index
                     engagement_id = dataset.engagement_id.loc[cur_index]
                     if engagement_id in rounds_policy_data[valid_round_id].history_per_engagement:
+                        # want to take most of real data (like recoil) and just shift in old predictions about
+                        # mouse x and y
                         rounds_policy_data[valid_round_id].history_per_engagement[engagement_id].add_row(
-                            rounds_policy_data[valid_round_id].last_output_per_engagement[engagement_id],
                             cts,
-                            orig_df.loc[cur_index].to_dict(),
+                            get_row_as_dict_loc(orig_df, cur_index),
                             dataset[cur_index][0],
-                            agg_dicts
                         )
                     else:
                         rounds_policy_data[valid_round_id].history_per_engagement[engagement_id] = PolicyHistory(
-                            orig_df.loc[cur_index].to_dict(), dataset[cur_index][0])
+                            get_row_as_dict_loc(orig_df, cur_index), dataset[cur_index][0])
                     round_row_tensors.append(rounds_policy_data[valid_round_id]
                                              .history_per_engagement[engagement_id].input_tensor)
                 X_rolling = torch.stack(round_row_tensors, dim=0)
@@ -126,10 +133,9 @@ def on_policy_inference(dataset: AimDataset, orig_df: pd.DataFrame, model: nn.Mo
                 for i, valid_round_id in enumerate(valid_rounds):
                     cur_index = rounds_policy_data[valid_round_id].cur_index
                     engagement_id = dataset.engagement_id.loc[cur_index]
-                    rounds_policy_data[valid_round_id].last_output_per_engagement[engagement_id] = PolicyOutput(
-                        cts.get_untransformed_output(pred[i], "delta view angle x (t)"),
-                        cts.get_untransformed_output(pred[i], "delta view angle y (t)")
-                    )
+                    # save all predictions for output row
+                    rounds_policy_data[valid_round_id].history_per_engagement[engagement_id].finish_row(pred[i],
+                                                                                                        cts, agg_dicts)
                     rounds_policy_data[valid_round_id].cur_index += 1
                 pbar.update(len(valid_rounds))
 
