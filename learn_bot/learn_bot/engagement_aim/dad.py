@@ -9,7 +9,7 @@ from learn_bot.libs.accuracy_and_loss import compute_loss, compute_accuracy, fin
     CPU_DEVICE_STR
 from learn_bot.engagement_aim.column_management import IOColumnTransformers, ColumnTypes, PRIOR_TICKS, FUTURE_TICKS, CUR_TICK
 from learn_bot.engagement_aim.lstm_aim_model import LSTMAimModel
-from typing import List, Dict
+from typing import List, Dict, Optional
 from dataclasses import dataclass
 import pandas as pd
 import torch.multiprocessing as mp
@@ -72,12 +72,20 @@ class PolicyHistory:
         self.input_tensor = new_input_tensor
 
     # for finishing cur tick
-    def finish_row(self, pred: torch.Tensor, cts: IOColumnTransformers, agg_dicts: List[Dict]):
+    def finish_row(self, pred: torch.Tensor, cts: IOColumnTransformers, agg_dicts: List[Dict],
+                   result_str: Optional[List[str]] = None):
+
         # finish cur input_tensor by setting all the outputs
         # TODO: handle outputs other than aim
         for i in range(0, CUR_TICK + FUTURE_TICKS):
             self.row_dict[get_x_field_str(i)] = cts.get_untransformed_output(pred, get_x_field_str(i))
             self.row_dict[get_y_field_str(i)] = cts.get_untransformed_output(pred, get_y_field_str(i))
+            if result_str is not None:
+                result_str.append(f"{i}: ({self.row_dict[get_x_field_str(i)]:.2E},"
+                                  f" {self.row_dict[get_y_field_str(i)]:.2e}); ")
+
+        if result_str is not None:
+            result_str.append("\n")
 
         agg_dicts.append(self.row_dict)
 
@@ -95,6 +103,7 @@ def on_policy_inference(dataset: AimDataset, orig_df: pd.DataFrame, model: nn.Mo
                         cts: IOColumnTransformers) -> pd.DataFrame:
     agg_dicts = []
     model.eval()
+    result_strs = []
     rounds_policy_data: Dict[int, RoundPolicyData] = {}
     for round_index, row in dataset.round_starts_ends.iterrows():
         rounds_policy_data[round_index] = RoundPolicyData(row['start index'], row['end index'], row['start index'], {})
@@ -134,11 +143,13 @@ def on_policy_inference(dataset: AimDataset, orig_df: pd.DataFrame, model: nn.Mo
                     cur_index = rounds_policy_data[valid_round_id].cur_index
                     engagement_id = dataset.engagement_id.loc[cur_index]
                     # save all predictions for output row
-                    rounds_policy_data[valid_round_id].history_per_engagement[engagement_id].finish_row(pred[i],
-                                                                                                        cts, agg_dicts)
+                    rounds_policy_data[valid_round_id].history_per_engagement[engagement_id].finish_row(pred[i], cts,
+                                                                                                        agg_dicts,
+                                                                                                        result_strs)
                     rounds_policy_data[valid_round_id].cur_index += 1
                 pbar.update(len(valid_rounds))
 
+    print("".join(result_strs))
     # get last round worth of data
     agg_df = pd.DataFrame.from_dict(agg_dicts)
     return agg_df
