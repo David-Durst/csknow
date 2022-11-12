@@ -198,21 +198,26 @@ class IOColumnTransformers:
 
         return torch.cat(uncat_result, dim=1)
 
-    def get_untransformed_output(self, x: torch.Tensor, col_name: str) -> float:
-        num_output_cols = len(self.output_types.column_names())
-        col_ranges = self.get_name_ranges(False, False)
+    def get_untransformed_value(self, x: torch.Tensor, col_name: str, input: bool) -> float:
+        col_names = self.input_types.column_names() if input else self.output_types.column_names()
+        num_cols = len(col_names)
+        col_ranges = self.get_name_ranges(input, False)
         col_index = 0
-        for i, col_name_ in enumerate(self.output_types.column_names()):
+        for i, col_name_ in enumerate(col_names):
             if col_name_ == col_name:
                 col_index = i
                 break
 
-        return x[num_output_cols + col_ranges[col_index].start].item()
+        if input:
+            return x[col_ranges[col_index].start].item()
+        else:
+            return x[num_cols + col_ranges[col_index].start].item()
 
-    def set_untransformed_output(self, x: torch.Tensor, col_name: str, value: float):
+    def set_untransformed_input_value(self, x: torch.Tensor, col_name: str, value: float):
+        col_names = self.input_types.column_names() if input else self.output_types.column_names()
         col_ranges = self.get_name_ranges(True, False)
         col_index = 0
-        for i, col_name_ in enumerate(self.output_types.column_names()):
+        for i, col_name_ in enumerate(col_names):
             if col_name_ == col_name:
                 col_index = i
                 break

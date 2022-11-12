@@ -74,7 +74,8 @@ def vis_train():
     # vis(simple_df)
     train_result = train(simple_df, 0, 500, False, False)
     simple_pred_df = on_policy_inference(train_result.train_dataset, simple_df,
-                                         train_result.model, train_result.column_transformers)
+                                         train_result.model, train_result.column_transformers,
+                                         True)
     vis(simple_df, simple_pred_df)
 
 

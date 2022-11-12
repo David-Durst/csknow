@@ -17,13 +17,6 @@ from tqdm import tqdm
 
 from learn_bot.libs.df_grouping import get_row_as_dict_loc
 
-
-@dataclass
-class PolicyOutput:
-    delta_view_angle_x: float
-    delta_view_angle_y: float
-
-
 # generate the input tensor for the next policy iteration
 # create the dict for inserting a new training data point into the data frame
 def get_x_field_str(tick: int = -1):
@@ -53,20 +46,37 @@ class PolicyHistory:
         self.input_tensor = input_tensor
 
     # for moving to next tick
-    def add_row(self, cts: IOColumnTransformers, new_row_dict: Dict, new_input_tensor: torch.Tensor):
+    def add_row(self, cts: IOColumnTransformers, new_row_dict: Dict, new_input_tensor: torch.Tensor, on_policy):
         # update new input_tensor and row_dict by setting the view angles from old input_tensor
         # most recent values are form policy_output
         # -1 value is set to last prediction since finish_row updates self.row_dict on last tick
-        for i in range(PRIOR_TICKS, 0):
-            new_row_dict[get_x_field_str(i)] = self.row_dict[get_x_field_str(i + 1)]
-            new_row_dict[get_y_field_str(i)] = self.row_dict[get_y_field_str(i + 1)]
+        if on_policy:
+            for i in range(PRIOR_TICKS, -1):
+                new_row_dict[get_x_field_str(i)] = self.row_dict[get_x_field_str(i + 1)]
+                new_row_dict[get_y_field_str(i)] = self.row_dict[get_y_field_str(i + 1)]
 
-            cts.set_untransformed_output(new_input_tensor, get_x_field_str(i),
-                                         cts.get_untransformed_output(self.input_tensor,
-                                                                      get_x_field_str(i + 1)))
-            cts.set_untransformed_output(new_input_tensor, get_y_field_str(i),
-                                         cts.get_untransformed_output(self.input_tensor,
-                                                                      get_y_field_str(i + 1)))
+                cts.set_untransformed_input_value(new_input_tensor, get_x_field_str(i),
+                                                  cts.get_untransformed_value(self.input_tensor,
+                                                                              get_x_field_str(i + 1), True))
+                cts.set_untransformed_input_value(new_input_tensor, get_y_field_str(i),
+                                                  cts.get_untransformed_value(self.input_tensor,
+                                                                              get_y_field_str(i + 1), True))
+
+                x_dict = new_row_dict[get_x_field_str(i)]
+                y_dict = new_row_dict[get_y_field_str(i)]
+                x_tensor = cts.get_untransformed_value(new_input_tensor, get_x_field_str(i), True)
+                y_tensor = cts.get_untransformed_value(new_input_tensor, get_y_field_str(i), True)
+                if abs(x_dict - x_tensor) > 0.0001:
+                    print("x bad")
+                if abs(y_dict - y_tensor) > 0.0001:
+                    print("y bad")
+                #print(f"({x_dict}, {y_dict}), ({x_tensor},{y_tensor})")
+
+        # last t output is new t-1 input
+        new_row_dict[get_x_field_str(-1)] = self.row_dict[get_x_field_str(0)]
+        new_row_dict[get_y_field_str(-1)] = self.row_dict[get_y_field_str(0)]
+        cts.set_untransformed_input_value(new_input_tensor, get_x_field_str(-1), self.row_dict[get_x_field_str(0)])
+        cts.set_untransformed_input_value(new_input_tensor, get_y_field_str(-1), self.row_dict[get_y_field_str(0)])
 
         self.row_dict = new_row_dict
         self.input_tensor = new_input_tensor
@@ -78,8 +88,8 @@ class PolicyHistory:
         # finish cur input_tensor by setting all the outputs
         # TODO: handle outputs other than aim
         for i in range(0, CUR_TICK + FUTURE_TICKS):
-            self.row_dict[get_x_field_str(i)] = cts.get_untransformed_output(pred, get_x_field_str(i))
-            self.row_dict[get_y_field_str(i)] = cts.get_untransformed_output(pred, get_y_field_str(i))
+            self.row_dict[get_x_field_str(i)] = cts.get_untransformed_value(pred, get_x_field_str(i), False)
+            self.row_dict[get_y_field_str(i)] = cts.get_untransformed_value(pred, get_y_field_str(i), False)
             if result_str is not None:
                 result_str.append(f"{i}: ({self.row_dict[get_x_field_str(i)]:.2E},"
                                   f" {self.row_dict[get_y_field_str(i)]:.2e}); ")
@@ -100,10 +110,10 @@ class RoundPolicyData:
 
 
 def on_policy_inference(dataset: AimDataset, orig_df: pd.DataFrame, model: nn.Module,
-                        cts: IOColumnTransformers) -> pd.DataFrame:
+                        cts: IOColumnTransformers, on_policy=True) -> pd.DataFrame:
     agg_dicts = []
     model.eval()
-    result_strs = []
+    result_strs = None #set to [] to get add_row printing
     rounds_policy_data: Dict[int, RoundPolicyData] = {}
     for round_index, row in dataset.round_starts_ends.iterrows():
         rounds_policy_data[round_index] = RoundPolicyData(row['start index'], row['end index'], row['start index'], {})
@@ -129,6 +139,7 @@ def on_policy_inference(dataset: AimDataset, orig_df: pd.DataFrame, model: nn.Mo
                             cts,
                             get_row_as_dict_loc(orig_df, cur_index),
                             dataset[cur_index][0],
+                            on_policy
                         )
                     else:
                         rounds_policy_data[valid_round_id].history_per_engagement[engagement_id] = PolicyHistory(
@@ -149,7 +160,8 @@ def on_policy_inference(dataset: AimDataset, orig_df: pd.DataFrame, model: nn.Mo
                     rounds_policy_data[valid_round_id].cur_index += 1
                 pbar.update(len(valid_rounds))
 
-    print("".join(result_strs))
+    if result_strs is not None:
+        print("".join(result_strs))
     # get last round worth of data
     agg_df = pd.DataFrame.from_dict(agg_dicts)
     return agg_df
