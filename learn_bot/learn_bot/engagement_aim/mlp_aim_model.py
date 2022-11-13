@@ -31,11 +31,5 @@ class MLPAimModel(nn.Module):
 
         # produce untransformed outputs
         out_untransformed = self.cts.untransform_columns(False, out_transformed)
-        return torch.cat([out_transformed, out_untransformed], dim=1)
-
-    def get_transformed_outputs(self, x: torch.Tensor) -> torch.Tensor:
-        return x[:, :len(self.cts.output_types.column_names())]
-
-    def get_untransformed_outputs(self, x: torch.Tensor):
-        return x[:, len(self.cts.output_types.column_names()):]
+        return torch.stack([out_transformed, out_untransformed], dim=1)
 

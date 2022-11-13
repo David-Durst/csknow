@@ -200,7 +200,6 @@ class IOColumnTransformers:
 
     def get_untransformed_value(self, x: torch.Tensor, col_name: str, input: bool) -> float:
         col_names = self.input_types.column_names() if input else self.output_types.column_names()
-        num_cols = len(col_names)
         col_ranges = self.get_name_ranges(input, False)
         col_index = 0
         for i, col_name_ in enumerate(col_names):
@@ -211,7 +210,7 @@ class IOColumnTransformers:
         if input:
             return x[col_ranges[col_index].start].item()
         else:
-            return x[num_cols + col_ranges[col_index].start].item()
+            return x[1:, col_ranges[col_index].start].item()
 
     def set_untransformed_input_value(self, x: torch.Tensor, col_name: str, value: float):
         col_names = self.input_types.column_names() if input else self.output_types.column_names()
@@ -223,3 +222,11 @@ class IOColumnTransformers:
                 break
 
         x[col_ranges[col_index].start] = value
+
+
+def get_transformed_outputs(x: torch.Tensor) -> torch.Tensor:
+    return x[:, 0, :].squeeze()
+
+
+def get_untransformed_outputs(x: torch.Tensor):
+    return x[:, 1, :].squeeze()

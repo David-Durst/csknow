@@ -122,7 +122,7 @@ class LSTMAimModel(nn.Module):
         # produce untransformed outputs
         out_transformed = torch.cat(outputs, dim=1).squeeze(dim=2)
         out_untransformed = self.cts.untransform_columns(False, out_transformed)
-        return torch.cat([out_transformed, out_untransformed], dim=1)
+        return torch.stack([out_transformed, out_untransformed], dim=1)
 
     def get_transformed_outputs(self, x: torch.Tensor) -> torch.Tensor:
         return x[:, :len(self.cts.output_types.column_names())]
