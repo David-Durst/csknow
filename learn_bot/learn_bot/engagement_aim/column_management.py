@@ -80,7 +80,7 @@ class PTMeanStdColumnTransformer(PTColumnTransformer):
         self.cpu_standard_deviations = standard_deviations.view(1,-1)
         # done so columsn that all equal mean are 0, 253 is sentinel value,
         # doesn't matter what value, sub by mean will make it equal 0.
-        self.cpu_standard_deviations[self.cpu_standard_deviations == 0.] = 253.
+        self.cpu_standard_deviations[self.cpu_standard_deviations == 0.] = torch.finfo(standard_deviations.dtype).smallest_normal
         self.means = self.cpu_means.to(CUDA_DEVICE_STR)
         self.standard_deviations = self.cpu_standard_deviations.to(CUDA_DEVICE_STR)
 
