@@ -1,5 +1,7 @@
 # https://pytorch.org/tutorials/beginner/basics/quickstart_tutorial.html
+import torch.optim
 from torch import nn
+from torch.optim.lr_scheduler import ExponentialLR
 from torch.utils.data import DataLoader
 import pandas as pd
 from pathlib import Path
@@ -66,8 +68,9 @@ def train(all_data_df: pd.DataFrame, dad_iters=4, num_epochs=5, save=True,
         print(param_layer.shape)
 
     # define losses
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.0001)
-    # optimizer = torch.optim.SGD(model.parameters(), lr=0.001)
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+    #optimizer = torch.optim.SGD(model.parameters(), lr=0.0001)
+    #scheduler = ExponentialLR(optimizer, gamma=0.9)
 
     output_cols = column_transformers.output_types.column_names()
 
@@ -130,8 +133,12 @@ def train(all_data_df: pd.DataFrame, dad_iters=4, num_epochs=5, save=True,
         print(f"Epoch {train_test_str} Accuracy: {accuracy_string}, Transformed Avg Loss: {cumulative_loss:>8f}")
 
     def train_and_test_SL(model, train_dataloader, test_dataloader):
+        nonlocal optimizer
         for epoch_num in range(num_epochs):
             print(f"\nEpoch {epoch_num + 1}\n-------------------------------")
+            #if epoch_num % 100 == 1000:
+                # optimizer = torch.optim.Adam(model.parameters(), lr=0.0001)
+            #scheduler.step()
             train_or_test_SL_epoch(train_dataloader, model, optimizer, epoch_num, True)
             with torch.no_grad():
                 train_or_test_SL_epoch(test_dataloader, model, None, epoch_num, False)

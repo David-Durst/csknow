@@ -14,7 +14,7 @@ class MLPAimModel(nn.Module):
         self.cts = cts
         self.inner_model = nn.Sequential(
             nn.Linear(cts.get_name_ranges(True, True)[-1].stop, self.internal_width),
-            #nn.ReLU(),
+            nn.ReLU(),
             #nn.Linear(self.internal_width, self.internal_width),
             #nn.ReLU(),
             #nn.Linear(self.internal_width, self.internal_width),
