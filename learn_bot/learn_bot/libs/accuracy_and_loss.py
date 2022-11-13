@@ -3,7 +3,7 @@ from learn_bot.engagement_aim.column_management import IOColumnTransformers, Col
 from math import sqrt
 from torch import nn
 
-float_loss_fn = nn.MSELoss()
+float_loss_fn = nn.MSELoss(reduction='sum')
 binary_loss_fn = nn.BCEWithLogitsLoss()
 classification_loss_fn = nn.CrossEntropyLoss()
 

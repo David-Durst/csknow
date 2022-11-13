@@ -71,7 +71,7 @@ def train(all_data_df: pd.DataFrame, dad_iters=4, num_epochs=5, save=True,
     optimizer = torch.optim.Adam(model.parameters(), lr=0.00001)
     #optimizer = torch.optim.SGD(model.parameters(), lr=0.0001)
     #scheduler = ExponentialLR(optimizer, gamma=0.9)
-    #scheduler = ReduceLROnPlateau(optimizer, 'min')
+    scheduler = ReduceLROnPlateau(optimizer, 'min')
 
     output_cols = column_transformers.output_types.column_names()
 
@@ -143,7 +143,7 @@ def train(all_data_df: pd.DataFrame, dad_iters=4, num_epochs=5, save=True,
             train_loss = train_or_test_SL_epoch(train_dataloader, model, optimizer, epoch_num, True)
             with torch.no_grad():
                 train_or_test_SL_epoch(test_dataloader, model, None, epoch_num, False)
-            #scheduler.step(train_loss)
+            scheduler.step(train_loss)
 
     agg_df = None
     total_train_df = train_df
