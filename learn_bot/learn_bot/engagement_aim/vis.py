@@ -219,7 +219,7 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame = None):
     play_active: bool = False
     num_play_updates_sleeping: int = 0
     def play_clicked():
-        global play_active, num_play_updates_sleeping
+        nonlocal play_active, num_play_updates_sleeping
         play_active = not play_active
         if play_active:
             play_button.configure(bg='green')
@@ -231,7 +231,7 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame = None):
 
 
     def play_update():
-        global num_play_updates_sleeping
+        nonlocal num_play_updates_sleeping
         num_play_updates_sleeping -= 1
         if play_active and num_play_updates_sleeping == 0:
             step_forward_clicked()
