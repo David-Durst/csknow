@@ -25,8 +25,10 @@ class AimEngagementExample:
 
 
 SEQUENCE_LENGTH = 50 + FUTURE_TICKS + PRIOR_TICKS_POS
-straight_line_example = AimEngagementExample([Point2D(0., i * -0.1) for i in range(SEQUENCE_LENGTH)])
-engagement_examples = [straight_line_example]
+vertical_line_example = AimEngagementExample([Point2D(0., i * -0.1) for i in range(SEQUENCE_LENGTH)])
+horizontal_line_example = AimEngagementExample([Point2D(i * -0.1, 0.) for i in range(SEQUENCE_LENGTH)])
+diagonal_line_example = AimEngagementExample([Point2D(i * -0.1, i * -0.1) for i in range(SEQUENCE_LENGTH)])
+engagement_examples = [vertical_line_example, horizontal_line_example, diagonal_line_example]
 
 
 def build_aim_df(example_row_df: Dict) -> pd.DataFrame:
@@ -72,7 +74,7 @@ def vis_train():
     example_row = get_row_as_dict_iloc(all_data_df, 0)
     simple_df = build_aim_df(example_row)
     # vis(simple_df)
-    train_result = train(simple_df, 0, 1000, False, False)
+    train_result = train(simple_df, 0, 10000, False, False)
     simple_pred_df = on_policy_inference(train_result.train_dataset, simple_df,
                                          train_result.model, train_result.column_transformers,
                                          True)
