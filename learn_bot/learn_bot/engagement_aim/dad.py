@@ -167,3 +167,11 @@ def on_policy_inference(dataset: AimDataset, orig_df: pd.DataFrame, model: nn.Mo
     return agg_df
 
 
+def create_dad_dataset(pred_df: pd.DataFrame, train_df: pd.DataFrame) -> pd.DataFrame:
+    column_names = pred_df.columns.tolist()
+    pred_column_names = [name for name in column_names if "(t-" in name or name == "index"]
+    pred_df_subset = pred_df.loc[:, pred_column_names]
+    train_column_names = [name for name in column_names if "(t-" not in name or name == "index"]
+    train_df_subset = train_df.loc[:, train_column_names]
+    return train_df_subset.merge(pred_df_subset, on="index", how="inner")
+

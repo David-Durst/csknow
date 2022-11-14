@@ -12,7 +12,7 @@ from learn_bot.libs.accuracy_and_loss import compute_loss, compute_accuracy, fin
 from learn_bot.engagement_aim.lstm_aim_model import LSTMAimModel
 from learn_bot.engagement_aim.output_plotting import plot_untransformed_and_transformed, ModelOutputRecording
 from learn_bot.libs.df_grouping import train_test_split_by_col, make_index_column
-from learn_bot.engagement_aim.dad import on_policy_inference
+from learn_bot.engagement_aim.dad import on_policy_inference, create_dad_dataset
 from tqdm import tqdm
 from dataclasses import dataclass
 
@@ -145,7 +145,6 @@ def train(all_data_df: pd.DataFrame, dad_iters=4, num_epochs=5, save=True,
                 train_or_test_SL_epoch(test_dataloader, model, None, epoch_num, False)
             #scheduler.step(train_loss)
 
-    agg_df = None
     total_train_df = train_df
     train_data = AimDataset(train_df, column_transformers)
     test_data = AimDataset(test_df, column_transformers)
@@ -178,11 +177,12 @@ def train(all_data_df: pd.DataFrame, dad_iters=4, num_epochs=5, save=True,
 
         if dad_num < dad_iters:
             # step 2: inference and result collection
-            agg_df = on_policy_inference(train_data, train_df, model, column_transformers)
+            pred_df = on_policy_inference(train_data, train_df, model, column_transformers)
             # model.to(CUDA_DEVICE_STR)
 
             # step 3: create new training data set
-            total_train_df = pd.concat([total_train_df, agg_df], ignore_index=True)
+            dad_df = create_dad_dataset(pred_df, train_df)
+            total_train_df = pd.concat([total_train_df, dad_df], ignore_index=True)
 
     model_output_recording.plot(column_transformers, temporal_io_float_column_names.vis_columns)
 
