@@ -384,6 +384,7 @@ public:
     double * aimPunchY;
     double * viewPunchX;
     double * viewPunchY;
+    double * recoilIndex;
     int16_t * team;
     double * health;
     double * armor;
@@ -391,6 +392,7 @@ public:
     bool * isAlive;
     bool * duckingKeyPressed;
     double * duckAmount;
+    bool * isReloading;
     bool * isWalking;
     bool * isScoped;
     bool * isAirborne;
@@ -431,6 +433,7 @@ public:
         aimPunchY = (double *) malloc(rows * sizeof(double));
         viewPunchX = (double *) malloc(rows * sizeof(double));
         viewPunchY = (double *) malloc(rows * sizeof(double));
+        recoilIndex = (double *) malloc(rows * sizeof(double));
         team = (int16_t *) malloc(rows * sizeof(int16_t));
         health = (double *) malloc(rows * sizeof(double));
         armor = (double *) malloc(rows * sizeof(double));
@@ -438,6 +441,7 @@ public:
         isAlive = (bool *) malloc(rows * sizeof(bool));
         duckingKeyPressed = (bool *) malloc(rows * sizeof(bool));
         duckAmount = (double *) malloc(rows * sizeof(double));
+        isReloading = (bool *) malloc(rows * sizeof(bool));
         isWalking = (bool *) malloc(rows * sizeof(bool));
         isScoped = (bool *) malloc(rows * sizeof(bool));
         isAirborne = (bool *) malloc(rows * sizeof(bool));
@@ -492,6 +496,7 @@ public:
         free(aimPunchY);
         free(viewPunchX);
         free(viewPunchY);
+        free(recoilIndex);
         free(team);
         free(health);
         free(armor);
@@ -499,6 +504,7 @@ public:
         free(isAlive);
         free(duckingKeyPressed);
         free(duckAmount);
+        free(isReloading);
         free(isWalking);
         free(isScoped);
         free(isAirborne);
