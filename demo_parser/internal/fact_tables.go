@@ -262,7 +262,7 @@ var ticksTable table[tickRow]
 // PLAYERATTICKS TABLE
 
 const playerAtTicksHeader = "id,player_id,tick_id,pos_x,pos_y,pos_z,eye_pos_z,vel_x,vel_y,vel_z,view_x,view_y,aim_punch_x,aim_punch_y," +
-	"view_punch_x,view_punch_y,team,health,armor,has_helmet,is_alive,ducking_key_pressed,duck_amount,is_walking,is_scoped," +
+	"view_punch_x,view_punch_y,recoilIndex,team,health,armor,has_helmet,is_alive,ducking_key_pressed,duck_amount,is_reloading,is_walking,is_scoped," +
 	"is_airborne,remaining_flash_time,active_weapon,main_weapon,primary_bullets_clip," +
 	"primary_bullets_reserve,secondary_weapon,secondary_bullets_clip,secondary_bullets_reserve,num_he," +
 	"num_flash,num_smoke,num_incendiary,num_molotov,num_decoy,num_zeus,has_defuser,has_bomb,money,ping\n"
@@ -284,6 +284,7 @@ type playerAtTickRow struct {
 	aimPunchY               float64
 	viewPunchX              float64
 	viewPunchY              float64
+	recoilIndex             float32
 	team                    int
 	health                  int
 	armor                   int
@@ -291,6 +292,7 @@ type playerAtTickRow struct {
 	isAlive                 bool
 	duckingKeyPressed       bool
 	duckAmount              float32
+	isReloading             bool
 	isWalking               bool
 	isScoped                bool
 	isAirborne              bool
@@ -319,18 +321,18 @@ func (p playerAtTickRow) toString() string {
 	return fmt.Sprintf(
 		"%d,%d,%d,%.2f,%.2f,%.2f,%.2f,"+
 			"%.2f,%.2f,%.2f,"+
-			"%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,"+
+			"%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,"+
 			"%d,%d,%d,%d,"+
-			"%d,%d,%.2f,%d,%d,%d,"+
+			"%d,%d,%.2f,%d,%d,%d,%d,"+
 			"%f,%d,%d,%d,"+
 			"%d,%d,%d,%d,"+
 			"%d,%d,%d,%d,%d,%d,%d,"+
 			"%d,%d,%d,%d\n",
 		p.id, p.playerId, p.tickId, p.posX, p.posY, p.posZ, p.eyePosZ,
 		p.velX, p.velY, p.velZ,
-		p.viewX, p.viewY, p.aimPunchX, p.aimPunchY, p.viewPunchX, p.viewPunchY,
+		p.viewX, p.viewY, p.aimPunchX, p.aimPunchY, p.viewPunchX, p.viewPunchY, p.recoilIndex,
 		p.team, p.health, p.armor, boolToInt(p.hasHelmet),
-		boolToInt(p.isAlive), boolToInt(p.duckingKeyPressed), p.duckAmount, boolToInt(p.isWalking), boolToInt(p.isScoped), boolToInt(p.isAirborne),
+		boolToInt(p.isAlive), boolToInt(p.duckingKeyPressed), p.duckAmount, boolToInt(p.isReloading), boolToInt(p.isWalking), boolToInt(p.isScoped), boolToInt(p.isAirborne),
 		p.flashDuration, p.activeWeapon, p.primaryWeapon, p.primaryBulletsClip,
 		p.primaryBulletsReserve, p.secondaryWeapon, p.secondaryBulletsClip, p.secondaryBulletsReserve,
 		p.numHE, p.numFlash, p.numSmoke, p.numIncendiary, p.numMolotov, p.numDecoy, p.numZeus,

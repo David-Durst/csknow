@@ -104,8 +104,10 @@ func ProcessTickData(localDemName string, idState *IDState) {
 				}
 			}
 			activeWeapon := common.EqUnknown
+			recoilIndex := InvalidFloat
 			if player.ActiveWeapon() != nil {
 				activeWeapon = player.ActiveWeapon().Type
+				recoilIndex = player.ActiveWeapon().Entity.PropertyValueMust("m_flRecoilIndex").FloatVal
 			}
 			aimPunchAngle := player.Entity.PropertyValueMust("localdata.m_Local.m_aimPunchAngle").VectorVal
 			viewPunchAngle := player.Entity.PropertyValueMust("localdata.m_Local.m_viewPunchAngle").VectorVal
@@ -121,10 +123,10 @@ func ProcessTickData(localDemName string, idState *IDState) {
 				player.Velocity().X, player.Velocity().Y, player.Velocity().Z,
 				player.ViewDirectionX(), player.ViewDirectionY(),
 				// flipping so match demo parser's assigner of yaw to x and pitch to y
-				aimPunchAngle.Y, aimPunchAngle.X, viewPunchAngle.Y, viewPunchAngle.X,
+				aimPunchAngle.Y, aimPunchAngle.X, viewPunchAngle.Y, viewPunchAngle.X, recoilIndex,
 				int(player.Team), player.Health(), player.Armor(), player.HasHelmet(),
 				player.IsAlive(), player.Flags().DuckingKeyPressed(), duckAmount,
-				player.IsWalking(), player.IsScoped(), player.IsAirborne(),
+				player.IsReloading, player.IsWalking(), player.IsScoped(), player.IsAirborne(),
 				player.FlashDuration, activeWeapon,
 				primaryWeapon, primaryBulletsClip, primaryBulletsReserve,
 				secondaryWeapon, secondaryBulletsClip, secondaryBulletsReserve,
