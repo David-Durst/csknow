@@ -34,7 +34,7 @@ public:
     RoundNumber roundNumber;
     int32_t tScore, ctScore;
     int32_t mapNumber;
-    double tickInterval;
+    double tickInterval, gameTime;
     CSKnowTime loadTime;
     //const static CSKnowTime defaultTime = std::chrono::system_clock::from_time_t(0);
 
@@ -44,6 +44,10 @@ public:
         string name;
         TeamId team;
         int32_t currentWeaponId;
+        float nextPrimaryAttack;
+        float nextSecondaryAttack;
+        float timeWeaponIdle;
+        bool reloadVisuallyComplete;
         int32_t rifleId;
         int32_t rifleClipAmmo;
         int32_t rifleReserveAmmo;
