@@ -47,6 +47,7 @@ public:
         float nextPrimaryAttack;
         float nextSecondaryAttack;
         float timeWeaponIdle;
+        float recoilIndex;
         bool reloadVisuallyComplete;
         int32_t rifleId;
         int32_t rifleClipAmmo;
