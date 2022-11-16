@@ -28,12 +28,11 @@ namespace csknow::fire_history {
         vector<RangeIndexEntry> rowIndicesPerRound;
         vector<int64_t> tickId;
         vector<int64_t> playerId;
-        vector<int64_t> ticksSinceLastFire;
-        vector<int64_t> lastShotFiredTickId;
-        vector<int64_t> ticksUntilNextFire;
-        vector<int64_t> nextShotFiredTickId;
         vector<int64_t> holdingAttackButton;
-        vector<DemoEquipmentType> activeWeaponType;
+        vector<int64_t> ticksSinceLastFire;
+        vector<int64_t> ticksSinceLastHoldingAttack;
+        vector<int64_t> ticksUntilNextFire;
+        vector<int64_t> ticksUntilNextHoldingAttack;
 
         FireHistoryResult(const Rounds & rounds, const Ticks & ticks) :
                 rounds(rounds), ticks(ticks) {
@@ -56,8 +55,9 @@ namespace csknow::fire_history {
 
         void oneLineToCSV(int64_t index, stringstream & ss) override {
             ss << index << "," << tickId[index] << "," << playerId[index]
-               << "," << ticksSinceLastFire[index] << "," << lastShotFiredTickId[index]
-               << "," << holdingAttackButton[index];
+               << "," << holdingAttackButton[index]
+               << "," << ticksSinceLastFire[index] << "," << ticksSinceLastHoldingAttack[index]
+               << "," << ticksUntilNextFire[index] << "," << ticksUntilNextHoldingAttack[index];
             ss << std::endl;
         }
 
@@ -68,7 +68,8 @@ namespace csknow::fire_history {
 
         [[nodiscard]]
         vector<string> getOtherColumnNames() override {
-            return {"ticks since last fire", "last shot fired tick id", "holding attack button"};
+            return {"ticks since last fire", "ticks since last holding attack", "ticks until next fire",
+                    "ticks until next holding attack"};
         }
 
         void runQuery(const Games & games, const WeaponFire & weaponFire, const PlayerAtTick & playerAtTick);

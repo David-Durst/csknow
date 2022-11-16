@@ -15,12 +15,11 @@ namespace csknow::fire_history {
         vector<vector<int64_t>> tmpRoundSizes(numThreads);
         vector<vector<int64_t>> tmpTickId(numThreads);
         vector<vector<int64_t>> tmpPlayerId(numThreads);
-        vector<vector<int64_t>> tmpTicksSinceLastFire(numThreads);
-        vector<vector<int64_t>> tmpLastShotFiredTickId(numThreads);
-        vector<vector<int64_t>> tmpTicksUntilNextFire(numThreads);
-        vector<vector<int64_t>> tmpNextShotFiredTickId(numThreads);
         vector<vector<int64_t>> tmpHoldingAttackButton(numThreads);
-        vector<vector<DemoEquipmentType>> tmpActiveWeaponType(numThreads);
+        vector<vector<int64_t>> tmpTicksSinceLastFire(numThreads);
+        vector<vector<int64_t>> tmpTicksSinceLastHoldingAttack(numThreads);
+        vector<vector<int64_t>> tmpTicksUntilNextFire(numThreads);
+        vector<vector<int64_t>> tmpTicksUntilNextHoldingAttack(numThreads);
 
         // for each round
         // track fire state for each player
@@ -38,15 +37,19 @@ namespace csknow::fire_history {
                                            {DurationType::Ticks, 0, 0, 1, 0});
             const PlayerToPATWindows & playerToPatWindows = rollingWindow.getWindows();
 
+            map<int64_t, int64_t> playerToLastFireTickId, playerToLastHoldingAttackTickId;
+            // if player hasn't fired in round present, assume the last first tick is first tick in round
+            const int64_t defaultFirstTickId = rounds.ticksPerRound[roundIndex].minId;
+
+            size_t threadMinIndex = tmpTickId[threadNum].size();
             // loop 1: compute past
             for (int64_t windowEndTickIndex = rollingWindow.lastReadTickId();
                  windowEndTickIndex <= rounds.ticksPerRound[roundIndex].maxId; windowEndTickIndex = rollingWindow.readNextTick()) {
                 int64_t tickIndex = rollingWindow.lastCurTickId();
 
-                map<int64_t, int64_t> playerToFirePerTick;
                 for (const auto & [_0, _1, fireIndex] :
                     ticks.weaponFirePerTick.intervalToEvent.findOverlapping(tickIndex, tickIndex)) {
-                    playerToFirePerTick[weaponFire.shooter[fireIndex]] = fireIndex;
+                    playerToLastFireTickId[weaponFire.shooter[fireIndex]] = tickIndex;
                 }
 
                 for (int64_t patIndex = ticks.patPerTick[tickIndex].minId;
@@ -56,65 +59,66 @@ namespace csknow::fire_history {
                     tmpTickId[threadNum].push_back(tickIndex);
                     tmpPlayerId[threadNum].push_back(curPlayerId);
 
-                    if (playerToFirePerTick.find(curPlayerId) != playerToFirePerTick.end()) {
-                        tmpTicksSinceLastFire[threadNum].push_back(0);
-                        tmpLastShotFiredTickId[threadNum].push_back(tickIndex);
+                    // add player to playerToLastFireTickId and playerToHoldingAttackTickId if not present
+                    if (playerToLastFireTickId.find(curPlayerId) == playerToLastFireTickId.end()) {
+                        playerToLastFireTickId[curPlayerId] = defaultFirstTickId;
                     }
-                    else {
-                        // need a way to look backwards in the tmp vector
-                        tmpTicksSinceLastFire[threadNum].push_back();
-                        tmpLastShotFiredTickId[threadNum].push_back(tickIndex);
+                    if (playerToLastHoldingAttackTickId.find(curPlayerId) == playerToLastHoldingAttackTickId.end()) {
+                        playerToLastHoldingAttackTickId[curPlayerId] = defaultFirstTickId;
                     }
-                    //tmpTicksSinceLastFire
+
+                    tmpTicksSinceLastFire[threadNum].push_back(ticks.gameTickNumber[tickIndex] -
+                        ticks.gameTickNumber[playerToLastFireTickId[curPlayerId]]);
+
+                    // holding attack if not reloading and recoil index going up or holding constant and greater than 0.5
+                    // recoil index increases by 1.0 increments, so can't be 0.5 and increasing
+                    // (technically could check closer to 0, but why push limits?)
+                    // recoil index resets to 0 on weapon switch, so anything that isn't 0 and isnt reloading
+                    // results from firing
+                    // recoil index is constant in between shots, only goes down over time
+                    double curRecoilIndex = playerAtTick.recoilIndex[patIndex];
+                    double priorRecoilIndex = playerAtTick.recoilIndex[priorPATIndex];
+                    bool isReloading = playerAtTick.isReloading[patIndex];
+                    bool holdingAttack = !isReloading && curRecoilIndex > 0.5 && curRecoilIndex >= priorRecoilIndex;
+                    tmpHoldingAttackButton[threadNum].push_back(holdingAttack);
+                    if (holdingAttack) {
+                        playerToLastHoldingAttackTickId[curPlayerId] = tickIndex;
+                    }
+                    tmpTicksSinceLastHoldingAttack[threadNum].push_back(ticks.gameTickNumber[tickIndex] -
+                        ticks.gameTickNumber[playerToLastHoldingAttackTickId[curPlayerId]]);
                 }
 
             }
+            size_t threadMaxIndex = tmpTickId[threadNum].size();
+
             // loop 2: go backwards to compute future
-            for (int64_t tickIndex = rounds.ticksPerRound[roundIndex].minId;
-                 tickIndex <= rounds.ticksPerRound[roundIndex].maxId; tickIndex++) {
-                for (const auto & [_0, _1, hurtIndex] :
-                    ticks.hurtPerTick.intervalToEvent.findOverlapping(tickIndex, tickIndex)) {
-                    if (!isDemoEquipmentAGun(hurt.weapon[hurtIndex])) {
-                        continue;
-                    }
-                    EngagementPlayers curPair{hurt.attacker[hurtIndex], hurt.victim[hurtIndex]};
+            const int64_t defaultLastTickId = rounds.ticksPerRound[roundIndex].maxId;
+            map<int64_t, int64_t> playerToNextFireTickId, playerToNextHoldingAttackTickId;
+            for (int64_t threadIndex = threadMaxIndex; threadIndex >= threadMinIndex; threadIndex--) {
+                const int64_t & curTickId = tmpTickId[threadNum][threadIndex];
+                const int64_t & curPlayerId = tmpPlayerId[threadNum][threadIndex];
 
-                    // start new engagement if none present
-                    if (curEngagements.find(curPair) == curEngagements.end()) {
-                        curEngagements[curPair] = {tickIndex, tickIndex,
-                                                   {tickIndex}, {hurtIndex}};
-                    }
-                    else {
-                        EngagementData & eData = curEngagements[curPair];
-                        // if current engagement hasn't ended, extend it
-                        // since new event will get PRE_ENGAGEMENT_SECONDS buffer and old event will get
-                        // POST_ENGAGEMENT_BUFFER, must consider entire region as restart time to prevent
-                        // overlapping event
-                        if (secondsBetweenTicks(ticks, tickRates, eData.endTick, tickIndex)
-                            <= PRE_ENGAGEMENT_SECONDS + POST_ENGAGEMENT_SECONDS) {
-                            eData.endTick = tickIndex;
-                            eData.hurtTickIds.push_back(tickIndex);
-                            eData.hurtIds.push_back(hurtIndex);
-                        }
-                            // if current engagement ended, finish it and start new one
-                        else {
-                            finishEngagement(rounds, ticks, tmpStartTickId, tmpEndTickId,
-                                             tmpLength, tmpPlayerId, tmpRole,
-                                             tmpHurtTickIds, tmpHurtIds, threadNum, tickRates,
-                                             curPair, eData);
-                            eData = {tickIndex, tickIndex,
-                                     {tickIndex}, {hurtIndex}};
-                        }
-                    }
+                // add player to playerToLastFireTickId and playerToHoldingAttackTickId if not present
+                if (playerToNextFireTickId.find(curPlayerId) == playerToNextFireTickId.end()) {
+                    playerToNextFireTickId[curPlayerId] = defaultLastTickId;
                 }
-            }
+                if (playerToNextHoldingAttackTickId.find(curPlayerId) == playerToNextHoldingAttackTickId.end()) {
+                    playerToNextHoldingAttackTickId[curPlayerId] = defaultLastTickId;
+                }
 
-            // at end of round, clear all engagements
-            for (const auto & engagement : curEngagements) {
-                finishEngagement(rounds, ticks, tmpStartTickId, tmpEndTickId,
-                                 tmpLength, tmpPlayerId, tmpRole,
-                                 tmpHurtTickIds, tmpHurtIds, threadNum, tickRates,
-                                 engagement.first, engagement.second);
+                // update fire/holding if currently doing it
+                if (tmpTicksSinceLastFire[threadNum][threadIndex] == 0) {
+                    playerToNextFireTickId[curPlayerId] = curTickId;
+                }
+                if (tmpHoldingAttackButton[threadNum][threadIndex] == true) {
+                    playerToNextHoldingAttackTickId[curPlayerId] = curTickId;
+                }
+
+                // record ticks until event happens
+                tmpTicksUntilNextFire[threadNum].push_back(ticks.gameTickNumber[playerToNextFireTickId[curPlayerId]] -
+                    ticks.gameTickNumber[curTickId]);
+                tmpTicksUntilNextHoldingAttack[threadNum].push_back(ticks.gameTickNumber[curTickId] -
+                    ticks.gameTickNumber[playerToNextHoldingAttackTickId[curPlayerId]]);
             }
 
             tmpRoundSizes[threadNum].push_back(static_cast<int64_t>(tmpTickId[threadNum].size()) - tmpRoundStarts[threadNum].back());
@@ -125,12 +129,11 @@ namespace csknow::fire_history {
                            [&](int64_t minThreadId, int64_t tmpRowId) {
                                tickId.push_back(tmpTickId[minThreadId][tmpRowId]);
                                playerId.push_back(tmpPlayerId[minThreadId][tmpRowId]);
-                               ticksSinceLastFire.push_back(tmpTicksSinceLastFire[minThreadId][tmpRowId]);
-                               lastShotFiredTickId.push_back(tmpLastShotFiredTickId[minThreadId][tmpRowId]);
-                               ticksUntilNextFire.push_back(tmpTicksUntilNextFire[minThreadId][tmpRowId]);
-                               nextShotFiredTickId.push_back(tmpNextShotFiredTickId[minThreadId][tmpRowId]);
                                holdingAttackButton.push_back(tmpHoldingAttackButton[minThreadId][tmpRowId]);
-                               activeWeaponType.push_back(tmpActiveWeaponType[minThreadId][tmpRowId]);
+                               ticksSinceLastFire.push_back(tmpTicksSinceLastFire[minThreadId][tmpRowId]);
+                               ticksSinceLastHoldingAttack.push_back(tmpTicksSinceLastHoldingAttack[minThreadId][tmpRowId]);
+                               ticksUntilNextFire.push_back(tmpTicksUntilNextFire[minThreadId][tmpRowId]);
+                               ticksUntilNextHoldingAttack.push_back(tmpTicksUntilNextHoldingAttack[minThreadId][tmpRowId]);
         });
     }
 }
