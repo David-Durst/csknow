@@ -2,8 +2,8 @@
 // Created by durst on 7/6/22.
 //
 
-#ifndef CSKNOW_ENGAGEMENT_H
-#define CSKNOW_ENGAGEMENT_H
+#ifndef CSKNOW_FIRE_HISTORY_H
+#define CSKNOW_FIRE_HISTORY_H
 #include <string>
 #include <set>
 #include <vector>
@@ -13,10 +13,6 @@
 #include <map>
 #include "load_data.h"
 #include "queries/query.h"
-#include "geometry.h"
-#include "enum_helpers.h"
-#define PRE_ENGAGEMENT_SECONDS 1.0
-#define POST_ENGAGEMENT_SECONDS 0.2
 using std::string;
 using std::vector;
 using std::set;
@@ -24,92 +20,55 @@ using std::unordered_map;
 using std::vector;
 using std::map;
 
-enum class EngagementRole {
-    Attacker,
-    Victim,
-    NUM_ENGAGEMENT_ROLES [[maybe_unused]]
-};
-
-class EngagementResult : public QueryResult {
+class FireHistoryResult : public QueryResult {
 public:
-    vector<RangeIndexEntry> rowIndicesPerRound;
-    vector<int64_t> startTickId;
-    vector<int64_t> endTickId;
-    vector<int64_t> tickLength;
-    vector<vector<int64_t>> playerId;
-    vector<vector<EngagementRole>> role;
-    vector<vector<int64_t>> hurtTickIds;
-    vector<vector<int64_t>> hurtIds;
-    IntervalIndex engagementsPerTick;
+    const Rounds & rounds;
+    const Ticks & ticks;
+    vector<int64_t> tickId;
+    vector<int64_t> playerId;
+    vector<int16_t> ticksSinceLastFire;
+    vector<int64_t> lastShotFiredTickId;
+    vector<int16_t> ticksUntilNextFire;
+    vector<int64_t> nextShotFiredTickId;
+    vector<int64_t> holdingAttackButton;
 
-
-    EngagementResult() {
-        variableLength = true;
-        startTickColumn = 0;
-        perEventLengthColumn = 2;
-        havePlayerLabels = true;
-        playerLabels = {"A", "V"};
-        playersToLabelColumn = 0;
-        playerLabelIndicesColumn = 1;
+    FireHistoryResult(const Rounds & rounds, const Ticks & ticks) :
+        rounds(rounds), ticks(ticks) {
+        variableLength = false;
+        startTickColumn = -1;
     }
 
     vector<int64_t> filterByForeignKey(int64_t otherTableIndex) override {
         vector<int64_t> result;
-        for (int64_t i = rowIndicesPerRound[otherTableIndex].minId; i <= rowIndicesPerRound[otherTableIndex].maxId; i++) {
-            if (i == -1) {
-                continue;
+        for (int64_t i = rounds.ticksPerRound[otherTableIndex].minId;
+             i <= rounds.ticksPerRound[otherTableIndex].maxId; i++) {
+            for (int64_t j = ticks.patPerTick[i].minId; j <= ticks.patPerTick[i].maxId; j++) {
+                if (j != -1) {
+                    result.push_back(j);
+                }
             }
-            result.push_back(i);
         }
         return result;
     }
 
     void oneLineToCSV(int64_t index, stringstream & ss) override {
-        ss << index << "," << startTickId[index] << "," << endTickId[index] << "," << tickLength[index] << ",";
-
-        vector<string> tmp;
-        for (int64_t pId : playerId[index]) {
-            tmp.push_back(std::to_string(pId));
-        }
-        commaSeparateList(ss, tmp, ";");
-        ss << ",";
-
-        tmp.clear();
-        for (EngagementRole r : role[index]) {
-            tmp.push_back(std::to_string(enumAsInt(r)));
-        }
-        commaSeparateList(ss, tmp, ";");
-        ss << ",";
-
-        tmp.clear();
-        for (int64_t hId : hurtTickIds[index]) {
-            tmp.push_back(std::to_string(hId));
-        }
-        commaSeparateList(ss, tmp, ";");
-        ss << ",";
-
-        tmp.clear();
-        for (int64_t hId : hurtIds[index]) {
-            tmp.push_back(std::to_string(hId));
-        }
-        commaSeparateList(ss, tmp, ";");
-
+        ss << index << "," << tickId[index] << "," << playerId[index]
+            << "," << ticksSinceLastFire[index] << "," << lastShotFiredTickId[index]
+            << "," << holdingAttackButton[index];
         ss << std::endl;
     }
 
     [[nodiscard]]
     vector<string> getForeignKeyNames() override {
-        return {"start tick id", "end tick id", "length"};
+        return {"tick id", "player id"};
     }
 
     [[nodiscard]]
     vector<string> getOtherColumnNames() override {
-        return {"player ids", "roles", "hurt tick ids", "hurt ids"};
+        return {"ticks since last fire", "last shot fired tick id", "holding attack button"};
     }
+
+    void runQuery(const WeaponFire & weaponFire, const PlayerAtTick & playerAtTick);
 };
 
-
-EngagementResult queryEngagementResult(const Games & games, const Rounds & rounds, const Ticks & ticks,
-                                       const Hurt & hurt);
-
-#endif //CSKNOW_ENGAGEMENT_H
+#endif //CSKNOW_FIRE_HISTORY_H
