@@ -31,8 +31,11 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
     vector<vector<int16_t>> tmpNumShotsFired(numThreads);
     vector<vector<int16_t>> tmpTicksSinceLastFire(numThreads);
     vector<vector<int64_t>> tmpLastShotFiredTickId(numThreads);
+    vector<vector<array<Vec2, TOTAL_AIM_TICKS>>> tmpViewAngle(numThreads);
     vector<vector<array<Vec2, TOTAL_AIM_TICKS>>> tmpDeltaViewAngle(numThreads);
+    vector<vector<array<bool, TOTAL_AIM_TICKS>>> tmpFirePressed(numThreads);
     vector<vector<array<Vec2, TOTAL_AIM_TICKS>>> tmpRecoilAngle(numThreads);
+    vector<vector<array<Vec2, TOTAL_AIM_TICKS>>> tmpViewAngleRecoilAdjusted(numThreads);
     vector<vector<array<Vec2, TOTAL_AIM_TICKS>>> tmpDeltaViewAngleRecoilAdjusted(numThreads);
     vector<vector<array<Vec3, TOTAL_AIM_TICKS>>> tmpDeltaPosition(numThreads);
     vector<vector<array<double, TOTAL_AIM_TICKS>>> tmpEyeToHeadDistance(numThreads);
@@ -75,7 +78,8 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
                 tmpEngagementId[threadNum].push_back(engagementIndex);
                 if (engagementToFireData.find(engagementIndex) == engagementToFireData.end()) {
                     engagementToFireData[engagementIndex] = {
-                        0, std::numeric_limits<int16_t>::max(), INVALID_ID                    };
+                        0, std::numeric_limits<int16_t>::max(), INVALID_ID
+                    };
                 }
 
                 int64_t attackerId = engagementResult.playerId[engagementIndex][0];
