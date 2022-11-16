@@ -20,6 +20,7 @@
 #include "enum_helpers.h"
 #include "queries/moments/engagement.h"
 #include "queries/moments/engagement_per_tick_aim.h"
+#include "queries/moments/fire_history.h"
 
 using std::string;
 using std::vector;
@@ -160,6 +161,7 @@ public:
 
 TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, const Rounds & rounds, const Ticks & ticks,
                                                        const PlayerAtTick & playerAtTick, const WeaponFire & weaponFire,
-                                                       const EngagementResult & engagementResult);
+                                                       const EngagementResult & engagementResult,
+                                                       const csknow::fire_history::FireHistoryResult & fireHistoryResult);
 
 #endif //CSKNOW_TRAINING_ENGAGEMENT_AIM_H

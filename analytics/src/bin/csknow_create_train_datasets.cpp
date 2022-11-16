@@ -30,6 +30,7 @@
 #include "queries/nav_cells.h"
 #include "queries/distance_to_places.h"
 #include "queries/moments/aggression_event.h"
+#include "queries/moments/fire_history.h"
 #include "queries/moments/engagement.h"
 #include "queries/moments/engagement_per_tick_aim.h"
 #include "queries/moments/non_engagement_trajectory.h"
@@ -167,6 +168,14 @@ int main(int argc, char * argv[]) {
     NavDangerResult d2NavDangerResult = queryNavDanger(map_visPoints.find("de_dust2")->second, dust2MeshName);
     std::cout << "processing aggression_event" << std::endl;
 
+
+    // fire history
+    string fireHistoryName = "fireHistory";
+    std::cout << "processing fire histry" << std::endl;
+    csknow::fire_history::FireHistoryResult fireHistoryResult(filteredRounds, ticks);
+    fireHistoryResult.runQuery(games, weaponFire, playerAtTick);
+    std::cout << "size: " << fireHistoryResult.size << std::endl;
+
     // engagement events
     string engagementName = "engagement";
     EngagementResult engagementResult = queryEngagementResult(games, filteredRounds, ticks, hurt);
@@ -205,7 +214,8 @@ int main(int argc, char * argv[]) {
     std::cout << "processing training engagement aim training data set" << std::endl;
     string engagementAimName = "engagementAim";
     TrainingEngagementAimResult engagementAimResult =
-        queryTrainingEngagementAim(games, filteredRounds, ticks, playerAtTick, weaponFire, engagementResult);
+        queryTrainingEngagementAim(games, filteredRounds, ticks, playerAtTick, weaponFire, engagementResult,
+                                   fireHistoryResult);
     std::cout << "size: " << engagementAimResult.size << std::endl;
     engagementAimResult.analyzeRollingWindowDifferences(filteredRounds, ticks, engagementPerTickAimResult);
 
