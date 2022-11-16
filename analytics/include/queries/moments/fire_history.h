@@ -25,13 +25,15 @@ namespace csknow::fire_history {
     public:
         const Rounds & rounds;
         const Ticks & ticks;
+        vector<RangeIndexEntry> rowIndicesPerRound;
         vector<int64_t> tickId;
         vector<int64_t> playerId;
-        vector<int16_t> ticksSinceLastFire;
+        vector<int64_t> ticksSinceLastFire;
         vector<int64_t> lastShotFiredTickId;
-        vector<int16_t> ticksUntilNextFire;
+        vector<int64_t> ticksUntilNextFire;
         vector<int64_t> nextShotFiredTickId;
         vector<int64_t> holdingAttackButton;
+        vector<DemoEquipmentType> activeWeaponType;
 
         FireHistoryResult(const Rounds & rounds, const Ticks & ticks) :
                 rounds(rounds), ticks(ticks) {
@@ -69,7 +71,7 @@ namespace csknow::fire_history {
             return {"ticks since last fire", "last shot fired tick id", "holding attack button"};
         }
 
-        void runQuery(const WeaponFire & weaponFire, const PlayerAtTick & playerAtTick);
+        void runQuery(const Games & games, const WeaponFire & weaponFire, const PlayerAtTick & playerAtTick);
     };
 }
 
