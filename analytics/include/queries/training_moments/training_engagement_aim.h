@@ -60,9 +60,7 @@ public:
     vector<array<Vec2, TOTAL_AIM_TICKS>> deltaRelativeFirstHitHeadViewAngle;
     vector<array<Vec2, TOTAL_AIM_TICKS>> deltaRelativeCurHeadViewAngle;
     vector<array<Vec2, TOTAL_AIM_TICKS>> recoilAngle;
-    vector<array<Vec2, TOTAL_AIM_TICKS>> deltaViewAngleRecoilAdjusted;
-    vector<array<Vec3, TOTAL_AIM_TICKS>> deltaPosition;
-    vector<array<double, TOTAL_AIM_TICKS>> eyeToHeadDistance;
+    vector<array<Vec2, TOTAL_AIM_TICKS>> deltaRelativeCurHeadRecoilAdjustedViewAngle;
     vector<array<int16_t, TOTAL_AIM_TICKS>> numShotsFired;
     vector<array<int16_t, TOTAL_AIM_TICKS>> ticksSinceLastFire;
     vector<array<int16_t, TOTAL_AIM_TICKS>> ticksSinceLastHoldingAttack;
@@ -71,6 +69,11 @@ public:
     vector<array<bool, TOTAL_AIM_TICKS>> enemyVisible;
     vector<array<Vec2, TOTAL_AIM_TICKS>> enemyMinViewAngle;
     vector<array<Vec2, TOTAL_AIM_TICKS>> enemyMaxViewAngle;
+    vector<array<Vec3, TOTAL_AIM_TICKS>> attackerEyePos;
+    vector<array<Vec3, TOTAL_AIM_TICKS>> victimEyePos;
+    vector<array<Vec3, TOTAL_AIM_TICKS>> attackerVel;
+    vector<array<Vec3, TOTAL_AIM_TICKS>> victimVel;
+    vector<array<double, TOTAL_AIM_TICKS>> eyeToHeadDistance;
     vector<AimWeaponType> weaponType;
     vector<double> distanceNormalization;
 
