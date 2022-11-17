@@ -59,20 +59,21 @@ public:
     vector<array<Vec2, TOTAL_AIM_TICKS>> idealViewAngle;
     vector<array<Vec2, TOTAL_AIM_TICKS>> deltaRelativeFirstHitHeadViewAngle;
     vector<array<Vec2, TOTAL_AIM_TICKS>> deltaRelativeCurHeadViewAngle;
-    vector<array<Vec2, TOTAL_AIM_TICKS>> recoilAngle;
-    vector<array<Vec2, TOTAL_AIM_TICKS>> deltaRelativeCurHeadRecoilAdjustedViewAngle;
-    vector<array<int16_t, TOTAL_AIM_TICKS>> numShotsFired;
+    vector<array<float, TOTAL_AIM_TICKS>> recoilIndex;
+    vector<array<Vec2, TOTAL_AIM_TICKS>> scaledRecoilAngle;
     vector<array<int16_t, TOTAL_AIM_TICKS>> ticksSinceLastFire;
     vector<array<int16_t, TOTAL_AIM_TICKS>> ticksSinceLastHoldingAttack;
-    vector<array<int16_t, TOTAL_AIM_TICKS>> ticksUntilNextFile;
+    vector<array<int16_t, TOTAL_AIM_TICKS>> ticksUntilNextFire;
     vector<array<int16_t, TOTAL_AIM_TICKS>> ticksUntilNextHoldingAttack;
     vector<array<bool, TOTAL_AIM_TICKS>> enemyVisible;
-    vector<array<Vec2, TOTAL_AIM_TICKS>> enemyMinViewAngle;
-    vector<array<Vec2, TOTAL_AIM_TICKS>> enemyMaxViewAngle;
+    vector<array<Vec2, TOTAL_AIM_TICKS>> enemyRelativeFirstHitHeadMinViewAngle;
+    vector<array<Vec2, TOTAL_AIM_TICKS>> enemyRelativeFirstHitHeadMaxViewAngle;
+    vector<array<Vec2, TOTAL_AIM_TICKS>> enemyRelativeFirstHitHeadCurHeadViewAngle;
     vector<array<Vec3, TOTAL_AIM_TICKS>> attackerEyePos;
     vector<array<Vec3, TOTAL_AIM_TICKS>> victimEyePos;
     vector<array<Vec3, TOTAL_AIM_TICKS>> attackerVel;
     vector<array<Vec3, TOTAL_AIM_TICKS>> victimVel;
+    vector<array<Vec3, TOTAL_AIM_TICKS>> deltaPos;
     vector<array<double, TOTAL_AIM_TICKS>> eyeToHeadDistance;
     vector<AimWeaponType> weaponType;
     vector<double> distanceNormalization;
@@ -99,14 +100,23 @@ public:
            << demoTickId[index] << "," << gameTickId[index] << ","
            << engagementId[index] << "," << attackerPlayerId[index] << "," << victimPlayerId[index] << ",";
 
-        ss << numShotsFired[index] << "," << ticksSinceLastFire[index] << ","
-           << lastShotFiredTickId[index];
-
         for (size_t i = 0; i < TOTAL_AIM_TICKS; i++) {
-            ss << "," << deltaViewAngle[index][i].x << "," << deltaViewAngle[index][i].y
-               << "," << recoilAngle[index][i].x << "," << recoilAngle[index][i].y
-               << "," << deltaViewAngleRecoilAdjusted[index][i].x << "," << deltaViewAngleRecoilAdjusted[index][i].y
-               << "," << deltaPosition[index][i].x << "," << deltaPosition[index][i].y << "," << deltaPosition[index][i].z
+            ss << "," << attackerViewAngle[index][i].toCSV() << "," << idealViewAngle[index][i].toCSV()
+               << "," << deltaRelativeFirstHitHeadViewAngle[index][i].toCSV()
+               << "," << deltaRelativeCurHeadViewAngle[index][i].toCSV()
+               << "," << recoilIndex[index][i]
+               << "," << scaledRecoilAngle[index][i].toCSV()
+               << "," << ticksSinceLastFire[index][i] << "," << ticksSinceLastHoldingAttack[index][i]
+               << "," << ticksUntilNextFire[index][i] << "," << ticksUntilNextHoldingAttack[index][i]
+               << "," << enemyVisible[index][i]
+               << "," << enemyRelativeFirstHitHeadMinViewAngle[index][i].toCSV()
+               << "," << enemyRelativeFirstHitHeadMaxViewAngle[index][i].toCSV()
+               << "," << enemyRelativeFirstHitHeadCurHeadViewAngle[index][i].toCSV()
+               << "," << attackerEyePos[index][i].toCSV()
+               << "," << victimEyePos[index][i].toCSV()
+               << "," << attackerVel[index][i].toCSV()
+               << "," << victimVel[index][i].toCSV()
+               << "," << deltaPos[index][i].toCSV()
                << "," << eyeToHeadDistance[index][i];
         }
 
@@ -122,16 +132,41 @@ public:
 
     vector<string> getOtherColumnNames() override {
         vector<string> result;
-        result.push_back("num shots fired");
-        result.push_back("ticks since last fire");
-        result.push_back("last fire tick id");
         for (int i = -1*PAST_AIM_TICKS; i <= FUTURE_AIM_TICKS; i++) {
-            result.push_back("delta view angle x (t" + toSignedIntString(i, true) + ")");
-            result.push_back("delta view angle y (t" + toSignedIntString(i, true) + ")");
-            result.push_back("recoil angle x (t" + toSignedIntString(i, true) + ")");
-            result.push_back("recoil angle y (t" + toSignedIntString(i, true) + ")");
-            result.push_back("delta view angle recoil adjusted x (t" + toSignedIntString(i, true) + ")");
-            result.push_back("delta view angle recoil adjusted y (t" + toSignedIntString(i, true) + ")");
+            result.push_back("attacker view angle x (t" + toSignedIntString(i, true) + ")");
+            result.push_back("attacker view angle y (t" + toSignedIntString(i, true) + ")");
+            result.push_back("ideal view angle x (t" + toSignedIntString(i, true) + ")");
+            result.push_back("ideal view angle y (t" + toSignedIntString(i, true) + ")");
+            result.push_back("delta relative first hit head view angle x (t" + toSignedIntString(i, true) + ")");
+            result.push_back("delta relative first hit head view angle y (t" + toSignedIntString(i, true) + ")");
+            result.push_back("delta relative cur head view angle x (t" + toSignedIntString(i, true) + ")");
+            result.push_back("delta relative cur head view angle y (t" + toSignedIntString(i, true) + ")");
+            result.push_back("recoil index (t" + toSignedIntString(i, true) + ")");
+            result.push_back("scaled recoil angle x (t" + toSignedIntString(i, true) + ")");
+            result.push_back("scaled recoil angle y (t" + toSignedIntString(i, true) + ")");
+            result.push_back("ticks since last fire (t" + toSignedIntString(i, true) + ")");
+            result.push_back("ticks since last holding attack (t" + toSignedIntString(i, true) + ")");
+            result.push_back("ticks until next fire (t" + toSignedIntString(i, true) + ")");
+            result.push_back("ticks until next holding attack (t" + toSignedIntString(i, true) + ")");
+            result.push_back("enemy visible (t" + toSignedIntString(i, true) + ")");
+            result.push_back("enemy relative first hit head min view angle x (t" + toSignedIntString(i, true) + ")");
+            result.push_back("enemy relative first hit head min view angle y (t" + toSignedIntString(i, true) + ")");
+            result.push_back("enemy relative first hit head max view angle x (t" + toSignedIntString(i, true) + ")");
+            result.push_back("enemy relative first hit head max view angle y (t" + toSignedIntString(i, true) + ")");
+            result.push_back("enemy relative first hit head cur head view angle x (t" + toSignedIntString(i, true) + ")");
+            result.push_back("enemy relative first hit head cur head view angle y (t" + toSignedIntString(i, true) + ")");
+            result.push_back("attacker eye pos x (t" + toSignedIntString(i, true) + ")");
+            result.push_back("attacker eye pos y (t" + toSignedIntString(i, true) + ")");
+            result.push_back("attacker eye pos z (t" + toSignedIntString(i, true) + ")");
+            result.push_back("victim eye pos x (t" + toSignedIntString(i, true) + ")");
+            result.push_back("victim eye pos y (t" + toSignedIntString(i, true) + ")");
+            result.push_back("victim eye pos z (t" + toSignedIntString(i, true) + ")");
+            result.push_back("attacker vel x (t" + toSignedIntString(i, true) + ")");
+            result.push_back("attacker vel y (t" + toSignedIntString(i, true) + ")");
+            result.push_back("attacker vel z (t" + toSignedIntString(i, true) + ")");
+            result.push_back("victim vel x (t" + toSignedIntString(i, true) + ")");
+            result.push_back("victim vel y (t" + toSignedIntString(i, true) + ")");
+            result.push_back("victim vel z (t" + toSignedIntString(i, true) + ")");
             result.push_back("delta position x (t" + toSignedIntString(i, true) + ")");
             result.push_back("delta position y (t" + toSignedIntString(i, true) + ")");
             result.push_back("delta position z (t" + toSignedIntString(i, true) + ")");
