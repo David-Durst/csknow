@@ -55,14 +55,22 @@ public:
     vector<int64_t> engagementId;
     vector<int64_t> attackerPlayerId;
     vector<int64_t> victimPlayerId;
-    vector<int16_t> numShotsFired;
-    vector<int16_t> ticksSinceLastFire;
-    vector<int64_t> lastShotFiredTickId;
-    vector<array<Vec2, TOTAL_AIM_TICKS>> deltaViewAngle;
+    vector<array<Vec2, TOTAL_AIM_TICKS>> attackerViewAngle;
+    vector<array<Vec2, TOTAL_AIM_TICKS>> idealViewAngle;
+    vector<array<Vec2, TOTAL_AIM_TICKS>> deltaRelativeFirstHitHeadViewAngle;
+    vector<array<Vec2, TOTAL_AIM_TICKS>> deltaRelativeCurHeadViewAngle;
     vector<array<Vec2, TOTAL_AIM_TICKS>> recoilAngle;
     vector<array<Vec2, TOTAL_AIM_TICKS>> deltaViewAngleRecoilAdjusted;
     vector<array<Vec3, TOTAL_AIM_TICKS>> deltaPosition;
     vector<array<double, TOTAL_AIM_TICKS>> eyeToHeadDistance;
+    vector<array<int16_t, TOTAL_AIM_TICKS>> numShotsFired;
+    vector<array<int16_t, TOTAL_AIM_TICKS>> ticksSinceLastFire;
+    vector<array<int16_t, TOTAL_AIM_TICKS>> ticksSinceLastHoldingAttack;
+    vector<array<int16_t, TOTAL_AIM_TICKS>> ticksUntilNextFile;
+    vector<array<int16_t, TOTAL_AIM_TICKS>> ticksUntilNextHoldingAttack;
+    vector<array<bool, TOTAL_AIM_TICKS>> enemyVisible;
+    vector<array<Vec2, TOTAL_AIM_TICKS>> enemyMinViewAngle;
+    vector<array<Vec2, TOTAL_AIM_TICKS>> enemyMaxViewAngle;
     vector<AimWeaponType> weaponType;
     vector<double> distanceNormalization;
 
