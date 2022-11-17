@@ -186,6 +186,15 @@ Vec2 vectorAngles(const Vec3 &forward)
 }
 
 static inline __attribute__((always_inline))
+Vec2 viewFromOriginToDest(Vec3 origin, Vec3 dest) {
+    Vec3 targetVector = dest - origin;
+    Vec2 targetViewAngle = vectorAngles(targetVector);
+    targetViewAngle.makePitchNeg90To90();
+    targetViewAngle.makeYawNeg180To180();
+    return targetViewAngle;
+}
+
+static inline __attribute__((always_inline))
 Vec2 deltaViewFromOriginToDest(Vec3 origin, Vec3 dest, Vec2 curViewAngle) {
     Vec3 targetVector = dest - origin;
     Vec2 targetViewAngle = vectorAngles(targetVector);

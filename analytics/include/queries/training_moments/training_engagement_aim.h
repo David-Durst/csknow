@@ -73,8 +73,6 @@ public:
     vector<array<Vec3, TOTAL_AIM_TICKS>> victimEyePos;
     vector<array<Vec3, TOTAL_AIM_TICKS>> attackerVel;
     vector<array<Vec3, TOTAL_AIM_TICKS>> victimVel;
-    vector<array<Vec3, TOTAL_AIM_TICKS>> deltaPos;
-    vector<array<double, TOTAL_AIM_TICKS>> eyeToHeadDistance;
     vector<AimWeaponType> weaponType;
     vector<double> distanceNormalization;
 
@@ -116,8 +114,6 @@ public:
                << "," << victimEyePos[index][i].toCSV()
                << "," << attackerVel[index][i].toCSV()
                << "," << victimVel[index][i].toCSV()
-               << "," << deltaPos[index][i].toCSV()
-               << "," << eyeToHeadDistance[index][i];
         }
 
         ss << "," << enumAsInt(weaponType[index]);
@@ -167,10 +163,6 @@ public:
             result.push_back("victim vel x (t" + toSignedIntString(i, true) + ")");
             result.push_back("victim vel y (t" + toSignedIntString(i, true) + ")");
             result.push_back("victim vel z (t" + toSignedIntString(i, true) + ")");
-            result.push_back("delta position x (t" + toSignedIntString(i, true) + ")");
-            result.push_back("delta position y (t" + toSignedIntString(i, true) + ")");
-            result.push_back("delta position z (t" + toSignedIntString(i, true) + ")");
-            result.push_back("eye-to-head distance (t" + toSignedIntString(i, true) + ")");
         }
         result.push_back("weapon type");
         return result;
