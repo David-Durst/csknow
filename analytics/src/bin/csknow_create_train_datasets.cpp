@@ -166,7 +166,6 @@ int main(int argc, char * argv[]) {
     NavVisibleResult d2CellVisibleResult(dust2CellsName, false, map_visPoints.find("de_dust2")->second, "de_dust2");
     string dust2DangerName = "de_dust2_danger";
     NavDangerResult d2NavDangerResult = queryNavDanger(map_visPoints.find("de_dust2")->second, dust2MeshName);
-    std::cout << "processing aggression_event" << std::endl;
 
 
     // fire history
@@ -178,6 +177,7 @@ int main(int argc, char * argv[]) {
 
     // engagement events
     string engagementName = "engagement";
+    std::cout << "processing engagements" << std::endl;
     EngagementResult engagementResult = queryEngagementResult(games, filteredRounds, ticks, hurt);
     std::cout << "size: " << engagementResult.size << std::endl;
     std::cout << "processing engagements per tick aim" << std::endl;
