@@ -304,10 +304,16 @@ int main(int argc, char * argv[]) {
     TrajectorySegmentResult trajectorySegmentResult =
             queryAllTrajectories(players, games, filteredRounds, ticks, playerAtTick, nonEngagementTrajectoryResult);
     std::cout << "size: " << trajectorySegmentResult.size << std::endl;
+    string fireHistoryName = "fireHistory";
+    std::cout << "processing fire history" << std::endl;
+    csknow::fire_history::FireHistoryResult fireHistoryResult(filteredRounds, ticks);
+    fireHistoryResult.runQuery(games, weaponFire, playerAtTick);
+    std::cout << "size: " << fireHistoryResult.size << std::endl;
     std::cout << "processing training engagement aim training data set" << std::endl;
     string engagementAimName = "trainEngagementAim";
     TrainingEngagementAimResult engagementAimResult =
-        queryTrainingEngagementAim(games, filteredRounds, ticks, playerAtTick, weaponFire, engagementResult);
+        queryTrainingEngagementAim(games, filteredRounds, ticks, playerAtTick, weaponFire, engagementResult, fireHistoryResult,
+                                   map_visPoints.at("de_dust2"));
     std::cout << "size: " << engagementAimResult.size << std::endl;
     engagementAimResult.analyzeRollingWindowDifferences(filteredRounds, ticks, engagementPerTickAimResult);
     std::cout << "processing training navigation data set" << std::endl;

@@ -136,6 +136,12 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
                         playerAtTick.eyePosZ[attackerPATId]
                     };
 
+                    Vec3 victimFootPos {
+                        playerAtTick.posX[victimPATId],
+                        playerAtTick.posY[victimPATId],
+                        playerAtTick.posZ[victimPATId]
+                    };
+
                     Vec3 victimEyePos {
                         playerAtTick.posX[victimPATId],
                         playerAtTick.posY[victimPATId],
@@ -204,6 +210,25 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
                         }
                     }
                     tmpEnemyVisible[threadNum].back()[i] = enemyInFOV && enemyVisNoFOV;
+
+                    AABB victimAABB = getAABBForPlayer(victimFootPos);
+                    vector<Vec3> aabbCorners = getAABBCorners(victimAABB);
+                    Vec2 enemyMinViewAngle{std::numeric_limits<double>::max(), std::numeric_limits<double>::max()},
+                        enemyMaxViewAngle{-1*std::numeric_limits<double>::max(), -1*std::numeric_limits<double>::max()};
+                    for (const auto & aabbCorner : aabbCorners) {
+                        Vec2 aabbViewAngle = viewFromOriginToDest(attackerEyePos, aabbCorner);
+                        Vec2 deltaAABBViewAngle = deltaViewFromOriginToDest(attackerEyePos,
+                                                      engagementToFirstHitVictimHeadPos[engagementIndex],
+                                                      aabbViewAngle);
+                        enemyMinViewAngle = min(enemyMinViewAngle, deltaAABBViewAngle);
+                        enemyMaxViewAngle = max(enemyMaxViewAngle, deltaAABBViewAngle);
+                    }
+
+                    tmpEnemyRelativeFirstHitHeadMinViewAngle[threadNum].back()[i] = enemyMinViewAngle;
+                    tmpEnemyRelativeFirstHitHeadMaxViewAngle[threadNum].back()[i] = enemyMaxViewAngle;
+                    tmpEnemyRelativeFirstHitHeadCurHeadAngle[threadNum].back()[i] =
+                        deltaViewFromOriginToDest(attackerEyePos,
+                                                  engagementToFirstHitVictimHeadPos[engagementIndex], idealViewAngle);
 
                     tmpAttackerEyePos[threadNum].back()[i] = attackerEyePos;
                     tmpVictimEyePos[threadNum].back()[i] = victimEyePos;

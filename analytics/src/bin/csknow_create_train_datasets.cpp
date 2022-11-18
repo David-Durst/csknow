@@ -171,7 +171,7 @@ int main(int argc, char * argv[]) {
 
     // fire history
     string fireHistoryName = "fireHistory";
-    std::cout << "processing fire histry" << std::endl;
+    std::cout << "processing fire history" << std::endl;
     csknow::fire_history::FireHistoryResult fireHistoryResult(filteredRounds, ticks);
     fireHistoryResult.runQuery(games, weaponFire, playerAtTick);
     std::cout << "size: " << fireHistoryResult.size << std::endl;
@@ -215,7 +215,7 @@ int main(int argc, char * argv[]) {
     string engagementAimName = "engagementAim";
     TrainingEngagementAimResult engagementAimResult =
         queryTrainingEngagementAim(games, filteredRounds, ticks, playerAtTick, weaponFire, engagementResult,
-                                   fireHistoryResult);
+                                   fireHistoryResult, map_visPoints.at("de_dust2"));
     std::cout << "size: " << engagementAimResult.size << std::endl;
     engagementAimResult.analyzeRollingWindowDifferences(filteredRounds, ticks, engagementPerTickAimResult);
 

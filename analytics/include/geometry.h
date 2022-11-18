@@ -105,17 +105,6 @@ AABB getAABBForPlayer(Vec3 pos) {
 }
 
 static inline __attribute__((always_inline))
-AABB getAABBForPlayer(Vec3 pos, double scalingFactor) {
-    // for AABB that are smaller than whole bounding box, keep z a
-    AABB result;
-    result.min = {pos.x - WIDTH / 2 * scalingFactor, pos.y - WIDTH / 2 * scalingFactor,
-                  pos.z + HEIGHT / 2 - HEIGHT / 2 * scalingFactor};
-    result.max = {pos.x + WIDTH / 2 * scalingFactor, pos.y + WIDTH / 2 * scalingFactor,
-                  pos.z + HEIGHT / 2 + HEIGHT / 2 * scalingFactor};
-    return result;
-}
-
-static inline __attribute__((always_inline))
 double computeAABBSize(AABB box) {
     double xDistance = box.max.x - box.min.x;
     double yDistance = box.max.y - box.min.y;
@@ -135,6 +124,22 @@ bool pointInRegionMaxInclusive(AABB box, Vec3 point) {
     return point.x > box.min.x && point.x <= box.max.x &&
            point.y > box.min.y && point.y <= box.max.y &&
            point.z > box.min.z && point.z <= box.max.z;
+}
+
+static inline __attribute__((always_inline))
+vector<Vec3> getAABBCorners(AABB aabb) {
+    vector<Vec3> result;
+    for (size_t x = 0; x < 2; x++) {
+        for (size_t y = 0; y < 2; y++) {
+            for (size_t z = 0; z < 2; z++) {
+                result.push_back({
+                    x == 0 ? aabb.min.x : aabb.max.x,
+                    y == 0 ? aabb.min.y : aabb.max.y,
+                    z == 0 ? aabb.min.z : aabb.max.z
+                })
+            }
+        }
+    }
 }
 
 // https://github.com/ValveSoftware/source-sdk-2013/blob/master/sp/src/mathlib/mathlib_base.cpp#L901-L914
