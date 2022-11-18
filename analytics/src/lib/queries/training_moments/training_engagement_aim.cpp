@@ -6,6 +6,7 @@
 #include "queries/lookback.h"
 #include "queries/base_tables.h"
 #include "queries/rolling_window.h"
+#include "bots/analysis/vis_geometry.h"
 #include <omp.h>
 
 struct EngagementFireData {
@@ -17,7 +18,8 @@ struct EngagementFireData {
 TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, const Rounds & rounds, const Ticks & ticks,
                                                        const PlayerAtTick & playerAtTick, const WeaponFire & weaponFire,
                                                        const EngagementResult & engagementResult,
-                                                       const csknow::fire_history::FireHistoryResult & fireHistoryResult) {
+                                                       const csknow::fire_history::FireHistoryResult & fireHistoryResult,
+                                                       const VisPoints & visPoints) {
     int numThreads = omp_get_max_threads();
     vector<vector<int64_t>> tmpRoundIds(numThreads);
     vector<vector<int64_t>> tmpRoundStarts(numThreads);
@@ -33,21 +35,20 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
     vector<vector<array<Vec2, TOTAL_AIM_TICKS>>> tmpIdealViewAngle(numThreads);
     vector<vector<array<Vec2, TOTAL_AIM_TICKS>>> tmpDeltaRelativeFirstHitHeadViewAngle(numThreads);
     vector<vector<array<Vec2, TOTAL_AIM_TICKS>>> tmpDeltaRelativeCurHeadViewAngle(numThreads);
-    vector<vector<array<Vec2, TOTAL_AIM_TICKS>>> tmpRecoilIndex(numThreads);
+    vector<vector<array<float, TOTAL_AIM_TICKS>>> tmpRecoilIndex(numThreads);
     vector<vector<array<Vec2, TOTAL_AIM_TICKS>>> tmpScaledRecoilAngle(numThreads);
-    vector<vector<array<int16_t, TOTAL_AIM_TICKS>>> tmpTicksSinceLastFire(numThreads);
-    vector<vector<array<int16_t, TOTAL_AIM_TICKS>>> tmpTicksSinceLastHoldingAttack(numThreads);
-    vector<vector<array<int16_t, TOTAL_AIM_TICKS>>> tmpTicksUntilNextFire(numThreads);
-    vector<vector<array<int16_t, TOTAL_AIM_TICKS>>> tmpTicksUntilNextHoldingAttack(numThreads);
+    vector<vector<array<int64_t, TOTAL_AIM_TICKS>>> tmpTicksSinceLastFire(numThreads);
+    vector<vector<array<int64_t, TOTAL_AIM_TICKS>>> tmpTicksSinceLastHoldingAttack(numThreads);
+    vector<vector<array<int64_t, TOTAL_AIM_TICKS>>> tmpTicksUntilNextFire(numThreads);
+    vector<vector<array<int64_t, TOTAL_AIM_TICKS>>> tmpTicksUntilNextHoldingAttack(numThreads);
     vector<vector<array<bool, TOTAL_AIM_TICKS>>> tmpEnemyVisible(numThreads);
     vector<vector<array<Vec2, TOTAL_AIM_TICKS>>> tmpEnemyRelativeFirstHitHeadMinViewAngle(numThreads);
     vector<vector<array<Vec2, TOTAL_AIM_TICKS>>> tmpEnemyRelativeFirstHitHeadMaxViewAngle(numThreads);
     vector<vector<array<Vec2, TOTAL_AIM_TICKS>>> tmpEnemyRelativeFirstHitHeadCurHeadAngle(numThreads);
-    vector<vector<array<Vec2, TOTAL_AIM_TICKS>>> attackerEyePos(numThreads);
-    vector<vector<array<Vec2, TOTAL_AIM_TICKS>>> victimEyePos(numThreads);
-    vector<vector<array<Vec2, TOTAL_AIM_TICKS>>> attackerVel(numThreads);
-    vector<vector<array<Vec2, TOTAL_AIM_TICKS>>> victimVel(numThreads);
-    vector<vector<array<Vec2, TOTAL_AIM_TICKS>>> deltaPos(numThreads);
+    vector<vector<array<Vec3, TOTAL_AIM_TICKS>>> tmpAttackerEyePos(numThreads);
+    vector<vector<array<Vec3, TOTAL_AIM_TICKS>>> tmpVictimEyePos(numThreads);
+    vector<vector<array<Vec3, TOTAL_AIM_TICKS>>> tmpAttackerVel(numThreads);
+    vector<vector<array<Vec3, TOTAL_AIM_TICKS>>> tmpVictimVel(numThreads);
     vector<vector<AimWeaponType>> tmpWeaponType(numThreads);
     vector<vector<double>> tmpDistanceNormalization(numThreads);
 
@@ -68,6 +69,8 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
                                        {DurationType::Ticks, 0, 0, PAST_AIM_TICKS, FUTURE_AIM_TICKS});
         const PlayerToPATWindows & playerToPatWindows = rollingWindow.getWindows();
 
+        map<int64_t, Vec3> engagementToFirstHitVictimHeadPos;
+
         for (int64_t windowEndTickIndex = rollingWindow.lastReadTickId();
              windowEndTickIndex <= rounds.ticksPerRound[roundIndex].maxId; windowEndTickIndex = rollingWindow.readNextTick()) {
             int64_t tickIndex = rollingWindow.lastCurTickId();
@@ -84,6 +87,26 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
                 int64_t victimId = engagementResult.playerId[engagementIndex][1];
                 tmpVictimPlayerId[threadNum].push_back(victimId);
 
+                // if first time dealing with this engagement, get the PAT for the victim on first hit
+                if (engagementToFirstHitVictimHeadPos.find(engagementIndex) == engagementToFirstHitVictimHeadPos.end()) {
+                    int64_t firstHitTickIndex = engagementResult.hurtTickIds[engagementIndex][0];
+                    for (int64_t patIndex = ticks.patPerTick[firstHitTickIndex].minId;
+                         patIndex <= ticks.patPerTick[firstHitTickIndex].maxId; patIndex++) {
+                        if (playerAtTick.playerId[patIndex] == victimId) {
+                            engagementToFirstHitVictimHeadPos[engagementIndex] =
+                                getCenterHeadCoordinatesForPlayer({
+                                    playerAtTick.posX[patIndex],
+                                    playerAtTick.posY[patIndex],
+                                    playerAtTick.eyePosZ[patIndex]
+                                }, {
+                                    playerAtTick.viewX[patIndex],
+                                    playerAtTick.viewY[patIndex]
+                                }, playerAtTick.duckAmount[patIndex]);
+                            break;
+                        }
+                    }
+                }
+
                 tmpAttackerViewAngle[threadNum].push_back({});
                 tmpIdealViewAngle[threadNum].push_back({});
                 tmpDeltaRelativeFirstHitHeadViewAngle[threadNum].push_back({});
@@ -98,11 +121,10 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
                 tmpEnemyRelativeFirstHitHeadMinViewAngle[threadNum].push_back({});
                 tmpEnemyRelativeFirstHitHeadMaxViewAngle[threadNum].push_back({});
                 tmpEnemyRelativeFirstHitHeadCurHeadAngle[threadNum].push_back({});
-                attackerEyePos[threadNum].push_back({});
-                victimEyePos[threadNum].push_back({});
-                attackerVel[threadNum].push_back({});
-                victimVel[threadNum].push_back({});
-                deltaPos[threadNum].push_back({});
+                tmpAttackerEyePos[threadNum].push_back({});
+                tmpVictimEyePos[threadNum].push_back({});
+                tmpAttackerVel[threadNum].push_back({});
+                tmpVictimVel[threadNum].push_back({});
 
                 for (size_t i = 0; i < TOTAL_AIM_TICKS; i++) {
                     const int64_t & attackerPATId = playerToPatWindows.at(attackerId).fromOldest(static_cast<int64_t>(i));
@@ -134,16 +156,18 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
                         playerAtTick.viewY[attackerPATId]
                     };
                     curViewAngle.normalize();
-
                     Vec2 idealViewAngle = viewFromOriginToDest(attackerEyePos, victimHeadPos);
-                    Vec2 deltaViewAngle = deltaViewFromOriginToDest(attackerEyePos, victimHeadPos, curViewAngle);
 
                     tmpAttackerViewAngle[threadNum].back()[i] = curViewAngle;
                     tmpIdealViewAngle[threadNum].back()[i] = idealViewAngle;
 
-                    tmpDeltaViewAngle[threadNum].back()[i] = deltaViewAngle;
-                    tmpEyeToHeadDistance[threadNum].back()[i] = computeDistance(attackerEyePos, victimHeadPos);
-                    tmpDeltaPosition[threadNum].back()[i] = attackerEyePos - victimEyePos;
+                    tmpDeltaRelativeFirstHitHeadViewAngle[threadNum].back()[i] =
+                        deltaViewFromOriginToDest(attackerEyePos,
+                                                  engagementToFirstHitVictimHeadPos[engagementIndex], curViewAngle);
+                    tmpDeltaRelativeCurHeadViewAngle[threadNum].back()[i] =
+                        deltaViewFromOriginToDest(attackerEyePos, victimHeadPos, curViewAngle);
+
+                    tmpRecoilIndex[threadNum].back()[i] = playerAtTick.recoilIndex[attackerPATId];
 
                     // mul recoil by -1 as flipping all angles internally
                     Vec2 recoil {
@@ -151,8 +175,49 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
                         -1 * playerAtTick.aimPunchY[attackerPATId]
                     };
 
-                    tmpRecoilAngle[threadNum].back()[i] = recoil;
-                    tmpDeltaViewAngleRecoilAdjusted[threadNum].back()[i] = deltaViewAngle + recoil * WEAPON_RECOIL_SCALE;
+                    tmpScaledRecoilAngle[threadNum].back()[i] = recoil * WEAPON_RECOIL_SCALE;
+
+                    tmpTicksSinceLastFire[threadNum].back()[i] = fireHistoryResult.ticksSinceLastFire[attackerPATId];
+                    tmpTicksSinceLastHoldingAttack[threadNum].back()[i] =
+                        fireHistoryResult.ticksSinceLastHoldingAttack[attackerPATId];
+                    tmpTicksUntilNextFire[threadNum].back()[i] = fireHistoryResult.ticksUntilNextFire[attackerPATId];
+                    tmpTicksUntilNextHoldingAttack[threadNum].back()[i] =
+                        fireHistoryResult.ticksUntilNextHoldingAttack[attackerPATId];
+
+
+                    vector<CellIdAndDistance> attackerCellIdsByDistances = visPoints.getCellVisPointsByDistance(
+                        attackerEyePos);
+                    vector<CellIdAndDistance> victimCellIdsByDistances = visPoints.getCellVisPointsByDistance(
+                        victimEyePos);
+                    vector<CellVisPoint> victimTwoClosestCellVisPoints = {
+                        visPoints.getCellVisPoints()[victimCellIdsByDistances[0].cellId],
+                        visPoints.getCellVisPoints()[victimCellIdsByDistances[1].cellId]
+                    };
+                    bool enemyInFOV = getCellsInFOV(victimTwoClosestCellVisPoints, attackerEyePos,
+                                                    curViewAngle);
+                    // vis from either of attackers two closest cell vis points
+                    bool enemyVisNoFOV = false;
+                    for (size_t i = 0; i < 2; i++) {
+                        for (size_t j = 0; j < 2; j++) {
+                            enemyVisNoFOV |= visPoints.getCellVisPoints()[attackerCellIdsByDistances[i].cellId]
+                                .visibleFromCurPoint[victimCellIdsByDistances[j].cellId];
+                        }
+                    }
+                    tmpEnemyVisible[threadNum].back()[i] = enemyInFOV && enemyVisNoFOV;
+
+                    tmpAttackerEyePos[threadNum].back()[i] = attackerEyePos;
+                    tmpVictimEyePos[threadNum].back()[i] = victimEyePos;
+                    tmpAttackerVel[threadNum].back()[i] = {
+                        playerAtTick.velX[attackerPATId],
+                        playerAtTick.velY[attackerPATId],
+                        playerAtTick.velZ[attackerPATId]
+                    };
+                    tmpVictimVel[threadNum].back()[i] = {
+                        playerAtTick.velX[victimPATId],
+                        playerAtTick.velY[victimPATId],
+                        playerAtTick.velZ[victimPATId]
+                    };
+
                 }
 
                 // compute normalization constants, used to visualize inference

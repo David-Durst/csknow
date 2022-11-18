@@ -61,10 +61,10 @@ public:
     vector<array<Vec2, TOTAL_AIM_TICKS>> deltaRelativeCurHeadViewAngle;
     vector<array<float, TOTAL_AIM_TICKS>> recoilIndex;
     vector<array<Vec2, TOTAL_AIM_TICKS>> scaledRecoilAngle;
-    vector<array<int16_t, TOTAL_AIM_TICKS>> ticksSinceLastFire;
-    vector<array<int16_t, TOTAL_AIM_TICKS>> ticksSinceLastHoldingAttack;
-    vector<array<int16_t, TOTAL_AIM_TICKS>> ticksUntilNextFire;
-    vector<array<int16_t, TOTAL_AIM_TICKS>> ticksUntilNextHoldingAttack;
+    vector<array<int64_t, TOTAL_AIM_TICKS>> ticksSinceLastFire;
+    vector<array<int64_t, TOTAL_AIM_TICKS>> ticksSinceLastHoldingAttack;
+    vector<array<int64_t, TOTAL_AIM_TICKS>> ticksUntilNextFire;
+    vector<array<int64_t, TOTAL_AIM_TICKS>> ticksUntilNextHoldingAttack;
     vector<array<bool, TOTAL_AIM_TICKS>> enemyVisible;
     vector<array<Vec2, TOTAL_AIM_TICKS>> enemyRelativeFirstHitHeadMinViewAngle;
     vector<array<Vec2, TOTAL_AIM_TICKS>> enemyRelativeFirstHitHeadMaxViewAngle;
@@ -200,6 +200,7 @@ public:
 TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, const Rounds & rounds, const Ticks & ticks,
                                                        const PlayerAtTick & playerAtTick, const WeaponFire & weaponFire,
                                                        const EngagementResult & engagementResult,
-                                                       const csknow::fire_history::FireHistoryResult & fireHistoryResult);
+                                                       const csknow::fire_history::FireHistoryResult & fireHistoryResult,
+                                                       const VisPoints & visPoints);
 
 #endif //CSKNOW_TRAINING_ENGAGEMENT_AIM_H
