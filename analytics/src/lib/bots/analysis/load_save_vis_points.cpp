@@ -455,7 +455,8 @@ vector<CellIdAndDistance> VisPoints::getCellVisPointsByDistance(const Vec3 &pos)
     vector<CellIdAndDistance> result;
     for (size_t i = 0; i < numAreasToConsider; i++) {
         const AreaVisPoint & areaVisPoint = areaVisPoints[areaIdToVectorIndex.at(areaDistances[i].areaId)];
-        for (const auto & cellId : areaVisPoint.cells) {
+        for (size_t j = 0; j < areaVisPoint.cells.size(); j++) {
+            const auto & cellId = areaVisPoint.cells[j];
             result.push_back({
                 cellId,
                 vis_point_helpers::get_point_to_aabb_distance(pos, cellVisPoints[cellId].cellCoordinates)

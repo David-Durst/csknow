@@ -7,7 +7,9 @@
 #include "queries/base_tables.h"
 #include "queries/rolling_window.h"
 #include "bots/analysis/vis_geometry.h"
+#include "file_helpers.h"
 #include <omp.h>
+#include <atomic>
 
 struct EngagementFireData {
     int16_t numShotsFired = 0;
@@ -21,6 +23,7 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
                                                        const csknow::fire_history::FireHistoryResult & fireHistoryResult,
                                                        const VisPoints & visPoints) {
     int numThreads = omp_get_max_threads();
+    std::atomic<int64_t> roundsProcessed = 0;
     vector<vector<int64_t>> tmpRoundIds(numThreads);
     vector<vector<int64_t>> tmpRoundStarts(numThreads);
     vector<vector<int64_t>> tmpRoundSizes(numThreads);
@@ -56,7 +59,7 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
     // for each tick
     // for each engagement in each tick
     // record where supposed to aim vs where aiming and distance
-//#pragma omp parallel for
+#pragma omp parallel for
     for (int64_t roundIndex = 0; roundIndex < rounds.size; roundIndex++) {
         int threadNum = omp_get_thread_num();
         tmpRoundIds[threadNum].push_back(roundIndex);
@@ -242,7 +245,6 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
                         playerAtTick.velY[victimPATId],
                         playerAtTick.velZ[victimPATId]
                     };
-
                 }
 
                 // compute normalization constants, used to visualize inference
@@ -295,7 +297,11 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
         }
 
         tmpRoundSizes[threadNum].push_back(static_cast<int64_t>(tmpTickId[threadNum].size()) - tmpRoundStarts[threadNum].back());
+        roundsProcessed++;
+        printProgress(roundsProcessed, rounds.size);
     }
+
+    std::cout << "ready" << std::endl;
 
     TrainingEngagementAimResult result;
     mergeThreadResults(numThreads, result.rowIndicesPerRound, tmpRoundIds, tmpRoundStarts, tmpRoundSizes,
