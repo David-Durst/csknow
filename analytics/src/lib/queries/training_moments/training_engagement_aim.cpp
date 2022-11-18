@@ -16,7 +16,7 @@ struct EngagementFireData {
 };
 
 TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, const Rounds & rounds, const Ticks & ticks,
-                                                       const PlayerAtTick & playerAtTick, const WeaponFire & weaponFire,
+                                                       const PlayerAtTick & playerAtTick,
                                                        const EngagementResult & engagementResult,
                                                        const csknow::fire_history::FireHistoryResult & fireHistoryResult,
                                                        const VisPoints & visPoints) {
@@ -308,14 +308,31 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
                            result.engagementId.push_back(tmpEngagementId[minThreadId][tmpRowId]);
                            result.attackerPlayerId.push_back(tmpAttackerPlayerId[minThreadId][tmpRowId]);
                            result.victimPlayerId.push_back(tmpVictimPlayerId[minThreadId][tmpRowId]);
-                           result.numShotsFired.push_back(tmpNumShotsFired[minThreadId][tmpRowId]);
+                           result.attackerViewAngle.push_back(tmpAttackerViewAngle[minThreadId][tmpRowId]);
+                           result.idealViewAngle.push_back(tmpIdealViewAngle[minThreadId][tmpRowId]);
+                           result.deltaRelativeFirstHitHeadViewAngle.push_back(
+                               tmpDeltaRelativeFirstHitHeadViewAngle[minThreadId][tmpRowId]);
+                           result.deltaRelativeCurHeadViewAngle.push_back(
+                               tmpDeltaRelativeCurHeadViewAngle[minThreadId][tmpRowId]);
+                           result.recoilIndex.push_back(tmpRecoilIndex[minThreadId][tmpRowId]);
+                           result.scaledRecoilAngle.push_back(tmpScaledRecoilAngle[minThreadId][tmpRowId]);
                            result.ticksSinceLastFire.push_back(tmpTicksSinceLastFire[minThreadId][tmpRowId]);
-                           result.lastShotFiredTickId.push_back(tmpLastShotFiredTickId[minThreadId][tmpRowId]);
-                           result.deltaViewAngle.push_back(tmpDeltaViewAngle[minThreadId][tmpRowId]);
-                           result.recoilAngle.push_back(tmpRecoilAngle[minThreadId][tmpRowId]);
-                           result.deltaViewAngleRecoilAdjusted.push_back(tmpDeltaViewAngleRecoilAdjusted[minThreadId][tmpRowId]);
-                           result.deltaPosition.push_back(tmpDeltaPosition[minThreadId][tmpRowId]);
-                           result.eyeToHeadDistance.push_back(tmpEyeToHeadDistance[minThreadId][tmpRowId]);
+                           result.ticksSinceLastHoldingAttack.push_back(
+                               tmpTicksSinceLastHoldingAttack[minThreadId][tmpRowId]);
+                           result.ticksUntilNextFire.push_back(tmpTicksUntilNextFire[minThreadId][tmpRowId]);
+                           result.ticksUntilNextHoldingAttack.push_back(
+                               tmpTicksUntilNextHoldingAttack[minThreadId][tmpRowId]);
+                           result.enemyVisible.push_back(tmpEnemyVisible[minThreadId][tmpRowId]);
+                           result.enemyRelativeFirstHitHeadMinViewAngle.push_back(
+                               tmpEnemyRelativeFirstHitHeadMinViewAngle[minThreadId][tmpRowId]);
+                           result.enemyRelativeFirstHitHeadMaxViewAngle.push_back(
+                               tmpEnemyRelativeFirstHitHeadMaxViewAngle[minThreadId][tmpRowId]);
+                           result.enemyRelativeFirstHitHeadCurHeadViewAngle.push_back(
+                               tmpEnemyRelativeFirstHitHeadCurHeadAngle[minThreadId][tmpRowId]);
+                           result.attackerEyePos.push_back(tmpAttackerEyePos[minThreadId][tmpRowId]);
+                           result.victimEyePos.push_back(tmpVictimEyePos[minThreadId][tmpRowId]);
+                           result.attackerVel.push_back(tmpAttackerVel[minThreadId][tmpRowId]);
+                           result.victimVel.push_back(tmpVictimVel[minThreadId][tmpRowId]);
                            result.distanceNormalization.push_back(tmpDistanceNormalization[minThreadId][tmpRowId]);
                            result.weaponType.push_back(tmpWeaponType[minThreadId][tmpRowId]);
                        });

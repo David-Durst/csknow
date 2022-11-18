@@ -113,7 +113,7 @@ public:
                << "," << attackerEyePos[index][i].toCSV()
                << "," << victimEyePos[index][i].toCSV()
                << "," << attackerVel[index][i].toCSV()
-               << "," << victimVel[index][i].toCSV()
+               << "," << victimVel[index][i].toCSV();
         }
 
         ss << "," << enumAsInt(weaponType[index]);
@@ -198,7 +198,7 @@ public:
 
 
 TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, const Rounds & rounds, const Ticks & ticks,
-                                                       const PlayerAtTick & playerAtTick, const WeaponFire & weaponFire,
+                                                       const PlayerAtTick & playerAtTick,
                                                        const EngagementResult & engagementResult,
                                                        const csknow::fire_history::FireHistoryResult & fireHistoryResult,
                                                        const VisPoints & visPoints);

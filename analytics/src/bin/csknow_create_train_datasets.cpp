@@ -214,7 +214,7 @@ int main(int argc, char * argv[]) {
     std::cout << "processing training engagement aim training data set" << std::endl;
     string engagementAimName = "engagementAim";
     TrainingEngagementAimResult engagementAimResult =
-        queryTrainingEngagementAim(games, filteredRounds, ticks, playerAtTick, weaponFire, engagementResult,
+        queryTrainingEngagementAim(games, filteredRounds, ticks, playerAtTick, engagementResult,
                                    fireHistoryResult, map_visPoints.at("de_dust2"));
     std::cout << "size: " << engagementAimResult.size << std::endl;
     engagementAimResult.analyzeRollingWindowDifferences(filteredRounds, ticks, engagementPerTickAimResult);

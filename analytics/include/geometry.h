@@ -136,10 +136,11 @@ vector<Vec3> getAABBCorners(AABB aabb) {
                     x == 0 ? aabb.min.x : aabb.max.x,
                     y == 0 ? aabb.min.y : aabb.max.y,
                     z == 0 ? aabb.min.z : aabb.max.z
-                })
+                });
             }
         }
     }
+    return result;
 }
 
 // https://github.com/ValveSoftware/source-sdk-2013/blob/master/sp/src/mathlib/mathlib_base.cpp#L901-L914

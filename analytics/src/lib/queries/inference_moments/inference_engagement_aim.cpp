@@ -39,6 +39,7 @@ void InferenceEngagementAimResult::runQuery(const Rounds & rounds, const string 
 
     predictedDeltaViewAngle.resize(trainingEngagementAimResult.size);
     normalizedPredictedDeltaViewAngle.resize(trainingEngagementAimResult.size);
+    /*
 #pragma omp parallel for
     for (int64_t roundIndex = 0; roundIndex < rounds.size; roundIndex++) {
         auto options = torch::TensorOptions().dtype(at::kFloat);
@@ -132,4 +133,5 @@ void InferenceEngagementAimResult::runQuery(const Rounds & rounds, const string 
         printProgress(roundsProcessed, rounds.size);
     }
     size = trainingEngagementAimResult.size;
+        */
 }
