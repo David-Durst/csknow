@@ -65,10 +65,13 @@ public:
     vector<array<int64_t, TOTAL_AIM_TICKS>> ticksSinceLastHoldingAttack;
     vector<array<int64_t, TOTAL_AIM_TICKS>> ticksUntilNextFire;
     vector<array<int64_t, TOTAL_AIM_TICKS>> ticksUntilNextHoldingAttack;
-    vector<array<bool, TOTAL_AIM_TICKS>> enemyVisible;
-    vector<array<Vec2, TOTAL_AIM_TICKS>> enemyRelativeFirstHitHeadMinViewAngle;
-    vector<array<Vec2, TOTAL_AIM_TICKS>> enemyRelativeFirstHitHeadMaxViewAngle;
-    vector<array<Vec2, TOTAL_AIM_TICKS>> enemyRelativeFirstHitHeadCurHeadViewAngle;
+    vector<array<bool, TOTAL_AIM_TICKS>> victimVisible;
+    vector<array<Vec2, TOTAL_AIM_TICKS>> victimRelativeFirstHitHeadMinViewAngle;
+    vector<array<Vec2, TOTAL_AIM_TICKS>> victimRelativeFirstHitHeadMaxViewAngle;
+    vector<array<Vec2, TOTAL_AIM_TICKS>> victimRelativeFirstHitHeadCurHeadViewAngle;
+    vector<array<Vec2, TOTAL_AIM_TICKS>> victimRelativeCurHeadMinViewAngle;
+    vector<array<Vec2, TOTAL_AIM_TICKS>> victimRelativeCurHeadMaxViewAngle;
+    vector<array<Vec2, TOTAL_AIM_TICKS>> victimRelativeCurHeadCurHeadViewAngle;
     vector<array<Vec3, TOTAL_AIM_TICKS>> attackerEyePos;
     vector<array<Vec3, TOTAL_AIM_TICKS>> victimEyePos;
     vector<array<Vec3, TOTAL_AIM_TICKS>> attackerVel;
@@ -96,7 +99,7 @@ public:
     void oneLineToCSV(int64_t index, stringstream & ss) override {
         ss << index << "," << roundId[index] << "," << tickId[index] << ","
            << demoTickId[index] << "," << gameTickId[index] << ","
-           << engagementId[index] << "," << attackerPlayerId[index] << "," << victimPlayerId[index] << ",";
+           << engagementId[index] << "," << attackerPlayerId[index] << "," << victimPlayerId[index];
 
         for (size_t i = 0; i < TOTAL_AIM_TICKS; i++) {
             ss << "," << attackerViewAngle[index][i].toCSV() << "," << idealViewAngle[index][i].toCSV()
@@ -106,10 +109,13 @@ public:
                << "," << scaledRecoilAngle[index][i].toCSV()
                << "," << ticksSinceLastFire[index][i] << "," << ticksSinceLastHoldingAttack[index][i]
                << "," << ticksUntilNextFire[index][i] << "," << ticksUntilNextHoldingAttack[index][i]
-               << "," << enemyVisible[index][i]
-               << "," << enemyRelativeFirstHitHeadMinViewAngle[index][i].toCSV()
-               << "," << enemyRelativeFirstHitHeadMaxViewAngle[index][i].toCSV()
-               << "," << enemyRelativeFirstHitHeadCurHeadViewAngle[index][i].toCSV()
+               << "," << victimVisible[index][i]
+               << "," << victimRelativeFirstHitHeadMinViewAngle[index][i].toCSV()
+               << "," << victimRelativeFirstHitHeadMaxViewAngle[index][i].toCSV()
+               << "," << victimRelativeFirstHitHeadCurHeadViewAngle[index][i].toCSV()
+               << "," << victimRelativeCurHeadMinViewAngle[index][i].toCSV()
+               << "," << victimRelativeCurHeadMaxViewAngle[index][i].toCSV()
+               << "," << victimRelativeCurHeadCurHeadViewAngle[index][i].toCSV()
                << "," << attackerEyePos[index][i].toCSV()
                << "," << victimEyePos[index][i].toCSV()
                << "," << attackerVel[index][i].toCSV()
@@ -144,13 +150,19 @@ public:
             result.push_back("ticks since last holding attack (t" + toSignedIntString(i, true) + ")");
             result.push_back("ticks until next fire (t" + toSignedIntString(i, true) + ")");
             result.push_back("ticks until next holding attack (t" + toSignedIntString(i, true) + ")");
-            result.push_back("enemy visible (t" + toSignedIntString(i, true) + ")");
-            result.push_back("enemy relative first hit head min view angle x (t" + toSignedIntString(i, true) + ")");
-            result.push_back("enemy relative first hit head min view angle y (t" + toSignedIntString(i, true) + ")");
-            result.push_back("enemy relative first hit head max view angle x (t" + toSignedIntString(i, true) + ")");
-            result.push_back("enemy relative first hit head max view angle y (t" + toSignedIntString(i, true) + ")");
-            result.push_back("enemy relative first hit head cur head view angle x (t" + toSignedIntString(i, true) + ")");
-            result.push_back("enemy relative first hit head cur head view angle y (t" + toSignedIntString(i, true) + ")");
+            result.push_back("victim visible (t" + toSignedIntString(i, true) + ")");
+            result.push_back("victim relative first hit head min view angle x (t" + toSignedIntString(i, true) + ")");
+            result.push_back("victim relative first hit head min view angle y (t" + toSignedIntString(i, true) + ")");
+            result.push_back("victim relative first hit head max view angle x (t" + toSignedIntString(i, true) + ")");
+            result.push_back("victim relative first hit head max view angle y (t" + toSignedIntString(i, true) + ")");
+            result.push_back("victim relative first hit head cur head view angle x (t" + toSignedIntString(i, true) + ")");
+            result.push_back("victim relative first hit head cur head view angle y (t" + toSignedIntString(i, true) + ")");
+            result.push_back("victim relative cur head min view angle x (t" + toSignedIntString(i, true) + ")");
+            result.push_back("victim relative cur head min view angle y (t" + toSignedIntString(i, true) + ")");
+            result.push_back("victim relative cur head max view angle x (t" + toSignedIntString(i, true) + ")");
+            result.push_back("victim relative cur head max view angle y (t" + toSignedIntString(i, true) + ")");
+            result.push_back("victim relative cur head cur head view angle x (t" + toSignedIntString(i, true) + ")");
+            result.push_back("victim relative cur head cur head view angle y (t" + toSignedIntString(i, true) + ")");
             result.push_back("attacker eye pos x (t" + toSignedIntString(i, true) + ")");
             result.push_back("attacker eye pos y (t" + toSignedIntString(i, true) + ")");
             result.push_back("attacker eye pos z (t" + toSignedIntString(i, true) + ")");
