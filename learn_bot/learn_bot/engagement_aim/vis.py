@@ -124,10 +124,10 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame = None):
     window.configure(background='grey')
 
     # columns for reading d
-    cur_x_column = temporal_io_float_column_names.vis_columns[0]
-    cur_y_column = temporal_io_float_column_names.vis_columns[1]
-    all_x_columns = temporal_io_float_column_names.get_matching_cols(base_float_columns[0])
-    all_y_columns = temporal_io_float_column_names.get_matching_cols(base_float_columns[1])
+    cur_x_column = temporal_io_float_column_names.vis_columns[4]
+    cur_y_column = temporal_io_float_column_names.vis_columns[5]
+    all_x_columns = temporal_io_float_column_names.get_matching_cols(base_float_columns[4])
+    all_y_columns = temporal_io_float_column_names.get_matching_cols(base_float_columns[5])
 
     # create axes and their objects
     def setAxSettings(ax: plt.Axes, title: str):

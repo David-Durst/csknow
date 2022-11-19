@@ -17,8 +17,6 @@ class AimDataset(Dataset):
         self.engagement_id = df.loc[:, 'engagement id']
         self.attacker_player_id = df.loc[:, 'attacker player id']
         self.victim_player_id = df.loc[:, 'victim player id']
-        self.num_shots_fired = df.loc[:, 'num shots fired']
-        self.ticks_since_last_fire = df.loc[:, 'last fire tick id']
 
         round_starts = df.groupby('round id').first('index').loc[:, ['index']].rename(columns={'index': 'start index'})
         round_ends = df.groupby('round id').last('index').loc[:, ['index']].rename(columns={'index': 'end index'})
@@ -34,14 +32,26 @@ class AimDataset(Dataset):
     def __getitem__(self, idx):
         return self.X[idx], self.Y[idx]
 
+base_float_columns: List[str] = ["attacker view angle x", "attacker view angle angle y",
+                                 "ideal view angle x", "ideal view angle y",
+                                 "delta relative first hit head view angle x", "delta relative first hit head view angle y",
+                                 "delta relative cur head view angle x", "delta relative cur head view angle y",
+                                 "recoil index",
+                                 "scaled recoil angle x", "scaled recoil angle y",
+                                 "ticks since last fire", "ticks since last holding attack",
+                                 "ticks until next fire", "ticks until next holding attack",
+                                 "victim relative first hit head min view angle x", "enemy relative first hit head min view angle y",
+                                 "victim relative first hit head max view angle x", "enemy relative first hit head max view angle y",
+                                 "victim relative first hit head cur head view angle x", "enemy relative first hit head cur max view angle y",
+                                 "victim relative cur head min view angle x", "enemy relative cur head min view angle y",
+                                 "victim relative cur head max view angle x", "enemy relative cur head max view angle y",
+                                 "victim relative cur head cur head view angle x", "enemy relative cur head cur max view angle y",
+                                 "attacker eye pos x", "attacker eye pos y", "attacker eye pos z",
+                                 "victim eye pos x", "victim eye pos y", "victim eye pos z",
+                                 "attacker vel x", "attacker vel y", "attacker vel z",
+                                 "victim vel x", "victim vel y", "victim vel z"]
 
-base_float_columns: List[str] = ["delta view angle x", "delta view angle y",
-                                 "recoil angle x", "recoil angle y",
-                                 "delta view angle recoil adjusted x", "delta view angle recoil adjusted y",
-                                 "delta position x", "delta position y", "delta position z",
-                                 "eye-to-head distance"]
-
-non_temporal_float_columns = ["num shots fired", "ticks since last fire"]
+non_temporal_float_columns = []
 
 input_categorical_columns: List[str] = ["weapon type"]
 
