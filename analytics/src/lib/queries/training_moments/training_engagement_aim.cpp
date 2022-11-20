@@ -11,10 +11,9 @@
 #include <omp.h>
 #include <atomic>
 
-struct EngagementFireData {
-    int16_t numShotsFired = 0;
-    int16_t ticksSinceLastFire = std::numeric_limits<int16_t>::max();
-    int64_t lastShotFiredTickId = INVALID_ID;
+struct EngagementHurtData {
+    int64_t engagementIndex;
+    bool hitRemaining;
 };
 
 TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, const Rounds & rounds, const Ticks & ticks,
@@ -80,8 +79,63 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
         for (int64_t windowEndTickIndex = rollingWindow.lastReadTickId();
              windowEndTickIndex <= rounds.ticksPerRound[roundIndex].maxId; windowEndTickIndex = rollingWindow.readNextTick()) {
             int64_t tickIndex = rollingWindow.lastCurTickId();
+            // late start and early termination of engagements
+            // each player can be attacker in at most one engagement at a time
+            // late start: sort priority by
+            // 1. at least hit remaining in engagement
+            // 2. earliest starting of those with at least 1 hit remaining
+            // 3. if all remaining engagments have no active hits, take the engagement with the most ticks left
+            // early termination: filter out engagements where attacker dead during window of computation
+            map<int64_t, vector<EngagementHurtData>> playerToAttackingEngagements;
             for (const auto & [_0, _1, engagementIndex] :
                 engagementResult.engagementsPerTick.intervalToEvent.findOverlapping(tickIndex, tickIndex)) {
+                int64_t attackerId = engagementResult.playerId[engagementIndex][0];
+
+                // if attacker isn't alive during window, skip
+                bool attackerDeadDuringWindow = false;
+                for (size_t i = 0; i < TOTAL_AIM_TICKS; i++) {
+                    const int64_t & attackerPATId =
+                        playerToPatWindows.at(attackerId).fromOldest(static_cast<int64_t>(i));
+                    if (!playerAtTick.isAlive[attackerPATId]) {
+                        attackerDeadDuringWindow = true;
+                        break;
+                    }
+                }
+                if (attackerDeadDuringWindow) {
+                    continue;
+                }
+
+                // otherwise add for sorting
+                bool hitRemaining = false;
+                for (const auto & hurtTickId : engagementResult.hurtTickIds[engagementIndex]) {
+                    if (hurtTickId >= tickIndex) {
+                        hitRemaining = true;
+                        break;
+                    }
+                }
+                playerToAttackingEngagements[attackerId].push_back({engagementIndex, hitRemaining});
+            }
+            vector<int64_t> selectedEngagements;
+            for (auto & [_, attackingEngagements] : playerToAttackingEngagements) {
+                std::sort(attackingEngagements.begin(), attackingEngagements.end(),
+                          [engagementResult](const EngagementHurtData & a, const EngagementHurtData & b) {
+                    bool aStartFirst =
+                        (engagementResult.startTickId[a.engagementIndex] < engagementResult.startTickId[b.engagementIndex]) ||
+                        (engagementResult.startTickId[a.engagementIndex] == engagementResult.startTickId[b.engagementIndex] &&
+                            a.engagementIndex < b.engagementIndex);
+                    bool aEndLater =
+                      (engagementResult.endTickId[a.engagementIndex] > engagementResult.endTickId[b.engagementIndex]) ||
+                      (engagementResult.endTickId[a.engagementIndex] == engagementResult.endTickId[b.engagementIndex] &&
+                       a.engagementIndex > b.engagementIndex);
+                    return (a.hitRemaining && !b.hitRemaining) ||
+                        (a.hitRemaining && b.hitRemaining && aStartFirst) ||
+                        (!a.hitRemaining && !b.hitRemaining && aEndLater);
+                });
+                selectedEngagements.push_back(attackingEngagements[0].engagementIndex);
+            }
+
+            // compute data for relevant engagements
+            for (const auto & engagementIndex : selectedEngagements) {
                 tmpRoundId[threadNum].push_back(roundIndex);
                 tmpTickId[threadNum].push_back(tickIndex);
                 tmpDemoTickId[threadNum].push_back(ticks.demoTickNumber[tickIndex]);
@@ -92,6 +146,7 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
                 tmpAttackerPlayerId[threadNum].push_back(attackerId);
                 int64_t victimId = engagementResult.playerId[engagementIndex][1];
                 tmpVictimPlayerId[threadNum].push_back(victimId);
+
 
                 // if first time dealing with this engagement, get the PAT for the victim on first hit
                 if (engagementToFirstHitVictimHeadPos.find(engagementIndex) == engagementToFirstHitVictimHeadPos.end()) {
@@ -271,9 +326,8 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
                 }
 
                 // compute normalization constants, used to visualize inference
-                const int64_t & curAttackerPATId = playerToPatWindows.at(attackerId).fromNewest(FUTURE_AIM_TICKS);
-                const int64_t & curVictimPATId = playerToPatWindows.at(victimId).fromNewest(FUTURE_AIM_TICKS);
-
+                const int64_t &curAttackerPATId = playerToPatWindows.at(attackerId).fromNewest(FUTURE_AIM_TICKS);
+                const int64_t &curVictimPATId = playerToPatWindows.at(victimId).fromNewest(FUTURE_AIM_TICKS);
                 Vec3 curAttackerEyePos = {
                     playerAtTick.posX[curAttackerPATId],
                     playerAtTick.posY[curAttackerPATId],
