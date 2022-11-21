@@ -21,6 +21,20 @@ prior_blue = "#00D5FAFF"
 future_gray = "#727272FF"
 present_red = (1., 0., 0., 0.5)
 
+class PerspectiveColumns:
+    cur_x_column: str
+    cur_y_column: str
+    all_x_columns: List[str]
+    all_y_columns: List[str]
+
+    def __init__(self, x_col_offset, y_col_offset):
+        self.cur_x_column = temporal_io_float_column_names.vis_columns[x_col_offset]
+        self.cur_y_column = temporal_io_float_column_names.vis_columns[y_col_offset]
+        self.all_x_columns = \
+            temporal_io_float_column_names.get_matching_cols(base_float_columns[x_col_offset])
+        self.all_y_columns = \
+            temporal_io_float_column_names.get_matching_cols(base_float_columns[y_col_offset])
+
 
 # https://stackoverflow.com/questions/11690597/there-is-a-class-matplotlib-axes-axessubplot-but-the-module-matplotlib-axes-has
 # matplotlib.axes._subplots.AxesSubplot doesn't exist statically
@@ -29,36 +43,35 @@ present_red = (1., 0., 0., 0.5)
 @dataclass
 class AxObjs:
     ax: plt.Axes
-    cur_x_column: str
-    cur_y_column: str
-    all_x_columns: List[str]
-    all_y_columns: List[str]
+    first_hit_columns: PerspectiveColumns
+    cur_head_columns: PerspectiveColumns
     all_line: Optional[Line2D] = None
     prior_line: Optional[Line2D] = None
     present_line: Optional[Line2D] = None
     present_series_line: Optional[Line2D] = None
     future_line: Optional[Line2D] = None
 
-    def update_aim_plot(self, data_df: pd.DataFrame, tick_id: int, canvas: FigureCanvasTkAgg):
+    def update_aim_plot(self, data_df: pd.DataFrame, tick_id: int, canvas: FigureCanvasTkAgg, use_first_hit: bool):
+        columns = self.first_hit_columns if use_first_hit else self.cur_head_columns
         prior_df = data_df[data_df['tick id'] < tick_id]
-        prior_x_np = prior_df.loc[:, self.cur_x_column].to_numpy()
-        prior_y_np = prior_df.loc[:, self.cur_y_column].to_numpy()
+        prior_x_np = prior_df.loc[:, columns.cur_x_column].to_numpy()
+        prior_y_np = prior_df.loc[:, columns.cur_y_column].to_numpy()
 
         present_df = data_df[data_df['tick id'] == tick_id]
-        present_x_np = present_df.loc[:, self.cur_x_column].to_numpy()
-        present_y_np = present_df.loc[:, self.cur_y_column].to_numpy()
+        present_x_np = present_df.loc[:, columns.cur_x_column].to_numpy()
+        present_y_np = present_df.loc[:, columns.cur_y_column].to_numpy()
 
         # shows series used in prediction, not sust single point
         present_series_df = data_df[data_df['tick id'] == tick_id].iloc[0, :]
-        present_series_x_np = present_series_df.loc[self.all_x_columns].to_numpy()
-        present_series_y_np = present_series_df.loc[self.all_y_columns].to_numpy()
+        present_series_x_np = present_series_df.loc[columns.all_x_columns].to_numpy()
+        present_series_y_np = present_series_df.loc[columns.all_y_columns].to_numpy()
 
         future_df = data_df[data_df['tick id'] > tick_id]
-        future_x_np = future_df.loc[:, self.cur_x_column].to_numpy()
-        future_y_np = future_df.loc[:, self.cur_y_column].to_numpy()
+        future_x_np = future_df.loc[:, columns.cur_x_column].to_numpy()
+        future_y_np = future_df.loc[:, columns.cur_y_column].to_numpy()
 
-        all_x_np = data_df.loc[:, self.cur_x_column].to_numpy()
-        all_y_np = data_df.loc[:, self.cur_y_column].to_numpy()
+        all_x_np = data_df.loc[:, columns.cur_x_column].to_numpy()
+        all_y_np = data_df.loc[:, columns.cur_y_column].to_numpy()
 
         if self.prior_line is None:
             # ax1.plot(x, y,color='#FF0000', linewidth=2.2, label='Example line',
@@ -106,6 +119,7 @@ class AxObjs:
         canvas.draw()
 
 
+
 def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame = None):
     all_data_df = all_data_df.sort_values(['engagement id', 'tick id'])
     make_index_column(all_data_df)
@@ -118,20 +132,21 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame = None):
     window = tk.Tk()
     window.title("Aim Images")
     if pred_df is None:
-        window.geometry("650x800")
+        window.geometry("650x950")
     else:
-        window.geometry("1100x800")
+        window.geometry("1100x950")
     window.configure(background='grey')
 
     # columns for reading d
-    cur_x_column = temporal_io_float_column_names.vis_columns[4]
-    cur_y_column = temporal_io_float_column_names.vis_columns[5]
-    all_x_columns = temporal_io_float_column_names.get_matching_cols(base_float_columns[4])
-    all_y_columns = temporal_io_float_column_names.get_matching_cols(base_float_columns[5])
+    first_hit_columns = PerspectiveColumns(4, 5)
+    cur_hit_columns = PerspectiveColumns(6, 7)
 
     # create axes and their objects
+    first_hit_title_suffix = " Relative To First Hit Enemy Head"
+    cur_pos_title_suffix = " Relative To Cur Enemy Head"
     def setAxSettings(ax: plt.Axes, title: str):
-        ax.set_title(title)
+        ax.base_title = title
+        ax.set_title(title + first_hit_title_suffix)
         ax.set_xlabel("Yaw Delta (deg)")
         ax.set_ylabel("Pitch Delta (deg)")
         ax.set_aspect('equal', adjustable='box')
@@ -144,9 +159,9 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame = None):
         fig = Figure(figsize=(11., 5.5), dpi=100)
         input_ax, pred_ax = fig.subplots(nrows=1, ncols=2)
         setAxSettings(pred_ax, "Pred Aim Data")
-        pred_ax_objs = AxObjs(pred_ax, cur_x_column, cur_y_column, all_x_columns, all_y_columns)
+        pred_ax_objs = AxObjs(pred_ax, first_hit_columns, cur_hit_columns)
     setAxSettings(input_ax, "Input Aim Data")
-    input_ax_objs = AxObjs(input_ax, cur_x_column, cur_y_column, all_x_columns, all_y_columns)
+    input_ax_objs = AxObjs(input_ax, first_hit_columns, cur_hit_columns)
 
     canvas = FigureCanvasTkAgg(fig, master=window)  # A tk.DrawingArea.
     canvas.draw()
@@ -196,16 +211,17 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame = None):
         tick_id_text_var.set("Tick ID: " + str(cur_tick))
         tick_demo_id_text_var.set("Demo Tick ID: " + str(cur_demo_tick))
         tick_game_id_text_var.set("Game Tick ID: " + str(cur_game_tick))
-        input_ax_objs.update_aim_plot(selected_df, cur_tick, canvas)
+        input_ax_objs.update_aim_plot(selected_df, cur_tick, canvas, first_hit_view_angle_reference)
         if pred_df is not None:
-            pred_ax_objs.update_aim_plot(pred_selected_df, cur_tick, canvas)
+            pred_ax_objs.update_aim_plot(pred_selected_df, cur_tick, canvas, first_hit_view_angle_reference)
         cur_row = selected_df.loc[cur_index, :]
+        columns = first_hit_columns if first_hit_view_angle_reference else cur_hit_columns
         engagement_id_text_var.set(f"Round ID: {int(cur_row.loc['round id'])}, "
                                    f"Engagement ID: {int(cur_engagement)}")
         text_data_text_var.set(f"attacker: {int(cur_row.loc['attacker player id'].item())}, "
                                f"victim: {int(cur_row.loc['victim player id'].item())}, "
-                               f"cur view: ({cur_row.loc[cur_x_column].item():.2f}, "
-                               f"{cur_row.loc[cur_y_column].item():.2f})")
+                               f"cur view: ({cur_row.loc[columns.cur_x_column].item():.2f}, "
+                               f"{cur_row.loc[columns.cur_y_column].item():.2f})")
 
 
     def step_back_clicked():
@@ -246,6 +262,20 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame = None):
             tick_slider.set(cur_tick_index)
             tick_slider_changed(cur_tick_index)
 
+    first_hit_view_angle_reference = True
+    def toggle_reference_clicked():
+        nonlocal first_hit_view_angle_reference
+        first_hit_view_angle_reference = not first_hit_view_angle_reference
+        cur_tick_index = int(tick_slider.get())
+        if first_hit_view_angle_reference:
+            input_ax.set_title(input_ax.base_title + first_hit_title_suffix)
+            if pred_df is not None:
+                pred_ax.set_title(pred_ax.base_title + first_hit_title_suffix)
+        else:
+            input_ax.set_title(input_ax.base_title + cur_pos_title_suffix)
+            if pred_df is not None:
+                pred_ax.set_title(pred_ax.base_title + cur_pos_title_suffix)
+        tick_slider_changed(cur_tick_index)
 
     # state setters
     def change_engagement_dependent_data():
@@ -334,6 +364,8 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame = None):
     play_button.pack(side="left")
     forward_step_button = tk.Button(tick_step_frame, text="⏩", command=step_forward_clicked)
     forward_step_button.pack(side="left")
+    frame_of_reference_button = tk.Button(tick_step_frame, text="toggle reference", command=toggle_reference_clicked)
+    frame_of_reference_button.pack(side="left")
 
     # creating text label
     text_data_frame = tk.Frame(window)
