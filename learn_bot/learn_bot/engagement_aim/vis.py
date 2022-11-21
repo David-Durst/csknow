@@ -187,9 +187,9 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame = None):
     window = tk.Tk()
     window.title("Aim Images")
     if pred_df is None:
-        window.geometry("650x950")
+        window.geometry("650x1000")
     else:
-        window.geometry("1100x950")
+        window.geometry("1100x1000")
     window.configure(background='grey')
 
     # columns for reading d
@@ -277,8 +277,17 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame = None):
                                f"victim: {int(cur_row.loc['victim player id'].item())}, "
                                f"cur view: ({cur_row.loc[columns.cur_view_angle_x_column].item():.2f}, "
                                f"{cur_row.loc[columns.cur_view_angle_y_column].item():.2f}), "
-                               f"recoil index: {cur_row.loc['recoil index'].item():.2f}")
-
+                               f"recoil index: {cur_row.loc['recoil index (t)'].item():.2f},\n"
+                               f"attacker vel: ({cur_row.loc['attacker vel x (t)'].item():.2f}, "
+                               f"{cur_row.loc['attacker vel y (t)'].item():.2f}, "
+                               f"{cur_row.loc['attacker vel z (t)'].item():.2f}), "
+                               f"victim vel: ({cur_row.loc['victim vel x (t)'].item():.2f}, "
+                               f"{cur_row.loc['victim vel y (t)'].item():.2f}, "
+                               f"{cur_row.loc['victim vel z (t)'].item():.2f}),\n"
+                               f"ticks since/until fire: ({cur_row.loc['ticks since last fire (t)'].item():.2f}, "
+                               f"{cur_row.loc['ticks until next fire (t)'].item():.2f}), "
+                               f"ticks since/until hold attack: ({cur_row.loc['ticks since last holding attack (t)'].item():.2f}, "
+                               f"{cur_row.loc['ticks until next holding attack (t)'].item():.2f})")
 
     def step_back_clicked():
         cur_tick_index = int(tick_slider.get())
