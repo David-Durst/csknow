@@ -116,8 +116,6 @@ class AxObjs:
             present_df.loc[:, columns.victim_cur_head_view_angle_x_column].item(),
             present_df.loc[:, columns.victim_cur_head_view_angle_y_column].item()
         )
-        print(f"aabb ({aabb_min}, {aabb_max}, {aabb_size}) ")
-        print(f"head center ({head_center}) ")
         head_radius = (aabb_max[0] - aabb_min[0]) / 2. * head_scale
 
         if self.prior_line is None:
@@ -278,7 +276,8 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame = None):
         text_data_text_var.set(f"attacker: {int(cur_row.loc['attacker player id'].item())}, "
                                f"victim: {int(cur_row.loc['victim player id'].item())}, "
                                f"cur view: ({cur_row.loc[columns.cur_view_angle_x_column].item():.2f}, "
-                               f"{cur_row.loc[columns.cur_view_angle_y_column].item():.2f})")
+                               f"{cur_row.loc[columns.cur_view_angle_y_column].item():.2f}), "
+                               f"recoil index: {cur_row.loc['recoil index'].item():.2f}")
 
 
     def step_back_clicked():
