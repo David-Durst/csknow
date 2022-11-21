@@ -73,6 +73,7 @@ class AxObjs:
     present_series_line: Optional[Line2D] = None
     future_line: Optional[Line2D] = None
     fire_line: Optional[Line2D] = None
+    hold_attack_line: Optional[Line2D] = None
     victim_head_circle: Optional[Circle] = None
     victim_aabb: Optional[Rectangle] = None
 
@@ -98,6 +99,10 @@ class AxObjs:
         fire_df = data_df[data_df['ticks until next fire (t)'] == 0.]
         fire_x_np = fire_df.loc[:, columns.cur_view_angle_x_column].to_numpy()
         fire_y_np = fire_df.loc[:, columns.cur_view_angle_y_column].to_numpy()
+
+        hold_attack_df = data_df[data_df['ticks until next holding attack (t)'] == 0.]
+        hold_attack_x_np = hold_attack_df.loc[:, columns.cur_view_angle_x_column].to_numpy()
+        hold_attack_y_np = hold_attack_df.loc[:, columns.cur_view_angle_y_column].to_numpy()
 
         all_x_np = data_df.loc[:, columns.cur_view_angle_x_column].to_numpy()
         all_y_np = data_df.loc[:, columns.cur_view_angle_y_column].to_numpy()
@@ -136,6 +141,9 @@ class AxObjs:
                                               marker='o', mfc=present_red, mec=present_red)
             self.fire_line, = self.ax.plot(fire_x_np, fire_y_np, linestyle="None", label="Fire",
                                               marker='|', mfc=fire_attack_white, mec=fire_attack_white)
+            self.hold_attack_line, = self.ax.plot(hold_attack_x_np, hold_attack_y_np,
+                                                  linestyle="None", label="Attack",
+                                                  marker='_', mfc=fire_attack_white, mec=fire_attack_white)
             self.victim_aabb = Rectangle(aabb_min, aabb_size[0], aabb_size[1],
                                          linewidth=2, edgecolor=aabb_green, facecolor='none')
             self.ax.add_patch(self.victim_aabb)
@@ -148,6 +156,7 @@ class AxObjs:
             self.future_line.set_data(future_x_np, future_y_np)
             self.present_line.set_data(present_x_np, present_y_np)
             self.fire_line.set_data(fire_x_np, fire_y_np)
+            self.hold_attack_line.set_data(hold_attack_x_np, hold_attack_y_np)
             self.victim_aabb.set_xy(aabb_min)
             self.victim_aabb.set_width(aabb_size[0])
             self.victim_aabb.set_height(aabb_size[1])
@@ -160,7 +169,7 @@ class AxObjs:
         self.ax.autoscale()
         legend = self.ax.legend()
         for handle in legend.legendHandles:
-            if handle.get_label() == "Fire":
+            if handle.get_label() == "Fire" or handle.get_label() == "Attack":
                 handle.set_mfc(fire_attack_black)
                 handle.set_mec(fire_attack_black)
 
