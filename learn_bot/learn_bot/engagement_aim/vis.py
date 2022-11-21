@@ -9,6 +9,14 @@ from matplotlib.backends.backend_tkagg import (
 from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
 
+weapon_type_to_str = {
+    0: "Pistol",
+    1: "SMG",
+    2: "Heavy",
+    3: "AR",
+    4: "Sniper",
+    5: "Unknown"
+}
 
 def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame = None):
     all_data_df = all_data_df.sort_values(['engagement id', 'tick id'])
@@ -110,6 +118,7 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame = None):
                                    f"Engagement ID: {int(cur_engagement)}")
         text_data_text_var.set(f"attacker: {int(cur_row.loc['attacker player id'].item())}, "
                                f"victim: {int(cur_row.loc['victim player id'].item())}, "
+                               f"weapon type: {weapon_type_to_str[int(cur_row.loc['weapon type'].item())]}, "
                                f"cur view: ({cur_row.loc[columns.cur_view_angle_x_column].item():.2f}, "
                                f"{cur_row.loc[columns.cur_view_angle_y_column].item():.2f}), "
                                f"recoil index: {cur_row.loc['recoil index (t)'].item():.2f},\n"
