@@ -12,6 +12,7 @@ from matplotlib.backends.backend_tkagg import (
 from matplotlib.figure import Figure
 from matplotlib.lines import Line2D
 import matplotlib.pyplot as plt
+from matplotlib.patches import Rectangle, Circle
 from dataclasses import dataclass
 
 # line colors
@@ -20,20 +21,44 @@ present_series_yellow = "#A89932FF"
 prior_blue = "#00D5FAFF"
 future_gray = "#727272FF"
 present_red = (1., 0., 0., 0.5)
+aabb_green = (0., 1., 0., 0.5)
+
+# very unscientific head scale relative to rest of body
+head_scale = 1. / 6.
+
 
 class PerspectiveColumns:
-    cur_x_column: str
-    cur_y_column: str
-    all_x_columns: List[str]
-    all_y_columns: List[str]
+    cur_view_angle_x_column: str
+    cur_view_angle_y_column: str
+    all_view_angle_x_columns: List[str]
+    all_view_angle_y_columns: List[str]
+    victim_min_view_angle_x_column: str
+    victim_min_view_angle_y_column: str
+    victim_max_view_angle_x_column: str
+    victim_max_view_angle_y_column: str
+    victim_cur_head_view_angle_x_column: str
+    victim_cur_head_view_angle_y_column: str
 
-    def __init__(self, x_col_offset, y_col_offset):
-        self.cur_x_column = temporal_io_float_column_names.vis_columns[x_col_offset]
-        self.cur_y_column = temporal_io_float_column_names.vis_columns[y_col_offset]
-        self.all_x_columns = \
+    def __init__(self, x_col_offset, victim_min_view_angle_x_offset):
+        y_col_offset = x_col_offset + 1
+        self.cur_view_angle_x_column = temporal_io_float_column_names.vis_columns[x_col_offset]
+        self.cur_view_angle_y_column = temporal_io_float_column_names.vis_columns[y_col_offset]
+        self.all_view_angle_x_columns = \
             temporal_io_float_column_names.get_matching_cols(base_float_columns[x_col_offset])
-        self.all_y_columns = \
+        self.all_view_angle_y_columns = \
             temporal_io_float_column_names.get_matching_cols(base_float_columns[y_col_offset])
+        self.victim_min_view_angle_x_column = \
+            temporal_io_float_column_names.vis_columns[victim_min_view_angle_x_offset]
+        self.victim_min_view_angle_y_column = \
+            temporal_io_float_column_names.vis_columns[victim_min_view_angle_x_offset + 1]
+        self.victim_max_view_angle_x_column = \
+            temporal_io_float_column_names.vis_columns[victim_min_view_angle_x_offset + 2]
+        self.victim_max_view_angle_y_column = \
+            temporal_io_float_column_names.vis_columns[victim_min_view_angle_x_offset + 3]
+        self.victim_cur_head_view_angle_x_column = \
+            temporal_io_float_column_names.vis_columns[victim_min_view_angle_x_offset + 4]
+        self.victim_cur_head_view_angle_y_column = \
+            temporal_io_float_column_names.vis_columns[victim_min_view_angle_x_offset + 5]
 
 
 # https://stackoverflow.com/questions/11690597/there-is-a-class-matplotlib-axes-axessubplot-but-the-module-matplotlib-axes-has
@@ -50,28 +75,50 @@ class AxObjs:
     present_line: Optional[Line2D] = None
     present_series_line: Optional[Line2D] = None
     future_line: Optional[Line2D] = None
+    victim_head_circle: Optional[Circle] = None
+    victim_aabb: Optional[Rectangle] = None
 
     def update_aim_plot(self, data_df: pd.DataFrame, tick_id: int, canvas: FigureCanvasTkAgg, use_first_hit: bool):
         columns = self.first_hit_columns if use_first_hit else self.cur_head_columns
         prior_df = data_df[data_df['tick id'] < tick_id]
-        prior_x_np = prior_df.loc[:, columns.cur_x_column].to_numpy()
-        prior_y_np = prior_df.loc[:, columns.cur_y_column].to_numpy()
+        prior_x_np = prior_df.loc[:, columns.cur_view_angle_x_column].to_numpy()
+        prior_y_np = prior_df.loc[:, columns.cur_view_angle_y_column].to_numpy()
 
         present_df = data_df[data_df['tick id'] == tick_id]
-        present_x_np = present_df.loc[:, columns.cur_x_column].to_numpy()
-        present_y_np = present_df.loc[:, columns.cur_y_column].to_numpy()
+        present_x_np = present_df.loc[:, columns.cur_view_angle_x_column].to_numpy()
+        present_y_np = present_df.loc[:, columns.cur_view_angle_y_column].to_numpy()
 
-        # shows series used in prediction, not sust single point
+        # shows series used in prediction, not just single point
         present_series_df = data_df[data_df['tick id'] == tick_id].iloc[0, :]
-        present_series_x_np = present_series_df.loc[columns.all_x_columns].to_numpy()
-        present_series_y_np = present_series_df.loc[columns.all_y_columns].to_numpy()
+        present_series_x_np = present_series_df.loc[columns.all_view_angle_x_columns].to_numpy()
+        present_series_y_np = present_series_df.loc[columns.all_view_angle_y_columns].to_numpy()
 
         future_df = data_df[data_df['tick id'] > tick_id]
-        future_x_np = future_df.loc[:, columns.cur_x_column].to_numpy()
-        future_y_np = future_df.loc[:, columns.cur_y_column].to_numpy()
+        future_x_np = future_df.loc[:, columns.cur_view_angle_x_column].to_numpy()
+        future_y_np = future_df.loc[:, columns.cur_view_angle_y_column].to_numpy()
 
-        all_x_np = data_df.loc[:, columns.cur_x_column].to_numpy()
-        all_y_np = data_df.loc[:, columns.cur_y_column].to_numpy()
+        all_x_np = data_df.loc[:, columns.cur_view_angle_x_column].to_numpy()
+        all_y_np = data_df.loc[:, columns.cur_view_angle_y_column].to_numpy()
+
+        aabb_min = (
+            present_df.loc[:, columns.victim_min_view_angle_x_column].item(),
+            present_df.loc[:, columns.victim_min_view_angle_y_column].item()
+        )
+        aabb_max = (
+            present_df.loc[:, columns.victim_max_view_angle_x_column].item(),
+            present_df.loc[:, columns.victim_max_view_angle_y_column].item()
+        )
+        aabb_size = (
+            aabb_max[0] - aabb_min[0],
+            aabb_max[1] - aabb_min[1]
+        )
+        head_center = (
+            present_df.loc[:, columns.victim_cur_head_view_angle_x_column].item(),
+            present_df.loc[:, columns.victim_cur_head_view_angle_y_column].item()
+        )
+        print(f"aabb ({aabb_min}, {aabb_max}, {aabb_size}) ")
+        print(f"head center ({head_center}) ")
+        head_radius = (aabb_max[0] - aabb_min[0]) / 2. * head_scale
 
         if self.prior_line is None:
             # ax1.plot(x, y,color='#FF0000', linewidth=2.2, label='Example line',
@@ -87,12 +134,22 @@ class AxObjs:
                                              marker='o', mfc=future_gray, mec=future_gray)
             self.present_line, = self.ax.plot(present_x_np, present_y_np, linestyle="None", label="Present",
                                               marker='o', mfc=present_red, mec=present_red)
+            self.victim_aabb = Rectangle(aabb_min, aabb_size[0], aabb_size[1],
+                                         linewidth=2, edgecolor=aabb_green, facecolor='none')
+            self.ax.add_patch(self.victim_aabb)
+            self.victim_head_circle = Circle(head_center, head_radius, color=aabb_green)
+            self.ax.add_patch(self.victim_head_circle)
         else:
             self.all_line.set_data(all_x_np, all_y_np)
             self.present_series_line.set_data(present_series_x_np, present_series_y_np)
             self.prior_line.set_data(prior_x_np, prior_y_np)
             self.future_line.set_data(future_x_np, future_y_np)
             self.present_line.set_data(present_x_np, present_y_np)
+            self.victim_aabb.set_xy(aabb_min)
+            self.victim_aabb.set_width(aabb_size[0])
+            self.victim_aabb.set_height(aabb_size[1])
+            self.victim_head_circle.set_center(head_center)
+            self.victim_head_circle.set_radius(head_radius)
 
         # recompute the ax.dataLim
         self.ax.relim()
@@ -138,8 +195,8 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame = None):
     window.configure(background='grey')
 
     # columns for reading d
-    first_hit_columns = PerspectiveColumns(4, 5)
-    cur_hit_columns = PerspectiveColumns(6, 7)
+    first_hit_columns = PerspectiveColumns(4, 15)
+    cur_hit_columns = PerspectiveColumns(6, 21)
 
     # create axes and their objects
     first_hit_title_suffix = " Relative To First Hit Enemy Head"
@@ -220,8 +277,8 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame = None):
                                    f"Engagement ID: {int(cur_engagement)}")
         text_data_text_var.set(f"attacker: {int(cur_row.loc['attacker player id'].item())}, "
                                f"victim: {int(cur_row.loc['victim player id'].item())}, "
-                               f"cur view: ({cur_row.loc[columns.cur_x_column].item():.2f}, "
-                               f"{cur_row.loc[columns.cur_y_column].item():.2f})")
+                               f"cur view: ({cur_row.loc[columns.cur_view_angle_x_column].item():.2f}, "
+                               f"{cur_row.loc[columns.cur_view_angle_y_column].item():.2f})")
 
 
     def step_back_clicked():
