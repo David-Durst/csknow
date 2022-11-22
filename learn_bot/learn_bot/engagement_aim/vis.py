@@ -185,19 +185,19 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame = None):
         if first_hit_view_angle_reference:
             input_ax.set_title(input_ax.base_title + first_hit_title_suffix)
             input_ax.set_xlabel(first_hit_x_label)
-            input_ax.set_xlabel(first_hit_y_label)
+            input_ax.set_ylabel(first_hit_y_label)
             if pred_df is not None:
                 pred_ax.set_title(pred_ax.base_title + first_hit_title_suffix)
                 pred_ax.set_xlabel(first_hit_x_label)
-                pred_ax.set_xlabel(first_hit_y_label)
+                pred_ax.set_ylabel(first_hit_y_label)
         else:
             input_ax.set_title(input_ax.base_title + cur_pos_title_suffix)
             input_ax.set_xlabel(cur_pos_x_label)
-            input_ax.set_xlabel(cur_pos_y_label)
+            input_ax.set_ylabel(cur_pos_y_label)
             if pred_df is not None:
                 pred_ax.set_title(pred_ax.base_title + cur_pos_title_suffix)
                 pred_ax.set_xlabel(cur_pos_x_label)
-                pred_ax.set_xlabel(cur_pos_y_label)
+                pred_ax.set_ylabel(cur_pos_y_label)
         tick_slider_changed(cur_tick_index)
 
     # state setters
