@@ -15,10 +15,11 @@ all_gray = (0.87, 0.87, 0.87, 1)
 present_series_yellow = "#A89932FF"
 prior_blue = "#00D5FAFF"
 future_gray = "#727272FF"
-present_red = (1., 0., 0., 0.5)
+present_red = (1., 0., 0., 1.)
 fire_attack_white = (1., 1., 1., 1.)
 fire_attack_black = (0., 0., 0., 1.)
 aabb_green = (0., 1., 0., 0.5)
+recoil_pink = (1., 0., 1., 1.)
 
 # very unscientific head scale relative to rest of body
 head_scale = 1. / 6.
@@ -35,8 +36,10 @@ class PerspectiveColumns:
     victim_max_view_angle_y_column: str
     victim_cur_head_view_angle_x_column: str
     victim_cur_head_view_angle_y_column: str
+    recoil_x_column: str
+    recoil_y_column: str
 
-    def __init__(self, x_col_offset, victim_min_view_angle_x_offset):
+    def __init__(self, x_col_offset, victim_min_view_angle_x_offset, recoil_offset):
         y_col_offset = x_col_offset + 1
         self.cur_view_angle_x_column = temporal_io_float_column_names.vis_columns[x_col_offset]
         self.cur_view_angle_y_column = temporal_io_float_column_names.vis_columns[y_col_offset]
@@ -56,6 +59,10 @@ class PerspectiveColumns:
             temporal_io_float_column_names.vis_columns[victim_min_view_angle_x_offset + 4]
         self.victim_cur_head_view_angle_y_column = \
             temporal_io_float_column_names.vis_columns[victim_min_view_angle_x_offset + 5]
+        self.recoil_x_column = \
+            temporal_io_float_column_names.vis_columns[recoil_offset]
+        self.recoil_y_column = \
+            temporal_io_float_column_names.vis_columns[recoil_offset + 1]
 
 
 # https://stackoverflow.com/questions/11690597/there-is-a-class-matplotlib-axes-axessubplot-but-the-module-matplotlib-axes-has
@@ -74,6 +81,7 @@ class AxObjs:
     future_line: Optional[Line2D] = None
     fire_line: Optional[Line2D] = None
     hold_attack_line: Optional[Line2D] = None
+    recoil_line: Optional[Line2D] = None
     victim_head_circle: Optional[Circle] = None
     victim_aabb: Optional[Rectangle] = None
 
@@ -103,6 +111,9 @@ class AxObjs:
         hold_attack_df = data_df[data_df['ticks until next holding attack (t)'] == 0.]
         hold_attack_x_np = hold_attack_df.loc[:, columns.cur_view_angle_x_column].to_numpy()
         hold_attack_y_np = hold_attack_df.loc[:, columns.cur_view_angle_y_column].to_numpy()
+
+        recoil_x_np = present_df.loc[:, columns.recoil_x_column].to_numpy() + present_x_np
+        recoil_y_np = present_df.loc[:, columns.recoil_y_column].to_numpy() + present_y_np
 
         all_x_np = data_df.loc[:, columns.cur_view_angle_x_column].to_numpy()
         all_y_np = data_df.loc[:, columns.cur_view_angle_y_column].to_numpy()
@@ -137,6 +148,8 @@ class AxObjs:
                                             marker='o', mfc=prior_blue, mec=prior_blue)
             self.future_line, = self.ax.plot(future_x_np, future_y_np, linestyle="None", label="Future",
                                              marker='o', mfc=future_gray, mec=future_gray)
+            self.recoil_line, = self.ax.plot(recoil_x_np, recoil_y_np, linestyle="None", label="Recoil",
+                                             marker='o', mfc=recoil_pink, mec=recoil_pink)
             self.present_line, = self.ax.plot(present_x_np, present_y_np, linestyle="None", label="Present",
                                               marker='o', mfc=present_red, mec=present_red)
             self.fire_line, = self.ax.plot(fire_x_np, fire_y_np, linestyle="None", label="Fire",
@@ -154,6 +167,7 @@ class AxObjs:
             self.present_series_line.set_data(present_series_x_np, present_series_y_np)
             self.prior_line.set_data(prior_x_np, prior_y_np)
             self.future_line.set_data(future_x_np, future_y_np)
+            self.recoil_line.set_data(recoil_x_np, recoil_y_np)
             self.present_line.set_data(present_x_np, present_y_np)
             self.fire_line.set_data(fire_x_np, fire_y_np)
             self.hold_attack_line.set_data(hold_attack_x_np, hold_attack_y_np)
