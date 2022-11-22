@@ -19,6 +19,8 @@ present_red = (1., 0., 0., 1.)
 fire_attack_hit_white = (1., 1., 1., 1.)
 fire_attack_black = (0., 0., 0., 1.)
 aabb_green = (0., 1., 0., 0.5)
+aabb_blue = (0., 0., 0.61, 0.5)
+aabb_black = (1., 1., 1., 1.0)
 recoil_pink = (1., 0., 1., 1.)
 
 # very unscientific head scale relative to rest of body
@@ -140,6 +142,8 @@ class AxObjs:
             present_df.loc[:, columns.victim_cur_head_view_angle_y_column].item()
         )
         head_radius = (aabb_max[0] - aabb_min[0]) / 2. * head_scale
+        victim_visible = present_df.loc[:, 'victim visible (t)'].item()
+        victim_alive = present_df.loc[:, 'victim alive (t)'].item()
 
         if self.prior_line is None:
             # ax1.plot(x, y,color='#FF0000', linewidth=2.2, label='Example line',
@@ -185,6 +189,16 @@ class AxObjs:
             self.victim_aabb.set_height(aabb_size[1])
             self.victim_head_circle.set_center(head_center)
             self.victim_head_circle.set_radius(head_radius)
+
+        if not victim_alive:
+            self.victim_aabb.set_edgecolor(aabb_black)
+            self.victim_head_circle.set_color(aabb_black)
+        elif victim_visible:
+            self.victim_aabb.set_edgecolor(aabb_green)
+            self.victim_head_circle.set_color(aabb_green)
+        else:
+            self.victim_aabb.set_edgecolor(aabb_blue)
+            self.victim_head_circle.set_color(aabb_blue)
 
         # recompute the ax.dataLim
         self.ax.relim()
