@@ -29,10 +29,10 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame = None):
     #This creates the main window of an application
     window = tk.Tk()
     window.title("Aim Images")
-    if pred_df is None:
-        window.geometry("650x1000")
-    else:
-        window.geometry("1100x1000")
+    #if pred_df is None:
+    #    window.geometry("650x1000")
+    #else:
+    #    window.geometry("1100x1000")
     window.configure(background='grey')
 
     # columns for reading d
@@ -61,9 +61,9 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame = None):
         fig = Figure(figsize=(11., 5.5), dpi=100)
         input_ax, pred_ax = fig.subplots(nrows=1, ncols=2)
         setAxSettings(pred_ax, "Pred Aim Data")
-        pred_ax_objs = AxObjs(pred_ax, first_hit_columns, cur_hit_columns)
+        pred_ax_objs = AxObjs(fig, pred_ax, first_hit_columns, cur_hit_columns)
     setAxSettings(input_ax, "Input Aim Data")
-    input_ax_objs = AxObjs(input_ax, first_hit_columns, cur_hit_columns)
+    input_ax_objs = AxObjs(fig, input_ax, first_hit_columns, cur_hit_columns)
 
     canvas = FigureCanvasTkAgg(fig, master=window)  # A tk.DrawingArea.
     canvas.draw()

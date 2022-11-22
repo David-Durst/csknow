@@ -20,7 +20,7 @@ fire_attack_hit_white = (1., 1., 1., 1.)
 fire_attack_black = (0., 0., 0., 1.)
 aabb_green = (0., 1., 0., 0.5)
 aabb_blue = (0., 0., 0.61, 0.5)
-aabb_black = (1., 1., 1., 1.0)
+aabb_black = (0., 0., 0., 1.0)
 recoil_pink = (1., 0., 1., 1.)
 
 # very unscientific head scale relative to rest of body
@@ -73,6 +73,7 @@ class PerspectiveColumns:
 # so use this instead
 @dataclass
 class AxObjs:
+    fig: plt.Figure
     ax: plt.Axes
     first_hit_columns: PerspectiveColumns
     cur_head_columns: PerspectiveColumns
