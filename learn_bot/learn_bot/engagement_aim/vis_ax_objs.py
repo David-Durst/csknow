@@ -74,145 +74,163 @@ class PerspectiveColumns:
 @dataclass
 class AxObjs:
     fig: plt.Figure
-    ax: plt.Axes
+    pos_ax: plt.Axes
+    speed_ax: plt.Axes
     first_hit_columns: PerspectiveColumns
     cur_head_columns: PerspectiveColumns
-    all_line: Optional[Line2D] = None
-    prior_line: Optional[Line2D] = None
-    present_line: Optional[Line2D] = None
-    present_series_line: Optional[Line2D] = None
-    future_line: Optional[Line2D] = None
-    fire_line: Optional[Line2D] = None
-    hold_attack_line: Optional[Line2D] = None
-    hit_victim_line: Optional[Line2D] = None
-    recoil_line: Optional[Line2D] = None
-    victim_head_circle: Optional[Circle] = None
-    victim_aabb: Optional[Rectangle] = None
+    # pos ax lines
+    pos_all_line: Optional[Line2D] = None
+    pos_prior_line: Optional[Line2D] = None
+    pos_present_line: Optional[Line2D] = None
+    pos_present_series_line: Optional[Line2D] = None
+    pos_future_line: Optional[Line2D] = None
+    pos_fire_line: Optional[Line2D] = None
+    pos_hold_attack_line: Optional[Line2D] = None
+    pos_hit_victim_line: Optional[Line2D] = None
+    pos_recoil_line: Optional[Line2D] = None
+    pos_victim_head_circle: Optional[Circle] = None
+    pos_victim_aabb: Optional[Rectangle] = None
+    # speed ax lines
+    speed_all_line: Optional[Line2D] = None
+    speed_prior_line: Optional[Line2D] = None
+    speed_present_line: Optional[Line2D] = None
+    speed_future_line: Optional[Line2D] = None
 
     def update_aim_plot(self, data_df: pd.DataFrame, tick_id: int, canvas: FigureCanvasTkAgg, use_first_hit: bool):
         columns = self.first_hit_columns if use_first_hit else self.cur_head_columns
-        prior_df = data_df[data_df['tick id'] < tick_id]
-        prior_x_np = prior_df.loc[:, columns.cur_view_angle_x_column].to_numpy()
-        prior_y_np = prior_df.loc[:, columns.cur_view_angle_y_column].to_numpy()
+        # pos data
+        pos_prior_df = data_df[data_df['tick id'] < tick_id]
+        pos_prior_x_np = pos_prior_df.loc[:, columns.cur_view_angle_x_column].to_numpy()
+        pos_prior_y_np = pos_prior_df.loc[:, columns.cur_view_angle_y_column].to_numpy()
 
-        present_df = data_df[data_df['tick id'] == tick_id]
-        present_x_np = present_df.loc[:, columns.cur_view_angle_x_column].to_numpy()
-        present_y_np = present_df.loc[:, columns.cur_view_angle_y_column].to_numpy()
+        pos_present_df = data_df[data_df['tick id'] == tick_id]
+        pos_present_x_np = pos_present_df.loc[:, columns.cur_view_angle_x_column].to_numpy()
+        pos_present_y_np = pos_present_df.loc[:, columns.cur_view_angle_y_column].to_numpy()
 
         # shows series used in prediction, not just single point
-        present_series_df = data_df[data_df['tick id'] == tick_id].iloc[0, :]
-        present_series_x_np = present_series_df.loc[columns.all_view_angle_x_columns].to_numpy()
-        present_series_y_np = present_series_df.loc[columns.all_view_angle_y_columns].to_numpy()
+        pos_present_series_df = data_df[data_df['tick id'] == tick_id].iloc[0, :]
+        pos_present_series_x_np = pos_present_series_df.loc[columns.all_view_angle_x_columns].to_numpy()
+        pos_present_series_y_np = pos_present_series_df.loc[columns.all_view_angle_y_columns].to_numpy()
 
-        future_df = data_df[data_df['tick id'] > tick_id]
-        future_x_np = future_df.loc[:, columns.cur_view_angle_x_column].to_numpy()
-        future_y_np = future_df.loc[:, columns.cur_view_angle_y_column].to_numpy()
+        pos_future_df = data_df[data_df['tick id'] > tick_id]
+        pos_future_x_np = pos_future_df.loc[:, columns.cur_view_angle_x_column].to_numpy()
+        pos_future_y_np = pos_future_df.loc[:, columns.cur_view_angle_y_column].to_numpy()
 
-        fire_df = data_df[data_df['ticks until next fire (t)'] == 0.]
-        fire_x_np = fire_df.loc[:, columns.cur_view_angle_x_column].to_numpy()
-        fire_y_np = fire_df.loc[:, columns.cur_view_angle_y_column].to_numpy()
+        pos_fire_df = data_df[data_df['ticks until next fire (t)'] == 0.]
+        pos_fire_x_np = pos_fire_df.loc[:, columns.cur_view_angle_x_column].to_numpy()
+        pos_fire_y_np = pos_fire_df.loc[:, columns.cur_view_angle_y_column].to_numpy()
 
-        hold_attack_df = data_df[data_df['ticks until next holding attack (t)'] == 0.]
-        hold_attack_x_np = hold_attack_df.loc[:, columns.cur_view_angle_x_column].to_numpy()
-        hold_attack_y_np = hold_attack_df.loc[:, columns.cur_view_angle_y_column].to_numpy()
+        pos_hold_attack_df = data_df[data_df['ticks until next holding attack (t)'] == 0.]
+        pos_hold_attack_x_np = pos_hold_attack_df.loc[:, columns.cur_view_angle_x_column].to_numpy()
+        pos_hold_attack_y_np = pos_hold_attack_df.loc[:, columns.cur_view_angle_y_column].to_numpy()
 
-        hit_victim_df = data_df[data_df['hit victim (t)'] == 1.]
-        hit_victim_x_np = hit_victim_df.loc[:, columns.cur_view_angle_x_column].to_numpy()
-        hit_victim_y_np = hit_victim_df.loc[:, columns.cur_view_angle_y_column].to_numpy()
+        pos_hit_victim_df = data_df[data_df['hit victim (t)'] == 1.]
+        pos_hit_victim_x_np = pos_hit_victim_df.loc[:, columns.cur_view_angle_x_column].to_numpy()
+        pos_hit_victim_y_np = pos_hit_victim_df.loc[:, columns.cur_view_angle_y_column].to_numpy()
 
-        recoil_x_np = present_df.loc[:, columns.recoil_x_column].to_numpy() + present_x_np
-        recoil_y_np = present_df.loc[:, columns.recoil_y_column].to_numpy() + present_y_np
+        pos_recoil_x_np = pos_present_df.loc[:, columns.recoil_x_column].to_numpy() + pos_present_x_np
+        pos_recoil_y_np = pos_present_df.loc[:, columns.recoil_y_column].to_numpy() + pos_present_y_np
 
-        all_x_np = data_df.loc[:, columns.cur_view_angle_x_column].to_numpy()
-        all_y_np = data_df.loc[:, columns.cur_view_angle_y_column].to_numpy()
+        pos_all_x_np = data_df.loc[:, columns.cur_view_angle_x_column].to_numpy()
+        pos_all_y_np = data_df.loc[:, columns.cur_view_angle_y_column].to_numpy()
 
         aabb_min = (
-            present_df.loc[:, columns.victim_min_view_angle_x_column].item(),
-            present_df.loc[:, columns.victim_min_view_angle_y_column].item()
+            pos_present_df.loc[:, columns.victim_min_view_angle_x_column].item(),
+            pos_present_df.loc[:, columns.victim_min_view_angle_y_column].item()
         )
         aabb_max = (
-            present_df.loc[:, columns.victim_max_view_angle_x_column].item(),
-            present_df.loc[:, columns.victim_max_view_angle_y_column].item()
+            pos_present_df.loc[:, columns.victim_max_view_angle_x_column].item(),
+            pos_present_df.loc[:, columns.victim_max_view_angle_y_column].item()
         )
         aabb_size = (
             aabb_max[0] - aabb_min[0],
             aabb_max[1] - aabb_min[1]
         )
         head_center = (
-            present_df.loc[:, columns.victim_cur_head_view_angle_x_column].item(),
-            present_df.loc[:, columns.victim_cur_head_view_angle_y_column].item()
+            pos_present_df.loc[:, columns.victim_cur_head_view_angle_x_column].item(),
+            pos_present_df.loc[:, columns.victim_cur_head_view_angle_y_column].item()
         )
         head_radius = (aabb_max[0] - aabb_min[0]) / 2. * head_scale
-        victim_visible = present_df.loc[:, 'victim visible (t)'].item()
-        victim_alive = present_df.loc[:, 'victim alive (t)'].item()
+        victim_visible = pos_present_df.loc[:, 'victim visible (t)'].item()
+        victim_alive = pos_present_df.loc[:, 'victim alive (t)'].item()
 
-        if self.prior_line is None:
+        # speed data
+        delta_data_df = data_df.loc[:, [columns.cur_view_angle_x_column, columns.cur_view_angle_y_column]]
+        delta_data_df.loc[:, columns.cur_view_angle_x_column] = \
+            delta_data_df.loc[:, columns.cur_view_angle_x_column].shift(1)
+        delta_data_df.loc[:, columns.cur_view_angle_y_column] = \
+            delta_data_df.loc[:, columns.cur_view_angle_y_column].shift(1)
+        pos_prior_x_np = pos_prior_df.loc[:, columns.cur_view_angle_x_column].to_numpy()
+        pos_prior_y_np = pos_prior_df.loc[:, columns.cur_view_angle_y_column].to_numpy()
+
+
+        if self.pos_prior_line is None:
             # ax1.plot(x, y,color='#FF0000', linewidth=2.2, label='Example line',
             #           marker='o', mfc='black', mec='black', ms=10)
-            self.all_line, = self.ax.plot(all_x_np, all_y_np, color=all_gray, label="_nolegend_")
-            self.present_series_line, = self.ax.plot(present_series_x_np, present_series_y_np,
-                                                     linestyle="None", label="Model Feature",
-                                                     marker='o', mfc="None", mec=present_series_yellow,
-                                                     markersize=10)
-            self.prior_line, = self.ax.plot(prior_x_np, prior_y_np, linestyle="None", label="Past",
-                                            marker='o', mfc=prior_blue, mec=prior_blue)
-            self.future_line, = self.ax.plot(future_x_np, future_y_np, linestyle="None", label="Future",
-                                             marker='o', mfc=future_gray, mec=future_gray)
-            self.recoil_line, = self.ax.plot(recoil_x_np, recoil_y_np, linestyle="None", label="Recoil",
-                                             marker='o', mfc=recoil_pink, mec=recoil_pink)
-            self.present_line, = self.ax.plot(present_x_np, present_y_np, linestyle="None", label="Present",
-                                              marker='o', mfc=present_red, mec=present_red)
-            self.fire_line, = self.ax.plot(fire_x_np, fire_y_np, linestyle="None", label="Fire",
-                                           marker='|', mfc=fire_attack_hit_white, mec=fire_attack_hit_white)
-            self.hold_attack_line, = self.ax.plot(hold_attack_x_np, hold_attack_y_np,
-                                                  linestyle="None", label="Attack",
-                                                  marker='_', mfc=fire_attack_hit_white, mec=fire_attack_hit_white)
-            self.hit_victim_line, = self.ax.plot(hit_victim_x_np, hit_victim_y_np,
-                                                 linestyle="None", label="Hit",
-                                                 marker='x', mfc=fire_attack_hit_white, mec=fire_attack_hit_white)
-            self.victim_aabb = Rectangle(aabb_min, aabb_size[0], aabb_size[1],
-                                         linewidth=2, edgecolor=aabb_green, facecolor='none')
-            self.ax.add_patch(self.victim_aabb)
-            self.victim_head_circle = Circle(head_center, head_radius, color=aabb_green)
-            self.ax.add_patch(self.victim_head_circle)
+            self.pos_all_line, = self.pos_ax.plot(pos_all_x_np, pos_all_y_np, color=all_gray, label="_nolegend_")
+            self.pos_present_series_line, = self.pos_ax.plot(pos_present_series_x_np, pos_present_series_y_np,
+                                                             linestyle="None", label="Model Feature",
+                                                             marker='o', mfc="None", mec=present_series_yellow,
+                                                             markersize=10)
+            self.pos_prior_line, = self.pos_ax.plot(pos_prior_x_np, pos_prior_y_np, linestyle="None", label="Past",
+                                                    marker='o', mfc=prior_blue, mec=prior_blue)
+            self.pos_future_line, = self.pos_ax.plot(pos_future_x_np, pos_future_y_np, linestyle="None", label="Future",
+                                                     marker='o', mfc=future_gray, mec=future_gray)
+            self.pos_recoil_line, = self.pos_ax.plot(pos_recoil_x_np, pos_recoil_y_np, linestyle="None", label="Recoil",
+                                                     marker='o', mfc=recoil_pink, mec=recoil_pink)
+            self.pos_present_line, = self.pos_ax.plot(pos_present_x_np, pos_present_y_np, linestyle="None", label="Present",
+                                                      marker='o', mfc=present_red, mec=present_red)
+            self.pos_fire_line, = self.pos_ax.plot(pos_fire_x_np, pos_fire_y_np, linestyle="None", label="Fire",
+                                                   marker='|', mfc=fire_attack_hit_white, mec=fire_attack_hit_white)
+            self.pos_hold_attack_line, = self.pos_ax.plot(pos_hold_attack_x_np, pos_hold_attack_y_np,
+                                                          linestyle="None", label="Attack",
+                                                          marker='_', mfc=fire_attack_hit_white, mec=fire_attack_hit_white)
+            self.pos_hit_victim_line, = self.pos_ax.plot(pos_hit_victim_x_np, pos_hit_victim_y_np,
+                                                         linestyle="None", label="Hit",
+                                                         marker='x', mfc=fire_attack_hit_white, mec=fire_attack_hit_white)
+            self.pos_victim_aabb = Rectangle(aabb_min, aabb_size[0], aabb_size[1],
+                                             linewidth=2, edgecolor=aabb_green, facecolor='none')
+            self.pos_ax.add_patch(self.pos_victim_aabb)
+            self.pos_victim_head_circle = Circle(head_center, head_radius, color=aabb_green)
+            self.pos_ax.add_patch(self.pos_victim_head_circle)
         else:
-            self.all_line.set_data(all_x_np, all_y_np)
-            self.present_series_line.set_data(present_series_x_np, present_series_y_np)
-            self.prior_line.set_data(prior_x_np, prior_y_np)
-            self.future_line.set_data(future_x_np, future_y_np)
-            self.recoil_line.set_data(recoil_x_np, recoil_y_np)
-            self.present_line.set_data(present_x_np, present_y_np)
-            self.fire_line.set_data(fire_x_np, fire_y_np)
-            self.hold_attack_line.set_data(hold_attack_x_np, hold_attack_y_np)
-            self.hit_victim_line.set_data(hit_victim_x_np, hit_victim_y_np)
-            self.victim_aabb.set_xy(aabb_min)
-            self.victim_aabb.set_width(aabb_size[0])
-            self.victim_aabb.set_height(aabb_size[1])
-            self.victim_head_circle.set_center(head_center)
-            self.victim_head_circle.set_radius(head_radius)
+            self.pos_all_line.set_data(pos_all_x_np, pos_all_y_np)
+            self.pos_present_series_line.set_data(pos_present_series_x_np, pos_present_series_y_np)
+            self.pos_prior_line.set_data(pos_prior_x_np, pos_prior_y_np)
+            self.pos_future_line.set_data(pos_future_x_np, pos_future_y_np)
+            self.pos_recoil_line.set_data(pos_recoil_x_np, pos_recoil_y_np)
+            self.pos_present_line.set_data(pos_present_x_np, pos_present_y_np)
+            self.pos_fire_line.set_data(pos_fire_x_np, pos_fire_y_np)
+            self.pos_hold_attack_line.set_data(pos_hold_attack_x_np, pos_hold_attack_y_np)
+            self.pos_hit_victim_line.set_data(pos_hit_victim_x_np, pos_hit_victim_y_np)
+            self.pos_victim_aabb.set_xy(aabb_min)
+            self.pos_victim_aabb.set_width(aabb_size[0])
+            self.pos_victim_aabb.set_height(aabb_size[1])
+            self.pos_victim_head_circle.set_center(head_center)
+            self.pos_victim_head_circle.set_radius(head_radius)
 
         if not victim_alive:
-            self.victim_aabb.set_edgecolor(aabb_black)
-            self.victim_head_circle.set_color(aabb_black)
+            self.pos_victim_aabb.set_edgecolor(aabb_black)
+            self.pos_victim_head_circle.set_color(aabb_black)
         elif victim_visible:
-            self.victim_aabb.set_edgecolor(aabb_green)
-            self.victim_head_circle.set_color(aabb_green)
+            self.pos_victim_aabb.set_edgecolor(aabb_green)
+            self.pos_victim_head_circle.set_color(aabb_green)
         else:
-            self.victim_aabb.set_edgecolor(aabb_blue)
-            self.victim_head_circle.set_color(aabb_blue)
+            self.pos_victim_aabb.set_edgecolor(aabb_blue)
+            self.pos_victim_head_circle.set_color(aabb_blue)
 
         # recompute the ax.dataLim
-        self.ax.relim()
+        self.pos_ax.relim()
         # update ax.viewLim using the new dataLim
-        self.ax.autoscale()
-        legend = self.ax.legend()
+        self.pos_ax.autoscale()
+        legend = self.pos_ax.legend()
         for handle in legend.legendHandles:
             if handle.get_label() in ["Fire", "Attack", "Hit"]:
                 handle.set_mfc(fire_attack_black)
                 handle.set_mec(fire_attack_black)
 
-        x_max, x_min = self.ax.get_xlim()
-        y_min, y_max = self.ax.get_ylim()
+        x_max, x_min = self.pos_ax.get_xlim()
+        y_min, y_max = self.pos_ax.get_ylim()
         x_range = x_max - x_min
         y_range = y_max - y_min
         if x_range < y_range:
@@ -224,8 +242,8 @@ class AxObjs:
             y_min -= range_diff / 2.
             y_max += range_diff / 2.
         # inverted xaxis so need to flip
-        self.ax.set_xlim(x_max, x_min)
-        self.ax.set_ylim(y_min, y_max)
+        self.pos_ax.set_xlim(x_max, x_min)
+        self.pos_ax.set_ylim(y_min, y_max)
 
         # required to update canvas and attached toolbar!
         canvas.draw()

@@ -46,24 +46,34 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame = None):
     cur_pos_x_label = "Yaw Delta (deg)"
     first_hit_y_label = "Pitch (deg)"
     cur_pos_y_label = "Pitch Delta (deg)"
-    def setAxSettings(ax: plt.Axes, title: str):
-        ax.base_title = title
+    def setPosAxSettings(ax: plt.Axes, title: str):
+        ax.base_title = title + " Pos"
         ax.set_title(title + first_hit_title_suffix)
         ax.set_xlabel(first_hit_x_label)
         ax.set_ylabel(first_hit_y_label)
         ax.set_aspect('equal', adjustable='box')
         ax.invert_xaxis()
 
+    def setSpeedAxSettings(ax: plt.Axes, title: str):
+        ax.set_title(title + " Speed")
+        ax.set_xlabel("Game Tick Id")
+        ax.set_ylabel("Mouse Speed (deg/tick, 3-window median)")
+        ax.invert_xaxis()
+
     if pred_df is None:
-        fig = Figure(figsize=(5.5, 5.5), dpi=100)
-        input_ax = fig.add_subplot()
+        fig = Figure(figsize=(11, 5.5), dpi=100)
+        # https://stackoverflow.com/questions/5083763/python-matplotlib-change-the-relative-size-of-a-subplot
+        #input_pos_ax, input_speed_ax = fig.subplots(nrows=1, ncols=2, gridspec_kw={'width_ratios': [1, 2]})
+        input_pos_ax, input_speed_ax = fig.subplots(nrows=1, ncols=2)
     else:
+        raise NotImplementedError
         fig = Figure(figsize=(11., 5.5), dpi=100)
-        input_ax, pred_ax = fig.subplots(nrows=1, ncols=2)
-        setAxSettings(pred_ax, "Pred Aim Data")
-        pred_ax_objs = AxObjs(fig, pred_ax, first_hit_columns, cur_hit_columns)
-    setAxSettings(input_ax, "Input Aim Data")
-    input_ax_objs = AxObjs(fig, input_ax, first_hit_columns, cur_hit_columns)
+        input_pos_ax, pred_ax = fig.subplots(nrows=1, ncols=2)
+        setPosAxSettings(pred_ax, "Pred Aim")
+        pred_ax_objs = AxObjs(fig, pred_ax, None, first_hit_columns, cur_hit_columns)
+    setPosAxSettings(input_pos_ax, "Input Aim")
+    setSpeedAxSettings(input_speed_ax, "Input Aim")
+    input_ax_objs = AxObjs(fig, input_pos_ax, input_speed_ax, first_hit_columns, cur_hit_columns)
 
     canvas = FigureCanvasTkAgg(fig, master=window)  # A tk.DrawingArea.
     canvas.draw()
@@ -183,17 +193,17 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame = None):
         first_hit_view_angle_reference = not first_hit_view_angle_reference
         cur_tick_index = int(tick_slider.get())
         if first_hit_view_angle_reference:
-            input_ax.set_title(input_ax.base_title + first_hit_title_suffix)
-            input_ax.set_xlabel(first_hit_x_label)
-            input_ax.set_ylabel(first_hit_y_label)
+            input_pos_ax.set_title(input_pos_ax.base_title + first_hit_title_suffix)
+            input_pos_ax.set_xlabel(first_hit_x_label)
+            input_pos_ax.set_ylabel(first_hit_y_label)
             if pred_df is not None:
                 pred_ax.set_title(pred_ax.base_title + first_hit_title_suffix)
                 pred_ax.set_xlabel(first_hit_x_label)
                 pred_ax.set_ylabel(first_hit_y_label)
         else:
-            input_ax.set_title(input_ax.base_title + cur_pos_title_suffix)
-            input_ax.set_xlabel(cur_pos_x_label)
-            input_ax.set_ylabel(cur_pos_y_label)
+            input_pos_ax.set_title(input_pos_ax.base_title + cur_pos_title_suffix)
+            input_pos_ax.set_xlabel(cur_pos_x_label)
+            input_pos_ax.set_ylabel(cur_pos_y_label)
             if pred_df is not None:
                 pred_ax.set_title(pred_ax.base_title + cur_pos_title_suffix)
                 pred_ax.set_xlabel(cur_pos_x_label)
