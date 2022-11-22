@@ -37,6 +37,7 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
     vector<vector<array<Vec2, TOTAL_AIM_TICKS>>> tmpIdealViewAngle(numThreads);
     vector<vector<array<Vec2, TOTAL_AIM_TICKS>>> tmpDeltaRelativeFirstHitHeadViewAngle(numThreads);
     vector<vector<array<Vec2, TOTAL_AIM_TICKS>>> tmpDeltaRelativeCurHeadViewAngle(numThreads);
+    vector<vector<array<bool, TOTAL_AIM_TICKS>>> tmpHitVictim(numThreads);
     vector<vector<array<float, TOTAL_AIM_TICKS>>> tmpRecoilIndex(numThreads);
     vector<vector<array<Vec2, TOTAL_AIM_TICKS>>> tmpScaledRecoilAngle(numThreads);
     vector<vector<array<int64_t, TOTAL_AIM_TICKS>>> tmpTicksSinceLastFire(numThreads);
@@ -172,6 +173,7 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
                 tmpIdealViewAngle[threadNum].push_back({});
                 tmpDeltaRelativeFirstHitHeadViewAngle[threadNum].push_back({});
                 tmpDeltaRelativeCurHeadViewAngle[threadNum].push_back({});
+                tmpHitVictim[threadNum].push_back({});
                 tmpRecoilIndex[threadNum].push_back({});
                 tmpScaledRecoilAngle[threadNum].push_back({});
                 tmpTicksSinceLastFire[threadNum].push_back({});
@@ -236,6 +238,9 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
                                                   engagementToFirstHitVictimHeadPos[engagementIndex], curViewAngle);
                     tmpDeltaRelativeCurHeadViewAngle[threadNum].back()[i] =
                         deltaViewFromOriginToDest(attackerEyePos, victimHeadPos, curViewAngle);
+
+                    tmpHitVictim[threadNum].back()[i] = fireHistoryResult.hitEnemy[attackerPATId] &&
+                        fireHistoryResult.victims[attackerPATId].find(victimId) != fireHistoryResult.victims[attackerPATId].end();
 
                     tmpRecoilIndex[threadNum].back()[i] = playerAtTick.recoilIndex[attackerPATId];
 
@@ -395,6 +400,7 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
                                tmpDeltaRelativeFirstHitHeadViewAngle[minThreadId][tmpRowId]);
                            result.deltaRelativeCurHeadViewAngle.push_back(
                                tmpDeltaRelativeCurHeadViewAngle[minThreadId][tmpRowId]);
+                           result.hitVictim.push_back(tmpHitVictim[minThreadId][tmpRowId]);
                            result.recoilIndex.push_back(tmpRecoilIndex[minThreadId][tmpRowId]);
                            result.scaledRecoilAngle.push_back(tmpScaledRecoilAngle[minThreadId][tmpRowId]);
                            result.ticksSinceLastFire.push_back(tmpTicksSinceLastFire[minThreadId][tmpRowId]);

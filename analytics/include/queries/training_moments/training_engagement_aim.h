@@ -59,6 +59,7 @@ public:
     vector<array<Vec2, TOTAL_AIM_TICKS>> idealViewAngle;
     vector<array<Vec2, TOTAL_AIM_TICKS>> deltaRelativeFirstHitHeadViewAngle;
     vector<array<Vec2, TOTAL_AIM_TICKS>> deltaRelativeCurHeadViewAngle;
+    vector<array<bool, TOTAL_AIM_TICKS>> hitVictim;
     vector<array<float, TOTAL_AIM_TICKS>> recoilIndex;
     vector<array<Vec2, TOTAL_AIM_TICKS>> scaledRecoilAngle;
     vector<array<int64_t, TOTAL_AIM_TICKS>> ticksSinceLastFire;
@@ -105,6 +106,7 @@ public:
             ss << "," << attackerViewAngle[index][i].toCSV() << "," << idealViewAngle[index][i].toCSV()
                << "," << deltaRelativeFirstHitHeadViewAngle[index][i].toCSV()
                << "," << deltaRelativeCurHeadViewAngle[index][i].toCSV()
+               << "," << boolToString(hitVictim[index][i])
                << "," << recoilIndex[index][i]
                << "," << scaledRecoilAngle[index][i].toCSV()
                << "," << ticksSinceLastFire[index][i] << "," << ticksSinceLastHoldingAttack[index][i]
@@ -143,6 +145,7 @@ public:
             result.push_back("delta relative first hit head view angle y (t" + toSignedIntString(i, true) + ")");
             result.push_back("delta relative cur head view angle x (t" + toSignedIntString(i, true) + ")");
             result.push_back("delta relative cur head view angle y (t" + toSignedIntString(i, true) + ")");
+            result.push_back("hit victim (t"+ toSignedIntString(i, true) + ")");
             result.push_back("recoil index (t" + toSignedIntString(i, true) + ")");
             result.push_back("scaled recoil angle x (t" + toSignedIntString(i, true) + ")");
             result.push_back("scaled recoil angle y (t" + toSignedIntString(i, true) + ")");

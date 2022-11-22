@@ -7,7 +7,7 @@
 
 
 namespace csknow::fire_history {
-    void FireHistoryResult::runQuery(const Games & games, const WeaponFire &weaponFire,
+    void FireHistoryResult::runQuery(const Games & games, const WeaponFire &weaponFire, const Hurt & hurt,
                                      const PlayerAtTick &playerAtTick) {
         tickId.resize(playerAtTick.size, INVALID_ID);
         playerId.resize(playerAtTick.size, INVALID_ID);
@@ -41,6 +41,12 @@ namespace csknow::fire_history {
                 for (const auto & [_0, _1, fireIndex] :
                     ticks.weaponFirePerTick.intervalToEvent.findOverlapping(tickIndex, tickIndex)) {
                     playerToLastFireTickId[weaponFire.shooter[fireIndex]] = tickIndex;
+                }
+
+                map<int64_t, set<int64_t>> attackerToVictims;
+                for (const auto & [_0, _1, hurtIndex] :
+                    ticks.hurtPerTick.intervalToEvent.findOverlapping(tickIndex, tickIndex)) {
+                    attackerToVictims[hurt.attacker[hurtIndex]].insert(hurt.victim[hurtIndex]);
                 }
 
                 for (int64_t patIndex = ticks.patPerTick[tickIndex].minId;
@@ -81,6 +87,15 @@ namespace csknow::fire_history {
                     else {
                         ticksSinceLastHoldingAttack[patIndex] = ticks.gameTickNumber[tickIndex] -
                             ticks.gameTickNumber[playerToLastHoldingAttackTickId[curPlayerId]];
+                    }
+
+                    if (attackerToVictims.find(curPlayerId) == attackerToVictims.end()){
+                        hitEnemy.push_back(false);
+                        victims.push_back({});
+                    }
+                    else {
+                        hitEnemy.push_back(true);
+                        victims.push_back(attackerToVictims[curPlayerId]);
                     }
                 }
 

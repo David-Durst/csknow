@@ -172,7 +172,7 @@ int main(int argc, char * argv[]) {
     string fireHistoryName = "fireHistory";
     std::cout << "processing fire history" << std::endl;
     csknow::fire_history::FireHistoryResult fireHistoryResult(filteredRounds, ticks);
-    fireHistoryResult.runQuery(games, weaponFire, playerAtTick);
+    fireHistoryResult.runQuery(games, weaponFire, hurt, playerAtTick);
     std::cout << "size: " << fireHistoryResult.size << std::endl;
 
     // engagement events

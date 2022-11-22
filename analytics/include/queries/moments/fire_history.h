@@ -33,6 +33,8 @@ namespace csknow::fire_history {
         vector<int64_t> ticksSinceLastHoldingAttack;
         vector<int64_t> ticksUntilNextFire;
         vector<int64_t> ticksUntilNextHoldingAttack;
+        vector<bool> hitEnemy;
+        vector<set<int64_t>> victims;
 
         FireHistoryResult(const Rounds & rounds, const Ticks & ticks) :
                 rounds(rounds), ticks(ticks) {
@@ -72,7 +74,8 @@ namespace csknow::fire_history {
                     "ticks until next holding attack"};
         }
 
-        void runQuery(const Games & games, const WeaponFire & weaponFire, const PlayerAtTick & playerAtTick);
+        void runQuery(const Games & games, const WeaponFire & weaponFire, const Hurt & hurt,
+                      const PlayerAtTick & playerAtTick);
     };
 }
 
