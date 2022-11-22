@@ -16,6 +16,8 @@ namespace csknow::fire_history {
         ticksSinceLastHoldingAttack.resize(playerAtTick.size, INVALID_ID);
         ticksUntilNextFire.resize(playerAtTick.size, INVALID_ID);
         ticksUntilNextHoldingAttack.resize(playerAtTick.size, INVALID_ID);
+        hitEnemy.resize(playerAtTick.size, false);
+        victims.resize(playerAtTick.size, {});
 
         // for each round
         // track fire state for each player
@@ -89,13 +91,9 @@ namespace csknow::fire_history {
                             ticks.gameTickNumber[playerToLastHoldingAttackTickId[curPlayerId]];
                     }
 
-                    if (attackerToVictims.find(curPlayerId) == attackerToVictims.end()){
-                        hitEnemy.push_back(false);
-                        victims.push_back({});
-                    }
-                    else {
-                        hitEnemy.push_back(true);
-                        victims.push_back(attackerToVictims[curPlayerId]);
+                    if (attackerToVictims.find(curPlayerId) != attackerToVictims.end()){
+                        hitEnemy[patIndex] = true;
+                        victims[patIndex] = attackerToVictims[curPlayerId];
                     }
                 }
 

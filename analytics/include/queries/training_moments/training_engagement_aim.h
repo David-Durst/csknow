@@ -106,7 +106,7 @@ public:
             ss << "," << attackerViewAngle[index][i].toCSV() << "," << idealViewAngle[index][i].toCSV()
                << "," << deltaRelativeFirstHitHeadViewAngle[index][i].toCSV()
                << "," << deltaRelativeCurHeadViewAngle[index][i].toCSV()
-               << "," << boolToString(hitVictim[index][i])
+               << "," << boolToInt(hitVictim[index][i])
                << "," << recoilIndex[index][i]
                << "," << scaledRecoilAngle[index][i].toCSV()
                << "," << ticksSinceLastFire[index][i] << "," << ticksSinceLastHoldingAttack[index][i]
