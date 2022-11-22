@@ -45,6 +45,7 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
     vector<vector<array<int64_t, TOTAL_AIM_TICKS>>> tmpTicksUntilNextFire(numThreads);
     vector<vector<array<int64_t, TOTAL_AIM_TICKS>>> tmpTicksUntilNextHoldingAttack(numThreads);
     vector<vector<array<bool, TOTAL_AIM_TICKS>>> tmpVictimVisible(numThreads);
+    vector<vector<array<bool, TOTAL_AIM_TICKS>>> tmpVictimAlive(numThreads);
     vector<vector<array<Vec2, TOTAL_AIM_TICKS>>> tmpVictimRelativeFirstHitHeadMinViewAngle(numThreads);
     vector<vector<array<Vec2, TOTAL_AIM_TICKS>>> tmpVictimRelativeFirstHitHeadMaxViewAngle(numThreads);
     vector<vector<array<Vec2, TOTAL_AIM_TICKS>>> tmpVictimRelativeFirstHitHeadCurHeadAngle(numThreads);
@@ -181,6 +182,7 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
                 tmpTicksUntilNextFire[threadNum].push_back({});
                 tmpTicksUntilNextHoldingAttack[threadNum].push_back({});
                 tmpVictimVisible[threadNum].push_back({});
+                tmpVictimAlive[threadNum].push_back({});
                 tmpVictimRelativeFirstHitHeadMinViewAngle[threadNum].push_back({});
                 tmpVictimRelativeFirstHitHeadMaxViewAngle[threadNum].push_back({});
                 tmpVictimRelativeFirstHitHeadCurHeadAngle[threadNum].push_back({});
@@ -279,6 +281,7 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
                         }
                     }
                     tmpVictimVisible[threadNum].back()[i] = victimInFOV && victimVisNoFOV;
+                    tmpVictimAlive[threadNum].back()[i] = playerAtTick.isAlive[victimPATId];
 
                     AABB victimAABB = getAABBForPlayer(victimFootPos);
                     vector<Vec3> aabbCorners = getAABBCorners(victimAABB);
@@ -410,6 +413,7 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
                            result.ticksUntilNextHoldingAttack.push_back(
                                tmpTicksUntilNextHoldingAttack[minThreadId][tmpRowId]);
                            result.victimVisible.push_back(tmpVictimVisible[minThreadId][tmpRowId]);
+                           result.victimAlive.push_back(tmpVictimAlive[minThreadId][tmpRowId]);
                            result.victimRelativeFirstHitHeadMinViewAngle.push_back(
                                tmpVictimRelativeFirstHitHeadMinViewAngle[minThreadId][tmpRowId]);
                            result.victimRelativeFirstHitHeadMaxViewAngle.push_back(
