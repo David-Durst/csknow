@@ -16,7 +16,7 @@ present_series_yellow = "#A89932FF"
 prior_blue = "#00D5FAFF"
 future_gray = "#727272FF"
 present_red = (1., 0., 0., 1.)
-fire_attack_white = (1., 1., 1., 1.)
+fire_attack_hit_white = (1., 1., 1., 1.)
 fire_attack_black = (0., 0., 0., 1.)
 aabb_green = (0., 1., 0., 0.5)
 recoil_pink = (1., 0., 1., 1.)
@@ -81,6 +81,7 @@ class AxObjs:
     future_line: Optional[Line2D] = None
     fire_line: Optional[Line2D] = None
     hold_attack_line: Optional[Line2D] = None
+    hit_victim_line: Optional[Line2D] = None
     recoil_line: Optional[Line2D] = None
     victim_head_circle: Optional[Circle] = None
     victim_aabb: Optional[Rectangle] = None
@@ -111,6 +112,10 @@ class AxObjs:
         hold_attack_df = data_df[data_df['ticks until next holding attack (t)'] == 0.]
         hold_attack_x_np = hold_attack_df.loc[:, columns.cur_view_angle_x_column].to_numpy()
         hold_attack_y_np = hold_attack_df.loc[:, columns.cur_view_angle_y_column].to_numpy()
+
+        hit_victim_df = data_df[data_df['hit victim (t)'] == 1.]
+        hit_victim_x_np = hit_victim_df.loc[:, columns.cur_view_angle_x_column].to_numpy()
+        hit_victim_y_np = hit_victim_df.loc[:, columns.cur_view_angle_y_column].to_numpy()
 
         recoil_x_np = present_df.loc[:, columns.recoil_x_column].to_numpy() + present_x_np
         recoil_y_np = present_df.loc[:, columns.recoil_y_column].to_numpy() + present_y_np
@@ -153,10 +158,13 @@ class AxObjs:
             self.present_line, = self.ax.plot(present_x_np, present_y_np, linestyle="None", label="Present",
                                               marker='o', mfc=present_red, mec=present_red)
             self.fire_line, = self.ax.plot(fire_x_np, fire_y_np, linestyle="None", label="Fire",
-                                              marker='|', mfc=fire_attack_white, mec=fire_attack_white)
+                                           marker='|', mfc=fire_attack_hit_white, mec=fire_attack_hit_white)
             self.hold_attack_line, = self.ax.plot(hold_attack_x_np, hold_attack_y_np,
                                                   linestyle="None", label="Attack",
-                                                  marker='_', mfc=fire_attack_white, mec=fire_attack_white)
+                                                  marker='_', mfc=fire_attack_hit_white, mec=fire_attack_hit_white)
+            self.hit_victim_line, = self.ax.plot(hit_victim_x_np, hit_victim_y_np,
+                                                 linestyle="None", label="Hit",
+                                                 marker='x', mfc=fire_attack_hit_white, mec=fire_attack_hit_white)
             self.victim_aabb = Rectangle(aabb_min, aabb_size[0], aabb_size[1],
                                          linewidth=2, edgecolor=aabb_green, facecolor='none')
             self.ax.add_patch(self.victim_aabb)
@@ -171,6 +179,7 @@ class AxObjs:
             self.present_line.set_data(present_x_np, present_y_np)
             self.fire_line.set_data(fire_x_np, fire_y_np)
             self.hold_attack_line.set_data(hold_attack_x_np, hold_attack_y_np)
+            self.hit_victim_line.set_data(hit_victim_x_np, hit_victim_y_np)
             self.victim_aabb.set_xy(aabb_min)
             self.victim_aabb.set_width(aabb_size[0])
             self.victim_aabb.set_height(aabb_size[1])
@@ -183,7 +192,7 @@ class AxObjs:
         self.ax.autoscale()
         legend = self.ax.legend()
         for handle in legend.legendHandles:
-            if handle.get_label() == "Fire" or handle.get_label() == "Attack":
+            if handle.get_label() in ["Fire", "Attack", "Hit"]:
                 handle.set_mfc(fire_attack_black)
                 handle.set_mec(fire_attack_black)
 

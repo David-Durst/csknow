@@ -36,6 +36,7 @@ base_float_columns: List[str] = ["attacker view angle x", "attacker view angle a
                                  "ideal view angle x", "ideal view angle y",
                                  "delta relative first hit head view angle x", "delta relative first hit head view angle y",
                                  "delta relative cur head view angle x", "delta relative cur head view angle y",
+                                 "hit victim",
                                  "recoil index",
                                  "scaled recoil angle x", "scaled recoil angle y",
                                  "ticks since last fire", "ticks since last holding attack",

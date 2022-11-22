@@ -36,8 +36,8 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame = None):
     window.configure(background='grey')
 
     # columns for reading d
-    first_hit_columns = PerspectiveColumns(4, 15, 9)
-    cur_hit_columns = PerspectiveColumns(6, 21, 9)
+    first_hit_columns = PerspectiveColumns(4, 16, 10)
+    cur_hit_columns = PerspectiveColumns(6, 22, 10)
 
     # create axes and their objects
     first_hit_title_suffix = " Relative To First Hit Enemy Head"
