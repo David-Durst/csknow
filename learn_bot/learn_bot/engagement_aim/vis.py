@@ -42,11 +42,15 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame = None):
     # create axes and their objects
     first_hit_title_suffix = " Relative To First Hit Enemy Head"
     cur_pos_title_suffix = " Relative To Cur Enemy Head"
+    first_hit_x_label = "Yaw (deg)"
+    cur_pos_x_label = "Yaw Delta (deg)"
+    first_hit_y_label = "Pitch (deg)"
+    cur_pos_y_label = "Pitch Delta (deg)"
     def setAxSettings(ax: plt.Axes, title: str):
         ax.base_title = title
         ax.set_title(title + first_hit_title_suffix)
-        ax.set_xlabel("Yaw Delta (deg)")
-        ax.set_ylabel("Pitch Delta (deg)")
+        ax.set_xlabel(first_hit_x_label)
+        ax.set_ylabel(first_hit_y_label)
         ax.set_aspect('equal', adjustable='box')
         ax.invert_xaxis()
 
@@ -180,12 +184,20 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame = None):
         cur_tick_index = int(tick_slider.get())
         if first_hit_view_angle_reference:
             input_ax.set_title(input_ax.base_title + first_hit_title_suffix)
+            input_ax.set_xlabel(first_hit_x_label)
+            input_ax.set_xlabel(first_hit_y_label)
             if pred_df is not None:
                 pred_ax.set_title(pred_ax.base_title + first_hit_title_suffix)
+                pred_ax.set_xlabel(first_hit_x_label)
+                pred_ax.set_xlabel(first_hit_y_label)
         else:
             input_ax.set_title(input_ax.base_title + cur_pos_title_suffix)
+            input_ax.set_xlabel(cur_pos_x_label)
+            input_ax.set_xlabel(cur_pos_y_label)
             if pred_df is not None:
                 pred_ax.set_title(pred_ax.base_title + cur_pos_title_suffix)
+                pred_ax.set_xlabel(cur_pos_x_label)
+                pred_ax.set_xlabel(cur_pos_y_label)
         tick_slider_changed(cur_tick_index)
 
     # state setters
