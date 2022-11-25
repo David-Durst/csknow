@@ -54,15 +54,12 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame = None):
         ax.set_xlabel(first_hit_x_label)
         ax.set_ylabel(first_hit_y_label)
         ax.set_aspect('equal', adjustable='box')
-        #ax.set_aspect('auto', adjustable='box')
         ax.invert_xaxis()
 
     def setSpeedAxSettings(ax: plt.Axes, title: str):
         ax.set_title(title + " Speed")
         ax.set_xlabel("Engagement Time (s)")
         ax.set_ylabel("Mouse Speed (deg/tick, 5-window median)")
-        #ax.set_aspect('auto')
-        #ax.set_aspect(0.5)
 
     if pred_df is None:
         fig = Figure(figsize=(16., 5.5), dpi=100)
@@ -71,17 +68,14 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame = None):
                                  wspace=0.1, hspace=0.1, width_ratios=[1, 1.5])
         input_pos_ax = fig.add_subplot(spec[0])
         input_speed_ax = fig.add_subplot(spec[1])
-        # https://stackoverflow.com/questions/5083763/python-matplotlib-change-the-relative-size-of-a-subplot
-        #input_pos_ax, input_speed_ax = fig.subplots(nrows=1, ncols=2, gridspec_kw={'width_ratios': [1, 2]})
-        #input_pos_ax, input_speed_ax = fig.subplots(nrows=1, ncols=2)
+        setPosAxSettings(input_pos_ax, "Input Aim")
+        setSpeedAxSettings(input_speed_ax, "Input Aim")
     else:
         raise NotImplementedError
         fig = Figure(figsize=(11., 5.5), dpi=100)
         input_pos_ax, pred_ax = fig.subplots(nrows=1, ncols=2)
         setPosAxSettings(pred_ax, "Pred Aim")
         pred_ax_objs = AxObjs(fig, pred_ax, None, first_hit_columns, cur_hit_columns)
-    setPosAxSettings(input_pos_ax, "Input Aim")
-    setSpeedAxSettings(input_speed_ax, "Input Aim")
     input_ax_objs = AxObjs(fig, input_pos_ax, input_speed_ax, first_hit_columns, cur_hit_columns)
 
     canvas = FigureCanvasTkAgg(fig, master=window)  # A tk.DrawingArea.
