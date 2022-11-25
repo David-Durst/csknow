@@ -86,21 +86,23 @@ bool aabbOverlapExclusive(AABB b0, AABB b1) {
 }
 
 #define PLAYER_HEIGHT 72
-#define PLAYER_WIDTH 32
-const int HEIGHT = 72;
+const int STANDING_HEIGHT = 72;
+const int CROUCHED_HEIGHT = 54;
 const int WIDTH = 32;
 static inline __attribute__((always_inline))
-AABB getAABBForPlayer(Vec3 pos) {
+AABB getAABBForPlayer(Vec3 pos, double duckAmount = 0.) {
     //https://developer.valvesoftware.com/wiki/Counter-Strike:_Global_Offensive_Mapper%27s_Reference
     // looks like coordinates are center at feet - tested using getpos_exact and box commands from
     //https://old.reddit.com/r/csmapmakers/comments/58ch3f/useful_console_commands_for_map_making_csgo/
     //making box with these coordinates wraps player perfectly
     // https://developer.valvesoftware.com/wiki/Dimensions#Eyelevel
     // eye level is 64 units when standing, 46 when crouching
+    // these numbers are weird, use mappers reference not this
     // getpos is eye level, getpos_exact is foot, both are center of model
     AABB result;
+    double height = duckAmount * CROUCHED_HEIGHT + (1.-duckAmount) * STANDING_HEIGHT;
     result.min = {pos.x - WIDTH / 2, pos.y - WIDTH / 2, pos.z};
-    result.max = {pos.x + WIDTH / 2, pos.y + WIDTH / 2, pos.z + HEIGHT};
+    result.max = {pos.x + WIDTH / 2, pos.y + WIDTH / 2, pos.z + height};
     return result;
 }
 

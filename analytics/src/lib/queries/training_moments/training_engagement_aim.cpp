@@ -77,7 +77,8 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
                                        {DurationType::Ticks, 0, 0, PAST_AIM_TICKS, FUTURE_AIM_TICKS});
         const PlayerToPATWindows & playerToPatWindows = rollingWindow.getWindows();
 
-        map<int64_t, Vec3> engagementToFirstHitVictimHeadPos;
+        map<int64_t, Vec3> engagementToFirstTickVictimHeadPos;
+        map<int64_t, int64_t> engagementToVictimLastAlivePATId;
 
         for (int64_t windowEndTickIndex = rollingWindow.lastReadTickId();
              windowEndTickIndex <= rounds.ticksPerRound[roundIndex].maxId; windowEndTickIndex = rollingWindow.readNextTick()) {
@@ -152,13 +153,12 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
                 tmpVictimPlayerId[threadNum].push_back(victimId);
 
 
-                // if first time dealing with this engagement, get the PAT for the victim on first hit
-                if (engagementToFirstHitVictimHeadPos.find(engagementIndex) == engagementToFirstHitVictimHeadPos.end()) {
-                    int64_t firstHitTickIndex = engagementResult.hurtTickIds[engagementIndex][0];
-                    for (int64_t patIndex = ticks.patPerTick[firstHitTickIndex].minId;
-                         patIndex <= ticks.patPerTick[firstHitTickIndex].maxId; patIndex++) {
+                // if first time dealing with this engagement, get the first tick head pos
+                if (engagementToFirstTickVictimHeadPos.find(engagementIndex) == engagementToFirstTickVictimHeadPos.end()) {
+                    for (int64_t patIndex = ticks.patPerTick[tickIndex].minId;
+                         patIndex <= ticks.patPerTick[tickIndex].maxId; patIndex++) {
                         if (playerAtTick.playerId[patIndex] == victimId) {
-                            engagementToFirstHitVictimHeadPos[engagementIndex] =
+                            engagementToFirstTickVictimHeadPos[engagementIndex] =
                                 getCenterHeadCoordinatesForPlayer({
                                     playerAtTick.posX[patIndex],
                                     playerAtTick.posY[patIndex],
@@ -198,7 +198,20 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
 
                 for (size_t i = 0; i < TOTAL_AIM_TICKS; i++) {
                     const int64_t & attackerPATId = playerToPatWindows.at(attackerId).fromOldest(static_cast<int64_t>(i));
-                    const int64_t & victimPATId = playerToPatWindows.at(victimId).fromOldest(static_cast<int64_t>(i));
+                    // need to check for last frame where victim is alive
+                    const int64_t & uncheckedVictimPATId =
+                        playerToPatWindows.at(victimId).fromOldest(static_cast<int64_t>(i));
+                    int64_t victimPATId = uncheckedVictimPATId;
+                    // assume alive on first tick, must be true as otherwise no engagement
+                    if (engagementToVictimLastAlivePATId.find(engagementIndex) ==
+                        engagementToVictimLastAlivePATId.end() ||
+                        (playerAtTick.isAlive[victimPATId] &&
+                        victimPATId > engagementToVictimLastAlivePATId[engagementIndex])) {
+                        engagementToVictimLastAlivePATId[engagementIndex] = victimPATId;
+                    }
+                    else if (!playerAtTick.isAlive[victimPATId]) {
+                        victimPATId = engagementToVictimLastAlivePATId[engagementIndex];
+                    }
 
                     Vec3 attackerEyePos {
                         playerAtTick.posX[attackerPATId],
@@ -239,7 +252,7 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
 
                     tmpDeltaRelativeFirstHitHeadViewAngle[threadNum].back()[i] =
                         deltaViewFromOriginToDest(attackerEyePos,
-                                                  engagementToFirstHitVictimHeadPos[engagementIndex], curViewAngle);
+                                                  engagementToFirstTickVictimHeadPos[engagementIndex], curViewAngle);
                     tmpDeltaRelativeCurHeadViewAngle[threadNum].back()[i] =
                         deltaViewFromOriginToDest(attackerEyePos, victimHeadPos, curViewAngle);
 
@@ -283,9 +296,9 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
                         }
                     }
                     tmpVictimVisible[threadNum].back()[i] = victimInFOV && victimVisNoFOV;
-                    tmpVictimAlive[threadNum].back()[i] = playerAtTick.isAlive[victimPATId];
+                    tmpVictimAlive[threadNum].back()[i] = playerAtTick.isAlive[uncheckedVictimPATId];
 
-                    AABB victimAABB = getAABBForPlayer(victimFootPos);
+                    AABB victimAABB = getAABBForPlayer(victimFootPos, playerAtTick.duckAmount[victimPATId]);
                     vector<Vec3> aabbCorners = getAABBCorners(victimAABB);
                     Vec2 victimMinViewAngleFirstHit{std::numeric_limits<double>::max(),
                                                    std::numeric_limits<double>::max()};
@@ -299,7 +312,7 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
                         Vec2 aabbViewAngle = viewFromOriginToDest(attackerEyePos, aabbCorner);
                         Vec2 deltaAABBViewAngleFirstHit =
                             deltaViewFromOriginToDest(attackerEyePos,
-                                                      engagementToFirstHitVictimHeadPos[engagementIndex],
+                                                      engagementToFirstTickVictimHeadPos[engagementIndex],
                                                       aabbViewAngle);
                         Vec2 deltaAABBViewAngleCur =
                             deltaViewFromOriginToDest(attackerEyePos,
@@ -315,7 +328,7 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
                     tmpVictimRelativeFirstHitHeadMaxViewAngle[threadNum].back()[i] = victimMaxViewAngleFirstHit;
                     tmpVictimRelativeFirstHitHeadCurHeadAngle[threadNum].back()[i] =
                         deltaViewFromOriginToDest(attackerEyePos,
-                                                  engagementToFirstHitVictimHeadPos[engagementIndex], idealViewAngle);
+                                                  engagementToFirstTickVictimHeadPos[engagementIndex], idealViewAngle);
                     tmpVictimRelativeCurHeadMinViewAngle[threadNum].back()[i] = victimMinViewAngleCur;
                     tmpVictimRelativeCurHeadMaxViewAngle[threadNum].back()[i] = victimMaxViewAngleCur;
                     tmpVictimRelativeCurHeadCurHeadAngle[threadNum].back()[i] =
@@ -328,11 +341,16 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
                         playerAtTick.velY[attackerPATId],
                         playerAtTick.velZ[attackerPATId]
                     };
-                    tmpVictimVel[threadNum].back()[i] = {
-                        playerAtTick.velX[victimPATId],
-                        playerAtTick.velY[victimPATId],
-                        playerAtTick.velZ[victimPATId]
-                    };
+                    if (playerAtTick.isAlive[uncheckedVictimPATId]) {
+                        tmpVictimVel[threadNum].back()[i] = {
+                            playerAtTick.velX[uncheckedVictimPATId],
+                            playerAtTick.velY[uncheckedVictimPATId],
+                            playerAtTick.velZ[uncheckedVictimPATId]
+                        };
+                    }
+                    else {
+                        tmpVictimVel[threadNum].back()[i] = {0., 0., 0.};
+                    }
                 }
 
                 // compute normalization constants, used to visualize inference
