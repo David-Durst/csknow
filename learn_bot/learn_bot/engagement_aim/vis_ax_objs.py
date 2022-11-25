@@ -234,8 +234,10 @@ class AxObjs:
         # speed data
         speed_cols = []
         speed_df = pd.DataFrame()
+        min_game_time = min(data_df['game time'])
         speed_df['tick id'] = data_df['tick id']
-        for i in range(-1, 1):
+        speed_df['delta game time'] = (data_df['game time'] - min_game_time) / 1000.
+        for i in range(-2, 3):
             x_speed_col = get_temporal_field_str("x speed at", i)
             y_speed_col = get_temporal_field_str("y speed at", i)
             speed_cols.append(get_temporal_field_str("speed at", i))
@@ -248,9 +250,10 @@ class AxObjs:
             speed_df[speed_cols[-1]] = \
                 (speed_df[x_speed_col].pow(2) + speed_df[y_speed_col].pow(2)).pow(0.5)
         median_speed_col = "median speed"
-        speed_df[median_speed_col] = speed_df[speed_cols].median(axis=1)
+        speed_df[median_speed_col] = speed_df[speed_cols].mean(axis=1)
+
         speed_df_temporal_slices = DataFrameTemporalSlices(speed_df, tick_id, columns,
-                                                           "tick id", median_speed_col,
+                                                           "delta game time", median_speed_col,
                                                            False)
 
         if self.pos_temporal_lines is None:
@@ -324,6 +327,8 @@ class AxObjs:
         # inverted xaxis so need to flip
         self.pos_ax.set_xlim(x_max, x_min)
         self.pos_ax.set_ylim(y_min, y_max)
+
+        #self.speed_ax.set_xlim(left=)
 
         # required to update canvas and attached toolbar!
         canvas.draw()

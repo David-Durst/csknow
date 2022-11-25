@@ -56,15 +56,15 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame = None):
 
     def setSpeedAxSettings(ax: plt.Axes, title: str):
         ax.set_title(title + " Speed")
-        ax.set_xlabel("Game Tick Id")
-        ax.set_ylabel("Mouse Speed (deg/tick, 3-window median)")
-        ax.invert_xaxis()
+        ax.set_xlabel("Engagement Time (s)")
+        ax.set_ylabel("Mouse Speed (deg/tick, 5-window median)")
+        ax.set_aspect('auto')
 
     if pred_df is None:
-        fig = Figure(figsize=(11, 5.5), dpi=100)
+        fig = Figure(figsize=(11., 5.5), dpi=100)
         # https://stackoverflow.com/questions/5083763/python-matplotlib-change-the-relative-size-of-a-subplot
-        #input_pos_ax, input_speed_ax = fig.subplots(nrows=1, ncols=2, gridspec_kw={'width_ratios': [1, 2]})
-        input_pos_ax, input_speed_ax = fig.subplots(nrows=1, ncols=2)
+        input_pos_ax, input_speed_ax = fig.subplots(nrows=1, ncols=2, gridspec_kw={'width_ratios': [1, 2]})
+        #input_pos_ax, input_speed_ax = fig.subplots(nrows=1, ncols=2)
     else:
         raise NotImplementedError
         fig = Figure(figsize=(11., 5.5), dpi=100)
