@@ -77,7 +77,11 @@ namespace csknow::fire_history {
                     double curRecoilIndex = playerAtTick.recoilIndex[patIndex];
                     double priorRecoilIndex = playerAtTick.recoilIndex[priorPATIndex];
                     bool isReloading = playerAtTick.isReloading[patIndex];
-                    bool holdingAttack = !isReloading && curRecoilIndex > 0.5 && curRecoilIndex >= priorRecoilIndex;
+                    // recoil index holds constant on some frames when decaying
+                    // so need to make sure equality only counts for holding if haven't started decaying
+                    bool recoilIndexNotDecaying = curRecoilIndex > priorRecoilIndex ||
+                        (curRecoilIndex == priorRecoilIndex && holdingAttackButton[priorPATIndex]);
+                    bool holdingAttack = !isReloading && curRecoilIndex > 0.5 && recoilIndexNotDecaying;
                     holdingAttackButton[patIndex] = holdingAttack;
                     if (holdingAttack) {
                         playerToLastHoldingAttackTickId[curPlayerId] = tickIndex;
