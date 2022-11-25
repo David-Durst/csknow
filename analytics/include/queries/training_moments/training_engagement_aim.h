@@ -52,6 +52,7 @@ public:
     vector<int64_t> tickId;
     vector<int64_t> demoTickId;
     vector<int64_t> gameTickId;
+    vector<int64_t> gameTime;
     vector<int64_t> engagementId;
     vector<int64_t> attackerPlayerId;
     vector<int64_t> victimPlayerId;
@@ -100,7 +101,7 @@ public:
 
     void oneLineToCSV(int64_t index, stringstream & ss) override {
         ss << index << "," << roundId[index] << "," << tickId[index] << ","
-           << demoTickId[index] << "," << gameTickId[index] << ","
+           << demoTickId[index] << "," << gameTickId[index] << "," << gameTime[index] << ","
            << engagementId[index] << "," << attackerPlayerId[index] << "," << victimPlayerId[index];
 
         for (size_t i = 0; i < TOTAL_AIM_TICKS; i++) {
@@ -132,7 +133,7 @@ public:
     }
 
     vector<string> getForeignKeyNames() override {
-        return {"round id", "tick id", "demo tick id", "game tick id",
+        return {"round id", "tick id", "demo tick id", "game tick id", "game time",
                 "engagement id", "attacker player id", "victim player id"};
     }
 

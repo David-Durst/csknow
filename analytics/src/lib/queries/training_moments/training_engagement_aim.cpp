@@ -30,6 +30,7 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
     vector<vector<int64_t>> tmpTickId(numThreads);
     vector<vector<int64_t>> tmpDemoTickId(numThreads);
     vector<vector<int64_t>> tmpGameTickId(numThreads);
+    vector<vector<int64_t>> tmpGameTime(numThreads);
     vector<vector<int64_t>> tmpEngagementId(numThreads);
     vector<vector<int64_t>> tmpAttackerPlayerId(numThreads);
     vector<vector<int64_t>> tmpVictimPlayerId(numThreads);
@@ -142,6 +143,7 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
                 tmpTickId[threadNum].push_back(tickIndex);
                 tmpDemoTickId[threadNum].push_back(ticks.demoTickNumber[tickIndex]);
                 tmpGameTickId[threadNum].push_back(ticks.gameTickNumber[tickIndex]);
+                tmpGameTime[threadNum].push_back(ticks.gameTime[tickIndex]);
                 tmpEngagementId[threadNum].push_back(engagementIndex);
 
                 int64_t attackerId = engagementResult.playerId[engagementIndex][0];
@@ -394,6 +396,7 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
                            result.tickId.push_back(tmpTickId[minThreadId][tmpRowId]);
                            result.demoTickId.push_back(tmpDemoTickId[minThreadId][tmpRowId]);
                            result.gameTickId.push_back(tmpGameTickId[minThreadId][tmpRowId]);
+                           result.gameTime.push_back(tmpGameTime[minThreadId][tmpRowId]);
                            result.engagementId.push_back(tmpEngagementId[minThreadId][tmpRowId]);
                            result.attackerPlayerId.push_back(tmpAttackerPlayerId[minThreadId][tmpRowId]);
                            result.victimPlayerId.push_back(tmpVictimPlayerId[minThreadId][tmpRowId]);
