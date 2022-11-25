@@ -8,6 +8,7 @@ from matplotlib.backends.backend_tkagg import (
     FigureCanvasTkAgg, NavigationToolbar2Tk)
 from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
+from matplotlib import gridspec
 
 weapon_type_to_str = {
     0: "Pistol",
@@ -33,6 +34,7 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame = None):
     #    window.geometry("650x1000")
     #else:
     #    window.geometry("1100x1000")
+    window.resizable(width=False, height=False)
     window.configure(background='grey')
 
     # columns for reading d
@@ -52,18 +54,25 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame = None):
         ax.set_xlabel(first_hit_x_label)
         ax.set_ylabel(first_hit_y_label)
         ax.set_aspect('equal', adjustable='box')
+        #ax.set_aspect('auto', adjustable='box')
         ax.invert_xaxis()
 
     def setSpeedAxSettings(ax: plt.Axes, title: str):
         ax.set_title(title + " Speed")
         ax.set_xlabel("Engagement Time (s)")
         ax.set_ylabel("Mouse Speed (deg/tick, 5-window median)")
-        ax.set_aspect('auto')
+        #ax.set_aspect('auto')
+        #ax.set_aspect(0.5)
 
     if pred_df is None:
-        fig = Figure(figsize=(11., 5.5), dpi=100)
+        fig = Figure(figsize=(16., 5.5), dpi=100)
+        spec = gridspec.GridSpec(ncols=2, nrows=1,
+                                 left=0.05, right=0.95,
+                                 wspace=0.1, hspace=0.1, width_ratios=[1, 1.5])
+        input_pos_ax = fig.add_subplot(spec[0])
+        input_speed_ax = fig.add_subplot(spec[1])
         # https://stackoverflow.com/questions/5083763/python-matplotlib-change-the-relative-size-of-a-subplot
-        input_pos_ax, input_speed_ax = fig.subplots(nrows=1, ncols=2, gridspec_kw={'width_ratios': [1, 2]})
+        #input_pos_ax, input_speed_ax = fig.subplots(nrows=1, ncols=2, gridspec_kw={'width_ratios': [1, 2]})
         #input_pos_ax, input_speed_ax = fig.subplots(nrows=1, ncols=2)
     else:
         raise NotImplementedError

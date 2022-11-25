@@ -328,7 +328,7 @@ class AxObjs:
         self.pos_ax.set_xlim(x_max, x_min)
         self.pos_ax.set_ylim(y_min, y_max)
 
-        #self.speed_ax.set_xlim(left=)
+        self.speed_ax.set_xlim(left=0)
 
         # required to update canvas and attached toolbar!
         canvas.draw()
