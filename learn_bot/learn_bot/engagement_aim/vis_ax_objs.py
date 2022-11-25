@@ -328,6 +328,9 @@ class AxObjs:
         self.pos_ax.set_xlim(x_max, x_min)
         self.pos_ax.set_ylim(y_min, y_max)
 
+        # rescale speed axis, just make 0 is start
+        self.speed_ax.relim()
+        self.speed_ax.autoscale()
         self.speed_ax.set_xlim(left=0)
 
         # required to update canvas and attached toolbar!

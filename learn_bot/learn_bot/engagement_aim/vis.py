@@ -30,14 +30,10 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame = None):
     #This creates the main window of an application
     window = tk.Tk()
     window.title("Aim Images")
-    #if pred_df is None:
-    #    window.geometry("650x1000")
-    #else:
-    #    window.geometry("1100x1000")
     window.resizable(width=False, height=False)
     window.configure(background='grey')
 
-    # columns for reading d
+    # columns for reading data
     first_hit_columns = PerspectiveColumns(4, 18, 10)
     cur_hit_columns = PerspectiveColumns(6, 24, 10)
 
