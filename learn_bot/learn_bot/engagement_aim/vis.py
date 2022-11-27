@@ -1,4 +1,7 @@
 import pandas as pd
+
+from learn_bot.engagement_aim.find_similar_trajectories import SimilarityConstraints, SimilarTrajectory, \
+    find_similar_trajectories
 from learn_bot.engagement_aim.vis_ax_objs import PerspectiveColumns, AxObjs
 from learn_bot.libs.df_grouping import make_index_column
 from learn_bot.engagement_aim.dataset import *
@@ -114,7 +117,7 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame = None):
             engagement_slider_changed(cur_engagement_index)
 
     def tick_slider_changed(cur_tick_index_str):
-        global cur_tick
+        nonlocal cur_tick
         cur_tick_index = int(cur_tick_index_str)
         cur_index = indices[cur_tick_index]
         cur_tick = ticks[cur_tick_index]
@@ -123,7 +126,8 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame = None):
         tick_id_text_var.set("Tick ID: " + str(cur_tick))
         tick_demo_id_text_var.set("Demo Tick ID: " + str(cur_demo_tick))
         tick_game_id_text_var.set("Game Tick ID: " + str(cur_game_tick))
-        input_ax_objs.update_aim_plot(selected_df, not_selected_df, cur_tick, canvas, first_hit_view_angle_reference)
+        input_ax_objs.update_aim_plot(selected_df, not_selected_df, cur_tick, canvas, first_hit_view_angle_reference,
+                                      similar_trajectories)
         if pred_df is not None:
             pred_ax_objs.update_aim_plot(pred_selected_df, cur_tick, canvas, first_hit_view_angle_reference)
         cur_row = selected_df.loc[cur_index, :]
@@ -137,13 +141,13 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame = None):
                                f"{cur_row.loc[columns.cur_view_angle_y_column].item():.2f}), "
                                f"recoil index: {cur_row.loc['recoil index (t)'].item():.2f}, "
                                f"recoil: ({cur_row.loc[columns.recoil_x_column].item():.2f}, "
-                               f"{cur_row.loc[columns.recoil_y_column].item():.2f}), \n"
+                               f"{cur_row.loc[columns.recoil_y_column].item():.2f}), "
                                f"attacker vel: ({cur_row.loc['attacker vel x (t)'].item():.2f}, "
                                f"{cur_row.loc['attacker vel y (t)'].item():.2f}, "
                                f"{cur_row.loc['attacker vel z (t)'].item():.2f}), "
                                f"victim vel: ({cur_row.loc['victim vel x (t)'].item():.2f}, "
                                f"{cur_row.loc['victim vel y (t)'].item():.2f}, "
-                               f"{cur_row.loc['victim vel z (t)'].item():.2f}),\n"
+                               f"{cur_row.loc['victim vel z (t)'].item():.2f}), "
                                f"ticks since/until fire: ({cur_row.loc['ticks since last fire (t)'].item():.2f}, "
                                f"{cur_row.loc['ticks until next fire (t)'].item():.2f}), "
                                f"ticks since/until hold attack: ({cur_row.loc['ticks since last holding attack (t)'].item():.2f}, "
@@ -210,6 +214,24 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame = None):
                 pred_ax.set_ylabel(cur_pos_y_label)
         tick_slider_changed(cur_tick_index)
 
+    similar_trajectories: List[SimilarTrajectory] = []
+    def update_similar_trajectories():
+        nonlocal similar_trajectories
+        similarity_constraint = SimilarityConstraints(
+            int(max_results_entry.get()),
+            same_alive_state.get(),
+            same_visibility_state.get(),
+            float(view_relative_to_enemy_radius_results_entry.get()),
+            float(mouse_speed_radius_entry.get()),
+            float(mouse_direction_angular_radius_entry.get()),
+            input_ax_objs.first_hit_columns.base_cur_view_angle_x_column,
+            input_ax_objs.first_hit_columns.base_cur_view_angle_y_column,
+            input_ax_objs.cur_head_columns.base_cur_view_angle_x_column,
+            input_ax_objs.cur_head_columns.base_cur_view_angle_y_column
+        )
+        similar_trajectories = find_similar_trajectories(not_selected_df, selected_df, cur_tick, similarity_constraint)
+
+
     # state setters
     def change_engagement_dependent_data():
         nonlocal selected_df, not_selected_df, pred_selected_df, cur_engagement, indices, ticks, demo_ticks, game_ticks
@@ -251,11 +273,9 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame = None):
     engagement_slider.pack(side="left")
 
     # engagegment id stepper
-    engagement_step_frame = tk.Frame(window)
-    engagement_step_frame.pack(pady=5)
-    back_engagement_button = tk.Button(engagement_step_frame, text="⏪", command=engagement_back_clicked)
+    back_engagement_button = tk.Button(engagement_frame, text="⏪", command=engagement_back_clicked)
     back_engagement_button.pack(side="left")
-    forward_engagement_button = tk.Button(engagement_step_frame, text="⏩", command=engagement_forward_clicked)
+    forward_engagement_button = tk.Button(engagement_frame, text="⏩", command=engagement_forward_clicked)
     forward_engagement_button.pack(side="left")
 
     # creating tick slider and label
@@ -289,16 +309,14 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame = None):
     tick_slider.pack(side="left")
 
     # creating tick play/pause/step buttons
-    tick_step_frame = tk.Frame(window)
-    tick_step_frame.pack(pady=5)
-    back_step_button = tk.Button(tick_step_frame, text="⏪", command=step_back_clicked)
+    back_step_button = tk.Button(tick_slider_frame, text="⏪", command=step_back_clicked)
     back_step_button.pack(side="left")
-    play_button = tk.Button(tick_step_frame, text="⏯", command=play_clicked)
+    play_button = tk.Button(tick_slider_frame, text="⏯", command=play_clicked)
     orig_player_button_color = play_button.cget("background")
     play_button.pack(side="left")
-    forward_step_button = tk.Button(tick_step_frame, text="⏩", command=step_forward_clicked)
+    forward_step_button = tk.Button(tick_slider_frame, text="⏩", command=step_forward_clicked)
     forward_step_button.pack(side="left")
-    frame_of_reference_button = tk.Button(tick_step_frame, text="toggle reference", command=toggle_reference_clicked)
+    frame_of_reference_button = tk.Button(tick_slider_frame, text="toggle reference", command=toggle_reference_clicked)
     frame_of_reference_button.pack(side="left")
 
     # creating text label
@@ -308,6 +326,55 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame = None):
     text_data_text_var = tk.StringVar()
     text_data_label = tk.Label(text_data_frame, textvariable=text_data_text_var)
     text_data_label.pack(side="left")
+
+    # creating similarity selector
+    similarity_frame = tk.Frame(window)
+    similarity_frame.pack(pady=5)
+    toggle_similar_trajectories_text_var = tk.StringVar()
+    toggle_similar_trajectories_button = tk.Button(similarity_frame, textvariable=toggle_similar_trajectories_text_var,
+                                                   command=step_back_clicked)
+    toggle_similar_trajectories_button.pack(side="left")
+    update_similar_trajectories_button = tk.Button(similarity_frame, text="Update Similar Trajectories",
+                                                   command=update_similar_trajectories)
+    update_similar_trajectories_button.pack(side="left")
+
+    max_results_label = tk.Label(similarity_frame, text="Max Results")
+    max_results_label.pack(side="left")
+    max_results_entry = tk.Entry(similarity_frame, width=5)
+    max_results_entry.pack(side="left")
+    max_results_entry.insert(0, "5")
+
+    same_alive_label = tk.Label(similarity_frame, text="Same Alive")
+    same_alive_label.pack(side="left")
+    same_alive_state = tk.BooleanVar()
+    same_alive_checkbutton = tk.Checkbutton(similarity_frame, variable=same_alive_state)
+    same_alive_checkbutton.pack(side="left")
+    same_alive_checkbutton.select()
+
+    same_visibility_label = tk.Label(similarity_frame, text="Same Visibility")
+    same_visibility_label.pack(side="left")
+    same_visibility_state = tk.BooleanVar()
+    same_visibility_checkbutton = tk.Checkbutton(similarity_frame, variable=same_visibility_state)
+    same_visibility_checkbutton.pack(side="left")
+    same_visibility_checkbutton.select()
+
+    view_relative_to_enemy_radius_results_label = tk.Label(similarity_frame, text="View Relative To Enemy Radius")
+    view_relative_to_enemy_radius_results_label.pack(side="left")
+    view_relative_to_enemy_radius_results_entry = tk.Entry(similarity_frame, width=5)
+    view_relative_to_enemy_radius_results_entry.pack(side="left")
+    view_relative_to_enemy_radius_results_entry.insert(0, "5.")
+
+    mouse_speed_radius_label = tk.Label(similarity_frame, text="Mouse Speed Radius")
+    mouse_speed_radius_label.pack(side="left")
+    mouse_speed_radius_entry = tk.Entry(similarity_frame, width=5)
+    mouse_speed_radius_entry.pack(side="left")
+    mouse_speed_radius_entry.insert(0, "1.")
+
+    mouse_direction_angular_radius_label = tk.Label(similarity_frame, text="Mouse Direction Angular Radius")
+    mouse_direction_angular_radius_label.pack(side="left")
+    mouse_direction_angular_radius_entry = tk.Entry(similarity_frame, width=5)
+    mouse_direction_angular_radius_entry.pack(side="left")
+    mouse_direction_angular_radius_entry.insert(0, "45.")
 
     # initial value settings
     engagement_slider_changed(0)

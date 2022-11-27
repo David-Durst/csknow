@@ -4,7 +4,7 @@ from learn_bot.engagement_aim.dataset import *
 from dataclasses import dataclass
 
 from learn_bot.libs.temporal_column_names import get_temporal_field_str
-from typing import Union
+from typing import Union, Optional
 
 
 def compute_distance(df: Union[pd.DataFrame, pd.Series], x_col: str, y_col: str, result_col: str,
@@ -36,6 +36,7 @@ def compute_angular_difference(df: pd.DataFrame, selected_row_df: pd.DataFrame, 
 
 @dataclass
 class SimilarityConstraints:
+    max_results: int
     same_alive: bool
     same_visibility: bool
     view_relative_to_enemy_radius: float

@@ -12,7 +12,7 @@ from matplotlib.patches import Rectangle, Circle
 from dataclasses import dataclass
 
 from learn_bot.engagement_aim.find_similar_trajectories import compute_distance, find_similar_trajectories, \
-    SimilarityConstraints
+    SimilarityConstraints, SimilarTrajectory
 from learn_bot.libs.temporal_column_names import get_temporal_field_str
 
 # line colors
@@ -228,8 +228,8 @@ class AxObjs:
     pos_victim_head_circle: Optional[Circle] = None
     pos_victim_aabb: Optional[Rectangle] = None
 
-    def update_aim_plot(self, selected_df: pd.DataFrame, not_selected_df: Optional[pd.DataFrame], tick_id: int,
-                        canvas: FigureCanvasTkAgg, use_first_hit: bool):
+    def update_aim_plot(self, selected_df: pd.DataFrame, not_selected_df: pd.DataFrame, tick_id: int,
+                        canvas: FigureCanvasTkAgg, use_first_hit: bool, similar_trajectories: List[SimilarTrajectory]):
         columns = self.first_hit_columns if use_first_hit else self.cur_head_columns
         pos_df_temporal_slices = DataFrameTemporalSlices(selected_df, tick_id, columns,
                                                          columns.cur_view_angle_x_column,
@@ -279,17 +279,19 @@ class AxObjs:
                                                            False)
 
         # get similar columns
-        if not_selected_df is not None:
-            similar_trajectories = \
-                find_similar_trajectories(not_selected_df, selected_df, tick_id,
-                                          SimilarityConstraints(True, True, -1., -1., -1.,#1., 1., 45.,
-                                                                self.first_hit_columns.base_cur_view_angle_x_column,
-                                                                self.first_hit_columns.base_cur_view_angle_y_column,
-                                                                self.cur_head_columns.base_cur_view_angle_x_column,
-                                                                self.cur_head_columns.base_cur_view_angle_y_column
-                                                                )
-                                          )
-            x = 2
+        #similarity_constraints.base_abs_view_angle_x_col = self.first_hit_columns.base_cur_view_angle_x_column
+        #similarity_constraints.base_abs_view_angle_y_col = self.first_hit_columns.base_cur_view_angle_y_column
+        #similarity_constraints.base_relative_view_angle_x_col = self.cur_head_columns.base_cur_view_angle_x_column
+        #similarity_constraints.base_relative_view_angle_y_col = self.cur_head_columns.base_cur_view_angle_y_column
+        #similar_trajectories = \
+        #    find_similar_trajectories(not_selected_df, selected_df, tick_id, similarity_constraints)
+        #SimilarityConstraints(True, True, -1., -1., -1.,#1., 1., 45.,
+        #                                                    self.first_hit_columns.base_cur_view_angle_x_column,
+        #                                                    self.first_hit_columns.base_cur_view_angle_y_column,
+        #                                                    self.cur_head_columns.base_cur_view_angle_x_column,
+        #                                                    self.cur_head_columns.base_cur_view_angle_y_column
+        #                                                    )
+        #                              )
 
         if self.pos_temporal_lines is None:
             # ax1.plot(x, y,color='#FF0000', linewidth=2.2, label='Example line',
