@@ -36,7 +36,7 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
     vector<vector<int64_t>> tmpVictimPlayerId(numThreads);
     vector<vector<array<Vec2, TOTAL_AIM_TICKS>>> tmpAttackerViewAngle(numThreads);
     vector<vector<array<Vec2, TOTAL_AIM_TICKS>>> tmpIdealViewAngle(numThreads);
-    vector<vector<array<Vec2, TOTAL_AIM_TICKS>>> tmpDeltaRelativeFirstHitHeadViewAngle(numThreads);
+    vector<vector<array<Vec2, TOTAL_AIM_TICKS>>> tmpDeltaRelativeFirstHeadViewAngle(numThreads);
     vector<vector<array<Vec2, TOTAL_AIM_TICKS>>> tmpDeltaRelativeCurHeadViewAngle(numThreads);
     vector<vector<array<bool, TOTAL_AIM_TICKS>>> tmpHitVictim(numThreads);
     vector<vector<array<float, TOTAL_AIM_TICKS>>> tmpRecoilIndex(numThreads);
@@ -47,9 +47,9 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
     vector<vector<array<int64_t, TOTAL_AIM_TICKS>>> tmpTicksUntilNextHoldingAttack(numThreads);
     vector<vector<array<bool, TOTAL_AIM_TICKS>>> tmpVictimVisible(numThreads);
     vector<vector<array<bool, TOTAL_AIM_TICKS>>> tmpVictimAlive(numThreads);
-    vector<vector<array<Vec2, TOTAL_AIM_TICKS>>> tmpVictimRelativeFirstHitHeadMinViewAngle(numThreads);
-    vector<vector<array<Vec2, TOTAL_AIM_TICKS>>> tmpVictimRelativeFirstHitHeadMaxViewAngle(numThreads);
-    vector<vector<array<Vec2, TOTAL_AIM_TICKS>>> tmpVictimRelativeFirstHitHeadCurHeadAngle(numThreads);
+    vector<vector<array<Vec2, TOTAL_AIM_TICKS>>> tmpVictimRelativeFirstHeadMinViewAngle(numThreads);
+    vector<vector<array<Vec2, TOTAL_AIM_TICKS>>> tmpVictimRelativeFirstHeadMaxViewAngle(numThreads);
+    vector<vector<array<Vec2, TOTAL_AIM_TICKS>>> tmpVictimRelativeFirstHeadCurHeadAngle(numThreads);
     vector<vector<array<Vec2, TOTAL_AIM_TICKS>>> tmpVictimRelativeCurHeadMinViewAngle(numThreads);
     vector<vector<array<Vec2, TOTAL_AIM_TICKS>>> tmpVictimRelativeCurHeadMaxViewAngle(numThreads);
     vector<vector<array<Vec2, TOTAL_AIM_TICKS>>> tmpVictimRelativeCurHeadCurHeadAngle(numThreads);
@@ -174,7 +174,7 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
 
                 tmpAttackerViewAngle[threadNum].push_back({});
                 tmpIdealViewAngle[threadNum].push_back({});
-                tmpDeltaRelativeFirstHitHeadViewAngle[threadNum].push_back({});
+                tmpDeltaRelativeFirstHeadViewAngle[threadNum].push_back({});
                 tmpDeltaRelativeCurHeadViewAngle[threadNum].push_back({});
                 tmpHitVictim[threadNum].push_back({});
                 tmpRecoilIndex[threadNum].push_back({});
@@ -185,9 +185,9 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
                 tmpTicksUntilNextHoldingAttack[threadNum].push_back({});
                 tmpVictimVisible[threadNum].push_back({});
                 tmpVictimAlive[threadNum].push_back({});
-                tmpVictimRelativeFirstHitHeadMinViewAngle[threadNum].push_back({});
-                tmpVictimRelativeFirstHitHeadMaxViewAngle[threadNum].push_back({});
-                tmpVictimRelativeFirstHitHeadCurHeadAngle[threadNum].push_back({});
+                tmpVictimRelativeFirstHeadMinViewAngle[threadNum].push_back({});
+                tmpVictimRelativeFirstHeadMaxViewAngle[threadNum].push_back({});
+                tmpVictimRelativeFirstHeadCurHeadAngle[threadNum].push_back({});
                 tmpVictimRelativeCurHeadMinViewAngle[threadNum].push_back({});
                 tmpVictimRelativeCurHeadMaxViewAngle[threadNum].push_back({});
                 tmpVictimRelativeCurHeadCurHeadAngle[threadNum].push_back({});
@@ -250,7 +250,7 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
                     tmpAttackerViewAngle[threadNum].back()[i] = curViewAngle;
                     tmpIdealViewAngle[threadNum].back()[i] = idealViewAngle;
 
-                    tmpDeltaRelativeFirstHitHeadViewAngle[threadNum].back()[i] =
+                    tmpDeltaRelativeFirstHeadViewAngle[threadNum].back()[i] =
                         deltaViewFromOriginToDest(attackerEyePos,
                                                   engagementToFirstTickVictimHeadPos[engagementIndex], curViewAngle);
                     tmpDeltaRelativeCurHeadViewAngle[threadNum].back()[i] =
@@ -300,9 +300,9 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
 
                     AABB victimAABB = getAABBForPlayer(victimFootPos, playerAtTick.duckAmount[victimPATId]);
                     vector<Vec3> aabbCorners = getAABBCorners(victimAABB);
-                    Vec2 victimMinViewAngleFirstHit{std::numeric_limits<double>::max(),
+                    Vec2 victimMinViewAngleFirstHead{std::numeric_limits<double>::max(),
                                                    std::numeric_limits<double>::max()};
-                    Vec2 victimMaxViewAngleFirstHit{-1*std::numeric_limits<double>::max(),
+                    Vec2 victimMaxViewAngleFirstHead{-1*std::numeric_limits<double>::max(),
                                                    -1*std::numeric_limits<double>::max()};
                     Vec2 victimMinViewAngleCur{std::numeric_limits<double>::max(),
                                               std::numeric_limits<double>::max()};
@@ -310,7 +310,7 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
                                               -1*std::numeric_limits<double>::max()};
                     for (const auto & aabbCorner : aabbCorners) {
                         Vec2 aabbViewAngle = viewFromOriginToDest(attackerEyePos, aabbCorner);
-                        Vec2 deltaAABBViewAngleFirstHit =
+                        Vec2 deltaAABBViewAngleFirstHead =
                             deltaViewFromOriginToDest(attackerEyePos,
                                                       engagementToFirstTickVictimHeadPos[engagementIndex],
                                                       aabbViewAngle);
@@ -318,15 +318,15 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
                             deltaViewFromOriginToDest(attackerEyePos,
                                                       victimHeadPos,
                                                       aabbViewAngle);
-                        victimMinViewAngleFirstHit = min(victimMinViewAngleFirstHit, deltaAABBViewAngleFirstHit);
-                        victimMaxViewAngleFirstHit = max(victimMaxViewAngleFirstHit, deltaAABBViewAngleFirstHit);
+                        victimMinViewAngleFirstHead = min(victimMinViewAngleFirstHead, deltaAABBViewAngleFirstHead);
+                        victimMaxViewAngleFirstHead = max(victimMaxViewAngleFirstHead, deltaAABBViewAngleFirstHead);
                         victimMinViewAngleCur = min(victimMinViewAngleCur, deltaAABBViewAngleCur);
                         victimMaxViewAngleCur = max(victimMaxViewAngleCur, deltaAABBViewAngleCur);
                     }
 
-                    tmpVictimRelativeFirstHitHeadMinViewAngle[threadNum].back()[i] = victimMinViewAngleFirstHit;
-                    tmpVictimRelativeFirstHitHeadMaxViewAngle[threadNum].back()[i] = victimMaxViewAngleFirstHit;
-                    tmpVictimRelativeFirstHitHeadCurHeadAngle[threadNum].back()[i] =
+                    tmpVictimRelativeFirstHeadMinViewAngle[threadNum].back()[i] = victimMinViewAngleFirstHead;
+                    tmpVictimRelativeFirstHeadMaxViewAngle[threadNum].back()[i] = victimMaxViewAngleFirstHead;
+                    tmpVictimRelativeFirstHeadCurHeadAngle[threadNum].back()[i] =
                         deltaViewFromOriginToDest(attackerEyePos,
                                                   engagementToFirstTickVictimHeadPos[engagementIndex], idealViewAngle);
                     tmpVictimRelativeCurHeadMinViewAngle[threadNum].back()[i] = victimMinViewAngleCur;
@@ -420,8 +420,8 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
                            result.victimPlayerId.push_back(tmpVictimPlayerId[minThreadId][tmpRowId]);
                            result.attackerViewAngle.push_back(tmpAttackerViewAngle[minThreadId][tmpRowId]);
                            result.idealViewAngle.push_back(tmpIdealViewAngle[minThreadId][tmpRowId]);
-                           result.deltaRelativeFirstHitHeadViewAngle.push_back(
-                               tmpDeltaRelativeFirstHitHeadViewAngle[minThreadId][tmpRowId]);
+                           result.deltaRelativeFirstHeadViewAngle.push_back(
+                               tmpDeltaRelativeFirstHeadViewAngle[minThreadId][tmpRowId]);
                            result.deltaRelativeCurHeadViewAngle.push_back(
                                tmpDeltaRelativeCurHeadViewAngle[minThreadId][tmpRowId]);
                            result.hitVictim.push_back(tmpHitVictim[minThreadId][tmpRowId]);
@@ -435,12 +435,12 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
                                tmpTicksUntilNextHoldingAttack[minThreadId][tmpRowId]);
                            result.victimVisible.push_back(tmpVictimVisible[minThreadId][tmpRowId]);
                            result.victimAlive.push_back(tmpVictimAlive[minThreadId][tmpRowId]);
-                           result.victimRelativeFirstHitHeadMinViewAngle.push_back(
-                               tmpVictimRelativeFirstHitHeadMinViewAngle[minThreadId][tmpRowId]);
-                           result.victimRelativeFirstHitHeadMaxViewAngle.push_back(
-                               tmpVictimRelativeFirstHitHeadMaxViewAngle[minThreadId][tmpRowId]);
-                           result.victimRelativeFirstHitHeadCurHeadViewAngle.push_back(
-                               tmpVictimRelativeFirstHitHeadCurHeadAngle[minThreadId][tmpRowId]);
+                           result.victimRelativeFirstHeadMinViewAngle.push_back(
+                               tmpVictimRelativeFirstHeadMinViewAngle[minThreadId][tmpRowId]);
+                           result.victimRelativeFirstHeadMaxViewAngle.push_back(
+                               tmpVictimRelativeFirstHeadMaxViewAngle[minThreadId][tmpRowId]);
+                           result.victimRelativeFirstHeadCurHeadViewAngle.push_back(
+                               tmpVictimRelativeFirstHeadCurHeadAngle[minThreadId][tmpRowId]);
                            result.victimRelativeCurHeadMinViewAngle.push_back(
                                tmpVictimRelativeCurHeadMinViewAngle[minThreadId][tmpRowId]);
                            result.victimRelativeCurHeadMaxViewAngle.push_back(
