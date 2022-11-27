@@ -41,7 +41,7 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame = None):
     cur_hit_columns = PerspectiveColumns(6, 24, 10)
 
     # create axes and their objects
-    first_hit_title_suffix = " Relative To First Hit Enemy Head"
+    first_hit_title_suffix = " Relative To First Enemy Head"
     cur_pos_title_suffix = " Relative To Cur Enemy Head"
     first_hit_x_label = "Yaw (deg)"
     cur_pos_x_label = "Yaw Delta (deg)"
