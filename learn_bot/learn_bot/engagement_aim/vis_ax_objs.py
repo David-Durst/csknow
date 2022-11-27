@@ -265,10 +265,7 @@ class AxObjs:
         speed_cols = []
         speed_df = pd.DataFrame()
         min_game_time = min(selected_df['game time'])
-        speed_df['tick id'] = selected_df['tick id']
-        speed_df['ticks until next fire (t)'] = selected_df['ticks until next fire (t)']
-        speed_df['ticks until next holding attack (t)'] = selected_df['ticks until next holding attack (t)']
-        speed_df['hit victim (t)'] = selected_df['hit victim (t)']
+        speed_df = selected_df.copy()
         speed_df['delta game time'] = (selected_df['game time'] - min_game_time) / 1000.
         for i in range(-2, 3):
             speed_cols.append(get_temporal_field_str("speed at", i))
@@ -285,7 +282,7 @@ class AxObjs:
         if not_selected_df is not None:
             similar_trajectories = \
                 find_similar_trajectories(not_selected_df, selected_df, tick_id,
-                                          SimilarityConstraints(True, True, 1., 1., 45.,
+                                          SimilarityConstraints(True, True, -1., -1., -1.,#1., 1., 45.,
                                                                 self.first_hit_columns.base_cur_view_angle_x_column,
                                                                 self.first_hit_columns.base_cur_view_angle_y_column,
                                                                 self.cur_head_columns.base_cur_view_angle_x_column,
