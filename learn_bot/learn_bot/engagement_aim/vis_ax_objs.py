@@ -11,6 +11,8 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle, Circle
 from dataclasses import dataclass
 
+from learn_bot.engagement_aim.find_similar_trajectories import compute_distance, find_similar_trajectories, \
+    SimilarityConstraints
 from learn_bot.libs.temporal_column_names import get_temporal_field_str
 
 # line colors
@@ -226,9 +228,10 @@ class AxObjs:
     pos_victim_head_circle: Optional[Circle] = None
     pos_victim_aabb: Optional[Rectangle] = None
 
-    def update_aim_plot(self, data_df: pd.DataFrame, tick_id: int, canvas: FigureCanvasTkAgg, use_first_hit: bool):
+    def update_aim_plot(self, selected_df: pd.DataFrame, not_selected_df: Optional[pd.DataFrame], tick_id: int,
+                        canvas: FigureCanvasTkAgg, use_first_hit: bool):
         columns = self.first_hit_columns if use_first_hit else self.cur_head_columns
-        pos_df_temporal_slices = DataFrameTemporalSlices(data_df, tick_id, columns,
+        pos_df_temporal_slices = DataFrameTemporalSlices(selected_df, tick_id, columns,
                                                          columns.cur_view_angle_x_column,
                                                          columns.cur_view_angle_y_column,
                                                          True)
@@ -255,36 +258,41 @@ class AxObjs:
             pos_df_temporal_slices.present_df.loc[:, columns.victim_cur_head_view_angle_y_column].item()
         )
         head_radius = (aabb_max[0] - aabb_min[0]) / 2. * head_scale
-        victim_visible = pos_df_temporal_slices.present_df.loc[:, 'victim visible (t)'].item()
-        victim_alive = pos_df_temporal_slices.present_df.loc[:, 'victim alive (t)'].item()
+        victim_visible = pos_df_temporal_slices.present_df.loc[:, cur_victim_visible_column].item()
+        victim_alive = pos_df_temporal_slices.present_df.loc[:, cur_victim_alive_column].item()
 
         # speed data
         speed_cols = []
         speed_df = pd.DataFrame()
-        min_game_time = min(data_df['game time'])
-        speed_df['tick id'] = data_df['tick id']
-        speed_df['ticks until next fire (t)'] = data_df['ticks until next fire (t)']
-        speed_df['ticks until next holding attack (t)'] = data_df['ticks until next holding attack (t)']
-        speed_df['hit victim (t)'] = data_df['hit victim (t)']
-        speed_df['delta game time'] = (data_df['game time'] - min_game_time) / 1000.
+        min_game_time = min(selected_df['game time'])
+        speed_df['tick id'] = selected_df['tick id']
+        speed_df['ticks until next fire (t)'] = selected_df['ticks until next fire (t)']
+        speed_df['ticks until next holding attack (t)'] = selected_df['ticks until next holding attack (t)']
+        speed_df['hit victim (t)'] = selected_df['hit victim (t)']
+        speed_df['delta game time'] = (selected_df['game time'] - min_game_time) / 1000.
         for i in range(-2, 3):
-            x_speed_col = get_temporal_field_str("x speed at", i)
-            y_speed_col = get_temporal_field_str("y speed at", i)
             speed_cols.append(get_temporal_field_str("speed at", i))
-            speed_df[x_speed_col] = \
-                data_df[get_temporal_field_str(columns.base_cur_view_angle_x_column, i)] - \
-                data_df[get_temporal_field_str(columns.base_cur_view_angle_x_column, i-1)]
-            speed_df[y_speed_col] = \
-                data_df[get_temporal_field_str(columns.base_cur_view_angle_y_column, i)] - \
-                data_df[get_temporal_field_str(columns.base_cur_view_angle_y_column, i - 1)]
-            speed_df[speed_cols[-1]] = \
-                (speed_df[x_speed_col].pow(2) + speed_df[y_speed_col].pow(2)).pow(0.5)
+            compute_distance(speed_df, columns.base_cur_view_angle_x_column, columns.base_cur_view_angle_y_column,
+                             speed_cols[-1], i - 1, i)
         median_speed_col = "median speed"
         speed_df[median_speed_col] = speed_df[speed_cols].mean(axis=1)
 
         speed_df_temporal_slices = DataFrameTemporalSlices(speed_df, tick_id, columns,
                                                            "delta game time", median_speed_col,
                                                            False)
+
+        # get similar columns
+        if not_selected_df is not None:
+            similar_trajectories = \
+                find_similar_trajectories(not_selected_df, selected_df, tick_id,
+                                          SimilarityConstraints(True, True, 1., 1., 45.,
+                                                                self.first_hit_columns.base_cur_view_angle_x_column,
+                                                                self.first_hit_columns.base_cur_view_angle_y_column,
+                                                                self.cur_head_columns.base_cur_view_angle_x_column,
+                                                                self.cur_head_columns.base_cur_view_angle_y_column
+                                                                )
+                                          )
+            x = 2
 
         if self.pos_temporal_lines is None:
             # ax1.plot(x, y,color='#FF0000', linewidth=2.2, label='Example line',

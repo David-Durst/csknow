@@ -91,6 +91,7 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame = None):
     cur_engagement: int = -1
     cur_tick: int = -1
     selected_df: pd.DataFrame = all_data_df
+    not_selected_df: pd.DataFrame = pd.DataFrame()
     pred_selected_df: pd.DataFrame = pred_df
 
     def engagement_slider_changed(cur_engagement_index):
@@ -122,7 +123,7 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame = None):
         tick_id_text_var.set("Tick ID: " + str(cur_tick))
         tick_demo_id_text_var.set("Demo Tick ID: " + str(cur_demo_tick))
         tick_game_id_text_var.set("Game Tick ID: " + str(cur_game_tick))
-        input_ax_objs.update_aim_plot(selected_df, cur_tick, canvas, first_hit_view_angle_reference)
+        input_ax_objs.update_aim_plot(selected_df, not_selected_df, cur_tick, canvas, first_hit_view_angle_reference)
         if pred_df is not None:
             pred_ax_objs.update_aim_plot(pred_selected_df, cur_tick, canvas, first_hit_view_angle_reference)
         cur_row = selected_df.loc[cur_index, :]
@@ -211,8 +212,9 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame = None):
 
     # state setters
     def change_engagement_dependent_data():
-        nonlocal selected_df, pred_selected_df, cur_engagement, indices, ticks, demo_ticks, game_ticks
+        nonlocal selected_df, not_selected_df, pred_selected_df, cur_engagement, indices, ticks, demo_ticks, game_ticks
         selected_df = all_data_df.loc[all_data_df['engagement id'] == cur_engagement]
+        not_selected_df = all_data_df.loc[all_data_df['engagement id'] != cur_engagement]
         if pred_df is not None:
             pred_selected_df = pred_df.loc[all_data_df['engagement id'] == cur_engagement]
 

@@ -63,3 +63,8 @@ input_column_types = ColumnTypes(temporal_io_float_column_names.input_columns + 
                                  input_categorical_columns, [6])
 
 output_column_types = ColumnTypes(temporal_io_float_column_names.output_columns, [], [])
+
+engagement_id_column = "engagement id"
+tick_id_column = "tick id"
+cur_victim_alive_column = "victim alive (t)"
+cur_victim_visible_column = "victim visible (t)"
