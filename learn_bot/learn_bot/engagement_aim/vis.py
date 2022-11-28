@@ -93,6 +93,7 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame = None):
     game_ticks = []
     cur_engagement: int = -1
     cur_tick: int = -1
+    cur_tick_index: int = -1
     selected_df: pd.DataFrame = all_data_df
     not_selected_df: pd.DataFrame = pd.DataFrame()
     pred_selected_df: pd.DataFrame = pred_df
@@ -117,7 +118,7 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame = None):
             engagement_slider_changed(cur_engagement_index)
 
     def tick_slider_changed(cur_tick_index_str):
-        nonlocal cur_tick
+        nonlocal cur_tick, cur_tick_index
         cur_tick_index = int(cur_tick_index_str)
         cur_index = indices[cur_tick_index]
         cur_tick = ticks[cur_tick_index]
@@ -154,7 +155,7 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame = None):
                                f"{cur_row.loc['ticks until next holding attack (t)'].item():.2f})")
 
     def step_back_clicked():
-        cur_tick_index = int(tick_slider.get())
+        nonlocal cur_tick_index
         if cur_tick_index > 0:
             cur_tick_index -= 1
             tick_slider.set(cur_tick_index)
@@ -185,7 +186,7 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame = None):
 
 
     def step_forward_clicked():
-        cur_tick_index = int(tick_slider.get())
+        nonlocal cur_tick_index
         if cur_tick_index < len(ticks) - 1:
             cur_tick_index += 1
             tick_slider.set(cur_tick_index)
@@ -195,7 +196,6 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame = None):
     def toggle_reference_clicked():
         nonlocal first_hit_view_angle_reference
         first_hit_view_angle_reference = not first_hit_view_angle_reference
-        cur_tick_index = int(tick_slider.get())
         if first_hit_view_angle_reference:
             input_pos_ax.set_title(input_pos_ax.base_title + first_hit_title_suffix)
             input_pos_ax.set_xlabel(first_hit_x_label)
@@ -230,6 +230,9 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame = None):
             input_ax_objs.cur_head_columns.base_cur_view_angle_y_column
         )
         similar_trajectories = find_similar_trajectories(not_selected_df, selected_df, cur_tick, similarity_constraint)
+        print(f"got {len(similar_trajectories)} similar trajectories")
+        similar_trajectories = similar_trajectories[:similarity_constraint.max_results]
+        tick_slider_changed(cur_tick_index)
 
     enable_similar_trajectories = True
     disable_similar_trajectories_str = "Disable Similar Trajectories"
@@ -241,6 +244,7 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame = None):
             toggle_similar_trajectories_text_var.set(disable_similar_trajectories_str)
         else:
             toggle_similar_trajectories_text_var.set(enable_similar_trajectories_str)
+        tick_slider_changed(cur_tick_index)
 
     # state setters
     def change_engagement_dependent_data():
