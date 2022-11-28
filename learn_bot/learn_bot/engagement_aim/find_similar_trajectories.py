@@ -7,8 +7,19 @@ from learn_bot.libs.temporal_column_names import get_temporal_field_str
 from typing import Union, Optional
 
 
-def compute_distance(df: Union[pd.DataFrame, pd.Series], x_col: str, y_col: str, result_col: str,
-                     start_t: int, end_t: int):
+def compute_distance(df: pd.DataFrame, x_col: str, y_col: str, result_col: str, t: int):
+    df[result_col] = \
+        (df[get_temporal_field_str(x_col, t)].pow(2) + df[get_temporal_field_str(y_col, t)].pow(2)).pow(0.5)
+
+
+def compute_per_axis_position_difference(df: pd.DataFrame, x_col: str, y_col: str, result_x_col: str, result_y_col: str,
+                                start_t: int, end_t: int):
+    df[result_x_col] = df[get_temporal_field_str(x_col, end_t)] - df[get_temporal_field_str(x_col, start_t)]
+    df[result_y_col] = df[get_temporal_field_str(y_col, end_t)] - df[get_temporal_field_str(y_col, start_t)]
+
+
+def compute_position_difference(df: pd.DataFrame, x_col: str, y_col: str, result_col: str,
+                                start_t: int, end_t: int):
     x_distance = df[get_temporal_field_str(x_col, end_t)] - df[get_temporal_field_str(x_col, start_t)]
     y_distance = df[get_temporal_field_str(y_col, end_t)] - df[get_temporal_field_str(y_col, start_t)]
     df[result_col] = (x_distance.pow(2) + y_distance.pow(2)).pow(0.5)
@@ -75,25 +86,26 @@ def find_similar_trajectories(not_selected_df: pd.DataFrame, selected_df: pd.Dat
         compute_distance(derived_df,
                          constraints.base_relative_view_angle_x_col,
                          constraints.base_relative_view_angle_y_col,
-                         relative_distance_col, -1 * constraints.speed_direction_mouse_ticks, 0)
+                         relative_distance_col, 0)
         compute_distance(selected_row_df,
                          constraints.base_relative_view_angle_x_col,
                          constraints.base_relative_view_angle_y_col,
-                         relative_distance_col, -1 * constraints.speed_direction_mouse_ticks, 0)
-        conditions = conditions & (derived_df[relative_distance_col] <= selected_row_df[relative_distance_col].item() +
-                                   constraints.view_relative_to_enemy_radius)
+                         relative_distance_col, 0)
+        conditions = conditions & (
+            (derived_df[relative_distance_col] - selected_row_df[relative_distance_col].item()).abs() <=
+            constraints.view_relative_to_enemy_radius)
     if constraints.mouse_speed_radius >= 0.:
         speed_col = "mouse speed"
-        compute_distance(derived_df,
-                         constraints.base_abs_view_angle_x_col,
-                         constraints.base_abs_view_angle_y_col,
-                         speed_col, -1 * constraints.speed_direction_mouse_ticks, 0)
-        compute_distance(selected_row_df,
-                         constraints.base_abs_view_angle_x_col,
-                         constraints.base_abs_view_angle_y_col,
-                         speed_col, -1 * constraints.speed_direction_mouse_ticks, 0)
-        conditions = conditions & (derived_df[speed_col] <= selected_row_df[speed_col].item() +
-                                   constraints.mouse_speed_radius)
+        compute_position_difference(derived_df,
+                                    constraints.base_abs_view_angle_x_col,
+                                    constraints.base_abs_view_angle_y_col,
+                                    speed_col, -1 * constraints.speed_direction_mouse_ticks, 0)
+        compute_position_difference(selected_row_df,
+                                    constraints.base_abs_view_angle_x_col,
+                                    constraints.base_abs_view_angle_y_col,
+                                    speed_col, -1 * constraints.speed_direction_mouse_ticks, 0)
+        conditions = conditions & (
+            (derived_df[speed_col] - selected_row_df[speed_col].item()).abs() <= constraints.mouse_speed_radius)
     if constraints.mouse_direction_angular_radius >= 0.:
         angular_difference_col = "mouse direction angle difference"
         compute_angular_difference(derived_df,

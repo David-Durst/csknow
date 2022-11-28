@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle, Circle
 from dataclasses import dataclass, field
 
-from learn_bot.engagement_aim.find_similar_trajectories import compute_distance, find_similar_trajectories, \
+from learn_bot.engagement_aim.find_similar_trajectories import compute_position_difference, find_similar_trajectories, \
     SimilarityConstraints, SimilarTrajectory
 from learn_bot.libs.temporal_column_names import get_temporal_field_str
 
@@ -282,8 +282,8 @@ class AxObjs:
         speed_df['delta game time'] = (selected_df['game time'] - min_game_time) / 1000.
         for i in range(-2, 3):
             speed_cols.append(get_temporal_field_str("speed at", i))
-            compute_distance(speed_df, columns.base_cur_view_angle_x_column, columns.base_cur_view_angle_y_column,
-                             speed_cols[-1], i - 1, i)
+            compute_position_difference(speed_df, columns.base_cur_view_angle_x_column, columns.base_cur_view_angle_y_column,
+                                        speed_cols[-1], i - 1, i)
         median_speed_col = "median speed"
         speed_df[median_speed_col] = speed_df[speed_cols].mean(axis=1)
 
