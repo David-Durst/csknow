@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle, Circle
 from dataclasses import dataclass, field
 
-from learn_bot.engagement_aim.find_similar_trajectories import compute_position_difference
+from learn_bot.engagement_aim.vis.vis_similar_trajectories import compute_position_difference
 from learn_bot.libs.temporal_column_names import get_temporal_field_str
 
 # line colors

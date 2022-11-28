@@ -60,7 +60,7 @@ class SimilarityConstraints:
     base_abs_view_angle_y_col: str
     base_relative_view_angle_x_col: str
     base_relative_view_angle_y_col: str
-    speed_direction_mouse_ticks: int = 3
+    speed_direction_mouse_ticks: int = 5
 
 
 @dataclass
