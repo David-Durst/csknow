@@ -11,8 +11,7 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle, Circle
 from dataclasses import dataclass, field
 
-from learn_bot.engagement_aim.find_similar_trajectories import compute_position_difference, find_similar_trajectories, \
-    SimilarityConstraints, SimilarTrajectory
+from learn_bot.engagement_aim.find_similar_trajectories import compute_position_difference
 from learn_bot.libs.temporal_column_names import get_temporal_field_str
 
 # line colors
@@ -239,8 +238,6 @@ class AxObjs:
     pos_recoil_line: Optional[Line2D] = None
     pos_victim_head_circle: Optional[Circle] = None
     pos_victim_aabb: Optional[Rectangle] = None
-    last_similar_trajectories: List[SimilarTrajectory] = field(default_factory=list)
-    last_similar_trajectories_lines: List[TemporalLines] = field(default_factory=list)
 
     def update_aim_plot(self, selected_df: pd.DataFrame, tick_id: int, canvas: FigureCanvasTkAgg, use_first_tick: bool):
         columns = self.first_tick_columns if use_first_tick else self.cur_head_columns

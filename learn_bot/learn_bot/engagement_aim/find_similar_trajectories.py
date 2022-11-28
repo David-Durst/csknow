@@ -8,6 +8,7 @@ from matplotlib.backends.backend_tkagg import (
 from matplotlib.figure import Figure
 from learn_bot.libs.temporal_column_names import get_temporal_field_str
 from typing import Optional, Tuple
+from math import pow
 
 
 def compute_distance(df: pd.DataFrame, x_col: str, y_col: str, result_col: str, t: int):
@@ -39,9 +40,9 @@ def compute_angular_difference(df: pd.DataFrame, selected_row_df: pd.DataFrame, 
     y_distance = df[y_end_col] - df[y_start_col]
     magnitude = (x_distance.pow(2) + y_distance.pow(2)).pow(0.5)
 
-    selected_x_distance = selected_row_df[x_end_col] - selected_row_df[x_start_col]
-    selected_y_distance = selected_row_df[y_end_col] - selected_row_df[y_start_col]
-    selected_magnitude = (selected_x_distance.pow(2) + selected_y_distance.pow(2)).pow(0.5)
+    selected_x_distance = (selected_row_df[x_end_col] - selected_row_df[x_start_col]).item()
+    selected_y_distance = (selected_row_df[y_end_col] - selected_row_df[y_start_col]).item()
+    selected_magnitude = pow(pow(selected_x_distance, 2) + pow(selected_y_distance, 2), 0.5)
 
     df[result_col] = np.rad2deg(np.arccos(
         ((x_distance * selected_x_distance) + (y_distance * selected_y_distance)) /
@@ -50,7 +51,6 @@ def compute_angular_difference(df: pd.DataFrame, selected_row_df: pd.DataFrame, 
 
 @dataclass
 class SimilarityConstraints:
-    max_results: int
     same_alive: bool
     same_visibility: bool
     view_relative_to_enemy_radius: float
@@ -132,6 +132,13 @@ def find_similar_trajectories(not_selected_df: pd.DataFrame, selected_df: pd.Dat
     return result
 
 
+
+def remove_window():
+    global child_window
+    child_window.destroy()
+    child_window = None
+
+
 child_window: Optional[tk.Toplevel] = None
 child_canvas: Optional[FigureCanvasTkAgg] = None
 child_figure: Optional[Figure] = None
@@ -143,6 +150,7 @@ def plot_similar_trajectories_next_movement(parent_window: tk.Tk, not_selected_d
         child_figure = Figure(figsize=(5.5, 5.5), dpi=100)
 
         child_window = tk.Toplevel(parent_window)
+        child_window.protocol('WM_DELETE_WINDOW', remove_window)
 
         child_canvas = FigureCanvasTkAgg(child_figure, master=child_window)  # A tk.DrawingArea.
         child_canvas.draw()
@@ -159,8 +167,8 @@ def plot_similar_trajectories_next_movement(parent_window: tk.Tk, not_selected_d
     similar_trajectories_tuples = [st.to_tuple() for st in similar_trajectories]
     trajectory_state_column = "trajectory states"
     similarity_points_df = not_selected_df.copy()
-    similarity_points_df[trajectory_state_column] = list(zip(similarity_points_df[tick_id_column],
-                                                             similarity_points_df[engagement_id_column]))
+    similarity_points_df[trajectory_state_column] = list(zip(similarity_points_df[engagement_id_column],
+                                                             similarity_points_df[tick_id_column]))
     similarity_points_df = \
         similarity_points_df[similarity_points_df[trajectory_state_column].isin(similar_trajectories_tuples)]
 

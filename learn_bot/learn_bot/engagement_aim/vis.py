@@ -217,7 +217,6 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame = None):
     def update_similar_trajectories():
         nonlocal similar_trajectories
         similarity_constraint = SimilarityConstraints(
-            int(max_results_entry.get()),
             same_alive_state.get(),
             same_visibility_state.get(),
             float(view_relative_to_enemy_radius_results_entry.get()),
@@ -352,12 +351,6 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame = None):
     update_similar_trajectories_button = tk.Button(similarity_frame, text="Update Similar Trajectories",
                                                    command=update_similar_trajectories)
     update_similar_trajectories_button.pack(side="left")
-
-    max_results_label = tk.Label(similarity_frame, text="Max Results")
-    max_results_label.pack(side="left")
-    max_results_entry = tk.Entry(similarity_frame, width=5)
-    max_results_entry.pack(side="left")
-    max_results_entry.insert(0, "5")
 
     same_alive_label = tk.Label(similarity_frame, text="Same Alive")
     same_alive_label.pack(side="left")
