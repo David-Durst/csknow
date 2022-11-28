@@ -37,21 +37,21 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame = None):
     window.configure(background='grey')
 
     # columns for reading data
-    first_hit_columns = PerspectiveColumns(4, 16, 10)
+    first_tick_columns = PerspectiveColumns(4, 16, 10)
     cur_hit_columns = PerspectiveColumns(6, 22, 10)
 
     # create axes and their objects
-    first_hit_title_suffix = " Relative To First Enemy Head"
+    first_tick_title_suffix = " Relative To First Enemy Head"
     cur_pos_title_suffix = " Relative To Cur Enemy Head"
-    first_hit_x_label = "Yaw (deg)"
+    first_tick_x_label = "Yaw (deg)"
     cur_pos_x_label = "Yaw Delta (deg)"
-    first_hit_y_label = "Pitch (deg)"
+    first_tick_y_label = "Pitch (deg)"
     cur_pos_y_label = "Pitch Delta (deg)"
     def setPosAxSettings(ax: plt.Axes, title: str):
         ax.base_title = title + " Pos"
-        ax.set_title(title + first_hit_title_suffix)
-        ax.set_xlabel(first_hit_x_label)
-        ax.set_ylabel(first_hit_y_label)
+        ax.set_title(title + first_tick_title_suffix)
+        ax.set_xlabel(first_tick_x_label)
+        ax.set_ylabel(first_tick_y_label)
         ax.set_aspect('equal', adjustable='box')
         ax.invert_xaxis()
 
@@ -74,8 +74,8 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame = None):
         fig = Figure(figsize=(11., 5.5), dpi=100)
         input_pos_ax, pred_ax = fig.subplots(nrows=1, ncols=2)
         setPosAxSettings(pred_ax, "Pred Aim")
-        pred_ax_objs = AxObjs(fig, pred_ax, None, first_hit_columns, cur_hit_columns)
-    input_ax_objs = AxObjs(fig, input_pos_ax, input_speed_ax, first_hit_columns, cur_hit_columns)
+        pred_ax_objs = AxObjs(fig, pred_ax, None, first_tick_columns, cur_hit_columns)
+    input_ax_objs = AxObjs(fig, input_pos_ax, input_speed_ax, first_tick_columns, cur_hit_columns)
 
     canvas = FigureCanvasTkAgg(fig, master=window)  # A tk.DrawingArea.
     canvas.draw()
@@ -127,12 +127,11 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame = None):
         tick_id_text_var.set("Tick ID: " + str(cur_tick))
         tick_demo_id_text_var.set("Demo Tick ID: " + str(cur_demo_tick))
         tick_game_id_text_var.set("Game Tick ID: " + str(cur_game_tick))
-        input_ax_objs.update_aim_plot(selected_df, not_selected_df, cur_tick, canvas, first_hit_view_angle_reference,
-                                      similar_trajectories if enable_similar_trajectories else [])
+        input_ax_objs.update_aim_plot(selected_df, cur_tick, canvas, first_tick_view_angle_reference)
         if pred_df is not None:
-            pred_ax_objs.update_aim_plot(pred_selected_df, cur_tick, canvas, first_hit_view_angle_reference)
+            pred_ax_objs.update_aim_plot(pred_selected_df, cur_tick, canvas, first_tick_view_angle_reference)
         cur_row = selected_df.loc[cur_index, :]
-        columns = first_hit_columns if first_hit_view_angle_reference else cur_hit_columns
+        columns = first_tick_columns if first_tick_view_angle_reference else cur_hit_columns
         engagement_id_text_var.set(f"Round ID: {int(cur_row.loc['round id'])}, "
                                    f"Engagement ID: {int(cur_engagement)}")
         text_data_text_var.set(f"attacker: {int(cur_row.loc['attacker player id'].item())}, "
@@ -192,18 +191,18 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame = None):
             tick_slider.set(cur_tick_index)
             tick_slider_changed(cur_tick_index)
 
-    first_hit_view_angle_reference = True
+    first_tick_view_angle_reference = True
     def toggle_reference_clicked():
-        nonlocal first_hit_view_angle_reference
-        first_hit_view_angle_reference = not first_hit_view_angle_reference
-        if first_hit_view_angle_reference:
-            input_pos_ax.set_title(input_pos_ax.base_title + first_hit_title_suffix)
-            input_pos_ax.set_xlabel(first_hit_x_label)
-            input_pos_ax.set_ylabel(first_hit_y_label)
+        nonlocal first_tick_view_angle_reference
+        first_tick_view_angle_reference = not first_tick_view_angle_reference
+        if first_tick_view_angle_reference:
+            input_pos_ax.set_title(input_pos_ax.base_title + first_tick_title_suffix)
+            input_pos_ax.set_xlabel(first_tick_x_label)
+            input_pos_ax.set_ylabel(first_tick_y_label)
             if pred_df is not None:
-                pred_ax.set_title(pred_ax.base_title + first_hit_title_suffix)
-                pred_ax.set_xlabel(first_hit_x_label)
-                pred_ax.set_ylabel(first_hit_y_label)
+                pred_ax.set_title(pred_ax.base_title + first_tick_title_suffix)
+                pred_ax.set_xlabel(first_tick_x_label)
+                pred_ax.set_ylabel(first_tick_y_label)
         else:
             input_pos_ax.set_title(input_pos_ax.base_title + cur_pos_title_suffix)
             input_pos_ax.set_xlabel(cur_pos_x_label)
@@ -224,8 +223,8 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame = None):
             float(view_relative_to_enemy_radius_results_entry.get()),
             float(mouse_speed_radius_entry.get()),
             float(mouse_direction_angular_radius_entry.get()),
-            input_ax_objs.first_hit_columns.base_cur_view_angle_x_column,
-            input_ax_objs.first_hit_columns.base_cur_view_angle_y_column,
+            input_ax_objs.first_tick_columns.base_cur_view_angle_x_column,
+            input_ax_objs.first_tick_columns.base_cur_view_angle_y_column,
             input_ax_objs.cur_head_columns.base_cur_view_angle_x_column,
             input_ax_objs.cur_head_columns.base_cur_view_angle_y_column
         )

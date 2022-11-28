@@ -232,7 +232,7 @@ class AxObjs:
     fig: plt.Figure
     pos_ax: plt.Axes
     speed_ax: plt.Axes
-    first_hit_columns: PerspectiveColumns
+    first_tick_columns: PerspectiveColumns
     cur_head_columns: PerspectiveColumns
     pos_temporal_lines: Optional[TemporalLines] = None
     speed_temporal_lines: Optional[TemporalLines] = None
@@ -242,9 +242,8 @@ class AxObjs:
     last_similar_trajectories: List[SimilarTrajectory] = field(default_factory=list)
     last_similar_trajectories_lines: List[TemporalLines] = field(default_factory=list)
 
-    def update_aim_plot(self, selected_df: pd.DataFrame, not_selected_df: pd.DataFrame, tick_id: int,
-                        canvas: FigureCanvasTkAgg, use_first_hit: bool, similar_trajectories: List[SimilarTrajectory]):
-        columns = self.first_hit_columns if use_first_hit else self.cur_head_columns
+    def update_aim_plot(self, selected_df: pd.DataFrame, tick_id: int, canvas: FigureCanvasTkAgg, use_first_tick: bool):
+        columns = self.first_tick_columns if use_first_tick else self.cur_head_columns
         pos_df_temporal_slices = DataFrameTemporalSlices(selected_df, tick_id, columns,
                                                          columns.cur_view_angle_x_column,
                                                          columns.cur_view_angle_y_column,
@@ -323,30 +322,6 @@ class AxObjs:
         else:
             self.pos_victim_aabb.set_edgecolor(aabb_blue)
             self.pos_victim_head_circle.set_color(aabb_blue)
-
-        # update similar trajectories if necessary
-        if similar_trajectories != self.last_similar_trajectories:
-            # clear out old lines
-            for similar_trajectory_lines in self.last_similar_trajectories_lines:
-                similar_trajectory_lines.remove()
-            self.last_similar_trajectories_lines = []
-
-            # get data for new lines
-            similar_trajectories_temporal_slices: List[DataFrameTemporalSlices] = []
-            self.last_similar_trajectories = similar_trajectories
-            for similar_trajectory in similar_trajectories:
-                similar_df = not_selected_df.loc[not_selected_df['engagement id'] == similar_trajectory.engagement_id]
-                similar_trajectories_temporal_slices.append(
-                    DataFrameTemporalSlices(similar_df, similar_trajectory.tick_id, columns,
-                                            columns.cur_view_angle_x_column,
-                                            columns.cur_view_angle_y_column,
-                                            False)
-                )
-
-            for similar_trajectory_temporal_slices in similar_trajectories_temporal_slices:
-                self.last_similar_trajectories_lines.append(
-                    TemporalLines(self.pos_ax, similar_trajectory_temporal_slices, False, False)
-                )
 
         # recompute the ax.dataLim
         self.pos_ax.relim()

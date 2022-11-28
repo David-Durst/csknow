@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 from learn_bot.engagement_aim.dataset import *
 from dataclasses import dataclass
+import tkinter as tk
 
 from learn_bot.libs.temporal_column_names import get_temporal_field_str
 from typing import Union, Optional
@@ -124,3 +125,31 @@ def find_similar_trajectories(not_selected_df: pd.DataFrame, selected_df: pd.Dat
         result.append(SimilarTrajectory(row[engagement_id_column], row[tick_id_column]))
 
     return result
+
+
+child_window: Optional[tk.Toplevel] = None
+def plot_similar_trajectories_next_movement(parent_window: tk.Tk, not_selected_df: pd.DataFrame):
+    global child_window
+    if child_window is None:
+        child_window = tk.Toplevel(child_window)
+    # clear out old lines
+    for similar_trajectory_lines in self.last_similar_trajectories_lines:
+        similar_trajectory_lines.remove()
+    self.last_similar_trajectories_lines = []
+
+    # get data for new lines
+    similar_trajectories_temporal_slices: List[DataFrameTemporalSlices] = []
+    self.last_similar_trajectories = similar_trajectories
+    for similar_trajectory in similar_trajectories:
+        similar_df = not_selected_df.loc[not_selected_df['engagement id'] == similar_trajectory.engagement_id]
+        similar_trajectories_temporal_slices.append(
+            DataFrameTemporalSlices(similar_df, similar_trajectory.tick_id, columns,
+                                    columns.cur_view_angle_x_column,
+                                    columns.cur_view_angle_y_column,
+                                    False)
+        )
+
+    for similar_trajectory_temporal_slices in similar_trajectories_temporal_slices:
+        self.last_similar_trajectories_lines.append(
+            TemporalLines(self.pos_ax, similar_trajectory_temporal_slices, False, False)
+        )
