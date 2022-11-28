@@ -2,7 +2,7 @@ import pandas as pd
 
 from learn_bot.engagement_aim.find_similar_trajectories import SimilarityConstraints, SimilarTrajectory, \
     find_similar_trajectories, plot_similar_trajectories_next_movement
-from learn_bot.engagement_aim.vis_ax_objs import PerspectiveColumns, AxObjs
+from learn_bot.engagement_aim.vis.vis_ax_objs import PerspectiveColumns, AxObjs
 from learn_bot.libs.df_grouping import make_index_column
 from learn_bot.engagement_aim.dataset import *
 import tkinter as tk
