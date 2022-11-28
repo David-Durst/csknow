@@ -217,18 +217,17 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame = None):
     def update_similar_trajectories():
         nonlocal similar_trajectories
         similarity_constraint = SimilarityConstraints(
+            int(next_move_ticks_entry.get()),
             same_alive_state.get(),
             same_visibility_state.get(),
             float(view_relative_to_enemy_radius_results_entry.get()),
             float(mouse_speed_radius_entry.get()),
-            float(mouse_direction_angular_radius_entry.get()),
             input_ax_objs.first_tick_columns.base_cur_view_angle_x_column,
             input_ax_objs.first_tick_columns.base_cur_view_angle_y_column,
             input_ax_objs.cur_head_columns.base_cur_view_angle_x_column,
             input_ax_objs.cur_head_columns.base_cur_view_angle_y_column
         )
         similar_trajectories = find_similar_trajectories(not_selected_df, selected_df, cur_tick, similarity_constraint)
-        print(f"got {len(similar_trajectories)} similar trajectories")
         if enable_similar_trajectories:
             plot_similar_trajectories_next_movement(window, not_selected_df,
                                                     similarity_constraint, similar_trajectories)
@@ -352,6 +351,12 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame = None):
                                                    command=update_similar_trajectories)
     update_similar_trajectories_button.pack(side="left")
 
+    next_move_ticks_label = tk.Label(similarity_frame, text="Next Move Ticks")
+    next_move_ticks_label.pack(side="left")
+    next_move_ticks_entry = tk.Entry(similarity_frame, width=5)
+    next_move_ticks_entry.pack(side="left")
+    next_move_ticks_entry.insert(0, "5")
+
     same_alive_label = tk.Label(similarity_frame, text="Same Alive")
     same_alive_label.pack(side="left")
     same_alive_state = tk.BooleanVar()
@@ -377,12 +382,6 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame = None):
     mouse_speed_radius_entry = tk.Entry(similarity_frame, width=5)
     mouse_speed_radius_entry.pack(side="left")
     mouse_speed_radius_entry.insert(0, "1.")
-
-    mouse_direction_angular_radius_label = tk.Label(similarity_frame, text="Mouse Direction Angular Radius")
-    mouse_direction_angular_radius_label.pack(side="left")
-    mouse_direction_angular_radius_entry = tk.Entry(similarity_frame, width=5)
-    mouse_direction_angular_radius_entry.pack(side="left")
-    mouse_direction_angular_radius_entry.insert(0, "45.")
 
     # initial value settings
     engagement_slider_changed(0)

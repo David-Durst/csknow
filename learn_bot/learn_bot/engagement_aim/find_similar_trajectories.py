@@ -11,7 +11,7 @@ from typing import Optional, Tuple
 from math import pow
 
 
-def compute_distance(df: pd.DataFrame, x_col: str, y_col: str, result_col: str, t: int):
+def compute_magnitude(df: pd.DataFrame, x_col: str, y_col: str, result_col: str, t: int):
     df[result_col] = \
         (df[get_temporal_field_str(x_col, t)].pow(2) + df[get_temporal_field_str(y_col, t)].pow(2)).pow(0.5)
 
@@ -51,11 +51,11 @@ def compute_angular_difference(df: pd.DataFrame, selected_row_df: pd.DataFrame, 
 
 @dataclass
 class SimilarityConstraints:
+    next_move_ticks: int
     same_alive: bool
     same_visibility: bool
     view_relative_to_enemy_radius: float
     mouse_speed_radius: float
-    mouse_direction_angular_radius: float
     base_abs_view_angle_x_col: str
     base_abs_view_angle_y_col: str
     base_relative_view_angle_x_col: str
@@ -70,6 +70,20 @@ class SimilarTrajectory:
 
     def to_tuple(self) -> Tuple[int, int]:
         return self.engagement_id, self.tick_id
+
+
+def compute_range_condition(derived_df: pd.DataFrame, selected_row_df: pd.DataFrame, x_col: str, y_col: str,
+                            magnitude_col: str, radius_constraint: float):
+    compute_magnitude(derived_df, x_col, y_col, magnitude_col, 0)
+    compute_magnitude(selected_row_df, x_col, y_col, magnitude_col, 0)
+    magnitude_radius_condition = (derived_df[magnitude_col] - selected_row_df[magnitude_col].item()).abs() <= \
+                                 radius_constraint
+    x_t_col = get_temporal_field_str(x_col, 0)
+    y_t_col = get_temporal_field_str(x_col, 0)
+    aabb_condition = \
+        ((derived_df[x_t_col] - selected_row_df[x_t_col].item()).abs() <= radius_constraint) & \
+        ((derived_df[y_t_col] - selected_row_df[y_t_col].item()).abs() <= radius_constraint)
+    return magnitude_radius_condition & aabb_condition
 
 
 def find_similar_trajectories(not_selected_df: pd.DataFrame, selected_df: pd.DataFrame, tick_id: int,
@@ -88,38 +102,31 @@ def find_similar_trajectories(not_selected_df: pd.DataFrame, selected_df: pd.Dat
         conditions = conditions & (
                 derived_df[cur_victim_visible_column] == selected_row[cur_victim_visible_column].item())
     if constraints.view_relative_to_enemy_radius > 0.:
-        relative_distance_col = "mouse distance to enemy"
-        compute_distance(derived_df,
-                         constraints.base_relative_view_angle_x_col,
-                         constraints.base_relative_view_angle_y_col,
-                         relative_distance_col, 0)
-        compute_distance(selected_row_df,
-                         constraints.base_relative_view_angle_x_col,
-                         constraints.base_relative_view_angle_y_col,
-                         relative_distance_col, 0)
-        conditions = conditions & (
-            (derived_df[relative_distance_col] - selected_row_df[relative_distance_col].item()).abs() <=
-            constraints.view_relative_to_enemy_radius)
+        magnitude_col = "mouse distance to enemy magnitude"
+        conditions = conditions & compute_range_condition(derived_df, selected_row_df,
+                                                          constraints.base_relative_view_angle_x_col,
+                                                          constraints.base_relative_view_angle_y_col,
+                                                          magnitude_col, constraints.view_relative_to_enemy_radius)
     if constraints.mouse_speed_radius >= 0.:
-        speed_col = "mouse speed"
-        compute_position_difference(derived_df,
-                                    constraints.base_abs_view_angle_x_col,
-                                    constraints.base_abs_view_angle_y_col,
-                                    speed_col, -1 * constraints.speed_direction_mouse_ticks, 0)
-        compute_position_difference(selected_row_df,
-                                    constraints.base_abs_view_angle_x_col,
-                                    constraints.base_abs_view_angle_y_col,
-                                    speed_col, -1 * constraints.speed_direction_mouse_ticks, 0)
-        conditions = conditions & (
-            (derived_df[speed_col] - selected_row_df[speed_col].item()).abs() <= constraints.mouse_speed_radius)
-    if constraints.mouse_direction_angular_radius >= 0.:
-        angular_difference_col = "mouse direction angle difference"
-        compute_angular_difference(derived_df,
-                                   selected_row_df,
-                                   constraints.base_abs_view_angle_x_col,
-                                   constraints.base_abs_view_angle_y_col,
-                                   angular_difference_col, -1 * constraints.speed_direction_mouse_ticks, 0)
-        conditions = conditions & (derived_df[angular_difference_col] <= constraints.mouse_speed_radius)
+        x_speed_col = "x mouse speed"
+        y_speed_col = "y mouse speed"
+        # need these to match naming approach of above
+        x_t_speed_col = "x mouse speed (t)"
+        y_t_speed_col = "y mouse speed (t)"
+        magnitude_speed_col = "magnitude mouse speed"
+        compute_per_axis_position_difference(derived_df,
+                                             constraints.base_abs_view_angle_x_col,
+                                             constraints.base_abs_view_angle_y_col,
+                                             x_t_speed_col, y_t_speed_col,
+                                             -1 * constraints.speed_direction_mouse_ticks, 0)
+        compute_per_axis_position_difference(selected_row_df,
+                                             constraints.base_abs_view_angle_x_col,
+                                             constraints.base_abs_view_angle_y_col,
+                                             x_t_speed_col, y_t_speed_col,
+                                             -1 * constraints.speed_direction_mouse_ticks, 0)
+        conditions = conditions & compute_range_condition(derived_df, selected_row_df,
+                                                          x_speed_col, y_speed_col,
+                                                          magnitude_speed_col, constraints.mouse_speed_radius)
 
     similar_df = derived_df[conditions]
     similar_engagements = similar_df.groupby([engagement_id_column]).agg({
@@ -163,6 +170,7 @@ def plot_similar_trajectories_next_movement(parent_window: tk.Tk, not_selected_d
 
     child_figure.clear()
     ax = child_figure.gca()
+    ax.invert_xaxis()
 
     similar_trajectories_tuples = [st.to_tuple() for st in similar_trajectories]
     trajectory_state_column = "trajectory states"
@@ -177,7 +185,7 @@ def plot_similar_trajectories_next_movement(parent_window: tk.Tk, not_selected_d
     compute_per_axis_position_difference(similarity_points_df, similarity_constraints.base_abs_view_angle_x_col,
                                          similarity_constraints.base_abs_view_angle_y_col,
                                          x_pos_delta_col, y_pos_delta_col,
-                                         0, similarity_constraints.speed_direction_mouse_ticks)
+                                         0, similarity_constraints.next_move_ticks)
 
     heatmap, xedges, yedges = np.histogram2d(similarity_points_df[x_pos_delta_col],
                                              similarity_points_df[y_pos_delta_col], bins=50)
@@ -187,7 +195,9 @@ def plot_similar_trajectories_next_movement(parent_window: tk.Tk, not_selected_d
     heatmap = heatmap.T
 
     X, Y = np.meshgrid(xedges, yedges)
-    ax.pcolormesh(X, Y, heatmap)
+    im = ax.pcolormesh(X, Y, heatmap)
+    child_figure.colorbar(im, ax=ax)
+    ax.set_title(f"{len(similar_trajectories)} Similar Trajectories {similarity_constraints.next_move_ticks} Delta Pos")
 
     child_canvas.draw()
 
