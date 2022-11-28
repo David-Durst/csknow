@@ -1,7 +1,7 @@
 import pandas as pd
 
 from learn_bot.engagement_aim.find_similar_trajectories import SimilarityConstraints, SimilarTrajectory, \
-    find_similar_trajectories
+    find_similar_trajectories, plot_similar_trajectories_next_movement
 from learn_bot.engagement_aim.vis_ax_objs import PerspectiveColumns, AxObjs
 from learn_bot.libs.df_grouping import make_index_column
 from learn_bot.engagement_aim.dataset import *
@@ -230,8 +230,9 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame = None):
         )
         similar_trajectories = find_similar_trajectories(not_selected_df, selected_df, cur_tick, similarity_constraint)
         print(f"got {len(similar_trajectories)} similar trajectories")
-        similar_trajectories = similar_trajectories[:similarity_constraint.max_results]
-        tick_slider_changed(cur_tick_index)
+        if enable_similar_trajectories:
+            plot_similar_trajectories_next_movement(window, not_selected_df,
+                                                    similarity_constraint, similar_trajectories)
 
     enable_similar_trajectories = True
     disable_similar_trajectories_str = "Disable Similar Trajectories"

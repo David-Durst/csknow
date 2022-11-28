@@ -3,9 +3,11 @@ import numpy as np
 from learn_bot.engagement_aim.dataset import *
 from dataclasses import dataclass
 import tkinter as tk
-
+from matplotlib.backends.backend_tkagg import (
+    FigureCanvasTkAgg, NavigationToolbar2Tk)
+from matplotlib.figure import Figure
 from learn_bot.libs.temporal_column_names import get_temporal_field_str
-from typing import Union, Optional
+from typing import Optional, Tuple
 
 
 def compute_distance(df: pd.DataFrame, x_col: str, y_col: str, result_col: str, t: int):
@@ -65,6 +67,9 @@ class SimilarityConstraints:
 class SimilarTrajectory:
     engagement_id: int
     tick_id: int
+
+    def to_tuple(self) -> Tuple[int, int]:
+        return self.engagement_id, self.tick_id
 
 
 def find_similar_trajectories(not_selected_df: pd.DataFrame, selected_df: pd.DataFrame, tick_id: int,
@@ -128,28 +133,53 @@ def find_similar_trajectories(not_selected_df: pd.DataFrame, selected_df: pd.Dat
 
 
 child_window: Optional[tk.Toplevel] = None
-def plot_similar_trajectories_next_movement(parent_window: tk.Tk, not_selected_df: pd.DataFrame):
-    global child_window
+child_canvas: Optional[FigureCanvasTkAgg] = None
+child_figure: Optional[Figure] = None
+def plot_similar_trajectories_next_movement(parent_window: tk.Tk, not_selected_df: pd.DataFrame,
+                                            similarity_constraints: SimilarityConstraints,
+                                            similar_trajectories: List[SimilarTrajectory]):
+    global child_window, child_canvas, child_figure
     if child_window is None:
-        child_window = tk.Toplevel(child_window)
-    # clear out old lines
-    for similar_trajectory_lines in self.last_similar_trajectories_lines:
-        similar_trajectory_lines.remove()
-    self.last_similar_trajectories_lines = []
+        child_figure = Figure(figsize=(5.5, 5.5), dpi=100)
 
-    # get data for new lines
-    similar_trajectories_temporal_slices: List[DataFrameTemporalSlices] = []
-    self.last_similar_trajectories = similar_trajectories
-    for similar_trajectory in similar_trajectories:
-        similar_df = not_selected_df.loc[not_selected_df['engagement id'] == similar_trajectory.engagement_id]
-        similar_trajectories_temporal_slices.append(
-            DataFrameTemporalSlices(similar_df, similar_trajectory.tick_id, columns,
-                                    columns.cur_view_angle_x_column,
-                                    columns.cur_view_angle_y_column,
-                                    False)
-        )
+        child_window = tk.Toplevel(parent_window)
 
-    for similar_trajectory_temporal_slices in similar_trajectories_temporal_slices:
-        self.last_similar_trajectories_lines.append(
-            TemporalLines(self.pos_ax, similar_trajectory_temporal_slices, False, False)
-        )
+        child_canvas = FigureCanvasTkAgg(child_figure, master=child_window)  # A tk.DrawingArea.
+        child_canvas.draw()
+        child_canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+
+        # pack_toolbar=False will make it easier to use a layout manager later on.
+        child_toolbar = NavigationToolbar2Tk(child_canvas, child_window, pack_toolbar=False)
+        child_toolbar.update()
+        child_toolbar.pack(side=tk.BOTTOM, fill=tk.X)
+
+    child_figure.clear()
+    ax = child_figure.gca()
+
+    similar_trajectories_tuples = [st.to_tuple() for st in similar_trajectories]
+    trajectory_state_column = "trajectory states"
+    similarity_points_df = not_selected_df.copy()
+    similarity_points_df[trajectory_state_column] = list(zip(similarity_points_df[tick_id_column],
+                                                             similarity_points_df[engagement_id_column]))
+    similarity_points_df = \
+        similarity_points_df[similarity_points_df[trajectory_state_column].isin(similar_trajectories_tuples)]
+
+    x_pos_delta_col = "X Delta"
+    y_pos_delta_col = "Y Delta"
+    compute_per_axis_position_difference(similarity_points_df, similarity_constraints.base_abs_view_angle_x_col,
+                                         similarity_constraints.base_abs_view_angle_y_col,
+                                         x_pos_delta_col, y_pos_delta_col,
+                                         0, similarity_constraints.speed_direction_mouse_ticks)
+
+    heatmap, xedges, yedges = np.histogram2d(similarity_points_df[x_pos_delta_col],
+                                             similarity_points_df[y_pos_delta_col], bins=50)
+
+    # Histogram does not follow Cartesian convention (see Notes),
+    # therefore transpose H for visualization purposes.
+    heatmap = heatmap.T
+
+    X, Y = np.meshgrid(xedges, yedges)
+    ax.pcolormesh(X, Y, heatmap)
+
+    child_canvas.draw()
+
