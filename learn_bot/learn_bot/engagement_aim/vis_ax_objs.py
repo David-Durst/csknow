@@ -9,7 +9,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.lines import Line2D
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle, Circle
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from learn_bot.engagement_aim.find_similar_trajectories import compute_distance, find_similar_trajectories, \
     SimilarityConstraints, SimilarTrajectory
@@ -210,6 +210,16 @@ class TemporalLines:
         self.hit_victim_line.set_data(df_temporal_slices.hit_victim_x_np,
                                       df_temporal_slices.hit_victim_y_np)
 
+    def remove(self):
+        self.all_line.remove()
+        if self.present_series_line is not None:
+            self.present_series_line.remove()
+        self.prior_line.remove()
+        self.future_line.remove()
+        self.present_line.remove()
+        self.fire_line.remove()
+        self.hold_attack_line.remove()
+        self.hit_victim_line.remove()
 
 # https://stackoverflow.com/questions/11690597/there-is-a-class-matplotlib-axes-axessubplot-but-the-module-matplotlib-axes-has
 # matplotlib.axes._subplots.AxesSubplot doesn't exist statically
@@ -227,6 +237,8 @@ class AxObjs:
     pos_recoil_line: Optional[Line2D] = None
     pos_victim_head_circle: Optional[Circle] = None
     pos_victim_aabb: Optional[Rectangle] = None
+    last_similar_trajectories: List[SimilarTrajectory] = field(default_factory=list)
+    last_similar_trajectories_lines: List[TemporalLines] = field(default_factory=list)
 
     def update_aim_plot(self, selected_df: pd.DataFrame, not_selected_df: pd.DataFrame, tick_id: int,
                         canvas: FigureCanvasTkAgg, use_first_hit: bool, similar_trajectories: List[SimilarTrajectory]):
@@ -263,7 +275,6 @@ class AxObjs:
 
         # speed data
         speed_cols = []
-        speed_df = pd.DataFrame()
         min_game_time = min(selected_df['game time'])
         speed_df = selected_df.copy()
         speed_df['delta game time'] = (selected_df['game time'] - min_game_time) / 1000.
@@ -277,21 +288,6 @@ class AxObjs:
         speed_df_temporal_slices = DataFrameTemporalSlices(speed_df, tick_id, columns,
                                                            "delta game time", median_speed_col,
                                                            False)
-
-        # get similar columns
-        #similarity_constraints.base_abs_view_angle_x_col = self.first_hit_columns.base_cur_view_angle_x_column
-        #similarity_constraints.base_abs_view_angle_y_col = self.first_hit_columns.base_cur_view_angle_y_column
-        #similarity_constraints.base_relative_view_angle_x_col = self.cur_head_columns.base_cur_view_angle_x_column
-        #similarity_constraints.base_relative_view_angle_y_col = self.cur_head_columns.base_cur_view_angle_y_column
-        #similar_trajectories = \
-        #    find_similar_trajectories(not_selected_df, selected_df, tick_id, similarity_constraints)
-        #SimilarityConstraints(True, True, -1., -1., -1.,#1., 1., 45.,
-        #                                                    self.first_hit_columns.base_cur_view_angle_x_column,
-        #                                                    self.first_hit_columns.base_cur_view_angle_y_column,
-        #                                                    self.cur_head_columns.base_cur_view_angle_x_column,
-        #                                                    self.cur_head_columns.base_cur_view_angle_y_column
-        #                                                    )
-        #                              )
 
         if self.pos_temporal_lines is None:
             # ax1.plot(x, y,color='#FF0000', linewidth=2.2, label='Example line',
@@ -325,6 +321,30 @@ class AxObjs:
         else:
             self.pos_victim_aabb.set_edgecolor(aabb_blue)
             self.pos_victim_head_circle.set_color(aabb_blue)
+
+        # update similar trajectories if necessary
+        if similar_trajectories != self.last_similar_trajectories:
+            # clear out old lines
+            for similar_trajectory_lines in self.last_similar_trajectories_lines:
+                similar_trajectory_lines.remove()
+            self.last_similar_trajectories_lines = []
+
+            # get data for new lines
+            similar_trajectories_temporal_slices: List[DataFrameTemporalSlices] = []
+            self.last_similar_trajectories = similar_trajectories
+            for similar_trajectory in similar_trajectories:
+                similar_df = not_selected_df.loc[not_selected_df['engagement id'] == similar_trajectory.engagement_id]
+                similar_trajectories_temporal_slices.append(
+                    DataFrameTemporalSlices(similar_df, similar_trajectory.tick_id, columns,
+                                            columns.cur_view_angle_x_column,
+                                            columns.cur_view_angle_y_column,
+                                            False)
+                )
+
+            for similar_trajectory_temporal_slices in similar_trajectories_temporal_slices:
+                self.last_similar_trajectories_lines.append(
+                    TemporalLines(self.pos_ax, similar_trajectory_temporal_slices, False)
+                )
 
         # recompute the ax.dataLim
         self.pos_ax.relim()

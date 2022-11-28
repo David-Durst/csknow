@@ -127,7 +127,7 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame = None):
         tick_demo_id_text_var.set("Demo Tick ID: " + str(cur_demo_tick))
         tick_game_id_text_var.set("Game Tick ID: " + str(cur_game_tick))
         input_ax_objs.update_aim_plot(selected_df, not_selected_df, cur_tick, canvas, first_hit_view_angle_reference,
-                                      similar_trajectories)
+                                      similar_trajectories if enable_similar_trajectories else [])
         if pred_df is not None:
             pred_ax_objs.update_aim_plot(pred_selected_df, cur_tick, canvas, first_hit_view_angle_reference)
         cur_row = selected_df.loc[cur_index, :]
@@ -231,6 +231,16 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame = None):
         )
         similar_trajectories = find_similar_trajectories(not_selected_df, selected_df, cur_tick, similarity_constraint)
 
+    enable_similar_trajectories = True
+    disable_similar_trajectories_str = "Disable Similar Trajectories"
+    enable_similar_trajectories_str = "Enable Similar Trajectories"
+    def toggle_similar_trajectories():
+        nonlocal enable_similar_trajectories
+        enable_similar_trajectories = not enable_similar_trajectories
+        if enable_similar_trajectories:
+            toggle_similar_trajectories_text_var.set(disable_similar_trajectories_str)
+        else:
+            toggle_similar_trajectories_text_var.set(enable_similar_trajectories_str)
 
     # state setters
     def change_engagement_dependent_data():
@@ -331,8 +341,9 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame = None):
     similarity_frame = tk.Frame(window)
     similarity_frame.pack(pady=5)
     toggle_similar_trajectories_text_var = tk.StringVar()
+    toggle_similar_trajectories_text_var.set(disable_similar_trajectories_str)
     toggle_similar_trajectories_button = tk.Button(similarity_frame, textvariable=toggle_similar_trajectories_text_var,
-                                                   command=step_back_clicked)
+                                                   command=toggle_similar_trajectories)
     toggle_similar_trajectories_button.pack(side="left")
     update_similar_trajectories_button = tk.Button(similarity_frame, text="Update Similar Trajectories",
                                                    command=update_similar_trajectories)
