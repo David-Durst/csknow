@@ -8,6 +8,7 @@ import numpy.typing as npt
 
 from learn_bot.engagement_aim.dataset import base_abs_x_pos_column, base_abs_y_pos_column
 from learn_bot.engagement_aim.vis.vis_similar_trajectories import compute_position_difference, default_speed_ticks
+from learn_bot.libs.temporal_column_names import get_temporal_field_str
 
 players_path = Path(__file__).parent / '..' / '..' / '..' / '..' / 'local_data' / 'players.csv'
 distributions_output_path = Path(__file__).parent / '..' / 'distributions'
@@ -27,6 +28,15 @@ def compute_mouse_movement_bits(all_data_df: pd.DataFrame) -> MouseBins:
     movement_df = all_data_df.copy()
     compute_position_difference(movement_df, base_abs_x_pos_column, base_abs_y_pos_column, speed_col,
                                 -1 * default_speed_ticks, 0)
+    print(f"{max(movement_df[speed_col])}, {movement_df[speed_col].idxmax()}")
+    max_idx = movement_df[speed_col].idxmax()
+    test_df = movement_df.iloc[[max_idx]].copy()
+    compute_position_difference(test_df, base_abs_x_pos_column, base_abs_y_pos_column, speed_col,
+                                -1 * default_speed_ticks, 0)
+    print(test_df.to_string())
+    for i in range(-12, 6):
+        print(f"x {i}: {test_df.loc[:, get_temporal_field_str(base_abs_x_pos_column, i)].item()}, "
+              f"y {i}: {test_df.loc[:, get_temporal_field_str(base_abs_y_pos_column, i)].item()}")
     _, speed_bins = np.histogram(movement_df[speed_col].to_numpy())
     next_speed_col = f"speed (t+{default_speed_ticks})"
     compute_position_difference(movement_df, base_abs_x_pos_column, base_abs_y_pos_column, next_speed_col,
