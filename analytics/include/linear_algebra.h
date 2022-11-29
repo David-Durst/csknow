@@ -265,7 +265,7 @@ struct Vec2 {
 
     void makePitchNeg90To90() {
         this->y = positiveModulo(this->y, 360.);
-        if (this->y > 260.) {
+        if (this->y > 180.) {
             this->y -= 360.;
         }
     }

@@ -206,6 +206,10 @@ static inline __attribute__((always_inline))
 Vec2 deltaViewFromOriginToDest(Vec3 origin, Vec3 dest, Vec2 curViewAngle) {
     Vec3 targetVector = dest - origin;
     Vec2 targetViewAngle = vectorAngles(targetVector);
+    // vectorAngles is 270 for -90, data is -90, make sure everything is noramlized before subtracting
+    // so don't get into a weird range as not interested in wrapping around, want to keep values close
+    targetViewAngle.makePitchNeg90To90();
+    targetViewAngle.makeYawNeg180To180();
     // want to be + if too large, - if too small, so do current - target
     Vec2 deltaViewAngle = curViewAngle - targetViewAngle;
     // invert so bigger pitch is aiming up
