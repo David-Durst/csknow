@@ -80,5 +80,6 @@ def compute_distributions(all_data_df: pd.DataFrame):
     players_df['id'] = players_df.index
     mouse_bins = compute_mouse_movement_bits(all_data_df)
     for i, player_row in players_df.iterrows():
+        if i == -1:
+            continue
         compute_mouse_movement_distributions(all_data_df, players_df, player_row['id'], mouse_bins)
-    print(players_df)

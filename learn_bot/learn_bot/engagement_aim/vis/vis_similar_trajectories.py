@@ -18,9 +18,10 @@ def compute_magnitude(df: pd.DataFrame, x_col: str, y_col: str, result_col: str,
 
 def compute_per_axis_position_difference(df: pd.DataFrame, x_col: str, y_col: str, result_x_col: str, result_y_col: str,
                                 start_t: int, end_t: int):
-    df[result_x_col] = (df[get_temporal_field_str(x_col, end_t)] - df[get_temporal_field_str(x_col, start_t)]).abs()
+    df[result_x_col] = df[get_temporal_field_str(x_col, end_t)] - df[get_temporal_field_str(x_col, start_t)]
     # modify x to deal with wrap around 180
-    df[result_x_col] = df[result_x_col].where(df[result_x_col] < 180., 360. - df[result_x_col])
+    df[result_x_col] = df[result_x_col].where(df[result_x_col].abs() < 180., 360. - df[result_x_col])
+    df[result_x_col] = df[result_x_col].where(df[result_x_col].abs() > -180., 360. + df[result_x_col])
     df[result_y_col] = df[get_temporal_field_str(y_col, end_t)] - df[get_temporal_field_str(y_col, start_t)]
 
 
