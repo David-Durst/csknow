@@ -7,6 +7,7 @@ from dataclasses import dataclass
 import numpy.typing as npt
 
 from learn_bot.engagement_aim.dataset import base_abs_x_pos_column, base_abs_y_pos_column
+from learn_bot.engagement_aim.output_plotting import filter_df
 from learn_bot.engagement_aim.vis.vis_similar_trajectories import compute_position_difference, default_speed_ticks
 from learn_bot.libs.temporal_column_names import get_temporal_field_str
 
@@ -28,21 +29,22 @@ def compute_mouse_movement_bits(all_data_df: pd.DataFrame) -> MouseBins:
     movement_df = all_data_df.copy()
     compute_position_difference(movement_df, base_abs_x_pos_column, base_abs_y_pos_column, speed_col,
                                 -1 * default_speed_ticks, 0)
-    print(f"{max(movement_df[speed_col])}, {movement_df[speed_col].idxmax()}")
-    max_idx = movement_df[speed_col].idxmax()
-    test_df = movement_df.iloc[[max_idx]].copy()
-    compute_position_difference(test_df, base_abs_x_pos_column, base_abs_y_pos_column, speed_col,
-                                -1 * default_speed_ticks, 0)
-    print(test_df.to_string())
-    for i in range(-12, 6):
-        print(f"x {i}: {test_df.loc[:, get_temporal_field_str(base_abs_x_pos_column, i)].item()}, "
-              f"y {i}: {test_df.loc[:, get_temporal_field_str(base_abs_y_pos_column, i)].item()}")
-    _, speed_bins = np.histogram(movement_df[speed_col].to_numpy())
+    movement_df = filter_df(movement_df, speed_col)
+    #print(f"{max(movement_df[speed_col])}, {movement_df[speed_col].idxmax()}")
+    #max_idx = movement_df[speed_col].idxmax()
+    #test_df = movement_df.iloc[[max_idx]].copy()
+    #compute_position_difference(test_df, base_abs_x_pos_column, base_abs_y_pos_column, speed_col,
+    #                            -1 * default_speed_ticks, 0)
+    #print(test_df.to_string())
+    #for i in range(-12, 6):
+    #    print(f"x {i}: {test_df.loc[:, get_temporal_field_str(base_abs_x_pos_column, i)].item()}, "
+    #          f"y {i}: {test_df.loc[:, get_temporal_field_str(base_abs_y_pos_column, i)].item()}")
+    _, speed_bins = np.histogram(movement_df[speed_col].to_numpy(), bins=100)
     next_speed_col = f"speed (t+{default_speed_ticks})"
     compute_position_difference(movement_df, base_abs_x_pos_column, base_abs_y_pos_column, next_speed_col,
                                 0, default_speed_ticks)
     movement_df[accel_col] = movement_df[next_speed_col] - movement_df[speed_col]
-    _, accel_bins = np.histogram(movement_df[accel_col].to_numpy())
+    _, accel_bins = np.histogram(movement_df[accel_col].to_numpy(), bins=100)
     return MouseBins(speed_bins, accel_bins)
 
 
