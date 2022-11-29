@@ -49,6 +49,7 @@ def compute_angular_difference(df: pd.DataFrame, selected_row_df: pd.DataFrame, 
         (magnitude * selected_magnitude)))
 
 
+default_speed_ticks = 5
 @dataclass
 class SimilarityConstraints:
     next_move_ticks: int
@@ -60,7 +61,7 @@ class SimilarityConstraints:
     base_abs_view_angle_y_col: str
     base_relative_view_angle_x_col: str
     base_relative_view_angle_y_col: str
-    speed_direction_mouse_ticks: int = 5
+    speed_direction_mouse_ticks: int = default_speed_ticks
 
 
 @dataclass

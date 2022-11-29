@@ -1,5 +1,6 @@
 import pandas as pd
 
+from learn_bot.engagement_aim.vis.distributions import compute_distributions
 from learn_bot.engagement_aim.vis.vis_similar_trajectories import SimilarityConstraints, SimilarTrajectory, \
     find_similar_trajectories, plot_similar_trajectories_next_movement
 from learn_bot.engagement_aim.vis.vis_ax_objs import PerspectiveColumns, AxObjs
@@ -392,4 +393,5 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame = None):
 
 if __name__ == "__main__":
     all_data_df = pd.read_csv(data_path)
+    compute_distributions(all_data_df)
     vis(all_data_df)

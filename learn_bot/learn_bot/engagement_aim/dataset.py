@@ -32,6 +32,9 @@ class AimDataset(Dataset):
     def __getitem__(self, idx):
         return self.X[idx], self.Y[idx]
 
+base_abs_x_pos_column = "delta relative first head view angle x"
+base_abs_y_pos_column = "delta relative first head view angle y"
+
 base_float_columns: List[str] = ["attacker view angle x", "attacker view angle angle y",
                                  "ideal view angle x", "ideal view angle y",
                                  "delta relative first head view angle x", "delta relative first head view angle y",
