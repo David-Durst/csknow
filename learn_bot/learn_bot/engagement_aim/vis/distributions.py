@@ -29,7 +29,7 @@ def compute_mouse_movement_bits(all_data_df: pd.DataFrame) -> MouseBins:
     movement_df = all_data_df.copy()
     compute_position_difference(movement_df, base_abs_x_pos_column, base_abs_y_pos_column, speed_col,
                                 -1 * default_speed_ticks, 0)
-    movement_df = filter_df(movement_df, speed_col)
+    speed_filtered_movement_df = filter_df(movement_df, speed_col)
     #print(f"{max(movement_df[speed_col])}, {movement_df[speed_col].idxmax()}")
     #max_idx = movement_df[speed_col].idxmax()
     #test_df = movement_df.iloc[[max_idx]].copy()
@@ -39,12 +39,13 @@ def compute_mouse_movement_bits(all_data_df: pd.DataFrame) -> MouseBins:
     #for i in range(-12, 6):
     #    print(f"x {i}: {test_df.loc[:, get_temporal_field_str(base_abs_x_pos_column, i)].item()}, "
     #          f"y {i}: {test_df.loc[:, get_temporal_field_str(base_abs_y_pos_column, i)].item()}")
-    _, speed_bins = np.histogram(movement_df[speed_col].to_numpy(), bins=100)
+    _, speed_bins = np.histogram(speed_filtered_movement_df[speed_col].to_numpy(), bins=100)
     next_speed_col = f"speed (t+{default_speed_ticks})"
     compute_position_difference(movement_df, base_abs_x_pos_column, base_abs_y_pos_column, next_speed_col,
                                 0, default_speed_ticks)
     movement_df[accel_col] = movement_df[next_speed_col] - movement_df[speed_col]
-    _, accel_bins = np.histogram(movement_df[accel_col].to_numpy(), bins=100)
+    accel_filtered_movement_df = filter_df(movement_df, accel_col)
+    _, accel_bins = np.histogram(accel_filtered_movement_df[accel_col].to_numpy(), bins=100)
     return MouseBins(speed_bins, accel_bins)
 
 
@@ -63,9 +64,13 @@ def compute_mouse_movement_distributions(all_data_df: pd.DataFrame, players_df: 
 
     fig.suptitle(f"{players_df.loc[player_id, 'name']} Speed and Acceleration Distributions")
     speed_ax.set_title("5-Tick Mouse Speed")
-    player_data_df.hist(speed_col, ax=speed_ax, bins=bins.speed_bins)
+    player_data_df.hist(speed_col, ax=speed_ax, bins=bins.speed_bins,
+                        weights=np.ones_like(player_data_df.index) / len(player_data_df.index))
+    speed_ax.set_ylim(top=0.55)
     accel_ax.set_title("5-Tick Mouse Acceleration")
-    player_data_df.hist(accel_col, ax=accel_ax, bins=bins.accel_bins)
+    player_data_df.hist(accel_col, ax=accel_ax, bins=bins.accel_bins,
+                        weights=np.ones_like(player_data_df.index) / len(player_data_df.index))
+    accel_ax.set_ylim(top=0.55)
 
     fig.savefig(distributions_output_path / f"mouse_dist_{players_df.loc[player_id, 'name']}")
 
