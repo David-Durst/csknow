@@ -392,6 +392,7 @@ int main(int argc, char * argv[]) {
     map<string, reference_wrapper<QueryResult>> analyses {
             {lookerName, lookersResult},
             {engagementAimName, engagementAimResult}                   ,
+	    {trajectorySegmentName, trajectorySegmentResult},
             //{nearestOriginName,                 nearestOriginResult},
             //{playerInCoverEdgeName,             playerInCoverEdgeResult},
             //{teamLookingAtCoverEdgeClusterName, teamLookingAtCoverEdgeClusterResult},
