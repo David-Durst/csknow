@@ -41,15 +41,6 @@ def compute_mouse_movement_bits(all_data_df: pd.DataFrame) -> MouseBins:
     compute_position_difference(movement_df, base_abs_x_pos_column, base_abs_y_pos_column, speed_col,
                                 -1 * default_speed_ticks, 0)
     speed_filtered_movement_df = filter_df(movement_df, speed_col, 0., 0.05)
-    #print(f"{max(movement_df[speed_col])}, {movement_df[speed_col].idxmax()}")
-    #max_idx = movement_df[speed_col].idxmax()
-    #test_df = movement_df.iloc[[max_idx]].copy()
-    #compute_position_difference(test_df, base_abs_x_pos_column, base_abs_y_pos_column, speed_col,
-    #                            -1 * default_speed_ticks, 0)
-    #print(test_df.to_string())
-    #for i in range(-12, 6):
-    #    print(f"x {i}: {test_df.loc[:, get_temporal_field_str(base_abs_x_pos_column, i)].item()}, "
-    #          f"y {i}: {test_df.loc[:, get_temporal_field_str(base_abs_y_pos_column, i)].item()}")
     _, speed_bins = np.histogram(speed_filtered_movement_df[speed_col].to_numpy(), bins=100)
     next_speed_col = f"speed (t+{default_speed_ticks})"
     compute_position_difference(movement_df, base_abs_x_pos_column, base_abs_y_pos_column, next_speed_col,
