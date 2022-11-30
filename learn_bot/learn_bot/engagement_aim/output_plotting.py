@@ -18,9 +18,9 @@ cat_column_x_axes: List[str] = ['weapon type']
 INCH_PER_FIG = 4
 
 
-def filter_df(df: pd.DataFrame, col_name) -> pd.DataFrame:
-    q_low = df[col_name].quantile(0.01)
-    q_hi = df[col_name].quantile(0.99)
+def filter_df(df: pd.DataFrame, col_name, low_pct_to_remove=0.01, high_pct_to_remove=0.01) -> pd.DataFrame:
+    q_low = df[col_name].quantile(low_pct_to_remove)
+    q_hi = df[col_name].quantile(1. - high_pct_to_remove)
     return df[(df[col_name] <= q_hi) & (df[col_name] >= q_low)]
 
 
