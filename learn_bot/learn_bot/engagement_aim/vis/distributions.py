@@ -131,7 +131,7 @@ players_combo_box: Optional[ttk.Combobox] = None
 
 def plot_distributions(parent_window: tk.Tk, all_data_df: pd.DataFrame):
     global players_combo_box, mouse_bins, data_df, selected_player, speed_ax, accel_ax, shot_ax, recoil_ax
-    if child_window.initialize(parent_window, (11, 11)):
+    if child_window.initialize(parent_window, (9, 9)):
         mouse_bins = compute_mouse_movement_bins(all_data_df)
         data_df = all_data_df.copy()
         attacker_players_and_ids = players_df.copy()
