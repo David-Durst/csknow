@@ -36,7 +36,7 @@ class MouseBins:
     accel_bins: npt.ArrayLike
 
 
-def compute_mouse_movement_bits(all_data_df: pd.DataFrame) -> MouseBins:
+def compute_mouse_movement_bins(all_data_df: pd.DataFrame) -> MouseBins:
     movement_df = all_data_df.copy()
     compute_position_difference(movement_df, base_abs_x_pos_column, base_abs_y_pos_column, speed_col,
                                 -1 * default_speed_ticks, 0)
@@ -73,6 +73,21 @@ def compute_mouse_movement_distributions(data_df: pd.DataFrame, player_name: str
     player_data_df.hist(accel_col, ax=accel_ax, bins=bins.accel_bins,
                         weights=np.ones_like(player_data_df.index) / len(player_data_df.index))
     accel_ax.set_ylim(top=0.55)
+
+
+def compute_hit_bins(all_data_df: pd.DataFrame) -> MouseBins:
+    movement_df = all_data_df.copy()
+    compute_position_difference(movement_df, base_abs_x_pos_column, base_abs_y_pos_column, speed_col,
+                                -1 * default_speed_ticks, 0)
+    speed_filtered_movement_df = filter_df(movement_df, speed_col, 0., 0.05)
+    _, speed_bins = np.histogram(speed_filtered_movement_df[speed_col].to_numpy(), bins=100)
+    next_speed_col = f"speed (t+{default_speed_ticks})"
+    compute_position_difference(movement_df, base_abs_x_pos_column, base_abs_y_pos_column, next_speed_col,
+                                0, default_speed_ticks)
+    movement_df[accel_col] = movement_df[next_speed_col] - movement_df[speed_col]
+    accel_filtered_movement_df = filter_df(movement_df, accel_col, 0.025, 0.025)
+    _, accel_bins = np.histogram(accel_filtered_movement_df[accel_col].to_numpy(), bins=100)
+    return MouseBins(speed_bins, accel_bins)
 
 
 def update_distribution_plots():
@@ -117,7 +132,7 @@ players_combo_box: Optional[ttk.Combobox] = None
 def plot_distributions(parent_window: tk.Tk, all_data_df: pd.DataFrame):
     global players_combo_box, mouse_bins, data_df, selected_player, speed_ax, accel_ax, shot_ax, recoil_ax
     if child_window.initialize(parent_window, (11, 11)):
-        mouse_bins = compute_mouse_movement_bits(all_data_df)
+        mouse_bins = compute_mouse_movement_bins(all_data_df)
         data_df = all_data_df.copy()
         attacker_players_and_ids = players_df.copy()
         attacker_players_and_ids = attacker_players_and_ids.reset_index().loc[:, ['name', 'id']]
