@@ -6,6 +6,8 @@ import tkinter as tk
 from matplotlib.backends.backend_tkagg import (
     FigureCanvasTkAgg, NavigationToolbar2Tk)
 from matplotlib.figure import Figure
+
+from learn_bot.engagement_aim.vis.child_window import ChildWindow
 from learn_bot.libs.temporal_column_names import get_temporal_field_str
 from typing import Optional, Tuple
 from math import pow
@@ -146,36 +148,15 @@ def find_similar_trajectories(not_selected_df: pd.DataFrame, selected_df: pd.Dat
 
 
 
-def remove_window():
-    global child_window
-    child_window.destroy()
-    child_window = None
 
-
-child_window: Optional[tk.Toplevel] = None
-child_canvas: Optional[FigureCanvasTkAgg] = None
-child_figure: Optional[Figure] = None
+child_window = ChildWindow()
 def plot_similar_trajectories_next_movement(parent_window: tk.Tk, not_selected_df: pd.DataFrame,
                                             similarity_constraints: SimilarityConstraints,
                                             similar_trajectories: List[SimilarTrajectory]):
-    global child_window, child_canvas, child_figure
-    if child_window is None:
-        child_figure = Figure(figsize=(5.5, 5.5), dpi=100)
+    child_window.initialize(parent_window, (5.5, 5.5))
 
-        child_window = tk.Toplevel(parent_window)
-        child_window.protocol('WM_DELETE_WINDOW', remove_window)
-
-        child_canvas = FigureCanvasTkAgg(child_figure, master=child_window)  # A tk.DrawingArea.
-        child_canvas.draw()
-        child_canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
-
-        # pack_toolbar=False will make it easier to use a layout manager later on.
-        child_toolbar = NavigationToolbar2Tk(child_canvas, child_window, pack_toolbar=False)
-        child_toolbar.update()
-        child_toolbar.pack(side=tk.BOTTOM, fill=tk.X)
-
-    child_figure.clear()
-    ax = child_figure.gca()
+    child_window.figure.clear()
+    ax = child_window.figure.gca()
     ax.invert_xaxis()
 
     similar_trajectories_tuples = [st.to_tuple() for st in similar_trajectories]
@@ -202,8 +183,8 @@ def plot_similar_trajectories_next_movement(parent_window: tk.Tk, not_selected_d
 
     X, Y = np.meshgrid(xedges, yedges)
     im = ax.pcolormesh(X, Y, heatmap)
-    child_figure.colorbar(im, ax=ax)
+    child_window.figure.colorbar(im, ax=ax)
     ax.set_title(f"{len(similar_trajectories)} Similar Trajectories {similarity_constraints.next_move_ticks} Delta Pos")
 
-    child_canvas.draw()
+    child_window.canvas.draw()
 

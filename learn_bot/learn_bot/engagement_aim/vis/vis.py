@@ -1,6 +1,6 @@
 import pandas as pd
 
-from learn_bot.engagement_aim.vis.distributions import compute_distributions
+from learn_bot.engagement_aim.vis.distributions import plot_distributions
 from learn_bot.engagement_aim.vis.vis_similar_trajectories import SimilarityConstraints, SimilarTrajectory, \
     find_similar_trajectories, plot_similar_trajectories_next_movement
 from learn_bot.engagement_aim.vis.vis_ax_objs import PerspectiveColumns, AxObjs
@@ -233,21 +233,10 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame = None):
             input_ax_objs.cur_head_columns.base_cur_view_angle_y_column
         )
         similar_trajectories = find_similar_trajectories(not_selected_df, selected_df, cur_tick, similarity_constraint)
-        if enable_similar_trajectories:
-            plot_similar_trajectories_next_movement(window, not_selected_df,
-                                                    similarity_constraint, similar_trajectories)
+        plot_similar_trajectories_next_movement(window, not_selected_df, similarity_constraint, similar_trajectories)
 
-    enable_similar_trajectories = True
-    disable_similar_trajectories_str = "Disable Similar Trajectories"
-    enable_similar_trajectories_str = "Enable Similar Trajectories"
-    def toggle_similar_trajectories():
-        nonlocal enable_similar_trajectories
-        enable_similar_trajectories = not enable_similar_trajectories
-        if enable_similar_trajectories:
-            toggle_similar_trajectories_text_var.set(disable_similar_trajectories_str)
-        else:
-            toggle_similar_trajectories_text_var.set(enable_similar_trajectories_str)
-        tick_slider_changed(cur_tick_index)
+    def show_distributions():
+        plot_distributions(window, all_data_df)
 
     # state setters
     def change_engagement_dependent_data():
@@ -268,6 +257,8 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame = None):
 
     s = ttk.Style()
     s.theme_use('alt')
+    s.configure('Valid.TCombobox', fieldbackground='white')
+    s.configure('Invalid.TCombobox', fieldbackground='#cfcfcf')
     # creating engagement slider and label
     engagement_id_frame = tk.Frame(window)
     engagement_id_frame.pack(pady=5)
@@ -347,12 +338,10 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame = None):
     # creating similarity selector
     similarity_frame = tk.Frame(window)
     similarity_frame.pack(pady=5)
-    toggle_similar_trajectories_text_var = tk.StringVar()
-    toggle_similar_trajectories_text_var.set(disable_similar_trajectories_str)
-    toggle_similar_trajectories_button = tk.Button(similarity_frame, textvariable=toggle_similar_trajectories_text_var,
-                                                   command=toggle_similar_trajectories)
-    toggle_similar_trajectories_button.pack(side="left")
-    update_similar_trajectories_button = tk.Button(similarity_frame, text="Update Similar Trajectories",
+    plot_distributions_button = tk.Button(similarity_frame, text="Plot Distributions",
+                                                   command=show_distributions)
+    plot_distributions_button.pack(side="left")
+    update_similar_trajectories_button = tk.Button(similarity_frame, text="Plot Similar Trajectories",
                                                    command=update_similar_trajectories)
     update_similar_trajectories_button.pack(side="left")
 
@@ -397,5 +386,4 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame = None):
 
 if __name__ == "__main__":
     all_data_df = pd.read_csv(data_path)
-    compute_distributions(all_data_df)
     vis(all_data_df)
