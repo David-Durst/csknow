@@ -69,6 +69,7 @@ cur_victim_alive_column = "victim alive (t)"
 cur_victim_visible_column = "victim visible (t)"
 base_hit_victim_column = "hit victim"
 base_ticks_since_last_fire_column = "ticks since last fire"
+base_ticks_since_last_attack_column = "ticks since last holding attack"
 
 base_abs_x_pos_column = "delta relative first head view angle x"
 base_abs_y_pos_column = "delta relative first head view angle y"

@@ -3,6 +3,8 @@ from typing import Optional
 import numpy as np
 import pandas as pd
 from pathlib import Path
+
+from matplotlib import gridspec
 from matplotlib.figure import Figure, Axes
 import matplotlib.pyplot as plt
 from dataclasses import dataclass
@@ -13,8 +15,8 @@ from tkinter import ttk
 from learn_bot.engagement_aim.dataset import base_abs_x_pos_column, base_abs_y_pos_column, base_hit_victim_column, \
     base_ticks_since_last_fire_column, base_relative_x_pos_column, base_recoil_x_column, base_relative_y_pos_column, \
     base_recoil_y_column, base_victim_relative_aabb_max_y, base_victim_relative_aabb_min_y, \
-    base_victim_relative_aabb_max_x, base_victim_relative_aabb_min_x
-from learn_bot.engagement_aim.output_plotting import filter_df
+    base_victim_relative_aabb_max_x, base_victim_relative_aabb_min_x, base_ticks_since_last_attack_column
+from learn_bot.engagement_aim.output_plotting import filter_df, filter_df_2d
 from learn_bot.engagement_aim.vis.child_window import ChildWindow
 from learn_bot.engagement_aim.vis.vis_similar_trajectories import compute_position_difference, default_speed_ticks, \
     normalize_columns
@@ -22,7 +24,7 @@ from learn_bot.libs.temporal_column_names import get_temporal_field_str
 
 players_path = Path(__file__).parent / '..' / '..' / '..' / '..' / 'local_data' / 'players.csv'
 players_df = pd.read_csv(players_path, names=["id", "game id", "name", "steam id"], index_col=0)
-player_names = players_df.loc[:, 'name'].unique().to_list()
+player_names = list(players_df.loc[:, 'name'].unique())
 selected_player = None
 players_id_offset = 1
 
@@ -33,6 +35,7 @@ speed_ax: Optional[Axes] = None
 accel_ax: Optional[Axes] = None
 hit_ax: Optional[Axes] = None
 fire_ax: Optional[Axes] = None
+attack_ax: Optional[Axes] = None
 
 
 @dataclass
@@ -67,26 +70,33 @@ def compute_mouse_movement_distributions(player_name: str, bins: MovementBins):
         if player_name != INVALID_NAME else bins.df.copy()
 
     speed_ax.clear()
-    speed_ax.set_title("5-Tick Mouse Speed")
     player_data_df.hist(speed_col, ax=speed_ax, bins=bins.speed_bins,
                         weights=np.ones_like(player_data_df.index) / len(player_data_df.index))
     speed_ax.set_ylim(top=0.55)
+    speed_ax.set_title("5-Tick Mouse Speed")
+    speed_ax.set_ylabel("Percent Of Ticks")
+    speed_ax.set_xlabel("Degrees/Tick")
 
     accel_ax.clear()
-    accel_ax.set_title("5-Tick Mouse Acceleration")
     player_data_df.hist(accel_col, ax=accel_ax, bins=bins.accel_bins,
                         weights=np.ones_like(player_data_df.index) / len(player_data_df.index))
     accel_ax.set_ylim(top=0.55)
+    accel_ax.set_title("5-Tick Mouse Acceleration")
+    accel_ax.set_ylabel("Percent Of Ticks")
+    accel_ax.set_xlabel("Degrees/Tick/Tick")
 
 
 @dataclass
-class HitFireBins:
+class HitFireAttackBins:
     hit_df: pd.DataFrame
     hit_x_bins: npt.ArrayLike
     hit_y_bins: npt.ArrayLike
     fire_df: pd.DataFrame
     fire_x_bins: npt.ArrayLike
     fire_y_bins: npt.ArrayLike
+    attack_df: pd.DataFrame
+    attack_x_bins: npt.ArrayLike
+    attack_y_bins: npt.ArrayLike
 
 
 relative_x_pos_with_recoil_column = "relative x pos with recoil"
@@ -106,10 +116,11 @@ def compute_normalized_with_recoil(data_df: pd.DataFrame):
                       get_temporal_field_str(base_victim_relative_aabb_max_y, 0))
 
 
-def compute_hit_fire_bins(data_df: pd.DataFrame) -> HitFireBins:
+def compute_hit_fire_attack_bins(data_df: pd.DataFrame) -> HitFireAttackBins:
     hit_df = data_df.copy()
     hit_df = hit_df[hit_df[get_temporal_field_str(base_hit_victim_column, 0)] == 1]
     compute_normalized_with_recoil(hit_df)
+    hit_df = filter_df_2d(hit_df, relative_x_pos_with_recoil_column, relative_y_pos_with_recoil_column, 0.01, 0.01)
 
     _, hit_x_bins, hit_y_bins = np.histogram2d(hit_df[relative_x_pos_with_recoil_column].to_numpy(),
                                                hit_df[relative_y_pos_with_recoil_column].to_numpy(),
@@ -118,15 +129,26 @@ def compute_hit_fire_bins(data_df: pd.DataFrame) -> HitFireBins:
     fire_df = data_df.copy()
     fire_df = fire_df[fire_df[get_temporal_field_str(base_ticks_since_last_fire_column, 0)] == 0]
     compute_normalized_with_recoil(fire_df)
+    fire_df = filter_df_2d(fire_df, relative_x_pos_with_recoil_column, relative_y_pos_with_recoil_column, 0.01, 0.01)
 
     _, fire_x_bins, fire_y_bins = np.histogram2d(fire_df[relative_x_pos_with_recoil_column].to_numpy(),
                                                  fire_df[relative_y_pos_with_recoil_column].to_numpy(),
                                                  bins=100)
 
-    return HitFireBins(hit_df, hit_x_bins, hit_y_bins, fire_df, fire_x_bins, fire_y_bins)
+    attack_df = data_df.copy()
+    attack_df = attack_df[attack_df[get_temporal_field_str(base_ticks_since_last_attack_column, 0)] == 0]
+    compute_normalized_with_recoil(attack_df)
+    attack_df = filter_df_2d(attack_df, relative_x_pos_with_recoil_column, relative_y_pos_with_recoil_column, 0.01, 0.01)
+
+    _, attack_x_bins, attack_y_bins = np.histogram2d(attack_df[relative_x_pos_with_recoil_column].to_numpy(),
+                                                     attack_df[relative_y_pos_with_recoil_column].to_numpy(),
+                                                     bins=100)
+
+    return HitFireAttackBins(hit_df, hit_x_bins, hit_y_bins, fire_df, fire_x_bins, fire_y_bins,
+                             attack_df, attack_x_bins, attack_y_bins)
 
 
-def compute_hit_fire_distributions(player_name: str, bins: HitFireBins):
+def compute_hit_fire_attack_distributions(player_name: str, bins: HitFireAttackBins):
     hit_df = bins.hit_df[bins.hit_df['attacker player name'] == player_name].copy() \
         if player_name != INVALID_NAME else bins.hit_df.copy()
 
@@ -141,6 +163,8 @@ def compute_hit_fire_distributions(player_name: str, bins: HitFireBins):
     hit_im = hit_ax.pcolormesh(hit_X, hit_Y, hit_heatmap)
     child_window.figure.colorbar(hit_im, ax=hit_ax)
     hit_ax.set_title(f"Hit Aim With Recoil Distribution")
+    hit_ax.set_xlabel("Normalized Yaw Distance (1 = AABB width)")
+    hit_ax.set_ylabel("Normalized Pitch Distance (1 = AABB height)")
 
 
     fire_df = bins.fire_df[bins.fire_df['attacker player name'] == player_name].copy() \
@@ -157,17 +181,44 @@ def compute_hit_fire_distributions(player_name: str, bins: HitFireBins):
     fire_im = fire_ax.pcolormesh(fire_X, fire_Y, fire_heatmap)
     child_window.figure.colorbar(fire_im, ax=fire_ax)
     fire_ax.set_title(f"Fire Aim With Recoil Distribution")
+    fire_ax.set_xlabel("Normalized Yaw Distance (1 = AABB width)")
+    fire_ax.set_ylabel("Normalized Pitch Distance (1 = AABB height)")
+
+
+    attack_df = bins.attack_df[bins.attack_df['attacker player name'] == player_name].copy() \
+        if player_name != INVALID_NAME else bins.attack_df.copy()
+
+    attack_ax.clear()
+    attack_heatmap, _, _ = np.histogram2d(attack_df[relative_x_pos_with_recoil_column],
+                                        attack_df[relative_y_pos_with_recoil_column],
+                                        bins=[bins.attack_x_bins, bins.attack_y_bins])
+
+    attack_heatmap = attack_heatmap.T
+
+    attack_X, attack_Y = np.meshgrid(bins.attack_x_bins, bins.attack_y_bins)
+    attack_im = attack_ax.pcolormesh(attack_X, attack_Y, attack_heatmap)
+    child_window.figure.colorbar(attack_im, ax=attack_ax)
+    attack_ax.set_title(f"Attack Aim With Recoil Distribution")
+    attack_ax.set_xlabel("Normalized Yaw Distance (1 = AABB width)")
+    attack_ax.set_ylabel("Normalized Pitch Distance (1 = AABB height)")
 
 
 def update_distribution_plots():
-    global speed_ax, accel_ax, hit_ax, fire_ax
+    global speed_ax, accel_ax, hit_ax, fire_ax,attack_ax
 
     child_window.figure.clear()
-    (speed_ax, accel_ax), (hit_ax, fire_ax) = child_window.figure.subplots(nrows=2, ncols=2)
+    gs = gridspec.GridSpec(ncols=6, nrows=2)
+                             #left=0.05, right=0.95,
+                             #wspace=0.1, hspace=0.1, width_ratios=[1, 1.5])
+    speed_ax = child_window.figure.add_subplot(gs[0, 0:3])
+    accel_ax = child_window.figure.add_subplot(gs[0, 3:6])
+    hit_ax = child_window.figure.add_subplot(gs[1, 0:2])
+    fire_ax = child_window.figure.add_subplot(gs[1, 2:4])
+    attack_ax = child_window.figure.add_subplot(gs[1, 4:6])
     child_window.figure.suptitle(f"{selected_player} Distributions")
 
     compute_mouse_movement_distributions(selected_player, movement_bins)
-    compute_hit_fire_distributions(selected_player, hit_fire_bins)
+    compute_hit_fire_attack_distributions(selected_player, hit_fire_attack_bins)
 
     child_window.figure.tight_layout()
     child_window.canvas.draw()
@@ -202,13 +253,13 @@ def update_selected_players(event):
 
 data_df: Optional[pd.DataFrame] = None
 movement_bins: Optional[MovementBins] = None
-hit_fire_bins: Optional[HitFireBins] = None
+hit_fire_attack_bins: Optional[HitFireAttackBins] = None
 child_window = ChildWindow()
 players_combo_box: Optional[ttk.Combobox] = None
 
 def plot_distributions(parent_window: tk.Tk, all_data_df: pd.DataFrame):
-    global players_combo_box, movement_bins, hit_fire_bins, data_df, selected_player
-    if child_window.initialize(parent_window, (9, 9)):
+    global players_combo_box, movement_bins, hit_fire_attack_bins, data_df, selected_player
+    if child_window.initialize(parent_window, (16.5, 9)):
         data_df = all_data_df.copy()
         attacker_players_and_ids = players_df.copy()
         attacker_players_and_ids = attacker_players_and_ids.reset_index().loc[:, ['name', 'id']]
@@ -216,7 +267,7 @@ def plot_distributions(parent_window: tk.Tk, all_data_df: pd.DataFrame):
         data_df = data_df.merge(attacker_players_and_ids, left_on='attacker player id', right_on='attacker id')
 
         movement_bins = compute_mouse_movement_bins(data_df)
-        hit_fire_bins = compute_hit_fire_bins(data_df)
+        hit_fire_attack_bins = compute_hit_fire_attack_bins(data_df)
 
         selected_player = INVALID_NAME
 

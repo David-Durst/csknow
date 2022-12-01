@@ -24,6 +24,16 @@ def filter_df(df: pd.DataFrame, col_name, low_pct_to_remove=0.01, high_pct_to_re
     return df[(df[col_name] <= q_hi) & (df[col_name] >= q_low)]
 
 
+def filter_df_2d(df: pd.DataFrame, col1_name, col2_name,
+                 low_pct_to_remove=0.01, high_pct_to_remove=0.01) -> pd.DataFrame:
+    q1_low = df[col1_name].quantile(low_pct_to_remove)
+    q1_hi = df[col1_name].quantile(1. - high_pct_to_remove)
+    q2_low = df[col2_name].quantile(low_pct_to_remove)
+    q2_hi = df[col2_name].quantile(1. - high_pct_to_remove)
+    return df[(df[col1_name] <= q1_hi) & (df[col1_name] >= q1_low) &
+              (df[col2_name] <= q2_hi) & (df[col2_name] >= q2_low)]
+
+
 def plot_untransformed_and_transformed(title: str, df, float_cols, cat_cols,
                                        transformed_df = None):
     # plot untransformed and transformed outputs
