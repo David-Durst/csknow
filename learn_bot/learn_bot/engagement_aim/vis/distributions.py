@@ -72,6 +72,7 @@ def compute_mouse_movement_distributions(player_name: str, bins: MovementBins):
     speed_ax.clear()
     player_data_df.hist(speed_col, ax=speed_ax, bins=bins.speed_bins,
                         weights=np.ones_like(player_data_df.index) / len(player_data_df.index))
+    speed_ax.set_xlim(left=0.)
     speed_ax.set_ylim(top=0.55)
     speed_ax.set_title("5-Tick Mouse Speed")
     speed_ax.set_ylabel("Percent Of Ticks")

@@ -350,6 +350,7 @@ class AxObjs:
         self.speed_ax.relim()
         self.speed_ax.autoscale()
         self.speed_ax.set_xlim(left=0)
+        self.speed_ax.set_ylim(bottom=0)
 
         # required to update canvas and attached toolbar!
         canvas.draw()
