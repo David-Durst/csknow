@@ -32,9 +32,6 @@ class AimDataset(Dataset):
     def __getitem__(self, idx):
         return self.X[idx], self.Y[idx]
 
-base_abs_x_pos_column = "delta relative first head view angle x"
-base_abs_y_pos_column = "delta relative first head view angle y"
-
 base_float_columns: List[str] = ["attacker view angle x", "attacker view angle angle y",
                                  "ideal view angle x", "ideal view angle y",
                                  "delta relative first head view angle x", "delta relative first head view angle y",
@@ -70,3 +67,16 @@ engagement_id_column = "engagement id"
 tick_id_column = "tick id"
 cur_victim_alive_column = "victim alive (t)"
 cur_victim_visible_column = "victim visible (t)"
+base_hit_victim_column = "hit victim"
+base_ticks_since_last_fire_column = "ticks since last fire"
+
+base_abs_x_pos_column = "delta relative first head view angle x"
+base_abs_y_pos_column = "delta relative first head view angle y"
+base_relative_x_pos_column = "delta relative cur head view angle x"
+base_relative_y_pos_column = "delta relative cur head view angle y"
+base_recoil_x_column = "scaled recoil angle x"
+base_recoil_y_column = "scaled recoil angle y"
+base_victim_relative_aabb_min_x = "victim relative cur head min view angle x"
+base_victim_relative_aabb_max_x = "victim relative cur head max view angle x"
+base_victim_relative_aabb_min_y = "victim relative cur head min view angle y"
+base_victim_relative_aabb_max_y = "victim relative cur head max view angle y"

@@ -18,13 +18,25 @@ def compute_magnitude(df: pd.DataFrame, x_col: str, y_col: str, result_col: str,
         (df[get_temporal_field_str(x_col, t)].pow(2) + df[get_temporal_field_str(y_col, t)].pow(2)).pow(0.5)
 
 
-def compute_per_axis_position_difference(df: pd.DataFrame, x_col: str, y_col: str, result_x_col: str, result_y_col: str,
-                                start_t: int, end_t: int):
+def compute_per_axis_position_difference(df: pd.DataFrame, x_col: str, y_col: str,
+                                         result_x_col: str, result_y_col: str,
+                                         start_t: int, end_t: int):
     df[result_x_col] = df[get_temporal_field_str(x_col, end_t)] - df[get_temporal_field_str(x_col, start_t)]
     # modify x to deal with wrap around 180
     df[result_x_col] = df[result_x_col].where(df[result_x_col].abs() < 180., 360. - df[result_x_col])
     df[result_x_col] = df[result_x_col].where(df[result_x_col].abs() > -180., 360. + df[result_x_col])
     df[result_y_col] = df[get_temporal_field_str(y_col, end_t)] - df[get_temporal_field_str(y_col, start_t)]
+
+
+def normalize_columns(df: pd.DataFrame, norm_x_col: str, norm_y_col: str, start_x_col: str, start_y_col: str,
+                      end_x_col: str, end_y_col: str):
+    delta_x = df[end_x_col] - df[start_x_col]
+    # modify x to deal with wrap around 180
+    delta_x = delta_x.where(delta_x.abs() < 180., 360. - delta_x)
+    delta_x = delta_x.where(delta_x.abs() > -180., 360. + delta_x)
+    delta_y = df[end_y_col] - df[start_y_col]
+    df[norm_x_col] = df[norm_x_col] / delta_x
+    df[norm_y_col] = df[norm_y_col] / delta_y
 
 
 def compute_position_difference(df: pd.DataFrame, x_col: str, y_col: str, result_col: str,
