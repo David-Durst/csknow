@@ -38,9 +38,9 @@ class TemporalIOColumnNames:
     def get_matching_cols(self, match_str, include_past=True, include_present=True, include_future=True):
         results = []
         if include_past:
-            results.append([c for c in self.past_columns if match_str in c])
+            results += [c for c in self.past_columns if match_str in c]
         if include_present:
-            results.append([c for c in self.present_columns if match_str in c])
+            results += [c for c in self.present_columns if match_str in c]
         if include_future:
-            results.append([c for c in self.future_columns if match_str in c])
+            results += [c for c in self.future_columns if match_str in c]
         return results

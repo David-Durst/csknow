@@ -52,7 +52,7 @@ base_victim_relative_aabb_max_x = "victim relative cur head max view angle x"
 base_victim_relative_aabb_min_y = "victim relative cur head min view angle y"
 base_victim_relative_aabb_max_y = "victim relative cur head max view angle y"
 
-base_float_columns: List[str] = ["attacker view angle x", "attacker view angle angle y",
+base_float_columns: List[str] = ["attacker view angle x", "attacker view angle y",
                                  "ideal view angle x", "ideal view angle y",
                                  "delta relative first head view angle x", "delta relative first head view angle y",
                                  "delta relative cur head view angle x", "delta relative cur head view angle y",
