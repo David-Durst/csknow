@@ -1,4 +1,4 @@
-from learn_bot.engagement_aim.column_management import PRIOR_TICKS, FUTURE_TICKS, PRIOR_TICKS_POS, CUR_TICK, \
+from learn_bot.engagement_aim.io_transforms import PRIOR_TICKS, FUTURE_TICKS, PRIOR_TICKS_POS, CUR_TICK, \
     IOColumnTransformers
 from learn_bot.engagement_aim.dad import get_x_field_str, get_y_field_str, on_policy_inference
 from learn_bot.engagement_aim.train import train

@@ -1,5 +1,5 @@
 from learn_bot.engagement_aim.dataset import *
-from learn_bot.engagement_aim.column_management import IOColumnTransformers, ColumnTransformerType, CPU_DEVICE_STR, \
+from learn_bot.engagement_aim.io_transforms import IOColumnTransformers, ColumnTransformerType, CPU_DEVICE_STR, \
     CUDA_DEVICE_STR, get_untransformed_outputs, get_transformed_outputs
 from math import sqrt
 from torch import nn

@@ -1,6 +1,6 @@
 import torch
 from torch.utils.data import Dataset
-from learn_bot.engagement_aim.column_management import IOColumnTransformers, ColumnTypes, PRIOR_TICKS, FUTURE_TICKS, \
+from learn_bot.engagement_aim.io_transforms import IOColumnTransformers, ColumnTypes, PRIOR_TICKS, FUTURE_TICKS, \
     CUR_TICK
 from typing import List
 from learn_bot.libs.temporal_column_names import TemporalIOColumnNames

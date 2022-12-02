@@ -4,7 +4,7 @@ from pathlib import Path
 import torch
 from torch.utils.data import DataLoader
 
-from learn_bot.engagement_aim.column_management import CUDA_DEVICE_STR, CPU_DEVICE_STR
+from learn_bot.engagement_aim.io_transforms import CUDA_DEVICE_STR, CPU_DEVICE_STR
 from learn_bot.libs.accuracy_and_loss import finish_accuracy, compute_loss, compute_accuracy
 from learn_bot.libs.df_grouping import train_test_split_by_col
 from learn_bot.libs.temporal_column_names import TemporalIOColumnNames

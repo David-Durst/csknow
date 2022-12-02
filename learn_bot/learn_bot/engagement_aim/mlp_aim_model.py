@@ -1,7 +1,7 @@
 from typing import List
 from torch import nn
 import torch
-from learn_bot.engagement_aim.column_management import IOColumnTransformers, ColumnTypes
+from learn_bot.engagement_aim.io_transforms import IOColumnTransformers, ColumnTypes
 
 
 class MLPAimModel(nn.Module):
