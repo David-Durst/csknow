@@ -12,25 +12,35 @@ def get_temporal_field_str(base_str: str, tick: int):
 
 
 class TemporalIOColumnNames:
-    input_columns: List[str]
-    output_columns: List[str]
-    vis_columns: List[str]
+    past_columns: List[str]
+    present_columns: List[str]
+    future_columns: List[str]
+    all_columns: List[str]
 
     def __init__(self, base_columns: List[str], prior_ticks: int, cur_tick: int, future_ticks: int):
-        self.input_columns = []
-        self.output_columns = []
-        self.vis_columns = []
+        self.past_columns = []
+        self.present_columns = []
+        self.future_columns = []
 
         for i in range(prior_ticks, cur_tick+future_ticks):
             if i < 0:
                 for base_col in base_columns:
-                    self.input_columns.append(get_temporal_field_str(base_col, i))
+                    self.past_columns.append(get_temporal_field_str(base_col, i))
+            elif i == 0:
+                for base_col in base_columns:
+                    self.present_columns.append(get_temporal_field_str(base_col, i))
             else:
                 for base_col in base_columns:
-                    if i == 0:
-                        self.vis_columns.append(get_temporal_field_str(base_col, i))
-                    self.output_columns.append(get_temporal_field_str(base_col, i))
+                    self.future_columns.append(get_temporal_field_str(base_col, i))
 
-    def get_matching_cols(self, match_str):
-        return [c for c in self.input_columns if match_str in c] + \
-               [c for c in self.output_columns if match_str in c]
+        self.all_columns = self.past_columns + self.present_columns + self.future_columns
+
+    def get_matching_cols(self, match_str, include_past=True, include_present=True, include_future=True):
+        results = []
+        if include_past:
+            results.append([c for c in self.past_columns if match_str in c])
+        if include_present:
+            results.append([c for c in self.present_columns if match_str in c])
+        if include_future:
+            results.append([c for c in self.future_columns if match_str in c])
+        return results

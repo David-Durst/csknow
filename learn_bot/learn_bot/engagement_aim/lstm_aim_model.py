@@ -78,7 +78,7 @@ class LSTMAimModel(nn.Module):
 
     def forward(self, x):
         # transform inputs
-        x_transformed = self.cts.transform_columns(True, x)
+        x_transformed = self.cts.transform_columns(True, x, x)
 
         # convert data from [batch len, data per tick * num prior ticks + constant data]
         # to [batch _len, prior tics, data per tick + constant data]
@@ -121,7 +121,7 @@ class LSTMAimModel(nn.Module):
 
         # produce untransformed outputs
         out_transformed = torch.cat(outputs, dim=1).squeeze(dim=2)
-        out_untransformed = self.cts.untransform_columns(False, out_transformed)
+        out_untransformed = self.cts.untransform_columns(False, out_transformed, x)
         return torch.stack([out_transformed, out_untransformed], dim=1)
 
     def get_transformed_outputs(self, x: torch.Tensor) -> torch.Tensor:

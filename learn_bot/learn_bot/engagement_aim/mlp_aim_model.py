@@ -24,12 +24,12 @@ class MLPAimModel(nn.Module):
 
     def forward(self, x):
         # transform inputs
-        x_transformed = self.cts.transform_columns(True, x)
+        x_transformed = self.cts.transform_columns(True, x, x)
 
         # run model except last layer
         out_transformed = self.inner_model(x_transformed)
 
         # produce untransformed outputs
-        out_untransformed = self.cts.untransform_columns(False, out_transformed)
+        out_untransformed = self.cts.untransform_columns(False, out_transformed, x)
         return torch.stack([out_transformed, out_untransformed], dim=1)
 

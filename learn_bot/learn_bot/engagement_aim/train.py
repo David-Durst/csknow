@@ -48,7 +48,7 @@ def train(all_data_df: pd.DataFrame, dad_iters=4, num_epochs=5, save=True,
 
     # plot data set with and without transformers
     plot_untransformed_and_transformed('train+test labels', all_data_df,
-                                       temporal_io_float_column_names.vis_columns + non_temporal_float_columns,
+                                       temporal_io_float_column_names.present_columns + non_temporal_float_columns,
                                        input_categorical_columns)
 
     # Get cpu or gpu device for training.
@@ -73,8 +73,6 @@ def train(all_data_df: pd.DataFrame, dad_iters=4, num_epochs=5, save=True,
     #scheduler = ExponentialLR(optimizer, gamma=0.9)
     #scheduler = ReduceLROnPlateau(optimizer, 'min')
 
-    output_cols = column_transformers.output_types.column_names()
-
     # train and test the model
     first_row: torch.Tensor
     model_output_recording: ModelOutputRecording = ModelOutputRecording(model)
@@ -97,7 +95,7 @@ def train(all_data_df: pd.DataFrame, dad_iters=4, num_epochs=5, save=True,
                 if batch == 0 and epoch_num == 0 and train:
                     first_row = X[0:1, :]
                 X, Y = X.to(device), Y.to(device)
-                transformed_Y = column_transformers.transform_columns(False, Y)
+                transformed_Y = column_transformers.transform_columns(False, Y, X)
                 # XR = torch.randn_like(X, device=device)
                 # XR[:,0] = X[:,0]
                 # YZ = torch.zeros_like(Y) + 0.1
@@ -184,7 +182,7 @@ def train(all_data_df: pd.DataFrame, dad_iters=4, num_epochs=5, save=True,
             dad_df = create_dad_dataset(pred_df, train_df)
             total_train_df = pd.concat([total_train_df, dad_df], ignore_index=True)
 
-    model_output_recording.plot(column_transformers, temporal_io_float_column_names.vis_columns)
+    model_output_recording.plot(column_transformers, output_column_types.column_names())
 
     if save:
         script_model = torch.jit.trace(model.to(CPU_DEVICE_STR), first_row)

@@ -1,9 +1,9 @@
 import torch
 from torch.utils.data import Dataset
 from learn_bot.engagement_aim.io_transforms import IOColumnTransformers, ColumnTypes, PRIOR_TICKS, FUTURE_TICKS, \
-    CUR_TICK
+    CUR_TICK, DeltaColumn
 from typing import List
-from learn_bot.libs.temporal_column_names import TemporalIOColumnNames
+from learn_bot.libs.temporal_column_names import TemporalIOColumnNames, get_temporal_field_str
 from pathlib import Path
 
 data_path = Path(__file__).parent / '..' / '..' / '..' / 'analytics' / 'csv_outputs' / 'engagementAim.csv'
@@ -32,6 +32,26 @@ class AimDataset(Dataset):
     def __getitem__(self, idx):
         return self.X[idx], self.Y[idx]
 
+
+engagement_id_column = "engagement id"
+tick_id_column = "tick id"
+cur_victim_alive_column = "victim alive (t)"
+cur_victim_visible_column = "victim visible (t)"
+base_hit_victim_column = "hit victim"
+base_ticks_since_last_fire_column = "ticks since last fire"
+base_ticks_since_last_attack_column = "ticks since last holding attack"
+
+base_abs_x_pos_column = "delta relative first head view angle x"
+base_abs_y_pos_column = "delta relative first head view angle y"
+base_relative_x_pos_column = "delta relative cur head view angle x"
+base_relative_y_pos_column = "delta relative cur head view angle y"
+base_recoil_x_column = "scaled recoil angle x"
+base_recoil_y_column = "scaled recoil angle y"
+base_victim_relative_aabb_min_x = "victim relative cur head min view angle x"
+base_victim_relative_aabb_max_x = "victim relative cur head max view angle x"
+base_victim_relative_aabb_min_y = "victim relative cur head min view angle y"
+base_victim_relative_aabb_max_y = "victim relative cur head max view angle y"
+
 base_float_columns: List[str] = ["attacker view angle x", "attacker view angle angle y",
                                  "ideal view angle x", "ideal view angle y",
                                  "delta relative first head view angle x", "delta relative first head view angle y",
@@ -58,26 +78,16 @@ input_categorical_columns: List[str] = ["weapon type"]
 
 temporal_io_float_column_names = TemporalIOColumnNames(base_float_columns, PRIOR_TICKS, CUR_TICK, FUTURE_TICKS)
 
-input_column_types = ColumnTypes(temporal_io_float_column_names.input_columns + non_temporal_float_columns,
+input_column_types = ColumnTypes(temporal_io_float_column_names.past_columns + non_temporal_float_columns, [],
                                  input_categorical_columns, [6])
 
-output_column_types = ColumnTypes(temporal_io_float_column_names.output_columns, [], [])
+output_relative_x_cols = temporal_io_float_column_names.get_matching_cols(base_abs_x_pos_column, False, True, True)
+output_relative_y_cols = temporal_io_float_column_names.get_matching_cols(base_abs_y_pos_column, False, True, True)
+output_ref_x_col = get_temporal_field_str(base_abs_x_pos_column, 0)
+output_ref_y_col = get_temporal_field_str(base_abs_y_pos_column, 0)
+output_delta_x = [DeltaColumn(c, output_ref_x_col) for c in output_relative_x_cols]
+output_delta_y = [DeltaColumn(c, output_ref_y_col) for c in output_relative_y_cols]
+output_delta = output_delta_x + output_delta_y
+output_standard_cols = temporal_io_float_column_names.get_matching_cols("ticks since", False, True, True)
 
-engagement_id_column = "engagement id"
-tick_id_column = "tick id"
-cur_victim_alive_column = "victim alive (t)"
-cur_victim_visible_column = "victim visible (t)"
-base_hit_victim_column = "hit victim"
-base_ticks_since_last_fire_column = "ticks since last fire"
-base_ticks_since_last_attack_column = "ticks since last holding attack"
-
-base_abs_x_pos_column = "delta relative first head view angle x"
-base_abs_y_pos_column = "delta relative first head view angle y"
-base_relative_x_pos_column = "delta relative cur head view angle x"
-base_relative_y_pos_column = "delta relative cur head view angle y"
-base_recoil_x_column = "scaled recoil angle x"
-base_recoil_y_column = "scaled recoil angle y"
-base_victim_relative_aabb_min_x = "victim relative cur head min view angle x"
-base_victim_relative_aabb_max_x = "victim relative cur head max view angle x"
-base_victim_relative_aabb_min_y = "victim relative cur head min view angle y"
-base_victim_relative_aabb_max_y = "victim relative cur head max view angle y"
+output_column_types = ColumnTypes(output_standard_cols, output_delta, [], [])
