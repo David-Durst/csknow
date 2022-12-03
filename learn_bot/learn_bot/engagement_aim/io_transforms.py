@@ -54,6 +54,7 @@ class ColumnTypes:
     # caching values
     column_types_ = None
     all_cols_ = None
+    delta_float_column_names_ = None
 
     def column_types(self) -> List[ColumnTransformerType]:
         if self.column_types_ is None:
@@ -71,6 +72,11 @@ class ColumnTypes:
             relative_cols, _ = split_delta_columns(self.float_delta_cols)
             self.all_cols_ = self.float_standard_cols + relative_cols + self.categorical_cols
         return self.all_cols_
+
+    def delta_float_column_names(self) -> List[str]:
+        if self.delta_float_column_names_ is None:
+            self.delta_float_column_names_, _ = split_delta_columns(self.float_delta_cols)
+        return self.delta_float_column_names_
 
 
 class PTColumnTransformer(ABC):
@@ -219,12 +225,12 @@ class IOColumnTransformers:
             ))
         if types.float_delta_cols:
             relative_cols, reference_cols = split_delta_columns(types.float_delta_cols)
-            relative_df = all_data_df.loc[:, relative_cols]
-            reference_df = all_data_df.loc[:, relative_cols]
-            delta_df = relative_df - reference_df
+            relative_tensor = torch.Tensor(all_data_df.loc[:, relative_cols].values)
+            reference_tensor = torch.Tensor(all_data_df.loc[:, reference_cols].values)
+            delta_tensor = relative_tensor - reference_tensor
             result.append(PTDeltaMeanStdColumnTransformer(
-                torch.Tensor(delta_df.mean()),
-                torch.Tensor(delta_df.std()),
+                torch.mean(delta_tensor, dim=0),
+                torch.std(delta_tensor, dim=0)
             ))
         for name in types.categorical_cols:
             result.append(PTOneHotColumnTransformer(types.num_cats_per_col[name]))
