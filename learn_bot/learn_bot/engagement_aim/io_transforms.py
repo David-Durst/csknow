@@ -27,7 +27,7 @@ class DeltaColumn:
     reference_col: str
 
 
-def split_delta_ref_columns(delta_ref_columns: List[DeltaColumn]) -> Tuple[List[str], List[str]]:
+def split_delta_columns(delta_ref_columns: List[DeltaColumn]) -> Tuple[List[str], List[str]]:
     return [drc.relative_col for drc in delta_ref_columns], [drc.reference_col for drc in delta_ref_columns]
 
 
@@ -68,8 +68,8 @@ class ColumnTypes:
 
     def column_names(self) -> List[str]:
         if self.all_cols_ is None:
-            self.all_cols_ = self.float_standard_cols + [c.delta_col for c in self.float_delta_cols] + \
-                             self.categorical_cols
+            relative_cols, _ = split_delta_columns(self.float_delta_cols)
+            self.all_cols_ = self.float_standard_cols + relative_cols + self.categorical_cols
         return self.all_cols_
 
 
@@ -126,10 +126,10 @@ class PTMeanStdColumnTransformer(PTColumnTransformer):
         else:
             return (value * self.standard_deviations) + self.means
 
-    def delta_convert(self, offset_value: torch.Tensor):
+    def delta_convert(self, relative_value: torch.Tensor, reference_value: torch.Tensor):
         raise NotImplementedError
 
-    def delta_inverse(self, offset_value: torch.Tensor):
+    def delta_inverse(self, relative_value: torch.Tensor, reference_value: torch.Tensor):
         raise NotImplementedError
 
 
@@ -188,10 +188,10 @@ class PTOneHotColumnTransformer(PTColumnTransformer):
     def inverse(self, value: torch.Tensor):
         return torch.argmax(value, -1, keepdim=True)
 
-    def delta_convert(self, offset_value: torch.Tensor):
+    def delta_convert(self, relative_value: torch.Tensor, reference_value: torch.Tensor):
         raise NotImplementedError
 
-    def delta_inverse(self, offset_value: torch.Tensor):
+    def delta_inverse(self, relative_value: torch.Tensor, reference_value: torch.Tensor):
         raise NotImplementedError
 
 
@@ -218,11 +218,11 @@ class IOColumnTransformers:
                 torch.Tensor(all_data_df.loc[:, types.float_standard_cols].std()),
             ))
         if types.float_delta_cols:
-            relative_cols, reference_cols = split_delta_ref_columns(types.float_delta_cols)
+            relative_cols, reference_cols = split_delta_columns(types.float_delta_cols)
             relative_df = all_data_df.loc[:, relative_cols]
             reference_df = all_data_df.loc[:, relative_cols]
             delta_df = relative_df - reference_df
-            result.append(PTMeanStdColumnTransformer(
+            result.append(PTDeltaMeanStdColumnTransformer(
                 torch.Tensor(delta_df.mean()),
                 torch.Tensor(delta_df.std()),
             ))
@@ -237,8 +237,13 @@ class IOColumnTransformers:
         column_types: ColumnTypes = self.input_types if input else self.output_types
         cts: List[PTColumnTransformer] = self.input_ct_pts if input else self.output_ct_pts
 
-        for _ in range(len(column_types.float_standard_cols) + len(column_types.float_delta_cols)):
+        for _ in column_types.float_standard_cols:
             if ColumnTransformerType.FLOAT_STANDARD in types:
+                result.append(range(cur_start, cur_start + 1))
+            cur_start += 1
+
+        for _ in column_types.float_delta_cols:
+            if ColumnTransformerType.FLOAT_DELTA in types:
                 result.append(range(cur_start, cur_start + 1))
             cur_start += 1
 
@@ -256,17 +261,16 @@ class IOColumnTransformers:
         return result
 
     # given the locations of columns in an input tensor that are used as reference for producing delta columns
-    def get_input_delta_reference_name_ranges(self) -> List[int]:
+    def get_input_delta_reference_positions(self, types: ColumnTypes) -> List[int]:
         result: List[int] = []
 
-        column_types: ColumnTypes = self.input_types
-
-        _, reference_cols = split_delta_ref_columns(column_types.float_delta_cols)
+        _, reference_cols = split_delta_columns(types.float_delta_cols)
 
         cur_col_index = 0
-        for float_standard_col in column_types.float_standard_cols:
-            if float_standard_col in reference_cols:
-                result.append(cur_col_index)
+        # input has baseline to compare to
+        for reference_col in reference_cols:
+            if reference_col in self.input_types.float_standard_cols:
+                result.append(self.input_types.float_standard_cols.index(reference_col))
             cur_col_index += 1
 
         return result
@@ -275,6 +279,7 @@ class IOColumnTransformers:
         uncat_result: List[torch.Tensor] = []
 
         ct_pts = self.input_ct_pts if input else self.output_ct_pts
+        types = self.input_types if input else self.output_types
 
         ct_offset = 0
         x_float_standard_name_ranges = self.get_name_ranges(input, False, {ColumnTransformerType.FLOAT_STANDARD})
@@ -286,8 +291,8 @@ class IOColumnTransformers:
         x_float_delta_name_ranges = self.get_name_ranges(input, False, {ColumnTransformerType.FLOAT_DELTA})
         if x_float_delta_name_ranges:
             x_relative_floats = x[:, x_float_delta_name_ranges[0].start:x_float_delta_name_ranges[-1].stop]
-            x_float_delta_reference_name_ranges = self.get_input_delta_reference_name_ranges()
-            x_reference_floats = x_input[:, x_float_delta_reference_name_ranges]
+            x_float_delta_reference_positions = self.get_input_delta_reference_positions(types)
+            x_reference_floats = x_input[:, x_float_delta_reference_positions]
             uncat_result.append(ct_pts[ct_offset].delta_convert(x_relative_floats, x_reference_floats))
             ct_offset += 1
 
@@ -301,6 +306,7 @@ class IOColumnTransformers:
         uncat_result: List[torch.Tensor] = []
 
         ct_pts = self.input_ct_pts if input else self.output_ct_pts
+        types = self.input_types if input else self.output_types
 
         ct_offset = 0
         x_float_name_ranges = self.get_name_ranges(input, True, {ColumnTransformerType.FLOAT_STANDARD})
@@ -312,8 +318,8 @@ class IOColumnTransformers:
         x_float_delta_name_ranges = self.get_name_ranges(input, False, {ColumnTransformerType.FLOAT_DELTA})
         if x_float_delta_name_ranges:
             x_relative_floats = x[:, x_float_delta_name_ranges[0].start:x_float_delta_name_ranges[-1].stop]
-            x_float_delta_reference_name_ranges = self.get_input_delta_reference_name_ranges()
-            x_reference_floats = x_input[:, x_float_delta_reference_name_ranges]
+            x_float_delta_reference_positions = self.get_input_delta_reference_positions(types)
+            x_reference_floats = x_input[:, x_float_delta_reference_positions]
             uncat_result.append(ct_pts[ct_offset].delta_inverse(x_relative_floats, x_reference_floats))
             ct_offset += 1
 

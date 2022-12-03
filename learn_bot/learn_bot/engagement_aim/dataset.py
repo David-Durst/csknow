@@ -83,11 +83,14 @@ input_column_types = ColumnTypes(temporal_io_float_column_names.past_columns + n
 
 output_relative_x_cols = temporal_io_float_column_names.get_matching_cols(base_abs_x_pos_column, False, True, True)
 output_relative_y_cols = temporal_io_float_column_names.get_matching_cols(base_abs_y_pos_column, False, True, True)
-output_ref_x_col = get_temporal_field_str(base_abs_x_pos_column, 0)
-output_ref_y_col = get_temporal_field_str(base_abs_y_pos_column, 0)
+output_ref_x_col = get_temporal_field_str(base_abs_x_pos_column, -1)
+output_ref_y_col = get_temporal_field_str(base_abs_y_pos_column, -1)
 output_delta_x = [DeltaColumn(c, output_ref_x_col) for c in output_relative_x_cols]
 output_delta_y = [DeltaColumn(c, output_ref_y_col) for c in output_relative_y_cols]
-output_delta = output_delta_x + output_delta_y
+output_delta = []
+for i in range(len(output_delta_x)):
+    output_delta.append(output_delta_x[i])
+    output_delta.append(output_delta_y[i])
 output_standard_cols = temporal_io_float_column_names.get_matching_cols("ticks since", False, True, True)
 
 output_column_types = ColumnTypes(output_standard_cols, output_delta, [], [])
