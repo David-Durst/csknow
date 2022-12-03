@@ -68,14 +68,20 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame = None):
                                  wspace=0.1, hspace=0.1, width_ratios=[1, 1.5])
         input_pos_ax = fig.add_subplot(spec[0])
         input_speed_ax = fig.add_subplot(spec[1])
-        setPosAxSettings(input_pos_ax, "Input Aim")
-        setSpeedAxSettings(input_speed_ax, "Input Aim")
     else:
-        raise NotImplementedError
-        fig = Figure(figsize=(11., 5.5), dpi=100)
-        input_pos_ax, pred_ax = fig.subplots(nrows=1, ncols=2)
-        setPosAxSettings(pred_ax, "Pred Aim")
-        pred_ax_objs = AxObjs(fig, pred_ax, None, first_tick_columns, cur_hit_columns)
+        fig = Figure(figsize=(16., 11.5), dpi=100)
+        spec = gridspec.GridSpec(ncols=2, nrows=2,
+                                 left=0.05, right=0.95,
+                                 wspace=0.1, hspace=0.1, width_ratios=[1, 1.5])
+        input_pos_ax = fig.add_subplot(spec[0])
+        input_speed_ax = fig.add_subplot(spec[1])
+        pred_pos_ax = fig.add_subplot(spec[2])
+        pred_speed_ax = fig.add_subplot(spec[3])
+        setPosAxSettings(pred_pos_ax, "Prediction Aim")
+        setSpeedAxSettings(pred_speed_ax, "Prediction Aim")
+        pred_ax_objs = AxObjs(fig, pred_pos_ax, pred_speed_ax, first_tick_columns, cur_hit_columns)
+    setPosAxSettings(input_pos_ax, "Input Aim")
+    setSpeedAxSettings(input_speed_ax, "Input Aim")
     input_ax_objs = AxObjs(fig, input_pos_ax, input_speed_ax, first_tick_columns, cur_hit_columns)
 
     canvas = FigureCanvasTkAgg(fig, master=window)  # A tk.DrawingArea.
@@ -205,17 +211,17 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame = None):
             input_pos_ax.set_xlabel(first_tick_x_label)
             input_pos_ax.set_ylabel(first_tick_y_label)
             if pred_df is not None:
-                pred_ax.set_title(pred_ax.base_title + first_tick_title_suffix)
-                pred_ax.set_xlabel(first_tick_x_label)
-                pred_ax.set_ylabel(first_tick_y_label)
+                pred_pos_ax.set_title(pred_pos_ax.base_title + first_tick_title_suffix)
+                pred_pos_ax.set_xlabel(first_tick_x_label)
+                pred_pos_ax.set_ylabel(first_tick_y_label)
         else:
             input_pos_ax.set_title(input_pos_ax.base_title + cur_pos_title_suffix)
             input_pos_ax.set_xlabel(cur_pos_x_label)
             input_pos_ax.set_ylabel(cur_pos_y_label)
             if pred_df is not None:
-                pred_ax.set_title(pred_ax.base_title + cur_pos_title_suffix)
-                pred_ax.set_xlabel(cur_pos_x_label)
-                pred_ax.set_ylabel(cur_pos_y_label)
+                pred_pos_ax.set_title(pred_pos_ax.base_title + cur_pos_title_suffix)
+                pred_pos_ax.set_xlabel(cur_pos_x_label)
+                pred_pos_ax.set_ylabel(cur_pos_y_label)
         tick_slider_changed(cur_tick_index)
 
     similar_trajectories: List[SimilarTrajectory] = []

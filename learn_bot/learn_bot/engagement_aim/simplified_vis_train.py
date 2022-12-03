@@ -49,8 +49,8 @@ def build_aim_df(example_row_df: Dict) -> pd.DataFrame:
             new_dict['tick id'] = tick_id
             new_dict['demo tick id'] = tick_id
             new_dict['game tick id'] = tick_id + PRIOR_TICKS
-            new_dict['delta view angle x (t)'] = engagement_examples[engagement_id].mouse_xy[tick_in_engagement].x
-            new_dict['delta view angle y (t)'] = engagement_examples[engagement_id].mouse_xy[tick_in_engagement].y
+            new_dict[get_x_field_str(0)] = engagement_examples[engagement_id].mouse_xy[tick_in_engagement].x
+            new_dict[get_y_field_str(0)] = engagement_examples[engagement_id].mouse_xy[tick_in_engagement].y
             for time_offset in range(PRIOR_TICKS, CUR_TICK + FUTURE_TICKS):
                 if time_offset == 0:
                     continue
@@ -78,7 +78,7 @@ def vis_train():
     simple_pred_df = on_policy_inference(train_result.train_dataset, simple_df,
                                          train_result.model, train_result.column_transformers,
                                          True)
-    vis(simple_df, simple_pred_df)
+    vis.vis(simple_df, simple_pred_df)
 
 
 

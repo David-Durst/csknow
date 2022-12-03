@@ -51,28 +51,28 @@ class PerspectiveColumns:
         y_col_offset = x_col_offset + 1
         self.base_cur_view_angle_x_column = base_float_columns[x_col_offset]
         self.base_cur_view_angle_y_column = base_float_columns[y_col_offset]
-        self.cur_view_angle_x_column = temporal_io_float_column_names.vis_columns[x_col_offset]
-        self.cur_view_angle_y_column = temporal_io_float_column_names.vis_columns[y_col_offset]
+        self.cur_view_angle_x_column = temporal_io_float_column_names.present_columns[x_col_offset]
+        self.cur_view_angle_y_column = temporal_io_float_column_names.present_columns[y_col_offset]
         self.all_view_angle_x_columns = \
             temporal_io_float_column_names.get_matching_cols(base_float_columns[x_col_offset])
         self.all_view_angle_y_columns = \
             temporal_io_float_column_names.get_matching_cols(base_float_columns[y_col_offset])
         self.victim_min_view_angle_x_column = \
-            temporal_io_float_column_names.vis_columns[victim_min_view_angle_x_offset]
+            temporal_io_float_column_names.present_columns[victim_min_view_angle_x_offset]
         self.victim_min_view_angle_y_column = \
-            temporal_io_float_column_names.vis_columns[victim_min_view_angle_x_offset + 1]
+            temporal_io_float_column_names.present_columns[victim_min_view_angle_x_offset + 1]
         self.victim_max_view_angle_x_column = \
-            temporal_io_float_column_names.vis_columns[victim_min_view_angle_x_offset + 2]
+            temporal_io_float_column_names.present_columns[victim_min_view_angle_x_offset + 2]
         self.victim_max_view_angle_y_column = \
-            temporal_io_float_column_names.vis_columns[victim_min_view_angle_x_offset + 3]
+            temporal_io_float_column_names.present_columns[victim_min_view_angle_x_offset + 3]
         self.victim_cur_head_view_angle_x_column = \
-            temporal_io_float_column_names.vis_columns[victim_min_view_angle_x_offset + 4]
+            temporal_io_float_column_names.present_columns[victim_min_view_angle_x_offset + 4]
         self.victim_cur_head_view_angle_y_column = \
-            temporal_io_float_column_names.vis_columns[victim_min_view_angle_x_offset + 5]
+            temporal_io_float_column_names.present_columns[victim_min_view_angle_x_offset + 5]
         self.recoil_x_column = \
-            temporal_io_float_column_names.vis_columns[recoil_offset]
+            temporal_io_float_column_names.present_columns[recoil_offset]
         self.recoil_y_column = \
-            temporal_io_float_column_names.vis_columns[recoil_offset + 1]
+            temporal_io_float_column_names.present_columns[recoil_offset + 1]
 
 
 class DataFrameTemporalSlices:
