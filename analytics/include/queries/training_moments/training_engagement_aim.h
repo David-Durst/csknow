@@ -35,6 +35,8 @@ constexpr int FUTURE_AIM_TICKS = 6;
 constexpr int CUR_AIM_TICK = 1;
 constexpr int TOTAL_AIM_TICKS = PAST_AIM_TICKS + FUTURE_AIM_TICKS + CUR_AIM_TICK;
 
+const int64_t MAX_TICKS_SINCE_LAST_FIRE_ATTACK = 100;
+
 enum class AimWeaponType {
     Pistol = 0,
     SMG,

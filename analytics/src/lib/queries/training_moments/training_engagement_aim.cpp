@@ -269,12 +269,14 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
 
                     tmpScaledRecoilAngle[threadNum].back()[i] = recoil * WEAPON_RECOIL_SCALE;
 
-                    tmpTicksSinceLastFire[threadNum].back()[i] = fireHistoryResult.ticksSinceLastFire[attackerPATId];
+                    tmpTicksSinceLastFire[threadNum].back()[i] =
+                        std::min(MAX_TICKS_SINCE_LAST_FIRE_ATTACK, fireHistoryResult.ticksSinceLastFire[attackerPATId]);
                     tmpTicksSinceLastHoldingAttack[threadNum].back()[i] =
-                        fireHistoryResult.ticksSinceLastHoldingAttack[attackerPATId];
-                    tmpTicksUntilNextFire[threadNum].back()[i] = fireHistoryResult.ticksUntilNextFire[attackerPATId];
+                        std::min(MAX_TICKS_SINCE_LAST_FIRE_ATTACK, fireHistoryResult.ticksSinceLastHoldingAttack[attackerPATId]);
+                    tmpTicksUntilNextFire[threadNum].back()[i] =
+                        std::min(MAX_TICKS_SINCE_LAST_FIRE_ATTACK, fireHistoryResult.ticksUntilNextFire[attackerPATId]);
                     tmpTicksUntilNextHoldingAttack[threadNum].back()[i] =
-                        fireHistoryResult.ticksUntilNextHoldingAttack[attackerPATId];
+                        std::min(MAX_TICKS_SINCE_LAST_FIRE_ATTACK, fireHistoryResult.ticksUntilNextHoldingAttack[attackerPATId]);
 
 
                     vector<CellIdAndDistance> attackerCellIdsByDistances = visPoints.getCellVisPointsByDistance(
