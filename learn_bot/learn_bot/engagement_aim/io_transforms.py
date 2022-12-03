@@ -67,7 +67,10 @@ class ColumnTypes:
                 self.column_types_.append(ColumnTransformerType.CATEGORICAL)
         return self.column_types_
 
-    def column_names(self) -> List[str]:
+    def column_names(self, relative_cols_first=False) -> List[str]:
+        if relative_cols_first:
+            relative_cols, _ = split_delta_columns(self.float_delta_cols)
+            return relative_cols + self.float_standard_cols + self.categorical_cols
         if self.all_cols_ is None:
             relative_cols, _ = split_delta_columns(self.float_delta_cols)
             self.all_cols_ = self.float_standard_cols + relative_cols + self.categorical_cols

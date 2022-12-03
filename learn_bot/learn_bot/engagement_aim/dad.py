@@ -20,21 +20,11 @@ from learn_bot.libs.df_grouping import get_row_as_dict_loc
 # generate the input tensor for the next policy iteration
 # create the dict for inserting a new training data point into the data frame
 def get_x_field_str(tick: int = -1):
-    if tick < 0:
-        return f"delta view angle x (t-{abs(tick)})"
-    elif tick == 0:
-        return f"delta view angle x (t)"
-    else:
-        return f"delta view angle x (t+{tick})"
+    return get_temporal_field_str(base_abs_x_pos_column, tick)
 
 
 def get_y_field_str(tick: int = -1):
-    if tick < 0:
-        return f"delta view angle y (t-{abs(tick)})"
-    elif tick == 0:
-        return f"delta view angle y (t)"
-    else:
-        return f"delta view angle y (t+{tick})"
+    return get_temporal_field_str(base_abs_y_pos_column, tick)
 
 
 class PolicyHistory:

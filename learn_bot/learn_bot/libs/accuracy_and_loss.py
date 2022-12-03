@@ -46,7 +46,7 @@ def compute_accuracy(pred, Y, accuracy, column_transformers: IOColumnTransformer
 
 def finish_accuracy(accuracy, column_transformers: IOColumnTransformers):
     accuracy_string = ""
-    for name, unadjusted_r in zip(column_transformers.output_types.column_names(),
+    for name, unadjusted_r in zip(column_transformers.output_types.column_names(True),
                                   column_transformers.get_name_ranges(False, False)):
         # make float accuracy into rmse
         if name in column_transformers.output_types.float_standard_cols or \

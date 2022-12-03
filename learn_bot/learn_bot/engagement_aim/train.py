@@ -25,7 +25,7 @@ class TrainResult:
     model: nn.Module
 
 
-def train(all_data_df: pd.DataFrame, dad_iters=4, num_epochs=5, save=True,
+def train(all_data_df: pd.DataFrame, dad_iters=4, num_epochs=1, save=True,
           diff_train_test=True) -> TrainResult:
     # all_data_df = all_data_df[all_data_df['num shots fired'] > 0]
 

@@ -72,11 +72,16 @@ base_float_columns: List[str] = ["attacker view angle x", "attacker view angle y
                                  "attacker vel x", "attacker vel y", "attacker vel z",
                                  "victim vel x", "victim vel y", "victim vel z"]
 
+# some columns only used for output, not input features
+base_non_input_float_columns: List[str] = ["ticks until next fire", "ticks until next holding attack"]
+
 non_temporal_float_columns = []
 
 input_categorical_columns: List[str] = ["weapon type"]
 
 temporal_io_float_column_names = TemporalIOColumnNames(base_float_columns, PRIOR_TICKS, CUR_TICK, FUTURE_TICKS)
+
+temporal_o_float_column_names = TemporalIOColumnNames(base_non_input_float_columns, 0, CUR_TICK, FUTURE_TICKS)
 
 input_column_types = ColumnTypes(temporal_io_float_column_names.past_columns + non_temporal_float_columns, [],
                                  input_categorical_columns, [6])
@@ -91,6 +96,7 @@ output_delta = []
 for i in range(len(output_delta_x)):
     output_delta.append(output_delta_x[i])
     output_delta.append(output_delta_y[i])
-output_standard_cols = temporal_io_float_column_names.get_matching_cols("ticks since", False, True, True)
+output_standard_cols = temporal_o_float_column_names.get_matching_cols("ticks until", False, True, True)
 
-output_column_types = ColumnTypes(output_standard_cols, output_delta, [], [])
+#output_column_types = ColumnTypes(output_standard_cols, output_delta, [], [])
+output_column_types = ColumnTypes([], output_delta, [], [])
