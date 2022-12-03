@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import pandas as pd
 from typing import List
 import matplotlib.pyplot as plt
@@ -9,14 +11,15 @@ from learn_bot.engagement_aim.mlp_aim_model import MLPAimModel
 from learn_bot.engagement_aim.io_transforms import IOColumnTransformers, get_transformed_outputs, \
     get_untransformed_outputs
 
-float_column_x_axes: List[str] = ['yaw degree', 'pitch degree', 'yaw degree', 'pitch degree',
-                                  'yaw degree', 'pitch degree',
-                                  'hammer units', 'hammer units', 'hammer units', 'hammer units']
-
-cat_column_x_axes: List[str] = ['weapon type']
+#float_column_x_axes: List[str] = ['yaw degree', 'pitch degree', 'yaw degree', 'pitch degree',
+#                                  'yaw degree', 'pitch degree',
+#                                  'hammer units', 'hammer units', 'hammer units', 'hammer units']
+#
+#cat_column_x_axes: List[str] = ['weapon type']
 
 INCH_PER_FIG = 4
 
+plot_path = Path(__file__).parent / 'distributions'
 
 def filter_df(df: pd.DataFrame, col_name, low_pct_to_remove=0.01, high_pct_to_remove=0.01) -> pd.DataFrame:
     q_low = df[col_name].quantile(low_pct_to_remove)
@@ -53,7 +56,7 @@ def plot_untransformed_and_transformed(title: str, df, float_cols, cat_cols,
     for i in range(len(float_cols)):
         df_filtered = filter_df(df, float_cols[i])
         df_filtered.hist(float_cols[i], ax=axs[0][i], bins=100)
-        axs[0][i].set_xlabel(float_column_x_axes[i % len(float_column_x_axes)])
+        #axs[0][i].set_xlabel(float_column_x_axes[i % len(float_column_x_axes)])
 
     # transformed
     if transformed_df is not None:
@@ -63,7 +66,7 @@ def plot_untransformed_and_transformed(title: str, df, float_cols, cat_cols,
         for i in range(len(float_cols)):
             transformed_df_filtered = filter_df(transformed_df, float_cols[i])
             transformed_df_filtered.hist(float_cols[i], ax=axs[0][i], bins=100)
-            axs[0][i].set_xlabel(float_column_x_axes[i % len(float_column_x_axes)] + ' standardized')
+            #axs[0][i].set_xlabel(float_column_x_axes[i % len(float_column_x_axes)] + ' standardized')
 
     # categorical
     if cat_cols:
@@ -71,9 +74,9 @@ def plot_untransformed_and_transformed(title: str, df, float_cols, cat_cols,
         subfigs[num_rows-1].suptitle('categorical')
         axs[0][0].set_ylabel('num points')
         for i in range(len(cat_cols)):
-            axs[0][i].set_xlabel(cat_column_x_axes[i % len(cat_column_x_axes)])
+            #axs[0][i].set_xlabel(cat_column_x_axes[i % len(cat_column_x_axes)])
             df.loc[:, cat_cols[i]].value_counts().plot.bar(ax=axs[0][0])
-    plt.show()
+    plt.savefig(plot_path / (title + '.png'))
 
 
 class ModelOutputRecording:

@@ -47,7 +47,7 @@ def train(all_data_df: pd.DataFrame, dad_iters=4, num_epochs=5, save=True,
     column_transformers = IOColumnTransformers(input_column_types, output_column_types, all_data_df)
 
     # plot data set with and without transformers
-    plot_untransformed_and_transformed('train+test labels', all_data_df,
+    plot_untransformed_and_transformed('train and test labels', all_data_df,
                                        temporal_io_float_column_names.present_columns + non_temporal_float_columns,
                                        input_categorical_columns)
 
