@@ -193,4 +193,4 @@ def train(all_data_df: pd.DataFrame, dad_iters=4, num_epochs=1, save=True,
 
 if __name__ == "__main__":
     all_data_df = pd.read_csv(data_path)
-    train(all_data_df)
+    train(all_data_df, dad_iters=0)
