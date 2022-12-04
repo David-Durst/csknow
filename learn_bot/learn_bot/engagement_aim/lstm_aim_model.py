@@ -56,7 +56,7 @@ class LSTMAimModel(nn.Module):
         super(LSTMAimModel, self).__init__()
         self.cts = cts
         self.num_categorical_transformed_features = \
-            len(self.cts.get_name_ranges(True, True, {ColumnTransformerType.CATEGORICAL})[-1])
+            len(self.cts.get_name_ranges(True, True, frozenset({ColumnTransformerType.CATEGORICAL}))[-1])
         self.num_prior_ticks = -1 * PRIOR_TICKS
         self.num_input_temporal_features = num_input_temporal_features
         self.num_input_non_temporal_floats = num_input_non_temporal_floats

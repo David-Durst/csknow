@@ -1,6 +1,8 @@
 from dataclasses import dataclass
+from functools import cache
+
 import pandas as pd
-from typing import List, Dict, Set, Tuple
+from typing import List, Dict, Tuple, FrozenSet
 from enum import Enum
 from abc import abstractmethod, ABC
 from torch.nn import functional as F
@@ -31,9 +33,9 @@ def split_delta_columns(delta_ref_columns: List[DeltaColumn]) -> Tuple[List[str]
     return [drc.relative_col for drc in delta_ref_columns], [drc.reference_col for drc in delta_ref_columns]
 
 
-ALL_TYPES: Set[ColumnTransformerType] = {ColumnTransformerType.FLOAT_STANDARD,
-                                         ColumnTransformerType.FLOAT_DELTA,
-                                         ColumnTransformerType.CATEGORICAL}
+ALL_TYPES: FrozenSet[ColumnTransformerType] = frozenset({ColumnTransformerType.FLOAT_STANDARD,
+                                                         ColumnTransformerType.FLOAT_DELTA,
+                                                         ColumnTransformerType.CATEGORICAL})
 
 
 class ColumnTypes:
@@ -239,7 +241,8 @@ class IOColumnTransformers:
             result.append(PTOneHotColumnTransformer(types.num_cats_per_col[name]))
         return result
 
-    def get_name_ranges(self, input: bool, transformed: bool, types: Set[ColumnTransformerType] = ALL_TYPES) -> List[range]:
+    @cache
+    def get_name_ranges(self, input: bool, transformed: bool, types: frozenset[ColumnTransformerType] = ALL_TYPES) -> List[range]:
         result: List[range] = []
         cur_start: int = 0
 
@@ -291,13 +294,14 @@ class IOColumnTransformers:
         types = self.input_types if input else self.output_types
 
         ct_offset = 0
-        x_float_standard_name_ranges = self.get_name_ranges(input, False, {ColumnTransformerType.FLOAT_STANDARD})
+        x_float_standard_name_ranges = self.get_name_ranges(input, False,
+                                                            frozenset({ColumnTransformerType.FLOAT_STANDARD}))
         if x_float_standard_name_ranges:
             x_floats = x[:, x_float_standard_name_ranges[0].start:x_float_standard_name_ranges[-1].stop]
             uncat_result.append(ct_pts[0].convert(x_floats))
             ct_offset += 1
 
-        x_float_delta_name_ranges = self.get_name_ranges(input, False, {ColumnTransformerType.FLOAT_DELTA})
+        x_float_delta_name_ranges = self.get_name_ranges(input, False, frozenset({ColumnTransformerType.FLOAT_DELTA}))
         if x_float_delta_name_ranges:
             x_relative_floats = x[:, x_float_delta_name_ranges[0].start:x_float_delta_name_ranges[-1].stop]
             x_float_delta_reference_positions = self.get_input_delta_reference_positions(types)
@@ -305,7 +309,7 @@ class IOColumnTransformers:
             uncat_result.append(ct_pts[ct_offset].delta_convert(x_relative_floats, x_reference_floats))
             ct_offset += 1
 
-        x_categorical_name_ranges = self.get_name_ranges(input, False, {ColumnTransformerType.CATEGORICAL})
+        x_categorical_name_ranges = self.get_name_ranges(input, False, frozenset({ColumnTransformerType.CATEGORICAL}))
         for i, categorical_name_range in enumerate(x_categorical_name_ranges):
             uncat_result.append(ct_pts[i+ct_offset].convert(x[:, categorical_name_range]))
 
@@ -318,13 +322,13 @@ class IOColumnTransformers:
         types = self.input_types if input else self.output_types
 
         ct_offset = 0
-        x_float_name_ranges = self.get_name_ranges(input, True, {ColumnTransformerType.FLOAT_STANDARD})
+        x_float_name_ranges = self.get_name_ranges(input, True, frozenset({ColumnTransformerType.FLOAT_STANDARD}))
         if x_float_name_ranges:
             x_floats = x[:, x_float_name_ranges[0].start:x_float_name_ranges[-1].stop]
             uncat_result.append(ct_pts[0].inverse(x_floats))
             ct_offset += 1
 
-        x_float_delta_name_ranges = self.get_name_ranges(input, False, {ColumnTransformerType.FLOAT_DELTA})
+        x_float_delta_name_ranges = self.get_name_ranges(input, False, frozenset({ColumnTransformerType.FLOAT_DELTA}))
         if x_float_delta_name_ranges:
             x_relative_floats = x[:, x_float_delta_name_ranges[0].start:x_float_delta_name_ranges[-1].stop]
             x_float_delta_reference_positions = self.get_input_delta_reference_positions(types)
@@ -332,7 +336,7 @@ class IOColumnTransformers:
             uncat_result.append(ct_pts[ct_offset].delta_inverse(x_relative_floats, x_reference_floats))
             ct_offset += 1
 
-        x_categorical_name_ranges = self.get_name_ranges(input, True, {ColumnTransformerType.CATEGORICAL})
+        x_categorical_name_ranges = self.get_name_ranges(input, True, frozenset({ColumnTransformerType.CATEGORICAL}))
         for i, categorical_name_range in enumerate(x_categorical_name_ranges):
             uncat_result.append(ct_pts[i+ct_offset].inverse(x[:, categorical_name_range]))
 

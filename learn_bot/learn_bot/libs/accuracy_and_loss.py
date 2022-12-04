@@ -14,12 +14,12 @@ def compute_loss(pred, y, column_transformers: IOColumnTransformers):
     pred_transformed = get_transformed_outputs(pred)
     total_loss = 0
     if column_transformers.output_types.float_standard_cols or column_transformers.output_types.float_delta_cols:
-        col_ranges = column_transformers.get_name_ranges(False, True, {ColumnTransformerType.FLOAT_STANDARD,
-                                                                       ColumnTransformerType.FLOAT_DELTA})
+        col_ranges = column_transformers.get_name_ranges(False, True, frozenset({ColumnTransformerType.FLOAT_STANDARD,
+                                                                                 ColumnTransformerType.FLOAT_DELTA}))
         col_range = range(col_ranges[0].start, col_ranges[-1].stop)
         total_loss += float_loss_fn(pred_transformed[:, col_range], y[:, col_range])
     if column_transformers.output_types.categorical_cols:
-        col_ranges = column_transformers.get_name_ranges(False, True, {ColumnTransformerType.CATEGORICAL})
+        col_ranges = column_transformers.get_name_ranges(False, True, frozenset({ColumnTransformerType.CATEGORICAL}))
         col_range = range(col_ranges[0].start, col_ranges[-1].stop)
         total_loss += classification_loss_fn(pred_transformed[:, col_range], y[:, col_range])
     return total_loss
@@ -29,8 +29,8 @@ def compute_accuracy(pred, Y, accuracy, column_transformers: IOColumnTransformer
     pred_untransformed = get_untransformed_outputs(pred)
 
     if column_transformers.output_types.float_standard_cols or column_transformers.output_types.float_delta_cols:
-        col_ranges = column_transformers.get_name_ranges(False, False, {ColumnTransformerType.FLOAT_STANDARD,
-                                                                        ColumnTransformerType.FLOAT_DELTA})
+        col_ranges = column_transformers.get_name_ranges(False, False, frozenset({ColumnTransformerType.FLOAT_STANDARD,
+                                                                                  ColumnTransformerType.FLOAT_DELTA}))
         col_range = range(col_ranges[0].start, col_ranges[-1].stop)
         squared_errors = torch.square(pred_untransformed[:, col_range] - Y[:, col_range]).sum(dim=0).to(CPU_DEVICE_STR)
         for i, name in enumerate(column_transformers.output_types.float_standard_cols +
@@ -38,7 +38,8 @@ def compute_accuracy(pred, Y, accuracy, column_transformers: IOColumnTransformer
             accuracy[name] += squared_errors[i].item()
 
     for name, col_range in zip(column_transformers.output_types.categorical_cols,
-                               column_transformers.get_name_ranges(False, False, {ColumnTransformerType.CATEGORICAL})):
+                               column_transformers.get_name_ranges(False, False,
+                                                                   frozenset({ColumnTransformerType.CATEGORICAL}))):
         # compute accuracy using unnormalized outputs on end
         accuracy[name] += (pred_untransformed[:, col_range].argmax(1) == Y[:, col_range].argmax(1)) \
             .type(torch.float).sum().item()
