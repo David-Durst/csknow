@@ -4,7 +4,8 @@ from learn_bot.engagement_aim.dad import get_x_field_str, get_y_field_str, on_po
 from learn_bot.engagement_aim.train import train
 from learn_bot.engagement_aim.vis import vis
 import pandas as pd
-from learn_bot.engagement_aim.dataset import data_path, AimDataset, input_column_types, output_column_types
+from learn_bot.engagement_aim.dataset import data_path, AimDataset, input_column_types, output_column_types, \
+    tick_id_column, seconds_per_tick
 from dataclasses import dataclass
 from typing import Tuple, List, Dict
 import copy
@@ -46,9 +47,10 @@ def build_aim_df(example_row_df: Dict) -> pd.DataFrame:
             new_dict = copy.deepcopy(example_row_df)
             new_dict['engagement id'] = engagement_id
             new_dict['id'] = tick_id
-            new_dict['tick id'] = tick_id
+            new_dict[tick_id_column] = tick_id
             new_dict['demo tick id'] = tick_id
             new_dict['game tick id'] = tick_id + PRIOR_TICKS
+            new_dict['game time'] = example_row_df['game time'] + tick_id * seconds_per_tick
             new_dict[get_x_field_str(0)] = engagement_examples[engagement_id].mouse_xy[tick_in_engagement].x
             new_dict[get_y_field_str(0)] = engagement_examples[engagement_id].mouse_xy[tick_in_engagement].y
             for time_offset in range(PRIOR_TICKS, CUR_TICK + FUTURE_TICKS):

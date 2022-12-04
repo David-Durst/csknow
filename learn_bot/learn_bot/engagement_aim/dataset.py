@@ -100,3 +100,5 @@ output_standard_cols = temporal_o_float_column_names.get_matching_cols("ticks un
 
 #output_column_types = ColumnTypes(output_standard_cols, output_delta, [], [])
 output_column_types = ColumnTypes([], output_delta, [], [])
+
+seconds_per_tick = 1. / 128. * 1000.

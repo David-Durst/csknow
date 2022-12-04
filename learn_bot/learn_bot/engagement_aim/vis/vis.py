@@ -64,15 +64,15 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame = None):
     if pred_df is None:
         fig = Figure(figsize=(16., 5.5), dpi=100)
         spec = gridspec.GridSpec(ncols=2, nrows=1,
-                                 left=0.05, right=0.95,
-                                 wspace=0.1, hspace=0.1, width_ratios=[1, 1.5])
+                                 left=0.05, right=0.95, bottom=0.1, top=0.95,
+                                 wspace=0.1, hspace=0.2, width_ratios=[1, 1.5])
         input_pos_ax = fig.add_subplot(spec[0])
         input_speed_ax = fig.add_subplot(spec[1])
     else:
-        fig = Figure(figsize=(16., 11.5), dpi=100)
+        fig = Figure(figsize=(16., 10), dpi=100)
         spec = gridspec.GridSpec(ncols=2, nrows=2,
-                                 left=0.05, right=0.95,
-                                 wspace=0.1, hspace=0.1, width_ratios=[1, 1.5])
+                                 left=0.05, right=0.95, bottom=0.1, top=0.95,
+                                 wspace=0.1, hspace=0.2, width_ratios=[1, 1.5])
         input_pos_ax = fig.add_subplot(spec[0])
         input_speed_ax = fig.add_subplot(spec[1])
         pred_pos_ax = fig.add_subplot(spec[2])
