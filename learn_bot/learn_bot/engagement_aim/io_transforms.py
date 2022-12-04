@@ -152,16 +152,16 @@ class PTDeltaMeanStdColumnTransformer(PTColumnTransformer):
     pt_ct_type: ColumnTransformerType = ColumnTransformerType.FLOAT_STANDARD
 
     def __init__(self, delta_means: torch.Tensor, delta_standard_deviations: torch.Tensor):
-        self.delta_cpu_means = delta_means.view(1,-1)
-        self.delta_cpu_standard_deviations = delta_standard_deviations.view(1,-1)
+        self.cpu_delta_means = delta_means.view(1,-1)
+        self.cpu_delta_standard_deviations = delta_standard_deviations.view(1,-1)
         # done so columsn that all equal mean are 0, 253 is sentinel value,
         # doesn't matter what value, sub by mean will make it equal 0.
         # NOTE TO SELF: IT DOES MATTER, TRAINING VALUES WON'T BE 0, AND LARGE STD DEV PREVENTS THEM FROM CONVERGING
         # DUE TO BAD LOSS
-        self.delta_cpu_standard_deviations[self.delta_cpu_standard_deviations == 0.] = \
+        self.cpu_delta_standard_deviations[self.cpu_delta_standard_deviations == 0.] = \
             torch.finfo(delta_standard_deviations.dtype).smallest_normal
-        self.delta_means = self.delta_cpu_means.to(CUDA_DEVICE_STR)
-        self.delta_standard_deviations = self.delta_cpu_standard_deviations.to(CUDA_DEVICE_STR)
+        self.delta_means = self.cpu_delta_means.to(CUDA_DEVICE_STR)
+        self.delta_standard_deviations = self.cpu_delta_standard_deviations.to(CUDA_DEVICE_STR)
 
     def convert(self, offset_value: torch.Tensor):
         raise NotImplementedError

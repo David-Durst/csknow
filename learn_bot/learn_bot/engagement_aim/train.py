@@ -16,16 +16,19 @@ from learn_bot.engagement_aim.dad import on_policy_inference, create_dad_dataset
 from tqdm import tqdm
 from dataclasses import dataclass
 
+from learn_bot.engagement_aim.vis import vis
+
 
 @dataclass(frozen=True)
 class TrainResult:
     train_dataset: AimDataset
     test_dataset: AimDataset
+    test_df: pd.DataFrame
     column_transformers: IOColumnTransformers
     model: nn.Module
 
 
-def train(all_data_df: pd.DataFrame, dad_iters=4, num_epochs=1, save=True,
+def train(all_data_df: pd.DataFrame, dad_iters=4, num_epochs=5, save=True,
           diff_train_test=True) -> TrainResult:
     # all_data_df = all_data_df[all_data_df['num shots fired'] > 0]
 
@@ -187,10 +190,15 @@ def train(all_data_df: pd.DataFrame, dad_iters=4, num_epochs=1, save=True,
     if save:
         script_model = torch.jit.trace(model.to(CPU_DEVICE_STR), first_row)
         script_model.save(Path(__file__).parent / '..' / '..' / 'models' / 'engagement_aim_model' / 'script_model.pt')
+        model.to(device)
 
-    return TrainResult(train_data, test_data, column_transformers, model)
+    return TrainResult(train_data, test_data, test_df, column_transformers, model)
 
 
 if __name__ == "__main__":
     all_data_df = pd.read_csv(data_path)
-    train(all_data_df, dad_iters=0)
+    train_result = train(all_data_df, dad_iters=0)
+    pred_df = on_policy_inference(train_result.test_dataset, train_result.test_df,
+                                  train_result.model, train_result.column_transformers,
+                                  True)
+    vis.vis(train_result.test_df, pred_df)
