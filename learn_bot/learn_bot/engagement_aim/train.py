@@ -198,7 +198,11 @@ def train(all_data_df: pd.DataFrame, dad_iters=4, num_epochs=5, save=True,
 if __name__ == "__main__":
     all_data_df = pd.read_csv(data_path)
     train_result = train(all_data_df, dad_iters=0)
-    pred_df = on_policy_inference(train_result.test_dataset, train_result.test_df,
+    engagement_ids = list(train_result.test_df[engagement_id_column].unique())
+    engagement_ids = engagement_ids[:30]
+    limited_test_df = train_result.test_df[train_result.test_df[engagement_id_column].isin(engagement_ids)]
+    limited_test_dataset = AimDataset(limited_test_df, train_result.column_transformers)
+    pred_df = on_policy_inference(limited_test_dataset, limited_test_df,
                                   train_result.model, train_result.column_transformers,
                                   True)
-    vis.vis(train_result.test_df, pred_df)
+    #vis.vis(train_result.test_df, pred_df)
