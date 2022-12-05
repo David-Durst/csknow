@@ -306,11 +306,15 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
                     }
                     bool curTickVictimVisible = victimInFOV && victimVisNoFOV;
                     tmpVictimVisible[threadNum].back()[i] = curTickVictimVisible;
-                    if (curTickVictimVisible && engagementToVictimFirstVisiblePATId.find(engagementIndex) ==
+                    if (curTickVictimVisible &&
+                        engagementToVictimFirstVisiblePATId.find(engagementIndex) ==
                         engagementToVictimFirstVisiblePATId.end()) {
                         engagementToVictimFirstVisiblePATId[engagementIndex] = victimPATId;
                     }
                     tmpVictimVisibleYet[threadNum].back()[i] =
+                        engagementToVictimFirstVisiblePATId.find(engagementIndex) !=
+                        engagementToVictimFirstVisiblePATId.end() &&
+                        engagementToVictimFirstVisiblePATId[engagementIndex] <= victimPATId;
 
                     tmpVictimAlive[threadNum].back()[i] = playerAtTick.isAlive[uncheckedVictimPATId];
 
