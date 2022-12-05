@@ -7,7 +7,8 @@ from dataset import *
 from learn_bot.engagement_aim.dataset import AimDataset
 from learn_bot.libs.accuracy_and_loss import compute_loss, compute_accuracy, finish_accuracy, CUDA_DEVICE_STR, \
     CPU_DEVICE_STR
-from learn_bot.engagement_aim.io_transforms import IOColumnTransformers, ColumnTypes, PRIOR_TICKS, FUTURE_TICKS, CUR_TICK
+from learn_bot.engagement_aim.io_transforms import IOColumnTransformers, ColumnTypes, PRIOR_TICKS, FUTURE_TICKS, \
+    CUR_TICK, ModelOutput
 from learn_bot.engagement_aim.lstm_aim_model import LSTMAimModel
 from typing import List, Dict, Optional
 from dataclasses import dataclass
@@ -72,7 +73,7 @@ class PolicyHistory:
         self.input_tensor = new_input_tensor
 
     # for finishing cur tick
-    def finish_row(self, pred: torch.Tensor, cts: IOColumnTransformers, agg_series: List[pd.Series],
+    def finish_row(self, pred: ModelOutput, cts: IOColumnTransformers, agg_series: List[pd.Series],
                    result_str: Optional[List[str]] = None):
 
         # finish cur input_tensor by setting all the outputs
@@ -137,16 +138,16 @@ def on_policy_inference(dataset: AimDataset, orig_df: pd.DataFrame, model: nn.Mo
                     round_row_tensors.append(rounds_policy_data[valid_round_id]
                                              .history_per_engagement[engagement_id].input_tensor)
                 X_rolling = torch.stack(round_row_tensors, dim=0)
-                pred = model(X_rolling.to(CUDA_DEVICE_STR)).to(CPU_DEVICE_STR).detach()
+                pred = model(X_rolling.to(CUDA_DEVICE_STR))
+                pred = (pred[0].to(CPU_DEVICE_STR).detach(), pred[1].to(CPU_DEVICE_STR).detach())
                 #pred = model(X_rolling).detach()
                 # need to add output to data set
                 for i, valid_round_id in enumerate(valid_rounds):
                     cur_index = rounds_policy_data[valid_round_id].cur_index
                     engagement_id = dataset.engagement_id.loc[cur_index]
                     # save all predictions for output row
-                    rounds_policy_data[valid_round_id].history_per_engagement[engagement_id].finish_row(pred[i], cts,
-                                                                                                        agg_series,
-                                                                                                        result_strs)
+                    rounds_policy_data[valid_round_id].history_per_engagement[engagement_id] \
+                        .finish_row((pred[0][i], pred[1][i]), cts, agg_series, result_strs)
                     rounds_policy_data[valid_round_id].cur_index += 1
                 pbar.update(len(valid_rounds))
 

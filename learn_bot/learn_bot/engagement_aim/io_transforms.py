@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from functools import cache
 
 import pandas as pd
-from typing import List, Dict, Tuple, FrozenSet
+from typing import List, Dict, Tuple, FrozenSet, Union
 from enum import Enum
 from abc import abstractmethod, ABC
 from torch.nn import functional as F
@@ -16,6 +16,7 @@ PRIOR_TICKS_POS = -1 * PRIOR_TICKS
 FUTURE_TICKS = 6
 CUR_TICK = 1
 
+ModelOutput = Tuple[torch.Tensor, torch.Tensor]
 
 class ColumnTransformerType(Enum):
     FLOAT_STANDARD = 0
@@ -342,7 +343,7 @@ class IOColumnTransformers:
 
         return torch.cat(uncat_result, dim=1)
 
-    def get_untransformed_value(self, x: torch.Tensor, col_name: str, input: bool) -> float:
+    def get_untransformed_value(self, x: Union[torch.Tensor, ModelOutput], col_name: str, input: bool) -> float:
         col_names = self.input_types.column_names() if input else self.output_types.column_names()
         col_ranges = self.get_name_ranges(input, False)
         col_index = 0
@@ -354,7 +355,7 @@ class IOColumnTransformers:
         if input:
             return x[col_ranges[col_index].start].item()
         else:
-            return x[1:, col_ranges[col_index].start].item()
+            return x[1][col_ranges[col_index].start].item()
 
     def set_untransformed_input_value(self, x: torch.Tensor, col_name: str, value: float):
         col_names = self.input_types.column_names() if input else self.output_types.column_names()
@@ -368,9 +369,9 @@ class IOColumnTransformers:
         x[col_ranges[col_index].start] = value
 
 
-def get_transformed_outputs(x: torch.Tensor) -> torch.Tensor:
-    return x[:, 0, :].squeeze()
+def get_transformed_outputs(x: ModelOutput) -> torch.Tensor:
+    return x[0]
 
 
-def get_untransformed_outputs(x: torch.Tensor):
-    return x[:, 1, :].squeeze()
+def get_untransformed_outputs(x: ModelOutput):
+    return x[1]

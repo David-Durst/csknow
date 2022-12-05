@@ -183,7 +183,9 @@ def train(all_data_df: pd.DataFrame, dad_iters=4, num_epochs=5, save=True,
             dad_df = create_dad_dataset(pred_df, train_df)
             total_train_df = pd.concat([total_train_df, dad_df], ignore_index=True)
 
-    model_output_recording.plot(column_transformers, output_column_types.column_names())
+    model_output_recording.plot(column_transformers,
+                                output_column_types.float_standard_cols + output_column_types.delta_float_column_names(),
+                                output_column_types.categorical_cols)
 
     if save:
         script_model = torch.jit.trace(model.to(CPU_DEVICE_STR), first_row)

@@ -31,5 +31,6 @@ class MLPAimModel(nn.Module):
 
         # produce untransformed outputs
         out_untransformed = self.cts.untransform_columns(False, out_transformed, x)
-        return torch.stack([out_transformed, out_untransformed], dim=1)
+        # https://github.com/pytorch/pytorch/issues/22440 how to parse tuple output
+        return out_transformed, out_untransformed
 

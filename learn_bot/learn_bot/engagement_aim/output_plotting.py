@@ -9,7 +9,7 @@ import torch
 
 from learn_bot.engagement_aim.mlp_aim_model import MLPAimModel
 from learn_bot.engagement_aim.io_transforms import IOColumnTransformers, get_transformed_outputs, \
-    get_untransformed_outputs
+    get_untransformed_outputs, ModelOutput
 
 #float_column_x_axes: List[str] = ['yaw degree', 'pitch degree', 'yaw degree', 'pitch degree',
 #                                  'yaw degree', 'pitch degree',
@@ -47,11 +47,11 @@ def plot_untransformed_and_transformed(title: str, df, float_cols, cat_cols,
         num_rows += 1
     if cat_cols:
         num_rows += 1
-    subfigs = fig.subfigures(nrows=num_rows, ncols=1)
+    subfigs = fig.subfigures(nrows=num_rows, ncols=1, squeeze=False)
 
     # untransformed
-    axs = subfigs[0].subplots(1, len(float_cols), squeeze=False)
-    subfigs[0].suptitle('float untransformed')
+    axs = subfigs[0][0].subplots(1, len(float_cols), squeeze=False)
+    subfigs[0][0].suptitle('float untransformed')
     axs[0][0].set_ylabel('num points')
     for i in range(len(float_cols)):
         df_filtered = filter_df(df, float_cols[i])
@@ -60,8 +60,8 @@ def plot_untransformed_and_transformed(title: str, df, float_cols, cat_cols,
 
     # transformed
     if transformed_df is not None:
-        axs = subfigs[1].subplots(1, len(float_cols), squeeze=False)
-        subfigs[1].suptitle('float transformed')
+        axs = subfigs[1][0].subplots(1, len(float_cols), squeeze=False)
+        subfigs[1][0].suptitle('float transformed')
         axs[0][0].set_ylabel('num points')
         for i in range(len(float_cols)):
             transformed_df_filtered = filter_df(transformed_df, float_cols[i])
@@ -70,12 +70,12 @@ def plot_untransformed_and_transformed(title: str, df, float_cols, cat_cols,
 
     # categorical
     if cat_cols:
-        axs = subfigs[num_rows-1].subplots(1, len(cat_cols), squeeze=False)
-        subfigs[num_rows-1].suptitle('categorical')
+        axs = subfigs[num_rows-1][0].subplots(1, len(cat_cols), squeeze=False)
+        subfigs[num_rows-1][0].suptitle('categorical')
         axs[0][0].set_ylabel('num points')
         for i in range(len(cat_cols)):
             #axs[0][i].set_xlabel(cat_column_x_axes[i % len(cat_column_x_axes)])
-            df.loc[:, cat_cols[i]].value_counts().plot.bar(ax=axs[0][0])
+            df.loc[:, cat_cols[i]].value_counts().plot.bar(ax=axs[0][i], title=cat_cols[i])
     plt.savefig(plot_path / (title + '.png'))
 
 
@@ -97,8 +97,8 @@ class ModelOutputRecording:
         self.test_errors_transformed = None
         self.model = model
 
-    def record_output(self, pred: torch.Tensor, Y: torch.Tensor, transformed_Y: torch.Tensor, train):
-        pred = pred.detach()
+    def record_output(self, pred: ModelOutput, Y: torch.Tensor, transformed_Y: torch.Tensor, train):
+        pred = (pred[0].detach(), pred[1].detach())
         Y = Y.detach()
         transformed_Y = transformed_Y.detach()
 
@@ -110,7 +110,7 @@ class ModelOutputRecording:
                 self.train_outputs_untransformed = torch.cat(
                     [self.train_outputs_untransformed, get_untransformed_outputs(pred)], 0)
                 self.train_outputs_transformed = torch.cat(
-                    [self.train_outputs_untransformed, get_transformed_outputs(pred)], 0)
+                    [self.train_outputs_transformed, get_transformed_outputs(pred)], 0)
         else:
             if self.test_outputs_untransformed is None:
                 self.test_outputs_untransformed = get_untransformed_outputs(pred)
@@ -127,17 +127,17 @@ class ModelOutputRecording:
                 self.test_errors_transformed = torch.cat(
                     [self.test_errors_transformed, get_transformed_outputs(pred) - transformed_Y], 0)
 
-    def plot(self, cts: IOColumnTransformers, vis_float_columns: List[str]):
+    def plot(self, cts: IOColumnTransformers, vis_float_columns: List[str], vis_cat_columns: List[str]):
         test_df = pd.DataFrame(self.test_outputs_untransformed.to(CPU_DEVICE_STR),
                                columns=cts.output_types.column_names())
-        transformed_test_df = pd.DataFrame(self.test_outputs_transformed.to(CPU_DEVICE_STR),
-                                           columns=cts.output_types.column_names())
-        plot_untransformed_and_transformed('test predictions', test_df, vis_float_columns, [],
-                                           transformed_test_df)
+        #transformed_test_df = pd.DataFrame(self.test_outputs_transformed.to(CPU_DEVICE_STR),
+        #                                   columns=cts.output_types.column_names())
+        plot_untransformed_and_transformed('test predictions', test_df, vis_float_columns, vis_cat_columns)
+                                           #transformed_test_df)
 
         test_errors_df = pd.DataFrame(self.test_errors_untransformed.to(CPU_DEVICE_STR),
                                       columns=cts.output_types.column_names())
-        transformed_test_errors_df = pd.DataFrame(self.test_errors_transformed.to(CPU_DEVICE_STR),
-                                                  columns=cts.output_types.column_names())
-        plot_untransformed_and_transformed('test errors', test_errors_df, vis_float_columns, [],
-                                           transformed_test_errors_df)
+        #transformed_test_errors_df = pd.DataFrame(self.test_errors_transformed.to(CPU_DEVICE_STR),
+        #                                          columns=cts.output_types.column_names())
+        plot_untransformed_and_transformed('test errors', test_errors_df, vis_float_columns, vis_cat_columns)
+                                           #transformed_test_errors_df)

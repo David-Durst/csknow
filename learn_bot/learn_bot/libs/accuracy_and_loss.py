@@ -56,9 +56,7 @@ def finish_accuracy(accuracy, column_transformers: IOColumnTransformers):
                 name in column_transformers.output_types.delta_float_column_names():
             accuracy[name] = sqrt(accuracy[name])
             accuracy_string += f'''{name}: {accuracy[name]} rmse'''
-        # record top-1 accuracy for tohers
-        elif name in column_transformers.output_types.boolean_cols:
-            accuracy_string += f'''{name}: {accuracy[name]} bool eq'''
+        # record top-1 accuracy for others
         elif name in column_transformers.output_types.categorical_cols:
             accuracy_string += f'''{name}: {accuracy[name]} % cat top 1 acc'''
         else:
