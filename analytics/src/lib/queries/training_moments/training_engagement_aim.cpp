@@ -41,11 +41,13 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
     vector<vector<array<bool, TOTAL_AIM_TICKS>>> tmpHitVictim(numThreads);
     vector<vector<array<float, TOTAL_AIM_TICKS>>> tmpRecoilIndex(numThreads);
     vector<vector<array<Vec2, TOTAL_AIM_TICKS>>> tmpScaledRecoilAngle(numThreads);
+    vector<vector<array<bool, TOTAL_AIM_TICKS>>> tmpHoldingAttack(numThreads);
     vector<vector<array<int64_t, TOTAL_AIM_TICKS>>> tmpTicksSinceLastFire(numThreads);
     vector<vector<array<int64_t, TOTAL_AIM_TICKS>>> tmpTicksSinceLastHoldingAttack(numThreads);
     vector<vector<array<int64_t, TOTAL_AIM_TICKS>>> tmpTicksUntilNextFire(numThreads);
     vector<vector<array<int64_t, TOTAL_AIM_TICKS>>> tmpTicksUntilNextHoldingAttack(numThreads);
     vector<vector<array<bool, TOTAL_AIM_TICKS>>> tmpVictimVisible(numThreads);
+    vector<vector<array<bool, TOTAL_AIM_TICKS>>> tmpVictimVisibleYet(numThreads);
     vector<vector<array<bool, TOTAL_AIM_TICKS>>> tmpVictimAlive(numThreads);
     vector<vector<array<Vec2, TOTAL_AIM_TICKS>>> tmpVictimRelativeFirstHeadMinViewAngle(numThreads);
     vector<vector<array<Vec2, TOTAL_AIM_TICKS>>> tmpVictimRelativeFirstHeadMaxViewAngle(numThreads);
@@ -79,6 +81,7 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
 
         map<int64_t, Vec3> engagementToFirstTickVictimHeadPos;
         map<int64_t, int64_t> engagementToVictimLastAlivePATId;
+        map<int64_t, int64_t> engagementToVictimFirstVisiblePATId;
 
         for (int64_t windowEndTickIndex = rollingWindow.lastReadTickId();
              windowEndTickIndex <= rounds.ticksPerRound[roundIndex].maxId; windowEndTickIndex = rollingWindow.readNextTick()) {
@@ -179,11 +182,13 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
                 tmpHitVictim[threadNum].push_back({});
                 tmpRecoilIndex[threadNum].push_back({});
                 tmpScaledRecoilAngle[threadNum].push_back({});
+                tmpHoldingAttack[threadNum].push_back({});
                 tmpTicksSinceLastFire[threadNum].push_back({});
                 tmpTicksSinceLastHoldingAttack[threadNum].push_back({});
                 tmpTicksUntilNextFire[threadNum].push_back({});
                 tmpTicksUntilNextHoldingAttack[threadNum].push_back({});
                 tmpVictimVisible[threadNum].push_back({});
+                tmpVictimVisibleYet[threadNum].push_back({});
                 tmpVictimAlive[threadNum].push_back({});
                 tmpVictimRelativeFirstHeadMinViewAngle[threadNum].push_back({});
                 tmpVictimRelativeFirstHeadMaxViewAngle[threadNum].push_back({});
@@ -269,6 +274,8 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
 
                     tmpScaledRecoilAngle[threadNum].back()[i] = recoil * WEAPON_RECOIL_SCALE;
 
+                    tmpHoldingAttack[threadNum].back()[i] =
+                        fireHistoryResult.ticksSinceLastHoldingAttack[attackerPATId] == 0;
                     tmpTicksSinceLastFire[threadNum].back()[i] =
                         std::min(MAX_TICKS_SINCE_LAST_FIRE_ATTACK, fireHistoryResult.ticksSinceLastFire[attackerPATId]);
                     tmpTicksSinceLastHoldingAttack[threadNum].back()[i] =
@@ -297,7 +304,14 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
                                 .visibleFromCurPoint[victimCellIdsByDistances[j].cellId];
                         }
                     }
-                    tmpVictimVisible[threadNum].back()[i] = victimInFOV && victimVisNoFOV;
+                    bool curTickVictimVisible = victimInFOV && victimVisNoFOV;
+                    tmpVictimVisible[threadNum].back()[i] = curTickVictimVisible;
+                    if (curTickVictimVisible && engagementToVictimFirstVisiblePATId.find(engagementIndex) ==
+                        engagementToVictimFirstVisiblePATId.end()) {
+                        engagementToVictimFirstVisiblePATId[engagementIndex] = victimPATId;
+                    }
+                    tmpVictimVisibleYet[threadNum].back()[i] =
+
                     tmpVictimAlive[threadNum].back()[i] = playerAtTick.isAlive[uncheckedVictimPATId];
 
                     AABB victimAABB = getAABBForPlayer(victimFootPos, playerAtTick.duckAmount[victimPATId]);
@@ -426,6 +440,7 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
                                tmpDeltaRelativeFirstHeadViewAngle[minThreadId][tmpRowId]);
                            result.deltaRelativeCurHeadViewAngle.push_back(
                                tmpDeltaRelativeCurHeadViewAngle[minThreadId][tmpRowId]);
+                           result.holdingAttack.push_back(tmpHoldingAttack[minThreadId][tmpRowId]);
                            result.hitVictim.push_back(tmpHitVictim[minThreadId][tmpRowId]);
                            result.recoilIndex.push_back(tmpRecoilIndex[minThreadId][tmpRowId]);
                            result.scaledRecoilAngle.push_back(tmpScaledRecoilAngle[minThreadId][tmpRowId]);
@@ -436,6 +451,7 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
                            result.ticksUntilNextHoldingAttack.push_back(
                                tmpTicksUntilNextHoldingAttack[minThreadId][tmpRowId]);
                            result.victimVisible.push_back(tmpVictimVisible[minThreadId][tmpRowId]);
+                           result.victimVisibleYet.push_back(tmpVictimVisibleYet[minThreadId][tmpRowId]);
                            result.victimAlive.push_back(tmpVictimAlive[minThreadId][tmpRowId]);
                            result.victimRelativeFirstHeadMinViewAngle.push_back(
                                tmpVictimRelativeFirstHeadMinViewAngle[minThreadId][tmpRowId]);

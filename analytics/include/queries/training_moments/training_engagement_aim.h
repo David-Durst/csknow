@@ -65,11 +65,13 @@ public:
     vector<array<bool, TOTAL_AIM_TICKS>> hitVictim;
     vector<array<float, TOTAL_AIM_TICKS>> recoilIndex;
     vector<array<Vec2, TOTAL_AIM_TICKS>> scaledRecoilAngle;
+    vector<array<bool, TOTAL_AIM_TICKS>> holdingAttack;
     vector<array<int64_t, TOTAL_AIM_TICKS>> ticksSinceLastFire;
     vector<array<int64_t, TOTAL_AIM_TICKS>> ticksSinceLastHoldingAttack;
     vector<array<int64_t, TOTAL_AIM_TICKS>> ticksUntilNextFire;
     vector<array<int64_t, TOTAL_AIM_TICKS>> ticksUntilNextHoldingAttack;
     vector<array<bool, TOTAL_AIM_TICKS>> victimVisible;
+    vector<array<bool, TOTAL_AIM_TICKS>> victimVisibleYet;
     vector<array<bool, TOTAL_AIM_TICKS>> victimAlive;
     vector<array<Vec2, TOTAL_AIM_TICKS>> victimRelativeFirstHeadMinViewAngle;
     vector<array<Vec2, TOTAL_AIM_TICKS>> victimRelativeFirstHeadMaxViewAngle;
@@ -113,9 +115,11 @@ public:
                << "," << boolToInt(hitVictim[index][i])
                << "," << recoilIndex[index][i]
                << "," << scaledRecoilAngle[index][i].toCSV()
+               << "," << boolToInt(holdingAttack[index][i])
                << "," << ticksSinceLastFire[index][i] << "," << ticksSinceLastHoldingAttack[index][i]
                << "," << ticksUntilNextFire[index][i] << "," << ticksUntilNextHoldingAttack[index][i]
                << "," << boolToInt(victimVisible[index][i])
+               << "," << boolToInt(victimVisibleYet[index][i])
                << "," << boolToInt(victimAlive[index][i])
                << "," << victimRelativeFirstHeadMinViewAngle[index][i].toCSV()
                << "," << victimRelativeFirstHeadMaxViewAngle[index][i].toCSV()
@@ -154,11 +158,13 @@ public:
             result.push_back("recoil index (t" + toSignedIntString(i, true) + ")");
             result.push_back("scaled recoil angle x (t" + toSignedIntString(i, true) + ")");
             result.push_back("scaled recoil angle y (t" + toSignedIntString(i, true) + ")");
+            result.push_back("holding attack (t"+ toSignedIntString(i, true) + ")");
             result.push_back("ticks since last fire (t" + toSignedIntString(i, true) + ")");
             result.push_back("ticks since last holding attack (t" + toSignedIntString(i, true) + ")");
             result.push_back("ticks until next fire (t" + toSignedIntString(i, true) + ")");
             result.push_back("ticks until next holding attack (t" + toSignedIntString(i, true) + ")");
             result.push_back("victim visible (t" + toSignedIntString(i, true) + ")");
+            result.push_back("victim visible yet (t" + toSignedIntString(i, true) + ")");
             result.push_back("victim alive (t" + toSignedIntString(i, true) + ")");
             result.push_back("victim relative first head min view angle x (t" + toSignedIntString(i, true) + ")");
             result.push_back("victim relative first head min view angle y (t" + toSignedIntString(i, true) + ")");
