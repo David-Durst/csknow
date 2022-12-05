@@ -22,8 +22,8 @@ def compute_loss(pred, y, column_transformers: IOColumnTransformers):
         total_loss += float_loss_fn(pred_transformed[:, col_range], y[:, col_range])
     if column_transformers.output_types.categorical_cols:
         col_ranges = column_transformers.get_name_ranges(False, True, frozenset({ColumnTransformerType.CATEGORICAL}))
-        col_range = range(col_ranges[0].start, col_ranges[-1].stop)
-        total_loss += classification_loss_fn(pred_transformed[:, col_range], y[:, col_range])
+        for col_range in col_ranges:
+            total_loss += classification_loss_fn(pred_transformed[:, col_range], y[:, col_range])
     return total_loss
 
 
@@ -43,8 +43,7 @@ def compute_accuracy(pred, Y, accuracy, column_transformers: IOColumnTransformer
                                column_transformers.get_name_ranges(False, False,
                                                                    frozenset({ColumnTransformerType.CATEGORICAL}))):
         # compute accuracy using unnormalized outputs on end
-        accuracy[name] += (pred_untransformed[:, col_range].argmax(1) == Y[:, col_range].argmax(1)) \
-            .type(torch.float).sum().item()
+        accuracy[name] += (pred_untransformed[:, col_range] == Y[:, col_range]).type(torch.float).sum().item()
 
 
 def finish_accuracy(accuracy, column_transformers: IOColumnTransformers):
