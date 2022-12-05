@@ -6,6 +6,8 @@ from torch import nn
 
 float_loss_fn = nn.MSELoss(reduction='sum')
 binary_loss_fn = nn.BCEWithLogitsLoss()
+# https://stackoverflow.com/questions/65192475/pytorch-logsoftmax-vs-softmax-for-crossentropyloss
+# no need to do softmax for classification output
 classification_loss_fn = nn.CrossEntropyLoss()
 
 
