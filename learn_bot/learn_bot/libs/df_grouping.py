@@ -24,6 +24,7 @@ def train_test_split_by_col(df: pd.DataFrame, group_col: str) -> TrainTestSplit:
 
 
 def make_index_column(df: pd.DataFrame):
+    df.drop("index", axis=1, errors="ignore", inplace=True)
     # creates a new index based on columns (index can be invalid if produced by train/test)
     df.reset_index(inplace=True, drop=True)
     # makes new index into column

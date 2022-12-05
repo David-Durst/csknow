@@ -34,11 +34,9 @@ def train(all_data_df: pd.DataFrame, dad_iters=4, num_epochs=5, save=True,
 
     if diff_train_test:
         train_test_split = train_test_split_by_col(all_data_df, 'engagement id')
-        train_df = train_test_split.train_df
+        train_df = train_test_split.train_df.copy()
         make_index_column(train_df)
-        train_df.reset_index(inplace=True, drop=True)
-        train_df.reset_index(inplace=True, drop=False)
-        test_df = train_test_split.test_df
+        test_df = train_test_split.test_df.copy()
         make_index_column(test_df)
     else:
         make_index_column(all_data_df)
@@ -205,4 +203,4 @@ if __name__ == "__main__":
     pred_df = on_policy_inference(limited_test_dataset, limited_test_df,
                                   train_result.model, train_result.column_transformers,
                                   True)
-    #vis.vis(train_result.test_df, pred_df)
+    vis.vis(train_result.test_df, pred_df)
