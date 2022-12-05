@@ -38,8 +38,8 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame = None):
     window.configure(background='grey')
 
     # columns for reading data
-    first_tick_columns = PerspectiveColumns(4, 16, 10)
-    cur_hit_columns = PerspectiveColumns(6, 22, 10)
+    first_tick_columns = PerspectiveColumns(base_abs_x_pos_column, base_victim_abs_aabb_min_x, base_recoil_x_column)
+    cur_hit_columns = PerspectiveColumns(base_relative_x_pos_column, base_victim_relative_aabb_min_x, base_recoil_x_column)
 
     # create axes and their objects
     first_tick_title_suffix = " Relative To First Enemy Head"
@@ -162,7 +162,9 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame = None):
                                f"ticks since/until fire: ({cur_row.loc['ticks since last fire (t)'].item():.2f}, "
                                f"{cur_row.loc['ticks until next fire (t)'].item():.2f}), "
                                f"ticks since/until hold attack: ({cur_row.loc['ticks since last holding attack (t)'].item():.2f}, "
-                               f"{cur_row.loc['ticks until next holding attack (t)'].item():.2f})")
+                               f"{cur_row.loc['ticks until next holding attack (t)'].item():.2f}), "
+                               f"victim visible yet: {cur_row.loc[cur_victim_visible_yet_column]}, "
+                               f"holding attack: {cur_row.loc['holding attack (t)']}")
 
     def step_back_clicked():
         nonlocal cur_tick_index

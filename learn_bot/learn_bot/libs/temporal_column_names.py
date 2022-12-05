@@ -16,11 +16,17 @@ class TemporalIOColumnNames:
     present_columns: List[str]
     future_columns: List[str]
     all_columns: List[str]
+    prior_ticks: int
+    cur_tick: int
+    future_ticks: int
 
     def __init__(self, base_columns: List[str], prior_ticks: int, cur_tick: int, future_ticks: int):
         self.past_columns = []
         self.present_columns = []
         self.future_columns = []
+        self.prior_ticks = prior_ticks
+        self.cur_tick = cur_tick
+        self.future_ticks = future_ticks
 
         for i in range(prior_ticks, cur_tick+future_ticks):
             if i < 0:
@@ -44,3 +50,17 @@ class TemporalIOColumnNames:
         if include_future:
             results += [c for c in self.future_columns if match_str in c]
         return results
+
+    def get_num_cats_per_temporal_column(self, num_cats_per_base_column: List[int],
+                                         include_past=True, include_present=True, include_future=True) -> List[int]:
+        result = []
+        if include_past:
+            for i in range(self.prior_ticks, 0):
+                result += num_cats_per_base_column
+        if include_present:
+            for i in range(0, self.cur_tick):
+                result += num_cats_per_base_column
+        if include_future:
+            for i in range(self.cur_tick, self.cur_tick+self.future_ticks):
+                result += num_cats_per_base_column
+        return result
