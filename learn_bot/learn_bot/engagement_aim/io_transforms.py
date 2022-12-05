@@ -289,6 +289,10 @@ class IOColumnTransformers:
         return result
 
     def transform_columns(self, input: bool, x: torch.Tensor, x_input: torch.Tensor) -> torch.Tensor:
+        cur_device = x.device
+        x = x.to(CPU_DEVICE_STR)
+        x_input = x_input.to(CPU_DEVICE_STR)
+
         uncat_result: List[torch.Tensor] = []
 
         ct_pts = self.input_ct_pts if input else self.output_ct_pts
@@ -314,9 +318,13 @@ class IOColumnTransformers:
         for i, categorical_name_range in enumerate(x_categorical_name_ranges):
             uncat_result.append(ct_pts[i+ct_offset].convert(x[:, categorical_name_range]))
 
-        return torch.cat(uncat_result, dim=1)
+        return torch.cat(uncat_result, dim=1).to(cur_device)
 
     def untransform_columns(self, input: bool, x: torch.Tensor, x_input: torch.Tensor) -> torch.Tensor:
+        cur_device = x.device
+        x = x.to(CPU_DEVICE_STR)
+        x_input = x_input.to(CPU_DEVICE_STR)
+
         uncat_result: List[torch.Tensor] = []
 
         ct_pts = self.input_ct_pts if input else self.output_ct_pts
@@ -341,7 +349,7 @@ class IOColumnTransformers:
         for i, categorical_name_range in enumerate(x_categorical_name_ranges):
             uncat_result.append(ct_pts[i+ct_offset].inverse(x[:, categorical_name_range]))
 
-        return torch.cat(uncat_result, dim=1)
+        return torch.cat(uncat_result, dim=1).to(cur_device)
 
     def get_untransformed_value(self, x: Union[torch.Tensor, ModelOutput], col_name: str, input: bool) -> float:
         col_names = self.input_types.column_names() if input else self.output_types.column_names()
