@@ -205,4 +205,5 @@ if __name__ == "__main__":
     pred_df = on_policy_inference(train_result.test_dataset, train_result.test_df,
                                   train_result.model, train_result.column_transformers,
                                   True)
-    vis.vis(train_result.test_df, pred_df)
+    if False:
+        vis.vis(train_result.test_df, pred_df)

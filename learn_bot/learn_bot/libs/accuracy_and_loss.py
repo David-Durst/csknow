@@ -14,6 +14,9 @@ classification_loss_fn = nn.CrossEntropyLoss()
 # https://discuss.pytorch.org/t/how-to-combine-multiple-criterions-to-a-loss-function/348/4
 def compute_loss(pred, y, column_transformers: IOColumnTransformers):
     pred_transformed = get_transformed_outputs(pred)
+    pred_transformed = pred_transformed.to(CPU_DEVICE_STR)
+    y = y.to(CPU_DEVICE_STR)
+
     total_loss = 0
     if column_transformers.output_types.float_standard_cols or column_transformers.output_types.float_delta_cols:
         col_ranges = column_transformers.get_name_ranges(False, True, frozenset({ColumnTransformerType.FLOAT_STANDARD,
@@ -29,6 +32,8 @@ def compute_loss(pred, y, column_transformers: IOColumnTransformers):
 
 def compute_accuracy(pred, Y, accuracy, column_transformers: IOColumnTransformers):
     pred_untransformed = get_untransformed_outputs(pred)
+    pred_untransformed = pred_untransformed.to(CPU_DEVICE_STR)
+    Y = Y.to(CPU_DEVICE_STR)
 
     if column_transformers.output_types.float_standard_cols or column_transformers.output_types.float_delta_cols:
         col_ranges = column_transformers.get_name_ranges(False, False, frozenset({ColumnTransformerType.FLOAT_STANDARD,

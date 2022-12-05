@@ -109,7 +109,7 @@ for i in range(len(output_delta_x)):
 output_standard_cols = temporal_o_float_column_names.get_matching_cols("ticks until", False, True, True)
 
 #output_column_types = ColumnTypes(output_standard_cols, output_delta, [], [])
-output_column_types = ColumnTypes([], output_delta, #[], [],
+output_column_types = ColumnTypes([], output_delta, #[], [])
                                   temporal_io_cat_column_names.present_columns +
                                   temporal_io_cat_column_names.future_columns,
                                   temporal_io_cat_column_names.get_num_cats_per_temporal_column([2], False, True, True))
