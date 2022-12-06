@@ -11,9 +11,9 @@ import torch
 CPU_DEVICE_STR = "cpu"
 CUDA_DEVICE_STR = "cuda"
 
-PRIOR_TICKS = -12
+PRIOR_TICKS = -13
 PRIOR_TICKS_POS = -1 * PRIOR_TICKS
-FUTURE_TICKS = 6
+FUTURE_TICKS = 13
 CUR_TICK = 1
 
 ModelOutput = Tuple[torch.Tensor, torch.Tensor]
