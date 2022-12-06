@@ -15,7 +15,8 @@ from tkinter import ttk
 from learn_bot.engagement_aim.dataset import base_abs_x_pos_column, base_abs_y_pos_column, base_hit_victim_column, \
     base_ticks_since_last_fire_column, base_relative_x_pos_column, base_recoil_x_column, base_relative_y_pos_column, \
     base_recoil_y_column, base_victim_relative_aabb_max_y, base_victim_relative_aabb_min_y, \
-    base_victim_relative_aabb_max_x, base_victim_relative_aabb_min_x, base_ticks_since_last_attack_column
+    base_victim_relative_aabb_max_x, base_victim_relative_aabb_min_x, base_ticks_since_last_attack_column, \
+    base_victim_abs_head_x, base_victim_abs_head_y
 from learn_bot.engagement_aim.output_plotting import filter_df, filter_df_2d
 from learn_bot.engagement_aim.vis.child_window import ChildWindow
 from learn_bot.engagement_aim.vis.vis_similar_trajectories import compute_position_difference, default_speed_ticks, \
@@ -104,10 +105,12 @@ relative_x_pos_with_recoil_column = "relative x pos with recoil"
 relative_y_pos_with_recoil_column = "relative y pos with recoil"
 def compute_normalized_with_recoil(data_df: pd.DataFrame):
     data_df[relative_x_pos_with_recoil_column] = \
-        data_df[get_temporal_field_str(base_relative_x_pos_column, 0)] + \
+        data_df[get_temporal_field_str(base_abs_x_pos_column, 0)] - \
+        data_df[get_temporal_field_str(base_victim_abs_head_x, 0)] + \
         data_df[get_temporal_field_str(base_recoil_x_column, 0)]
     data_df[relative_y_pos_with_recoil_column] = \
-        data_df[get_temporal_field_str(base_relative_y_pos_column, 0)] + \
+        data_df[get_temporal_field_str(base_relative_y_pos_column, 0)] - \
+        data_df[get_temporal_field_str(base_victim_abs_head_y, 0)] + \
         data_df[get_temporal_field_str(base_recoil_y_column, 0)]
 
     normalize_columns(data_df, relative_x_pos_with_recoil_column, relative_y_pos_with_recoil_column,
