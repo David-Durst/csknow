@@ -30,8 +30,8 @@ using std::vector;
 using std::array;
 using std::map;
 
-constexpr int PAST_AIM_TICKS = 12;
-constexpr int FUTURE_AIM_TICKS = 6;
+constexpr int PAST_AIM_TICKS = 13;
+constexpr int FUTURE_AIM_TICKS = 13;
 constexpr int CUR_AIM_TICK = 1;
 constexpr int TOTAL_AIM_TICKS = PAST_AIM_TICKS + FUTURE_AIM_TICKS + CUR_AIM_TICK;
 
