@@ -243,8 +243,11 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame = None):
         similar_trajectories = find_similar_trajectories(not_selected_df, selected_df, cur_tick, similarity_constraint)
         plot_similar_trajectories_next_movement(window, not_selected_df, similarity_constraint, similar_trajectories)
 
-    def show_distributions():
+    def show_all_data_distributions():
         plot_distributions(window, all_data_df)
+
+    def show_pred_data_distributions():
+        plot_distributions(window, pred_df)
 
     # state setters
     def change_engagement_dependent_data():
@@ -346,9 +349,13 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame = None):
     # creating similarity selector
     similarity_frame = tk.Frame(window)
     similarity_frame.pack(pady=5)
-    plot_distributions_button = tk.Button(similarity_frame, text="Plot Distributions",
-                                                   command=show_distributions)
-    plot_distributions_button.pack(side="left")
+    plot_all_data_distributions_button = tk.Button(similarity_frame, text="Plot Input Distributions",
+                                                   command=show_all_data_distributions)
+    plot_all_data_distributions_button.pack(side="left")
+    if pred_df is not None:
+        plot_pred_distributions_button = tk.Button(similarity_frame, text="Plot Pred Distributions",
+                                                   command=show_pred_data_distributions)
+        plot_pred_distributions_button.pack(side="left")
     update_similar_trajectories_button = tk.Button(similarity_frame, text="Plot Similar Trajectories",
                                                    command=update_similar_trajectories)
     update_similar_trajectories_button.pack(side="left")
