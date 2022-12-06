@@ -7,6 +7,7 @@ import pandas as pd
 from pathlib import Path
 from dataset import *
 from learn_bot.engagement_aim.mlp_aim_model import MLPAimModel
+from learn_bot.engagement_aim.target_mlp_aim_model import TargetMLPAimModel
 from learn_bot.libs.accuracy_and_loss import compute_loss, compute_accuracy, finish_accuracy, CUDA_DEVICE_STR, \
     CPU_DEVICE_STR
 from learn_bot.engagement_aim.lstm_aim_model import LSTMAimModel
@@ -59,7 +60,7 @@ def train(all_data_df: pd.DataFrame, dad_iters=4, num_epochs=5, save=True,
 
     # Define model
     embedding_dim = 5
-    model = MLPAimModel(column_transformers).to(device)
+    model = TargetMLPAimModel(column_transformers).to(device)
     # model = LSTMAimModel(column_transformers, len(temporal_io_float_column_names.input_columns), len(non_temporal_float_columns)).to(device)
 
     print(model)
@@ -197,6 +198,8 @@ def train(all_data_df: pd.DataFrame, dad_iters=4, num_epochs=5, save=True,
 
 if __name__ == "__main__":
     all_data_df = pd.read_csv(data_path)
+    all_data_df[target_o_float_columns[0]] = all_data_df[get_temporal_field_str(base_abs_x_pos_column, FUTURE_TICKS)]
+    all_data_df[target_o_float_columns[1]] = all_data_df[get_temporal_field_str(base_abs_y_pos_column, FUTURE_TICKS)]
     #all_data_df = all_data_df[(all_data_df[weapon_type_col] == 3) & (all_data_df[cur_victim_visible_yet_column] == 1.)]
     train_result = train(all_data_df, dad_iters=0)
     #engagement_ids = list(train_result.test_df[engagement_id_column].unique())

@@ -89,6 +89,8 @@ temporal_o_float_column_names = TemporalIOColumnNames(base_non_input_float_colum
 
 temporal_io_cat_column_names = TemporalIOColumnNames([base_holding_attack], PRIOR_TICKS, CUR_TICK, FUTURE_TICKS)
 
+target_o_float_columns = ["target view angle x", "target view angle y"]
+
 weapon_type_col = "weapon type"
 static_input_categorical_columns: List[str] = [weapon_type_col]
 
@@ -107,13 +109,15 @@ output_delta = []
 for i in range(len(output_delta_x)):
     output_delta.append(output_delta_x[i])
     output_delta.append(output_delta_y[i])
+output_delta_target = [DeltaColumn(target_o_float_columns[0], output_ref_x_col),
+                       DeltaColumn(target_o_float_columns[1], output_ref_y_col)]
 output_standard_cols = temporal_o_float_column_names.get_matching_cols("ticks until", False, True, True)
 
 #output_column_types = ColumnTypes(output_standard_cols, output_delta, [], [])
-output_column_types = ColumnTypes([], output_delta, #[], [])
-                                  temporal_io_cat_column_names.present_columns +
-                                  temporal_io_cat_column_names.future_columns,
-                                  temporal_io_cat_column_names.get_num_cats_per_temporal_column([2], False, True, True))
+output_column_types = ColumnTypes([], output_delta_target + output_delta, [], [])
+                                  #temporal_io_cat_column_names.present_columns +
+                                  #temporal_io_cat_column_names.future_columns,
+                                  #temporal_io_cat_column_names.get_num_cats_per_temporal_column([2], False, True, True))
 #output_column_types = ColumnTypes(output_relative_x_cols + output_relative_y_cols, [], [], [])
 
 seconds_per_tick = 1. / 128. * 1000.
