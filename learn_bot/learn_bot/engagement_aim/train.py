@@ -197,6 +197,7 @@ def train(all_data_df: pd.DataFrame, dad_iters=4, num_epochs=5, save=True,
 
 if __name__ == "__main__":
     all_data_df = pd.read_csv(data_path)
+    #all_data_df = all_data_df[(all_data_df[weapon_type_col] == 3) & (all_data_df[cur_victim_visible_yet_column] == 1.)]
     train_result = train(all_data_df, dad_iters=0)
     #engagement_ids = list(train_result.test_df[engagement_id_column].unique())
     #engagement_ids = engagement_ids[:30]
@@ -205,5 +206,4 @@ if __name__ == "__main__":
     pred_df = on_policy_inference(train_result.test_dataset, train_result.test_df,
                                   train_result.model, train_result.column_transformers,
                                   True)
-    if False:
-        vis.vis(train_result.test_df, pred_df)
+    vis.vis(train_result.test_df, pred_df)

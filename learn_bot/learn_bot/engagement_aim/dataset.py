@@ -89,7 +89,8 @@ temporal_o_float_column_names = TemporalIOColumnNames(base_non_input_float_colum
 
 temporal_io_cat_column_names = TemporalIOColumnNames([base_holding_attack], PRIOR_TICKS, CUR_TICK, FUTURE_TICKS)
 
-static_input_categorical_columns: List[str] = ["weapon type"]
+weapon_type_col = "weapon type"
+static_input_categorical_columns: List[str] = [weapon_type_col]
 
 input_column_types = ColumnTypes(temporal_io_float_column_names.past_columns + non_temporal_float_columns, [],
                                  temporal_io_cat_column_names.past_columns + static_input_categorical_columns,
