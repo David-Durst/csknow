@@ -335,8 +335,10 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame = None):
     play_button.pack(side="left")
     forward_step_button = tk.Button(tick_slider_frame, text="⏩", command=step_forward_clicked)
     forward_step_button.pack(side="left")
-    frame_of_reference_button = tk.Button(tick_slider_frame, text="toggle reference", command=toggle_reference_clicked)
-    frame_of_reference_button.pack(side="left")
+    # not predicting relative cols, so can't toggle in this mode
+    if pred_df is None:
+        frame_of_reference_button = tk.Button(tick_slider_frame, text="toggle reference", command=toggle_reference_clicked)
+        frame_of_reference_button.pack(side="left")
 
     # creating text label
     text_data_frame = tk.Frame(window)

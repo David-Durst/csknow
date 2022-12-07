@@ -62,7 +62,7 @@ base_victim_relative_aabb_max_y = "victim relative cur head max view angle y"
 base_victim_relative_head_y = "victim relative cur head cur head view angle y"
 base_holding_attack = "holding attack"
 
-base_float_columns: List[str] = ["attacker view angle x", "attacker view angle y",
+base_vis_float_columns: List[str] = ["attacker view angle x", "attacker view angle y",
                                  "ideal view angle x", "ideal view angle y",
                                  "delta relative first head view angle x", "delta relative first head view angle y",
                                  "delta relative cur head view angle x", "delta relative cur head view angle y",
@@ -82,12 +82,34 @@ base_float_columns: List[str] = ["attacker view angle x", "attacker view angle y
                                  "attacker vel x", "attacker vel y", "attacker vel z",
                                  "victim vel x", "victim vel y", "victim vel z"]
 
+temporal_vis_float_column_names = TemporalIOColumnNames(base_vis_float_columns, PRIOR_TICKS, CUR_TICK, FUTURE_TICKS)
+
+base_learning_float_columns: List[str] = [#"attacker view angle x", "attacker view angle y",
+    "ideal view angle x", "ideal view angle y",
+    "delta relative first head view angle x", "delta relative first head view angle y",
+    #"delta relative cur head view angle x", "delta relative cur head view angle y",
+    "hit victim",
+    "recoil index",
+    "scaled recoil angle x", "scaled recoil angle y",
+    "ticks since last fire", "ticks since last holding attack",
+    "victim visible", "victim visible yet", "victim alive",
+    "victim relative first head min view angle x", "victim relative first head min view angle y",
+    "victim relative first head max view angle x", "victim relative first head max view angle y",
+    "victim relative first head cur head view angle x", "victim relative first head cur head view angle y",
+    #"victim relative cur head min view angle x", "victim relative cur head min view angle y",
+    #"victim relative cur head max view angle x", "victim relative cur head max view angle y",
+    #"victim relative cur head cur head view angle x", "victim relative cur head cur head view angle y",
+    "attacker eye pos x", "attacker eye pos y", "attacker eye pos z",
+    "victim eye pos x", "victim eye pos y", "victim eye pos z",
+    "attacker vel x", "attacker vel y", "attacker vel z",
+    "victim vel x", "victim vel y", "victim vel z"]
+
 # some columns only used for output, not input features
 base_non_input_float_columns: List[str] = ["ticks until next fire", "ticks until next holding attack"]
 
 non_temporal_float_columns = []
 
-temporal_io_float_column_names = TemporalIOColumnNames(base_float_columns, PRIOR_TICKS, CUR_TICK, FUTURE_TICKS)
+temporal_io_float_column_names = TemporalIOColumnNames(base_learning_float_columns, PRIOR_TICKS, CUR_TICK, FUTURE_TICKS)
 
 temporal_o_float_column_names = TemporalIOColumnNames(base_non_input_float_columns, 0, CUR_TICK, FUTURE_TICKS)
 
