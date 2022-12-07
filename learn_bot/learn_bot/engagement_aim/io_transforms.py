@@ -21,7 +21,13 @@ ModelOutput = Tuple[torch.Tensor, torch.Tensor]
 class ColumnTransformerType(Enum):
     FLOAT_STANDARD = 0
     FLOAT_DELTA = 1
-    CATEGORICAL = 2
+    # -180 to 180
+    FLOAT_180_ANGLE = 2
+    FLOAT_180_ANGLE_DELTA = 3
+    # -90 to 90
+    FLOAT_90_ANGLE = 4
+    FLOAT_90_ANGLE_DELTA = 5
+    CATEGORICAL = 6
 
 
 @dataclass
@@ -36,19 +42,31 @@ def split_delta_columns(delta_ref_columns: List[DeltaColumn]) -> Tuple[List[str]
 
 ALL_TYPES: FrozenSet[ColumnTransformerType] = frozenset({ColumnTransformerType.FLOAT_STANDARD,
                                                          ColumnTransformerType.FLOAT_DELTA,
+                                                         ColumnTransformerType.FLOAT_180_ANGLE,
+                                                         ColumnTransformerType.FLOAT_90_ANGLE,
                                                          ColumnTransformerType.CATEGORICAL})
 
 
 class ColumnTypes:
     float_standard_cols: List[str]
     float_delta_cols: List[DeltaColumn]
+    float_180_angle_cols: List[str]
+    float_180_angle_delta_cols: List[DeltaColumn]
+    float_90_angle_cols: List[str]
+    float_90_angle_delta_cols: List[DeltaColumn]
     categorical_cols: List[str]
     num_cats_per_col: Dict[str, int]
 
     def __init__(self, float_standard_cols: List[str] = [], float_delta_cols: List[DeltaColumn] = [],
+                 float_180_angle_cols: List[str] = [], float_180_angle_delta_cols: List[DeltaColumn] = [],
+                 float_90_angle_cols: List[str] = [], float_90_angle_delta_cols: List[DeltaColumn] = [],
                  categorical_cols: List[str] = [], num_cats_per_col: List[int] = []):
         self.float_standard_cols = float_standard_cols
         self.float_delta_cols = float_delta_cols
+        self.float_180_angle_cols = float_180_angle_cols
+        self.float_180_angle_delta_cols = float_180_angle_delta_cols
+        self.float_90_angle_cols = float_90_angle_cols
+        self.float_90_angle_delta_cols = float_90_angle_delta_cols
         self.categorical_cols = categorical_cols
         self.num_cats_per_col = {}
         for cat, num_cats in zip(categorical_cols, num_cats_per_col):
@@ -58,6 +76,8 @@ class ColumnTypes:
     column_types_ = None
     all_cols_ = None
     delta_float_column_names_ = None
+    delta_180_angle_column_names_ = None
+    delta_90_angle_column_names_ = None
 
     def column_types(self) -> List[ColumnTransformerType]:
         if self.column_types_ is None:
@@ -66,6 +86,14 @@ class ColumnTypes:
                 self.column_types_.append(ColumnTransformerType.FLOAT_STANDARD)
             for _ in self.float_delta_cols:
                 self.column_types_.append(ColumnTransformerType.FLOAT_DELTA)
+            for _ in self.float_180_angle_cols:
+                self.column_types_.append(ColumnTransformerType.FLOAT_180_ANGLE)
+            for _ in self.float_180_angle_delta_cols:
+                self.column_types_.append(ColumnTransformerType.FLOAT_180_ANGLE_DELTA)
+            for _ in self.float_90_angle_cols:
+                self.column_types_.append(ColumnTransformerType.FLOAT_90_ANGLE)
+            for _ in self.float_90_angle_delta_cols:
+                self.column_types_.append(ColumnTransformerType.FLOAT_90_ANGLE_DELTA)
             for _ in self.categorical_cols:
                 self.column_types_.append(ColumnTransformerType.CATEGORICAL)
         return self.column_types_
@@ -73,16 +101,34 @@ class ColumnTypes:
     def column_names(self, relative_cols_first=False) -> List[str]:
         if relative_cols_first:
             relative_cols, _ = split_delta_columns(self.float_delta_cols)
-            return relative_cols + self.float_standard_cols + self.categorical_cols
+            relative_180_cols, _ = split_delta_columns(self.float_180_angle_delta_cols)
+            relative_90_cols, _ = split_delta_columns(self.float_90_angle_delta_cols)
+            return relative_cols + relative_180_cols + relative_90_cols + \
+                   self.float_180_angle_cols + self.float_90_angle_cols + self.categorical_cols
         if self.all_cols_ is None:
             relative_cols, _ = split_delta_columns(self.float_delta_cols)
-            self.all_cols_ = self.float_standard_cols + relative_cols + self.categorical_cols
+            relative_180_cols, _ = split_delta_columns(self.float_180_angle_delta_cols)
+            relative_90_cols, _ = split_delta_columns(self.float_90_angle_delta_cols)
+            self.all_cols_ = self.float_standard_cols + relative_cols + \
+                             self.float_180_angle_cols + relative_180_cols + \
+                             self.float_90_angle_cols + relative_90_cols + \
+                             self.categorical_cols
         return self.all_cols_
 
     def delta_float_column_names(self) -> List[str]:
         if self.delta_float_column_names_ is None:
             self.delta_float_column_names_, _ = split_delta_columns(self.float_delta_cols)
         return self.delta_float_column_names_
+
+    def delta_180_angle_column_names(self) -> List[str]:
+        if self.delta_180_angle_column_names_ is None:
+            self.delta_180_angle_column_names_, _ = split_delta_columns(self.float_180_angle_delta_cols)
+        return self.delta_180_angle_column_names_
+
+    def delta_90_angle_column_names(self) -> List[str]:
+        if self.delta_90_angle_column_names_ is None:
+            self.delta_90_angle_column_names_, _ = split_delta_columns(self.float_90_angle_delta_cols)
+        return self.delta_90_angle_column_names_
 
 
 class PTColumnTransformer(ABC):
@@ -185,6 +231,82 @@ class PTDeltaMeanStdColumnTransformer(PTColumnTransformer):
             return (relative_value * self.delta_standard_deviations) + self.delta_means + reference_value
 
 
+class PT180AngleColumnTransformer(PTColumnTransformer):
+    pt_ct_type: ColumnTransformerType = ColumnTransformerType.FLOAT_180_ANGLE
+
+    def convert(self, value: torch.Tensor):
+        value = value.clone().detach()
+        value = value.unsqueeze(-1).expand(-1, 2)
+        value[:, :, 0] = torch.sin(value[:, :, 0])
+        value[:, :, 1] = torch.cos(value[:, :, 1])
+        return torch.flatten(value, start_dim=1)
+
+    def inverse(self, value: torch.Tensor):
+        value = value.clone().detach()
+        value = value.unflatten(dim=2, sizes=(-1, 2))
+        value[:, :, 0] = torch.atan2(value[:, :, 0], value[:, :, 1])
+        value = value[:, :, [0]]
+        return value.unsqueeze(-1)
+
+    def delta_convert(self, relative_value: torch.Tensor, reference_value: torch.Tensor):
+        raise NotImplementedError
+
+    def delta_inverse(self, relative_value: torch.Tensor, reference_value: torch.Tensor):
+        raise NotImplementedError
+
+
+class PTDelta180AngleColumnTransformer(PT180AngleColumnTransformer):
+    pt_ct_type: ColumnTransformerType = ColumnTransformerType.FLOAT_180_ANGLE_DELTA
+
+    def convert(self, value: torch.Tensor):
+        raise NotImplementedError
+
+    def inverse(self, value: torch.Tensor):
+        raise NotImplementedError
+
+    def delta_convert(self, relative_value: torch.Tensor, reference_value: torch.Tensor):
+        delta_value = relative_value - reference_value
+        return super().convert(delta_value)
+
+    def delta_inverse(self, relative_value: torch.Tensor, reference_value: torch.Tensor):
+        delta_value = relative_value - reference_value
+        return super().inverse(delta_value)
+
+
+class PT90AngleColumnTransformer(PT180AngleColumnTransformer):
+    pt_ct_type: ColumnTransformerType = ColumnTransformerType.FLOAT_90_ANGLE
+
+    def inverse(self, value: torch.Tensor):
+        value = value.unflatten(dim=2, sizes=(-1, 2))
+        value[:, :, 0] = torch.atan(value[:, :, 0] / value[:, :, 1])
+        value = value[:, :, [0]]
+        return value.unsqueeze(-1)
+
+    def delta_convert(self, relative_value: torch.Tensor, reference_value: torch.Tensor):
+        raise NotImplementedError
+
+    def delta_inverse(self, relative_value: torch.Tensor, reference_value: torch.Tensor):
+        raise NotImplementedError
+
+
+class PTDelta90AngleColumnTransformer(PT90AngleColumnTransformer):
+    pt_ct_type: ColumnTransformerType = ColumnTransformerType.FLOAT_90_ANGLE_DELTA
+
+    def convert(self, value: torch.Tensor):
+        raise NotImplementedError
+
+    def inverse(self, value: torch.Tensor):
+        raise NotImplementedError
+
+    def delta_convert(self, relative_value: torch.Tensor, reference_value: torch.Tensor):
+        delta_value = relative_value - reference_value
+        return super().convert(delta_value)
+
+    def delta_inverse(self, relative_value: torch.Tensor, reference_value: torch.Tensor):
+        delta_value = relative_value - reference_value
+        return super().inverse(delta_value)
+
+
 @dataclass
 class PTOneHotColumnTransformer(PTColumnTransformer):
     # CATEGORICAL data
@@ -238,6 +360,14 @@ class IOColumnTransformers:
                 torch.mean(delta_tensor, dim=0),
                 torch.std(delta_tensor, dim=0)
             ))
+        if types.float_180_angle_cols:
+            result.append(PT180AngleColumnTransformer())
+        if types.float_180_angle_delta_cols:
+            result.append(PTDelta180AngleColumnTransformer())
+        if types.float_90_angle_cols:
+            result.append(PT90AngleColumnTransformer())
+        if types.float_90_angle_delta_cols:
+            result.append(PTDelta90AngleColumnTransformer())
         for name in types.categorical_cols:
             result.append(PTOneHotColumnTransformer(types.num_cats_per_col[name]))
         return result
@@ -257,6 +387,26 @@ class IOColumnTransformers:
 
         for _ in column_types.float_delta_cols:
             if ColumnTransformerType.FLOAT_DELTA in types:
+                result.append(range(cur_start, cur_start + 1))
+            cur_start += 1
+
+        for _ in column_types.float_180_angle_cols:
+            if ColumnTransformerType.FLOAT_180_ANGLE in types:
+                result.append(range(cur_start, cur_start + 1))
+            cur_start += 1
+
+        for _ in column_types.float_180_angle_delta_cols:
+            if ColumnTransformerType.FLOAT_180_ANGLE_DELTA in types:
+                result.append(range(cur_start, cur_start + 1))
+            cur_start += 1
+
+        for _ in column_types.float_90_angle_cols:
+            if ColumnTransformerType.FLOAT_90_ANGLE in types:
+                result.append(range(cur_start, cur_start + 1))
+            cur_start += 1
+
+        for _ in column_types.float_90_angle_delta_cols:
+            if ColumnTransformerType.FLOAT_90_ANGLE_DELTA in types:
                 result.append(range(cur_start, cur_start + 1))
             cur_start += 1
 
@@ -303,7 +453,7 @@ class IOColumnTransformers:
                                                             frozenset({ColumnTransformerType.FLOAT_STANDARD}))
         if x_float_standard_name_ranges:
             x_floats = x[:, x_float_standard_name_ranges[0].start:x_float_standard_name_ranges[-1].stop]
-            uncat_result.append(ct_pts[0].convert(x_floats))
+            uncat_result.append(ct_pts[ct_offset].convert(x_floats))
             ct_offset += 1
 
         x_float_delta_name_ranges = self.get_name_ranges(input, False, frozenset({ColumnTransformerType.FLOAT_DELTA}))
@@ -312,6 +462,27 @@ class IOColumnTransformers:
             x_float_delta_reference_positions = self.get_input_delta_reference_positions(types)
             x_reference_floats = x_input[:, x_float_delta_reference_positions]
             uncat_result.append(ct_pts[ct_offset].delta_convert(x_relative_floats, x_reference_floats))
+            ct_offset += 1
+
+        x_float_180_angle_name_ranges = self.get_name_ranges(input, False,
+                                                             frozenset({ColumnTransformerType.FLOAT_180_ANGLE}))
+        if x_float_180_angle_name_ranges:
+            x_floats_180_angle = x[:, x_float_180_angle_name_ranges[0].start:x_float_180_angle_name_ranges[-1].stop]
+            uncat_result.append(ct_pts[ct_offset].convert(x_floats_180_angle))
+            ct_offset += 1
+
+        x_float_180_angle_delta_nam = self.get_name_ranges(input, False,
+                                                             frozenset({ColumnTransformerType.FLOAT_180_ANGLE_DELTA}))
+        if x_float_180_angle_name_ranges:
+            x_floats_180_angle = x[:, x_float_180_angle_name_ranges[0].start:x_float_180_angle_name_ranges[-1].stop]
+            uncat_result.append(ct_pts[ct_offset].convert(x_floats_180_angle))
+            ct_offset += 1
+
+        x_float_90_angle_name_ranges = self.get_name_ranges(input, False,
+                                                            frozenset({ColumnTransformerType.FLOAT_90_ANGLE}))
+        if x_float_90_angle_name_ranges:
+            x_floats_90_angle = x[:, x_float_90_angle_name_ranges[0].start:x_float_90_angle_name_ranges[-1].stop]
+            uncat_result.append(ct_pts[ct_offset].convert(x_floats_90_angle))
             ct_offset += 1
 
         x_categorical_name_ranges = self.get_name_ranges(input, False, frozenset({ColumnTransformerType.CATEGORICAL}))
@@ -334,7 +505,7 @@ class IOColumnTransformers:
         x_float_name_ranges = self.get_name_ranges(input, True, frozenset({ColumnTransformerType.FLOAT_STANDARD}))
         if x_float_name_ranges:
             x_floats = x[:, x_float_name_ranges[0].start:x_float_name_ranges[-1].stop]
-            uncat_result.append(ct_pts[0].inverse(x_floats))
+            uncat_result.append(ct_pts[ct_offset].inverse(x_floats))
             ct_offset += 1
 
         x_float_delta_name_ranges = self.get_name_ranges(input, False, frozenset({ColumnTransformerType.FLOAT_DELTA}))
@@ -343,6 +514,20 @@ class IOColumnTransformers:
             x_float_delta_reference_positions = self.get_input_delta_reference_positions(types)
             x_reference_floats = x_input[:, x_float_delta_reference_positions]
             uncat_result.append(ct_pts[ct_offset].delta_inverse(x_relative_floats, x_reference_floats))
+            ct_offset += 1
+
+        x_float_180_angle_name_ranges = self.get_name_ranges(input, True,
+                                                             frozenset({ColumnTransformerType.FLOAT_180_ANGLE}))
+        if x_float_180_angle_name_ranges:
+            x_floats_180_angle = x[:, x_float_180_angle_name_ranges[0].start:x_float_180_angle_name_ranges[-1].stop]
+            uncat_result.append(ct_pts[ct_offset].inverse(x_floats_180_angle))
+            ct_offset += 1
+
+        x_float_90_angle_name_ranges = self.get_name_ranges(input, True,
+                                                            frozenset({ColumnTransformerType.FLOAT_90_ANGLE}))
+        if x_float_90_angle_name_ranges:
+            x_floats_90_angle = x[:, x_float_90_angle_name_ranges[0].start:x_float_90_angle_name_ranges[-1].stop]
+            uncat_result.append(ct_pts[ct_offset].inverse(x_floats_90_angle))
             ct_offset += 1
 
         x_categorical_name_ranges = self.get_name_ranges(input, True, frozenset({ColumnTransformerType.CATEGORICAL}))
