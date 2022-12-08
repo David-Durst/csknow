@@ -132,26 +132,22 @@ weapon_type_col = "weapon type"
 static_input_categorical_columns: List[str] = [weapon_type_col]
 
 input_column_types = ColumnTypes(temporal_io_float_standard_column_names.past_columns + non_temporal_float_columns, [],
+                                 temporal_io_float_180_angle_column_names.past_columns, [],
+                                 temporal_io_float_90_angle_column_names.past_columns, [],
                                  temporal_io_cat_column_names.past_columns + static_input_categorical_columns,
                                  temporal_io_cat_column_names.get_num_cats_per_temporal_column([2], True, False, False)
                                  + [6])
 
-output_relative_x_cols = temporal_io_float_column_names.get_matching_cols(base_abs_x_pos_column, False, True, True)
-output_relative_y_cols = temporal_io_float_column_names.get_matching_cols(base_abs_y_pos_column, False, True, True)
+output_relative_x_cols = temporal_io_float_180_angle_column_names.get_matching_cols(base_abs_x_pos_column, False, True, True)
+output_relative_y_cols = temporal_io_float_90_angle_column_names.get_matching_cols(base_abs_y_pos_column, False, True, True)
 output_ref_x_col = get_temporal_field_str(base_abs_x_pos_column, -1)
 output_ref_y_col = get_temporal_field_str(base_abs_y_pos_column, -1)
 output_delta_x = [DeltaColumn(c, output_ref_x_col) for c in output_relative_x_cols]
 output_delta_y = [DeltaColumn(c, output_ref_y_col) for c in output_relative_y_cols]
-output_delta = []
-for i in range(len(output_delta_x)):
-    output_delta.append(output_delta_x[i])
-    output_delta.append(output_delta_y[i])
-output_delta_target = [DeltaColumn(target_o_float_columns[0], output_ref_x_col),
-                       DeltaColumn(target_o_float_columns[1], output_ref_y_col)]
 output_standard_cols = temporal_o_float_column_names.get_matching_cols("ticks until", False, True, True)
 
 #output_column_types = ColumnTypes(output_standard_cols, output_delta, [], [])
-output_column_types = ColumnTypes([], output_delta_target + output_delta, [], [])
+output_column_types = ColumnTypes([], [], [], output_delta_x, [], output_delta_y, [], [])
                                   #temporal_io_cat_column_names.present_columns +
                                   #temporal_io_cat_column_names.future_columns,
                                   #temporal_io_cat_column_names.get_num_cats_per_temporal_column([2], False, True, True))

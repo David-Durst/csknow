@@ -147,7 +147,7 @@ class PTColumnTransformer(ABC):
         pass
 
     @abstractmethod
-    def delta_inverse(self, relative_value: torch.Tensor, reference_value: torch.Tensor):
+    def delta_inverse(self, delta_value: torch.Tensor, reference_value: torch.Tensor):
         pass
 
 
@@ -187,7 +187,7 @@ class PTMeanStdColumnTransformer(PTColumnTransformer):
     def delta_convert(self, relative_value: torch.Tensor, reference_value: torch.Tensor):
         raise NotImplementedError
 
-    def delta_inverse(self, relative_value: torch.Tensor, reference_value: torch.Tensor):
+    def delta_inverse(self, delta_value: torch.Tensor, reference_value: torch.Tensor):
         raise NotImplementedError
 
 
@@ -224,11 +224,11 @@ class PTDeltaMeanStdColumnTransformer(PTColumnTransformer):
         else:
             return (relative_value - reference_value - self.delta_means) / self.delta_standard_deviations
 
-    def delta_inverse(self, relative_value: torch.Tensor, reference_value: torch.Tensor):
-        if relative_value.device.type == CPU_DEVICE_STR:
-            return (relative_value * self.cpu_delta_standard_deviations) + self.cpu_delta_means + reference_value
+    def delta_inverse(self, delta_value: torch.Tensor, reference_value: torch.Tensor):
+        if delta_value.device.type == CPU_DEVICE_STR:
+            return (delta_value * self.cpu_delta_standard_deviations) + self.cpu_delta_means + reference_value
         else:
-            return (relative_value * self.delta_standard_deviations) + self.delta_means + reference_value
+            return (delta_value * self.delta_standard_deviations) + self.delta_means + reference_value
 
 
 class PT180AngleColumnTransformer(PTColumnTransformer):
@@ -251,7 +251,7 @@ class PT180AngleColumnTransformer(PTColumnTransformer):
     def delta_convert(self, relative_value: torch.Tensor, reference_value: torch.Tensor):
         raise NotImplementedError
 
-    def delta_inverse(self, relative_value: torch.Tensor, reference_value: torch.Tensor):
+    def delta_inverse(self, delta_value: torch.Tensor, reference_value: torch.Tensor):
         raise NotImplementedError
 
 
@@ -268,9 +268,9 @@ class PTDelta180AngleColumnTransformer(PT180AngleColumnTransformer):
         delta_value = relative_value - reference_value
         return super().convert(delta_value)
 
-    def delta_inverse(self, relative_value: torch.Tensor, reference_value: torch.Tensor):
-        delta_value = relative_value - reference_value
-        return super().inverse(delta_value)
+    def delta_inverse(self, delta_value: torch.Tensor, reference_value: torch.Tensor):
+        delta_value = super().inverse(delta_value)
+        return delta_value + reference_value
 
 
 class PT90AngleColumnTransformer(PT180AngleColumnTransformer):
@@ -285,7 +285,7 @@ class PT90AngleColumnTransformer(PT180AngleColumnTransformer):
     def delta_convert(self, relative_value: torch.Tensor, reference_value: torch.Tensor):
         raise NotImplementedError
 
-    def delta_inverse(self, relative_value: torch.Tensor, reference_value: torch.Tensor):
+    def delta_inverse(self, delta_value: torch.Tensor, reference_value: torch.Tensor):
         raise NotImplementedError
 
 
@@ -302,9 +302,9 @@ class PTDelta90AngleColumnTransformer(PT90AngleColumnTransformer):
         delta_value = relative_value - reference_value
         return super().convert(delta_value)
 
-    def delta_inverse(self, relative_value: torch.Tensor, reference_value: torch.Tensor):
-        delta_value = relative_value - reference_value
-        return super().inverse(delta_value)
+    def delta_inverse(self, delta_value: torch.Tensor, reference_value: torch.Tensor):
+        delta_value = super().inverse(delta_value)
+        return delta_value - reference_value
 
 
 @dataclass
@@ -424,10 +424,15 @@ class IOColumnTransformers:
         return result
 
     # given the locations of columns in an input tensor that are used as reference for producing delta columns
-    def get_input_delta_reference_positions(self, types: ColumnTypes) -> List[int]:
+    def get_input_delta_reference_positions(self, types: ColumnTypes, delta_type: ColumnTransformerType) -> List[int]:
         result: List[int] = []
 
-        _, reference_cols = split_delta_columns(types.float_delta_cols)
+        if delta_type == ColumnTransformerType.FLOAT_DELTA:
+            _, reference_cols = split_delta_columns(types.float_delta_cols)
+        elif delta_type == ColumnTransformerType.FLOAT_180_ANGLE_DELTA:
+            _, reference_cols = split_delta_columns(types.float_180_angle_delta_cols)
+        else:
+            _, reference_cols = split_delta_columns(types.float_90_angle_delta_cols)
 
         cur_col_index = 0
         # input has baseline to compare to
@@ -459,7 +464,7 @@ class IOColumnTransformers:
         x_float_delta_name_ranges = self.get_name_ranges(input, False, frozenset({ColumnTransformerType.FLOAT_DELTA}))
         if x_float_delta_name_ranges:
             x_relative_floats = x[:, x_float_delta_name_ranges[0].start:x_float_delta_name_ranges[-1].stop]
-            x_float_delta_reference_positions = self.get_input_delta_reference_positions(types)
+            x_float_delta_reference_positions = self.get_input_delta_reference_positions(types, ColumnTransformerType.FLOAT_DELTA)
             x_reference_floats = x_input[:, x_float_delta_reference_positions]
             uncat_result.append(ct_pts[ct_offset].delta_convert(x_relative_floats, x_reference_floats))
             ct_offset += 1
@@ -471,11 +476,13 @@ class IOColumnTransformers:
             uncat_result.append(ct_pts[ct_offset].convert(x_floats_180_angle))
             ct_offset += 1
 
-        x_float_180_angle_delta_nam = self.get_name_ranges(input, False,
-                                                             frozenset({ColumnTransformerType.FLOAT_180_ANGLE_DELTA}))
-        if x_float_180_angle_name_ranges:
-            x_floats_180_angle = x[:, x_float_180_angle_name_ranges[0].start:x_float_180_angle_name_ranges[-1].stop]
-            uncat_result.append(ct_pts[ct_offset].convert(x_floats_180_angle))
+        x_float_180_angle_delta_name_ranges = self.get_name_ranges(input, False,
+                                                                   frozenset({ColumnTransformerType.FLOAT_180_ANGLE_DELTA}))
+        if x_float_180_angle_delta_name_ranges:
+            x_relative_angles = x[:, x_float_180_angle_delta_name_ranges[0].start:x_float_180_angle_delta_name_ranges[-1].stop]
+            x_float_delta_reference_positions = self.get_input_delta_reference_positions(types, ColumnTransformerType.FLOAT_180_ANGLE_DELTA)
+            x_reference_angles = x_input[:, x_float_delta_reference_positions]
+            uncat_result.append(ct_pts[ct_offset].delta_convert(x_relative_angles, x_reference_angles))
             ct_offset += 1
 
         x_float_90_angle_name_ranges = self.get_name_ranges(input, False,
@@ -483,6 +490,15 @@ class IOColumnTransformers:
         if x_float_90_angle_name_ranges:
             x_floats_90_angle = x[:, x_float_90_angle_name_ranges[0].start:x_float_90_angle_name_ranges[-1].stop]
             uncat_result.append(ct_pts[ct_offset].convert(x_floats_90_angle))
+            ct_offset += 1
+
+        x_float_90_angle_delta_name_ranges = self.get_name_ranges(input, False,
+                                                                   frozenset({ColumnTransformerType.FLOAT_90_ANGLE_DELTA}))
+        if x_float_90_angle_delta_name_ranges:
+            x_relative_angles = x[:, x_float_90_angle_delta_name_ranges[0].start:x_float_90_angle_delta_name_ranges[-1].stop]
+            x_float_delta_reference_positions = self.get_input_delta_reference_positions(types, ColumnTransformerType.FLOAT_90_ANGLE_DELTA)
+            x_reference_angles = x_input[:, x_float_delta_reference_positions]
+            uncat_result.append(ct_pts[ct_offset].delta_convert(x_relative_angles, x_reference_angles))
             ct_offset += 1
 
         x_categorical_name_ranges = self.get_name_ranges(input, False, frozenset({ColumnTransformerType.CATEGORICAL}))
@@ -511,7 +527,7 @@ class IOColumnTransformers:
         x_float_delta_name_ranges = self.get_name_ranges(input, False, frozenset({ColumnTransformerType.FLOAT_DELTA}))
         if x_float_delta_name_ranges:
             x_relative_floats = x[:, x_float_delta_name_ranges[0].start:x_float_delta_name_ranges[-1].stop]
-            x_float_delta_reference_positions = self.get_input_delta_reference_positions(types)
+            x_float_delta_reference_positions = self.get_input_delta_reference_positions(types, ColumnTransformerType.FLOAT_DELTA)
             x_reference_floats = x_input[:, x_float_delta_reference_positions]
             uncat_result.append(ct_pts[ct_offset].delta_inverse(x_relative_floats, x_reference_floats))
             ct_offset += 1
@@ -523,11 +539,27 @@ class IOColumnTransformers:
             uncat_result.append(ct_pts[ct_offset].inverse(x_floats_180_angle))
             ct_offset += 1
 
+        x_float_180_delta_name_ranges = self.get_name_ranges(input, False, frozenset({ColumnTransformerType.FLOAT_180_ANGLE_DELTA}))
+        if x_float_180_delta_name_ranges:
+            x_relative_floats = x[:, x_float_180_delta_name_ranges[0].start:x_float_180_delta_name_ranges[-1].stop]
+            x_float_delta_reference_positions = self.get_input_delta_reference_positions(types, ColumnTransformerType.FLOAT_180_ANGLE_DELTA)
+            x_reference_floats = x_input[:, x_float_delta_reference_positions]
+            uncat_result.append(ct_pts[ct_offset].delta_inverse(x_relative_floats, x_reference_floats))
+            ct_offset += 1
+
         x_float_90_angle_name_ranges = self.get_name_ranges(input, True,
                                                             frozenset({ColumnTransformerType.FLOAT_90_ANGLE}))
         if x_float_90_angle_name_ranges:
             x_floats_90_angle = x[:, x_float_90_angle_name_ranges[0].start:x_float_90_angle_name_ranges[-1].stop]
             uncat_result.append(ct_pts[ct_offset].inverse(x_floats_90_angle))
+            ct_offset += 1
+
+        x_float_90_delta_name_ranges = self.get_name_ranges(input, False, frozenset({ColumnTransformerType.FLOAT_90_ANGLE_DELTA}))
+        if x_float_90_delta_name_ranges:
+            x_relative_floats = x[:, x_float_90_delta_name_ranges[0].start:x_float_90_delta_name_ranges[-1].stop]
+            x_float_delta_reference_positions = self.get_input_delta_reference_positions(types, ColumnTransformerType.FLOAT_90_ANGLE_DELTA)
+            x_reference_floats = x_input[:, x_float_delta_reference_positions]
+            uncat_result.append(ct_pts[ct_offset].delta_inverse(x_relative_floats, x_reference_floats))
             ct_offset += 1
 
         x_categorical_name_ranges = self.get_name_ranges(input, True, frozenset({ColumnTransformerType.CATEGORICAL}))
