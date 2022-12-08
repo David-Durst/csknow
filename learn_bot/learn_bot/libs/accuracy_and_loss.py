@@ -18,9 +18,13 @@ def compute_loss(pred, y, column_transformers: IOColumnTransformers):
     y = y.to(CPU_DEVICE_STR)
 
     total_loss = 0
-    if column_transformers.output_types.float_standard_cols or column_transformers.output_types.float_delta_cols:
-        col_ranges = column_transformers.get_name_ranges(False, True, frozenset({ColumnTransformerType.FLOAT_STANDARD,
-                                                                                 ColumnTransformerType.FLOAT_DELTA}))
+    if column_transformers.output_types.float_standard_cols or column_transformers.output_types.float_delta_cols or \
+        column_transformers.output_types.float_180_angle_cols or column_transformers.output_types.float_180_angle_delta_cols or \
+        column_transformers.output_types.float_90_angle_cols or column_transformers.output_types.float_90_angle_delta_cols:
+        col_ranges = column_transformers.get_name_ranges(False, True,
+                                                         frozenset({ColumnTransformerType.FLOAT_STANDARD, ColumnTransformerType.FLOAT_DELTA,
+                                                                    ColumnTransformerType.FLOAT_180_ANGLE, ColumnTransformerType.FLOAT_180_ANGLE_DELTA,
+                                                                    ColumnTransformerType.FLOAT_90_ANGLE, ColumnTransformerType.FLOAT_90_ANGLE_DELTA}))
         col_range = range(col_ranges[0].start, col_ranges[-1].stop)
         total_loss += float_loss_fn(pred_transformed[:, col_range], y[:, col_range])
     if column_transformers.output_types.categorical_cols:
@@ -35,13 +39,22 @@ def compute_accuracy(pred, Y, accuracy, column_transformers: IOColumnTransformer
     pred_untransformed = pred_untransformed.to(CPU_DEVICE_STR)
     Y = Y.to(CPU_DEVICE_STR)
 
-    if column_transformers.output_types.float_standard_cols or column_transformers.output_types.float_delta_cols:
-        col_ranges = column_transformers.get_name_ranges(False, False, frozenset({ColumnTransformerType.FLOAT_STANDARD,
-                                                                                  ColumnTransformerType.FLOAT_DELTA}))
+    if column_transformers.output_types.float_standard_cols or column_transformers.output_types.float_delta_cols or \
+            column_transformers.output_types.float_180_angle_cols or column_transformers.output_types.float_180_angle_delta_cols or \
+            column_transformers.output_types.float_90_angle_cols or column_transformers.output_types.float_90_angle_delta_cols:
+        col_ranges = column_transformers.get_name_ranges(False, False,
+                                                         frozenset({ColumnTransformerType.FLOAT_STANDARD, ColumnTransformerType.FLOAT_DELTA,
+                                                                    ColumnTransformerType.FLOAT_180_ANGLE, ColumnTransformerType.FLOAT_180_ANGLE_DELTA,
+                                                                    ColumnTransformerType.FLOAT_90_ANGLE, ColumnTransformerType.FLOAT_90_ANGLE_DELTA}))
         col_range = range(col_ranges[0].start, col_ranges[-1].stop)
         squared_errors = torch.square(pred_untransformed[:, col_range] - Y[:, col_range]).sum(dim=0).to(CPU_DEVICE_STR)
         for i, name in enumerate(column_transformers.output_types.float_standard_cols +
-                                 column_transformers.output_types.delta_float_column_names()):
+                                 column_transformers.output_types.delta_float_column_names() +
+                                 column_transformers.output_types.float_180_angle_cols +
+                                 column_transformers.output_types.delta_180_angle_column_names() +
+                                 column_transformers.output_types.float_90_angle_cols +
+                                 column_transformers.output_types.delta_90_angle_column_names()
+                                 ):
             accuracy[name] += squared_errors[i].item()
 
     for name, col_range in zip(column_transformers.output_types.categorical_cols,
@@ -57,7 +70,11 @@ def finish_accuracy(accuracy, column_transformers: IOColumnTransformers):
                                   column_transformers.get_name_ranges(False, False)):
         # make float accuracy into rmse
         if name in column_transformers.output_types.float_standard_cols or \
-                name in column_transformers.output_types.delta_float_column_names():
+                name in column_transformers.output_types.delta_float_column_names() or \
+                name in column_transformers.output_types.float_180_angle_cols or \
+                name in column_transformers.output_types.delta_180_angle_column_names() or \
+                name in column_transformers.output_types.float_90_angle_cols or \
+                name in column_transformers.output_types.delta_90_angle_column_names():
             accuracy[name] = sqrt(accuracy[name])
             accuracy_string += f'''{name}: {accuracy[name]} rmse'''
         # record top-1 accuracy for others

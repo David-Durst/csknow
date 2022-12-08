@@ -50,7 +50,7 @@ def train(all_data_df: pd.DataFrame, dad_iters=4, num_epochs=5, save=True,
 
     # plot data set with and without transformers
     plot_untransformed_and_transformed('train and test labels', all_data_df,
-                                       temporal_io_float_column_names.present_columns + non_temporal_float_columns,
+                                       temporal_io_float_standard_column_names.present_columns + non_temporal_float_columns,
                                        temporal_io_cat_column_names.present_columns + static_input_categorical_columns)
 
     # Get cpu or gpu device for training.
@@ -185,7 +185,9 @@ def train(all_data_df: pd.DataFrame, dad_iters=4, num_epochs=5, save=True,
             total_train_df = pd.concat([total_train_df, dad_df], ignore_index=True)
 
     model_output_recording.plot(column_transformers,
-                                output_column_types.float_standard_cols + output_column_types.delta_float_column_names(),
+                                output_column_types.float_standard_cols + output_column_types.delta_float_column_names() +
+                                output_column_types.float_180_angle_cols + output_column_types.delta_180_angle_column_names() +
+                                output_column_types.float_90_angle_cols + output_column_types.delta_90_angle_column_names(),
                                 output_column_types.categorical_cols)
 
     if save:

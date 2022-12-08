@@ -29,7 +29,7 @@ class TargetMLPAimModel(nn.Module):
             nn.LeakyReLU(),
             nn.Linear(self.internal_width, self.internal_width),
             nn.LeakyReLU(),
-            nn.Linear(self.internal_width, cts.get_name_ranges(False, True)[-1].stop - self.target_width)
+            nn.Linear(self.internal_width, cts.get_name_ranges(False, True)[-1].stop)
         )
 
     def forward(self, x):
@@ -38,8 +38,8 @@ class TargetMLPAimModel(nn.Module):
 
         # run model except last layer
         target_transformed = self.target_model(x_transformed)
-        movement_transformed = self.movement_model(target_transformed)
-        out_transformed = torch.cat([target_transformed, movement_transformed], dim=1)
+        out_transformed = self.movement_model(target_transformed)
+        #out_transformed = torch.cat([target_transformed, movement_transformed], dim=1)
 
         # produce untransformed outputs
         out_untransformed = self.cts.untransform_columns(False, out_transformed, x)
