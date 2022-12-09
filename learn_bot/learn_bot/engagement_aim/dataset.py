@@ -131,9 +131,9 @@ target_o_float_columns = ["target view angle x", "target view angle y"]
 weapon_type_col = "weapon type"
 static_input_categorical_columns: List[str] = [weapon_type_col]
 
-input_column_types = ColumnTypes(temporal_io_float_standard_column_names.past_columns + non_temporal_float_columns, [],
-                                 temporal_io_float_180_angle_column_names.past_columns, [],
-                                 temporal_io_float_90_angle_column_names.past_columns, [],
+input_column_types = ColumnTypes(temporal_io_float_standard_column_names.past_columns + non_temporal_float_columns +
+                                 temporal_io_float_180_angle_column_names.past_columns +
+                                 temporal_io_float_90_angle_column_names.past_columns, [], [], [], [], [],
                                  temporal_io_cat_column_names.past_columns + static_input_categorical_columns,
                                  temporal_io_cat_column_names.get_num_cats_per_temporal_column([2], True, False, False)
                                  + [6])
@@ -147,7 +147,7 @@ output_delta_y = [DeltaColumn(c, output_ref_y_col) for c in output_relative_y_co
 output_standard_cols = temporal_o_float_column_names.get_matching_cols("ticks until", False, True, True)
 
 #output_column_types = ColumnTypes(output_standard_cols, output_delta, [], [])
-output_column_types = ColumnTypes([], [], [], output_delta_x, [], output_delta_y, [], [])
+output_column_types = ColumnTypes([], output_delta_x + output_delta_y, [], [], [], [], [], [])
                                   #temporal_io_cat_column_names.present_columns +
                                   #temporal_io_cat_column_names.future_columns,
                                   #temporal_io_cat_column_names.get_num_cats_per_temporal_column([2], False, True, True))

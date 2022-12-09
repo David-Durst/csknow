@@ -27,7 +27,7 @@ class MLPAimModel(nn.Module):
         x_transformed = self.cts.transform_columns(True, x, x)
 
         # run model except last layer
-        out_transformed = torch.clamp(self.inner_model(x_transformed), -1, 1)
+        out_transformed = self.inner_model(x_transformed)
 
         # produce untransformed outputs
         out_untransformed = self.cts.untransform_columns(False, out_transformed, x)
