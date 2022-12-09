@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from functools import cache
 
+import numpy as np
 import pandas as pd
 from typing import List, Dict, Tuple, FrozenSet, Union
 from enum import Enum
@@ -58,11 +59,15 @@ class ColumnTypes:
     float_90_angle_delta_cols: List[DeltaColumn]
     categorical_cols: List[str]
     num_cats_per_col: Dict[str, int]
+    # need to use same mean and std dev for angular columns so they can be compared in loss
+    float_angular_standard_cols: List[str]
+    float_angular_delta_cols: List[DeltaColumn]
 
     def __init__(self, float_standard_cols: List[str] = [], float_delta_cols: List[DeltaColumn] = [],
                  float_180_angle_cols: List[str] = [], float_180_angle_delta_cols: List[DeltaColumn] = [],
                  float_90_angle_cols: List[str] = [], float_90_angle_delta_cols: List[DeltaColumn] = [],
-                 categorical_cols: List[str] = [], num_cats_per_col: List[int] = []):
+                 categorical_cols: List[str] = [], num_cats_per_col: List[int] = [],
+                 float_angular_standard_cols: List[str] = [], float_angular_delta_cols: List[DeltaColumn] = []):
         self.float_standard_cols = float_standard_cols
         self.float_delta_cols = float_delta_cols
         self.float_180_angle_cols = float_180_angle_cols
@@ -73,6 +78,8 @@ class ColumnTypes:
         self.num_cats_per_col = {}
         for cat, num_cats in zip(categorical_cols, num_cats_per_col):
             self.num_cats_per_col[cat] = num_cats
+        self.float_angular_standard_cols = float_angular_standard_cols
+        self.float_angular_delta_cols = float_angular_delta_cols
 
     # caching values
     column_types_ = None
@@ -339,23 +346,33 @@ class IOColumnTransformers:
         self.input_ct_pts = self.create_pytorch_column_transformers(self.input_types, all_data_df)
         self.output_ct_pts = self.create_pytorch_column_transformers(self.output_types, all_data_df)
 
+
+    def compute_mean_per_column(self, all_cols: List[str], angular_cols: List[str], all_data_df: pd.DataFrame) -> \
+            Tuple[torch.Tensor, torch.Tensor]:
+        means = all_data_df.loc[:, all_cols].mean()
+        stds = all_data_df.loc[:, all_cols].std()
+        angular_mean = np.mean(all_data_df.loc[:, angular_cols].to_numpy())
+        angular_std = np.std(all_data_df.loc[:, angular_cols].to_numpy())
+        for angular_col in angular_cols:
+            means[angular_col] = angular_mean
+            stds[angular_col] = angular_std
+        return torch.Tensor(means), torch.Tensor(stds)
+
     def create_pytorch_column_transformers(self, types: ColumnTypes, all_data_df: pd.DataFrame) -> \
             List[PTColumnTransformer]:
         result: List[PTColumnTransformer] = []
         if types.float_standard_cols:
-            result.append(PTMeanStdColumnTransformer(
-                torch.Tensor(all_data_df.loc[:, types.float_standard_cols].mean()),
-                torch.Tensor(all_data_df.loc[:, types.float_standard_cols].std()),
-            ))
+            means, stds = self.compute_mean_per_column(types.float_standard_cols, types.float_angular_standard_cols,
+                                                       all_data_df)
+            result.append(PTMeanStdColumnTransformer(means, stds))
         if types.float_delta_cols:
             relative_cols, reference_cols = split_delta_columns(types.float_delta_cols)
-            relative_tensor = torch.Tensor(all_data_df.loc[:, relative_cols].values)
-            reference_tensor = torch.Tensor(all_data_df.loc[:, reference_cols].values)
-            delta_tensor = relative_tensor - reference_tensor
-            result.append(PTDeltaMeanStdColumnTransformer(
-                torch.mean(delta_tensor, dim=0),
-                torch.std(delta_tensor, dim=0)
-            ))
+            delta_np = all_data_df.loc[:, relative_cols].to_numpy() - \
+                       all_data_df.loc[:, reference_cols].to_numpy()
+            angular_relative_cols, _ = split_delta_columns(types.float_angular_delta_cols)
+            delta_df = pd.DataFrame(delta_np, columns=relative_cols)
+            means, stds = self.compute_mean_per_column(relative_cols, angular_relative_cols, delta_df)
+            result.append(PTDeltaMeanStdColumnTransformer(means, stds))
         if types.float_180_angle_cols:
             result.append(PT180AngleColumnTransformer())
         if types.float_180_angle_delta_cols:

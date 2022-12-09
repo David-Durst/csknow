@@ -4,15 +4,23 @@ channels:
   - nvidia
   - defaults
 dependencies:
+  - absl-py=1.3.0=py39haa95532_0
+  - aiohttp=3.8.3=py39h2bbff1b_0
+  - aiosignal=1.2.0=pyhd3eb1b0_0
+  - async-timeout=4.0.2=py39haa95532_0
+  - attrs=22.1.0=py39haa95532_0
   - blas=1.0=mkl
+  - blinker=1.4=py39haa95532_0
   - bottleneck=1.3.5=py39h080aedc_0
   - brotli=1.0.9=h2bbff1b_7
   - brotli-bin=1.0.9=h2bbff1b_7
   - brotlipy=0.7.0=py39h2bbff1b_1003
   - ca-certificates=2022.10.11=haa95532_0
+  - cachetools=4.2.2=pyhd3eb1b0_0
   - certifi=2022.9.24=py39haa95532_0
   - cffi=1.15.1=py39h2bbff1b_3
   - charset-normalizer=2.0.4=pyhd3eb1b0_0
+  - click=8.0.4=py39haa95532_0
   - colorama=0.4.5=py39haa95532_0
   - cryptography=38.0.1=py39h21b164f_0
   - cuda=11.6.2=0
@@ -43,14 +51,20 @@ dependencies:
   - cuda-tools=11.6.2=0
   - cuda-visual-tools=11.6.2=0
   - cycler=0.11.0=pyhd3eb1b0_0
+  - dataclasses=0.8=pyh6d0b6a4_7
   - flit-core=3.6.0=pyhd3eb1b0_0
   - fonttools=4.25.0=pyhd3eb1b0_0
   - freetype=2.12.1=ha860e81_0
+  - frozenlist=1.3.3=py39h2bbff1b_0
   - glib=2.69.1=h5dc1a3c_2
+  - google-auth=2.6.0=pyhd3eb1b0_0
+  - google-auth-oauthlib=0.4.4=pyhd3eb1b0_0
+  - grpcio=1.42.0=py39hc60d5dd_0
   - gst-plugins-base=1.18.5=h9e645db_0
   - gstreamer=1.18.5=hd78058f_0
   - icu=58.2=ha925a31_3
   - idna=3.4=py39haa95532_0
+  - importlib-metadata=4.11.3=py39haa95532_0
   - intel-openmp=2021.4.0=haa95532_3556
   - jpeg=9e=h2bbff1b_0
   - kiwisolver=1.4.2=py39hd77b12b_0
@@ -78,6 +92,7 @@ dependencies:
   - libnvjpeg-dev=11.9.0.86=0
   - libogg=1.3.5=h2bbff1b_1
   - libpng=1.6.37=h2a8f88b_0
+  - libprotobuf=3.20.1=h23ce68f_0
   - libtiff=4.4.0=h8a3f274_2
   - libuv=1.40.0=he774522_0
   - libvorbis=1.3.7=he774522_0
@@ -86,17 +101,20 @@ dependencies:
   - libxml2=2.9.14=h0ad7f3c_0
   - libxslt=1.1.35=h2bbff1b_0
   - lz4-c=1.9.3=h2bbff1b_1
+  - markdown=3.3.4=py39haa95532_0
   - matplotlib=3.5.3=py39haa95532_0
   - matplotlib-base=3.5.3=py39hd77b12b_0
   - mkl=2021.4.0=haa95532_640
   - mkl-service=2.4.0=py39h2bbff1b_0
   - mkl_fft=1.3.1=py39h277e83a_0
   - mkl_random=1.2.2=py39hf11a4ad_0
+  - multidict=6.0.2=py39h2bbff1b_0
   - munkres=1.1.4=py_0
   - nsight-compute=2022.3.0.22=0
   - numexpr=2.8.4=py39h5b0cc5e_0
   - numpy=1.23.4=py39h3b20f71_0
   - numpy-base=1.23.4=py39h4da318b_0
+  - oauthlib=3.2.1=py39haa95532_0
   - openssl=1.1.1s=h2bbff1b_0
   - packaging=21.3=pyhd3eb1b0_0
   - pandas=1.5.2=py39hf11a4ad_0
@@ -104,7 +122,11 @@ dependencies:
   - pillow=9.2.0=py39hdc2b20a_1
   - pip=22.2.2=py39haa95532_0
   - ply=3.11=py39haa95532_0
+  - protobuf=3.20.1=py39hd77b12b_0
+  - pyasn1=0.4.8=pyhd3eb1b0_0
+  - pyasn1-modules=0.2.8=py_0
   - pycparser=2.21=pyhd3eb1b0_0
+  - pyjwt=2.4.0=py39haa95532_0
   - pyopenssl=22.0.0=pyhd3eb1b0_0
   - pyparsing=3.0.9=py39haa95532_0
   - pyqt=5.15.7=py39hd77b12b_0
@@ -120,10 +142,15 @@ dependencies:
   - qt-webengine=5.15.9=hb9a9bb5_4
   - qtwebkit=5.212=h3ad3cdb_4
   - requests=2.28.1=py39haa95532_0
+  - requests-oauthlib=1.3.0=py_0
+  - rsa=4.7.2=pyhd3eb1b0_1
   - setuptools=65.5.0=py39haa95532_0
   - sip=6.6.2=py39hd77b12b_0
   - six=1.16.0=pyhd3eb1b0_1
   - sqlite=3.40.0=h2bbff1b_0
+  - tensorboard=2.9.0=py39haa95532_0
+  - tensorboard-data-server=0.6.0=py39haa95532_0
+  - tensorboard-plugin-wit=1.8.1=py39haa95532_0
   - tk=8.6.12=h2bbff1b_0
   - toml=0.10.2=pyhd3eb1b0_0
   - tornado=6.2=py39h2bbff1b_0
@@ -133,10 +160,13 @@ dependencies:
   - urllib3=1.26.12=py39haa95532_0
   - vc=14.2=h21ff451_1
   - vs2015_runtime=14.27.29016=h5e58377_2
+  - werkzeug=2.0.3=pyhd3eb1b0_0
   - wheel=0.37.1=pyhd3eb1b0_0
   - win_inet_pton=1.1.0=py39haa95532_0
   - wincertstore=0.2=py39haa95532_2
   - xz=5.2.8=h8cc25b3_0
+  - yarl=1.8.1=py39h2bbff1b_0
+  - zipp=3.8.0=py39haa95532_0
   - zlib=1.2.13=h8cc25b3_0
   - zstd=1.5.2=h19a0ad4_0
   - pip:
