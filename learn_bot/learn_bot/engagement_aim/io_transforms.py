@@ -237,18 +237,14 @@ class PT180AngleColumnTransformer(PTColumnTransformer):
     pt_ct_type: ColumnTransformerType = ColumnTransformerType.FLOAT_180_ANGLE
 
     def convert(self, value: torch.Tensor):
-        #value = value.clone().detach()
-        value = value.unsqueeze(-1).expand(-1, -1, 2)
-        value[:, :, 0] = torch.sin(value[:, :, 0])
-        value[:, :, 1] = torch.cos(value[:, :, 1])
-        return torch.flatten(value, start_dim=1)
+        sin_value = torch.sin(torch.deg2rad(value))
+        cos_value = torch.cos(torch.deg2rad(value))
+        stack_value = torch.stack([sin_value, cos_value], dim=2)
+        return torch.flatten(stack_value, start_dim=1)
 
     def inverse(self, value: torch.Tensor):
-        #value = value.clone().detach()
         value = torch.unflatten(value, dim=1, sizes=(-1, 2))
-        value[:, :, 0] = torch.atan2(value[:, :, 0], value[:, :, 1])
-        value = value[:, :, [0]]
-        return value.squeeze(-1)
+        return torch.rad2deg(torch.atan2(value[:, :, 0], value[:, :, 1]))
 
     def delta_convert(self, relative_value: torch.Tensor, reference_value: torch.Tensor):
         raise NotImplementedError
@@ -280,9 +276,7 @@ class PT90AngleColumnTransformer(PT180AngleColumnTransformer):
 
     def inverse(self, value: torch.Tensor):
         value = torch.unflatten(value, dim=1, sizes=(-1, 2))
-        value[:, :, 0] = torch.atan(value[:, :, 0] / value[:, :, 1])
-        value = value[:, :, [0]]
-        return value.squeeze(-1)
+        return torch.rad2deg(torch.atan(value[:, :, 0] / value[:, :, 1]))
 
     def delta_convert(self, relative_value: torch.Tensor, reference_value: torch.Tensor):
         raise NotImplementedError

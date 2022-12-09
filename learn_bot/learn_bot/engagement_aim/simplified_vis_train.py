@@ -57,6 +57,7 @@ def build_aim_df(example_row_df: Dict) -> pd.DataFrame:
                 if time_offset == 0:
                     continue
                 tick_with_time_offset = tick_in_engagement + time_offset
+                # too large indices won't show up in final data set because extend at bottom filters them out
                 if tick_with_time_offset < 0 or \
                         tick_with_time_offset >= len(engagement_examples[engagement_id].mouse_xy):
                     continue
