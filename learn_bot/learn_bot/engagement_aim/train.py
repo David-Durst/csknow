@@ -60,7 +60,7 @@ def train(all_data_df: pd.DataFrame, dad_iters=4, num_epochs=5, save=True,
 
     # Define model
     embedding_dim = 5
-    model = TargetMLPAimModel(column_transformers).to(device)
+    model = MLPAimModel(column_transformers).to(device)
     # model = LSTMAimModel(column_transformers, len(temporal_io_float_column_names.input_columns), len(non_temporal_float_columns)).to(device)
 
     print(model)
