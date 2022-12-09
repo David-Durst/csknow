@@ -300,7 +300,7 @@ class PTDelta90AngleColumnTransformer(PT90AngleColumnTransformer):
 
     def delta_inverse(self, delta_value: torch.Tensor, reference_value: torch.Tensor):
         delta_value = super().inverse(delta_value)
-        return delta_value - reference_value
+        return delta_value + reference_value
 
 
 @dataclass
