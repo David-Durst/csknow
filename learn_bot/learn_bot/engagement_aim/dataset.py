@@ -1,3 +1,4 @@
+import pandas as pd
 import torch
 from torch.utils.data import Dataset
 from learn_bot.engagement_aim.io_transforms import IOColumnTransformers, ColumnTypes, PRIOR_TICKS, FUTURE_TICKS, \
@@ -10,7 +11,7 @@ data_path = Path(__file__).parent / '..' / '..' / '..' / 'analytics' / 'csv_outp
 
 # https://androidkt.com/load-pandas-dataframe-using-dataset-and-dataloader-in-pytorch/
 class AimDataset(Dataset):
-    def __init__(self, df, cts: IOColumnTransformers):
+    def __init__(self, df: pd.DataFrame, cts: IOColumnTransformers):
         self.id = df.loc[:, 'id']
         self.round_id = df.loc[:, 'round id']
         self.tick_id = df.loc[:, 'tick id']
@@ -23,14 +24,15 @@ class AimDataset(Dataset):
         self.round_starts_ends = round_starts.join(round_ends, on='round id')
 
         # convert player id's to indexes
-        self.X = torch.tensor(df.loc[:, cts.input_types.column_names()].values).float()
-        self.Y = torch.tensor(df.loc[:, cts.output_types.column_names()].values).float()
+        self.X = torch.tensor(df.loc[:, cts.input_types.column_names()].to_numpy()).float()
+        self.Y = torch.tensor(df.loc[:, cts.output_types.column_names()].to_numpy()).float()
+        self.Targets = torch.tensor(df.loc[:, cts.output_types.delta_float_target_column_names()].to_numpy()).float()
 
     def __len__(self):
         return len(self.id)
 
     def __getitem__(self, idx):
-        return self.X[idx], self.Y[idx]
+        return self.X[idx], self.Y[idx], self.Targets[idx]
 
 
 engagement_id_column = "engagement id"
@@ -144,8 +146,10 @@ output_relative_x_cols = temporal_io_float_180_angle_column_names.get_matching_c
 output_relative_y_cols = temporal_io_float_90_angle_column_names.get_matching_cols(base_abs_y_pos_column, False, True, True)
 output_ref_x_col = get_temporal_field_str(base_abs_x_pos_column, -1)
 output_ref_y_col = get_temporal_field_str(base_abs_y_pos_column, -1)
-output_delta_x = [DeltaColumn(c, output_ref_x_col) for c in output_relative_x_cols]
-output_delta_y = [DeltaColumn(c, output_ref_y_col) for c in output_relative_y_cols]
+output_target_x_cols = temporal_io_float_180_angle_column_names.get_matching_cols(base_victim_abs_head_x, False, True, True)
+output_target_y_cols = temporal_io_float_90_angle_column_names.get_matching_cols(base_victim_abs_head_x, False, True, True)
+output_delta_x = [DeltaColumn(c_rel, output_ref_x_col, c_target) for c_rel, c_target in zip(output_relative_x_cols, output_target_x_cols)]
+output_delta_y = [DeltaColumn(c_rel, output_ref_y_col, c_target) for c_rel, c_target in zip(output_relative_y_cols, output_target_y_cols)]
 output_standard_cols = temporal_o_float_column_names.get_matching_cols("ticks until", False, True, True)
 
 #output_column_types = ColumnTypes(output_standard_cols, output_delta, [], [])

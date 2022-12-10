@@ -9,7 +9,7 @@ from dataset import *
 from learn_bot.engagement_aim.mlp_aim_model import MLPAimModel
 from learn_bot.engagement_aim.target_mlp_aim_model import TargetMLPAimModel
 from learn_bot.libs.accuracy_and_loss import compute_loss, compute_accuracy, finish_accuracy, CUDA_DEVICE_STR, \
-    CPU_DEVICE_STR
+    CPU_DEVICE_STR, AimLosses
 from learn_bot.engagement_aim.lstm_aim_model import LSTMAimModel
 from learn_bot.engagement_aim.output_plotting import plot_untransformed_and_transformed, ModelOutputRecording
 from learn_bot.libs.df_grouping import train_test_split_by_col, make_index_column
@@ -87,34 +87,35 @@ def train(all_data_df: pd.DataFrame, dad_iters=4, num_epochs=5, save=True,
             model.train()
         else:
             model.eval()
-        cumulative_loss = 0
+        cumulative_loss = AimLosses()
         accuracy = {}
         # bar = Bar('Processing', max=size)
         for name in column_transformers.output_types.column_names():
             accuracy[name] = 0
         with tqdm(total=len(dataloader), disable=False) as pbar:
-            for batch, (X, Y) in enumerate(dataloader):
+            for batch, (X, Y, Targets) in enumerate(dataloader):
                 if batch == 0 and epoch_num == 0 and train:
                     first_row = X[0:1, :]
-                X, Y = X.to(device), Y.to(device)
+                X, Y, Targets = X.to(device), Y.to(device), Targets.to(device)
                 transformed_Y = column_transformers.transform_columns(False, Y, X)
+                transformed_Targets = column_transformers.transform_columns(False, Targets, X)
                 # XR = torch.randn_like(X, device=device)
                 # XR[:,0] = X[:,0]
                 # YZ = torch.zeros_like(Y) + 0.1
 
                 # Compute prediction error
                 pred = model(X)
-                batch_loss = compute_loss(pred, transformed_Y, column_transformers)
+                batch_loss = compute_loss(pred, transformed_Y, transformed_Targets, column_transformers)
                 cumulative_loss += batch_loss
 
                 # Backpropagation
                 if train:
                     optimizer.zero_grad()
-                    batch_loss.backward()
+                    batch_loss.get_total_loss().backward()
                     optimizer.step()
 
                 if False and train and batch % 100 == 0:
-                    loss, current = batch_loss.item(), batch * len(X)
+                    loss, current = batch_loss.get_total_loss().item(), batch * len(X)
                     print('pred')
                     print(pred[0:2])
                     print('y')
@@ -131,7 +132,7 @@ def train(all_data_df: pd.DataFrame, dad_iters=4, num_epochs=5, save=True,
             accuracy[name] /= size
         accuracy_string = finish_accuracy(accuracy, column_transformers)
         train_test_str = "Train" if train else "Test"
-        print(f"Epoch {train_test_str} Accuracy: {accuracy_string}, Transformed Avg Loss: {cumulative_loss:>8f}")
+        print(f"Epoch {train_test_str} Accuracy: {accuracy_string}, Transformed Avg Loss: {cumulative_loss.get_total_loss().item():>8f}")
         return cumulative_loss
 
     def train_and_test_SL(model, train_dataloader, test_dataloader):
@@ -163,14 +164,16 @@ def train(all_data_df: pd.DataFrame, dad_iters=4, num_epochs=5, save=True,
         print(f"num test examples: {len(test_data)}")
 
         if dad_num == 0:
-            for X, Y in train_dataloader:
+            for X, Y, Target in train_dataloader:
                 print(f"Train shape of X: {X.shape} {X.dtype}")
                 print(f"Train shape of Y: {Y.shape} {Y.dtype}")
+                print(f"Train shape of target: {Target.shape} {Target.dtype}")
                 break
 
-            for X, Y in test_dataloader:
+            for X, Y, Target in test_dataloader:
                 print(f"Test shape of X: {X.shape} {X.dtype}")
                 print(f"Test shape of Y: {Y.shape} {Y.dtype}")
+                print(f"Train shape of target: {Target.shape} {Target.dtype}")
                 break
 
         train_and_test_SL(model, train_dataloader, test_dataloader)

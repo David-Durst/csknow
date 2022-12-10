@@ -1,8 +1,11 @@
+import torch
+
 from learn_bot.engagement_aim.dataset import *
 from learn_bot.engagement_aim.io_transforms import IOColumnTransformers, ColumnTransformerType, CPU_DEVICE_STR, \
     CUDA_DEVICE_STR, get_untransformed_outputs, get_transformed_outputs
 from math import sqrt
 from torch import nn
+from dataclasses import dataclass
 
 float_loss_fn = nn.MSELoss(reduction='sum')
 binary_loss_fn = nn.BCEWithLogitsLoss()
@@ -11,13 +14,41 @@ binary_loss_fn = nn.BCEWithLogitsLoss()
 classification_loss_fn = nn.CrossEntropyLoss()
 
 
+class AimLosses:
+    pos_float_loss: torch.Tensor
+    target_float_loss: torch.Tensor
+    cat_loss: torch.Tensor
+
+    def __init__(self):
+        self.pos_float_loss = torch.zeros([1])
+        self.target_float_loss = torch.zeros([1])
+        self.cat_loss = torch.zeros([1])
+
+    def get_total_loss(self):
+        return self.pos_float_loss + self.target_float_loss + self.cat_loss
+
+    def __iadd__(self, other):
+        self.pos_float_loss += other.pos_float_loss
+        self.target_float_loss += other.target_float_loss
+        self.cat_loss += other.cat_loss
+        return self
+
+    def __itruediv__(self, other):
+        self.pos_float_loss /= other
+        self.target_float_loss /= other
+        self.cat_loss /= other
+        return self
+
+
 # https://discuss.pytorch.org/t/how-to-combine-multiple-criterions-to-a-loss-function/348/4
-def compute_loss(pred, y, column_transformers: IOColumnTransformers):
+def compute_loss(pred, y, transformed_targets, column_transformers: IOColumnTransformers):
     pred_transformed = get_transformed_outputs(pred)
     pred_transformed = pred_transformed.to(CPU_DEVICE_STR)
     y = y.to(CPU_DEVICE_STR)
+    transformed_targets = transformed_targets.to(CPU_DEVICE_STR)
 
-    total_loss = 0
+    losses = AimLosses()
+
     if column_transformers.output_types.float_standard_cols or column_transformers.output_types.float_delta_cols or \
         column_transformers.output_types.float_180_angle_cols or column_transformers.output_types.float_180_angle_delta_cols or \
         column_transformers.output_types.float_90_angle_cols or column_transformers.output_types.float_90_angle_delta_cols:
@@ -26,12 +57,14 @@ def compute_loss(pred, y, column_transformers: IOColumnTransformers):
                                                                     ColumnTransformerType.FLOAT_180_ANGLE, ColumnTransformerType.FLOAT_180_ANGLE_DELTA,
                                                                     ColumnTransformerType.FLOAT_90_ANGLE, ColumnTransformerType.FLOAT_90_ANGLE_DELTA}))
         col_range = range(col_ranges[0].start, col_ranges[-1].stop)
-        total_loss += float_loss_fn(pred_transformed[:, col_range], y[:, col_range])
+        losses.pos_float_loss += float_loss_fn(pred_transformed[:, col_range], y[:, col_range])
+        losses.target_float_loss += float_loss_fn(pred_transformed[:, col_range] - transformed_targets,
+                                                  y[:, col_range] - transformed_targets)
     if column_transformers.output_types.categorical_cols:
         col_ranges = column_transformers.get_name_ranges(False, True, frozenset({ColumnTransformerType.CATEGORICAL}))
         for col_range in col_ranges:
-            total_loss += classification_loss_fn(pred_transformed[:, col_range], y[:, col_range])
-    return total_loss
+            losses.cat_loss += classification_loss_fn(pred_transformed[:, col_range], y[:, col_range])
+    return losses
 
 
 def compute_accuracy(pred, Y, accuracy, column_transformers: IOColumnTransformers):

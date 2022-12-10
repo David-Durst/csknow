@@ -35,10 +35,14 @@ class ColumnTransformerType(Enum):
 class DeltaColumn:
     relative_col: str
     reference_col: str
+    target_col: str
 
 
 def split_delta_columns(delta_ref_columns: List[DeltaColumn]) -> Tuple[List[str], List[str]]:
     return [drc.relative_col for drc in delta_ref_columns], [drc.reference_col for drc in delta_ref_columns]
+
+def target_delta_columns(delta_ref_columns: List[DeltaColumn]) -> Tuple[List[str], List[str]]:
+    return [drc.target_col for drc in delta_ref_columns]
 
 
 ALL_TYPES: FrozenSet[ColumnTransformerType] = frozenset({ColumnTransformerType.FLOAT_STANDARD,
@@ -87,6 +91,7 @@ class ColumnTypes:
     delta_float_column_names_ = None
     delta_180_angle_column_names_ = None
     delta_90_angle_column_names_ = None
+    delta_float_target_column_names_ = None
 
     def column_types(self) -> List[ColumnTransformerType]:
         if self.column_types_ is None:
@@ -138,6 +143,11 @@ class ColumnTypes:
         if self.delta_90_angle_column_names_ is None:
             self.delta_90_angle_column_names_, _ = split_delta_columns(self.float_90_angle_delta_cols)
         return self.delta_90_angle_column_names_
+
+    def delta_float_target_column_names(self) -> List[str]:
+        if self.delta_float_target_column_names_ is None:
+            self.delta_float_target_column_names_ = target_delta_columns(self.float_delta_cols)
+        return self.delta_float_target_column_names_
 
 
 class PTColumnTransformer(ABC):
@@ -346,10 +356,10 @@ class IOColumnTransformers:
         self.input_types = input_types
         self.output_types = output_types
 
+        self.compute_angular_mean_std(all_data_df)
+
         self.input_ct_pts = self.create_pytorch_column_transformers(self.input_types, all_data_df)
         self.output_ct_pts = self.create_pytorch_column_transformers(self.output_types, all_data_df)
-
-        self.compute_angular_mean_std(all_data_df)
 
     def compute_angular_mean_std(self, all_data_df: pd.DataFrame):
         angular_standard_cols = self.input_types.float_angular_standard_cols + \
