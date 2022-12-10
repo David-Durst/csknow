@@ -339,6 +339,9 @@ class IOColumnTransformers:
     input_ct_pts: List[PTColumnTransformer]
     output_ct_pts: List[PTColumnTransformer]
 
+    angular_mean: float
+    angular_std: float
+
     def __init__(self, input_types: ColumnTypes, output_types: ColumnTypes, all_data_df: pd.DataFrame):
         self.input_types = input_types
         self.output_types = output_types
@@ -346,16 +349,25 @@ class IOColumnTransformers:
         self.input_ct_pts = self.create_pytorch_column_transformers(self.input_types, all_data_df)
         self.output_ct_pts = self.create_pytorch_column_transformers(self.output_types, all_data_df)
 
+        self.compute_angular_mean_std(all_data_df)
+
+    def compute_angular_mean_std(self, all_data_df: pd.DataFrame):
+        angular_standard_cols = self.input_types.float_angular_standard_cols + \
+            self.output_types.float_angular_standard_cols
+        angular_relative_cols, _ = split_delta_columns(self.input_types.float_angular_delta_cols +
+                                                       self.output_types.float_angular_delta_cols)
+        angular_cols = angular_standard_cols + angular_standard_cols
+        self.angular_mean = np.mean(all_data_df.loc[:, angular_cols].to_numpy()).item()
+        self.angular_std = np.std(all_data_df.loc[:, angular_cols].to_numpy()).item()
+
 
     def compute_mean_per_column(self, all_cols: List[str], angular_cols: List[str], all_data_df: pd.DataFrame) -> \
             Tuple[torch.Tensor, torch.Tensor]:
         means = all_data_df.loc[:, all_cols].mean()
         stds = all_data_df.loc[:, all_cols].std()
-        angular_mean = np.mean(all_data_df.loc[:, angular_cols].to_numpy())
-        angular_std = np.std(all_data_df.loc[:, angular_cols].to_numpy())
         for angular_col in angular_cols:
-            means[angular_col] = angular_mean
-            stds[angular_col] = angular_std
+            means[angular_col] = self.angular_mean
+            stds[angular_col] = self.angular_std
         return torch.Tensor(means), torch.Tensor(stds)
 
     def create_pytorch_column_transformers(self, types: ColumnTypes, all_data_df: pd.DataFrame) -> \
