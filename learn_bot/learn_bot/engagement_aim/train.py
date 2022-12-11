@@ -1,10 +1,15 @@
 # https://pytorch.org/tutorials/beginner/basics/quickstart_tutorial.html
+from typing import Dict
+
 import torch.optim
 from torch import nn
 from torch.optim.lr_scheduler import ExponentialLR, ReduceLROnPlateau
 from torch.utils.data import DataLoader
 import pandas as pd
 from pathlib import Path
+
+from torch.utils.tensorboard import SummaryWriter
+
 from dataset import *
 from learn_bot.engagement_aim.mlp_aim_model import MLPAimModel
 from learn_bot.engagement_aim.target_mlp_aim_model import TargetMLPAimModel
@@ -18,6 +23,9 @@ from tqdm import tqdm
 from dataclasses import dataclass
 
 from learn_bot.engagement_aim.vis import vis
+
+checkpoints_path = Path(__file__).parent / 'checkpoints'
+runs_path = Path(__file__).parent / 'runs'
 
 
 @dataclass(frozen=True)
@@ -133,17 +141,38 @@ def train(all_data_df: pd.DataFrame, dad_iters=4, num_epochs=5, save=True,
         accuracy_string = finish_accuracy(accuracy, column_transformers)
         train_test_str = "Train" if train else "Test"
         print(f"Epoch {train_test_str} Accuracy: {accuracy_string}, Transformed Avg Loss: {cumulative_loss.get_total_loss().item():>8f}")
-        return cumulative_loss
+        return cumulative_loss, accuracy
 
-    def train_and_test_SL(model, train_dataloader, test_dataloader):
+    def save_model(dad_num: int, epoch_num: int):
+        torch.save({
+            'epoch_num': epoch_num,
+            'dad_num': dad_num,
+            'model_state_dict': model.state_dict(),
+            'optimizer_state_dict': optimizer.state_dict(),
+        }, checkpoints_path / "model.pt")
+
+    writer = SummaryWriter(runs_path)
+    def save_tensorboard(train_loss: AimLosses, test_loss: AimLosses, train_accuracy: Dict, test_accuracy: Dict,
+                         total_epoch_num):
+        train_loss.add_scalars(writer, 'train', total_epoch_num)
+        test_loss.add_scalars(writer, 'test', total_epoch_num)
+        for name, acc in train_accuracy.items():
+            writer.add_scalar('train/acc/' + name, acc, total_epoch_num)
+        for name, acc in test_accuracy.items():
+            writer.add_scalar('test/acc/' + name, acc, total_epoch_num)
+
+    def train_and_test_SL(model, train_dataloader, test_dataloader, dad_num, start_epoch=0):
         nonlocal optimizer
-        for epoch_num in range(num_epochs):
+        for epoch_num in range(start_epoch, num_epochs):
             print(f"\nEpoch {epoch_num + 1}\n-------------------------------")
             #if epoch_num % 100 == 1000:
                 # optimizer = torch.optim.Adam(model.parameters(), lr=0.0001)
-            train_loss = train_or_test_SL_epoch(train_dataloader, model, optimizer, epoch_num, True)
+            train_loss, train_accuracy = train_or_test_SL_epoch(train_dataloader, model, optimizer, epoch_num, True)
             with torch.no_grad():
-                train_or_test_SL_epoch(test_dataloader, model, None, epoch_num, False)
+                test_loss, test_accuracy = train_or_test_SL_epoch(test_dataloader, model, None, epoch_num, False)
+            if (epoch_num > 0 and epoch_num % 20 == 0) or epoch_num == num_epochs - 1:
+                save_model(dad_num, epoch_num)
+            save_tensorboard(train_loss, test_loss, train_accuracy, test_accuracy, dad_num*num_epochs + epoch_num)
             #scheduler.step(train_loss)
 
     total_train_df = train_df
@@ -176,7 +205,7 @@ def train(all_data_df: pd.DataFrame, dad_iters=4, num_epochs=5, save=True,
                 print(f"Train shape of target: {Target.shape} {Target.dtype}")
                 break
 
-        train_and_test_SL(model, train_dataloader, test_dataloader)
+        train_and_test_SL(model, train_dataloader, test_dataloader, dad_num)
 
         if dad_num < dad_iters:
             # step 2: inference and result collection

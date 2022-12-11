@@ -1,4 +1,5 @@
 import torch
+from torch.utils.tensorboard import SummaryWriter
 
 from learn_bot.engagement_aim.dataset import *
 from learn_bot.engagement_aim.io_transforms import IOColumnTransformers, ColumnTransformerType, CPU_DEVICE_STR, \
@@ -38,6 +39,12 @@ class AimLosses:
         self.target_float_loss /= other
         self.cat_loss /= other
         return self
+
+    def add_scalars(self, writer: SummaryWriter, prefix: str, total_epoch_num: int):
+        writer.add_scalar(prefix + '/loss/pos_float', self.pos_float_loss, total_epoch_num)
+        writer.add_scalar(prefix + '/loss/target_float', self.target_float_loss, total_epoch_num)
+        writer.add_scalar(prefix + '/loss/cat', self.cat_loss, total_epoch_num)
+        writer.add_scalar(prefix + '/loss/total', self.get_total_loss(), total_epoch_num)
 
 
 # https://discuss.pytorch.org/t/how-to-combine-multiple-criterions-to-a-loss-function/348/4
