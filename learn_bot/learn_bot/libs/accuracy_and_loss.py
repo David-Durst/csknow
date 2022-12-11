@@ -26,7 +26,7 @@ class AimLosses:
         self.cat_loss = torch.zeros([1])
 
     def get_total_loss(self):
-        return self.pos_float_loss + self.target_float_loss + self.cat_loss
+        return self.pos_float_loss #+ self.target_float_loss + self.cat_loss
 
     def __iadd__(self, other):
         self.pos_float_loss += other.pos_float_loss

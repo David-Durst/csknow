@@ -21,11 +21,14 @@ from learn_bot.libs.df_grouping import train_test_split_by_col, make_index_colum
 from learn_bot.engagement_aim.dad import on_policy_inference, create_dad_dataset
 from tqdm import tqdm
 from dataclasses import dataclass
+from datetime import datetime
 
 from learn_bot.engagement_aim.vis import vis
 
 checkpoints_path = Path(__file__).parent / 'checkpoints'
-runs_path = Path(__file__).parent / 'runs'
+
+now = datetime.now()
+runs_path = Path(__file__).parent / 'runs' / now.strftime("%m_%d_%Y__%H_%M_%S")
 
 
 @dataclass(frozen=True)
