@@ -280,7 +280,7 @@ class AxObjs:
         min_game_time = min(selected_df['game time'])
         speed_df = selected_df.copy()
         speed_df['delta game time'] = (selected_df['game time'] - min_game_time) / 1000.
-        for i in range(-2, 3):
+        for i in range(-4, 1):
             speed_cols.append(get_temporal_field_str("speed at", i))
             compute_position_difference(speed_df, columns.base_cur_view_angle_x_column, columns.base_cur_view_angle_y_column,
                                         speed_cols[-1], i - 1, i)

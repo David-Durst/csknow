@@ -151,6 +151,7 @@ output_target_y_cols = temporal_io_float_90_angle_column_names.get_matching_cols
 output_delta_x = [DeltaColumn(c_rel, output_ref_x_col, c_target) for c_rel, c_target in zip(output_relative_x_cols, output_target_x_cols)]
 output_delta_y = [DeltaColumn(c_rel, output_ref_y_col, c_target) for c_rel, c_target in zip(output_relative_y_cols, output_target_y_cols)]
 output_standard_cols = temporal_o_float_column_names.get_matching_cols("ticks until", False, True, True)
+num_x_targets = len(output_target_x_cols)
 
 #output_column_types = ColumnTypes(output_standard_cols, output_delta, [], [])
 output_column_types = ColumnTypes([], output_delta_x + output_delta_y, [], [], [], [], [], [], [],
