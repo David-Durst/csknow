@@ -26,7 +26,7 @@ class AimLosses:
         self.cat_loss = torch.zeros([1])
 
     def get_total_loss(self):
-        return self.pos_float_loss #+ self.target_float_loss + self.cat_loss
+        return self.pos_float_loss + self.target_float_loss + self.cat_loss
 
     def __iadd__(self, other):
         self.pos_float_loss += other.pos_float_loss
@@ -47,6 +47,10 @@ class AimLosses:
         writer.add_scalar(prefix + '/loss/total', self.get_total_loss(), total_epoch_num)
 
 
+def norm_2d(xy: torch.Tensor):
+    return torch.sqrt(torch.pow(xy[:, :num_x_targets], 2) + torch.pow(xy[:, num_x_targets:], 2))
+
+
 # https://discuss.pytorch.org/t/how-to-combine-multiple-criterions-to-a-loss-function/348/4
 def compute_loss(pred, y, transformed_targets, column_transformers: IOColumnTransformers):
     pred_transformed = get_transformed_outputs(pred)
@@ -65,8 +69,9 @@ def compute_loss(pred, y, transformed_targets, column_transformers: IOColumnTran
                                                                     ColumnTransformerType.FLOAT_90_ANGLE, ColumnTransformerType.FLOAT_90_ANGLE_DELTA}))
         col_range = range(col_ranges[0].start, col_ranges[-1].stop)
         losses.pos_float_loss += float_loss_fn(pred_transformed[:, col_range], y[:, col_range])
-        losses.target_float_loss += float_loss_fn(pred_transformed[:, col_range] - transformed_targets,
-                                                  y[:, col_range] - transformed_targets)
+        pred_target_distances = norm_2d((pred_transformed[:, col_range] - transformed_targets))
+        y_target_distances = norm_2d(y[:, col_range] - transformed_targets)
+        losses.target_float_loss += float_loss_fn(pred_target_distances, y_target_distances)
     if column_transformers.output_types.categorical_cols:
         col_ranges = column_transformers.get_name_ranges(False, True, frozenset({ColumnTransformerType.CATEGORICAL}))
         for col_range in col_ranges:
