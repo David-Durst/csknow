@@ -30,7 +30,7 @@ selected_player = None
 players_id_offset = 1
 
 speed_col = "speed (t)"
-next_speed_col = f"speed (t+{default_speed_ticks})"
+prior_speed_col = f"speed (t-{default_speed_ticks})"
 accel_col = "accel"
 speed_ax: Optional[Axes] = None
 accel_ax: Optional[Axes] = None
@@ -56,9 +56,9 @@ def compute_mouse_movement_bins(data_df: pd.DataFrame) -> MovementBins:
     _, speed_bins = np.histogram(speed_filtered_movement_df[speed_col].to_numpy(), bins=100)
 
     # compute accel
-    compute_position_difference(movement_df, base_abs_x_pos_column, base_abs_y_pos_column, next_speed_col,
-                                0, default_speed_ticks)
-    movement_df[accel_col] = movement_df[next_speed_col] - movement_df[speed_col]
+    compute_position_difference(movement_df, base_abs_x_pos_column, base_abs_y_pos_column, prior_speed_col,
+                                -2 * default_speed_ticks, -1 * default_speed_ticks)
+    movement_df[accel_col] = movement_df[speed_col] - movement_df[prior_speed_col]
     accel_filtered_movement_df = filter_df(movement_df, accel_col, 0.025, 0.025)
     _, accel_bins = np.histogram(accel_filtered_movement_df[accel_col].to_numpy(), bins=100)
 

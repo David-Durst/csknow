@@ -238,7 +238,7 @@ if __name__ == "__main__":
     all_data_df[target_o_float_columns[0]] = all_data_df[get_temporal_field_str(base_abs_x_pos_column, FUTURE_TICKS)]
     all_data_df[target_o_float_columns[1]] = all_data_df[get_temporal_field_str(base_abs_y_pos_column, FUTURE_TICKS)]
     #all_data_df = all_data_df[(all_data_df[weapon_type_col] == 3) & (all_data_df[cur_victim_visible_yet_column] == 1.)]
-    train_result = train(all_data_df, dad_iters=0)
+    train_result = train(all_data_df, dad_iters=0, num_epochs=100)
     #engagement_ids = list(train_result.test_df[engagement_id_column].unique())
     #engagement_ids = engagement_ids[:30]
     #limited_test_df = train_result.test_df[train_result.test_df[engagement_id_column].isin(engagement_ids)]

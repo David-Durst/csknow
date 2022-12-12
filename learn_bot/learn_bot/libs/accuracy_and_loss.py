@@ -8,7 +8,8 @@ from math import sqrt
 from torch import nn
 from dataclasses import dataclass
 
-float_loss_fn = nn.MSELoss(reduction='sum')
+#float_loss_fn = nn.MSELoss(reduction='sum')
+float_loss_fn = nn.HuberLoss()
 binary_loss_fn = nn.BCEWithLogitsLoss()
 # https://stackoverflow.com/questions/65192475/pytorch-logsoftmax-vs-softmax-for-crossentropyloss
 # no need to do softmax for classification output
