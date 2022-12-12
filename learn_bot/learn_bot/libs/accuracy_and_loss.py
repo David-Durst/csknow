@@ -18,16 +18,18 @@ classification_loss_fn = nn.CrossEntropyLoss()
 
 class AimLosses:
     pos_float_loss: torch.Tensor
+    pos_attacking_float_loss: torch.Tensor
     target_float_loss: torch.Tensor
     cat_loss: torch.Tensor
 
     def __init__(self):
         self.pos_float_loss = torch.zeros([1])
+        self.pos_attacking_float_loss = torch.zeros([1])
         self.target_float_loss = torch.zeros([1])
         self.cat_loss = torch.zeros([1])
 
     def get_total_loss(self):
-        return self.pos_float_loss + self.target_float_loss + self.cat_loss
+        return self.pos_float_loss + self.pos_attacking_float_los + self.target_float_loss + self.cat_loss
 
     def __iadd__(self, other):
         self.pos_float_loss += other.pos_float_loss
@@ -37,12 +39,14 @@ class AimLosses:
 
     def __itruediv__(self, other):
         self.pos_float_loss /= other
+        self.pos_attacking_float_loss /= other
         self.target_float_loss /= other
         self.cat_loss /= other
         return self
 
     def add_scalars(self, writer: SummaryWriter, prefix: str, total_epoch_num: int):
         writer.add_scalar(prefix + '/loss/pos_float', self.pos_float_loss, total_epoch_num)
+        writer.add_scalar(prefix + '/loss/pos_attacking_float', self.pos_attacking_float_loss, total_epoch_num)
         writer.add_scalar(prefix + '/loss/target_float', self.target_float_loss, total_epoch_num)
         writer.add_scalar(prefix + '/loss/cat', self.cat_loss, total_epoch_num)
         writer.add_scalar(prefix + '/loss/total', self.get_total_loss(), total_epoch_num)
@@ -53,11 +57,14 @@ def norm_2d(xy: torch.Tensor):
 
 
 # https://discuss.pytorch.org/t/how-to-combine-multiple-criterions-to-a-loss-function/348/4
-def compute_loss(pred, y, transformed_targets, column_transformers: IOColumnTransformers):
+def compute_loss(pred, y, transformed_targets, attacking, column_transformers: IOColumnTransformers):
     pred_transformed = get_transformed_outputs(pred)
     pred_transformed = pred_transformed.to(CPU_DEVICE_STR)
     y = y.to(CPU_DEVICE_STR)
     transformed_targets = transformed_targets.to(CPU_DEVICE_STR)
+    attacking = attacking.to(CPU_DEVICE_STR)
+    # duplicate attacking columns for yaw and pitch
+    attacking_duplicated = torch.cat([attacking, attacking], dim=1)
 
     losses = AimLosses()
 
@@ -70,6 +77,8 @@ def compute_loss(pred, y, transformed_targets, column_transformers: IOColumnTran
                                                                     ColumnTransformerType.FLOAT_90_ANGLE, ColumnTransformerType.FLOAT_90_ANGLE_DELTA}))
         col_range = range(col_ranges[0].start, col_ranges[-1].stop)
         losses.pos_float_loss += float_loss_fn(pred_transformed[:, col_range], y[:, col_range])
+        losses.pos_attacking_float_loss += \
+            float_loss_fn(pred_transformed[:, col_range] * attacking_duplicated, y[:, col_range] * attacking_duplicated)
         pred_target_distances = norm_2d((pred_transformed[:, col_range] - transformed_targets))
         y_target_distances = norm_2d(y[:, col_range] - transformed_targets)
         losses.target_float_loss += float_loss_fn(pred_target_distances, y_target_distances)

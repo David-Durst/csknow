@@ -104,19 +104,19 @@ def train(all_data_df: pd.DataFrame, dad_iters=4, num_epochs=5, save=True,
         for name in column_transformers.output_types.column_names():
             accuracy[name] = 0
         with tqdm(total=len(dataloader), disable=False) as pbar:
-            for batch, (X, Y, Targets) in enumerate(dataloader):
+            for batch, (X, Y, targets, attacking) in enumerate(dataloader):
                 if batch == 0 and epoch_num == 0 and train:
                     first_row = X[0:1, :]
-                X, Y, Targets = X.to(device), Y.to(device), Targets.to(device)
+                X, Y = X.to(device), Y.to(device)
                 transformed_Y = column_transformers.transform_columns(False, Y, X)
-                transformed_Targets = column_transformers.transform_columns(False, Targets, X)
+                transformed_targets = column_transformers.transform_columns(False, targets, X)
                 # XR = torch.randn_like(X, device=device)
                 # XR[:,0] = X[:,0]
                 # YZ = torch.zeros_like(Y) + 0.1
 
                 # Compute prediction error
                 pred = model(X)
-                batch_loss = compute_loss(pred, transformed_Y, transformed_Targets, column_transformers)
+                batch_loss = compute_loss(pred, transformed_Y, transformed_targets, attacking, column_transformers)
                 cumulative_loss += batch_loss
 
                 # Backpropagation
@@ -204,16 +204,18 @@ def train(all_data_df: pd.DataFrame, dad_iters=4, num_epochs=5, save=True,
         print(f"num test examples: {len(test_data)}")
 
         if dad_num == 0:
-            for X, Y, Target in train_dataloader:
+            for X, Y, target, attacking in train_dataloader:
                 print(f"Train shape of X: {X.shape} {X.dtype}")
                 print(f"Train shape of Y: {Y.shape} {Y.dtype}")
-                print(f"Train shape of target: {Target.shape} {Target.dtype}")
+                print(f"Train shape of target: {target.shape} {target.dtype}")
+                print(f"Train shape of attacking: {attacking.shape} {attacking.dtype}")
                 break
 
-            for X, Y, Target in test_dataloader:
+            for X, Y, target, attacking in test_dataloader:
                 print(f"Test shape of X: {X.shape} {X.dtype}")
                 print(f"Test shape of Y: {Y.shape} {Y.dtype}")
-                print(f"Train shape of target: {Target.shape} {Target.dtype}")
+                print(f"Train shape of target: {target.shape} {target.dtype}")
+                print(f"Train shape of attacking: {attacking.shape} {attacking.dtype}")
                 break
 
         train_and_test_SL(model, train_dataloader, test_dataloader, dad_num)

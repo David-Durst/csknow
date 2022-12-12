@@ -27,12 +27,14 @@ class AimDataset(Dataset):
         self.X = torch.tensor(df.loc[:, cts.input_types.column_names()].to_numpy()).float()
         self.Y = torch.tensor(df.loc[:, cts.output_types.column_names()].to_numpy()).float()
         self.Targets = torch.tensor(df.loc[:, cts.output_types.delta_float_target_column_names()].to_numpy()).float()
+        self.attacking = torch.tensor(df.loc[:, temporal_io_attacking_column_names.present_columns +
+                                                temporal_io_attacking_column_names.future_columns].to_numpy()).float()
 
     def __len__(self):
         return len(self.id)
 
     def __getitem__(self, idx):
-        return self.X[idx], self.Y[idx], self.Targets[idx]
+        return self.X[idx], self.Y[idx], self.Targets[idx], self.attacking[idx]
 
 
 engagement_id_column = "engagement id"
@@ -123,6 +125,7 @@ non_temporal_float_columns = []
 temporal_io_float_standard_column_names = TemporalIOColumnNames(base_learning_float_standard_columns, PRIOR_TICKS, CUR_TICK, FUTURE_TICKS)
 temporal_io_float_180_angle_column_names = TemporalIOColumnNames(base_learning_float_180_angle_columns, PRIOR_TICKS, CUR_TICK, FUTURE_TICKS)
 temporal_io_float_90_angle_column_names = TemporalIOColumnNames(base_learning_float_90_angle_columns, PRIOR_TICKS, CUR_TICK, FUTURE_TICKS)
+temporal_io_attacking_column_names = TemporalIOColumnNames([base_holding_attack], PRIOR_TICKS, CUR_TICK, FUTURE_TICKS)
 
 temporal_o_float_column_names = TemporalIOColumnNames(base_non_input_float_columns, 0, CUR_TICK, FUTURE_TICKS)
 
