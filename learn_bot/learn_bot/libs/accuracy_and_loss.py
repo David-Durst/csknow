@@ -8,8 +8,10 @@ from math import sqrt
 from torch import nn
 from dataclasses import dataclass
 
-#float_loss_fn = nn.MSELoss(reduction='sum')
-float_loss_fn = nn.HuberLoss()
+#base_float_loss_fn = nn.MSELoss(reduction='sum')
+base_float_loss_fn = nn.HuberLoss(reduction='none')
+def float_loss_fn(input, target, weight):
+    return torch.sum(weight * base_float_loss_fn(input, target)) / torch.sum(weight)
 binary_loss_fn = nn.BCEWithLogitsLoss()
 # https://stackoverflow.com/questions/65192475/pytorch-logsoftmax-vs-softmax-for-crossentropyloss
 # no need to do softmax for classification output
@@ -58,14 +60,15 @@ def norm_2d(xy: torch.Tensor):
 
 
 # https://discuss.pytorch.org/t/how-to-combine-multiple-criterions-to-a-loss-function/348/4
-def compute_loss(pred, y, transformed_targets, attacking, column_transformers: IOColumnTransformers):
+def compute_loss(pred, y, transformed_targets, attacking, time_weights, column_transformers: IOColumnTransformers):
     pred_transformed = get_transformed_outputs(pred)
     pred_transformed = pred_transformed.to(CPU_DEVICE_STR)
     y = y.to(CPU_DEVICE_STR)
     transformed_targets = transformed_targets.to(CPU_DEVICE_STR)
     attacking = attacking.to(CPU_DEVICE_STR)
-    # duplicate attacking columns for yaw and pitch
+    # duplicate columns for yaw and pitch
     attacking_duplicated = torch.cat([attacking, attacking], dim=1)
+    time_weights_duplicated = torch.cat([time_weights, time_weights], dim=1)
 
     losses = AimLosses()
 
@@ -77,12 +80,13 @@ def compute_loss(pred, y, transformed_targets, attacking, column_transformers: I
                                                                     ColumnTransformerType.FLOAT_180_ANGLE, ColumnTransformerType.FLOAT_180_ANGLE_DELTA,
                                                                     ColumnTransformerType.FLOAT_90_ANGLE, ColumnTransformerType.FLOAT_90_ANGLE_DELTA}))
         col_range = range(col_ranges[0].start, col_ranges[-1].stop)
-        losses.pos_float_loss += float_loss_fn(pred_transformed[:, col_range], y[:, col_range])
+        losses.pos_float_loss += float_loss_fn(pred_transformed[:, col_range], y[:, col_range], time_weights_duplicated)
         losses.pos_attacking_float_loss += \
-            float_loss_fn(pred_transformed[:, col_range] * attacking_duplicated, y[:, col_range] * attacking_duplicated)
+            float_loss_fn(pred_transformed[:, col_range] * attacking_duplicated, y[:, col_range] * attacking_duplicated,
+                          time_weights_duplicated)
         pred_target_distances = norm_2d((pred_transformed[:, col_range] - transformed_targets))
         y_target_distances = norm_2d(y[:, col_range] - transformed_targets)
-        losses.target_float_loss += float_loss_fn(pred_target_distances, y_target_distances)
+        losses.target_float_loss += float_loss_fn(pred_target_distances, y_target_distances, time_weights)
     if column_transformers.output_types.categorical_cols:
         col_ranges = column_transformers.get_name_ranges(False, True, frozenset({ColumnTransformerType.CATEGORICAL}))
         for col_range in col_ranges:

@@ -89,6 +89,7 @@ def train(all_data_df: pd.DataFrame, dad_iters=4, num_epochs=5, save=True,
     # train and test the model
     first_row: torch.Tensor
     model_output_recording: ModelOutputRecording = ModelOutputRecording(model)
+    time_weights = torch.tensor([[1, 1] + [0] * (FUTURE_TICKS - 1)])
 
     def train_or_test_SL_epoch(dataloader, model, optimizer, epoch_num, train=True):
         nonlocal first_row, model_output_recording
@@ -116,7 +117,8 @@ def train(all_data_df: pd.DataFrame, dad_iters=4, num_epochs=5, save=True,
 
                 # Compute prediction error
                 pred = model(X)
-                batch_loss = compute_loss(pred, transformed_Y, transformed_targets, attacking, column_transformers)
+                batch_loss = compute_loss(pred, transformed_Y, transformed_targets, attacking, time_weights,
+                                          column_transformers)
                 cumulative_loss += batch_loss
 
                 # Backpropagation
@@ -248,7 +250,7 @@ if __name__ == "__main__":
     all_data_df[target_o_float_columns[0]] = all_data_df[get_temporal_field_str(base_abs_x_pos_column, FUTURE_TICKS)]
     all_data_df[target_o_float_columns[1]] = all_data_df[get_temporal_field_str(base_abs_y_pos_column, FUTURE_TICKS)]
     #all_data_df = all_data_df[(all_data_df[weapon_type_col] == 3) & (all_data_df[cur_victim_visible_yet_column] == 1.)]
-    train_result = train(all_data_df, dad_iters=0, num_epochs=5)
+    train_result = train(all_data_df, dad_iters=0, num_epochs=20)
     #engagement_ids = list(train_result.test_df[engagement_id_column].unique())
     #engagement_ids = engagement_ids[:30]
     #limited_test_df = train_result.test_df[train_result.test_df[engagement_id_column].isin(engagement_ids)]
