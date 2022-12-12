@@ -146,13 +146,17 @@ def train(all_data_df: pd.DataFrame, dad_iters=4, num_epochs=5, save=True,
         print(f"Epoch {train_test_str} Accuracy: {accuracy_string}, Transformed Avg Loss: {cumulative_loss.get_total_loss().item():>8f}")
         return cumulative_loss, accuracy
 
-    def save_model(dad_num: int, epoch_num: int):
+    def save_model(dad_num: int, epoch_num: int, best: bool):
+        if best:
+            name = "best_model.pt"
+        else:
+            name = "model.pt"
         torch.save({
             'epoch_num': epoch_num,
             'dad_num': dad_num,
             'model_state_dict': model.state_dict(),
             'optimizer_state_dict': optimizer.state_dict(),
-        }, checkpoints_path / "model.pt")
+        }, checkpoints_path / name)
 
     writer = SummaryWriter(runs_path)
     def save_tensorboard(train_loss: AimLosses, test_loss: AimLosses, train_accuracy: Dict, test_accuracy: Dict,
@@ -164,8 +168,9 @@ def train(all_data_df: pd.DataFrame, dad_iters=4, num_epochs=5, save=True,
         for name, acc in test_accuracy.items():
             writer.add_scalar('test/acc/' + name, acc, total_epoch_num)
 
+    best_result = None
     def train_and_test_SL(model, train_dataloader, test_dataloader, dad_num, start_epoch=0):
-        nonlocal optimizer
+        nonlocal optimizer, best_result
         for epoch_num in range(start_epoch, num_epochs):
             print(f"\nEpoch {epoch_num + 1}\n-------------------------------")
             #if epoch_num % 100 == 1000:
@@ -174,7 +179,10 @@ def train(all_data_df: pd.DataFrame, dad_iters=4, num_epochs=5, save=True,
             with torch.no_grad():
                 test_loss, test_accuracy = train_or_test_SL_epoch(test_dataloader, model, None, epoch_num, False)
             if (epoch_num > 0 and epoch_num % 20 == 0) or epoch_num == num_epochs - 1:
-                save_model(dad_num, epoch_num)
+                save_model(dad_num, epoch_num, False)
+            if best_result is None or test_loss.get_total_loss() < best_result.get_total_loss():
+                best_result = test_loss
+                save_model(dad_num, epoch_num, True)
             save_tensorboard(train_loss, test_loss, train_accuracy, test_accuracy, dad_num*num_epochs + epoch_num)
             #scheduler.step(train_loss)
 
@@ -238,7 +246,7 @@ if __name__ == "__main__":
     all_data_df[target_o_float_columns[0]] = all_data_df[get_temporal_field_str(base_abs_x_pos_column, FUTURE_TICKS)]
     all_data_df[target_o_float_columns[1]] = all_data_df[get_temporal_field_str(base_abs_y_pos_column, FUTURE_TICKS)]
     #all_data_df = all_data_df[(all_data_df[weapon_type_col] == 3) & (all_data_df[cur_victim_visible_yet_column] == 1.)]
-    train_result = train(all_data_df, dad_iters=0, num_epochs=100)
+    train_result = train(all_data_df, dad_iters=0, num_epochs=5)
     #engagement_ids = list(train_result.test_df[engagement_id_column].unique())
     #engagement_ids = engagement_ids[:30]
     #limited_test_df = train_result.test_df[train_result.test_df[engagement_id_column].isin(engagement_ids)]
