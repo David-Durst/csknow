@@ -28,15 +28,18 @@ class AimLosses:
         self.pos_float_loss = torch.zeros([1])
         self.pos_attacking_float_loss = torch.zeros([1])
         self.target_float_loss = torch.zeros([1])
+        self.speed_float_loss = torch.zeros([1])
         self.cat_loss = torch.zeros([1])
 
     def get_total_loss(self):
-        return self.pos_float_loss + self.pos_attacking_float_loss + self.target_float_loss + self.cat_loss
+        return self.pos_float_loss + self.pos_attacking_float_loss + self.target_float_loss + \
+               self.speed_float_loss + self.cat_loss
 
     def __iadd__(self, other):
         self.pos_float_loss += other.pos_float_loss
         self.pos_attacking_float_loss += other.pos_attacking_float_loss
         self.target_float_loss += other.target_float_loss
+        self.speed_float_loss += other.speed_float_loss
         self.cat_loss += other.cat_loss
         return self
 
@@ -44,6 +47,7 @@ class AimLosses:
         self.pos_float_loss /= other
         self.pos_attacking_float_loss /= other
         self.target_float_loss /= other
+        self.speed_float_loss /= other
         self.cat_loss /= other
         return self
 
@@ -51,6 +55,7 @@ class AimLosses:
         writer.add_scalar(prefix + '/loss/pos_float', self.pos_float_loss, total_epoch_num)
         writer.add_scalar(prefix + '/loss/pos_attacking_float', self.pos_attacking_float_loss, total_epoch_num)
         writer.add_scalar(prefix + '/loss/target_float', self.target_float_loss, total_epoch_num)
+        writer.add_scalar(prefix + '/loss/speed_float', self.speed_float_loss, total_epoch_num)
         writer.add_scalar(prefix + '/loss/cat', self.cat_loss, total_epoch_num)
         writer.add_scalar(prefix + '/loss/total', self.get_total_loss(), total_epoch_num)
 
@@ -60,7 +65,8 @@ def norm_2d(xy: torch.Tensor):
 
 
 # https://discuss.pytorch.org/t/how-to-combine-multiple-criterions-to-a-loss-function/348/4
-def compute_loss(pred, y, transformed_targets, attacking, time_weights, column_transformers: IOColumnTransformers):
+def compute_loss(pred, y, transformed_targets, attacking, transformed_last_input_angles,
+                 time_weights, column_transformers: IOColumnTransformers):
     pred_transformed = get_transformed_outputs(pred)
     pred_transformed = pred_transformed.to(CPU_DEVICE_STR)
     y = y.to(CPU_DEVICE_STR)
@@ -69,6 +75,10 @@ def compute_loss(pred, y, transformed_targets, attacking, time_weights, column_t
     # duplicate columns for yaw and pitch
     attacking_duplicated = torch.cat([attacking, attacking], dim=1)
     time_weights_duplicated = torch.cat([time_weights, time_weights], dim=1)
+    transformed_last_input_angles = transformed_last_input_angles.to(CPU_DEVICE_STR)
+    last_input_angles_x_duplicated = transformed_last_input_angles[:, [0]].expand(-1, time_weights.shape[1])
+    last_input_angles_y_duplicated = transformed_last_input_angles[:, [1]].expand(-1, time_weights.shape[1])
+    last_input_angles_duplicated = torch.cat([last_input_angles_x_duplicated, last_input_angles_y_duplicated], dim=1)
 
     losses = AimLosses()
 
@@ -84,9 +94,14 @@ def compute_loss(pred, y, transformed_targets, attacking, time_weights, column_t
         losses.pos_attacking_float_loss += \
             float_loss_fn(pred_transformed[:, col_range] * attacking_duplicated, y[:, col_range] * attacking_duplicated,
                           time_weights_duplicated)
+
         pred_target_distances = norm_2d((pred_transformed[:, col_range] - transformed_targets))
         y_target_distances = norm_2d(y[:, col_range] - transformed_targets)
         losses.target_float_loss += float_loss_fn(pred_target_distances, y_target_distances, time_weights)
+
+        pred_speed = norm_2d(pred_transformed[:, col_range] - last_input_angles_duplicated)
+        y_speed = norm_2d(y[:, col_range] - last_input_angles_duplicated)
+        losses.speed_float_loss += float_loss_fn(pred_speed, y_speed, time_weights)
     if column_transformers.output_types.categorical_cols:
         col_ranges = column_transformers.get_name_ranges(False, True, frozenset({ColumnTransformerType.CATEGORICAL}))
         for col_range in col_ranges:

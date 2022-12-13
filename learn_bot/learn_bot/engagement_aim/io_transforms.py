@@ -323,6 +323,7 @@ class PTDelta90AngleColumnTransformer(PT90AngleColumnTransformer):
 @dataclass
 class PTOneHotColumnTransformer(PTColumnTransformer):
     # CATEGORICAL data
+    col_name: str
     num_classes: int
 
     pt_ct_type: ColumnTransformerType = ColumnTransformerType.CATEGORICAL
@@ -404,7 +405,7 @@ class IOColumnTransformers:
         if types.float_90_angle_delta_cols:
             result.append(PTDelta90AngleColumnTransformer())
         for name in types.categorical_cols:
-            result.append(PTOneHotColumnTransformer(types.num_cats_per_col[name]))
+            result.append(PTOneHotColumnTransformer(name, types.num_cats_per_col[name]))
         return result
 
     @cache
@@ -456,6 +457,51 @@ class IOColumnTransformers:
                 else:
                     if ColumnTransformerType.CATEGORICAL in types:
                         result.append(range(cur_start, cur_start + 1))
+                    cur_start += 1
+
+        return result
+
+    @cache
+    def get_name_ranges_dict(self, input: bool, transformed: bool) -> Dict[str, range]:
+        result: Dict[str, range] = {}
+        cur_start: int = 0
+
+        column_types: ColumnTypes = self.input_types if input else self.output_types
+        cts: List[PTColumnTransformer] = self.input_ct_pts if input else self.output_ct_pts
+
+        angle_columns = 2 if transformed else 1
+
+        for col_name in column_types.float_standard_cols:
+            result[col_name] = range(cur_start, cur_start + 1)
+            cur_start += 1
+
+        for col_name in column_types.delta_float_column_names():
+            result[col_name] = range(cur_start, cur_start + 1)
+            cur_start += 1
+
+        for col_name in column_types.float_180_angle_cols:
+            result[col_name] = range(cur_start, cur_start + angle_columns)
+            cur_start += angle_columns
+
+        for col_name in column_types.delta_180_angle_column_names():
+            result[col_name] = range(cur_start, cur_start + angle_columns)
+            cur_start += angle_columns
+
+        for col_name in column_types.float_90_angle_cols:
+            result[col_name] = range(cur_start, cur_start + angle_columns)
+            cur_start += angle_columns
+
+        for col_name in column_types.delta_90_angle_column_names():
+            result[col_name] = range(cur_start, cur_start + angle_columns)
+            cur_start += angle_columns
+
+        for ct in cts:
+            if ct.pt_ct_type == ColumnTransformerType.CATEGORICAL:
+                if transformed:
+                    result[ct.col_name] = range(cur_start, cur_start + ct.num_classes)
+                    cur_start += ct.num_classes
+                else:
+                    result[ct.col_name] = range(cur_start, cur_start + 1)
                     cur_start += 1
 
         return result
