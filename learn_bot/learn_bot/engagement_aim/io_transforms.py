@@ -1,3 +1,4 @@
+import re
 from dataclasses import dataclass
 from functools import cache
 
@@ -54,6 +55,15 @@ ALL_TYPES: FrozenSet[ColumnTransformerType] = frozenset({ColumnTransformerType.F
                                                          ColumnTransformerType.CATEGORICAL})
 
 
+@dataclass(frozen=True)
+class ColumnTimeOffset:
+    temporal: bool
+    offset: int
+
+    def offset_valid_for_range(self, time_offset_range: range):
+        return not self.temporal or self.offset in time_offset_range
+
+
 class ColumnTypes:
     float_standard_cols: List[str]
     float_delta_cols: List[DeltaColumn]
@@ -84,6 +94,22 @@ class ColumnTypes:
             self.num_cats_per_col[cat] = num_cats
         self.float_angular_standard_cols = float_angular_standard_cols
         self.float_angular_delta_cols = float_angular_delta_cols
+        self.compute_time_offsets()
+
+    col_time_offsets: Dict[str, ColumnTimeOffset]
+    def compute_time_offsets(self):
+        self.col_time_offsets = []
+        for col_name in self.column_names():
+            if '(t)' in col_name:
+                self.col_time_offsets[col_name] = ColumnTimeOffset(True, 0)
+            elif '(t+' in col_name:
+                self.col_time_offsets[col_name] = ColumnTimeOffset(True,
+                                                                   int(re.search(r'\(t\+(\d+)\)', col_name).group(1)))
+            elif '(t-' in col_name:
+                self.col_time_offsets[col_name] = ColumnTimeOffset(True, -1 *
+                                                                   int(re.search(r'\(t\-(\d+)\)', col_name).group(1)))
+            else:
+                self.col_time_offsets[col_name] = ColumnTimeOffset(False, 0)
 
     # caching values
     column_types_ = None
@@ -502,6 +528,60 @@ class IOColumnTransformers:
                     cur_start += ct.num_classes
                 else:
                     result[ct.col_name] = range(cur_start, cur_start + 1)
+                    cur_start += 1
+
+        return result
+
+    @cache
+    def get_name_ranges_in_time_range(self, input: bool, transformed: bool,
+                                      time_offset_range: range) -> List[range]:
+        result: Dict[str, range] = {}
+        cur_start: int = 0
+
+        column_types: ColumnTypes = self.input_types if input else self.output_types
+        cts: List[PTColumnTransformer] = self.input_ct_pts if input else self.output_ct_pts
+
+        angle_columns = 2 if transformed else 1
+
+        for col_name in column_types.float_standard_cols:
+            if column_types.col_time_offsets[col_name].offset_valid_for_range(time_offset_range):
+                result[col_name] = range(cur_start, cur_start + 1)
+            cur_start += 1
+
+        for col_name in column_types.delta_float_column_names():
+            if column_types.col_time_offsets[col_name].offset_valid_for_range(time_offset_range):
+                result[col_name] = range(cur_start, cur_start + 1)
+            cur_start += 1
+
+        for col_name in column_types.float_180_angle_cols:
+            if column_types.col_time_offsets[col_name].offset_valid_for_range(time_offset_range):
+                result[col_name] = range(cur_start, cur_start + angle_columns)
+            cur_start += angle_columns
+
+        for col_name in column_types.delta_180_angle_column_names():
+            if column_types.col_time_offsets[col_name].offset_valid_for_range(time_offset_range):
+                result[col_name] = range(cur_start, cur_start + angle_columns)
+            cur_start += angle_columns
+
+        for col_name in column_types.float_90_angle_cols:
+            if column_types.col_time_offsets[col_name].offset_valid_for_range(time_offset_range):
+                result[col_name] = range(cur_start, cur_start + angle_columns)
+            cur_start += angle_columns
+
+        for col_name in column_types.delta_90_angle_column_names():
+            if column_types.col_time_offsets[col_name].offset_valid_for_range(time_offset_range):
+                result[col_name] = range(cur_start, cur_start + angle_columns)
+            cur_start += angle_columns
+
+        for ct in cts:
+            if ct.pt_ct_type == ColumnTransformerType.CATEGORICAL:
+                if transformed:
+                    if column_types.col_time_offsets[ct.col_name].offset_valid_for_range(time_offset_range):
+                        result[ct.col_name] = range(cur_start, cur_start + ct.num_classes)
+                    cur_start += ct.num_classes
+                else:
+                    if column_types.col_time_offsets[ct.col_name].offset_valid_for_range(time_offset_range):
+                        result[ct.col_name] = range(cur_start, cur_start + 1)
                     cur_start += 1
 
         return result
