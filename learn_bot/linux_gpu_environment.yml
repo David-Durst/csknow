@@ -6,19 +6,29 @@ channels:
 dependencies:
   - _libgcc_mutex=0.1=main
   - _openmp_mutex=5.1=1_gnu
+  - absl-py=1.3.0=py39h06a4308_0
+  - aiohttp=3.8.3=py39h5eee18b_0
+  - aiosignal=1.2.0=pyhd3eb1b0_0
+  - async-timeout=4.0.2=py39h06a4308_0
+  - attrs=22.1.0=py39h06a4308_0
   - blas=1.0=mkl
+  - blinker=1.4=py39h06a4308_0
   - bottleneck=1.3.5=py39h7deecbd_0
   - brotli=1.0.9=h5eee18b_7
   - brotli-bin=1.0.9=h5eee18b_7
   - brotlipy=0.7.0=py39hb9d737c_1004
   - bzip2=1.0.8=h7f98852_4
-  - ca-certificates=2022.07.19=h06a4308_0
+  - c-ares=1.18.1=h7f8727e_0
+  - ca-certificates=2022.10.11=h06a4308_0
+  - cachetools=4.2.2=pyhd3eb1b0_0
   - certifi=2022.9.24=py39h06a4308_0
   - cffi=1.14.6=py39he32792d_0
   - charset-normalizer=2.1.1=pyhd8ed1ab_0
+  - click=8.0.4=py39h06a4308_0
   - cryptography=37.0.2=py39hd97740a_0
   - cudatoolkit=11.6.0=hecad31d_10
   - cycler=0.11.0=pyhd3eb1b0_0
+  - dataclasses=0.8=pyh6d0b6a4_7
   - dbus=1.13.18=hb2f20db_0
   - expat=2.4.9=h6a678d5_0
   - ffmpeg=4.3=hf484d3e_0
@@ -26,13 +36,18 @@ dependencies:
   - fontconfig=2.13.1=h6c09931_0
   - fonttools=4.25.0=pyhd3eb1b0_0
   - freetype=2.11.0=h70c0345_0
+  - frozenlist=1.3.3=py39h5eee18b_0
   - glib=2.69.1=h4ff587b_1
   - gmp=6.2.1=h58526e2_0
   - gnutls=3.6.13=h85f3911_1
+  - google-auth=2.6.0=pyhd3eb1b0_0
+  - google-auth-oauthlib=0.4.4=pyhd3eb1b0_0
+  - grpcio=1.42.0=py39hce63b2e_0
   - gst-plugins-base=1.14.0=h8213a91_2
   - gstreamer=1.14.0=h28cd5cc_2
   - icu=58.2=he6710b0_3
   - idna=3.4=pyhd8ed1ab_0
+  - importlib-metadata=4.11.3=py39h06a4308_0
   - intel-openmp=2021.4.0=h06a4308_3561
   - joblib=1.1.0=pyhd3eb1b0_0
   - jpeg=9e=h166bdaf_1
@@ -50,6 +65,7 @@ dependencies:
   - libgomp=11.2.0=h1234567_1
   - libiconv=1.17=h166bdaf_0
   - libpng=1.6.37=h21135ba_2
+  - libprotobuf=3.20.1=h4ff587b_0
   - libstdcxx-ng=11.2.0=h1234567_1
   - libtiff=4.2.0=hf544144_3
   - libuuid=1.0.3=h7f8727e_2
@@ -57,29 +73,36 @@ dependencies:
   - libxcb=1.15=h7f8727e_0
   - libxml2=2.9.14=h74e7548_0
   - lz4-c=1.9.3=h9c3ff4c_1
+  - markdown=3.3.4=py39h06a4308_0
   - matplotlib=3.5.2=py39h06a4308_0
   - matplotlib-base=3.5.2=py39hf590b9c_0
   - mkl=2021.4.0=h06a4308_640
   - mkl-service=2.4.0=py39h7e14d7c_0
   - mkl_fft=1.3.1=py39h0c7bc48_1
   - mkl_random=1.2.2=py39hde0f152_0
+  - multidict=6.0.2=py39h5eee18b_0
   - munkres=1.1.4=py_0
   - ncurses=6.3=h5eee18b_3
   - nettle=3.6=he412f7d_0
   - numexpr=2.8.3=py39h807cd23_0
   - numpy=1.23.1=py39h6c91a56_0
   - numpy-base=1.23.1=py39ha15fc14_0
+  - oauthlib=3.2.1=py39h06a4308_0
   - olefile=0.46=pyh9f0ad1d_1
   - openh264=2.1.1=h780b84a_0
   - openjpeg=2.4.0=hb52868f_1
-  - openssl=1.1.1q=h7f8727e_0
+  - openssl=1.1.1s=h7f8727e_0
   - packaging=21.3=pyhd3eb1b0_0
   - pandas=1.4.4=py39h6a678d5_0
   - pcre=8.45=h295c915_0
   - pillow=8.2.0=py39hf95b381_1
   - pip=22.2.2=py39h06a4308_0
   - progress=1.5=py39h06a4308_0
+  - protobuf=3.20.1=py39h295c915_0
+  - pyasn1=0.4.8=pyhd3eb1b0_0
+  - pyasn1-modules=0.2.8=py_0
   - pycparser=2.21=pyhd8ed1ab_0
+  - pyjwt=2.4.0=py39h06a4308_0
   - pyopenssl=22.0.0=pyhd8ed1ab_1
   - pyparsing=3.0.9=py39h06a4308_0
   - pyqt=5.9.2=py39h2531618_6
@@ -93,12 +116,17 @@ dependencies:
   - qt=5.9.7=h5867ecd_1
   - readline=8.1.2=h7f8727e_1
   - requests=2.28.1=pyhd8ed1ab_1
+  - requests-oauthlib=1.3.0=py_0
+  - rsa=4.7.2=pyhd3eb1b0_1
   - scikit-learn=1.1.1=py39h6a678d5_0
   - scipy=1.9.1=py39h14f4228_0
   - setuptools=63.4.1=py39h06a4308_0
   - sip=4.19.13=py39h295c915_0
   - six=1.16.0=pyh6c4a22f_0
   - sqlite=3.39.3=h5082296_0
+  - tensorboard=2.10.0=py39h06a4308_0
+  - tensorboard-data-server=0.6.1=py39h52d8a92_0
+  - tensorboard-plugin-wit=1.8.1=py39h06a4308_0
   - threadpoolctl=2.2.0=pyh0d69192_0
   - tk=8.6.12=h1ccaba5_0
   - torchaudio=0.12.1=py39_cu116
@@ -107,8 +135,14 @@ dependencies:
   - typing_extensions=4.3.0=pyha770c72_0
   - tzdata=2022c=h04d1e81_0
   - urllib3=1.26.11=pyhd8ed1ab_0
+  - werkzeug=2.0.3=pyhd3eb1b0_0
   - wheel=0.37.1=pyhd3eb1b0_0
   - xz=5.2.6=h5eee18b_0
+  - yarl=1.8.1=py39h5eee18b_0
+  - zipp=3.8.0=py39h06a4308_0
   - zlib=1.2.12=h5eee18b_3
   - zstd=1.5.0=ha95c52a_0
+  - pip:
+    - pycapnp==1.2.1
+    - tqdm==4.64.1
 prefix: /home/durst/miniconda3/envs/learn_bot
