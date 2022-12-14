@@ -109,13 +109,13 @@ def train(all_data_df: pd.DataFrame, dad_iters=4, num_epochs=5, save=True,
                 if batch == 0 and epoch_num == 0 and train:
                     first_row = X[0:1, :]
                 X, Y = X.to(device), Y.to(device)
-                transformed_X = column_transformers.transform_columns(True, X, X)
+                #transformed_X = column_transformers.transform_columns(True, X, X)
                 transformed_Y = column_transformers.transform_columns(False, Y, X)
                 transformed_targets = column_transformers.transform_columns(False, targets, X)
                 input_name_ranges_dict = column_transformers.get_name_ranges_dict(True, True)
-                transformed_last_input_angles = \
-                    transformed_X[:, [input_name_ranges_dict[get_temporal_field_str(base_abs_x_pos_column, -1)].start,
-                                      input_name_ranges_dict[get_temporal_field_str(base_abs_y_pos_column, -1)].start]]
+                transformed_last_input_angles = None#\
+                #    transformed_X[:, [input_name_ranges_dict[get_temporal_field_str(base_abs_x_pos_column, -1)].start,
+                #                      input_name_ranges_dict[get_temporal_field_str(base_abs_y_pos_column, -1)].start]]
                 # XR = torch.randn_like(X, device=device)
                 # XR[:,0] = X[:,0]
                 # YZ = torch.zeros_like(Y) + 0.1
@@ -255,7 +255,7 @@ if __name__ == "__main__":
     all_data_df[target_o_float_columns[0]] = all_data_df[get_temporal_field_str(base_abs_x_pos_column, FUTURE_TICKS)]
     all_data_df[target_o_float_columns[1]] = all_data_df[get_temporal_field_str(base_abs_y_pos_column, FUTURE_TICKS)]
     #all_data_df = all_data_df[(all_data_df[weapon_type_col] == 3) & (all_data_df[cur_victim_visible_yet_column] == 1.)]
-    train_result = train(all_data_df, dad_iters=3, num_epochs=40)
+    train_result = train(all_data_df, dad_iters=3, num_epochs=30)
     #engagement_ids = list(train_result.test_df[engagement_id_column].unique())
     #engagement_ids = engagement_ids[:30]
     #limited_test_df = train_result.test_df[train_result.test_df[engagement_id_column].isin(engagement_ids)]

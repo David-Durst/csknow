@@ -32,8 +32,8 @@ class AimLosses:
         self.cat_loss = torch.zeros([1])
 
     def get_total_loss(self):
-        return self.pos_float_loss + self.pos_attacking_float_loss + self.target_float_loss + \
-               self.speed_float_loss + self.cat_loss
+        return self.pos_float_loss + self.pos_attacking_float_loss + self.target_float_loss + self.cat_loss# + \
+               #self.speed_float_loss + self.cat_loss
 
     def __iadd__(self, other):
         self.pos_float_loss += other.pos_float_loss
@@ -75,10 +75,10 @@ def compute_loss(pred, y, transformed_targets, attacking, transformed_last_input
     # duplicate columns for yaw and pitch
     attacking_duplicated = torch.cat([attacking, attacking], dim=1)
     time_weights_duplicated = torch.cat([time_weights, time_weights], dim=1)
-    transformed_last_input_angles = transformed_last_input_angles.to(CPU_DEVICE_STR)
-    last_input_angles_x_duplicated = transformed_last_input_angles[:, [0]].expand(-1, time_weights.shape[1])
-    last_input_angles_y_duplicated = transformed_last_input_angles[:, [1]].expand(-1, time_weights.shape[1])
-    last_input_angles_duplicated = torch.cat([last_input_angles_x_duplicated, last_input_angles_y_duplicated], dim=1)
+    #transformed_last_input_angles = transformed_last_input_angles.to(CPU_DEVICE_STR)
+    #last_input_angles_x_duplicated = transformed_last_input_angles[:, [0]].expand(-1, time_weights.shape[1])
+    #last_input_angles_y_duplicated = transformed_last_input_angles[:, [1]].expand(-1, time_weights.shape[1])
+    #last_input_angles_duplicated = torch.cat([last_input_angles_x_duplicated, last_input_angles_y_duplicated], dim=1)
 
     losses = AimLosses()
 
@@ -99,9 +99,9 @@ def compute_loss(pred, y, transformed_targets, attacking, transformed_last_input
         y_target_distances = norm_2d(y[:, col_range] - transformed_targets)
         losses.target_float_loss += float_loss_fn(pred_target_distances, y_target_distances, time_weights)
 
-        pred_speed = norm_2d(pred_transformed[:, col_range] - last_input_angles_duplicated)
-        y_speed = norm_2d(y[:, col_range] - last_input_angles_duplicated)
-        losses.speed_float_loss += float_loss_fn(pred_speed, y_speed, time_weights)
+        #pred_speed = norm_2d(pred_transformed[:, col_range] - last_input_angles_duplicated)
+        #y_speed = norm_2d(y[:, col_range] - last_input_angles_duplicated)
+        #losses.speed_float_loss += float_loss_fn(pred_speed, y_speed, time_weights)
     if column_transformers.output_types.categorical_cols:
         col_ranges = column_transformers.get_name_ranges(False, True, frozenset({ColumnTransformerType.CATEGORICAL}))
         for col_range in col_ranges:
