@@ -98,7 +98,7 @@ class ColumnTypes:
 
     col_time_offsets: Dict[str, ColumnTimeOffset]
     def compute_time_offsets(self):
-        self.col_time_offsets = []
+        self.col_time_offsets = {}
         for col_name in self.column_names():
             if '(t)' in col_name:
                 self.col_time_offsets[col_name] = ColumnTimeOffset(True, 0)
