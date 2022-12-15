@@ -93,7 +93,7 @@ def train(all_data_df: pd.DataFrame, dad_iters=4, num_epochs=5, save=True,
     model_output_recording: ModelOutputRecording = ModelOutputRecording(model)
     time_weights_list = [1]
     for _ in range(FUTURE_TICKS):
-        time_weights_list.append(0.9 * time_weights_list[-1])
+        time_weights_list.append(0.8 * time_weights_list[-1])
     time_weights = torch.tensor([time_weights_list])
 
     def train_or_test_SL_epoch(dataloader, model, optimizer, epoch_num, train=True):
@@ -208,7 +208,7 @@ def train(all_data_df: pd.DataFrame, dad_iters=4, num_epochs=5, save=True,
         # create data sets for pytorch
         total_train_data = AimDataset(total_train_df, column_transformers, all_time_column_transformers)
 
-        batch_size = min([64, len(total_train_data), len(test_data)])
+        batch_size = min([128, len(total_train_data), len(test_data)])
 
         train_dataloader = DataLoader(total_train_data, batch_size=batch_size, shuffle=True)
         test_dataloader = DataLoader(test_data, batch_size=batch_size, shuffle=True)
@@ -261,7 +261,7 @@ if __name__ == "__main__":
     all_data_df[target_o_float_columns[0]] = all_data_df[get_temporal_field_str(base_abs_x_pos_column, FUTURE_TICKS)]
     all_data_df[target_o_float_columns[1]] = all_data_df[get_temporal_field_str(base_abs_y_pos_column, FUTURE_TICKS)]
     #all_data_df = all_data_df[(all_data_df[weapon_type_col] == 3) & (all_data_df[cur_victim_visible_yet_column] == 1.)]
-    train_result = train(all_data_df, dad_iters=3, num_epochs=30)
+    train_result = train(all_data_df, dad_iters=0, num_epochs=20)
     #engagement_ids = list(train_result.test_df[engagement_id_column].unique())
     #engagement_ids = engagement_ids[:30]
     #limited_test_df = train_result.test_df[train_result.test_df[engagement_id_column].isin(engagement_ids)]
