@@ -15,43 +15,35 @@ def row_rollout(model: nn.Module, X: torch.Tensor, all_inputs_column_transformer
     num_ticks_to_predict = CUR_TICK + FUTURE_TICKS
     input_range = PRIOR_TICKS_POS
 
-    # no non-temporal data as will get that from X repeatedly
-    all_but_newest_input_indices = \
-        network_inputs_column_transformers.get_name_ranges_in_time_range(True, False, range(PRIOR_TICKS, -1), False)
+    # indices to read output from for saving for later
     first_output_indices = \
         network_inputs_column_transformers.get_name_ranges_in_time_range(False, False, range(0, 1), False)
 
     network_col_names_to_ranges = network_inputs_column_transformers.get_name_ranges_dict(True, False)
     newest_input_indices = [network_col_names_to_ranges[col_name].start for col_name in newest_input_names]
 
-    start_offset = PRIOR_TICKS
-    # start with just input
-    # after first iteration, take next input, shift it back by one, and then get next
-    first_input_name_indices = \
-        all_inputs_column_transformers.get_name_ranges_in_time_range(True, False,
-                                                                     range(start_offset, start_offset + input_range),
-                                                                     True)
-    tick_X = X[:, first_input_name_indices].clone()
     untransformed_outputs = []
     transformed_outputs = []
-    next_input_tick_offset = 0
     for tick_num in range(num_ticks_to_predict):
+        input_name_indices = \
+            all_inputs_column_transformers.get_name_ranges_in_time_range(True, False,
+                                                                         range(PRIOR_TICKS + tick_num,
+                                                                               PRIOR_TICKS + tick_num + input_range),
+                                                                         True)
+        tick_X = X[:, input_name_indices].clone()
+        # after first iteration, replace predicted values
+        # can get fresh for all other values because they don't change
+        # this removes need for shifting
+        if tick_num > 0:
+            tick_X[:, newest_input_indices] = untransformed_outputs[-1].detach()
 
         # predict and record outputs
         transformed_Y, untransformed_Y = model(tick_X)
         transformed_outputs.append(transformed_Y[:, first_output_indices])
         untransformed_outputs.append(untransformed_Y[:, first_output_indices])
 
-        # shift in next input if not finished
-        if tick_num < num_ticks_to_predict:
-            # include non-temporal data here
-            next_input_name_ranges = \
-                all_inputs_column_transformers.get_name_ranges_in_time_range(True, False,
-                                                                             range(next_input_tick_offset, next_input_tick_offset + 1),
-                                                                             True)
-            tick_X = torch.cat([tick_X[:, all_but_newest_input_indices], X[:, next_input_name_ranges]], dim=1)
-            tick_X[:, newest_input_indices] = untransformed_Y[:, first_output_indices].detach()
-
-            next_input_tick_offset += 1
-
-    return torch.cat(untransformed_outputs, dim=1), torch.cat(transformed_outputs, dim=1)
+    # add extra dimension so can keep x's and y's grouped together
+    untransformed_outputs = [o.unsqueeze(-1) for o in untransformed_outputs]
+    transformed_outputs = [o.unsqueeze(-1) for o in transformed_outputs]
+    return torch.flatten(torch.cat(untransformed_outputs, dim=2), 1), \
+           torch.flatten(torch.cat(transformed_outputs, dim=2), 1)
