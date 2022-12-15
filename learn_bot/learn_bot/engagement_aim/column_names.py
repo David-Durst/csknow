@@ -85,8 +85,6 @@ base_learning_float_90_angle_columns: List[str] = [
 # some columns only used for output, not input features
 base_non_input_float_columns: List[str] = ["ticks until next fire", "ticks until next holding attack"]
 
-non_temporal_float_columns = []
-
 temporal_io_float_standard_column_names = TemporalIOColumnNames(base_learning_float_standard_columns, PRIOR_TICKS, CUR_TICK, FUTURE_TICKS)
 temporal_io_float_180_angle_column_names = TemporalIOColumnNames(base_learning_float_180_angle_columns, PRIOR_TICKS, CUR_TICK, FUTURE_TICKS)
 temporal_io_float_90_angle_column_names = TemporalIOColumnNames(base_learning_float_90_angle_columns, PRIOR_TICKS, CUR_TICK, FUTURE_TICKS)
@@ -101,7 +99,7 @@ target_o_float_columns = ["target view angle x", "target view angle y"]
 weapon_type_col = "weapon type"
 static_input_categorical_columns: List[str] = [weapon_type_col]
 
-input_column_types = ColumnTypes(temporal_io_float_standard_column_names.past_columns + non_temporal_float_columns +
+input_column_types = ColumnTypes(temporal_io_float_standard_column_names.past_columns +
                                  temporal_io_float_180_angle_column_names.past_columns +
                                  temporal_io_float_90_angle_column_names.past_columns, [], [], [], [], [],
                                  temporal_io_cat_column_names.past_columns + static_input_categorical_columns,
@@ -109,6 +107,15 @@ input_column_types = ColumnTypes(temporal_io_float_standard_column_names.past_co
                                  + [6],
                                  temporal_io_float_180_angle_column_names.past_columns +
                                  temporal_io_float_90_angle_column_names.past_columns, [])
+
+all_time_column_types = ColumnTypes(temporal_io_float_standard_column_names.all_columns +
+                                 temporal_io_float_180_angle_column_names.all_columns +
+                                 temporal_io_float_90_angle_column_names.all_columns, [], [], [], [], [],
+                                 temporal_io_cat_column_names.all_columns + static_input_categorical_columns,
+                                 temporal_io_cat_column_names.get_num_cats_per_temporal_column([2], True, True, True)
+                                 + [6],
+                                 temporal_io_float_180_angle_column_names.all_columns +
+                                 temporal_io_float_90_angle_column_names.all_columns, [])
 
 output_relative_x_cols = temporal_io_float_180_angle_column_names.get_matching_cols(base_abs_x_pos_column, False, True, True)
 output_relative_y_cols = temporal_io_float_90_angle_column_names.get_matching_cols(base_abs_y_pos_column, False, True, True)

@@ -538,7 +538,7 @@ class IOColumnTransformers:
     @cache
     def get_name_ranges_in_time_range(self, input: bool, transformed: bool,
                                       time_offset_range: range, include_non_temporal: bool) -> List[int]:
-        result: List[int] = {}
+        result: List[int] = []
         cur_start: int = 0
 
         column_types: ColumnTypes = self.input_types if input else self.output_types

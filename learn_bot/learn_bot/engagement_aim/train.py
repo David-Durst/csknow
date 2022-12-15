@@ -12,6 +12,7 @@ from torch.utils.tensorboard import SummaryWriter
 
 from dataset import *
 from learn_bot.engagement_aim.mlp_aim_model import MLPAimModel
+from learn_bot.engagement_aim.row_rollout import row_rollout
 from learn_bot.engagement_aim.target_mlp_aim_model import TargetMLPAimModel
 from learn_bot.libs.accuracy_and_loss import compute_loss, compute_accuracy, finish_accuracy, CUDA_DEVICE_STR, \
     CPU_DEVICE_STR, AimLosses
@@ -58,10 +59,11 @@ def train(all_data_df: pd.DataFrame, dad_iters=4, num_epochs=5, save=True,
 
     # transform input and output
     column_transformers = IOColumnTransformers(input_column_types, output_column_types, train_df)
+    all_time_column_transformers = IOColumnTransformers(all_time_column_types, output_column_types, train_df)
 
     # plot data set with and without transformers
     plot_untransformed_and_transformed('train and test labels', all_data_df,
-                                       temporal_io_float_standard_column_names.present_columns + non_temporal_float_columns,
+                                       temporal_io_float_standard_column_names.present_columns,
                                        temporal_io_cat_column_names.present_columns + static_input_categorical_columns)
 
     # Get cpu or gpu device for training.
@@ -105,10 +107,10 @@ def train(all_data_df: pd.DataFrame, dad_iters=4, num_epochs=5, save=True,
         for name in column_transformers.output_types.column_names():
             accuracy[name] = 0
         with tqdm(total=len(dataloader), disable=False) as pbar:
-            for batch, (X, Y, targets, attacking) in enumerate(dataloader):
+            for batch, (X, Y, targets, attacking, all_time_X) in enumerate(dataloader):
                 if batch == 0 and epoch_num == 0 and train:
                     first_row = X[0:1, :]
-                X, Y = X.to(device), Y.to(device)
+                X, Y, all_time_X = X.to(device), Y.to(device), all_time_X.to(device)
                 #transformed_X = column_transformers.transform_columns(True, X, X)
                 transformed_Y = column_transformers.transform_columns(False, Y, X)
                 transformed_targets = column_transformers.transform_columns(False, targets, X)
@@ -121,7 +123,8 @@ def train(all_data_df: pd.DataFrame, dad_iters=4, num_epochs=5, save=True,
                 # YZ = torch.zeros_like(Y) + 0.1
 
                 # Compute prediction error
-                pred = model(X)
+                #pred = model(X)
+                pred = row_rollout(model, all_time_X, all_time_column_transformers, column_transformers)
                 batch_loss = compute_loss(pred, transformed_Y, transformed_targets, attacking,
                                           transformed_last_input_angles, time_weights, column_transformers)
                 cumulative_loss += batch_loss
@@ -194,13 +197,13 @@ def train(all_data_df: pd.DataFrame, dad_iters=4, num_epochs=5, save=True,
             #scheduler.step(train_loss)
 
     total_train_df = train_df
-    train_data = AimDataset(train_df, column_transformers)
-    test_data = AimDataset(test_df, column_transformers)
+    train_data = AimDataset(train_df, column_transformers, all_time_column_transformers)
+    test_data = AimDataset(test_df, column_transformers, all_time_column_transformers)
     for dad_num in range(dad_iters + 1):
         print(f"DaD Iter {dad_num + 1}\n-------------------------------")
         # step 1: train model
         # create data sets for pytorch
-        total_train_data = AimDataset(total_train_df, column_transformers)
+        total_train_data = AimDataset(total_train_df, column_transformers, all_time_column_transformers)
 
         batch_size = min([64, len(total_train_data), len(test_data)])
 
@@ -211,14 +214,14 @@ def train(all_data_df: pd.DataFrame, dad_iters=4, num_epochs=5, save=True,
         print(f"num test examples: {len(test_data)}")
 
         if dad_num == 0:
-            for X, Y, target, attacking in train_dataloader:
+            for X, Y, target, attacking, _ in train_dataloader:
                 print(f"Train shape of X: {X.shape} {X.dtype}")
                 print(f"Train shape of Y: {Y.shape} {Y.dtype}")
                 print(f"Train shape of target: {target.shape} {target.dtype}")
                 print(f"Train shape of attacking: {attacking.shape} {attacking.dtype}")
                 break
 
-            for X, Y, target, attacking in test_dataloader:
+            for X, Y, target, attacking, _ in test_dataloader:
                 print(f"Test shape of X: {X.shape} {X.dtype}")
                 print(f"Test shape of Y: {Y.shape} {Y.dtype}")
                 print(f"Test shape of target: {target.shape} {target.dtype}")

@@ -12,7 +12,7 @@ data_path = Path(__file__).parent / '..' / '..' / '..' / 'analytics' / 'csv_outp
 
 # https://androidkt.com/load-pandas-dataframe-using-dataset-and-dataloader-in-pytorch/
 class AimDataset(Dataset):
-    def __init__(self, df: pd.DataFrame, cts: IOColumnTransformers):
+    def __init__(self, df: pd.DataFrame, cts: IOColumnTransformers, all_time_cts: IOColumnTransformers):
         self.id = df.loc[:, 'id']
         self.round_id = df.loc[:, 'round id']
         self.tick_id = df.loc[:, 'tick id']
@@ -25,6 +25,7 @@ class AimDataset(Dataset):
         self.round_starts_ends = round_starts.join(round_ends, on='round id')
 
         # convert player id's to indexes
+        self.all_time_X = torch.tensor(df.loc[:, all_time_cts.input_types.column_names()].to_numpy()).float()
         self.X = torch.tensor(df.loc[:, cts.input_types.column_names()].to_numpy()).float()
         self.Y = torch.tensor(df.loc[:, cts.output_types.column_names()].to_numpy()).float()
         self.Targets = torch.tensor(df.loc[:, cts.output_types.delta_float_target_column_names()].to_numpy()).float()
@@ -35,7 +36,7 @@ class AimDataset(Dataset):
         return len(self.id)
 
     def __getitem__(self, idx):
-        return self.X[idx], self.Y[idx], self.Targets[idx], self.attacking[idx]
+        return self.X[idx], self.Y[idx], self.Targets[idx], self.attacking[idx], self.all_time_X[idx]
 
 
 seconds_per_tick = 1. / 128. * 1000.
