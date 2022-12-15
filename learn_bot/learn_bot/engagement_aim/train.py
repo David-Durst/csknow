@@ -91,7 +91,10 @@ def train(all_data_df: pd.DataFrame, dad_iters=4, num_epochs=5, save=True,
     # train and test the model
     first_row: torch.Tensor
     model_output_recording: ModelOutputRecording = ModelOutputRecording(model)
-    time_weights = torch.tensor([[1, 1] + [0] * (FUTURE_TICKS - 1)])
+    time_weights_list = [1]
+    for _ in range(FUTURE_TICKS):
+        time_weights_list.append(0.9 * time_weights_list[-1])
+    time_weights = torch.tensor([time_weights_list])
 
     def train_or_test_SL_epoch(dataloader, model, optimizer, epoch_num, train=True):
         nonlocal first_row, model_output_recording

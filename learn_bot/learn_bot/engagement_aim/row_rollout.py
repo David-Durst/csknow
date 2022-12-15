@@ -22,8 +22,8 @@ def row_rollout(model: nn.Module, X: torch.Tensor, all_inputs_column_transformer
     network_col_names_to_ranges = network_inputs_column_transformers.get_name_ranges_dict(True, False)
     newest_input_indices = [network_col_names_to_ranges[col_name].start for col_name in newest_input_names]
 
-    untransformed_outputs = []
     transformed_outputs = []
+    untransformed_outputs = []
     for tick_num in range(num_ticks_to_predict):
         input_name_indices = \
             all_inputs_column_transformers.get_name_ranges_in_time_range(True, False,
@@ -43,7 +43,7 @@ def row_rollout(model: nn.Module, X: torch.Tensor, all_inputs_column_transformer
         untransformed_outputs.append(untransformed_Y[:, first_output_indices])
 
     # add extra dimension so can keep x's and y's grouped together
-    untransformed_outputs = [o.unsqueeze(-1) for o in untransformed_outputs]
     transformed_outputs = [o.unsqueeze(-1) for o in transformed_outputs]
-    return torch.flatten(torch.cat(untransformed_outputs, dim=2), 1), \
-           torch.flatten(torch.cat(transformed_outputs, dim=2), 1)
+    untransformed_outputs = [o.unsqueeze(-1) for o in untransformed_outputs]
+    return torch.flatten(torch.cat(transformed_outputs, dim=2), 1), \
+           torch.flatten(torch.cat(untransformed_outputs, dim=2), 1)
