@@ -1,4 +1,5 @@
 # https://pytorch.org/tutorials/beginner/basics/quickstart_tutorial.html
+import math
 from typing import Dict
 
 import torch.optim
@@ -154,6 +155,7 @@ def train(all_data_df: pd.DataFrame, dad_iters=4, num_epochs=5, save=True,
         cumulative_loss /= num_batches
         for name in column_transformers.output_types.column_names():
             accuracy[name] /= size
+            accuracy[name] = math.sqrt(accuracy[name])
         accuracy_string = finish_accuracy(accuracy, column_transformers)
         train_test_str = "Train" if train else "Test"
         print(f"Epoch {train_test_str} Accuracy: {accuracy_string}, Transformed Avg Loss: {cumulative_loss.get_total_loss().item():>8f}")
@@ -261,7 +263,7 @@ if __name__ == "__main__":
     all_data_df[target_o_float_columns[0]] = all_data_df[get_temporal_field_str(base_abs_x_pos_column, FUTURE_TICKS)]
     all_data_df[target_o_float_columns[1]] = all_data_df[get_temporal_field_str(base_abs_y_pos_column, FUTURE_TICKS)]
     #all_data_df = all_data_df[(all_data_df[weapon_type_col] == 3) & (all_data_df[cur_victim_visible_yet_column] == 1.)]
-    train_result = train(all_data_df, dad_iters=0, num_epochs=20)
+    train_result = train(all_data_df, dad_iters=0, num_epochs=5)
     #engagement_ids = list(train_result.test_df[engagement_id_column].unique())
     #engagement_ids = engagement_ids[:30]
     #limited_test_df = train_result.test_df[train_result.test_df[engagement_id_column].isin(engagement_ids)]
