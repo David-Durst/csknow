@@ -6,7 +6,7 @@ from learn_bot.engagement_aim.io_transforms import IOColumnTransformers, ColumnT
 from typing import List
 from learn_bot.libs.temporal_column_names import TemporalIOColumnNames, get_temporal_field_str
 from pathlib import Path
-from column_names import *
+from learn_bot.engagement_aim.column_names import *
 
 data_path = Path(__file__).parent / '..' / '..' / '..' / 'analytics' / 'csv_outputs' / 'engagementAim.csv'
 
@@ -36,7 +36,7 @@ class AimDataset(Dataset):
         return len(self.id)
 
     def __getitem__(self, idx):
-        return self.X[idx], self.Y[idx], self.Targets[idx], self.attacking[idx], self.all_time_X[idx]
+        return self.X[idx], self.Y[idx], self.Targets[idx], self.attacking[idx], self.all_time_X[idx], idx
 
 
 seconds_per_tick = 1. / 128. * 1000.

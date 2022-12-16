@@ -97,10 +97,11 @@ def train(all_data_df: pd.DataFrame, dad_iters=4, num_epochs=5, save=True,
         time_weights_list.append(0.8 * time_weights_list[-1])
     time_weights = torch.tensor([time_weights_list])
 
-    def train_or_test_SL_epoch(dataloader, model, optimizer, epoch_num, train=True):
+    def train_or_test_SL_epoch(dataloader, model, optimizer, epoch_num, dad_num, train=True):
         nonlocal first_row, model_output_recording
         size = len(dataloader.dataset)
         num_batches = len(dataloader)
+        tmp_first_accs = []
         if train:
             model.train()
         else:
@@ -111,7 +112,7 @@ def train(all_data_df: pd.DataFrame, dad_iters=4, num_epochs=5, save=True,
         for name in column_transformers.output_types.column_names():
             accuracy[name] = 0
         with tqdm(total=len(dataloader), disable=False) as pbar:
-            for batch, (X, Y, targets, attacking, all_time_X) in enumerate(dataloader):
+            for batch, (X, Y, targets, attacking, all_time_X, idxs) in enumerate(dataloader):
                 if batch == 0 and epoch_num == 0 and train:
                     first_row = X[0:1, :]
                 X, Y, all_time_X = X.to(device), Y.to(device), all_time_X.to(device)
@@ -127,8 +128,8 @@ def train(all_data_df: pd.DataFrame, dad_iters=4, num_epochs=5, save=True,
                 # YZ = torch.zeros_like(Y) + 0.1
 
                 # Compute prediction error
-                #pred = model(X)
-                pred = row_rollout(model, all_time_X, all_time_column_transformers, column_transformers)
+                pred = model(X)
+                #pred = row_rollout(model, all_time_X, all_time_column_transformers, column_transformers)
                 batch_loss = compute_loss(pred, transformed_Y, transformed_targets, attacking,
                                           transformed_last_input_angles, time_weights, column_transformers)
                 cumulative_loss += batch_loss
@@ -148,14 +149,16 @@ def train(all_data_df: pd.DataFrame, dad_iters=4, num_epochs=5, save=True,
                     print(f"loss: {loss:>7f}  [{current:>5d}/{size:>5d}]")
 
                 compute_accuracy(pred, Y, accuracy, column_transformers)
-                if epoch_num == num_epochs - 1:
+                tmp_first_accs.append((torch.square(pred[1] - Y).sum(dim=0) / 128)[0].item())
+                if epoch_num == num_epochs - 1 and dad_num == dad_iters:
+                    if tmp_first_accs[-1] > 500:
+                        x = 1
                     model_output_recording.record_output(pred, Y, transformed_Y, train)
                 pbar.update(1)
 
         cumulative_loss /= num_batches
         for name in column_transformers.output_types.column_names():
             accuracy[name] /= size
-            accuracy[name] = math.sqrt(accuracy[name])
         accuracy_string = finish_accuracy(accuracy, column_transformers)
         train_test_str = "Train" if train else "Test"
         print(f"Epoch {train_test_str} Accuracy: {accuracy_string}, Transformed Avg Loss: {cumulative_loss.get_total_loss().item():>8f}")
@@ -190,9 +193,9 @@ def train(all_data_df: pd.DataFrame, dad_iters=4, num_epochs=5, save=True,
             print(f"\nEpoch {epoch_num + 1}\n-------------------------------")
             #if epoch_num % 100 == 1000:
                 # optimizer = torch.optim.Adam(model.parameters(), lr=0.0001)
-            train_loss, train_accuracy = train_or_test_SL_epoch(train_dataloader, model, optimizer, epoch_num, True)
+            train_loss, train_accuracy = train_or_test_SL_epoch(train_dataloader, model, optimizer, epoch_num, dad_num, True)
             with torch.no_grad():
-                test_loss, test_accuracy = train_or_test_SL_epoch(test_dataloader, model, None, epoch_num, False)
+                test_loss, test_accuracy = train_or_test_SL_epoch(test_dataloader, model, None, epoch_num, dad_num, False)
             if (epoch_num > 0 and epoch_num % 20 == 0) or epoch_num == num_epochs - 1:
                 save_model(dad_num, epoch_num, False)
             if best_result is None or test_loss.get_total_loss() < best_result.get_total_loss():
@@ -205,7 +208,10 @@ def train(all_data_df: pd.DataFrame, dad_iters=4, num_epochs=5, save=True,
     train_data = AimDataset(train_df, column_transformers, all_time_column_transformers)
     test_data = AimDataset(test_df, column_transformers, all_time_column_transformers)
     for dad_num in range(dad_iters + 1):
-        print(f"DaD Iter {dad_num + 1}\n-------------------------------")
+        if dad_num < dad_iters:
+            print(f"DaD Iter {dad_num}\n-------------------------------")
+        else:
+            print(f"Final, Non-DaD Iter\n-------------------------------")
         # step 1: train model
         # create data sets for pytorch
         total_train_data = AimDataset(total_train_df, column_transformers, all_time_column_transformers)
@@ -219,14 +225,14 @@ def train(all_data_df: pd.DataFrame, dad_iters=4, num_epochs=5, save=True,
         print(f"num test examples: {len(test_data)}")
 
         if dad_num == 0:
-            for X, Y, target, attacking, _ in train_dataloader:
+            for X, Y, target, attacking, _, _ in train_dataloader:
                 print(f"Train shape of X: {X.shape} {X.dtype}")
                 print(f"Train shape of Y: {Y.shape} {Y.dtype}")
                 print(f"Train shape of target: {target.shape} {target.dtype}")
                 print(f"Train shape of attacking: {attacking.shape} {attacking.dtype}")
                 break
 
-            for X, Y, target, attacking, _ in test_dataloader:
+            for X, Y, target, attacking, _, _ in test_dataloader:
                 print(f"Test shape of X: {X.shape} {X.dtype}")
                 print(f"Test shape of Y: {Y.shape} {Y.dtype}")
                 print(f"Test shape of target: {target.shape} {target.dtype}")
