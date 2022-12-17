@@ -84,8 +84,8 @@ def train(all_data_df: pd.DataFrame, dad_iters=4, num_epochs=5, save=True,
         print(param_layer.shape)
 
     # define losses
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.0001)
-    #optimizer = torch.optim.SGD(model.parameters(), lr=0.0001)
+    #optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+    optimizer = torch.optim.SGD(model.parameters(), lr=0.001)
     #scheduler = ExponentialLR(optimizer, gamma=0.9)
     #scheduler = ReduceLROnPlateau(optimizer, 'min')
 

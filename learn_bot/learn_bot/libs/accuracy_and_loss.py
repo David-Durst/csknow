@@ -93,9 +93,9 @@ def compute_loss(pred, y, transformed_targets, attacking, transformed_last_input
                                                                     ColumnTransformerType.FLOAT_90_ANGLE, ColumnTransformerType.FLOAT_90_ANGLE_DELTA}))
         col_range = range(col_ranges[0].start, col_ranges[-1].stop)
         losses.pos_float_loss += float_loss_fn(pred_transformed[:, col_range], y[:, col_range], time_weights_duplicated)
-        losses.pos_attacking_float_loss += \
-            float_loss_fn(pred_transformed[:, col_range] * attacking_duplicated, y[:, col_range] * attacking_duplicated,
-                          time_weights_duplicated)
+        #losses.pos_attacking_float_loss += \
+        #    float_loss_fn(pred_transformed[:, col_range] * attacking_duplicated, y[:, col_range] * attacking_duplicated,
+        #                  time_weights_duplicated)
 
         #pred_target_distances = norm_2d((pred_transformed[:, col_range] - transformed_targets))
         #y_target_distances = norm_2d(y[:, col_range] - transformed_targets)

@@ -26,10 +26,12 @@ class AimEngagementExample:
 
 
 SEQUENCE_LENGTH = 50 + FUTURE_TICKS + PRIOR_TICKS_POS
+no_line_example = AimEngagementExample([Point2D(0., 0.) for i in range(SEQUENCE_LENGTH)])
 vertical_line_example = AimEngagementExample([Point2D(0., i * -0.1) for i in range(SEQUENCE_LENGTH)])
 horizontal_line_example = AimEngagementExample([Point2D(i * -0.1, 0.) for i in range(SEQUENCE_LENGTH)])
 diagonal_line_example = AimEngagementExample([Point2D(i * -0.1, i * -0.1) for i in range(SEQUENCE_LENGTH)])
-engagement_examples = [vertical_line_example, horizontal_line_example, diagonal_line_example]
+#jengagement_examples = [vertical_line_example, horizontal_line_example, diagonal_line_example]
+engagement_examples = [horizontal_line_example]
 
 
 def build_aim_df(example_row_df: Dict) -> pd.DataFrame:
