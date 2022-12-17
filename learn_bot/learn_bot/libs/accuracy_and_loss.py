@@ -74,7 +74,9 @@ def compute_loss(pred, y, transformed_targets, attacking, transformed_last_input
     attacking = attacking.to(CPU_DEVICE_STR)
     # duplicate columns for yaw and pitch
     attacking_duplicated = torch.cat([attacking, attacking], dim=1)
+    attacking_duplicated = torch.flatten(torch.unsqueeze(attacking_duplicated, -1).expand(-1, -1, 2), 1)
     time_weights_duplicated = torch.cat([time_weights, time_weights], dim=1)
+    time_weights_duplicated = torch.flatten(torch.unsqueeze(time_weights_duplicated, -1).expand(-1, -1, 2), 1)
     #transformed_last_input_angles = transformed_last_input_angles.to(CPU_DEVICE_STR)
     #last_input_angles_x_duplicated = transformed_last_input_angles[:, [0]].expand(-1, time_weights.shape[1])
     #last_input_angles_y_duplicated = transformed_last_input_angles[:, [1]].expand(-1, time_weights.shape[1])
@@ -95,9 +97,9 @@ def compute_loss(pred, y, transformed_targets, attacking, transformed_last_input
             float_loss_fn(pred_transformed[:, col_range] * attacking_duplicated, y[:, col_range] * attacking_duplicated,
                           time_weights_duplicated)
 
-        pred_target_distances = norm_2d((pred_transformed[:, col_range] - transformed_targets))
-        y_target_distances = norm_2d(y[:, col_range] - transformed_targets)
-        losses.target_float_loss += float_loss_fn(pred_target_distances, y_target_distances, time_weights)
+        #pred_target_distances = norm_2d((pred_transformed[:, col_range] - transformed_targets))
+        #y_target_distances = norm_2d(y[:, col_range] - transformed_targets)
+        #losses.target_float_loss += float_loss_fn(pred_target_distances, y_target_distances, time_weights)
 
         #pred_speed = norm_2d(pred_transformed[:, col_range] - last_input_angles_duplicated)
         #y_speed = norm_2d(y[:, col_range] - last_input_angles_duplicated)

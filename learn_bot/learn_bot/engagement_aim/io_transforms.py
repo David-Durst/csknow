@@ -175,7 +175,9 @@ class ColumnTypes:
 
     def delta_float_target_column_names(self) -> List[str]:
         if self.delta_float_target_column_names_ is None:
-            self.delta_float_target_column_names_ = target_delta_columns(self.float_delta_cols)
+            self.delta_float_target_column_names_ = target_delta_columns(self.float_delta_cols +
+                                                                         self.float_180_angle_delta_cols +
+                                                                         self.float_90_angle_delta_cols)
         return self.delta_float_target_column_names_
 
 
@@ -313,8 +315,8 @@ class PTDelta180AngleColumnTransformer(PT180AngleColumnTransformer):
         return super().convert(delta_value)
 
     def delta_inverse(self, delta_value: torch.Tensor, reference_value: torch.Tensor):
-        delta_value = super().inverse(delta_value)
-        return delta_value + reference_value
+        angular_delta_value = super().inverse(delta_value)
+        return angular_delta_value + reference_value
 
 
 class PT90AngleColumnTransformer(PT180AngleColumnTransformer):
@@ -397,6 +399,8 @@ class IOColumnTransformers:
         angular_relative_cols, _ = split_delta_columns(self.input_types.float_angular_delta_cols +
                                                        self.output_types.float_angular_delta_cols)
         angular_cols = angular_standard_cols + angular_standard_cols
+        if not angular_cols:
+            return
         self.angular_mean = np.mean(all_data_df.loc[:, angular_cols].to_numpy()).item()
         self.angular_std = np.std(all_data_df.loc[:, angular_cols].to_numpy()).item()
 
@@ -611,10 +615,11 @@ class IOColumnTransformers:
             input_reference_cols = self.input_types.float_90_angle_cols
 
         cur_col_index = 0
+        all_cols = self.input_types.column_names()
         # input has baseline to compare to
         for reference_col in output_reference_cols:
             if reference_col in input_reference_cols:
-                result.append(input_reference_cols.index(reference_col))
+                result.append(all_cols.index(reference_col))
             cur_col_index += 1
 
         return result
