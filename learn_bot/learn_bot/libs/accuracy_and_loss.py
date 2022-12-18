@@ -84,27 +84,13 @@ def compute_loss(pred, y_transformed, y_untransformed, transformed_targets, atta
     attacking_duplicated = torch.cat([attacking, attacking], dim=1)
     attacking_duplicated = torch.flatten(torch.unsqueeze(attacking_duplicated, -1).expand(-1, -1, 2), 1)
     time_weights_duplicated = torch.cat([time_weights, time_weights], dim=1)
-    time_weights_duplicated = torch.flatten(torch.unsqueeze(time_weights_duplicated, -1).expand(-1, -1, 2), 1)
+    #time_weights_duplicated = torch.flatten(torch.unsqueeze(time_weights_duplicated, -1).expand(-1, -1, 2), 1)
     #transformed_last_input_angles = transformed_last_input_angles.to(CPU_DEVICE_STR)
     #last_input_angles_x_duplicated = transformed_last_input_angles[:, [0]].expand(-1, time_weights.shape[1])
     #last_input_angles_y_duplicated = transformed_last_input_angles[:, [1]].expand(-1, time_weights.shape[1])
     #last_input_angles_duplicated = torch.cat([last_input_angles_x_duplicated, last_input_angles_y_duplicated], dim=1)
 
     losses = AimLosses()
-
-    def compute_float_losses(col_range: range, pred, y):
-        losses.pos_float_loss += float_loss_fn(pred[:, col_range], y[:, col_range], time_weights_duplicated)
-        #losses.pos_attacking_float_loss += \
-        #    float_loss_fn(pred[:, col_range] * attacking_duplicated, y[:, col_range] * attacking_duplicated,
-        #                  time_weights_duplicated)
-
-        #pred_target_distances = norm_2d((pred[:, col_range] - transformed_targets))
-        #y_target_distances = norm_2d(y[:, col_range] - transformed_targets)
-        #losses.target_float_loss += float_loss_fn(pred_target_distances, y_target_distances, time_weights)
-
-        #pred_speed = norm_2d(pred[:, col_range] - last_input_angles_duplicated)
-        #y_speed = norm_2d(y[:, col_range] - last_input_angles_duplicated)
-        #losses.speed_float_loss += float_loss_fn(pred_speed, y_speed, time_weights)
 
     if column_transformers.output_types.float_standard_cols or column_transformers.output_types.float_delta_cols:
         col_ranges = column_transformers.get_name_ranges(False, True,

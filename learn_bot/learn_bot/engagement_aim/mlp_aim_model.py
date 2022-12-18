@@ -19,8 +19,7 @@ class MLPAimModel(nn.Module):
             nn.LeakyReLU(),
             nn.Linear(self.internal_width, self.internal_width),
             nn.LeakyReLU(),
-            nn.Linear(self.internal_width, cts.get_name_ranges(False, True)[-1].stop),
-            nn.Tanh()
+            nn.Linear(self.internal_width, cts.get_name_ranges(False, True)[-1].stop)
         )
 
     def forward(self, x):
