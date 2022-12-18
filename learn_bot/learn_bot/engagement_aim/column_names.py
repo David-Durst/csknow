@@ -106,7 +106,8 @@ input_column_types = ColumnTypes(temporal_io_float_standard_column_names.past_co
                                  temporal_io_cat_column_names.past_columns + static_input_categorical_columns,
                                  temporal_io_cat_column_names.get_num_cats_per_temporal_column([2], True, False, False)
                                  + [6],
-                                 temporal_io_float_180_angle_column_names.past_columns + temporal_io_float_90_angle_column_names.past_columns, [])
+                                 temporal_io_float_180_angle_column_names.past_columns + temporal_io_float_90_angle_column_names.past_columns, [],
+                                 temporal_io_float_180_angle_column_names.past_columns)
 
 all_time_column_types = ColumnTypes(temporal_io_float_standard_column_names.all_columns +
                                     temporal_io_float_90_angle_column_names.all_columns +
@@ -115,7 +116,8 @@ all_time_column_types = ColumnTypes(temporal_io_float_standard_column_names.all_
                                     temporal_io_cat_column_names.all_columns + static_input_categorical_columns,
                                     temporal_io_cat_column_names.get_num_cats_per_temporal_column([2], True, True, True)
                                     + [6],
-                                    temporal_io_float_180_angle_column_names.all_columns + temporal_io_float_90_angle_column_names.all_columns, [])
+                                    temporal_io_float_180_angle_column_names.all_columns + temporal_io_float_90_angle_column_names.all_columns, [],
+                                    temporal_io_float_180_angle_column_names.all_columns)
 
 output_relative_x_cols = temporal_io_float_180_angle_column_names.get_matching_cols(base_abs_x_pos_column, False, True, True)
 output_relative_y_cols = temporal_io_float_90_angle_column_names.get_matching_cols(base_abs_y_pos_column, False, True, True)
@@ -130,7 +132,7 @@ num_x_targets = len(output_target_x_cols)
 
 #output_column_types = ColumnTypes(output_standard_cols, output_delta, [], [])
 output_column_types = ColumnTypes([], output_delta_x + output_delta_y, [], [], [], [], [], [], [],
-                                  output_delta_x + output_delta_y)
+                                  output_delta_x + output_delta_y, output_delta_x)
 #temporal_io_cat_column_names.present_columns +
 #temporal_io_cat_column_names.future_columns,
 #temporal_io_cat_column_names.get_num_cats_per_temporal_column([2], False, True, True))
