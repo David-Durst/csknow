@@ -30,7 +30,7 @@ no_line_example = AimEngagementExample([Point2D(0., 0.) for i in range(SEQUENCE_
 vertical_line_example = AimEngagementExample([Point2D(0., i * -0.1) for i in range(SEQUENCE_LENGTH)])
 horizontal_line_example = AimEngagementExample([Point2D(i * -0.1, 0.) for i in range(SEQUENCE_LENGTH)])
 diagonal_line_example = AimEngagementExample([Point2D(i * -0.1, i * -0.1) for i in range(SEQUENCE_LENGTH)])
-#jengagement_examples = [vertical_line_example, horizontal_line_example, diagonal_line_example]
+#engagement_examples = [vertical_line_example, horizontal_line_example, diagonal_line_example]
 engagement_examples = [horizontal_line_example]
 
 

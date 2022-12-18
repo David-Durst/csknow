@@ -3,7 +3,8 @@ from torch.utils.tensorboard import SummaryWriter
 
 from learn_bot.engagement_aim.dataset import *
 from learn_bot.engagement_aim.io_transforms import IOColumnTransformers, ColumnTransformerType, CPU_DEVICE_STR, \
-    CUDA_DEVICE_STR, get_untransformed_outputs, get_transformed_outputs
+    CUDA_DEVICE_STR, get_untransformed_outputs, get_transformed_outputs, PT180AngleColumnTransformer, \
+    PT90AngleColumnTransformer
 from math import sqrt
 from torch import nn
 from dataclasses import dataclass
@@ -64,12 +65,19 @@ def norm_2d(xy: torch.Tensor):
     return torch.sqrt(torch.pow(xy[:, :num_x_targets], 2) + torch.pow(xy[:, num_x_targets:], 2))
 
 
+angle_transformer_180 = PT180AngleColumnTransformer()
+angle_transformer_90 = PT90AngleColumnTransformer()
+
+
 # https://discuss.pytorch.org/t/how-to-combine-multiple-criterions-to-a-loss-function/348/4
-def compute_loss(pred, y, transformed_targets, attacking, transformed_last_input_angles,
+def compute_loss(pred, y_transformed, y_untransformed, transformed_targets, attacking, transformed_last_input_angles,
                  time_weights, column_transformers: IOColumnTransformers):
     pred_transformed = get_transformed_outputs(pred)
     pred_transformed = pred_transformed.to(CPU_DEVICE_STR)
-    y = y.to(CPU_DEVICE_STR)
+    pred_untransformed = get_untransformed_outputs(pred)
+    pred_untransformed = pred_untransformed.to(CPU_DEVICE_STR)
+    y_transformed = y_transformed.to(CPU_DEVICE_STR)
+    y_untransformed = y_untransformed.to(CPU_DEVICE_STR)
     transformed_targets = transformed_targets.to(CPU_DEVICE_STR)
     attacking = attacking.to(CPU_DEVICE_STR)
     # duplicate columns for yaw and pitch
@@ -84,26 +92,57 @@ def compute_loss(pred, y, transformed_targets, attacking, transformed_last_input
 
     losses = AimLosses()
 
-    if column_transformers.output_types.float_standard_cols or column_transformers.output_types.float_delta_cols or \
-        column_transformers.output_types.float_180_angle_cols or column_transformers.output_types.float_180_angle_delta_cols or \
-        column_transformers.output_types.float_90_angle_cols or column_transformers.output_types.float_90_angle_delta_cols:
-        col_ranges = column_transformers.get_name_ranges(False, True,
-                                                         frozenset({ColumnTransformerType.FLOAT_STANDARD, ColumnTransformerType.FLOAT_DELTA,
-                                                                    ColumnTransformerType.FLOAT_180_ANGLE, ColumnTransformerType.FLOAT_180_ANGLE_DELTA,
-                                                                    ColumnTransformerType.FLOAT_90_ANGLE, ColumnTransformerType.FLOAT_90_ANGLE_DELTA}))
-        col_range = range(col_ranges[0].start, col_ranges[-1].stop)
-        losses.pos_float_loss += float_loss_fn(pred_transformed[:, col_range], y[:, col_range], time_weights_duplicated)
+    def compute_float_losses(col_range: range, pred, y):
+        losses.pos_float_loss += float_loss_fn(pred[:, col_range], y[:, col_range], time_weights_duplicated)
         #losses.pos_attacking_float_loss += \
-        #    float_loss_fn(pred_transformed[:, col_range] * attacking_duplicated, y[:, col_range] * attacking_duplicated,
+        #    float_loss_fn(pred[:, col_range] * attacking_duplicated, y[:, col_range] * attacking_duplicated,
         #                  time_weights_duplicated)
 
-        #pred_target_distances = norm_2d((pred_transformed[:, col_range] - transformed_targets))
+        #pred_target_distances = norm_2d((pred[:, col_range] - transformed_targets))
         #y_target_distances = norm_2d(y[:, col_range] - transformed_targets)
         #losses.target_float_loss += float_loss_fn(pred_target_distances, y_target_distances, time_weights)
 
-        #pred_speed = norm_2d(pred_transformed[:, col_range] - last_input_angles_duplicated)
+        #pred_speed = norm_2d(pred[:, col_range] - last_input_angles_duplicated)
         #y_speed = norm_2d(y[:, col_range] - last_input_angles_duplicated)
         #losses.speed_float_loss += float_loss_fn(pred_speed, y_speed, time_weights)
+
+    if column_transformers.output_types.float_standard_cols or column_transformers.output_types.float_delta_cols:
+        col_ranges = column_transformers.get_name_ranges(False, True,
+                                                         frozenset({ColumnTransformerType.FLOAT_STANDARD, ColumnTransformerType.FLOAT_DELTA}))
+        col_range = range(col_ranges[0].start, col_ranges[-1].stop)
+        losses.pos_float_loss += float_loss_fn(pred_transformed[:, col_range], y_transformed[:, col_range],
+                                               time_weights_duplicated)
+        # losses.pos_attacking_float_loss += \
+        #    float_loss_fn(pred_transformed[:, col_range] * attacking_duplicated,
+        #                  y_transformed[:, col_range] * attacking_duplicated,
+        #                  time_weights_duplicated)
+
+        # pred_target_distances = norm_2d((pred_transformed[:, col_range] - transformed_targets))
+        # y_target_distances = norm_2d(y_transformed[:, col_range] - transformed_targets)
+        # losses.target_float_loss += float_loss_fn(pred_target_distances, y_target_distances, time_weights)
+
+        # pred_speed = norm_2d(pred_transformed[:, col_range] - last_input_angles_duplicated)
+        # y_speed = norm_2d(y_transformed[:, col_range] - last_input_angles_duplicated)
+        # losses.speed_float_loss += float_loss_fn(pred_speed, y_speed, time_weights)
+    if column_transformers.output_types.float_180_angle_cols or column_transformers.output_types.float_180_angle_delta_cols:
+
+        col_ranges = column_transformers.get_name_ranges(False, False,
+                                                         frozenset({ColumnTransformerType.FLOAT_180_ANGLE,
+                                                                    ColumnTransformerType.FLOAT_180_ANGLE_DELTA}))
+        col_range = range(col_ranges[0].start, col_ranges[-1].stop)
+        angular_differences = pred_untransformed[:, col_range] - y_untransformed[:, col_range]
+        fixed_angular_differences = angle_transformer_180.inverse(angle_transformer_180.convert(angular_differences))
+        losses.pos_float_loss += float_loss_fn(fixed_angular_differences, torch.zeros_like(fixed_angular_differences),
+                                               time_weights) / 180.
+    if column_transformers.output_types.float_90_angle_cols or column_transformers.output_types.float_90_angle_delta_cols:
+        col_ranges = column_transformers.get_name_ranges(False, False,
+                                                         frozenset({ColumnTransformerType.FLOAT_90_ANGLE,
+                                                                    ColumnTransformerType.FLOAT_90_ANGLE_DELTA}))
+        col_range = range(col_ranges[0].start, col_ranges[-1].stop)
+        angular_differences = pred_untransformed[:, col_range] - y_untransformed[:, col_range]
+        fixed_angular_differences = angle_transformer_90.inverse(angle_transformer_90.convert(angular_differences))
+        losses.pos_float_loss += float_loss_fn(fixed_angular_differences, torch.zeros_like(fixed_angular_differences),
+                                               time_weights) / 90.
     if column_transformers.output_types.categorical_cols:
         col_ranges = column_transformers.get_name_ranges(False, True, frozenset({ColumnTransformerType.CATEGORICAL}))
         for col_range in col_ranges:
