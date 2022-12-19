@@ -45,7 +45,7 @@ def row_rollout(model: nn.Module, X: torch.Tensor, transformed_Y: torch.tensor, 
         # after first iteration, replace predicted values
         # can get fresh for all other values because they don't change
         # this removes need for shifting
-        if tick_num > 0 and False:
+        if tick_num > 0:
             tick_X[:, rolling_input_indices] = torch.roll(last_rolling_inputs, -1, 1)
             tick_X[:, newest_input_indices] = last_untransformed_output
 
