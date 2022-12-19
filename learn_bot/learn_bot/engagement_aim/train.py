@@ -128,8 +128,8 @@ def train(all_data_df: pd.DataFrame, dad_iters=4, num_epochs=5, save=True,
                 # YZ = torch.zeros_like(Y) + 0.1
 
                 # Compute prediction error
-                pred = model(X)
-                pred2 = row_rollout(model, all_time_X, transformed_Y, Y, all_time_column_transformers,
+                #pred = model(X)
+                pred = row_rollout(model, all_time_X, transformed_Y, Y, all_time_column_transformers,
                                     column_transformers)
                 batch_loss = compute_loss(X, pred, transformed_Y, Y, transformed_targets, attacking,
                                           transformed_last_input_angles, time_weights, column_transformers)
