@@ -596,8 +596,9 @@ class IOColumnTransformers:
 
     @cache
     def get_name_ranges_in_time_range(self, input: bool, transformed: bool,
-                                      time_offset_range: range, include_non_temporal: bool) -> List[int]:
+                                      time_offset_range: range, include_non_temporal: bool) -> Tuple[List[int], List[str]]:
         result: List[int] = []
+        result_str: List[str] = []
         cur_start: int = 0
 
         column_types: ColumnTypes = self.input_types if input else self.output_types
@@ -608,35 +609,43 @@ class IOColumnTransformers:
         for col_name in column_types.float_standard_cols:
             if column_types.col_time_offsets[col_name].offset_valid_for_range(time_offset_range, include_non_temporal):
                 result.append(cur_start)
+                result_str.append(col_name)
             cur_start += 1
 
         for col_name in column_types.delta_float_column_names():
             if column_types.col_time_offsets[col_name].offset_valid_for_range(time_offset_range, include_non_temporal):
                 result.append(cur_start)
+                result_str.append(col_name)
             cur_start += 1
 
         for col_name in column_types.float_180_angle_cols:
             if column_types.col_time_offsets[col_name].offset_valid_for_range(time_offset_range, include_non_temporal):
                 for i in range(angle_columns):
                     result.append(cur_start + i)
+                    result_str.append(col_name)
             cur_start += angle_columns
 
         for col_name in column_types.delta_180_angle_column_names():
             if column_types.col_time_offsets[col_name].offset_valid_for_range(time_offset_range, include_non_temporal):
                 for i in range(angle_columns):
                     result.append(cur_start + i)
+                    result_str.append(col_name)
             cur_start += angle_columns
 
         for col_name in column_types.float_90_angle_cols:
+            if col_name == 'victim relative first head cur head view angle y (t+13)':
+                x = 1
             if column_types.col_time_offsets[col_name].offset_valid_for_range(time_offset_range, include_non_temporal):
                 for i in range(angle_columns):
                     result.append(cur_start + i)
+                    result_str.append(col_name)
             cur_start += angle_columns
 
         for col_name in column_types.delta_90_angle_column_names():
             if column_types.col_time_offsets[col_name].offset_valid_for_range(time_offset_range, include_non_temporal):
                 for i in range(angle_columns):
                     result.append(cur_start + i)
+                    result_str.append(col_name)
             cur_start += angle_columns
 
         for ct in cts:
@@ -646,14 +655,16 @@ class IOColumnTransformers:
                                                                                          include_non_temporal):
                         for i in range(ct.num_classes):
                             result.append(cur_start + i)
+                            result_str.append(ct.col_name)
                     cur_start += ct.num_classes
                 else:
                     if column_types.col_time_offsets[ct.col_name].offset_valid_for_range(time_offset_range,
                                                                                          include_non_temporal):
                         result.append(cur_start)
+                        result_str.append(ct.col_name)
                     cur_start += 1
 
-        return result
+        return result, result_str
 
     # given the locations of columns in an input tensor that are used as reference for producing delta columns
     def get_input_delta_reference_positions(self, types: ColumnTypes, delta_type: ColumnTransformerType) -> List[int]:

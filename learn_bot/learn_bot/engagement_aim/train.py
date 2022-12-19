@@ -94,7 +94,7 @@ def train(all_data_df: pd.DataFrame, dad_iters=4, num_epochs=5, save=True,
     model_output_recording: ModelOutputRecording = ModelOutputRecording(model)
     time_weights_list = [1]
     for _ in range(FUTURE_TICKS):
-        time_weights_list.append(0.8 * time_weights_list[-1])
+        time_weights_list.append(0 * time_weights_list[-1])
     time_weights = torch.tensor([time_weights_list])
 
     def train_or_test_SL_epoch(dataloader, model, optimizer, epoch_num, dad_num, train=True):
@@ -128,9 +128,9 @@ def train(all_data_df: pd.DataFrame, dad_iters=4, num_epochs=5, save=True,
                 # YZ = torch.zeros_like(Y) + 0.1
 
                 # Compute prediction error
-                #pred = model(X)
+                pred2 = model(X)
                 pred = row_rollout(model, all_time_X, transformed_Y, Y, all_time_column_transformers,
-                                    column_transformers)
+                                    column_transformers, pred2, X)
                 batch_loss = compute_loss(X, pred, transformed_Y, Y, transformed_targets, attacking,
                                           transformed_last_input_angles, time_weights, column_transformers)
                 cumulative_loss += batch_loss
