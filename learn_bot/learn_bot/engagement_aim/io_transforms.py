@@ -189,6 +189,10 @@ class ColumnTypes:
                                                                          self.float_90_angle_delta_cols)
         return self.delta_float_target_column_names_
 
+    def sin_cos_encoded_angles(self) -> List[str]:
+        return self.float_180_angle_cols + self.delta_180_angle_column_names() + \
+               self.float_90_angle_cols + self.delta_90_angle_column_names()
+
 
 class PTColumnTransformer(ABC):
     pt_ct_type: ColumnTransformerType
@@ -290,16 +294,23 @@ class PTDeltaMeanStdColumnTransformer(PTColumnTransformer):
             return (delta_value * self.delta_standard_deviations) + self.delta_means + reference_value
 
 
-class PT180AngleColumnTransformer(PTColumnTransformer):
+class PT180AngleColumnTransformer(PTMeanStdColumnTransformer):
     pt_ct_type: ColumnTransformerType = ColumnTransformerType.FLOAT_180_ANGLE
+
+    def __init__(self, num_cols: int, sin_mean: float, sin_std: float, cos_mean: float, cos_std: float):
+        means = torch.tensor([sin_mean, cos_mean] * num_cols)
+        stds = torch.tensor([sin_std, cos_std] * num_cols)
+        super().__init__(means, stds)
+
 
     def convert(self, value: torch.Tensor):
         sin_value = torch.sin(torch.deg2rad(value))
         cos_value = torch.cos(torch.deg2rad(value))
         stack_value = torch.stack([sin_value, cos_value], dim=2)
-        return torch.flatten(stack_value, start_dim=1)
+        return super().convert(torch.flatten(stack_value, start_dim=1))
 
     def inverse(self, value: torch.Tensor):
+        value = super().inverse(value)
         value = torch.unflatten(value, dim=1, sizes=(-1, 2))
         return torch.rad2deg(torch.atan2(value[:, :, 0], value[:, :, 1]))
 
@@ -312,6 +323,9 @@ class PT180AngleColumnTransformer(PTColumnTransformer):
 
 class PTDelta180AngleColumnTransformer(PT180AngleColumnTransformer):
     pt_ct_type: ColumnTransformerType = ColumnTransformerType.FLOAT_180_ANGLE_DELTA
+
+    def __init__(self, num_cols: int, sin_mean: float, sin_std: float, cos_mean: float, cos_std: float):
+        super().__init__(num_cols, sin_mean, sin_std, cos_mean, cos_std)
 
     def convert(self, value: torch.Tensor):
         raise NotImplementedError
@@ -331,7 +345,11 @@ class PTDelta180AngleColumnTransformer(PT180AngleColumnTransformer):
 class PT90AngleColumnTransformer(PT180AngleColumnTransformer):
     pt_ct_type: ColumnTransformerType = ColumnTransformerType.FLOAT_90_ANGLE
 
+    def __init__(self, num_cols: int, sin_mean: float, sin_std: float, cos_mean: float, cos_std: float):
+        super().__init__(num_cols, sin_mean, sin_std, cos_mean, cos_std)
+
     def inverse(self, value: torch.Tensor):
+        value = PTMeanStdColumnTransformer.inverse(self, value)
         value = torch.unflatten(value, dim=1, sizes=(-1, 2))
         return torch.rad2deg(torch.atan(value[:, :, 0] / value[:, :, 1]))
 
@@ -344,6 +362,9 @@ class PT90AngleColumnTransformer(PT180AngleColumnTransformer):
 
 class PTDelta90AngleColumnTransformer(PT90AngleColumnTransformer):
     pt_ct_type: ColumnTransformerType = ColumnTransformerType.FLOAT_90_ANGLE_DELTA
+
+    def __init__(self, num_cols: int, sin_mean: float, sin_std: float, cos_mean: float, cos_std: float):
+        super().__init__(num_cols, sin_mean, sin_std, cos_mean, cos_std)
 
     def convert(self, value: torch.Tensor):
         raise NotImplementedError
@@ -393,6 +414,11 @@ class IOColumnTransformers:
     angular_mean: float
     angular_std: float
 
+    angular_sin_mean: float
+    angular_sin_std: float
+    angular_cos_mean: float
+    angular_cos_std: float
+
     def __init__(self, input_types: ColumnTypes, output_types: ColumnTypes, all_data_df: pd.DataFrame):
         self.input_types = input_types
         self.output_types = output_types
@@ -407,11 +433,17 @@ class IOColumnTransformers:
                                 self.output_types.float_angular_standard_cols
         angular_relative_cols, _ = split_delta_columns(self.input_types.float_angular_delta_cols +
                                                        self.output_types.float_angular_delta_cols)
-        angular_cols = angular_standard_cols + angular_standard_cols
-        if not angular_cols:
-            return
-        self.angular_mean = np.mean(all_data_df.loc[:, angular_cols].to_numpy()).item()
-        self.angular_std = np.std(all_data_df.loc[:, angular_cols].to_numpy()).item()
+        angular_angle_encoded = angular_standard_cols + angular_standard_cols
+        angular_sin_cos_encoded = self.input_types.sin_cos_encoded_angles() + self.output_types.sin_cos_encoded_angles()
+        if angular_angle_encoded:
+            self.angular_mean = np.mean(all_data_df.loc[:, angular_angle_encoded].to_numpy()).item()
+            self.angular_std = np.std(all_data_df.loc[:, angular_angle_encoded].to_numpy()).item()
+        if angular_sin_cos_encoded:
+            self.angular_sin_mean = np.mean(np.sin(np.deg2rad(all_data_df.loc[:, angular_sin_cos_encoded].to_numpy()))).item()
+            self.angular_sin_std = np.std(np.sin(np.deg2rad(all_data_df.loc[:, angular_sin_cos_encoded].to_numpy()))).item()
+            self.angular_cos_mean = np.mean(np.cos(np.deg2rad(all_data_df.loc[:, angular_sin_cos_encoded].to_numpy()))).item()
+            self.angular_cos_std = np.std(np.cos(np.deg2rad(all_data_df.loc[:, angular_sin_cos_encoded].to_numpy()))).item()
+
 
     def compute_mean_per_column(self, all_cols: List[str], angular_cols: List[str], all_data_df: pd.DataFrame) -> \
             Tuple[torch.Tensor, torch.Tensor]:
@@ -438,13 +470,21 @@ class IOColumnTransformers:
             means, stds = self.compute_mean_per_column(relative_cols, angular_relative_cols, delta_df)
             result.append(PTDeltaMeanStdColumnTransformer(means, stds))
         if types.float_180_angle_cols:
-            result.append(PT180AngleColumnTransformer())
+            result.append(PT180AngleColumnTransformer(len(types.float_180_angle_cols),
+                                                      self.angular_sin_mean, self.angular_sin_std,
+                                                      self.angular_cos_mean, self.angular_cos_std))
         if types.float_180_angle_delta_cols:
-            result.append(PTDelta180AngleColumnTransformer())
+            result.append(PTDelta180AngleColumnTransformer(len(types.float_180_angle_delta_cols),
+                                                           self.angular_sin_mean, self.angular_sin_std,
+                                                           self.angular_cos_mean, self.angular_cos_std))
         if types.float_90_angle_cols:
-            result.append(PT90AngleColumnTransformer())
+            result.append(PT90AngleColumnTransformer(len(types.float_90_angle_cols),
+                                                     self.angular_sin_mean, self.angular_sin_std,
+                                                     self.angular_cos_mean, self.angular_cos_std))
         if types.float_90_angle_delta_cols:
-            result.append(PTDelta90AngleColumnTransformer())
+            result.append(PTDelta90AngleColumnTransformer(len(types.float_90_angle_delta_cols),
+                                                          self.angular_sin_mean, self.angular_sin_std,
+                                                          self.angular_cos_mean, self.angular_cos_std))
         for name in types.categorical_cols:
             result.append(PTOneHotColumnTransformer(name, types.num_cats_per_col[name]))
         return result
