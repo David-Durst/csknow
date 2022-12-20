@@ -77,23 +77,26 @@ def row_rollout(model: nn.Module, X: torch.Tensor, transformed_Y: torch.tensor, 
             tick_X[:, newest_input_indices] = last_untransformed_output
 
         last_rolling_inputs = tick_X[:, rolling_input_indices].detach()
+        if tick_num > 0: #not torch.equal(last_tick_X
+            x = 1
+        last_tick_X = tick_X.clone()
 
         # predict and record outputs
-        on_policy_transformed_Y, on_policy_untransformed_Y = model(tick_X)
+        transformed_pred, untransformed_pred = model(tick_X)
         # note: when blending, need to apply alpha in transformed mode and recompute untransformed
         # actually, random sampling fixes this, no need to blend between values, just pick one
         transformed_output_indices, _ = \
             network_inputs_column_transformers.get_name_ranges_in_time_range(False, True,
                                                                              range(tick_num, tick_num + 1), False)
         transformed_outputs[:, transformed_output_indices] = \
-            on_policy_transformed_Y[:, transformed_first_output_indices]
+            transformed_pred[:, transformed_first_output_indices]
         untransformed_output_indices, _ = \
             network_inputs_column_transformers.get_name_ranges_in_time_range(False, False,
                                                                              range(tick_num, tick_num + 1), False)
         untransformed_outputs[:, untransformed_output_indices] = \
-            on_policy_untransformed_Y[:, untransformed_first_output_indices]
+            untransformed_pred[:, untransformed_first_output_indices]
         if random.uniform(0, 1) < blend_amount.on_policy_pct:
-            last_untransformed_output = on_policy_untransformed_Y[:, untransformed_first_output_indices].detach()
+            last_untransformed_output = untransformed_pred[:, untransformed_first_output_indices].detach()
         else:
             last_untransformed_output = untransformed_Y[:, true_output_name_indices].detach()
 
