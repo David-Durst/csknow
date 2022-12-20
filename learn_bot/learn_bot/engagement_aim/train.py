@@ -128,9 +128,9 @@ def train(all_data_df: pd.DataFrame, dad_iters=4, num_off_policy_epochs=5, num_s
                 # YZ = torch.zeros_like(Y) + 0.1
 
                 # Compute prediction error
-                pred2 = model(X)
+                #pred2 = model(X)
                 pred = row_rollout(model, all_time_X, transformed_Y, Y, all_time_column_transformers,
-                                    column_transformers, blend_amount, pred2)
+                                    column_transformers, blend_amount)
                 batch_loss = compute_loss(X, pred, transformed_Y, Y, transformed_targets, attacking,
                                           transformed_last_input_angles, time_weights, column_transformers)
                 cumulative_loss += batch_loss
@@ -185,11 +185,12 @@ def train(all_data_df: pd.DataFrame, dad_iters=4, num_off_policy_epochs=5, num_s
             writer.add_scalar('test/acc/' + name, acc, total_epoch_num)
 
     best_result = None
-    def train_and_test_SL(model, train_dataloader, test_dataloader, num_epochs, blend_amount_fn,
+    def train_and_test_SL(model, train_dataloader, test_dataloader, num_epochs, start_overall_epoch, blend_amount_fn,
                           first_epoch_set, last_epoch_set):
         nonlocal optimizer, best_result
         for epoch_num in range(num_epochs):
-            print(f"\nEpoch {epoch_num + 1}\n-------------------------------")
+            print(f"\nEpoch {start_overall_epoch + epoch_num}, Blend {blend_amount_fn(epoch_num, num_epochs)}\n"
+                  f"-------------------------------")
             #if epoch_num % 100 == 1000:
                 # optimizer = torch.optim.Adam(model.parameters(), lr=0.0001)
             first_epoch = first_epoch_set and epoch_num == 0
@@ -212,6 +213,7 @@ def train(all_data_df: pd.DataFrame, dad_iters=4, num_off_policy_epochs=5, num_s
     total_train_df = train_df
     train_data = AimDataset(train_df, column_transformers, all_time_column_transformers)
     test_data = AimDataset(test_df, column_transformers, all_time_column_transformers)
+    num_overall_epochs = 0
     for dad_num in range(dad_iters + 1):
         if dad_num < dad_iters:
             print(f"DaD Iter {dad_num}\n-------------------------------")
@@ -247,23 +249,26 @@ def train(all_data_df: pd.DataFrame, dad_iters=4, num_off_policy_epochs=5, num_s
         epochs_per_dad_iter = num_off_policy_epochs + num_scheduled_sampling_epochs + num_on_policy_epochs
 
         if num_off_policy_epochs > 0:
-            train_and_test_SL(model, train_dataloader, test_dataloader, num_off_policy_epochs,
+            train_and_test_SL(model, train_dataloader, test_dataloader, num_off_policy_epochs, num_overall_epochs,
                               get_off_policy_blend_amount,
                               dad_num == 0,
                               dad_num == dad_iters and epochs_per_dad_iter == num_off_policy_epochs)
+            num_overall_epochs += num_off_policy_epochs
 
         if num_scheduled_sampling_epochs > 0:
-            train_and_test_SL(model, train_dataloader, test_dataloader, num_off_policy_epochs,
+            train_and_test_SL(model, train_dataloader, test_dataloader, num_scheduled_sampling_epochs, num_overall_epochs,
                               get_scheduled_sampling_blend_amount,
                               dad_num == 0 and num_off_policy_epochs == 0,
                               dad_num == dad_iters and
                               epochs_per_dad_iter == num_off_policy_epochs + num_scheduled_sampling_epochs)
+            num_overall_epochs += num_scheduled_sampling_epochs
 
         if num_on_policy_epochs > 0:
-            train_and_test_SL(model, train_dataloader, test_dataloader, num_off_policy_epochs,
+            train_and_test_SL(model, train_dataloader, test_dataloader, num_on_policy_epochs, num_overall_epochs,
                               get_on_policy_blend_amount,
                               dad_num == 0 and num_off_policy_epochs == 0 and num_scheduled_sampling_epochs == 0,
                               dad_num == dad_iters)
+            num_overall_epochs += num_on_policy_epochs
 
         if dad_num < dad_iters:
             # step 2: inference and result collection

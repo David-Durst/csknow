@@ -23,6 +23,9 @@ class BlendAmount:
         self.on_policy_pct = on_policy_pct
         self.off_policy_pct = 1 - on_policy_pct
 
+    def __str__(self):
+        return f"(on_policy_pct: {self.on_policy_pct}, off_policy_pct: {self.off_policy_pct})"
+
 
 def get_on_policy_blend_amount(epoch_num: int, num_epochs: int) -> BlendAmount:
     return BlendAmount(1.)
@@ -38,7 +41,7 @@ def get_scheduled_sampling_blend_amount(epoch_num: int, num_epochs: int) -> Blen
 
 def row_rollout(model: nn.Module, X: torch.Tensor, transformed_Y: torch.tensor, untransformed_Y: torch.tensor,
                 all_inputs_column_transformers: IOColumnTransformers,
-                network_inputs_column_transformers: IOColumnTransformers, blend_amount: BlendAmount, other_pred):
+                network_inputs_column_transformers: IOColumnTransformers, blend_amount: BlendAmount):
     num_ticks_to_predict = CUR_TICK + FUTURE_TICKS
     input_range = PRIOR_TICKS_POS
 
