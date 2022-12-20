@@ -78,7 +78,7 @@ def vis_train():
     all_data_df = all_data_df.sort_values(['engagement id', 'tick id'])
     example_row = get_row_as_dict_iloc(all_data_df, 0)
     simple_df = build_aim_df(example_row)
-    train_result = train(simple_df, 0, 500, False, False)
+    train_result = train(simple_df, 0, 500, 100, 100, False, False)
     simple_pred_df = on_policy_inference(train_result.train_dataset, simple_df,
                                          train_result.model, train_result.column_transformers,
                                          True)
