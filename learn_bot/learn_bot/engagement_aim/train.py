@@ -118,8 +118,8 @@ def train(all_data_df: pd.DataFrame, dad_iters=4, num_off_policy_epochs=5, num_s
                 X, Y, all_time_X = X.to(device), Y.to(device), all_time_X.to(device)
                 #transformed_X = column_transformers.transform_columns(True, X, X)
                 transformed_Y = column_transformers.transform_columns(False, Y, X)
-                transformed_targets = column_transformers.transform_columns(False, targets, X)
-                input_name_ranges_dict = column_transformers.get_name_ranges_dict(True, True)
+                #transformed_targets = column_transformers.transform_columns(False, targets, X)
+                #input_name_ranges_dict = column_transformers.get_name_ranges_dict(True, True)
                 transformed_last_input_angles = None#\
                 #    transformed_X[:, [input_name_ranges_dict[get_temporal_field_str(base_abs_x_pos_column, -1)].start,
                 #                      input_name_ranges_dict[get_temporal_field_str(base_abs_y_pos_column, -1)].start]]
@@ -131,7 +131,7 @@ def train(all_data_df: pd.DataFrame, dad_iters=4, num_off_policy_epochs=5, num_s
                 #pred2 = model(X)
                 pred = row_rollout(model, all_time_X, transformed_Y, Y, all_time_column_transformers,
                                     column_transformers, blend_amount)
-                batch_loss = compute_loss(X, pred, transformed_Y, Y, transformed_targets, attacking,
+                batch_loss = compute_loss(X, pred, transformed_Y, Y, targets, attacking,
                                           transformed_last_input_angles, time_weights, column_transformers)
                 cumulative_loss += batch_loss
 
@@ -162,14 +162,12 @@ def train(all_data_df: pd.DataFrame, dad_iters=4, num_off_policy_epochs=5, num_s
         print(f"Epoch {train_test_str} Accuracy: {accuracy_string}, Transformed Avg Loss: {cumulative_loss.get_total_loss().item():>8f}")
         return cumulative_loss, accuracy
 
-    def save_model(dad_num: int, epoch_num: int, best: bool):
+    def save_model(best: bool):
         if best:
             name = "best_model.pt"
         else:
             name = "model.pt"
         torch.save({
-            'epoch_num': epoch_num,
-            'dad_num': dad_num,
             'model_state_dict': model.state_dict(),
             'optimizer_state_dict': optimizer.state_dict(),
         }, checkpoints_path / name)
@@ -189,7 +187,8 @@ def train(all_data_df: pd.DataFrame, dad_iters=4, num_off_policy_epochs=5, num_s
                           first_epoch_set, last_epoch_set):
         nonlocal optimizer, best_result
         for epoch_num in range(num_epochs):
-            print(f"\nEpoch {start_overall_epoch + epoch_num}, Blend {blend_amount_fn(epoch_num, num_epochs)}\n"
+            overall_epoch_num = start_overall_epoch + epoch_num
+            print(f"\nEpoch {overall_epoch_num}, Blend {blend_amount_fn(epoch_num, num_epochs)}\n"
                   f"-------------------------------")
             #if epoch_num % 100 == 1000:
                 # optimizer = torch.optim.Adam(model.parameters(), lr=0.0001)
@@ -203,11 +202,11 @@ def train(all_data_df: pd.DataFrame, dad_iters=4, num_off_policy_epochs=5, num_s
                                                                   first_epoch, last_epoch,
                                                                   blend_amount_fn(epoch_num, num_epochs), False)
             if (epoch_num > 0 and epoch_num % 20 == 0) or epoch_num == num_epochs - 1:
-                save_model(dad_num, epoch_num, False)
+                save_model(False)
             if best_result is None or test_loss.get_total_loss() < best_result.get_total_loss():
                 best_result = test_loss
-                save_model(dad_num, epoch_num, True)
-            save_tensorboard(train_loss, test_loss, train_accuracy, test_accuracy, dad_num*num_epochs + epoch_num)
+                save_model(True)
+            save_tensorboard(train_loss, test_loss, train_accuracy, test_accuracy, overall_epoch_num)
             #scheduler.step(train_loss)
 
     total_train_df = train_df
