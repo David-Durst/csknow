@@ -32,7 +32,7 @@ def normalize_columns(df: pd.DataFrame, norm_x_col: str, norm_y_col: str, start_
                       end_x_col: str, end_y_col: str):
     delta_x = df[end_x_col] - df[start_x_col]
     # modify x to deal with wrap around 180
-    delta_x = delta_x.where(delta_x.abs() < 180., 360. - delta_x)
+    delta_x = delta_x.where(delta_x.abs() < 180., -360. + delta_x)
     delta_x = delta_x.where(delta_x.abs() > -180., 360. + delta_x)
     delta_y = df[end_y_col] - df[start_y_col]
     df[norm_x_col] = df[norm_x_col] / delta_x

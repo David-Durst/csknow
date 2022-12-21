@@ -58,9 +58,9 @@ class PerspectiveColumns:
         self.cur_view_angle_x_column = temporal_vis_float_column_names.present_columns[x_col_offset]
         self.cur_view_angle_y_column = temporal_vis_float_column_names.present_columns[y_col_offset]
         self.all_view_angle_x_columns = \
-            temporal_vis_float_column_names.get_matching_cols(base_vis_float_columns[x_col_offset])
+            temporal_vis_float_column_names.get_matching_cols(base_vis_float_columns[x_col_offset], include_future=False)
         self.all_view_angle_y_columns = \
-            temporal_vis_float_column_names.get_matching_cols(base_vis_float_columns[y_col_offset])
+            temporal_vis_float_column_names.get_matching_cols(base_vis_float_columns[y_col_offset], include_future=False)
         self.victim_min_view_angle_x_column = \
             temporal_vis_float_column_names.present_columns[victim_min_view_angle_x_offset]
         self.victim_min_view_angle_y_column = \
