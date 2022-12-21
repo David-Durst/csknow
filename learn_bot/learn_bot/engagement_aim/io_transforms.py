@@ -859,6 +859,14 @@ class IOColumnTransformers:
 
         x[col_ranges[col_index].start] = value
 
+    def get_column_transformer_by_type(self, input: bool, ct_type: ColumnTransformerType) -> List[PTColumnTransformer]:
+        column_transformers = self.input_ct_pts if input else self.output_ct_pts
+        valid_cts = []
+        for column_transformer in column_transformers:
+            if column_transformer.pt_ct_type == ct_type:
+                valid_cts.append(column_transformer)
+        return valid_cts
+
 
 def get_transformed_outputs(x: ModelOutput) -> torch.Tensor:
     return x[0]

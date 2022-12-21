@@ -65,10 +65,6 @@ def norm_2d(xy: torch.Tensor):
     return torch.sqrt(torch.pow(xy[:, :num_x_targets], 2) + torch.pow(xy[:, num_x_targets:], 2))
 
 
-#angle_transformer_180 = PT180AngleColumnTransformer()
-#angle_transformer_90 = PT90AngleColumnTransformer()
-
-
 # https://discuss.pytorch.org/t/how-to-combine-multiple-criterions-to-a-loss-function/348/4
 def compute_loss(x, pred, y_transformed, y_untransformed, transformed_targets, attacking, transformed_last_input_angles,
                  time_weights, column_transformers: IOColumnTransformers):
@@ -160,43 +156,43 @@ def compute_loss(x, pred, y_transformed, y_untransformed, transformed_targets, a
     return losses
 
 
+def wrap_angles(angle_deltas: torch.Tensor) -> torch.Tensor:
+    sin_deltas = torch.sin(torch.deg2rad(angle_deltas))
+    cos_deltas = torch.cos(torch.deg2rad(angle_deltas))
+    return torch.rad2deg(torch.atan2(sin_deltas, cos_deltas))
+
 def compute_accuracy(pred, Y, accuracy, column_transformers: IOColumnTransformers):
     pred_untransformed = get_untransformed_outputs(pred)
     pred_untransformed = pred_untransformed.to(CPU_DEVICE_STR)
     Y = Y.to(CPU_DEVICE_STR)
 
     if column_transformers.output_types.float_standard_cols or column_transformers.output_types.float_delta_cols or \
-            column_transformers.output_types.float_180_angle_cols or column_transformers.output_types.float_180_angle_delta_cols or \
             column_transformers.output_types.float_90_angle_cols or column_transformers.output_types.float_90_angle_delta_cols:
-        #wrap_col_ranges = column_transformers.get_name_ranges(False, False,
-        #                                                      frozenset({ColumnTransformerType.FLOAT_STANDARD, ColumnTransformerType.FLOAT_DELTA,
-        #                                                                 ColumnTransformerType.FLOAT_180_ANGLE, ColumnTransformerType.FLOAT_180_ANGLE_DELTA,
-        #                                                                 ColumnTransformerType.FLOAT_90_ANGLE, ColumnTransformerType.FLOAT_90_ANGLE_DELTA}),
-        #                                                      True)
-        #wrap_col_range = range(wrap_col_ranges[0].start, wrap_col_ranges[-1].stop)
-        #wrap_angular_differences = pred_untransformed[:, wrap_col_range] - Y[:, wrap_col_range]
-        #fixed_angular_differences = angle_transformer_180.inverse(angle_transformer_180.convert(wrap_angular_differences))
-
+        # don't wrap 90 as can't wrap vertically in csgo
         col_ranges = column_transformers.get_name_ranges(False, False,
-                                                         frozenset({ColumnTransformerType.FLOAT_STANDARD, ColumnTransformerType.FLOAT_DELTA,
-                                                                    ColumnTransformerType.FLOAT_180_ANGLE, ColumnTransformerType.FLOAT_180_ANGLE_DELTA,
-                                                                    ColumnTransformerType.FLOAT_90_ANGLE, ColumnTransformerType.FLOAT_90_ANGLE_DELTA}))
+                                                         frozenset({ColumnTransformerType.FLOAT_STANDARD,
+                                                                    ColumnTransformerType.FLOAT_DELTA,
+                                                                    ColumnTransformerType.FLOAT_90_ANGLE,
+                                                                    ColumnTransformerType.FLOAT_90_ANGLE_DELTA}))
         col_range = range(col_ranges[0].start, col_ranges[-1].stop)
 
-        #merged_pred_values = pred_untransformed.detach().clone()
-        #merged_pred_values[:, wrap_col_range] = fixed_angular_differences
-        #merged_y_values = Y
-        #merged_y_values[:, wrap_col_range] = 0.
-
-        #squared_errors = torch.square(merged_pred_values[:, col_range] - merged_y_values[:, col_range]).sum(dim=0).to(CPU_DEVICE_STR)
         squared_errors = torch.square(pred_untransformed[:, col_range] - Y[:, col_range]).sum(dim=0).to(CPU_DEVICE_STR)
         for i, name in enumerate(column_transformers.output_types.float_standard_cols +
                                  column_transformers.output_types.delta_float_column_names() +
-                                 column_transformers.output_types.float_180_angle_cols +
-                                 column_transformers.output_types.delta_180_angle_column_names() +
                                  column_transformers.output_types.float_90_angle_cols +
-                                 column_transformers.output_types.delta_90_angle_column_names()
-                                 ):
+                                 column_transformers.output_types.delta_90_angle_column_names()):
+            accuracy[name] += squared_errors[i].item()
+    if column_transformers.output_types.float_180_angle_cols or \
+            column_transformers.output_types.float_180_angle_delta_cols:
+        col_ranges = column_transformers.get_name_ranges(False, False,
+                                                         frozenset({ColumnTransformerType.FLOAT_180_ANGLE,
+                                                                    ColumnTransformerType.FLOAT_180_ANGLE_DELTA}))
+        col_range = range(col_ranges[0].start, col_ranges[-1].stop)
+
+        wrapped_angle_differences = wrap_angles(pred_untransformed[:, col_range] - Y[:, col_range])
+        squared_errors = torch.square(wrapped_angle_differences).sum(dim=0).to(CPU_DEVICE_STR)
+        for i, name in enumerate(column_transformers.output_types.float_180_angle_cols +
+                                 column_transformers.output_types.delta_180_angle_column_names()):
             accuracy[name] += squared_errors[i].item()
 
     for name, col_range in zip(column_transformers.output_types.categorical_cols,
