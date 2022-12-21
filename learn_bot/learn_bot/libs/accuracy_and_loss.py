@@ -65,6 +65,11 @@ def norm_2d(xy: torch.Tensor):
     return torch.sqrt(torch.pow(xy[:, :num_x_targets], 2) + torch.pow(xy[:, num_x_targets:], 2))
 
 
+def wrap_angles(angle_deltas: torch.Tensor) -> torch.Tensor:
+    sin_deltas = torch.sin(torch.deg2rad(angle_deltas))
+    cos_deltas = torch.cos(torch.deg2rad(angle_deltas))
+    return torch.rad2deg(torch.atan2(sin_deltas, cos_deltas))
+
 # https://discuss.pytorch.org/t/how-to-combine-multiple-criterions-to-a-loss-function/348/4
 def compute_loss(x, pred, y_transformed, y_untransformed, transformed_targets, attacking, transformed_last_input_angles,
                  time_weights, column_transformers: IOColumnTransformers):
@@ -155,11 +160,6 @@ def compute_loss(x, pred, y_transformed, y_untransformed, transformed_targets, a
             losses.cat_loss += classification_loss_fn(pred_transformed[:, col_range], y_transformed[:, col_range])
     return losses
 
-
-def wrap_angles(angle_deltas: torch.Tensor) -> torch.Tensor:
-    sin_deltas = torch.sin(torch.deg2rad(angle_deltas))
-    cos_deltas = torch.cos(torch.deg2rad(angle_deltas))
-    return torch.rad2deg(torch.atan2(sin_deltas, cos_deltas))
 
 def compute_accuracy(pred, Y, accuracy, column_transformers: IOColumnTransformers):
     pred_untransformed = get_untransformed_outputs(pred)
