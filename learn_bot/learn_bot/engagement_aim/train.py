@@ -48,14 +48,16 @@ def train(all_data_df: pd.DataFrame, dad_iters=4, num_off_policy_epochs=5, num_s
     # all_data_df = all_data_df[all_data_df['num shots fired'] > 0]
 
     if diff_train_test:
-        train_test_split = train_test_split_by_col(all_data_df, 'engagement id')
+        train_test_split = train_test_split_by_col(all_data_df, engagement_id_column)
         train_df = train_test_split.train_df.copy()
+        train_group_ids = train_test_split.train_group_ids
         make_index_column(train_df)
         test_df = train_test_split.test_df.copy()
         make_index_column(test_df)
     else:
         make_index_column(all_data_df)
         train_df = all_data_df
+        train_group_ids = all_data_df.loc[:, engagement_id_column].unique().to_list()
         test_df = all_data_df
 
 
@@ -163,11 +165,14 @@ def train(all_data_df: pd.DataFrame, dad_iters=4, num_off_policy_epochs=5, num_s
         return cumulative_loss, accuracy
 
     def save_model(best: bool):
+        shared_str = f"off_{num_off_policy_epochs}_scheduled_" \
+                     f"{num_scheduled_sampling_epochs}_on_{num_on_policy_epochs}_dad_{dad_iters}"
         if best:
-            name = "best_model.pt"
+            name = f"best_model_{shared_str}.pt"
         else:
-            name = "model.pt"
+            name = f"model_{shared_str}.pt"
         torch.save({
+            'train_group_ids': train_group_ids,
             'model_state_dict': model.state_dict(),
             'optimizer_state_dict': optimizer.state_dict(),
         }, checkpoints_path / name)
