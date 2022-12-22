@@ -336,8 +336,8 @@ export function drawMouseData(kymographCanvas: HTMLCanvasElement,
                 dataIndex = futurePredictionDeltaData.length
             }
             predictionDeltaData.push({
-                x: parseFloat(curAimData.otherColumnValues[2]),
-                y: parseFloat(curAimData.otherColumnValues[3])
+                x: parseFloat(curAimData.otherColumnValues[0]),
+                y: parseFloat(curAimData.otherColumnValues[1])
             })
             if (hurtTickIds.has(curAimData.foreignKeyValues[0])) {
                 hurtDataIndices[dataSetIndex].add(dataIndex)
