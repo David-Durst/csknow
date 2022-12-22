@@ -12,7 +12,7 @@ constexpr int WARMUP_TICKS = 128;
 class InferenceEngagementAimResult : public QueryResult {
 public:
     const TrainingEngagementAimResult & trainingEngagementAimResult;
-    vector<Vec2> predictedDeltaViewAngle, normalizedPredictedDeltaViewAngle;
+    vector<Vec2> predictedDeltaRelativeFirstHeadViewAngle;
 
 
     explicit InferenceEngagementAimResult(const TrainingEngagementAimResult & trainingEngagementAimResult) :
@@ -42,10 +42,8 @@ public:
             << trainingEngagementAimResult.engagementId[index] << ","
             << trainingEngagementAimResult.attackerPlayerId[index] << ","
             << trainingEngagementAimResult.victimPlayerId[index] << ","
-            << predictedDeltaViewAngle[index].x << ","
-            << predictedDeltaViewAngle[index].y << ","
-            << normalizedPredictedDeltaViewAngle[index].x << ","
-            << normalizedPredictedDeltaViewAngle[index].y;
+            << predictedDeltaRelativeFirstHeadViewAngle[index].x << ","
+            << predictedDeltaRelativeFirstHeadViewAngle[index].y;
 
         ss << std::endl;
     }
@@ -55,8 +53,7 @@ public:
     }
 
     vector<string> getOtherColumnNames() override {
-        return {"predicted delta view angle x", "predicted delta view angle y",
-                "normalized predicted delta view angle x", "normalized predicted delta view angle y"};
+        return {"predicted delta view angle x", "predicted delta view angle y"};
     }
 
     void runQuery(const Rounds & rounds, const string & modelsDir, const EngagementResult & engagementResult);

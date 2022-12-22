@@ -11,13 +11,66 @@
 namespace fs = std::filesystem;
 
 struct EngagementAimInferenceTickData {
-    Vec2 deltaViewAngle;
-    Vec2 recoilAngle;
-    Vec2 deltaViewAngleRecoilAdjusted;
-    Vec3 deltaPosition;
-    double eyeToHeadDistance;
+    // general float encoded
+    bool hitVictim;
+    float recoilIndex;
+    int64_t ticksSinceLastFire;
+    int64_t ticksSinceLastHoldingAttack;
+    bool victimVisible;
+    bool victimVisibleYet;
+    bool victimAlive;
+    Vec3 attackerEyePos;
+    Vec3 victimEyePos;
+    Vec3 attackerVel;
+    Vec3 victimVel;
+    // angle encoded
+    Vec2 idealViewAngle;
+    Vec2 deltaRelativeFirstHeadViewAngle;
+    Vec2 scaledRecoilAngle;
+    Vec2 victimRelativeFirstHeadMinViewAngle;
+    Vec2 victimRelativeFirstHeadMaxViewAngle;
+    Vec2 victimRelativeFirstHeadCurHeadViewAngle;
     int warmupTicksUsed;
 };
+
+void updatePriorData(EngagementAimInferenceTickData & priorData,
+                     const TrainingEngagementAimResult & trainingEngagementAimResult,
+                     size_t engagementAimId, size_t tickNum) {
+    priorData.hitVictim =
+        trainingEngagementAimResult.hitVictim[engagementAimId][tickNum];
+    priorData.recoilIndex =
+        trainingEngagementAimResult.recoilIndex[engagementAimId][tickNum];
+    priorData.ticksSinceLastFire =
+        trainingEngagementAimResult.ticksSinceLastFire[engagementAimId][tickNum];
+    priorData.ticksSinceLastHoldingAttack =
+        trainingEngagementAimResult.ticksSinceLastHoldingAttack[engagementAimId][tickNum];
+    priorData.victimVisible =
+        trainingEngagementAimResult.victimVisible[engagementAimId][tickNum];
+    priorData.victimVisibleYet =
+        trainingEngagementAimResult.victimVisibleYet[engagementAimId][tickNum];
+    priorData.victimAlive =
+        trainingEngagementAimResult.victimAlive[engagementAimId][tickNum];
+    priorData.attackerEyePos =
+        trainingEngagementAimResult.attackerEyePos[engagementAimId][tickNum];
+    priorData.victimEyePos =
+        trainingEngagementAimResult.victimEyePos[engagementAimId][tickNum];
+    priorData.attackerVel =
+        trainingEngagementAimResult.attackerVel[engagementAimId][tickNum];
+    priorData.victimVel =
+        trainingEngagementAimResult.victimVel[engagementAimId][tickNum];
+    priorData.idealViewAngle =
+        trainingEngagementAimResult.idealViewAngle[engagementAimId][tickNum];
+    priorData.deltaRelativeFirstHeadViewAngle =
+        trainingEngagementAimResult.deltaRelativeCurHeadViewAngle[engagementAimId][tickNum];
+    priorData.scaledRecoilAngle =
+        trainingEngagementAimResult.scaledRecoilAngle[engagementAimId][tickNum];
+    priorData.victimRelativeFirstHeadMinViewAngle =
+        trainingEngagementAimResult.victimRelativeCurHeadMinViewAngle[engagementAimId][tickNum];
+    priorData.victimRelativeFirstHeadMaxViewAngle =
+        trainingEngagementAimResult.victimRelativeFirstHeadMaxViewAngle[engagementAimId][tickNum];
+    priorData.victimRelativeFirstHeadCurHeadViewAngle =
+        trainingEngagementAimResult.victimRelativeFirstHeadCurHeadViewAngle[engagementAimId][tickNum];
+}
 
 void InferenceEngagementAimResult::runQuery(const Rounds & rounds, const string & modelsDir,
                                             const EngagementResult & engagementResult) {
@@ -37,9 +90,7 @@ void InferenceEngagementAimResult::runQuery(const Rounds & rounds, const string 
 
     std::atomic<int64_t> roundsProcessed = 0;
 
-    predictedDeltaViewAngle.resize(trainingEngagementAimResult.size);
-    normalizedPredictedDeltaViewAngle.resize(trainingEngagementAimResult.size);
-    /*
+    predictedDeltaRelativeFirstHeadViewAngle.resize(trainingEngagementAimResult.size);
 #pragma omp parallel for
     for (int64_t roundIndex = 0; roundIndex < rounds.size; roundIndex++) {
         auto options = torch::TensorOptions().dtype(at::kFloat);
@@ -56,16 +107,8 @@ void InferenceEngagementAimResult::runQuery(const Rounds & rounds, const string 
                 engagementResult.engagementsPerTick.eventToInterval.at(engagementId);
             if (trainingEngagementAimResult.tickId[engagementAimId] == engagementTickRange.minId) {
                 for (size_t priorTickNum = 0; priorTickNum < PAST_AIM_TICKS; priorTickNum++) {
-                    priorData[priorTickNum].deltaViewAngle =
-                        trainingEngagementAimResult.deltaViewAngle[engagementAimId][priorTickNum];
-                    priorData[priorTickNum].recoilAngle =
-                        trainingEngagementAimResult.recoilAngle[engagementAimId][priorTickNum];
-                    priorData[priorTickNum].deltaViewAngleRecoilAdjusted =
-                        trainingEngagementAimResult.deltaViewAngleRecoilAdjusted[engagementAimId][priorTickNum];
-                    priorData[priorTickNum].eyeToHeadDistance =
-                        trainingEngagementAimResult.eyeToHeadDistance[engagementAimId][priorTickNum];
-                    priorData[priorTickNum].deltaPosition =
-                        trainingEngagementAimResult.deltaPosition[engagementAimId][priorTickNum];
+                    updatePriorData(priorData[priorTickNum], trainingEngagementAimResult,
+                                    engagementAimId, priorTickNum);
                 }
                 // only need the last prior data entry's warmup tracker
                 priorData[PAST_AIM_TICKS - 1].warmupTicksUsed = 0;
@@ -77,37 +120,54 @@ void InferenceEngagementAimResult::runQuery(const Rounds & rounds, const string 
                 std::vector<float> rowCPP;
                 // all but cur tick are inputs
                 for (size_t priorDeltaNum = 0; priorDeltaNum < priorData.size(); priorDeltaNum++) {
-                    rowCPP.push_back(static_cast<float>(priorData[priorDeltaNum].deltaViewAngle.x));
-                    rowCPP.push_back(static_cast<float>(priorData[priorDeltaNum].deltaViewAngle.y));
-                    rowCPP.push_back(static_cast<float>(priorData[priorDeltaNum].recoilAngle.x));
-                    rowCPP.push_back(static_cast<float>(priorData[priorDeltaNum].recoilAngle.y));
-                    rowCPP.push_back(static_cast<float>(priorData[priorDeltaNum].deltaViewAngleRecoilAdjusted.x));
-                    rowCPP.push_back(static_cast<float>(priorData[priorDeltaNum].deltaViewAngleRecoilAdjusted.y));
-                    rowCPP.push_back(static_cast<float>(priorData[priorDeltaNum].deltaPosition.x));
-                    rowCPP.push_back(static_cast<float>(priorData[priorDeltaNum].deltaPosition.y));
-                    rowCPP.push_back(static_cast<float>(priorData[priorDeltaNum].deltaPosition.z));
-                    rowCPP.push_back(static_cast<float>(priorData[priorDeltaNum].eyeToHeadDistance));
+                    rowCPP.push_back(static_cast<float>(boolToInt(priorData[priorDeltaNum].hitVictim)));
+                    rowCPP.push_back(static_cast<float>(priorData[priorDeltaNum].recoilIndex));
+                    rowCPP.push_back(static_cast<float>(priorData[priorDeltaNum].ticksSinceLastFire));
+                    rowCPP.push_back(static_cast<float>(priorData[priorDeltaNum].ticksSinceLastHoldingAttack));
+                    rowCPP.push_back(static_cast<float>(boolToInt(priorData[priorDeltaNum].victimVisible)));
+                    rowCPP.push_back(static_cast<float>(boolToInt(priorData[priorDeltaNum].victimVisibleYet)));
+                    rowCPP.push_back(static_cast<float>(boolToInt(priorData[priorDeltaNum].victimAlive)));
+                    rowCPP.push_back(static_cast<float>(priorData[priorDeltaNum].attackerEyePos.x));
+                    rowCPP.push_back(static_cast<float>(priorData[priorDeltaNum].attackerEyePos.y));
+                    rowCPP.push_back(static_cast<float>(priorData[priorDeltaNum].attackerEyePos.z));
+                    rowCPP.push_back(static_cast<float>(priorData[priorDeltaNum].victimEyePos.x));
+                    rowCPP.push_back(static_cast<float>(priorData[priorDeltaNum].victimEyePos.y));
+                    rowCPP.push_back(static_cast<float>(priorData[priorDeltaNum].victimEyePos.z));
+                    rowCPP.push_back(static_cast<float>(priorData[priorDeltaNum].attackerVel.x));
+                    rowCPP.push_back(static_cast<float>(priorData[priorDeltaNum].attackerVel.y));
+                    rowCPP.push_back(static_cast<float>(priorData[priorDeltaNum].attackerVel.z));
+                    rowCPP.push_back(static_cast<float>(priorData[priorDeltaNum].victimVel.x));
+                    rowCPP.push_back(static_cast<float>(priorData[priorDeltaNum].victimVel.y));
+                    rowCPP.push_back(static_cast<float>(priorData[priorDeltaNum].victimVel.z));
+                    rowCPP.push_back(static_cast<float>(priorData[priorDeltaNum].idealViewAngle.x));
+                    rowCPP.push_back(static_cast<float>(priorData[priorDeltaNum].deltaRelativeFirstHeadViewAngle.x));
+                    rowCPP.push_back(static_cast<float>(priorData[priorDeltaNum].scaledRecoilAngle.x));
+                    rowCPP.push_back(static_cast<float>(priorData[priorDeltaNum].victimRelativeFirstHeadMinViewAngle.x));
+                    rowCPP.push_back(static_cast<float>(priorData[priorDeltaNum].victimRelativeFirstHeadMaxViewAngle.x));
+                    rowCPP.push_back(static_cast<float>(priorData[priorDeltaNum].victimRelativeFirstHeadCurHeadViewAngle.x));
+                    rowCPP.push_back(static_cast<float>(priorData[priorDeltaNum].idealViewAngle.y));
+                    rowCPP.push_back(static_cast<float>(priorData[priorDeltaNum].deltaRelativeFirstHeadViewAngle.y));
+                    rowCPP.push_back(static_cast<float>(priorData[priorDeltaNum].scaledRecoilAngle.y));
+                    rowCPP.push_back(static_cast<float>(priorData[priorDeltaNum].victimRelativeFirstHeadMinViewAngle.y));
+                    rowCPP.push_back(static_cast<float>(priorData[priorDeltaNum].victimRelativeFirstHeadMaxViewAngle.y));
+                    rowCPP.push_back(static_cast<float>(priorData[priorDeltaNum].victimRelativeFirstHeadCurHeadViewAngle.y));
                 }
-                rowCPP.push_back(static_cast<float>(trainingEngagementAimResult.numShotsFired[engagementAimId]));
-                rowCPP.push_back(static_cast<float>(trainingEngagementAimResult.ticksSinceLastFire[engagementAimId]));
                 rowCPP.push_back(static_cast<float>(trainingEngagementAimResult.weaponType[engagementAimId]));
                 torch::Tensor rowPT = torch::from_blob(rowCPP.data(), {1, static_cast<long>(rowCPP.size())},
                                                        options).clone();
                 inputs.push_back(rowPT);
 
                 // Execute the model and turn its output into a tensor.
-                at::Tensor output = module.forward(inputs).toTensor();
-                predictedDeltaViewAngle[engagementAimId] = {
-                        static_cast<double>(output[0][output[0].size(0) / 2].item<float>()),
-                        static_cast<double>(output[0][output[0].size(0) / 2 + 1].item<float>())
+                at::Tensor output = module.forward(inputs).toTuple()->elements()[1].toTensor();
+                predictedDeltaRelativeFirstHeadViewAngle[engagementAimId] = {
+                        static_cast<double>(output[0][0].item<float>()),
+                        static_cast<double>(output[0][output[0].size(0) / 2].item<float>())
                 };
             }
             else {
-                predictedDeltaViewAngle[engagementAimId] =
-                        trainingEngagementAimResult.deltaViewAngle[engagementAimId][PAST_AIM_TICKS];
+                predictedDeltaRelativeFirstHeadViewAngle[engagementAimId] =
+                        trainingEngagementAimResult.deltaRelativeFirstHeadViewAngle[engagementAimId][PAST_AIM_TICKS];
             }
-            normalizedPredictedDeltaViewAngle[engagementAimId] = predictedDeltaViewAngle[engagementAimId] /
-                trainingEngagementAimResult.distanceNormalization[engagementAimId];
 
             // if last tick for engagement, remove it from actives. Otherwise rotate the current prediction into prior deltas
             if (trainingEngagementAimResult.tickId[engagementAimId] == engagementTickRange.maxId) {
@@ -116,16 +176,10 @@ void InferenceEngagementAimResult::runQuery(const Rounds & rounds, const string 
                 for (size_t priorDeltaNum = 1; priorDeltaNum < PAST_AIM_TICKS; priorDeltaNum++) {
                     priorData[priorDeltaNum - 1] = priorData[priorDeltaNum];
                 }
-                priorData[PAST_AIM_TICKS - 1].deltaViewAngle = predictedDeltaViewAngle.back();
-                priorData[PAST_AIM_TICKS - 1].recoilAngle =
-                    trainingEngagementAimResult.recoilAngle[engagementAimId][PAST_AIM_TICKS];
-                priorData[PAST_AIM_TICKS - 1].deltaViewAngleRecoilAdjusted =
-                    priorData[PAST_AIM_TICKS - 1].deltaViewAngle +
-                    priorData[PAST_AIM_TICKS - 1].recoilAngle * WEAPON_RECOIL_SCALE;
-                priorData[PAST_AIM_TICKS - 1].deltaPosition =
-                    trainingEngagementAimResult.deltaPosition[engagementAimId][PAST_AIM_TICKS];
-                priorData[PAST_AIM_TICKS - 1].eyeToHeadDistance =
-                    trainingEngagementAimResult.eyeToHeadDistance[engagementAimId][PAST_AIM_TICKS];
+                updatePriorData(priorData[PAST_AIM_TICKS], trainingEngagementAimResult,
+                                engagementAimId, PAST_AIM_TICKS);
+                priorData[PAST_AIM_TICKS - 1].deltaRelativeFirstHeadViewAngle =
+                    predictedDeltaRelativeFirstHeadViewAngle.back();
                 priorData[PAST_AIM_TICKS - 1].warmupTicksUsed++;
             }
         }
@@ -133,5 +187,4 @@ void InferenceEngagementAimResult::runQuery(const Rounds & rounds, const string 
         printProgress(roundsProcessed, rounds.size);
     }
     size = trainingEngagementAimResult.size;
-        */
 }
