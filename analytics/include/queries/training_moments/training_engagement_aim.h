@@ -19,7 +19,6 @@
 #include "geometry.h"
 #include "enum_helpers.h"
 #include "queries/moments/engagement.h"
-#include "queries/moments/engagement_per_tick_aim.h"
 #include "queries/moments/fire_history.h"
 
 using std::string;
@@ -193,33 +192,6 @@ public:
         }
         result.push_back("weapon type");
         return result;
-    }
-
-    void analyzeRollingWindowDifferences(const Rounds & rounds, const Ticks & ticks,
-                                         const EngagementPerTickAimResult & engagementPerTickAimResult) const {
-        int64_t numDifferencesDueToWindowRange = 0;
-        for (int64_t i = 0, j = 0; i < engagementPerTickAimResult.size; i++) {
-            if (engagementPerTickAimResult.tickId[i] == tickId[j]) {
-                j++;
-            }
-            else {
-                int64_t distanceToRoundEnd = rounds.endTick[ticks.roundId[engagementPerTickAimResult.tickId[i]]] -
-                    engagementPerTickAimResult.tickId[i];
-#if false
-                std::cout << "per tick i " << i << " per tick aim tick id " << engagementPerTickAimResult.tickId[i]
-                          << " per tick aim engagmenet id " << engagementPerTickAimResult.engagementId[i]
-                          << " distance to round end " << distanceToRoundEnd
-                          << " training j " << j
-                          << " training tick id " << tickId[j]
-                          << " training engagement id " << engagementId[j] << std::endl;
-#endif //false
-                if (distanceToRoundEnd < FUTURE_AIM_TICKS) {
-                    numDifferencesDueToWindowRange++;
-                }
-            }
-        }
-        std::cout << "missing ticks: " << engagementPerTickAimResult.size - size
-            << " missing ticks due to end of round/window range " << numDifferencesDueToWindowRange << std::endl;
     }
 };
 

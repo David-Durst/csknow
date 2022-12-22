@@ -91,7 +91,7 @@ void InferenceEngagementAimResult::runQuery(const Rounds & rounds, const string 
     std::atomic<int64_t> roundsProcessed = 0;
 
     predictedDeltaRelativeFirstHeadViewAngle.resize(trainingEngagementAimResult.size);
-#pragma omp parallel for
+//#pragma omp parallel for
     for (int64_t roundIndex = 0; roundIndex < rounds.size; roundIndex++) {
         auto options = torch::TensorOptions().dtype(at::kFloat);
         // NUM_TICKS stores cur tick and prior ticks in window, shrink by 1 for just prior ticks
@@ -176,7 +176,7 @@ void InferenceEngagementAimResult::runQuery(const Rounds & rounds, const string 
                 for (size_t priorDeltaNum = 1; priorDeltaNum < PAST_AIM_TICKS; priorDeltaNum++) {
                     priorData[priorDeltaNum - 1] = priorData[priorDeltaNum];
                 }
-                updatePriorData(priorData[PAST_AIM_TICKS], trainingEngagementAimResult,
+                updatePriorData(priorData[PAST_AIM_TICKS - 1], trainingEngagementAimResult,
                                 engagementAimId, PAST_AIM_TICKS);
                 priorData[PAST_AIM_TICKS - 1].deltaRelativeFirstHeadViewAngle =
                     predictedDeltaRelativeFirstHeadViewAngle.back();

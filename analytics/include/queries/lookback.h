@@ -45,6 +45,11 @@ int secondsToGameTicks(const TickRates & tickRates, double seconds) {
     return ceil(tickRates.gameTickRate * seconds);
 }
 
+static inline __attribute__((always_inline))
+double gameTicksToSeconds(const TickRates & tickRates, int64_t gameTicks) {
+    return static_cast<double>(gameTicks) / tickRates.gameTickRate;
+}
+
 static double secondsBetweenTicks(const Ticks & ticks, TickRates tickRates, int64_t startTick, int64_t endTick) {
     return (ticks.gameTickNumber[endTick] - ticks.gameTickNumber[startTick]) / static_cast<double>(tickRates.gameTickRate);
 }

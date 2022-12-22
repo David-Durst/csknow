@@ -67,7 +67,7 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
     // for each engagement in each tick
     // record where supposed to aim vs where aiming and distance
 #pragma omp parallel for
-    for (int64_t roundIndex = 0; roundIndex < rounds.size; roundIndex++) {
+    for (int64_t roundIndex = 0; roundIndex < 2L/*rounds.size*/; roundIndex++) {
         int threadNum = omp_get_thread_num();
         tmpRoundIds[threadNum].push_back(roundIndex);
         tmpRoundStarts[threadNum].push_back(static_cast<int64_t>(tmpTickId[threadNum].size()));

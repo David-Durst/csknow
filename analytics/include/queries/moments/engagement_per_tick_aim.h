@@ -18,6 +18,8 @@
 #include "geometry.h"
 #include "enum_helpers.h"
 #include "queries/moments/engagement.h"
+#include "queries/training_moments/training_engagement_aim.h"
+
 using std::string;
 using std::vector;
 using std::set;
@@ -74,7 +76,7 @@ public:
 
 
 EngagementPerTickAimResult queryEngagementPerTickAim(const Games & games, const Rounds & rounds, const Ticks & ticks,
-                                       const PlayerAtTick & playerAtTick, const Hurt & hurt,
-                                       const EngagementResult & engagementResult);
+                                                     const EngagementResult & engagementResult,
+                                                     const TrainingEngagementAimResult & trainingEngagementAimResult);
 
 #endif //CSKNOW_ENGAGEMENT_PER_TICK_AIM_H

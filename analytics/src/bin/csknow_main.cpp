@@ -287,13 +287,6 @@ int main(int argc, char * argv[]) {
     string engagementName = "engagement";
     EngagementResult engagementResult = queryEngagementResult(games, filteredRounds, ticks, hurt);
     std::cout << "size: " << engagementResult.size << std::endl;
-    std::cout << "processing engagements per tick aim" << std::endl;
-    string engagementPerTickAimName = "engagementPerTickAim";
-    EngagementPerTickAimResult engagementPerTickAimResult =
-            queryEngagementPerTickAim(games, filteredRounds, ticks, playerAtTick, hurt, engagementResult);
-    engagementResult.havePerTickAimTable = true;
-    engagementResult.perTickAimTable = engagementPerTickAimName;
-    std::cout << "size: " << engagementPerTickAimResult.size << std::endl;
     std::cout << "processing non engagement trajectory" << std::endl;
     string nonEngagementTrajectoryName = "nonEngagementTrajectory";
     NonEngagementTrajectoryResult nonEngagementTrajectoryResult =
@@ -315,7 +308,13 @@ int main(int argc, char * argv[]) {
         queryTrainingEngagementAim(games, filteredRounds, ticks, playerAtTick, engagementResult, fireHistoryResult,
                                    map_visPoints.at("de_dust2"));
     std::cout << "size: " << engagementAimResult.size << std::endl;
-    engagementAimResult.analyzeRollingWindowDifferences(filteredRounds, ticks, engagementPerTickAimResult);
+    std::cout << "processing engagements per tick aim" << std::endl;
+    string engagementPerTickAimName = "engagementPerTickAim";
+    EngagementPerTickAimResult engagementPerTickAimResult;// =
+        //queryEngagementPerTickAim(games, filteredRounds, ticks, engagementResult, engagementAimResult);
+    engagementResult.havePerTickAimTable = true;
+    engagementResult.perTickAimTable = engagementPerTickAimName;
+    std::cout << "size: " << engagementPerTickAimResult.size << std::endl;
     std::cout << "processing training navigation data set" << std::endl;
     string trainingNavigationName = "trainNav";
     csknow::navigation::TrainingNavigationResult trainingNavigationResult =
