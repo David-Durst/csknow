@@ -31,7 +31,7 @@ EngagementPerTickAimResult queryEngagementPerTickAim(const Games & games, const 
     // record where supposed to aim vs where aiming and if it's a fire/hit
     // clear out all hurt events on end of round
 //#pragma omp parallel for
-    for (int64_t roundIndex = 0; roundIndex < 2L /*rounds.size*/; roundIndex++) {
+    for (int64_t roundIndex = 0; roundIndex < rounds.size; roundIndex++) {
         int threadNum = omp_get_thread_num();
         tmpRoundIds[threadNum].push_back(roundIndex);
         tmpRoundStarts[threadNum].push_back(static_cast<int64_t>(tmpTickId[threadNum].size()));

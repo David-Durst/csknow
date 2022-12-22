@@ -30,6 +30,7 @@ struct EngagementAimInferenceTickData {
     Vec2 victimRelativeFirstHeadMinViewAngle;
     Vec2 victimRelativeFirstHeadMaxViewAngle;
     Vec2 victimRelativeFirstHeadCurHeadViewAngle;
+    bool holdingAttack;
     int warmupTicksUsed;
 };
 
@@ -70,6 +71,8 @@ void updatePriorData(EngagementAimInferenceTickData & priorData,
         trainingEngagementAimResult.victimRelativeFirstHeadMaxViewAngle[engagementAimId][tickNum];
     priorData.victimRelativeFirstHeadCurHeadViewAngle =
         trainingEngagementAimResult.victimRelativeFirstHeadCurHeadViewAngle[engagementAimId][tickNum];
+    priorData.holdingAttack =
+        trainingEngagementAimResult.holdingAttack[engagementAimId][tickNum];
 }
 
 void InferenceEngagementAimResult::runQuery(const Rounds & rounds, const string & modelsDir,
@@ -119,6 +122,7 @@ void InferenceEngagementAimResult::runQuery(const Rounds & rounds, const string 
                 std::vector<torch::jit::IValue> inputs;
                 std::vector<float> rowCPP;
                 // all but cur tick are inputs
+                // seperate different input types
                 for (size_t priorDeltaNum = 0; priorDeltaNum < priorData.size(); priorDeltaNum++) {
                     rowCPP.push_back(static_cast<float>(boolToInt(priorData[priorDeltaNum].hitVictim)));
                     rowCPP.push_back(static_cast<float>(priorData[priorDeltaNum].recoilIndex));
@@ -139,6 +143,8 @@ void InferenceEngagementAimResult::runQuery(const Rounds & rounds, const string 
                     rowCPP.push_back(static_cast<float>(priorData[priorDeltaNum].victimVel.x));
                     rowCPP.push_back(static_cast<float>(priorData[priorDeltaNum].victimVel.y));
                     rowCPP.push_back(static_cast<float>(priorData[priorDeltaNum].victimVel.z));
+                }
+                for (size_t priorDeltaNum = 0; priorDeltaNum < priorData.size(); priorDeltaNum++) {
                     rowCPP.push_back(static_cast<float>(priorData[priorDeltaNum].idealViewAngle.x));
                     rowCPP.push_back(static_cast<float>(priorData[priorDeltaNum].deltaRelativeFirstHeadViewAngle.x));
                     rowCPP.push_back(static_cast<float>(priorData[priorDeltaNum].scaledRecoilAngle.x));
@@ -151,6 +157,9 @@ void InferenceEngagementAimResult::runQuery(const Rounds & rounds, const string 
                     rowCPP.push_back(static_cast<float>(priorData[priorDeltaNum].victimRelativeFirstHeadMinViewAngle.y));
                     rowCPP.push_back(static_cast<float>(priorData[priorDeltaNum].victimRelativeFirstHeadMaxViewAngle.y));
                     rowCPP.push_back(static_cast<float>(priorData[priorDeltaNum].victimRelativeFirstHeadCurHeadViewAngle.y));
+                }
+                for (size_t priorDeltaNum = 0; priorDeltaNum < priorData.size(); priorDeltaNum++) {
+                    rowCPP.push_back(static_cast<float>(boolToInt(priorData[priorDeltaNum].holdingAttack)));
                 }
                 rowCPP.push_back(static_cast<float>(trainingEngagementAimResult.weaponType[engagementAimId]));
                 torch::Tensor rowPT = torch::from_blob(rowCPP.data(), {1, static_cast<long>(rowCPP.size())},

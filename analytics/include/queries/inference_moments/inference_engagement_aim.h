@@ -7,7 +7,7 @@
 
 #include "queries/training_moments/training_engagement_aim.h"
 
-constexpr int WARMUP_TICKS = 128;
+constexpr int WARMUP_TICKS = 0;
 
 class InferenceEngagementAimResult : public QueryResult {
 public:

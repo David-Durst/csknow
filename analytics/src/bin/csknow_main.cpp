@@ -310,8 +310,8 @@ int main(int argc, char * argv[]) {
     std::cout << "size: " << engagementAimResult.size << std::endl;
     std::cout << "processing engagements per tick aim" << std::endl;
     string engagementPerTickAimName = "engagementPerTickAim";
-    EngagementPerTickAimResult engagementPerTickAimResult;// =
-        //queryEngagementPerTickAim(games, filteredRounds, ticks, engagementResult, engagementAimResult);
+    EngagementPerTickAimResult engagementPerTickAimResult =
+        queryEngagementPerTickAim(games, filteredRounds, ticks, engagementResult, engagementAimResult);
     engagementResult.havePerTickAimTable = true;
     engagementResult.perTickAimTable = engagementPerTickAimName;
     std::cout << "size: " << engagementPerTickAimResult.size << std::endl;
