@@ -141,10 +141,10 @@ export function createCharts(kymographCtx: CanvasRenderingContext2D, scatterCtx:
                     position: 'bottom',
                     title: {
                         display: true,
-                        text: "Yaw Delta (deg / target height deg)"
+                        text: "Yaw Delta (deg)"
                     },
-                    min: -1.5,
-                    max: 1.5,
+                    //min: -1.5,
+                    //max: 1.5,
                     reverse: true,
                     ticks: {
                         stepSize: 0.5
@@ -153,10 +153,10 @@ export function createCharts(kymographCtx: CanvasRenderingContext2D, scatterCtx:
                 y: {
                     title: {
                         display: true,
-                        text: "Pitch Delta (deg / player height deg)"
+                        text: "Pitch Delta (deg)"
                     },
-                    min: -1.5,
-                    max: 1.0,
+                    //min: -1.5,
+                    //max: 1.0,
                 }
             },
             responsive: false,
@@ -164,7 +164,7 @@ export function createCharts(kymographCtx: CanvasRenderingContext2D, scatterCtx:
             plugins: {
                 title: {
                     display: true,
-                    text: "Normalized View Angle Delta Relative To Aiming At Enemy Head"
+                    text: "Input Delta View Angle"
                 }
             }
         }
@@ -180,10 +180,10 @@ export function createCharts(kymographCtx: CanvasRenderingContext2D, scatterCtx:
                     position: 'bottom',
                     title: {
                         display: true,
-                        text: "Yaw Delta (deg / target height deg)"
+                        text: "Yaw Delta (deg)"
                     },
-                    min: -1.5,
-                    max: 1.5,
+                    //min: -1.5,
+                    //max: 1.5,
                     reverse: true,
                     ticks: {
                         stepSize: 0.5
@@ -192,10 +192,10 @@ export function createCharts(kymographCtx: CanvasRenderingContext2D, scatterCtx:
                 y: {
                     title: {
                         display: true,
-                        text: "Pitch Delta (deg / player height deg)"
+                        text: "Pitch Delta (deg)"
                     },
-                    min: -1.5,
-                    max: 1.0,
+                    //min: -1.5,
+                    //max: 1.0,
                 }
             },
             responsive: false,
@@ -203,7 +203,7 @@ export function createCharts(kymographCtx: CanvasRenderingContext2D, scatterCtx:
             plugins: {
                 title: {
                     display: true,
-                    text: "Inference Delta View Angle ..."
+                    text: "Pred Delta View Angle"
                 }
             }
         }
@@ -225,6 +225,7 @@ export function drawMouseData(kymographCanvas: HTMLCanvasElement,
                               inferenceCanvas: HTMLCanvasElement,
                               gameData: GameData, tickData: TickRow, eventData: Row) {
     const parser = gameData.parsers.get(curEvent)
+    /*
     if (zoomMouseData) {
         scatterChart.options.scales.x.min = -1.5
         scatterChart.options.scales.x.max = 1.5
@@ -245,6 +246,7 @@ export function drawMouseData(kymographCanvas: HTMLCanvasElement,
         inferenceChart.options.scales.y.min = -3.0
         inferenceChart.options.scales.y.max = 2.0
     }
+     */
     if (parser != null && parser.havePerTickAimTable && eventData != null && displayMouseData) {
         kymographCanvas.style.display = "inline-block"
         scatterCanvas.style.display = "inline-block"
