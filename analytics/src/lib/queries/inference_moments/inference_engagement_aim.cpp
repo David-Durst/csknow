@@ -62,11 +62,11 @@ void updatePriorData(EngagementAimInferenceTickData & priorData,
     priorData.idealViewAngle =
         trainingEngagementAimResult.idealViewAngle[engagementAimId][tickNum];
     priorData.deltaRelativeFirstHeadViewAngle =
-        trainingEngagementAimResult.deltaRelativeCurHeadViewAngle[engagementAimId][tickNum];
+        trainingEngagementAimResult.deltaRelativeFirstHeadViewAngle[engagementAimId][tickNum];
     priorData.scaledRecoilAngle =
         trainingEngagementAimResult.scaledRecoilAngle[engagementAimId][tickNum];
     priorData.victimRelativeFirstHeadMinViewAngle =
-        trainingEngagementAimResult.victimRelativeCurHeadMinViewAngle[engagementAimId][tickNum];
+        trainingEngagementAimResult.victimRelativeFirstHeadMinViewAngle[engagementAimId][tickNum];
     priorData.victimRelativeFirstHeadMaxViewAngle =
         trainingEngagementAimResult.victimRelativeFirstHeadMaxViewAngle[engagementAimId][tickNum];
     priorData.victimRelativeFirstHeadCurHeadViewAngle =
@@ -148,15 +148,23 @@ void InferenceEngagementAimResult::runQuery(const Rounds & rounds, const string 
                     rowCPP.push_back(static_cast<float>(priorData[priorDeltaNum].idealViewAngle.x));
                     rowCPP.push_back(static_cast<float>(priorData[priorDeltaNum].deltaRelativeFirstHeadViewAngle.x));
                     rowCPP.push_back(static_cast<float>(priorData[priorDeltaNum].scaledRecoilAngle.x));
-                    rowCPP.push_back(static_cast<float>(priorData[priorDeltaNum].victimRelativeFirstHeadMinViewAngle.x));
-                    rowCPP.push_back(static_cast<float>(priorData[priorDeltaNum].victimRelativeFirstHeadMaxViewAngle.x));
-                    rowCPP.push_back(static_cast<float>(priorData[priorDeltaNum].victimRelativeFirstHeadCurHeadViewAngle.x));
+                    rowCPP.push_back(
+                        static_cast<float>(priorData[priorDeltaNum].victimRelativeFirstHeadMinViewAngle.x));
+                    rowCPP.push_back(
+                        static_cast<float>(priorData[priorDeltaNum].victimRelativeFirstHeadMaxViewAngle.x));
+                    rowCPP.push_back(
+                        static_cast<float>(priorData[priorDeltaNum].victimRelativeFirstHeadCurHeadViewAngle.x));
+                }
+                for (size_t priorDeltaNum = 0; priorDeltaNum < priorData.size(); priorDeltaNum++) {
                     rowCPP.push_back(static_cast<float>(priorData[priorDeltaNum].idealViewAngle.y));
                     rowCPP.push_back(static_cast<float>(priorData[priorDeltaNum].deltaRelativeFirstHeadViewAngle.y));
                     rowCPP.push_back(static_cast<float>(priorData[priorDeltaNum].scaledRecoilAngle.y));
-                    rowCPP.push_back(static_cast<float>(priorData[priorDeltaNum].victimRelativeFirstHeadMinViewAngle.y));
-                    rowCPP.push_back(static_cast<float>(priorData[priorDeltaNum].victimRelativeFirstHeadMaxViewAngle.y));
-                    rowCPP.push_back(static_cast<float>(priorData[priorDeltaNum].victimRelativeFirstHeadCurHeadViewAngle.y));
+                    rowCPP.push_back(
+                        static_cast<float>(priorData[priorDeltaNum].victimRelativeFirstHeadMinViewAngle.y));
+                    rowCPP.push_back(
+                        static_cast<float>(priorData[priorDeltaNum].victimRelativeFirstHeadMaxViewAngle.y));
+                    rowCPP.push_back(
+                        static_cast<float>(priorData[priorDeltaNum].victimRelativeFirstHeadCurHeadViewAngle.y));
                 }
                 for (size_t priorDeltaNum = 0; priorDeltaNum < priorData.size(); priorDeltaNum++) {
                     rowCPP.push_back(static_cast<float>(boolToInt(priorData[priorDeltaNum].holdingAttack)));
@@ -188,7 +196,7 @@ void InferenceEngagementAimResult::runQuery(const Rounds & rounds, const string 
                 updatePriorData(priorData[PAST_AIM_TICKS - 1], trainingEngagementAimResult,
                                 engagementAimId, PAST_AIM_TICKS);
                 priorData[PAST_AIM_TICKS - 1].deltaRelativeFirstHeadViewAngle =
-                    predictedDeltaRelativeFirstHeadViewAngle.back();
+                    predictedDeltaRelativeFirstHeadViewAngle[engagementAimId];
                 priorData[PAST_AIM_TICKS - 1].warmupTicksUsed++;
             }
         }
