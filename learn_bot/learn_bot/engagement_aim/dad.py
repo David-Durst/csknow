@@ -140,8 +140,8 @@ def on_policy_inference(dataset: AimDataset, orig_df: pd.DataFrame, model: nn.Mo
                 X_rolling = torch.stack(round_row_tensors, dim=0)
                 pred = model(X_rolling.to(CUDA_DEVICE_STR))
                 pred = (pred[0].to(CPU_DEVICE_STR).detach(), pred[1].to(CPU_DEVICE_STR).detach())
-                print(",".join([str(x.item()) for x in list(X_rolling[0])]))
-                print(f"{pred[1][0,0].item()}, {pred[1][0,14].item()}")
+                #print(",".join([str(x.item()) for x in list(X_rolling[0])]))
+                #print(f"{pred[1][0,0].item()}, {pred[1][0,14].item()}")
                 #pred = model(X_rolling).detach()
                 # need to add output to data set
                 for i, valid_round_id in enumerate(valid_rounds):
