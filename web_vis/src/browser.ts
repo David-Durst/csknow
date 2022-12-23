@@ -39,7 +39,7 @@ import {
     getTables,
     remoteAddr,
     setRemoteAddr,
-    getRoundFilteredTables, getNonTemporalTables, getBlob
+    getRoundFilteredTables, getNonTemporalTables, getBlob, defaultRemoteAddr
 } from "./controller/downloadData";
 import {
     setupSelectors,
@@ -55,7 +55,6 @@ const path = require("path");
 
 let roundLabelStr: string = ""
 let downloadSelect: HTMLSelectElement = null;
-let remoteAddrSelect: HTMLSelectElement = null;
 const black = "rgba(0,0,0,1.0)";
 const gray = "rgba(159,159,159,1.0)";
 const lightGray = "rgba(200,200,200,0.7)";
@@ -63,10 +62,6 @@ const darkBlue = "rgba(4,190,196,1.0)";
 const lightBlue = "rgba(194,255,243,1.0)";
 const darkRed = "rgba(209,0,0,1.0)";
 const lightRed = "rgba(255,143,143,1.0)";
-
-function assignRemoteAddr() {
-    setRemoteAddr(remoteAddrSelect.value)
-}
 
 // Set the AWS region
 const REGION = "us-east-1"; //e.g. "us-east-1"
@@ -100,12 +95,16 @@ async function init() {
     setupSmallOrLargeMode();
     // While loop that runs until response.truncated is false
     downloadSelect = document.querySelector<HTMLSelectElement>("#download-type")
-    remoteAddrSelect = document.querySelector<HTMLSelectElement>("#remote-addr")
     if (smallMode) {
         setRemoteAddr(path.parse(document.URL).dir + "/bot_example_data/")
     }
     else {
-        setRemoteAddr(remoteAddrSelect.value)
+        if (window.location.protocol == "file:") {
+            setRemoteAddr("http://localhost:3123/")
+        }
+        else {
+            setRemoteAddr(defaultRemoteAddr)
+        }
     }
     setupCanvas()
     createGameData();
@@ -122,7 +121,6 @@ async function init() {
     setInitialized();
     registerPlayHandlers();
     document.querySelector<HTMLSelectElement>("#download-type").addEventListener("change", setMatchAndRoundLabels)
-    document.querySelector<HTMLSelectElement>("#remote-addr").addEventListener("change", assignRemoteAddr)
     setupCanvasHandlers()
     setupFilterHandlers()
 }

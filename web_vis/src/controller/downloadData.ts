@@ -8,7 +8,8 @@ import {
 import IntervalTree from "@flatten-js/interval-tree";
 import {indexEventsForRound} from "../data/ticksToOtherTables";
 
-export let remoteAddr = "http://52.86.105.42:3123/"
+export const defaultRemoteAddr = "http://54.219.195.192:3123/"
+export let remoteAddr = "http://54.219.195.192:3123/"
 
 export function setRemoteAddr(newRemoteAddr: string) {
     remoteAddr = newRemoteAddr
