@@ -116,7 +116,7 @@ void ReachableResult::load(const string & mapsPath, const string & mapName) {
 }
 
 void ReachableResult::computeCellDistances() {
-    std::cout << "starting cell distances" << std::endl;
+    //std::cout << "starting cell distances" << std::endl;
     // since scaling across all distances in map, won't have a max distance from every src cell
     // will have a min distance since every area is 0 distance to itself
     double maxDistance = -1*std::numeric_limits<double>::max(),
@@ -158,5 +158,5 @@ void ReachableResult::computeCellDistances() {
             }
         }
     }
-    std::cout << "ending cell distances" << std::endl;
+    //std::cout << "ending cell distances" << std::endl;
 }
