@@ -34,7 +34,7 @@ def load_model_file(all_data_df: pd.DataFrame, model_file_name: str) -> TrainRes
     model.load_state_dict(model_file['model_state_dict'])
     model.to(CUDA_DEVICE_STR)
 
-    return TrainResult(train_data, test_data, test_df, column_transformers, model)
+    return TrainResult(train_data, test_data, train_df, test_df, column_transformers, model)
 
 
 if __name__ == "__main__":
@@ -46,7 +46,7 @@ if __name__ == "__main__":
     #load_result = load_model_file(all_data_df, "model_off_2_scheduled_0_on_0_dad_0.pt")
     load_result = load_model_file(all_data_df, "model_off_5_scheduled_5_on_20_dad_1.pt")
 
-    pred_df = on_policy_inference(load_result.test_dataset, load_result.test_df,
+    pred_df = on_policy_inference(load_result.train_dataset, load_result.train_df,
                                   load_result.model, load_result.column_transformers,
                                   True)
-    vis.vis(load_result.test_df, pred_df)
+    vis.vis(load_result.train_df, pred_df)

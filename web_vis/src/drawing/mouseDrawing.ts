@@ -99,8 +99,8 @@ export function createCharts(kymographCtx: CanvasRenderingContext2D, scatterCtx:
                         display: true,
                         text: "View Angle Speed (deg)"
                     },
-                    min: 0.,
-                    max: 2.
+                    //min: 0.,
+                    //max: 2.
                 }
             },
             responsive: false,
