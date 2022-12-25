@@ -133,6 +133,7 @@ public:
         }
     };
 
+    set<CSGOId> csgoIds;
     vector<int> csgoIdToCSKnowId;
     vector<Client> clients;
     [[nodiscard]]

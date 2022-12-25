@@ -482,6 +482,7 @@ void ServerState::loadServerState() {
     int maxServerId = -1;
     for (const auto & client : clients) {
         maxServerId = std::max(maxServerId, client.csgoId);
+        csgoIds.insert(client.csgoId);
     }
     csgoIdToCSKnowId.resize(maxServerId + 1);
     for (int i = 0; i <= maxServerId; i++) {
