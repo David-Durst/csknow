@@ -308,6 +308,78 @@ void ServerState::loadC4State(const string& visibilityFilePath) {
     closeMMapFile({fd, stats, file});
 }
 
+void ServerState::loadHurtEvents(const string &hurtFilePath) {
+    // mmap the file
+    auto [fd, stats, file] = openMMapFile(hurtFilePath);
+
+    // skip the header
+    size_t firstRow = getNewline(file, 0, stats.st_size);
+
+    // track location for error logging
+    int64_t rowNumber = 0;
+    int64_t colNumber = 0;
+
+    for (size_t curStart = firstRow + 1, curDelimiter = getNextDelimiter(file, curStart, stats.st_size);
+         curDelimiter < static_cast<size_t>(stats.st_size);
+         curStart = curDelimiter + 1, curDelimiter = getNextDelimiter(file, curStart, stats.st_size)) {
+        if (colNumber == 0) {
+            hurtEvents.push_back({});
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, hurtEvents.back().victimId);
+        }
+        else if (colNumber == 1) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, hurtEvents.back().attackerId);
+        }
+        else if (colNumber == 2) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, hurtEvents.back().health);
+        }
+        else if (colNumber == 3) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, hurtEvents.back().armor);
+        }
+        else if (colNumber == 4) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, hurtEvents.back().healthDamage);
+        }
+        else if (colNumber == 5) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, hurtEvents.back().armorDamage);
+        }
+        else if (colNumber == 6) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, hurtEvents.back().hitGroup);
+        }
+        else if (colNumber == 7) {
+            readCol(file, curStart, curDelimiter, hurtEvents.back().weapon);
+            rowNumber++;
+        }
+        colNumber = (colNumber + 1) % 8;
+    }
+    closeMMapFile({fd, stats, file});
+}
+
+void ServerState::loadWeaponFireEvents(const string &weaponFireFilePath) {
+    // mmap the file
+    auto [fd, stats, file] = openMMapFile(weaponFireFilePath);
+
+    // skip the header
+    size_t firstRow = getNewline(file, 0, stats.st_size);
+
+    // track location for error logging
+    int64_t rowNumber = 0;
+    int64_t colNumber = 0;
+
+    for (size_t curStart = firstRow + 1, curDelimiter = getNextDelimiter(file, curStart, stats.st_size);
+         curDelimiter < static_cast<size_t>(stats.st_size);
+         curStart = curDelimiter + 1, curDelimiter = getNextDelimiter(file, curStart, stats.st_size)) {
+        if (colNumber == 0) {
+            weaponFireEvents.push_back({});
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, weaponFireEvents.back().shooter);
+        }
+        else if (colNumber == 1) {
+            readCol(file, curStart, curDelimiter, weaponFireEvents.back().weapon);
+            rowNumber++;
+        }
+        colNumber = (colNumber + 1) % 2;
+    }
+    closeMMapFile({fd, stats, file});
+}
+
 void ServerState::loadServerState() {
     string generalFileName = "general.csv";
     string generalFilePath = dataPath + "/" + generalFileName;
@@ -329,18 +401,33 @@ void ServerState::loadServerState() {
     string tmpC4FileName = "c4.csv.tmp.read";
     string tmpC4FilePath = dataPath + "/" + tmpC4FileName;
 
+    string hurtFileName = "hurt.csv";
+    string hurtFilePath = dataPath + "/" + hurtFileName;
+    string tmpHurtFileName = "hurt.csv.tmp.read";
+    string tmpHurtFilePath = dataPath + "/" + tmpHurtFileName;
+
+    string weaponFireFileName = "weaponFire.csv";
+    string weaponFireFilePath = dataPath + "/" + weaponFireFileName;
+    string tmpWeaponFireFileName = "weaponFire.csv.tmp.read";
+    string tmpWeaponFireFilePath = dataPath + "/" + tmpWeaponFireFileName;
+
     loadTime = std::chrono::system_clock::now();
 
     bool generalExists = std::filesystem::exists(generalFilePath);
     bool clientStatesExists = std::filesystem::exists(clientStatesFilePath);
     bool visibilityExists = std::filesystem::exists(visibilityFilePath);
     bool c4FileExists = std::filesystem::exists(c4FilePath);
-    if (generalExists && clientStatesExists && visibilityExists && c4FileExists) {
+    bool hurtFileExists = std::filesystem::exists(hurtFilePath);
+    bool weaponFireFileExists = std::filesystem::exists(weaponFireFilePath);
+    if (generalExists && clientStatesExists && visibilityExists && c4FileExists &&
+        hurtFileExists && weaponFireFileExists) {
         try {
             std::filesystem::rename(generalFilePath, tmpGeneralFilePath);
             std::filesystem::rename(clientStatesFilePath, tmpClientStatesFilePath);
             std::filesystem::rename(visibilityFilePath, tmpVisibilityFilePath);
             std::filesystem::rename(c4FilePath, tmpC4FilePath);
+            std::filesystem::rename(hurtFilePath, tmpHurtFilePath);
+            std::filesystem::rename(weaponFireFilePath, tmpWeaponFireFilePath);
             loadedSuccessfully = true;
         }
         catch(std::filesystem::filesystem_error const& ex) {
@@ -363,8 +450,14 @@ void ServerState::loadServerState() {
         else if (!visibilityExists) {
             badPath = visibilityFilePath;
         }
-        else {
+        else if (!c4FileExists) {
             badPath = c4FilePath;
+        }
+        else if (!hurtFileExists) {
+            badPath = hurtFilePath;
+        }
+        else {
+            badPath = weaponFireFilePath;
         }
         loadedSuccessfully = false;
         return;

@@ -28,6 +28,8 @@ private:
     void loadClientStates(const string& clientStatesFilePath);
     void loadVisibilityClientPairs(const string& visibilityFilePath);
     void loadC4State(const string& c4FilePath);
+    void loadHurtEvents(const string& hurtFilePath);
+    void loadWeaponFireEvents(const string& weaponFireFilePath);
 
 public:
     string mapName;
@@ -230,6 +232,26 @@ public:
     bool c4IsDefused;
     float c4X, c4Y, c4Z;
 
+
+    // event state
+    struct Hurt {
+        int64_t victimId;
+        int64_t attackerId;
+        int32_t health;
+        int32_t armor;
+        int32_t healthDamage;
+        int32_t armorDamage;
+        int64_t hitGroup;
+        string weapon;
+    };
+    vector<Hurt> hurtEvents;
+
+    // event state
+    struct WeaponFire {
+        int64_t shooter;
+        string weapon;
+    };
+    vector<WeaponFire> weaponFireEvents;
 
     // state for caller to debug
     bool loadedSuccessfully;
