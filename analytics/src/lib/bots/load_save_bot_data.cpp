@@ -475,6 +475,8 @@ void ServerState::loadServerState() {
     loadClientStates(tmpClientStatesFilePath);
     loadVisibilityClientPairs(tmpVisibilityFilePath);
     loadC4State(tmpC4FilePath);
+    loadHurtEvents(tmpHurtFilePath);
+    loadWeaponFireEvents(tmpWeaponFireFilePath);
 
     // build map from server id to CSKnow id
     int maxServerId = -1;
