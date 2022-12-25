@@ -1,0 +1,8 @@
+//
+// Created by durst on 12/25/22.
+//
+
+#ifndef CSKNOW_STREAMING_FIRE_HISTORY_H
+#define CSKNOW_STREAMING_FIRE_HISTORY_H
+
+#endif //CSKNOW_STREAMING_FIRE_HISTORY_H

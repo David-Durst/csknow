@@ -11,7 +11,7 @@ namespace csknow::fire_history {
                                      const PlayerAtTick &playerAtTick) {
         tickId.resize(playerAtTick.size, INVALID_ID);
         playerId.resize(playerAtTick.size, INVALID_ID);
-        holdingAttackButton.resize(playerAtTick.size, INVALID_ID);
+        holdingAttackButton.resize(playerAtTick.size, false);
         ticksSinceLastFire.resize(playerAtTick.size, INVALID_ID);
         ticksSinceLastHoldingAttack.resize(playerAtTick.size, INVALID_ID);
         ticksUntilNextFire.resize(playerAtTick.size, INVALID_ID);
@@ -79,6 +79,7 @@ namespace csknow::fire_history {
                     bool isReloading = playerAtTick.isReloading[patIndex];
                     // recoil index holds constant on some frames when decaying
                     // so need to make sure equality only counts for holding if haven't started decaying
+                    // circular holdingAttackButton works because all initialized to false and start on second tick of round
                     bool recoilIndexNotDecaying = curRecoilIndex > priorRecoilIndex ||
                         (curRecoilIndex == priorRecoilIndex && holdingAttackButton[priorPATIndex]);
                     bool holdingAttack = !isReloading && curRecoilIndex > 0.5 && recoilIndexNotDecaying;

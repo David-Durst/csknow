@@ -28,7 +28,7 @@ namespace csknow::fire_history {
         vector<RangeIndexEntry> rowIndicesPerRound;
         vector<int64_t> tickId;
         vector<int64_t> playerId;
-        vector<int64_t> holdingAttackButton;
+        vector<bool> holdingAttackButton;
         vector<int64_t> ticksSinceLastFire;
         vector<int64_t> ticksSinceLastHoldingAttack;
         vector<int64_t> ticksUntilNextFire;
