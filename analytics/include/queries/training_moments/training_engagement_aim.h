@@ -83,7 +83,6 @@ public:
     vector<array<Vec3, TOTAL_AIM_TICKS>> attackerVel;
     vector<array<Vec3, TOTAL_AIM_TICKS>> victimVel;
     vector<AimWeaponType> weaponType;
-    vector<double> distanceNormalization;
 
 
     TrainingEngagementAimResult() {
@@ -200,6 +199,6 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
                                                        const PlayerAtTick & playerAtTick,
                                                        const EngagementResult & engagementResult,
                                                        const csknow::fire_history::FireHistoryResult & fireHistoryResult,
-                                                       const VisPoints & visPoints);
+                                                       const VisPoints & visPoints, bool parallelize = true);
 
 #endif //CSKNOW_TRAINING_ENGAGEMENT_AIM_H
