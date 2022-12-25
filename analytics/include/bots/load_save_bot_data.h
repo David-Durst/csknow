@@ -43,6 +43,9 @@ public:
         int32_t csgoId;
         string name;
         TeamId team;
+        int health;
+        int armor;
+        bool hasHelmet;
         int32_t currentWeaponId;
         float nextPrimaryAttack;
         float nextSecondaryAttack;
@@ -61,6 +64,7 @@ public:
         int32_t hes;
         int32_t decoys;
         int32_t incendiaries;
+        int32_t zeus;
         bool hasC4;
         float lastEyePosX;
         float lastEyePosY;
@@ -83,6 +87,13 @@ public:
         bool isAirborne;
         bool isScoped;
         float duckAmount;
+        bool duckKeyPressed;
+        bool isReloading;
+        bool isWalking;
+        float flashDuration;
+        bool hasDefuser;
+        int money;
+        int ping;
 
         // keyboard/mouse inputs sent to game engine
         int32_t buttons;

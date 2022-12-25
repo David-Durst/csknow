@@ -48,7 +48,7 @@ public:
         bool isWalking;
         bool isScoped;
         bool isAirborne;
-        double remainingFlashTime;
+        double flashDuration;
     };
 
     string posStateToCSV(PosState posState) {
@@ -60,7 +60,7 @@ public:
         result << "," << boolToInt(posState.isWalking);
         result << "," << boolToInt(posState.isScoped);
         result << "," << boolToInt(posState.isAirborne);
-        result << "," << posState.remainingFlashTime;
+        result << "," << posState.flashDuration;
         return result.str();
     }
 

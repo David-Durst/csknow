@@ -82,126 +82,159 @@ void ServerState::loadClientStates(const string& clientStatesFilePath) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].team);
         }
         else if (colNumber == 4) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].currentWeaponId);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].health);
         }
         else if (colNumber == 5) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].nextPrimaryAttack);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].armor);
         }
         else if (colNumber == 6) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].nextSecondaryAttack);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].hasHelmet);
         }
         else if (colNumber == 7) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].timeWeaponIdle);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].currentWeaponId);
         }
         else if (colNumber == 8) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].recoilIndex);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].nextPrimaryAttack);
         }
         else if (colNumber == 9) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].reloadVisuallyComplete);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].nextSecondaryAttack);
         }
         else if (colNumber == 10) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].rifleId);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].timeWeaponIdle);
         }
         else if (colNumber == 11) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].rifleClipAmmo);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].recoilIndex);
         }
         else if (colNumber == 12) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].rifleReserveAmmo);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].reloadVisuallyComplete);
         }
         else if (colNumber == 13) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].pistolId);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].rifleId);
         }
         else if (colNumber == 14) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].pistolClipAmmo);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].rifleClipAmmo);
         }
         else if (colNumber == 15) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].pistolReserveAmmo);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].rifleReserveAmmo);
         }
         else if (colNumber == 16) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].flashes);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].pistolId);
         }
         else if (colNumber == 17) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].molotovs);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].pistolClipAmmo);
         }
         else if (colNumber == 18) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].smokes);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].pistolReserveAmmo);
         }
         else if (colNumber == 19) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].hes);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].flashes);
         }
         else if (colNumber == 20) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].decoys);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].molotovs);
         }
         else if (colNumber == 21) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].incendiaries);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].smokes);
         }
         else if (colNumber == 22) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].hasC4);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].hes);
         }
         else if (colNumber == 23) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].lastEyePosX);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].decoys);
         }
         else if (colNumber == 24) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].lastEyePosY);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].incendiaries);
         }
         else if (colNumber == 25) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].lastEyePosZ);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].zeus);
         }
         else if (colNumber == 26) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].lastFootPosZ);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].hasC4);
         }
         else if (colNumber == 27) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].lastVelX);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].lastEyePosX);
         }
         else if (colNumber == 28) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].lastVelY);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].lastEyePosY);
         }
         else if (colNumber == 29) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].lastEyePosZ);
+        }
+        else if (colNumber == 30) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].lastFootPosZ);
+        }
+        else if (colNumber == 31) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].lastVelX);
+        }
+        else if (colNumber == 32) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].lastVelY);
+        }
+        else if (colNumber == 33) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].lastVelZ);
         }
         // Y AND X ARE INTENTIONALLY FLIPPED, I USE X FOR YAW, Y FOR PITCH, ENGINE DOES OPPOSITE
-        else if (colNumber == 30) {
+        else if (colNumber == 34) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].lastEyeAngleY);
         }
-        else if (colNumber == 31) {
+        else if (colNumber == 35) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].lastEyeAngleX);
         }
-        else if (colNumber == 32) {
+        else if (colNumber == 36) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].lastAimpunchAngleY);
         }
-        else if (colNumber == 33) {
+        else if (colNumber == 37) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].lastAimpunchAngleX);
         }
-        else if (colNumber == 34) {
+        else if (colNumber == 38) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].lastViewpunchAngleY);
         }
-        else if (colNumber == 35) {
+        else if (colNumber == 39) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].lastViewpunchAngleX);
         }
-        else if (colNumber == 36) {
+        else if (colNumber == 40) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].lastEyeWithRecoilAngleY);
         }
-        else if (colNumber == 37) {
+        else if (colNumber == 41) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].lastEyeWithRecoilAngleX);
         }
-        else if (colNumber == 38) {
+        else if (colNumber == 42) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].isAlive);
         }
-        else if (colNumber == 39) {
+        else if (colNumber == 43) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].isBot);
         }
-        else if (colNumber == 40) {
+        else if (colNumber == 44) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].isAirborne);
         }
-        else if (colNumber == 41) {
+        else if (colNumber == 45) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].isScoped);
         }
-        else if (colNumber == 42) {
+        else if (colNumber == 46) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].duckAmount);
+        }
+        else if (colNumber == 47) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].duckKeyPressed);
+        }
+        else if (colNumber == 48) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].isReloading);
+        }
+        else if (colNumber == 49) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].isWalking);
+        }
+        else if (colNumber == 50) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].flashDuration);
+        }
+        else if (colNumber == 51) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].hasDefuser);
+        }
+        else if (colNumber == 52) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].money);
+        }
+        else if (colNumber == 53) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].ping);
             rowNumber++;
             arrayEntry++;
         }
-        colNumber = (colNumber + 1) % 43;
+        colNumber = (colNumber + 1) % 54;
     }
     closeMMapFile({fd, stats, file});
 }

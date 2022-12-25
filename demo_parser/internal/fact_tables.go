@@ -263,7 +263,7 @@ var ticksTable table[tickRow]
 
 const playerAtTicksHeader = "id,player_id,tick_id,pos_x,pos_y,pos_z,eye_pos_z,vel_x,vel_y,vel_z,view_x,view_y,aim_punch_x,aim_punch_y," +
 	"view_punch_x,view_punch_y,recoilIndex,team,health,armor,has_helmet,is_alive,ducking_key_pressed,duck_amount,is_reloading,is_walking,is_scoped," +
-	"is_airborne,remaining_flash_time,active_weapon,main_weapon,primary_bullets_clip," +
+	"is_airborne,flash_duration,active_weapon,main_weapon,primary_bullets_clip," +
 	"primary_bullets_reserve,secondary_weapon,secondary_bullets_clip,secondary_bullets_reserve,num_he," +
 	"num_flash,num_smoke,num_incendiary,num_molotov,num_decoy,num_zeus,has_defuser,has_bomb,money,ping\n"
 

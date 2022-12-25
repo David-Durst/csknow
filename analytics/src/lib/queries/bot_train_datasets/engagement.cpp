@@ -231,7 +231,7 @@ computePosState(const PlayerAtTick & playerAtTick, Vec3 shooterOrigin,
     result.isWalking = playerAtTick.isWalking[targetPATId];
     result.isScoped = playerAtTick.isScoped[targetPATId];
     result.isAirborne = playerAtTick.isAirborne[targetPATId];
-    result.remainingFlashTime = playerAtTick.remainingFlashTime[targetPATId];
+    result.flashDuration = playerAtTick.flashDuration[targetPATId];
     return result;
 }
 

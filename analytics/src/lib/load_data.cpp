@@ -521,7 +521,7 @@ void loadPlayerAtTickFile(PlayerAtTick & pat, const string & filePath, int64_t f
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, pat.isAirborne[arrayEntry]);
         }
         else if (colNumber == 28) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, pat.remainingFlashTime[arrayEntry]);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, pat.flashDuration[arrayEntry]);
         }
         else if (colNumber == 29) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, pat.activeWeapon[arrayEntry]);
