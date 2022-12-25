@@ -396,7 +396,7 @@ public:
     bool * isWalking;
     bool * isScoped;
     bool * isAirborne;
-    double * remainingFlashTime;
+    double * flashDuration;
     int16_t * activeWeapon;
     int16_t * primaryWeapon;
     int16_t * primaryBulletsClip;
@@ -445,7 +445,7 @@ public:
         isWalking = (bool *) malloc(rows * sizeof(bool));
         isScoped = (bool *) malloc(rows * sizeof(bool));
         isAirborne = (bool *) malloc(rows * sizeof(bool));
-        remainingFlashTime = (double *) malloc(rows * sizeof(double));
+        flashDuration = (double *) malloc(rows * sizeof(double));
         activeWeapon = (int16_t *) malloc(rows * sizeof(int16_t));
         primaryWeapon = (int16_t *) malloc(rows * sizeof(int16_t));
         primaryBulletsClip = (int16_t *) malloc(rows * sizeof(int16_t));
@@ -508,7 +508,7 @@ public:
         free(isWalking);
         free(isScoped);
         free(isAirborne);
-        free(remainingFlashTime);
+        free(flashDuration);
         free(activeWeapon);
         free(primaryWeapon);
         free(primaryBulletsClip);

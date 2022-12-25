@@ -20,7 +20,7 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
                                                        const PlayerAtTick & playerAtTick,
                                                        const EngagementResult & engagementResult,
                                                        const csknow::fire_history::FireHistoryResult & fireHistoryResult,
-                                                       const VisPoints & visPoints) {
+                                                       const VisPoints & visPoints, bool parallelize) {
     int numThreads = omp_get_max_threads();
     std::atomic<int64_t> roundsProcessed = 0;
     vector<vector<int64_t>> tmpRoundIds(numThreads);
@@ -60,13 +60,12 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
     vector<vector<array<Vec3, TOTAL_AIM_TICKS>>> tmpAttackerVel(numThreads);
     vector<vector<array<Vec3, TOTAL_AIM_TICKS>>> tmpVictimVel(numThreads);
     vector<vector<AimWeaponType>> tmpWeaponType(numThreads);
-    vector<vector<double>> tmpDistanceNormalization(numThreads);
 
     // for each round
     // for each tick
     // for each engagement in each tick
     // record where supposed to aim vs where aiming and distance
-#pragma omp parallel for
+#pragma omp parallel for if(parallelize)
     for (int64_t roundIndex = 0; roundIndex < rounds.size; roundIndex++) {
         int threadNum = omp_get_thread_num();
         tmpRoundIds[threadNum].push_back(roundIndex);
@@ -202,7 +201,8 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
                 tmpVictimVel[threadNum].push_back({});
 
                 for (size_t i = 0; i < TOTAL_AIM_TICKS; i++) {
-                    const int64_t & attackerPATId = playerToPatWindows.at(attackerId).fromOldest(static_cast<int64_t>(i));
+                    const int64_t & attackerPATId =
+                        playerToPatWindows.at(attackerId).fromOldest(static_cast<int64_t>(i));
                     // need to check for last frame where victim is alive
                     const int64_t & uncheckedVictimPATId =
                         playerToPatWindows.at(victimId).fromOldest(static_cast<int64_t>(i));
@@ -373,27 +373,8 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
                     }
                 }
 
-                // compute normalization constants, used to visualize inference
-                const int64_t &curAttackerPATId = playerToPatWindows.at(attackerId).fromNewest(FUTURE_AIM_TICKS);
-                const int64_t &curVictimPATId = playerToPatWindows.at(victimId).fromNewest(FUTURE_AIM_TICKS);
-                Vec3 curAttackerEyePos = {
-                    playerAtTick.posX[curAttackerPATId],
-                    playerAtTick.posY[curAttackerPATId],
-                    playerAtTick.eyePosZ[curAttackerPATId]
-                };
-
-                Vec3 victimBotPos = {
-                    playerAtTick.posX[curVictimPATId],
-                    playerAtTick.posY[curVictimPATId],
-                    playerAtTick.posZ[curVictimPATId]
-                };
-                Vec2 viewAngleToBotPos = vectorAngles(victimBotPos - curAttackerEyePos);
-                Vec3 victimTopPos = victimBotPos;
-                victimTopPos.z += PLAYER_HEIGHT;
-                Vec2 topVsBotViewAngle = deltaViewFromOriginToDest(curAttackerEyePos, victimTopPos, viewAngleToBotPos);
-                tmpDistanceNormalization[threadNum].push_back(std::abs(topVsBotViewAngle.y));
-
                 // assume attacker has same weapon for all ticks
+                const int64_t &curAttackerPATId = playerToPatWindows.at(attackerId).fromNewest(FUTURE_AIM_TICKS);
                 AimWeaponType aimWeaponType;
                 DemoEquipmentType demoEquipmentType =
                         static_cast<DemoEquipmentType>(playerAtTick.activeWeapon[curAttackerPATId]);
@@ -473,7 +454,6 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
                            result.victimEyePos.push_back(tmpVictimEyePos[minThreadId][tmpRowId]);
                            result.attackerVel.push_back(tmpAttackerVel[minThreadId][tmpRowId]);
                            result.victimVel.push_back(tmpVictimVel[minThreadId][tmpRowId]);
-                           result.distanceNormalization.push_back(tmpDistanceNormalization[minThreadId][tmpRowId]);
                            result.weaponType.push_back(tmpWeaponType[minThreadId][tmpRowId]);
                        });
     return result;
