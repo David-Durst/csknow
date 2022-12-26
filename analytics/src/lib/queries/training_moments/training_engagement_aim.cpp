@@ -217,6 +217,7 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
                     else if (!playerAtTick.isAlive[victimPATId]) {
                         victimPATId = engagementToVictimLastAlivePATId[engagementIndex];
                     }
+                    // do nothing if victim is alive but not newest recorded alive time
 
                     Vec3 attackerEyePos {
                         playerAtTick.posX[attackerPATId],
