@@ -237,6 +237,12 @@ Ray getEyeCoordinatesForPlayerGivenEyeHeight(Vec3 pos, Vec2 view) {
 }
 
 static inline __attribute__((always_inline))
+Vec3 getFootCoordinatesForPlayerGivenEyePos(Vec3 pos) {
+    // same as above, but the pos.z is eye, not foot
+    return {pos.x, pos.y, pos.z - EYE_HEIGHT}
+}
+
+static inline __attribute__((always_inline))
 Vec3 getCenterHeadCoordinatesForPlayer(Vec3 eyePos, Vec2 view, double duckAmount) {
     // no z factor if pitch is 90 (looking down), all z factor and no x/y factor if pitch is -90 (looking up)
     // scale looking down is 0 and up is 90, perfect for sin/cos function where head makes quarter circle

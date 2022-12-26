@@ -29,7 +29,7 @@ public:
             set<uint32_t> badSources = blackboard.navFile.get_sources_to_area(4048);
             std::cout << "what happened here folks?" << std::endl;
         }
-        for (const auto & waypoint : blackboard.playerToPath[targetId].waypoints) {
+        for (const auto & waypoint : blackboard.playerToPath[csgoId].waypoints) {
             if (waypoint.area1 == 4048 || waypoint.area2 == 4048) {
                 set<uint32_t> badSources = blackboard.navFile.get_sources_to_area(4048);
                 std::cout << "why happened here folks?" << std::endl;

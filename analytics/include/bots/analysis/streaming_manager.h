@@ -7,15 +7,18 @@
 
 #include <bots/streaming_bot_database.h>
 #include <bots/streaming_moments/streaming_fire_history.h>
+#include <bots/streaming_moments/streaming_engagement_aim.h>
 
 class StreamingManager {
 public:
     StreamingBotDatabase db;
     csknow::fire_history::StreamingFireHistory streamingFireHistory;
+    csknow::engagement_aim::StreamingEngagementAim streamingEngagementAim;
 
-    void update(const ServerState & state) {
+    void update(const ServerState & state, const VisPoints & visPoints) {
         db.addState(state);
         streamingFireHistory.addTickData(db);
+        streamingEngagementAim.addTickData(db, streamingFireHistory, visPoints);
     }
 
 };

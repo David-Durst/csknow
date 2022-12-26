@@ -65,7 +65,7 @@ public:
             }
 
             /*
-            if (targetId == 3777) {
+            if (csgoId == 3777) {
                 int x = 1;
             }
              */

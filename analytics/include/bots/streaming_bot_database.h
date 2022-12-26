@@ -41,9 +41,10 @@ public:
         batchData.enqueue(state);
     }
 
-    void pinState(size_t ticksFromPresent = 0) {
+    StreamingPinId pinState(size_t ticksFromPresent = 0) {
         pinnedData[nextPinId] = batchData.fromNewest(static_cast<int64_t>(ticksFromPresent));
         nextPinId++;
+        return nextPinId - 1;
     }
 
     void unpinState(StreamingPinId pinId) {

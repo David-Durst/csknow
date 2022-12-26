@@ -138,7 +138,7 @@ void Tree::tick(ServerState & state, const string & mapsPath) {
         }
 
         // update streaming analytics database used in tree
-        blackboard->streamingManager.update(state);
+        blackboard->streamingManager.update(state, blackboard->visPoints);
 
 
         // update all nodes in tree

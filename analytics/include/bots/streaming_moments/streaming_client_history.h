@@ -14,12 +14,14 @@ namespace csknow {
 
         unordered_map<CSGOId, CircularBuffer<T>> clientHistory;
 
-        bool addClient(CSGOId csgoId) {
+        void addClient(CSGOId csgoId) {
             if (clientHistory.find(csgoId) == clientHistory.end()) {
                 clientHistory.insert({csgoId, CircularBuffer<T>(PAST_AIM_TICKS)});
-                return true;
             }
-            return false;
+        }
+
+        void updateClient(CSGOId csgoId) {
+            clientHistory.insert_or_assign(csgoId, CircularBuffer<T>(PAST_AIM_TICKS));
         }
 
         void removeInactiveClients(const set<CSGOId> & activeClients) {
