@@ -137,6 +137,10 @@ void Tree::tick(ServerState & state, const string & mapsPath) {
             return;
         }
 
+        // update streaming analytics database used in tree
+        blackboard->streamingManager.update(state);
+
+
         // update all nodes in tree
         // don't care about which player as order is for all players
         globalNode->exec(state, defaultThinker);

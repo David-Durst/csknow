@@ -11,6 +11,7 @@
 
 namespace csknow::fire_history {
     class StreamingFireHistory {
+    public:
         struct FirePlayerData {
             CSGOId playerId;
             bool holdingAttackButton;

@@ -20,6 +20,7 @@
 #include "bots/behavior_tree/priority/memory_data.h"
 #include "bots/behavior_tree/global/possible_nav_areas.h"
 #include "bots/behavior_tree/action/second_order_controller.h"
+#include "bots/analysis/streaming_manager.h"
 #include <filesystem>
 #include <memory>
 #include <random>
@@ -85,6 +86,7 @@ struct Blackboard {
     set<AreaId> removedAreas;
     map<AreaId, AreaId> removedAreaAlternatives;
     ServerState lastFrameState;
+    StreamingManager streamingManager;
 
     // helpers
     std::random_device rd;
