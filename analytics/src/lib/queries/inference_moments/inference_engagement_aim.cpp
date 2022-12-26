@@ -10,31 +10,7 @@
 
 namespace fs = std::filesystem;
 
-struct EngagementAimInferenceTickData {
-    // general float encoded
-    bool hitVictim;
-    float recoilIndex;
-    int64_t ticksSinceLastFire;
-    int64_t ticksSinceLastHoldingAttack;
-    bool victimVisible;
-    bool victimVisibleYet;
-    bool victimAlive;
-    Vec3 attackerEyePos;
-    Vec3 victimEyePos;
-    Vec3 attackerVel;
-    Vec3 victimVel;
-    // angle encoded
-    Vec2 idealViewAngle;
-    Vec2 deltaRelativeFirstHeadViewAngle;
-    Vec2 scaledRecoilAngle;
-    Vec2 victimRelativeFirstHeadMinViewAngle;
-    Vec2 victimRelativeFirstHeadMaxViewAngle;
-    Vec2 victimRelativeFirstHeadCurHeadViewAngle;
-    bool holdingAttack;
-    int warmupTicksUsed;
-};
-
-void updatePriorData(EngagementAimInferenceTickData & priorData,
+void updatePriorData(EngagementAimTickData & priorData,
                      const TrainingEngagementAimResult & trainingEngagementAimResult,
                      size_t engagementAimId, size_t tickNum) {
     priorData.hitVictim =
@@ -98,12 +74,12 @@ void InferenceEngagementAimResult::runQuery(const Rounds & rounds, const string 
     for (int64_t roundIndex = 0; roundIndex < rounds.size; roundIndex++) {
         auto options = torch::TensorOptions().dtype(at::kFloat);
         // NUM_TICKS stores cur tick and prior ticks in window, shrink by 1 for just prior ticks
-        map<int64_t, array<EngagementAimInferenceTickData, PAST_AIM_TICKS>> activeEngagementsPriorTickData;
+        map<int64_t, array<EngagementAimTickData, PAST_AIM_TICKS>> activeEngagementsPriorTickData;
         for (int64_t engagementAimId = trainingEngagementAimResult.rowIndicesPerRound[roundIndex].minId;
              engagementAimId <= trainingEngagementAimResult.rowIndicesPerRound[roundIndex].maxId;
              engagementAimId++) {
             int64_t engagementId = trainingEngagementAimResult.engagementId[engagementAimId];
-            array<EngagementAimInferenceTickData, PAST_AIM_TICKS> &priorData = activeEngagementsPriorTickData[engagementId];
+            array<EngagementAimTickData, PAST_AIM_TICKS> &priorData = activeEngagementsPriorTickData[engagementId];
 
             // add old deltas if in engagement's first tick, otherwise use delta prior earlier predictions
             const RangeIndexEntry &engagementTickRange =

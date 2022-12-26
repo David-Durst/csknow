@@ -53,7 +53,7 @@ public:
         }
     }
 
-    size_t playerHistoryLength(CSGOId csgoId) const {
+    size_t clientHistoryLength(CSGOId csgoId) const {
         for (int64_t i = 0; i < STREAMING_HISTORY_TICKS; i++) {
             // hit history length if no more overall history or no more player-specific histroy
             if (batchData.getCurSize() <= i ||

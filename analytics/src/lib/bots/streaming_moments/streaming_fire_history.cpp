@@ -21,29 +21,30 @@ namespace csknow::fire_history {
 
         for (const auto & curTickClient : curState.clients) {
             activeClients.insert(curTickClient.csgoId);
-            bool clientNew = addPlayer(curTickClient.csgoId);
+            fireClientHistory.addClient(curTickClient.csgoId);
             // if player is fresh or dead, give them a fresh state independent of past history
-            FirePlayerData firePlayerData;
-            firePlayerData.playerId = curTickClient.csgoId;
-            if (db.playerHistoryLength(curTickClient.csgoId) < 2 || !curTickClient.isAlive) {
-                firePlayerData.holdingAttackButton = false;
-                firePlayerData.ticksSinceLastFire = MAX_TICKS_SINCE_LAST_FIRE_ATTACK;
-                firePlayerData.ticksSinceLastHoldingAttack = MAX_TICKS_SINCE_LAST_FIRE_ATTACK;
-                firePlayerData.hitEnemy = false;
-                firePlayerData.victims = {};
+            FireClientData fireClientData;
+            fireClientData.playerId = curTickClient.csgoId;
+            if (db.clientHistoryLength(curTickClient.csgoId) < 2 || !curTickClient.isAlive) {
+                fireClientData.holdingAttackButton = false;
+                fireClientData.ticksSinceLastFire = MAX_TICKS_SINCE_LAST_FIRE_ATTACK;
+                fireClientData.ticksSinceLastHoldingAttack = MAX_TICKS_SINCE_LAST_FIRE_ATTACK;
+                fireClientData.hitEnemy = false;
+                fireClientData.victims = {};
             }
             // otherwise, update based on cur tick/last tick
             else {
                 const ServerState::Client & priorTickClient =
                     db.batchData.fromNewest(1).getClient(curTickClient.csgoId);
-                const FirePlayerData & priorFirePlayerData = firePlayerHistory.at(curTickClient.csgoId).fromNewest();
+                const FireClientData & priorFirePlayerData =
+                    fireClientHistory.clientHistory.at(curTickClient.csgoId).fromNewest();
 
                 if (firingClients.find(curTickClient.csgoId) != firingClients.end()) {
-                    firePlayerData.ticksSinceLastFire = 0;
+                    fireClientData.ticksSinceLastFire = 0;
                 }
                 else {
-                    firePlayerData.ticksSinceLastFire = std::min(MAX_TICKS_SINCE_LAST_FIRE_ATTACK,
-                                                                 firePlayerData.ticksSinceLastFire + 1);
+                    fireClientData.ticksSinceLastFire = std::min(MAX_TICKS_SINCE_LAST_FIRE_ATTACK,
+                                                                 fireClientData.ticksSinceLastFire + 1);
                 }
 
                 // holding attack if not reloading and recoil index going up or holding constant and greater than 0.5
@@ -61,36 +62,28 @@ namespace csknow::fire_history {
                 bool recoilIndexNotDecaying = curRecoilIndex > priorRecoilIndex ||
                                               (curRecoilIndex == priorRecoilIndex &&
                                               priorFirePlayerData.holdingAttackButton);
-                firePlayerData.holdingAttackButton = !isReloading && curRecoilIndex > 0.5 && recoilIndexNotDecaying;
-                if (firePlayerData.holdingAttackButton) {
-                    firePlayerData.ticksSinceLastHoldingAttack = 0;
+                fireClientData.holdingAttackButton = !isReloading && curRecoilIndex > 0.5 && recoilIndexNotDecaying;
+                if (fireClientData.holdingAttackButton) {
+                    fireClientData.ticksSinceLastHoldingAttack = 0;
                 }
                 else {
-                    firePlayerData.ticksSinceLastHoldingAttack =
+                    fireClientData.ticksSinceLastHoldingAttack =
                         std::min(MAX_TICKS_SINCE_LAST_FIRE_ATTACK, priorFirePlayerData.ticksSinceLastHoldingAttack + 1);
                 }
 
                 if (attackerToVictims.find(curTickClient.csgoId) != attackerToVictims.end()){
-                    firePlayerData.hitEnemy = true;
-                    firePlayerData.victims = attackerToVictims[curTickClient.csgoId];
+                    fireClientData.hitEnemy = true;
+                    fireClientData.victims = attackerToVictims[curTickClient.csgoId];
                 }
                 else {
-                    firePlayerData.hitEnemy = false;
-                    firePlayerData.victims = {};
+                    fireClientData.hitEnemy = false;
+                    fireClientData.victims = {};
                 }
             }
+
+            fireClientHistory.clientHistory.at(curTickClient.csgoId).enqueue(fireClientData);
         }
 
-        // remove no longer valid clients
-        vector<CSGOId> historyClients;
-        for (const auto & [csgoId, _] : firePlayerHistory) {
-            historyClients.push_back(csgoId);
-        }
-
-        for (const auto & clientCSGOId : historyClients) {
-            if (activeClients.find(clientCSGOId) == activeClients.end()) {
-                firePlayerHistory.erase(clientCSGOId);
-            }
-        }
+        fireClientHistory.removeInactiveClients(activeClients);
     }
 }
