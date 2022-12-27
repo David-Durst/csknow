@@ -229,7 +229,7 @@ struct Blackboard {
 
     Blackboard(const string & navPath, const string & mapName) :
         navPath(navPath), mapsPath(std::filesystem::path(navPath).remove_filename().string()),
-        navFile(navPath.c_str()),
+        navFile(navPath.c_str()), streamingManager(navPath),
         gen(rd()), navFileOverlay(navFile),
         visPoints(navFile), mapMeshResult(queryMapMesh(navFile, "")),
         reachability(queryReachable(visPoints, mapMeshResult, "", mapsPath, mapName)),

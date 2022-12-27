@@ -15,6 +15,8 @@ public:
     csknow::fire_history::StreamingFireHistory streamingFireHistory;
     csknow::engagement_aim::StreamingEngagementAim streamingEngagementAim;
 
+    StreamingManager(const string & navPath) : streamingEngagementAim(navPath) { }
+
     void update(const ServerState & state, const VisPoints & visPoints) {
         db.addState(state);
         streamingFireHistory.addTickData(db);

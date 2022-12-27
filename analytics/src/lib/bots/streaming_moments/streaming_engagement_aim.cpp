@@ -4,8 +4,86 @@
 
 #include "bots/streaming_moments/streaming_engagement_aim.h"
 #include "bots/analysis/vis_geometry.h"
+#include <torch/script.h>
 
 namespace csknow::engagement_aim {
+    AimWeaponType weaponIdToWeaponType(int32_t weaponId) {
+        switch (weaponId) {
+            case enumAsInt(AimWeaponId::Deagle):
+                return AimWeaponType::Pistol;
+            case enumAsInt(AimWeaponId::Dualies):
+                return AimWeaponType::Pistol;
+            case enumAsInt(AimWeaponId::FiveSeven):
+                return AimWeaponType::Pistol;
+            case enumAsInt(AimWeaponId::Glock):
+                return AimWeaponType::Pistol;
+            case enumAsInt(AimWeaponId::AK):
+                return AimWeaponType::AR;
+            case enumAsInt(AimWeaponId::AUG):
+                return AimWeaponType::AR;
+            case enumAsInt(AimWeaponId::AWP):
+                return AimWeaponType::Sniper;
+            case enumAsInt(AimWeaponId::FAMAS):
+                return AimWeaponType::AR;
+            case enumAsInt(AimWeaponId::G3):
+                return AimWeaponType::AR;
+            case enumAsInt(AimWeaponId::Galil):
+                return AimWeaponType::AR;
+            case enumAsInt(AimWeaponId::M249):
+                return AimWeaponType::Heavy;
+            case enumAsInt(AimWeaponId::M4A4):
+                return AimWeaponType::AR;
+            case enumAsInt(AimWeaponId::Mac10):
+                return AimWeaponType::SMG;
+            case enumAsInt(AimWeaponId::P90):
+                return AimWeaponType::SMG;
+            case enumAsInt(AimWeaponId::MP5):
+                return AimWeaponType::SMG;
+            case enumAsInt(AimWeaponId::UMP):
+                return AimWeaponType::SMG;
+            case enumAsInt(AimWeaponId::XM1014):
+                return AimWeaponType::Heavy;
+            case enumAsInt(AimWeaponId::Bizon):
+                return AimWeaponType::SMG;
+            case enumAsInt(AimWeaponId::MAG7):
+                return AimWeaponType::Heavy;
+            case enumAsInt(AimWeaponId::Negev):
+                return AimWeaponType::Heavy;
+            case enumAsInt(AimWeaponId::SawedOff):
+                return AimWeaponType::Heavy;
+            case enumAsInt(AimWeaponId::Tec9):
+                return AimWeaponType::Pistol;
+            case enumAsInt(AimWeaponId::Zeus):
+                return AimWeaponType::Unknown;
+            case enumAsInt(AimWeaponId::P2000):
+                return AimWeaponType::Pistol;
+            case enumAsInt(AimWeaponId::MP7):
+                return AimWeaponType::SMG;
+            case enumAsInt(AimWeaponId::MP9):
+                return AimWeaponType::SMG;
+            case enumAsInt(AimWeaponId::Nova):
+                return AimWeaponType::Heavy;
+            case enumAsInt(AimWeaponId::P250):
+                return AimWeaponType::Pistol;
+            case enumAsInt(AimWeaponId::Scar):
+                return AimWeaponType::AR;
+            case enumAsInt(AimWeaponId::SG553):
+                return AimWeaponType::AR;
+            case enumAsInt(AimWeaponId::SSG):
+                return AimWeaponType::Sniper;
+            case enumAsInt(AimWeaponId::M4A1S):
+                return AimWeaponType::AR;
+            case enumAsInt(AimWeaponId::USPS):
+                return AimWeaponType::Pistol;
+            case enumAsInt(AimWeaponId::CZ):
+                return AimWeaponType::Pistol;
+            case enumAsInt(AimWeaponId::R8):
+                return AimWeaponType::Pistol;
+            default:
+                return AimWeaponType::Unknown;
+        }
+    }
+
     EngagementAimTickData
     StreamingEngagementAim::computeOneTickData(StreamingBotDatabase & db,
                                                const fire_history::StreamingFireHistory & streamingFireHistory,
@@ -181,6 +259,98 @@ namespace csknow::engagement_aim {
         engagementAimTickData.victimEyePos = victimEyePos;
         engagementAimTickData.attackerVel = attackerClient.getVelocity();
         engagementAimTickData.victimVel = victimVel;
+        return engagementAimTickData;
+    }
+
+    void StreamingEngagementAim::predictNewAngles(const StreamingBotDatabase & db) {
+        const ServerState & curState = db.batchData.fromNewest();
+        // record who doesn't have a target and which prediction index maps to which attacker id
+        set<CSGOId> attackerIds;
+        vector<CSGOId> orderedAttackerIds;
+        vector<torch::Tensor> rowsPT;
+        auto options = torch::TensorOptions().dtype(at::kFloat);
+        for (const auto & curTickClient : curState.clients) {
+            if (currentClientTargetMap.find(curTickClient.csgoId) == currentClientTargetMap.end()) {
+                continue;
+            }
+            attackerIds.insert(curTickClient.csgoId);
+            orderedAttackerIds.push_back(curTickClient.csgoId);
+            std::vector<float> rowCPP;
+            // all but cur tick are inputs
+            // seperate different input types
+            const CircularBuffer<EngagementAimTickData> & engagementAimHistory =
+                engagementAimPlayerHistory.clientHistory.at(curTickClient.csgoId);
+            for (int64_t priorTickNum = PAST_AIM_TICKS - 1; priorTickNum >= 0; priorTickNum--) {
+                const EngagementAimTickData & engagementAimTickData = engagementAimHistory.fromNewest(priorTickNum);
+                rowCPP.push_back(static_cast<float>(boolToInt(engagementAimTickData.hitVictim)));
+                rowCPP.push_back(static_cast<float>(engagementAimTickData.recoilIndex));
+                rowCPP.push_back(static_cast<float>(engagementAimTickData.ticksSinceLastFire));
+                rowCPP.push_back(static_cast<float>(engagementAimTickData.ticksSinceLastHoldingAttack));
+                rowCPP.push_back(static_cast<float>(boolToInt(engagementAimTickData.victimVisible)));
+                rowCPP.push_back(static_cast<float>(boolToInt(engagementAimTickData.victimVisibleYet)));
+                rowCPP.push_back(static_cast<float>(boolToInt(engagementAimTickData.victimAlive)));
+                rowCPP.push_back(static_cast<float>(engagementAimTickData.attackerEyePos.x));
+                rowCPP.push_back(static_cast<float>(engagementAimTickData.attackerEyePos.y));
+                rowCPP.push_back(static_cast<float>(engagementAimTickData.attackerEyePos.z));
+                rowCPP.push_back(static_cast<float>(engagementAimTickData.victimEyePos.x));
+                rowCPP.push_back(static_cast<float>(engagementAimTickData.victimEyePos.y));
+                rowCPP.push_back(static_cast<float>(engagementAimTickData.victimEyePos.z));
+                rowCPP.push_back(static_cast<float>(engagementAimTickData.attackerVel.x));
+                rowCPP.push_back(static_cast<float>(engagementAimTickData.attackerVel.y));
+                rowCPP.push_back(static_cast<float>(engagementAimTickData.attackerVel.z));
+                rowCPP.push_back(static_cast<float>(engagementAimTickData.victimVel.x));
+                rowCPP.push_back(static_cast<float>(engagementAimTickData.victimVel.y));
+                rowCPP.push_back(static_cast<float>(engagementAimTickData.victimVel.z));
+            }
+            for (int64_t priorTickNum = PAST_AIM_TICKS - 1; priorTickNum >= 0; priorTickNum--) {
+                const EngagementAimTickData & engagementAimTickData = engagementAimHistory.fromNewest(priorTickNum);
+                rowCPP.push_back(static_cast<float>(engagementAimTickData.idealViewAngle.x));
+                rowCPP.push_back(static_cast<float>(engagementAimTickData.deltaRelativeFirstHeadViewAngle.x));
+                rowCPP.push_back(static_cast<float>(engagementAimTickData.scaledRecoilAngle.x));
+                rowCPP.push_back(
+                    static_cast<float>(engagementAimTickData.victimRelativeFirstHeadMinViewAngle.x));
+                rowCPP.push_back(
+                    static_cast<float>(engagementAimTickData.victimRelativeFirstHeadMaxViewAngle.x));
+                rowCPP.push_back(
+                    static_cast<float>(engagementAimTickData.victimRelativeFirstHeadCurHeadViewAngle.x));
+            }
+            for (int64_t priorTickNum = PAST_AIM_TICKS - 1; priorTickNum >= 0; priorTickNum--) {
+                const EngagementAimTickData & engagementAimTickData = engagementAimHistory.fromNewest(priorTickNum);
+                rowCPP.push_back(static_cast<float>(engagementAimTickData.idealViewAngle.y));
+                rowCPP.push_back(static_cast<float>(engagementAimTickData.deltaRelativeFirstHeadViewAngle.y));
+                rowCPP.push_back(static_cast<float>(engagementAimTickData.scaledRecoilAngle.y));
+                rowCPP.push_back(
+                    static_cast<float>(engagementAimTickData.victimRelativeFirstHeadMinViewAngle.y));
+                rowCPP.push_back(
+                    static_cast<float>(engagementAimTickData.victimRelativeFirstHeadMaxViewAngle.y));
+                rowCPP.push_back(
+                    static_cast<float>(engagementAimTickData.victimRelativeFirstHeadCurHeadViewAngle.y));
+            }
+            for (int64_t priorTickNum = PAST_AIM_TICKS - 1; priorTickNum >= 0; priorTickNum--) {
+                const EngagementAimTickData & engagementAimTickData = engagementAimHistory.fromNewest(priorTickNum);
+                rowCPP.push_back(static_cast<float>(boolToInt(engagementAimTickData.holdingAttack)));
+            }
+            // TODO: handle weapons other than AK47
+            rowCPP.push_back(static_cast<float>(weaponIdToWeaponType(curTickClient.currentWeaponId)));
+            rowsPT.push_back(torch::from_blob(rowCPP.data(), {1, static_cast<long>(rowCPP.size())},
+                                              options));
+        }
+        std::vector<torch::jit::IValue> inputs{torch::cat(rowsPT)};
+        at::Tensor output = module.forward(inputs).toTuple()->elements()[1].toTensor();
+
+        for (size_t i = 0; i < orderedAttackerIds.size(); i++) {
+            // fix these angles to be absolute and not relative
+            playerToNewAngles[orderedAttackerIds[i]] = {
+                static_cast<double>(output[i][0].item<float>()),
+                static_cast<double>(output[i][output[0].size(0) / 2].item<float>())
+            };
+        }
+        // same angles as before if no target
+        for (const auto & curTickClient : curState.clients) {
+            if (attackerIds.find(curTickClient.csgoId) == attackerIds.end()) {
+                playerToNewAngles[curTickClient.csgoId] = curTickClient.getCurrentViewAngles();
+            }
+        }
     }
 
     void StreamingEngagementAim::addTickData(StreamingBotDatabase & db,
@@ -191,9 +361,9 @@ namespace csknow::engagement_aim {
 
         for (const auto & curTickClient : curState.clients) {
             activeClients.insert(curTickClient.csgoId);
-            const fire_history::FireClientData & curFireClientData =
-                streamingFireHistory.fireClientHistory.clientHistory.at(curTickClient.csgoId).fromNewest();
-            EngagementAimTickData engagementAimTickData;
+            if (currentClientTargetMap.find(curTickClient.csgoId) == currentClientTargetMap.end()) {
+                continue;
+            }
 
             // all ticks need to know how far past they can look, as if not enough history then replicate available
             // data
@@ -221,21 +391,21 @@ namespace csknow::engagement_aim {
                     // try to get state i in past, but if don't have it, settle for oldest
                     size_t attackerStateOffset = std::min(i, oldestAttackerStateOffset);
                     size_t victimStateOffset = std::min(i, oldestVictimStateOffset);
-                    computeOneTickData(db, streamingFireHistory, curTickClient.csgoId, target,
-                                       attackerStateOffset, victimStateOffset,
-                                       i == PAST_AIM_TICKS - 1);
+                    engagementAimPlayerHistory.clientHistory.at(curTickClient.csgoId).enqueue(
+                        computeOneTickData(db, streamingFireHistory, curTickClient.csgoId, target,
+                                           attackerStateOffset, victimStateOffset,
+                                           i == PAST_AIM_TICKS - 1, visPoints));
                 }
             }
             // now that past is filled in, fill in most recent state
             // no need for state offset shenanigans, always have current state
-            computeOneTickData(db, streamingFireHistory, curTickClient.csgoId, target,
-                               0, 0, false);
-
-
-            engagementAimPlayerHistory.clientHistory.at(curTickClient.csgoId).enqueue(engagementAimTickData);
+            engagementAimPlayerHistory.clientHistory.at(curTickClient.csgoId).enqueue(
+                computeOneTickData(db, streamingFireHistory, curTickClient.csgoId, target,
+                                   0, 0, false, visPoints));
         }
 
         engagementAimPlayerHistory.removeInactiveClients(activeClients);
+        predictNewAngles(db);
         priorClientTargetMap = currentClientTargetMap;
     }
 }

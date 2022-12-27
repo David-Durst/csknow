@@ -147,7 +147,7 @@ void InferenceEngagementAimResult::runQuery(const Rounds & rounds, const string 
                 }
                 rowCPP.push_back(static_cast<float>(trainingEngagementAimResult.weaponType[engagementAimId]));
                 torch::Tensor rowPT = torch::from_blob(rowCPP.data(), {1, static_cast<long>(rowCPP.size())},
-                                                       options).clone();
+                                                       options);
                 inputs.push_back(rowPT);
 
                 // Execute the model and turn its output into a tensor.
