@@ -235,10 +235,6 @@ namespace csknow::engagement_aim {
                                          std::numeric_limits<double>::max()};
         Vec2 victimMaxViewAngleFirstHead{-1*std::numeric_limits<double>::max(),
                                          -1*std::numeric_limits<double>::max()};
-        Vec2 victimMinViewAngleCur{std::numeric_limits<double>::max(),
-                                   std::numeric_limits<double>::max()};
-        Vec2 victimMaxViewAngleCur{-1*std::numeric_limits<double>::max(),
-                                   -1*std::numeric_limits<double>::max()};
         for (const auto & aabbCorner : aabbCorners) {
             Vec2 aabbViewAngle = viewFromOriginToDest(attackerEyePos, aabbCorner);
             Vec2 deltaAABBViewAngleFirstHead =
@@ -339,16 +335,25 @@ namespace csknow::engagement_aim {
         at::Tensor output = module.forward(inputs).toTuple()->elements()[1].toTensor();
 
         for (size_t i = 0; i < orderedAttackerIds.size(); i++) {
-            // fix these angles to be absolute and not relative
-            playerToNewAngles[orderedAttackerIds[i]] = {
+            // subtract from input delta view angles to get change in angle, then apply that to current view angles
+            Vec2 outputViewAngle = {
                 static_cast<double>(output[i][0].item<float>()),
                 static_cast<double>(output[i][output[0].size(0) / 2].item<float>())
             };
+            Vec2 curViewAngle = engagementAimPlayerHistory.clientHistory.at(orderedAttackerIds[i])
+                .fromNewest().deltaRelativeFirstHeadViewAngle;
+            Vec2 deltaViewAngle = outputViewAngle - curViewAngle;
+            // flip y axis to go back to game coordinates
+            deltaViewAngle.y *= -1;
+            deltaViewAngle.makePitchNeg90To90();
+            deltaViewAngle.makeYawNeg180To180();
+            playerToDeltaAngle[orderedAttackerIds[i]] = deltaViewAngle;
         }
         // same angles as before if no target
         for (const auto & curTickClient : curState.clients) {
             if (attackerIds.find(curTickClient.csgoId) == attackerIds.end()) {
-                playerToNewAngles[curTickClient.csgoId] = curTickClient.getCurrentViewAngles();
+                playerToDeltaAngle[curTickClient.csgoId] = {0., 0.};
+                //playerToNewAngles[curTickClient.csgoId] = curTickClient.getCurrentViewAngles();
             }
         }
     }

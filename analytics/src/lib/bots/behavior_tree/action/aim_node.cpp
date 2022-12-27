@@ -113,6 +113,17 @@ namespace action {
             curAction.aimTargetType = AimTargetType::Waypoint;
         }
 
+        // save target for learned model
+        csknow::engagement_aim::ClientTargetMap & clientTargetMap = blackboard.streamingManager.streamingEngagementAim
+            .currentClientTargetMap;
+        if (curAction.aimTargetType == AimTargetType::Player) {
+            clientTargetMap[curClient.csgoId] = {curPriority.targetPlayer.playerId};
+        }
+        else {
+            clientTargetMap[curClient.csgoId] = {INVALID_ID, aimTarget};
+        }
+
+
         // don't need to change pitch here because engine stores pitch in -90 to 90 (I think)
         // while conversion function below uses 360-270 for -90-0
         Vec2 curViewAngle = curClient.getCurrentViewAnglesWithAimpunch();
@@ -131,6 +142,7 @@ namespace action {
             Vec2 newDeltaAnglePct = makeAngleToPct(newDeltaAngle);
             curAction.inputAngleDeltaPctX = newDeltaAnglePct.x;
             curAction.inputAngleDeltaPctY = newDeltaAnglePct.y;
+            /*
             double velocity = std::abs(computeMagnitude(newDeltaAnglePct));
             curAction.rollingAvgMouseVelocity = curAction.rollingAvgMouseVelocity * 0.5 + velocity * 0.5;
             double absAccel = std::abs(velocity  - curAction.rollingAvgMouseVelocity);
@@ -146,9 +158,24 @@ namespace action {
                 //curAction.enableSecondOrder = false;
             }
             curAction.enableSecondOrder = true;
+             */
             curAction.lastActionTime = state.loadTime;
         }
+        else {
+            const unordered_map<CSGOId, Vec2> & playerToDeltaAngle =
+                blackboard.streamingManager.streamingEngagementAim.playerToDeltaAngle;
+            if (playerToDeltaAngle.find(curClient.csgoId) == playerToDeltaAngle.end()) {
+                curAction.inputAngleDeltaPctX = 0.;
+                curAction.inputAngleDeltaPctY = 0.;
+            }
+            else {
+                Vec2 newDeltaAnglePct = makeAngleToPct(playerToDeltaAngle.at(curClient.csgoId));
+                curAction.inputAngleDeltaPctX = newDeltaAnglePct.x;
+                curAction.inputAngleDeltaPctY = newDeltaAnglePct.y;
+            }
+        }
 
+        /*
         if (!SECOND_ORDER || !curAction.enableSecondOrder) { //|| computeMagnitude(deltaAngle) > 40) {
             // TODO: use better angle velocity control
             curAction.inputAngleDeltaPctX = computeAngleVelocityPID(deltaAngle.x, blackboard.playerToPIDStateX[treeThinker.csgoId], blackboard.aimDis(blackboard.gen));
@@ -158,6 +185,7 @@ namespace action {
             curAction.inputAngleDeltaPctY = curAction.inputAngleDeltaPctY * 0.45 + oldAction.inputAngleDeltaPctY * 0.55;
 
         }
+         */
 
         playerNodeState[treeThinker.csgoId] = NodeState::Success;
         return playerNodeState[treeThinker.csgoId];
