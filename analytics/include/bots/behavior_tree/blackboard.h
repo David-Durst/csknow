@@ -177,7 +177,7 @@ struct Blackboard {
         return teamToLastRoundSawEnemy.find(team) != teamToLastRoundSawEnemy.end() &&
                 teamToLastRoundSawEnemy[team] == state.roundNumber;
     }
-    optional<CSGOId> defuserId;
+    std::optional<CSGOId> defuserId;
     [[nodiscard]]
     bool isPlayerDefuser(CSGOId playerId) const {
         return defuserId && defuserId.value() == playerId;

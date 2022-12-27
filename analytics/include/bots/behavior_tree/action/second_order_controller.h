@@ -7,7 +7,6 @@
 
 #include "geometry.h"
 #include <optional>
-using std::optional;
 
 // https://www.youtube.com/watch?v=KPoeNZZ6H4s (13:26)
 class SecondOrderController {
@@ -26,7 +25,7 @@ public:
         yd = {0., 0.};
     }
 
-    Vec2 update(double T, Vec2 x, Vec2 yp, optional<Vec2> xd = {}) {
+    Vec2 update(double T, Vec2 x, Vec2 yp, std::optional<Vec2> xd = {}) {
         if (!xd) { // estimate velocity
             xd = (x - xp) / T;
             xp = x;

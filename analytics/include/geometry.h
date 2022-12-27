@@ -239,7 +239,7 @@ Ray getEyeCoordinatesForPlayerGivenEyeHeight(Vec3 pos, Vec2 view) {
 static inline __attribute__((always_inline))
 Vec3 getFootCoordinatesForPlayerGivenEyePos(Vec3 pos) {
     // same as above, but the pos.z is eye, not foot
-    return {pos.x, pos.y, pos.z - EYE_HEIGHT}
+    return {pos.x, pos.y, pos.z - EYE_HEIGHT};
 }
 
 static inline __attribute__((always_inline))

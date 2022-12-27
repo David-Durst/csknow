@@ -7,7 +7,6 @@
 
 #include <queries/query.h>
 #include "bots/load_save_bot_data.h"
-using std::optional;
 
 struct MoveOptions {
     bool move;
@@ -50,7 +49,7 @@ struct Priority {
     Vec3 targetPos;
     TargetPlayer targetPlayer;
     NonDangerAimAreaType nonDangerAimAreaType;
-    optional<AreaId> nonDangerAimArea;
+    std::optional<AreaId> nonDangerAimArea;
     MoveOptions moveOptions;
     ShootOptions shootOptions;
 

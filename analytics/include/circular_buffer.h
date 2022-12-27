@@ -1,3 +1,5 @@
+#ifndef CSKNOW_CIRCULAR_BUFFER_H
+#define CSKNOW_CIRCULAR_BUFFER_H
 #include <vector>
 
 static inline __attribute__((always_inline))
@@ -64,3 +66,5 @@ public:
         return result;
     }
 };
+
+#endif // CSKNOW_CIRCULAR_BUFFER_H

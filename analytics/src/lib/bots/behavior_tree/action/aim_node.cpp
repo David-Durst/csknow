@@ -71,7 +71,7 @@ namespace action {
         SecondOrderController & mouseController = blackboard.playerToMouseController.find(treeThinker.csgoId)->second;
         const Order & curOrder = blackboard.strategy.getOrderForPlayer(treeThinker.csgoId);
         Action & curAction = blackboard.playerToAction[treeThinker.csgoId];
-        Action & oldAction = blackboard.lastPlayerToAction[treeThinker.csgoId];
+        //Action & oldAction = blackboard.lastPlayerToAction[treeThinker.csgoId];
         Priority & curPriority = blackboard.playerToPriority[treeThinker.csgoId];
         Path & curPath = blackboard.playerToPath[treeThinker.csgoId];
         Vec3 aimTarget;
@@ -117,7 +117,7 @@ namespace action {
         csknow::engagement_aim::ClientTargetMap & clientTargetMap = blackboard.streamingManager.streamingEngagementAim
             .currentClientTargetMap;
         if (curAction.aimTargetType == AimTargetType::Player) {
-            clientTargetMap[curClient.csgoId] = {curPriority.targetPlayer.playerId};
+            clientTargetMap[curClient.csgoId] = {curPriority.targetPlayer.playerId, {0., 0., 0.}};
         }
         else {
             clientTargetMap[curClient.csgoId] = {INVALID_ID, aimTarget};
