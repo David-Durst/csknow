@@ -4,7 +4,7 @@
 
 #include "bots/behavior_tree/action/action_node.h"
 #define MAX_LOOK_AT_C4_DISTANCE 300.
-#define SECOND_ORDER true
+#define SECOND_ORDER false
 #define K_P 0.0025
 #define K_I 0.
 #define K_D 0.

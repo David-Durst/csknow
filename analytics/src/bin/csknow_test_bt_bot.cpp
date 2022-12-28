@@ -39,9 +39,9 @@ int main(int argc, char * argv[]) {
     std::thread filterReceiver(&Tree::readFilterNames, &tree);
 
     bool finishedTests = false;
-    /*
     ScriptsRunner scriptsRunner(Script::makeList(
-            make_unique<GooseToCatScript>(state),
+            /*
+         make_unique<GooseToCatScript>(state),
             make_unique<GooseToCatShortScript>(state),
             make_unique<CTPushLongScript>(state),
             make_unique<CTPushBDoorsScript>(state),
@@ -52,7 +52,9 @@ int main(int argc, char * argv[]) {
             make_unique<HoldASiteBaitScript>(state),
             make_unique<HoldBSitePushScript>(state),
             make_unique<HoldBSiteBaitScript>(state),
-            make_unique<AimAndKillWithinTimeCheck>(state),
+                */
+            make_unique<AimAndKillWithinTimeCheck>(state)
+                /*
             make_unique<CTEngageSpacingScript>(state),
             make_unique<PushBaitGooseToCatScript>(state),
             make_unique<PushWaitForBaitGooseToCatScript>(state),
@@ -71,13 +73,15 @@ int main(int argc, char * argv[]) {
             make_unique<VisibilityPossibleNavAreasCheck>(state),
             make_unique<DangerOnePlayerCheck>(state),
             make_unique<DangerTwoPlayerCheck>(state)
+                 */
     ), true);
-     */
+     /*
     // visualization scripts rather than actual tests
     ScriptsRunner scriptsRunner(Script::makeList(
             make_unique<HeadTrackingScript>(state),
             make_unique<CrouchedHeadTrackingScript>(state)
     ), true);
+     */
 
 
 

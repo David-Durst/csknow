@@ -356,6 +356,15 @@ namespace csknow::engagement_aim {
                 Vec2 curViewAngle = engagementAimPlayerHistory.clientHistory.at(orderedAttackerIds[i])
                     .fromNewest().deltaRelativeFirstHeadViewAngle;
                 Vec2 deltaViewAngle = outputViewAngle - curViewAngle;
+                if (std::abs(deltaViewAngle.x) < 0.001 && std::abs(deltaViewAngle.y) < 0.001) {
+                    std::cout << "stopped" << std::endl;
+                    for (int64_t priorTickNum = PAST_AIM_TICKS - 1; priorTickNum >= 0; priorTickNum--) {
+                        const auto s = engagementAimPlayerHistory.clientHistory.at(orderedAttackerIds[i])
+                            .fromNewest(priorTickNum);
+                        std::cout << s.toCSV(priorTickNum == PAST_AIM_TICKS - 1) << std::endl;
+                    }
+                    std::cout << outputViewAngle.toString() << std::endl;
+                }
                 // flip y axis to go back to game coordinates
                 deltaViewAngle.y *= -1;
                 deltaViewAngle.makePitchNeg90To90();
