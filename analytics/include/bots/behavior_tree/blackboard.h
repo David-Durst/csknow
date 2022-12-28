@@ -81,7 +81,7 @@ struct PrintState {
 };
 
 struct Blackboard {
-    string navPath, mapsPath;
+    string navFolderPath, navPath, mapsPath;
     nav_mesh::nav_file navFile;
     set<AreaId> removedAreas;
     map<AreaId, AreaId> removedAreaAlternatives;
@@ -228,8 +228,9 @@ struct Blackboard {
     vector<PrintState> printPerPlayerState(const ServerState & state, CSGOId playerId);
 
     Blackboard(const string & navPath, const string & mapName) :
-        navPath(navPath), mapsPath(std::filesystem::path(navPath).remove_filename().string()),
-        navFile(navPath.c_str()), streamingManager(navPath),
+        navFolderPath(std::filesystem::path(navPath).remove_filename().string()),
+        navPath(navPath), mapsPath(navFolderPath),
+        navFile(navPath.c_str()), streamingManager(navFolderPath),
         gen(rd()), navFileOverlay(navFile),
         visPoints(navFile), mapMeshResult(queryMapMesh(navFile, "")),
         reachability(queryReachable(visPoints, mapMeshResult, "", mapsPath, mapName)),

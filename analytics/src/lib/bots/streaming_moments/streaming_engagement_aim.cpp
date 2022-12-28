@@ -263,7 +263,7 @@ namespace csknow::engagement_aim {
         // record who doesn't have a target and which prediction index maps to which attacker id
         set<CSGOId> attackerIds;
         vector<CSGOId> orderedAttackerIds;
-        vector<torch::Tensor> rowsPT;
+        std::vector<std::vector<float>> rowsCPP;
         auto options = torch::TensorOptions().dtype(at::kFloat);
         for (const auto & curTickClient : curState.clients) {
             if (currentClientTargetMap.find(curTickClient.csgoId) == currentClientTargetMap.end()) {
@@ -327,33 +327,49 @@ namespace csknow::engagement_aim {
                 rowCPP.push_back(static_cast<float>(boolToInt(engagementAimTickData.holdingAttack)));
             }
             // TODO: handle weapons other than AK47
-            rowCPP.push_back(static_cast<float>(weaponIdToWeaponType(curTickClient.currentWeaponId)));
-            rowsPT.push_back(torch::from_blob(rowCPP.data(), {1, static_cast<long>(rowCPP.size())},
-                                              options));
+            //std::cout << enumAsInt(weaponIdToWeaponType(curTickClient.currentWeaponId)) << std::endl;
+            //std::cout << static_cast<float>(weaponIdToWeaponType(curTickClient.currentWeaponId)) << std::endl;
+            rowCPP.push_back(
+                static_cast<float>(enumAsInt(weaponIdToWeaponType(curTickClient.currentWeaponId))));
+            //std::cout << rowCPP[416] << std::endl;
+            rowsCPP.push_back(rowCPP);
+            //std::cout << rowsPT[0][0][416].item<float>() << std::endl;
         }
-        std::vector<torch::jit::IValue> inputs{torch::cat(rowsPT)};
-        at::Tensor output = module.forward(inputs).toTuple()->elements()[1].toTensor();
+        if (!rowsCPP.empty()) {
+            vector<torch::Tensor> rowsPT;
+            for (auto & rowCPP : rowsCPP) {
+                rowsPT.push_back(torch::from_blob(rowCPP.data(), {1, static_cast<long>(rowCPP.size())},
+                                                  options));
+            }
+            torch::Tensor tmp = torch::cat(rowsPT);
+            for (size_t i = 0; i < orderedAttackerIds.size(); i++) {
+                //std::cout << rowsPT[i][0][416].item<float>() << std::endl;
+                std::cout << tmp[i][416].item<float>() << std::endl;
+            }
+            std::vector<torch::jit::IValue> inputs{torch::cat(rowsPT)};
+            at::Tensor output = module.forward(inputs).toTuple()->elements()[1].toTensor();
 
-        for (size_t i = 0; i < orderedAttackerIds.size(); i++) {
-            // subtract from input delta view angles to get change in angle, then apply that to current view angles
-            Vec2 outputViewAngle = {
-                static_cast<double>(output[i][0].item<float>()),
-                static_cast<double>(output[i][output[0].size(0) / 2].item<float>())
-            };
-            Vec2 curViewAngle = engagementAimPlayerHistory.clientHistory.at(orderedAttackerIds[i])
-                .fromNewest().deltaRelativeFirstHeadViewAngle;
-            Vec2 deltaViewAngle = outputViewAngle - curViewAngle;
-            // flip y axis to go back to game coordinates
-            deltaViewAngle.y *= -1;
-            deltaViewAngle.makePitchNeg90To90();
-            deltaViewAngle.makeYawNeg180To180();
-            playerToDeltaAngle[orderedAttackerIds[i]] = deltaViewAngle;
-        }
-        // same angles as before if no target
-        for (const auto & curTickClient : curState.clients) {
-            if (attackerIds.find(curTickClient.csgoId) == attackerIds.end()) {
-                playerToDeltaAngle[curTickClient.csgoId] = {0., 0.};
-                //playerToNewAngles[curTickClient.csgoId] = curTickClient.getCurrentViewAngles();
+            for (size_t i = 0; i < orderedAttackerIds.size(); i++) {
+                // subtract from input delta view angles to get change in angle, then apply that to current view angles
+                Vec2 outputViewAngle = {
+                    static_cast<double>(output[i][0].item<float>()),
+                    static_cast<double>(output[i][output[0].size(0) / 2].item<float>())
+                };
+                Vec2 curViewAngle = engagementAimPlayerHistory.clientHistory.at(orderedAttackerIds[i])
+                    .fromNewest().deltaRelativeFirstHeadViewAngle;
+                Vec2 deltaViewAngle = outputViewAngle - curViewAngle;
+                // flip y axis to go back to game coordinates
+                deltaViewAngle.y *= -1;
+                deltaViewAngle.makePitchNeg90To90();
+                deltaViewAngle.makeYawNeg180To180();
+                playerToDeltaAngle[orderedAttackerIds[i]] = deltaViewAngle;
+            }
+            // same angles as before if no target
+            for (const auto & curTickClient : curState.clients) {
+                if (attackerIds.find(curTickClient.csgoId) == attackerIds.end()) {
+                    playerToDeltaAngle[curTickClient.csgoId] = {0., 0.};
+                    //playerToNewAngles[curTickClient.csgoId] = curTickClient.getCurrentViewAngles();
+                }
             }
         }
     }
@@ -372,12 +388,12 @@ namespace csknow::engagement_aim {
 
             // all ticks need to know how far past they can look, as if not enough history then replicate available
             // data
-            size_t oldestAttackerStateOffset = db.clientHistoryLength(curTickClient.csgoId);
+            size_t oldestAttackerStateOffset = db.clientHistoryLength(curTickClient.csgoId) - 1;
             // history is irrelevant if target is a fixed position rather than a player
             size_t oldestVictimStateOffset = 0;
             const EngagementAimTarget & target = currentClientTargetMap.at(curTickClient.csgoId);
             if (target.isPlayer()) {
-                oldestVictimStateOffset = db.clientHistoryLength(target.csgoId);
+                oldestVictimStateOffset = db.clientHistoryLength(target.csgoId) - 1;
             }
 
             // if engagement is new, fill in all past
