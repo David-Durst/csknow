@@ -11,6 +11,7 @@
 #include "queries/inference_moments/inference_engagement_aim.h"
 #include <torch/script.h>
 #include <filesystem>
+#include <ATen/Parallel.h>
 
 namespace fs = std::filesystem;
 
@@ -93,7 +94,10 @@ namespace csknow::engagement_aim {
 
             try {
                 // Deserialize the ScriptModule from a file using torch::jit::load().
-                module = torch::jit::load(modelPath);
+                auto tmp_module = torch::jit::load(modelPath);
+                module = optimize_for_inference(tmp_module);
+                at::init_num_threads();
+                at::set_num_threads(0);
             }
             catch (const c10::Error& e) {
                 std::cerr << "error loading engagement aim model\n";

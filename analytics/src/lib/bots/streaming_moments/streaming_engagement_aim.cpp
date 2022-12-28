@@ -265,6 +265,7 @@ namespace csknow::engagement_aim {
     }
 
     void StreamingEngagementAim::predictNewAngles(const StreamingBotDatabase & db) {
+        torch::NoGradGuard no_grad;
         const ServerState & curState = db.batchData.fromNewest();
         // record who doesn't have a target and which prediction index maps to which attacker id
         set<CSGOId> attackerIds;
