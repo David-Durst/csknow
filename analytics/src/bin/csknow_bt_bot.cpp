@@ -31,6 +31,8 @@ int main(int argc, char * argv[]) {
         filterReceiver.swap(tmpThread);
     }
 
+    at::set_num_threads(1);
+
 #pragma clang diagnostic push
 #pragma ide diagnostic ignored "EndlessLoop"
     while (true) {
