@@ -17,10 +17,10 @@ public:
 
     StreamingManager(const string & navPath) : streamingEngagementAim(navPath) { }
 
-    void update(const ServerState & state, const VisPoints & visPoints) {
+    void update(const ServerState & state) {
         db.addState(state);
         streamingFireHistory.addTickData(db);
-        streamingEngagementAim.addTickData(db, streamingFireHistory, visPoints);
+        streamingEngagementAim.addTickData(db, streamingFireHistory);
     }
 
 };

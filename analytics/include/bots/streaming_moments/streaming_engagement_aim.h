@@ -81,7 +81,7 @@ namespace csknow::engagement_aim {
                                                  const fire_history::StreamingFireHistory & streamingFireHistory,
                                                  CSGOId attackerId, const EngagementAimTarget & target,
                                                  size_t attackerStateOffset, size_t victimStateOffset,
-                                                 bool firstEngagementTick, const VisPoints & visPoints);
+                                                 bool firstEngagementTick);
         void predictNewAngles(const StreamingBotDatabase & db);
 
         torch::jit::script::Module module;
@@ -109,8 +109,7 @@ namespace csknow::engagement_aim {
         unordered_map<CSGOId, Vec2> playerToDeltaAngle;
 
         void addTickData(StreamingBotDatabase & db,
-                         const fire_history::StreamingFireHistory & streamingFireHistory,
-                         const VisPoints & visPoints);
+                         const fire_history::StreamingFireHistory & streamingFireHistory);
     };
 }
 

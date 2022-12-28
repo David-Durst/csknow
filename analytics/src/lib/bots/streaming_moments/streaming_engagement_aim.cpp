@@ -89,7 +89,7 @@ namespace csknow::engagement_aim {
                                                const fire_history::StreamingFireHistory & streamingFireHistory,
                                                CSGOId attackerId, const EngagementAimTarget & target,
                                                size_t attackerStateOffset, size_t victimStateOffset,
-                                               bool firstEngagementTick, const VisPoints & visPoints) {
+                                               bool firstEngagementTick) {
 
         // create victim position data depending on victim is player or target
         Vec3 victimFootPos;
@@ -145,6 +145,8 @@ namespace csknow::engagement_aim {
             playerToVictimEngagementFirstHeadPos[attackerId] = victimHeadPos;
         }
 
+        const ServerState & serverStateAttackerOffset =
+            db.batchData.fromNewest(static_cast<int64_t>(attackerStateOffset));
         const ServerState::Client & attackerClient =
             db.batchData.fromNewest(static_cast<int64_t>(attackerStateOffset))
             .getClient(attackerId);
@@ -192,6 +194,7 @@ namespace csknow::engagement_aim {
             std::min(MAX_TICKS_SINCE_LAST_FIRE_ATTACK, attackerFireData.ticksSinceLastHoldingAttack);
 
 
+        /*
         vector<CellIdAndDistance> attackerCellIdsByDistances = visPoints.getCellVisPointsByDistance(
             attackerEyePos);
         vector<CellIdAndDistance> victimCellIdsByDistances = visPoints.getCellVisPointsByDistance(
@@ -210,7 +213,10 @@ namespace csknow::engagement_aim {
                     .visibleFromCurPoint[victimCellIdsByDistances[j].cellId];
             }
         }
-        bool curTickVictimVisible = victimInFOV && victimVisNoFOV;
+         */ //victimInFOV && victimVisNoFOV;
+        // only alive if real player (csgoId defined), so only do visibility check if valid target.csgoId
+        bool curTickVictimVisible = victimAlive &&
+            serverStateAttackerOffset.isVisible(attackerId, target.csgoId);
         engagementAimTickData.victimVisible = curTickVictimVisible;
         // remove victim visibility tracking if new engagmeent
         if (firstEngagementTick &&
@@ -327,24 +333,15 @@ namespace csknow::engagement_aim {
                 rowCPP.push_back(static_cast<float>(boolToInt(engagementAimTickData.holdingAttack)));
             }
             // TODO: handle weapons other than AK47
-            //std::cout << enumAsInt(weaponIdToWeaponType(curTickClient.currentWeaponId)) << std::endl;
-            //std::cout << static_cast<float>(weaponIdToWeaponType(curTickClient.currentWeaponId)) << std::endl;
             rowCPP.push_back(
                 static_cast<float>(enumAsInt(weaponIdToWeaponType(curTickClient.currentWeaponId))));
-            //std::cout << rowCPP[416] << std::endl;
             rowsCPP.push_back(rowCPP);
-            //std::cout << rowsPT[0][0][416].item<float>() << std::endl;
         }
         if (!rowsCPP.empty()) {
             vector<torch::Tensor> rowsPT;
             for (auto & rowCPP : rowsCPP) {
                 rowsPT.push_back(torch::from_blob(rowCPP.data(), {1, static_cast<long>(rowCPP.size())},
                                                   options));
-            }
-            torch::Tensor tmp = torch::cat(rowsPT);
-            for (size_t i = 0; i < orderedAttackerIds.size(); i++) {
-                //std::cout << rowsPT[i][0][416].item<float>() << std::endl;
-                std::cout << tmp[i][416].item<float>() << std::endl;
             }
             std::vector<torch::jit::IValue> inputs{torch::cat(rowsPT)};
             at::Tensor output = module.forward(inputs).toTuple()->elements()[1].toTensor();
@@ -375,8 +372,7 @@ namespace csknow::engagement_aim {
     }
 
     void StreamingEngagementAim::addTickData(StreamingBotDatabase & db,
-                     const fire_history::StreamingFireHistory & streamingFireHistory,
-                     const VisPoints & visPoints) {
+                     const fire_history::StreamingFireHistory & streamingFireHistory) {
         const ServerState & curState = db.batchData.fromNewest();
         set<CSGOId> activeClients;
 
@@ -415,14 +411,14 @@ namespace csknow::engagement_aim {
                     engagementAimPlayerHistory.clientHistory.at(curTickClient.csgoId).enqueue(
                         computeOneTickData(db, streamingFireHistory, curTickClient.csgoId, target,
                                            attackerStateOffset, victimStateOffset,
-                                           i == PAST_AIM_TICKS - 1, visPoints));
+                                           i == PAST_AIM_TICKS - 1));
                 }
             }
             // now that past is filled in, fill in most recent state
             // no need for state offset shenanigans, always have current state
             engagementAimPlayerHistory.clientHistory.at(curTickClient.csgoId).enqueue(
                 computeOneTickData(db, streamingFireHistory, curTickClient.csgoId, target,
-                                   0, 0, false, visPoints));
+                                   0, 0, false));
         }
 
         engagementAimPlayerHistory.removeInactiveClients(activeClients);
