@@ -167,7 +167,8 @@ namespace csknow::engagement_aim {
                                       playerToVictimEngagementFirstHeadPos[attackerId], curViewAngle);
 
         const fire_history::FireClientData & attackerFireData =
-            streamingFireHistory.fireClientHistory.clientHistory.at(attackerId).fromNewest(attackerStateOffset);
+            streamingFireHistory.fireClientHistory.clientHistory.at(attackerId)
+            .fromNewest(static_cast<int64_t>(attackerStateOffset));
         if (target.isPlayer()) {
             engagementAimTickData.hitVictim = attackerFireData.hitEnemy &&
                                               attackerFireData.victims.find(target.csgoId) !=
@@ -358,12 +359,14 @@ namespace csknow::engagement_aim {
                 Vec2 deltaViewAngle = outputViewAngle - curViewAngle;
                 if (std::abs(deltaViewAngle.x) < 0.001 && std::abs(deltaViewAngle.y) < 0.001) {
                     std::cout << "stopped" << std::endl;
+                    /*
                     for (int64_t priorTickNum = PAST_AIM_TICKS - 1; priorTickNum >= 0; priorTickNum--) {
                         const auto s = engagementAimPlayerHistory.clientHistory.at(orderedAttackerIds[i])
                             .fromNewest(priorTickNum);
                         std::cout << s.toCSV(priorTickNum == PAST_AIM_TICKS - 1) << std::endl;
                     }
                     std::cout << outputViewAngle.toString() << std::endl;
+                     */
                 }
                 // flip y axis to go back to game coordinates
                 deltaViewAngle.y *= -1;

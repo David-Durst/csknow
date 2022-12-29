@@ -470,6 +470,8 @@ void ServerState::loadServerState() {
     inputsValid.resize(rows, false);
     
     visibilityClientPairs.clear();
+    hurtEvents.clear();
+    weaponFireEvents.clear();
 
     loadGeneralState(tmpGeneralFilePath);
     loadClientStates(tmpClientStatesFilePath);

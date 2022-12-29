@@ -244,6 +244,19 @@ public:
         int32_t armorDamage;
         int64_t hitGroup;
         string weapon;
+
+        string toString() const {
+            std::ostringstream ss;
+            ss << "victim id: " << victimId
+                << ", attacker id: " << attackerId
+                << ", health: " << health
+                << ", armor: " << armor
+                << ", health damage: " << healthDamage
+                << ", armor damage: " << armorDamage
+                << ", hit group: " << hitGroup
+                << ", weapon: " << weapon;
+            return ss.str();
+        }
     };
     vector<Hurt> hurtEvents;
 
