@@ -79,10 +79,6 @@ namespace csknow::fire_history {
                     fireClientData.hitEnemy = false;
                     fireClientData.victims = {};
                 }
-                if (fireClientData.hitEnemy && !fireClientData.holdingAttackButton) {
-                    std::cout << "hit but no attack, num hurt events: "
-                        << curState.hurtEvents[0].toString() << std::endl;
-                }
             }
 
             fireClientHistory.clientHistory.at(curTickClient.csgoId).enqueue(fireClientData);

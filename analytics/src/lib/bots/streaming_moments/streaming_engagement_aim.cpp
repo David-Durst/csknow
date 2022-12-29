@@ -4,6 +4,7 @@
 
 #include "bots/streaming_moments/streaming_engagement_aim.h"
 #include "bots/analysis/vis_geometry.h"
+#include "bots/analysis/pytorch_utils.h"
 #include <torch/script.h>
 
 namespace csknow::engagement_aim {
@@ -139,6 +140,7 @@ namespace csknow::engagement_aim {
             victimDuckAmount = 0.;
             victimAlive = false;
         }
+        // need to flip eye angles from server to match train data
         Vec3 victimHeadPos =
             getCenterHeadCoordinatesForPlayer(victimEyePos, victimViewAngle, victimDuckAmount);
         if (firstEngagementTick) {
@@ -345,6 +347,7 @@ namespace csknow::engagement_aim {
                 rowsPT.push_back(torch::from_blob(rowCPP.data(), {1, static_cast<long>(rowCPP.size())},
                                                   options));
             }
+            torch::Tensor tmpTensor = torch::cat(rowsPT);
             std::vector<torch::jit::IValue> inputs{torch::cat(rowsPT)};
             at::Tensor output = module.forward(inputs).toTuple()->elements()[1].toTensor();
 
@@ -357,17 +360,24 @@ namespace csknow::engagement_aim {
                 Vec2 curViewAngle = engagementAimPlayerHistory.clientHistory.at(orderedAttackerIds[i])
                     .fromNewest().deltaRelativeFirstHeadViewAngle;
                 Vec2 deltaViewAngle = outputViewAngle - curViewAngle;
-                if (std::abs(deltaViewAngle.x) < 0.001 && std::abs(deltaViewAngle.y) < 0.001) {
+                if (i == 0) {
+                    std::cout << "speed: " << computeMagnitude(deltaViewAngle)
+                        << "cur view angle: " << curViewAngle.toString()
+                        << "delta view angle: " << deltaViewAngle.toString()
+                        << std::endl;
+                }
+                /*
+                if (computeMagnitude(deltaViewAngle) > 5. && computeMagnitude(curViewAngle) < 15.) {
                     std::cout << "stopped" << std::endl;
-                    /*
                     for (int64_t priorTickNum = PAST_AIM_TICKS - 1; priorTickNum >= 0; priorTickNum--) {
                         const auto s = engagementAimPlayerHistory.clientHistory.at(orderedAttackerIds[i])
                             .fromNewest(priorTickNum);
                         std::cout << s.toCSV(priorTickNum == PAST_AIM_TICKS - 1) << std::endl;
                     }
+                    print2DTensor(tmpTensor);
                     std::cout << outputViewAngle.toString() << std::endl;
-                     */
                 }
+                 */
                 // flip y axis to go back to game coordinates
                 deltaViewAngle.y *= -1;
                 deltaViewAngle.makePitchNeg90To90();
