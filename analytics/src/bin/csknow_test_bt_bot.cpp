@@ -117,6 +117,9 @@ int main(int argc, char * argv[]) {
         }
 
         if (state.getLastFrame() - priorFrame > 2) {
+            std::cout << "cur frame: " << state.getLastFrame() << ", prior frame: " << priorFrame
+                << ", start to start: " << startToStart.count()
+                << std::endl;
             numSkips++;
         }
         if (state.getLastFrame() == priorFrame) {

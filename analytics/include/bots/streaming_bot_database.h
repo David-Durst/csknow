@@ -14,14 +14,6 @@ typedef int64_t StreamingPinId;
 
 class StreamingBotDatabase {
 public:
-    /*
-    Games games;
-    Rounds rounds;
-    Ticks ticks;
-    PlayerAtTick playerAtTick;
-    WeaponFire weaponFire;
-    Hurt hurt;
-     */
     CircularBuffer<ServerState> batchData;
     unordered_map<StreamingPinId, ServerState> pinnedData;
     StreamingPinId nextPinId;
