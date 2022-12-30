@@ -250,6 +250,28 @@ struct Blackboard {
         ctMemory.team = ENGINE_TEAM_CT;
     }
 
+    Blackboard(const string & navPath, VisPoints visPoints,
+               MapMeshResult mapMeshResult, ReachableResult reachability, DistanceToPlacesResult distanceToPlaces) :
+        navFolderPath(std::filesystem::path(navPath).remove_filename().string()),
+        navPath(navPath), mapsPath(navFolderPath),
+        navFile(navPath.c_str()), streamingManager(navFolderPath),
+        gen(rd()), navFileOverlay(navFile),
+        visPoints(visPoints), mapMeshResult(mapMeshResult),
+        reachability(reachability),
+        distanceToPlaces(distanceToPlaces),
+        aggressionDis(0., 1.),
+        tDangerAreaLastCheckTime(navFile.m_areas.size(), defaultTime),
+        ctDangerAreaLastCheckTime(navFile.m_areas.size(), defaultTime),
+        possibleNavAreas(navFile), standDis(0, 100.0), aimDis(0., 2.0) {
+
+        navFileOverlay.setMapsPath(mapsPath);
+
+        tMemory.considerAllTeammates = true;
+        tMemory.team = ENGINE_TEAM_T;
+        ctMemory.considerAllTeammates = true;
+        ctMemory.team = ENGINE_TEAM_CT;
+    }
+
 };
 
 #endif //CSKNOW_BLACKBOARD_H

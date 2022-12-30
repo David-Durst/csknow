@@ -31,7 +31,14 @@ void Tree::tick(ServerState & state, const string & mapsPath) {
         bool makeBlackboardSuccesfully = false;
         while (!makeBlackboardSuccesfully) {
             try {
-                blackboard = make_unique<Blackboard>(navPath, state.mapName);
+                if (state.mapNumber != curMapNumber) {
+                    blackboard = make_unique<Blackboard>(navPath, state.mapName);
+                }
+                else {
+                    blackboard = make_unique<Blackboard>(navPath,
+                                                         blackboard->visPoints, blackboard->mapMeshResult,
+                                                         blackboard->reachability, blackboard->distanceToPlaces);
+                }
                 makeBlackboardSuccesfully = true;
             }
             catch (const std::exception & ex) {
