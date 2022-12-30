@@ -58,13 +58,10 @@ int main(int argc, char * argv[]) {
             numFailures++;
         }
 
-        if (state.getLastFrame() - priorFrame > 10) {
-            std::cout << "cur frame: " << state.getLastFrame() << ", prior frame: " << priorFrame;
-            if (db.batchData.getCurSize() > 1) {
-                std::cout << ", prior state cur frame: " << db.batchData.fromNewest(1).getLastFrame() << std::endl;
-            }
-            std::cout << ", start to start: " << startToStart.count();
-            std::cout << std::endl;
+        if (state.getLastFrame() - priorFrame > 2) {
+            std::cout << "cur frame: " << state.getLastFrame() << ", prior frame: " << priorFrame
+                      << ", start to start: " << startToStart.count()
+                      << std::endl;
             numSkips++;
         }
         if (state.getLastFrame() == priorFrame) {
