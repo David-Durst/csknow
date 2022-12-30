@@ -89,6 +89,7 @@ int main(int argc, char * argv[]) {
     int32_t priorFrame = 0;
     size_t numMisses = 0;
     size_t numSkips = 0;
+    size_t numDups = 0;
     auto priorStart = std::chrono::system_clock::now();
 #pragma clang diagnostic push
 #pragma ide diagnostic ignored "EndlessLoop"
@@ -116,6 +117,9 @@ int main(int argc, char * argv[]) {
         if (state.getLastFrame() - priorFrame > 2) {
             numSkips++;
         }
+        if (state.getLastFrame() == priorFrame) {
+            numDups++;
+        }
         priorStart = start;
         priorFrame = state.getLastFrame();
 
@@ -140,7 +144,8 @@ int main(int argc, char * argv[]) {
             << ", start to start " <<  startToStart.count()
             << ", frame to time ratio " << frameDiff / startToStart.count()
             << ", num misses " << numMisses
-            << ", num skips " << numSkips << std::endl;
+            << ", num skips " << numSkips
+            << ", num dups " << numDups << std::endl;
         logFile << tree.curLog;
         logFile.close();
         testLogFile << scriptsRunner.curLog();
