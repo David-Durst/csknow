@@ -91,12 +91,14 @@ int main(int argc, char * argv[]) {
     size_t numSkips = 0;
     size_t numDups = 0;
     auto priorStart = std::chrono::system_clock::now();
+    double savedTickInterval = 0.1;
 #pragma clang diagnostic push
 #pragma ide diagnostic ignored "EndlessLoop"
     while (!finishedTests) {
         auto start = std::chrono::system_clock::now();
         state.loadServerState();
-        std::chrono::duration<double> timePerTick(state.loadedSuccessfully ? state.tickInterval : 0.1);
+        std::chrono::duration<double> timePerTick(state.loadedSuccessfully ? state.tickInterval : savedTickInterval);
+        savedTickInterval = state.tickInterval;
         auto parseEnd = std::chrono::system_clock::now();
         std::chrono::duration<double> startToStart = start - priorStart;
         double frameDiff = (state.getLastFrame() - priorFrame) / 128.;
