@@ -33,6 +33,10 @@ int main(int argc, char * argv[]) {
 
     at::set_num_threads(1);
 
+    int32_t priorFrame = 0;
+    size_t numMisses = 0;
+    size_t numSkips = 0;
+    auto priorStart = std::chrono::system_clock::now();
 #pragma clang diagnostic push
 #pragma ide diagnostic ignored "EndlessLoop"
     while (true) {
@@ -40,7 +44,9 @@ int main(int argc, char * argv[]) {
         state.loadServerState();
         std::chrono::duration<double> timePerTick(state.loadedSuccessfully ? state.tickInterval : 0.1);
         auto parseEnd = std::chrono::system_clock::now();
-            
+        std::chrono::duration<double> startToStart = start - priorStart;
+        double frameDiff = (state.getLastFrame() - priorFrame) / 128.;
+
         if (state.loadedSuccessfully) {
             tree.tick(state, mapsPath);
             state.saveBotInputs();
@@ -48,6 +54,12 @@ int main(int argc, char * argv[]) {
         else {
             numFailures++;
         }
+
+        if (state.getLastFrame() - priorFrame > 2) {
+            numSkips++;
+        }
+        priorStart = start;
+        priorFrame = state.getLastFrame();
 
         auto end = std::chrono::system_clock::now();
         std::chrono::duration<double> botTime = end - start;
@@ -57,15 +69,19 @@ int main(int argc, char * argv[]) {
         logFile << "Num failures " << numFailures << ", last bad path: " << state.badPath << std::endl;
         bool sleep;
         if (botTime < timePerTick) {
-            logFile << "Bot compute time: " << botTime.count()
-                << "s, pct parse " << parseTime.count() / botTime.count() << std::endl;
+            logFile << "Bot compute time: ";
             sleep = true;
         }
         else {
-            logFile << "\033[1;31mMissed Bot compute time:\033[0m " << botTime.count()
-                << "s, pct parse " << parseTime.count() / botTime.count() << std::endl;
+            logFile << "\033[1;31mMissed Bot compute time:\033[0m " ;
             sleep = false;
+            numMisses++;
         }
+        logFile << botTime.count() << "s, pct parse " << parseTime.count() / botTime.count()
+                << ", start to start " <<  startToStart.count()
+                << ", frame to time ratio " << frameDiff / startToStart.count()
+                << ", num misses " << numMisses
+                << ", num skips " << numSkips << std::endl;
         logFile << tree.curLog;
         logFile.close();
         if (sleep) {

@@ -31,6 +31,8 @@ struct EngagementAimTickData {
     Vec2 victimRelativeFirstHeadCurHeadViewAngle;
     bool holdingAttack;
     int warmupTicksUsed;
+    // extras
+    Vec2 attackerViewAngle;
 
     string toString() const {
         std::ostringstream ss;

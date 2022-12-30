@@ -172,6 +172,14 @@ namespace action {
                 Vec2 newDeltaAnglePct = makeAngleToPct(playerToDeltaAngle.at(curClient.csgoId));
                 curAction.inputAngleDeltaPctX = newDeltaAnglePct.x;
                 curAction.inputAngleDeltaPctY = newDeltaAnglePct.y;
+                if (curClient.csgoId == 3 && false) {
+                    std::cout << curClient.name << " (" << curClient.csgoId << ") "
+                        << "frame: " << curClient.lastFrame
+                        << "cur view angle: " << curClient.getCurrentViewAngles().toString()
+                        << "delta angle: " << playerToDeltaAngle.at(curClient.csgoId).toString()
+                        << "delta angle pct: " << newDeltaAnglePct.toString()
+                        << std::endl;
+                }
             }
         }
 

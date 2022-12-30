@@ -49,6 +49,8 @@ void updatePriorData(EngagementAimTickData & priorData,
         trainingEngagementAimResult.victimRelativeFirstHeadCurHeadViewAngle[engagementAimId][tickNum];
     priorData.holdingAttack =
         trainingEngagementAimResult.holdingAttack[engagementAimId][tickNum];
+    priorData.attackerViewAngle =
+        trainingEngagementAimResult.attackerViewAngle[engagementAimId][tickNum];
 }
 
 void InferenceEngagementAimResult::runQuery(const Rounds & rounds, const string & modelsDir,

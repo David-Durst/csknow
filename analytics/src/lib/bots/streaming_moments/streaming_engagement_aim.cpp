@@ -163,6 +163,7 @@ namespace csknow::engagement_aim {
         Vec2 idealViewAngle = viewFromOriginToDest(attackerEyePos, victimHeadPos);
 
         engagementAimTickData.idealViewAngle = idealViewAngle;
+        engagementAimTickData.attackerViewAngle = curViewAngle;
 
         engagementAimTickData.deltaRelativeFirstHeadViewAngle =
             deltaViewFromOriginToDest(attackerEyePos,
@@ -267,6 +268,7 @@ namespace csknow::engagement_aim {
         return engagementAimTickData;
     }
 
+    size_t numSkips = 0;
     void StreamingEngagementAim::predictNewAngles(const StreamingBotDatabase & db) {
         torch::NoGradGuard no_grad;
         const ServerState & curState = db.batchData.fromNewest();
@@ -357,14 +359,22 @@ namespace csknow::engagement_aim {
                     static_cast<double>(output[i][0].item<float>()),
                     static_cast<double>(output[i][output[0].size(0) / 2].item<float>())
                 };
-                Vec2 curViewAngle = engagementAimPlayerHistory.clientHistory.at(orderedAttackerIds[i])
-                    .fromNewest().deltaRelativeFirstHeadViewAngle;
-                Vec2 deltaViewAngle = outputViewAngle - curViewAngle;
-                if (i == 0) {
-                    std::cout << "speed: " << computeMagnitude(deltaViewAngle)
-                        << "cur view angle: " << curViewAngle.toString()
+                const ServerState & prevState = db.batchData.fromNewest(1);
+                EngagementAimTickData & newestTickData = engagementAimPlayerHistory.clientHistory.at(orderedAttackerIds[i])
+                    .fromNewest();
+                Vec2 inputViewAngle = newestTickData.deltaRelativeFirstHeadViewAngle;
+                Vec2 deltaViewAngle = outputViewAngle - inputViewAngle;
+                if (i == 0 && curState.getLastFrame() - prevState.getLastFrame() > 2) {
+                    std::cout << "cur frame: " << curState.getLastFrame() << "prev frame: " << prevState.getLastFrame()
+                        << "skips: " << numSkips
+                        << "speed: " << computeMagnitude(deltaViewAngle)
+                        << "cur view angle: " << newestTickData.attackerViewAngle.toString()
+                        << "delta relative first head view angle: " << inputViewAngle.toString()
                         << "delta view angle: " << deltaViewAngle.toString()
+                        << "cur pos: " << newestTickData.attackerEyePos.toString()
+                        << "victim pos: " << newestTickData.victimEyePos.toString()
                         << std::endl;
+                    numSkips++;
                 }
                 /*
                 if (computeMagnitude(deltaViewAngle) > 5. && computeMagnitude(curViewAngle) < 15.) {

@@ -84,8 +84,11 @@ int main(int argc, char * argv[]) {
      */
 
 
+    at::set_num_threads(1);
 
-    int32_t priorFrame;
+    int32_t priorFrame = 0;
+    size_t numMisses = 0;
+    size_t numSkips = 0;
     auto priorStart = std::chrono::system_clock::now();
 #pragma clang diagnostic push
 #pragma ide diagnostic ignored "EndlessLoop"
@@ -110,6 +113,9 @@ int main(int argc, char * argv[]) {
             numFailures++;
         }
 
+        if (state.getLastFrame() - priorFrame > 2) {
+            numSkips++;
+        }
         priorStart = start;
         priorFrame = state.getLastFrame();
 
@@ -128,10 +134,13 @@ int main(int argc, char * argv[]) {
         else {
             logFile << "\033[1;31mMissed Bot compute time:\033[0m " ;
             sleep = false;
+            numMisses++;
         }
         logFile << botTime.count() << "s, pct parse " << parseTime.count() / botTime.count()
             << ", start to start " <<  startToStart.count()
-            << ", frame to time ratio" << frameDiff / startToStart.count() << std::endl;
+            << ", frame to time ratio " << frameDiff / startToStart.count()
+            << ", num misses " << numMisses
+            << ", num skips " << numSkips << std::endl;
         logFile << tree.curLog;
         logFile.close();
         testLogFile << scriptsRunner.curLog();
