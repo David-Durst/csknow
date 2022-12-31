@@ -2,6 +2,7 @@
 // Created by durst on 12/29/21.
 //
 #include "bots/load_save_bot_data.h"
+#include <thread>
 #include "load_cover.h"
 #include "load_data.h"
 #include "file_helpers.h"
@@ -380,7 +381,38 @@ void ServerState::loadWeaponFireEvents(const string &weaponFireFilePath) {
     closeMMapFile({fd, stats, file});
 }
 
-void ServerState::loadServerState() {
+void ServerState::sleepUntilServerStateExists(CSGOFileTime lastFileTime) {
+    // check the last file written
+    string hurtFileName = "hurt.csv";
+    string hurtFilePath = dataPath + "/" + hurtFileName;
+    while (!std::filesystem::exists(hurtFilePath)) {
+        // should always be called after a successful inital load
+        // but if no successful initial load, default tickInterval has a sane default value
+        std::chrono::duration<double> timeSinceLastFile =
+            std::filesystem::file_time_type::clock::now() - lastFileTime;
+        std::chrono::duration<double> sleepLength(0.1);
+        //std::cout << "time since last file: " << timeSinceLastFile.count() << ", sleep for ";
+        if (timeSinceLastFile.count() < tickInterval - longPollBufferSeconds) {
+            //std::cout << longPollSeconds;
+            std::this_thread::sleep_for(std::chrono::duration<double>(longPollSeconds));
+        }
+        else {
+            //std::cout << shortPollSeconds;
+            std::this_thread::sleep_for(std::chrono::duration<double>(shortPollSeconds));
+        }
+    }
+}
+
+double ServerState::getGeneralStatFileTime() {
+    string generalFileName = "general.csv";
+    string generalFilePath = dataPath + "/" + generalFileName;
+
+    struct stat s;
+    stat(generalFilePath.c_str(), &s);
+    return s.st_mtim.tv_nsec / 1e9;
+}
+
+CSGOFileTime ServerState::loadServerState() {
     string generalFileName = "general.csv";
     string generalFilePath = dataPath + "/" + generalFileName;
     string tmpGeneralFileName = "general.csv.tmp.read";
@@ -401,33 +433,35 @@ void ServerState::loadServerState() {
     string tmpC4FileName = "c4.csv.tmp.read";
     string tmpC4FilePath = dataPath + "/" + tmpC4FileName;
 
-    string hurtFileName = "hurt.csv";
-    string hurtFilePath = dataPath + "/" + hurtFileName;
-    string tmpHurtFileName = "hurt.csv.tmp.read";
-    string tmpHurtFilePath = dataPath + "/" + tmpHurtFileName;
-
     string weaponFireFileName = "weaponFire.csv";
     string weaponFireFilePath = dataPath + "/" + weaponFireFileName;
     string tmpWeaponFireFileName = "weaponFire.csv.tmp.read";
     string tmpWeaponFireFilePath = dataPath + "/" + tmpWeaponFireFileName;
 
+    string hurtFileName = "hurt.csv";
+    string hurtFilePath = dataPath + "/" + hurtFileName;
+    string tmpHurtFileName = "hurt.csv.tmp.read";
+    string tmpHurtFilePath = dataPath + "/" + tmpHurtFileName;
+
     loadTime = std::chrono::system_clock::now();
+    CSGOFileTime fileTime;
 
     bool generalExists = std::filesystem::exists(generalFilePath);
     bool clientStatesExists = std::filesystem::exists(clientStatesFilePath);
     bool visibilityExists = std::filesystem::exists(visibilityFilePath);
     bool c4FileExists = std::filesystem::exists(c4FilePath);
-    bool hurtFileExists = std::filesystem::exists(hurtFilePath);
     bool weaponFireFileExists = std::filesystem::exists(weaponFireFilePath);
+    bool hurtFileExists = std::filesystem::exists(hurtFilePath);
     if (generalExists && clientStatesExists && visibilityExists && c4FileExists &&
-        hurtFileExists && weaponFireFileExists) {
+        weaponFireFileExists && hurtFileExists) {
         try {
+            fileTime = std::filesystem::last_write_time(generalFilePath);
             std::filesystem::rename(generalFilePath, tmpGeneralFilePath);
             std::filesystem::rename(clientStatesFilePath, tmpClientStatesFilePath);
             std::filesystem::rename(visibilityFilePath, tmpVisibilityFilePath);
             std::filesystem::rename(c4FilePath, tmpC4FilePath);
-            std::filesystem::rename(hurtFilePath, tmpHurtFilePath);
             std::filesystem::rename(weaponFireFilePath, tmpWeaponFireFilePath);
+            std::filesystem::rename(hurtFilePath, tmpHurtFilePath);
             loadedSuccessfully = true;
         }
         catch(std::filesystem::filesystem_error const& ex) {
@@ -453,14 +487,14 @@ void ServerState::loadServerState() {
         else if (!c4FileExists) {
             badPath = c4FilePath;
         }
-        else if (!hurtFileExists) {
-            badPath = hurtFilePath;
-        }
-        else {
+        else if (!weaponFireFileExists) {
             badPath = weaponFireFilePath;
         }
+        else {
+            badPath = hurtFilePath;
+        }
         loadedSuccessfully = false;
-        return;
+        return fileTime;
     }
 
     vector<int64_t> startingPointPerFile = getFileStartingRows({tmpClientStatesFilePath});
@@ -470,15 +504,15 @@ void ServerState::loadServerState() {
     inputsValid.resize(rows, false);
     
     visibilityClientPairs.clear();
-    hurtEvents.clear();
     weaponFireEvents.clear();
+    hurtEvents.clear();
 
     loadGeneralState(tmpGeneralFilePath);
     loadClientStates(tmpClientStatesFilePath);
     loadVisibilityClientPairs(tmpVisibilityFilePath);
     loadC4State(tmpC4FilePath);
-    loadHurtEvents(tmpHurtFilePath);
     loadWeaponFireEvents(tmpWeaponFireFilePath);
+    loadHurtEvents(tmpHurtFilePath);
 
     // build map from server id to CSKnow id
     int maxServerId = -1;
@@ -493,6 +527,7 @@ void ServerState::loadServerState() {
     for (int i = 0; i < (int) clients.size(); i++) {
         csgoIdToCSKnowId[clients[i].csgoId] = i;
     }
+    return fileTime;
 }
 
 void ServerState::saveBotInputs() {

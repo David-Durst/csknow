@@ -20,7 +20,14 @@ typedef int64_t CSGOId;
 typedef int32_t TeamId;
 typedef int32_t RoundNumber;
 typedef std::chrono::time_point<std::chrono::system_clock> CSKnowTime;
+typedef std::chrono::time_point<std::filesystem::__file_clock> CSGOFileTime;
 constexpr CSKnowTime defaultTime = std::chrono::system_clock::time_point();
+// long poll up until this time before the next write
+constexpr double longPollBufferSeconds = 0.00150;
+// poll length
+constexpr double longPollSeconds = 0.001;
+constexpr double shortPollSeconds = 0.00025;
+constexpr double defaultTickInterval = 0.1;
 
 class ServerState {
 private:
@@ -36,7 +43,7 @@ public:
     RoundNumber roundNumber;
     int32_t tScore, ctScore;
     int32_t mapNumber;
-    double tickInterval, gameTime;
+    double tickInterval = defaultTickInterval, gameTime;
     CSKnowTime loadTime;
     //const static CSKnowTime defaultTime = std::chrono::system_clock::from_time_t(0);
 
@@ -274,7 +281,9 @@ public:
     string inputsLog, thinkLog;
 
     string dataPath;
-    void loadServerState();
+    void sleepUntilServerStateExists(CSGOFileTime lastFileTime);
+    double getGeneralStatFileTime();
+    CSGOFileTime loadServerState();
     void saveBotInputs();
     bool saveScript(const vector<string>& scriptLines) const;
     [[nodiscard]] Vec3 getC4Pos() const;
