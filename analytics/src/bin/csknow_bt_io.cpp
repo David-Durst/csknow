@@ -40,8 +40,8 @@ int main(int argc, char * argv[]) {
     StreamingBotDatabase db;
     auto priorStart = std::chrono::system_clock::now();
     CSGOFileTime priorFileTime;
-    double priorGameTime;
-    double priorStatTime;
+    double priorGameTime = 0;
+    double priorStatTime = 0;
     size_t ticksSinceLastShortTick = 0;
 #pragma clang diagnostic push
 #pragma ide diagnostic ignored "EndlessLoop"

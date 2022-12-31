@@ -40,8 +40,8 @@ int main(int argc, char * argv[]) {
 
     bool finishedTests = false;
     ScriptsRunner scriptsRunner(Script::makeList(
-            /*
-         make_unique<GooseToCatScript>(state),
+         make_unique<GooseToCatScript>(state)
+             /*
             make_unique<GooseToCatShortScript>(state),
             make_unique<CTPushLongScript>(state),
             make_unique<CTPushBDoorsScript>(state),
@@ -53,7 +53,7 @@ int main(int argc, char * argv[]) {
             make_unique<HoldBSitePushScript>(state),
             make_unique<HoldBSiteBaitScript>(state),
                 */
-            make_unique<AimAndKillWithinTimeCheck>(state)
+            //make_unique<AimAndKillWithinTimeCheck>(state)
                 /*
             make_unique<CTEngageSpacingScript>(state),
             make_unique<PushBaitGooseToCatScript>(state),
@@ -91,16 +91,20 @@ int main(int argc, char * argv[]) {
     size_t numSkips = 0;
     size_t numDups = 0;
     auto priorStart = std::chrono::system_clock::now();
-    double savedTickInterval = 0.1;
+    CSGOFileTime priorFileTime;
+    double priorGameTime = 0;
+    double priorStatTime = 0;
 #pragma clang diagnostic push
 #pragma ide diagnostic ignored "EndlessLoop"
     while (!finishedTests) {
         auto start = std::chrono::system_clock::now();
-        state.loadServerState();
-        std::chrono::duration<double> timePerTick(state.loadedSuccessfully ? state.tickInterval : savedTickInterval);
-        savedTickInterval = state.tickInterval;
+        double curStatTime = state.getGeneralStatFileTime();
+        CSGOFileTime newFileTime = state.loadServerState();
+        double newGameTime = state.gameTime;
+        std::chrono::duration<double> timePerTick(state.tickInterval);
         auto parseEnd = std::chrono::system_clock::now();
         std::chrono::duration<double> startToStart = start - priorStart;
+        std::chrono::duration<double> fileWriteToWrite = newFileTime - priorFileTime;
         double frameDiff = (state.getLastFrame() - priorFrame) / 128.;
 
         if (state.loadedSuccessfully) {
@@ -116,16 +120,20 @@ int main(int argc, char * argv[]) {
             numFailures++;
         }
 
-        if (state.getLastFrame() - priorFrame > 2) {
-            std::cout << "cur frame: " << state.getLastFrame() << ", prior frame: " << priorFrame
-                << ", start to start: " << startToStart.count()
-                << std::endl;
+        if (state.getLastFrame() != priorFrame + 1) {
+            std::cout << "write to write: " << fileWriteToWrite.count()
+                      << ", delta game time " << newGameTime - priorGameTime
+                      << ", delta stat time" << curStatTime - priorStatTime
+                      << ", cur stat time" << curStatTime << std::endl;
             numSkips++;
         }
         if (state.getLastFrame() == priorFrame) {
             numDups++;
         }
         priorStart = start;
+        priorGameTime = newGameTime;
+        priorStatTime = curStatTime;
+        priorFileTime = newFileTime;
         priorFrame = state.getLastFrame();
 
         auto end = std::chrono::system_clock::now();
@@ -135,14 +143,11 @@ int main(int argc, char * argv[]) {
         std::fstream logFile (logPath + "/bt_bot.log", std::fstream::out);
         std::fstream testLogFile (logPath + "/bt_test_bot.log", std::fstream::out);
         logFile << "Num failures " << numFailures << ", last bad path: " << state.badPath << std::endl;
-        bool sleep;
         if (botTime < timePerTick) {
             logFile << "Bot compute time: ";
-            sleep = true;
         }
         else {
             logFile << "\033[1;31mMissed Bot compute time:\033[0m " ;
-            sleep = false;
             numMisses++;
         }
         logFile << botTime.count() << "s, pct parse " << parseTime.count() / botTime.count()
@@ -155,9 +160,7 @@ int main(int argc, char * argv[]) {
         logFile.close();
         testLogFile << scriptsRunner.curLog();
         testLogFile.close();
-        if (sleep) {
-            std::this_thread::sleep_for(timePerTick - botTime);
-        }
+        state.sleepUntilServerStateExists(priorFileTime);
     }
 #pragma clang diagnostic pop
 
