@@ -37,7 +37,9 @@ func ProcessStructure(unprocessedKey string, localDemName string, idState *IDSta
 	}
 	defer f.Close()
 
-	p := demoinfocs.NewParser(f)
+	cfg := demoinfocs.DefaultParserConfig
+	cfg.IgnoreErrBombsiteIndexNotFound = true
+	p := demoinfocs.NewParserWithConfig(f, cfg)
 	defer p.Close()
 
 	p.RegisterEventHandler(func(e events.RoundStart) {
@@ -47,6 +49,10 @@ func ProcessStructure(unprocessedKey string, localDemName string, idState *IDSta
 	})
 
 	p.RegisterEventHandler(func(e events.RoundFreezetimeEnd) {
+		// if no round start yet, skip the freeze time end
+		if unfilteredRoundsTable.len() == 0 {
+			return
+		}
 		// only update once per round, as can fire duplicate event at end of last round of match
 		if unfilteredRoundsTable.tail().freezeTimeEnd == InvalidId {
 			unfilteredRoundsTable.tail().freezeTimeEnd = nextTickId
@@ -178,10 +184,13 @@ func computePeriodIndices(lastIndices periodIndices, regulation bool, otNumber i
 	return resultIndices
 }
 
-func FilterRounds(idState *IDState) {
+func FilterRounds(idState *IDState, shouldFilterRounds bool) {
 	filteredRoundsTable.rows = make([]roundRow, unfilteredRoundsTable.len())
 	copy(filteredRoundsTable.rows, unfilteredRoundsTable.rows)
 	if filteredRoundsTable.len() == 0 {
+		return
+	}
+	if !shouldFilterRounds {
 		return
 	}
 

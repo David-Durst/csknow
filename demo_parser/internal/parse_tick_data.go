@@ -19,7 +19,9 @@ func ProcessTickData(localDemName string, idState *IDState) {
 	}
 	defer f.Close()
 
-	p := demoinfocs.NewParser(f)
+	cfg := demoinfocs.DefaultParserConfig
+	cfg.IgnoreErrBombsiteIndexNotFound = true
+	p := demoinfocs.NewParserWithConfig(f, cfg)
 	defer p.Close()
 
 	p.RegisterEventHandler(func(e events.FrameDone) {
@@ -349,6 +351,16 @@ func ProcessTickData(localDemName string, idState *IDState) {
 	})
 
 	p.RegisterEventHandler(func(e events.BombPlanted) {
+		// defuse mode has successful plants that never begin, add a plant row when those happen
+		if plantTable.len() == 0 || plantTable.tail().endTick != InvalidId {
+			curID := idState.nextPlant
+			idState.nextPlant++
+
+			plantTable.append(plantRow{
+				curID, idState.nextTick, InvalidId,
+				playersTracker.getPlayerIdFromGameData(e.Player), false,
+			})
+		}
 		// plants interrupted by end of round may fire twice, this will just take latest result
 		plant := plantTable.tail()
 		plant.endTick = idState.nextTick

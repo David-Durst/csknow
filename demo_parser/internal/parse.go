@@ -27,11 +27,12 @@ func InitTablesTrackers() {
 	grenadeTracker.init()
 }
 
-func ParseDemo(unprocessedKey string, localDemName string, idState *IDState, firstRun bool, gameType c.GameType) {
+func ParseDemo(unprocessedKey string, localDemName string, idState *IDState, firstRun bool, gameType c.GameType,
+	shouldFilterRounds bool) {
 	fmt.Printf("localDemName: %s\n", localDemName)
 	InitTablesTrackers()
 	ProcessStructure(unprocessedKey, localDemName, idState, gameType)
-	FilterRounds(idState)
+	FilterRounds(idState, shouldFilterRounds)
 	ProcessTickData(localDemName, idState)
 	// this only needs to be called once, so it always closes
 	FlushStructure(firstRun)

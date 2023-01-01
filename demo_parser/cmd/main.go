@@ -31,6 +31,11 @@ const trainDemoUnprocessedPrefix = "demos/train_data/unprocessed/"
 const trainDemoProcessedPrefix = "demos/train_data/processed/"
 const trainCSVPrefixBase = "demos/train_data/csvs/"
 
+// these will be used to replace the AWS S3 prefixes if using manual data set
+const manualDemoUnprocessedPrefix = "demos/manual_data/unprocessed/"
+const manualDemoProcessedPrefix = "demos/manual_data/processed/"
+const manualCSVPrefixBase = "demos/manual_data/csvs/"
+
 func updatePrefixs() {
 	csvPrefixLocal = csvPrefixBase + "local/"
 	csvPrefixGlobal = csvPrefixBase + "global/"
@@ -39,7 +44,8 @@ func updatePrefixs() {
 func main() {
 	startIDState := d.DefaultIDState()
 
-	trainDataFlag := flag.Bool("t", true, "set if not using bot training data")
+	trainDataFlag := flag.Bool("t", true, "set -t=false if not using bot training data")
+	manualDataFlag := flag.Bool("m", false, "set if using manual data")
 	// if reprocessing, don't move the demos
 	firstRunPtr := flag.Bool("f", true, "set if first file processed is first overall")
 	reprocessFlag := flag.Bool("r", false, "set for reprocessing demos")
@@ -54,11 +60,12 @@ func main() {
 		os.Exit(0)
 	}
 
+	shouldFilterRounds := !*manualDataFlag
 	if *localFlag {
 		if !firstRun {
 			startIDState = d.ParseInputStateCSV()
 		}
-		d.ParseDemo(*localDemName, *localDemName, &startIDState, firstRun, c.Pro)
+		d.ParseDemo(*localDemName, *localDemName, &startIDState, firstRun, c.Pro, shouldFilterRounds)
 		d.SaveOutputStateCSV(&startIDState)
 		os.Exit(0)
 	}
@@ -67,6 +74,11 @@ func main() {
 		demoUnprocessedPrefix = trainDemoUnprocessedPrefix
 		demoProcessedPrefix = trainDemoProcessedPrefix
 		csvPrefixBase = trainCSVPrefixBase
+		updatePrefixs()
+	} else if *manualDataFlag {
+		demoUnprocessedPrefix = manualDemoUnprocessedPrefix
+		demoProcessedPrefix = manualDemoProcessedPrefix
+		csvPrefixBase = manualCSVPrefixBase
 		updatePrefixs()
 	}
 
@@ -136,7 +148,7 @@ func main() {
 				}
 				fmt.Printf("Handling file: %s\n", *obj.Key)
 				d.DownloadFile(downloader, *obj.Key, *localDemName)
-				d.ParseDemo(*obj.Key, *localDemName, &startIDState, firstRun, c.GameType(gameTypeIndex))
+				d.ParseDemo(*obj.Key, *localDemName, &startIDState, firstRun, c.GameType(gameTypeIndex), shouldFilterRounds)
 				firstRun = false
 				d.UploadCSVs(uploader, *obj.Key, csvPrefixLocal)
 				filesToMove = append(filesToMove, *obj.Key)
