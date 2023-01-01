@@ -31,6 +31,10 @@ var csvPrefixBase = "demos/csvs3/"
 const trainProcessedPrefix = "demos/train_data/processed/"
 const trainCsvPrefixBase = "demos/train_data/csvs/"
 
+// these will be used to replace the AWS S3 prefixes if using manual data set
+const manualProcessedPrefix = "demos/manual_data/processed/"
+const manualCsvPrefixBase = "demos/manual_data/csvs/"
+
 var csvPrefixLocal string
 var csvPrefixGlobal string
 
@@ -105,7 +109,8 @@ func main() {
 	var needToDownload []string
 	fillAlreadyDownloaded(&alreadyDownloaded)
 
-	trainDataFlag := flag.Bool("t", true, "set if not using bot training data")
+	trainDataFlag := flag.Bool("t", true, "set -t=false if not using bot training data")
+	manualDataFlag := flag.Bool("m", false, "set if using manual data")
 	localFlag := flag.Bool("l", false, "set for desktop runs that only download a few csvs")
 	keyFilterFlag := flag.String("f", "", "set for adding to local runs files that contain a substring")
 	subsetFlag := flag.Bool("s", false, "set for server runs that only download a subset csvs (but more than -l)")
@@ -117,6 +122,11 @@ func main() {
 		processedPrefix = trainProcessedPrefix
 		processedSmallPrefix = trainProcessedPrefix
 		csvPrefixBase = trainCsvPrefixBase
+		updatePrefixs()
+	} else if *manualDataFlag {
+		processedPrefix = manualProcessedPrefix
+		processedSmallPrefix = manualProcessedPrefix
+		csvPrefixBase = manualCsvPrefixBase
 		updatePrefixs()
 	}
 
