@@ -2,6 +2,7 @@
 .idea/
 demos/
 local_data/
+manual_data/
 local_data_remote/
 download_s3_csvs/already_downloaded.txt
 .vscode/
