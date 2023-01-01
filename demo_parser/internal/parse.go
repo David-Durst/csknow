@@ -32,6 +32,7 @@ func ParseDemo(unprocessedKey string, localDemName string, idState *IDState, fir
 	fmt.Printf("localDemName: %s\n", localDemName)
 	InitTablesTrackers()
 	ProcessStructure(unprocessedKey, localDemName, idState, gameType)
+	FixRounds()
 	FilterRounds(idState, shouldFilterRounds)
 	ProcessTickData(localDemName, idState)
 	// this only needs to be called once, so it always closes

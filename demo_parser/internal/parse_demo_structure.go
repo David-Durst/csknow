@@ -184,6 +184,25 @@ func computePeriodIndices(lastIndices periodIndices, regulation bool, otNumber i
 	return resultIndices
 }
 
+func FixRounds() {
+	// if round has no end, give it same end as start
+	// aim_test.dem has rounds with no ends
+	// if round has no official end, give it same official end as it's normal end
+	for i, _ := range unfilteredRoundsTable.rows {
+		if unfilteredRoundsTable.rows[i].endTick == InvalidId {
+			unfilteredRoundsTable.rows[i].endTick = unfilteredRoundsTable.rows[i].startTick
+		}
+	}
+	// 2351898_128353_g2-vs-ence-m3-dust2_5f2f16a6-292a-11ec-8e27-0a58a9feac02.dem
+	// end of OT has no officila round end as using plugin to manage OT, just ends as soon as round over
+	// so if official round end invalid at end of period, just make it equal to regular round end
+	for i, _ := range unfilteredRoundsTable.rows {
+		if unfilteredRoundsTable.rows[i].endOfficialTick == InvalidId {
+			unfilteredRoundsTable.rows[i].endOfficialTick = unfilteredRoundsTable.rows[i].endTick
+		}
+	}
+}
+
 func FilterRounds(idState *IDState, shouldFilterRounds bool) {
 	filteredRoundsTable.rows = make([]roundRow, unfilteredRoundsTable.len())
 	copy(filteredRoundsTable.rows, unfilteredRoundsTable.rows)
@@ -235,12 +254,6 @@ func FilterRounds(idState *IDState, shouldFilterRounds bool) {
 		for j := indices[i].lastSecondHalfStartIndex; j <= indices[i].lastSecondHalfEndIndex; j++ {
 			if i > 0 {
 				filteredRoundsTable.rows[j].overtime = true
-			}
-			// 2351898_128353_g2-vs-ence-m3-dust2_5f2f16a6-292a-11ec-8e27-0a58a9feac02.dem
-			// end of OT has no officila round end as using plugin to manage OT, just ends as soon as round over
-			// so if official round end invalid at end of period, just make it equal to regular round end
-			if filteredRoundsTable.rows[j].endOfficialTick == InvalidId {
-				filteredRoundsTable.rows[j].endOfficialTick = filteredRoundsTable.rows[j].endTick
 			}
 			tmpRounds = append(tmpRounds, filteredRoundsTable.rows[j])
 		}

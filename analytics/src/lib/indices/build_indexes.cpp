@@ -19,6 +19,7 @@ void buildRangeIndex(const vector<int64_t> &primaryKeyCol, int64_t primarySize, 
         }
         else {
             // sometimes have mistakes where point to 0 as uninitalized, skip entries
+            // for example, ticks in between rounds have a round id of -1
             for(; foreignKeyCol[foreignIndex] <= 0 && foreignKeyCol[foreignIndex] < primaryKeyCol[primaryIndex]; foreignIndex++);
             if (foreignKeyCol[foreignIndex] < primaryKeyCol[primaryIndex]) {
                 cout << "bad foreign " << foreignIndex  << " val " << foreignKeyCol[foreignIndex]
@@ -28,9 +29,16 @@ void buildRangeIndex(const vector<int64_t> &primaryKeyCol, int64_t primarySize, 
                 assert(foreignKeyCol[foreignIndex] >= primaryKeyCol[primaryIndex]);
             }
             assert(foreignIndex < foreignSize);
-            rangeIndexCol[primaryIndex].minId = foreignIndex;
-            for (; foreignIndex < foreignSize && foreignKeyCol[foreignIndex] == primaryKeyCol[primaryIndex]; foreignIndex++) ;
-            rangeIndexCol[primaryIndex].maxId = foreignIndex - 1;
+            // skip primary key col that have no references to them
+            if (foreignKeyCol[foreignIndex] == primaryKeyCol[primaryIndex]) {
+                rangeIndexCol[primaryIndex].minId = foreignIndex;
+                for (; foreignIndex < foreignSize && foreignKeyCol[foreignIndex] == primaryKeyCol[primaryIndex]; foreignIndex++) ;
+                rangeIndexCol[primaryIndex].maxId = foreignIndex - 1;
+            }
+            else {
+                rangeIndexCol[primaryIndex].minId = -1;
+                rangeIndexCol[primaryIndex].maxId = -1;
+            }
         }
     }
 }

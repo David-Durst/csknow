@@ -3,6 +3,7 @@ cmake-build-*
 build/
 scripts/bin/
 csv_outputs
+manual_outputs
 bt_*.log
 external/libtorch
 *.vis
