@@ -19,15 +19,7 @@ public:
     StreamingPinId nextPinId;
 
 
-    StreamingBotDatabase() : batchData(STREAMING_HISTORY_TICKS), nextPinId(0) {
-        /*
-        games.init(1, 1, {0});
-        rounds.init(1, 1, {0});
-        ticks.init(PAST_AIM_TICKS, 1, {0});
-        playerAtTick.init(PAST_AIM_TICKS * NUM_PLAYERS, 1, {0});
-        weaponFire.init()
-         */
-    }
+    StreamingBotDatabase() : batchData(STREAMING_HISTORY_TICKS), nextPinId(0) { }
 
     void addState(const ServerState & state) {
         batchData.enqueue(state);

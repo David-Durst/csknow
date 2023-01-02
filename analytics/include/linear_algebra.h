@@ -93,7 +93,7 @@ struct Vec3 {
 
     bool operator!=(const Vec3& rhs) const
     {
-        return x != rhs.x || y != rhs.y || z == rhs.z;
+        return x != rhs.x || y != rhs.y || z != rhs.z;
     }
 
     Vec3 operator+(const Vec3 & other) const {
@@ -215,6 +215,16 @@ struct Vec2 {
         } else {
             return y;
         }
+    }
+
+    bool operator==(const Vec2& rhs) const
+    {
+        return x == rhs.x && y == rhs.y;
+    }
+
+    bool operator!=(const Vec2& rhs) const
+    {
+        return x != rhs.x || y != rhs.y;
     }
 
     Vec2 operator+(const Vec2 & other) const {
