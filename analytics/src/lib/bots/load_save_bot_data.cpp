@@ -537,11 +537,12 @@ void ServerState::saveBotInputs() {
     string tmpInputsFilePath = dataPath + "/" + tmpInputsFileName;
 
     std::stringstream inputsStream;
-    inputsStream << "Player Index,Buttons,Input Angle Delta Pct Pitch,Input Angle Delta Pct Yaw\n";
+    inputsStream << "Player Index,Last Frame,Buttons,Input Angle Delta Pct Pitch,Input Angle Delta Pct Yaw\n";
 
     for (int i = 0; i < (int) inputsValid.size(); i++) {
         if (i < (int) clients.size() && inputsValid[i]) {
             inputsStream << clients[i].csgoId << ","
+                << getLastFrame() << ","
                 << clients[i].buttons << ","
                 // FLIPPING TO MATCH YAW AND PITCH
                 << clients[i].inputAngleDeltaPctY << ","

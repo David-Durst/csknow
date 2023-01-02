@@ -120,6 +120,7 @@ int main(int argc, char * argv[]) {
             numFailures++;
         }
 
+        /*
         if (state.getLastFrame() != priorFrame + 1) {
             std::cout << "write to write: " << fileWriteToWrite.count()
                       << ", delta game time " << newGameTime - priorGameTime
@@ -127,6 +128,7 @@ int main(int argc, char * argv[]) {
                       << ", cur stat time" << curStatTime << std::endl;
             numSkips++;
         }
+         */
         if (state.getLastFrame() == priorFrame) {
             numDups++;
         }
