@@ -95,6 +95,7 @@ namespace csknow::engagement_aim {
 
         torch::jit::script::Module module;
     public:
+        int printAimTicks = 0;
         StreamingEngagementAim(const string & navPath) {
             fs::path modelPath = fs::path(navPath) / fs::path("..") /
                 fs::path("..") / fs::path("learn_bot") / fs::path("models") /

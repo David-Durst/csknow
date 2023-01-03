@@ -91,10 +91,12 @@ struct Vec3 {
         return x == rhs.x && y == rhs.y && z == rhs.z;
     }
 
+    /*
     bool operator!=(const Vec3& rhs) const
     {
         return x != rhs.x || y != rhs.y || z != rhs.z;
     }
+     */
 
     Vec3 operator+(const Vec3 & other) const {
         Vec3 result = *this;

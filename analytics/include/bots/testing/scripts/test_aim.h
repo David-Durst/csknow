@@ -44,6 +44,27 @@ public:
     }
 };
 
+struct PrintAim : public Node {
+    int numTicks;
+    PrintAim(Blackboard & blackboard, int numTicks) : Node(blackboard, "PrintAim"), numTicks(numTicks) { }
+
+    NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
+        blackboard.streamingManager.streamingEngagementAim.printAimTicks = numTicks;
+        playerNodeState[treeThinker.csgoId] = NodeState::Success;
+        return NodeState::Success;
+    }
+};
+
+struct ClearAimTargets : public Node {
+    ClearAimTargets(Blackboard & blackboard) : Node(blackboard, "PrintAim") { }
+
+    NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
+        blackboard.streamingManager.streamingEngagementAim.currentClientTargetMap.clear();
+        playerNodeState[treeThinker.csgoId] = NodeState::Success;
+        return NodeState::Success;
+    }
+};
+
 class AimAndKillWithinTimeCheck : public Script {
 public:
     explicit AimAndKillWithinTimeCheck(const ServerState &) :
@@ -73,7 +94,9 @@ public:
                                                          make_unique<GiveItem>(blackboard, neededBots[0].id, state, "weapon_ak47"),
                                                          make_unique<movement::WaitNode>(blackboard, 0.1),
                                                          make_unique<SetCurrentItem>(blackboard, neededBots[0].id, state, "weapon_ak47"),
-                                                         make_unique<movement::WaitNode>(blackboard, 5)),
+                                                         make_unique<ClearAimTargets>(blackboard),
+                                                         make_unique<movement::WaitNode>(blackboard, 5),
+                                                         make_unique<PrintAim>(blackboard, 10)),
                                                  "AimAndKillWithinTimeCheckSetup");
             Node::Ptr disableAllBothDuringSetup = make_unique<ParallelFirstNode>(blackboard, Node::makeList(
                                                         std::move(setupCommands),

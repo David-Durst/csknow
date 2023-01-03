@@ -278,6 +278,9 @@ namespace csknow::engagement_aim {
         std::vector<std::vector<float>> rowsCPP;
         auto options = torch::TensorOptions().dtype(at::kFloat);
         for (const auto & curTickClient : curState.clients) {
+            if (curTickClient.name != "Matt") {
+                continue;
+            }
             if (currentClientTargetMap.find(curTickClient.csgoId) == currentClientTargetMap.end()) {
                 continue;
             }
@@ -376,18 +379,25 @@ namespace csknow::engagement_aim {
                         << std::endl;
                     numSkips++;
                 }
-                /*
-                if (computeMagnitude(deltaViewAngle) > 5. && computeMagnitude(curViewAngle) < 15.) {
-                    std::cout << "stopped" << std::endl;
+                bool loggedClient = curState.getClient(orderedAttackerIds[i]).name == "Matt";
+                //EngagementAimTickData & priorTickData = engagementAimPlayerHistory.clientHistory.at(orderedAttackerIds[i])
+                //    .fromNewest(1);
+                //if (newestTickData.deltaRelativeFirstHeadViewAngle == priorTickData.deltaRelativeFirstHeadViewAngle) {
+                if (loggedClient && printAimTicks > 0) {
+                    std::cout << curState.getClient(orderedAttackerIds[i]).name << std::endl;
+                    std::cout << curState.getClient(orderedAttackerIds[i]).getCurrentViewAngles().toString() << std::endl;
                     for (int64_t priorTickNum = PAST_AIM_TICKS - 1; priorTickNum >= 0; priorTickNum--) {
                         const auto s = engagementAimPlayerHistory.clientHistory.at(orderedAttackerIds[i])
                             .fromNewest(priorTickNum);
                         std::cout << s.toCSV(priorTickNum == PAST_AIM_TICKS - 1) << std::endl;
                     }
-                    print2DTensor(tmpTensor);
+                    torch::Tensor selectedTensor = tmpTensor.slice(0, i, i+1);
+                    print2DTensor(selectedTensor);
+                    //print2DTensor(tmpTensor);
                     std::cout << outputViewAngle.toString() << std::endl;
+                    std::cout << deltaViewAngle.toString() << std::endl;
+                    std::cout << output[0].size(0) / 2 << std::endl;
                 }
-                 */
                 // flip y axis to go back to game coordinates
                 deltaViewAngle.y *= -1;
                 deltaViewAngle.makePitchNeg90To90();
@@ -401,6 +411,9 @@ namespace csknow::engagement_aim {
                     //playerToNewAngles[curTickClient.csgoId] = curTickClient.getCurrentViewAngles();
                 }
             }
+        }
+        if (printAimTicks > 0) {
+            printAimTicks--;
         }
     }
 
