@@ -9,6 +9,7 @@ from pathlib import Path
 from learn_bot.engagement_aim.column_names import *
 
 data_path = Path(__file__).parent / '..' / '..' / '..' / 'analytics' / 'csv_outputs' / 'engagementAim.csv'
+manual_data_path = Path(__file__).parent / '..' / '..' / '..' / 'analytics' / 'manual_outputs' / 'engagementAim.csv'
 
 # https://androidkt.com/load-pandas-dataframe-using-dataset-and-dataloader-in-pytorch/
 class AimDataset(Dataset):

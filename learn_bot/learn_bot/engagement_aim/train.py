@@ -41,6 +41,7 @@ class TrainResult:
     train_df: pd.DataFrame
     test_df: pd.DataFrame
     column_transformers: IOColumnTransformers
+    all_time_column_transformers: IOColumnTransformers
     model: nn.Module
 
 
@@ -295,7 +296,8 @@ def train(all_data_df: pd.DataFrame, dad_iters=4, num_off_policy_epochs=5, num_s
         script_model.save(Path(__file__).parent / '..' / '..' / 'models' / 'engagement_aim_model' / 'script_model.pt')
         model.to(device)
 
-    return TrainResult(train_data, test_data, train_df, test_df, column_transformers, model)
+    return TrainResult(train_data, test_data, train_df, test_df, column_transformers,
+                       all_time_column_transformers, model)
 
 
 if __name__ == "__main__":
