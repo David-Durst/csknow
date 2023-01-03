@@ -116,6 +116,7 @@ namespace csknow::engagement_aim {
         unordered_map<CSGOId, StreamingPinId> playerToVictimLastAlivePos;
         unordered_map<CSGOId, Vec3> playerToVictimEngagementFirstHeadPos;
         unordered_map<CSGOId, bool> playerToVictimFirstVisibleFrame;
+        unordered_map<CSGOId, Vec2> playerToNewAngle;
         unordered_map<CSGOId, Vec2> playerToDeltaAngle;
 
         void addTickData(StreamingBotDatabase & db,

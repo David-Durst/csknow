@@ -109,8 +109,8 @@ namespace action {
             curAction.setButton(IN_MOVELEFT, false);
             curAction.setButton(IN_BACK, false);
             curAction.setButton(IN_MOVERIGHT, false);
-            curAction.inputAngleDeltaPctX = 0;
-            curAction.inputAngleDeltaPctY = 0;
+            curAction.inputAngleX = 0;
+            curAction.inputAngleY = 0;
         }
 
         playerNodeState[treeThinker.csgoId] = curPath.pathCallSucceeded ? NodeState::Success : NodeState::Failure;

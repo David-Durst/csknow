@@ -140,8 +140,8 @@ namespace action {
             Vec2 newDeltaAngle = mouseController.update(state.getSecondsBetweenTimes(curAction.lastActionTime, state.loadTime),
                                                         deltaAngle, {0., 0.});
             Vec2 newDeltaAnglePct = makeAngleToPct(newDeltaAngle);
-            curAction.inputAngleDeltaPctX = newDeltaAnglePct.x;
-            curAction.inputAngleDeltaPctY = newDeltaAnglePct.y;
+            curAction.inputAngleX = newDeltaAnglePct.x;
+            curAction.inputAngleY = newDeltaAnglePct.y;
             /*
             double velocity = std::abs(computeMagnitude(newDeltaAnglePct));
             curAction.rollingAvgMouseVelocity = curAction.rollingAvgMouseVelocity * 0.5 + velocity * 0.5;
@@ -150,8 +150,8 @@ namespace action {
                 mouseController.reset();
                 // do computation a second time with reset values
                 Vec2 newDeltaAnglePct = makeAngleToPct(newDeltaAngle);
-                curAction.inputAngleDeltaPctX = newDeltaAnglePct.x;
-                curAction.inputAngleDeltaPctY = newDeltaAnglePct.y;
+                curAction.inputAngleX = newDeltaAnglePct.x;
+                curAction.inputAngleY = newDeltaAnglePct.y;
                 curAction.enableSecondOrder = true;
             }
             else if (absAccel > 0.4 && velocity > 0.9) {
@@ -162,22 +162,21 @@ namespace action {
             curAction.lastActionTime = state.loadTime;
         }
         else {
-            const unordered_map<CSGOId, Vec2> & playerToDeltaAngle =
-                blackboard.streamingManager.streamingEngagementAim.playerToDeltaAngle;
-            if (playerToDeltaAngle.find(curClient.csgoId) == playerToDeltaAngle.end()) {
-                curAction.inputAngleDeltaPctX = 0.;
-                curAction.inputAngleDeltaPctY = 0.;
+            const unordered_map<CSGOId, Vec2> & playerToNewAngle =
+                blackboard.streamingManager.streamingEngagementAim.playerToNewAngle;
+            if (playerToNewAngle.find(curClient.csgoId) == playerToNewAngle.end()) {
+                curAction.inputAngleX = 0.;
+                curAction.inputAngleY = 0.;
             }
             else {
-                Vec2 newDeltaAnglePct = makeAngleToPct(playerToDeltaAngle.at(curClient.csgoId));
-                curAction.inputAngleDeltaPctX = newDeltaAnglePct.x;
-                curAction.inputAngleDeltaPctY = newDeltaAnglePct.y;
+                Vec2 newAngle = playerToNewAngle.at(curClient.csgoId);
+                curAction.inputAngleX = newAngle.x;
+                curAction.inputAngleY = newAngle.y;
                 if (curClient.csgoId == 3 && false) {
                     std::cout << curClient.name << " (" << curClient.csgoId << ") "
                         << "frame: " << curClient.lastFrame
                         << "cur view angle: " << curClient.getCurrentViewAngles().toString()
-                        << "delta angle: " << playerToDeltaAngle.at(curClient.csgoId).toString()
-                        << "delta angle pct: " << newDeltaAnglePct.toString()
+                        << "new view angle: " << newAngle.toString()
                         << std::endl;
                 }
             }
@@ -186,11 +185,11 @@ namespace action {
         /*
         if (!SECOND_ORDER || !curAction.enableSecondOrder) { //|| computeMagnitude(deltaAngle) > 40) {
             // TODO: use better angle velocity control
-            curAction.inputAngleDeltaPctX = computeAngleVelocityPID(deltaAngle.x, blackboard.playerToPIDStateX[treeThinker.csgoId], blackboard.aimDis(blackboard.gen));
-            curAction.inputAngleDeltaPctY = computeAngleVelocityPID(deltaAngle.y, blackboard.playerToPIDStateY[treeThinker.csgoId], blackboard.aimDis(blackboard.gen));
+            curAction.inputAngleX = computeAngleVelocityPID(deltaAngle.x, blackboard.playerToPIDStateX[treeThinker.csgoId], blackboard.aimDis(blackboard.gen));
+            curAction.inputAngleY = computeAngleVelocityPID(deltaAngle.y, blackboard.playerToPIDStateY[treeThinker.csgoId], blackboard.aimDis(blackboard.gen));
 
-            curAction.inputAngleDeltaPctX = curAction.inputAngleDeltaPctX * 0.45 + oldAction.inputAngleDeltaPctX * 0.55;
-            curAction.inputAngleDeltaPctY = curAction.inputAngleDeltaPctY * 0.45 + oldAction.inputAngleDeltaPctY * 0.55;
+            curAction.inputAngleX = curAction.inputAngleX * 0.45 + oldAction.inputAngleX * 0.55;
+            curAction.inputAngleY = curAction.inputAngleY * 0.45 + oldAction.inputAngleY * 0.55;
 
         }
          */

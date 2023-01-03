@@ -278,9 +278,6 @@ namespace csknow::engagement_aim {
         std::vector<std::vector<float>> rowsCPP;
         auto options = torch::TensorOptions().dtype(at::kFloat);
         for (const auto & curTickClient : curState.clients) {
-            if (curTickClient.name != "Matt") {
-                continue;
-            }
             if (currentClientTargetMap.find(curTickClient.csgoId) == currentClientTargetMap.end()) {
                 continue;
             }
@@ -358,31 +355,38 @@ namespace csknow::engagement_aim {
 
             for (size_t i = 0; i < orderedAttackerIds.size(); i++) {
                 // subtract from input delta view angles to get change in angle, then apply that to current view angles
-                Vec2 outputViewAngle = {
+                Vec2 outputRelativeViewAngle = {
                     static_cast<double>(output[i][0].item<float>()),
                     static_cast<double>(output[i][output[0].size(0) / 2].item<float>())
                 };
                 const ServerState & prevState = db.batchData.fromNewest(1);
                 EngagementAimTickData & newestTickData = engagementAimPlayerHistory.clientHistory.at(orderedAttackerIds[i])
                     .fromNewest();
-                Vec2 inputViewAngle = newestTickData.deltaRelativeFirstHeadViewAngle;
-                Vec2 deltaViewAngle = outputViewAngle - inputViewAngle;
+                Vec2 inputRelativeViewAngle = newestTickData.deltaRelativeFirstHeadViewAngle;
+                Vec2 deltaViewAngle = outputRelativeViewAngle - inputRelativeViewAngle;
+                deltaViewAngle.y *= -1;
+                deltaViewAngle.makePitchNeg90To90();
+                deltaViewAngle.makeYawNeg180To180();
+                Vec2 outputViewAngle = newestTickData.attackerViewAngle + deltaViewAngle;
+                /*
                 if (i == 0 && curState.getLastFrame() - prevState.getLastFrame() > 2) {
                     std::cout << "cur frame: " << curState.getLastFrame() << "prev frame: " << prevState.getLastFrame()
                         << "skips: " << numSkips
                         << "speed: " << computeMagnitude(deltaViewAngle)
                         << "cur view angle: " << newestTickData.attackerViewAngle.toString()
-                        << "delta relative first head view angle: " << inputViewAngle.toString()
+                        << "delta relative first head view angle: " << inputRelativeViewAngle.toString()
                         << "delta view angle: " << deltaViewAngle.toString()
                         << "cur pos: " << newestTickData.attackerEyePos.toString()
                         << "victim pos: " << newestTickData.victimEyePos.toString()
                         << std::endl;
                     numSkips++;
                 }
-                bool loggedClient = curState.getClient(orderedAttackerIds[i]).name == "Matt";
+                 */
+                //bool loggedClient = curState.getClient(orderedAttackerIds[i]).name == "Matt";
                 //EngagementAimTickData & priorTickData = engagementAimPlayerHistory.clientHistory.at(orderedAttackerIds[i])
                 //    .fromNewest(1);
                 //if (newestTickData.deltaRelativeFirstHeadViewAngle == priorTickData.deltaRelativeFirstHeadViewAngle) {
+                /*
                 if (loggedClient && printAimTicks > 0) {
                     std::cout << curState.getClient(orderedAttackerIds[i]).name << std::endl;
                     std::cout << curState.getClient(orderedAttackerIds[i]).getCurrentViewAngles().toString() << std::endl;
@@ -398,23 +402,24 @@ namespace csknow::engagement_aim {
                     std::cout << deltaViewAngle.toString() << std::endl;
                     std::cout << output[0].size(0) / 2 << std::endl;
                 }
+                 */
                 // flip y axis to go back to game coordinates
-                deltaViewAngle.y *= -1;
-                deltaViewAngle.makePitchNeg90To90();
-                deltaViewAngle.makeYawNeg180To180();
                 playerToDeltaAngle[orderedAttackerIds[i]] = deltaViewAngle;
+                playerToNewAngle[orderedAttackerIds[i]] = outputViewAngle;
             }
             // same angles as before if no target
             for (const auto & curTickClient : curState.clients) {
                 if (attackerIds.find(curTickClient.csgoId) == attackerIds.end()) {
                     playerToDeltaAngle[curTickClient.csgoId] = {0., 0.};
-                    //playerToNewAngles[curTickClient.csgoId] = curTickClient.getCurrentViewAngles();
+                    playerToNewAngle[curTickClient.csgoId] = curTickClient.getCurrentViewAngles();
                 }
             }
         }
+        /*
         if (printAimTicks > 0) {
             printAimTicks--;
         }
+         */
     }
 
     void StreamingEngagementAim::addTickData(StreamingBotDatabase & db,

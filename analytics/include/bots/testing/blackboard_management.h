@@ -117,8 +117,8 @@ public:
                 blackboard.playerToAction[targetIds[i]].buttons = 0;
             }
             if (disableMouse) {
-                blackboard.playerToAction[targetIds[i]].inputAngleDeltaPctX = 0.;
-                blackboard.playerToAction[targetIds[i]].inputAngleDeltaPctY = 0.;
+                blackboard.playerToAction[targetIds[i]].inputAngleX = 0.;
+                blackboard.playerToAction[targetIds[i]].inputAngleY = 0.;
             }
             blackboard.playerToAction[targetIds[i]].setButton(IN_ATTACK, disableFiring ? false : oldFireValue);
         }

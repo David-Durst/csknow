@@ -82,14 +82,14 @@ struct Action {
     }
 
     // these range from -1 to 1
-    float inputAngleDeltaPctX;
-    float inputAngleDeltaPctY;
+    float inputAngleX;
+    float inputAngleY;
 
     string print() {
         return "buttons: " + std::to_string(buttons) + ", shots in burst: " + std::to_string(shotsInBurst)
-            + ", mouse delta x: " + std::to_string(inputAngleDeltaPctX) +
-            ", mouse delta y: " + std::to_string(inputAngleDeltaPctY) +
-            ", enable second order: " + boolToString(enableSecondOrder) +
+               + ", mouse x: " + std::to_string(inputAngleX) +
+               ", mouse y: " + std::to_string(inputAngleY) +
+               ", enable second order: " + boolToString(enableSecondOrder) +
             ", aim target type: " + aimTargetTypeToString(aimTargetType);
     }
 };

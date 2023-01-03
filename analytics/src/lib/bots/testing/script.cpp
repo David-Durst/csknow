@@ -61,8 +61,8 @@ bool Script::tick(Tree & tree, ServerState & state) {
 
     for (auto & client : state.clients) {
         const Action & clientAction = tree.blackboard->playerToAction[client.csgoId];
-        state.setInputs(client.csgoId, clientAction.buttons, clientAction.inputAngleDeltaPctX,
-                        clientAction.inputAngleDeltaPctY);
+        state.setInputs(client.csgoId, clientAction.buttons, clientAction.inputAngleX,
+                        clientAction.inputAngleY);
     }
 
     bool finished = true;
