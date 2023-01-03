@@ -368,6 +368,7 @@ namespace csknow::engagement_aim {
                 deltaViewAngle.makePitchNeg90To90();
                 deltaViewAngle.makeYawNeg180To180();
                 Vec2 outputViewAngle = newestTickData.attackerViewAngle + deltaViewAngle;
+                outputViewAngle.makeYawNeg180To180();
                 /*
                 if (i == 0 && curState.getLastFrame() - prevState.getLastFrame() > 2) {
                     std::cout << "cur frame: " << curState.getLastFrame() << "prev frame: " << prevState.getLastFrame()

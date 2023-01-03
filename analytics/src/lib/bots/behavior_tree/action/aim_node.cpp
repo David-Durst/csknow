@@ -4,7 +4,7 @@
 
 #include "bots/behavior_tree/action/action_node.h"
 #define MAX_LOOK_AT_C4_DISTANCE 300.
-#define SECOND_ORDER false
+#define SECOND_ORDER true
 #define K_P 0.0025
 #define K_I 0.
 #define K_D 0.
@@ -139,9 +139,11 @@ namespace action {
         if (SECOND_ORDER) {
             Vec2 newDeltaAngle = mouseController.update(state.getSecondsBetweenTimes(curAction.lastActionTime, state.loadTime),
                                                         deltaAngle, {0., 0.});
-            Vec2 newDeltaAnglePct = makeAngleToPct(newDeltaAngle);
-            curAction.inputAngleX = newDeltaAnglePct.x;
-            curAction.inputAngleY = newDeltaAnglePct.y;
+            //Vec2 newDeltaAnglePct = makeAngleToPct(newDeltaAngle);
+            Vec2 newAngle = curClient.getCurrentViewAngles() + newDeltaAngle;
+            newAngle.makeYawNeg180To180();
+            curAction.inputAngleX = newAngle.x;
+            curAction.inputAngleY = newAngle.y;
             /*
             double velocity = std::abs(computeMagnitude(newDeltaAnglePct));
             curAction.rollingAvgMouseVelocity = curAction.rollingAvgMouseVelocity * 0.5 + velocity * 0.5;
