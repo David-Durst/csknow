@@ -67,11 +67,19 @@ namespace csknow::engagement_aim {
         }
 
         bool operator==(const EngagementAimTarget & other) const {
-            return csgoId == other.csgoId && pos == other.pos;
+            if (isPlayer() && other.isPlayer()) {
+                return csgoId == other.csgoId;
+            }
+            else if (!isPlayer() && !other.isPlayer()) {
+                return pos == other.pos;
+            }
+            else {
+                return false;
+            }
         }
 
         bool operator!=(const EngagementAimTarget & other) const {
-            return csgoId != other.csgoId || pos != other.pos;
+            return !this->operator==(other);
         }
     };
 
