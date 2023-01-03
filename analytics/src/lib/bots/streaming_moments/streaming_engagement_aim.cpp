@@ -444,9 +444,10 @@ namespace csknow::engagement_aim {
                 oldestVictimStateOffset = db.clientHistoryLength(target.csgoId) - 1;
             }
 
-            // if engagement is new, fill in all past
+            // if engagement is new or teleported, fill in all past
             if (priorClientTargetMap.find(curTickClient.csgoId) == priorClientTargetMap.end() ||
-                priorClientTargetMap.at(curTickClient.csgoId) != target) {
+                priorClientTargetMap.at(curTickClient.csgoId) != target ||
+                curTickClient.lastTeleportId != curTickClient.lastTeleportConfirmationId) {
                 engagementAimPlayerHistory.updateClient(curTickClient.csgoId);
                 // removed pinned last victim alive from old victim
                 if (playerToVictimLastAlivePos.find(curTickClient.csgoId) != playerToVictimLastAlivePos.end()) {

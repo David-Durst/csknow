@@ -50,6 +50,7 @@ public:
     struct Client {
         int32_t lastFrame;
         int32_t csgoId;
+        int32_t lastTeleportId;
         string name;
         TeamId team;
         int health;
@@ -107,6 +108,8 @@ public:
         // keyboard/mouse inputs sent to game engine
         int32_t buttons;
 
+        // default initialize this one since it isn't read from file
+        int32_t lastTeleportConfirmationId = 0;
         // these range from -1 to 1
         float inputAngleDeltaPctX;
         float inputAngleDeltaPctY;
@@ -164,9 +167,11 @@ public:
     }
 
     vector<bool> inputsValid;
-    void setInputs(CSGOId csgoId, int32_t buttons, float inputAngleDeltaPctX, float inputAngleDeltaPctY) {
+    void setInputs(CSGOId csgoId, int32_t lastTeleportConfirmationId, int32_t buttons,
+                   float inputAngleDeltaPctX, float inputAngleDeltaPctY) {
         int csknowId = csgoIdToCSKnowId[csgoId];
         Client & curClient = clients[csknowId];
+        curClient.lastTeleportConfirmationId = lastTeleportConfirmationId;
         curClient.buttons = buttons;
         curClient.inputAngleDeltaPctX = inputAngleDeltaPctX;
         curClient.inputAngleDeltaPctY = inputAngleDeltaPctY;

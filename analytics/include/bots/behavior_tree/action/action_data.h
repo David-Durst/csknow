@@ -30,6 +30,8 @@ struct Action {
     CSKnowTime lastJumpTime = defaultTime, lastScopeTime = defaultTime, lastActionTime = defaultTime;
     double rollingAvgMouseVelocity;
     bool enableSecondOrder;
+    // default initialize this one since it isn't read from file
+    int32_t lastTeleportConfirmationId = 0;
     int32_t buttons;
     int32_t shotsInBurst;
     bool keepCrouching = false;

@@ -173,8 +173,8 @@ void Tree::tick(ServerState & state, const string & mapsPath) {
             // update state actions with actions per player
             const Action & clientAction = blackboard->playerToAction[client.csgoId];
 
-            state.setInputs(client.csgoId, clientAction.buttons, clientAction.inputAngleX,
-                            clientAction.inputAngleY);
+            state.setInputs(client.csgoId, clientAction.lastTeleportConfirmationId, clientAction.buttons,
+                            clientAction.inputAngleX, clientAction.inputAngleY);
             //state.setInputs(client.csgoId, 0, clientAction.inputAngleX,
             //                clientAction.inputAngleY);
 
