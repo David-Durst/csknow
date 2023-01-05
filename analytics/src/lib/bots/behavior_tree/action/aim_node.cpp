@@ -189,6 +189,8 @@ namespace action {
             curAction.inputAngleX = curClient.getCurrentViewAngles().x;
             curAction.inputAngleY = curClient.getCurrentViewAngles().y;
         }
+        // this is set every time because actions are stored in blackboard but clients persist separately
+        // so if blackboard gets reset, this ensures every clients action is brought up to latest confirmation id
         curAction.lastTeleportConfirmationId = curClient.lastTeleportId;
 
         /*
