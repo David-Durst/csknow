@@ -77,7 +77,7 @@ void ServerState::loadClientStates(const string& clientStatesFilePath) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].csgoId);
         }
         else if (colNumber == 2) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].csgoId);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].lastTeleportId);
         }
         else if (colNumber == 3) {
             readCol(file, curStart, curDelimiter, clients[arrayEntry].name);
