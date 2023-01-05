@@ -74,7 +74,7 @@ int main(int argc, char * argv[]) {
             make_unique<DangerOnePlayerCheck>(state),
             make_unique<DangerTwoPlayerCheck>(state)
                  */
-    ), true);
+    ), false);
      /*
     // visualization scripts rather than actual tests
     ScriptsRunner scriptsRunner(Script::makeList(
@@ -166,5 +166,5 @@ int main(int argc, char * argv[]) {
     }
 #pragma clang diagnostic pop
 
-    return 0;
+    exit(0);
 }

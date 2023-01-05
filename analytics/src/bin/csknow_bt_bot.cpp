@@ -97,5 +97,5 @@ int main(int argc, char * argv[]) {
     }
 #pragma clang diagnostic pop
 
-    return 0;
+    exit(0);
 }
