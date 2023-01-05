@@ -60,6 +60,9 @@ bool Script::tick(Tree & tree, ServerState & state) {
     NodeState conditionResult = commands->exec(state, defaultThinker);
 
     for (auto & client : state.clients) {
+        if (!client.isAlive || !client.isBot) {
+            continue;
+        }
         const Action & clientAction = tree.blackboard->playerToAction[client.csgoId];
         state.setInputs(client.csgoId, clientAction.lastTeleportConfirmationId, clientAction.buttons,
                         clientAction.inputAngleX, clientAction.inputAngleY, true);

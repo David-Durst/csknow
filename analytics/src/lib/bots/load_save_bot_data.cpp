@@ -235,10 +235,13 @@ void ServerState::loadClientStates(const string& clientStatesFilePath) {
         }
         else if (colNumber == 54) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].ping);
+        }
+        else if (colNumber == 55) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].inputSet);
             rowNumber++;
             arrayEntry++;
         }
-        colNumber = (colNumber + 1) % 55;
+        colNumber = (colNumber + 1) % 56;
     }
     closeMMapFile({fd, stats, file});
 }

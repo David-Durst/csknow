@@ -104,6 +104,7 @@ public:
         bool hasDefuser;
         int money;
         int ping;
+        bool inputSet;
 
         // keyboard/mouse inputs sent to game engine
         int32_t buttons;
