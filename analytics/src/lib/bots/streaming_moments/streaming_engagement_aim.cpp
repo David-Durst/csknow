@@ -449,8 +449,8 @@ namespace csknow::engagement_aim {
                 priorClientTargetMap.at(curTickClient.csgoId) != target ||
                 curTickClient.lastTeleportId != curTickClient.lastTeleportConfirmationId) {
                 if (curTickClient.lastTeleportId != curTickClient.lastTeleportConfirmationId) {
-                    std::cout << curTickClient.name << " teleport id mismatch, old " <<
-                    curTickClient.lastTeleportId << ", new " << curTickClient.lastTeleportConfirmationId << std::endl;
+                    std::cout << curTickClient.name << " teleport id mismatch, id " <<
+                    curTickClient.lastTeleportId << ", confirm id " << curTickClient.lastTeleportConfirmationId << std::endl;
                 }
                 engagementAimPlayerHistory.updateClient(curTickClient.csgoId);
                 // removed pinned last victim alive from old victim
