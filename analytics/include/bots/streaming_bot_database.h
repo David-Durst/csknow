@@ -21,6 +21,12 @@ public:
 
     StreamingBotDatabase() : batchData(STREAMING_HISTORY_TICKS), nextPinId(0) { }
 
+    void clear() {
+        pinnedData.clear();
+        batchData.clear();
+        nextPinId = 0;
+    }
+
     void addState(const ServerState & state) {
         batchData.enqueue(state);
     }

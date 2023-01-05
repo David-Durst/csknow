@@ -16,13 +16,7 @@ public:
     csknow::engagement_aim::StreamingEngagementAim streamingEngagementAim;
 
     StreamingManager(const string & navPath) : streamingEngagementAim(navPath) { }
-
-    void update(const ServerState & state) {
-        db.addState(state);
-        streamingFireHistory.addTickData(db);
-        streamingEngagementAim.addTickData(db, streamingFireHistory);
-    }
-
+    void update(const ServerState & state);
 };
 
 #endif //CSKNOW_STREAMING_MANAGER_H

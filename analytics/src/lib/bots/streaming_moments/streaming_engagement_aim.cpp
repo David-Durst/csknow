@@ -444,17 +444,14 @@ namespace csknow::engagement_aim {
                 oldestVictimStateOffset = db.clientHistoryLength(target.csgoId) - 1;
             }
 
-            // if engagement is new or teleported, fill in all past
+            // if engagement is new or teleported (aka reset called), fill in all past
             if (priorClientTargetMap.find(curTickClient.csgoId) == priorClientTargetMap.end() ||
                 priorClientTargetMap.at(curTickClient.csgoId) != target ||
-                curTickClient.lastTeleportId != curTickClient.lastTeleportConfirmationId) {
+                reset) {
                 if (curTickClient.lastTeleportId != curTickClient.lastTeleportConfirmationId) {
                     std::cout << curTickClient.name << " teleport id mismatch, id " <<
                     curTickClient.lastTeleportId << ", confirm id " << curTickClient.lastTeleportConfirmationId <<
                     ", view angle " << curTickClient.getCurrentViewAngles().toString() << std::endl;
-                    // if teleport, then history must start fressh
-                    oldestAttackerStateOffset = 0;
-                    oldestVictimStateOffset = 0;
                 }
                 engagementAimPlayerHistory.updateClient(curTickClient.csgoId);
                 // removed pinned last victim alive from old victim
@@ -480,17 +477,27 @@ namespace csknow::engagement_aim {
             engagementAimPlayerHistory.clientHistory.at(curTickClient.csgoId).enqueue(
                 computeOneTickData(db, streamingFireHistory, curTickClient.csgoId, target,
                                    0, 0, false));
-            if (curTickClient.lastTeleportId != curTickClient.lastTeleportConfirmationId) {
-                const auto & h = engagementAimPlayerHistory.clientHistory.at(curTickClient.csgoId);
-                for (size_t i = 0; i < h.getCurSize(); i++) {
-                    std::cout << i << " " << h.fromOldest(i).attackerViewAngle.toString() << std::endl;
-                }
-                std::cout << playerToNewAngle.at(curTickClient.csgoId).toString() << std::endl;
-            }
         }
 
         engagementAimPlayerHistory.removeInactiveClients(activeClients);
         predictNewAngles(db);
+        for (const auto & curTickClient : curState.clients) {
+            if (currentClientTargetMap.find(curTickClient.csgoId) == currentClientTargetMap.end()) {
+                continue;
+            }
+            if (curTickClient.lastTeleportId != curTickClient.lastTeleportConfirmationId) {
+                std::cout << "a" << std::endl;
+                const auto &h = engagementAimPlayerHistory.clientHistory.at(curTickClient.csgoId);
+                std::cout << "b" << std::endl;
+                for (size_t i = 0; i < h.getCurSize(); i++) {
+                    std::cout << i << " " << h.fromOldest(i).attackerViewAngle.toString() << std::endl;
+                }
+                std::cout << "c" << std::endl;
+                std::cout << "new angle " << playerToNewAngle.at(curTickClient.csgoId).toString() << std::endl;
+                std::cout << "delta angle " << playerToDeltaAngle.at(curTickClient.csgoId).toString() << std::endl;
+            }
+        }
         priorClientTargetMap = currentClientTargetMap;
+        reset = false;
     }
 }

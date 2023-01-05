@@ -110,15 +110,15 @@ class DisableActionsNode : public Node {
 public:
     DisableActionsNode(Blackboard & blackboard, string name, vector<CSGOId> targetIds, bool disableMouse = true, bool disableFiring = true, bool disableMove = true) :
             Node(blackboard, std::move(name)), targetIds(std::move(targetIds)), disableMouse(disableMouse), disableFiring(disableFiring), disableMove(disableMove) { };
-    NodeState exec(const ServerState &, TreeThinker &treeThinker) override {
+    NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
         for (size_t i = 0; i < targetIds.size(); i++) {
             bool oldFireValue = blackboard.playerToAction[targetIds[i]].getButton(IN_ATTACK);
             if (disableMove) {
                 blackboard.playerToAction[targetIds[i]].buttons = 0;
             }
             if (disableMouse) {
-                blackboard.playerToAction[targetIds[i]].inputAngleX = 0.;
-                blackboard.playerToAction[targetIds[i]].inputAngleY = 0.;
+                blackboard.playerToAction[targetIds[i]].inputAngleX = state.getClient(targetIds[i]).lastEyeAngleX;
+                blackboard.playerToAction[targetIds[i]].inputAngleY = state.getClient(targetIds[i]).lastEyeAngleY;
             }
             blackboard.playerToAction[targetIds[i]].setButton(IN_ATTACK, disableFiring ? false : oldFireValue);
         }

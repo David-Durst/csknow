@@ -112,8 +112,8 @@ public:
         // default initialize this one since it isn't read from file
         int32_t lastTeleportConfirmationId = 0;
         // these range from -1 to 1
-        float inputAngleDeltaPctX;
-        float inputAngleDeltaPctY;
+        float inputAngleX;
+        float inputAngleY;
 
         [[nodiscard]]
         Vec2 getCurrentViewAngles() const {
@@ -169,19 +169,21 @@ public:
 
     vector<bool> inputsValid;
     void setInputs(CSGOId csgoId, int32_t lastTeleportConfirmationId, int32_t buttons,
-                   float inputAngleDeltaPctX, float inputAngleDeltaPctY, bool source) {
+                   float inputAngleX, float inputAngleY, bool source) {
         int csknowId = csgoIdToCSKnowId[csgoId];
         Client & curClient = clients[csknowId];
         if (lastTeleportConfirmationId == 0 && curClient.lastTeleportConfirmationId == 1) {
             std::cout << curClient.name << "," << curClient.lastFrame << "going backwards" << (source ? "script" : "tree") << std::endl;
         }
         if (lastTeleportConfirmationId == 1 && curClient.lastTeleportConfirmationId == 0) {
-            std::cout << curClient.name << "," << curClient.lastFrame << "going forwards" << (source ? "script" : "tree") << std::endl;
+            std::cout << curClient.name << "," << curClient.lastFrame <<
+            "going forwards" << (source ? "script" : "tree") << "," <<
+            "(" << inputAngleX << "," << inputAngleY << ")" << std::endl;
         }
         curClient.lastTeleportConfirmationId = lastTeleportConfirmationId;
         curClient.buttons = buttons;
-        curClient.inputAngleDeltaPctX = inputAngleDeltaPctX;
-        curClient.inputAngleDeltaPctY = inputAngleDeltaPctY;
+        curClient.inputAngleX = inputAngleX;
+        curClient.inputAngleY = inputAngleY;
         inputsValid[csknowId] = true;
     }
 

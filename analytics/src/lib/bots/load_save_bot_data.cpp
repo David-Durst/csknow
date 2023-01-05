@@ -548,12 +548,12 @@ void ServerState::saveBotInputs() {
     for (int i = 0; i < (int) inputsValid.size(); i++) {
         if (i < (int) clients.size() && inputsValid[i]) {
             inputsStream << clients[i].csgoId << ","
-                << getLastFrame() << ","
-                << clients[i].lastTeleportConfirmationId << ","
-                << clients[i].buttons << ","
+                         << getLastFrame() << ","
+                         << clients[i].lastTeleportConfirmationId << ","
+                         << clients[i].buttons << ","
                 // FLIPPING TO MATCH YAW AND PITCH
-                << clients[i].inputAngleDeltaPctY << ","
-                << clients[i].inputAngleDeltaPctX << "\n";
+                << clients[i].inputAngleY << ","
+                         << clients[i].inputAngleX << "\n";
         }
     }
 
