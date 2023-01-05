@@ -169,17 +169,9 @@ public:
 
     vector<bool> inputsValid;
     void setInputs(CSGOId csgoId, int32_t lastTeleportConfirmationId, int32_t buttons,
-                   float inputAngleX, float inputAngleY, bool source) {
+                   float inputAngleX, float inputAngleY) {
         int csknowId = csgoIdToCSKnowId[csgoId];
         Client & curClient = clients[csknowId];
-        if (lastTeleportConfirmationId == 0 && curClient.lastTeleportConfirmationId == 1) {
-            std::cout << curClient.name << "," << curClient.lastFrame << "going backwards" << (source ? "script" : "tree") << std::endl;
-        }
-        if (lastTeleportConfirmationId == 1 && curClient.lastTeleportConfirmationId == 0) {
-            std::cout << curClient.name << "," << curClient.lastFrame <<
-            "going forwards" << (source ? "script" : "tree") << "," <<
-            "(" << inputAngleX << "," << inputAngleY << ")" << std::endl;
-        }
         curClient.lastTeleportConfirmationId = lastTeleportConfirmationId;
         curClient.buttons = buttons;
         curClient.inputAngleX = inputAngleX;

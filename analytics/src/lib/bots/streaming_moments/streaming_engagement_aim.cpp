@@ -448,11 +448,13 @@ namespace csknow::engagement_aim {
             if (priorClientTargetMap.find(curTickClient.csgoId) == priorClientTargetMap.end() ||
                 priorClientTargetMap.at(curTickClient.csgoId) != target ||
                 reset) {
+                /*
                 if (curTickClient.lastTeleportId != curTickClient.lastTeleportConfirmationId) {
                     std::cout << curTickClient.name << " teleport id mismatch, id " <<
                     curTickClient.lastTeleportId << ", confirm id " << curTickClient.lastTeleportConfirmationId <<
                     ", view angle " << curTickClient.getCurrentViewAngles().toString() << std::endl;
                 }
+                 */
                 engagementAimPlayerHistory.updateClient(curTickClient.csgoId);
                 // removed pinned last victim alive from old victim
                 if (playerToVictimLastAlivePos.find(curTickClient.csgoId) != playerToVictimLastAlivePos.end()) {
@@ -481,6 +483,7 @@ namespace csknow::engagement_aim {
 
         engagementAimPlayerHistory.removeInactiveClients(activeClients);
         predictNewAngles(db);
+        /*
         for (const auto & curTickClient : curState.clients) {
             if (currentClientTargetMap.find(curTickClient.csgoId) == currentClientTargetMap.end()) {
                 continue;
@@ -497,6 +500,7 @@ namespace csknow::engagement_aim {
                 std::cout << "delta angle " << playerToDeltaAngle.at(curTickClient.csgoId).toString() << std::endl;
             }
         }
+         */
         priorClientTargetMap = currentClientTargetMap;
         reset = false;
     }

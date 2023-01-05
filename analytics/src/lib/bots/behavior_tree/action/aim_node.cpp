@@ -183,6 +183,7 @@ namespace action {
                 }
             }
         }
+        /*
         if (curClient.lastTeleportId != curClient.lastTeleportConfirmationId) {
             std::cout << curClient.name << "aim node last teleport id " << curClient.lastTeleportId
                 << ", last teleport confirmation id " << curClient.lastTeleportConfirmationId
@@ -190,6 +191,7 @@ namespace action {
             curAction.inputAngleX = curClient.getCurrentViewAngles().x;
             curAction.inputAngleY = curClient.getCurrentViewAngles().y;
         }
+         */
         //std::cout << curClient.name << curClient.getCurrentViewAngles().toString() << std::endl;
         // this is set every time because actions are stored in blackboard but clients persist separately
         // so if blackboard gets reset, this ensures every clients action is brought up to latest confirmation id

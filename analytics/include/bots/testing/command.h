@@ -98,7 +98,6 @@ struct Teleport : Command {
         Command(blackboard, "TeleportCmd"), playerName(playerName) { }
 
     virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
-        std::cout << "teleport " << playerName << std::endl;
         std::stringstream result;
         result << "sm_teleport " << playerName;
         scriptLines = {result.str()};
