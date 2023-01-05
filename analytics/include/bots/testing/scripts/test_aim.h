@@ -94,9 +94,7 @@ public:
                                                          make_unique<GiveItem>(blackboard, neededBots[0].id, state, "weapon_ak47"),
                                                          make_unique<movement::WaitNode>(blackboard, 0.1),
                                                          make_unique<SetCurrentItem>(blackboard, neededBots[0].id, state, "weapon_ak47"),
-                                                         make_unique<ClearAimTargets>(blackboard),
-                                                         make_unique<movement::WaitNode>(blackboard, 5),
-                                                         make_unique<PrintAim>(blackboard, 10)),
+                                                         make_unique<movement::WaitNode>(blackboard, 0.1)),
                                                  "AimAndKillWithinTimeCheckSetup");
             Node::Ptr disableAllBothDuringSetup = make_unique<ParallelFirstNode>(blackboard, Node::makeList(
                                                         std::move(setupCommands),
