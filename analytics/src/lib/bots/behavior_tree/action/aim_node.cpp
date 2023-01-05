@@ -184,6 +184,8 @@ namespace action {
             }
         }
         if (curClient.lastTeleportId != curClient.lastTeleportConfirmationId) {
+            std::cout << curClient.name << "aim node last teleport id " << curClient.lastTeleportId
+                << ", last teleport confirmation id " << curClient.lastTeleportConfirmationId << std::endl;
             curAction.lastTeleportConfirmationId = curClient.lastTeleportId;
             curAction.inputAngleX = curClient.getCurrentViewAngles().x;
             curAction.inputAngleY = curClient.getCurrentViewAngles().y;
