@@ -113,10 +113,13 @@ struct PreTestingInitFinishedNode : Node {
             }
         }
         // another human team check
+        /*
+         * this was a buggy check. human on spectator but only 6 bots as 7th hasn't spawned yet
         if (numBots < 7) {
             playerNodeState[treeThinker.csgoId] = NodeState::Running;
             return playerNodeState[treeThinker.csgoId];
         }
+         */
         // otherwise don't need score
         playerNodeState[treeThinker.csgoId] = NodeState::Success;
         return playerNodeState[treeThinker.csgoId];

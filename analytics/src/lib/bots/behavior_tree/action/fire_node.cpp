@@ -86,12 +86,14 @@ namespace action {
                 // TODO: AFTER ADDING VELOCITY FIELD, TRACK STOPPED TO SHOOT USING VELOCITY
                 curAction.setButton(IN_ATTACK, !attackLastFrame && haveAmmo && aimingAtEnemy);
                 if (curAction.getButton(IN_ATTACK)) {
+                    /*
                     std::cout << "firing at " << targetClient.name << std::endl;
                     std::cout << "eye coordinates " << eyeCoordinates.toString() << std::endl;
                     std::cout << "targetAABB " << targetAABB.toString() << std::endl;
                     std::cout << "cur client name " << curClient.name << std::endl;
                     std::cout << "cur view angles " << curClient.getCurrentViewAngles().toString() << std::endl;
                     std::cout << "cur view angles with aimunch" << curClient.getCurrentViewAnglesWithAimpunch().toString() << std::endl;
+                     */
                     curAction.shotsInBurst++;
                 }
                 /*
