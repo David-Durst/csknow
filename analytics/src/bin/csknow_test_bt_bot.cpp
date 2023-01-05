@@ -92,8 +92,8 @@ int main(int argc, char * argv[]) {
     size_t numDups = 0;
     auto priorStart = std::chrono::system_clock::now();
     CSGOFileTime priorFileTime;
-    double priorGameTime = 0;
-    double priorStatTime = 0;
+    [[maybe_unused]] double priorGameTime = 0;
+    [[maybe_unused]] double priorStatTime = 0;
 #pragma clang diagnostic push
 #pragma ide diagnostic ignored "EndlessLoop"
     while (!finishedTests) {

@@ -48,7 +48,7 @@ struct PrintAim : public Node {
     int numTicks;
     PrintAim(Blackboard & blackboard, int numTicks) : Node(blackboard, "PrintAim"), numTicks(numTicks) { }
 
-    NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
+    NodeState exec([[maybe_unused]] const ServerState & state, TreeThinker &treeThinker) override {
         blackboard.streamingManager.streamingEngagementAim.printAimTicks = numTicks;
         playerNodeState[treeThinker.csgoId] = NodeState::Success;
         return NodeState::Success;
@@ -58,7 +58,7 @@ struct PrintAim : public Node {
 struct ClearAimTargets : public Node {
     ClearAimTargets(Blackboard & blackboard) : Node(blackboard, "PrintAim") { }
 
-    NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
+    NodeState exec([[maybe_unused]] const ServerState & state, TreeThinker &treeThinker) override {
         blackboard.streamingManager.streamingEngagementAim.currentClientTargetMap.clear();
         playerNodeState[treeThinker.csgoId] = NodeState::Success;
         return NodeState::Success;

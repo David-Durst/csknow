@@ -359,7 +359,7 @@ namespace csknow::engagement_aim {
                     static_cast<double>(output[i][0].item<float>()),
                     static_cast<double>(output[i][output[0].size(0) / 2].item<float>())
                 };
-                const ServerState & prevState = db.batchData.fromNewest(1);
+                //const ServerState & prevState = db.batchData.fromNewest(1);
                 EngagementAimTickData & newestTickData = engagementAimPlayerHistory.clientHistory.at(orderedAttackerIds[i])
                     .fromNewest();
                 Vec2 inputRelativeViewAngle = newestTickData.deltaRelativeFirstHeadViewAngle;
@@ -448,6 +448,10 @@ namespace csknow::engagement_aim {
             if (priorClientTargetMap.find(curTickClient.csgoId) == priorClientTargetMap.end() ||
                 priorClientTargetMap.at(curTickClient.csgoId) != target ||
                 curTickClient.lastTeleportId != curTickClient.lastTeleportConfirmationId) {
+                if (curTickClient.lastTeleportId != curTickClient.lastTeleportConfirmationId) {
+                    std::cout << curTickClient.name << " teleport id mismatch, old " <<
+                    curTickClient.lastTeleportId << ", new " << curTickClient.lastTeleportConfirmationId << std::endl;
+                }
                 engagementAimPlayerHistory.updateClient(curTickClient.csgoId);
                 // removed pinned last victim alive from old victim
                 if (playerToVictimLastAlivePos.find(curTickClient.csgoId) != playerToVictimLastAlivePos.end()) {
