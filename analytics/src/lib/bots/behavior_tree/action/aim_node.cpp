@@ -4,7 +4,7 @@
 
 #include "bots/behavior_tree/action/action_node.h"
 #define MAX_LOOK_AT_C4_DISTANCE 300.
-#define SECOND_ORDER true
+#define SECOND_ORDER false
 #define K_P 0.0025
 #define K_I 0.
 #define K_D 0.
@@ -126,12 +126,12 @@ namespace action {
 
         // don't need to change pitch here because engine stores pitch in -90 to 90 (I think)
         // while conversion function below uses 360-270 for -90-0
-        Vec2 curViewAngle;
+        Vec2 curViewAngle = curClient.getCurrentViewAnglesWithAimpunch();;
         const csknow::StreamingClientHistory<EngagementAimTickData> & engagementAimPlayerHistory =
             blackboard.streamingManager.streamingEngagementAim.engagementAimPlayerHistory;
-        if (engagementAimPlayerHistory.clientHistory.find(curClient.csgoId) ==
+        if (true || engagementAimPlayerHistory.clientHistory.find(curClient.csgoId) ==
             engagementAimPlayerHistory.clientHistory.end()) {
-            curViewAngle = curClient.getCurrentViewAnglesWithAimpunch();
+
         }
         else {
             Vec2 scaledRecoilAngle =
@@ -156,15 +156,16 @@ namespace action {
         Vec2 deltaAngle = targetViewAngle - curViewAngle;
         deltaAngle.makeYawNeg180To180();
 
+        curAction.inputAngleAbsolute = !SECOND_ORDER;
         if (SECOND_ORDER) {
             Vec2 newDeltaAngle = mouseController.update(state.getSecondsBetweenTimes(curAction.lastActionTime, state.loadTime),
                                                         deltaAngle, {0., 0.});
-            //Vec2 newDeltaAnglePct = makeAngleToPct(newDeltaAngle);
-            Vec2 newAngle = curClient.getCurrentViewAngles() + newDeltaAngle;
+            Vec2 newDeltaAnglePct = makeAngleToPct(newDeltaAngle);
+            //Vec2 newAngle = newDeltaAnglePct;
             //std::cout << curClient.name << "," << curClient.getCurrentViewAngles().toString() << "," << newAngle.toString() << std::endl;
-            newAngle.makeYawNeg180To180();
-            curAction.inputAngleX = newAngle.x;
-            curAction.inputAngleY = newAngle.y;
+            //newAngle.makeYawNeg180To180();
+            curAction.inputAngleX = newDeltaAnglePct.x;
+            curAction.inputAngleY = newDeltaAnglePct.y;
             /*
             double velocity = std::abs(computeMagnitude(newDeltaAnglePct));
             curAction.rollingAvgMouseVelocity = curAction.rollingAvgMouseVelocity * 0.5 + velocity * 0.5;

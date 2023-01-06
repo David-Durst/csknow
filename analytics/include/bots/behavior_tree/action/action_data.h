@@ -83,9 +83,9 @@ struct Action {
         return movingForward() || movingBackward() || movingLeft() || movingRight();
     }
 
-    // these range from -1 to 1
     float inputAngleX;
     float inputAngleY;
+    bool inputAngleAbsolute;
 
     string print() {
         return "buttons: " + std::to_string(buttons) + ", shots in burst: " + std::to_string(shotsInBurst)

@@ -119,6 +119,7 @@ public:
             if (disableMouse) {
                 blackboard.playerToAction[targetIds[i]].inputAngleX = state.getClient(targetIds[i]).lastEyeAngleX;
                 blackboard.playerToAction[targetIds[i]].inputAngleY = state.getClient(targetIds[i]).lastEyeAngleY;
+                blackboard.playerToAction[targetIds[i]].inputAngleAbsolute = true;
             }
             blackboard.playerToAction[targetIds[i]].setButton(IN_ATTACK, disableFiring ? false : oldFireValue);
         }

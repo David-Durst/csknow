@@ -114,9 +114,9 @@ public:
         // this tells the aim model whether it can use this value, because reading from game state
         // leads to 1 frame delay oddities due to 1 frame delay
         bool inputAngleDefined = false;
-        // these range from -1 to 1
         float inputAngleX;
         float inputAngleY;
+        bool inputAngleAbsolute;
 
         [[nodiscard]]
         Vec2 getCurrentViewAngles() const {
@@ -172,13 +172,14 @@ public:
 
     vector<bool> inputsValid;
     void setInputs(CSGOId csgoId, int32_t lastTeleportConfirmationId, int32_t buttons,
-                   float inputAngleX, float inputAngleY) {
+                   float inputAngleX, float inputAngleY, bool inputAngleAbsolute) {
         int csknowId = csgoIdToCSKnowId[csgoId];
         Client & curClient = clients[csknowId];
         curClient.lastTeleportConfirmationId = lastTeleportConfirmationId;
         curClient.buttons = buttons;
         curClient.inputAngleX = inputAngleX;
         curClient.inputAngleY = inputAngleY;
+        curClient.inputAngleAbsolute = inputAngleAbsolute;
         curClient.inputAngleDefined = true;
         inputsValid[csknowId] = true;
     }

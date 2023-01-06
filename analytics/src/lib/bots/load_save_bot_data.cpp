@@ -3,6 +3,7 @@
 //
 #include "bots/load_save_bot_data.h"
 #include <thread>
+#include "queries/query.h"
 #include "load_cover.h"
 #include "load_data.h"
 #include "file_helpers.h"
@@ -543,7 +544,7 @@ void ServerState::saveBotInputs() {
     string tmpInputsFilePath = dataPath + "/" + tmpInputsFileName;
 
     std::stringstream inputsStream;
-    inputsStream << "Player Index,Last Frame,Buttons,Input Angle Delta Pct Pitch,Input Angle Delta Pct Yaw\n";
+    inputsStream << "Player Index,Last Frame,Last Teleport Confirmation Id,Buttons,Input Angle Delta Pct Pitch,Input Angle Delta Pct Yaw,Input Angle Absolute\n";
 
     for (int i = 0; i < (int) inputsValid.size(); i++) {
         if (i < (int) clients.size() && inputsValid[i]) {
@@ -551,9 +552,10 @@ void ServerState::saveBotInputs() {
                          << getLastFrame() << ","
                          << clients[i].lastTeleportConfirmationId << ","
                          << clients[i].buttons << ","
-                // FLIPPING TO MATCH YAW AND PITCH
-                << clients[i].inputAngleY << ","
-                         << clients[i].inputAngleX << "\n";
+                         // FLIPPING TO MATCH YAW AND PITCH
+                         << clients[i].inputAngleY << ","
+                         << clients[i].inputAngleX << ","
+                         << boolToInt(clients[i].inputAngleAbsolute) << "\n";
         }
     }
 

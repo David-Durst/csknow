@@ -174,7 +174,7 @@ void Tree::tick(ServerState & state, const string & mapsPath) {
             const Action & clientAction = blackboard->playerToAction[client.csgoId];
 
             state.setInputs(client.csgoId, clientAction.lastTeleportConfirmationId, clientAction.buttons,
-                            clientAction.inputAngleX, clientAction.inputAngleY);
+                            clientAction.inputAngleX, clientAction.inputAngleY, clientAction.inputAngleAbsolute);
 
             // log state
             if (localLogFilterNames.empty() || localLogFilterNames.find(state.getClient(treeThinker.csgoId).name) != localLogFilterNames.end()) {

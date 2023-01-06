@@ -65,7 +65,7 @@ bool Script::tick(Tree & tree, ServerState & state) {
         }
         const Action & clientAction = tree.blackboard->playerToAction[client.csgoId];
         state.setInputs(client.csgoId, clientAction.lastTeleportConfirmationId, clientAction.buttons,
-                        clientAction.inputAngleX, clientAction.inputAngleY);
+                        clientAction.inputAngleX, clientAction.inputAngleY, clientAction.inputAngleAbsolute);
     }
 
     bool finished = true;
