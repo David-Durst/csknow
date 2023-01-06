@@ -111,6 +111,9 @@ public:
 
         // default initialize this one since it isn't read from file
         int32_t lastTeleportConfirmationId = 0;
+        // this tells the aim model whether it can use this value, because reading from game state
+        // leads to 1 frame delay oddities due to 1 frame delay
+        bool inputAngleDefined = false;
         // these range from -1 to 1
         float inputAngleX;
         float inputAngleY;
@@ -176,6 +179,7 @@ public:
         curClient.buttons = buttons;
         curClient.inputAngleX = inputAngleX;
         curClient.inputAngleY = inputAngleY;
+        curClient.inputAngleDefined = true;
         inputsValid[csknowId] = true;
     }
 

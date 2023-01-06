@@ -9,7 +9,7 @@ void StreamingManager::update(const ServerState & state) {
     for (const auto & client : state.clients) {
         if (client.lastTeleportId != client.lastTeleportConfirmationId) {
             db.clear();
-            streamingEngagementAim.reset = true;
+            streamingEngagementAim.reset();
             break;
         }
     }

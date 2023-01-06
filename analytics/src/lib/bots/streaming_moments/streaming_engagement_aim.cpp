@@ -157,7 +157,16 @@ namespace csknow::engagement_aim {
 
         Vec3 attackerEyePos = attackerClient.getEyePosForPlayer();
 
-        Vec2 curViewAngle = attackerClient.getCurrentViewAngles();
+        Vec2 curViewAngle;
+        // try to live 1 frame in the future by taking last prediction, but take reality from game engine if not
+        // possible
+        if (!attackerClient.inputAngleDefined) {
+        //if (true || attackerStateOffset != 0 || playerToNewAngle.find(attackerId) == playerToNewAngle.end()) {
+            curViewAngle = attackerClient.getCurrentViewAngles();
+        }
+        else {
+            curViewAngle = {attackerClient.inputAngleX, attackerClient.inputAngleY};//playerToNewAngle[attackerId];
+        }
 
         curViewAngle.normalize();
         Vec2 idealViewAngle = viewFromOriginToDest(attackerEyePos, victimHeadPos);
@@ -447,7 +456,7 @@ namespace csknow::engagement_aim {
             // if engagement is new or teleported (aka reset called), fill in all past
             if (priorClientTargetMap.find(curTickClient.csgoId) == priorClientTargetMap.end() ||
                 priorClientTargetMap.at(curTickClient.csgoId) != target ||
-                reset) {
+                resetInternal) {
                 /*
                 if (curTickClient.lastTeleportId != curTickClient.lastTeleportConfirmationId) {
                     std::cout << curTickClient.name << " teleport id mismatch, id " <<
@@ -502,6 +511,6 @@ namespace csknow::engagement_aim {
         }
          */
         priorClientTargetMap = currentClientTargetMap;
-        reset = false;
+        resetInternal = false;
     }
 }

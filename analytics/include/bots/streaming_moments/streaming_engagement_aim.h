@@ -94,6 +94,7 @@ namespace csknow::engagement_aim {
         void predictNewAngles(const StreamingBotDatabase & db);
 
         torch::jit::script::Module module;
+        bool resetInternal = false;
     public:
         int printAimTicks = 0;
         StreamingEngagementAim(const string & navPath) {
@@ -118,7 +119,12 @@ namespace csknow::engagement_aim {
         unordered_map<CSGOId, bool> playerToVictimFirstVisibleFrame;
         unordered_map<CSGOId, Vec2> playerToNewAngle;
         unordered_map<CSGOId, Vec2> playerToDeltaAngle;
-        bool reset = false;
+
+        void reset() {
+            resetInternal = true;
+            playerToNewAngle.clear();
+            playerToDeltaAngle.clear();
+        }
 
         void addTickData(StreamingBotDatabase & db,
                          const fire_history::StreamingFireHistory & streamingFireHistory);

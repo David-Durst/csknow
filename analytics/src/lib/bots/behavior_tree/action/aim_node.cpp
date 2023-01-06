@@ -4,7 +4,7 @@
 
 #include "bots/behavior_tree/action/action_node.h"
 #define MAX_LOOK_AT_C4_DISTANCE 300.
-#define SECOND_ORDER false
+#define SECOND_ORDER true
 #define K_P 0.0025
 #define K_I 0.
 #define K_D 0.
@@ -126,7 +126,27 @@ namespace action {
 
         // don't need to change pitch here because engine stores pitch in -90 to 90 (I think)
         // while conversion function below uses 360-270 for -90-0
-        Vec2 curViewAngle = curClient.getCurrentViewAnglesWithAimpunch();
+        Vec2 curViewAngle;
+        const csknow::StreamingClientHistory<EngagementAimTickData> & engagementAimPlayerHistory =
+            blackboard.streamingManager.streamingEngagementAim.engagementAimPlayerHistory;
+        if (engagementAimPlayerHistory.clientHistory.find(curClient.csgoId) ==
+            engagementAimPlayerHistory.clientHistory.end()) {
+            curViewAngle = curClient.getCurrentViewAnglesWithAimpunch();
+        }
+        else {
+            Vec2 scaledRecoilAngle =
+                engagementAimPlayerHistory.clientHistory.at(curClient.csgoId).fromNewest().scaledRecoilAngle;
+            // unflip from internal flip
+            scaledRecoilAngle.y *= -1;
+            curViewAngle =
+                engagementAimPlayerHistory.clientHistory.at(curClient.csgoId).fromNewest().attackerViewAngle +
+                scaledRecoilAngle;
+            std::cout <<
+                engagementAimPlayerHistory.clientHistory.at(curClient.csgoId).fromNewest().scaledRecoilAngle.toString()
+                << std::endl;
+
+            curViewAngle.makeYawNeg180To180();
+        }
         Vec3 targetVector = aimTarget - curClient.getEyePosForPlayer();
         Vec2 targetViewAngle = vectorAngles(targetVector);
 
@@ -141,6 +161,7 @@ namespace action {
                                                         deltaAngle, {0., 0.});
             //Vec2 newDeltaAnglePct = makeAngleToPct(newDeltaAngle);
             Vec2 newAngle = curClient.getCurrentViewAngles() + newDeltaAngle;
+            //std::cout << curClient.name << "," << curClient.getCurrentViewAngles().toString() << "," << newAngle.toString() << std::endl;
             newAngle.makeYawNeg180To180();
             curAction.inputAngleX = newAngle.x;
             curAction.inputAngleY = newAngle.y;
@@ -172,6 +193,10 @@ namespace action {
             }
             else {
                 Vec2 newAngle = playerToNewAngle.at(curClient.csgoId);
+                std::cout << curClient.name
+                    << "," << curClient.getCurrentViewAngles().toString()
+                    << ",{" << curClient.inputAngleX << "," << curClient.inputAngleY << "}"
+                    << "," << newAngle.toString() << std::endl;
                 curAction.inputAngleX = newAngle.x;
                 curAction.inputAngleY = newAngle.y;
                 if (curClient.csgoId == 3 && false) {
