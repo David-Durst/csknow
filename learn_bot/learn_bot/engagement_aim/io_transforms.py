@@ -603,7 +603,8 @@ class IOColumnTransformers:
 
     @cache
     def get_name_ranges_in_time_range(self, input: bool, transformed: bool,
-                                      time_offset_range: range, include_non_temporal: bool) -> Tuple[List[int], List[str]]:
+                                      time_offset_range: range, include_non_temporal: bool,
+                                      include_cat: bool) -> Tuple[List[int], List[str]]:
         result: List[int] = []
         result_str: List[str] = []
         cur_start: int = 0
@@ -655,21 +656,22 @@ class IOColumnTransformers:
                     result_str.append(col_name)
             cur_start += angle_columns
 
-        for ct in cts:
-            if ct.pt_ct_type == ColumnTransformerType.CATEGORICAL:
-                if transformed:
-                    if column_types.col_time_offsets[ct.col_name].offset_valid_for_range(time_offset_range,
-                                                                                         include_non_temporal):
-                        for i in range(ct.num_classes):
-                            result.append(cur_start + i)
+        if include_cat:
+            for ct in cts:
+                if ct.pt_ct_type == ColumnTransformerType.CATEGORICAL:
+                    if transformed:
+                        if column_types.col_time_offsets[ct.col_name].offset_valid_for_range(time_offset_range,
+                                                                                             include_non_temporal):
+                            for i in range(ct.num_classes):
+                                result.append(cur_start + i)
+                                result_str.append(ct.col_name)
+                        cur_start += ct.num_classes
+                    else:
+                        if column_types.col_time_offsets[ct.col_name].offset_valid_for_range(time_offset_range,
+                                                                                             include_non_temporal):
+                            result.append(cur_start)
                             result_str.append(ct.col_name)
-                    cur_start += ct.num_classes
-                else:
-                    if column_types.col_time_offsets[ct.col_name].offset_valid_for_range(time_offset_range,
-                                                                                         include_non_temporal):
-                        result.append(cur_start)
-                        result_str.append(ct.col_name)
-                    cur_start += 1
+                        cur_start += 1
 
         return result, result_str
 

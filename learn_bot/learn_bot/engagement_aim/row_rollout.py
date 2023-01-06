@@ -47,9 +47,12 @@ def row_rollout(model: nn.Module, X: torch.Tensor, transformed_Y: torch.tensor, 
 
     # indices to read output from for saving for later
     transformed_first_output_indices, _ = \
-        network_inputs_column_transformers.get_name_ranges_in_time_range(False, True, range(0, 1), False)
+        network_inputs_column_transformers.get_name_ranges_in_time_range(False, True, range(0, 1), False, True)
     untransformed_first_output_indices, _ = \
-        network_inputs_column_transformers.get_name_ranges_in_time_range(False, False, range(0, 1), False)
+        network_inputs_column_transformers.get_name_ranges_in_time_range(False, False, range(0, 1), False, True)
+    # removing cat so can get just those used in on-policy
+    untransformed_first_output_indices_non_cat, _ = \
+        network_inputs_column_transformers.get_name_ranges_in_time_range(False, False, range(0, 1), False, False)
 
     network_col_names_to_ranges = network_inputs_column_transformers.get_name_ranges_dict(True, False)
     rolling_input_indices = [network_col_names_to_ranges[col_name].start for col_name in rolling_input_names]
@@ -63,12 +66,12 @@ def row_rollout(model: nn.Module, X: torch.Tensor, transformed_Y: torch.tensor, 
             all_inputs_column_transformers.get_name_ranges_in_time_range(True, False,
                                                                          range(PRIOR_TICKS + tick_num,
                                                                                PRIOR_TICKS + tick_num + input_range),
-                                                                         True)
+                                                                         True, True)
         true_output_name_indices, _ = \
             network_inputs_column_transformers.get_name_ranges_in_time_range(False, False,
                                                                              range(PRIOR_TICKS + tick_num + input_range,
                                                                                    PRIOR_TICKS + tick_num + input_range + 1),
-                                                                             True)
+                                                                             True, False)
         tick_X = X[:, input_name_indices].clone()
         #off_policy_transformed_Y, off_policy_untransformed_Y = model(tick_X)
         # after first iteration, replace predicted values
@@ -90,16 +93,18 @@ def row_rollout(model: nn.Module, X: torch.Tensor, transformed_Y: torch.tensor, 
         # actually, random sampling fixes this, no need to blend between values, just pick one
         transformed_output_indices, _ = \
             network_inputs_column_transformers.get_name_ranges_in_time_range(False, True,
-                                                                             range(tick_num, tick_num + 1), False)
+                                                                             range(tick_num, tick_num + 1), False,
+                                                                             True)
         transformed_outputs[:, transformed_output_indices] = \
             transformed_pred[:, transformed_first_output_indices]
         untransformed_output_indices, _ = \
             network_inputs_column_transformers.get_name_ranges_in_time_range(False, False,
-                                                                             range(tick_num, tick_num + 1), False)
+                                                                             range(tick_num, tick_num + 1), False,
+                                                                             True)
         untransformed_outputs[:, untransformed_output_indices] = \
             untransformed_pred[:, untransformed_first_output_indices]
         if random.uniform(0, 1) < blend_amount.on_policy_pct:
-            last_untransformed_output = untransformed_pred[:, untransformed_first_output_indices].detach()
+            last_untransformed_output = untransformed_pred[:, untransformed_first_output_indices_non_cat].detach()
         else:
             last_untransformed_output = untransformed_Y[:, true_output_name_indices].detach()
 
