@@ -27,6 +27,9 @@ def get_x_field_str(tick: int = -1):
 def get_y_field_str(tick: int = -1):
     return get_temporal_field_str(base_abs_y_pos_column, tick)
 
+def get_holding_attack_field_str(tick: int = -1):
+    return get_temporal_field_str(base_holding_attack, tick)
+
 
 class PolicyHistory:
     row_series: pd.Series
@@ -81,6 +84,7 @@ class PolicyHistory:
         for i in range(0, CUR_TICK + FUTURE_TICKS):
             self.row_series[get_x_field_str(i)] = cts.get_untransformed_value(pred, get_x_field_str(i), False)
             self.row_series[get_y_field_str(i)] = cts.get_untransformed_value(pred, get_y_field_str(i), False)
+            self.row_series[get_holding_attack_field_str(i)] = cts.get_untransformed_value(pred, get_holding_attack_field_str(i), False)
             if result_str is not None:
                 result_str.append(f"{i}: ({self.row_series[get_x_field_str(i)]:.2E},"
                                   f" {self.row_series[get_y_field_str(i)]:.2e}); ")

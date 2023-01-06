@@ -53,14 +53,14 @@ def compute_mouse_movement_bins(data_df: pd.DataFrame) -> MovementBins:
     compute_position_difference(movement_df, base_abs_x_pos_column, base_abs_y_pos_column, speed_col,
                                 -1 * default_speed_ticks, 0)
     speed_filtered_movement_df = filter_df(movement_df, speed_col, 0., 0.05)
-    _, speed_bins = np.histogram(speed_filtered_movement_df[speed_col].to_numpy(), bins=100)
+    _, speed_bins = np.histogram(speed_filtered_movement_df[speed_col].to_numpy(), bins=100, range=(0., 2.5))
 
     # compute accel
     compute_position_difference(movement_df, base_abs_x_pos_column, base_abs_y_pos_column, prior_speed_col,
                                 -2 * default_speed_ticks, -1 * default_speed_ticks)
     movement_df[accel_col] = movement_df[speed_col] - movement_df[prior_speed_col]
     accel_filtered_movement_df = filter_df(movement_df, accel_col, 0.025, 0.025)
-    _, accel_bins = np.histogram(accel_filtered_movement_df[accel_col].to_numpy(), bins=100)
+    _, accel_bins = np.histogram(accel_filtered_movement_df[accel_col].to_numpy(), bins=100, range=(-2., 2.))
 
     return MovementBins(movement_df, speed_bins, accel_bins)
 
@@ -121,6 +121,7 @@ def compute_normalized_with_recoil(data_df: pd.DataFrame):
 
 
 def compute_hit_fire_attack_bins(data_df: pd.DataFrame) -> HitFireAttackBins:
+    hist_range = [[-2, 2], [-1.5, 1.5]]
     hit_df = data_df.copy()
     hit_df = hit_df[hit_df[get_temporal_field_str(base_hit_victim_column, 0)] == 1]
     compute_normalized_with_recoil(hit_df)
@@ -128,7 +129,7 @@ def compute_hit_fire_attack_bins(data_df: pd.DataFrame) -> HitFireAttackBins:
 
     _, hit_x_bins, hit_y_bins = np.histogram2d(hit_df[relative_x_pos_with_recoil_column].to_numpy(),
                                                hit_df[relative_y_pos_with_recoil_column].to_numpy(),
-                                               bins=100)
+                                               bins=100, range=hist_range)
 
     fire_df = data_df.copy()
     fire_df = fire_df[fire_df[get_temporal_field_str(base_ticks_since_last_fire_column, 0)] == 0]
@@ -137,7 +138,7 @@ def compute_hit_fire_attack_bins(data_df: pd.DataFrame) -> HitFireAttackBins:
 
     _, fire_x_bins, fire_y_bins = np.histogram2d(fire_df[relative_x_pos_with_recoil_column].to_numpy(),
                                                  fire_df[relative_y_pos_with_recoil_column].to_numpy(),
-                                                 bins=100)
+                                                 bins=100, range=hist_range)
 
     attack_df = data_df.copy()
     attack_df = attack_df[attack_df[get_temporal_field_str(base_ticks_since_last_attack_column, 0)] == 0]
@@ -146,7 +147,7 @@ def compute_hit_fire_attack_bins(data_df: pd.DataFrame) -> HitFireAttackBins:
 
     _, attack_x_bins, attack_y_bins = np.histogram2d(attack_df[relative_x_pos_with_recoil_column].to_numpy(),
                                                      attack_df[relative_y_pos_with_recoil_column].to_numpy(),
-                                                     bins=100)
+                                                     bins=100, range=hist_range)
 
     return HitFireAttackBins(hit_df, hit_x_bins, hit_y_bins, fire_df, fire_x_bins, fire_y_bins,
                              attack_df, attack_x_bins, attack_y_bins)

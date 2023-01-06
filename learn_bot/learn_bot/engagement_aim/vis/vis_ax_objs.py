@@ -22,6 +22,7 @@ future_gray = "#727272FF"
 present_red = (1., 0., 0., 1.)
 fire_attack_hit_white = (1., 1., 1., 1.)
 fire_attack_black = (0., 0., 0., 1.)
+pred_attack_yellow = "#E6E600AA"
 aabb_green = (0., 1., 0., 0.5)
 aabb_blue = (0., 0., 0.61, 0.5)
 aabb_black = (0., 0., 0., 1.0)
@@ -112,6 +113,10 @@ class DataFrameTemporalSlices:
     hit_victim_x_np: np.ndarray
     hit_victim_y_np: np.ndarray
 
+    pred_hold_attack_df: pd.DataFrame
+    pred_hold_attack_x_np: np.ndarray
+    pred_hold_attack_y_np: np.ndarray
+
     def __init__(self, data_df: pd.DataFrame, tick_id: int, columns: PerspectiveColumns,
                  x_col: str, y_col: str, include_present_series: bool):
         # pos data
@@ -152,6 +157,10 @@ class DataFrameTemporalSlices:
         self.hit_victim_x_np = self.hit_victim_df.loc[:, x_col].to_numpy()
         self.hit_victim_y_np = self.hit_victim_df.loc[:, y_col].to_numpy()
 
+        self.pred_hold_attack_df = data_df[data_df['holding attack (t)'] > 0.5]
+        self.pred_hold_attack_x_np = self.hold_attack_df.loc[:, x_col].to_numpy()
+        self.pred_hold_attack_y_np = self.hold_attack_df.loc[:, y_col].to_numpy()
+
 no_legend_str = "_nolegend_"
 
 class TemporalLines:
@@ -164,9 +173,11 @@ class TemporalLines:
     fire_line: Optional[Line2D]
     hold_attack_line: Optional[Line2D]
     hit_victim_line: Optional[Line2D]
+    pred: bool
+    pred_hold_attack_line: Optional[Line2D]
 
     def __init__(self, ax: plt.Axes, df_temporal_slices: DataFrameTemporalSlices, include_present_series: bool,
-                 use_legend: bool):
+                 use_legend: bool, pred: bool):
         self.all_line, = ax.plot(df_temporal_slices.all_x_np, df_temporal_slices.all_y_np,
                                  color=all_gray, label=no_legend_str)
         if include_present_series:
@@ -186,6 +197,13 @@ class TemporalLines:
         self.present_line, = ax.plot(df_temporal_slices.present_x_np, df_temporal_slices.present_y_np,
                                      linestyle="None", label="Present" if use_legend else no_legend_str,
                                      marker='o', mfc=present_red, mec=present_red)
+        self.pred = pred
+        if self.pred:
+            self.pred_hold_attack_line, = ax.plot(df_temporal_slices.pred_hold_attack_x_np,
+                                                  df_temporal_slices.pred_hold_attack_y_np,
+                                                  linestyle="None", label="Pred Attack" if use_legend else no_legend_str,
+                                                  marker='s', mfc=pred_attack_yellow, mec=pred_attack_yellow,
+                                                  markersize=5)
         self.fire_line, = ax.plot(df_temporal_slices.fire_x_np, df_temporal_slices.fire_y_np,
                                   linestyle="None", label="Fire" if use_legend else no_legend_str,
                                   marker='|', mfc=fire_attack_hit_white, mec=fire_attack_hit_white)
@@ -208,6 +226,9 @@ class TemporalLines:
                                   df_temporal_slices.future_y_np)
         self.present_line.set_data(df_temporal_slices.present_x_np,
                                    df_temporal_slices.present_y_np)
+        if self.pred:
+            self.pred_hold_attack_line.set_data(df_temporal_slices.pred_hold_attack_x_np,
+                                                df_temporal_slices.pred_hold_attack_y_np)
         self.fire_line.set_data(df_temporal_slices.fire_x_np,
                                 df_temporal_slices.fire_y_np)
         self.hold_attack_line.set_data(df_temporal_slices.hold_attack_x_np,
@@ -225,6 +246,8 @@ class TemporalLines:
         self.fire_line.remove()
         self.hold_attack_line.remove()
         self.hit_victim_line.remove()
+        if self.pred:
+            self.pred_hold_attack_line.remove()
 
 # https://stackoverflow.com/questions/11690597/there-is-a-class-matplotlib-axes-axessubplot-but-the-module-matplotlib-axes-has
 # matplotlib.axes._subplots.AxesSubplot doesn't exist statically
@@ -232,6 +255,7 @@ class TemporalLines:
 # so use this instead
 @dataclass
 class AxObjs:
+    pred: bool
     fig: plt.Figure
     pos_ax: plt.Axes
     speed_ax: plt.Axes
@@ -296,13 +320,13 @@ class AxObjs:
             #           marker='o', mfc='black', mec='black', ms=10)
             self.pos_recoil_line, = self.pos_ax.plot(pos_recoil_x_np, pos_recoil_y_np, linestyle="None", label="Recoil",
                                                      marker='o', mfc=recoil_pink, mec=recoil_pink)
-            self.pos_temporal_lines = TemporalLines(self.pos_ax, pos_df_temporal_slices, True, True)
+            self.pos_temporal_lines = TemporalLines(self.pos_ax, pos_df_temporal_slices, True, True, self.pred)
             self.pos_victim_aabb = Rectangle(aabb_min, aabb_size[0], aabb_size[1],
                                              linewidth=2, edgecolor=aabb_green, facecolor='none')
             self.pos_ax.add_patch(self.pos_victim_aabb)
             self.pos_victim_head_circle = Circle(head_center, head_radius, color=aabb_green)
             self.pos_ax.add_patch(self.pos_victim_head_circle)
-            self.speed_temporal_lines = TemporalLines(self.speed_ax, speed_df_temporal_slices, False, False)
+            self.speed_temporal_lines = TemporalLines(self.speed_ax, speed_df_temporal_slices, False, False, self.pred)
         else:
             self.pos_recoil_line.set_data(pos_recoil_x_np,
                                           pos_recoil_y_np)
@@ -333,6 +357,9 @@ class AxObjs:
             if handle.get_label() in ["Fire", "Attack", "Hit"]:
                 handle.set_mfc(fire_attack_black)
                 handle.set_mec(fire_attack_black)
+            elif handle.get_label() in ["Pred Attack"]:
+                handle.set_mfc(pred_attack_yellow)
+                handle.set_mec(pred_attack_yellow)
 
         x_max, x_min = self.pos_ax.get_xlim()
         y_min, y_max = self.pos_ax.get_ylim()
