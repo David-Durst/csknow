@@ -123,30 +123,9 @@ namespace action {
             clientTargetMap[curClient.csgoId] = {INVALID_ID, aimTarget};
         }
 
-
         // don't need to change pitch here because engine stores pitch in -90 to 90 (I think)
         // while conversion function below uses 360-270 for -90-0
         Vec2 curViewAngle = curClient.getCurrentViewAnglesWithAimpunch();;
-        const csknow::StreamingClientHistory<EngagementAimTickData> & engagementAimPlayerHistory =
-            blackboard.streamingManager.streamingEngagementAim.engagementAimPlayerHistory;
-        if (true || engagementAimPlayerHistory.clientHistory.find(curClient.csgoId) ==
-            engagementAimPlayerHistory.clientHistory.end()) {
-
-        }
-        else {
-            Vec2 scaledRecoilAngle =
-                engagementAimPlayerHistory.clientHistory.at(curClient.csgoId).fromNewest().scaledRecoilAngle;
-            // unflip from internal flip
-            scaledRecoilAngle.y *= -1;
-            curViewAngle =
-                engagementAimPlayerHistory.clientHistory.at(curClient.csgoId).fromNewest().attackerViewAngle +
-                scaledRecoilAngle;
-            std::cout <<
-                engagementAimPlayerHistory.clientHistory.at(curClient.csgoId).fromNewest().scaledRecoilAngle.toString()
-                << std::endl;
-
-            curViewAngle.makeYawNeg180To180();
-        }
         Vec3 targetVector = aimTarget - curClient.getEyePosForPlayer();
         Vec2 targetViewAngle = vectorAngles(targetVector);
 
@@ -194,10 +173,12 @@ namespace action {
             }
             else {
                 Vec2 newAngle = playerToNewAngle.at(curClient.csgoId);
+                /*
                 std::cout << curClient.name
                     << "," << curClient.getCurrentViewAngles().toString()
                     << ",{" << curClient.inputAngleX << "," << curClient.inputAngleY << "}"
                     << "," << newAngle.toString() << std::endl;
+                */
                 curAction.inputAngleX = newAngle.x;
                 curAction.inputAngleY = newAngle.y;
                 if (curClient.csgoId == 3 && false) {
