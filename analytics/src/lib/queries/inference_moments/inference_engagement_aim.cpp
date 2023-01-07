@@ -156,7 +156,7 @@ void InferenceEngagementAimResult::runQuery(const Rounds & rounds, const string 
                 at::Tensor output = module.forward(inputs).toTuple()->elements()[1].toTensor();
                 predictedDeltaRelativeFirstHeadViewAngle[engagementAimId] = {
                         static_cast<double>(output[0][0].item<float>()),
-                        static_cast<double>(output[0][output[0].size(0) / 2].item<float>())
+                        static_cast<double>(output[0][output[0].size(0) / 3].item<float>())
                 };
             }
             else {

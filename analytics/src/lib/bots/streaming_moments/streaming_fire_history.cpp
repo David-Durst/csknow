@@ -39,7 +39,11 @@ namespace csknow::fire_history {
                 const FireClientData & priorFirePlayerData =
                     fireClientHistory.clientHistory.at(curTickClient.csgoId).fromNewest();
 
-                if (firingClients.find(curTickClient.csgoId) != firingClients.end()) {
+                // if input angle defined, then action was input and firing is valid
+                if (curTickClient.inputAngleDefined && curTickClient.intendedToFire) {
+                    fireClientData.ticksSinceLastFire = 0;
+                }
+                else if (firingClients.find(curTickClient.csgoId) != firingClients.end()) {
                     fireClientData.ticksSinceLastFire = 0;
                 }
                 else {

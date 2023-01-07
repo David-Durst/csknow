@@ -119,6 +119,7 @@ namespace csknow::engagement_aim {
         unordered_map<CSGOId, bool> playerToVictimFirstVisibleFrame;
         unordered_map<CSGOId, Vec2> playerToNewAngle;
         unordered_map<CSGOId, Vec2> playerToDeltaAngle;
+        unordered_map<CSGOId, bool> playerToFiring;
 
         void reset() {
             resetInternal = true;

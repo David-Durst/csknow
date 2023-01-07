@@ -108,6 +108,7 @@ public:
 
         // keyboard/mouse inputs sent to game engine
         int32_t buttons;
+        bool intendedToFire;
 
         // default initialize this one since it isn't read from file
         int32_t lastTeleportConfirmationId = 0;
@@ -171,12 +172,13 @@ public:
     }
 
     vector<bool> inputsValid;
-    void setInputs(CSGOId csgoId, int32_t lastTeleportConfirmationId, int32_t buttons,
+    void setInputs(CSGOId csgoId, int32_t lastTeleportConfirmationId, int32_t buttons, bool intendedToFire,
                    float inputAngleX, float inputAngleY, bool inputAngleAbsolute) {
         int csknowId = csgoIdToCSKnowId[csgoId];
         Client & curClient = clients[csknowId];
         curClient.lastTeleportConfirmationId = lastTeleportConfirmationId;
         curClient.buttons = buttons;
+        curClient.intendedToFire = intendedToFire;
         curClient.inputAngleX = inputAngleX;
         curClient.inputAngleY = inputAngleY;
         curClient.inputAngleAbsolute = inputAngleAbsolute;

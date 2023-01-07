@@ -33,6 +33,7 @@ struct Action {
     // default initialize this one since it isn't read from file
     int32_t lastTeleportConfirmationId = 0;
     int32_t buttons;
+    bool intendedToFire;
     int32_t shotsInBurst;
     bool keepCrouching = false;
     AimTargetType aimTargetType;

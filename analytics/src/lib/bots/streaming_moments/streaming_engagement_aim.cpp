@@ -364,10 +364,13 @@ namespace csknow::engagement_aim {
 
             for (size_t i = 0; i < orderedAttackerIds.size(); i++) {
                 // subtract from input delta view angles to get change in angle, then apply that to current view angles
+                //std::cout << output[0].size(0) << std::endl;
                 Vec2 outputRelativeViewAngle = {
                     static_cast<double>(output[i][0].item<float>()),
-                    static_cast<double>(output[i][output[0].size(0) / 2].item<float>())
+                    static_cast<double>(output[i][output[0].size(0) / 3].item<float>())
                 };
+                playerToFiring[orderedAttackerIds[i]] =
+                    static_cast<double>(output[i][output[0].size(0) * 2 / 3].item<float>());
                 //const ServerState & prevState = db.batchData.fromNewest(1);
                 EngagementAimTickData & newestTickData = engagementAimPlayerHistory.clientHistory.at(orderedAttackerIds[i])
                     .fromNewest();
@@ -422,6 +425,7 @@ namespace csknow::engagement_aim {
                 if (attackerIds.find(curTickClient.csgoId) == attackerIds.end()) {
                     playerToDeltaAngle[curTickClient.csgoId] = {0., 0.};
                     playerToNewAngle[curTickClient.csgoId] = curTickClient.getCurrentViewAngles();
+                    playerToFiring[curTickClient.csgoId] = false;
                 }
             }
         }

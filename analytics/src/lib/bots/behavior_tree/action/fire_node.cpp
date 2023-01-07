@@ -3,6 +3,7 @@
 //
 #include "bots/input_bits.h"
 #include "bots/behavior_tree/action/action_node.h"
+constexpr bool learned_firing = true;
 
 namespace action {
     // const set<int32_t> scopedWeaponIds{AWP_ID, GSG_ID, SCAR_ID, SCOUT_ID};
@@ -82,9 +83,20 @@ namespace action {
                 AABB targetAABB = getAABBForPlayer(targetClient.getFootPosForPlayer());
                 double hitt0, hitt1;
                 bool aimingAtEnemy = intersectP(targetAABB, eyeCoordinates, hitt0, hitt1);
+                if (learned_firing) {
+                    const unordered_map<CSGOId, bool> & playerToFiring =
+                        blackboard.streamingManager.streamingEngagementAim.playerToFiring;
+                    if (playerToFiring.find(curClient.csgoId) == playerToFiring.end()) {
+                        aimingAtEnemy = false;
+                    }
+                    else {
+                        aimingAtEnemy = playerToFiring.at(curClient.csgoId);
+                    }
+                }
 
                 // TODO: AFTER ADDING VELOCITY FIELD, TRACK STOPPED TO SHOOT USING VELOCITY
                 curAction.setButton(IN_ATTACK, !attackLastFrame && haveAmmo && aimingAtEnemy);
+                curAction.intendedToFire = aimingAtEnemy;
                 if (curAction.getButton(IN_ATTACK)) {
                     /*
                     std::cout << "firing at " << targetClient.name << std::endl;
