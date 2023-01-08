@@ -18,7 +18,9 @@ def binary_loss_fn(input, target, weight):
     return torch.sum(weight * base_binary_loss_fn(input, target)) / torch.sum(weight)
 # https://stackoverflow.com/questions/65192475/pytorch-logsoftmax-vs-softmax-for-crossentropyloss
 # no need to do softmax for classification output
-classification_loss_fn = nn.CrossEntropyLoss()
+base_classification_loss_fn = nn.CrossEntropyLoss()
+def classification_loss_fn(input, target, weight):
+    return torch.sum(weight * base_classification_loss_fn(input, target)) / torch.sum(weight)
 
 
 class AimLosses:
