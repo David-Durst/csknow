@@ -27,11 +27,12 @@ struct Command : Node {
 };
 
 struct PreTestingInit : Command {
-    PreTestingInit(Blackboard & blackboard) :
-            Command(blackboard, "PreTestingInitmd") { }
+    int numHumansNonSpec;
+    PreTestingInit(Blackboard & blackboard, int numHumansNonSpec) :
+            Command(blackboard, "PreTestingInitmd"), numHumansNonSpec(numHumansNonSpec) { }
     virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
         blackboard.inTest = true;
-        scriptLines = {"sm_allHumansSpec; sm_botDebug f; sm_skipFirstRound;"};
+        scriptLines = {"sm_allHumansSpec " + std::to_string(numHumansNonSpec) + "; sm_botDebug f; sm_skipFirstRound;"};
         return Command::exec(state, treeThinker);
     }
 };
@@ -293,6 +294,23 @@ struct SpecDynamic : Command {
             }
         }
         scriptLines = {result.str()};
+        return Command::exec(state, treeThinker);
+    }
+};
+
+struct SayIf : Command {
+    bool condition;
+    string str;
+    SayIf(Blackboard & blackboard, bool condition, string str) :
+        Command(blackboard, "InitTestingRoundCmd"), condition(condition), str(str) { }
+    virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
+        blackboard.inTest = true;
+        if (condition) {
+            scriptLines = {"say " + str + ";"};
+        }
+        else {
+            scriptLines = {};
+        }
         return Command::exec(state, treeThinker);
     }
 };

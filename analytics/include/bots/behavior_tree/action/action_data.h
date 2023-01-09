@@ -87,6 +87,8 @@ struct Action {
     float inputAngleX;
     float inputAngleY;
     bool inputAngleAbsolute;
+    // force human players inputs
+    bool forceInput;
 
     string print() {
         return "buttons: " + std::to_string(buttons) + ", shots in burst: " + std::to_string(shotsInBurst)

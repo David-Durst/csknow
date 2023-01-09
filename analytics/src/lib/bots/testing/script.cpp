@@ -8,9 +8,21 @@
 void Script::initialize(Tree &, ServerState & state) {
     // allocate the bots to use
     set<CSGOId> usedBots;
+    // get non-human bots
     for (auto &neededBot: neededBots) {
         for (const auto &client: state.clients) {
-            if (client.isBot && client.team == neededBot.team &&
+            if (client.isBot && client.team == neededBot.team && !neededBot.human &&
+                usedBots.find(client.csgoId) == usedBots.end()) {
+                neededBot.id = client.csgoId;
+                usedBots.insert(client.csgoId);
+                break;
+            }
+        }
+    }
+    // get human bots
+    for (auto &neededBot: neededBots) {
+        for (const auto &client: state.clients) {
+            if (!client.isBot && client.team == neededBot.team && neededBot.human &&
                 usedBots.find(client.csgoId) == usedBots.end()) {
                 neededBot.id = client.csgoId;
                 usedBots.insert(client.csgoId);
@@ -66,7 +78,7 @@ bool Script::tick(Tree & tree, ServerState & state) {
         const Action & clientAction = tree.blackboard->playerToAction[client.csgoId];
         state.setInputs(client.csgoId, clientAction.lastTeleportConfirmationId, clientAction.buttons,
                         clientAction.intendedToFire, clientAction.inputAngleX, clientAction.inputAngleY,
-                        clientAction.inputAngleAbsolute);
+                        clientAction.inputAngleAbsolute, clientAction.forceInput);
     }
 
     bool finished = true;

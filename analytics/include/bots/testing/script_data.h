@@ -27,6 +27,7 @@ struct NeededBot {
     CSGOId id;
     int team;
     AggressiveType type = AggressiveType::Push;
+    bool human = false;
 };
 
 #endif //CSKNOW_SCRIPT_DATA_H

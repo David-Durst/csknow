@@ -122,6 +122,7 @@ public:
                 blackboard.playerToAction[targetIds[i]].inputAngleAbsolute = true;
             }
             blackboard.playerToAction[targetIds[i]].setButton(IN_ATTACK, disableFiring ? false : oldFireValue);
+            blackboard.playerToAction[targetIds[i]].forceInput = true;
         }
         playerNodeState[treeThinker.csgoId] = NodeState::Running;
         return playerNodeState[treeThinker.csgoId];

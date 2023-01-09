@@ -60,8 +60,9 @@ public:
 };
 
 struct NeedPreTestingInitNode : Node {
-    explicit NeedPreTestingInitNode(Blackboard & blackboard) :
-            Node(blackboard, "NeedPreTestingInitNode") { }
+    int numHumansNonSpec;
+    explicit NeedPreTestingInitNode(Blackboard & blackboard, int numHumansNonSpec) :
+            Node(blackboard, "NeedPreTestingInitNode"), numHumansNonSpec(numHumansNonSpec) { }
     NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
         blackboard.inTest = true;
         // need preinit testing if score is 0 0
@@ -70,21 +71,31 @@ struct NeedPreTestingInitNode : Node {
             return playerNodeState[treeThinker.csgoId];
         }
         int numBots = 0;
+
         // need preinit testing if any humans aren't spectators
+        int numHumans = 0;
         for (const auto & client : state.clients) {
-            if (!client.isBot && client.team != ENGINE_TEAM_SPEC) {
-                playerNodeState[treeThinker.csgoId] = NodeState::Success;
-                return playerNodeState[treeThinker.csgoId];
+            if (!client.isBot) {
+                bool humanWrongTeam =
+                    (client.team != ENGINE_TEAM_SPEC && numHumans >= numHumansNonSpec) ||
+                    (client.team != ENGINE_TEAM_T && numHumans < numHumansNonSpec);
+                numHumans++;
+                if (humanWrongTeam) {
+                    playerNodeState[treeThinker.csgoId] = NodeState::Success;
+                    return playerNodeState[treeThinker.csgoId];
+                }
             }
             if (client.isBot) {
                 numBots++;
             }
         }
         // another human team check
+        /*
         if (numBots < 7) {
             playerNodeState[treeThinker.csgoId] = NodeState::Success;
             return playerNodeState[treeThinker.csgoId];
         }
+         */
         // otherwise don't need score
         playerNodeState[treeThinker.csgoId] = NodeState::Failure;
         return playerNodeState[treeThinker.csgoId];
@@ -92,8 +103,9 @@ struct NeedPreTestingInitNode : Node {
 };
 
 struct PreTestingInitFinishedNode : Node {
-    explicit PreTestingInitFinishedNode(Blackboard & blackboard) :
-            Node(blackboard, "PreTestingInitFinishedNode") { }
+    int numHumansNonSpec;
+    explicit PreTestingInitFinishedNode(Blackboard & blackboard, int numHumansNonSpec) :
+            Node(blackboard, "PreTestingInitFinishedNode"), numHumansNonSpec(numHumansNonSpec) { }
     NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
         blackboard.inTest = true;
         // need preinit testing if score is 0 0
@@ -103,10 +115,17 @@ struct PreTestingInitFinishedNode : Node {
         }
         int numBots = 0;
         // need preinit testing if any humans aren't spectators
+        int numHumans = 0;
         for (const auto & client : state.clients) {
-            if (!client.isBot && client.team != ENGINE_TEAM_SPEC) {
-                playerNodeState[treeThinker.csgoId] = NodeState::Running;
-                return playerNodeState[treeThinker.csgoId];
+            if (!client.isBot) {
+                bool humanWrongTeam =
+                    (client.team != ENGINE_TEAM_SPEC && numHumans >= numHumansNonSpec) ||
+                    (client.team != ENGINE_TEAM_T && numHumans < numHumansNonSpec);
+                numHumans++;
+                if (humanWrongTeam) {
+                    playerNodeState[treeThinker.csgoId] = NodeState::Running;
+                    return playerNodeState[treeThinker.csgoId];
+                }
             }
             if (client.isBot) {
                 numBots++;
@@ -127,19 +146,21 @@ struct PreTestingInitFinishedNode : Node {
 };
 
 class InitScript : public Script {
+    int numHumansNonSpec;
 public:
-    InitScript() : Script("InitScript", {}, {}, true) { };
+    InitScript(int numHumansNonSpec) : Script("InitScript", {}, {}, true),
+        numHumansNonSpec(numHumansNonSpec) { };
 
     void initialize(Tree & tree, ServerState & state) override  {
         if (tree.newBlackboard) {
             Blackboard & blackboard = *tree.blackboard;
             Script::initialize(tree, state);
             commands = make_unique<SequenceNode>(blackboard, Node::makeList(
-                    make_unique<NeedPreTestingInitNode>(blackboard),
-                    make_unique<PreTestingInit>(blackboard),
-                    make_unique<PreTestingInitFinishedNode>(blackboard),
+                    make_unique<NeedPreTestingInitNode>(blackboard, numHumansNonSpec),
+                    make_unique<PreTestingInit>(blackboard, numHumansNonSpec),
+                    make_unique<PreTestingInitFinishedNode>(blackboard, numHumansNonSpec),
                     make_unique<Draw>(blackboard),
-                    make_unique<PreTestingInitFinishedNode>(blackboard)),
+                    make_unique<PreTestingInitFinishedNode>(blackboard, numHumansNonSpec)),
                  "InitScript");
         }
     }
@@ -153,9 +174,10 @@ protected:
     bool restartOnFinish;
 
 public:
-    explicit ScriptsRunner(vector<Script::Ptr> && scripts, bool restartOnFinish = false) :
+    explicit ScriptsRunner(vector<Script::Ptr> && scripts, bool restartOnFinish = false, int numHumans = 0) :
         scripts(std::move(scripts)), restartOnFinish(restartOnFinish) {
-        this->scripts.insert(this->scripts.begin(), make_unique<InitScript>());
+        // add Init as a separate script, so can skip it after it finishes
+        this->scripts.insert(this->scripts.begin(), make_unique<InitScript>(numHumans));
         if (this->scripts.empty()) {
             std::cout << "warning: scripts runner will crash with no scripts" << std::endl;
         }

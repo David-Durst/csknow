@@ -118,6 +118,7 @@ public:
         float inputAngleX;
         float inputAngleY;
         bool inputAngleAbsolute;
+        bool forceInput;
 
         [[nodiscard]]
         Vec2 getCurrentViewAngles() const {
@@ -173,7 +174,7 @@ public:
 
     vector<bool> inputsValid;
     void setInputs(CSGOId csgoId, int32_t lastTeleportConfirmationId, int32_t buttons, bool intendedToFire,
-                   float inputAngleX, float inputAngleY, bool inputAngleAbsolute) {
+                   float inputAngleX, float inputAngleY, bool inputAngleAbsolute, bool forceInput) {
         int csknowId = csgoIdToCSKnowId[csgoId];
         Client & curClient = clients[csknowId];
         curClient.lastTeleportConfirmationId = lastTeleportConfirmationId;
@@ -183,6 +184,7 @@ public:
         curClient.inputAngleY = inputAngleY;
         curClient.inputAngleAbsolute = inputAngleAbsolute;
         curClient.inputAngleDefined = true;
+        curClient.forceInput = forceInput;
         inputsValid[csknowId] = true;
     }
 

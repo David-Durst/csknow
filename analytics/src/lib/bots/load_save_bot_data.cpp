@@ -544,7 +544,7 @@ void ServerState::saveBotInputs() {
     string tmpInputsFilePath = dataPath + "/" + tmpInputsFileName;
 
     std::stringstream inputsStream;
-    inputsStream << "Player Index,Last Frame,Last Teleport Confirmation Id,Buttons,Input Angle Delta Pct Pitch,Input Angle Delta Pct Yaw,Input Angle Absolute\n";
+    inputsStream << "Player Index,Last Frame,Last Teleport Confirmation Id,Buttons,Input Angle Delta Pct Pitch,Input Angle Delta Pct Yaw,Input Angle Absolute,Force Input\n";
 
     for (int i = 0; i < (int) inputsValid.size(); i++) {
         if (i < (int) clients.size() && inputsValid[i]) {
@@ -555,7 +555,8 @@ void ServerState::saveBotInputs() {
                          // FLIPPING TO MATCH YAW AND PITCH
                          << clients[i].inputAngleY << ","
                          << clients[i].inputAngleX << ","
-                         << boolToInt(clients[i].inputAngleAbsolute) << "\n";
+                         << boolToInt(clients[i].inputAngleAbsolute) << ","
+                         << boolToInt(clients[i].forceInput) << "\n";
         }
     }
 

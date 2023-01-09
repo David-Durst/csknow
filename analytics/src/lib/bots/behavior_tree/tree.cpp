@@ -156,6 +156,8 @@ void Tree::tick(ServerState & state, const string & mapsPath) {
         printStates.push_back(blackboard->printCommunicateState(state));
 
         for (auto & client : state.clients) {
+            // disable force for all players, testing infrastructure can set force
+            blackboard->playerToAction[client.csgoId].forceInput = false;
             if (!client.isAlive || !client.isBot) {
                 continue;
             }
@@ -175,7 +177,7 @@ void Tree::tick(ServerState & state, const string & mapsPath) {
 
             state.setInputs(client.csgoId, clientAction.lastTeleportConfirmationId, clientAction.buttons,
                             clientAction.intendedToFire, clientAction.inputAngleX, clientAction.inputAngleY,
-                            clientAction.inputAngleAbsolute);
+                            clientAction.inputAngleAbsolute, clientAction.forceInput);
 
             // log state
             if (localLogFilterNames.empty() || localLogFilterNames.find(state.getClient(treeThinker.csgoId).name) != localLogFilterNames.end()) {

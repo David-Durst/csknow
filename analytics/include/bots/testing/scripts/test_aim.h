@@ -153,12 +153,16 @@ namespace variable_aim_test {
         Vec3 pos;
         Vec2 viewAngle;
         int32_t inputBits;
+        bool humanAttacker;
 
 
     public:
         explicit VariableAimAndKillWithinTimeCheck(EnemyPos enemyPos, EnemyMovement enemyMovement,
-                                                   AttackerInitialViewAngle attackerInitialViewAngle) :
-            Script("VariableAim", {{0, ENGINE_TEAM_T}, {0, ENGINE_TEAM_CT}}, {ObserveType::FirstPerson, 0}) {
+                                                   AttackerInitialViewAngle attackerInitialViewAngle, bool humanAttacker) :
+                                                   Script("VariableAim", {{0, ENGINE_TEAM_T, AggressiveType::Push, humanAttacker },
+                                                                          {0, ENGINE_TEAM_CT}},
+                                                          {humanAttacker ? ObserveType::None : ObserveType::FirstPerson, 0}),
+                                                   humanAttacker(humanAttacker) {
             switch (enemyPos) {
                 case EnemyPos::Close:
                     switch (enemyMovement) {
@@ -299,6 +303,7 @@ namespace variable_aim_test {
                                                          //std::move(movingPreAct),
                                                          //make_unique<ResetAimController>(blackboard),
                                                          //std::move(movingAimBufferFill),
+                                                         make_unique<SayIf>(blackboard, humanAttacker, "move mouse"),
                                                          make_unique<ParallelFirstNode>(blackboard, Node::makeList(
                                                                                             make_unique<KilledAfterTime>(blackboard, neededBots[0].id, neededBots[1].id, 0.1),
                                                                                             make_unique<ForceActionsNode>(blackboard, vector{neededBots[1].id}, inputBits),
