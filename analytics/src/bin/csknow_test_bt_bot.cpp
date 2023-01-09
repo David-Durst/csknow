@@ -75,6 +75,152 @@ int main(int argc, char * argv[]) {
             make_unique<DangerTwoPlayerCheck>(state)
                  */
     ), true);
+    ScriptsRunner scenarioRunner(Script::makeList(
+        make_unique<variable_aim_test::VariableAimAndKillWithinTimeCheck>(
+            variable_aim_test::EnemyPos::Close, variable_aim_test::EnemyMovement::None,
+            variable_aim_test::AttackerInitialViewAngle::HardLeft),
+        make_unique<variable_aim_test::VariableAimAndKillWithinTimeCheck>(
+            variable_aim_test::EnemyPos::Close, variable_aim_test::EnemyMovement::None,
+            variable_aim_test::AttackerInitialViewAngle::MidLeft),
+        make_unique<variable_aim_test::VariableAimAndKillWithinTimeCheck>(
+            variable_aim_test::EnemyPos::Close, variable_aim_test::EnemyMovement::None,
+            variable_aim_test::AttackerInitialViewAngle::MidRightUp),
+        make_unique<variable_aim_test::VariableAimAndKillWithinTimeCheck>(
+            variable_aim_test::EnemyPos::Close, variable_aim_test::EnemyMovement::None,
+            variable_aim_test::AttackerInitialViewAngle::MidRightDown),
+        make_unique<variable_aim_test::VariableAimAndKillWithinTimeCheck>(
+            variable_aim_test::EnemyPos::Close, variable_aim_test::EnemyMovement::Forward,
+            variable_aim_test::AttackerInitialViewAngle::HardLeft),
+        make_unique<variable_aim_test::VariableAimAndKillWithinTimeCheck>(
+            variable_aim_test::EnemyPos::Close, variable_aim_test::EnemyMovement::Forward,
+            variable_aim_test::AttackerInitialViewAngle::MidLeft),
+        make_unique<variable_aim_test::VariableAimAndKillWithinTimeCheck>(
+            variable_aim_test::EnemyPos::Close, variable_aim_test::EnemyMovement::Forward,
+            variable_aim_test::AttackerInitialViewAngle::MidRightUp),
+        make_unique<variable_aim_test::VariableAimAndKillWithinTimeCheck>(
+            variable_aim_test::EnemyPos::Close, variable_aim_test::EnemyMovement::Forward,
+            variable_aim_test::AttackerInitialViewAngle::MidRightDown),
+        make_unique<variable_aim_test::VariableAimAndKillWithinTimeCheck>(
+            variable_aim_test::EnemyPos::Close, variable_aim_test::EnemyMovement::Left,
+            variable_aim_test::AttackerInitialViewAngle::HardLeft),
+        make_unique<variable_aim_test::VariableAimAndKillWithinTimeCheck>(
+            variable_aim_test::EnemyPos::Close, variable_aim_test::EnemyMovement::Left,
+            variable_aim_test::AttackerInitialViewAngle::MidLeft),
+        make_unique<variable_aim_test::VariableAimAndKillWithinTimeCheck>(
+            variable_aim_test::EnemyPos::Close, variable_aim_test::EnemyMovement::Left,
+            variable_aim_test::AttackerInitialViewAngle::MidRightUp),
+        make_unique<variable_aim_test::VariableAimAndKillWithinTimeCheck>(
+            variable_aim_test::EnemyPos::Close, variable_aim_test::EnemyMovement::Left,
+            variable_aim_test::AttackerInitialViewAngle::MidRightDown),
+        make_unique<variable_aim_test::VariableAimAndKillWithinTimeCheck>(
+            variable_aim_test::EnemyPos::Close, variable_aim_test::EnemyMovement::Right,
+            variable_aim_test::AttackerInitialViewAngle::HardLeft),
+        make_unique<variable_aim_test::VariableAimAndKillWithinTimeCheck>(
+            variable_aim_test::EnemyPos::Close, variable_aim_test::EnemyMovement::Right,
+            variable_aim_test::AttackerInitialViewAngle::MidLeft),
+        make_unique<variable_aim_test::VariableAimAndKillWithinTimeCheck>(
+            variable_aim_test::EnemyPos::Close, variable_aim_test::EnemyMovement::Right,
+            variable_aim_test::AttackerInitialViewAngle::MidRightUp),
+        make_unique<variable_aim_test::VariableAimAndKillWithinTimeCheck>(
+            variable_aim_test::EnemyPos::Close, variable_aim_test::EnemyMovement::Right,
+            variable_aim_test::AttackerInitialViewAngle::MidRightDown),
+        make_unique<variable_aim_test::VariableAimAndKillWithinTimeCheck>(
+            variable_aim_test::EnemyPos::BottomRamp, variable_aim_test::EnemyMovement::None,
+            variable_aim_test::AttackerInitialViewAngle::HardLeft),
+        make_unique<variable_aim_test::VariableAimAndKillWithinTimeCheck>(
+            variable_aim_test::EnemyPos::BottomRamp, variable_aim_test::EnemyMovement::None,
+            variable_aim_test::AttackerInitialViewAngle::MidLeft),
+        make_unique<variable_aim_test::VariableAimAndKillWithinTimeCheck>(
+            variable_aim_test::EnemyPos::BottomRamp, variable_aim_test::EnemyMovement::None,
+            variable_aim_test::AttackerInitialViewAngle::MidRightUp),
+        make_unique<variable_aim_test::VariableAimAndKillWithinTimeCheck>(
+            variable_aim_test::EnemyPos::BottomRamp, variable_aim_test::EnemyMovement::None,
+            variable_aim_test::AttackerInitialViewAngle::MidRightDown),
+        make_unique<variable_aim_test::VariableAimAndKillWithinTimeCheck>(
+            variable_aim_test::EnemyPos::BottomRamp, variable_aim_test::EnemyMovement::Forward,
+            variable_aim_test::AttackerInitialViewAngle::HardLeft),
+        make_unique<variable_aim_test::VariableAimAndKillWithinTimeCheck>(
+            variable_aim_test::EnemyPos::BottomRamp, variable_aim_test::EnemyMovement::Forward,
+            variable_aim_test::AttackerInitialViewAngle::MidLeft),
+        make_unique<variable_aim_test::VariableAimAndKillWithinTimeCheck>(
+            variable_aim_test::EnemyPos::BottomRamp, variable_aim_test::EnemyMovement::Forward,
+            variable_aim_test::AttackerInitialViewAngle::MidRightUp),
+        make_unique<variable_aim_test::VariableAimAndKillWithinTimeCheck>(
+            variable_aim_test::EnemyPos::BottomRamp, variable_aim_test::EnemyMovement::Forward,
+            variable_aim_test::AttackerInitialViewAngle::MidRightDown),
+        make_unique<variable_aim_test::VariableAimAndKillWithinTimeCheck>(
+            variable_aim_test::EnemyPos::BottomRamp, variable_aim_test::EnemyMovement::Left,
+            variable_aim_test::AttackerInitialViewAngle::HardLeft),
+        make_unique<variable_aim_test::VariableAimAndKillWithinTimeCheck>(
+            variable_aim_test::EnemyPos::BottomRamp, variable_aim_test::EnemyMovement::Left,
+            variable_aim_test::AttackerInitialViewAngle::MidLeft),
+        make_unique<variable_aim_test::VariableAimAndKillWithinTimeCheck>(
+            variable_aim_test::EnemyPos::BottomRamp, variable_aim_test::EnemyMovement::Left,
+            variable_aim_test::AttackerInitialViewAngle::MidRightUp),
+        make_unique<variable_aim_test::VariableAimAndKillWithinTimeCheck>(
+            variable_aim_test::EnemyPos::BottomRamp, variable_aim_test::EnemyMovement::Left,
+            variable_aim_test::AttackerInitialViewAngle::MidRightDown),
+        make_unique<variable_aim_test::VariableAimAndKillWithinTimeCheck>(
+            variable_aim_test::EnemyPos::BottomRamp, variable_aim_test::EnemyMovement::Right,
+            variable_aim_test::AttackerInitialViewAngle::HardLeft),
+        make_unique<variable_aim_test::VariableAimAndKillWithinTimeCheck>(
+            variable_aim_test::EnemyPos::BottomRamp, variable_aim_test::EnemyMovement::Right,
+            variable_aim_test::AttackerInitialViewAngle::MidLeft),
+        make_unique<variable_aim_test::VariableAimAndKillWithinTimeCheck>(
+            variable_aim_test::EnemyPos::BottomRamp, variable_aim_test::EnemyMovement::Right,
+            variable_aim_test::AttackerInitialViewAngle::MidRightUp),
+        make_unique<variable_aim_test::VariableAimAndKillWithinTimeCheck>(
+            variable_aim_test::EnemyPos::BottomRamp, variable_aim_test::EnemyMovement::Right,
+            variable_aim_test::AttackerInitialViewAngle::MidRightDown),
+        make_unique<variable_aim_test::VariableAimAndKillWithinTimeCheck>(
+            variable_aim_test::EnemyPos::TopRamp, variable_aim_test::EnemyMovement::None,
+            variable_aim_test::AttackerInitialViewAngle::HardLeft),
+        make_unique<variable_aim_test::VariableAimAndKillWithinTimeCheck>(
+            variable_aim_test::EnemyPos::TopRamp, variable_aim_test::EnemyMovement::None,
+            variable_aim_test::AttackerInitialViewAngle::MidLeft),
+        make_unique<variable_aim_test::VariableAimAndKillWithinTimeCheck>(
+            variable_aim_test::EnemyPos::TopRamp, variable_aim_test::EnemyMovement::None,
+            variable_aim_test::AttackerInitialViewAngle::MidRightUp),
+        make_unique<variable_aim_test::VariableAimAndKillWithinTimeCheck>(
+            variable_aim_test::EnemyPos::TopRamp, variable_aim_test::EnemyMovement::None,
+            variable_aim_test::AttackerInitialViewAngle::MidRightDown),
+        make_unique<variable_aim_test::VariableAimAndKillWithinTimeCheck>(
+            variable_aim_test::EnemyPos::TopRamp, variable_aim_test::EnemyMovement::Forward,
+            variable_aim_test::AttackerInitialViewAngle::HardLeft),
+        make_unique<variable_aim_test::VariableAimAndKillWithinTimeCheck>(
+            variable_aim_test::EnemyPos::TopRamp, variable_aim_test::EnemyMovement::Forward,
+            variable_aim_test::AttackerInitialViewAngle::MidLeft),
+        make_unique<variable_aim_test::VariableAimAndKillWithinTimeCheck>(
+            variable_aim_test::EnemyPos::TopRamp, variable_aim_test::EnemyMovement::Forward,
+            variable_aim_test::AttackerInitialViewAngle::MidRightUp),
+        make_unique<variable_aim_test::VariableAimAndKillWithinTimeCheck>(
+            variable_aim_test::EnemyPos::TopRamp, variable_aim_test::EnemyMovement::Forward,
+            variable_aim_test::AttackerInitialViewAngle::MidRightDown),
+        make_unique<variable_aim_test::VariableAimAndKillWithinTimeCheck>(
+            variable_aim_test::EnemyPos::TopRamp, variable_aim_test::EnemyMovement::Left,
+            variable_aim_test::AttackerInitialViewAngle::HardLeft),
+        make_unique<variable_aim_test::VariableAimAndKillWithinTimeCheck>(
+            variable_aim_test::EnemyPos::TopRamp, variable_aim_test::EnemyMovement::Left,
+            variable_aim_test::AttackerInitialViewAngle::MidLeft),
+        make_unique<variable_aim_test::VariableAimAndKillWithinTimeCheck>(
+            variable_aim_test::EnemyPos::TopRamp, variable_aim_test::EnemyMovement::Left,
+            variable_aim_test::AttackerInitialViewAngle::MidRightUp),
+        make_unique<variable_aim_test::VariableAimAndKillWithinTimeCheck>(
+            variable_aim_test::EnemyPos::TopRamp, variable_aim_test::EnemyMovement::Left,
+            variable_aim_test::AttackerInitialViewAngle::MidRightDown),
+        make_unique<variable_aim_test::VariableAimAndKillWithinTimeCheck>(
+            variable_aim_test::EnemyPos::TopRamp, variable_aim_test::EnemyMovement::Right,
+            variable_aim_test::AttackerInitialViewAngle::HardLeft),
+        make_unique<variable_aim_test::VariableAimAndKillWithinTimeCheck>(
+            variable_aim_test::EnemyPos::TopRamp, variable_aim_test::EnemyMovement::Right,
+            variable_aim_test::AttackerInitialViewAngle::MidLeft),
+        make_unique<variable_aim_test::VariableAimAndKillWithinTimeCheck>(
+            variable_aim_test::EnemyPos::TopRamp, variable_aim_test::EnemyMovement::Right,
+            variable_aim_test::AttackerInitialViewAngle::MidRightUp),
+        make_unique<variable_aim_test::VariableAimAndKillWithinTimeCheck>(
+            variable_aim_test::EnemyPos::TopRamp, variable_aim_test::EnemyMovement::Right,
+            variable_aim_test::AttackerInitialViewAngle::MidRightDown)
+    ), true);
      /*
     // visualization scripts rather than actual tests
     ScriptsRunner scriptsRunner(Script::makeList(
@@ -111,8 +257,10 @@ int main(int argc, char * argv[]) {
             tree.tick(state, mapsPath);
             if (state.clients.size() > 0) {
                 //std::cout << "time since last save " << state.getSecondsBetweenTimes(start, priorStart) << std::endl;
-                scriptsRunner.initialize(tree, state);
-                finishedTests = scriptsRunner.tick(tree, state);
+                //scriptsRunner.initialize(tree, state);
+                //finishedTests = scriptsRunner.tick(tree, state);
+                scenarioRunner.initialize(tree, state);
+                finishedTests = scenarioRunner.tick(tree, state);
             }
             state.saveBotInputs();
         }

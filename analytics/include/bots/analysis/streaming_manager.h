@@ -14,6 +14,7 @@ public:
     StreamingBotDatabase db;
     csknow::fire_history::StreamingFireHistory streamingFireHistory;
     csknow::engagement_aim::StreamingEngagementAim streamingEngagementAim;
+    bool forceReset = false;
 
     StreamingManager(const string & navPath) : streamingEngagementAim(navPath) { }
     void update(const ServerState & state);

@@ -7,9 +7,10 @@
 void StreamingManager::update(const ServerState & state) {
     // if any client teleports, clear everyone's history
     for (const auto & client : state.clients) {
-        if (client.lastTeleportId != client.lastTeleportConfirmationId) {
+        if (client.lastTeleportId != client.lastTeleportConfirmationId || forceReset) {
             db.clear();
             streamingEngagementAim.reset();
+            forceReset = false;
             break;
         }
     }

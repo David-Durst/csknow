@@ -136,7 +136,7 @@ public:
             Node(blackboard, std::move(name)), targetIds(std::move(targetIds)), inputBits(inputBits) { };
     NodeState exec(const ServerState &, TreeThinker &treeThinker) override {
         for (size_t i = 0; i < targetIds.size(); i++) {
-            blackboard.playerToAction[targetIds[i]].buttons |= inputBits;
+            blackboard.playerToAction[targetIds[i]].buttons = inputBits;
         }
         playerNodeState[treeThinker.csgoId] = NodeState::Running;
         return playerNodeState[treeThinker.csgoId];
