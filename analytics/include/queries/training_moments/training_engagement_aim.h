@@ -72,6 +72,9 @@ public:
     vector<array<bool, TOTAL_AIM_TICKS>> victimVisible;
     vector<array<bool, TOTAL_AIM_TICKS>> victimVisibleYet;
     vector<array<bool, TOTAL_AIM_TICKS>> victimAlive;
+    vector<array<Vec2, TOTAL_AIM_TICKS>> victimMinViewAngle;
+    vector<array<Vec2, TOTAL_AIM_TICKS>> victimMaxViewAngle;
+    vector<array<Vec2, TOTAL_AIM_TICKS>> victimCurHeadViewAngle;
     vector<array<Vec2, TOTAL_AIM_TICKS>> victimRelativeFirstHeadMinViewAngle;
     vector<array<Vec2, TOTAL_AIM_TICKS>> victimRelativeFirstHeadMaxViewAngle;
     vector<array<Vec2, TOTAL_AIM_TICKS>> victimRelativeFirstHeadCurHeadViewAngle;
@@ -80,6 +83,7 @@ public:
     vector<array<Vec2, TOTAL_AIM_TICKS>> victimRelativeCurHeadCurHeadViewAngle;
     vector<array<Vec3, TOTAL_AIM_TICKS>> attackerEyePos;
     vector<array<Vec3, TOTAL_AIM_TICKS>> victimEyePos;
+    vector<array<Vec3, TOTAL_AIM_TICKS>> deltaEyePos;
     vector<array<Vec3, TOTAL_AIM_TICKS>> attackerVel;
     vector<array<Vec3, TOTAL_AIM_TICKS>> victimVel;
     vector<AimWeaponType> weaponType;
@@ -119,6 +123,9 @@ public:
                << "," << boolToInt(victimVisible[index][i])
                << "," << boolToInt(victimVisibleYet[index][i])
                << "," << boolToInt(victimAlive[index][i])
+               << "," << victimMinViewAngle[index][i].toCSV()
+               << "," << victimMaxViewAngle[index][i].toCSV()
+               << "," << victimCurHeadViewAngle[index][i].toCSV()
                << "," << victimRelativeFirstHeadMinViewAngle[index][i].toCSV()
                << "," << victimRelativeFirstHeadMaxViewAngle[index][i].toCSV()
                << "," << victimRelativeFirstHeadCurHeadViewAngle[index][i].toCSV()
@@ -127,6 +134,7 @@ public:
                << "," << victimRelativeCurHeadCurHeadViewAngle[index][i].toCSV()
                << "," << attackerEyePos[index][i].toCSV()
                << "," << victimEyePos[index][i].toCSV()
+               << "," << deltaEyePos[index][i].toCSV()
                << "," << attackerVel[index][i].toCSV()
                << "," << victimVel[index][i].toCSV();
         }
@@ -164,6 +172,12 @@ public:
             result.push_back("victim visible (t" + toSignedIntString(i, true) + ")");
             result.push_back("victim visible yet (t" + toSignedIntString(i, true) + ")");
             result.push_back("victim alive (t" + toSignedIntString(i, true) + ")");
+            result.push_back("victim min view angle x (t" + toSignedIntString(i, true) + ")");
+            result.push_back("victim min view angle y (t" + toSignedIntString(i, true) + ")");
+            result.push_back("victim max view angle x (t" + toSignedIntString(i, true) + ")");
+            result.push_back("victim max view angle y (t" + toSignedIntString(i, true) + ")");
+            result.push_back("victim cur head view angle x (t" + toSignedIntString(i, true) + ")");
+            result.push_back("victim cur head view angle y (t" + toSignedIntString(i, true) + ")");
             result.push_back("victim relative first head min view angle x (t" + toSignedIntString(i, true) + ")");
             result.push_back("victim relative first head min view angle y (t" + toSignedIntString(i, true) + ")");
             result.push_back("victim relative first head max view angle x (t" + toSignedIntString(i, true) + ")");
@@ -182,6 +196,9 @@ public:
             result.push_back("victim eye pos x (t" + toSignedIntString(i, true) + ")");
             result.push_back("victim eye pos y (t" + toSignedIntString(i, true) + ")");
             result.push_back("victim eye pos z (t" + toSignedIntString(i, true) + ")");
+            result.push_back("delta eye pos x (t" + toSignedIntString(i, true) + ")");
+            result.push_back("delta eye pos y (t" + toSignedIntString(i, true) + ")");
+            result.push_back("delta eye pos z (t" + toSignedIntString(i, true) + ")");
             result.push_back("attacker vel x (t" + toSignedIntString(i, true) + ")");
             result.push_back("attacker vel y (t" + toSignedIntString(i, true) + ")");
             result.push_back("attacker vel z (t" + toSignedIntString(i, true) + ")");
