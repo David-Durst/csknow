@@ -276,9 +276,10 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
                     tmpRecoilIndex[threadNum].back()[i] = playerAtTick.recoilIndex[attackerPATId];
 
                     // mul recoil by -1 as flipping all angles internally
+                    // DON'T DO THIS, MAKES CALCULATIONS A PAIN
                     Vec2 recoil {
                         playerAtTick.aimPunchX[attackerPATId],
-                        -1 * playerAtTick.aimPunchY[attackerPATId]
+                        playerAtTick.aimPunchY[attackerPATId]
                     };
 
                     tmpScaledRecoilAngle[threadNum].back()[i] = recoil * WEAPON_RECOIL_SCALE;
@@ -351,10 +352,8 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
                             deltaViewFromOriginToDest(attackerEyePos,
                                                       victimHeadPos,
                                                       aabbViewAngle);
-                        Vec2 flippedYViewAngle = aabbViewAngle;
-                        flippedYViewAngle.y *= -1;
-                        victimMinViewAngle = min(victimMinViewAngle, flippedYViewAngle);
-                        victimMaxViewAngle = max(victimMaxViewAngle, flippedYViewAngle);
+                        victimMinViewAngle = min(victimMinViewAngle, aabbViewAngle);
+                        victimMaxViewAngle = max(victimMaxViewAngle, aabbViewAngle);
                         victimMinViewAngleFirstHead = min(victimMinViewAngleFirstHead, deltaAABBViewAngleFirstHead);
                         victimMaxViewAngleFirstHead = max(victimMaxViewAngleFirstHead, deltaAABBViewAngleFirstHead);
                         victimMinViewAngleCur = min(victimMinViewAngleCur, deltaAABBViewAngleCur);
@@ -364,7 +363,6 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
                     tmpVictimMinViewAngle[threadNum].back()[i] = victimMinViewAngle;
                     tmpVictimMaxViewAngle[threadNum].back()[i] = victimMaxViewAngle;
                     tmpVictimCurHeadAngle[threadNum].back()[i] = idealViewAngle;
-                    tmpVictimCurHeadAngle[threadNum].back()[i].y *= -1;
                     tmpVictimRelativeFirstHeadMinViewAngle[threadNum].back()[i] = victimMinViewAngleFirstHead;
                     tmpVictimRelativeFirstHeadMaxViewAngle[threadNum].back()[i] = victimMaxViewAngleFirstHead;
                     tmpVictimRelativeFirstHeadCurHeadAngle[threadNum].back()[i] =

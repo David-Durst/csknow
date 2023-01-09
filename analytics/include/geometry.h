@@ -213,7 +213,8 @@ Vec2 deltaViewFromOriginToDest(Vec3 origin, Vec3 dest, Vec2 curViewAngle) {
     // want to be + if too large, - if too small, so do current - target
     Vec2 deltaViewAngle = curViewAngle - targetViewAngle;
     // invert so bigger pitch is aiming up
-    deltaViewAngle.y *= -1;
+    // DON'T DO THIS, IT MAKES CALCULATIONS A PAIN
+    // deltaViewAngle.y *= -1;
     deltaViewAngle.makePitchNeg90To90();
     deltaViewAngle.makeYawNeg180To180();
     return deltaViewAngle;
