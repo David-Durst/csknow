@@ -72,7 +72,7 @@ bool Script::tick(Tree & tree, ServerState & state) {
     NodeState conditionResult = commands->exec(state, defaultThinker);
 
     for (auto & client : state.clients) {
-        if (!client.isAlive || !client.isBot) {
+        if (!client.isAlive) {
             continue;
         }
         const Action & clientAction = tree.blackboard->playerToAction[client.csgoId];
