@@ -48,10 +48,11 @@ class PerspectiveColumns:
     recoil_x_column: str
     recoil_y_column: str
 
-    def __init__(self, x_col, victim_min_view_angle_x_col, recoil_x_col):
+    def __init__(self, x_col, y_col, victim_min_view_angle_x_col, victim_min_view_angle_y_col, recoil_x_col):
         x_col_offset = base_vis_float_columns.index(x_col)
-        y_col_offset = x_col_offset + 1
+        y_col_offset = base_vis_float_columns.index(y_col)
         victim_min_view_angle_x_offset = base_vis_float_columns.index(victim_min_view_angle_x_col)
+        victim_min_view_angle_y_offset = base_vis_float_columns.index(victim_min_view_angle_y_col)
         recoil_offset = base_vis_float_columns.index(recoil_x_col)
 
         self.base_cur_view_angle_x_column = base_vis_float_columns[x_col_offset]
@@ -65,15 +66,15 @@ class PerspectiveColumns:
         self.victim_min_view_angle_x_column = \
             temporal_vis_float_column_names.present_columns[victim_min_view_angle_x_offset]
         self.victim_min_view_angle_y_column = \
-            temporal_vis_float_column_names.present_columns[victim_min_view_angle_x_offset + 1]
+            temporal_vis_float_column_names.present_columns[victim_min_view_angle_y_offset]
         self.victim_max_view_angle_x_column = \
             temporal_vis_float_column_names.present_columns[victim_min_view_angle_x_offset + 2]
         self.victim_max_view_angle_y_column = \
-            temporal_vis_float_column_names.present_columns[victim_min_view_angle_x_offset + 3]
+            temporal_vis_float_column_names.present_columns[victim_min_view_angle_y_offset + 2]
         self.victim_cur_head_view_angle_x_column = \
             temporal_vis_float_column_names.present_columns[victim_min_view_angle_x_offset + 4]
         self.victim_cur_head_view_angle_y_column = \
-            temporal_vis_float_column_names.present_columns[victim_min_view_angle_x_offset + 5]
+            temporal_vis_float_column_names.present_columns[victim_min_view_angle_y_offset + 4]
         self.recoil_x_column = \
             temporal_vis_float_column_names.present_columns[recoil_offset]
         self.recoil_y_column = \

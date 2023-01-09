@@ -12,11 +12,17 @@ base_ticks_since_last_fire_column = "ticks since last fire"
 base_ticks_since_last_attack_column = "ticks since last holding attack"
 
 base_abs_x_pos_column = "delta relative first head view angle x"
-base_abs_y_pos_column = "delta relative first head view angle y"
+base_abs_y_pos_column = "attacker view angle y"
 base_relative_x_pos_column = "delta relative cur head view angle x"
 base_relative_y_pos_column = "delta relative cur head view angle y"
 base_recoil_x_column = "scaled recoil angle x"
 base_recoil_y_column = "scaled recoil angle y"
+base_victim_aabb_min_x = "victim min view angle x"
+base_victim_aabb_max_x = "victim max view angle x"
+base_victim_head_x = "victim cur head view angle x"
+base_victim_aabb_min_y = "victim min view angle y"
+base_victim_aabb_max_y = "victim max view angle y"
+base_victim_head_y = "victim cur head view angle y"
 base_victim_abs_aabb_min_x = "victim relative first head min view angle x"
 base_victim_abs_aabb_max_x = "victim relative first head max view angle x"
 base_victim_abs_head_x = "victim relative first head cur head view angle x"
@@ -40,6 +46,9 @@ base_vis_float_columns: List[str] = ["attacker view angle x", "attacker view ang
                                      "scaled recoil angle x", "scaled recoil angle y",
                                      "ticks since last fire", "ticks since last holding attack",
                                      "victim visible", "victim visible yet", "victim alive",
+                                     "victim min view angle x", "victim min view angle y",
+                                     "victim max view angle x", "victim max view angle y",
+                                     "victim cur head view angle x", "victim cur head view angle y",
                                      "victim relative first head min view angle x", "victim relative first head min view angle y",
                                      "victim relative first head max view angle x", "victim relative first head max view angle y",
                                      "victim relative first head cur head view angle x", "victim relative first head cur head view angle y",
@@ -55,17 +64,13 @@ temporal_vis_float_column_names = TemporalIOColumnNames(base_vis_float_columns, 
 
 base_learning_float_standard_columns: List[str] = [
     "hit victim",
-    "recoil index",
     "ticks since last fire", "ticks since last holding attack",
     "victim visible", "victim visible yet", "victim alive",
     "attacker eye pos x", "attacker eye pos y", "attacker eye pos z",
-    "victim eye pos x", "victim eye pos y", "victim eye pos z",
-    "attacker vel x", "attacker vel y", "attacker vel z",
-    "victim vel x", "victim vel y", "victim vel z"
+    "victim eye pos x", "victim eye pos y", "victim eye pos z"
 ]
 
 base_learning_float_180_angle_columns: List[str] = [
-    "ideal view angle x",
     "delta relative first head view angle x",
     "scaled recoil angle x",
     "victim relative first head min view angle x",
@@ -74,12 +79,11 @@ base_learning_float_180_angle_columns: List[str] = [
 ]
 
 base_learning_float_90_angle_columns: List[str] = [
-    "ideal view angle y",
-    "delta relative first head view angle y",
+    "attacker view angle y",
     "scaled recoil angle y",
-    "victim relative first head min view angle y",
-    "victim relative first head max view angle y",
-    "victim relative first head cur head view angle y"
+    "victim min view angle y",
+    "victim max view angle y",
+    "victim cur head view angle y"
 ]
 
 # some columns only used for output, not input features
@@ -124,7 +128,7 @@ output_relative_y_cols = temporal_io_float_90_angle_column_names.get_matching_co
 output_ref_x_col = get_temporal_field_str(base_abs_x_pos_column, -1)
 output_ref_y_col = get_temporal_field_str(base_abs_y_pos_column, -1)
 output_target_x_cols = temporal_io_float_180_angle_column_names.get_matching_cols(base_victim_abs_head_x, False, True, True)
-output_target_y_cols = temporal_io_float_90_angle_column_names.get_matching_cols(base_victim_abs_head_y, False, True, True)
+output_target_y_cols = temporal_io_float_90_angle_column_names.get_matching_cols(base_victim_head_y, False, True, True)
 output_delta_x = [DeltaColumn(c_rel, output_ref_x_col, c_target) for c_rel, c_target in zip(output_relative_x_cols, output_target_x_cols)]
 output_delta_y = [DeltaColumn(c_rel, output_ref_y_col, c_target) for c_rel, c_target in zip(output_relative_y_cols, output_target_y_cols)]
 output_standard_cols = temporal_o_float_column_names.get_matching_cols("ticks until", False, True, True)

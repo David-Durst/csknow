@@ -38,8 +38,12 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame = None):
     window.configure(background='grey')
 
     # columns for reading data
-    first_tick_columns = PerspectiveColumns(base_abs_x_pos_column, base_victim_abs_aabb_min_x, base_recoil_x_column)
-    cur_hit_columns = PerspectiveColumns(base_relative_x_pos_column, base_victim_relative_aabb_min_x, base_recoil_x_column)
+    first_tick_columns = PerspectiveColumns(base_abs_x_pos_column, base_abs_y_pos_column,
+                                            base_victim_abs_aabb_min_x, base_victim_aabb_min_y,
+                                            base_recoil_x_column)
+    cur_hit_columns = PerspectiveColumns(base_relative_x_pos_column, base_relative_y_pos_column,
+                                         base_victim_relative_aabb_min_x, base_victim_relative_aabb_min_y,
+                                         base_recoil_x_column)
 
     # create axes and their objects
     first_tick_title_suffix = " Relative To First Enemy Head"
