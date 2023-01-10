@@ -25,23 +25,24 @@ class AttackerVictimCoordinateColumns:
     victim_aabb_head_y: str
 
 
+base_changed_offset_coordinates = AttackerVictimCoordinateColumns(
+    "delta relative first head view angle x", "victim relative first head min view angle x",
+    "victim relative first head max view angle x", "victim relative first head cur head view angle x",
+    "delta relative first head view angle y", "victim relative first head min view angle y",
+    "victim relative first head max view angle y", "victim relative first head cur head view angle y",
+)
+
 base_engine_coordinates = AttackerVictimCoordinateColumns(
     "attacker view angle x", "victim min view angle x", "victim max view angle x", "victim cur head view angle x",
     "attacker view angle y", "victim min view angle y", "victim max view angle x", "victim cur head view angle x"
 )
 
-base_changed_offset_coordinates = AttackerVictimCoordinateColumns(
-    "delta relative first head view angle x", "victim relative first head min view angle x",
-    "victim relative first head max view angle x", "victim relative first head cur head view angle x",
-    "delta relative first head view angle y", "victim relative first head min view angle y",
-    "victim relative first head may view angle y", "victim relative first head cur head view angle y",
-)
 
 base_relative_coordinates = AttackerVictimCoordinateColumns(
     "delta relative cur head view angle x", "victim relative cur head min view angle x",
     "victim relative cur head max view angle x", "victim relative cur head cur head view angle x",
     "delta relative cur head view angle y", "victim relative cur head min view angle y",
-    "victim relative cur head may view angle y", "victim relative cur head cur head view angle y",
+    "victim relative cur head max view angle y", "victim relative cur head cur head view angle y",
 )
 
 base_recoil_x_column = "scaled recoil angle x"

@@ -1,9 +1,11 @@
+from enum import Enum
+
 import pandas as pd
 
 from learn_bot.engagement_aim.vis.distributions import plot_distributions
 from learn_bot.engagement_aim.vis.vis_similar_trajectories import SimilarityConstraints, SimilarTrajectory, \
     find_similar_trajectories, plot_similar_trajectories_next_movement
-from learn_bot.engagement_aim.vis.vis_ax_objs import PerspectiveColumns, AxObjs
+from learn_bot.engagement_aim.vis.vis_ax_objs import PerspectiveColumns, AxObjs, ColumnReference
 from learn_bot.libs.df_grouping import make_index_column
 from learn_bot.engagement_aim.dataset import *
 import tkinter as tk
@@ -38,23 +40,19 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame = None):
     window.configure(background='grey')
 
     # columns for reading data
-    first_tick_columns = PerspectiveColumns(base_changed_offset_coordinates.attacker_x_view_angle,
-                                            base_changed_offset_coordinates.attacker_y_view_angle,
-                                            base_changed_offset_coordinates.victim_aabb_min_x,
-                                            base_changed_offset_coordinates.victim_aabb_min_y,
-                                            base_recoil_x_column)
-    cur_hit_columns = PerspectiveColumns(base_relative_coordinates.attacker_x_view_angle,
-                                         base_relative_coordinates.attacker_y_view_angle,
-                                         base_relative_coordinates.victim_aabb_min_x,
-                                         base_relative_coordinates.victim_aabb_min_y,
-                                         base_recoil_x_column)
+    first_tick_columns = PerspectiveColumns(base_changed_offset_coordinates, base_recoil_x_column)
+    engine_columns = PerspectiveColumns(base_engine_coordinates, base_recoil_x_column)
+    cur_tick_columns = PerspectiveColumns(base_relative_coordinates, base_recoil_x_column)
 
     # create axes and their objects
     first_tick_title_suffix = " Relative To First Enemy Head"
+    engine_title_suffix = " Relative To Cur Enemy Head"
     cur_pos_title_suffix = " Relative To Cur Enemy Head"
-    first_tick_x_label = "Yaw (deg)"
+    first_tick_x_label = "Yaw (deg, changed offset)"
+    engine_x_label = "Yaw (deg)"
     cur_pos_x_label = "Yaw Delta (deg)"
-    first_tick_y_label = "Pitch (deg)"
+    first_tick_y_label = "Pitch (deg changed offset)"
+    engine_y_label = "Pitch (deg)"
     cur_pos_y_label = "Pitch Delta (deg)"
     def setPosAxSettings(ax: plt.Axes, title: str):
         ax.base_title = title + " Pos"
@@ -86,10 +84,10 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame = None):
         pred_speed_ax = fig.add_subplot(spec[3])
         setPosAxSettings(pred_pos_ax, "Prediction Aim")
         setSpeedAxSettings(pred_speed_ax, "Prediction Aim")
-        pred_ax_objs = AxObjs(True, fig, pred_pos_ax, pred_speed_ax, first_tick_columns, cur_hit_columns)
+        pred_ax_objs = AxObjs(True, fig, pred_pos_ax, pred_speed_ax, first_tick_columns, engine_columns, cur_tick_columns)
     setPosAxSettings(input_pos_ax, "Input Aim")
     setSpeedAxSettings(input_speed_ax, "Input Aim")
-    input_ax_objs = AxObjs(False, fig, input_pos_ax, input_speed_ax, first_tick_columns, cur_hit_columns)
+    input_ax_objs = AxObjs(False, fig, input_pos_ax, input_speed_ax, first_tick_columns, engine_columns, cur_tick_columns)
 
     canvas = FigureCanvasTkAgg(fig, master=window)  # A tk.DrawingArea.
     canvas.draw()
@@ -141,11 +139,16 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame = None):
         tick_id_text_var.set("Tick ID: " + str(cur_tick))
         tick_demo_id_text_var.set("Demo Tick ID: " + str(cur_demo_tick))
         tick_game_id_text_var.set("Game Tick ID: " + str(cur_game_tick))
-        input_ax_objs.update_aim_plot(selected_df, cur_tick, canvas, first_tick_view_angle_reference)
+        input_ax_objs.update_aim_plot(selected_df, cur_tick, canvas, column_reference)
         if pred_df is not None:
-            pred_ax_objs.update_aim_plot(pred_selected_df, cur_tick, canvas, first_tick_view_angle_reference)
+            pred_ax_objs.update_aim_plot(pred_selected_df, cur_tick, canvas, column_reference)
         cur_row = selected_df.loc[cur_index, :]
-        columns = first_tick_columns if first_tick_view_angle_reference else cur_hit_columns
+        if column_reference == ColumnReference.FIRST_TICK:
+            columns = first_tick_columns
+        elif column_reference == ColumnReference.ENGINE:
+            columns = engine_columns
+        else:
+            columns = cur_tick_columns
         engagement_id_text_var.set(f"Round ID: {int(cur_row.loc['round id'])}, "
                                    f"Engagement ID: {int(cur_engagement)}")
         text_data_text_var.set(f"attacker: {int(cur_row.loc['attacker player id'].item())}, "
@@ -211,11 +214,11 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame = None):
             tick_slider.set(cur_tick_index)
             tick_slider_changed(cur_tick_index)
 
-    first_tick_view_angle_reference = True
+    column_reference: ColumnReference = ColumnReference.FIRST_TICK
     def toggle_reference_clicked():
-        nonlocal first_tick_view_angle_reference
-        first_tick_view_angle_reference = not first_tick_view_angle_reference
-        if first_tick_view_angle_reference:
+        nonlocal column_reference
+        column_reference = ColumnReference((column_reference.value + 1) % len(ColumnReference))
+        if column_reference == ColumnReference.FIRST_TICK:
             input_pos_ax.set_title(input_pos_ax.base_title + first_tick_title_suffix)
             input_pos_ax.set_xlabel(first_tick_x_label)
             input_pos_ax.set_ylabel(first_tick_y_label)
@@ -223,6 +226,14 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame = None):
                 pred_pos_ax.set_title(pred_pos_ax.base_title + first_tick_title_suffix)
                 pred_pos_ax.set_xlabel(first_tick_x_label)
                 pred_pos_ax.set_ylabel(first_tick_y_label)
+        elif column_reference == ColumnReference.ENGINE:
+            input_pos_ax.set_title(input_pos_ax.base_title + engine_title_suffix)
+            input_pos_ax.set_xlabel(engine_x_label)
+            input_pos_ax.set_ylabel(engine_y_label)
+            if pred_df is not None:
+                pred_pos_ax.set_title(pred_pos_ax.base_title + engine_title_suffix)
+                pred_pos_ax.set_xlabel(engine_x_label)
+                pred_pos_ax.set_ylabel(engine_y_label)
         else:
             input_pos_ax.set_title(input_pos_ax.base_title + cur_pos_title_suffix)
             input_pos_ax.set_xlabel(cur_pos_x_label)
