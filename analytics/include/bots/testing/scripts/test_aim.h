@@ -304,6 +304,7 @@ namespace variable_aim_test {
                                                          //make_unique<ResetAimController>(blackboard),
                                                          //std::move(movingAimBufferFill),
                                                          make_unique<SayIf>(blackboard, humanAttacker, "move mouse"),
+                                                         make_unique<PrintAim>(blackboard, 128),
                                                          make_unique<ParallelFirstNode>(blackboard, Node::makeList(
                                                                                             make_unique<KilledAfterTime>(blackboard, neededBots[0].id, neededBots[1].id, 0.1),
                                                                                             make_unique<ForceActionsNode>(blackboard, vector{neededBots[1].id}, inputBits),

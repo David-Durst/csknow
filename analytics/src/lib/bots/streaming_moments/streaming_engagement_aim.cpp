@@ -395,11 +395,10 @@ namespace csknow::engagement_aim {
                     numSkips++;
                 }
                  */
-                //bool loggedClient = curState.getClient(orderedAttackerIds[i]).name == "Matt";
                 //EngagementAimTickData & priorTickData = engagementAimPlayerHistory.clientHistory.at(orderedAttackerIds[i])
                 //    .fromNewest(1);
                 //if (newestTickData.deltaRelativeFirstHeadViewAngle == priorTickData.deltaRelativeFirstHeadViewAngle) {
-                /*
+                bool loggedClient = curState.getClient(orderedAttackerIds[i]).name == "Yahn";
                 if (loggedClient && printAimTicks > 0) {
                     std::cout << curState.getClient(orderedAttackerIds[i]).name << std::endl;
                     std::cout << curState.getClient(orderedAttackerIds[i]).getCurrentViewAngles().toString() << std::endl;
@@ -413,9 +412,9 @@ namespace csknow::engagement_aim {
                     //print2DTensor(tmpTensor);
                     std::cout << outputViewAngle.toString() << std::endl;
                     std::cout << deltaViewAngle.toString() << std::endl;
-                    std::cout << output[0].size(0) / 2 << std::endl;
+                    std::cout << output[i][output[0].size(0) * 2 / 3].item<float>() << std::endl;
+                    std::cout << output[0].size(0) / 3 << std::endl;
                 }
-                 */
                 // flip y axis to go back to game coordinates
                 playerToDeltaAngle[orderedAttackerIds[i]] = deltaViewAngle;
                 playerToNewAngle[orderedAttackerIds[i]] = outputViewAngle;
@@ -429,11 +428,9 @@ namespace csknow::engagement_aim {
                 }
             }
         }
-        /*
         if (printAimTicks > 0) {
             printAimTicks--;
         }
-         */
     }
 
     void StreamingEngagementAim::addTickData(StreamingBotDatabase & db,
