@@ -39,7 +39,7 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame = None):
 
     # columns for reading data
     first_tick_columns = PerspectiveColumns(base_abs_x_pos_column, base_abs_y_pos_column,
-                                            base_victim_abs_aabb_min_x, base_victim_aabb_min_y,
+                                            base_victim_abs_aabb_min_x, base_victim_abs_aabb_min_y,
                                             base_recoil_x_column)
     cur_hit_columns = PerspectiveColumns(base_relative_x_pos_column, base_relative_y_pos_column,
                                          base_victim_relative_aabb_min_x, base_victim_relative_aabb_min_y,
@@ -58,7 +58,6 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame = None):
         ax.set_xlabel(first_tick_x_label)
         ax.set_ylabel(first_tick_y_label)
         ax.set_aspect('equal', adjustable='box')
-        ax.invert_xaxis()
 
     def setSpeedAxSettings(ax: plt.Axes, title: str):
         ax.set_title(title + " Speed")

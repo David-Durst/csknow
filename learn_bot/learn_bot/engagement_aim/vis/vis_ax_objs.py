@@ -376,7 +376,7 @@ class AxObjs:
             y_max += range_diff / 2.
         # inverted xaxis so need to flip
         self.pos_ax.set_xlim(x_max, x_min)
-        self.pos_ax.set_ylim(y_min, y_max)
+        self.pos_ax.set_ylim(y_max, y_min)
 
         # rescale speed axis, just make 0 is start
         self.speed_ax.relim()

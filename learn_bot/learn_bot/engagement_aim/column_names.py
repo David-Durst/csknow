@@ -12,7 +12,7 @@ base_ticks_since_last_fire_column = "ticks since last fire"
 base_ticks_since_last_attack_column = "ticks since last holding attack"
 
 base_abs_x_pos_column = "delta relative first head view angle x"
-base_abs_y_pos_column = "attacker view angle y"
+base_abs_y_pos_column = "delta relative first head view angle y"#"attacker view angle y"
 base_relative_x_pos_column = "delta relative cur head view angle x"
 base_relative_y_pos_column = "delta relative cur head view angle y"
 base_recoil_x_column = "scaled recoil angle x"
