@@ -38,11 +38,15 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame = None):
     window.configure(background='grey')
 
     # columns for reading data
-    first_tick_columns = PerspectiveColumns(base_abs_x_pos_column, base_abs_y_pos_column,
-                                            base_victim_abs_aabb_min_x, base_victim_abs_aabb_min_y,
+    first_tick_columns = PerspectiveColumns(base_changed_offset_coordinates.attacker_x_view_angle,
+                                            base_changed_offset_coordinates.attacker_y_view_angle,
+                                            base_changed_offset_coordinates.victim_aabb_min_x,
+                                            base_changed_offset_coordinates.victim_aabb_min_y,
                                             base_recoil_x_column)
-    cur_hit_columns = PerspectiveColumns(base_relative_x_pos_column, base_relative_y_pos_column,
-                                         base_victim_relative_aabb_min_x, base_victim_relative_aabb_min_y,
+    cur_hit_columns = PerspectiveColumns(base_relative_coordinates.attacker_x_view_angle,
+                                         base_relative_coordinates.attacker_y_view_angle,
+                                         base_relative_coordinates.victim_aabb_min_x,
+                                         base_relative_coordinates.victim_aabb_min_y,
                                          base_recoil_x_column)
 
     # create axes and their objects

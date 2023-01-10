@@ -12,11 +12,9 @@ import numpy.typing as npt
 import tkinter as tk
 from tkinter import ttk
 
-from learn_bot.engagement_aim.dataset import base_abs_x_pos_column, base_abs_y_pos_column, base_hit_victim_column, \
-    base_ticks_since_last_fire_column, base_relative_x_pos_column, base_recoil_x_column, base_relative_y_pos_column, \
-    base_recoil_y_column, base_victim_relative_aabb_max_y, base_victim_relative_aabb_min_y, \
-    base_victim_relative_aabb_max_x, base_victim_relative_aabb_min_x, base_ticks_since_last_attack_column, \
-    base_victim_abs_head_x, base_victim_abs_head_y
+from learn_bot.engagement_aim.dataset import  base_hit_victim_column, \
+    base_ticks_since_last_fire_column, base_recoil_x_column, base_recoil_y_column, \
+    base_ticks_since_last_attack_column, base_changed_offset_coordinates
 from learn_bot.engagement_aim.output_plotting import filter_df, filter_df_2d
 from learn_bot.engagement_aim.vis.child_window import ChildWindow
 from learn_bot.engagement_aim.vis.vis_similar_trajectories import compute_position_difference, default_speed_ticks, \
@@ -50,13 +48,15 @@ def compute_mouse_movement_bins(data_df: pd.DataFrame) -> MovementBins:
     movement_df = data_df.copy()
 
     # compute speed
-    compute_position_difference(movement_df, base_abs_x_pos_column, base_abs_y_pos_column, speed_col,
+    compute_position_difference(movement_df, base_changed_offset_coordinates.attacker_x_view_angle,
+                                base_changed_offset_coordinates.attacker_y_view_angle, speed_col,
                                 -1 * default_speed_ticks, 0)
     speed_filtered_movement_df = filter_df(movement_df, speed_col, 0., 0.05)
     _, speed_bins = np.histogram(speed_filtered_movement_df[speed_col].to_numpy(), bins=100, range=(0., 2.5))
 
     # compute accel
-    compute_position_difference(movement_df, base_abs_x_pos_column, base_abs_y_pos_column, prior_speed_col,
+    compute_position_difference(movement_df, base_changed_offset_coordinates.attacker_x_view_angle,
+                                base_changed_offset_coordinates.attacker_y_view_angle, prior_speed_col,
                                 -2 * default_speed_ticks, -1 * default_speed_ticks)
     movement_df[accel_col] = movement_df[speed_col] - movement_df[prior_speed_col]
     accel_filtered_movement_df = filter_df(movement_df, accel_col, 0.025, 0.025)
@@ -105,19 +105,19 @@ relative_x_pos_with_recoil_column = "relative x pos with recoil"
 relative_y_pos_with_recoil_column = "relative y pos with recoil"
 def compute_normalized_with_recoil(data_df: pd.DataFrame):
     data_df[relative_x_pos_with_recoil_column] = \
-        data_df[get_temporal_field_str(base_abs_x_pos_column, 0)] - \
-        data_df[get_temporal_field_str(base_victim_abs_head_x, 0)] + \
+        data_df[get_temporal_field_str(base_changed_offset_coordinates.attacker_x_view_angle, 0)] - \
+        data_df[get_temporal_field_str(base_changed_offset_coordinates.victim_aabb_head_x, 0)] + \
         data_df[get_temporal_field_str(base_recoil_x_column, 0)]
     data_df[relative_y_pos_with_recoil_column] = \
-        data_df[get_temporal_field_str(base_relative_y_pos_column, 0)] - \
-        data_df[get_temporal_field_str(base_victim_abs_head_y, 0)] + \
+        data_df[get_temporal_field_str(base_changed_offset_coordinates.attacker_y_view_angle, 0)] - \
+        data_df[get_temporal_field_str(base_changed_offset_coordinates.victim_aabb_head_y, 0)] + \
         data_df[get_temporal_field_str(base_recoil_y_column, 0)]
 
     normalize_columns(data_df, relative_x_pos_with_recoil_column, relative_y_pos_with_recoil_column,
-                      get_temporal_field_str(base_victim_relative_aabb_min_x, 0),
-                      get_temporal_field_str(base_victim_relative_aabb_min_y, 0),
-                      get_temporal_field_str(base_victim_relative_aabb_max_x, 0),
-                      get_temporal_field_str(base_victim_relative_aabb_max_y, 0))
+                      get_temporal_field_str(base_changed_offset_coordinates.victim_aabb_min_x, 0),
+                      get_temporal_field_str(base_changed_offset_coordinates.victim_aabb_min_y, 0),
+                      get_temporal_field_str(base_changed_offset_coordinates.victim_aabb_max_x, 0),
+                      get_temporal_field_str(base_changed_offset_coordinates.victim_aabb_max_y, 0))
 
 
 def compute_hit_fire_attack_bins(data_df: pd.DataFrame) -> HitFireAttackBins:

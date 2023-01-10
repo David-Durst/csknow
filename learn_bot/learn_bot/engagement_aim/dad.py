@@ -21,11 +21,11 @@ from learn_bot.libs.df_grouping import get_row_as_dict_loc
 # generate the input tensor for the next policy iteration
 # create the dict for inserting a new training data point into the data frame
 def get_x_field_str(tick: int = -1):
-    return get_temporal_field_str(base_abs_x_pos_column, tick)
+    return get_temporal_field_str(base_changed_offset_coordinates.attacker_x_view_angle, tick)
 
 
 def get_y_field_str(tick: int = -1):
-    return get_temporal_field_str(base_abs_y_pos_column, tick)
+    return get_temporal_field_str(base_changed_offset_coordinates.attacker_y_view_angle, tick)
 
 def get_holding_attack_field_str(tick: int = -1):
     return get_temporal_field_str(base_holding_attack, tick)

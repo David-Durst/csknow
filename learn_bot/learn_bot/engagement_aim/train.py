@@ -302,8 +302,10 @@ def train(all_data_df: pd.DataFrame, dad_iters=4, num_off_policy_epochs=5, num_s
 
 if __name__ == "__main__":
     all_data_df = pd.read_csv(data_path)
-    all_data_df[target_o_float_columns[0]] = all_data_df[get_temporal_field_str(base_abs_x_pos_column, FUTURE_TICKS)]
-    all_data_df[target_o_float_columns[1]] = all_data_df[get_temporal_field_str(base_abs_y_pos_column, FUTURE_TICKS)]
+    all_data_df[target_o_float_columns[0]] = \
+        all_data_df[get_temporal_field_str(base_changed_offset_coordinates.attacker_x_view_angle, FUTURE_TICKS)]
+    all_data_df[target_o_float_columns[1]] = \
+        all_data_df[get_temporal_field_str(base_changed_offset_coordinates.attacker_y_view_angle, FUTURE_TICKS)]
     #all_data_df = all_data_df[(all_data_df[weapon_type_col] == 3) & (all_data_df[cur_victim_visible_yet_column] == 1.)]
     train_result = train(all_data_df, dad_iters=1, num_off_policy_epochs=5, num_scheduled_sampling_epochs=5,
                          num_on_policy_epochs=20)

@@ -1,18 +1,20 @@
 import torch
 from torch import nn
 
-from learn_bot.engagement_aim.column_names import base_abs_x_pos_column, base_abs_y_pos_column
+from learn_bot.engagement_aim.column_names import base_changed_offset_coordinates
 from learn_bot.engagement_aim.io_transforms import IOColumnTransformers, FUTURE_TICKS, CUR_TICK, PRIOR_TICKS, \
     PRIOR_TICKS_POS
 from learn_bot.libs.temporal_column_names import get_temporal_field_str
 from dataclasses import dataclass
 import random
 
-input_names_x = [get_temporal_field_str(base_abs_x_pos_column, i) for i in range(PRIOR_TICKS, 0)]
-input_names_y = [get_temporal_field_str(base_abs_y_pos_column, i) for i in range(PRIOR_TICKS, 0)]
+input_names_x = [get_temporal_field_str(base_changed_offset_coordinates.attacker_x_view_angle, i)
+                 for i in range(PRIOR_TICKS, 0)]
+input_names_y = [get_temporal_field_str(base_changed_offset_coordinates.attacker_y_view_angle, i)
+                 for i in range(PRIOR_TICKS, 0)]
 rolling_input_names = input_names_x + input_names_y
-newest_input_names = [get_temporal_field_str(base_abs_x_pos_column, -1),
-                      get_temporal_field_str(base_abs_y_pos_column, -1)]
+newest_input_names = [get_temporal_field_str(base_changed_offset_coordinates.attacker_x_view_angle, -1),
+                      get_temporal_field_str(base_changed_offset_coordinates.attacker_y_view_angle, -1)]
 
 
 class BlendAmount:

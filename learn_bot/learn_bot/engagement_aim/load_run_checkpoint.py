@@ -1,7 +1,7 @@
 import pandas as pd
 import torch
 
-from learn_bot.engagement_aim.column_names import target_o_float_columns, base_abs_x_pos_column, base_abs_y_pos_column, \
+from learn_bot.engagement_aim.column_names import target_o_float_columns, base_changed_offset_coordinates, \
     input_column_types, output_column_types, all_time_column_types, engagement_id_column
 from learn_bot.engagement_aim.dad import on_policy_inference
 from learn_bot.engagement_aim.dataset import data_path, AimDataset, manual_data_path
@@ -47,8 +47,10 @@ if __name__ == "__main__":
     else:
         all_data_df = pd.read_csv(manual_data_path)
 
-    all_data_df[target_o_float_columns[0]] = all_data_df[get_temporal_field_str(base_abs_x_pos_column, FUTURE_TICKS)]
-    all_data_df[target_o_float_columns[1]] = all_data_df[get_temporal_field_str(base_abs_y_pos_column, FUTURE_TICKS)]
+    all_data_df[target_o_float_columns[0]] = \
+        all_data_df[get_temporal_field_str(base_changed_offset_coordinates.attacker_x_view_angle, FUTURE_TICKS)]
+    all_data_df[target_o_float_columns[1]] = \
+        all_data_df[get_temporal_field_str(base_changed_offset_coordinates.attacker_y_view_angle, FUTURE_TICKS)]
 
     #load_result = load_model_file(all_data_df, "model_off_2_scheduled_0_on_0_dad_0.pt")
     load_result = load_model_file(all_data_df, "model_off_5_scheduled_5_on_20_dad_1.pt")
