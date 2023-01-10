@@ -3,7 +3,7 @@
 //
 #include "bots/input_bits.h"
 #include "bots/behavior_tree/action/action_node.h"
-constexpr bool learned_firing = false;
+constexpr bool learned_firing = true;
 
 namespace action {
     // const set<int32_t> scopedWeaponIds{AWP_ID, GSG_ID, SCAR_ID, SCOUT_ID};

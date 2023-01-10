@@ -76,12 +76,15 @@ int main(int argc, char * argv[]) {
                  */
     ), true);
     ScriptsRunner scenarioRunner(Script::makeList(
+        /*
         make_unique<variable_aim_test::VariableAimAndKillWithinTimeCheck>(
             variable_aim_test::EnemyPos::Close, variable_aim_test::EnemyMovement::None,
             variable_aim_test::AttackerInitialViewAngle::HardLeft, false),
+            */
         make_unique<variable_aim_test::VariableAimAndKillWithinTimeCheck>(
             variable_aim_test::EnemyPos::Close, variable_aim_test::EnemyMovement::None,
-            variable_aim_test::AttackerInitialViewAngle::MidLeft, false),
+            variable_aim_test::AttackerInitialViewAngle::MidLeft, false)
+        /*
         make_unique<variable_aim_test::VariableAimAndKillWithinTimeCheck>(
             variable_aim_test::EnemyPos::Close, variable_aim_test::EnemyMovement::None,
             variable_aim_test::AttackerInitialViewAngle::MidRightUp, false),
@@ -220,7 +223,8 @@ int main(int argc, char * argv[]) {
         make_unique<variable_aim_test::VariableAimAndKillWithinTimeCheck>(
             variable_aim_test::EnemyPos::TopRamp, variable_aim_test::EnemyMovement::Right,
             variable_aim_test::AttackerInitialViewAngle::MidRightDown, false)
-    ), false, 0);
+            */
+    ), true, 0);
 
     ScriptsRunner humanScenarioRunner(Script::makeList(
         make_unique<variable_aim_test::VariableAimAndKillWithinTimeCheck>(
@@ -404,10 +408,10 @@ int main(int argc, char * argv[]) {
             tree.tick(state, mapsPath);
             if (state.clients.size() > 0) {
                 //std::cout << "time since last save " << state.getSecondsBetweenTimes(start, priorStart) << std::endl;
-                scriptsRunner.initialize(tree, state);
-                finishedTests = scriptsRunner.tick(tree, state);
-                //scenarioRunner.initialize(tree, state);
-                //finishedTests = scenarioRunner.tick(tree, state);
+                //scriptsRunner.initialize(tree, state);
+                //finishedTests = scriptsRunner.tick(tree, state);
+                scenarioRunner.initialize(tree, state);
+                finishedTests = scenarioRunner.tick(tree, state);
                 //humanScenarioRunner.initialize(tree, state);
                 //finishedTests = humanScenarioRunner.tick(tree, state);
             }
