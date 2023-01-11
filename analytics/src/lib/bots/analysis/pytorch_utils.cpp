@@ -4,7 +4,7 @@
 
 #include "bots/analysis/pytorch_utils.h"
 
-void print2DTensor(torch::Tensor & tensor) {
+std::string print2DTensor(torch::Tensor & tensor) {
     std::ostringstream ss;
     for (int64_t i = 0; i < tensor.size(0); i++) {
         for (int64_t j = 0; j < tensor.size(1); j++) {
@@ -12,5 +12,5 @@ void print2DTensor(torch::Tensor & tensor) {
         }
         ss << std::endl;
     }
-    std::cout << ss.str();
+    return ss.str();
 }

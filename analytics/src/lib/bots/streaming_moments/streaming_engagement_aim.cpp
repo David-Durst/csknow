@@ -398,22 +398,23 @@ namespace csknow::engagement_aim {
                 //EngagementAimTickData & priorTickData = engagementAimPlayerHistory.clientHistory.at(orderedAttackerIds[i])
                 //    .fromNewest(1);
                 //if (newestTickData.deltaRelativeFirstHeadViewAngle == priorTickData.deltaRelativeFirstHeadViewAngle) {
-                bool loggedClient = curState.getClient(orderedAttackerIds[i]).name == "Yahn";
+                bool loggedClient = curState.getClient(orderedAttackerIds[i]).team == ENGINE_TEAM_T &&
+                    curState.getClient(orderedAttackerIds[i]).isAlive;
                 if (loggedClient && printAimTicks > 0) {
-                    std::cout << curState.getClient(orderedAttackerIds[i]).name << std::endl;
-                    std::cout << curState.getClient(orderedAttackerIds[i]).getCurrentViewAngles().toString() << std::endl;
+                    aimTicksFile << curState.getClient(orderedAttackerIds[i]).name << std::endl;
+                    aimTicksFile << curState.getClient(orderedAttackerIds[i]).getCurrentViewAngles().toString() << std::endl;
                     for (int64_t priorTickNum = PAST_AIM_TICKS - 1; priorTickNum >= 0; priorTickNum--) {
                         const auto s = engagementAimPlayerHistory.clientHistory.at(orderedAttackerIds[i])
                             .fromNewest(priorTickNum);
-                        std::cout << s.toCSV(priorTickNum == PAST_AIM_TICKS - 1) << std::endl;
+                        aimTicksFile << s.toCSV(priorTickNum == PAST_AIM_TICKS - 1) << std::endl;
                     }
                     torch::Tensor selectedTensor = tmpTensor.slice(0, i, i+1);
-                    print2DTensor(selectedTensor);
+                    aimTicksFile << print2DTensor(selectedTensor);
                     //print2DTensor(tmpTensor);
-                    std::cout << outputViewAngle.toString() << std::endl;
-                    std::cout << deltaViewAngle.toString() << std::endl;
-                    std::cout << output[i][output[0].size(0) * 2 / 3].item<float>() << std::endl;
-                    std::cout << output[0].size(0) / 3 << std::endl;
+                    aimTicksFile << outputViewAngle.toString() << std::endl;
+                    aimTicksFile << deltaViewAngle.toString() << std::endl;
+                    aimTicksFile << output[i][output[0].size(0) * 2 / 3].item<float>() << std::endl;
+                    aimTicksFile << output[0].size(0) / 3 << std::endl;
                 }
                 // flip y axis to go back to game coordinates
                 playerToDeltaAngle[orderedAttackerIds[i]] = deltaViewAngle;

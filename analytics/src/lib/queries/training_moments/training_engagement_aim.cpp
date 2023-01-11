@@ -279,7 +279,7 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
                     // DON'T DO THIS, MAKES CALCULATIONS A PAIN
                     Vec2 recoil {
                         playerAtTick.aimPunchX[attackerPATId],
-                        playerAtTick.aimPunchY[attackerPATId]
+                        -1 * playerAtTick.aimPunchY[attackerPATId]
                     };
 
                     tmpScaledRecoilAngle[threadNum].back()[i] = recoil * WEAPON_RECOIL_SCALE;

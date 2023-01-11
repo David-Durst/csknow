@@ -97,7 +97,11 @@ namespace csknow::engagement_aim {
         bool resetInternal = false;
     public:
         int printAimTicks = 0;
-        StreamingEngagementAim(const string & navPath) {
+        std::fstream aimTicksFile;
+        StreamingEngagementAim(const string & navPath) :
+            aimTicksFile(fs::path(navPath) / fs::path("..") / fs::path("..") /
+            fs::path("aim_ticks.csv"), std::fstream::out) {
+
             fs::path modelPath = fs::path(navPath) / fs::path("..") /
                 fs::path("..") / fs::path("learn_bot") / fs::path("models") /
                 fs::path("engagement_aim_model") / fs::path("script_model.pt");

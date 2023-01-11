@@ -282,7 +282,7 @@ namespace variable_aim_test {
                                                                         make_unique<GiveItem>(blackboard, neededBots[0].id, state, "weapon_ak47"),
                                                                         make_unique<movement::WaitNode>(blackboard, 0.1),
                                                                         make_unique<SetCurrentItem>(blackboard, neededBots[0].id, state, "weapon_ak47"),
-                                                                        make_unique<movement::WaitNode>(blackboard, 0.1)),
+                                                                        make_unique<movement::WaitNode>(blackboard, 1.1)),
                                                                     "VariableAimAndKillWithinTimeCheckSetup");
                 Node::Ptr disableAllBothDuringSetup = make_unique<ParallelFirstNode>(blackboard, Node::makeList(
                     std::move(setupCommands),
@@ -304,7 +304,7 @@ namespace variable_aim_test {
                                                          //make_unique<ResetAimController>(blackboard),
                                                          //std::move(movingAimBufferFill),
                                                          make_unique<SayIf>(blackboard, humanAttacker, "move mouse"),
-                                                         make_unique<PrintAim>(blackboard, 128),
+                                                         make_unique<PrintAim>(blackboard, 512),
                                                          make_unique<ParallelFirstNode>(blackboard, Node::makeList(
                                                                                             make_unique<KilledAfterTime>(blackboard, neededBots[0].id, neededBots[1].id, 0.1),
                                                                                             make_unique<ForceActionsNode>(blackboard, vector{neededBots[1].id}, inputBits),

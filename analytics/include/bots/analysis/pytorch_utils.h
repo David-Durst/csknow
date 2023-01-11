@@ -7,6 +7,6 @@
 
 #include <torch/script.h>
 
-void print2DTensor(torch::Tensor & tensor);
+std::string print2DTensor(torch::Tensor & tensor);
 
 #endif //CSKNOW_PYTORCH_UTILS_H
