@@ -3,6 +3,7 @@ BUCKET = PureS3Path.from_uri("s3://csknow")
 PIPELINE_TEMPLATE = BUCKET / "demos" / "train_data_template"
 TRAIN_DATA = BUCKET / "demos" / "train_data"
 MANUAL_DATA = BUCKET / "demos" / "manual_data"
+MANUAL_DISABLED = MANUAL_DATA / "disabled"
 MANUAL_CSVS = MANUAL_DATA / "csvs"
 MANUAL_PROCESSED = MANUAL_DATA / "processed"
 MANUAL_PROCESSED_BOTS = MANUAL_DATA / "processed" / "bots"

@@ -7,6 +7,7 @@ def s3_mkdir(s3, bucket_path: PureS3Path):
 
 def generate_data_folder(s3):
     s3_mkdir(s3, MANUAL_DATA)
+    s3_mkdir(s3, MANUAL_DISABLED)
     s3_mkdir(s3, MANUAL_CSVS)
     s3_mkdir(s3, MANUAL_CSVS / "global")
     s3_mkdir(s3, MANUAL_CSVS / "local")
