@@ -15,6 +15,8 @@ from dataclasses import dataclass, field
 from learn_bot.engagement_aim.vis.vis_similar_trajectories import compute_position_difference
 from learn_bot.libs.temporal_column_names import get_temporal_field_str
 
+neg_pitch_up = False
+
 class ColumnReference(Enum):
     FIRST_TICK = 0
     ENGINE = 1
@@ -414,7 +416,10 @@ class AxObjs:
             y_max += range_diff / 2.
         # inverted xaxis so need to flip
         self.pos_ax.set_xlim(x_max, x_min)
-        self.pos_ax.set_ylim(y_max, y_min)
+        if neg_pitch_up:
+            self.pos_ax.set_ylim(y_max, y_min)
+        else:
+            self.pos_ax.set_ylim(y_min, y_max)
 
         # rescale speed axis, just make 0 is start
         self.speed_ax.relim()
