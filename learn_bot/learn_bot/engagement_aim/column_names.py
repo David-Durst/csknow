@@ -76,13 +76,17 @@ temporal_vis_float_column_names = TemporalIOColumnNames(base_vis_float_columns, 
 
 base_learning_float_standard_columns: List[str] = [
     "hit victim",
+    "recoil index",
     "ticks since last fire", "ticks since last holding attack",
     "victim visible", "victim visible yet", "victim alive",
     "attacker eye pos x", "attacker eye pos y", "attacker eye pos z",
-    "victim eye pos x", "victim eye pos y", "victim eye pos z"
+    "victim eye pos x", "victim eye pos y", "victim eye pos z",
+    "attacker vel x", "attacker vel y", "attacker vel z",
+    "victim vel x", "victim vel y", "victim vel z"
 ]
 
 base_learning_float_180_angle_columns: List[str] = [
+    "ideal view angle x",
     "delta relative first head view angle x",
     "scaled recoil angle x",
     "victim relative first head min view angle x",
@@ -91,11 +95,12 @@ base_learning_float_180_angle_columns: List[str] = [
 ]
 
 base_learning_float_90_angle_columns: List[str] = [
-    "attacker view angle y",
+    "ideal view angle y",
+    "delta relative first head view angle y",
     "scaled recoil angle y",
-    "victim min view angle y",
-    "victim max view angle y",
-    "victim cur head view angle y"
+    "victim relative first head min view angle y",
+    "victim relative first head max view angle y",
+    "victim relative first head cur head view angle y"
 ]
 
 # some columns only used for output, not input features
@@ -139,7 +144,7 @@ output_relative_x_cols = \
     temporal_io_float_180_angle_column_names.get_matching_cols(base_changed_offset_coordinates.attacker_x_view_angle,
                                                                False, True, True)
 output_relative_y_cols = \
-    temporal_io_float_90_angle_column_names.get_matching_cols(base_changed_offset_coordinates.attacker_x_view_angle,
+    temporal_io_float_90_angle_column_names.get_matching_cols(base_changed_offset_coordinates.attacker_y_view_angle,
                                                               False, True, True)
 output_ref_x_col = get_temporal_field_str(base_changed_offset_coordinates.attacker_x_view_angle, -1)
 output_ref_y_col = get_temporal_field_str(base_changed_offset_coordinates.attacker_y_view_angle, -1)
