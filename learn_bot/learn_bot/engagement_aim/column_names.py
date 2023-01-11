@@ -34,7 +34,7 @@ base_changed_offset_coordinates = AttackerVictimCoordinateColumns(
 
 base_engine_coordinates = AttackerVictimCoordinateColumns(
     "attacker view angle x", "victim min view angle x", "victim max view angle x", "victim cur head view angle x",
-    "attacker view angle y", "victim min view angle y", "victim max view angle x", "victim cur head view angle x"
+    "attacker view angle y", "victim min view angle y", "victim max view angle y", "victim cur head view angle y"
 )
 
 
