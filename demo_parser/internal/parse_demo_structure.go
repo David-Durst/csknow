@@ -210,6 +210,18 @@ func FilterRounds(idState *IDState, shouldFilterRounds bool) {
 		return
 	}
 	if !shouldFilterRounds {
+		// drop empty rounds at least
+		newRoundIndex := 0
+		for i := 0; i < filteredRoundsTable.len(); i++ {
+			if filteredRoundsTable.rows[i].startTick != filteredRoundsTable.rows[i].endTick {
+				filteredRoundsTable.rows[newRoundIndex] = filteredRoundsTable.rows[i]
+				newRoundIndex++
+			}
+		}
+		filteredRoundsTable.rows = filteredRoundsTable.rows[:newRoundIndex]
+		for i := 0; i < filteredRoundsTable.len(); i++ {
+			filteredRoundsTable.rows[i].id = RowIndex(i)
+		}
 		return
 	}
 
