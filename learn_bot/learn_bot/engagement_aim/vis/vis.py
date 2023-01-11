@@ -46,7 +46,7 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame = None):
 
     # create axes and their objects
     first_tick_title_suffix = " Relative To First Enemy Head"
-    engine_title_suffix = " Relative To Cur Enemy Head"
+    engine_title_suffix = " From Engine"
     cur_pos_title_suffix = " Relative To Cur Enemy Head"
     first_tick_x_label = "Yaw (deg, changed offset)"
     engine_x_label = "Yaw (deg)"
