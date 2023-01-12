@@ -11,6 +11,7 @@ void StreamingManager::update(const ServerState & state) {
             db.clear();
             streamingEngagementAim.reset();
             forceReset = false;
+            streamingEngagementAim.aimTicksFile << "reset" << std::endl;
             break;
         }
     }
