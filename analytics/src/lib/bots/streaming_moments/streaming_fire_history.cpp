@@ -36,19 +36,23 @@ namespace csknow::fire_history {
             else {
                 const ServerState::Client & priorTickClient =
                     db.batchData.fromNewest(1).getClient(curTickClient.csgoId);
-                const FireClientData & priorFirePlayerData =
+                const FireClientData & priorFireClientData =
                     fireClientHistory.clientHistory.at(curTickClient.csgoId).fromNewest();
 
-                // if input angle defined, then action was input and firing is valid
-                if (curTickClient.inputAngleDefined && curTickClient.intendedToFire) {
+                // if input angle defined, then action was input and firing is valid (if can fire)
+                if (curTickClient.inputAngleDefined && curTickClient.intendedToFire &&
+                    curTickClient.nextPrimaryAttack >= curState.gameTime) {
                     fireClientData.ticksSinceLastFire = 0;
                 }
+                /*
                 else if (firingClients.find(curTickClient.csgoId) != firingClients.end()) {
-                    fireClientData.ticksSinceLastFire = 0;
+                    fireClientData.ticksSinceLastFire = std::min(MAX_TICKS_SINCE_LAST_FIRE_ATTACK,
+                                                                 fireClientData.ticksSinceLastFire + 1);;
                 }
+                 */
                 else {
                     fireClientData.ticksSinceLastFire = std::min(MAX_TICKS_SINCE_LAST_FIRE_ATTACK,
-                                                                 fireClientData.ticksSinceLastFire + 1);
+                                                                 priorFireClientData.ticksSinceLastFire + 1);
                 }
 
                 // holding attack if not reloading and recoil index going up or holding constant and greater than 0.5
@@ -65,14 +69,15 @@ namespace csknow::fire_history {
                 // circular holdingAttackButton works because all initialized to false and start on second tick of history
                 bool recoilIndexNotDecaying = curRecoilIndex > priorRecoilIndex ||
                                               (curRecoilIndex == priorRecoilIndex &&
-                                              priorFirePlayerData.holdingAttackButton);
+                                              priorFireClientData.holdingAttackButton);
                 fireClientData.holdingAttackButton = !isReloading && curRecoilIndex > 0.5 && recoilIndexNotDecaying;
-                if (fireClientData.holdingAttackButton) {
+                // if fired last tick, make sure record attacking even though won't show up in data until next tick
+                if (fireClientData.holdingAttackButton || fireClientData.ticksSinceLastFire == 0) {
                     fireClientData.ticksSinceLastHoldingAttack = 0;
                 }
                 else {
                     fireClientData.ticksSinceLastHoldingAttack =
-                        std::min(MAX_TICKS_SINCE_LAST_FIRE_ATTACK, priorFirePlayerData.ticksSinceLastHoldingAttack + 1);
+                        std::min(MAX_TICKS_SINCE_LAST_FIRE_ATTACK, priorFireClientData.ticksSinceLastHoldingAttack + 1);
                 }
 
                 if (attackerToVictims.find(curTickClient.csgoId) != attackerToVictims.end()){

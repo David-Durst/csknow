@@ -226,7 +226,7 @@ int main(int argc, char * argv[]) {
             variable_aim_test::EnemyPos::TopRamp, variable_aim_test::EnemyMovement::Right,
             variable_aim_test::AttackerInitialViewAngle::MidRightDown, false)
             */
-    ), false, 0);
+    ), true, 0);
 
     ScriptsRunner humanScenarioRunner(Script::makeList(
         make_unique<variable_aim_test::VariableAimAndKillWithinTimeCheck>(
