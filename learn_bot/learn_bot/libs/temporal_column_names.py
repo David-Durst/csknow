@@ -11,6 +11,14 @@ def get_temporal_field_str(base_str: str, tick: int):
         return f"{base_str} (t+{abs(tick)})"
 
 
+def get_base_field_str(temporal_str: str):
+    if " (t" in temporal_str:
+       end_index = temporal_str.index(" (t")
+       return temporal_str[0:end_index]
+    else:
+        return temporal_str
+
+
 class TemporalIOColumnNames:
     past_columns: List[str]
     present_columns: List[str]

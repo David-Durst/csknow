@@ -72,10 +72,13 @@ class ColumnTimeOffset:
 class ColumnTypes:
     float_standard_cols: List[str]
     float_delta_cols: List[DeltaColumn]
+    float_delta_col_names: List[str]
     float_180_angle_cols: List[str]
     float_180_angle_delta_cols: List[DeltaColumn]
+    float_180_angle_delta_col_names: List[str]
     float_90_angle_cols: List[str]
     float_90_angle_delta_cols: List[DeltaColumn]
+    float_90_angle_delta_col_names: List[str]
     categorical_cols: List[str]
     num_cats_per_col: Dict[str, int]
     # need to use same mean and std dev for angular columns so they can be compared in loss
@@ -94,10 +97,13 @@ class ColumnTypes:
                  float_180_wrap_cols: List[str] = []):
         self.float_standard_cols = float_standard_cols
         self.float_delta_cols = float_delta_cols
+        self.float_delta_col_names = [c.relative_col for c in float_delta_cols]
         self.float_180_angle_cols = float_180_angle_cols
         self.float_180_angle_delta_cols = float_180_angle_delta_cols
+        self.float_180_angle_delta_col_names = [c.relative_col for c in float_180_angle_delta_cols]
         self.float_90_angle_cols = float_90_angle_cols
         self.float_90_angle_delta_cols = float_90_angle_delta_cols
+        self.float_90_angle_delta_col_names = [c.relative_col for c in float_90_angle_delta_cols]
         self.categorical_cols = categorical_cols
         self.num_cats_per_col = {}
         for cat, num_cats in zip(categorical_cols, num_cats_per_col):
@@ -681,13 +687,15 @@ class IOColumnTransformers:
 
         if delta_type == ColumnTransformerType.FLOAT_DELTA:
             _, output_reference_cols = split_delta_columns(types.float_delta_cols)
-            input_reference_cols = self.input_types.float_standard_cols
+            input_reference_cols = self.input_types.float_standard_cols + self.input_types.float_delta_col_names
         elif delta_type == ColumnTransformerType.FLOAT_180_ANGLE_DELTA:
             _, output_reference_cols = split_delta_columns(types.float_180_angle_delta_cols)
-            input_reference_cols = self.input_types.float_180_angle_cols
+            input_reference_cols = self.input_types.float_180_angle_cols + \
+                                   self.input_types.float_180_angle_delta_col_names
         else:
             _, output_reference_cols = split_delta_columns(types.float_90_angle_delta_cols)
-            input_reference_cols = self.input_types.float_90_angle_cols
+            input_reference_cols = self.input_types.float_90_angle_cols + \
+                                   self.input_types.float_90_angle_delta_col_names
 
         cur_col_index = 0
         all_cols = self.input_types.column_names()
