@@ -28,6 +28,7 @@ def run():
     print_folder(fs, MANUAL_UNPROCESSED_PROS)
     print_folder(fs, MANUAL_PROCESSED_BOTS)
     print_folder(fs, MANUAL_PROCESSED_PROS)
+    print_folder(fs, MANUAL_CSVS / "local")
 
 
 if __name__ == "__main__":
