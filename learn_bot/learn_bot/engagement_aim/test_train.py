@@ -40,7 +40,7 @@ if __name__ == "__main__":
     output_test_script_model = script_test_model(dataset[1:2][0])
     print(torch.equal(output_test_model, output_test_script_model))
 
-    model_file = torch.load(checkpoints_path / "model_off_1_scheduled_0_on_0_dad_0.pt")
+    model_file = torch.load(checkpoints_path / "model_off_5_scheduled_5_on_20_dad_1.pt")
     model = MLPAimModel(model_file['column_transformers'])
     model.load_state_dict(model_file['model_state_dict'])
     model.eval()
@@ -49,7 +49,7 @@ if __name__ == "__main__":
     output_script_model = script_model(dataset[1:2][0])
     print(torch.equal(output_model[0], output_script_model[0]))
 
-    loaded_script_model = torch.jit.load(manual_data_path.parent / 'simple_model.pt')
+    loaded_script_model = torch.jit.load(manual_data_path.parent / 'fixed_serialization_reduced_model.pt')
     output_loaded_script_model = loaded_script_model(dataset[1:2][0])
     print(torch.equal(output_model[0], output_loaded_script_model[0]))
 
