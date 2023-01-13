@@ -296,7 +296,6 @@ def train(all_data_df: pd.DataFrame, dad_iters=4, num_off_policy_epochs=5, num_s
 
     if save:
         script_model = torch.jit.trace(model.to(CPU_DEVICE_STR), first_row)
-        print(script_non_script_models_equal(script_model, model, first_row))
         script_model.save(Path(__file__).parent / '..' / '..' / 'models' / 'engagement_aim_model' / 'script_model.pt')
         model.to(device)
 
