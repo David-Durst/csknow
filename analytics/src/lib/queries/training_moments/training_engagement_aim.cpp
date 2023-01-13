@@ -87,7 +87,7 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
                                        {DurationType::Ticks, 0, 0, PAST_AIM_TICKS, FUTURE_AIM_TICKS});
         const PlayerToPATWindows & playerToPatWindows = rollingWindow.getWindows();
 
-        map<int64_t, Vec3> engagementToFirstTickVictimHeadPos;
+        map<int64_t, Vec2> engagementToFirstTickIdealViewAngle;
         map<int64_t, int64_t> engagementToVictimLastAlivePATId;
         map<int64_t, int64_t> engagementToVictimFirstVisiblePATId;
 
@@ -165,22 +165,35 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
 
 
                 // if first time dealing with this engagement, get the first tick head pos
-                if (engagementToFirstTickVictimHeadPos.find(engagementIndex) == engagementToFirstTickVictimHeadPos.end()) {
-                    for (int64_t patIndex = ticks.patPerTick[tickIndex].minId;
-                         patIndex <= ticks.patPerTick[tickIndex].maxId; patIndex++) {
-                        if (playerAtTick.playerId[patIndex] == victimId) {
-                            engagementToFirstTickVictimHeadPos[engagementIndex] =
-                                getCenterHeadCoordinatesForPlayer({
-                                    playerAtTick.posX[patIndex],
-                                    playerAtTick.posY[patIndex],
-                                    playerAtTick.eyePosZ[patIndex]
-                                }, {
-                                    playerAtTick.viewX[patIndex],
-                                    playerAtTick.viewY[patIndex]
-                                }, playerAtTick.duckAmount[patIndex]);
-                            break;
-                        }
-                    }
+                if (engagementToFirstTickIdealViewAngle.find(engagementIndex) ==
+                    engagementToFirstTickIdealViewAngle.end()) {
+                    const int64_t & attackerPATId =
+                        playerToPatWindows.at(attackerId).fromOldest(static_cast<int64_t>(PAST_AIM_TICKS));
+                    // first tick in engagmenet, so no need to check for last frame where victim is alive
+                    const int64_t & victimPATId =
+                        playerToPatWindows.at(victimId).fromOldest(static_cast<int64_t>(PAST_AIM_TICKS));
+
+                    Vec3 attackerEyePos {
+                        playerAtTick.posX[attackerPATId],
+                        playerAtTick.posY[attackerPATId],
+                        playerAtTick.eyePosZ[attackerPATId]
+                    };
+
+                    Vec3 victimHeadPos = getCenterHeadCoordinatesForPlayer(
+                        {
+                            playerAtTick.posX[victimPATId],
+                            playerAtTick.posY[victimPATId],
+                            playerAtTick.eyePosZ[victimPATId]
+                        },
+                        {
+                            playerAtTick.viewX[victimPATId],
+                            playerAtTick.viewY[victimPATId]
+                        },
+                        playerAtTick.duckAmount[victimPATId]
+                    );
+
+                    Vec2 idealViewAngle = viewFromOriginToDest(attackerEyePos, victimHeadPos);
+                    engagementToFirstTickIdealViewAngle[engagementIndex] = idealViewAngle;
                 }
 
                 tmpAttackerViewAngle[threadNum].push_back({});
@@ -275,8 +288,7 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
                     tmpIdealViewAngle[threadNum].back()[i] = idealViewAngle;
 
                     tmpDeltaRelativeFirstHeadViewAngle[threadNum].back()[i] =
-                        deltaViewFromOriginToDest(attackerEyePos,
-                                                  engagementToFirstTickVictimHeadPos[engagementIndex], curViewAngle);
+                        wrappedAngleDifference(curViewAngle, engagementToFirstTickIdealViewAngle[engagementIndex]);
                     tmpDeltaRelativeCurHeadViewAngle[threadNum].back()[i] =
                         deltaViewFromOriginToDest(attackerEyePos, victimHeadPos, curViewAngle);
 
@@ -289,7 +301,7 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
                     // DON'T DO THIS, MAKES CALCULATIONS A PAIN
                     Vec2 recoil {
                         playerAtTick.aimPunchX[attackerPATId],
-                        -1 * playerAtTick.aimPunchY[attackerPATId]
+                        playerAtTick.aimPunchY[attackerPATId]
                     };
 
                     tmpScaledRecoilAngle[threadNum].back()[i] = recoil * WEAPON_RECOIL_SCALE;
@@ -355,9 +367,7 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
                     for (const auto & aabbCorner : aabbCorners) {
                         Vec2 aabbViewAngle = viewFromOriginToDest(attackerEyePos, aabbCorner);
                         Vec2 deltaAABBViewAngleFirstHead =
-                            deltaViewFromOriginToDest(attackerEyePos,
-                                                      engagementToFirstTickVictimHeadPos[engagementIndex],
-                                                      aabbViewAngle);
+                            wrappedAngleDifference(aabbViewAngle, engagementToFirstTickIdealViewAngle[engagementIndex]);
                         Vec2 deltaAABBViewAngleCur =
                             deltaViewFromOriginToDest(attackerEyePos,
                                                       victimHeadPos,
@@ -376,8 +386,7 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
                     tmpVictimRelativeFirstHeadMinViewAngle[threadNum].back()[i] = victimMinViewAngleFirstHead;
                     tmpVictimRelativeFirstHeadMaxViewAngle[threadNum].back()[i] = victimMaxViewAngleFirstHead;
                     tmpVictimRelativeFirstHeadCurHeadAngle[threadNum].back()[i] =
-                        deltaViewFromOriginToDest(attackerEyePos,
-                                                  engagementToFirstTickVictimHeadPos[engagementIndex], idealViewAngle);
+                        wrappedAngleDifference(idealViewAngle, engagementToFirstTickIdealViewAngle[engagementIndex]);
                     tmpVictimRelativeCurHeadMinViewAngle[threadNum].back()[i] = victimMinViewAngleCur;
                     tmpVictimRelativeCurHeadMaxViewAngle[threadNum].back()[i] = victimMaxViewAngleCur;
                     tmpVictimRelativeCurHeadCurHeadAngle[threadNum].back()[i] =
