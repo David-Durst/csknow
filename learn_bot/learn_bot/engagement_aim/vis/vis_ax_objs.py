@@ -15,7 +15,7 @@ from dataclasses import dataclass, field
 from learn_bot.engagement_aim.vis.vis_similar_trajectories import compute_position_difference
 from learn_bot.libs.temporal_column_names import get_temporal_field_str
 
-neg_pitch_up = False
+neg_pitch_up = True
 
 class ColumnReference(Enum):
     FIRST_TICK = 0
