@@ -24,7 +24,7 @@ class TestMLPAimModel(nn.Module):
 
     def forward(self, x):
         # transform inputs
-        x_transformed = self.cts.transform_columns(True, x, x)
+        x_transformed = self.cts.transform_columns(True, x, x, False)
 
         ## run model except last layer
         out_transformed = self.inner_model(x_transformed)

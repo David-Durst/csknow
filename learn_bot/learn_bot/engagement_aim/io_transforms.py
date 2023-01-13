@@ -211,8 +211,10 @@ class PTColumnTransformer(ABC):
     def inverse(self, value):
         pass
 
+    # relative_to_prior needed for transforming outputs for computing loss in row rollout
+    # row rollout is computed one tick at a time, so the outputs are relative to prior
     @abstractmethod
-    def delta_convert(self, relative_value: torch.Tensor, reference_value: torch.Tensor):
+    def delta_convert(self, relative_value: torch.Tensor, reference_value: torch.Tensor, relative_to_prior: bool):
         pass
 
     @abstractmethod
@@ -253,7 +255,7 @@ class PTMeanStdColumnTransformer(PTColumnTransformer):
         else:
             return (value * self.standard_deviations) + self.means
 
-    def delta_convert(self, relative_value: torch.Tensor, reference_value: torch.Tensor):
+    def delta_convert(self, relative_value: torch.Tensor, reference_value: torch.Tensor, relative_to_prior: bool):
         raise NotImplementedError
 
     def delta_inverse(self, delta_value: torch.Tensor, reference_value: torch.Tensor):
@@ -287,10 +289,11 @@ class PTDeltaMeanStdColumnTransformer(PTColumnTransformer):
     def inverse(self, offset_value: torch.Tensor):
         raise NotImplementedError
 
-    def delta_convert(self, relative_value: torch.Tensor, reference_value: torch.Tensor):
+    def delta_convert(self, relative_value: torch.Tensor, reference_value: torch.Tensor, relative_to_prior: bool):
         delta_value = relative_value - reference_value
-        # make delta values relative to each other rather than reference value
-        delta_value[:, 1:] -= torch.roll(delta_value, 1, 1)[:, 1:]
+        if relative_to_prior:
+            # make delta values relative to each other rather than reference value
+            delta_value[:, 1:] -= torch.roll(delta_value, 1, 1)[:, 1:]
         if relative_value.device.type == CPU_DEVICE_STR:
             return (delta_value - self.cpu_delta_means) / self.cpu_delta_standard_deviations
         else:
@@ -323,7 +326,7 @@ class PT180AngleColumnTransformer(PTMeanStdColumnTransformer):
         value = torch.unflatten(value, dim=1, sizes=(-1, 2))
         return torch.rad2deg(torch.atan2(value[:, :, 0], value[:, :, 1]))
 
-    def delta_convert(self, relative_value: torch.Tensor, reference_value: torch.Tensor):
+    def delta_convert(self, relative_value: torch.Tensor, reference_value: torch.Tensor, relative_to_prior: bool):
         raise NotImplementedError
 
     def delta_inverse(self, delta_value: torch.Tensor, reference_value: torch.Tensor):
@@ -342,10 +345,11 @@ class PTDelta180AngleColumnTransformer(PT180AngleColumnTransformer):
     def inverse(self, value: torch.Tensor):
         raise NotImplementedError
 
-    def delta_convert(self, relative_value: torch.Tensor, reference_value: torch.Tensor):
+    def delta_convert(self, relative_value: torch.Tensor, reference_value: torch.Tensor, relative_to_prior: bool):
         delta_value = relative_value - reference_value
-        # make delta values relative to each other rather than reference value
-        delta_value[:, 1:] -= torch.roll(delta_value, 1, 1)[:, 1:]
+        if relative_to_prior:
+            # make delta values relative to each other rather than reference value
+            delta_value[:, 1:] -= torch.roll(delta_value, 1, 1)[:, 1:]
         return super().convert(delta_value)
 
     def delta_inverse(self, delta_value: torch.Tensor, reference_value: torch.Tensor):
@@ -364,7 +368,7 @@ class PT90AngleColumnTransformer(PT180AngleColumnTransformer):
         value = torch.unflatten(value, dim=1, sizes=(-1, 2))
         return torch.rad2deg(torch.atan(value[:, :, 0] / value[:, :, 1]))
 
-    def delta_convert(self, relative_value: torch.Tensor, reference_value: torch.Tensor):
+    def delta_convert(self, relative_value: torch.Tensor, reference_value: torch.Tensor, relative_to_prior: bool):
         raise NotImplementedError
 
     def delta_inverse(self, delta_value: torch.Tensor, reference_value: torch.Tensor):
@@ -383,10 +387,11 @@ class PTDelta90AngleColumnTransformer(PT90AngleColumnTransformer):
     def inverse(self, value: torch.Tensor):
         raise NotImplementedError
 
-    def delta_convert(self, relative_value: torch.Tensor, reference_value: torch.Tensor):
+    def delta_convert(self, relative_value: torch.Tensor, reference_value: torch.Tensor, relative_to_prior: bool):
         delta_value = relative_value - reference_value
-        # make delta values relative to each other rather than reference value
-        delta_value[:, 1:] -= torch.roll(delta_value, 1, 1)[:, 1:]
+        if relative_to_prior:
+            # make delta values relative to each other rather than reference value
+            delta_value[:, 1:] -= torch.roll(delta_value, 1, 1)[:, 1:]
         return super().convert(delta_value)
 
     def delta_inverse(self, delta_value: torch.Tensor, reference_value: torch.Tensor):
@@ -410,7 +415,7 @@ class PTOneHotColumnTransformer(PTColumnTransformer):
     def inverse(self, value: torch.Tensor):
         return torch.argmax(value, -1, keepdim=True)
 
-    def delta_convert(self, relative_value: torch.Tensor, reference_value: torch.Tensor):
+    def delta_convert(self, relative_value: torch.Tensor, reference_value: torch.Tensor, relative_to_prior: bool):
         raise NotImplementedError
 
     def delta_inverse(self, relative_value: torch.Tensor, reference_value: torch.Tensor):
@@ -707,7 +712,8 @@ class IOColumnTransformers:
 
         return result
 
-    def transform_columns(self, input: bool, x: torch.Tensor, x_input: torch.Tensor) -> torch.Tensor:
+    def transform_columns(self, input: bool, x: torch.Tensor, x_input: torch.Tensor, relative_to_prior: bool) \
+            -> torch.Tensor:
         cur_device = x.device
         x = x.to(CPU_DEVICE_STR)
         x_input = x_input.to(CPU_DEVICE_STR)
@@ -731,7 +737,8 @@ class IOColumnTransformers:
             x_float_delta_reference_positions = self.get_input_delta_reference_positions(types,
                                                                                          ColumnTransformerType.FLOAT_DELTA)
             x_reference_floats = x_input[:, x_float_delta_reference_positions]
-            uncat_result.append(ct_pts[ct_offset].delta_convert(x_relative_floats, x_reference_floats))
+            uncat_result.append(ct_pts[ct_offset].delta_convert(x_relative_floats, x_reference_floats,
+                                                                relative_to_prior))
             ct_offset += 1
 
         x_float_180_angle_name_ranges = self.get_name_ranges(input, False,
@@ -750,7 +757,8 @@ class IOColumnTransformers:
             x_float_delta_reference_positions = self.get_input_delta_reference_positions(types,
                                                                                          ColumnTransformerType.FLOAT_180_ANGLE_DELTA)
             x_reference_angles = x_input[:, x_float_delta_reference_positions]
-            uncat_result.append(ct_pts[ct_offset].delta_convert(x_relative_angles, x_reference_angles))
+            uncat_result.append(ct_pts[ct_offset].delta_convert(x_relative_angles, x_reference_angles,
+                                                                relative_to_prior))
             ct_offset += 1
 
         x_float_90_angle_name_ranges = self.get_name_ranges(input, False,
@@ -769,7 +777,8 @@ class IOColumnTransformers:
             x_float_delta_reference_positions = self.get_input_delta_reference_positions(types,
                                                                                          ColumnTransformerType.FLOAT_90_ANGLE_DELTA)
             x_reference_angles = x_input[:, x_float_delta_reference_positions]
-            uncat_result.append(ct_pts[ct_offset].delta_convert(x_relative_angles, x_reference_angles))
+            uncat_result.append(ct_pts[ct_offset].delta_convert(x_relative_angles, x_reference_angles,
+                                                                relative_to_prior))
             ct_offset += 1
 
         x_categorical_name_ranges = self.get_name_ranges(input, False, frozenset({ColumnTransformerType.CATEGORICAL}))

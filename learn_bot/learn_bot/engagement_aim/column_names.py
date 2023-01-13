@@ -118,9 +118,16 @@ base_non_input_float_columns: List[str] = ["ticks until next fire", "ticks until
 
 temporal_io_float_standard_column_names = TemporalIOColumnNames(base_learning_float_standard_columns, PRIOR_TICKS, CUR_TICK, FUTURE_TICKS)
 temporal_io_float_delta_column_names = TemporalIOColumnNames(base_learning_float_delta_columns, PRIOR_TICKS, CUR_TICK, FUTURE_TICKS)
-input_float_delta = [DeltaColumn(c_rel, get_temporal_field_str(get_base_field_str(c_rel), -1), None) for c_rel in
+def get_float_ref_base(col_name: str):
+    if "pos x" in col_name:
+        return base_learning_float_delta_columns[0]
+    elif "pos y" in col_name:
+        return base_learning_float_delta_columns[1]
+    else:
+        return base_learning_float_delta_columns[2]
+input_float_delta = [DeltaColumn(c_rel, get_temporal_field_str(get_float_ref_base(c_rel), -1), None) for c_rel in
                      temporal_io_float_delta_column_names.past_columns]
-all_float_delta = [DeltaColumn(c_rel, get_temporal_field_str(get_base_field_str(c_rel), -1), None) for c_rel in
+all_float_delta = [DeltaColumn(c_rel, get_temporal_field_str(get_float_ref_base(c_rel), -1), None) for c_rel in
                    temporal_io_float_delta_column_names.all_columns]
 
 temporal_io_float_180_standard_angle_column_names = \
