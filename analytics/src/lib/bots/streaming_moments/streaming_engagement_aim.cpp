@@ -140,12 +140,6 @@ namespace csknow::engagement_aim {
             victimDuckAmount = 0.;
             victimAlive = false;
         }
-        // need to flip eye angles from server to match train data
-        Vec3 victimHeadPos =
-            getCenterHeadCoordinatesForPlayer(victimEyePos, victimViewAngle, victimDuckAmount);
-        if (firstEngagementTick) {
-            playerToVictimEngagementFirstHeadPos[attackerId] = victimHeadPos;
-        }
 
         const ServerState & serverStateAttackerOffset =
             db.batchData.fromNewest(static_cast<int64_t>(attackerStateOffset));
@@ -169,14 +163,20 @@ namespace csknow::engagement_aim {
         }
 
         curViewAngle.normalize();
+
+        Vec3 victimHeadPos =
+            getCenterHeadCoordinatesForPlayer(victimEyePos, victimViewAngle, victimDuckAmount);
+
         Vec2 idealViewAngle = viewFromOriginToDest(attackerEyePos, victimHeadPos);
 
-        engagementAimTickData.idealViewAngle = idealViewAngle;
+        if (firstEngagementTick) {
+            playerToVictimEngagementFirstIdealViewAngle[attackerId] = idealViewAngle;
+        }
+
         engagementAimTickData.attackerViewAngle = curViewAngle;
 
         engagementAimTickData.deltaRelativeFirstHeadViewAngle =
-            deltaViewFromOriginToDest(attackerEyePos,
-                                      playerToVictimEngagementFirstHeadPos[attackerId], curViewAngle);
+            wrappedAngleDifference(curViewAngle, playerToVictimEngagementFirstIdealViewAngle[attackerId]);
 
         const fire_history::FireClientData & attackerFireData =
             streamingFireHistory.fireClientHistory.clientHistory.at(attackerId)
@@ -190,12 +190,9 @@ namespace csknow::engagement_aim {
             engagementAimTickData.hitVictim = false;
         }
 
-        engagementAimTickData.recoilIndex = attackerClient.recoilIndex;
-
-        // mul recoil by -1 as flipping all angles internally
         Vec2 recoil {
             attackerClient.lastAimpunchAngleX,
-            -1 * attackerClient.lastAimpunchAngleY,
+            attackerClient.lastAimpunchAngleY,
         };
 
         engagementAimTickData.scaledRecoilAngle = recoil * WEAPON_RECOIL_SCALE;
@@ -229,23 +226,9 @@ namespace csknow::engagement_aim {
          */ //victimInFOV && victimVisNoFOV;
         // only alive if real player (csgoId defined), so only do visibility check if valid target.csgoId
         bool curTickVictimVisible = victimAlive &&
-            serverStateAttackerOffset.isVisible(attackerId, target.csgoId);
+            serverStateAttackerOffset.isVisible(attackerId, target.csgoId) &&
+            getPointInFOV(victimEyePos, attackerEyePos, curViewAngle);
         engagementAimTickData.victimVisible = curTickVictimVisible;
-        // remove victim visibility tracking if new engagmeent
-        if (firstEngagementTick &&
-            playerToVictimFirstVisibleFrame.find(attackerId) != playerToVictimFirstVisibleFrame.end()) {
-            playerToVictimFirstVisibleFrame.erase(attackerId);
-        }
-        // since always have attacker client, just use that frame
-        if (curTickVictimVisible &&
-            (playerToVictimFirstVisibleFrame.find(attackerId) == playerToVictimFirstVisibleFrame.end() ||
-            playerToVictimFirstVisibleFrame.at(attackerId) > attackerClient.lastFrame)) {
-            playerToVictimFirstVisibleFrame[attackerId] = attackerClient.lastFrame;
-        }
-        engagementAimTickData.victimVisibleYet =
-            playerToVictimFirstVisibleFrame.find(attackerId) != playerToVictimFirstVisibleFrame.end() &&
-            playerToVictimFirstVisibleFrame[attackerId] <= attackerClient.lastFrame;
-
         engagementAimTickData.victimAlive = victimAlive;
 
         AABB victimAABB = getAABBForPlayer(victimFootPos, victimDuckAmount);
@@ -257,9 +240,7 @@ namespace csknow::engagement_aim {
         for (const auto & aabbCorner : aabbCorners) {
             Vec2 aabbViewAngle = viewFromOriginToDest(attackerEyePos, aabbCorner);
             Vec2 deltaAABBViewAngleFirstHead =
-                deltaViewFromOriginToDest(attackerEyePos,
-                                          playerToVictimEngagementFirstHeadPos[attackerId],
-                                          aabbViewAngle);
+                wrappedAngleDifference(aabbViewAngle, playerToVictimEngagementFirstIdealViewAngle[attackerId]);
             victimMinViewAngleFirstHead = min(victimMinViewAngleFirstHead, deltaAABBViewAngleFirstHead);
             victimMaxViewAngleFirstHead = max(victimMaxViewAngleFirstHead, deltaAABBViewAngleFirstHead);
         }
@@ -267,13 +248,10 @@ namespace csknow::engagement_aim {
         engagementAimTickData.victimRelativeFirstHeadMinViewAngle = victimMinViewAngleFirstHead;
         engagementAimTickData.victimRelativeFirstHeadMaxViewAngle = victimMaxViewAngleFirstHead;
         engagementAimTickData.victimRelativeFirstHeadCurHeadViewAngle =
-            deltaViewFromOriginToDest(attackerEyePos,
-                                      playerToVictimEngagementFirstHeadPos[attackerId], idealViewAngle);
+            wrappedAngleDifference(idealViewAngle, playerToVictimEngagementFirstIdealViewAngle[attackerId]);
 
         engagementAimTickData.attackerEyePos = attackerEyePos;
         engagementAimTickData.victimEyePos = victimEyePos;
-        engagementAimTickData.attackerVel = attackerClient.getVelocity();
-        engagementAimTickData.victimVel = victimVel;
         return engagementAimTickData;
     }
 
@@ -298,32 +276,29 @@ namespace csknow::engagement_aim {
             const CircularBuffer<EngagementAimTickData> & engagementAimHistory =
                 engagementAimPlayerHistory.clientHistory.at(curTickClient.csgoId);
             for (int64_t priorTickNum = PAST_AIM_TICKS - 1; priorTickNum >= 0; priorTickNum--) {
-                const EngagementAimTickData & engagementAimTickData = engagementAimHistory.fromNewest(priorTickNum);
+                const EngagementAimTickData &engagementAimTickData = engagementAimHistory.fromNewest(priorTickNum);
                 rowCPP.push_back(static_cast<float>(boolToInt(engagementAimTickData.hitVictim)));
-                rowCPP.push_back(static_cast<float>(engagementAimTickData.recoilIndex));
                 rowCPP.push_back(static_cast<float>(engagementAimTickData.ticksSinceLastFire));
                 rowCPP.push_back(static_cast<float>(engagementAimTickData.ticksSinceLastHoldingAttack));
                 rowCPP.push_back(static_cast<float>(boolToInt(engagementAimTickData.victimVisible)));
-                rowCPP.push_back(static_cast<float>(boolToInt(engagementAimTickData.victimVisibleYet)));
                 rowCPP.push_back(static_cast<float>(boolToInt(engagementAimTickData.victimAlive)));
+            }
+            for (int64_t priorTickNum = PAST_AIM_TICKS - 1; priorTickNum >= 0; priorTickNum--) {
+                const EngagementAimTickData &engagementAimTickData = engagementAimHistory.fromNewest(priorTickNum);
                 rowCPP.push_back(static_cast<float>(engagementAimTickData.attackerEyePos.x));
                 rowCPP.push_back(static_cast<float>(engagementAimTickData.attackerEyePos.y));
                 rowCPP.push_back(static_cast<float>(engagementAimTickData.attackerEyePos.z));
                 rowCPP.push_back(static_cast<float>(engagementAimTickData.victimEyePos.x));
                 rowCPP.push_back(static_cast<float>(engagementAimTickData.victimEyePos.y));
                 rowCPP.push_back(static_cast<float>(engagementAimTickData.victimEyePos.z));
-                rowCPP.push_back(static_cast<float>(engagementAimTickData.attackerVel.x));
-                rowCPP.push_back(static_cast<float>(engagementAimTickData.attackerVel.y));
-                rowCPP.push_back(static_cast<float>(engagementAimTickData.attackerVel.z));
-                rowCPP.push_back(static_cast<float>(engagementAimTickData.victimVel.x));
-                rowCPP.push_back(static_cast<float>(engagementAimTickData.victimVel.y));
-                rowCPP.push_back(static_cast<float>(engagementAimTickData.victimVel.z));
+            }
+            for (int64_t priorTickNum = PAST_AIM_TICKS - 1; priorTickNum >= 0; priorTickNum--) {
+                const EngagementAimTickData &engagementAimTickData = engagementAimHistory.fromNewest(priorTickNum);
+                rowCPP.push_back(static_cast<float>(engagementAimTickData.scaledRecoilAngle.x));
             }
             for (int64_t priorTickNum = PAST_AIM_TICKS - 1; priorTickNum >= 0; priorTickNum--) {
                 const EngagementAimTickData & engagementAimTickData = engagementAimHistory.fromNewest(priorTickNum);
-                rowCPP.push_back(static_cast<float>(engagementAimTickData.idealViewAngle.x));
                 rowCPP.push_back(static_cast<float>(engagementAimTickData.deltaRelativeFirstHeadViewAngle.x));
-                rowCPP.push_back(static_cast<float>(engagementAimTickData.scaledRecoilAngle.x));
                 rowCPP.push_back(
                     static_cast<float>(engagementAimTickData.victimRelativeFirstHeadMinViewAngle.x));
                 rowCPP.push_back(
@@ -332,10 +307,12 @@ namespace csknow::engagement_aim {
                     static_cast<float>(engagementAimTickData.victimRelativeFirstHeadCurHeadViewAngle.x));
             }
             for (int64_t priorTickNum = PAST_AIM_TICKS - 1; priorTickNum >= 0; priorTickNum--) {
-                const EngagementAimTickData & engagementAimTickData = engagementAimHistory.fromNewest(priorTickNum);
-                rowCPP.push_back(static_cast<float>(engagementAimTickData.idealViewAngle.y));
-                rowCPP.push_back(static_cast<float>(engagementAimTickData.deltaRelativeFirstHeadViewAngle.y));
+                const EngagementAimTickData &engagementAimTickData = engagementAimHistory.fromNewest(priorTickNum);
                 rowCPP.push_back(static_cast<float>(engagementAimTickData.scaledRecoilAngle.y));
+            }
+            for (int64_t priorTickNum = PAST_AIM_TICKS - 1; priorTickNum >= 0; priorTickNum--) {
+                const EngagementAimTickData &engagementAimTickData = engagementAimHistory.fromNewest(priorTickNum);
+                rowCPP.push_back(static_cast<float>(engagementAimTickData.deltaRelativeFirstHeadViewAngle.y));
                 rowCPP.push_back(
                     static_cast<float>(engagementAimTickData.victimRelativeFirstHeadMinViewAngle.y));
                 rowCPP.push_back(

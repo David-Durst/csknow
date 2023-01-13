@@ -12,20 +12,15 @@ constexpr int WARMUP_TICKS = 0;
 struct EngagementAimTickData {
     // general float encoded
     bool hitVictim;
-    float recoilIndex;
     int64_t ticksSinceLastFire;
     int64_t ticksSinceLastHoldingAttack;
     bool victimVisible;
-    bool victimVisibleYet;
     bool victimAlive;
     Vec3 attackerEyePos;
     Vec3 victimEyePos;
-    Vec3 attackerVel;
-    Vec3 victimVel;
     // angle encoded
-    Vec2 idealViewAngle;
-    Vec2 deltaRelativeFirstHeadViewAngle;
     Vec2 scaledRecoilAngle;
+    Vec2 deltaRelativeFirstHeadViewAngle;
     Vec2 victimRelativeFirstHeadMinViewAngle;
     Vec2 victimRelativeFirstHeadMaxViewAngle;
     Vec2 victimRelativeFirstHeadCurHeadViewAngle;
@@ -37,19 +32,14 @@ struct EngagementAimTickData {
     string toString() const {
         std::ostringstream ss;
         ss << "hit victim: " << boolToString(hitVictim)
-            << ", recoil index: " << recoilIndex
             << ", ticks since last fire: " << ticksSinceLastFire
             << ", ticks since last holding attack: " << ticksSinceLastHoldingAttack
             << ", victim visible: " << boolToString(victimVisible)
-            << ", victim visible yet: " << boolToString(victimVisibleYet)
             << ", victim alive: " << boolToString(victimAlive)
             << ", attacker eye pos: " << attackerEyePos.toString()
             << ", victim eye pos: " << victimEyePos.toString()
-            << ", attacker vel: " << attackerVel.toString()
-            << ", victim vel: " << victimVel.toString()
-            << ", ideal view angle: " << idealViewAngle.toString()
-            << ", delta relative first head view angle: " << deltaRelativeFirstHeadViewAngle.toString()
             << ", scaled recoil angle: " << scaledRecoilAngle.toString()
+            << ", delta relative first head view angle: " << deltaRelativeFirstHeadViewAngle.toString()
             << ", victim relative first head min view angle: " << victimRelativeFirstHeadMinViewAngle.toString()
             << ", victim relative first head max view angle: " << victimRelativeFirstHeadMaxViewAngle.toString()
             << ", victim relative first head cur head view angle: " << victimRelativeFirstHeadCurHeadViewAngle.toString()
@@ -63,19 +53,14 @@ struct EngagementAimTickData {
         std::ostringstream ss;
         if (header) {
             ss << "hit victim"
-               << ",recoil index"
                << ",ticks since last fire"
                << ",ticks since last holding attack"
                << ",victim visible"
-               << ",victim visible yet"
                << ",victim alive"
                << ",attacker eye pos x,attacker eye pos y,attacker eye pos z"
                << ",victim eye pos x,victim eye pos y,victim eye pos z"
-               << ",attacker vel x,attacker vel y,attacker vel z"
-               << ",victim vel x,victim vel y,victim vel z"
-               << ",ideal view angle x,ideal view angle y"
-               << ",delta relative first head view angle x,delta relative first head view angle y"
                << ",scaled recoil angle x,scaled recoil angle y"
+               << ",delta relative first head view angle x,delta relative first head view angle y"
                << ",victim relative first head min view angle x,victim relative first head min view angle y"
                << ",victim relative first head max view angle x,victim relative first head max view angle y"
                << ",victim relative first head cur head view angle x,victim relative first head cur head view angle y"
@@ -85,19 +70,14 @@ struct EngagementAimTickData {
                << std::endl;
         }
         ss << boolToString(hitVictim)
-           << "," << recoilIndex
            << "," << ticksSinceLastFire
            << "," << ticksSinceLastHoldingAttack
            << "," << boolToString(victimVisible)
-           << "," << boolToString(victimVisibleYet)
            << "," << boolToString(victimAlive)
            << "," << attackerEyePos.toCSV()
            << "," << victimEyePos.toCSV()
-           << "," << attackerVel.toCSV()
-           << "," << victimVel.toCSV()
-           << "," << idealViewAngle.toCSV()
-           << "," << deltaRelativeFirstHeadViewAngle.toCSV()
            << "," << scaledRecoilAngle.toCSV()
+           << "," << deltaRelativeFirstHeadViewAngle.toCSV()
            << "," << victimRelativeFirstHeadMinViewAngle.toCSV()
            << "," << victimRelativeFirstHeadMaxViewAngle.toCSV()
            << "," << victimRelativeFirstHeadCurHeadViewAngle.toCSV()

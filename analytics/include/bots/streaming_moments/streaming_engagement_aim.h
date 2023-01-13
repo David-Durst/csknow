@@ -119,8 +119,7 @@ namespace csknow::engagement_aim {
 
         ClientTargetMap currentClientTargetMap, priorClientTargetMap;
         unordered_map<CSGOId, StreamingPinId> playerToVictimLastAlivePos;
-        unordered_map<CSGOId, Vec3> playerToVictimEngagementFirstHeadPos;
-        unordered_map<CSGOId, bool> playerToVictimFirstVisibleFrame;
+        map<CSGOId, Vec2> playerToVictimEngagementFirstIdealViewAngle;
         unordered_map<CSGOId, Vec2> playerToNewAngle;
         unordered_map<CSGOId, Vec2> playerToDeltaAngle;
         unordered_map<CSGOId, bool> playerToFiring;
