@@ -214,9 +214,17 @@ Vec2 deltaViewFromOriginToDest(Vec3 origin, Vec3 dest, Vec2 curViewAngle) {
     Vec2 deltaViewAngle = curViewAngle - targetViewAngle;
     // invert so bigger pitch is aiming up
     // DON'T DO THIS, IT MAKES CALCULATIONS A PAIN
-    deltaViewAngle.y *= -1;
+    // deltaViewAngle.y *= -1;
     deltaViewAngle.makePitchNeg90To90();
     deltaViewAngle.makeYawNeg180To180();
+    return deltaViewAngle;
+}
+
+static inline __attribute__((always_inline))
+Vec2 wrappedAngleDifference(Vec2 curViewAngle, Vec2 refViewAngle) {
+    // y axis is flipped, so reverse here
+    Vec2 deltaViewAngle = curViewAngle - refViewAngle;
+    deltaViewAngle.normalize();
     return deltaViewAngle;
 }
 
