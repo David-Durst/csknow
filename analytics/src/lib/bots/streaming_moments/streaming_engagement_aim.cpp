@@ -353,9 +353,10 @@ namespace csknow::engagement_aim {
                     .fromNewest();
                 Vec2 inputRelativeViewAngle = newestTickData.deltaRelativeFirstHeadViewAngle;
                 Vec2 deltaViewAngle = outputRelativeViewAngle - inputRelativeViewAngle;
-                deltaViewAngle.y *= -1;
                 deltaViewAngle.makePitchNeg90To90();
                 deltaViewAngle.makeYawNeg180To180();
+                deltaViewAngle.x += dist(gen);
+                deltaViewAngle.y += dist(gen);
                 Vec2 outputViewAngle = newestTickData.attackerViewAngle + deltaViewAngle;
                 outputViewAngle.makeYawNeg180To180();
                 /*
