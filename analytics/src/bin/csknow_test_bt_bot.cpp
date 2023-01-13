@@ -94,35 +94,35 @@ int main(int argc, char * argv[]) {
         make_unique<variable_aim_test::VariableAimAndKillWithinTimeCheck>(
             variable_aim_test::EnemyPos::Close, variable_aim_test::EnemyMovement::Forward,
             variable_aim_test::AttackerInitialViewAngle::HardLeft, false),
+        make_unique<variable_aim_test::VariableAimAndKillWithinTimeCheck>(
+            variable_aim_test::EnemyPos::Close, variable_aim_test::EnemyMovement::Forward,
+            variable_aim_test::AttackerInitialViewAngle::MidLeft, false),
+        make_unique<variable_aim_test::VariableAimAndKillWithinTimeCheck>(
+            variable_aim_test::EnemyPos::Close, variable_aim_test::EnemyMovement::Forward,
+            variable_aim_test::AttackerInitialViewAngle::MidRightUp, false),
+        make_unique<variable_aim_test::VariableAimAndKillWithinTimeCheck>(
+            variable_aim_test::EnemyPos::Close, variable_aim_test::EnemyMovement::Forward,
+            variable_aim_test::AttackerInitialViewAngle::MidRightDown, false),
+        make_unique<variable_aim_test::VariableAimAndKillWithinTimeCheck>(
+            variable_aim_test::EnemyPos::Close, variable_aim_test::EnemyMovement::Left,
+            variable_aim_test::AttackerInitialViewAngle::HardLeft, false),
+        make_unique<variable_aim_test::VariableAimAndKillWithinTimeCheck>(
+            variable_aim_test::EnemyPos::Close, variable_aim_test::EnemyMovement::Left,
+            variable_aim_test::AttackerInitialViewAngle::MidLeft, false),
+        make_unique<variable_aim_test::VariableAimAndKillWithinTimeCheck>(
+            variable_aim_test::EnemyPos::Close, variable_aim_test::EnemyMovement::Left,
+            variable_aim_test::AttackerInitialViewAngle::MidRightUp, false),
+        make_unique<variable_aim_test::VariableAimAndKillWithinTimeCheck>(
+            variable_aim_test::EnemyPos::Close, variable_aim_test::EnemyMovement::Left,
+            variable_aim_test::AttackerInitialViewAngle::MidRightDown, false),
+        make_unique<variable_aim_test::VariableAimAndKillWithinTimeCheck>(
+            variable_aim_test::EnemyPos::Close, variable_aim_test::EnemyMovement::Right,
+            variable_aim_test::AttackerInitialViewAngle::HardLeft, false),
             */
         make_unique<variable_aim_test::VariableAimAndKillWithinTimeCheck>(
-            variable_aim_test::EnemyPos::Close, variable_aim_test::EnemyMovement::Forward,
+            variable_aim_test::EnemyPos::Close, variable_aim_test::EnemyMovement::Right,
             variable_aim_test::AttackerInitialViewAngle::MidLeft, false)
-        /*
-        make_unique<variable_aim_test::VariableAimAndKillWithinTimeCheck>(
-            variable_aim_test::EnemyPos::Close, variable_aim_test::EnemyMovement::Forward,
-            variable_aim_test::AttackerInitialViewAngle::MidRightUp, false),
-        make_unique<variable_aim_test::VariableAimAndKillWithinTimeCheck>(
-            variable_aim_test::EnemyPos::Close, variable_aim_test::EnemyMovement::Forward,
-            variable_aim_test::AttackerInitialViewAngle::MidRightDown, false),
-        make_unique<variable_aim_test::VariableAimAndKillWithinTimeCheck>(
-            variable_aim_test::EnemyPos::Close, variable_aim_test::EnemyMovement::Left,
-            variable_aim_test::AttackerInitialViewAngle::HardLeft, false),
-        make_unique<variable_aim_test::VariableAimAndKillWithinTimeCheck>(
-            variable_aim_test::EnemyPos::Close, variable_aim_test::EnemyMovement::Left,
-            variable_aim_test::AttackerInitialViewAngle::MidLeft, false),
-        make_unique<variable_aim_test::VariableAimAndKillWithinTimeCheck>(
-            variable_aim_test::EnemyPos::Close, variable_aim_test::EnemyMovement::Left,
-            variable_aim_test::AttackerInitialViewAngle::MidRightUp, false),
-        make_unique<variable_aim_test::VariableAimAndKillWithinTimeCheck>(
-            variable_aim_test::EnemyPos::Close, variable_aim_test::EnemyMovement::Left,
-            variable_aim_test::AttackerInitialViewAngle::MidRightDown, false),
-        make_unique<variable_aim_test::VariableAimAndKillWithinTimeCheck>(
-            variable_aim_test::EnemyPos::Close, variable_aim_test::EnemyMovement::Right,
-            variable_aim_test::AttackerInitialViewAngle::HardLeft, false),
-        make_unique<variable_aim_test::VariableAimAndKillWithinTimeCheck>(
-            variable_aim_test::EnemyPos::Close, variable_aim_test::EnemyMovement::Right,
-            variable_aim_test::AttackerInitialViewAngle::MidLeft, false),
+            /*
         make_unique<variable_aim_test::VariableAimAndKillWithinTimeCheck>(
             variable_aim_test::EnemyPos::Close, variable_aim_test::EnemyMovement::Right,
             variable_aim_test::AttackerInitialViewAngle::MidRightUp, false),

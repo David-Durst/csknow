@@ -296,13 +296,13 @@ namespace variable_aim_test {
                 Node::Ptr movingAimBufferFill = make_unique<ParallelFirstNode>(blackboard, Node::makeList(
                     make_unique<DisableActionsNode>(blackboard, "DisableSetup", vector{neededBots[0].id}),
                     make_unique<ForceActionsNode>(blackboard, vector{neededBots[1].id}, inputBits),
-                    make_unique<movement::WaitNode>(blackboard, 0.1)
+                    make_unique<movement::WaitNode>(blackboard, 0.5)
                 ), "VariableMovingPreAct");
                 commands = make_unique<SequenceNode>(blackboard, Node::makeList(
                                                          std::move(disableAllBothDuringSetup),
                                                          //std::move(movingPreAct),
                                                          //make_unique<ResetAimController>(blackboard),
-                                                         //std::move(movingAimBufferFill),
+                                                         std::move(movingAimBufferFill),
                                                          make_unique<SayIf>(blackboard, humanAttacker, "move mouse"),
                                                          make_unique<PrintAim>(blackboard, 512),
                                                          make_unique<ParallelFirstNode>(blackboard, Node::makeList(
