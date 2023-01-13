@@ -537,6 +537,9 @@ CSGOFileTime ServerState::loadServerState() {
     return fileTime;
 }
 
+// debug helper to check when teleportation is breaking
+bool disableTeleportationConfirmation = false;
+
 void ServerState::saveBotInputs() {
     string inputsFileName = "input.csv";
     string inputsFilePath = dataPath + "/" + inputsFileName;
@@ -548,9 +551,15 @@ void ServerState::saveBotInputs() {
 
     for (int i = 0; i < (int) inputsValid.size(); i++) {
         if (i < (int) clients.size() && inputsValid[i]) {
+            if (disableTeleportationConfirmation) {
+                clients[i].forceInput = true;
+            }
             inputsStream << clients[i].csgoId << ","
                          << getLastFrame() << ","
-                         << clients[i].lastTeleportConfirmationId << ","
+                         // if set confirmation id to 0, learned controller will fire early
+                         // as it runs off it's own predictions so it thinks its aiming at target.
+                         // setting forceInput tells learned firing controller about disable
+                         << (disableTeleportationConfirmation ? 0 : clients[i].lastTeleportConfirmationId) << ","
                          << clients[i].buttons << ","
                          // FLIPPING TO MATCH YAW AND PITCH
                          << clients[i].inputAngleY << ","

@@ -160,7 +160,7 @@ namespace csknow::engagement_aim {
         Vec2 curViewAngle;
         // try to live 1 frame in the future by taking last prediction, but take reality from game engine if not
         // possible
-        if (!attackerClient.inputAngleDefined) {
+        if (!attackerClient.inputAngleDefined || attackerClient.forceInput) {
         //if (true || attackerStateOffset != 0 || playerToNewAngle.find(attackerId) == playerToNewAngle.end()) {
             curViewAngle = attackerClient.getCurrentViewAngles();
         }
