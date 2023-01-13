@@ -30,7 +30,7 @@ def load_model_file(all_data_df: pd.DataFrame, model_file_name: str) -> TrainRes
     train_data = AimDataset(train_df, column_transformers, all_time_column_transformers)
     test_data = AimDataset(test_df, column_transformers, all_time_column_transformers)
 
-    model = MLPAimModel(column_transformers)
+    model = MLPAimModel(model_file['column_transformers'])
     model.load_state_dict(model_file['model_state_dict'])
     model.to(CUDA_DEVICE_STR)
 
