@@ -850,6 +850,18 @@ class IOColumnTransformers:
         else:
             return x[1][col_ranges[col_index].start].item()
 
+    def get_untransformed_values(self, x: Union[torch.Tensor, ModelOutput], input: bool) -> Dict:
+        col_names = self.input_types.column_names() if input else self.output_types.column_names()
+        col_ranges = self.get_name_ranges(input, False)
+
+        x_tensor: torch.Tensor = x if input else x[1]
+        result = {}
+
+        for col_name, col_range in zip(col_names, col_ranges):
+            result[col_name] = x_tensor[col_range.start].item()
+
+        return result
+
     def set_untransformed_input_value(self, x: torch.Tensor, col_name: str, value: float):
         col_names = self.input_types.column_names() if input else self.output_types.column_names()
         col_ranges = self.get_name_ranges(True, False)

@@ -40,15 +40,16 @@ if __name__ == "__main__":
     output_test_script_model = script_test_model(dataset[1:2][0])
     print(torch.equal(output_test_model, output_test_script_model))
 
-    model_file = torch.load(checkpoints_path / "model_off_5_scheduled_5_on_20_dad_1.pt")
-    model = MLPAimModel(column_transformers)
+    model_file = torch.load(checkpoints_path / "model_off_1_scheduled_0_on_0_dad_0.pt")
+    model = MLPAimModel(model_file['column_transformers'])
     model.load_state_dict(model_file['model_state_dict'])
+    model.eval()
     script_model = torch.jit.trace(model.to(CPU_DEVICE_STR), dataset[0:1][0])
     output_model = model(dataset[1:2][0])
     output_script_model = script_model(dataset[1:2][0])
     print(torch.equal(output_model[0], output_script_model[0]))
 
-    loaded_script_model = torch.jit.load(manual_data_path.parent / 'reduced_weighted_firing_script_model.pt')
+    loaded_script_model = torch.jit.load(manual_data_path.parent / 'simple_model.pt')
     output_loaded_script_model = loaded_script_model(dataset[1:2][0])
     print(torch.equal(output_model[0], output_loaded_script_model[0]))
 
@@ -62,11 +63,29 @@ if __name__ == "__main__":
     script_model_code_constants = script_model.code_with_constants
     loaded_script_model_code_constants = loaded_script_model.code_with_constants
     print(script_model_code_constants[0] == loaded_script_model_code_constants[0])
-    print(script_model_code_constants[0])
+    #print(script_model_code_constants[0])
 
     script_constants = script_model_code_constants[1].const_mapping
     loaded_constants = loaded_script_model_code_constants[1].const_mapping
     print("start comparing const mapping")
     for k in script_constants.keys():
         print(f"{k}: {torch.equal(script_constants[k], loaded_constants[k])}")
+    script_model.save(manual_data_path.parent / 'new_reduced_weighted_firing_script_model.pt')
 
+    new_loaded_script_model = torch.jit.load(manual_data_path.parent / 'new_reduced_weighted_firing_script_model.pt')
+    output_new_loaded_script_model = new_loaded_script_model(dataset[1:2][0])
+    print(torch.equal(output_model[0], output_new_loaded_script_model[0]))
+
+    loaded_script_model.save(manual_data_path.parent / 'resaved_reduced_weighted_firing_script_model.pt')
+    reloaded_script_model = torch.jit.load(manual_data_path.parent / 'resaved_reduced_weighted_firing_script_model.pt')
+    all_equal = True
+    for p1, p2 in zip(loaded_script_model.state_dict().items(), reloaded_script_model.state_dict().items()):
+        if not torch.equal(p1[1], p2[1]):
+            all_equal = False
+            break
+    print(all_equal)
+
+    reloaded_script_constants = reloaded_script_model.code_with_constants[1].const_mapping
+    print("start comparing const mapping")
+    for k in reloaded_script_constants.keys():
+        print(f"{k}: {torch.equal(reloaded_script_constants[k], loaded_constants[k])}")

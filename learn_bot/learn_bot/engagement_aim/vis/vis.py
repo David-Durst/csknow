@@ -419,6 +419,10 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame = None):
     # Start the GUI
     window.mainloop()
 
+orig_dataset = False
 if __name__ == "__main__":
-    all_data_df = pd.read_csv(data_path)
+    if orig_dataset:
+        all_data_df = pd.read_csv(data_path)
+    else:
+        all_data_df = pd.read_csv(manual_data_path)
     vis(all_data_df)

@@ -27,6 +27,7 @@ from dataclasses import dataclass
 from datetime import datetime
 
 from learn_bot.engagement_aim.vis import vis
+from learn_bot.libs.compare_models import *
 
 checkpoints_path = Path(__file__).parent / 'checkpoints'
 
@@ -177,6 +178,8 @@ def train(all_data_df: pd.DataFrame, dad_iters=4, num_off_policy_epochs=5, num_s
             'train_group_ids': train_group_ids,
             'model_state_dict': model.state_dict(),
             'optimizer_state_dict': optimizer.state_dict(),
+            'column_transformers': column_transformers,
+            'all_time_column_transformers': all_time_column_transformers
         }, checkpoints_path / name)
 
     writer = SummaryWriter(runs_path)
@@ -293,6 +296,7 @@ def train(all_data_df: pd.DataFrame, dad_iters=4, num_off_policy_epochs=5, num_s
 
     if save:
         script_model = torch.jit.trace(model.to(CPU_DEVICE_STR), first_row)
+        print(script_non_script_models_equal(script_model, model, first_row))
         script_model.save(Path(__file__).parent / '..' / '..' / 'models' / 'engagement_aim_model' / 'script_model.pt')
         model.to(device)
 
@@ -307,8 +311,8 @@ if __name__ == "__main__":
     all_data_df[target_o_float_columns[1]] = \
         all_data_df[get_temporal_field_str(base_changed_offset_coordinates.attacker_y_view_angle, FUTURE_TICKS)]
     #all_data_df = all_data_df[(all_data_df[weapon_type_col] == 3) & (all_data_df[cur_victim_visible_yet_column] == 1.)]
-    train_result = train(all_data_df, dad_iters=1, num_off_policy_epochs=5, num_scheduled_sampling_epochs=5,
-                         num_on_policy_epochs=20)
+    train_result = train(all_data_df, dad_iters=0, num_off_policy_epochs=1, num_scheduled_sampling_epochs=0,
+                         num_on_policy_epochs=0)
     #engagement_ids = list(train_result.test_df[engagement_id_column].unique())
     #engagement_ids = engagement_ids[:30]
     #limited_test_df = train_result.test_df[train_result.test_df[engagement_id_column].isin(engagement_ids)]
