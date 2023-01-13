@@ -411,11 +411,13 @@ namespace csknow::engagement_aim {
                     }
                     torch::Tensor selectedTensor = tmpTensor.slice(0, i, i+1);
                     aimTicksStream << print2DTensor(selectedTensor);
+                    torch::Tensor outputSelectedTensor = output.slice(0, i, i+1);
+                    aimTicksStream << print2DTensor(outputSelectedTensor);
                     //print2DTensor(tmpTensor);
                     aimTicksStream << outputViewAngle.toString() << std::endl;
                     aimTicksStream << deltaViewAngle.toString() << std::endl;
                     aimTicksStream << output[i][output[0].size(0) * 2 / 3].item<float>() << std::endl;
-                    aimTicksStream << output[0].size(0) / 3 << std::endl;
+                    aimTicksStream << output[0].size(0) << std::endl;
                     aimTicksFile << aimTicksStream.str();
                 }
                 // flip y axis to go back to game coordinates

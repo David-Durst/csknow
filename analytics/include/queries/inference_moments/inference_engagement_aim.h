@@ -54,6 +54,7 @@ struct EngagementAimTickData {
             << ", victim relative first head max view angle: " << victimRelativeFirstHeadMaxViewAngle.toString()
             << ", victim relative first head cur head view angle: " << victimRelativeFirstHeadCurHeadViewAngle.toString()
             << ", holding attack: " << boolToString(holdingAttack)
+            << ", attacker view angle: " << attackerViewAngle.toString()
             << ", warmup ticks used: " << warmupTicksUsed;
         return ss.str();
     }
@@ -79,6 +80,7 @@ struct EngagementAimTickData {
                << ",victim relative first head max view angle x,victim relative first head max view angle y"
                << ",victim relative first head cur head view angle x,victim relative first head cur head view angle y"
                << ",holding attack"
+               << ",attacker view angle x,attacker view angle y"
                << ",warmup ticks used"
                << std::endl;
         }
@@ -100,6 +102,7 @@ struct EngagementAimTickData {
            << "," << victimRelativeFirstHeadMaxViewAngle.toCSV()
            << "," << victimRelativeFirstHeadCurHeadViewAngle.toCSV()
            << "," << boolToString(holdingAttack)
+           << "," << attackerViewAngle.toCSV()
            << "," << warmupTicksUsed;
         return ss.str();
     }

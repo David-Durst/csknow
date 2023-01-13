@@ -45,9 +45,8 @@ namespace csknow::fire_history {
                     fireClientData.ticksSinceLastFire = 0;
                 }
                 /*
-                else if (firingClients.find(curTickClient.csgoId) != firingClients.end()) {
-                    fireClientData.ticksSinceLastFire = std::min(MAX_TICKS_SINCE_LAST_FIRE_ATTACK,
-                                                                 fireClientData.ticksSinceLastFire + 1);;
+                if (firingClients.find(curTickClient.csgoId) != firingClients.end()) {
+                    fireClientData.ticksSinceLastFire = 0;
                 }
                  */
                 else {

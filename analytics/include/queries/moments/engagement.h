@@ -15,7 +15,7 @@
 #include "queries/query.h"
 #include "geometry.h"
 #include "enum_helpers.h"
-#define PRE_ENGAGEMENT_SECONDS 1.0
+#define PRE_ENGAGEMENT_SECONDS 2.0
 #define POST_ENGAGEMENT_SECONDS 0.2
 using std::string;
 using std::vector;
