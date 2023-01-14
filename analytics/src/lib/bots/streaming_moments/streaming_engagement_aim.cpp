@@ -189,9 +189,11 @@ namespace csknow::engagement_aim {
         else {
             engagementAimTickData.hitVictim = false;
         }
+        /*
         if (fakeAttackDist(gen) < 0.05) {
             engagementAimTickData.hitVictim = true;
         }
+         */
 
         engagementAimTickData.recoilIndex = attackerClient.recoilIndex;
 
@@ -302,12 +304,14 @@ namespace csknow::engagement_aim {
                 engagementAimPlayerHistory.clientHistory.at(curTickClient.csgoId);
             for (int64_t priorTickNum = PAST_AIM_TICKS - 1; priorTickNum >= 0; priorTickNum--) {
                 const EngagementAimTickData & engagementAimTickData = engagementAimHistory.fromNewest(priorTickNum);
+                /*
                 rowCPP.push_back(static_cast<float>(boolToInt(engagementAimTickData.hitVictim)));
                 rowCPP.push_back(static_cast<float>(engagementAimTickData.recoilIndex));
                 rowCPP.push_back(static_cast<float>(engagementAimTickData.ticksSinceLastFire));
                 rowCPP.push_back(static_cast<float>(engagementAimTickData.ticksSinceLastHoldingAttack));
+                 */
                 rowCPP.push_back(static_cast<float>(boolToInt(engagementAimTickData.victimVisible)));
-                rowCPP.push_back(static_cast<float>(boolToInt(engagementAimTickData.victimVisibleYet)));
+                //rowCPP.push_back(static_cast<float>(boolToInt(engagementAimTickData.victimVisibleYet)));
                 rowCPP.push_back(static_cast<float>(boolToInt(engagementAimTickData.victimAlive)));
                 rowCPP.push_back(static_cast<float>(engagementAimTickData.attackerEyePos.x));
                 rowCPP.push_back(static_cast<float>(engagementAimTickData.attackerEyePos.y));
@@ -414,9 +418,11 @@ namespace csknow::engagement_aim {
                             .fromNewest(priorTickNum);
                         aimTicksStream << s.toCSV(priorTickNum == PAST_AIM_TICKS - 1) << std::endl;
                     }
+                    /*
                     if (playerToFiring[orderedAttackerIds[i]]) {
                         std::cout << "firing" << std::endl;
                     }
+                     */
                     torch::Tensor selectedTensor = tmpTensor.slice(0, i, i+1);
                     aimTicksStream << "input," << print2DTensor(selectedTensor);
                     torch::Tensor outputSelectedTensor = output.slice(0, i, i+1);
