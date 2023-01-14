@@ -360,7 +360,9 @@ namespace csknow::engagement_aim {
             }
             torch::Tensor tmpTensor = torch::cat(rowsPT);
             std::vector<torch::jit::IValue> inputs{torch::cat(rowsPT)};
-            at::Tensor output = module.forward(inputs).toTuple()->elements()[1].toTensor();
+            const auto tuple_output = module.forward(inputs).toTuple();
+            at::Tensor output = tuple_output->elements()[1].toTensor();
+            at::Tensor raw_output = tuple_output->elements()[0].toTensor();
 
             for (size_t i = 0; i < orderedAttackerIds.size(); i++) {
                 // subtract from input delta view angles to get change in angle, then apply that to current view angles
@@ -409,14 +411,22 @@ namespace csknow::engagement_aim {
                             .fromNewest(priorTickNum);
                         aimTicksStream << s.toCSV(priorTickNum == PAST_AIM_TICKS - 1) << std::endl;
                     }
+                    if (playerToFiring[orderedAttackerIds[i]]) {
+                        std::cout << "firing" << std::endl;
+                    }
                     torch::Tensor selectedTensor = tmpTensor.slice(0, i, i+1);
-                    aimTicksStream << print2DTensor(selectedTensor);
+                    aimTicksStream << "input," << print2DTensor(selectedTensor);
                     torch::Tensor outputSelectedTensor = output.slice(0, i, i+1);
-                    aimTicksStream << print2DTensor(outputSelectedTensor);
+                    aimTicksStream << "output," << print2DTensor(outputSelectedTensor);
+                    torch::Tensor outputRawSelectedTensor = raw_output.slice(0, i, i+1);
+                    aimTicksStream << "output raw," << print2DTensor(outputRawSelectedTensor);
                     //print2DTensor(tmpTensor);
-                    aimTicksStream << outputViewAngle.toString() << std::endl;
-                    aimTicksStream << deltaViewAngle.toString() << std::endl;
-                    aimTicksStream << output[i][output[0].size(0) * 2 / 3].item<float>() << std::endl;
+                    aimTicksStream << "output view angle," << outputViewAngle.toString() << std::endl;
+                    aimTicksStream << "delta view angle," << deltaViewAngle.toString() << std::endl;
+                    aimTicksStream << "fire," << output[i][output[0].size(0) * 2 / 3].item<float>() << std::endl;
+                    aimTicksStream << "fire weights," <<
+                        raw_output[i][raw_output[0].size(0) * 2 / 3].item<float>() << "," <<
+                        raw_output[i][(raw_output[0].size(0) * 2 / 3) + 1].item<float>() << std::endl;
                     aimTicksStream << output[0].size(0) << std::endl;
                     aimTicksFile << aimTicksStream.str();
                 }
