@@ -95,7 +95,7 @@ namespace action {
                 }
 
                 // TODO: AFTER ADDING VELOCITY FIELD, TRACK STOPPED TO SHOOT USING VELOCITY
-                curAction.setButton(IN_ATTACK, !attackLastFrame && haveAmmo && aimingAtEnemy);
+                curAction.setButton(IN_ATTACK, /* !attackLastFrame && */ haveAmmo && aimingAtEnemy);
                 curAction.intendedToFire = aimingAtEnemy;
                 if (curAction.getButton(IN_ATTACK)) {
                     /*

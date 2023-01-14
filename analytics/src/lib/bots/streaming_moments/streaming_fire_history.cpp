@@ -71,7 +71,7 @@ namespace csknow::fire_history {
                                               priorFireClientData.holdingAttackButton);
                 fireClientData.holdingAttackButton = !isReloading && curRecoilIndex > 0.5 && recoilIndexNotDecaying;
                 // if fired last tick, make sure record attacking even though won't show up in data until next tick
-                if (fireClientData.holdingAttackButton || fireClientData.ticksSinceLastFire == 0) {
+                if (curTickClient.intendedToFire) { //fireClientData.holdingAttackButton || fireClientData.ticksSinceLastFire == 0) {
                     fireClientData.ticksSinceLastHoldingAttack = 0;
                 }
                 else {
