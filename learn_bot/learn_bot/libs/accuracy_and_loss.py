@@ -76,7 +76,7 @@ def wrap_angles(angle_deltas: torch.Tensor) -> torch.Tensor:
 
 # https://discuss.pytorch.org/t/how-to-combine-multiple-criterions-to-a-loss-function/348/4
 def compute_loss(x, pred, y_transformed, y_untransformed, targets, attacking, transformed_last_input_angles,
-                 time_weights, column_transformers: IOColumnTransformers):
+                 time_weights, column_transformers: IOColumnTransformers, include_cat_cols):
     x = x.to(CPU_DEVICE_STR)
     pred_transformed = get_transformed_outputs(pred)
     pred_transformed = pred_transformed.to(CPU_DEVICE_STR)
@@ -172,7 +172,7 @@ def compute_loss(x, pred, y_transformed, y_untransformed, targets, attacking, tr
     #    fixed_angular_differences = angle_transformer_90.inverse(angle_transformer_90.convert(angular_differences))
     #    losses.pos_float_loss += float_loss_fn(fixed_angular_differences, torch.zeros_like(fixed_angular_differences),
     #                                           time_weights) / 90.
-    if column_transformers.output_types.categorical_cols:
+    if include_cat_cols and column_transformers.output_types.categorical_cols:
         col_ranges = column_transformers.get_name_ranges(False, True, frozenset({ColumnTransformerType.CATEGORICAL}))
         for col_range in col_ranges:
             losses.cat_loss += classification_loss_fn(pred_transformed[:, col_range], y_transformed[:, col_range],

@@ -103,7 +103,8 @@ def train(all_data_df: pd.DataFrame, dad_iters=4, num_off_policy_epochs=5, num_s
         time_weights_list.append(0.8 * time_weights_list[-1])
     time_weights = torch.tensor([time_weights_list])
 
-    def train_or_test_SL_epoch(dataloader, model, optimizer, first_epoch, last_epoch, blend_amount, train=True):
+    def train_or_test_SL_epoch(dataloader, model, optimizer, first_epoch, last_epoch, blend_amount, include_cat_cols,
+                               train=True):
         nonlocal first_row, model_output_recording
         size = len(dataloader.dataset)
         num_batches = len(dataloader)
@@ -137,7 +138,8 @@ def train(all_data_df: pd.DataFrame, dad_iters=4, num_off_policy_epochs=5, num_s
                 pred = row_rollout(model, all_time_X, transformed_Y, Y, all_time_column_transformers,
                                     column_transformers, blend_amount)
                 batch_loss = compute_loss(X, pred, transformed_Y, Y, targets, attacking,
-                                          transformed_last_input_angles, time_weights, column_transformers)
+                                          transformed_last_input_angles, time_weights, column_transformers,
+                                          include_cat_cols)
                 cumulative_loss += batch_loss
 
                 # Backpropagation
@@ -194,7 +196,7 @@ def train(all_data_df: pd.DataFrame, dad_iters=4, num_off_policy_epochs=5, num_s
 
     best_result = None
     def train_and_test_SL(model, train_dataloader, test_dataloader, num_epochs, start_overall_epoch, blend_amount_fn,
-                          first_epoch_set, last_epoch_set):
+                          first_epoch_set, last_epoch_set, include_cat_cols):
         nonlocal optimizer, best_result
         for epoch_num in range(num_epochs):
             overall_epoch_num = start_overall_epoch + epoch_num
@@ -206,11 +208,13 @@ def train(all_data_df: pd.DataFrame, dad_iters=4, num_off_policy_epochs=5, num_s
             last_epoch = last_epoch_set and epoch_num == num_epochs - 1
             train_loss, train_accuracy = train_or_test_SL_epoch(train_dataloader, model, optimizer,
                                                                 first_epoch, last_epoch,
-                                                                blend_amount_fn(epoch_num, num_epochs), True)
+                                                                blend_amount_fn(epoch_num, num_epochs),
+                                                                include_cat_cols, True)
             with torch.no_grad():
                 test_loss, test_accuracy = train_or_test_SL_epoch(test_dataloader, model, None,
                                                                   first_epoch, last_epoch,
-                                                                  blend_amount_fn(epoch_num, num_epochs), False)
+                                                                  blend_amount_fn(epoch_num, num_epochs),
+                                                                  include_cat_cols, False)
             if (epoch_num > 0 and epoch_num % 20 == 0) or epoch_num == num_epochs - 1:
                 save_model(False)
             if best_result is None or test_loss.get_total_loss() < best_result.get_total_loss():
@@ -234,14 +238,15 @@ def train(all_data_df: pd.DataFrame, dad_iters=4, num_off_policy_epochs=5, num_s
 
         batch_size = min([128, len(total_train_data), len(test_data)])
 
-        train_dataloader = DataLoader(total_train_data, batch_size=batch_size, shuffle=True)
+        train_dataloader = DataLoader(train_data, batch_size=batch_size, shuffle=True)
+        total_train_dataloader = DataLoader(total_train_data, batch_size=batch_size, shuffle=True)
         test_dataloader = DataLoader(test_data, batch_size=batch_size, shuffle=True)
 
         print(f"num train examples: {len(total_train_data)}")
         print(f"num test examples: {len(test_data)}")
 
         if dad_num == 0:
-            for X, Y, target, attacking, _, _ in train_dataloader:
+            for X, Y, target, attacking, _, _ in total_train_dataloader:
                 print(f"Train shape of X: {X.shape} {X.dtype}")
                 print(f"Train shape of Y: {Y.shape} {Y.dtype}")
                 print(f"Train shape of target: {target.shape} {target.dtype}")
@@ -258,26 +263,31 @@ def train(all_data_df: pd.DataFrame, dad_iters=4, num_off_policy_epochs=5, num_s
         epochs_per_dad_iter = num_off_policy_epochs + num_scheduled_sampling_epochs + num_on_policy_epochs
 
         if num_off_policy_epochs > 0:
-            train_and_test_SL(model, train_dataloader, test_dataloader, num_off_policy_epochs, num_overall_epochs,
+            train_and_test_SL(model, total_train_dataloader, test_dataloader, num_off_policy_epochs, num_overall_epochs,
                               get_off_policy_blend_amount,
                               dad_num == 0,
-                              dad_num == dad_iters and epochs_per_dad_iter == num_off_policy_epochs)
+                              dad_num == dad_iters and epochs_per_dad_iter == num_off_policy_epochs, True)
             num_overall_epochs += num_off_policy_epochs
 
         if num_scheduled_sampling_epochs > 0:
-            train_and_test_SL(model, train_dataloader, test_dataloader, num_scheduled_sampling_epochs, num_overall_epochs,
+            train_and_test_SL(model, total_train_dataloader, test_dataloader, num_scheduled_sampling_epochs, num_overall_epochs,
                               get_scheduled_sampling_blend_amount,
                               dad_num == 0 and num_off_policy_epochs == 0,
                               dad_num == dad_iters and
-                              epochs_per_dad_iter == num_off_policy_epochs + num_scheduled_sampling_epochs)
+                              epochs_per_dad_iter == num_off_policy_epochs + num_scheduled_sampling_epochs, True)
             num_overall_epochs += num_scheduled_sampling_epochs
 
         if num_on_policy_epochs > 0:
-            train_and_test_SL(model, train_dataloader, test_dataloader, num_on_policy_epochs, num_overall_epochs,
+            train_and_test_SL(model, total_train_dataloader, test_dataloader, num_on_policy_epochs, num_overall_epochs,
                               get_on_policy_blend_amount,
                               dad_num == 0 and num_off_policy_epochs == 0 and num_scheduled_sampling_epochs == 0,
-                              dad_num == dad_iters)
+                              dad_num == dad_iters, True)
             num_overall_epochs += num_on_policy_epochs
+
+        if False and dad_num == dad_iters and num_off_policy_epochs > 0:
+            train_and_test_SL(model, train_dataloader, test_dataloader, num_off_policy_epochs, num_overall_epochs,
+                              get_off_policy_blend_amount,
+                              dad_num == 0, True, True)
 
         if dad_num < dad_iters:
             # step 2: inference and result collection
