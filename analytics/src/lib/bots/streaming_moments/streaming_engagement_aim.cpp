@@ -189,6 +189,9 @@ namespace csknow::engagement_aim {
         else {
             engagementAimTickData.hitVictim = false;
         }
+        if (fakeAttackDist(gen) < 0.05) {
+            engagementAimTickData.hitVictim = true;
+        }
 
         engagementAimTickData.recoilIndex = attackerClient.recoilIndex;
 

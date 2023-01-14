@@ -12,6 +12,7 @@
 #include <torch/script.h>
 #include <filesystem>
 #include <ATen/Parallel.h>
+#include <random>
 
 namespace fs = std::filesystem;
 
@@ -98,9 +99,15 @@ namespace csknow::engagement_aim {
     public:
         int printAimTicks = 0;
         std::fstream aimTicksFile;
+
+        std::random_device rd;
+        std::mt19937 gen;
+        std::normal_distribution<> outXYDist{0.,0.1};
+        std::uniform_real_distribution<> fakeAttackDist{0, 1.};
+
         StreamingEngagementAim(const string & navPath) :
             aimTicksFile(fs::path(navPath) / fs::path("..") / fs::path("..") /
-            fs::path("aim_ticks.csv"), std::fstream::out) {
+            fs::path("aim_ticks.csv"), std::fstream::out), gen(rd()) {
 
             fs::path modelPath = fs::path(navPath) / fs::path("..") /
                 fs::path("..") / fs::path("learn_bot") / fs::path("models") /
