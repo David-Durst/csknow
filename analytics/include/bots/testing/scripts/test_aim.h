@@ -100,13 +100,19 @@ public:
                                                         std::move(setupCommands),
                                                         make_unique<DisableActionsNode>(blackboard, "DisableSetup", vector{neededBots[0].id, neededBots[1].id})
                     ), "AimAndKillDisableDuringSetup");
+            Node::Ptr damageOnFail = make_unique<SequenceNode>(blackboard, Node::makeList(
+                make_unique<movement::WaitNode>(blackboard, 4, true),
+                make_unique<DamageActive>(blackboard, neededBots[0].id, neededBots[1].id, state),
+                make_unique<movement::WaitNode>(blackboard, 0.1, false)
+            ), "DamageOnFail");
             commands = make_unique<SequenceNode>(blackboard, Node::makeList(
                                                          std::move(disableAllBothDuringSetup),
                                                          make_unique<ParallelFirstNode>(blackboard, Node::makeList(
                                                                                                 make_unique<KilledAfterTime>(blackboard, neededBots[0].id, neededBots[1].id, 0.5),
                                                                                                 make_unique<DisableActionsNode>(blackboard, "DisableSetup", vector{neededBots[1].id}),
-                                                                                                make_unique<movement::WaitNode>(blackboard, 4, false)),
-                                                                                        "AimAndKillCondition")),
+                                                                                                //make_unique<movement::WaitNode>(blackboard, 4, false)),
+                                                                                                std::move(damageOnFail)
+                                                         ), "AimAndKillCondition")),
                                                  "AimAndKillSequence");
         }
     }
@@ -298,6 +304,11 @@ namespace variable_aim_test {
                     make_unique<ForceActionsNode>(blackboard, vector{neededBots[1].id}, inputBits),
                     make_unique<movement::WaitNode>(blackboard, 0.5)
                 ), "VariableMovingPreAct");
+                Node::Ptr damageOnFail = make_unique<SequenceNode>(blackboard, Node::makeList(
+                    make_unique<movement::WaitNode>(blackboard, 4, true),
+                    make_unique<DamageActive>(blackboard, neededBots[0].id, neededBots[1].id, state),
+                    make_unique<movement::WaitNode>(blackboard, 0.1, false)
+                ), "DamageOnFail");
                 commands = make_unique<SequenceNode>(blackboard, Node::makeList(
                                                          std::move(disableAllBothDuringSetup),
                                                          //std::move(movingPreAct),
@@ -308,8 +319,9 @@ namespace variable_aim_test {
                                                          make_unique<ParallelFirstNode>(blackboard, Node::makeList(
                                                                                             make_unique<KilledAfterTime>(blackboard, neededBots[0].id, neededBots[1].id, 0.1),
                                                                                             make_unique<ForceActionsNode>(blackboard, vector{neededBots[1].id}, inputBits),
-                                                                                            make_unique<movement::WaitNode>(blackboard, 4, false)),
-                                                                                        "VariableAimAndKillCondition")),
+                                                                                            //make_unique<movement::WaitNode>(blackboard, 4, false)),
+                                                                                            std::move(damageOnFail)
+                                                         ), "VariableAimAndKillCondition")),
                                                      "VariableAimAndKillSequence");
             }
         }

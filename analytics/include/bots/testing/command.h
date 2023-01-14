@@ -175,6 +175,23 @@ struct SetHealth : Command {
     }
 };
 
+struct DamageActive : Command {
+    string attackerName, victimName;
+
+    DamageActive(Blackboard & blackboard, CSGOId attackerId, CSGOId victimId, const ServerState & serverState) :
+        Command(blackboard, "DamageActiveCmd"), attackerName(serverState.getClient(attackerId).name),
+        victimName(serverState.getClient(victimId).name) { }
+    DamageActive(Blackboard & blackboard, string attackerName, string victimName) :
+        Command(blackboard, "DamageActiveCmd"), attackerName(attackerName), victimName(victimName) { }
+
+    virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
+        std::stringstream result;
+        result << "sm_damageActive " << attackerName << " " << victimName;
+        scriptLines = {result.str()};
+        return Command::exec(state, treeThinker);
+    }
+};
+
 struct GiveItem : Command {
     string playerName;
     string itemName;
