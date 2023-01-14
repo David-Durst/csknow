@@ -15,10 +15,13 @@ class MLPAimModel(nn.Module):
         self.inner_model = nn.Sequential(
             nn.Linear(cts.get_name_ranges(True, True)[-1].stop, self.internal_width),
             nn.LeakyReLU(),
+            #nn.Dropout(0.1),
             nn.Linear(self.internal_width, self.internal_width),
             nn.LeakyReLU(),
+            #nn.Dropout(0.1),
             nn.Linear(self.internal_width, self.internal_width),
             nn.LeakyReLU(),
+            #nn.Dropout(0.1),
             nn.Linear(self.internal_width, cts.get_name_ranges(False, True)[-1].stop)
         )
 
