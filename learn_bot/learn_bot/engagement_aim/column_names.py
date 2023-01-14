@@ -75,10 +75,11 @@ base_vis_float_columns: List[str] = ["attacker view angle x", "attacker view ang
 temporal_vis_float_column_names = TemporalIOColumnNames(base_vis_float_columns, PRIOR_TICKS, CUR_TICK, FUTURE_TICKS)
 
 base_learning_float_standard_columns: List[str] = [
-    "hit victim",
-    "recoil index",
-    "ticks since last fire", "ticks since last holding attack",
-    "victim visible", "victim visible yet", "victim alive",
+    #"hit victim",
+    #"recoil index",
+    #"ticks since last fire", "ticks since last holding attack",
+    "victim visible", #"victim visible yet",
+    "victim alive",
     "attacker eye pos x", "attacker eye pos y", "attacker eye pos z",
     "victim eye pos x", "victim eye pos y", "victim eye pos z",
     "attacker vel x", "attacker vel y", "attacker vel z",
