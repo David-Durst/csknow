@@ -19,16 +19,19 @@ data_path = Path(__file__).parent / '..' / '..' / '..' / 'analytics' / 'csv_outp
 
 weapon_id_column = "weapon id"
 recoil_index_column = "recoil index (t)"
-x_recoil_column = "scaled recoil angle x (t)"
-prior_x_recoil_column = "scaled recoil angle x (t-1)"
+base_x_recoil_column = "scaled recoil angle x"
+cur_x_recoil_column = "scaled recoil angle x (t)"
 delta_x_recoil_column = "delta scaled recoil angle x"
-y_recoil_column = "scaled recoil angle y (t)"
-prior_y_recoil_column = "scaled recoil angle y (t-1)"
+base_y_recoil_column = "scaled recoil angle y"
+cur_y_recoil_column = "scaled recoil angle y (t)"
 delta_y_recoil_column = "delta scaled recoil angle y"
 x_vel_column = "attacker vel x (t)"
 y_vel_column = "attacker vel y (t)"
 z_vel_column = "attacker vel z (t)"
+attacker_duck_amount_column = "attacker duck amount (t)"
+ticks_since_last_fire_column = "ticks since last fire (t)"
 
+duck_options = ["any state", "standing", "crouching"]
 
 @dataclass
 class RecoilPlot:
@@ -37,7 +40,9 @@ class RecoilPlot:
 
     def plot_recoil_distribution(self, abs_hist_ax: plt.Axes, delta_hist_ax: plt.Axes,
                                  recoil_df: pd.DataFrame, weapon_id: int,
-                                 min_recoil_index: float, max_recoil_index: float, min_speed: float, max_speed: float):
+                                 min_recoil_index: float, max_recoil_index: float, min_speed: float, max_speed: float,
+                                 min_ticks_since_fire: float, max_ticks_since_fire: float,
+                                 duck_option: str, delta_ticks: int):
         abs_hist_range = [[-10, 10], [-1, 20]]
         delta_hist_range = [[-2, 2], [-2, 2]]
 
@@ -46,18 +51,25 @@ class RecoilPlot:
         conditions = (recoil_df[weapon_id_column] == weapon_id) & \
                      (recoil_df[recoil_index_column] >= min_recoil_index) & \
                      (recoil_df[recoil_index_column] <= max_recoil_index) & \
-                     (speed_col >= min_speed) & (speed_col <= max_speed)
+                     (speed_col >= min_speed) & (speed_col <= max_speed) & \
+                     (recoil_df[ticks_since_last_fire_column] >= min_ticks_since_fire) & \
+                     (recoil_df[ticks_since_last_fire_column] <= max_ticks_since_fire)
+
+        if duck_option == duck_options[1]:
+            conditions = conditions & (recoil_df[attacker_duck_amount_column] > 0.5)
+        elif duck_option == duck_options[2]:
+            conditions = conditions & (recoil_df[attacker_duck_amount_column] <= 0.5)
 
         selected_recoil_df = recoil_df[conditions].copy()
         selected_recoil_df[delta_x_recoil_column] = \
-            selected_recoil_df[x_recoil_column] - selected_recoil_df[prior_x_recoil_column]
+            selected_recoil_df[cur_x_recoil_column] - selected_recoil_df[base_x_recoil_column + f" (t-{delta_ticks})"]
         selected_recoil_df[delta_y_recoil_column] = \
-            selected_recoil_df[y_recoil_column] - selected_recoil_df[prior_y_recoil_column]
+            selected_recoil_df[cur_y_recoil_column] - selected_recoil_df[base_y_recoil_column + f" (t-{delta_ticks})"]
 
         # plot abs
         abs_recoil_heatmap, abs_recoil_x_bins, abs_recoil_y_bins = \
-            np.histogram2d(selected_recoil_df[x_recoil_column].to_numpy(),
-                           selected_recoil_df[y_recoil_column].to_numpy(),
+            np.histogram2d(selected_recoil_df[cur_x_recoil_column].to_numpy(),
+                           selected_recoil_df[cur_y_recoil_column].to_numpy(),
                            bins=40, range=abs_hist_range)
         abs_recoil_heatmap = abs_recoil_heatmap.T
         abs_recoil_X, abs_recoil_Y = np.meshgrid(abs_recoil_x_bins, abs_recoil_y_bins)
@@ -86,13 +98,10 @@ class RecoilPlot:
         self.canvas.draw()
 
 
-def vis(all_data_df: pd.DataFrame):
-    recoil_df = all_data_df.loc[:, [weapon_id_column, recoil_index_column,
-                                    x_recoil_column, prior_x_recoil_column, y_recoil_column, prior_y_recoil_column,
-                                    x_vel_column, y_vel_column, z_vel_column]]
+def vis(recoil_df: pd.DataFrame):
     weapon_ids = all_data_df.loc[:, weapon_id_column].unique().tolist()
     weapon_names = [weapon_id_to_name[index] for index in weapon_ids]
-    sorted(weapon_names)
+    weapon_names = sorted(weapon_names)
 
     #This creates the main window of an application
     window = tk.Tk()
@@ -129,11 +138,20 @@ def vis(all_data_df: pd.DataFrame):
         min_speed = mid_speed - range_speed / 2.
         max_speed = mid_speed + range_speed / 2.
 
+        mid_ticks_since_fire = float(mid_ticks_since_fire_selector.get())
+        range_ticks_since_fire = float(range_ticks_since_fire_selector.get())
+        min_ticks_since_fire = mid_ticks_since_fire - range_ticks_since_fire / 2.
+        max_ticks_since_fire = mid_ticks_since_fire + range_ticks_since_fire / 2.
+
         recoil_index_text_var.set(f"recoil index mid {mid_recoil_index} range {range_recoil_index},"
-                                  f"speed mid {mid_speed} range {range_speed}")
+                                  f"speed mid {mid_speed} range {range_speed},"
+                                  f"ticks since fire mid {mid_ticks_since_fire} range {range_ticks_since_fire},"
+                                  f"delta ticks {int(delta_ticks_selector.get())}")
         recoil_plot.plot_recoil_distribution(abs_hist_ax, delta_hist_ax,
                                              recoil_df, weapon_name_to_id[weapon_selector_variable.get()],
-                                             min_recoil_index, max_recoil_index, min_speed, max_speed)
+                                             min_recoil_index, max_recoil_index, min_speed, max_speed,
+                                             min_ticks_since_fire, max_ticks_since_fire,
+                                             duck_selector_variable.get(), int(delta_ticks_selector.get()))
 
     discrete_selector_frame = tk.Frame(window)
     discrete_selector_frame.pack(pady=5)
@@ -144,6 +162,15 @@ def vis(all_data_df: pd.DataFrame):
                                     command=ignore_arg_update_graph)
     weapon_selector.configure(width=20)
     weapon_selector.pack(side="left")
+
+    duck_label = tk.Label(discrete_selector_frame, text="Duck Options")
+    duck_label.pack(side="left")
+    duck_selector_variable = tk.StringVar()
+    duck_selector_variable.set(duck_options[0])  # default value
+    duck_selector = tk.OptionMenu(discrete_selector_frame, duck_selector_variable, *duck_options,
+                                    command=ignore_arg_update_graph)
+    duck_selector.configure(width=20)
+    duck_selector.pack(side="left")
 
     recoil_index_text_frame = tk.Frame(window)
     recoil_index_text_frame.pack(pady=5)
@@ -162,7 +189,6 @@ def vis(all_data_df: pd.DataFrame):
         orient='horizontal',
         showvalue=0,
         length=300,
-        resolution=0.5,
         command=ignore_arg_update_graph
     )
     mid_recoil_index_selector.pack()
@@ -214,6 +240,53 @@ def vis(all_data_df: pd.DataFrame):
     )
     range_speed_selector.set(500)
     range_speed_selector.pack(side="left")
+
+
+    mid_ticks_since_fire_frame = tk.Frame(window)
+    mid_ticks_since_fire_frame.pack(pady=5)
+    mid_ticks_since_fire_label = tk.Label(mid_ticks_since_fire_frame, text="Ticks Since Fire Mid")
+    mid_ticks_since_fire_label.pack(side="left")
+    mid_ticks_since_fire_selector = tk.Scale(
+        mid_ticks_since_fire_frame,
+        from_=0,
+        to=100,
+        orient='horizontal',
+        showvalue=0,
+        length=300,
+        command=ignore_arg_update_graph
+    )
+    mid_ticks_since_fire_selector.pack(side="left")
+
+    range_ticks_since_fire_frame = tk.Frame(window)
+    range_ticks_since_fire_frame.pack(pady=5)
+    range_ticks_since_fire_label = tk.Label(range_ticks_since_fire_frame, text="Ticks Since Fire Range")
+    range_ticks_since_fire_label.pack(side="left")
+    range_ticks_since_fire_selector = tk.Scale(
+        range_ticks_since_fire_frame,
+        from_=1,
+        to=200,
+        orient='horizontal',
+        showvalue=0,
+        length=300,
+        command=ignore_arg_update_graph
+    )
+    range_ticks_since_fire_selector.set(200)
+    range_ticks_since_fire_selector.pack(side="left")
+
+    delta_ticks_frame = tk.Frame(window)
+    delta_ticks_frame.pack(pady=5)
+    delta_ticks_label = tk.Label(delta_ticks_frame, text="Delta Ticks")
+    delta_ticks_label.pack(side="left")
+    delta_ticks_selector = tk.Scale(
+        delta_ticks_frame,
+        from_=1,
+        to=13,
+        orient='horizontal',
+        showvalue=0,
+        length=300,
+        command=ignore_arg_update_graph
+    )
+    delta_ticks_selector.pack(side="left")
 
     update_graph()
 
