@@ -64,8 +64,8 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
     vector<vector<array<Vec3, TOTAL_AIM_TICKS>>> tmpAttackerVel(numThreads);
     vector<vector<array<Vec3, TOTAL_AIM_TICKS>>> tmpVictimVel(numThreads);
     vector<vector<array<float, TOTAL_AIM_TICKS>>> tmpAttackerDuckAmount(numThreads);
+    vector<vector<array<DemoEquipmentType, TOTAL_AIM_TICKS>>> tmpWeaponId(numThreads);
     vector<vector<AimWeaponType>> tmpWeaponType(numThreads);
-    vector<vector<DemoEquipmentType>> tmpWeaponId(numThreads);
 
     // for each round
     // for each tick
@@ -210,6 +210,7 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
                 tmpAttackerVel[threadNum].push_back({});
                 tmpVictimVel[threadNum].push_back({});
                 tmpAttackerDuckAmount[threadNum].push_back({});
+                tmpWeaponId[threadNum].push_back({});
 
                 for (size_t i = 0; i < TOTAL_AIM_TICKS; i++) {
                     const int64_t & attackerPATId =
@@ -395,6 +396,8 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
                         tmpVictimVel[threadNum].back()[i] = {0., 0., 0.};
                     }
                     tmpAttackerDuckAmount[threadNum].back()[i] = playerAtTick.duckAmount[attackerPATId];
+                    tmpWeaponId[threadNum].back()[i] =
+                        static_cast<DemoEquipmentType>(playerAtTick.activeWeapon[attackerPATId]);
                 }
 
                 // assume attacker has same weapon for all ticks
@@ -423,7 +426,6 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
                     aimWeaponType = AimWeaponType::Unknown;
                 }
                 tmpWeaponType[threadNum].push_back(aimWeaponType);
-                tmpWeaponId[threadNum].push_back(demoEquipmentType);
             }
         }
 
@@ -487,8 +489,8 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
                            result.attackerVel.push_back(tmpAttackerVel[minThreadId][tmpRowId]);
                            result.victimVel.push_back(tmpVictimVel[minThreadId][tmpRowId]);
                            result.attackerDuckAmount.push_back(tmpAttackerDuckAmount[minThreadId][tmpRowId]);
-                           result.weaponType.push_back(tmpWeaponType[minThreadId][tmpRowId]);
                            result.weaponId.push_back(tmpWeaponId[minThreadId][tmpRowId]);
+                           result.weaponType.push_back(tmpWeaponType[minThreadId][tmpRowId]);
                        });
     return result;
 }

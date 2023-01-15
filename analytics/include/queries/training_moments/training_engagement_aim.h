@@ -87,8 +87,8 @@ public:
     vector<array<Vec3, TOTAL_AIM_TICKS>> attackerVel;
     vector<array<Vec3, TOTAL_AIM_TICKS>> victimVel;
     vector<array<float, TOTAL_AIM_TICKS>> attackerDuckAmount;
+    vector<array<DemoEquipmentType, TOTAL_AIM_TICKS>> weaponId;
     vector<AimWeaponType> weaponType;
-    vector<DemoEquipmentType> weaponId;
 
 
     TrainingEngagementAimResult() {
@@ -139,10 +139,11 @@ public:
                << "," << deltaEyePos[index][i].toCSV()
                << "," << attackerVel[index][i].toCSV()
                << "," << victimVel[index][i].toCSV()
-               << "," << attackerDuckAmount[index][i];
+               << "," << attackerDuckAmount[index][i]
+               << "," << enumAsInt(weaponId[index][i]);
         }
 
-        s << "," << enumAsInt(weaponType[index]) << "," << enumAsInt(weaponId[index]);
+        s << "," << enumAsInt(weaponType[index]);
 
         s << std::endl;
     }
@@ -209,9 +210,9 @@ public:
             result.push_back("victim vel y (t" + toSignedIntString(i, true) + ")");
             result.push_back("victim vel z (t" + toSignedIntString(i, true) + ")");
             result.push_back("attacker duck amount (t" + toSignedIntString(i, true) + ")");
+            result.push_back("weapon id (t" + toSignedIntString(i, true) + ")");
         }
         result.push_back("weapon type");
-        result.push_back("weapon id");
         return result;
     }
 };
