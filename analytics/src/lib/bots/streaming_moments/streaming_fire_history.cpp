@@ -41,7 +41,7 @@ namespace csknow::fire_history {
 
                 // if input angle defined, then action was input and firing is valid (if can fire)
                 if (curTickClient.inputAngleDefined && curTickClient.intendedToFire &&
-                    curTickClient.nextPrimaryAttack >= curState.gameTime) {
+                    curTickClient.nextPrimaryAttack <= curState.gameTime) {
                     fireClientData.ticksSinceLastFire = 0;
                 }
                 /*
