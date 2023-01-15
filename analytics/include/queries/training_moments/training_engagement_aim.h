@@ -87,6 +87,7 @@ public:
     vector<array<Vec3, TOTAL_AIM_TICKS>> attackerVel;
     vector<array<Vec3, TOTAL_AIM_TICKS>> victimVel;
     vector<AimWeaponType> weaponType;
+    vector<DemoEquipmentType> weaponId;
 
 
     TrainingEngagementAimResult() {
@@ -139,7 +140,7 @@ public:
                << "," << victimVel[index][i].toCSV();
         }
 
-        ss << "," << enumAsInt(weaponType[index]);
+        ss << "," << enumAsInt(weaponType[index]) << "," << enumAsInt(weaponId[index]);
 
         ss << std::endl;
     }
@@ -207,6 +208,7 @@ public:
             result.push_back("victim vel z (t" + toSignedIntString(i, true) + ")");
         }
         result.push_back("weapon type");
+        result.push_back("weapon id");
         return result;
     }
 };

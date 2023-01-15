@@ -64,6 +64,7 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
     vector<vector<array<Vec3, TOTAL_AIM_TICKS>>> tmpAttackerVel(numThreads);
     vector<vector<array<Vec3, TOTAL_AIM_TICKS>>> tmpVictimVel(numThreads);
     vector<vector<AimWeaponType>> tmpWeaponType(numThreads);
+    vector<vector<DemoEquipmentType>> tmpWeaponId(numThreads);
 
     // for each round
     // for each tick
@@ -419,6 +420,7 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
                     aimWeaponType = AimWeaponType::Unknown;
                 }
                 tmpWeaponType[threadNum].push_back(aimWeaponType);
+                tmpWeaponId[threadNum].push_back(demoEquipmentType);
             }
         }
 
@@ -482,6 +484,7 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
                            result.attackerVel.push_back(tmpAttackerVel[minThreadId][tmpRowId]);
                            result.victimVel.push_back(tmpVictimVel[minThreadId][tmpRowId]);
                            result.weaponType.push_back(tmpWeaponType[minThreadId][tmpRowId]);
+                           result.weaponId.push_back(tmpWeaponId[minThreadId][tmpRowId]);
                        });
     return result;
 }
