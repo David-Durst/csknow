@@ -21,7 +21,7 @@ recoil_saved_path = Path(__file__).parent / 'saved_recoil_dataframe.csv'
 
 core_id_columns = ["id", "round id", "tick id", "demo tick id", "game tick id", "game time", "engagement id"]
 
-weapon_id_column = "weapon id"
+weapon_id_column = "weapon id (t)"
 recoil_index_column = "recoil index (t)"
 base_x_recoil_column = "scaled recoil angle x"
 cur_x_recoil_column = "scaled recoil angle x (t)"
@@ -178,13 +178,15 @@ def vis(recoil_df: pd.DataFrame):
         recoil_index_text_var.set(f"recoil index mid {mid_recoil_index} range {range_recoil_index},"
                                   f"speed mid {mid_speed} range {range_speed},"
                                   f"ticks since fire mid {mid_ticks_since_fire} range {range_ticks_since_fire},"
-                                  f"delta ticks {int(delta_ticks_selector.get())}")
+                                  f"delta ticks {int(delta_ticks_selector.get())},"
+                                  f"num points {len(last_filtered_recoil_data.all_cols_df)}")
 
         recoil_plot.plot_recoil_distribution(abs_hist_ax, delta_hist_ax, last_filtered_recoil_data.all_cols_df)
 
     def save_graph_data():
-        last_filtered_recoil_data.all_cols_df.to_csv(saved_path)
-        
+        tmp_df = last_filtered_recoil_data.all_cols_df.copy()
+        tmp_df.sort_index(axis=1).T.to_csv(saved_path)
+
     def save_graph_data_recoil_cols():
         last_filtered_recoil_data.recoil_cols_df.to_csv(recoil_saved_path)
 
