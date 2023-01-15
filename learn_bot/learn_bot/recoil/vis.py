@@ -21,6 +21,9 @@ weapon_id_column = "weapon id"
 recoil_index_column = "recoil index (t)"
 x_recoil_column = "scaled recoil angle x (t)"
 y_recoil_column = "scaled recoil angle y (t)"
+x_vel_column = "attacker vel x (t)"
+y_vel_column = "attacker vel y (t)"
+z_vel_column = "attacker vel z (t)"
 
 
 @dataclass
@@ -29,11 +32,16 @@ class RecoilPlot:
     canvas: FigureCanvasTkAgg
 
     def plot_recoil_distribution(self, hist_ax: plt.Axes, recoil_df: pd.DataFrame, weapon_id: int,
-                                 min_recoil_index: float, max_recoil_index: float):
+                                 min_recoil_index: float, max_recoil_index: float, min_speed: float, max_speed: float):
         hist_range = [[-10, 10], [-1, 20]]
-        selected_recoil_df = recoil_df[(recoil_df[weapon_id_column] == weapon_id) &
-                                       (recoil_df[recoil_index_column] >= min_recoil_index) &
-                                       (recoil_df[recoil_index_column] <= max_recoil_index)]
+        speed_col = \
+            np.sqrt((recoil_df[x_vel_column].pow(2) + recoil_df[y_vel_column].pow(2) + recoil_df[z_vel_column].pow(2)))
+        conditions = (recoil_df[weapon_id_column] == weapon_id) & \
+                     (recoil_df[recoil_index_column] >= min_recoil_index) & \
+                     (recoil_df[recoil_index_column] <= max_recoil_index) & \
+                     (speed_col >= min_speed) & (speed_col <= max_speed)
+
+        selected_recoil_df = recoil_df[conditions]
 
         hist_ax.clear()
         recoil_heatmap, recoil_x_bins, recoil_y_bins = np.histogram2d(selected_recoil_df[x_recoil_column].to_numpy(),
@@ -51,7 +59,8 @@ class RecoilPlot:
 
 
 def vis(all_data_df: pd.DataFrame):
-    recoil_df = all_data_df.loc[:, [weapon_id_column, recoil_index_column, x_recoil_column, y_recoil_column]]
+    recoil_df = all_data_df.loc[:, [weapon_id_column, recoil_index_column, x_recoil_column, y_recoil_column,
+                                    x_vel_column, y_vel_column, z_vel_column]]
     weapon_ids = all_data_df.loc[:, weapon_id_column].unique().tolist()
     weapon_names = [weapon_id_to_name[index] for index in weapon_ids]
 
@@ -78,13 +87,21 @@ def vis(all_data_df: pd.DataFrame):
     def update_graph():
         fig.clear()
         hist_ax = fig.add_subplot(1, 1, 1)
+
         mid_recoil_index = float(mid_recoil_index_selector.get())
         range_recoil_index = float(range_recoil_index_selector.get())
         min_recoil_index = mid_recoil_index - range_recoil_index / 2.
         max_recoil_index = mid_recoil_index + range_recoil_index / 2.
-        recoil_index_text_var.set(f"recoin index mid {mid_recoil_index}, range {range_recoil_index}")
+
+        mid_speed = float(mid_speed_selector.get())
+        range_speed = float(range_speed_selector.get())
+        min_speed = mid_speed - range_speed / 2.
+        max_speed = mid_speed + range_speed / 2.
+
+        recoil_index_text_var.set(f"recoil index mid {mid_recoil_index} range {range_recoil_index},"
+                                  f"speed mid {mid_speed} range {range_speed}")
         recoil_plot.plot_recoil_distribution(hist_ax, recoil_df, weapon_name_to_id[weapon_selector_variable.get()],
-                                             min_recoil_index, max_recoil_index)
+                                             min_recoil_index, max_recoil_index, min_speed, max_speed)
 
     discrete_selector_frame = tk.Frame(window)
     discrete_selector_frame.pack(pady=5)
@@ -104,6 +121,8 @@ def vis(all_data_df: pd.DataFrame):
 
     mid_recoil_index_frame = tk.Frame(window)
     mid_recoil_index_frame.pack(pady=5)
+    mid_recoil_index_label = tk.Label(mid_recoil_index_frame, text="Recoil Index Mid")
+    mid_recoil_index_label.pack(side="left")
     mid_recoil_index_selector = tk.Scale(
         mid_recoil_index_frame,
         from_=0,
@@ -118,6 +137,8 @@ def vis(all_data_df: pd.DataFrame):
 
     range_recoil_index_frame = tk.Frame(window)
     range_recoil_index_frame.pack(pady=5)
+    range_recoil_index_label = tk.Label(range_recoil_index_frame, text="Recoil Index Range")
+    range_recoil_index_label.pack(side="left")
     range_recoil_index_selector = tk.Scale(
         range_recoil_index_frame,
         from_=1,
@@ -127,7 +148,40 @@ def vis(all_data_df: pd.DataFrame):
         length=300,
         command=ignore_arg_update_graph
     )
-    range_recoil_index_selector.pack()
+    range_recoil_index_selector.set(30)
+    range_recoil_index_selector.pack(side="left")
+
+    mid_speed_frame = tk.Frame(window)
+    mid_speed_frame.pack(pady=5)
+    mid_speed_label = tk.Label(mid_speed_frame, text="Attacker Speed Mid")
+    mid_speed_label.pack(side="left")
+    mid_speed_selector = tk.Scale(
+        mid_speed_frame,
+        from_=0,
+        to=250,
+        orient='horizontal',
+        showvalue=0,
+        length=300,
+        resolution=0.5,
+        command=ignore_arg_update_graph
+    )
+    mid_speed_selector.pack(side="left")
+
+    range_speed_frame = tk.Frame(window)
+    range_speed_frame.pack(pady=5)
+    range_speed_label = tk.Label(range_speed_frame, text="Attacker Speed Range")
+    range_speed_label.pack(side="left")
+    range_speed_selector = tk.Scale(
+        range_speed_frame,
+        from_=1,
+        to=500,
+        orient='horizontal',
+        showvalue=0,
+        length=300,
+        command=ignore_arg_update_graph
+    )
+    range_speed_selector.set(500)
+    range_speed_selector.pack(side="left")
 
     update_graph()
 
