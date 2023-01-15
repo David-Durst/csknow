@@ -63,6 +63,7 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
     vector<vector<array<Vec3, TOTAL_AIM_TICKS>>> tmpDeltaEyePos(numThreads);
     vector<vector<array<Vec3, TOTAL_AIM_TICKS>>> tmpAttackerVel(numThreads);
     vector<vector<array<Vec3, TOTAL_AIM_TICKS>>> tmpVictimVel(numThreads);
+    vector<vector<array<float, TOTAL_AIM_TICKS>>> tmpAttackerDuckAmount(numThreads);
     vector<vector<AimWeaponType>> tmpWeaponType(numThreads);
     vector<vector<DemoEquipmentType>> tmpWeaponId(numThreads);
 
@@ -208,6 +209,7 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
                 tmpDeltaEyePos[threadNum].push_back({});
                 tmpAttackerVel[threadNum].push_back({});
                 tmpVictimVel[threadNum].push_back({});
+                tmpAttackerDuckAmount[threadNum].push_back({});
 
                 for (size_t i = 0; i < TOTAL_AIM_TICKS; i++) {
                     const int64_t & attackerPATId =
@@ -392,6 +394,7 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
                     else {
                         tmpVictimVel[threadNum].back()[i] = {0., 0., 0.};
                     }
+                    tmpAttackerDuckAmount[threadNum].back()[i] = playerAtTick.duckAmount[attackerPATId];
                 }
 
                 // assume attacker has same weapon for all ticks
@@ -483,6 +486,7 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
                            result.deltaEyePos.push_back(tmpDeltaEyePos[minThreadId][tmpRowId]);
                            result.attackerVel.push_back(tmpAttackerVel[minThreadId][tmpRowId]);
                            result.victimVel.push_back(tmpVictimVel[minThreadId][tmpRowId]);
+                           result.attackerDuckAmount.push_back(tmpAttackerDuckAmount[minThreadId][tmpRowId]);
                            result.weaponType.push_back(tmpWeaponType[minThreadId][tmpRowId]);
                            result.weaponId.push_back(tmpWeaponId[minThreadId][tmpRowId]);
                        });
