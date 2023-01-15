@@ -69,22 +69,22 @@ public:
         return result;
     }
 
-    void oneLineToCSV(int64_t index, stringstream & ss) override {
-        ss << index << "," << startTickId[index] << "," << endTickId[index] << "," << tickLength[index] << ",";
+    void oneLineToCSV(int64_t index, std::ostream &s) override {
+        s << index << "," << startTickId[index] << "," << endTickId[index] << "," << tickLength[index] << ",";
 
         vector<string> tmp;
         for (int64_t pId : playerId[index]) {
             tmp.push_back(std::to_string(pId));
         }
-        commaSeparateList(ss, tmp, ";");
-        ss << ",";
+        commaSeparateList(s, tmp, ";");
+        s << ",";
 
         tmp.clear();
         for (AggressionRole r : role[index]) {
             tmp.push_back(std::to_string(enumAsInt(r)));
         }
-        commaSeparateList(ss, tmp, ";");
-        ss << std::endl;
+        commaSeparateList(s, tmp, ";");
+        s << std::endl;
     }
 
     [[nodiscard]]

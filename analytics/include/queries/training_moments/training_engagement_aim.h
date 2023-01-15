@@ -106,17 +106,17 @@ public:
         return result;
     }
 
-    void oneLineToCSV(int64_t index, stringstream & ss) override {
-        ss << index << "," << roundId[index] << "," << tickId[index] << ","
-           << demoTickId[index] << "," << gameTickId[index] << "," << gameTime[index] << ","
-           << engagementId[index] << "," << attackerPlayerId[index] << "," << victimPlayerId[index];
+    void oneLineToCSV(int64_t index, std::ostream &s) override {
+        s << index << "," << roundId[index] << "," << tickId[index] << ","
+          << demoTickId[index] << "," << gameTickId[index] << "," << gameTime[index] << ","
+          << engagementId[index] << "," << attackerPlayerId[index] << "," << victimPlayerId[index];
 
         for (size_t i = 0; i < TOTAL_AIM_TICKS; i++) {
-            ss << "," << attackerViewAngle[index][i].toCSV() << "," << idealViewAngle[index][i].toCSV()
-               << "," << deltaRelativeFirstHeadViewAngle[index][i].toCSV()
-               << "," << deltaRelativeCurHeadViewAngle[index][i].toCSV()
-               << "," << boolToInt(hitVictim[index][i])
-               << "," << recoilIndex[index][i]
+            s << "," << attackerViewAngle[index][i].toCSV() << "," << idealViewAngle[index][i].toCSV()
+              << "," << deltaRelativeFirstHeadViewAngle[index][i].toCSV()
+              << "," << deltaRelativeCurHeadViewAngle[index][i].toCSV()
+              << "," << boolToInt(hitVictim[index][i])
+              << "," << recoilIndex[index][i]
                << "," << scaledRecoilAngle[index][i].toCSV()
                << "," << boolToInt(holdingAttack[index][i])
                << "," << ticksSinceLastFire[index][i] << "," << ticksSinceLastHoldingAttack[index][i]
@@ -140,9 +140,9 @@ public:
                << "," << victimVel[index][i].toCSV();
         }
 
-        ss << "," << enumAsInt(weaponType[index]) << "," << enumAsInt(weaponId[index]);
+        s << "," << enumAsInt(weaponType[index]) << "," << enumAsInt(weaponId[index]);
 
-        ss << std::endl;
+        s << std::endl;
     }
 
     vector<string> getForeignKeyNames() override {

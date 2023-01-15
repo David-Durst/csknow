@@ -34,9 +34,9 @@ public:
         return result;
     }
 
-    void oneLineToCSV(int64_t index, stringstream & ss) {
-        ss << index << "," << tickId[index] << "," << lookerPlayerAtTickId[index] << "," << lookerPlayerId[index] << ","
-           << lookedAtPlayerAtTickId[index] << "," << lookedAtPlayerId[index] << std::endl;
+    void oneLineToCSV(int64_t index, std::ostream &s) {
+        s << index << "," << tickId[index] << "," << lookerPlayerAtTickId[index] << "," << lookerPlayerId[index] << ","
+          << lookedAtPlayerAtTickId[index] << "," << lookedAtPlayerId[index] << std::endl;
     }
 
     vector<string> getForeignKeyNames() {

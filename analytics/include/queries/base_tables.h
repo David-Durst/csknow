@@ -20,10 +20,10 @@ public:
         return {};
     }
 
-    void oneLineToCSV(int64_t index, stringstream & ss) override {
-        ss << games.id[index] << "," << games.demoFile[index] << ","
-           << games.demoTickRate[index] << "," << games.gameTickRate[index];
-        ss << std::endl;
+    void oneLineToCSV(int64_t index, std::ostream &s) override {
+        s << games.id[index] << "," << games.demoFile[index] << ","
+          << games.demoTickRate[index] << "," << games.gameTickRate[index];
+        s << std::endl;
     }
 
     vector<string> getForeignKeyNames() override {
@@ -55,12 +55,12 @@ public:
         return result;
     }
 
-    void oneLineToCSV(int64_t index, stringstream & ss) override {
-        ss << rounds.id[index] << "," << rounds.gameId[index] << "," << rounds.startTick[index]
-           << "," << rounds.endTick[index] << "," << rounds.endTick[index] - rounds.startTick[index] + 1 << ","
-           << rounds.warmup[index] << "," << rounds.freezeTimeEnd[index] << "," << rounds.roundNumber[index] << ","
-           << rounds.roundEndReason[index] << "," << rounds.winner[index] << ","
-           << rounds.tWins[index] << "," << rounds.ctWins[index] << std::endl;
+    void oneLineToCSV(int64_t index, std::ostream &s) override {
+        s << rounds.id[index] << "," << rounds.gameId[index] << "," << rounds.startTick[index]
+          << "," << rounds.endTick[index] << "," << rounds.endTick[index] - rounds.startTick[index] + 1 << ","
+          << rounds.warmup[index] << "," << rounds.freezeTimeEnd[index] << "," << rounds.roundNumber[index] << ","
+          << rounds.roundEndReason[index] << "," << rounds.winner[index] << ","
+          << rounds.tWins[index] << "," << rounds.ctWins[index] << std::endl;
     }
 
     vector<string> getForeignKeyNames() override {
@@ -91,8 +91,8 @@ public:
         return result;
     }
 
-    void oneLineToCSV(int64_t index, stringstream & ss) override {
-        ss << players.id[index] << "," << players.gameId[index] << "," << players.name[index] << std::endl;
+    void oneLineToCSV(int64_t index, std::ostream &s) override {
+        s << players.id[index] << "," << players.gameId[index] << "," << players.name[index] << std::endl;
     }
 
     vector<string> getForeignKeyNames() override {
@@ -124,10 +124,10 @@ public:
         return result;
     }
 
-    void oneLineToCSV(int64_t index, stringstream & ss) override {
-        ss << ticks.id[index] << "," << ticks.roundId[index] << "," << ticks.gameTime[index] << ","
-           << ticks.demoTickNumber[index] << "," << ticks.gameTickNumber[index] << "," << ticks.bombCarrier[index] << ","
-           << ticks.bombX[index] << "," << ticks.bombY[index] << "," << ticks.bombZ[index] << std::endl;
+    void oneLineToCSV(int64_t index, std::ostream &s) override {
+        s << ticks.id[index] << "," << ticks.roundId[index] << "," << ticks.gameTime[index] << ","
+          << ticks.demoTickNumber[index] << "," << ticks.gameTickNumber[index] << "," << ticks.bombCarrier[index] << ","
+          << ticks.bombX[index] << "," << ticks.bombY[index] << "," << ticks.bombZ[index] << std::endl;
     }
 
     vector<string> getForeignKeyNames() override {
@@ -164,11 +164,11 @@ public:
         return result;
     }
 
-    void oneLineToCSV(int64_t index, stringstream & ss) override {
-        ss << pat.id[index] << "," << pat.tickId[index] << "," << pat.playerId[index] << ","
-           << pat.posX[index] << "," << pat.posY[index] << "," << pat.posZ[index] << ","
-           << pat.viewX[index] << "," << pat.viewY[index] << "," << pat.team[index] << ","
-           << pat.health[index] << "," << pat.armor[index] << "," << pat.isAlive[index] << std::endl;
+    void oneLineToCSV(int64_t index, std::ostream &s) override {
+        s << pat.id[index] << "," << pat.tickId[index] << "," << pat.playerId[index] << ","
+          << pat.posX[index] << "," << pat.posY[index] << "," << pat.posZ[index] << ","
+          << pat.viewX[index] << "," << pat.viewY[index] << "," << pat.team[index] << ","
+          << pat.health[index] << "," << pat.armor[index] << "," << pat.isAlive[index] << std::endl;
     }
 
     vector<string> getForeignKeyNames() override {

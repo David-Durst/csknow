@@ -42,10 +42,10 @@ public:
         return result;
     }
 
-    void oneLineToCSV(int64_t index, stringstream & ss) {
-        ss << index << "," << tickId[index] << "," << originPlayerAtTickId[index] << "," << originPlayerId[index] << ","
-           << lookingPlayerAtTickId[index] << "," << lookingPlayerId[index] << ","
-           << nearestOriginId[index] << "," << coverEdgeClusterId[index] << std::endl;
+    void oneLineToCSV(int64_t index, std::ostream &s) {
+        s << index << "," << tickId[index] << "," << originPlayerAtTickId[index] << "," << originPlayerId[index] << ","
+          << lookingPlayerAtTickId[index] << "," << lookingPlayerId[index] << ","
+          << nearestOriginId[index] << "," << coverEdgeClusterId[index] << std::endl;
     }
 
     vector<string> getForeignKeyNames() {

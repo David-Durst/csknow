@@ -33,8 +33,8 @@ public:
     };
     [[maybe_unused]] explicit Cluster(const string & filePath);
 
-    void oneLineToCSV(int64_t index, stringstream & ss) override {
-        ss << id[index] << "," << wallId[index] << "," << x[index] << "," << y[index] << "," << z[index] << std::endl;
+    void oneLineToCSV(int64_t index, std::ostream &s) override {
+        s << id[index] << "," << wallId[index] << "," << x[index] << "," << y[index] << "," << z[index] << std::endl;
     }
 
     vector<string> getForeignKeyNames() override {

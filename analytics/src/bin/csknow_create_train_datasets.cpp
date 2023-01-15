@@ -221,7 +221,7 @@ int main(int argc, char * argv[]) {
         std::ofstream fsOverride;
         std::cout << "writing " << outputDir + "/" + name + ".csv" << std::endl;
         fsOverride.open(outputDir + "/" + name + ".csv");
-        fsOverride << result.get().toCSV();
+        result.get().toCSV(fsOverride);
         fsOverride.close();
     }
 

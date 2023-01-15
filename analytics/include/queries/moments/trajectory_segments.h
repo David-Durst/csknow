@@ -46,13 +46,13 @@ public:
         return {};
     }
 
-    void oneLineToCSV(int64_t index, stringstream & ss) override {
-        ss << index << "," << trajectoryId[index] << "," << segmentStartTickId[index] << "," << segmentEndTickId[index] << ","
-           << tickLength[index] << "," << playerId[index] << "," << playerName[index] << ","
-           << segmentStart2DPos[index].x << "," << segmentStart2DPos[index].y << "," << segmentStart2DPos[index].z << ","
-           << segmentEnd2DPos[index].x << "," << segmentEnd2DPos[index].y << "," << segmentEnd2DPos[index].z;
+    void oneLineToCSV(int64_t index, std::ostream &s) override {
+        s << index << "," << trajectoryId[index] << "," << segmentStartTickId[index] << "," << segmentEndTickId[index] << ","
+          << tickLength[index] << "," << playerId[index] << "," << playerName[index] << ","
+          << segmentStart2DPos[index].x << "," << segmentStart2DPos[index].y << "," << segmentStart2DPos[index].z << ","
+          << segmentEnd2DPos[index].x << "," << segmentEnd2DPos[index].y << "," << segmentEnd2DPos[index].z;
 
-        ss << std::endl;
+        s << std::endl;
     }
 
     [[nodiscard]]

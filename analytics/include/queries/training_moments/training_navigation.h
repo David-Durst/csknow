@@ -126,17 +126,17 @@ namespace csknow {
                 return result;
             }
 
-            void oneLineToCSV(int64_t index, stringstream & ss) override {
-                ss << index << "," << segmentCurTickId[index] << "," << segmentCurDemoTickId[index] << ","
-                   << segmentCurGameTickId[index] << "," << roundId[index] << "," << trajectoryId[index] << ","
-                   << playerId[index] << "," << players.name[players.idOffset + playerId[index]];
+            void oneLineToCSV(int64_t index, std::ostream &s) override {
+                s << index << "," << segmentCurTickId[index] << "," << segmentCurDemoTickId[index] << ","
+                  << segmentCurGameTickId[index] << "," << roundId[index] << "," << trajectoryId[index] << ","
+                  << playerId[index] << "," << players.name[players.idOffset + playerId[index]];
 
                 for (size_t i = 0; i < TOTAL_NAV_TICKS; i++) {
                     // empty output dir as may load result from different directory
                     TemporalImageNames imgNames(segmentTickIds[index][i], players.name[players.idOffset + playerId[index]],
                                                teamId[index], string(trainNavDir) + "_" + std::to_string(roundId[index]));
-                    ss << "," << playerViewDir[index][i].x << "," << playerViewDir[index][i].y
-                       << "," << health[index][i] << "," << armor[index][i]
+                    s << "," << playerViewDir[index][i].x << "," << playerViewDir[index][i].y
+                      << "," << health[index][i] << "," << armor[index][i]
                        << "," << imgNames.playerPos
                        << "," << imgNames.playerVis
                        << "," << imgNames.playerVisFrom
@@ -149,10 +149,10 @@ namespace csknow {
                         << "," << imgNames.visFromEnemies
                        << "," << imgNames.c4Pos;
                 }
-                ss << "," << enumAsInt(movementResult[index].xResult)
+                s << "," << enumAsInt(movementResult[index].xResult)
                    << "," << enumAsInt(movementResult[index].yResult);
 
-                ss << std::endl;
+                s << std::endl;
             }
 
             vector<string> getForeignKeyNames() override {

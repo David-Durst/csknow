@@ -88,6 +88,13 @@ public:
         return ss.str();
     }
 
+    void toCSV(std::ostream & s) {
+        addHeader(s);
+        for (int64_t index = 0; index < size; index++) {
+            oneLineToCSV(index, s);
+        }
+    }
+
     string toCSV(int64_t otherTableIndex) {
         std::stringstream ss;
         addHeader(ss);
@@ -98,15 +105,15 @@ public:
         return ss.str();
     }
 
-    void addHeader(stringstream & ss) {
-        ss << "id";
+    void addHeader(std::ostream & s) {
+        s << "id";
         for (const auto & foreignKey : getForeignKeyNames()) {
-            ss << "," << foreignKey;
+            s << "," << foreignKey;
         }
         for (const auto & otherCol : getOtherColumnNames()) {
-            ss << "," << otherCol;
+            s << "," << otherCol;
         }
-        ss << std::endl;
+        s << std::endl;
     }
 
     static
@@ -124,19 +131,19 @@ public:
     }
 
     static
-    void commaSeparateList(stringstream & ss, vector<string> list, const string& separator = ",") {
+    void commaSeparateList(std::ostream & s, vector<string> list, const string& separator = ",") {
         if (list.empty()) {
             return;
         }
-        ss << list[0];
+        s << list[0];
         for (size_t i = 1; i < list.size(); i++) {
-            ss << separator << list[i];
+            s << separator << list[i];
         }
     }
 
     // find all rows with foreign key that reference another table
     virtual vector<int64_t> filterByForeignKey(int64_t otherTableIndex) = 0;
-    virtual void oneLineToCSV(int64_t index, stringstream & ss) = 0;
+    virtual void oneLineToCSV(int64_t index, std::ostream &s) = 0;
     virtual vector<string> getForeignKeyNames() = 0;
     virtual vector<string> getOtherColumnNames() = 0;
 };

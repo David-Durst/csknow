@@ -34,14 +34,14 @@ public:
         this->overlayLabelsQuery = overlayLabelsQuery;
     };
 
-    void oneLineToCSV(int64_t index, stringstream & ss) override {
-        ss << index;
-        ss << "," << coordinate[index].min.x << "," << coordinate[index].min.y << "," << coordinate[index].min.z
-           << "," << coordinate[index].max.x << "," << coordinate[index].max.y << "," << coordinate[index].max.z;
+    void oneLineToCSV(int64_t index, std::ostream &s) override {
+        s << index;
+        s << "," << coordinate[index].min.x << "," << coordinate[index].min.y << "," << coordinate[index].min.z
+          << "," << coordinate[index].max.x << "," << coordinate[index].max.y << "," << coordinate[index].max.z;
         for (size_t i = 0; i < coordinate.size(); i++) {
-            ss << "," << distanceMatrix[index * coordinate.size() + i];
+            s << "," << distanceMatrix[index * coordinate.size() + i];
         }
-        ss << std::endl;
+        s << std::endl;
     }
 
     vector<string> getForeignKeyNames() override {

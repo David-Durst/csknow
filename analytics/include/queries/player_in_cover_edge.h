@@ -41,10 +41,10 @@ public:
         return result;
     }
 
-    void oneLineToCSV(int64_t index, stringstream & ss) override {
-        ss << index << "," << tickId[index] << "," << lookerPlayerAtTickId[index] << "," << lookerPlayerId[index] << ","
-           << lookedAtPlayerAtTickId[index] << "," << lookedAtPlayerId[index] << ","
-           << nearestOriginId[index] << "," << coverEdgeId[index] << std::endl;
+    void oneLineToCSV(int64_t index, std::ostream &s) override {
+        s << index << "," << tickId[index] << "," << lookerPlayerAtTickId[index] << "," << lookerPlayerId[index] << ","
+          << lookedAtPlayerAtTickId[index] << "," << lookedAtPlayerId[index] << ","
+          << nearestOriginId[index] << "," << coverEdgeId[index] << std::endl;
     }
 
     [[nodiscard]]

@@ -64,11 +64,11 @@ public:
         return result;
     }
 
-    void oneLineToCSV(int64_t index, stringstream & ss) override {
-        ss << index << "," << startTickId[index] << "," << endTickId[index] << "," << tickLength[index] << ","
-            << playerId[index] << "," << 0;
+    void oneLineToCSV(int64_t index, std::ostream &s) override {
+        s << index << "," << startTickId[index] << "," << endTickId[index] << "," << tickLength[index] << ","
+          << playerId[index] << "," << 0;
 
-        ss << std::endl;
+        s << std::endl;
     }
 
     [[nodiscard]]

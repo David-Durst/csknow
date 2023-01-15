@@ -55,12 +55,12 @@ namespace csknow::fire_history {
             return result;
         }
 
-        void oneLineToCSV(int64_t index, stringstream & ss) override {
-            ss << index << "," << tickId[index] << "," << playerId[index]
-               << "," << holdingAttackButton[index]
-               << "," << ticksSinceLastFire[index] << "," << ticksSinceLastHoldingAttack[index]
-               << "," << ticksUntilNextFire[index] << "," << ticksUntilNextHoldingAttack[index];
-            ss << std::endl;
+        void oneLineToCSV(int64_t index, std::ostream &s) override {
+            s << index << "," << tickId[index] << "," << playerId[index]
+              << "," << holdingAttackButton[index]
+              << "," << ticksSinceLastFire[index] << "," << ticksSinceLastHoldingAttack[index]
+              << "," << ticksUntilNextFire[index] << "," << ticksUntilNextHoldingAttack[index];
+            s << std::endl;
         }
 
         [[nodiscard]]

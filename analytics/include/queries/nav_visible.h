@@ -45,8 +45,8 @@ public:
                     visPoints.getCellVisPoints().size());
     };
 
-    void oneLineToCSV(int64_t index, stringstream & ss) override {
-        ss << index << std::endl;
+    void oneLineToCSV(int64_t index, std::ostream &s) override {
+        s << index << std::endl;
     }
 
     vector<string> getForeignKeyNames() override {

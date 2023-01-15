@@ -137,15 +137,15 @@ public:
         return result;
     }
 
-    void oneLineToCSV(int64_t index, stringstream & ss) override {
-        ss << index << "," << trainingEngagementAimResult.tickId[index] << ","
-            << trainingEngagementAimResult.engagementId[index] << ","
-            << trainingEngagementAimResult.attackerPlayerId[index] << ","
-            << trainingEngagementAimResult.victimPlayerId[index] << ","
-            << predictedDeltaRelativeFirstHeadViewAngle[index].x << ","
-            << predictedDeltaRelativeFirstHeadViewAngle[index].y;
+    void oneLineToCSV(int64_t index, std::ostream &s) override {
+        s << index << "," << trainingEngagementAimResult.tickId[index] << ","
+          << trainingEngagementAimResult.engagementId[index] << ","
+          << trainingEngagementAimResult.attackerPlayerId[index] << ","
+          << trainingEngagementAimResult.victimPlayerId[index] << ","
+          << predictedDeltaRelativeFirstHeadViewAngle[index].x << ","
+          << predictedDeltaRelativeFirstHeadViewAngle[index].y;
 
-        ss << std::endl;
+        s << std::endl;
     }
 
     vector<string> getForeignKeyNames() override {
