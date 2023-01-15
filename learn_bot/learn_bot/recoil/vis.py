@@ -20,7 +20,11 @@ data_path = Path(__file__).parent / '..' / '..' / '..' / 'analytics' / 'csv_outp
 weapon_id_column = "weapon id"
 recoil_index_column = "recoil index (t)"
 x_recoil_column = "scaled recoil angle x (t)"
+prior_x_recoil_column = "scaled recoil angle x (t-1)"
+delta_x_recoil_column = "delta scaled recoil angle x"
 y_recoil_column = "scaled recoil angle y (t)"
+prior_y_recoil_column = "scaled recoil angle y (t-1)"
+delta_y_recoil_column = "delta scaled recoil angle y"
 x_vel_column = "attacker vel x (t)"
 y_vel_column = "attacker vel y (t)"
 z_vel_column = "attacker vel z (t)"
@@ -31,9 +35,12 @@ class RecoilPlot:
     fig: plt.Figure
     canvas: FigureCanvasTkAgg
 
-    def plot_recoil_distribution(self, hist_ax: plt.Axes, recoil_df: pd.DataFrame, weapon_id: int,
+    def plot_recoil_distribution(self, abs_hist_ax: plt.Axes, delta_hist_ax: plt.Axes,
+                                 recoil_df: pd.DataFrame, weapon_id: int,
                                  min_recoil_index: float, max_recoil_index: float, min_speed: float, max_speed: float):
-        hist_range = [[-10, 10], [-1, 20]]
+        abs_hist_range = [[-10, 10], [-1, 20]]
+        delta_hist_range = [[-2, 2], [-2, 2]]
+
         speed_col = \
             np.sqrt((recoil_df[x_vel_column].pow(2) + recoil_df[y_vel_column].pow(2) + recoil_df[z_vel_column].pow(2)))
         conditions = (recoil_df[weapon_id_column] == weapon_id) & \
@@ -41,28 +48,51 @@ class RecoilPlot:
                      (recoil_df[recoil_index_column] <= max_recoil_index) & \
                      (speed_col >= min_speed) & (speed_col <= max_speed)
 
-        selected_recoil_df = recoil_df[conditions]
+        selected_recoil_df = recoil_df[conditions].copy()
+        selected_recoil_df[delta_x_recoil_column] = \
+            selected_recoil_df[x_recoil_column] - selected_recoil_df[prior_x_recoil_column]
+        selected_recoil_df[delta_y_recoil_column] = \
+            selected_recoil_df[y_recoil_column] - selected_recoil_df[prior_y_recoil_column]
 
-        hist_ax.clear()
-        recoil_heatmap, recoil_x_bins, recoil_y_bins = np.histogram2d(selected_recoil_df[x_recoil_column].to_numpy(),
-                                                                       selected_recoil_df[y_recoil_column].to_numpy(),
-                                                                       bins=40, range=hist_range)
-        recoil_heatmap = recoil_heatmap.T
-        recoil_X, recoil_Y = np.meshgrid(recoil_x_bins, recoil_y_bins)
-        recoil_im = hist_ax.pcolormesh(recoil_X, recoil_Y, recoil_heatmap)
-        self.fig.colorbar(recoil_im, ax=hist_ax)
+        # plot abs
+        abs_recoil_heatmap, abs_recoil_x_bins, abs_recoil_y_bins = \
+            np.histogram2d(selected_recoil_df[x_recoil_column].to_numpy(),
+                           selected_recoil_df[y_recoil_column].to_numpy(),
+                           bins=40, range=abs_hist_range)
+        abs_recoil_heatmap = abs_recoil_heatmap.T
+        abs_recoil_X, abs_recoil_Y = np.meshgrid(abs_recoil_x_bins, abs_recoil_y_bins)
+        abs_recoil_im = abs_hist_ax.pcolormesh(abs_recoil_X, abs_recoil_Y, abs_recoil_heatmap)
+        self.fig.colorbar(abs_recoil_im, ax=abs_hist_ax)
 
-        hist_ax.set_title("Scaled Recoil Distribution")
-        hist_ax.set_xlabel("X Recoil (deg)")
-        hist_ax.set_ylabel("Y Recoil (deg)")
+        abs_hist_ax.set_title("Absolute Scaled Recoil")
+        abs_hist_ax.set_xlabel("X Recoil (deg)")
+        abs_hist_ax.set_ylabel("Y Recoil (deg)")
+
+        # plot delta
+        delta_recoil_heatmap, delta_recoil_x_bins, delta_recoil_y_bins = \
+            np.histogram2d(selected_recoil_df[delta_x_recoil_column].to_numpy(),
+                           selected_recoil_df[delta_y_recoil_column].to_numpy(),
+                           bins=40, range=delta_hist_range)
+        delta_recoil_heatmap = delta_recoil_heatmap.T
+        delta_recoil_X, delta_recoil_Y = np.meshgrid(delta_recoil_x_bins, delta_recoil_y_bins)
+        delta_recoil_im = delta_hist_ax.pcolormesh(delta_recoil_X, delta_recoil_Y, delta_recoil_heatmap)
+        self.fig.colorbar(delta_recoil_im, ax=delta_hist_ax)
+
+        delta_hist_ax.set_title("Delta Scaled Recoil")
+        delta_hist_ax.set_xlabel("Delta X Recoil (deg)")
+        delta_hist_ax.set_ylabel("Delta Y Recoil (deg)")
+
+        self.fig.tight_layout()
         self.canvas.draw()
 
 
 def vis(all_data_df: pd.DataFrame):
-    recoil_df = all_data_df.loc[:, [weapon_id_column, recoil_index_column, x_recoil_column, y_recoil_column,
+    recoil_df = all_data_df.loc[:, [weapon_id_column, recoil_index_column,
+                                    x_recoil_column, prior_x_recoil_column, y_recoil_column, prior_y_recoil_column,
                                     x_vel_column, y_vel_column, z_vel_column]]
     weapon_ids = all_data_df.loc[:, weapon_id_column].unique().tolist()
     weapon_names = [weapon_id_to_name[index] for index in weapon_ids]
+    sorted(weapon_names)
 
     #This creates the main window of an application
     window = tk.Tk()
@@ -70,7 +100,7 @@ def vis(all_data_df: pd.DataFrame):
     window.resizable(width=False, height=False)
     window.configure(background='grey')
 
-    fig = Figure(figsize=(5.5, 5.5), dpi=100)
+    fig = Figure(figsize=(12., 5.5), dpi=100)
     canvas = FigureCanvasTkAgg(fig, master=window)  # A tk.DrawingArea.
     recoil_plot = RecoilPlot(fig, canvas)
     canvas.draw()
@@ -86,7 +116,8 @@ def vis(all_data_df: pd.DataFrame):
 
     def update_graph():
         fig.clear()
-        hist_ax = fig.add_subplot(1, 1, 1)
+        abs_hist_ax = fig.add_subplot(1, 2, 1)
+        delta_hist_ax = fig.add_subplot(1, 2, 2)
 
         mid_recoil_index = float(mid_recoil_index_selector.get())
         range_recoil_index = float(range_recoil_index_selector.get())
@@ -100,7 +131,8 @@ def vis(all_data_df: pd.DataFrame):
 
         recoil_index_text_var.set(f"recoil index mid {mid_recoil_index} range {range_recoil_index},"
                                   f"speed mid {mid_speed} range {range_speed}")
-        recoil_plot.plot_recoil_distribution(hist_ax, recoil_df, weapon_name_to_id[weapon_selector_variable.get()],
+        recoil_plot.plot_recoil_distribution(abs_hist_ax, delta_hist_ax,
+                                             recoil_df, weapon_name_to_id[weapon_selector_variable.get()],
                                              min_recoil_index, max_recoil_index, min_speed, max_speed)
 
     discrete_selector_frame = tk.Frame(window)
