@@ -72,34 +72,63 @@ def vis(all_data_df: pd.DataFrame):
     toolbar.update()
     toolbar.pack(side=tk.BOTTOM, fill=tk.X)
 
+    def ignore_arg_update_graph(ignore_arg):
+        update_graph()
+
     def update_graph():
         fig.clear()
         hist_ax = fig.add_subplot(1, 1, 1)
+        mid_recoil_index = float(mid_recoil_index_selector.get())
+        range_recoil_index = float(range_recoil_index_selector.get())
+        min_recoil_index = mid_recoil_index - range_recoil_index / 2.
+        max_recoil_index = mid_recoil_index + range_recoil_index / 2.
+        recoil_index_text_var.set(f"recoin index mid {mid_recoil_index}, range {range_recoil_index}")
         recoil_plot.plot_recoil_distribution(hist_ax, recoil_df, weapon_name_to_id[weapon_selector_variable.get()],
-                                             float(min_recoil_index_entry.get()), float(max_recoil_index_entry.get()))
+                                             min_recoil_index, max_recoil_index)
 
-    weapon_recoil_index_selector_frame = tk.Frame(window)
-    weapon_recoil_index_selector_frame.pack(pady=5)
+    discrete_selector_frame = tk.Frame(window)
+    discrete_selector_frame.pack(pady=5)
 
     weapon_selector_variable = tk.StringVar()
     weapon_selector_variable.set(weapon_names[0])  # default value
-    weapon_selector = tk.OptionMenu(weapon_recoil_index_selector_frame, weapon_selector_variable, *weapon_names)
+    weapon_selector = tk.OptionMenu(discrete_selector_frame, weapon_selector_variable, *weapon_names,
+                                    command=ignore_arg_update_graph)
+    weapon_selector.configure(width=20)
     weapon_selector.pack(side="left")
 
-    min_recoil_index_label = tk.Label(weapon_recoil_index_selector_frame, text="Min Recoil Index")
-    min_recoil_index_label.pack(side="left")
-    min_recoil_index_entry = tk.Entry(weapon_recoil_index_selector_frame, width=5)
-    min_recoil_index_entry.pack(side="left")
-    min_recoil_index_entry.insert(0, "0.")
+    recoil_index_text_frame = tk.Frame(window)
+    recoil_index_text_frame.pack(pady=5)
+    recoil_index_text_var = tk.StringVar()
+    recoil_index_label = tk.Label(recoil_index_text_frame, textvariable=recoil_index_text_var)
+    recoil_index_label.pack(side="left")
 
-    max_recoil_index_label = tk.Label(weapon_recoil_index_selector_frame, text="Max Recoil Index")
-    max_recoil_index_label.pack(side="left")
-    max_recoil_index_entry = tk.Entry(weapon_recoil_index_selector_frame, width=5)
-    max_recoil_index_entry.pack(side="left")
-    max_recoil_index_entry.insert(0, "30.")
+    mid_recoil_index_frame = tk.Frame(window)
+    mid_recoil_index_frame.pack(pady=5)
+    mid_recoil_index_selector = tk.Scale(
+        mid_recoil_index_frame,
+        from_=0,
+        to=30,
+        orient='horizontal',
+        showvalue=0,
+        length=300,
+        resolution=0.5,
+        command=ignore_arg_update_graph
+    )
+    mid_recoil_index_selector.pack()
 
-    update_button = tk.Button(weapon_recoil_index_selector_frame, text="Update", command=update_graph)
-    update_button.pack(side="left")
+    range_recoil_index_frame = tk.Frame(window)
+    range_recoil_index_frame.pack(pady=5)
+    range_recoil_index_selector = tk.Scale(
+        range_recoil_index_frame,
+        from_=1,
+        to=30,
+        orient='horizontal',
+        showvalue=0,
+        length=300,
+        command=ignore_arg_update_graph
+    )
+    range_recoil_index_selector.pack()
+
     update_graph()
 
     # Start the GUI
