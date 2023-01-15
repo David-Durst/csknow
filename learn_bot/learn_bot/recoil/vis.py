@@ -17,6 +17,9 @@ from learn_bot.recoil.weapon_id_name_conversion import weapon_id_to_name, weapon
 
 data_path = Path(__file__).parent / '..' / '..' / '..' / 'analytics' / 'csv_outputs' / 'engagementAim.csv'
 saved_path = Path(__file__).parent / 'saved_dataframe.csv'
+recoil_saved_path = Path(__file__).parent / 'saved_recoil_dataframe.csv'
+
+core_id_columns = ["id", "round id", "tick id", "demo tick id", "game tick id", "game time", "engagement id"]
 
 weapon_id_column = "weapon id"
 recoil_index_column = "recoil index (t)"
@@ -35,32 +38,43 @@ ticks_since_last_fire_column = "ticks since last fire (t)"
 duck_options = ["any state", "standing", "crouching"]
 
 
-def filter_data(recoil_df: pd.DataFrame, weapon_id: int, min_recoil_index: float, max_recoil_index: float,
-                min_speed: float, max_speed: float,
-                min_ticks_since_fire: float, max_ticks_since_fire: float,
-                duck_option: str, delta_ticks: int) -> pd.DataFrame:
-    speed_col = \
-        np.sqrt((recoil_df[x_vel_column].pow(2) + recoil_df[y_vel_column].pow(2) + recoil_df[z_vel_column].pow(2)))
-    conditions = (recoil_df[weapon_id_column] == weapon_id) & \
-                 (recoil_df[recoil_index_column] >= min_recoil_index) & \
-                 (recoil_df[recoil_index_column] <= max_recoil_index) & \
-                 (speed_col >= min_speed) & (speed_col <= max_speed) & \
-                 (recoil_df[ticks_since_last_fire_column] >= min_ticks_since_fire) & \
-                 (recoil_df[ticks_since_last_fire_column] <= max_ticks_since_fire)
+class FilteredRecoilData:
+    all_cols_df: pd.DataFrame
+    recoil_cols_df: pd.DataFrame
 
-    if duck_option == duck_options[1]:
-        conditions = conditions & (recoil_df[attacker_duck_amount_column] > 0.5)
-    elif duck_option == duck_options[2]:
-        conditions = conditions & (recoil_df[attacker_duck_amount_column] <= 0.5)
+    def __init__(self, input_df: pd.DataFrame, weapon_id: int, min_recoil_index: float, max_recoil_index: float,
+                 min_speed: float, max_speed: float,
+                 min_ticks_since_fire: float, max_ticks_since_fire: float,
+                 duck_option: str, delta_ticks: int):
+        speed_col = \
+            np.sqrt((input_df[x_vel_column].pow(2) + input_df[y_vel_column].pow(2) + input_df[z_vel_column].pow(2)))
+        conditions = (input_df[weapon_id_column] == weapon_id) & \
+                     (input_df[recoil_index_column] >= min_recoil_index) & \
+                     (input_df[recoil_index_column] <= max_recoil_index) & \
+                     (speed_col >= min_speed) & (speed_col <= max_speed) & \
+                     (input_df[ticks_since_last_fire_column] >= min_ticks_since_fire) & \
+                     (input_df[ticks_since_last_fire_column] <= max_ticks_since_fire)
 
-    selected_recoil_df = recoil_df[conditions].copy()
+        if duck_option == duck_options[1]:
+            conditions = conditions & (input_df[attacker_duck_amount_column] > 0.5)
+        elif duck_option == duck_options[2]:
+            conditions = conditions & (input_df[attacker_duck_amount_column] <= 0.5)
 
-    selected_recoil_df[delta_x_recoil_column] = \
-        selected_recoil_df[cur_x_recoil_column] - selected_recoil_df[base_x_recoil_column + f" (t-{delta_ticks})"]
-    selected_recoil_df[delta_y_recoil_column] = \
-        selected_recoil_df[cur_y_recoil_column] - selected_recoil_df[base_y_recoil_column + f" (t-{delta_ticks})"]
+        self.all_cols_df = input_df[conditions].copy()
 
-    return selected_recoil_df
+        old_x_recoil_column = base_x_recoil_column + f" (t-{delta_ticks})"
+        self.all_cols_df[delta_x_recoil_column] = \
+            self.all_cols_df[cur_x_recoil_column] - self.all_cols_df[old_x_recoil_column]
+        old_y_recoil_column = base_y_recoil_column + f" (t-{delta_ticks})"
+        self.all_cols_df[delta_y_recoil_column] = \
+            self.all_cols_df[cur_y_recoil_column] - self.all_cols_df[old_y_recoil_column]
+
+        self.recoil_cols_df = \
+            self.all_cols_df.loc[:, core_id_columns +
+                                    [weapon_id_column, recoil_index_column,
+                                     ticks_since_last_fire_column, attacker_duck_amount_column,
+                                     cur_x_recoil_column, delta_x_recoil_column, old_x_recoil_column,
+                                     cur_y_recoil_column, delta_y_recoil_column, old_y_recoil_column]]
 
 
 @dataclass
@@ -132,10 +146,10 @@ def vis(recoil_df: pd.DataFrame):
     def ignore_arg_update_graph(ignore_arg):
         update_graph()
 
-    last_filtered_recoil_df: pd.DataFrame
+    last_filtered_recoil_data: FilteredRecoilData
 
     def update_graph():
-        nonlocal last_filtered_recoil_df
+        nonlocal last_filtered_recoil_data
         fig.clear()
         abs_hist_ax = fig.add_subplot(1, 2, 1)
         delta_hist_ax = fig.add_subplot(1, 2, 2)
@@ -155,21 +169,24 @@ def vis(recoil_df: pd.DataFrame):
         min_ticks_since_fire = mid_ticks_since_fire - range_ticks_since_fire / 2.
         max_ticks_since_fire = mid_ticks_since_fire + range_ticks_since_fire / 2.
 
-        last_filtered_recoil_df = \
-            filter_data(recoil_df, weapon_name_to_id[weapon_selector_variable.get()],
-                        min_recoil_index, max_recoil_index, min_speed, max_speed,
-                        min_ticks_since_fire, max_ticks_since_fire,
-                        duck_selector_variable.get(), int(delta_ticks_selector.get()))
+        last_filtered_recoil_data = \
+            FilteredRecoilData(recoil_df, weapon_name_to_id[weapon_selector_variable.get()],
+                               min_recoil_index, max_recoil_index, min_speed, max_speed,
+                               min_ticks_since_fire, max_ticks_since_fire,
+                               duck_selector_variable.get(), int(delta_ticks_selector.get()))
 
         recoil_index_text_var.set(f"recoil index mid {mid_recoil_index} range {range_recoil_index},"
                                   f"speed mid {mid_speed} range {range_speed},"
                                   f"ticks since fire mid {mid_ticks_since_fire} range {range_ticks_since_fire},"
                                   f"delta ticks {int(delta_ticks_selector.get())}")
 
-        recoil_plot.plot_recoil_distribution(abs_hist_ax, delta_hist_ax, last_filtered_recoil_df)
+        recoil_plot.plot_recoil_distribution(abs_hist_ax, delta_hist_ax, last_filtered_recoil_data.all_cols_df)
 
     def save_graph_data():
-        last_filtered_recoil_df.to_csv(saved_path)
+        last_filtered_recoil_data.all_cols_df.to_csv(saved_path)
+        
+    def save_graph_data_recoil_cols():
+        last_filtered_recoil_data.recoil_cols_df.to_csv(recoil_saved_path)
 
 
     discrete_selector_frame = tk.Frame(window)
@@ -191,8 +208,12 @@ def vis(recoil_df: pd.DataFrame):
     duck_selector.configure(width=20)
     duck_selector.pack(side="left")
 
-    save_button = tk.Button(discrete_selector_frame, text="Save", command=save_graph_data)
-    save_button.pack(side="left")
+    save_all_cols_button = tk.Button(discrete_selector_frame, text="Save All Cols", command=save_graph_data)
+    save_all_cols_button.pack(side="left")
+
+    save_recoil_cols_button = tk.Button(discrete_selector_frame, text="Save Recoil Cols",
+                                        command=save_graph_data_recoil_cols)
+    save_recoil_cols_button.pack(side="left")
 
     recoil_index_text_frame = tk.Frame(window)
     recoil_index_text_frame.pack(pady=5)
@@ -228,7 +249,7 @@ def vis(recoil_df: pd.DataFrame):
         length=300,
         command=ignore_arg_update_graph
     )
-    range_recoil_index_selector.set(30)
+    #range_recoil_index_selector.set(30)
     range_recoil_index_selector.pack(side="left")
 
     mid_speed_frame = tk.Frame(window)
@@ -292,7 +313,7 @@ def vis(recoil_df: pd.DataFrame):
         length=300,
         command=ignore_arg_update_graph
     )
-    range_ticks_since_fire_selector.set(200)
+    #range_ticks_since_fire_selector.set(200)
     range_ticks_since_fire_selector.pack(side="left")
 
     delta_ticks_frame = tk.Frame(window)
