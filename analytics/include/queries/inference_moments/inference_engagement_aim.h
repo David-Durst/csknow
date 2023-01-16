@@ -33,6 +33,7 @@ struct EngagementAimTickData {
     int warmupTicksUsed;
     // extras
     Vec2 attackerViewAngle;
+    Vec2 deltaRelativeCurHeadViewAngle;
 
     string toString() const {
         std::ostringstream ss;
@@ -55,6 +56,7 @@ struct EngagementAimTickData {
             << ", victim relative first head cur head view angle: " << victimRelativeFirstHeadCurHeadViewAngle.toString()
             << ", holding attack: " << boolToString(holdingAttack)
             << ", attacker view angle: " << attackerViewAngle.toString()
+            << ", delta relative cur head view angle: " << deltaRelativeCurHeadViewAngle.toString()
             << ", warmup ticks used: " << warmupTicksUsed;
         return ss.str();
     }
@@ -81,6 +83,7 @@ struct EngagementAimTickData {
                << ",victim relative first head cur head view angle x,victim relative first head cur head view angle y"
                << ",holding attack"
                << ",attacker view angle x,attacker view angle y"
+               << ",delta relative cur head view angle x,delta relative cur head view angle y"
                << ",warmup ticks used"
                << std::endl;
         }
@@ -103,6 +106,7 @@ struct EngagementAimTickData {
            << "," << victimRelativeFirstHeadCurHeadViewAngle.toCSV()
            << "," << boolToString(holdingAttack)
            << "," << attackerViewAngle.toCSV()
+           << "," << deltaRelativeCurHeadViewAngle.toCSV()
            << "," << warmupTicksUsed;
         return ss.str();
     }

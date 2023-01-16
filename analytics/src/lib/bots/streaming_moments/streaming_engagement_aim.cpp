@@ -177,6 +177,9 @@ namespace csknow::engagement_aim {
         engagementAimTickData.deltaRelativeFirstHeadViewAngle =
             deltaViewFromOriginToDest(attackerEyePos,
                                       playerToVictimEngagementFirstHeadPos[attackerId], curViewAngle);
+        engagementAimTickData.deltaRelativeCurHeadViewAngle =
+            deltaViewFromOriginToDest(attackerEyePos, victimHeadPos, curViewAngle);
+
 
         const fire_history::FireClientData & attackerFireData =
             streamingFireHistory.fireClientHistory.clientHistory.at(attackerId)
@@ -390,6 +393,24 @@ namespace csknow::engagement_aim {
                 deltaViewAngle.makeYawNeg180To180();
                 Vec2 outputViewAngle = newestTickData.attackerViewAngle + deltaViewAngle;
                 outputViewAngle.makeYawNeg180To180();
+                EngagementAimTickData & tminus1TickData = engagementAimPlayerHistory.clientHistory.at(orderedAttackerIds[i])
+                    .fromNewest(1);
+                EngagementAimTickData & tminus2TickData = engagementAimPlayerHistory.clientHistory.at(orderedAttackerIds[i])
+                    .fromNewest(1);
+                EngagementAimTickData & oldestTickData = engagementAimPlayerHistory.clientHistory.at(orderedAttackerIds[i])
+                    .fromOldest();
+                double distanceToTargetMinus1 =
+                    computeMagnitude(newestTickData.deltaRelativeCurHeadViewAngle -
+                    tminus1TickData.deltaRelativeCurHeadViewAngle);
+                double distanceToTargetMinus2 =
+                    computeMagnitude(newestTickData.deltaRelativeCurHeadViewAngle -
+                                     tminus2TickData.deltaRelativeCurHeadViewAngle);
+                double distanceToTargetOldest =
+                    computeMagnitude(newestTickData.deltaRelativeCurHeadViewAngle -
+                                     oldestTickData.deltaRelativeCurHeadViewAngle);
+                if (distanceToTargetMinus1 < 1. && distanceToTargetMinus2 < 1. && distanceToTargetOldest > 5.) {
+                    playerToFiring[orderedAttackerIds[i]] = true;
+                }
                 /*
                 if (i == 0 && curState.getLastFrame() - prevState.getLastFrame() > 2) {
                     std::cout << "cur frame: " << curState.getLastFrame() << "prev frame: " << prevState.getLastFrame()

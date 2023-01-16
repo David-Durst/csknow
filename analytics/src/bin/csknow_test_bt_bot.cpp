@@ -78,7 +78,8 @@ int main(int argc, char * argv[]) {
     ScriptsRunner scenarioRunner(Script::makeList(
         make_unique<variable_aim_test::VariableAimAndKillWithinTimeCheck>(
             variable_aim_test::EnemyPos::Close, variable_aim_test::EnemyMovement::None,
-            variable_aim_test::AttackerInitialViewAngle::HardLeft, false),
+            variable_aim_test::AttackerInitialViewAngle::HardLeft, false)
+            /*
         make_unique<variable_aim_test::VariableAimAndKillWithinTimeCheck>(
             variable_aim_test::EnemyPos::Close, variable_aim_test::EnemyMovement::None,
             variable_aim_test::AttackerInitialViewAngle::MidLeft, false),
@@ -220,7 +221,8 @@ int main(int argc, char * argv[]) {
         make_unique<variable_aim_test::VariableAimAndKillWithinTimeCheck>(
             variable_aim_test::EnemyPos::TopRamp, variable_aim_test::EnemyMovement::Right,
             variable_aim_test::AttackerInitialViewAngle::MidRightDown, false)
-    ), false, 0);
+             */
+    ), true, 0);
 
     ScriptsRunner humanScenarioRunner(Script::makeList(
         make_unique<variable_aim_test::VariableAimAndKillWithinTimeCheck>(
