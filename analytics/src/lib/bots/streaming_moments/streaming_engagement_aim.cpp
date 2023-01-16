@@ -393,24 +393,32 @@ namespace csknow::engagement_aim {
                 deltaViewAngle.makeYawNeg180To180();
                 Vec2 outputViewAngle = newestTickData.attackerViewAngle + deltaViewAngle;
                 outputViewAngle.makeYawNeg180To180();
-                EngagementAimTickData & tminus1TickData = engagementAimPlayerHistory.clientHistory.at(orderedAttackerIds[i])
-                    .fromNewest(1);
-                EngagementAimTickData & tminus2TickData = engagementAimPlayerHistory.clientHistory.at(orderedAttackerIds[i])
-                    .fromNewest(1);
+                EngagementAimTickData & recentTickData = engagementAimPlayerHistory.clientHistory.at(orderedAttackerIds[i])
+                    .fromNewest(4);
                 EngagementAimTickData & oldestTickData = engagementAimPlayerHistory.clientHistory.at(orderedAttackerIds[i])
                     .fromOldest();
-                double distanceToTargetMinus1 =
+                double distanceToTargetRecent =
                     computeMagnitude(newestTickData.deltaRelativeCurHeadViewAngle -
-                    tminus1TickData.deltaRelativeCurHeadViewAngle);
-                double distanceToTargetMinus2 =
-                    computeMagnitude(newestTickData.deltaRelativeCurHeadViewAngle -
-                                     tminus2TickData.deltaRelativeCurHeadViewAngle);
+                                     recentTickData.deltaRelativeCurHeadViewAngle);
                 double distanceToTargetOldest =
                     computeMagnitude(newestTickData.deltaRelativeCurHeadViewAngle -
                                      oldestTickData.deltaRelativeCurHeadViewAngle);
-                if (distanceToTargetMinus1 < 1. && distanceToTargetMinus2 < 1. && distanceToTargetOldest > 5.) {
+                if (distanceToTargetRecent < 0.75 && distanceToTargetOldest > 1. && newestTickData.recoilIndex < 2.) {
                     playerToFiring[orderedAttackerIds[i]] = true;
                 }
+                double mouseVelocityRecent =
+                    computeMagnitude(newestTickData.attackerViewAngle - recentTickData.attackerViewAngle);
+                double mouseVelocityOldest =
+                    computeMagnitude(newestTickData.attackerViewAngle - recentTickData.attackerViewAngle);
+                double enemyVelocityRecent = computeMagnitude(newestTickData.victimVel);
+                if (mouseVelocityRecent < 0.75 && mouseVelocityOldest > 2. && enemyVelocityRecent > 50. && newestTickData.recoilIndex < 0.75) {
+                    playerToFiring[orderedAttackerIds[i]] = true;
+                }
+                /*
+                if (newestTickData.recoilIndex > 8.) {
+                    playerToFiring[orderedAttackerIds[i]] = false;
+                }
+                 */
                 /*
                 if (i == 0 && curState.getLastFrame() - prevState.getLastFrame() > 2) {
                     std::cout << "cur frame: " << curState.getLastFrame() << "prev frame: " << prevState.getLastFrame()
@@ -450,10 +458,13 @@ namespace csknow::engagement_aim {
                     aimTicksStream << "output," << print2DTensor(outputSelectedTensor);
                     torch::Tensor outputRawSelectedTensor = raw_output.slice(0, i, i+1);
                     aimTicksStream << "output raw," << print2DTensor(outputRawSelectedTensor);
+                    aimTicksStream << "distance to target recent," << distanceToTargetRecent << std::endl;
+                    aimTicksStream << "distance to target oldest," << distanceToTargetOldest << std::endl;
                     //print2DTensor(tmpTensor);
                     aimTicksStream << "output view angle," << outputViewAngle.toString() << std::endl;
                     aimTicksStream << "delta view angle," << deltaViewAngle.toString() << std::endl;
                     aimTicksStream << "fire," << output[i][output[0].size(0) * 2 / 3].item<float>() << std::endl;
+                    aimTicksStream << "fire fixed," << boolToString(playerToFiring[orderedAttackerIds[i]]) << std::endl;
                     aimTicksStream << "fire weights," <<
                         raw_output[i][raw_output[0].size(0) * 2 / 3].item<float>() << "," <<
                         raw_output[i][(raw_output[0].size(0) * 2 / 3) + 1].item<float>() << std::endl;
