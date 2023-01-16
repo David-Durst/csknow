@@ -87,6 +87,9 @@ public:
     vector<array<Vec3, TOTAL_AIM_TICKS>> attackerVel;
     vector<array<Vec3, TOTAL_AIM_TICKS>> victimVel;
     vector<array<float, TOTAL_AIM_TICKS>> attackerDuckAmount;
+    vector<array<float, TOTAL_AIM_TICKS>> attackerNextPrimaryAttack;
+    vector<array<float, TOTAL_AIM_TICKS>> attackerNextSecondaryAttack;
+    vector<array<float, TOTAL_AIM_TICKS>> attackerGameTime;
     vector<array<DemoEquipmentType, TOTAL_AIM_TICKS>> weaponId;
     vector<AimWeaponType> weaponType;
 
@@ -140,6 +143,9 @@ public:
                << "," << attackerVel[index][i].toCSV()
                << "," << victimVel[index][i].toCSV()
                << "," << attackerDuckAmount[index][i]
+               << "," << attackerNextPrimaryAttack[index][i]
+               << "," << attackerNextSecondaryAttack[index][i]
+               << "," << attackerGameTime[index][i]
                << "," << enumAsInt(weaponId[index][i]);
         }
 
@@ -210,6 +216,9 @@ public:
             result.push_back("victim vel y (t" + toSignedIntString(i, true) + ")");
             result.push_back("victim vel z (t" + toSignedIntString(i, true) + ")");
             result.push_back("attacker duck amount (t" + toSignedIntString(i, true) + ")");
+            result.push_back("attacker next primary attack (t" + toSignedIntString(i, true) + ")");
+            result.push_back("attacker next secondary attack (t" + toSignedIntString(i, true) + ")");
+            result.push_back("attacker game time (t" + toSignedIntString(i, true) + ")");
             result.push_back("weapon id (t" + toSignedIntString(i, true) + ")");
         }
         result.push_back("weapon type");

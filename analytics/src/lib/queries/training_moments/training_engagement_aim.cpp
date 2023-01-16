@@ -64,6 +64,9 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
     vector<vector<array<Vec3, TOTAL_AIM_TICKS>>> tmpAttackerVel(numThreads);
     vector<vector<array<Vec3, TOTAL_AIM_TICKS>>> tmpVictimVel(numThreads);
     vector<vector<array<float, TOTAL_AIM_TICKS>>> tmpAttackerDuckAmount(numThreads);
+    vector<vector<array<float, TOTAL_AIM_TICKS>>> tmpNextPrimaryAttack(numThreads);
+    vector<vector<array<float, TOTAL_AIM_TICKS>>> tmpNextSecondaryAttack(numThreads);
+    vector<vector<array<float, TOTAL_AIM_TICKS>>> tmpAttackerGameTime(numThreads);
     vector<vector<array<DemoEquipmentType, TOTAL_AIM_TICKS>>> tmpWeaponId(numThreads);
     vector<vector<AimWeaponType>> tmpWeaponType(numThreads);
 
@@ -210,6 +213,9 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
                 tmpAttackerVel[threadNum].push_back({});
                 tmpVictimVel[threadNum].push_back({});
                 tmpAttackerDuckAmount[threadNum].push_back({});
+                tmpNextPrimaryAttack[threadNum].push_back({});
+                tmpNextSecondaryAttack[threadNum].push_back({});
+                tmpAttackerGameTime[threadNum].push_back({});
                 tmpWeaponId[threadNum].push_back({});
 
                 for (size_t i = 0; i < TOTAL_AIM_TICKS; i++) {
@@ -396,6 +402,9 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
                         tmpVictimVel[threadNum].back()[i] = {0., 0., 0.};
                     }
                     tmpAttackerDuckAmount[threadNum].back()[i] = playerAtTick.duckAmount[attackerPATId];
+                    tmpNextPrimaryAttack[threadNum].back()[i] = playerAtTick.nextPrimaryAttack[attackerPATId];
+                    tmpNextSecondaryAttack[threadNum].back()[i] = playerAtTick.nextSecondaryAttack[attackerPATId];
+                    tmpAttackerGameTime[threadNum].back()[i] = playerAtTick.gameTime[attackerPATId];
                     tmpWeaponId[threadNum].back()[i] =
                         static_cast<DemoEquipmentType>(playerAtTick.activeWeapon[attackerPATId]);
                 }
@@ -490,6 +499,9 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
                            result.victimVel.push_back(tmpVictimVel[minThreadId][tmpRowId]);
                            result.attackerDuckAmount.push_back(tmpAttackerDuckAmount[minThreadId][tmpRowId]);
                            result.weaponId.push_back(tmpWeaponId[minThreadId][tmpRowId]);
+                           result.attackerNextPrimaryAttack.push_back(tmpNextPrimaryAttack[minThreadId][tmpRowId]);
+                           result.attackerNextSecondaryAttack.push_back(tmpNextSecondaryAttack[minThreadId][tmpRowId]);
+                           result.attackerGameTime.push_back(tmpAttackerGameTime[minThreadId][tmpRowId]);
                            result.weaponType.push_back(tmpWeaponType[minThreadId][tmpRowId]);
                        });
     return result;

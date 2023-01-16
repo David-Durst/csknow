@@ -107,10 +107,20 @@ func ProcessTickData(localDemName string, idState *IDState) {
 			}
 			activeWeapon := common.EqUnknown
 			recoilIndex := InvalidFloat
+			nextPrimaryAttack := InvalidFloat
+			nextSecondaryAttack := InvalidFloat
 			if player.ActiveWeapon() != nil {
 				activeWeapon = player.ActiveWeapon().Type
 				recoilIndex = player.ActiveWeapon().Entity.PropertyValueMust("m_flRecoilIndex").FloatVal
+				nextPrimaryAttack = player.ActiveWeapon().Entity.PropertyValueMust("LocalActiveWeaponData.m_flNextPrimaryAttack").FloatVal
+				nextSecondaryAttack = player.ActiveWeapon().Entity.PropertyValueMust("LocalActiveWeaponData.m_flNextSecondaryAttack").FloatVal
 			}
+			/*
+				for _, prop := range player.Entity.Properties() {
+					print(prop.Name() + "\n")
+				}
+			*/
+			gameTime := float64(player.Entity.PropertyValueMust("localdata.m_nTickBase").IntVal) * (1. / p.TickRate())
 			aimPunchAngle := player.Entity.PropertyValueMust("localdata.m_Local.m_aimPunchAngle").VectorVal
 			viewPunchAngle := player.Entity.PropertyValueMust("localdata.m_Local.m_viewPunchAngle").VectorVal
 			// old demos (like 319_titan-epsilon_de_dust2.dem) don't track duck amount (probably not networked at that
@@ -125,7 +135,8 @@ func ProcessTickData(localDemName string, idState *IDState) {
 				player.Velocity().X, player.Velocity().Y, player.Velocity().Z,
 				player.ViewDirectionX(), player.ViewDirectionY(),
 				// flipping so match demo parser's assigner of yaw to x and pitch to y
-				aimPunchAngle.Y, aimPunchAngle.X, viewPunchAngle.Y, viewPunchAngle.X, recoilIndex,
+				aimPunchAngle.Y, aimPunchAngle.X, viewPunchAngle.Y, viewPunchAngle.X,
+				recoilIndex, nextPrimaryAttack, nextSecondaryAttack, gameTime,
 				int(player.Team), player.Health(), player.Armor(), player.HasHelmet(),
 				player.IsAlive(), player.Flags().DuckingKeyPressed(), duckAmount,
 				player.IsReloading, player.IsWalking(), player.IsScoped(), player.IsAirborne(),

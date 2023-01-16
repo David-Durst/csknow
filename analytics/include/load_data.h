@@ -385,6 +385,9 @@ public:
     double * viewPunchX;
     double * viewPunchY;
     double * recoilIndex;
+    double * nextPrimaryAttack;
+    double * nextSecondaryAttack;
+    double * gameTime;
     int16_t * team;
     double * health;
     double * armor;
@@ -434,6 +437,9 @@ public:
         viewPunchX = (double *) malloc(rows * sizeof(double));
         viewPunchY = (double *) malloc(rows * sizeof(double));
         recoilIndex = (double *) malloc(rows * sizeof(double));
+        nextPrimaryAttack = (double *) malloc(rows * sizeof(double));
+        nextSecondaryAttack = (double *) malloc(rows * sizeof(double));
+        gameTime = (double *) malloc(rows * sizeof(double));
         team = (int16_t *) malloc(rows * sizeof(int16_t));
         health = (double *) malloc(rows * sizeof(double));
         armor = (double *) malloc(rows * sizeof(double));
