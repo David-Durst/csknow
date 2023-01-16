@@ -406,9 +406,11 @@ namespace csknow::engagement_aim {
                 if (distanceToTargetRecent < 0.75 && distanceToTargetOldest > 2. && newestTickData.recoilIndex < 2.) {
                     //playerToManualOverrideStart[orderedAttackerIds[i]] = db.batchData.fromNewest().getLastFrame();
                     playerToFiring[orderedAttackerIds[i]] = true;
-                    deltaViewAngle = deltaViewAngle * 5;
+                    deltaViewAngle = deltaViewAngle * 10;
+                    //deltaViewAngle.x += newestTickData.deltaRelativeCurHeadViewAngle.x / 4;
                     outputViewAngle = newestTickData.attackerViewAngle + deltaViewAngle;
                     outputViewAngle.makeYawNeg180To180();
+                    std::cout << "base fix " << curState.getLastFrame() << std::endl;
                 }
                 double mouseVelocityRecent =
                     computeMagnitude(newestTickData.attackerViewAngle - recentTickData.attackerViewAngle);
@@ -418,6 +420,10 @@ namespace csknow::engagement_aim {
                 if (mouseVelocityRecent < 0.75 && mouseVelocityOldest > 2. && enemyVelocityRecent > 50. && newestTickData.recoilIndex < 0.75) {
                     //playerToManualOverrideStart[orderedAttackerIds[i]] = db.batchData.fromNewest().getLastFrame();
                     playerToFiring[orderedAttackerIds[i]] = true;
+                    deltaViewAngle = deltaViewAngle * 5;
+                    outputViewAngle = newestTickData.attackerViewAngle + deltaViewAngle;
+                    outputViewAngle.makeYawNeg180To180();
+                    std::cout << "speed fix" << std::endl;
                 }
                 /*
                 if (newestTickData.recoilIndex > 7.) {
@@ -475,6 +481,10 @@ namespace csknow::engagement_aim {
                         raw_output[i][(raw_output[0].size(0) * 2 / 3) + 1].item<float>() << std::endl;
                     aimTicksStream << output[0].size(0) << std::endl;
                     aimTicksFile << aimTicksStream.str();
+                    /*
+                    std::cout << "fire fixed," << boolToString(playerToFiring[orderedAttackerIds[i]])
+                        << ",frame," << curState.getLastFrame() << std::endl;
+                        */
                 }
                 // flip y axis to go back to game coordinates
                 playerToDeltaAngle[orderedAttackerIds[i]] = deltaViewAngle;

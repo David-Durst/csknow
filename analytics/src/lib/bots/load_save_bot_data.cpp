@@ -7,6 +7,7 @@
 #include "load_cover.h"
 #include "load_data.h"
 #include "file_helpers.h"
+#include "bots/input_bits.h"
 #include <string>
 #include <filesystem>
 #include <fstream>
@@ -554,6 +555,11 @@ void ServerState::saveBotInputs() {
 
     for (int i = 0; i < (int) inputsValid.size(); i++) {
         if (i < (int) clients.size() && inputsValid[i]) {
+            /*
+            if ((clients[i].buttons & IN_ATTACK) > 0) {
+                std::cout << "sending fire" << std::endl;
+            }
+             */
             if (disableTeleportationConfirmation) {
                 clients[i].forceInput = true;
             }
