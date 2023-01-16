@@ -403,8 +403,12 @@ namespace csknow::engagement_aim {
                 double distanceToTargetOldest =
                     computeMagnitude(newestTickData.deltaRelativeCurHeadViewAngle -
                                      oldestTickData.deltaRelativeCurHeadViewAngle);
-                if (distanceToTargetRecent < 0.75 && distanceToTargetOldest > 1. && newestTickData.recoilIndex < 2.) {
+                if (distanceToTargetRecent < 0.75 && distanceToTargetOldest > 2. && newestTickData.recoilIndex < 2.) {
+                    //playerToManualOverrideStart[orderedAttackerIds[i]] = db.batchData.fromNewest().getLastFrame();
                     playerToFiring[orderedAttackerIds[i]] = true;
+                    deltaViewAngle = deltaViewAngle * 5;
+                    outputViewAngle = newestTickData.attackerViewAngle + deltaViewAngle;
+                    outputViewAngle.makeYawNeg180To180();
                 }
                 double mouseVelocityRecent =
                     computeMagnitude(newestTickData.attackerViewAngle - recentTickData.attackerViewAngle);
@@ -412,10 +416,11 @@ namespace csknow::engagement_aim {
                     computeMagnitude(newestTickData.attackerViewAngle - recentTickData.attackerViewAngle);
                 double enemyVelocityRecent = computeMagnitude(newestTickData.victimVel);
                 if (mouseVelocityRecent < 0.75 && mouseVelocityOldest > 2. && enemyVelocityRecent > 50. && newestTickData.recoilIndex < 0.75) {
+                    //playerToManualOverrideStart[orderedAttackerIds[i]] = db.batchData.fromNewest().getLastFrame();
                     playerToFiring[orderedAttackerIds[i]] = true;
                 }
                 /*
-                if (newestTickData.recoilIndex > 8.) {
+                if (newestTickData.recoilIndex > 7.) {
                     playerToFiring[orderedAttackerIds[i]] = false;
                 }
                  */

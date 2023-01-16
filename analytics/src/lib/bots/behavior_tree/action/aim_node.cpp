@@ -4,10 +4,11 @@
 
 #include "bots/behavior_tree/action/action_node.h"
 #define MAX_LOOK_AT_C4_DISTANCE 300.
-#define SECOND_ORDER false
 #define K_P 0.0025
 #define K_I 0.
 #define K_D 0.
+
+constexpr bool second_order = false;
 
 namespace action {
     float computeAngleVelocityPID(double deltaAngle, PIDState pidState, double noise) {
@@ -135,8 +136,18 @@ namespace action {
         Vec2 deltaAngle = targetViewAngle - curViewAngle;
         deltaAngle.makeYawNeg180To180();
 
-        curAction.inputAngleAbsolute = !SECOND_ORDER;
-        if (SECOND_ORDER) {
+        const unordered_map<CSGOId, uint32_t> & playerToManualOverrideStart =
+            blackboard.streamingManager.streamingEngagementAim.playerToManualOverrideStart;
+        /*
+        curAction.inputAngleAbsolute = true;
+        bool manualOverride = force_controller ||
+            (playerToManualOverrideStart.find(curClient.csgoId) != playerToManualOverrideStart.end() &&
+            playerToManualOverrideStart.at(curClient.csgoId) >= state.getLastFrame() - 4);
+        if (force_controller) {
+        }
+         */
+        curAction.inputAngleAbsolute = !second_order;
+        if (second_order) {
             Vec2 newDeltaAngle = mouseController.update(state.getSecondsBetweenTimes(curAction.lastActionTime, state.loadTime),
                                                         deltaAngle, {0., 0.});
             Vec2 newDeltaAnglePct = makeAngleToPct(newDeltaAngle);
