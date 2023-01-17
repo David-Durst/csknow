@@ -403,20 +403,30 @@ namespace csknow::engagement_aim {
                 double distanceToTargetOldest =
                     computeMagnitude(newestTickData.deltaRelativeCurHeadViewAngle -
                                      oldestTickData.deltaRelativeCurHeadViewAngle);
-                if (distanceToTargetRecent < 0.75 && distanceToTargetOldest > 2. && newestTickData.recoilIndex < 2.) {
-                    //playerToManualOverrideStart[orderedAttackerIds[i]] = db.batchData.fromNewest().getLastFrame();
+                if (distanceToTargetRecent < 0.75 && distanceToTargetOldest > 2. && newestTickData.recoilIndex < 2. &&
+                    playerToManualOverride.find(orderedAttackerIds[i]) == playerToManualOverride.end()) {
+                    playerToManualOverride[orderedAttackerIds[i]] = 7;
+                }
+                else if (playerToManualOverride.find(orderedAttackerIds[i]) != playerToManualOverride.end() &&
+                         playerToManualOverride.at(orderedAttackerIds[i]) > 0) {
+                    playerToManualOverride[orderedAttackerIds[i]]--;
+                }
+                else if (playerToManualOverride.find(orderedAttackerIds[i]) != playerToManualOverride.end() &&
+                         playerToManualOverride.at(orderedAttackerIds[i]) == 0) {
+                    playerToManualOverride.erase(orderedAttackerIds[i]);
                     playerToFiring[orderedAttackerIds[i]] = true;
                     deltaViewAngle = deltaViewAngle * 10;
                     //deltaViewAngle.x += newestTickData.deltaRelativeCurHeadViewAngle.x / 4;
                     outputViewAngle = newestTickData.attackerViewAngle + deltaViewAngle;
                     outputViewAngle.makeYawNeg180To180();
-                    std::cout << "base fix " << curState.getLastFrame() << std::endl;
+                    //std::cout << "base fix " << curState.getLastFrame() << std::endl;
                 }
                 double mouseVelocityRecent =
                     computeMagnitude(newestTickData.attackerViewAngle - recentTickData.attackerViewAngle);
                 double mouseVelocityOldest =
                     computeMagnitude(newestTickData.attackerViewAngle - recentTickData.attackerViewAngle);
                 double enemyVelocityRecent = computeMagnitude(newestTickData.victimVel);
+                /*
                 if (mouseVelocityRecent < 0.75 && mouseVelocityOldest > 2. && enemyVelocityRecent > 50. && newestTickData.recoilIndex < 0.75) {
                     //playerToManualOverrideStart[orderedAttackerIds[i]] = db.batchData.fromNewest().getLastFrame();
                     playerToFiring[orderedAttackerIds[i]] = true;
@@ -425,6 +435,7 @@ namespace csknow::engagement_aim {
                     outputViewAngle.makeYawNeg180To180();
                     std::cout << "speed fix" << std::endl;
                 }
+                 */
                 /*
                 if (newestTickData.recoilIndex > 7.) {
                     playerToFiring[orderedAttackerIds[i]] = false;

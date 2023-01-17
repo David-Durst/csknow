@@ -136,9 +136,9 @@ namespace action {
         Vec2 deltaAngle = targetViewAngle - curViewAngle;
         deltaAngle.makeYawNeg180To180();
 
+        /*
         const unordered_map<CSGOId, uint32_t> & playerToManualOverrideStart =
             blackboard.streamingManager.streamingEngagementAim.playerToManualOverrideStart;
-        /*
         curAction.inputAngleAbsolute = true;
         bool manualOverride = force_controller ||
             (playerToManualOverrideStart.find(curClient.csgoId) != playerToManualOverrideStart.end() &&

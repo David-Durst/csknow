@@ -16,6 +16,15 @@ void StreamingManager::update(const ServerState & state) {
         }
     }
 
+    if (streamingTestLogger.testActive()) {
+        for (const auto & weaponFireEvent : state.weaponFireEvents) {
+            streamingTestLogger.addEvent("weapon fire");
+        }
+        for (const auto & hurt : state.hurtEvents) {
+            streamingTestLogger.addEvent("hurt");
+        }
+    }
+
     db.addState(state);
     streamingFireHistory.addTickData(db);
     streamingEngagementAim.addTickData(db, streamingFireHistory);

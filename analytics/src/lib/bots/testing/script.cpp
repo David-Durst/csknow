@@ -87,9 +87,15 @@ bool Script::tick(Tree & tree, ServerState & state) {
     }
     else if (initScript) { } // don't print for init script
     else if (conditionResult == NodeState::Success) {
+        if (tree.blackboard->streamingManager.streamingTestLogger.testActive()) {
+            tree.blackboard->streamingManager.streamingTestLogger.endTest(true);
+        }
         std::cout << name << " succeeded" << std::endl;
     }
     else if (conditionResult == NodeState::Failure) {
+        if (tree.blackboard->streamingManager.streamingTestLogger.testActive()) {
+            tree.blackboard->streamingManager.streamingTestLogger.endTest(false);
+        }
         std::cout << name << " failed: " << std::endl;
         std::cout << commands->printState(state, defaultThinker.csgoId).getState() << std::endl;
     }
