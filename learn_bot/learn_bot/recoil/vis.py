@@ -23,6 +23,7 @@ core_id_columns = ["id", "round id", "tick id", "demo tick id", "game tick id", 
 
 weapon_id_column = "weapon id (t)"
 recoil_index_column = "recoil index (t)"
+prior_recoil_index_column = "recoil index (t-1)"
 base_x_recoil_column = "scaled recoil angle x"
 cur_x_recoil_column = "scaled recoil angle x (t)"
 delta_x_recoil_column = "delta scaled recoil angle x"
@@ -338,7 +339,14 @@ def vis(recoil_df: pd.DataFrame):
     # Start the GUI
     window.mainloop()
 
+bad_recoil_index_path = Path(__file__).parent / 'bad_recoil_index.csv'
 
 if __name__ == "__main__":
     all_data_df = pd.read_csv(data_path)
+    x_all = all_data_df[(all_data_df[ticks_since_last_fire_column] == 0)]
+    print(len(x_all))
+    x = all_data_df[(all_data_df[ticks_since_last_fire_column] == 0) &
+                    (all_data_df[recoil_index_column] - 0.5 <= all_data_df[prior_recoil_index_column])]
+    print(len(x))
+    x.copy().sort_index(axis=1).T.to_csv(bad_recoil_index_path)
     vis(all_data_df)
