@@ -263,11 +263,13 @@ public:
 
 class StartTestTiming : public Node {
     string testName;
+    CSGOId attackerId;
 public:
-    StartTestTiming(Blackboard & blackboard, const string & testName) :
-        Node(blackboard, testName + "StartTestTiming"), testName(testName) { };
+    StartTestTiming(Blackboard & blackboard, const string & testName, CSGOId attackerId) :
+        Node(blackboard, testName + "StartTestTiming"), testName(testName), attackerId(attackerId) { };
     NodeState exec(const ServerState &, TreeThinker &treeThinker) override {
         blackboard.streamingManager.streamingTestLogger.startTest(testName);
+        blackboard.streamingManager.streamingTestLogger.attackerId = attackerId;
         playerNodeState[treeThinker.csgoId] = NodeState::Success;
         return playerNodeState[treeThinker.csgoId];
     }

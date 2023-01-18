@@ -15,7 +15,6 @@ namespace csknow::test_log {
     }
 
     void StreamingTestLogger::startTest(const string & testName) {
-        TestId newId;
         if (!testTimings.isEmpty() && testTimings.fromNewest().endTime == defaultTime) {
             throw std::logic_error("starting test while prior one not ended");
         }
@@ -25,7 +24,7 @@ namespace csknow::test_log {
         nextTestId++;
     }
 
-    void StreamingTestLogger::addEvent(const string & eventName) {
+    void StreamingTestLogger::addEvent(const string & eventName, const string & payload) {
         if (testTimings.isEmpty()) {
             throw std::logic_error("adding event to test that isn't started");
         }
@@ -36,10 +35,11 @@ namespace csknow::test_log {
             newEventId = 0;
         }
         else {
-            newEventId = lastTest.testEventTimings.back().eventId;
+            newEventId = lastTest.testEventTimings.back().eventId + 1;
         }
 
-        lastTest.testEventTimings.push_back({eventName, lastTest.testId, newEventId, curFrameTime});
+        lastTest.testEventTimings.push_back({eventName, lastTest.testId, newEventId, curFrameTime,
+                                             payload});
     }
 
     void StreamingTestLogger::endTest(bool success) {

@@ -16,11 +16,13 @@ namespace csknow::test_log {
         string eventName;
         TestId testId, eventId;
         CSKnowTime eventTime;
+        string payload;
 
         string toString(const CSKnowTime & testStartTime) const {
             std::stringstream ss;
             ss << eventName << "," << testId << "," << eventId
-               << "," << std::chrono::duration<double>(eventTime - testStartTime).count();
+               << "," << std::chrono::duration<double>(eventTime - testStartTime).count()
+               << "," << payload;
             return ss.str();
         }
     };
@@ -50,6 +52,8 @@ namespace csknow::test_log {
         CSKnowTime curFrameTime = defaultTime;
 
     public:
+        CSGOId attackerId = INVALID_ID;
+
         explicit StreamingTestLogger(const string & navPath) : testTimings(STREAMING_HISTORY_TICKS),
             testTimingPath(fs::path(navPath) / fs::path("..") / fs::path("..") / fs::path("test_timing.csv")),
             testEventTimingPath(fs::path(navPath) / fs::path("..") / fs::path("..") / fs::path("test_event_timing.csv")),
@@ -62,7 +66,7 @@ namespace csknow::test_log {
         void setNextTestId(int nextTestId) { this->nextTestId = nextTestId; }
         void setCurFrameTime() { curFrameTime = std::chrono::system_clock::now(); }
         void startTest(const string & testName);
-        void addEvent(const string & eventName);
+        void addEvent(const string & eventName, const string & payload);
         void endTest(bool success);
         bool testActive() const;
     };
