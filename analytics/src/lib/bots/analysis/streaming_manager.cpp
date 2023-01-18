@@ -16,11 +16,12 @@ void StreamingManager::update(const ServerState & state) {
         }
     }
 
+    streamingTestLogger.setCurFrameTime();
     if (streamingTestLogger.testActive()) {
-        for (const auto & weaponFireEvent : state.weaponFireEvents) {
+        for (size_t i = 0; i < state.weaponFireEvents.size(); i++) {
             streamingTestLogger.addEvent("weapon fire");
         }
-        for (const auto & hurt : state.hurtEvents) {
+        for (size_t i = 0; i < state.hurtEvents.size(); i++) {
             streamingTestLogger.addEvent("hurt");
         }
     }

@@ -123,12 +123,20 @@ bool ScriptsRunner::tick(Tree & tree, ServerState & state) {
         if (curScript > 0) {
             std::cout << scripts[curScript]->name << " starting" << std::endl;
         }
+        // overwrite log files on init script so ready for all real scripts
+        else {
+            tree.blackboard->streamingManager.streamingTestLogger.createLogFiles();
+        }
         startingNewScript = false;
         tree.resetState = true;
     }
     else {
         tree.resetState = false;
     }
+
+    // just force test id every frame, not a big deal
+    tree.blackboard->streamingManager.streamingTestLogger.setNextTestId(curScript - 1);
+
     for (const auto & neededBot : scripts[curScript]->getNeededBots()) {
         if (tree.blackboard->playerToTreeThinkers.find(neededBot.id) != tree.blackboard->playerToTreeThinkers.end()) {
             tree.blackboard->playerToTreeThinkers[neededBot.id].aggressiveType = neededBot.type;

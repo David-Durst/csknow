@@ -17,10 +17,10 @@ namespace csknow::test_log {
         TestId testId, eventId;
         CSKnowTime eventTime;
 
-        string toString() const {
+        string toString(const CSKnowTime & testStartTime) const {
             std::stringstream ss;
             ss << eventName << "," << testId << "," << eventId
-               << "," << std::chrono::duration_cast<std::chrono::seconds>(eventTime.time_since_epoch()).count();
+               << "," << std::chrono::duration<double>(eventTime - testStartTime).count();
             return ss.str();
         }
     };
@@ -35,8 +35,7 @@ namespace csknow::test_log {
         string toString() const {
             std::stringstream ss;
             ss << testName << "," << testId
-                << "," << std::chrono::duration_cast<std::chrono::seconds>(startTime.time_since_epoch()).count()
-                << "," << std::chrono::duration_cast<std::chrono::seconds>(endTime.time_since_epoch()).count()
+                << "," << std::chrono::duration<double>(endTime - startTime).count()
                 << "," << boolToInt(success);
             return ss.str();
         }
@@ -44,23 +43,28 @@ namespace csknow::test_log {
 
     class StreamingTestLogger {
         CircularBuffer<TestTiming> testTimings;
+        fs::path testTimingPath, testEventTimingPath;
         std::fstream testTimingFile, testEventTimingFile;
-        std::fstream eventsTimingFile;
+        int nextTestId = 0;
+        // ensures multiple events on same frame get same time
+        CSKnowTime curFrameTime = defaultTime;
 
     public:
-        StreamingTestLogger(const string & navPath) : testTimings(STREAMING_HISTORY_TICKS),
-            testTimingFile(fs::path(navPath) / fs::path("..") / fs::path("..") /
-                fs::path("test_timing.csv"), std::fstream::out),
-            testEventTimingFile(fs::path(navPath) / fs::path("..") / fs::path("..") /
-                fs::path("test_event_timing.csv"), std::fstream::out) {
-            testTimingFile << "test name,test id,start time,end time" << std::endl;
-            testEventTimingFile << "event name,test id,event id,event time" << std::endl;
-        }
+        explicit StreamingTestLogger(const string & navPath) : testTimings(STREAMING_HISTORY_TICKS),
+            testTimingPath(fs::path(navPath) / fs::path("..") / fs::path("..") / fs::path("test_timing.csv")),
+            testEventTimingPath(fs::path(navPath) / fs::path("..") / fs::path("..") / fs::path("test_event_timing.csv")),
+            // open these for append since blackboard recreates them so often
+            // createLogFiles will reopen with concate for first test
+            testTimingFile(testTimingPath, std::fstream::out | std::fstream::app),
+            testEventTimingFile(testEventTimingPath, std::fstream::out | std::fstream::app) { }
 
+        void createLogFiles();
+        void setNextTestId(int nextTestId) { this->nextTestId = nextTestId; }
+        void setCurFrameTime() { curFrameTime = std::chrono::system_clock::now(); }
         void startTest(const string & testName);
         void addEvent(const string & eventName);
         void endTest(bool success);
-        bool testActive();
+        bool testActive() const;
     };
 }
 #endif //CSKNOW_STREAMING_TEST_LOGGER_H

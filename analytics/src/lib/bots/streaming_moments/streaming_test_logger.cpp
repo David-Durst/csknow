@@ -5,20 +5,24 @@
 #include "bots/streaming_moments/streaming_test_logger.h"
 
 namespace csknow::test_log {
+    void StreamingTestLogger::createLogFiles() {
+        testTimingFile.close();
+        testTimingFile.open(testTimingPath, std::fstream::out);
+        testEventTimingFile.close();
+        testEventTimingFile.open(testEventTimingPath, std::fstream::out);
+        testTimingFile << "test name,test id,end time" << std::endl;
+        testEventTimingFile << "event name,test id,event id,event time" << std::endl;
+    }
+
     void StreamingTestLogger::startTest(const string & testName) {
         TestId newId;
-        if (testTimings.isEmpty()) {
-            newId = 0;
+        if (!testTimings.isEmpty() && testTimings.fromNewest().endTime == defaultTime) {
+            throw std::logic_error("starting test while prior one not ended");
         }
-        else {
-            if (testTimings.fromNewest().endTime == defaultTime) {
-                throw std::logic_error("starting test while prior one not ended");
-            }
-            else {
-                newId = testTimings.fromNewest().testId + 1;
-            }
-        }
-        testTimings.enqueue({testName, newId, std::chrono::system_clock::now(), defaultTime});
+        testTimings.enqueue({testName, nextTestId,
+                             std::chrono::system_clock::now(), defaultTime,
+                             false, {}});
+        nextTestId++;
     }
 
     void StreamingTestLogger::addEvent(const string & eventName) {
@@ -35,8 +39,7 @@ namespace csknow::test_log {
             newEventId = lastTest.testEventTimings.back().eventId;
         }
 
-        lastTest.testEventTimings.push_back({eventName, lastTest.testId, newEventId,
-                                             std::chrono::system_clock::now()});
+        lastTest.testEventTimings.push_back({eventName, lastTest.testId, newEventId, curFrameTime});
     }
 
     void StreamingTestLogger::endTest(bool success) {
@@ -48,10 +51,14 @@ namespace csknow::test_log {
         lastTest.endTime = std::chrono::system_clock::now();
         lastTest.success = success;
         testTimingFile << lastTest.toString() << std::endl;
-        testTimingFile.flush();
+        //testTimingFile.flush();
         for (const auto & testEventTiming : lastTest.testEventTimings) {
-            testEventTimingFile << testEventTiming.toString() << std::endl;
+            testEventTimingFile << testEventTiming.toString(lastTest.startTime) << std::endl;
         }
-        testEventTimingFile.flush();
+        //testEventTimingFile.flush();
+    }
+
+    bool StreamingTestLogger::testActive() const {
+        return !testTimings.isEmpty() && testTimings.fromNewest().endTime == defaultTime;
     }
 }

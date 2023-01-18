@@ -264,21 +264,10 @@ public:
 class StartTestTiming : public Node {
     string testName;
 public:
-    StartTestTiming(Blackboard & blackboard, string testName) :
-        Node(blackboard, std::move(name + "StartTestTiming")), testName(testName) { };
+    StartTestTiming(Blackboard & blackboard, const string & testName) :
+        Node(blackboard, testName + "StartTestTiming"), testName(testName) { };
     NodeState exec(const ServerState &, TreeThinker &treeThinker) override {
         blackboard.streamingManager.streamingTestLogger.startTest(testName);
-        playerNodeState[treeThinker.csgoId] = NodeState::Success;
-        return playerNodeState[treeThinker.csgoId];
-    }
-};
-
-class EndTestTiming : public Node {
-public:
-    EndTestTiming(Blackboard & blackboard) :
-        Node(blackboard, std::move(name + "EndTestTiming")) { };
-    NodeState exec(const ServerState &, TreeThinker &treeThinker) override {
-        blackboard.streamingManager.streamingTestLogger.endTest();
         playerNodeState[treeThinker.csgoId] = NodeState::Success;
         return playerNodeState[treeThinker.csgoId];
     }

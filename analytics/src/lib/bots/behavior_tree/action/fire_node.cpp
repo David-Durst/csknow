@@ -65,7 +65,7 @@ namespace action {
 
                 const ServerState::Client & targetClient = state.getClient(curPriority.targetPlayer.playerId);
 
-                bool attackLastFrame = (oldAction.buttons & IN_ATTACK) > 0;
+                //bool attackLastFrame = (oldAction.buttons & IN_ATTACK) > 0;
 
                 bool haveAmmo = true;
                 if (curClient.currentWeaponId == curClient.rifleId) {

@@ -421,12 +421,12 @@ namespace csknow::engagement_aim {
                     outputViewAngle.makeYawNeg180To180();
                     //std::cout << "base fix " << curState.getLastFrame() << std::endl;
                 }
+                /*
                 double mouseVelocityRecent =
                     computeMagnitude(newestTickData.attackerViewAngle - recentTickData.attackerViewAngle);
                 double mouseVelocityOldest =
                     computeMagnitude(newestTickData.attackerViewAngle - recentTickData.attackerViewAngle);
                 double enemyVelocityRecent = computeMagnitude(newestTickData.victimVel);
-                /*
                 if (mouseVelocityRecent < 0.75 && mouseVelocityOldest > 2. && enemyVelocityRecent > 50. && newestTickData.recoilIndex < 0.75) {
                     //playerToManualOverrideStart[orderedAttackerIds[i]] = db.batchData.fromNewest().getLastFrame();
                     playerToFiring[orderedAttackerIds[i]] = true;
