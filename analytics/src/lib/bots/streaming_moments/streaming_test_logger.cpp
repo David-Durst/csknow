@@ -10,8 +10,8 @@ namespace csknow::test_log {
         testTimingFile.open(testTimingPath, std::fstream::out);
         testEventTimingFile.close();
         testEventTimingFile.open(testEventTimingPath, std::fstream::out);
-        testTimingFile << "test name,test id,end time" << std::endl;
-        testEventTimingFile << "event name,test id,event id,event time" << std::endl;
+        testTimingFile << "test name,test id,end time,success" << std::endl;
+        testEventTimingFile << "event name,test id,event id,event time,payload" << std::endl;
     }
 
     void StreamingTestLogger::startTest(const string & testName) {

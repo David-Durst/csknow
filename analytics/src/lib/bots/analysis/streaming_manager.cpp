@@ -30,7 +30,8 @@ void StreamingManager::update(const ServerState & state) {
     streamingFireHistory.addTickData(db);
     streamingEngagementAim.addTickData(db, streamingFireHistory);
 
-    if (streamingTestLogger.testActive() && streamingTestLogger.attackerId != INVALID_ID) {
+    if (streamingTestLogger.testActive() && streamingTestLogger.attackerId != INVALID_ID &&
+        state.getClient(streamingTestLogger.attackerId).isBot) {
         const EngagementAimTickData & attackerEngagementAimTickData =
             streamingEngagementAim.engagementAimPlayerHistory.clientHistory.at(streamingTestLogger.attackerId).fromNewest();
         streamingTestLogger.addEvent("angular distance x",
