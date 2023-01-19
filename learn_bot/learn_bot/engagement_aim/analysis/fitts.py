@@ -12,10 +12,13 @@ bot_timing_path = Path(__file__).parent / "test_timing_data" / "bot" / "test_tim
 bot_event_timing_path = Path(__file__).parent / "test_timing_data" / "bot" / "test_event_timing.csv"
 human_timing_path = Path(__file__).parent / "test_timing_data" / "human" / "test_timing.csv"
 human_event_timing_path = Path(__file__).parent / "test_timing_data" / "human" / "test_event_timing.csv"
-plot_path = Path(__file__).parent / "test_timing_data" / "bot_timing_result.png"
+plot_path = Path(__file__).parent / "test_timing_data" / "timing_result.png"
+success_path = Path(__file__).parent / "test_timing_data" / "success.csv"
 
 # use ramp so can isolate left/right movement coming right after ramp from left/right looking that comes later
-movement_options = ["RampNone", "RampForward", "RampLeft", "RampRight"]
+# didn't use consistent naming, so need to check two sets of options
+movement_options_a = ["CloseNone", "CloseForward", "CloseLeft", "CloseRight"]
+movement_options_b = ["RampNone", "RampForward", "RampLeft", "RampRight"]
 movement_names = ["Still", "Forward", "Left", "Right"]
 
 none_red = (1., 0., 0., 1.)
@@ -131,7 +134,11 @@ def vis():
 
     for test_name, test_id in zip(test_names, test_ids):
         movement_name: str = "invalid"
-        for i, option in enumerate(movement_options):
+        # TODO: fix naming to remove this
+        for i, option in enumerate(movement_options_a):
+            if option in test_name:
+                movement_name = movement_names[i]
+        for i, option in enumerate(movement_options_b):
             if option in test_name:
                 movement_name = movement_names[i]
 
@@ -181,14 +188,14 @@ def vis():
     human_data_df = pd.DataFrame([d.to_dict() for d in human_data])
 
     bot_success_data_df = bot_data_df[bot_data_df[success_col]]
+    bot_success_tracker_data_df = bot_data_df.loc[:, [test_name_col, success_col]]
     human_success_data_df = human_data_df[human_data_df[success_col]]
+    human_success_tracker_subset_data_df = human_data_df.loc[:, [test_name_col, success_col]]
+    success_subset_data_df = bot_success_tracker_data_df.merge(human_success_tracker_subset_data_df, on=test_name_col)
 
     print(f"Bot Success Rate: {len(bot_success_data_df) / len(bot_data_df)}, "
           f"Human Success Rate: {len(human_success_data_df) / len(human_data_df)}")
-    print(f"Bot Test Successes")
-    print(bot_data_df.loc[:, [test_name_col, success_col]])
-    print(f"Human Test Successes")
-    print(human_data_df.loc[:, [test_name_col, success_col]])
+    success_subset_data_df.to_csv(success_path)
 
     bot_success_data_df = bot_success_data_df.sort_values(by=index_of_difficulty_col)
     human_success_data_df = human_success_data_df.sort_values(by=index_of_difficulty_col)
