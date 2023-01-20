@@ -47,6 +47,7 @@ base_relative_coordinates = AttackerVictimCoordinateColumns(
 
 base_recoil_x_column = "scaled recoil angle x"
 base_recoil_y_column = "scaled recoil angle y"
+base_ticks_since_holding_attack = "ticks since holding attack"
 base_holding_attack = "holding attack"
 
 base_vis_float_columns: List[str] = ["attacker view angle x", "attacker view angle y",
@@ -77,19 +78,20 @@ temporal_vis_float_column_names = TemporalIOColumnNames(base_vis_float_columns, 
 base_learning_float_standard_columns: List[str] = [
     #"hit victim",
     #"recoil index",
-    #"ticks since last fire", "ticks since last holding attack",
+    #"ticks since last fire",
+    "ticks since last holding attack",
     "victim visible", #"victim visible yet",
     "victim alive",
     "attacker eye pos x", "attacker eye pos y", "attacker eye pos z",
     "victim eye pos x", "victim eye pos y", "victim eye pos z",
     "attacker vel x", "attacker vel y", "attacker vel z",
-    "victim vel x", "victim vel y", "victim vel z"
+    "victim vel x", "victim vel y", "victim vel z",
+    "scaled recoil angle x", "scaled recoil angle y"
 ]
 
 base_learning_float_180_angle_columns: List[str] = [
     "ideal view angle x",
     "delta relative first head view angle x",
-    "scaled recoil angle x",
     "victim relative first head min view angle x",
     "victim relative first head max view angle x",
     "victim relative first head cur head view angle x"
@@ -98,7 +100,6 @@ base_learning_float_180_angle_columns: List[str] = [
 base_learning_float_90_angle_columns: List[str] = [
     "ideal view angle y",
     "delta relative first head view angle y",
-    "scaled recoil angle y",
     "victim relative first head min view angle y",
     "victim relative first head max view angle y",
     "victim relative first head cur head view angle y"
@@ -126,7 +127,7 @@ input_column_types = ColumnTypes(temporal_io_float_standard_column_names.past_co
                                  temporal_io_float_90_angle_column_names.past_columns, [],
                                  temporal_io_cat_column_names.past_columns + static_input_categorical_columns,
                                  temporal_io_cat_column_names.get_num_cats_per_temporal_column([2], True, False, False)
-                                 + [6],
+                                 + [8],
                                  #temporal_io_float_180_angle_column_names.past_columns + temporal_io_float_90_angle_column_names.past_columns, [],
                                  [], [],
                                  temporal_io_float_180_angle_column_names.past_columns)
@@ -136,10 +137,19 @@ all_time_column_types = ColumnTypes(temporal_io_float_standard_column_names.all_
                                     temporal_io_float_90_angle_column_names.all_columns, [],
                                     temporal_io_cat_column_names.all_columns + static_input_categorical_columns,
                                     temporal_io_cat_column_names.get_num_cats_per_temporal_column([2], True, True, True)
-                                    + [6],
+                                    + [8],
                                     #temporal_io_float_180_angle_column_names.all_columns + temporal_io_float_90_angle_column_names.all_columns, [],
                                     [], [],
                                     temporal_io_float_180_angle_column_names.all_columns)
+
+output_relative_recoil_x_cols = \
+    temporal_io_float_180_angle_column_names.get_matching_cols(base_recoil_x_column, False, True, True)
+output_relative_recoil_y_cols = \
+    temporal_io_float_90_angle_column_names.get_matching_cols(base_recoil_y_column, False, True, True)
+output_ref_recoil_x_col = get_temporal_field_str(base_recoil_x_column, -1)
+output_ref_recoil_y_col = get_temporal_field_str(base_recoil_y_column, -1)
+output_delta_recoil_x = [DeltaColumn(c_rel, output_ref_recoil_x_col, None) for c_rel in output_relative_recoil_x_cols]
+output_delta_recoil_y = [DeltaColumn(c_rel, output_ref_recoil_y_col, None) for c_rel in output_relative_recoil_y_cols]
 
 output_relative_x_cols = \
     temporal_io_float_180_angle_column_names.get_matching_cols(base_changed_offset_coordinates.attacker_x_view_angle,
@@ -164,7 +174,8 @@ output_cat_cols = temporal_io_cat_column_names.present_columns + temporal_io_cat
 num_x_targets = len(output_target_x_cols)
 
 #output_column_types = ColumnTypes(output_standard_cols, output_delta, [], [])
-output_column_types = ColumnTypes([], [], [], output_delta_x, [], output_delta_y,
+output_column_types = ColumnTypes([], output_delta_recoil_x + output_delta_recoil_y,
+                                  [], output_delta_x, [], output_delta_y,
                                   output_cat_cols, [2 for _ in output_cat_cols], [],
                                   [], [])
                                   #output_delta_x + output_delta_y, [])

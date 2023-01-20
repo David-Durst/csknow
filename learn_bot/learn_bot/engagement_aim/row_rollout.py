@@ -1,20 +1,32 @@
 import torch
 from torch import nn
 
-from learn_bot.engagement_aim.column_names import base_changed_offset_coordinates
+from learn_bot.engagement_aim.column_names import base_changed_offset_coordinates, base_recoil_x_column, \
+    base_recoil_y_column, base_ticks_since_holding_attack
 from learn_bot.engagement_aim.io_transforms import IOColumnTransformers, FUTURE_TICKS, CUR_TICK, PRIOR_TICKS, \
     PRIOR_TICKS_POS
 from learn_bot.libs.temporal_column_names import get_temporal_field_str
 from dataclasses import dataclass
 import random
 
+input_ticks_since_holding_attack = \
+    [get_temporal_field_str(base_ticks_since_holding_attack, i) for i in range(PRIOR_TICKS, 0)]
+input_names_recoil_x = [get_temporal_field_str(base_recoil_x_column, i) for i in range(PRIOR_TICKS, 0)]
+input_names_recoil_y = [get_temporal_field_str(base_recoil_y_column, i) for i in range(PRIOR_TICKS, 0)]
 input_names_x = [get_temporal_field_str(base_changed_offset_coordinates.attacker_x_view_angle, i)
                  for i in range(PRIOR_TICKS, 0)]
 input_names_y = [get_temporal_field_str(base_changed_offset_coordinates.attacker_y_view_angle, i)
                  for i in range(PRIOR_TICKS, 0)]
-rolling_input_names = input_names_x + input_names_y
-newest_input_names = [get_temporal_field_str(base_changed_offset_coordinates.attacker_x_view_angle, -1),
-                      get_temporal_field_str(base_changed_offset_coordinates.attacker_y_view_angle, -1)]
+rolling_input_names = input_ticks_since_holding_attack + input_names_recoil_x + input_names_recoil_y + \
+                      input_names_x + input_names_y
+newest_ticks_since_last_holding_attack_name = get_temporal_field_str(base_ticks_since_holding_attack, -1),
+second_newest_ticks_since_last_holding_attack_name = get_temporal_field_str(base_ticks_since_holding_attack, -2),
+newest_input_names = [
+    get_temporal_field_str(base_recoil_x_column, -1),
+    get_temporal_field_str(base_recoil_y_column, -1),
+    get_temporal_field_str(base_changed_offset_coordinates.attacker_x_view_angle, -1),
+    get_temporal_field_str(base_changed_offset_coordinates.attacker_y_view_angle, -1)
+]
 
 
 class BlendAmount:
@@ -55,6 +67,10 @@ def row_rollout(model: nn.Module, X: torch.Tensor, transformed_Y: torch.tensor, 
     # removing cat so can get just those used in on-policy
     untransformed_first_output_indices_non_cat, _ = \
         network_inputs_column_transformers.get_name_ranges_in_time_range(False, False, range(0, 1), False, False)
+    untransformed_first_output_indices_cat, _ = \
+        network_inputs_column_transformers.get_name_ranges_in_time_range(False, False, range(0, 1), False, True)
+    untransformed_first_output_indices_cat_only = \
+        untransformed_first_output_indices_cat[len(untransformed_first_output_indices_non_cat):]
 
     network_col_names_to_ranges = network_inputs_column_transformers.get_name_ranges_dict(True, False)
     rolling_input_indices = [network_col_names_to_ranges[col_name].start for col_name in rolling_input_names]
@@ -83,6 +99,10 @@ def row_rollout(model: nn.Module, X: torch.Tensor, transformed_Y: torch.tensor, 
             tmp_tick_X = tick_X.clone()
             tick_X[:, rolling_input_indices] = torch.roll(last_rolling_inputs, -1, 1)
             tick_X[:, newest_input_indices] = last_untransformed_output
+            if last_firing_output is not None:
+                tick_X[:, newest_ticks_since_last_holding_attack_name] = \
+                    torch.where(last_firing_output >= 0.5, 0,
+                                torch.min(100, second_newest_ticks_since_last_holding_attack_name+1))
 
         last_rolling_inputs = tick_X[:, rolling_input_indices].detach()
         if tick_num > 0: #not torch.equal(last_tick_X
@@ -105,8 +125,11 @@ def row_rollout(model: nn.Module, X: torch.Tensor, transformed_Y: torch.tensor, 
                                                                              True)
         untransformed_outputs[:, untransformed_output_indices] = \
             untransformed_pred[:, untransformed_first_output_indices]
+        # only set to true if on policy, then take as signal to update ticks since last firing
+        last_firing_output = None
         if random.uniform(0, 1) < blend_amount.on_policy_pct:
             last_untransformed_output = untransformed_pred[:, untransformed_first_output_indices_non_cat].detach()
+            last_firing_output = untransformed_pred[:, untransformed_first_output_indices_cat_only].detach()
         else:
             last_untransformed_output = untransformed_Y[:, true_output_name_indices].detach()
 
