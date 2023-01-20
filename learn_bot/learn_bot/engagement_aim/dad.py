@@ -18,14 +18,28 @@ from tqdm import tqdm
 
 from learn_bot.libs.df_grouping import get_row_as_dict_loc
 
+
 # generate the input tensor for the next policy iteration
 # create the dict for inserting a new training data point into the data frame
+def get_recoil_x_field_str(tick: int = -1):
+    return get_temporal_field_str(base_recoil_x_column, tick)
+
+
+def get_recoil_y_field_str(tick: int = -1):
+    return get_temporal_field_str(base_recoil_y_column, tick)
+
+
 def get_x_field_str(tick: int = -1):
     return get_temporal_field_str(base_changed_offset_coordinates.attacker_x_view_angle, tick)
 
 
 def get_y_field_str(tick: int = -1):
     return get_temporal_field_str(base_changed_offset_coordinates.attacker_y_view_angle, tick)
+
+
+def get_ticks_since_holding_attack_field_str(tick: int = -1):
+    return get_temporal_field_str(base_ticks_since_holding_attack, tick)
+
 
 def get_holding_attack_field_str(tick: int = -1):
     return get_temporal_field_str(base_holding_attack, tick)
@@ -46,31 +60,54 @@ class PolicyHistory:
         # -1 value is set to last preseriesion since finish_row updates self.row_series on last tick
         if on_policy:
             for i in range(PRIOR_TICKS, -1):
+                new_row_series[get_recoil_x_field_str(i)] = self.row_series[get_recoil_x_field_str(i + 1)]
+                new_row_series[get_recoil_y_field_str(i)] = self.row_series[get_recoil_y_field_str(i + 1)]
                 new_row_series[get_x_field_str(i)] = self.row_series[get_x_field_str(i + 1)]
                 new_row_series[get_y_field_str(i)] = self.row_series[get_y_field_str(i + 1)]
+                new_row_series[get_ticks_since_holding_attack_field_str(i)] = \
+                    self.row_series[get_ticks_since_holding_attack_field_str(i + 1)]
 
+                cts.set_untransformed_input_value(new_input_tensor, get_recoil_x_field_str(i),
+                                                  cts.get_untransformed_value(self.input_tensor,
+                                                                              get_recoil_x_field_str(i + 1), True))
+                cts.set_untransformed_input_value(new_input_tensor, get_recoil_y_field_str(i),
+                                                  cts.get_untransformed_value(self.input_tensor,
+                                                                              get_recoil_y_field_str(i + 1), True))
                 cts.set_untransformed_input_value(new_input_tensor, get_x_field_str(i),
                                                   cts.get_untransformed_value(self.input_tensor,
                                                                               get_x_field_str(i + 1), True))
                 cts.set_untransformed_input_value(new_input_tensor, get_y_field_str(i),
                                                   cts.get_untransformed_value(self.input_tensor,
                                                                               get_y_field_str(i + 1), True))
+                cts.set_untransformed_input_value(new_input_tensor, get_ticks_since_holding_attack_field_str(i),
+                                                  cts.get_untransformed_value(self.input_tensor,
+                                                                              get_ticks_since_holding_attack_field_str(i + 1), True))
 
-                x_series = new_row_series[get_x_field_str(i)]
-                y_series = new_row_series[get_y_field_str(i)]
-                x_tensor = cts.get_untransformed_value(new_input_tensor, get_x_field_str(i), True)
-                y_tensor = cts.get_untransformed_value(new_input_tensor, get_y_field_str(i), True)
-                if abs(x_series - x_tensor) > 0.0001:
-                    print("x bad")
-                if abs(y_series - y_tensor) > 0.0001:
-                    print("y bad")
+                #x_series = new_row_series[get_x_field_str(i)]
+                #y_series = new_row_series[get_y_field_str(i)]
+                #x_tensor = cts.get_untransformed_value(new_input_tensor, get_x_field_str(i), True)
+                #y_tensor = cts.get_untransformed_value(new_input_tensor, get_y_field_str(i), True)
+                #if abs(x_series - x_tensor) > 0.0001:
+                #    print("x bad")
+                #if abs(y_series - y_tensor) > 0.0001:
+                #    print("y bad")
                 #print(f"({x_series}, {y_series}), ({x_tensor},{y_tensor})")
 
         # last t output is new t-1 input
+        new_row_series[get_recoil_x_field_str(-1)] = self.row_series[get_recoil_x_field_str(0)]
+        new_row_series[get_recoil_y_field_str(-1)] = self.row_series[get_recoil_y_field_str(0)]
         new_row_series[get_x_field_str(-1)] = self.row_series[get_x_field_str(0)]
         new_row_series[get_y_field_str(-1)] = self.row_series[get_y_field_str(0)]
+        new_row_series[get_ticks_since_holding_attack_field_str(-1)] = \
+            self.row_series[get_ticks_since_holding_attack_field_str(0)]
+        cts.set_untransformed_input_value(new_input_tensor, get_recoil_x_field_str(-1),
+                                          self.row_series[get_recoil_x_field_str(0)])
+        cts.set_untransformed_input_value(new_input_tensor, get_recoil_y_field_str(-1),
+                                          self.row_series[get_recoil_x_field_str(0)])
         cts.set_untransformed_input_value(new_input_tensor, get_x_field_str(-1), self.row_series[get_x_field_str(0)])
         cts.set_untransformed_input_value(new_input_tensor, get_y_field_str(-1), self.row_series[get_y_field_str(0)])
+        cts.set_untransformed_input_value(new_input_tensor, get_ticks_since_holding_attack_field_str(-1),
+                                          self.row_series[get_ticks_since_holding_attack_field_str(0)])
 
         self.row_series = new_row_series
         self.input_tensor = new_input_tensor
@@ -82,9 +119,17 @@ class PolicyHistory:
         # finish cur input_tensor by setting all the outputs
         # TODO: handle outputs other than aim
         for i in range(0, CUR_TICK + FUTURE_TICKS):
+            self.row_series[get_recoil_x_field_str(i)] = cts.get_untransformed_value(pred, get_recoil_x_field_str(i), False)
+            self.row_series[get_recoil_y_field_str(i)] = cts.get_untransformed_value(pred, get_recoil_y_field_str(i), False)
             self.row_series[get_x_field_str(i)] = cts.get_untransformed_value(pred, get_x_field_str(i), False)
             self.row_series[get_y_field_str(i)] = cts.get_untransformed_value(pred, get_y_field_str(i), False)
             self.row_series[get_holding_attack_field_str(i)] = cts.get_untransformed_value(pred, get_holding_attack_field_str(i), False)
+            if self.row_series[get_holding_attack_field_str(i)] >= 0.5:
+                self.row_series[get_ticks_since_holding_attack_field_str(i)] = 0
+            else:
+                self.row_series[get_ticks_since_holding_attack_field_str(i)] = \
+                    min(100, self.row_series[get_ticks_since_holding_attack_field_str(i-1)] + 1)
+
             if result_str is not None:
                 result_str.append(f"{i}: ({self.row_series[get_x_field_str(i)]:.2E},"
                                   f" {self.row_series[get_y_field_str(i)]:.2e}); ")

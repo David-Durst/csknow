@@ -102,7 +102,7 @@ def row_rollout(model: nn.Module, X: torch.Tensor, transformed_Y: torch.tensor, 
             if last_firing_output is not None:
                 tick_X[:, newest_ticks_since_last_holding_attack_name] = \
                     torch.where(last_firing_output >= 0.5, 0,
-                                torch.min(100, second_newest_ticks_since_last_holding_attack_name+1))
+                                torch.min(100, second_newest_ticks_since_last_holding_attack_name + 1))
 
         last_rolling_inputs = tick_X[:, rolling_input_indices].detach()
         if tick_num > 0: #not torch.equal(last_tick_X
