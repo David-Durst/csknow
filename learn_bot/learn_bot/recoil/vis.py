@@ -234,6 +234,7 @@ def vis(recoil_df: pd.DataFrame):
         to=30,
         orient='horizontal',
         showvalue=0,
+        resolution=0.5,
         length=300,
         command=ignore_arg_update_graph
     )
@@ -245,10 +246,11 @@ def vis(recoil_df: pd.DataFrame):
     range_recoil_index_label.pack(side="left")
     range_recoil_index_selector = tk.Scale(
         range_recoil_index_frame,
-        from_=1,
-        to=30,
+        from_=0.5,
+        to=15,
         orient='horizontal',
         showvalue=0,
+        resolution=0.5,
         length=300,
         command=ignore_arg_update_graph
     )
