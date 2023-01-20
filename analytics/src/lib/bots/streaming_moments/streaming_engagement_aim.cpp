@@ -19,21 +19,21 @@ namespace csknow::engagement_aim {
             case enumAsInt(AimWeaponId::Glock):
                 return AimWeaponType::Pistol;
             case enumAsInt(AimWeaponId::AK):
-                return AimWeaponType::AR;
+                return AimWeaponType::AK;
             case enumAsInt(AimWeaponId::AUG):
-                return AimWeaponType::AR;
+                return AimWeaponType::AROther;
             case enumAsInt(AimWeaponId::AWP):
                 return AimWeaponType::Sniper;
             case enumAsInt(AimWeaponId::FAMAS):
-                return AimWeaponType::AR;
+                return AimWeaponType::AROther;
             case enumAsInt(AimWeaponId::G3):
-                return AimWeaponType::AR;
+                return AimWeaponType::AROther;
             case enumAsInt(AimWeaponId::Galil):
-                return AimWeaponType::AR;
+                return AimWeaponType::AROther;
             case enumAsInt(AimWeaponId::M249):
                 return AimWeaponType::Heavy;
             case enumAsInt(AimWeaponId::M4A4):
-                return AimWeaponType::AR;
+                return AimWeaponType::AROther;
             case enumAsInt(AimWeaponId::Mac10):
                 return AimWeaponType::SMG;
             case enumAsInt(AimWeaponId::P90):
@@ -67,13 +67,13 @@ namespace csknow::engagement_aim {
             case enumAsInt(AimWeaponId::P250):
                 return AimWeaponType::Pistol;
             case enumAsInt(AimWeaponId::Scar):
-                return AimWeaponType::AR;
+                return AimWeaponType::AROther;
             case enumAsInt(AimWeaponId::SG553):
-                return AimWeaponType::AR;
+                return AimWeaponType::AROther;
             case enumAsInt(AimWeaponId::SSG):
                 return AimWeaponType::Sniper;
             case enumAsInt(AimWeaponId::M4A1S):
-                return AimWeaponType::AR;
+                return AimWeaponType::M4A1;
             case enumAsInt(AimWeaponId::USPS):
                 return AimWeaponType::Pistol;
             case enumAsInt(AimWeaponId::CZ):

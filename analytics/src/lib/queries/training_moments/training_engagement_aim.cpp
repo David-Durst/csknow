@@ -427,8 +427,14 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
                     if (demoEquipmentType == DemoEquipmentType::EqScout || demoEquipmentType == DemoEquipmentType::EqAWP) {
                         aimWeaponType = AimWeaponType::Sniper;
                     }
+                    else if (demoEquipmentType == DemoEquipmentType::EqAK47) {
+                        aimWeaponType = AimWeaponType::AK;
+                    }
+                    else if (demoEquipmentType == DemoEquipmentType::EqM4A1) {
+                        aimWeaponType = AimWeaponType::M4A1;
+                    }
                     else {
-                        aimWeaponType = AimWeaponType::AR;
+                        aimWeaponType = AimWeaponType::AROther;
                     }
                 }
                 else {

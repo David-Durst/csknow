@@ -40,7 +40,9 @@ enum class AimWeaponType {
     Pistol = 0,
     SMG,
     Heavy,
-    AR,
+    AK,
+    M4A1,
+    AROther,
     Sniper,
     Unknown,
     AIM_WEAPON_TYPE_COUNT [[maybe_unused]]
