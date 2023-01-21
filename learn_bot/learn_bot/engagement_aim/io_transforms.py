@@ -440,7 +440,7 @@ class IOColumnTransformers:
                                 self.output_types.float_angular_standard_cols
         angular_relative_cols, _ = split_delta_columns(self.input_types.float_angular_delta_cols +
                                                        self.output_types.float_angular_delta_cols)
-        angular_angle_encoded = angular_standard_cols + angular_standard_cols
+        angular_angle_encoded = angular_standard_cols + angular_relative_cols
         angular_sin_cos_encoded = self.input_types.sin_cos_encoded_angles() + self.output_types.sin_cos_encoded_angles()
         if angular_angle_encoded:
             self.angular_mean = np.mean(all_data_df.loc[:, angular_angle_encoded].to_numpy()).item()
