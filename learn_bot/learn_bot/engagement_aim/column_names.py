@@ -47,7 +47,7 @@ base_relative_coordinates = AttackerVictimCoordinateColumns(
 
 base_recoil_x_column = "scaled recoil angle x"
 base_recoil_y_column = "scaled recoil angle y"
-base_ticks_since_holding_attack = "ticks since holding attack"
+base_ticks_since_holding_attack = "ticks since last holding attack"
 base_holding_attack = "holding attack"
 
 base_vis_float_columns: List[str] = ["attacker view angle x", "attacker view angle y",
@@ -143,13 +143,13 @@ all_time_column_types = ColumnTypes(temporal_io_float_standard_column_names.all_
                                     temporal_io_float_180_angle_column_names.all_columns)
 
 output_relative_recoil_x_cols = \
-    temporal_io_float_180_angle_column_names.get_matching_cols(base_recoil_x_column, False, True, True)
+    temporal_io_float_standard_column_names.get_matching_cols(base_recoil_x_column, False, True, True)
 output_relative_recoil_y_cols = \
-    temporal_io_float_90_angle_column_names.get_matching_cols(base_recoil_y_column, False, True, True)
+    temporal_io_float_standard_column_names.get_matching_cols(base_recoil_y_column, False, True, True)
 output_ref_recoil_x_col = get_temporal_field_str(base_recoil_x_column, -1)
 output_ref_recoil_y_col = get_temporal_field_str(base_recoil_y_column, -1)
-output_delta_recoil_x = [DeltaColumn(c_rel, output_ref_recoil_x_col, None) for c_rel in output_relative_recoil_x_cols]
-output_delta_recoil_y = [DeltaColumn(c_rel, output_ref_recoil_y_col, None) for c_rel in output_relative_recoil_y_cols]
+output_delta_recoil_x = [DeltaColumn(c_rel, output_ref_recoil_x_col, c_rel) for c_rel in output_relative_recoil_x_cols]
+output_delta_recoil_y = [DeltaColumn(c_rel, output_ref_recoil_y_col, c_rel) for c_rel in output_relative_recoil_y_cols]
 
 output_relative_x_cols = \
     temporal_io_float_180_angle_column_names.get_matching_cols(base_changed_offset_coordinates.attacker_x_view_angle,

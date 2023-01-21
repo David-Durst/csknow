@@ -137,30 +137,31 @@ def compute_loss(x, pred, y_transformed, y_untransformed, targets, attacking, tr
                                                time_weights_sin_cos)
 
         # compute distance to target loss
-        col_ranges_180 = column_transformers.get_name_ranges(False, False,
-                                                             frozenset({ColumnTransformerType.FLOAT_180_ANGLE,
-                                                                        ColumnTransformerType.FLOAT_180_ANGLE_DELTA}))
-        col_range_180 = range(col_ranges_180[0].start, col_ranges_180[-1].stop)
+        if False:
+            col_ranges_180 = column_transformers.get_name_ranges(False, False,
+                                                                 frozenset({ColumnTransformerType.FLOAT_180_ANGLE,
+                                                                            ColumnTransformerType.FLOAT_180_ANGLE_DELTA}))
+            col_range_180 = range(col_ranges_180[0].start, col_ranges_180[-1].stop)
 
-        wrapped_pred_target_differences_180 = wrap_angles(pred_untransformed[:, col_range_180] -
-                                                          targets[:, col_range_180])
+            wrapped_pred_target_differences_180 = wrap_angles(pred_untransformed[:, col_range_180] -
+                                                              targets[:, col_range_180])
 
-        wrapped_y_target_differences_180 = wrap_angles(y_untransformed[:, col_range_180] -
-                                                       targets[:, col_range_180])
+            wrapped_y_target_differences_180 = wrap_angles(y_untransformed[:, col_range_180] -
+                                                           targets[:, col_range_180])
 
-        col_ranges_90 = column_transformers.get_name_ranges(False, False,
-                                                             frozenset({ColumnTransformerType.FLOAT_90_ANGLE,
-                                                                        ColumnTransformerType.FLOAT_90_ANGLE_DELTA}))
-        col_range_90 = range(col_ranges_90[0].start, col_ranges_90[-1].stop)
+            col_ranges_90 = column_transformers.get_name_ranges(False, False,
+                                                                 frozenset({ColumnTransformerType.FLOAT_90_ANGLE,
+                                                                            ColumnTransformerType.FLOAT_90_ANGLE_DELTA}))
+            col_range_90 = range(col_ranges_90[0].start, col_ranges_90[-1].stop)
 
-        pred_target_differences_90 = (pred_untransformed[:, col_range_90] - targets[:, col_range_90])
-        y_target_differences_90 = (y_untransformed[:, col_range_90] - targets[:, col_range_90])
+            pred_target_differences_90 = (pred_untransformed[:, col_range_90] - targets[:, col_range_90])
+            y_target_differences_90 = (y_untransformed[:, col_range_90] - targets[:, col_range_90])
 
-        pred_target_distances = norm_2d(torch.cat([wrapped_pred_target_differences_180, pred_target_differences_90],
-                                                  dim=1))
-        y_target_distances = norm_2d(torch.cat([wrapped_y_target_differences_180, y_target_differences_90],
-                                               dim=1))
-        losses.target_float_loss += float_loss_fn(pred_target_distances, y_target_distances, time_weights)
+            pred_target_distances = norm_2d(torch.cat([wrapped_pred_target_differences_180, pred_target_differences_90],
+                                                      dim=1))
+            y_target_distances = norm_2d(torch.cat([wrapped_y_target_differences_180, y_target_differences_90],
+                                                   dim=1))
+            losses.target_float_loss += float_loss_fn(pred_target_distances, y_target_distances, time_weights)
         #losses.pos_float_loss += float_loss_fn(fixed_angular_differences, torch.zeros_like(fixed_angular_differences),
         #                                       time_weights) / 180.
     #if column_transformers.output_types.float_90_angle_cols or column_transformers.output_types.float_90_angle_delta_cols:

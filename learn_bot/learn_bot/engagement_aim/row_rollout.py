@@ -4,7 +4,7 @@ from torch import nn
 from learn_bot.engagement_aim.column_names import base_changed_offset_coordinates, base_recoil_x_column, \
     base_recoil_y_column, base_ticks_since_holding_attack
 from learn_bot.engagement_aim.io_transforms import IOColumnTransformers, FUTURE_TICKS, CUR_TICK, PRIOR_TICKS, \
-    PRIOR_TICKS_POS
+    PRIOR_TICKS_POS, CUDA_DEVICE_STR
 from learn_bot.libs.temporal_column_names import get_temporal_field_str
 from dataclasses import dataclass
 import random
@@ -19,8 +19,8 @@ input_names_y = [get_temporal_field_str(base_changed_offset_coordinates.attacker
                  for i in range(PRIOR_TICKS, 0)]
 rolling_input_names = input_ticks_since_holding_attack + input_names_recoil_x + input_names_recoil_y + \
                       input_names_x + input_names_y
-newest_ticks_since_last_holding_attack_name = get_temporal_field_str(base_ticks_since_holding_attack, -1),
-second_newest_ticks_since_last_holding_attack_name = get_temporal_field_str(base_ticks_since_holding_attack, -2),
+newest_ticks_since_last_holding_attack_name = get_temporal_field_str(base_ticks_since_holding_attack, -1)
+second_newest_ticks_since_last_holding_attack_name = get_temporal_field_str(base_ticks_since_holding_attack, -2)
 newest_input_names = [
     get_temporal_field_str(base_recoil_x_column, -1),
     get_temporal_field_str(base_recoil_y_column, -1),
@@ -53,6 +53,9 @@ def get_scheduled_sampling_blend_amount(epoch_num: int, num_epochs: int) -> Blen
     return BlendAmount(epoch_num / num_epochs)
 
 
+zero_tensor = torch.tensor(0).to(CUDA_DEVICE_STR)
+hundred_tensor = torch.tensor(100).to(CUDA_DEVICE_STR)
+
 def row_rollout(model: nn.Module, X: torch.Tensor, transformed_Y: torch.tensor, untransformed_Y: torch.tensor,
                 all_inputs_column_transformers: IOColumnTransformers,
                 network_inputs_column_transformers: IOColumnTransformers, blend_amount: BlendAmount):
@@ -75,6 +78,10 @@ def row_rollout(model: nn.Module, X: torch.Tensor, transformed_Y: torch.tensor, 
     network_col_names_to_ranges = network_inputs_column_transformers.get_name_ranges_dict(True, False)
     rolling_input_indices = [network_col_names_to_ranges[col_name].start for col_name in rolling_input_names]
     newest_input_indices = [network_col_names_to_ranges[col_name].start for col_name in newest_input_names]
+    newest_holding_attack_input_indices = \
+        network_col_names_to_ranges[newest_ticks_since_last_holding_attack_name].start
+    second_newest_holding_attack_input_indices = \
+        network_col_names_to_ranges[second_newest_ticks_since_last_holding_attack_name].start
 
 
     transformed_outputs = torch.zeros_like(transformed_Y)
@@ -100,9 +107,9 @@ def row_rollout(model: nn.Module, X: torch.Tensor, transformed_Y: torch.tensor, 
             tick_X[:, rolling_input_indices] = torch.roll(last_rolling_inputs, -1, 1)
             tick_X[:, newest_input_indices] = last_untransformed_output
             if last_firing_output is not None:
-                tick_X[:, newest_ticks_since_last_holding_attack_name] = \
-                    torch.where(last_firing_output >= 0.5, 0,
-                                torch.min(100, second_newest_ticks_since_last_holding_attack_name + 1))
+                tick_X[:, [newest_holding_attack_input_indices]] = \
+                    torch.where(last_firing_output >= 0.5, zero_tensor,
+                                torch.min(hundred_tensor, tick_X[:, [second_newest_holding_attack_input_indices]] + 1))
 
         last_rolling_inputs = tick_X[:, rolling_input_indices].detach()
         if tick_num > 0: #not torch.equal(last_tick_X
