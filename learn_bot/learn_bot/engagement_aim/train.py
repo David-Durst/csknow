@@ -60,7 +60,7 @@ def train(all_data_df: pd.DataFrame, dad_iters=4, num_off_policy_epochs=5, num_s
     else:
         make_index_column(all_data_df)
         train_df = all_data_df
-        train_group_ids = all_data_df.loc[:, engagement_id_column].unique().to_list()
+        train_group_ids = list(all_data_df.loc[:, engagement_id_column].unique())
         test_df = all_data_df
 
 
