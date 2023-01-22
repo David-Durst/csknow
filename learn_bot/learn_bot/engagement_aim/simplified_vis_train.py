@@ -1,7 +1,7 @@
 from learn_bot.engagement_aim.io_transforms import PRIOR_TICKS, FUTURE_TICKS, PRIOR_TICKS_POS, CUR_TICK, \
     IOColumnTransformers
 from learn_bot.engagement_aim.dad import get_x_field_str, get_y_field_str, on_policy_inference, get_recoil_x_field_str, \
-    get_recoil_y_field_str
+    get_recoil_y_field_str, get_ticks_since_holding_attack_field_str
 from learn_bot.engagement_aim.train import train
 from learn_bot.engagement_aim.vis import vis
 import pandas as pd
@@ -60,6 +60,7 @@ def build_aim_df(example_row_df: Dict) -> pd.DataFrame:
                 tick_with_time_offset = tick_in_engagement + time_offset
                 new_dict[get_recoil_x_field_str(time_offset)] = 0.02 * tick_with_time_offset
                 new_dict[get_recoil_y_field_str(time_offset)] = -0.02 * tick_with_time_offset
+                new_dict[get_ticks_since_holding_attack_field_str(time_offset)] = 100
                 if time_offset == 0:
                     continue
                 # too large indices won't show up in final data set because extend at bottom filters them out
