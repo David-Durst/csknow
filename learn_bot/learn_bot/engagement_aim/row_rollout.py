@@ -56,6 +56,8 @@ def get_scheduled_sampling_blend_amount(epoch_num: int, num_epochs: int) -> Blen
 zero_tensor = torch.tensor(0).to(CUDA_DEVICE_STR)
 hundred_tensor = torch.tensor(100).to(CUDA_DEVICE_STR)
 
+ROW_ROLLOUT_DEBUG = False
+
 def row_rollout(model: nn.Module, X: torch.Tensor, transformed_Y: torch.tensor, untransformed_Y: torch.tensor,
                 all_inputs_column_transformers: IOColumnTransformers,
                 network_inputs_column_transformers: IOColumnTransformers, blend_amount: BlendAmount):
@@ -92,24 +94,43 @@ def row_rollout(model: nn.Module, X: torch.Tensor, transformed_Y: torch.tensor, 
                                                                          range(PRIOR_TICKS + tick_num,
                                                                                PRIOR_TICKS + tick_num + input_range),
                                                                          True, True)
-        true_output_name_indices, _ = \
+        true_output_name_indices, true_output_names = \
             network_inputs_column_transformers.get_name_ranges_in_time_range(False, False,
                                                                              range(PRIOR_TICKS + tick_num + input_range,
                                                                                    PRIOR_TICKS + tick_num + input_range + 1),
                                                                              True, False)
         tick_X = X[:, input_name_indices].clone()
+        if ROW_ROLLOUT_DEBUG:
+            ticks_since_holding_attack_test = network_inputs_column_transformers.\
+                get_untransformed_values_like(tick_X[0], True, base_ticks_since_holding_attack)
+            scaled_recoil_x_test = network_inputs_column_transformers. \
+                get_untransformed_values_like(tick_X[0], True, base_recoil_x_column)
+            scaled_recoil_y_test = network_inputs_column_transformers. \
+                get_untransformed_values_like(tick_X[0], True, base_recoil_y_column)
         #off_policy_transformed_Y, off_policy_untransformed_Y = model(tick_X)
         # after first iteration, replace predicted values
         # can get fresh for all other values because they don't change
         # this removes need for shifting
         if tick_num > 0:
             tmp_tick_X = tick_X.clone()
+            saved_newest_ticks_since_holding_attack = X[:, [newest_holding_attack_input_indices]].clone()
             tick_X[:, rolling_input_indices] = torch.roll(last_rolling_inputs, -1, 1)
             tick_X[:, newest_input_indices] = last_untransformed_output
-            if last_firing_output is not None:
+            # since ticks since fire is rolling but not set directly, need to update regardless of on or off policy
+            if last_firing_output is None:
+                tick_X[:, [newest_holding_attack_input_indices]] = \
+                    saved_newest_ticks_since_holding_attack
+            else:
                 tick_X[:, [newest_holding_attack_input_indices]] = \
                     torch.where(last_firing_output >= 0.5, zero_tensor,
                                 torch.min(hundred_tensor, tick_X[:, [second_newest_holding_attack_input_indices]] + 1))
+        if ROW_ROLLOUT_DEBUG:
+            updated_ticks_since_holding_attack_test = network_inputs_column_transformers. \
+                get_untransformed_values_like(tick_X[0], True, base_ticks_since_holding_attack)
+            updated_scaled_recoil_x_test = network_inputs_column_transformers. \
+                get_untransformed_values_like(tick_X[0], True, base_recoil_x_column)
+            updated_scaled_recoil_y_test = network_inputs_column_transformers. \
+                get_untransformed_values_like(tick_X[0], True, base_recoil_y_column)
 
         last_rolling_inputs = tick_X[:, rolling_input_indices].detach()
         if tick_num > 0: #not torch.equal(last_tick_X

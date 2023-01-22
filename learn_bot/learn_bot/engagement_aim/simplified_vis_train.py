@@ -1,6 +1,7 @@
 from learn_bot.engagement_aim.io_transforms import PRIOR_TICKS, FUTURE_TICKS, PRIOR_TICKS_POS, CUR_TICK, \
     IOColumnTransformers
-from learn_bot.engagement_aim.dad import get_x_field_str, get_y_field_str, on_policy_inference
+from learn_bot.engagement_aim.dad import get_x_field_str, get_y_field_str, on_policy_inference, get_recoil_x_field_str, \
+    get_recoil_y_field_str
 from learn_bot.engagement_aim.train import train
 from learn_bot.engagement_aim.vis import vis
 import pandas as pd
@@ -56,9 +57,11 @@ def build_aim_df(example_row_df: Dict) -> pd.DataFrame:
             new_dict[get_x_field_str(0)] = engagement_examples[engagement_id].mouse_xy[tick_in_engagement].x
             new_dict[get_y_field_str(0)] = engagement_examples[engagement_id].mouse_xy[tick_in_engagement].y
             for time_offset in range(PRIOR_TICKS, CUR_TICK + FUTURE_TICKS):
+                tick_with_time_offset = tick_in_engagement + time_offset
+                new_dict[get_recoil_x_field_str(time_offset)] = 0.02 * tick_with_time_offset
+                new_dict[get_recoil_y_field_str(time_offset)] = -0.02 * tick_with_time_offset
                 if time_offset == 0:
                     continue
-                tick_with_time_offset = tick_in_engagement + time_offset
                 # too large indices won't show up in final data set because extend at bottom filters them out
                 if tick_with_time_offset < 0 or \
                         tick_with_time_offset >= len(engagement_examples[engagement_id].mouse_xy):

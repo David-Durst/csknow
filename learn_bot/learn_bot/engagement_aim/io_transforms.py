@@ -862,6 +862,14 @@ class IOColumnTransformers:
 
         return result
 
+    def get_untransformed_values_like(self, x: Union[torch.Tensor, ModelOutput], input: bool, subset_str: str) -> Dict:
+        all_untransformed_values = self.get_untransformed_values(x, input)
+        result = {}
+        for k, v in all_untransformed_values.items():
+            if subset_str in k:
+                result[k] = v
+        return result
+
     def set_untransformed_input_value(self, x: torch.Tensor, col_name: str, value: float):
         col_names = self.input_types.column_names() if input else self.output_types.column_names()
         col_ranges = self.get_name_ranges(True, False)
