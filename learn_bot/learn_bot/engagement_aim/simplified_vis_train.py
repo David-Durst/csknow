@@ -17,6 +17,8 @@ from learn_bot.libs.df_grouping import get_row_as_dict_iloc
 
 @dataclass(frozen=True)
 class Point2D:
+    recoil_x: float
+    recoil_y: float
     x: float
     y: float
 
@@ -27,12 +29,16 @@ class AimEngagementExample:
 
 
 SEQUENCE_LENGTH = 50 + FUTURE_TICKS + PRIOR_TICKS_POS
-no_line_example = AimEngagementExample([Point2D(0., 0.) for i in range(SEQUENCE_LENGTH)])
-vertical_line_example = AimEngagementExample([Point2D(0., i * -0.1) for i in range(SEQUENCE_LENGTH)])
-horizontal_line_example = AimEngagementExample([Point2D(i * -0.1, 0.) for i in range(SEQUENCE_LENGTH)])
-diagonal_line_example = AimEngagementExample([Point2D(i * -0.1, i * -0.1) for i in range(SEQUENCE_LENGTH)])
-engagement_examples = [vertical_line_example, horizontal_line_example, diagonal_line_example]
-#engagement_examples = [horizontal_line_example]
+no_line_example = AimEngagementExample([Point2D(0., 0., 0., 0.) for i in range(SEQUENCE_LENGTH)])
+vertical_line_example = \
+    AimEngagementExample([Point2D(0.02 * i, -0.02 * i, 0., i * -0.1) for i in range(SEQUENCE_LENGTH)])
+horizontal_line_example = \
+    AimEngagementExample([Point2D(0.02 * i, -0.02 * i, i * -0.1, 0.) for i in range(SEQUENCE_LENGTH)])
+diagonal_line_example = \
+    AimEngagementExample([Point2D(0.02 * i, -0.02 * i, i * -0.1, i * -0.1) for i in range(SEQUENCE_LENGTH)])
+#engagement_examples = [vertical_line_example, horizontal_line_example, diagonal_line_example]
+engagement_examples = [horizontal_line_example]
+#engagement_examples = [no_line_example]
 
 
 def build_aim_df(example_row_df: Dict) -> pd.DataFrame:
@@ -54,12 +60,14 @@ def build_aim_df(example_row_df: Dict) -> pd.DataFrame:
             new_dict['demo tick id'] = tick_id
             new_dict['game tick id'] = tick_id + PRIOR_TICKS
             new_dict['game time'] = example_row_df['game time'] + tick_id * seconds_per_tick
+            new_dict[get_recoil_x_field_str(0)] = \
+                engagement_examples[engagement_id].mouse_xy[tick_in_engagement].recoil_x
+            new_dict[get_recoil_y_field_str(0)] = \
+                engagement_examples[engagement_id].mouse_xy[tick_in_engagement].recoil_y
             new_dict[get_x_field_str(0)] = engagement_examples[engagement_id].mouse_xy[tick_in_engagement].x
             new_dict[get_y_field_str(0)] = engagement_examples[engagement_id].mouse_xy[tick_in_engagement].y
             for time_offset in range(PRIOR_TICKS, CUR_TICK + FUTURE_TICKS):
                 tick_with_time_offset = tick_in_engagement + time_offset
-                new_dict[get_recoil_x_field_str(time_offset)] = 0.02 * tick_with_time_offset
-                new_dict[get_recoil_y_field_str(time_offset)] = -0.02 * tick_with_time_offset
                 new_dict[get_ticks_since_holding_attack_field_str(time_offset)] = 100
                 if time_offset == 0:
                     continue
@@ -67,6 +75,10 @@ def build_aim_df(example_row_df: Dict) -> pd.DataFrame:
                 if tick_with_time_offset < 0 or \
                         tick_with_time_offset >= len(engagement_examples[engagement_id].mouse_xy):
                     continue
+                new_dict[get_recoil_x_field_str(time_offset)] = engagement_examples[engagement_id] \
+                    .mouse_xy[tick_with_time_offset].recoil_x
+                new_dict[get_recoil_y_field_str(time_offset)] = engagement_examples[engagement_id] \
+                    .mouse_xy[tick_with_time_offset].recoil_y
                 new_dict[get_x_field_str(time_offset)] = engagement_examples[engagement_id] \
                     .mouse_xy[tick_with_time_offset].x
                 new_dict[get_y_field_str(time_offset)] = engagement_examples[engagement_id] \
