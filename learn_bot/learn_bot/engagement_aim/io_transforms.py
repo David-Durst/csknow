@@ -868,6 +868,23 @@ class IOColumnTransformers:
 
         return result
 
+    def get_untransformed_values_multiple_rows(self, x: Union[torch.Tensor, ModelOutput], input: bool,
+                                               subset_str: str = None) -> pd.DataFrame:
+        col_names = self.input_types.column_names() if input else self.output_types.column_names()
+        col_ranges = self.get_name_ranges(input, False)
+
+        x_tensor: torch.Tensor = x if input else x[1]
+        result = []
+
+        for i in range(x_tensor.shape[0]):
+            row_result = {}
+            for col_name, col_range in zip(col_names, col_ranges):
+                if subset_str is None or subset_str in col_name:
+                    row_result[col_name] = x_tensor[i, col_range.start].item()
+            result.append(row_result)
+
+        return pd.DataFrame(result)
+
     def get_untransformed_values_like(self, x: Union[torch.Tensor, ModelOutput], input: bool, subset_str: str) -> Dict:
         all_untransformed_values = self.get_untransformed_values(x, input)
         result = {}

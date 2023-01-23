@@ -30,6 +30,8 @@ class AimEngagementExample:
 
 SEQUENCE_LENGTH = 50 + FUTURE_TICKS + PRIOR_TICKS_POS
 no_line_example = AimEngagementExample([Point2D(0., 0., 0., 0.) for i in range(SEQUENCE_LENGTH)])
+horizontal_no_recoil_line_example = \
+    AimEngagementExample([Point2D(0., 0., i * -0.1, 0.) for i in range(SEQUENCE_LENGTH)])
 vertical_line_example = \
     AimEngagementExample([Point2D(0.02 * i, -0.02 * i, 0., i * -0.1) for i in range(SEQUENCE_LENGTH)])
 horizontal_line_example = \
@@ -37,7 +39,7 @@ horizontal_line_example = \
 diagonal_line_example = \
     AimEngagementExample([Point2D(0.02 * i, -0.02 * i, i * -0.1, i * -0.1) for i in range(SEQUENCE_LENGTH)])
 #engagement_examples = [vertical_line_example, horizontal_line_example, diagonal_line_example]
-engagement_examples = [horizontal_line_example]
+engagement_examples = [horizontal_no_recoil_line_example]
 #engagement_examples = [no_line_example]
 
 
@@ -90,6 +92,7 @@ def build_aim_df(example_row_df: Dict) -> pd.DataFrame:
 
 
 def vis_train():
+    pd.set_option('display.max_columns', None)
     all_data_df = pd.read_csv(data_path)
     all_data_df = all_data_df.sort_values(['engagement id', 'tick id'])
     example_row = get_row_as_dict_iloc(all_data_df, 0)
