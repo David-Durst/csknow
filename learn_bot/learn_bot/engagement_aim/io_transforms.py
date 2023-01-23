@@ -283,8 +283,12 @@ class PTDeltaMeanStdColumnTransformer(PTColumnTransformer):
 
     def delta_convert(self, relative_value: torch.Tensor, reference_value: torch.Tensor):
         delta_value = relative_value - reference_value
+        # split so roll each feature separately
+        # TODO: 180 and 90 ct assume only 1 column, generalize those to multiple columns
+        unflattened_delta_value = torch.unflatten(delta_value, 1, (-1, CUR_TICK + FUTURE_TICKS))
         # make delta values relative to each other rather than reference value
-        delta_value[:, 1:] -= torch.roll(delta_value, 1, 1)[:, 1:]
+        unflattened_delta_value[:, :, 1:] -= torch.roll(unflattened_delta_value, 1, 2)[:, :, 1:]
+        delta_value = torch.flatten(unflattened_delta_value, 1)
         if relative_value.device.type == CPU_DEVICE_STR:
             return (delta_value - self.cpu_delta_means) / self.cpu_delta_standard_deviations
         else:
