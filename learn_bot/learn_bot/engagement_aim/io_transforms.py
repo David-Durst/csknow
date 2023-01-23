@@ -230,8 +230,7 @@ class PTMeanStdColumnTransformer(PTColumnTransformer):
         # doesn't matter what value, sub by mean will make it equal 0.
         # NOTE TO SELF: IT DOES MATTER, TRAINING VALUES WON'T BE 0, AND LARGE STD DEV PREVENTS THEM FROM CONVERGING
         # DUE TO BAD LOSS
-        self.cpu_standard_deviations[self.cpu_standard_deviations == 0.] = \
-            torch.finfo(standard_deviations.dtype).smallest_normal
+        self.cpu_standard_deviations = torch.max(torch.tensor(1e-5), self.cpu_standard_deviations)
         self.means = self.cpu_means.to(CUDA_DEVICE_STR)
         self.standard_deviations = self.cpu_standard_deviations.to(CUDA_DEVICE_STR)
 
@@ -270,8 +269,7 @@ class PTDeltaMeanStdColumnTransformer(PTColumnTransformer):
         # doesn't matter what value, sub by mean will make it equal 0.
         # NOTE TO SELF: IT DOES MATTER, TRAINING VALUES WON'T BE 0, AND LARGE STD DEV PREVENTS THEM FROM CONVERGING
         # DUE TO BAD LOSS
-        self.cpu_delta_standard_deviations[self.cpu_delta_standard_deviations == 0.] = \
-            torch.finfo(delta_standard_deviations.dtype).smallest_normal
+        self.cpu_delta_standard_deviations = torch.max(torch.tensor(1e-5), self.cpu_delta_standard_deviations)
         self.delta_means = self.cpu_delta_means.to(CUDA_DEVICE_STR)
         self.delta_standard_deviations = self.cpu_delta_standard_deviations.to(CUDA_DEVICE_STR)
 
@@ -283,12 +281,12 @@ class PTDeltaMeanStdColumnTransformer(PTColumnTransformer):
 
     def delta_convert(self, relative_value: torch.Tensor, reference_value: torch.Tensor):
         delta_value = relative_value - reference_value
-        # split so roll each feature separately
-        # TODO: 180 and 90 ct assume only 1 column, generalize those to multiple columns
-        unflattened_delta_value = torch.unflatten(delta_value, 1, (-1, CUR_TICK + FUTURE_TICKS))
-        # make delta values relative to each other rather than reference value
-        unflattened_delta_value[:, :, 1:] -= torch.roll(unflattened_delta_value, 1, 2)[:, :, 1:]
-        delta_value = torch.flatten(unflattened_delta_value, 1)
+        ## split so roll each feature separately
+        ## TODO: 180 and 90 ct assume only 1 column, generalize those to multiple columns
+        #unflattened_delta_value = torch.unflatten(delta_value, 1, (-1, CUR_TICK + FUTURE_TICKS))
+        ## make delta values relative to each other rather than reference value
+        #unflattened_delta_value[:, :, 1:] -= torch.roll(unflattened_delta_value, 1, 2)[:, :, 1:]
+        #delta_value = torch.flatten(unflattened_delta_value, 1)
         if relative_value.device.type == CPU_DEVICE_STR:
             return (delta_value - self.cpu_delta_means) / self.cpu_delta_standard_deviations
         else:
