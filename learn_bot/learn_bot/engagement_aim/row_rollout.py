@@ -141,12 +141,12 @@ def row_rollout(model: nn.Module, X: torch.Tensor, transformed_Y: torch.tensor, 
         transformed_pred, untransformed_pred = model(tick_X)
         # note: when blending, need to apply alpha in transformed mode and recompute untransformed
         # actually, random sampling fixes this, no need to blend between values, just pick one
-        transformed_output_indices, _ = \
-            network_inputs_column_transformers.get_name_ranges_in_time_range(False, True,
-                                                                             range(tick_num, tick_num + 1), False,
-                                                                             True)
-        transformed_outputs[:, transformed_output_indices] = \
-            transformed_pred[:, transformed_first_output_indices]
+        #transformed_output_indices, _ = \
+        #    network_inputs_column_transformers.get_name_ranges_in_time_range(False, True,
+        #                                                                     range(tick_num, tick_num + 1), False,
+        #                                                                     True)
+        #transformed_outputs[:, transformed_output_indices] = \
+        #    transformed_pred[:, transformed_first_output_indices]
         untransformed_output_indices, _ = \
             network_inputs_column_transformers.get_name_ranges_in_time_range(False, False,
                                                                              range(tick_num, tick_num + 1), False,
@@ -161,7 +161,7 @@ def row_rollout(model: nn.Module, X: torch.Tensor, transformed_Y: torch.tensor, 
         else:
             last_untransformed_output = untransformed_Y[:, true_output_name_indices].detach()
 
-    return transformed_outputs, untransformed_outputs
+    return network_inputs_column_transformers.transform_columns(False, untransformed_outputs, X), untransformed_outputs
     # add extra dimension so can keep x's and y's grouped together
     #transformed_outputs = [o.unsqueeze(-1) for o in transformed_outputs]
     #untransformed_outputs = [o.unsqueeze(-1) for o in untransformed_outputs]

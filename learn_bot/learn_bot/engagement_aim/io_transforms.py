@@ -341,7 +341,7 @@ class PTDelta180AngleColumnTransformer(PT180AngleColumnTransformer):
     def delta_convert(self, relative_value: torch.Tensor, reference_value: torch.Tensor):
         delta_value = relative_value - reference_value
         # make delta values relative to each other rather than reference value
-        delta_value[:, 1:] -= torch.roll(delta_value, 1, 1)[:, 1:]
+        #delta_value[:, 1:] -= torch.roll(delta_value, 1, 1)[:, 1:]
         return super().convert(delta_value)
 
     def delta_inverse(self, delta_value: torch.Tensor, reference_value: torch.Tensor):
@@ -382,7 +382,7 @@ class PTDelta90AngleColumnTransformer(PT90AngleColumnTransformer):
     def delta_convert(self, relative_value: torch.Tensor, reference_value: torch.Tensor):
         delta_value = relative_value - reference_value
         # make delta values relative to each other rather than reference value
-        delta_value[:, 1:] -= torch.roll(delta_value, 1, 1)[:, 1:]
+        #delta_value[:, 1:] -= torch.roll(delta_value, 1, 1)[:, 1:]
         return super().convert(delta_value)
 
     def delta_inverse(self, delta_value: torch.Tensor, reference_value: torch.Tensor):
