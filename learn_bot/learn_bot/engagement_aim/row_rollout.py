@@ -161,7 +161,7 @@ def row_rollout(model: nn.Module, X: torch.Tensor, transformed_Y: torch.tensor, 
         else:
             last_untransformed_output = untransformed_Y[:, true_output_name_indices].detach()
 
-    #test_transform = network_inputs_column_transformers.transform_columns(False, untransformed_outputs, X)
+    test_transform = network_inputs_column_transformers.transform_columns(False, untransformed_outputs, X)
     #test_transform_rev = network_inputs_column_transformers.untransform_columns(False, test_transform, X)
     return network_inputs_column_transformers.transform_columns(False, untransformed_outputs, X), untransformed_outputs
     # add extra dimension so can keep x's and y's grouped together

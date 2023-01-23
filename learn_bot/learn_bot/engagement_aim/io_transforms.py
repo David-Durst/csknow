@@ -230,6 +230,8 @@ class PTMeanStdColumnTransformer(PTColumnTransformer):
         # doesn't matter what value, sub by mean will make it equal 0.
         # NOTE TO SELF: IT DOES MATTER, TRAINING VALUES WON'T BE 0, AND LARGE STD DEV PREVENTS THEM FROM CONVERGING
         # DUE TO BAD LOSS
+        #self.cpu_standard_deviations[self.cpu_standard_deviations == 0.] = \
+        #    torch.finfo(standard_deviations.dtype).smallest_normal
         self.cpu_standard_deviations = torch.max(torch.tensor(1e-5), self.cpu_standard_deviations)
         self.means = self.cpu_means.to(CUDA_DEVICE_STR)
         self.standard_deviations = self.cpu_standard_deviations.to(CUDA_DEVICE_STR)
@@ -269,6 +271,8 @@ class PTDeltaMeanStdColumnTransformer(PTColumnTransformer):
         # doesn't matter what value, sub by mean will make it equal 0.
         # NOTE TO SELF: IT DOES MATTER, TRAINING VALUES WON'T BE 0, AND LARGE STD DEV PREVENTS THEM FROM CONVERGING
         # DUE TO BAD LOSS
+        #self.cpu_delta_standard_deviations[self.cpu_delta_standard_deviations == 0.] = \
+        #    torch.finfo(delta_standard_deviations.dtype).smallest_normal
         self.cpu_delta_standard_deviations = torch.max(torch.tensor(1e-5), self.cpu_delta_standard_deviations)
         self.delta_means = self.cpu_delta_means.to(CUDA_DEVICE_STR)
         self.delta_standard_deviations = self.cpu_delta_standard_deviations.to(CUDA_DEVICE_STR)

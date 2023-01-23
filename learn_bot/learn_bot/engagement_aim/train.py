@@ -124,6 +124,7 @@ def train(all_data_df: pd.DataFrame, dad_iters=4, num_off_policy_epochs=5, num_s
                 X, Y, all_time_X = X.to(device), Y.to(device), all_time_X.to(device)
                 #transformed_X = column_transformers.transform_columns(True, X, X)
                 transformed_Y = column_transformers.transform_columns(False, Y, X)
+                #untransformed_Y = column_transformers.untransform_columns(False, transformed_Y, X)
                 #transformed_targets = column_transformers.transform_columns(False, targets, X)
                 #input_name_ranges_dict = column_transformers.get_name_ranges_dict(True, True)
                 transformed_last_input_angles = None#\

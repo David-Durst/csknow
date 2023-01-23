@@ -25,23 +25,26 @@ def classification_loss_fn(input, target, weight):
 
 class AimLosses:
     pos_float_loss: torch.Tensor
+    pos_cos_sin_loss: torch.Tensor
     pos_attacking_float_loss: torch.Tensor
     target_float_loss: torch.Tensor
     cat_loss: torch.Tensor
 
     def __init__(self):
         self.pos_float_loss = torch.zeros([1])
+        self.pos_sin_cos_loss = torch.zeros([1])
         self.pos_attacking_float_loss = torch.zeros([1])
         self.target_float_loss = torch.zeros([1])
         self.speed_float_loss = torch.zeros([1])
         self.cat_loss = torch.zeros([1])
 
     def get_total_loss(self):
-        return self.pos_float_loss + self.pos_attacking_float_loss + self.target_float_loss / 200 + self.cat_loss / 500# + \
+        return self.pos_float_loss + self.pos_sin_cos_loss + self.pos_attacking_float_loss + self.target_float_loss / 200 + self.cat_loss / 500# + \
                #self.speed_float_loss + self.cat_loss
 
     def __iadd__(self, other):
         self.pos_float_loss += other.pos_float_loss
+        self.pos_sin_cos_loss += other.pos_sin_cos_loss
         self.pos_attacking_float_loss += other.pos_attacking_float_loss
         self.target_float_loss += other.target_float_loss
         self.speed_float_loss += other.speed_float_loss
@@ -50,6 +53,7 @@ class AimLosses:
 
     def __itruediv__(self, other):
         self.pos_float_loss /= other
+        self.pos_sin_cos_loss /= other
         self.pos_attacking_float_loss /= other
         self.target_float_loss /= other
         self.speed_float_loss /= other
@@ -58,6 +62,7 @@ class AimLosses:
 
     def add_scalars(self, writer: SummaryWriter, prefix: str, total_epoch_num: int):
         writer.add_scalar(prefix + '/loss/pos_float', self.pos_float_loss, total_epoch_num)
+        writer.add_scalar(prefix + '/loss/pos_sin_cos', self.pos_sin_cos_loss, total_epoch_num)
         writer.add_scalar(prefix + '/loss/pos_attacking_float', self.pos_attacking_float_loss, total_epoch_num)
         writer.add_scalar(prefix + '/loss/target_float', self.target_float_loss / 200, total_epoch_num)
         writer.add_scalar(prefix + '/loss/speed_float', self.speed_float_loss, total_epoch_num)
@@ -105,7 +110,7 @@ def compute_loss(x, pred, y_transformed, y_untransformed, targets, attacking, tr
                                                                     ColumnTransformerType.FLOAT_DELTA}))
         col_range = range(col_ranges[0].start, col_ranges[-1].stop)
         losses.pos_float_loss += float_loss_fn(pred_transformed[:, col_range], y_transformed[:, col_range],
-                                               time_weights_sin_cos)
+                                               time_weights.repeat(1, int(len(col_range) / time_weights.shape[1])))
         # losses.pos_attacking_float_loss += \
         #    float_loss_fn(pred_transformed[:, col_range] * attacking_duplicated,
         #                  y_transformed[:, col_range] * attacking_duplicated,
@@ -133,8 +138,8 @@ def compute_loss(x, pred, y_transformed, y_untransformed, targets, attacking, tr
                                                                     ColumnTransformerType.FLOAT_90_ANGLE_DELTA}))
         col_range = range(col_ranges[0].start, col_ranges[-1].stop)
 
-        losses.pos_float_loss += float_loss_fn(pred_transformed[:, col_range], y_transformed[:, col_range],
-                                               time_weights_sin_cos)
+        losses.pos_sin_cos_loss += float_loss_fn(pred_transformed[:, col_range], y_transformed[:, col_range],
+                                                 time_weights_sin_cos)
 
         # compute distance to target loss
         if False:
