@@ -19,8 +19,8 @@ def binary_loss_fn(input, target, weight):
 # https://stackoverflow.com/questions/65192475/pytorch-logsoftmax-vs-softmax-for-crossentropyloss
 # no need to do softmax for classification output
 base_classification_loss_fn = nn.CrossEntropyLoss()
-def classification_loss_fn(input, target, weight):
-    return torch.sum(weight * base_classification_loss_fn(input, target)) / torch.sum(weight)
+def classification_loss_fn(input, target, weight, weight_sum):
+    return (weight * base_classification_loss_fn(input, target)) / weight_sum
 
 
 class AimLosses:
@@ -39,7 +39,7 @@ class AimLosses:
         self.cat_loss = torch.zeros([1])
 
     def get_total_loss(self):
-        return self.pos_float_loss + self.pos_sin_cos_loss + self.pos_attacking_float_loss + self.target_float_loss / 200 + self.cat_loss / 500# + \
+        return self.pos_float_loss + self.pos_sin_cos_loss + self.pos_attacking_float_loss + self.target_float_loss / 200 + self.cat_loss# + \
                #self.speed_float_loss + self.cat_loss
 
     def __iadd__(self, other):
@@ -66,7 +66,7 @@ class AimLosses:
         writer.add_scalar(prefix + '/loss/pos_attacking_float', self.pos_attacking_float_loss, total_epoch_num)
         writer.add_scalar(prefix + '/loss/target_float', self.target_float_loss / 200, total_epoch_num)
         writer.add_scalar(prefix + '/loss/speed_float', self.speed_float_loss, total_epoch_num)
-        writer.add_scalar(prefix + '/loss/cat', self.cat_loss / 500, total_epoch_num)
+        writer.add_scalar(prefix + '/loss/cat', self.cat_loss, total_epoch_num)
         writer.add_scalar(prefix + '/loss/total', self.get_total_loss(), total_epoch_num)
 
 
@@ -181,9 +181,9 @@ def compute_loss(x, pred, y_transformed, y_untransformed, targets, attacking, tr
     #                                           time_weights) / 90.
     if include_cat_cols and column_transformers.output_types.categorical_cols:
         col_ranges = column_transformers.get_name_ranges(False, True, frozenset({ColumnTransformerType.CATEGORICAL}))
-        for col_range in col_ranges:
+        for i, col_range in enumerate(col_ranges):
             losses.cat_loss += classification_loss_fn(pred_transformed[:, col_range], y_transformed[:, col_range],
-                                                      time_weights)
+                                                      time_weights[0, i % len(time_weights[0])], torch.sum(time_weights))
     return losses
 
 

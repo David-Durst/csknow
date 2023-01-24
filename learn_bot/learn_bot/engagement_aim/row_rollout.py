@@ -158,8 +158,10 @@ def row_rollout(model: nn.Module, X: torch.Tensor, all_time_X: torch.Tensor, tra
         # only set to true if on policy, then take as signal to update ticks since last firing
         last_firing_output = None
         if random.uniform(0, 1) < blend_amount.on_policy_pct:
+            test_last_untransformed_output = untransformed_Y[:, true_output_name_indices].detach()
             last_untransformed_output = untransformed_pred[:, untransformed_first_output_indices_non_cat].detach()
             last_firing_output = untransformed_pred[:, untransformed_first_output_indices_cat_only].detach()
+            tmp = 1
         else:
             last_untransformed_output = untransformed_Y[:, true_output_name_indices].detach()
 
