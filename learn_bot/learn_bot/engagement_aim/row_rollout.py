@@ -113,7 +113,7 @@ def row_rollout(model: nn.Module, X: torch.Tensor, all_time_X: torch.Tensor, tra
         # this removes need for shifting
         if tick_num > 0:
             tmp_tick_X = tick_X.clone()
-            saved_newest_ticks_since_holding_attack = all_time_X[:, [newest_holding_attack_input_indices]].clone()
+            saved_newest_ticks_since_holding_attack = tick_X[:, [newest_holding_attack_input_indices]].clone()
             tick_X[:, rolling_input_indices] = torch.roll(last_rolling_inputs, -1, 1)
             tick_X[:, newest_input_indices] = last_untransformed_output
             # since ticks since fire is rolling but not set directly, need to update regardless of on or off policy
