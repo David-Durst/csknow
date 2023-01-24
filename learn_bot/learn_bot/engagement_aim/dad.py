@@ -103,7 +103,7 @@ class PolicyHistory:
         cts.set_untransformed_input_value(new_input_tensor, get_recoil_x_field_str(-1),
                                           self.row_series[get_recoil_x_field_str(0)])
         cts.set_untransformed_input_value(new_input_tensor, get_recoil_y_field_str(-1),
-                                          self.row_series[get_recoil_x_field_str(0)])
+                                          self.row_series[get_recoil_y_field_str(0)])
         cts.set_untransformed_input_value(new_input_tensor, get_x_field_str(-1), self.row_series[get_x_field_str(0)])
         cts.set_untransformed_input_value(new_input_tensor, get_y_field_str(-1), self.row_series[get_y_field_str(0)])
         cts.set_untransformed_input_value(new_input_tensor, get_ticks_since_holding_attack_field_str(-1),
@@ -118,21 +118,22 @@ class PolicyHistory:
 
         # finish cur input_tensor by setting all the outputs
         # TODO: handle outputs other than aim
-        for i in range(0, CUR_TICK + FUTURE_TICKS):
-            self.row_series[get_recoil_x_field_str(i)] = cts.get_untransformed_value(pred, get_recoil_x_field_str(i), False)
-            self.row_series[get_recoil_y_field_str(i)] = cts.get_untransformed_value(pred, get_recoil_y_field_str(i), False)
-            self.row_series[get_x_field_str(i)] = cts.get_untransformed_value(pred, get_x_field_str(i), False)
-            self.row_series[get_y_field_str(i)] = cts.get_untransformed_value(pred, get_y_field_str(i), False)
-            self.row_series[get_holding_attack_field_str(i)] = cts.get_untransformed_value(pred, get_holding_attack_field_str(i), False)
-            if self.row_series[get_holding_attack_field_str(i)] >= 0.5:
-                self.row_series[get_ticks_since_holding_attack_field_str(i)] = 0
-            else:
-                self.row_series[get_ticks_since_holding_attack_field_str(i)] = \
-                    min(100, self.row_series[get_ticks_since_holding_attack_field_str(i-1)] + 1)
+        #for i in range(0, CUR_TICK + FUTURE_TICKS):
+        # dont' need to handle i after 0 becuase not actually predicting them
+        self.row_series[get_recoil_x_field_str(0)] = cts.get_untransformed_value(pred, get_recoil_x_field_str(0), False)
+        self.row_series[get_recoil_y_field_str(0)] = cts.get_untransformed_value(pred, get_recoil_y_field_str(0), False)
+        self.row_series[get_x_field_str(0)] = cts.get_untransformed_value(pred, get_x_field_str(0), False)
+        self.row_series[get_y_field_str(0)] = cts.get_untransformed_value(pred, get_y_field_str(0), False)
+        self.row_series[get_holding_attack_field_str(0)] = cts.get_untransformed_value(pred, get_holding_attack_field_str(0), False)
+        if self.row_series[get_holding_attack_field_str(0)] >= 0.5:
+            self.row_series[get_ticks_since_holding_attack_field_str(0)] = 0
+        else:
+            self.row_series[get_ticks_since_holding_attack_field_str(0)] = \
+                min(100, self.row_series[get_ticks_since_holding_attack_field_str(-1)] + 1)
 
-            if result_str is not None:
-                result_str.append(f"{i}: ({self.row_series[get_x_field_str(i)]:.2E},"
-                                  f" {self.row_series[get_y_field_str(i)]:.2e}); ")
+        if result_str is not None:
+            result_str.append(f"({self.row_series[get_x_field_str(0)]:.2E},"
+                              f" {self.row_series[get_y_field_str(0)]:.2e}); ")
 
         if result_str is not None:
             result_str.append("\n")

@@ -125,9 +125,10 @@ static_input_categorical_columns: List[str] = [weapon_type_col]
 input_column_types = ColumnTypes(temporal_io_float_standard_column_names.past_columns, [],
                                  temporal_io_float_180_angle_column_names.past_columns, [],
                                  temporal_io_float_90_angle_column_names.past_columns, [],
-                                 temporal_io_cat_column_names.past_columns + static_input_categorical_columns,
-                                 temporal_io_cat_column_names.get_num_cats_per_temporal_column([2], True, False, False)
-                                 + [8],
+                                 #temporal_io_cat_column_names.past_columns +
+                                 static_input_categorical_columns,
+                                 #temporal_io_cat_column_names.get_num_cats_per_temporal_column([2], True, False, False) +
+                                 [8],
                                  #temporal_io_float_180_angle_column_names.past_columns + temporal_io_float_90_angle_column_names.past_columns, [],
                                  [], [],
                                  temporal_io_float_180_angle_column_names.past_columns)
@@ -135,9 +136,10 @@ input_column_types = ColumnTypes(temporal_io_float_standard_column_names.past_co
 all_time_column_types = ColumnTypes(temporal_io_float_standard_column_names.all_columns, [],
                                     temporal_io_float_180_angle_column_names.all_columns, [],
                                     temporal_io_float_90_angle_column_names.all_columns, [],
-                                    temporal_io_cat_column_names.all_columns + static_input_categorical_columns,
-                                    temporal_io_cat_column_names.get_num_cats_per_temporal_column([2], True, True, True)
-                                    + [8],
+                                    #temporal_io_cat_column_names.all_columns +
+                                    static_input_categorical_columns,
+                                    #temporal_io_cat_column_names.get_num_cats_per_temporal_column([2], True, True, True) +
+                                    [8],
                                     #temporal_io_float_180_angle_column_names.all_columns + temporal_io_float_90_angle_column_names.all_columns, [],
                                     [], [],
                                     temporal_io_float_180_angle_column_names.all_columns)
