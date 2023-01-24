@@ -84,10 +84,10 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame = None):
         pred_speed_ax = fig.add_subplot(spec[3])
         setPosAxSettings(pred_pos_ax, "Prediction Aim")
         setSpeedAxSettings(pred_speed_ax, "Prediction Aim")
-        pred_ax_objs = AxObjs(True, fig, pred_pos_ax, pred_speed_ax, first_tick_columns, engine_columns, cur_tick_columns)
+        pred_ax_objs = AxObjs(fig, pred_pos_ax, pred_speed_ax, first_tick_columns, engine_columns, cur_tick_columns)
     setPosAxSettings(input_pos_ax, "Input Aim")
     setSpeedAxSettings(input_speed_ax, "Input Aim")
-    input_ax_objs = AxObjs(False, fig, input_pos_ax, input_speed_ax, first_tick_columns, engine_columns, cur_tick_columns)
+    input_ax_objs = AxObjs(fig, input_pos_ax, input_speed_ax, first_tick_columns, engine_columns, cur_tick_columns)
 
     canvas = FigureCanvasTkAgg(fig, master=window)  # A tk.DrawingArea.
     canvas.draw()
