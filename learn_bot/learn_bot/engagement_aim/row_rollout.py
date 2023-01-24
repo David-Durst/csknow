@@ -58,8 +58,8 @@ hundred_tensor = torch.tensor(100).to(CUDA_DEVICE_STR)
 
 ROW_ROLLOUT_DEBUG = False
 
-def row_rollout(model: nn.Module, X: torch.Tensor, transformed_Y: torch.tensor, untransformed_Y: torch.tensor,
-                all_inputs_column_transformers: IOColumnTransformers,
+def row_rollout(model: nn.Module, X: torch.Tensor, all_time_X: torch.Tensor, transformed_Y: torch.tensor,
+                untransformed_Y: torch.tensor, all_inputs_column_transformers: IOColumnTransformers,
                 network_inputs_column_transformers: IOColumnTransformers, blend_amount: BlendAmount):
     num_ticks_to_predict = CUR_TICK + FUTURE_TICKS
     input_range = PRIOR_TICKS_POS
@@ -99,7 +99,7 @@ def row_rollout(model: nn.Module, X: torch.Tensor, transformed_Y: torch.tensor, 
                                                                              range(PRIOR_TICKS + tick_num + input_range,
                                                                                    PRIOR_TICKS + tick_num + input_range + 1),
                                                                              True, False)
-        tick_X = X[:, input_name_indices].clone()
+        tick_X = all_time_X[:, input_name_indices].clone()
         if ROW_ROLLOUT_DEBUG:
             ticks_since_holding_attack_test = network_inputs_column_transformers.\
                 get_untransformed_values_like(tick_X[0], True, base_ticks_since_holding_attack)
@@ -113,7 +113,7 @@ def row_rollout(model: nn.Module, X: torch.Tensor, transformed_Y: torch.tensor, 
         # this removes need for shifting
         if tick_num > 0:
             tmp_tick_X = tick_X.clone()
-            saved_newest_ticks_since_holding_attack = X[:, [newest_holding_attack_input_indices]].clone()
+            saved_newest_ticks_since_holding_attack = all_time_X[:, [newest_holding_attack_input_indices]].clone()
             tick_X[:, rolling_input_indices] = torch.roll(last_rolling_inputs, -1, 1)
             tick_X[:, newest_input_indices] = last_untransformed_output
             # since ticks since fire is rolling but not set directly, need to update regardless of on or off policy
@@ -133,9 +133,9 @@ def row_rollout(model: nn.Module, X: torch.Tensor, transformed_Y: torch.tensor, 
                 get_untransformed_values_like(tick_X[0], True, base_recoil_y_column)
 
         last_rolling_inputs = tick_X[:, rolling_input_indices].detach()
-        if tick_num > 0: #not torch.equal(last_tick_X
-            x = 1
-        last_tick_X = tick_X.clone()
+        #if tick_num > 0: not torch.equal(last_tick_X
+        #    x = 1
+        #last_tick_X = tick_X.clone()
 
         # predict and record outputs
         transformed_pred, untransformed_pred = model(tick_X)
@@ -165,7 +165,8 @@ def row_rollout(model: nn.Module, X: torch.Tensor, transformed_Y: torch.tensor, 
 
     #test_transform = network_inputs_column_transformers.transform_columns(False, untransformed_outputs, X)
     #test_transform_rev = network_inputs_column_transformers.untransform_columns(False, test_transform, X)
-    return network_inputs_column_transformers.transform_columns(False, untransformed_outputs, X), untransformed_outputs
+    return network_inputs_column_transformers.transform_columns(False, untransformed_outputs, X), \
+           untransformed_outputs
     # add extra dimension so can keep x's and y's grouped together
     #transformed_outputs = [o.unsqueeze(-1) for o in transformed_outputs]
     #untransformed_outputs = [o.unsqueeze(-1) for o in untransformed_outputs]

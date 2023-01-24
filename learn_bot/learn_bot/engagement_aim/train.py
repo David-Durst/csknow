@@ -136,7 +136,7 @@ def train(all_data_df: pd.DataFrame, dad_iters=4, num_off_policy_epochs=5, num_s
 
                 # Compute prediction error
                 #pred2 = model(X)
-                pred = row_rollout(model, all_time_X, transformed_Y, Y, all_time_column_transformers,
+                pred = row_rollout(model, X, all_time_X, transformed_Y, Y, all_time_column_transformers,
                                     column_transformers, blend_amount)
                 batch_loss = compute_loss(X, pred, transformed_Y, Y, targets, attacking,
                                           transformed_last_input_angles, time_weights, column_transformers,
