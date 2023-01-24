@@ -38,8 +38,8 @@ horizontal_line_example = \
     AimEngagementExample([Point2D(0.02 * i, -0.02 * i, i * -0.1, 0.) for i in range(SEQUENCE_LENGTH)])
 diagonal_line_example = \
     AimEngagementExample([Point2D(0.02 * i, -0.02 * i, i * -0.1, i * -0.1) for i in range(SEQUENCE_LENGTH)])
-#engagement_examples = [vertical_line_example, horizontal_line_example, diagonal_line_example]
-engagement_examples = [horizontal_no_recoil_line_example]
+engagement_examples = [vertical_line_example, horizontal_line_example, diagonal_line_example]
+#engagement_examples = [horizontal_no_recoil_line_example]
 #engagement_examples = [no_line_example]
 
 
@@ -97,7 +97,7 @@ def vis_train():
     all_data_df = all_data_df.sort_values(['engagement id', 'tick id'])
     example_row = get_row_as_dict_iloc(all_data_df, 0)
     simple_df = build_aim_df(example_row)
-    train_result = train(simple_df, 1, 50, 50, 150, False, False)
+    train_result = train(simple_df, 0, 100, 100, 300, False, False)
     simple_pred_df = on_policy_inference(train_result.train_dataset, simple_df,
                                          train_result.model, train_result.column_transformers,
                                          True)
