@@ -56,7 +56,7 @@ def get_scheduled_sampling_blend_amount(epoch_num: int, num_epochs: int) -> Blen
 zero_tensor = torch.tensor(0).to(CUDA_DEVICE_STR)
 hundred_tensor = torch.tensor(100).to(CUDA_DEVICE_STR)
 
-ROW_ROLLOUT_DEBUG = True
+ROW_ROLLOUT_DEBUG = False
 
 def row_rollout(model: nn.Module, X: torch.Tensor, transformed_Y: torch.tensor, untransformed_Y: torch.tensor,
                 all_inputs_column_transformers: IOColumnTransformers,
