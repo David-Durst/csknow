@@ -105,11 +105,14 @@ def compute_loss(x, pred, y_transformed, y_untransformed, targets, attacking, tr
     losses = AimLosses()
 
     if column_transformers.output_types.float_standard_cols or column_transformers.output_types.float_delta_cols:
-        col_ranges = column_transformers.get_name_ranges(False, False,
+        col_ranges = column_transformers.get_name_ranges(False, True,
                                                          frozenset({ColumnTransformerType.FLOAT_STANDARD,
                                                                     ColumnTransformerType.FLOAT_DELTA}))
+        #col_range = range(col_ranges[0].start, col_ranges[-1].stop)
+        #losses.pos_float_loss += float_loss_fn(pred_untransformed[:, col_range], y_untransformed[:, col_range],
+        #                                       time_weights.repeat(1, int(len(col_range) / time_weights.shape[1])))
         col_range = range(col_ranges[0].start, col_ranges[-1].stop)
-        losses.pos_float_loss += float_loss_fn(pred_untransformed[:, col_range], y_untransformed[:, col_range],
+        losses.pos_float_loss += float_loss_fn(pred_transformed[:, col_range], y_transformed[:, col_range],
                                                time_weights.repeat(1, int(len(col_range) / time_weights.shape[1])))
         # losses.pos_attacking_float_loss += \
         #    float_loss_fn(pred_transformed[:, col_range] * attacking_duplicated,
@@ -131,16 +134,18 @@ def compute_loss(x, pred, y_transformed, y_untransformed, targets, attacking, tr
             column_transformers.output_types.float_90_angle_cols or column_transformers.output_types.float_90_angle_delta_cols:
 
         # compute pos loss
-        col_ranges = column_transformers.get_name_ranges(False, False,
+        col_ranges = column_transformers.get_name_ranges(False, True,
                                                          frozenset({ColumnTransformerType.FLOAT_180_ANGLE,
                                                                     ColumnTransformerType.FLOAT_180_ANGLE_DELTA,
                                                                     ColumnTransformerType.FLOAT_90_ANGLE,
                                                                     ColumnTransformerType.FLOAT_90_ANGLE_DELTA}))
         col_range = range(col_ranges[0].start, col_ranges[-1].stop)
 
-        wrapped = wrap_angles(pred_untransformed[:, col_range] - y_untransformed[:, col_range])
-        losses.pos_sin_cos_loss += float_loss_fn(wrapped, torch.zeros_like(wrapped),
-                                                 time_weights_duplicated)
+        #wrapped = wrap_angles(pred_untransformed[:, col_range] - y_untransformed[:, col_range])
+        #losses.pos_sin_cos_loss += float_loss_fn(wrapped, torch.zeros_like(wrapped),
+        #                                         time_weights_duplicated)
+        losses.pos_sin_cos_loss += float_loss_fn(pred_transformed[:, col_range], y_transformed[:, col_range],
+                                                 time_weights_duplicated_sin_cos)
 
         # compute distance to target loss
         if False:
