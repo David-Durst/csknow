@@ -39,7 +39,7 @@ class AimLosses:
         self.cat_loss = torch.zeros([1])
 
     def get_total_loss(self):
-        return self.pos_float_loss + self.pos_sin_cos_loss + self.pos_attacking_float_loss + self.target_float_loss / 200 + self.cat_loss# + \
+        return self.pos_float_loss + self.pos_sin_cos_loss * 10. + self.pos_attacking_float_loss + self.target_float_loss / 200 + self.cat_loss# + \
                #self.speed_float_loss + self.cat_loss
 
     def __iadd__(self, other):
@@ -62,7 +62,7 @@ class AimLosses:
 
     def add_scalars(self, writer: SummaryWriter, prefix: str, total_epoch_num: int):
         writer.add_scalar(prefix + '/loss/pos_float', self.pos_float_loss, total_epoch_num)
-        writer.add_scalar(prefix + '/loss/pos_sin_cos', self.pos_sin_cos_loss, total_epoch_num)
+        writer.add_scalar(prefix + '/loss/pos_sin_cos', self.pos_sin_cos_loss * 10., total_epoch_num)
         writer.add_scalar(prefix + '/loss/pos_attacking_float', self.pos_attacking_float_loss, total_epoch_num)
         writer.add_scalar(prefix + '/loss/target_float', self.target_float_loss / 200, total_epoch_num)
         writer.add_scalar(prefix + '/loss/speed_float', self.speed_float_loss, total_epoch_num)
