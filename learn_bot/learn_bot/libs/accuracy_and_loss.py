@@ -105,15 +105,15 @@ def compute_loss(x, pred, y_transformed, y_untransformed, targets, attacking, tr
     losses = AimLosses()
 
     if column_transformers.output_types.float_standard_cols or column_transformers.output_types.float_delta_cols:
-        col_ranges = column_transformers.get_name_ranges(False, True,
+        col_ranges = column_transformers.get_name_ranges(False, False,
                                                          frozenset({ColumnTransformerType.FLOAT_STANDARD,
                                                                     ColumnTransformerType.FLOAT_DELTA}))
-        #col_range = range(col_ranges[0].start, col_ranges[-1].stop)
-        #losses.pos_float_loss += float_loss_fn(pred_untransformed[:, col_range], y_untransformed[:, col_range],
-        #                                       time_weights.repeat(1, int(len(col_range) / time_weights.shape[1])))
         col_range = range(col_ranges[0].start, col_ranges[-1].stop)
-        losses.pos_float_loss += float_loss_fn(pred_transformed[:, col_range], y_transformed[:, col_range],
+        losses.pos_float_loss += float_loss_fn(pred_untransformed[:, col_range], y_untransformed[:, col_range],
                                                time_weights.repeat(1, int(len(col_range) / time_weights.shape[1])))
+        #col_range = range(col_ranges[0].start, col_ranges[-1].stop)
+        #losses.pos_float_loss += float_loss_fn(pred_transformed[:, col_range], y_transformed[:, col_range],
+        #                                       time_weights.repeat(1, int(len(col_range) / time_weights.shape[1])))
         # losses.pos_attacking_float_loss += \
         #    float_loss_fn(pred_transformed[:, col_range] * attacking_duplicated,
         #                  y_transformed[:, col_range] * attacking_duplicated,

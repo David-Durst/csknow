@@ -261,6 +261,12 @@ class PTDeltaMeanStdColumnTransformer(PTColumnTransformer):
     cpu_delta_standard_deviations: torch.Tensor
     delta_means: torch.Tensor
     delta_standard_deviations: torch.Tensor
+    # extend first delta/std dev for the delta_convert
+    extended_cpu_delta_means: torch.Tensor
+    extended_cpu_delta_standard_deviations: torch.Tensor
+    extended_delta_means: torch.Tensor
+    extended_delta_standard_deviations: torch.Tensor
+
 
     pt_ct_type: ColumnTransformerType = ColumnTransformerType.FLOAT_STANDARD
 
@@ -274,8 +280,19 @@ class PTDeltaMeanStdColumnTransformer(PTColumnTransformer):
         #self.cpu_delta_standard_deviations[self.cpu_delta_standard_deviations == 0.] = \
         #    torch.finfo(delta_standard_deviations.dtype).smallest_normal
         self.cpu_delta_standard_deviations = torch.max(torch.tensor(1e-5), self.cpu_delta_standard_deviations)
+
+        self.extended_cpu_delta_means = self.cpu_delta_means.clone()
+        nested_extended_cpu_delta_means = torch.unflatten(self.extended_cpu_delta_means, 1, (-1, CUR_TICK + FUTURE_TICKS))
+        nested_extended_cpu_delta_means[:, :, 1:] = nested_extended_cpu_delta_means[:, :, 0:1]
+        self.extended_cpu_delta_standard_deviations = self.cpu_delta_standard_deviations.clone()
+        nested_extended_cpu_standard_deviations = \
+            torch.unflatten(self.extended_cpu_delta_standard_deviations, 1, (-1, CUR_TICK + FUTURE_TICKS))
+        nested_extended_cpu_standard_deviations[:, :, 1:] = nested_extended_cpu_standard_deviations[:, :, 0:1]
+
         self.delta_means = self.cpu_delta_means.to(CUDA_DEVICE_STR)
         self.delta_standard_deviations = self.cpu_delta_standard_deviations.to(CUDA_DEVICE_STR)
+        self.extended_delta_means = self.extended_cpu_delta_means.to(CUDA_DEVICE_STR)
+        self.extended_delta_standard_deviations = self.extended_cpu_delta_standard_deviations.to(CUDA_DEVICE_STR)
 
     def convert(self, offset_value: torch.Tensor):
         raise NotImplementedError
@@ -290,11 +307,10 @@ class PTDeltaMeanStdColumnTransformer(PTColumnTransformer):
         unflattened_delta_value = torch.unflatten(delta_value, 1, (-1, CUR_TICK + FUTURE_TICKS))
         # make delta values relative to each other rather than reference value
         unflattened_delta_value[:, :, 1:] -= torch.roll(unflattened_delta_value, 1, 2)[:, :, 1:]
-        delta_value = torch.flatten(unflattened_delta_value, 1)
         if relative_value.device.type == CPU_DEVICE_STR:
-            return (delta_value - self.cpu_delta_means) / self.cpu_delta_standard_deviations
+            return (delta_value - self.extended_cpu_delta_means) / self.extended_cpu_delta_standard_deviations
         else:
-            return (delta_value - self.delta_means) / self.delta_standard_deviations
+            return (delta_value - self.extended_delta_means) / self.extended_delta_standard_deviations
 
     def delta_inverse(self, delta_value: torch.Tensor, reference_value: torch.Tensor):
         if delta_value.device.type == CPU_DEVICE_STR:
