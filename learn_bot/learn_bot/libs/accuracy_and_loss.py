@@ -131,7 +131,7 @@ def compute_loss(x, pred, y_transformed, y_untransformed, targets, attacking, tr
             column_transformers.output_types.float_90_angle_cols or column_transformers.output_types.float_90_angle_delta_cols:
 
         # compute pos loss
-        col_ranges = column_transformers.get_name_ranges(False, False,
+        col_ranges = column_transformers.get_name_ranges(False, True,
                                                          frozenset({ColumnTransformerType.FLOAT_180_ANGLE,
                                                                     ColumnTransformerType.FLOAT_180_ANGLE_DELTA,
                                                                     ColumnTransformerType.FLOAT_90_ANGLE,
@@ -139,7 +139,7 @@ def compute_loss(x, pred, y_transformed, y_untransformed, targets, attacking, tr
         col_range = range(col_ranges[0].start, col_ranges[-1].stop)
 
         losses.pos_sin_cos_loss += float_loss_fn(pred_transformed[:, col_range], y_transformed[:, col_range],
-                                                 time_weights_sin_cos)
+                                                 time_weights_duplicated_sin_cos)
 
         # compute distance to target loss
         if False:
