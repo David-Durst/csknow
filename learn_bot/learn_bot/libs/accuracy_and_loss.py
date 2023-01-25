@@ -39,7 +39,7 @@ class AimLosses:
         self.cat_loss = torch.zeros([1])
 
     def get_total_loss(self):
-        return self.pos_float_loss + self.pos_sin_cos_loss + self.pos_attacking_float_loss + self.target_float_loss / 200 + self.cat_loss# + \
+        return self.pos_float_loss / 10 + self.pos_sin_cos_loss + self.pos_attacking_float_loss + self.target_float_loss / 200 + self.cat_loss / 10.# + \
                #self.speed_float_loss + self.cat_loss
 
     def __iadd__(self, other):
@@ -61,12 +61,12 @@ class AimLosses:
         return self
 
     def add_scalars(self, writer: SummaryWriter, prefix: str, total_epoch_num: int):
-        writer.add_scalar(prefix + '/loss/pos_float', self.pos_float_loss, total_epoch_num)
+        writer.add_scalar(prefix + '/loss/pos_float', self.pos_float_loss / 10, total_epoch_num)
         writer.add_scalar(prefix + '/loss/pos_sin_cos', self.pos_sin_cos_loss, total_epoch_num)
         writer.add_scalar(prefix + '/loss/pos_attacking_float', self.pos_attacking_float_loss, total_epoch_num)
         writer.add_scalar(prefix + '/loss/target_float', self.target_float_loss / 200, total_epoch_num)
         writer.add_scalar(prefix + '/loss/speed_float', self.speed_float_loss, total_epoch_num)
-        writer.add_scalar(prefix + '/loss/cat', self.cat_loss, total_epoch_num)
+        writer.add_scalar(prefix + '/loss/cat', self.cat_loss / 10, total_epoch_num)
         writer.add_scalar(prefix + '/loss/total', self.get_total_loss(), total_epoch_num)
 
 
@@ -148,31 +148,30 @@ def compute_loss(x, pred, y_transformed, y_untransformed, targets, attacking, tr
                                                  time_weights_duplicated_sin_cos)
 
         # compute distance to target loss
-        if False:
-            col_ranges_180 = column_transformers.get_name_ranges(False, False,
-                                                                 frozenset({ColumnTransformerType.FLOAT_180_ANGLE,
-                                                                            ColumnTransformerType.FLOAT_180_ANGLE_DELTA}))
-            col_range_180 = range(col_ranges_180[0].start, col_ranges_180[-1].stop)
+        col_ranges_180 = column_transformers.get_name_ranges(False, False,
+                                                             frozenset({ColumnTransformerType.FLOAT_180_ANGLE,
+                                                                        ColumnTransformerType.FLOAT_180_ANGLE_DELTA}))
+        col_range_180 = range(col_ranges_180[0].start, col_ranges_180[-1].stop)
 
-            wrapped_pred_target_differences_180 = wrap_angles(pred_untransformed[:, col_range_180] -
-                                                              targets[:, col_range_180])
+        wrapped_pred_target_differences_180 = wrap_angles(pred_untransformed[:, col_range_180] -
+                                                          targets[:, col_range_180])
 
-            wrapped_y_target_differences_180 = wrap_angles(y_untransformed[:, col_range_180] -
-                                                           targets[:, col_range_180])
+        wrapped_y_target_differences_180 = wrap_angles(y_untransformed[:, col_range_180] -
+                                                       targets[:, col_range_180])
 
-            col_ranges_90 = column_transformers.get_name_ranges(False, False,
-                                                                 frozenset({ColumnTransformerType.FLOAT_90_ANGLE,
-                                                                            ColumnTransformerType.FLOAT_90_ANGLE_DELTA}))
-            col_range_90 = range(col_ranges_90[0].start, col_ranges_90[-1].stop)
+        col_ranges_90 = column_transformers.get_name_ranges(False, False,
+                                                             frozenset({ColumnTransformerType.FLOAT_90_ANGLE,
+                                                                        ColumnTransformerType.FLOAT_90_ANGLE_DELTA}))
+        col_range_90 = range(col_ranges_90[0].start, col_ranges_90[-1].stop)
 
-            pred_target_differences_90 = (pred_untransformed[:, col_range_90] - targets[:, col_range_90])
-            y_target_differences_90 = (y_untransformed[:, col_range_90] - targets[:, col_range_90])
+        pred_target_differences_90 = (pred_untransformed[:, col_range_90] - targets[:, col_range_90])
+        y_target_differences_90 = (y_untransformed[:, col_range_90] - targets[:, col_range_90])
 
-            pred_target_distances = norm_2d(torch.cat([wrapped_pred_target_differences_180, pred_target_differences_90],
-                                                      dim=1))
-            y_target_distances = norm_2d(torch.cat([wrapped_y_target_differences_180, y_target_differences_90],
-                                                   dim=1))
-            losses.target_float_loss += float_loss_fn(pred_target_distances, y_target_distances, time_weights)
+        pred_target_distances = norm_2d(torch.cat([wrapped_pred_target_differences_180, pred_target_differences_90],
+                                                  dim=1))
+        y_target_distances = norm_2d(torch.cat([wrapped_y_target_differences_180, y_target_differences_90],
+                                               dim=1))
+        losses.target_float_loss += float_loss_fn(pred_target_distances, y_target_distances, time_weights)
         #losses.pos_float_loss += float_loss_fn(fixed_angular_differences, torch.zeros_like(fixed_angular_differences),
         #                                       time_weights) / 180.
     #if column_transformers.output_types.float_90_angle_cols or column_transformers.output_types.float_90_angle_delta_cols:
