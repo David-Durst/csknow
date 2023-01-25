@@ -205,9 +205,8 @@ def compute_accuracy(pred, Y, accuracy, column_transformers: IOColumnTransformer
                                                                     ColumnTransformerType.FLOAT_DELTA,
                                                                     ColumnTransformerType.FLOAT_90_ANGLE,
                                                                     ColumnTransformerType.FLOAT_90_ANGLE_DELTA}))
-        col_range = range(col_ranges[0].start, col_ranges[-1].stop)
-
-        squared_errors = torch.square(pred_untransformed[:, col_range] - Y[:, col_range]).sum(dim=0).to(CPU_DEVICE_STR)
+        squared_errors = torch.square(torch.flatten(pred_untransformed[:, col_ranges] - Y[:, col_ranges], start_dim=1)) \
+            .sum(dim=0).to(CPU_DEVICE_STR)
         for i, name in enumerate(column_transformers.output_types.float_standard_cols +
                                  column_transformers.output_types.delta_float_column_names() +
                                  column_transformers.output_types.float_90_angle_cols +
