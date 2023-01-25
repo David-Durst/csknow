@@ -53,8 +53,9 @@ namespace action {
                 maxBurstShots = 3;
             }
 
-            if (curPriority.shootOptions == ShootOptions::DontShoot ||
-                (haveRecoil && curAction.shotsInBurst > maxBurstShots)) {
+            if (!learned_firing &&
+                (curPriority.shootOptions == ShootOptions::DontShoot ||
+                (haveRecoil && curAction.shotsInBurst > maxBurstShots))) {
                 curAction.setButton(IN_ATTACK, false);
             }
             else {

@@ -406,10 +406,10 @@ int main(int argc, char * argv[]) {
                 //std::cout << "time since last save " << state.getSecondsBetweenTimes(start, priorStart) << std::endl;
                 //scriptsRunner.initialize(tree, state);
                 //finishedTests = scriptsRunner.tick(tree, state);
-                //scenarioRunner.initialize(tree, state);
-                //finishedTests = scenarioRunner.tick(tree, state);
-                humanScenarioRunner.initialize(tree, state);
-                finishedTests = humanScenarioRunner.tick(tree, state);
+                scenarioRunner.initialize(tree, state);
+                finishedTests = scenarioRunner.tick(tree, state);
+                //humanScenarioRunner.initialize(tree, state);
+                //finishedTests = humanScenarioRunner.tick(tree, state);
             }
             state.saveBotInputs();
         }

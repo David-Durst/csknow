@@ -311,8 +311,8 @@ namespace csknow::engagement_aim {
                 rowCPP.push_back(static_cast<float>(boolToInt(engagementAimTickData.hitVictim)));
                 rowCPP.push_back(static_cast<float>(engagementAimTickData.recoilIndex));
                 rowCPP.push_back(static_cast<float>(engagementAimTickData.ticksSinceLastFire));
-                rowCPP.push_back(static_cast<float>(engagementAimTickData.ticksSinceLastHoldingAttack));
                  */
+                rowCPP.push_back(static_cast<float>(engagementAimTickData.ticksSinceLastHoldingAttack));
                 rowCPP.push_back(static_cast<float>(boolToInt(engagementAimTickData.victimVisible)));
                 //rowCPP.push_back(static_cast<float>(boolToInt(engagementAimTickData.victimVisibleYet)));
                 rowCPP.push_back(static_cast<float>(boolToInt(engagementAimTickData.victimAlive)));
@@ -328,12 +328,13 @@ namespace csknow::engagement_aim {
                 rowCPP.push_back(static_cast<float>(engagementAimTickData.victimVel.x));
                 rowCPP.push_back(static_cast<float>(engagementAimTickData.victimVel.y));
                 rowCPP.push_back(static_cast<float>(engagementAimTickData.victimVel.z));
+                rowCPP.push_back(static_cast<float>(engagementAimTickData.scaledRecoilAngle.x));
+                rowCPP.push_back(static_cast<float>(engagementAimTickData.scaledRecoilAngle.y));
             }
             for (int64_t priorTickNum = PAST_AIM_TICKS - 1; priorTickNum >= 0; priorTickNum--) {
                 const EngagementAimTickData & engagementAimTickData = engagementAimHistory.fromNewest(priorTickNum);
                 rowCPP.push_back(static_cast<float>(engagementAimTickData.idealViewAngle.x));
                 rowCPP.push_back(static_cast<float>(engagementAimTickData.deltaRelativeFirstHeadViewAngle.x));
-                rowCPP.push_back(static_cast<float>(engagementAimTickData.scaledRecoilAngle.x));
                 rowCPP.push_back(
                     static_cast<float>(engagementAimTickData.victimRelativeFirstHeadMinViewAngle.x));
                 rowCPP.push_back(
@@ -345,7 +346,6 @@ namespace csknow::engagement_aim {
                 const EngagementAimTickData & engagementAimTickData = engagementAimHistory.fromNewest(priorTickNum);
                 rowCPP.push_back(static_cast<float>(engagementAimTickData.idealViewAngle.y));
                 rowCPP.push_back(static_cast<float>(engagementAimTickData.deltaRelativeFirstHeadViewAngle.y));
-                rowCPP.push_back(static_cast<float>(engagementAimTickData.scaledRecoilAngle.y));
                 rowCPP.push_back(
                     static_cast<float>(engagementAimTickData.victimRelativeFirstHeadMinViewAngle.y));
                 rowCPP.push_back(
@@ -353,10 +353,12 @@ namespace csknow::engagement_aim {
                 rowCPP.push_back(
                     static_cast<float>(engagementAimTickData.victimRelativeFirstHeadCurHeadViewAngle.y));
             }
+            /*
             for (int64_t priorTickNum = PAST_AIM_TICKS - 1; priorTickNum >= 0; priorTickNum--) {
                 const EngagementAimTickData & engagementAimTickData = engagementAimHistory.fromNewest(priorTickNum);
                 rowCPP.push_back(static_cast<float>(boolToInt(engagementAimTickData.holdingAttack)));
             }
+             */
             // TODO: handle weapons other than AK47
             rowCPP.push_back(
                 static_cast<float>(enumAsInt(weaponIdToWeaponType(curTickClient.currentWeaponId))));
@@ -378,11 +380,12 @@ namespace csknow::engagement_aim {
                 // subtract from input delta view angles to get change in angle, then apply that to current view angles
                 //std::cout << output[0].size(0) << std::endl;
                 Vec2 outputRelativeViewAngle = {
-                    static_cast<double>(output[i][0].item<float>()),
-                    static_cast<double>(output[i][output[0].size(0) / 3].item<float>())
+                    //static_cast<double>(output[i][0].item<float>()),
+                    static_cast<double>(output[i][output[0].size(0) * 2 / 5].item<float>()),
+                    static_cast<double>(output[i][output[0].size(0) * 3 / 5].item<float>())
                 };
                 playerToFiring[orderedAttackerIds[i]] =
-                    static_cast<double>(output[i][output[0].size(0) * 2 / 3].item<float>());
+                    static_cast<double>(output[i][output[0].size(0) * 4 / 5].item<float>());
                 //const ServerState & prevState = db.batchData.fromNewest(1);
                 EngagementAimTickData & newestTickData = engagementAimPlayerHistory.clientHistory.at(orderedAttackerIds[i])
                     .fromNewest();
@@ -403,6 +406,8 @@ namespace csknow::engagement_aim {
                 double distanceToTargetOldest =
                     computeMagnitude(newestTickData.deltaRelativeCurHeadViewAngle -
                                      oldestTickData.deltaRelativeCurHeadViewAngle);
+                /*
+                 HEURISTIC THAT FIXED FIRING
                 if (distanceToTargetRecent < 0.75 && distanceToTargetOldest > 2. && newestTickData.recoilIndex < 2. &&
                     playerToManualOverride.find(orderedAttackerIds[i]) == playerToManualOverride.end()) {
                     playerToManualOverride[orderedAttackerIds[i]] = 7;
@@ -421,7 +426,9 @@ namespace csknow::engagement_aim {
                     outputViewAngle.makeYawNeg180To180();
                     //std::cout << "base fix " << curState.getLastFrame() << std::endl;
                 }
+                 */
                 /*
+                 * Unnecessary heuristic
                 double mouseVelocityRecent =
                     computeMagnitude(newestTickData.attackerViewAngle - recentTickData.attackerViewAngle);
                 double mouseVelocityOldest =
