@@ -20,9 +20,11 @@ weapon_type_to_str = {
     0: "Pistol",
     1: "SMG",
     2: "Heavy",
-    3: "AR",
-    4: "Sniper",
-    5: "Unknown"
+    3: "AK",
+    4: "M4A1",
+    5: "AROther",
+    6: "Sniper",
+    7: "Unknown"
 }
 
 def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame = None):
