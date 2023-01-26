@@ -171,11 +171,11 @@ class DataFrameTemporalSlices:
         self.all_x_np = data_df.loc[:, x_col].to_numpy()
         self.all_y_np = data_df.loc[:, y_col].to_numpy()
 
-        self.fire_df = data_df[data_df['ticks until next fire (t)'] == 0.]
+        self.fire_df = data_df[data_df['ticks since last fire (t)'] == 0.]
         self.fire_x_np = self.fire_df.loc[:, x_col].to_numpy()
         self.fire_y_np = self.fire_df.loc[:, y_col].to_numpy()
 
-        self.hold_attack_df = data_df[data_df['ticks until next holding attack (t)'] == 0.]
+        self.hold_attack_df = data_df[data_df['ticks since last holding attack (t)'] == 0.]
         self.hold_attack_x_np = self.hold_attack_df.loc[:, x_col].to_numpy()
         self.hold_attack_y_np = self.hold_attack_df.loc[:, y_col].to_numpy()
 
@@ -186,6 +186,7 @@ class DataFrameTemporalSlices:
 no_legend_str = "_nolegend_"
 
 class TemporalLines:
+    pred: bool
     # pos ax lines
     all_line: Line2D
     prior_line: Line2D
@@ -196,8 +197,9 @@ class TemporalLines:
     hold_attack_line: Optional[Line2D]
     hit_victim_line: Optional[Line2D]
 
-    def __init__(self, ax: plt.Axes, df_temporal_slices: DataFrameTemporalSlices, include_present_series: bool,
+    def __init__(self, pred: bool, ax: plt.Axes, df_temporal_slices: DataFrameTemporalSlices, include_present_series: bool,
                  use_legend: bool):
+        self.pred = pred
         self.all_line, = ax.plot(df_temporal_slices.all_x_np, df_temporal_slices.all_y_np,
                                  color=all_gray, label=no_legend_str)
         if include_present_series:
@@ -217,9 +219,10 @@ class TemporalLines:
         self.present_line, = ax.plot(df_temporal_slices.present_x_np, df_temporal_slices.present_y_np,
                                      linestyle="None", label="Present" if use_legend else no_legend_str,
                                      marker='o', mfc=present_red, mec=present_red)
-        self.fire_line, = ax.plot(df_temporal_slices.fire_x_np, df_temporal_slices.fire_y_np,
-                                  linestyle="None", label="Fire" if use_legend else no_legend_str,
-                                  marker='|', mfc=fire_attack_hit_white, mec=fire_attack_hit_white)
+        if not self.pred:
+            self.fire_line, = ax.plot(df_temporal_slices.fire_x_np, df_temporal_slices.fire_y_np,
+                                      linestyle="None", label="Fire" if use_legend else no_legend_str,
+                                      marker='|', mfc=fire_attack_hit_white, mec=fire_attack_hit_white)
         self.hold_attack_line, = ax.plot(df_temporal_slices.hold_attack_x_np, df_temporal_slices.hold_attack_y_np,
                                          linestyle="None", label="Attack" if use_legend else no_legend_str,
                                          marker='_', mfc=fire_attack_hit_white, mec=fire_attack_hit_white)
@@ -239,8 +242,9 @@ class TemporalLines:
                                   df_temporal_slices.future_y_np)
         self.present_line.set_data(df_temporal_slices.present_x_np,
                                    df_temporal_slices.present_y_np)
-        self.fire_line.set_data(df_temporal_slices.fire_x_np,
-                                df_temporal_slices.fire_y_np)
+        if not self.pred:
+            self.fire_line.set_data(df_temporal_slices.fire_x_np,
+                                    df_temporal_slices.fire_y_np)
         self.hold_attack_line.set_data(df_temporal_slices.hold_attack_x_np,
                                        df_temporal_slices.hold_attack_y_np)
         self.hit_victim_line.set_data(df_temporal_slices.hit_victim_x_np,
@@ -263,6 +267,7 @@ class TemporalLines:
 # so use this instead
 @dataclass
 class AxObjs:
+    pred: bool
     fig: plt.Figure
     pos_ax: plt.Axes
     speed_ax: plt.Axes
@@ -334,13 +339,13 @@ class AxObjs:
             #           marker='o', mfc='black', mec='black', ms=10)
             self.pos_recoil_line, = self.pos_ax.plot(pos_recoil_x_np, pos_recoil_y_np, linestyle="None", label="Recoil",
                                                      marker='o', mfc=recoil_pink, mec=recoil_pink)
-            self.pos_temporal_lines = TemporalLines(self.pos_ax, pos_df_temporal_slices, True, True)
+            self.pos_temporal_lines = TemporalLines(self.pred, self.pos_ax, pos_df_temporal_slices, True, True)
             self.pos_victim_aabb = Rectangle(aabb_min, aabb_size[0], aabb_size[1],
                                              linewidth=2, edgecolor=aabb_green, facecolor='none')
             self.pos_ax.add_patch(self.pos_victim_aabb)
             self.pos_victim_head_circle = Circle(head_center, head_radius, color=aabb_green)
             self.pos_ax.add_patch(self.pos_victim_head_circle)
-            self.speed_temporal_lines = TemporalLines(self.speed_ax, speed_df_temporal_slices, False, False)
+            self.speed_temporal_lines = TemporalLines(self.pred, self.speed_ax, speed_df_temporal_slices, False, False)
         else:
             self.pos_recoil_line.set_data(pos_recoil_x_np,
                                           pos_recoil_y_np)
