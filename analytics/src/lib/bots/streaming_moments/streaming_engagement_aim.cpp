@@ -140,12 +140,6 @@ namespace csknow::engagement_aim {
             victimDuckAmount = 0.;
             victimAlive = false;
         }
-        // need to flip eye angles from server to match train data
-        Vec3 victimHeadPos =
-            getCenterHeadCoordinatesForPlayer(victimEyePos, victimViewAngle, victimDuckAmount);
-        if (firstEngagementTick) {
-            playerToVictimEngagementFirstHeadPos[attackerId] = victimHeadPos;
-        }
 
         const ServerState & serverStateAttackerOffset =
             db.batchData.fromNewest(static_cast<int64_t>(attackerStateOffset));
@@ -169,14 +163,20 @@ namespace csknow::engagement_aim {
         }
 
         curViewAngle.normalize();
+
+        Vec3 victimHeadPos =
+            getCenterHeadCoordinatesForPlayer(victimEyePos, victimViewAngle, victimDuckAmount);
+
         Vec2 idealViewAngle = viewFromOriginToDest(attackerEyePos, victimHeadPos);
 
         engagementAimTickData.idealViewAngle = idealViewAngle;
+        if (firstEngagementTick) {
+            playerToVictimEngagementFirstIdealViewAngle[attackerId] = idealViewAngle;
+        }
         engagementAimTickData.attackerViewAngle = curViewAngle;
 
         engagementAimTickData.deltaRelativeFirstHeadViewAngle =
-            deltaViewFromOriginToDest(attackerEyePos,
-                                      playerToVictimEngagementFirstHeadPos[attackerId], curViewAngle);
+            wrappedAngleDifference(curViewAngle, playerToVictimEngagementFirstIdealViewAngle[attackerId]);
         engagementAimTickData.deltaRelativeCurHeadViewAngle =
             deltaViewFromOriginToDest(attackerEyePos, victimHeadPos, curViewAngle);
 
@@ -203,7 +203,7 @@ namespace csknow::engagement_aim {
         // mul recoil by -1 as flipping all angles internally
         Vec2 recoil {
             attackerClient.lastAimpunchAngleX,
-            -1 * attackerClient.lastAimpunchAngleY,
+            attackerClient.lastAimpunchAngleY,
         };
 
         engagementAimTickData.scaledRecoilAngle = recoil * WEAPON_RECOIL_SCALE;
@@ -237,7 +237,8 @@ namespace csknow::engagement_aim {
          */ //victimInFOV && victimVisNoFOV;
         // only alive if real player (csgoId defined), so only do visibility check if valid target.csgoId
         bool curTickVictimVisible = victimAlive &&
-            serverStateAttackerOffset.isVisible(attackerId, target.csgoId);
+            serverStateAttackerOffset.isVisible(attackerId, target.csgoId) &&
+            getPointInFOV(victimEyePos, attackerEyePos, curViewAngle);
         engagementAimTickData.victimVisible = curTickVictimVisible;
         // remove victim visibility tracking if new engagmeent
         if (firstEngagementTick &&
@@ -265,9 +266,7 @@ namespace csknow::engagement_aim {
         for (const auto & aabbCorner : aabbCorners) {
             Vec2 aabbViewAngle = viewFromOriginToDest(attackerEyePos, aabbCorner);
             Vec2 deltaAABBViewAngleFirstHead =
-                deltaViewFromOriginToDest(attackerEyePos,
-                                          playerToVictimEngagementFirstHeadPos[attackerId],
-                                          aabbViewAngle);
+                wrappedAngleDifference(aabbViewAngle, playerToVictimEngagementFirstIdealViewAngle[attackerId]);
             victimMinViewAngleFirstHead = min(victimMinViewAngleFirstHead, deltaAABBViewAngleFirstHead);
             victimMaxViewAngleFirstHead = max(victimMaxViewAngleFirstHead, deltaAABBViewAngleFirstHead);
         }
@@ -275,8 +274,7 @@ namespace csknow::engagement_aim {
         engagementAimTickData.victimRelativeFirstHeadMinViewAngle = victimMinViewAngleFirstHead;
         engagementAimTickData.victimRelativeFirstHeadMaxViewAngle = victimMaxViewAngleFirstHead;
         engagementAimTickData.victimRelativeFirstHeadCurHeadViewAngle =
-            deltaViewFromOriginToDest(attackerEyePos,
-                                      playerToVictimEngagementFirstHeadPos[attackerId], idealViewAngle);
+            wrappedAngleDifference(idealViewAngle, playerToVictimEngagementFirstIdealViewAngle[attackerId]);
 
         engagementAimTickData.attackerEyePos = attackerEyePos;
         engagementAimTickData.victimEyePos = victimEyePos;
@@ -391,7 +389,7 @@ namespace csknow::engagement_aim {
                     .fromNewest();
                 Vec2 inputRelativeViewAngle = newestTickData.deltaRelativeFirstHeadViewAngle;
                 Vec2 deltaViewAngle = outputRelativeViewAngle - inputRelativeViewAngle;
-                deltaViewAngle.y *= -1;
+                //deltaViewAngle.y *= -1;
                 deltaViewAngle.makePitchNeg90To90();
                 deltaViewAngle.makeYawNeg180To180();
                 Vec2 outputViewAngle = newestTickData.attackerViewAngle + deltaViewAngle;
