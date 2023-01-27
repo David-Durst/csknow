@@ -430,5 +430,4 @@ if __name__ == "__main__":
         all_data_df = pd.read_csv(data_path)
     else:
         all_data_df = pd.read_csv(manual_data_path)
-    vis_2d_trajectories(all_data_df)
     vis(all_data_df)
