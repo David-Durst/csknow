@@ -1,6 +1,8 @@
 from pathlib import Path
 
 import pandas as pd
+from matplotlib import gridspec
+
 from learn_bot.engagement_aim.column_names import *
 
 from matplotlib.figure import Figure
@@ -63,13 +65,26 @@ def vis_2d_trajectories(data_df: pd.DataFrame):
 
 
 
-    fig = Figure(figsize=(12., 8.), dpi=100)
+    fig = Figure(figsize=(27., 8.), dpi=100)
 
-    cur_ax = fig.add_subplot(1, 2, 1)
+    gs = gridspec.GridSpec(ncols=3, nrows=1,
+                           left=0.05, right=0.95, wspace=0.2)
+    #left=0.05, right=0.95,
+    #wspace=0.1, hspace=0.1, width_ratios=[1, 1.5])
+
+    cur_ax = fig.add_subplot(gs[0, 0])
     cur_ax.set_title('Enemy Trajectory Relative To Cur Attacker Pos')
     cur_ax.set_xlabel('X Offset To Cur')
     cur_ax.set_ylabel('Y Offset To Cur')
     cur_lines = []
+    cur_colors = []
+
+    color_map = mpl.colormaps['plasma']
+    min_z = min(filtered_df[get_temporal_field_str(base_cur_offset_pos_z_column, 0)])
+    max_z = max(filtered_df[get_temporal_field_str(base_cur_offset_pos_z_column, 0)])
+    norm = mpl.colors.Normalize(vmin=min_z, vmax=max_z, clip=True)
+    mapper = cm.ScalarMappable(norm=norm, cmap=color_map)
+
     for _, row in filtered_df.iterrows():
         cur_lines.append((
             (
@@ -81,12 +96,19 @@ def vis_2d_trajectories(data_df: pd.DataFrame):
                 row[get_temporal_field_str(base_cur_offset_pos_y_column, FUTURE_TICKS)]
             )
         ))
+        cur_colors.append(mapper.to_rgba(row[get_temporal_field_str(base_cur_offset_pos_z_column, 0)]))
 
-    cur_lc = LineCollection(cur_lines)
+    cur_lc = LineCollection(cur_lines, colors=cur_colors)
     cur_ax.add_collection(cur_lc)
     cur_ax.autoscale()
+    cur_xs = cur_ax.get_xlim()
+    cur_ys = cur_ax.get_ylim()
+    cur_ax.set_xlim(min(cur_xs[0], cur_ys[0]), max(cur_xs[1], cur_ys[1]))
+    cur_ax.set_ylim(min(cur_xs[0], cur_ys[0]), max(cur_xs[1], cur_ys[1]))
+    cbar = fig.colorbar(mapper)
+    cbar.set_label('Enemy Height Relative To Cur Attacker Pos', rotation=270, labelpad=10)
 
-    first_ax = fig.add_subplot(1, 2, 2)
+    first_ax = fig.add_subplot(gs[0, 1])
     first_ax.set_title('Enemy Trajectory Relative To First Attacker Pos')
     first_ax.set_xlabel('X Offset To First')
     first_ax.set_ylabel('Y Offset To First')
@@ -115,8 +137,21 @@ def vis_2d_trajectories(data_df: pd.DataFrame):
     first_lc = LineCollection(first_lines, colors=first_colors)
     first_ax.add_collection(first_lc)
     first_ax.autoscale()
+    first_xs = first_ax.get_xlim()
+    first_ys = first_ax.get_ylim()
+    first_ax.set_xlim(min(first_xs[0], first_ys[0]), max(first_xs[1], first_ys[1]))
+    first_ax.set_ylim(min(first_xs[0], first_ys[0]), max(first_xs[1], first_ys[1]))
+    cbar = fig.colorbar(mapper)
+    cbar.set_label('Enemy Height Relative To First Attacker Pos', rotation=270, labelpad=10)
+
+    hist_ax = fig.add_subplot(gs[0, 2])
+    filtered_df.hist(get_temporal_field_str(base_first_offset_pos_z_column, 0), bins=20, ax=hist_ax)
+    hist_ax.set_title('Enemy Height Relative To First Attacker Pos')
+    hist_ax.set_xlabel('Z Offset To First')
+    hist_ax.set_ylabel('Num Points')
 
     fig.savefig(trajectory_path)
+
 
 if __name__ == "__main__":
     all_data_df = pd.read_csv(data_path)
