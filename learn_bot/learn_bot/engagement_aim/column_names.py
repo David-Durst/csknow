@@ -50,6 +50,13 @@ base_recoil_y_column = "scaled recoil angle y"
 base_ticks_since_holding_attack = "ticks since last holding attack"
 base_holding_attack = "holding attack"
 
+base_attacker_pos_x = "attacker eye pos x"
+base_attacker_pos_y = "attacker eye pos y"
+base_attacker_pos_z = "attacker eye pos z"
+base_victim_pos_x = "victim eye pos x"
+base_victim_pos_y = "victim eye pos y"
+base_victim_pos_z = "victim eye pos z"
+
 base_vis_float_columns: List[str] = ["attacker view angle x", "attacker view angle y",
                                      "ideal view angle x", "ideal view angle y",
                                      "delta relative first head view angle x", "delta relative first head view angle y",

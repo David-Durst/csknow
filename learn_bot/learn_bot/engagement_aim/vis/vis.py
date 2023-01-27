@@ -3,6 +3,7 @@ from enum import Enum
 import pandas as pd
 
 from learn_bot.engagement_aim.vis.distributions import plot_distributions
+from learn_bot.engagement_aim.vis.enemy_trajectories import vis_2d_trajectories
 from learn_bot.engagement_aim.vis.vis_similar_trajectories import SimilarityConstraints, SimilarTrajectory, \
     find_similar_trajectories, plot_similar_trajectories_next_movement
 from learn_bot.engagement_aim.vis.vis_ax_objs import PerspectiveColumns, AxObjs, ColumnReference
@@ -423,10 +424,11 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame = None):
     # Start the GUI
     window.mainloop()
 
-orig_dataset = False
+orig_dataset = True
 if __name__ == "__main__":
     if orig_dataset:
         all_data_df = pd.read_csv(data_path)
     else:
         all_data_df = pd.read_csv(manual_data_path)
+    vis_2d_trajectories(all_data_df)
     vis(all_data_df)
