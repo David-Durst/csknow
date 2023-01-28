@@ -10,7 +10,7 @@ from matplotlib.collections import LineCollection
 import matplotlib as mpl
 import matplotlib.cm as cm
 
-from learn_bot.engagement_aim.dataset import data_path
+from learn_bot.engagement_aim.dataset import data_path, manual_data_path
 
 trajectory_path = Path(__file__).parent / ".." / "analysis" / "test_timing_data" / "enemy_trajectories.png"
 
@@ -65,13 +65,14 @@ def vis_2d_trajectories(data_df: pd.DataFrame):
 
 
 
-    fig = Figure(figsize=(27., 8.), dpi=100)
+    fig = Figure(figsize=(25., 16.), dpi=100)
 
-    gs = gridspec.GridSpec(ncols=3, nrows=1,
+    gs = gridspec.GridSpec(ncols=3, nrows=2,
                            left=0.05, right=0.95, wspace=0.2)
     #left=0.05, right=0.95,
     #wspace=0.1, hspace=0.1, width_ratios=[1, 1.5])
 
+    # cur ax
     cur_ax = fig.add_subplot(gs[0, 0])
     cur_ax.set_title('Enemy Trajectory Relative To Cur Attacker Pos')
     cur_ax.set_xlabel('X Offset To Cur')
@@ -108,6 +109,7 @@ def vis_2d_trajectories(data_df: pd.DataFrame):
     cbar = fig.colorbar(mapper)
     cbar.set_label('Enemy Height Relative To Cur Attacker Pos', rotation=270, labelpad=10)
 
+    # first ax
     first_ax = fig.add_subplot(gs[0, 1])
     first_ax.set_title('Enemy Trajectory Relative To First Attacker Pos')
     first_ax.set_xlabel('X Offset To First')
@@ -150,10 +152,99 @@ def vis_2d_trajectories(data_df: pd.DataFrame):
     hist_ax.set_xlabel('Z Offset To First')
     hist_ax.set_ylabel('Num Points')
 
+    view_color = [(0., 0., 1., 0.1)]
+
+    # enemy head ax
+    enemy_head_ax = fig.add_subplot(gs[1, 0])
+    enemy_head_ax.set_title('Victim Head View Angle')
+    enemy_head_ax.set_xlabel('Yaw')
+    enemy_head_ax.set_ylabel('Pitch')
+    enemy_head_lines = []
+
+    for _, row in filtered_df.iterrows():
+        enemy_head_lines.append((
+            (
+                row[get_temporal_field_str(base_changed_offset_coordinates.victim_aabb_head_x, 0)],
+                row[get_temporal_field_str(base_changed_offset_coordinates.victim_aabb_head_y, 0)]
+            ),
+            (
+                row[get_temporal_field_str(base_changed_offset_coordinates.victim_aabb_head_x, FUTURE_TICKS)],
+                row[get_temporal_field_str(base_changed_offset_coordinates.victim_aabb_head_y, FUTURE_TICKS)]
+            )
+        ))
+
+    enemy_head_lc = LineCollection(enemy_head_lines, colors=view_color)
+    enemy_head_ax.add_collection(enemy_head_lc)
+    enemy_head_ax.autoscale()
+    enemy_head_xs = enemy_head_ax.get_xlim()
+    enemy_head_ys = enemy_head_ax.get_ylim()
+    enemy_head_ax.set_xlim(max(enemy_head_xs[1], enemy_head_ys[1]), min(enemy_head_xs[0], enemy_head_ys[0]))
+    enemy_head_ax.set_ylim(max(enemy_head_xs[1], enemy_head_ys[1]), min(enemy_head_xs[0], enemy_head_ys[0]))
+
+    # crosshair ax
+    crosshair_ax = fig.add_subplot(gs[1, 1])
+    crosshair_ax.set_title('Attacker View Angle')
+    crosshair_ax.set_xlabel('Yaw')
+    crosshair_ax.set_ylabel('Pitch')
+    crosshair_lines = []
+
+    for _, row in filtered_df.iterrows():
+        crosshair_lines.append((
+            (
+                row[get_temporal_field_str(base_changed_offset_coordinates.attacker_x_view_angle, 0)],
+                row[get_temporal_field_str(base_changed_offset_coordinates.attacker_y_view_angle, 0)]
+            ),
+            (
+                row[get_temporal_field_str(base_changed_offset_coordinates.attacker_x_view_angle, FUTURE_TICKS)],
+                row[get_temporal_field_str(base_changed_offset_coordinates.attacker_y_view_angle, FUTURE_TICKS)]
+            )
+        ))
+
+    crosshair_lc = LineCollection(crosshair_lines, colors=view_color)
+    crosshair_ax.add_collection(crosshair_lc)
+    crosshair_ax.autoscale()
+    crosshair_xs = crosshair_ax.get_xlim()
+    crosshair_ys = crosshair_ax.get_ylim()
+    crosshair_ax.set_xlim(max(crosshair_xs[1], crosshair_ys[1]), min(crosshair_xs[0], crosshair_ys[0]))
+    crosshair_ax.set_ylim(max(crosshair_xs[1], crosshair_ys[1]), min(crosshair_xs[0], crosshair_ys[0]))
+
+    # relative crosshair ax
+    relative_crosshair_ax = fig.add_subplot(gs[1, 2])
+    relative_crosshair_ax.set_title('Relative View Angle')
+    relative_crosshair_ax.set_xlabel('Yaw')
+    relative_crosshair_ax.set_ylabel('Pitch')
+    relative_crosshair_lines = []
+
+    for _, row in filtered_df.iterrows():
+        relative_crosshair_lines.append((
+            (
+                row[get_temporal_field_str(base_relative_coordinates.attacker_x_view_angle, 0)],
+                row[get_temporal_field_str(base_relative_coordinates.attacker_y_view_angle, 0)]
+            ),
+            (
+                row[get_temporal_field_str(base_relative_coordinates.attacker_x_view_angle, FUTURE_TICKS)],
+                row[get_temporal_field_str(base_relative_coordinates.attacker_y_view_angle, FUTURE_TICKS)]
+            )
+        ))
+
+    relative_crosshair_lc = LineCollection(relative_crosshair_lines, colors=view_color)
+    relative_crosshair_ax.add_collection(relative_crosshair_lc)
+    relative_crosshair_ax.autoscale()
+    relative_crosshair_xs = relative_crosshair_ax.get_xlim()
+    relative_crosshair_ys = relative_crosshair_ax.get_ylim()
+    relative_crosshair_ax.set_xlim(max(relative_crosshair_xs[1], relative_crosshair_ys[1]),
+                                   min(relative_crosshair_xs[0], relative_crosshair_ys[0]))
+    relative_crosshair_ax.set_ylim(max(relative_crosshair_xs[1], relative_crosshair_ys[1]),
+                                   min(relative_crosshair_xs[0], relative_crosshair_ys[0]))
+
     fig.savefig(trajectory_path)
 
 
+orig_dataset = True
 if __name__ == "__main__":
-    all_data_df = pd.read_csv(data_path)
+    if orig_dataset:
+        all_data_df = pd.read_csv(data_path)
+    else:
+        all_data_df = pd.read_csv(manual_data_path)
     vis_2d_trajectories(all_data_df)
 
