@@ -24,13 +24,21 @@ first_tick_in_engagement_column = 'first tick in engagement'
 first_attacker_pos_x_in_engagement_column = 'first attacker pos x in engagement'
 first_attacker_pos_y_in_engagement_column = 'first attacker pos y in engagement'
 first_attacker_pos_z_in_engagement_column = 'first attacker pos z in engagement'
+first_victim_pos_x_in_engagement_column = 'first victim pos x in engagement'
+first_victim_pos_y_in_engagement_column = 'first victim pos y in engagement'
+first_victim_pos_z_in_engagement_column = 'first victim pos z in engagement'
+distance_covered_column = 'distance covered'
+first_tick_in_engagement_column = 'first tick in engagement'
+last_tick_in_engagement_column = 'last tick in engagement'
+victim_speed_column = 'victim speed'
 
 def vis_2d_trajectories(data_df: pd.DataFrame):
     data_df = data_df.copy()
 
     data_df.sort_values(['engagement id', 'tick id'], inplace=True)
 
-    data_df[first_tick_in_engagement_column] = data_df.groupby('engagement id')['tick id'].transform('first')
+    engagement_ids = data_df['engagement id'].unique().tolist()
+
     # get first pos offset
     data_df[first_attacker_pos_x_in_engagement_column] = \
         data_df.groupby('engagement id')[get_temporal_field_str(base_attacker_pos_x, 0)].transform('first')
@@ -38,6 +46,16 @@ def vis_2d_trajectories(data_df: pd.DataFrame):
         data_df.groupby('engagement id')[get_temporal_field_str(base_attacker_pos_y, 0)].transform('first')
     data_df[first_attacker_pos_z_in_engagement_column] = \
         data_df.groupby('engagement id')[get_temporal_field_str(base_attacker_pos_z, 0)].transform('first')
+    data_df[first_victim_pos_x_in_engagement_column] = \
+        data_df.groupby('engagement id')[get_temporal_field_str(base_victim_pos_x, 0)].transform('first')
+    data_df[first_victim_pos_y_in_engagement_column] = \
+        data_df.groupby('engagement id')[get_temporal_field_str(base_victim_pos_y, 0)].transform('first')
+    data_df[first_victim_pos_z_in_engagement_column] = \
+        data_df.groupby('engagement id')[get_temporal_field_str(base_victim_pos_z, 0)].transform('first')
+    data_df[first_tick_in_engagement_column] = \
+        data_df.groupby('engagement id')['tick id'].transform('first')
+    data_df[last_tick_in_engagement_column] = \
+        data_df.groupby('engagement id')['tick id'].transform('last')
     filtered_df = data_df[(data_df['tick id'] - data_df[first_tick_in_engagement_column]) % 13 == 0].copy()
 
     new_col_names = []
@@ -67,7 +85,7 @@ def vis_2d_trajectories(data_df: pd.DataFrame):
 
     fig = Figure(figsize=(25., 16.), dpi=100)
 
-    gs = gridspec.GridSpec(ncols=3, nrows=2,
+    gs = gridspec.GridSpec(ncols=4, nrows=2,
                            left=0.05, right=0.95, wspace=0.2)
     #left=0.05, right=0.95,
     #wspace=0.1, hspace=0.1, width_ratios=[1, 1.5])
@@ -146,11 +164,12 @@ def vis_2d_trajectories(data_df: pd.DataFrame):
     cbar = fig.colorbar(mapper)
     cbar.set_label('Enemy Height Relative To First Attacker Pos', rotation=270, labelpad=10)
 
-    hist_ax = fig.add_subplot(gs[0, 2])
-    filtered_df.hist(get_temporal_field_str(base_first_offset_pos_z_column, 0), bins=20, ax=hist_ax)
-    hist_ax.set_title('Enemy Height Relative To First Attacker Pos')
-    hist_ax.set_xlabel('Z Offset To First')
-    hist_ax.set_ylabel('Num Points')
+    # height hist ax
+    height_hist_ax = fig.add_subplot(gs[0, 2])
+    filtered_df.hist(get_temporal_field_str(base_first_offset_pos_z_column, 0), bins=20, ax=height_hist_ax)
+    height_hist_ax.set_title('Enemy Height Relative To First Attacker Pos')
+    height_hist_ax.set_xlabel('Z Offset To First')
+    height_hist_ax.set_ylabel('Num Points')
 
     view_color = [(0., 0., 1., 0.1)]
 
@@ -236,6 +255,63 @@ def vis_2d_trajectories(data_df: pd.DataFrame):
                                    min(relative_crosshair_xs[0], relative_crosshair_ys[0]))
     relative_crosshair_ax.set_ylim(max(relative_crosshair_xs[1], relative_crosshair_ys[1]),
                                    min(relative_crosshair_xs[0], relative_crosshair_ys[0]))
+
+    # distance covered ax
+    distance_covered_hist_ax = fig.add_subplot(gs[0, 3])
+    end_tick_df = data_df[data_df['tick id'] == data_df[last_tick_in_engagement_column]].copy()
+    end_tick_df[distance_covered_column] = \
+        (
+                ((end_tick_df[get_temporal_field_str(base_attacker_pos_x, FUTURE_TICKS)] -
+                  end_tick_df[get_temporal_field_str(base_attacker_pos_x, 0)]) ** 2) +
+                ((end_tick_df[get_temporal_field_str(base_attacker_pos_y, FUTURE_TICKS)] -
+                  end_tick_df[get_temporal_field_str(base_attacker_pos_y, 0)]) ** 2) +
+                ((end_tick_df[get_temporal_field_str(base_attacker_pos_z, FUTURE_TICKS)] -
+                  end_tick_df[get_temporal_field_str(base_attacker_pos_z, 0)]) ** 2)).pow(1./2)
+    end_tick_df.hist(distance_covered_column, bins=20, ax=distance_covered_hist_ax)
+    distance_covered_hist_ax.set_title('Distance Covered Per Engagement')
+    distance_covered_hist_ax.set_xlabel('Distance Covered')
+    distance_covered_hist_ax.set_ylabel('Num Points')
+
+    #filtered_df.groupby('engagement id').agg(min_.transform('first')
+    # speed ax
+    speed_ax = fig.add_subplot(gs[1, 3])
+    max_tick_delta = max(filtered_df[last_tick_in_engagement_column] - filtered_df['tick id']) + FUTURE_TICKS
+    speed_ax.set_title('Victim XY Velocity During Engagement')
+    speed_lines = []
+    speed_colors = []
+
+    filtered_df[victim_speed_column] = ((filtered_df['victim vel x (t)'] ** 2) +
+                                        (filtered_df['victim vel y (t)'] ** 2)).pow(1./2)
+
+    color_map = mpl.colormaps['tab20b']
+    norm = mpl.colors.Normalize(vmin=0., vmax=250., clip=True)
+    mapper = cm.ScalarMappable(norm=norm, cmap=color_map)
+
+    LINES_PER_COL_VELOCITY = 100
+
+    for _, row in filtered_df.iterrows():
+        engagement_index = engagement_ids.index(row['engagement id'])
+        col_num = int(engagement_index / LINES_PER_COL_VELOCITY)
+        row_num = engagement_index % LINES_PER_COL_VELOCITY
+
+        speed_lines.append((
+            (
+                col_num + (row['tick id'] - row[first_tick_in_engagement_column]) / max_tick_delta,
+                row_num
+            ),
+            (
+                col_num + (row['tick id'] - row[first_tick_in_engagement_column] + FUTURE_TICKS) / max_tick_delta,
+                row_num
+            )
+        ))
+        speed_colors.append(mapper.to_rgba(row[victim_speed_column]))
+
+    speed_lc = LineCollection(speed_lines, colors=speed_colors)
+    speed_ax.add_collection(speed_lc)
+    speed_ax.autoscale()
+
+    cbar = fig.colorbar(mapper)
+    cbar.set_label('Victim Velocity (ceil 250)', rotation=270, labelpad=10)
 
     fig.savefig(trajectory_path)
 
