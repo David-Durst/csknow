@@ -12,8 +12,6 @@ import matplotlib.cm as cm
 
 from learn_bot.engagement_aim.dataset import data_path, manual_data_path
 
-trajectory_path = Path(__file__).parent / ".." / "analysis" / "test_timing_data" / "enemy_trajectories.png"
-
 base_cur_offset_pos_x_column = "cur offset pos x"
 base_cur_offset_pos_y_column = "cur offset pos y"
 base_cur_offset_pos_z_column = "cur offset pos z"
@@ -30,9 +28,10 @@ first_victim_pos_z_in_engagement_column = 'first victim pos z in engagement'
 distance_covered_column = 'distance covered'
 first_tick_in_engagement_column = 'first tick in engagement'
 last_tick_in_engagement_column = 'last tick in engagement'
-victim_speed_column = 'victim speed'
+victim_speed_abs_column = 'victim speed abs'
+victim_speed_rel_column = 'victim speed rel'
 
-def vis_2d_trajectories(data_df: pd.DataFrame):
+def vis_2d_trajectories(data_df: pd.DataFrame, distribution_trajectory_path: Path, individual_trajectory_path: Path):
     data_df = data_df.copy()
 
     data_df.sort_values(['engagement id', 'tick id'], inplace=True)
@@ -58,8 +57,6 @@ def vis_2d_trajectories(data_df: pd.DataFrame):
         data_df.groupby('engagement id')['tick id'].transform('last')
     filtered_df = data_df[(data_df['tick id'] - data_df[first_tick_in_engagement_column]) % 13 == 0].copy()
 
-    new_col_names = []
-    new_cols = []
     for i in [0, FUTURE_TICKS]:
         filtered_df[get_temporal_field_str(base_cur_offset_pos_x_column, i)] = \
             filtered_df[get_temporal_field_str(base_victim_pos_x, i)] - \
@@ -82,10 +79,9 @@ def vis_2d_trajectories(data_df: pd.DataFrame):
             filtered_df[first_attacker_pos_z_in_engagement_column]
 
 
+    fig = Figure(figsize=(24., 16.), dpi=100)
 
-    fig = Figure(figsize=(40., 16.), dpi=100)
-
-    gs = gridspec.GridSpec(ncols=5, nrows=2,
+    gs = gridspec.GridSpec(ncols=3, nrows=2,
                            left=0.05, right=0.95, wspace=0.2)
     #left=0.05, right=0.95,
     #wspace=0.1, hspace=0.1, width_ratios=[1, 1.5])
@@ -256,6 +252,8 @@ def vis_2d_trajectories(data_df: pd.DataFrame):
     relative_crosshair_ax.set_ylim(max(relative_crosshair_xs[1], relative_crosshair_ys[1]),
                                    min(relative_crosshair_xs[0], relative_crosshair_ys[0]))
 
+    fig.savefig(distribution_trajectory_path)
+
     # distance covered ax
     #distance_covered_hist_ax = fig.add_subplot(gs[0, 3])
     #end_tick_df = data_df[data_df['tick id'] == data_df[last_tick_in_engagement_column]].copy()
@@ -273,16 +271,70 @@ def vis_2d_trajectories(data_df: pd.DataFrame):
     #distance_covered_hist_ax.set_ylabel('Num Points')
 
     #filtered_df.groupby('engagement id').agg(min_.transform('first')
-    # speed ax
-    speed_ax = fig.add_subplot(gs[0:2, 3:5])
+
+    fig = Figure(figsize=(32., 16.), dpi=100)
+
+    gs = gridspec.GridSpec(ncols=2, nrows=1,
+                           left=0.05, right=0.95, wspace=0.2)
+
+    # absolute speed ax
+    speed_abs_ax = fig.add_subplot(gs[0, 0])
     max_tick_delta = max(filtered_df[last_tick_in_engagement_column] - filtered_df['tick id']) + FUTURE_TICKS
     # mul by 1.2 so have a little space between each column
     max_tick_delta *= 1.2
-    speed_ax.set_title('Victim XY Speed During Engagement')
-    speed_lines = []
-    speed_colors = []
+    speed_abs_ax.set_title('Victim Absolute XY Speed During Engagement')
+    speed_abs_lines = []
+    speed_abs_colors = []
 
-    filtered_df[victim_speed_column] = (((filtered_df['victim vel x (t)'] - filtered_df['attacker vel x (t)']) ** 2) +
+    filtered_df[victim_speed_abs_column] = (((filtered_df['victim vel x (t)']) ** 2) +
+                                        ((filtered_df['victim vel y (t)']) ** 2)).pow(1./2)
+
+    color_map = mpl.colormaps['tab20b']
+    norm = mpl.colors.Normalize(vmin=0., vmax=250., clip=True)
+    mapper = cm.ScalarMappable(norm=norm, cmap=color_map)
+
+    LINES_PER_COL_VELOCITY = 100
+
+    engagement_id_to_col_row_nums = {}
+
+    for _, row in filtered_df.iterrows():
+        engagement_index = engagement_ids.index(row['engagement id'])
+        col_num = int(engagement_index / LINES_PER_COL_VELOCITY)
+        row_num = engagement_index % LINES_PER_COL_VELOCITY
+        engagement_id_to_col_row_nums[int(row['engagement id'])] = (col_num, row_num)
+
+        speed_abs_lines.append((
+            (
+                col_num + (row['tick id'] - row[first_tick_in_engagement_column]) / max_tick_delta,
+                row_num
+            ),
+            (
+                col_num + (row['tick id'] - row[first_tick_in_engagement_column] + FUTURE_TICKS) / max_tick_delta,
+                row_num
+            )
+        ))
+        speed_abs_colors.append(mapper.to_rgba(row[victim_speed_abs_column]))
+
+    speed_abs_lc = LineCollection(speed_abs_lines, colors=speed_abs_colors, linewidths=5)
+    speed_abs_ax.add_collection(speed_abs_lc)
+    speed_abs_ax.autoscale()
+
+    for engagement_index, (col_num, row_num) in engagement_id_to_col_row_nums.items():
+        speed_abs_ax.text(col_num - 0.19, row_num - 0.5, str(engagement_index))
+
+    cbar = fig.colorbar(mapper)
+    cbar.set_label('Victim Speed (ceil 250)', rotation=270, labelpad=10)
+
+    # relative speed ax
+    speed_rel_ax = fig.add_subplot(gs[0, 1])
+    max_tick_delta = max(filtered_df[last_tick_in_engagement_column] - filtered_df['tick id']) + FUTURE_TICKS
+    # mul by 1.2 so have a little space between each column
+    max_tick_delta *= 1.2
+    speed_rel_ax.set_title('Victim Relative XY Speed During Engagement')
+    speed_rel_lines = []
+    speed_rel_colors = []
+
+    filtered_df[victim_speed_rel_column] = (((filtered_df['victim vel x (t)'] - filtered_df['attacker vel x (t)']) ** 2) +
                                         ((filtered_df['victim vel y (t)'] - filtered_df['attacker vel y (t)']) ** 2)).pow(1./2)
 
     color_map = mpl.colormaps['tab20b']
@@ -299,10 +351,7 @@ def vis_2d_trajectories(data_df: pd.DataFrame):
         row_num = engagement_index % LINES_PER_COL_VELOCITY
         engagement_id_to_col_row_nums[int(row['engagement id'])] = (col_num, row_num)
 
-        if engagement_index == 214:
-            print(f'''{row['tick id']}, {row['engagement id']}, {row['victim vel x (t)']}, {row['victim vel y (t)']}, {row[victim_speed_column]}''')
-
-        speed_lines.append((
+        speed_rel_lines.append((
             (
                 col_num + (row['tick id'] - row[first_tick_in_engagement_column]) / max_tick_delta,
                 row_num
@@ -312,26 +361,28 @@ def vis_2d_trajectories(data_df: pd.DataFrame):
                 row_num
             )
         ))
-        speed_colors.append(mapper.to_rgba(row[victim_speed_column]))
+        speed_rel_colors.append(mapper.to_rgba(row[victim_speed_rel_column]))
 
-    speed_lc = LineCollection(speed_lines, colors=speed_colors, linewidths=5)
-    speed_ax.add_collection(speed_lc)
-    speed_ax.autoscale()
+    speed_rel_lc = LineCollection(speed_rel_lines, colors=speed_rel_colors, linewidths=5)
+    speed_rel_ax.add_collection(speed_rel_lc)
+    speed_rel_ax.autoscale()
 
     for engagement_index, (col_num, row_num) in engagement_id_to_col_row_nums.items():
-        speed_ax.text(col_num - 0.19, row_num - 0.5, str(engagement_index))
+        speed_rel_ax.text(col_num - 0.19, row_num - 0.5, str(engagement_index))
 
     cbar = fig.colorbar(mapper)
-    cbar.set_label('Victim Velocity (ceil 250)', rotation=270, labelpad=10)
+    cbar.set_label('Victim Speed - Attacker Speed (ceil 500)', rotation=270, labelpad=10)
 
-    fig.savefig(trajectory_path)
+    fig.savefig(individual_trajectory_path)
 
 
-orig_dataset = True
+trajectory_path = Path(__file__).parent / ".." / "analysis" / "test_timing_data"
 if __name__ == "__main__":
-    if orig_dataset:
-        all_data_df = pd.read_csv(data_path)
-    else:
-        all_data_df = pd.read_csv(manual_data_path)
-    vis_2d_trajectories(all_data_df)
+    all_data_df = pd.read_csv(data_path)
+    vis_2d_trajectories(all_data_df, trajectory_path / "real_distributions.png",
+                        trajectory_path / "real_individual.png")
+
+    manual_data_df = pd.read_csv(manual_data_path)
+    vis_2d_trajectories(manual_data_df, trajectory_path / "range_distributions.png",
+                        trajectory_path / "range_individual.png")
 
