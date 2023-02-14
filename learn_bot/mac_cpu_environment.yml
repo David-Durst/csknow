@@ -1,17 +1,37 @@
 name: learn_bot
 channels:
+  - conda-forge
   - defaults
 dependencies:
+  - absl-py=1.4.0=pyhd8ed1ab_0
+  - aiohttp=3.8.4=py39ha30fb19_0
+  - aiosignal=1.3.1=pyhd8ed1ab_0
+  - async-timeout=4.0.2=pyhd8ed1ab_0
+  - attrs=22.2.0=pyh71513ae_0
   - blas=1.0=openblas
+  - blinker=1.5=pyhd8ed1ab_0
   - bottleneck=1.3.5=py39h67323c0_0
   - brotli=1.0.9=hca72f7f_7
   - brotli-bin=1.0.9=hca72f7f_7
-  - ca-certificates=2022.10.11=hecd8cb5_0
-  - certifi=2022.9.24=py39hecd8cb5_0
+  - brotlipy=0.7.0=py39ha30fb19_1005
+  - c-ares=1.18.1=h0d85af4_0
+  - ca-certificates=2022.12.7=h033912b_0
+  - cachetools=5.3.0=pyhd8ed1ab_0
+  - certifi=2022.12.7=pyhd8ed1ab_0
+  - cffi=1.15.1=py39h131948b_3
+  - charset-normalizer=2.1.1=pyhd8ed1ab_0
+  - click=8.1.3=unix_pyhd8ed1ab_2
+  - cryptography=37.0.4=py39h9c2a9ce_0
   - cycler=0.11.0=pyhd3eb1b0_0
   - fonttools=4.25.0=pyhd3eb1b0_0
   - freetype=2.12.1=hd8bbffd_0
+  - frozenlist=1.3.3=py39ha30fb19_0
   - giflib=5.2.1=haf1e3a3_0
+  - google-auth=2.16.0=pyh1a96a4e_1
+  - google-auth-oauthlib=0.4.6=pyhd8ed1ab_0
+  - grpcio=1.42.0=py39ha29bfda_0
+  - idna=3.4=pyhd8ed1ab_0
+  - importlib-metadata=6.0.0=pyha770c72_0
   - joblib=1.1.1=py39hecd8cb5_0
   - jpeg=9e=hca72f7f_0
   - kiwisolver=1.4.2=py39he9d5cce_0
@@ -27,46 +47,67 @@ dependencies:
   - libgfortran5=11.3.0=h9dfd629_28
   - libopenblas=0.3.21=h54e7dc3_0
   - libpng=1.6.37=ha441bb4_0
+  - libprotobuf=3.15.8=hcf210ce_1
   - libtiff=4.4.0=h2cd0358_2
   - libwebp=1.2.4=h56c3ce4_0
   - libwebp-base=1.2.4=hca72f7f_0
   - llvm-openmp=14.0.6=h0dcd299_0
   - lz4-c=1.9.3=h23ab428_1
+  - markdown=3.4.1=pyhd8ed1ab_0
+  - markupsafe=2.1.2=py39ha30fb19_0
   - matplotlib=3.5.3=py39hecd8cb5_0
   - matplotlib-base=3.5.3=py39hfb0c5b7_0
+  - multidict=6.0.4=py39ha30fb19_0
   - munkres=1.1.4=py_0
   - ncurses=6.3=hca72f7f_3
   - nomkl=3.0=0
   - numexpr=2.8.4=py39h57a7bef_0
   - numpy=1.23.4=py39h57a7bef_0
   - numpy-base=1.23.4=py39hc93c6d9_0
-  - openssl=1.1.1s=hca72f7f_0
+  - oauthlib=3.2.2=pyhd8ed1ab_0
+  - openssl=1.1.1t=hfd90126_0
   - packaging=21.3=pyhd3eb1b0_0
   - pandas=1.5.1=py39h07fba90_0
   - pillow=9.2.0=py39hde71d04_1
   - pip=22.2.2=py39hecd8cb5_0
+  - protobuf=3.15.8=py39h9fcab8e_0
+  - pyasn1=0.4.8=py_0
+  - pyasn1-modules=0.2.7=py_0
+  - pycparser=2.21=pyhd8ed1ab_0
+  - pyjwt=2.6.0=pyhd8ed1ab_0
+  - pyopenssl=22.0.0=pyhd8ed1ab_1
   - pyparsing=3.0.9=py39hecd8cb5_0
+  - pysocks=1.7.1=pyha2e5f31_6
   - python=3.9.15=h218abb5_2
   - python-dateutil=2.8.2=pyhd3eb1b0_0
+  - python_abi=3.9=2_cp39
   - pytz=2022.1=py39hecd8cb5_0
+  - pyu2f=0.1.5=pyhd8ed1ab_0
   - readline=8.2=hca72f7f_0
+  - requests-oauthlib=1.3.1=pyhd8ed1ab_0
+  - rsa=4.9=pyhd8ed1ab_0
   - setuptools=65.5.0=py39hecd8cb5_0
   - six=1.16.0=pyhd3eb1b0_1
   - sqlite=3.40.0=h880c91c_0
+  - tensorboard=2.10.0=py39hecd8cb5_0
+  - tensorboard-data-server=0.6.1=py39h7242b5c_0
+  - tensorboard-plugin-wit=1.8.1=pyhd8ed1ab_0
   - tk=8.6.12=h5d9f67b_0
   - tornado=6.2=py39hca72f7f_0
   - tqdm=4.64.1=py39hecd8cb5_0
+  - typing-extensions=4.4.0=hd8ed1ab_0
+  - typing_extensions=4.4.0=pyha770c72_0
   - tzdata=2022f=h04d1e81_0
+  - werkzeug=2.2.2=pyhd8ed1ab_0
   - wheel=0.37.1=pyhd3eb1b0_0
   - xz=5.2.6=hca72f7f_0
+  - yarl=1.8.2=py39ha30fb19_0
+  - zipp=3.13.0=pyhd8ed1ab_0
   - zlib=1.2.13=h4dc903c_0
   - zstd=1.5.2=hcb37349_0
   - pip:
-    - charset-normalizer==2.1.1
-    - idna==3.4
     - requests==2.28.1
     - torch==1.13.0
     - torchvision==0.14.0
-    - typing-extensions==4.4.0
     - urllib3==1.26.13
 prefix: /Users/durst/anaconda/envs/learn_bot
