@@ -372,10 +372,10 @@ export function drawTick(e: InputEvent) {
         else {
             mainCtx.fillStyle = dark_red
             if (players[p].playerId == selectedPlayer) {
-                mainCtx.fillStyle = yellow
+                mainCtx.fillStyle = light_red
             }
             else if (playerText == "t" || playerText == "s") {
-                mainCtx.fillStyle = light_red
+                mainCtx.fillStyle = yellow
             }
         }
         const location = new MapCoordinate(
