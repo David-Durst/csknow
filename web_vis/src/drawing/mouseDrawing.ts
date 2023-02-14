@@ -155,6 +155,7 @@ export function createCharts(kymographCtx: CanvasRenderingContext2D, scatterCtx:
                         display: true,
                         text: "Pitch Delta (deg)"
                     },
+		    reverse: true,
                     //min: -1.5,
                     //max: 1.0,
                 }
@@ -194,6 +195,7 @@ export function createCharts(kymographCtx: CanvasRenderingContext2D, scatterCtx:
                         display: true,
                         text: "Pitch Delta (deg)"
                     },
+		    reverse: true,
                     //min: -1.5,
                     //max: 1.0,
                 }
