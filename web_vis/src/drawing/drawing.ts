@@ -69,7 +69,7 @@ const light_blue = "rgba(194,255,243,1.0)";
 const purple = "rgb(160,124,205)";
 const dark_red = "rgba(209,0,0,1.0)";
 const light_red = "rgba(255,143,143,1.0)";
-const yellow = "rgb(252,198,102)";
+const yellow = "rgb(187,142,52)";
 const green = "rgba(0,150,0,1.0)";
 export let smallMode: boolean = false
 
@@ -365,18 +365,22 @@ export function drawTick(e: InputEvent) {
             if (players[p].playerId == selectedPlayer) {
                 mainCtx.fillStyle = purple
             }
+            /*
             else if (playerText == "t" || playerText == "s") {
                 mainCtx.fillStyle = light_blue
             }
+             */
         }
         else {
-            mainCtx.fillStyle = dark_red
+            mainCtx.fillStyle = yellow
             if (players[p].playerId == selectedPlayer) {
-                mainCtx.fillStyle = light_red
+                mainCtx.fillStyle = dark_red
             }
+            /*
             else if (playerText == "t" || playerText == "s") {
                 mainCtx.fillStyle = yellow
             }
+             */
         }
         const location = new MapCoordinate(
             players[p].posX,
