@@ -245,7 +245,7 @@ public:
         saveTemporalArrayOfVec2VectorsToHDF5(deltaRelativeFirstHeadViewAngle, file, startOffset,
                                              "delta relative first head view angle");
         saveTemporalArrayOfVec2VectorsToHDF5(deltaRelativeCurHeadViewAngle, file, startOffset,
-                                             "delta relative first head view angle");
+                                             "delta relative cur head view angle");
         saveTemporalArrayOfVectorsToHDF5(hitVictim, file, startOffset,
                                          "hit victim");
         saveTemporalArrayOfVectorsToHDF5(recoilIndex, file, startOffset,
