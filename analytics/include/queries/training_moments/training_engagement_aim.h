@@ -316,7 +316,7 @@ public:
         saveTemporalVectorOfEnumsToHDF5(weaponId, file, startOffset,
                                         "weapon id", hdf5NestedCreateProps);
 
-        file.createDataSet("/data/weapon type", vectorOfEnumsToVectorOfInts(weaponType), hdf5NestedCreateProps);
+        file.createDataSet("/data/weapon type", vectorOfEnumsToVectorOfInts(weaponType), hdf5FlatCreateProps);
         //file.createDataSet<int64_t>("id", )
         //return {"round id", "tick id", "demo tick id", "game tick id", "game time",
         //        "engagement id", "attacker player id", "victim player id"};
