@@ -5,7 +5,6 @@
 #include "queries/query.h"
 #include "enum_helpers.h"
 
-
 void mergeThreadResults(int numThreads, vector<RangeIndexEntry> &rowIndicesPerRound, const vector<vector<int64_t>> & tmpRoundIds,
                         const vector<vector<int64_t>> & tmpRoundStarts, const vector<vector<int64_t>> & tmpRoundSizes,
                         vector<int64_t> & resultStartTickId, int64_t & resultSize,

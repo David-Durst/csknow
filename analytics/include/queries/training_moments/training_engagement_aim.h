@@ -227,7 +227,8 @@ public:
         return result;
     }
 
-    void toHDF5Inner(HighFive::File & file) override {
+    void toHDF5Inner(HighFive::File & file, const HighFive::DataSetCreateProps & hdf5CreateProps) override {
+        /*
         H5Easy::dump(file, "/data/round id", roundId, defaultHDF5DumpOption);
         H5Easy::dump(file, "/data/tick id", tickId, defaultHDF5DumpOption);
         H5Easy::dump(file, "/data/demo tick id", demoTickId, defaultHDF5DumpOption);
@@ -237,9 +238,11 @@ public:
         H5Easy::dump(file, "/data/attacker player id", attackerPlayerId, defaultHDF5DumpOption);
         H5Easy::dump(file, "/data/victim player id", victimPlayerId, defaultHDF5DumpOption);
 
+         */
         int startOffset = -1 * PAST_AIM_TICKS;
         saveTemporalArrayOfVec2VectorsToHDF5(attackerViewAngle, file, startOffset,
-                                             "attacker view angle");
+                                             "attacker view angle", hdf5CreateProps);
+        /*
         saveTemporalArrayOfVec2VectorsToHDF5(idealViewAngle, file, startOffset,
                                              "ideal view angle");
         saveTemporalArrayOfVec2VectorsToHDF5(deltaRelativeFirstHeadViewAngle, file, startOffset,
@@ -309,7 +312,7 @@ public:
 
         H5Easy::dump(file, "/data/weapon type", vectorOfEnumsToVectorOfInts(weaponType),
                      defaultHDF5DumpOption);
-        auto dude = vectorOfEnumsToVectorOfInts(weaponType);
+                     */
         //file.createDataSet<int64_t>("id", )
         //return {"round id", "tick id", "demo tick id", "game tick id", "game time",
         //        "engagement id", "attacker player id", "victim player id"};
