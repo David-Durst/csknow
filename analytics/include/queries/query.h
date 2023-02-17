@@ -141,7 +141,7 @@ public:
             id_to_save.push_back(i);
         }
         HighFive::DataSetCreateProps hdf5CreateProps;
-        hdf5CreateProps.add(HighFive::Deflate(9));
+        hdf5CreateProps.add(HighFive::Deflate(6));
         hdf5CreateProps.add(HighFive::Chunking(id_to_save.size()));
         file.createDataSet(hdf5Prefix + "id", id_to_save, hdf5CreateProps);
 
