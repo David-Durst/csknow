@@ -276,6 +276,7 @@ void saveTemporalVectorOfEnumsToHDF5(const std::vector<std::array<T, N>> & vecto
                                      int startOffset, const string & baseString) {
     std::array<std::vector<int>, N> arrayOfIntVectors = vectorOfEnumArraysToArrayOfIntVectors(vectorOfEnumArrays);
     for (size_t arrayIndex = 0; arrayIndex < arrayOfIntVectors.size(); arrayIndex++) {
+        std::cout << "adding" << baseString + "(t" + toSignedIntString(arrayIndex + startOffset) + ")" << std::endl;
         H5Easy::dump(file, "/data/" +
                            baseString + "(t" + toSignedIntString(arrayIndex + startOffset, true) + ")",
                      arrayOfIntVectors[arrayIndex]);
