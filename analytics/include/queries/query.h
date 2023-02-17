@@ -235,9 +235,9 @@ std::array<vector<int>, N> vectorOfEnumArraysToArrayOfIntVectors(const std::vect
 }
 
 template <std::size_t N>
-std::array<std::array<std::vector<double>, 2>, N>
+std::array<std::array<std::vector<float>, 2>, N>
 vectorOfVec2ArraysToArrayOfArrayOfVectors(const std::vector<std::array<Vec2, N>> & vectorOfVec2Arrays){
-    std::array<std::array<std::vector<double>, 2>, N> arrayOfArrayOfVectors;
+    std::array<std::array<std::vector<float>, 2>, N> arrayOfArrayOfVectors;
     for (size_t i = 0; i < arrayOfArrayOfVectors.size(); i++) {
         for (size_t j = 0; j < 2; j++) {
             arrayOfArrayOfVectors[i][j].reserve(vectorOfVec2Arrays.size());
@@ -246,8 +246,10 @@ vectorOfVec2ArraysToArrayOfArrayOfVectors(const std::vector<std::array<Vec2, N>>
 
     for (size_t vectorIndex = 0; vectorIndex < vectorOfVec2Arrays.size(); vectorIndex++) {
         for (size_t arrayIndex = 0; arrayIndex < arrayOfArrayOfVectors.size(); arrayIndex++) {
-            arrayOfArrayOfVectors[arrayIndex][0].push_back(vectorOfVec2Arrays[vectorIndex][arrayIndex].x);
-            arrayOfArrayOfVectors[arrayIndex][1].push_back(vectorOfVec2Arrays[vectorIndex][arrayIndex].y);
+            arrayOfArrayOfVectors[arrayIndex][0].push_back(
+                static_cast<float>(vectorOfVec2Arrays[vectorIndex][arrayIndex].x));
+            arrayOfArrayOfVectors[arrayIndex][1].push_back(
+                static_cast<float>(vectorOfVec2Arrays[vectorIndex][arrayIndex].y));
         }
     }
 
@@ -255,9 +257,9 @@ vectorOfVec2ArraysToArrayOfArrayOfVectors(const std::vector<std::array<Vec2, N>>
 }
 
 template <std::size_t N>
-std::array<std::array<std::vector<double>, 3>, N>
+std::array<std::array<std::vector<float>, 3>, N>
 vectorOfVec3ArraysToArrayOfArrayOfVectors(const std::vector<std::array<Vec3, N>> & vectorOfVec3Arrays){
-    std::array<std::array<std::vector<double>, 3>, N> arrayOfArrayOfVectors;
+    std::array<std::array<std::vector<float>, 3>, N> arrayOfArrayOfVectors;
     for (size_t i = 0; i < arrayOfArrayOfVectors.size(); i++) {
         for (size_t j = 0; j < 3; j++) {
             arrayOfArrayOfVectors[i][j].reserve(vectorOfVec3Arrays.size());
@@ -266,45 +268,47 @@ vectorOfVec3ArraysToArrayOfArrayOfVectors(const std::vector<std::array<Vec3, N>>
 
     for (size_t vectorIndex = 0; vectorIndex < vectorOfVec3Arrays.size(); vectorIndex++) {
         for (size_t arrayIndex = 0; arrayIndex < arrayOfArrayOfVectors.size(); arrayIndex++) {
-            arrayOfArrayOfVectors[arrayIndex][0].push_back(vectorOfVec3Arrays[vectorIndex][arrayIndex].x);
-            arrayOfArrayOfVectors[arrayIndex][1].push_back(vectorOfVec3Arrays[vectorIndex][arrayIndex].y);
-            arrayOfArrayOfVectors[arrayIndex][2].push_back(vectorOfVec3Arrays[vectorIndex][arrayIndex].z);
+            arrayOfArrayOfVectors[arrayIndex][0].push_back(
+                static_cast<float>(vectorOfVec3Arrays[vectorIndex][arrayIndex].x));
+            arrayOfArrayOfVectors[arrayIndex][1].push_back(
+                static_cast<float>(vectorOfVec3Arrays[vectorIndex][arrayIndex].y));
+            arrayOfArrayOfVectors[arrayIndex][2].push_back(
+                static_cast<float>(vectorOfVec3Arrays[vectorIndex][arrayIndex].z));
         }
     }
 
     return arrayOfArrayOfVectors;
 }
 
-/*
 template <typename T, std::size_t N>
 void saveTemporalVectorOfEnumsToHDF5(const std::vector<std::array<T, N>> & vectorOfEnumArrays, HighFive::File & file,
-                                     int startOffset, const string & baseString) {
+                                     int startOffset, const string & baseString,
+                                     const HighFive::DataSetCreateProps & hdf5CreateProps) {
     std::array<std::vector<int>, N> arrayOfIntVectors = vectorOfEnumArraysToArrayOfIntVectors(vectorOfEnumArrays);
     for (size_t arrayIndex = 0; arrayIndex < arrayOfIntVectors.size(); arrayIndex++) {
-        std::cout << "adding" << baseString + "(t" + toSignedIntString(arrayIndex + startOffset) + ")" << std::endl;
-        H5Easy::dump(file, "/data/" +
-                           baseString + "(t" + toSignedIntString(arrayIndex + startOffset, true) + ")",
-                     arrayOfIntVectors[arrayIndex], QueryResult::defaultHDF5DumpOption);
+        file.createDataSet("/data/" +
+                            baseString + "(t" + toSignedIntString(arrayIndex + startOffset, true) + ")",
+                            arrayOfIntVectors[arrayIndex], hdf5CreateProps);
     }
 }
 
 template <typename T, std::size_t N>
 void saveTemporalArrayOfVectorsToHDF5(const std::vector<std::array<T, N>> & vectorOfArrays, HighFive::File & file,
-                                      int startOffset, const string & baseString) {
+                                      int startOffset, const string & baseString,
+                                      const HighFive::DataSetCreateProps & hdf5CreateProps) {
     std::array<std::vector<T>, N> arrayOfVectors = vectorOfArraysToArrayOfVectors(vectorOfArrays);
     for (size_t arrayIndex = 0; arrayIndex < arrayOfVectors.size(); arrayIndex++) {
-        H5Easy::dump(file, "/data/" +
-                           baseString + "(t" + toSignedIntString(arrayIndex + startOffset, true) + ")",
-                     arrayOfVectors[arrayIndex], QueryResult::defaultHDF5DumpOption);
+        file.createDataSet("/data/" +
+                            baseString + "(t" + toSignedIntString(arrayIndex + startOffset, true) + ")",
+                            arrayOfVectors[arrayIndex], hdf5CreateProps);
     }
 }
- */
 
 template <std::size_t N>
 void saveTemporalArrayOfVec2VectorsToHDF5(const std::vector<std::array<Vec2, N>> & vectorOfVec2Arrays, HighFive::File & file,
                                           int startOffset, const string & baseString,
                                           const HighFive::DataSetCreateProps & hdf5CreateProps) {
-    std::array<std::array<std::vector<double>, 2>, N> arrayOfArrayOfVectors =
+    std::array<std::array<std::vector<float>, 2>, N> arrayOfArrayOfVectors =
             vectorOfVec2ArraysToArrayOfArrayOfVectors(vectorOfVec2Arrays);
     for (size_t arrayIndex = 0; arrayIndex < arrayOfArrayOfVectors.size(); arrayIndex++) {
         file.createDataSet("/data/" +
@@ -316,25 +320,24 @@ void saveTemporalArrayOfVec2VectorsToHDF5(const std::vector<std::array<Vec2, N>>
     }
 }
 
-/*
 template <std::size_t N>
 void saveTemporalArrayOfVec3VectorsToHDF5(const std::vector<std::array<Vec3, N>> & vectorOfVec3Arrays, HighFive::File & file,
-                                          int startOffset, const string & baseString) {
-    std::array<std::array<std::vector<double>, 3>, N> arrayOfArrayOfVectors =
+                                          int startOffset, const string & baseString,
+                                          const HighFive::DataSetCreateProps & hdf5CreateProps) {
+    std::array<std::array<std::vector<float>, 3>, N> arrayOfArrayOfVectors =
             vectorOfVec3ArraysToArrayOfArrayOfVectors(vectorOfVec3Arrays);
     for (size_t arrayIndex = 0; arrayIndex < arrayOfArrayOfVectors.size(); arrayIndex++) {
-        H5Easy::dump(file, "/data/" +
+        file.createDataSet("/data/" +
                            baseString + " x (t" + toSignedIntString(arrayIndex + startOffset, true) + ")",
-                     arrayOfArrayOfVectors[arrayIndex][0], QueryResult::defaultHDF5DumpOption);
-        H5Easy::dump(file, "/data/" +
+                           arrayOfArrayOfVectors[arrayIndex][0], hdf5CreateProps);
+        file.createDataSet("/data/" +
                            baseString + " y (t" + toSignedIntString(arrayIndex + startOffset, true) + ")",
-                     arrayOfArrayOfVectors[arrayIndex][1], QueryResult::defaultHDF5DumpOption);
-        H5Easy::dump(file, "/data/" +
+                           arrayOfArrayOfVectors[arrayIndex][1], hdf5CreateProps);
+        file.createDataSet("/data/" +
                            baseString + " z (t" + toSignedIntString(arrayIndex + startOffset, true) + ")",
-                     arrayOfArrayOfVectors[arrayIndex][2], QueryResult::defaultHDF5DumpOption);
+                           arrayOfArrayOfVectors[arrayIndex][2], hdf5CreateProps);
     }
 }
- */
 
 void mergeThreadResults(int numThreads, vector<RangeIndexEntry> &rowIndicesPerRound, const vector<vector<int64_t>> & tmpRoundIds,
                         const vector<vector<int64_t>> & tmpRoundStarts, const vector<vector<int64_t>> & tmpRoundSizes,

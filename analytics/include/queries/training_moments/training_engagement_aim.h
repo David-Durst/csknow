@@ -228,91 +228,86 @@ public:
     }
 
     void toHDF5Inner(HighFive::File & file, const HighFive::DataSetCreateProps & hdf5CreateProps) override {
-        /*
-        H5Easy::dump(file, "/data/round id", roundId, defaultHDF5DumpOption);
-        H5Easy::dump(file, "/data/tick id", tickId, defaultHDF5DumpOption);
-        H5Easy::dump(file, "/data/demo tick id", demoTickId, defaultHDF5DumpOption);
-        H5Easy::dump(file, "/data/game tick id", gameTickId, defaultHDF5DumpOption);
-        H5Easy::dump(file, "/data/game time", gameTime, defaultHDF5DumpOption);
-        H5Easy::dump(file, "/data/engagement id", engagementId, defaultHDF5DumpOption);
-        H5Easy::dump(file, "/data/attacker player id", attackerPlayerId, defaultHDF5DumpOption);
-        H5Easy::dump(file, "/data/victim player id", victimPlayerId, defaultHDF5DumpOption);
+        file.createDataSet("/data/round id", roundId, hdf5CreateProps);
+        file.createDataSet("/data/tick id", tickId, hdf5CreateProps);
+        file.createDataSet("/data/demo tick id", demoTickId, hdf5CreateProps);
+        file.createDataSet("/data/game tick id", gameTickId, hdf5CreateProps);
+        file.createDataSet("/data/game time", gameTime, hdf5CreateProps);
+        file.createDataSet("/data/engagement id", engagementId, hdf5CreateProps);
+        file.createDataSet("/data/attacker player id", attackerPlayerId, hdf5CreateProps);
+        file.createDataSet("/data/victim player id", victimPlayerId, hdf5CreateProps);
 
-         */
         int startOffset = -1 * PAST_AIM_TICKS;
         saveTemporalArrayOfVec2VectorsToHDF5(attackerViewAngle, file, startOffset,
                                              "attacker view angle", hdf5CreateProps);
-        /*
         saveTemporalArrayOfVec2VectorsToHDF5(idealViewAngle, file, startOffset,
-                                             "ideal view angle");
+                                             "ideal view angle", hdf5CreateProps);
         saveTemporalArrayOfVec2VectorsToHDF5(deltaRelativeFirstHeadViewAngle, file, startOffset,
-                                             "delta relative first head view angle");
+                                             "delta relative first head view angle", hdf5CreateProps);
         saveTemporalArrayOfVec2VectorsToHDF5(deltaRelativeCurHeadViewAngle, file, startOffset,
-                                             "delta relative cur head view angle");
+                                             "delta relative cur head view angle", hdf5CreateProps);
         saveTemporalArrayOfVectorsToHDF5(hitVictim, file, startOffset,
-                                         "hit victim");
+                                         "hit victim", hdf5CreateProps);
         saveTemporalArrayOfVectorsToHDF5(recoilIndex, file, startOffset,
-                                         "recoil index");
+                                         "recoil index", hdf5CreateProps);
         saveTemporalArrayOfVec2VectorsToHDF5(scaledRecoilAngle, file, startOffset,
-                                             "scaled recoil angle");
+                                             "scaled recoil angle", hdf5CreateProps);
         saveTemporalArrayOfVectorsToHDF5(holdingAttack, file, startOffset,
-                                         "holding attack");
+                                         "holding attack", hdf5CreateProps);
         saveTemporalArrayOfVectorsToHDF5(ticksSinceLastFire, file, startOffset,
-                                         "ticks since last fire");
+                                         "ticks since last fire", hdf5CreateProps);
         saveTemporalArrayOfVectorsToHDF5(ticksSinceLastHoldingAttack, file, startOffset,
-                                         "ticks since last holding attack");
+                                         "ticks since last holding attack", hdf5CreateProps);
         saveTemporalArrayOfVectorsToHDF5(ticksUntilNextFire, file, startOffset,
-                                         "ticks until next fire");
+                                         "ticks until next fire", hdf5CreateProps);
         saveTemporalArrayOfVectorsToHDF5(ticksUntilNextHoldingAttack, file, startOffset,
-                                         "ticks until next holding attack");
+                                         "ticks until next holding attack", hdf5CreateProps);
         saveTemporalArrayOfVectorsToHDF5(victimVisible, file, startOffset,
-                                         "victim visible");
+                                         "victim visible", hdf5CreateProps);
         saveTemporalArrayOfVectorsToHDF5(victimVisibleYet, file, startOffset,
-                                         "victim visible yet");
+                                         "victim visible yet", hdf5CreateProps);
         saveTemporalArrayOfVectorsToHDF5(victimAlive, file, startOffset,
-                                         "victim alive");
+                                         "victim alive", hdf5CreateProps);
         saveTemporalArrayOfVec2VectorsToHDF5(victimMinViewAngle, file, startOffset,
-                                             "victim min view angle");
+                                             "victim min view angle", hdf5CreateProps);
         saveTemporalArrayOfVec2VectorsToHDF5(victimMaxViewAngle, file, startOffset,
-                                             "victim max view angle");
+                                             "victim max view angle", hdf5CreateProps);
         saveTemporalArrayOfVec2VectorsToHDF5(victimCurHeadViewAngle, file, startOffset,
-                                             "victim cur head view angle");
+                                             "victim cur head view angle", hdf5CreateProps);
         saveTemporalArrayOfVec2VectorsToHDF5(victimRelativeFirstHeadMinViewAngle, file, startOffset,
-                                             "victim relative first head min view angle");
+                                             "victim relative first head min view angle", hdf5CreateProps);
         saveTemporalArrayOfVec2VectorsToHDF5(victimRelativeFirstHeadMaxViewAngle, file, startOffset,
-                                             "victim relative first head max view angle");
+                                             "victim relative first head max view angle", hdf5CreateProps);
         saveTemporalArrayOfVec2VectorsToHDF5(victimRelativeFirstHeadCurHeadViewAngle, file, startOffset,
-                                             "victim relative first head cur head view angle");
+                                             "victim relative first head cur head view angle", hdf5CreateProps);
         saveTemporalArrayOfVec2VectorsToHDF5(victimRelativeCurHeadMinViewAngle, file, startOffset,
-                                             "victim relative cur head min view angle");
+                                             "victim relative cur head min view angle", hdf5CreateProps);
         saveTemporalArrayOfVec2VectorsToHDF5(victimRelativeCurHeadMaxViewAngle, file, startOffset,
-                                             "victim relative cur head max view angle");
+                                             "victim relative cur head max view angle", hdf5CreateProps);
         saveTemporalArrayOfVec2VectorsToHDF5(victimRelativeCurHeadCurHeadViewAngle, file, startOffset,
-                                             "victim relative cur head cur head view angle");
+                                             "victim relative cur head cur head view angle", hdf5CreateProps);
         saveTemporalArrayOfVec3VectorsToHDF5(attackerEyePos, file, startOffset,
-                                             "attacker eye pos");
+                                             "attacker eye pos", hdf5CreateProps);
         saveTemporalArrayOfVec3VectorsToHDF5(victimEyePos, file, startOffset,
-                                             "victim eye pos");
+                                             "victim eye pos", hdf5CreateProps);
         saveTemporalArrayOfVec3VectorsToHDF5(deltaEyePos, file, startOffset,
-                                             "delta eye pos");
+                                             "delta eye pos", hdf5CreateProps);
         saveTemporalArrayOfVec3VectorsToHDF5(attackerVel, file, startOffset,
-                                             "attacker vel");
+                                             "attacker vel", hdf5CreateProps);
         saveTemporalArrayOfVec3VectorsToHDF5(victimVel, file, startOffset,
-                                             "victim vel");
+                                             "victim vel", hdf5CreateProps);
         saveTemporalArrayOfVectorsToHDF5(attackerDuckAmount, file, startOffset,
-                                         "attacker duck amount");
+                                         "attacker duck amount", hdf5CreateProps);
         saveTemporalArrayOfVectorsToHDF5(attackerNextPrimaryAttack, file, startOffset,
-                                         "attacker next primary attack");
+                                         "attacker next primary attack", hdf5CreateProps);
         saveTemporalArrayOfVectorsToHDF5(attackerNextSecondaryAttack, file, startOffset,
-                                         "attacker next secondary attack");
+                                         "attacker next secondary attack", hdf5CreateProps);
         saveTemporalArrayOfVectorsToHDF5(attackerGameTime, file, startOffset,
-                                         "attacker game time");
+                                         "attacker game time", hdf5CreateProps);
         saveTemporalVectorOfEnumsToHDF5(weaponId, file, startOffset,
-                                        "weapon id");
+                                        "weapon id", hdf5CreateProps);
 
-        H5Easy::dump(file, "/data/weapon type", vectorOfEnumsToVectorOfInts(weaponType),
-                     defaultHDF5DumpOption);
-                     */
+        file.createDataSet("/data/weapon type", vectorOfEnumsToVectorOfInts(weaponType), hdf5CreateProps);
         //file.createDataSet<int64_t>("id", )
         //return {"round id", "tick id", "demo tick id", "game tick id", "game time",
         //        "engagement id", "attacker player id", "victim player id"};
