@@ -237,81 +237,78 @@ public:
         H5Easy::dump(file, "/data/attacker player id", attackerPlayerId, defaultHDF5DumpOption);
         H5Easy::dump(file, "/data/victim player id", victimPlayerId, defaultHDF5DumpOption);
 
-        /*
         int startOffset = -1 * PAST_AIM_TICKS;
-        int endOffset = FUTURE_AIM_TICKS;
-        saveTemporalArrayOfVec2VectorsToHDF5(attackerViewAngle, file, startOffset, endOffset,
+        saveTemporalArrayOfVec2VectorsToHDF5(attackerViewAngle, file, startOffset,
                                              "attacker view angle");
-        saveTemporalArrayOfVec2VectorsToHDF5(idealViewAngle, file, startOffset, endOffset,
+        saveTemporalArrayOfVec2VectorsToHDF5(idealViewAngle, file, startOffset,
                                              "ideal view angle");
-        saveTemporalArrayOfVec2VectorsToHDF5(deltaRelativeFirstHeadViewAngle, file, startOffset, endOffset,
+        saveTemporalArrayOfVec2VectorsToHDF5(deltaRelativeFirstHeadViewAngle, file, startOffset,
                                              "delta relative first head view angle");
-        saveTemporalArrayOfVec2VectorsToHDF5(deltaRelativeCurHeadViewAngle, file, startOffset, endOffset,
+        saveTemporalArrayOfVec2VectorsToHDF5(deltaRelativeCurHeadViewAngle, file, startOffset,
                                              "delta relative first head view angle");
-        saveTemporalArrayOfVectorsToHDF5(hitVictim, file, startOffset, endOffset,
+        saveTemporalArrayOfVectorsToHDF5(hitVictim, file, startOffset,
                                          "hit victim");
-        saveTemporalArrayOfVectorsToHDF5(recoilIndex, file, startOffset, endOffset,
+        saveTemporalArrayOfVectorsToHDF5(recoilIndex, file, startOffset,
                                          "recoil index");
-        saveTemporalArrayOfVec2VectorsToHDF5(scaledRecoilAngle, file, startOffset, endOffset,
+        saveTemporalArrayOfVec2VectorsToHDF5(scaledRecoilAngle, file, startOffset,
                                              "scaled recoil angle");
-        saveTemporalArrayOfVectorsToHDF5(holdingAttack, file, startOffset, endOffset,
+        saveTemporalArrayOfVectorsToHDF5(holdingAttack, file, startOffset,
                                          "holding attack");
-        saveTemporalArrayOfVectorsToHDF5(ticksSinceLastFire, file, startOffset, endOffset,
+        saveTemporalArrayOfVectorsToHDF5(ticksSinceLastFire, file, startOffset,
                                          "ticks since last fire");
-        saveTemporalArrayOfVectorsToHDF5(ticksSinceLastHoldingAttack, file, startOffset, endOffset,
+        saveTemporalArrayOfVectorsToHDF5(ticksSinceLastHoldingAttack, file, startOffset,
                                          "ticks since last holding attack");
-        saveTemporalArrayOfVectorsToHDF5(ticksUntilNextFire, file, startOffset, endOffset,
+        saveTemporalArrayOfVectorsToHDF5(ticksUntilNextFire, file, startOffset,
                                          "ticks until next fire");
-        saveTemporalArrayOfVectorsToHDF5(ticksUntilNextHoldingAttack, file, startOffset, endOffset,
+        saveTemporalArrayOfVectorsToHDF5(ticksUntilNextHoldingAttack, file, startOffset,
                                          "ticks until next holding attack");
-        saveTemporalArrayOfVectorsToHDF5(victimVisible, file, startOffset, endOffset,
+        saveTemporalArrayOfVectorsToHDF5(victimVisible, file, startOffset,
                                          "victim visible");
-        saveTemporalArrayOfVectorsToHDF5(victimVisibleYet, file, startOffset, endOffset,
+        saveTemporalArrayOfVectorsToHDF5(victimVisibleYet, file, startOffset,
                                          "victim visible yet");
-        saveTemporalArrayOfVectorsToHDF5(victimAlive, file, startOffset, endOffset,
+        saveTemporalArrayOfVectorsToHDF5(victimAlive, file, startOffset,
                                          "victim alive");
-        saveTemporalArrayOfVec2VectorsToHDF5(victimMinViewAngle, file, startOffset, endOffset,
+        saveTemporalArrayOfVec2VectorsToHDF5(victimMinViewAngle, file, startOffset,
                                              "victim min view angle");
-        saveTemporalArrayOfVec2VectorsToHDF5(victimMaxViewAngle, file, startOffset, endOffset,
+        saveTemporalArrayOfVec2VectorsToHDF5(victimMaxViewAngle, file, startOffset,
                                              "victim max view angle");
-        saveTemporalArrayOfVec2VectorsToHDF5(victimCurHeadViewAngle, file, startOffset, endOffset,
+        saveTemporalArrayOfVec2VectorsToHDF5(victimCurHeadViewAngle, file, startOffset,
                                              "victim cur head view angle");
-        saveTemporalArrayOfVec2VectorsToHDF5(victimRelativeFirstHeadMinViewAngle, file, startOffset, endOffset,
+        saveTemporalArrayOfVec2VectorsToHDF5(victimRelativeFirstHeadMinViewAngle, file, startOffset,
                                              "victim relative first head min view angle");
-        saveTemporalArrayOfVec2VectorsToHDF5(victimRelativeFirstHeadMaxViewAngle, file, startOffset, endOffset,
+        saveTemporalArrayOfVec2VectorsToHDF5(victimRelativeFirstHeadMaxViewAngle, file, startOffset,
                                              "victim relative first head max view angle");
-        saveTemporalArrayOfVec2VectorsToHDF5(victimRelativeFirstHeadCurHeadViewAngle, file, startOffset, endOffset,
+        saveTemporalArrayOfVec2VectorsToHDF5(victimRelativeFirstHeadCurHeadViewAngle, file, startOffset,
                                              "victim relative first head cur head view angle");
-        saveTemporalArrayOfVec2VectorsToHDF5(victimRelativeCurHeadMinViewAngle, file, startOffset, endOffset,
+        saveTemporalArrayOfVec2VectorsToHDF5(victimRelativeCurHeadMinViewAngle, file, startOffset,
                                              "victim relative cur head min view angle");
-        saveTemporalArrayOfVec2VectorsToHDF5(victimRelativeCurHeadMaxViewAngle, file, startOffset, endOffset,
+        saveTemporalArrayOfVec2VectorsToHDF5(victimRelativeCurHeadMaxViewAngle, file, startOffset,
                                              "victim relative cur head max view angle");
-        saveTemporalArrayOfVec2VectorsToHDF5(victimRelativeCurHeadCurHeadViewAngle, file, startOffset, endOffset,
+        saveTemporalArrayOfVec2VectorsToHDF5(victimRelativeCurHeadCurHeadViewAngle, file, startOffset,
                                              "victim relative cur head cur head view angle");
-        saveTemporalArrayOfVec3VectorsToHDF5(attackerEyePos, file, startOffset, endOffset,
+        saveTemporalArrayOfVec3VectorsToHDF5(attackerEyePos, file, startOffset,
                                              "attacker eye pos");
-        saveTemporalArrayOfVec3VectorsToHDF5(victimEyePos, file, startOffset, endOffset,
+        saveTemporalArrayOfVec3VectorsToHDF5(victimEyePos, file, startOffset,
                                              "victim eye pos");
-        saveTemporalArrayOfVec3VectorsToHDF5(deltaEyePos, file, startOffset, endOffset,
+        saveTemporalArrayOfVec3VectorsToHDF5(deltaEyePos, file, startOffset,
                                              "delta eye pos");
-        saveTemporalArrayOfVec3VectorsToHDF5(attackerVel, file, startOffset, endOffset,
+        saveTemporalArrayOfVec3VectorsToHDF5(attackerVel, file, startOffset,
                                              "attacker vel");
-        saveTemporalArrayOfVec3VectorsToHDF5(victimVel, file, startOffset, endOffset,
+        saveTemporalArrayOfVec3VectorsToHDF5(victimVel, file, startOffset,
                                              "victim vel");
-        saveTemporalArrayOfVectorsToHDF5(attackerDuckAmount, file, startOffset, endOffset,
+        saveTemporalArrayOfVectorsToHDF5(attackerDuckAmount, file, startOffset,
                                          "attacker duck amount");
-        saveTemporalArrayOfVectorsToHDF5(attackerNextPrimaryAttack, file, startOffset, endOffset,
+        saveTemporalArrayOfVectorsToHDF5(attackerNextPrimaryAttack, file, startOffset,
                                          "attacker next primary attack");
-        saveTemporalArrayOfVectorsToHDF5(attackerNextSecondaryAttack, file, startOffset, endOffset,
+        saveTemporalArrayOfVectorsToHDF5(attackerNextSecondaryAttack, file, startOffset,
                                          "attacker next secondary attack");
-        saveTemporalArrayOfVectorsToHDF5(attackerGameTime, file, startOffset, endOffset,
+        saveTemporalArrayOfVectorsToHDF5(attackerGameTime, file, startOffset,
                                          "attacker game time");
-        saveTemporalVectorOfEnumsToHDF5(weaponId, file, startOffset, endOffset,
+        saveTemporalVectorOfEnumsToHDF5(weaponId, file, startOffset,
                                         "weapon id");
 
         H5Easy::dump(file, "/data/weapon type", vectorOfEnumsToVectorOfInts(weaponType),
                      defaultHDF5DumpOption);
-                                        */
         auto dude = vectorOfEnumsToVectorOfInts(weaponType);
         //file.createDataSet<int64_t>("id", )
         //return {"round id", "tick id", "demo tick id", "game tick id", "game time",
