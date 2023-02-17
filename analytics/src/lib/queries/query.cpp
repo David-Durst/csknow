@@ -5,6 +5,26 @@
 #include "queries/query.h"
 #include "enum_helpers.h"
 
+void QueryResult::toHDF5(const string &filePath) {
+    // We create an empty HDF55 file, by truncating an existing
+    // file if required:
+    HighFive::File file(filePath, HighFive::File::Overwrite);
+
+    // create id column
+    vector<int64_t> id_to_save;
+    id_to_save.reserve(size);
+    for (int64_t i = 0; i < size; i++) {
+        id_to_save.push_back(i);
+    }
+    HighFive::DataSetCreateProps hdf5CreateProps;
+    hdf5CreateProps.add(HighFive::Deflate(6));
+    hdf5CreateProps.add(HighFive::Chunking(id_to_save.size()));
+    file.createDataSet(hdf5Prefix + "id", id_to_save, hdf5CreateProps);
+
+    // create all other columns
+    toHDF5Inner(file);
+}
+
 void mergeThreadResults(int numThreads, vector<RangeIndexEntry> &rowIndicesPerRound, const vector<vector<int64_t>> & tmpRoundIds,
                         const vector<vector<int64_t>> & tmpRoundStarts, const vector<vector<int64_t>> & tmpRoundSizes,
                         vector<int64_t> & resultStartTickId, int64_t & resultSize,
