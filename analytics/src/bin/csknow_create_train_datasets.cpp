@@ -218,11 +218,12 @@ int main(int argc, char * argv[]) {
 
     // create the output files and the metadata describing files
     for (const auto & [name, result] : analyses) {
-        std::ofstream fsOverride;
+        //std::ofstream fsOverride;
         std::cout << "writing " << outputDir + "/" + name + ".csv" << std::endl;
-        fsOverride.open(outputDir + "/" + name + ".csv");
-        result.get().toCSV(fsOverride);
-        fsOverride.close();
+        //fsOverride.open(outputDir + "/" + name + ".csv");
+        //result.get().toCSV(fsOverride);
+        result.get().toHDF5(outputDir + "/" + name + ".hdf5");
+        //fsOverride.close();
     }
 
     return 0;

@@ -6,6 +6,8 @@
 #include <fstream>
 #include <functional>
 #include "load_data.h"
+#include "linear_algebra.h"
+#include <highfive/H5Easy.hpp>
 using std::vector;
 using std::stringstream;
 using std::string;
@@ -38,6 +40,21 @@ enum DataType {
     srcAndTarget = 3
 };
  */
+
+static inline
+string toSignedIntString(int64_t i, bool dropZero = false) {
+    if (dropZero && i == 0) {
+        return "";
+    }
+    if (i < 0) {
+        return std::to_string(i);
+    }
+    else {
+        return "+" + std::to_string(i);
+
+    }
+}
+
 class QueryResult {
 public:
 //    vector<int64_t> positionIndex;
@@ -65,6 +82,8 @@ public:
     int64_t blobTotalBytes = INVALID_ID;
     string extension = ".query";
     vector<int> keyPlayerColumns = {};
+    string hdf5Prefix = "/data/";
+    H5Easy::DumpOptions defaultHDF5DumpOption{H5Easy::Compression(9)};
 //    vector<int> keysForDiff;
 
     //virtual string toCSVFiltered(const Position & position, string game) = 0;
@@ -105,6 +124,28 @@ public:
         return ss.str();
     }
 
+    // TODO: Remove implementation, make all queries implement this
+    virtual void toHDF5Inner([[maybe_unused]] HighFive::File & file) {
+        throw std::runtime_error("HDFS saving not implemented for this query yet");
+    }
+
+    void toHDF5(const string& filePath) {
+        // We create an empty HDF55 file, by truncating an existing
+        // file if required:
+        H5Easy::File file(filePath, H5Easy::File::Overwrite);
+
+        // create id column
+        vector<int64_t> id_to_save;
+        id_to_save.reserve(size);
+        for (int64_t i = 0; i < size; i++) {
+            id_to_save.push_back(i);
+        }
+        H5Easy::dump(file, hdf5Prefix + "id", id_to_save, defaultHDF5DumpOption);
+
+        // create all other columns
+        toHDF5Inner(file);
+    }
+
     void addHeader(std::ostream & s) {
         s << "id";
         for (const auto & foreignKey : getForeignKeyNames()) {
@@ -116,18 +157,15 @@ public:
         s << std::endl;
     }
 
-    static
-    string toSignedIntString(int64_t i, bool dropZero = false) {
-        if (dropZero && i == 0) {
-            return "";
+    std::vector<string> getHeader() {
+        std::vector<string> result{"id"};
+        for (const auto & foreignKey : getForeignKeyNames()) {
+            result.push_back(foreignKey);
         }
-        if (i < 0) {
-            return std::to_string(i);
+        for (const auto & otherCol : getOtherColumnNames()) {
+            result.push_back(otherCol);
         }
-        else {
-            return "+" + std::to_string(i);
-
-        }
+        return result;
     }
 
     static
@@ -147,6 +185,36 @@ public:
     virtual vector<string> getForeignKeyNames() = 0;
     virtual vector<string> getOtherColumnNames() = 0;
 };
+
+template <typename T>
+std::vector<int> vectorOfEnumsToVectorOfInts(const std::vector<T> & vectorOfEnums);
+
+template <typename T, std::size_t _Nm>
+std::array<std::vector<T>, _Nm> vectorOfArraysToArrayOfVectors(const std::vector<std::array<T, _Nm>> & vectorOfArrays);
+
+template <std::size_t _Nm>
+std::array<std::array<std::vector<double>, 2>, _Nm>
+vectorOfVec2ArraysToArrayOfArrayOfVectors(const std::vector<std::array<Vec2, _Nm>> & vectorOfVec2Arrays);
+
+template <std::size_t _Nm>
+std::array<std::array<std::vector<double>, 3>, _Nm>
+vectorOfVec3ArraysToArrayOfArrayOfVectors(const std::vector<std::array<Vec3, _Nm>> & vectorOfVec3Arrays);
+
+template <typename T>
+void saveTemporalVectorOfEnumsToHDF5(const std::vector<T> & vectorOfEnums, HighFive::File & file,
+                                     int startOffset, int endOffset, const string & baseString);
+
+template <typename T, std::size_t _Nm>
+void saveTemporalArrayOfVectorsToHDF5(const std::vector<std::array<T, _Nm>> & vectorOfArrays, HighFive::File & file,
+                                      int startOffset, int endOffset, const string & baseString);
+
+template <std::size_t N>
+void saveTemporalArrayOfVec2VectorsToHDF5(const std::vector<std::array<Vec2, N>> & vectorOfVec2Arrays, HighFive::File & file,
+                                          int startOffset, int endOffset, const string & baseString);
+
+template <std::size_t _Nm>
+void saveTemporalArrayOfVec3VectorsToHDF5(const std::vector<std::array<Vec3, _Nm>> & vectorOfArrays, HighFive::File & file,
+                                          int startOffset, int endOffset, const string & baseString);
 
 void mergeThreadResults(int numThreads, vector<RangeIndexEntry> &rowIndicesPerRound, const vector<vector<int64_t>> & tmpRoundIds,
                         const vector<vector<int64_t>> & tmpRoundStarts, const vector<vector<int64_t>> & tmpRoundSizes,
