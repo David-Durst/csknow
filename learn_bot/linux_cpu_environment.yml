@@ -8,14 +8,16 @@ dependencies:
   - blas=1.0=mkl
   - bottleneck=1.3.2=py39hdd57654_1
   - bzip2=1.0.8=h7b6447c_0
-  - ca-certificates=2022.2.1=h06a4308_0
-  - certifi=2021.10.8=py39h06a4308_2
+  - ca-certificates=2023.01.10=h06a4308_0
+  - certifi=2022.12.7=py39h06a4308_0
   - cpuonly=2.0=0
   - ffmpeg=4.3=hf484d3e_0
   - freetype=2.11.0=h70c0345_0
   - giflib=5.2.1=h7b6447c_0
   - gmp=6.2.1=h2531618_2
   - gnutls=3.6.15=he1e5248_0
+  - h5py=2.10.0=py39hec9cf62_0
+  - hdf5=1.10.6=hb1b8bf9_0
   - intel-openmp=2021.4.0=h06a4308_3561
   - joblib=1.1.0=pyhd3eb1b0_0
   - jpeg=9d=h7f8727e_0
@@ -49,7 +51,7 @@ dependencies:
   - numpy-base=1.21.2=py39h79a1101_0
   - olefile=0.46=pyhd3eb1b0_0
   - openh264=2.1.1=h4ff587b_0
-  - openssl=1.1.1m=h7f8727e_0
+  - openssl=1.1.1t=h7f8727e_0
   - packaging=21.3=pyhd3eb1b0_0
   - pandas=1.4.1=py39h295c915_0
   - pillow=8.4.0=py39h5aabda8_0
