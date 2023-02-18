@@ -200,9 +200,9 @@ std::vector<array<int, N>> vectorOfEnumArraysToVectorOfIntArrays(const std::vect
 }
 
 template <std::size_t N>
-std::array<std::vector<std::array<float, N>>, 2>
-vectorOfVec2ArraysToArrayOfFloatVectors(const std::vector<std::array<Vec2, N>> & vectorOfVec2Arrays){
-    std::array<std::vector<std::array<float, N>>, 2> result;
+std::array<std::vector<std::array<double, N>>, 2>
+vectorOfVec2ArraysToArrayOfDoubleVectors(const std::vector<std::array<Vec2, N>> & vectorOfVec2Arrays){
+    std::array<std::vector<std::array<double, N>>, 2> result;
     for (size_t i = 0; i < result.size(); i++) {
         result[0].reserve(vectorOfVec2Arrays.size());
         result[1].reserve(vectorOfVec2Arrays.size());
@@ -212,10 +212,8 @@ vectorOfVec2ArraysToArrayOfFloatVectors(const std::vector<std::array<Vec2, N>> &
         result[0].push_back({});
         result[1].push_back({});
         for (size_t arrayIndex = 0; arrayIndex < vectorOfVec2Arrays.front().size(); arrayIndex++) {
-            result[0][vectorIndex][arrayIndex] =
-                static_cast<float>(vectorOfVec2Arrays[vectorIndex][arrayIndex].x);
-            result[1][vectorIndex][arrayIndex] =
-                static_cast<float>(vectorOfVec2Arrays[vectorIndex][arrayIndex].y);
+            result[0][vectorIndex][arrayIndex] = vectorOfVec2Arrays[vectorIndex][arrayIndex].x;
+            result[1][vectorIndex][arrayIndex] = vectorOfVec2Arrays[vectorIndex][arrayIndex].y;
         }
     }
 
@@ -223,9 +221,9 @@ vectorOfVec2ArraysToArrayOfFloatVectors(const std::vector<std::array<Vec2, N>> &
 }
 
 template <std::size_t N>
-std::array<std::vector<std::array<float, N>>, 3>
-vectorOfVec3ArraysToArrayOfFloatVectors(const std::vector<std::array<Vec3, N>> & vectorOfVec3Arrays){
-    std::array<std::vector<std::array<float, N>>, 3> result;
+std::array<std::vector<std::array<double, N>>, 3>
+vectorOfVec3ArraysToArrayOfDoubleVectors(const std::vector<std::array<Vec3, N>> & vectorOfVec3Arrays){
+    std::array<std::vector<std::array<double, N>>, 3> result;
     for (size_t i = 0; i < result.size(); i++) {
         result[0].reserve(vectorOfVec3Arrays.size());
         result[1].reserve(vectorOfVec3Arrays.size());
@@ -237,12 +235,9 @@ vectorOfVec3ArraysToArrayOfFloatVectors(const std::vector<std::array<Vec3, N>> &
         result[1].push_back({});
         result[2].push_back({});
         for (size_t arrayIndex = 0; arrayIndex < vectorOfVec3Arrays.front().size(); arrayIndex++) {
-            result[0][vectorIndex][arrayIndex] =
-                static_cast<float>(vectorOfVec3Arrays[vectorIndex][arrayIndex].x);
-            result[1][vectorIndex][arrayIndex] =
-                static_cast<float>(vectorOfVec3Arrays[vectorIndex][arrayIndex].y);
-            result[2][vectorIndex][arrayIndex] =
-                static_cast<float>(vectorOfVec3Arrays[vectorIndex][arrayIndex].z);
+            result[0][vectorIndex][arrayIndex] = vectorOfVec3Arrays[vectorIndex][arrayIndex].x;
+            result[1][vectorIndex][arrayIndex] = vectorOfVec3Arrays[vectorIndex][arrayIndex].y;
+            result[2][vectorIndex][arrayIndex] = vectorOfVec3Arrays[vectorIndex][arrayIndex].z;
         }
     }
 
@@ -288,8 +283,8 @@ template <std::size_t N>
 void saveTemporalArrayOfVec2VectorsToHDF5(const std::vector<std::array<Vec2, N>> & vectorOfVec2Arrays, HighFive::File & file,
                                           int startOffset, const string & baseString,
                                           const HighFive::DataSetCreateProps & hdf5CreateProps) {
-    std::array<std::vector<std::array<float, N>>, 2> arrayOfArrayOfVectors =
-        vectorOfVec2ArraysToArrayOfFloatVectors(vectorOfVec2Arrays);
+    std::array<std::vector<std::array<double, N>>, 2> arrayOfArrayOfVectors =
+        vectorOfVec2ArraysToArrayOfDoubleVectors(vectorOfVec2Arrays);
     HighFive::DataSet xDataset =
         file.createDataSet("/data/" + baseString + " x", arrayOfArrayOfVectors[0], hdf5CreateProps);
     HighFive::DataSet yDataset =
@@ -317,8 +312,8 @@ template <std::size_t N>
 void saveTemporalArrayOfVec3VectorsToHDF5(const std::vector<std::array<Vec3, N>> & vectorOfVec3Arrays, HighFive::File & file,
                                           int startOffset, const string & baseString,
                                           const HighFive::DataSetCreateProps & hdf5CreateProps) {
-    std::array<std::vector<std::array<float, N>>, 3> arrayOfArrayOfVectors =
-            vectorOfVec3ArraysToArrayOfFloatVectors(vectorOfVec3Arrays);
+    std::array<std::vector<std::array<double, N>>, 3> arrayOfArrayOfVectors =
+            vectorOfVec3ArraysToArrayOfDoubleVectors(vectorOfVec3Arrays);
     HighFive::DataSet xDataset =
         file.createDataSet("/data/" + baseString + " x", arrayOfArrayOfVectors[0], hdf5CreateProps);
     HighFive::DataSet yDataset =
@@ -342,7 +337,7 @@ void saveTemporalArrayOfVec3VectorsToHDF5(const std::vector<std::array<Vec3, N>>
         }
         xNamesStream << baseString + " x (t" + toSignedIntString(arrayIndex + startOffset, true) + ")";
         yNamesStream << baseString + " y (t" + toSignedIntString(arrayIndex + startOffset, true) + ")";
-        yNamesStream << baseString + " z (t" + toSignedIntString(arrayIndex + startOffset, true) + ")";
+        zNamesStream << baseString + " z (t" + toSignedIntString(arrayIndex + startOffset, true) + ")";
     }
     xNames.write(xNamesStream.str());
     yNames.write(yNamesStream.str());
