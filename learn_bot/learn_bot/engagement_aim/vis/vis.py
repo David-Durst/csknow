@@ -17,6 +17,8 @@ from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
 from matplotlib import gridspec
 
+from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd, compare_to_csv
+
 weapon_type_to_str = {
     0: "Pistol",
     1: "SMG",
@@ -427,7 +429,16 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame = None):
 orig_dataset = True
 if __name__ == "__main__":
     if orig_dataset:
-        all_data_df = pd.read_csv(data_path)
+        #import time
+        #start_new = time.process_time()
+        all_data_df = load_hdf5_to_pd(hdf5_data_path)
+        #print(all_data_df.columns)
+        #end_new = time.process_time()
+        #old_all_data_df = pd.read_csv(data_path)
+        #end_old = time.process_time()
+        #compare_to_csv(all_data_df, old_all_data_df)
+        #end_compare = time.process_time()
+        #print(f'''new time {end_new - start_new}s, old time {end_old - end_new}s, compare {end_compare - end_old}s''')
     else:
         all_data_df = pd.read_csv(manual_data_path)
     vis(all_data_df)
