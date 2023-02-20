@@ -29,6 +29,7 @@
 #include "queries/nav_danger.h"
 #include "queries/nav_cells.h"
 #include "queries/distance_to_places.h"
+#include "queries/orders.h"
 #include "queries/moments/aggression_event.h"
 #include "queries/moments/fire_history.h"
 #include "queries/moments/engagement.h"
@@ -167,6 +168,12 @@ int main(int argc, char * argv[]) {
     string dust2DangerName = "de_dust2_danger";
     NavDangerResult d2NavDangerResult = queryNavDanger(map_visPoints.find("de_dust2")->second, dust2MeshName);
 
+    // orders
+    string ordersName = "orders";
+    std::cout << "processing orders" << std::endl;
+    csknow::orders::OrdersResult ordersResult(map_visPoints.at("de_dust2"), d2MeshResult, d2DistanceToPlacesResult);
+    ordersResult.runQuery();
+    std::cout << "size: " << ordersResult.size << std::endl;
 
     // fire history
     string fireHistoryName = "fireHistory";

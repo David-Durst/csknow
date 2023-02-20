@@ -99,13 +99,13 @@ public:
     }
 
     [[maybe_unused]]
-    bool isVisiblePlace(AreaId srcId, const string & placeName, const map<string, vector<AreaId>> & placeToArea) {
+    bool isVisiblePlace(AreaId srcId, const string & placeName, const map<string, vector<AreaId>> & placeToArea) const {
         AreaBits visibleAreasInPlace;
         if (placeToArea.find(placeName) == placeToArea.end()) {
             return false;
         }
         for (const auto & areaId : placeToArea.find(placeName)->second) {
-            visibleAreasInPlace.set(areaIdToVectorIndex[areaId], true);
+            visibleAreasInPlace.set(areaIdToVectorIndex.at(areaId), true);
         }
         visibleAreasInPlace &= getVisibilityRelativeToSrc(srcId);
         return visibleAreasInPlace.any();

@@ -84,6 +84,15 @@ public:
     }
 
     [[nodiscard]]
+    double getClosestDistance(string srcPlaceName, PlaceIndex dstPlace) const {
+        double minDistance = std::numeric_limits<double>::max();
+        for (const auto & srcAreaId : placeToArea.at(srcPlaceName)) {
+            minDistance = std::min(minDistance, getClosestDistance(srcAreaId, dstPlace));
+        }
+        return minDistance;
+    }
+
+    [[nodiscard]]
     double getClosestDistance(AreaId srcAreaId, const string & dstPlaceName, const nav_mesh::nav_file & navFile) const {
         int64_t srcArea = static_cast<int64_t>(navFile.m_area_ids_to_indices.find(srcAreaId)->second);
         PlaceIndex dstPlace = placeNameToIndex.find(dstPlaceName)->second;
@@ -130,6 +139,11 @@ public:
         size_t srcArea = navFile.m_area_ids_to_indices.find(srcAreaId)->second,
                 dstPlace = placeNameToIndex.find(dstPlaceName)->second;
         return areaIndexToId[getMedianArea(static_cast<int64_t>(srcArea), static_cast<int64_t>(dstPlace))];
+    }
+
+    [[nodiscard]]
+    bool placeValid(PlaceIndex placeIndex) const {
+        return !places[placeIndex].empty();
     }
 
     void load(const string & mapsPath, const string & mapName, const nav_mesh::nav_file & navFile,
