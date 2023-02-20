@@ -143,7 +143,7 @@ public:
 
     [[nodiscard]]
     bool placeValid(PlaceIndex placeIndex) const {
-        return !places[placeIndex].empty();
+        return placeIndex < places.size();
     }
 
     void load(const string & mapsPath, const string & mapName, const nav_mesh::nav_file & navFile,

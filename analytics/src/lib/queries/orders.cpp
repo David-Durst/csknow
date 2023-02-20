@@ -8,9 +8,10 @@ namespace csknow::orders {
     struct PossibleOrder {
         std::vector<PlaceIndex> placesVec;
         std::set<PlaceIndex> placesSet;
+        std::vector<string> placesNames;
 
-        PossibleOrder(const std::vector<PlaceIndex> & places) :
-            placesVec(places), placesSet(placesVec.begin(), placesVec.end()) { }
+        PossibleOrder(const std::vector<PlaceIndex> & places, const std::vector<string> & placesNames) :
+            placesVec(places), placesSet(placesVec.begin(), placesVec.end()), placesNames(placesNames) { }
     };
 
     // for each place, compute all places that are reachable in one area edge
@@ -18,11 +19,16 @@ namespace csknow::orders {
         map<PlaceIndex, set<PlaceIndex>> result;
         for (PlaceIndex srcPlaceIndex = 0; srcPlaceIndex < distanceToPlacesResult.places.size(); srcPlaceIndex++) {
             const string & srcPlaceName = distanceToPlacesResult.places[srcPlaceIndex];
-            for (const auto & srcAreaIndex : distanceToPlacesResult.placeToArea.at(srcPlaceName)) {
+            for (const auto & srcAreaId : distanceToPlacesResult.placeToArea.at(srcPlaceName)) {
+                int64_t srcAreaIndex = mapMeshResult.areaToInternalId.at(srcAreaId);
                 for (size_t i = 0; i < mapMeshResult.connectionAreaIds[srcAreaIndex].size(); i++) {
-                    int64_t destId = mapMeshResult.areaToInternalId.at(mapMeshResult.connectionAreaIds[srcAreaIndex][i]);
-                    PlaceIndex dstPlaceIndex = distanceToPlacesResult.areaToPlace[destId];
-                    if (distanceToPlacesResult.placeValid(dstPlaceIndex)) {
+                    int64_t destIndex = mapMeshResult.areaToInternalId.at(mapMeshResult.connectionAreaIds[srcAreaIndex][i]);
+                    PlaceIndex dstPlaceIndex = distanceToPlacesResult.areaToPlace[destIndex];
+                    // TODO: fix with ability to walk through invalid regions, for now, fixing one in bdoors/b on d2
+                    if (destIndex == 1077) {
+                        dstPlaceIndex = distanceToPlacesResult.placeNameToIndex.at("BombsiteB");
+                    }
+                    if (dstPlaceIndex != srcPlaceIndex && distanceToPlacesResult.placeValid(dstPlaceIndex)) {
                         result[srcPlaceIndex].insert(dstPlaceIndex);
                     }
                 }
@@ -39,32 +45,39 @@ namespace csknow::orders {
     // need to do a DFS where allow re-exploration, just not cycles
     struct DFSOrderState {
         std::vector<PlaceIndex> curPath;
+        std::vector<string> curPathNames;
         std::vector<std::vector<PlaceIndex>> branchOptions;
         std::vector<size_t> curBranchIndices;
 
-        void pop() {
+        void pop_and_increment() {
             curPath.pop_back();
+            curPathNames.pop_back();
             branchOptions.pop_back();
             curBranchIndices.pop_back();
+            if (!curBranchIndices.empty()) {
+                curBranchIndices.back()++;
+            }
         }
     };
 
-    std::vector<PossibleOrder> computeAllPossibleOrders(const map<PlaceIndex, vector<PlaceIndex>> & connectedPlaces,
-                                                        OrderLandmarks landmarks) {
+    std::vector<PossibleOrder> computeAllPossibleOrders(const DistanceToPlacesResult & distanceToPlacesResult,
+            const map<PlaceIndex, vector<PlaceIndex>> & connectedPlaces, OrderLandmarks landmarks) {
         std::vector<PossibleOrder> result;
 
         DFSOrderState dfsOrderState{{landmarks.startPlace},
+                                    {distanceToPlacesResult.places.at(landmarks.startPlace)},
                                     {connectedPlaces.at(landmarks.startPlace)}, {0}};
 
         // done if empty
         while (!dfsOrderState.branchOptions.empty()) {
             // done with current level of branch if hit all options
-            if (dfsOrderState.curBranchIndices.back() == dfsOrderState.branchOptions.size()) {
-                dfsOrderState.pop();
+            if (dfsOrderState.curBranchIndices.back() == dfsOrderState.branchOptions.back().size()) {
+                dfsOrderState.pop_and_increment();
             }
             // append path if it ends at goal
             else if (dfsOrderState.curPath.back() == landmarks.endPlace) {
-                result.push_back(PossibleOrder(dfsOrderState.curPath));
+                result.push_back(PossibleOrder(dfsOrderState.curPath, dfsOrderState.curPathNames));
+                dfsOrderState.pop_and_increment();
             }
             // if not start, other objective, or cycle, then step in a layer
             else {
@@ -73,8 +86,11 @@ namespace csknow::orders {
                 bool nextPlaceIsOtherObjective = nextPlaceIndex == landmarks.otherObjective;
                 bool cycle = std::find(dfsOrderState.curPath.begin(), dfsOrderState.curPath.end(), nextPlaceIndex) !=
                     dfsOrderState.curPath.end();
-                if (!nextPlaceIsStart && !nextPlaceIsOtherObjective && !cycle) {
+                // map mesh has some accidental duplicate names, like Ramp and ARamp
+                bool invalidName = distanceToPlacesResult.places[nextPlaceIndex] == "Ramp";
+                if (!nextPlaceIsStart && !nextPlaceIsOtherObjective && !cycle && !invalidName) {
                     dfsOrderState.curPath.push_back(nextPlaceIndex);
+                    dfsOrderState.curPathNames.push_back(distanceToPlacesResult.places[nextPlaceIndex]);
                     dfsOrderState.branchOptions.push_back(connectedPlaces.at(nextPlaceIndex));
                     dfsOrderState.curBranchIndices.push_back(0);
                 }
@@ -176,6 +192,7 @@ namespace csknow::orders {
                 result.push_back(nonSupersetOrders[orderIndex]);
             }
         }
+        return result;
     }
 
     void OrdersResult::runQuery() {
@@ -189,8 +206,9 @@ namespace csknow::orders {
                                   distanceToPlacesResult.placeNameToIndex.at("BombsiteA")};
 
         // step 1: any possible sequence of places that don't repeat and don't hit start/other objective
-        std::vector<PossibleOrder> aAllPossibleOrders = computeAllPossibleOrders(connectedPlaces, aLandmarks),
-            bAllPossibleOrders = computeAllPossibleOrders(connectedPlaces, bLandmarks);
+        std::vector<PossibleOrder> aAllPossibleOrders =
+                computeAllPossibleOrders(distanceToPlacesResult, connectedPlaces, aLandmarks),
+                bAllPossibleOrders = computeAllPossibleOrders(distanceToPlacesResult, connectedPlaces, bLandmarks);
 
         // step 2: sort longest to shortest number of places, cull longest if anything shorter is strict subset with same
         // non-end last
