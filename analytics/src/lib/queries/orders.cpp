@@ -79,16 +79,23 @@ namespace csknow::orders {
                 result.push_back(PossibleOrder(dfsOrderState.curPath, dfsOrderState.curPathNames));
                 dfsOrderState.pop_and_increment();
             }
-            // if not start, other objective, or cycle, then step in a layer
+            // if not start, other objective, adjacent to other objective, or cycle, then step in a layer
+            // need adjacent to other objective as can go A long -> under A -> CT spawn -> b slope -> B
+            // without touching A site on d2, this removes that (similar issue with forklift near A on cache)
             else {
                 PlaceIndex nextPlaceIndex = dfsOrderState.branchOptions.back()[dfsOrderState.curBranchIndices.back()];
                 bool nextPlaceIsStart = nextPlaceIndex == landmarks.startPlace;
                 bool nextPlaceIsOtherObjective = nextPlaceIndex == landmarks.otherObjective;
+                bool nextPlaceIsNextToOtherObjective =
+                    std::find(connectedPlaces.at(landmarks.otherObjective).begin(),
+                              connectedPlaces.at(landmarks.otherObjective).end(),
+                              nextPlaceIndex) != connectedPlaces.at(landmarks.otherObjective).end();
                 bool cycle = std::find(dfsOrderState.curPath.begin(), dfsOrderState.curPath.end(), nextPlaceIndex) !=
                     dfsOrderState.curPath.end();
                 // map mesh has some accidental duplicate names, like Ramp and ARamp
                 bool invalidName = distanceToPlacesResult.places[nextPlaceIndex] == "Ramp";
-                if (!nextPlaceIsStart && !nextPlaceIsOtherObjective && !cycle && !invalidName) {
+                if (!nextPlaceIsStart && !nextPlaceIsOtherObjective && !nextPlaceIsNextToOtherObjective &&
+                    !cycle && !invalidName) {
                     dfsOrderState.curPath.push_back(nextPlaceIndex);
                     dfsOrderState.curPathNames.push_back(distanceToPlacesResult.places[nextPlaceIndex]);
                     dfsOrderState.branchOptions.push_back(connectedPlaces.at(nextPlaceIndex));
@@ -120,7 +127,10 @@ namespace csknow::orders {
                     allPossibleOrders[possibleOrderIndex].placesSet.begin(),
                     allPossibleOrders[possibleOrderIndex].placesSet.end(),
                     std::back_inserter(intersection));
-                if (intersection.size() == allPossibleOrders[smallerOrderIndex].placesSet.size()) {
+                // don't compare actual last as that's the end, want the connection to end
+                bool sameEnd = allPossibleOrders[possibleOrderIndex].placesVec.end()[-2] ==
+                    allPossibleOrders[smallerOrderIndex].placesVec.end()[-2];
+                if (intersection.size() == allPossibleOrders[smallerOrderIndex].placesSet.size() && sameEnd) {
                     isSuperset = true;
                     break;
                 }
@@ -212,7 +222,7 @@ namespace csknow::orders {
 
         // step 2: sort longest to shortest number of places, cull longest if anything shorter is strict subset with same
         // non-end last
-        // need to compare non-start first and non-end last as want to remove order like pit in long A path
+        // need to compare non-end last as want to remove order like pit in long A path
         // while keeping unique endings like B window
         std::vector<PossibleOrder> aNonSupersetOrders = filterSupersetOrders(aAllPossibleOrders),
             bNonSupersetOrders = filterSupersetOrders(bAllPossibleOrders);
@@ -242,5 +252,6 @@ namespace csknow::orders {
         for (const auto & bOrder : bUniqueEndingOrders) {
             orders.push_back({bOrder.placesVec, OrderType::BOrder});
         }
+        size = orders.size();
     }
 }
