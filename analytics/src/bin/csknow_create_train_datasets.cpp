@@ -30,6 +30,7 @@
 #include "queries/nav_cells.h"
 #include "queries/distance_to_places.h"
 #include "queries/orders.h"
+#include "queries/nearest_nav_area.h"
 #include "queries/moments/aggression_event.h"
 #include "queries/moments/fire_history.h"
 #include "queries/moments/engagement.h"
@@ -174,6 +175,13 @@ int main(int argc, char * argv[]) {
     csknow::orders::OrdersResult ordersResult(map_visPoints.at("de_dust2"), d2MeshResult, d2DistanceToPlacesResult);
     ordersResult.runQuery();
     std::cout << "size: " << ordersResult.size << std::endl;
+
+    // nearest nav areas
+    string nearestNavAreasName = "nearestNavAreas";
+    std::cout << "processing nearestNavAreas" << std::endl;
+    csknow::nearest_nav_area::NearestNavArea nearestNavAreaResult;
+    nearestNavAreaResult.runQuery(filteredRounds, ticks, playerAtTick, map_navs.at("de_dust2"));
+    std::cout << "size: " << nearestNavAreaResult.size << std::endl;
 
     // fire history
     string fireHistoryName = "fireHistory";
