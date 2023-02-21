@@ -325,20 +325,13 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
                     vector<CellIdAndDistance> victimCellIdsByDistances = nearestNavCell.getNearestCells(
                         victimEyePos);
                     /*
-                    vector<CellIdAndDistance> attackerCellIdsByDistances = visPoints.getCellVisPointsByDistance(
-                        attackerEyePos);
-                    vector<CellIdAndDistance> victimCellIdsByDistances = visPoints.getCellVisPointsByDistance(
+                    vector<CellIdAndDistance> otherVictimCellIdsByDistances = visPoints.getCellVisPointsByDistance(
                         victimEyePos);
-                    Vec3 testPos{424.170000,2057.500000,268.930000};
-                    vector<CellIdAndDistance> oldRes = visPoints.getCellVisPointsByDistance(
-                        testPos);
-                    vector<CellIdAndDistance> newRes = nearestNavCell.getNearestCells(
-                        testPos);
-                    if (victimCellIdsByDistances[0].distance < otherVictimCellIdsByDistances[0].distance ||
-                        victimCellIdsByDistances[1].distance < otherVictimCellIdsByDistances[1].distance) {
+                    if (victimCellIdsByDistances[0].distance > otherVictimCellIdsByDistances[0].distance ||
+                        victimCellIdsByDistances[1].distance > otherVictimCellIdsByDistances[1].distance) {
                         std::cout << "bad victim cell distance, pos: " << victimEyePos.toCSV() << std::endl;
                     }
-                        */
+                     */
                     vector<CellVisPoint> victimTwoClosestCellVisPoints = {
                         visPoints.getCellVisPoints()[victimCellIdsByDistances[0].cellId],
                         visPoints.getCellVisPoints()[victimCellIdsByDistances[1].cellId]

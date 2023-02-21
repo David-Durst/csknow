@@ -29,7 +29,7 @@ namespace csknow::nearest_nav_cell {
         IVec3 gridDimensions;
         const VisPoints & visPoints;
 
-        NearestNavCell(const VisPoints & visPoints) : visPoints(visPoints) {
+        explicit NearestNavCell(const VisPoints & visPoints) : visPoints(visPoints) {
             variableLength = false;
             nonTemporal = true;
             overlay = true;
