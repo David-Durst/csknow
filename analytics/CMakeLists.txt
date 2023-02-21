@@ -27,7 +27,7 @@ set(HIGHFIVE_USE_BOOST OFF)
 set(HIGHFIVE_UNIT_TESTS OFF)
 set(HIGHFIVE_UNIT_TESTS OFF CACHE STRING "")
 set(HIGHFIVE_BUILD_DOCS OFF)
-add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/external/HighFive")
+add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/external/HighFive" EXCLUDE_FROM_ALL)
 
 list(APPEND CMAKE_PREFIX_PATH "${CMAKE_SOURCE_DIR}/external/libtorch")
 foreach(path ${CMAKE_PREFIX_PATH})
