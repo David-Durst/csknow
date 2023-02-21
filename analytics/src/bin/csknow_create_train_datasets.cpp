@@ -179,7 +179,7 @@ int main(int argc, char * argv[]) {
     // nearest nav areas
     string nearestNavAreasName = "nearestNavAreas";
     std::cout << "processing nearestNavAreas" << std::endl;
-    csknow::nearest_nav_area::NearestNavCell nearestNavCellResult;
+    csknow::nearest_nav_cell::NearestNavCell nearestNavCellResult;
     nearestNavCellResult.runQuery(filteredRounds, ticks, playerAtTick, map_visPoints.at("de_dust2"), navPath, "de_dust2");
     std::cout << "size: " << nearestNavCellResult.size << std::endl;
 
@@ -223,7 +223,7 @@ int main(int argc, char * argv[]) {
     string engagementAimName = "engagementAim";
     TrainingEngagementAimResult engagementAimResult =
         queryTrainingEngagementAim(games, filteredRounds, ticks, playerAtTick, engagementResult,
-                                   fireHistoryResult, map_visPoints.at("de_dust2"));
+                                   fireHistoryResult, map_visPoints.at("de_dust2"), nearestNavCellResult);
     std::cout << "size: " << engagementAimResult.size << std::endl;
 
     map<string, reference_wrapper<QueryResult>> analyses {

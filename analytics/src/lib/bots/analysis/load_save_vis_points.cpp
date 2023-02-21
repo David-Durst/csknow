@@ -436,7 +436,8 @@ namespace vis_point_helpers {
     }
 }
 
-vector<CellIdAndDistance> VisPoints::getCellVisPointsByDistance(const Vec3 &pos) const {
+vector<CellIdAndDistance> VisPoints::getCellVisPointsByDistance(const Vec3 &pos, size_t maxAreasToConsider,
+                                                                size_t maxCellsToConsider) const {
     vector<nav_mesh::AreaDistance> areaDistances = navFile.get_area_distances_to_position(vec3Conv(pos));
     // a small number of areas have no cells, pick at least first two area that's closest and enough that at least
     // three cells
@@ -447,7 +448,7 @@ vector<CellIdAndDistance> VisPoints::getCellVisPointsByDistance(const Vec3 &pos)
     for (const auto & areaDistance : areaDistances) {
         numAreasToConsider++;
         numCellsToConsider += areaVisPoints[areaIdToIndex(areaDistance.areaId)].cells.size();
-        if (numAreasToConsider >= 2 && numCellsToConsider >= 3) {
+        if (numAreasToConsider >= maxAreasToConsider && numCellsToConsider >= maxCellsToConsider) {
             break;
         }
     }

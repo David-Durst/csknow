@@ -12,8 +12,8 @@ using std::set;
 using std::unordered_map;
 using std::vector;
 
-namespace csknow::nearest_nav_area {
-    constexpr size_t numNearestCellsPerGridEntry = 2;
+namespace csknow::nearest_nav_cell {
+    constexpr size_t numNearestCellsPerGridEntry = 10;
 
     typedef std::array<CellIdAndDistance, numNearestCellsPerGridEntry> NearestGridData;
 
@@ -29,6 +29,7 @@ namespace csknow::nearest_nav_area {
             variableLength = false;
             nonTemporal = true;
             overlay = true;
+            extension = ".near";
         }
 
         vector<int64_t> filterByForeignKey(int64_t) override {
@@ -38,9 +39,11 @@ namespace csknow::nearest_nav_area {
         void oneLineToCSV(int64_t index, std::ostream & s) override {
             s << index << ","
                 << gridEntryAABB[index].min.toCSV() << ","
-                << gridEntryAABB[index].max.toCSV() << ","
-                << nearestCellsGrid[index][0].cellId << "," << nearestCellsGrid[index][0].distance
-                << nearestCellsGrid[index][1].cellId << "," << nearestCellsGrid[index][1].distance;
+                << gridEntryAABB[index].max.toCSV();
+            for (size_t i = 0; i < numNearestCellsPerGridEntry; i++) {
+                s << "," << nearestCellsGrid[index][i].cellId;
+                s << "," << nearestCellsGrid[index][i].distance;
+            }
         }
 
         vector<string> getForeignKeyNames() override {
@@ -48,8 +51,11 @@ namespace csknow::nearest_nav_area {
         }
 
         vector<string> getOtherColumnNames() override {
-            return {"min x", "min y", "min z", "max x", "max y", "max z", "nearest cell id", "nearest cell distance",
-                    "second nearest cell id", "second nearest cell distance"};
+            vector<string> result = {"min x", "min y", "min z", "max x", "max y", "max z"};
+            for (size_t i = 0; i < numNearestCellsPerGridEntry; i++) {
+                result.push_back(std::to_string(i) + " nearest cell id");
+            }
+            return result;
         }
 
         IVec3 posToGridIndex(Vec3 pos) {

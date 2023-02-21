@@ -20,6 +20,7 @@
 #include "enum_helpers.h"
 #include "queries/moments/engagement.h"
 #include "queries/moments/fire_history.h"
+#include "queries/nearest_nav_cell.h"
 
 using std::string;
 using std::vector;
@@ -329,6 +330,8 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
                                                        const PlayerAtTick & playerAtTick,
                                                        const EngagementResult & engagementResult,
                                                        const csknow::fire_history::FireHistoryResult & fireHistoryResult,
-                                                       const VisPoints & visPoints, bool parallelize = true);
+                                                       const VisPoints & visPoints,
+                                                       const csknow::nearest_nav_cell::NearestNavCell & nearestNavCell,
+                                                       bool parallelize = true);
 
 #endif //CSKNOW_TRAINING_ENGAGEMENT_AIM_H

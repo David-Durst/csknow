@@ -20,7 +20,9 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
                                                        const PlayerAtTick & playerAtTick,
                                                        const EngagementResult & engagementResult,
                                                        const csknow::fire_history::FireHistoryResult & fireHistoryResult,
-                                                       const VisPoints & visPoints, bool parallelize) {
+                                                       const VisPoints & visPoints,
+                                                       const csknow::nearest_nav_cell::NearestNavCell & nearestNavCell,
+                                                       bool parallelize) {
     int numThreads = omp_get_max_threads();
     std::atomic<int64_t> roundsProcessed = 0;
     vector<vector<int64_t>> tmpRoundIds(numThreads);

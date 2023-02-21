@@ -142,7 +142,9 @@ public:
     }
     [[nodiscard]] const AABB & getAreaBounds() const { return areaBounds; };
     [[nodiscard]] const CellDiscreteCoord & getMaxCellNumbersByDim() const { return maxCellNumbersByDim; };
-    [[nodiscard]] vector<CellIdAndDistance> getCellVisPointsByDistance(const Vec3 & pos) const;
+    [[nodiscard]] vector<CellIdAndDistance> getCellVisPointsByDistance(const Vec3 & pos,
+                                                                       size_t maxAreasToConsider = 2,
+                                                                       size_t maxCellsToConsider = 3) const;
     [[nodiscard]] const size_t & areaIdToIndex(AreaId areaId) const { return areaIdToVectorIndex.at(areaId); };
     [[nodiscard]] const AreaVisPoint & getAreaVisPoint(AreaId areaId) const { return areaVisPoints[areaIdToIndex(areaId)]; }
 };

@@ -7,9 +7,9 @@
 #include <filesystem>
 #include <atomic>
 
-namespace csknow::nearest_nav_area {
+namespace csknow::nearest_nav_cell {
     void NearestNavCell::load(const string &mapsPath, const string &mapName) {
-        string nearestFileName = mapName + ".near";
+        string nearestFileName = mapName + extension;
         string nearestFilePath = mapsPath + "/" + nearestFileName;
 
         if (std::filesystem::exists(nearestFilePath)) {
@@ -42,19 +42,14 @@ namespace csknow::nearest_nav_area {
                 getline(nearestStream, value, ',');
                 gridEntryAABB[index].max.z = std::stod(value);
 
-                getline(nearestStream, value, ',');
                 nearestCellsGrid.push_back({});
-                nearestCellsGrid[index][0].cellId = std::stoul(value);
+                for (size_t i = 0; i < numNearestCellsPerGridEntry; i++) {
+                    getline(nearestStream, value, ',');
+                    nearestCellsGrid[index][i].cellId = std::stoul(value);
 
-                getline(nearestStream, value, ',');
-                nearestCellsGrid[index][0].distance = std::stod(value);
-
-                nearestCellsGrid.push_back({});
-                nearestCellsGrid[index][1].cellId = std::stoul(value);
-
-                getline(nearestStream, value, ',');
-                nearestCellsGrid[index][1].distance = std::stod(value);
-
+                    getline(nearestStream, value, ',');
+                    nearestCellsGrid[index][i].distance = std::stod(value);
+                }
                 index++;
             }
             size = static_cast<int64_t>(nearestCellsGrid.size());
@@ -70,7 +65,7 @@ namespace csknow::nearest_nav_area {
 
     void NearestNavCell::runQuery(const Rounds & rounds, const Ticks & ticks, const PlayerAtTick & playerAtTick,
                                   const VisPoints & visPoints, const string & mapsPath, const string & mapName) {
-        string nearestFileName = mapName + ".near";
+        string nearestFileName = mapName + extension;
         string nearestFilePath = mapsPath + "/" + nearestFileName;
 
         if (std::filesystem::exists(nearestFilePath)) {
@@ -126,7 +121,7 @@ namespace csknow::nearest_nav_area {
                         gridIndexToAABB(gridIndex) = {gridIndexToPos(gridIndex), gridIndexToPos(gridIndex) + 1};
 
                         vector<CellIdAndDistance> cellVisPointsByDistance =
-                            visPoints.getCellVisPointsByDistance(gridIndexToPos(gridIndex));
+                            visPoints.getCellVisPointsByDistance(gridIndexToPos(gridIndex), 10, 10);
                         gridIndexToNearestCells(gridIndex)[0] = cellVisPointsByDistance[0];
                         gridIndexToNearestCells(gridIndex)[1] = cellVisPointsByDistance[1];
                     }
