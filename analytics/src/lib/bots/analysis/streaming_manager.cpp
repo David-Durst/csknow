@@ -4,6 +4,7 @@
 
 #include <bots/analysis/streaming_manager.h>
 #include <bots/analysis/weapon_id_converter.h>
+#include "bots/analysis/vis_geometry.h"
 
 void StreamingManager::update(const ServerState & state) {
     // if any client teleports, clear everyone's history
@@ -51,7 +52,9 @@ void StreamingManager::update(const ServerState & state) {
 }
 
 void StreamingManager::update(const Players & players, const Ticks & ticks, const WeaponFire & weaponFire,
-                              const Hurt & hurt, const PlayerAtTick & playerAtTick, int64_t tickIndex) {
+                              const Hurt & hurt, const PlayerAtTick & playerAtTick, int64_t tickIndex,
+                              const csknow::nearest_nav_cell::NearestNavCell & nearestNavCell,
+                              const VisPoints & visPoints) {
     ServerState newState;
 
     for (int64_t patIndex = ticks.patPerTick[tickIndex].minId;
@@ -132,6 +135,18 @@ void StreamingManager::update(const Players & players, const Ticks & ticks, cons
         newState.clients.push_back(newClient);
     }
 
+    for (size_t outerClientIndex = 0; outerClientIndex < newState.clients.size(); outerClientIndex++) {
+        const ServerState::Client & outerClient = newState.clients[outerClientIndex];
+        for (size_t innerClientIndex = outerClientIndex + 1; innerClientIndex < newState.clients.size();
+            innerClientIndex++) {
+            const ServerState::Client & innerClient = newState.clients[innerClientIndex];
+            if (demoIsVisible(playerAtTick, outerClient.csgoId, innerClient.csgoId,
+                              nearestNavCell, visPoints)) {
+                newState.visibilityClientPairs.insert({outerClient.csgoId, innerClient.csgoId});
+            }
+        }
+    }
+
     for (const auto & [_0, _1, hurtIndex] :
         ticks.hurtPerTick.intervalToEvent.findOverlapping(tickIndex, tickIndex)) {
         ServerState::Hurt newHurt {
@@ -162,4 +177,53 @@ void StreamingManager::update(const Players & players, const Ticks & ticks, cons
     newState.setClientIdTrackers();
 
     update(newState);
+}
+
+bool demoIsVisible(const PlayerAtTick & playerAtTick, int64_t attackerPATId, int64_t victimPATId,
+                   const csknow::nearest_nav_cell::NearestNavCell & nearestNavCell,
+                   const VisPoints & visPoints) {
+
+    Vec3 attackerEyePos {
+            playerAtTick.posX[attackerPATId],
+            playerAtTick.posY[attackerPATId],
+            playerAtTick.eyePosZ[attackerPATId]
+    };
+
+    Vec3 victimEyePos {
+            playerAtTick.posX[victimPATId],
+            playerAtTick.posY[victimPATId],
+            playerAtTick.eyePosZ[victimPATId]
+    };
+
+    Vec2 curViewAngle {
+            playerAtTick.viewX[attackerPATId],
+            playerAtTick.viewY[attackerPATId]
+    };
+    vector<CellIdAndDistance> attackerCellIdsByDistances = nearestNavCell.getNearestCells(
+            attackerEyePos);
+    vector<CellIdAndDistance> victimCellIdsByDistances = nearestNavCell.getNearestCells(
+            victimEyePos);
+    /*
+    vector<CellIdAndDistance> otherVictimCellIdsByDistances = visPoints.getCellVisPointsByDistance(
+        victimEyePos);
+    if (victimCellIdsByDistances[0].distance > otherVictimCellIdsByDistances[0].distance ||
+        victimCellIdsByDistances[1].distance > otherVictimCellIdsByDistances[1].distance) {
+        std::cout << "bad victim cell distance, pos: " << victimEyePos.toCSV() << std::endl;
+    }
+     */
+    vector<CellVisPoint> victimTwoClosestCellVisPoints = {
+            visPoints.getCellVisPoints()[victimCellIdsByDistances[0].cellId],
+            visPoints.getCellVisPoints()[victimCellIdsByDistances[1].cellId]
+    };
+    bool victimInFOV = getCellsInFOV(victimTwoClosestCellVisPoints, attackerEyePos,
+                                     curViewAngle);
+    // vis from either of attackers two closest cell vis points
+    bool victimVisNoFOV = false;
+    for (size_t i = 0; i < 2; i++) {
+        for (size_t j = 0; j < 2; j++) {
+            victimVisNoFOV |= visPoints.getCellVisPoints()[attackerCellIdsByDistances[i].cellId]
+                    .visibleFromCurPoint[victimCellIdsByDistances[j].cellId];
+        }
+    }
+    return victimInFOV && victimVisNoFOV;
 }

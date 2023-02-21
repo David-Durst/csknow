@@ -21,7 +21,12 @@ public:
     StreamingManager(const string & navPath) : streamingTestLogger(navPath), streamingEngagementAim(navPath)  { }
     void update(const ServerState & state);
     void update(const Players & players, const Ticks & ticks, const WeaponFire & weaponFire, const Hurt & hurt,
-                const PlayerAtTick & playerAtTick, int64_t tickIndex);
+                const PlayerAtTick & playerAtTick, int64_t tickIndex,
+                const csknow::nearest_nav_cell::NearestNavCell & nearestNavCell, const VisPoints & visPoints);
 };
+
+bool demoIsVisible(const PlayerAtTick & playerAtTick, int64_t attackerPATId, int64_t victimPATId,
+                   const csknow::nearest_nav_cell::NearestNavCell & nearestNavCell,
+                   const VisPoints & visPoints);
 
 #endif //CSKNOW_STREAMING_MANAGER_H

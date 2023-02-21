@@ -8,6 +8,7 @@
 #include "queries/rolling_window.h"
 #include "bots/analysis/vis_geometry.h"
 #include "file_helpers.h"
+#include "bots/analysis/streaming_manager.h"
 #include <omp.h>
 #include <atomic>
 
@@ -320,33 +321,8 @@ TrainingEngagementAimResult queryTrainingEngagementAim(const Games & games, cons
                         std::min(MAX_TICKS_SINCE_LAST_FIRE_ATTACK, fireHistoryResult.ticksUntilNextHoldingAttack[attackerPATId]);
 
 
-                    vector<CellIdAndDistance> attackerCellIdsByDistances = nearestNavCell.getNearestCells(
-                        attackerEyePos);
-                    vector<CellIdAndDistance> victimCellIdsByDistances = nearestNavCell.getNearestCells(
-                        victimEyePos);
-                    /*
-                    vector<CellIdAndDistance> otherVictimCellIdsByDistances = visPoints.getCellVisPointsByDistance(
-                        victimEyePos);
-                    if (victimCellIdsByDistances[0].distance > otherVictimCellIdsByDistances[0].distance ||
-                        victimCellIdsByDistances[1].distance > otherVictimCellIdsByDistances[1].distance) {
-                        std::cout << "bad victim cell distance, pos: " << victimEyePos.toCSV() << std::endl;
-                    }
-                     */
-                    vector<CellVisPoint> victimTwoClosestCellVisPoints = {
-                        visPoints.getCellVisPoints()[victimCellIdsByDistances[0].cellId],
-                        visPoints.getCellVisPoints()[victimCellIdsByDistances[1].cellId]
-                    };
-                    bool victimInFOV = getCellsInFOV(victimTwoClosestCellVisPoints, attackerEyePos,
-                                                    curViewAngle);
-                    // vis from either of attackers two closest cell vis points
-                    bool victimVisNoFOV = false;
-                    for (size_t i = 0; i < 2; i++) {
-                        for (size_t j = 0; j < 2; j++) {
-                            victimVisNoFOV |= visPoints.getCellVisPoints()[attackerCellIdsByDistances[i].cellId]
-                                .visibleFromCurPoint[victimCellIdsByDistances[j].cellId];
-                        }
-                    }
-                    bool curTickVictimVisible = victimInFOV && victimVisNoFOV;
+                    bool curTickVictimVisible = demoIsVisible(playerAtTick, attackerPATId, victimPATId,
+                                                              nearestNavCell, visPoints);
                     tmpVictimVisible[threadNum].back()[i] = curTickVictimVisible;
                     if (curTickVictimVisible &&
                         engagementToVictimFirstVisiblePATId.find(engagementIndex) ==
