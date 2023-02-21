@@ -44,6 +44,7 @@ namespace csknow::nearest_nav_cell {
                 s << "," << nearestCellsGrid[index][i].cellId;
                 s << "," << nearestCellsGrid[index][i].distance;
             }
+            s << std::endl;
         }
 
         vector<string> getForeignKeyNames() override {
