@@ -20,6 +20,8 @@ public:
 
     StreamingManager(const string & navPath) : streamingTestLogger(navPath), streamingEngagementAim(navPath)  { }
     void update(const ServerState & state);
+    void update(const Players & players, const Ticks & ticks, const WeaponFire & weaponFire, const Hurt & hurt,
+                const PlayerAtTick & playerAtTick, int64_t tickIndex);
 };
 
 #endif //CSKNOW_STREAMING_MANAGER_H

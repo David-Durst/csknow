@@ -525,8 +525,14 @@ CSGOFileTime ServerState::loadServerState() {
     loadWeaponFireEvents(tmpWeaponFireFilePath);
     loadHurtEvents(tmpHurtFilePath);
 
+    setClientIdTrackers();
+    return fileTime;
+}
+
+void ServerState::setClientIdTrackers() {
     // build map from server id to CSKnow id
     int maxServerId = -1;
+    csgoIds.clear();
     for (const auto & client : clients) {
         maxServerId = std::max(maxServerId, client.csgoId);
         csgoIds.insert(client.csgoId);
@@ -538,7 +544,7 @@ CSGOFileTime ServerState::loadServerState() {
     for (int i = 0; i < (int) clients.size(); i++) {
         csgoIdToCSKnowId[clients[i].csgoId] = i;
     }
-    return fileTime;
+
 }
 
 // debug helper to check when teleportation is breaking

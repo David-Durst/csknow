@@ -17,45 +17,6 @@
 namespace fs = std::filesystem;
 
 namespace csknow::engagement_aim {
-    // https://tf2b.com/itemlist.php?gid=730
-    enum class AimWeaponId {
-        None = 0,
-        Deagle,
-        Dualies,
-        FiveSeven,
-        Glock,
-        AK = 7,
-        AUG,
-        AWP,
-        FAMAS,
-        G3,
-        Galil = 13,
-        M249,
-        M4A4 = 16,
-        Mac10,
-        P90 = 19,
-        MP5 = 23,
-        UMP,
-        XM1014,
-        Bizon,
-        MAG7,
-        Negev,
-        SawedOff,
-        Tec9,
-        Zeus,
-        P2000,
-        MP7,
-        MP9,
-        Nova,
-        P250,
-        Scar = 38,
-        SG553,
-        SSG,
-        M4A1S = 60,
-        USPS,
-        CZ = 63,
-        R8
-    };
     AimWeaponType weaponIdToWeaponType(int32_t weaponId);
 
     struct EngagementAimTarget {

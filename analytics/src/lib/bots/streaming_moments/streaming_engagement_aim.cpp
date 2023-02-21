@@ -5,80 +5,81 @@
 #include "bots/streaming_moments/streaming_engagement_aim.h"
 #include "bots/analysis/vis_geometry.h"
 #include "bots/analysis/pytorch_utils.h"
+#include "bots/analysis/weapon_id_converter.h"
 #include <torch/script.h>
 
 namespace csknow::engagement_aim {
     AimWeaponType weaponIdToWeaponType(int32_t weaponId) {
         switch (weaponId) {
-            case enumAsInt(AimWeaponId::Deagle):
+            case enumAsInt(EngineWeaponId::Deagle):
                 return AimWeaponType::Pistol;
-            case enumAsInt(AimWeaponId::Dualies):
+            case enumAsInt(EngineWeaponId::Dualies):
                 return AimWeaponType::Pistol;
-            case enumAsInt(AimWeaponId::FiveSeven):
+            case enumAsInt(EngineWeaponId::FiveSeven):
                 return AimWeaponType::Pistol;
-            case enumAsInt(AimWeaponId::Glock):
+            case enumAsInt(EngineWeaponId::Glock):
                 return AimWeaponType::Pistol;
-            case enumAsInt(AimWeaponId::AK):
+            case enumAsInt(EngineWeaponId::AK):
                 return AimWeaponType::AK;
-            case enumAsInt(AimWeaponId::AUG):
+            case enumAsInt(EngineWeaponId::AUG):
                 return AimWeaponType::AROther;
-            case enumAsInt(AimWeaponId::AWP):
+            case enumAsInt(EngineWeaponId::AWP):
                 return AimWeaponType::Sniper;
-            case enumAsInt(AimWeaponId::FAMAS):
+            case enumAsInt(EngineWeaponId::FAMAS):
                 return AimWeaponType::AROther;
-            case enumAsInt(AimWeaponId::G3):
+            case enumAsInt(EngineWeaponId::G3):
                 return AimWeaponType::AROther;
-            case enumAsInt(AimWeaponId::Galil):
+            case enumAsInt(EngineWeaponId::Galil):
                 return AimWeaponType::AROther;
-            case enumAsInt(AimWeaponId::M249):
+            case enumAsInt(EngineWeaponId::M249):
                 return AimWeaponType::Heavy;
-            case enumAsInt(AimWeaponId::M4A4):
+            case enumAsInt(EngineWeaponId::M4A4):
                 return AimWeaponType::AROther;
-            case enumAsInt(AimWeaponId::Mac10):
+            case enumAsInt(EngineWeaponId::Mac10):
                 return AimWeaponType::SMG;
-            case enumAsInt(AimWeaponId::P90):
+            case enumAsInt(EngineWeaponId::P90):
                 return AimWeaponType::SMG;
-            case enumAsInt(AimWeaponId::MP5):
+            case enumAsInt(EngineWeaponId::MP5):
                 return AimWeaponType::SMG;
-            case enumAsInt(AimWeaponId::UMP):
+            case enumAsInt(EngineWeaponId::UMP):
                 return AimWeaponType::SMG;
-            case enumAsInt(AimWeaponId::XM1014):
+            case enumAsInt(EngineWeaponId::XM1014):
                 return AimWeaponType::Heavy;
-            case enumAsInt(AimWeaponId::Bizon):
+            case enumAsInt(EngineWeaponId::Bizon):
                 return AimWeaponType::SMG;
-            case enumAsInt(AimWeaponId::MAG7):
+            case enumAsInt(EngineWeaponId::MAG7):
                 return AimWeaponType::Heavy;
-            case enumAsInt(AimWeaponId::Negev):
+            case enumAsInt(EngineWeaponId::Negev):
                 return AimWeaponType::Heavy;
-            case enumAsInt(AimWeaponId::SawedOff):
+            case enumAsInt(EngineWeaponId::SawedOff):
                 return AimWeaponType::Heavy;
-            case enumAsInt(AimWeaponId::Tec9):
+            case enumAsInt(EngineWeaponId::Tec9):
                 return AimWeaponType::Pistol;
-            case enumAsInt(AimWeaponId::Zeus):
+            case enumAsInt(EngineWeaponId::Zeus):
                 return AimWeaponType::Unknown;
-            case enumAsInt(AimWeaponId::P2000):
+            case enumAsInt(EngineWeaponId::P2000):
                 return AimWeaponType::Pistol;
-            case enumAsInt(AimWeaponId::MP7):
+            case enumAsInt(EngineWeaponId::MP7):
                 return AimWeaponType::SMG;
-            case enumAsInt(AimWeaponId::MP9):
+            case enumAsInt(EngineWeaponId::MP9):
                 return AimWeaponType::SMG;
-            case enumAsInt(AimWeaponId::Nova):
+            case enumAsInt(EngineWeaponId::Nova):
                 return AimWeaponType::Heavy;
-            case enumAsInt(AimWeaponId::P250):
+            case enumAsInt(EngineWeaponId::P250):
                 return AimWeaponType::Pistol;
-            case enumAsInt(AimWeaponId::Scar):
+            case enumAsInt(EngineWeaponId::Scar):
                 return AimWeaponType::AROther;
-            case enumAsInt(AimWeaponId::SG553):
+            case enumAsInt(EngineWeaponId::SG553):
                 return AimWeaponType::AROther;
-            case enumAsInt(AimWeaponId::SSG):
+            case enumAsInt(EngineWeaponId::SSG):
                 return AimWeaponType::Sniper;
-            case enumAsInt(AimWeaponId::M4A1S):
+            case enumAsInt(EngineWeaponId::M4A1S):
                 return AimWeaponType::M4A1;
-            case enumAsInt(AimWeaponId::USPS):
+            case enumAsInt(EngineWeaponId::USPS):
                 return AimWeaponType::Pistol;
-            case enumAsInt(AimWeaponId::CZ):
+            case enumAsInt(EngineWeaponId::CZ):
                 return AimWeaponType::Pistol;
-            case enumAsInt(AimWeaponId::R8):
+            case enumAsInt(EngineWeaponId::R8):
                 return AimWeaponType::Pistol;
             default:
                 return AimWeaponType::Unknown;

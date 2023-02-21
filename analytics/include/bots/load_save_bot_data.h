@@ -300,6 +300,7 @@ public:
     void sleepUntilServerStateExists(CSGOFileTime lastFileTime);
     double getGeneralStatFileTime();
     CSGOFileTime loadServerState();
+    void setClientIdTrackers();
     void saveBotInputs();
     bool saveScript(const vector<string>& scriptLines) const;
     [[nodiscard]] Vec3 getC4Pos() const;

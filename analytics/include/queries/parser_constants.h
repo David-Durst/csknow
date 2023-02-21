@@ -7,6 +7,7 @@
 
 // These are constants set by demoinfocs-golang rather than the CSGO engine
 
+// https://github.com/markus-wa/demoinfocs-golang/blob/71f5b83ce50fae684a256bde37f50dcc71488cbb/pkg/demoinfocs/common/equipment.go#L46-L116
 enum class DemoEquipmentType : int16_t {
     EqUnknown = 0,
 

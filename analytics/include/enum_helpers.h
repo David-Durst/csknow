@@ -7,7 +7,7 @@
 
 template <class T>
 constexpr int enumAsInt(T enumElem) {
-    return static_cast<std::underlying_type_t<T>>(enumElem);
+    return static_cast<std::underlying_type_t<T>>(static_cast<int>(enumElem));
 }
 
 template <class T>
