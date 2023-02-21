@@ -44,7 +44,7 @@ namespace csknow::orders {
             overlay = true;
         }
 
-        vector<int64_t> filterByForeignKey(int64_t otherTableIndex) override {
+        vector<int64_t> filterByForeignKey(int64_t) override {
             return {};
         }
 
