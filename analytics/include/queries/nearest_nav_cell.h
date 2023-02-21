@@ -13,9 +13,12 @@ using std::unordered_map;
 using std::vector;
 
 namespace csknow::nearest_nav_cell {
-    constexpr size_t numNearestCellsPerGridEntry = 10;
+    // 9 for same layer, then 1 above and 1 below
+    constexpr size_t NUM_NEAREST_CELLS_PER_GRID_ENTRY = 11;
+    constexpr double GRID_DIM_WIDTH_DEPTH = CELL_DIM_WIDTH_DEPTH;
+    constexpr double GRID_DIM_HEIGHT = CELL_DIM_HEIGHT;
 
-    typedef std::array<CellIdAndDistance, numNearestCellsPerGridEntry> NearestGridData;
+    typedef std::array<CellIdAndDistance, NUM_NEAREST_CELLS_PER_GRID_ENTRY> NearestGridData;
 
     class NearestNavCell : public QueryResult {
         void load(const string & mapsPath, const string & mapName);
@@ -41,7 +44,7 @@ namespace csknow::nearest_nav_cell {
             s << index << ","
                 << gridEntryAABB[index].min.toCSV() << ","
                 << gridEntryAABB[index].max.toCSV();
-            for (size_t i = 0; i < numNearestCellsPerGridEntry; i++) {
+            for (size_t i = 0; i < NUM_NEAREST_CELLS_PER_GRID_ENTRY; i++) {
                 s << "," << nearestCellsGrid[index][i].cellId;
                 s << "," << nearestCellsGrid[index][i].distance;
             }
@@ -54,28 +57,28 @@ namespace csknow::nearest_nav_cell {
 
         vector<string> getOtherColumnNames() override {
             vector<string> result = {"min x", "min y", "min z", "max x", "max y", "max z"};
-            for (size_t i = 0; i < numNearestCellsPerGridEntry; i++) {
+            for (size_t i = 0; i < NUM_NEAREST_CELLS_PER_GRID_ENTRY; i++) {
                 result.push_back(std::to_string(i) + " nearest cell id");
             }
             return result;
         }
 
         IVec3 posToGridIndex(Vec3 pos) const {
-            // fit pos into bounds (in case using this on data set not created from)
+            // fit pos into bounds
             Vec3 thresholdedPos = min(max(pos, playerPositionBounds.min), playerPositionBounds.max);
             Vec3 deltaCellBounds = thresholdedPos - playerPositionBounds.min;
             return {
-                static_cast<int64_t>(deltaCellBounds.x / CELL_DIM_WIDTH_DEPTH),
-                static_cast<int64_t>(deltaCellBounds.y / CELL_DIM_WIDTH_DEPTH),
-                static_cast<int64_t>(deltaCellBounds.z / CELL_DIM_HEIGHT)
+                static_cast<int64_t>(deltaCellBounds.x / GRID_DIM_WIDTH_DEPTH),
+                static_cast<int64_t>(deltaCellBounds.y / GRID_DIM_WIDTH_DEPTH),
+                static_cast<int64_t>(deltaCellBounds.z / GRID_DIM_HEIGHT)
             };
         };
 
-        Vec3 gridIndexToPos(IVec3 gridIndex) {
+        Vec3 gridIndexToCenterPos(IVec3 gridIndex) const {
             return playerPositionBounds.min + Vec3{
-                gridIndex.x * CELL_DIM_WIDTH_DEPTH,
-                gridIndex.y * CELL_DIM_WIDTH_DEPTH,
-                gridIndex.z * CELL_DIM_HEIGHT,
+                (gridIndex.x + 0.5) * GRID_DIM_WIDTH_DEPTH,
+                (gridIndex.y + 0.5) * GRID_DIM_WIDTH_DEPTH,
+                (gridIndex.z + 0.5) * GRID_DIM_HEIGHT
             };
         }
 
@@ -100,15 +103,30 @@ namespace csknow::nearest_nav_cell {
         }
 
         std::vector<CellIdAndDistance> getNearestCells(Vec3 pos) const {
-            const NearestGridData & nearestGridData = gridIndexToNearestCells(posToGridIndex(pos));
+            IVec3 curGridIndex = posToGridIndex(pos);
+            const NearestGridData & nearestGridData = gridIndexToNearestCells(curGridIndex);
+            // get the nearest grid index other than the cur one
+            // take nearest in x/y with same z
+            Vec3 curGridCenter = gridIndexToCenterPos(curGridIndex);
+            IVec3 otherGridIndex = curGridIndex;
+            otherGridIndex.x += pos.x >= curGridCenter.x ? 1 : -1;
+            otherGridIndex.y += pos.y >= curGridCenter.y ? 1 : -1;
+            const NearestGridData & otherGridData = gridIndexToNearestCells(otherGridIndex);
 
+            std::set<CellId> resultSet;
             std::vector<CellIdAndDistance> result;
-            for (const auto & nearestGridEntry : nearestGridData) {
-                result.push_back({
-                    nearestGridEntry.cellId,
-                    vis_point_helpers::get_point_to_aabb_distance(
-                        pos, visPoints.getCellVisPoints()[nearestGridEntry.cellId].cellCoordinates)
-                    });
+            for (const auto & gridData : {nearestGridData, otherGridData}) {
+                for (const auto & nearestGridEntry : gridData) {
+                    if (resultSet.find(nearestGridEntry.cellId) == resultSet.end()) {
+                        resultSet.insert(nearestGridEntry.cellId);
+                        result.push_back({
+                                             nearestGridEntry.cellId,
+                                             vis_point_helpers::get_point_to_aabb_distance(
+                                                 pos, visPoints.getCellVisPoints()[nearestGridEntry.cellId].cellCoordinates)
+                                         });
+                    }
+                }
+
             }
 
             std::sort(result.begin(), result.end(), [](const CellIdAndDistance & a, const CellIdAndDistance & b) {
@@ -118,8 +136,7 @@ namespace csknow::nearest_nav_cell {
             return result;
         }
 
-        void runQuery(const Rounds & rounds, const Ticks & ticks, const PlayerAtTick & playerAtTick,
-                      const string & mapsPath, const string & mapName);
+        void runQuery(const string & mapsPath, const string & mapName);
     };
 }
 

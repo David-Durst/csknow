@@ -43,7 +43,7 @@ namespace csknow::nearest_nav_cell {
                 gridEntryAABB[index].max.z = std::stod(value);
 
                 nearestCellsGrid.push_back({});
-                for (size_t i = 0; i < numNearestCellsPerGridEntry; i++) {
+                for (size_t i = 0; i < NUM_NEAREST_CELLS_PER_GRID_ENTRY; i++) {
                     getline(nearestStream, value, ',');
                     nearestCellsGrid[index][i].cellId = std::stoul(value);
 
@@ -63,12 +63,11 @@ namespace csknow::nearest_nav_cell {
         }
     }
 
-    void NearestNavCell::runQuery(const Rounds & rounds, const Ticks & ticks, const PlayerAtTick & playerAtTick,
-                                  const string & mapsPath, const string & mapName) {
+    void NearestNavCell::runQuery(const string & mapsPath, const string & mapName) {
         string nearestFileName = mapName + extension;
         string nearestFilePath = mapsPath + "/" + nearestFileName;
 
-        if (std::filesystem::exists(nearestFilePath)) {
+        if (false && std::filesystem::exists(nearestFilePath)) {
             load(mapsPath, mapName);
         }
         else {
@@ -83,25 +82,10 @@ namespace csknow::nearest_nav_cell {
                                         -1. * std::numeric_limits<double>::max()
                                     }};
 
-            // step 1: get bounds for where players can stand in data
-            for (int64_t roundIndex = 0; roundIndex < rounds.size; roundIndex++) {
-                for (int64_t tickIndex = rounds.ticksPerRound[roundIndex].minId;
-                     tickIndex <= rounds.ticksPerRound[roundIndex].maxId; tickIndex++) {
-                    for (int64_t patIndex = ticks.patPerTick[tickIndex].minId;
-                         patIndex <= ticks.patPerTick[tickIndex].maxId; patIndex++) {
-                        playerPositionBounds.min = min(playerPositionBounds.min, {
-                            playerAtTick.posX[patIndex],
-                            playerAtTick.posY[patIndex],
-                            playerAtTick.posZ[patIndex],
-                        });
-                        playerPositionBounds.max = max(playerPositionBounds.max, {
-                            playerAtTick.posX[patIndex],
-                            playerAtTick.posY[patIndex],
-                            playerAtTick.posZ[patIndex],
-                        });
-
-                    }
-                }
+            // step 1: get bounds for all cells
+            for (const auto & cellVisPoint : visPoints.getCellVisPoints()) {
+                playerPositionBounds.min = min(playerPositionBounds.min, cellVisPoint.cellCoordinates.min);
+                playerPositionBounds.max = max(playerPositionBounds.max, cellVisPoint.cellCoordinates.max);
             }
 
             // step 2: define grid dimensions, add 1 as size is 1 greater than max 0 indexed coordinate
@@ -117,13 +101,13 @@ namespace csknow::nearest_nav_cell {
                     for (int64_t curZId = 0; curZId < gridDimensions.z; curZId++) {
                         IVec3 gridIndex = {curXId, curYId, curZId};
 
-                        gridIndexToAABB(gridIndex) = {gridIndexToPos(gridIndex), gridIndexToPos(gridIndex) + 1};
+                        gridIndexToAABB(gridIndex) = {gridIndexToCenterPos(gridIndex), gridIndexToCenterPos(gridIndex + 1)};
 
                         vector<CellIdAndDistance> cellVisPointsByDistance =
-                            visPoints.getCellVisPointsByDistance(gridIndexToPos(gridIndex),
-                                                                 numNearestCellsPerGridEntry,
-                                                                 numNearestCellsPerGridEntry);
-                        for (size_t i = 0; i < numNearestCellsPerGridEntry; i++) {
+                            visPoints.getCellVisPointsByDistance(gridIndexToCenterPos(gridIndex),
+                                                                 NUM_NEAREST_CELLS_PER_GRID_ENTRY,
+                                                                 NUM_NEAREST_CELLS_PER_GRID_ENTRY);
+                        for (size_t i = 0; i < NUM_NEAREST_CELLS_PER_GRID_ENTRY; i++) {
                             gridIndexToNearestCells(gridIndex)[i] = cellVisPointsByDistance[i];
                         }
                     }
