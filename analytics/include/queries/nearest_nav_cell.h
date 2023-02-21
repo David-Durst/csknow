@@ -24,8 +24,9 @@ namespace csknow::nearest_nav_cell {
         std::vector<NearestGridData> nearestCellsGrid;
         AABB playerPositionBounds;
         IVec3 gridDimensions;
+        const VisPoints & visPoints;
 
-        NearestNavCell() {
+        NearestNavCell(const VisPoints & visPoints) : visPoints(visPoints) {
             variableLength = false;
             nonTemporal = true;
             overlay = true;
@@ -59,7 +60,7 @@ namespace csknow::nearest_nav_cell {
             return result;
         }
 
-        IVec3 posToGridIndex(Vec3 pos) {
+        IVec3 posToGridIndex(Vec3 pos) const {
             // fit pos into bounds (in case using this on data set not created from)
             Vec3 thresholdedPos = min(max(pos, playerPositionBounds.min), playerPositionBounds.max);
             Vec3 deltaCellBounds = thresholdedPos - playerPositionBounds.min;
@@ -98,8 +99,27 @@ namespace csknow::nearest_nav_cell {
                                     gridIndex.y * gridDimensions.z + gridIndex.z];
         }
 
+        std::vector<CellIdAndDistance> getNearestCells(Vec3 pos) const {
+            const NearestGridData & nearestGridData = gridIndexToNearestCells(posToGridIndex(pos));
+
+            std::vector<CellIdAndDistance> result;
+            for (const auto & nearestGridEntry : nearestGridData) {
+                result.push_back({
+                    nearestGridEntry.cellId,
+                    vis_point_helpers::get_point_to_aabb_distance(
+                        pos, visPoints.getCellVisPoints()[nearestGridEntry.cellId].cellCoordinates)
+                    });
+            }
+
+            std::sort(result.begin(), result.end(), [](const CellIdAndDistance & a, const CellIdAndDistance & b) {
+                return a.distance < b.distance;
+            });
+
+            return result;
+        }
+
         void runQuery(const Rounds & rounds, const Ticks & ticks, const PlayerAtTick & playerAtTick,
-                      const VisPoints & visPoints, const string & mapsPath, const string & mapName);
+                      const string & mapsPath, const string & mapName);
     };
 }
 

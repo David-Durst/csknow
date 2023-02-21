@@ -64,7 +64,7 @@ namespace csknow::nearest_nav_cell {
     }
 
     void NearestNavCell::runQuery(const Rounds & rounds, const Ticks & ticks, const PlayerAtTick & playerAtTick,
-                                  const VisPoints & visPoints, const string & mapsPath, const string & mapName) {
+                                  const string & mapsPath, const string & mapName) {
         string nearestFileName = mapName + extension;
         string nearestFilePath = mapsPath + "/" + nearestFileName;
 
@@ -111,7 +111,6 @@ namespace csknow::nearest_nav_cell {
             gridEntryAABB.resize(gridDimensions.x * gridDimensions.y * gridDimensions.z);
             nearestCellsGrid.resize(gridDimensions.x * gridDimensions.y * gridDimensions.z);
             std::atomic<int64_t> xProcessed = 0;
-            std::cout << "grid dimensions (" << gridDimensions.x << "," << gridDimensions.y << "," << gridDimensions.z << ")" << std::endl;
 #pragma omp parallel for
             for (int64_t curXId = 0; curXId < gridDimensions.x; curXId++) {
                 for (int64_t curYId = 0; curYId < gridDimensions.y; curYId++) {
@@ -121,9 +120,12 @@ namespace csknow::nearest_nav_cell {
                         gridIndexToAABB(gridIndex) = {gridIndexToPos(gridIndex), gridIndexToPos(gridIndex) + 1};
 
                         vector<CellIdAndDistance> cellVisPointsByDistance =
-                            visPoints.getCellVisPointsByDistance(gridIndexToPos(gridIndex), 10, 10);
-                        gridIndexToNearestCells(gridIndex)[0] = cellVisPointsByDistance[0];
-                        gridIndexToNearestCells(gridIndex)[1] = cellVisPointsByDistance[1];
+                            visPoints.getCellVisPointsByDistance(gridIndexToPos(gridIndex),
+                                                                 numNearestCellsPerGridEntry,
+                                                                 numNearestCellsPerGridEntry);
+                        for (size_t i = 0; i < numNearestCellsPerGridEntry; i++) {
+                            gridIndexToNearestCells(gridIndex)[i] = cellVisPointsByDistance[i];
+                        }
                     }
                 }
                 xProcessed++;

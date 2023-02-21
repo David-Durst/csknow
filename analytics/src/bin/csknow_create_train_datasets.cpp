@@ -179,8 +179,8 @@ int main(int argc, char * argv[]) {
     // nearest nav areas
     string nearestNavAreasName = "nearestNavAreas";
     std::cout << "processing nearestNavAreas" << std::endl;
-    csknow::nearest_nav_cell::NearestNavCell nearestNavCellResult;
-    nearestNavCellResult.runQuery(filteredRounds, ticks, playerAtTick, map_visPoints.at("de_dust2"), navPath, "de_dust2");
+    csknow::nearest_nav_cell::NearestNavCell nearestNavCellResult(map_visPoints.at("de_dust2"));
+    nearestNavCellResult.runQuery(filteredRounds, ticks, playerAtTick, navPath, "de_dust2");
     std::cout << "size: " << nearestNavCellResult.size << std::endl;
 
     // fire history
