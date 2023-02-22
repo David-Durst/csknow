@@ -73,6 +73,7 @@ RoundPlantDefusal processRoundPlantDefusals(const Rounds & rounds, const Ticks &
             }
         }
     }
+    return result;
 }
 
 void StreamingManager::update(const Games & games, const RoundPlantDefusal & roundPlantDefusal, const Rounds & rounds,
