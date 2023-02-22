@@ -188,7 +188,10 @@ int main(int argc, char * argv[]) {
     string behaviorTreeLatentEventsName = "behaviorTreeLatentEvents";
     std::cout << "processing behaviorTreeLatentEvents" << std::endl;
     csknow::behavior_tree_latent_events::BehaviorTreeLatentEvents behaviorTreeLatentEvents;
-    behaviorTreeLatentEvents.runQuery(navPath, map_visPoints.at("de_dust2"), d2MeshResult, navPath, "de_dust2");
+    behaviorTreeLatentEvents.runQuery(navPath + "/de_dust2.nav", map_visPoints.at("de_dust2"), d2MeshResult,
+                                      d2ReachableResult, d2DistanceToPlacesResult,
+                                      nearestNavCellResult, players, filteredRounds, ticks, playerAtTick,
+                                      weaponFire, hurt);
     std::cout << "size: " << nearestNavCellResult.size << std::endl;
 
     // fire history

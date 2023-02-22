@@ -43,6 +43,7 @@ namespace csknow::behavior_tree_latent_events {
                     patIndex <= ticks.patPerTick[tickIndex].maxId; patIndex++) {
                     TreeThinker defaultThinker{playerAtTick.playerId[patIndex], AggressiveType::Push};
                     playerQueryNode.exec(blackboard.streamingManager.db.batchData.fromNewest(), defaultThinker);
+                    int x = 1;
                 }
             }
         }

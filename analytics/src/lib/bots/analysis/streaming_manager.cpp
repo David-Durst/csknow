@@ -71,67 +71,67 @@ void StreamingManager::update(const Players & players, const Ticks & ticks, cons
 
         Vec2 viewWithRecoil = viewAngle + recoil * WEAPON_RECOIL_SCALE;
 
-        ServerState::Client newClient {
-            static_cast<int32_t>(tickIndex),
-            static_cast<int32_t>(playerAtTick.playerId[patIndex]),
-            INVALID_ID,
-            players.name[playerAtTick.playerId[patIndex]],
-            static_cast<TeamId>(playerAtTick.team[patIndex]),
-            static_cast<int>(playerAtTick.health[patIndex]),
-            static_cast<int>(playerAtTick.armor[patIndex]),
-            playerAtTick.hasHelmet[patIndex],
-            static_cast<int32_t>(enumAsInt(
-                demoEquipmentTypeToEngineWeaponId(playerAtTick.activeWeapon[patIndex]))),
-            static_cast<float>(playerAtTick.nextPrimaryAttack[patIndex]),
-            static_cast<float>(playerAtTick.nextSecondaryAttack[patIndex]),
-            INVALID_ID, // TODO: remove weapon idle, not useful
-            static_cast<float>(playerAtTick.recoilIndex[patIndex]),
-            false, // TODO: remove reloading visually complete, not useful
-            static_cast<int32_t>(enumAsInt(
-                demoEquipmentTypeToEngineWeaponId(playerAtTick.primaryWeapon[patIndex]))),
-            static_cast<int32_t>(playerAtTick.primaryBulletsClip[patIndex]),
-            static_cast<int32_t>(playerAtTick.primaryBulletsReserve[patIndex]),
-            static_cast<int32_t>(enumAsInt(
-                demoEquipmentTypeToEngineWeaponId(playerAtTick.secondaryWeapon[patIndex]))),
-            static_cast<int32_t>(playerAtTick.secondaryBulletsClip[patIndex]),
-            static_cast<int32_t>(playerAtTick.secondaryBulletsReserve[patIndex]),
-            static_cast<int32_t>(playerAtTick.numFlash[patIndex]),
-            static_cast<int32_t>(playerAtTick.numMolotov[patIndex]),
-            static_cast<int32_t>(playerAtTick.numSmoke[patIndex]),
-            static_cast<int32_t>(playerAtTick.numHe[patIndex]),
-            static_cast<int32_t>(playerAtTick.numDecoy[patIndex]),
-            static_cast<int32_t>(playerAtTick.numIncendiary[patIndex]),
-            static_cast<int32_t>(playerAtTick.numZeus[patIndex]),
-            playerAtTick.hasBomb[patIndex],
-            static_cast<float>(playerAtTick.posX[patIndex]),
-            static_cast<float>(playerAtTick.posY[patIndex]),
-            static_cast<float>(playerAtTick.eyePosZ[patIndex]),
-            static_cast<float>(playerAtTick.posZ[patIndex]),
-            static_cast<float>(playerAtTick.velX[patIndex]),
-            static_cast<float>(playerAtTick.velY[patIndex]),
-            static_cast<float>(playerAtTick.velZ[patIndex]),
-            static_cast<float>(playerAtTick.viewX[patIndex]),
-            static_cast<float>(playerAtTick.viewY[patIndex]),
-            static_cast<float>(playerAtTick.aimPunchX[patIndex]),
-            static_cast<float>(playerAtTick.aimPunchY[patIndex]),
-            static_cast<float>(playerAtTick.viewPunchX[patIndex]),
-            static_cast<float>(playerAtTick.viewPunchY[patIndex]),
-            static_cast<float>(viewWithRecoil.x),
-            static_cast<float>(viewWithRecoil.y),
-            playerAtTick.isAlive[patIndex],
-            true, // make all bots so tree looks at all
-            playerAtTick.isAirborne[patIndex],
-            playerAtTick.isScoped[patIndex],
-            static_cast<float>(playerAtTick.duckAmount[patIndex]),
-            playerAtTick.duckingKeyPressed[patIndex],
-            playerAtTick.isReloading[patIndex],
-            playerAtTick.isWalking[patIndex],
-            static_cast<float>(playerAtTick.flashDuration[patIndex]),
-            playerAtTick.hasDefuser[patIndex],
-            static_cast<int>(playerAtTick.money[patIndex]),
-            static_cast<int>(playerAtTick.ping[patIndex]),
-            static_cast<float>(playerAtTick.gameTime[patIndex]),
-        };
+        ServerState::Client newClient;
+        newClient.lastFrame = static_cast<int32_t>(tickIndex);
+        newClient.csgoId = static_cast<int32_t>(playerAtTick.playerId[patIndex]);
+        newClient.lastTeleportId = INVALID_ID;
+        newClient.name = players.name[playerAtTick.playerId[patIndex]];
+        newClient.team = static_cast<TeamId>(playerAtTick.team[patIndex]);
+        newClient.health = static_cast<int>(playerAtTick.health[patIndex]);
+        newClient.armor = static_cast<int>(playerAtTick.armor[patIndex]);
+        newClient.hasHelmet = playerAtTick.hasHelmet[patIndex];
+        newClient.currentWeaponId = static_cast<int32_t>(enumAsInt(
+            demoEquipmentTypeToEngineWeaponId(playerAtTick.activeWeapon[patIndex])));
+        newClient.nextPrimaryAttack = static_cast<float>(playerAtTick.nextPrimaryAttack[patIndex]);
+        newClient.nextSecondaryAttack = static_cast<float>(playerAtTick.nextSecondaryAttack[patIndex]);
+        newClient.timeWeaponIdle = INVALID_ID; // TODO: remove weapon idle, not useful
+        newClient.recoilIndex = static_cast<float>(playerAtTick.recoilIndex[patIndex]);
+        newClient.reloadVisuallyComplete = false; // TODO: remove reloading visually complete, not useful
+        newClient.rifleId = static_cast<int32_t>(enumAsInt(
+            demoEquipmentTypeToEngineWeaponId(playerAtTick.primaryWeapon[patIndex])));
+        newClient.rifleClipAmmo = static_cast<int32_t>(playerAtTick.primaryBulletsClip[patIndex]);
+        newClient.rifleReserveAmmo = static_cast<int32_t>(playerAtTick.primaryBulletsReserve[patIndex]);
+        newClient.pistolId = static_cast<int32_t>(enumAsInt(
+            demoEquipmentTypeToEngineWeaponId(playerAtTick.secondaryWeapon[patIndex])));
+        newClient.pistolClipAmmo = static_cast<int32_t>(playerAtTick.secondaryBulletsClip[patIndex]);
+        newClient.pistolReserveAmmo = static_cast<int32_t>(playerAtTick.secondaryBulletsReserve[patIndex]);
+        newClient.flashes = static_cast<int32_t>(playerAtTick.numFlash[patIndex]);
+        newClient.molotovs = static_cast<int32_t>(playerAtTick.numMolotov[patIndex]);
+        newClient.smokes = static_cast<int32_t>(playerAtTick.numSmoke[patIndex]);
+        newClient.hes = static_cast<int32_t>(playerAtTick.numHe[patIndex]);
+        newClient.decoys = static_cast<int32_t>(playerAtTick.numDecoy[patIndex]);
+        newClient.incendiaries = static_cast<int32_t>(playerAtTick.numIncendiary[patIndex]);
+        newClient.zeus = static_cast<int32_t>(playerAtTick.numZeus[patIndex]);
+        newClient.hasC4 = playerAtTick.hasBomb[patIndex];
+        newClient.lastEyePosX = static_cast<float>(playerAtTick.posX[patIndex]);
+        newClient.lastEyePosY = static_cast<float>(playerAtTick.posY[patIndex]);
+        newClient.lastEyePosZ = static_cast<float>(playerAtTick.eyePosZ[patIndex]);
+        newClient.lastFootPosZ = static_cast<float>(playerAtTick.posZ[patIndex]);
+        newClient.lastVelX = static_cast<float>(playerAtTick.velX[patIndex]);
+        newClient.lastVelY = static_cast<float>(playerAtTick.velY[patIndex]);
+        newClient.lastVelZ = static_cast<float>(playerAtTick.velZ[patIndex]);
+        newClient.lastEyeAngleX = static_cast<float>(playerAtTick.viewX[patIndex]);
+        newClient.lastEyeAngleY = static_cast<float>(playerAtTick.viewY[patIndex]);
+        newClient.lastAimpunchAngleX = static_cast<float>(playerAtTick.aimPunchX[patIndex]);
+        newClient.lastAimpunchAngleY = static_cast<float>(playerAtTick.aimPunchY[patIndex]);
+        newClient.lastViewpunchAngleX = static_cast<float>(playerAtTick.viewPunchX[patIndex]);
+        newClient.lastViewpunchAngleY = static_cast<float>(playerAtTick.viewPunchY[patIndex]);
+        newClient.lastEyeWithRecoilAngleX = static_cast<float>(viewWithRecoil.x);
+        newClient.lastEyeWithRecoilAngleY = static_cast<float>(viewWithRecoil.y);
+        newClient.isAlive = playerAtTick.isAlive[patIndex];
+        newClient.isBot = true; // make all bots so tree looks at all
+        newClient.isAirborne = playerAtTick.isAirborne[patIndex];
+        newClient.isScoped = playerAtTick.isScoped[patIndex];
+        newClient.duckAmount = static_cast<float>(playerAtTick.duckAmount[patIndex]);
+        newClient.duckKeyPressed = playerAtTick.duckingKeyPressed[patIndex];
+        newClient.isReloading = playerAtTick.isReloading[patIndex];
+        newClient.isWalking = playerAtTick.isWalking[patIndex];
+        newClient.flashDuration = static_cast<float>(playerAtTick.flashDuration[patIndex]);
+        newClient.hasDefuser = playerAtTick.hasDefuser[patIndex];
+        newClient.money = static_cast<int>(playerAtTick.money[patIndex]);
+        newClient.ping = static_cast<int>(playerAtTick.ping[patIndex]);
+        newClient.gameTime = static_cast<float>(playerAtTick.gameTime[patIndex]);
+
         newState.clients.push_back(newClient);
     }
 
