@@ -5,6 +5,7 @@
 #ifndef CSKNOW_BEHAVIOR_TREE_LATENT_EVENTS_H
 #define CSKNOW_BEHAVIOR_TREE_LATENT_EVENTS_H
 
+#include <variant>
 #include "queries/moments/engagement.h"
 #include "bots/behavior_tree/blackboard.h"
 #include "bots/behavior_tree/node.h"
@@ -12,7 +13,7 @@
 #include "bots/behavior_tree/global/strategy_node.h"
 #include "bots/behavior_tree/priority/engage_node.h"
 
-namespace csknow::behavior_tree_latent_events {
+namespace csknow::behavior_tree_latent_states {
     class GlobalQueryNode : public SequenceNode {
     public:
         GlobalQueryNode(Blackboard & blackboard) :
@@ -22,32 +23,53 @@ namespace csknow::behavior_tree_latent_events {
                 ), "GlobalQueryNodes") { };
     };
 
-    class PlayerQueryNode : public SequenceNode {
+    class ClearPriorityNode : public Node {
+    public:
+        ClearPriorityNode(Blackboard & blackboard) : Node(blackboard, "ClearPriorityNode") { };
+        virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override;
+    };
+
+    class PriorityDecisionNode : public SelectorNode {
+    public:
+        PriorityDecisionNode(Blackboard & blackboard) :
+            SelectorNode(blackboard, Node::makeList(
+                             make_unique<EnemyEngageCheckNode>(blackboard),
+                             make_unique<ClearPriorityNode>(blackboard)),
+                         "PriorityDecisionNode") { };
+    };
+
+    class PlayerQueryNode : public ParallelFirstNode {
     public:
         PlayerQueryNode(Blackboard & blackboard) :
-                SequenceNode(blackboard, Node::makeList(
+                ParallelFirstNode(blackboard, Node::makeList(
                         make_unique<memory::PerPlayerMemory>(blackboard),
                         make_unique<EnemyEngageCheckNode>(blackboard)
                 ), "GlobalQueryNodes") { };
     };
 
-    enum class LatentEventType {
-        DefusalOffensive,
-        DefusalDefense,
+    enum class LatentStateType {
+        Order, // since order changes are symmetric (everoyne knows the events), only need 1 state for ct and t
         Engagement
     };
 
-    class BehaviorTreeLatentEvents : public QueryResult {
+    struct OrderStatePayload { };
+    struct EngagementStatePayload {
+        CSGOId sourceId, targetId;
+    };
+
+    typedef std::variant<OrderStatePayload, EngagementStatePayload> StatePayload;
+
+    class BehaviorTreeLatentStates : public QueryResult {
     public:
         vector<RangeIndexEntry> rowIndicesPerRound;
         vector<int64_t> startTickId;
         vector<int64_t> endTickId;
         vector<int64_t> tickLength;
-        vector<LatentEventType> eventType;
-        vector<int64_t> playerId;
+        vector<LatentStateType> latentStateType;
+        vector<StatePayload> statePayload;
         IntervalIndex eventsPerTick;
 
-        BehaviorTreeLatentEvents() {
+        BehaviorTreeLatentStates() {
             variableLength = false;
             nonTemporal = true;
             overlay = true;

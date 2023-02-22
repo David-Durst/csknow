@@ -187,7 +187,7 @@ int main(int argc, char * argv[]) {
     // bt latent events
     string behaviorTreeLatentEventsName = "behaviorTreeLatentEvents";
     std::cout << "processing behaviorTreeLatentEvents" << std::endl;
-    csknow::behavior_tree_latent_events::BehaviorTreeLatentEvents behaviorTreeLatentEvents;
+    csknow::behavior_tree_latent_states::BehaviorTreeLatentStates behaviorTreeLatentEvents;
     behaviorTreeLatentEvents.runQuery(navPath + "/de_dust2.nav", map_visPoints.at("de_dust2"), d2MeshResult,
                                       d2ReachableResult, d2DistanceToPlacesResult,
                                       nearestNavCellResult, players, filteredRounds, ticks, playerAtTick,
