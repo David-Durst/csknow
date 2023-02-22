@@ -5,6 +5,7 @@
 #include "queries/moments/behavior_tree_latent_states.h"
 #include "indices/build_indexes.h"
 #include "bots/behavior_tree/tree.h"
+#include "file_helpers.h"
 
 namespace csknow::behavior_tree_latent_states {
 
@@ -49,6 +50,7 @@ namespace csknow::behavior_tree_latent_states {
                                             const Plants & plants, const Defusals & defusals) {
 
         int numThreads = omp_get_max_threads();
+        std::atomic<int64_t> roundsProcessed = 0;
         vector<vector<int64_t>> tmpRoundIds(numThreads);
         vector<vector<int64_t>> tmpRoundStarts(numThreads);
         vector<vector<int64_t>> tmpRoundSizes(numThreads);
@@ -60,7 +62,7 @@ namespace csknow::behavior_tree_latent_states {
         TreeThinker defaultThinker{INVALID_ID, AggressiveType::Push};
 
 //#pragma omp parallel for
-        for (int64_t roundIndex = 0; roundIndex < rounds.size; roundIndex++) {
+        for (int64_t roundIndex = 0; roundIndex < 1L /*rounds.size*/; roundIndex++) {
             int threadNum = omp_get_thread_num();
             tmpRoundIds[threadNum].push_back(roundIndex);
             tmpRoundStarts[threadNum].push_back(static_cast<int64_t>(tmpStartTickId[threadNum].size()));
@@ -73,7 +75,7 @@ namespace csknow::behavior_tree_latent_states {
             map<CSGOId, TemporaryStateData> activeEngagementState;
 
             for (int64_t tickIndex = rounds.ticksPerRound[roundIndex].minId;
-                 tickIndex <= rounds.ticksPerRound[roundIndex].maxId; tickIndex++) {
+                 tickIndex <= 3000L/*rounds.ticksPerRound[roundIndex].maxId*/; tickIndex++) {
                 blackboard.streamingManager.update(games, roundPlantDefusal, rounds, players, ticks, weaponFire, hurt,
                                                    playerAtTick, tickIndex, nearestNavCell, visPoints);
                 const ServerState & curState = blackboard.streamingManager.db.batchData.fromNewest();
@@ -146,6 +148,10 @@ namespace csknow::behavior_tree_latent_states {
                             activeEngagementState.at(playerId));
 
             }
+
+            tmpRoundSizes[threadNum].push_back(static_cast<int64_t>(tmpStartTickId[threadNum].size()) - tmpRoundStarts[threadNum].back());
+            roundsProcessed++;
+            printProgress(roundsProcessed, rounds.size);
         }
 
         mergeThreadResults(numThreads, rowIndicesPerRound, tmpRoundIds, tmpRoundStarts, tmpRoundSizes,
