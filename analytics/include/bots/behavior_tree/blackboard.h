@@ -250,8 +250,9 @@ struct Blackboard {
         ctMemory.team = ENGINE_TEAM_CT;
     }
 
-    Blackboard(const string & navPath, VisPoints visPoints,
-               MapMeshResult mapMeshResult, ReachableResult reachability, DistanceToPlacesResult distanceToPlaces) :
+    Blackboard(const string & navPath, const VisPoints & visPoints,
+               const MapMeshResult & mapMeshResult, const ReachableResult & reachability,
+               const DistanceToPlacesResult & distanceToPlaces) :
         navFolderPath(std::filesystem::path(navPath).remove_filename().string()),
         navPath(navPath), mapsPath(navFolderPath),
         navFile(navPath.c_str()), streamingManager(navFolderPath),

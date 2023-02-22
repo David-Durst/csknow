@@ -46,6 +46,7 @@
 #include "navmesh/nav_file.h"
 #include "queries/nav_mesh.h"
 #include "queries/reachable.h"
+#include "queries/moments/behavior_tree_latent_events.h"
 #include <filesystem>
 namespace fs = std::filesystem;
 
@@ -181,6 +182,13 @@ int main(int argc, char * argv[]) {
     std::cout << "processing nearestNavAreas" << std::endl;
     csknow::nearest_nav_cell::NearestNavCell nearestNavCellResult(map_visPoints.at("de_dust2"));
     nearestNavCellResult.runQuery(navPath, "de_dust2");
+    std::cout << "size: " << nearestNavCellResult.size << std::endl;
+
+    // bt latent events
+    string behaviorTreeLatentEventsName = "behaviorTreeLatentEvents";
+    std::cout << "processing behaviorTreeLatentEvents" << std::endl;
+    csknow::behavior_tree_latent_events::BehaviorTreeLatentEvents behaviorTreeLatentEvents;
+    behaviorTreeLatentEvents.runQuery(navPath, map_visPoints.at("de_dust2"), d2MeshResult, navPath, "de_dust2");
     std::cout << "size: " << nearestNavCellResult.size << std::endl;
 
     // fire history
