@@ -81,8 +81,8 @@ void buildIndexes(Equipment & equipment [[maybe_unused]], GameTypes & gameTypes 
     // TODO: reenable when golang parser UniqueID2 works so indices are fixed
     //buildRangeIndex(grenades.id, grenades.size, flashed.grenadeId, flashed.size, grenades.flashedPerGrenade, "grenades", "flashed");
     //buildRangeIndex(grenades.id, grenades.size, grenadeTrajectories.grenadeId, grenadeTrajectories.size, grenades.trajectoryPerGrenade, "grenades", "grenadeTrajectories");
-    buildRangeIndex(plants.id, plants.size, defusals.plantId, defusals.size, plants.defusalsPerGrenade, "plants", "defusals");
-    buildRangeIndex(plants.id, plants.size, explosions.plantId, explosions.size, plants.explosionsPerGrenade, "plants", "explosions");
+    buildRangeIndex(plants.id, plants.size, defusals.plantId, defusals.size, plants.defusalsPerPlant, "plants", "defusals");
+    buildRangeIndex(plants.id, plants.size, explosions.plantId, explosions.size, plants.explosionsPerPlant, "plants", "explosions");
 
     cout << "building hashmap indexes" << endl;
     ticks.weaponFirePerTick = buildIntervalIndex({weaponFire.tickId}, weaponFire.size);

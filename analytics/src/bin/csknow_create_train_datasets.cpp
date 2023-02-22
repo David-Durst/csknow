@@ -46,7 +46,7 @@
 #include "navmesh/nav_file.h"
 #include "queries/nav_mesh.h"
 #include "queries/reachable.h"
-#include "queries/moments/behavior_tree_latent_events.h"
+#include "queries/moments/behavior_tree_latent_states.h"
 #include <filesystem>
 namespace fs = std::filesystem;
 
@@ -190,9 +190,9 @@ int main(int argc, char * argv[]) {
     csknow::behavior_tree_latent_states::BehaviorTreeLatentStates behaviorTreeLatentEvents;
     behaviorTreeLatentEvents.runQuery(navPath + "/de_dust2.nav", map_visPoints.at("de_dust2"), d2MeshResult,
                                       d2ReachableResult, d2DistanceToPlacesResult,
-                                      nearestNavCellResult, players, filteredRounds, ticks, playerAtTick,
-                                      weaponFire, hurt);
-    std::cout << "size: " << nearestNavCellResult.size << std::endl;
+                                      nearestNavCellResult, players, games, filteredRounds, ticks,
+                                      playerAtTick, weaponFire, hurt, plants, defusals);
+    std::cout << "size: " << behaviorTreeLatentEvents.size << std::endl;
 
     // fire history
     string fireHistoryName = "fireHistory";

@@ -845,8 +845,8 @@ public:
     int64_t * endTick;
     int64_t * planter;
     bool * succesful;
-    RangeIndex defusalsPerGrenade;
-    RangeIndex explosionsPerGrenade;
+    RangeIndex defusalsPerPlant;
+    RangeIndex explosionsPerPlant;
 
     void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) override {
         ColStore::init(rows, numFiles, gameStarts);
@@ -854,8 +854,8 @@ public:
         endTick = (int64_t *) malloc(rows * sizeof(int64_t));
         planter = (int64_t *) malloc(rows * sizeof(int64_t));
         succesful = (bool *) malloc(rows * sizeof(bool));
-        defusalsPerGrenade = (RangeIndexEntry *) malloc(rows * sizeof(RangeIndexEntry));
-        explosionsPerGrenade = (RangeIndexEntry *) malloc(rows * sizeof(RangeIndexEntry));
+        defusalsPerPlant = (RangeIndexEntry *) malloc(rows * sizeof(RangeIndexEntry));
+        explosionsPerPlant = (RangeIndexEntry *) malloc(rows * sizeof(RangeIndexEntry));
     }
 
     Plants() = default;
@@ -867,8 +867,8 @@ public:
         free(endTick);
         free(planter);
         free(succesful);
-        free(defusalsPerGrenade);
-        free(explosionsPerGrenade);
+        free(defusalsPerPlant);
+        free(explosionsPerPlant);
     }
 
     Plants(const Plants& other) = delete;

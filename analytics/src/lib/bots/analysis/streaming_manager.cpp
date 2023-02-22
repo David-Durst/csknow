@@ -51,12 +51,49 @@ void StreamingManager::update(const ServerState & state) {
     }
 }
 
-void StreamingManager::update(const Players & players, const Ticks & ticks, const WeaponFire & weaponFire,
+RoundPlantDefusal processRoundPlantDefusals(const Rounds & rounds, const Ticks & ticks, const Plants & plants,
+                                            const Defusals & defusals, int64_t roundIndex) {
+    RoundPlantDefusal result{INVALID_ID, INVALID_ID};
+    for (int64_t tickIndex = rounds.ticksPerRound[roundIndex].minId;
+         tickIndex <= rounds.ticksPerRound[roundIndex].maxId; tickIndex++) {
+        if (result.plantTickIndex == INVALID_ID) {
+            for (const auto & [_0, _1, plantIndex] :
+                ticks.plantsPerTick.intervalToEvent.findOverlapping(tickIndex, tickIndex)) {
+                if (plants.succesful[plantIndex]) {
+                    result.plantTickIndex = plants.endTick[tickIndex];
+                }
+            }
+        }
+        if (result.defusalTickIndex == INVALID_ID) {
+            for (const auto &[_0, _1, defusalIndex]:
+                ticks.defusalsPerTick.intervalToEvent.findOverlapping(tickIndex, tickIndex)) {
+                if (defusals.succesful[defusalIndex]) {
+                    result.defusalTickIndex = defusals.endTick[tickIndex];
+                }
+            }
+        }
+    }
+}
+
+void StreamingManager::update(const Games & games, const RoundPlantDefusal & roundPlantDefusal, const Rounds & rounds,
+                              const Players & players, const Ticks & ticks, const WeaponFire & weaponFire,
                               const Hurt & hurt, const PlayerAtTick & playerAtTick, int64_t tickIndex,
                               const csknow::nearest_nav_cell::NearestNavCell & nearestNavCell,
                               const VisPoints & visPoints) {
     ServerState newState;
 
+    int64_t roundIndex = ticks.roundId[tickIndex];
+    int64_t gameIndex = rounds.gameId[roundIndex];
+
+    // loadGenerateState equivalent
+    newState.mapName = games.mapName[gameIndex];
+    newState.tScore = rounds.tWins[gameIndex];
+    newState.ctScore = rounds.ctWins[gameIndex];
+    newState.mapNumber = gameIndex;
+    newState.tickInterval = games.gameTickRate[gameIndex];
+    newState.gameTime = ticks.gameTime[gameIndex];
+
+    // loadClientStates equivelent
     for (int64_t patIndex = ticks.patPerTick[tickIndex].minId;
          patIndex <= ticks.patPerTick[tickIndex].maxId; patIndex++) {
         Vec2 viewAngle {
@@ -135,6 +172,7 @@ void StreamingManager::update(const Players & players, const Ticks & ticks, cons
         newState.clients.push_back(newClient);
     }
 
+    // loadVisibilityClientPairs equivalent
     for (size_t outerClientIndex = 0; outerClientIndex < newState.clients.size(); outerClientIndex++) {
         const ServerState::Client & outerClient = newState.clients[outerClientIndex];
         for (size_t innerClientIndex = outerClientIndex + 1; innerClientIndex < newState.clients.size();
@@ -147,6 +185,16 @@ void StreamingManager::update(const Players & players, const Ticks & ticks, cons
         }
     }
 
+    // loadC4State equivalent
+    newState.c4Exists = true;
+    newState.c4IsPlanted = tickIndex >= roundPlantDefusal.plantTickIndex;
+    newState.c4IsDropped = !newState.c4IsPlanted && ticks.bombCarrier[tickIndex] == INVALID_ID;
+    newState.c4IsDefused = tickIndex >= roundPlantDefusal.defusalTickIndex;
+    newState.c4X = ticks.bombX[tickIndex];
+    newState.c4Y = ticks.bombY[tickIndex];
+    newState.c4Z = ticks.bombZ[tickIndex];
+
+    // loadHurtEvent equivalent
     for (const auto & [_0, _1, hurtIndex] :
         ticks.hurtPerTick.intervalToEvent.findOverlapping(tickIndex, tickIndex)) {
         ServerState::Hurt newHurt {
@@ -163,6 +211,7 @@ void StreamingManager::update(const Players & players, const Ticks & ticks, cons
         newState.hurtEvents.push_back(newHurt);
     }
 
+    // loadWeaponFire equivalent
     for (const auto & [_0, _1, weaponFireIndex] :
         ticks.weaponFirePerTick.intervalToEvent.findOverlapping(tickIndex, tickIndex)) {
         ServerState::WeaponFire newWeaponFire {

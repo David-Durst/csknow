@@ -10,6 +10,14 @@
 #include <bots/streaming_moments/streaming_engagement_aim.h>
 #include <bots/streaming_moments/streaming_test_logger.h>
 
+// when converting col store to row store, precompute plant/defusal for entire round
+struct RoundPlantDefusal {
+    int64_t plantTickIndex;
+    int64_t defusalTickIndex;
+};
+RoundPlantDefusal processRoundPlantDefusals(const Rounds & rounds, const Ticks & ticks, const Plants & plants,
+                                            const Defusals & defusals, int64_t roundIndex);
+
 class StreamingManager {
 public:
     StreamingBotDatabase db;
@@ -20,7 +28,9 @@ public:
 
     StreamingManager(const string & navPath) : streamingTestLogger(navPath), streamingEngagementAim(navPath)  { }
     void update(const ServerState & state);
-    void update(const Players & players, const Ticks & ticks, const WeaponFire & weaponFire, const Hurt & hurt,
+
+    void update(const Games & games, const RoundPlantDefusal & roundPlantDefusal, const Rounds & rounds,
+                const Players & players, const Ticks & ticks, const WeaponFire & weaponFire, const Hurt & hurt,
                 const PlayerAtTick & playerAtTick, int64_t tickIndex,
                 const csknow::nearest_nav_cell::NearestNavCell & nearestNavCell, const VisPoints & visPoints);
 };

@@ -89,45 +89,7 @@ void Tree::tick(ServerState & state, const string & mapsPath) {
     }
 
     // insert tree thinkers and memories for new bots
-    bool haveCTPusher = false;
-    for (const auto & [playerId, thinker] : blackboard->playerToTreeThinkers) {
-        if (state.getClient(playerId).team == ENGINE_TEAM_CT && thinker.aggressiveType == AggressiveType::Push) {
-            haveCTPusher = true;
-        }
-    }
-    for (const auto & client : state.clients) {
-        if (client.isBot && blackboard->playerToTreeThinkers.find(client.csgoId) == blackboard->playerToTreeThinkers.end()) {
-            AggressiveType aggressiveType;
-            if (ALL_PUSH) {
-                aggressiveType = AggressiveType::Push;
-            }
-            else {
-                if (client.team == ENGINE_TEAM_CT && !haveCTPusher) {
-                    aggressiveType = AggressiveType::Push;
-                }
-                else {
-                    aggressiveType = blackboard->aggressionDis(blackboard->gen) < 0.5 ?
-                            AggressiveType::Push : AggressiveType::Bait;
-                    if (client.team == ENGINE_TEAM_CT && aggressiveType == AggressiveType::Push) {
-                        haveCTPusher = true;
-                    }
-                }
-            }
-            blackboard->playerToTreeThinkers[client.csgoId] = {
-                    client.csgoId,
-                    aggressiveType,
-                    {100, 60, 1200, 600},
-                    2.5
-            };
-            blackboard->playerToMemory[client.csgoId] = {
-                    false,
-                    client.team,
-                    client.csgoId,
-                    { }
-            };
-            blackboard->playerToMouseController.insert({client.csgoId, SecondOrderController(1.6, 0.76, 0.5)});
-        }
-    }
+    addTreeThinkersToBlackboard(state, blackboard.get());
 
     // compute the ids that are valid
     if (filterMutex.try_lock()) {
@@ -225,4 +187,47 @@ void Tree::readFilterNames() {
         }
     }
 #pragma GCC diagnostic pop
+}
+
+void addTreeThinkersToBlackboard(const ServerState & state, Blackboard * blackboard) {
+    // insert tree thinkers and memories for new bots
+    bool haveCTPusher = false;
+    for (const auto & [playerId, thinker] : blackboard->playerToTreeThinkers) {
+        if (state.getClient(playerId).team == ENGINE_TEAM_CT && thinker.aggressiveType == AggressiveType::Push) {
+            haveCTPusher = true;
+        }
+    }
+    for (const auto & client : state.clients) {
+        if (client.isBot && blackboard->playerToTreeThinkers.find(client.csgoId) == blackboard->playerToTreeThinkers.end()) {
+            AggressiveType aggressiveType;
+            if (ALL_PUSH) {
+                aggressiveType = AggressiveType::Push;
+            }
+            else {
+                if (client.team == ENGINE_TEAM_CT && !haveCTPusher) {
+                    aggressiveType = AggressiveType::Push;
+                }
+                else {
+                    aggressiveType = blackboard->aggressionDis(blackboard->gen) < 0.5 ?
+                                     AggressiveType::Push : AggressiveType::Bait;
+                    if (client.team == ENGINE_TEAM_CT && aggressiveType == AggressiveType::Push) {
+                        haveCTPusher = true;
+                    }
+                }
+            }
+            blackboard->playerToTreeThinkers[client.csgoId] = {
+                client.csgoId,
+                aggressiveType,
+                {100, 60, 1200, 600},
+                2.5
+            };
+            blackboard->playerToMemory[client.csgoId] = {
+                false,
+                client.team,
+                client.csgoId,
+                { }
+            };
+            blackboard->playerToMouseController.insert({client.csgoId, SecondOrderController(1.6, 0.76, 0.5)});
+        }
+    }
 }

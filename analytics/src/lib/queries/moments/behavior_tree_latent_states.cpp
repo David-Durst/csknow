@@ -2,8 +2,9 @@
 // Created by durst on 2/21/23.
 //
 
-#include "queries/moments/behavior_tree_latent_events.h"
+#include "queries/moments/behavior_tree_latent_states.h"
 #include "indices/build_indexes.h"
+#include "bots/behavior_tree/tree.h"
 
 namespace csknow::behavior_tree_latent_states {
 
@@ -15,6 +16,8 @@ namespace csknow::behavior_tree_latent_states {
         curPriority.nonDangerAimArea = {};
         curPriority.moveOptions = {true, false, false};
         curPriority.shootOptions = ShootOptions::DontShoot;
+        playerNodeState[treeThinker.csgoId] = NodeState::Success;
+        return playerNodeState[treeThinker.csgoId];
     }
 
     struct TemporaryStateData {
@@ -40,9 +43,10 @@ namespace csknow::behavior_tree_latent_states {
                                             const MapMeshResult & mapMeshResult, const ReachableResult & reachability,
                                             const DistanceToPlacesResult & distanceToPlaces,
                                             const nearest_nav_cell::NearestNavCell & nearestNavCell,
-                                            const Players & players, const Rounds & rounds, const Ticks & ticks,
-                                            const PlayerAtTick & playerAtTick,
-                                            const WeaponFire & weaponFire, const Hurt & hurt) {
+                                            const Players & players, const Games & games, const Rounds & rounds,
+                                            const Ticks & ticks, const PlayerAtTick & playerAtTick,
+                                            const WeaponFire & weaponFire, const Hurt & hurt,
+                                            const Plants & plants, const Defusals & defusals) {
 
         int numThreads = omp_get_max_threads();
         vector<vector<int64_t>> tmpRoundIds(numThreads);
@@ -63,15 +67,17 @@ namespace csknow::behavior_tree_latent_states {
             Blackboard blackboard(navPath, visPoints, mapMeshResult, reachability, distanceToPlaces);
             GlobalQueryNode globalQueryNode(blackboard);
             PlayerQueryNode playerQueryNode(blackboard);
+            RoundPlantDefusal roundPlantDefusal = processRoundPlantDefusals(rounds, ticks, plants, defusals, roundIndex);
 
             TemporaryStateData activeOrderState;
             map<CSGOId, TemporaryStateData> activeEngagementState;
 
             for (int64_t tickIndex = rounds.ticksPerRound[roundIndex].minId;
                  tickIndex <= rounds.ticksPerRound[roundIndex].maxId; tickIndex++) {
+                blackboard.streamingManager.update(games, roundPlantDefusal, rounds, players, ticks, weaponFire, hurt,
+                                                   playerAtTick, tickIndex, nearestNavCell, visPoints);
                 const ServerState & curState = blackboard.streamingManager.db.batchData.fromNewest();
-                blackboard.streamingManager.update(players, ticks, weaponFire, hurt, playerAtTick, tickIndex,
-                                                   nearestNavCell, visPoints);
+                addTreeThinkersToBlackboard(curState, &blackboard);
                 globalQueryNode.exec(curState, defaultThinker);
 
                 // order state transition whenever new orders
@@ -135,7 +141,7 @@ namespace csknow::behavior_tree_latent_states {
                             tmpLatentStateType, tmpStatePayload,
                             LatentStateType::Engagement,
                             EngagementStatePayload{playerId,
-                            get<EngagementStatePayload>(temporaryStateData.payload).targetId}, threadNum,
+                            std::get<EngagementStatePayload>(temporaryStateData.payload).targetId}, threadNum,
                             rounds.ticksPerRound[roundIndex].maxId,
                             activeEngagementState.at(playerId));
 

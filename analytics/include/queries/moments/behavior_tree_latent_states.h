@@ -2,8 +2,8 @@
 // Created by durst on 2/21/23.
 //
 
-#ifndef CSKNOW_BEHAVIOR_TREE_LATENT_EVENTS_H
-#define CSKNOW_BEHAVIOR_TREE_LATENT_EVENTS_H
+#ifndef CSKNOW_BEHAVIOR_TREE_LATENT_STATES_H
+#define CSKNOW_BEHAVIOR_TREE_LATENT_STATES_H
 
 #include <variant>
 #include "queries/moments/engagement.h"
@@ -19,6 +19,7 @@ namespace csknow::behavior_tree_latent_states {
         GlobalQueryNode(Blackboard & blackboard) :
                 SequenceNode(blackboard, Node::makeList(
                         make_unique<strategy::CreateOrdersNode>(blackboard),
+                        make_unique<strategy::AssignPlayersToOrders>(blackboard),
                         make_unique<communicate::CommunicateTeamMemory>(blackboard)
                 ), "GlobalQueryNodes") { };
     };
@@ -95,11 +96,12 @@ namespace csknow::behavior_tree_latent_states {
                       const MapMeshResult & mapMeshResult, const ReachableResult & reachability,
                       const DistanceToPlacesResult & distanceToPlaces,
                       const nearest_nav_cell::NearestNavCell & nearestNavCell,
-                      const Players & players, const Rounds & rounds, const Ticks & ticks,
-                      const PlayerAtTick & playerAtTick,
-                      const WeaponFire & weaponFire, const Hurt & hurt);
+                      const Players & players, const Games & games, const Rounds & rounds,
+                      const Ticks & ticks, const PlayerAtTick & playerAtTick,
+                      const WeaponFire & weaponFire, const Hurt & hurt,
+                      const Plants & plants, const Defusals & defusals);
     };
 
 }
 
-#endif //CSKNOW_BEHAVIOR_TREE_LATENT_EVENTS_H
+#endif //CSKNOW_BEHAVIOR_TREE_LATENT_STATES_H

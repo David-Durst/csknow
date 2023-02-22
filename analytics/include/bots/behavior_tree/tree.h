@@ -33,8 +33,10 @@ public:
     set<string> sharedLogFilterNames, localLogFilterNames;
 
     string curLog;
+
     void tick(ServerState & state, const string & mapsPath);
     void readFilterNames();
 };
+void addTreeThinkersToBlackboard(const ServerState & state, Blackboard * blackboard);
 
 #endif //CSKNOW_TREE_H
