@@ -9,7 +9,7 @@
 
 namespace csknow::behavior_tree_latent_states {
 
-    NodeState ClearPriorityNode::exec(const ServerState &state, TreeThinker &treeThinker) {
+    NodeState ClearPriorityNode::exec(const ServerState &, TreeThinker &treeThinker) {
         // default values are set to invalid where necessary, so this is fine
         Priority &curPriority = blackboard.playerToPriority[treeThinker.csgoId];
         curPriority.priorityType = PriorityType::Order;
@@ -27,8 +27,8 @@ namespace csknow::behavior_tree_latent_states {
     };
 
     void finishEvent(vector<vector<int64_t>> & tmpStartTickId, vector<vector<int64_t>> & tmpEndTickId,
-                     vector<vector<int64_t>> & tmpLength, vector<vector<LatentStateType>> tmpLatentStateType,
-                     vector<vector<StatePayload>> tmpStatePayload,
+                     vector<vector<int64_t>> & tmpLength, vector<vector<LatentStateType>> & tmpLatentStateType,
+                     vector<vector<StatePayload>> & tmpStatePayload,
                      const LatentStateType & latentStateType,
                      const EngagementStatePayload & engagementStatePayload,
                      int threadNum, int64_t curTickIndex, const TemporaryStateData & temporaryStateData) {
@@ -62,7 +62,7 @@ namespace csknow::behavior_tree_latent_states {
         TreeThinker defaultThinker{INVALID_ID, AggressiveType::Push};
 
 //#pragma omp parallel for
-        for (int64_t roundIndex = 0; roundIndex < 1L /*rounds.size*/; roundIndex++) {
+        for (int64_t roundIndex = 0; roundIndex < rounds.size; roundIndex++) {
             int threadNum = omp_get_thread_num();
             tmpRoundIds[threadNum].push_back(roundIndex);
             tmpRoundStarts[threadNum].push_back(static_cast<int64_t>(tmpStartTickId[threadNum].size()));
@@ -75,7 +75,7 @@ namespace csknow::behavior_tree_latent_states {
             map<CSGOId, TemporaryStateData> activeEngagementState;
 
             for (int64_t tickIndex = rounds.ticksPerRound[roundIndex].minId;
-                 tickIndex <= 3000L/*rounds.ticksPerRound[roundIndex].maxId*/; tickIndex++) {
+                 tickIndex <= rounds.ticksPerRound[roundIndex].maxId; tickIndex++) {
                 blackboard.streamingManager.update(games, roundPlantDefusal, rounds, players, ticks, weaponFire, hurt,
                                                    playerAtTick, tickIndex, nearestNavCell, visPoints);
                 const ServerState & curState = blackboard.streamingManager.db.batchData.fromNewest();
@@ -102,31 +102,45 @@ namespace csknow::behavior_tree_latent_states {
                 for (int64_t patIndex = ticks.patPerTick[tickIndex].minId;
                     patIndex <= ticks.patPerTick[tickIndex].maxId; patIndex++) {
                     CSGOId curPlayerId = playerAtTick.playerId[patIndex];
-                    TreeThinker defaultThinker{curPlayerId, AggressiveType::Push};
-                    playerQueryNode.exec(curState, defaultThinker);
+                    if (playerAtTick.isAlive[patIndex]) {
+                        playerQueryNode.exec(curState, blackboard.playerToTreeThinkers[curPlayerId]);
 
-                    bool prevActiveEngagement =
-                        activeEngagementState.find(curPlayerId) != activeEngagementState.end();
-                    int64_t curTarget = blackboard.playerToPriority[curPlayerId].targetPlayer.playerId;
-                    CSGOId prevTarget = INVALID_ID;
-                    if (prevActiveEngagement) {
-                        prevTarget =
-                            std::get<EngagementStatePayload>(activeEngagementState[curPlayerId].payload).targetId;
-                    }
-
-                    // state transition whenever a target change
-                    if (prevTarget != curTarget) {
-                        // if state change where previously had a target, write the state
+                        bool prevActiveEngagement =
+                            activeEngagementState.find(curPlayerId) != activeEngagementState.end();
+                        int64_t curTarget = blackboard.playerToPriority[curPlayerId].targetPlayer.playerId;
+                        CSGOId prevTarget = INVALID_ID;
                         if (prevActiveEngagement) {
+                            prevTarget =
+                                std::get<EngagementStatePayload>(activeEngagementState[curPlayerId].payload).targetId;
+                        }
+
+                        // state transition whenever a target change
+                        if (prevTarget != curTarget) {
+                            // if state change where previously had a target, write the state
+                            if (prevActiveEngagement) {
+                                finishEvent(tmpStartTickId, tmpEndTickId, tmpLength,
+                                            tmpLatentStateType, tmpStatePayload,
+                                            LatentStateType::Engagement,
+                                            EngagementStatePayload{curPlayerId, prevTarget}, threadNum,
+                                            tickIndex, activeEngagementState.at(curPlayerId));
+                                activeEngagementState.erase(curPlayerId);
+                            }
+                            activeOrderState.startTickId = tickIndex;
+                            activeOrderState.payload = EngagementStatePayload{curPlayerId, curTarget};
+                        }
+                    }
+                    else {
+                        bool prevActiveEngagement =
+                            activeEngagementState.find(curPlayerId) != activeEngagementState.end();
+                        if (prevActiveEngagement) {
+                            CSGOId prevTarget =
+                                std::get<EngagementStatePayload>(activeEngagementState[curPlayerId].payload).targetId;
                             finishEvent(tmpStartTickId, tmpEndTickId, tmpLength,
                                         tmpLatentStateType, tmpStatePayload,
                                         LatentStateType::Engagement,
                                         EngagementStatePayload{curPlayerId, prevTarget}, threadNum,
                                         tickIndex, activeEngagementState.at(curPlayerId));
-                            activeEngagementState.erase(curPlayerId);
                         }
-                        activeOrderState.startTickId = tickIndex;
-                        activeOrderState.payload = EngagementStatePayload{curPlayerId, curTarget};
                     }
                 }
             }

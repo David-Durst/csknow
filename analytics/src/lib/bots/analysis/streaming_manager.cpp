@@ -88,6 +88,7 @@ void StreamingManager::update(const Games & games, const RoundPlantDefusal & rou
 
     // loadGenerateState equivalent
     newState.mapName = games.mapName[gameIndex];
+    newState.roundNumber = roundIndex;
     newState.tScore = rounds.tWins[gameIndex];
     newState.ctScore = rounds.ctWins[gameIndex];
     newState.mapNumber = gameIndex;
@@ -113,7 +114,7 @@ void StreamingManager::update(const Games & games, const RoundPlantDefusal & rou
         newClient.lastFrame = static_cast<int32_t>(tickIndex);
         newClient.csgoId = static_cast<int32_t>(playerAtTick.playerId[patIndex]);
         newClient.lastTeleportId = INVALID_ID;
-        newClient.name = players.name[playerAtTick.playerId[patIndex]];
+        newClient.name = players.name[playerAtTick.playerId[patIndex] + players.idOffset];
         newClient.team = static_cast<TeamId>(playerAtTick.team[patIndex]);
         newClient.health = static_cast<int>(playerAtTick.health[patIndex]);
         newClient.armor = static_cast<int>(playerAtTick.armor[patIndex]);
@@ -172,6 +173,8 @@ void StreamingManager::update(const Games & games, const RoundPlantDefusal & rou
 
         newState.clients.push_back(newClient);
     }
+    std::sort(newState.clients.begin(), newState.clients.end(),
+              [](const ServerState::Client & a, const ServerState::Client & b) { return a.csgoId < b.csgoId; });
 
     // loadVisibilityClientPairs equivalent
     for (size_t outerClientIndex = 0; outerClientIndex < newState.clients.size(); outerClientIndex++) {
