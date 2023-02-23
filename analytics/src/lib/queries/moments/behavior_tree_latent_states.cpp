@@ -66,7 +66,7 @@ namespace csknow::behavior_tree_latent_states {
             int threadNum = omp_get_thread_num();
             tmpRoundIds[threadNum].push_back(roundIndex);
             tmpRoundStarts[threadNum].push_back(static_cast<int64_t>(tmpStartTickId[threadNum].size()));
-            Blackboard blackboard(navPath, visPoints, mapMeshResult, reachability, distanceToPlaces);
+            Blackboard blackboard(navPath, visPoints, nearestNavCell, mapMeshResult, reachability, distanceToPlaces);
             GlobalQueryNode globalQueryNode(blackboard);
             PlayerQueryNode playerQueryNode(blackboard);
             RoundPlantDefusal roundPlantDefusal = processRoundPlantDefusals(rounds, ticks, plants, defusals, roundIndex);

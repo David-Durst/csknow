@@ -36,7 +36,8 @@ void Tree::tick(ServerState & state, const string & mapsPath) {
                 }
                 else {
                     blackboard = make_unique<Blackboard>(navPath,
-                                                         blackboard->visPoints, blackboard->mapMeshResult,
+                                                         blackboard->visPoints, blackboard->nearestNavCell,
+                                                         blackboard->mapMeshResult,
                                                          blackboard->reachability, blackboard->distanceToPlaces);
                 }
                 makeBlackboardSuccesfully = true;

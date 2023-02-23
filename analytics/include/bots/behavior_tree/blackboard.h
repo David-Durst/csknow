@@ -16,6 +16,7 @@
 #include "queries/nav_mesh.h"
 #include "queries/reachable.h"
 #include "queries/distance_to_places.h"
+#include "queries/nearest_nav_cell.h"
 #include "bots/analysis/load_save_vis_points.h"
 #include "bots/behavior_tree/priority/memory_data.h"
 #include "bots/behavior_tree/global/possible_nav_areas.h"
@@ -95,6 +96,7 @@ struct Blackboard {
 
     // general map data
     VisPoints visPoints;
+    csknow::nearest_nav_cell::NearestNavCell nearestNavCell;
     MapMeshResult mapMeshResult;
     ReachableResult reachability;
     DistanceToPlacesResult distanceToPlaces;
@@ -232,7 +234,7 @@ struct Blackboard {
         navPath(navPath), mapsPath(navFolderPath),
         navFile(navPath.c_str()), streamingManager(navFolderPath),
         gen(rd()), navFileOverlay(navFile),
-        visPoints(navFile), mapMeshResult(queryMapMesh(navFile, "")),
+        visPoints(navFile), nearestNavCell(visPoints), mapMeshResult(queryMapMesh(navFile, "")),
         reachability(queryReachable(visPoints, mapMeshResult, "", mapsPath, mapName)),
         distanceToPlaces(queryDistanceToPlaces(navFile, reachability, "", mapsPath, mapName)),
         aggressionDis(0., 1.),
@@ -251,13 +253,14 @@ struct Blackboard {
     }
 
     Blackboard(const string & navPath, const VisPoints & visPoints,
+               const csknow::nearest_nav_cell::NearestNavCell & nearestNavCell,
                const MapMeshResult & mapMeshResult, const ReachableResult & reachability,
                const DistanceToPlacesResult & distanceToPlaces) :
         navFolderPath(std::filesystem::path(navPath).remove_filename().string()),
         navPath(navPath), mapsPath(navFolderPath),
         navFile(navPath.c_str()), streamingManager(navFolderPath),
         gen(rd()), navFileOverlay(navFile),
-        visPoints(visPoints), mapMeshResult(mapMeshResult),
+        visPoints(visPoints), nearestNavCell(nearestNavCell), mapMeshResult(mapMeshResult),
         reachability(reachability),
         distanceToPlaces(distanceToPlaces),
         aggressionDis(0., 1.),
