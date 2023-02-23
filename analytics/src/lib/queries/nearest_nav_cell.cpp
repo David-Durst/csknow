@@ -62,28 +62,16 @@ namespace csknow::nearest_nav_cell {
         string nearestFilePath = mapsPath + "/" + nearestFileName;
 
         // step 1: get bounds for all cells
-        playerPositionBounds = {{
-                                    std::numeric_limits<double>::max(),
-                                    std::numeric_limits<double>::max(),
-                                    std::numeric_limits<double>::max()
-                                },
-                                {
-                                    -1. * std::numeric_limits<double>::max(),
-                                    -1. * std::numeric_limits<double>::max(),
-                                    -1. * std::numeric_limits<double>::max()
-                                }};
-        for (const auto & cellVisPoint : visPoints.getCellVisPoints()) {
-            playerPositionBounds.min = min(playerPositionBounds.min, cellVisPoint.cellCoordinates.min);
-            playerPositionBounds.max = max(playerPositionBounds.max, cellVisPoint.cellCoordinates.max);
-        }
+
+        areaBounds = visPoints.getAreaBounds();
 
         // step 2: define grid dimensions, add 1 as size is 1 greater than max 0 indexed coordinate
-        gridDimensions = posToGridIndex(playerPositionBounds.max) + 1;
+        gridDimensions = posToGridIndex(areaBounds.max) + 1;
 
         // step 3: for every entry in grid, find closest in map (loading this if possible)
         gridEntryAABB.resize(gridDimensions.x * gridDimensions.y * gridDimensions.z);
         nearestCellsGrid.resize(gridDimensions.x * gridDimensions.y * gridDimensions.z);
-        if (std::filesystem::exists(nearestFilePath)) {
+        if (false && std::filesystem::exists(nearestFilePath)) {
             load(mapsPath, mapName);
         }
         else {
@@ -94,7 +82,7 @@ namespace csknow::nearest_nav_cell {
                     for (int64_t curZId = 0; curZId < gridDimensions.z; curZId++) {
                         IVec3 gridIndex = {curXId, curYId, curZId};
 
-                        gridIndexToAABB(gridIndex) = {gridIndexToCenterPos(gridIndex), gridIndexToCenterPos(gridIndex + 1)};
+                        gridIndexToAABB(gridIndex) = {gridIndexToMinPos(gridIndex), gridIndexToMinPos(gridIndex + 1)};
 
                         vector<CellIdAndDistance> cellVisPointsByDistance =
                             visPoints.getCellVisPointsByDistance(gridIndexToCenterPos(gridIndex),

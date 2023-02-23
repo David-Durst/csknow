@@ -25,7 +25,7 @@ namespace csknow::nearest_nav_cell {
     public:
         std::vector<AABB> gridEntryAABB;
         std::vector<NearestGridData> nearestCellsGrid;
-        AABB playerPositionBounds;
+        AABB areaBounds;
         IVec3 gridDimensions;
         const VisPoints & visPoints;
 
@@ -65,8 +65,8 @@ namespace csknow::nearest_nav_cell {
 
         IVec3 posToGridIndex(Vec3 pos) const {
             // fit pos into bounds
-            Vec3 thresholdedPos = min(max(pos, playerPositionBounds.min), playerPositionBounds.max);
-            Vec3 deltaCellBounds = thresholdedPos - playerPositionBounds.min;
+            Vec3 thresholdedPos = min(max(pos, areaBounds.min), areaBounds.max);
+            Vec3 deltaCellBounds = thresholdedPos - areaBounds.min;
             return {
                 static_cast<int64_t>(deltaCellBounds.x / GRID_DIM_WIDTH_DEPTH),
                 static_cast<int64_t>(deltaCellBounds.y / GRID_DIM_WIDTH_DEPTH),
@@ -75,10 +75,18 @@ namespace csknow::nearest_nav_cell {
         };
 
         Vec3 gridIndexToCenterPos(IVec3 gridIndex) const {
-            return playerPositionBounds.min + Vec3{
+            return areaBounds.min + Vec3{
                 (gridIndex.x + 0.5) * GRID_DIM_WIDTH_DEPTH,
                 (gridIndex.y + 0.5) * GRID_DIM_WIDTH_DEPTH,
                 (gridIndex.z + 0.5) * GRID_DIM_HEIGHT
+            };
+        }
+
+        Vec3 gridIndexToMinPos(IVec3 gridIndex) const {
+            return areaBounds.min + Vec3{
+                gridIndex.x * GRID_DIM_WIDTH_DEPTH,
+                gridIndex.y * GRID_DIM_WIDTH_DEPTH,
+                gridIndex.z * GRID_DIM_HEIGHT
             };
         }
 
