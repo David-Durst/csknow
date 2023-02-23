@@ -263,7 +263,7 @@ bool demoIsVisible(const PlayerAtTick & playerAtTick, int64_t attackerPATId, int
         victimCellIdsByDistances[1].distance > otherVictimCellIdsByDistances[1].distance) {
         std::cout << "bad victim cell distance, pos: " << victimEyePos.toCSV() << std::endl;
     }
-     */
+    */
     vector<CellVisPoint> victimTwoClosestCellVisPoints = {
             visPoints.getCellVisPoints()[victimCellIdsByDistances[0].cellId],
             visPoints.getCellVisPoints()[victimCellIdsByDistances[1].cellId]

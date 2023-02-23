@@ -110,39 +110,7 @@ namespace csknow::nearest_nav_cell {
                                     gridIndex.y * gridDimensions.z + gridIndex.z];
         }
 
-        std::vector<CellIdAndDistance> getNearestCells(Vec3 pos) const {
-            IVec3 curGridIndex = posToGridIndex(pos);
-            const NearestGridData & nearestGridData = gridIndexToNearestCells(curGridIndex);
-            // get the nearest grid index other than the cur one
-            // take nearest in x/y with same z
-            Vec3 curGridCenter = gridIndexToCenterPos(curGridIndex);
-            IVec3 otherGridIndex = curGridIndex;
-            otherGridIndex.x += pos.x >= curGridCenter.x ? 1 : -1;
-            otherGridIndex.y += pos.y >= curGridCenter.y ? 1 : -1;
-            const NearestGridData & otherGridData = gridIndexToNearestCells(otherGridIndex);
-
-            std::set<CellId> resultSet;
-            std::vector<CellIdAndDistance> result;
-            for (const auto & gridData : {nearestGridData, otherGridData}) {
-                for (const auto & nearestGridEntry : gridData) {
-                    if (resultSet.find(nearestGridEntry.cellId) == resultSet.end()) {
-                        resultSet.insert(nearestGridEntry.cellId);
-                        result.push_back({
-                                             nearestGridEntry.cellId,
-                                             vis_point_helpers::get_point_to_aabb_distance(
-                                                 pos, visPoints.getCellVisPoints()[nearestGridEntry.cellId].cellCoordinates)
-                                         });
-                    }
-                }
-
-            }
-
-            std::sort(result.begin(), result.end(), [](const CellIdAndDistance & a, const CellIdAndDistance & b) {
-                return a.distance < b.distance;
-            });
-
-            return result;
-        }
+        std::vector<CellIdAndDistance> getNearestCells(Vec3 pos) const;
 
         void runQuery(const string & mapsPath, const string & mapName);
     };
