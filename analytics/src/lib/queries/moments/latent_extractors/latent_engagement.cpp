@@ -57,6 +57,7 @@ namespace csknow::latent_engagement {
                         if (behaviorTreeLatentStates.startTickId[latentEventIndex] == tickIndex &&
                             behaviorTreeLatentStates.latentStateType[latentEventIndex] ==
                             csknow::behavior_tree_latent_states::LatentStateType::Engagement) {
+                            std::cout << "adding latent event" << std::endl;
                             latentEventIndexToTmpEngagementIndex[latentEventIndex] = tmpStartTickId.size();
                             tmpStartTickId[threadNum].push_back(behaviorTreeLatentStates.startTickId[latentEventIndex]);
                             tmpEndTickId[threadNum].push_back(behaviorTreeLatentStates.endTickId[latentEventIndex]);
