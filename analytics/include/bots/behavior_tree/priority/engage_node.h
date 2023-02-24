@@ -55,16 +55,16 @@ public:
         map<CSGOId, EnemyPositionMemory> & relevantCommunicatedEnemies = blackboard.playerToRelevantCommunicatedEnemies[treeThinker.csgoId];
         relevantCommunicatedEnemies.clear();
         Vec3 curPos = state.getClient(treeThinker.csgoId).getFootPosForPlayer();
-        AreaId curAreaId = blackboard.nearestNavCell.getNearestArea(curPos);
-        AreaId oldCurAreaId = blackboard.navFile
+        AreaId curAreaId = blackboard.navFile
                 .get_nearest_area_by_position(vec3Conv(curPos))
                 .get_id();
+        /*
+        AreaId curAreaId = blackboard.nearestNavCell.getNearestArea(curPos);
         if (curAreaId != oldCurAreaId) {
             double curDistance = blackboard.navFile.get_point_to_area_distance_within(vec3Conv(curPos),
                                                                                blackboard.navFile.get_area_by_id(curAreaId));
             double oldDistance = blackboard.navFile.get_point_to_area_distance_within(vec3Conv(curPos),
                                                                                blackboard.navFile.get_area_by_id(oldCurAreaId));
-            Vec3 testPos{-560.679993,1998.670044,-117.599998};
             if (curDistance < oldDistance) {
                 blackboard.navFile.get_nearest_area_by_position(vec3Conv(curPos));
             }
@@ -84,6 +84,7 @@ public:
                 " new area connections size " << blackboard.navFile.get_area_by_id(curAreaId).get_connections().size() <<
                 std::endl;
         }
+         */
         for (const auto & [enemyId, enemyPos] : blackboard.getCommunicatedPlayers(state, treeThinker).positions) {
             AreaId enemyAreaId = blackboard.navFile
                     .get_nearest_area_by_position(vec3Conv(enemyPos.lastSeenFootPos)).get_id();
