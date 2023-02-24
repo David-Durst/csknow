@@ -151,6 +151,7 @@ public:
 
 namespace vis_point_helpers {
     float get_point_to_aabb_distance(Vec3 position, const AABB &area);
+    float get_point_to_area_aabb_distance(Vec3 position, const AABB &area);
 }
 
 #endif //CSKNOW_LOAD_SAVE_VIS_POINTS_H

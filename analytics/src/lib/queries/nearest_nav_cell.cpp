@@ -168,12 +168,77 @@ namespace csknow::nearest_nav_cell {
     }
 
     std::vector<CellIdAndDistance> NearestNavCell::getNearestCells(Vec3 pos) const {
-        return getNearest(pos, true);
+        IVec3 curGridIndex = posToGridIndex(pos);
+        const NearestGridData & nearestGridData = gridIndexToNearestCells(curGridIndex);
+        // get the nearest grid index other than the cur one
+        // take nearest in x/y with same z
+        Vec3 curGridCenter = gridIndexToCenterPos(curGridIndex);
+        IVec3 otherGridIndex = curGridIndex;
+        otherGridIndex.x += pos.x >= curGridCenter.x ? 1 : -1;
+        otherGridIndex.y += pos.y >= curGridCenter.y ? 1 : -1;
+        const NearestGridData & otherGridData = gridIndexToNearestCells(otherGridIndex);
+
+        CellIdAndDistance firstNearest = nearestGridData[0];
+        firstNearest.distance = vis_point_helpers::get_point_to_aabb_distance(
+              pos, visPoints.getCellVisPoints()[firstNearest.cellId].cellCoordinates);
+        if (firstNearest.distance == 0.) {
+            CellIdAndDistance secondNearest = otherGridData[0];
+            secondNearest.distance = vis_point_helpers::get_point_to_aabb_distance(
+                pos, visPoints.getCellVisPoints()[firstNearest.cellId].cellCoordinates);
+            return {firstNearest, secondNearest};
+        }
+        else {
+            std::set<CellId> resultSet;
+            std::vector<CellIdAndDistance> result;
+            for (const auto & gridData : {nearestGridData, otherGridData}) {
+                for (const auto & nearestGridEntry : gridData) {
+                    if (resultSet.find(nearestGridEntry.cellId) == resultSet.end()) {
+                        resultSet.insert(nearestGridEntry.cellId);
+                        result.push_back({nearestGridEntry.cellId, vis_point_helpers::get_point_to_aabb_distance(
+                            pos, visPoints.getCellVisPoints()[nearestGridEntry.cellId].cellCoordinates)});
+                    }
+                }
+
+            }
+
+            std::sort(result.begin(), result.end(), [](const CellIdAndDistance & a, const CellIdAndDistance & b) {
+                return a.distance < b.distance;
+            });
+            return result;
+        }
     }
 
     AreaId NearestNavCell::getNearestArea(Vec3 pos) const {
-        std::vector<CellIdAndDistance> nearestCells = getNearest(pos, false);
-        return visPoints.getCellVisPoints()[nearestCells[0].cellId].areaId;
+        IVec3 curGridIndex = posToGridIndex(pos);
+        const NearestGridData & nearestGridData = gridIndexToNearestCells(curGridIndex);
+        // get the nearest grid index other than the cur one
+        // take nearest in x/y with same z
+        Vec3 curGridCenter = gridIndexToCenterPos(curGridIndex);
+        IVec3 otherGridIndex = curGridIndex;
+        otherGridIndex.x += pos.x >= curGridCenter.x ? 1 : -1;
+        otherGridIndex.y += pos.y >= curGridCenter.y ? 1 : -1;
+        const NearestGridData & otherGridData = gridIndexToNearestCells(otherGridIndex);
+
+        std::set<AreaId> resultSet;
+        std::vector<AreaIdAndDistance> result;
+        for (const auto & gridData : {nearestGridData, otherGridData}) {
+            for (const auto & nearestGridEntry : gridData) {
+                AreaId areaId = visPoints.getCellVisPoints()[nearestGridEntry.cellId].areaId;
+                if (resultSet.find(areaId) == resultSet.end()) {
+                    resultSet.insert(areaId);
+                    result.push_back({areaId, vis_point_helpers::get_point_to_area_aabb_distance(
+                        pos, visPoints.getAreaVisPoint(areaId).areaCoordinates)
+                    });
+                }
+            }
+
+        }
+
+        std::sort(result.begin(), result.end(), [](const AreaIdAndDistance & a, const AreaIdAndDistance & b) {
+            return a.distance < b.distance;
+        });
+
+        return result[0].areaId;
     }
 }
 

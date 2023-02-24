@@ -68,6 +68,11 @@ public:
             if (curDistance < oldDistance) {
                 blackboard.navFile.get_nearest_area_by_position(vec3Conv(curPos));
             }
+            if (oldDistance == 0.) {
+                AreaId tmpOldCurAreaId = blackboard.navFile.get_nearest_area_by_position(vec3Conv(curPos)).get_id();
+                AreaId tmpCurAreaId = blackboard.nearestNavCell.getNearestArea(curPos);
+                blackboard.navFile.get_nearest_area_by_position(vec3Conv(curPos));
+            }
             std::cout << "nearest area id cache wrong for pos "
                 << state.getClient(treeThinker.csgoId).getFootPosForPlayer().toCSV() <<
                 " old area id " << oldCurAreaId << " distance " << oldDistance << " aabb " <<

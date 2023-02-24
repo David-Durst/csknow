@@ -20,6 +20,11 @@ namespace csknow::nearest_nav_cell {
 
     typedef std::array<CellIdAndDistance, NUM_NEAREST_CELLS_PER_GRID_ENTRY> NearestGridData;
 
+    struct AreaIdAndDistance {
+        CellId areaId;
+        double distance;
+    };
+
     class NearestNavCell : public QueryResult {
         void load(const string & mapsPath, const string & mapName);
     public:
@@ -111,8 +116,9 @@ namespace csknow::nearest_nav_cell {
         }
 
         // true if distance metric is cells, false if distance metric is areas
-        std::vector<CellIdAndDistance> getNearest(Vec3 pos, bool cells) const;
         std::vector<CellIdAndDistance> getNearestCells(Vec3 pos) const;
+        // NEED TO FIX, 1807 DOESN'T APPEAR AS TOO SMALL FOR CELL, SO CAN"T GET IT
+        // NEED A BETTER FIX
         AreaId getNearestArea(Vec3 pos) const;
 
         void runQuery(const string & mapsPath, const string & mapName);

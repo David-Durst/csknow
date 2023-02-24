@@ -406,7 +406,7 @@ void VisPoints::setDangerPoints(const nav_mesh::nav_file & navFile, bool area) {
 
 namespace vis_point_helpers {
 // https://stackoverflow.com/questions/5254838/calculating-distance-between-a-point-and-a-rectangular-box-nearest-point
-    bool is_within_3d( const AABB & area, const Vec3 & position) {
+    bool is_within_3d( const AABB & area, const Vec3 & position, float z_tolerance) {
         if ( position.x < area.min.x )
             return false;
 
@@ -419,17 +419,28 @@ namespace vis_point_helpers {
         if ( position.y > area.max.y )
             return false;
 
-        if ( position.z < area.min.z )
+        if ( position.z < area.min.z - z_tolerance )
             return false;
 
-        if ( position.z > area.max.z )
+        if ( position.z > area.max.z + z_tolerance )
             return false;
 
         return true;
     }
 
     float get_point_to_aabb_distance( Vec3 position, const AABB& area) {
-        if (is_within_3d(area, position)) {
+        if (is_within_3d(area, position, 0.)) {
+            return 0.;
+        }
+        float dx = std::max(area.min.x - position.x, std::max(0., position.x - area.max.x));
+        float dy = std::max(area.min.y - position.y, std::max(0., position.y - area.max.y));
+        float dz = std::max(area.min.z - position.z, std::max(0., position.z - area.max.z));
+        return std::sqrt(dx * dx + dy * dy + dz * dz);
+    }
+
+    float get_point_to_area_aabb_distance( Vec3 position, const AABB& area) {
+        // see is_within_3d in nav_area.h for why 31
+        if (is_within_3d(area, position, 31.)) {
             return 0.;
         }
         float dx = std::max(area.min.x - position.x, std::max(0., position.x - area.max.x));
