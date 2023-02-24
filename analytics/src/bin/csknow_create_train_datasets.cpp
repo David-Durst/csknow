@@ -37,6 +37,7 @@
 #include "queries/moments/engagement_per_tick_aim.h"
 #include "queries/moments/non_engagement_trajectory.h"
 #include "queries/moments/trajectory_segments.h"
+#include "queries/moments/latent_extractors/latent_engagement.h"
 #include "queries/training_moments/training_engagement_aim.h"
 #include "queries/inference_moments/inference_engagement_aim.h"
 #include "queries/training_moments/training_navigation.h"
@@ -206,6 +207,15 @@ int main(int argc, char * argv[]) {
     std::cout << "processing engagements" << std::endl;
     EngagementResult engagementResult = queryEngagementResult(games, filteredRounds, ticks, hurt);
     std::cout << "size: " << engagementResult.size << std::endl;
+
+    // latent engagement events
+    string latentEngagementName = "latentEngagement";
+    std::cout << "processing latent engagements" << std::endl;
+    csknow::latent_engagement::LatentEngagementResult latentEngagementResult;
+    latentEngagementResult.runQuery(filteredRounds, ticks, hurt, behaviorTreeLatentEvents);
+    std::cout << "size: " << latentEngagementResult.size << std::endl;
+
+    // non-engagement trajectories
     std::cout << "processing non engagement trajectory" << std::endl;
     string nonEngagementTrajectoryName = "nonEngagementTrajectory";
     NonEngagementTrajectoryResult nonEngagementTrajectoryResult =
