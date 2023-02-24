@@ -110,7 +110,10 @@ namespace csknow::nearest_nav_cell {
                                     gridIndex.y * gridDimensions.z + gridIndex.z];
         }
 
+        // true if distance metric is cells, false if distance metric is areas
+        std::vector<CellIdAndDistance> getNearest(Vec3 pos, bool cells) const;
         std::vector<CellIdAndDistance> getNearestCells(Vec3 pos) const;
+        AreaId getNearestArea(Vec3 pos) const;
 
         void runQuery(const string & mapsPath, const string & mapName);
     };

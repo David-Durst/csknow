@@ -254,6 +254,15 @@ namespace nav_mesh {
         return std::sqrt(dx * dx + dy * dy + dz * dz);
     }
 
+    float nav_file::get_point_to_area_distance_within( vec3_t position, const nav_area& area, float z_scaling) const {
+        if (area.is_within_3d(position) ) {
+            return 0.;
+        }
+        else {
+            return get_point_to_area_distance(position, area, z_scaling);
+        }
+    }
+
     float nav_file::get_point_to_area_distance_2d( vec3_t position, const nav_area& area) const {
         float dx = std::max(area.get_min_corner().x - position.x,
                             std::max(0.f, position.x - area.get_max_corner().x));
@@ -291,6 +300,10 @@ namespace nav_mesh {
 
         for ( size_t area_id = 0; area_id < m_areas.size(); area_id++) {
             const nav_area& area = m_areas[area_id];
+            if (area.get_id() == 8828 || area.get_id() == 8826) {
+                int x = 1;
+                (void) x;
+            }
             // skip bugged areas with no connections
             if ( area.m_connections.empty() ) {
                 continue;

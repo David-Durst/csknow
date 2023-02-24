@@ -252,10 +252,8 @@ bool demoIsVisible(const PlayerAtTick & playerAtTick, int64_t attackerPATId, int
             playerAtTick.viewX[attackerPATId],
             playerAtTick.viewY[attackerPATId]
     };
-    vector<CellIdAndDistance> attackerCellIdsByDistances = nearestNavCell.getNearestCells(
-            attackerEyePos);
-    vector<CellIdAndDistance> victimCellIdsByDistances = nearestNavCell.getNearestCells(
-            victimEyePos);
+    vector<CellIdAndDistance> attackerCellIdsByDistances = nearestNavCell.getNearestCells(attackerEyePos);
+    vector<CellIdAndDistance> victimCellIdsByDistances = nearestNavCell.getNearestCells(victimEyePos);
     /*
     vector<CellIdAndDistance> otherVictimCellIdsByDistances = visPoints.getCellVisPointsByDistance(
         victimEyePos);

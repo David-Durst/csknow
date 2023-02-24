@@ -102,7 +102,8 @@ namespace csknow::nearest_nav_cell {
         }
     }
 
-    std::vector<CellIdAndDistance> NearestNavCell::getNearestCells(Vec3 pos) const {
+    // true if distance metric is cells, false if distance metric is areas
+    std::vector<CellIdAndDistance> NearestNavCell::getNearest(Vec3 pos, bool cells) const {
         IVec3 curGridIndex = posToGridIndex(pos);
         const NearestGridData & nearestGridData = gridIndexToNearestCells(curGridIndex);
         // get the nearest grid index other than the cur one
@@ -114,12 +115,26 @@ namespace csknow::nearest_nav_cell {
         const NearestGridData & otherGridData = gridIndexToNearestCells(otherGridIndex);
 
         CellIdAndDistance firstNearest = nearestGridData[0];
-        firstNearest.distance = vis_point_helpers::get_point_to_aabb_distance(
-            pos, visPoints.getCellVisPoints()[firstNearest.cellId].cellCoordinates);
+        if (cells) {
+            firstNearest.distance = vis_point_helpers::get_point_to_aabb_distance(
+                pos, visPoints.getCellVisPoints()[firstNearest.cellId].cellCoordinates);
+        }
+        else {
+            firstNearest.distance = vis_point_helpers::get_point_to_aabb_distance(
+                pos,
+                visPoints.getAreaVisPoint(visPoints.getCellVisPoints()[firstNearest.cellId].areaId).areaCoordinates);
+        }
         if (firstNearest.distance == 0.) {
             CellIdAndDistance secondNearest = otherGridData[0];
-            secondNearest.distance = vis_point_helpers::get_point_to_aabb_distance(
-                pos, visPoints.getCellVisPoints()[firstNearest.cellId].cellCoordinates);
+            if (cells) {
+                secondNearest.distance = vis_point_helpers::get_point_to_aabb_distance(
+                    pos, visPoints.getCellVisPoints()[firstNearest.cellId].cellCoordinates);
+            }
+            else {
+                secondNearest.distance = vis_point_helpers::get_point_to_aabb_distance(
+                    pos,
+                    visPoints.getAreaVisPoint(visPoints.getCellVisPoints()[secondNearest.cellId].areaId).areaCoordinates);
+            }
             return {firstNearest, secondNearest};
         }
         else {
@@ -129,10 +144,17 @@ namespace csknow::nearest_nav_cell {
                 for (const auto & nearestGridEntry : gridData) {
                     if (resultSet.find(nearestGridEntry.cellId) == resultSet.end()) {
                         resultSet.insert(nearestGridEntry.cellId);
-                        result.push_back({
-                            nearestGridEntry.cellId, vis_point_helpers::get_point_to_aabb_distance(
-                                pos, visPoints.getCellVisPoints()[nearestGridEntry.cellId].cellCoordinates)
-                        });
+                        double distance;
+                        if (cells) {
+                            distance = vis_point_helpers::get_point_to_aabb_distance(
+                                pos, visPoints.getCellVisPoints()[nearestGridEntry.cellId].cellCoordinates);
+                        }
+                        else {
+                            distance = vis_point_helpers::get_point_to_aabb_distance(
+                                pos,
+                                visPoints.getAreaVisPoint(visPoints.getCellVisPoints()[nearestGridEntry.cellId].areaId).areaCoordinates);
+                        }
+                        result.push_back({nearestGridEntry.cellId, distance});
                     }
                 }
 
@@ -143,6 +165,15 @@ namespace csknow::nearest_nav_cell {
             });
             return result;
         }
+    }
+
+    std::vector<CellIdAndDistance> NearestNavCell::getNearestCells(Vec3 pos) const {
+        return getNearest(pos, true);
+    }
+
+    AreaId NearestNavCell::getNearestArea(Vec3 pos) const {
+        std::vector<CellIdAndDistance> nearestCells = getNearest(pos, false);
+        return visPoints.getCellVisPoints()[nearestCells[0].cellId].areaId;
     }
 }
 

@@ -54,9 +54,31 @@ public:
         // select only relevant communicated enemies - those that are near a danger area
         map<CSGOId, EnemyPositionMemory> & relevantCommunicatedEnemies = blackboard.playerToRelevantCommunicatedEnemies[treeThinker.csgoId];
         relevantCommunicatedEnemies.clear();
-        AreaId curAreaId = blackboard.navFile
-                .get_nearest_area_by_position(vec3Conv(state.getClient(treeThinker.csgoId).getFootPosForPlayer()))
+        Vec3 curPos = state.getClient(treeThinker.csgoId).getFootPosForPlayer();
+        AreaId curAreaId = blackboard.nearestNavCell.getNearestArea(curPos);
+        AreaId oldCurAreaId = blackboard.navFile
+                .get_nearest_area_by_position(vec3Conv(curPos))
                 .get_id();
+        if (curAreaId != oldCurAreaId) {
+            double curDistance = blackboard.navFile.get_point_to_area_distance_within(vec3Conv(curPos),
+                                                                               blackboard.navFile.get_area_by_id(curAreaId));
+            double oldDistance = blackboard.navFile.get_point_to_area_distance_within(vec3Conv(curPos),
+                                                                               blackboard.navFile.get_area_by_id(oldCurAreaId));
+            Vec3 testPos{-560.679993,1998.670044,-117.599998};
+            if (curDistance < oldDistance) {
+                blackboard.navFile.get_nearest_area_by_position(vec3Conv(curPos));
+            }
+            std::cout << "nearest area id cache wrong for pos "
+                << state.getClient(treeThinker.csgoId).getFootPosForPlayer().toCSV() <<
+                " old area id " << oldCurAreaId << " distance " << oldDistance << " aabb " <<
+                blackboard.nearestNavCell.visPoints.getAreaVisPoint(oldCurAreaId).areaCoordinates.min.toCSV() <<
+                blackboard.nearestNavCell.visPoints.getAreaVisPoint(oldCurAreaId).areaCoordinates.max.toCSV() <<
+                " new area id " << curAreaId << " distance " << curDistance << " aabb " <<
+                blackboard.nearestNavCell.visPoints.getAreaVisPoint(curAreaId).areaCoordinates.min.toCSV() <<
+                blackboard.nearestNavCell.visPoints.getAreaVisPoint(curAreaId).areaCoordinates.max.toCSV() <<
+                " new area connections size " << blackboard.navFile.get_area_by_id(curAreaId).get_connections().size() <<
+                std::endl;
+        }
         for (const auto & [enemyId, enemyPos] : blackboard.getCommunicatedPlayers(state, treeThinker).positions) {
             AreaId enemyAreaId = blackboard.navFile
                     .get_nearest_area_by_position(vec3Conv(enemyPos.lastSeenFootPos)).get_id();
