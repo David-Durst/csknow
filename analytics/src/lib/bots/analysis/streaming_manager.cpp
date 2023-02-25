@@ -95,6 +95,7 @@ void StreamingManager::update(const Games & games, const RoundPlantDefusal & rou
     newState.tickInterval = games.gameTickRate[gameIndex];
     newState.gameTime = ticks.gameTime[gameIndex];
 
+    map<int64_t, int64_t> playerToPATindex;
     // loadClientStates equivelent
     for (int64_t patIndex = ticks.patPerTick[tickIndex].minId;
          patIndex <= ticks.patPerTick[tickIndex].maxId; patIndex++) {
@@ -109,6 +110,7 @@ void StreamingManager::update(const Games & games, const RoundPlantDefusal & rou
         };
 
         Vec2 viewWithRecoil = viewAngle + recoil * WEAPON_RECOIL_SCALE;
+        playerToPATindex[playerAtTick.playerId[patIndex]] = patIndex;
 
         ServerState::Client newClient;
         newClient.lastFrame = static_cast<int32_t>(tickIndex);
@@ -182,8 +184,8 @@ void StreamingManager::update(const Games & games, const RoundPlantDefusal & rou
         for (size_t innerClientIndex = outerClientIndex + 1; innerClientIndex < newState.clients.size();
             innerClientIndex++) {
             const ServerState::Client & innerClient = newState.clients[innerClientIndex];
-            if (demoIsVisible(playerAtTick, outerClient.csgoId, innerClient.csgoId,
-                              nearestNavCell, visPoints)) {
+            if (demoIsVisible(playerAtTick, playerToPATindex[outerClient.csgoId],
+                              playerToPATindex[innerClient.csgoId], nearestNavCell, visPoints)) {
                 newState.visibilityClientPairs.insert({outerClient.csgoId, innerClient.csgoId});
             }
         }
