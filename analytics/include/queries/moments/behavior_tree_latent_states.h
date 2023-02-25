@@ -44,7 +44,7 @@ namespace csknow::behavior_tree_latent_states {
         PlayerQueryNode(Blackboard & blackboard) :
                 ParallelFirstNode(blackboard, Node::makeList(
                         make_unique<memory::PerPlayerMemory>(blackboard),
-                        make_unique<EnemyEngageCheckNode>(blackboard)
+                        make_unique<PriorityDecisionNode>(blackboard)
                 ), "GlobalQueryNodes") { };
     };
 

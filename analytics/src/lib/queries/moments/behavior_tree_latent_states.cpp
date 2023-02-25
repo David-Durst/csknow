@@ -130,10 +130,12 @@ namespace csknow::behavior_tree_latent_states {
                                             tickIndex, activeEngagementState.at(curPlayerId));
                                 activeEngagementState.erase(curPlayerId);
                             }
-                            activeEngagementState[curPlayerId] = {
-                                tickIndex,
-                                EngagementStatePayload{curPlayerId, curTarget}
-                            };
+                            if (curTarget != INVALID_ID) {
+                                activeEngagementState[curPlayerId] = {
+                                    tickIndex,
+                                    EngagementStatePayload{curPlayerId, curTarget}
+                                };
+                            }
                         }
                     }
                     else {
