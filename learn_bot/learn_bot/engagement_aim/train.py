@@ -11,7 +11,7 @@ from pathlib import Path
 
 from torch.utils.tensorboard import SummaryWriter
 
-from dataset import *
+from learn_bot.engagement_aim.dataset import *
 from learn_bot.engagement_aim.mlp_aim_model import MLPAimModel
 from learn_bot.engagement_aim.row_rollout import row_rollout, get_off_policy_blend_amount, get_on_policy_blend_amount, \
     get_scheduled_sampling_blend_amount

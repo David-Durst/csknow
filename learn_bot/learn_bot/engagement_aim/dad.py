@@ -3,7 +3,7 @@ import copy
 import torch
 from torch import nn
 
-from dataset import *
+from learn_bot.engagement_aim.dataset import *
 from learn_bot.engagement_aim.dataset import AimDataset
 from learn_bot.libs.accuracy_and_loss import compute_loss, compute_accuracy, finish_accuracy, CUDA_DEVICE_STR, \
     CPU_DEVICE_STR
