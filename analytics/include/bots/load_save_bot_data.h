@@ -22,6 +22,11 @@ typedef int32_t RoundNumber;
 typedef std::chrono::time_point<std::chrono::system_clock> CSKnowTime;
 typedef std::chrono::time_point<std::filesystem::__file_clock> CSGOFileTime;
 constexpr CSKnowTime defaultTime = std::chrono::system_clock::time_point();
+static inline __attribute__((always_inline))
+CSKnowTime secondsToCSKnowTime(double seconds, CSKnowTime initTime = defaultTime) {
+    return std::chrono::duration_cast<std::chrono::system_clock::duration>(
+        std::chrono::duration<double, std::ratio<1>>(seconds)) + initTime;
+}
 // long poll up until this time before the next write
 constexpr double longPollBufferSeconds = 0.00150;
 // poll length

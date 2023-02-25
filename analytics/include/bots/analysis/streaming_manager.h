@@ -9,6 +9,7 @@
 #include <bots/streaming_moments/streaming_fire_history.h>
 #include <bots/streaming_moments/streaming_engagement_aim.h>
 #include <bots/streaming_moments/streaming_test_logger.h>
+#include "queries/lookback.h"
 
 // when converting col store to row store, precompute plant/defusal for entire round
 struct RoundPlantDefusal {
@@ -32,7 +33,8 @@ public:
     void update(const Games & games, const RoundPlantDefusal & roundPlantDefusal, const Rounds & rounds,
                 const Players & players, const Ticks & ticks, const WeaponFire & weaponFire, const Hurt & hurt,
                 const PlayerAtTick & playerAtTick, int64_t tickIndex,
-                const csknow::nearest_nav_cell::NearestNavCell & nearestNavCell, const VisPoints & visPoints);
+                const csknow::nearest_nav_cell::NearestNavCell & nearestNavCell, const VisPoints & visPoints,
+                const TickRates & tickRates);
 };
 
 bool demoIsVisible(const PlayerAtTick & playerAtTick, int64_t attackerPATId, int64_t victimPATId,

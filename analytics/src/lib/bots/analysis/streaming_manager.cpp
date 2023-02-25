@@ -80,11 +80,13 @@ void StreamingManager::update(const Games & games, const RoundPlantDefusal & rou
                               const Players & players, const Ticks & ticks, const WeaponFire & weaponFire,
                               const Hurt & hurt, const PlayerAtTick & playerAtTick, int64_t tickIndex,
                               const csknow::nearest_nav_cell::NearestNavCell & nearestNavCell,
-                              const VisPoints & visPoints) {
+                              const VisPoints & visPoints, const TickRates & tickRates) {
     ServerState newState;
 
     int64_t roundIndex = ticks.roundId[tickIndex];
     int64_t gameIndex = rounds.gameId[roundIndex];
+
+    newState.loadTime = secondsToCSKnowTime(gameTicksToSeconds(tickRates, ticks.gameTickNumber[tickIndex]));
 
     // loadGenerateState equivalent
     newState.mapName = games.mapName[gameIndex];

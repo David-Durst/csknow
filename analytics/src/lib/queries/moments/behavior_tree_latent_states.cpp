@@ -61,7 +61,7 @@ namespace csknow::behavior_tree_latent_states {
         vector<vector<StatePayload>> tmpStatePayload(numThreads);
         TreeThinker defaultThinker{INVALID_ID, AggressiveType::Push};
 
-//#pragma omp parallel for
+#pragma omp parallel for
         for (int64_t roundIndex = 0; roundIndex < rounds.size; roundIndex++) {
             int threadNum = omp_get_thread_num();
             tmpRoundIds[threadNum].push_back(roundIndex);
@@ -71,16 +71,21 @@ namespace csknow::behavior_tree_latent_states {
             PlayerQueryNode playerQueryNode(blackboard);
             RoundPlantDefusal roundPlantDefusal = processRoundPlantDefusals(rounds, ticks, plants, defusals, roundIndex);
 
+            TickRates tickRates = computeTickRates(games, rounds, roundIndex);
+
             TemporaryStateData activeOrderState;
             map<CSGOId, TemporaryStateData> activeEngagementState;
 
             for (int64_t tickIndex = rounds.ticksPerRound[roundIndex].minId;
                  tickIndex <= rounds.ticksPerRound[roundIndex].maxId; tickIndex++) {
                 blackboard.streamingManager.update(games, roundPlantDefusal, rounds, players, ticks, weaponFire, hurt,
-                                                   playerAtTick, tickIndex, nearestNavCell, visPoints);
+                                                   playerAtTick, tickIndex, nearestNavCell, visPoints, tickRates);
                 const ServerState & curState = blackboard.streamingManager.db.batchData.fromNewest();
                 addTreeThinkersToBlackboard(curState, &blackboard);
                 globalQueryNode.exec(curState, defaultThinker);
+                if (ticks.gameTickNumber[tickIndex] == 6460) {
+                    int x = 1;
+                }
 
                 // order state transition whenever new orders
                 // since my bots don't need to handle plants (plant start of round for retakes mode), I force a transition
