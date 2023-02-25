@@ -48,10 +48,6 @@ public:
                                                                         "EnemyEngageCheckNode") { };
 
     virtual bool valid(const ServerState & state, TreeThinker & treeThinker) override {
-        if (treeThinker.csgoId == 7) {
-            auto y =blackboard.playerToMemory[treeThinker.csgoId];
-            int x = 1;
-        }
         bool enemyVisible = !state.getVisibleEnemies(treeThinker.csgoId).empty();
         bool rememberEnemy = !blackboard.playerToMemory[treeThinker.csgoId].positions.empty();
 

@@ -83,9 +83,6 @@ namespace csknow::behavior_tree_latent_states {
                 const ServerState & curState = blackboard.streamingManager.db.batchData.fromNewest();
                 addTreeThinkersToBlackboard(curState, &blackboard);
                 globalQueryNode.exec(curState, defaultThinker);
-                if (ticks.gameTickNumber[tickIndex] == 6460) {
-                    int x = 1;
-                }
 
                 // order state transition whenever new orders
                 // since my bots don't need to handle plants (plant start of round for retakes mode), I force a transition
