@@ -328,7 +328,7 @@ if __name__ == "__main__":
     #engagement_ids = engagement_ids[:30]
     #limited_test_df = train_result.test_df[train_result.test_df[engagement_id_column].isin(engagement_ids)]
     #limited_test_dataset = AimDataset(limited_test_df, train_result.column_transformers)
-    pred_df = on_policy_inference(train_result.test_dataset, train_result.test_df,
-                                  train_result.model, train_result.column_transformers,
-                                  True)
-    vis.vis(train_result.test_df, pred_df)
+    #pred_df = on_policy_inference(train_result.test_dataset, train_result.test_df,
+    #                              train_result.model, train_result.column_transformers,
+    #                              True)
+    #vis.vis(train_result.test_df, pred_df)
