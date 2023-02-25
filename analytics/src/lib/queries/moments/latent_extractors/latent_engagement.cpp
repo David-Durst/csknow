@@ -46,8 +46,8 @@ namespace csknow::latent_engagement {
 
                 for (const auto & [_0, _1, latentEventIndex] :
                     behaviorTreeLatentStates.eventsPerTick.intervalToEvent.findOverlapping(tickIndex, tickIndex)) {
-                    std::cout << "tick index " << tickIndex << " in latent event " << latentEventIndex <<
-                        " start index" << behaviorTreeLatentStates.startTickId[latentEventIndex] << std::endl;
+                    //std::cout << "tick index " << tickIndex << " in latent event " << latentEventIndex <<
+                    //    " start index" << behaviorTreeLatentStates.startTickId[latentEventIndex] << std::endl;
 
                     if (behaviorTreeLatentStates.latentStateType[latentEventIndex] ==
                         csknow::behavior_tree_latent_states::LatentStateType::Engagement) {
@@ -59,7 +59,7 @@ namespace csknow::latent_engagement {
                         if (behaviorTreeLatentStates.startTickId[latentEventIndex] == tickIndex &&
                             behaviorTreeLatentStates.latentStateType[latentEventIndex] ==
                             csknow::behavior_tree_latent_states::LatentStateType::Engagement) {
-                            std::cout << "adding latent event" << std::endl;
+                            //std::cout << "adding latent event" << std::endl;
                             latentEventIndexToTmpEngagementIndex[latentEventIndex] = tmpStartTickId.size();
                             tmpStartTickId[threadNum].push_back(behaviorTreeLatentStates.startTickId[latentEventIndex]);
                             tmpEndTickId[threadNum].push_back(behaviorTreeLatentStates.endTickId[latentEventIndex]);
@@ -85,19 +85,18 @@ namespace csknow::latent_engagement {
             tmpRoundSizes[threadNum].push_back(static_cast<int64_t>(tmpStartTickId[threadNum].size()) - tmpRoundStarts[threadNum].back());
         }
 
-        EngagementResult result;
-        mergeThreadResults(numThreads, result.rowIndicesPerRound, tmpRoundIds, tmpRoundStarts, tmpRoundSizes,
-                           result.startTickId, result.size,
+        mergeThreadResults(numThreads, rowIndicesPerRound, tmpRoundIds, tmpRoundStarts, tmpRoundSizes,
+                           startTickId, size,
                            [&](int64_t minThreadId, int64_t tmpRowId) {
-                               result.startTickId.push_back(tmpStartTickId[minThreadId][tmpRowId]);
-                               result.endTickId.push_back(tmpEndTickId[minThreadId][tmpRowId]);
-                               result.tickLength.push_back(tmpLength[minThreadId][tmpRowId]);
-                               result.playerId.push_back(tmpPlayerId[minThreadId][tmpRowId]);
-                               result.role.push_back(tmpRole[minThreadId][tmpRowId]);
-                               result.hurtTickIds.push_back(tmpHurtTickIds[minThreadId][tmpRowId]);
-                               result.hurtIds.push_back(tmpHurtIds[minThreadId][tmpRowId]);
+                               startTickId.push_back(tmpStartTickId[minThreadId][tmpRowId]);
+                               endTickId.push_back(tmpEndTickId[minThreadId][tmpRowId]);
+                               tickLength.push_back(tmpLength[minThreadId][tmpRowId]);
+                               playerId.push_back(tmpPlayerId[minThreadId][tmpRowId]);
+                               role.push_back(tmpRole[minThreadId][tmpRowId]);
+                               hurtTickIds.push_back(tmpHurtTickIds[minThreadId][tmpRowId]);
+                               hurtIds.push_back(tmpHurtIds[minThreadId][tmpRowId]);
                            });
-        vector<const int64_t *> foreignKeyCols{result.startTickId.data(), result.endTickId.data()};
-        result.engagementsPerTick = buildIntervalIndex(foreignKeyCols, result.size);
+        vector<const int64_t *> foreignKeyCols{startTickId.data(), endTickId.data()};
+        engagementsPerTick = buildIntervalIndex(foreignKeyCols, size);
     }
 }

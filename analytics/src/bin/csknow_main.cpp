@@ -37,12 +37,15 @@
 #include "queries/training_moments/training_engagement_aim.h"
 #include "queries/inference_moments/inference_engagement_aim.h"
 #include "queries/training_moments/training_navigation.h"
+#include "queries/moments/trajectory_segments.h"
+#include "queries/moments/latent_extractors/latent_engagement.h"
 #define CPPHTTPLIB_OPENSSL_SUPPORT
 #include "httplib.h"
 #include <cerrno>
 #include "navmesh/nav_file.h"
 #include "queries/nav_mesh.h"
 #include "queries/reachable.h"
+#include "queries/orders.h"
 #include <filesystem>
 namespace fs = std::filesystem;
 
@@ -277,6 +280,38 @@ int main(int argc, char * argv[]) {
     NavVisibleResult d2CellVisibleResult(dust2CellsName, false, map_visPoints.find("de_dust2")->second, "de_dust2");
     string dust2DangerName = "de_dust2_danger";
     NavDangerResult d2NavDangerResult = queryNavDanger(map_visPoints.find("de_dust2")->second, dust2MeshName);
+
+    // orders
+    string ordersName = "orders";
+    std::cout << "processing orders" << std::endl;
+    csknow::orders::OrdersResult ordersResult(map_visPoints.at("de_dust2"), d2MeshResult, d2DistanceToPlacesResult);
+    ordersResult.runQuery();
+    std::cout << "size: " << ordersResult.size << std::endl;
+
+    // nearest nav areas
+    string nearestNavAreasName = "nearestNavAreas";
+    std::cout << "processing nearestNavAreas" << std::endl;
+    csknow::nearest_nav_cell::NearestNavCell nearestNavCellResult(map_visPoints.at("de_dust2"));
+    nearestNavCellResult.runQuery(navPath, "de_dust2");
+    std::cout << "size: " << nearestNavCellResult.size << std::endl;
+
+    // bt latent events
+    string behaviorTreeLatentEventsName = "behaviorTreeLatentEvents";
+    std::cout << "processing behaviorTreeLatentEvents" << std::endl;
+    csknow::behavior_tree_latent_states::BehaviorTreeLatentStates behaviorTreeLatentEvents;
+    behaviorTreeLatentEvents.runQuery(navPath + "/de_dust2.nav", map_visPoints.at("de_dust2"), d2MeshResult,
+                                      d2ReachableResult, d2DistanceToPlacesResult,
+                                      nearestNavCellResult, players, games, filteredRounds, ticks,
+                                      playerAtTick, weaponFire, hurt, plants, defusals);
+    std::cout << "size: " << behaviorTreeLatentEvents.size << std::endl;
+
+    // latent engagement events
+    string latentEngagementName = "latentEngagement";
+    std::cout << "processing latent engagements" << std::endl;
+    csknow::latent_engagement::LatentEngagementResult latentEngagementResult;
+    latentEngagementResult.runQuery(filteredRounds, ticks, hurt, behaviorTreeLatentEvents);
+    std::cout << "size: " << latentEngagementResult.size << std::endl;
+
     /*
     std::cout << "processing aggression_event" << std::endl;
     string aggressionEventName = "aggression_event";
@@ -306,7 +341,7 @@ int main(int argc, char * argv[]) {
     string engagementAimName = "trainEngagementAim";
     TrainingEngagementAimResult engagementAimResult =
         queryTrainingEngagementAim(games, filteredRounds, ticks, playerAtTick, engagementResult, fireHistoryResult,
-                                   map_visPoints.at("de_dust2"));
+                                   map_visPoints.at("de_dust2"), nearestNavCellResult);
     std::cout << "size: " << engagementAimResult.size << std::endl;
     std::cout << "processing engagements per tick aim" << std::endl;
     string engagementPerTickAimName = "engagementPerTickAim";
@@ -474,6 +509,7 @@ int main(int argc, char * argv[]) {
             {inferenceEngagementAimName, inferenceEngagementAimResult},
             {nonEngagementTrajectoryName, nonEngagementTrajectoryResult},
             {trajectorySegmentName, trajectorySegmentResult},
+            {latentEngagementName, latentEngagementResult},
             //{queryNames[5], aCatClusterSequence},
             //{queryNames[6], aCatPeekersClusters},
             //{queryNames[7], midCTClusterSequence},
