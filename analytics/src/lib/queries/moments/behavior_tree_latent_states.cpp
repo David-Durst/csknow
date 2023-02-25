@@ -125,8 +125,10 @@ namespace csknow::behavior_tree_latent_states {
                                             tickIndex, activeEngagementState.at(curPlayerId));
                                 activeEngagementState.erase(curPlayerId);
                             }
-                            activeOrderState.startTickId = tickIndex;
-                            activeOrderState.payload = EngagementStatePayload{curPlayerId, curTarget};
+                            activeEngagementState[curPlayerId] = {
+                                tickIndex,
+                                EngagementStatePayload{curPlayerId, curTarget}
+                            };
                         }
                     }
                     else {
@@ -140,6 +142,7 @@ namespace csknow::behavior_tree_latent_states {
                                         LatentStateType::Engagement,
                                         EngagementStatePayload{curPlayerId, prevTarget}, threadNum,
                                         tickIndex, activeEngagementState.at(curPlayerId));
+                            activeEngagementState.erase(curPlayerId);
                         }
                     }
                 }

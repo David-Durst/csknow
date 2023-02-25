@@ -46,6 +46,8 @@ namespace csknow::latent_engagement {
 
                 for (const auto & [_0, _1, latentEventIndex] :
                     behaviorTreeLatentStates.eventsPerTick.intervalToEvent.findOverlapping(tickIndex, tickIndex)) {
+                    std::cout << "tick index " << tickIndex << " in latent event " << latentEventIndex <<
+                        " start index" << behaviorTreeLatentStates.startTickId[latentEventIndex] << std::endl;
 
                     if (behaviorTreeLatentStates.latentStateType[latentEventIndex] ==
                         csknow::behavior_tree_latent_states::LatentStateType::Engagement) {
