@@ -28,6 +28,7 @@ from datetime import datetime
 
 from learn_bot.engagement_aim.vis import vis
 from learn_bot.libs.compare_models import *
+from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd
 
 checkpoints_path = Path(__file__).parent / 'checkpoints'
 
@@ -315,7 +316,7 @@ def train(all_data_df: pd.DataFrame, dad_iters=4, num_off_policy_epochs=5, num_s
 
 
 if __name__ == "__main__":
-    all_data_df = pd.read_csv(data_path)
+    all_data_df = load_hdf5_to_pd(hdf5_data_path)
     all_data_df[target_o_float_columns[0]] = \
         all_data_df[get_temporal_field_str(base_changed_offset_coordinates.attacker_x_view_angle, FUTURE_TICKS)]
     all_data_df[target_o_float_columns[1]] = \
