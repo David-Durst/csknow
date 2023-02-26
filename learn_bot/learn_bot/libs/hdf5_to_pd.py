@@ -25,6 +25,9 @@ def load_hdf5_to_pd(hdf5_path: Path):
             partial_dfs.append(pd.DataFrame(np_arr, columns=col_names))
 
     result_df = pd.concat(partial_dfs, axis=1)
+    for col in result_df.columns:
+        if str(result_df[col].dtype) == 'bool':
+            result_df[col] = result_df[col].astype(int)
     return result_df
 
 
