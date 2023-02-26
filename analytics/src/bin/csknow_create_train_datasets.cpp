@@ -247,15 +247,24 @@ int main(int argc, char * argv[]) {
                                    fireHistoryResult, map_visPoints.at("de_dust2"), nearestNavCellResult);
     std::cout << "size: " << engagementAimResult.size << std::endl;
 
+    // latent engagement aim data
+    std::cout << "processing training latent engagement aim training data set" << std::endl;
+    string latentEngagementAimName = "latentEngagementAim";
+    TrainingEngagementAimResult latentEngagementAimResult =
+        queryTrainingEngagementAim(games, filteredRounds, ticks, playerAtTick, latentEngagementResult,
+                                   fireHistoryResult, map_visPoints.at("de_dust2"), nearestNavCellResult);
+    std::cout << "size: " << latentEngagementAimResult.size << std::endl;
+
     map<string, reference_wrapper<QueryResult>> analyses {
             {engagementAimName, engagementAimResult},
+            {latentEngagementAimName, latentEngagementAimResult},
             //{trainingNavigationName, trainingNavigationResult},
     };
 
     // create the output files and the metadata describing files
     for (const auto & [name, result] : analyses) {
         //std::ofstream fsOverride;
-        std::cout << "writing " << outputDir + "/" + name + ".csv" << std::endl;
+        std::cout << "writing " << outputDir + "/" + name + ".hdf5" << std::endl;
         //fsOverride.open(outputDir + "/" + name + ".csv");
         //result.get().toCSV(fsOverride);
         result.get().toHDF5(outputDir + "/" + name + ".hdf5");
