@@ -56,10 +56,13 @@ IntervalIndex buildIntervalIndex(const vector<const int64_t *> &foreignKeyCols, 
     unordered_map<int64_t, RangeIndexEntry> eventToInterval;
     for (int64_t foreignIndex = 0; foreignIndex < foreignSize; foreignIndex++) {
         // collect all primary key entries that are in range the foreign keys
-        int64_t minPrimaryIndex = foreignKeyCols[0][foreignIndex], maxPrimaryIndex = foreignKeyCols[0][foreignIndex];
-        for (size_t col = 1; col < foreignKeyCols.size(); col++) {
-            minPrimaryIndex = std::min(minPrimaryIndex, foreignKeyCols[col][foreignIndex]);
-            maxPrimaryIndex = std::max(maxPrimaryIndex, foreignKeyCols[col][foreignIndex]);
+        int64_t minPrimaryIndex = std::numeric_limits<int64_t>::max(),
+            maxPrimaryIndex = std::numeric_limits<int64_t>::max() * -1;
+        for (size_t col = 0; col < foreignKeyCols.size(); col++) {
+            if (foreignKeyCols[col][foreignIndex] > INVALID_ID) {
+                minPrimaryIndex = std::min(minPrimaryIndex, foreignKeyCols[col][foreignIndex]);
+                maxPrimaryIndex = std::max(maxPrimaryIndex, foreignKeyCols[col][foreignIndex]);
+            }
         }
         eventIntervals.push_back({minPrimaryIndex, maxPrimaryIndex, foreignIndex});
         eventToInterval[foreignIndex] = {minPrimaryIndex, maxPrimaryIndex};
