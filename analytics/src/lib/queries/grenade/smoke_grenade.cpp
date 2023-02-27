@@ -6,24 +6,43 @@
 #include <omp.h>
 
 namespace csknow::smoke_grenade {
-    void SmokeGrenadeResult::runQuery(const Ticks & ticks, const Grenades & grenades,
+    void SmokeGrenadeResult::runQuery(const Rounds & rounds, const Ticks & ticks, const Grenades & grenades,
                                       const GrenadeTrajectories & grenadeTrajectories) {
         int numThreads = omp_get_max_threads();
         vector<vector<int64_t>> tmpRoundIds(numThreads);
         vector<vector<int64_t>> tmpRoundStarts(numThreads);
         vector<vector<int64_t>> tmpRoundSizes(numThreads);
-        vector<vector<int64_t>> tmpStartTickId(numThreads);
-        vector<vector<int64_t>> tmpEndTickId(numThreads);
-        vector<vector<int64_t>> tmpLength(numThreads);
-        vector<vector<int64_t>> tmpThrowTick(numThreads);
-        vector<vector<int64_t>> tmpActiveTick(numThreads);
-        vector<vector<int64_t>> tmpExpiredTick(numThreads);
-        vector<vector<int64_t>> tmpDestroyTick(numThreads);
+        vector<vector<int64_t>> tmpTickId(numThreads);
         vector<vector<int64_t>> tmpThrowerId(numThreads);
+        vector<vector<SmokeGrenadeState>> tmpState(numThreads);
         vector<vector<Vec3>> tmpPos(numThreads);
 
-        int64_t roundIndex = INVALID_ID;
 //#pragma omp parallel for
+        for (int64_t roundIndex = 0; roundIndex < rounds.size; roundIndex++) {
+            int threadNum = omp_get_thread_num();
+            tmpRoundIds[threadNum].push_back(roundIndex);
+            tmpRoundStarts[threadNum].push_back(static_cast<int64_t>(tmpTickId[threadNum].size()));
+
+            for (int64_t tickIndex = rounds.ticksPerRound[roundIndex].minId;
+                 tickIndex <= rounds.ticksPerRound[roundIndex].maxId; tickIndex++) {
+
+                for (const auto & [_0, _1, grenadeIndex] :
+                    ticks.grenadesPerTick.intervalToEvent.findOverlapping(tickIndex, tickIndex)) {
+                    tmpTickId[threadNum].push_back(tickIndex);
+                    tmpThrowerId[threadNum].push_back(grenades.thrower[grenadeIndex]);
+                    if (tickIndex < grenades.activeTick[grenadeIndex]) {
+                        tmpState[threadNum].push_back(SmokeGrenadeState::Thrown);
+                    }
+                    else {
+                        tmpState[threadNum].push_back(SmokeGrenadeState::Active);
+                    }
+                    tmpPos[threadNum].push_back()
+                }
+            }
+
+            tmpRoundSizes[threadNum].push_back(static_cast<int64_t>(tmpTickId[threadNum].size()) - tmpRoundStarts[threadNum].back());
+        }
+        int64_t roundIndex = INVALID_ID;
         for (int64_t grenadeIndex = 0; grenadeIndex < grenades.size; grenadeIndex++) {
             int threadNum = omp_get_thread_num();
             int64_t throwTickIndex = grenades.throwTick[grenadeIndex];

@@ -5,26 +5,28 @@
 #ifndef CSKNOW_SMOKE_GRENADE_H
 #define CSKNOW_SMOKE_GRENADE_H
 #include "queries/base_tables.h"
+#include "enum_helpers.h"
 
 
 namespace csknow::smoke_grenade {
+    enum class SmokeGrenadeState {
+        Thrown,
+        Active
+    };
+
     class SmokeGrenadeResult : public QueryResult {
     public:
         vector<RangeIndexEntry> rowIndicesPerRound;
-        vector<int64_t> startTickId;
-        vector<int64_t> endTickId;
-        vector<int64_t> tickLength;
-        vector<int64_t> throwTick;
-        vector<int64_t> activeTick;
-        vector<int64_t> expiredTick;
-        vector<int64_t> destroyTick;
+        vector<int64_t> tickId;
         vector<int64_t> throwerId;
+        vector<SmokeGrenadeState> state;
         vector<Vec3> pos;
+        IntervalIndex smokeGrenadesPerTick;
 
         SmokeGrenadeResult() {
-            variableLength = true;
+            variableLength = false;
             startTickColumn = 0;
-            perEventLengthColumn = 2;
+            ticksPerEvent = 1;
         }
 
         vector<int64_t> filterByForeignKey(int64_t otherTableIndex) override {
@@ -39,24 +41,22 @@ namespace csknow::smoke_grenade {
         }
 
         void oneLineToCSV(int64_t index, std::ostream &s) override {
-            s << index << "," << startTickId[index] << "," << endTickId[index] << "," << tickLength[index] << ","
-              << throwTick[index] << "," << activeTick[index] << "," << expiredTick[index] << "," << destroyTick[index]
-              << "," << throwerId[index] << "," << pos[index].toCSV();
+            s << index << "," << tickId[index] << "," << throwerId[index]
+              << "," << enumAsInt(state[index]) << "," << pos[index].toCSV();
 
         }
 
         [[nodiscard]]
         vector<string> getForeignKeyNames() override {
-            return {"start tick id", "end tick id", "length", "throw tick id", "active tick id",
-                    "expired tick id", "destroyed tick id", "thrower id"};
+            return {"tick id", "thrower id"};
         }
 
         [[nodiscard]]
         vector<string> getOtherColumnNames() override {
-            return {"pos x", "pos y", "pos z"};
+            return {"state", "pos x", "pos y", "pos z"};
         }
 
-        void runQuery(const Ticks & ticks, const Grenades & grenades,
+        void runQuery(const Rounds & rounds, const Ticks & ticks, const Grenades & grenades,
                       const GrenadeTrajectories & grenadeTrajectories);
     };
 }
