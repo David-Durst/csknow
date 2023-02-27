@@ -236,6 +236,7 @@ def on_policy_inference(dataset: AimDataset, orig_df: pd.DataFrame, model: nn.Mo
                         # save all predictions for output row
                         rounds_policy_data[valid_round_id].history_per_engagement[engagement_id] \
                             .finish_row((pred[0][i], pred[1][i]), cts, agg_series, result_strs)
+                        #rounds_policy_data[valid_round_id].cur_index += 2
                         rounds_policy_data[valid_round_id].cur_index += 1
                     pbar.update(len(valid_rounds))
 

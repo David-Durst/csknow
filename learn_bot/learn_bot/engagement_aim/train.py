@@ -98,7 +98,7 @@ def train(all_data_df: pd.DataFrame, dad_iters=4, num_off_policy_epochs=5, num_s
 
     # train and test the model
     first_row: torch.Tensor
-    model_output_recording: ModelOutputRecording = ModelOutputRecording(model)
+    #model_output_recording: ModelOutputRecording = ModelOutputRecording(model)
     time_weights_list = [1]
     for _ in range(FUTURE_TICKS):
         time_weights_list.append(0.8 * time_weights_list[-1])
@@ -106,7 +106,7 @@ def train(all_data_df: pd.DataFrame, dad_iters=4, num_off_policy_epochs=5, num_s
 
     def train_or_test_SL_epoch(dataloader, model, optimizer, first_epoch, last_epoch, blend_amount, include_cat_cols,
                                train=True):
-        nonlocal first_row, model_output_recording
+        nonlocal first_row#, model_output_recording
         size = len(dataloader.dataset)
         num_batches = len(dataloader)
         if train:
@@ -159,8 +159,8 @@ def train(all_data_df: pd.DataFrame, dad_iters=4, num_off_policy_epochs=5, num_s
                     print(f"loss: {loss:>7f}  [{current:>5d}/{size:>5d}]")
 
                 compute_accuracy(pred, Y, accuracy, column_transformers)
-                if last_epoch:
-                    model_output_recording.record_output(pred, Y, transformed_Y, train)
+                #if last_epoch:
+                #    model_output_recording.record_output(pred, Y, transformed_Y, train)
                 pbar.update(1)
 
         cumulative_loss /= num_batches
@@ -300,11 +300,11 @@ def train(all_data_df: pd.DataFrame, dad_iters=4, num_off_policy_epochs=5, num_s
             dad_df = create_dad_dataset(pred_df, train_df)
             total_train_df = pd.concat([total_train_df, dad_df], ignore_index=True)
 
-    model_output_recording.plot(column_transformers,
-                                output_column_types.float_standard_cols + output_column_types.delta_float_column_names() +
-                                output_column_types.float_180_angle_cols + output_column_types.delta_180_angle_column_names() +
-                                output_column_types.float_90_angle_cols + output_column_types.delta_90_angle_column_names(),
-                                output_column_types.categorical_cols)
+    #model_output_recording.plot(column_transformers,
+    #                            output_column_types.float_standard_cols + output_column_types.delta_float_column_names() +
+    #                            output_column_types.float_180_angle_cols + output_column_types.delta_180_angle_column_names() +
+    #                            output_column_types.float_90_angle_cols + output_column_types.delta_90_angle_column_names(),
+    #                            output_column_types.categorical_cols)
 
     if save:
         script_model = torch.jit.trace(model.to(CPU_DEVICE_STR), first_row)
