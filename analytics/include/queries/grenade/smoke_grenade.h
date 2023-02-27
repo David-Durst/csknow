@@ -42,7 +42,8 @@ namespace csknow::smoke_grenade {
 
         void oneLineToCSV(int64_t index, std::ostream &s) override {
             s << index << "," << tickId[index] << "," << throwerId[index]
-              << "," << enumAsInt(state[index]) << "," << pos[index].toCSV();
+              << "," << enumAsInt(state[index]) << "," << pos[index].toCSV()
+              << std::endl;
 
         }
 
