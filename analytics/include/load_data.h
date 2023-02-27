@@ -743,7 +743,7 @@ public:
     int64_t * expiredTick;
     int64_t * destroyTick;
     RangeIndex flashedPerGrenade;
-    RangeIndex trajectoryPerGrenade;
+    IntervalIndex trajectoryPerGrenade;
 
     void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) override {
         ColStore::init(rows, numFiles, gameStarts);
@@ -754,7 +754,6 @@ public:
         expiredTick = (int64_t *) malloc(rows * sizeof(int64_t));
         destroyTick = (int64_t *) malloc(rows * sizeof(int64_t));
         flashedPerGrenade = (RangeIndexEntry *) malloc(rows * sizeof(RangeIndexEntry));
-        trajectoryPerGrenade = (RangeIndexEntry *) malloc(rows * sizeof(RangeIndexEntry));
     }
 
     Grenades() = default;
@@ -769,7 +768,6 @@ public:
         free(expiredTick);
         free(destroyTick);
         free(flashedPerGrenade);
-        free(trajectoryPerGrenade);
     }
 
     Grenades(const Grenades& other) = delete;

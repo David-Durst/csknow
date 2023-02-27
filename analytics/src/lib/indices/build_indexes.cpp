@@ -83,7 +83,6 @@ void buildIndexes(Equipment & equipment [[maybe_unused]], GameTypes & gameTypes 
     buildRangeIndex(ticks.id, ticks.size, footstep.tickId, footstep.size, ticks.footstepPerTick, "ticks", "footstep");
     // TODO: reenable when golang parser UniqueID2 works so indices are fixed
     //buildRangeIndex(grenades.id, grenades.size, flashed.grenadeId, flashed.size, grenades.flashedPerGrenade, "grenades", "flashed");
-    //buildRangeIndex(grenades.id, grenades.size, grenadeTrajectories.grenadeId, grenadeTrajectories.size, grenades.trajectoryPerGrenade, "grenades", "grenadeTrajectories");
     buildRangeIndex(plants.id, plants.size, defusals.plantId, defusals.size, plants.defusalsPerPlant, "plants", "defusals");
     buildRangeIndex(plants.id, plants.size, explosions.plantId, explosions.size, plants.explosionsPerPlant, "plants", "explosions");
 
@@ -104,6 +103,7 @@ void buildIndexes(Equipment & equipment [[maybe_unused]], GameTypes & gameTypes 
     ticks.defusalsStartPerTick = buildIntervalIndex({defusals.startTick}, defusals.size);
     ticks.defusalsEndPerTick = buildIntervalIndex({defusals.endTick}, defusals.size);
     ticks.explosionsPerTick = buildIntervalIndex({explosions.tickId}, explosions.size);
+    grenades.trajectoryPerGrenade = buildIntervalIndex({grenadeTrajectories.grenadeId}, grenadeTrajectories.size);
 }
 
 void buildGridIndex(const vector<int64_t> &primaryKeyCol, const Vec3 * points, GridIndex &index) {

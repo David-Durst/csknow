@@ -499,6 +499,7 @@ int main(int argc, char * argv[]) {
             {"players", queryPlayers},
             {"ticks", queryTicks},
             {"playerAtTick", queryPlayerAtTick},
+            {"smokeGrenades", smokeGrenadeResult},
             {dust2MeshName, d2MeshResult},
             {dust2CellsName, d2CellsResult},
             {dust2AreaVisibleName, d2AreaVisibleResult},

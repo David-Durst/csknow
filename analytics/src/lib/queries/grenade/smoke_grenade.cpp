@@ -26,6 +26,7 @@ namespace csknow::smoke_grenade {
             tmpRoundStarts[threadNum].push_back(static_cast<int64_t>(tmpTickId[threadNum].size()));
 
             std::map<int64_t, std::map<int64_t, Vec3>> grenadeToTickToPos;
+            std::map<int64_t, Vec3> grenadeToLastPos;
 
             for (int64_t tickIndex = rounds.ticksPerRound[roundIndex].minId;
                  tickIndex <= rounds.ticksPerRound[roundIndex].maxId; tickIndex++) {
@@ -48,20 +49,30 @@ namespace csknow::smoke_grenade {
                     // if first tick with grenade, add it to map
                     if (grenadeToTickToPos.find(grenadeIndex) == grenadeToTickToPos.end()) {
                         size_t trajectoryOffset = 0;
-                        for (int64_t grenadeTrajectoryIndex = grenades.trajectoryPerGrenade[grenadeIndex].minId;
-                             grenadeTrajectoryIndex <= grenades.trajectoryPerGrenade[grenadeIndex].maxId;
-                             grenadeTrajectoryIndex++) {
-                            grenadeToTickToPos[grenadeIndex][tickIndex + trajectoryOffset] = {
+                        auto trajectory = grenades.trajectoryPerGrenade.intervalToEvent.findOverlapping(grenadeIndex, grenadeIndex);
+                        std::sort(trajectory.begin(), trajectory.end(), [](const Interval<int64_t, int64_t> & a, const Interval<int64_t, int64_t> & b) {
+                            return a.value < b.value;
+                        });
+                        for (const auto & [_0, _1, grenadeTrajectoryIndex] : trajectory) {
+                            Vec3 curPos {
                                 grenadeTrajectories.posX[grenadeTrajectoryIndex],
                                 grenadeTrajectories.posY[grenadeTrajectoryIndex],
                                 grenadeTrajectories.posZ[grenadeTrajectoryIndex]
                             };
+                            grenadeToTickToPos[grenadeIndex][tickIndex + trajectoryOffset] = curPos;
+                            grenadeToLastPos[grenadeIndex] = curPos;
                             trajectoryOffset++;
-
                         }
                     }
 
-                    tmpPos[threadNum].push_back(grenadeToTickToPos[grenadeIndex][tickIndex]);
+                    // smoke grenade trajectories last less than total throw time (seem to stop when grenade comes to rest)
+                    // so repeat pos once past length
+                    if (grenadeToTickToPos[grenadeIndex].find(tickIndex) != grenadeToTickToPos[grenadeIndex].end()) {
+                        tmpPos[threadNum].push_back(grenadeToTickToPos[grenadeIndex][tickIndex]);
+                    }
+                    else {
+                        tmpPos[threadNum].push_back(grenadeToLastPos[grenadeIndex]);
+                    }
                 }
             }
 
