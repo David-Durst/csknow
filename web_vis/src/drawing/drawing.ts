@@ -72,6 +72,9 @@ const light_red = "rgba(255,143,143,1.0)";
 const yellow = "rgb(187,142,52)";
 const green = "rgba(0,150,0,1.0)";
 export let smallMode: boolean = false
+const smoke_gray = "rgba(200, 200, 200, 0.4)"
+const smokeGrenadeImg = new Image()
+smokeGrenadeImg.src = "vis_images/smoke_grenade.png"
 
 let demoURL: string = ""
 export function setDemoURL(newUrl: string) {
@@ -402,6 +405,29 @@ export function drawTick(e: InputEvent) {
         }
         mainCtx.restore()
         //ctx.fillRect(location.getCanvasX(), location.getCanvasY(), 1, 1)
+    }
+    const smokes = gameData.getSmokeGrenades(tickData)
+    // https://www.google.com/search?client=firefox-b-1-d&q=smoke+radius+csgo
+    for (let s = 0; s < smokes.length; s++) {
+        const smokeLocation = new MapCoordinate(
+            smokes[s].posX,
+            smokes[s].posY,
+            false);
+        const smokeMax = new MapCoordinate(
+            smokes[s].posX + 144,
+            smokes[s].posY + 144,
+            false);
+        const smokeRadius = smokeMax.getCanvasX() - smokeLocation.getCanvasX()
+        if (smokes[s].state == 0) {
+            mainCtx.drawImage(smokeGrenadeImg, smokeLocation.getCanvasX(), smokeLocation.getCanvasY(), 30, 30)
+        }
+        else {
+            mainCtx.beginPath();
+            mainCtx.arc(smokeLocation.getCanvasX(), smokeLocation.getCanvasY(), smokeRadius,
+                0, 2 * Math.PI, false);
+            mainCtx.fillStyle = smoke_gray
+            mainCtx.fill()
+        }
     }
     if (drawingRegionFilter || definedRegionFilter) {
         if (emptyFilter) {

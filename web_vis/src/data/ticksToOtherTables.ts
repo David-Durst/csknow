@@ -62,7 +62,7 @@ export function indexEventsForRound(gameData: GameData) {
     generateRangeIndex(gameData.ticksTable, gameData.playerAtTicksTable,
         gameData.ticksToPlayerAtTick)
     gameData.ticksToSmokeGrenades.clear()
-    generateRangeIndex(gameData.ticksTable, gameData.playerAtTicksTable,
+    generateRangeIndex(gameData.ticksTable, gameData.smokeGrenadeTable,
         gameData.ticksToSmokeGrenades)
 
     for (let dataName of gameData.tableNames) {
