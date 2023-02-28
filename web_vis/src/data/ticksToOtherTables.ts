@@ -5,7 +5,7 @@ import {
     playerAtTickTableName,
     tickTableName,
     RangeIndex,
-    RangeIndexEntry, tablesNotFilteredByRound,
+    RangeIndexEntry, tablesNotFilteredByRound, smokeGrenadeName, playerFlashedTableName,
 } from "./tables";
 import {gameData} from "./data";
 import IntervalTree from "@flatten-js/interval-tree";
@@ -64,12 +64,16 @@ export function indexEventsForRound(gameData: GameData) {
     gameData.ticksToSmokeGrenades.clear()
     generateRangeIndex(gameData.ticksTable, gameData.smokeGrenadeTable,
         gameData.ticksToSmokeGrenades)
+    gameData.ticksToPlayerFlashed.clear()
+    generateRangeIndex(gameData.ticksTable, gameData.playerFlashedTable,
+        gameData.ticksToPlayerFlashed)
 
     for (let dataName of gameData.tableNames) {
         const curParser = gameData.parsers.get(dataName)
         // skip if non-temporal, longer time scale than a round, tick data, or already indexed by ticks to PAT
         if (tablesNotFilteredByRound.includes(dataName)
-            || dataName == tickTableName || dataName == playerAtTickTableName
+            || dataName == tickTableName || dataName == playerAtTickTableName || dataName == smokeGrenadeName
+            || dataName == playerFlashedTableName
             || curParser.nonTemporal) {
             continue;
         }

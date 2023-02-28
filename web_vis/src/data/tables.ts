@@ -183,6 +183,20 @@ export class SmokeGrenadeRow extends Row {
     }
 }
 
+export class PlayerFlashedRow extends Row {
+    tickId: number;
+    victimId: number;
+    flashAmount: number;
+
+    constructor(id: number, parser: Parser,
+                foreignKeyValues: number[], otherColumnValues: string[]) {
+        super(id, parser, foreignKeyValues, otherColumnValues);
+        this.tickId = foreignKeyValues[0];
+        this.victimId = foreignKeyValues[1];
+        this.flashAmount = parseFloat(otherColumnValues[0]);
+    }
+}
+
 export enum ParserType {
     tick,
     game,
@@ -190,6 +204,7 @@ export enum ParserType {
     player,
     playerAtTick,
     smokeGrenade,
+    playerFlashed,
     other
 }
 
@@ -348,6 +363,17 @@ export class Parser {
                 )
             )
         }
+        else if (this.parserType == ParserType.playerFlashed) {
+            gameData.playerFlashedTable.push(
+                new PlayerFlashedRow(
+                    id, this,
+                    currentLine.slice(foreignKeysStart,
+                        foreignKeysStart + this.foreignKeyNames.length)
+                        .map(s => parseInt(s)),
+                    currentLine.slice(otherColumnsStart, currentLine.length)
+                )
+            )
+        }
         // overlays last for all times
         else if (this.nonTemporal) {
             gameData.overlays.get(this.tableName).push(
@@ -401,6 +427,7 @@ export const roundTableName = "rounds"
 export const playerAtTickTableName = "playerAtTick"
 export const playersTableName = "players"
 export const smokeGrenadeName = "smokeGrenades"
+export const playerFlashedTableName = "playerFlashed"
 export const tablesNotFilteredByRound = [gameTableName, roundTableName, playersTableName]
 export class GameData {
     tableNames: string[] = [];
@@ -413,8 +440,10 @@ export class GameData {
     playerIdToIndex: Map<number, number> = new Map<number, number>();
     playerAtTicksTable: PlayerAtTickRow[];
     smokeGrenadeTable: SmokeGrenadeRow[];
+    playerFlashedTable: PlayerFlashedRow[];
     ticksToPlayerAtTick: RangeIndex = new Map<number, RangeIndexEntry>()
     ticksToSmokeGrenades: RangeIndex = new Map<number, RangeIndexEntry>()
+    ticksToPlayerFlashed: RangeIndex = new Map<number, RangeIndexEntry>()
     tables: Map<string, Row[]> =
         new Map<string, Row[]>();
     ticksToOtherTablesIndices: Map<string, IntervalTree<number>> =
@@ -463,6 +492,19 @@ export class GameData {
         return result;
     }
 
+    getPlayerFlashedThisTick(tickData: TickRow) : Map<number, number> {
+        if (!this.ticksToPlayerFlashed.has(tickData.id) ||
+            this.ticksToPlayerFlashed.get(tickData.id).minId == -1) {
+            return new Map<number, number>();
+        }
+        let result = new Map<number, number>();
+        for (let i = this.ticksToPlayerFlashed.get(tickData.id).minId;
+             i <= this.ticksToPlayerFlashed.get(tickData.id).maxId; i++) {
+            result.set(this.playerFlashedTable[i].victimId, this.playerFlashedTable[i].flashAmount)
+        }
+        return result;
+    }
+
     getPlayerByIndex(playerId: number) : PlayerRow {
         if (this.playerIdToIndex.size == 0) {
             for (let i = 0; i < this.playersTable.length; i++) {
@@ -490,9 +532,9 @@ export class GameData {
         target.playersTable = this.playersTable
         target.playerIdToIndex = this.playerIdToIndex
         target.playerAtTicksTable = this.playerAtTicksTable;
-        target.smokeGrenadeTable = this.smokeGrenadeTable;
         target.ticksToPlayerAtTick = this.ticksToPlayerAtTick;
         target.smokeGrenadeTable = this.smokeGrenadeTable;
+        target.playerFlashedTable = this.playerFlashedTable;
         target.tables = this.tables;
         target.ticksToOtherTablesIndices = this.ticksToOtherTablesIndices;
         target.overlays = this.overlays;
@@ -505,6 +547,7 @@ export class GameData {
         this.playerIdToIndex.clear();
         this.playerAtTicksTable = [];
         this.smokeGrenadeTable = [];
+        this.playerFlashedTable = [];
         for (const key of Array.from(this.tables.keys())) {
             this.tables.set(key, []);
         }

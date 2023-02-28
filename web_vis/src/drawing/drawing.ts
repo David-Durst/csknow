@@ -75,6 +75,10 @@ export let smallMode: boolean = false
 const smoke_gray = "rgba(200, 200, 200, 0.4)"
 const smokeGrenadeImg = new Image()
 smokeGrenadeImg.src = "vis_images/smoke_grenade.png"
+function getFlashColor(alpha: number): string {
+    console.log(`alpha: ${alpha}`)
+    return `rgba(255, 255, 255, ${alpha})`
+}
 
 let demoURL: string = ""
 export function setDemoURL(newUrl: string) {
@@ -361,6 +365,7 @@ export function drawTick(e: InputEvent) {
             return a.playerId - b.playerId
         }
     })
+    const playerFlashed = gameData.getPlayerFlashedThisTick(tickData)
     for (let p = 0; p < players.length && showPlayers; p++) {
         let playerText = playersText.get(players[p].playerId)
         mainCtx.fillStyle = dark_blue
@@ -404,6 +409,10 @@ export function drawTick(e: InputEvent) {
             mainCtx.fillRect(-2 * fontScale, (-13 + -7 * zScaling) * fontScale, 4 * fontScale, 10 * fontScale)
         }
         mainCtx.restore()
+        if (playerFlashed.has(players[p].playerId)) {
+            mainCtx.fillStyle = getFlashColor(playerFlashed.get(players[p].playerId));
+            mainCtx.fillText(playerText, location.getCanvasX(), location.getCanvasY())
+        }
         //ctx.fillRect(location.getCanvasX(), location.getCanvasY(), 1, 1)
     }
     const smokes = gameData.getSmokeGrenades(tickData)

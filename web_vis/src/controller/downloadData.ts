@@ -3,7 +3,7 @@ import {
     gameTableName, Parser,
     ParserType, playerAtTickTableName, playersTableName, RoundRow,
     roundTableName, tablesNotFilteredByRound,
-    tickTableName, TickRow, PlayerAtTickRow, parseBool, smokeGrenadeName
+    tickTableName, TickRow, PlayerAtTickRow, parseBool, smokeGrenadeName, playerFlashedTableName
 } from "../data/tables";
 import IntervalTree from "@flatten-js/interval-tree";
 import {indexEventsForRound} from "../data/ticksToOtherTables";
@@ -77,6 +77,9 @@ export async function getTables() {
                 }
                 else if (cols[0] == smokeGrenadeName) {
                     parserType = ParserType.smokeGrenade;
+                }
+                else if (cols[0] == playerFlashedTableName) {
+                    parserType = ParserType.playerFlashed;
                 }
                 else {
                     parserType = ParserType.other
