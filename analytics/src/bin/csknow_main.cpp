@@ -24,6 +24,7 @@
 #include "queries/groupInSequenceOfRegions.h"
 #include "queries/base_tables.h"
 #include "queries/grenade/smoke_grenade.h"
+#include "queries/grenade/player_flashed.h"
 #include "queries/position_and_wall_view.h"
 #include "indices/spotted.h"
 #include "queries/nav_visible.h"
@@ -184,6 +185,8 @@ int main(int argc, char * argv[]) {
     QueryPlayerAtTick queryPlayerAtTick(filteredRounds, ticks, playerAtTick);
     csknow::smoke_grenade::SmokeGrenadeResult smokeGrenadeResult;
     smokeGrenadeResult.runQuery(filteredRounds, ticks, grenades, grenadeTrajectories);
+    csknow::player_flashed::PlayerFlashedResult playerFlashedResult;
+    playerFlashedResult.runQuery(games, filteredRounds, ticks, playerAtTick, flashed);
 
     /*
     // record locations and view angles
@@ -500,6 +503,7 @@ int main(int argc, char * argv[]) {
             {"ticks", queryTicks},
             {"playerAtTick", queryPlayerAtTick},
             {"smokeGrenades", smokeGrenadeResult},
+            {"playerFlashed", playerFlashedResult},
             {dust2MeshName, d2MeshResult},
             {dust2CellsName, d2CellsResult},
             {dust2AreaVisibleName, d2AreaVisibleResult},
