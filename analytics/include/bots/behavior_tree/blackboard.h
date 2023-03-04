@@ -231,10 +231,10 @@ struct Blackboard {
     vector<PrintState> printPerPlayerState(const ServerState & state, CSGOId playerId);
 
     // training/inference data
-    csknow::feature_store::FeatureStoreResult & featureStoreResult;
+    csknow::feature_store::FeatureStorePreCommitBuffer & featureStorePreCommitBuffer;
 
     Blackboard(const string & navPath, const string & mapName,
-               csknow::feature_store::FeatureStoreResult & featureStoreResult) :
+               csknow::feature_store::FeatureStorePreCommitBuffer & featureStorePreCommitBuffer) :
         navFolderPath(std::filesystem::path(navPath).remove_filename().string()),
         navPath(navPath), mapsPath(navFolderPath),
         navFile(navPath.c_str()), streamingManager(navFolderPath),
@@ -246,7 +246,7 @@ struct Blackboard {
         tDangerAreaLastCheckTime(navFile.m_areas.size(), defaultTime),
         ctDangerAreaLastCheckTime(navFile.m_areas.size(), defaultTime),
         possibleNavAreas(navFile), standDis(0, 100.0), aimDis(0., 2.0),
-        featureStoreResult(featureStoreResult) {
+        featureStorePreCommitBuffer(featureStorePreCommitBuffer) {
 
         navFileOverlay.setMapsPath(mapsPath);
         visPoints.load(mapsPath, mapName, true, navFile, true);
@@ -262,7 +262,7 @@ struct Blackboard {
                const csknow::nearest_nav_cell::NearestNavCell & nearestNavCell,
                const MapMeshResult & mapMeshResult, const ReachableResult & reachability,
                const DistanceToPlacesResult & distanceToPlaces,
-               csknow::feature_store::FeatureStoreResult & featureStoreResult) :
+               csknow::feature_store::FeatureStorePreCommitBuffer & featureStorePreCommitBuffer) :
         navFolderPath(std::filesystem::path(navPath).remove_filename().string()),
         navPath(navPath), mapsPath(navFolderPath),
         navFile(navPath.c_str()), streamingManager(navFolderPath),
@@ -274,7 +274,7 @@ struct Blackboard {
         tDangerAreaLastCheckTime(navFile.m_areas.size(), defaultTime),
         ctDangerAreaLastCheckTime(navFile.m_areas.size(), defaultTime),
         possibleNavAreas(navFile), standDis(0, 100.0), aimDis(0., 2.0),
-        featureStoreResult(featureStoreResult) {
+        featureStorePreCommitBuffer(featureStorePreCommitBuffer) {
 
         navFileOverlay.setMapsPath(mapsPath);
 

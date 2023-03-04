@@ -2,9 +2,28 @@
 // Created by durst on 3/3/23.
 //
 
+#include <omp.h>
 #include "bots/analysis/feature_store.h"
 
 namespace csknow::feature_store {
+    void FeatureStorePreCommitBuffer::addEngagementPossibleEnemy(
+        const EngagementPossibleEnemy & engagementPossibleEnemy) {
+        engagementPossibleEnemyBuffer.push_back(engagementPossibleEnemy);
+    }
+
+    void FeatureStorePreCommitBuffer::addTargetPossibleEnemy(const TargetPossibleEnemy & targetPossibleEnemy) {
+        targetPossibleEnemyBuffer.push_back(targetPossibleEnemy);
+    }
+
+    void FeatureStorePreCommitBuffer::addEngagementLabel(bool hitEngagement, bool visibleEngagement) {
+        hitEngagementBuffer = hitEngagement;
+        visibleEngagementBuffer = visibleEngagement;
+    }
+
+    void FeatureStorePreCommitBuffer::addTargetPossibleEnemyLabel(const TargetPossibleEnemyLabel & targetPossibleEnemyLabel) {
+        targetPossibleEnemyLabelBuffer.push_back(targetPossibleEnemyLabel);
+    }
+
     void FeatureStoreResult::init(size_t size) {
         for (int i = 0; i < maxEnemies; i++) {
             columnEnemyData[i].enemyEngagementStates.resize(size);
@@ -15,6 +34,7 @@ namespace csknow::feature_store {
         }
         hitEngagement.resize(size);
         visibleEngagement.resize(size);
+        valid.resize(size, false);
     }
 
     FeatureStoreResult::FeatureStoreResult() {
@@ -27,77 +47,54 @@ namespace csknow::feature_store {
         init(size);
     }
 
-    void FeatureStoreResult::addEngagementPossibleEnemy(
-        const EngagementPossibleEnemy & engagementPossibleEnemy) {
-        engagementPossibleEnemyBuffer.push_back(engagementPossibleEnemy);
-    }
-
-    void FeatureStoreResult::addTargetPossibleEnemy(const TargetPossibleEnemy & targetPossibleEnemy) {
-        targetPossibleEnemyBuffer.push_back(targetPossibleEnemy);
-    }
-
-    void FeatureStoreResult::addEngagementLabel(bool hitEngagement, bool visibleEngagement) {
-        hitEngagementBuffer = hitEngagement;
-        visibleEngagementBuffer = visibleEngagement;
-    }
-
-    void FeatureStoreResult::addTargetPossibleEnemyLabel(const TargetPossibleEnemyLabel & targetPossibleEnemyLabel) {
-        targetPossibleEnemyLabelBuffer.push_back(targetPossibleEnemyLabel);
-    }
-
-    void FeatureStoreResult::commitRow() {
-        std::sort(engagementPossibleEnemyBuffer.begin(), engagementPossibleEnemyBuffer.end(),
+    void FeatureStoreResult::commitRow(FeatureStorePreCommitBuffer & buffer, size_t rowIndex) {
+        std::sort(buffer.engagementPossibleEnemyBuffer.begin(), buffer.engagementPossibleEnemyBuffer.end(),
                   [](const EngagementPossibleEnemy & a, const EngagementPossibleEnemy & b) {
             return a.playerId < b.playerId;
         });
-        std::sort(targetPossibleEnemyBuffer.begin(), targetPossibleEnemyBuffer.end(),
+        std::sort(buffer.targetPossibleEnemyBuffer.begin(), buffer.targetPossibleEnemyBuffer.end(),
                   [](const TargetPossibleEnemy & a, const TargetPossibleEnemy & b) {
                       return a.playerId < b.playerId;
         });
-        std::sort(targetPossibleEnemyLabelBuffer.begin(), targetPossibleEnemyLabelBuffer.end(),
+        std::sort(buffer.targetPossibleEnemyLabelBuffer.begin(), buffer.targetPossibleEnemyLabelBuffer.end(),
                   [](const TargetPossibleEnemyLabel & a, const TargetPossibleEnemyLabel & b) {
                       return a.playerId < b.playerId;
         });
 
-        if (engagementPossibleEnemyBuffer.size() != maxEnemies) {
+        if (buffer.engagementPossibleEnemyBuffer.size() != maxEnemies) {
             throw std::runtime_error("committing row with wrong number of engagement players");
         }
-        if (targetPossibleEnemyBuffer.size() != maxEnemies) {
+        if (buffer.targetPossibleEnemyBuffer.size() != maxEnemies) {
             throw std::runtime_error("committing row with wrong number of target players");
         }
-        if (training && targetPossibleEnemyLabelBuffer.size() != maxEnemies) {
+        if (training && buffer.targetPossibleEnemyLabelBuffer.size() != maxEnemies) {
             throw std::runtime_error("committing row with wrong number of target player labels");
         }
-        for (size_t i = 0; i < engagementPossibleEnemyBuffer.size(); i++) {
-            if (engagementPossibleEnemyBuffer[i].playerId != targetPossibleEnemyBuffer[i].playerId ||
-                (training && engagementPossibleEnemyBuffer[i].playerId != targetPossibleEnemyLabelBuffer[i].playerId)) {
+        for (size_t i = 0; i < buffer.engagementPossibleEnemyBuffer.size(); i++) {
+            if (buffer.engagementPossibleEnemyBuffer[i].playerId != buffer.targetPossibleEnemyBuffer[i].playerId ||
+                (training && buffer.engagementPossibleEnemyBuffer[i].playerId != buffer.targetPossibleEnemyLabelBuffer[i].playerId)) {
                 throw std::runtime_error("committing row with different player ids");
             }
 
-            if (training) {
-                columnEnemyData[i].playerId.push_back(engagementPossibleEnemyBuffer[i].playerId);
-                columnEnemyData[i].enemyEngagementStates.push_back(engagementPossibleEnemyBuffer[i].enemyState);
-                columnEnemyData[i].timeSinceLastVisible.push_back(engagementPossibleEnemyBuffer[i].timeSinceLastVisible);
-                columnEnemyData[i].timeToBecomeVisible.push_back(engagementPossibleEnemyBuffer[i].timeToBecomeVisible);
-                columnEnemyData[i].worldDistanceToEnemy.push_back(targetPossibleEnemyBuffer[i].worldDistanceToEnemy);
-                columnEnemyData[i].crosshairDistanceToEnemy.push_back(targetPossibleEnemyBuffer[i].crosshairDistanceToEnemyHead);
-                columnEnemyData[i].nearestTargetEnemy.push_back(targetPossibleEnemyLabelBuffer[i].nearestTargetEnemy);
-                columnEnemyData[i].hitTargetEnemy.push_back(targetPossibleEnemyLabelBuffer[i].hitTargetEnemy);
-            }
-            else {
-                columnEnemyData[i].playerId[0] = engagementPossibleEnemyBuffer[i].playerId;
-                columnEnemyData[i].enemyEngagementStates[0] = engagementPossibleEnemyBuffer[i].enemyState;
-                columnEnemyData[i].timeSinceLastVisible[0] = engagementPossibleEnemyBuffer[i].timeSinceLastVisible;
-                columnEnemyData[i].timeToBecomeVisible[0] = engagementPossibleEnemyBuffer[i].timeToBecomeVisible;
-                columnEnemyData[i].worldDistanceToEnemy[0] = targetPossibleEnemyBuffer[i].worldDistanceToEnemy;
-                columnEnemyData[i].crosshairDistanceToEnemy[0] = targetPossibleEnemyBuffer[i].crosshairDistanceToEnemyHead;
-            }
+            columnEnemyData[i].playerId[rowIndex] = buffer.engagementPossibleEnemyBuffer[i].playerId;
+            columnEnemyData[i].enemyEngagementStates[rowIndex] =
+                buffer.engagementPossibleEnemyBuffer[i].enemyState;
+            columnEnemyData[i].timeSinceLastVisible[rowIndex] =
+                buffer.engagementPossibleEnemyBuffer[i].timeSinceLastVisible;
+            columnEnemyData[i].timeToBecomeVisible[rowIndex] =
+                buffer.engagementPossibleEnemyBuffer[i].timeToBecomeVisible;
+            columnEnemyData[i].worldDistanceToEnemy[rowIndex] =
+                buffer.targetPossibleEnemyBuffer[i].worldDistanceToEnemy;
+            columnEnemyData[i].crosshairDistanceToEnemy[rowIndex] =
+                buffer.targetPossibleEnemyBuffer[i].crosshairDistanceToEnemyHead;
         }
 
         if (training) {
-            hitEngagement.push_back(hitEngagementBuffer);
-            visibleEngagement.push_back(visibleEngagementBuffer);
+            hitEngagement[rowIndex] = buffer.hitEngagementBuffer;
+            visibleEngagement[rowIndex] = buffer.visibleEngagementBuffer;
         }
+
+        valid[rowIndex] = true;
     }
 
     void FeatureStoreResult::toHDF5Inner(HighFive::File & file) {

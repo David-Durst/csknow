@@ -59,6 +59,8 @@ namespace csknow::behavior_tree_latent_states {
         vector<vector<int64_t>> tmpLength(numThreads);
         vector<vector<LatentStateType>> tmpLatentStateType(numThreads);
         vector<vector<StatePayload>> tmpStatePayload(numThreads);
+        feature_store::FeatureStoreResult featureStoreResult(playerAtTick.size);
+        vector<feature_store::FeatureStorePreCommitBuffer> tmpPreCommitBuffer(numThreads);
         TreeThinker defaultThinker{INVALID_ID, AggressiveType::Push};
 
 #pragma omp parallel for
@@ -66,7 +68,8 @@ namespace csknow::behavior_tree_latent_states {
             int threadNum = omp_get_thread_num();
             tmpRoundIds[threadNum].push_back(roundIndex);
             tmpRoundStarts[threadNum].push_back(static_cast<int64_t>(tmpStartTickId[threadNum].size()));
-            Blackboard blackboard(navPath, visPoints, nearestNavCell, mapMeshResult, reachability, distanceToPlaces);
+            Blackboard blackboard(navPath, visPoints, nearestNavCell, mapMeshResult, reachability, distanceToPlaces,
+                                  tmpPreCommitBuffer[threadNum]);
             GlobalQueryNode globalQueryNode(blackboard);
             PlayerQueryNode playerQueryNode(blackboard);
             RoundPlantDefusal roundPlantDefusal = processRoundPlantDefusals(rounds, ticks, plants, defusals, roundIndex);
@@ -149,6 +152,7 @@ namespace csknow::behavior_tree_latent_states {
                             activeEngagementState.erase(curPlayerId);
                         }
                     }
+                    featureStoreResult.commitRow(tmpPreCommitBuffer[threadNum], patIndex);
                 }
             }
 

@@ -37,13 +37,20 @@ namespace csknow::feature_store {
         bool hitTargetEnemy;
     };
 
-    class FeatureStoreResult : public QueryResult {
+    struct FeatureStorePreCommitBuffer {
         vector<EngagementPossibleEnemy> engagementPossibleEnemyBuffer;
         vector<TargetPossibleEnemy> targetPossibleEnemyBuffer;
         vector<TargetPossibleEnemyLabel> targetPossibleEnemyLabelBuffer;
         bool hitEngagementBuffer;
         bool visibleEngagementBuffer;
 
+        void addEngagementPossibleEnemy(const EngagementPossibleEnemy & engagementPossibleEnemy);
+        void addTargetPossibleEnemy(const TargetPossibleEnemy & targetPossibleEnemy);
+        void addEngagementLabel(bool hitEngagement, bool visibleEngagement);
+        void addTargetPossibleEnemyLabel(const TargetPossibleEnemyLabel & targetPossibleEnemyLabel);
+    };
+
+    class FeatureStoreResult : public QueryResult {
         void init(size_t size);
 
     public:
@@ -62,17 +69,16 @@ namespace csknow::feature_store {
         array<ColumnEnemyData, maxEnemies> columnEnemyData;
         vector<bool> hitEngagement;
         vector<bool> visibleEngagement;
+        vector<bool> valid;
         bool training;
+
+        // for use in non-multithreaded applications where want on buffer
+        FeatureStorePreCommitBuffer defaultBuffer;
 
         FeatureStoreResult();
         FeatureStoreResult(size_t size);
 
-
-        void addEngagementPossibleEnemy(const EngagementPossibleEnemy & engagementPossibleEnemy);
-        void addTargetPossibleEnemy(const TargetPossibleEnemy & targetPossibleEnemy);
-        void addEngagementLabel(bool hitEngagement, bool visibleEngagement);
-        void addTargetPossibleEnemyLabel(const TargetPossibleEnemyLabel & targetPossibleEnemyLabel);
-        void commitRow();
+        void commitRow(FeatureStorePreCommitBuffer & buffer, size_t rowIndex = 0);
         void toHDF5Inner(HighFive::File & file) override;
 
         vector<int64_t> filterByForeignKey(int64_t otherTableIndex) override { return {}; }
