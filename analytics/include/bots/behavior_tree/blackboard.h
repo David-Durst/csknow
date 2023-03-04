@@ -22,6 +22,7 @@
 #include "bots/behavior_tree/global/possible_nav_areas.h"
 #include "bots/behavior_tree/action/second_order_controller.h"
 #include "bots/analysis/streaming_manager.h"
+#include "bots/analysis/feature_store.h"
 #include <filesystem>
 #include <memory>
 #include <random>
@@ -229,7 +230,11 @@ struct Blackboard {
     PrintState printCommunicateState(const ServerState & state);
     vector<PrintState> printPerPlayerState(const ServerState & state, CSGOId playerId);
 
-    Blackboard(const string & navPath, const string & mapName) :
+    // training/inference data
+    csknow::feature_store::FeatureStoreResult & featureStoreResult;
+
+    Blackboard(const string & navPath, const string & mapName,
+               csknow::feature_store::FeatureStoreResult & featureStoreResult) :
         navFolderPath(std::filesystem::path(navPath).remove_filename().string()),
         navPath(navPath), mapsPath(navFolderPath),
         navFile(navPath.c_str()), streamingManager(navFolderPath),
@@ -240,7 +245,8 @@ struct Blackboard {
         aggressionDis(0., 1.),
         tDangerAreaLastCheckTime(navFile.m_areas.size(), defaultTime),
         ctDangerAreaLastCheckTime(navFile.m_areas.size(), defaultTime),
-        possibleNavAreas(navFile), standDis(0, 100.0), aimDis(0., 2.0) {
+        possibleNavAreas(navFile), standDis(0, 100.0), aimDis(0., 2.0),
+        featureStoreResult(featureStoreResult) {
 
         navFileOverlay.setMapsPath(mapsPath);
         visPoints.load(mapsPath, mapName, true, navFile, true);
@@ -255,7 +261,8 @@ struct Blackboard {
     Blackboard(const string & navPath, const VisPoints & visPoints,
                const csknow::nearest_nav_cell::NearestNavCell & nearestNavCell,
                const MapMeshResult & mapMeshResult, const ReachableResult & reachability,
-               const DistanceToPlacesResult & distanceToPlaces) :
+               const DistanceToPlacesResult & distanceToPlaces,
+               csknow::feature_store::FeatureStoreResult & featureStoreResult) :
         navFolderPath(std::filesystem::path(navPath).remove_filename().string()),
         navPath(navPath), mapsPath(navFolderPath),
         navFile(navPath.c_str()), streamingManager(navFolderPath),
@@ -266,7 +273,8 @@ struct Blackboard {
         aggressionDis(0., 1.),
         tDangerAreaLastCheckTime(navFile.m_areas.size(), defaultTime),
         ctDangerAreaLastCheckTime(navFile.m_areas.size(), defaultTime),
-        possibleNavAreas(navFile), standDis(0, 100.0), aimDis(0., 2.0) {
+        possibleNavAreas(navFile), standDis(0, 100.0), aimDis(0., 2.0),
+        featureStoreResult(featureStoreResult) {
 
         navFileOverlay.setMapsPath(mapsPath);
 

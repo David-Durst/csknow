@@ -7,6 +7,7 @@
 #include <functional>
 #include "load_data.h"
 #include "linear_algebra.h"
+#include "enum_helpers.h"
 #include <highfive/H5File.hpp>
 using std::vector;
 using std::stringstream;

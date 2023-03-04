@@ -34,6 +34,8 @@ public:
 
     string curLog;
 
+    csknow::feature_store::FeatureStoreResult featureStoreResult;
+
     void tick(ServerState & state, const string & mapsPath);
     void readFilterNames();
 };

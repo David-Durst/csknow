@@ -32,13 +32,14 @@ void Tree::tick(ServerState & state, const string & mapsPath) {
         while (!makeBlackboardSuccesfully) {
             try {
                 if (state.mapNumber != curMapNumber) {
-                    blackboard = make_unique<Blackboard>(navPath, state.mapName);
+                    blackboard = make_unique<Blackboard>(navPath, state.mapName, featureStoreResult);
                 }
                 else {
                     blackboard = make_unique<Blackboard>(navPath,
                                                          blackboard->visPoints, blackboard->nearestNavCell,
                                                          blackboard->mapMeshResult,
-                                                         blackboard->reachability, blackboard->distanceToPlaces);
+                                                         blackboard->reachability, blackboard->distanceToPlaces,
+                                                         featureStoreResult);
                 }
                 makeBlackboardSuccesfully = true;
             }
@@ -152,6 +153,8 @@ void Tree::tick(ServerState & state, const string & mapsPath) {
 
             }
         }
+
+        featureStoreResult.commitRow();
 
         stringstream logCollector;
         for (const auto & printState : printStates) {

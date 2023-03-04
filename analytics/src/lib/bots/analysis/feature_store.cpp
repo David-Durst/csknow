@@ -5,18 +5,26 @@
 #include "bots/analysis/feature_store.h"
 
 namespace csknow::feature_store {
-    FeatureStoreResult::FeatureStoreResult(bool training) : training(training) {
-        if (!training) {
-            for (int i = 0; i < maxEnemies; i++) {
-                columnEnemyData[i].enemyEngagementStates.resize(1);
-                columnEnemyData[i].timeSinceLastVisible.resize(1);
-                columnEnemyData[i].timeToBecomeVisible.resize(1);
-                columnEnemyData[i].worldDistanceToEnemy.resize(1);
-                columnEnemyData[i].crosshairDistanceToEnemy.resize(1);
-            }
-            hitEngagement.resize(1);
-            visibleEngagement.resize(1);
+    void FeatureStoreResult::init(size_t size) {
+        for (int i = 0; i < maxEnemies; i++) {
+            columnEnemyData[i].enemyEngagementStates.resize(size);
+            columnEnemyData[i].timeSinceLastVisible.resize(size);
+            columnEnemyData[i].timeToBecomeVisible.resize(size);
+            columnEnemyData[i].worldDistanceToEnemy.resize(size);
+            columnEnemyData[i].crosshairDistanceToEnemy.resize(size);
         }
+        hitEngagement.resize(size);
+        visibleEngagement.resize(size);
+    }
+
+    FeatureStoreResult::FeatureStoreResult() {
+        training = false;
+        init(1);
+    }
+
+    FeatureStoreResult::FeatureStoreResult(size_t size) {
+        training = true;
+        init(size);
     }
 
     void FeatureStoreResult::addEngagementPossibleEnemy(
@@ -57,12 +65,12 @@ namespace csknow::feature_store {
         if (targetPossibleEnemyBuffer.size() != maxEnemies) {
             throw std::runtime_error("committing row with wrong number of target players");
         }
-        if (targetPossibleEnemyLabelBuffer.size() != maxEnemies) {
+        if (training && targetPossibleEnemyLabelBuffer.size() != maxEnemies) {
             throw std::runtime_error("committing row with wrong number of target player labels");
         }
         for (size_t i = 0; i < engagementPossibleEnemyBuffer.size(); i++) {
             if (engagementPossibleEnemyBuffer[i].playerId != targetPossibleEnemyBuffer[i].playerId ||
-                engagementPossibleEnemyBuffer[i].playerId != targetPossibleEnemyLabelBuffer[i].playerId) {
+                (training && engagementPossibleEnemyBuffer[i].playerId != targetPossibleEnemyLabelBuffer[i].playerId)) {
                 throw std::runtime_error("committing row with different player ids");
             }
 
@@ -83,8 +91,6 @@ namespace csknow::feature_store {
                 columnEnemyData[i].timeToBecomeVisible[0] = engagementPossibleEnemyBuffer[i].timeToBecomeVisible;
                 columnEnemyData[i].worldDistanceToEnemy[0] = targetPossibleEnemyBuffer[i].worldDistanceToEnemy;
                 columnEnemyData[i].crosshairDistanceToEnemy[0] = targetPossibleEnemyBuffer[i].crosshairDistanceToEnemyHead;
-                columnEnemyData[i].nearestTargetEnemy[0] = targetPossibleEnemyLabelBuffer[i].nearestTargetEnemy;
-                columnEnemyData[i].hitTargetEnemy[0] = targetPossibleEnemyLabelBuffer[i].hitTargetEnemy;
             }
         }
 
@@ -92,9 +98,33 @@ namespace csknow::feature_store {
             hitEngagement.push_back(hitEngagementBuffer);
             visibleEngagement.push_back(visibleEngagementBuffer);
         }
-        else {
-            hitEngagement[0] = hitEngagementBuffer;
-            visibleEngagement[0] = visibleEngagementBuffer;
+    }
+
+    void FeatureStoreResult::toHDF5Inner(HighFive::File & file) {
+        HighFive::DataSetCreateProps hdf5FlatCreateProps;
+        hdf5FlatCreateProps.add(HighFive::Deflate(6));
+        hdf5FlatCreateProps.add(HighFive::Chunking(columnEnemyData[0].crosshairDistanceToEnemy.size()));
+
+        for (size_t i = 0; i < columnEnemyData.size(); i++) {
+            string iStr = std::to_string(i);
+            file.createDataSet("/data/player id " + iStr, columnEnemyData[i].playerId, hdf5FlatCreateProps);
+            file.createDataSet("/data/enemy engagement states" + iStr,
+                               vectorOfEnumsToVectorOfInts(columnEnemyData[i].enemyEngagementStates),
+                               hdf5FlatCreateProps);
+            file.createDataSet("/data/time since last visible " + iStr,
+                               columnEnemyData[i].timeSinceLastVisible, hdf5FlatCreateProps);
+            file.createDataSet("/data/time to become visible " + iStr,
+                               columnEnemyData[i].timeToBecomeVisible, hdf5FlatCreateProps);
+            file.createDataSet("/data/world distance to enemy " + iStr,
+                               columnEnemyData[i].worldDistanceToEnemy, hdf5FlatCreateProps);
+            file.createDataSet("/data/crosshair distance to enemy " + iStr,
+                               columnEnemyData[i].crosshairDistanceToEnemy, hdf5FlatCreateProps);
+            file.createDataSet("/data/nearest target enemy " + iStr,
+                               columnEnemyData[i].nearestTargetEnemy, hdf5FlatCreateProps);
+            file.createDataSet("/data/hit target enemy " + iStr,
+                               columnEnemyData[i].hitTargetEnemy, hdf5FlatCreateProps);
         }
+        file.createDataSet("/data/hit engagement", hitEngagement, hdf5FlatCreateProps);
+        file.createDataSet("/data/visible engagement", visibleEngagement, hdf5FlatCreateProps);
     }
 }

@@ -44,6 +44,8 @@ namespace csknow::feature_store {
         bool hitEngagementBuffer;
         bool visibleEngagementBuffer;
 
+        void init(size_t size);
+
     public:
         struct ColumnEnemyData {
             vector<int64_t> playerId;
@@ -62,7 +64,8 @@ namespace csknow::feature_store {
         vector<bool> visibleEngagement;
         bool training;
 
-        FeatureStoreResult(bool training);
+        FeatureStoreResult();
+        FeatureStoreResult(size_t size);
 
 
         void addEngagementPossibleEnemy(const EngagementPossibleEnemy & engagementPossibleEnemy);
