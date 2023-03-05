@@ -41,6 +41,15 @@ public:
                          "EngageNode") { };
 };
 
+void setPossibleEnemyDistances(Vec3 attackerEyePos, Vec2 attackerViewAngle,
+                               Vec3 victimEyePos, Vec2 victimViewAngle, double victimDuckAmount,
+                               csknow::feature_store::EngagementPossibleEnemy & engagementPossibleEnemy) {
+    Vec3 victimHeadPos = getCenterHeadCoordinatesForPlayer(victimEyePos, victimViewAngle, victimDuckAmount);
+    Vec2 deltaViewAngle = deltaViewFromOriginToDest(attackerEyePos, victimHeadPos, attackerViewAngle);
+    engagementPossibleEnemy.worldDistanceToEnemy = computeDistance(attackerEyePos, victimEyePos);
+    engagementPossibleEnemy.crosshairDistanceToEnemyHead = computeMagnitude(deltaViewAngle);
+}
+
 class EnemyEngageCheckNode : public ConditionDecorator {
 public:
     EnemyEngageCheckNode(Blackboard & blackboard) : ConditionDecorator(blackboard,
@@ -48,6 +57,7 @@ public:
                                                                         "EnemyEngageCheckNode") { };
 
     virtual bool valid(const ServerState & state, TreeThinker & treeThinker) override {
+        const ServerState::Client & curClient = state.getClient(treeThinker.csgoId);
         bool enemyVisible = !state.getVisibleEnemies(treeThinker.csgoId).empty();
         bool rememberEnemy = !blackboard.playerToMemory[treeThinker.csgoId].positions.empty();
 
@@ -128,7 +138,11 @@ public:
             }
         }
 
-        for (const auto & [_, possibleEnemy] : possibleEnemies) {
+        for (auto & [victimId, possibleEnemy] : possibleEnemies) {
+            const ServerState::Client & victimClient = state.getClient(victimId);
+            setPossibleEnemyDistances(curClient.getEyePosForPlayer(), curClient.getCurrentViewAngles(),
+                                      victimClient.getEyePosForPlayer(), victimClient.getCurrentViewAngles(),
+                                      victimClient.duckAmount, possibleEnemy);
             blackboard.featureStorePreCommitBuffer.addEngagementPossibleEnemy(possibleEnemy);
         }
 

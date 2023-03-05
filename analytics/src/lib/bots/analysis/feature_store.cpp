@@ -12,10 +12,6 @@ namespace csknow::feature_store {
         engagementPossibleEnemyBuffer.push_back(engagementPossibleEnemy);
     }
 
-    void FeatureStorePreCommitBuffer::addTargetPossibleEnemy(const TargetPossibleEnemy & targetPossibleEnemy) {
-        targetPossibleEnemyBuffer.push_back(targetPossibleEnemy);
-    }
-
     void FeatureStorePreCommitBuffer::addEngagementLabel(bool hitEngagement, bool visibleEngagement) {
         hitEngagementBuffer = hitEngagement;
         visibleEngagementBuffer = visibleEngagement;
@@ -52,20 +48,14 @@ namespace csknow::feature_store {
                   [](const EngagementPossibleEnemy & a, const EngagementPossibleEnemy & b) {
             return a.playerId < b.playerId;
         });
-        std::sort(buffer.targetPossibleEnemyBuffer.begin(), buffer.targetPossibleEnemyBuffer.end(),
-                  [](const TargetPossibleEnemy & a, const TargetPossibleEnemy & b) {
-                      return a.playerId < b.playerId;
-        });
         std::sort(buffer.targetPossibleEnemyLabelBuffer.begin(), buffer.targetPossibleEnemyLabelBuffer.end(),
                   [](const TargetPossibleEnemyLabel & a, const TargetPossibleEnemyLabel & b) {
                       return a.playerId < b.playerId;
         });
 
-        if (buffer.engagementPossibleEnemyBuffer.size() != maxEnemies) {
+        if (buffer.engagementPossibleEnemyBuffer.size() >= maxEnemies) {
+            std::cerr << "committing row with wrong number of engagement players" << std::endl;
             throw std::runtime_error("committing row with wrong number of engagement players");
-        }
-        if (buffer.targetPossibleEnemyBuffer.size() != maxEnemies) {
-            throw std::runtime_error("committing row with wrong number of target players");
         }
 
         // fewer target labels than active players, so record those that exist and make rest non-target
@@ -75,10 +65,6 @@ namespace csknow::feature_store {
         }
 
         for (size_t i = 0; i < buffer.engagementPossibleEnemyBuffer.size(); i++) {
-            if (buffer.engagementPossibleEnemyBuffer[i].playerId != buffer.targetPossibleEnemyBuffer[i].playerId) {
-                throw std::runtime_error("committing row with different player ids");
-            }
-
             int64_t curPlayerId = buffer.engagementPossibleEnemyBuffer[i].playerId;
             columnEnemyData[i].playerId[rowIndex] = curPlayerId;
             columnEnemyData[i].enemyEngagementStates[rowIndex] =
@@ -86,9 +72,9 @@ namespace csknow::feature_store {
             columnEnemyData[i].timeSinceLastVisibleOrToBecomeVisible[rowIndex] =
                 buffer.engagementPossibleEnemyBuffer[i].timeSinceLastVisibleOrToBecomeVisible;
             columnEnemyData[i].worldDistanceToEnemy[rowIndex] =
-                buffer.targetPossibleEnemyBuffer[i].worldDistanceToEnemy;
+                buffer.engagementPossibleEnemyBuffer[i].worldDistanceToEnemy;
             columnEnemyData[i].crosshairDistanceToEnemy[rowIndex] =
-                buffer.targetPossibleEnemyBuffer[i].crosshairDistanceToEnemyHead;
+                buffer.engagementPossibleEnemyBuffer[i].crosshairDistanceToEnemyHead;
 
             if (playerToTargetLabel.find(curPlayerId) == playerToTargetLabel.end()) {
                 columnEnemyData[i].nearestTargetEnemy[rowIndex] = false;

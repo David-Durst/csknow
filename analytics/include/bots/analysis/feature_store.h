@@ -23,10 +23,6 @@ namespace csknow::feature_store {
         CSGOId playerId;
         EngagementEnemyState enemyState;
         double timeSinceLastVisibleOrToBecomeVisible;
-    };
-
-    struct TargetPossibleEnemy {
-        CSGOId playerId;
         double worldDistanceToEnemy;
         double crosshairDistanceToEnemyHead;
     };
@@ -39,13 +35,11 @@ namespace csknow::feature_store {
 
     struct FeatureStorePreCommitBuffer {
         vector<EngagementPossibleEnemy> engagementPossibleEnemyBuffer;
-        vector<TargetPossibleEnemy> targetPossibleEnemyBuffer;
         vector<TargetPossibleEnemyLabel> targetPossibleEnemyLabelBuffer;
         bool hitEngagementBuffer;
         bool visibleEngagementBuffer;
 
         void addEngagementPossibleEnemy(const EngagementPossibleEnemy & engagementPossibleEnemy);
-        void addTargetPossibleEnemy(const TargetPossibleEnemy & targetPossibleEnemy);
         void addEngagementLabel(bool hitEngagement, bool visibleEngagement);
         void addTargetPossibleEnemyLabel(const TargetPossibleEnemyLabel & targetPossibleEnemyLabel);
     };
@@ -80,8 +74,8 @@ namespace csknow::feature_store {
         void commitRow(FeatureStorePreCommitBuffer & buffer, size_t rowIndex = 0);
         void toHDF5Inner(HighFive::File & file) override;
 
-        vector<int64_t> filterByForeignKey(int64_t otherTableIndex) override { return {}; }
-        void oneLineToCSV(int64_t index, std::ostream &s) override { }
+        vector<int64_t> filterByForeignKey(int64_t) override { return {}; }
+        void oneLineToCSV(int64_t, std::ostream &) override { }
         vector<string> getForeignKeyNames() override { return {}; }
         vector<string> getOtherColumnNames() override { return {}; }
     };
