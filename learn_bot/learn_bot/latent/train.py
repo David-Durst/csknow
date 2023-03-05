@@ -11,26 +11,18 @@ from pathlib import Path
 
 from torch.utils.tensorboard import SummaryWriter
 
-from learn_bot.engagement_aim.dataset import *
-from learn_bot.engagement_aim.mlp_aim_model import MLPAimModel
-from learn_bot.engagement_aim.row_rollout import row_rollout, get_off_policy_blend_amount, get_on_policy_blend_amount, \
-    get_scheduled_sampling_blend_amount
-from learn_bot.engagement_aim.target_mlp_aim_model import TargetMLPAimModel
+from learn_bot.latent.dataset import *
+from learn_bot.latent.mlp_latent_model import MLPLatentModel
 from learn_bot.libs.io_transforms import CUDA_DEVICE_STR
 from learn_bot.libs.accuracy_and_loss import compute_loss, compute_accuracy, finish_accuracy, \
     CPU_DEVICE_STR, AimLosses
-from learn_bot.engagement_aim.lstm_aim_model import LSTMAimModel
-from learn_bot.engagement_aim.output_plotting import ModelOutputRecording
 from learn_bot.libs.plot_features import plot_untransformed_and_transformed
 from learn_bot.libs.df_grouping import train_test_split_by_col, make_index_column
-from learn_bot.engagement_aim.dad import on_policy_inference, create_dad_dataset
 from tqdm import tqdm
 from dataclasses import dataclass
 from datetime import datetime
 
 from learn_bot.engagement_aim.vis import vis
-from learn_bot.libs.compare_models import *
-from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd
 
 checkpoints_path = Path(__file__).parent / 'checkpoints'
 
@@ -40,18 +32,15 @@ runs_path = Path(__file__).parent / 'runs' / now.strftime("%m_%d_%Y__%H_%M_%S")
 
 @dataclass(frozen=True)
 class TrainResult:
-    train_dataset: AimDataset
-    test_dataset: AimDataset
+    train_dataset: LatentDataset
+    test_dataset: LatentDataset
     train_df: pd.DataFrame
     test_df: pd.DataFrame
     column_transformers: IOColumnTransformers
-    all_time_column_transformers: IOColumnTransformers
     model: nn.Module
 
 
-def train(all_data_df: pd.DataFrame, dad_iters=4, num_off_policy_epochs=5, num_scheduled_sampling_epochs=5,
-          num_on_policy_epochs=5, save=True, diff_train_test=True) -> TrainResult:
-    # all_data_df = all_data_df[all_data_df['num shots fired'] > 0]
+def train(all_data_df: pd.DataFrame, save=True, diff_train_test=True) -> TrainResult:
 
     if diff_train_test:
         train_test_split = train_test_split_by_col(all_data_df, engagement_id_column)
@@ -140,7 +129,7 @@ def train(all_data_df: pd.DataFrame, dad_iters=4, num_off_policy_epochs=5, num_s
                 # Compute prediction error
                 #pred2 = model(X)
                 pred = row_rollout(model, X, all_time_X, transformed_Y, Y, all_time_column_transformers,
-                                    column_transformers, blend_amount)
+                                   column_transformers, blend_amount)
                 batch_loss = compute_loss(X, pred, transformed_Y, Y, targets, attacking,
                                           transformed_last_input_angles, time_weights, column_transformers,
                                           include_cat_cols)
@@ -207,7 +196,7 @@ def train(all_data_df: pd.DataFrame, dad_iters=4, num_off_policy_epochs=5, num_s
             print(f"\nEpoch {overall_epoch_num}, Blend {blend_amount_fn(epoch_num, num_epochs)}\n"
                   f"-------------------------------")
             #if epoch_num % 100 == 1000:
-                # optimizer = torch.optim.Adam(model.parameters(), lr=0.0001)
+            # optimizer = torch.optim.Adam(model.parameters(), lr=0.0001)
             first_epoch = first_epoch_set and epoch_num == 0
             last_epoch = last_epoch_set and epoch_num == num_epochs - 1
             train_loss, train_accuracy = train_or_test_SL_epoch(train_dataloader, model, optimizer,
