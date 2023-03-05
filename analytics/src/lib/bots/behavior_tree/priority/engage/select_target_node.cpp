@@ -6,6 +6,18 @@
 #include <functional>
 
 namespace engage {
+     csknow::feature_store::TargetPossibleEnemy
+     getTargetPossibleEnemy(Vec3 attackerEyePos, Vec2 attackerViewAngle,
+                            CSGOId victimId, Vec3 victimEyePos, Vec2 victimViewAngle, double victimDuckAmount) {
+        Vec3 victimHeadPos = getCenterHeadCoordinatesForPlayer(victimEyePos, victimViewAngle, victimDuckAmount);
+        Vec2 deltaViewAngle = deltaViewFromOriginToDest(attackerEyePos, victimHeadPos, attackerViewAngle);
+        return {
+            victimId,
+            computeDistance(attackerEyePos, victimEyePos),
+            computeMagnitude(deltaViewAngle)
+        };
+    }
+
     NodeState SelectTargetNode::exec(const ServerState & state, TreeThinker &treeThinker) {
         const ServerState::Client & curClient = state.getClient(treeThinker.csgoId);
         vector<std::reference_wrapper<const ServerState::Client>> visibleEnemies =
@@ -16,6 +28,37 @@ namespace engage {
         curPriority.nonDangerAimArea = {};
         const map<CSGOId, EnemyPositionMemory> & rememberedEnemies = blackboard.playerToMemory[treeThinker.csgoId].positions;
         const map<CSGOId, EnemyPositionMemory> & communicatedEnemies = blackboard.playerToRelevantCommunicatedEnemies[treeThinker.csgoId];
+
+        // record features
+        map<CSGOId, csknow::feature_store::TargetPossibleEnemy> possibleEnemies;
+        for (const auto visibleEnemy : visibleEnemies) {
+            possibleEnemies[visibleEnemy.get().csgoId] =
+                getTargetPossibleEnemy(curClient.getEyePosForPlayer(), curClient.getCurrentViewAngles(),
+                                       visibleEnemy.get().csgoId, visibleEnemy.get().getEyePosForPlayer(),
+                                       visibleEnemy.get().getCurrentViewAngles(), visibleEnemy.get().duckAmount);
+        }
+        for (const auto [id, enemyPositionMemory] : rememberedEnemies) {
+            if (possibleEnemies.find(id) == possibleEnemies.end()) {
+                const ServerState::Client & victimClient = state.getClient(id);
+                possibleEnemies[id] =
+                    getTargetPossibleEnemy(curClient.getEyePosForPlayer(), curClient.getCurrentViewAngles(),
+                                           victimClient.csgoId, victimClient.getEyePosForPlayer(),
+                                           victimClient.getCurrentViewAngles(), victimClient.duckAmount);
+
+            }
+        }
+        for (const auto [id, enemyPositionMemory] : communicatedEnemies) {
+            if (possibleEnemies.find(id) == possibleEnemies.end()) {
+                const ServerState::Client & victimClient = state.getClient(id);
+                possibleEnemies[id] =
+                    getTargetPossibleEnemy(curClient.getEyePosForPlayer(), curClient.getCurrentViewAngles(),
+                                           victimClient.csgoId, victimClient.getEyePosForPlayer(),
+                                           victimClient.getCurrentViewAngles(), victimClient.duckAmount);
+            }
+        }
+        for (const auto & [_, possibleEnemy] : possibleEnemies) {
+            blackboard.featureStorePreCommitBuffer.addTargetPossibleEnemy(possibleEnemy);
+        }
 
         // if no priority yet or switching from order, setup priority with right type
         if (!havePriority || curPriority.priorityType != PriorityType::Engagement) {
