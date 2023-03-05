@@ -3,6 +3,7 @@
 //
 
 #include <omp.h>
+#include <map>
 #include "bots/analysis/feature_store.h"
 
 namespace csknow::feature_store {
@@ -66,16 +67,20 @@ namespace csknow::feature_store {
         if (buffer.targetPossibleEnemyBuffer.size() != maxEnemies) {
             throw std::runtime_error("committing row with wrong number of target players");
         }
-        if (training && buffer.targetPossibleEnemyLabelBuffer.size() != maxEnemies) {
-            throw std::runtime_error("committing row with wrong number of target player labels");
+
+        // fewer target labels than active players, so record those that exist and make rest non-target
+        std::map<int64_t, TargetPossibleEnemyLabel> playerToTargetLabel;
+        for (const auto targetLabel : buffer.targetPossibleEnemyLabelBuffer) {
+            playerToTargetLabel[targetLabel.playerId] = targetLabel;
         }
+
         for (size_t i = 0; i < buffer.engagementPossibleEnemyBuffer.size(); i++) {
-            if (buffer.engagementPossibleEnemyBuffer[i].playerId != buffer.targetPossibleEnemyBuffer[i].playerId ||
-                (training && buffer.engagementPossibleEnemyBuffer[i].playerId != buffer.targetPossibleEnemyLabelBuffer[i].playerId)) {
+            if (buffer.engagementPossibleEnemyBuffer[i].playerId != buffer.targetPossibleEnemyBuffer[i].playerId) {
                 throw std::runtime_error("committing row with different player ids");
             }
 
-            columnEnemyData[i].playerId[rowIndex] = buffer.engagementPossibleEnemyBuffer[i].playerId;
+            int64_t curPlayerId = buffer.engagementPossibleEnemyBuffer[i].playerId;
+            columnEnemyData[i].playerId[rowIndex] = curPlayerId;
             columnEnemyData[i].enemyEngagementStates[rowIndex] =
                 buffer.engagementPossibleEnemyBuffer[i].enemyState;
             columnEnemyData[i].timeSinceLastVisibleOrToBecomeVisible[rowIndex] =
@@ -84,6 +89,16 @@ namespace csknow::feature_store {
                 buffer.targetPossibleEnemyBuffer[i].worldDistanceToEnemy;
             columnEnemyData[i].crosshairDistanceToEnemy[rowIndex] =
                 buffer.targetPossibleEnemyBuffer[i].crosshairDistanceToEnemyHead;
+
+            if (playerToTargetLabel.find(curPlayerId) == playerToTargetLabel.end()) {
+                columnEnemyData[i].nearestTargetEnemy[rowIndex] = false;
+                columnEnemyData[i].hitTargetEnemy[rowIndex] = false;
+            }
+            else {
+                columnEnemyData[i].nearestTargetEnemy[rowIndex] =
+                    playerToTargetLabel[curPlayerId].nearestTargetEnemy;
+                columnEnemyData[i].hitTargetEnemy[rowIndex] = playerToTargetLabel[curPlayerId].hitTargetEnemy;
+            }
         }
 
         if (training) {
