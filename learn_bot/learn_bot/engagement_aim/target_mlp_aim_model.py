@@ -1,7 +1,6 @@
 from typing import List
 from torch import nn
-import torch
-from learn_bot.engagement_aim.io_transforms import IOColumnTransformers, ColumnTypes
+from learn_bot.libs.io_transforms import IOColumnTransformers
 
 
 class TargetMLPAimModel(nn.Module):

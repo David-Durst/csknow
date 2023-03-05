@@ -3,10 +3,9 @@ from torch import nn
 
 from learn_bot.engagement_aim.column_names import base_changed_offset_coordinates, base_recoil_x_column, \
     base_recoil_y_column, base_ticks_since_holding_attack
-from learn_bot.engagement_aim.io_transforms import IOColumnTransformers, FUTURE_TICKS, CUR_TICK, PRIOR_TICKS, \
+from learn_bot.libs.io_transforms import IOColumnTransformers, FUTURE_TICKS, CUR_TICK, PRIOR_TICKS, \
     PRIOR_TICKS_POS, CUDA_DEVICE_STR
 from learn_bot.libs.temporal_column_names import get_temporal_field_str
-from dataclasses import dataclass
 import random
 
 input_ticks_since_holding_attack = \

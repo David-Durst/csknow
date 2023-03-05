@@ -8,7 +8,7 @@ from learn_bot.libs.accuracy_and_loss import CPU_DEVICE_STR
 import torch
 
 from learn_bot.engagement_aim.mlp_aim_model import MLPAimModel
-from learn_bot.engagement_aim.io_transforms import IOColumnTransformers, get_transformed_outputs, \
+from learn_bot.libs.io_transforms import IOColumnTransformers, get_transformed_outputs, \
     get_untransformed_outputs, ModelOutput
 
 #float_column_x_axes: List[str] = ['yaw degree', 'pitch degree', 'yaw degree', 'pitch degree',

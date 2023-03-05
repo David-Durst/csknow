@@ -1,22 +1,14 @@
-import copy
-
-import torch
 from torch import nn
 
 from learn_bot.engagement_aim.dataset import *
 from learn_bot.engagement_aim.dataset import AimDataset
-from learn_bot.libs.accuracy_and_loss import compute_loss, compute_accuracy, finish_accuracy, CUDA_DEVICE_STR, \
+from learn_bot.libs.accuracy_and_loss import CUDA_DEVICE_STR, \
     CPU_DEVICE_STR
-from learn_bot.engagement_aim.io_transforms import IOColumnTransformers, ColumnTypes, PRIOR_TICKS, FUTURE_TICKS, \
-    CUR_TICK, ModelOutput
-from learn_bot.engagement_aim.lstm_aim_model import LSTMAimModel
+from learn_bot.libs.io_transforms import IOColumnTransformers, PRIOR_TICKS, ModelOutput
 from typing import List, Dict, Optional
 from dataclasses import dataclass
 import pandas as pd
-import torch.multiprocessing as mp
 from tqdm import tqdm
-
-from learn_bot.libs.df_grouping import get_row_as_dict_loc
 
 
 # generate the input tensor for the next policy iteration

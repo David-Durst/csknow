@@ -1,16 +1,13 @@
-from learn_bot.engagement_aim.io_transforms import PRIOR_TICKS, FUTURE_TICKS, PRIOR_TICKS_POS, CUR_TICK, \
-    IOColumnTransformers
+from learn_bot.libs.io_transforms import PRIOR_TICKS, FUTURE_TICKS, PRIOR_TICKS_POS, CUR_TICK
 from learn_bot.engagement_aim.dad import get_x_field_str, get_y_field_str, on_policy_inference, get_recoil_x_field_str, \
     get_recoil_y_field_str, get_ticks_since_holding_attack_field_str
 from learn_bot.engagement_aim.train import train
 from learn_bot.engagement_aim.vis import vis
 import pandas as pd
-from learn_bot.engagement_aim.dataset import data_path, AimDataset, input_column_types, output_column_types, \
-    tick_id_column, seconds_per_tick
+from learn_bot.engagement_aim.dataset import data_path, tick_id_column, seconds_per_tick
 from dataclasses import dataclass
-from typing import Tuple, List, Dict
+from typing import List, Dict
 import copy
-import numpy as np
 
 from learn_bot.libs.df_grouping import get_row_as_dict_iloc
 
