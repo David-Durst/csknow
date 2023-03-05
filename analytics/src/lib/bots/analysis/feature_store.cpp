@@ -22,6 +22,7 @@ namespace csknow::feature_store {
     }
 
     void FeatureStoreResult::init(size_t size) {
+        roundId.resize(size, INVALID_ID);
         for (int i = 0; i < maxEnemies; i++) {
             columnEnemyData[i].playerId.resize(size, INVALID_ID);
             columnEnemyData[i].enemyEngagementStates.resize(size, EngagementEnemyState::None);
@@ -47,7 +48,8 @@ namespace csknow::feature_store {
         init(size);
     }
 
-    void FeatureStoreResult::commitRow(FeatureStorePreCommitBuffer & buffer, size_t rowIndex) {
+    void FeatureStoreResult::commitRow(FeatureStorePreCommitBuffer & buffer, size_t rowIndex, int64_t roundIndex) {
+        roundId[rowIndex] = roundIndex;
         std::sort(buffer.engagementPossibleEnemyBuffer.begin(), buffer.engagementPossibleEnemyBuffer.end(),
                   [](const EngagementPossibleEnemy & a, const EngagementPossibleEnemy & b) {
             return a.playerId < b.playerId;
@@ -107,6 +109,7 @@ namespace csknow::feature_store {
         hdf5FlatCreateProps.add(HighFive::Deflate(6));
         hdf5FlatCreateProps.add(HighFive::Chunking(columnEnemyData[0].crosshairDistanceToEnemy.size()));
 
+        file.createDataSet("/data/round id ", roundId, hdf5FlatCreateProps);
         for (size_t i = 0; i < columnEnemyData.size(); i++) {
             string iStr = std::to_string(i);
             file.createDataSet("/data/player id " + iStr, columnEnemyData[i].playerId, hdf5FlatCreateProps);

@@ -181,7 +181,7 @@ namespace csknow::behavior_tree_latent_states {
                             activeEngagementState.erase(curPlayerId);
                         }
                     }
-                    featureStoreResult.commitRow(tmpPreCommitBuffer[threadNum], patIndex);
+                    featureStoreResult.commitRow(tmpPreCommitBuffer[threadNum], patIndex, roundIndex);
                 }
             }
 
