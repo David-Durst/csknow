@@ -46,6 +46,8 @@ def compute_loss(x, pred, y_transformed, y_untransformed, column_transformers: I
     x = x.to(CPU_DEVICE_STR)
     pred_transformed = get_transformed_outputs(pred)
     pred_transformed = pred_transformed.to(CPU_DEVICE_STR)
+    y_transformed = y_transformed.to(CPU_DEVICE_STR)
+    y_untransformed = y_untransformed.to(CPU_DEVICE_STR)
 
     losses = LatentLosses()
 

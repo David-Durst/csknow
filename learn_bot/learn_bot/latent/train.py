@@ -106,7 +106,7 @@ def train(all_data_df: pd.DataFrame, num_epochs: int, save=True, diff_train_test
 
                 # Compute prediction error
                 pred = model(X)
-                batch_loss = compute_loss(X, pred, transformed_Y, Y)
+                batch_loss = compute_loss(X, pred, transformed_Y, Y, column_transformers)
                 cumulative_loss += batch_loss
 
                 # Backpropagation
@@ -144,7 +144,7 @@ def train(all_data_df: pd.DataFrame, num_epochs: int, save=True, diff_train_test
         for name, acc in test_accuracy.items():
             writer.add_scalar('test/acc/' + name, acc, epoch_num)
 
-    def train_and_test_SL(model, train_dataloader, num_epochs):
+    def train_and_test_SL(model, train_dataloader, test_dataloader, num_epochs):
         nonlocal optimizer
         for epoch_num in range(num_epochs):
             print(f"\nEpoch {epoch_num}\n" + f"-------------------------------")
@@ -166,6 +166,7 @@ def train(all_data_df: pd.DataFrame, num_epochs: int, save=True, diff_train_test
     for X, Y in train_dataloader:
         print(f"Train shape of X: {X.shape} {X.dtype}")
         print(f"Train shape of Y: {Y.shape} {Y.dtype}")
+        break
 
     train_and_test_SL(model, train_dataloader, test_dataloader, num_epochs)
 
