@@ -1,13 +1,9 @@
 # https://pytorch.org/tutorials/beginner/basics/quickstart_tutorial.html
-import math
 from typing import Dict
 
 import torch.optim
 from torch import nn
-from torch.optim.lr_scheduler import ExponentialLR, ReduceLROnPlateau
 from torch.utils.data import DataLoader
-import pandas as pd
-from pathlib import Path
 
 from torch.utils.tensorboard import SummaryWriter
 
@@ -15,15 +11,13 @@ from learn_bot.latent.dataset import *
 from learn_bot.latent.mlp_latent_model import MLPLatentModel
 from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd
 from learn_bot.libs.io_transforms import CUDA_DEVICE_STR
-from learn_bot.libs.accuracy_and_loss import compute_loss, compute_accuracy, finish_accuracy, \
+from learn_bot.engagement_aim.accuracy_and_loss import compute_loss, compute_accuracy, finish_accuracy, \
     CPU_DEVICE_STR, AimLosses
 from learn_bot.libs.plot_features import plot_untransformed_and_transformed
 from learn_bot.libs.df_grouping import train_test_split_by_col, make_index_column
 from tqdm import tqdm
 from dataclasses import dataclass
 from datetime import datetime
-
-from learn_bot.engagement_aim.vis import vis
 
 checkpoints_path = Path(__file__).parent / 'checkpoints'
 

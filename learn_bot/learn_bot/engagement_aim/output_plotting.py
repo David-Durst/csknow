@@ -1,6 +1,6 @@
 import pandas as pd
 from typing import List
-from learn_bot.libs.accuracy_and_loss import CPU_DEVICE_STR
+from learn_bot.engagement_aim.accuracy_and_loss import CPU_DEVICE_STR
 
 import torch
 

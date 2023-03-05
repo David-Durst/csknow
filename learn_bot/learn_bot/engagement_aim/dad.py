@@ -2,7 +2,7 @@ from torch import nn
 
 from learn_bot.engagement_aim.dataset import *
 from learn_bot.engagement_aim.dataset import AimDataset
-from learn_bot.libs.accuracy_and_loss import CUDA_DEVICE_STR, \
+from learn_bot.engagement_aim.accuracy_and_loss import CUDA_DEVICE_STR, \
     CPU_DEVICE_STR
 from learn_bot.libs.io_transforms import IOColumnTransformers, PRIOR_TICKS, ModelOutput
 from typing import List, Dict, Optional
