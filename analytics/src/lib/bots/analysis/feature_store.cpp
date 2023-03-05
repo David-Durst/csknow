@@ -26,14 +26,13 @@ namespace csknow::feature_store {
 
     void FeatureStoreResult::init(size_t size) {
         for (int i = 0; i < maxEnemies; i++) {
-            columnEnemyData[i].enemyEngagementStates.resize(size);
-            columnEnemyData[i].timeSinceLastVisible.resize(size);
-            columnEnemyData[i].timeToBecomeVisible.resize(size);
-            columnEnemyData[i].worldDistanceToEnemy.resize(size);
-            columnEnemyData[i].crosshairDistanceToEnemy.resize(size);
+            columnEnemyData[i].enemyEngagementStates.resize(size, EngagementEnemyState::None);
+            columnEnemyData[i].timeSinceLastVisibleOrToBecomeVisible.resize(size, maxTimeToVis);
+            columnEnemyData[i].worldDistanceToEnemy.resize(size, INVALID_ID);
+            columnEnemyData[i].crosshairDistanceToEnemy.resize(size, INVALID_ID);
         }
-        hitEngagement.resize(size);
-        visibleEngagement.resize(size);
+        hitEngagement.resize(size, false);
+        visibleEngagement.resize(size, false);
         valid.resize(size, false);
     }
 
@@ -79,10 +78,8 @@ namespace csknow::feature_store {
             columnEnemyData[i].playerId[rowIndex] = buffer.engagementPossibleEnemyBuffer[i].playerId;
             columnEnemyData[i].enemyEngagementStates[rowIndex] =
                 buffer.engagementPossibleEnemyBuffer[i].enemyState;
-            columnEnemyData[i].timeSinceLastVisible[rowIndex] =
-                buffer.engagementPossibleEnemyBuffer[i].timeSinceLastVisible;
-            columnEnemyData[i].timeToBecomeVisible[rowIndex] =
-                buffer.engagementPossibleEnemyBuffer[i].timeToBecomeVisible;
+            columnEnemyData[i].timeSinceLastVisibleOrToBecomeVisible[rowIndex] =
+                buffer.engagementPossibleEnemyBuffer[i].timeSinceLastVisibleOrToBecomeVisible;
             columnEnemyData[i].worldDistanceToEnemy[rowIndex] =
                 buffer.targetPossibleEnemyBuffer[i].worldDistanceToEnemy;
             columnEnemyData[i].crosshairDistanceToEnemy[rowIndex] =
@@ -112,10 +109,8 @@ namespace csknow::feature_store {
             file.createDataSet("/data/enemy engagement states" + iStr,
                                vectorOfEnumsToVectorOfInts(columnEnemyData[i].enemyEngagementStates),
                                hdf5FlatCreateProps);
-            file.createDataSet("/data/time since last visible " + iStr,
-                               columnEnemyData[i].timeSinceLastVisible, hdf5FlatCreateProps);
-            file.createDataSet("/data/time to become visible " + iStr,
-                               columnEnemyData[i].timeToBecomeVisible, hdf5FlatCreateProps);
+            file.createDataSet("/data/time since last visible or to become visible " + iStr,
+                               columnEnemyData[i].timeSinceLastVisibleOrToBecomeVisible, hdf5FlatCreateProps);
             file.createDataSet("/data/world distance to enemy " + iStr,
                                columnEnemyData[i].worldDistanceToEnemy, hdf5FlatCreateProps);
             file.createDataSet("/data/crosshair distance to enemy " + iStr,

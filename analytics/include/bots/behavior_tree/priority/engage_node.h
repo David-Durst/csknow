@@ -51,6 +51,24 @@ public:
         bool enemyVisible = !state.getVisibleEnemies(treeThinker.csgoId).empty();
         bool rememberEnemy = !blackboard.playerToMemory[treeThinker.csgoId].positions.empty();
 
+        map<CSGOId, csknow::feature_store::EngagementPossibleEnemy> possibleEnemies;
+        for (const auto & visibleEnemy : state.getVisibleEnemies(treeThinker.csgoId)) {
+            possibleEnemies[visibleEnemy.get().csgoId] = {
+                visibleEnemy.get().csgoId, csknow::feature_store::EngagementEnemyState::Visible, 0.
+            };
+        }
+
+        for (const auto & [rememberedEnemyId, rememberedEnemyState] :
+             blackboard.playerToMemory[treeThinker.csgoId].positions) {
+            if (possibleEnemies.find(rememberedEnemyId) == possibleEnemies.end()) {
+                double secondsSinceLastSeen =
+                    state.getSecondsBetweenTimes(state.loadTime, rememberedEnemyState.lastSeenTime);
+                possibleEnemies[rememberedEnemyId] = {
+                    rememberedEnemyId, csknow::feature_store::EngagementEnemyState::Remembered, secondsSinceLastSeen
+                };
+            }
+        }
+
         // select only relevant communicated enemies - those that are near a danger area
         map<CSGOId, EnemyPositionMemory> & relevantCommunicatedEnemies = blackboard.playerToRelevantCommunicatedEnemies[treeThinker.csgoId];
         relevantCommunicatedEnemies.clear();
@@ -90,14 +108,30 @@ public:
                     .get_nearest_area_by_position(vec3Conv(enemyPos.lastSeenFootPos)).get_id();
             int64_t enemyAreaIndex = blackboard.navFile.m_area_ids_to_indices[enemyAreaId];
             AreaBits dangerAreaBits = blackboard.visPoints.getDangerRelativeToSrc(curAreaId);
+            double minTimeToVis = csknow::feature_store::maxTimeToVis;
             for (size_t dangerAreaIndex = 0; dangerAreaIndex < dangerAreaBits.size(); dangerAreaIndex++) {
-                if (dangerAreaBits[dangerAreaIndex] &&
-                    secondsAwayAtMaxSpeed(blackboard.reachability.getDistance(enemyAreaIndex, dangerAreaIndex)) < COMMUNICATED_ENEMY_RELEVANT_TIME) {
-                    relevantCommunicatedEnemies[enemyId] = enemyPos;
-                    break;
+                if (dangerAreaBits[dangerAreaIndex]) {
+                    double secondsAway =
+                        secondsAwayAtMaxSpeed(blackboard.reachability.getDistance(enemyAreaIndex, dangerAreaIndex));
+                    if (secondsAway < COMMUNICATED_ENEMY_RELEVANT_TIME &&
+                        relevantCommunicatedEnemies.find(enemyAreaId) == relevantCommunicatedEnemies.end()) {
+                        relevantCommunicatedEnemies[enemyId] = enemyPos;
+                    }
+                    minTimeToVis = std::min(minTimeToVis, secondsAway);
                 }
             }
+
+            if (possibleEnemies.find(enemyId) == possibleEnemies.end()) {
+                possibleEnemies[enemyId] = {
+                    enemyId, csknow::feature_store::EngagementEnemyState::Communicated, minTimeToVis
+                };
+            }
         }
+
+        for (const auto & [_, possibleEnemy] : possibleEnemies) {
+            blackboard.featureStorePreCommitBuffer.addEngagementPossibleEnemy(possibleEnemy);
+        }
+
         bool communicatedEnemy = !relevantCommunicatedEnemies.empty();
         return enemyVisible || rememberEnemy || communicatedEnemy;
     }

@@ -18,11 +18,11 @@ namespace csknow::feature_store {
         None
     };
 
+    constexpr double maxTimeToVis = 200.;
     struct EngagementPossibleEnemy {
         CSGOId playerId;
         EngagementEnemyState enemyState;
-        double timeSinceLastVisible;
-        double timeToBecomeVisible;
+        double timeSinceLastVisibleOrToBecomeVisible;
     };
 
     struct TargetPossibleEnemy {
@@ -58,8 +58,7 @@ namespace csknow::feature_store {
             vector<int64_t> playerId;
             // inputs
             vector<EngagementEnemyState> enemyEngagementStates;
-            vector<double> timeSinceLastVisible;
-            vector<double> timeToBecomeVisible;
+            vector<double> timeSinceLastVisibleOrToBecomeVisible;
             vector<double> worldDistanceToEnemy;
             vector<double> crosshairDistanceToEnemy;
             // labels
