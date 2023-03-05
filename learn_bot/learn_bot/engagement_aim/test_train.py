@@ -20,7 +20,8 @@ from learn_bot.engagement_aim.train import checkpoints_path
 from learn_bot.libs.accuracy_and_loss import compute_loss, compute_accuracy, finish_accuracy, CUDA_DEVICE_STR, \
     CPU_DEVICE_STR, AimLosses
 from learn_bot.engagement_aim.lstm_aim_model import LSTMAimModel
-from learn_bot.engagement_aim.output_plotting import plot_untransformed_and_transformed, ModelOutputRecording
+from learn_bot.engagement_aim.output_plotting import ModelOutputRecording
+from learn_bot.libs.plot_features import plot_untransformed_and_transformed
 from learn_bot.libs.df_grouping import train_test_split_by_col, make_index_column
 from learn_bot.engagement_aim.dad import on_policy_inference, create_dad_dataset
 from tqdm import tqdm

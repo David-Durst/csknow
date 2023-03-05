@@ -15,7 +15,7 @@ from tkinter import ttk
 from learn_bot.engagement_aim.dataset import  base_hit_victim_column, \
     base_ticks_since_last_fire_column, base_recoil_x_column, base_recoil_y_column, \
     base_ticks_since_last_attack_column, base_changed_offset_coordinates
-from learn_bot.engagement_aim.output_plotting import filter_df, filter_df_2d
+from learn_bot.libs.plot_features import filter_df, filter_df_2d
 from learn_bot.engagement_aim.vis.child_window import ChildWindow
 from learn_bot.engagement_aim.vis.vis_similar_trajectories import compute_position_difference, default_speed_ticks, \
     normalize_columns
