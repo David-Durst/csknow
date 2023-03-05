@@ -9,6 +9,7 @@ from torch.utils.tensorboard import SummaryWriter
 
 from learn_bot.engagement_aim.dataset import *
 from learn_bot.engagement_aim.mlp_aim_model import MLPAimModel
+from learn_bot.engagement_aim.output_plotting import plot_path
 from learn_bot.engagement_aim.row_rollout import row_rollout, get_off_policy_blend_amount, get_on_policy_blend_amount, \
     get_scheduled_sampling_blend_amount
 from learn_bot.libs.io_transforms import CUDA_DEVICE_STR
@@ -64,7 +65,7 @@ def train(all_data_df: pd.DataFrame, dad_iters=4, num_off_policy_epochs=5, num_s
     all_time_column_transformers = IOColumnTransformers(all_time_column_types, output_column_types, train_df)
 
     # plot data set with and without transformers
-    plot_untransformed_and_transformed('train and test labels', all_data_df,
+    plot_untransformed_and_transformed(plot_path, 'train and test labels', all_data_df,
                                        temporal_io_float_standard_column_names.present_columns,
                                        temporal_io_cat_column_names.present_columns + static_input_categorical_columns)
 

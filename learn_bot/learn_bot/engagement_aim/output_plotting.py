@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import pandas as pd
 from typing import List
 from learn_bot.engagement_aim.accuracy_and_loss import CPU_DEVICE_STR
@@ -9,6 +11,7 @@ from learn_bot.libs.io_transforms import IOColumnTransformers, get_transformed_o
     get_untransformed_outputs, ModelOutput
 from learn_bot.libs.plot_features import plot_untransformed_and_transformed
 
+plot_path = Path(__file__).parent / 'distributions'
 
 #float_column_x_axes: List[str] = ['yaw degree', 'pitch degree', 'yaw degree', 'pitch degree',
 #                                  'yaw degree', 'pitch degree',
@@ -70,12 +73,12 @@ class ModelOutputRecording:
                                columns=cts.output_types.column_names())
         #transformed_test_df = pd.DataFrame(self.test_outputs_transformed.to(CPU_DEVICE_STR),
         #                                   columns=cts.output_types.column_names())
-        plot_untransformed_and_transformed('test predictions', test_df, vis_float_columns, vis_cat_columns)
+        plot_untransformed_and_transformed(plot_path, 'test predictions', test_df, vis_float_columns, vis_cat_columns)
                                            #transformed_test_df)
 
         test_errors_df = pd.DataFrame(self.test_errors_untransformed.to(CPU_DEVICE_STR),
                                       columns=cts.output_types.column_names())
         #transformed_test_errors_df = pd.DataFrame(self.test_errors_transformed.to(CPU_DEVICE_STR),
         #                                          columns=cts.output_types.column_names())
-        plot_untransformed_and_transformed('test errors', test_errors_df, vis_float_columns, vis_cat_columns)
+        plot_untransformed_and_transformed(plot_path, 'test errors', test_errors_df, vis_float_columns, vis_cat_columns)
                                            #transformed_test_errors_df)

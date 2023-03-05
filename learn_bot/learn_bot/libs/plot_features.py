@@ -4,8 +4,6 @@ import pandas as pd
 from matplotlib import pyplot as plt
 
 INCH_PER_FIG = 4
-plot_path = Path(__file__).parent / 'distributions'
-
 
 def filter_df(df: pd.DataFrame, col_name, low_pct_to_remove=0.01, high_pct_to_remove=0.01) -> pd.DataFrame:
     q_low = df[col_name].quantile(low_pct_to_remove)
@@ -23,7 +21,7 @@ def filter_df_2d(df: pd.DataFrame, col1_name, col2_name,
               (df[col2_name] <= q2_hi) & (df[col2_name] >= q2_low)]
 
 
-def plot_untransformed_and_transformed(title: str, df, float_cols, cat_cols,
+def plot_untransformed_and_transformed(plot_path: Path, title: str, df, float_cols, cat_cols,
                                        transformed_df = None):
     # plot untransformed and transformed outputs
     fig = plt.figure(figsize=(INCH_PER_FIG * len(float_cols), 3.5 * INCH_PER_FIG), constrained_layout=True)

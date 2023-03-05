@@ -20,6 +20,7 @@ from dataclasses import dataclass
 from datetime import datetime
 
 checkpoints_path = Path(__file__).parent / 'checkpoints'
+plot_path = Path(__file__).parent / 'distributions'
 
 now = datetime.now()
 runs_path = Path(__file__).parent / 'runs' / now.strftime("%m_%d_%Y__%H_%M_%S")
@@ -55,7 +56,7 @@ def train(all_data_df: pd.DataFrame, num_epochs: int, save=True, diff_train_test
     column_transformers = IOColumnTransformers(input_column_types, output_column_types, train_df)
 
     # plot data set with and without transformers
-    plot_untransformed_and_transformed('train and test labels', all_data_df,
+    plot_untransformed_and_transformed(plot_path, 'train and test labels', all_data_df,
                                        input_column_types.float_standard_cols,
                                        input_column_types.categorical_cols + output_column_types.categorical_cols)
 
@@ -144,7 +145,7 @@ def train(all_data_df: pd.DataFrame, num_epochs: int, save=True, diff_train_test
             writer.add_scalar('test/acc/' + name, acc, epoch_num)
 
     def train_and_test_SL(model, train_dataloader, num_epochs):
-        nonlocal optimizer, best_result
+        nonlocal optimizer
         for epoch_num in range(num_epochs):
             print(f"\nEpoch {epoch_num}\n" + f"-------------------------------")
             train_loss, train_accuracy = train_or_test_SL_epoch(train_dataloader, model, optimizer, True)

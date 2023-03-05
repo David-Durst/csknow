@@ -1,3 +1,4 @@
+import copy
 from typing import List
 from dataclasses import dataclass
 
@@ -54,7 +55,7 @@ base_enemy_columns: EnemyColumns = EnemyColumns(
 
 
 def get_ith_enemy_columns(i: int) -> EnemyColumns:
-    result = base_enemy_columns
+    result = copy.copy(base_enemy_columns)
     result.enemy_player_id += f" {i}"
     result.engagement_state += f" {i}"
     result.time_since_last_visible_or_to_become_visible += f" {i}"
@@ -62,6 +63,7 @@ def get_ith_enemy_columns(i: int) -> EnemyColumns:
     result.crosshair_distance_to_enemy += f" {i}"
     result.nearest_target_enemy += f" {i}"
     result.hit_target_enemy += f" {i}"
+    return result
 
 
 hit_engagement_column = "hit engagement"
