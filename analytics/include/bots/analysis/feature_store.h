@@ -49,6 +49,8 @@ namespace csknow::feature_store {
 
     public:
         vector<int64_t> roundId;
+        vector<int64_t> tickId;
+        vector<int64_t> playerId;
         struct ColumnEnemyData {
             vector<int64_t> playerId;
             // inputs
@@ -72,7 +74,8 @@ namespace csknow::feature_store {
         FeatureStoreResult();
         FeatureStoreResult(size_t size);
 
-        void commitRow(FeatureStorePreCommitBuffer & buffer, size_t rowIndex = 0, int64_t roundIndex = 0);
+        void commitRow(FeatureStorePreCommitBuffer & buffer, size_t rowIndex = 0,
+                       int64_t roundIndex = 0, int64_t tickIndex = 0, int64_t playerIndex = 0);
         void toHDF5Inner(HighFive::File & file) override;
 
         vector<int64_t> filterByForeignKey(int64_t) override { return {}; }

@@ -23,6 +23,8 @@ namespace csknow::feature_store {
 
     void FeatureStoreResult::init(size_t size) {
         roundId.resize(size, INVALID_ID);
+        tickId.resize(size, INVALID_ID);
+        playerId.resize(size, INVALID_ID);
         for (int i = 0; i < maxEnemies; i++) {
             columnEnemyData[i].playerId.resize(size, INVALID_ID);
             columnEnemyData[i].enemyEngagementStates.resize(size, EngagementEnemyState::None);
@@ -48,8 +50,11 @@ namespace csknow::feature_store {
         init(size);
     }
 
-    void FeatureStoreResult::commitRow(FeatureStorePreCommitBuffer & buffer, size_t rowIndex, int64_t roundIndex) {
+    void FeatureStoreResult::commitRow(FeatureStorePreCommitBuffer & buffer, size_t rowIndex,
+                                       int64_t roundIndex, int64_t tickIndex, int64_t playerIndex) {
         roundId[rowIndex] = roundIndex;
+        tickId[rowIndex] = tickIndex;
+        playerId[rowIndex] = playerIndex;
         std::sort(buffer.engagementPossibleEnemyBuffer.begin(), buffer.engagementPossibleEnemyBuffer.end(),
                   [](const EngagementPossibleEnemy & a, const EngagementPossibleEnemy & b) {
             return a.playerId < b.playerId;
@@ -109,11 +114,13 @@ namespace csknow::feature_store {
         hdf5FlatCreateProps.add(HighFive::Deflate(6));
         hdf5FlatCreateProps.add(HighFive::Chunking(columnEnemyData[0].crosshairDistanceToEnemy.size()));
 
-        file.createDataSet("/data/round id ", roundId, hdf5FlatCreateProps);
+        file.createDataSet("/data/round id", roundId, hdf5FlatCreateProps);
+        file.createDataSet("/data/tick id", tickId, hdf5FlatCreateProps);
+        file.createDataSet("/data/player id", playerId, hdf5FlatCreateProps);
         for (size_t i = 0; i < columnEnemyData.size(); i++) {
             string iStr = std::to_string(i);
-            file.createDataSet("/data/player id " + iStr, columnEnemyData[i].playerId, hdf5FlatCreateProps);
-            file.createDataSet("/data/enemy engagement states" + iStr,
+            file.createDataSet("/data/enemy player id " + iStr, columnEnemyData[i].playerId, hdf5FlatCreateProps);
+            file.createDataSet("/data/enemy engagement states " + iStr,
                                vectorOfEnumsToVectorOfInts(columnEnemyData[i].enemyEngagementStates),
                                hdf5FlatCreateProps);
             file.createDataSet("/data/time since last visible or to become visible " + iStr,
