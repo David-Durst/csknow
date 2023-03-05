@@ -301,14 +301,20 @@ int main(int argc, char * argv[]) {
     nearestNavCellResult.runQuery(navPath, "de_dust2");
     std::cout << "size: " << nearestNavCellResult.size << std::endl;
 
+    // engagements
+    std::cout << "processing engagements" << std::endl;
+    string engagementName = "engagement";
+    EngagementResult engagementResult = queryEngagementResult(games, filteredRounds, ticks, hurt);
+    std::cout << "size: " << engagementResult.size << std::endl;
+
     // bt latent events
     string behaviorTreeLatentEventsName = "behaviorTreeLatentEvents";
     std::cout << "processing behaviorTreeLatentEvents" << std::endl;
-    csknow::behavior_tree_latent_states::BehaviorTreeLatentStates behaviorTreeLatentEvents;
+    csknow::behavior_tree_latent_states::BehaviorTreeLatentStates behaviorTreeLatentEvents(playerAtTick);
     behaviorTreeLatentEvents.runQuery(navPath + "/de_dust2.nav", map_visPoints.at("de_dust2"), d2MeshResult,
                                       d2ReachableResult, d2DistanceToPlacesResult,
                                       nearestNavCellResult, players, games, filteredRounds, ticks,
-                                      playerAtTick, weaponFire, hurt, plants, defusals);
+                                      playerAtTick, weaponFire, hurt, plants, defusals, engagementResult);
     std::cout << "size: " << behaviorTreeLatentEvents.size << std::endl;
 
     // latent engagement events
@@ -324,10 +330,6 @@ int main(int argc, char * argv[]) {
     AggressionEventResult aggressionEventResult =
             queryAggressionRoles(games, filteredRounds, ticks, playerAtTick, map_navs["de_dust2"], map_visPoints.find("de_dust2")->second, d2ReachableResult);
             */
-    std::cout << "processing engagements" << std::endl;
-    string engagementName = "engagement";
-    EngagementResult engagementResult = queryEngagementResult(games, filteredRounds, ticks, hurt);
-    std::cout << "size: " << engagementResult.size << std::endl;
     std::cout << "processing non engagement trajectory" << std::endl;
     string nonEngagementTrajectoryName = "nonEngagementTrajectory";
     NonEngagementTrajectoryResult nonEngagementTrajectoryResult =

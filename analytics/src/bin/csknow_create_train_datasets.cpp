@@ -185,16 +185,6 @@ int main(int argc, char * argv[]) {
     nearestNavCellResult.runQuery(navPath, "de_dust2");
     std::cout << "size: " << nearestNavCellResult.size << std::endl;
 
-    // bt latent events
-    string behaviorTreeLatentEventsName = "behaviorTreeLatentEvents";
-    std::cout << "processing behaviorTreeLatentEvents" << std::endl;
-    csknow::behavior_tree_latent_states::BehaviorTreeLatentStates behaviorTreeLatentEvents;
-    behaviorTreeLatentEvents.runQuery(navPath + "/de_dust2.nav", map_visPoints.at("de_dust2"), d2MeshResult,
-                                      d2ReachableResult, d2DistanceToPlacesResult,
-                                      nearestNavCellResult, players, games, filteredRounds, ticks,
-                                      playerAtTick, weaponFire, hurt, plants, defusals);
-    std::cout << "size: " << behaviorTreeLatentEvents.size << std::endl;
-
     // fire history
     string fireHistoryName = "fireHistory";
     std::cout << "processing fire history" << std::endl;
@@ -207,6 +197,17 @@ int main(int argc, char * argv[]) {
     std::cout << "processing engagements" << std::endl;
     EngagementResult engagementResult = queryEngagementResult(games, filteredRounds, ticks, hurt);
     std::cout << "size: " << engagementResult.size << std::endl;
+
+    // bt latent events
+    string behaviorTreeLatentEventsName = "behaviorTreeLatentEvents";
+    string behaviorTreeFeatureStoreName = "behaviorTreeFeatureStore";
+    std::cout << "processing behaviorTreeLatentEvents" << std::endl;
+    csknow::behavior_tree_latent_states::BehaviorTreeLatentStates behaviorTreeLatentEvents(playerAtTick);
+    behaviorTreeLatentEvents.runQuery(navPath + "/de_dust2.nav", map_visPoints.at("de_dust2"), d2MeshResult,
+                                      d2ReachableResult, d2DistanceToPlacesResult,
+                                      nearestNavCellResult, players, games, filteredRounds, ticks,
+                                      playerAtTick, weaponFire, hurt, plants, defusals, engagementResult);
+    std::cout << "size: " << behaviorTreeLatentEvents.size << std::endl;
 
     // latent engagement events
     string latentEngagementName = "latentEngagement";
@@ -258,6 +259,7 @@ int main(int argc, char * argv[]) {
     map<string, reference_wrapper<QueryResult>> analyses {
             {engagementAimName, engagementAimResult},
             {latentEngagementAimName, latentEngagementAimResult},
+            {behaviorTreeFeatureStoreName, behaviorTreeLatentEvents.featureStoreResult}
             //{trainingNavigationName, trainingNavigationResult},
     };
 

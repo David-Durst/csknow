@@ -69,8 +69,9 @@ namespace csknow::behavior_tree_latent_states {
         vector<LatentStateType> latentStateType;
         vector<StatePayload> statePayload;
         IntervalIndex eventsPerTick;
+        feature_store::FeatureStoreResult featureStoreResult;
 
-        BehaviorTreeLatentStates() {
+        BehaviorTreeLatentStates(const PlayerAtTick & playerAtTick) : featureStoreResult(playerAtTick.size) {
             variableLength = false;
             nonTemporal = true;
             overlay = true;
@@ -99,7 +100,8 @@ namespace csknow::behavior_tree_latent_states {
                       const Players & players, const Games & games, const Rounds & rounds,
                       const Ticks & ticks, const PlayerAtTick & playerAtTick,
                       const WeaponFire & weaponFire, const Hurt & hurt,
-                      const Plants & plants, const Defusals & defusals);
+                      const Plants & plants, const Defusals & defusals,
+                      const EngagementResult & acausalEngagementResult);
     };
 
 }

@@ -47,7 +47,8 @@ namespace csknow::behavior_tree_latent_states {
                                             const Players & players, const Games & games, const Rounds & rounds,
                                             const Ticks & ticks, const PlayerAtTick & playerAtTick,
                                             const WeaponFire & weaponFire, const Hurt & hurt,
-                                            const Plants & plants, const Defusals & defusals) {
+                                            const Plants & plants, const Defusals & defusals,
+                                            const EngagementResult & acausalEngagementResult) {
 
         int numThreads = omp_get_max_threads();
         std::atomic<int64_t> roundsProcessed = 0;
@@ -59,7 +60,6 @@ namespace csknow::behavior_tree_latent_states {
         vector<vector<int64_t>> tmpLength(numThreads);
         vector<vector<LatentStateType>> tmpLatentStateType(numThreads);
         vector<vector<StatePayload>> tmpStatePayload(numThreads);
-        feature_store::FeatureStoreResult featureStoreResult(playerAtTick.size);
         vector<feature_store::FeatureStorePreCommitBuffer> tmpPreCommitBuffer(numThreads);
         TreeThinker defaultThinker{INVALID_ID, AggressiveType::Push};
 
@@ -86,6 +86,13 @@ namespace csknow::behavior_tree_latent_states {
                 const ServerState & curState = blackboard.streamingManager.db.batchData.fromNewest();
                 addTreeThinkersToBlackboard(curState, &blackboard);
                 globalQueryNode.exec(curState, defaultThinker);
+
+                map<int64_t, int64_t> playerToACausalTarget;
+                for (const auto & [_0, _1, engagementIndex] :
+                    acausalEngagementResult.engagementsPerTick.intervalToEvent.findOverlapping(tickIndex, tickIndex)) {
+                    playerToACausalTarget[acausalEngagementResult.playerId[engagementIndex][0]] =
+                        acausalEngagementResult.playerId[engagementIndex][1];
+                }
 
                 // order state transition whenever new orders
                 // since my bots don't need to handle plants (plant start of round for retakes mode), I force a transition
@@ -136,6 +143,28 @@ namespace csknow::behavior_tree_latent_states {
                                     EngagementStatePayload{curPlayerId, curTarget}
                                 };
                             }
+                        }
+
+                        bool visibleEngagement = curTarget != INVALID_ID;
+                        bool hitEngagement = playerToACausalTarget.find(curPlayerId) != playerToACausalTarget.end();
+                        tmpPreCommitBuffer[threadNum].addEngagementLabel(hitEngagement, visibleEngagement);
+                        if (visibleEngagement && hitEngagement) {
+                            int64_t acausalTarget = playerToACausalTarget[curPlayerId];
+                            if (curTarget == acausalTarget) {
+                                tmpPreCommitBuffer[threadNum].addTargetPossibleEnemyLabel({curTarget, true, true});
+                            }
+                            else {
+                                tmpPreCommitBuffer[threadNum].addTargetPossibleEnemyLabel({curTarget, true, false});
+                                tmpPreCommitBuffer[threadNum].addTargetPossibleEnemyLabel({acausalTarget, false, true});
+                            }
+                        }
+                        else if (visibleEngagement) {
+                            tmpPreCommitBuffer[threadNum].addTargetPossibleEnemyLabel({curTarget, true, false});
+                        }
+                        else if (hitEngagement) {
+                            tmpPreCommitBuffer[threadNum].addTargetPossibleEnemyLabel({
+                                playerToACausalTarget[curPlayerId], false, true
+                            });
                         }
                     }
                     else {
