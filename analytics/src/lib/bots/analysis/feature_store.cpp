@@ -95,7 +95,6 @@ namespace csknow::feature_store {
         valid[rowIndex] = true;
 
         buffer.engagementPossibleEnemyBuffer.clear();
-        buffer.targetPossibleEnemyBuffer.clear();
         buffer.targetPossibleEnemyLabelBuffer.clear();
     }
 
