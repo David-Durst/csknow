@@ -63,7 +63,7 @@ namespace csknow::behavior_tree_latent_states {
         vector<feature_store::FeatureStorePreCommitBuffer> tmpPreCommitBuffer(numThreads);
         TreeThinker defaultThinker{INVALID_ID, AggressiveType::Push};
 
-//#pragma omp parallel for
+#pragma omp parallel for
         for (int64_t roundIndex = 0; roundIndex < rounds.size; roundIndex++) {
             int threadNum = omp_get_thread_num();
             tmpRoundIds[threadNum].push_back(roundIndex);

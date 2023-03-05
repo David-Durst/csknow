@@ -23,10 +23,13 @@ namespace csknow::feature_store {
 
     void FeatureStoreResult::init(size_t size) {
         for (int i = 0; i < maxEnemies; i++) {
+            columnEnemyData[i].playerId.resize(size, INVALID_ID);
             columnEnemyData[i].enemyEngagementStates.resize(size, EngagementEnemyState::None);
             columnEnemyData[i].timeSinceLastVisibleOrToBecomeVisible.resize(size, maxTimeToVis);
             columnEnemyData[i].worldDistanceToEnemy.resize(size, INVALID_ID);
             columnEnemyData[i].crosshairDistanceToEnemy.resize(size, INVALID_ID);
+            columnEnemyData[i].nearestTargetEnemy.resize(size, false);
+            columnEnemyData[i].hitTargetEnemy.resize(size, false);
         }
         hitEngagement.resize(size, false);
         visibleEngagement.resize(size, false);
@@ -53,7 +56,7 @@ namespace csknow::feature_store {
                       return a.playerId < b.playerId;
         });
 
-        if (buffer.engagementPossibleEnemyBuffer.size() >= maxEnemies) {
+        if (buffer.engagementPossibleEnemyBuffer.size() > maxEnemies) {
             std::cerr << "committing row with wrong number of engagement players" << std::endl;
             throw std::runtime_error("committing row with wrong number of engagement players");
         }

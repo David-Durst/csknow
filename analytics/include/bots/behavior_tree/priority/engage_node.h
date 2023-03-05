@@ -41,20 +41,20 @@ public:
                          "EngageNode") { };
 };
 
-void setPossibleEnemyDistances(Vec3 attackerEyePos, Vec2 attackerViewAngle,
-                               Vec3 victimEyePos, Vec2 victimViewAngle, double victimDuckAmount,
-                               csknow::feature_store::EngagementPossibleEnemy & engagementPossibleEnemy) {
-    Vec3 victimHeadPos = getCenterHeadCoordinatesForPlayer(victimEyePos, victimViewAngle, victimDuckAmount);
-    Vec2 deltaViewAngle = deltaViewFromOriginToDest(attackerEyePos, victimHeadPos, attackerViewAngle);
-    engagementPossibleEnemy.worldDistanceToEnemy = computeDistance(attackerEyePos, victimEyePos);
-    engagementPossibleEnemy.crosshairDistanceToEnemyHead = computeMagnitude(deltaViewAngle);
-}
-
 class EnemyEngageCheckNode : public ConditionDecorator {
 public:
     EnemyEngageCheckNode(Blackboard & blackboard) : ConditionDecorator(blackboard,
                                                                         make_unique<EngageNode>(blackboard),
                                                                         "EnemyEngageCheckNode") { };
+
+    void setPossibleEnemyDistances(Vec3 attackerEyePos, Vec2 attackerViewAngle,
+                                   Vec3 victimEyePos, Vec2 victimViewAngle, double victimDuckAmount,
+                                   csknow::feature_store::EngagementPossibleEnemy & engagementPossibleEnemy) {
+        Vec3 victimHeadPos = getCenterHeadCoordinatesForPlayer(victimEyePos, victimViewAngle, victimDuckAmount);
+        Vec2 deltaViewAngle = deltaViewFromOriginToDest(attackerEyePos, victimHeadPos, attackerViewAngle);
+        engagementPossibleEnemy.worldDistanceToEnemy = computeDistance(attackerEyePos, victimEyePos);
+        engagementPossibleEnemy.crosshairDistanceToEnemyHead = computeMagnitude(deltaViewAngle);
+    }
 
     virtual bool valid(const ServerState & state, TreeThinker & treeThinker) override {
         const ServerState::Client & curClient = state.getClient(treeThinker.csgoId);
@@ -64,7 +64,8 @@ public:
         map<CSGOId, csknow::feature_store::EngagementPossibleEnemy> possibleEnemies;
         for (const auto & visibleEnemy : state.getVisibleEnemies(treeThinker.csgoId)) {
             possibleEnemies[visibleEnemy.get().csgoId] = {
-                visibleEnemy.get().csgoId, csknow::feature_store::EngagementEnemyState::Visible, 0.
+                visibleEnemy.get().csgoId, csknow::feature_store::EngagementEnemyState::Visible, 0.,
+                INVALID_ID, INVALID_ID
             };
         }
 
@@ -74,7 +75,8 @@ public:
                 double secondsSinceLastSeen =
                     state.getSecondsBetweenTimes(state.loadTime, rememberedEnemyState.lastSeenTime);
                 possibleEnemies[rememberedEnemyId] = {
-                    rememberedEnemyId, csknow::feature_store::EngagementEnemyState::Remembered, secondsSinceLastSeen
+                    rememberedEnemyId, csknow::feature_store::EngagementEnemyState::Remembered, secondsSinceLastSeen,
+                    INVALID_ID, INVALID_ID
                 };
             }
         }
@@ -133,7 +135,8 @@ public:
 
             if (possibleEnemies.find(enemyId) == possibleEnemies.end()) {
                 possibleEnemies[enemyId] = {
-                    enemyId, csknow::feature_store::EngagementEnemyState::Communicated, minTimeToVis
+                    enemyId, csknow::feature_store::EngagementEnemyState::Communicated, minTimeToVis,
+                    INVALID_ID, INVALID_ID
                 };
             }
         }
