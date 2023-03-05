@@ -34,6 +34,7 @@ namespace csknow::feature_store {
         hitEngagement.resize(size, false);
         visibleEngagement.resize(size, false);
         valid.resize(size, false);
+        this->size = size;
     }
 
     FeatureStoreResult::FeatureStoreResult() {
