@@ -249,16 +249,18 @@ int main(int argc, char * argv[]) {
     std::cout << "size: " << engagementAimResult.size << std::endl;
 
     // latent engagement aim data
+    /*
     std::cout << "processing training latent engagement aim training data set" << std::endl;
     string latentEngagementAimName = "latentEngagementAim";
     TrainingEngagementAimResult latentEngagementAimResult =
         queryTrainingEngagementAim(games, filteredRounds, ticks, playerAtTick, latentEngagementResult,
                                    fireHistoryResult, map_visPoints.at("de_dust2"), nearestNavCellResult);
     std::cout << "size: " << latentEngagementAimResult.size << std::endl;
+     */
 
     map<string, reference_wrapper<QueryResult>> analyses {
             {engagementAimName, engagementAimResult},
-            {latentEngagementAimName, latentEngagementAimResult},
+            //{latentEngagementAimName, latentEngagementAimResult},
             {behaviorTreeFeatureStoreName, behaviorTreeLatentEvents.featureStoreResult}
             //{trainingNavigationName, trainingNavigationResult},
     };
