@@ -29,8 +29,8 @@ namespace csknow::feature_store {
             columnEnemyData[i].playerId.resize(size, INVALID_ID);
             columnEnemyData[i].enemyEngagementStates.resize(size, EngagementEnemyState::None);
             columnEnemyData[i].timeSinceLastVisibleOrToBecomeVisible.resize(size, maxTimeToVis);
-            columnEnemyData[i].worldDistanceToEnemy.resize(size, INVALID_ID);
-            columnEnemyData[i].crosshairDistanceToEnemy.resize(size, INVALID_ID);
+            columnEnemyData[i].worldDistanceToEnemy.resize(size, maxWorldDistance);
+            columnEnemyData[i].crosshairDistanceToEnemy.resize(size, maxCrosshairDistance);
             columnEnemyData[i].nearestTargetEnemy.resize(size, false);
             columnEnemyData[i].hitTargetEnemy.resize(size, false);
         }

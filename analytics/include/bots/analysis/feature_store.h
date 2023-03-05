@@ -18,7 +18,9 @@ namespace csknow::feature_store {
         None
     };
 
-    constexpr double maxTimeToVis = 200.;
+    constexpr double maxTimeToVis = 100.;
+    constexpr double maxWorldDistance = 4000.;
+    constexpr double maxCrosshairDistance = 360.;
     struct EngagementPossibleEnemy {
         CSGOId playerId;
         EngagementEnemyState enemyState;
