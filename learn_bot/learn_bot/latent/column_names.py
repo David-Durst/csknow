@@ -64,6 +64,11 @@ def get_ith_enemy_columns(i: int) -> EnemyColumns:
     result.hit_target_enemy += f" {i}"
 
 
+hit_engagement_column = "hit engagement"
+visible_engagement_column = "visible engagement"
+general_cat_columns = [hit_engagement_column, visible_engagement_column]
+
+
 specific_enemy_columns: list[EnemyColumns] = [get_ith_enemy_columns(i) for i in range(max_enemies)]
 flat_specific_enemy_columns: list[str] = [col for cols in specific_enemy_columns for col in cols.to_list()]
 flat_input_float_specific_enemy_columns: list[str] = \
@@ -72,8 +77,9 @@ flat_input_cat_specific_enemy_columns: list[str] = \
     [col for cols in specific_enemy_columns for col in cols.to_input_cat_list()]
 flat_input_cat_specific_enemy_num_options: list[int] = \
     [col for cols in specific_enemy_columns for col in cols.to_input_cat_num_options()]
-flat_output_float_specific_enemy_columns: list[str] = \
-    [col for cols in specific_enemy_columns for col in cols.to_output_list()]
+flat_output_cat_columns: list[str] = \
+    [col for cols in specific_enemy_columns for col in cols.to_output_list()] + general_cat_columns
+flat_output_num_options: list[int] = [2 for _ in flat_output_cat_columns]
 
 
 def get_simplified_column_types(float_standard_cols: List[str], categorical_cols: List[str],
@@ -84,4 +90,4 @@ def get_simplified_column_types(float_standard_cols: List[str], categorical_cols
 input_column_types = get_simplified_column_types(flat_input_float_specific_enemy_columns,
                                                  flat_input_cat_specific_enemy_columns,
                                                  flat_input_cat_specific_enemy_num_options)
-output_column_types = get_simplified_column_types(flat_output_float_specific_enemy_columns, [], [])
+output_column_types = get_simplified_column_types([], flat_output_cat_columns, flat_output_num_options)

@@ -11,8 +11,8 @@ from learn_bot.latent.dataset import *
 from learn_bot.latent.mlp_latent_model import MLPLatentModel
 from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd
 from learn_bot.libs.io_transforms import CUDA_DEVICE_STR
-from learn_bot.engagement_aim.accuracy_and_loss import compute_loss, compute_accuracy, finish_accuracy, \
-    CPU_DEVICE_STR, AimLosses
+from learn_bot.latent.accuracy_and_loss import compute_loss, compute_accuracy, finish_accuracy, \
+    CPU_DEVICE_STR, LatentLosses
 from learn_bot.libs.plot_features import plot_untransformed_and_transformed
 from learn_bot.libs.df_grouping import train_test_split_by_col, make_index_column
 from tqdm import tqdm
@@ -88,7 +88,7 @@ def train(all_data_df: pd.DataFrame, num_epochs: int, save=True, diff_train_test
             model.train()
         else:
             model.eval()
-        cumulative_loss = AimLosses()
+        cumulative_loss = LatentLosses()
         accuracy = {}
         # bar = Bar('Processing', max=size)
         for name in column_transformers.output_types.column_names():
@@ -134,7 +134,7 @@ def train(all_data_df: pd.DataFrame, num_epochs: int, save=True, diff_train_test
         }, checkpoints_path / 'checkpoint.pt')
 
     writer = SummaryWriter(runs_path)
-    def save_tensorboard(train_loss: AimLosses, test_loss: AimLosses, train_accuracy: Dict, test_accuracy: Dict,
+    def save_tensorboard(train_loss: LatentLosses, test_loss: LatentLosses, train_accuracy: Dict, test_accuracy: Dict,
                          epoch_num):
         train_loss.add_scalars(writer, 'train', epoch_num)
         test_loss.add_scalars(writer, 'test', epoch_num)
