@@ -172,7 +172,7 @@ def train(all_data_df: pd.DataFrame, num_epochs: int, save=True, diff_train_test
 
     if save:
         script_model = torch.jit.trace(model.to(CPU_DEVICE_STR), first_row)
-        script_model.save(Path(__file__).parent / '..' / '..' / 'models' / 'engagement_aim_model' / 'script_model.pt')
+        script_model.save(checkpoints_path / 'script_model.pt')
         model.to(device)
 
     return TrainResult(train_data, test_data, train_df, test_df, column_transformers, model)
@@ -180,4 +180,4 @@ def train(all_data_df: pd.DataFrame, num_epochs: int, save=True, diff_train_test
 
 if __name__ == "__main__":
     all_data_df = load_hdf5_to_pd(latent_hdf5_data_path)
-    train_result = train(all_data_df, num_epochs=20)
+    train_result = train(all_data_df, num_epochs=5)
