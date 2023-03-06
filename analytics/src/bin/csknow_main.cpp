@@ -38,6 +38,7 @@
 #include "queries/moments/trajectory_segments.h"
 #include "queries/training_moments/training_engagement_aim.h"
 #include "queries/inference_moments/inference_engagement_aim.h"
+#include "queries/inference_moments/inference_latent_engagement.h"
 #include "queries/training_moments/training_navigation.h"
 #include "queries/moments/trajectory_segments.h"
 #include "queries/moments/latent_extractors/latent_engagement.h"
@@ -324,6 +325,13 @@ int main(int argc, char * argv[]) {
     latentEngagementResult.runQuery(filteredRounds, ticks, hurt, behaviorTreeLatentEvents);
     std::cout << "size: " << latentEngagementResult.size << std::endl;
 
+    // inference latent engagement
+    string inferenceLatentEngagementName = "inferenceLatentEngagement";
+    std::cout << "processing ineference latent engagements" << std::endl;
+    csknow::inference_latent_engagement::InferenceLatentEngagementResult inferenceLatentEngagementResult(playerAtTick);
+    inferenceLatentEngagementResult.runQuery(modelsDir, filteredRounds, ticks, behaviorTreeLatentEvents);
+    std::cout << "size: " << inferenceLatentEngagementResult.size << std::endl;
+
     /*
     std::cout << "processing aggression_event" << std::endl;
     string aggressionEventName = "aggression_event";
@@ -520,6 +528,7 @@ int main(int argc, char * argv[]) {
             {nonEngagementTrajectoryName, nonEngagementTrajectoryResult},
             {trajectorySegmentName, trajectorySegmentResult},
             {latentEngagementName, latentEngagementResult},
+            {inferenceLatentEngagementName, inferenceLatentEngagementResult},
             //{queryNames[5], aCatClusterSequence},
             //{queryNames[6], aCatPeekersClusters},
             //{queryNames[7], midCTClusterSequence},
