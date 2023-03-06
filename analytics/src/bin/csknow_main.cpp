@@ -327,7 +327,7 @@ int main(int argc, char * argv[]) {
 
     // inference latent engagement
     string inferenceLatentEngagementName = "inferenceLatentEngagement";
-    std::cout << "processing ineference latent engagements" << std::endl;
+    std::cout << "processing inference latent engagements" << std::endl;
     csknow::inference_latent_engagement::InferenceLatentEngagementResult inferenceLatentEngagementResult(playerAtTick);
     inferenceLatentEngagementResult.runQuery(modelsDir, filteredRounds, ticks, behaviorTreeLatentEvents);
     std::cout << "size: " << inferenceLatentEngagementResult.size << std::endl;

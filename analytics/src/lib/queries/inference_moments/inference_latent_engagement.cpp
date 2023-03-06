@@ -4,12 +4,13 @@
 
 #include "queries/inference_moments/inference_latent_engagement.h"
 #include "file_helpers.h"
+#include "indices/build_indexes.h"
 
 namespace csknow::inference_latent_engagement {
 
     struct LatentEngagementData {
         int64_t attacker, victim;
-        int64_t startTick, endTick = INVALID_ID;
+        int64_t startTick;
         vector<int64_t> hurtTickIds, hurtIds;
     };
 
@@ -17,10 +18,10 @@ namespace csknow::inference_latent_engagement {
                           vector<vector<int64_t>> & tmpLength, vector<vector<vector<int64_t>>> & tmpPlayerId,
                           vector<vector<vector<EngagementRole>>> & tmpRole,
                           vector<vector<vector<int64_t>>> & tmpHurtTickIds, vector<vector<vector<int64_t>>> & tmpHurtIds,
-                          int threadNum, const LatentEngagementData &eData) {
+                          int64_t endTickIndex, int threadNum, const LatentEngagementData &eData) {
         tmpStartTickId[threadNum].push_back(eData.startTick);
-        tmpEndTickId[threadNum].push_back(eData.endTick);
-        tmpLength[threadNum].push_back(eData.endTick - eData.startTick + 1);
+        tmpEndTickId[threadNum].push_back(endTickIndex);
+        tmpLength[threadNum].push_back(endTickIndex - eData.startTick + 1);
         tmpPlayerId[threadNum].push_back({eData.attacker, eData.victim});
         tmpRole[threadNum].push_back({EngagementRole::Attacker, EngagementRole::Victim});
         tmpHurtTickIds[threadNum].push_back(eData.hurtTickIds);
@@ -59,9 +60,13 @@ namespace csknow::inference_latent_engagement {
         vector<vector<vector<int64_t>>> tmpHurtIds(numThreads);
 
 //#pragma omp parallel for
-        for (int64_t roundIndex = 0; roundIndex < rounds.size; roundIndex++) {
+        for (int64_t roundIndex = 0; roundIndex < 1L /*rounds.size*/; roundIndex++) {
             int threadNum = omp_get_thread_num();
+            tmpRoundIds[threadNum].push_back(roundIndex);
+            tmpRoundStarts[threadNum].push_back(static_cast<int64_t>(tmpStartTickId[threadNum].size()));
+
             auto options = torch::TensorOptions().dtype(at::kFloat);
+
             map<int64_t, LatentEngagementData> playerToActiveEngagement;
             for (int64_t tickIndex = rounds.ticksPerRound[roundIndex].minId;
                  tickIndex <= rounds.ticksPerRound[roundIndex].maxId; tickIndex++) {
@@ -75,12 +80,15 @@ namespace csknow::inference_latent_engagement {
                     for (size_t enemyNum = 0; enemyNum < csknow::feature_store::maxEnemies; enemyNum++) {
                         const csknow::feature_store::FeatureStoreResult::ColumnEnemyData &columnEnemyData =
                             behaviorTreeLatentStates.featureStoreResult.columnEnemyData[enemyNum];
-                        rowCPP.push_back(static_cast<float>(columnEnemyData.playerId[patIndex]));
-                        rowCPP.push_back(static_cast<float>(columnEnemyData.enemyEngagementStates[patIndex]));
                         rowCPP.push_back(
                             static_cast<float>(columnEnemyData.timeSinceLastVisibleOrToBecomeVisible[patIndex]));
                         rowCPP.push_back(static_cast<float>(columnEnemyData.worldDistanceToEnemy[patIndex]));
                         rowCPP.push_back(static_cast<float>(columnEnemyData.crosshairDistanceToEnemy[patIndex]));
+                    }
+                    for (size_t enemyNum = 0; enemyNum < csknow::feature_store::maxEnemies; enemyNum++) {
+                        const csknow::feature_store::FeatureStoreResult::ColumnEnemyData &columnEnemyData =
+                            behaviorTreeLatentStates.featureStoreResult.columnEnemyData[enemyNum];
+                        rowCPP.push_back(static_cast<float>(columnEnemyData.enemyEngagementStates[patIndex]));
                     }
 
                     torch::Tensor rowPT = torch::from_blob(rowCPP.data(), {1, static_cast<long>(rowCPP.size())},
@@ -106,6 +114,15 @@ namespace csknow::inference_latent_engagement {
                     }
 
                     bool hitEngagement = output[0][csknow::feature_store::maxEnemies * 2].item<float>() >= 0.5;
+                    /*
+                    if (hitEngagement) {
+                        std::cout << "hit engagement" << std::endl;
+                    }
+                    bool visibleEngagement = output[0][csknow::feature_store::maxEnemies * 2 + 1].item<float>() >= 0.5;
+                    if (visibleEngagement) {
+                        std::cout << "visible engagement" << std::endl;
+                    }
+                     */
 
                     bool oldEngagementToWrite =
                         // if was engagement and now none
@@ -118,17 +135,19 @@ namespace csknow::inference_latent_engagement {
 
                     // if new engagement and no old engagement, just add to tracker
                     if (oldEngagementToWrite) {
+                        //std::cout << "writing latent engagement" << std::endl;
                         finishEngagement(tmpStartTickId, tmpEndTickId,
                                          tmpLength, tmpPlayerId,
                                          tmpRole,
-                                         tmpHurtTickIds, tmpHurtIds,
+                                         tmpHurtTickIds, tmpHurtIds, tickIndex,
                                          threadNum, playerToActiveEngagement[curPlayerId]);
                         playerToActiveEngagement.erase(curPlayerId);
                     }
-                    if (hitEngagement && oldEngagementToWrite) {
+                    if (hitEngagement && playerToActiveEngagement.find(curPlayerId) == playerToActiveEngagement.end()) {
+                        //std::cout << "starting latent engagement" << std::endl;
                         playerToActiveEngagement[curPlayerId] = {
                             curPlayerId, firstLikelyHitEnemy,
-                            tickIndex, INVALID_ID, vector<int64_t>(), vector<int64_t>()
+                            tickIndex, vector<int64_t>(), vector<int64_t>()
                         };
                     }
                 }
@@ -138,13 +157,27 @@ namespace csknow::inference_latent_engagement {
                 finishEngagement(tmpStartTickId, tmpEndTickId,
                                  tmpLength, tmpPlayerId,
                                  tmpRole,
-                                 tmpHurtTickIds, tmpHurtIds,
+                                 tmpHurtTickIds, tmpHurtIds, rounds.ticksPerRound[roundIndex].maxId - 1,
                                  threadNum, eData);
             }
 
+            tmpRoundSizes[threadNum].push_back(static_cast<int64_t>(tmpStartTickId[threadNum].size()) - tmpRoundStarts[threadNum].back());
             roundsProcessed++;
             printProgress(roundsProcessed, rounds.size);
         }
-        size = playerAtTick.size;
+
+        mergeThreadResults(numThreads, rowIndicesPerRound, tmpRoundIds, tmpRoundStarts, tmpRoundSizes,
+                           startTickId, size,
+                           [&](int64_t minThreadId, int64_t tmpRowId) {
+                               startTickId.push_back(tmpStartTickId[minThreadId][tmpRowId]);
+                               endTickId.push_back(tmpEndTickId[minThreadId][tmpRowId]);
+                               tickLength.push_back(tmpLength[minThreadId][tmpRowId]);
+                               playerId.push_back(tmpPlayerId[minThreadId][tmpRowId]);
+                               role.push_back(tmpRole[minThreadId][tmpRowId]);
+                               hurtTickIds.push_back(tmpHurtTickIds[minThreadId][tmpRowId]);
+                               hurtIds.push_back(tmpHurtIds[minThreadId][tmpRowId]);
+                           });
+        vector<const int64_t *> foreignKeyCols{startTickId.data(), endTickId.data()};
+        engagementsPerTick = buildIntervalIndex(foreignKeyCols, size);
     }
 }
