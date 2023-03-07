@@ -66,10 +66,12 @@ namespace csknow::feature_store {
             // labels
             vector<bool> nearestTargetEnemy;
             vector<bool> hitTargetEnemy;
+            vector<bool> visibleIn1s, visibleIn2s, visibleIn5s, visibleIn10s;
         };
         array<ColumnEnemyData, maxEnemies> columnEnemyData;
         vector<bool> hitEngagement;
         vector<bool> visibleEngagement;
+        vector<int> nearestCrosshairCurTick, nearestCrosshairEnemy500ms, nearestCrosshairEnemy1s, nearestCrosshairEnemy2s;
         vector<bool> valid;
         bool training;
 
@@ -81,6 +83,8 @@ namespace csknow::feature_store {
 
         void commitRow(FeatureStorePreCommitBuffer & buffer, size_t rowIndex = 0,
                        int64_t roundIndex = 0, int64_t tickIndex = 0, int64_t playerIndex = 0);
+        void computeAcausalLabels(const Games & games, const Rounds & rounds,
+                                  const Ticks & ticks, const PlayerAtTick & playerAtTick);
         void toHDF5Inner(HighFive::File & file) override;
 
         vector<int64_t> filterByForeignKey(int64_t) override { return {}; }
