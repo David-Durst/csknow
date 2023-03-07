@@ -94,7 +94,7 @@ namespace csknow::feature_store {
         bool tEnemies = false;
         for (size_t i = 0; i < buffer.engagementPossibleEnemyBuffer.size(); i++) {
             int64_t curPlayerId = buffer.engagementPossibleEnemyBuffer[i].playerId;
-            if (i == 0 && buffer.tPlayerIdToIndex.find(curPlayerId) != curPlayerId) {
+            if (i == 0 && buffer.tPlayerIdToIndex.find(curPlayerId) != buffer.tPlayerIdToIndex.end()) {
                 tEnemies = true;
             }
             size_t columnIndex = tEnemies ? buffer.tPlayerIdToIndex[curPlayerId] : buffer.ctPlayerIdToIndex[curPlayerId];
@@ -137,10 +137,10 @@ namespace csknow::feature_store {
             TickRates tickRates = computeTickRates(games, rounds, roundIndex);
             // start at end and work backwards to compute future
             std::map<int64_t, std::map<int64_t, int64_t>> nextVisibleTickId;
-            std::map<int64_t, std::map<int64_t, int64_t>> numTicksNearestCrosshair500ms;
-            std::map<int64_t, std::map<int64_t, int64_t>> numTicksNearestCrosshair1s;
-            std::map<int64_t, std::map<int64_t, int64_t>> numTicksNearestCrosshair2s;
-            std::map<int64_t, std::map<int64_t, int64_t>> playerToTickToNearest;
+            std::map<int64_t, std::map<int, int64_t>> playerToEnemyNumToNumTicksNearestCrosshair500ms;
+            std::map<int64_t, std::map<int, int64_t>> playerToEnemyNumToNumTicksNearestCrosshair1s;
+            std::map<int64_t, std::map<int, int64_t>> playerToEnemyNumToNumTicksNearestCrosshair2s;
+            std::map<int64_t, std::map<int64_t, int>> playerToTickToNearest;
             int64_t futureTickIndex500ms = rounds.ticksPerRound[roundIndex].maxId,
                 futureTickIndex1s = rounds.ticksPerRound[roundIndex].maxId,
                 futureTickIndex2s = rounds.ticksPerRound[roundIndex].maxId;
@@ -164,10 +164,13 @@ namespace csknow::feature_store {
 
                 for (int64_t patIndex = ticks.patPerTick[tickIndex].minId;
                      patIndex <= ticks.patPerTick[tickIndex].maxId; patIndex++) {
+                    if (!valid[patIndex]) {
+                        continue;
+                    }
                     const int64_t & curPlayerId = playerAtTick.playerId[patIndex];
 
                     double minCrosshairDistanceToEnemy = maxCrosshairDistance;
-                    int64_t closestEnemy = maxEnemies;
+                    int nearestEnemy = maxEnemies;
                     for (size_t columnIndex = 0; columnIndex < maxEnemies; columnIndex++) {
                         int64_t enemyPlayerId = columnEnemyData[columnIndex].playerId[patIndex];
                         // compute visibility for this frame
@@ -185,12 +188,78 @@ namespace csknow::feature_store {
                         }
                         // record nearest enemy for collection later
                         if (columnEnemyData[columnIndex].crosshairDistanceToEnemy[patIndex] < minCrosshairDistanceToEnemy) {
-                            closestEnemy = enemyPlayerId;
+                            nearestEnemy = columnIndex;
                             minCrosshairDistanceToEnemy =
                                 columnEnemyData[columnIndex].crosshairDistanceToEnemy[patIndex];
                         }
                     }
 
+                    // add to rolling trackers
+                    playerToTickToNearest[curPlayerId][tickIndex] = nearestEnemy;
+                    if (playerToEnemyNumToNumTicksNearestCrosshair500ms[curPlayerId].find(nearestEnemy) ==
+                        playerToEnemyNumToNumTicksNearestCrosshair500ms[curPlayerId].end()) {
+                        playerToEnemyNumToNumTicksNearestCrosshair500ms[curPlayerId][nearestEnemy] = 0;
+                    }
+                    playerToEnemyNumToNumTicksNearestCrosshair500ms[curPlayerId][nearestEnemy]++;
+                    if (playerToEnemyNumToNumTicksNearestCrosshair1s[curPlayerId].find(nearestEnemy) ==
+                        playerToEnemyNumToNumTicksNearestCrosshair1s[curPlayerId].end()) {
+                        playerToEnemyNumToNumTicksNearestCrosshair1s[curPlayerId][nearestEnemy] = 0;
+                    }
+                    playerToEnemyNumToNumTicksNearestCrosshair1s[curPlayerId][nearestEnemy]++;
+                    if (playerToEnemyNumToNumTicksNearestCrosshair2s[curPlayerId].find(nearestEnemy) ==
+                        playerToEnemyNumToNumTicksNearestCrosshair2s[curPlayerId].end()) {
+                        playerToEnemyNumToNumTicksNearestCrosshair2s[curPlayerId][nearestEnemy] = 0;
+                    }
+                    playerToEnemyNumToNumTicksNearestCrosshair2s[curPlayerId][nearestEnemy]++;
+
+                    // subtract from rolling trackers
+                    for (const auto & removedTick : removed500msTicks) {
+                        int enemyToDecrease = playerToTickToNearest[curPlayerId][removedTick];
+                        playerToEnemyNumToNumTicksNearestCrosshair500ms[curPlayerId][enemyToDecrease]--;
+                    }
+                    for (const auto & removedTick : removed1sTicks) {
+                        int enemyToDecrease = playerToTickToNearest[curPlayerId][removedTick];
+                        playerToEnemyNumToNumTicksNearestCrosshair1s[curPlayerId][enemyToDecrease]--;
+                    }
+                    for (const auto & removedTick : removed2sTicks) {
+                        int enemyToDecrease = playerToTickToNearest[curPlayerId][removedTick];
+                        playerToEnemyNumToNumTicksNearestCrosshair2s[curPlayerId][enemyToDecrease]--;
+                        // remove the tick from the specific tick trackers once it's past longest window
+                        playerToTickToNearest[curPlayerId].erase(removedTick);
+                    }
+
+                    // compute labels based on future data
+                    nearestCrosshairCurTick[patIndex] = nearestEnemy;
+                    int64_t maxTicksNearest = 0;
+                    int nearestEnemyOverWindow = maxEnemies;
+                    for (const auto & [enemyNum, numTicksNearest] :
+                        playerToEnemyNumToNumTicksNearestCrosshair500ms[curPlayerId]) {
+                        if (numTicksNearest > maxTicksNearest) {
+                            maxTicksNearest = numTicksNearest;
+                            nearestEnemyOverWindow = enemyNum;
+                        }
+                    }
+                    nearestCrosshairEnemy500ms[patIndex] = nearestEnemyOverWindow;
+                    maxTicksNearest = 0;
+                    nearestEnemyOverWindow = maxEnemies;
+                    for (const auto & [enemyNum, numTicksNearest] :
+                        playerToEnemyNumToNumTicksNearestCrosshair1s[curPlayerId]) {
+                        if (numTicksNearest > maxTicksNearest) {
+                            maxTicksNearest = numTicksNearest;
+                            nearestEnemyOverWindow = enemyNum;
+                        }
+                    }
+                    nearestCrosshairEnemy1s[patIndex] = nearestEnemyOverWindow;
+                    maxTicksNearest = 0;
+                    nearestEnemyOverWindow = maxEnemies;
+                    for (const auto & [enemyNum, numTicksNearest] :
+                        playerToEnemyNumToNumTicksNearestCrosshair2s[curPlayerId]) {
+                        if (numTicksNearest > maxTicksNearest) {
+                            maxTicksNearest = numTicksNearest;
+                            nearestEnemyOverWindow = enemyNum;
+                        }
+                    }
+                    nearestCrosshairEnemy2s[patIndex] = nearestEnemyOverWindow;
                 }
             }
         }
