@@ -209,6 +209,10 @@ int main(int argc, char * argv[]) {
                                       playerAtTick, weaponFire, hurt, plants, defusals, engagementResult);
     std::cout << "size: " << behaviorTreeLatentEvents.size << std::endl;
 
+    std::cout << "processing behavior tree feature store" << std::endl;
+    behaviorTreeLatentEvents.featureStoreResult.computeAcausalLabels(games, filteredRounds, ticks, playerAtTick);
+    std::cout << "size: " << behaviorTreeLatentEvents.featureStoreResult.size << std::endl;
+
     // latent engagement events
     string latentEngagementName = "latentEngagement";
     std::cout << "processing latent engagements" << std::endl;
