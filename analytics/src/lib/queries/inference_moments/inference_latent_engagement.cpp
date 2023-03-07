@@ -141,7 +141,7 @@ namespace csknow::inference_latent_engagement {
                         // new engagmenet with different target
                         (engagment &&
                          playerToActiveEngagement.find(curPlayerId) != playerToActiveEngagement.end() &&
-                         playerToActiveEngagement[curPlayerId].victim != firstLikelyHitEnemy);
+                         playerToActiveEngagement[curPlayerId].victim != firstLikelyEnemy);
 
                     // if new engagement and no old engagement, just add to tracker
                     if (oldEngagementToWrite) {
