@@ -6,6 +6,8 @@
 #include <map>
 #include "bots/analysis/feature_store.h"
 #include "queries/lookback.h"
+#include "file_helpers.h"
+#include <atomic>
 
 namespace csknow::feature_store {
     void FeatureStorePreCommitBuffer::updateFeatureStoreBufferPlayers(const ServerState & state) {
@@ -57,6 +59,7 @@ namespace csknow::feature_store {
         }
         hitEngagement.resize(size, false);
         visibleEngagement.resize(size, false);
+        nearestCrosshairCurTick.resize(size, false);
         nearestCrosshairEnemy500ms.resize(size, false);
         nearestCrosshairEnemy1s.resize(size, false);
         nearestCrosshairEnemy2s.resize(size, false);
@@ -132,6 +135,7 @@ namespace csknow::feature_store {
 
     void FeatureStoreResult::computeAcausalLabels(const Games & games, const Rounds & rounds,
                                                   const Ticks & ticks, const PlayerAtTick & playerAtTick) {
+        std::atomic<int64_t> roundsProcessed = 0;
 //#pragma omp parallel for
         for (int64_t roundIndex = 0; roundIndex < rounds.size; roundIndex++) {
             TickRates tickRates = computeTickRates(games, rounds, roundIndex);
@@ -186,6 +190,7 @@ namespace csknow::feature_store {
                             columnEnemyData[columnIndex].visibleIn5s[patIndex] = timeUntilVisible < 5.;
                             columnEnemyData[columnIndex].visibleIn10s[patIndex] = timeUntilVisible < 10.;
                         }
+                        // these default to false, so no need for else clause setting them to false
                         // record nearest enemy for collection later
                         if (columnEnemyData[columnIndex].crosshairDistanceToEnemy[patIndex] < minCrosshairDistanceToEnemy) {
                             nearestEnemy = columnIndex;
@@ -262,6 +267,8 @@ namespace csknow::feature_store {
                     nearestCrosshairEnemy2s[patIndex] = nearestEnemyOverWindow;
                 }
             }
+            roundsProcessed++;
+            printProgress(roundsProcessed, rounds.size);
         }
     }
 
