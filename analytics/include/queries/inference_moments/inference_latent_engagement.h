@@ -14,7 +14,8 @@ namespace csknow::inference_latent_engagement {
         explicit InferenceLatentEngagementResult(const PlayerAtTick & playerAtTick) : playerAtTick(playerAtTick) { };
 
         void runQuery(const string & modelsDir, const Rounds & rounds, const Ticks & ticks,
-                      const csknow::behavior_tree_latent_states::BehaviorTreeLatentStates & behaviorTreeLatentStates);
+                      const csknow::behavior_tree_latent_states::BehaviorTreeLatentStates & behaviorTreeLatentStates,
+                      bool useHitEngagementDefinition);
 
     };
 }

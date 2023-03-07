@@ -30,7 +30,8 @@ namespace csknow::inference_latent_engagement {
 
     void InferenceLatentEngagementResult::runQuery(
         const string & modelsDir, const Rounds & rounds, const Ticks & ticks,
-        const csknow::behavior_tree_latent_states::BehaviorTreeLatentStates & behaviorTreeLatentStates) {
+        const csknow::behavior_tree_latent_states::BehaviorTreeLatentStates & behaviorTreeLatentStates,
+        bool useHitEngagementDefinition) {
         fs::path modelPath = fs::path(modelsDir) / fs::path("latent_model") /
                              fs::path("script_model.pt");
 
@@ -100,6 +101,7 @@ namespace csknow::inference_latent_engagement {
 
                     vector<csknow::feature_store::TargetPossibleEnemyLabel> targetLabels;
                     int firstLikelyHitEnemy = INVALID_ID;
+                    int firstLikelyNearestEnemy = INVALID_ID;
                     for (size_t enemyNum = 0; enemyNum < csknow::feature_store::maxEnemies; enemyNum++) {
                         const csknow::feature_store::FeatureStoreResult::ColumnEnemyData &columnEnemyData =
                             behaviorTreeLatentStates.featureStoreResult.columnEnemyData[enemyNum];
@@ -111,6 +113,9 @@ namespace csknow::inference_latent_engagement {
                         if (firstLikelyHitEnemy == INVALID_ID && targetLabels.back().hitTargetEnemy) {
                             firstLikelyHitEnemy = columnEnemyData.playerId[patIndex];
                         }
+                        if (firstLikelyNearestEnemy == INVALID_ID && targetLabels.back().nearestTargetEnemy) {
+                            firstLikelyNearestEnemy = columnEnemyData.playerId[patIndex];
+                        }
                     }
 
                     bool hitEngagement = output[0][csknow::feature_store::maxEnemies * 2].item<float>() >= 0.5;
@@ -118,18 +123,23 @@ namespace csknow::inference_latent_engagement {
                     if (hitEngagement) {
                         std::cout << "hit engagement" << std::endl;
                     }
+                     */
                     bool visibleEngagement = output[0][csknow::feature_store::maxEnemies * 2 + 1].item<float>() >= 0.5;
+                    /*
                     if (visibleEngagement) {
                         std::cout << "visible engagement" << std::endl;
                     }
                      */
 
+                    bool engagment = useHitEngagementDefinition ? hitEngagement : visibleEngagement;
+                    int firstLikelyEnemy = useHitEngagementDefinition ? firstLikelyHitEnemy : firstLikelyNearestEnemy;
+
                     bool oldEngagementToWrite =
                         // if was engagement and now none
-                        (!hitEngagement &&
+                        (!engagment &&
                          playerToActiveEngagement.find(curPlayerId) != playerToActiveEngagement.end()) ||
                         // new engagmenet with different target
-                        (hitEngagement &&
+                        (engagment &&
                          playerToActiveEngagement.find(curPlayerId) != playerToActiveEngagement.end() &&
                          playerToActiveEngagement[curPlayerId].victim != firstLikelyHitEnemy);
 
@@ -143,10 +153,10 @@ namespace csknow::inference_latent_engagement {
                                          threadNum, playerToActiveEngagement[curPlayerId]);
                         playerToActiveEngagement.erase(curPlayerId);
                     }
-                    if (hitEngagement && playerToActiveEngagement.find(curPlayerId) == playerToActiveEngagement.end()) {
+                    if (engagment && playerToActiveEngagement.find(curPlayerId) == playerToActiveEngagement.end()) {
                         //std::cout << "starting latent engagement" << std::endl;
                         playerToActiveEngagement[curPlayerId] = {
-                            curPlayerId, firstLikelyHitEnemy,
+                            curPlayerId, firstLikelyEnemy,
                             tickIndex, vector<int64_t>(), vector<int64_t>()
                         };
                     }

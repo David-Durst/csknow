@@ -326,11 +326,17 @@ int main(int argc, char * argv[]) {
     std::cout << "size: " << latentEngagementResult.size << std::endl;
 
     // inference latent engagement
-    string inferenceLatentEngagementName = "inferenceLatentEngagement";
-    std::cout << "processing inference latent engagements" << std::endl;
-    csknow::inference_latent_engagement::InferenceLatentEngagementResult inferenceLatentEngagementResult(playerAtTick);
-    inferenceLatentEngagementResult.runQuery(modelsDir, filteredRounds, ticks, behaviorTreeLatentEvents);
-    std::cout << "size: " << inferenceLatentEngagementResult.size << std::endl;
+    string inferenceLatentEngagementHitName = "inferenceLatentEngagementHit";
+    std::cout << "processing inference latent engagements hit" << std::endl;
+    csknow::inference_latent_engagement::InferenceLatentEngagementResult inferenceLatentEngagementHitResult(playerAtTick);
+    inferenceLatentEngagementHitResult.runQuery(modelsDir, filteredRounds, ticks, behaviorTreeLatentEvents, true);
+    std::cout << "size: " << inferenceLatentEngagementHitResult.size << std::endl;
+
+    string inferenceLatentEngagementVisibleName = "inferenceLatentEngagementVisible";
+    std::cout << "processing inference latent engagements visible" << std::endl;
+    csknow::inference_latent_engagement::InferenceLatentEngagementResult inferenceLatentEngagementVisibleResult(playerAtTick);
+    inferenceLatentEngagementVisibleResult.runQuery(modelsDir, filteredRounds, ticks, behaviorTreeLatentEvents, false);
+    std::cout << "size: " << inferenceLatentEngagementVisibleResult.size << std::endl;
 
     /*
     std::cout << "processing aggression_event" << std::endl;
@@ -528,7 +534,8 @@ int main(int argc, char * argv[]) {
             {nonEngagementTrajectoryName, nonEngagementTrajectoryResult},
             {trajectorySegmentName, trajectorySegmentResult},
             {latentEngagementName, latentEngagementResult},
-            {inferenceLatentEngagementName, inferenceLatentEngagementResult},
+            {inferenceLatentEngagementHitName, inferenceLatentEngagementHitResult},
+            {inferenceLatentEngagementVisibleName, inferenceLatentEngagementVisibleResult},
             //{queryNames[5], aCatClusterSequence},
             //{queryNames[6], aCatPeekersClusters},
             //{queryNames[7], midCTClusterSequence},
