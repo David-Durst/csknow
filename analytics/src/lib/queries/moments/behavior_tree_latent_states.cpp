@@ -85,6 +85,7 @@ namespace csknow::behavior_tree_latent_states {
                                                    playerAtTick, tickIndex, nearestNavCell, visPoints, tickRates);
                 const ServerState & curState = blackboard.streamingManager.db.batchData.fromNewest();
                 addTreeThinkersToBlackboard(curState, &blackboard);
+                tmpPreCommitBuffer[threadNum].updateFeatureStoreBufferPlayers(curState);
                 globalQueryNode.exec(curState, defaultThinker);
 
                 map<int64_t, int64_t> playerToACausalTarget;

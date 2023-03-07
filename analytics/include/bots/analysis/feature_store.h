@@ -36,6 +36,9 @@ namespace csknow::feature_store {
     };
 
     struct FeatureStorePreCommitBuffer {
+        map<int64_t, int> tPlayerIdToIndex, ctPlayerIdToIndex;
+        void updateFeatureStoreBufferPlayers(const ServerState & state);
+
         vector<EngagementPossibleEnemy> engagementPossibleEnemyBuffer;
         vector<TargetPossibleEnemyLabel> targetPossibleEnemyLabelBuffer;
         bool hitEngagementBuffer;

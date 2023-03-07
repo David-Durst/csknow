@@ -7,6 +7,22 @@
 #include "bots/analysis/feature_store.h"
 
 namespace csknow::feature_store {
+    void FeatureStorePreCommitBuffer::updateFeatureStoreBufferPlayers(const ServerState & state) {
+        tPlayerIdToIndex.clear();
+        ctPlayerIdToIndex.clear();
+        int tIndex = 0, ctIndex = 0;
+        for (const auto & client : state.clients) {
+            if (client.team == ENGINE_TEAM_T) {
+                tPlayerIdToIndex[client.csgoId] = tIndex;
+                tIndex++;
+            }
+            else if (client.team == ENGINE_TEAM_CT) {
+                ctPlayerIdToIndex[client.csgoId] = ctIndex;
+                ctIndex++;
+            }
+        }
+    }
+
     void FeatureStorePreCommitBuffer::addEngagementPossibleEnemy(
         const EngagementPossibleEnemy & engagementPossibleEnemy) {
         engagementPossibleEnemyBuffer.push_back(engagementPossibleEnemy);
@@ -55,14 +71,6 @@ namespace csknow::feature_store {
         roundId[rowIndex] = roundIndex;
         tickId[rowIndex] = tickIndex;
         playerId[rowIndex] = playerIndex;
-        std::sort(buffer.engagementPossibleEnemyBuffer.begin(), buffer.engagementPossibleEnemyBuffer.end(),
-                  [](const EngagementPossibleEnemy & a, const EngagementPossibleEnemy & b) {
-            return a.playerId < b.playerId;
-        });
-        std::sort(buffer.targetPossibleEnemyLabelBuffer.begin(), buffer.targetPossibleEnemyLabelBuffer.end(),
-                  [](const TargetPossibleEnemyLabel & a, const TargetPossibleEnemyLabel & b) {
-                      return a.playerId < b.playerId;
-        });
 
         if (buffer.engagementPossibleEnemyBuffer.size() > maxEnemies) {
             std::cerr << "committing row with wrong number of engagement players" << std::endl;
@@ -75,16 +83,21 @@ namespace csknow::feature_store {
             playerToTargetLabel[targetLabel.playerId] = targetLabel;
         }
 
+        bool tEnemies = false;
         for (size_t i = 0; i < buffer.engagementPossibleEnemyBuffer.size(); i++) {
             int64_t curPlayerId = buffer.engagementPossibleEnemyBuffer[i].playerId;
-            columnEnemyData[i].playerId[rowIndex] = curPlayerId;
-            columnEnemyData[i].enemyEngagementStates[rowIndex] =
+            if (i == 0 && buffer.tPlayerIdToIndex.find(curPlayerId) != curPlayerId) {
+                tEnemies = true;
+            }
+            size_t columnIndex = tEnemies ? buffer.tPlayerIdToIndex[curPlayerId] : buffer.ctPlayerIdToIndex[curPlayerId];
+            columnEnemyData[columnIndex].playerId[rowIndex] = curPlayerId;
+            columnEnemyData[columnIndex].enemyEngagementStates[rowIndex] =
                 buffer.engagementPossibleEnemyBuffer[i].enemyState;
-            columnEnemyData[i].timeSinceLastVisibleOrToBecomeVisible[rowIndex] =
+            columnEnemyData[columnIndex].timeSinceLastVisibleOrToBecomeVisible[rowIndex] =
                 buffer.engagementPossibleEnemyBuffer[i].timeSinceLastVisibleOrToBecomeVisible;
-            columnEnemyData[i].worldDistanceToEnemy[rowIndex] =
+            columnEnemyData[columnIndex].worldDistanceToEnemy[rowIndex] =
                 buffer.engagementPossibleEnemyBuffer[i].worldDistanceToEnemy;
-            columnEnemyData[i].crosshairDistanceToEnemy[rowIndex] =
+            columnEnemyData[columnIndex].crosshairDistanceToEnemy[rowIndex] =
                 buffer.engagementPossibleEnemyBuffer[i].crosshairDistanceToEnemyHead;
 
             if (playerToTargetLabel.find(curPlayerId) == playerToTargetLabel.end()) {
