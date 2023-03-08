@@ -72,6 +72,10 @@ def get_ith_enemy_columns(i: int) -> EnemyColumns:
     result.crosshair_distance_to_enemy += f" {i}"
     result.nearest_target_enemy += f" {i}"
     result.hit_target_enemy += f" {i}"
+    result.visible_1s += f" {i}"
+    result.visible_2s += f" {i}"
+    result.visible_5s += f" {i}"
+    result.visible_10s += f" {i}"
     return result
 
 

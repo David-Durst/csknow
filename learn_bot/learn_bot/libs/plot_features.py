@@ -24,7 +24,7 @@ def filter_df_2d(df: pd.DataFrame, col1_name, col2_name,
 def plot_untransformed_and_transformed(plot_path: Path, title: str, df, float_cols, cat_cols,
                                        transformed_df = None):
     # plot untransformed and transformed outputs
-    fig = plt.figure(figsize=(INCH_PER_FIG * len(float_cols), 3.5 * INCH_PER_FIG), constrained_layout=True)
+    fig = plt.figure(figsize=(INCH_PER_FIG * 2 * len(float_cols), 3.5 * INCH_PER_FIG), constrained_layout=True)
     fig.suptitle(title)
     num_rows = 1
     if transformed_df is not None:
