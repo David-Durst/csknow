@@ -30,6 +30,7 @@ class MLPLatentModel(nn.Module):
 
         # produce untransformed outputs
         out_untransformed = self.cts.untransform_columns(False, out_transformed, x)
+        out_untransformed_cat_prob = self.cts.untransform_cat_columns_prob(False, out_transformed, x)
         # https://github.com/pytorch/pytorch/issues/22440 how to parse tuple output
-        return out_transformed, out_untransformed
+        return out_transformed, out_untransformed, out_untransformed_cat_prob
 

@@ -22,11 +22,15 @@ class EnemyColumns:
     crosshair_distance_to_enemy: str
     nearest_target_enemy: str
     hit_target_enemy: str
+    visible_1s: str
+    visible_2s: str
+    visible_5s: str
+    visible_10s: str
 
     def to_list(self) -> list[str]:
         return [self.enemy_player_id, self.engagement_state, self.time_since_last_visible_or_to_become_visible,
                 self.world_distance_to_enemy, self.crosshair_distance_to_enemy, self.nearest_target_enemy,
-                self.hit_target_enemy]
+                self.hit_target_enemy, self.visible_1s, self.visible_2s, self.visible_5s, self.visible_10s]
 
     def to_input_float_list(self) -> list[str]:
         return [self.time_since_last_visible_or_to_become_visible, self.world_distance_to_enemy,
@@ -39,7 +43,8 @@ class EnemyColumns:
         return [num_engagement_states]
 
     def to_output_list(self) -> list[str]:
-        return [self.nearest_target_enemy, self.hit_target_enemy]
+        return [self.nearest_target_enemy, self.hit_target_enemy,
+                self.visible_1s, self.visible_2s, self.visible_5s, self.visible_10s]
 
 
 
@@ -50,7 +55,11 @@ base_enemy_columns: EnemyColumns = EnemyColumns(
     "world distance to enemy",
     "crosshair distance to enemy",
     "nearest target enemy",
-    "hit target enemy"
+    "hit target enemy",
+    "visible in 1s",
+    "visible in 2s",
+    "visible in 5s",
+    "visible in 10s",
 )
 
 
@@ -69,6 +78,10 @@ def get_ith_enemy_columns(i: int) -> EnemyColumns:
 hit_engagement_column = "hit engagement"
 visible_engagement_column = "visible engagement"
 general_cat_columns = [hit_engagement_column, visible_engagement_column]
+nearest_crosshair_500ms_column = "nearest crosshair enemy 500ms"
+nearest_crosshair_1s_column = "nearest crosshair enemy 1s"
+nearest_crosshair_2s_column = "nearest crosshair enemy 2s"
+temporal_cat_columns = [nearest_crosshair_500ms_column, nearest_crosshair_1s_column, nearest_crosshair_2s_column]
 
 
 specific_enemy_columns: list[EnemyColumns] = [get_ith_enemy_columns(i) for i in range(max_enemies)]
@@ -79,9 +92,11 @@ flat_input_cat_specific_enemy_columns: list[str] = \
     [col for cols in specific_enemy_columns for col in cols.to_input_cat_list()]
 flat_input_cat_specific_enemy_num_options: list[int] = \
     [col for cols in specific_enemy_columns for col in cols.to_input_cat_num_options()]
-flat_output_cat_columns: list[str] = \
+binary_flat_output_cat_columns: list[str] = \
     [col for cols in specific_enemy_columns for col in cols.to_output_list()] + general_cat_columns
-flat_output_num_options: list[int] = [2 for _ in flat_output_cat_columns]
+flat_output_cat_columns: list[str] = binary_flat_output_cat_columns + temporal_cat_columns
+flat_output_num_options: list[int] = [2 for _ in binary_flat_output_cat_columns] + \
+    [max_enemies + 1 for _ in temporal_cat_columns]
 
 
 def get_simplified_column_types(float_standard_cols: List[str], categorical_cols: List[str],

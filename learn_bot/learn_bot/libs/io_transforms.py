@@ -426,6 +426,9 @@ class PTOneHotColumnTransformer(PTColumnTransformer):
     def inverse(self, value: torch.Tensor):
         return torch.argmax(value, -1, keepdim=True)
 
+    def inverse_prob(self, value: torch.Tensor):
+        return torch.softmax(value, dim=1)
+
     def delta_convert(self, relative_value: torch.Tensor, reference_value: torch.Tensor):
         raise NotImplementedError
 
@@ -858,6 +861,51 @@ class IOColumnTransformers:
 
         return torch.cat(uncat_result, dim=1).to(cur_device)
 
+    def untransform_cat_columns_prob(self, input: bool, x: torch.Tensor, x_input: torch.Tensor) -> torch.Tensor:
+        cur_device = x.device
+        x = x.to(CPU_DEVICE_STR)
+        x_input = x_input.to(CPU_DEVICE_STR)
+
+        uncat_result: List[torch.Tensor] = []
+
+        ct_pts = self.input_ct_pts if input else self.output_ct_pts
+        types = self.input_types if input else self.output_types
+
+        ct_offset = 0
+        x_float_name_ranges = self.get_name_ranges(input, True, frozenset({ColumnTransformerType.FLOAT_STANDARD}))
+        if x_float_name_ranges:
+            ct_offset += 1
+
+        x_float_delta_name_ranges = self.get_name_ranges(input, True, frozenset({ColumnTransformerType.FLOAT_DELTA}))
+        if x_float_delta_name_ranges:
+            ct_offset += 1
+
+        x_float_180_angle_name_ranges = self.get_name_ranges(input, True,
+                                                             frozenset({ColumnTransformerType.FLOAT_180_ANGLE}))
+        if x_float_180_angle_name_ranges:
+            ct_offset += 1
+
+        x_float_180_delta_name_ranges = self.get_name_ranges(input, True,
+                                                             frozenset({ColumnTransformerType.FLOAT_180_ANGLE_DELTA}))
+        if x_float_180_delta_name_ranges:
+            ct_offset += 1
+
+        x_float_90_angle_name_ranges = self.get_name_ranges(input, True,
+                                                            frozenset({ColumnTransformerType.FLOAT_90_ANGLE}))
+        if x_float_90_angle_name_ranges:
+            ct_offset += 1
+
+        x_float_90_delta_name_ranges = self.get_name_ranges(input, True,
+                                                            frozenset({ColumnTransformerType.FLOAT_90_ANGLE_DELTA}))
+        if x_float_90_delta_name_ranges:
+            ct_offset += 1
+
+        x_categorical_name_ranges = self.get_name_ranges(input, True, frozenset({ColumnTransformerType.CATEGORICAL}))
+        for i, categorical_name_range in enumerate(x_categorical_name_ranges):
+            uncat_result.append(ct_pts[i + ct_offset].inverse_prob(x[:, categorical_name_range]))
+
+        return torch.cat(uncat_result, dim=1).to(cur_device)
+
     def get_untransformed_value(self, x: Union[torch.Tensor, ModelOutput], col_name: str, input: bool) -> float:
         col_names = self.input_types.column_names() if input else self.output_types.column_names()
         col_ranges = self.get_name_ranges(input, False)
@@ -935,3 +983,6 @@ def get_transformed_outputs(x: ModelOutput) -> torch.Tensor:
 
 def get_untransformed_outputs(x: ModelOutput):
     return x[1]
+
+def get_untransformed_cat_prob_outputs(x: ModelOutput):
+    return x[2]
