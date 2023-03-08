@@ -112,13 +112,13 @@ namespace csknow::feature_store {
                 buffer.engagementPossibleEnemyBuffer[i].crosshairDistanceToEnemyHead;
 
             if (playerToTargetLabel.find(curPlayerId) == playerToTargetLabel.end()) {
-                columnEnemyData[i].nearestTargetEnemy[rowIndex] = false;
-                columnEnemyData[i].hitTargetEnemy[rowIndex] = false;
+                columnEnemyData[columnIndex].nearestTargetEnemy[rowIndex] = false;
+                columnEnemyData[columnIndex].hitTargetEnemy[rowIndex] = false;
             }
             else {
-                columnEnemyData[i].nearestTargetEnemy[rowIndex] =
+                columnEnemyData[columnIndex].nearestTargetEnemy[rowIndex] =
                     playerToTargetLabel[curPlayerId].nearestTargetEnemy;
-                columnEnemyData[i].hitTargetEnemy[rowIndex] = playerToTargetLabel[curPlayerId].hitTargetEnemy;
+                columnEnemyData[columnIndex].hitTargetEnemy[rowIndex] = playerToTargetLabel[curPlayerId].hitTargetEnemy;
             }
         }
 
