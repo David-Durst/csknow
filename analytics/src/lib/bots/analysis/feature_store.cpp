@@ -59,10 +59,10 @@ namespace csknow::feature_store {
         }
         hitEngagement.resize(size, false);
         visibleEngagement.resize(size, false);
-        nearestCrosshairCurTick.resize(size, false);
-        nearestCrosshairEnemy500ms.resize(size, false);
-        nearestCrosshairEnemy1s.resize(size, false);
-        nearestCrosshairEnemy2s.resize(size, false);
+        nearestCrosshairCurTick.resize(size, maxEnemies);
+        nearestCrosshairEnemy500ms.resize(size, maxEnemies);
+        nearestCrosshairEnemy1s.resize(size, maxEnemies);
+        nearestCrosshairEnemy2s.resize(size, maxEnemies);
         valid.resize(size, false);
         this->size = size;
     }
@@ -136,7 +136,7 @@ namespace csknow::feature_store {
     void FeatureStoreResult::computeAcausalLabels(const Games & games, const Rounds & rounds,
                                                   const Ticks & ticks, const PlayerAtTick & playerAtTick) {
         std::atomic<int64_t> roundsProcessed = 0;
-//#pragma omp parallel for
+#pragma omp parallel for
         for (int64_t roundIndex = 0; roundIndex < rounds.size; roundIndex++) {
             TickRates tickRates = computeTickRates(games, rounds, roundIndex);
             // start at end and work backwards to compute future
