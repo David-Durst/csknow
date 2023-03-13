@@ -53,10 +53,14 @@ class DBN:
 def plot_dbn(dbn: DBN):
     g = dot.Dot(graph_type='digraph')
     g.set_rankdir("TB")
-    g.set_splines("ortho")
+    g.set("newrank", "True")
 
+    node_to_time_cluster = {}
+    node_to_type_cluster = {}
+    parent_cluster = dot.Cluster("parent", rank="same")
     for t in [0,1]:
-        time_cluster = dot.Cluster(str(t), label=f"Time Slice {t}", bgcolor="#737272", rankdir="LR")
+        time_cluster = dot.Cluster(str(t), label=f"Time Slice {t}", fontcolor="#DADADA", bgcolor="#737272",
+                                   rank="same", rankdir="LR")
         g.add_subgraph(time_cluster)
         node_types = [DBNType.CausalInput, DBNType.LatentState, DBNType.ACausalOutput]
         for nt in node_types:
@@ -70,21 +74,31 @@ def plot_dbn(dbn: DBN):
                 label_str = "ACausal Output"
                 color = "#8ff2ae"
             print(label_str)
-            node_type_cluster = dot.Cluster(str(t) + label_str, label=label_str, bgcolor="#DDDDDD", rankdir="same")
-            time_cluster.add_subgraph(node_type_cluster)
+            type_cluster = dot.Cluster(str(t) + label_str, label=label_str, fontcolor="#000000", bgcolor="#DDDDDD",
+                                       rank="same", rankdir="same")
+            time_cluster.add_subgraph(type_cluster)
             for n in dbn.get_nodes(nt):
-                node_type_cluster.add_node(dot.Node(f"{t}_{n.id}", label=n.name, fillcolor=color, style="filled"))
+                type_cluster.add_node(dot.Node(f"{t}_{n.id}", label=n.name, fillcolor=color, style="filled"))
+                node_to_time_cluster[n.id] = time_cluster
+                node_to_type_cluster[n.id] = type_cluster
 
         g.set_edge_defaults(color="blue", constraint="True")
         for e in dbn.edges:
-            should_constrain = "True"
-            if dbn.nodes[e.src].node_type == dbn.nodes[e.dst].node_type:
-                should_constrain = "False"
-            g.add_edge(dot.Edge(f"{t}_{e.src}", f"{t}_{e.dst}", constraint=should_constrain))
+            #should_constrain = "True"
+            #if dbn.nodes[e.src].node_type == dbn.nodes[e.dst].node_type:
+            #    should_constrain = "False"
+            if node_to_type_cluster[e.src] == node_to_type_cluster[e.dst]:
+                node_to_type_cluster[e.src].add_edge(dot.Edge(f"{t}_{e.src}", f"{t}_{e.dst}", constraint="False"))
+            else:
+                node_to_time_cluster[e.src].add_edge(dot.Edge(f"{t}_{e.src}", f"{t}_{e.dst}", constraint="True"))
 
     g.set_edge_defaults(color="black", constraint="True")
     for n in dbn.temporal_nodes:
         g.add_edge(dot.Edge(f"0_{n.id}", f"1_{n.id}"))
+
+    g.set_edge_defaults(color="invis", constraint="True")
+    for n in dbn.nodes:
+        g.add_edge(dot.Edge(f"0_{n.id}", f"1_{n.id}", rank="same"))
 
     g.write_png("models/dbn.png")
 
