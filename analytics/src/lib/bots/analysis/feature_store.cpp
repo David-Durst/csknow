@@ -332,8 +332,6 @@ namespace csknow::feature_store {
                                columnEnemyData[i].visibleIn5s, hdf5FlatCreateProps);
             file.createDataSet("/data/visible in 10s " + iStr,
                                columnEnemyData[i].visibleIn10s, hdf5FlatCreateProps);
-            file.createDataSet("/data/pct nearest crosshair enemy 2s " + iStr,
-                               columnEnemyData[i].visibleIn10s, hdf5FlatCreateProps);
         }
         file.createDataSet("/data/hit engagement", hitEngagement, hdf5FlatCreateProps);
         file.createDataSet("/data/visible engagement", visibleEngagement, hdf5FlatCreateProps);
@@ -342,6 +340,10 @@ namespace csknow::feature_store {
         file.createDataSet("/data/nearest crosshair enemy 2s", nearestCrosshairEnemy2s, hdf5FlatCreateProps);
         file.createDataSet("/data/position offset 2s up to threshold", nearestCrosshairEnemy2s, hdf5FlatCreateProps);
         file.createDataSet("/data/view angle offset 2s up to threshold", nearestCrosshairEnemy2s, hdf5FlatCreateProps);
+        for (size_t i = 0; i <= maxEnemies; i++) {
+            file.createDataSet("/data/pct nearest crosshair enemy 2s " + std::to_string(i),
+                               pctNearestCrosshairEnemy2s[i], hdf5FlatCreateProps);
+        }
         file.createDataSet("/data/next tick id 2s", nextTickId2s, hdf5FlatCreateProps);
     }
 }
