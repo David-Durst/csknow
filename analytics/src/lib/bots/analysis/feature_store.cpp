@@ -63,6 +63,12 @@ namespace csknow::feature_store {
         nearestCrosshairEnemy500ms.resize(size, maxEnemies);
         nearestCrosshairEnemy1s.resize(size, maxEnemies);
         nearestCrosshairEnemy2s.resize(size, maxEnemies);
+        positionOffset2sUpToThreshold.resize(size, 1.);
+        viewAngleOffset2sUpToThreshold.resize(size, 1.);
+        for (int i = 0; i <= maxEnemies; i++) {
+            pctNearestCrosshairEnemy2s[i].resize(size, 0.);
+        }
+        nextTickId2s.resize(size, INVALID_ID);
         valid.resize(size, false);
         this->size = size;
     }
@@ -136,6 +142,7 @@ namespace csknow::feature_store {
     void FeatureStoreResult::computeAcausalLabels(const Games & games, const Rounds & rounds,
                                                   const Ticks & ticks, const PlayerAtTick & playerAtTick) {
         std::atomic<int64_t> roundsProcessed = 0;
+        patId = playerAtTick.id;
 #pragma omp parallel for
         for (int64_t roundIndex = 0; roundIndex < rounds.size; roundIndex++) {
             TickRates tickRates = computeTickRates(games, rounds, roundIndex);
@@ -145,6 +152,8 @@ namespace csknow::feature_store {
             std::map<int64_t, std::map<int, int64_t>> playerToEnemyNumToNumTicksNearestCrosshair1s;
             std::map<int64_t, std::map<int, int64_t>> playerToEnemyNumToNumTicksNearestCrosshair2s;
             std::map<int64_t, std::map<int64_t, int>> playerToTickToNearest;
+            std::map<int64_t, std::map<int64_t, Vec3>> playerToTickToPos;
+            std::map<int64_t, std::map<int64_t, Vec2>> playerToTickToViewAngle;
             int64_t futureTickIndex500ms = rounds.ticksPerRound[roundIndex].maxId,
                 futureTickIndex1s = rounds.ticksPerRound[roundIndex].maxId,
                 futureTickIndex2s = rounds.ticksPerRound[roundIndex].maxId;
@@ -201,6 +210,12 @@ namespace csknow::feature_store {
 
                     // add to rolling trackers
                     playerToTickToNearest[curPlayerId][tickIndex] = nearestEnemy;
+                    playerToTickToPos[curPlayerId][tickIndex] = {
+                        playerAtTick.posX[patIndex], playerAtTick.posY[patIndex], playerAtTick.posZ[patIndex]
+                    };
+                    playerToTickToViewAngle[curPlayerId][tickIndex] = {
+                        playerAtTick.viewX[patIndex], playerAtTick.viewY[patIndex]
+                    };
                     if (playerToEnemyNumToNumTicksNearestCrosshair500ms[curPlayerId].find(nearestEnemy) ==
                         playerToEnemyNumToNumTicksNearestCrosshair500ms[curPlayerId].end()) {
                         playerToEnemyNumToNumTicksNearestCrosshair500ms[curPlayerId][nearestEnemy] = 0;
@@ -231,6 +246,8 @@ namespace csknow::feature_store {
                         playerToEnemyNumToNumTicksNearestCrosshair2s[curPlayerId][enemyToDecrease]--;
                         // remove the tick from the specific tick trackers once it's past longest window
                         playerToTickToNearest[curPlayerId].erase(removedTick);
+                        playerToTickToPos[curPlayerId].erase(removedTick);
+                        playerToTickToViewAngle[curPlayerId].erase(removedTick);
                     }
 
                     // compute labels based on future data
@@ -263,8 +280,18 @@ namespace csknow::feature_store {
                             maxTicksNearest = numTicksNearest;
                             nearestEnemyOverWindow = enemyNum;
                         }
+                        pctNearestCrosshairEnemy2s[enemyNum][patIndex] =
+                            static_cast<double>(numTicksNearest) / static_cast<double>(futureTickIndex2s - tickIndex);
                     }
                     nearestCrosshairEnemy2s[patIndex] = nearestEnemyOverWindow;
+
+                    positionOffset2sUpToThreshold[patIndex] = std::min(maxPositionDelta,
+                        computeDistance(playerToTickToPos[curPlayerId][tickIndex],
+                                        playerToTickToPos[curPlayerId][futureTickIndex2s])) / maxPositionDelta;
+                    viewAngleOffset2sUpToThreshold[patIndex] = std::min(maxViewAngleDelta,
+                        computeDistance(playerToTickToPos[curPlayerId][tickIndex],
+                                        playerToTickToPos[curPlayerId][futureTickIndex2s])) / maxViewAngleDelta;
+                    nextTickId2s[patIndex] = futureTickIndex2s;
                 }
             }
             roundsProcessed++;
@@ -280,6 +307,7 @@ namespace csknow::feature_store {
         file.createDataSet("/data/round id", roundId, hdf5FlatCreateProps);
         file.createDataSet("/data/tick id", tickId, hdf5FlatCreateProps);
         file.createDataSet("/data/player id", playerId, hdf5FlatCreateProps);
+        file.createDataSet("/data/player at tick id", patId, hdf5FlatCreateProps);
         for (size_t i = 0; i < columnEnemyData.size(); i++) {
             string iStr = std::to_string(i);
             file.createDataSet("/data/enemy player id " + iStr, columnEnemyData[i].playerId, hdf5FlatCreateProps);
@@ -304,11 +332,16 @@ namespace csknow::feature_store {
                                columnEnemyData[i].visibleIn5s, hdf5FlatCreateProps);
             file.createDataSet("/data/visible in 10s " + iStr,
                                columnEnemyData[i].visibleIn10s, hdf5FlatCreateProps);
+            file.createDataSet("/data/pct nearest crosshair enemy 2s " + iStr,
+                               columnEnemyData[i].visibleIn10s, hdf5FlatCreateProps);
         }
         file.createDataSet("/data/hit engagement", hitEngagement, hdf5FlatCreateProps);
         file.createDataSet("/data/visible engagement", visibleEngagement, hdf5FlatCreateProps);
         file.createDataSet("/data/nearest crosshair enemy 500ms", nearestCrosshairEnemy500ms, hdf5FlatCreateProps);
         file.createDataSet("/data/nearest crosshair enemy 1s", nearestCrosshairEnemy1s, hdf5FlatCreateProps);
         file.createDataSet("/data/nearest crosshair enemy 2s", nearestCrosshairEnemy2s, hdf5FlatCreateProps);
+        file.createDataSet("/data/position offset 2s up to threshold", nearestCrosshairEnemy2s, hdf5FlatCreateProps);
+        file.createDataSet("/data/view angle offset 2s up to threshold", nearestCrosshairEnemy2s, hdf5FlatCreateProps);
+        file.createDataSet("/data/next tick id 2s", nextTickId2s, hdf5FlatCreateProps);
     }
 }

@@ -21,6 +21,8 @@ namespace csknow::feature_store {
     constexpr double maxTimeToVis = 100.;
     constexpr double maxWorldDistance = 4000.;
     constexpr double maxCrosshairDistance = 360.;
+    constexpr double maxPositionDelta = 150.;
+    constexpr double maxViewAngleDelta = 15.;
     struct EngagementPossibleEnemy {
         CSGOId playerId;
         EngagementEnemyState enemyState;
@@ -56,6 +58,7 @@ namespace csknow::feature_store {
         vector<int64_t> roundId;
         vector<int64_t> tickId;
         vector<int64_t> playerId;
+        vector<int64_t> patId;
         struct ColumnEnemyData {
             vector<int64_t> playerId;
             // inputs
@@ -72,6 +75,9 @@ namespace csknow::feature_store {
         vector<bool> hitEngagement;
         vector<bool> visibleEngagement;
         vector<int> nearestCrosshairCurTick, nearestCrosshairEnemy500ms, nearestCrosshairEnemy1s, nearestCrosshairEnemy2s;
+        vector<double> positionOffset2sUpToThreshold, viewAngleOffset2sUpToThreshold;
+        array<vector<double>, maxEnemies+1> pctNearestCrosshairEnemy2s;
+        vector<int64_t> nextTickId2s;
         vector<bool> valid;
         bool training;
 
