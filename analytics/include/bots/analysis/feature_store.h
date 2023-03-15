@@ -77,6 +77,8 @@ namespace csknow::feature_store {
         vector<bool> visibleEngagement;
         vector<int> nearestCrosshairCurTick, nearestCrosshairEnemy500ms, nearestCrosshairEnemy1s, nearestCrosshairEnemy2s;
         vector<double> positionOffset2sUpToThreshold, viewAngleOffset2sUpToThreshold;
+        // these are just used to create binomial distributions
+        vector<double> negPositionOffset2sUpToThreshold, negViewAngleOffset2sUpToThreshold;
         array<vector<double>, maxEnemies+1> pctNearestCrosshairEnemy2s;
         vector<int64_t> nextPATId2s;
         vector<bool> valid;

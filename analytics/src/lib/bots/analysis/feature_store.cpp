@@ -65,6 +65,8 @@ namespace csknow::feature_store {
         nearestCrosshairEnemy2s.resize(size, maxEnemies);
         positionOffset2sUpToThreshold.resize(size, 1.);
         viewAngleOffset2sUpToThreshold.resize(size, 1.);
+        negPositionOffset2sUpToThreshold.resize(size, 0.);
+        negViewAngleOffset2sUpToThreshold.resize(size, 0.);
         for (int i = 0; i <= maxEnemies; i++) {
             pctNearestCrosshairEnemy2s[i].resize(size, 0.);
         }
@@ -294,6 +296,8 @@ namespace csknow::feature_store {
                     viewAngleOffset2sUpToThreshold[patIndex] = std::min(maxViewAngleDelta,
                         computeDistance(playerToTickToPos[curPlayerId][tickIndex],
                                         playerToTickToPos[curPlayerId][futureTickIndex2s])) / maxViewAngleDelta;
+                    negPositionOffset2sUpToThreshold[patIndex] = 1. - positionOffset2sUpToThreshold[patIndex];
+                    negViewAngleOffset2sUpToThreshold[patIndex] = 1. - viewAngleOffset2sUpToThreshold[patIndex];
                     nextPATId2s[patIndex] = tickToPlayerToPATId[futureTickIndex2s][curPlayerId];
                 }
             }
@@ -337,6 +341,8 @@ namespace csknow::feature_store {
         dst.nearestCrosshairEnemy2s[dstIndex] = src.nearestCrosshairEnemy2s[srcIndex];
         dst.positionOffset2sUpToThreshold[dstIndex] = src.positionOffset2sUpToThreshold[srcIndex];
         dst.viewAngleOffset2sUpToThreshold[dstIndex] = src.viewAngleOffset2sUpToThreshold[srcIndex];
+        dst.negPositionOffset2sUpToThreshold[dstIndex] = src.negPositionOffset2sUpToThreshold[srcIndex];
+        dst.negViewAngleOffset2sUpToThreshold[dstIndex] = src.negViewAngleOffset2sUpToThreshold[srcIndex];
         for (size_t i = 0; i < dst.pctNearestCrosshairEnemy2s.size(); i++) {
             dst.pctNearestCrosshairEnemy2s[i][dstIndex] = src.pctNearestCrosshairEnemy2s[i][srcIndex];
         }
@@ -419,8 +425,10 @@ namespace csknow::feature_store {
         file.createDataSet("/data/nearest crosshair enemy 500ms", nearestCrosshairEnemy500ms, hdf5FlatCreateProps);
         file.createDataSet("/data/nearest crosshair enemy 1s", nearestCrosshairEnemy1s, hdf5FlatCreateProps);
         file.createDataSet("/data/nearest crosshair enemy 2s", nearestCrosshairEnemy2s, hdf5FlatCreateProps);
-        file.createDataSet("/data/position offset 2s up to threshold", nearestCrosshairEnemy2s, hdf5FlatCreateProps);
-        file.createDataSet("/data/view angle offset 2s up to threshold", nearestCrosshairEnemy2s, hdf5FlatCreateProps);
+        file.createDataSet("/data/position offset 2s up to threshold", positionOffset2sUpToThreshold, hdf5FlatCreateProps);
+        file.createDataSet("/data/view angle offset 2s up to threshold", viewAngleOffset2sUpToThreshold, hdf5FlatCreateProps);
+        file.createDataSet("/data/neg position offset 2s up to threshold", negPositionOffset2sUpToThreshold, hdf5FlatCreateProps);
+        file.createDataSet("/data/neg view angle offset 2s up to threshold", negViewAngleOffset2sUpToThreshold, hdf5FlatCreateProps);
         for (size_t i = 0; i <= maxEnemies; i++) {
             file.createDataSet("/data/pct nearest crosshair enemy 2s " + std::to_string(i),
                                pctNearestCrosshairEnemy2s[i], hdf5FlatCreateProps);
