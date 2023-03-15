@@ -55,6 +55,11 @@ def compute_loss(x, pred, y_transformed, y_untransformed, column_transformers: I
         col_ranges = column_transformers.get_name_ranges(False, True, frozenset({ColumnTransformerType.CATEGORICAL}))
         for i, col_range in enumerate(col_ranges):
             losses.cat_loss += base_classification_loss_fn(pred_transformed[:, col_range], y_transformed[:, col_range])
+
+    if column_transformers.output_types.categorical_distribution_cols:
+        col_ranges = column_transformers.get_name_ranges(False, True, frozenset({ColumnTransformerType.CATEGORICAL_DISTRIBUTION}))
+        for i, col_range in enumerate(col_ranges):
+            losses.cat_loss += base_classification_loss_fn(pred_transformed[:, col_range], y_transformed[:, col_range])
     return losses
 
 
@@ -67,6 +72,11 @@ def compute_accuracy(pred, Y, accuracy, column_transformers: IOColumnTransformer
                                column_transformers.get_name_ranges(False, False,
                                                                    frozenset({ColumnTransformerType.CATEGORICAL}))):
         # compute accuracy using unnormalized outputs on end
+        accuracy[name] += (pred_untransformed[:, col_range] == Y[:, col_range]).type(torch.float).sum().item()
+
+    for name, col_range in zip(column_transformers.output_types.categorical_cols,
+                               column_transformers.get_name_ranges(False, False,
+                                                                   frozenset({ColumnTransformerType.CATEGORICAL_DISTRIBUTION}))):
         accuracy[name] += (pred_untransformed[:, col_range] == Y[:, col_range]).type(torch.float).sum().item()
 
 

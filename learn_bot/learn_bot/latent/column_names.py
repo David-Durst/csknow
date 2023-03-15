@@ -11,6 +11,7 @@ row_id_column = "id"
 round_id_column = "round id"
 tick_id_column = "tick id"
 player_id_column = "player id"
+pat_id_column = "player at tick id"
 
 
 @dataclass
@@ -87,6 +88,14 @@ nearest_crosshair_1s_column = "nearest crosshair enemy 1s"
 nearest_crosshair_2s_column = "nearest crosshair enemy 2s"
 temporal_cat_columns = [nearest_crosshair_500ms_column, nearest_crosshair_1s_column, nearest_crosshair_2s_column]
 
+position_offset_2s_column = "position offset 2s up to threshold"
+neg_position_offset_2s_column = "neg position offset 2s up to threshold"
+view_angle_offset_2s_column = "view angle offset 2s up to threshold"
+neg_view_angle_offset_2s_column = "neg_view angle offset 2s up to threshold"
+pct_nearest_enemy_2s_columns = ["pct nearest crosshair enemy 2s " + str(i) for i in range(max_enemies + 1)]
+next_tick_id_2s_column = "next tick id 2s"
+next_tick_id_columns = [f"next tick id {str(2*(i+1))}s" for i in range(1,10)]
+
 
 specific_enemy_columns: list[EnemyColumns] = [get_ith_enemy_columns(i) for i in range(max_enemies)]
 flat_specific_enemy_columns: list[str] = [col for cols in specific_enemy_columns for col in cols.to_list()]
@@ -101,14 +110,21 @@ binary_flat_output_cat_columns: list[str] = \
 flat_output_cat_columns: list[str] = binary_flat_output_cat_columns + temporal_cat_columns
 flat_output_num_options: list[int] = [2 for _ in binary_flat_output_cat_columns] + \
     [max_enemies + 1 for _ in temporal_cat_columns]
+flat_output_cat_distribution_columns: list[list[str]] = \
+    [[position_offset_2s_column, neg_position_offset_2s_column],
+     [view_angle_offset_2s_column, neg_view_angle_offset_2s_column],
+     pct_nearest_enemy_2s_columns]
 
 
 def get_simplified_column_types(float_standard_cols: List[str], categorical_cols: List[str],
-                                num_cats_per_col: List[int]) -> ColumnTypes:
-    return ColumnTypes(float_standard_cols, [], [], [], [], [], categorical_cols, num_cats_per_col, [], [], [])
+                                num_cats_per_col: List[int],
+                                categorical_distribution_cols: List[List[str]]) -> ColumnTypes:
+    return ColumnTypes(float_standard_cols, [], [], [], [], [], categorical_cols, num_cats_per_col, [], [], [],
+                       categorical_distribution_cols)
 
 
 input_column_types = get_simplified_column_types(flat_input_float_specific_enemy_columns,
                                                  flat_input_cat_specific_enemy_columns,
-                                                 flat_input_cat_specific_enemy_num_options)
-output_column_types = get_simplified_column_types([], flat_output_cat_columns, flat_output_num_options)
+                                                 flat_input_cat_specific_enemy_num_options, [])
+output_column_types = get_simplified_column_types([], flat_output_cat_columns, flat_output_num_options,
+                                                  flat_output_cat_distribution_columns)

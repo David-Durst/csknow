@@ -8,6 +8,7 @@ from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 
 from learn_bot.latent.dataset import *
+from learn_bot.latent.lstm_latent_model import LSTMLatentModel
 from learn_bot.latent.mlp_latent_model import MLPLatentModel
 from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd
 from learn_bot.libs.io_transforms import CUDA_DEVICE_STR
@@ -36,7 +37,7 @@ class TrainResult:
     model: nn.Module
 
 
-def train(all_data_df: pd.DataFrame, num_epochs: int, save=True, diff_train_test=True) -> TrainResult:
+def train(all_data_df: pd.DataFrame, num_epochs: int, windowed=False, save=True, diff_train_test=True) -> TrainResult:
 
     if diff_train_test:
         train_test_split = train_test_split_by_col(all_data_df, round_id_column)
@@ -66,7 +67,8 @@ def train(all_data_df: pd.DataFrame, num_epochs: int, save=True, diff_train_test
     print(f"Using {device} device")
 
     # Define model
-    model = MLPLatentModel(column_transformers).to(device)
+    #model = MLPLatentModel(column_transformers).to(device)
+    model = LSTMLatentModel(column_transformers).to(device)
 
     print(model)
     params = list(model.parameters())
@@ -154,8 +156,8 @@ def train(all_data_df: pd.DataFrame, num_epochs: int, save=True, diff_train_test
             save_model()
             save_tensorboard(train_loss, test_loss, train_accuracy, test_accuracy, epoch_num)
 
-    train_data = LatentDataset(train_df, column_transformers)
-    test_data = LatentDataset(test_df, column_transformers)
+    train_data = LatentDataset(train_df, column_transformers, windowed=windowed)
+    test_data = LatentDataset(test_df, column_transformers, windowed=windowed)
     batch_size = 64
     train_dataloader = DataLoader(train_data, batch_size=batch_size, shuffle=True)
     test_dataloader = DataLoader(test_data, batch_size=batch_size, shuffle=True)
@@ -179,5 +181,6 @@ def train(all_data_df: pd.DataFrame, num_epochs: int, save=True, diff_train_test
 
 
 if __name__ == "__main__":
-    all_data_df = load_hdf5_to_pd(latent_hdf5_data_path)
-    train_result = train(all_data_df, num_epochs=5)
+    #all_data_df = load_hdf5_to_pd(latent_hdf5_data_path)
+    all_data_df = load_hdf5_to_pd(latent_window_hdf5_data_path)
+    train_result = train(all_data_df, num_epochs=5, windowed=True)

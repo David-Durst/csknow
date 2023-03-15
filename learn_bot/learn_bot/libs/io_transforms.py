@@ -31,6 +31,7 @@ class ColumnTransformerType(Enum):
     FLOAT_90_ANGLE = 4
     FLOAT_90_ANGLE_DELTA = 5
     CATEGORICAL = 6
+    CATEGORICAL_DISTRIBUTION = 7
 
 
 @dataclass
@@ -54,7 +55,8 @@ ALL_TYPES: FrozenSet[ColumnTransformerType] = frozenset({ColumnTransformerType.F
                                                          ColumnTransformerType.FLOAT_180_ANGLE_DELTA,
                                                          ColumnTransformerType.FLOAT_90_ANGLE,
                                                          ColumnTransformerType.FLOAT_90_ANGLE_DELTA,
-                                                         ColumnTransformerType.CATEGORICAL})
+                                                         ColumnTransformerType.CATEGORICAL,
+                                                         ColumnTransformerType.CATEGORICAL_DISTRIBUTION})
 
 
 @dataclass(frozen=True)
@@ -82,6 +84,7 @@ class ColumnTypes:
     float_angular_standard_cols: List[str]
     float_angular_delta_cols: List[DeltaColumn]
     float_180_wrap_cols: List[str]
+    categorical_distribution_cols: List[List[str]]
 
     def __init__(self, float_standard_cols: List[str] = [], float_delta_cols: List[DeltaColumn] = [],
                  float_180_angle_cols: List[str] = [], float_180_angle_delta_cols: List[DeltaColumn] = [],
@@ -91,7 +94,8 @@ class ColumnTypes:
                  # cols that are angular
                  float_angular_standard_cols: List[str] = [], float_angular_delta_cols: List[DeltaColumn] = [],
                  # these are standard or delta columns that wrap around at 180/-180 when computing loss
-                 float_180_wrap_cols: List[str] = []):
+                 float_180_wrap_cols: List[str] = [],
+                 categorical_distribution_cols: List[List[str]] = []):
         self.float_standard_cols = float_standard_cols
         self.float_delta_cols = float_delta_cols
         self.float_180_angle_cols = float_180_angle_cols
@@ -105,6 +109,7 @@ class ColumnTypes:
         self.float_angular_standard_cols = float_angular_standard_cols
         self.float_angular_delta_cols = float_angular_delta_cols
         self.float_180_wrap_cols = float_180_wrap_cols
+        self.categorical_distribution_cols = categorical_distribution_cols
         self.compute_time_offsets()
 
     col_time_offsets: Dict[str, ColumnTimeOffset]
@@ -148,15 +153,19 @@ class ColumnTypes:
                 self.column_types_.append(ColumnTransformerType.FLOAT_90_ANGLE_DELTA)
             for _ in self.categorical_cols:
                 self.column_types_.append(ColumnTransformerType.CATEGORICAL)
+            for _ in self.categorical_distribution_cols:
+                self.column_types_.append(ColumnTransformerType.CATEGORICAL_DISTRIBUTION)
         return self.column_types_
 
     def column_names(self, relative_cols_first=False) -> List[str]:
+        categorical_distribution_cols = [c[0] for c in self.categorical_distribution_cols]
         if relative_cols_first:
             relative_cols, _ = split_delta_columns(self.float_delta_cols)
             relative_180_cols, _ = split_delta_columns(self.float_180_angle_delta_cols)
             relative_90_cols, _ = split_delta_columns(self.float_90_angle_delta_cols)
             return relative_cols + relative_180_cols + relative_90_cols + \
-                   self.float_180_angle_cols + self.float_90_angle_cols + self.categorical_cols
+                   self.float_180_angle_cols + self.float_90_angle_cols + self.categorical_cols + \
+                   categorical_distribution_cols
         if self.all_cols_ is None:
             relative_cols, _ = split_delta_columns(self.float_delta_cols)
             relative_180_cols, _ = split_delta_columns(self.float_180_angle_delta_cols)
@@ -164,7 +173,7 @@ class ColumnTypes:
             self.all_cols_ = self.float_standard_cols + relative_cols + \
                              self.float_180_angle_cols + relative_180_cols + \
                              self.float_90_angle_cols + relative_90_cols + \
-                             self.categorical_cols
+                             self.categorical_cols + categorical_distribution_cols
         return self.all_cols_
 
     def delta_float_column_names(self) -> List[str]:
@@ -436,6 +445,55 @@ class PTOneHotColumnTransformer(PTColumnTransformer):
         raise NotImplementedError
 
 
+@dataclass
+class PTOneHotColumnTransformer(PTColumnTransformer):
+    # CATEGORICAL data
+    col_name: str
+    num_classes: int
+
+    pt_ct_type: ColumnTransformerType = ColumnTransformerType.CATEGORICAL
+
+    def convert(self, value: torch.Tensor):
+        one_hot_result = F.one_hot(value.to(torch.int64), num_classes=self.num_classes)
+        one_hot_float_result = one_hot_result.to(value.dtype)
+        return torch.flatten(one_hot_float_result, start_dim=1)
+
+    def inverse(self, value: torch.Tensor):
+        return torch.argmax(value, -1, keepdim=True)
+
+    def inverse_prob(self, value: torch.Tensor):
+        return torch.softmax(value, dim=1)
+
+    def delta_convert(self, relative_value: torch.Tensor, reference_value: torch.Tensor):
+        raise NotImplementedError
+
+    def delta_inverse(self, relative_value: torch.Tensor, reference_value: torch.Tensor):
+        raise NotImplementedError
+
+
+@dataclass
+class PTCatDistributionColumnTransformer(PTColumnTransformer):
+    # CATEGORICAL data
+    col_names: List[str]
+
+    pt_ct_type: ColumnTransformerType = ColumnTransformerType.CATEGORICAL_DISTRIBUTION
+
+    def convert(self, value: torch.Tensor):
+        return value
+
+    def inverse(self, value: torch.Tensor):
+        return torch.softmax(value, dim=1)
+
+    def inverse_prob(self, value: torch.Tensor):
+        raise NotImplementedError
+
+    def delta_convert(self, relative_value: torch.Tensor, reference_value: torch.Tensor):
+        raise NotImplementedError
+
+    def delta_inverse(self, relative_value: torch.Tensor, reference_value: torch.Tensor):
+        raise NotImplementedError
+
+
 class IOColumnTransformers:
     input_types: ColumnTypes
     output_types: ColumnTypes
@@ -519,6 +577,8 @@ class IOColumnTransformers:
                                                           self.angular_cos_mean, self.angular_cos_std))
         for name in types.categorical_cols:
             result.append(PTOneHotColumnTransformer(name, types.num_cats_per_col[name]))
+        for names in types.categorical_distribution_cols:
+            result.append(PTCatDistributionColumnTransformer(names))
         return result
 
     @cache
@@ -579,6 +639,12 @@ class IOColumnTransformers:
                         result.append(range(cur_start, cur_start + 1))
                     cur_start += 1
 
+        for ct in cts:
+            if ct.pt_ct_type == ColumnTransformerType.CATEGORICAL_DISTRIBUTION:
+                if ColumnTransformerType.CATEGORICAL_DISTRIBUTION in types and not only_wrap_cols:
+                    result.append(range(cur_start, cur_start + len(ct.col_names)))
+                cur_start += len(ct.col_names)
+
         return result
 
     @cache
@@ -623,6 +689,11 @@ class IOColumnTransformers:
                 else:
                     result[ct.col_name] = range(cur_start, cur_start + 1)
                     cur_start += 1
+
+        for ct in cts:
+            if ct.pt_ct_type == ColumnTransformerType.CATEGORICAL_DISTRIBUTION:
+                result[ct.col_names[0]] = range(cur_start, cur_start + len(ct.col_names))
+                cur_start += len(ct.col_names)
 
         return result
 
@@ -697,6 +768,15 @@ class IOColumnTransformers:
                             result.append(cur_start)
                             result_str.append(ct.col_name)
                         cur_start += 1
+
+            for ct in cts:
+                if ct.pt_ct_type == ColumnTransformerType.CATEGORICAL_DISTRIBUTION:
+                    if column_types.col_time_offsets[ct.col_names[0]].offset_valid_for_range(time_offset_range,
+                                                                                             include_non_temporal):
+                        for i in range(len(ct.col_names)):
+                            result.append(cur_start + i)
+                            result_str.append(ct.col_names[0])
+                    cur_start += len(ct.col_names)
 
         return result, result_str
 
@@ -793,6 +873,11 @@ class IOColumnTransformers:
         for i, categorical_name_range in enumerate(x_categorical_name_ranges):
             uncat_result.append(ct_pts[i + ct_offset].convert(x[:, categorical_name_range]))
 
+        x_categorical_distribution_name_ranges = \
+            self.get_name_ranges(input, False, frozenset({ColumnTransformerType.CATEGORICAL_DISTRIBUTION}))
+        for i, categorical_distribution_name_range in enumerate(x_categorical_distribution_name_ranges):
+            uncat_result.append(ct_pts[i + ct_offset].convert(x[:, categorical_distribution_name_range]))
+
         return torch.cat(uncat_result, dim=1).to(cur_device)
 
     def untransform_columns(self, input: bool, x: torch.Tensor, x_input: torch.Tensor) -> torch.Tensor:
@@ -859,6 +944,11 @@ class IOColumnTransformers:
         for i, categorical_name_range in enumerate(x_categorical_name_ranges):
             uncat_result.append(ct_pts[i + ct_offset].inverse(x[:, categorical_name_range]))
 
+        x_categorical_distribution_name_ranges = \
+            self.get_name_ranges(input, True, frozenset({ColumnTransformerType.CATEGORICAL_DISTRIBUTION}))
+        for i, categorical_distribution_name_range in enumerate(x_categorical_distribution_name_ranges):
+            uncat_result.append(ct_pts[i + ct_offset].inverse(x[:, categorical_distribution_name_range]))
+
         return torch.cat(uncat_result, dim=1).to(cur_device)
 
     def untransform_cat_columns_prob(self, input: bool, x: torch.Tensor, x_input: torch.Tensor) -> torch.Tensor:
@@ -903,6 +993,11 @@ class IOColumnTransformers:
         x_categorical_name_ranges = self.get_name_ranges(input, True, frozenset({ColumnTransformerType.CATEGORICAL}))
         for i, categorical_name_range in enumerate(x_categorical_name_ranges):
             uncat_result.append(ct_pts[i + ct_offset].inverse_prob(x[:, categorical_name_range]))
+
+        x_categorical_distribution_name_ranges = \
+            self.get_name_ranges(input, True, frozenset({ColumnTransformerType.CATEGORICAL_DISTRIBUTION}))
+        for i, categorical_distribution_name_range in enumerate(x_categorical_distribution_name_ranges):
+            uncat_result.append(ct_pts[i + ct_offset].inverse(x[:, categorical_distribution_name_range]))
 
         return torch.cat(uncat_result, dim=1).to(cur_device)
 

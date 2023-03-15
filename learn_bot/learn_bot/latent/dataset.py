@@ -6,10 +6,13 @@ from pathlib import Path
 from learn_bot.latent.column_names import *
 
 latent_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / 'analytics' / 'csv_outputs' / 'behaviorTreeFeatureStore.hdf5'
+latent_window_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / 'analytics' / 'csv_outputs' / 'behaviorTreeWindowFeatureStore.hdf5'
+window_size = 10
 
 # https://androidkt.com/load-pandas-dataframe-using-dataset-and-dataloader-in-pytorch/
 class LatentDataset(Dataset):
-    def __init__(self, df: pd.DataFrame, cts: IOColumnTransformers):
+    windowed: bool
+    def __init__(self, df: pd.DataFrame, cts: IOColumnTransformers, windowed=False):
         self.id = df.loc[:, row_id_column]
         self.round_id = df.loc[:, round_id_column]
         self.tick_id = df.loc[:, tick_id_column]
@@ -20,11 +23,18 @@ class LatentDataset(Dataset):
         self.round_starts_ends = round_starts.join(round_ends, on=round_id_column)
 
         # convert player id's to indexes
+        self.windowed = windowed
         self.X = torch.tensor(df.loc[:, cts.input_types.column_names()].to_numpy()).float()
         self.Y = torch.tensor(df.loc[:, cts.output_types.column_names()].to_numpy()).float()
+        if windowed:
+            self.X = torch.split(self.X, window_size)
+            self.Y = torch.split(self.Y, window_size)
 
     def __len__(self):
-        return len(self.id)
+        if self.windowed:
+            return len(self.id) / 10
+        else:
+            return len(self.id)
 
     def __getitem__(self, idx):
         return self.X[idx], self.Y[idx]
