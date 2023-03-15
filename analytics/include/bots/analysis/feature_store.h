@@ -23,6 +23,7 @@ namespace csknow::feature_store {
     constexpr double maxCrosshairDistance = 360.;
     constexpr double maxPositionDelta = 150.;
     constexpr double maxViewAngleDelta = 15.;
+    constexpr size_t windowSize = 10;
     struct EngagementPossibleEnemy {
         CSGOId playerId;
         EngagementEnemyState enemyState;
@@ -77,7 +78,7 @@ namespace csknow::feature_store {
         vector<int> nearestCrosshairCurTick, nearestCrosshairEnemy500ms, nearestCrosshairEnemy1s, nearestCrosshairEnemy2s;
         vector<double> positionOffset2sUpToThreshold, viewAngleOffset2sUpToThreshold;
         array<vector<double>, maxEnemies+1> pctNearestCrosshairEnemy2s;
-        vector<int64_t> nextTickId2s;
+        vector<int64_t> nextPATId2s;
         vector<bool> valid;
         bool training;
 
@@ -91,6 +92,7 @@ namespace csknow::feature_store {
                        int64_t roundIndex = 0, int64_t tickIndex = 0, int64_t playerIndex = 0);
         void computeAcausalLabels(const Games & games, const Rounds & rounds,
                                   const Ticks & ticks, const PlayerAtTick & playerAtTick);
+        FeatureStoreResult makeWindows() const;
         void toHDF5Inner(HighFive::File & file) override;
 
         vector<int64_t> filterByForeignKey(int64_t) override { return {}; }

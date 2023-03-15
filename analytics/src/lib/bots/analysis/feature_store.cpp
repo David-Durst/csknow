@@ -68,7 +68,7 @@ namespace csknow::feature_store {
         for (int i = 0; i <= maxEnemies; i++) {
             pctNearestCrosshairEnemy2s[i].resize(size, 0.);
         }
-        nextTickId2s.resize(size, INVALID_ID);
+        nextPATId2s.resize(size, INVALID_ID);
         valid.resize(size, false);
         this->size = size;
     }
@@ -154,6 +154,7 @@ namespace csknow::feature_store {
             std::map<int64_t, std::map<int64_t, int>> playerToTickToNearest;
             std::map<int64_t, std::map<int64_t, Vec3>> playerToTickToPos;
             std::map<int64_t, std::map<int64_t, Vec2>> playerToTickToViewAngle;
+            std::map<int64_t, std::map<int64_t, int64_t>> tickToPlayerToPATId;
             int64_t futureTickIndex500ms = rounds.ticksPerRound[roundIndex].maxId,
                 futureTickIndex1s = rounds.ticksPerRound[roundIndex].maxId,
                 futureTickIndex2s = rounds.ticksPerRound[roundIndex].maxId;
@@ -181,6 +182,7 @@ namespace csknow::feature_store {
                         continue;
                     }
                     const int64_t & curPlayerId = playerAtTick.playerId[patIndex];
+                    tickToPlayerToPATId[tickIndex][curPlayerId] = patIndex;
 
                     double minCrosshairDistanceToEnemy = maxCrosshairDistance;
                     int nearestEnemy = maxEnemies;
@@ -248,6 +250,7 @@ namespace csknow::feature_store {
                         playerToTickToNearest[curPlayerId].erase(removedTick);
                         playerToTickToPos[curPlayerId].erase(removedTick);
                         playerToTickToViewAngle[curPlayerId].erase(removedTick);
+                        tickToPlayerToPATId.erase(removedTick);
                     }
 
                     // compute labels based on future data
@@ -291,12 +294,90 @@ namespace csknow::feature_store {
                     viewAngleOffset2sUpToThreshold[patIndex] = std::min(maxViewAngleDelta,
                         computeDistance(playerToTickToPos[curPlayerId][tickIndex],
                                         playerToTickToPos[curPlayerId][futureTickIndex2s])) / maxViewAngleDelta;
-                    nextTickId2s[patIndex] = futureTickIndex2s;
+                    nextPATId2s[patIndex] = tickToPlayerToPATId[futureTickIndex2s][curPlayerId];
                 }
             }
             roundsProcessed++;
             printProgress(roundsProcessed, rounds.size);
         }
+    }
+
+    void clone(const FeatureStoreResult & src, FeatureStoreResult & dst, size_t srcIndex, size_t dstIndex) {
+        dst.roundId[dstIndex] = src.roundId[srcIndex];
+        dst.tickId[dstIndex] = src.tickId[srcIndex];
+        dst.playerId[dstIndex] = src.playerId[srcIndex];
+        dst.patId[dstIndex] = src.patId[srcIndex];
+        for (size_t i = 0; i < dst.columnEnemyData.size(); i++) {
+            dst.columnEnemyData[i].enemyEngagementStates[dstIndex] =
+                src.columnEnemyData[i].enemyEngagementStates[srcIndex];
+            dst.columnEnemyData[i].timeSinceLastVisibleOrToBecomeVisible[dstIndex] =
+                src.columnEnemyData[i].timeSinceLastVisibleOrToBecomeVisible[srcIndex];
+            dst.columnEnemyData[i].worldDistanceToEnemy[dstIndex] =
+                src.columnEnemyData[i].worldDistanceToEnemy[srcIndex];
+            dst.columnEnemyData[i].crosshairDistanceToEnemy[dstIndex] =
+                src.columnEnemyData[i].crosshairDistanceToEnemy[srcIndex];
+            dst.columnEnemyData[i].nearestTargetEnemy[dstIndex] =
+                src.columnEnemyData[i].nearestTargetEnemy[srcIndex];
+            dst.columnEnemyData[i].hitTargetEnemy[dstIndex] =
+                src.columnEnemyData[i].hitTargetEnemy[srcIndex];
+            dst.columnEnemyData[i].visibleIn1s[dstIndex] =
+                src.columnEnemyData[i].visibleIn1s[srcIndex];
+            dst.columnEnemyData[i].visibleIn2s[dstIndex] =
+                src.columnEnemyData[i].visibleIn2s[srcIndex];
+            dst.columnEnemyData[i].visibleIn5s[dstIndex] =
+                src.columnEnemyData[i].visibleIn5s[srcIndex];
+            dst.columnEnemyData[i].visibleIn10s[dstIndex] =
+                src.columnEnemyData[i].visibleIn10s[srcIndex];
+        }
+        dst.hitEngagement[dstIndex] = src.hitEngagement[srcIndex];
+        dst.visibleEngagement[dstIndex] = src.visibleEngagement[srcIndex];
+        dst.nearestCrosshairCurTick[dstIndex] = src.nearestCrosshairCurTick[srcIndex];
+        dst.nearestCrosshairEnemy500ms[dstIndex] = src.nearestCrosshairEnemy500ms[srcIndex];
+        dst.nearestCrosshairEnemy1s[dstIndex] = src.nearestCrosshairEnemy1s[srcIndex];
+        dst.nearestCrosshairEnemy2s[dstIndex] = src.nearestCrosshairEnemy2s[srcIndex];
+        dst.positionOffset2sUpToThreshold[dstIndex] = src.positionOffset2sUpToThreshold[srcIndex];
+        dst.viewAngleOffset2sUpToThreshold[dstIndex] = src.viewAngleOffset2sUpToThreshold[srcIndex];
+        for (size_t i = 0; i < dst.pctNearestCrosshairEnemy2s.size(); i++) {
+            dst.pctNearestCrosshairEnemy2s[i][dstIndex] = src.pctNearestCrosshairEnemy2s[i][srcIndex];
+        }
+        dst.nextPATId2s[dstIndex] = src.nextPATId2s[srcIndex];
+        dst.valid[dstIndex] = src.valid[srcIndex];
+    }
+
+    FeatureStoreResult FeatureStoreResult::makeWindows() const {
+        size_t numValid = 0;
+        std::cout << "start" << std::endl;
+        for (size_t i = 0; i < static_cast<size_t>(size); i++) {
+            if (valid[i] && tickId[i] % 10 == 0) {
+                numValid++;
+            }
+        }
+
+        FeatureStoreResult windowResult(numValid * windowSize);
+        windowResult.patId.resize(numValid * windowSize);
+        size_t windowResultIndex = 0;
+        for (size_t i = 0; i < static_cast<size_t>(size); i++) {
+            if (!valid[i] || tickId[i] % 10 != 0) {
+                continue;
+            }
+
+            size_t patPointer = i;
+            bool curWindowValid = true;
+            for (size_t j = 0; j < windowSize; j++) {
+                if (curWindowValid) {
+                    clone(*this, windowResult, patPointer, windowResultIndex);
+                    if (nextPATId2s[patPointer] != INVALID_ID) {
+                        patPointer = static_cast<size_t>(nextPATId2s[patPointer]);
+                    }
+                    else {
+                        curWindowValid = false;
+                    }
+                }
+                windowResultIndex++;
+            }
+        }
+
+        return windowResult;
     }
 
     void FeatureStoreResult::toHDF5Inner(HighFive::File & file) {
@@ -344,6 +425,7 @@ namespace csknow::feature_store {
             file.createDataSet("/data/pct nearest crosshair enemy 2s " + std::to_string(i),
                                pctNearestCrosshairEnemy2s[i], hdf5FlatCreateProps);
         }
-        file.createDataSet("/data/next tick id 2s", nextTickId2s, hdf5FlatCreateProps);
+        file.createDataSet("/data/next player at tick id 2s", nextPATId2s, hdf5FlatCreateProps);
+        file.createDataSet("/data/valid", valid, hdf5FlatCreateProps);
     }
 }

@@ -201,6 +201,7 @@ int main(int argc, char * argv[]) {
     // bt latent events
     string behaviorTreeLatentEventsName = "behaviorTreeLatentEvents";
     string behaviorTreeFeatureStoreName = "behaviorTreeFeatureStore";
+    string behaviorTreeWindowFeatureStoreName = "behaviorTreeWindowFeatureStore";
     std::cout << "processing behaviorTreeLatentEvents" << std::endl;
     csknow::behavior_tree_latent_states::BehaviorTreeLatentStates behaviorTreeLatentEvents(playerAtTick);
     behaviorTreeLatentEvents.runQuery(navPath + "/de_dust2.nav", map_visPoints.at("de_dust2"), d2MeshResult,
@@ -212,6 +213,11 @@ int main(int argc, char * argv[]) {
     std::cout << "processing behavior tree feature store" << std::endl;
     behaviorTreeLatentEvents.featureStoreResult.computeAcausalLabels(games, filteredRounds, ticks, playerAtTick);
     std::cout << "size: " << behaviorTreeLatentEvents.featureStoreResult.size << std::endl;
+
+    std::cout << "processing behavior tree window feature store" << std::endl;
+    csknow::feature_store::FeatureStoreResult windowFeatureStoreResult =
+        behaviorTreeLatentEvents.featureStoreResult.makeWindows();
+    std::cout << "size: " << windowFeatureStoreResult.size << std::endl;
 
     // latent engagement events
     string latentEngagementName = "latentEngagement";
@@ -265,7 +271,8 @@ int main(int argc, char * argv[]) {
     map<string, reference_wrapper<QueryResult>> analyses {
             {engagementAimName, engagementAimResult},
             //{latentEngagementAimName, latentEngagementAimResult},
-            {behaviorTreeFeatureStoreName, behaviorTreeLatentEvents.featureStoreResult}
+            {behaviorTreeFeatureStoreName, behaviorTreeLatentEvents.featureStoreResult},
+            {behaviorTreeWindowFeatureStoreName, windowFeatureStoreResult}
             //{trainingNavigationName, trainingNavigationResult},
     };
 
