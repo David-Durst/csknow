@@ -332,10 +332,15 @@ namespace csknow::feature_store {
         }
     }
 
-    void clone(const FeatureStoreResult & src, FeatureStoreResult & dst, size_t srcIndex, size_t dstIndex) {
+    void clone(const FeatureStoreResult & src, FeatureStoreResult & dst, size_t srcIndex, size_t dstIndex,
+               bool invalidSubset) {
         dst.roundId[dstIndex] = src.roundId[srcIndex];
-        dst.tickId[dstIndex] = src.tickId[srcIndex];
         dst.playerId[dstIndex] = src.playerId[srcIndex];
+        dst.valid[dstIndex] = src.valid[srcIndex];
+        if (invalidSubset) {
+            return;
+        }
+        dst.tickId[dstIndex] = src.tickId[srcIndex];
         dst.patId[dstIndex] = src.patId[srcIndex];
         for (size_t i = 0; i < dst.columnEnemyData.size(); i++) {
             dst.columnEnemyData[i].enemyEngagementStates[dstIndex] =
@@ -373,7 +378,9 @@ namespace csknow::feature_store {
             dst.pctNearestCrosshairEnemy2s[i][dstIndex] = src.pctNearestCrosshairEnemy2s[i][srcIndex];
         }
         dst.nextPATId2s[dstIndex] = src.nextPATId2s[srcIndex];
-        dst.valid[dstIndex] = src.valid[srcIndex];
+        if (dst.nextPATId2s[dstIndex] == 0) {
+            std::cout << "bad things are happening" << std::endl;
+        }
     }
 
     FeatureStoreResult FeatureStoreResult::makeWindows() const {
@@ -395,8 +402,8 @@ namespace csknow::feature_store {
             size_t patPointer = i;
             bool curWindowValid = true;
             for (size_t j = 0; j < windowSize; j++) {
+                clone(*this, windowResult, patPointer, windowResultIndex, !curWindowValid);
                 if (curWindowValid) {
-                    clone(*this, windowResult, patPointer, windowResultIndex);
                     if (nextPATId2s[patPointer] != INVALID_ID) {
                         patPointer = static_cast<size_t>(nextPATId2s[patPointer]);
                     }
