@@ -57,9 +57,9 @@ def train(all_data_df: pd.DataFrame, num_epochs: int, windowed=False, save=True,
     column_transformers = IOColumnTransformers(input_column_types, output_column_types, train_df)
 
     # plot data set with and without transformers
-    plot_untransformed_and_transformed(plot_path, 'train and test labels', all_data_df,
-                                       input_column_types.float_standard_cols,
-                                       input_column_types.categorical_cols + output_column_types.categorical_cols)
+    #plot_untransformed_and_transformed(plot_path, 'train and test labels', all_data_df,
+    #                                   input_column_types.float_standard_cols,
+    #                                   input_column_types.categorical_cols + output_column_types.categorical_cols)
 
     # Get cpu or gpu device for training.
     device: str = CUDA_DEVICE_STR if torch.cuda.is_available() else CPU_DEVICE_STR
@@ -101,7 +101,10 @@ def train(all_data_df: pd.DataFrame, num_epochs: int, windowed=False, save=True,
                 if first_row is None:
                     first_row = X[0:1, :]
                 X, Y = X.to(device), Y.to(device)
-                transformed_Y = column_transformers.transform_columns(False, Y, X)
+                if windowed:
+                    transformed_Y = column_transformers.nested_transform_columns(False, Y, X, window_size=window_size)
+                else:
+                    transformed_Y = column_transformers.transform_columns(False, Y, X)
                 # XR = torch.randn_like(X, device=device)
                 # XR[:,0] = X[:,0]
                 # YZ = torch.zeros_like(Y) + 0.1

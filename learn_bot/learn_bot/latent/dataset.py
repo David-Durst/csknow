@@ -27,12 +27,12 @@ class LatentDataset(Dataset):
         self.X = torch.tensor(df.loc[:, cts.input_types.column_names()].to_numpy()).float()
         self.Y = torch.tensor(df.loc[:, cts.output_types.column_names()].to_numpy()).float()
         if windowed:
-            self.X = torch.split(self.X, window_size)
-            self.Y = torch.split(self.Y, window_size)
+            self.X = torch.unflatten(self.X, 0, [-1, 10])
+            self.Y = torch.unflatten(self.Y, 0, [-1, 10])
 
     def __len__(self):
         if self.windowed:
-            return len(self.id) / 10
+            return int(len(self.id) / 10)
         else:
             return len(self.id)
 

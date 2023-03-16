@@ -446,32 +446,6 @@ class PTOneHotColumnTransformer(PTColumnTransformer):
 
 
 @dataclass
-class PTOneHotColumnTransformer(PTColumnTransformer):
-    # CATEGORICAL data
-    col_name: str
-    num_classes: int
-
-    pt_ct_type: ColumnTransformerType = ColumnTransformerType.CATEGORICAL
-
-    def convert(self, value: torch.Tensor):
-        one_hot_result = F.one_hot(value.to(torch.int64), num_classes=self.num_classes)
-        one_hot_float_result = one_hot_result.to(value.dtype)
-        return torch.flatten(one_hot_float_result, start_dim=1)
-
-    def inverse(self, value: torch.Tensor):
-        return torch.argmax(value, -1, keepdim=True)
-
-    def inverse_prob(self, value: torch.Tensor):
-        return torch.softmax(value, dim=1)
-
-    def delta_convert(self, relative_value: torch.Tensor, reference_value: torch.Tensor):
-        raise NotImplementedError
-
-    def delta_inverse(self, relative_value: torch.Tensor, reference_value: torch.Tensor):
-        raise NotImplementedError
-
-
-@dataclass
 class PTCatDistributionColumnTransformer(PTColumnTransformer):
     # CATEGORICAL data
     col_names: List[str]
@@ -872,6 +846,7 @@ class IOColumnTransformers:
         x_categorical_name_ranges = self.get_name_ranges(input, False, frozenset({ColumnTransformerType.CATEGORICAL}))
         for i, categorical_name_range in enumerate(x_categorical_name_ranges):
             uncat_result.append(ct_pts[i + ct_offset].convert(x[:, categorical_name_range]))
+        ct_offset += len(x_categorical_name_ranges)
 
         x_categorical_distribution_name_ranges = \
             self.get_name_ranges(input, False, frozenset({ColumnTransformerType.CATEGORICAL_DISTRIBUTION}))
@@ -879,6 +854,13 @@ class IOColumnTransformers:
             uncat_result.append(ct_pts[i + ct_offset].convert(x[:, categorical_distribution_name_range]))
 
         return torch.cat(uncat_result, dim=1).to(cur_device)
+
+    def nested_transform_columns(self, input: bool, x: torch.Tensor, x_input: torch.Tensor,
+                                 window_size: int) -> torch.Tensor:
+        flattened_x = torch.flatten(x, 0, 1)
+        flattened_x_input = torch.flatten(x_input, 0, 1)
+        flattened_transformed_x = self.transform_columns(input, flattened_x, flattened_x_input)
+        return torch.unflatten(flattened_transformed_x, 0, [-1, window_size])
 
     def untransform_columns(self, input: bool, x: torch.Tensor, x_input: torch.Tensor) -> torch.Tensor:
         cur_device = x.device
@@ -951,6 +933,13 @@ class IOColumnTransformers:
 
         return torch.cat(uncat_result, dim=1).to(cur_device)
 
+    def nested_untransform_columns(self, input: bool, x: torch.Tensor, x_input: torch.Tensor,
+                                 window_size: int) -> torch.Tensor:
+        flattened_x = torch.flatten(x, 0, 1)
+        flattened_x_input = torch.flatten(x_input, 0, 1)
+        flattened_untransformed_x = self.transform_columns(input, flattened_x, flattened_x_input)
+        return torch.unflatten(flattened_untransformed_x, 0, [-1, window_size])
+
     def untransform_cat_columns_prob(self, input: bool, x: torch.Tensor, x_input: torch.Tensor) -> torch.Tensor:
         cur_device = x.device
         x = x.to(CPU_DEVICE_STR)
@@ -993,6 +982,7 @@ class IOColumnTransformers:
         x_categorical_name_ranges = self.get_name_ranges(input, True, frozenset({ColumnTransformerType.CATEGORICAL}))
         for i, categorical_name_range in enumerate(x_categorical_name_ranges):
             uncat_result.append(ct_pts[i + ct_offset].inverse_prob(x[:, categorical_name_range]))
+        ct_offset += len(x_categorical_name_ranges)
 
         x_categorical_distribution_name_ranges = \
             self.get_name_ranges(input, True, frozenset({ColumnTransformerType.CATEGORICAL_DISTRIBUTION}))
