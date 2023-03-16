@@ -173,6 +173,7 @@ namespace csknow::feature_store {
                     futureTickIndex1s--;
                 }
                 vector<int64_t> removed2sTicks;
+                //int64_t oldFutureTickIndex2s = futureTickIndex2s;
                 while (secondsBetweenTicks(ticks, tickRates, tickIndex, futureTickIndex2s) > 2.) {
                     removed2sTicks.push_back(futureTickIndex2s);
                     futureTickIndex2s--;
@@ -298,7 +299,32 @@ namespace csknow::feature_store {
                                         playerToTickToPos[curPlayerId][futureTickIndex2s])) / maxViewAngleDelta;
                     negPositionOffset2sUpToThreshold[patIndex] = 1. - positionOffset2sUpToThreshold[patIndex];
                     negViewAngleOffset2sUpToThreshold[patIndex] = 1. - viewAngleOffset2sUpToThreshold[patIndex];
-                    nextPATId2s[patIndex] = tickToPlayerToPATId[futureTickIndex2s][curPlayerId];
+                    /*
+                    if (tickToPlayerToPATId.find(futureTickIndex2s) == tickToPlayerToPATId.end() ||
+                        tickToPlayerToPATId[futureTickIndex2s].find(curPlayerId) == tickToPlayerToPATId[futureTickIndex2s].end()) {
+                        std::cout << "something is wrong" << std::endl;
+                        std::cout << "old future tick index 2s: " << oldFutureTickIndex2s << std::endl;
+                        std::cout << "new future tick index 2s: " << futureTickIndex2s << std::endl;
+                        std::cout << "tick index: " << tickIndex << std::endl;
+                        std::cout << "removed ticks: ";
+                        for (const auto & removedTick : removed2sTicks) {
+                            std::cout << removedTick << ",";
+                        }
+                        if (tickToPlayerToPATId.find(futureTickIndex2s) == tickToPlayerToPATId.end()) {
+                            std::cout << "missing entire tick" << std::endl;
+                        }
+                        else {
+                            std::cout << "missing player" << std::endl;
+                        }
+                        std::cout << std::endl;
+                        exit(1);
+                    }
+                     */
+                    // in one round, a player drops out, need to ignore that part of round
+                    if (tickToPlayerToPATId.find(futureTickIndex2s) != tickToPlayerToPATId.end() &&
+                        tickToPlayerToPATId[futureTickIndex2s].find(curPlayerId) != tickToPlayerToPATId[futureTickIndex2s].end()) {
+                        nextPATId2s[patIndex] = tickToPlayerToPATId[futureTickIndex2s][curPlayerId];
+                    }
                 }
             }
             roundsProcessed++;
@@ -352,7 +378,6 @@ namespace csknow::feature_store {
 
     FeatureStoreResult FeatureStoreResult::makeWindows() const {
         size_t numValid = 0;
-        std::cout << "start" << std::endl;
         for (size_t i = 0; i < static_cast<size_t>(size); i++) {
             if (valid[i] && tickId[i] % 10 == 0) {
                 numValid++;
