@@ -8,7 +8,9 @@ from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 
 from learn_bot.latent.dataset import *
+from learn_bot.latent.latent_to_distributions import get_target_distributions, num_target_options
 from learn_bot.latent.lstm_latent_model import LSTMLatentModel
+from learn_bot.latent.mlp_hidden_latent_model import MLPHiddenLatentModel
 from learn_bot.latent.mlp_latent_model import MLPLatentModel
 from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd
 from learn_bot.libs.io_transforms import CUDA_DEVICE_STR
@@ -67,8 +69,9 @@ def train(all_data_df: pd.DataFrame, num_epochs: int, windowed=False, save=True,
     print(f"Using {device} device")
 
     # Define model
+    model = MLPHiddenLatentModel(column_transformers, num_target_options, get_target_distributions).to(device)
     #model = MLPLatentModel(column_transformers).to(device)
-    model = LSTMLatentModel(column_transformers).to(device)
+    #model = LSTMLatentModel(column_transformers).to(device)
 
     print(model)
     params = list(model.parameters())
@@ -184,6 +187,6 @@ def train(all_data_df: pd.DataFrame, num_epochs: int, windowed=False, save=True,
 
 
 if __name__ == "__main__":
-    #all_data_df = load_hdf5_to_pd(latent_hdf5_data_path)
-    all_data_df = load_hdf5_to_pd(latent_window_hdf5_data_path)
-    train_result = train(all_data_df, num_epochs=5, windowed=True)
+    all_data_df = load_hdf5_to_pd(latent_hdf5_data_path)
+    #all_data_df = load_hdf5_to_pd(latent_window_hdf5_data_path)
+    train_result = train(all_data_df, num_epochs=5, windowed=False)
