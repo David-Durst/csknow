@@ -286,8 +286,18 @@ namespace csknow::feature_store {
                             maxTicksNearest = numTicksNearest;
                             nearestEnemyOverWindow = enemyNum;
                         }
-                        pctNearestCrosshairEnemy2s[enemyNum][patIndex] =
-                            static_cast<double>(numTicksNearest) / static_cast<double>(futureTickIndex2s - tickIndex);
+                        if (futureTickIndex2s == tickIndex) {
+                            if (enemyNum == maxEnemies) {
+                                pctNearestCrosshairEnemy2s[enemyNum][patIndex] = 1.;
+                            }
+                            else {
+                                pctNearestCrosshairEnemy2s[enemyNum][patIndex] = 0.;
+                            }
+                        }
+                        else {
+                            pctNearestCrosshairEnemy2s[enemyNum][patIndex] =
+                                static_cast<double>(numTicksNearest) / static_cast<double>(futureTickIndex2s - tickIndex);
+                        }
                     }
                     nearestCrosshairEnemy2s[patIndex] = nearestEnemyOverWindow;
 
