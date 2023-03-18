@@ -133,7 +133,7 @@ public:
                 }
             }
 
-            if (possibleEnemies.find(enemyId) == possibleEnemies.end()) {
+            if (possibleEnemies.find(enemyId) == possibleEnemies.end() && minTimeToVis < COMMUNICATED_ENEMY_RELEVANT_TIME) {
                 possibleEnemies[enemyId] = {
                     enemyId, csknow::feature_store::EngagementEnemyState::Communicated, minTimeToVis,
                     INVALID_ID, INVALID_ID
