@@ -79,7 +79,9 @@ def compute_accuracy(pred, Y, accuracy, column_transformers: IOColumnTransformer
     for name, col_range in zip(column_transformers.output_types.categorical_distribution_first_sub_cols,
                                column_transformers.get_name_ranges(False, False,
                                                                    frozenset({ColumnTransformerType.CATEGORICAL_DISTRIBUTION}))):
-        accuracy[name] += base_classification_loss_fn(pred_untransformed[:, col_range], Y[:, col_range])
+        accuracy[name] += (torch.argmax(pred_untransformed[:, col_range], -1, keepdim=True) ==
+                           torch.argmax(Y[:, col_range], -1, keepdim=True)).type(torch.float).sum().item()
+        #accuracy[name] += base_classification_loss_fn(pred_untransformed[:, col_range], Y[:, col_range])
 
 
 def finish_accuracy(accuracy, column_transformers: IOColumnTransformers):
