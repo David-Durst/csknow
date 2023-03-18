@@ -187,10 +187,16 @@ namespace csknow::feature_store {
                     const int64_t & curPlayerId = playerAtTick.playerId[patIndex];
                     tickToPlayerToPATId[tickIndex][curPlayerId] = patIndex;
 
+                    std::array<bool, maxEnemies> validEnemyNums{};
+
                     double minCrosshairDistanceToEnemy = maxCrosshairDistance;
                     int nearestEnemy = maxEnemies;
                     for (size_t columnIndex = 0; columnIndex < maxEnemies; columnIndex++) {
                         int64_t enemyPlayerId = columnEnemyData[columnIndex].playerId[patIndex];
+                        validEnemyNums[columnIndex] = enemyPlayerId != INVALID_ID;
+                        if (!validEnemyNums[columnIndex]) {
+                            continue;
+                        }
                         // compute visibility for this frame
                         if (columnEnemyData[columnIndex].enemyEngagementStates[patIndex] == EngagementEnemyState::Visible) {
                             nextVisibleTickId[curPlayerId][enemyPlayerId] = tickIndex;
@@ -262,7 +268,7 @@ namespace csknow::feature_store {
                     int nearestEnemyOverWindow = maxEnemies;
                     for (const auto & [enemyNum, numTicksNearest] :
                         playerToEnemyNumToNumTicksNearestCrosshair500ms[curPlayerId]) {
-                        if (numTicksNearest > maxTicksNearest) {
+                        if (numTicksNearest > maxTicksNearest && validEnemyNums[enemyNum]) {
                             maxTicksNearest = numTicksNearest;
                             nearestEnemyOverWindow = enemyNum;
                         }
@@ -272,7 +278,7 @@ namespace csknow::feature_store {
                     nearestEnemyOverWindow = maxEnemies;
                     for (const auto & [enemyNum, numTicksNearest] :
                         playerToEnemyNumToNumTicksNearestCrosshair1s[curPlayerId]) {
-                        if (numTicksNearest > maxTicksNearest) {
+                        if (numTicksNearest > maxTicksNearest && validEnemyNums[enemyNum]) {
                             maxTicksNearest = numTicksNearest;
                             nearestEnemyOverWindow = enemyNum;
                         }
@@ -282,7 +288,7 @@ namespace csknow::feature_store {
                     nearestEnemyOverWindow = maxEnemies;
                     for (const auto & [enemyNum, numTicksNearest] :
                         playerToEnemyNumToNumTicksNearestCrosshair2s[curPlayerId]) {
-                        if (numTicksNearest > maxTicksNearest) {
+                        if (numTicksNearest > maxTicksNearest && validEnemyNums[enemyNum]) {
                             maxTicksNearest = numTicksNearest;
                             nearestEnemyOverWindow = enemyNum;
                         }

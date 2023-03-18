@@ -103,6 +103,7 @@ namespace csknow::inference_latent_engagement {
                     float mostLikelyEnemyProb = -1;
                     size_t mostLikelyEnemyNum = csknow::feature_store::maxEnemies + 1;
                     for (size_t enemyNum = 0; enemyNum <= csknow::feature_store::maxEnemies; enemyNum++) {
+                        std::cout << output[0][enemyNum].item<float>() << std::endl;
                         enemyProbabilities.push_back(output[0][enemyNum].item<float>());
                         if (enemyProbabilities.back() > mostLikelyEnemyProb) {
                             mostLikelyEnemyNum = enemyNum;
@@ -139,9 +140,28 @@ namespace csknow::inference_latent_engagement {
                     bool engagement = mostLikelyEnemyNum < csknow::feature_store::maxEnemies;
                     int firstLikelyEnemy = INVALID_ID;
                     if (engagement) {
+                        for (size_t enemyNum = 0; enemyNum <= csknow::feature_store::maxEnemies; enemyNum++) {
+                            std::cout << output[0][enemyNum].item<float>() << std::endl;
+                        }
                         firstLikelyEnemy = behaviorTreeLatentStates.featureStoreResult
                             .columnEnemyData[mostLikelyEnemyNum].playerId[patIndex];
+                        exit(1);
                     }
+                    /*
+                    if (engagement && firstLikelyEnemy == INVALID_ID) {
+                        std::cout << "bad" << std::endl;
+                        std::cout << "most likely enemy num: " << mostLikelyEnemyNum << std::endl;
+                        for (size_t enemyNum = 0; enemyNum < csknow::feature_store::maxEnemies; enemyNum++) {
+                            const csknow::feature_store::FeatureStoreResult::ColumnEnemyData &columnEnemyData =
+                                behaviorTreeLatentStates.featureStoreResult.columnEnemyData[enemyNum];
+                            std::cout << "enemyNum " << enemyNum << ", player id " << columnEnemyData.playerId[patIndex] <<
+                                ", engagement state " << enumAsInt(columnEnemyData.enemyEngagementStates[patIndex]) <<
+                                ", prob " << enemyProbabilities[enemyNum] << " other prob " << output[0][enemyNum].item<float>() << std::endl;
+
+
+                        }
+                    }
+                     */
 
                     bool oldEngagementToWrite =
                         // if was engagement and now none
