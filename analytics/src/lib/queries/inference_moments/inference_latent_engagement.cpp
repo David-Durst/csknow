@@ -30,11 +30,11 @@ namespace csknow::inference_latent_engagement {
 
     void InferenceLatentEngagementResult::runQuery(
         const string & modelsDir, const Rounds & rounds, const Ticks & ticks,
-        const csknow::behavior_tree_latent_states::BehaviorTreeLatentStates & behaviorTreeLatentStates,
-        bool useHitEngagementDefinition) {
+        const csknow::behavior_tree_latent_states::BehaviorTreeLatentStates & behaviorTreeLatentStates) {
         fs::path modelPath = fs::path(modelsDir) / fs::path("latent_model") /
                              fs::path("script_model.pt");
 
+        torch::jit::getProfilingMode() = false;
         torch::jit::script::Module module;
         try {
             // Deserialize the ScriptModule from a file using torch::jit::load().
@@ -97,12 +97,18 @@ namespace csknow::inference_latent_engagement {
                     inputs.push_back(rowPT);
 
                     // Execute the model and turn its output into a tensor.
-                    at::Tensor output = module.forward(inputs).toTuple()->elements()[1].toTensor();
+                    at::Tensor output = module.forward(inputs).toTuple()->elements()[0].toTensor();
 
-                    vector<csknow::feature_store::TargetPossibleEnemyLabel> targetLabels;
-                    int firstLikelyHitEnemy = INVALID_ID;
-                    int firstLikelyNearestEnemy = INVALID_ID;
-                    for (size_t enemyNum = 0; enemyNum < csknow::feature_store::maxEnemies; enemyNum++) {
+                    vector<float> enemyProbabilities;
+                    float mostLikelyEnemyProb = -1;
+                    size_t mostLikelyEnemyNum = csknow::feature_store::maxEnemies + 1;
+                    for (size_t enemyNum = 0; enemyNum <= csknow::feature_store::maxEnemies; enemyNum++) {
+                        enemyProbabilities.push_back(output[0][enemyNum].item<float>());
+                        if (enemyProbabilities.back() > mostLikelyEnemyProb) {
+                            mostLikelyEnemyNum = enemyNum;
+                            mostLikelyEnemyProb = enemyProbabilities.back();
+                        }
+                        /*
                         const csknow::feature_store::FeatureStoreResult::ColumnEnemyData &columnEnemyData =
                             behaviorTreeLatentStates.featureStoreResult.columnEnemyData[enemyNum];
                         targetLabels.push_back({
@@ -116,30 +122,33 @@ namespace csknow::inference_latent_engagement {
                         if (firstLikelyNearestEnemy == INVALID_ID && targetLabels.back().nearestTargetEnemy) {
                             firstLikelyNearestEnemy = columnEnemyData.playerId[patIndex];
                         }
+                         */
                     }
 
-                    bool hitEngagement = output[0][csknow::feature_store::maxEnemies * 2].item<float>() >= 0.5;
                     /*
+                    bool hitEngagement = output[0][csknow::feature_store::maxEnemies * 2].item<float>() >= 0.5;
                     if (hitEngagement) {
                         std::cout << "hit engagement" << std::endl;
                     }
-                     */
                     bool visibleEngagement = output[0][csknow::feature_store::maxEnemies * 2 + 1].item<float>() >= 0.5;
-                    /*
                     if (visibleEngagement) {
                         std::cout << "visible engagement" << std::endl;
                     }
                      */
 
-                    bool engagment = useHitEngagementDefinition ? hitEngagement : visibleEngagement;
-                    int firstLikelyEnemy = useHitEngagementDefinition ? firstLikelyHitEnemy : firstLikelyNearestEnemy;
+                    bool engagement = mostLikelyEnemyNum < csknow::feature_store::maxEnemies;
+                    int firstLikelyEnemy = INVALID_ID;
+                    if (engagement) {
+                        firstLikelyEnemy = behaviorTreeLatentStates.featureStoreResult
+                            .columnEnemyData[mostLikelyEnemyNum].playerId[patIndex];
+                    }
 
                     bool oldEngagementToWrite =
                         // if was engagement and now none
-                        (!engagment &&
+                        (!engagement &&
                          playerToActiveEngagement.find(curPlayerId) != playerToActiveEngagement.end()) ||
                         // new engagmenet with different target
-                        (engagment &&
+                        (engagement &&
                          playerToActiveEngagement.find(curPlayerId) != playerToActiveEngagement.end() &&
                          playerToActiveEngagement[curPlayerId].victim != firstLikelyEnemy);
 
@@ -153,7 +162,7 @@ namespace csknow::inference_latent_engagement {
                                          threadNum, playerToActiveEngagement[curPlayerId]);
                         playerToActiveEngagement.erase(curPlayerId);
                     }
-                    if (engagment && playerToActiveEngagement.find(curPlayerId) == playerToActiveEngagement.end()) {
+                    if (engagement && playerToActiveEngagement.find(curPlayerId) == playerToActiveEngagement.end()) {
                         //std::cout << "starting latent engagement" << std::endl;
                         playerToActiveEngagement[curPlayerId] = {
                             curPlayerId, firstLikelyEnemy,
