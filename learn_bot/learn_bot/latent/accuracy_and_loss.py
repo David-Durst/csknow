@@ -98,7 +98,7 @@ def finish_accuracy(accuracy, column_transformers: IOColumnTransformers):
         # record top-1 accuracy for others
         elif name in column_transformers.output_types.categorical_cols:
             accuracy_string += f'''{name}: {accuracy[name]} % cat top 1 acc'''
-        elif name in column_transformers.output_types.categorical_distribution_cols:
+        elif name in column_transformers.output_types.column_names_all_categorical_columns():
             accuracy_string += f'''{name}: {accuracy[name]} % cat top 1 acc'''
         else:
             raise "Invalid Column Type For finish_accuracy"
