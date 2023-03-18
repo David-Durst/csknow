@@ -188,5 +188,6 @@ def train(all_data_df: pd.DataFrame, num_epochs: int, windowed=False, save=True,
 
 if __name__ == "__main__":
     all_data_df = load_hdf5_to_pd(latent_hdf5_data_path)
+    #all_data_df = all_data_df.iloc[:500000]
     #all_data_df = load_hdf5_to_pd(latent_window_hdf5_data_path)
     train_result = train(all_data_df, num_epochs=5, windowed=False)

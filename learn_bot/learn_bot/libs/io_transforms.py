@@ -85,6 +85,7 @@ class ColumnTypes:
     float_angular_delta_cols: List[DeltaColumn]
     float_180_wrap_cols: List[str]
     categorical_distribution_cols: List[List[str]]
+    categorical_distribution_first_sub_cols: List[List[str]]
 
     def __init__(self, float_standard_cols: List[str] = [], float_delta_cols: List[DeltaColumn] = [],
                  float_180_angle_cols: List[str] = [], float_180_angle_delta_cols: List[DeltaColumn] = [],
@@ -110,6 +111,7 @@ class ColumnTypes:
         self.float_angular_delta_cols = float_angular_delta_cols
         self.float_180_wrap_cols = float_180_wrap_cols
         self.categorical_distribution_cols = categorical_distribution_cols
+        self.categorical_distribution_first_sub_cols = [cs[0] for cs in categorical_distribution_cols]
         self.compute_time_offsets()
 
     col_time_offsets: Dict[str, ColumnTimeOffset]
