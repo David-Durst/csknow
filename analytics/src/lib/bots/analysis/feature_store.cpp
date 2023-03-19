@@ -187,7 +187,8 @@ namespace csknow::feature_store {
                     const int64_t & curPlayerId = playerAtTick.playerId[patIndex];
                     tickToPlayerToPATId[tickIndex][curPlayerId] = patIndex;
 
-                    std::array<bool, maxEnemies> validEnemyNums{};
+                    std::array<bool, maxEnemies+1> validEnemyNums{};
+                    validEnemyNums[maxEnemies] = true;
 
                     double minCrosshairDistanceToEnemy = maxCrosshairDistance;
                     int nearestEnemy = maxEnemies;
@@ -290,7 +291,7 @@ namespace csknow::feature_store {
                     for (const auto & [enemyNum, numTicksNearest] :
                         playerToEnemyNumToNumTicksNearestCrosshair2s[curPlayerId]) {
                         if (validEnemyNums[enemyNum]) {
-                            if (numTicksNearest > maxTicksNearest && validEnemyNums[enemyNum]) {
+                            if (numTicksNearest > maxTicksNearest) {
                                 maxTicksNearest = numTicksNearest;
                                 nearestEnemyOverWindow = enemyNum;
                             }
@@ -301,6 +302,7 @@ namespace csknow::feature_store {
                     for (const auto & [enemyNum, numTicksNearest] :
                         playerToEnemyNumToNumTicksNearestCrosshair2s[curPlayerId]) {
                         if (validEnemyNums[enemyNum]) {
+                            /*
                             if (futureTickIndex2s == tickIndex) {
                                 if (enemyNum == maxEnemies) {
                                     pctNearestCrosshairEnemy2s[enemyNum][patIndex] = 1.;
@@ -310,11 +312,43 @@ namespace csknow::feature_store {
                                 }
                             }
                             else {
+                             */
                                 pctNearestCrosshairEnemy2s[enemyNum][patIndex] =
                                     static_cast<double>(numTicksNearest) / static_cast<double>(totalNumTicksNearest);
-                            }
+                                /*
+                                if (totalNumTicksNearest == 0) {
+                                    std::cout << "creating an infinity" << std::endl;
+                                }
+                                 */
+                            //}
                         }
                     }
+                    /*
+                    if (tickIndex == 224486 && curPlayerId == 5) {
+                        std::cout << "nearestCrosshairEnemy2s " << nearestCrosshairEnemy2s[patIndex]
+                            << ", future tick index 2s " << futureTickIndex2s
+                            << ", tick index " << tickIndex << ", total num ticks nearest " << totalNumTicksNearest;
+                        std::cout << ", pct nearest ";
+                        for (size_t enemyN = 0; enemyN < maxEnemies + 1; enemyN++) {
+                            std::cout << pctNearestCrosshairEnemy2s[enemyN][patIndex] << ", ";
+                        }
+                        std::cout << ", valid enemy nums ";
+                        for (size_t enemyN = 0; enemyN < maxEnemies + 1; enemyN++) {
+                            std::cout << validEnemyNums[enemyN] << ", ";
+                        }
+                        std::cout << ", num ticks nearest crosshair ";
+                        for (size_t enemyN = 0; enemyN < maxEnemies + 1; enemyN++) {
+                            if (playerToEnemyNumToNumTicksNearestCrosshair2s[curPlayerId].find(enemyN) !=
+                                playerToEnemyNumToNumTicksNearestCrosshair2s[curPlayerId].end()) {
+                                std::cout << playerToEnemyNumToNumTicksNearestCrosshair2s[curPlayerId][enemyN] << ", ";
+                            }
+                            else {
+                                std::cout << 0 << ", ";
+                            }
+                        }
+                        std::cout << std::endl;
+                    }
+                     */
 
                     positionOffset2sUpToThreshold[patIndex] = std::min(maxPositionDelta,
                         computeDistance(playerToTickToPos[curPlayerId][tickIndex],
