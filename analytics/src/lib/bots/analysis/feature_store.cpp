@@ -286,26 +286,35 @@ namespace csknow::feature_store {
                     nearestCrosshairEnemy1s[patIndex] = nearestEnemyOverWindow;
                     maxTicksNearest = 0;
                     nearestEnemyOverWindow = maxEnemies;
+                    int64_t totalNumTicksNearest = 0;
                     for (const auto & [enemyNum, numTicksNearest] :
                         playerToEnemyNumToNumTicksNearestCrosshair2s[curPlayerId]) {
-                        if (numTicksNearest > maxTicksNearest && validEnemyNums[enemyNum]) {
-                            maxTicksNearest = numTicksNearest;
-                            nearestEnemyOverWindow = enemyNum;
-                        }
-                        if (futureTickIndex2s == tickIndex) {
-                            if (enemyNum == maxEnemies) {
-                                pctNearestCrosshairEnemy2s[enemyNum][patIndex] = 1.;
+                        if (validEnemyNums[enemyNum]) {
+                            if (numTicksNearest > maxTicksNearest && validEnemyNums[enemyNum]) {
+                                maxTicksNearest = numTicksNearest;
+                                nearestEnemyOverWindow = enemyNum;
                             }
-                            else {
-                                pctNearestCrosshairEnemy2s[enemyNum][patIndex] = 0.;
-                            }
-                        }
-                        else {
-                            pctNearestCrosshairEnemy2s[enemyNum][patIndex] =
-                                static_cast<double>(numTicksNearest) / static_cast<double>(futureTickIndex2s - tickIndex);
+                            totalNumTicksNearest += numTicksNearest;
                         }
                     }
                     nearestCrosshairEnemy2s[patIndex] = nearestEnemyOverWindow;
+                    for (const auto & [enemyNum, numTicksNearest] :
+                        playerToEnemyNumToNumTicksNearestCrosshair2s[curPlayerId]) {
+                        if (validEnemyNums[enemyNum]) {
+                            if (futureTickIndex2s == tickIndex) {
+                                if (enemyNum == maxEnemies) {
+                                    pctNearestCrosshairEnemy2s[enemyNum][patIndex] = 1.;
+                                }
+                                else {
+                                    pctNearestCrosshairEnemy2s[enemyNum][patIndex] = 0.;
+                                }
+                            }
+                            else {
+                                pctNearestCrosshairEnemy2s[enemyNum][patIndex] =
+                                    static_cast<double>(numTicksNearest) / static_cast<double>(totalNumTicksNearest);
+                            }
+                        }
+                    }
 
                     positionOffset2sUpToThreshold[patIndex] = std::min(maxPositionDelta,
                         computeDistance(playerToTickToPos[curPlayerId][tickIndex],
