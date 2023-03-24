@@ -8,5 +8,5 @@ def get_target_distributions(latent_tensor: torch.Tensor):
          latent_tensor[:, [num_target_options-1]]], dim=1)
     aim_distribution = position_distribution
     nearest_enemy_distribution = latent_tensor
-    return torch.concat([position_distribution, nearest_enemy_distribution], dim=1)
+    return torch.concat([position_distribution, aim_distribution, nearest_enemy_distribution], dim=1)
 
