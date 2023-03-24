@@ -101,6 +101,7 @@ namespace csknow::feature_store {
         void oneLineToCSV(int64_t, std::ostream &) override { }
         vector<string> getForeignKeyNames() override { return {}; }
         vector<string> getOtherColumnNames() override { return {}; }
+        void checkInvalid() const;
     };
 
 }

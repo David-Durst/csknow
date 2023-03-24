@@ -60,6 +60,7 @@ namespace csknow::inference_latent_engagement {
         vector<vector<vector<int64_t>>> tmpHurtTickIds(numThreads);
         vector<vector<vector<int64_t>>> tmpHurtIds(numThreads);
 
+        behaviorTreeLatentStates.featureStoreResult.checkInvalid();
 //#pragma omp parallel for
         for (int64_t roundIndex = 0; roundIndex < 1L /*rounds.size*/; roundIndex++) {
             int threadNum = omp_get_thread_num();
@@ -109,10 +110,18 @@ namespace csknow::inference_latent_engagement {
                     for (size_t enemyNum = 0; enemyNum <= csknow::feature_store::maxEnemies; enemyNum++) {
                         //std::cout << output[0][enemyNum].item<float>() << std::endl;
                         enemyProbabilities.push_back(output[0][enemyNum].item<float>());
-                        if (enemyStates[patIndex] != csknow::feature_store::EngagementEnemyState::None &&
+                        if (enemyStates[enemyNum] != csknow::feature_store::EngagementEnemyState::None &&
                             enemyProbabilities.back() > mostLikelyEnemyProb) {
                             mostLikelyEnemyNum = enemyNum;
                             mostLikelyEnemyProb = enemyProbabilities.back();
+                            if (enemyNum < csknow::feature_store::maxEnemies && behaviorTreeLatentStates.featureStoreResult
+                                .columnEnemyData[mostLikelyEnemyNum].playerId[patIndex] == INVALID_ID) {
+                                std::cout << "invalid noted played tick id " << tickIndex
+                                    << " enemy num " << enemyNum
+                                    << " enegagmenet state " << enumAsInt(enemyStates[enemyNum])
+                                    << " size " << behaviorTreeLatentStates.featureStoreResult.size
+                                    << std::endl;
+                            }
                         }
                         /*
                         const csknow::feature_store::FeatureStoreResult::ColumnEnemyData &columnEnemyData =

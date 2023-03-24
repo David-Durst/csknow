@@ -317,6 +317,7 @@ int main(int argc, char * argv[]) {
                                       nearestNavCellResult, players, games, filteredRounds, ticks,
                                       playerAtTick, weaponFire, hurt, plants, defusals, engagementResult);
     std::cout << "size: " << behaviorTreeLatentEvents.size << std::endl;
+    behaviorTreeLatentEvents.featureStoreResult.checkInvalid();
 
     // latent engagement events
     string latentEngagementName = "latentEngagement";

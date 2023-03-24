@@ -527,4 +527,16 @@ namespace csknow::feature_store {
         file.createDataSet("/data/next player at tick id 2s", nextPATId2s, hdf5FlatCreateProps);
         file.createDataSet("/data/valid", valid, hdf5FlatCreateProps);
     }
+
+    void FeatureStoreResult::checkInvalid() const {
+        for (int64_t i = 0; i < size; i++) {
+            for (size_t j = 0; j < maxEnemies; j++) {
+                if (enumAsInt(columnEnemyData[j].enemyEngagementStates[i]) < 0 ||
+                    enumAsInt(columnEnemyData[j].enemyEngagementStates[i]) > 5) {
+                    std::cout << "invalid " << i << std::endl;
+                    exit(1);
+                }
+            }
+        }
+    }
 }
