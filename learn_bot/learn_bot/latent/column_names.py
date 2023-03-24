@@ -112,7 +112,7 @@ flat_output_num_options: list[int] = [2 for _ in binary_flat_output_cat_columns]
     [max_enemies + 1 for _ in temporal_cat_columns]
 flat_output_cat_distribution_columns: list[list[str]] = \
     [[position_offset_2s_column, neg_position_offset_2s_column],
-     [view_angle_offset_2s_column, neg_view_angle_offset_2s_column],
+     #[view_angle_offset_2s_column, neg_view_angle_offset_2s_column],
      pct_nearest_enemy_2s_columns]
 
 
