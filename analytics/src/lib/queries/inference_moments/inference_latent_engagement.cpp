@@ -86,11 +86,15 @@ namespace csknow::inference_latent_engagement {
                         rowCPP.push_back(static_cast<float>(columnEnemyData.worldDistanceToEnemy[patIndex]));
                         rowCPP.push_back(static_cast<float>(columnEnemyData.crosshairDistanceToEnemy[patIndex]));
                     }
+                    vector<csknow::feature_store::EngagementEnemyState> enemyStates;
                     for (size_t enemyNum = 0; enemyNum < csknow::feature_store::maxEnemies; enemyNum++) {
                         const csknow::feature_store::FeatureStoreResult::ColumnEnemyData &columnEnemyData =
                             behaviorTreeLatentStates.featureStoreResult.columnEnemyData[enemyNum];
                         rowCPP.push_back(static_cast<float>(columnEnemyData.enemyEngagementStates[patIndex]));
+                        enemyStates.push_back(columnEnemyData.enemyEngagementStates[patIndex]);
                     }
+                    // add last one for no enemy
+                    enemyStates.push_back(csknow::feature_store::EngagementEnemyState::Visible);
 
                     torch::Tensor rowPT = torch::from_blob(rowCPP.data(), {1, static_cast<long>(rowCPP.size())},
                                                            options);
@@ -105,7 +109,8 @@ namespace csknow::inference_latent_engagement {
                     for (size_t enemyNum = 0; enemyNum <= csknow::feature_store::maxEnemies; enemyNum++) {
                         //std::cout << output[0][enemyNum].item<float>() << std::endl;
                         enemyProbabilities.push_back(output[0][enemyNum].item<float>());
-                        if (enemyProbabilities.back() > mostLikelyEnemyProb) {
+                        if (enemyStates[patIndex] != csknow::feature_store::EngagementEnemyState::None &&
+                            enemyProbabilities.back() > mostLikelyEnemyProb) {
                             mostLikelyEnemyNum = enemyNum;
                             mostLikelyEnemyProb = enemyProbabilities.back();
                         }
