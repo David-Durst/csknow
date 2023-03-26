@@ -46,6 +46,9 @@ namespace csknow::inference_latent_engagement {
             return;
         }
 
+        at::set_num_threads(1);
+        at::set_num_interop_threads(1);
+
         std::atomic<int64_t> roundsProcessed = 0;
 
         int numThreads = omp_get_max_threads();
@@ -59,8 +62,10 @@ namespace csknow::inference_latent_engagement {
         vector<vector<vector<EngagementRole>>> tmpRole(numThreads);
         vector<vector<vector<int64_t>>> tmpHurtTickIds(numThreads);
         vector<vector<vector<int64_t>>> tmpHurtIds(numThreads);
+        vector<vector<vector<PlayerEngageProb>>> tmpPlayerEngageProb(numThreads);
 
         behaviorTreeLatentStates.featureStoreResult.checkInvalid();
+        playerEngageProbs.resize(playerAtTick.size);
 //#pragma omp parallel for
         for (int64_t roundIndex = 0; roundIndex < 1L /*rounds.size*/; roundIndex++) {
             int threadNum = omp_get_thread_num();
@@ -107,9 +112,30 @@ namespace csknow::inference_latent_engagement {
                     vector<float> enemyProbabilities;
                     float mostLikelyEnemyProb = -1;
                     size_t mostLikelyEnemyNum = csknow::feature_store::maxEnemies + 1;
+                    /*
+                    if (tickIndex == 8080 && curPlayerId == 3) {
+                        std::cout << "tick index " << tickIndex << " cur player id " << curPlayerId
+                            << " game tick " <<  ticks.gameTickNumber[tickIndex]
+                            << " demo tick " << ticks.demoTickNumber[tickIndex] << std::endl;
+                        for (size_t enemyNum = 0; enemyNum < csknow::feature_store::maxEnemies; enemyNum++) {
+                            std::cout << "cur player " << curPlayerId
+                                << " enemy num " << enemyNum
+                                << " player id " << behaviorTreeLatentStates.featureStoreResult.columnEnemyData[enemyNum].playerId[patIndex]
+                                << " world distance " << behaviorTreeLatentStates.featureStoreResult.columnEnemyData[enemyNum].worldDistanceToEnemy[patIndex]
+                                << " crosshair distance " << behaviorTreeLatentStates.featureStoreResult.columnEnemyData[enemyNum].crosshairDistanceToEnemy[patIndex]
+                                << " enemy prob " << output[0][enemyNum].item<float>()
+                                << std::endl;
+                        }
+                    }
+                     */
                     for (size_t enemyNum = 0; enemyNum <= csknow::feature_store::maxEnemies; enemyNum++) {
                         //std::cout << output[0][enemyNum].item<float>() << std::endl;
                         enemyProbabilities.push_back(output[0][enemyNum].item<float>());
+                        int64_t enemyId = INVALID_ID;
+                        if (enemyNum < csknow::feature_store::maxEnemies) {
+                            behaviorTreeLatentStates.featureStoreResult.columnEnemyData[enemyNum].playerId[patIndex];
+                        }
+                        playerEngageProbs[patIndex][enemyNum] = {enemyId, output[0][enemyNum].item<float>()};
                         if (enemyStates[enemyNum] != csknow::feature_store::EngagementEnemyState::None &&
                             enemyProbabilities.back() > mostLikelyEnemyProb) {
                             mostLikelyEnemyNum = enemyNum;

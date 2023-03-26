@@ -88,6 +88,26 @@ namespace csknow::behavior_tree_latent_states {
                 tmpPreCommitBuffer[threadNum].updateFeatureStoreBufferPlayers(curState);
                 globalQueryNode.exec(curState, defaultThinker);
 
+                /*
+                if (tickIndex == 8080) {
+                    for (int64_t i = 0; i < 3; i++) {
+                        const ServerState::Client & curClient = curState.getClient(3);
+                        const ServerState::Client & victimClient = curState.getClient(i);
+                        csknow::feature_store::EngagementPossibleEnemy possibleEnemy;
+                        Vec3 victimHeadPos = getCenterHeadCoordinatesForPlayer(victimClient.getEyePosForPlayer(),
+                                                                               victimClient.getCurrentViewAngles(),
+                                                                               victimClient.duckAmount);
+                        Vec2 deltaViewAngle = deltaViewFromOriginToDest(curClient.getEyePosForPlayer(), victimHeadPos,
+                                                                        curClient.getCurrentViewAngles());
+                        std::cout << "tick index " << tickIndex << " cur pos " << curClient.getEyePosForPlayer().toCSV() <<
+                            " enemy pos " << victimClient.getEyePosForPlayer().toCSV() << " cur client view angle "
+                            << curClient.getCurrentViewAngles().toCSV() << std::endl;
+                        std::cout << " delta view angle " << computeMagnitude(deltaViewAngle)
+                                  << " world distance " << computeDistance(curClient.getEyePosForPlayer(), victimClient.getEyePosForPlayer()) << std::endl;
+                    }
+                }
+                 */
+
                 map<int64_t, int64_t> playerToACausalTarget;
                 for (const auto & [_0, _1, engagementIndex] :
                     acausalEngagementResult.engagementsPerTick.intervalToEvent.findOverlapping(tickIndex, tickIndex)) {
