@@ -92,7 +92,7 @@ position_offset_2s_column = "position offset 2s up to threshold"
 neg_position_offset_2s_column = "neg position offset 2s up to threshold"
 view_angle_offset_2s_column = "view angle offset 2s up to threshold"
 neg_view_angle_offset_2s_column = "neg view angle offset 2s up to threshold"
-pct_nearest_enemy_2s_columns = ["pct nearest crosshair enemy 2s " + str(i) for i in range(max_enemies + 1)]
+pct_nearest_crosshair_enemy_2s_columns = ["pct nearest crosshair enemy 2s " + str(i) for i in range(max_enemies + 1)]
 next_tick_id_2s_column = "next tick id 2s"
 next_tick_id_columns = [f"next tick id {str(2*(i+1))}s" for i in range(1,10)]
 
@@ -113,7 +113,7 @@ flat_output_num_options: list[int] = [2 for _ in binary_flat_output_cat_columns]
 flat_output_cat_distribution_columns: list[list[str]] = \
     [[position_offset_2s_column, neg_position_offset_2s_column],
      [view_angle_offset_2s_column, neg_view_angle_offset_2s_column],
-     pct_nearest_enemy_2s_columns]
+     pct_nearest_crosshair_enemy_2s_columns]
 
 
 def get_simplified_column_types(float_standard_cols: List[str], categorical_cols: List[str],

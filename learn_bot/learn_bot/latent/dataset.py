@@ -3,7 +3,7 @@ import torch
 from torch.utils.data import Dataset
 from learn_bot.libs.io_transforms import IOColumnTransformers
 from pathlib import Path
-from learn_bot.latent.column_names import *
+from learn_bot.latent.engagement.column_names import *
 
 latent_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / 'analytics' / 'csv_outputs' / 'behaviorTreeFeatureStore.hdf5'
 latent_window_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / 'analytics' / 'csv_outputs' / 'behaviorTreeWindowFeatureStore.hdf5'

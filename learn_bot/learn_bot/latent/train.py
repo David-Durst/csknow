@@ -1,4 +1,5 @@
 # https://pytorch.org/tutorials/beginner/basics/quickstart_tutorial.html
+from enum import Enum
 from typing import Dict
 
 import torch.optim
@@ -7,6 +8,8 @@ from torch.utils.data import DataLoader
 
 from torch.utils.tensorboard import SummaryWriter
 
+from learn_bot.latent.aggression.column_names import aggression_input_column_types, aggression_output_column_types
+from learn_bot.latent.aggression.latent_to_distributions import get_aggression_distributions
 from learn_bot.latent.dataset import *
 from learn_bot.latent.engagement.column_names import round_id_column, engagement_input_column_types, engagement_output_column_types
 from learn_bot.latent.engagement.latent_to_distributions import get_engagement_target_distributions, num_target_options
@@ -40,7 +43,13 @@ class TrainResult:
     model: nn.Module
 
 
-def train(all_data_df: pd.DataFrame, num_epochs: int, windowed=False, save=True, diff_train_test=True) -> TrainResult:
+class TrainType(Enum):
+    Engagement = 1
+    Aggression = 2
+
+
+def train(train_type: TrainType, all_data_df: pd.DataFrame, num_epochs: int,
+          windowed=False, save=True, diff_train_test=True) -> TrainResult:
 
     if diff_train_test:
         train_test_split = train_test_split_by_col(all_data_df, round_id_column)
@@ -56,9 +65,6 @@ def train(all_data_df: pd.DataFrame, num_epochs: int, windowed=False, save=True,
         test_df = all_data_df
 
 
-    # transform input and output
-    column_transformers = IOColumnTransformers(engagement_input_column_types, engagement_output_column_types, train_df)
-
     # plot data set with and without transformers
     #plot_untransformed_and_transformed(plot_path, 'train and test labels', all_data_df,
     #                                   input_column_types.float_standard_cols,
@@ -70,7 +76,16 @@ def train(all_data_df: pd.DataFrame, num_epochs: int, windowed=False, save=True,
     print(f"Using {device} device")
 
     # Define model
-    model = MLPHiddenLatentModel(column_transformers, num_target_options, get_engagement_target_distributions).to(device)
+    if train_type == TrainType.Engagement:
+        # transform input and output
+        column_transformers = IOColumnTransformers(engagement_input_column_types, engagement_output_column_types,
+                                                   train_df)
+        model = MLPHiddenLatentModel(column_transformers, num_target_options, get_engagement_target_distributions).to(device)
+    else:
+        column_transformers = IOColumnTransformers(aggression_input_column_types, aggression_output_column_types,
+                                                   train_df)
+        model = MLPHiddenLatentModel(column_transformers, num_target_options, get_aggression_distributions).to(
+            device)
     #model = MLPLatentModel(column_transformers).to(device)
     #model = LSTMLatentModel(column_transformers).to(device)
 
@@ -181,7 +196,10 @@ def train(all_data_df: pd.DataFrame, num_epochs: int, windowed=False, save=True,
 
     if save:
         script_model = torch.jit.trace(model.to(CPU_DEVICE_STR), first_row)
-        script_model.save(checkpoints_path / 'script_model.pt')
+        if train_type == TrainType.Engagement:
+            script_model.save(checkpoints_path / 'engagement_script_model.pt')
+        else:
+            script_model.save(checkpoints_path / 'aggression_script_model.pt')
         model.to(device)
 
     return TrainResult(train_data, test_data, train_df, test_df, column_transformers, model)
@@ -192,6 +210,7 @@ if __name__ == "__main__":
     all_data_df = all_data_df[all_data_df['valid'] == 1.]
     #all_data_df = all_data_df.iloc[:500000]
     #all_data_df = load_hdf5_to_pd(latent_window_hdf5_data_path)
-    train_result = train(all_data_df, num_epochs=1, windowed=False)
+    #train_result = train(TrainType.Engagement, all_data_df, num_epochs=1, windowed=False)
+    train_result = train(TrainType.Aggression, all_data_df, num_epochs=1, windowed=False)
 
 # all_data_df[((all_data_df['pct nearest crosshair enemy 2s 0'] + all_data_df['pct nearest crosshair enemy 2s 1'] + all_data_df['pct nearest crosshair enemy 2s 2'] + all_data_df['pct nearest crosshair enemy 2s 3'] + all_data_df['pct nearest crosshair enemy 2s 4'] + all_data_df['pct nearest crosshair enemy 2s 5']) < 0.9) & (all_data_df['valid'] == 1)]
