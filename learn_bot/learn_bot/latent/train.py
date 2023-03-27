@@ -8,7 +8,8 @@ from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 
 from learn_bot.latent.dataset import *
-from learn_bot.latent.latent_to_distributions import get_target_distributions, num_target_options
+from learn_bot.latent.engagement.column_names import round_id_column, engagement_input_column_types, engagement_output_column_types
+from learn_bot.latent.engagement.latent_to_distributions import get_engagement_target_distributions, num_target_options
 from learn_bot.latent.lstm_latent_model import LSTMLatentModel
 from learn_bot.latent.mlp_hidden_latent_model import MLPHiddenLatentModel
 from learn_bot.latent.mlp_latent_model import MLPLatentModel
@@ -56,7 +57,7 @@ def train(all_data_df: pd.DataFrame, num_epochs: int, windowed=False, save=True,
 
 
     # transform input and output
-    column_transformers = IOColumnTransformers(input_column_types, output_column_types, train_df)
+    column_transformers = IOColumnTransformers(engagement_input_column_types, engagement_output_column_types, train_df)
 
     # plot data set with and without transformers
     #plot_untransformed_and_transformed(plot_path, 'train and test labels', all_data_df,
@@ -69,7 +70,7 @@ def train(all_data_df: pd.DataFrame, num_epochs: int, windowed=False, save=True,
     print(f"Using {device} device")
 
     # Define model
-    model = MLPHiddenLatentModel(column_transformers, num_target_options, get_target_distributions).to(device)
+    model = MLPHiddenLatentModel(column_transformers, num_target_options, get_engagement_target_distributions).to(device)
     #model = MLPLatentModel(column_transformers).to(device)
     #model = LSTMLatentModel(column_transformers).to(device)
 

@@ -2,7 +2,7 @@ import torch
 
 num_target_options = 6
 
-def get_target_distributions(latent_tensor: torch.Tensor):
+def get_engagement_target_distributions(latent_tensor: torch.Tensor):
     position_distribution = torch.concat(
         [torch.sum(latent_tensor[:, 0:num_target_options-1], dim=1, keepdim=True),
          latent_tensor[:, [num_target_options-1]]], dim=1)

@@ -123,10 +123,10 @@ def get_simplified_column_types(float_standard_cols: List[str], categorical_cols
                        categorical_distribution_cols)
 
 
-input_column_types = get_simplified_column_types(flat_input_float_specific_enemy_columns,
+engagement_input_column_types = get_simplified_column_types(flat_input_float_specific_enemy_columns,
                                                  flat_input_cat_specific_enemy_columns,
                                                  flat_input_cat_specific_enemy_num_options, [])
 #output_column_types = get_simplified_column_types([], flat_output_cat_columns, flat_output_num_options,
 #                                                  flat_output_cat_distribution_columns)
-output_column_types = get_simplified_column_types([], [], [],
+engagement_output_column_types = get_simplified_column_types([], [], [],
                                                   flat_output_cat_distribution_columns)
