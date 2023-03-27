@@ -18,18 +18,33 @@ namespace csknow::feature_store {
         None
     };
 
+    enum class NearestEnemyState {
+        Decrease,
+        Constant,
+        Increase,
+        NUM_NEAREST_ENEMY_STATE
+    };
+    constexpr size_t numNearestEnemyState = static_cast<size_t>(NearestEnemyState::NUM_NEAREST_ENEMY_STATE);
+
     constexpr double maxTimeToVis = 100.;
     constexpr double maxWorldDistance = 4000.;
     constexpr double maxCrosshairDistance = 30.;
     constexpr double maxPositionDelta = 150.;
     constexpr double maxViewAngleDelta = 15.;
     constexpr size_t windowSize = 10;
+    constexpr double nearestEnemyChangeThreshold = 32.;
     struct EngagementPossibleEnemy {
         CSGOId playerId;
         EngagementEnemyState enemyState;
         double timeSinceLastVisibleOrToBecomeVisible;
         double worldDistanceToEnemy;
         double crosshairDistanceToEnemyHead;
+    };
+
+    struct EngagementTeammate {
+        CSGOId playerId;
+        double worldDistanceToTeammate;
+        double crosshairDistanceToTeammateHead;
     };
 
     struct TargetPossibleEnemyLabel {
@@ -46,10 +61,12 @@ namespace csknow::feature_store {
         vector<TargetPossibleEnemyLabel> targetPossibleEnemyLabelBuffer;
         bool hitEngagementBuffer;
         bool visibleEngagementBuffer;
+        vector<EngagementTeammate> engagementTeammateBuffer;
 
         void addEngagementPossibleEnemy(const EngagementPossibleEnemy & engagementPossibleEnemy);
         void addEngagementLabel(bool hitEngagement, bool visibleEngagement);
         void addTargetPossibleEnemyLabel(const TargetPossibleEnemyLabel & targetPossibleEnemyLabel);
+        void addEngagementTeammate(const EngagementTeammate & engagementTeammate);
     };
 
     class FeatureStoreResult : public QueryResult {
@@ -62,6 +79,7 @@ namespace csknow::feature_store {
         vector<int64_t> patId;
         struct ColumnEnemyData {
             vector<int64_t> playerId;
+            // target
             // inputs
             vector<EngagementEnemyState> enemyEngagementStates;
             vector<double> timeSinceLastVisibleOrToBecomeVisible;
@@ -73,6 +91,13 @@ namespace csknow::feature_store {
             vector<bool> visibleIn1s, visibleIn2s, visibleIn5s, visibleIn10s;
         };
         array<ColumnEnemyData, maxEnemies> columnEnemyData;
+        struct ColumnTeammateData {
+            vector<int64_t> playerId;
+            // inputs
+            vector<double> teammateWorldDistanceToEnemy;
+            vector<double> crosshairDistanceToTeammate;
+        };
+        array<ColumnTeammateData, maxEnemies> columnTeammateData;
         vector<bool> hitEngagement;
         vector<bool> visibleEngagement;
         vector<int> nearestCrosshairCurTick, nearestCrosshairEnemy500ms, nearestCrosshairEnemy1s, nearestCrosshairEnemy2s;
@@ -80,6 +105,7 @@ namespace csknow::feature_store {
         // these are just used to create binomial distributions
         vector<double> negPositionOffset2sUpToThreshold, negViewAngleOffset2sUpToThreshold;
         array<vector<double>, maxEnemies+1> pctNearestCrosshairEnemy2s;
+        array<vector<double>, numNearestEnemyState> pctNearestEnemyChange;
         vector<int64_t> nextPATId2s;
         vector<bool> valid;
         bool training;

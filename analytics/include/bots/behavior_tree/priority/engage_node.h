@@ -56,6 +56,15 @@ public:
         engagementPossibleEnemy.crosshairDistanceToEnemyHead = computeMagnitude(deltaViewAngle);
     }
 
+    void setTeammateDistances(Vec3 attackerEyePos, Vec2 attackerViewAngle,
+                                   Vec3 victimEyePos, Vec2 victimViewAngle, double victimDuckAmount,
+                                   csknow::feature_store::EngagementTeammate & engagementTeammate) {
+        Vec3 victimHeadPos = getCenterHeadCoordinatesForPlayer(victimEyePos, victimViewAngle, victimDuckAmount);
+        Vec2 deltaViewAngle = deltaViewFromOriginToDest(attackerEyePos, victimHeadPos, attackerViewAngle);
+        engagementTeammate.worldDistanceToTeammate = computeDistance(attackerEyePos, victimEyePos);
+        engagementTeammate.crosshairDistanceToTeammateHead = computeMagnitude(deltaViewAngle);
+    }
+
     virtual bool valid(const ServerState & state, TreeThinker & treeThinker) override {
         const ServerState::Client & curClient = state.getClient(treeThinker.csgoId);
         bool enemyVisible = !state.getVisibleEnemies(treeThinker.csgoId).empty();
@@ -147,6 +156,18 @@ public:
                                       victimClient.getEyePosForPlayer(), victimClient.getCurrentViewAngles(),
                                       victimClient.duckAmount, possibleEnemy);
             blackboard.featureStorePreCommitBuffer.addEngagementPossibleEnemy(possibleEnemy);
+        }
+
+        for (auto & teammateId : state.getPlayersOnTeam(curClient.team)) {
+            const auto & teammateClient = state.getClient(teammateId);
+            if (teammateId == curClient.csgoId || !teammateClient.isAlive) {
+                continue;
+            }
+            csknow::feature_store::EngagementTeammate engagementTeammate;
+            setTeammateDistances(curClient.getEyePosForPlayer(), curClient.getCurrentViewAngles(),
+                                      teammateClient.getEyePosForPlayer(), teammateClient.getCurrentViewAngles(),
+                                      teammateClient.duckAmount, engagementTeammate);
+            blackboard.featureStorePreCommitBuffer.addEngagementTeammate(engagementTeammate);
         }
 
         bool communicatedEnemy = !relevantCommunicatedEnemies.empty();
