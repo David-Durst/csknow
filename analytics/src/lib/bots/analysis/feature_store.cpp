@@ -158,6 +158,7 @@ namespace csknow::feature_store {
         valid[rowIndex] = true;
 
         buffer.engagementPossibleEnemyBuffer.clear();
+        buffer.engagementTeammateBuffer.clear();
         buffer.targetPossibleEnemyLabelBuffer.clear();
     }
 

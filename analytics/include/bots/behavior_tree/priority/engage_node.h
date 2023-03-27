@@ -163,7 +163,7 @@ public:
             if (teammateId == curClient.csgoId || !teammateClient.isAlive) {
                 continue;
             }
-            csknow::feature_store::EngagementTeammate engagementTeammate;
+            csknow::feature_store::EngagementTeammate engagementTeammate{};
             setTeammateDistances(curClient.getEyePosForPlayer(), curClient.getCurrentViewAngles(),
                                       teammateClient.getEyePosForPlayer(), teammateClient.getCurrentViewAngles(),
                                       teammateClient.duckAmount, engagementTeammate);
