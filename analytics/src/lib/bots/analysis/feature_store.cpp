@@ -8,6 +8,7 @@
 #include "queries/lookback.h"
 #include "file_helpers.h"
 #include <atomic>
+#include "circular_buffer.h"
 
 namespace csknow::feature_store {
     void FeatureStorePreCommitBuffer::updateFeatureStoreBufferPlayers(const ServerState & state) {
@@ -61,7 +62,7 @@ namespace csknow::feature_store {
             columnEnemyData[i].visibleIn5s.resize(size, false);
             columnEnemyData[i].visibleIn10s.resize(size, false);
             columnTeammateData[i].playerId.resize(size, INVALID_ID);
-            columnTeammateData[i].teammateWorldDistanceToEnemy.resize(size, maxWorldDistance);
+            columnTeammateData[i].teammateWorldDistance.resize(size, maxWorldDistance);
             columnTeammateData[i].crosshairDistanceToTeammate.resize(size, maxCrosshairDistance);
         }
         hitEngagement.resize(size, false);
@@ -78,7 +79,7 @@ namespace csknow::feature_store {
             pctNearestCrosshairEnemy2s[i].resize(size, 0.);
         }
         for (int i = 0; i < numNearestEnemyState; i++) {
-            pctNearestEnemyChange[i].resize(size, 0.);
+            pctNearestEnemyChange2s[i].resize(size, 0.);
         }
         nextPATId2s.resize(size, INVALID_ID);
         valid.resize(size, false);
@@ -143,7 +144,7 @@ namespace csknow::feature_store {
         for (size_t i = 0; i < buffer.engagementTeammateBuffer.size(); i++) {
             int64_t curPlayerId = buffer.engagementTeammateBuffer[i].playerId;
             size_t columnIndex = tEnemies ? buffer.ctPlayerIdToIndex[curPlayerId] : buffer.tPlayerIdToIndex[curPlayerId];
-            columnTeammateData[columnIndex].teammateWorldDistanceToEnemy[rowIndex] =
+            columnTeammateData[columnIndex].teammateWorldDistance[rowIndex] =
                 buffer.engagementTeammateBuffer[i].worldDistanceToTeammate;
             columnTeammateData[columnIndex].crosshairDistanceToTeammate[rowIndex] =
                 buffer.engagementTeammateBuffer[i].crosshairDistanceToTeammateHead;
@@ -167,14 +168,14 @@ namespace csknow::feature_store {
 #pragma omp parallel for
         for (int64_t roundIndex = 0; roundIndex < rounds.size; roundIndex++) {
             TickRates tickRates = computeTickRates(games, rounds, roundIndex);
+            int twoSecondTicks = secondsToDemoTicks(tickRates, 2.);
             // start at end and work backwards to compute future
             std::map<int64_t, std::map<int64_t, int64_t>> nextVisibleTickId;
             std::map<int64_t, std::map<int, int64_t>> playerToEnemyNumToNumTicksNearestCrosshair500ms;
             std::map<int64_t, std::map<int, int64_t>> playerToEnemyNumToNumTicksNearestCrosshair1s;
             std::map<int64_t, std::map<int, int64_t>> playerToEnemyNumToNumTicksNearestCrosshair2s;
             std::map<int64_t, std::map<int64_t, int>> playerToTickToNearestCrosshair;
-            std::map<int64_t, std::map<int64_t, int>> playerToTickToNearestWorldDistanceEnemy;
-            std::map<int64_t, std::map<int64_t, double>> playerToTickToNearestWorldDistance;
+            std::map<int64_t, CircularBuffer<double>> playerToTickToNearestWorldDistance;
             std::map<int64_t, std::map<int64_t, Vec3>> playerToTickToPos;
             std::map<int64_t, std::map<int64_t, Vec2>> playerToTickToViewAngle;
             std::map<int64_t, std::map<int64_t, int64_t>> tickToPlayerToPATId;
@@ -250,8 +251,11 @@ namespace csknow::feature_store {
 
                     // add to rolling trackers
                     playerToTickToNearestCrosshair[curPlayerId][tickIndex] = nearestCrosshairEnemy;
-                    playerToTickToNearestWorldDistanceEnemy[curPlayerId][tickIndex] = nearestWorldDistanceEnemy;
-                    playerToTickToNearestWorldDistance[curPlayerId][tickIndex] = minWorldDistanceToEnemy;
+                    if (playerToTickToNearestWorldDistance.find(curPlayerId) == playerToTickToNearestWorldDistance.end()) {
+                        playerToTickToNearestWorldDistance.insert({curPlayerId,
+                                                                   CircularBuffer<double>(twoSecondTicks)});
+                    }
+                    playerToTickToNearestWorldDistance.at(curPlayerId).enqueue(minWorldDistanceToEnemy);
                     playerToTickToPos[curPlayerId][tickIndex] = {
                         playerAtTick.posX[patIndex], playerAtTick.posY[patIndex], playerAtTick.posZ[patIndex]
                     };
@@ -288,8 +292,6 @@ namespace csknow::feature_store {
                         playerToEnemyNumToNumTicksNearestCrosshair2s[curPlayerId][enemyToDecrease]--;
                         // remove the tick from the specific tick trackers once it's past longest window
                         playerToTickToNearestCrosshair[curPlayerId].erase(removedTick);
-                        playerToTickToNearestWorldDistanceEnemy[curPlayerId].erase(removedTick);
-                        playerToTickToNearestWorldDistance[curPlayerId].erase(removedTick);
                         playerToTickToPos[curPlayerId].erase(removedTick);
                         playerToTickToViewAngle[curPlayerId].erase(removedTick);
                         tickToPlayerToPATId.erase(removedTick);
@@ -355,6 +357,32 @@ namespace csknow::feature_store {
                             //}
                         }
                     }
+
+                    array<size_t, numNearestEnemyState> numNearestEnemyChange{0};
+                    int64_t numNearestWorldDistanceTicks =
+                        playerToTickToNearestWorldDistance.at(curPlayerId).getCurSize();
+                    for (int64_t i = 0; i < numNearestWorldDistanceTicks; i++) {
+                        double futureMinDistance = playerToTickToNearestWorldDistance.at(curPlayerId).fromNewest(i);
+                        if (futureMinDistance < minWorldDistanceToEnemy - nearestEnemyChangeThreshold) {
+                            numNearestEnemyChange[enumAsInt(NearestEnemyState::Decrease)]++;
+                        }
+                        else if (futureMinDistance > minWorldDistanceToEnemy - nearestEnemyChangeThreshold) {
+                            numNearestEnemyChange[enumAsInt(NearestEnemyState::Increase)]++;
+                        }
+                        else {
+                            numNearestEnemyChange[enumAsInt(NearestEnemyState::Constant)]++;
+                        }
+                    }
+                    pctNearestEnemyChange2s[enumAsInt(NearestEnemyState::Decrease)][patIndex] =
+                        static_cast<double>(numNearestEnemyChange[enumAsInt(NearestEnemyState::Decrease)]) /
+                        static_cast<double>(numNearestWorldDistanceTicks);
+                    pctNearestEnemyChange2s[enumAsInt(NearestEnemyState::Increase)][patIndex] =
+                        static_cast<double>(numNearestEnemyChange[enumAsInt(NearestEnemyState::Increase)]) /
+                        static_cast<double>(numNearestWorldDistanceTicks);
+                    pctNearestEnemyChange2s[enumAsInt(NearestEnemyState::Constant)][patIndex] =
+                        static_cast<double>(numNearestEnemyChange[enumAsInt(NearestEnemyState::Constant)]) /
+                        static_cast<double>(numNearestWorldDistanceTicks);
+
                     /*
                     if (tickIndex == 224486 && curPlayerId == 5) {
                         std::cout << "nearestCrosshairEnemy2s " << nearestCrosshairEnemy2s[patIndex]
@@ -434,6 +462,8 @@ namespace csknow::feature_store {
         dst.tickId[dstIndex] = src.tickId[srcIndex];
         dst.patId[dstIndex] = src.patId[srcIndex];
         for (size_t i = 0; i < dst.columnEnemyData.size(); i++) {
+            dst.columnEnemyData[i].playerId[dstIndex] =
+                src.columnEnemyData[i].playerId[srcIndex];
             dst.columnEnemyData[i].enemyEngagementStates[dstIndex] =
                 src.columnEnemyData[i].enemyEngagementStates[srcIndex];
             dst.columnEnemyData[i].timeSinceLastVisibleOrToBecomeVisible[dstIndex] =
@@ -454,6 +484,12 @@ namespace csknow::feature_store {
                 src.columnEnemyData[i].visibleIn5s[srcIndex];
             dst.columnEnemyData[i].visibleIn10s[dstIndex] =
                 src.columnEnemyData[i].visibleIn10s[srcIndex];
+            dst.columnTeammateData[i].playerId[dstIndex] =
+                src.columnTeammateData[i].playerId[srcIndex];
+            dst.columnTeammateData[i].teammateWorldDistance[dstIndex] =
+                src.columnTeammateData[i].teammateWorldDistance[srcIndex];
+            dst.columnTeammateData[i].crosshairDistanceToTeammate[dstIndex] =
+                src.columnTeammateData[i].crosshairDistanceToTeammate[srcIndex];
         }
         dst.hitEngagement[dstIndex] = src.hitEngagement[srcIndex];
         dst.visibleEngagement[dstIndex] = src.visibleEngagement[srcIndex];
@@ -467,6 +503,9 @@ namespace csknow::feature_store {
         dst.negViewAngleOffset2sUpToThreshold[dstIndex] = src.negViewAngleOffset2sUpToThreshold[srcIndex];
         for (size_t i = 0; i < dst.pctNearestCrosshairEnemy2s.size(); i++) {
             dst.pctNearestCrosshairEnemy2s[i][dstIndex] = src.pctNearestCrosshairEnemy2s[i][srcIndex];
+        }
+        for (size_t i = 0; i < dst.pctNearestEnemyChange2s.size(); i++) {
+            dst.pctNearestEnemyChange2s[i][dstIndex] = src.pctNearestEnemyChange2s[i][srcIndex];
         }
         dst.nextPATId2s[dstIndex] = src.nextPATId2s[srcIndex];
         if (dst.nextPATId2s[dstIndex] == 0) {
@@ -542,6 +581,9 @@ namespace csknow::feature_store {
                                columnEnemyData[i].visibleIn5s, hdf5FlatCreateProps);
             file.createDataSet("/data/visible in 10s " + iStr,
                                columnEnemyData[i].visibleIn10s, hdf5FlatCreateProps);
+            file.createDataSet("/data/teammate player id " + iStr, columnTeammateData[i].playerId, hdf5FlatCreateProps);
+            file.createDataSet("/data/teammate world distance " + iStr, columnTeammateData[i].teammateWorldDistance, hdf5FlatCreateProps);
+            file.createDataSet("/data/crosshair distance to teammate " + iStr, columnTeammateData[i].crosshairDistanceToTeammate, hdf5FlatCreateProps);
         }
         file.createDataSet("/data/hit engagement", hitEngagement, hdf5FlatCreateProps);
         file.createDataSet("/data/visible engagement", visibleEngagement, hdf5FlatCreateProps);
@@ -555,6 +597,10 @@ namespace csknow::feature_store {
         for (size_t i = 0; i <= maxEnemies; i++) {
             file.createDataSet("/data/pct nearest crosshair enemy 2s " + std::to_string(i),
                                pctNearestCrosshairEnemy2s[i], hdf5FlatCreateProps);
+        }
+        for (size_t i = 0; i < numNearestEnemyState; i++) {
+            file.createDataSet("/data/pct nearest enemy change 2s " + std::to_string(i),
+                               pctNearestEnemyChange2s[i], hdf5FlatCreateProps);
         }
         file.createDataSet("/data/next player at tick id 2s", nextPATId2s, hdf5FlatCreateProps);
         file.createDataSet("/data/valid", valid, hdf5FlatCreateProps);

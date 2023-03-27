@@ -94,7 +94,7 @@ namespace csknow::feature_store {
         struct ColumnTeammateData {
             vector<int64_t> playerId;
             // inputs
-            vector<double> teammateWorldDistanceToEnemy;
+            vector<double> teammateWorldDistance;
             vector<double> crosshairDistanceToTeammate;
         };
         array<ColumnTeammateData, maxEnemies> columnTeammateData;
@@ -105,7 +105,7 @@ namespace csknow::feature_store {
         // these are just used to create binomial distributions
         vector<double> negPositionOffset2sUpToThreshold, negViewAngleOffset2sUpToThreshold;
         array<vector<double>, maxEnemies+1> pctNearestCrosshairEnemy2s;
-        array<vector<double>, numNearestEnemyState> pctNearestEnemyChange;
+        array<vector<double>, numNearestEnemyState> pctNearestEnemyChange2s;
         vector<int64_t> nextPATId2s;
         vector<bool> valid;
         bool training;
