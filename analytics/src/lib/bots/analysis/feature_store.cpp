@@ -78,7 +78,7 @@ namespace csknow::feature_store {
         for (int i = 0; i <= maxEnemies; i++) {
             pctNearestCrosshairEnemy2s[i].resize(size, 0.);
         }
-        for (int i = 0; i < numNearestEnemyState; i++) {
+        for (size_t i = 0; i < numNearestEnemyState; i++) {
             pctNearestEnemyChange2s[i].resize(size, 0.);
         }
         nextPATId2s.resize(size, INVALID_ID);
@@ -216,7 +216,6 @@ namespace csknow::feature_store {
                     double minCrosshairDistanceToEnemy = maxCrosshairDistance;
                     int nearestCrosshairEnemy = maxEnemies;
                     double minWorldDistanceToEnemy = maxWorldDistance;
-                    int nearestWorldDistanceEnemy = maxEnemies;
                     for (size_t columnIndex = 0; columnIndex < maxEnemies; columnIndex++) {
                         int64_t enemyPlayerId = columnEnemyData[columnIndex].playerId[patIndex];
                         validEnemyNums[columnIndex] = enemyPlayerId != INVALID_ID;
@@ -244,7 +243,6 @@ namespace csknow::feature_store {
                                 columnEnemyData[columnIndex].crosshairDistanceToEnemy[patIndex];
                         }
                         if (columnEnemyData[columnIndex].worldDistanceToEnemy[patIndex] < minWorldDistanceToEnemy) {
-                            nearestWorldDistanceEnemy = columnIndex;
                             minWorldDistanceToEnemy =
                                 columnEnemyData[columnIndex].worldDistanceToEnemy[patIndex];
                         }
