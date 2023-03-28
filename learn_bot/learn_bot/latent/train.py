@@ -9,7 +9,7 @@ from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 
 from learn_bot.latent.aggression.column_names import aggression_input_column_types, aggression_output_column_types
-from learn_bot.latent.aggression.latent_to_distributions import get_aggression_distributions
+from learn_bot.latent.aggression.latent_to_distributions import get_aggression_distributions, num_aggression_options
 from learn_bot.latent.dataset import *
 from learn_bot.latent.engagement.column_names import round_id_column, engagement_input_column_types, engagement_output_column_types
 from learn_bot.latent.engagement.latent_to_distributions import get_engagement_target_distributions, num_target_options
@@ -84,7 +84,7 @@ def train(train_type: TrainType, all_data_df: pd.DataFrame, num_epochs: int,
     else:
         column_transformers = IOColumnTransformers(aggression_input_column_types, aggression_output_column_types,
                                                    train_df)
-        model = MLPHiddenLatentModel(column_transformers, num_target_options, get_aggression_distributions).to(
+        model = MLPHiddenLatentModel(column_transformers, num_aggression_options, get_aggression_distributions).to(
             device)
     #model = MLPLatentModel(column_transformers).to(device)
     #model = LSTMLatentModel(column_transformers).to(device)
