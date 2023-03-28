@@ -108,6 +108,12 @@ namespace csknow::behavior_tree_latent_states {
                 }
                  */
 
+                std::set<int64_t> firingPlayers;
+                for (const auto & [_0, _1, fireIndex] :
+                    ticks.weaponFirePerTick.intervalToEvent.findOverlapping(tickIndex, tickIndex)) {
+                    firingPlayers.insert(weaponFire.shooter[fireIndex]);
+                }
+
                 map<int64_t, int64_t> playerToACausalTarget;
                 for (const auto & [_0, _1, engagementIndex] :
                     acausalEngagementResult.engagementsPerTick.intervalToEvent.findOverlapping(tickIndex, tickIndex)) {
@@ -137,6 +143,10 @@ namespace csknow::behavior_tree_latent_states {
                     CSGOId curPlayerId = playerAtTick.playerId[patIndex];
                     if (playerAtTick.isAlive[patIndex]) {
                         playerQueryNode.exec(curState, blackboard.playerToTreeThinkers[curPlayerId]);
+
+                        if (firingPlayers.find(curPlayerId) != firingPlayers.end()) {
+                            featureStoreResult.fireCurTick[patIndex] = true;
+                        }
 
                         bool prevActiveEngagement =
                             activeEngagementState.find(curPlayerId) != activeEngagementState.end();

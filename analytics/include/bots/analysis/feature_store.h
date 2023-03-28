@@ -32,7 +32,7 @@ namespace csknow::feature_store {
     constexpr double maxPositionDelta = 150.;
     constexpr double maxViewAngleDelta = 15.;
     constexpr size_t windowSize = 10;
-    constexpr double nearestEnemyChangeThreshold = 32.;
+    constexpr double nearestEnemyChangeThreshold = 1.;
     struct EngagementPossibleEnemy {
         CSGOId playerId;
         EngagementEnemyState enemyState;
@@ -98,6 +98,7 @@ namespace csknow::feature_store {
             vector<double> crosshairDistanceToTeammate;
         };
         array<ColumnTeammateData, maxEnemies> columnTeammateData;
+        vector<bool> fireCurTick;
         vector<bool> hitEngagement;
         vector<bool> visibleEngagement;
         vector<int> nearestCrosshairCurTick, nearestCrosshairEnemy500ms, nearestCrosshairEnemy1s, nearestCrosshairEnemy2s;
@@ -105,6 +106,7 @@ namespace csknow::feature_store {
         // these are just used to create binomial distributions
         vector<double> negPositionOffset2sUpToThreshold, negViewAngleOffset2sUpToThreshold;
         array<vector<double>, maxEnemies+1> pctNearestCrosshairEnemy2s;
+        vector<double> visibleEnemy2s, negVisibleEnemy2s, fireNext2s, negFireNext2s;
         array<vector<double>, numNearestEnemyState> pctNearestEnemyChange2s;
         vector<int64_t> nextPATId2s;
         vector<bool> valid;
