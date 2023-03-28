@@ -599,7 +599,7 @@ namespace csknow::feature_store {
         }
         vector<string> nearestEnemyStateNames{"decrease", "constant", "increase"};
         for (size_t i = 0; i < numNearestEnemyState; i++) {
-            file.createDataSet("/data/pct nearest enemy change 2s " + std::to_string(i),
+            file.createDataSet("/data/pct nearest enemy change 2s " + nearestEnemyStateNames[i],
                                pctNearestEnemyChange2s[i], hdf5FlatCreateProps);
         }
         file.createDataSet("/data/next player at tick id 2s", nextPATId2s, hdf5FlatCreateProps);
