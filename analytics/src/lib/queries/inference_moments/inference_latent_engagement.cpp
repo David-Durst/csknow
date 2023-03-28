@@ -32,7 +32,7 @@ namespace csknow::inference_latent_engagement {
         const string & modelsDir, const Rounds & rounds, const Ticks & ticks,
         const csknow::behavior_tree_latent_states::BehaviorTreeLatentStates & behaviorTreeLatentStates) {
         fs::path modelPath = fs::path(modelsDir) / fs::path("latent_model") /
-                             fs::path("script_model.pt");
+                             fs::path("engagement_script_model.pt");
 
         torch::jit::getProfilingMode() = false;
         torch::jit::script::Module module;
@@ -45,9 +45,6 @@ namespace csknow::inference_latent_engagement {
             std::cerr << "error loading latent model\n";
             return;
         }
-
-        at::set_num_threads(1);
-        at::set_num_interop_threads(1);
 
         std::atomic<int64_t> roundsProcessed = 0;
 

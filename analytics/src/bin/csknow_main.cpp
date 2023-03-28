@@ -39,6 +39,7 @@
 #include "queries/training_moments/training_engagement_aim.h"
 #include "queries/inference_moments/inference_engagement_aim.h"
 #include "queries/inference_moments/inference_latent_engagement.h"
+#include "queries/inference_moments/inference_latent_aggression.h"
 #include "queries/training_moments/training_navigation.h"
 #include "queries/moments/trajectory_segments.h"
 #include "queries/moments/latent_extractors/latent_engagement.h"
@@ -327,11 +328,21 @@ int main(int argc, char * argv[]) {
     std::cout << "size: " << latentEngagementResult.size << std::endl;
 
     // inference latent engagement
+    at::set_num_threads(1);
+    at::set_num_interop_threads(1);
+
     string inferenceLatentEngagementName = "inferenceLatentEngagement";
     std::cout << "processing inference latent engagements" << std::endl;
     csknow::inference_latent_engagement::InferenceLatentEngagementResult inferenceLatentEngagementResult(playerAtTick);
     inferenceLatentEngagementResult.runQuery(modelsDir, filteredRounds, ticks, behaviorTreeLatentEvents);
     std::cout << "size: " << inferenceLatentEngagementResult.size << std::endl;
+
+    // inference latent aggression
+    string inferenceLatentAggressionName = "inferenceLatentAggression";
+    std::cout << "processing inference latent aggression" << std::endl;
+    csknow::inference_latent_aggression::InferenceLatentAggressionResult inferenceLatentAggressionResult(playerAtTick);
+    inferenceLatentEngagementResult.runQuery(modelsDir, filteredRounds, ticks, behaviorTreeLatentEvents);
+    std::cout << "size: " << inferenceLatentAggressionResult.size << std::endl;
     /*
     string inferenceLatentEngagementHitName = "inferenceLatentEngagementHit";
     std::cout << "processing inference latent engagements hit" << std::endl;
