@@ -548,6 +548,10 @@ namespace csknow::feature_store {
         for (size_t i = 0; i < dst.pctNearestCrosshairEnemy2s.size(); i++) {
             dst.pctNearestCrosshairEnemy2s[i][dstIndex] = src.pctNearestCrosshairEnemy2s[i][srcIndex];
         }
+        dst.fireNext2s[dstIndex] = src.fireNext2s[srcIndex];
+        dst.negFireNext2s[dstIndex] = src.negFireNext2s[srcIndex];
+        dst.visibleEnemy2s[dstIndex] = src.visibleEnemy2s[srcIndex];
+        dst.negVisibleEnemy2s[dstIndex] = src.negVisibleEnemy2s[srcIndex];
         for (size_t i = 0; i < dst.pctNearestEnemyChange2s.size(); i++) {
             dst.pctNearestEnemyChange2s[i][dstIndex] = src.pctNearestEnemyChange2s[i][srcIndex];
         }
@@ -642,10 +646,10 @@ namespace csknow::feature_store {
             file.createDataSet("/data/pct nearest crosshair enemy 2s " + std::to_string(i),
                                pctNearestCrosshairEnemy2s[i], hdf5FlatCreateProps);
         }
-        file.createDataSet("/data/visible enemy 2s", positionOffset2sUpToThreshold, hdf5FlatCreateProps);
-        file.createDataSet("/data/neg visible enemy 2s", positionOffset2sUpToThreshold, hdf5FlatCreateProps);
-        file.createDataSet("/data/fire next 2s", positionOffset2sUpToThreshold, hdf5FlatCreateProps);
-        file.createDataSet("/data/neg fire next 2s", positionOffset2sUpToThreshold, hdf5FlatCreateProps);
+        file.createDataSet("/data/visible enemy 2s", visibleEnemy2s, hdf5FlatCreateProps);
+        file.createDataSet("/data/neg visible enemy 2s", negVisibleEnemy2s, hdf5FlatCreateProps);
+        file.createDataSet("/data/fire next 2s", fireNext2s, hdf5FlatCreateProps);
+        file.createDataSet("/data/neg fire next 2s", negFireNext2s, hdf5FlatCreateProps);
         vector<string> nearestEnemyStateNames{"decrease", "constant", "increase"};
         for (size_t i = 0; i < numNearestEnemyState; i++) {
             file.createDataSet("/data/pct nearest enemy change 2s " + nearestEnemyStateNames[i],
