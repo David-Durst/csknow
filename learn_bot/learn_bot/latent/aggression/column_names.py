@@ -28,6 +28,10 @@ def get_ith_teammate_columns(i: int) -> TeammateColumns:
 
 change_options = ["decrease", "constant", "increase"]
 
+fire_next_2s_column = "fire next 2s"
+neg_fire_next_2s_column = "neg fire next 2s"
+visible_enemy_next_2s_column = "visible enemy 2s"
+neg_visible_enemy_next_2s_column = "neg visible enemy 2s"
 pct_nearest_enemy_change_2s_columns = ["pct nearest enemy change 2s " +
                                        change_option for change_option in change_options]
 
@@ -42,4 +46,6 @@ aggression_input_column_types = get_simplified_column_types(flat_input_float_spe
 #output_column_types = get_simplified_column_types([], flat_output_cat_columns, flat_output_num_options,
 #                                                  flat_output_cat_distribution_columns)
 aggression_output_column_types = get_simplified_column_types([], [], [],
-                                                             [pct_nearest_enemy_change_2s_columns])
+                                                             [[fire_next_2s_column, neg_fire_next_2s_column],
+                                                              [visible_enemy_next_2s_column, neg_visible_enemy_next_2s_column],
+                                                              pct_nearest_enemy_change_2s_columns])
