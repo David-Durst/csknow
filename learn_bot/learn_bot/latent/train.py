@@ -87,7 +87,7 @@ def train(train_type: TrainType, all_data_df: pd.DataFrame, num_epochs: int,
 
     # plot data set with and without transformers
     #plot_untransformed_and_transformed(plot_path, 'train and test labels', all_data_df,
-    #                                   input_column_types.float_standard_cols,
+    #                                   input_column_types.float_standard_cols + output_column_types.categorical_distribution_cols_flattened,
     #                                   input_column_types.categorical_cols + output_column_types.categorical_cols)
     #model = MLPLatentModel(column_transformers).to(device)
     #model = LSTMLatentModel(column_transformers).to(device)
