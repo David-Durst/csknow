@@ -63,7 +63,7 @@ namespace csknow::feature_store {
             columnEnemyData[i].visibleIn10s.resize(size, false);
             columnTeammateData[i].playerId.resize(size, INVALID_ID);
             columnTeammateData[i].teammateWorldDistance.resize(size, maxWorldDistance);
-            columnTeammateData[i].crosshairDistanceToTeammate.resize(size, maxCrosshairDistance);
+            columnTeammateData[i].crosshairDistanceToTeammate.resize(size, maxTeammateCrosshairDistance);
         }
         fireCurTick.resize(size, false);
         hitEngagement.resize(size, false);
@@ -148,7 +148,11 @@ namespace csknow::feature_store {
 
         for (size_t i = 0; i < buffer.engagementTeammateBuffer.size(); i++) {
             int64_t curPlayerId = buffer.engagementTeammateBuffer[i].playerId;
+            if (i == 0 && buffer.ctPlayerIdToIndex.find(curPlayerId) != buffer.ctPlayerIdToIndex.end()) {
+                tEnemies = true;
+            }
             size_t columnIndex = tEnemies ? buffer.ctPlayerIdToIndex[curPlayerId] : buffer.tPlayerIdToIndex[curPlayerId];
+            //std::cout << "teammate id " << curPlayerId << " column index " << columnIndex << std::endl;
             columnTeammateData[columnIndex].teammateWorldDistance[rowIndex] =
                 buffer.engagementTeammateBuffer[i].worldDistanceToTeammate;
             columnTeammateData[columnIndex].crosshairDistanceToTeammate[rowIndex] =
@@ -275,7 +279,7 @@ namespace csknow::feature_store {
                         playerToTickToVisibleEnemy2s.insert({curPlayerId,
                                                          CircularBuffer<double>(twoSecondTicks)});
                     }
-                    playerToTickToFireNext2s.at(curPlayerId).enqueue(visibleEnemyThisFrame ? 1. : 0.);
+                    playerToTickToVisibleEnemy2s.at(curPlayerId).enqueue(visibleEnemyThisFrame ? 1. : 0.);
 
                     playerToTickToPos[curPlayerId][tickIndex] = {
                         playerAtTick.posX[patIndex], playerAtTick.posY[patIndex], playerAtTick.posZ[patIndex]

@@ -29,6 +29,7 @@ namespace csknow::feature_store {
     constexpr double maxTimeToVis = 100.;
     constexpr double maxWorldDistance = 4000.;
     constexpr double maxCrosshairDistance = 30.;
+    constexpr double maxTeammateCrosshairDistance = 180.;
     constexpr double maxPositionDelta = 150.;
     constexpr double maxViewAngleDelta = 15.;
     constexpr size_t windowSize = 10;

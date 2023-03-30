@@ -164,6 +164,7 @@ public:
                 continue;
             }
             csknow::feature_store::EngagementTeammate engagementTeammate{};
+            engagementTeammate.playerId = teammateId;
             setTeammateDistances(curClient.getEyePosForPlayer(), curClient.getCurrentViewAngles(),
                                       teammateClient.getEyePosForPlayer(), teammateClient.getCurrentViewAngles(),
                                       teammateClient.duckAmount, engagementTeammate);
