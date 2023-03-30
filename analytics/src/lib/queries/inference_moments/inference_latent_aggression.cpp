@@ -126,7 +126,7 @@ namespace csknow::inference_latent_aggression {
 
                     // if new engagement and no old engagement, just add to tracker
                     if (oldAggressionToWrite) {
-                        //std::cout << "writing latent engagement" << std::endl;
+                        //std::cout << "writing latent aggression" << std::endl;
                         finishAggression(tmpStartTickId, tmpEndTickId,
                                          tmpLength, tmpPlayerId,
                                          tmpRole, tickIndex,
@@ -134,7 +134,7 @@ namespace csknow::inference_latent_aggression {
                         playerToActiveAggression.erase(curPlayerId);
                     }
                     if (playerToActiveAggression.find(curPlayerId) == playerToActiveAggression.end()) {
-                        //std::cout << "starting latent engagement" << std::endl;
+                        //std::cout << "starting latent aggression" << std::endl;
                         playerToActiveAggression[curPlayerId] = {
                             curPlayerId, tickIndex, mostLikelyAggression
                         };

@@ -386,12 +386,19 @@ namespace csknow::feature_store {
                     array<size_t, numNearestEnemyState> numNearestEnemyChange{0};
                     int64_t numNearestWorldDistanceTicks =
                         playerToTickToNearestWorldDistance.at(curPlayerId).getCurSize();
+                    /*
+                    if (numNearestWorldDistanceTicks == 1 && curPlayerId == 0 && roundIndex == 2) {
+                        std::cout << "first tick: " << tickIndex << " for player " << curPlayerId <<
+                            " num nearest ticks " << numNearestWorldDistanceTicks << " max size " << playerToTickToNearestWorldDistance.at(curPlayerId).maxSize() << " distance "
+                            << playerToTickToNearestWorldDistance.at(curPlayerId).fromNewest(0) << std::endl;
+                    }
+                     */
                     for (int64_t i = 0; i < numNearestWorldDistanceTicks; i++) {
                         double futureMinDistance = playerToTickToNearestWorldDistance.at(curPlayerId).fromNewest(i);
                         if (futureMinDistance < minWorldDistanceToEnemy - nearestEnemyChangeThreshold) {
                             numNearestEnemyChange[enumAsInt(NearestEnemyState::Decrease)]++;
                         }
-                        else if (futureMinDistance > minWorldDistanceToEnemy - nearestEnemyChangeThreshold) {
+                        else if (futureMinDistance > minWorldDistanceToEnemy + nearestEnemyChangeThreshold) {
                             numNearestEnemyChange[enumAsInt(NearestEnemyState::Increase)]++;
                         }
                         else {

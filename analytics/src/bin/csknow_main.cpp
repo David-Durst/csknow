@@ -341,7 +341,7 @@ int main(int argc, char * argv[]) {
     string inferenceLatentAggressionName = "inferenceLatentAggression";
     std::cout << "processing inference latent aggression" << std::endl;
     csknow::inference_latent_aggression::InferenceLatentAggressionResult inferenceLatentAggressionResult(playerAtTick);
-    inferenceLatentEngagementResult.runQuery(modelsDir, filteredRounds, ticks, behaviorTreeLatentEvents);
+    inferenceLatentAggressionResult.runQuery(modelsDir, filteredRounds, ticks, behaviorTreeLatentEvents);
     std::cout << "size: " << inferenceLatentAggressionResult.size << std::endl;
     /*
     string inferenceLatentEngagementHitName = "inferenceLatentEngagementHit";
@@ -554,6 +554,7 @@ int main(int argc, char * argv[]) {
             {trajectorySegmentName, trajectorySegmentResult},
             {latentEngagementName, latentEngagementResult},
             {inferenceLatentEngagementName, inferenceLatentEngagementResult},
+            {inferenceLatentAggressionName, inferenceLatentAggressionResult},
             //{inferenceLatentEngagementHitName, inferenceLatentEngagementHitResult},
             //{inferenceLatentEngagementVisibleName, inferenceLatentEngagementVisibleResult},
             //{queryNames[5], aCatClusterSequence},
