@@ -64,12 +64,6 @@ def train(train_type: TrainType, all_data_df: pd.DataFrame, num_epochs: int,
         train_group_ids = list(all_data_df.loc[:, round_id_column].unique())
         test_df = all_data_df
 
-
-    # plot data set with and without transformers
-    #plot_untransformed_and_transformed(plot_path, 'train and test labels', all_data_df,
-    #                                   input_column_types.float_standard_cols,
-    #                                   input_column_types.categorical_cols + output_column_types.categorical_cols)
-
     # Get cpu or gpu device for training.
     device: str = CUDA_DEVICE_STR if torch.cuda.is_available() else CPU_DEVICE_STR
     # device = CPU_DEVICE_STR
@@ -81,11 +75,20 @@ def train(train_type: TrainType, all_data_df: pd.DataFrame, num_epochs: int,
         column_transformers = IOColumnTransformers(engagement_input_column_types, engagement_output_column_types,
                                                    train_df)
         model = MLPHiddenLatentModel(column_transformers, num_target_options, get_engagement_target_distributions).to(device)
+        input_column_types = engagement_input_column_types
+        output_column_types = engagement_output_column_types
     else:
         column_transformers = IOColumnTransformers(aggression_input_column_types, aggression_output_column_types,
                                                    train_df)
         model = MLPHiddenLatentModel(column_transformers, num_aggression_options, get_aggression_distributions).to(
             device)
+        input_column_types = aggression_input_column_types
+        output_column_types = aggression_output_column_types
+
+    # plot data set with and without transformers
+    #plot_untransformed_and_transformed(plot_path, 'train and test labels', all_data_df,
+    #                                   input_column_types.float_standard_cols,
+    #                                   input_column_types.categorical_cols + output_column_types.categorical_cols)
     #model = MLPLatentModel(column_transformers).to(device)
     #model = LSTMLatentModel(column_transformers).to(device)
 
@@ -214,3 +217,7 @@ if __name__ == "__main__":
     train_result = train(TrainType.Aggression, all_data_df, num_epochs=1, windowed=False)
 
 # all_data_df[((all_data_df['pct nearest crosshair enemy 2s 0'] + all_data_df['pct nearest crosshair enemy 2s 1'] + all_data_df['pct nearest crosshair enemy 2s 2'] + all_data_df['pct nearest crosshair enemy 2s 3'] + all_data_df['pct nearest crosshair enemy 2s 4'] + all_data_df['pct nearest crosshair enemy 2s 5']) < 0.9) & (all_data_df['valid'] == 1)]
+# all_data_df[(all_data_df['pct nearest enemy change 2s decrease'] + all_data_df['pct nearest enemy change 2s constant'] + all_data_df['pct nearest enemy change 2s increase'] < 0.9) & (all_data_df['valid'] == 1)]
+# all_data_df[(all_data_df['pct nearest enemy change 2s decrease'] + all_data_df['pct nearest enemy change 2s constant'] > 0.1) & (all_data_df['valid'] == 1)]
+# all_data_df[(all_data_df['fire next 2s'] + all_data_df['neg fire next 2s'] < 0.9) & (all_data_df['valid'] == 1)]
+# all_data_df[(all_data_df['visible enemy 2s'] + all_data_df['neg visible enemy 2s'] < 0.9) & (all_data_df['valid'] == 1)]

@@ -37,7 +37,7 @@ pct_nearest_enemy_change_2s_columns = ["pct nearest enemy change 2s " +
 
 specific_teammate_columns: list[TeammateColumns] = [get_ith_teammate_columns(i) for i in range(max_enemies)]
 flat_input_float_specific_teammate_columns: list[str] = \
-    [col for cols in specific_enemy_columns for col in cols.to_input_float_list()]
+    [col for cols in specific_teammate_columns for col in cols.to_input_float_list()]
 
 aggression_input_column_types = get_simplified_column_types(flat_input_float_specific_enemy_columns +
                                                             flat_input_float_specific_teammate_columns,
