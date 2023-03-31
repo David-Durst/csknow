@@ -1,3 +1,5 @@
+from typing import Callable
+
 from torch.utils.tensorboard import SummaryWriter
 
 from learn_bot.latent.dataset import *
@@ -42,7 +44,8 @@ class LatentLosses:
 
 
 # https://discuss.pytorch.org/t/how-to-combine-multiple-criterions-to-a-loss-function/348/4
-def compute_loss(x, pred, y_transformed, y_untransformed, column_transformers: IOColumnTransformers):
+def compute_loss(x, pred, y_transformed, y_untransformed, column_transformers: IOColumnTransformers,
+                 latent_to_prob: Callable):
     x = x.to(CPU_DEVICE_STR)
     pred_transformed = get_transformed_outputs(pred)
     pred_transformed = pred_transformed.to(CPU_DEVICE_STR)
@@ -60,8 +63,7 @@ def compute_loss(x, pred, y_transformed, y_untransformed, column_transformers: I
 
     if column_transformers.output_types.categorical_distribution_cols:
         col_ranges = column_transformers.get_name_ranges(False, True, frozenset({ColumnTransformerType.CATEGORICAL_DISTRIBUTION}))
-        for i, col_range in enumerate(col_ranges):
-            losses.cat_loss += base_classification_loss_fn(pred_untransformed[:, col_range], y_untransformed[:, col_range])
+        losses.cat_loss += latent_to_prob(pred_transformed, y_transformed, col_ranges)
     return losses
 
 

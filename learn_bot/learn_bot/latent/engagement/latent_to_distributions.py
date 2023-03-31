@@ -1,3 +1,5 @@
+from typing import List
+
 import torch
 
 num_target_options = 6
@@ -10,3 +12,16 @@ def get_engagement_target_distributions(latent_tensor: torch.Tensor):
     nearest_enemy_distribution = latent_tensor
     return torch.concat([position_distribution, aim_distribution, nearest_enemy_distribution], dim=1)
 
+def get_engagement_probability(latent_tensor: torch.Tensor, observation: torch.Tensor, col_ranges: List[range]):
+    position_prob = torch.concat(
+        [latent_tensor[:, [num_target_options-1]] * observation[:, [col_ranges[0][0]]],
+         latent_tensor[:, 0:num_target_options-1] * observation[:, [col_ranges[0][1] for _ in range(num_target_options-1)]]],
+        dim=1)
+    aim_prob = torch.concat(
+        [latent_tensor[:, [num_target_options-1]] * observation[:, [col_ranges[1][0]]],
+         latent_tensor[:, 0:num_target_options-1] * observation[:, [col_ranges[1][1] for _ in range(num_target_options-1)]]],
+        dim=1)
+    nearest_enemy_change = latent_tensor * observation[:, col_ranges[2]]
+    # add 0.001 so that no probs are 0
+    return -1 * \
+        torch.sum(torch.log(0.001 + torch.concat([position_prob, aim_prob, nearest_enemy_change], dim=1)))

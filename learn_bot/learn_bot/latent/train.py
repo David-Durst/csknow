@@ -9,10 +9,12 @@ from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 
 from learn_bot.latent.aggression.column_names import aggression_input_column_types, aggression_output_column_types
-from learn_bot.latent.aggression.latent_to_distributions import get_aggression_distributions, num_aggression_options
+from learn_bot.latent.aggression.latent_to_distributions import get_aggression_distributions, num_aggression_options, \
+    get_aggression_probability
 from learn_bot.latent.dataset import *
 from learn_bot.latent.engagement.column_names import round_id_column, engagement_input_column_types, engagement_output_column_types
-from learn_bot.latent.engagement.latent_to_distributions import get_engagement_target_distributions, num_target_options
+from learn_bot.latent.engagement.latent_to_distributions import get_engagement_target_distributions, num_target_options, \
+    get_engagement_probability
 from learn_bot.latent.lstm_latent_model import LSTMLatentModel
 from learn_bot.latent.mlp_hidden_latent_model import MLPHiddenLatentModel
 from learn_bot.latent.mlp_latent_model import MLPLatentModel
@@ -77,6 +79,7 @@ def train(train_type: TrainType, all_data_df: pd.DataFrame, num_epochs: int,
         model = MLPHiddenLatentModel(column_transformers, num_target_options, get_engagement_target_distributions).to(device)
         input_column_types = engagement_input_column_types
         output_column_types = engagement_output_column_types
+        prob_func = get_engagement_probability
     else:
         column_transformers = IOColumnTransformers(aggression_input_column_types, aggression_output_column_types,
                                                    train_df)
@@ -84,6 +87,7 @@ def train(train_type: TrainType, all_data_df: pd.DataFrame, num_epochs: int,
             device)
         input_column_types = aggression_input_column_types
         output_column_types = aggression_output_column_types
+        prob_func = get_aggression_probability
 
     # plot data set with and without transformers
     #plot_untransformed_and_transformed(plot_path, 'train and test labels', all_data_df,
@@ -133,7 +137,7 @@ def train(train_type: TrainType, all_data_df: pd.DataFrame, num_epochs: int,
 
                 # Compute prediction error
                 pred = model(X)
-                batch_loss = compute_loss(X, pred, transformed_Y, Y, column_transformers)
+                batch_loss = compute_loss(X, pred, transformed_Y, Y, column_transformers, prob_func)
                 cumulative_loss += batch_loss
 
                 # Backpropagation
