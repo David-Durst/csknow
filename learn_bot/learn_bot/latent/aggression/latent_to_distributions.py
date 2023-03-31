@@ -22,7 +22,7 @@ def get_aggression_probability(latent_tensor: torch.Tensor, observation: torch.T
          latent_tensor[:, [1]] * observation[:, [col_ranges[1][1]]],
          latent_tensor[:, [2]] * observation[:, [col_ranges[1][1]]]],
         dim=1)
-    nearest_enemy_change = latent_tensor * observation[:, col_ranges]
+    nearest_enemy_change = latent_tensor * observation[:, col_ranges[2]]
     #
     # add 0.001 so that no probs are 0
     return -1 * \
