@@ -48,7 +48,7 @@ public:
         startTickColumn = 0;
         perEventLengthColumn = 2;
         havePlayerLabels = true;
-        playerLabels = {"A", "V"};
+        playerLabels = {"A", "T"};
         playersToLabelColumn = 0;
         playerLabelIndicesColumn = 1;
     }
