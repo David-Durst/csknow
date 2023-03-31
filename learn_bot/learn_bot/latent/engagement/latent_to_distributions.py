@@ -18,10 +18,10 @@ def get_engagement_probability(latent_tensor: torch.Tensor, observation: torch.T
     #     latent_tensor[:, 0:num_target_options-1] * observation[:, [col_ranges[0][1] for _ in range(num_target_options-1)]]],
     #    dim=1)
     aim_prob = torch.concat(
-        [latent_tensor[:, [num_target_options-1]] * observation[:, [col_ranges[0][0]]],
-         latent_tensor[:, 0:num_target_options-1] * observation[:, [col_ranges[0][1] for _ in range(num_target_options-1)]]],
+        [latent_tensor[:, [num_target_options-1]] * observation[:, [col_ranges[1][0]]],
+         latent_tensor[:, 0:num_target_options-1] * observation[:, [col_ranges[1][1] for _ in range(num_target_options-1)]]],
         dim=1)
-    nearest_enemy_change = latent_tensor * observation[:, col_ranges[1]]
+    nearest_enemy_change = latent_tensor * observation[:, col_ranges[2]]
     # add 0.001 so that no probs are 0
     return -1 * \
         torch.sum(torch.log(0.001 + torch.concat([aim_prob, nearest_enemy_change], dim=1)))
