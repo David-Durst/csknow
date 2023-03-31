@@ -70,6 +70,7 @@ namespace csknow::latent_engagement {
                             tmpHurtIds[threadNum].push_back({});
                         }
 
+                        /*
                         if (hurtAttackerAndVictimToHurtId.find({engagementStatePayload.sourceId, engagementStatePayload.targetId}) !=
                             hurtAttackerAndVictimToHurtId.end()) {
                             int64_t tmpIndex = latentEventIndexToTmpEngagementIndex[latentEventIndex];
@@ -77,6 +78,7 @@ namespace csknow::latent_engagement {
                             tmpHurtIds[threadNum][tmpIndex].push_back(
                                 hurtAttackerAndVictimToHurtId[{engagementStatePayload.sourceId, engagementStatePayload.targetId}]);
                         }
+                         */
                     }
 
                 }
