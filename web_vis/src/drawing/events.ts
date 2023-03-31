@@ -45,7 +45,7 @@ export function getPlayersText(tickData: TickRow, gameData: GameData): Map<numbe
     const players: PlayerAtTickRow[] = gameData.getPlayersAtTick(tickData)
     // if no event, do nothing special
     if (curEvent == "none" || !index.intersect_any([tickData.id, tickData.id]) ||
-        !gameData.parsers.get(curEvent).havePlayerLabels) {
+        !gameData.parsers.get(curEvent).havePlayerLabels || selectedEventId == -2) {
         for (let p = 0; p < players.length; p++) {
             result.set(players[p].playerId, basicPlayerText(gameData, tickData, p))
         }
@@ -58,7 +58,9 @@ export function getPlayersText(tickData: TickRow, gameData: GameData): Map<numbe
     const eventsForTick = index.search([tickData.id, tickData.id])
 
     // default value for active event
-    activeEvent = eventArray[Math.min(...eventsForTick)]
+    if (selectedEventId == INVALID_ID) {
+        activeEvent = eventArray[Math.min(...eventsForTick)]
+    }
     // use selected to override if that set, or prior is that is set as backup
     // see updateEventId for how selectEventId is set
     if (selectedEventId != INVALID_ID) {
@@ -168,6 +170,9 @@ function toggleMouseZoom() {
     drawTick(null)
 }
 
+let playerToEventIndex: Map<number, number> = new Map()
+let lastEvent = ""
+
 export function updateEventIdAndSelector(tickData: TickRow) {
     const parser = gameData.parsers.get(curEvent)
     if (curEvent == "none" || !parser.havePlayerLabels) {
@@ -181,27 +186,32 @@ export function updateEventIdAndSelector(tickData: TickRow) {
     else {
         eventIdLabel.style.display = "inline"
         eventIdSelector.style.display = "inline-block"
-        eventIdSelector.options.length = 0
-        eventIdSelector.options.add(new Option("default", "-1"))
         const index = getTickToOtherTableIndex(gameData, curEvent)
         const eventArray = gameData.tables.get(curEvent)
         const eventsForTick = index.search([tickData.id, tickData.id])
-        // default to non-valid eventId index
-        let eventIdIndex = 0
+        let newPlayersTable = gameData.playersTable.length > 0 &&
+            !playerToEventIndex.has(gameData.playersTable[0].gameId)
+        if (eventIdSelector.options.length == 0 || newPlayersTable || curEvent != lastEvent) {
+            lastEvent = curEvent
+            eventIdSelector.options.length = 0
+            eventIdSelector.options.add(new Option("default", "-1"))
+            for (let i = 0 ; i < gameData.playersTable.length; i++) {
+                eventIdSelector.options.add(new Option(
+                    gameData.playersTable[i].name + "(" + gameData.playersTable[i].id.toString() + ")", "-2"))
+                playerToEventIndex.set(gameData.playersTable[i].id, i + 1)
+            }
+        }
+        for (let i = 1; i < eventIdSelector.length; i++) {
+            eventIdSelector.options[i].value = "-2"
+        }
         for (let i = 0; i < eventsForTick.length; i++) {
             const curEventRow = eventArray[eventsForTick[i]]
-            if (curEventRow.id == selectedEventId) {
-                // plus 1 as need to account for default value
-                eventIdIndex = i + 1
-            }
             let eventName = curEventRow.otherColumnValues[parser.playersToLabelColumn]
-            eventIdSelector.options.add(new Option(eventName, curEventRow.id.toString()))
+            let sourcePlayerId = parseInt(eventName.split(";")[0])
+            eventIdSelector.options[playerToEventIndex.get(sourcePlayerId)].value = curEventRow.id.toString()
         }
-        eventIdSelector.selectedIndex = eventIdIndex
         // if old selected event id no longer value, just go with default setting
-        if (eventIdIndex == 0) {
-            selectedEventId = INVALID_ID
-        }
+        selectedEventId = parseInt(eventIdSelector.value)
         if (parser.havePerTickAimTable) {
             mouseDataDisplayButton.style.display = "inline-block"
         }

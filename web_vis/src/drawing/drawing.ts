@@ -76,7 +76,6 @@ const smoke_gray = "rgba(200, 200, 200, 0.4)"
 const smokeGrenadeImg = new Image()
 smokeGrenadeImg.src = "vis_images/smoke_grenade.png"
 function getFlashColor(alpha: number): string {
-    console.log(`alpha: ${alpha}`)
     return `rgba(255, 255, 255, ${alpha})`
 }
 
