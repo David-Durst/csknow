@@ -72,6 +72,8 @@ public:
     int playersToLabelColumn = 0;
     int playerLabelIndicesColumn = 0;
     vector<string> playerLabels;
+    bool perTickPlayerLabels = false;
+    string perTickPlayerLabelsQuery = "";
     bool havePerTickAimTable = false;
     string perTickAimTable;
     bool havePerTickAimPredictionTable = false;

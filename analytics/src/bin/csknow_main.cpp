@@ -39,7 +39,9 @@
 #include "queries/training_moments/training_engagement_aim.h"
 #include "queries/inference_moments/inference_engagement_aim.h"
 #include "queries/inference_moments/inference_latent_engagement.h"
+#include "queries/inference_moments/inference_latent_engagement_distribution.h"
 #include "queries/inference_moments/inference_latent_aggression.h"
+#include "queries/inference_moments/inference_latent_aggression_distribution.h"
 #include "queries/training_moments/training_navigation.h"
 #include "queries/moments/trajectory_segments.h"
 #include "queries/moments/latent_extractors/latent_engagement.h"
@@ -337,12 +339,22 @@ int main(int argc, char * argv[]) {
     inferenceLatentEngagementResult.runQuery(modelsDir, filteredRounds, ticks, behaviorTreeLatentEvents);
     std::cout << "size: " << inferenceLatentEngagementResult.size << std::endl;
 
+    string inferenceLatentEngagementDistributionName = "inferenceLatentEngagementDistribution";
+    csknow::inference_latent_engagement::InferenceLatentEngagementDistributionResult
+        inferenceLatentEngagementDistributionResult(playerAtTick, queryPlayerAtTick, inferenceLatentEngagementResult);
+    inferenceLatentEngagementResult.perTickPlayerLabelsQuery = inferenceLatentEngagementDistributionName;
+
     // inference latent aggression
     string inferenceLatentAggressionName = "inferenceLatentAggression";
     std::cout << "processing inference latent aggression" << std::endl;
     csknow::inference_latent_aggression::InferenceLatentAggressionResult inferenceLatentAggressionResult(playerAtTick);
     inferenceLatentAggressionResult.runQuery(modelsDir, filteredRounds, ticks, behaviorTreeLatentEvents);
     std::cout << "size: " << inferenceLatentAggressionResult.size << std::endl;
+
+    string inferenceLatentAggressionDistributionName = "inferenceLatentAggressionDistribution";
+    csknow::inference_latent_aggression::InferenceLatentAggressionDistributionResult
+        inferenceLatentAggressionDistributionResult(playerAtTick, queryPlayerAtTick, inferenceLatentAggressionResult);
+    inferenceLatentAggressionResult.perTickPlayerLabelsQuery = inferenceLatentAggressionDistributionName;
     /*
     string inferenceLatentEngagementHitName = "inferenceLatentEngagementHit";
     std::cout << "processing inference latent engagements hit" << std::endl;
@@ -554,7 +566,9 @@ int main(int argc, char * argv[]) {
             {trajectorySegmentName, trajectorySegmentResult},
             {latentEngagementName, latentEngagementResult},
             {inferenceLatentEngagementName, inferenceLatentEngagementResult},
+            {inferenceLatentEngagementDistributionName, inferenceLatentEngagementDistributionResult},
             {inferenceLatentAggressionName, inferenceLatentAggressionResult},
+            {inferenceLatentAggressionDistributionName, inferenceLatentAggressionDistributionResult},
             //{inferenceLatentEngagementHitName, inferenceLatentEngagementHitResult},
             //{inferenceLatentEngagementVisibleName, inferenceLatentEngagementVisibleResult},
             //{queryNames[5], aCatClusterSequence},
@@ -707,6 +721,10 @@ int main(int argc, char * argv[]) {
                 ss << queryValue.playerLabelIndicesColumn;
                 ss << ",";
                 QueryResult::commaSeparateList(ss, queryValue.playerLabels, ";");
+                ss << ",";
+                ss << queryValue.perTickPlayerLabels;
+                ss << ",";
+                ss << queryValue.perTickPlayerLabelsQuery;
                 ss << ",";
                 ss << boolToString(queryValue.havePerTickAimTable);
                 ss << ",";
