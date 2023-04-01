@@ -110,7 +110,10 @@ export function getPlayersText(tickData: TickRow, gameData: GameData): Map<numbe
             const playerAndProbs = labelData[sourcePATId].otherColumnValues[0].split(";")
             for (let i = 0; i < playerAndProbs.length; i++) {
                 const playerAndProb = playerAndProbs[i].split("=")
-                result.set(parseInt(playerAndProb[0]), playerAndProb[1])
+                if (parseInt(playerAndProb[0]) != INVALID_ID) {
+
+                    result.set(parseInt(playerAndProb[0]), playerAndProb[1])
+                }
             }
         }
     }
