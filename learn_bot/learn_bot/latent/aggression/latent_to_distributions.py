@@ -26,4 +26,4 @@ def get_aggression_probability(latent_tensor: torch.Tensor, observation: torch.T
     #
     # add 0.001 so that no probs are 0
     return -1 * \
-        torch.sum(torch.log(0.001 + torch.concat([fire_next_2s_prob, visible_next_2s_prob, nearest_enemy_change], dim=1)))
+        torch.sum(torch.log(0.001 + torch.concat([nearest_enemy_change], dim=1)))

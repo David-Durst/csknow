@@ -24,4 +24,4 @@ def get_engagement_probability(latent_tensor: torch.Tensor, observation: torch.T
     nearest_enemy_change = latent_tensor * observation[:, col_ranges[2]]
     # add 0.001 so that no probs are 0
     return -1 * \
-        torch.sum(torch.log(0.001 + torch.concat([aim_prob, nearest_enemy_change], dim=1)))
+        torch.sum(torch.log(0.001 + torch.concat([nearest_enemy_change], dim=1)))
