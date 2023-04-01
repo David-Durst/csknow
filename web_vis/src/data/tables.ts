@@ -230,6 +230,8 @@ export class Parser {
     playersToLabelColumn: number;
     playerLabelIndicesColumn: number;
     playerLabels: string[];
+    perTickPlayerLabels: boolean;
+    perTickPlayerLabelsQuery: string;
     havePerTickAimTable: boolean;
     perTickAimTable: string;
     havePerTickAimPredictionTable: boolean;
@@ -247,7 +249,7 @@ export class Parser {
                 ticksPerEvent: string, parserType: ParserType, baseUrl: string,
                 keyPlayerColumns: string, nonTemporal: string, overlay: string, overlayLabelsQuery: string,
                 havePlayerLabels: string, playersToLabelColumn: string,
-                playerLabelIndicesColumn: string, playerLabels: string,
+                playerLabelIndicesColumn: string, playerLabels: string, perTickPlayerLabels: string, perTickPlayerLabelsQuery: string,
                 havePerTickAimTable: string, perTickAimTable: string,
                 havePerTickAimPredictionTable: string, perTickAimPredictionTable: string,
                 eventIdColumn: string, haveBlob: string, blobFileName: string, blobBytesPerRow: string,
@@ -281,6 +283,8 @@ export class Parser {
         this.playersToLabelColumn = parseInt(playersToLabelColumn)
         this.playerLabelIndicesColumn = parseInt(playerLabelIndicesColumn)
         this.playerLabels = playerLabels.length > 0 ? playerLabels.split(";") : []
+        this.perTickPlayerLabels = parseBool(perTickPlayerLabels)
+        this.perTickPlayerLabelsQuery = perTickPlayerLabelsQuery
         this.havePerTickAimTable = parseBool(havePerTickAimTable)
         this.perTickAimTable = perTickAimTable
         this.havePerTickAimPredictionTable = parseBool(havePerTickAimPredictionTable)

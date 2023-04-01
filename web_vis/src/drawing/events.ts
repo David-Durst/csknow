@@ -93,6 +93,25 @@ export function getPlayersText(tickData: TickRow, gameData: GameData): Map<numbe
             result.set(players[p].playerId, basicPlayerText(gameData, tickData, p))
         }
     }
+    if (parser.perTickPlayerLabelsQuery != "" && playersToLabel.length > 0) {
+        const sourcePlayerId = playersToLabel[0]
+        let sourcePATId = INVALID_ID
+        for (let i = gameData.ticksToPlayerAtTick.get(tickData.id).minId;
+             i <= gameData.ticksToPlayerAtTick.get(tickData.id).maxId; i++) {
+            if (gameData.playerAtTicksTable[i].playerId == sourcePlayerId) {
+                sourcePATId = i;
+                break
+            }
+        }
+        if (sourcePATId != INVALID_ID) {
+            const labelData = gameData.tables.get(parser.perTickPlayerLabelsQuery)
+            const playerAndProbs = labelData[sourcePATId].otherColumnValues[0].split(";")
+            for (let i = 0; i < playerAndProbs.length; i++) {
+                const playerAndProb = playerAndProbs[i].split("=")
+                result.set(parseInt(playerAndProb[0]), playerAndProb[1])
+            }
+        }
+    }
     /*
 
     const playerIDToLocalPATIndex: Map<number, number> = new Map<number, number>()

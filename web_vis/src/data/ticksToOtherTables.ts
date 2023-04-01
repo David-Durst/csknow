@@ -74,7 +74,7 @@ export function indexEventsForRound(gameData: GameData) {
         if (tablesNotFilteredByRound.includes(dataName)
             || dataName == tickTableName || dataName == playerAtTickTableName || dataName == smokeGrenadeName
             || dataName == playerFlashedTableName
-            || curParser.nonTemporal) {
+            || curParser.nonTemporal || curParser.perTickPlayerLabels) {
             continue;
         }
         let getTicksPerEvent = function (index: number, tick: number): number {
