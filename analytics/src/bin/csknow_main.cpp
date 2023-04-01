@@ -95,6 +95,7 @@ int main(int argc, char * argv[]) {
         haveModels = true;
         modelsDir = argv[5];
     }
+    (void) haveModels;
 
     std::map<std::string, nav_mesh::nav_file> map_navs;
     //Figure out from where to where you'd like to find a path
@@ -385,6 +386,9 @@ int main(int argc, char * argv[]) {
     TrajectorySegmentResult trajectorySegmentResult =
             queryAllTrajectories(players, games, filteredRounds, ticks, playerAtTick, nonEngagementTrajectoryResult);
     std::cout << "size: " << trajectorySegmentResult.size << std::endl;
+
+    /*
+     disabling aim model stuff
     string fireHistoryName = "fireHistory";
     std::cout << "processing fire history" << std::endl;
     csknow::fire_history::FireHistoryResult fireHistoryResult(filteredRounds, ticks);
@@ -419,6 +423,8 @@ int main(int argc, char * argv[]) {
     std::cout << "size: " << inferenceEngagementAimResult.size << std::endl;
     engagementResult.havePerTickAimPredictionTable = true;
     engagementResult.perTickPredictionAimTable = inferenceEngagementAimName;
+     */
+
     /*
     VelocityResult velocityResult = queryVelocity(position);
     std::cout << "velocity moments: " << velocityResult.positionIndex.size() << std::endl;
@@ -560,8 +566,10 @@ int main(int argc, char * argv[]) {
             {dust2DistanceToPlacesName, d2DistanceToPlacesResult},
             //{aggressionEventName, aggressionEventResult},
             {engagementName, engagementResult},
+            /* aim model queries
             {engagementPerTickAimName, engagementPerTickAimResult},
             {inferenceEngagementAimName, inferenceEngagementAimResult},
+             */
             {nonEngagementTrajectoryName, nonEngagementTrajectoryResult},
             {trajectorySegmentName, trajectorySegmentResult},
             {latentEngagementName, latentEngagementResult},

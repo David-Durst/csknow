@@ -130,7 +130,7 @@ namespace csknow::inference_latent_engagement {
                         enemyProbabilities.push_back(output[0][enemyNum].item<float>());
                         int64_t enemyId = INVALID_ID;
                         if (enemyNum < csknow::feature_store::maxEnemies) {
-                            behaviorTreeLatentStates.featureStoreResult.columnEnemyData[enemyNum].playerId[patIndex];
+                            enemyId = behaviorTreeLatentStates.featureStoreResult.columnEnemyData[enemyNum].playerId[patIndex];
                         }
                         playerEngageProbs[patIndex][enemyNum] = {enemyId, output[0][enemyNum].item<float>()};
                         if (enemyStates[enemyNum] != csknow::feature_store::EngagementEnemyState::None &&
