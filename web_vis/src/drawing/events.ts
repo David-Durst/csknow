@@ -22,8 +22,10 @@ export let activeEvent: Row = null
 export let curOverlay: string = "none"
 export let displayMouseData = true
 export let zoomMouseData = true
+export let showDistribution = false
 let mouseDataDisplayButton: HTMLButtonElement = null
 let mouseDataZoomButton: HTMLButtonElement = null
+let showDistributionButton: HTMLButtonElement = null
 
 export const DEFAULT_ALIVE_STRING = "o"
 export const DEFAULT_DEAD_STRING = "x"
@@ -93,7 +95,7 @@ export function getPlayersText(tickData: TickRow, gameData: GameData): Map<numbe
             result.set(players[p].playerId, basicPlayerText(gameData, tickData, p))
         }
     }
-    if (parser.perTickPlayerLabelsQuery != "" && playersToLabel.length > 0) {
+    if (parser.perTickPlayerLabelsQuery != "" && playersToLabel.length > 0 && showDistribution) {
         const sourcePlayerId = playersToLabel[0]
         let sourcePATId = INVALID_ID
         for (let i = gameData.ticksToPlayerAtTick.get(tickData.id).minId;
@@ -189,6 +191,18 @@ function toggleMouseZoom() {
     drawTick(null)
 }
 
+function toggleShowDistribution() {
+    if (showDistribution) {
+        showDistribution = false
+        mouseDataZoomButton.innerText = "show distribution"
+    }
+    else {
+        showDistribution = true
+        showDistributionButton.innerText = "show labels"
+    }
+    drawTick(null)
+}
+
 let playerToEventIndex: Map<number, number> = new Map()
 let lastEvent = ""
 
@@ -258,4 +272,6 @@ export function setupEventDrawing() {
     mouseDataDisplayButton.addEventListener("click", toggleMouseDisplay)
     mouseDataZoomButton = document.querySelector<HTMLButtonElement>("#event-mouse-zoom")
     mouseDataZoomButton.addEventListener("click", toggleMouseZoom)
+    showDistributionButton = document.querySelector<HTMLButtonElement>("#event-show-distribution")
+    showDistributionButton.addEventListener("click", toggleShowDistribution)
 }
