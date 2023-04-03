@@ -71,6 +71,25 @@ public:
         return {"warmup", "freeze time end", "round number", "round end reason", "winner",
                 "t wins", "ct wins"};
     }
+
+    void toHDF5Inner(HighFive::File & file) override {
+
+        HighFive::DataSetCreateProps hdf5FlatCreateProps;
+        hdf5FlatCreateProps.add(HighFive::Deflate(6));
+        hdf5FlatCreateProps.add(HighFive::Chunking(rounds.id.size()));
+        size_t len = rounds.id.size();
+
+        file.createDataSet("/data/game id", arrayToVector(rounds.gameId, len), hdf5FlatCreateProps);
+        file.createDataSet("/data/start tick", arrayToVector(rounds.startTick, len), hdf5FlatCreateProps);
+        file.createDataSet("/data/end tick", arrayToVector(rounds.endTick, len), hdf5FlatCreateProps);
+        file.createDataSet("/data/warmup", arrayToVector(rounds.warmup, len), hdf5FlatCreateProps);
+        file.createDataSet("/data/freeze time end", arrayToVector(rounds.freezeTimeEnd, len), hdf5FlatCreateProps);
+        file.createDataSet("/data/round number", arrayToVector(rounds.roundNumber, len), hdf5FlatCreateProps);
+        file.createDataSet("/data/round end reason", arrayToVector(rounds.roundEndReason, len), hdf5FlatCreateProps);
+        file.createDataSet("/data/winner", arrayToVector(rounds.winner, len), hdf5FlatCreateProps);
+        file.createDataSet("/data/tWins", arrayToVector(rounds.tWins, len), hdf5FlatCreateProps);
+        file.createDataSet("/data/ctWins", arrayToVector(rounds.ctWins, len), hdf5FlatCreateProps);
+    }
 };
 
 class QueryPlayers : public QueryResult {
@@ -177,6 +196,107 @@ public:
 
     vector<string> getOtherColumnNames() override {
         return {"pos x", "pos y", "pos z", "view x", "view y", "team", "health", "armor", "is alive"};
+    }
+};
+
+class QueryWeaponFire : public QueryResult {
+public:
+    const Rounds & rounds;
+    const Ticks & ticks;
+    const WeaponFire & weaponFire;
+    QueryWeaponFire(const Rounds & rounds, const Ticks & ticks, const WeaponFire & weaponFire)
+        : rounds(rounds), ticks(ticks), weaponFire(weaponFire) {
+        this->size = weaponFire.size;
+        this->startTickColumn = 0;
+        this->ticksPerEvent = 1;
+    }
+
+    vector<int64_t> filterByForeignKey(int64_t otherTableIndex) override {
+        vector<int64_t> result;
+        for (int64_t i = rounds.ticksPerRound[otherTableIndex].minId;
+             i <= rounds.ticksPerRound[otherTableIndex].maxId; i++) {
+            for (const auto & [_0, _1, weaponFireIndex] :
+                ticks.weaponFirePerTick.intervalToEvent.findOverlapping(i, i)) {
+                result.push_back(weaponFireIndex);
+            }
+        }
+        return result;
+    }
+
+    void oneLineToCSV(int64_t index, std::ostream &s) override {
+        s << weaponFire.id[index] << "," << weaponFire.tickId[index] << "," << weaponFire.shooter[index] << ","
+          << weaponFire.weapon[index] << std::endl;
+    }
+
+    vector<string> getForeignKeyNames() override {
+        return {"tick id", "shooter"};
+    }
+
+    vector<string> getOtherColumnNames() override {
+        return {"weapon"};
+    }
+
+    void toHDF5Inner(HighFive::File & file) override {
+
+        HighFive::DataSetCreateProps hdf5FlatCreateProps;
+        hdf5FlatCreateProps.add(HighFive::Deflate(6));
+        hdf5FlatCreateProps.add(HighFive::Chunking(weaponFire.id.size()));
+        size_t len = weaponFire.id.size();
+
+        file.createDataSet("/data/tick id", arrayToVector(weaponFire.tickId, len), hdf5FlatCreateProps);
+        file.createDataSet("/data/shooter", arrayToVector(weaponFire.shooter, len), hdf5FlatCreateProps);
+        file.createDataSet("/data/weapon", arrayToVector(weaponFire.weapon, len), hdf5FlatCreateProps);
+    }
+};
+
+class QueryKills : public QueryResult {
+public:
+    const Rounds & rounds;
+    const Ticks & ticks;
+    const Kills & kills;
+    QueryKills(const Rounds & rounds, const Ticks & ticks, const Kills & kills)
+        : rounds(rounds), ticks(ticks), kills(kills) {
+        this->size = kills.size;
+        this->startTickColumn = 0;
+        this->ticksPerEvent = 1;
+    }
+
+    vector<int64_t> filterByForeignKey(int64_t otherTableIndex) override {
+        vector<int64_t> result;
+        for (int64_t i = rounds.ticksPerRound[otherTableIndex].minId;
+             i <= rounds.ticksPerRound[otherTableIndex].maxId; i++) {
+            for (const auto & [_0, _1, killsIndex] :
+                ticks.killsPerTick.intervalToEvent.findOverlapping(i, i)) {
+                result.push_back(killsIndex);
+            }
+        }
+        return result;
+    }
+
+    void oneLineToCSV(int64_t index, std::ostream &s) override {
+        s << kills.id[index] << "," << kills.tickId[index] << "," << kills.killer[index] << ","
+          << kills.victim[index] << "," << kills.weapon << std::endl;
+    }
+
+    vector<string> getForeignKeyNames() override {
+        return {"tick id", "killer", "victim"};
+    }
+
+    vector<string> getOtherColumnNames() override {
+        return {"weapon"};
+    }
+
+    void toHDF5Inner(HighFive::File & file) override {
+
+        HighFive::DataSetCreateProps hdf5FlatCreateProps;
+        hdf5FlatCreateProps.add(HighFive::Deflate(6));
+        hdf5FlatCreateProps.add(HighFive::Chunking(kills.id.size()));
+        size_t len = kills.id.size();
+
+        file.createDataSet("/data/tick id", arrayToVector(kills.tickId, len), hdf5FlatCreateProps);
+        file.createDataSet("/data/killer", arrayToVector(kills.killer, len), hdf5FlatCreateProps);
+        file.createDataSet("/data/victim", arrayToVector(kills.victim, len), hdf5FlatCreateProps);
+        file.createDataSet("/data/weapon", arrayToVector(kills.weapon, len), hdf5FlatCreateProps);
     }
 };
 

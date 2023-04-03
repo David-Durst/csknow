@@ -106,6 +106,25 @@ public:
     vector<string> getOtherColumnNames() override {
         return {"player ids", "roles", "hurt tick ids", "hurt ids"};
     }
+
+    void toHDF5Inner(HighFive::File & file) override {
+
+        HighFive::DataSetCreateProps hdf5FlatCreateProps;
+        hdf5FlatCreateProps.add(HighFive::Deflate(6));
+        hdf5FlatCreateProps.add(HighFive::Chunking(startTickId.size()));
+
+        file.createDataSet("/data/start tick id", startTickId, hdf5FlatCreateProps);
+        file.createDataSet("/data/end tick id", endTickId, hdf5FlatCreateProps);
+        file.createDataSet("/data/tick length", tickLength, hdf5FlatCreateProps);
+        file.createDataSet("/data/attacker id", vectorOfVectorToVectorSelector(playerId, 0), hdf5FlatCreateProps);
+        file.createDataSet("/data/attacker role",
+                           vectorOfEnumsToVectorOfInts(vectorOfVectorToVectorSelector(role, 0)),
+                           hdf5FlatCreateProps);
+        file.createDataSet("/data/target id", vectorOfVectorToVectorSelector(playerId, 1), hdf5FlatCreateProps);
+        file.createDataSet("/data/target role",
+                           vectorOfEnumsToVectorOfInts(vectorOfVectorToVectorSelector(role, 1)),
+                           hdf5FlatCreateProps);
+    }
 };
 
 

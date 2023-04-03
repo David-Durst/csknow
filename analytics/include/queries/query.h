@@ -174,6 +174,17 @@ public:
     virtual vector<string> getOtherColumnNames() = 0;
 };
 
+template <typename T>
+std::vector<T> arrayToVector(const T * input, size_t len) {
+    std::vector<T> result;
+    result.reserve(len);
+
+    for (size_t i = 0; i < len; i++) {
+        result.push_back(input[i]);
+    }
+
+    return result;
+}
 
 template <typename T>
 std::vector<int> vectorOfEnumsToVectorOfInts(const std::vector<T> & vectorOfEnums) {
@@ -182,6 +193,18 @@ std::vector<int> vectorOfEnumsToVectorOfInts(const std::vector<T> & vectorOfEnum
 
     for (size_t i = 0; i < vectorOfEnums.size(); i++) {
         result.push_back(enumAsInt(vectorOfEnums[i]));
+    }
+
+    return result;
+}
+
+template <typename T>
+std::vector<T> vectorOfVectorToVectorSelector(const std::vector<std::vector<T>> & vectorOfVector, size_t index) {
+    std::vector<T> result;
+    result.reserve(vectorOfVector.size());
+
+    for (size_t i = 0; i < vectorOfVector.size(); i++) {
+        result.push_back(vectorOfVector[i][index]);
     }
 
     return result;

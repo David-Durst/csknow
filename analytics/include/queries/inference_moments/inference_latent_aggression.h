@@ -72,6 +72,21 @@ namespace csknow::inference_latent_aggression {
         void runQuery(const string & modelsDir, const Rounds & rounds, const Ticks & ticks,
                       const csknow::behavior_tree_latent_states::BehaviorTreeLatentStates & behaviorTreeLatentStates);
 
+        void toHDF5Inner(HighFive::File & file) override {
+
+            HighFive::DataSetCreateProps hdf5FlatCreateProps;
+            hdf5FlatCreateProps.add(HighFive::Deflate(6));
+            hdf5FlatCreateProps.add(HighFive::Chunking(startTickId.size()));
+
+            file.createDataSet("/data/start tick id", startTickId, hdf5FlatCreateProps);
+            file.createDataSet("/data/end tick id", endTickId, hdf5FlatCreateProps);
+            file.createDataSet("/data/tick length", tickLength, hdf5FlatCreateProps);
+            file.createDataSet("/data/player id", vectorOfVectorToVectorSelector(playerId, 0), hdf5FlatCreateProps);
+            file.createDataSet("/data/role",
+                               vectorOfEnumsToVectorOfInts(vectorOfVectorToVectorSelector(role, 0)),
+                               hdf5FlatCreateProps);
+        }
+
     };
 }
 
