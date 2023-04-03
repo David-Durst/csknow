@@ -55,6 +55,10 @@ public:
 
     vector<int64_t> filterByForeignKey(int64_t otherTableIndex) override {
         vector<int64_t> result;
+        // Normally would segfault, but this query is slow so I don't run for all rounds in debug cases
+        if (otherTableIndex >= static_cast<int64_t>(rowIndicesPerRound.size())) {
+            return result;
+        }
         for (int64_t i = rowIndicesPerRound[otherTableIndex].minId; i <= rowIndicesPerRound[otherTableIndex].maxId; i++) {
             if (i == -1) {
                 continue;
