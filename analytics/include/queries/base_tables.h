@@ -249,6 +249,57 @@ public:
     }
 };
 
+class QueryHurt : public QueryResult {
+public:
+    const Rounds & rounds;
+    const Ticks & ticks;
+    const Hurt & hurt;
+    QueryHurt(const Rounds & rounds, const Ticks & ticks, const Hurt & hurt)
+        : rounds(rounds), ticks(ticks), hurt(hurt) {
+        this->size = hurt.size;
+        this->startTickColumn = 0;
+        this->ticksPerEvent = 1;
+    }
+
+    vector<int64_t> filterByForeignKey(int64_t otherTableIndex) override {
+        vector<int64_t> result;
+        for (int64_t i = rounds.ticksPerRound[otherTableIndex].minId;
+             i <= rounds.ticksPerRound[otherTableIndex].maxId; i++) {
+            for (const auto & [_0, _1, killsIndex] :
+                ticks.killsPerTick.intervalToEvent.findOverlapping(i, i)) {
+                result.push_back(killsIndex);
+            }
+        }
+        return result;
+    }
+
+    void oneLineToCSV(int64_t index, std::ostream &s) override {
+        s << hurt.id[index] << "," << hurt.tickId[index] << "," << hurt.attacker[index] << ","
+          << hurt.victim[index] << "," << hurt.weapon << std::endl;
+    }
+
+    vector<string> getForeignKeyNames() override {
+        return {"tick id", "attacker", "victim"};
+    }
+
+    vector<string> getOtherColumnNames() override {
+        return {"weapon"};
+    }
+
+    void toHDF5Inner(HighFive::File & file) override {
+
+        HighFive::DataSetCreateProps hdf5FlatCreateProps;
+        hdf5FlatCreateProps.add(HighFive::Deflate(6));
+        hdf5FlatCreateProps.add(HighFive::Chunking(hurt.id.size()));
+        size_t len = hurt.id.size();
+
+        file.createDataSet("/data/tick id", arrayToVector(hurt.tickId, len), hdf5FlatCreateProps);
+        file.createDataSet("/data/attacker", arrayToVector(hurt.attacker, len), hdf5FlatCreateProps);
+        file.createDataSet("/data/victim", arrayToVector(hurt.victim, len), hdf5FlatCreateProps);
+        file.createDataSet("/data/weapon", vectorOfEnumsToVectorOfInts(arrayToVector(hurt.weapon, len)), hdf5FlatCreateProps);
+    }
+};
+
 class QueryKills : public QueryResult {
 public:
     const Rounds & rounds;

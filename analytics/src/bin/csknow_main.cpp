@@ -189,6 +189,7 @@ int main(int argc, char * argv[]) {
     QueryTicks queryTicks(filteredRounds, ticks);
     QueryPlayerAtTick queryPlayerAtTick(filteredRounds, ticks, playerAtTick);
     QueryWeaponFire queryWeaponFire(filteredRounds, ticks, weaponFire);
+    QueryHurt queryHurt(filteredRounds, ticks, hurt);
     QueryKills queryKills(filteredRounds, ticks, kills);
     csknow::smoke_grenade::SmokeGrenadeResult smokeGrenadeResult;
     smokeGrenadeResult.runQuery(filteredRounds, ticks, grenades, grenadeTrajectories);
@@ -553,6 +554,7 @@ int main(int argc, char * argv[]) {
     map<string, reference_wrapper<QueryResult>> analyses {
         {"rounds", queryRounds},
         {"weaponFire", queryWeaponFire},
+        {"hurt", queryHurt},
         {"kills", queryKills},
         {latentEngagementName, latentEngagementResult},
         {inferenceLatentEngagementName, inferenceLatentEngagementResult},
