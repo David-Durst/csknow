@@ -139,3 +139,38 @@ EngagementResult queryEngagementResult(const Games & games, const Rounds & round
     result.engagementsPerTick = buildIntervalIndex(foreignKeyCols, result.size);
     return result;
 }
+
+void EngagementResult::computePercentMatchNearestCrosshair(const Rounds & rounds, const Ticks & ticks,
+                                                           const PlayerAtTick & playerAtTick,
+                                                           const csknow::feature_store::FeatureStoreResult & featureStoreResult) {
+    map<int64_t, int64_t> engagementToNumCorrectTicks;
+    for (int64_t roundIndex = 0; roundIndex < rounds.size; roundIndex++) {
+        for (int64_t tickIndex = rounds.ticksPerRound[roundIndex].minId;
+             tickIndex <= rounds.ticksPerRound[roundIndex].maxId; tickIndex++) {
+            map<int64_t, int64_t> playerToVictimCurTick;
+            map<int64_t, int64_t> playerToEngagementCurTick;
+            for (const auto & [_0, _1, engagementIndex] :
+                engagementsPerTick.intervalToEvent.findOverlapping(tickIndex, tickIndex)) {
+                playerToVictimCurTick[playerId[engagementIndex][0]] = playerId[engagementIndex][1];
+                playerToEngagementCurTick[playerId[engagementIndex][0]] = engagementIndex;
+                if (engagementToNumCorrectTicks.find(engagementIndex) == engagementToNumCorrectTicks.end()) {
+                    engagementToNumCorrectTicks[engagementIndex] = 0;
+                }
+            }
+            for (int64_t patIndex = ticks.patPerTick[tickIndex].minId;
+                 patIndex <= ticks.patPerTick[tickIndex].maxId; patIndex++) {
+                int64_t attackerId = playerAtTick.playerId[patIndex];
+                if (playerToVictimCurTick.find(attackerId) != playerToVictimCurTick.end()) {
+                    if (featureStoreResult.nearestCrosshairEnemy2s[patIndex] == playerToVictimCurTick[attackerId]) {
+                        engagementToNumCorrectTicks[playerToEngagementCurTick[attackerId]]++;
+                    }
+                }
+            }
+        }
+    }
+    for (int64_t engagementIndex = 0; engagementIndex < size; engagementIndex++) {
+        percentMatchNearestCrosshairEnemy2s.push_back(
+            static_cast<double>(engagementToNumCorrectTicks[engagementIndex]) /
+            static_cast<double>(tickLength[engagementIndex]));
+    }
+}

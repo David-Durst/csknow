@@ -324,6 +324,7 @@ int main(int argc, char * argv[]) {
                                       nearestNavCellResult, players, games, filteredRounds, ticks,
                                       playerAtTick, weaponFire, hurt, plants, defusals, engagementResult);
     std::cout << "size: " << behaviorTreeLatentEvents.size << std::endl;
+    behaviorTreeLatentEvents.featureStoreResult.computeAcausalLabels(games, filteredRounds, ticks, playerAtTick);
     behaviorTreeLatentEvents.featureStoreResult.checkInvalid();
 
     // latent engagement events
@@ -331,6 +332,8 @@ int main(int argc, char * argv[]) {
     std::cout << "processing latent engagements" << std::endl;
     csknow::latent_engagement::LatentEngagementResult latentEngagementResult;
     latentEngagementResult.runQuery(filteredRounds, ticks, hurt, behaviorTreeLatentEvents);
+    latentEngagementResult.computePercentMatchNearestCrosshair(filteredRounds, ticks, playerAtTick,
+                                                               behaviorTreeLatentEvents.featureStoreResult);
     std::cout << "size: " << latentEngagementResult.size << std::endl;
 
     // inference latent engagement
@@ -341,6 +344,8 @@ int main(int argc, char * argv[]) {
     std::cout << "processing inference latent engagements" << std::endl;
     csknow::inference_latent_engagement::InferenceLatentEngagementResult inferenceLatentEngagementResult(playerAtTick);
     inferenceLatentEngagementResult.runQuery(modelsDir, filteredRounds, ticks, behaviorTreeLatentEvents);
+    inferenceLatentEngagementResult.computePercentMatchNearestCrosshair(filteredRounds, ticks, playerAtTick,
+                                                                        behaviorTreeLatentEvents.featureStoreResult);
     std::cout << "size: " << inferenceLatentEngagementResult.size << std::endl;
 
     string inferenceLatentEngagementDistributionName = "inferenceLatentEngagementDistribution";

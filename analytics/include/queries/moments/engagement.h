@@ -15,6 +15,7 @@
 #include "queries/query.h"
 #include "geometry.h"
 #include "enum_helpers.h"
+#include "bots/analysis/feature_store.h"
 #define PRE_ENGAGEMENT_SECONDS 1.0
 #define POST_ENGAGEMENT_SECONDS 0.2
 using std::string;
@@ -40,6 +41,7 @@ public:
     vector<vector<EngagementRole>> role;
     vector<vector<int64_t>> hurtTickIds;
     vector<vector<int64_t>> hurtIds;
+    vector<double> percentMatchNearestCrosshairEnemy2s;
     IntervalIndex engagementsPerTick;
 
 
@@ -128,7 +130,11 @@ public:
         file.createDataSet("/data/target role",
                            vectorOfEnumsToVectorOfInts(vectorOfVectorToVectorSelector(role, 1)),
                            hdf5FlatCreateProps);
+        file.createDataSet("/data/percent match nearest crosshair enemy 2s", percentMatchNearestCrosshairEnemy2s, hdf5FlatCreateProps);
     }
+
+    void computePercentMatchNearestCrosshair(const Rounds & rounds, const Ticks & ticks, const PlayerAtTick & playerAtTick,
+                                             const csknow::feature_store::FeatureStoreResult & featureStoreResult);
 };
 
 
