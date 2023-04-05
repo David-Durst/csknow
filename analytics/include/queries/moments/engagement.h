@@ -41,6 +41,9 @@ public:
     vector<vector<EngagementRole>> role;
     vector<vector<int64_t>> hurtTickIds;
     vector<vector<int64_t>> hurtIds;
+    vector<double> percentMatchNearestCrosshairEnemyCurTick;
+    vector<double> percentMatchNearestCrosshairEnemy500ms;
+    vector<double> percentMatchNearestCrosshairEnemy1s;
     vector<double> percentMatchNearestCrosshairEnemy2s;
     IntervalIndex engagementsPerTick;
 
@@ -130,6 +133,9 @@ public:
         file.createDataSet("/data/target role",
                            vectorOfEnumsToVectorOfInts(vectorOfVectorToVectorSelector(role, 1)),
                            hdf5FlatCreateProps);
+        file.createDataSet("/data/percent match nearest crosshair enemy cur tick", percentMatchNearestCrosshairEnemyCurTick, hdf5FlatCreateProps);
+        file.createDataSet("/data/percent match nearest crosshair enemy 500ms", percentMatchNearestCrosshairEnemy500ms, hdf5FlatCreateProps);
+        file.createDataSet("/data/percent match nearest crosshair enemy 1s", percentMatchNearestCrosshairEnemy1s, hdf5FlatCreateProps);
         file.createDataSet("/data/percent match nearest crosshair enemy 2s", percentMatchNearestCrosshairEnemy2s, hdf5FlatCreateProps);
     }
 
