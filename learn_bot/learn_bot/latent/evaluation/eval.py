@@ -17,6 +17,16 @@ inference_latent_engagement_hdf5_data_path = Path(__file__).parent / '..' / '..'
 
 valid_round_numbers = [2]
 
+def match_lims(ax0: plt.Axes, ax1: plt.Axes):
+    xs0 = ax0.get_xlim()
+    ys0 = ax0.get_ylim()
+    xs1 = ax1.get_xlim()
+    ys1 = ax1.get_ylim()
+    ax0.set_xlim(min(xs0[0], xs1[0]), max(xs0[1], xs1[1]))
+    ax1.set_xlim(min(xs0[0], xs1[0]), max(xs0[1], xs1[1]))
+    ax0.set_ylim(min(ys0[0], ys1[0]), max(ys0[1], ys1[1]))
+    ax1.set_ylim(min(ys0[0], ys1[0]), max(ys0[1], ys1[1]))
+
 
 def compare_results(ticks_df: pd.DataFrame, rounds_df: pd.DataFrame, weapon_fire_df: pd.DataFrame, kills_df: pd.DataFrame, hurt_df: pd.DataFrame,
                     latent_engagement_df: pd.DataFrame, inference_latent_engagement_df: pd.DataFrame):
@@ -62,102 +72,100 @@ def compare_results(ticks_df: pd.DataFrame, rounds_df: pd.DataFrame, weapon_fire
         valid_latent_engagement_df['tick length'] / 128.
     bins=[i*0.5 for i in range(2*7)]
     fig, ax = plt.subplots(nrows=5, ncols=2, figsize=(2*8, 5 * 8))
-    ax = valid_latent_engagement_df.hist(column='Engagement Length', bins=bins)
+    valid_latent_engagement_df.hist(column='Engagement Length', bins=bins, ax=ax[0,0])
     ax[0,0].set_xlabel("seconds")
     ax[0,0].set_ylabel("number of engagements")
     ax[0,0].set_title("Latent Engagements Length")
-    ax[0,0].text(3., 40., str(valid_latent_engagement_df['Engagement Length'].describe()))
-    ax[0,0].figure.savefig(plot_path / 'latent_engagement_length.png')
+    ax[0,0].text(3., 40., valid_latent_engagement_df['Engagement Length'].describe().to_string())
+    #ax[0,0].figure.savefig(plot_path / 'latent_engagement_length.png')
     valid_inference_latent_engagement_df['Engagement Length'] = \
         valid_inference_latent_engagement_df['tick length'] / 128.
-    ax = valid_inference_latent_engagement_df.hist(column='Engagement Length', bins=bins)
-    ax[0,0].set_xlabel("seconds")
-    ax[0,0].set_ylabel("number of engagements")
-    ax[0,0].set_title("Inference Latent Engagements Length")
-    ax[0,0].text(3., 40., str(valid_inference_latent_engagement_df['Engagement Length'].describe()))
-    ax[0,0].figure.savefig(plot_path / 'inference_latent_engagement_length.png')
+    valid_inference_latent_engagement_df.hist(column='Engagement Length', bins=bins, ax=ax[0,1])
+    ax[0,1].set_xlabel("seconds")
+    ax[0,1].set_ylabel("number of engagements")
+    ax[0,1].set_title("Inference Latent Engagements Length")
+    ax[0,1].text(3., 40., valid_inference_latent_engagement_df['Engagement Length'].describe().to_string())
+    match_lims(ax[0,0], ax[0,1])
 
     # graph percent match nearest crosshair enemy cur tick
     nearest_crosshair_enemy_col = "percent match nearest crosshair enemy cur tick"
     bins=[i / 20. for i in range(20)]
-    ax = valid_latent_engagement_df.hist(column=nearest_crosshair_enemy_col, bins=bins)
-    ax[0,0].set_xlabel("percent of frames")
-    ax[0,0].set_ylabel("number of engagements")
-    ax[0,0].set_title("Percent of Frames Match Nearest Crosshair Enemy Cur Tick")
-    ax[0,0].text(0.3, 0.5, str(valid_latent_engagement_df[nearest_crosshair_enemy_col].describe()),
-                 transform=ax[0,0].transAxes)
-    ax[0,0].figure.savefig(plot_path / 'latent_percent_match_cur_tick.png')
-    ax = valid_inference_latent_engagement_df.hist(column=nearest_crosshair_enemy_col, bins=bins)
-    ax[0,0].set_xlabel("percent of frames")
-    ax[0,0].set_ylabel("number of engagements")
-    ax[0,0].set_title("Inference Percent of Frames Match Nearest Crosshair Enemy Cur Tick")
-    ax[0,0].text(0.3, 0.5, str(valid_inference_latent_engagement_df[nearest_crosshair_enemy_col].describe()),
-                 transform=ax[0,0].transAxes)
-    ax[0,0].figure.savefig(plot_path / 'inference_latent_percent_match_cur_tick.png')
+    valid_latent_engagement_df.hist(column=nearest_crosshair_enemy_col, bins=bins, ax=ax[1, 0])
+    ax[1,0].set_xlabel("percent of frames")
+    ax[1,0].set_ylabel("number of engagements")
+    ax[1,0].set_title("Percent of Frames Match Nearest Crosshair Enemy Cur Tick")
+    ax[1,0].text(0.3, 0.5, valid_latent_engagement_df[nearest_crosshair_enemy_col].describe().to_string(),
+                 transform=ax[1,0].transAxes)
+    valid_inference_latent_engagement_df.hist(column=nearest_crosshair_enemy_col, bins=bins, ax=ax[1,1])
+    ax[1,1].set_xlabel("percent of frames")
+    ax[1,1].set_ylabel("number of engagements")
+    ax[1,1].set_title("Inference Percent of Frames Match Nearest Crosshair Enemy Cur Tick")
+    ax[1,1].text(0.3, 0.5, valid_inference_latent_engagement_df[nearest_crosshair_enemy_col].describe().to_string(),
+                 transform=ax[1,1].transAxes)
+    match_lims(ax[1,0], ax[1,1])
 
     # graph percent match nearest crosshair enemy 500ms
     nearest_crosshair_enemy_col = "percent match nearest crosshair enemy 500ms"
     bins=[i / 20. for i in range(20)]
-    ax = valid_latent_engagement_df.hist(column=nearest_crosshair_enemy_col, bins=bins)
-    ax[0,0].set_xlabel("percent of frames")
-    ax[0,0].set_ylabel("number of engagements")
-    ax[0,0].set_title("Percent of Frames Match Nearest Crosshair Enemy 500ms")
-    ax[0,0].text(0.3, 0.5, str(valid_latent_engagement_df[nearest_crosshair_enemy_col].describe()),
-                 transform=ax[0,0].transAxes)
-    ax[0,0].figure.savefig(plot_path / 'latent_percent_match_500ms.png')
-    ax = valid_inference_latent_engagement_df.hist(column=nearest_crosshair_enemy_col, bins=bins)
-    ax[0,0].set_xlabel("percent of frames")
-    ax[0,0].set_ylabel("number of engagements")
-    ax[0,0].set_title("Inference Percent of Frames Match Nearest Crosshair Enemy 500ms")
-    ax[0,0].text(0.3, 0.5, str(valid_inference_latent_engagement_df[nearest_crosshair_enemy_col].describe()),
-                 transform=ax[0,0].transAxes)
-    ax[0,0].figure.savefig(plot_path / 'inference_latent_percent_match_500ms.png')
+    valid_latent_engagement_df.hist(column=nearest_crosshair_enemy_col, bins=bins, ax=ax[2,0])
+    ax[2,0].set_xlabel("percent of frames")
+    ax[2,0].set_ylabel("number of engagements")
+    ax[2,0].set_title("Percent of Frames Match Nearest Crosshair Enemy 500ms")
+    ax[2,0].text(0.3, 0.5, valid_latent_engagement_df[nearest_crosshair_enemy_col].describe().to_string(),
+                 transform=ax[2,0].transAxes)
+    valid_inference_latent_engagement_df.hist(column=nearest_crosshair_enemy_col, bins=bins, ax=ax[2,1])
+    ax[2,1].set_xlabel("percent of frames")
+    ax[2,1].set_ylabel("number of engagements")
+    ax[2,1].set_title("Inference Percent of Frames Match Nearest Crosshair Enemy 500ms")
+    ax[2,1].text(0.3, 0.5, valid_inference_latent_engagement_df[nearest_crosshair_enemy_col].describe().to_string(),
+                 transform=ax[2,1].transAxes)
+    match_lims(ax[2,0], ax[2,1])
 
     # graph percent match nearest crosshair enemy 1s
     nearest_crosshair_enemy_col = "percent match nearest crosshair enemy 1s"
     bins=[i / 20. for i in range(20)]
-    ax = valid_latent_engagement_df.hist(column=nearest_crosshair_enemy_col, bins=bins)
-    ax[0,0].set_xlabel("percent of frames")
-    ax[0,0].set_ylabel("number of engagements")
-    ax[0,0].set_title("Percent of Frames Match Nearest Crosshair Enemy 1s")
-    ax[0,0].text(0.3, 0.5, str(valid_latent_engagement_df[nearest_crosshair_enemy_col].describe()),
-                 transform=ax[0,0].transAxes)
-    ax[0,0].figure.savefig(plot_path / 'latent_percent_match_1s.png')
-    ax = valid_inference_latent_engagement_df.hist(column=nearest_crosshair_enemy_col, bins=bins)
-    ax[0,0].set_xlabel("percent of frames")
-    ax[0,0].set_ylabel("number of engagements")
-    ax[0,0].set_title("Inference Percent of Frames Match Nearest Crosshair Enemy 1s")
-    ax[0,0].text(0.3, 0.5, str(valid_inference_latent_engagement_df[nearest_crosshair_enemy_col].describe()),
-                 transform=ax[0,0].transAxes)
-    ax[0,0].figure.savefig(plot_path / 'inference_latent_percent_match_1s.png')
+    valid_latent_engagement_df.hist(column=nearest_crosshair_enemy_col, bins=bins, ax=ax[3,0])
+    ax[3,0].set_xlabel("percent of frames")
+    ax[3,0].set_ylabel("number of engagements")
+    ax[3,0].set_title("Percent of Frames Match Nearest Crosshair Enemy 1s")
+    ax[3,0].text(0.3, 0.5, valid_latent_engagement_df[nearest_crosshair_enemy_col].describe().to_string(),
+                 transform=ax[3,0].transAxes)
+    valid_inference_latent_engagement_df.hist(column=nearest_crosshair_enemy_col, bins=bins, ax=ax[3,1])
+    ax[3,1].set_xlabel("percent of frames")
+    ax[3,1].set_ylabel("number of engagements")
+    ax[3,1].set_title("Inference Percent of Frames Match Nearest Crosshair Enemy 1s")
+    ax[3,1].text(0.3, 0.5, valid_inference_latent_engagement_df[nearest_crosshair_enemy_col].describe().to_string(),
+                 transform=ax[3,1].transAxes)
+    match_lims(ax[3,0], ax[3,1])
 
     # graph percent match nearest crosshair enemy 2s
     nearest_crosshair_enemy_col = "percent match nearest crosshair enemy 2s"
     bins=[i / 20. for i in range(20)]
-    ax = valid_latent_engagement_df.hist(column=nearest_crosshair_enemy_col, bins=bins)
-    ax[0,0].set_xlabel("percent of frames")
-    ax[0,0].set_ylabel("number of engagements")
-    ax[0,0].set_title("Percent of Frames Match Nearest Crosshair Enemy 2s")
-    ax[0,0].text(0.3, 0.5, str(valid_latent_engagement_df[nearest_crosshair_enemy_col].describe()),
-                 transform=ax[0,0].transAxes)
-    ax[0,0].figure.savefig(plot_path / 'latent_percent_match_2s.png')
+    valid_latent_engagement_df.hist(column=nearest_crosshair_enemy_col, bins=bins, ax=ax[4,0])
+    ax[4,0].set_xlabel("percent of frames")
+    ax[4,0].set_ylabel("number of engagements")
+    ax[4,0].set_title("Percent of Frames Match Nearest Crosshair Enemy 2s")
+    describe_str = valid_latent_engagement_df[nearest_crosshair_enemy_col].describe().to_string()
     ticks_per_engagement_2s_correct = \
         valid_latent_engagement_df[nearest_crosshair_enemy_col] * valid_latent_engagement_df['tick length']
     percent_ticks_2s_correct = ticks_per_engagement_2s_correct.sum() / valid_latent_engagement_df['tick length'].sum()
-    print('''percent of frames in engagements when heuristic predict right nearest crosshair enemy 2s:''' +
-          f'''{percent_ticks_2s_correct}''')
-    ax = valid_inference_latent_engagement_df.hist(column=nearest_crosshair_enemy_col, bins=bins)
-    ax[0,0].set_xlabel("percent of frames")
-    ax[0,0].set_ylabel("number of engagements")
-    ax[0,0].set_title("Inference Percent of Frames Match Nearest Crosshair Enemy 2s")
-    ax[0,0].text(0.3, 0.5, str(valid_inference_latent_engagement_df[nearest_crosshair_enemy_col].describe()),
-                 transform=ax[0,0].transAxes)
-    ax[0,0].figure.savefig(plot_path / 'inference_latent_percent_match_2s.png')
+    frame_weight_str = '''pct frames nearest enemy 2s:''' + \
+                       f'''{percent_ticks_2s_correct:.4f}'''
+    ax[4,0].text(0.3, 0.5, describe_str + "\n" + frame_weight_str, transform=ax[4,0].transAxes)
+    valid_inference_latent_engagement_df.hist(column=nearest_crosshair_enemy_col, bins=bins, ax=ax[4,1])
+    ax[4,1].set_xlabel("percent of frames")
+    ax[4,1].set_ylabel("number of engagements")
+    ax[4,1].set_title("Inference Percent of Frames Match Nearest Crosshair Enemy 2s")
+    describe_str = valid_inference_latent_engagement_df[nearest_crosshair_enemy_col].describe().to_string()
     ticks_per_inference_engagement_2s_correct = \
         valid_inference_latent_engagement_df[nearest_crosshair_enemy_col] * valid_inference_latent_engagement_df['tick length']
     inference_percent_ticks_2s_correct = ticks_per_inference_engagement_2s_correct.sum() / valid_inference_latent_engagement_df['tick length'].sum()
-    print('''percent of frames in engagements when inference predict right nearest crosshair enemy 2s:''' +
-          f'''{inference_percent_ticks_2s_correct}''')
+    frame_weight_str = '''pct frames nearest enemy 2s:''' + \
+                       f'''{inference_percent_ticks_2s_correct:.4f}'''
+    ax[4,1].text(0.3, 0.5, describe_str + "\n" + frame_weight_str, transform=ax[4,1].transAxes)
+    match_lims(ax[4,0], ax[4,1])
+    plt.tight_layout()
+    fig.savefig(plot_path / 'inference_vs_heuristic_engagements.png')
 
     # measure kill agreement
     num_engagement_kill_matches = 0
