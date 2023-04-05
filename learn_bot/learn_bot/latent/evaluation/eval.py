@@ -1,8 +1,10 @@
 from pathlib import Path
 
 import pandas as pd
+from matplotlib import pyplot as plt
 
 from learn_bot.latent.dataset import latent_hdf5_data_path
+from learn_bot.latent.engagement.column_names import get_ith_enemy_columns
 from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd
 from learn_bot.latent.train import plot_path
 
@@ -16,8 +18,17 @@ inference_latent_engagement_hdf5_data_path = Path(__file__).parent / '..' / '..'
 valid_round_numbers = [2]
 
 
-def compare_results(rounds_df: pd.DataFrame, weapon_fire_df: pd.DataFrame, kills_df: pd.DataFrame, hurt_df: pd.DataFrame,
+def compare_results(ticks_df: pd.DataFrame, rounds_df: pd.DataFrame, weapon_fire_df: pd.DataFrame, kills_df: pd.DataFrame, hurt_df: pd.DataFrame,
                     latent_engagement_df: pd.DataFrame, inference_latent_engagement_df: pd.DataFrame):
+    # percent of ticks data with target
+    with_no_enemy_ticks_df = ticks_df[
+        (ticks_df[get_ith_enemy_columns(0).engagement_state] == 3) &
+        (ticks_df[get_ith_enemy_columns(1).engagement_state] == 3) &
+        (ticks_df[get_ith_enemy_columns(2).engagement_state] == 3) &
+        (ticks_df[get_ith_enemy_columns(3).engagement_state] == 3) &
+        (ticks_df[get_ith_enemy_columns(4).engagement_state] == 3)
+    ]
+    print(f'''percent no enemy: {len(with_no_enemy_ticks_df)/len(ticks_df)}''')
     # get data in valid rounds
     valid_rounds_df = rounds_df[(rounds_df['game id'] == 0) & rounds_df['round number'].isin(valid_round_numbers)]
     round_start_ticks = valid_rounds_df.loc[:, 'start tick'].tolist()
@@ -50,6 +61,7 @@ def compare_results(rounds_df: pd.DataFrame, weapon_fire_df: pd.DataFrame, kills
     valid_latent_engagement_df['Engagement Length'] = \
         valid_latent_engagement_df['tick length'] / 128.
     bins=[i*0.5 for i in range(2*7)]
+    fig, ax = plt.subplots(nrows=5, ncols=2, figsize=(2*8, 5 * 8))
     ax = valid_latent_engagement_df.hist(column='Engagement Length', bins=bins)
     ax[0,0].set_xlabel("seconds")
     ax[0,0].set_ylabel("number of engagements")
@@ -129,6 +141,11 @@ def compare_results(rounds_df: pd.DataFrame, weapon_fire_df: pd.DataFrame, kills
     ax[0,0].text(0.3, 0.5, str(valid_latent_engagement_df[nearest_crosshair_enemy_col].describe()),
                  transform=ax[0,0].transAxes)
     ax[0,0].figure.savefig(plot_path / 'latent_percent_match_2s.png')
+    ticks_per_engagement_2s_correct = \
+        valid_latent_engagement_df[nearest_crosshair_enemy_col] * valid_latent_engagement_df['tick length']
+    percent_ticks_2s_correct = ticks_per_engagement_2s_correct.sum() / valid_latent_engagement_df['tick length'].sum()
+    print('''percent of frames in engagements when heuristic predict right nearest crosshair enemy 2s:''' +
+          f'''{percent_ticks_2s_correct}''')
     ax = valid_inference_latent_engagement_df.hist(column=nearest_crosshair_enemy_col, bins=bins)
     ax[0,0].set_xlabel("percent of frames")
     ax[0,0].set_ylabel("number of engagements")
@@ -136,6 +153,11 @@ def compare_results(rounds_df: pd.DataFrame, weapon_fire_df: pd.DataFrame, kills
     ax[0,0].text(0.3, 0.5, str(valid_inference_latent_engagement_df[nearest_crosshair_enemy_col].describe()),
                  transform=ax[0,0].transAxes)
     ax[0,0].figure.savefig(plot_path / 'inference_latent_percent_match_2s.png')
+    ticks_per_inference_engagement_2s_correct = \
+        valid_inference_latent_engagement_df[nearest_crosshair_enemy_col] * valid_inference_latent_engagement_df['tick length']
+    inference_percent_ticks_2s_correct = ticks_per_inference_engagement_2s_correct.sum() / valid_inference_latent_engagement_df['tick length'].sum()
+    print('''percent of frames in engagements when inference predict right nearest crosshair enemy 2s:''' +
+          f'''{inference_percent_ticks_2s_correct}''')
 
     # measure kill agreement
     num_engagement_kill_matches = 0
@@ -226,10 +248,11 @@ def compare_results(rounds_df: pd.DataFrame, weapon_fire_df: pd.DataFrame, kills
 
 if __name__ == "__main__":
     ticks_df = load_hdf5_to_pd(latent_hdf5_data_path)
+    ticks_df = ticks_df[ticks_df['valid'] == 1.]
     rounds_df = load_hdf5_to_pd(rounds_hdf5_data_path)
     weapon_fire_df = load_hdf5_to_pd(weapon_fire_hdf5_data_path)
     kills_df = load_hdf5_to_pd(kills_hdf5_data_path)
     hurt_df = load_hdf5_to_pd(hurt_hdf5_data_path)
     latent_engagement_df = load_hdf5_to_pd(latent_engagement_hdf5_data_path)
     inference_latent_engagement_df = load_hdf5_to_pd(inference_latent_engagement_hdf5_data_path)
-    compare_results(rounds_df, weapon_fire_df, kills_df, hurt_df, latent_engagement_df, inference_latent_engagement_df)
+    compare_results(ticks_df, rounds_df, weapon_fire_df, kills_df, hurt_df, latent_engagement_df, inference_latent_engagement_df)
