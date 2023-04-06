@@ -51,6 +51,19 @@ namespace strategy {
         else {
             blackboard.newOrderThisFrame = false;
         }
+
+        // save player team state in feature store
+        vector<csknow::feature_store::BTTeamPlayerData> & btTeamPlayerData =
+            blackboard.featureStorePreCommitBuffer.btTeamPlayerData;
+        btTeamPlayerData.clear();
+        for (const auto & client : state.clients) {
+            AreaId curAreaId = blackboard.navFile
+                .get_nearest_area_by_position(vec3Conv(client.getFootPosForPlayer()))
+                .get_id();
+            btTeamPlayerData.push_back({client.csgoId, client.team, curAreaId});
+        }
+
+
         playerNodeState[treeThinker.csgoId] = NodeState::Success;
         return playerNodeState[treeThinker.csgoId];
     }

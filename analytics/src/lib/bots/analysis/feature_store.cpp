@@ -11,40 +11,6 @@
 #include "circular_buffer.h"
 
 namespace csknow::feature_store {
-    void FeatureStorePreCommitBuffer::updateFeatureStoreBufferPlayers(const ServerState & state) {
-        tPlayerIdToIndex.clear();
-        ctPlayerIdToIndex.clear();
-        int tIndex = 0, ctIndex = 0;
-        for (const auto & client : state.clients) {
-            if (client.team == ENGINE_TEAM_T) {
-                tPlayerIdToIndex[client.csgoId] = tIndex;
-                tIndex++;
-            }
-            else if (client.team == ENGINE_TEAM_CT) {
-                ctPlayerIdToIndex[client.csgoId] = ctIndex;
-                ctIndex++;
-            }
-        }
-    }
-
-    void FeatureStorePreCommitBuffer::addEngagementPossibleEnemy(
-        const EngagementPossibleEnemy & engagementPossibleEnemy) {
-        engagementPossibleEnemyBuffer.push_back(engagementPossibleEnemy);
-    }
-
-    void FeatureStorePreCommitBuffer::addEngagementLabel(bool hitEngagement, bool visibleEngagement) {
-        hitEngagementBuffer = hitEngagement;
-        visibleEngagementBuffer = visibleEngagement;
-    }
-
-    void FeatureStorePreCommitBuffer::addTargetPossibleEnemyLabel(const TargetPossibleEnemyLabel & targetPossibleEnemyLabel) {
-        targetPossibleEnemyLabelBuffer.push_back(targetPossibleEnemyLabel);
-    }
-
-    void FeatureStorePreCommitBuffer::addEngagementTeammate(const EngagementTeammate &engagementTeammate) {
-        engagementTeammateBuffer.push_back(engagementTeammate);
-    }
-
     void FeatureStoreResult::init(size_t size) {
         roundId.resize(size, INVALID_ID);
         tickId.resize(size, INVALID_ID);
@@ -101,8 +67,8 @@ namespace csknow::feature_store {
         init(size);
     }
 
-    void FeatureStoreResult::commitRow(FeatureStorePreCommitBuffer & buffer, size_t rowIndex,
-                                       int64_t roundIndex, int64_t tickIndex, int64_t playerIndex) {
+    void FeatureStoreResult::commitPlayerRow(FeatureStorePreCommitBuffer & buffer, size_t rowIndex,
+                                             int64_t roundIndex, int64_t tickIndex, int64_t playerIndex) {
         roundId[rowIndex] = roundIndex;
         tickId[rowIndex] = tickIndex;
         playerId[rowIndex] = playerIndex;

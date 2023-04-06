@@ -155,7 +155,7 @@ void Tree::tick(ServerState & state, const string & mapsPath) {
             }
         }
 
-        featureStoreResult.commitRow(featureStoreResult.defaultBuffer);
+        featureStoreResult.commitPlayerRow(featureStoreResult.defaultBuffer);
 
         stringstream logCollector;
         for (const auto & printState : printStates) {

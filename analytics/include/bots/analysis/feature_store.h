@@ -7,10 +7,10 @@
 
 #include "queries/query.h"
 #include "bots/load_save_bot_data.h"
+#include "bots/analysis/feature_store_team.h"
 
 
 namespace csknow::feature_store {
-    constexpr int maxEnemies = 5;
     enum class EngagementEnemyState {
         Visible,
         Communicated,
@@ -34,41 +34,6 @@ namespace csknow::feature_store {
     constexpr double maxViewAngleDelta = 15.;
     constexpr size_t windowSize = 10;
     constexpr double nearestEnemyChangeThreshold = 1.;
-    struct EngagementPossibleEnemy {
-        CSGOId playerId;
-        EngagementEnemyState enemyState;
-        double timeSinceLastVisibleOrToBecomeVisible;
-        double worldDistanceToEnemy;
-        double crosshairDistanceToEnemyHead;
-    };
-
-    struct EngagementTeammate {
-        CSGOId playerId;
-        double worldDistanceToTeammate;
-        double crosshairDistanceToTeammateHead;
-    };
-
-    struct TargetPossibleEnemyLabel {
-        int64_t playerId;
-        bool nearestTargetEnemy;
-        bool hitTargetEnemy;
-    };
-
-    struct FeatureStorePreCommitBuffer {
-        std::map<int64_t, int> tPlayerIdToIndex, ctPlayerIdToIndex;
-        void updateFeatureStoreBufferPlayers(const ServerState & state);
-
-        vector<EngagementPossibleEnemy> engagementPossibleEnemyBuffer;
-        vector<TargetPossibleEnemyLabel> targetPossibleEnemyLabelBuffer;
-        bool hitEngagementBuffer;
-        bool visibleEngagementBuffer;
-        vector<EngagementTeammate> engagementTeammateBuffer;
-
-        void addEngagementPossibleEnemy(const EngagementPossibleEnemy & engagementPossibleEnemy);
-        void addEngagementLabel(bool hitEngagement, bool visibleEngagement);
-        void addTargetPossibleEnemyLabel(const TargetPossibleEnemyLabel & targetPossibleEnemyLabel);
-        void addEngagementTeammate(const EngagementTeammate & engagementTeammate);
-    };
 
     class FeatureStoreResult : public QueryResult {
         void init(size_t size);
@@ -116,11 +81,14 @@ namespace csknow::feature_store {
         // for use in non-multithreaded applications where want on buffer
         FeatureStorePreCommitBuffer defaultBuffer;
 
+        // team data, only one row per tick so different data layout
+        TeamFeatureStoreResult teamFeatureStoreResult;
+
         FeatureStoreResult();
         FeatureStoreResult(size_t size);
 
-        void commitRow(FeatureStorePreCommitBuffer & buffer, size_t rowIndex = 0,
-                       int64_t roundIndex = 0, int64_t tickIndex = 0, int64_t playerIndex = 0);
+        void commitPlayerRow(FeatureStorePreCommitBuffer & buffer, size_t rowIndex = 0,
+                             int64_t roundIndex = 0, int64_t tickIndex = 0, int64_t playerIndex = 0);
         void computeAcausalLabels(const Games & games, const Rounds & rounds,
                                   const Ticks & ticks, const PlayerAtTick & playerAtTick);
         FeatureStoreResult makeWindows() const;
