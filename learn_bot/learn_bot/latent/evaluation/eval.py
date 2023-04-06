@@ -103,6 +103,7 @@ def compare_results(ticks_df: pd.DataFrame, rounds_df: pd.DataFrame, weapon_fire
     ax[1,1].text(0.3, 0.5, valid_inference_latent_engagement_df[nearest_crosshair_enemy_col].describe().to_string(),
                  transform=ax[1,1].transAxes)
     match_lims(ax[1,0], ax[1,1])
+    print(valid_inference_latent_engagement_df[valid_inference_latent_engagement_df[nearest_crosshair_enemy_col] < 0.1].to_string())
 
     # graph percent match nearest crosshair enemy 500ms
     nearest_crosshair_enemy_col = "percent match nearest crosshair enemy 500ms"
