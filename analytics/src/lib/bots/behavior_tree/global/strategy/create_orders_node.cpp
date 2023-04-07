@@ -57,6 +57,9 @@ namespace strategy {
             blackboard.featureStorePreCommitBuffer.btTeamPlayerData;
         btTeamPlayerData.clear();
         for (const auto & client : state.clients) {
+            if (!client.isAlive) {
+                continue;
+            }
             AreaId curAreaId = blackboard.navFile
                 .get_nearest_area_by_position(vec3Conv(client.getFootPosForPlayer()))
                 .get_id();

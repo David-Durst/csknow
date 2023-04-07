@@ -88,6 +88,10 @@ namespace csknow::behavior_tree_latent_states {
                 tmpPreCommitBuffer[threadNum].updateFeatureStoreBufferPlayers(curState);
                 globalQueryNode.exec(curState, defaultThinker);
 
+                featureStoreResult.teamFeatureStoreResult.commitTeamRow(featureStoreResult.defaultBuffer,
+                                                                        blackboard.distanceToPlaces, blackboard.navFile,
+                                                                        roundIndex, tickIndex);
+
                 /*
                 if (tickIndex == 8080) {
                     for (int64_t i = 0; i < 3; i++) {

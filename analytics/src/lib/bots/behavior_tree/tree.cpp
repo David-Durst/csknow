@@ -116,6 +116,8 @@ void Tree::tick(ServerState & state, const string & mapsPath) {
         // update all nodes in tree
         // don't care about which player as order is for all players
         globalNode->exec(state, defaultThinker);
+        featureStoreResult.teamFeatureStoreResult.commitTeamRow(featureStoreResult.defaultBuffer,
+                                                                blackboard->distanceToPlaces, blackboard->navFile );
         printStates.push_back(globalNode->printState(state, defaultThinker.csgoId));
         printStates.push_back(blackboard->printStrategyState(state));
         printStates.push_back(blackboard->printCommunicateState(state));

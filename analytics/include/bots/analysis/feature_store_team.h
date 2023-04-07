@@ -11,6 +11,7 @@
 #include "queries/distance_to_places.h"
 #include "bots/analysis/feature_store_precommit.h"
 #include "queries/orders.h"
+#include "circular_buffer.h"
 
 namespace csknow::feature_store {
     constexpr int maxEnemies = 5;
@@ -42,11 +43,18 @@ namespace csknow::feature_store {
             array<vector<double>, num_orders_per_site> distributionNearestAOrders30s, distributionNearestBOrders30s;
         };
         array<ColumnPlayerData, maxEnemies> columnCTData, columnTData;
+        vector<std::reference_wrapper<array<ColumnPlayerData, maxEnemies>>> getAllColumnData() {
+            return {columnCTData, columnTData};
+        }
+        vector<string> allColumnDataTeam = {"CT", "T"};
+
 
         TeamFeatureStoreResult(size_t size, const std::vector<csknow::orders::QueryOrder> & orders);
         void commitTeamRow(FeatureStorePreCommitBuffer & buffer, DistanceToPlacesResult & distanceToPlaces,
                            const nav_mesh::nav_file & navFile,
                            int64_t roundIndex = 0, int64_t tickIndex = 0);
+        void computeTeamTickACausalLabels(int64_t curTick, CircularBuffer<int64_t> & futureTracker, array<ColumnPlayerData,
+                                          maxEnemies> & columnData, bool future15s);
         void computeAcausalLabels(const Games & games, const Rounds & rounds,
                                   const Ticks & ticks);
         void toHDF5Inner(HighFive::File & file) override;
