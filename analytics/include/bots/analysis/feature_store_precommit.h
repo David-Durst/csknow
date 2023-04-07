@@ -7,12 +7,28 @@
 
 #include "queries/query.h"
 #include "bots/load_save_bot_data.h"
+#include "geometryNavConversions.h"
+#include <map>
 
 namespace csknow::feature_store {
     struct BTTeamPlayerData {
         int64_t playerId;
         TeamId teamId;
         AreaId curArea;
+        int64_t curAreaIndex;
+    };
+
+    struct C4MapData {
+        bool c4Planted;
+        AreaId c4AreaId;
+        int64_t c4AreaIndex;
+    };
+
+    enum class EngagementEnemyState {
+        Visible,
+        Communicated,
+        Remembered,
+        None
     };
 
     struct EngagementPossibleEnemy {
@@ -37,6 +53,7 @@ namespace csknow::feature_store {
 
     struct FeatureStorePreCommitBuffer {
         std::map<int64_t, int> tPlayerIdToIndex, ctPlayerIdToIndex;
+        C4MapData c4MapData;
 
         void updateFeatureStoreBufferPlayers(const ServerState &state);
 

@@ -60,9 +60,18 @@ namespace strategy {
             AreaId curAreaId = blackboard.navFile
                 .get_nearest_area_by_position(vec3Conv(client.getFootPosForPlayer()))
                 .get_id();
-            btTeamPlayerData.push_back({client.csgoId, client.team, curAreaId});
+            int64_t curAreaIndex = blackboard.navFile.m_area_ids_to_indices.at(curAreaId);
+            btTeamPlayerData.push_back({client.csgoId, client.team, curAreaId, curAreaIndex});
         }
-
+        AreaId c4AreaId = blackboard.navFile
+            .get_nearest_area_by_position(vec3Conv(state.getC4Pos()))
+            .get_id();
+        int64_t c4AreaIndex = blackboard.navFile.m_area_ids_to_indices.at(c4AreaId);
+        blackboard.featureStorePreCommitBuffer.c4MapData = {
+            state.c4IsPlanted,
+            c4AreaId,
+            c4AreaIndex
+        };
 
         playerNodeState[treeThinker.csgoId] = NodeState::Success;
         return playerNodeState[treeThinker.csgoId];

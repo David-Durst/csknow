@@ -71,7 +71,9 @@ namespace csknow::behavior_tree_latent_states {
         IntervalIndex eventsPerTick;
         feature_store::FeatureStoreResult featureStoreResult;
 
-        BehaviorTreeLatentStates(const PlayerAtTick & playerAtTick) : featureStoreResult(playerAtTick.size) {
+        BehaviorTreeLatentStates(const Ticks & ticks, const PlayerAtTick & playerAtTick,
+                                 const std::vector<csknow::orders::QueryOrder> & orders) :
+            featureStoreResult(ticks.size, playerAtTick.size, orders) {
             variableLength = false;
             nonTemporal = true;
             overlay = true;

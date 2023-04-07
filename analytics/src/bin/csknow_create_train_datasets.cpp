@@ -203,7 +203,8 @@ int main(int argc, char * argv[]) {
     string behaviorTreeFeatureStoreName = "behaviorTreeFeatureStore";
     string behaviorTreeWindowFeatureStoreName = "behaviorTreeWindowFeatureStore";
     std::cout << "processing behaviorTreeLatentEvents" << std::endl;
-    csknow::behavior_tree_latent_states::BehaviorTreeLatentStates behaviorTreeLatentEvents(playerAtTick);
+    csknow::behavior_tree_latent_states::BehaviorTreeLatentStates behaviorTreeLatentEvents(ticks, playerAtTick,
+                                                                                           ordersResult.orders);
     behaviorTreeLatentEvents.runQuery(navPath + "/de_dust2.nav", map_visPoints.at("de_dust2"), d2MeshResult,
                                       d2ReachableResult, d2DistanceToPlacesResult,
                                       nearestNavCellResult, players, games, filteredRounds, ticks,

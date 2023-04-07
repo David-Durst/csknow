@@ -57,14 +57,16 @@ namespace csknow::feature_store {
         this->size = size;
     }
 
-    FeatureStoreResult::FeatureStoreResult() {
+    FeatureStoreResult::FeatureStoreResult() : teamFeatureStoreResult(1, {}) {
         training = false;
         init(1);
     }
 
-    FeatureStoreResult::FeatureStoreResult(size_t size) {
+    FeatureStoreResult::FeatureStoreResult(size_t tickSize, size_t patSize,
+                                           const std::vector<csknow::orders::QueryOrder> & orders) :
+                                           teamFeatureStoreResult(tickSize, orders) {
         training = true;
-        init(size);
+        init(patSize);
     }
 
     void FeatureStoreResult::commitPlayerRow(FeatureStorePreCommitBuffer & buffer, size_t rowIndex,
@@ -546,7 +548,7 @@ namespace csknow::feature_store {
             }
         }
 
-        FeatureStoreResult windowResult(numValid * windowSize);
+        FeatureStoreResult windowResult(1, numValid * windowSize, {});
         windowResult.patId.resize(numValid * windowSize);
         size_t windowResultIndex = 0;
         for (size_t i = 0; i < static_cast<size_t>(size); i++) {

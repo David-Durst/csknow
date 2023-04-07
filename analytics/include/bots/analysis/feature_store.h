@@ -11,13 +11,6 @@
 
 
 namespace csknow::feature_store {
-    enum class EngagementEnemyState {
-        Visible,
-        Communicated,
-        Remembered,
-        None
-    };
-
     enum class NearestEnemyState {
         Decrease,
         Constant,
@@ -85,7 +78,7 @@ namespace csknow::feature_store {
         TeamFeatureStoreResult teamFeatureStoreResult;
 
         FeatureStoreResult();
-        FeatureStoreResult(size_t size);
+        FeatureStoreResult(size_t tickSize, size_t patSize, const std::vector<csknow::orders::QueryOrder> & orders);
 
         void commitPlayerRow(FeatureStorePreCommitBuffer & buffer, size_t rowIndex = 0,
                              int64_t roundIndex = 0, int64_t tickIndex = 0, int64_t playerIndex = 0);
