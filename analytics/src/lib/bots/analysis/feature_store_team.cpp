@@ -36,6 +36,7 @@ namespace csknow::feature_store {
                 columnCTData[i].distributionNearestBOrders30s[j].resize(size, INVALID_ID);
             }
         }
+        this->size = size;
     }
 
     TeamFeatureStoreResult::TeamFeatureStoreResult(size_t size, const std::vector<csknow::orders::QueryOrder> & orders) {
@@ -104,16 +105,16 @@ namespace csknow::feature_store {
                 int64_t futureTick = futureTracker.fromOldest(futureTickIndex);
                 if (futureTick != curTick &&
                     columnData[playerColumn].playerId[curTick] == columnData[playerColumn].playerId[futureTick]) {
-                    double aTotalDistance = 0., bTotalDistance = 0.;
+                    double totalDistance = 0.;
                     for (size_t orderPerSite = 0; orderPerSite < num_orders_per_site; orderPerSite++) {
-                        aTotalDistance += columnData[playerColumn].distanceToNearestAOrderNavArea[orderPerSite][futureTick];
-                        bTotalDistance += columnData[playerColumn].distanceToNearestBOrderNavArea[orderPerSite][futureTick];
+                        totalDistance += columnData[playerColumn].distanceToNearestAOrderNavArea[orderPerSite][futureTick];
+                        totalDistance += columnData[playerColumn].distanceToNearestBOrderNavArea[orderPerSite][futureTick];
                     }
                     for (size_t orderPerSite = 0; orderPerSite < num_orders_per_site; orderPerSite++) {
                         double percentNearnessA = 1 -
-                            (columnData[playerColumn].distanceToNearestAOrderNavArea[orderPerSite][futureTick] / aTotalDistance);
+                            (columnData[playerColumn].distanceToNearestAOrderNavArea[orderPerSite][futureTick] / totalDistance);
                         double percentNearnessB = 1 -
-                            (columnData[playerColumn].distanceToNearestBOrderNavArea[orderPerSite][futureTick] / bTotalDistance);
+                            (columnData[playerColumn].distanceToNearestBOrderNavArea[orderPerSite][futureTick] / totalDistance);
                         if (future15s) {
                             columnData[playerColumn].distributionNearestAOrders15s[orderPerSite][curTick] = percentNearnessA;
                             columnData[playerColumn].distributionNearestBOrders15s[orderPerSite][curTick] = percentNearnessB;

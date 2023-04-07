@@ -164,11 +164,13 @@ void EngagementResult::computePercentMatchNearestCrosshair(const Rounds & rounds
                  patIndex <= ticks.patPerTick[tickIndex].maxId; patIndex++) {
                 int64_t attackerId = playerAtTick.playerId[patIndex];
                 if (playerToVictimCurTick.find(attackerId) != playerToVictimCurTick.end()) {
+                    /*
                     if (ticks.demoTickNumber[tickIndex] == 5117 && attackerId == 2) {
                         std::cout << "tick index " << tickIndex << " attacker id " << attackerId
                             << " victim id " << playerToVictimCurTick[attackerId] << " nearest crosshair enemy 2s "
                             << featureStoreResult.nearestCrosshairEnemy2s[patIndex] << std::endl;
                     }
+                     */
                     int nearestEnemyIndexCurTick = featureStoreResult.nearestCrosshairCurTick[patIndex];
                     if (featureStoreResult.columnEnemyData[nearestEnemyIndexCurTick].playerId[patIndex] == playerToVictimCurTick[attackerId]) {
                         engagementToNumCorrectTicksCurTick[playerToEngagementCurTick[attackerId]]++;
