@@ -13,6 +13,7 @@ namespace csknow::feature_store {
         roundId.resize(size, INVALID_ID);
         tickId.resize(size, INVALID_ID);
         c4Status.resize(size, C4Status::NotPlanted);
+        valid.resize(size, false);
         for (int i = 0; i < maxEnemies; i++) {
             columnTData[i].playerId.resize(size, INVALID_ID);
             columnTData[i].distanceToASite.resize(size, INVALID_ID);
@@ -65,6 +66,7 @@ namespace csknow::feature_store {
         else {
             c4Status[tickIndex] = C4Status::NotPlanted;
         }
+        valid[tickIndex] = true;
         for (size_t i = 0; i < buffer.btTeamPlayerData.size(); i++) {
             const BTTeamPlayerData & btTeamPlayerData = buffer.btTeamPlayerData[i];
             auto & columnData = btTeamPlayerData.teamId == ENGINE_TEAM_T ? columnTData : columnCTData;
@@ -163,6 +165,7 @@ namespace csknow::feature_store {
         file.createDataSet("/data/round id", roundId, hdf5FlatCreateProps);
         file.createDataSet("/data/tick id", tickId, hdf5FlatCreateProps);
         file.createDataSet("/data/c4 status", vectorOfEnumsToVectorOfInts(c4Status), hdf5FlatCreateProps);
+        file.createDataSet("/data/valid", valid, hdf5FlatCreateProps);
         for (size_t columnDataIndex = 0; columnDataIndex < getAllColumnData().size(); columnDataIndex++) {
             array<ColumnPlayerData, maxEnemies> & columnData = getAllColumnData()[columnDataIndex];
             string columnTeam = allColumnDataTeam[columnDataIndex];

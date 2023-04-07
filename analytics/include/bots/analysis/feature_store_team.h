@@ -31,6 +31,7 @@ namespace csknow::feature_store {
         vector<int64_t> roundId;
         vector<int64_t> tickId;
         vector<C4Status> c4Status;
+        vector<bool> valid;
         std::vector<csknow::orders::QueryOrder> aOrders, bOrders;
 
         struct ColumnPlayerData {
