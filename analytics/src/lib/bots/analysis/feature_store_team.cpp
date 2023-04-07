@@ -12,8 +12,14 @@ namespace csknow::feature_store {
     void TeamFeatureStoreResult::init(size_t size) {
         roundId.resize(size, INVALID_ID);
         tickId.resize(size, INVALID_ID);
-        c4Status.resize(size, C4Status::NotPlanted);
         valid.resize(size, false);
+        c4Status.resize(size, C4Status::NotPlanted);
+        c4DistanceToASite.resize(size, INVALID_ID);
+        c4DistanceToBSite.resize(size, INVALID_ID);
+        for (int j = 0; j < num_orders_per_site; j++) {
+            c4DistanceToNearestAOrderNavArea[j].resize(size, INVALID_ID);
+            c4DistanceToNearestBOrderNavArea[j].resize(size, INVALID_ID);
+        }
         for (int i = 0; i < maxEnemies; i++) {
             columnTData[i].playerId.resize(size, INVALID_ID);
             columnTData[i].distanceToASite.resize(size, INVALID_ID);
@@ -57,6 +63,8 @@ namespace csknow::feature_store {
                                                int64_t roundIndex, int64_t tickIndex) {
         roundId[tickIndex] = roundIndex;
         tickId[tickIndex] = tickIndex;
+        valid[tickIndex] = true;
+        
         if (buffer.c4MapData.c4Planted) {
             double c4DistanceToASite =
                 distanceToPlaces.getClosestDistance(buffer.c4MapData.c4AreaId, a_site, navFile);
@@ -67,7 +75,25 @@ namespace csknow::feature_store {
         else {
             c4Status[tickIndex] = C4Status::NotPlanted;
         }
-        valid[tickIndex] = true;
+        c4DistanceToASite[tickIndex] =
+            distanceToPlaces.getClosestDistance(buffer.c4MapData.c4AreaId, a_site, navFile);
+        c4DistanceToBSite[tickIndex] =
+            distanceToPlaces.getClosestDistance(buffer.c4MapData.c4AreaId, b_site, navFile);
+        for (size_t j = 0; j < num_orders_per_site; j++) {
+            double & aOrderDistance = c4DistanceToNearestAOrderNavArea[j][tickIndex];
+            aOrderDistance = std::numeric_limits<double>::max();
+            for (size_t k = 0; k < aOrders[j].places.size(); k++) {
+                aOrderDistance = std::min(aOrderDistance,
+                                          distanceToPlaces.getClosestDistance(buffer.c4MapData.c4AreaIndex, aOrders[j].places[k]));
+            }
+            double & bOrderDistance = c4DistanceToNearestBOrderNavArea[j][tickIndex];
+            bOrderDistance = std::numeric_limits<double>::max();
+            for (size_t k = 0; k < bOrders[j].places.size(); k++) {
+                bOrderDistance = std::min(bOrderDistance,
+                                          distanceToPlaces.getClosestDistance(buffer.c4MapData.c4AreaIndex, bOrders[j].places[k]));
+            }
+        }
+
         for (size_t i = 0; i < buffer.btTeamPlayerData.size(); i++) {
             const BTTeamPlayerData & btTeamPlayerData = buffer.btTeamPlayerData[i];
             auto & columnData = btTeamPlayerData.teamId == ENGINE_TEAM_T ? columnTData : columnCTData;
@@ -83,12 +109,14 @@ namespace csknow::feature_store {
                 double & aOrderDistance = columnData[columnIndex].distanceToNearestAOrderNavArea[j][tickIndex];
                 aOrderDistance = std::numeric_limits<double>::max();
                 for (size_t k = 0; k < aOrders[j].places.size(); k++) {
-                    aOrderDistance = distanceToPlaces.getMedianDistance(btTeamPlayerData.curAreaIndex, aOrders[j].places[k]);
+                    aOrderDistance = std::min(aOrderDistance,
+                                              distanceToPlaces.getClosestDistance(btTeamPlayerData.curAreaIndex, aOrders[j].places[k]));
                 }
                 double & bOrderDistance = columnData[columnIndex].distanceToNearestBOrderNavArea[j][tickIndex];
                 bOrderDistance = std::numeric_limits<double>::max();
                 for (size_t k = 0; k < bOrders[j].places.size(); k++) {
-                    bOrderDistance = distanceToPlaces.getMedianDistance(btTeamPlayerData.curAreaIndex, bOrders[j].places[k]);
+                    bOrderDistance = std::min(bOrderDistance,
+                                              distanceToPlaces.getClosestDistance(btTeamPlayerData.curAreaIndex, bOrders[j].places[k]));
                 }
             }
         }
@@ -165,8 +193,15 @@ namespace csknow::feature_store {
 
         file.createDataSet("/data/round id", roundId, hdf5FlatCreateProps);
         file.createDataSet("/data/tick id", tickId, hdf5FlatCreateProps);
-        file.createDataSet("/data/c4 status", vectorOfEnumsToVectorOfInts(c4Status), hdf5FlatCreateProps);
         file.createDataSet("/data/valid", valid, hdf5FlatCreateProps);
+        file.createDataSet("/data/c4 status", vectorOfEnumsToVectorOfInts(c4Status), hdf5FlatCreateProps);
+        file.createDataSet("/data/c4 distance to a site", c4DistanceToASite, hdf5FlatCreateProps);
+        file.createDataSet("/data/c4 distance to b site", c4DistanceToBSite, hdf5FlatCreateProps);
+        for (size_t orderIndex = 0; orderIndex < num_orders_per_site; orderIndex++) {
+            string orderIndexStr = std::to_string(orderIndex);
+            file.createDataSet("/data/c4 distance to nearest a order " + orderIndexStr + " nav area ", c4DistanceToNearestAOrderNavArea[orderIndex], hdf5FlatCreateProps);
+            file.createDataSet("/data/c4 distance to nearest b order " + orderIndexStr + " nav area ", c4DistanceToNearestBOrderNavArea[orderIndex], hdf5FlatCreateProps);
+        }
         for (size_t columnDataIndex = 0; columnDataIndex < getAllColumnData().size(); columnDataIndex++) {
             array<ColumnPlayerData, maxEnemies> & columnData = getAllColumnData()[columnDataIndex];
             string columnTeam = allColumnDataTeam[columnDataIndex];

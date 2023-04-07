@@ -28,11 +28,15 @@ namespace csknow::feature_store {
         void init(size_t size);
 
     public:
+        std::vector<csknow::orders::QueryOrder> aOrders, bOrders;
+
         vector<int64_t> roundId;
         vector<int64_t> tickId;
-        vector<C4Status> c4Status;
         vector<bool> valid;
-        std::vector<csknow::orders::QueryOrder> aOrders, bOrders;
+
+        vector<C4Status> c4Status;
+        vector<double> c4DistanceToASite, c4DistanceToBSite;
+        array<vector<double>, num_orders_per_site> c4DistanceToNearestAOrderNavArea, c4DistanceToNearestBOrderNavArea;
 
         struct ColumnPlayerData {
             vector<int64_t> playerId;
