@@ -64,7 +64,7 @@ namespace csknow::feature_store {
         roundId[tickIndex] = roundIndex;
         tickId[tickIndex] = tickIndex;
         valid[tickIndex] = true;
-        
+
         if (buffer.c4MapData.c4Planted) {
             double c4DistanceToASite =
                 distanceToPlaces.getClosestDistance(buffer.c4MapData.c4AreaId, a_site, navFile);
