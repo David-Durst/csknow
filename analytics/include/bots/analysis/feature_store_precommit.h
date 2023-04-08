@@ -11,6 +11,8 @@
 #include <map>
 
 namespace csknow::feature_store {
+    constexpr double maxWorldDistance = 4000.;
+
     struct BTTeamPlayerData {
         int64_t playerId;
         TeamId teamId;

@@ -20,7 +20,6 @@ namespace csknow::feature_store {
     constexpr size_t numNearestEnemyState = static_cast<size_t>(NearestEnemyState::NUM_NEAREST_ENEMY_STATE);
 
     constexpr double maxTimeToVis = 100.;
-    constexpr double maxWorldDistance = 4000.;
     constexpr double maxCrosshairDistance = 30.;
     constexpr double maxTeammateCrosshairDistance = 180.;
     constexpr double maxPositionDelta = 150.;

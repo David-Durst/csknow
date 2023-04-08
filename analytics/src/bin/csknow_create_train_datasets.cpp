@@ -176,6 +176,7 @@ int main(int argc, char * argv[]) {
     std::cout << "processing orders" << std::endl;
     csknow::orders::OrdersResult ordersResult(map_visPoints.at("de_dust2"), d2MeshResult, d2DistanceToPlacesResult);
     ordersResult.runQuery();
+    ordersResult.toCSV(std::cout);
     std::cout << "size: " << ordersResult.size << std::endl;
 
     // nearest nav areas
