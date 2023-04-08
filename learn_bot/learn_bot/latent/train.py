@@ -240,3 +240,4 @@ if __name__ == "__main__":
 # all_data_df[(all_data_df['pct nearest enemy change 2s decrease'] + all_data_df['pct nearest enemy change 2s constant'] > 0.1) & (all_data_df['valid'] == 1)]
 # all_data_df[(all_data_df['fire next 2s'] + all_data_df['neg fire next 2s'] < 0.9) & (all_data_df['valid'] == 1)]
 # all_data_df[(all_data_df['visible enemy 2s'] + all_data_df['neg visible enemy 2s'] < 0.9) & (all_data_df['valid'] == 1)]
+# team_data_df[(team_data_df['distribution nearest a order 1 30s CT 0'] + team_data_df['distribution nearest a order 2 30s CT 0'] > 1.)]
