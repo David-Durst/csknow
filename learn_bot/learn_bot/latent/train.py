@@ -18,6 +18,9 @@ from learn_bot.latent.engagement.latent_to_distributions import get_engagement_t
 from learn_bot.latent.lstm_latent_model import LSTMLatentModel
 from learn_bot.latent.mlp_hidden_latent_model import MLPHiddenLatentModel
 from learn_bot.latent.mlp_latent_model import MLPLatentModel
+from learn_bot.latent.mlp_nested_hidden_latent_model import MLPNestedHiddenLatentModel
+from learn_bot.latent.order.column_names import order_input_column_types, order_output_column_types
+from learn_bot.latent.order.latent_to_distributions import get_order_probability
 from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd
 from learn_bot.libs.io_transforms import CUDA_DEVICE_STR
 from learn_bot.latent.accuracy_and_loss import compute_loss, compute_accuracy, finish_accuracy, \
@@ -48,6 +51,7 @@ class TrainResult:
 class TrainType(Enum):
     Engagement = 1
     Aggression = 2
+    Order = 3
 
 
 def train(train_type: TrainType, all_data_df: pd.DataFrame, num_epochs: int,
@@ -80,7 +84,7 @@ def train(train_type: TrainType, all_data_df: pd.DataFrame, num_epochs: int,
         input_column_types = engagement_input_column_types
         output_column_types = engagement_output_column_types
         prob_func = get_engagement_probability
-    else:
+    elif train_type == TrainType.Aggression:
         column_transformers = IOColumnTransformers(aggression_input_column_types, aggression_output_column_types,
                                                    train_df)
         model = MLPHiddenLatentModel(column_transformers, num_aggression_options, get_aggression_distributions).to(
@@ -88,6 +92,13 @@ def train(train_type: TrainType, all_data_df: pd.DataFrame, num_epochs: int,
         input_column_types = aggression_input_column_types
         output_column_types = aggression_output_column_types
         prob_func = get_aggression_probability
+    else:
+        column_transformers = IOColumnTransformers(order_input_column_types, order_output_column_types,
+                                                   train_df)
+        model = MLPNestedHiddenLatentModel(column_transformers, num_aggression_options).to(device)
+        input_column_types = order_input_column_types
+        output_column_types = order_output_column_types
+        prob_func = get_order_probability
 
     # plot data set with and without transformers
     #plot_untransformed_and_transformed(plot_path, 'train and test labels', all_data_df,

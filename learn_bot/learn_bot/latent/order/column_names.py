@@ -119,17 +119,16 @@ class PlayerOrderColumns:
 
 specific_player_order_columns: list[PlayerOrderColumns] = \
     [PlayerOrderColumns(team_str, player_index) for team_str in team_strs for player_index in range(max_enemies)]
-flat_input_float_team_columns: list[str] = \
+flat_input_float_order_columns: list[str] = \
     float_c4_cols + [col for cols in specific_player_order_columns for col in cols.to_input_float_list()]
-flat_input_cat_team_columns: list[str] = [c4_status_col]
-flat_input_cat_team_num_options: list[int] = [num_c4_status]
+flat_input_cat_order_columns: list[str] = [c4_status_col]
+flat_input_cat_order_num_options: list[int] = [num_c4_status]
 flat_output_cat_distribution_columns: list[list[str]] = \
     flatten_list([cols.to_output_cat_list(False, True) for cols in specific_player_order_columns])
 
-team_input_column_types = get_simplified_column_types(flat_input_float_team_columns,
-                                                      flat_input_cat_team_columns,
-                                                      flat_input_cat_team_num_options, [])
+order_input_column_types = get_simplified_column_types(flat_input_float_order_columns,
+                                                      flat_input_cat_order_columns,
+                                                      flat_input_cat_order_num_options, [])
 #output_column_types = get_simplified_column_types([], flat_output_cat_columns, flat_output_num_options,
 #                                                  flat_output_cat_distribution_columns)
-engagement_output_column_types = get_simplified_column_types([], [], [],
-                                                             flat_output_cat_distribution_columns)
+order_output_column_types = get_simplified_column_types([], [], [], flat_output_cat_distribution_columns)
