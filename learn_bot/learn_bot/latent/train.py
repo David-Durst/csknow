@@ -19,7 +19,7 @@ from learn_bot.latent.lstm_latent_model import LSTMLatentModel
 from learn_bot.latent.mlp_hidden_latent_model import MLPHiddenLatentModel
 from learn_bot.latent.mlp_latent_model import MLPLatentModel
 from learn_bot.latent.mlp_nested_hidden_latent_model import MLPNestedHiddenLatentModel
-from learn_bot.latent.order.column_names import order_input_column_types, order_output_column_types
+from learn_bot.latent.order.column_names import order_input_column_types, order_output_column_types, num_orders_per_site
 from learn_bot.latent.order.latent_to_distributions import get_order_probability
 from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd
 from learn_bot.libs.io_transforms import CUDA_DEVICE_STR
@@ -95,15 +95,15 @@ def train(train_type: TrainType, all_data_df: pd.DataFrame, num_epochs: int,
     else:
         column_transformers = IOColumnTransformers(order_input_column_types, order_output_column_types,
                                                    train_df)
-        model = MLPNestedHiddenLatentModel(column_transformers, num_aggression_options).to(device)
+        model = MLPNestedHiddenLatentModel(column_transformers, max_enemies, 2*num_orders_per_site).to(device)
         input_column_types = order_input_column_types
         output_column_types = order_output_column_types
         prob_func = get_order_probability
 
     # plot data set with and without transformers
-    #plot_untransformed_and_transformed(plot_path, 'train and test labels', all_data_df,
-    #                                   input_column_types.float_standard_cols + output_column_types.categorical_distribution_cols_flattened,
-    #                                   input_column_types.categorical_cols + output_column_types.categorical_cols)
+    plot_untransformed_and_transformed(plot_path, 'train and test labels', all_data_df,
+                                       input_column_types.float_standard_cols + output_column_types.categorical_distribution_cols_flattened,
+                                       input_column_types.categorical_cols + output_column_types.categorical_cols)
     #model = MLPLatentModel(column_transformers).to(device)
     #model = LSTMLatentModel(column_transformers).to(device)
 
@@ -222,14 +222,18 @@ def train(train_type: TrainType, all_data_df: pd.DataFrame, num_epochs: int,
 
     return TrainResult(train_data, test_data, train_df, test_df, column_transformers, model)
 
+latent_team_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / 'analytics' / 'csv_outputs' / 'behaviorTreeTeamFeatureStore.hdf5'
 
 if __name__ == "__main__":
     all_data_df = load_hdf5_to_pd(latent_hdf5_data_path)
     all_data_df = all_data_df[all_data_df['valid'] == 1.]
+    team_data_df = load_hdf5_to_pd(latent_team_hdf5_data_path)
+    team_data_df = team_data_df[team_data_df['valid'] == 1.]
     #all_data_df = all_data_df.iloc[:500000]
     #all_data_df = load_hdf5_to_pd(latent_window_hdf5_data_path)
-    train_result = train(TrainType.Engagement, all_data_df, num_epochs=1, windowed=False)
-    train_result = train(TrainType.Aggression, all_data_df, num_epochs=1, windowed=False)
+    #train_result = train(TrainType.Engagement, all_data_df, num_epochs=1, windowed=False)
+    #train_result = train(TrainType.Aggression, all_data_df, num_epochs=1, windowed=False)
+    train_result = train(TrainType.Order, team_data_df, num_epochs=1, windowed=False)
 
 # all_data_df[((all_data_df['pct nearest crosshair enemy 2s 0'] + all_data_df['pct nearest crosshair enemy 2s 1'] + all_data_df['pct nearest crosshair enemy 2s 2'] + all_data_df['pct nearest crosshair enemy 2s 3'] + all_data_df['pct nearest crosshair enemy 2s 4'] + all_data_df['pct nearest crosshair enemy 2s 5']) < 0.9) & (all_data_df['valid'] == 1)]
 # all_data_df[(all_data_df['pct nearest enemy change 2s decrease'] + all_data_df['pct nearest enemy change 2s constant'] + all_data_df['pct nearest enemy change 2s increase'] < 0.9) & (all_data_df['valid'] == 1)]
