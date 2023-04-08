@@ -199,8 +199,8 @@ namespace csknow::feature_store {
         file.createDataSet("/data/c4 distance to b site", c4DistanceToBSite, hdf5FlatCreateProps);
         for (size_t orderIndex = 0; orderIndex < num_orders_per_site; orderIndex++) {
             string orderIndexStr = std::to_string(orderIndex);
-            file.createDataSet("/data/c4 distance to nearest a order " + orderIndexStr + " nav area ", c4DistanceToNearestAOrderNavArea[orderIndex], hdf5FlatCreateProps);
-            file.createDataSet("/data/c4 distance to nearest b order " + orderIndexStr + " nav area ", c4DistanceToNearestBOrderNavArea[orderIndex], hdf5FlatCreateProps);
+            file.createDataSet("/data/c4 distance to nearest a order " + orderIndexStr + " nav area", c4DistanceToNearestAOrderNavArea[orderIndex], hdf5FlatCreateProps);
+            file.createDataSet("/data/c4 distance to nearest b order " + orderIndexStr + " nav area", c4DistanceToNearestBOrderNavArea[orderIndex], hdf5FlatCreateProps);
         }
         for (size_t columnDataIndex = 0; columnDataIndex < getAllColumnData().size(); columnDataIndex++) {
             array<ColumnPlayerData, maxEnemies> & columnData = getAllColumnData()[columnDataIndex];
