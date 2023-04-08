@@ -195,9 +195,9 @@ void StreamingManager::update(const Games & games, const RoundPlantDefusal & rou
 
     // loadC4State equivalent
     newState.c4Exists = true;
-    newState.c4IsPlanted = tickIndex >= roundPlantDefusal.plantTickIndex;
+    newState.c4IsPlanted = roundPlantDefusal.plantTickIndex != -1 && tickIndex >= roundPlantDefusal.plantTickIndex;
     newState.c4IsDropped = !newState.c4IsPlanted && ticks.bombCarrier[tickIndex] == INVALID_ID;
-    newState.c4IsDefused = tickIndex >= roundPlantDefusal.defusalTickIndex;
+    newState.c4IsDefused = roundPlantDefusal.defusalTickIndex != -1 && tickIndex >= roundPlantDefusal.defusalTickIndex;
     newState.c4X = ticks.bombX[tickIndex];
     newState.c4Y = ticks.bombY[tickIndex];
     newState.c4Z = ticks.bombZ[tickIndex];
