@@ -94,11 +94,24 @@ namespace csknow::feature_store {
             }
         }
 
+        /*
+        Vec3 t0Pos;
+        int64_t areaIndex;
+        AreaId areaId;
+         */
         for (size_t i = 0; i < buffer.btTeamPlayerData.size(); i++) {
             const BTTeamPlayerData & btTeamPlayerData = buffer.btTeamPlayerData[i];
             auto & columnData = btTeamPlayerData.teamId == ENGINE_TEAM_T ? columnTData : columnCTData;
             size_t columnIndex = btTeamPlayerData.teamId == ENGINE_TEAM_T ?
                 buffer.tPlayerIdToIndex[btTeamPlayerData.playerId] : buffer.ctPlayerIdToIndex[btTeamPlayerData.playerId];
+
+            /*
+            if (columnIndex == 0 && btTeamPlayerData.teamId == ENGINE_TEAM_T) {
+                t0Pos = btTeamPlayerData.curPos;
+                areaIndex = btTeamPlayerData.curAreaIndex;
+                areaId = btTeamPlayerData.curArea;
+            }
+             */
 
             columnData[columnIndex].playerId[tickIndex] = btTeamPlayerData.playerId;
             columnData[columnIndex].distanceToASite[tickIndex] =
@@ -108,18 +121,30 @@ namespace csknow::feature_store {
             for (size_t j = 0; j < num_orders_per_site; j++) {
                 double & aOrderDistance = columnData[columnIndex].distanceToNearestAOrderNavArea[j][tickIndex];
                 aOrderDistance = std::numeric_limits<double>::max();
-                for (size_t k = 0; k < aOrders[j].places.size(); k++) {
+                // start at 1 so skip tspawn (as all T's spend a significant time pre unfreeze in all orders then)
+                for (size_t k = 1; k < aOrders[j].places.size(); k++) {
                     aOrderDistance = std::min(aOrderDistance,
                                               distanceToPlaces.getClosestDistance(btTeamPlayerData.curAreaIndex, aOrders[j].places[k]));
                 }
                 double & bOrderDistance = columnData[columnIndex].distanceToNearestBOrderNavArea[j][tickIndex];
                 bOrderDistance = std::numeric_limits<double>::max();
-                for (size_t k = 0; k < bOrders[j].places.size(); k++) {
+                for (size_t k = 1; k < bOrders[j].places.size(); k++) {
                     bOrderDistance = std::min(bOrderDistance,
                                               distanceToPlaces.getClosestDistance(btTeamPlayerData.curAreaIndex, bOrders[j].places[k]));
                 }
             }
         }
+
+        /*
+        if (tickIndex == 1195) {
+            std::cout << "T 0 player id " << columnTData[0].playerId[tickIndex] << " pos " << t0Pos.toCSV() << " area id " << areaId
+                << " distance to BSite order 2 " << columnTData[0].distanceToNearestBOrderNavArea[0][tickIndex] << std::endl;
+            for (size_t k = 0; k < bOrders[2].places.size(); k++) {
+                std::cout << "place " << bOrders[2].places[k] << " " << distanceToPlaces.places[bOrders[2].places[k]]
+                    << " distance " << distanceToPlaces.getClosestDistance(areaIndex, bOrders[2].places[k]) << std::endl;
+            }
+        }
+         */
     }
 
     void TeamFeatureStoreResult::computeTeamTickACausalLabels(int64_t curTick, CircularBuffer<int64_t> & futureTracker,
@@ -205,7 +230,7 @@ namespace csknow::feature_store {
     void TeamFeatureStoreResult::computeAcausalLabels(const Games & games, const Rounds & rounds,
                                                       const Ticks & ticks) {
         std::atomic<int64_t> roundsProcessed = 0;
-//#pragma omp parallel for
+#pragma omp parallel for
         for (int64_t roundIndex = 0; roundIndex < rounds.size; roundIndex++) {
             TickRates tickRates = computeTickRates(games, rounds, roundIndex);
             CircularBuffer<int64_t> ticks15sFutureTracker(15), ticks30sFutureTracker(30);
@@ -224,6 +249,7 @@ namespace csknow::feature_store {
                 computeTeamTickACausalLabels(tickIndex, ticks30sFutureTracker, columnCTData, false);
                 computeTeamTickACausalLabels(tickIndex, ticks15sFutureTracker, columnTData, true);
                 computeTeamTickACausalLabels(tickIndex, ticks30sFutureTracker, columnTData, false);
+                /*
                 if (tickIndex == 1195) {
                     std::cout << "cur tick " << tickIndex << " 30s tick " << ticks30sFutureTracker.fromOldest() << std::endl;
                     std::cout << "distribution nearest a order 0 30s CT 0 " << columnCTData[0].distributionNearestAOrders30s[0][tickIndex] << std::endl;
@@ -233,6 +259,7 @@ namespace csknow::feature_store {
                     std::cout << "distribution nearest b order 1 30s CT 0 " << columnCTData[0].distributionNearestBOrders30s[1][tickIndex] << std::endl;
                     std::cout << "distribution nearest b order 2 30s CT 0 " << columnCTData[0].distributionNearestBOrders30s[2][tickIndex] << std::endl;
                 }
+                 */
             }
             roundsProcessed++;
             printProgress(roundsProcessed, rounds.size);

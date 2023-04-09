@@ -18,6 +18,7 @@ namespace csknow::feature_store {
         TeamId teamId;
         AreaId curArea;
         int64_t curAreaIndex;
+        Vec3 curPos;
     };
 
     struct C4MapData {
