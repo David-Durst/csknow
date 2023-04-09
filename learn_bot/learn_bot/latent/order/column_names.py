@@ -127,7 +127,7 @@ flat_input_float_order_columns: list[str] = \
 flat_input_cat_order_columns: list[str] = [c4_status_col]
 flat_input_cat_order_num_options: list[int] = [num_c4_status]
 flat_output_cat_distribution_columns: list[list[str]] = \
-    flatten_list([cols.to_output_cat_list(False, True) for cols in specific_player_order_columns])
+    flatten_list([cols.to_output_cat_list(True, False) for cols in specific_player_order_columns])
 
 order_input_column_types = get_simplified_column_types(flat_input_float_order_columns,
                                                       flat_input_cat_order_columns,
