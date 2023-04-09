@@ -105,12 +105,6 @@ class PlayerOrderColumns:
         return [self.distance_to_a_site, self.distance_to_b_site] + \
             flatten_list([self.distance_to_nearest_a_order_nav_area, self.distance_to_nearest_b_order_nav_area])
 
-    def to_input_cat_list(self) -> list[str]:
-        return [self.engagement_state]
-
-    def to_input_cat_num_options(self) -> list[int]:
-        return [num_engagement_states]
-
     def to_output_cat_list(self, include_15=True, include_30=True) -> list[list[str]]:
         result = []
         if include_15:
