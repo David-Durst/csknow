@@ -2,6 +2,8 @@ from typing import List
 
 import torch
 
+from learn_bot.latent.engagement.latent_to_distributions import add_to_zeros
+
 num_aggression_options = 3
 
 def get_aggression_distributions(latent_tensor: torch.Tensor):
@@ -26,4 +28,4 @@ def get_aggression_probability(latent_tensor: torch.Tensor, observation: torch.T
     #
     # add 0.001 so that no probs are 0
     return -1 * \
-        torch.sum(torch.log(0.001 + torch.concat([nearest_enemy_change], dim=1)))
+        torch.sum(torch.log(add_to_zeros(torch.concat([nearest_enemy_change], dim=1))))

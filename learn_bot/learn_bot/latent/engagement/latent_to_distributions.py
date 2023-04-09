@@ -12,6 +12,11 @@ def get_engagement_target_distributions(latent_tensor: torch.Tensor):
     nearest_enemy_distribution = latent_tensor
     return torch.concat([position_distribution, aim_distribution, nearest_enemy_distribution], dim=1)
 
+
+zero_adjustment_amount = 0.001
+def add_to_zeros(input_tensor: torch.Tensor):
+     return torch.where(input_tensor != 0., input_tensor, zero_adjustment_amount)
+
 def get_engagement_probability(latent_tensor: torch.Tensor, observation: torch.Tensor, col_ranges: List[range]):
     #position_prob = torch.concat(
     #    [latent_tensor[:, [num_target_options-1]] * observation[:, [col_ranges[0][0]]],
@@ -24,4 +29,4 @@ def get_engagement_probability(latent_tensor: torch.Tensor, observation: torch.T
     nearest_enemy_change = latent_tensor * observation[:, col_ranges[2]]
     # add 0.001 so that no probs are 0
     return -1 * \
-        torch.sum(torch.log(0.001 + torch.concat([nearest_enemy_change], dim=1)))
+        torch.sum(torch.log(add_to_zeros(torch.concat([nearest_enemy_change], dim=1))))
