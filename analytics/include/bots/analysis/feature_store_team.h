@@ -48,7 +48,7 @@ namespace csknow::feature_store {
             array<vector<double>, num_orders_per_site> distributionNearestAOrders30s, distributionNearestBOrders30s;
         };
         array<ColumnPlayerData, maxEnemies> columnCTData, columnTData;
-        vector<std::reference_wrapper<array<ColumnPlayerData, maxEnemies>>> getAllColumnData() {
+        vector<std::reference_wrapper<const array<ColumnPlayerData, maxEnemies>>> getAllColumnData() const {
             return {columnCTData, columnTData};
         }
         vector<string> allColumnDataTeam = {"CT", "T"};

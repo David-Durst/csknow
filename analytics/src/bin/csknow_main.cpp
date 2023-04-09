@@ -42,6 +42,8 @@
 #include "queries/inference_moments/inference_latent_engagement_distribution.h"
 #include "queries/inference_moments/inference_latent_aggression.h"
 #include "queries/inference_moments/inference_latent_aggression_distribution.h"
+#include "queries/inference_moments/inference_latent_order.h"
+#include "queries/inference_moments/inference_latent_order_distribution.h"
 #include "queries/training_moments/training_navigation.h"
 #include "queries/moments/trajectory_segments.h"
 #include "queries/moments/latent_extractors/latent_engagement.h"
@@ -340,6 +342,17 @@ int main(int argc, char * argv[]) {
     at::set_num_threads(1);
     at::set_num_interop_threads(1);
 
+    string inferenceLatentOrderName = "inferenceLatentOrder";
+    std::cout << "processing inference latent orders" << std::endl;
+    csknow::inference_latent_order::InferenceLatentOrderResult inferenceLatentOrderResult;
+    inferenceLatentOrderResult.runQuery(modelsDir, filteredRounds, ticks, playerAtTick, behaviorTreeLatentEvents);
+    std::cout << "size: " << inferenceLatentOrderResult.size << std::endl;
+
+    string inferenceLatentOrderDistributionName = "inferenceLatentOrderDistribution";
+    csknow::inference_latent_order::InferenceLatentOrderDistributionResult
+        inferenceLatentOrderDistributionResult(playerAtTick, queryPlayerAtTick, ordersResult, inferenceLatentOrderResult);
+    inferenceLatentOrderResult.perTickPlayerLabelsQuery = inferenceLatentOrderDistributionName;
+
     string inferenceLatentEngagementName = "inferenceLatentEngagement";
     std::cout << "processing inference latent engagements" << std::endl;
     csknow::inference_latent_engagement::InferenceLatentEngagementResult inferenceLatentEngagementResult(playerAtTick);
@@ -561,6 +574,7 @@ int main(int argc, char * argv[]) {
         {"weaponFire", queryWeaponFire},
         {"hurt", queryHurt},
         {"kills", queryKills},
+        {inferenceLatentOrderName, inferenceLatentOrderResult},
         {latentEngagementName, latentEngagementResult},
         {inferenceLatentEngagementName, inferenceLatentEngagementResult},
         {inferenceLatentAggressionName, inferenceLatentAggressionResult},
@@ -600,6 +614,8 @@ int main(int argc, char * argv[]) {
              */
             {nonEngagementTrajectoryName, nonEngagementTrajectoryResult},
             {trajectorySegmentName, trajectorySegmentResult},
+            {inferenceLatentOrderName, inferenceLatentOrderResult},
+            {inferenceLatentOrderDistributionName, inferenceLatentOrderDistributionResult},
             {latentEngagementName, latentEngagementResult},
             {inferenceLatentEngagementName, inferenceLatentEngagementResult},
             {inferenceLatentEngagementDistributionName, inferenceLatentEngagementDistributionResult},

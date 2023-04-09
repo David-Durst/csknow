@@ -283,7 +283,7 @@ namespace csknow::feature_store {
             file.createDataSet("/data/c4 distance to nearest b order " + orderIndexStr + " nav area", c4DistanceToNearestBOrderNavArea[orderIndex], hdf5FlatCreateProps);
         }
         for (size_t columnDataIndex = 0; columnDataIndex < getAllColumnData().size(); columnDataIndex++) {
-            array<ColumnPlayerData, maxEnemies> & columnData = getAllColumnData()[columnDataIndex];
+            const array<ColumnPlayerData, maxEnemies> & columnData = getAllColumnData()[columnDataIndex];
             string columnTeam = allColumnDataTeam[columnDataIndex];
             for (size_t columnPlayer = 0; columnPlayer < columnData.size(); columnPlayer++) {
                 string iStr = std::to_string(columnPlayer);
