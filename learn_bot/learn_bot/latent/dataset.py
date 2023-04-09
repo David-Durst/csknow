@@ -16,7 +16,7 @@ class LatentDataset(Dataset):
         self.id = df.loc[:, row_id_column]
         self.round_id = df.loc[:, round_id_column]
         self.tick_id = df.loc[:, tick_id_column]
-        self.player_id = df.loc[:, player_id_column]
+        #self.player_id = df.loc[:, player_id_column]
 
         round_starts = df.groupby(round_id_column).first('index').loc[:, ['index']].rename(columns={'index': 'start index'})
         round_ends = df.groupby(round_id_column).last('index').loc[:, ['index']].rename(columns={'index': 'end index'})

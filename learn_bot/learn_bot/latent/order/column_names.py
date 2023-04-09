@@ -88,9 +88,12 @@ class PlayerOrderColumns:
             self.distribution_nearest_a_order_30s \
                 .append(get_player_nearest_order_columns(player_index, order_index, team_str, site_strs[0],
                                                          DistributionTimes.Time_30))
-            self.distribution_nearest_b_order_15s = []
-            self.distribution_nearest_b_order_30s = []
-
+            self.distribution_nearest_b_order_15s \
+                .append(get_player_nearest_order_columns(player_index, order_index, team_str, site_strs[1],
+                                                         DistributionTimes.Time_15))
+            self.distribution_nearest_b_order_30s \
+                .append(get_player_nearest_order_columns(player_index, order_index, team_str, site_strs[1],
+                                                         DistributionTimes.Time_30))
 
     def to_list(self) -> list[str]:
         return [self.player_id, self.distance_to_a_site, self.distance_to_b_site] + \

@@ -95,15 +95,15 @@ def train(train_type: TrainType, all_data_df: pd.DataFrame, num_epochs: int,
     else:
         column_transformers = IOColumnTransformers(order_input_column_types, order_output_column_types,
                                                    train_df)
-        model = MLPNestedHiddenLatentModel(column_transformers, max_enemies, 2*num_orders_per_site).to(device)
+        model = MLPNestedHiddenLatentModel(column_transformers, 2*max_enemies, 2*num_orders_per_site).to(device)
         input_column_types = order_input_column_types
         output_column_types = order_output_column_types
         prob_func = get_order_probability
 
     # plot data set with and without transformers
-    plot_untransformed_and_transformed(plot_path, 'train and test labels', all_data_df,
-                                       input_column_types.float_standard_cols + output_column_types.categorical_distribution_cols_flattened,
-                                       input_column_types.categorical_cols + output_column_types.categorical_cols)
+    #plot_untransformed_and_transformed(plot_path, 'train and test labels', all_data_df,
+    #                                   input_column_types.float_standard_cols + output_column_types.categorical_distribution_cols_flattened,
+    #                                   input_column_types.categorical_cols + output_column_types.categorical_cols)
     #model = MLPLatentModel(column_transformers).to(device)
     #model = LSTMLatentModel(column_transformers).to(device)
 
@@ -231,8 +231,8 @@ if __name__ == "__main__":
     team_data_df = team_data_df[team_data_df['valid'] == 1.]
     #all_data_df = all_data_df.iloc[:500000]
     #all_data_df = load_hdf5_to_pd(latent_window_hdf5_data_path)
-    #train_result = train(TrainType.Engagement, all_data_df, num_epochs=1, windowed=False)
-    #train_result = train(TrainType.Aggression, all_data_df, num_epochs=1, windowed=False)
+    train_result = train(TrainType.Engagement, all_data_df, num_epochs=1, windowed=False)
+    train_result = train(TrainType.Aggression, all_data_df, num_epochs=1, windowed=False)
     train_result = train(TrainType.Order, team_data_df, num_epochs=1, windowed=False)
 
 # all_data_df[((all_data_df['pct nearest crosshair enemy 2s 0'] + all_data_df['pct nearest crosshair enemy 2s 1'] + all_data_df['pct nearest crosshair enemy 2s 2'] + all_data_df['pct nearest crosshair enemy 2s 3'] + all_data_df['pct nearest crosshair enemy 2s 4'] + all_data_df['pct nearest crosshair enemy 2s 5']) < 0.9) & (all_data_df['valid'] == 1)]

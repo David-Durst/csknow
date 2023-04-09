@@ -23,7 +23,8 @@ class MLPNestedHiddenLatentModel(nn.Module):
             nn.LeakyReLU(),
             nn.Linear(self.internal_width, outer_latent_size * inner_latent_size),
             nn.Unflatten(1, torch.Size([outer_latent_size, inner_latent_size])),
-            nn.Softmax(dim=2)
+            nn.Softmax(dim=2),
+            nn.Flatten(1)
         )
 
     def forward(self, x):
