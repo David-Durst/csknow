@@ -216,8 +216,10 @@ def train(train_type: TrainType, all_data_df: pd.DataFrame, num_epochs: int,
         script_model = torch.jit.trace(model.to(CPU_DEVICE_STR), first_row)
         if train_type == TrainType.Engagement:
             script_model.save(checkpoints_path / 'engagement_script_model.pt')
-        else:
+        elif train_type == TrainType.Aggression:
             script_model.save(checkpoints_path / 'aggression_script_model.pt')
+        else:
+            script_model.save(checkpoints_path / 'order_script_model.pt')
         model.to(device)
 
     return TrainResult(train_data, test_data, train_df, test_df, column_transformers, model)
