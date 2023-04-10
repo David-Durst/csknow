@@ -148,6 +148,12 @@ def train(train_type: TrainType, all_data_df: pd.DataFrame, num_epochs: int,
 
                 # Compute prediction error
                 pred = model(X)
+                if torch.isnan(X).any():
+                    print('bad X')
+                if torch.isnan(Y).any():
+                    print('bad Y')
+                if torch.isnan(pred[0]).any():
+                    print('bad pred')
                 batch_loss = compute_loss(X, pred, transformed_Y, Y, column_transformers, prob_func)
                 cumulative_loss += batch_loss
 
