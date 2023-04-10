@@ -353,7 +353,7 @@ int main(int argc, char * argv[]) {
     csknow::inference_latent_order::InferenceLatentOrderDistributionResult
         inferenceLatentOrderDistributionResult(playerAtTick, queryPlayerAtTick, ordersResult, d2MeshResult,
                                                inferenceLatentOrderResult);
-    inferenceLatentOrderResult.perTickPlayerLabelsQuery = inferenceLatentOrderDistributionName;
+    inferenceLatentOrderResult.perTickPosLabelsQuery = inferenceLatentOrderDistributionName;
 
     string inferenceLatentEngagementName = "inferenceLatentEngagement";
     std::cout << "processing inference latent engagements" << std::endl;
@@ -778,11 +778,13 @@ int main(int argc, char * argv[]) {
                 ss << ",";
                 ss << queryValue.perTickPlayerLabels;
                 ss << ",";
+                ss << queryValue.perTickPlayerLabelsQuery;
+                ss << ",";
                 QueryResult::commaSeparateList(ss, queryValue.posLabelsPositions, ";");
                 ss << ",";
                 ss << queryValue.perTickPosLabels;
                 ss << ",";
-                ss << queryValue.perTickPlayerLabelsQuery;
+                ss << queryValue.perTickPosLabelsQuery;
                 ss << ",";
                 ss << boolToString(queryValue.havePerTickAimTable);
                 ss << ",";
