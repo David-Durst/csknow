@@ -214,14 +214,16 @@ namespace csknow::feature_store {
                     }
                 }
             }
-            for (size_t orderPerSite = 0; orderPerSite < num_orders_per_site; orderPerSite++) {
-                if (future15s) {
-                    columnData[playerColumn].distributionNearestAOrders15s[orderPerSite][curTick] /= numPointsInDistribution;
-                    columnData[playerColumn].distributionNearestBOrders15s[orderPerSite][curTick] /= numPointsInDistribution;
-                }
-                else {
-                    columnData[playerColumn].distributionNearestAOrders30s[orderPerSite][curTick] /= numPointsInDistribution;
-                    columnData[playerColumn].distributionNearestBOrders30s[orderPerSite][curTick] /= numPointsInDistribution;
+            if (numPointsInDistribution != 0) {
+                for (size_t orderPerSite = 0; orderPerSite < num_orders_per_site; orderPerSite++) {
+                    if (future15s) {
+                        columnData[playerColumn].distributionNearestAOrders15s[orderPerSite][curTick] /= numPointsInDistribution;
+                        columnData[playerColumn].distributionNearestBOrders15s[orderPerSite][curTick] /= numPointsInDistribution;
+                    }
+                    else {
+                        columnData[playerColumn].distributionNearestAOrders30s[orderPerSite][curTick] /= numPointsInDistribution;
+                        columnData[playerColumn].distributionNearestBOrders30s[orderPerSite][curTick] /= numPointsInDistribution;
+                    }
                 }
             }
         }
@@ -230,7 +232,7 @@ namespace csknow::feature_store {
     void TeamFeatureStoreResult::computeAcausalLabels(const Games & games, const Rounds & rounds,
                                                       const Ticks & ticks) {
         std::atomic<int64_t> roundsProcessed = 0;
-#pragma omp parallel for
+//#pragma omp parallel for
         for (int64_t roundIndex = 0; roundIndex < rounds.size; roundIndex++) {
             TickRates tickRates = computeTickRates(games, rounds, roundIndex);
             CircularBuffer<int64_t> ticks15sFutureTracker(15), ticks30sFutureTracker(30);
