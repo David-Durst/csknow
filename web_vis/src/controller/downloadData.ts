@@ -46,7 +46,10 @@ export async function getTables() {
                 const playerLabelsIndex = playerLabelIndicesColumnIndex + 1
                 const perTickPlayerLabels = playerLabelsIndex + 1
                 const perTickPlayerLabelsQuery = perTickPlayerLabels + 1
-                const havePerTickAimTable = perTickPlayerLabelsQuery + 1
+                const posLabelPositionsIndex = perTickPlayerLabelsQuery + 1
+                const perTickPosLabels = posLabelPositionsIndex + 1
+                const perTickPosLabelsQuery = perTickPosLabels + 1
+                const havePerTickAimTable = perTickPosLabelsQuery + 1
                 const perTickAimTable = havePerTickAimTable + 1
                 const havePerTickPredictionAimTable = perTickAimTable + 1
                 const perTickPredictionAimTable = havePerTickPredictionAimTable + 1
@@ -94,7 +97,9 @@ export async function getTables() {
                         remoteAddr + "query/" + cols[0],
                         cols[keyPlayerColumnsIndex], cols[nonTemporalIndex], cols[overlayIndex], cols[overlayLabelsQueryIndex],
                         cols[havePlayerLabelsIndex], cols[playersToLabelColumnIndex], cols[playerLabelIndicesColumnIndex],
-                        cols[playerLabelsIndex], cols[perTickPlayerLabels], cols[perTickPlayerLabelsQuery], cols[havePerTickAimTable], cols[perTickAimTable],
+                        cols[playerLabelsIndex], cols[perTickPlayerLabels], cols[perTickPlayerLabelsQuery],
+                        cols[posLabelPositionsIndex], cols[perTickPosLabels], cols[perTickPosLabelsQuery],
+                        cols[havePerTickAimTable], cols[perTickAimTable],
                         cols[havePerTickPredictionAimTable], cols[perTickPredictionAimTable], cols[eventIdColumn],
                         cols[haveBlobColumnIndex], cols[blobFileNameColumnIndex], cols[blobBytesPerRowColumnIndex],
                         cols[blobTotalBytesColumnIndex]

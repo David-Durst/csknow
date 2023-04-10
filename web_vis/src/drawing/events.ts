@@ -4,7 +4,7 @@ import {
     PlayerAtTickRow,
     playerAtTickTableName, PlayerRow,
     Row,
-    TickRow,
+    TickRow, Vec3,
 } from "../data/tables";
 import IntervalTree from "@flatten-js/interval-tree";
 import {gameData, INVALID_ID} from "../data/data";
@@ -111,7 +111,6 @@ export function getPlayersText(tickData: TickRow, gameData: GameData): Map<numbe
             for (let i = 0; i < playerAndProbs.length; i++) {
                 const playerAndProb = playerAndProbs[i].split("=")
                 if (parseInt(playerAndProb[0]) != INVALID_ID) {
-
                     result.set(parseInt(playerAndProb[0]), playerAndProb[1])
                 }
             }
@@ -145,6 +144,48 @@ export function getPlayersText(tickData: TickRow, gameData: GameData): Map<numbe
 
      */
     return result
+}
+
+export class PosTextPosition {
+    constructor(pos: Vec3, text: string) {
+        this.pos = pos
+        this.text = text
+    }
+
+    pos: Vec3;
+    text: string;
+}
+
+export function getPosTextPositions(tickData: TickRow, gameData: GameData): Array<PosTextPosition> {
+    let result = new Array<PosTextPosition>()
+    const index = getTickToOtherTableIndex(gameData, curEvent)
+    if (curEvent == "none" || !index.intersect_any([tickData.id, tickData.id]) ||
+        !gameData.parsers.get(curEvent).havePlayerLabels || selectedEventId == -2) {
+        return result
+    }
+    const parser = gameData.parsers.get(curEvent)
+    const playersToLabel = activeEvent.otherColumnValues[parser.playersToLabelColumn].split(";").map(x => parseInt(x))
+    if (parser.perTickPosLabelsQuery != "" && showDistribution) {
+        const posLabelsParser = gameData.parsers.get(parser.perTickPosLabelsQuery)
+        const sourcePlayerId = playersToLabel[0]
+        let sourcePATId = INVALID_ID
+        for (let i = gameData.ticksToPlayerAtTick.get(tickData.id).minId;
+             i <= gameData.ticksToPlayerAtTick.get(tickData.id).maxId; i++) {
+            if (gameData.playerAtTicksTable[i].playerId == sourcePlayerId) {
+                sourcePATId = i;
+                break
+            }
+        }
+        if (sourcePATId != INVALID_ID) {
+            const labelData = gameData.tables.get(parser.perTickPosLabelsQuery)
+            const posProbs = labelData[sourcePATId].otherColumnValues[0].split(";")
+            for (let i = 0; i < posLabelsParser.posLabelPositions.length; i++) {
+                result.push(new PosTextPosition(posLabelsParser.posLabelPositions[i], posProbs[i]))
+            }
+        }
+    }
+
+    return result;
 }
 
 export function setEventText(tickData: TickRow, gameData: GameData) {

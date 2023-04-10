@@ -9,7 +9,7 @@ import {getPackedSettings} from "http2";
 import {
     activeEvent,
     curOverlay, DEFAULT_ALIVE_STRING,
-    getPlayersText, setEventsOverlaysToDraw,
+    getPlayersText, getPosTextPositions, setEventsOverlaysToDraw,
     setEventText, setupEventDrawing, updateEventIdAndSelector,
 } from "./events";
 import {clearCustomFilter} from "../controller/ide_filters";
@@ -63,6 +63,7 @@ let showPlayers = true;
 let minZ = 0;
 let maxZ = 0;
 const black = "rgba(0,0,0,1.0)";
+const black_translucent = "rgba(0,0,0,0.6)";
 const gray = "rgba(159,159,159,1.0)";
 const dark_blue = "rgba(4,190,196,1.0)";
 const light_blue = "rgba(194,255,243,1.0)";
@@ -436,6 +437,17 @@ export function drawTick(e: InputEvent) {
             mainCtx.fillStyle = smoke_gray
             mainCtx.fill()
         }
+    }
+    const posTextPositions = getPosTextPositions(tickData, filteredData)
+    mainCtx.fillStyle = black_translucent
+    for (let ptp = 0; ptp < posTextPositions.length; ptp++) {
+        const zScaling = (posTextPositions[ptp].pos.posZ - minZ) / (maxZ - minZ)
+        mainCtx.font = ((zScaling * 20 + 30) * fontScale).toString() + "px Arial"
+        const location = new MapCoordinate(
+            posTextPositions[ptp].pos.posX,
+            posTextPositions[ptp].pos.posY,
+            false);
+        mainCtx.fillText(posTextPositions[ptp].text, location.getCanvasX(), location.getCanvasY())
     }
     if (drawingRegionFilter || definedRegionFilter) {
         if (emptyFilter) {

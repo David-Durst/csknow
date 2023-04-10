@@ -208,6 +208,18 @@ export enum ParserType {
     other
 }
 
+export class Vec3 {
+    constructor(posX: number, posY: number, posZ: number) {
+        this.posX = posX
+        this.posY = posY
+        this.posZ = posZ
+    }
+
+    posX: number;
+    posY: number;
+    posZ: number;
+}
+
 export class Parser {
     tempLineContainer: string = "";
     tableName: string
@@ -232,6 +244,9 @@ export class Parser {
     playerLabels: string[];
     perTickPlayerLabels: boolean;
     perTickPlayerLabelsQuery: string;
+    posLabelPositions: Vec3[];
+    perTickPosLabels: boolean;
+    perTickPosLabelsQuery: string;
     havePerTickAimTable: boolean;
     perTickAimTable: string;
     havePerTickAimPredictionTable: boolean;
@@ -250,6 +265,7 @@ export class Parser {
                 keyPlayerColumns: string, nonTemporal: string, overlay: string, overlayLabelsQuery: string,
                 havePlayerLabels: string, playersToLabelColumn: string,
                 playerLabelIndicesColumn: string, playerLabels: string, perTickPlayerLabels: string, perTickPlayerLabelsQuery: string,
+                posLabelPositions: string, perTickPosLabels: string, perTickPosLabelsQuery: string,
                 havePerTickAimTable: string, perTickAimTable: string,
                 havePerTickAimPredictionTable: string, perTickAimPredictionTable: string,
                 eventIdColumn: string, haveBlob: string, blobFileName: string, blobBytesPerRow: string,
@@ -285,6 +301,13 @@ export class Parser {
         this.playerLabels = playerLabels.length > 0 ? playerLabels.split(";") : []
         this.perTickPlayerLabels = parseBool(perTickPlayerLabels)
         this.perTickPlayerLabelsQuery = perTickPlayerLabelsQuery
+        this.posLabelPositions = posLabelPositions.split(";")
+            .map((vec3Str) => {
+                const vec3StrSplit = vec3Str.split("_")
+                return new Vec3(parseFloat(vec3StrSplit[0]), parseFloat(vec3StrSplit[1]), parseFloat(vec3StrSplit[2]));
+            })
+        this.perTickPosLabels = parseBool(perTickPosLabels)
+        this.perTickPosLabelsQuery = perTickPosLabelsQuery
         this.havePerTickAimTable = parseBool(havePerTickAimTable)
         this.perTickAimTable = perTickAimTable
         this.havePerTickAimPredictionTable = parseBool(havePerTickAimPredictionTable)
