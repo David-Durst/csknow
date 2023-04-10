@@ -18,12 +18,12 @@ namespace csknow::inference_latent_order {
 
 // just present so can reuse the player labels
     enum class OrderRole {
-        CT0,
-        CT1,
-        CT2,
-        T0,
-        T1,
-        T2
+        A0,
+        A1,
+        A2,
+        B0,
+        B1,
+        B2
     };
 
     class InferenceLatentOrderResult : public QueryResult {
@@ -43,7 +43,7 @@ namespace csknow::inference_latent_order {
             startTickColumn = 0;
             perEventLengthColumn = 2;
             havePlayerLabels = true;
-            playerLabels = {"AL", "AC", "AS", "BH", "BD", "BT"};
+            playerLabels = {"AS", "AL", "AC", "BH", "BD", "BT"};
             playersToLabelColumn = 0;
             playerLabelIndicesColumn = 1;
         }

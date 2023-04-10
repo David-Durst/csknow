@@ -115,29 +115,32 @@ namespace csknow::inference_latent_order {
 
                 // Execute the model and turn its output into a tensor.
                 at::Tensor output = module.forward(inputs).toTuple()->elements()[0].toTensor();
-                // std::cout << output << std::endl;
+                if (tickIndex == 1195) {
+                    std::cout << "tick index " << tickIndex << " demo tick " << ticks.demoTickNumber[tickIndex] << std::endl;
+                }
+                //std::cout << output << std::endl;
                 for (int64_t patIndex = ticks.patPerTick[tickIndex].minId;
                      patIndex <= ticks.patPerTick[tickIndex].maxId; patIndex++) {
                     int64_t curPlayerId = playerAtTick.playerId[patIndex];
                     size_t playerStartIndex = playerIdToColumnIndex[curPlayerId] * total_orders;
                     float mostLikelyOrderProb = -1;
-                    OrderRole mostLikelyOrder = OrderRole::CT0;
+                    OrderRole mostLikelyOrder = OrderRole::A0;
 
-                    for (size_t orderIndex = 0; orderIndex < csknow::feature_store::num_orders_per_site; orderIndex++) {
+                    for (size_t orderIndex = 0; orderIndex < total_orders; orderIndex++) {
                         playerOrderProb[patIndex][orderIndex] = output[0][playerStartIndex + orderIndex].item<float>();
                         if (mostLikelyOrderProb < playerOrderProb[patIndex][orderIndex]) {
                             mostLikelyOrderProb = playerOrderProb[patIndex][orderIndex];
                             mostLikelyOrder = static_cast<OrderRole>(orderIndex);
                         }
                     }
-                    /*
-                    std::cout << "tick index " << tickIndex << ", pat index " << patIndex
-                        << ", player id " << curPlayerId << ", probabilities ";
-                    for (size_t orderIndex = 0; orderIndex < csknow::feature_store::num_orders_per_site; orderIndex++) {
-                        std::cout << playerOrderProb[patIndex][orderIndex] << ";";
+                    if (tickIndex == 1195) {
+                        std::cout << "player id " << curPlayerId << ", probabilities ";
+                        for (size_t orderIndex = 0;
+                             orderIndex < total_orders; orderIndex++) {
+                            std::cout << playerOrderProb[patIndex][orderIndex] << ";";
+                        }
+                        std::cout << std::endl;
                     }
-                    std::cout << std::endl;
-                     */
 
                     bool oldOrderToWrite =
                         playerToActiveOrder.find(curPlayerId) != playerToActiveOrder.end() &&
