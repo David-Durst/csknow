@@ -111,9 +111,11 @@ namespace csknow::inference_latent_order {
                 torch::Tensor rowPT = torch::from_blob(rowCPP.data(), {1, static_cast<long>(rowCPP.size())},
                                                        options);
                 inputs.push_back(rowPT);
+                std::cout << rowPT << std::endl;
 
                 // Execute the model and turn its output into a tensor.
                 at::Tensor output = module.forward(inputs).toTuple()->elements()[0].toTensor();
+                std::cout << output << std::endl;
                 for (int64_t patIndex = ticks.patPerTick[tickIndex].minId;
                      patIndex <= ticks.patPerTick[tickIndex].maxId; patIndex++) {
                     int64_t curPlayerId = playerAtTick.playerId[patIndex];
@@ -128,7 +130,12 @@ namespace csknow::inference_latent_order {
                             mostLikelyOrder = static_cast<OrderRole>(orderIndex);
                         }
                     }
-
+                    std::cout << "tick index " << tickIndex << ", pat index " << patIndex
+                        << ", player id " << curPlayerId << ", probabilities ";
+                    for (size_t orderIndex = 0; orderIndex < csknow::feature_store::num_orders_per_site; orderIndex++) {
+                        std::cout << playerOrderProb[patIndex][orderIndex] << ";";
+                    }
+                    std::cout << std::endl;
 
                     bool oldOrderToWrite =
                         playerToActiveOrder.find(curPlayerId) != playerToActiveOrder.end() &&
@@ -147,6 +154,7 @@ namespace csknow::inference_latent_order {
                         };
                     }
                 }
+                exit(0);
             }
 
             for (const auto & [curPlayerId, lData] : playerToActiveOrder) {
