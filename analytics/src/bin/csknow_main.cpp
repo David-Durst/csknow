@@ -302,6 +302,7 @@ int main(int argc, char * argv[]) {
     std::cout << "processing orders" << std::endl;
     csknow::orders::OrdersResult ordersResult(map_visPoints.at("de_dust2"), d2MeshResult, d2DistanceToPlacesResult);
     ordersResult.runQuery();
+    ordersResult.toCSV(std::cout);
     std::cout << "size: " << ordersResult.size << std::endl;
 
     // nearest nav areas
@@ -350,7 +351,8 @@ int main(int argc, char * argv[]) {
 
     string inferenceLatentOrderDistributionName = "inferenceLatentOrderDistribution";
     csknow::inference_latent_order::InferenceLatentOrderDistributionResult
-        inferenceLatentOrderDistributionResult(playerAtTick, queryPlayerAtTick, ordersResult, inferenceLatentOrderResult);
+        inferenceLatentOrderDistributionResult(playerAtTick, queryPlayerAtTick, ordersResult, d2MeshResult,
+                                               inferenceLatentOrderResult);
     inferenceLatentOrderResult.perTickPlayerLabelsQuery = inferenceLatentOrderDistributionName;
 
     string inferenceLatentEngagementName = "inferenceLatentEngagement";
@@ -775,6 +777,10 @@ int main(int argc, char * argv[]) {
                 QueryResult::commaSeparateList(ss, queryValue.playerLabels, ";");
                 ss << ",";
                 ss << queryValue.perTickPlayerLabels;
+                ss << ",";
+                QueryResult::commaSeparateList(ss, queryValue.posLabelsPositions, ";");
+                ss << ",";
+                ss << queryValue.perTickPosLabels;
                 ss << ",";
                 ss << queryValue.perTickPlayerLabelsQuery;
                 ss << ",";

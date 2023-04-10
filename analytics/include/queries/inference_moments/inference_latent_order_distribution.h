@@ -15,19 +15,28 @@ namespace csknow::inference_latent_order {
         QueryPlayerAtTick & queryPlayerAtTick;
         const orders::OrdersResult & ordersResult;
         const InferenceLatentOrderResult & inferenceLatentOrderResult;
+        array<PlaceIndex, total_orders> orderToPlace{4, 2, 3, 5, 4, 2};
+        array<Vec3, total_orders> orderLabelPositions;
+
+        void setLabelPositions(const MapMeshResult & mapMeshResult);
 
         explicit InferenceLatentOrderDistributionResult(const PlayerAtTick & playerAtTick,
                                                         QueryPlayerAtTick & queryPlayerAtTick,
                                                         const orders::OrdersResult & ordersResult,
+                                                        const MapMeshResult & mapMeshResult,
                                                         const InferenceLatentOrderResult & inferenceLatentOrderResult) :
             playerAtTick(playerAtTick),
             queryPlayerAtTick(queryPlayerAtTick),
             ordersResult(ordersResult),
             inferenceLatentOrderResult(inferenceLatentOrderResult) {
+            setLabelPositions(mapMeshResult);
             variableLength = false;
             startTickColumn = 0;
             ticksPerEvent = 1;
-            perTickPlayerLabels = true;
+            perTickPosLabels = true;
+            for (size_t i = 0; i < orderLabelPositions.size(); i++) {
+                posLabelsPositions.push_back(orderLabelPositions[i].toCSV("_"));
+            }
         };
 
         vector<int64_t> filterByForeignKey(int64_t otherTableIndex) override {

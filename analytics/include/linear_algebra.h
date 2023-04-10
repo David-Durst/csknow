@@ -161,6 +161,9 @@ struct Vec3 {
     string toCSV() const {
         return std::to_string(x) + "," + std::to_string(y) + "," + std::to_string(z);
     }
+    string toCSV(string sep) const {
+        return std::to_string(x) + sep + std::to_string(y) + sep + std::to_string(z);
+    }
     glm::vec3 toGLM() const {
         return {static_cast<float>(x), static_cast<float>(y), static_cast<float>(z)};
     };
