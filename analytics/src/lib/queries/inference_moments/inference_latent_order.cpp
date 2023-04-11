@@ -33,7 +33,8 @@ namespace csknow::inference_latent_order {
         torch::jit::script::Module module;
         try {
             // Deserialize the ScriptModule from a file using torch::jit::load().
-            module = torch::jit::load(modelPath);
+            auto tmp_module = torch::jit::load(modelPath);
+            module = torch::jit::optimize_for_inference(tmp_module);
         }
         catch (const c10::Error &e) {
             size = 0;
@@ -56,6 +57,8 @@ namespace csknow::inference_latent_order {
 
         behaviorTreeLatentStates.featureStoreResult.checkInvalid();
         playerOrderProb.resize(playerAtTick.size);
+        double inferenceSeconds = 0.;
+        double numInferences = 0.;
 //#pragma omp parallel for
         for (int64_t roundIndex = 0; roundIndex < 1L /*rounds.size*/; roundIndex++) {
             int threadNum = omp_get_thread_num();
@@ -114,7 +117,12 @@ namespace csknow::inference_latent_order {
                 //std::cout << rowPT << std::endl;
 
                 // Execute the model and turn its output into a tensor.
+                auto start = std::chrono::system_clock::now();
                 at::Tensor output = module.forward(inputs).toTuple()->elements()[0].toTensor();
+                auto end = std::chrono::system_clock::now();
+                std::chrono::duration<double> inferenceTime = end - start;
+                inferenceSeconds += inferenceTime.count();
+                numInferences++;
                 /*
                 if (ticks.demoTickNumber[tickIndex] == 5169) {
                     std::cout << "tick index " << tickIndex << " demo tick " << ticks.demoTickNumber[tickIndex] << std::endl;
@@ -193,7 +201,7 @@ namespace csknow::inference_latent_order {
                            });
         vector<const int64_t *> foreignKeyCols{startTickId.data(), endTickId.data()};
         ordersPerTick = buildIntervalIndex(foreignKeyCols, size);
-
+        std::cout << "orders time per inference " << inferenceSeconds / numInferences << std::endl;
     }
 
 }
