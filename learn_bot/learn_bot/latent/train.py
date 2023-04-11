@@ -19,8 +19,10 @@ from learn_bot.latent.lstm_latent_model import LSTMLatentModel
 from learn_bot.latent.mlp_hidden_latent_model import MLPHiddenLatentModel
 from learn_bot.latent.mlp_latent_model import MLPLatentModel
 from learn_bot.latent.mlp_nested_hidden_latent_model import MLPNestedHiddenLatentModel
-from learn_bot.latent.order.column_names import order_input_column_types, order_output_column_types, num_orders_per_site
+from learn_bot.latent.order.column_names import order_input_column_types, order_output_column_types, num_orders_per_site, \
+    PlayerOrderColumns
 from learn_bot.latent.order.latent_to_distributions import get_order_probability
+from learn_bot.latent.profiling import profile_latent_model
 from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd
 from learn_bot.libs.io_transforms import CUDA_DEVICE_STR
 from learn_bot.latent.accuracy_and_loss import compute_loss, compute_accuracy, finish_accuracy, \
@@ -30,6 +32,7 @@ from learn_bot.libs.df_grouping import train_test_split_by_col, make_index_colum
 from tqdm import tqdm
 from dataclasses import dataclass
 from datetime import datetime
+import time
 
 checkpoints_path = Path(__file__).parent / 'checkpoints'
 plot_path = Path(__file__).parent / 'distributions'
@@ -37,6 +40,7 @@ plot_path = Path(__file__).parent / 'distributions'
 now = datetime.now()
 runs_path = Path(__file__).parent / 'runs' / now.strftime("%m_%d_%Y__%H_%M_%S")
 
+time_model = False
 
 @dataclass(frozen=True)
 class TrainResult:
@@ -146,6 +150,15 @@ def train(train_type: TrainType, all_data_df: pd.DataFrame, num_epochs: int,
                 # XR[:,0] = X[:,0]
                 # YZ = torch.zeros_like(Y) + 0.1
 
+                if time_model:
+                    if train_type == TrainType.Engagement:
+                        model_path = checkpoints_path / 'engagement_script_model.pt'
+                    elif train_type == TrainType.Aggression:
+                        model_path = checkpoints_path / 'aggression_script_model.pt'
+                    else:
+                        model_path = checkpoints_path / 'order_script_model.pt'
+                    profile_latent_model(model_path, batch_size, X)
+
                 # Compute prediction error
                 pred = model(X)
                 if torch.isnan(X).any():
@@ -233,14 +246,14 @@ def train(train_type: TrainType, all_data_df: pd.DataFrame, num_epochs: int,
 latent_team_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / 'analytics' / 'csv_outputs' / 'behaviorTreeTeamFeatureStore.hdf5'
 
 if __name__ == "__main__":
-    all_data_df = load_hdf5_to_pd(latent_hdf5_data_path)
-    all_data_df = all_data_df[all_data_df['valid'] == 1.]
+    #all_data_df = load_hdf5_to_pd(latent_hdf5_data_path)
+    #all_data_df = all_data_df[all_data_df['valid'] == 1.]
     team_data_df = load_hdf5_to_pd(latent_team_hdf5_data_path)
     team_data_df = team_data_df[team_data_df['valid'] == 1.]
     #all_data_df = all_data_df.iloc[:500000]
     #all_data_df = load_hdf5_to_pd(latent_window_hdf5_data_path)
-    train_result = train(TrainType.Engagement, all_data_df, num_epochs=1, windowed=False)
-    train_result = train(TrainType.Aggression, all_data_df, num_epochs=1, windowed=False)
+    #train_result = train(TrainType.Engagement, all_data_df, num_epochs=1, windowed=False)
+    #train_result = train(TrainType.Aggression, all_data_df, num_epochs=1, windowed=False)
     train_result = train(TrainType.Order, team_data_df, num_epochs=1, windowed=False)
 
 # all_data_df[((all_data_df['pct nearest crosshair enemy 2s 0'] + all_data_df['pct nearest crosshair enemy 2s 1'] + all_data_df['pct nearest crosshair enemy 2s 2'] + all_data_df['pct nearest crosshair enemy 2s 3'] + all_data_df['pct nearest crosshair enemy 2s 4'] + all_data_df['pct nearest crosshair enemy 2s 5']) < 0.9) & (all_data_df['valid'] == 1)]
