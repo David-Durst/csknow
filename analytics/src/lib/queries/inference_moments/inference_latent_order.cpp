@@ -115,9 +115,15 @@ namespace csknow::inference_latent_order {
 
                 // Execute the model and turn its output into a tensor.
                 at::Tensor output = module.forward(inputs).toTuple()->elements()[0].toTensor();
-                if (tickIndex == 1195) {
+                /*
+                if (ticks.demoTickNumber[tickIndex] == 5169) {
                     std::cout << "tick index " << tickIndex << " demo tick " << ticks.demoTickNumber[tickIndex] << std::endl;
+                    std::cout << rowPT << std::endl;
+                    for (const auto & [playerId, columnIndex] : playerIdToColumnIndex) {
+                        std::cout << "player id " << playerId << " start column index " << columnIndex * total_orders << std::endl;
+                    }
                 }
+                 */
                 //std::cout << output << std::endl;
                 for (int64_t patIndex = ticks.patPerTick[tickIndex].minId;
                      patIndex <= ticks.patPerTick[tickIndex].maxId; patIndex++) {
@@ -133,7 +139,8 @@ namespace csknow::inference_latent_order {
                             mostLikelyOrder = static_cast<OrderRole>(orderIndex);
                         }
                     }
-                    if (tickIndex == 1195) {
+                    /*
+                    if (ticks.demoTickNumber[tickIndex] == 5169) {
                         std::cout << "player id " << curPlayerId << ", probabilities ";
                         for (size_t orderIndex = 0;
                              orderIndex < total_orders; orderIndex++) {
@@ -141,6 +148,7 @@ namespace csknow::inference_latent_order {
                         }
                         std::cout << std::endl;
                     }
+                     */
 
                     bool oldOrderToWrite =
                         playerToActiveOrder.find(curPlayerId) != playerToActiveOrder.end() &&

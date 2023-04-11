@@ -82,13 +82,13 @@ namespace csknow::feature_store {
         for (size_t j = 0; j < num_orders_per_site; j++) {
             double & aOrderDistance = c4DistanceToNearestAOrderNavArea[j][tickIndex];
             aOrderDistance = std::numeric_limits<double>::max();
-            for (size_t k = 0; k < aOrders[j].places.size(); k++) {
+            for (size_t k = 1; k < aOrders[j].places.size(); k++) {
                 aOrderDistance = std::min(aOrderDistance,
                                           distanceToPlaces.getClosestDistance(buffer.c4MapData.c4AreaIndex, aOrders[j].places[k]));
             }
             double & bOrderDistance = c4DistanceToNearestBOrderNavArea[j][tickIndex];
             bOrderDistance = std::numeric_limits<double>::max();
-            for (size_t k = 0; k < bOrders[j].places.size(); k++) {
+            for (size_t k = 1; k < bOrders[j].places.size(); k++) {
                 bOrderDistance = std::min(bOrderDistance,
                                           distanceToPlaces.getClosestDistance(buffer.c4MapData.c4AreaIndex, bOrders[j].places[k]));
             }
