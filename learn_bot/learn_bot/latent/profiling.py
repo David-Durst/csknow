@@ -11,8 +11,11 @@ num_per_row_calls = 0
 
 def profile_latent_model(model_path: pathlib.Path, batch_size: int, batch: torch.Tensor):
     global aggregate_batch_time, num_batch_calls, aggregate_per_row_time, num_per_row_calls
-    model = torch.jit.load(model_path)
+    torch.set_num_threads(1)
+    model = torch.jit.optimize_for_inference(torch.jit.load(model_path))
     batch_cpu = batch.to("cpu")
+    if num_per_row_calls == 0 and num_batch_calls == 0:
+        print(model.code)
     if random.uniform(0,1) < 0.5:
         start = time.time()
         model(batch_cpu)
