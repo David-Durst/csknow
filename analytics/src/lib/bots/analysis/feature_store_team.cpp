@@ -45,8 +45,9 @@ namespace csknow::feature_store {
         this->size = size;
     }
 
-    TeamFeatureStoreResult::TeamFeatureStoreResult(size_t size, const std::vector<csknow::orders::QueryOrder> & orders) {
-        init(size);
+    void TeamFeatureStoreResult::setOrders(const std::vector<csknow::orders::QueryOrder> &orders) {
+        aOrders.clear();
+        bOrders.clear();
         for (const auto & order : orders) {
             if (order.orderType == orders::OrderType::AOrder) {
                 aOrders.push_back(order);
@@ -55,6 +56,11 @@ namespace csknow::feature_store {
                 bOrders.push_back(order);
             }
         }
+    }
+
+    TeamFeatureStoreResult::TeamFeatureStoreResult(size_t size, const std::vector<csknow::orders::QueryOrder> & orders) {
+        init(size);
+        setOrders(orders);
     }
 
     void TeamFeatureStoreResult::commitTeamRow(FeatureStorePreCommitBuffer & buffer,

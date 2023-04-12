@@ -99,6 +99,7 @@ namespace csknow::behavior_tree_latent_states {
                       const MapMeshResult & mapMeshResult, const ReachableResult & reachability,
                       const DistanceToPlacesResult & distanceToPlaces,
                       const nearest_nav_cell::NearestNavCell & nearestNavCell,
+                      const csknow::orders::OrdersResult & ordersResult,
                       const Players & players, const Games & games, const Rounds & rounds,
                       const Ticks & ticks, const PlayerAtTick & playerAtTick,
                       const WeaponFire & weaponFire, const Hurt & hurt,

@@ -101,6 +101,7 @@ struct Blackboard {
     MapMeshResult mapMeshResult;
     ReachableResult reachability;
     DistanceToPlacesResult distanceToPlaces;
+    csknow::orders::OrdersResult ordersResult;
 
     // all player data
     map<CSGOId, TreeThinker> playerToTreeThinkers;
@@ -242,6 +243,7 @@ struct Blackboard {
         visPoints(navFile), nearestNavCell(visPoints), mapMeshResult(queryMapMesh(navFile, "")),
         reachability(queryReachable(visPoints, mapMeshResult, "", mapsPath, mapName)),
         distanceToPlaces(queryDistanceToPlaces(navFile, reachability, "", mapsPath, mapName)),
+        ordersResult(visPoints, mapMeshResult, distanceToPlaces),
         aggressionDis(0., 1.),
         tDangerAreaLastCheckTime(navFile.m_areas.size(), defaultTime),
         ctDangerAreaLastCheckTime(navFile.m_areas.size(), defaultTime),
@@ -251,6 +253,7 @@ struct Blackboard {
         navFileOverlay.setMapsPath(mapsPath);
         visPoints.load(mapsPath, mapName, true, navFile, true);
         visPoints.load(mapsPath, mapName, false, navFile, true);
+        ordersResult.runQuery();
 
         tMemory.considerAllTeammates = true;
         tMemory.team = ENGINE_TEAM_T;
@@ -261,7 +264,7 @@ struct Blackboard {
     Blackboard(const string & navPath, const VisPoints & visPoints,
                const csknow::nearest_nav_cell::NearestNavCell & nearestNavCell,
                const MapMeshResult & mapMeshResult, const ReachableResult & reachability,
-               const DistanceToPlacesResult & distanceToPlaces,
+               const DistanceToPlacesResult & distanceToPlaces, const csknow::orders::OrdersResult & ordersResult,
                csknow::feature_store::FeatureStorePreCommitBuffer & featureStorePreCommitBuffer) :
         navFolderPath(std::filesystem::path(navPath).remove_filename().string()),
         navPath(navPath), mapsPath(navFolderPath),
@@ -270,6 +273,7 @@ struct Blackboard {
         visPoints(visPoints), nearestNavCell(nearestNavCell), mapMeshResult(mapMeshResult),
         reachability(reachability),
         distanceToPlaces(distanceToPlaces),
+        ordersResult(ordersResult),
         aggressionDis(0., 1.),
         tDangerAreaLastCheckTime(navFile.m_areas.size(), defaultTime),
         ctDangerAreaLastCheckTime(navFile.m_areas.size(), defaultTime),

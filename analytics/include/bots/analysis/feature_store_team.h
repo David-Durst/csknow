@@ -54,6 +54,7 @@ namespace csknow::feature_store {
         vector<string> allColumnDataTeam = {"CT", "T"};
 
 
+        void setOrders(const std::vector<csknow::orders::QueryOrder> & orders);
         TeamFeatureStoreResult(size_t size, const std::vector<csknow::orders::QueryOrder> & orders);
         void commitTeamRow(FeatureStorePreCommitBuffer & buffer, DistanceToPlacesResult & distanceToPlaces,
                            const nav_mesh::nav_file & navFile,

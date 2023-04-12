@@ -44,6 +44,7 @@ namespace csknow::behavior_tree_latent_states {
                                             const MapMeshResult & mapMeshResult, const ReachableResult & reachability,
                                             const DistanceToPlacesResult & distanceToPlaces,
                                             const nearest_nav_cell::NearestNavCell & nearestNavCell,
+                                            const csknow::orders::OrdersResult & ordersResult,
                                             const Players & players, const Games & games, const Rounds & rounds,
                                             const Ticks & ticks, const PlayerAtTick & playerAtTick,
                                             const WeaponFire & weaponFire, const Hurt & hurt,
@@ -69,7 +70,7 @@ namespace csknow::behavior_tree_latent_states {
             tmpRoundIds[threadNum].push_back(roundIndex);
             tmpRoundStarts[threadNum].push_back(static_cast<int64_t>(tmpStartTickId[threadNum].size()));
             Blackboard blackboard(navPath, visPoints, nearestNavCell, mapMeshResult, reachability, distanceToPlaces,
-                                  tmpPreCommitBuffer[threadNum]);
+                                  ordersResult, tmpPreCommitBuffer[threadNum]);
             GlobalQueryNode globalQueryNode(blackboard);
             PlayerQueryNode playerQueryNode(blackboard);
             RoundPlantDefusal roundPlantDefusal = processRoundPlantDefusals(rounds, ticks, plants, defusals, roundIndex);

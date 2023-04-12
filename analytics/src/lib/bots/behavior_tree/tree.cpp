@@ -39,8 +39,10 @@ void Tree::tick(ServerState & state, const string & mapsPath) {
                                                          blackboard->visPoints, blackboard->nearestNavCell,
                                                          blackboard->mapMeshResult,
                                                          blackboard->reachability, blackboard->distanceToPlaces,
+                                                         blackboard->ordersResult,
                                                          featureStoreResult.defaultBuffer);
                 }
+                featureStoreResult.teamFeatureStoreResult.setOrders(blackboard->ordersResult.orders);
                 makeBlackboardSuccesfully = true;
             }
             catch (const std::exception & ex) {
