@@ -8,7 +8,7 @@
 #define K_I 0.
 #define K_D 0.
 
-constexpr bool second_order = false;
+constexpr bool second_order = true;
 
 namespace action {
     float computeAngleVelocityPID(double deltaAngle, PIDState pidState, double noise) {

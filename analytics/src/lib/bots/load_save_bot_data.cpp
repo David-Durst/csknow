@@ -230,23 +230,26 @@ void ServerState::loadClientStates(const string& clientStatesFilePath) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].flashDuration);
         }
         else if (colNumber == 52) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].hasDefuser);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].maxFlashAlpha);
         }
         else if (colNumber == 53) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].money);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].hasDefuser);
         }
         else if (colNumber == 54) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].ping);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].money);
         }
         else if (colNumber == 55) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].gameTime);
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].ping);
         }
         else if (colNumber == 56) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].gameTime);
+        }
+        else if (colNumber == 57) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].inputSet);
             rowNumber++;
             arrayEntry++;
         }
-        colNumber = (colNumber + 1) % 57;
+        colNumber = (colNumber + 1) % 58;
     }
     closeMMapFile({fd, stats, file});
 }
