@@ -29,6 +29,7 @@ namespace csknow::inference_latent_order {
         fs::path modelPath = fs::path(modelsDir) / fs::path("latent_model") /
                              fs::path("order_script_model.pt");
 
+        torch::NoGradGuard no_grad;
         torch::jit::getProfilingMode() = false;
         torch::jit::script::Module module;
         try {
