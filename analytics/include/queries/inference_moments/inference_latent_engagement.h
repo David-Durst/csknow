@@ -5,6 +5,7 @@
 #ifndef CSKNOW_INFERENCE_LATENT_ENGAGEMENT_H
 #define CSKNOW_INFERENCE_LATENT_ENGAGEMENT_H
 #include "queries/moments/behavior_tree_latent_states.h"
+#include "queries/inference_moments/inference_latent_engagement_helpers.h"
 
 namespace csknow::inference_latent_engagement {
     struct PlayerEngageProb {
@@ -12,19 +13,6 @@ namespace csknow::inference_latent_engagement {
         float prob;
     };
 
-    struct InferenceEngagementTickValues {
-        std::vector<float> rowCPP;
-        vector<csknow::feature_store::EngagementEnemyState> enemyStates;
-    };
-    InferenceEngagementTickValues extractFeatureStoreEngagementValues(
-        const csknow::feature_store::FeatureStoreResult & featureStoreResult, int64_t rowIndex);
-    struct InferenceEngagementTickProbabilities {
-        vector<float> enemyProbabilities;
-        size_t mostLikelyEnemyNum;
-    };
-    InferenceEngagementTickProbabilities extractFeatureStoreEngagementResults(
-        //const csknow::feature_store::FeatureStoreResult & featureStoreResult, int64_t rowIndex, int64_t tickIndex,
-        const at::Tensor & output, const InferenceEngagementTickValues & values);
 
     class InferenceLatentEngagementResult : public EngagementResult {
     public:

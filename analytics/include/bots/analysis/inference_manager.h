@@ -5,8 +5,11 @@
 #ifndef CSKNOW_INFERENCE_MANAGER_H
 #define CSKNOW_INFERENCE_MANAGER_H
 
-#include "queries/inference_moments/inference_latent_engagement.h"
+#include "queries/inference_moments/inference_latent_engagement_helpers.h"
 #include "bots/load_save_bot_data.h"
+#include <filesystem>
+
+namespace fs = std::filesystem;
 
 namespace csknow::inference_manager {
 

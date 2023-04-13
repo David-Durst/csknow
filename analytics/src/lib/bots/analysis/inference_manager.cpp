@@ -59,7 +59,7 @@ namespace csknow::inference_manager {
         size_t elementsPerClient = playerToInferenceData[clientsToInfer.front()].engagementValues.rowCPP.size();
         std::vector<float> rowCPP;
         for (const auto & csgoId : clientsToInfer) {
-            const vector<float> & playerRow = playerToInferenceData[clientsToInfer.front()].engagementValues.rowCPP;
+            const vector<float> & playerRow = playerToInferenceData[csgoId].engagementValues.rowCPP;
             rowCPP.insert(rowCPP.end(), playerRow.begin(), playerRow.end());
         }
         std::vector<torch::jit::IValue> inputs;
