@@ -89,6 +89,7 @@ namespace csknow::inference_manager {
             return;
         }
 
+        torch::NoGradGuard no_grad;
         // sort clients by ticks since max inference
         struct ClientAndTicks {
             CSGOId csgoId;
@@ -96,7 +97,9 @@ namespace csknow::inference_manager {
         };
         vector<ClientAndTicks> clientsToInfer;
 
-        for (const auto & [csgoId, clientInferenceData] : playerToInferenceData) {
+        for (auto & [csgoId, clientInferenceData] : playerToInferenceData) {
+            clientInferenceData.ticksSinceLastInference =
+                std::min(clientInferenceData.ticksSinceLastInference + 1, max_track_ticks);
             clientsToInfer.push_back({csgoId, clientInferenceData.ticksSinceLastInference});
         }
 
@@ -111,6 +114,7 @@ namespace csknow::inference_manager {
         vector<CSGOId> clients;
         for (const auto & client : clientsToInfer) {
             clients.push_back(client.csgoId);
+            playerToInferenceData[client.csgoId].ticksSinceLastInference = 0;
         }
 
         auto start = std::chrono::system_clock::now();

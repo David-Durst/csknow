@@ -13,7 +13,7 @@ namespace fs = std::filesystem;
 
 namespace csknow::inference_manager {
 
-    constexpr size_t batch_size_per_model = 2;
+    constexpr size_t batch_size_per_model = 1;
     constexpr size_t max_track_ticks = 20;
 
     struct ClientInferenceData {
