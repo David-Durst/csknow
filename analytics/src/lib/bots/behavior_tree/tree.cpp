@@ -4,6 +4,7 @@
 
 #include "bots/behavior_tree/tree.h"
 #include "bots/behavior_tree/global/global_node.h"
+#include "queries/inference_moments/inference_latent_engagement.h"
 
 void Tree::tick(ServerState & state, const string & mapsPath) {
     string navPath = mapsPath + "/" + state.mapName + ".nav";
@@ -124,6 +125,8 @@ void Tree::tick(ServerState & state, const string & mapsPath) {
         printStates.push_back(blackboard->printStrategyState(state));
         printStates.push_back(blackboard->printCommunicateState(state));
 
+        inferenceManager.setCurClients(state.clients);
+
         for (auto & client : state.clients) {
             // disable force for all players, testing infrastructure can set force
             blackboard->playerToAction[client.csgoId].forceInput = false;
@@ -157,9 +160,11 @@ void Tree::tick(ServerState & state, const string & mapsPath) {
                 printStates.back().appendNewline = true;
 
             }
+
+            featureStoreResult.commitPlayerRow(featureStoreResult.defaultBuffer);
+            inferenceManager.recordPlayerValues(featureStoreResult, client.csgoId);
         }
 
-        featureStoreResult.commitPlayerRow(featureStoreResult.defaultBuffer);
 
         stringstream logCollector;
         for (const auto & printState : printStates) {

@@ -10,23 +10,24 @@
 
 //#define LOG_STATE
 int main(int argc, char * argv[]) {
-    if (argc != 4 && argc != 5) {
-        std::cout << "please call this code with 3 or 4 arguments: \n"
+    if (argc != 5 && argc != 6) {
+        std::cout << "please call this code with 4 or 5 arguments: \n"
             << "1. path/to/maps\n"
             << "2. path/to/data\n"
             << "3. path/to/log\n"
-            << "4. any value disables read filter names thread\n" << std::endl;
+            << "4. path/to/models\n"
+            << "5. any value disables read filter names thread\n" << std::endl;
         return 1;
     }
-    string mapsPath = argv[1], dataPath = argv[2], logPath = argv[3];
+    string mapsPath = argv[1], dataPath = argv[2], logPath = argv[3], modelsDir = argv[4];
 
     ServerState state;
     state.dataPath = dataPath;
 
     uint64_t numFailures = 0;
-    Tree tree;
+    Tree tree(modelsDir);
     std::thread filterReceiver;
-    if (argc == 4) {
+    if (argc == 5) {
         std::thread tmpThread(&Tree::readFilterNames, &tree);
         filterReceiver.swap(tmpThread);
     }

@@ -22,20 +22,22 @@
 //#define LOG_STATE
 
 int main(int argc, char * argv[]) {
-    if (argc != 4) {
-        std::cout << "please call this code with 3 arguments: \n"
+    if (argc != 5) {
+        std::cout << "please call this code with 4 arguments: \n"
             << "1. path/to/maps\n"
             << "2. path/to/data\n"
-            << "3. path/to/log\n" << std::endl;
+            << "3. path/to/log\n"
+            << "4. path/to/models\n"
+            << std::endl;
         return 1;
     }
-    string mapsPath = argv[1], dataPath = argv[2], logPath = argv[3];
+    string mapsPath = argv[1], dataPath = argv[2], logPath = argv[3], modelsDir = argv[4];
 
     ServerState state;
     state.dataPath = dataPath;
 
     uint64_t numFailures = 0;
-    Tree tree;
+    Tree tree(modelsDir);
     std::thread filterReceiver(&Tree::readFilterNames, &tree);
 
     bool finishedTests = false;
@@ -404,10 +406,10 @@ int main(int argc, char * argv[]) {
             tree.tick(state, mapsPath);
             if (state.clients.size() > 0) {
                 //std::cout << "time since last save " << state.getSecondsBetweenTimes(start, priorStart) << std::endl;
-                //scriptsRunner.initialize(tree, state);
-                //finishedTests = scriptsRunner.tick(tree, state);
-                scenarioRunner.initialize(tree, state);
-                finishedTests = scenarioRunner.tick(tree, state);
+                scriptsRunner.initialize(tree, state);
+                finishedTests = scriptsRunner.tick(tree, state);
+                //scenarioRunner.initialize(tree, state);
+                //finishedTests = scenarioRunner.tick(tree, state);
                 //humanScenarioRunner.initialize(tree, state);
                 //finishedTests = humanScenarioRunner.tick(tree, state);
             }

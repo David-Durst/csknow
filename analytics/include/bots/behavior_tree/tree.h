@@ -10,6 +10,7 @@
 #include "bots/behavior_tree/priority/priority_node.h"
 #include "bots/behavior_tree/pathing_node.h"
 #include "bots/behavior_tree/action/action_node.h"
+#include "bots/analysis/inference_manager.h"
 #include <memory>
 #include <atomic>
 #include <mutex>
@@ -35,6 +36,10 @@ public:
     string curLog;
 
     csknow::feature_store::FeatureStoreResult featureStoreResult;
+    csknow::inference_manager::InferenceManager inferenceManager;
+
+    Tree() { };
+    Tree(const std::string & modelsDir) : inferenceManager(modelsDir) { };
 
     void tick(ServerState & state, const string & mapsPath);
     void readFilterNames();

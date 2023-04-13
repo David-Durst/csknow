@@ -28,6 +28,54 @@ namespace csknow::inference_latent_engagement {
         tmpHurtIds[threadNum].push_back(eData.hurtIds);
     }
 
+    InferenceEngagementTickValues extractFeatureStoreEngagementValues(
+        const csknow::feature_store::FeatureStoreResult & featureStoreResult, int64_t rowIndex) {
+        InferenceEngagementTickValues result;
+        // seperate different input types
+        for (size_t enemyNum = 0; enemyNum < csknow::feature_store::maxEnemies; enemyNum++) {
+            const csknow::feature_store::FeatureStoreResult::ColumnEnemyData &columnEnemyData =
+                featureStoreResult.columnEnemyData[enemyNum];
+            result.rowCPP.push_back(
+                static_cast<float>(columnEnemyData.timeSinceLastVisibleOrToBecomeVisible[rowIndex]));
+            result.rowCPP.push_back(static_cast<float>(columnEnemyData.worldDistanceToEnemy[rowIndex]));
+            result.rowCPP.push_back(static_cast<float>(columnEnemyData.crosshairDistanceToEnemy[rowIndex]));
+        }
+        for (size_t enemyNum = 0; enemyNum < csknow::feature_store::maxEnemies; enemyNum++) {
+            const csknow::feature_store::FeatureStoreResult::ColumnEnemyData &columnEnemyData =
+                featureStoreResult.columnEnemyData[enemyNum];
+            result.rowCPP.push_back(static_cast<float>(columnEnemyData.enemyEngagementStates[rowIndex]));
+            result.enemyStates.push_back(columnEnemyData.enemyEngagementStates[rowIndex]);
+        }
+        // add last one for no enemy
+        result.enemyStates.push_back(csknow::feature_store::EngagementEnemyState::Visible);
+        return result;
+    }
+
+    InferenceEngagementTickProbabilities extractFeatureStoreEngagementResults(
+        const csknow::feature_store::FeatureStoreResult & featureStoreResult, int64_t rowIndex, int64_t tickIndex,
+        const at::Tensor & output, const InferenceEngagementTickValues & values) {
+        InferenceEngagementTickProbabilities result;
+        float mostLikelyEnemyProb = -1;
+        result.mostLikelyEnemyNum = csknow::feature_store::maxEnemies + 1;
+        for (size_t enemyNum = 0; enemyNum <= csknow::feature_store::maxEnemies; enemyNum++) {
+            //std::cout << output[0][enemyNum].item<float>() << std::endl;
+            result.enemyProbabilities.push_back(output[0][enemyNum].item<float>());
+            if (values.enemyStates[enemyNum] != csknow::feature_store::EngagementEnemyState::None &&
+                result.enemyProbabilities.back() > mostLikelyEnemyProb) {
+                result.mostLikelyEnemyNum = enemyNum;
+                mostLikelyEnemyProb = result.enemyProbabilities.back();
+                if (enemyNum < csknow::feature_store::maxEnemies &&
+                    featureStoreResult.columnEnemyData[result.mostLikelyEnemyNum].playerId[rowIndex] == INVALID_ID) {
+                    std::cout << "invalid noted played tick id " << tickIndex
+                              << " enemy num " << enemyNum
+                              << " enegagmenet state " << enumAsInt(values.enemyStates[enemyNum])
+                              << " size " << featureStoreResult.size
+                              << std::endl;
+                }
+            }
+        }
+    }
+
     void InferenceLatentEngagementResult::runQuery(
         const string & modelsDir, const Rounds & rounds, const Ticks & ticks,
         const csknow::behavior_tree_latent_states::BehaviorTreeLatentStates & behaviorTreeLatentStates) {
@@ -77,38 +125,18 @@ namespace csknow::inference_latent_engagement {
                 for (int64_t patIndex = ticks.patPerTick[tickIndex].minId;
                      patIndex <= ticks.patPerTick[tickIndex].maxId; patIndex++) {
                     int64_t curPlayerId = playerAtTick.playerId[patIndex];
-                    std::vector<torch::jit::IValue> inputs;
-                    std::vector<float> rowCPP;
-                    // all but cur tick are inputs
-                    // seperate different input types
-                    for (size_t enemyNum = 0; enemyNum < csknow::feature_store::maxEnemies; enemyNum++) {
-                        const csknow::feature_store::FeatureStoreResult::ColumnEnemyData &columnEnemyData =
-                            behaviorTreeLatentStates.featureStoreResult.columnEnemyData[enemyNum];
-                        rowCPP.push_back(
-                            static_cast<float>(columnEnemyData.timeSinceLastVisibleOrToBecomeVisible[patIndex]));
-                        rowCPP.push_back(static_cast<float>(columnEnemyData.worldDistanceToEnemy[patIndex]));
-                        rowCPP.push_back(static_cast<float>(columnEnemyData.crosshairDistanceToEnemy[patIndex]));
-                    }
-                    vector<csknow::feature_store::EngagementEnemyState> enemyStates;
-                    for (size_t enemyNum = 0; enemyNum < csknow::feature_store::maxEnemies; enemyNum++) {
-                        const csknow::feature_store::FeatureStoreResult::ColumnEnemyData &columnEnemyData =
-                            behaviorTreeLatentStates.featureStoreResult.columnEnemyData[enemyNum];
-                        rowCPP.push_back(static_cast<float>(columnEnemyData.enemyEngagementStates[patIndex]));
-                        enemyStates.push_back(columnEnemyData.enemyEngagementStates[patIndex]);
-                    }
-                    // add last one for no enemy
-                    enemyStates.push_back(csknow::feature_store::EngagementEnemyState::Visible);
 
-                    torch::Tensor rowPT = torch::from_blob(rowCPP.data(), {1, static_cast<long>(rowCPP.size())},
+                    InferenceEngagementTickValues values =
+                        extractFeatureStoreEngagementValues(behaviorTreeLatentStates.featureStoreResult, patIndex);
+                    std::vector<torch::jit::IValue> inputs;
+
+                    torch::Tensor rowPT = torch::from_blob(values.rowCPP.data(), {1, static_cast<long>(values.rowCPP.size())},
                                                            options);
                     inputs.push_back(rowPT);
 
                     // Execute the model and turn its output into a tensor.
                     at::Tensor output = module.forward(inputs).toTuple()->elements()[0].toTensor();
 
-                    vector<float> enemyProbabilities;
-                    float mostLikelyEnemyProb = -1;
-                    size_t mostLikelyEnemyNum = csknow::feature_store::maxEnemies + 1;
                     /*
                     if (tickIndex == 8080 && curPlayerId == 3) {
                         std::cout << "tick index " << tickIndex << " cur player id " << curPlayerId
@@ -125,43 +153,17 @@ namespace csknow::inference_latent_engagement {
                         }
                     }
                      */
+                    // for distribution visualization
                     for (size_t enemyNum = 0; enemyNum <= csknow::feature_store::maxEnemies; enemyNum++) {
-                        //std::cout << output[0][enemyNum].item<float>() << std::endl;
-                        enemyProbabilities.push_back(output[0][enemyNum].item<float>());
                         int64_t enemyId = INVALID_ID;
                         if (enemyNum < csknow::feature_store::maxEnemies) {
                             enemyId = behaviorTreeLatentStates.featureStoreResult.columnEnemyData[enemyNum].playerId[patIndex];
                         }
                         playerEngageProbs[patIndex][enemyNum] = {enemyId, output[0][enemyNum].item<float>()};
-                        if (enemyStates[enemyNum] != csknow::feature_store::EngagementEnemyState::None &&
-                            enemyProbabilities.back() > mostLikelyEnemyProb) {
-                            mostLikelyEnemyNum = enemyNum;
-                            mostLikelyEnemyProb = enemyProbabilities.back();
-                            if (enemyNum < csknow::feature_store::maxEnemies && behaviorTreeLatentStates.featureStoreResult
-                                .columnEnemyData[mostLikelyEnemyNum].playerId[patIndex] == INVALID_ID) {
-                                std::cout << "invalid noted played tick id " << tickIndex
-                                    << " enemy num " << enemyNum
-                                    << " enegagmenet state " << enumAsInt(enemyStates[enemyNum])
-                                    << " size " << behaviorTreeLatentStates.featureStoreResult.size
-                                    << std::endl;
-                            }
-                        }
-                        /*
-                        const csknow::feature_store::FeatureStoreResult::ColumnEnemyData &columnEnemyData =
-                            behaviorTreeLatentStates.featureStoreResult.columnEnemyData[enemyNum];
-                        targetLabels.push_back({
-                                                   columnEnemyData.playerId[patIndex],
-                                                   output[0][enemyNum * 2].item<float>() >= 0.5,
-                                                   output[0][enemyNum * 2 + 1].item<float>() >= 0.5
-                                               });
-                        if (firstLikelyHitEnemy == INVALID_ID && targetLabels.back().hitTargetEnemy) {
-                            firstLikelyHitEnemy = columnEnemyData.playerId[patIndex];
-                        }
-                        if (firstLikelyNearestEnemy == INVALID_ID && targetLabels.back().nearestTargetEnemy) {
-                            firstLikelyNearestEnemy = columnEnemyData.playerId[patIndex];
-                        }
-                         */
                     }
+                    InferenceEngagementTickProbabilities probabilities =
+                        extractFeatureStoreEngagementResults(behaviorTreeLatentStates.featureStoreResult, patIndex,
+                                                             tickIndex, output, values);
 
                     /*
                     bool hitEngagement = output[0][csknow::feature_store::maxEnemies * 2].item<float>() >= 0.5;
@@ -174,7 +176,7 @@ namespace csknow::inference_latent_engagement {
                     }
                      */
 
-                    bool engagement = mostLikelyEnemyNum < csknow::feature_store::maxEnemies;
+                    bool engagement = probabilities.mostLikelyEnemyNum < csknow::feature_store::maxEnemies;
                     int firstLikelyEnemy = INVALID_ID;
                     if (engagement) {
                         /*
@@ -183,7 +185,7 @@ namespace csknow::inference_latent_engagement {
                         }
                          */
                         firstLikelyEnemy = behaviorTreeLatentStates.featureStoreResult
-                            .columnEnemyData[mostLikelyEnemyNum].playerId[patIndex];
+                            .columnEnemyData[probabilities.mostLikelyEnemyNum].playerId[patIndex];
                         //exit(1);
                     }
                     /*
