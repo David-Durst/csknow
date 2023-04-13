@@ -29,7 +29,8 @@ namespace csknow::inference_manager {
         set<CSGOId> curClients;
         for (const auto & client : clients) {
             curClients.insert(client.csgoId);
-            if (playerToInferenceData.find(client.csgoId) == playerToInferenceData.end()) {
+            if (playerToInferenceData.find(client.csgoId) == playerToInferenceData.end() &&
+                client.isAlive && client.isBot) {
                 playerToInferenceData[client.csgoId] = {};
                 playerToInferenceData[client.csgoId].ticksSinceLastInference = max_track_ticks;
             }
