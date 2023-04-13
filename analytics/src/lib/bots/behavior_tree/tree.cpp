@@ -33,10 +33,11 @@ void Tree::tick(ServerState & state, const string & mapsPath) {
         while (!makeBlackboardSuccesfully) {
             try {
                 if (state.mapNumber != curMapNumber) {
-                    blackboard = make_unique<Blackboard>(navPath, state.mapName, featureStoreResult.defaultBuffer);
+                    blackboard = make_unique<Blackboard>(navPath, state.mapName, inferenceManager,
+                                                         featureStoreResult.defaultBuffer);
                 }
                 else {
-                    blackboard = make_unique<Blackboard>(navPath,
+                    blackboard = make_unique<Blackboard>(navPath, inferenceManager,
                                                          blackboard->visPoints, blackboard->nearestNavCell,
                                                          blackboard->mapMeshResult,
                                                          blackboard->reachability, blackboard->distanceToPlaces,
@@ -165,8 +166,10 @@ void Tree::tick(ServerState & state, const string & mapsPath) {
             inferenceManager.recordPlayerValues(featureStoreResult, client.csgoId);
         }
 
+        inferenceManager.runInferences();
 
         stringstream logCollector;
+        logCollector << "inference time " << inferenceManager.inferenceSeconds << "s" << std::endl;
         for (const auto & printState : printStates) {
             logCollector << printState.getState();
             if (printState.appendNewline) {

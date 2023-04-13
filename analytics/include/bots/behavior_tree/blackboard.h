@@ -23,6 +23,7 @@
 #include "bots/behavior_tree/action/second_order_controller.h"
 #include "bots/analysis/streaming_manager.h"
 #include "bots/analysis/feature_store.h"
+#include "bots/analysis/inference_manager.h"
 #include <filesystem>
 #include <memory>
 #include <random>
@@ -89,6 +90,7 @@ struct Blackboard {
     map<AreaId, AreaId> removedAreaAlternatives;
     ServerState lastFrameState;
     StreamingManager streamingManager;
+    const csknow::inference_manager::InferenceManager & inferenceManager;
 
     // helpers
     std::random_device rd;
@@ -235,10 +237,11 @@ struct Blackboard {
     csknow::feature_store::FeatureStorePreCommitBuffer & featureStorePreCommitBuffer;
 
     Blackboard(const string & navPath, const string & mapName,
+               const csknow::inference_manager::InferenceManager & inferenceManager,
                csknow::feature_store::FeatureStorePreCommitBuffer & featureStorePreCommitBuffer) :
         navFolderPath(std::filesystem::path(navPath).remove_filename().string()),
         navPath(navPath), mapsPath(navFolderPath),
-        navFile(navPath.c_str()), streamingManager(navFolderPath),
+        navFile(navPath.c_str()), streamingManager(navFolderPath), inferenceManager(inferenceManager),
         gen(rd()), navFileOverlay(navFile),
         visPoints(navFile), nearestNavCell(visPoints), mapMeshResult(queryMapMesh(navFile, "")),
         reachability(queryReachable(visPoints, mapMeshResult, "", mapsPath, mapName)),
@@ -261,14 +264,15 @@ struct Blackboard {
         ctMemory.team = ENGINE_TEAM_CT;
     }
 
-    Blackboard(const string & navPath, const VisPoints & visPoints,
+    Blackboard(const string & navPath, const csknow::inference_manager::InferenceManager & inferenceManager,
+               const VisPoints & visPoints,
                const csknow::nearest_nav_cell::NearestNavCell & nearestNavCell,
                const MapMeshResult & mapMeshResult, const ReachableResult & reachability,
                const DistanceToPlacesResult & distanceToPlaces, const csknow::orders::OrdersResult & ordersResult,
                csknow::feature_store::FeatureStorePreCommitBuffer & featureStorePreCommitBuffer) :
         navFolderPath(std::filesystem::path(navPath).remove_filename().string()),
         navPath(navPath), mapsPath(navFolderPath),
-        navFile(navPath.c_str()), streamingManager(navFolderPath),
+        navFile(navPath.c_str()), streamingManager(navFolderPath), inferenceManager(inferenceManager),
         gen(rd()), navFileOverlay(navFile),
         visPoints(visPoints), nearestNavCell(nearestNavCell), mapMeshResult(mapMeshResult),
         reachability(reachability),

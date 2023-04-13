@@ -23,7 +23,7 @@ namespace csknow::inference_latent_engagement {
         size_t mostLikelyEnemyNum;
     };
     InferenceEngagementTickProbabilities extractFeatureStoreEngagementResults(
-        const csknow::feature_store::FeatureStoreResult & featureStoreResult, int64_t rowIndex, int64_t tickIndex,
+        //const csknow::feature_store::FeatureStoreResult & featureStoreResult, int64_t rowIndex, int64_t tickIndex,
         const at::Tensor & output, const InferenceEngagementTickValues & values);
 
     class InferenceLatentEngagementResult : public EngagementResult {

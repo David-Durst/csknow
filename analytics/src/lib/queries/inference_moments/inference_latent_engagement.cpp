@@ -52,7 +52,7 @@ namespace csknow::inference_latent_engagement {
     }
 
     InferenceEngagementTickProbabilities extractFeatureStoreEngagementResults(
-        const csknow::feature_store::FeatureStoreResult & featureStoreResult, int64_t rowIndex, int64_t tickIndex,
+        //const csknow::feature_store::FeatureStoreResult & featureStoreResult, int64_t rowIndex, int64_t tickIndex,
         const at::Tensor & output, const InferenceEngagementTickValues & values) {
         InferenceEngagementTickProbabilities result;
         float mostLikelyEnemyProb = -1;
@@ -64,6 +64,7 @@ namespace csknow::inference_latent_engagement {
                 result.enemyProbabilities.back() > mostLikelyEnemyProb) {
                 result.mostLikelyEnemyNum = enemyNum;
                 mostLikelyEnemyProb = result.enemyProbabilities.back();
+                /*
                 if (enemyNum < csknow::feature_store::maxEnemies &&
                     featureStoreResult.columnEnemyData[result.mostLikelyEnemyNum].playerId[rowIndex] == INVALID_ID) {
                     std::cout << "invalid noted played tick id " << tickIndex
@@ -72,6 +73,7 @@ namespace csknow::inference_latent_engagement {
                               << " size " << featureStoreResult.size
                               << std::endl;
                 }
+                 */
             }
         }
     }
@@ -162,8 +164,9 @@ namespace csknow::inference_latent_engagement {
                         playerEngageProbs[patIndex][enemyNum] = {enemyId, output[0][enemyNum].item<float>()};
                     }
                     InferenceEngagementTickProbabilities probabilities =
-                        extractFeatureStoreEngagementResults(behaviorTreeLatentStates.featureStoreResult, patIndex,
-                                                             tickIndex, output, values);
+                        extractFeatureStoreEngagementResults(
+                            //behaviorTreeLatentStates.featureStoreResult, patIndex, tickIndex,
+                            output, values);
 
                     /*
                     bool hitEngagement = output[0][csknow::feature_store::maxEnemies * 2].item<float>() >= 0.5;
