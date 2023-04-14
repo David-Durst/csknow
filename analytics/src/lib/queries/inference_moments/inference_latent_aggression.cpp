@@ -71,58 +71,28 @@ namespace csknow::inference_latent_aggression {
                 for (int64_t patIndex = ticks.patPerTick[tickIndex].minId;
                      patIndex <= ticks.patPerTick[tickIndex].maxId; patIndex++) {
                     int64_t curPlayerId = playerAtTick.playerId[patIndex];
-                    std::vector<torch::jit::IValue> inputs;
-                    std::vector<float> rowCPP;
-                    // all but cur tick are inputs
-                    // seperate different input types
-                    for (size_t enemyNum = 0; enemyNum < csknow::feature_store::maxEnemies; enemyNum++) {
-                        const csknow::feature_store::FeatureStoreResult::ColumnEnemyData &columnEnemyData =
-                            behaviorTreeLatentStates.featureStoreResult.columnEnemyData[enemyNum];
-                        rowCPP.push_back(
-                            static_cast<float>(columnEnemyData.timeSinceLastVisibleOrToBecomeVisible[patIndex]));
-                        rowCPP.push_back(static_cast<float>(columnEnemyData.worldDistanceToEnemy[patIndex]));
-                        rowCPP.push_back(static_cast<float>(columnEnemyData.crosshairDistanceToEnemy[patIndex]));
-                    }
-                    for (size_t teammateNum = 0; teammateNum < csknow::feature_store::maxEnemies; teammateNum++) {
-                        const csknow::feature_store::FeatureStoreResult::ColumnTeammateData &columnTeammateData =
-                            behaviorTreeLatentStates.featureStoreResult.columnTeammateData[teammateNum];
-                        rowCPP.push_back(static_cast<float>(columnTeammateData.teammateWorldDistance[patIndex]));
-                        rowCPP.push_back(static_cast<float>(columnTeammateData.crosshairDistanceToTeammate[patIndex]));
-                    }
-                    vector<csknow::feature_store::EngagementEnemyState> enemyStates;
-                    for (size_t enemyNum = 0; enemyNum < csknow::feature_store::maxEnemies; enemyNum++) {
-                        const csknow::feature_store::FeatureStoreResult::ColumnEnemyData &columnEnemyData =
-                            behaviorTreeLatentStates.featureStoreResult.columnEnemyData[enemyNum];
-                        rowCPP.push_back(static_cast<float>(columnEnemyData.enemyEngagementStates[patIndex]));
-                        enemyStates.push_back(columnEnemyData.enemyEngagementStates[patIndex]);
-                    }
-                    // add last one for no enemy
-                    enemyStates.push_back(csknow::feature_store::EngagementEnemyState::Visible);
 
-                    torch::Tensor rowPT = torch::from_blob(rowCPP.data(), {1, static_cast<long>(rowCPP.size())},
+                    InferenceAggressionTickValues values =
+                        extractFeatureStoreAggressionValues(behaviorTreeLatentStates.featureStoreResult, patIndex);
+                    std::vector<torch::jit::IValue> inputs;
+                    torch::Tensor rowPT = torch::from_blob(values.rowCPP.data(), {1, static_cast<long>(values.rowCPP.size())},
                                                            options);
                     inputs.push_back(rowPT);
 
                     // Execute the model and turn its output into a tensor.
                     at::Tensor output = module.forward(inputs).toTuple()->elements()[0].toTensor();
 
-                    vector<float> aggressionProbabilities;
-                    float mostLikelyAggressionProb = -1;
-                    feature_store::NearestEnemyState mostLikelyAggression = feature_store::NearestEnemyState::Constant;
                     for (size_t aggressionOption = 0; aggressionOption < csknow::feature_store::numNearestEnemyState;
-                        aggressionOption++) {
+                         aggressionOption++) {
                         //std::cout << output[0][enemyNum].item<float>() << std::endl;
-                        aggressionProbabilities.push_back(output[0][aggressionOption].item<float>());
                         playerAggressionProb[patIndex][aggressionOption] = output[0][aggressionOption].item<float>();
-                        if (aggressionProbabilities.back() > mostLikelyAggressionProb) {
-                            mostLikelyAggressionProb = aggressionProbabilities.back();
-                            mostLikelyAggression = static_cast<feature_store::NearestEnemyState>(aggressionOption);
-                        }
                     }
+                    InferenceAggressionTickProbabilities probabilities =
+                        extractFeatureStoreAggressionResults(output, values);
 
                     bool oldAggressionToWrite =
                         playerToActiveAggression.find(curPlayerId) != playerToActiveAggression.end() &&
-                        playerToActiveAggression[curPlayerId].aggressionState != mostLikelyAggression;
+                        playerToActiveAggression[curPlayerId].aggressionState != probabilities.mostLikelyAggression;
 
                     // if new engagement and no old engagement, just add to tracker
                     if (oldAggressionToWrite) {
@@ -136,7 +106,7 @@ namespace csknow::inference_latent_aggression {
                     if (playerToActiveAggression.find(curPlayerId) == playerToActiveAggression.end()) {
                         //std::cout << "starting latent aggression" << std::endl;
                         playerToActiveAggression[curPlayerId] = {
-                            curPlayerId, tickIndex, mostLikelyAggression
+                            curPlayerId, tickIndex, probabilities.mostLikelyAggression
                         };
                     }
                 }

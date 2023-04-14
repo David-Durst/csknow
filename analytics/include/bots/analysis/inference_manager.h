@@ -6,6 +6,7 @@
 #define CSKNOW_INFERENCE_MANAGER_H
 
 #include "queries/inference_moments/inference_latent_engagement_helpers.h"
+#include "queries/inference_moments/inference_latent_aggression_helpers.h"
 #include "bots/load_save_bot_data.h"
 #include <filesystem>
 
@@ -20,10 +21,13 @@ namespace csknow::inference_manager {
         size_t ticksSinceLastInference;
         csknow::inference_latent_engagement::InferenceEngagementTickValues engagementValues;
         csknow::inference_latent_engagement::InferenceEngagementTickProbabilities engagementProbabilities;
+        csknow::inference_latent_aggression::InferenceAggressionTickValues aggressionValues;
+        csknow::inference_latent_aggression::InferenceAggressionTickProbabilities aggressionProbabilities;
     };
 
     class InferenceManager {
         void runEngagementInference(const vector<CSGOId> & clientsToInfer);
+        void runAggressionInference(const vector<CSGOId> & clientsToInfer);
     public:
         bool valid;
         double inferenceSeconds;

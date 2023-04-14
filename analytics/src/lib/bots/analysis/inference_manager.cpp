@@ -70,9 +70,7 @@ namespace csknow::inference_manager {
                              {static_cast<long>(clientsToInfer.size()), static_cast<long>(elementsPerClient)}, options);
         inputs.push_back(rowPT);
 
-        // Execute the model and turn its output into a tensor.
         at::Tensor output = engagementModule.forward(inputs).toTuple()->elements()[0].toTensor();
-
 
         for (size_t i = 0; i < clientsToInfer.size(); i++) {
             at::Tensor playerOutput = output.index({Slice(i, None, i+1), "..."});
@@ -80,7 +78,34 @@ namespace csknow::inference_manager {
                 csknow::inference_latent_engagement::extractFeatureStoreEngagementResults(
                     playerOutput, playerToInferenceData[clientsToInfer[i]].engagementValues);
         }
+    }
 
+    void InferenceManager::runAggressionInference(const vector<CSGOId> & clientsToInfer) {
+        if (clientsToInfer.empty()) {
+            return;
+        }
+        vector<csknow::inference_latent_aggression::InferenceAggressionTickValues> values;
+        size_t elementsPerClient = playerToInferenceData[clientsToInfer.front()].aggressionValues.rowCPP.size();
+        std::vector<float> rowCPP;
+        for (const auto & csgoId : clientsToInfer) {
+            const vector<float> & playerRow = playerToInferenceData[csgoId].aggressionValues.rowCPP;
+            rowCPP.insert(rowCPP.end(), playerRow.begin(), playerRow.end());
+        }
+        std::vector<torch::jit::IValue> inputs;
+
+        torch::Tensor rowPT =
+            torch::from_blob(rowCPP.data(),
+                             {static_cast<long>(clientsToInfer.size()), static_cast<long>(elementsPerClient)}, options);
+        inputs.push_back(rowPT);
+
+        at::Tensor output = aggressionModule.forward(inputs).toTuple()->elements()[0].toTensor();
+
+        for (size_t i = 0; i < clientsToInfer.size(); i++) {
+            at::Tensor playerOutput = output.index({Slice(i, None, i+1), "..."});
+            playerToInferenceData[clientsToInfer[i]].aggressionProbabilities =
+                csknow::inference_latent_aggression::extractFeatureStoreAggressionResults(
+                    playerOutput, playerToInferenceData[clientsToInfer[i]].aggressionValues);
+        }
     }
 
     void InferenceManager::runInferences() {
@@ -119,6 +144,7 @@ namespace csknow::inference_manager {
 
         auto start = std::chrono::system_clock::now();
         runEngagementInference(clients);
+        runAggressionInference(clients);
         auto end = std::chrono::system_clock::now();
         std::chrono::duration<double> inferenceTime = end - start;
         inferenceSeconds = inferenceTime.count();

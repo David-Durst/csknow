@@ -5,6 +5,7 @@
 #ifndef CSKNOW_INFERENCE_LATENT_AGGRESSION_H
 #define CSKNOW_INFERENCE_LATENT_AGGRESSION_H
 #include "queries/moments/behavior_tree_latent_states.h"
+#include "queries/inference_moments/inference_latent_aggression_helpers.h"
 
 namespace csknow::inference_latent_aggression {
     class InferenceLatentAggressionResult : public QueryResult {
