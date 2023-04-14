@@ -5,6 +5,6 @@
 #ifndef CSKNOW_INFERENCE_SETTINGS_H
 #define CSKNOW_INFERENCE_SETTINGS_H
 
-constexpr bool newOrderEveryFrame = true;
+constexpr size_t newOrderTicks = 128 * 3;
 
 #endif //CSKNOW_INFERENCE_SETTINGS_H

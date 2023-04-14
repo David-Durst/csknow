@@ -193,7 +193,7 @@ namespace strategy {
         for (size_t i = 0; i < probabilities.size(); i++) {
             weightSoFar += probabilities[i];
             if (probSample < weightSoFar) {
-                //std::cout << "assigning to " << client.team << ", " << i << std::endl;
+                std::cout << "assigning to " << client.team << ", " << i << std::endl;
                 blackboard.strategy.assignPlayerToOrder(client.csgoId,
                                                         {client.team, static_cast<int64_t>(i)});
                 return true;
@@ -201,7 +201,7 @@ namespace strategy {
         }
         // default if probs don't sum perfectly is take last one as this will result from a
         // slight numerical instability mismatch
-        //std::cout << "bad assigning to " << client.team << ", " << 2 << std::endl;
+        std::cout << "bad assigning to " << client.team << ", " << 2 << std::endl;
         blackboard.strategy.assignPlayerToOrder(client.csgoId, {client.team, 2});
         return true;
     }

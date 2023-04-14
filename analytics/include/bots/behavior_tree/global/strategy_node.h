@@ -106,6 +106,7 @@ namespace strategy {
     class CreateOrdersNode : public Node {
         RoundNumber planRoundNumber = -1;
         int32_t playersAliveLastPlan = -1;
+        size_t ticksSinceLastOrder = 0;
         vector<CSGOId> ctPlayers = {}, tPlayers = {};
     public:
         explicit CreateOrdersNode(Blackboard & blackboard) : Node(blackboard, "CreateOrdersNode") { };

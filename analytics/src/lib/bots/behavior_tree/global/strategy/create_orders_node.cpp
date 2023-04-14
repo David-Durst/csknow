@@ -20,21 +20,18 @@ namespace strategy {
             }
         }
 
-
-        if (!blackboard.inTest && newOrderEveryFrame) {
-            blackboard.recomputeOrders = true;
-        }
         if (playerNodeState.find(treeThinker.csgoId) == playerNodeState.end() ||
             state.roundNumber != planRoundNumber || state.numPlayersAlive() != playersAliveLastPlan ||
             state.getPlayersOnTeam(ENGINE_TEAM_CT) != ctPlayers || state.getPlayersOnTeam(ENGINE_TEAM_T) != tPlayers ||
             botNeedsAnOrder ||
-            blackboard.recomputeOrders) {
+            blackboard.recomputeOrders || (!blackboard.inTest && ticksSinceLastOrder >= newOrderTicks)) {
             planRoundNumber = state.roundNumber;
             playersAliveLastPlan = state.numPlayersAlive();
             ctPlayers = state.getPlayersOnTeam(ENGINE_TEAM_CT);
             tPlayers = state.getPlayersOnTeam(ENGINE_TEAM_T);
             blackboard.newOrderThisFrame = true;
             blackboard.recomputeOrders = false;
+            ticksSinceLastOrder = 0;
 
             blackboard.strategy.clear();
             blackboard.playerToPath.clear();
