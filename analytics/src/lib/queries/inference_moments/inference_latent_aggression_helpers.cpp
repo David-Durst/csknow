@@ -34,8 +34,7 @@ namespace csknow::inference_latent_aggression {
         return result;
     }
 
-    InferenceAggressionTickProbabilities extractFeatureStoreAggressionResults(
-        const at::Tensor & output, const InferenceAggressionTickValues & values) {
+    InferenceAggressionTickProbabilities extractFeatureStoreAggressionResults(const at::Tensor & output) {
         InferenceAggressionTickProbabilities result;
         float mostLikelyAggressionProb = -1;
         for (size_t aggressionOption = 0; aggressionOption < csknow::feature_store::numNearestEnemyState;

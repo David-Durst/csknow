@@ -65,8 +65,6 @@ namespace csknow::inference_latent_order {
             int threadNum = omp_get_thread_num();
             tmpRoundIds[threadNum].push_back(roundIndex);
             tmpRoundStarts[threadNum].push_back(static_cast<int64_t>(tmpStartTickId[threadNum].size()));
-            const csknow::feature_store::TeamFeatureStoreResult & teamFeatureStoreResult =
-                behaviorTreeLatentStates.featureStoreResult.teamFeatureStoreResult;
 
             auto options = torch::TensorOptions().dtype(at::kFloat);
 

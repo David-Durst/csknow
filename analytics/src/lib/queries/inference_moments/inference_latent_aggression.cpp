@@ -87,8 +87,7 @@ namespace csknow::inference_latent_aggression {
                         //std::cout << output[0][enemyNum].item<float>() << std::endl;
                         playerAggressionProb[patIndex][aggressionOption] = output[0][aggressionOption].item<float>();
                     }
-                    InferenceAggressionTickProbabilities probabilities =
-                        extractFeatureStoreAggressionResults(output, values);
+                    InferenceAggressionTickProbabilities probabilities = extractFeatureStoreAggressionResults(output);
 
                     bool oldAggressionToWrite =
                         playerToActiveAggression.find(curPlayerId) != playerToActiveAggression.end() &&

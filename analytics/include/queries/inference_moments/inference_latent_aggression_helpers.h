@@ -18,8 +18,7 @@ namespace csknow::inference_latent_aggression {
         vector<float> aggressionProbabilities;
         feature_store::NearestEnemyState mostLikelyAggression;
     };
-    InferenceAggressionTickProbabilities extractFeatureStoreAggressionResults(
-        const at::Tensor & output, const InferenceAggressionTickValues & values);
+    InferenceAggressionTickProbabilities extractFeatureStoreAggressionResults(const at::Tensor & output);
 }
 
 #endif //CSKNOW_INFERENCE_LATENT_AGGRESSION_HELPERS_H

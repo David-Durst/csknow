@@ -107,8 +107,7 @@ namespace csknow::inference_manager {
         for (size_t i = 0; i < clientsToInfer.size(); i++) {
             at::Tensor playerOutput = output.index({Slice(i, None, i+1), "..."});
             playerToInferenceData[clientsToInfer[i]].aggressionProbabilities =
-                csknow::inference_latent_aggression::extractFeatureStoreAggressionResults(
-                    playerOutput, playerToInferenceData[clientsToInfer[i]].aggressionValues);
+                csknow::inference_latent_aggression::extractFeatureStoreAggressionResults(playerOutput);
         }
     }
 
