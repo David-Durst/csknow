@@ -46,6 +46,10 @@ namespace csknow::inference_manager {
         }
     }
 
+    void InferenceManager::recordTeamValues(csknow::feature_store::FeatureStoreResult & featureStoreResult) {
+        orderValues = csknow::inference_latent_order::extractFeatureStoreOrderValues(featureStoreResult, 0);
+    }
+
     void InferenceManager::recordPlayerValues(csknow::feature_store::FeatureStoreResult &featureStoreResult,
                                               CSGOId playerId) {
         playerToInferenceData[playerId].engagementValues =
@@ -105,6 +109,22 @@ namespace csknow::inference_manager {
             playerToInferenceData[clientsToInfer[i]].aggressionProbabilities =
                 csknow::inference_latent_aggression::extractFeatureStoreAggressionResults(
                     playerOutput, playerToInferenceData[clientsToInfer[i]].aggressionValues);
+        }
+    }
+
+    void InferenceManager::runOrderInference() {
+        std::vector<torch::jit::IValue> inputs;
+        torch::Tensor rowPT = torch::from_blob(orderValues.rowCPP.data(),
+                                               {1, static_cast<long>(orderValues.rowCPP.size())},
+                                               options);
+        
+        inputs.push_back(rowPT);
+
+        at::Tensor output = orderModule.forward(inputs).toTuple()->elements()[0].toTensor();
+
+        for (auto & [csgoId, _] : playerToInferenceData) {
+            playerToInferenceData[csgoId].orderProbabilities =
+                extractFeatureStoreOrderResults(output, orderValues, csgoId);
         }
     }
 

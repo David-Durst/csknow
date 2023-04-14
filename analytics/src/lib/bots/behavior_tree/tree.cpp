@@ -127,6 +127,7 @@ void Tree::tick(ServerState & state, const string & mapsPath) {
         printStates.push_back(blackboard->printCommunicateState(state));
 
         inferenceManager.setCurClients(state.clients);
+        inferenceManager.recordTeamValues(featureStoreResult);
 
         for (auto & client : state.clients) {
             // disable force for all players, testing infrastructure can set force

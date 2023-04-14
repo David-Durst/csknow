@@ -7,6 +7,7 @@
 
 #include "queries/inference_moments/inference_latent_engagement_helpers.h"
 #include "queries/inference_moments/inference_latent_aggression_helpers.h"
+#include "queries/inference_moments/inference_latent_order_helpers.h"
 #include "bots/load_save_bot_data.h"
 #include <filesystem>
 
@@ -23,16 +24,20 @@ namespace csknow::inference_manager {
         csknow::inference_latent_engagement::InferenceEngagementTickProbabilities engagementProbabilities;
         csknow::inference_latent_aggression::InferenceAggressionTickValues aggressionValues;
         csknow::inference_latent_aggression::InferenceAggressionTickProbabilities aggressionProbabilities;
+        csknow::inference_latent_order::InferenceOrderPlayerAtTickProbabilities orderProbabilities;
     };
 
     class InferenceManager {
         void runEngagementInference(const vector<CSGOId> & clientsToInfer);
         void runAggressionInference(const vector<CSGOId> & clientsToInfer);
+        void runOrderInference();
     public:
         bool valid;
         double inferenceSeconds;
         torch::TensorOptions options = torch::TensorOptions().dtype(at::kFloat);
         map<CSGOId, ClientInferenceData> playerToInferenceData;
+        csknow::inference_latent_order::InferenceOrderTickValues orderValues;
+        csknow::inference_latent_order::InferenceOrderPlayerAtTickProbabilities orderProbabilities;
 
         fs::path engagementModelPath, aggressionModelPath, orderModelPath;
         torch::jit::script::Module engagementModule, aggressionModule, orderModule;
@@ -40,6 +45,7 @@ namespace csknow::inference_manager {
         InferenceManager() : valid(false) { };
 
         void setCurClients(const vector<ServerState::Client> & clients);
+        void recordTeamValues(csknow::feature_store::FeatureStoreResult & featureStoreResult);
         void recordPlayerValues(csknow::feature_store::FeatureStoreResult & featureStoreResult, CSGOId playerId);
         void runInferences();
     };

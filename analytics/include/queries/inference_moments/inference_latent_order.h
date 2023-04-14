@@ -11,20 +11,9 @@
 #include "enum_helpers.h"
 #include "bots/analysis/feature_store.h"
 #include "queries/moments/behavior_tree_latent_states.h"
+#include "queries/inference_moments/inference_latent_order_helpers.h"
 
 namespace csknow::inference_latent_order {
-
-    constexpr int total_orders = feature_store::num_orders_per_site * 2;
-
-// just present so can reuse the player labels
-    enum class OrderRole {
-        A0,
-        A1,
-        A2,
-        B0,
-        B1,
-        B2
-    };
 
     class InferenceLatentOrderResult : public QueryResult {
     public:

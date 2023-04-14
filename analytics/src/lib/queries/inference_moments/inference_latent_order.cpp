@@ -74,45 +74,10 @@ namespace csknow::inference_latent_order {
             for (int64_t tickIndex = rounds.ticksPerRound[roundIndex].minId;
                  tickIndex <= rounds.ticksPerRound[roundIndex].maxId; tickIndex++) {
 
+                InferenceOrderTickValues values = extractFeatureStoreOrderValues(behaviorTreeLatentStates.featureStoreResult,
+                                                                                 tickIndex);
                 std::vector<torch::jit::IValue> inputs;
-                std::vector<float> rowCPP;
-                map<int64_t, size_t> playerIdToColumnIndex;
-                // c4 float data
-                rowCPP.push_back(static_cast<float>(teamFeatureStoreResult.c4DistanceToASite[tickIndex]));
-                rowCPP.push_back(static_cast<float>(teamFeatureStoreResult.c4DistanceToBSite[tickIndex]));
-                for (size_t orderIndex = 0; orderIndex < csknow::feature_store::num_orders_per_site; orderIndex++) {
-                    rowCPP.push_back(static_cast<float>(
-                        teamFeatureStoreResult.c4DistanceToNearestAOrderNavArea[orderIndex][tickIndex]));
-                }
-                for (size_t orderIndex = 0; orderIndex < csknow::feature_store::num_orders_per_site; orderIndex++) {
-                    rowCPP.push_back(static_cast<float>(
-                        teamFeatureStoreResult.c4DistanceToNearestBOrderNavArea[orderIndex][tickIndex]));
-                }
-                // player data
-                bool ctColumnData = true;
-                for (const auto & columnData :
-                     behaviorTreeLatentStates.featureStoreResult.teamFeatureStoreResult.getAllColumnData()) {
-                    for (size_t playerNum = 0; playerNum < csknow::feature_store::maxEnemies; playerNum++) {
-                        const auto & columnPlayerData = columnData.get()[playerNum];
-                        playerIdToColumnIndex[columnPlayerData.playerId[tickIndex]] = playerNum +
-                            (ctColumnData ? 0 : csknow::feature_store::maxEnemies);
-                        rowCPP.push_back(static_cast<float>(columnPlayerData.distanceToASite[tickIndex]));
-                        rowCPP.push_back(static_cast<float>(columnPlayerData.distanceToBSite[tickIndex]));
-                        for (size_t orderIndex = 0; orderIndex < csknow::feature_store::num_orders_per_site; orderIndex++) {
-                            rowCPP.push_back(static_cast<float>(
-                                columnPlayerData.distanceToNearestAOrderNavArea[orderIndex][tickIndex]));
-                        }
-                        for (size_t orderIndex = 0; orderIndex < csknow::feature_store::num_orders_per_site; orderIndex++) {
-                            rowCPP.push_back(static_cast<float>(
-                                columnPlayerData.distanceToNearestBOrderNavArea[orderIndex][tickIndex]));
-                        }
-                    }
-                    ctColumnData = false;
-                }
-                // cat data
-                rowCPP.push_back(static_cast<float>(teamFeatureStoreResult.c4Status[tickIndex]));
-
-                torch::Tensor rowPT = torch::from_blob(rowCPP.data(), {1, static_cast<long>(rowCPP.size())},
+                torch::Tensor rowPT = torch::from_blob(values.rowCPP.data(), {1, static_cast<long>(values.rowCPP.size())},
                                                        options);
                 inputs.push_back(rowPT);
                 //std::cout << rowPT << std::endl;
@@ -137,16 +102,10 @@ namespace csknow::inference_latent_order {
                 for (int64_t patIndex = ticks.patPerTick[tickIndex].minId;
                      patIndex <= ticks.patPerTick[tickIndex].maxId; patIndex++) {
                     int64_t curPlayerId = playerAtTick.playerId[patIndex];
-                    size_t playerStartIndex = playerIdToColumnIndex[curPlayerId] * total_orders;
-                    float mostLikelyOrderProb = -1;
-                    OrderRole mostLikelyOrder = OrderRole::A0;
-
+                    InferenceOrderPlayerAtTickProbabilities probabilities =
+                        extractFeatureStoreOrderResults(output, values, curPlayerId);
                     for (size_t orderIndex = 0; orderIndex < total_orders; orderIndex++) {
-                        playerOrderProb[patIndex][orderIndex] = output[0][playerStartIndex + orderIndex].item<float>();
-                        if (mostLikelyOrderProb < playerOrderProb[patIndex][orderIndex]) {
-                            mostLikelyOrderProb = playerOrderProb[patIndex][orderIndex];
-                            mostLikelyOrder = static_cast<OrderRole>(orderIndex);
-                        }
+                        playerOrderProb[patIndex][orderIndex] = probabilities.orderProbabilities[orderIndex];
                     }
                     /*
                     if (ticks.demoTickNumber[tickIndex] == 5169) {
@@ -161,7 +120,7 @@ namespace csknow::inference_latent_order {
 
                     bool oldOrderToWrite =
                         playerToActiveOrder.find(curPlayerId) != playerToActiveOrder.end() &&
-                        playerToActiveOrder[curPlayerId].role != mostLikelyOrder;
+                        playerToActiveOrder[curPlayerId].role != probabilities.mostLikelyOrder;
 
                     if (oldOrderToWrite) {
                         finishOrder(tmpStartTickId, tmpEndTickId,
@@ -172,7 +131,7 @@ namespace csknow::inference_latent_order {
                     }
                     if (playerToActiveOrder.find(curPlayerId) == playerToActiveOrder.end()) {
                         playerToActiveOrder[curPlayerId] = {
-                            curPlayerId, tickIndex, mostLikelyOrder
+                            curPlayerId, tickIndex, probabilities.mostLikelyOrder
                         };
                     }
                 }
