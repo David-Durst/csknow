@@ -117,7 +117,7 @@ namespace csknow::inference_manager {
         torch::Tensor rowPT = torch::from_blob(orderValues.rowCPP.data(),
                                                {1, static_cast<long>(orderValues.rowCPP.size())},
                                                options);
-        
+
         inputs.push_back(rowPT);
 
         at::Tensor output = orderModule.forward(inputs).toTuple()->elements()[0].toTensor();
@@ -165,6 +165,7 @@ namespace csknow::inference_manager {
         auto start = std::chrono::system_clock::now();
         runEngagementInference(clients);
         runAggressionInference(clients);
+        runOrderInference();
         auto end = std::chrono::system_clock::now();
         std::chrono::duration<double> inferenceTime = end - start;
         inferenceSeconds = inferenceTime.count();
