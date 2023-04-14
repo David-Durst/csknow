@@ -54,6 +54,8 @@ namespace csknow::inference_manager {
                                               CSGOId playerId) {
         playerToInferenceData[playerId].engagementValues =
             csknow::inference_latent_engagement::extractFeatureStoreEngagementValues(featureStoreResult, 0);
+        playerToInferenceData[playerId].aggressionValues =
+            csknow::inference_latent_aggression::extractFeatureStoreAggressionValues(featureStoreResult, 0);
     }
 
     void InferenceManager::runEngagementInference(const vector<CSGOId> & clientsToInfer) {
