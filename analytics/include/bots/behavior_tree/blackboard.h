@@ -30,6 +30,8 @@
 using std::map;
 using std::make_unique;
 
+constexpr size_t newOrderTicks = 128 * 3;
+
 enum class AggressiveType {
     Push,
     Bait,
@@ -91,6 +93,7 @@ struct Blackboard {
     ServerState lastFrameState;
     StreamingManager streamingManager;
     const csknow::inference_manager::InferenceManager & inferenceManager;
+    size_t ticksSinceLastProbOrderAssignment = newOrderTicks;
 
     // helpers
     std::random_device rd;

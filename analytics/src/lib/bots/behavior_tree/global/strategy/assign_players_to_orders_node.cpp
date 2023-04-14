@@ -162,6 +162,7 @@ namespace strategy {
             return false;
 
         }
+        blackboard.ticksSinceLastProbOrderAssignment = 0;
         vector<float> probabilities;
         const csknow::inference_latent_order::InferenceOrderPlayerAtTickProbabilities & orderProbabilities =
             blackboard.inferenceManager.playerToInferenceData.at(client.csgoId).orderProbabilities;

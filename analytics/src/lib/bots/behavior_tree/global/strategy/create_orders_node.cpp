@@ -3,7 +3,6 @@
 //
 
 #include "bots/behavior_tree/global/strategy_node.h"
-#include "bots/behavior_tree/inference_settings.h"
 
 namespace strategy {
     NodeState CreateOrdersNode::exec(const ServerState &state, TreeThinker &treeThinker) {
@@ -20,18 +19,30 @@ namespace strategy {
             }
         }
 
+        blackboard.ticksSinceLastProbOrderAssignment++;
+        bool ctPlayersAlive = false, tPlayersAlive = false;
+        for (const auto & client : state.clients) {
+            if (client.isAlive && client.team == ENGINE_TEAM_CT) {
+                ctPlayersAlive = true;
+            }
+            if (client.isAlive && client.team == ENGINE_TEAM_T) {
+                tPlayersAlive = true;
+            }
+        }
+        bool probOrderChange =
+            !blackboard.inTest && blackboard.ticksSinceLastProbOrderAssignment >= newOrderTicks &&
+            ctPlayersAlive && tPlayersAlive;
         if (playerNodeState.find(treeThinker.csgoId) == playerNodeState.end() ||
             state.roundNumber != planRoundNumber || state.numPlayersAlive() != playersAliveLastPlan ||
             state.getPlayersOnTeam(ENGINE_TEAM_CT) != ctPlayers || state.getPlayersOnTeam(ENGINE_TEAM_T) != tPlayers ||
             botNeedsAnOrder ||
-            blackboard.recomputeOrders || (!blackboard.inTest && ticksSinceLastOrder >= newOrderTicks)) {
+            blackboard.recomputeOrders || probOrderChange) {
             planRoundNumber = state.roundNumber;
             playersAliveLastPlan = state.numPlayersAlive();
             ctPlayers = state.getPlayersOnTeam(ENGINE_TEAM_CT);
             tPlayers = state.getPlayersOnTeam(ENGINE_TEAM_T);
             blackboard.newOrderThisFrame = true;
             blackboard.recomputeOrders = false;
-            ticksSinceLastOrder = 0;
 
             blackboard.strategy.clear();
             blackboard.playerToPath.clear();
