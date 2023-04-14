@@ -3,6 +3,7 @@
 //
 #include "bots/behavior_tree/global/strategy_node.h"
 #include "bots/behavior_tree/pathing_node.h"
+
 namespace strategy {
     struct OrderPlaceDistance {
         OrderId orderId;
@@ -10,6 +11,8 @@ namespace strategy {
         double distance = -1.;
         bool assignedPlayer = false;
     };
+
+    constexpr bool useModelProbabilities = true;
 
     NodeState AssignPlayersToOrders::exec(const ServerState &state, TreeThinker &treeThinker) {
         if (blackboard.newOrderThisFrame) {
@@ -63,10 +66,23 @@ namespace strategy {
                 throw std::runtime_error("no t orders with a hold place or hold area");
             }
 
+            bool plantedA = blackboard.navFile.get_place(
+                blackboard.navFile.get_nearest_area_by_position(vec3Conv(state.getC4Pos())).m_place) == "BombsiteA";
+
+            for (const auto & tOrderId  : blackboard.strategy.getOrderIds(true, false)) {
+                std::cout << "t order id " << tOrderId.team << ", " << tOrderId.index << std::endl;
+            }
+            for (const auto & ctOrderId  : blackboard.strategy.getOrderIds(false, true)) {
+                std::cout << "ct order id " << ctOrderId.team << ", " << ctOrderId.index << std::endl;
+            }
+
             // for CT, compute distance to each waypoint in each order and assign player to order with closest waypoint
             // for T, same thing but also considering covering every order - nearest unassigned order, or nearest unassigned if all assigned
             for (const auto & client : state.clients) {
                 if (client.isAlive && client.isBot) {
+                    if (useModelProbabilities && assignPlayerToOrderProbabilistic(client, plantedA)) {
+                        continue;
+                    }
                     if (client.team == ENGINE_TEAM_CT) {
                         Path pathToC4 = movement::computePath(blackboard, vec3Conv(state.getC4Pos()), client);
                         bool foundPath = false;
@@ -125,5 +141,66 @@ namespace strategy {
         }
         playerNodeState[treeThinker.csgoId] = NodeState::Success;
         return playerNodeState[treeThinker.csgoId];
+    }
+
+    const map<size_t, size_t> aHeuristicToModelOrderIndices{
+        {1, 0}, // a spawn
+        {0, 1}, // a long
+        {2, 2}, // a cat
+    };
+    const map<size_t, size_t> bHeuristicToModelOrderIndices{
+        {1, 3}, // b hole
+        {0, 4}, // b doors
+        {2, 5} // b tuns
+    };
+
+    bool AssignPlayersToOrders::assignPlayerToOrderProbabilistic(const ServerState::Client client, bool plantedA) {
+        if (blackboard.inferenceManager.playerToInferenceData.find(client.csgoId) ==
+            blackboard.inferenceManager.playerToInferenceData.end()) {
+            return false;
+
+        }
+        vector<float> probabilities;
+        const csknow::inference_latent_order::InferenceOrderPlayerAtTickProbabilities & orderProbabilities =
+            blackboard.inferenceManager.playerToInferenceData.at(client.csgoId).orderProbabilities;
+        if (plantedA) {
+            probabilities = {
+                orderProbabilities.orderProbabilities[aHeuristicToModelOrderIndices.at(0)],
+                orderProbabilities.orderProbabilities[aHeuristicToModelOrderIndices.at(1)],
+                orderProbabilities.orderProbabilities[aHeuristicToModelOrderIndices.at(2)]
+            };
+        }
+        else {
+            probabilities = {
+                orderProbabilities.orderProbabilities[bHeuristicToModelOrderIndices.at(0)],
+                orderProbabilities.orderProbabilities[bHeuristicToModelOrderIndices.at(1)],
+                orderProbabilities.orderProbabilities[bHeuristicToModelOrderIndices.at(2)]
+            };
+        }
+
+        // re-weight just for one site
+        double reweightFactor = 0.;
+        for (size_t i = 0; i < probabilities.size(); i++) {
+            reweightFactor += probabilities[i];
+        }
+        for (size_t i = 0; i < probabilities.size(); i++) {
+            probabilities[i] *= 1/reweightFactor;
+        }
+        double probSample = blackboard.aggressionDis(blackboard.gen);
+        double weightSoFar = 0.;
+        for (size_t i = 0; i < probabilities.size(); i++) {
+            weightSoFar += probabilities[i];
+            if (probSample < weightSoFar) {
+                std::cout << "assigning to " << client.team << ", " << i << std::endl;
+                blackboard.strategy.assignPlayerToOrder(client.csgoId,
+                                                        {client.team, static_cast<int64_t>(i)});
+                return true;
+            }
+        }
+        // default if probs don't sum perfectly is take last one as this will result from a
+        // slight numerical instability mismatch
+        std::cout << "bad assigning to " << client.team << ", " << 2 << std::endl;
+        blackboard.strategy.assignPlayerToOrder(client.csgoId, {client.team, 2});
+        return true;
     }
 }

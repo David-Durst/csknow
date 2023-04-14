@@ -19,6 +19,7 @@ namespace csknow::inference_manager {
     constexpr size_t max_track_ticks = 20;
 
     struct ClientInferenceData {
+        bool validData;
         size_t ticksSinceLastInference;
         csknow::inference_latent_engagement::InferenceEngagementTickValues engagementValues;
         csknow::inference_latent_engagement::InferenceEngagementTickProbabilities engagementProbabilities;
@@ -37,7 +38,6 @@ namespace csknow::inference_manager {
         torch::TensorOptions options = torch::TensorOptions().dtype(at::kFloat);
         map<CSGOId, ClientInferenceData> playerToInferenceData;
         csknow::inference_latent_order::InferenceOrderTickValues orderValues;
-        csknow::inference_latent_order::InferenceOrderPlayerAtTickProbabilities orderProbabilities;
 
         fs::path engagementModelPath, aggressionModelPath, orderModelPath;
         torch::jit::script::Module engagementModule, aggressionModule, orderModule;

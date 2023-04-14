@@ -40,7 +40,8 @@ namespace communicate::spacing {
                                            (a.numPlayers == b.numPlayers && a.aggressive == b.aggressive && a.waypointIndex < b.waypointIndex); });
                     }
                     blackboard.strategy.assignPlayerToHoldIndex(followerId, orderId, holdOptions.front().waypointIndex);
-                    holdOptions.erase(holdOptions.begin());
+                    holdOptions.front().numPlayers++;
+                    //holdOptions.erase(holdOptions.begin());
                 }
             }
         }

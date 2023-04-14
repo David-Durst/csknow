@@ -32,6 +32,7 @@ namespace csknow::inference_manager {
             if (playerToInferenceData.find(client.csgoId) == playerToInferenceData.end() &&
                 client.isAlive && client.isBot) {
                 playerToInferenceData[client.csgoId] = {};
+                playerToInferenceData[client.csgoId].validData = false;
                 playerToInferenceData[client.csgoId].ticksSinceLastInference = max_track_ticks;
             }
         }
@@ -160,6 +161,7 @@ namespace csknow::inference_manager {
         vector<CSGOId> clients;
         for (const auto & client : clientsToInfer) {
             clients.push_back(client.csgoId);
+            playerToInferenceData[client.csgoId].validData = true;
             playerToInferenceData[client.csgoId].ticksSinceLastInference = 0;
         }
 

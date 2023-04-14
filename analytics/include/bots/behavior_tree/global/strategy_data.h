@@ -366,9 +366,15 @@ public:
     [[nodiscard]]
     const Order & getOrder(OrderId orderId) const {
         if (orderId.team == ENGINE_TEAM_T) {
+            if (orderId.index < 0 || orderId.index >= static_cast<int64_t>(tOrders.size())) {
+                throw std::runtime_error( "getOrder bad t order index" );
+            }
             return tOrders[orderId.index];
         }
         else if (orderId.team == ENGINE_TEAM_CT) {
+            if (orderId.index < 0 || orderId.index >= static_cast<int64_t>(ctOrders.size())) {
+                throw std::runtime_error( "getOrder bad ct order index" );
+            }
             return ctOrders[orderId.index];
         }
         throw std::runtime_error( "getOrder bad order id" );

@@ -3,6 +3,7 @@
 //
 
 #include "bots/behavior_tree/global/strategy_node.h"
+#include "bots/behavior_tree/inference_settings.h"
 
 namespace strategy {
     NodeState CreateOrdersNode::exec(const ServerState &state, TreeThinker &treeThinker) {
@@ -19,6 +20,10 @@ namespace strategy {
             }
         }
 
+
+        if (!blackboard.inTest && newOrderEveryFrame) {
+            blackboard.recomputeOrders = true;
+        }
         if (playerNodeState.find(treeThinker.csgoId) == playerNodeState.end() ||
             state.roundNumber != planRoundNumber || state.numPlayersAlive() != playersAliveLastPlan ||
             state.getPlayersOnTeam(ENGINE_TEAM_CT) != ctPlayers || state.getPlayersOnTeam(ENGINE_TEAM_T) != tPlayers ||
