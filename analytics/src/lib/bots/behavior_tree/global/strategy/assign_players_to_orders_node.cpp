@@ -69,12 +69,14 @@ namespace strategy {
             bool plantedA = blackboard.navFile.get_place(
                 blackboard.navFile.get_nearest_area_by_position(vec3Conv(state.getC4Pos())).m_place) == "BombsiteA";
 
+            /*
             for (const auto & tOrderId  : blackboard.strategy.getOrderIds(true, false)) {
                 std::cout << "t order id " << tOrderId.team << ", " << tOrderId.index << std::endl;
             }
             for (const auto & ctOrderId  : blackboard.strategy.getOrderIds(false, true)) {
                 std::cout << "ct order id " << ctOrderId.team << ", " << ctOrderId.index << std::endl;
             }
+             */
 
             // for CT, compute distance to each waypoint in each order and assign player to order with closest waypoint
             // for T, same thing but also considering covering every order - nearest unassigned order, or nearest unassigned if all assigned
@@ -191,7 +193,7 @@ namespace strategy {
         for (size_t i = 0; i < probabilities.size(); i++) {
             weightSoFar += probabilities[i];
             if (probSample < weightSoFar) {
-                std::cout << "assigning to " << client.team << ", " << i << std::endl;
+                //std::cout << "assigning to " << client.team << ", " << i << std::endl;
                 blackboard.strategy.assignPlayerToOrder(client.csgoId,
                                                         {client.team, static_cast<int64_t>(i)});
                 return true;
@@ -199,7 +201,7 @@ namespace strategy {
         }
         // default if probs don't sum perfectly is take last one as this will result from a
         // slight numerical instability mismatch
-        std::cout << "bad assigning to " << client.team << ", " << 2 << std::endl;
+        //std::cout << "bad assigning to " << client.team << ", " << 2 << std::endl;
         blackboard.strategy.assignPlayerToOrder(client.csgoId, {client.team, 2});
         return true;
     }
