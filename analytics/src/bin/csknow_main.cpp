@@ -324,7 +324,7 @@ int main(int argc, char * argv[]) {
     csknow::behavior_tree_latent_states::BehaviorTreeLatentStates behaviorTreeLatentEvents(ticks, playerAtTick, ordersResult.orders);
     behaviorTreeLatentEvents.runQuery(navPath + "/de_dust2.nav", map_visPoints.at("de_dust2"), d2MeshResult,
                                       d2ReachableResult, d2DistanceToPlacesResult,
-                                      nearestNavCellResult, players, games, filteredRounds, ticks,
+                                      nearestNavCellResult, ordersResult, players, games, filteredRounds, ticks,
                                       playerAtTick, weaponFire, hurt, plants, defusals, engagementResult);
     std::cout << "size: " << behaviorTreeLatentEvents.size << std::endl;
     behaviorTreeLatentEvents.featureStoreResult.computeAcausalLabels(games, filteredRounds, ticks, playerAtTick);

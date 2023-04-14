@@ -100,10 +100,12 @@ namespace csknow::inference_latent_order {
                 for (int64_t patIndex = ticks.patPerTick[tickIndex].minId;
                      patIndex <= ticks.patPerTick[tickIndex].maxId; patIndex++) {
                     int64_t curPlayerId = playerAtTick.playerId[patIndex];
-                    InferenceOrderPlayerAtTickProbabilities probabilities =
-                        extractFeatureStoreOrderResults(output, values, curPlayerId);
-                    for (size_t orderIndex = 0; orderIndex < total_orders; orderIndex++) {
-                        playerOrderProb[patIndex][orderIndex] = probabilities.orderProbabilities[orderIndex];
+                    InferenceOrderPlayerAtTickProbabilities probabilities{};
+                    if (playerAtTick.isAlive[patIndex]) {
+                        probabilities = extractFeatureStoreOrderResults(output, values, curPlayerId);
+                        for (size_t orderIndex = 0; orderIndex < total_orders; orderIndex++) {
+                            playerOrderProb[patIndex][orderIndex] = probabilities.orderProbabilities[orderIndex];
+                        }
                     }
                     /*
                     if (ticks.demoTickNumber[tickIndex] == 5169) {
@@ -118,7 +120,8 @@ namespace csknow::inference_latent_order {
 
                     bool oldOrderToWrite =
                         playerToActiveOrder.find(curPlayerId) != playerToActiveOrder.end() &&
-                        playerToActiveOrder[curPlayerId].role != probabilities.mostLikelyOrder;
+                        (!playerAtTick.isAlive[patIndex] ||
+                         playerToActiveOrder[curPlayerId].role != probabilities.mostLikelyOrder);
 
                     if (oldOrderToWrite) {
                         finishOrder(tmpStartTickId, tmpEndTickId,
@@ -127,7 +130,8 @@ namespace csknow::inference_latent_order {
                                     threadNum, playerToActiveOrder[curPlayerId]);
                         playerToActiveOrder.erase(curPlayerId);
                     }
-                    if (playerToActiveOrder.find(curPlayerId) == playerToActiveOrder.end()) {
+                    if (playerToActiveOrder.find(curPlayerId) == playerToActiveOrder.end() &&
+                        playerAtTick.isAlive[patIndex]) {
                         playerToActiveOrder[curPlayerId] = {
                             curPlayerId, tickIndex, probabilities.mostLikelyOrder
                         };
