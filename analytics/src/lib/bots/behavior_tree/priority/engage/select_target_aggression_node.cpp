@@ -12,9 +12,9 @@ namespace engage {
         //Path & curPath = blackboard.playerToPath[treeThinker.csgoId];
 
         if (!blackboard.inTest && useAggressionModelProbabilities) {
-            vector<double> probabilities;
             const csknow::inference_latent_aggression::InferenceAggressionTickProbabilities & aggressionProbabilities =
                 blackboard.inferenceManager.playerToInferenceData.at(treeThinker.csgoId).aggressionProbabilities;
+            vector<float> probabilities = aggressionProbabilities.aggressionProbabilities;
 
             // re-weight just for one site
             double reweightFactor = 0.;

@@ -6,7 +6,7 @@
 #include <functional>
 
 namespace engage {
-    constexpr bool useTargetModelProbabilities = true;
+    constexpr bool useTargetModelProbabilities = false;
 
     NodeState SelectTargetNode::exec(const ServerState & state, TreeThinker &treeThinker) {
         const ServerState::Client & curClient = state.getClient(treeThinker.csgoId);
