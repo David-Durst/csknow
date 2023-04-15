@@ -5,7 +5,7 @@
 #include "bots/behavior_tree/priority/engage_node.h"
 
 namespace engage {
-    constexpr bool useAggressionModelProbabilities = false;
+    constexpr bool useAggressionModelProbabilities = true;
 
     NodeState SelectTargetAggressionNode::exec(const ServerState &state, TreeThinker &treeThinker) {
         Priority & curPriority = blackboard.playerToPriority[treeThinker.csgoId];
@@ -40,11 +40,11 @@ namespace engage {
                 curPriority.targetPos = curPriority.targetPlayer.footPos;
             }
             else if (aggressionOption == static_cast<size_t>(csknow::feature_store::NearestEnemyState::Constant)) {
-                curPriority.moveOptions = {false, false, true};
+                curPriority.moveOptions = {false, false, false};
             }
             else {
                 // move to nearest area not visible to enemy
-                curPriority.moveOptions = {true, false, true};
+                curPriority.moveOptions = {true, false, false};
                 AreaBits targetVisBits =
                     blackboard.getVisibleAreasByPlayer(state.getClient(curPriority.targetPlayer.playerId));
                 const nav_mesh::nav_area & curArea = blackboard.getPlayerNavArea(state.getClient(treeThinker.csgoId));
@@ -62,9 +62,6 @@ namespace engage {
                 }
                 curPriority.targetPos = blackboard.visPoints.getCellVisPoints()[minAreaIndex].center;
             }
-
-            playerNodeState[treeThinker.csgoId] = NodeState::Failure;
-            return playerNodeState[treeThinker.csgoId];
         }
 
         playerNodeState[treeThinker.csgoId] = NodeState::Success;
