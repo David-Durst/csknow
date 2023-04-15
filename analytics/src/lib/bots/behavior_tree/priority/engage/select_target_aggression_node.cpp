@@ -5,10 +5,9 @@
 #include "bots/behavior_tree/priority/engage_node.h"
 
 namespace engage {
-    constexpr bool useAggressionModelProbabilities = true;
+    constexpr bool useAggressionModelProbabilities = false;
 
     NodeState SelectTargetAggressionNode::exec(const ServerState &state, TreeThinker &treeThinker) {
-        const OrderId & curOrderId = blackboard.strategy.getOrderIdForPlayer(treeThinker.csgoId);
         Priority & curPriority = blackboard.playerToPriority[treeThinker.csgoId];
         //Path & curPath = blackboard.playerToPath[treeThinker.csgoId];
 
@@ -36,11 +35,11 @@ namespace engage {
                 }
             }
 
-            if (aggressionOption == enumAsInt(csknow::feature_store::NearestEnemyState::Decrease)) {
+            if (aggressionOption == static_cast<size_t>(csknow::feature_store::NearestEnemyState::Decrease)) {
                 curPriority.moveOptions = {true, false, true};
                 curPriority.targetPos = curPriority.targetPlayer.footPos;
             }
-            else if (aggressionOption == enumAsInt(csknow::feature_store::NearestEnemyState::Constant)) {
+            else if (aggressionOption == static_cast<size_t>(csknow::feature_store::NearestEnemyState::Constant)) {
                 curPriority.moveOptions = {false, false, true};
             }
             else {
