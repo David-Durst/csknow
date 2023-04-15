@@ -232,6 +232,13 @@ struct Blackboard {
         return result;
     }
 
+    [[nodiscard]]
+    AreaBits getVisibleAreasByPlayer(const ServerState::Client & client) const {
+        AreaId curArea =
+            navFile.get_nearest_area_by_position(vec3Conv(client.getFootPosForPlayer())).get_id();
+        return visPoints.getVisibilityRelativeToSrc(curArea);
+    }
+
     PrintState printStrategyState(const ServerState & state);
     PrintState printCommunicateState(const ServerState & state);
     vector<PrintState> printPerPlayerState(const ServerState & state, CSGOId playerId);

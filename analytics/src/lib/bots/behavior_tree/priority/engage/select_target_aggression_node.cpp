@@ -38,12 +38,30 @@ namespace engage {
 
             if (aggressionOption == enumAsInt(csknow::feature_store::NearestEnemyState::Decrease)) {
                 curPriority.moveOptions = {true, false, true};
+                curPriority.targetPos = curPriority.targetPlayer.footPos;
             }
             else if (aggressionOption == enumAsInt(csknow::feature_store::NearestEnemyState::Constant)) {
                 curPriority.moveOptions = {false, false, true};
             }
             else {
+                // move to nearest area not visible to enemy
                 curPriority.moveOptions = {true, false, true};
+                AreaBits targetVisBits =
+                    blackboard.getVisibleAreasByPlayer(state.getClient(curPriority.targetPlayer.playerId));
+                const nav_mesh::nav_area & curArea = blackboard.getPlayerNavArea(state.getClient(treeThinker.csgoId));
+                size_t curAreaIndex = blackboard.visPoints.areaIdToIndex(curArea.get_id());
+                size_t minAreaIndex = 0;
+                double minAreaDistance = std::numeric_limits<double>::max();
+                for (size_t areaIndex = 0; areaIndex < targetVisBits.size(); areaIndex++) {
+                    if (!targetVisBits[areaIndex]) {
+                        double curAreaDistance = blackboard.reachability.getDistance(curAreaIndex, areaIndex);
+                        if (curAreaDistance < minAreaDistance) {
+                            curAreaDistance = minAreaDistance;
+                            minAreaIndex = areaIndex;
+                        }
+                    }
+                }
+                curPriority.targetPos = blackboard.visPoints.getCellVisPoints()[minAreaIndex].center;
             }
 
             playerNodeState[treeThinker.csgoId] = NodeState::Failure;
