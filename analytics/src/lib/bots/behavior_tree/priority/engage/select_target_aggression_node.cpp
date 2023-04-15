@@ -55,7 +55,7 @@ namespace engage {
                     if (!targetVisBits[areaIndex]) {
                         double curAreaDistance = blackboard.reachability.getDistance(curAreaIndex, areaIndex);
                         if (curAreaDistance < minAreaDistance) {
-                            curAreaDistance = minAreaDistance;
+                            minAreaDistance = curAreaDistance;
                             minAreaIndex = areaIndex;
                         }
                     }
