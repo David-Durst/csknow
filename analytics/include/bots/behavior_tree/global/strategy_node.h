@@ -117,7 +117,7 @@ namespace strategy {
     public:
         explicit AssignPlayersToOrders(Blackboard & blackboard) : Node(blackboard, "AssignPlayersToOrders") { };
         NodeState exec(const ServerState & state, TreeThinker &treeThinker) override;
-        bool assignPlayerToOrderProbabilistic(const ServerState::Client client, bool plantedA);
+        bool assignPlayerToOrderProbabilistic(const ServerState::Client & client, bool plantedA);
     };
 }
 

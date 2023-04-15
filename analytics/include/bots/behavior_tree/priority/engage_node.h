@@ -21,6 +21,7 @@ namespace engage {
     public:
         SelectTargetNode(Blackboard & blackboard) : Node(blackboard, "SelectTargetNode") { };
         virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override;
+        CSGOId assignPlayerToTargetProbabilistic(const ServerState::Client & client);
     };
 
     class SelectFireModeNode : public Node {

@@ -12,7 +12,7 @@ namespace strategy {
         bool assignedPlayer = false;
     };
 
-    constexpr bool useModelProbabilities = true;
+    constexpr bool useOrderModelProbabilities = true;
 
     NodeState AssignPlayersToOrders::exec(const ServerState &state, TreeThinker &treeThinker) {
         if (blackboard.newOrderThisFrame) {
@@ -82,7 +82,7 @@ namespace strategy {
             // for T, same thing but also considering covering every order - nearest unassigned order, or nearest unassigned if all assigned
             for (const auto & client : state.clients) {
                 if (client.isAlive && client.isBot) {
-                    if (useModelProbabilities && assignPlayerToOrderProbabilistic(client, plantedA)) {
+                    if (useOrderModelProbabilities && assignPlayerToOrderProbabilistic(client, plantedA)) {
                         continue;
                     }
                     if (client.team == ENGINE_TEAM_CT) {
@@ -156,11 +156,10 @@ namespace strategy {
         {2, 5} // b tuns
     };
 
-    bool AssignPlayersToOrders::assignPlayerToOrderProbabilistic(const ServerState::Client client, bool plantedA) {
+    bool AssignPlayersToOrders::assignPlayerToOrderProbabilistic(const ServerState::Client & client, bool plantedA) {
         if (blackboard.inferenceManager.playerToInferenceData.find(client.csgoId) ==
             blackboard.inferenceManager.playerToInferenceData.end()) {
             return false;
-
         }
         blackboard.ticksSinceLastProbOrderAssignment = 0;
         vector<float> probabilities;

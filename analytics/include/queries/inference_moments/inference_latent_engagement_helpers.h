@@ -12,6 +12,7 @@
 namespace csknow::inference_latent_engagement {
     struct InferenceEngagementTickValues {
         std::vector<float> rowCPP;
+        vector<CSGOId> enemyIds;
         vector<csknow::feature_store::EngagementEnemyState> enemyStates;
     };
     InferenceEngagementTickValues extractFeatureStoreEngagementValues(

@@ -12,6 +12,7 @@ namespace csknow::inference_latent_engagement {
         for (size_t enemyNum = 0; enemyNum < csknow::feature_store::maxEnemies; enemyNum++) {
             const csknow::feature_store::FeatureStoreResult::ColumnEnemyData &columnEnemyData =
                 featureStoreResult.columnEnemyData[enemyNum];
+            result.enemyIds.push_back(columnEnemyData.playerId[rowIndex]);
             result.rowCPP.push_back(
                 static_cast<float>(columnEnemyData.timeSinceLastVisibleOrToBecomeVisible[rowIndex]));
             result.rowCPP.push_back(static_cast<float>(columnEnemyData.worldDistanceToEnemy[rowIndex]));
