@@ -6,7 +6,7 @@
 #include <functional>
 
 namespace engage {
-    constexpr bool useTargetModelProbabilities = false;
+    constexpr bool useTargetModelProbabilities = true;
 
     NodeState SelectTargetNode::exec(const ServerState & state, TreeThinker &treeThinker) {
         const ServerState::Client & curClient = state.getClient(treeThinker.csgoId);
@@ -24,7 +24,7 @@ namespace engage {
             curPriority.priorityType = PriorityType::Engagement;
         }
 
-        if (!blackboard.inTest && useTargetModelProbabilities) {
+        if (useTargetModelProbabilities) {
             CSGOId targetId = assignPlayerToTargetProbabilistic(curClient, state, curTarget,
                                                                 rememberedEnemies, communicatedEnemies);
             if (targetId != INVALID_ID) {
@@ -133,10 +133,14 @@ namespace engage {
             blackboard.inferenceManager.playerToInferenceData.at(client.csgoId).engagementValues;
         const csknow::inference_latent_engagement::InferenceEngagementTickProbabilities & engagementProbabilities =
             blackboard.inferenceManager.playerToInferenceData.at(client.csgoId).engagementProbabilities;
+        //size_t printedTimes = 0;
+        //std::cout << "checking target for " << client.csgoId << std::endl;
         for (size_t i = 0; i < engagementTickValues.enemyIds.size(); i++) {
             if (engagementTickValues.enemyIds[i] != INVALID_ID) {
                 playerIds.push_back(engagementTickValues.enemyIds[i]);
                 probabilities.push_back(engagementProbabilities.enemyProbabilities[i]);
+                //std::cout << "enemy id " << playerIds.back() << " raw prob " << probabilities.back() << std::endl;
+                //printedTimes++;
             }
         }
 
@@ -153,11 +157,26 @@ namespace engage {
         CSGOId targetId = INVALID_ID;
         for (size_t i = 0; i < probabilities.size(); i++) {
             weightSoFar += probabilities[i];
+            /*
+            if (client.csgoId == 6) {
+                std::cout << "playerIds " << i << " for real id " << playerIds[i] << " has prob " << probabilities[i] << " compared to " << weightSoFar << std::endl;
+            }
+             */
             if (probSample < weightSoFar) {
                 //std::cout << "assigning to " << client.team << ", " << i << std::endl;
                 targetId = playerIds[i];
+                break;
             }
         }
+        /*
+        if (client.csgoId == 6) {
+            std::cout << "selected target id " << targetId << std::endl;
+            std::cout << "communicated enemies size " << communicatedEnemies.size() << std::endl;
+            for (const auto & [communicatedEnemyId, _] : communicatedEnemies) {
+                std::cout << "communicated enemy id " << communicatedEnemyId << std::endl;
+            }
+        }
+         */
         // default if probs don't sum perfectly is take last one as this will result from a
         // slight numerical instability mismatch
 
@@ -167,15 +186,20 @@ namespace engage {
                 curTarget = {curTargetClient.csgoId, state.roundNumber, client.lastFrame,
                              curTargetClient.getFootPosForPlayer(), curTargetClient.getEyePosForPlayer(), true};
             }
-            else if (rememberedEnemies.find(curTarget.playerId) != rememberedEnemies.end()) {
+            else if (rememberedEnemies.find(targetId) != rememberedEnemies.end()) {
                 curTarget = {curTargetClient.csgoId, state.roundNumber, client.lastFrame,
-                             curTarget.footPos = rememberedEnemies.find(curTarget.playerId)->second.lastSeenFootPos,
+                             rememberedEnemies.find(curTarget.playerId)->second.lastSeenFootPos,
                              rememberedEnemies.find(curTarget.playerId)->second.lastSeenEyePos,
                              false};
             }
-            else if (communicatedEnemies.find(curTarget.playerId) != communicatedEnemies.end()) {
+            else if (communicatedEnemies.find(targetId) != communicatedEnemies.end()) {
+                /*
+                if (client.csgoId == 6) {
+                    std::cout << "should be handling communicated enemy " << std::endl;
+                }
+                 */
                 curTarget = {curTargetClient.csgoId, state.roundNumber, client.lastFrame,
-                    curTarget.footPos = communicatedEnemies.find(curTarget.playerId)->second.lastSeenFootPos,
+                    communicatedEnemies.find(curTarget.playerId)->second.lastSeenFootPos,
                     communicatedEnemies.find(curTarget.playerId)->second.lastSeenEyePos,
                     false};
             }
@@ -183,6 +207,11 @@ namespace engage {
         else {
             std::cout << "bad target assignment due to overflow" << std::endl;
         }
+        /*
+        if (client.csgoId == 6) {
+            std::cout << "cur id " << client.csgoId << " enemy id " << curTarget.playerId << std::endl;
+        }
+         */
         return targetId;
     }
 }
