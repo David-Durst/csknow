@@ -24,7 +24,7 @@ namespace engage {
             curPriority.priorityType = PriorityType::Engagement;
         }
 
-        if (useTargetModelProbabilities) {
+        if (!blackboard.inTest && useTargetModelProbabilities) {
             CSGOId targetId = assignPlayerToTargetProbabilistic(curClient);
             if (targetId != INVALID_ID) {
                 const ServerState::Client & targetClient = state.clients[targetId];
