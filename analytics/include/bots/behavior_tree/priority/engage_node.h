@@ -21,12 +21,21 @@ namespace engage {
     public:
         SelectTargetNode(Blackboard & blackboard) : Node(blackboard, "SelectTargetNode") { };
         virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override;
-        CSGOId assignPlayerToTargetProbabilistic(const ServerState::Client & client);
+        CSGOId assignPlayerToTargetProbabilistic(const ServerState::Client & client, const ServerState & state,
+                                                 TargetPlayer & curTarget,
+                                                 const map<CSGOId, EnemyPositionMemory> & rememberedEnemies,
+                                                 const map<CSGOId, EnemyPositionMemory> & communicatedEnemies);
     };
 
     class SelectFireModeNode : public Node {
     public:
         SelectFireModeNode(Blackboard & blackboard) : Node(blackboard, "FireSelectionTaskNode") { };
+        virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override;
+    };
+
+    class SelectTargetAggressionNode : public Node {
+    public:
+        SelectTargetAggressionNode(Blackboard & blackboard) : Node(blackboard, "TargetAggressionSelectionTaskNode") { };
         virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override;
     };
 }

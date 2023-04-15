@@ -25,11 +25,9 @@ namespace engage {
         }
 
         if (!blackboard.inTest && useTargetModelProbabilities) {
-            CSGOId targetId = assignPlayerToTargetProbabilistic(curClient);
+            CSGOId targetId = assignPlayerToTargetProbabilistic(curClient, state, curTarget,
+                                                                rememberedEnemies, communicatedEnemies);
             if (targetId != INVALID_ID) {
-                const ServerState::Client & targetClient = state.clients[targetId];
-                curTarget.footPos = targetClient.getFootPosForPlayer();
-                curTarget.eyePos = targetClient.getEyePosForPlayer();
                 playerNodeState[treeThinker.csgoId] = NodeState::Success;
                 return playerNodeState[treeThinker.csgoId];
             }
@@ -119,7 +117,10 @@ namespace engage {
         return playerNodeState[treeThinker.csgoId];
     }
 
-    CSGOId SelectTargetNode::assignPlayerToTargetProbabilistic(const ServerState::Client & client) {
+    CSGOId SelectTargetNode::assignPlayerToTargetProbabilistic(
+        const ServerState::Client & client, const ServerState & state, TargetPlayer & curTarget,
+        const map<CSGOId, EnemyPositionMemory> & rememberedEnemies,
+        const map<CSGOId, EnemyPositionMemory> & communicatedEnemies) {
         if (blackboard.inferenceManager.playerToInferenceData.find(client.csgoId) ==
             blackboard.inferenceManager.playerToInferenceData.end() ||
             !blackboard.inferenceManager.playerToInferenceData.at(client.csgoId).validData) {
@@ -149,17 +150,40 @@ namespace engage {
         }
         double probSample = blackboard.aggressionDis(blackboard.gen);
         double weightSoFar = 0.;
+        CSGOId targetId = INVALID_ID;
         for (size_t i = 0; i < probabilities.size(); i++) {
             weightSoFar += probabilities[i];
             if (probSample < weightSoFar) {
                 //std::cout << "assigning to " << client.team << ", " << i << std::endl;
-                return playerIds[i];
+                targetId = playerIds[i];
             }
         }
         // default if probs don't sum perfectly is take last one as this will result from a
         // slight numerical instability mismatch
-        std::cout << "bad target assignment due to overflow" << std::endl;
-        return INVALID_ID;
+
+        if (targetId != INVALID_ID) {
+            const ServerState::Client & curTargetClient = state.getClient(targetId);
+            if (state.isVisible(client.csgoId, targetId)) {
+                curTarget = {curTargetClient.csgoId, state.roundNumber, client.lastFrame,
+                             curTargetClient.getFootPosForPlayer(), curTargetClient.getEyePosForPlayer(), true};
+            }
+            else if (rememberedEnemies.find(curTarget.playerId) != rememberedEnemies.end()) {
+                curTarget = {curTargetClient.csgoId, state.roundNumber, client.lastFrame,
+                             curTarget.footPos = rememberedEnemies.find(curTarget.playerId)->second.lastSeenFootPos,
+                             rememberedEnemies.find(curTarget.playerId)->second.lastSeenEyePos,
+                             false};
+            }
+            else if (communicatedEnemies.find(curTarget.playerId) != communicatedEnemies.end()) {
+                curTarget = {curTargetClient.csgoId, state.roundNumber, client.lastFrame,
+                    curTarget.footPos = communicatedEnemies.find(curTarget.playerId)->second.lastSeenFootPos,
+                    communicatedEnemies.find(curTarget.playerId)->second.lastSeenEyePos,
+                    false};
+            }
+        }
+        else {
+            std::cout << "bad target assignment due to overflow" << std::endl;
+        }
+        return targetId;
     }
 }
 
