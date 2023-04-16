@@ -13,7 +13,8 @@ namespace engage {
 
         if (!blackboard.inTest && useAggressionModelProbabilities &&
             blackboard.inferenceManager.playerToInferenceData.find(treeThinker.csgoId) !=
-            blackboard.inferenceManager.playerToInferenceData.end()) {
+            blackboard.inferenceManager.playerToInferenceData.end() &&
+            blackboard.inferenceManager.playerToInferenceData.at(treeThinker.csgoId).validData) {
             const csknow::inference_latent_aggression::InferenceAggressionTickProbabilities & aggressionProbabilities =
                 blackboard.inferenceManager.playerToInferenceData.at(treeThinker.csgoId).aggressionProbabilities;
             vector<float> probabilities = aggressionProbabilities.aggressionProbabilities;

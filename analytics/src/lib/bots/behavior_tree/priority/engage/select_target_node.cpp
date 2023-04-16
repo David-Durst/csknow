@@ -29,8 +29,11 @@ namespace engage {
                                                                 rememberedEnemies, communicatedEnemies);
             if (targetId != INVALID_ID) {
                 playerNodeState[treeThinker.csgoId] = NodeState::Success;
-                return playerNodeState[treeThinker.csgoId];
             }
+            else {
+                playerNodeState[treeThinker.csgoId] = NodeState::Failure;
+            }
+            return playerNodeState[treeThinker.csgoId];
         }
 
         // keep same target if from this round and still visible or remembered or communicated
@@ -143,6 +146,18 @@ namespace engage {
                 //printedTimes++;
             }
         }
+        /*
+        if (probabilities.empty() && !state.getVisibleEnemies(client.csgoId).empty()) {
+            std::cout << "not empty mismatch" << std::endl;
+        }
+        if (probabilities.empty()) {
+            for (size_t i = 0; i < engagementTickValues.enemyIds.size(); i++) {
+                if (engagementTickValues.enemyStates[i] != csknow::feature_store::EngagementEnemyState::None) {
+                    std::cout << "no enemy id but valid engagemnet state" << std::endl;
+                }
+            }
+        }
+         */
 
         // re-weight just for one site
         double reweightFactor = 0.;
@@ -205,7 +220,16 @@ namespace engage {
             }
         }
         else {
+            // don't worry about this case
+            // it's because of late updates so enemies become visible before model reruns
+            /*
             std::cout << "bad target assignment due to overflow" << std::endl;
+            std::cout << "id, prob ";
+            for (size_t i = 0; i < probabilities.size(); i++) {
+                std::cout << playerIds[i] << "," << probabilities[i] << " ; ";
+            }
+            std::cout << std::endl;
+             */
         }
         /*
         if (client.csgoId == 6) {
