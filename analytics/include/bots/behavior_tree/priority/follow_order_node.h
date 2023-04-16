@@ -97,6 +97,12 @@ namespace follow {
                 make_unique<spacing::PushConditionNode>(blackboard)),
         "SpacingSelectorNode") { };
     };
+
+    class EnemiesAliveTaskNode : public Node {
+    public:
+        EnemiesAliveTaskNode(Blackboard & blackboard) : Node(blackboard, "EnemiesAliveTaskNode") { };
+        virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override;
+    };
 }
 
 
@@ -107,6 +113,7 @@ public:
                                                         make_unique<follow::ComputeNavAreaNode>(blackboard),
                                                         make_unique<follow::ComputeNonDangerAimAreaNode>(blackboard),
                                                         make_unique<movement::PathingNode>(blackboard),
+                                                        make_unique<follow::EnemiesAliveTaskNode>(blackboard),
                                                         make_unique<follow::SpacingNode>(blackboard)),
                                         "FollowOrderSequenceNode") { };
 };

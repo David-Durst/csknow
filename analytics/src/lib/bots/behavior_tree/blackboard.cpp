@@ -8,7 +8,7 @@ PrintState Blackboard::printStrategyState(const ServerState &state) {
     PrintState printState;
     printState.curState = strategy.print(state);
     if (defuserId) {
-        printState.curState.push_back("defuser: None" + state.getPlayerString(defuserId.value()));
+        printState.curState.push_back("defuser: " + state.getPlayerString(defuserId.value()));
     }
     else {
         printState.curState.push_back("defuser: None");
