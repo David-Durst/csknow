@@ -340,7 +340,11 @@ int main(int argc, char * argv[]) {
     std::cout << "size: " << latentEngagementResult.size << std::endl;
 
     // inference latent engagement
-    at::set_num_threads(1);
+    // https://pytorch.org/docs/stable/notes/cpu_threading_torchscript_inference.html
+    // want high intra-op parallelism but not inter-op parallelism
+    // intra-op
+    //at::set_num_threads(1);
+    // inter-op
     at::set_num_interop_threads(1);
 
     string inferenceLatentOrderName = "inferenceLatentOrder";

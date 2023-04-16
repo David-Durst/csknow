@@ -57,8 +57,8 @@ namespace csknow::inference_latent_aggression {
 
         behaviorTreeLatentStates.featureStoreResult.checkInvalid();
         playerAggressionProb.resize(playerAtTick.size);
-//#pragma omp parallel for
-        for (int64_t roundIndex = 0; roundIndex < 1L /*rounds.size*/; roundIndex++) {
+#pragma omp parallel for
+        for (int64_t roundIndex = 0; roundIndex < rounds.size; roundIndex++) {
             int threadNum = omp_get_thread_num();
             tmpRoundIds[threadNum].push_back(roundIndex);
             tmpRoundStarts[threadNum].push_back(static_cast<int64_t>(tmpStartTickId[threadNum].size()));
