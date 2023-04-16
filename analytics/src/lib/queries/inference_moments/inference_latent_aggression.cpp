@@ -68,6 +68,9 @@ namespace csknow::inference_latent_aggression {
             map<int64_t, LatentAggressionData> playerToActiveAggression;
             for (int64_t tickIndex = rounds.ticksPerRound[roundIndex].minId;
                  tickIndex <= rounds.ticksPerRound[roundIndex].maxId; tickIndex++) {
+                if (tickIndex % 10 != 0) {
+                    continue;
+                }
                 for (int64_t patIndex = ticks.patPerTick[tickIndex].minId;
                      patIndex <= ticks.patPerTick[tickIndex].maxId; patIndex++) {
                     int64_t curPlayerId = playerAtTick.playerId[patIndex];

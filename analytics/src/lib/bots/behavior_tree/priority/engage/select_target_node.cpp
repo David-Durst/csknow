@@ -24,7 +24,7 @@ namespace engage {
             curPriority.priorityType = PriorityType::Engagement;
         }
 
-        if (useTargetModelProbabilities) {
+        if (!blackboard.inAnalysis && useTargetModelProbabilities) {
             CSGOId targetId = assignPlayerToTargetProbabilistic(curClient, state, curTarget,
                                                                 rememberedEnemies, communicatedEnemies);
             if (targetId != INVALID_ID) {

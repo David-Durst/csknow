@@ -30,8 +30,8 @@ namespace strategy {
             }
         }
         bool probOrderChange =
-            !blackboard.inTest && blackboard.ticksSinceLastProbOrderAssignment >= newOrderTicks &&
-            ctPlayersAlive && tPlayersAlive;
+            !blackboard.inTest && !blackboard.inAnalysis &&
+            blackboard.ticksSinceLastProbOrderAssignment >= newOrderTicks && ctPlayersAlive && tPlayersAlive;
         if (playerNodeState.find(treeThinker.csgoId) == playerNodeState.end() ||
             state.roundNumber != planRoundNumber || state.numPlayersAlive() != playersAliveLastPlan ||
             state.getPlayersOnTeam(ENGINE_TEAM_CT) != ctPlayers || state.getPlayersOnTeam(ENGINE_TEAM_T) != tPlayers ||

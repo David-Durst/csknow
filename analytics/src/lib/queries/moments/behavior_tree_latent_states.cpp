@@ -73,6 +73,7 @@ namespace csknow::behavior_tree_latent_states {
             tmpRoundStarts[threadNum].push_back(static_cast<int64_t>(tmpStartTickId[threadNum].size()));
             Blackboard blackboard(navPath, invalidInferenceManager, visPoints, nearestNavCell, mapMeshResult,
                                   reachability, distanceToPlaces, ordersResult, tmpPreCommitBuffer[threadNum]);
+            blackboard.inAnalysis = true;
             GlobalQueryNode globalQueryNode(blackboard);
             PlayerQueryNode playerQueryNode(blackboard);
             RoundPlantDefusal roundPlantDefusal = processRoundPlantDefusals(rounds, ticks, plants, defusals, roundIndex);
