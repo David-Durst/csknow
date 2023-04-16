@@ -129,6 +129,7 @@ void Tree::tick(ServerState & state, const string & mapsPath) {
 
         inferenceManager.setCurClients(state.clients);
         inferenceManager.recordTeamValues(featureStoreResult);
+        featureStoreResult.teamFeatureStoreResult.reinit();
 
         for (auto & client : state.clients) {
             // disable force for all players, testing infrastructure can set force
@@ -166,6 +167,7 @@ void Tree::tick(ServerState & state, const string & mapsPath) {
 
             featureStoreResult.commitPlayerRow(featureStoreResult.defaultBuffer);
             inferenceManager.recordPlayerValues(featureStoreResult, client.csgoId);
+            featureStoreResult.reinit();
         }
 
         inferenceManager.runInferences();

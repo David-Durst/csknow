@@ -68,6 +68,53 @@ namespace csknow::feature_store {
         training = true;
         init(patSize);
     }
+    
+    void FeatureStoreResult::reinit() {
+        for (int64_t rowIndex = 0; rowIndex < size; rowIndex++) {
+            roundId[rowIndex] = INVALID_ID;
+            tickId[rowIndex] = INVALID_ID;
+            playerId[rowIndex] = INVALID_ID;
+            for (int i = 0; i < maxEnemies; i++) {
+                columnEnemyData[i].playerId[rowIndex] = INVALID_ID;
+                columnEnemyData[i].enemyEngagementStates[rowIndex] = EngagementEnemyState::None;
+                columnEnemyData[i].timeSinceLastVisibleOrToBecomeVisible[rowIndex] = maxTimeToVis;
+                columnEnemyData[i].worldDistanceToEnemy[rowIndex] = maxWorldDistance;
+                columnEnemyData[i].crosshairDistanceToEnemy[rowIndex] = maxCrosshairDistance;
+                columnEnemyData[i].nearestTargetEnemy[rowIndex] = false;
+                columnEnemyData[i].hitTargetEnemy[rowIndex] = false;
+                columnEnemyData[i].visibleIn1s[rowIndex] = false;
+                columnEnemyData[i].visibleIn2s[rowIndex] = false;
+                columnEnemyData[i].visibleIn5s[rowIndex] = false;
+                columnEnemyData[i].visibleIn10s[rowIndex] = false;
+                columnTeammateData[i].playerId[rowIndex] = INVALID_ID;
+                columnTeammateData[i].teammateWorldDistance[rowIndex] = maxWorldDistance;
+                columnTeammateData[i].crosshairDistanceToTeammate[rowIndex] = maxTeammateCrosshairDistance;
+            }
+            fireCurTick[rowIndex] = false;
+            hitEngagement[rowIndex] = false;
+            visibleEngagement[rowIndex] = false;
+            nearestCrosshairCurTick[rowIndex] = maxEnemies;
+            nearestCrosshairEnemy500ms[rowIndex] = maxEnemies;
+            nearestCrosshairEnemy1s[rowIndex] = maxEnemies;
+            nearestCrosshairEnemy2s[rowIndex] = maxEnemies;
+            positionOffset2sUpToThreshold[rowIndex] = 1.;
+            viewAngleOffset2sUpToThreshold[rowIndex] = 1.;
+            negPositionOffset2sUpToThreshold[rowIndex] = 0.;
+            negViewAngleOffset2sUpToThreshold[rowIndex] = 0.;
+            for (int i = 0; i <= maxEnemies; i++) {
+                pctNearestCrosshairEnemy2s[i][rowIndex] = 0.;
+            }
+            visibleEnemy2s[rowIndex] = 0.;
+            negVisibleEnemy2s[rowIndex] = 1.;
+            fireNext2s[rowIndex] = 0.;
+            negFireNext2s[rowIndex] = 1.;
+            for (size_t i = 0; i < numNearestEnemyState; i++) {
+                pctNearestEnemyChange2s[i][rowIndex] = 0.;
+            }
+            nextPATId2s[rowIndex] = INVALID_ID;
+            valid[rowIndex] = false;
+        }
+    }
 
     void FeatureStoreResult::commitPlayerRow(FeatureStorePreCommitBuffer & buffer, size_t rowIndex,
                                              int64_t roundIndex, int64_t tickIndex, int64_t playerIndex) {

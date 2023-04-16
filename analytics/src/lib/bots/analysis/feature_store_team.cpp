@@ -62,6 +62,43 @@ namespace csknow::feature_store {
         init(size);
         setOrders(orders);
     }
+    
+    void TeamFeatureStoreResult::reinit() {
+        for (int64_t rowIndex = 0; rowIndex < size; rowIndex++) {
+            roundId[rowIndex] = INVALID_ID;
+            tickId[rowIndex] = INVALID_ID;
+            valid[rowIndex] = false;
+            c4Status[rowIndex] = C4Status::NotPlanted;
+            c4DistanceToASite[rowIndex] = INVALID_ID;
+            c4DistanceToBSite[rowIndex] = INVALID_ID;
+            for (int j = 0; j < num_orders_per_site; j++) {
+                c4DistanceToNearestAOrderNavArea[j][rowIndex] = INVALID_ID;
+                c4DistanceToNearestBOrderNavArea[j][rowIndex] = INVALID_ID;
+            }
+            for (int i = 0; i < maxEnemies; i++) {
+                columnTData[i].playerId[rowIndex] = INVALID_ID;
+                columnTData[i].distanceToASite[rowIndex] = 2 * maxWorldDistance;
+                columnTData[i].distanceToBSite[rowIndex] = 2 * maxWorldDistance;
+                columnCTData[i].playerId[rowIndex] = INVALID_ID;
+                columnCTData[i].distanceToASite[rowIndex] = 2 * maxWorldDistance;
+                columnCTData[i].distanceToBSite[rowIndex] = 2 * maxWorldDistance;
+                for (int j = 0; j < num_orders_per_site; j++) {
+                    columnTData[i].distanceToNearestAOrderNavArea[j][rowIndex] = 2 * maxWorldDistance;
+                    columnTData[i].distanceToNearestBOrderNavArea[j][rowIndex] = 2 * maxWorldDistance;
+                    columnTData[i].distributionNearestAOrders15s[j][rowIndex] = INVALID_ID;
+                    columnTData[i].distributionNearestBOrders15s[j][rowIndex] = INVALID_ID;
+                    columnTData[i].distributionNearestAOrders30s[j][rowIndex] = INVALID_ID;
+                    columnTData[i].distributionNearestBOrders30s[j][rowIndex] = INVALID_ID;
+                    columnCTData[i].distanceToNearestAOrderNavArea[j][rowIndex] = INVALID_ID;
+                    columnCTData[i].distanceToNearestBOrderNavArea[j][rowIndex] = INVALID_ID;
+                    columnCTData[i].distributionNearestAOrders15s[j][rowIndex] = INVALID_ID;
+                    columnCTData[i].distributionNearestBOrders15s[j][rowIndex] = INVALID_ID;
+                    columnCTData[i].distributionNearestAOrders30s[j][rowIndex] = INVALID_ID;
+                    columnCTData[i].distributionNearestBOrders30s[j][rowIndex] = INVALID_ID;
+                }
+            }
+        }
+    }
 
     void TeamFeatureStoreResult::commitTeamRow(FeatureStorePreCommitBuffer & buffer,
                                                DistanceToPlacesResult & distanceToPlaces,

@@ -56,6 +56,7 @@ namespace csknow::feature_store {
 
         void setOrders(const std::vector<csknow::orders::QueryOrder> & orders);
         TeamFeatureStoreResult(size_t size, const std::vector<csknow::orders::QueryOrder> & orders);
+        void reinit();
         void commitTeamRow(FeatureStorePreCommitBuffer & buffer, DistanceToPlacesResult & distanceToPlaces,
                            const nav_mesh::nav_file & navFile,
                            int64_t roundIndex = 0, int64_t tickIndex = 0);

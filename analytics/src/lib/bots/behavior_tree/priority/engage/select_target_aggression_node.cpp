@@ -11,7 +11,9 @@ namespace engage {
         Priority & curPriority = blackboard.playerToPriority[treeThinker.csgoId];
         //Path & curPath = blackboard.playerToPath[treeThinker.csgoId];
 
-        if (!blackboard.inTest && useAggressionModelProbabilities) {
+        if (!blackboard.inTest && useAggressionModelProbabilities &&
+            blackboard.inferenceManager.playerToInferenceData.find(treeThinker.csgoId) !=
+            blackboard.inferenceManager.playerToInferenceData.end()) {
             const csknow::inference_latent_aggression::InferenceAggressionTickProbabilities & aggressionProbabilities =
                 blackboard.inferenceManager.playerToInferenceData.at(treeThinker.csgoId).aggressionProbabilities;
             vector<float> probabilities = aggressionProbabilities.aggressionProbabilities;

@@ -78,6 +78,7 @@ namespace csknow::feature_store {
 
         FeatureStoreResult();
         FeatureStoreResult(size_t tickSize, size_t patSize, const std::vector<csknow::orders::QueryOrder> & orders);
+        void reinit();
 
         void commitPlayerRow(FeatureStorePreCommitBuffer & buffer, size_t rowIndex = 0,
                              int64_t roundIndex = 0, int64_t tickIndex = 0, int64_t playerIndex = 0);

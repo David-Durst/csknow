@@ -9,15 +9,18 @@ namespace csknow::inference_latent_engagement {
         const csknow::feature_store::FeatureStoreResult & featureStoreResult, int64_t rowIndex) {
         InferenceEngagementTickValues result;
         // seperate different input types
+        //std::cout << "creating enemy ids: ";
         for (size_t enemyNum = 0; enemyNum < csknow::feature_store::maxEnemies; enemyNum++) {
             const csknow::feature_store::FeatureStoreResult::ColumnEnemyData &columnEnemyData =
                 featureStoreResult.columnEnemyData[enemyNum];
             result.enemyIds.push_back(columnEnemyData.playerId[rowIndex]);
+            //std::cout << columnEnemyData.playerId[rowIndex] << ", ";
             result.rowCPP.push_back(
                 static_cast<float>(columnEnemyData.timeSinceLastVisibleOrToBecomeVisible[rowIndex]));
             result.rowCPP.push_back(static_cast<float>(columnEnemyData.worldDistanceToEnemy[rowIndex]));
             result.rowCPP.push_back(static_cast<float>(columnEnemyData.crosshairDistanceToEnemy[rowIndex]));
         }
+        //std::cout << std::endl;
         for (size_t enemyNum = 0; enemyNum < csknow::feature_store::maxEnemies; enemyNum++) {
             const csknow::feature_store::FeatureStoreResult::ColumnEnemyData &columnEnemyData =
                 featureStoreResult.columnEnemyData[enemyNum];
