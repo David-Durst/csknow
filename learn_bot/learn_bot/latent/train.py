@@ -41,7 +41,7 @@ plot_path = Path(__file__).parent / 'distributions'
 now = datetime.now()
 runs_path = Path(__file__).parent / 'runs' / now.strftime("%m_%d_%Y__%H_%M_%S")
 
-time_model = True
+time_model = False
 
 @dataclass(frozen=True)
 class TrainResult:
