@@ -28,6 +28,11 @@ def train_test_split_by_col_ids(df: pd.DataFrame, group_col: str, col_ids: List[
     all_data_df_split_predicate = df[group_col].isin(col_ids)
     return TrainTestSplit(df[all_data_df_split_predicate], df[~all_data_df_split_predicate], col_ids)
 
+
+def get_test_col_ids(train_test_split: TrainTestSplit, group_col: str) -> List[int]:
+    return train_test_split.train_df.groupby([group_col]).index.to_list()
+
+
 def make_index_column(df: pd.DataFrame):
     df.drop("index", axis=1, errors="ignore", inplace=True)
     # creates a new index based on columns (index can be invalid if produced by train/test)

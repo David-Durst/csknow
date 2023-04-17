@@ -28,11 +28,12 @@ from learn_bot.libs.io_transforms import CUDA_DEVICE_STR
 from learn_bot.latent.accuracy_and_loss import compute_loss, compute_accuracy, finish_accuracy, \
     CPU_DEVICE_STR, LatentLosses
 from learn_bot.libs.plot_features import plot_untransformed_and_transformed
-from learn_bot.libs.df_grouping import train_test_split_by_col, make_index_column
+from learn_bot.libs.df_grouping import train_test_split_by_col, make_index_column, TrainTestSplit, get_test_col_ids
 from tqdm import tqdm
 from dataclasses import dataclass
 from datetime import datetime
 import time
+from typing import Optional
 
 checkpoints_path = Path(__file__).parent / 'checkpoints'
 plot_path = Path(__file__).parent / 'distributions'
@@ -59,20 +60,15 @@ class TrainType(Enum):
 
 
 def train(train_type: TrainType, all_data_df: pd.DataFrame, num_epochs: int,
-          windowed=False, save=True, diff_train_test=True) -> TrainResult:
+          windowed=False, save=True) -> TrainResult:
 
-    if diff_train_test:
-        train_test_split = train_test_split_by_col(all_data_df, round_id_column)
-        train_df = train_test_split.train_df.copy()
-        train_group_ids = train_test_split.train_group_ids
-        make_index_column(train_df)
-        test_df = train_test_split.test_df.copy()
-        make_index_column(test_df)
-    else:
-        make_index_column(all_data_df)
-        train_df = all_data_df
-        train_group_ids = list(all_data_df.loc[:, round_id_column].unique())
-        test_df = all_data_df
+    train_test_split = train_test_split_by_col(all_data_df, round_id_column)
+    train_df = train_test_split.train_df.copy()
+    train_group_ids = train_test_split.train_group_ids
+    make_index_column(train_df)
+    test_df = train_test_split.test_df.copy()
+    test_group_ids = get_test_col_ids(train_test_split, round_id_column)
+    make_index_column(test_df)
 
     # Get cpu or gpu device for training.
     device: str = CUDA_DEVICE_STR if torch.cuda.is_available() else CPU_DEVICE_STR
@@ -233,12 +229,19 @@ def train(train_type: TrainType, all_data_df: pd.DataFrame, num_epochs: int,
 
     if save:
         script_model = torch.jit.trace(model.to(CPU_DEVICE_STR), first_row)
+        test_group_ids_str = ",".join([str(round_id) for round_id in test_group_ids])
         if train_type == TrainType.Engagement:
             script_model.save(checkpoints_path / 'engagement_script_model.pt')
+            with open(checkpoints_path / 'engagements_test_round_ids.csv') as f:
+                f.write(test_group_ids_str)
         elif train_type == TrainType.Aggression:
             script_model.save(checkpoints_path / 'aggression_script_model.pt')
+            with open(checkpoints_path / 'aggression_test_round_ids.csv') as f:
+                f.write(test_group_ids_str)
         else:
             script_model.save(checkpoints_path / 'order_script_model.pt')
+            with open(checkpoints_path / 'order_test_round_ids.csv') as f:
+                f.write(test_group_ids_str)
         model.to(device)
 
     return TrainResult(train_data, test_data, train_df, test_df, column_transformers, model)
@@ -246,14 +249,14 @@ def train(train_type: TrainType, all_data_df: pd.DataFrame, num_epochs: int,
 latent_team_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / 'analytics' / 'csv_outputs' / 'behaviorTreeTeamFeatureStore.hdf5'
 
 if __name__ == "__main__":
-    #all_data_df = load_hdf5_to_pd(latent_hdf5_data_path)
-    #all_data_df = all_data_df[all_data_df['valid'] == 1.]
+    all_data_df = load_hdf5_to_pd(latent_hdf5_data_path)
+    all_data_df = all_data_df[all_data_df['valid'] == 1.]
     team_data_df = load_hdf5_to_pd(latent_team_hdf5_data_path)
     team_data_df = team_data_df[team_data_df['valid'] == 1.]
     #all_data_df = all_data_df.iloc[:500000]
     #all_data_df = load_hdf5_to_pd(latent_window_hdf5_data_path)
-    #train_result = train(TrainType.Engagement, all_data_df, num_epochs=1, windowed=False)
-    #train_result = train(TrainType.Aggression, all_data_df, num_epochs=1, windowed=False)
+    train_result = train(TrainType.Engagement, all_data_df, num_epochs=1, windowed=False)
+    train_result = train(TrainType.Aggression, all_data_df, num_epochs=1, windowed=False)
     train_result = train(TrainType.Order, team_data_df, num_epochs=1, windowed=False)
 
 # all_data_df[((all_data_df['pct nearest crosshair enemy 2s 0'] + all_data_df['pct nearest crosshair enemy 2s 1'] + all_data_df['pct nearest crosshair enemy 2s 2'] + all_data_df['pct nearest crosshair enemy 2s 3'] + all_data_df['pct nearest crosshair enemy 2s 4'] + all_data_df['pct nearest crosshair enemy 2s 5']) < 0.9) & (all_data_df['valid'] == 1)]
