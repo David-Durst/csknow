@@ -106,7 +106,6 @@ public:
         bool isReloading;
         bool isWalking;
         float flashDuration;
-        float maxFlashAlpha;
         bool hasDefuser;
         int money;
         int ping;
