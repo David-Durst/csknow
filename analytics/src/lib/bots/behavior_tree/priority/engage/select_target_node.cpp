@@ -28,6 +28,7 @@ namespace engage {
             CSGOId targetId = assignPlayerToTargetProbabilistic(curClient, state, curTarget,
                                                                 rememberedEnemies, communicatedEnemies);
             if (targetId != INVALID_ID) {
+                curPriority.targetPos = curTarget.footPos;
                 playerNodeState[treeThinker.csgoId] = NodeState::Success;
             }
             else {
