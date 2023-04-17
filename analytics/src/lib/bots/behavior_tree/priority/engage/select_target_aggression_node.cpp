@@ -10,6 +10,10 @@ namespace engage {
         Priority & curPriority = blackboard.playerToPriority[treeThinker.csgoId];
         //Path & curPath = blackboard.playerToPath[treeThinker.csgoId];
 
+        // forcing targetPos to be something valid
+        TargetPlayer & curTarget = curPriority.targetPlayer;
+        curPriority.targetPos = curTarget.footPos;
+
         if (!blackboard.inAnalysis && !blackboard.inTest && useAggressionModelProbabilities &&
             blackboard.inferenceManager.playerToInferenceData.find(treeThinker.csgoId) !=
             blackboard.inferenceManager.playerToInferenceData.end() &&
