@@ -30,7 +30,7 @@ def train_test_split_by_col_ids(df: pd.DataFrame, group_col: str, col_ids: List[
 
 
 def get_test_col_ids(train_test_split: TrainTestSplit, group_col: str) -> List[int]:
-    return train_test_split.train_df.groupby([group_col]).index.to_list()
+    return train_test_split.test_df.groupby([group_col]).count().index.to_list()
 
 
 def make_index_column(df: pd.DataFrame):
