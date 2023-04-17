@@ -232,15 +232,15 @@ def train(train_type: TrainType, all_data_df: pd.DataFrame, num_epochs: int,
         test_group_ids_str = ",".join([str(round_id) for round_id in test_group_ids])
         if train_type == TrainType.Engagement:
             script_model.save(checkpoints_path / 'engagement_script_model.pt')
-            with open(checkpoints_path / 'engagements_test_round_ids.csv') as f:
+            with open(checkpoints_path / 'engagements_test_round_ids.csv', 'w+') as f:
                 f.write(test_group_ids_str)
         elif train_type == TrainType.Aggression:
             script_model.save(checkpoints_path / 'aggression_script_model.pt')
-            with open(checkpoints_path / 'aggression_test_round_ids.csv') as f:
+            with open(checkpoints_path / 'aggression_test_round_ids.csv', 'w+') as f:
                 f.write(test_group_ids_str)
         else:
             script_model.save(checkpoints_path / 'order_script_model.pt')
-            with open(checkpoints_path / 'order_test_round_ids.csv') as f:
+            with open(checkpoints_path / 'order_test_round_ids.csv', 'w+') as f:
                 f.write(test_group_ids_str)
         model.to(device)
 
