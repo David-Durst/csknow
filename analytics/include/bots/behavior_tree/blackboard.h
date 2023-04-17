@@ -30,7 +30,7 @@
 using std::map;
 using std::make_unique;
 
-constexpr size_t newOrderTicks = 128 * 3;
+constexpr size_t newOrderTicks = 128 * 11;
 
 enum class AggressiveType {
     Push,
