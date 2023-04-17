@@ -3,6 +3,7 @@
 //
 
 #include "bots/behavior_tree/global/strategy_node.h"
+#include "bots/analysis/learned_models.h"
 
 namespace strategy {
     NodeState CreateOrdersNode::exec(const ServerState &state, TreeThinker &treeThinker) {
@@ -29,7 +30,7 @@ namespace strategy {
                 tPlayersAlive = true;
             }
         }
-        bool probOrderChange =
+        bool probOrderChange = useOrderModelProbabilities &&
             !blackboard.inTest && !blackboard.inAnalysis &&
             blackboard.ticksSinceLastProbOrderAssignment >= newOrderTicks && ctPlayersAlive && tPlayersAlive;
         if (playerNodeState.find(treeThinker.csgoId) == playerNodeState.end() ||

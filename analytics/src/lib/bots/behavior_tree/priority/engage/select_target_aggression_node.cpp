@@ -3,10 +3,9 @@
 //
 
 #include "bots/behavior_tree/priority/engage_node.h"
+#include "bots/analysis/learned_models.h"
 
 namespace engage {
-    constexpr bool useAggressionModelProbabilities = true;
-
     NodeState SelectTargetAggressionNode::exec(const ServerState &state, TreeThinker &treeThinker) {
         Priority & curPriority = blackboard.playerToPriority[treeThinker.csgoId];
         //Path & curPath = blackboard.playerToPath[treeThinker.csgoId];

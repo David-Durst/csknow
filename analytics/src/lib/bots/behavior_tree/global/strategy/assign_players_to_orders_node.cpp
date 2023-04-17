@@ -3,6 +3,7 @@
 //
 #include "bots/behavior_tree/global/strategy_node.h"
 #include "bots/behavior_tree/pathing_node.h"
+#include "bots/analysis/learned_models.h"
 
 namespace strategy {
     struct OrderPlaceDistance {
@@ -11,8 +12,6 @@ namespace strategy {
         double distance = -1.;
         bool assignedPlayer = false;
     };
-
-    constexpr bool useOrderModelProbabilities = true;
 
     NodeState AssignPlayersToOrders::exec(const ServerState &state, TreeThinker &treeThinker) {
         if (blackboard.newOrderThisFrame) {

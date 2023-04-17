@@ -3,11 +3,10 @@
 //
 
 #include "bots/behavior_tree/priority/engage_node.h"
+#include "bots/analysis/learned_models.h"
 #include <functional>
 
 namespace engage {
-    constexpr bool useTargetModelProbabilities = true;
-
     NodeState SelectTargetNode::exec(const ServerState & state, TreeThinker &treeThinker) {
         const ServerState::Client & curClient = state.getClient(treeThinker.csgoId);
         vector<std::reference_wrapper<const ServerState::Client>> visibleEnemies =
