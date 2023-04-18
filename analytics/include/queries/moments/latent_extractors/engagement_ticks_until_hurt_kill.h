@@ -8,7 +8,7 @@
 #include "queries/moments/latent_extractors/latent_engagement.h"
 
 namespace csknow::latent_engagement {
-    class EngagementTicksUntilHurtKill : QueryResult {
+    class EngagementTicksUntilHurtKill : public QueryResult {
     public:
         vector<RangeIndexEntry> rowIndicesPerRound;
         vector<int64_t> nextHurtId;
