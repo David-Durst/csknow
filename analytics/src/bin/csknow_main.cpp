@@ -47,6 +47,7 @@
 #include "queries/training_moments/training_navigation.h"
 #include "queries/moments/trajectory_segments.h"
 #include "queries/moments/latent_extractors/latent_engagement.h"
+#include "queries/moments/latent_extractors/engagement_ticks_until_hurt_kill.h"
 #define CPPHTTPLIB_OPENSSL_SUPPORT
 #include "httplib.h"
 #include <cerrno>
@@ -338,6 +339,12 @@ int main(int argc, char * argv[]) {
     latentEngagementResult.computePercentMatchNearestCrosshair(filteredRounds, ticks, playerAtTick,
                                                                behaviorTreeLatentEvents.featureStoreResult);
     std::cout << "size: " << latentEngagementResult.size << std::endl;
+
+    string engagmeentTicksUntilHurtKill = "engagementTicksUntilHurtKill";
+    std::cout << "processing engagement ticks until hurt kill" << std::endl;
+    csknow::latent_engagement::EngagementTicksUntilHurtKill engagementTicksUntilHurtKill;
+    engagementTicksUntilHurtKill.runQuery(filteredRounds, ticks, playerAtTick, hurt, kills, behaviorTreeLatentEvents);
+    std::cout << "size: " << engagementTicksUntilHurtKill.size << std::endl;
 
     // inference latent engagement
     // https://pytorch.org/docs/stable/notes/cpu_threading_torchscript_inference.html
