@@ -31,8 +31,15 @@ namespace engage {
         bool timeForNewTarget =
             blackboard.playerToTicksSinceLastProbTargetAssignment.at(curClient.csgoId) >= newTargetTicks;
         if (!blackboard.inAnalysis && useTargetModelProbabilities) {
+            if (blackboard.playerToLastProbTargetAssignment.find(curClient.csgoId) ==
+                blackboard.playerToLastProbTargetAssignment.end() || timeForNewTarget) {
+                blackboard.playerToLastProbTargetAssignment[curClient.csgoId] = INVALID_ID;
+            }
+            CSGOId lastProbTargetAssignment = blackboard.playerToLastProbTargetAssignment[curClient.csgoId];
             CSGOId targetId = assignPlayerToTargetProbabilistic(curClient, state, curTarget,
+                                                                lastProbTargetAssignment,
                                                                 rememberedEnemies, communicatedEnemies);
+            blackboard.playerToLastProbTargetAssignment[curClient.csgoId] = targetId;
             if (targetId != INVALID_ID) {
                 blackboard.playerToTicksSinceLastProbTargetAssignment[curClient.csgoId] = 0;
                 curPriority.targetPos = curTarget.footPos;
@@ -130,6 +137,7 @@ namespace engage {
 
     CSGOId SelectTargetNode::assignPlayerToTargetProbabilistic(
         const ServerState::Client & client, const ServerState & state, TargetPlayer & curTarget,
+        CSGOId lastProbTargetAssignment,
         const map<CSGOId, EnemyPositionMemory> & rememberedEnemies,
         const map<CSGOId, EnemyPositionMemory> & communicatedEnemies) {
         if (blackboard.inferenceManager.playerToInferenceData.find(client.csgoId) ==
@@ -187,6 +195,13 @@ namespace engage {
              */
             if (probSample < weightSoFar) {
                 //std::cout << "assigning to " << client.team << ", " << i << std::endl;
+                targetId = playerIds[i];
+                break;
+            }
+        }
+        // use prior target if an option
+        for (size_t i = 0; i < playerIds.size(); i++) {
+            if (lastProbTargetAssignment == playerIds[i]) {
                 targetId = playerIds[i];
                 break;
             }

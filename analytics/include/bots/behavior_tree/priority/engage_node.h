@@ -22,7 +22,7 @@ namespace engage {
         SelectTargetNode(Blackboard & blackboard) : Node(blackboard, "SelectTargetNode") { };
         virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override;
         CSGOId assignPlayerToTargetProbabilistic(const ServerState::Client & client, const ServerState & state,
-                                                 TargetPlayer & curTarget,
+                                                 TargetPlayer & curTarget, CSGOId lastProbTargetAssignment,
                                                  const map<CSGOId, EnemyPositionMemory> & rememberedEnemies,
                                                  const map<CSGOId, EnemyPositionMemory> & communicatedEnemies);
     };

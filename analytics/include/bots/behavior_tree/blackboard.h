@@ -96,6 +96,7 @@ struct Blackboard {
     const csknow::inference_manager::InferenceManager & inferenceManager;
     size_t ticksSinceLastProbOrderAssignment = newOrderTicks;
     map<CSGOId, size_t> playerToTicksSinceLastProbTargetAssignment;
+    map<CSGOId, CSGOId> playerToLastProbTargetAssignment;
 
     // helpers
     std::random_device rd;
