@@ -374,26 +374,7 @@ void saveTemporalArrayOfVec3VectorsToHDF5(const std::vector<std::array<Vec3, N>>
 }
 
 void saveVec3VectorToHDF5(const std::vector<Vec3> & vectorOfVec3, HighFive::File & file,
-                          const string & baseString, const HighFive::DataSetCreateProps & hdf5CreateProps) {
-    std::array<std::vector<double>, 3> result;
-    for (size_t i = 0; i < result.size(); i++) {
-        result[0].reserve(vectorOfVec3.size());
-        result[1].reserve(vectorOfVec3.size());
-        result[2].reserve(vectorOfVec3.size());
-    }
-
-    for (size_t vectorIndex = 0; vectorIndex < vectorOfVec3.size(); vectorIndex++) {
-        result[0].push_back(vectorOfVec3[vectorIndex].x);
-        result[1].push_back(vectorOfVec3[vectorIndex].y);
-        result[2].push_back(vectorOfVec3[vectorIndex].z);
-    }
-    HighFive::DataSet xDataset =
-        file.createDataSet("/data/" + baseString + " x", result[0], hdf5CreateProps);
-    HighFive::DataSet yDataset =
-        file.createDataSet("/data/" + baseString + " y", result[1], hdf5CreateProps);
-    HighFive::DataSet zDataset =
-        file.createDataSet("/data/" + baseString + " z", result[2], hdf5CreateProps);
-}
+                          const string & baseString, const HighFive::DataSetCreateProps & hdf5CreateProps);
 
 void mergeThreadResults(int numThreads, vector<RangeIndexEntry> &rowIndicesPerRound, const vector<vector<int64_t>> & tmpRoundIds,
                         const vector<vector<int64_t>> & tmpRoundStarts, const vector<vector<int64_t>> & tmpRoundSizes,
