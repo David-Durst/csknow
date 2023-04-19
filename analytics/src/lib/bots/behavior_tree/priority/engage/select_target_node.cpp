@@ -23,10 +23,18 @@ namespace engage {
             curPriority.priorityType = PriorityType::Engagement;
         }
 
+        if (blackboard.playerToTicksSinceLastProbTargetAssignment.find(curClient.csgoId) ==
+            blackboard.playerToTicksSinceLastProbTargetAssignment.end()) {
+            blackboard.playerToTicksSinceLastProbTargetAssignment[curClient.csgoId] = newTargetTicks;
+        }
+        blackboard.playerToTicksSinceLastProbTargetAssignment[curClient.csgoId]++;
+        bool timeForNewTarget =
+            blackboard.playerToTicksSinceLastProbTargetAssignment.at(curClient.csgoId) >= newTargetTicks;
         if (!blackboard.inAnalysis && useTargetModelProbabilities) {
             CSGOId targetId = assignPlayerToTargetProbabilistic(curClient, state, curTarget,
                                                                 rememberedEnemies, communicatedEnemies);
             if (targetId != INVALID_ID) {
+                blackboard.playerToTicksSinceLastProbTargetAssignment[curClient.csgoId] = 0;
                 curPriority.targetPos = curTarget.footPos;
                 playerNodeState[treeThinker.csgoId] = NodeState::Success;
             }
