@@ -18,10 +18,11 @@ namespace csknow::feature_store {
         TeamId teamId;
         AreaId curArea;
         int64_t curAreaIndex;
-        Vec3 curPos;
+        Vec3 curFootPos;
     };
 
     struct C4MapData {
+        Vec3 c4Pos;
         bool c4Planted;
         AreaId c4AreaId;
         int64_t c4AreaIndex;

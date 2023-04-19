@@ -86,6 +86,7 @@ namespace strategy {
             .get_id();
         int64_t c4AreaIndex = blackboard.navFile.m_area_ids_to_indices.at(c4AreaId);
         blackboard.featureStorePreCommitBuffer.c4MapData = {
+            state.getC4Pos(),
             state.c4IsPlanted,
             c4AreaId,
             c4AreaIndex

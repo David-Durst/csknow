@@ -14,6 +14,7 @@ namespace csknow::feature_store {
         tickId.resize(size, INVALID_ID);
         valid.resize(size, false);
         c4Status.resize(size, C4Status::NotPlanted);
+        c4Pos.resize(size, invalidWorldPos);
         c4DistanceToASite.resize(size, INVALID_ID);
         c4DistanceToBSite.resize(size, INVALID_ID);
         for (int j = 0; j < num_orders_per_site; j++) {
@@ -22,9 +23,11 @@ namespace csknow::feature_store {
         }
         for (int i = 0; i < maxEnemies; i++) {
             columnTData[i].playerId.resize(size, INVALID_ID);
+            columnTData[i].footPos.resize(size, invalidWorldPos);
             columnTData[i].distanceToASite.resize(size, 2 * maxWorldDistance);
             columnTData[i].distanceToBSite.resize(size, 2 * maxWorldDistance);
             columnCTData[i].playerId.resize(size, INVALID_ID);
+            columnCTData[i].footPos.resize(size, invalidWorldPos);
             columnCTData[i].distanceToASite.resize(size, 2 * maxWorldDistance);
             columnCTData[i].distanceToBSite.resize(size, 2 * maxWorldDistance);
             for (int j = 0; j < num_orders_per_site; j++) {
@@ -40,6 +43,18 @@ namespace csknow::feature_store {
                 columnCTData[i].distributionNearestBOrders15s[j].resize(size, INVALID_ID);
                 columnCTData[i].distributionNearestAOrders30s[j].resize(size, INVALID_ID);
                 columnCTData[i].distributionNearestBOrders30s[j].resize(size, INVALID_ID);
+            }
+            for (int j = 0; j < num_places; j++) {
+                columnTData[i].curPlace[j].resize(size, false);
+                columnTData[i].distributionNearestPlace10to15s[j].resize(size, INVALID_ID);
+                columnCTData[i].curPlace[j].resize(size, false);
+                columnCTData[i].distributionNearestPlace10to15s[j].resize(size, INVALID_ID);
+            }
+            for (int j = 0; j < area_grid_size; j++) {
+                columnTData[i].areaGridCellInPlace[j].resize(size, false);
+                columnTData[i].distributionNearestAreaGridInPlace10to15s[j].resize(size, INVALID_ID);
+                columnCTData[i].areaGridCellInPlace[j].resize(size, false);
+                columnCTData[i].distributionNearestAreaGridInPlace10to15s[j].resize(size, INVALID_ID);
             }
         }
         this->size = size;
@@ -69,6 +84,7 @@ namespace csknow::feature_store {
             tickId[rowIndex] = INVALID_ID;
             valid[rowIndex] = false;
             c4Status[rowIndex] = C4Status::NotPlanted;
+            c4Pos[rowIndex] = invalidWorldPos;
             c4DistanceToASite[rowIndex] = INVALID_ID;
             c4DistanceToBSite[rowIndex] = INVALID_ID;
             for (int j = 0; j < num_orders_per_site; j++) {
@@ -77,9 +93,11 @@ namespace csknow::feature_store {
             }
             for (int i = 0; i < maxEnemies; i++) {
                 columnTData[i].playerId[rowIndex] = INVALID_ID;
+                columnTData[i].footPos[rowIndex] = invalidWorldPos;
                 columnTData[i].distanceToASite[rowIndex] = 2 * maxWorldDistance;
                 columnTData[i].distanceToBSite[rowIndex] = 2 * maxWorldDistance;
                 columnCTData[i].playerId[rowIndex] = INVALID_ID;
+                columnCTData[i].footPos[rowIndex] = invalidWorldPos;
                 columnCTData[i].distanceToASite[rowIndex] = 2 * maxWorldDistance;
                 columnCTData[i].distanceToBSite[rowIndex] = 2 * maxWorldDistance;
                 for (int j = 0; j < num_orders_per_site; j++) {
@@ -96,8 +114,28 @@ namespace csknow::feature_store {
                     columnCTData[i].distributionNearestAOrders30s[j][rowIndex] = INVALID_ID;
                     columnCTData[i].distributionNearestBOrders30s[j][rowIndex] = INVALID_ID;
                 }
+                for (int j = 0; j < num_places; j++) {
+                    columnTData[i].curPlace[j][rowIndex] = false;
+                    columnTData[i].distributionNearestPlace10to15s[j][rowIndex] = INVALID_ID;
+                    columnCTData[i].curPlace[j][rowIndex] = false;
+                    columnCTData[i].distributionNearestPlace10to15s[j][rowIndex] = INVALID_ID;
+                }
+                for (int j = 0; j < area_grid_size; j++) {
+                    columnTData[i].areaGridCellInPlace[j][rowIndex] = false;
+                    columnTData[i].distributionNearestAreaGridInPlace10to15s[j][rowIndex] = INVALID_ID;
+                    columnCTData[i].areaGridCellInPlace[j][rowIndex] = false;
+                    columnCTData[i].distributionNearestAreaGridInPlace10to15s[j][rowIndex] = INVALID_ID;
+                }
             }
         }
+    }
+
+    size_t getAreaGridFlatIndex(Vec3 pos, AABB placeAABB) {
+        double xPct = std::max(0., std::min(1., (pos.x - placeAABB.min.x) / (placeAABB.max.x - placeAABB.min.x)));
+        double yPct = std::max(0., std::min(1., (pos.y - placeAABB.min.y) / (placeAABB.max.y - placeAABB.min.y)));
+        size_t xValue = static_cast<size_t>(xPct * area_grid_dim);
+        size_t yValue = static_cast<size_t>(yPct * area_grid_dim);
+        return xValue + yValue * area_grid_dim;
     }
 
     void TeamFeatureStoreResult::commitTeamRow(FeatureStorePreCommitBuffer & buffer,
@@ -157,6 +195,7 @@ namespace csknow::feature_store {
              */
 
             columnData[columnIndex].playerId[tickIndex] = btTeamPlayerData.playerId;
+            columnData[columnIndex].footPos[tickIndex] = btTeamPlayerData.curFootPos;
             columnData[columnIndex].distanceToASite[tickIndex] =
                 distanceToPlaces.getClosestDistance(btTeamPlayerData.curArea, a_site, navFile);
             columnData[columnIndex].distanceToBSite[tickIndex] =
@@ -176,6 +215,12 @@ namespace csknow::feature_store {
                                               distanceToPlaces.getClosestDistance(btTeamPlayerData.curAreaIndex, bOrders[j].places[k]));
                 }
             }
+            PlaceIndex curPlaceIndex = distanceToPlaces.areaToPlace[btTeamPlayerData.curAreaIndex];
+            string curPlaceString = distanceToPlaces.places[curPlaceIndex];
+            columnData[columnIndex].curPlace[tickIndex][curPlaceIndex] = true;
+            size_t areaGridIndex = getAreaGridFlatIndex(btTeamPlayerData.curFootPos,
+                                                        distanceToPlaces.placeToAABB.at(curPlaceString));
+            columnData[columnIndex].areaGridCellInPlace[tickIndex][areaGridIndex] = true;
         }
 
         /*

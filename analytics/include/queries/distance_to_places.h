@@ -19,6 +19,7 @@ public:
     vector<AreaId> areaIndexToId;
     map<string, PlaceIndex> placeNameToIndex;
     map<string, vector<AreaId>> placeToArea;
+    map<string, AABB> placeToAABB;
     vector<PlaceIndex> areaToPlace;
     vector<string> places;
     vector<double> closestDistanceMatrix;

@@ -14,8 +14,13 @@
 #include "circular_buffer.h"
 
 namespace csknow::feature_store {
+    constexpr double invalidWorldPosDim = 8000.;
+    const Vec3 invalidWorldPos = {invalidWorldPosDim, invalidWorldPosDim, invalidWorldPosDim};
     constexpr int maxEnemies = 5;
     constexpr int num_orders_per_site = 3;
+    constexpr int num_places = 27;
+    constexpr int area_grid_dim = 5;
+    constexpr int area_grid_size = area_grid_dim*area_grid_dim;
     const string a_site = "BombsiteA", b_site = "BombsiteB";
 
     enum class C4Status {
@@ -35,17 +40,23 @@ namespace csknow::feature_store {
         vector<bool> valid;
 
         vector<C4Status> c4Status;
+        vector<Vec3> c4Pos;
         vector<double> c4DistanceToASite, c4DistanceToBSite;
         array<vector<double>, num_orders_per_site> c4DistanceToNearestAOrderNavArea, c4DistanceToNearestBOrderNavArea;
 
         struct ColumnPlayerData {
             vector<int64_t> playerId;
             // inputs
+            vector<Vec3> footPos;
             vector<double> distanceToASite, distanceToBSite;
             array<vector<double>, num_orders_per_site> distanceToNearestAOrderNavArea, distanceToNearestBOrderNavArea;
+            array<vector<bool>, num_places> curPlace;
+            array<vector<bool>, area_grid_size> areaGridCellInPlace;
             // outputs
             array<vector<double>, num_orders_per_site> distributionNearestAOrders15s, distributionNearestBOrders15s;
             array<vector<double>, num_orders_per_site> distributionNearestAOrders30s, distributionNearestBOrders30s;
+            array<vector<double>, num_places> distributionNearestPlace10to15s;
+            array<vector<double>, area_grid_size> distributionNearestAreaGridInPlace10to15s;
         };
         array<ColumnPlayerData, maxEnemies> columnCTData, columnTData;
         vector<std::reference_wrapper<const array<ColumnPlayerData, maxEnemies>>> getAllColumnData() const {
