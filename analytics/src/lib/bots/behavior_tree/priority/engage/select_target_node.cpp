@@ -195,6 +195,7 @@ namespace engage {
         // default if probs don't sum perfectly is take last one as this will result from a
         // slight numerical instability mismatch
 
+        //bool foundValue = true;
         if (targetId != INVALID_ID) {
             const ServerState::Client & curTargetClient = state.getClient(targetId);
             if (state.isVisible(client.csgoId, targetId)) {
@@ -203,8 +204,8 @@ namespace engage {
             }
             else if (rememberedEnemies.find(targetId) != rememberedEnemies.end()) {
                 curTarget = {curTargetClient.csgoId, state.roundNumber, client.lastFrame,
-                             rememberedEnemies.find(curTarget.playerId)->second.lastSeenFootPos,
-                             rememberedEnemies.find(curTarget.playerId)->second.lastSeenEyePos,
+                             rememberedEnemies.find(targetId)->second.lastSeenFootPos,
+                             rememberedEnemies.find(targetId)->second.lastSeenEyePos,
                              false};
             }
             else if (communicatedEnemies.find(targetId) != communicatedEnemies.end()) {
@@ -214,10 +215,15 @@ namespace engage {
                 }
                  */
                 curTarget = {curTargetClient.csgoId, state.roundNumber, client.lastFrame,
-                    communicatedEnemies.find(curTarget.playerId)->second.lastSeenFootPos,
-                    communicatedEnemies.find(curTarget.playerId)->second.lastSeenEyePos,
+                    communicatedEnemies.find(targetId)->second.lastSeenFootPos,
+                    communicatedEnemies.find(targetId)->second.lastSeenEyePos,
                     false};
             }
+            /*
+            else {
+                foundValue = false;
+            }
+             */
         }
         else {
             // don't worry about this case
@@ -231,6 +237,23 @@ namespace engage {
             std::cout << std::endl;
              */
         }
+        /*
+        if (targetId != INVALID_ID &&
+            (std::abs(curTarget.footPos.z) > 5000 || std::abs(curTarget.eyePos.z) > 5000 ||
+             std::abs(curTarget.footPos.y) > 5000 || std::abs(curTarget.eyePos.y) > 5000 ||
+             std::abs(curTarget.footPos.x) > 5000 || std::abs(curTarget.eyePos.x) > 5000)) {
+            std::cout << "foundValue " << foundValue << std::endl;
+            bool isVisible = state.isVisible(client.csgoId, targetId);
+            bool isRemembered = rememberedEnemies.find(targetId) != rememberedEnemies.end();
+            bool isCommunicated = communicatedEnemies.find(targetId) != communicatedEnemies.end();
+            if (isCommunicated) {
+                std::cout << targetId << std::endl;
+                std::cout << communicatedEnemies.at(targetId).lastSeenEyePos.toCSV() << std::endl;
+                std::cout << communicatedEnemies.at(targetId).lastSeenFootPos.toCSV() << std::endl;
+            }
+            std::cout << isVisible << "," << isRemembered << "," << isCommunicated << std::endl;
+        }
+         */
         /*
         if (client.csgoId == 6) {
             std::cout << "cur id " << client.csgoId << " enemy id " << curTarget.playerId << std::endl;
