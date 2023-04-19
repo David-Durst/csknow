@@ -3,7 +3,6 @@
 //
 
 #include "bots/analysis/feature_store_team.h"
-#include "queries/lookback.h"
 #include "circular_buffer.h"
 #include "file_helpers.h"
 #include <atomic>
@@ -46,15 +45,15 @@ namespace csknow::feature_store {
             }
             for (int j = 0; j < num_places; j++) {
                 columnTData[i].curPlace[j].resize(size, false);
-                columnTData[i].distributionNearestPlace10to15s[j].resize(size, INVALID_ID);
+                columnTData[i].distributionNearestPlace7to15s[j].resize(size, INVALID_ID);
                 columnCTData[i].curPlace[j].resize(size, false);
-                columnCTData[i].distributionNearestPlace10to15s[j].resize(size, INVALID_ID);
+                columnCTData[i].distributionNearestPlace7to15s[j].resize(size, INVALID_ID);
             }
             for (int j = 0; j < area_grid_size; j++) {
                 columnTData[i].areaGridCellInPlace[j].resize(size, false);
-                columnTData[i].distributionNearestAreaGridInPlace10to15s[j].resize(size, INVALID_ID);
+                columnTData[i].distributionNearestAreaGridInPlace7to15s[j].resize(size, INVALID_ID);
                 columnCTData[i].areaGridCellInPlace[j].resize(size, false);
-                columnCTData[i].distributionNearestAreaGridInPlace10to15s[j].resize(size, INVALID_ID);
+                columnCTData[i].distributionNearestAreaGridInPlace7to15s[j].resize(size, INVALID_ID);
             }
         }
         this->size = size;
@@ -116,15 +115,15 @@ namespace csknow::feature_store {
                 }
                 for (int j = 0; j < num_places; j++) {
                     columnTData[i].curPlace[j][rowIndex] = false;
-                    columnTData[i].distributionNearestPlace10to15s[j][rowIndex] = INVALID_ID;
+                    columnTData[i].distributionNearestPlace7to15s[j][rowIndex] = INVALID_ID;
                     columnCTData[i].curPlace[j][rowIndex] = false;
-                    columnCTData[i].distributionNearestPlace10to15s[j][rowIndex] = INVALID_ID;
+                    columnCTData[i].distributionNearestPlace7to15s[j][rowIndex] = INVALID_ID;
                 }
                 for (int j = 0; j < area_grid_size; j++) {
                     columnTData[i].areaGridCellInPlace[j][rowIndex] = false;
-                    columnTData[i].distributionNearestAreaGridInPlace10to15s[j][rowIndex] = INVALID_ID;
+                    columnTData[i].distributionNearestAreaGridInPlace7to15s[j][rowIndex] = INVALID_ID;
                     columnCTData[i].areaGridCellInPlace[j][rowIndex] = false;
-                    columnCTData[i].distributionNearestAreaGridInPlace10to15s[j][rowIndex] = INVALID_ID;
+                    columnCTData[i].distributionNearestAreaGridInPlace7to15s[j][rowIndex] = INVALID_ID;
                 }
             }
         }
@@ -235,9 +234,9 @@ namespace csknow::feature_store {
          */
     }
 
-    void TeamFeatureStoreResult::computeTeamTickACausalLabels(int64_t curTick, CircularBuffer<int64_t> & futureTracker,
-                                                              array<ColumnPlayerData, maxEnemies> & columnData,
-                                                              bool future15s) {
+    void TeamFeatureStoreResult::computeOrderACausalLabels(int64_t curTick, CircularBuffer<int64_t> & futureTracker,
+                                                           array<ColumnPlayerData, maxEnemies> & columnData,
+                                                           bool future15s) {
         for (size_t playerColumn = 0; playerColumn < maxEnemies; playerColumn++) {
             if (columnData[playerColumn].playerId[curTick] == INVALID_ID) {
                 continue;
@@ -305,13 +304,65 @@ namespace csknow::feature_store {
             if (numPointsInDistribution != 0) {
                 for (size_t orderPerSite = 0; orderPerSite < num_orders_per_site; orderPerSite++) {
                     if (future15s) {
-                        columnData[playerColumn].distributionNearestAOrders15s[orderPerSite][curTick] /= numPointsInDistribution;
-                        columnData[playerColumn].distributionNearestBOrders15s[orderPerSite][curTick] /= numPointsInDistribution;
+                        columnData[playerColumn].distributionNearestAOrders15s[orderPerSite][curTick] /=
+                            static_cast<double>(numPointsInDistribution);
+                        columnData[playerColumn].distributionNearestBOrders15s[orderPerSite][curTick] /=
+                            static_cast<double>(numPointsInDistribution);
                     }
                     else {
-                        columnData[playerColumn].distributionNearestAOrders30s[orderPerSite][curTick] /= numPointsInDistribution;
-                        columnData[playerColumn].distributionNearestBOrders30s[orderPerSite][curTick] /= numPointsInDistribution;
+                        columnData[playerColumn].distributionNearestAOrders30s[orderPerSite][curTick] /=
+                            static_cast<double>(numPointsInDistribution);
+                        columnData[playerColumn].distributionNearestBOrders30s[orderPerSite][curTick] /=
+                            static_cast<double>(numPointsInDistribution);
                     }
+                }
+            }
+        }
+    }
+
+    void TeamFeatureStoreResult::computePlaceAreaACausalLabels(const Ticks & ticks, const TickRates & tickRates,
+                                                               int64_t curTick, CircularBuffer<int64_t> &futureTracker,
+                                                               array<ColumnPlayerData, maxEnemies> &columnData) {
+        for (size_t playerColumn = 0; playerColumn < maxEnemies; playerColumn++) {
+            if (columnData[playerColumn].playerId[curTick] == INVALID_ID) {
+                continue;
+            }
+            // clear out values for current tick
+            for (size_t placeIndex = 0; placeIndex < num_places; placeIndex++) {
+                columnData[playerColumn].distributionNearestPlace7to15s[placeIndex][curTick] = 0;
+            }
+            for (size_t areaGridIndex = 0; areaGridIndex < area_grid_size; areaGridIndex++) {
+                columnData[playerColumn].distributionNearestAreaGridInPlace7to15s[areaGridIndex][curTick] = 0;
+            }
+            // want all points where alive, and accounting for ties
+            size_t numPointsInDistribution = 0;
+            for (int64_t futureTickIndex = 0; futureTickIndex < futureTracker.getCurSize(); futureTickIndex++) {
+                int64_t futureTick = futureTracker.fromOldest(futureTickIndex);
+                bool in7to15sWindow = secondsBetweenTicks(ticks, tickRates, curTick, futureTick) >= 7.;
+                if (futureTick != curTick &&
+                    columnData[playerColumn].playerId[curTick] == columnData[playerColumn].playerId[futureTick] &&
+                    in7to15sWindow) {
+                    numPointsInDistribution++;
+                    for (size_t placeIndex = 0; placeIndex < num_places; placeIndex++) {
+                        if (columnData[playerColumn].curPlace[placeIndex][futureTick]) {
+                            columnData[playerColumn].distributionNearestPlace7to15s[placeIndex][curTick]++;
+                        }
+                    }
+                    for (size_t areaGridIndex = 0; areaGridIndex < area_grid_size; areaGridIndex++) {
+                        if (columnData[playerColumn].areaGridCellInPlace[areaGridIndex][futureTick]) {
+                            columnData[playerColumn].distributionNearestAreaGridInPlace7to15s[areaGridIndex][curTick]++;
+                        }
+                    }
+                }
+            }
+            if (numPointsInDistribution != 0) {
+                for (size_t placeIndex = 0; placeIndex < num_places; placeIndex++) {
+                    columnData[playerColumn].distributionNearestPlace7to15s[placeIndex][curTick] /=
+                        static_cast<double>(numPointsInDistribution);
+                }
+                for (size_t areaGridIndex = 0; areaGridIndex < area_grid_size; areaGridIndex++) {
+                    columnData[playerColumn].distributionNearestAreaGridInPlace7to15s[areaGridIndex][curTick] /=
+                        static_cast<double>(numPointsInDistribution);
                 }
             }
         }
@@ -335,10 +386,12 @@ namespace csknow::feature_store {
                     secondsBetweenTicks(ticks, tickRates, tickIndex, ticks30sFutureTracker.fromNewest()) >= 1.) {
                     ticks30sFutureTracker.enqueue(tickIndex);
                 }
-                computeTeamTickACausalLabels(tickIndex, ticks15sFutureTracker, columnCTData, true);
-                computeTeamTickACausalLabels(tickIndex, ticks30sFutureTracker, columnCTData, false);
-                computeTeamTickACausalLabels(tickIndex, ticks15sFutureTracker, columnTData, true);
-                computeTeamTickACausalLabels(tickIndex, ticks30sFutureTracker, columnTData, false);
+                computeOrderACausalLabels(tickIndex, ticks15sFutureTracker, columnCTData, true);
+                computeOrderACausalLabels(tickIndex, ticks30sFutureTracker, columnCTData, false);
+                computeOrderACausalLabels(tickIndex, ticks15sFutureTracker, columnTData, true);
+                computeOrderACausalLabels(tickIndex, ticks30sFutureTracker, columnTData, false);
+                computePlaceAreaACausalLabels(ticks, tickRates, tickIndex, ticks15sFutureTracker, columnCTData);
+                computePlaceAreaACausalLabels(ticks, tickRates, tickIndex, ticks15sFutureTracker, columnTData);
                 /*
                 if (tickIndex == 1195) {
                     std::cout << "cur tick " << tickIndex << " 30s tick " << ticks30sFutureTracker.fromOldest() << std::endl;
@@ -365,6 +418,7 @@ namespace csknow::feature_store {
         file.createDataSet("/data/tick id", tickId, hdf5FlatCreateProps);
         file.createDataSet("/data/valid", valid, hdf5FlatCreateProps);
         file.createDataSet("/data/c4 status", vectorOfEnumsToVectorOfInts(c4Status), hdf5FlatCreateProps);
+        saveVec3VectorToHDF5(c4Pos, file, "c4 pos", hdf5FlatCreateProps);
         file.createDataSet("/data/c4 distance to a site", c4DistanceToASite, hdf5FlatCreateProps);
         file.createDataSet("/data/c4 distance to b site", c4DistanceToBSite, hdf5FlatCreateProps);
         for (size_t orderIndex = 0; orderIndex < num_orders_per_site; orderIndex++) {
@@ -379,6 +433,8 @@ namespace csknow::feature_store {
                 string iStr = std::to_string(columnPlayer);
                 file.createDataSet("/data/player id " + columnTeam + " " + iStr,
                                    columnData[columnPlayer].playerId, hdf5FlatCreateProps);
+                saveVec3VectorToHDF5(columnData[columnPlayer].footPos, file,
+                                     "player pos " + columnTeam + " " + iStr, hdf5FlatCreateProps);
                 file.createDataSet("/data/distance to a site " + columnTeam + " " + iStr,
                                    columnData[columnPlayer].distanceToASite, hdf5FlatCreateProps);
                 file.createDataSet("/data/distance to b site " + columnTeam + " " + iStr,
@@ -397,6 +453,20 @@ namespace csknow::feature_store {
                                        columnData[columnPlayer].distributionNearestAOrders30s[orderIndex], hdf5FlatCreateProps);
                     file.createDataSet("/data/distribution nearest b order " + orderIndexStr + " 30s " + columnTeam + " " + iStr,
                                        columnData[columnPlayer].distributionNearestBOrders30s[orderIndex], hdf5FlatCreateProps);
+                }
+                for (size_t placeIndex = 0; placeIndex < num_places; placeIndex++) {
+                    string placeIndexStr = std::to_string(placeIndex);
+                    file.createDataSet("/data/cur place " + placeIndexStr + " " + columnTeam + " " + iStr,
+                                       columnData[columnPlayer].curPlace[placeIndex], hdf5FlatCreateProps);
+                    file.createDataSet("/data/distribution nearest place 7 to 15s " + placeIndexStr + " " + columnTeam + " " + iStr,
+                                       columnData[columnPlayer].distributionNearestPlace7to15s[placeIndex], hdf5FlatCreateProps);
+                }
+                for (size_t areaGridIndex = 0; areaGridIndex < area_grid_size; areaGridIndex++) {
+                    string areaGridIndexStr = std::to_string(areaGridIndex);
+                    file.createDataSet("/data/area grid cell in place " + areaGridIndexStr + " " + columnTeam + " " + iStr,
+                                       columnData[columnPlayer].areaGridCellInPlace[areaGridIndex], hdf5FlatCreateProps);
+                    file.createDataSet("/data/distribution nearest area grid in place 7 to 15s " + areaGridIndexStr + " " + columnTeam + " " + iStr,
+                                       columnData[columnPlayer].distributionNearestAreaGridInPlace7to15s[areaGridIndex], hdf5FlatCreateProps);
                 }
             }
         }
