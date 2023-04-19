@@ -146,6 +146,15 @@ public:
         return placeIndex < places.size();
     }
 
+    void writeAreasPerPlace(const string & path) const {
+        std::ofstream ofile(path);
+        ofile << "place name, num areas" << std::endl;
+        for (const auto & [placeName, areas] : placeToArea) {
+            ofile << placeName << "," << areas.size() << std::endl;
+        }
+        ofile.close();
+    }
+
     void load(const string & mapsPath, const string & mapName, const nav_mesh::nav_file & navFile,
               const ReachableResult & reachableResult);
 };

@@ -50,7 +50,7 @@ namespace csknow::latent_engagement {
                 }
 
                 for (int64_t patIndex = ticks.patPerTick[tickIndex].minId;
-                     patIndex <= ticks.patPerTick[tickIndex].maxId; tickIndex++) {
+                     patIndex <= ticks.patPerTick[tickIndex].maxId; patIndex++) {
                     int64_t playerId = playerAtTick.playerId[patIndex];
 
                     if (playersHurtingThisTickToEventIndex.find(playerId) != playersHurtingThisTickToEventIndex.end()) {
@@ -71,7 +71,7 @@ namespace csknow::latent_engagement {
             for (int64_t tickIndex = rounds.ticksPerRound[roundIndex].maxId;
                  tickIndex >= rounds.ticksPerRound[roundIndex].minId; tickIndex--) {
                 for (int64_t patIndex = ticks.patPerTick[tickIndex].minId;
-                     patIndex <= ticks.patPerTick[tickIndex].maxId; tickIndex++) {
+                     patIndex <= ticks.patPerTick[tickIndex].maxId; patIndex++) {
                     int64_t playerId = playerAtTick.playerId[patIndex];
 
                     if (nextHurtId[patIndex] != INVALID_ID) {

@@ -5,6 +5,7 @@
 #include "queries/inference_moments/inference_latent_engagement.h"
 #include "file_helpers.h"
 #include "indices/build_indexes.h"
+#include "bots/analysis/learned_models.h"
 
 namespace csknow::inference_latent_engagement {
 
@@ -64,7 +65,7 @@ namespace csknow::inference_latent_engagement {
         behaviorTreeLatentStates.featureStoreResult.checkInvalid();
         playerEngageProbs.resize(playerAtTick.size);
 #pragma omp parallel for
-        for (int64_t roundIndex = 0; roundIndex < rounds.size; roundIndex++) {
+        for (int64_t roundIndex = 0; roundIndex < (runAllRounds ? rounds.size : 1L); roundIndex++) {
             int threadNum = omp_get_thread_num();
             tmpRoundIds[threadNum].push_back(roundIndex);
             tmpRoundStarts[threadNum].push_back(static_cast<int64_t>(tmpStartTickId[threadNum].size()));
