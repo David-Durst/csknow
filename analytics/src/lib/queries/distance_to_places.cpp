@@ -28,7 +28,7 @@ void setupBasics(DistanceToPlacesResult & result, const nav_mesh::nav_file & nav
         result.placeToArea[navFile.get_place(area.m_place)].push_back(area.get_id());
         AABB & aabb = result.placeToAABB[navFile.get_place(area.m_place)];
         aabb.min = min(aabb.min, vec3tConv(area.get_min_corner()));
-        aabb.max = min(aabb.max, vec3tConv(area.get_max_corner()));
+        aabb.max = max(aabb.max, vec3tConv(area.get_max_corner()));
     }
     for (size_t i = 0; i < navFile.m_areas.size(); i++) {
         result.areaIndexToId.push_back(navFile.m_areas[i].get_id());

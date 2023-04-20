@@ -155,6 +155,7 @@ namespace csknow::feature_store {
         else {
             c4Status[tickIndex] = C4Status::NotPlanted;
         }
+        c4Pos[tickIndex] = buffer.c4MapData.c4Pos;
         c4DistanceToASite[tickIndex] =
             distanceToPlaces.getClosestDistance(buffer.c4MapData.c4AreaId, a_site, navFile);
         c4DistanceToBSite[tickIndex] =
