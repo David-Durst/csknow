@@ -40,7 +40,7 @@ namespace csknow::behavior_tree_latent_states {
         tmpStatePayload[threadNum].push_back(engagementStatePayload);
     }
 
-    void BehaviorTreeLatentStates::runQuery(const string & navPath, VisPoints visPoints,
+    void BehaviorTreeLatentStates::runQuery(const string & navPath, const VisPoints & visPoints,
                                             const MapMeshResult & mapMeshResult, const ReachableResult & reachability,
                                             const DistanceToPlacesResult & distanceToPlaces,
                                             const nearest_nav_cell::NearestNavCell & nearestNavCell,
@@ -66,8 +66,9 @@ namespace csknow::behavior_tree_latent_states {
         // TODO run inferences in BT rather than in later queries
         csknow::inference_manager::InferenceManager invalidInferenceManager;
 
-#pragma omp parallel for
-        for (int64_t roundIndex = 0; roundIndex < rounds.size; roundIndex++) {
+//#pragma omp parallel for
+        for (int64_t roundIndex = 15; roundIndex < rounds.size; roundIndex++) {
+            std::cout << "round index " << roundIndex << std::endl;
             int threadNum = omp_get_thread_num();
             tmpRoundIds[threadNum].push_back(roundIndex);
             tmpRoundStarts[threadNum].push_back(static_cast<int64_t>(tmpStartTickId[threadNum].size()));

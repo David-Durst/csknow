@@ -214,7 +214,7 @@ void addTreeThinkersToBlackboard(const ServerState & state, Blackboard * blackbo
     // insert tree thinkers and memories for new bots
     bool haveCTPusher = false;
     for (const auto & [playerId, thinker] : blackboard->playerToTreeThinkers) {
-        if (state.getClient(playerId).team == ENGINE_TEAM_CT && thinker.aggressiveType == AggressiveType::Push) {
+        if (state.getClientSlowSafe(playerId).team == ENGINE_TEAM_CT && thinker.aggressiveType == AggressiveType::Push) {
             haveCTPusher = true;
         }
     }

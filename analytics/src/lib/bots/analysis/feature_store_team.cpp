@@ -135,7 +135,13 @@ namespace csknow::feature_store {
         double xPct = std::max(0., std::min(1., (pos.x - placeAABB.min.x) / (placeAABB.max.x - placeAABB.min.x)));
         double yPct = std::max(0., std::min(1., (pos.y - placeAABB.min.y) / (placeAABB.max.y - placeAABB.min.y)));
         size_t xValue = static_cast<size_t>(xPct * area_grid_dim);
+        if (xValue == area_grid_dim) {
+            xValue--;
+        }
         size_t yValue = static_cast<size_t>(yPct * area_grid_dim);
+        if (yValue == area_grid_dim) {
+            yValue--;
+        }
         return xValue + yValue * area_grid_dim;
     }
 
@@ -222,6 +228,12 @@ namespace csknow::feature_store {
             columnData[columnIndex].curPlace[curPlaceIndex][tickIndex] = true;
             size_t areaGridIndex = getAreaGridFlatIndex(btTeamPlayerData.curFootPos,
                                                         distanceToPlaces.placeToAABB.at(curPlaceString));
+            if (columnData[columnIndex].areaGridCellInPlace.size() <= areaGridIndex) {
+                std::cout << "a " << areaGridIndex << std::endl;
+            }
+            else if (columnData[columnIndex].areaGridCellInPlace[areaGridIndex].size() <= tickIndex) {
+                std::cout << "b" << std::endl;
+            }
             columnData[columnIndex].areaGridCellInPlace[areaGridIndex][tickIndex] = true;
         }
 

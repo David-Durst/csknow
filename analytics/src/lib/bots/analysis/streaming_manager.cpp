@@ -83,6 +83,8 @@ void StreamingManager::update(const Games & games, const RoundPlantDefusal & rou
                               const VisPoints & visPoints, const TickRates & tickRates) {
     ServerState newState;
 
+    newState.loadedSuccessfully = true;
+
     int64_t roundIndex = ticks.roundId[tickIndex];
     int64_t gameIndex = rounds.gameId[roundIndex];
 
@@ -228,7 +230,7 @@ void StreamingManager::update(const Games & games, const RoundPlantDefusal & rou
         ticks.weaponFirePerTick.intervalToEvent.findOverlapping(tickIndex, tickIndex)) {
         ServerState::WeaponFire newWeaponFire {
             weaponFire.shooter[weaponFireIndex],
-            demoEquipmentTypeToString(hurt.weapon[weaponFireIndex])
+            demoEquipmentTypeToString(weaponFire.weapon[weaponFireIndex])
         };
 
         newState.weaponFireEvents.push_back(newWeaponFire);

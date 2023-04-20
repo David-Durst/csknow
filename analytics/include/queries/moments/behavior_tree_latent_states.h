@@ -95,7 +95,7 @@ namespace csknow::behavior_tree_latent_states {
             return {};
         }
 
-        void runQuery(const string & navPath, VisPoints visPoints,
+        void runQuery(const string & navPath, const VisPoints & visPoints,
                       const MapMeshResult & mapMeshResult, const ReachableResult & reachability,
                       const DistanceToPlacesResult & distanceToPlaces,
                       const nearest_nav_cell::NearestNavCell & nearestNavCell,
