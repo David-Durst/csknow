@@ -281,18 +281,22 @@ def train(train_type: TrainType, all_data_df: pd.DataFrame, num_epochs: int,
 
 latent_team_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / 'analytics' / 'csv_outputs' / 'behaviorTreeTeamFeatureStore.hdf5'
 
+new_latent_team_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / 'analytics' / 'csv_outputs' / '4_19_23_place_area_behaviorTreeTeamFeatureStore.hdf5'
+
 if __name__ == "__main__":
-    all_data_df = load_hdf5_to_pd(latent_hdf5_data_path)
-    all_data_df = all_data_df[all_data_df['valid'] == 1.]
+    #all_data_df = load_hdf5_to_pd(latent_hdf5_data_path)
+    #all_data_df = all_data_df[all_data_df['valid'] == 1.]
     team_data_df = load_hdf5_to_pd(latent_team_hdf5_data_path)
     team_data_df = team_data_df[team_data_df['valid'] == 1.]
+    new_team_data_df = load_hdf5_to_pd(new_latent_team_hdf5_data_path)
+    new_team_data_df = new_team_data_df[new_team_data_df['valid'] == 1.]
     #all_data_df = all_data_df.iloc[:500000]
     #all_data_df = load_hdf5_to_pd(latent_window_hdf5_data_path)
-    train_result = train(TrainType.Engagement, all_data_df, num_epochs=1, windowed=False)
-    train_result = train(TrainType.Aggression, all_data_df, num_epochs=1, windowed=False)
-    train_result = train(TrainType.Order, team_data_df, num_epochs=1, windowed=False)
-    train_result = train(TrainType.Place, team_data_df, num_epochs=1, windowed=False)
-    train_result = train(TrainType.Area, team_data_df, num_epochs=1, windowed=False)
+    #train_result = train(TrainType.Engagement, all_data_df, num_epochs=1, windowed=False)
+    #train_result = train(TrainType.Aggression, all_data_df, num_epochs=1, windowed=False)
+    train_result = train(TrainType.Order, new_team_data_df, num_epochs=1, windowed=False)
+    #train_result = train(TrainType.Place, team_data_df, num_epochs=1, windowed=False)
+    #train_result = train(TrainType.Area, team_data_df, num_epochs=1, windowed=False)
 
 # all_data_df[((all_data_df['pct nearest crosshair enemy 2s 0'] + all_data_df['pct nearest crosshair enemy 2s 1'] + all_data_df['pct nearest crosshair enemy 2s 2'] + all_data_df['pct nearest crosshair enemy 2s 3'] + all_data_df['pct nearest crosshair enemy 2s 4'] + all_data_df['pct nearest crosshair enemy 2s 5']) < 0.9) & (all_data_df['valid'] == 1)]
 # all_data_df[(all_data_df['pct nearest enemy change 2s decrease'] + all_data_df['pct nearest enemy change 2s constant'] + all_data_df['pct nearest enemy change 2s increase'] < 0.9) & (all_data_df['valid'] == 1)]
