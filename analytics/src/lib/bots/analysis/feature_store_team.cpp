@@ -214,12 +214,12 @@ namespace csknow::feature_store {
                                               distanceToPlaces.getClosestDistance(btTeamPlayerData.curAreaIndex, bOrders[j].places[k]));
                 }
             }
-            PlaceIndex curPlaceIndex = distanceToPlaces.areaToPlace[btTeamPlayerData.curAreaIndex];
-            string curPlaceString = distanceToPlaces.places[curPlaceIndex];
-            columnData[columnIndex].curPlace[tickIndex][curPlaceIndex] = true;
+            PlaceIndex curPlaceIndex = distanceToPlaces.getClosestValidPlace(btTeamPlayerData.curAreaIndex, navFile);
+            string curPlaceString = navFile.get_place(curPlaceIndex);
+            columnData[columnIndex].curPlace[curPlaceIndex][tickIndex] = true;
             size_t areaGridIndex = getAreaGridFlatIndex(btTeamPlayerData.curFootPos,
                                                         distanceToPlaces.placeToAABB.at(curPlaceString));
-            columnData[columnIndex].areaGridCellInPlace[tickIndex][areaGridIndex] = true;
+            columnData[columnIndex].areaGridCellInPlace[areaGridIndex][tickIndex] = true;
         }
 
         /*

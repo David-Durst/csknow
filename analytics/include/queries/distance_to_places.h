@@ -85,6 +85,27 @@ public:
     }
 
     [[nodiscard]]
+    PlaceIndex getClosestValidPlace(int64_t srcArea, const nav_mesh::nav_file & navFile) const {
+        PlaceIndex actualPlaceIndex = areaToPlace[srcArea];
+        string actualPlaceName = navFile.get_place(actualPlaceIndex);
+        if (actualPlaceName == "INVALID") {
+            double minDistance = std::numeric_limits<double>::max();
+            PlaceIndex closestPlaceIndex = std::numeric_limits<uint16_t>::max();
+            for (size_t i = 0; i < places.size(); i++) {
+                double curDistance = getClosestDistance(srcArea, i);
+                if (curDistance < minDistance) {
+                    closestPlaceIndex = i;
+                    minDistance = curDistance;
+                }
+            }
+            return closestPlaceIndex;
+        }
+        else {
+            return actualPlaceIndex;
+        }
+    }
+
+    [[nodiscard]]
     double getClosestDistance(string srcPlaceName, PlaceIndex dstPlace) const {
         double minDistance = std::numeric_limits<double>::max();
         for (const auto & srcAreaId : placeToArea.at(srcPlaceName)) {

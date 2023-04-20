@@ -290,7 +290,6 @@ int main(int argc, char * argv[]) {
     string dust2DistanceToPlacesName = "de_dust2_distance_to_places";
     DistanceToPlacesResult d2DistanceToPlacesResult = queryDistanceToPlaces(map_navs["de_dust2"], d2ReachableResult,
                                                                             dust2MeshName, navPath, "de_dust2");
-    d2DistanceToPlacesResult.load(navPath, "de_dust2", map_navs["de_dust2"], d2ReachableResult);
     string dust2AreaVisibleName = "de_dust2_area_visible";
     NavVisibleResult d2AreaVisibleResult(dust2MeshName, true, map_visPoints.find("de_dust2")->second, "de_dust2");
     string dust2CellVisibleName = "de_dust2_cell_visible";
