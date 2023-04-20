@@ -9,7 +9,6 @@ namespace csknow::latent_engagement {
                                                 const PlayerAtTick &playerAtTick,
                                                 const Hurt &hurt, const Kills &kills,
                                                 const csknow::behavior_tree_latent_states::BehaviorTreeLatentStates &behaviorTreeLatentStates) {
-        int numThreads = omp_get_max_threads();
         nextHurtId.resize(playerAtTick.size, INVALID_ID);
         nextHurtTickId.resize(playerAtTick.size, INVALID_ID);
         nextKillId.resize(playerAtTick.size, INVALID_ID);

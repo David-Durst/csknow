@@ -44,6 +44,8 @@
 #include "queries/inference_moments/inference_latent_aggression_distribution.h"
 #include "queries/inference_moments/inference_latent_order.h"
 #include "queries/inference_moments/inference_latent_order_distribution.h"
+#include "queries/inference_moments/inference_latent_place.h"
+#include "queries/inference_moments/inference_latent_place_distribution.h"
 #include "queries/training_moments/training_navigation.h"
 #include "queries/moments/trajectory_segments.h"
 #include "queries/moments/latent_extractors/latent_engagement.h"
@@ -364,6 +366,18 @@ int main(int argc, char * argv[]) {
         inferenceLatentOrderDistributionResult(playerAtTick, queryPlayerAtTick, ordersResult, d2MeshResult,
                                                inferenceLatentOrderResult);
     inferenceLatentOrderResult.perTickPosLabelsQuery = inferenceLatentOrderDistributionName;
+
+    string inferenceLatentPlaceName = "inferenceLatentPlace";
+    std::cout << "processing inference latent orders" << std::endl;
+    csknow::inference_latent_place::InferenceLatentPlaceResult inferenceLatentPlaceResult(d2DistanceToPlacesResult);
+    inferenceLatentPlaceResult.runQuery(modelsDir, filteredRounds, ticks, playerAtTick, behaviorTreeLatentEvents);
+    std::cout << "size: " << inferenceLatentPlaceResult.size << std::endl;
+
+    string inferenceLatentPlaceDistributionName = "inferenceLatentPlaceDistribution";
+    csknow::inference_latent_place::InferenceLatentPlaceDistributionResult
+            inferenceLatentPlaceDistributionResult(playerAtTick, queryPlayerAtTick, d2DistanceToPlacesResult,
+                                                   inferenceLatentPlaceResult);
+    inferenceLatentPlaceResult.perTickPosLabelsQuery = inferenceLatentPlaceDistributionName;
 
     string inferenceLatentEngagementName = "inferenceLatentEngagement";
     std::cout << "processing inference latent engagements" << std::endl;

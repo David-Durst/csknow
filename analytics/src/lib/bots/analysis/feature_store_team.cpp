@@ -228,12 +228,6 @@ namespace csknow::feature_store {
             columnData[columnIndex].curPlace[curPlaceIndex][tickIndex] = true;
             size_t areaGridIndex = getAreaGridFlatIndex(btTeamPlayerData.curFootPos,
                                                         distanceToPlaces.placeToAABB.at(curPlaceString));
-            if (columnData[columnIndex].areaGridCellInPlace.size() <= areaGridIndex) {
-                std::cout << "a " << areaGridIndex << std::endl;
-            }
-            else if (columnData[columnIndex].areaGridCellInPlace[areaGridIndex].size() <= tickIndex) {
-                std::cout << "b" << std::endl;
-            }
             columnData[columnIndex].areaGridCellInPlace[areaGridIndex][tickIndex] = true;
         }
 
