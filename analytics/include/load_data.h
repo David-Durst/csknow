@@ -503,6 +503,9 @@ public:
         free(viewPunchX);
         free(viewPunchY);
         free(recoilIndex);
+        free(nextPrimaryAttack);
+        free(nextSecondaryAttack);
+        free(gameTime);
         free(team);
         free(health);
         free(armor);

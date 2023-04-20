@@ -66,9 +66,8 @@ namespace csknow::behavior_tree_latent_states {
         // TODO run inferences in BT rather than in later queries
         csknow::inference_manager::InferenceManager invalidInferenceManager;
 
-//#pragma omp parallel for
-        for (int64_t roundIndex = 15; roundIndex < rounds.size; roundIndex++) {
-            std::cout << "round index " << roundIndex << " round number " << rounds.roundNumber[roundIndex] << std::endl;
+#pragma omp parallel for
+        for (int64_t roundIndex = 0; roundIndex < rounds.size; roundIndex++) {
             int threadNum = omp_get_thread_num();
             tmpRoundIds[threadNum].push_back(roundIndex);
             tmpRoundStarts[threadNum].push_back(static_cast<int64_t>(tmpStartTickId[threadNum].size()));
