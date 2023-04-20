@@ -60,7 +60,7 @@ RoundPlantDefusal processRoundPlantDefusals(const Rounds & rounds, const Ticks &
             for (const auto & [_0, _1, plantIndex] :
                 ticks.plantsPerTick.intervalToEvent.findOverlapping(tickIndex, tickIndex)) {
                 if (plants.succesful[plantIndex]) {
-                    result.plantTickIndex = plants.endTick[tickIndex];
+                    result.plantTickIndex = plants.endTick[plantIndex];
                 }
             }
         }
@@ -68,7 +68,7 @@ RoundPlantDefusal processRoundPlantDefusals(const Rounds & rounds, const Ticks &
             for (const auto &[_0, _1, defusalIndex]:
                 ticks.defusalsPerTick.intervalToEvent.findOverlapping(tickIndex, tickIndex)) {
                 if (defusals.succesful[defusalIndex]) {
-                    result.defusalTickIndex = defusals.endTick[tickIndex];
+                    result.defusalTickIndex = defusals.endTick[defusalIndex];
                 }
             }
         }
@@ -174,6 +174,10 @@ void StreamingManager::update(const Games & games, const RoundPlantDefusal & rou
         newClient.money = static_cast<int>(playerAtTick.money[patIndex]);
         newClient.ping = static_cast<int>(playerAtTick.ping[patIndex]);
         newClient.gameTime = static_cast<float>(playerAtTick.gameTime[patIndex]);
+        newClient.inputSet = true;
+        newClient.intendedToFire = false;
+        newClient.inputAngleAbsolute = false;
+        newClient.forceInput = false;
 
         newState.clients.push_back(newClient);
     }

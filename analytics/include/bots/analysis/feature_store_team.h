@@ -19,7 +19,7 @@ namespace csknow::feature_store {
     const Vec3 invalidWorldPos = {invalidWorldPosDim, invalidWorldPosDim, invalidWorldPosDim};
     constexpr int maxEnemies = 5;
     constexpr int num_orders_per_site = 3;
-    constexpr int num_places = 27;
+    constexpr int num_places = 26;
     constexpr int area_grid_dim = 5;
     constexpr int area_grid_size = area_grid_dim*area_grid_dim;
     const string a_site = "BombsiteA", b_site = "BombsiteB";
