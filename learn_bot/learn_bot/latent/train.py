@@ -22,6 +22,9 @@ from learn_bot.latent.mlp_nested_hidden_latent_model import MLPNestedHiddenLaten
 from learn_bot.latent.order.column_names import order_input_column_types, order_output_column_types, num_orders_per_site, \
     PlayerOrderColumns
 from learn_bot.latent.order.latent_to_distributions import get_order_probability
+from learn_bot.latent.place_area.column_names import place_area_input_column_types, place_output_column_types, \
+    num_places, area_grid_size, area_output_column_types
+from learn_bot.latent.place_area.latent_to_distributions import get_place_area_probability
 from learn_bot.latent.profiling import profile_latent_model
 from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd
 from learn_bot.libs.io_transforms import CUDA_DEVICE_STR
@@ -57,6 +60,8 @@ class TrainType(Enum):
     Engagement = 1
     Aggression = 2
     Order = 3
+    Place = 4
+    Area = 5
 
 
 def train(train_type: TrainType, all_data_df: pd.DataFrame, num_epochs: int,
@@ -92,18 +97,34 @@ def train(train_type: TrainType, all_data_df: pd.DataFrame, num_epochs: int,
         input_column_types = aggression_input_column_types
         output_column_types = aggression_output_column_types
         prob_func = get_aggression_probability
-    else:
+    elif train_type == TrainType.Order:
         column_transformers = IOColumnTransformers(order_input_column_types, order_output_column_types,
                                                    train_df)
         model = MLPNestedHiddenLatentModel(column_transformers, 2*max_enemies, 2*num_orders_per_site).to(device)
         input_column_types = order_input_column_types
         output_column_types = order_output_column_types
         prob_func = get_order_probability
+    elif train_type == TrainType.Place:
+        column_transformers = IOColumnTransformers(place_area_input_column_types, place_output_column_types,
+                                                   train_df)
+        model = MLPNestedHiddenLatentModel(column_transformers, 2*max_enemies, num_places).to(device)
+        input_column_types = place_area_input_column_types
+        output_column_types = place_output_column_types
+        prob_func = get_place_area_probability
+    elif train_type == TrainType.Area:
+        column_transformers = IOColumnTransformers(place_area_input_column_types, area_output_column_types,
+                                                   train_df)
+        model = MLPNestedHiddenLatentModel(column_transformers, 2 * max_enemies, area_grid_size).to(device)
+        input_column_types = place_area_input_column_types
+        output_column_types = area_output_column_types
+        prob_func = get_place_area_probability
+    else:
+        raise Exception("invalid train type")
 
     # plot data set with and without transformers
-    #plot_untransformed_and_transformed(plot_path, 'train and test labels', all_data_df,
-    #                                   input_column_types.float_standard_cols + output_column_types.categorical_distribution_cols_flattened,
-    #                                   input_column_types.categorical_cols + output_column_types.categorical_cols)
+    plot_untransformed_and_transformed(plot_path, 'train and test labels', all_data_df,
+                                       input_column_types.float_standard_cols + output_column_types.categorical_distribution_cols_flattened,
+                                       input_column_types.categorical_cols + output_column_types.categorical_cols)
     #model = MLPLatentModel(column_transformers).to(device)
     #model = LSTMLatentModel(column_transformers).to(device)
 
@@ -151,8 +172,12 @@ def train(train_type: TrainType, all_data_df: pd.DataFrame, num_epochs: int,
                         model_path = checkpoints_path / 'engagement_script_model.pt'
                     elif train_type == TrainType.Aggression:
                         model_path = checkpoints_path / 'aggression_script_model.pt'
-                    else:
+                    elif train_type == TrainType.Order:
                         model_path = checkpoints_path / 'order_script_model.pt'
+                    elif train_type == TrainType.Place:
+                        model_path = checkpoints_path / 'place_script_model.pt'
+                    elif train_type == TrainType.Area:
+                        model_path = checkpoints_path / 'area_script_model.pt'
                     profile_latent_model(model_path, batch_size, X)
 
                 # Compute prediction error
@@ -238,9 +263,17 @@ def train(train_type: TrainType, all_data_df: pd.DataFrame, num_epochs: int,
             script_model.save(checkpoints_path / 'aggression_script_model.pt')
             with open(checkpoints_path / 'aggression_test_round_ids.csv', 'w+') as f:
                 f.write(test_group_ids_str)
-        else:
+        elif train_type == TrainType.Order:
             script_model.save(checkpoints_path / 'order_script_model.pt')
             with open(checkpoints_path / 'order_test_round_ids.csv', 'w+') as f:
+                f.write(test_group_ids_str)
+        elif train_type == TrainType.Place:
+            script_model.save(checkpoints_path / 'place_script_model.pt')
+            with open(checkpoints_path / 'place_test_round_ids.csv', 'w+') as f:
+                f.write(test_group_ids_str)
+        elif train_type == TrainType.Area:
+            script_model.save(checkpoints_path / 'area_script_model.pt')
+            with open(checkpoints_path / 'area_test_round_ids.csv', 'w+') as f:
                 f.write(test_group_ids_str)
         model.to(device)
 
@@ -249,15 +282,17 @@ def train(train_type: TrainType, all_data_df: pd.DataFrame, num_epochs: int,
 latent_team_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / 'analytics' / 'csv_outputs' / 'behaviorTreeTeamFeatureStore.hdf5'
 
 if __name__ == "__main__":
-    all_data_df = load_hdf5_to_pd(latent_hdf5_data_path)
-    all_data_df = all_data_df[all_data_df['valid'] == 1.]
+    #all_data_df = load_hdf5_to_pd(latent_hdf5_data_path)
+    #all_data_df = all_data_df[all_data_df['valid'] == 1.]
     team_data_df = load_hdf5_to_pd(latent_team_hdf5_data_path)
     team_data_df = team_data_df[team_data_df['valid'] == 1.]
     #all_data_df = all_data_df.iloc[:500000]
     #all_data_df = load_hdf5_to_pd(latent_window_hdf5_data_path)
-    train_result = train(TrainType.Engagement, all_data_df, num_epochs=1, windowed=False)
-    train_result = train(TrainType.Aggression, all_data_df, num_epochs=1, windowed=False)
-    train_result = train(TrainType.Order, team_data_df, num_epochs=1, windowed=False)
+    #train_result = train(TrainType.Engagement, all_data_df, num_epochs=1, windowed=False)
+    #train_result = train(TrainType.Aggression, all_data_df, num_epochs=1, windowed=False)
+    #train_result = train(TrainType.Order, team_data_df, num_epochs=1, windowed=False)
+    train_result = train(TrainType.Place, team_data_df, num_epochs=1, windowed=False)
+    train_result = train(TrainType.Area, team_data_df, num_epochs=1, windowed=False)
 
 # all_data_df[((all_data_df['pct nearest crosshair enemy 2s 0'] + all_data_df['pct nearest crosshair enemy 2s 1'] + all_data_df['pct nearest crosshair enemy 2s 2'] + all_data_df['pct nearest crosshair enemy 2s 3'] + all_data_df['pct nearest crosshair enemy 2s 4'] + all_data_df['pct nearest crosshair enemy 2s 5']) < 0.9) & (all_data_df['valid'] == 1)]
 # all_data_df[(all_data_df['pct nearest enemy change 2s decrease'] + all_data_df['pct nearest enemy change 2s constant'] + all_data_df['pct nearest enemy change 2s increase'] < 0.9) & (all_data_df['valid'] == 1)]
