@@ -211,6 +211,7 @@ int main(int argc, char * argv[]) {
                                       nearestNavCellResult, ordersResult, players, games, filteredRounds, ticks,
                                       playerAtTick, weaponFire, hurt, plants, defusals, engagementResult);
     std::cout << "size: " << behaviorTreeLatentEvents.size << std::endl;
+    behaviorTreeLatentEvents.featureStoreResult.teamFeatureStoreResult.checkPossiblyBadValue();
 
     std::cout << "processing behavior tree feature store" << std::endl;
     behaviorTreeLatentEvents.featureStoreResult.computeAcausalLabels(games, filteredRounds, ticks, playerAtTick);

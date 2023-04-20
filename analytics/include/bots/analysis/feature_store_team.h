@@ -80,6 +80,9 @@ namespace csknow::feature_store {
         void computeAcausalLabels(const Games & games, const Rounds & rounds,
                                   const Ticks & ticks);
         void toHDF5Inner(HighFive::File & file) override;
+        void checkPossiblyBadValue() {
+            std::cout << "checking possibly bad value on init " << columnTData[4].distributionNearestAOrders15s[0][8240] << std::endl;
+        }
 
         vector<int64_t> filterByForeignKey(int64_t) override { return {}; }
         void oneLineToCSV(int64_t, std::ostream &) override { }

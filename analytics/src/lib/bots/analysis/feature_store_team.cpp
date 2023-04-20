@@ -6,6 +6,7 @@
 #include "circular_buffer.h"
 #include "file_helpers.h"
 #include <atomic>
+#include <cmath>
 
 namespace csknow::feature_store {
     void TeamFeatureStoreResult::init(size_t size) {
@@ -57,6 +58,7 @@ namespace csknow::feature_store {
             }
         }
         this->size = size;
+        checkPossiblyBadValue();
     }
 
     void TeamFeatureStoreResult::setOrders(const std::vector<csknow::orders::QueryOrder> &orders) {
@@ -239,6 +241,14 @@ namespace csknow::feature_store {
                                                            array<ColumnPlayerData, maxEnemies> & columnData,
                                                            bool future15s) {
         for (size_t playerColumn = 0; playerColumn < maxEnemies; playerColumn++) {
+            if (curTick == 8240 && playerColumn == 4) {
+                std::cout << "tick " << curTick << " player id " << columnData[playerColumn].playerId[curTick] << std::endl;
+                for (size_t orderPerSite = 0; orderPerSite < num_orders_per_site; orderPerSite++) {
+                    std::cout << "distribution nearest a orders 15s order " << orderPerSite << " " <<
+                              columnData[playerColumn].distributionNearestAOrders15s[orderPerSite][curTick]
+                              << std::endl;
+                }
+            }
             if (columnData[playerColumn].playerId[curTick] == INVALID_ID) {
                 continue;
             }
@@ -372,6 +382,11 @@ namespace csknow::feature_store {
     void TeamFeatureStoreResult::computeAcausalLabels(const Games & games, const Rounds & rounds,
                                                       const Ticks & ticks) {
         std::atomic<int64_t> roundsProcessed = 0;
+        for (size_t i = 0; i < columnTData[4].distributionNearestAOrders15s[0].size(); i++) {
+            if (std::isnan(columnTData[4].distributionNearestAOrders15s[0][i])) {
+                std::cout << i << " is nan with tick index " << std::endl;
+            }
+        }
 //#pragma omp parallel for
         for (int64_t roundIndex = 0; roundIndex < rounds.size; roundIndex++) {
             TickRates tickRates = computeTickRates(games, rounds, roundIndex);
