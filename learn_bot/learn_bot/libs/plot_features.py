@@ -3,6 +3,7 @@ from pathlib import Path
 
 import pandas as pd
 from matplotlib import pyplot as plt
+from tqdm import tqdm
 
 INCH_PER_FIG = 4
 
@@ -37,10 +38,12 @@ def plot_untransformed_and_transformed(plot_path: Path, title: str, df, float_co
     fig.suptitle(title + ' float untransformed')
     for i in range(num_float_rows):
         axs[i][0].set_ylabel('num points')
-    for i in range(len(float_cols)):
-        df_filtered = filter_df(df, float_cols[i])
-        df_filtered.hist(float_cols[i], ax=axs[i // num_float_cols][i % num_float_cols], bins=100)
-        #axs[0][i].set_xlabel(float_column_x_axes[i % len(float_column_x_axes)])
+
+    with tqdm(total=len(float_cols), disable=False) as pbar:
+        for i in range(len(float_cols)):
+            df.hist(float_cols[i], ax=axs[i // num_float_cols][i % num_float_cols], bins=100)
+            #axs[0][i].set_xlabel(float_column_x_axes[i % len(float_column_x_axes)])
+            pbar.update(1)
     plt.savefig(plot_path / (title + ' untransformed.png'))
 
     # transformed

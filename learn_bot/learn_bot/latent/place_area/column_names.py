@@ -12,8 +12,8 @@ c4_pos_cols = ["c4 pos x", "c4 pos y", "c4 pos z"]
 float_c4_cols = [c4_distance_to_a_site_col, c4_distance_to_b_site_col] + c4_pos_cols
 
 
-def get_player_pos_columns(player_index: int, team_str: str) -> str:
-    return "player pos " + team_str + " " + str(player_index)
+def get_player_pos_columns(player_index: int, team_str: str, dim_str: str) -> str:
+    return "player pos " + team_str + " " + str(player_index) + " " + dim_str
 
 
 def get_player_cur_place_columns(player_index: int, place_index: int, team_str: str) -> str:
@@ -46,7 +46,7 @@ class PlayerPlaceAreaColumns:
         self.player_id = player_id_column + " " + player_team_str(team_str, player_index)
         self.distance_to_a_site = "distance to a site " + player_team_str(team_str, player_index)
         self.distance_to_b_site = "distance to b site " + player_team_str(team_str, player_index)
-        self.pos = [get_player_pos_columns(player_index, team_str) + dim_str for dim_str in ["x", "y", "z"]]
+        self.pos = [get_player_pos_columns(player_index, team_str, dim_str) for dim_str in ["x", "y", "z"]]
         self.cur_place = []
         self.area_grid_cell_in_place = []
         self.distribution_nearest_place = []

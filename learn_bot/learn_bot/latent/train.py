@@ -292,7 +292,7 @@ if __name__ == "__main__":
     #train_result = train(TrainType.Aggression, all_data_df, num_epochs=1, windowed=False)
     #train_result = train(TrainType.Order, team_data_df, num_epochs=1, windowed=False)
     train_result = train(TrainType.Place, team_data_df, num_epochs=1, windowed=False)
-    train_result = train(TrainType.Area, team_data_df, num_epochs=1, windowed=False)
+    #train_result = train(TrainType.Area, team_data_df, num_epochs=1, windowed=False)
 
 # all_data_df[((all_data_df['pct nearest crosshair enemy 2s 0'] + all_data_df['pct nearest crosshair enemy 2s 1'] + all_data_df['pct nearest crosshair enemy 2s 2'] + all_data_df['pct nearest crosshair enemy 2s 3'] + all_data_df['pct nearest crosshair enemy 2s 4'] + all_data_df['pct nearest crosshair enemy 2s 5']) < 0.9) & (all_data_df['valid'] == 1)]
 # all_data_df[(all_data_df['pct nearest enemy change 2s decrease'] + all_data_df['pct nearest enemy change 2s constant'] + all_data_df['pct nearest enemy change 2s increase'] < 0.9) & (all_data_df['valid'] == 1)]
