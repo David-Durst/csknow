@@ -368,7 +368,7 @@ int main(int argc, char * argv[]) {
     inferenceLatentOrderResult.perTickPosLabelsQuery = inferenceLatentOrderDistributionName;
 
     string inferenceLatentPlaceName = "inferenceLatentPlace";
-    std::cout << "processing inference latent orders" << std::endl;
+    std::cout << "processing inference latent place" << std::endl;
     csknow::inference_latent_place::InferenceLatentPlaceResult inferenceLatentPlaceResult(d2DistanceToPlacesResult);
     inferenceLatentPlaceResult.runQuery(modelsDir, filteredRounds, ticks, playerAtTick, behaviorTreeLatentEvents);
     std::cout << "size: " << inferenceLatentPlaceResult.size << std::endl;
@@ -601,6 +601,7 @@ int main(int argc, char * argv[]) {
         {"hurt", queryHurt},
         {"kills", queryKills},
         {inferenceLatentOrderName, inferenceLatentOrderResult},
+        {inferenceLatentPlaceName, inferenceLatentPlaceResult},
         {latentEngagementName, latentEngagementResult},
         {inferenceLatentEngagementName, inferenceLatentEngagementResult},
         {inferenceLatentAggressionName, inferenceLatentAggressionResult},
