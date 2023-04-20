@@ -637,3 +637,14 @@ Vec3 ServerState::getC4Pos() const {
         return {INVALID_ID, INVALID_ID, INVALID_ID};
     }
 }
+
+const ServerState::Client & ServerState::getClientSlowSafe(CSGOId csgoId) const {
+    if (csgoId < 0 || csgoId >= static_cast<int>(csgoIdToCSKnowId.size())) {
+        std::cout << "bad csgoId" << std::endl;
+    }
+    int csknowId = csgoIdToCSKnowId[csgoId];
+    if (csknowId < 0 || csknowId >= static_cast<int>(clients.size())) {
+        std::cout << "bad csknowId" << std::endl;
+    }
+    return clients[csknowId];
+}

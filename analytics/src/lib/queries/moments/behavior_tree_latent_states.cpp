@@ -68,15 +68,17 @@ namespace csknow::behavior_tree_latent_states {
 
 //#pragma omp parallel for
         for (int64_t roundIndex = 15; roundIndex < rounds.size; roundIndex++) {
-            std::cout << "round index " << roundIndex << std::endl;
+            std::cout << "round index " << roundIndex << " round number " << rounds.roundNumber[roundIndex] << std::endl;
             int threadNum = omp_get_thread_num();
             tmpRoundIds[threadNum].push_back(roundIndex);
             tmpRoundStarts[threadNum].push_back(static_cast<int64_t>(tmpStartTickId[threadNum].size()));
-            Blackboard blackboard(navPath, invalidInferenceManager, visPoints, nearestNavCell, mapMeshResult,
-                                  reachability, distanceToPlaces, ordersResult, tmpPreCommitBuffer[threadNum]);
-            blackboard.inAnalysis = true;
-            GlobalQueryNode globalQueryNode(blackboard);
-            PlayerQueryNode playerQueryNode(blackboard);
+            std::unique_ptr<Blackboard> blackboard =
+                    make_unique<Blackboard>(navPath, invalidInferenceManager, visPoints, nearestNavCell,
+                                            mapMeshResult, reachability, distanceToPlaces,
+                                            ordersResult, tmpPreCommitBuffer[threadNum]);
+            blackboard->inAnalysis = true;
+            std::unique_ptr<GlobalQueryNode> globalQueryNode = make_unique<GlobalQueryNode>(*blackboard);
+            std::unique_ptr<PlayerQueryNode> playerQueryNode = make_unique<PlayerQueryNode>(*blackboard);
             RoundPlantDefusal roundPlantDefusal = processRoundPlantDefusals(rounds, ticks, plants, defusals, roundIndex);
 
             TickRates tickRates = computeTickRates(games, rounds, roundIndex);
@@ -84,17 +86,35 @@ namespace csknow::behavior_tree_latent_states {
             TemporaryStateData activeOrderState;
             map<CSGOId, TemporaryStateData> activeEngagementState;
 
+            set<int64_t> curPlayers;
             for (int64_t tickIndex = rounds.ticksPerRound[roundIndex].minId;
                  tickIndex <= rounds.ticksPerRound[roundIndex].maxId; tickIndex++) {
-                blackboard.streamingManager.update(games, roundPlantDefusal, rounds, players, ticks, weaponFire, hurt,
-                                                   playerAtTick, tickIndex, nearestNavCell, visPoints, tickRates);
-                const ServerState & curState = blackboard.streamingManager.db.batchData.fromNewest();
-                addTreeThinkersToBlackboard(curState, &blackboard);
+
+                // reset blackboard if new player joins
+                set<int64_t> newPlayers;
+                for (int64_t patIndex = ticks.patPerTick[tickIndex].minId;
+                     patIndex <= ticks.patPerTick[tickIndex].maxId; patIndex++) {
+                    newPlayers.insert(playerAtTick.playerId[patIndex]);
+                }
+                if (newPlayers != curPlayers) {
+                    curPlayers = newPlayers;
+                    blackboard = make_unique<Blackboard>(navPath, invalidInferenceManager, visPoints, nearestNavCell,
+                                                         mapMeshResult, reachability, distanceToPlaces,
+                                                         ordersResult, tmpPreCommitBuffer[threadNum]);
+                    blackboard->inAnalysis = true;
+                    globalQueryNode = make_unique<GlobalQueryNode>(*blackboard);
+                    playerQueryNode = make_unique<PlayerQueryNode>(*blackboard);
+                }
+
+                blackboard->streamingManager.update(games, roundPlantDefusal, rounds, players, ticks, weaponFire, hurt,
+                                                    playerAtTick, tickIndex, nearestNavCell, visPoints, tickRates);
+                const ServerState & curState = blackboard->streamingManager.db.batchData.fromNewest();
+                addTreeThinkersToBlackboard(curState, blackboard.get());
                 tmpPreCommitBuffer[threadNum].updateFeatureStoreBufferPlayers(curState);
-                globalQueryNode.exec(curState, defaultThinker);
+                globalQueryNode->exec(curState, defaultThinker);
 
                 featureStoreResult.teamFeatureStoreResult.commitTeamRow(tmpPreCommitBuffer[threadNum],
-                                                                        blackboard.distanceToPlaces, blackboard.navFile,
+                                                                        blackboard->distanceToPlaces, blackboard->navFile,
                                                                         roundIndex, tickIndex);
 
                 /*
@@ -135,7 +155,7 @@ namespace csknow::behavior_tree_latent_states {
                 // in real data
                 if (curState.c4IsPlanted) {
                     // this forces state transition on first plant frame (as INVALID_ID until plant)
-                    if (blackboard.newOrderThisFrame || activeOrderState.startTickId == INVALID_ID) {
+                    if (blackboard->newOrderThisFrame || activeOrderState.startTickId == INVALID_ID) {
                         if (activeOrderState.startTickId != INVALID_ID) {
                             finishEvent(tmpStartTickId, tmpEndTickId, tmpLength,
                                         tmpLatentStateType, tmpStatePayload,
@@ -151,7 +171,7 @@ namespace csknow::behavior_tree_latent_states {
                     patIndex <= ticks.patPerTick[tickIndex].maxId; patIndex++) {
                     CSGOId curPlayerId = playerAtTick.playerId[patIndex];
                     if (playerAtTick.isAlive[patIndex]) {
-                        playerQueryNode.exec(curState, blackboard.playerToTreeThinkers[curPlayerId]);
+                        playerQueryNode->exec(curState, blackboard->playerToTreeThinkers[curPlayerId]);
 
                         if (firingPlayers.find(curPlayerId) != firingPlayers.end()) {
                             featureStoreResult.fireCurTick[patIndex] = true;
@@ -159,7 +179,7 @@ namespace csknow::behavior_tree_latent_states {
 
                         bool prevActiveEngagement =
                             activeEngagementState.find(curPlayerId) != activeEngagementState.end();
-                        int64_t curTarget = blackboard.playerToPriority[curPlayerId].targetPlayer.playerId;
+                        int64_t curTarget = blackboard->playerToPriority[curPlayerId].targetPlayer.playerId;
                         CSGOId prevTarget = INVALID_ID;
                         if (prevActiveEngagement) {
                             prevTarget =
