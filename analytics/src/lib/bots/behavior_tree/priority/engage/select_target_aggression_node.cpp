@@ -14,6 +14,13 @@ namespace engage {
         TargetPlayer & curTarget = curPriority.targetPlayer;
         curPriority.targetPos = curTarget.footPos;
 
+        if (blackboard.playerToTicksSinceLastProbAggressionAssignment.find(treeThinker.csgoId) ==
+            blackboard.playerToTicksSinceLastProbAggressionAssignment.end()) {
+            blackboard.playerToTicksSinceLastProbAggressionAssignment[treeThinker.csgoId] = newAggressionTicks;
+        }
+        blackboard.playerToTicksSinceLastProbAggressionAssignment[curClient.csgoId]++;
+        bool timeForNewTarget =
+                blackboard.playerToTicksSinceLastProbTargetAssignment.at(curClient.csgoId) >= newTargetTicks;
         if (!blackboard.inAnalysis && !blackboard.inTest && useAggressionModelProbabilities &&
             blackboard.inferenceManager.playerToInferenceData.find(treeThinker.csgoId) !=
             blackboard.inferenceManager.playerToInferenceData.end() &&
@@ -46,7 +53,12 @@ namespace engage {
                 curPriority.targetPos = curPriority.targetPlayer.footPos;
             }
             else if (aggressionOption == static_cast<size_t>(csknow::feature_store::NearestEnemyState::Constant)) {
-                curPriority.moveOptions = {false, false, false};
+                if (curTarget.visible) {
+                    curPriority.moveOptions = {false, false, false};
+                }
+                else {
+                    curPriority.moveOptions = {true, false, false};
+                }
             }
             else {
                 // move to nearest area not visible to enemy

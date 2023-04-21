@@ -32,6 +32,7 @@ using std::make_unique;
 
 constexpr size_t newOrderTicks = 128 * 6;
 constexpr size_t newTargetTicks = 128 * 0.5;
+constexpr size_t newAggressionTicks = 128 * 0.5;
 
 enum class AggressiveType {
     Push,
@@ -97,6 +98,8 @@ struct Blackboard {
     size_t ticksSinceLastProbOrderAssignment = newOrderTicks;
     map<CSGOId, size_t> playerToTicksSinceLastProbTargetAssignment;
     map<CSGOId, CSGOId> playerToLastProbTargetAssignment;
+    map<CSGOId, size_t> playerToTicksSinceLastProbAggressionAssignment;
+    map<CSGOId, CSGOId> playerToLastProbAggressionAssignment;
 
     // helpers
     std::random_device rd;
