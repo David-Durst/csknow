@@ -13,7 +13,11 @@ namespace csknow::inference_manager {
         aggressionModelPath(fs::path(modelsDir) / fs::path("latent_model") /
                             fs::path("aggression_script_model.pt")),
         orderModelPath(fs::path(modelsDir) / fs::path("latent_model") /
-                       fs::path("order_script_model.pt")) {
+                       fs::path("order_script_model.pt")),
+        placeModelPath(fs::path(modelsDir) / fs::path("latent_model") /
+                       fs::path("place_script_model.pt")),
+        areaModelPath(fs::path(modelsDir) / fs::path("latent_model") /
+                       fs::path("area_script_model.pt")) {
         at::set_num_threads(1);
         at::set_num_interop_threads(1);
         torch::jit::getProfilingMode() = false;
@@ -23,6 +27,10 @@ namespace csknow::inference_manager {
         aggressionModule = torch::jit::optimize_for_inference(tmpAggressionModule);
         auto tmpOrderModule = torch::jit::load(orderModelPath);
         orderModule = torch::jit::optimize_for_inference(tmpOrderModule);
+        auto tmpPlaceModule = torch::jit::load(placeModelPath);
+        placeModule = torch::jit::optimize_for_inference(tmpPlaceModule);
+        auto tmpAreaModule = torch::jit::load(areaModelPath);
+        areaModule = torch::jit::optimize_for_inference(tmpAreaModule);
     }
 
     void InferenceManager::setCurClients(const vector<ServerState::Client> & clients) {
@@ -132,6 +140,38 @@ namespace csknow::inference_manager {
         }
     }
 
+    void InferenceManager::runPlaceInference() {
+        std::vector<torch::jit::IValue> inputs;
+        torch::Tensor rowPT = torch::from_blob(placeValues.rowCPP.data(),
+                                               {1, static_cast<long>(placeValues.rowCPP.size())},
+                                               options);
+
+        inputs.push_back(rowPT);
+
+        at::Tensor output = placeModule.forward(inputs).toTuple()->elements()[0].toTensor();
+
+        for (auto & [csgoId, _] : playerToInferenceData) {
+            playerToInferenceData[csgoId].placeProbabilities =
+                    extractFeatureStorePlaceResults(output, placeValues, csgoId);
+        }
+    }
+
+    void InferenceManager::runAreaInference() {
+        std::vector<torch::jit::IValue> inputs;
+        torch::Tensor rowPT = torch::from_blob(areaValues.rowCPP.data(),
+                                               {1, static_cast<long>(areaValues.rowCPP.size())},
+                                               options);
+
+        inputs.push_back(rowPT);
+
+        at::Tensor output = areaModule.forward(inputs).toTuple()->elements()[0].toTensor();
+
+        for (auto & [csgoId, _] : playerToInferenceData) {
+            playerToInferenceData[csgoId].areaProbabilities =
+                    extractFeatureStoreAreaResults(output, areaValues, csgoId);
+        }
+    }
+
     void InferenceManager::runInferences() {
         if (!valid) {
             inferenceSeconds = 0;
@@ -171,6 +211,8 @@ namespace csknow::inference_manager {
         runEngagementInference(clients);
         runAggressionInference(clients);
         runOrderInference();
+        runPlaceInference();
+        runAreaInference();
         auto end = std::chrono::system_clock::now();
         std::chrono::duration<double> inferenceTime = end - start;
         inferenceSeconds = inferenceTime.count();

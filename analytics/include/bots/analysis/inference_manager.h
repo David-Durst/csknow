@@ -36,6 +36,8 @@ namespace csknow::inference_manager {
         void runEngagementInference(const vector<CSGOId> & clientsToInfer);
         void runAggressionInference(const vector<CSGOId> & clientsToInfer);
         void runOrderInference();
+        void runPlaceInference();
+        void runAreaInference();
     public:
         bool valid;
         double inferenceSeconds;
@@ -45,8 +47,8 @@ namespace csknow::inference_manager {
         csknow::inference_latent_place::InferencePlaceTickValues placeValues;
         csknow::inference_latent_area::InferenceAreaTickValues areaValues;
 
-        fs::path engagementModelPath, aggressionModelPath, orderModelPath;
-        torch::jit::script::Module engagementModule, aggressionModule, orderModule;
+        fs::path engagementModelPath, aggressionModelPath, orderModelPath, placeModelPath, areaModelPath;
+        torch::jit::script::Module engagementModule, aggressionModule, orderModule, placeModule, areaModule;
         InferenceManager(const std::string & modelsDir);
         InferenceManager() : valid(false) { };
 
