@@ -4,11 +4,12 @@ import {
     PlayerAtTickRow,
     playerAtTickTableName, PlayerRow,
     Row,
-    TickRow, Vec3,
+    TickRow, unPackVec3ListStr, Vec3,
 } from "../data/tables";
 import IntervalTree from "@flatten-js/interval-tree";
 import {gameData, INVALID_ID} from "../data/data";
 import {drawTick} from "../drawing/drawing";
+import {start} from "repl";
 
 let eventSelector: HTMLSelectElement = null
 let eventDiv: HTMLDivElement = null
@@ -169,6 +170,7 @@ export function getPosTextPositions(tickData: TickRow, gameData: GameData): Arra
         const posLabelsParser = gameData.parsers.get(parser.perTickPosLabelsQuery)
         const sourcePlayerId = playersToLabel[0]
         let sourcePATId = INVALID_ID
+        const labelData = gameData.tables.get(parser.perTickPosLabelsQuery)
         for (let i = gameData.ticksToPlayerAtTick.get(tickData.id).minId;
              i <= gameData.ticksToPlayerAtTick.get(tickData.id).maxId; i++) {
             if (gameData.playerAtTicksTable[i].playerId == sourcePlayerId) {
@@ -177,10 +179,29 @@ export function getPosTextPositions(tickData: TickRow, gameData: GameData): Arra
             }
         }
         if (sourcePATId != INVALID_ID) {
-            const labelData = gameData.tables.get(parser.perTickPosLabelsQuery)
             const posProbs = labelData[sourcePATId].otherColumnValues[0].split(";")
-            for (let i = 0; i < posLabelsParser.posLabelPositions.length; i++) {
-                result.push(new PosTextPosition(posLabelsParser.posLabelPositions[i], posProbs[i]))
+            if (parser.havePerTickPos) {
+                const aabbStr = labelData[sourcePATId].otherColumnValues[posLabelsParser.perTickPosAABBColumn]
+                const aabb = unPackVec3ListStr(aabbStr)
+                const labelsPerRow = Math.ceil(Math.sqrt(posProbs.length))
+                const startVec3 = aabb[0]
+                const endVec3 = aabb[0]
+                const deltaX = (endVec3.posX - startVec3.posX) / labelsPerRow
+                const deltaY = (endVec3.posY - startVec3.posY) / labelsPerRow
+                const avgZ = (endVec3.posZ + startVec3.posZ) / 2
+                for (let i = 0; i < posLabelsParser.posLabelPositions.length; i++) {
+                    const xVal = i % labelsPerRow
+                    const yVal = Math.floor(i / labelsPerRow)
+                    result.push(new PosTextPosition(new Vec3(
+                        startVec3.posX + deltaX * xVal,
+                        startVec3.posY + deltaY * yVal,
+                        avgZ), posProbs[i]))
+                }
+            }
+            else {
+                for (let i = 0; i < posLabelsParser.posLabelPositions.length; i++) {
+                    result.push(new PosTextPosition(posLabelsParser.posLabelPositions[i], posProbs[i]))
+                }
             }
         }
     }

@@ -220,6 +220,14 @@ export class Vec3 {
     posZ: number;
 }
 
+export function unPackVec3ListStr(vec3ListStr: string): Vec3[] {
+        return vec3ListStr.split(";")
+            .map((vec3Str) => {
+                const vec3StrSplit = vec3Str.split("_")
+                return new Vec3(parseFloat(vec3StrSplit[0]), parseFloat(vec3StrSplit[1]), parseFloat(vec3StrSplit[2]));
+            })
+}
+
 export class Parser {
     tempLineContainer: string = "";
     tableName: string
@@ -265,10 +273,10 @@ export class Parser {
                 foreignKeyNames: string[], otherColumnNames: string[],
                 ticksPerEvent: string, parserType: ParserType, baseUrl: string,
                 keyPlayerColumns: string, nonTemporal: string, overlay: string, overlayLabelsQuery: string,
-                havePlayerLabels: string, playersToLabelColumn: string,
-                playerLabelIndicesColumn: string, playerLabels: string, perTickPlayerLabels: string,
-                perTickPosAABBColumn: string, havePerTickPos: string, perTickPlayerLabelsQuery: string,
-                posLabelPositions: string, perTickPosLabels: string, perTickPosLabelsQuery: string,
+                havePlayerLabels: string, playersToLabelColumn: string, playerLabelIndicesColumn: string,
+                playerLabels: string, perTickPlayerLabels: string, perTickPlayerLabelsQuery: string,
+                posLabelPositions: string, perTickPosLabels: string,
+                perTickPosAABBColumn: string, havePerTickPos: string, perTickPosLabelsQuery: string,
                 havePerTickAimTable: string, perTickAimTable: string,
                 havePerTickAimPredictionTable: string, perTickAimPredictionTable: string,
                 eventIdColumn: string, haveBlob: string, blobFileName: string, blobBytesPerRow: string,
@@ -306,11 +314,7 @@ export class Parser {
         this.perTickPosAABBColumn = parseInt(perTickPosAABBColumn)
         this.havePerTickPos = parseBool(havePerTickPos)
         this.perTickPlayerLabelsQuery = perTickPlayerLabelsQuery
-        this.posLabelPositions = posLabelPositions.split(";")
-            .map((vec3Str) => {
-                const vec3StrSplit = vec3Str.split("_")
-                return new Vec3(parseFloat(vec3StrSplit[0]), parseFloat(vec3StrSplit[1]), parseFloat(vec3StrSplit[2]));
-            })
+        this.posLabelPositions = unPackVec3ListStr(posLabelPositions)
         this.perTickPosLabels = parseBool(perTickPosLabels)
         this.perTickPosLabelsQuery = perTickPosLabelsQuery
         this.havePerTickAimTable = parseBool(havePerTickAimTable)
