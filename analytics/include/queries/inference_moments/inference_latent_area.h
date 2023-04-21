@@ -11,7 +11,7 @@
 #include "enum_helpers.h"
 #include "bots/analysis/feature_store.h"
 #include "queries/moments/behavior_tree_latent_states.h"
-#include "queries/inference_moments/inference_latent_place_helpers.h"
+#include "queries/inference_moments/inference_latent_area_helpers.h"
 
 namespace csknow::inference_latent_area {
 
@@ -25,8 +25,6 @@ namespace csknow::inference_latent_area {
         vector<size_t> areaGridIndex;
         vector<array<float, csknow::feature_store::num_places>> playerAreaProb;
         IntervalIndex areasPerTick;
-
-        void setLabelPositions();
 
         InferenceLatentAreaResult() {
             variableLength = true;

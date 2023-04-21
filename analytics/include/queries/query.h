@@ -76,8 +76,8 @@ public:
     string perTickPlayerLabelsQuery = "";
     vector<string> posLabelsPositions;
     bool perTickPosLabels = false;
-    int perTickPosOffsetsColumn = 0;
-    bool havePerTickPosOffsets = false;
+    int perTickPosAABBColumn = 0;
+    bool havePerTickPos = false;
     string perTickPosLabelsQuery = "";
     bool havePerTickAimTable = false;
     string perTickAimTable;

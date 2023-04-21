@@ -6,6 +6,7 @@
 #define CSKNOW_INFERENCE_LATENT_AREA_DISTRIBUTION_H
 
 #include "queries/inference_moments/inference_latent_area.h"
+#include "queries/inference_moments/inference_latent_place.h"
 #include "queries/base_tables.h"
 
 namespace csknow::inference_latent_area {
@@ -15,28 +16,25 @@ namespace csknow::inference_latent_area {
         QueryPlayerAtTick & queryPlayerAtTick;
         const DistanceToPlacesResult & distanceToPlacesResult;
         const InferenceLatentAreaResult & inferenceLatentAreaResult;
-        array<Vec3, csknow::feature_store::area_grid_size> areaLabelPositions;
-
-        void setLabelPositions();
+        const csknow::inference_latent_place::InferenceLatentPlaceResult & inferenceLatentPlaceResult;
 
         explicit InferenceLatentAreaDistributionResult(const PlayerAtTick & playerAtTick,
                                                         QueryPlayerAtTick & queryPlayerAtTick,
                                                         const DistanceToPlacesResult & distanceToPlacesResult,
-                                                        const InferenceLatentAreaResult & inferenceLatentAreaResult) :
+                                                        const InferenceLatentAreaResult & inferenceLatentAreaResult,
+                                                        const csknow::inference_latent_place::InferenceLatentPlaceResult &
+                                                            inferenceLatentPlaceResult) :
                 playerAtTick(playerAtTick),
                 queryPlayerAtTick(queryPlayerAtTick),
                 distanceToPlacesResult(distanceToPlacesResult),
-                inferenceLatentAreaResult(inferenceLatentAreaResult) {
-            setLabelPositions();
+                inferenceLatentAreaResult(inferenceLatentAreaResult),
+                inferenceLatentPlaceResult(inferenceLatentPlaceResult) {
             variableLength = false;
             startTickColumn = 0;
             ticksPerEvent = 1;
             perTickPosLabels = true;
-            for (size_t i = 0; i < areaLabelPositions.size(); i++) {
-                posLabelsPositions.push_back(areaLabelPositions[i].toCSV("_"));
-            }
-            havePerTickPosOffsets = true;
-            perTickPosOffsetsColumn = 1
+            havePerTickPos = true;
+            perTickPosAABBColumn = 1;
         };
 
         vector<int64_t> filterByForeignKey(int64_t otherTableIndex) override {
@@ -55,6 +53,9 @@ namespace csknow::inference_latent_area {
                 s << prob;
                 first = false;
             }
+            const string & place = distanceToPlacesResult.places[inferenceLatentPlaceResult.placeIndex[index]];
+            const AABB & placeAABB = distanceToPlacesResult.placeToAABB.at(place);
+            s << "," << placeAABB.min.toCSV("_") << ";" << placeAABB.max.toCSV("_");
             s << std::endl;
         }
 
@@ -65,7 +66,7 @@ namespace csknow::inference_latent_area {
 
         [[nodiscard]]
         vector<string> getOtherColumnNames() override {
-            return {"area prob", "place offset"};
+            return {"area prob", "place aabb"};
         }
     };
 }

@@ -57,6 +57,7 @@
 #include "queries/nav_mesh.h"
 #include "queries/reachable.h"
 #include "queries/orders.h"
+#include "queries/inference_moments/inference_latent_area_distribution.h"
 #include <filesystem>
 namespace fs = std::filesystem;
 
@@ -379,6 +380,18 @@ int main(int argc, char * argv[]) {
                                                    inferenceLatentPlaceResult);
     inferenceLatentPlaceResult.perTickPosLabelsQuery = inferenceLatentPlaceDistributionName;
 
+    string inferenceLatentAreaName = "inferenceLatentArea";
+    std::cout << "processing inference latent area" << std::endl;
+    csknow::inference_latent_area::InferenceLatentAreaResult inferenceLatentAreaResult;
+    inferenceLatentAreaResult.runQuery(modelsDir, filteredRounds, ticks, playerAtTick, behaviorTreeLatentEvents);
+    std::cout << "size: " << inferenceLatentAreaResult.size << std::endl;
+
+    string inferenceLatentAreaDistributionName = "inferenceLatentAreaDistribution";
+    csknow::inference_latent_area::InferenceLatentAreaDistributionResult
+        inferenceLatentAreaDistributionResult(playerAtTick, queryPlayerAtTick, d2DistanceToPlacesResult,
+                                               inferenceLatentAreaResult, inferenceLatentPlaceResult);
+    inferenceLatentAreaResult.perTickPosLabelsQuery = inferenceLatentAreaDistributionName;
+
     string inferenceLatentEngagementName = "inferenceLatentEngagement";
     std::cout << "processing inference latent engagements" << std::endl;
     csknow::inference_latent_engagement::InferenceLatentEngagementResult inferenceLatentEngagementResult(playerAtTick);
@@ -602,6 +615,7 @@ int main(int argc, char * argv[]) {
         {"kills", queryKills},
         {inferenceLatentOrderName, inferenceLatentOrderResult},
         {inferenceLatentPlaceName, inferenceLatentPlaceResult},
+        {inferenceLatentAreaName, inferenceLatentAreaResult},
         {latentEngagementName, latentEngagementResult},
         {inferenceLatentEngagementName, inferenceLatentEngagementResult},
         {inferenceLatentAggressionName, inferenceLatentAggressionResult},
