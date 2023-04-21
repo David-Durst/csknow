@@ -99,7 +99,7 @@ struct Blackboard {
     map<CSGOId, size_t> playerToTicksSinceLastProbTargetAssignment;
     map<CSGOId, CSGOId> playerToLastProbTargetAssignment;
     map<CSGOId, size_t> playerToTicksSinceLastProbAggressionAssignment;
-    map<CSGOId, CSGOId> playerToLastProbAggressionAssignment;
+    map<CSGOId, csknow::feature_store::NearestEnemyState> playerToLastProbAggressionAssignment;
 
     // helpers
     std::random_device rd;
@@ -273,6 +273,7 @@ struct Blackboard {
         navFileOverlay.setMapsPath(mapsPath);
         visPoints.load(mapsPath, mapName, true, navFile, true);
         visPoints.load(mapsPath, mapName, false, navFile, true);
+        nearestNavCell.runQuery(mapsPath, mapName);
         ordersResult.runQuery();
 
         tMemory.considerAllTeammates = true;

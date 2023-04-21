@@ -46,6 +46,10 @@ struct IVec3 {
         result.z -= value;
         return result;
     }
+
+    string toCSV() const {
+        return std::to_string(x) + "," + std::to_string(y) + "," + std::to_string(z);
+    }
 };
 
 static inline __attribute__((always_inline))

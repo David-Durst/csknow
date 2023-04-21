@@ -18,13 +18,19 @@ namespace engage {
             blackboard.playerToTicksSinceLastProbAggressionAssignment.end()) {
             blackboard.playerToTicksSinceLastProbAggressionAssignment[treeThinker.csgoId] = newAggressionTicks;
         }
-        blackboard.playerToTicksSinceLastProbAggressionAssignment[curClient.csgoId]++;
-        bool timeForNewTarget =
-                blackboard.playerToTicksSinceLastProbTargetAssignment.at(curClient.csgoId) >= newTargetTicks;
+        blackboard.playerToTicksSinceLastProbAggressionAssignment[treeThinker.csgoId]++;
+        bool timeForNewAggression =
+                blackboard.playerToTicksSinceLastProbTargetAssignment.at(treeThinker.csgoId) >= newTargetTicks;
         if (!blackboard.inAnalysis && !blackboard.inTest && useAggressionModelProbabilities &&
             blackboard.inferenceManager.playerToInferenceData.find(treeThinker.csgoId) !=
             blackboard.inferenceManager.playerToInferenceData.end() &&
             blackboard.inferenceManager.playerToInferenceData.at(treeThinker.csgoId).validData) {
+            if (blackboard.playerToLastProbAggressionAssignment.find(treeThinker.csgoId) ==
+                blackboard.playerToLastProbAggressionAssignment.end() || timeForNewAggression) {
+                blackboard.playerToLastProbAggressionAssignment[treeThinker.csgoId] =
+                    csknow::feature_store::NearestEnemyState::NUM_NEAREST_ENEMY_STATE;
+            }
+            csknow::feature_store::NearestEnemyState & lastProbAggressionAssignment = blackboard.playerToLastProbAggressionAssignment[treeThinker.csgoId];
             const csknow::inference_latent_aggression::InferenceAggressionTickProbabilities & aggressionProbabilities =
                 blackboard.inferenceManager.playerToInferenceData.at(treeThinker.csgoId).aggressionProbabilities;
             vector<float> probabilities = aggressionProbabilities.aggressionProbabilities;
@@ -46,6 +52,13 @@ namespace engage {
                     aggressionOption = i;
                     break;
                 }
+            }
+            // use prior aggression if an option
+            if (lastProbAggressionAssignment != csknow::feature_store::NearestEnemyState::NUM_NEAREST_ENEMY_STATE) {
+                aggressionOption = static_cast<size_t>(lastProbAggressionAssignment);
+            }
+            else {
+                lastProbAggressionAssignment = static_cast<csknow::feature_store::NearestEnemyState>(aggressionOption);
             }
 
             if (aggressionOption == static_cast<size_t>(csknow::feature_store::NearestEnemyState::Decrease)) {
