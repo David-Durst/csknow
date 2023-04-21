@@ -824,6 +824,10 @@ int main(int argc, char * argv[]) {
                 ss << ",";
                 ss << queryValue.perTickPosLabels;
                 ss << ",";
+                ss << queryValue.perTickPosAABBColumn;
+                ss << ",";
+                ss << boolToString(queryValue.havePerTickPos);
+                ss << ",";
                 ss << queryValue.perTickPosLabelsQuery;
                 ss << ",";
                 ss << boolToString(queryValue.havePerTickAimTable);
