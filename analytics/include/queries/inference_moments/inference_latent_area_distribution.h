@@ -17,6 +17,9 @@ namespace csknow::inference_latent_area {
         const DistanceToPlacesResult & distanceToPlacesResult;
         const InferenceLatentAreaResult & inferenceLatentAreaResult;
         const csknow::inference_latent_place::InferenceLatentPlaceResult & inferenceLatentPlaceResult;
+        vector<PlaceIndex> mostLikelyPlace;
+
+        void computeMostLikelyPlace();
 
         explicit InferenceLatentAreaDistributionResult(const PlayerAtTick & playerAtTick,
                                                         QueryPlayerAtTick & queryPlayerAtTick,
@@ -29,6 +32,7 @@ namespace csknow::inference_latent_area {
                 distanceToPlacesResult(distanceToPlacesResult),
                 inferenceLatentAreaResult(inferenceLatentAreaResult),
                 inferenceLatentPlaceResult(inferenceLatentPlaceResult) {
+            computeMostLikelyPlace();
             variableLength = false;
             startTickColumn = 0;
             ticksPerEvent = 1;
@@ -53,9 +57,10 @@ namespace csknow::inference_latent_area {
                 s << prob;
                 first = false;
             }
-            const string & place = distanceToPlacesResult.places[inferenceLatentPlaceResult.placeIndex[index]];
+            s << ",";
+            const string & place = distanceToPlacesResult.places[mostLikelyPlace[index]];
             const AABB & placeAABB = distanceToPlacesResult.placeToAABB.at(place);
-            s << "," << placeAABB.min.toCSV("_") << ";" << placeAABB.max.toCSV("_");
+            s << placeAABB.min.toCSV("_") << ";" << placeAABB.max.toCSV("_");
             s << std::endl;
         }
 
