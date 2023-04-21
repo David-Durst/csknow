@@ -23,7 +23,7 @@ namespace csknow::inference_latent_area {
         vector<int64_t> tickLength;
         vector<int64_t> playerId;
         vector<size_t> areaGridIndex;
-        vector<array<float, csknow::feature_store::num_places>> playerAreaProb;
+        vector<array<float, csknow::feature_store::area_grid_size>> playerAreaProb;
         IntervalIndex areasPerTick;
 
         InferenceLatentAreaResult() {
@@ -34,7 +34,7 @@ namespace csknow::inference_latent_area {
             playerLabels = {};
             for (size_t areaIndex = 0; areaIndex < csknow::feature_store::area_grid_size; areaIndex++) {
                 playerLabels.push_back(
-                        std::to_string(areaIndex % csknow::feature_store::area_grid_dim) + "," +
+                        std::to_string(areaIndex % csknow::feature_store::area_grid_dim) + "_" +
                         std::to_string(areaIndex / csknow::feature_store::area_grid_dim)
                 );
             }

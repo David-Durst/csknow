@@ -44,7 +44,7 @@ namespace csknow::inference_latent_place {
         void oneLineToCSV(int64_t index, std::ostream &s) override {
             s << index << "," << playerAtTick.tickId[index] << ",";
 
-            s << std::setprecision(2);
+            s << std::fixed << std::setprecision(2);
             bool first = true;
             for (const auto prob : inferenceLatentPlaceResult.playerPlaceProb[index]) {
                 if (!first) {
