@@ -148,13 +148,15 @@ export function getPlayersText(tickData: TickRow, gameData: GameData): Map<numbe
 }
 
 export class PosTextPosition {
-    constructor(pos: Vec3, text: string) {
+    constructor(pos: Vec3, text: string, small: boolean) {
         this.pos = pos
         this.text = text
+        this.small = small
     }
 
     pos: Vec3;
     text: string;
+    small: boolean
 }
 
 export function getPosTextPositions(tickData: TickRow, gameData: GameData): Array<PosTextPosition> {
@@ -180,27 +182,31 @@ export function getPosTextPositions(tickData: TickRow, gameData: GameData): Arra
         }
         if (sourcePATId != INVALID_ID) {
             const posProbs = labelData[sourcePATId].otherColumnValues[0].split(";")
-            if (parser.havePerTickPos) {
+            if (posLabelsParser.havePerTickPos) {
                 const aabbStr = labelData[sourcePATId].otherColumnValues[posLabelsParser.perTickPosAABBColumn]
                 const aabb = unPackVec3ListStr(aabbStr)
                 const labelsPerRow = Math.ceil(Math.sqrt(posProbs.length))
                 const startVec3 = aabb[0]
-                const endVec3 = aabb[0]
+                const endVec3 = aabb[1]
                 const deltaX = (endVec3.posX - startVec3.posX) / labelsPerRow
                 const deltaY = (endVec3.posY - startVec3.posY) / labelsPerRow
                 const avgZ = (endVec3.posZ + startVec3.posZ) / 2
-                for (let i = 0; i < posLabelsParser.posLabelPositions.length; i++) {
+                for (let i = 0; i < posProbs.length; i++) {
                     const xVal = i % labelsPerRow
                     const yVal = Math.floor(i / labelsPerRow)
+                    let posProbString = "0"
+                    if (parseFloat(posProbs[i]) > 0.01) {
+                        posProbString = posProbs[i].substring(1)
+                    }
                     result.push(new PosTextPosition(new Vec3(
                         startVec3.posX + deltaX * xVal,
                         startVec3.posY + deltaY * yVal,
-                        avgZ), posProbs[i]))
+                        avgZ), posProbString, true))
                 }
             }
             else {
                 for (let i = 0; i < posLabelsParser.posLabelPositions.length; i++) {
-                    result.push(new PosTextPosition(posLabelsParser.posLabelPositions[i], posProbs[i]))
+                    result.push(new PosTextPosition(posLabelsParser.posLabelPositions[i], posProbs[i], false))
                 }
             }
         }

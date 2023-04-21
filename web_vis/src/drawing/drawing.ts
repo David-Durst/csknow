@@ -442,7 +442,12 @@ export function drawTick(e: InputEvent) {
     mainCtx.fillStyle = white_translucent
     for (let ptp = 0; ptp < posTextPositions.length; ptp++) {
         const zScaling = (posTextPositions[ptp].pos.posZ - minZ) / (maxZ - minZ)
-        mainCtx.font = ((zScaling * 20 + 30) * fontScale).toString() + "px Arial"
+        if (posTextPositions[ptp].small) {
+            mainCtx.font = (10 * fontScale).toString() + "px Arial"
+        }
+        else {
+            mainCtx.font = ((zScaling * 20 + 30) * fontScale).toString() + "px Arial"
+        }
         const location = new MapCoordinate(
             posTextPositions[ptp].pos.posX,
             posTextPositions[ptp].pos.posY,
