@@ -11,6 +11,7 @@
 #include "bots/behavior_tree/pathing_node.h"
 #include "bots/behavior_tree/action/action_node.h"
 #include "bots/analysis/inference_manager.h"
+#include "bots/analysis/streaming_manager.h"
 #include <memory>
 #include <atomic>
 #include <mutex>
@@ -42,6 +43,7 @@ public:
     Tree(const std::string & modelsDir) : inferenceManager(modelsDir) { };
 
     void tick(ServerState & state, const string & mapsPath);
+    void updateStateVisibility(ServerState & state, Blackboard & blackboard);
     void readFilterNames();
 };
 void addTreeThinkersToBlackboard(const ServerState & state, Blackboard * blackboard);

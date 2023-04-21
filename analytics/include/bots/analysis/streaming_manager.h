@@ -40,5 +40,8 @@ public:
 bool demoIsVisible(const PlayerAtTick & playerAtTick, int64_t attackerPATId, int64_t victimPATId,
                    const csknow::nearest_nav_cell::NearestNavCell & nearestNavCell,
                    const VisPoints & visPoints);
+bool vecIsVisible(Vec3 attackerEyePos, Vec3 victimEyePos, Vec2 curViewAngle,
+                  const csknow::nearest_nav_cell::NearestNavCell & nearestNavCell,
+                  const VisPoints & visPoints);
 
 #endif //CSKNOW_STREAMING_MANAGER_H

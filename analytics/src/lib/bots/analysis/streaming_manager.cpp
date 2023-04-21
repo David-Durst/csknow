@@ -262,6 +262,13 @@ bool demoIsVisible(const PlayerAtTick & playerAtTick, int64_t attackerPATId, int
             playerAtTick.viewX[attackerPATId],
             playerAtTick.viewY[attackerPATId]
     };
+    return vecIsVisible(attackerEyePos, victimEyePos, curViewAngle, nearestNavCell, visPoints);
+}
+
+bool vecIsVisible(Vec3 attackerEyePos, Vec3 victimEyePos, Vec2 curViewAngle,
+                   const csknow::nearest_nav_cell::NearestNavCell & nearestNavCell,
+                   const VisPoints & visPoints) {
+
     vector<CellIdAndDistance> attackerCellIdsByDistances = nearestNavCell.getNearestCells(attackerEyePos);
     vector<CellIdAndDistance> victimCellIdsByDistances = nearestNavCell.getNearestCells(victimEyePos);
     /*
