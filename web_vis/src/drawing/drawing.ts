@@ -443,7 +443,7 @@ export function drawTick(e: InputEvent) {
     for (let ptp = 0; ptp < posTextPositions.length; ptp++) {
         const zScaling = (posTextPositions[ptp].pos.posZ - minZ) / (maxZ - minZ)
         if (posTextPositions[ptp].small) {
-            mainCtx.font = (10 * fontScale).toString() + "px Arial"
+            mainCtx.font = (8 * fontScale).toString() + "px Arial"
         }
         else {
             mainCtx.font = ((zScaling * 20 + 30) * fontScale).toString() + "px Arial"
