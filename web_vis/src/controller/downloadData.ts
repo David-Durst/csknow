@@ -48,7 +48,9 @@ export async function getTables() {
                 const perTickPlayerLabelsQuery = perTickPlayerLabels + 1
                 const posLabelPositionsIndex = perTickPlayerLabelsQuery + 1
                 const perTickPosLabels = posLabelPositionsIndex + 1
-                const perTickPosLabelsQuery = perTickPosLabels + 1
+                const perTickPosAABBColumn = perTickPosLabels + 1
+                const havePerTickPosIndex = perTickPosAABBColumn + 1
+                const perTickPosLabelsQuery = havePerTickPosIndex + 1
                 const havePerTickAimTable = perTickPosLabelsQuery + 1
                 const perTickAimTable = havePerTickAimTable + 1
                 const havePerTickPredictionAimTable = perTickAimTable + 1
@@ -98,7 +100,8 @@ export async function getTables() {
                         cols[keyPlayerColumnsIndex], cols[nonTemporalIndex], cols[overlayIndex], cols[overlayLabelsQueryIndex],
                         cols[havePlayerLabelsIndex], cols[playersToLabelColumnIndex], cols[playerLabelIndicesColumnIndex],
                         cols[playerLabelsIndex], cols[perTickPlayerLabels], cols[perTickPlayerLabelsQuery],
-                        cols[posLabelPositionsIndex], cols[perTickPosLabels], cols[perTickPosLabelsQuery],
+                        cols[posLabelPositionsIndex], cols[perTickPosLabels],
+                        cols[perTickPosAABBColumn], cols[havePerTickPosIndex], cols[perTickPosLabelsQuery],
                         cols[havePerTickAimTable], cols[perTickAimTable],
                         cols[havePerTickPredictionAimTable], cols[perTickPredictionAimTable], cols[eventIdColumn],
                         cols[haveBlobColumnIndex], cols[blobFileNameColumnIndex], cols[blobBytesPerRowColumnIndex],
@@ -111,7 +114,8 @@ export async function getTables() {
                             .add(new Option(cols[0], cols[0]));
                     }
                     // all tables that are per tick (aka per round and not tick) are events to consider
-                    else if (!tablesNotFilteredByRound.includes(cols[0]) && cols[0] != tickTableName){
+                    // filter out distribution columns that are helper events as well
+                    else if (!tablesNotFilteredByRound.includes(cols[0]) && cols[0] != tickTableName && !cols[0].endsWith("Distribution")){
                         (<HTMLSelectElement> document.getElementById("event-type"))
                             .add(new Option(cols[0], cols[0]));
                     }

@@ -246,6 +246,8 @@ export class Parser {
     perTickPlayerLabelsQuery: string;
     posLabelPositions: Vec3[];
     perTickPosLabels: boolean;
+    perTickPosAABBColumn: number;
+    havePerTickPos: boolean;
     perTickPosLabelsQuery: string;
     havePerTickAimTable: boolean;
     perTickAimTable: string;
@@ -264,7 +266,8 @@ export class Parser {
                 ticksPerEvent: string, parserType: ParserType, baseUrl: string,
                 keyPlayerColumns: string, nonTemporal: string, overlay: string, overlayLabelsQuery: string,
                 havePlayerLabels: string, playersToLabelColumn: string,
-                playerLabelIndicesColumn: string, playerLabels: string, perTickPlayerLabels: string, perTickPlayerLabelsQuery: string,
+                playerLabelIndicesColumn: string, playerLabels: string, perTickPlayerLabels: string,
+                perTickPosAABBColumn: string, havePerTickPos: string, perTickPlayerLabelsQuery: string,
                 posLabelPositions: string, perTickPosLabels: string, perTickPosLabelsQuery: string,
                 havePerTickAimTable: string, perTickAimTable: string,
                 havePerTickAimPredictionTable: string, perTickAimPredictionTable: string,
@@ -300,6 +303,8 @@ export class Parser {
         this.playerLabelIndicesColumn = parseInt(playerLabelIndicesColumn)
         this.playerLabels = playerLabels.length > 0 ? playerLabels.split(";") : []
         this.perTickPlayerLabels = parseBool(perTickPlayerLabels)
+        this.perTickPosAABBColumn = parseInt(perTickPosAABBColumn)
+        this.havePerTickPos = parseBool(havePerTickPos)
         this.perTickPlayerLabelsQuery = perTickPlayerLabelsQuery
         this.posLabelPositions = posLabelPositions.split(";")
             .map((vec3Str) => {
