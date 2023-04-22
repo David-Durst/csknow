@@ -85,6 +85,7 @@ namespace nav_mesh {
         float get_point_to_area_distance_2d( vec3_t position, const nav_area& area) const;
         vec3_t get_nearest_point_in_area( vec3_t position, nav_area& area);
 		const nav_area& get_nearest_area_by_position( vec3_t position ) const;
+		const nav_area& get_nearest_area_by_position_in_place( vec3_t position, std::uint16_t place_id ) const;
         std::vector<AreaDistance> get_area_distances_to_position( vec3_t position ) const;
         void remove_incoming_edges_to_areas( std::set<std::uint32_t> ids );
         void remove_edges( std::set<std::pair<std::uint32_t, std::uint32_t>> ids );

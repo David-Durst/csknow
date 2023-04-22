@@ -327,6 +327,38 @@ namespace nav_mesh {
 
     }
 
+    const nav_area& nav_file::get_nearest_area_by_position_in_place( vec3_t position, std::uint16_t place_id ) const {
+        float nearest_area_distance = std::numeric_limits<float>::max();
+        size_t nearest_area_id = -1;
+
+        for ( size_t area_id = 0; area_id < m_areas.size(); area_id++) {
+            const nav_area& area = m_areas[area_id];
+            // skip bugged areas with no connections
+            if ( area.m_connections.empty() ) {
+                continue;
+            }
+            if ( area.m_place != place_id ) {
+                continue;
+            }
+            if ( area.is_within_3d( position ) ) {
+                return area;
+            }
+            float other_distance = get_point_to_area_distance_2d( position, area);
+            if ( other_distance < nearest_area_distance ) {
+                nearest_area_distance = other_distance;
+                nearest_area_id = area_id;
+            }
+        }
+
+        if ( nearest_area_id == static_cast<size_t>(-1)) {
+            throw std::runtime_error( "nav_file::get_nearest_area_by_position: no areas" );
+        }
+        else {
+            return m_areas[nearest_area_id];
+        }
+
+    }
+
     std::vector<AreaDistance> nav_file::get_area_distances_to_position( vec3_t position ) const {
         std::vector<AreaDistance> result;
         for ( size_t area_id = 0; area_id < m_areas.size(); area_id++) {

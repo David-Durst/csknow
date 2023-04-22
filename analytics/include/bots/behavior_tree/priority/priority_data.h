@@ -8,6 +8,12 @@
 #include <queries/query.h>
 #include "bots/load_save_bot_data.h"
 
+struct PriorityPlaceAreaAssignment {
+    Vec3 targetPos;
+    AreaId targetAreaId;
+    bool valid;
+};
+
 struct MoveOptions {
     bool move;
     bool walk;

@@ -14,6 +14,14 @@
 
 namespace follow {
     namespace compute_nav_area {
+        class ComputeModelNavAreaNode : public Node {
+        public:
+            ComputeModelNavAreaNode(Blackboard & blackboard) : Node(blackboard, "ComputeModelNavAreaNode") { };
+            PlaceIndex computePlaceProbabilistic(const Order & curOrder, AreaId curAreaId, CSGOId csgoId);
+            void computeAreaProbabilistic(Priority & curPriority, PlaceIndex nextPlace, CSGOId csgoId);
+            virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override;
+        };
+
         class ComputeEntryNavAreaNode : public Node {
         public:
             ComputeEntryNavAreaNode(Blackboard & blackboard) : Node(blackboard, "ComputeEntryNavAreaNode") { };
@@ -31,6 +39,7 @@ namespace follow {
     public:
         ComputeNavAreaNode(Blackboard & blackboard) :
                 SelectorNode(blackboard, Node::makeList(
+                                     make_unique<compute_nav_area::ComputeModelNavAreaNode>(blackboard),
                                      make_unique<TeamConditionDecorator>(
                                              blackboard, make_unique<compute_nav_area::ComputeEntryNavAreaNode>(blackboard),
                                              ENGINE_TEAM_CT),
@@ -45,6 +54,12 @@ namespace follow {
     };
 
     namespace spacing {
+        class LearnedSpacingNode : public Node {
+        public:
+            LearnedSpacingNode(Blackboard & blackboard) : Node(blackboard, "LearnedSpacingNode") { };
+            virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override;
+        };
+
         class NoMovementNode : public Node {
         public:
             NoMovementNode(Blackboard & blackboard) : Node(blackboard, "NoMovementNode") { };
