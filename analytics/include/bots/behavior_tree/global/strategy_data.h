@@ -5,6 +5,7 @@
 #ifndef CSKNOW_STRATEGY_DATA_H
 #define CSKNOW_STRATEGY_DATA_H
 #include "bots/load_save_bot_data.h"
+#include "bots/behavior_tree/order_model_heuristic_mapping.h"
 #include "navmesh/nav_file.h"
 #include "geometryNavConversions.h"
 #include "queries/distance_to_places.h"
@@ -297,15 +298,6 @@ struct Order {
         result.push_back(followersStream.str());
     }
 };
-
-struct OrderId {
-    TeamId team = INVALID_ID;
-    int64_t index = INVALID_ID;
-};
-
-static bool operator<(const OrderId& a, const OrderId& b) {
-    return a.team < b.team || (a.team == b.team && a.index < b.index);
-}
 
 class Strategy {
     vector<Order> tOrders, ctOrders;

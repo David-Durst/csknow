@@ -144,17 +144,6 @@ namespace strategy {
         return playerNodeState[treeThinker.csgoId];
     }
 
-    const map<size_t, size_t> aHeuristicToModelOrderIndices{
-        {1, 0}, // a spawn
-        {0, 1}, // a long
-        {2, 2}, // a cat
-    };
-    const map<size_t, size_t> bHeuristicToModelOrderIndices{
-        {1, 3}, // b hole
-        {0, 4}, // b doors
-        {2, 5} // b tuns
-    };
-
     bool AssignPlayersToOrders::assignPlayerToOrderProbabilistic(const ServerState::Client & client, bool plantedA) {
         if (blackboard.inferenceManager.playerToInferenceData.find(client.csgoId) ==
             blackboard.inferenceManager.playerToInferenceData.end()) {
