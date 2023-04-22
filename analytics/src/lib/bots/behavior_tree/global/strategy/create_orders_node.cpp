@@ -4,6 +4,7 @@
 
 #include "bots/behavior_tree/global/strategy_node.h"
 #include "bots/analysis/learned_models.h"
+#include "bots/behavior_tree/order_model_heuristic_mapping.h"
 
 namespace strategy {
     NodeState CreateOrdersNode::exec(const ServerState &state, TreeThinker &treeThinker) {
@@ -53,13 +54,26 @@ namespace strategy {
             bool plantedA = blackboard.navFile.get_place(
                     blackboard.navFile.get_nearest_area_by_position(vec3Conv(state.getC4Pos())).m_place) == "BombsiteA";
 
-            for (const auto & order : plantedA ? aOffenseOrders : bOffenseOrders) {
-                blackboard.strategy.addOrder(ENGINE_TEAM_CT, order, blackboard.navFile, blackboard.reachability,
-                                             blackboard.visPoints, blackboard.distanceToPlaces);
+            if (usePlaceAreaModelProbabilities) {
+                createModelOrders();
+                for (const auto & order : plantedA ? blackboard.strategy.aModelCTOrders : blackboard.strategy.bModelCTOrders) {
+                    blackboard.strategy.addOrder(ENGINE_TEAM_CT, order, blackboard.navFile, blackboard.reachability,
+                                                 blackboard.visPoints, blackboard.distanceToPlaces);
+                }
+                for (const auto & order : plantedA ? blackboard.strategy.aModelTOrders : blackboard.strategy.bModelTOrders) {
+                    blackboard.strategy.addOrder(ENGINE_TEAM_T, order, blackboard.navFile, blackboard.reachability,
+                                                 blackboard.visPoints, blackboard.distanceToPlaces);
+                }
             }
-            for (const auto & order : plantedA ? aDefenseOrders : bDefenseOrders) {
-                blackboard.strategy.addOrder(ENGINE_TEAM_T, order, blackboard.navFile, blackboard.reachability,
-                                             blackboard.visPoints, blackboard.distanceToPlaces);
+            else {
+                for (const auto & order : plantedA ? aOffenseOrders : bOffenseOrders) {
+                    blackboard.strategy.addOrder(ENGINE_TEAM_CT, order, blackboard.navFile, blackboard.reachability,
+                                                 blackboard.visPoints, blackboard.distanceToPlaces);
+                }
+                for (const auto & order : plantedA ? aDefenseOrders : bDefenseOrders) {
+                    blackboard.strategy.addOrder(ENGINE_TEAM_T, order, blackboard.navFile, blackboard.reachability,
+                                                 blackboard.visPoints, blackboard.distanceToPlaces);
+                }
             }
         }
         else {
@@ -94,5 +108,37 @@ namespace strategy {
 
         playerNodeState[treeThinker.csgoId] = NodeState::Success;
         return playerNodeState[treeThinker.csgoId];
+    }
+
+    void CreateOrdersNode::createModelOrders() {
+        if (!blackboard.strategy.aModelCTOrders.empty()) {
+            return;
+        }
+        vector<Order> ctOrders, tOrders;
+        // create orders in bot format from query format
+        for (const auto & queryOrder : blackboard.ordersResult.orders) {
+            Waypoints ctWaypoints;
+            for (const auto & queryOrderPlace : queryOrder.places) {
+                ctWaypoints.push_back({WaypointType::NavPlace,
+                                       blackboard.distanceToPlaces.places[queryOrderPlace]});
+            }
+            // add c4 for CT
+            Waypoint lastCTWaypoint = ctWaypoints.back();
+            lastCTWaypoint.type = WaypointType::C4;
+            ctWaypoints.push_back(lastCTWaypoint);
+            Waypoints tWaypoints = ctWaypoints;
+            std::reverse(tWaypoints.begin(), tWaypoints.end());
+
+            ctOrders.push_back({ctWaypoints});
+            tOrders.push_back({ctWaypoints});
+        }
+
+        // insert in order matching hueristics
+        for (size_t heuristicIndex = 0; heuristicIndex < csknow::feature_store::num_orders_per_site; heuristicIndex++) {
+            blackboard.strategy.aModelCTOrders.push_back(ctOrders[aHeuristicToModelOrderIndices.at(heuristicIndex)]);
+            blackboard.strategy.aModelTOrders.push_back(tOrders[aHeuristicToModelOrderIndices.at(heuristicIndex)]);
+            blackboard.strategy.bModelCTOrders.push_back(ctOrders[bHeuristicToModelOrderIndices.at(heuristicIndex)]);
+            blackboard.strategy.bModelTOrders.push_back(tOrders[bHeuristicToModelOrderIndices.at(heuristicIndex)]);
+        }
     }
 }

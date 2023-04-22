@@ -108,6 +108,7 @@ namespace strategy {
         int32_t playersAliveLastPlan = -1;
         size_t ticksSinceLastOrder = 0;
         vector<CSGOId> ctPlayers = {}, tPlayers = {};
+        void createModelOrders();
     public:
         explicit CreateOrdersNode(Blackboard & blackboard) : Node(blackboard, "CreateOrdersNode") { };
         NodeState exec(const ServerState & state, TreeThinker &treeThinker) override;

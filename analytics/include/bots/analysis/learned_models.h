@@ -8,8 +8,7 @@
 constexpr bool useOrderModelProbabilities = true;
 constexpr bool useAggressionModelProbabilities = true;
 constexpr bool useTargetModelProbabilities = true;
-constexpr bool usePlaceModelProbabilities = true;
-constexpr bool useAreaModelProbabilities = true;
+constexpr bool usePlaceAreaModelProbabilities = true;
 constexpr bool runAllRounds = false;
 
 #endif //CSKNOW_LEARNED_MODELS_H
