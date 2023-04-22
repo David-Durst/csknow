@@ -148,6 +148,7 @@ namespace follow::compute_nav_area {
                 PlaceIndex nextPlace = computePlaceProbabilistic(curOrder, curAreaId, treeThinker.csgoId);
                 computeAreaProbabilistic(curPriority, nextPlace, treeThinker.csgoId);
                 lastProbPlaceAreaAssignment = {curPriority.targetPos, curPriority.targetAreaId, true};
+                blackboard.playerToTicksSinceLastProbPlaceAreaAssignment[treeThinker.csgoId] = 0;
             }
             else {
                 curPriority.targetPos = lastProbPlaceAreaAssignment.targetPos;
