@@ -59,6 +59,8 @@ namespace csknow::inference_manager {
 
     void InferenceManager::recordTeamValues(csknow::feature_store::FeatureStoreResult & featureStoreResult) {
         orderValues = csknow::inference_latent_order::extractFeatureStoreOrderValues(featureStoreResult, 0);
+        placeValues = csknow::inference_latent_place::extractFeatureStorePlaceValues(featureStoreResult, 0);
+        areaValues = csknow::inference_latent_area::extractFeatureStoreAreaValues(featureStoreResult, 0);
     }
 
     void InferenceManager::recordPlayerValues(csknow::feature_store::FeatureStoreResult &featureStoreResult,
