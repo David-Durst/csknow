@@ -117,7 +117,7 @@ void Tree::tick(ServerState & state, const string & mapsPath) {
         // blackboard->streamingManager.update(state);
 
         blackboard->featureStorePreCommitBuffer.updateFeatureStoreBufferPlayers(state);
-        updateStateVisibility(state, *blackboard);
+        //updateStateVisibility(state, *blackboard);
 
         // update all nodes in tree
         // don't care about which player as order is for all players

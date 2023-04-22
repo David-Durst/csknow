@@ -20,7 +20,7 @@ namespace engage {
         }
         blackboard.playerToTicksSinceLastProbAggressionAssignment[treeThinker.csgoId]++;
         bool timeForNewAggression =
-                blackboard.playerToTicksSinceLastProbTargetAssignment.at(treeThinker.csgoId) >= newTargetTicks;
+                blackboard.playerToTicksSinceLastProbAggressionAssignment.at(treeThinker.csgoId) >= newTargetTicks;
         if (!blackboard.inAnalysis && !blackboard.inTest && useAggressionModelProbabilities &&
             blackboard.inferenceManager.playerToInferenceData.find(treeThinker.csgoId) !=
             blackboard.inferenceManager.playerToInferenceData.end() &&
@@ -59,6 +59,7 @@ namespace engage {
             }
             else {
                 lastProbAggressionAssignment = static_cast<csknow::feature_store::NearestEnemyState>(aggressionOption);
+                blackboard.playerToTicksSinceLastProbAggressionAssignment[treeThinker.csgoId] = 0;
             }
 
             if (aggressionOption == static_cast<size_t>(csknow::feature_store::NearestEnemyState::Decrease)) {
