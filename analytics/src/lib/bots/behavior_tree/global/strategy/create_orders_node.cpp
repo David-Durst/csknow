@@ -54,7 +54,9 @@ namespace strategy {
             bool plantedA = blackboard.navFile.get_place(
                     blackboard.navFile.get_nearest_area_by_position(vec3Conv(state.getC4Pos())).m_place) == "BombsiteA";
 
-            if (!blackboard.inTest && !blackboard.inAnalysis && usePlaceAreaModelProbabilities) {
+            if (!blackboard.inTest && !blackboard.inAnalysis && usePlaceAreaModelProbabilities &&
+                blackboard.inferenceManager.haveValidData()) {
+                blackboard.modelOrders = true;
                 createModelOrders();
                 for (const auto & order : plantedA ? blackboard.strategy.aModelCTOrders : blackboard.strategy.bModelCTOrders) {
                     blackboard.strategy.addOrder(ENGINE_TEAM_CT, order, blackboard.navFile, blackboard.reachability,
@@ -66,6 +68,7 @@ namespace strategy {
                 }
             }
             else {
+                blackboard.modelOrders = false;
                 for (const auto & order : plantedA ? aOffenseOrders : bOffenseOrders) {
                     blackboard.strategy.addOrder(ENGINE_TEAM_CT, order, blackboard.navFile, blackboard.reachability,
                                                  blackboard.visPoints, blackboard.distanceToPlaces);

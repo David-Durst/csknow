@@ -6,7 +6,7 @@
 #include "bots/analysis/learned_models.h"
 
 namespace follow::spacing {
-    NodeState LearnedSpacingNode::exec(const ServerState &state, TreeThinker &treeThinker) {
+    NodeState LearnedSpacingNode::exec(const ServerState &, TreeThinker &treeThinker) {
         if (!blackboard.inAnalysis && !blackboard.inTest && usePlaceAreaModelProbabilities) {
             playerNodeState[treeThinker.csgoId] = NodeState::Success;
         }

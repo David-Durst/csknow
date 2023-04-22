@@ -56,6 +56,7 @@ namespace csknow::inference_manager {
         void recordTeamValues(csknow::feature_store::FeatureStoreResult & featureStoreResult);
         void recordPlayerValues(csknow::feature_store::FeatureStoreResult & featureStoreResult, CSGOId playerId);
         void runInferences();
+        bool haveValidData() const;
     };
 }
 

@@ -16,7 +16,7 @@ namespace strategy {
     NodeState AssignPlayersToOrders::exec(const ServerState &state, TreeThinker &treeThinker) {
         if (blackboard.newOrderThisFrame) {
             map<string, OrderId> ctOptions;
-            OrderId defaultCTOption{INVALID_ID, INVALID_ID};
+            OrderId defaultCTOption{INVALID_ID, INVALID_ID}, defaultTOption{INVALID_ID, INVALID_ID};
             vector<OrderPlaceDistance> tOptions;
             // build the Order Place options, will compute distance for each client
             for (const auto & orderId : blackboard.strategy.getOrderIds(false, true)) {
@@ -43,6 +43,7 @@ namespace strategy {
 
             map<OrderId, size_t> tPlayersPerOrder;
             for (const auto & orderId : blackboard.strategy.getOrderIds(true, false)) {
+                defaultTOption = orderId;
                 const Order & order = blackboard.strategy.getOrder(orderId);
                 tPlayersPerOrder[orderId] = 0;
                 for (const auto & waypoint : order.waypoints) {
@@ -61,7 +62,11 @@ namespace strategy {
                     }
                 }
             }
-            if (tOptions.empty()) {
+            // need some order assignment to work on first frame
+            if (usePlaceAreaModelProbabilities && tOptions.empty()) {
+                tOptions.push_back({defaultTOption, blackboard.strategy.getOrder(defaultTOption).waypoints[0].placeName});
+            }
+            else if (!usePlaceAreaModelProbabilities && tOptions.empty()) {
                 throw std::runtime_error("no t orders with a hold place or hold area");
             }
 
@@ -147,7 +152,8 @@ namespace strategy {
 
     bool AssignPlayersToOrders::assignPlayerToOrderProbabilistic(const ServerState::Client & client, bool plantedA) {
         if (blackboard.inferenceManager.playerToInferenceData.find(client.csgoId) ==
-            blackboard.inferenceManager.playerToInferenceData.end()) {
+            blackboard.inferenceManager.playerToInferenceData.end() ||
+            !blackboard.inferenceManager.playerToInferenceData.at(client.csgoId).validData) {
             return false;
         }
         blackboard.ticksSinceLastProbOrderAssignment = 0;

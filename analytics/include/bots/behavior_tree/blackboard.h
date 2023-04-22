@@ -132,6 +132,7 @@ struct Blackboard {
     // order data (movedC4 is for debugging, need to reset orders)
     bool newOrderThisFrame, recomputeOrders = false;
     Strategy strategy;
+    bool modelOrders;
 
     bool executeIfAllFinishedSetup(const ServerState & state) {
         for (const auto & [playerId, treeThinker] : playerToTreeThinkers) {

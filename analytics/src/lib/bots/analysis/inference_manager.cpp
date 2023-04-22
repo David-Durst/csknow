@@ -220,4 +220,14 @@ namespace csknow::inference_manager {
         inferenceSeconds = inferenceTime.count();
     }
 
+    bool InferenceManager::haveValidData() const {
+        for (const auto & [_, inferenceData] : playerToInferenceData) {
+            if (inferenceData.validData) {
+                return true;
+                break;
+            }
+        }
+        return false;
+    }
+
 }
