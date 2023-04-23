@@ -1,7 +1,6 @@
 //
 // Created by durst on 4/22/23.
 //
-#pragma optimize level=0
 
 #include "bots/analysis/learned_models.h"
 #include "bots/behavior_tree/priority/follow_order_node.h"
@@ -14,6 +13,8 @@ namespace follow::compute_nav_area {
                                                                   AreaId curAreaId, CSGOId csgoId,
                                                                   ModelNavData & modelNavData) {
         const ServerState::Client & curClient = state.getClient(csgoId);
+        const csknow::inference_latent_place::InferencePlacePlayerAtTickProbabilities & placeProbabilities =
+            blackboard.inferenceManager.playerToInferenceData.at(csgoId).placeProbabilities;
         // get cur place (closest place on order) and all places closer to objective if CT (offense)
         // include a places on order if T (on defense)
         set<PlaceIndex> waypointPlacesSet;
@@ -34,14 +35,18 @@ namespace follow::compute_nav_area {
 
         string curPlaceName = blackboard.distanceToPlaces.places[curPlace];
         set<PlaceIndex> validPlaces;
+        vector<PlaceIndex> validPlacesVectorOrderedOrder;
         bool hitCurPlace = false;
-        for (const auto & waypoint : curOrder.waypoints) {
+        for (size_t i = 0; i < curOrder.waypoints.size(); i++) {
+            const Waypoint & waypoint = curOrder.waypoints[i];
             if (waypoint.placeName == curPlaceName) {
                 hitCurPlace = true;
             }
             if (hitCurPlace || curClient.team == ENGINE_TEAM_T) {
                 validPlaces.insert(blackboard.distanceToPlaces.placeNameToIndex.at(waypoint.placeName));
+                validPlacesVectorOrderedOrder.push_back(blackboard.distanceToPlaces.placeNameToIndex.at(waypoint.placeName));
                 modelNavData.orderPlaceOptions.push_back(waypoint.placeName);
+                modelNavData.orderPlaceProbs.push_back(placeProbabilities.placeProbabilities[validPlacesVectorOrderedOrder.back()]);
             }
         }
 
@@ -56,14 +61,16 @@ namespace follow::compute_nav_area {
          */
 
         // compute place probabilities
+        float curPlaceProbability;
         vector<float> probabilities;
-        vector<PlaceIndex> validPlacesVector;
-        const csknow::inference_latent_place::InferencePlacePlayerAtTickProbabilities & placeProbabilities =
-            blackboard.inferenceManager.playerToInferenceData.at(csgoId).placeProbabilities;
+        vector<PlaceIndex> validPlacesOrderedProbs;
         for (PlaceIndex i = 0; i < placeProbabilities.placeProbabilities.size(); i++) {
             if (validPlaces.find(i) != validPlaces.end()) {
                 probabilities.push_back(placeProbabilities.placeProbabilities[i]);
-                validPlacesVector.push_back(i);
+                validPlacesOrderedProbs.push_back(i);
+            }
+            if (i == curPlace) {
+                curPlaceProbability = placeProbabilities.placeProbabilities[i];
             }
         }
         // this should print for t's only
@@ -79,25 +86,55 @@ namespace follow::compute_nav_area {
          */
 
         // re-weight just for valid places
-        double reweightFactor = 0.;
-        for (size_t i = 0; i < probabilities.size(); i++) {
-            reweightFactor += probabilities[i];
-        }
-        for (size_t i = 0; i < probabilities.size(); i++) {
-            probabilities[i] *= 1/reweightFactor;
-        }
-        double probSample = blackboard.aggressionDis(blackboard.gen);
-        double weightSoFar = 0.;
+        // if CT (offense), give all non-cur weight to next place as on rails
+        // if T, distribute evenly as less proscriptive
         PlaceIndex placeOption = 0;
-        for (size_t i = 0; i < probabilities.size(); i++) {
-            weightSoFar += probabilities[i];
-            if (probSample < weightSoFar) {
-                placeOption = validPlacesVector[i];
-                break;
+        if (curClient.team == ENGINE_TEAM_CT) {
+            double probSample = blackboard.aggressionDis(blackboard.gen);
+            //std::cout << "csgoid " << csgoId << " probSample " << probSample << " curPlaceProbability " << curPlaceProbability << std::endl;
+            if (probSample < curPlaceProbability) {
+                placeOption = curPlace;
+            }
+            else {
+                // if not cur place, next place (unless only 1 option as at end)
+                if (validPlacesVectorOrderedOrder.size() == 1) {
+                    placeOption = validPlacesVectorOrderedOrder[0];
+                }
+                else {
+                    placeOption = validPlacesVectorOrderedOrder[1];
+                }
             }
         }
+        else {
+            double reweightFactor = 0.;
+            for (size_t i = 0; i < probabilities.size(); i++) {
+                reweightFactor += probabilities[i];
+            }
+            for (size_t i = 0; i < probabilities.size(); i++) {
+                probabilities[i] *= 1/reweightFactor;
+            }
+            double probSample = blackboard.aggressionDis(blackboard.gen);
+            double weightSoFar = 0.;
+            for (size_t i = 0; i < probabilities.size(); i++) {
+                weightSoFar += probabilities[i];
+                if (probSample < weightSoFar) {
+                    placeOption = validPlacesOrderedProbs[i];
+                    break;
+                }
+            }
+        }
+
+        // if cur place isn't next place and same order, terminate early
+        if (blackboard.playerToModelNavData.find(csgoId) != blackboard.playerToModelNavData.end()) {
+            const ModelNavData & oldModelNavData = blackboard.playerToModelNavData.at(csgoId);
+            if (oldModelNavData.nextPlace != curPlaceName) {
+                placeOption = oldModelNavData.nextPlaceIndex;
+            }
+        }
+
         modelNavData.curPlace = curPlaceName;
         modelNavData.nextPlace = blackboard.distanceToPlaces.places[placeOption];
+        modelNavData.nextPlaceIndex = placeOption;
         return placeOption;
     }
 

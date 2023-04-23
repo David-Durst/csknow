@@ -51,6 +51,7 @@ namespace strategy {
             blackboard.strategy.clear();
             blackboard.playerToPath.clear();
             blackboard.playerToPriority.clear();
+            blackboard.playerToModelNavData.clear();
 
             // first setup orders to go A or B
             bool plantedA = blackboard.navFile.get_place(
@@ -71,7 +72,7 @@ namespace strategy {
                     std::cout << std::endl;
                      */
                 }
-                std::cout << (plantedA ? "A " : "B ") << "T orders: ";
+                // std::cout << (plantedA ? "A " : "B ") << "T orders: ";
                 for (const auto & order : plantedA ? blackboard.strategy.aModelTOrders : blackboard.strategy.bModelTOrders) {
                     blackboard.strategy.addOrder(ENGINE_TEAM_T, order, blackboard.navFile, blackboard.reachability,
                                                  blackboard.visPoints, blackboard.distanceToPlaces);

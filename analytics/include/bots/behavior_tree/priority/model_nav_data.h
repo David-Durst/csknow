@@ -10,8 +10,10 @@
 
 struct ModelNavData {
     vector<string> orderPlaceOptions;
+    vector<float> orderPlaceProbs;
     string curPlace;
     string nextPlace;
+    PlaceIndex nextPlaceIndex;
     size_t nextArea;
 
     [[nodiscard]]
@@ -22,6 +24,10 @@ struct ModelNavData {
             << "order places: ";
         for (const auto & orderPlace : orderPlaceOptions) {
             result << orderPlace << ", ";
+        }
+        result << "; place prob: ";
+        for (const auto & orderProb : orderPlaceProbs) {
+            result << orderProb << ", ";
         }
 
         return result.str();
