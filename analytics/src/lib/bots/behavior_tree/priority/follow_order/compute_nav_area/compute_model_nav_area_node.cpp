@@ -37,16 +37,19 @@ namespace follow::compute_nav_area {
         set<PlaceIndex> validPlaces;
         vector<PlaceIndex> validPlacesVectorOrderedOrder;
         bool hitCurPlace = false;
+        map<PlaceIndex, size_t> placeIndexToWaypointIndex;
         for (size_t i = 0; i < curOrder.waypoints.size(); i++) {
             const Waypoint & waypoint = curOrder.waypoints[i];
+            PlaceIndex placeIndex = blackboard.distanceToPlaces.placeNameToIndex.at(waypoint.placeName);
+            placeIndexToWaypointIndex[placeIndex] = i;
             if (waypoint.placeName == curPlaceName) {
                 hitCurPlace = true;
             }
             if (hitCurPlace || curClient.team == ENGINE_TEAM_T) {
-                validPlaces.insert(blackboard.distanceToPlaces.placeNameToIndex.at(waypoint.placeName));
-                validPlacesVectorOrderedOrder.push_back(blackboard.distanceToPlaces.placeNameToIndex.at(waypoint.placeName));
+                validPlaces.insert(placeIndex);
+                validPlacesVectorOrderedOrder.push_back(placeIndex);
                 modelNavData.orderPlaceOptions.push_back(waypoint.placeName);
-                modelNavData.orderPlaceProbs.push_back(placeProbabilities.placeProbabilities[validPlacesVectorOrderedOrder.back()]);
+                modelNavData.orderPlaceProbs.push_back(placeProbabilities.placeProbabilities[placeIndex]);
             }
         }
 
@@ -132,9 +135,21 @@ namespace follow::compute_nav_area {
             }
         }
 
+        // if T and new to order, just get to closet place on order before going anywhere else
+        if (blackboard.playerToModelNavData.find(csgoId) == blackboard.playerToModelNavData.end() &&
+            curClient.team == ENGINE_TEAM_T) {
+            placeOption = curPlace;
+        }
+
+        // if cur place is bombsite and CT defuser, then move to c4
+        if (blackboard.isPlayerDefuser(csgoId) && (curPlaceName == "BombsiteA" || curPlaceName == "BombsiteB")) {
+            placeOption = validPlacesVectorOrderedOrder.back();
+        }
+
         modelNavData.curPlace = curPlaceName;
         modelNavData.nextPlace = blackboard.distanceToPlaces.places[placeOption];
         modelNavData.nextPlaceIndex = placeOption;
+        blackboard.strategy.playerToWaypointIndex[csgoId] = placeIndexToWaypointIndex[curPlace];
         return placeOption;
     }
 
