@@ -58,13 +58,27 @@ namespace strategy {
                 blackboard.inferenceManager.haveValidData()) {
                 blackboard.modelOrders = true;
                 createModelOrders();
+                //std::cout << (plantedA ? "A " : "B ") << "CT orders: " << std::endl;
                 for (const auto & order : plantedA ? blackboard.strategy.aModelCTOrders : blackboard.strategy.bModelCTOrders) {
                     blackboard.strategy.addOrder(ENGINE_TEAM_CT, order, blackboard.navFile, blackboard.reachability,
                                                  blackboard.visPoints, blackboard.distanceToPlaces);
+                    /*
+                    for (const auto & waypoint : order.waypoints) {
+                        std::cout << waypoint.placeName << ", ";
+                    }
+                    std::cout << std::endl;
+                     */
                 }
+                std::cout << (plantedA ? "A " : "B ") << "T orders: ";
                 for (const auto & order : plantedA ? blackboard.strategy.aModelTOrders : blackboard.strategy.bModelTOrders) {
                     blackboard.strategy.addOrder(ENGINE_TEAM_T, order, blackboard.navFile, blackboard.reachability,
                                                  blackboard.visPoints, blackboard.distanceToPlaces);
+                    /*
+                    for (const auto & waypoint : order.waypoints) {
+                        std::cout << waypoint.placeName << ", ";
+                    }
+                    std::cout << std::endl;
+                     */
                 }
             }
             else {
@@ -133,7 +147,7 @@ namespace strategy {
             std::reverse(tWaypoints.begin(), tWaypoints.end());
 
             ctOrders.push_back({ctWaypoints});
-            tOrders.push_back({ctWaypoints});
+            tOrders.push_back({tWaypoints});
         }
 
         // insert in order matching hueristics

@@ -17,7 +17,8 @@ namespace follow {
         class ComputeModelNavAreaNode : public Node {
         public:
             ComputeModelNavAreaNode(Blackboard & blackboard) : Node(blackboard, "ComputeModelNavAreaNode") { };
-            PlaceIndex computePlaceProbabilistic(const Order & curOrder, AreaId curAreaId, CSGOId csgoId);
+            PlaceIndex computePlaceProbabilistic(const ServerState & state, const Order & curOrder,
+                                                 AreaId curAreaId, CSGOId csgoId);
             void computeAreaProbabilistic(Priority & curPriority, PlaceIndex nextPlace, CSGOId csgoId);
             virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override;
         };

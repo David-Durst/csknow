@@ -9,8 +9,11 @@
 namespace follow::compute_nav_area {
     constexpr double max_place_distance_seconds = 5.;
 
-    PlaceIndex ComputeModelNavAreaNode::computePlaceProbabilistic(const Order & curOrder, AreaId curAreaId, CSGOId csgoId) {
-        // get cur place (closest place on order) and all places closer to objective
+    PlaceIndex ComputeModelNavAreaNode::computePlaceProbabilistic(const ServerState & state, const Order & curOrder,
+                                                                  AreaId curAreaId, CSGOId csgoId) {
+        const ServerState::Client & curClient = state.getClient(csgoId);
+        // get cur place (closest place on order) and all places closer to objective if CT (offense)
+        // include a places on order if T (on defense)
         set<PlaceIndex> waypointPlacesSet;
         for (const auto & waypoint : curOrder.waypoints) {
             waypointPlacesSet.insert(blackboard.distanceToPlaces.placeNameToIndex.at(waypoint.placeName));
@@ -34,7 +37,7 @@ namespace follow::compute_nav_area {
             if (waypoint.placeName == curPlaceName) {
                 hitCurPlace = true;
             }
-            if (hitCurPlace) {
+            if (hitCurPlace || curClient.team == ENGINE_TEAM_T) {
                 validPlaces.insert(blackboard.distanceToPlaces.placeNameToIndex.at(waypoint.placeName));
             }
         }
@@ -61,6 +64,7 @@ namespace follow::compute_nav_area {
             }
         }
         // this should print for t's only
+        /*
         if (curOrder.waypoints[0].type == WaypointType::C4) {
             std::cout << "valid places for " << csgoId << ": ";
             for (const auto validPlace : validPlaces) {
@@ -69,6 +73,7 @@ namespace follow::compute_nav_area {
             std::cout << std::endl;
             std::cout << "cur place: " << curPlaceName << std::endl;
         }
+         */
 
         // re-weight just for valid places
         double reweightFactor = 0.;
@@ -146,6 +151,16 @@ namespace follow::compute_nav_area {
         AreaId curAreaId = curArea.get_id();
         const Order & curOrder = blackboard.strategy.getOrderForPlayer(treeThinker.csgoId);
 
+        /*
+        if (state.getClient(treeThinker.csgoId).team == ENGINE_TEAM_T) {
+            std::cout << state.getClient(treeThinker.csgoId).name << " order waypoints: ";
+            for (const auto & waypoint : curOrder.waypoints) {
+                std::cout << waypoint.placeName << ", ";
+            }
+            std::cout << std::endl;
+        }
+         */
+
         // default values are set to invalid where necessary, so this is fine
         Priority & curPriority = blackboard.playerToPriority[treeThinker.csgoId];
         bool wasInEngagement = curPriority.priorityType == PriorityType::Engagement;
@@ -180,7 +195,7 @@ namespace follow::compute_nav_area {
                 blackboard.playerToLastProbPlaceAreaAssignment[treeThinker.csgoId];
 
             if (!lastProbPlaceAreaAssignment.valid) {
-                PlaceIndex nextPlace = computePlaceProbabilistic(curOrder, curAreaId, treeThinker.csgoId);
+                PlaceIndex nextPlace = computePlaceProbabilistic(state, curOrder, curAreaId, treeThinker.csgoId);
                 computeAreaProbabilistic(curPriority, nextPlace, treeThinker.csgoId);
                 lastProbPlaceAreaAssignment = {curPriority.targetPos, curPriority.targetAreaId, true};
                 blackboard.playerToTicksSinceLastProbPlaceAreaAssignment[treeThinker.csgoId] = 0;
