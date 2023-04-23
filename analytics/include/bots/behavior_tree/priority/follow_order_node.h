@@ -20,8 +20,8 @@ namespace follow {
             ComputeModelNavAreaNode(Blackboard & blackboard) : Node(blackboard, "ComputeModelNavAreaNode") { };
             PlaceIndex computePlaceProbabilistic(const ServerState & state, const Order & curOrder,
                                                  AreaId curAreaId, CSGOId csgoId, ModelNavData & modelNavData);
-            void computeAreaProbabilistic(Priority & curPriority, PlaceIndex nextPlace, CSGOId csgoId,
-                                          ModelNavData & modelNavData);
+            void computeAreaProbabilistic(const ServerState & state, Priority & curPriority, PlaceIndex nextPlace,
+                                          CSGOId csgoId, ModelNavData & modelNavData);
             virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override;
         };
 

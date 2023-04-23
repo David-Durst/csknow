@@ -153,8 +153,9 @@ namespace follow::compute_nav_area {
         return placeOption;
     }
 
-    void ComputeModelNavAreaNode::computeAreaProbabilistic(Priority & curPriority, PlaceIndex nextPlace,
-                                                           CSGOId csgoId, ModelNavData & modelNavData) {
+    void ComputeModelNavAreaNode::computeAreaProbabilistic(const ServerState & state, Priority & curPriority,
+                                                           PlaceIndex nextPlace, CSGOId csgoId,
+                                                           ModelNavData & modelNavData) {
         // compute area probabilities
         const csknow::inference_latent_area::InferenceAreaPlayerAtTickProbabilities & areaGridProbabilities =
             blackboard.inferenceManager.playerToInferenceData.at(csgoId).areaProbabilities;
@@ -193,7 +194,18 @@ namespace follow::compute_nav_area {
             (yVal + 0.5) * deltaY,
             0.
         };
-        curPriority.targetAreaId = blackboard.navFile.get_nearest_area_by_position(vec3Conv(areaGridPos)).get_id();
+
+        curPriority.targetAreaId = blackboard.navFile
+            .get_nearest_area_by_position_in_place(vec3Conv(areaGridPos), modelNavData.nextPlaceIndex).get_id();
+        // if same next place and not at old next area, keep using that area
+        if (blackboard.playerToModelNavData.find(csgoId) != blackboard.playerToModelNavData.end()) {
+            const ModelNavData & oldModelNavData = blackboard.playerToModelNavData.at(csgoId);
+            AreaId curAreaId = blackboard.navFile
+                .get_nearest_area_by_position(vec3Conv(state.getClient(csgoId).getFootPosForPlayer())).get_id();
+            if (oldModelNavData.nextPlace == modelNavData.nextPlace && oldModelNavData.nextArea != curAreaId) {
+                curPriority.targetAreaId = oldModelNavData.nextArea;
+            }
+        }
         curPriority.targetPos = vec3tConv(blackboard.navFile.get_area_by_id_fast(curPriority.targetAreaId).get_center());
         modelNavData.nextArea = curPriority.targetAreaId;
     }
@@ -256,7 +268,7 @@ namespace follow::compute_nav_area {
             if (!lastProbPlaceAreaAssignment.valid) {
                 PlaceIndex nextPlace = computePlaceProbabilistic(state, curOrder, curAreaId, treeThinker.csgoId,
                                                                  modelNavData);
-                computeAreaProbabilistic(curPriority, nextPlace, treeThinker.csgoId, modelNavData);
+                computeAreaProbabilistic(state, curPriority, nextPlace, treeThinker.csgoId, modelNavData);
                 lastProbPlaceAreaAssignment = {curPriority.targetPos, curPriority.targetAreaId, true};
                 blackboard.playerToTicksSinceLastProbPlaceAreaAssignment[treeThinker.csgoId] = 0;
                 blackboard.playerToModelNavData[treeThinker.csgoId] = modelNavData;

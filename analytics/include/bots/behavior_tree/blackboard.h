@@ -31,7 +31,7 @@
 using std::map;
 using std::make_unique;
 
-constexpr size_t newOrderTicks = 128 * 3;
+constexpr size_t newOrderTicks = 128 * 6;
 constexpr size_t newTargetTicks = 128 * 0.5;
 constexpr size_t newAggressionTicks = 128 * 0.5;
 constexpr size_t newPlaceAreaTicks = 128 * 1.;
