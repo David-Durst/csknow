@@ -61,7 +61,7 @@ namespace follow::compute_nav_area {
          */
 
         // compute place probabilities
-        float curPlaceProbability;
+        float curPlaceProbability = 0.;
         vector<float> probabilities;
         vector<PlaceIndex> validPlacesOrderedProbs;
         for (PlaceIndex i = 0; i < placeProbabilities.placeProbabilities.size(); i++) {
