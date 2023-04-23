@@ -10,18 +10,44 @@ namespace follow::compute_nav_area {
     constexpr double max_place_distance_seconds = 5.;
 
     PlaceIndex ComputeModelNavAreaNode::computePlaceProbabilistic(const Order & curOrder, AreaId curAreaId, CSGOId csgoId) {
-        // valid options for places are those in the order or within distance to current place
-        set<PlaceIndex> validPlaces;
+        // get cur place (closest place on order) and all places closer to objective
+        set<PlaceIndex> waypointPlacesSet;
         for (const auto & waypoint : curOrder.waypoints) {
-            validPlaces.insert(blackboard.distanceToPlaces.placeNameToIndex.at(waypoint.placeName));
+            waypointPlacesSet.insert(blackboard.distanceToPlaces.placeNameToIndex.at(waypoint.placeName));
         }
+
+        PlaceIndex curPlace = 0;
+        double minPlaceDistance = std::numeric_limits<double>::max();
+        size_t curAreaIndex = blackboard.navFile.m_area_ids_to_indices.at(curAreaId);
+        for (PlaceIndex placeIndex = 0; placeIndex < blackboard.distanceToPlaces.places.size(); placeIndex++) {
+            double curPlaceDistance = blackboard.distanceToPlaces.getClosestDistance(curAreaIndex, placeIndex);
+            if (curPlaceDistance < minPlaceDistance && waypointPlacesSet.find(placeIndex) != waypointPlacesSet.end()) {
+                curPlace = placeIndex;
+                minPlaceDistance = curPlaceDistance;
+            }
+        }
+
+        string curPlaceName = blackboard.distanceToPlaces.places[curPlace];
+        set<PlaceIndex> validPlaces;
+        bool hitCurPlace = false;
+        for (const auto & waypoint : curOrder.waypoints) {
+            if (waypoint.placeName == curPlaceName) {
+                hitCurPlace = true;
+            }
+            if (hitCurPlace) {
+                validPlaces.insert(blackboard.distanceToPlaces.placeNameToIndex.at(waypoint.placeName));
+            }
+        }
+
+        /*
+        // add all places that are within 5s of current location and not on order (aka can explore but can't go back)
         for (const auto & placeName : blackboard.distanceToPlaces.places) {
-            if (secondsAwayAtMaxSpeed(
-                blackboard.distanceToPlaces.getClosestDistance(curAreaId, placeName, blackboard.navFile)) <
+            if (secondsAwayAtMaxSpeed(blackboard.distanceToPlaces.getClosestDistance(curAreaId, placeName, blackboard.navFile)) <
                 max_place_distance_seconds) {
                 validPlaces.insert(blackboard.distanceToPlaces.placeNameToIndex.at(placeName));
             }
         }
+         */
 
         // compute place probabilities
         vector<float> probabilities;
@@ -33,6 +59,15 @@ namespace follow::compute_nav_area {
                 probabilities.push_back(placeProbabilities.placeProbabilities[i]);
                 validPlacesVector.push_back(i);
             }
+        }
+        // this should print for t's only
+        if (curOrder.waypoints[0].type == WaypointType::C4) {
+            std::cout << "valid places for " << csgoId << ": ";
+            for (const auto validPlace : validPlaces) {
+                std::cout << blackboard.distanceToPlaces.places[validPlace] << ", ";
+            }
+            std::cout << std::endl;
+            std::cout << "cur place: " << curPlaceName << std::endl;
         }
 
         // re-weight just for valid places
@@ -163,7 +198,7 @@ namespace follow::compute_nav_area {
             }
 
             // if in the target area (and not moving to c4), don't move
-            if (!blackboard.isPlayerDefuser(treeThinker.csgoId) && curAreaId == curPriority.targetAreaId) {
+            if ((!blackboard.isPlayerDefuser(treeThinker.csgoId) || state.c4IsDefused) && curAreaId == curPriority.targetAreaId) {
                 curPriority.moveOptions = {false, false, false};
             }
         }
