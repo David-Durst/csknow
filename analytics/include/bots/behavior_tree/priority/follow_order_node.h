@@ -9,6 +9,7 @@
 #include "bots/behavior_tree/pathing_node.h"
 #include <map>
 #include "bots/behavior_tree/condition_helper_node.h"
+#include "bots/behavior_tree/priority/model_nav_data.h"
 
 #define HOLD_DISTANCE 300.f
 
@@ -18,8 +19,9 @@ namespace follow {
         public:
             ComputeModelNavAreaNode(Blackboard & blackboard) : Node(blackboard, "ComputeModelNavAreaNode") { };
             PlaceIndex computePlaceProbabilistic(const ServerState & state, const Order & curOrder,
-                                                 AreaId curAreaId, CSGOId csgoId);
-            void computeAreaProbabilistic(Priority & curPriority, PlaceIndex nextPlace, CSGOId csgoId);
+                                                 AreaId curAreaId, CSGOId csgoId, ModelNavData & modelNavData);
+            void computeAreaProbabilistic(Priority & curPriority, PlaceIndex nextPlace, CSGOId csgoId,
+                                          ModelNavData & modelNavData);
             virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override;
         };
 

@@ -1,6 +1,7 @@
 //
 // Created by durst on 4/22/23.
 //
+#pragma optimize level=0
 
 #include "bots/analysis/learned_models.h"
 #include "bots/behavior_tree/priority/follow_order_node.h"
@@ -10,7 +11,8 @@ namespace follow::compute_nav_area {
     constexpr double max_place_distance_seconds = 5.;
 
     PlaceIndex ComputeModelNavAreaNode::computePlaceProbabilistic(const ServerState & state, const Order & curOrder,
-                                                                  AreaId curAreaId, CSGOId csgoId) {
+                                                                  AreaId curAreaId, CSGOId csgoId,
+                                                                  ModelNavData & modelNavData) {
         const ServerState::Client & curClient = state.getClient(csgoId);
         // get cur place (closest place on order) and all places closer to objective if CT (offense)
         // include a places on order if T (on defense)
@@ -39,6 +41,7 @@ namespace follow::compute_nav_area {
             }
             if (hitCurPlace || curClient.team == ENGINE_TEAM_T) {
                 validPlaces.insert(blackboard.distanceToPlaces.placeNameToIndex.at(waypoint.placeName));
+                modelNavData.orderPlaceOptions.push_back(waypoint.placeName);
             }
         }
 
@@ -93,11 +96,13 @@ namespace follow::compute_nav_area {
                 break;
             }
         }
+        modelNavData.curPlace = curPlaceName;
+        modelNavData.nextPlace = blackboard.distanceToPlaces.places[placeOption];
         return placeOption;
     }
 
     void ComputeModelNavAreaNode::computeAreaProbabilistic(Priority & curPriority, PlaceIndex nextPlace,
-                                                           CSGOId csgoId) {
+                                                           CSGOId csgoId, ModelNavData & modelNavData) {
         // compute area probabilities
         const csknow::inference_latent_area::InferenceAreaPlayerAtTickProbabilities & areaGridProbabilities =
             blackboard.inferenceManager.playerToInferenceData.at(csgoId).areaProbabilities;
@@ -138,6 +143,7 @@ namespace follow::compute_nav_area {
         };
         curPriority.targetAreaId = blackboard.navFile.get_nearest_area_by_position(vec3Conv(areaGridPos)).get_id();
         curPriority.targetPos = vec3tConv(blackboard.navFile.get_area_by_id_fast(curPriority.targetAreaId).get_center());
+        modelNavData.nextArea = curPriority.targetAreaId;
     }
 
     NodeState ComputeModelNavAreaNode::exec(const ServerState &state, TreeThinker &treeThinker) {
@@ -145,6 +151,7 @@ namespace follow::compute_nav_area {
             playerNodeState[treeThinker.csgoId] = NodeState::Failure;
             return playerNodeState[treeThinker.csgoId];
         }
+        ModelNavData modelNavData;
 
         const nav_mesh::nav_area & curArea = blackboard.navFile.get_nearest_area_by_position(
             vec3Conv(state.getClient(treeThinker.csgoId).getFootPosForPlayer()));
@@ -195,10 +202,12 @@ namespace follow::compute_nav_area {
                 blackboard.playerToLastProbPlaceAreaAssignment[treeThinker.csgoId];
 
             if (!lastProbPlaceAreaAssignment.valid) {
-                PlaceIndex nextPlace = computePlaceProbabilistic(state, curOrder, curAreaId, treeThinker.csgoId);
-                computeAreaProbabilistic(curPriority, nextPlace, treeThinker.csgoId);
+                PlaceIndex nextPlace = computePlaceProbabilistic(state, curOrder, curAreaId, treeThinker.csgoId,
+                                                                 modelNavData);
+                computeAreaProbabilistic(curPriority, nextPlace, treeThinker.csgoId, modelNavData);
                 lastProbPlaceAreaAssignment = {curPriority.targetPos, curPriority.targetAreaId, true};
                 blackboard.playerToTicksSinceLastProbPlaceAreaAssignment[treeThinker.csgoId] = 0;
+                blackboard.playerToModelNavData[treeThinker.csgoId] = modelNavData;
             }
             else {
                 curPriority.targetPos = lastProbPlaceAreaAssignment.targetPos;

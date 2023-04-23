@@ -224,7 +224,6 @@ namespace csknow::inference_manager {
         for (const auto & [_, inferenceData] : playerToInferenceData) {
             if (inferenceData.validData) {
                 return true;
-                break;
             }
         }
         return false;

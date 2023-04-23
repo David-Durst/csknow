@@ -57,6 +57,9 @@ vector<PrintState> Blackboard::printPerPlayerState(const ServerState &state, CSG
     printStates.emplace_back(playerToPath[playerId].print(state, navFile));
     printStates.emplace_back(playerToAction[playerId].print());
     printStates.emplace_back(playerToMemory[playerId].print(state));
+    if (playerToModelNavData.find(playerId) != playerToModelNavData.end()) {
+        printStates.emplace_back(playerToModelNavData[playerId].print(state));
+    }
 
     return printStates;
 }

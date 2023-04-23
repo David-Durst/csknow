@@ -24,6 +24,7 @@
 #include "bots/analysis/streaming_manager.h"
 #include "bots/analysis/feature_store.h"
 #include "bots/analysis/inference_manager.h"
+#include "bots/behavior_tree/priority/model_nav_data.h"
 #include <filesystem>
 #include <memory>
 #include <random>
@@ -209,6 +210,7 @@ struct Blackboard {
     map<CSGOId, uint32_t> playerToLastPathingSourceNavAreaId;
     map<CSGOId, uint32_t> playerToLastPathingTargetNavAreaId;
     std::uniform_real_distribution<> standDis;
+    map<CSGOId, ModelNavData> playerToModelNavData;
 
     // action data
     map<CSGOId, SecondOrderController> playerToMouseController;
