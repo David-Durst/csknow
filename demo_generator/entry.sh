@@ -26,9 +26,9 @@ cd ..
 
 
 if [ ! -v HEURISTICS ]; then
-    bash ~/csknow/analytics/scripts/bot_bt_run_docker_heuristics.sh >> bot.log 2>> bot.log &
-else 
     bash ~/csknow/analytics/scripts/bot_bt_run_docker.sh >> bot.log 2>> bot.log &
+else 
+    bash ~/csknow/analytics/scripts/bot_bt_run_docker_heuristics.sh >> bot.log 2>> bot.log &
 fi
 
 
