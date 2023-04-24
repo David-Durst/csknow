@@ -6,7 +6,7 @@ python3 -u upload_logs.py >> upload.log 2>> upload.log &
 # had problems getting csknow to update itself, so just forcing it here
 cd ~/csknow
 git pull --tags
-git checkout v0.2.0
+git checkout v0.2.1
 
 ssh-keygen -b 2048 -t rsa -f /tmp/sshkey -q -N ""
 
