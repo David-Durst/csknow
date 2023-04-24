@@ -5,6 +5,7 @@ python3 -u upload_logs.py >> upload.log 2>> upload.log &
 
 # had problems getting csknow to update itself, so just forcing it here
 cd ~/csknow
+git pull
 git pull --tags
 git checkout v0.2.1
 
