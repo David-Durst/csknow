@@ -75,8 +75,8 @@ namespace csknow::engagement_aim {
                 fs::path("engagement_aim_model") / fs::path("script_model.pt");
 
             try {
-                auto tmp_module = torch::jit::load(modelPath);
-                module = optimize_for_inference(tmp_module);
+                //auto tmp_module = torch::jit::load(modelPath);
+                //module = optimize_for_inference(tmp_module);
             }
             catch (const c10::Error& e) {
                 std::cerr << "error loading engagement aim model\n" << e.msg() << std::endl;
