@@ -7,7 +7,7 @@ python3 -u upload_logs.py >> upload.log 2>> upload.log &
 cd ~/csknow
 git pull
 git pull --tags
-git checkout v0.2.2
+git checkout v0.2.3
 
 ssh-keygen -b 2048 -t rsa -f /tmp/sshkey -q -N ""
 
