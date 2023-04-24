@@ -13,8 +13,12 @@ bash ~/install_link.sh
 
 cd learn_bot
 scripts/deploy_latent_models.sh
-
 cd ..
+
+cd analytics
+scripts/install_dependencies.sh
+cd ..
+
 
 if [ ! -v HEURISTICS ]; then
     bash ~/csknow/analytics/scripts/bot_bt_run_docker_heuristics.sh >> bot.log 2>> bot.log &
