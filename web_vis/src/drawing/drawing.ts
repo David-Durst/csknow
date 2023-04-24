@@ -446,7 +446,7 @@ export function drawTick(e: InputEvent) {
             mainCtx.font = (8 * fontScale).toString() + "px Arial"
         }
         else {
-            mainCtx.font = ((zScaling * 20 + 30) * fontScale).toString() + "px Arial"
+            mainCtx.font = ((zScaling * 5 + 14) * fontScale).toString() + "px Arial"
         }
         const location = new MapCoordinate(
             posTextPositions[ptp].pos.posX,
