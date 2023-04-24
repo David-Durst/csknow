@@ -19,5 +19,5 @@ cd ${script_dir}/..
 git pull
 cd build
 cmake .. -DCMAKE_BUILD_TYPE=Release
-make
+make -j
 chmod a+x csknow_bt_bot

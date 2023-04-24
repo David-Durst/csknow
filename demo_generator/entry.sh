@@ -11,9 +11,9 @@ git checkout v0.2.1
 
 ssh-keygen -b 2048 -t rsa -f /tmp/sshkey -q -N ""
 
-cd analytics
-scripts/install_dependencies.sh
-cd ..
+#cd analytics
+#scripts/install_dependencies.sh
+#cd ..
 
 bash ~/csknow/analytics/scripts/bot_build_docker.sh
 
