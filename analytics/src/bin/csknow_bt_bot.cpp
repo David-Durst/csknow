@@ -36,7 +36,7 @@ int main(int argc, char * argv[]) {
     uint64_t numFailures = 0;
     Tree tree(modelsDir);
     std::thread filterReceiver;
-    if (argc == 5) {
+    if (argc == 6) {
         std::thread tmpThread(&Tree::readFilterNames, &tree);
         filterReceiver.swap(tmpThread);
     }
