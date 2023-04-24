@@ -12,7 +12,7 @@ fi
 
 cd ${home_link_path}
 git pull --tags
-git checkout v0.1.4
+git checkout v0.2.0
 echo "${NONVOLUMESTEAMAPPDIR}" > .csgo_path
 
 cd ${csgo_link_path}/..
