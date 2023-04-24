@@ -1,3 +1,7 @@
+map=${1:-de_dust2}
+
+mkdir -p ../demos
+
 script_dir="tmp"
 #https://www.ostricher.com/2014/10/the-right-way-to-get-the-directory-of-a-bash-script/
 get_script_dir () {
@@ -15,5 +19,12 @@ get_script_dir () {
 get_script_dir
 
 
-cd ${script_dir}/../build
-./csknow_bt_bot ${script_dir}/../nav ${NONVOLUMESTEAMAPPDIR}/csgo/addons/sourcemod/bot-link-data ${script_dir}/../ ${script_dir}/../../learn_bot/models y
+iam_role=$(cat ${script_dir}/../private/.aws_csgo_server_role)
+gslt=$(cat ${script_dir}/../private/.gslt)
+docker run --name durst_csgo_${map} \
+    --rm \
+    -e RUNNING_IN_EC2=1 -e ROLE=${iam_role} -e MAP=${map} -e GSLT=${gslt} -e HEURISTICS=1 \
+    -p 27015:27015/tcp -p 27015:27015/udp \
+    --tmpfs /home/steam/csgo-dedicated-non-volume/csgo/addons/sourcemod/bot-link-data \
+    durst/csgo:0.4
+
