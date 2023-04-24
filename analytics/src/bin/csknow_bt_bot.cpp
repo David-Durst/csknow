@@ -1,6 +1,7 @@
 #include "bots/load_save_bot_data.h"
 #include "bots/behavior_tree/tree.h"
 #include "navmesh/nav_file.h"
+#include "bots/analysis/learned_models.h"
 #include <iostream>
 #include <thread>
 #include <chrono>
@@ -10,16 +11,24 @@
 
 //#define LOG_STATE
 int main(int argc, char * argv[]) {
-    if (argc != 5 && argc != 6) {
-        std::cout << "please call this code with 4 or 5 arguments: \n"
+    if (argc != 6 && argc != 7) {
+        std::cout << "please call this code with 5 or 6 arguments: \n"
             << "1. path/to/maps\n"
             << "2. path/to/data\n"
             << "3. path/to/log\n"
-            << "4. path/to/models\n"
-            << "5. any value disables read filter names thread\n" << std::endl;
+            << "4. path/to/models (string none disables models) \n"
+            << "5. y/n for using models (vs heuristics) \n"
+            << "6. any value disables read filter names thread\n" << std::endl;
         return 1;
     }
-    string mapsPath = argv[1], dataPath = argv[2], logPath = argv[3], modelsDir = argv[4];
+    string mapsPath = argv[1], dataPath = argv[2], logPath = argv[3], modelsDir = argv[4], useModels = argv[5];
+
+    if (useModels == "n") {
+        useOrderModelProbabilities = false;
+        useAggressionModelProbabilities = false;
+        useTargetModelProbabilities = false;
+        usePlaceAreaModelProbabilities = false;
+    }
 
     ServerState state;
     state.dataPath = dataPath;

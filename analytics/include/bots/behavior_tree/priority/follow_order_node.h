@@ -110,6 +110,7 @@ namespace follow {
     public:
         SpacingNode(Blackboard & blackboard) :
             SelectorNode(blackboard, Node::makeList(
+                make_unique<spacing::LearnedSpacingNode>(blackboard),
                 make_unique<spacing::BaitConditionNode>(blackboard),
                 make_unique<spacing::LurkConditionNode>(blackboard),
                 make_unique<spacing::PushConditionNode>(blackboard)),

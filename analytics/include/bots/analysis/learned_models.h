@@ -5,10 +5,10 @@
 #ifndef CSKNOW_LEARNED_MODELS_H
 #define CSKNOW_LEARNED_MODELS_H
 
-constexpr bool useOrderModelProbabilities = true;
-constexpr bool useAggressionModelProbabilities = true;
-constexpr bool useTargetModelProbabilities = true;
-constexpr bool usePlaceAreaModelProbabilities = true;
-constexpr bool runAllRounds = false;
+extern bool useOrderModelProbabilities;
+extern bool useAggressionModelProbabilities;
+extern bool useTargetModelProbabilities;
+extern bool usePlaceAreaModelProbabilities;
+extern bool runAllRounds;
 
 #endif //CSKNOW_LEARNED_MODELS_H
