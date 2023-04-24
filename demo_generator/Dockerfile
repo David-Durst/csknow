@@ -5,7 +5,7 @@ RUN ${HOMEDIR}/update.sh
 USER root
 # DONT INSTALL c++, g++ works but c++ crashes for some reason
 RUN apt-get -y update && \
-    apt-get -y install less procps unzip zip python3 jq libgomp1 make g++ git libssl-dev
+    apt-get -y install less procps unzip zip python3 jq libgomp1 make gcc g++ git libssl-dev gdb libopencv-dev python3-opencv cmake libhdf5-dev
 RUN wget https://github.com/Kitware/CMake/releases/download/v3.22.2/cmake-3.22.2-linux-x86_64.sh && \
     chmod a+x cmake-3.22.2-linux-x86_64.sh && \
     mkdir cmake && \
