@@ -291,6 +291,7 @@ void ServerState::loadC4State(const string& visibilityFilePath) {
     int64_t colNumber = 0;
 
     c4Exists = false;
+    bool c4IsPlantedPrior = c4IsPlanted;
 
     for (size_t curStart = firstRow + 1, curDelimiter = getNextDelimiter(file, curStart, stats.st_size);
          curDelimiter < static_cast<size_t>(stats.st_size);
@@ -318,6 +319,16 @@ void ServerState::loadC4State(const string& visibilityFilePath) {
         colNumber = (colNumber + 1) % 6;
     }
     closeMMapFile({fd, stats, file});
+
+    if (c4Exists && !c4IsPlantedPrior && c4IsPlanted) {
+        ticksSinceLastPlant = 0;
+    }
+    else if (c4IsPlanted) {
+        ticksSinceLastPlant++;
+    }
+    else {
+        ticksSinceLastPlant = -1;
+    }
 }
 
 void ServerState::loadHurtEvents(const string &hurtFilePath) {

@@ -262,6 +262,7 @@ public:
     bool c4IsDropped;
     bool c4IsDefused;
     float c4X, c4Y, c4Z;
+    int64_t ticksSinceLastPlant;
 
 
     // event state
