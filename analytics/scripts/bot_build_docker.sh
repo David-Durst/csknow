@@ -18,6 +18,6 @@ mkdir -p ${script_dir}/../build
 cd ${script_dir}/..
 git pull
 cd build
-cmake .. -DCMAKE_BUILD_TYPE=Release
+cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo
 make -j3
 chmod a+x csknow_bt_bot

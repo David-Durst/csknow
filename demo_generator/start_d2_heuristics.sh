@@ -25,6 +25,7 @@ docker run --name durst_csgo_${map} \
     --rm \
     -e RUNNING_IN_EC2=1 -e ROLE=${iam_role} -e MAP=${map} -e GSLT=${gslt} -e HEURISTICS=1 \
     -p 27015:27015/tcp -p 27015:27015/udp \
+    --ulimit core=-1 \
     --tmpfs /home/steam/csgo-dedicated-non-volume/csgo/addons/sourcemod/bot-link-data \
     --mount type=bind,source=$script_dir/../analytics/external,target=/home/steam/csknow/analytics/external \
     durst/csgo:0.4
