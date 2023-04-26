@@ -281,7 +281,7 @@ namespace follow::compute_nav_area {
 
             // if CT defuser and in bombsite, then move to c4
             if (blackboard.isPlayerDefuser(treeThinker.csgoId) &&
-                blackboard.distanceToPlaces.places[curArea.m_place] == curOrder.waypoints.back().placeName) {
+                blackboard.navFile.get_place(curArea.m_place) == curOrder.waypoints.back().placeName) {
                 curPriority.targetPos = state.getC4Pos();
                 curPriority.targetAreaId = blackboard.navFile.get_nearest_area_by_position(vec3Conv(curPriority.targetPos)).get_id();
             }
