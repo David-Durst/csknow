@@ -222,11 +222,11 @@ namespace csknow::inference_manager {
 
     bool InferenceManager::haveValidData() const {
         for (const auto & [_, inferenceData] : playerToInferenceData) {
-            if (inferenceData.validData) {
-                return true;
+            if (!inferenceData.validData) {
+                return false;
             }
         }
-        return false;
+        return true;
     }
 
 }

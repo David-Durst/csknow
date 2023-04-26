@@ -211,7 +211,8 @@ namespace follow::compute_nav_area {
     }
 
     NodeState ComputeModelNavAreaNode::exec(const ServerState &state, TreeThinker &treeThinker) {
-        if (blackboard.inAnalysis || blackboard.inTest || !usePlaceAreaModelProbabilities) {
+        if (blackboard.inAnalysis || blackboard.inTest || !usePlaceAreaModelProbabilities ||
+            !blackboard.inferenceManager.haveValidData()) {
             playerNodeState[treeThinker.csgoId] = NodeState::Failure;
             return playerNodeState[treeThinker.csgoId];
         }

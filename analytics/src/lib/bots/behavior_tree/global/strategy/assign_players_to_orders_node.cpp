@@ -151,9 +151,7 @@ namespace strategy {
     }
 
     bool AssignPlayersToOrders::assignPlayerToOrderProbabilistic(const ServerState::Client & client, bool plantedA) {
-        if (blackboard.inferenceManager.playerToInferenceData.find(client.csgoId) ==
-            blackboard.inferenceManager.playerToInferenceData.end() ||
-            !blackboard.inferenceManager.playerToInferenceData.at(client.csgoId).validData) {
+        if (!blackboard.inferenceManager.haveValidData()) {
             return false;
         }
         blackboard.ticksSinceLastProbOrderAssignment = 0;

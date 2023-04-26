@@ -120,6 +120,9 @@ void Tree::tick(ServerState & state, const string & mapsPath) {
         blackboard->featureStorePreCommitBuffer.updateFeatureStoreBufferPlayers(state);
         //updateStateVisibility(state, *blackboard);
 
+        // update cur clients before global node so have playerToInferenceData ready
+        inferenceManager.setCurClients(state.clients);
+
         // update all nodes in tree
         // don't care about which player as order is for all players
         globalNode->exec(state, defaultThinker);
@@ -129,7 +132,6 @@ void Tree::tick(ServerState & state, const string & mapsPath) {
         printStates.push_back(blackboard->printStrategyState(state));
         printStates.push_back(blackboard->printCommunicateState(state));
 
-        inferenceManager.setCurClients(state.clients);
         inferenceManager.recordTeamValues(featureStoreResult);
         featureStoreResult.teamFeatureStoreResult.reinit();
 
