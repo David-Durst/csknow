@@ -31,6 +31,10 @@ var csvPrefixBase = "demos/csvs3/"
 const trainProcessedPrefix = "demos/train_data/processed/"
 const trainCsvPrefixBase = "demos/train_data/csvs/"
 
+// these will be used to replace the prefixes if using retakes data set
+const retakesProcessedPrefix = "demos/retakes_data/processed/"
+const retakesCsvPrefixBase = "demos/retakes_data/csvs/"
+
 // these will be used to replace the AWS S3 prefixes if using manual data set
 const manualProcessedPrefix = "demos/manual_data/processed/"
 const manualCsvPrefixBase = "demos/manual_data/csvs/"
@@ -110,6 +114,7 @@ func main() {
 	fillAlreadyDownloaded(&alreadyDownloaded)
 
 	trainDataFlag := flag.Bool("t", true, "set -t=false if not using bot training data")
+	retakesDataFlag := flag.Bool("rd", true, "set if using retakes data")
 	manualDataFlag := flag.Bool("m", false, "set if using manual data")
 	localFlag := flag.Bool("l", false, "set for desktop runs that only download a few csvs")
 	keyFilterFlag := flag.String("f", "", "set for adding to local runs files that contain a substring")
@@ -127,6 +132,11 @@ func main() {
 		processedPrefix = manualProcessedPrefix
 		processedSmallPrefix = manualProcessedPrefix
 		csvPrefixBase = manualCsvPrefixBase
+		updatePrefixs()
+	} else if *retakesDataFlag {
+		processedPrefix = retakesProcessedPrefix
+		processedSmallPrefix = retakesProcessedPrefix
+		csvPrefixBase = retakesCsvPrefixBase
 		updatePrefixs()
 	}
 
@@ -192,6 +202,9 @@ func main() {
 	})
 
 	localDir := "../local_data/"
+	if *retakesDataFlag {
+		localDir = "../local_retakes_data/"
+	}
 	downloadFile(downloader, csvPrefixGlobal+"global_games.csv", localDir+gamesCSVName, true)
 	downloadFile(downloader, csvPrefixGlobal+"dimension_table_equipment.csv", localDir+localEquipmentDimTable, true)
 	downloadFile(downloader, csvPrefixGlobal+"dimension_table_game_types.csv", localDir+localGameTypeDimTable, true)
@@ -199,12 +212,21 @@ func main() {
 
 	saveNewlyDownloaded(needToDownload)
 
-	fmt.Printf("executing merge.sh")
-	out, err := exec.Command("/bin/bash", "merge.sh").Output()
-	if err != nil {
-		log.Fatal(err)
+	if !*retakesDataFlag {
+		fmt.Printf("executing merge.sh")
+		out, err := exec.Command("/bin/bash", "merge.sh").Output()
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Println(out)
+	} else {
+		fmt.Printf("executing merge_retakes.sh")
+		out, err := exec.Command("/bin/bash", "merge_retakes.sh").Output()
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Println(out)
 	}
-	fmt.Println(out)
 
 	if *localFlag {
 		fmt.Printf("executing first_lines_games.sh")
