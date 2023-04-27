@@ -42,6 +42,7 @@ private:
     void loadC4State(const string& c4FilePath);
     void loadHurtEvents(const string& hurtFilePath);
     void loadWeaponFireEvents(const string& weaponFireFilePath);
+    void loadRoundStartEvents(const string& roundStartFilePath);
 
 public:
     string mapName;
@@ -297,6 +298,8 @@ public:
         string weapon;
     };
     vector<WeaponFire> weaponFireEvents;
+    int64_t lastRoundStartFrame = -1;
+    bool newRoundStart = false;
 
     // state for caller to debug
     bool loadedSuccessfully;

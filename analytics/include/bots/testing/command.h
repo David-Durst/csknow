@@ -58,6 +58,17 @@ struct InitTestingRound : Command {
     }
 };
 
+struct InitGameRound : Command {
+    string scriptName;
+    InitGameRound(Blackboard & blackboard, string scriptName) :
+        Command(blackboard, "InitGameRoundCmd"), scriptName(scriptName) { }
+    virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
+        blackboard.inTest = true;
+        scriptLines = {"sm_refresh;say Running Game " + scriptName + "; sm_skipFirstRound; sm_botDebug f; mp_warmup_end; sm_draw;"};
+        return Command::exec(state, treeThinker);
+    }
+};
+
 struct SavePos : Command {
     string playerName;
 
