@@ -47,6 +47,24 @@ void saveVec3VectorToHDF5(const std::vector<Vec3> & vectorOfVec3, HighFive::File
         file.createDataSet("/data/" + baseString + " z", result[2], hdf5CreateProps);
 }
 
+void saveVec2VectorToHDF5(const std::vector<Vec2> & vectorOfVec2, HighFive::File & file,
+                          const string & baseString, const HighFive::DataSetCreateProps & hdf5CreateProps) {
+    std::array<std::vector<double>, 2> result;
+    for (size_t i = 0; i < result.size(); i++) {
+        result[0].reserve(vectorOfVec2.size());
+        result[1].reserve(vectorOfVec2.size());
+    }
+
+    for (size_t vectorIndex = 0; vectorIndex < vectorOfVec2.size(); vectorIndex++) {
+        result[0].push_back(vectorOfVec2[vectorIndex].x);
+        result[1].push_back(vectorOfVec2[vectorIndex].y);
+    }
+    HighFive::DataSet xDataset =
+        file.createDataSet("/data/" + baseString + " x", result[0], hdf5CreateProps);
+    HighFive::DataSet yDataset =
+        file.createDataSet("/data/" + baseString + " y", result[1], hdf5CreateProps);
+}
+
 void loadVec3VectorFromHDF5(std::vector<Vec3> & vectorOfVec3, HighFive::File & file, const string & baseString) {
     std::array<std::vector<double>, 3> result;
 
@@ -62,6 +80,21 @@ void loadVec3VectorFromHDF5(std::vector<Vec3> & vectorOfVec3, HighFive::File & f
         vectorOfVec3[vectorIndex].x = result[0][vectorIndex];
         vectorOfVec3[vectorIndex].y = result[1][vectorIndex];
         vectorOfVec3[vectorIndex].z = result[2][vectorIndex];
+    }
+}
+
+void loadVec2VectorFromHDF5(std::vector<Vec2> & vectorOfVec2, HighFive::File & file, const string & baseString) {
+    std::array<std::vector<double>, 3> result;
+
+    auto xDataset = file.getDataSet("/data/" + baseString + " x");
+    result[0] = xDataset.read<std::vector<double>>();
+    auto yDataset = file.getDataSet("/data/" + baseString + " y");
+    result[1] = yDataset.read<std::vector<double>>();
+
+    vectorOfVec2.resize(result[0].size());
+    for (size_t vectorIndex = 0; vectorIndex < vectorOfVec2.size(); vectorIndex++) {
+        vectorOfVec2[vectorIndex].x = result[0][vectorIndex];
+        vectorOfVec2[vectorIndex].y = result[1][vectorIndex];
     }
 }
 

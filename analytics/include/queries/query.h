@@ -377,7 +377,10 @@ void saveTemporalArrayOfVec3VectorsToHDF5(const std::vector<std::array<Vec3, N>>
 
 void saveVec3VectorToHDF5(const std::vector<Vec3> & vectorOfVec3, HighFive::File & file,
                           const string & baseString, const HighFive::DataSetCreateProps & hdf5CreateProps);
+void saveVec2VectorToHDF5(const std::vector<Vec2> & vectorOfVec2, HighFive::File & file,
+                          const string & baseString, const HighFive::DataSetCreateProps & hdf5CreateProps);
 void loadVec3VectorFromHDF5(std::vector<Vec3> & vectorOfVec3, HighFive::File & file, const string & baseString);
+void loadVec2VectorFromHDF5(std::vector<Vec2> & vectorOfVec2, HighFive::File & file, const string & baseString);
 
 void mergeThreadResults(int numThreads, vector<RangeIndexEntry> &rowIndicesPerRound, const vector<vector<int64_t>> & tmpRoundIds,
                         const vector<vector<int64_t>> & tmpRoundStarts, const vector<vector<int64_t>> & tmpRoundSizes,

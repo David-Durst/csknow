@@ -179,7 +179,7 @@ int main(int argc, char * argv[]) {
     string plantStatesName = "plantStates";
     std::cout << "processing plantStates" << std::endl;
     csknow::plant_states::PlantStatesResult plantStatesResult;
-    plantStatesResult.runQuery(filteredRounds, ticks, plants, defusals);
+    plantStatesResult.runQuery(filteredRounds, ticks, playerAtTick, plants, defusals);
     std::cout << "size: " << plantStatesResult.size << std::endl;
 
     map<string, reference_wrapper<QueryResult>> analyses {

@@ -18,6 +18,8 @@
 #include "bots/analysis/feature_store.h"
 
 namespace csknow::plant_states {
+    constexpr int max_players_per_team = 5;
+
     class PlantStatesResult : public QueryResult {
     public:
         vector<RangeIndexEntry> rowIndicesPerRound;
@@ -31,6 +33,12 @@ namespace csknow::plant_states {
         vector<TeamId> winnerTeam;
         vector<bool> c4Defused;
         IntervalIndex plantStatesPerTick;
+        struct PlayerState {
+            vector<bool> alive;
+            vector<Vec3> pos;
+            vector<Vec2> viewAngle;
+        };
+        array<PlayerState, max_players_per_team> ctPlayerStates, tPlayerStates;
 
 
         PlantStatesResult() {
@@ -89,6 +97,18 @@ namespace csknow::plant_states {
             saveVec3VectorToHDF5(c4Pos, file, "c4 pos", hdf5FlatCreateProps);
             file.createDataSet("/data/winner team", winnerTeam, hdf5FlatCreateProps);
             file.createDataSet("/data/c4 defused", c4Defused, hdf5FlatCreateProps);
+            for (size_t i = 0; i < max_players_per_team; i++) {
+                string iStr = std::to_string(i);
+                file.createDataSet("/data/ct " + iStr + " alive", ctPlayerStates[i].alive, hdf5FlatCreateProps);
+                saveVec3VectorToHDF5(ctPlayerStates[i].pos, file, "ct " + iStr + " alive", hdf5FlatCreateProps);
+                saveVec2VectorToHDF5(ctPlayerStates[i].viewAngle, file, "ct " + iStr + " view angle", hdf5FlatCreateProps);
+            }
+            for (size_t i = 0; i < max_players_per_team; i++) {
+                string iStr = std::to_string(i);
+                file.createDataSet("/data/t " + iStr + " alive", tPlayerStates[i].alive, hdf5FlatCreateProps);
+                saveVec3VectorToHDF5(tPlayerStates[i].pos, file, "t " + iStr + " alive", hdf5FlatCreateProps);
+                saveVec2VectorToHDF5(tPlayerStates[i].viewAngle, file, "t " + iStr + " view angle", hdf5FlatCreateProps);
+            }
         }
 
         void load(const string& filePath) {
@@ -121,10 +141,26 @@ namespace csknow::plant_states {
             auto c4DefusedDataset = file.getDataSet("/data/c4 defused");
             c4Defused = c4DefusedDataset.read<std::vector<bool>>();
 
+            for (size_t i = 0; i < max_players_per_team; i++) {
+                string iStr = std::to_string(i);
+                auto ctPlayerAliveDataset = file.getDataSet("/data/ct " + iStr + " alive");
+                ctPlayerStates[i].alive = ctPlayerAliveDataset.read<std::vector<bool>>();
+                loadVec3VectorFromHDF5(ctPlayerStates[i].pos, file, "ct " + iStr + " alive");
+                loadVec2VectorFromHDF5(ctPlayerStates[i].viewAngle, file, "ct " + iStr + " view angle");
+            }
+            for (size_t i = 0; i < max_players_per_team; i++) {
+                string iStr = std::to_string(i);
+                auto tPlayerAliveDataset = file.getDataSet("/data/t " + iStr + " alive");
+                tPlayerStates[i].alive = tPlayerAliveDataset.read<std::vector<bool>>();
+                loadVec3VectorFromHDF5(tPlayerStates[i].pos, file, "t " + iStr + " alive");
+                loadVec2VectorFromHDF5(tPlayerStates[i].viewAngle, file, "t " + iStr + " view angle");
+            }
+
             size = plantTickId.size();
         }
 
-        void runQuery(const Rounds & rounds, const Ticks & ticks, const Plants & plants, const Defusals & defusals);
+        void runQuery(const Rounds & rounds, const Ticks & ticks, const PlayerAtTick & playerAtTick,
+                      const Plants & plants, const Defusals & defusals);
     };
 
 }
