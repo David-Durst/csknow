@@ -158,7 +158,9 @@ func computePeriodIndices(lastIndices periodIndices, regulation bool, otNumber i
 	for i := lastIndices.lastSecondHalfEndIndex + 1; i < filteredRoundsTable.len(); i++ {
 		ctPeriodWins := filteredRoundsTable.rows[i].ctWins - otStartScore
 		tPeriodWins := filteredRoundsTable.rows[i].tWins - otStartScore
-		if ctPeriodWins == 0 && tPeriodWins == 0 {
+		// 2354401_134278_gambit-vs-faze-m1-dust2_faae56c6-972c-11ec-80cf-0a58a9feac02.dem - first round is invalid
+		// just let that one go and grab the first round
+		if ctPeriodWins == 0 && tPeriodWins == 0 || resultIndices.candidateFirstHalfStartIndex == InvalidInt {
 			resultIndices.candidateFirstHalfStartIndex = i
 		}
 		// end half when rounds are half total period rounds
@@ -228,10 +230,11 @@ func FilterRounds(idState *IDState, shouldFilterRounds bool) {
 	// save first id to continue based on, will need it since modifying table, possibly dropping first round
 	curRoundId := filteredRoundsTable.rows[0].id
 
-	// first get rid of the easy stuff: warmup rounds
+	// first get rid of the easy stuff: warmup rounds and those not won by a specific team
 	newRoundIndex := 0
 	for i := 0; i < filteredRoundsTable.len(); i++ {
-		if !filteredRoundsTable.rows[i].warmup {
+		if !filteredRoundsTable.rows[i].warmup && (filteredRoundsTable.rows[i].winner == common.TeamTerrorists ||
+			filteredRoundsTable.rows[i].winner == common.TeamCounterTerrorists) {
 			filteredRoundsTable.rows[newRoundIndex] = filteredRoundsTable.rows[i]
 			newRoundIndex++
 		}
