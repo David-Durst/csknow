@@ -47,6 +47,24 @@ void saveVec3VectorToHDF5(const std::vector<Vec3> & vectorOfVec3, HighFive::File
         file.createDataSet("/data/" + baseString + " z", result[2], hdf5CreateProps);
 }
 
+void loadVec3VectorFromHDF5(std::vector<Vec3> & vectorOfVec3, HighFive::File & file, const string & baseString) {
+    std::array<std::vector<double>, 3> result;
+
+    auto xDataset = file.getDataSet("/data/" + baseString + " x");
+    result[0] = xDataset.read<std::vector<double>>();
+    auto yDataset = file.getDataSet("/data/" + baseString + " y");
+    result[1] = yDataset.read<std::vector<double>>();
+    auto zDataset = file.getDataSet("/data/" + baseString + " z");
+    result[2] = zDataset.read<std::vector<double>>();
+
+    vectorOfVec3.resize(result[0].size());
+    for (size_t vectorIndex = 0; vectorIndex < vectorOfVec3.size(); vectorIndex++) {
+        vectorOfVec3[vectorIndex].x = result[0][vectorIndex];
+        vectorOfVec3[vectorIndex].y = result[1][vectorIndex];
+        vectorOfVec3[vectorIndex].z = result[2][vectorIndex];
+    }
+}
+
 void mergeThreadResults(int numThreads, vector<RangeIndexEntry> &rowIndicesPerRound, const vector<vector<int64_t>> & tmpRoundIds,
                         const vector<vector<int64_t>> & tmpRoundStarts, const vector<vector<int64_t>> & tmpRoundSizes,
                         vector<int64_t> & resultStartTickId, int64_t & resultSize,

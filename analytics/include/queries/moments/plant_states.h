@@ -76,7 +76,6 @@ namespace csknow::plant_states {
         }
 
         void toHDF5Inner(HighFive::File & file) override {
-
             HighFive::DataSetCreateProps hdf5FlatCreateProps;
             hdf5FlatCreateProps.add(HighFive::Deflate(6));
             hdf5FlatCreateProps.add(HighFive::Chunking(plantTickId.size()));
@@ -90,6 +89,37 @@ namespace csknow::plant_states {
             saveVec3VectorToHDF5(c4Pos, file, "c4 pos", hdf5FlatCreateProps);
             file.createDataSet("/data/winner team", winnerTeam, hdf5FlatCreateProps);
             file.createDataSet("/data/c4 defused", c4Defused, hdf5FlatCreateProps);
+        }
+
+        void load(const string& filePath) {
+            // We open the file as read-only:
+            HighFive::File file(filePath, HighFive::File::ReadOnly);
+
+            auto plantTickIdDataset = file.getDataSet("/data/plant tick id");
+            plantTickId = plantTickIdDataset.read<std::vector<int64_t>>();
+
+            auto roundEndTickIdDataset = file.getDataSet("/data/round end tick id");
+            roundEndTickId = roundEndTickIdDataset.read<std::vector<int64_t>>();
+
+            auto tickLengthDataset = file.getDataSet("/data/tick length");
+            tickLength = tickLengthDataset.read<std::vector<int64_t>>();
+
+            auto roundIdDataset = file.getDataSet("/data/round id");
+            roundId = roundIdDataset.read<std::vector<int64_t>>();
+
+            auto plantIdDataset = file.getDataSet("/data/plant id");
+            plantId = plantIdDataset.read<std::vector<int64_t>>();
+
+            auto defusalIdDataset = file.getDataSet("/data/defusal id");
+            defusalId = defusalIdDataset.read<std::vector<int64_t>>();
+
+            loadVec3VectorFromHDF5(c4Pos, file, "c4 pos");
+
+            auto winnerTeamDataset = file.getDataSet("/data/winner team");
+            winnerTeam = winnerTeamDataset.read<std::vector<TeamId>>();
+
+            auto c4DefusedDataset = file.getDataSet("/data/c4 defused");
+            c4Defused = c4DefusedDataset.read<std::vector<bool>>();
         }
 
         void runQuery(const Rounds & rounds, const Ticks & ticks, const Plants & plants, const Defusals & defusals);
