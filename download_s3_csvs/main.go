@@ -21,7 +21,10 @@ const gamesCSVName = "global_games.csv"
 const localEquipmentDimTable = "dimension_table_equipment.csv"
 const localGameTypeDimTable = "dimension_table_game_types.csv"
 const localHitGroupDimTable = "dimension_table_hit_groups.csv"
-const alreadyDownloadedFileName = "../local_data/already_downloaded.txt"
+
+var alreadyDownloadedFileName = "../local_data/already_downloaded.txt"
+var dataDir = "local_data"
+var dataPath = "../local_data/"
 
 var processedPrefix = "demos/processed2/"
 var processedSmallPrefix = "demos/processed2_small/"
@@ -34,6 +37,9 @@ const trainCsvPrefixBase = "demos/train_data/csvs/"
 // these will be used to replace the prefixes if using retakes data set
 const retakesProcessedPrefix = "demos/retakes_data/processed/"
 const retakesCsvPrefixBase = "demos/retakes_data/csvs/"
+const retakesAlreadyDownloadedFileName = "../retakes_data/already_downloaded.txt"
+const retakesDir = "retakes_data"
+const retakesPath = "../retakes_data/"
 
 // these will be used to replace the AWS S3 prefixes if using manual data set
 const manualProcessedPrefix = "demos/manual_data/processed/"
@@ -104,7 +110,7 @@ func downloadFile(downloader *s3manager.Downloader, fileKey string, localFileNam
 }
 
 func downloadCSVForDemo(downloader *s3manager.Downloader, demKey string, csvType string, mustDownload bool) {
-	localPath := path.Join("..", "local_data", csvType, demKey+"_"+csvType+".csv")
+	localPath := path.Join("..", dataDir, csvType, demKey+"_"+csvType+".csv")
 	downloadFile(downloader, csvPrefixLocal+demKey+"_"+csvType+".csv", localPath, mustDownload)
 }
 
@@ -137,6 +143,9 @@ func main() {
 		processedPrefix = retakesProcessedPrefix
 		processedSmallPrefix = retakesProcessedPrefix
 		csvPrefixBase = retakesCsvPrefixBase
+		alreadyDownloadedFileName = retakesAlreadyDownloadedFileName
+		dataDir = retakesDir
+		dataPath = retakesPath
 		updatePrefixs()
 	}
 
@@ -201,10 +210,7 @@ func main() {
 		return true
 	})
 
-	localDir := "../local_data/"
-	if *retakesDataFlag {
-		localDir = "../local_retakes_data/"
-	}
+	localDir := dataPath
 	downloadFile(downloader, csvPrefixGlobal+"global_games.csv", localDir+gamesCSVName, true)
 	downloadFile(downloader, csvPrefixGlobal+"dimension_table_equipment.csv", localDir+localEquipmentDimTable, true)
 	downloadFile(downloader, csvPrefixGlobal+"dimension_table_game_types.csv", localDir+localGameTypeDimTable, true)
