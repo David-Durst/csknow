@@ -11,7 +11,7 @@ namespace action {
     NodeState FireTaskNode::exec(const ServerState &state, TreeThinker &treeThinker) {
         const ServerState::Client & curClient = state.getClient(treeThinker.csgoId);
         Action & curAction = blackboard.playerToAction[treeThinker.csgoId];
-        Action & oldAction = blackboard.lastPlayerToAction[treeThinker.csgoId];
+        //Action & oldAction = blackboard.lastPlayerToAction[treeThinker.csgoId];
         Priority & curPriority = blackboard.playerToPriority[treeThinker.csgoId];
         //Path & curPath = blackboard.playerToPath[treeThinker.csgoId];
 
