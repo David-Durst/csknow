@@ -120,6 +120,8 @@ namespace csknow::plant_states {
 
             auto c4DefusedDataset = file.getDataSet("/data/c4 defused");
             c4Defused = c4DefusedDataset.read<std::vector<bool>>();
+
+            size = plantTickId.size();
         }
 
         void runQuery(const Rounds & rounds, const Ticks & ticks, const Plants & plants, const Defusals & defusals);
