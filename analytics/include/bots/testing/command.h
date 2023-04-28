@@ -63,7 +63,7 @@ struct InitGameRound : Command {
     InitGameRound(Blackboard & blackboard, string scriptName) :
         Command(blackboard, "InitGameRoundCmd"), scriptName(scriptName) { }
     virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
-        blackboard.inTest = true;
+        blackboard.inTest = false;
         scriptLines = {"sm_refresh;say Running Game " + scriptName + "; sm_skipFirstRound; sm_botDebug f; mp_warmup_end; sm_draw;"};
         return Command::exec(state, treeThinker);
     }

@@ -24,17 +24,20 @@
 //#define LOG_STATE
 
 int main(int argc, char * argv[]) {
-    if (argc != 6) {
-        std::cout << "please call this code with 5 arguments: \n"
+    if (argc != 7) {
+        std::cout << "please call this code with 6 arguments: \n"
             << "1. path/to/maps\n"
             << "2. path/to/data\n"
             << "3. path/to/log\n"
             << "4. path/to/models\n"
             << "5. path/to/saved/data\n"
+            << "6. t/r (t for tests, r for rounds)\n"
             << std::endl;
         return 1;
     }
     string mapsPath = argv[1], dataPath = argv[2], logPath = argv[3], modelsDir = argv[4], savedDatasetsDir = argv[5];
+
+    bool runTest = argv[6] == "t";
 
     ServerState state;
     state.dataPath = dataPath;
@@ -413,12 +416,18 @@ int main(int argc, char * argv[]) {
             tree.tick(state, mapsPath);
             if (state.clients.size() > 0) {
                 //std::cout << "time since last save " << state.getSecondsBetweenTimes(start, priorStart) << std::endl;
-                scriptsRunner.initialize(tree, state);
-                finishedTests = scriptsRunner.tick(tree, state);
-                //scenarioRunner.initialize(tree, state);
-                //finishedTests = scenarioRunner.tick(tree, state);
-                //humanScenarioRunner.initialize(tree, state);
-                //finishedTests = humanScenarioRunner.tick(tree, state);
+                if (runTest) {
+                    scriptsRunner.initialize(tree, state);
+                    finishedTests = scriptsRunner.tick(tree, state);
+                    //scenarioRunner.initialize(tree, state);
+                    //finishedTests = scenarioRunner.tick(tree, state);
+                    //humanScenarioRunner.initialize(tree, state);
+                    //finishedTests = humanScenarioRunner.tick(tree, state);
+                }
+                else {
+                    roundScriptsRunner.initialize(tree, state);
+                    finishedTests = roundScriptsRunner.tick(tree, state);
+                }
             }
             state.saveBotInputs();
         }
