@@ -145,7 +145,6 @@ namespace csknow::plant_states {
                 string iStr = std::to_string(i);
                 auto ctPlayerAliveDataset = file.getDataSet("/data/ct " + iStr + " alive");
                 ctPlayerStates[i].alive = ctPlayerAliveDataset.read<std::vector<bool>>();
-                std::cout << "writing ct " << i << std::endl;
                 loadVec3VectorFromHDF5(ctPlayerStates[i].pos, file, "ct " + iStr + " pos");
                 loadVec2VectorFromHDF5(ctPlayerStates[i].viewAngle, file, "ct " + iStr + " view angle");
             }

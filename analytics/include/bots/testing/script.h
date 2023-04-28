@@ -29,6 +29,7 @@ public:
             initScript(initScript), name(std::move(name)) { }
            //vector<Command::Ptr> && logicCommands, unique_ptr<Node> && conditions) :
            //logicCommands(std::move(logicCommands)), conditions(std::move(conditions)) { }
+    virtual ~Script() = default;
 
     static TreeThinker getDefaultThinker() {
         TreeThinker defaultThinker{INVALID_ID, AggressiveType::Push, {0., 0., 0., 0.}, 0.};

@@ -12,6 +12,8 @@
 #include "bots/testing/scripts/test_engage_spacing.h"
 #include "bots/testing/scripts/test_defuse.h"
 #include "bots/testing/scripts/test_head_position.h"
+#include "bots/testing/scripts/test_round.h"
+#include "queries/moments/plant_states.h"
 #include "navmesh/nav_file.h"
 #include <iostream>
 #include <thread>
@@ -22,16 +24,17 @@
 //#define LOG_STATE
 
 int main(int argc, char * argv[]) {
-    if (argc != 5) {
-        std::cout << "please call this code with 4 arguments: \n"
+    if (argc != 6) {
+        std::cout << "please call this code with 5 arguments: \n"
             << "1. path/to/maps\n"
             << "2. path/to/data\n"
             << "3. path/to/log\n"
             << "4. path/to/models\n"
+            << "5. path/to/saved/data\n"
             << std::endl;
         return 1;
     }
-    string mapsPath = argv[1], dataPath = argv[2], logPath = argv[3], modelsDir = argv[4];
+    string mapsPath = argv[1], dataPath = argv[2], logPath = argv[3], modelsDir = argv[4], savedDatasetsDir = argv[5];
 
     ServerState state;
     state.dataPath = dataPath;
@@ -41,6 +44,10 @@ int main(int argc, char * argv[]) {
     std::thread filterReceiver(&Tree::readFilterNames, &tree);
 
     bool finishedTests = false;
+    csknow::plant_states::PlantStatesResult plantStatesResult;
+    plantStatesResult.load(savedDatasetsDir + "/plantStates.hdf5");
+    ScriptsRunner roundScriptsRunner(createRoundScripts(plantStatesResult), false);
+
     ScriptsRunner scriptsRunner(Script::makeList(
             /*
          make_unique<GooseToCatScript>(state),

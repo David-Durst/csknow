@@ -26,4 +26,6 @@ public:
     void initialize(Tree & tree, ServerState & state) override;
 };
 
+vector<Script::Ptr> createRoundScripts(const csknow::plant_states::PlantStatesResult & plantStatesResult);
+
 #endif //CSKNOW_TEST_ROUND_H

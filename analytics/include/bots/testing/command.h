@@ -129,7 +129,7 @@ struct TeleportMultiple : Command {
             playerNames.push_back(serverState.getClient(playerId).name);
         }
     }
-    TeleportMultiple(Blackboard & blackboard, vector<string> playerName, vector<Vec3> playerPos,
+    TeleportMultiple(Blackboard & blackboard, vector<string> playerNames, vector<Vec3> playerPos,
                      vector<Vec2> playerViewAngle) :
         Command(blackboard, "TeleportCmd"), playerNames(playerNames), playerPos(playerPos),
         playerViewAngle(playerViewAngle) { }
