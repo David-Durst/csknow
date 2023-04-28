@@ -384,4 +384,53 @@ struct Pause : Command {
     }
 };
 
+struct Quit : Command {
+    Quit(Blackboard & blackboard) : Command(blackboard, "Quit") { }
+
+    virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
+        std::stringstream result;
+        result << "quit";
+        scriptLines = {result.str()};
+        return Command::exec(state, treeThinker);
+    }
+};
+
+struct SetMaxRounds : Command {
+    size_t maxRounds;
+    SetMaxRounds(Blackboard & blackboard, size_t maxRounds) :
+        Command(blackboard, "SetMaxRounds"), maxRounds(maxRounds) { }
+
+    virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
+        std::stringstream result;
+        result << "sm_setMaxRounds " << maxRounds;
+        scriptLines = {result.str()};
+        return Command::exec(state, treeThinker);
+    }
+};
+
+struct SetBotStop : Command {
+    bool ctBotStop, tBotStop;
+    SetBotStop(Blackboard & blackboard, bool ctBotStop, bool tBotStop) :
+        Command(blackboard, "SetMaxRounds"), ctBotStop(ctBotStop), tBotStop(tBotStop) { }
+
+    virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
+        std::stringstream result;
+        string botStopArg;
+        if (ctBotStop && tBotStop) {
+            botStopArg = "1";
+        }
+        else if (ctBotStop) {
+            botStopArg = "ct";
+        }
+        else if (tBotStop) {
+            botStopArg = "t";
+        }
+        else {
+            botStopArg = "0";
+        }
+        result << "sm_setBotStop " << botStopArg;
+        scriptLines = {result.str()};
+        return Command::exec(state, treeThinker);
+    }
+};
 #endif //CSKNOW_COMMAND_H
