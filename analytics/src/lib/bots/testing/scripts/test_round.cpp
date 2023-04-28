@@ -8,18 +8,27 @@ RoundScript::RoundScript(const csknow::plant_states::PlantStatesResult & plantSt
     name += std::to_string(plantStateIndex);
     int numCT = 0, numT = 0;
     neededBots.clear();
+    c4Pos = plantStatesResult.c4Pos[plantStateIndex];
     for (size_t i = 0; i < csknow::plant_states::max_players_per_team; i++) {
         if (plantStatesResult.ctPlayerStates[i].alive[plantStateIndex] && numCT < maxCT) {
             numCT++;
             neededBots.push_back({0, ENGINE_TEAM_CT});
             playerPos.push_back(plantStatesResult.ctPlayerStates[i].pos[plantStateIndex]);
             playerViewAngle.push_back(plantStatesResult.ctPlayerStates[i].viewAngle[plantStateIndex]);
+            // need to flip view angle between recording and game
+            double tmpX = playerViewAngle.back().x;
+            playerViewAngle.back().x = playerViewAngle.back().y;
+            playerViewAngle.back().y = tmpX;
         }
         if (plantStatesResult.tPlayerStates[i].alive[plantStateIndex] && numT < maxT) {
             numT++;
             neededBots.push_back({0, ENGINE_TEAM_T});
             playerPos.push_back(plantStatesResult.tPlayerStates[i].pos[plantStateIndex]);
             playerViewAngle.push_back(plantStatesResult.tPlayerStates[i].viewAngle[plantStateIndex]);
+            // need to flip view angle between recording and game
+            double tmpX = playerViewAngle.back().x;
+            playerViewAngle.back().x = playerViewAngle.back().y;
+            playerViewAngle.back().y = tmpX;
         }
     }
 }
@@ -35,6 +44,8 @@ void RoundScript::initialize(Tree &tree, ServerState &state) {
             make_unique<SpecDynamic>(blackboard, neededBots, observeSettings),
             make_unique<SlayAllBut>(blackboard, neededBotIds, state),
             make_unique<TeleportMultiple>(blackboard, neededBotIds, playerPos, playerViewAngle, state),
+            make_unique<SetPos>(blackboard, c4Pos, Vec2({0., 0.})),
+            make_unique<TeleportPlantedC4>(blackboard),
             make_unique<movement::WaitNode>(blackboard, 0.1),
             make_unique<ClearMemoryCommunicationDangerNode>(blackboard),
             make_unique<RecomputeOrdersNode>(blackboard)), "RoundSetup");

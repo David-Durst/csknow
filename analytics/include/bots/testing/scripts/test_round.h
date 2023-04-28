@@ -16,6 +16,7 @@ constexpr int maxCT = 4;
 constexpr int maxT = 3;
 
 class RoundScript : public Script {
+    Vec3 c4Pos;
     vector<Vec3> playerPos;
     vector<Vec2> playerViewAngle;
 
