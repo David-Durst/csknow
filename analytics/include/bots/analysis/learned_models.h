@@ -5,10 +5,18 @@
 #ifndef CSKNOW_LEARNED_MODELS_H
 #define CSKNOW_LEARNED_MODELS_H
 
-extern bool useOrderModelProbabilities;
-extern bool useAggressionModelProbabilities;
-extern bool useTargetModelProbabilities;
-extern bool usePlaceAreaModelProbabilities;
+#include "bots/load_save_bot_data.h"
+
+extern bool useOrderModelProbabilitiesT, useOrderModelProbabilitiesCT;
+extern bool useAggressionModelProbabilitiesT, useAggressionModelProbabilitiesCT;
+extern bool useTargetModelProbabilitiesT, useTargetModelProbabilitiesCT;
+extern bool usePlaceAreaModelProbabilitiesT, usePlaceAreaModelProbabilitiesCT;
 extern bool runAllRounds;
+
+void setAllTeamModelProbabilities(bool value, TeamId teamId);
+bool getOrderModelProbabilities(TeamId teamId);
+bool getAggressionModelProbabilities(TeamId teamId);
+bool getTargetModelProbabilities(TeamId teamId);
+bool getPlaceAreaModelProbabilities(TeamId teamId);
 
 #endif //CSKNOW_LEARNED_MODELS_H

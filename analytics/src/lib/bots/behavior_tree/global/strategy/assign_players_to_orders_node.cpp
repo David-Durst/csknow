@@ -86,7 +86,7 @@ namespace strategy {
             // for T, same thing but also considering covering every order - nearest unassigned order, or nearest unassigned if all assigned
             for (const auto & client : state.clients) {
                 if (client.isAlive && client.isBot) {
-                    if (!blackboard.inTest && !blackboard.inAnalysis && useOrderModelProbabilities &&
+                    if (!blackboard.inTest && !blackboard.inAnalysis && getOrderModelProbabilities(client.team) &&
                         assignPlayerToOrderProbabilistic(client, plantedA)) {
                         continue;
                     }

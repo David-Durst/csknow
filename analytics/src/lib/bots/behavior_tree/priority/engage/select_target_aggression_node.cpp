@@ -8,6 +8,7 @@
 namespace engage {
     NodeState SelectTargetAggressionNode::exec(const ServerState &state, TreeThinker &treeThinker) {
         Priority & curPriority = blackboard.playerToPriority[treeThinker.csgoId];
+        const ServerState::Client & curClient = state.getClient(treeThinker.csgoId);
         //Path & curPath = blackboard.playerToPath[treeThinker.csgoId];
 
         // forcing targetPos to be something valid
@@ -21,7 +22,7 @@ namespace engage {
         blackboard.playerToTicksSinceLastProbAggressionAssignment[treeThinker.csgoId]++;
         bool timeForNewAggression =
                 blackboard.playerToTicksSinceLastProbAggressionAssignment.at(treeThinker.csgoId) >= newTargetTicks;
-        if (!blackboard.inAnalysis && !blackboard.inTest && useAggressionModelProbabilities &&
+        if (!blackboard.inAnalysis && !blackboard.inTest && getAggressionModelProbabilities(curClient.team) &&
             blackboard.inferenceManager.playerToInferenceData.find(treeThinker.csgoId) !=
             blackboard.inferenceManager.playerToInferenceData.end() &&
             blackboard.inferenceManager.playerToInferenceData.at(treeThinker.csgoId).validData) {

@@ -12,7 +12,7 @@ namespace communicate::spacing {
             blackboard.defuserId = {};
         }
 
-        if (blackboard.newOrderThisFrame && !blackboard.modelOrders) {
+        if (blackboard.newOrderThisFrame && !blackboard.modelOrdersCT) {
             for (const auto & orderId : blackboard.strategy.getOrderIds(false, true)) {
                 // assign one of pushers to go first, then assign rest
                 // after pushers, assign baiters

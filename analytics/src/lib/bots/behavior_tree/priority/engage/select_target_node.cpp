@@ -30,7 +30,7 @@ namespace engage {
         blackboard.playerToTicksSinceLastProbTargetAssignment[curClient.csgoId]++;
         bool timeForNewTarget =
             blackboard.playerToTicksSinceLastProbTargetAssignment.at(curClient.csgoId) >= newTargetTicks;
-        if (!blackboard.inAnalysis && useTargetModelProbabilities) {
+        if (!blackboard.inAnalysis && getTargetModelProbabilities(curClient.team)) {
             if (blackboard.playerToLastProbTargetAssignment.find(curClient.csgoId) ==
                 blackboard.playerToLastProbTargetAssignment.end() || timeForNewTarget) {
                 blackboard.playerToLastProbTargetAssignment[curClient.csgoId] = INVALID_ID;

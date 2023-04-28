@@ -67,7 +67,7 @@ void RoundScript::initialize(Tree &tree, ServerState &state) {
 vector<Script::Ptr> createRoundScripts(const csknow::plant_states::PlantStatesResult & plantStatesResult) {
     vector<Script::Ptr> result;
 
-    for (size_t i = 0; i < 1 /*static_cast<size_t>(plantStatesResult.size)*/; i++) {
+    for (size_t i = 0; i < static_cast<size_t>(plantStatesResult.size); i++) {
         result.push_back(make_unique<RoundScript>(plantStatesResult, i));
     }
 

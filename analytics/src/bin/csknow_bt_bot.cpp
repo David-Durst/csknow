@@ -24,10 +24,8 @@ int main(int argc, char * argv[]) {
     string mapsPath = argv[1], dataPath = argv[2], logPath = argv[3], modelsDir = argv[4], useModels = argv[5];
 
     if (useModels == "n") {
-        useOrderModelProbabilities = false;
-        useAggressionModelProbabilities = false;
-        useTargetModelProbabilities = false;
-        usePlaceAreaModelProbabilities = false;
+        setAllTeamModelProbabilities(false, ENGINE_TEAM_T);
+        setAllTeamModelProbabilities(false, ENGINE_TEAM_CT);
     }
 
     ServerState state;

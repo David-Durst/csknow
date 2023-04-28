@@ -32,7 +32,7 @@ int main(int argc, char * argv[]) {
             << "3. path/to/log\n"
             << "4. path/to/models\n"
             << "5. path/to/saved/data\n"
-            << "6. t/r (t for tests, r for rounds, rh for rounds with hueristics)\n"
+            << "6. t/r (t for tests, r for rounds, rh for rounds with hueristics, rht for rounds with t hueristics, rhct for rounds with ct heuristics)\n"
             << std::endl;
         return 1;
     }
@@ -42,14 +42,20 @@ int main(int argc, char * argv[]) {
     bool runTest = roundsTestStr == "t";
     bool runRoundsNoHeuristics = roundsTestStr == "r";
     bool runRoundsHeuristics = roundsTestStr == "rh";
-    if (!runTest && !runRoundsNoHeuristics && !runRoundsHeuristics) {
-        std::cout << "invalid test option " << std::endl;
+    bool runRoundsHeuristicsT = roundsTestStr == "rht";
+    bool runRoundsHeuristicsCT = roundsTestStr == "rhct";
+    if (!runTest && !runRoundsNoHeuristics && !runRoundsHeuristics && !runRoundsHeuristicsT && !runRoundsHeuristicsCT) {
+        std::cout << "invalid test option " << roundsTestStr << std::endl;
     }
     if (runRoundsHeuristics) {
-        useOrderModelProbabilities = false;
-        useAggressionModelProbabilities = false;
-        useTargetModelProbabilities = false;
-        usePlaceAreaModelProbabilities = false;
+        setAllTeamModelProbabilities(false, ENGINE_TEAM_T);
+        setAllTeamModelProbabilities(false, ENGINE_TEAM_CT);
+    }
+    if (runRoundsHeuristicsT) {
+        setAllTeamModelProbabilities(false, ENGINE_TEAM_T);
+    }
+    if (runRoundsHeuristicsCT) {
+        setAllTeamModelProbabilities(false, ENGINE_TEAM_CT);
     }
 
     ServerState state;
