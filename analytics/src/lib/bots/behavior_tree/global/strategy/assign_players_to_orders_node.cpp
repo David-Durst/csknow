@@ -63,10 +63,10 @@ namespace strategy {
                 }
             }
             // need some order assignment to work on first frame
-            if (usePlaceAreaModelProbabilities && tOptions.empty()) {
+            if (getPlaceAreaModelProbabilities(ENGINE_TEAM_T) && tOptions.empty()) {
                 tOptions.push_back({defaultTOption, blackboard.strategy.getOrder(defaultTOption).waypoints[0].placeName});
             }
-            else if (!usePlaceAreaModelProbabilities && tOptions.empty()) {
+            else if (!getPlaceAreaModelProbabilities(ENGINE_TEAM_T) && tOptions.empty()) {
                 throw std::runtime_error("no t orders with a hold place or hold area");
             }
 

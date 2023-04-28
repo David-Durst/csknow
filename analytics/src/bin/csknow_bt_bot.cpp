@@ -17,16 +17,13 @@ int main(int argc, char * argv[]) {
             << "2. path/to/data\n"
             << "3. path/to/log\n"
             << "4. path/to/models (string none disables models) \n"
-            << "5. y/n for using models (vs heuristics) \n"
+            << "5. r for rounds with models, rh for rounds with hueristics, rht for rounds with t hueristics, rhct for rounds with ct heuristics\n"
             << "6. any value disables read filter names thread\n" << std::endl;
         return 1;
     }
-    string mapsPath = argv[1], dataPath = argv[2], logPath = argv[3], modelsDir = argv[4], useModels = argv[5];
+    string mapsPath = argv[1], dataPath = argv[2], logPath = argv[3], modelsDir = argv[4], modelArg = argv[5];
 
-    if (useModels == "n") {
-        setAllTeamModelProbabilities(false, ENGINE_TEAM_T);
-        setAllTeamModelProbabilities(false, ENGINE_TEAM_CT);
-    }
+    processModelArg(modelArg);
 
     ServerState state;
     state.dataPath = dataPath;

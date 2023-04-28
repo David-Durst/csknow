@@ -14,6 +14,27 @@ bool usePlaceAreaModelProbabilitiesT = true;
 bool usePlaceAreaModelProbabilitiesCT = true;
 bool runAllRounds = false;
 
+void processModelArg(string modelArg) {
+    bool runRoundsNoHeuristics = modelArg == "r";
+    bool runRoundsHeuristics = modelArg == "rh";
+    bool runRoundsHeuristicsT = modelArg == "rht";
+    bool runRoundsHeuristicsCT = modelArg == "rhct";
+    if (!runRoundsNoHeuristics && !runRoundsHeuristics && !runRoundsHeuristicsT && !runRoundsHeuristicsCT) {
+        std::cout << "invalid test option " << modelArg << std::endl;
+        exit(1);
+    }
+    if (runRoundsHeuristics) {
+        setAllTeamModelProbabilities(false, ENGINE_TEAM_T);
+        setAllTeamModelProbabilities(false, ENGINE_TEAM_CT);
+    }
+    if (runRoundsHeuristicsT) {
+        setAllTeamModelProbabilities(false, ENGINE_TEAM_T);
+    }
+    if (runRoundsHeuristicsCT) {
+        setAllTeamModelProbabilities(false, ENGINE_TEAM_CT);
+    }
+}
+
 void setAllTeamModelProbabilities(bool value, TeamId teamId) {
     if (teamId == ENGINE_TEAM_T) {
         useOrderModelProbabilitiesT = value;
