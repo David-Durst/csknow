@@ -37,11 +37,13 @@ namespace strategy {
         // as soon as have valid inference data, need to get model orders, as rest of tree will assume switching to models
         bool switchToModelOrders = useOrderModelProbabilities && !blackboard.inTest && !blackboard.inAnalysis &&
             !blackboard.modelOrders && blackboard.inferenceManager.haveValidData();
+        // if start with model orders and switch off, then need to remove model orders immediately
+        bool switchFromModelOrders = blackboard.modelOrders && (blackboard.inTest || blackboard.inAnalysis);
         if (playerNodeState.find(treeThinker.csgoId) == playerNodeState.end() ||
             state.roundNumber != planRoundNumber || state.numPlayersAlive() != playersAliveLastPlan ||
             state.getPlayersOnTeam(ENGINE_TEAM_CT) != ctPlayers || state.getPlayersOnTeam(ENGINE_TEAM_T) != tPlayers ||
             botNeedsAnOrder ||
-            blackboard.recomputeOrders || probOrderChange || switchToModelOrders) {
+            blackboard.recomputeOrders || probOrderChange || switchToModelOrders || switchFromModelOrders) {
             planRoundNumber = state.roundNumber;
             playersAliveLastPlan = state.numPlayersAlive();
             ctPlayers = state.getPlayersOnTeam(ENGINE_TEAM_CT);
