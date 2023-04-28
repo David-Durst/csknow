@@ -57,6 +57,13 @@ public:
     void restart() { commands->restart(getDefaultThinker()); }
 
     const vector<NeededBot> & getNeededBots() { return neededBots; }
+    vector<CSGOId> getNeededBotIds() {
+        vector<CSGOId> result;
+        for (const auto & neededBot : neededBots) {
+            result.push_back(neededBot.id);
+        }
+        return result;
+    }
 };
 
 struct NeedPreTestingInitNode : Node {

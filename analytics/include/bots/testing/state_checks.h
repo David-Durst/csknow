@@ -313,4 +313,15 @@ public:
         return playerNodeState[treeThinker.csgoId];
     }
 };
+
+class RoundStart : public Node {
+public:
+    explicit RoundStart(Blackboard & blackboard) :
+        Node(blackboard, "RoundStart") { };
+
+    NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
+        playerNodeState[treeThinker.csgoId] = state.newRoundStart ? NodeState::Success : NodeState::Failure;
+        return playerNodeState[treeThinker.csgoId];
+    }
+};
 #endif //CSKNOW_STATE_CHECKS_H

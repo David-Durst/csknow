@@ -117,6 +117,36 @@ struct Teleport : Command {
     }
 };
 
+struct TeleportMultiple : Command {
+    vector<string> playerNames;
+    vector<Vec3> playerPos;
+    vector<Vec2> playerViewAngle;
+
+    TeleportMultiple(Blackboard & blackboard, vector<CSGOId> playerIds, vector<Vec3> playerPos,
+                     vector<Vec2> playerViewAngle, const ServerState & serverState) :
+        Command(blackboard, "TeleportCmd"), playerPos(playerPos), playerViewAngle(playerViewAngle) {
+        for (const auto & playerId : playerIds) {
+            playerNames.push_back(serverState.getClient(playerId).name);
+        }
+    }
+    TeleportMultiple(Blackboard & blackboard, vector<string> playerName, vector<Vec3> playerPos,
+                     vector<Vec2> playerViewAngle) :
+        Command(blackboard, "TeleportCmd"), playerNames(playerNames), playerPos(playerPos),
+        playerViewAngle(playerViewAngle) { }
+
+    virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
+        scriptLines = {};
+        for (size_t i = 0; i < playerNames.size(); i++) {
+            std::stringstream result;
+            result << "sm_setPos " << playerPos[i].x << " " << playerPos[i].y << " " << playerPos[i].z << " "
+                << playerViewAngle[i].y << " " << playerViewAngle[i].x << std::endl;
+            result << "sm_teleport " << playerNames[i];
+            scriptLines.push_back(result.str());
+        }
+        return Command::exec(state, treeThinker);
+    }
+};
+
 struct TeleportPlantedC4 : Command {
     TeleportPlantedC4(Blackboard & blackboard) :
             Command(blackboard, "TeleportPlantedC4Cmd") { }
