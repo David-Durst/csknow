@@ -14,6 +14,7 @@
 #include "bots/testing/scripts/test_head_position.h"
 #include "bots/testing/scripts/test_round.h"
 #include "queries/moments/plant_states.h"
+#include "bots/analysis/learned_models.h"
 #include "navmesh/nav_file.h"
 #include <iostream>
 #include <thread>
@@ -31,13 +32,25 @@ int main(int argc, char * argv[]) {
             << "3. path/to/log\n"
             << "4. path/to/models\n"
             << "5. path/to/saved/data\n"
-            << "6. t/r (t for tests, r for rounds)\n"
+            << "6. t/r (t for tests, r for rounds, rh for rounds with hueristics)\n"
             << std::endl;
         return 1;
     }
-    string mapsPath = argv[1], dataPath = argv[2], logPath = argv[3], modelsDir = argv[4], savedDatasetsDir = argv[5];
+    string mapsPath = argv[1], dataPath = argv[2], logPath = argv[3], modelsDir = argv[4], savedDatasetsDir = argv[5],
+        roundsTestStr = argv[6];
 
-    bool runTest = argv[6] == "t";
+    bool runTest = roundsTestStr == "t";
+    bool runRoundsNoHeuristics = roundsTestStr == "r";
+    bool runRoundsHeuristics = roundsTestStr == "rh";
+    if (!runTest && !runRoundsNoHeuristics && !runRoundsHeuristics) {
+        std::cout << "invalid test option " << std::endl;
+    }
+    if (runRoundsHeuristics) {
+        useOrderModelProbabilities = false;
+        useAggressionModelProbabilities = false;
+        useTargetModelProbabilities = false;
+        usePlaceAreaModelProbabilities = false;
+    }
 
     ServerState state;
     state.dataPath = dataPath;
@@ -49,7 +62,7 @@ int main(int argc, char * argv[]) {
     bool finishedTests = false;
     csknow::plant_states::PlantStatesResult plantStatesResult;
     plantStatesResult.load(savedDatasetsDir + "/plantStates.hdf5");
-    ScriptsRunner roundScriptsRunner(createRoundScripts(plantStatesResult), false);
+    ScriptsRunner roundScriptsRunner(createRoundScripts(plantStatesResult), true);
 
     ScriptsRunner scriptsRunner(Script::makeList(
             /*
