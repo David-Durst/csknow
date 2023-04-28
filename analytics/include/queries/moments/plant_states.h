@@ -100,13 +100,13 @@ namespace csknow::plant_states {
             for (size_t i = 0; i < max_players_per_team; i++) {
                 string iStr = std::to_string(i);
                 file.createDataSet("/data/ct " + iStr + " alive", ctPlayerStates[i].alive, hdf5FlatCreateProps);
-                saveVec3VectorToHDF5(ctPlayerStates[i].pos, file, "ct " + iStr + " alive", hdf5FlatCreateProps);
+                saveVec3VectorToHDF5(ctPlayerStates[i].pos, file, "ct " + iStr + " pos", hdf5FlatCreateProps);
                 saveVec2VectorToHDF5(ctPlayerStates[i].viewAngle, file, "ct " + iStr + " view angle", hdf5FlatCreateProps);
             }
             for (size_t i = 0; i < max_players_per_team; i++) {
                 string iStr = std::to_string(i);
                 file.createDataSet("/data/t " + iStr + " alive", tPlayerStates[i].alive, hdf5FlatCreateProps);
-                saveVec3VectorToHDF5(tPlayerStates[i].pos, file, "t " + iStr + " alive", hdf5FlatCreateProps);
+                saveVec3VectorToHDF5(tPlayerStates[i].pos, file, "t " + iStr + " pos", hdf5FlatCreateProps);
                 saveVec2VectorToHDF5(tPlayerStates[i].viewAngle, file, "t " + iStr + " view angle", hdf5FlatCreateProps);
             }
         }
@@ -145,14 +145,15 @@ namespace csknow::plant_states {
                 string iStr = std::to_string(i);
                 auto ctPlayerAliveDataset = file.getDataSet("/data/ct " + iStr + " alive");
                 ctPlayerStates[i].alive = ctPlayerAliveDataset.read<std::vector<bool>>();
-                loadVec3VectorFromHDF5(ctPlayerStates[i].pos, file, "ct " + iStr + " alive");
+                std::cout << "writing ct " << i << std::endl;
+                loadVec3VectorFromHDF5(ctPlayerStates[i].pos, file, "ct " + iStr + " pos");
                 loadVec2VectorFromHDF5(ctPlayerStates[i].viewAngle, file, "ct " + iStr + " view angle");
             }
             for (size_t i = 0; i < max_players_per_team; i++) {
                 string iStr = std::to_string(i);
                 auto tPlayerAliveDataset = file.getDataSet("/data/t " + iStr + " alive");
                 tPlayerStates[i].alive = tPlayerAliveDataset.read<std::vector<bool>>();
-                loadVec3VectorFromHDF5(tPlayerStates[i].pos, file, "t " + iStr + " alive");
+                loadVec3VectorFromHDF5(tPlayerStates[i].pos, file, "t " + iStr + " pos");
                 loadVec2VectorFromHDF5(tPlayerStates[i].viewAngle, file, "t " + iStr + " view angle");
             }
 

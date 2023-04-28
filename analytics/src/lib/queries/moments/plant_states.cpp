@@ -23,7 +23,7 @@ namespace csknow::plant_states {
         vector<vector<Vec3>> tmpC4Pos(numThreads);
         vector<vector<TeamId>> tmpWinnerTam(numThreads);
         vector<vector<bool>> tmpC4Defused(numThreads);
-        vector<array<PlayerState, max_players_per_team>> tmpCTPlayerStates, tmpTPlayerStates;
+        vector<array<PlayerState, max_players_per_team>> tmpCTPlayerStates(numThreads), tmpTPlayerStates(numThreads);
 
         // for each round
         // track events for each pairs of player.
@@ -52,10 +52,18 @@ namespace csknow::plant_states {
 
                 // don't add multiple player states per round
                 if (curTickIsPlant && !foundFirstPlantInRound) {
+                    tmpC4Pos[threadNum].push_back({
+                        ticks.bombX[tickIndex],
+                        ticks.bombY[tickIndex],
+                        ticks.bombZ[tickIndex]
+                    });
+
                     for (size_t i = 0; i < max_players_per_team; i++) {
                         tmpCTPlayerStates[threadNum][i].alive.push_back(false);
-                        tmpTPlayerStates[threadNum][i].alive.push_back(false);
                         tmpCTPlayerStates[threadNum][i].pos.push_back({0., 0., 0.});
+                        tmpCTPlayerStates[threadNum][i].viewAngle.push_back({0., 0.});
+                        tmpTPlayerStates[threadNum][i].alive.push_back(false);
+                        tmpTPlayerStates[threadNum][i].pos.push_back({0., 0., 0.});
                         tmpTPlayerStates[threadNum][i].viewAngle.push_back({0., 0.});
                     }
 
@@ -126,6 +134,7 @@ namespace csknow::plant_states {
                                roundId.push_back(tmpRoundId[minThreadId][tmpRowId]);
                                plantId.push_back(tmpPlantId[minThreadId][tmpRowId]);
                                defusalId.push_back(tmpDefusalId[minThreadId][tmpRowId]);
+                               c4Pos.push_back(tmpC4Pos[minThreadId][tmpRowId]);
                                winnerTeam.push_back(tmpWinnerTam[minThreadId][tmpRowId]);
                                c4Defused.push_back(tmpC4Defused[minThreadId][tmpRowId]);
                                for (size_t i = 0; i < max_players_per_team; i++) {
@@ -139,5 +148,16 @@ namespace csknow::plant_states {
                            });
         vector<const int64_t *> foreignKeyCols{plantTickId.data(), roundEndTickId.data()};
         plantStatesPerTick = buildIntervalIndex(foreignKeyCols, size);
+
+        /*
+        for (size_t i = 0; i < max_players_per_team; i++) {
+            std::cout << "ct player " << i << " alive size " << ctPlayerStates[i].alive.size() << std::endl;
+            std::cout << "ct player " << i << " pos size " << ctPlayerStates[i].pos.size() << std::endl;
+            std::cout << "ct player " << i << " view angle size " << ctPlayerStates[i].viewAngle.size() << std::endl;
+            std::cout << "t player " << i << " alive size " << ctPlayerStates[i].alive.size() << std::endl;
+            std::cout << "t player " << i << " pos size " << ctPlayerStates[i].pos.size() << std::endl;
+            std::cout << "t player " << i << " view angle size " << ctPlayerStates[i].viewAngle.size() << std::endl;
+        }
+         */
     }
 }
