@@ -1,4 +1,4 @@
-dir_path=../local_retakes_data
+dir_path=../retakes_data
 
 # add these back if doing cv visibility or manually labled actions/skills
 #visibilities visibilities_unadjusted actions skill

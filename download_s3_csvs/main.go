@@ -234,16 +234,23 @@ func main() {
 
 	saveNewlyDownloaded(needToDownload)
 
-	if !*retakesDataFlag {
-		fmt.Printf("executing merge.sh")
-		out, err := exec.Command("/bin/bash", "merge.sh").Output()
+	if *retakesDataFlag {
+		fmt.Printf("executing merge_retakes.sh")
+		out, err := exec.Command("/bin/bash", "merge_retakes.sh").Output()
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Println(out)
+	} else if *botRetakesDataFlag {
+		fmt.Printf("executing merge_bot_retakes.sh")
+		out, err := exec.Command("/bin/bash", "merge_bot_retakes.sh").Output()
 		if err != nil {
 			log.Fatal(err)
 		}
 		fmt.Println(out)
 	} else {
-		fmt.Printf("executing merge_retakes.sh")
-		out, err := exec.Command("/bin/bash", "merge_retakes.sh").Output()
+		fmt.Printf("executing merge.sh")
+		out, err := exec.Command("/bin/bash", "merge.sh").Output()
 		if err != nil {
 			log.Fatal(err)
 		}
