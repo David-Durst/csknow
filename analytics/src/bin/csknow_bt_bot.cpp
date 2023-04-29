@@ -43,7 +43,7 @@ int main(int argc, char * argv[]) {
 
     SetBotStop setBotStop(*tree.blackboard, botStop);
     setBotStop.exec(state, tree.defaultThinker);
-    SetMaxRounds setMaxRounds(*tree.blackboard, 100);
+    SetMaxRounds setMaxRounds(*tree.blackboard, 100, false);
     setMaxRounds.exec(state, tree.defaultThinker);
 
     int32_t priorFrame = 0;

@@ -324,4 +324,17 @@ public:
         return playerNodeState[treeThinker.csgoId];
     }
 };
+
+struct WaitUntilScoreLessThan : Node {
+    int maxScore;
+    WaitUntilScoreLessThan(Blackboard & blackboard, int maxScore) :
+        Node(blackboard, "WaitUntilScoreLessThan"), maxScore(maxScore) { }
+
+    virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
+        std::stringstream result;
+        playerNodeState[treeThinker.csgoId] = (state.ctScore + state.tScore < maxScore) ?
+            NodeState::Success : NodeState::Failure;
+        return playerNodeState[treeThinker.csgoId];
+    }
+};
 #endif //CSKNOW_STATE_CHECKS_H

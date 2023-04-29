@@ -412,7 +412,7 @@ struct SetMaxRounds : Command {
 struct SetBotStop : Command {
     string botStopStr;
     SetBotStop(Blackboard & blackboard, string botStopStr) :
-        Command(blackboard, "SetMaxRounds"), botStopStr(botStopStr) { }
+        Command(blackboard, "SetBotStop"), botStopStr(botStopStr) { }
 
     virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
         std::stringstream result;

@@ -38,7 +38,7 @@ int main(int argc, char * argv[]) {
         return 1;
     }
     string mapsPath = argv[1], dataPath = argv[2], logPath = argv[3], modelsDir = argv[4], savedDatasetsDir = argv[5],
-        roundsTestStr = argv[6], botStop = argv[6];
+        roundsTestStr = argv[6], botStop = argv[7];
 
     bool runTest = roundsTestStr == "t";
     if (!runTest) {
@@ -54,10 +54,8 @@ int main(int argc, char * argv[]) {
 
     SetBotStop setBotStop(*tree.blackboard, botStop);
     setBotStop.exec(state, tree.defaultThinker);
-    if (runTest) {
-        SetMaxRounds setMaxRounds(*tree.blackboard, 100);
-        setMaxRounds.exec(state, tree.defaultThinker);
-    }
+    SetMaxRounds setMaxRounds(*tree.blackboard, 100, false);
+    setMaxRounds.exec(state, tree.defaultThinker);
 
     bool finishedTests = false;
     csknow::plant_states::PlantStatesResult plantStatesResult;

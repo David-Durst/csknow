@@ -43,7 +43,7 @@ void RoundScript::initialize(Tree &tree, ServerState &state) {
         bool lastRound = numRounds == plantStateIndex + 1;
         Node::Ptr setupCommands = make_unique<SequenceNode>(blackboard, Node::makeList(
             make_unique<InitGameRound>(blackboard, name),
-            make_unique<SetMaxRounds>(blackboard, lastRound ? 20 : 1, true),
+            make_unique<SetMaxRounds>(blackboard, lastRound ? 2 : 20, true),
             make_unique<movement::WaitNode>(blackboard, 0.3),
             make_unique<SpecDynamic>(blackboard, neededBots, observeSettings),
             make_unique<SlayAllBut>(blackboard, neededBotIds, state),
@@ -80,16 +80,34 @@ void QuitScript::initialize(Tree & tree, ServerState & state) {
     }
 }
 
+WaitUntilScoreScript::WaitUntilScoreScript() : Script("WaitUntilScoreScript", {{0, ENGINE_TEAM_CT}},
+                                                      {ObserveType::FirstPerson, 0}) { }
+
+void WaitUntilScoreScript::initialize(Tree & tree, ServerState & state) {
+    if (tree.newBlackboard) {
+        Blackboard &blackboard = *tree.blackboard;
+        Script::initialize(tree, state);
+        commands = make_unique<SequenceNode>(blackboard, Node::makeList(
+            make_unique<SlayAllBut>(blackboard, vector<CSGOId>{}, state),
+            make_unique<RepeatDecorator>(blackboard, make_unique<WaitUntilScoreLessThan>(blackboard, 3), true),
+            make_unique<RepeatDecorator>(blackboard, make_unique<RoundStart>(blackboard), true)
+        ), "WaitUntilSequence");
+    }
+}
+
 vector<Script::Ptr> createRoundScripts(const csknow::plant_states::PlantStatesResult & plantStatesResult,
                                        bool quitAtEnd) {
     vector<Script::Ptr> result;
 
-    size_t numRounds = static_cast<size_t>(plantStatesResult.size);
+    size_t numRounds = 3;/*static_cast<size_t>(plantStatesResult.size);*/
     for (size_t i = 0; i < numRounds; i++) {
         result.push_back(make_unique<RoundScript>(plantStatesResult, i, numRounds));
     }
     if (quitAtEnd) {
         result.push_back(make_unique<QuitScript>());
+    }
+    else {
+        result.push_back(make_unique<WaitUntilScoreScript>());
     }
 
     return result;
