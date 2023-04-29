@@ -19,6 +19,7 @@ class RoundScript : public Script {
     Vec3 c4Pos;
     vector<Vec3> playerPos;
     vector<Vec2> playerViewAngle;
+    size_t plantStateIndex;
 
 public:
     explicit RoundScript(const csknow::plant_states::PlantStatesResult & plantStatesResult, size_t plantStateIndex);
@@ -26,6 +27,15 @@ public:
     void initialize(Tree & tree, ServerState & state) override;
 };
 
-vector<Script::Ptr> createRoundScripts(const csknow::plant_states::PlantStatesResult & plantStatesResult);
+class QuitScript : public Script {
+
+public:
+    QuitScript();
+
+    void initialize(Tree & tree, ServerState & state) override;
+};
+
+vector<Script::Ptr> createRoundScripts(const csknow::plant_states::PlantStatesResult & plantStatesResult,
+                                       bool quitAtEnd);
 
 #endif //CSKNOW_TEST_ROUND_H

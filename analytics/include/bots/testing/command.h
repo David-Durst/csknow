@@ -409,26 +409,13 @@ struct SetMaxRounds : Command {
 };
 
 struct SetBotStop : Command {
-    bool ctBotStop, tBotStop;
-    SetBotStop(Blackboard & blackboard, bool ctBotStop, bool tBotStop) :
-        Command(blackboard, "SetMaxRounds"), ctBotStop(ctBotStop), tBotStop(tBotStop) { }
+    string botStopStr;
+    SetBotStop(Blackboard & blackboard, string botStopStr) :
+        Command(blackboard, "SetMaxRounds"), botStopStr(botStopStr) { }
 
     virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
         std::stringstream result;
-        string botStopArg;
-        if (ctBotStop && tBotStop) {
-            botStopArg = "1";
-        }
-        else if (ctBotStop) {
-            botStopArg = "ct";
-        }
-        else if (tBotStop) {
-            botStopArg = "t";
-        }
-        else {
-            botStopArg = "0";
-        }
-        result << "sm_setBotStop " << botStopArg;
+        result << "sm_setBotStop " << botStopStr;
         scriptLines = {result.str()};
         return Command::exec(state, treeThinker);
     }

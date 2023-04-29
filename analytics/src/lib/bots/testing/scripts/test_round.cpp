@@ -4,7 +4,8 @@
 #include "bots/testing/scripts/test_round.h"
 
 RoundScript::RoundScript(const csknow::plant_states::PlantStatesResult & plantStatesResult, size_t plantStateIndex) :
-    Script("RoundScript", {}, {ObserveType::FirstPerson, 0}) {
+    Script("RoundScript", {}, {ObserveType::FirstPerson, 0}),
+    plantStateIndex(plantStateIndex) {
     name += std::to_string(plantStateIndex);
     int numCT = 0, numT = 0;
     neededBots.clear();
@@ -40,6 +41,7 @@ void RoundScript::initialize(Tree &tree, ServerState &state) {
         vector<CSGOId> neededBotIds = getNeededBotIds();
         Node::Ptr setupCommands = make_unique<SequenceNode>(blackboard, Node::makeList(
             make_unique<InitGameRound>(blackboard, name),
+            make_unique<SetMaxRounds>(blackboard, plantStateIndex + 5),
             make_unique<movement::WaitNode>(blackboard, 0.3),
             make_unique<SpecDynamic>(blackboard, neededBots, observeSettings),
             make_unique<SlayAllBut>(blackboard, neededBotIds, state),
@@ -64,11 +66,27 @@ void RoundScript::initialize(Tree &tree, ServerState &state) {
     }
 }
 
-vector<Script::Ptr> createRoundScripts(const csknow::plant_states::PlantStatesResult & plantStatesResult) {
+QuitScript::QuitScript() : Script("QuitScript", {{0, ENGINE_TEAM_CT}},
+                                  {ObserveType::FirstPerson, 0}) { }
+
+void QuitScript::initialize(Tree & tree, ServerState & state) {
+    if (tree.newBlackboard) {
+        Blackboard &blackboard = *tree.blackboard;
+        Script::initialize(tree, state);
+        commands = make_unique<SequenceNode>(blackboard, Node::makeList(
+            make_unique<Quit>(blackboard)), "RoundSequence");
+    }
+}
+
+vector<Script::Ptr> createRoundScripts(const csknow::plant_states::PlantStatesResult & plantStatesResult,
+                                       bool quitAtEnd) {
     vector<Script::Ptr> result;
 
     for (size_t i = 0; i < static_cast<size_t>(plantStatesResult.size); i++) {
         result.push_back(make_unique<RoundScript>(plantStatesResult, i));
+    }
+    if (quitAtEnd) {
+        result.push_back(make_unique<QuitScript>());
     }
 
     return result;

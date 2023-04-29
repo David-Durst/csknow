@@ -25,19 +25,21 @@
 //#define LOG_STATE
 
 int main(int argc, char * argv[]) {
-    if (argc != 7) {
-        std::cout << "please call this code with 6 arguments: \n"
+    if (argc != 9) {
+        std::cout << "please call this code with 8 arguments: \n"
             << "1. path/to/maps\n"
             << "2. path/to/data\n"
             << "3. path/to/log\n"
             << "4. path/to/models\n"
             << "5. path/to/saved/data\n"
             << "6. t for tests, r for rounds, rh for rounds with hueristics, rht for rounds with t hueristics, rhct for rounds with ct heuristics\n"
+            << "7. 1 for all csknow bots, ct for ct only csknow bots, t for t only csknow bots, 0 for for no csknow bots\n"
+            << "8. y/n for quit on finish\n"
             << std::endl;
         return 1;
     }
     string mapsPath = argv[1], dataPath = argv[2], logPath = argv[3], modelsDir = argv[4], savedDatasetsDir = argv[5],
-        roundsTestStr = argv[6];
+        roundsTestStr = argv[6], botStop = argv[6], quitOnFinish = argv[7];
 
     bool runTest = roundsTestStr == "t";
     if (!runTest) {
@@ -51,10 +53,17 @@ int main(int argc, char * argv[]) {
     Tree tree(modelsDir);
     std::thread filterReceiver(&Tree::readFilterNames, &tree);
 
+    SetBotStop setBotStop(*tree.blackboard, botStop);
+    setBotStop.exec(state, tree.defaultThinker);
+    if (runTest) {
+        SetMaxRounds setMaxRounds(*tree.blackboard, 100);
+        setMaxRounds.exec(state, tree.defaultThinker);
+    }
+
     bool finishedTests = false;
     csknow::plant_states::PlantStatesResult plantStatesResult;
     plantStatesResult.load(savedDatasetsDir + "/plantStates.hdf5");
-    ScriptsRunner roundScriptsRunner(createRoundScripts(plantStatesResult), true);
+    ScriptsRunner roundScriptsRunner(createRoundScripts(plantStatesResult, quitOnFinish == "y"), true);
 
     ScriptsRunner scriptsRunner(Script::makeList(
             /*

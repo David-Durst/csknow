@@ -2,6 +2,7 @@
 #include "bots/behavior_tree/tree.h"
 #include "navmesh/nav_file.h"
 #include "bots/analysis/learned_models.h"
+#include "bots/testing/command.h"
 #include <iostream>
 #include <thread>
 #include <chrono>
@@ -11,17 +12,19 @@
 
 //#define LOG_STATE
 int main(int argc, char * argv[]) {
-    if (argc != 6 && argc != 7) {
-        std::cout << "please call this code with 5 or 6 arguments: \n"
+    if (argc != 7 && argc != 8) {
+        std::cout << "please call this code with 6 or 7 arguments: \n"
             << "1. path/to/maps\n"
             << "2. path/to/data\n"
             << "3. path/to/log\n"
             << "4. path/to/models (string none disables models) \n"
             << "5. r for rounds with models, rh for rounds with hueristics, rht for rounds with t hueristics, rhct for rounds with ct heuristics\n"
-            << "6. any value disables read filter names thread\n" << std::endl;
+            << "6. 1 for all csknow bots, ct for ct only csknow bots, t for t only csknow bots, 0 for for no csknow bots\n"
+            << "7. any value disables read filter names thread\n" << std::endl;
         return 1;
     }
-    string mapsPath = argv[1], dataPath = argv[2], logPath = argv[3], modelsDir = argv[4], modelArg = argv[5];
+    string mapsPath = argv[1], dataPath = argv[2], logPath = argv[3], modelsDir = argv[4], modelArg = argv[5],
+        botStop = argv[6];
 
     processModelArg(modelArg);
 
@@ -31,12 +34,17 @@ int main(int argc, char * argv[]) {
     uint64_t numFailures = 0;
     Tree tree(modelsDir);
     std::thread filterReceiver;
-    if (argc == 6) {
+    if (argc == 7) {
         std::thread tmpThread(&Tree::readFilterNames, &tree);
         filterReceiver.swap(tmpThread);
     }
 
     at::set_num_threads(1);
+
+    SetBotStop setBotStop(*tree.blackboard, botStop);
+    setBotStop.exec(state, tree.defaultThinker);
+    SetMaxRounds setMaxRounds(*tree.blackboard, 100);
+    setMaxRounds.exec(state, tree.defaultThinker);
 
     int32_t priorFrame = 0;
     size_t numMisses = 0;
