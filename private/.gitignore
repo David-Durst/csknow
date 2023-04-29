@@ -2,3 +2,4 @@
 .aws_csgo_server_role
 .mysql_password
 .gslt
+.aws_credentials
