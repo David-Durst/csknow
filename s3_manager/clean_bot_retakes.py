@@ -1,13 +1,13 @@
 import boto3
 from constants import *
-from utils import generate_data_folder
+from utils import generate_bot_retakes_data_folder
 import s3fs
 
 
 def run():
     s3 = boto3.client('s3')
     # make sure folder structure exists
-    generate_data_folder(s3)
+    generate_bot_retakes_data_folder(s3)
 
     # make sure nothing considered already processed, but leave unprocessed in place
     fs = s3fs.S3FileSystem()
@@ -22,7 +22,7 @@ def run():
     bucket.objects.filter(Prefix=BOT_RETAKES_CSVS.key).delete()
 
     # create csv folders (as well as everything else, doesn't hurt since it's not slow and won't delete stuff)
-    generate_data_folder(s3)
+    generate_bot_retakes_data_folder(s3)
 
 if __name__ == "__main__":
     run()
