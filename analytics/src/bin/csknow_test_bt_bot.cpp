@@ -486,7 +486,12 @@ int main(int argc, char * argv[]) {
             << ", num dups " << numDups << std::endl;
         logFile << tree.curLog;
         logFile.close();
-        testLogFile << scriptsRunner.curLog();
+        if (runTest) {
+            testLogFile << scriptsRunner.curLog();
+        }
+        else {
+            testLogFile << roundScriptsRunner.curLog();
+        }
         testLogFile.close();
         state.sleepUntilServerStateExists(priorFileTime);
     }
