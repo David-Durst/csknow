@@ -10,7 +10,7 @@ fi
 cd ~/csknow
 git pull
 git pull --tags
-git checkout v0.2.10
+git checkout v0.2.11
 
 ssh-keygen -b 2048 -t rsa -f /tmp/sshkey -q -N ""
 
