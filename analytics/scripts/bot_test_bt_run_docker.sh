@@ -14,7 +14,6 @@ get_script_dir () {
 }
 get_script_dir
 
-
 cd ${script_dir}/../build
 ./csknow_test_bt_bot ${script_dir}/../nav ${NONVOLUMESTEAMAPPDIR}/csgo/addons/sourcemod/bot-link-data ${script_dir}/../ ${script_dir}/../../learn_bot/models \
-    ${CSKNOW_BOT_STYLE} ${CSGO_BOT_STYLE}
+    ${script_dir}/../saved_datasets ${CSKNOW_BOT_STYLE} ${CSGO_BOT_STYLE}
