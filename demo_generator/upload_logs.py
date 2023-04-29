@@ -23,7 +23,7 @@ while True:
     for f in files[:-1]:
         print("moving file:" + str(f))
         p = Path(f)
-        aws_name = p.stem + "_" + csknow_bot_style + "_" + csgo_bot_style + "_" + str(machine_id) + p.suffix 
+        aws_name = csknow_bot_style + "_" + csgo_bot_style + "_" + p.stem + "_" + str(machine_id) + p.suffix 
         os.system(f"aws s3 cp {f} s3://csknow/demos/bot_retakes_data/unprocessed/bots/{aws_name}")
         os.remove(f)
     time.sleep(60)

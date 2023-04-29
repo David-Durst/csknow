@@ -18,8 +18,8 @@ get_script_dir () {
 }
 get_script_dir
 
-if [ -f "${script_dir}/../.aws_credentials" ]; then
-    source ${script_dir}/../.aws_credentials
+if [ -f "${script_dir}/../private/.aws_credentials" ]; then
+    source ${script_dir}/../private/.aws_credentials
 fi
 
 iam_role=$(cat ${script_dir}/../private/.aws_csgo_server_role)
