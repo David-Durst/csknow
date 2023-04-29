@@ -26,7 +26,8 @@ iam_role=$(cat ${script_dir}/../private/.aws_csgo_server_role)
 gslt=$(cat ${script_dir}/../private/.gslt)
 docker run --name durst_csgo_${map} \
     --rm \
-    -e RUNNING_IN_EC2=1 -e ROLE=${iam_role} -e MAP=${map} -e GSLT=${gslt} AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} \
+    -e RUNNING_IN_EC2=1 -e ROLE=${iam_role} -e MAP=${map} -e GSLT=${gslt} \
+    -e AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} -e AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} \
     -p 27015:27015/tcp -p 27015:27015/udp \
     --ulimit core=-1 \
     --tmpfs /home/steam/csgo-dedicated-non-volume/csgo/addons/sourcemod/bot-link-data \

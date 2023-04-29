@@ -16,4 +16,4 @@ get_script_dir
 
 
 cd ${script_dir}/../build
-./csknow_bt_bot ${script_dir}/../nav ${NONVOLUMESTEAMAPPDIR}/csgo/addons/sourcemod/bot-link-data ${script_dir}/../ ${script_dir}/../../learn_bot/models n
+./csknow_bt_bot ${script_dir}/../nav ${NONVOLUMESTEAMAPPDIR}/csgo/addons/sourcemod/bot-link-data ${script_dir}/../ ${script_dir}/../../learn_bot/models rh 1
