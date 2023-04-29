@@ -3,9 +3,10 @@
 //
 #include "bots/testing/scripts/test_round.h"
 
-RoundScript::RoundScript(const csknow::plant_states::PlantStatesResult & plantStatesResult, size_t plantStateIndex) :
+RoundScript::RoundScript(const csknow::plant_states::PlantStatesResult & plantStatesResult, size_t plantStateIndex,
+                         size_t numRounds) :
     Script("RoundScript", {}, {ObserveType::FirstPerson, 0}),
-    plantStateIndex(plantStateIndex) {
+    plantStateIndex(plantStateIndex), numRounds(numRounds) {
     name += std::to_string(plantStateIndex);
     int numCT = 0, numT = 0;
     neededBots.clear();
@@ -39,9 +40,10 @@ void RoundScript::initialize(Tree &tree, ServerState &state) {
         Blackboard &blackboard = *tree.blackboard;
         Script::initialize(tree, state);
         vector<CSGOId> neededBotIds = getNeededBotIds();
+        bool lastRound = numRounds == plantStateIndex + 1;
         Node::Ptr setupCommands = make_unique<SequenceNode>(blackboard, Node::makeList(
             make_unique<InitGameRound>(blackboard, name),
-            make_unique<SetMaxRounds>(blackboard, plantStateIndex + 5),
+            make_unique<SetMaxRounds>(blackboard, lastRound ? 20 : 1, true),
             make_unique<movement::WaitNode>(blackboard, 0.3),
             make_unique<SpecDynamic>(blackboard, neededBots, observeSettings),
             make_unique<SlayAllBut>(blackboard, neededBotIds, state),
@@ -82,8 +84,9 @@ vector<Script::Ptr> createRoundScripts(const csknow::plant_states::PlantStatesRe
                                        bool quitAtEnd) {
     vector<Script::Ptr> result;
 
-    for (size_t i = 0; i < static_cast<size_t>(plantStatesResult.size); i++) {
-        result.push_back(make_unique<RoundScript>(plantStatesResult, i));
+    size_t numRounds = static_cast<size_t>(plantStatesResult.size);
+    for (size_t i = 0; i < numRounds; i++) {
+        result.push_back(make_unique<RoundScript>(plantStatesResult, i, numRounds));
     }
     if (quitAtEnd) {
         result.push_back(make_unique<QuitScript>());

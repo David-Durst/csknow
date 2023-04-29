@@ -397,12 +397,13 @@ struct Quit : Command {
 
 struct SetMaxRounds : Command {
     size_t maxRounds;
-    SetMaxRounds(Blackboard & blackboard, size_t maxRounds) :
-        Command(blackboard, "SetMaxRounds"), maxRounds(maxRounds) { }
+    bool offset;
+    SetMaxRounds(Blackboard & blackboard, size_t maxRounds, bool offset) :
+        Command(blackboard, "SetMaxRounds"), maxRounds(maxRounds), offset(offset) { }
 
     virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
         std::stringstream result;
-        result << "sm_setMaxRounds " << maxRounds;
+        result << "sm_setMaxRounds " << (offset ? state.ctScore + state.tScore + maxRounds : maxRounds);
         scriptLines = {result.str()};
         return Command::exec(state, treeThinker);
     }

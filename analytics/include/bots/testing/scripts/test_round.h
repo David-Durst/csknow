@@ -19,10 +19,11 @@ class RoundScript : public Script {
     Vec3 c4Pos;
     vector<Vec3> playerPos;
     vector<Vec2> playerViewAngle;
-    size_t plantStateIndex;
+    size_t plantStateIndex, numRounds;
 
 public:
-    explicit RoundScript(const csknow::plant_states::PlantStatesResult & plantStatesResult, size_t plantStateIndex);
+    explicit RoundScript(const csknow::plant_states::PlantStatesResult & plantStatesResult, size_t plantStateIndex,
+                         size_t numRounds);
 
     void initialize(Tree & tree, ServerState & state) override;
 };
