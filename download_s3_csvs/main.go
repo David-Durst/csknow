@@ -41,6 +41,13 @@ const retakesAlreadyDownloadedFileName = "../retakes_data/already_downloaded.txt
 const retakesDir = "retakes_data"
 const retakesPath = "../retakes_data/"
 
+// these will be used to replace the prefixes if using bot retakes data set
+const botRetakesProcessedPrefix = "demos/bot_retakes_data/processed/"
+const botRetakesCsvPrefixBase = "demos/bot_retakes_data/csvs/"
+const botRetakesAlreadyDownloadedFileName = "../bot_retakes_data/already_downloaded.txt"
+const botRetakesDir = "bot_retakes_data"
+const botRetakesPath = "../bot_retakes_data/"
+
 // these will be used to replace the AWS S3 prefixes if using manual data set
 const manualProcessedPrefix = "demos/manual_data/processed/"
 const manualCsvPrefixBase = "demos/manual_data/csvs/"
@@ -120,7 +127,8 @@ func main() {
 	fillAlreadyDownloaded(&alreadyDownloaded)
 
 	trainDataFlag := flag.Bool("t", true, "set -t=false if not using bot training data")
-	retakesDataFlag := flag.Bool("rd", true, "set if using retakes data")
+	retakesDataFlag := flag.Bool("rd", false, "set if using retakes data")
+	botRetakesDataFlag := flag.Bool("brd", false, "set if using retakes data")
 	manualDataFlag := flag.Bool("m", false, "set if using manual data")
 	localFlag := flag.Bool("l", false, "set for desktop runs that only download a few csvs")
 	keyFilterFlag := flag.String("f", "", "set for adding to local runs files that contain a substring")
@@ -146,6 +154,14 @@ func main() {
 		alreadyDownloadedFileName = retakesAlreadyDownloadedFileName
 		dataDir = retakesDir
 		dataPath = retakesPath
+		updatePrefixs()
+	} else if *botRetakesDataFlag {
+		processedPrefix = botRetakesProcessedPrefix
+		processedSmallPrefix = botRetakesProcessedPrefix
+		csvPrefixBase = botRetakesCsvPrefixBase
+		alreadyDownloadedFileName = botRetakesAlreadyDownloadedFileName
+		dataDir = botRetakesDir
+		dataPath = botRetakesPath
 		updatePrefixs()
 	}
 

@@ -36,6 +36,11 @@ const retakesDemoUnprocessedPrefix = "demos/retakes_data/unprocessed/"
 const retakesDemoProcessedPrefix = "demos/retakes_data/processed/"
 const retakesCSVPrefixBase = "demos/retakes_data/csvs/"
 
+// these will be used to replace the AWS S3 prefixes if using bot retakes data set
+const botRetakesDemoUnprocessedPrefix = "demos/bot_retakes_data/unprocessed/"
+const botRetakesDemoProcessedPrefix = "demos/bot_retakes_data/processed/"
+const botRetakesCSVPrefixBase = "demos/bot_retakes_data/csvs/"
+
 // these will be used to replace the AWS S3 prefixes if using manual data set
 const manualDemoUnprocessedPrefix = "demos/manual_data/unprocessed/"
 const manualDemoProcessedPrefix = "demos/manual_data/processed/"
@@ -50,7 +55,8 @@ func main() {
 	startIDState := d.DefaultIDState()
 
 	trainDataFlag := flag.Bool("t", true, "set -t=false if not using bot training data")
-	retakesDataFlag := flag.Bool("rd", true, "set if using retakes data")
+	retakesDataFlag := flag.Bool("rd", false, "set if using retakes data")
+	botRetakesDataFlag := flag.Bool("brd", false, "set if using retakes data")
 	manualDataFlag := flag.Bool("m", false, "set if using manual data")
 	// if reprocessing, don't move the demos
 	firstRunPtr := flag.Bool("f", true, "set if first file processed is first overall")
@@ -66,7 +72,7 @@ func main() {
 		os.Exit(0)
 	}
 
-	shouldFilterRounds := !*manualDataFlag
+	shouldFilterRounds := !*manualDataFlag && !*botRetakesDataFlag
 	if *localFlag {
 		if !firstRun {
 			startIDState = d.ParseInputStateCSV()
@@ -90,6 +96,11 @@ func main() {
 		demoUnprocessedPrefix = retakesDemoUnprocessedPrefix
 		demoProcessedPrefix = retakesDemoProcessedPrefix
 		csvPrefixBase = retakesCSVPrefixBase
+		updatePrefixs()
+	} else if *botRetakesDataFlag {
+		demoUnprocessedPrefix = botRetakesDemoUnprocessedPrefix
+		demoProcessedPrefix = botRetakesDemoProcessedPrefix
+		csvPrefixBase = botRetakesCSVPrefixBase
 		updatePrefixs()
 	}
 
