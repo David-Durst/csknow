@@ -88,6 +88,8 @@ namespace csknow::retakes_moments {
         ctMoments.numPlayers.resize(numRounds, 0);
 
         tMoments.win.resize(numRounds);
+        tMoments.shotsPerTotalPlayers.resize(numRounds);
+        tMoments.killsPerTotalPlayers.resize(numRounds);
         tMoments.distanceTraveledPerPlayer.resize(numRounds, 0.);
         tMoments.maxDistanceFromStart.resize(numRounds, 0.);
         tMoments.shotsPerKill.resize(numRounds, 0.);
