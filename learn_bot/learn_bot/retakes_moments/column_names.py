@@ -41,6 +41,11 @@ class TeamMomentStrs:
     botType: str
     numPlayers: str
 
+    def get_moment_columns(self):
+        return [self.win, self.shots_per_total_players, self.kills_per_total_players,
+                self.distance_traveled_per_player, self.max_distance_from_start, self.shots_per_kill,
+                self.average_speed_while_shooting, self.num_players_alive_tick_before_explosion, self.numPlayers]
+
 
 ctMomentsStrs = TeamMomentStrs(
     "ct win",
@@ -71,3 +76,14 @@ tMomentsStrs = TeamMomentStrs(
 validRoundIdStr = "id"
 tickLengthStr = "tick length"
 defusalIdStr = "defusalId"
+
+
+@dataclass
+class CTTPair:
+    ct_column_name: str
+    t_column_name: str
+
+
+column_names: List[CTTPair] = \
+    [CTTPair(ctStr, tStr) for (ctStr, tStr) in
+     zip(ctMomentsStrs.get_moment_columns(), tMomentsStrs.get_moment_columns())]
