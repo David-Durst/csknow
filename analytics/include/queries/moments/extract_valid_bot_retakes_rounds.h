@@ -12,6 +12,7 @@
 #include <list>
 #include <map>
 #include "load_data.h"
+#include "queries/moments/plant_states.h"
 
 namespace csknow::round_extractor {
     class ExtractValidBotRetakesRounds {
@@ -19,6 +20,7 @@ namespace csknow::round_extractor {
         vector<int64_t> validRoundIds;
         vector<int64_t> plantIndex;
         ExtractValidBotRetakesRounds(const Games & games, const Rounds & rounds);
+        ExtractValidBotRetakesRounds(const csknow::plant_states::PlantStatesResult & plantStatesResult);
     };
 }
 

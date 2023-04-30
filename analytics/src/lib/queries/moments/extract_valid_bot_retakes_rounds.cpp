@@ -33,4 +33,13 @@ namespace csknow::round_extractor {
             }
         }
     }
+
+    ExtractValidBotRetakesRounds::ExtractValidBotRetakesRounds(
+        const csknow::plant_states::PlantStatesResult & plantStatesResult) {
+        for (int64_t i = 0; i < plantStatesResult.size; i++) {
+            validRoundIds.push_back(plantStatesResult.roundId[i]);
+            plantIndex.push_back(i);
+        }
+
+    }
 }

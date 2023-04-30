@@ -37,7 +37,6 @@ namespace csknow::plant_states {
             int64_t plantId = INVALID_ID;
             int64_t defusalId = INVALID_ID;
 
-            map<int64_t, int64_t> latentEventIndexToTmpEngagementIndex;
             bool foundFirstPlantInRound = false;
             for (int64_t tickIndex = rounds.ticksPerRound[roundIndex].minId;
                  tickIndex <= rounds.ticksPerRound[roundIndex].maxId; tickIndex++) {

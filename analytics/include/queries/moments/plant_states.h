@@ -45,10 +45,6 @@ namespace csknow::plant_states {
             variableLength = true;
             startTickColumn = 0;
             perEventLengthColumn = 2;
-            havePlayerLabels = true;
-            playerLabels = {"A", "T"};
-            playersToLabelColumn = 0;
-            playerLabelIndicesColumn = 1;
         }
 
         vector<int64_t> filterByForeignKey(int64_t otherTableIndex) override {
