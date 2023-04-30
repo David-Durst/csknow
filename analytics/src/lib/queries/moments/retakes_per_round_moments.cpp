@@ -200,7 +200,6 @@ namespace csknow::retakes_moments {
                                 }));
                             }
                             if (playersKillingThisTick.find(playerId) != playersKillingThisTick.end()) {
-                                std::cout << "recording kill" << std::endl;
                                 playerRetakeState.numKills++;
                             }
                             playerRetakeState.lastTickAlive = tickIndex;
@@ -255,7 +254,6 @@ namespace csknow::retakes_moments {
                 (ctMoments.numPlayers[validRoundIndex] + tMoments.numPlayers[validRoundIndex]);
             tMoments.shotsPerKill[validRoundIndex] /= tKills;
             tMoments.averageSpeedWhileShooting[validRoundIndex] /= tShots;
-            std::cout << "ct kills: " << ctKills << ", t kills " << tKills << std::endl;
 
             tickLength[validRoundIndex] = roundEndTickId[validRoundIndex] - plantTickId[validRoundIndex] + 1;
         }
