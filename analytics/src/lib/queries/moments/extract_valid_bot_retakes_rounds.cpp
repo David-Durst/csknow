@@ -16,6 +16,7 @@ namespace csknow::round_extractor {
                 }
             }
 
+            //size_t startIndexValidRoundsCurGame = validRoundIds.size();
             // first win round is for triggering the start, last win round is for reset, so get all between
             for (size_t i = 1; i < winRounds.size(); i++) {
                 if (winRounds[i] == lastWinRound) {
@@ -24,6 +25,13 @@ namespace csknow::round_extractor {
                 validRoundIds.push_back(winRounds[i]);
                 plantIndex.push_back(i-1);
             }
+
+            /*
+            std::cout << "valid rounds and plant index for " << games.demoFile[gameIndex] << ": " << std::endl;
+            for (size_t i = startIndexValidRoundsCurGame; i < validRoundIds.size(); i++) {
+                std::cout << validRoundIds[i] << "," << plantIndex[i] << std::endl;
+            }
+             */
         }
     }
 

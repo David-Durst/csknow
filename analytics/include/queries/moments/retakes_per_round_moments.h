@@ -35,6 +35,8 @@ namespace csknow::retakes_moments {
         struct TeamMoments {
             // level 0 - base performance
             vector<bool> win;
+            vector<int> shotsPerTotalPlayers;
+            vector<int> killsPerTotalPlayers;
             // level 1 - key metrics
             vector<double> distanceTraveledPerPlayer;
             vector<double> maxDistanceFromStart;
@@ -99,6 +101,8 @@ namespace csknow::retakes_moments {
             file.createDataSet("/data/plant id", plantId, hdf5FlatCreateProps);
             file.createDataSet("/data/defusal id", defusalId, hdf5FlatCreateProps);
             file.createDataSet("/data/ct win", ctMoments.win, hdf5FlatCreateProps);
+            file.createDataSet("/data/ct shots per total players", ctMoments.shotsPerTotalPlayers, hdf5FlatCreateProps);
+            file.createDataSet("/data/ct kills per total players", ctMoments.killsPerTotalPlayers, hdf5FlatCreateProps);
             file.createDataSet("/data/ct distance traveled per player", ctMoments.distanceTraveledPerPlayer, hdf5FlatCreateProps);
             file.createDataSet("/data/ct max distance from start", ctMoments.maxDistanceFromStart, hdf5FlatCreateProps);
             file.createDataSet("/data/ct shots per kill", ctMoments.shotsPerKill, hdf5FlatCreateProps);
@@ -107,6 +111,8 @@ namespace csknow::retakes_moments {
             file.createDataSet("/data/ct num players", ctMoments.numPlayers, hdf5FlatCreateProps);
             file.createDataSet("/data/ct bot type", vectorOfEnumsToVectorOfInts(ctMoments.botType), hdf5FlatCreateProps);
             file.createDataSet("/data/t win", tMoments.win, hdf5FlatCreateProps);
+            file.createDataSet("/data/t shots per total players", tMoments.shotsPerTotalPlayers, hdf5FlatCreateProps);
+            file.createDataSet("/data/t kills per total players", tMoments.killsPerTotalPlayers, hdf5FlatCreateProps);
             file.createDataSet("/data/t distance traveled per player", tMoments.distanceTraveledPerPlayer, hdf5FlatCreateProps);
             file.createDataSet("/data/t max distance from start", tMoments.maxDistanceFromStart, hdf5FlatCreateProps);
             file.createDataSet("/data/t shots per kill", tMoments.shotsPerKill, hdf5FlatCreateProps);
@@ -118,7 +124,8 @@ namespace csknow::retakes_moments {
 
         void runQuery(const Games & games, const Rounds & rounds, const Ticks & ticks, const PlayerAtTick & playerAtTick,
                       const WeaponFire & weaponFire, const Kills & kills, const Plants & plants, const Defusals & defusals,
-                      const csknow::round_extractor::ExtractValidBotRetakesRounds & extractValidBotRetakesRounds);
+                      const csknow::round_extractor::ExtractValidBotRetakesRounds & extractValidBotRetakesRounds,
+                      bool botData);
     };
 }
 

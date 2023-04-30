@@ -3,6 +3,7 @@
 //
 
 #include "queries/moments/retakes_per_round_moments.h"
+#include "signal.h"
 
 namespace csknow::retakes_moments {
     struct RetakeInternalPlayerState {
@@ -65,7 +66,8 @@ namespace csknow::retakes_moments {
                                           const PlayerAtTick & playerAtTick,
                                           const WeaponFire & weaponFire, const Kills & kills,
                                           const Plants & plants, const Defusals & defusals,
-                                          const csknow::round_extractor::ExtractValidBotRetakesRounds & extractValidBotRetakesRounds) {
+                                          const csknow::round_extractor::ExtractValidBotRetakesRounds & extractValidBotRetakesRounds,
+                                          bool botData) {
         size_t numRounds = extractValidBotRetakesRounds.validRoundIds.size();
         plantTickId.resize(numRounds);
         roundEndTickId.resize(numRounds);
@@ -75,6 +77,8 @@ namespace csknow::retakes_moments {
         defusalId.resize(numRounds, INVALID_ID);
 
         ctMoments.win.resize(numRounds);
+        ctMoments.shotsPerTotalPlayers.resize(numRounds);
+        ctMoments.killsPerTotalPlayers.resize(numRounds);
         ctMoments.distanceTraveledPerPlayer.resize(numRounds, 0.);
         ctMoments.maxDistanceFromStart.resize(numRounds, 0.);
         ctMoments.shotsPerKill.resize(numRounds, 0);
@@ -152,7 +156,7 @@ namespace csknow::retakes_moments {
                 set<int64_t> playersKillingThisTick;
                 for (const auto & [_0, _1, killIndex] :
                     ticks.killsPerTick.intervalToEvent.findOverlapping(tickIndex, tickIndex)) {
-                    playersFiringThisTick.insert(kills.killer[killIndex]);
+                    playersKillingThisTick.insert(kills.killer[killIndex]);
                 }
 
                 if (curTickIsFirstPlant) {
@@ -162,7 +166,7 @@ namespace csknow::retakes_moments {
                     foundFirstDefusalInRound = true;
                 }
 
-                if (foundFirstPlantInRound) {
+                if (botData || foundFirstPlantInRound) {
                     for (int64_t patIndex = ticks.patPerTick[tickIndex].minId;
                          patIndex <= ticks.patPerTick[tickIndex].maxId; patIndex++) {
                         if (playerAtTick.isAlive[patIndex]) {
@@ -196,6 +200,7 @@ namespace csknow::retakes_moments {
                                 }));
                             }
                             if (playersKillingThisTick.find(playerId) != playersKillingThisTick.end()) {
+                                std::cout << "recording kill" << std::endl;
                                 playerRetakeState.numKills++;
                             }
                             playerRetakeState.lastTickAlive = tickIndex;
@@ -238,10 +243,19 @@ namespace csknow::retakes_moments {
                 }
             }
 
+            ctMoments.shotsPerTotalPlayers[validRoundIndex] = ctShots /
+                (ctMoments.numPlayers[validRoundIndex] + tMoments.numPlayers[validRoundIndex]);
+            ctMoments.killsPerTotalPlayers[validRoundIndex] = ctKills /
+                (ctMoments.numPlayers[validRoundIndex] + tMoments.numPlayers[validRoundIndex]);
             ctMoments.shotsPerKill[validRoundIndex] /= ctKills;
             ctMoments.averageSpeedWhileShooting[validRoundIndex] /= ctShots;
+            tMoments.shotsPerTotalPlayers[validRoundIndex] = tShots /
+                (ctMoments.numPlayers[validRoundIndex] + tMoments.numPlayers[validRoundIndex]);
+            tMoments.killsPerTotalPlayers[validRoundIndex] = tKills /
+                (ctMoments.numPlayers[validRoundIndex] + tMoments.numPlayers[validRoundIndex]);
             tMoments.shotsPerKill[validRoundIndex] /= tKills;
             tMoments.averageSpeedWhileShooting[validRoundIndex] /= tShots;
+            std::cout << "ct kills: " << ctKills << ", t kills " << tKills << std::endl;
 
             tickLength[validRoundIndex] = roundEndTickId[validRoundIndex] - plantTickId[validRoundIndex] + 1;
         }

@@ -194,7 +194,7 @@ int main(int argc, char * argv[]) {
         csknow::round_extractor::ExtractValidBotRetakesRounds extractValidBotRetakesRounds(plantStatesResult);
         std::cout << "processing human retakes per round moments" << std::endl;
         retakesPerRoundMoments.runQuery(games, filteredRounds, ticks, playerAtTick, weaponFire, kills, plants, defusals,
-                                        extractValidBotRetakesRounds);
+                                        extractValidBotRetakesRounds, false);
         std::cout << "size: " << retakesPerRoundMoments.size << std::endl;
     }
     else {
@@ -202,7 +202,7 @@ int main(int argc, char * argv[]) {
         csknow::round_extractor::ExtractValidBotRetakesRounds extractValidBotRetakesRounds(games, filteredRounds);
         std::cout << "processing bot retakes per round moments" << std::endl;
         retakesPerRoundMoments.runQuery(games, filteredRounds, ticks, playerAtTick, weaponFire, kills, plants, defusals,
-                                        extractValidBotRetakesRounds);
+                                        extractValidBotRetakesRounds, true);
         std::cout << "size: " << retakesPerRoundMoments.size << std::endl;
     }
 
