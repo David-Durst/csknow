@@ -20,5 +20,5 @@ cd ${script_dir}/../build
 cmake .. -DCMAKE_BUILD_TYPE=Release
 if make -j4; then
     chmod a+x csknow_create_retakes_datasets
-    ${script_dir}/../build/csknow_create_retakes_datasets ${script_dir}/../../bot_retakes_data ${script_dir}/../nav ${script_dir}/../csv_outputs b
+    ${script_dir}/../build/csknow_create_retakes_moments_datasets ${script_dir}/../../bot_retakes_data ${script_dir}/../nav ${script_dir}/../csv_outputs b
 fi
