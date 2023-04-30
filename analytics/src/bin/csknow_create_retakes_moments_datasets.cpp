@@ -183,7 +183,7 @@ int main(int argc, char * argv[]) {
     std::cout << "size: " << nearestNavCellResult.size << std::endl;
 
     // plant states
-    string retakesPerRoundMomentsName = "retakesPerRoundMoments";
+    string retakesPerRoundMomentsName = std::string(humanData ? "human" : "bot") + "RetakesPerRoundMoments";
     csknow::retakes_moments::RetakesPerRoundMoments retakesPerRoundMoments;
 
     if (humanData) {
