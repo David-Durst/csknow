@@ -35,6 +35,7 @@
 #include "queries/orders.h"
 #include "queries/nearest_nav_cell.h"
 #include "queries/moments/extract_valid_bot_retakes_rounds.h"
+#include "queries/moments/retakes_per_round_moments.h"
 #define CPPHTTPLIB_OPENSSL_SUPPORT
 #include "httplib.h"
 #include <cerrno>
@@ -50,17 +51,20 @@ using std::string;
 using std::reference_wrapper;
 
 int main(int argc, char * argv[]) {
-    if (argc != 4) {
-        std::cout << "please call this code 3 arguments: " << std::endl;
+    if (argc != 5) {
+        std::cout << "please call this code 4 arguments: " << std::endl;
         std::cout << "1. path/to/local_data" << std::endl;
         std::cout << "2. path/to/nav_meshes" << std::endl;
         std::cout << "3. path/to/output/dir" << std::endl;
+        std::cout << "4. h for human/b for bot" << std::endl;
         return 1;
     }
 
     string dataPath = argv[1];
     string navPath = argv[2];
     string outputDir = argv[3];
+    string humanDataStr = argv[4];
+    bool humanData = humanDataStr == "h";
 
     std::map<std::string, nav_mesh::nav_file> map_navs;
     //Figure out from where to where you'd like to find a path
@@ -179,12 +183,32 @@ int main(int argc, char * argv[]) {
     std::cout << "size: " << nearestNavCellResult.size << std::endl;
 
     // plant states
-    string plantStatesName = "plantStates";
-    std::cout << "processing plantStates" << std::endl;
-    csknow::round_extractor::ExtractValidBotRetakesRounds extractValidBotRetakesRounds(games, filteredRounds);
+    string retakesPerRoundMomentsName = "retakesPerRoundMoments";
+    csknow::retakes_moments::RetakesPerRoundMoments retakesPerRoundMoments;
+
+    if (humanData) {
+        std::cout << "processing human plantStates" << std::endl;
+        csknow::plant_states::PlantStatesResult plantStatesResult;
+        plantStatesResult.runQuery(filteredRounds, ticks, playerAtTick, plants, defusals);
+        std::cout << "processing human plantStates" << std::endl;
+        csknow::round_extractor::ExtractValidBotRetakesRounds extractValidBotRetakesRounds(plantStatesResult);
+        std::cout << "processing human retakes per round moments" << std::endl;
+        retakesPerRoundMoments.runQuery(games, filteredRounds, ticks, playerAtTick, weaponFire, kills, plants, defusals,
+                                        extractValidBotRetakesRounds);
+        std::cout << "size: " << retakesPerRoundMoments.size << std::endl;
+    }
+    else {
+        std::cout << "processing bot plantStates" << std::endl;
+        csknow::round_extractor::ExtractValidBotRetakesRounds extractValidBotRetakesRounds(games, filteredRounds);
+        std::cout << "processing bot retakes per round moments" << std::endl;
+        retakesPerRoundMoments.runQuery(games, filteredRounds, ticks, playerAtTick, weaponFire, kills, plants, defusals,
+                                        extractValidBotRetakesRounds);
+        std::cout << "size: " << retakesPerRoundMoments.size << std::endl;
+    }
+
 
     map<string, reference_wrapper<QueryResult>> analyses {
-        //{plantStatesName, plantStatesResult},
+        {retakesPerRoundMomentsName, retakesPerRoundMoments},
     };
 
     // create the output files and the metadata describing files

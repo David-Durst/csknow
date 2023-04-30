@@ -24,13 +24,6 @@ namespace csknow::round_extractor {
                 validRoundIds.push_back(winRounds[i]);
                 plantIndex.push_back(i-1);
             }
-
-            if (gameIndex == 0) {
-                std::cout << "valid rounds and plant index for game 0:" << std::endl;
-                for (size_t i = 0; i < validRoundIds.size(); i++) {
-                    std::cout << validRoundIds[i] << "," << plantIndex[i] << std::endl;
-                }
-            }
         }
     }
 

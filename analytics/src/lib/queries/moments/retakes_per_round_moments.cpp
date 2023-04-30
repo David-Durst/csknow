@@ -135,8 +135,9 @@ namespace csknow::retakes_moments {
                     }
                 }
 
-                for (const auto & [_0, _1, explosionIndex] :
+                for (const auto & unused :
                     ticks.explosionsPerTick.intervalToEvent.findOverlapping(tickIndex, tickIndex)) {
+                    (void) unused;
                     explosionTickId = tickIndex;
                 }
 
@@ -205,7 +206,7 @@ namespace csknow::retakes_moments {
             }
 
             // compute overall team stats per round
-            int ctKills = 0, tKills, ctShots = 0, tShots = 0;
+            int ctKills = 0, tKills = 0, ctShots = 0, tShots = 0;
             for (const auto & [_, playerRetakeState] : playerToRetakeState) {
                 if (playerRetakeState.teamId == ENGINE_TEAM_CT) {
                     ctKills += playerRetakeState.numKills;
@@ -244,5 +245,6 @@ namespace csknow::retakes_moments {
 
             tickLength[validRoundIndex] = roundEndTickId[validRoundIndex] - plantTickId[validRoundIndex] + 1;
         }
+        size = roundId.size();
     }
 }

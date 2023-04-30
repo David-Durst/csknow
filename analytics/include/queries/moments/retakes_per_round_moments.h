@@ -54,6 +54,8 @@ namespace csknow::retakes_moments {
             perEventLengthColumn = 2;
         }
 
+        vector<int64_t> filterByForeignKey(int64_t) override { return {}; }
+
         void oneLineToCSV(int64_t index, std::ostream &s) override {
             s << index << "," << plantTickId[index] << "," << roundEndTickId[index] << "," << tickLength[index] << ","
               << roundId[index] << "," << plantId[index] << "," << defusalId[index] << ","
