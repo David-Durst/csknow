@@ -31,7 +31,7 @@ namespace csknow::retakes_moments {
             ctBotType = RetakeBotType::CSGODefault;
             tBotType = RetakeBotType::CSKnowLearned;
         }
-        else if (demoName.find("r_0") == 0) {
+        else if (demoName.find("rh_0") == 0) {
             ctBotType = RetakeBotType::CSGODefault;
             tBotType = RetakeBotType::CSGODefault;
         }
@@ -96,7 +96,7 @@ namespace csknow::retakes_moments {
         tMoments.botType.resize(numRounds);
         tMoments.numPlayers.resize(numRounds, 0);
 
-//#pragma omp parallel for
+#pragma omp parallel for
         for (size_t validRoundIndex = 0; validRoundIndex < extractValidBotRetakesRounds.validRoundIds.size();
              validRoundIndex++) {
             //int threadNum = omp_get_thread_num();
