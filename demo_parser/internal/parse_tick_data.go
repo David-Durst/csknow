@@ -389,12 +389,34 @@ func ProcessTickData(localDemName string, idState *IDState) {
 	})
 
 	p.RegisterEventHandler(func(e events.BombDefuseAborted) {
+		// demos/bot_retakes_data/unprocessed/bots/r_1_auto0-20230430-131945-747721314-de_dust2-Counter-Strike__Global_Offensive_c90ec300-e6ed-11ed-a337-0242ac110002.dem
+		// had a defsual with no defuse start
+		if defusalTable.len() == 0 {
+			curID := idState.nextDefusal
+			idState.nextDefusal++
+
+			defusalTable.append(defusalRow{
+				curID, plantTable.tail().id, idState.nextTick, InvalidId,
+				playersTracker.getPlayerIdFromGameData(e.Player), false,
+			})
+		}
 		defusal := defusalTable.tail()
 		defusal.endTick = idState.nextTick
 		defusal.successful = false
 	})
 
 	p.RegisterEventHandler(func(e events.BombDefused) {
+		// demos/bot_retakes_data/unprocessed/bots/r_1_auto0-20230430-131945-747721314-de_dust2-Counter-Strike__Global_Offensive_c90ec300-e6ed-11ed-a337-0242ac110002.dem
+		// had a defsual with no defuse start
+		if defusalTable.len() == 0 {
+			curID := idState.nextDefusal
+			idState.nextDefusal++
+
+			defusalTable.append(defusalRow{
+				curID, plantTable.tail().id, idState.nextTick, InvalidId,
+				playersTracker.getPlayerIdFromGameData(e.Player), false,
+			})
+		}
 		defusal := defusalTable.tail()
 		defusal.endTick = idState.nextTick
 		defusal.successful = true
