@@ -51,6 +51,9 @@ void RoundScript::initialize(Tree &tree, ServerState &state) {
             make_unique<SetPos>(blackboard, c4Pos, Vec2({0., 0.})),
             make_unique<TeleportPlantedC4>(blackboard),
             make_unique<movement::WaitNode>(blackboard, 0.1),
+            make_unique<DamageActive>(blackboard, neededBotIds[0], neededBotIds[0], state),
+            make_unique<SetHealth>(blackboard, neededBotIds[0], state, 100),
+            make_unique<movement::WaitNode>(blackboard, 0.1),
             make_unique<ClearMemoryCommunicationDangerNode>(blackboard),
             make_unique<RecomputeOrdersNode>(blackboard)), "RoundSetup");
         Node::Ptr disableAllBothDuringSetup = make_unique<ParallelFirstNode>(blackboard, Node::makeList(

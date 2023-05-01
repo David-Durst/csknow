@@ -69,6 +69,8 @@ namespace csknow::retakes_moments {
                                           const csknow::round_extractor::ExtractValidBotRetakesRounds & extractValidBotRetakesRounds,
                                           bool botData) {
         size_t numRounds = extractValidBotRetakesRounds.validRoundIds.size();
+        gameId.resize(numRounds);
+        plantSituationId.resize(numRounds);
         plantTickId.resize(numRounds);
         roundEndTickId.resize(numRounds);
         tickLength.resize(numRounds);
@@ -101,10 +103,12 @@ namespace csknow::retakes_moments {
 #pragma omp parallel for
         for (size_t validRoundIndex = 0; validRoundIndex < extractValidBotRetakesRounds.validRoundIds.size();
              validRoundIndex++) {
+            plantSituationId[validRoundIndex] = extractValidBotRetakesRounds.plantIndex[validRoundIndex];
             //std::cout << "valid round index " << validRoundIndex << std::endl;
             //int threadNum = omp_get_thread_num();
             int64_t roundIndex = extractValidBotRetakesRounds.validRoundIds[validRoundIndex];
             roundId[validRoundIndex] = roundIndex;
+            gameId[validRoundIndex] = rounds.gameId[roundIndex];
             roundEndTickId[validRoundIndex] = rounds.endTick[roundIndex];
             int64_t gameId = rounds.gameId[roundIndex];
             setBotTypes(ctMoments.botType[validRoundIndex], tMoments.botType[validRoundIndex],

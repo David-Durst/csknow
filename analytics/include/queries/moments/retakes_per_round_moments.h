@@ -26,6 +26,8 @@ namespace csknow::retakes_moments {
     };
     class RetakesPerRoundMoments : public QueryResult {
     public:
+        vector<int64_t> gameId;
+        vector<int64_t> plantSituationId;
         vector<int64_t> plantTickId;
         vector<int64_t> roundEndTickId;
         vector<int64_t> tickLength;
@@ -94,6 +96,8 @@ namespace csknow::retakes_moments {
             hdf5FlatCreateProps.add(HighFive::Deflate(6));
             hdf5FlatCreateProps.add(HighFive::Chunking(plantTickId.size()));
 
+            file.createDataSet("/data/game id", plantSituationId, hdf5FlatCreateProps);
+            file.createDataSet("/data/plant situation id", plantSituationId, hdf5FlatCreateProps);
             file.createDataSet("/data/plant tick id", plantTickId, hdf5FlatCreateProps);
             file.createDataSet("/data/round end tick id", roundEndTickId, hdf5FlatCreateProps);
             file.createDataSet("/data/tick length", tickLength, hdf5FlatCreateProps);
