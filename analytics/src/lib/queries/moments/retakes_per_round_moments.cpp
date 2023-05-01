@@ -85,7 +85,8 @@ namespace csknow::retakes_moments {
         ctMoments.maxDistanceFromStart.resize(numRounds, 0.);
         ctMoments.shotsPerKill.resize(numRounds, 0);
         ctMoments.averageSpeedWhileShooting.resize(numRounds, 0.);
-        ctMoments.numPlayersAliveTickBeforeExplosion.resize(numRounds, 0.);
+        ctMoments.numPlayersAliveTickBeforeExplosion.resize(numRounds, NAN);
+        ctMoments.numPlayersAliveTickAfterExplosion.resize(numRounds, NAN);
         ctMoments.botType.resize(numRounds);
         ctMoments.numPlayers.resize(numRounds, 0);
 
@@ -96,7 +97,8 @@ namespace csknow::retakes_moments {
         tMoments.maxDistanceFromStart.resize(numRounds, 0.);
         tMoments.shotsPerKill.resize(numRounds, 0.);
         tMoments.averageSpeedWhileShooting.resize(numRounds, 0.);
-        tMoments.numPlayersAliveTickBeforeExplosion.resize(numRounds, 0.);
+        tMoments.numPlayersAliveTickBeforeExplosion.resize(numRounds, NAN);
+        tMoments.numPlayersAliveTickAfterExplosion.resize(numRounds, NAN);
         tMoments.botType.resize(numRounds);
         tMoments.numPlayers.resize(numRounds, 0);
 
@@ -262,6 +264,12 @@ namespace csknow::retakes_moments {
              */
 
             // compute overall team stats per round
+            if (explosionTickId != INVALID_ID) {
+                ctMoments.numPlayersAliveTickBeforeExplosion[validRoundIndex] = 0;
+                ctMoments.numPlayersAliveTickAfterExplosion[validRoundIndex] = 0;
+                tMoments.numPlayersAliveTickBeforeExplosion[validRoundIndex] = 0;
+                tMoments.numPlayersAliveTickAfterExplosion[validRoundIndex] = 0;
+            }
             double ctKills = 0., tKills = 0., ctShots = 0., tShots = 0.;
             for (const auto & [_, playerRetakeState] : playerToRetakeState) {
                 if (playerRetakeState.teamId == ENGINE_TEAM_CT) {
@@ -276,6 +284,9 @@ namespace csknow::retakes_moments {
                     if (explosionTickId != INVALID_ID && playerRetakeState.lastTickAlive + 1 >= explosionTickId) {
                         ctMoments.numPlayersAliveTickBeforeExplosion[validRoundIndex]++;
                     }
+                    if (explosionTickId != INVALID_ID && playerRetakeState.lastTickAlive > explosionTickId) {
+                        ctMoments.numPlayersAliveTickAfterExplosion[validRoundIndex]++;
+                    }
                     ctMoments.numPlayers[validRoundIndex]++;
                 }
                 else {
@@ -289,6 +300,9 @@ namespace csknow::retakes_moments {
                     tMoments.averageSpeedWhileShooting[validRoundIndex] += playerRetakeState.sumSpeedDuringShooting;
                     if (explosionTickId != INVALID_ID && playerRetakeState.lastTickAlive + 1 >= explosionTickId) {
                         tMoments.numPlayersAliveTickBeforeExplosion[validRoundIndex]++;
+                    }
+                    if (explosionTickId != INVALID_ID && playerRetakeState.lastTickAlive > explosionTickId) {
+                        tMoments.numPlayersAliveTickAfterExplosion[validRoundIndex]++;
                     }
                     tMoments.numPlayers[validRoundIndex]++;
                 }

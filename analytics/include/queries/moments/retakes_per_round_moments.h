@@ -46,6 +46,7 @@ namespace csknow::retakes_moments {
             vector<double> averageSpeedWhileShooting;
             // level 2 - bug detectors
             vector<int> numPlayersAliveTickBeforeExplosion;
+            vector<int> numPlayersAliveTickAfterExplosion;
             // base statistics
             vector<RetakeBotType> botType;
             vector<int> numPlayers;
@@ -112,6 +113,7 @@ namespace csknow::retakes_moments {
             file.createDataSet("/data/ct shots per kill", ctMoments.shotsPerKill, hdf5FlatCreateProps);
             file.createDataSet("/data/ct average speed while shooting", ctMoments.averageSpeedWhileShooting, hdf5FlatCreateProps);
             file.createDataSet("/data/ct num players alive before explosion", ctMoments.numPlayersAliveTickBeforeExplosion, hdf5FlatCreateProps);
+            file.createDataSet("/data/ct num players alive after explosion", ctMoments.numPlayersAliveTickAfterExplosion, hdf5FlatCreateProps);
             file.createDataSet("/data/ct num players", ctMoments.numPlayers, hdf5FlatCreateProps);
             file.createDataSet("/data/ct bot type", vectorOfEnumsToVectorOfInts(ctMoments.botType), hdf5FlatCreateProps);
             file.createDataSet("/data/t win", tMoments.win, hdf5FlatCreateProps);
@@ -122,6 +124,7 @@ namespace csknow::retakes_moments {
             file.createDataSet("/data/t shots per kill", tMoments.shotsPerKill, hdf5FlatCreateProps);
             file.createDataSet("/data/t average speed while shooting", tMoments.averageSpeedWhileShooting, hdf5FlatCreateProps);
             file.createDataSet("/data/t num players alive before explosion", tMoments.numPlayersAliveTickBeforeExplosion, hdf5FlatCreateProps);
+            file.createDataSet("/data/t num players alive after explosion", tMoments.numPlayersAliveTickAfterExplosion, hdf5FlatCreateProps);
             file.createDataSet("/data/t num players", tMoments.numPlayers, hdf5FlatCreateProps);
             file.createDataSet("/data/t bot type", vectorOfEnumsToVectorOfInts(tMoments.botType), hdf5FlatCreateProps);
         }
