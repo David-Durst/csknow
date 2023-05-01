@@ -239,8 +239,8 @@ namespace csknow::retakes_moments {
                                     numTeleportTicks++;
                                     std::cout << "teleport tick " << tickIndex << " game tick number " << ticks.gameTickNumber[tickIndex] << " distance " << teleportDistance << std::endl;
                                 }
-                                 */
                                 teleportTick = true;
+                                 */
                             }
                             playerRetakeState.lastPos = curPos;
                         }
