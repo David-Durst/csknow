@@ -101,7 +101,7 @@ namespace csknow::retakes_moments {
 #pragma omp parallel for
         for (size_t validRoundIndex = 0; validRoundIndex < extractValidBotRetakesRounds.validRoundIds.size();
              validRoundIndex++) {
-            std::cout << "valid round index " << validRoundIndex << std::endl;
+            //std::cout << "valid round index " << validRoundIndex << std::endl;
             //int threadNum = omp_get_thread_num();
             int64_t roundIndex = extractValidBotRetakesRounds.validRoundIds[validRoundIndex];
             roundId[validRoundIndex] = roundIndex;
