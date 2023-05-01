@@ -85,8 +85,10 @@ namespace csknow::retakes_moments {
         ctMoments.maxDistanceFromStart.resize(numRounds, 0.);
         ctMoments.shotsPerKill.resize(numRounds, 0);
         ctMoments.averageSpeedWhileShooting.resize(numRounds, 0.);
-        ctMoments.numPlayersAliveTickBeforeExplosion.resize(numRounds, NAN);
-        ctMoments.numPlayersAliveTickAfterExplosion.resize(numRounds, NAN);
+        ctMoments.numPlayersAliveTickBeforeExplosion.resize(numRounds,
+                                                            std::numeric_limits<double>::quiet_NaN());
+        ctMoments.numPlayersAliveTickAfterExplosion.resize(numRounds,
+                                                           std::numeric_limits<double>::quiet_NaN());
         ctMoments.botType.resize(numRounds);
         ctMoments.numPlayers.resize(numRounds, 0);
 
@@ -97,8 +99,10 @@ namespace csknow::retakes_moments {
         tMoments.maxDistanceFromStart.resize(numRounds, 0.);
         tMoments.shotsPerKill.resize(numRounds, 0.);
         tMoments.averageSpeedWhileShooting.resize(numRounds, 0.);
-        tMoments.numPlayersAliveTickBeforeExplosion.resize(numRounds, NAN);
-        tMoments.numPlayersAliveTickAfterExplosion.resize(numRounds, NAN);
+        tMoments.numPlayersAliveTickBeforeExplosion.resize(numRounds,
+                                                           std::numeric_limits<double>::quiet_NaN());
+        tMoments.numPlayersAliveTickAfterExplosion.resize(numRounds,
+                                                          std::numeric_limits<double>::quiet_NaN());
         tMoments.botType.resize(numRounds);
         tMoments.numPlayers.resize(numRounds, 0);
 

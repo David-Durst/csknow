@@ -44,9 +44,9 @@ namespace csknow::retakes_moments {
             vector<double> maxDistanceFromStart;
             vector<double> shotsPerKill;
             vector<double> averageSpeedWhileShooting;
-            // level 2 - bug detectors
-            vector<int> numPlayersAliveTickBeforeExplosion;
-            vector<int> numPlayersAliveTickAfterExplosion;
+            // level 2 - bug detectors, making double so can have nan's
+            vector<double> numPlayersAliveTickBeforeExplosion;
+            vector<double> numPlayersAliveTickAfterExplosion;
             // base statistics
             vector<RetakeBotType> botType;
             vector<int> numPlayers;
