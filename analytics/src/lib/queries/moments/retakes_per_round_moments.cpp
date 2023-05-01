@@ -129,8 +129,9 @@ namespace csknow::retakes_moments {
             for (int64_t tickIndex = rounds.ticksPerRound[roundIndex].minId;
                  tickIndex <= rounds.ticksPerRound[roundIndex].maxId; tickIndex++) {
                 // can't use first death by world, not all rounds involve death by world
-                // but they all involve a teleport - clear all positions if teleported
-                bool teleportTick = false;
+                // but they all involve a teleport - clear all positions if first time teleported
+                // sometimes can teleport for next round before end of cur round
+                //bool kills = false;
                 bool curTickIsFirstPlant = false, curTickIsFirstDefusal = false;
                 for (const auto &[_0, _1, plantIndex]:
                     ticks.plantsEndPerTick.intervalToEvent.findOverlapping(tickIndex, tickIndex)) {
