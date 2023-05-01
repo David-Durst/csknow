@@ -98,7 +98,7 @@ namespace csknow::retakes_moments {
         tMoments.botType.resize(numRounds);
         tMoments.numPlayers.resize(numRounds, 0);
 
-//#pragma omp parallel for
+#pragma omp parallel for
         for (size_t validRoundIndex = 0; validRoundIndex < extractValidBotRetakesRounds.validRoundIds.size();
              validRoundIndex++) {
             std::cout << "valid round index " << validRoundIndex << std::endl;
