@@ -36,6 +36,7 @@ class TeamMomentStrs:
 
     # level 2 - bug detectors
     num_players_alive_tick_before_explosion: str
+    num_players_alive_tick_after_explosion: str
 
     # base statistics
     botType: str
@@ -44,7 +45,8 @@ class TeamMomentStrs:
     def get_moment_columns(self):
         return [self.win, self.shots_per_total_players, self.kills_per_total_players,
                 self.distance_traveled_per_player, self.max_distance_from_start, self.shots_per_kill,
-                self.average_speed_while_shooting, self.num_players_alive_tick_before_explosion, self.numPlayers]
+                self.average_speed_while_shooting, self.num_players_alive_tick_before_explosion,
+                self.num_players_alive_tick_after_explosion, self.numPlayers]
 
 
 ctMomentsStrs = TeamMomentStrs(
@@ -56,6 +58,7 @@ ctMomentsStrs = TeamMomentStrs(
     "ct shots per kill",
     "ct average speed while shooting",
     "ct num players alive before explosion",
+    "ct num players alive after explosion",
     "ct bot type",
     "ct num players"
 )
@@ -69,6 +72,7 @@ tMomentsStrs = TeamMomentStrs(
     "t shots per kill",
     "t average speed while shooting",
     "t num players alive before explosion",
+    "t num players alive after explosion",
     "t bot type",
     "t num players"
 )

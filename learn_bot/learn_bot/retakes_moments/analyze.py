@@ -7,6 +7,7 @@ from learn_bot.retakes_moments.column_names import *
 
 human_retakes_per_round_moments_path = Path(__file__).parent / '..' / '..' / '..' / 'analytics' / 'csv_outputs' / 'humanRetakesPerRoundMoments.hdf5'
 bot_retakes_per_round_moments_path = Path(__file__).parent / '..' / '..' / '..' / 'analytics' / 'csv_outputs' / 'botRetakesPerRoundMoments.hdf5'
+plant_states_path = Path(__file__).parent / '..' / '..' / '..' / 'analytics' / 'saved_datasets' / 'plantStates.hdf5'
 
 
 def analyze(all_per_round_df: pd.DataFrame):
@@ -41,6 +42,7 @@ def analyze(all_per_round_df: pd.DataFrame):
 
 
 if __name__ == "__main__":
+    plant_states_df = load_hdf5_to_pd(plant_states_path)
     human_per_round_df = load_hdf5_to_pd(human_retakes_per_round_moments_path)
     human_per_round_df.replace([np.inf, -np.inf], np.nan, inplace=True)
     print(f'''num human rounds: {len(human_per_round_df)}''')
