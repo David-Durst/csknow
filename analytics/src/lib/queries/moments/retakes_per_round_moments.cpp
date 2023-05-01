@@ -98,9 +98,10 @@ namespace csknow::retakes_moments {
         tMoments.botType.resize(numRounds);
         tMoments.numPlayers.resize(numRounds, 0);
 
-#pragma omp parallel for
+//#pragma omp parallel for
         for (size_t validRoundIndex = 0; validRoundIndex < extractValidBotRetakesRounds.validRoundIds.size();
              validRoundIndex++) {
+            std::cout << "valid round index " << validRoundIndex << std::endl;
             //int threadNum = omp_get_thread_num();
             int64_t roundIndex = extractValidBotRetakesRounds.validRoundIds[validRoundIndex];
             roundId[validRoundIndex] = roundIndex;
@@ -122,8 +123,14 @@ namespace csknow::retakes_moments {
             int64_t explosionTickId = INVALID_ID;
 
             bool foundFirstPlantInRound = false, foundFirstDefusalInRound;
+            int64_t firstDeathByWorldTick = INVALID_ID;
+            int64_t firstTeleportTickIndex = INVALID_ID;
+            //int numTeleportTicks = 0;
             for (int64_t tickIndex = rounds.ticksPerRound[roundIndex].minId;
                  tickIndex <= rounds.ticksPerRound[roundIndex].maxId; tickIndex++) {
+                // can't use first death by world, not all rounds involve death by world
+                // but they all involve a teleport - clear all positions if teleported
+                bool teleportTick = false;
                 bool curTickIsFirstPlant = false, curTickIsFirstDefusal = false;
                 for (const auto &[_0, _1, plantIndex]:
                     ticks.plantsEndPerTick.intervalToEvent.findOverlapping(tickIndex, tickIndex)) {
@@ -159,6 +166,10 @@ namespace csknow::retakes_moments {
                 for (const auto & [_0, _1, killIndex] :
                     ticks.killsPerTick.intervalToEvent.findOverlapping(tickIndex, tickIndex)) {
                     playersKillingThisTick.insert(kills.killer[killIndex]);
+                    if (firstDeathByWorldTick == INVALID_ID &&
+                        static_cast<DemoEquipmentType>(kills.weapon[killIndex]) == DemoEquipmentType::EqWorld) {
+                        firstDeathByWorldTick = tickIndex;
+                    }
                 }
 
                 if (curTickIsFirstPlant) {
@@ -167,6 +178,17 @@ namespace csknow::retakes_moments {
                 if (curTickIsFirstDefusal) {
                     foundFirstDefusalInRound = true;
                 }
+
+                /*
+                bool pastSetupDeaths = firstDeathByWorldTick != INVALID_ID && firstDeathByWorldTick < tickIndex;
+
+                if (firstDeathByWorldTick != INVALID_ID && tickIndex >= firstDeathByWorldTick &&
+                    tickIndex < firstDeathByWorldTick + 2) {
+                    std::cout << "demoName " << games.demoFile[gameId] << " tickIndex " << tickIndex << " firstDeathByWorldTick " << firstDeathByWorldTick <<
+                        " c4 pos " << ticks.bombX[tickIndex] << "," << ticks.bombY[tickIndex] << "," << ticks.bombZ[tickIndex] << std::endl;
+                }
+                 */
+
 
                 if (botData || foundFirstPlantInRound) {
                     for (int64_t patIndex = ticks.patPerTick[tickIndex].minId;
@@ -205,14 +227,37 @@ namespace csknow::retakes_moments {
                                 playerRetakeState.numKills++;
                             }
                             playerRetakeState.lastTickAlive = tickIndex;
+                            double teleportDistance = computeDistance(playerRetakeState.lastPos, curPos);
+                            if (tickIndex != rounds.startTick[roundIndex] && teleportDistance > 50. &&
+                                computeMagnitude({playerAtTick.velX[patIndex], playerAtTick.velY[patIndex], playerAtTick.velZ[patIndex]}) == 0.) {
+                                if (firstTeleportTickIndex == INVALID_ID) {
+                                    firstTeleportTickIndex = tickIndex;
+                                }
+                                /*
+                                if (!teleportTick) {
+                                    numTeleportTicks++;
+                                    std::cout << "teleport tick " << tickIndex << " game tick number " << ticks.gameTickNumber[tickIndex] << " distance " << teleportDistance << std::endl;
+                                }
+                                 */
+                                teleportTick = true;
+                            }
                             playerRetakeState.lastPos = curPos;
                         }
                     }
                 }
+                if (firstTeleportTickIndex != INVALID_ID && tickIndex >= firstTeleportTickIndex &&
+                    tickIndex <= firstTeleportTickIndex + 3) {
+                    playerToRetakeState.clear();
+                }
             }
+            /*
+            if (numTeleportTicks != 1) {
+                std::cout << "num teleport ticks: " << numTeleportTicks << std::endl;
+            }
+             */
 
             // compute overall team stats per round
-            int ctKills = 0, tKills = 0, ctShots = 0, tShots = 0;
+            double ctKills = 0., tKills = 0., ctShots = 0., tShots = 0.;
             for (const auto & [_, playerRetakeState] : playerToRetakeState) {
                 if (playerRetakeState.teamId == ENGINE_TEAM_CT) {
                     ctKills += playerRetakeState.numKills;

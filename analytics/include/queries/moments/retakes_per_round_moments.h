@@ -35,8 +35,8 @@ namespace csknow::retakes_moments {
         struct TeamMoments {
             // level 0 - base performance
             vector<bool> win;
-            vector<int> shotsPerTotalPlayers;
-            vector<int> killsPerTotalPlayers;
+            vector<double> shotsPerTotalPlayers;
+            vector<double> killsPerTotalPlayers;
             // level 1 - key metrics
             vector<double> distanceTraveledPerPlayer;
             vector<double> maxDistanceFromStart;
