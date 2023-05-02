@@ -106,7 +106,7 @@ namespace csknow::retakes_moments {
         tMoments.botType.resize(numRounds);
         tMoments.numPlayers.resize(numRounds, 0);
 
-#pragma omp parallel for
+//#pragma omp parallel for
         for (size_t validRoundIndex = 0; validRoundIndex < extractValidBotRetakesRounds.validRoundIds.size();
              validRoundIndex++) {
             plantSituationId[validRoundIndex] = extractValidBotRetakesRounds.plantIndex[validRoundIndex];
@@ -127,6 +127,13 @@ namespace csknow::retakes_moments {
             else {
                 ctMoments.win[validRoundIndex] = false;
                 tMoments.win[validRoundIndex] = true;
+            }
+
+            if (ctMoments.botType[validRoundIndex] == RetakeBotType::CSKnowLearned &&
+                tMoments.botType[validRoundIndex] == RetakeBotType::CSGODefault &&
+                tMoments.win[validRoundIndex]) {
+                std::cout << "t defualt beats ct learned " << games.demoFile[gameId] << " start game tick number " <<
+                    ticks.gameTickNumber[rounds.ticksPerRound[roundIndex].minId];
             }
 
             map<int64_t, RetakeInternalPlayerState> playerToRetakeState;
