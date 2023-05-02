@@ -538,10 +538,12 @@ namespace csknow::feature_store {
                                        columnData[columnPlayer].curPlace[placeIndex], hdf5FlatCreateProps);
                     file.createDataSet("/data/distribution nearest place 7 to 15s " + placeIndexStr + " " + columnTeam + " " + iStr,
                                        columnData[columnPlayer].distributionNearestPlace7to15s[placeIndex], hdf5FlatCreateProps);
+                    /*
                     for (int priorTick = 0; priorTick < num_prior_ticks; priorTick++) {
                         file.createDataSet("/data/prior place " + placeIndexStr + " " + columnTeam + " " + iStr +  " t-" + std::to_string(priorTick+1),
                                            columnData[columnPlayer].priorPlaces[priorTick][placeIndex], hdf5FlatCreateProps);
                     }
+                     */
                 }
                 for (size_t areaGridIndex = 0; areaGridIndex < area_grid_size; areaGridIndex++) {
                     string areaGridIndexStr = std::to_string(areaGridIndex);
@@ -549,10 +551,12 @@ namespace csknow::feature_store {
                                        columnData[columnPlayer].areaGridCellInPlace[areaGridIndex], hdf5FlatCreateProps);
                     file.createDataSet("/data/distribution nearest area grid in place 7 to 15s " + areaGridIndexStr + " " + columnTeam + " " + iStr,
                                        columnData[columnPlayer].distributionNearestAreaGridInPlace7to15s[areaGridIndex], hdf5FlatCreateProps);
+                    /*
                     for (int priorTick = 0; priorTick < num_prior_ticks; priorTick++) {
                         file.createDataSet("/data/prior area grid cell in place " + areaGridIndexStr + " " + columnTeam + " " + iStr +  " t-" + std::to_string(priorTick+1),
                                            columnData[columnPlayer].priorAreaGridCellInPlace[priorTick][areaGridIndex], hdf5FlatCreateProps);
                     }
+                     */
                 }
             }
         }
