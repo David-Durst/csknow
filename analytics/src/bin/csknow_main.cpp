@@ -154,13 +154,14 @@ int main(int argc, char * argv[]) {
     Plants plants;
     Defusals defusals;
     Explosions explosions;
+    Say say;
     CoverEdges coverEdges;
     CoverOrigins coverOrigins;
 
     loadData(equipment, gameTypes, hitGroups, games, players, unfilteredRounds, filteredRounds, ticks, playerAtTick, spotted, footstep, weaponFire,
-             kills, hurt, grenades, flashed, grenadeTrajectories, plants, defusals, explosions, dataPath);
+             kills, hurt, grenades, flashed, grenadeTrajectories, plants, defusals, explosions, say, dataPath);
     buildIndexes(equipment, gameTypes, hitGroups, games, players, filteredRounds, ticks, playerAtTick, spotted, footstep, weaponFire,
-                 kills, hurt, grenades, flashed, grenadeTrajectories, plants, defusals, explosions);
+                 kills, hurt, grenades, flashed, grenadeTrajectories, plants, defusals, explosions, say);
     //std::printf("GLIBCXX: %d\n",__GLIBCXX__);
     std::cout << "num elements in equipment: " << equipment.size << std::endl;
     std::cout << "num elements in game_types: " << gameTypes.size << std::endl;
@@ -182,6 +183,7 @@ int main(int argc, char * argv[]) {
     std::cout << "num elements in plants: " << plants.size << std::endl;
     std::cout << "num elements in defusals: " << defusals.size << std::endl;
     std::cout << "num elements in explosions: " << explosions.size << std::endl;
+    std::cout << "num elements in say: " << say.size << std::endl;
 
     //loadCover(coverOrigins, coverEdges, dataPath);
     //buildCoverIndex(coverOrigins, coverEdges);

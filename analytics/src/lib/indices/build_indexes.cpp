@@ -73,7 +73,8 @@ IntervalIndex buildIntervalIndex(const vector<const int64_t *> &foreignKeyCols, 
 void buildIndexes(Equipment & equipment [[maybe_unused]], GameTypes & gameTypes [[maybe_unused]], HitGroups & hitGroups [[maybe_unused]], Games & games,
                        Players & players, Rounds & rounds, Ticks & ticks, PlayerAtTick & playerAtTick, Spotted & spotted, Footstep & footstep,
                        WeaponFire & weaponFire, Kills & kills, Hurt & hurt, Grenades & grenades, Flashed & flashed,
-                       GrenadeTrajectories & grenadeTrajectories [[maybe_unused]], Plants & plants, Defusals & defusals, Explosions & explosions) {
+                       GrenadeTrajectories & grenadeTrajectories [[maybe_unused]], Plants & plants, Defusals & defusals, Explosions & explosions,
+                       Say & say) {
     cout << "building range indexes" << endl;
     buildRangeIndex(games.id, games.size, rounds.gameId, rounds.size, games.roundsPerGame, "games", "rounds");
     buildRangeIndex(games.id, games.size, players.gameId, players.size, games.playersPerGame, "games", "players");
@@ -103,6 +104,7 @@ void buildIndexes(Equipment & equipment [[maybe_unused]], GameTypes & gameTypes 
     ticks.defusalsStartPerTick = buildIntervalIndex({defusals.startTick}, defusals.size);
     ticks.defusalsEndPerTick = buildIntervalIndex({defusals.endTick}, defusals.size);
     ticks.explosionsPerTick = buildIntervalIndex({explosions.tickId}, explosions.size);
+    ticks.sayPerTick = buildIntervalIndex({say.tickId}, say.size);
     grenades.trajectoryPerGrenade = buildIntervalIndex({grenadeTrajectories.grenadeId}, grenadeTrajectories.size);
 }
 

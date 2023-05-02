@@ -1268,10 +1268,61 @@ void loadExplosions(Explosions & explosions, const string & dataPath) {
     }
 }
 
+void loadSayFile(Say & say, const string & filePath, int64_t fileRowStart) {
+    // mmap the file
+    auto [fd, stats, file] = openMMapFile(filePath);
+
+    // skip the header
+    size_t firstRow = getNewline(file, 0, stats.st_size);
+
+    // track location for error logging
+    int64_t rowNumber = 0;
+    int64_t colNumber = 0;
+
+    // track location for insertion
+    int64_t arrayEntry = fileRowStart;
+
+    for (size_t curStart = firstRow + 1, curDelimiter = getNextDelimiter(file, curStart, stats.st_size);
+         curDelimiter < static_cast<size_t>(stats.st_size);
+         curStart = curDelimiter + 1, curDelimiter = getNextDelimiter(file, curStart, stats.st_size)) {
+        if (colNumber == 0) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, say.id[arrayEntry]);
+        }
+        else if (colNumber == 1) {
+            readCol(file, curStart, curDelimiter, rowNumber, colNumber, say.tickId[arrayEntry]);
+        }
+        else if (colNumber == 2) {
+            readCol(file, curStart, curDelimiter, &say.message[arrayEntry]);
+            rowNumber++;
+            arrayEntry++;
+        }
+        colNumber = (colNumber + 1) % 3;
+    }
+    closeMMapFile({fd, stats, file});
+}
+
+void loadSay(Say & say, const string & dataPath) {
+    vector<string> filePaths;
+    getFilesInDirectory(dataPath + "/say", filePaths);
+
+    std::cout << "determining array size" << std::endl;
+    vector<int64_t> startingPointPerFile = getFileStartingRows(filePaths);
+    int64_t rows = startingPointPerFile[filePaths.size()];
+
+    std::cout << "allocating arrays" << std::endl;
+    say.init(rows, static_cast<int64_t>(filePaths.size()), startingPointPerFile);
+
+    std::cout << "loading say off disk" << std::endl;
+#pragma omp parallel for
+    for (size_t fileIndex = 0; fileIndex < filePaths.size(); fileIndex++) {
+        loadSayFile(say, filePaths[fileIndex], startingPointPerFile[fileIndex]);
+    }
+}
+
 void loadData(Equipment & equipment, GameTypes & gameTypes, HitGroups & hitGroups, Games & games, Players & players,
               Rounds & unfilteredRounds, Rounds & filteredRounds, Ticks & ticks, PlayerAtTick & playerAtTick, Spotted & spotted, Footstep & footstep, WeaponFire & weaponFire,
               Kills & kills, Hurt & hurt, Grenades & grenades, Flashed & flashed, GrenadeTrajectories & grenadeTrajectories,
-              Plants & plants, Defusals & defusals, Explosions & explosions, const string & dataPath) {
+              Plants & plants, Defusals & defusals, Explosions & explosions, Say & say, const string & dataPath) {
     std::cout << "loading equipment" << std::endl;
     loadEquipment(equipment, dataPath);
     std::cout << "loading game_types" << std::endl;
@@ -1312,4 +1363,6 @@ void loadData(Equipment & equipment, GameTypes & gameTypes, HitGroups & hitGroup
     loadDefusals(defusals, dataPath);
     std::cout << "loading explosions" << std::endl;
     loadExplosions(explosions, dataPath);
+    std::cout << "loading say" << std::endl;
+    loadSay(say, dataPath);
 }

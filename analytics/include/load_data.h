@@ -302,6 +302,7 @@ public:
     IntervalIndex defusalsStartPerTick;
     IntervalIndex defusalsEndPerTick;
     IntervalIndex explosionsPerTick;
+    IntervalIndex sayPerTick;
 
     void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) override {
         ColStore::init(rows, numFiles, gameStarts);
@@ -933,9 +934,40 @@ public:
     Explosions& operator=(const Explosions& other) = delete;
 };
 
+class Say : public ColStore {
+public:
+    int64_t * gameId;
+    int64_t * tickId;
+    char ** message;
+
+    void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) override {
+        ColStore::init(rows, numFiles, gameStarts);
+        gameId = (int64_t *) malloc(rows * sizeof(int64_t));
+        tickId = (int64_t *) malloc(rows * sizeof(int64_t));
+        message = (char **) malloc(rows * sizeof(char*));
+    }
+
+    Say() = default;
+    ~Say() {
+        if (!beenInitialized){
+            return;
+        }
+        for (int64_t row = 0; row < size; row++) {
+            free(message[row]);
+        }
+        free(message);
+
+        free(gameId);
+        free(tickId);
+    }
+
+    Say(const Say& other) = delete;
+    Say& operator=(const Say& other) = delete;
+};
+
 void loadData(Equipment & equipment, GameTypes & gameTypes, HitGroups & hitGroups, Games & games, Players & players,
               Rounds & unfilteredRounds, Rounds & filteredRounds, Ticks & ticks, PlayerAtTick & playerAtTick, Spotted & spotted, Footstep & footstep, WeaponFire & weaponFire,
               Kills & kills, Hurt & hurt, Grenades & grenades, Flashed & flashed, GrenadeTrajectories & grenadeTrajectories,
-              Plants & plants, Defusals & defusals, Explosions & explosions, const string & dataPath);
+              Plants & plants, Defusals & defusals, Explosions & explosions, Say & say, const string & dataPath);
 
 #endif //CSKNOW_LOAD_DATA_H

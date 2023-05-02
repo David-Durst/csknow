@@ -15,6 +15,7 @@ IntervalIndex buildIntervalIndex(const vector<const int64_t *> &foreignKeyCols, 
 void buildIndexes(Equipment & equipment, GameTypes & gameTypes, HitGroups & hitGroups, Games & games,
                   Players & players, Rounds & rounds, Ticks & ticks, PlayerAtTick & playerAtTick, Spotted & spotted, Footstep & footstep,
                   WeaponFire & weaponFire, Kills & kills, Hurt & hurt, Grenades & grenades, Flashed & flashed,
-                  GrenadeTrajectories & grenadeTrajectories, Plants & plants, Defusals & defusals, Explosions & explosions);
+                  GrenadeTrajectories & grenadeTrajectories, Plants & plants, Defusals & defusals, Explosions & explosions,
+                  Say & say);
 
 #endif //CSKNOW_BUILD_INDEXES_H
