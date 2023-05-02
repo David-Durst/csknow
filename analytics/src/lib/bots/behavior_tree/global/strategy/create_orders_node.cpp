@@ -34,7 +34,8 @@ namespace strategy {
         bool useOrderModelProbabilitiesEitherTeam = useOrderModelProbabilitiesT || useOrderModelProbabilitiesCT;
         bool probOrderChange = useOrderModelProbabilitiesEitherTeam &&
             !blackboard.inTest && !blackboard.inAnalysis &&
-            blackboard.ticksSinceLastProbOrderAssignment >= newOrderTicks && ctPlayersAlive && tPlayersAlive;
+            blackboard.ticksSinceLastProbOrderAssignment >= newOrderTicks && ctPlayersAlive && tPlayersAlive &&
+            blackboard.defuserId == INVALID_ID; // if have a defuser, don't interrup them
         // as soon as have valid inference data, need to get model orders, as rest of tree will assume switching to models
         bool switchToModelOrders = useOrderModelProbabilitiesEitherTeam && !blackboard.inTest && !blackboard.inAnalysis &&
             !blackboard.modelOrdersT && !blackboard.modelOrdersCT && blackboard.inferenceManager.haveValidData();
