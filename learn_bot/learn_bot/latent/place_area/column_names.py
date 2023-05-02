@@ -23,9 +23,9 @@ class PlayerPlaceAreaColumns:
     prior_pos: list[str]
     vel: list[str]
     cur_place: list[str]
-    prior_place: list[str]
-    prior_area_grid_cell_in_place: list[str]
+    #prior_place: list[str]
     area_grid_cell_in_place: list[str]
+    #prior_area_grid_cell_in_place: list[str]
     distribution_nearest_place: list[str]
     distribution_nearest_grid_area: list[str]
 
@@ -37,9 +37,9 @@ class PlayerPlaceAreaColumns:
         self.prior_pos = []
         self.vel = [get_player_pos_columns(player_index, team_str, dim_str) for dim_str in ["x", "y", "z"]]
         self.cur_place = []
-        self.prior_place = []
+        #self.prior_place = []
         self.area_grid_cell_in_place = []
-        self.prior_area_grid_cell_in_place = []
+        #self.prior_area_grid_cell_in_place = []
         self.distribution_nearest_place = []
         self.distribution_nearest_grid_area = []
         for place_index in range(num_places):
@@ -55,23 +55,23 @@ class PlayerPlaceAreaColumns:
         for prior_tick in range(1, num_prior_ticks+1):
             for dim_str in ["x", "y", "z"]:
                 get_player_pos_columns(player_index, team_str, dim_str, prior_tick)
-            for place_index in range(num_places):
-                self.prior_place \
-                    .append(get_player_prior_place_columns(player_index, place_index, team_str, prior_tick))
-            for area_grid_index in range(area_grid_size):
-                self.prior_area_grid_cell_in_place \
-                    .append(get_player_prior_area_grid_cell_in_place_columns(player_index, area_grid_index, team_str, prior_tick))
+            #for place_index in range(num_places):
+            #    self.prior_place \
+            #        .append(get_player_prior_place_columns(player_index, place_index, team_str, prior_tick))
+            #for area_grid_index in range(area_grid_size):
+            #    self.prior_area_grid_cell_in_place \
+            #        .append(get_player_prior_area_grid_cell_in_place_columns(player_index, area_grid_index, team_str, prior_tick))
 
     def to_list(self) -> list[str]:
         return [self.player_id, self.distance_to_a_site, self.distance_to_b_site] + \
-            flatten_list([self.pos, self.prior_pos, self.cur_place, self.prior_place,
-                          self.area_grid_cell_in_place, self.prior_area_grid_cell_in_place,
+            flatten_list([self.pos, self.prior_pos, self.cur_place, #self.prior_place,
+                          self.area_grid_cell_in_place, #self.prior_area_grid_cell_in_place,
                           self.distribution_nearest_place, self.distribution_nearest_grid_area])
 
     def to_input_float_list(self) -> list[str]:
         return [self.distance_to_a_site, self.distance_to_b_site] + \
-            flatten_list([self.pos, self.prior_pos, self.cur_place, self.prior_place,
-                          self.area_grid_cell_in_place, self.prior_area_grid_cell_in_place])
+            flatten_list([self.pos, self.prior_pos, self.cur_place, #self.prior_place,
+                          self.area_grid_cell_in_place])#, self.prior_area_grid_cell_in_place])
 
     def to_output_cat_list(self, place: bool, area: bool) -> list[list[str]]:
         result = []
