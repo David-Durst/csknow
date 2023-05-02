@@ -41,6 +41,7 @@ namespace csknow::feature_store {
         vector<bool> valid;
 
         vector<C4Status> c4Status;
+        vector<int64_t> c4TicksSincePlant;
         vector<Vec3> c4Pos;
         vector<double> c4DistanceToASite, c4DistanceToBSite;
         array<vector<double>, num_orders_per_site> c4DistanceToNearestAOrderNavArea, c4DistanceToNearestBOrderNavArea;

@@ -42,4 +42,29 @@ namespace csknow::feature_store {
         historicalPlayerDataBuffer.clear();
     }
 
+    void FeatureStorePreCommitBuffer::appendPlayerHistory() {
+        std::map<int64_t, BTTeamPlayerData> newEntryHistoricalPlayerDataBuffer;
+        for (const auto & playerData : btTeamPlayerData) {
+            newEntryHistoricalPlayerDataBuffer[playerData.playerId] = playerData;
+        }
+        historicalPlayerDataBuffer.enqueue(newEntryHistoricalPlayerDataBuffer);
+    }
+
+    int64_t FeatureStorePreCommitBuffer::getPlayerOldestContiguousHistoryIndex(int64_t playerId) {
+        int64_t result = INVALID_ID;
+        for (int64_t i = 0; i < historicalPlayerDataBuffer.getCurSize(); i++) {
+            if (historicalPlayerDataBuffer.fromNewest(i).find(playerId) !=
+                historicalPlayerDataBuffer.fromNewest(i).end()) {
+                result = i;
+            }
+            else {
+                break;
+            }
+        }
+        if (result == INVALID_ID) {
+            throw std::runtime_error("player " + std::to_string(playerId) + " not in history with cur size " +
+                std::to_string(historicalPlayerDataBuffer.getCurSize()));
+        }
+        return result;
+    }
 }

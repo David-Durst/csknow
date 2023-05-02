@@ -28,6 +28,7 @@ namespace csknow::feature_store {
     struct C4MapData {
         Vec3 c4Pos;
         bool c4Planted;
+        int64_t ticksSincePlant;
         AreaId c4AreaId;
         int64_t c4AreaIndex;
     };
@@ -80,9 +81,12 @@ namespace csknow::feature_store {
         void addEngagementTeammate(const EngagementTeammate &engagementTeammate);
 
         vector<BTTeamPlayerData> btTeamPlayerData;
-        CircularBuffer<map<int64_t, BTTeamPlayerData>> historicalPlayerDataBuffer{num_prior_ticks + 1};
+        CircularBuffer<std::map<int64_t, BTTeamPlayerData>>
+            historicalPlayerDataBuffer{prior_tick_spacing * num_prior_ticks + 1};
 
         void clearHistory();
+        void appendPlayerHistory();
+        int64_t getPlayerOldestContiguousHistoryIndex(int64_t playerId);
     };
 }
 #endif //CSKNOW_FEATURE_STORE_PRECOMMIT_H

@@ -126,8 +126,9 @@ namespace strategy {
                 .get_id();
             int64_t curAreaIndex = blackboard.navFile.m_area_ids_to_indices.at(curAreaId);
             btTeamPlayerData.push_back({client.csgoId, client.team, curAreaId, curAreaIndex,
-                                        client.getFootPosForPlayer()});
+                                        client.getFootPosForPlayer(), client.getVelocity()});
         }
+        blackboard.featureStorePreCommitBuffer.appendPlayerHistory();
         AreaId c4AreaId = blackboard.navFile
             .get_nearest_area_by_position(vec3Conv(state.getC4Pos()))
             .get_id();
@@ -135,6 +136,7 @@ namespace strategy {
         blackboard.featureStorePreCommitBuffer.c4MapData = {
             state.getC4Pos(),
             state.c4IsPlanted,
+            state.ticksSinceLastPlant,
             c4AreaId,
             c4AreaIndex
         };

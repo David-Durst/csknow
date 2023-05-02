@@ -207,6 +207,12 @@ void StreamingManager::update(const Games & games, const RoundPlantDefusal & rou
     newState.c4X = ticks.bombX[tickIndex];
     newState.c4Y = ticks.bombY[tickIndex];
     newState.c4Z = ticks.bombZ[tickIndex];
+    if (newState.c4IsPlanted) {
+        newState.ticksSinceLastPlant = tickIndex - roundPlantDefusal.plantTickIndex;
+    }
+    else {
+        newState.ticksSinceLastPlant = -1;
+    }
 
     // loadHurtEvent equivalent
     for (const auto & [_0, _1, hurtIndex] :
