@@ -261,7 +261,7 @@ namespace csknow::feature_store {
                                                         distanceToPlaces.placeToAABB.at(curPlaceString));
             columnData[columnIndex].areaGridCellInPlace[areaGridIndex][tickIndex] = true;
             for (int64_t j = 0; j < num_prior_ticks; j++) {
-                int64_t priorTickIndex = j * prior_tick_spacing;
+                int64_t priorTickIndex = (j + 1) * prior_tick_spacing;
                 priorTickIndex = std::min(priorTickIndex, oldestHistoryIndex);
                 const BTTeamPlayerData & priorBTTeamPlayerData =
                     buffer.historicalPlayerDataBuffer.fromNewest(priorTickIndex).at(btTeamPlayerData.playerId);
