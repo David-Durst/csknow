@@ -133,7 +133,7 @@ namespace csknow::retakes_moments {
                 tMoments.botType[validRoundIndex] == RetakeBotType::CSGODefault &&
                 tMoments.win[validRoundIndex]) {
                 std::cout << "t defualt beats ct learned " << games.demoFile[gameId] << " start game tick number " <<
-                    ticks.gameTickNumber[rounds.ticksPerRound[roundIndex].minId];
+                    ticks.gameTickNumber[rounds.ticksPerRound[roundIndex].minId] << std::endl;
             }
 
             map<int64_t, RetakeInternalPlayerState> playerToRetakeState;
