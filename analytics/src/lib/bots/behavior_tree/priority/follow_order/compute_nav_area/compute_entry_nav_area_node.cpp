@@ -14,12 +14,25 @@ namespace follow::compute_nav_area {
         // if no priority yet or switching from engagement, setup priority without a target
         // just do this every frame since cheap, less conditions through tree to track
         moveToWaypoint(blackboard, state, treeThinker, curOrder, curPriority);
+        /*
+         * note: on enemy death, will get blackboard cleared, so only way to tell is new order rather than
+         * if old priorty was engagement
+        if (blackboard.newOrderThisFrame) {
+            std::cout << "switching this frame" << std::endl;
+        }
+         */
         curPriority.priorityType = PriorityType::Order;
         curPriority.targetPlayer.playerId = INVALID_ID;
         curPriority.nonDangerAimArea = {};
         curPriority.moveOptions = {true, false, false};
         curPriority.shootOptions = ShootOptions::DontShoot;
 
+        /*
+        const auto & curArea = blackboard.navFile.get_nearest_area_by_position(
+            vec3Conv(state.clients[state.csgoIdToCSKnowId[treeThinker.csgoId]].getFootPosForPlayer()));
+        AreaId curAreaId = curArea.get_id();
+        std::cout << "curAreaId: " << curAreaId << ", curArea.m_id " << curArea.m_id << std::endl;
+         */
         AreaId curAreaId = blackboard.navFile.get_nearest_area_by_position(
                 vec3Conv(state.clients[state.csgoIdToCSKnowId[treeThinker.csgoId]].getFootPosForPlayer())).get_id();
         string curPlace = blackboard.getPlayerPlace(state.clients[state.csgoIdToCSKnowId[treeThinker.csgoId]].getFootPosForPlayer());
@@ -36,6 +49,9 @@ namespace follow::compute_nav_area {
             }
             // otherwise, stop (if in air, could be landing, so keep going forward then)
             else {
+                // if interrupted while defusing, when swithc back make sure to return to final waypont and not initial entry
+                blackboard.strategy.playerToWaypointIndex[treeThinker.csgoId] =
+                    static_cast<int64_t>(curOrder.waypoints.size()) - 1;
                 if (!state.getClient(treeThinker.csgoId).isAirborne) {
                     curPriority.moveOptions.move = false;
                 }
