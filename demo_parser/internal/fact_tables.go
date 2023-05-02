@@ -43,12 +43,13 @@ type IDState struct {
 	nextPlant             RowIndex
 	nextDefusal           RowIndex
 	nextExplosion         RowIndex
+	nextSay               RowIndex
 }
 
 func DefaultIDState() IDState {
 	return IDState{0, 0, 0, 0, 0, 0, 0,
 		0, 0, 0, 0, 0, 0, 0,
-		0, 0}
+		0, 0, 0}
 }
 
 type tableRow interface {
@@ -644,3 +645,23 @@ func (e explosionRow) ID() RowIndex {
 }
 
 var explosionTable table[explosionRow]
+
+// SAY TABLE
+
+const sayHeader = "id,tick_id,message\n"
+
+type sayRow struct {
+	id      RowIndex
+	tickId  RowIndex
+	message string
+}
+
+func (e sayRow) toString() string {
+	return fmt.Sprintf("%d,%d,%s\n", e.id, e.tickId, e.message)
+}
+
+func (e sayRow) ID() RowIndex {
+	return e.id
+}
+
+var sayTable table[sayRow]

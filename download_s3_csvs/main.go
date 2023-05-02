@@ -11,9 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"log"
 	"os"
-	"os/exec"
 	"path"
-	"strconv"
 	"strings"
 )
 
@@ -218,8 +216,9 @@ func main() {
 			downloadCSVForDemo(downloader, localKey, "plants", true)
 			downloadCSVForDemo(downloader, localKey, "defusals", true)
 			downloadCSVForDemo(downloader, localKey, "explosions", true)
+			downloadCSVForDemo(downloader, localKey, "say", true)
 			downloadCSVForDemo(downloader, localKey, "kills", true)
-			downloadCSVForDemo(downloader, localKey, "skill", false)
+			//downloadCSVForDemo(downloader, localKey, "skill", false)
 			numDownloaded++
 		}
 
@@ -234,35 +233,37 @@ func main() {
 
 	saveNewlyDownloaded(needToDownload)
 
-	if *retakesDataFlag {
-		fmt.Printf("executing merge_retakes.sh")
-		out, err := exec.Command("/bin/bash", "merge_retakes.sh").Output()
-		if err != nil {
-			log.Fatal(err)
+	/*
+		if *retakesDataFlag {
+			fmt.Printf("executing merge_retakes.sh")
+			out, err := exec.Command("/bin/bash", "merge_retakes.sh").Output()
+			if err != nil {
+				log.Fatal(err)
+			}
+			fmt.Println(out)
+		} else if *botRetakesDataFlag {
+			fmt.Printf("executing merge_bot_retakes.sh")
+			out, err := exec.Command("/bin/bash", "merge_bot_retakes.sh").Output()
+			if err != nil {
+				log.Fatal(err)
+			}
+			fmt.Println(out)
+		} else {
+			fmt.Printf("executing merge.sh")
+			out, err := exec.Command("/bin/bash", "merge.sh").Output()
+			if err != nil {
+				log.Fatal(err)
+			}
+			fmt.Println(out)
 		}
-		fmt.Println(out)
-	} else if *botRetakesDataFlag {
-		fmt.Printf("executing merge_bot_retakes.sh")
-		out, err := exec.Command("/bin/bash", "merge_bot_retakes.sh").Output()
-		if err != nil {
-			log.Fatal(err)
-		}
-		fmt.Println(out)
-	} else {
-		fmt.Printf("executing merge.sh")
-		out, err := exec.Command("/bin/bash", "merge.sh").Output()
-		if err != nil {
-			log.Fatal(err)
-		}
-		fmt.Println(out)
-	}
 
-	if *localFlag {
-		fmt.Printf("executing first_lines_games.sh")
-		firstLinesGamesOut, err := exec.Command("/bin/bash", "first_lines_games.sh", strconv.Itoa(1+numDownloaded)).Output()
-		if err != nil {
-			log.Fatal(err)
+		if *localFlag {
+			fmt.Printf("executing first_lines_games.sh")
+			firstLinesGamesOut, err := exec.Command("/bin/bash", "first_lines_games.sh", strconv.Itoa(1+numDownloaded)).Output()
+			if err != nil {
+				log.Fatal(err)
+			}
+			fmt.Println(firstLinesGamesOut)
 		}
-		fmt.Println(firstLinesGamesOut)
-	}
+	*/
 }

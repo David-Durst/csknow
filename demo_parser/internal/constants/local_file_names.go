@@ -20,6 +20,7 @@ const (
 	LocalPlantsCSVName              = "local_plants.csv"
 	LocalDefusalsCSVName            = "local_defusals.csv"
 	LocalExplosionsCSVName          = "local_explosions.csv"
+	LocalSayCSVName                 = "local_say.csv"
 	LocalKillsCSVName               = "local_kills.csv"
 	LocalEquipmentDimTable          = "dimension_table_equipment.csv"
 	LocalGameTypeDimTable           = "dimension_table_game_types.csv"

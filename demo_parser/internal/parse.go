@@ -22,6 +22,7 @@ func InitTablesTrackers() {
 	plantTable.init(c.LocalPlantsCSVName, plantHeader)
 	defusalTable.init(c.LocalDefusalsCSVName, defusalHeader)
 	explosionTable.init(c.LocalExplosionsCSVName, explosionHeader)
+	sayTable.init(c.LocalSayCSVName, sayHeader)
 
 	playersTracker.init()
 	grenadeTracker.init()

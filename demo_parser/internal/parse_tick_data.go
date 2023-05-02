@@ -6,6 +6,7 @@ import (
 	"github.com/markus-wa/demoinfocs-golang/v3/pkg/demoinfocs/common"
 	"github.com/markus-wa/demoinfocs-golang/v3/pkg/demoinfocs/events"
 	"os"
+	"strings"
 )
 
 func getPlayers(p *demoinfocs.Parser) []*common.Player {
@@ -428,6 +429,14 @@ func ProcessTickData(localDemName string, idState *IDState) {
 		explosionTable.append(explosionRow{curID, plantTable.tail().id, idState.nextTick})
 	})
 
+	p.RegisterEventHandler(func(e events.SayText) {
+		curID := idState.nextSay
+		idState.nextSay++
+		strippedNewlineText := strings.ReplaceAll(e.Text, "\n", "_")
+		strippedCommaText := strings.ReplaceAll(strippedNewlineText, ",", "_")
+		sayTable.append(sayRow{curID, idState.nextTick, strippedCommaText})
+	})
+
 	p.RegisterEventHandler(func(e events.RoundEndOfficial) {
 		FlushTickData(false)
 	})
@@ -453,4 +462,5 @@ func FlushTickData(close bool) {
 	plantTable.flush(close)
 	defusalTable.flush(close)
 	explosionTable.flush(close)
+	sayTable.flush(close)
 }

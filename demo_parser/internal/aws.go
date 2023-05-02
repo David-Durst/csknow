@@ -67,5 +67,6 @@ func UploadCSVs(uploader *s3manager.Uploader, fileKey string, csvPrefixLocal str
 	UploadFile(uploader, c.LocalPlantsCSVName, fileKey+"_plants", csvPrefixLocal)
 	UploadFile(uploader, c.LocalDefusalsCSVName, fileKey+"_defusals", csvPrefixLocal)
 	UploadFile(uploader, c.LocalExplosionsCSVName, fileKey+"_explosions", csvPrefixLocal)
+	UploadFile(uploader, c.LocalSayCSVName, fileKey+"_say", csvPrefixLocal)
 	UploadFile(uploader, c.LocalKillsCSVName, fileKey+"_kills", csvPrefixLocal)
 }
