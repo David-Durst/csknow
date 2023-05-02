@@ -40,6 +40,24 @@ namespace csknow::plant_states {
             bool foundFirstPlantInRound = false;
             for (int64_t tickIndex = rounds.ticksPerRound[roundIndex].minId;
                  tickIndex <= rounds.ticksPerRound[roundIndex].maxId; tickIndex++) {
+                // stop once both CT and T aren't alive
+                bool ctAlive = false, tAlive = false;
+                for (int64_t patIndex = ticks.patPerTick[tickIndex].minId;
+                     patIndex <= ticks.patPerTick[tickIndex].maxId; patIndex++) {
+                    if (playerAtTick.isAlive[patIndex]) {
+                        if (playerAtTick.team[patIndex] == ENGINE_TEAM_CT) {
+                            ctAlive = true;
+                        }
+                        else if (playerAtTick.team[patIndex] == ENGINE_TEAM_T) {
+                            tAlive = true;
+                        }
+                    }
+                }
+                if (!ctAlive || !tAlive) {
+                    continue;
+                }
+
+
                 bool curTickIsPlant = false;
                 for (const auto & [_0, _1, plantIndex] :
                     ticks.plantsEndPerTick.intervalToEvent.findOverlapping(tickIndex, tickIndex)) {

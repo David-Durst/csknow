@@ -129,10 +129,10 @@ namespace csknow::retakes_moments {
                 tMoments.win[validRoundIndex] = true;
             }
 
-            if (ctMoments.botType[validRoundIndex] == RetakeBotType::CSKnowLearned &&
+            if (ctMoments.botType[validRoundIndex] == RetakeBotType::CSKnowHeuristic &&
                 tMoments.botType[validRoundIndex] == RetakeBotType::CSGODefault &&
                 tMoments.win[validRoundIndex]) {
-                std::cout << "t defualt beats ct learned " << games.demoFile[gameId] << " start game tick number " <<
+                std::cout << "t defualt beats ct heuristic " << games.demoFile[gameId] << " start game tick number " <<
                     ticks.gameTickNumber[rounds.ticksPerRound[roundIndex].minId] << std::endl;
             }
 
