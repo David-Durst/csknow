@@ -24,12 +24,18 @@ namespace csknow::feature_store {
         for (int i = 0; i < maxEnemies; i++) {
             columnTData[i].playerId.resize(size, INVALID_ID);
             columnTData[i].footPos.resize(size, invalidWorldPos);
+            columnTData[i].velocity.resize(size, {INVALID_ID, INVALID_ID, INVALID_ID});
             columnTData[i].distanceToASite.resize(size, 2 * maxWorldDistance);
             columnTData[i].distanceToBSite.resize(size, 2 * maxWorldDistance);
             columnCTData[i].playerId.resize(size, INVALID_ID);
             columnCTData[i].footPos.resize(size, invalidWorldPos);
+            columnCTData[i].velocity.resize(size, {INVALID_ID, INVALID_ID, INVALID_ID});
             columnCTData[i].distanceToASite.resize(size, 2 * maxWorldDistance);
             columnCTData[i].distanceToBSite.resize(size, 2 * maxWorldDistance);
+            for (int j = 0; j < num_prior_ticks; j++) {
+                columnTData[i].priorFootPos[j].resize(size, invalidWorldPos);
+                columnCTData[i].priorFootPos[j].resize(size, invalidWorldPos);
+            }
             for (int j = 0; j < num_orders_per_site; j++) {
                 columnTData[i].distanceToNearestAOrderNavArea[j].resize(size, 2 * maxWorldDistance);
                 columnTData[i].distanceToNearestBOrderNavArea[j].resize(size, 2 * maxWorldDistance);
@@ -49,12 +55,20 @@ namespace csknow::feature_store {
                 columnTData[i].distributionNearestPlace7to15s[j].resize(size, INVALID_ID);
                 columnCTData[i].curPlace[j].resize(size, false);
                 columnCTData[i].distributionNearestPlace7to15s[j].resize(size, INVALID_ID);
+                for (int k = 0; k < num_prior_ticks; k++) {
+                    columnTData[i].priorPlaces[k][j].resize(size, false);
+                    columnCTData[i].priorPlaces[k][j].resize(size, false);
+                }
             }
             for (int j = 0; j < area_grid_size; j++) {
                 columnTData[i].areaGridCellInPlace[j].resize(size, false);
                 columnTData[i].distributionNearestAreaGridInPlace7to15s[j].resize(size, INVALID_ID);
                 columnCTData[i].areaGridCellInPlace[j].resize(size, false);
                 columnCTData[i].distributionNearestAreaGridInPlace7to15s[j].resize(size, INVALID_ID);
+                for (int k = 0; k < num_prior_ticks; k++) {
+                    columnTData[i].priorAreaGridCellInPlace[k][j].resize(size, false);
+                    columnCTData[i].priorAreaGridCellInPlace[k][j].resize(size, false);
+                }
             }
         }
         this->size = size;
@@ -101,6 +115,10 @@ namespace csknow::feature_store {
                 columnCTData[i].footPos[rowIndex] = invalidWorldPos;
                 columnCTData[i].distanceToASite[rowIndex] = 2 * maxWorldDistance;
                 columnCTData[i].distanceToBSite[rowIndex] = 2 * maxWorldDistance;
+                for (int j = 0; j < num_prior_ticks; j++) {
+                    columnTData[i].priorFootPos[j][rowIndex] = invalidWorldPos;
+                    columnCTData[i].priorFootPos[j][rowIndex] = invalidWorldPos;
+                }
                 for (int j = 0; j < num_orders_per_site; j++) {
                     columnTData[i].distanceToNearestAOrderNavArea[j][rowIndex] = 2 * maxWorldDistance;
                     columnTData[i].distanceToNearestBOrderNavArea[j][rowIndex] = 2 * maxWorldDistance;
@@ -120,6 +138,10 @@ namespace csknow::feature_store {
                     columnTData[i].distributionNearestPlace7to15s[j][rowIndex] = INVALID_ID;
                     columnCTData[i].curPlace[j][rowIndex] = false;
                     columnCTData[i].distributionNearestPlace7to15s[j][rowIndex] = INVALID_ID;
+                    for (int k = 0; k < num_prior_ticks; k++) {
+                        columnTData[i].priorPlaces[k][j][rowIndex] = false;
+                        columnCTData[i].priorPlaces[k][j][rowIndex] = false;
+                    }
                 }
                 for (int j = 0; j < area_grid_size; j++) {
                     columnTData[i].areaGridCellInPlace[j][rowIndex] = false;

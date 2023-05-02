@@ -49,10 +49,14 @@ namespace csknow::feature_store {
             vector<int64_t> playerId;
             // inputs
             vector<Vec3> footPos;
+            array<vector<Vec3>, num_prior_ticks> priorFootPos;
+            vector<Vec3> velocity;
             vector<double> distanceToASite, distanceToBSite;
             array<vector<double>, num_orders_per_site> distanceToNearestAOrderNavArea, distanceToNearestBOrderNavArea;
             array<vector<bool>, num_places> curPlace;
+            array<array<vector<bool>, num_places>, num_prior_ticks> priorPlaces;
             array<vector<bool>, area_grid_size> areaGridCellInPlace;
+            array<array<vector<bool>, area_grid_size>, num_prior_ticks> priorAreaGridCellInPlace;
             // outputs
             array<vector<double>, num_orders_per_site> distributionNearestAOrders15s, distributionNearestBOrders15s;
             array<vector<double>, num_orders_per_site> distributionNearestAOrders30s, distributionNearestBOrders30s;

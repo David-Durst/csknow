@@ -45,6 +45,7 @@ void Tree::tick(ServerState & state, const string & mapsPath) {
                                                          featureStoreResult.defaultBuffer);
                 }
                 featureStoreResult.teamFeatureStoreResult.setOrders(blackboard->ordersResult.orders);
+                featureStoreResult.defaultBuffer.clearHistory();
                 makeBlackboardSuccesfully = true;
             }
             catch (const std::exception & ex) {

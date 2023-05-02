@@ -38,4 +38,8 @@ namespace csknow::feature_store {
         engagementTeammateBuffer.push_back(engagementTeammate);
     }
 
+    void FeatureStorePreCommitBuffer::clearHistory() {
+        historicalPlayerDataBuffer.clear();
+    }
+
 }
