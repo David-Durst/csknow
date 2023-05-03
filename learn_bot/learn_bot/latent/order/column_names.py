@@ -57,8 +57,8 @@ def get_player_nearest_order_columns(player_index: int, order_index: int, team_s
 
 
 def get_player_pos_columns(player_index: int, team_str: str, dim_str: str, history_index: int = 0) -> str:
-    return "player pos " + team_str + " " + str(player_index) + " " + dim_str + \
-        ("" if history_index == 0 else " t-" + str(history_index))
+    return "player pos " + team_str + " " + str(player_index) + \
+        ("" if history_index == 0 else " t-" + str(history_index)) + " " + dim_str
 
 
 def get_player_velocity_columns(player_index: int, team_str: str, dim_str: str) -> str:
@@ -151,7 +151,7 @@ class PlayerOrderColumns:
                 .append(get_player_area_grid_cell_in_place_columns(player_index, area_grid_index, team_str))
         for prior_tick in range(1, num_prior_ticks+1):
             for dim_str in ["x", "y", "z"]:
-                get_player_pos_columns(player_index, team_str, dim_str, prior_tick)
+                self.prior_pos.append(get_player_pos_columns(player_index, team_str, dim_str, prior_tick))
             #for place_index in range(num_places):
             #    self.prior_place \
             #        .append(get_player_prior_place_columns(player_index, place_index, team_str, prior_tick))

@@ -54,7 +54,7 @@ class PlayerPlaceAreaColumns:
                 .append(get_player_distribution_nearest_grid_area(player_index, area_grid_index, team_str))
         for prior_tick in range(1, num_prior_ticks+1):
             for dim_str in ["x", "y", "z"]:
-                get_player_pos_columns(player_index, team_str, dim_str, prior_tick)
+                self.prior_pos.append(get_player_pos_columns(player_index, team_str, dim_str, prior_tick))
             #for place_index in range(num_places):
             #    self.prior_place \
             #        .append(get_player_prior_place_columns(player_index, place_index, team_str, prior_tick))
