@@ -21,6 +21,10 @@ namespace csknow::inference_latent_order {
             result.rowCPP.push_back(static_cast<float>(
                                  teamFeatureStoreResult.c4DistanceToNearestBOrderNavArea[orderIndex][rowIndex]));
         }
+        result.rowCPP.push_back(static_cast<float>(teamFeatureStoreResult.c4Pos[rowIndex].x));
+        result.rowCPP.push_back(static_cast<float>(teamFeatureStoreResult.c4Pos[rowIndex].y));
+        result.rowCPP.push_back(static_cast<float>(teamFeatureStoreResult.c4Pos[rowIndex].z));
+        result.rowCPP.push_back(static_cast<float>(teamFeatureStoreResult.c4TicksSincePlant[rowIndex]));
         // player data
         bool ctColumnData = true;
         for (const auto & columnData :
@@ -31,6 +35,20 @@ namespace csknow::inference_latent_order {
                     playerNum + (ctColumnData ? 0 : csknow::feature_store::maxEnemies);
                 result.rowCPP.push_back(static_cast<float>(columnPlayerData.distanceToASite[rowIndex]));
                 result.rowCPP.push_back(static_cast<float>(columnPlayerData.distanceToBSite[rowIndex]));
+                result.rowCPP.push_back(static_cast<float>(columnPlayerData.footPos[rowIndex].x));
+                result.rowCPP.push_back(static_cast<float>(columnPlayerData.footPos[rowIndex].y));
+                result.rowCPP.push_back(static_cast<float>(columnPlayerData.footPos[rowIndex].z));
+                for (size_t priorTick = 0; priorTick < csknow::feature_store::num_prior_ticks; priorTick++) {
+                    result.rowCPP.push_back(static_cast<float>(
+                                                columnPlayerData.priorFootPos[priorTick][rowIndex].x));
+                    result.rowCPP.push_back(static_cast<float>(
+                                                columnPlayerData.priorFootPos[priorTick][rowIndex].y));
+                    result.rowCPP.push_back(static_cast<float>(
+                                                columnPlayerData.priorFootPos[priorTick][rowIndex].z));
+                }
+                result.rowCPP.push_back(static_cast<float>(columnPlayerData.velocity[rowIndex].x));
+                result.rowCPP.push_back(static_cast<float>(columnPlayerData.velocity[rowIndex].y));
+                result.rowCPP.push_back(static_cast<float>(columnPlayerData.velocity[rowIndex].z));
                 for (size_t orderIndex = 0; orderIndex < csknow::feature_store::num_orders_per_site; orderIndex++) {
                     result.rowCPP.push_back(static_cast<float>(
                                          columnPlayerData.distanceToNearestAOrderNavArea[orderIndex][rowIndex]));
@@ -44,6 +62,25 @@ namespace csknow::inference_latent_order {
         }
         // cat data
         result.rowCPP.push_back(static_cast<float>(teamFeatureStoreResult.c4Status[rowIndex]));
+        ctColumnData = true;
+        // distribution cat data
+        for (const auto & columnData :
+            featureStoreResult.teamFeatureStoreResult.getAllColumnData()) {
+            for (size_t playerNum = 0; playerNum < csknow::feature_store::maxEnemies; playerNum++) {
+                const auto & columnPlayerData = columnData.get()[playerNum];
+                result.playerIdToColumnIndex[columnPlayerData.playerId[rowIndex]] =
+                    playerNum + (ctColumnData ? 0 : csknow::feature_store::maxEnemies);
+                for (size_t placeIndex = 0; placeIndex < csknow::feature_store::num_places; placeIndex++) {
+                    result.rowCPP.push_back(static_cast<float>(
+                                                columnPlayerData.curPlace[placeIndex][rowIndex]));
+                }
+                for (size_t areaIndex = 0; areaIndex < csknow::feature_store::area_grid_size; areaIndex++) {
+                    result.rowCPP.push_back(static_cast<float>(
+                                                columnPlayerData.areaGridCellInPlace[areaIndex][rowIndex]));
+                }
+            }
+            ctColumnData = false;
+        }
         return result;
     }
 
