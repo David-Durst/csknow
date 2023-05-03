@@ -64,13 +64,13 @@ class PlayerPlaceAreaColumns:
 
     def to_list(self) -> list[str]:
         return [self.player_id, self.distance_to_a_site, self.distance_to_b_site] + \
-            flatten_list([self.pos, self.prior_pos, self.cur_place, #self.prior_place,
+            flatten_list([self.pos, self.prior_pos, self.vel, self.cur_place, #self.prior_place,
                           self.area_grid_cell_in_place, #self.prior_area_grid_cell_in_place,
                           self.distribution_nearest_place, self.distribution_nearest_grid_area])
 
     def to_input_float_list(self) -> list[str]:
         return [self.distance_to_a_site, self.distance_to_b_site] + \
-            flatten_list([self.pos, self.prior_pos, self.cur_place, #self.prior_place,
+            flatten_list([self.pos, self.prior_pos, self.vel, self.cur_place, #self.prior_place,
                           self.area_grid_cell_in_place])#, self.prior_area_grid_cell_in_place])
 
     def to_output_cat_list(self, place: bool, area: bool) -> list[list[str]]:

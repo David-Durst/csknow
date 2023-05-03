@@ -161,7 +161,7 @@ class PlayerOrderColumns:
 
     def to_list(self) -> list[str]:
         return [self.player_id, self.distance_to_a_site, self.distance_to_b_site] + \
-            flatten_list([self.pos, self.prior_pos, self.cur_place, #self.prior_place,
+            flatten_list([self.pos, self.prior_pos, self.vel, self.cur_place, #self.prior_place,
                           self.area_grid_cell_in_place, #self.prior_area_grid_cell_in_place,
                           self.distance_to_nearest_a_order_nav_area, self.distance_to_nearest_b_order_nav_area,
                           self.distribution_nearest_a_order_15s, self.distribution_nearest_a_order_30s,
@@ -169,7 +169,7 @@ class PlayerOrderColumns:
 
     def to_input_float_list(self) -> list[str]:
         return [self.distance_to_a_site, self.distance_to_b_site] + \
-            flatten_list([self.pos, self.prior_pos, self.cur_place, # self.prior_place,
+            flatten_list([self.pos, self.prior_pos, self.vel, self.cur_place, # self.prior_place,
                           self.area_grid_cell_in_place]) + \
             flatten_list([self.distance_to_nearest_a_order_nav_area, self.distance_to_nearest_b_order_nav_area])
     # , self.prior_area_grid_cell_in_place]) + \
