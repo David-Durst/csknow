@@ -59,10 +59,13 @@ namespace csknow::feature_store {
             array<vector<bool>, area_grid_size> areaGridCellInPlace;
             array<array<vector<bool>, area_grid_size>, num_prior_ticks> priorAreaGridCellInPlace;
             // outputs
-            array<vector<double>, num_orders_per_site> distributionNearestAOrders15s, distributionNearestBOrders15s;
-            array<vector<double>, num_orders_per_site> distributionNearestAOrders30s, distributionNearestBOrders30s;
-            array<vector<double>, num_places> distributionNearestPlace7to15s;
-            array<vector<double>, area_grid_size> distributionNearestAreaGridInPlace7to15s;
+            array<vector<double>, num_orders_per_site> distributionNearestAOrders6s, distributionNearestBOrders6s;
+            //array<vector<double>, num_orders_per_site> distributionNearestAOrders15s, distributionNearestBOrders15s;
+            //array<vector<double>, num_orders_per_site> distributionNearestAOrders30s, distributionNearestBOrders30s;
+            array<vector<double>, num_places> distributionNearestPlace3to6s;
+            //array<vector<double>, num_places> distributionNearestPlace7to15s;
+            array<vector<double>, area_grid_size> distributionNearestAreaGridInPlace3to6s;
+            //array<vector<double>, area_grid_size> distributionNearestAreaGridInPlace7to15s;
         };
         array<ColumnPlayerData, maxEnemies> columnCTData, columnTData;
         vector<std::reference_wrapper<const array<ColumnPlayerData, maxEnemies>>> getAllColumnData() const {
@@ -77,17 +80,24 @@ namespace csknow::feature_store {
         void commitTeamRow(FeatureStorePreCommitBuffer & buffer, DistanceToPlacesResult & distanceToPlaces,
                            const nav_mesh::nav_file & navFile,
                            int64_t roundIndex = 0, int64_t tickIndex = 0);
+        enum class ACausalTimingOption {
+            s6,
+            s15,
+            s30
+        };
         void computeOrderACausalLabels(int64_t curTick, CircularBuffer<int64_t> & futureTracker,
-                                       array<ColumnPlayerData, maxEnemies> & columnData, bool future15s);
+                                       array<ColumnPlayerData, maxEnemies> & columnData, ACausalTimingOption timingOption);
         void computePlaceAreaACausalLabels(const Ticks & ticks, const TickRates & tickRates, int64_t curTick,
                                            CircularBuffer<int64_t> & futureTracker,
                                            array<ColumnPlayerData,maxEnemies> & columnData);
         void computeAcausalLabels(const Games & games, const Rounds & rounds,
                                   const Ticks & ticks);
         void toHDF5Inner(HighFive::File & file) override;
+        /*
         void checkPossiblyBadValue() {
             std::cout << "checking possibly bad value on init " << columnTData[4].distributionNearestAOrders15s[0][8240] << std::endl;
         }
+         */
 
         vector<int64_t> filterByForeignKey(int64_t) override { return {}; }
         void oneLineToCSV(int64_t, std::ostream &) override { }

@@ -40,22 +40,28 @@ namespace csknow::feature_store {
             for (int j = 0; j < num_orders_per_site; j++) {
                 columnTData[i].distanceToNearestAOrderNavArea[j].resize(size, 2 * maxWorldDistance);
                 columnTData[i].distanceToNearestBOrderNavArea[j].resize(size, 2 * maxWorldDistance);
-                columnTData[i].distributionNearestAOrders15s[j].resize(size, INVALID_ID);
-                columnTData[i].distributionNearestBOrders15s[j].resize(size, INVALID_ID);
-                columnTData[i].distributionNearestAOrders30s[j].resize(size, INVALID_ID);
-                columnTData[i].distributionNearestBOrders30s[j].resize(size, INVALID_ID);
+                columnTData[i].distributionNearestAOrders6s[j].resize(size, INVALID_ID);
+                columnTData[i].distributionNearestBOrders6s[j].resize(size, INVALID_ID);
+                //columnTData[i].distributionNearestAOrders15s[j].resize(size, INVALID_ID);
+                //columnTData[i].distributionNearestBOrders15s[j].resize(size, INVALID_ID);
+                //columnTData[i].distributionNearestAOrders30s[j].resize(size, INVALID_ID);
+                //columnTData[i].distributionNearestBOrders30s[j].resize(size, INVALID_ID);
                 columnCTData[i].distanceToNearestAOrderNavArea[j].resize(size, INVALID_ID);
                 columnCTData[i].distanceToNearestBOrderNavArea[j].resize(size, INVALID_ID);
-                columnCTData[i].distributionNearestAOrders15s[j].resize(size, INVALID_ID);
-                columnCTData[i].distributionNearestBOrders15s[j].resize(size, INVALID_ID);
-                columnCTData[i].distributionNearestAOrders30s[j].resize(size, INVALID_ID);
-                columnCTData[i].distributionNearestBOrders30s[j].resize(size, INVALID_ID);
+                columnCTData[i].distributionNearestAOrders6s[j].resize(size, INVALID_ID);
+                columnCTData[i].distributionNearestBOrders6s[j].resize(size, INVALID_ID);
+                //columnCTData[i].distributionNearestAOrders15s[j].resize(size, INVALID_ID);
+                //columnCTData[i].distributionNearestBOrders15s[j].resize(size, INVALID_ID);
+                //columnCTData[i].distributionNearestAOrders30s[j].resize(size, INVALID_ID);
+                //columnCTData[i].distributionNearestBOrders30s[j].resize(size, INVALID_ID);
             }
             for (int j = 0; j < num_places; j++) {
                 columnTData[i].curPlace[j].resize(size, false);
-                columnTData[i].distributionNearestPlace7to15s[j].resize(size, INVALID_ID);
+                columnTData[i].distributionNearestPlace3to6s[j].resize(size, INVALID_ID);
+                //columnTData[i].distributionNearestPlace7to15s[j].resize(size, INVALID_ID);
                 columnCTData[i].curPlace[j].resize(size, false);
-                columnCTData[i].distributionNearestPlace7to15s[j].resize(size, INVALID_ID);
+                columnCTData[i].distributionNearestPlace3to6s[j].resize(size, INVALID_ID);
+                //columnCTData[i].distributionNearestPlace7to15s[j].resize(size, INVALID_ID);
                 for (int k = 0; k < num_prior_ticks; k++) {
                     columnTData[i].priorPlaces[k][j].resize(size, false);
                     columnCTData[i].priorPlaces[k][j].resize(size, false);
@@ -63,9 +69,11 @@ namespace csknow::feature_store {
             }
             for (int j = 0; j < area_grid_size; j++) {
                 columnTData[i].areaGridCellInPlace[j].resize(size, false);
-                columnTData[i].distributionNearestAreaGridInPlace7to15s[j].resize(size, INVALID_ID);
+                columnTData[i].distributionNearestAreaGridInPlace3to6s[j].resize(size, INVALID_ID);
+                //columnTData[i].distributionNearestAreaGridInPlace7to15s[j].resize(size, INVALID_ID);
                 columnCTData[i].areaGridCellInPlace[j].resize(size, false);
-                columnCTData[i].distributionNearestAreaGridInPlace7to15s[j].resize(size, INVALID_ID);
+                columnCTData[i].distributionNearestAreaGridInPlace3to6s[j].resize(size, INVALID_ID);
+                //columnCTData[i].distributionNearestAreaGridInPlace7to15s[j].resize(size, INVALID_ID);
                 for (int k = 0; k < num_prior_ticks; k++) {
                     columnTData[i].priorAreaGridCellInPlace[k][j].resize(size, false);
                     columnCTData[i].priorAreaGridCellInPlace[k][j].resize(size, false);
@@ -126,22 +134,28 @@ namespace csknow::feature_store {
                 for (int j = 0; j < num_orders_per_site; j++) {
                     columnTData[i].distanceToNearestAOrderNavArea[j][rowIndex] = 2 * maxWorldDistance;
                     columnTData[i].distanceToNearestBOrderNavArea[j][rowIndex] = 2 * maxWorldDistance;
-                    columnTData[i].distributionNearestAOrders15s[j][rowIndex] = INVALID_ID;
-                    columnTData[i].distributionNearestBOrders15s[j][rowIndex] = INVALID_ID;
-                    columnTData[i].distributionNearestAOrders30s[j][rowIndex] = INVALID_ID;
-                    columnTData[i].distributionNearestBOrders30s[j][rowIndex] = INVALID_ID;
+                    columnTData[i].distributionNearestAOrders6s[j][rowIndex] = INVALID_ID;
+                    columnTData[i].distributionNearestBOrders6s[j][rowIndex] = INVALID_ID;
+                    //columnTData[i].distributionNearestAOrders15s[j][rowIndex] = INVALID_ID;
+                    //columnTData[i].distributionNearestBOrders15s[j][rowIndex] = INVALID_ID;
+                    //columnTData[i].distributionNearestAOrders30s[j][rowIndex] = INVALID_ID;
+                    //columnTData[i].distributionNearestBOrders30s[j][rowIndex] = INVALID_ID;
                     columnCTData[i].distanceToNearestAOrderNavArea[j][rowIndex] = INVALID_ID;
                     columnCTData[i].distanceToNearestBOrderNavArea[j][rowIndex] = INVALID_ID;
-                    columnCTData[i].distributionNearestAOrders15s[j][rowIndex] = INVALID_ID;
-                    columnCTData[i].distributionNearestBOrders15s[j][rowIndex] = INVALID_ID;
-                    columnCTData[i].distributionNearestAOrders30s[j][rowIndex] = INVALID_ID;
-                    columnCTData[i].distributionNearestBOrders30s[j][rowIndex] = INVALID_ID;
+                    columnCTData[i].distributionNearestAOrders6s[j][rowIndex] = INVALID_ID;
+                    columnCTData[i].distributionNearestBOrders6s[j][rowIndex] = INVALID_ID;
+                    //columnCTData[i].distributionNearestAOrders15s[j][rowIndex] = INVALID_ID;
+                    //columnCTData[i].distributionNearestBOrders15s[j][rowIndex] = INVALID_ID;
+                    //columnCTData[i].distributionNearestAOrders30s[j][rowIndex] = INVALID_ID;
+                    //columnCTData[i].distributionNearestBOrders30s[j][rowIndex] = INVALID_ID;
                 }
                 for (int j = 0; j < num_places; j++) {
                     columnTData[i].curPlace[j][rowIndex] = false;
-                    columnTData[i].distributionNearestPlace7to15s[j][rowIndex] = INVALID_ID;
+                    columnTData[i].distributionNearestPlace3to6s[j][rowIndex] = INVALID_ID;
+                    //columnTData[i].distributionNearestPlace7to15s[j][rowIndex] = INVALID_ID;
                     columnCTData[i].curPlace[j][rowIndex] = false;
-                    columnCTData[i].distributionNearestPlace7to15s[j][rowIndex] = INVALID_ID;
+                    columnCTData[i].distributionNearestPlace3to6s[j][rowIndex] = INVALID_ID;
+                    //columnCTData[i].distributionNearestPlace7to15s[j][rowIndex] = INVALID_ID;
                     for (int k = 0; k < num_prior_ticks; k++) {
                         columnTData[i].priorPlaces[k][j][rowIndex] = false;
                         columnCTData[i].priorPlaces[k][j][rowIndex] = false;
@@ -149,9 +163,11 @@ namespace csknow::feature_store {
                 }
                 for (int j = 0; j < area_grid_size; j++) {
                     columnTData[i].areaGridCellInPlace[j][rowIndex] = false;
-                    columnTData[i].distributionNearestAreaGridInPlace7to15s[j][rowIndex] = INVALID_ID;
+                    columnTData[i].distributionNearestAreaGridInPlace3to6s[j][rowIndex] = INVALID_ID;
+                    //columnTData[i].distributionNearestAreaGridInPlace7to15s[j][rowIndex] = INVALID_ID;
                     columnCTData[i].areaGridCellInPlace[j][rowIndex] = false;
-                    columnCTData[i].distributionNearestAreaGridInPlace7to15s[j][rowIndex] = INVALID_ID;
+                    columnCTData[i].distributionNearestAreaGridInPlace3to6s[j][rowIndex] = INVALID_ID;
+                    //columnCTData[i].distributionNearestAreaGridInPlace7to15s[j][rowIndex] = INVALID_ID;
                     for (int k = 0; k < num_prior_ticks; k++) {
                         columnTData[i].priorAreaGridCellInPlace[k][j][rowIndex] = false;
                         columnCTData[i].priorAreaGridCellInPlace[k][j][rowIndex] = false;
@@ -294,7 +310,7 @@ namespace csknow::feature_store {
 
     void TeamFeatureStoreResult::computeOrderACausalLabels(int64_t curTick, CircularBuffer<int64_t> & futureTracker,
                                                            array<ColumnPlayerData, maxEnemies> & columnData,
-                                                           bool future15s) {
+                                                           ACausalTimingOption timingOption) {
         for (size_t playerColumn = 0; playerColumn < maxEnemies; playerColumn++) {
             /*
             if (curTick == 8240 && playerColumn == 4) {
@@ -311,13 +327,17 @@ namespace csknow::feature_store {
             }
             // clear out values for current tick
             for (size_t orderPerSite = 0; orderPerSite < num_orders_per_site; orderPerSite++) {
-                if (future15s) {
-                    columnData[playerColumn].distributionNearestAOrders15s[orderPerSite][curTick] = 0;
-                    columnData[playerColumn].distributionNearestBOrders15s[orderPerSite][curTick] = 0;
+                if (timingOption == ACausalTimingOption::s6) {
+                    columnData[playerColumn].distributionNearestAOrders6s[orderPerSite][curTick] = 0;
+                    columnData[playerColumn].distributionNearestBOrders6s[orderPerSite][curTick] = 0;
+                }
+                else if (timingOption == ACausalTimingOption::s15) {
+                    //columnData[playerColumn].distributionNearestAOrders15s[orderPerSite][curTick] = 0;
+                    //columnData[playerColumn].distributionNearestBOrders15s[orderPerSite][curTick] = 0;
                 }
                 else {
-                    columnData[playerColumn].distributionNearestAOrders30s[orderPerSite][curTick] = 0;
-                    columnData[playerColumn].distributionNearestBOrders30s[orderPerSite][curTick] = 0;
+                    //columnData[playerColumn].distributionNearestAOrders30s[orderPerSite][curTick] = 0;
+                    //columnData[playerColumn].distributionNearestBOrders30s[orderPerSite][curTick] = 0;
                 }
             }
             // want all points where alive, and accounting for ties
@@ -352,36 +372,48 @@ namespace csknow::feature_store {
                     }
                     numPointsInDistribution += minDistanceAOrders.size() + minDistanceBOrders.size();
                     for (const auto & orderPerSite : minDistanceAOrders) {
-                        if (future15s) {
-                            columnData[playerColumn].distributionNearestAOrders15s[orderPerSite][curTick]++;
+                        if (timingOption == ACausalTimingOption::s6) {
+                            columnData[playerColumn].distributionNearestAOrders6s[orderPerSite][curTick]++;
+                        }
+                        else if (timingOption == ACausalTimingOption::s15) {
+                            //columnData[playerColumn].distributionNearestAOrders15s[orderPerSite][curTick]++;
                         }
                         else {
-                            columnData[playerColumn].distributionNearestAOrders30s[orderPerSite][curTick]++;
+                            //columnData[playerColumn].distributionNearestAOrders30s[orderPerSite][curTick]++;
                         }
                     }
                     for (const auto & orderPerSite : minDistanceBOrders) {
-                        if (future15s) {
-                            columnData[playerColumn].distributionNearestBOrders15s[orderPerSite][curTick]++;
+                        if (timingOption == ACausalTimingOption::s6) {
+                            columnData[playerColumn].distributionNearestBOrders6s[orderPerSite][curTick]++;
+                        }
+                        else if (timingOption == ACausalTimingOption::s15) {
+                            //columnData[playerColumn].distributionNearestBOrders15s[orderPerSite][curTick]++;
                         }
                         else {
-                            columnData[playerColumn].distributionNearestBOrders30s[orderPerSite][curTick]++;
+                            //columnData[playerColumn].distributionNearestBOrders30s[orderPerSite][curTick]++;
                         }
                     }
                 }
             }
             if (numPointsInDistribution != 0) {
                 for (size_t orderPerSite = 0; orderPerSite < num_orders_per_site; orderPerSite++) {
-                    if (future15s) {
-                        columnData[playerColumn].distributionNearestAOrders15s[orderPerSite][curTick] /=
+                    if (timingOption == ACausalTimingOption::s6) {
+                        columnData[playerColumn].distributionNearestAOrders6s[orderPerSite][curTick] /=
                             static_cast<double>(numPointsInDistribution);
-                        columnData[playerColumn].distributionNearestBOrders15s[orderPerSite][curTick] /=
+                        columnData[playerColumn].distributionNearestBOrders6s[orderPerSite][curTick] /=
                             static_cast<double>(numPointsInDistribution);
                     }
+                    else if (timingOption == ACausalTimingOption::s15) {
+                        //columnData[playerColumn].distributionNearestAOrders15s[orderPerSite][curTick] /=
+                        //    static_cast<double>(numPointsInDistribution);
+                        //columnData[playerColumn].distributionNearestBOrders15s[orderPerSite][curTick] /=
+                        //    static_cast<double>(numPointsInDistribution);
+                    }
                     else {
-                        columnData[playerColumn].distributionNearestAOrders30s[orderPerSite][curTick] /=
-                            static_cast<double>(numPointsInDistribution);
-                        columnData[playerColumn].distributionNearestBOrders30s[orderPerSite][curTick] /=
-                            static_cast<double>(numPointsInDistribution);
+                        //columnData[playerColumn].distributionNearestAOrders30s[orderPerSite][curTick] /=
+                        //    static_cast<double>(numPointsInDistribution);
+                        //columnData[playerColumn].distributionNearestBOrders30s[orderPerSite][curTick] /=
+                        //    static_cast<double>(numPointsInDistribution);
                     }
                 }
             }
@@ -397,40 +429,49 @@ namespace csknow::feature_store {
             }
             // clear out values for current tick
             for (size_t placeIndex = 0; placeIndex < num_places; placeIndex++) {
-                columnData[playerColumn].distributionNearestPlace7to15s[placeIndex][curTick] = 0;
+                columnData[playerColumn].distributionNearestPlace3to6s[placeIndex][curTick] = 0;
+                //columnData[playerColumn].distributionNearestPlace7to15s[placeIndex][curTick] = 0;
             }
             for (size_t areaGridIndex = 0; areaGridIndex < area_grid_size; areaGridIndex++) {
-                columnData[playerColumn].distributionNearestAreaGridInPlace7to15s[areaGridIndex][curTick] = 0;
+                columnData[playerColumn].distributionNearestAreaGridInPlace3to6s[areaGridIndex][curTick] = 0;
+                //columnData[playerColumn].distributionNearestAreaGridInPlace7to15s[areaGridIndex][curTick] = 0;
             }
             // want all points where alive, and accounting for ties
             size_t numPointsInDistribution = 0;
             for (int64_t futureTickIndex = 0; futureTickIndex < futureTracker.getCurSize(); futureTickIndex++) {
                 int64_t futureTick = futureTracker.fromOldest(futureTickIndex);
-                bool in7to15sWindow = secondsBetweenTicks(ticks, tickRates, curTick, futureTick) >= 7.;
+                bool in3to6sWindow = secondsBetweenTicks(ticks, tickRates, curTick, futureTick) >= 3.;
+                //bool in7to15sWindow = secondsBetweenTicks(ticks, tickRates, curTick, futureTick) >= 7.;
                 if (futureTick != curTick &&
                     columnData[playerColumn].playerId[curTick] == columnData[playerColumn].playerId[futureTick] &&
-                    in7to15sWindow) {
+                    in3to6sWindow) {
                     numPointsInDistribution++;
                     for (size_t placeIndex = 0; placeIndex < num_places; placeIndex++) {
                         if (columnData[playerColumn].curPlace[placeIndex][futureTick]) {
-                            columnData[playerColumn].distributionNearestPlace7to15s[placeIndex][curTick]++;
+                            columnData[playerColumn].distributionNearestPlace3to6s[placeIndex][curTick]++;
+                            //columnData[playerColumn].distributionNearestPlace7to15s[placeIndex][curTick]++;
                         }
                     }
                     for (size_t areaGridIndex = 0; areaGridIndex < area_grid_size; areaGridIndex++) {
                         if (columnData[playerColumn].areaGridCellInPlace[areaGridIndex][futureTick]) {
-                            columnData[playerColumn].distributionNearestAreaGridInPlace7to15s[areaGridIndex][curTick]++;
+                            columnData[playerColumn].distributionNearestAreaGridInPlace3to6s[areaGridIndex][curTick]++;
+                            //columnData[playerColumn].distributionNearestAreaGridInPlace7to15s[areaGridIndex][curTick]++;
                         }
                     }
                 }
             }
             if (numPointsInDistribution != 0) {
                 for (size_t placeIndex = 0; placeIndex < num_places; placeIndex++) {
-                    columnData[playerColumn].distributionNearestPlace7to15s[placeIndex][curTick] /=
+                    columnData[playerColumn].distributionNearestPlace3to6s[placeIndex][curTick] /=
                         static_cast<double>(numPointsInDistribution);
+                    //columnData[playerColumn].distributionNearestPlace7to15s[placeIndex][curTick] /=
+                    //    static_cast<double>(numPointsInDistribution);
                 }
                 for (size_t areaGridIndex = 0; areaGridIndex < area_grid_size; areaGridIndex++) {
-                    columnData[playerColumn].distributionNearestAreaGridInPlace7to15s[areaGridIndex][curTick] /=
+                    columnData[playerColumn].distributionNearestAreaGridInPlace3to6s[areaGridIndex][curTick] /=
                         static_cast<double>(numPointsInDistribution);
+                    //columnData[playerColumn].distributionNearestAreaGridInPlace7to15s[areaGridIndex][curTick] /=
+                    //    static_cast<double>(numPointsInDistribution);
                 }
             }
         }
@@ -449,10 +490,14 @@ namespace csknow::feature_store {
 //#pragma omp parallel for
         for (int64_t roundIndex = 0; roundIndex < rounds.size; roundIndex++) {
             TickRates tickRates = computeTickRates(games, rounds, roundIndex);
-            CircularBuffer<int64_t> ticks15sFutureTracker(15), ticks30sFutureTracker(30);
+            CircularBuffer<int64_t> ticks6sFutureTracker(6), ticks15sFutureTracker(15), ticks30sFutureTracker(30);
             for (int64_t tickIndex = rounds.ticksPerRound[roundIndex].maxId;
                  tickIndex >= rounds.ticksPerRound[roundIndex].minId; tickIndex--) {
                 // add a new tick every second
+                if (ticks6sFutureTracker.isEmpty() ||
+                    secondsBetweenTicks(ticks, tickRates, tickIndex, ticks6sFutureTracker.fromNewest()) >= 1.) {
+                    ticks6sFutureTracker.enqueue(tickIndex);
+                }
                 if (ticks15sFutureTracker.isEmpty() ||
                     secondsBetweenTicks(ticks, tickRates, tickIndex, ticks15sFutureTracker.fromNewest()) >= 1.) {
                     ticks15sFutureTracker.enqueue(tickIndex);
@@ -461,12 +506,16 @@ namespace csknow::feature_store {
                     secondsBetweenTicks(ticks, tickRates, tickIndex, ticks30sFutureTracker.fromNewest()) >= 1.) {
                     ticks30sFutureTracker.enqueue(tickIndex);
                 }
-                computeOrderACausalLabels(tickIndex, ticks15sFutureTracker, columnCTData, true);
-                computeOrderACausalLabels(tickIndex, ticks30sFutureTracker, columnCTData, false);
-                computeOrderACausalLabels(tickIndex, ticks15sFutureTracker, columnTData, true);
-                computeOrderACausalLabels(tickIndex, ticks30sFutureTracker, columnTData, false);
-                computePlaceAreaACausalLabels(ticks, tickRates, tickIndex, ticks15sFutureTracker, columnCTData);
-                computePlaceAreaACausalLabels(ticks, tickRates, tickIndex, ticks15sFutureTracker, columnTData);
+                computeOrderACausalLabels(tickIndex, ticks15sFutureTracker, columnCTData, ACausalTimingOption::s6);
+                //computeOrderACausalLabels(tickIndex, ticks15sFutureTracker, columnCTData, ACausalTimingOption::s15);
+                //computeOrderACausalLabels(tickIndex, ticks30sFutureTracker, columnCTData, ACausalTimingOption::s30);
+                computeOrderACausalLabels(tickIndex, ticks15sFutureTracker, columnTData, ACausalTimingOption::s6);
+                //computeOrderACausalLabels(tickIndex, ticks15sFutureTracker, columnTData, ACausalTimingOption::s15);
+                //computeOrderACausalLabels(tickIndex, ticks30sFutureTracker, columnTData, ACausalTimingOption::s30);
+                computePlaceAreaACausalLabels(ticks, tickRates, tickIndex, ticks6sFutureTracker, columnCTData);
+                computePlaceAreaACausalLabels(ticks, tickRates, tickIndex, ticks6sFutureTracker, columnTData);
+                //computePlaceAreaACausalLabels(ticks, tickRates, tickIndex, ticks15sFutureTracker, columnCTData);
+                //computePlaceAreaACausalLabels(ticks, tickRates, tickIndex, ticks15sFutureTracker, columnTData);
                 /*
                 if (tickIndex == 1195) {
                     std::cout << "cur tick " << tickIndex << " 30s tick " << ticks30sFutureTracker.fromOldest() << std::endl;
@@ -528,21 +577,27 @@ namespace csknow::feature_store {
                                        columnData[columnPlayer].distanceToNearestAOrderNavArea[orderIndex], hdf5FlatCreateProps);
                     file.createDataSet("/data/distance to nearest b order " + orderIndexStr + " nav area " + columnTeam + " " + iStr,
                                        columnData[columnPlayer].distanceToNearestBOrderNavArea[orderIndex], hdf5FlatCreateProps);
-                    file.createDataSet("/data/distribution nearest a order " + orderIndexStr + " 15s " + columnTeam + " " + iStr,
-                                       columnData[columnPlayer].distributionNearestAOrders15s[orderIndex], hdf5FlatCreateProps);
-                    file.createDataSet("/data/distribution nearest b order " + orderIndexStr + " 15s " + columnTeam + " " + iStr,
-                                       columnData[columnPlayer].distributionNearestBOrders15s[orderIndex], hdf5FlatCreateProps);
-                    file.createDataSet("/data/distribution nearest a order " + orderIndexStr + " 30s " + columnTeam + " " + iStr,
-                                       columnData[columnPlayer].distributionNearestAOrders30s[orderIndex], hdf5FlatCreateProps);
-                    file.createDataSet("/data/distribution nearest b order " + orderIndexStr + " 30s " + columnTeam + " " + iStr,
-                                       columnData[columnPlayer].distributionNearestBOrders30s[orderIndex], hdf5FlatCreateProps);
+                    file.createDataSet("/data/distribution nearest a order " + orderIndexStr + " 6s " + columnTeam + " " + iStr,
+                                       columnData[columnPlayer].distributionNearestAOrders6s[orderIndex], hdf5FlatCreateProps);
+                    file.createDataSet("/data/distribution nearest b order " + orderIndexStr + " 6s " + columnTeam + " " + iStr,
+                                       columnData[columnPlayer].distributionNearestBOrders6s[orderIndex], hdf5FlatCreateProps);
+                    //file.createDataSet("/data/distribution nearest a order " + orderIndexStr + " 15s " + columnTeam + " " + iStr,
+                    //                   columnData[columnPlayer].distributionNearestAOrders15s[orderIndex], hdf5FlatCreateProps);
+                    //file.createDataSet("/data/distribution nearest b order " + orderIndexStr + " 15s " + columnTeam + " " + iStr,
+                    //                   columnData[columnPlayer].distributionNearestBOrders15s[orderIndex], hdf5FlatCreateProps);
+                    //file.createDataSet("/data/distribution nearest a order " + orderIndexStr + " 30s " + columnTeam + " " + iStr,
+                    //                   columnData[columnPlayer].distributionNearestAOrders30s[orderIndex], hdf5FlatCreateProps);
+                    //file.createDataSet("/data/distribution nearest b order " + orderIndexStr + " 30s " + columnTeam + " " + iStr,
+                    //                   columnData[columnPlayer].distributionNearestBOrders30s[orderIndex], hdf5FlatCreateProps);
                 }
                 for (size_t placeIndex = 0; placeIndex < num_places; placeIndex++) {
                     string placeIndexStr = std::to_string(placeIndex);
                     file.createDataSet("/data/cur place " + placeIndexStr + " " + columnTeam + " " + iStr,
                                        columnData[columnPlayer].curPlace[placeIndex], hdf5FlatCreateProps);
-                    file.createDataSet("/data/distribution nearest place 7 to 15s " + placeIndexStr + " " + columnTeam + " " + iStr,
-                                       columnData[columnPlayer].distributionNearestPlace7to15s[placeIndex], hdf5FlatCreateProps);
+                    file.createDataSet("/data/distribution nearest place 3 to 6s " + placeIndexStr + " " + columnTeam + " " + iStr,
+                                       columnData[columnPlayer].distributionNearestPlace3to6s[placeIndex], hdf5FlatCreateProps);
+                    //file.createDataSet("/data/distribution nearest place 7 to 15s " + placeIndexStr + " " + columnTeam + " " + iStr,
+                    //                   columnData[columnPlayer].distributionNearestPlace7to15s[placeIndex], hdf5FlatCreateProps);
                     /*
                     for (int priorTick = 0; priorTick < num_prior_ticks; priorTick++) {
                         file.createDataSet("/data/prior place " + placeIndexStr + " " + columnTeam + " " + iStr +  " t-" + std::to_string(priorTick+1),
@@ -554,8 +609,10 @@ namespace csknow::feature_store {
                     string areaGridIndexStr = std::to_string(areaGridIndex);
                     file.createDataSet("/data/area grid cell in place " + areaGridIndexStr + " " + columnTeam + " " + iStr,
                                        columnData[columnPlayer].areaGridCellInPlace[areaGridIndex], hdf5FlatCreateProps);
-                    file.createDataSet("/data/distribution nearest area grid in place 7 to 15s " + areaGridIndexStr + " " + columnTeam + " " + iStr,
-                                       columnData[columnPlayer].distributionNearestAreaGridInPlace7to15s[areaGridIndex], hdf5FlatCreateProps);
+                    file.createDataSet("/data/distribution nearest area grid in place 3 to 6s " + areaGridIndexStr + " " + columnTeam + " " + iStr,
+                                       columnData[columnPlayer].distributionNearestAreaGridInPlace3to6s[areaGridIndex], hdf5FlatCreateProps);
+                    //file.createDataSet("/data/distribution nearest area grid in place 7 to 15s " + areaGridIndexStr + " " + columnTeam + " " + iStr,
+                    //                   columnData[columnPlayer].distributionNearestAreaGridInPlace7to15s[areaGridIndex], hdf5FlatCreateProps);
                     /*
                     for (int priorTick = 0; priorTick < num_prior_ticks; priorTick++) {
                         file.createDataSet("/data/prior area grid cell in place " + areaGridIndexStr + " " + columnTeam + " " + iStr +  " t-" + std::to_string(priorTick+1),
