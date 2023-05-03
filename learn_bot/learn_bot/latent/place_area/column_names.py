@@ -8,11 +8,11 @@ float_c4_cols = [c4_distance_to_a_site_col, c4_distance_to_b_site_col] + c4_pos_
 
 
 def get_player_distribution_nearest_place(player_index: int, place_index: int, team_str: str) -> str:
-    return "distribution nearest place 7 to 15s " + str(place_index) + " " + team_str + " " + str(player_index)
+    return "distribution nearest place 3 to 6s " + str(place_index) + " " + team_str + " " + str(player_index)
 
 
 def get_player_distribution_nearest_grid_area(player_index: int, area_grid_index: int, team_str: str) -> str:
-    return "distribution nearest area grid in place 7 to 15s " + str(area_grid_index) + " " + team_str + " " + str(player_index)
+    return "distribution nearest area grid in place 3 to 6s " + str(area_grid_index) + " " + team_str + " " + str(player_index)
 
 
 class PlayerPlaceAreaColumns:
