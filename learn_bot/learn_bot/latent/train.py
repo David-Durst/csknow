@@ -1,6 +1,7 @@
 # https://pytorch.org/tutorials/beginner/basics/quickstart_tutorial.html
 from enum import Enum
 from typing import Dict
+import sys
 
 import torch.optim
 from torch import nn
@@ -151,6 +152,7 @@ def train(train_type: TrainType, all_data_df: pd.DataFrame, num_epochs: int,
             model.eval()
         cumulative_loss = LatentLosses()
         accuracy = {}
+        losses = []
         # bar = Bar('Processing', max=size)
         for name in column_transformers.output_types.column_names():
             accuracy[name] = 0
@@ -184,12 +186,18 @@ def train(train_type: TrainType, all_data_df: pd.DataFrame, num_epochs: int,
                 pred = model(X)
                 if torch.isnan(X).any():
                     print('bad X')
+                    sys.exit(0)
                 if torch.isnan(Y).any():
                     print('bad Y')
+                    sys.exit(0)
                 if torch.isnan(pred[0]).any():
+                    print(X)
+                    print(pred[0])
                     print('bad pred')
+                    sys.exit(0)
                 batch_loss = compute_loss(X, pred, transformed_Y, Y, column_transformers, prob_func)
                 cumulative_loss += batch_loss
+                losses.append(batch_loss.get_total_loss().tolist()[0])
 
                 # Backpropagation
                 if train:
@@ -288,11 +296,12 @@ if __name__ == "__main__":
     team_data_df = team_data_df[team_data_df['valid'] == 1.]
     #all_data_df = all_data_df.iloc[:500000]
     #all_data_df = load_hdf5_to_pd(latent_window_hdf5_data_path)
-    train_result = train(TrainType.Order, team_data_df, num_epochs=1, windowed=False)
-    train_result = train(TrainType.Place, team_data_df, num_epochs=1, windowed=False)
-    train_result = train(TrainType.Area, team_data_df, num_epochs=1, windowed=False)
-    train_result = train(TrainType.Engagement, all_data_df, num_epochs=1, windowed=False)
-    train_result = train(TrainType.Aggression, all_data_df, num_epochs=1, windowed=False)
+    while True:
+        train_result = train(TrainType.Order, team_data_df, num_epochs=1, windowed=False)
+        train_result = train(TrainType.Place, team_data_df, num_epochs=1, windowed=False)
+        train_result = train(TrainType.Area, team_data_df, num_epochs=1, windowed=False)
+    #train_result = train(TrainType.Engagement, all_data_df, num_epochs=1, windowed=False)
+    #train_result = train(TrainType.Aggression, all_data_df, num_epochs=1, windowed=False)
 
 # all_data_df[((all_data_df['pct nearest crosshair enemy 2s 0'] + all_data_df['pct nearest crosshair enemy 2s 1'] + all_data_df['pct nearest crosshair enemy 2s 2'] + all_data_df['pct nearest crosshair enemy 2s 3'] + all_data_df['pct nearest crosshair enemy 2s 4'] + all_data_df['pct nearest crosshair enemy 2s 5']) < 0.9) & (all_data_df['valid'] == 1)]
 # all_data_df[(all_data_df['pct nearest enemy change 2s decrease'] + all_data_df['pct nearest enemy change 2s constant'] + all_data_df['pct nearest enemy change 2s increase'] < 0.9) & (all_data_df['valid'] == 1)]

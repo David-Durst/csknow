@@ -11,5 +11,4 @@ def get_place_area_probability(latent_tensor: torch.Tensor, observation: torch.T
     # remove negatives for dead players, don't count those during loss
     # 0.999 + 0.001 below will send to 1 so have no impact on loss
     negs_removed = torch.where(per_player_place_area_probs >= 0., per_player_place_area_probs, 1 - zero_adjustment_amount)
-    return -1 * \
-        torch.sum(torch.log(add_to_zeros(torch.concat([negs_removed], dim=1))))
+    return -1 * torch.sum(torch.log(add_to_zeros(torch.concat([negs_removed], dim=1)))) / 10

@@ -223,6 +223,8 @@ int main(int argc, char * argv[]) {
     behaviorTreeLatentEvents.featureStoreResult.teamFeatureStoreResult.computeAcausalLabels(games, filteredRounds, ticks);
     std::cout << "size: " << behaviorTreeLatentEvents.featureStoreResult.teamFeatureStoreResult.size << std::endl;
 
+    exit(0);
+
     /*
     std::cout << "processing behavior tree window feature store" << std::endl;
     csknow::feature_store::FeatureStoreResult windowFeatureStoreResult =

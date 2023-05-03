@@ -70,8 +70,10 @@ class PlayerPlaceAreaColumns:
 
     def to_input_float_list(self) -> list[str]:
         return [self.distance_to_a_site, self.distance_to_b_site] + \
-            flatten_list([self.pos, self.prior_pos, self.vel, self.cur_place, #self.prior_place,
-                          self.area_grid_cell_in_place])#, self.prior_area_grid_cell_in_place])
+            flatten_list([self.pos, self.prior_pos, self.vel])
+
+    def to_input_distribution_cat_list(self) -> list[list[str]]:
+        return [self.cur_place, self.area_grid_cell_in_place]
 
     def to_output_cat_list(self, place: bool, area: bool) -> list[list[str]]:
         result = []
@@ -88,6 +90,8 @@ flat_input_float_place_area_columns: list[str] = \
     float_c4_cols + [col for cols in specific_player_place_area_columns for col in cols.to_input_float_list()]
 flat_input_cat_place_area_columns: list[str] = [c4_status_col]
 flat_input_cat_place_area_num_options: list[int] = [num_c4_status]
+flat_input_distribution_cat_place_area_columns: list[list[str]] = \
+    flatten_list([cols.to_input_distribution_cat_list() for cols in specific_player_order_columns])
 flat_output_cat_place_distribution_columns: list[list[str]] = \
     flatten_list([cols.to_output_cat_list(True, False) for cols in specific_player_place_area_columns])
 flat_output_cat_area_distribution_columns: list[list[str]] = \
@@ -95,7 +99,8 @@ flat_output_cat_area_distribution_columns: list[list[str]] = \
 
 place_area_input_column_types = get_simplified_column_types(flat_input_float_place_area_columns,
                                                             flat_input_cat_place_area_columns,
-                                                            flat_input_cat_place_area_num_options, [])
+                                                            flat_input_cat_place_area_num_options,
+                                                            flat_input_distribution_cat_place_area_columns)
 #output_column_types = get_simplified_column_types([], flat_output_cat_columns, flat_output_num_options,
 #                                                  flat_output_cat_distribution_columns)
 place_output_column_types = get_simplified_column_types([], [], [], flat_output_cat_place_distribution_columns)

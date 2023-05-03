@@ -111,10 +111,12 @@ namespace csknow::feature_store {
             for (int i = 0; i < maxEnemies; i++) {
                 columnTData[i].playerId[rowIndex] = INVALID_ID;
                 columnTData[i].footPos[rowIndex] = invalidWorldPos;
+                columnTData[i].velocity[rowIndex] = {INVALID_ID, INVALID_ID, INVALID_ID};
                 columnTData[i].distanceToASite[rowIndex] = 2 * maxWorldDistance;
                 columnTData[i].distanceToBSite[rowIndex] = 2 * maxWorldDistance;
                 columnCTData[i].playerId[rowIndex] = INVALID_ID;
                 columnCTData[i].footPos[rowIndex] = invalidWorldPos;
+                columnCTData[i].velocity[rowIndex] = {INVALID_ID, INVALID_ID, INVALID_ID};
                 columnCTData[i].distanceToASite[rowIndex] = 2 * maxWorldDistance;
                 columnCTData[i].distanceToBSite[rowIndex] = 2 * maxWorldDistance;
                 for (int j = 0; j < num_prior_ticks; j++) {
@@ -266,6 +268,9 @@ namespace csknow::feature_store {
                 const BTTeamPlayerData & priorBTTeamPlayerData =
                     buffer.historicalPlayerDataBuffer.fromNewest(priorTickIndex).at(btTeamPlayerData.playerId);
                 columnData[columnIndex].priorFootPos[j][tickIndex] = priorBTTeamPlayerData.curFootPos;
+                if (isnan(priorBTTeamPlayerData.curFootPos.x) || isnan(priorBTTeamPlayerData.curFootPos.y) || isnan(priorBTTeamPlayerData.curFootPos.z) ) {
+                    std::cout << "found nan" << std::endl;
+                }
                 PlaceIndex priorPlaceIndex = distanceToPlaces.getClosestValidPlace(priorBTTeamPlayerData.curAreaIndex, navFile);
                 string priorPlaceString = navFile.get_place(priorPlaceIndex);
                 columnData[columnIndex].priorPlaces[j][priorPlaceIndex][tickIndex] = true;

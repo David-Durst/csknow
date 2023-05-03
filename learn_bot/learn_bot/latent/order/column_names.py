@@ -17,7 +17,6 @@ num_places = 26
 area_grid_dim = 5
 area_grid_size = area_grid_dim * area_grid_dim
 
-
 c4_status_col = "c4 status"
 c4_pos_cols = ["c4 pos x", "c4 pos y", "c4 pos z"]
 c4_ticks_since_plant = ["c4 ticks since plant"]
@@ -28,9 +27,8 @@ c4_distance_to_nearest_a_order_nav_area_cols = \
 c4_distance_to_nearest_b_order_nav_area_cols = \
     ["c4 distance to nearest b order " + str(i) + " nav area" for i in range(num_orders_per_site)]
 float_c4_cols = [c4_distance_to_a_site_col, c4_distance_to_b_site_col] + \
-          c4_distance_to_nearest_a_order_nav_area_cols + c4_distance_to_nearest_b_order_nav_area_cols + \
-          c4_pos_cols + c4_ticks_since_plant
-
+                c4_distance_to_nearest_a_order_nav_area_cols + c4_distance_to_nearest_b_order_nav_area_cols + \
+                c4_pos_cols + c4_ticks_since_plant
 
 team_strs = ["CT", "T"]
 site_strs = ["a", "b"]
@@ -77,7 +75,8 @@ def get_player_area_grid_cell_in_place_columns(player_index: int, area_grid_inde
     return "area grid cell in place " + str(area_grid_index) + " " + team_str + " " + str(player_index)
 
 
-def get_player_prior_area_grid_cell_in_place_columns(player_index: int, area_grid_index: int, team_str: str, history_index: int) -> str:
+def get_player_prior_area_grid_cell_in_place_columns(player_index: int, area_grid_index: int, team_str: str,
+                                                     history_index: int) -> str:
     return "prior area grid cell in place " + str(area_grid_index) + " " + team_str + " " + str(player_index) \
         + " t-" + str(history_index)
 
@@ -88,8 +87,10 @@ T = TypeVar('T')
 def flatten_list(xss: list[list[T]]) -> list[T]:
     return [xi for xs in xss for xi in xs]
 
+
 def player_team_str(team_str: str, player_index: int) -> str:
     return team_str + " " + str(player_index)
+
 
 class PlayerOrderColumns:
     player_id: str
@@ -97,9 +98,9 @@ class PlayerOrderColumns:
     prior_pos: list[str]
     vel: list[str]
     cur_place: list[str]
-    #prior_place: list[str]
+    # prior_place: list[str]
     area_grid_cell_in_place: list[str]
-    #prior_area_grid_cell_in_place: list[str]
+    # prior_area_grid_cell_in_place: list[str]
     distance_to_a_site: str
     distance_to_b_site: str
     distance_to_nearest_a_order_nav_area: list[str]
@@ -117,9 +118,9 @@ class PlayerOrderColumns:
         self.prior_pos = []
         self.vel = [get_player_pos_columns(player_index, team_str, dim_str) for dim_str in ["x", "y", "z"]]
         self.cur_place = []
-        #self.prior_place = []
+        # self.prior_place = []
         self.area_grid_cell_in_place = []
-        #self.prior_area_grid_cell_in_place = []
+        # self.prior_area_grid_cell_in_place = []
         self.distance_to_nearest_a_order_nav_area = []
         self.distance_to_nearest_b_order_nav_area = []
         self.distribution_nearest_a_order_15s = []
@@ -149,30 +150,31 @@ class PlayerOrderColumns:
         for area_grid_index in range(area_grid_size):
             self.area_grid_cell_in_place \
                 .append(get_player_area_grid_cell_in_place_columns(player_index, area_grid_index, team_str))
-        for prior_tick in range(1, num_prior_ticks+1):
+        for prior_tick in range(1, num_prior_ticks + 1):
             for dim_str in ["x", "y", "z"]:
                 self.prior_pos.append(get_player_pos_columns(player_index, team_str, dim_str, prior_tick))
-            #for place_index in range(num_places):
+            # for place_index in range(num_places):
             #    self.prior_place \
             #        .append(get_player_prior_place_columns(player_index, place_index, team_str, prior_tick))
-            #for area_grid_index in range(area_grid_size):
+            # for area_grid_index in range(area_grid_size):
             #    self.prior_area_grid_cell_in_place \
             #        .append(get_player_prior_area_grid_cell_in_place_columns(player_index, area_grid_index, team_str, prior_tick))
 
     def to_list(self) -> list[str]:
         return [self.player_id, self.distance_to_a_site, self.distance_to_b_site] + \
-            flatten_list([self.pos, self.prior_pos, self.vel, self.cur_place, #self.prior_place,
-                          self.area_grid_cell_in_place, #self.prior_area_grid_cell_in_place,
+            flatten_list([self.pos, self.prior_pos, self.vel, self.cur_place,  # self.prior_place,
+                          self.area_grid_cell_in_place,  # self.prior_area_grid_cell_in_place,
                           self.distance_to_nearest_a_order_nav_area, self.distance_to_nearest_b_order_nav_area,
                           self.distribution_nearest_a_order_15s, self.distribution_nearest_a_order_30s,
                           self.distribution_nearest_b_order_15s, self.distribution_nearest_b_order_30s])
 
     def to_input_float_list(self) -> list[str]:
         return [self.distance_to_a_site, self.distance_to_b_site] + \
-            flatten_list([self.pos, self.prior_pos, self.vel, self.cur_place, # self.prior_place,
-                          self.area_grid_cell_in_place]) + \
+            flatten_list([self.pos, self.prior_pos, self.vel]) + \
             flatten_list([self.distance_to_nearest_a_order_nav_area, self.distance_to_nearest_b_order_nav_area])
-    # , self.prior_area_grid_cell_in_place]) + \
+
+    def to_input_distribution_cat_list(self) -> list[list[str]]:
+        return [self.cur_place, self.area_grid_cell_in_place]
 
     def to_output_cat_list(self, include_15=True, include_30=True) -> list[list[str]]:
         result = []
@@ -189,12 +191,15 @@ flat_input_float_order_columns: list[str] = \
     float_c4_cols + [col for cols in specific_player_order_columns for col in cols.to_input_float_list()]
 flat_input_cat_order_columns: list[str] = [c4_status_col]
 flat_input_cat_order_num_options: list[int] = [num_c4_status]
+flat_input_distribution_cat_order_columns: list[list[str]] = \
+    flatten_list([cols.to_input_distribution_cat_list() for cols in specific_player_order_columns])
 flat_output_cat_distribution_columns: list[list[str]] = \
     flatten_list([cols.to_output_cat_list(True, False) for cols in specific_player_order_columns])
 
 order_input_column_types = get_simplified_column_types(flat_input_float_order_columns,
-                                                      flat_input_cat_order_columns,
-                                                      flat_input_cat_order_num_options, [])
-#output_column_types = get_simplified_column_types([], flat_output_cat_columns, flat_output_num_options,
+                                                       flat_input_cat_order_columns,
+                                                       flat_input_cat_order_num_options,
+                                                       flat_input_distribution_cat_order_columns)
+# output_column_types = get_simplified_column_types([], flat_output_cat_columns, flat_output_num_options,
 #                                                  flat_output_cat_distribution_columns)
 order_output_column_types = get_simplified_column_types([], [], [], flat_output_cat_distribution_columns)
