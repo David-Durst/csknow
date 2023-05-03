@@ -296,9 +296,9 @@ if __name__ == "__main__":
     team_data_df = team_data_df[team_data_df['valid'] == 1.]
     #all_data_df = all_data_df.iloc[:500000]
     #all_data_df = load_hdf5_to_pd(latent_window_hdf5_data_path)
-    train_result = train(TrainType.Order, team_data_df, num_epochs=10, windowed=False)
-    train_result = train(TrainType.Place, team_data_df, num_epochs=10, windowed=False)
-    train_result = train(TrainType.Area, team_data_df, num_epochs=10, windowed=False)
+    train_result = train(TrainType.Order, team_data_df, num_epochs=3, windowed=False)
+    train_result = train(TrainType.Place, team_data_df, num_epochs=3, windowed=False)
+    train_result = train(TrainType.Area, team_data_df, num_epochs=3, windowed=False)
     train_result = train(TrainType.Engagement, all_data_df, num_epochs=1, windowed=False)
     train_result = train(TrainType.Aggression, all_data_df, num_epochs=1, windowed=False)
 
