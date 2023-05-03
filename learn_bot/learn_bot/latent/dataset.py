@@ -24,7 +24,7 @@ class LatentDataset(Dataset):
 
         # convert player id's to indexes
         self.windowed = windowed
-        self.X = torch.tensor(df.loc[:, cts.input_types.column_names()].to_numpy()).float()
+        self.X = torch.tensor(df.loc[:, cts.input_types.column_names_all_categorical_columns()].to_numpy()).float()
         self.Y = torch.tensor(df.loc[:, cts.output_types.column_names_all_categorical_columns()].to_numpy()).float()
         if windowed:
             self.X = torch.unflatten(self.X, 0, [-1, 10])

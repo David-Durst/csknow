@@ -198,8 +198,8 @@ flat_output_cat_distribution_columns: list[list[str]] = \
 
 order_input_column_types = get_simplified_column_types(flat_input_float_order_columns,
                                                        flat_input_cat_order_columns,
-                                                       flat_input_cat_order_num_options, [])
-                                                       #flat_input_distribution_cat_order_columns)
+                                                       flat_input_cat_order_num_options,
+                                                       flat_input_distribution_cat_order_columns)
 # output_column_types = get_simplified_column_types([], flat_output_cat_columns, flat_output_num_options,
 #                                                  flat_output_cat_distribution_columns)
 order_output_column_types = get_simplified_column_types([], [], [], flat_output_cat_distribution_columns)
