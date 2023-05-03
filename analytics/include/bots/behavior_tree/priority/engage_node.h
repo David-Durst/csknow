@@ -37,6 +37,8 @@ namespace engage {
     public:
         SelectTargetAggressionNode(Blackboard & blackboard) : Node(blackboard, "TargetAggressionSelectionTaskNode") { };
         virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override;
+        void setTargetPosForTarget(const ServerState::Client & client, Priority & curPriority,
+                                   const TargetPlayer & curTarget);
     };
 }
 

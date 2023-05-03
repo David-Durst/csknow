@@ -13,7 +13,8 @@ namespace engage {
 
         // forcing targetPos to be something valid
         TargetPlayer & curTarget = curPriority.targetPlayer;
-        curPriority.targetPos = curTarget.footPos;
+        //curPriority.targetPos = curTarget.footPos;
+        setTargetPosForTarget(curClient, curPriority, curTarget);
 
         if (blackboard.playerToTicksSinceLastProbAggressionAssignment.find(treeThinker.csgoId) ==
             blackboard.playerToTicksSinceLastProbAggressionAssignment.end()) {
@@ -99,5 +100,25 @@ namespace engage {
 
         playerNodeState[treeThinker.csgoId] = NodeState::Success;
         return playerNodeState[treeThinker.csgoId];
+    }
+
+
+    void SelectTargetAggressionNode::setTargetPosForTarget(const ServerState::Client & client, Priority & curPriority,
+                                                           const TargetPlayer & curTarget) {
+        AreaId curAreaId = blackboard.navFile
+            .get_nearest_area_by_position(vec3Conv(client.getFootPosForPlayer())).get_id();
+        size_t curAreaIndex = blackboard.navFile.m_area_ids_to_indices.at(curAreaId);
+        AreaId targetAreaId = blackboard.navFile.get_nearest_area_by_position(vec3Conv(curTarget.footPos)).get_id();
+        AreaBits enemyDangerAreaBits = blackboard.visPoints.getDangerRelativeToSrc(targetAreaId);
+        double nearestDangerAreaDistance = std::numeric_limits<double>::max();
+        size_t nearestDangerAreaIndex = 0;
+        for (size_t dangerAreaIndex = 0; dangerAreaIndex < enemyDangerAreaBits.size(); dangerAreaIndex++) {
+            double newDangerAreaDistance = blackboard.reachability.getDistance(curAreaIndex, dangerAreaIndex);
+            if (enemyDangerAreaBits[dangerAreaIndex] && newDangerAreaDistance < nearestDangerAreaDistance) {
+                nearestDangerAreaDistance = newDangerAreaDistance;
+                nearestDangerAreaIndex = dangerAreaIndex;
+            }
+        }
+        curPriority.targetPos = getCenter(blackboard.reachability.coordinate[nearestDangerAreaIndex]);
     }
 }
