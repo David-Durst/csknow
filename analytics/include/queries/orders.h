@@ -33,6 +33,7 @@ namespace csknow::orders {
         std::set<PlaceIndex> computePlacesVisibleFromDestination(OrderLandmarks) const;
     public:
         std::vector<QueryOrder> orders;
+        std::set<PlaceIndex> aPlacesVisibleFromDestination, bPlacesVisibleFromDestination;
         const VisPoints & visPoints;
         const MapMeshResult & mapMeshResult;
         const DistanceToPlacesResult & distanceToPlacesResult;

@@ -240,8 +240,8 @@ namespace csknow::orders {
         // only doing retakes, not looking at early match exploration. important thing is it canonicalizes to one
         // order to B on cache through B halls
         // NOTE: unique relative to smaller paths, as non-unique areas will always be unique to one (smallest)
-        std::set<PlaceIndex> aPlacesVisibleFromDestination = computePlacesVisibleFromDestination(aLandmarks),
-            bPlacesVisibleFromDestination = computePlacesVisibleFromDestination(bLandmarks);
+        aPlacesVisibleFromDestination = computePlacesVisibleFromDestination(aLandmarks);
+        bPlacesVisibleFromDestination = computePlacesVisibleFromDestination(bLandmarks);
         std::vector<PossibleOrder>
             aUniqueEndingOrders = filterNonUniqueOrders(aNonSupersetOrders, aPlacesVisibleFromDestination),
             bUniqueEndingOrders = filterNonUniqueOrders(bNonSupersetOrders, bPlacesVisibleFromDestination);
@@ -252,6 +252,6 @@ namespace csknow::orders {
         for (const auto & bOrder : bUniqueEndingOrders) {
             orders.push_back({bOrder.placesVec, OrderType::BOrder});
         }
-        size = orders.size();
+        size = static_cast<int64_t>(orders.size());
     }
 }

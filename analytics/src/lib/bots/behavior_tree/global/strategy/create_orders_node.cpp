@@ -64,6 +64,12 @@ namespace strategy {
 
             bool eitherTeamModelRequirements = !blackboard.inTest && !blackboard.inAnalysis &&
                 blackboard.inferenceManager.haveValidData();
+            if (plantedA) {
+                blackboard.placesVisibleFromDestination = blackboard.ordersResult.aPlacesVisibleFromDestination;
+            }
+            else {
+                blackboard.placesVisibleFromDestination = blackboard.ordersResult.bPlacesVisibleFromDestination;
+            }
             if (eitherTeamModelRequirements && getPlaceAreaModelProbabilities(ENGINE_TEAM_CT)) {
                 blackboard.modelOrdersCT = true;
                 createModelOrders();

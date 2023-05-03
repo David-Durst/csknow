@@ -48,7 +48,9 @@ namespace follow::compute_nav_area {
             if (waypoint.placeName == curPlaceName) {
                 hitCurPlace = true;
             }
-            if (hitCurPlace || curClient.team == ENGINE_TEAM_T) {
+            if ((curClient.team == ENGINE_TEAM_CT && hitCurPlace) ||
+                (curClient.team == ENGINE_TEAM_T &&
+                blackboard.placesVisibleFromDestination.find(placeIndex) != blackboard.placesVisibleFromDestination.end())) {
                 validPlaces.insert(placeIndex);
                 validPlacesVectorOrderedOrder.push_back(placeIndex);
                 modelNavData.orderPlaceOptions.push_back(waypoint.placeName);

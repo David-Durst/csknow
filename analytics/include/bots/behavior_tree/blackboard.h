@@ -134,6 +134,7 @@ struct Blackboard {
     bool newOrderThisFrame, recomputeOrders = false;
     Strategy strategy;
     bool modelOrdersT, modelOrdersCT;
+    std::set<PlaceIndex> placesVisibleFromDestination;
 
     bool executeIfAllFinishedSetup(const ServerState & state) {
         for (const auto & [playerId, treeThinker] : playerToTreeThinkers) {
