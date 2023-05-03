@@ -99,8 +99,8 @@ flat_output_cat_area_distribution_columns: list[list[str]] = \
 
 place_area_input_column_types = get_simplified_column_types(flat_input_float_place_area_columns,
                                                             flat_input_cat_place_area_columns,
-                                                            flat_input_cat_place_area_num_options,
-                                                            flat_input_distribution_cat_place_area_columns)
+                                                            flat_input_cat_place_area_num_options, [])
+                                                            #flat_input_distribution_cat_place_area_columns)
 #output_column_types = get_simplified_column_types([], flat_output_cat_columns, flat_output_num_options,
 #                                                  flat_output_cat_distribution_columns)
 place_output_column_types = get_simplified_column_types([], [], [], flat_output_cat_place_distribution_columns)
