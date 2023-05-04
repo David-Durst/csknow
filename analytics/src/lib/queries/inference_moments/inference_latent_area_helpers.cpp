@@ -3,6 +3,7 @@
 //
 
 #include "queries/inference_moments/inference_latent_area_helpers.h"
+#include "bots/analysis/learned_models.h"
 
 namespace csknow::inference_latent_area {
     InferenceAreaTickValues extractFeatureStoreAreaValues(
@@ -51,7 +52,12 @@ namespace csknow::inference_latent_area {
         float mostLikelyAreaProb = -1;
         size_t playerStartIndex = values.playerIdToColumnIndex.at(curPlayerId) * csknow::feature_store::area_grid_size;
         for (size_t areaIndex = 0; areaIndex < csknow::feature_store::area_grid_size; areaIndex++) {
-            result.areaProbabilities.push_back(output[0][playerStartIndex + areaIndex].item<float>());
+            if (useRealProb) {
+                result.areaProbabilities.push_back(output[0][playerStartIndex + areaIndex].item<float>());
+            }
+            else {
+                result.areaProbabilities.push_back(1. / csknow::feature_store::area_grid_size);
+            }
             if (result.areaProbabilities.back() > mostLikelyAreaProb) {
                 mostLikelyAreaProb = result.areaProbabilities.back();
                 result.mostLikelyArea = areaIndex;

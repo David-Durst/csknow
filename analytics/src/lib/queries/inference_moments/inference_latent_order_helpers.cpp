@@ -3,6 +3,7 @@
 //
 
 #include "queries/inference_moments/inference_latent_order_helpers.h"
+#include "bots/analysis/learned_models.h"
 
 namespace csknow::inference_latent_order {
     InferenceOrderTickValues extractFeatureStoreOrderValues(
@@ -90,7 +91,12 @@ namespace csknow::inference_latent_order {
         float mostLikelyOrderProb = -1;
         size_t playerStartIndex = values.playerIdToColumnIndex.at(curPlayerId) * total_orders;
         for (size_t orderIndex = 0; orderIndex < total_orders; orderIndex++) {
-            result.orderProbabilities.push_back(output[0][playerStartIndex + orderIndex].item<float>());
+            if (useRealProb) {
+                result.orderProbabilities.push_back(output[0][playerStartIndex + orderIndex].item<float>());
+            }
+            else {
+                result.orderProbabilities.push_back(1. / total_orders);
+            }
             if (result.orderProbabilities.back() > mostLikelyOrderProb) {
                 mostLikelyOrderProb = result.orderProbabilities.back();
                 result.mostLikelyOrder = static_cast<OrderRole>(orderIndex);

@@ -3,6 +3,7 @@
 //
 
 #include "queries/inference_moments/inference_latent_engagement_helpers.h"
+#include "bots/analysis/learned_models.h"
 
 namespace csknow::inference_latent_engagement {
     InferenceEngagementTickValues extractFeatureStoreEngagementValues(
@@ -40,7 +41,12 @@ namespace csknow::inference_latent_engagement {
         result.mostLikelyEnemyNum = csknow::feature_store::maxEnemies + 1;
         for (size_t enemyNum = 0; enemyNum <= csknow::feature_store::maxEnemies; enemyNum++) {
             //std::cout << output[0][enemyNum].item<float>() << std::endl;
-            result.enemyProbabilities.push_back(output[0][enemyNum].item<float>());
+            if (useRealProb) {
+                result.enemyProbabilities.push_back(output[0][enemyNum].item<float>());
+            }
+            else {
+                result.enemyProbabilities.push_back(1. / csknow::feature_store::maxEnemies);
+            }
             if (values.enemyStates[enemyNum] != csknow::feature_store::EngagementEnemyState::None &&
                 result.enemyProbabilities.back() > mostLikelyEnemyProb) {
                 result.mostLikelyEnemyNum = enemyNum;

@@ -293,7 +293,7 @@ if __name__ == "__main__":
     all_data_df = load_hdf5_to_pd(latent_hdf5_data_path)
     all_data_df = all_data_df[all_data_df['valid'] == 1.]
     team_data_df = load_hdf5_to_pd(latent_team_hdf5_data_path)
-    team_data_df = team_data_df[team_data_df['valid'] == 1.]
+    team_data_df = team_data_df[(team_data_df['valid'] == 1.) & (team_data_df['c4 status'] < 2)]
     #all_data_df = all_data_df.iloc[:500000]
     #all_data_df = load_hdf5_to_pd(latent_window_hdf5_data_path)
     train_result = train(TrainType.Order, team_data_df, num_epochs=3, windowed=False)

@@ -3,6 +3,7 @@
 //
 
 #include "queries/inference_moments/inference_latent_place_helpers.h"
+#include "bots/analysis/learned_models.h"
 
 namespace csknow::inference_latent_place {
     InferencePlaceTickValues extractFeatureStorePlaceValues(
@@ -73,7 +74,12 @@ namespace csknow::inference_latent_place {
         float mostLikelyPlaceProb = -1;
         size_t playerStartIndex = values.playerIdToColumnIndex.at(curPlayerId) * csknow::feature_store::num_places;
         for (size_t placeIndex = 0; placeIndex < csknow::feature_store::num_places; placeIndex++) {
-            result.placeProbabilities.push_back(output[0][playerStartIndex + placeIndex].item<float>());
+            if (useRealProb) {
+                result.placeProbabilities.push_back(output[0][playerStartIndex + placeIndex].item<float>());
+            }
+            else {
+                result.placeProbabilities.push_back(1. / csknow::feature_store::num_places);
+            }
             if (result.placeProbabilities.back() > mostLikelyPlaceProb) {
                 mostLikelyPlaceProb = result.placeProbabilities.back();
                 result.mostLikelyPlace = static_cast<PlaceIndex>(placeIndex);

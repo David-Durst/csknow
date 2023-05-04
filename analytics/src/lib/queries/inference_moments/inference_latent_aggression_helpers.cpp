@@ -3,6 +3,7 @@
 //
 
 #include "queries/inference_moments/inference_latent_aggression_helpers.h"
+#include "bots/analysis/learned_models.h"
 
 namespace csknow::inference_latent_aggression {
     InferenceAggressionTickValues extractFeatureStoreAggressionValues(
@@ -39,7 +40,12 @@ namespace csknow::inference_latent_aggression {
         float mostLikelyAggressionProb = -1;
         for (size_t aggressionOption = 0; aggressionOption < csknow::feature_store::numNearestEnemyState;
              aggressionOption++) {
-            result.aggressionProbabilities.push_back(output[0][aggressionOption].item<float>());
+            if (useRealProb) {
+                result.aggressionProbabilities.push_back(output[0][aggressionOption].item<float>());
+            }
+            else {
+                result.aggressionProbabilities.push_back(1. / csknow::feature_store::numNearestEnemyState);
+            }
             if (result.aggressionProbabilities.back() > mostLikelyAggressionProb) {
                 mostLikelyAggressionProb = result.aggressionProbabilities.back();
                 result.mostLikelyAggression = static_cast<feature_store::NearestEnemyState>(aggressionOption);

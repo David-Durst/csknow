@@ -12,6 +12,7 @@ extern bool useAggressionModelProbabilitiesT, useAggressionModelProbabilitiesCT;
 extern bool useTargetModelProbabilitiesT, useTargetModelProbabilitiesCT;
 extern bool usePlaceAreaModelProbabilitiesT, usePlaceAreaModelProbabilitiesCT;
 extern bool runAllRounds;
+extern bool useRealProb;
 
 void processModelArg(string modelArg);
 void setAllTeamModelProbabilities(bool value, TeamId teamId);
