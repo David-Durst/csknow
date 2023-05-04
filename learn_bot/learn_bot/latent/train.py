@@ -263,34 +263,36 @@ def train(train_type: TrainType, all_data_df: pd.DataFrame, num_epochs: int,
     train_and_test_SL(model, train_dataloader, test_dataloader, num_epochs)
 
     if save:
-        model.eval()
-        script_model = torch.jit.trace(model.to(CPU_DEVICE_STR), first_row)
-        tmp_model = SimplifiedTransformerNestedHiddenLatentModel().to(device)
-        tmp_model.to(CPU_DEVICE_STR)
-        tmp_model.eval()
-        torch.jit.script(tmp_model)
-        test_group_ids_str = ",".join([str(round_id) for round_id in test_group_ids])
-        if train_type == TrainType.Engagement:
-            script_model.save(checkpoints_path / 'engagement_script_model.pt')
-            with open(checkpoints_path / 'engagement_test_round_ids.csv', 'w+') as f:
-                f.write(test_group_ids_str)
-        elif train_type == TrainType.Aggression:
-            script_model.save(checkpoints_path / 'aggression_script_model.pt')
-            with open(checkpoints_path / 'aggression_test_round_ids.csv', 'w+') as f:
-                f.write(test_group_ids_str)
-        elif train_type == TrainType.Order:
-            script_model.save(checkpoints_path / 'order_script_model.pt')
-            with open(checkpoints_path / 'order_test_round_ids.csv', 'w+') as f:
-                f.write(test_group_ids_str)
-        elif train_type == TrainType.Place:
-            script_model.save(checkpoints_path / 'place_script_model.pt')
-            with open(checkpoints_path / 'place_test_round_ids.csv', 'w+') as f:
-                f.write(test_group_ids_str)
-        elif train_type == TrainType.Area:
-            script_model.save(checkpoints_path / 'area_script_model.pt')
-            with open(checkpoints_path / 'area_test_round_ids.csv', 'w+') as f:
-                f.write(test_group_ids_str)
-        model.to(device)
+        with torch.no_grad():
+            model.eval()
+            script_model = torch.jit.trace(model.to(CPU_DEVICE_STR), first_row)
+            tmp_model = SimplifiedTransformerNestedHiddenLatentModel().to(device)
+            tmp_model.to(CPU_DEVICE_STR)
+            tmp_model.eval()
+            torch.jit.trace(tmp_model, torch.ones([64, 10, 512]))
+            #  torch.jit.script(tmp_model)
+            test_group_ids_str = ",".join([str(round_id) for round_id in test_group_ids])
+            if train_type == TrainType.Engagement:
+                script_model.save(checkpoints_path / 'engagement_script_model.pt')
+                with open(checkpoints_path / 'engagement_test_round_ids.csv', 'w+') as f:
+                    f.write(test_group_ids_str)
+            elif train_type == TrainType.Aggression:
+                script_model.save(checkpoints_path / 'aggression_script_model.pt')
+                with open(checkpoints_path / 'aggression_test_round_ids.csv', 'w+') as f:
+                    f.write(test_group_ids_str)
+            elif train_type == TrainType.Order:
+                script_model.save(checkpoints_path / 'order_script_model.pt')
+                with open(checkpoints_path / 'order_test_round_ids.csv', 'w+') as f:
+                    f.write(test_group_ids_str)
+            elif train_type == TrainType.Place:
+                script_model.save(checkpoints_path / 'place_script_model.pt')
+                with open(checkpoints_path / 'place_test_round_ids.csv', 'w+') as f:
+                    f.write(test_group_ids_str)
+            elif train_type == TrainType.Area:
+                script_model.save(checkpoints_path / 'area_script_model.pt')
+                with open(checkpoints_path / 'area_test_round_ids.csv', 'w+') as f:
+                    f.write(test_group_ids_str)
+            model.to(device)
 
     return TrainResult(train_data, test_data, train_df, test_df, column_transformers, model)
 
