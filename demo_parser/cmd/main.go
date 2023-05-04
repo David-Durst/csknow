@@ -31,6 +31,11 @@ const trainDemoUnprocessedPrefix = "demos/train_data/unprocessed/"
 const trainDemoProcessedPrefix = "demos/train_data/processed/"
 const trainCSVPrefixBase = "demos/train_data/csvs/"
 
+// these will be used to replace the AWS S3 prefixes if using big bot train data set
+const bigTrainDemoUnprocessedPrefix = "demos/big_train_data/unprocessed/"
+const bigTrainDemoProcessedPrefix = "demos/big_train_data/processed/"
+const bigTrainCSVPrefixBase = "demos/big_train_data/csvs/"
+
 // these will be used to replace the AWS S3 prefixes if using retakes data set
 const retakesDemoUnprocessedPrefix = "demos/retakes_data/unprocessed/"
 const retakesDemoProcessedPrefix = "demos/retakes_data/processed/"
@@ -55,6 +60,7 @@ func main() {
 	startIDState := d.DefaultIDState()
 
 	trainDataFlag := flag.Bool("t", true, "set -t=false if not using bot training data")
+	bigTrainDataFlag := flag.Bool("bt", false, "set if using big train data")
 	retakesDataFlag := flag.Bool("rd", false, "set if using retakes data")
 	botRetakesDataFlag := flag.Bool("brd", false, "set if using retakes data")
 	manualDataFlag := flag.Bool("m", false, "set if using manual data")
@@ -86,6 +92,11 @@ func main() {
 		demoUnprocessedPrefix = trainDemoUnprocessedPrefix
 		demoProcessedPrefix = trainDemoProcessedPrefix
 		csvPrefixBase = trainCSVPrefixBase
+		updatePrefixs()
+	} else if *bigTrainDataFlag {
+		demoUnprocessedPrefix = bigTrainDemoUnprocessedPrefix
+		demoProcessedPrefix = bigTrainDemoProcessedPrefix
+		csvPrefixBase = bigTrainCSVPrefixBase
 		updatePrefixs()
 	} else if *manualDataFlag {
 		demoUnprocessedPrefix = manualDemoUnprocessedPrefix

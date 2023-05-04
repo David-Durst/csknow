@@ -32,6 +32,13 @@ var csvPrefixBase = "demos/csvs3/"
 const trainProcessedPrefix = "demos/train_data/processed/"
 const trainCsvPrefixBase = "demos/train_data/csvs/"
 
+// these will be used to replace the prefixes if using bigTraing data set
+const bigTrainProcessedPrefix = "demos/big_train_data/processed/"
+const bigTrainCsvPrefixBase = "demos/big_train_data/csvs/"
+const bigTrainAlreadyDownloadedFileName = "../big_train_data/already_downloaded.txt"
+const bigTrainDir = "big_train_data"
+const bigTrainPath = "../big_train_data/"
+
 // these will be used to replace the prefixes if using retakes data set
 const retakesProcessedPrefix = "demos/retakes_data/processed/"
 const retakesCsvPrefixBase = "demos/retakes_data/csvs/"
@@ -125,6 +132,7 @@ func main() {
 	fillAlreadyDownloaded(&alreadyDownloaded)
 
 	trainDataFlag := flag.Bool("t", true, "set -t=false if not using bot training data")
+	bigTrainDataFlag := flag.Bool("bt", false, "set if using big train data")
 	retakesDataFlag := flag.Bool("rd", false, "set if using retakes data")
 	botRetakesDataFlag := flag.Bool("brd", false, "set if using retakes data")
 	manualDataFlag := flag.Bool("m", false, "set if using manual data")
@@ -145,6 +153,13 @@ func main() {
 		processedSmallPrefix = manualProcessedPrefix
 		csvPrefixBase = manualCsvPrefixBase
 		updatePrefixs()
+	} else if *bigTrainDataFlag {
+		processedPrefix = bigTrainProcessedPrefix
+		processedSmallPrefix = bigTrainProcessedPrefix
+		csvPrefixBase = bigTrainCsvPrefixBase
+		alreadyDownloadedFileName = bigTrainAlreadyDownloadedFileName
+		dataDir = bigTrainDir
+		dataPath = bigTrainPath
 	} else if *retakesDataFlag {
 		processedPrefix = retakesProcessedPrefix
 		processedSmallPrefix = retakesProcessedPrefix
