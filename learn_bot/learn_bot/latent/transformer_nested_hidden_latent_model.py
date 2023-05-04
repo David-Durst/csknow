@@ -44,9 +44,8 @@ class TransformerNestedHiddenLatentModel(nn.Module):
             nn.Linear(self.internal_width, self.internal_width),
         )
 
-        #self.transformer_model = nn.Sequential(
-        #    nn.TransformerEncoderLayer(d_model=self.internal_width, nhead=4, batch_first=True, dropout=0.),
-        #)
+        transformer_encoder_layer = nn.TransformerEncoderLayer(d_model=self.internal_width, nhead=4, batch_first=True)
+        self.transformer_model = nn.TransformerEncoder(transformer_encoder_layer, num_layers=2)
 
         self.decoder = nn.Sequential(
             nn.Linear(self.internal_width, inner_latent_size),
@@ -68,26 +67,26 @@ class TransformerNestedHiddenLatentModel(nn.Module):
         # run model except last layer
         encoded = self.encoder_model(split_x_gathered)
 
-        #transformed = self.transformer_model(encoded)
+        transformed = self.transformer_model(encoded)
 
-        latent = self.decoder(encoded)
+        latent = self.decoder(transformed)
 
         # https://github.com/pytorch/pytorch/issues/22440 how to parse tuple output
         # hack for now to keep same API, will remove later
         return latent, latent
 
 
-class SimplifiedTransformerNestedHiddenLatentModel(nn.Module):
-
-    def __init__(self):
-        super(SimplifiedTransformerNestedHiddenLatentModel, self).__init__()
-
-        self.transformer_model = nn.Sequential(
-            nn.TransformerEncoderLayer(d_model=512, nhead=4, batch_first=True),
-        )
-
-    def forward(self, x):
-        # transform inputs
-        transformed = self.transformer_model(x)
-
-        return transformed
+#class SimplifiedTransformerNestedHiddenLatentModel(nn.Module):
+#
+#    def __init__(self):
+#        super(SimplifiedTransformerNestedHiddenLatentModel, self).__init__()
+#
+#        self.transformer_model = nn.Sequential(
+#            nn.TransformerEncoderLayer(d_model=512, nhead=4, batch_first=True),
+#        )
+#
+#    def forward(self, x):
+#        # transform inputs
+#        transformed = self.transformer_model(x)
+#
+#        return transformed
