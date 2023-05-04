@@ -48,7 +48,7 @@ namespace follow::compute_nav_area {
             if (waypoint.placeName == curPlaceName) {
                 hitCurPlace = true;
             }
-            if ((curClient.team == ENGINE_TEAM_CT && hitCurPlace) ||
+            if (true || (curClient.team == ENGINE_TEAM_CT && hitCurPlace) ||
                 (curClient.team == ENGINE_TEAM_T &&
                 blackboard.placesVisibleFromDestination.find(placeIndex) != blackboard.placesVisibleFromDestination.end())) {
                 validPlaces.insert(placeIndex);
@@ -64,6 +64,7 @@ namespace follow::compute_nav_area {
                 nearestWaypointDistance = newWaypointDistance;
             }
         }
+        /*
         if (!hitCurPlace && curClient.team == ENGINE_TEAM_CT) {
             const Waypoint & waypoint = curOrder.waypoints[nearestWaypoint];
             PlaceIndex placeIndex = blackboard.distanceToPlaces.placeNameToIndex.at(waypoint.placeName);
@@ -72,6 +73,7 @@ namespace follow::compute_nav_area {
             modelNavData.orderPlaceOptions.push_back(waypoint.placeName);
             modelNavData.orderPlaceProbs.push_back(placeProbabilities.placeProbabilities[placeIndex]);
         }
+         */
 
         /*
         // add all places that are within 5s of current location and not on order (aka can explore but can't go back)
@@ -112,7 +114,9 @@ namespace follow::compute_nav_area {
         // if CT (offense), give all non-cur weight to next place as on rails
         // if T, distribute evenly as less proscriptive
         PlaceIndex placeOption = 0;
-        if (curClient.team == ENGINE_TEAM_CT) {
+        double reweightFactor = 0., probSum = 0.;
+        bool pathTest = false;
+        if (false && curClient.team == ENGINE_TEAM_CT) {
             double probSample = blackboard.aggressionDis(blackboard.gen);
             //std::cout << "csgoid " << csgoId << " probSample " << probSample << " curPlaceProbability " << curPlaceProbability << std::endl;
             if (probSample < curPlaceProbability) {
@@ -129,12 +133,12 @@ namespace follow::compute_nav_area {
             }
         }
         else {
-            double reweightFactor = 0.;
             for (size_t i = 0; i < probabilities.size(); i++) {
                 reweightFactor += probabilities[i];
             }
             for (size_t i = 0; i < probabilities.size(); i++) {
                 probabilities[i] *= 1/reweightFactor;
+                probSum += probabilities[i];
             }
             double probSample = blackboard.aggressionDis(blackboard.gen);
             double weightSoFar = 0.;
@@ -146,6 +150,21 @@ namespace follow::compute_nav_area {
                 }
             }
         }
+        /*
+        if (csgoId == 3) {
+            std::cout << "repicking place for " << csgoId << ", reweightFactor " << reweightFactor << ", probSum " << probSum << std::endl;
+            std::cout << "not reweighted prob: ";
+            for (size_t i = 0; i < modelNavData.orderPlaceProbs.size(); i++) {
+                std::cout << modelNavData.orderPlaceProbs[i] << ",";
+            }
+            std::cout << std::endl;
+            std::cout << "reweighted prob: ";
+            for (size_t i = 0; i < probabilities.size(); i++) {
+                std::cout << probabilities[i] << ",";
+            }
+            std::cout << std::endl;
+        }
+         */
 
         // if cur place isn't next place and same order, terminate early
         if (blackboard.playerToModelNavData.find(csgoId) != blackboard.playerToModelNavData.end()) {

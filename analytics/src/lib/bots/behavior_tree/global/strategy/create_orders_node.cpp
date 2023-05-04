@@ -32,7 +32,7 @@ namespace strategy {
             }
         }
         bool useOrderModelProbabilitiesEitherTeam = useOrderModelProbabilitiesT || useOrderModelProbabilitiesCT;
-        bool probOrderChange = false && useOrderModelProbabilitiesEitherTeam &&
+        bool probOrderChange = useOrderModelProbabilitiesEitherTeam &&
             !blackboard.inTest && !blackboard.inAnalysis &&
             blackboard.ticksSinceLastProbOrderAssignment >= newOrderTicks && ctPlayersAlive && tPlayersAlive &&
             blackboard.defuserId == INVALID_ID; // if have a defuser, don't interrup them
@@ -42,7 +42,7 @@ namespace strategy {
         // if start with model orders and switch off, then need to remove model orders immediately
         bool switchFromModelOrders = (blackboard.modelOrdersT || blackboard.modelOrdersCT) && (blackboard.inTest || blackboard.inAnalysis);
         if (playerNodeState.find(treeThinker.csgoId) == playerNodeState.end() ||
-            state.roundNumber != planRoundNumber || /*state.numPlayersAlive() != playersAliveLastPlan ||*/
+            state.roundNumber != planRoundNumber || state.numPlayersAlive() != playersAliveLastPlan ||
             state.getPlayersOnTeam(ENGINE_TEAM_CT) != ctPlayers || state.getPlayersOnTeam(ENGINE_TEAM_T) != tPlayers ||
             botNeedsAnOrder ||
             blackboard.recomputeOrders || probOrderChange || switchToModelOrders || switchFromModelOrders) {
