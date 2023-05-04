@@ -4,7 +4,7 @@ import torch
 from torch import nn
 
 from learn_bot.latent.engagement.column_names import max_enemies
-from learn_bot.latent.order.column_names import team_strs, player_team_str
+from learn_bot.latent.order.column_names import team_strs, player_team_str, flatten_list
 from learn_bot.libs.io_transforms import IOColumnTransformers, CUDA_DEVICE_STR
 
 
@@ -31,8 +31,9 @@ class TransformerNestedHiddenLatentModel(nn.Module):
                           for team_str in team_strs for player_index in range(max_enemies)]
 
         self.num_players = len(player_columns)
-        self.player_columns_cpu = torch.tensor(player_columns) \
-            .unflatten(0, torch.Size([1, len(player_columns)])).expand()
+        assert self.num_players == outer_latent_size
+        self.columns_per_players = len(player_columns[0])
+        self.player_columns_cpu = torch.tensor(flatten_list(player_columns))
         self.player_columns_gpu = self.player_columns_cpu.to(CUDA_DEVICE_STR)
 
         self.encoder_model = nn.Sequential(
@@ -45,8 +46,10 @@ class TransformerNestedHiddenLatentModel(nn.Module):
 
         self.transformer_model = nn.Sequential(
             nn.TransformerEncoderLayer(d_model=self.internal_width, nhead=4, batch_first=True),
-            nn.Linear(self.internal_width, outer_latent_size * inner_latent_size),
-            nn.Unflatten(1, torch.Size([outer_latent_size, inner_latent_size])),
+        )
+
+        self.decoder = nn.Sequential(
+            nn.Linear(self.internal_width, inner_latent_size),
             nn.Softmax(dim=2),
             nn.Flatten(1)
         )
@@ -55,18 +58,19 @@ class TransformerNestedHiddenLatentModel(nn.Module):
         # transform inputs
         x_transformed = self.cts.transform_columns(True, x, x)
 
-        repeated_x_transformed = x_transformed.unflatten(1, torch.Size([1, x_transformed.shape[-1]])) \
-            .expand([-1, self.num_players, -1])
-
         if x_transformed.device.type == CUDA_DEVICE_STR:
-            x_gathered = torch.gather(repeated_x_transformed, 1, self.player_columns_gpu)
+            x_gathered = torch.index_select(x_transformed, 1, self.player_columns_gpu)
         else:
-            x_gathered = torch.gather(repeated_x_transformed, 1, self.player_columns_cpu)
+            x_gathered = torch.index_select(x_transformed, 1, self.player_columns_cpu)
+
+        split_x_gathered = x_gathered.unflatten(1, torch.Size([self.num_players, self.columns_per_players]))
 
         # run model except last layer
-        encoded = self.encoder_model(x_gathered)
+        encoded = self.encoder_model(split_x_gathered)
 
-        latent = self.transformer_model(encoded)
+        transformed = self.transformer_model(encoded)
+
+        latent = self.decoder(transformed)
 
         # https://github.com/pytorch/pytorch/issues/22440 how to parse tuple output
         # hack for now to keep same API, will remove later
