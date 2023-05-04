@@ -103,7 +103,7 @@ def train(train_type: TrainType, all_data_df: pd.DataFrame, num_epochs: int,
     elif train_type == TrainType.Order:
         column_transformers = IOColumnTransformers(order_input_column_types, order_output_column_types,
                                                    train_df)
-        model = MLPNestedHiddenLatentModel(column_transformers, 2*max_enemies, 2*num_orders_per_site).to(device)
+        model = TransformerNestedHiddenLatentModel(column_transformers, 2*max_enemies, 2*num_orders_per_site).to(device)
         input_column_types = order_input_column_types
         output_column_types = order_output_column_types
         prob_func = get_order_probability
@@ -123,8 +123,6 @@ def train(train_type: TrainType, all_data_df: pd.DataFrame, num_epochs: int,
         prob_func = get_place_area_probability
     else:
         raise Exception("invalid train type")
-
-    simplified_model = SimplifiedTransformerNestedHiddenLatentModel(column_transformers, 2*max_enemies, 2*num_orders_per_site).to(device)
 
     # plot data set with and without transformers
     #plot_untransformed_and_transformed(plot_path, 'train and test labels', all_data_df,
@@ -265,7 +263,6 @@ def train(train_type: TrainType, all_data_df: pd.DataFrame, num_epochs: int,
     train_and_test_SL(model, train_dataloader, test_dataloader, num_epochs)
 
     if save:
-        tmp_script_model = torch.jit.trace(simplified_model.to(CPU_DEVICE_STR), first_row)
         model.eval()
         script_model = torch.jit.trace(model.to(CPU_DEVICE_STR), first_row)
         test_group_ids_str = ",".join([str(round_id) for round_id in test_group_ids])
@@ -302,7 +299,7 @@ if __name__ == "__main__":
     team_data_df = team_data_df[(team_data_df['valid'] == 1.) & (team_data_df['c4 status'] < 2)]
     #all_data_df = all_data_df.iloc[:500000]
     #all_data_df = load_hdf5_to_pd(latent_window_hdf5_data_path)
-    train_result = train(TrainType.Order, team_data_df, num_epochs=1, windowed=False)
+    train_result = train(TrainType.Order, team_data_df, num_epochs=3, windowed=False)
     train_result = train(TrainType.Place, team_data_df, num_epochs=3, windowed=False)
     train_result = train(TrainType.Area, team_data_df, num_epochs=3, windowed=False)
     train_result = train(TrainType.Engagement, all_data_df, num_epochs=1, windowed=False)
