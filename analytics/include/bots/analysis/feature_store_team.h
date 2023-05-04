@@ -49,6 +49,7 @@ namespace csknow::feature_store {
         struct ColumnPlayerData {
             vector<int64_t> playerId;
             // inputs
+            vector<bool> ctTeam;
             vector<Vec3> footPos;
             array<vector<Vec3>, num_prior_ticks> priorFootPos;
             vector<Vec3> velocity;

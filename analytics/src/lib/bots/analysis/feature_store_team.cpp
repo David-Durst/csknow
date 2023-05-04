@@ -24,11 +24,13 @@ namespace csknow::feature_store {
         }
         for (int i = 0; i < maxEnemies; i++) {
             columnTData[i].playerId.resize(size, INVALID_ID);
+            columnTData[i].ctTeam.resize(size, false);
             columnTData[i].footPos.resize(size, invalidWorldPos);
             columnTData[i].velocity.resize(size, {INVALID_ID, INVALID_ID, INVALID_ID});
             columnTData[i].distanceToASite.resize(size, 2 * maxWorldDistance);
             columnTData[i].distanceToBSite.resize(size, 2 * maxWorldDistance);
             columnCTData[i].playerId.resize(size, INVALID_ID);
+            columnCTData[i].ctTeam.resize(size, true);
             columnCTData[i].footPos.resize(size, invalidWorldPos);
             columnCTData[i].velocity.resize(size, {INVALID_ID, INVALID_ID, INVALID_ID});
             columnCTData[i].distanceToASite.resize(size, 2 * maxWorldDistance);
@@ -118,11 +120,13 @@ namespace csknow::feature_store {
             }
             for (int i = 0; i < maxEnemies; i++) {
                 columnTData[i].playerId[rowIndex] = INVALID_ID;
+                columnTData[i].ctTeam[rowIndex] = false;
                 columnTData[i].footPos[rowIndex] = invalidWorldPos;
                 columnTData[i].velocity[rowIndex] = {INVALID_ID, INVALID_ID, INVALID_ID};
                 columnTData[i].distanceToASite[rowIndex] = 2 * maxWorldDistance;
                 columnTData[i].distanceToBSite[rowIndex] = 2 * maxWorldDistance;
                 columnCTData[i].playerId[rowIndex] = INVALID_ID;
+                columnTData[i].ctTeam[rowIndex] = true;
                 columnCTData[i].footPos[rowIndex] = invalidWorldPos;
                 columnCTData[i].velocity[rowIndex] = {INVALID_ID, INVALID_ID, INVALID_ID};
                 columnCTData[i].distanceToASite[rowIndex] = 2 * maxWorldDistance;
@@ -558,6 +562,8 @@ namespace csknow::feature_store {
                 string iStr = std::to_string(columnPlayer);
                 file.createDataSet("/data/player id " + columnTeam + " " + iStr,
                                    columnData[columnPlayer].playerId, hdf5FlatCreateProps);
+                file.createDataSet("/data/player ctTeam " + columnTeam + " " + iStr,
+                                   columnData[columnPlayer].ctTeam, hdf5FlatCreateProps);
                 saveVec3VectorToHDF5(columnData[columnPlayer].footPos, file,
                                      "player pos " + columnTeam + " " + iStr, hdf5FlatCreateProps);
                 for (int priorTick = 0; priorTick < num_prior_ticks; priorTick++) {

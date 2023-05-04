@@ -27,6 +27,7 @@ from learn_bot.latent.place_area.column_names import place_area_input_column_typ
     num_places, area_grid_size, area_output_column_types
 from learn_bot.latent.place_area.latent_to_distributions import get_place_area_probability
 from learn_bot.latent.profiling import profile_latent_model
+from learn_bot.latent.transformer_nested_hidden_latent_model import TransformerNestedHiddenLatentModel
 from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd
 from learn_bot.libs.io_transforms import CUDA_DEVICE_STR
 from learn_bot.latent.accuracy_and_loss import compute_loss, compute_accuracy, finish_accuracy, \
@@ -101,7 +102,7 @@ def train(train_type: TrainType, all_data_df: pd.DataFrame, num_epochs: int,
     elif train_type == TrainType.Order:
         column_transformers = IOColumnTransformers(order_input_column_types, order_output_column_types,
                                                    train_df)
-        model = MLPNestedHiddenLatentModel(column_transformers, 2*max_enemies, 2*num_orders_per_site).to(device)
+        model = TransformerNestedHiddenLatentModel(column_transformers, 2*max_enemies, 2*num_orders_per_site).to(device)
         input_column_types = order_input_column_types
         output_column_types = order_output_column_types
         prob_func = get_order_probability

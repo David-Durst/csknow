@@ -4,7 +4,7 @@ from functools import cache
 
 import numpy as np
 import pandas as pd
-from typing import List, Dict, Tuple, FrozenSet, Union
+from typing import List, Dict, Tuple, FrozenSet, Union, Optional
 from enum import Enum
 from abc import abstractmethod, ABC
 from torch.nn import functional as F
@@ -571,7 +571,7 @@ class IOColumnTransformers:
 
     @cache
     def get_name_ranges(self, input: bool, transformed: bool, types: frozenset[ColumnTransformerType] = ALL_TYPES,
-                        only_wrap_cols: bool = False) -> List[range]:
+                        only_wrap_cols: bool = False, contained_str: Optional[str] = None) -> List[range]:
         result: List[range] = []
         cur_start: int = 0
 
@@ -582,54 +582,63 @@ class IOColumnTransformers:
 
         for col_name in column_types.float_standard_cols:
             if ColumnTransformerType.FLOAT_STANDARD in types and \
-                    (not only_wrap_cols or col_name in column_types.float_180_wrap_cols):
+                    (not only_wrap_cols or col_name in column_types.float_180_wrap_cols) and \
+                    (contained_str is None or contained_str in col_name):
                 result.append(range(cur_start, cur_start + 1))
             cur_start += 1
 
         for col_name in column_types.float_delta_cols:
             if ColumnTransformerType.FLOAT_DELTA in types and \
-                    (not only_wrap_cols or col_name in column_types.float_180_wrap_cols):
+                    (not only_wrap_cols or col_name in column_types.float_180_wrap_cols) and \
+                    (contained_str is None or contained_str in col_name):
                 result.append(range(cur_start, cur_start + 1))
             cur_start += 1
 
-        for _ in column_types.float_180_angle_cols:
+        for col_name in column_types.float_180_angle_cols:
             if ColumnTransformerType.FLOAT_180_ANGLE in types and \
-                    (not only_wrap_cols or col_name in column_types.float_180_wrap_cols):
+                    (not only_wrap_cols or col_name in column_types.float_180_wrap_cols) and \
+                    (contained_str is None or contained_str in col_name):
                 result.append(range(cur_start, cur_start + angle_columns))
             cur_start += angle_columns
 
-        for _ in column_types.float_180_angle_delta_cols:
+        for col_name in column_types.float_180_angle_delta_cols:
             if ColumnTransformerType.FLOAT_180_ANGLE_DELTA in types and \
-                    (not only_wrap_cols or col_name in column_types.float_180_wrap_cols):
+                    (not only_wrap_cols or col_name in column_types.float_180_wrap_cols) and \
+                    (contained_str is None or contained_str in col_name):
                 result.append(range(cur_start, cur_start + angle_columns))
             cur_start += angle_columns
 
-        for _ in column_types.float_90_angle_cols:
+        for col_name in column_types.float_90_angle_cols:
             if ColumnTransformerType.FLOAT_90_ANGLE in types and \
-                    (not only_wrap_cols or col_name in column_types.float_180_wrap_cols):
+                    (not only_wrap_cols or col_name in column_types.float_180_wrap_cols) and \
+                    (contained_str is None or contained_str in col_name):
                 result.append(range(cur_start, cur_start + angle_columns))
             cur_start += angle_columns
 
-        for _ in column_types.float_90_angle_delta_cols:
+        for col_name in column_types.float_90_angle_delta_cols:
             if ColumnTransformerType.FLOAT_90_ANGLE_DELTA in types and \
-                    (not only_wrap_cols or col_name in column_types.float_180_wrap_cols):
+                    (not only_wrap_cols or col_name in column_types.float_180_wrap_cols) and \
+                    (contained_str is None or contained_str in col_name):
                 result.append(range(cur_start, cur_start + angle_columns))
             cur_start += angle_columns
 
         for ct in cts:
             if ct.pt_ct_type == ColumnTransformerType.CATEGORICAL:
                 if transformed:
-                    if ColumnTransformerType.CATEGORICAL in types and not only_wrap_cols:
+                    if ColumnTransformerType.CATEGORICAL in types and not only_wrap_cols and \
+                            (contained_str is None or contained_str in ct.col_name):
                         result.append(range(cur_start, cur_start + ct.num_classes))
                     cur_start += ct.num_classes
                 else:
-                    if ColumnTransformerType.CATEGORICAL in types and not only_wrap_cols:
+                    if ColumnTransformerType.CATEGORICAL in types and not only_wrap_cols and \
+                            (contained_str is None or contained_str in ct.col_name):
                         result.append(range(cur_start, cur_start + 1))
                     cur_start += 1
 
         for ct in cts:
             if ct.pt_ct_type == ColumnTransformerType.CATEGORICAL_DISTRIBUTION:
-                if ColumnTransformerType.CATEGORICAL_DISTRIBUTION in types and not only_wrap_cols:
+                if ColumnTransformerType.CATEGORICAL_DISTRIBUTION in types and not only_wrap_cols and \
+                        (contained_str is None or contained_str in ct.col_names[0]):
                     result.append(range(cur_start, cur_start + len(ct.col_names)))
                 cur_start += len(ct.col_names)
 

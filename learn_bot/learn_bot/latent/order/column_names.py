@@ -56,6 +56,8 @@ def get_player_nearest_order_columns(player_index: int, order_index: int, team_s
     return "distribution nearest " + site_str + " order " + str(order_index) + time_str + team_str + " " + \
         str(player_index)
 
+def get_player_ctteam_column(player_index: int, team_str: str) -> str:
+    return "player ctTeam " + team_str + " " + str(player_index)
 
 def get_player_pos_columns(player_index: int, team_str: str, dim_str: str, history_index: int = 0) -> str:
     return "player pos " + team_str + " " + str(player_index) + \
@@ -97,6 +99,7 @@ def player_team_str(team_str: str, player_index: int) -> str:
 
 class PlayerOrderColumns:
     player_id: str
+    ct_team: str
     pos: list[str]
     prior_pos: list[str]
     vel: list[str]
@@ -117,6 +120,7 @@ class PlayerOrderColumns:
 
     def __init__(self, team_str: str, player_index: int):
         self.player_id = player_id_column + " " + player_team_str(team_str, player_index)
+        self.ct_team = get_player_ctteam_column(player_index, team_str)
         self.distance_to_a_site = "distance to a site " + player_team_str(team_str, player_index)
         self.distance_to_b_site = "distance to b site " + player_team_str(team_str, player_index)
         self.pos = [get_player_pos_columns(player_index, team_str, dim_str) for dim_str in ["x", "y", "z"]]
@@ -187,7 +191,7 @@ class PlayerOrderColumns:
             flatten_list([self.distance_to_nearest_a_order_nav_area, self.distance_to_nearest_b_order_nav_area])
 
     def to_input_distribution_cat_list(self) -> list[list[str]]:
-        return [self.cur_place, self.area_grid_cell_in_place]
+        return [self.cur_place, self.area_grid_cell_in_place, [self.ct_team]]
 
     def to_output_cat_list(self, include_6=True, include_15=True, include_30=True) -> list[list[str]]:
         result = []
