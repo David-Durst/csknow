@@ -22,12 +22,23 @@ namespace follow::compute_nav_area {
             waypointPlacesSet.insert(blackboard.distanceToPlaces.placeNameToIndex.at(waypoint.placeName));
         }
 
+        /*
+        std::cout << "cur area id: " << curAreaId << std::endl;
+        const nav_mesh::nav_area & curArea = blackboard.navFile.get_nearest_area_by_position(
+                vec3Conv(curClient.getFootPosForPlayer()));
+        std::cout << "recomputed cur area id: " << curArea.get_id() << std::endl;
+        std::cout << "cur foot pos: " << curClient.getFootPosForPlayer().toCSV() << std::endl;
+        string reallyCurPlace = blackboard.navFile.get_place(curArea.m_place);
+        std::cout << "really cur place: "  << reallyCurPlace << std::endl;
+         */
+        bool useAnyPlace = true;
+
         PlaceIndex curPlace = 0;
         double minPlaceDistance = std::numeric_limits<double>::max();
         size_t curAreaIndex = blackboard.navFile.m_area_ids_to_indices.at(curAreaId);
         for (PlaceIndex placeIndex = 0; placeIndex < blackboard.distanceToPlaces.places.size(); placeIndex++) {
             double curPlaceDistance = blackboard.distanceToPlaces.getClosestDistance(curAreaIndex, placeIndex);
-            if (curPlaceDistance < minPlaceDistance && waypointPlacesSet.find(placeIndex) != waypointPlacesSet.end()) {
+            if (curPlaceDistance < minPlaceDistance && (useAnyPlace || waypointPlacesSet.find(placeIndex) != waypointPlacesSet.end())) {
                 curPlace = placeIndex;
                 minPlaceDistance = curPlaceDistance;
             }
@@ -41,27 +52,37 @@ namespace follow::compute_nav_area {
         size_t nearestWaypoint = 0;
         double nearestWaypointDistance = std::numeric_limits<double>::max();
         PlaceIndex lastPlaceIndex = blackboard.distanceToPlaces.placeNameToIndex.at(curOrder.waypoints.back().placeName);
-        for (size_t i = 0; i < curOrder.waypoints.size(); i++) {
-            const Waypoint & waypoint = curOrder.waypoints[i];
-            PlaceIndex placeIndex = blackboard.distanceToPlaces.placeNameToIndex.at(waypoint.placeName);
-            placeIndexToWaypointIndex[placeIndex] = i;
-            if (waypoint.placeName == curPlaceName) {
-                hitCurPlace = true;
-            }
-            if (true || (curClient.team == ENGINE_TEAM_CT && hitCurPlace) ||
-                (curClient.team == ENGINE_TEAM_T &&
-                blackboard.placesVisibleFromDestination.find(placeIndex) != blackboard.placesVisibleFromDestination.end())) {
+        if (useAnyPlace) {
+            for (size_t placeIndex = 0; placeIndex < blackboard.distanceToPlaces.places.size(); placeIndex++) {
                 validPlaces.insert(placeIndex);
                 validPlacesVectorOrderedOrder.push_back(placeIndex);
-                modelNavData.orderPlaceOptions.push_back(waypoint.placeName);
+                modelNavData.orderPlaceOptions.push_back(blackboard.distanceToPlaces.places[placeIndex]);
                 modelNavData.orderPlaceProbs.push_back(placeProbabilities.placeProbabilities[placeIndex]);
             }
-            int64_t closestAreaIndexInPlace = blackboard.distanceToPlaces.getClosestArea(curAreaIndex, placeIndex);
-            double newWaypointDistance = blackboard.reachability.getDistance(curAreaIndex, closestAreaIndexInPlace) +
-                blackboard.distanceToPlaces.getClosestDistance(closestAreaIndexInPlace, lastPlaceIndex);
-            if (newWaypointDistance < nearestWaypointDistance) {
-                nearestWaypoint = i;
-                nearestWaypointDistance = newWaypointDistance;
+        }
+        else {
+            for (size_t i = 0; i < curOrder.waypoints.size(); i++) {
+                const Waypoint & waypoint = curOrder.waypoints[i];
+                PlaceIndex placeIndex = blackboard.distanceToPlaces.placeNameToIndex.at(waypoint.placeName);
+                placeIndexToWaypointIndex[placeIndex] = i;
+                if (waypoint.placeName == curPlaceName) {
+                    hitCurPlace = true;
+                }
+                if (true || (curClient.team == ENGINE_TEAM_CT && hitCurPlace) ||
+                    (curClient.team == ENGINE_TEAM_T &&
+                     blackboard.placesVisibleFromDestination.find(placeIndex) != blackboard.placesVisibleFromDestination.end())) {
+                    validPlaces.insert(placeIndex);
+                    validPlacesVectorOrderedOrder.push_back(placeIndex);
+                    modelNavData.orderPlaceOptions.push_back(waypoint.placeName);
+                    modelNavData.orderPlaceProbs.push_back(placeProbabilities.placeProbabilities[placeIndex]);
+                }
+                int64_t closestAreaIndexInPlace = blackboard.distanceToPlaces.getClosestArea(curAreaIndex, placeIndex);
+                double newWaypointDistance = blackboard.reachability.getDistance(curAreaIndex, closestAreaIndexInPlace) +
+                                             blackboard.distanceToPlaces.getClosestDistance(closestAreaIndexInPlace, lastPlaceIndex);
+                if (newWaypointDistance < nearestWaypointDistance) {
+                    nearestWaypoint = i;
+                    nearestWaypointDistance = newWaypointDistance;
+                }
             }
         }
         /*
@@ -174,11 +195,13 @@ namespace follow::compute_nav_area {
             }
         }
 
+        /*
         // if T and new to order, just get to closet place on order before going anywhere else
         if (blackboard.playerToModelNavData.find(csgoId) == blackboard.playerToModelNavData.end() &&
             curClient.team == ENGINE_TEAM_T) {
             placeOption = curPlace;
         }
+         */
 
         // if cur place is bombsite and CT defuser, then move to c4
         if (blackboard.isPlayerDefuser(csgoId) && (curPlaceName == "BombsiteA" || curPlaceName == "BombsiteB")) {
@@ -330,9 +353,11 @@ namespace follow::compute_nav_area {
             }
 
             // if in the target area (and not moving to c4), don't move
+            /*
             if ((!blackboard.isPlayerDefuser(treeThinker.csgoId) || state.c4IsDefused) && curAreaId == curPriority.targetAreaId) {
                 curPriority.moveOptions = {false, false, false};
             }
+             */
         }
 
         playerNodeState[treeThinker.csgoId] = NodeState::Success;
