@@ -79,6 +79,7 @@ namespace csknow::inference_latent_order {
                     result.rowCPP.push_back(static_cast<float>(
                                                 columnPlayerData.areaGridCellInPlace[areaIndex][rowIndex]));
                 }
+                result.rowCPP.push_back(static_cast<float>(columnPlayerData.ctTeam[rowIndex]));
             }
             ctColumnData = false;
         }

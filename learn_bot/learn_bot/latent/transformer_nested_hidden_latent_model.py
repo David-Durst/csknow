@@ -17,7 +17,7 @@ def range_list_to_index_list(range_list: list[range]) -> list[int]:
 
 
 class TransformerNestedHiddenLatentModel(nn.Module):
-    internal_width = 512
+    internal_width = 256
     cts: IOColumnTransformers
     output_layers: List[nn.Module]
     latent_to_distributions: Callable
