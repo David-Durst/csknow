@@ -217,6 +217,9 @@ namespace follow::compute_nav_area {
 
         curPriority.targetAreaId = blackboard.navFile
             .get_nearest_area_by_position_in_place(vec3Conv(areaGridPos), modelNavData.nextPlaceIndex).get_id();
+        if (blackboard.removedAreas.find(curPriority.targetAreaId) != blackboard.removedAreas.end()) {
+            curPriority.targetAreaId = blackboard.removedAreaAlternatives[curPriority.targetAreaId];
+        }
         // if same next place and not at old next area, keep using that area
         if (blackboard.playerToModelNavData.find(csgoId) != blackboard.playerToModelNavData.end()) {
             const ModelNavData & oldModelNavData = blackboard.playerToModelNavData.at(csgoId);
