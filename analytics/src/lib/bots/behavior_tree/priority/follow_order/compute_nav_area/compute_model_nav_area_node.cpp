@@ -31,7 +31,7 @@ namespace follow::compute_nav_area {
         string reallyCurPlace = blackboard.navFile.get_place(curArea.m_place);
         std::cout << "really cur place: "  << reallyCurPlace << std::endl;
          */
-        bool useAnyPlace = true;
+        bool useAnyPlace = false;
 
         PlaceIndex curPlace = 0;
         double minPlaceDistance = std::numeric_limits<double>::max();
@@ -47,9 +47,9 @@ namespace follow::compute_nav_area {
         string curPlaceName = blackboard.distanceToPlaces.places[curPlace];
         set<PlaceIndex> validPlaces;
         vector<PlaceIndex> validPlacesVectorOrderedOrder;
-        bool hitCurPlace = false;
+        //bool hitCurPlace = false;
         map<PlaceIndex, size_t> placeIndexToWaypointIndex;
-        size_t nearestWaypoint = 0;
+        //size_t nearestWaypoint = 0;
         double nearestWaypointDistance = std::numeric_limits<double>::max();
         PlaceIndex lastPlaceIndex = blackboard.distanceToPlaces.placeNameToIndex.at(curOrder.waypoints.back().placeName);
         if (useAnyPlace) {
@@ -65,17 +65,20 @@ namespace follow::compute_nav_area {
                 const Waypoint & waypoint = curOrder.waypoints[i];
                 PlaceIndex placeIndex = blackboard.distanceToPlaces.placeNameToIndex.at(waypoint.placeName);
                 placeIndexToWaypointIndex[placeIndex] = i;
+                /*
                 if (waypoint.placeName == curPlaceName) {
                     hitCurPlace = true;
                 }
-                if (true || (curClient.team == ENGINE_TEAM_CT && hitCurPlace) ||
+                 */
+                if (true /*|| (curClient.team == ENGINE_TEAM_CT && hitCurPlace) ||
                     (curClient.team == ENGINE_TEAM_T &&
-                     blackboard.placesVisibleFromDestination.find(placeIndex) != blackboard.placesVisibleFromDestination.end())) {
+                     blackboard.placesVisibleFromDestination.find(placeIndex) != blackboard.placesVisibleFromDestination.end())*/) {
                     validPlaces.insert(placeIndex);
                     validPlacesVectorOrderedOrder.push_back(placeIndex);
                     modelNavData.orderPlaceOptions.push_back(waypoint.placeName);
                     modelNavData.orderPlaceProbs.push_back(placeProbabilities.placeProbabilities[placeIndex]);
                 }
+                /*
                 int64_t closestAreaIndexInPlace = blackboard.distanceToPlaces.getClosestArea(curAreaIndex, placeIndex);
                 double newWaypointDistance = blackboard.reachability.getDistance(curAreaIndex, closestAreaIndexInPlace) +
                                              blackboard.distanceToPlaces.getClosestDistance(closestAreaIndexInPlace, lastPlaceIndex);
@@ -83,6 +86,7 @@ namespace follow::compute_nav_area {
                     nearestWaypoint = i;
                     nearestWaypointDistance = newWaypointDistance;
                 }
+                 */
             }
         }
         /*
