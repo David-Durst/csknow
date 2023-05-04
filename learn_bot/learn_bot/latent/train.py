@@ -124,7 +124,6 @@ def train(train_type: TrainType, all_data_df: pd.DataFrame, num_epochs: int,
     else:
         raise Exception("invalid train type")
 
-    tmp_model = SimplifiedTransformerNestedHiddenLatentModel(column_transformers, 2*max_enemies, 2*num_orders_per_site).to(device)
     # plot data set with and without transformers
     #plot_untransformed_and_transformed(plot_path, 'train and test labels', all_data_df,
     #                                   input_column_types.float_standard_cols + output_column_types.categorical_distribution_cols_flattened,
@@ -266,8 +265,10 @@ def train(train_type: TrainType, all_data_df: pd.DataFrame, num_epochs: int,
     if save:
         model.eval()
         script_model = torch.jit.trace(model.to(CPU_DEVICE_STR), first_row)
+        tmp_model = SimplifiedTransformerNestedHiddenLatentModel().to(device)
+        tmp_model.to(CPU_DEVICE_STR)
         tmp_model.eval()
-        torch.jit.trace(tmp_model.to(CPU_DEVICE_STR), first_row)
+        torch.jit.script(tmp_model)
         test_group_ids_str = ",".join([str(round_id) for round_id in test_group_ids])
         if train_type == TrainType.Engagement:
             script_model.save(checkpoints_path / 'engagement_script_model.pt')
