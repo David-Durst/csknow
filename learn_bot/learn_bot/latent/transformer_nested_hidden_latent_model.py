@@ -45,7 +45,7 @@ class TransformerNestedHiddenLatentModel(nn.Module):
         )
 
         #self.transformer_model = nn.Sequential(
-        #    nn.TransformerEncoderLayer(d_model=self.internal_width, nhead=4, batch_first=True),
+        #    nn.TransformerEncoderLayer(d_model=self.internal_width, nhead=4, batch_first=True, dropout=0.),
         #)
 
         self.decoder = nn.Sequential(
@@ -109,11 +109,11 @@ class SimplifiedTransformerNestedHiddenLatentModel(nn.Module):
             nn.TransformerEncoderLayer(d_model=self.internal_width, nhead=4, batch_first=True),
         )
 
-        self.decoder = nn.Sequential(
-            nn.Linear(self.internal_width, inner_latent_size),
-            nn.Softmax(dim=2),
-            nn.Flatten(1)
-        )
+        #self.decoder = nn.Sequential(
+        #    nn.Linear(self.internal_width, inner_latent_size),
+        #    nn.Softmax(dim=2),
+        #    nn.Flatten(1)
+        #)
 
     def forward(self, x):
         # transform inputs
@@ -131,6 +131,6 @@ class SimplifiedTransformerNestedHiddenLatentModel(nn.Module):
 
         transformed = self.transformer_model(encoded)
 
-        latent = self.decoder(transformed)
+        #latent = self.decoder(transformed)
 
-        return latent
+        return transformed

@@ -110,20 +110,21 @@ def train(train_type: TrainType, all_data_df: pd.DataFrame, num_epochs: int,
     elif train_type == TrainType.Place:
         column_transformers = IOColumnTransformers(place_area_input_column_types, place_output_column_types,
                                                    train_df)
-        model = MLPNestedHiddenLatentModel(column_transformers, 2*max_enemies, num_places).to(device)
+        model = TransformerNestedHiddenLatentModel(column_transformers, 2*max_enemies, num_places).to(device)
         input_column_types = place_area_input_column_types
         output_column_types = place_output_column_types
         prob_func = get_place_area_probability
     elif train_type == TrainType.Area:
         column_transformers = IOColumnTransformers(place_area_input_column_types, area_output_column_types,
                                                    train_df)
-        model = MLPNestedHiddenLatentModel(column_transformers, 2 * max_enemies, area_grid_size).to(device)
+        model = TransformerNestedHiddenLatentModel(column_transformers, 2 * max_enemies, area_grid_size).to(device)
         input_column_types = place_area_input_column_types
         output_column_types = area_output_column_types
         prob_func = get_place_area_probability
     else:
         raise Exception("invalid train type")
 
+    tmp_model = SimplifiedTransformerNestedHiddenLatentModel(column_transformers, 2*max_enemies, 2*num_orders_per_site).to(device)
     # plot data set with and without transformers
     #plot_untransformed_and_transformed(plot_path, 'train and test labels', all_data_df,
     #                                   input_column_types.float_standard_cols + output_column_types.categorical_distribution_cols_flattened,
@@ -265,6 +266,8 @@ def train(train_type: TrainType, all_data_df: pd.DataFrame, num_epochs: int,
     if save:
         model.eval()
         script_model = torch.jit.trace(model.to(CPU_DEVICE_STR), first_row)
+        tmp_model.eval()
+        torch.jit.trace(tmp_model.to(CPU_DEVICE_STR), first_row)
         test_group_ids_str = ",".join([str(round_id) for round_id in test_group_ids])
         if train_type == TrainType.Engagement:
             script_model.save(checkpoints_path / 'engagement_script_model.pt')
@@ -299,7 +302,7 @@ if __name__ == "__main__":
     team_data_df = team_data_df[(team_data_df['valid'] == 1.) & (team_data_df['c4 status'] < 2)]
     #all_data_df = all_data_df.iloc[:500000]
     #all_data_df = load_hdf5_to_pd(latent_window_hdf5_data_path)
-    train_result = train(TrainType.Order, team_data_df, num_epochs=3, windowed=False)
+    train_result = train(TrainType.Order, team_data_df, num_epochs=1, windowed=False)
     train_result = train(TrainType.Place, team_data_df, num_epochs=3, windowed=False)
     train_result = train(TrainType.Area, team_data_df, num_epochs=3, windowed=False)
     train_result = train(TrainType.Engagement, all_data_df, num_epochs=1, windowed=False)
