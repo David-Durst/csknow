@@ -82,13 +82,22 @@ func ProcessStructure(unprocessedKey string, localDemName string, idState *IDSta
 	})
 
 	p.RegisterEventHandler(func(e events.RoundEndOfficial) {
-		// this event seems to fire the tick when you are in the next round,
-		// step back 30 ticks to make sure this is end of current round and not starting the next round
-		unfilteredRoundsTable.tail().endOfficialTick = nextTickId - 30
-		if unfilteredRoundsTable.tail().endOfficialTick < unfilteredRoundsTable.tail().endTick {
-			unfilteredRoundsTable.tail().endOfficialTick = unfilteredRoundsTable.tail().endTick
+		if unfilteredRoundsTable.len() > 0 && unfilteredRoundsTable.tail().endOfficialTick == InvalidId {
+			// this event seems to fire the tick when you are in the next round,
+			// step back 30 ticks to make sure this is end of current round and not starting the next round
+			unfilteredRoundsTable.tail().endOfficialTick = nextTickId - 30
+			if unfilteredRoundsTable.tail().endOfficialTick < unfilteredRoundsTable.tail().endTick {
+				unfilteredRoundsTable.tail().endOfficialTick = unfilteredRoundsTable.tail().endTick
+			}
+			unfilteredRoundsTable.tail().finished = true
+		} else {
+			// handle demos that have a round end officila with no round end
+			// assume bogus rounds are warmups
+			addNewRound(idState, nextTickId, &unfilteredRoundsTable)
 		}
-		unfilteredRoundsTable.tail().finished = true
+
+		unfilteredRoundsTable.tail().tWins = p.GameState().Team(common.TeamTerrorists).Score()
+		unfilteredRoundsTable.tail().ctWins = p.GameState().Team(common.TeamCounterTerrorists).Score()
 	})
 
 	playersTracker.init()
