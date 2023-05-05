@@ -31,7 +31,7 @@ namespace follow::compute_nav_area {
         string reallyCurPlace = blackboard.navFile.get_place(curArea.m_place);
         std::cout << "really cur place: "  << reallyCurPlace << std::endl;
          */
-        bool useAnyPlace = false;
+        bool useAnyPlace = true;
 
         PlaceIndex curPlace = 0;
         double minPlaceDistance = std::numeric_limits<double>::max();
@@ -192,12 +192,14 @@ namespace follow::compute_nav_area {
          */
 
         // if cur place isn't next place and same order, terminate early
+        /*
         if (blackboard.playerToModelNavData.find(csgoId) != blackboard.playerToModelNavData.end()) {
             const ModelNavData & oldModelNavData = blackboard.playerToModelNavData.at(csgoId);
             if (oldModelNavData.nextPlace != curPlaceName) {
                 placeOption = oldModelNavData.nextPlaceIndex;
             }
         }
+         */
 
         /*
         // if T and new to order, just get to closet place on order before going anywhere else
@@ -267,6 +269,7 @@ namespace follow::compute_nav_area {
             curPriority.targetAreaId = blackboard.removedAreaAlternatives[curPriority.targetAreaId];
         }
         // if same next place and not at old next area, keep using that area
+        /*
         if (blackboard.playerToModelNavData.find(csgoId) != blackboard.playerToModelNavData.end()) {
             const ModelNavData & oldModelNavData = blackboard.playerToModelNavData.at(csgoId);
             AreaId curAreaId = blackboard.navFile
@@ -275,6 +278,7 @@ namespace follow::compute_nav_area {
                 curPriority.targetAreaId = oldModelNavData.nextArea;
             }
         }
+         */
         curPriority.targetPos = vec3tConv(blackboard.navFile.get_area_by_id_fast(curPriority.targetAreaId).get_center());
         modelNavData.nextArea = curPriority.targetAreaId;
     }
