@@ -168,6 +168,7 @@ namespace follow::compute_nav_area {
                 probabilities[i] *= 1/reweightFactor;
                 probSum += probabilities[i];
             }
+            /*
             double probSample = blackboard.aggressionDis(blackboard.gen);
             double weightSoFar = 0.;
             for (size_t i = 0; i < probabilities.size(); i++) {
@@ -177,6 +178,16 @@ namespace follow::compute_nav_area {
                     break;
                 }
             }
+             */
+            size_t maxProbIndex = 0;
+            double maxProb = -1.;
+            for (size_t i = 0; i < probabilities.size(); i++) {
+                if (probabilities[i] > maxProb) {
+                    maxProbIndex = i;
+                    maxProb = probabilities[i];
+                }
+            }
+            placeOption = validPlacesOrderedProbs[maxProbIndex];
         }
         /*
         if (csgoId == 3) {
@@ -240,14 +251,24 @@ namespace follow::compute_nav_area {
         for (size_t i = 0; i < probabilities.size(); i++) {
             probabilities[i] *= 1/reweightFactor;
         }
+        size_t areaGridOption = 0;
+        /*
         double probSample = blackboard.aggressionDis(blackboard.gen);
         double weightSoFar = 0.;
-        size_t areaGridOption = 0;
         for (size_t i = 0; i < probabilities.size(); i++) {
             weightSoFar += probabilities[i];
             if (probSample < weightSoFar) {
                 areaGridOption = i;
                 break;
+            }
+        }
+         */
+        size_t maxProbIndex = 0;
+        double maxProb = -1.;
+        for (size_t i = 0; i < probabilities.size(); i++) {
+            if (probabilities[i] > maxProb) {
+                areaGridOption = i;
+                maxProb = probabilities[i];
             }
         }
 
