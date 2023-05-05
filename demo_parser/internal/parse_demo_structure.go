@@ -95,9 +95,6 @@ func ProcessStructure(unprocessedKey string, localDemName string, idState *IDSta
 			// assume bogus rounds are warmups
 			addNewRound(idState, nextTickId, &unfilteredRoundsTable)
 		}
-
-		unfilteredRoundsTable.tail().tWins = p.GameState().Team(common.TeamTerrorists).Score()
-		unfilteredRoundsTable.tail().ctWins = p.GameState().Team(common.TeamCounterTerrorists).Score()
 	})
 
 	playersTracker.init()
