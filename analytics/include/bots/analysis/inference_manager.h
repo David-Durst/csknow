@@ -35,9 +35,13 @@ namespace csknow::inference_manager {
     class InferenceManager {
         void runEngagementInference(const vector<CSGOId> & clientsToInfer);
         void runAggressionInference(const vector<CSGOId> & clientsToInfer);
+        bool ranOrderInference = false;
         void runOrderInference();
+        bool ranPlaceInference = false;
         void runPlaceInference();
+        bool ranAreaInference = false;
         void runAreaInference();
+        int overallModelToRun = 0;
     public:
         bool valid;
         double inferenceSeconds;

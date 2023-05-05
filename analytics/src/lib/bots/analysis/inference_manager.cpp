@@ -212,15 +212,28 @@ namespace csknow::inference_manager {
         auto start = std::chrono::system_clock::now();
         runEngagementInference(clients);
         runAggressionInference(clients);
-        runOrderInference();
-        runPlaceInference();
-        runAreaInference();
+        if (overallModelToRun == 0) {
+            runOrderInference();
+            ranOrderInference = true;
+        }
+        else if (overallModelToRun == 1) {
+            runPlaceInference();
+            ranPlaceInference = true;
+        }
+        else {
+            runAreaInference();
+            ranAreaInference = true;
+        }
+        overallModelToRun = (overallModelToRun + 1) % 3;
         auto end = std::chrono::system_clock::now();
         std::chrono::duration<double> inferenceTime = end - start;
         inferenceSeconds = inferenceTime.count();
     }
 
     bool InferenceManager::haveValidData() const {
+        if (!ranOrderInference || !ranPlaceInference || !ranAreaInference) {
+            return false;
+        }
         for (const auto & [_, inferenceData] : playerToInferenceData) {
             if (!inferenceData.validData) {
                 return false;
