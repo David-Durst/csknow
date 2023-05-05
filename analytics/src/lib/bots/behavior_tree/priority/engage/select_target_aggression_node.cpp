@@ -113,10 +113,12 @@ namespace engage {
         double nearestDangerAreaDistance = std::numeric_limits<double>::max();
         size_t nearestDangerAreaIndex = 0;
         for (size_t dangerAreaIndex = 0; dangerAreaIndex < enemyDangerAreaBits.size(); dangerAreaIndex++) {
-            double newDangerAreaDistance = blackboard.reachability.getDistance(curAreaIndex, dangerAreaIndex);
-            if (enemyDangerAreaBits[dangerAreaIndex] && newDangerAreaDistance < nearestDangerAreaDistance) {
-                nearestDangerAreaDistance = newDangerAreaDistance;
-                nearestDangerAreaIndex = dangerAreaIndex;
+            if (enemyDangerAreaBits[dangerAreaIndex]) {
+                double newDangerAreaDistance = blackboard.reachability.getDistance(curAreaIndex, dangerAreaIndex);
+                if (newDangerAreaDistance < nearestDangerAreaDistance) {
+                    nearestDangerAreaDistance = newDangerAreaDistance;
+                    nearestDangerAreaIndex = dangerAreaIndex;
+                }
             }
         }
         curPriority.targetPos = getCenter(blackboard.reachability.coordinate[nearestDangerAreaIndex]);
