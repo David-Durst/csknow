@@ -101,7 +101,15 @@ func ProcessStructure(unprocessedKey string, localDemName string, idState *IDSta
 	if idState.nextPlayer == 0 {
 		playersTable.append(playerRow{InvalidId, InvalidId, "invalid", 0})
 	}
+
 	p.RegisterEventHandler(func(e events.FrameDone) {
+		players := getPlayers(&p)
+
+		// skip ticks until at least one player is connected
+		if len(players) == 0 {
+			return
+		}
+
 		// on the first tick save the game state
 		if nextTickId == idState.nextTick {
 			header := p.Header()
@@ -114,7 +122,6 @@ func ProcessStructure(unprocessedKey string, localDemName string, idState *IDSta
 		}
 
 		// add all new players
-		players := getPlayers(&p)
 		sort.Slice(players, func(i int, j int) bool {
 			return players[i].Name < players[j].Name
 		})
