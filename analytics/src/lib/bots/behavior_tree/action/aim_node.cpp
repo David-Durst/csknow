@@ -76,6 +76,10 @@ namespace action {
         Priority & curPriority = blackboard.playerToPriority[treeThinker.csgoId];
         Path & curPath = blackboard.playerToPath[treeThinker.csgoId];
         Vec3 aimTarget;
+        uint32_t curArea = blackboard.navFile.get_nearest_area_by_position(vec3Conv(curClient.getFootPosForPlayer())).get_id();
+        string curPlace = blackboard.navFile.get_place(blackboard.navFile.get_area_by_id_fast(curArea).m_place);
+        uint32_t c4Area = blackboard.navFile.get_nearest_area_by_position(vec3Conv(state.getC4Pos())).get_id();
+        string c4Place = blackboard.navFile.get_place(blackboard.navFile.get_area_by_id_fast(c4Area).m_place);
 
         if (!curPath.pathCallSucceeded) {
             playerNodeState[treeThinker.csgoId] = NodeState::Failure;
@@ -88,8 +92,7 @@ namespace action {
             aimTarget = curPriority.targetPlayer.eyePos;
             curAction.aimTargetType = AimTargetType::Player;
         }
-        else if (blackboard.isPlayerDefuser(treeThinker.csgoId) &&
-            curOrder.waypoints[blackboard.strategy.playerToWaypointIndex[treeThinker.csgoId]].type == WaypointType::C4) {
+        else if (blackboard.isPlayerDefuser(treeThinker.csgoId) && curPlace == c4Place) {
             aimTarget = state.getC4Pos();
             curAction.aimTargetType = AimTargetType::C4;
         }
