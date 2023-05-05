@@ -6,9 +6,15 @@
 #define CSKNOW_PRIORITY_DATA_H
 
 #include <queries/query.h>
+#include "geometryNavConversions.h"
 #include "bots/load_save_bot_data.h"
 
-struct PriorityPlaceAreaAssignment {
+struct PriorityPlaceAssignment {
+    PlaceIndex nextPlace;
+    bool valid;
+};
+
+struct PriorityAreaAssignment {
     Vec3 targetPos;
     AreaId targetAreaId;
     bool valid;

@@ -8,15 +8,16 @@ float_c4_cols = [c4_distance_to_a_site_col, c4_distance_to_b_site_col] + c4_pos_
 
 
 def get_player_distribution_nearest_place(player_index: int, place_index: int, team_str: str) -> str:
-    return "distribution nearest place 3 to 6s " + str(place_index) + " " + team_str + " " + str(player_index)
+    return "distribution nearest place " + str(place_index) + " " + team_str + " " + str(player_index)
 
 
 def get_player_distribution_nearest_grid_area(player_index: int, area_grid_index: int, team_str: str) -> str:
-    return "distribution nearest area grid in place 3 to 6s " + str(area_grid_index) + " " + team_str + " " + str(player_index)
+    return "distribution nearest area grid in place " + str(area_grid_index) + " " + team_str + " " + str(player_index)
 
 
 class PlayerPlaceAreaColumns:
     player_id: str
+    index_on_team: list[str]
     ct_team: str
     distance_to_a_site: str
     distance_to_b_site: str
@@ -32,6 +33,7 @@ class PlayerPlaceAreaColumns:
 
     def __init__(self, team_str: str, player_index: int):
         self.player_id = player_id_column + " " + player_team_str(team_str, player_index)
+        self.index_on_team = get_player_index_on_team_column(player_index, team_str)
         self.ct_team = get_player_ctteam_column(player_index, team_str)
         self.distance_to_a_site = "distance to a site " + player_team_str(team_str, player_index)
         self.distance_to_b_site = "distance to b site " + player_team_str(team_str, player_index)
@@ -75,7 +77,7 @@ class PlayerPlaceAreaColumns:
             flatten_list([self.pos, self.prior_pos, self.vel])
 
     def to_input_distribution_cat_list(self) -> list[list[str]]:
-        return [self.cur_place, self.area_grid_cell_in_place, [self.ct_team]]
+        return [self.cur_place, self.area_grid_cell_in_place, self.index_on_team, [self.ct_team]]
 
     def to_output_cat_list(self, place: bool, area: bool) -> list[list[str]]:
         result = []

@@ -45,16 +45,12 @@ def get_player_distance_order_columns(player_index: int, order_index: int, team_
         str(player_index)
 
 
-def get_player_nearest_order_columns(player_index: int, order_index: int, team_str: str, site_str: str,
-                                     distribution_time: DistributionTimes) -> str:
-    if distribution_time == DistributionTimes.Time_30:
-        time_str = " 30s "
-    elif distribution_time == DistributionTimes.Time_15:
-        time_str = " 15s "
-    else:
-        time_str = " 6s "
-    return "distribution nearest " + site_str + " order " + str(order_index) + time_str + team_str + " " + \
+def get_player_nearest_order_columns(player_index: int, order_index: int, team_str: str, site_str: str) -> str:
+    return "distribution nearest " + site_str + " order " + str(order_index) + " " + team_str + " " + \
         str(player_index)
+
+def get_player_index_on_team_column(player_index: int, team_str: str) -> list[str]:
+    return ["player index on team " + str(i) + " " + team_str + " " + str(player_index) for i in range(max_enemies)]
 
 def get_player_ctteam_column(player_index: int, team_str: str) -> str:
     return "player ctTeam " + team_str + " " + str(player_index)
@@ -99,6 +95,7 @@ def player_team_str(team_str: str, player_index: int) -> str:
 
 class PlayerOrderColumns:
     player_id: str
+    index_on_team: list[str]
     ct_team: str
     pos: list[str]
     prior_pos: list[str]
@@ -111,15 +108,16 @@ class PlayerOrderColumns:
     distance_to_b_site: str
     distance_to_nearest_a_order_nav_area: list[str]
     distance_to_nearest_b_order_nav_area: list[str]
-    distribution_nearest_a_order_6s: list[str]
+    distribution_nearest_a_order: list[str]
     #distribution_nearest_a_order_15s: list[str]
     #distribution_nearest_a_order_30s: list[str]
-    distribution_nearest_b_order_6s: list[str]
+    distribution_nearest_b_order: list[str]
     #distribution_nearest_b_order_15s: list[str]
     #distribution_nearest_b_order_30s: list[str]
 
     def __init__(self, team_str: str, player_index: int):
         self.player_id = player_id_column + " " + player_team_str(team_str, player_index)
+        self.index_on_team = get_player_index_on_team_column(player_index, team_str)
         self.ct_team = get_player_ctteam_column(player_index, team_str)
         self.distance_to_a_site = "distance to a site " + player_team_str(team_str, player_index)
         self.distance_to_b_site = "distance to b site " + player_team_str(team_str, player_index)
@@ -132,10 +130,10 @@ class PlayerOrderColumns:
         # self.prior_area_grid_cell_in_place = []
         self.distance_to_nearest_a_order_nav_area = []
         self.distance_to_nearest_b_order_nav_area = []
-        self.distribution_nearest_a_order_6s = []
+        self.distribution_nearest_a_order = []
         #self.distribution_nearest_a_order_15s = []
         #self.distribution_nearest_a_order_30s = []
-        self.distribution_nearest_b_order_6s = []
+        self.distribution_nearest_b_order = []
         #self.distribution_nearest_b_order_15s = []
         #self.distribution_nearest_b_order_30s = []
         for order_index in range(num_orders_per_site):
@@ -143,18 +141,16 @@ class PlayerOrderColumns:
                 .append(get_player_distance_order_columns(player_index, order_index, team_str, site_strs[0]))
             self.distance_to_nearest_b_order_nav_area \
                 .append(get_player_distance_order_columns(player_index, order_index, team_str, site_strs[1]))
-            self.distribution_nearest_a_order_6s \
-                .append(get_player_nearest_order_columns(player_index, order_index, team_str, site_strs[0],
-                                                         DistributionTimes.Time_6))
+            self.distribution_nearest_a_order \
+                .append(get_player_nearest_order_columns(player_index, order_index, team_str, site_strs[0]))
             #self.distribution_nearest_a_order_15s \
             #    .append(get_player_nearest_order_columns(player_index, order_index, team_str, site_strs[0],
             #                                             DistributionTimes.Time_15))
             #self.distribution_nearest_a_order_30s \
             #    .append(get_player_nearest_order_columns(player_index, order_index, team_str, site_strs[0],
             #                                             DistributionTimes.Time_30))
-            self.distribution_nearest_b_order_6s \
-                .append(get_player_nearest_order_columns(player_index, order_index, team_str, site_strs[1],
-                                                         DistributionTimes.Time_6))
+            self.distribution_nearest_b_order \
+                .append(get_player_nearest_order_columns(player_index, order_index, team_str, site_strs[1]))
             #self.distribution_nearest_b_order_15s \
             #    .append(get_player_nearest_order_columns(player_index, order_index, team_str, site_strs[1],
             #                                             DistributionTimes.Time_15))
@@ -182,8 +178,8 @@ class PlayerOrderColumns:
             flatten_list([self.pos, self.prior_pos, self.vel, self.cur_place,  # self.prior_place,
                           self.area_grid_cell_in_place,  # self.prior_area_grid_cell_in_place,
                           self.distance_to_nearest_a_order_nav_area, self.distance_to_nearest_b_order_nav_area,
-                          self.distribution_nearest_a_order_6s, #self.distribution_nearest_a_order_15s, self.distribution_nearest_a_order_30s,
-                          self.distribution_nearest_b_order_6s])#, self.distribution_nearest_b_order_15s, self.distribution_nearest_b_order_30s])
+                          self.distribution_nearest_a_order, #self.distribution_nearest_a_order_15s, self.distribution_nearest_a_order_30s,
+                          self.distribution_nearest_b_order])#, self.distribution_nearest_b_order_15s, self.distribution_nearest_b_order_30s])
 
     def to_input_float_list(self) -> list[str]:
         return [self.distance_to_a_site, self.distance_to_b_site] + \
@@ -191,12 +187,12 @@ class PlayerOrderColumns:
             flatten_list([self.distance_to_nearest_a_order_nav_area, self.distance_to_nearest_b_order_nav_area])
 
     def to_input_distribution_cat_list(self) -> list[list[str]]:
-        return [self.cur_place, self.area_grid_cell_in_place, [self.ct_team]]
+        return [self.cur_place, self.area_grid_cell_in_place, self.index_on_team, [self.ct_team]]
 
     def to_output_cat_list(self, include_6=True, include_15=True, include_30=True) -> list[list[str]]:
         result = []
         if include_6:
-            result += [flatten_list([self.distribution_nearest_a_order_6s, self.distribution_nearest_b_order_6s])]
+            result += [flatten_list([self.distribution_nearest_a_order, self.distribution_nearest_b_order])]
         #if include_15:
         #    result += [flatten_list([self.distribution_nearest_a_order_15s, self.distribution_nearest_b_order_15s])]
         #if include_30:

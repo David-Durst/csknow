@@ -49,6 +49,7 @@ namespace csknow::feature_store {
         struct ColumnPlayerData {
             vector<int64_t> playerId;
             // inputs
+            array<vector<bool>, maxEnemies> indexOnTeam;
             vector<bool> ctTeam;
             vector<Vec3> footPos;
             array<vector<Vec3>, num_prior_ticks> priorFootPos;
@@ -60,12 +61,12 @@ namespace csknow::feature_store {
             array<vector<bool>, area_grid_size> areaGridCellInPlace;
             array<array<vector<bool>, area_grid_size>, num_prior_ticks> priorAreaGridCellInPlace;
             // outputs
-            array<vector<float>, num_orders_per_site> distributionNearestAOrders6s, distributionNearestBOrders6s;
+            array<vector<float>, num_orders_per_site> distributionNearestAOrders, distributionNearestBOrders;
             //array<vector<float>, num_orders_per_site> distributionNearestAOrders15s, distributionNearestBOrders15s;
             //array<vector<float>, num_orders_per_site> distributionNearestAOrders30s, distributionNearestBOrders30s;
-            array<vector<float>, num_places> distributionNearestPlace3to6s;
+            array<vector<float>, num_places> distributionNearestPlace;
             //array<vector<float>, num_places> distributionNearestPlace7to15s;
-            array<vector<float>, area_grid_size> distributionNearestAreaGridInPlace3to6s;
+            array<vector<float>, area_grid_size> distributionNearestAreaGridInPlace;
             //array<vector<float>, area_grid_size> distributionNearestAreaGridInPlace7to15s;
         };
         array<ColumnPlayerData, maxEnemies> columnCTData, columnTData;
@@ -88,9 +89,14 @@ namespace csknow::feature_store {
         };
         void computeOrderACausalLabels(int64_t curTick, CircularBuffer<int64_t> & futureTracker,
                                        array<ColumnPlayerData, maxEnemies> & columnData, ACausalTimingOption timingOption);
-        void computePlaceAreaACausalLabels(const Ticks & ticks, const TickRates & tickRates, int64_t curTick,
+        void computePlaceACausalLabels(const Ticks & ticks, const TickRates & tickRates, int64_t curTick,
                                            CircularBuffer<int64_t> & futureTracker,
-                                           array<ColumnPlayerData,maxEnemies> & columnData);
+                                           array<ColumnPlayerData,maxEnemies> & columnData,
+                                           double futureSecondsTheshold);
+        void computeAreaACausalLabels(const Ticks & ticks, const TickRates & tickRates, int64_t curTick,
+                                           CircularBuffer<int64_t> & futureTracker,
+                                           array<ColumnPlayerData,maxEnemies> & columnData,
+                                           double futureSecondsTheshold);
         void computeAcausalLabels(const Games & games, const Rounds & rounds,
                                   const Ticks & ticks);
         void toHDF5Inner(HighFive::File & file) override;

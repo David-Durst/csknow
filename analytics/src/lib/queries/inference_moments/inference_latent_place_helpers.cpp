@@ -62,6 +62,10 @@ namespace csknow::inference_latent_place {
                     result.rowCPP.push_back(static_cast<float>(
                                                 columnPlayerData.areaGridCellInPlace[areaIndex][rowIndex]));
                 }
+                for (size_t playerIndexOnTeam = 0; playerIndexOnTeam < csknow::feature_store::maxEnemies; playerIndexOnTeam++) {
+                    result.rowCPP.push_back(static_cast<float>(
+                                                    columnPlayerData.indexOnTeam[playerIndexOnTeam][rowIndex]));
+                }
                 result.rowCPP.push_back(static_cast<float>(columnPlayerData.ctTeam[rowIndex]));
             }
             ctColumnData = false;

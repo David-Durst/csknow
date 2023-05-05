@@ -58,6 +58,7 @@ namespace follow::compute_nav_area {
                 validPlacesVectorOrderedOrder.push_back(placeIndex);
                 modelNavData.orderPlaceOptions.push_back(blackboard.distanceToPlaces.places[placeIndex]);
                 modelNavData.orderPlaceProbs.push_back(placeProbabilities.placeProbabilities[placeIndex]);
+                placeIndexToWaypointIndex[placeIndex] = 0;
             }
         }
         else {
@@ -324,33 +325,56 @@ namespace follow::compute_nav_area {
             curPriority.targetAreaId = curAreaId;
         }
         else {
-            if (blackboard.playerToTicksSinceLastProbPlaceAreaAssignment.find(treeThinker.csgoId) ==
-                blackboard.playerToTicksSinceLastProbPlaceAreaAssignment.end()) {
-                blackboard.playerToTicksSinceLastProbPlaceAreaAssignment[treeThinker.csgoId] = newPlaceAreaTicks;
+            // update place
+            if (blackboard.playerToTicksSinceLastProbPlaceAssignment.find(treeThinker.csgoId) ==
+                blackboard.playerToTicksSinceLastProbPlaceAssignment.end()) {
+                blackboard.playerToTicksSinceLastProbPlaceAssignment[treeThinker.csgoId] = newPlaceTicks;
             }
-            blackboard.playerToTicksSinceLastProbPlaceAreaAssignment[treeThinker.csgoId]++;
-            bool timeForNewPlaceArea =
-                blackboard.playerToTicksSinceLastProbPlaceAreaAssignment.at(treeThinker.csgoId) >= newTargetTicks ||
+            blackboard.playerToTicksSinceLastProbPlaceAssignment[treeThinker.csgoId]++;
+            bool timeForNewPlace =
+                blackboard.playerToTicksSinceLastProbPlaceAssignment.at(treeThinker.csgoId) >= newPlaceTicks ||
                 wasInEngagement;
-            if (blackboard.playerToLastProbPlaceAreaAssignment.find(treeThinker.csgoId) ==
-                blackboard.playerToLastProbPlaceAreaAssignment.end() || timeForNewPlaceArea) {
-                blackboard.playerToLastProbPlaceAreaAssignment[treeThinker.csgoId] =
-                    {Vec3{INVALID_ID, INVALID_ID, INVALID_ID}, 0, false};
+            if (blackboard.playerToLastProbPlaceAssignment.find(treeThinker.csgoId) ==
+                blackboard.playerToLastProbPlaceAssignment.end() || timeForNewPlace) {
+                blackboard.playerToLastProbPlaceAssignment[treeThinker.csgoId] =
+                    {0, false};
+                    //{Vec3{INVALID_ID, INVALID_ID, INVALID_ID}, 0, false};
             }
-            PriorityPlaceAreaAssignment & lastProbPlaceAreaAssignment =
-                blackboard.playerToLastProbPlaceAreaAssignment[treeThinker.csgoId];
+            PriorityPlaceAssignment & lastProbPlaceAssignment =
+                blackboard.playerToLastProbPlaceAssignment[treeThinker.csgoId];
+            if (!lastProbPlaceAssignment.valid) {
+                lastProbPlaceAssignment.nextPlace = computePlaceProbabilistic(state, curOrder, curAreaId, treeThinker.csgoId,
+                                                                              modelNavData);
+                blackboard.playerToTicksSinceLastProbPlaceAssignment[treeThinker.csgoId] = 0;
+                lastProbPlaceAssignment.valid = true;
+            }
 
-            if (!lastProbPlaceAreaAssignment.valid) {
-                PlaceIndex nextPlace = computePlaceProbabilistic(state, curOrder, curAreaId, treeThinker.csgoId,
-                                                                 modelNavData);
-                computeAreaProbabilistic(state, curPriority, nextPlace, treeThinker.csgoId, modelNavData);
-                lastProbPlaceAreaAssignment = {curPriority.targetPos, curPriority.targetAreaId, true};
-                blackboard.playerToTicksSinceLastProbPlaceAreaAssignment[treeThinker.csgoId] = 0;
+            // update area
+            if (blackboard.playerToTicksSinceLastProbAreaAssignment.find(treeThinker.csgoId) ==
+                blackboard.playerToTicksSinceLastProbAreaAssignment.end()) {
+                blackboard.playerToTicksSinceLastProbAreaAssignment[treeThinker.csgoId] = newAreaTicks;
+            }
+            blackboard.playerToTicksSinceLastProbAreaAssignment[treeThinker.csgoId]++;
+            bool timeForNewArea =
+                    blackboard.playerToTicksSinceLastProbAreaAssignment.at(treeThinker.csgoId) >= newAreaTicks ||
+                    wasInEngagement || timeForNewPlace;
+            if (blackboard.playerToLastProbAreaAssignment.find(treeThinker.csgoId) ==
+                blackboard.playerToLastProbAreaAssignment.end() || timeForNewArea) {
+                blackboard.playerToLastProbAreaAssignment[treeThinker.csgoId] =
+                        {Vec3{INVALID_ID, INVALID_ID, INVALID_ID}, 0, false};
+            }
+            PriorityAreaAssignment & lastProbAreaAssignment =
+                    blackboard.playerToLastProbAreaAssignment[treeThinker.csgoId];
+            if (!lastProbAreaAssignment.valid) {
+                computeAreaProbabilistic(state, curPriority, lastProbPlaceAssignment.nextPlace, treeThinker.csgoId, modelNavData);
+                lastProbAreaAssignment = {curPriority.targetPos, curPriority.targetAreaId, true};
+                blackboard.playerToTicksSinceLastProbAreaAssignment[treeThinker.csgoId] = 0;
+                lastProbAreaAssignment.valid = true;
                 blackboard.playerToModelNavData[treeThinker.csgoId] = modelNavData;
             }
             else {
-                curPriority.targetPos = lastProbPlaceAreaAssignment.targetPos;
-                curPriority.targetAreaId = lastProbPlaceAreaAssignment.targetAreaId;
+                curPriority.targetPos = lastProbAreaAssignment.targetPos;
+                curPriority.targetAreaId = lastProbAreaAssignment.targetAreaId;
             }
 
             // if CT defuser and in bombsite, then move to c4
