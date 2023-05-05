@@ -7,6 +7,7 @@
 #include "file_helpers.h"
 #include <atomic>
 #include <cmath>
+#include <csignal>
 
 namespace csknow::feature_store {
     void TeamFeatureStoreResult::init(size_t size) {
@@ -254,6 +255,9 @@ namespace csknow::feature_store {
             }
              */
 
+            if (columnIndex >= columnData.size()) {
+                std::cout << "bad round index " << roundIndex << ", tickIndex " << tickIndex << std::endl;
+            }
             columnData[columnIndex].playerId[tickIndex] = btTeamPlayerData.playerId;
             columnData[columnIndex].footPos[tickIndex] = btTeamPlayerData.curFootPos;
             columnData[columnIndex].velocity[tickIndex] = btTeamPlayerData.velocity;

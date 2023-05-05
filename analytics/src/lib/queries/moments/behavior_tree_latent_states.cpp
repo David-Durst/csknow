@@ -66,6 +66,14 @@ namespace csknow::behavior_tree_latent_states {
         // TODO run inferences in BT rather than in later queries
         csknow::inference_manager::InferenceManager invalidInferenceManager;
 
+        /*
+        for (int64_t roundIndex = 0; roundIndex < rounds.size; roundIndex++) {
+            TickRates tickRates = computeTickRates(games, rounds, roundIndex);
+            int twoSecondTicks = secondsToDemoTicks(tickRates, 2.);
+            std::cout << "twoSecondTicks: " << twoSecondTicks << "demo " << games.demoFile[rounds.gameId[roundIndex]] << std::endl;
+        }
+         */
+
 #pragma omp parallel for
         for (int64_t roundIndex = 0; roundIndex < rounds.size; roundIndex++) {
             int threadNum = omp_get_thread_num();
@@ -111,6 +119,12 @@ namespace csknow::behavior_tree_latent_states {
                 addTreeThinkersToBlackboard(curState, blackboard.get());
                 tmpPreCommitBuffer[threadNum].updateFeatureStoreBufferPlayers(curState);
                 globalQueryNode->exec(curState, defaultThinker);
+
+                /*
+                if (tickIndex == 2487942) {
+                    std::cout << "demo " << games.demoFile[rounds.gameId[roundIndex]] << " game tick number " << ticks.gameTickNumber[tickIndex] << std::endl;
+                }
+                 */
 
                 featureStoreResult.teamFeatureStoreResult.commitTeamRow(tmpPreCommitBuffer[threadNum],
                                                                         blackboard->distanceToPlaces, blackboard->navFile,
