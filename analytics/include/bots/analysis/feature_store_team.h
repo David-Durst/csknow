@@ -43,8 +43,8 @@ namespace csknow::feature_store {
         vector<C4Status> c4Status;
         vector<int64_t> c4TicksSincePlant;
         vector<Vec3> c4Pos;
-        vector<double> c4DistanceToASite, c4DistanceToBSite;
-        array<vector<double>, num_orders_per_site> c4DistanceToNearestAOrderNavArea, c4DistanceToNearestBOrderNavArea;
+        vector<float> c4DistanceToASite, c4DistanceToBSite;
+        array<vector<float>, num_orders_per_site> c4DistanceToNearestAOrderNavArea, c4DistanceToNearestBOrderNavArea;
 
         struct ColumnPlayerData {
             vector<int64_t> playerId;
@@ -53,20 +53,20 @@ namespace csknow::feature_store {
             vector<Vec3> footPos;
             array<vector<Vec3>, num_prior_ticks> priorFootPos;
             vector<Vec3> velocity;
-            vector<double> distanceToASite, distanceToBSite;
-            array<vector<double>, num_orders_per_site> distanceToNearestAOrderNavArea, distanceToNearestBOrderNavArea;
+            vector<float> distanceToASite, distanceToBSite;
+            array<vector<float>, num_orders_per_site> distanceToNearestAOrderNavArea, distanceToNearestBOrderNavArea;
             array<vector<bool>, num_places> curPlace;
             array<array<vector<bool>, num_places>, num_prior_ticks> priorPlaces;
             array<vector<bool>, area_grid_size> areaGridCellInPlace;
             array<array<vector<bool>, area_grid_size>, num_prior_ticks> priorAreaGridCellInPlace;
             // outputs
-            array<vector<double>, num_orders_per_site> distributionNearestAOrders6s, distributionNearestBOrders6s;
-            //array<vector<double>, num_orders_per_site> distributionNearestAOrders15s, distributionNearestBOrders15s;
-            //array<vector<double>, num_orders_per_site> distributionNearestAOrders30s, distributionNearestBOrders30s;
-            array<vector<double>, num_places> distributionNearestPlace3to6s;
-            //array<vector<double>, num_places> distributionNearestPlace7to15s;
-            array<vector<double>, area_grid_size> distributionNearestAreaGridInPlace3to6s;
-            //array<vector<double>, area_grid_size> distributionNearestAreaGridInPlace7to15s;
+            array<vector<float>, num_orders_per_site> distributionNearestAOrders6s, distributionNearestBOrders6s;
+            //array<vector<float>, num_orders_per_site> distributionNearestAOrders15s, distributionNearestBOrders15s;
+            //array<vector<float>, num_orders_per_site> distributionNearestAOrders30s, distributionNearestBOrders30s;
+            array<vector<float>, num_places> distributionNearestPlace3to6s;
+            //array<vector<float>, num_places> distributionNearestPlace7to15s;
+            array<vector<float>, area_grid_size> distributionNearestAreaGridInPlace3to6s;
+            //array<vector<float>, area_grid_size> distributionNearestAreaGridInPlace7to15s;
         };
         array<ColumnPlayerData, maxEnemies> columnCTData, columnTData;
         vector<std::reference_wrapper<const array<ColumnPlayerData, maxEnemies>>> getAllColumnData() const {

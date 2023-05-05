@@ -40,9 +40,9 @@ namespace csknow::feature_store {
             // target
             // inputs
             vector<EngagementEnemyState> enemyEngagementStates;
-            vector<double> timeSinceLastVisibleOrToBecomeVisible;
-            vector<double> worldDistanceToEnemy;
-            vector<double> crosshairDistanceToEnemy;
+            vector<float> timeSinceLastVisibleOrToBecomeVisible;
+            vector<float> worldDistanceToEnemy;
+            vector<float> crosshairDistanceToEnemy;
             // labels
             vector<bool> nearestTargetEnemy;
             vector<bool> hitTargetEnemy;
@@ -52,20 +52,20 @@ namespace csknow::feature_store {
         struct ColumnTeammateData {
             vector<int64_t> playerId;
             // inputs
-            vector<double> teammateWorldDistance;
-            vector<double> crosshairDistanceToTeammate;
+            vector<float> teammateWorldDistance;
+            vector<float> crosshairDistanceToTeammate;
         };
         array<ColumnTeammateData, maxEnemies> columnTeammateData;
         vector<bool> fireCurTick;
         vector<bool> hitEngagement;
         vector<bool> visibleEngagement;
         vector<int> nearestCrosshairCurTick, nearestCrosshairEnemy500ms, nearestCrosshairEnemy1s, nearestCrosshairEnemy2s;
-        vector<double> positionOffset2sUpToThreshold, viewAngleOffset2sUpToThreshold;
+        vector<float> positionOffset2sUpToThreshold, viewAngleOffset2sUpToThreshold;
         // these are just used to create binomial distributions
-        vector<double> negPositionOffset2sUpToThreshold, negViewAngleOffset2sUpToThreshold;
-        array<vector<double>, maxEnemies+1> pctNearestCrosshairEnemy2s;
-        vector<double> visibleEnemy2s, negVisibleEnemy2s, fireNext2s, negFireNext2s;
-        array<vector<double>, numNearestEnemyState> pctNearestEnemyChange2s;
+        vector<float> negPositionOffset2sUpToThreshold, negViewAngleOffset2sUpToThreshold;
+        array<vector<float>, maxEnemies+1> pctNearestCrosshairEnemy2s;
+        vector<float> visibleEnemy2s, negVisibleEnemy2s, fireNext2s, negFireNext2s;
+        array<vector<float>, numNearestEnemyState> pctNearestEnemyChange2s;
         vector<int64_t> nextPATId2s;
         vector<bool> valid;
         bool training;

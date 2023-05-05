@@ -220,17 +220,17 @@ namespace csknow::feature_store {
         c4DistanceToBSite[tickIndex] =
             distanceToPlaces.getClosestDistance(buffer.c4MapData.c4AreaId, b_site, navFile);
         for (size_t j = 0; j < num_orders_per_site; j++) {
-            double & aOrderDistance = c4DistanceToNearestAOrderNavArea[j][tickIndex];
+            float & aOrderDistance = c4DistanceToNearestAOrderNavArea[j][tickIndex];
             aOrderDistance = std::numeric_limits<double>::max();
             for (size_t k = 1; k < aOrders[j].places.size(); k++) {
                 aOrderDistance = std::min(aOrderDistance,
-                                          distanceToPlaces.getClosestDistance(buffer.c4MapData.c4AreaIndex, aOrders[j].places[k]));
+                                          static_cast<float>(distanceToPlaces.getClosestDistance(buffer.c4MapData.c4AreaIndex, aOrders[j].places[k])));
             }
-            double & bOrderDistance = c4DistanceToNearestBOrderNavArea[j][tickIndex];
+            float & bOrderDistance = c4DistanceToNearestBOrderNavArea[j][tickIndex];
             bOrderDistance = std::numeric_limits<double>::max();
             for (size_t k = 1; k < bOrders[j].places.size(); k++) {
                 bOrderDistance = std::min(bOrderDistance,
-                                          distanceToPlaces.getClosestDistance(buffer.c4MapData.c4AreaIndex, bOrders[j].places[k]));
+                                          static_cast<float>(distanceToPlaces.getClosestDistance(buffer.c4MapData.c4AreaIndex, bOrders[j].places[k])));
             }
         }
 
@@ -262,18 +262,18 @@ namespace csknow::feature_store {
             columnData[columnIndex].distanceToBSite[tickIndex] =
                 distanceToPlaces.getClosestDistance(btTeamPlayerData.curArea, b_site, navFile);
             for (size_t j = 0; j < num_orders_per_site; j++) {
-                double & aOrderDistance = columnData[columnIndex].distanceToNearestAOrderNavArea[j][tickIndex];
+                float & aOrderDistance = columnData[columnIndex].distanceToNearestAOrderNavArea[j][tickIndex];
                 aOrderDistance = std::numeric_limits<double>::max();
                 // start at 1 so skip tspawn (as all T's spend a significant time pre unfreeze in all orders then)
                 for (size_t k = 1; k < aOrders[j].places.size(); k++) {
                     aOrderDistance = std::min(aOrderDistance,
-                                              distanceToPlaces.getClosestDistance(btTeamPlayerData.curAreaIndex, aOrders[j].places[k]));
+                                              static_cast<float>(distanceToPlaces.getClosestDistance(btTeamPlayerData.curAreaIndex, aOrders[j].places[k])));
                 }
-                double & bOrderDistance = columnData[columnIndex].distanceToNearestBOrderNavArea[j][tickIndex];
+                float & bOrderDistance = columnData[columnIndex].distanceToNearestBOrderNavArea[j][tickIndex];
                 bOrderDistance = std::numeric_limits<double>::max();
                 for (size_t k = 1; k < bOrders[j].places.size(); k++) {
                     bOrderDistance = std::min(bOrderDistance,
-                                              distanceToPlaces.getClosestDistance(btTeamPlayerData.curAreaIndex, bOrders[j].places[k]));
+                                              static_cast<float>(distanceToPlaces.getClosestDistance(btTeamPlayerData.curAreaIndex, bOrders[j].places[k])));
                 }
             }
             PlaceIndex curPlaceIndex = distanceToPlaces.getClosestValidPlace(btTeamPlayerData.curAreaIndex, navFile);
