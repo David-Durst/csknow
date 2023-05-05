@@ -4,7 +4,7 @@ import boto3
 import s3path
 
 from constants import *
-from utils import generate_bot_retakes_data_folder
+from utils import generate_big_train_data_folder
 import s3fs
 
 def print_folder(fs: s3fs.S3FileSystem, remote_path: s3path.PureS3Path):
@@ -20,14 +20,14 @@ def run():
     s3 = boto3.client('s3')
 
     # make sure folder structure exists
-    generate_bot_retakes_data_folder(s3)
+    generate_big_train_data_folder(s3)
 
     fs = s3fs.S3FileSystem()
-    print_folder(fs, BOT_RETAKES_DISABLED)
-    print_folder(fs, BOT_RETAKES_UNPROCESSED_BOTS)
-    print_folder(fs, BOT_RETAKES_UNPROCESSED_PROS)
-    print_folder(fs, BOT_RETAKES_PROCESSED_BOTS)
-    print_folder(fs, BOT_RETAKES_PROCESSED_PROS)
+    print_folder(fs, BIG_TRAIN_DISABLED)
+    print_folder(fs, BIG_TRAIN_UNPROCESSED_BOTS)
+    print_folder(fs, BIG_TRAIN_UNPROCESSED_PROS)
+    print_folder(fs, BIG_TRAIN_PROCESSED_BOTS)
+    print_folder(fs, BIG_TRAIN_PROCESSED_PROS)
 
 
 if __name__ == "__main__":
