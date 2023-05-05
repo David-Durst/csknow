@@ -464,11 +464,46 @@ namespace csknow::feature_store {
                         }
                     }
                 }
+                if (futureTick < curTick) {
+                    std::cout << "ticks going wrong direction " << curTick << " " << futureTick << std::endl;
+                    std::raise(SIGINT);
+                }
             }
             if (numPointsInDistribution != 0) {
                 for (size_t placeIndex = 0; placeIndex < num_places; placeIndex++) {
                     columnData[playerColumn].distributionNearestPlace[placeIndex][curTick] /=
                         static_cast<double>(numPointsInDistribution);
+                }
+
+                PlaceIndex curPlace = 50;
+                int numCurPlaces = 0;
+                for (size_t placeIndex = 0; placeIndex < num_places; placeIndex++) {
+                    if (columnData[playerColumn].curPlace[placeIndex][curTick]) {
+                        curPlace = placeIndex;
+                        numCurPlaces++;
+                    }
+                }
+                if (numCurPlaces != 1 || curPlace > 25) {
+                    std::cout << "bad tick not one cur place " << curTick << std::endl;
+                    std::raise(SIGINT);
+                }
+                for (const PlaceIndex badCurPlace : {11, 13, 17, 24}) {
+                    for (const PlaceIndex badNextPlace : {7, 12})
+                    if (curPlace == badCurPlace && columnData[playerColumn].distributionNearestPlace[badNextPlace][curTick] > 0) {
+                        std::cout << "bad tick reached " << badCurPlace << " to " << badNextPlace << " in under 2 seconds " << curTick << std::endl;
+                        for (int64_t futureTickIndex = 0; futureTickIndex < futureTracker.getCurSize(); futureTickIndex++) {
+                            int64_t futureTick = futureTracker.fromOldest(futureTickIndex);
+                            bool inWindow = secondsBetweenTicks(ticks, tickRates, curTick, futureTick) >=
+                                            futureSecondsThreshold;
+                            if (futureTick != curTick &&
+                                columnData[playerColumn].playerId[curTick] ==
+                                columnData[playerColumn].playerId[futureTick] &&
+                                inWindow && columnData[playerColumn].curPlace[badNextPlace][futureTick]) {
+                                std::cout << "future tick " << futureTick << std::endl;
+                            }
+                        }
+                        std::raise(SIGINT);
+                    }
                 }
             }
         }
@@ -555,6 +590,10 @@ namespace csknow::feature_store {
                     ticks30sFutureTracker.enqueue(tickIndex);
                 }
                  */
+                if (ticks.roundId[ticks1sFutureTracker.fromOldest()] != ticks.roundId[tickIndex]) {
+                    std::cout << "round id mismatch cur tick " << tickIndex << " future tick " << ticks1sFutureTracker.fromOldest() << std::endl;
+                    std::raise(SIGINT);
+                }
                 computeOrderACausalLabels(tickIndex, ticks6sFutureTracker, columnCTData, ACausalTimingOption::s6);
                 //computeOrderACausalLabels(tickIndex, ticks15sFutureTracker, columnCTData, ACausalTimingOption::s15);
                 //computeOrderACausalLabels(tickIndex, ticks30sFutureTracker, columnCTData, ACausalTimingOption::s30);

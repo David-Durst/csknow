@@ -172,6 +172,34 @@ int main(int argc, char * argv[]) {
     string dust2DangerName = "de_dust2_danger";
     NavDangerResult d2NavDangerResult = queryNavDanger(map_visPoints.find("de_dust2")->second, dust2MeshName);
 
+    std::cout << "places: ";
+    for (size_t i = 0; i < d2DistanceToPlacesResult.places.size(); i++) {{
+        std::cout << "(" << i << "," << d2DistanceToPlacesResult.places[i] << "); ";
+    }}
+    std::cout << std::endl;
+    /*
+    for (const auto & tickIndex : {1476979, 1477226, 1477162, 1477098, 1477034}) {
+        int64_t roundIndex = ticks.roundId[tickIndex];
+        int64_t gameIndex = filteredRounds.gameId[roundIndex];
+        std::cout << "tick index: " << tickIndex << " game tick index " << ticks.gameTickNumber[tickIndex]
+            << " demo file " << games.demoFile[gameIndex] << std::endl;
+
+    }
+    int64_t tmpTickIndex = 1476979;
+    int64_t tmpRoundIndex = ticks.roundId[tmpTickIndex];
+    int64_t tmpGameIndex = filteredRounds.gameId[tmpRoundIndex];
+    for (int64_t tmpR = games.roundsPerGame[tmpGameIndex].minId; tmpR <= games.roundsPerGame[tmpGameIndex].maxId; tmpR++) {
+        std::cout << "tmpR " << tmpR << " start index " << filteredRounds.ticksPerRound[tmpR].minId
+            << " start game tick number " << ticks.gameTickNumber[filteredRounds.ticksPerRound[tmpR].minId]
+            << " end tick number " << filteredRounds.ticksPerRound[tmpR].maxId
+            << " end game tick number " << ticks.gameTickNumber[filteredRounds.ticksPerRound[tmpR].maxId]
+            << " real end tick number " << filteredRounds.endTick[tmpR]
+            << " real game end tick number " << ticks.gameTickNumber[filteredRounds.endTick[tmpR]] << std::endl;
+    }
+    exit(0);
+     */
+
+
     // orders
     string ordersName = "orders";
     std::cout << "processing orders" << std::endl;
