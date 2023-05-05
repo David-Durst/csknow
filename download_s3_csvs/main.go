@@ -160,6 +160,7 @@ func main() {
 		alreadyDownloadedFileName = bigTrainAlreadyDownloadedFileName
 		dataDir = bigTrainDir
 		dataPath = bigTrainPath
+		updatePrefixs()
 	} else if *retakesDataFlag {
 		processedPrefix = retakesProcessedPrefix
 		processedSmallPrefix = retakesProcessedPrefix

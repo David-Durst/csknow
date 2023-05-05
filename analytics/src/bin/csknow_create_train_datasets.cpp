@@ -187,12 +187,14 @@ int main(int argc, char * argv[]) {
     nearestNavCellResult.runQuery(navPath, "de_dust2");
     std::cout << "size: " << nearestNavCellResult.size << std::endl;
 
+    /*
     // fire history
     string fireHistoryName = "fireHistory";
     std::cout << "processing fire history" << std::endl;
     csknow::fire_history::FireHistoryResult fireHistoryResult(filteredRounds, ticks);
     fireHistoryResult.runQuery(games, weaponFire, hurt, playerAtTick);
     std::cout << "size: " << fireHistoryResult.size << std::endl;
+     */
 
     // engagement events
     string engagementName = "engagement";
@@ -230,6 +232,7 @@ int main(int argc, char * argv[]) {
     std::cout << "size: " << windowFeatureStoreResult.size << std::endl;
      */
 
+    /*
     // latent engagement events
     string latentEngagementName = "latentEngagement";
     std::cout << "processing latent engagements" << std::endl;
@@ -252,13 +255,12 @@ int main(int argc, char * argv[]) {
     std::cout << "size: " << trajectorySegmentResult.size << std::endl;
     std::cout << "processing training navigation data set" << std::endl;
     string trainingNavigationName = "trainNav";
-    /*
+    / *
     csknow::navigation::TrainingNavigationResult trainingNavigationResult; =
         csknow::navigation::queryTrainingNavigation(map_visPoints.at("de_dust2"), d2ReachableResult, players, games,
                                                     filteredRounds, ticks, playerAtTick, nonEngagementTrajectoryResult,
                                                     outputDir, true);
     std::cout << "size: " << trainingNavigationResult.size << std::endl;
-     */
 
 
     // engagement aim data
@@ -270,7 +272,7 @@ int main(int argc, char * argv[]) {
     std::cout << "size: " << engagementAimResult.size << std::endl;
 
     // latent engagement aim data
-    /*
+    / *
     std::cout << "processing training latent engagement aim training data set" << std::endl;
     string latentEngagementAimName = "latentEngagementAim";
     TrainingEngagementAimResult latentEngagementAimResult =
@@ -280,7 +282,7 @@ int main(int argc, char * argv[]) {
      */
 
     map<string, reference_wrapper<QueryResult>> analyses {
-            {engagementAimName, engagementAimResult},
+            //{engagementAimName, engagementAimResult},
             //{latentEngagementAimName, latentEngagementAimResult},
             {behaviorTreeFeatureStoreName, behaviorTreeLatentEvents.featureStoreResult},
             {behaviorTreeTeamFeatureStoreName, behaviorTreeLatentEvents.featureStoreResult.teamFeatureStoreResult}
