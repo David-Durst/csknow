@@ -52,6 +52,8 @@ namespace follow::compute_nav_area {
         //size_t nearestWaypoint = 0;
         double nearestWaypointDistance = std::numeric_limits<double>::max();
         PlaceIndex lastPlaceIndex = blackboard.distanceToPlaces.placeNameToIndex.at(curOrder.waypoints.back().placeName);
+        modelNavData.orderPlaceOptions.clear();
+        modelNavData.orderPlaceProbs.clear();
         if (useAnyPlace) {
             for (size_t placeIndex = 0; placeIndex < blackboard.distanceToPlaces.places.size(); placeIndex++) {
                 validPlaces.insert(placeIndex);
@@ -291,7 +293,6 @@ namespace follow::compute_nav_area {
             playerNodeState[treeThinker.csgoId] = NodeState::Failure;
             return playerNodeState[treeThinker.csgoId];
         }
-        ModelNavData modelNavData;
 
         const nav_mesh::nav_area & curArea = blackboard.navFile.get_nearest_area_by_position(
             vec3Conv(state.getClient(treeThinker.csgoId).getFootPosForPlayer()));
@@ -325,6 +326,12 @@ namespace follow::compute_nav_area {
             curPriority.targetAreaId = curAreaId;
         }
         else {
+            // NEEED TO FIX MODELNAVDEATA, DOING AREA WITH NO PLACE
+            bool needNewModelNavData = blackboard.playerToModelNavData.find(treeThinker.csgoId) ==
+                                       blackboard.playerToModelNavData.end();
+            ModelNavData & modelNavData = blackboard.playerToModelNavData[treeThinker.csgoId];
+
+
             // update place
             if (blackboard.playerToTicksSinceLastProbPlaceAssignment.find(treeThinker.csgoId) ==
                 blackboard.playerToTicksSinceLastProbPlaceAssignment.end()) {
@@ -333,7 +340,7 @@ namespace follow::compute_nav_area {
             blackboard.playerToTicksSinceLastProbPlaceAssignment[treeThinker.csgoId]++;
             bool timeForNewPlace =
                 blackboard.playerToTicksSinceLastProbPlaceAssignment.at(treeThinker.csgoId) >= newPlaceTicks ||
-                wasInEngagement;
+                wasInEngagement || needNewModelNavData;
             if (blackboard.playerToLastProbPlaceAssignment.find(treeThinker.csgoId) ==
                 blackboard.playerToLastProbPlaceAssignment.end() || timeForNewPlace) {
                 blackboard.playerToLastProbPlaceAssignment[treeThinker.csgoId] =
@@ -370,7 +377,6 @@ namespace follow::compute_nav_area {
                 lastProbAreaAssignment = {curPriority.targetPos, curPriority.targetAreaId, true};
                 blackboard.playerToTicksSinceLastProbAreaAssignment[treeThinker.csgoId] = 0;
                 lastProbAreaAssignment.valid = true;
-                blackboard.playerToModelNavData[treeThinker.csgoId] = modelNavData;
             }
             else {
                 curPriority.targetPos = lastProbAreaAssignment.targetPos;
