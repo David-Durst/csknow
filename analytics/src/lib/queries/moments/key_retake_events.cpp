@@ -13,17 +13,20 @@ namespace csknow::key_retake_events {
         explosionBeforeOrDuringThisTick.resize(ticks.size, false);
         ctAliveAfterExplosion.resize(ticks.size, false);
         tAliveAfterDefusal.resize(ticks.size, false);
-        roundHasPlant.resize(ticks.size,  false);
-        roundHasDefusal.resize(ticks.size,  false);
-        roundHasRetakeCTSave.resize(ticks.size,  false);
-        roundHasRetakeTSave.resize(ticks.size,  false);
-        roundHasRetakeSave.resize(ticks.size,  false);
-        roundC4Deaths.resize(ticks.size, 0);
-        roundNonC4PostPlantWorldDeaths.resize(ticks.size, 0);
+        roundHasPlant.resize(rounds.size,  false);
+        roundCTAliveOnPlant.resize(rounds.size, 0);
+        roundTAliveOnPlant.resize(rounds.size, 0);
+        roundHasDefusal.resize(rounds.size,  false);
+        roundHasRetakeCTSave.resize(rounds.size,  false);
+        roundHasRetakeTSave.resize(rounds.size,  false);
+        roundHasRetakeSave.resize(rounds.size,  false);
+        roundC4Deaths.resize(rounds.size, 0);
+        roundNonC4PostPlantWorldDeaths.resize(rounds.size, 0);
 #pragma omp parallel for
         for (int64_t roundIndex = 0; roundIndex < rounds.size; roundIndex++) {
             bool foundFirstFireInRound = false, foundFirstPlantInRound = false, foundFirstDefusalInRound = false,
                 foundExplosionInRound = false;
+            int64_t firstPlantTick = INVALID_ID;
             int64_t firstExplosionTick = INVALID_ID;
             for (int64_t tickIndex = rounds.ticksPerRound[roundIndex].minId;
                  tickIndex <= rounds.ticksPerRound[roundIndex].maxId; tickIndex++) {
@@ -43,6 +46,7 @@ namespace csknow::key_retake_events {
                             ticks.plantsEndPerTick.intervalToEvent.findOverlapping(tickIndex, tickIndex)) {
                         if (plants.succesful[plantIndex]) {
                             foundFirstPlantInRound = true;
+                            firstPlantTick = tickIndex;
                             break;
                         }
                     }
@@ -94,9 +98,15 @@ namespace csknow::key_retake_events {
                     if (playerAtTick.isAlive[patIndex]) {
                         if (playerAtTick.team[patIndex] == ENGINE_TEAM_CT) {
                             ctAlive = true;
+                            if (firstPlantTick == tickIndex) {
+                                roundCTAliveOnPlant[roundIndex]++;
+                            }
                         }
                         else if (playerAtTick.team[patIndex] == ENGINE_TEAM_T) {
                             tAlive = true;
+                            if (firstPlantTick == tickIndex) {
+                                roundTAliveOnPlant[roundIndex]++;
+                            }
                         }
                     }
                 }
@@ -146,6 +156,7 @@ namespace csknow::key_retake_events {
         pctRetakeCTSaveRounds = static_cast<double>(numRetakeCTSaveRounds) / static_cast<double>(numRetakeRounds);
         pctRetakeTSaveRounds = static_cast<double>(numRetakeTSaveRounds) / static_cast<double>(numRetakeRounds);
 
+        /*
         std::cout << "num retake rounds: " << numRetakeRounds
             << ", num retake non-save rounds: " << numRetakeNonSaveRounds
             << ", pct retake non-save rounds: " << pctRetakeNonSaveRounds
@@ -156,6 +167,14 @@ namespace csknow::key_retake_events {
             << ", num C4 deaths: " << numC4Deaths
             << ", num non-c4 post plant world deaths: " << numNonC4PostPlantWorldDeaths
             << std::endl;
+
+        std::cout << "round id, num CT alive on plant, num T alive on plant" << std::endl;
+        for (int64_t roundIndex = 0; roundIndex < rounds.size; roundIndex++) {
+            if (roundHasPlant[roundIndex]) {
+                std::cout << roundIndex << "," << roundCTAliveOnPlant[roundIndex] << "," << roundTAliveOnPlant[roundIndex] << std::endl;
+            }
+        }
+         */
     }
 
 }

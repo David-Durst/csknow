@@ -25,6 +25,8 @@ namespace csknow::key_retake_events {
         vector<bool> tAliveAfterDefusal;
         // per round data
         vector<bool> roundHasPlant;
+        vector<int> roundCTAliveOnPlant;
+        vector<int> roundTAliveOnPlant;
         vector<bool> roundHasDefusal;
         vector<bool> roundHasRetakeCTSave;
         vector<bool> roundHasRetakeTSave;

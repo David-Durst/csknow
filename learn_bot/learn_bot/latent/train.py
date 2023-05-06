@@ -300,7 +300,12 @@ latent_team_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / 'analy
 
 def run_team_analysis():
     team_data_df = load_hdf5_to_pd(latent_team_hdf5_data_path)
-    team_data_df = team_data_df[(team_data_df['valid'] == 1.) & (team_data_df['c4 status'] < 2)]
+    #print(f'''num retake save ticks {len(team_data_df[(team_data_df['valid'] == 1.) & (team_data_df['c4 status'] < 2) &
+    #                                                  (team_data_df['retake save round tick'] == 1)])}''')
+    #print(f'''num retake non-save ticks {len(team_data_df[(team_data_df['valid'] == 1.) & (team_data_df['c4 status'] < 2) &
+    #                                                  (team_data_df['retake save round tick'] == 0)])}''')
+    team_data_df = team_data_df[(team_data_df['valid'] == 1.) & (team_data_df['c4 status'] < 2) &
+                                (team_data_df['retake save round tick'] == 0)]
     train_result = train(TrainType.Order, team_data_df, num_epochs=3, windowed=False)
     train_result = train(TrainType.Place, team_data_df, num_epochs=3, windowed=False)
     train_result = train(TrainType.Area, team_data_df, num_epochs=3, windowed=False)

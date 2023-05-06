@@ -40,7 +40,7 @@ namespace csknow::feature_store {
         vector<int64_t> roundId;
         vector<int64_t> tickId;
         vector<bool> valid;
-        vector<bool> roundHasRetakeSave;
+        vector<bool> retakeSaveRoundTick;
 
         vector<C4Status> c4Status;
         vector<int64_t> c4TicksSincePlant;
