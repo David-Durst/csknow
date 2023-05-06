@@ -179,7 +179,7 @@ int main(int argc, char * argv[]) {
     }}
     std::cout << std::endl;
 
-    csknow::key_retake_events::KeyRetakeEvents(filteredRounds, ticks, playerAtTick, plants, defusals, kills);
+    csknow::key_retake_events::KeyRetakeEvents keyRetakeEvents(filteredRounds, ticks, playerAtTick, plants, defusals, kills);
 
     /*
     std::cout << "closest distance " << d2DistanceToPlacesResult.getClosestDistance(1742, "ExtendedA", map_navs.at("de_dust2")) << std::endl;
@@ -265,7 +265,8 @@ int main(int argc, char * argv[]) {
     std::cout << "processing behavior tree team feature store" << std::endl;
     behaviorTreeLatentEvents.featureStoreResult.teamFeatureStoreResult.computeAcausalLabels(games, filteredRounds, ticks,
                                                                                             players, d2DistanceToPlacesResult,
-                                                                                            map_navs.at("de_dust2"));
+                                                                                            map_navs.at("de_dust2"),
+                                                                                            keyRetakeEvents);
     std::cout << "size: " << behaviorTreeLatentEvents.featureStoreResult.teamFeatureStoreResult.size << std::endl;
 
     /*

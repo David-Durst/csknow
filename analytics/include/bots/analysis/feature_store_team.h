@@ -13,6 +13,7 @@
 #include "bots/analysis/feature_store_precommit.h"
 #include "queries/orders.h"
 #include "circular_buffer.h"
+#include "queries/moments/key_retake_events.h"
 
 namespace csknow::feature_store {
     constexpr double invalidWorldPosDim = 8000.;
@@ -39,6 +40,7 @@ namespace csknow::feature_store {
         vector<int64_t> roundId;
         vector<int64_t> tickId;
         vector<bool> valid;
+        vector<bool> roundHasRetakeSave;
 
         vector<C4Status> c4Status;
         vector<int64_t> c4TicksSincePlant;
@@ -102,7 +104,8 @@ namespace csknow::feature_store {
                                            double futureSecondsTheshold);
         void computeAcausalLabels(const Games & games, const Rounds & rounds, const Ticks & ticks,
                                   const Players & players, const DistanceToPlacesResult & distanceToPlacesResult,
-                                  const nav_mesh::nav_file & navFile);
+                                  const nav_mesh::nav_file & navFile,
+                                  const csknow::key_retake_events::KeyRetakeEvents & keyRetakeEvents);
         void toHDF5Inner(HighFive::File & file) override;
         /*
         void checkPossiblyBadValue() {

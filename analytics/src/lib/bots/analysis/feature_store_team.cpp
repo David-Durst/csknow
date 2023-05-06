@@ -14,6 +14,7 @@ namespace csknow::feature_store {
         roundId.resize(size, INVALID_ID);
         tickId.resize(size, INVALID_ID);
         valid.resize(size, false);
+        roundHasRetakeSave.resize(size, false);
         c4Status.resize(size, C4Status::NotPlanted);
         c4TicksSincePlant.resize(size, INVALID_ID);
         c4Pos.resize(size, invalidWorldPos);
@@ -114,6 +115,7 @@ namespace csknow::feature_store {
             roundId[rowIndex] = INVALID_ID;
             tickId[rowIndex] = INVALID_ID;
             valid[rowIndex] = false;
+            roundHasRetakeSave[rowIndex] = false;
             c4Status[rowIndex] = C4Status::NotPlanted;
             c4TicksSincePlant[rowIndex] = INVALID_ID;
             c4Pos[rowIndex] = invalidWorldPos;
@@ -590,7 +592,8 @@ namespace csknow::feature_store {
                                                       const Ticks & ticks,
                                                       const Players & players,
                                                       const DistanceToPlacesResult & distanceToPlacesResult,
-                                                      const nav_mesh::nav_file & navFile) {
+                                                      const nav_mesh::nav_file & navFile,
+                                                      const csknow::key_retake_events::KeyRetakeEvents & keyRetakeEvents) {
         std::atomic<int64_t> roundsProcessed = 0;
         /*
         for (size_t i = 0; i < columnTData[4].distributionNearestAOrders15s[0].size(); i++) {
@@ -607,6 +610,7 @@ namespace csknow::feature_store {
             //, ticks15sFutureTracker(15), ticks30sFutureTracker(30);
             for (int64_t tickIndex = rounds.ticksPerRound[roundIndex].maxId;
                  tickIndex >= rounds.ticksPerRound[roundIndex].minId; tickIndex--) {
+                roundHasRetakeSave[tickIndex] = keyRetakeEvents.roundHasRetakeSave[tickIndex];
                 // add a new tick every second
                 if (ticks1sFutureTracker.isEmpty() ||
                     secondsBetweenTicks(ticks, tickRates, tickIndex, ticks1sFutureTracker.fromNewest()) >= 0.25) {
@@ -673,6 +677,7 @@ namespace csknow::feature_store {
         file.createDataSet("/data/round id", roundId, hdf5FlatCreateProps);
         file.createDataSet("/data/tick id", tickId, hdf5FlatCreateProps);
         file.createDataSet("/data/valid", valid, hdf5FlatCreateProps);
+        file.createDataSet("/data/round has retake save", roundHasRetakeSave, hdf5FlatCreateProps);
         file.createDataSet("/data/c4 status", vectorOfEnumsToVectorOfInts(c4Status), hdf5FlatCreateProps);
         file.createDataSet("/data/c4 ticks since plant", c4TicksSincePlant, hdf5FlatCreateProps);
         saveVec3VectorToHDF5(c4Pos, file, "c4 pos", hdf5FlatCreateProps);
