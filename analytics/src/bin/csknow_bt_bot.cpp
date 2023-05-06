@@ -3,6 +3,7 @@
 #include "navmesh/nav_file.h"
 #include "bots/analysis/learned_models.h"
 #include "bots/testing/command.h"
+#include "bots/testing/scripts/test_setup.h"
 #include <iostream>
 #include <thread>
 #include <chrono>
@@ -47,7 +48,8 @@ int main(int argc, char * argv[]) {
     size_t numDups = 0;
     auto priorStart = std::chrono::system_clock::now();
     double savedTickInterval = 0.1;
-    bool firstFrame = true;
+    SetupCommands setupCommands(botStop, 100);
+    bool finishedSetup = false;
 #pragma clang diagnostic push
 #pragma ide diagnostic ignored "EndlessLoop"
     while (true) {
@@ -61,12 +63,8 @@ int main(int argc, char * argv[]) {
 
         if (state.loadedSuccessfully) {
             tree.tick(state, mapsPath);
-            if (firstFrame) {
-                SetBotStop setBotStop(*tree.blackboard, botStop);
-                setBotStop.exec(state, tree.defaultThinker);
-                SetMaxRounds setMaxRounds(*tree.blackboard, 100, false);
-                setMaxRounds.exec(state, tree.defaultThinker);
-                firstFrame = false;
+            if (!finishedSetup) {
+                finishedSetup = setupCommands.tick(state, *tree.blackboard);
             }
             state.saveBotInputs();
         }

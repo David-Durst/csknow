@@ -16,6 +16,7 @@
 #include "queries/moments/plant_states.h"
 #include "bots/analysis/learned_models.h"
 #include "navmesh/nav_file.h"
+#include "bots/testing/scripts/test_setup.h"
 #include <iostream>
 #include <thread>
 #include <chrono>
@@ -411,6 +412,8 @@ int main(int argc, char * argv[]) {
     CSGOFileTime priorFileTime;
     [[maybe_unused]] double priorGameTime = 0;
     [[maybe_unused]] double priorStatTime = 0;
+    SetupCommands setupCommands(botStop, 100);
+    bool finishedSetup = false;
 #pragma clang diagnostic push
 #pragma ide diagnostic ignored "EndlessLoop"
     while (!finishedTests) {
@@ -426,7 +429,10 @@ int main(int argc, char * argv[]) {
 
         if (state.loadedSuccessfully) {
             tree.tick(state, mapsPath);
-            if (state.clients.size() > 0) {
+            if (!finishedSetup) {
+                finishedSetup = setupCommands.tick(state, *tree.blackboard);
+            }
+            else if (state.clients.size() > 0) {
                 //std::cout << "time since last save " << state.getSecondsBetweenTimes(start, priorStart) << std::endl;
                 if (runTest) {
                     scriptsRunner.initialize(tree, state);
@@ -439,13 +445,6 @@ int main(int argc, char * argv[]) {
                 else {
                     roundScriptsRunner.initialize(tree, state);
                     finishedTests = roundScriptsRunner.tick(tree, state);
-                }
-                if (firstFrame) {
-                    SetBotStop setBotStop(*tree.blackboard, botStop);
-                    setBotStop.exec(state, tree.defaultThinker);
-                    SetMaxRounds setMaxRounds(*tree.blackboard, 100, false);
-                    setMaxRounds.exec(state, tree.defaultThinker);
-                    firstFrame = false;
                 }
             }
             state.saveBotInputs();
