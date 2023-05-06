@@ -41,6 +41,7 @@
 #include "queries/training_moments/training_engagement_aim.h"
 #include "queries/inference_moments/inference_engagement_aim.h"
 #include "queries/training_moments/training_navigation.h"
+#include "queries/moments/key_retake_events.h"
 #define CPPHTTPLIB_OPENSSL_SUPPORT
 #include "httplib.h"
 #include <cerrno>
@@ -177,6 +178,9 @@ int main(int argc, char * argv[]) {
         std::cout << "(" << i << "," << d2DistanceToPlacesResult.places[i] << "); ";
     }}
     std::cout << std::endl;
+
+    csknow::key_retake_events::KeyRetakeEvents(filteredRounds, ticks, playerAtTick, plants, defusals, kills);
+
     /*
     std::cout << "closest distance " << d2DistanceToPlacesResult.getClosestDistance(1742, "ExtendedA", map_navs.at("de_dust2")) << std::endl;
     std::cout << "short area ids: ";
