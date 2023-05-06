@@ -523,8 +523,8 @@ namespace csknow::feature_store {
                     }
                 }
                  */
-                for (const PlaceIndex badCurPlace : {17/*11, 13, 17, 24*/}) {
-                    for (const PlaceIndex badNextPlace : {11, 1, 2/*7, 12*/})
+                for (const PlaceIndex badCurPlace : {18, 3, 5, 20, 25/*17*//*11, 13, 17, 24*/}) {
+                    for (const PlaceIndex badNextPlace : {11, 0/*11, 1, 2*//*7, 12*/})
                     if (curPlace == badCurPlace && columnData[playerColumn].distributionNearestPlace[badNextPlace][curTick] > 0) {
                         std::cout << "bad tick reached " << badCurPlace << " to " << badNextPlace << " in under 2 seconds " << curTick << std::endl;
                         for (int64_t futureTickIndex = 0; futureTickIndex < futureTracker.getCurSize(); futureTickIndex++) {
