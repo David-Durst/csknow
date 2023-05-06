@@ -440,6 +440,13 @@ int main(int argc, char * argv[]) {
                     roundScriptsRunner.initialize(tree, state);
                     finishedTests = roundScriptsRunner.tick(tree, state);
                 }
+                if (firstFrame) {
+                    SetBotStop setBotStop(*tree.blackboard, botStop);
+                    setBotStop.exec(state, tree.defaultThinker);
+                    SetMaxRounds setMaxRounds(*tree.blackboard, 100, false);
+                    setMaxRounds.exec(state, tree.defaultThinker);
+                    firstFrame = false;
+                }
             }
             state.saveBotInputs();
         }
