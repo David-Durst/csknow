@@ -436,10 +436,13 @@ namespace csknow::feature_store {
         }
     }
 
-    void TeamFeatureStoreResult::computePlaceACausalLabels(const Ticks & ticks, const TickRates & tickRates,
-                                                           int64_t curTick, CircularBuffer<int64_t> &futureTracker,
+    void TeamFeatureStoreResult::computePlaceACausalLabels(const Games & games, const Ticks & ticks, const TickRates & tickRates,
+                                                           int64_t curGame, int64_t curTick, CircularBuffer<int64_t> &futureTracker,
                                                            array<ColumnPlayerData, maxEnemies> &columnData,
-                                                           double futureSecondsThreshold) {
+                                                           double futureSecondsThreshold,
+                                                           const Players & players,
+                                                           const DistanceToPlacesResult & distanceToPlacesResult,
+                                                           const nav_mesh::nav_file & navFile) {
         for (size_t playerColumn = 0; playerColumn < maxEnemies; playerColumn++) {
             if (columnData[playerColumn].playerId[curTick] == INVALID_ID) {
                 continue;
@@ -487,8 +490,41 @@ namespace csknow::feature_store {
                     std::cout << "bad tick not one cur place " << curTick << std::endl;
                     std::raise(SIGINT);
                 }
-                for (const PlaceIndex badCurPlace : {11, 13, 17, 24}) {
-                    for (const PlaceIndex badNextPlace : {7, 12})
+                (void) games;
+                (void) curGame;
+                (void) players;
+                (void) distanceToPlacesResult;
+                (void) navFile;
+                /*
+                int64_t curPlayerId = columnData[playerColumn].playerId[curTick];
+                for (size_t nextPlaceIndex = 0; nextPlaceIndex < num_places; nextPlaceIndex++) {
+                    if (columnData[playerColumn].distributionNearestPlace[nextPlaceIndex][curTick] > 0) {
+                        double distanceBetweenCurAndNextPlace =
+                                distanceToPlacesResult.getClosestDistance(distanceToPlacesResult.places[curPlace], distanceToPlacesResult.places[nextPlaceIndex], navFile);
+                        if (secondsAwayAtMaxSpeed(distanceBetweenCurAndNextPlace) > 10.) {
+                            std::cout << games.demoFile[curGame] << " bad tick reached (" << curPlace << ","
+                                << distanceToPlacesResult.places[curPlace] << ") to (" << nextPlaceIndex << ","
+                                << distanceToPlacesResult.places[nextPlaceIndex] << ") in under 2 seconds "
+                                << " for player (" << curPlayerId << "," << players.name[curPlayerId + players.idOffset] << ") on tick id "
+                                << curTick << " and game tick " << ticks.gameTickNumber[curTick] << " distance " << distanceBetweenCurAndNextPlace << std::endl;
+                            for (int64_t futureTickIndex = 0; futureTickIndex < futureTracker.getCurSize(); futureTickIndex++) {
+                                int64_t futureTick = futureTracker.fromOldest(futureTickIndex);
+                                bool inWindow = secondsBetweenTicks(ticks, tickRates, curTick, futureTick) >=
+                                                futureSecondsThreshold;
+                                if (futureTick != curTick &&
+                                    columnData[playerColumn].playerId[curTick] ==
+                                    columnData[playerColumn].playerId[futureTick] &&
+                                    inWindow && columnData[playerColumn].curPlace[nextPlaceIndex][futureTick]) {
+                                    std::cout << "future tick " << futureTick << " and game tick " << ticks.gameTickNumber[futureTick] << std::endl;
+                                }
+                            }
+                            std::raise(SIGINT);
+                        }
+                    }
+                }
+                 */
+                for (const PlaceIndex badCurPlace : {17/*11, 13, 17, 24*/}) {
+                    for (const PlaceIndex badNextPlace : {11, 1, 2/*7, 12*/})
                     if (curPlace == badCurPlace && columnData[playerColumn].distributionNearestPlace[badNextPlace][curTick] > 0) {
                         std::cout << "bad tick reached " << badCurPlace << " to " << badNextPlace << " in under 2 seconds " << curTick << std::endl;
                         for (int64_t futureTickIndex = 0; futureTickIndex < futureTracker.getCurSize(); futureTickIndex++) {
@@ -551,7 +587,10 @@ namespace csknow::feature_store {
     }
 
     void TeamFeatureStoreResult::computeAcausalLabels(const Games & games, const Rounds & rounds,
-                                                      const Ticks & ticks) {
+                                                      const Ticks & ticks,
+                                                      const Players & players,
+                                                      const DistanceToPlacesResult & distanceToPlacesResult,
+                                                      const nav_mesh::nav_file & navFile) {
         std::atomic<int64_t> roundsProcessed = 0;
         /*
         for (size_t i = 0; i < columnTData[4].distributionNearestAOrders15s[0].size(); i++) {
@@ -562,6 +601,7 @@ namespace csknow::feature_store {
          */
 //#pragma omp parallel for
         for (int64_t roundIndex = 0; roundIndex < rounds.size; roundIndex++) {
+            int64_t gameIndex = rounds.gameId[roundIndex];
             TickRates tickRates = computeTickRates(games, rounds, roundIndex);
             CircularBuffer<int64_t> ticks1sFutureTracker(4), ticks2sFutureTracker(4), ticks6sFutureTracker(6);
             //, ticks15sFutureTracker(15), ticks30sFutureTracker(30);
@@ -600,8 +640,10 @@ namespace csknow::feature_store {
                 computeOrderACausalLabels(tickIndex, ticks6sFutureTracker, columnTData, ACausalTimingOption::s6);
                 //computeOrderACausalLabels(tickIndex, ticks15sFutureTracker, columnTData, ACausalTimingOption::s15);
                 //computeOrderACausalLabels(tickIndex, ticks30sFutureTracker, columnTData, ACausalTimingOption::s30);
-                computePlaceACausalLabels(ticks, tickRates, tickIndex, ticks2sFutureTracker, columnCTData, 0.1);
-                computePlaceACausalLabels(ticks, tickRates, tickIndex, ticks2sFutureTracker, columnTData, 0.1);
+                computePlaceACausalLabels(games, ticks, tickRates, gameIndex, tickIndex, ticks2sFutureTracker, columnCTData, 0.1,
+                                          players, distanceToPlacesResult, navFile);
+                computePlaceACausalLabels(games, ticks, tickRates, gameIndex, tickIndex, ticks2sFutureTracker, columnTData, 0.1,
+                                          players, distanceToPlacesResult, navFile);
                 computeAreaACausalLabels(ticks, tickRates, tickIndex, ticks1sFutureTracker, columnCTData, 0.1);
                 computeAreaACausalLabels(ticks, tickRates, tickIndex, ticks1sFutureTracker, columnTData, 0.1);
                 //computePlaceAreaACausalLabels(ticks, tickRates, tickIndex, ticks15sFutureTracker, columnCTData);

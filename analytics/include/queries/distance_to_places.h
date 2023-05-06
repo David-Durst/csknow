@@ -106,10 +106,10 @@ public:
     }
 
     [[nodiscard]]
-    double getClosestDistance(string srcPlaceName, PlaceIndex dstPlace) const {
+    double getClosestDistance(string srcPlaceName, string dstPlaceName, const nav_mesh::nav_file & navFile) const {
         double minDistance = std::numeric_limits<double>::max();
         for (const auto & srcAreaId : placeToArea.at(srcPlaceName)) {
-            minDistance = std::min(minDistance, getClosestDistance(srcAreaId, dstPlace));
+            minDistance = std::min(minDistance, getClosestDistance(srcAreaId, dstPlaceName, navFile));
         }
         return minDistance;
     }

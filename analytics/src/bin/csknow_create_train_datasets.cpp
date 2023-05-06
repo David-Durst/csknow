@@ -178,6 +178,15 @@ int main(int argc, char * argv[]) {
     }}
     std::cout << std::endl;
     /*
+    std::cout << "closest distance " << d2DistanceToPlacesResult.getClosestDistance(1742, "ExtendedA", map_navs.at("de_dust2")) << std::endl;
+    std::cout << "short area ids: ";
+    for (const auto & shortAreaId : d2DistanceToPlacesResult.placeToArea["Short"]) {
+        std::cout << shortAreaId << ", ";
+    }
+    std::cout << std::endl;
+    std::cout << "closest distance " << d2DistanceToPlacesResult.getClosestDistance("Short", "ExtendedA", map_navs.at("de_dust2")) << std::endl;
+    std::cout << "distance " << d2ReachableResult.getDistance(1742, 1728, map_navs.at("de_dust2"));
+    exit(0);
     for (const auto & tickIndex : {1476979, 1477226, 1477162, 1477098, 1477034}) {
         int64_t roundIndex = ticks.roundId[tickIndex];
         int64_t gameIndex = filteredRounds.gameId[roundIndex];
@@ -250,7 +259,9 @@ int main(int argc, char * argv[]) {
     std::cout << "size: " << behaviorTreeLatentEvents.featureStoreResult.size << std::endl;
 
     std::cout << "processing behavior tree team feature store" << std::endl;
-    behaviorTreeLatentEvents.featureStoreResult.teamFeatureStoreResult.computeAcausalLabels(games, filteredRounds, ticks);
+    behaviorTreeLatentEvents.featureStoreResult.teamFeatureStoreResult.computeAcausalLabels(games, filteredRounds, ticks,
+                                                                                            players, d2DistanceToPlacesResult,
+                                                                                            map_navs.at("de_dust2"));
     std::cout << "size: " << behaviorTreeLatentEvents.featureStoreResult.teamFeatureStoreResult.size << std::endl;
 
     /*

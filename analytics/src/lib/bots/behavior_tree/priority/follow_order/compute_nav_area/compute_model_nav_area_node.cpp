@@ -168,7 +168,6 @@ namespace follow::compute_nav_area {
                 probabilities[i] *= 1/reweightFactor;
                 probSum += probabilities[i];
             }
-            /*
             double probSample = blackboard.aggressionDis(blackboard.gen);
             double weightSoFar = 0.;
             for (size_t i = 0; i < probabilities.size(); i++) {
@@ -178,7 +177,7 @@ namespace follow::compute_nav_area {
                     break;
                 }
             }
-             */
+            /*
             size_t maxProbIndex = 0;
             double maxProb = -1.;
             for (size_t i = 0; i < probabilities.size(); i++) {
@@ -188,6 +187,7 @@ namespace follow::compute_nav_area {
                 }
             }
             placeOption = validPlacesOrderedProbs[maxProbIndex];
+             */
         }
         /*
         if (csgoId == 3) {
@@ -252,7 +252,6 @@ namespace follow::compute_nav_area {
             probabilities[i] *= 1/reweightFactor;
         }
         size_t areaGridOption = 0;
-        /*
         double probSample = blackboard.aggressionDis(blackboard.gen);
         double weightSoFar = 0.;
         for (size_t i = 0; i < probabilities.size(); i++) {
@@ -262,7 +261,7 @@ namespace follow::compute_nav_area {
                 break;
             }
         }
-         */
+        /*
         size_t maxProbIndex = 0;
         double maxProb = -1.;
         for (size_t i = 0; i < probabilities.size(); i++) {
@@ -271,6 +270,7 @@ namespace follow::compute_nav_area {
                 maxProb = probabilities[i];
             }
         }
+         */
 
         // compute map grid to pos, and then pos to area
         // ok to pick bad area, as computePath in path node will pick a valid alternative (tree computes alternatives)

@@ -89,16 +89,20 @@ namespace csknow::feature_store {
         };
         void computeOrderACausalLabels(int64_t curTick, CircularBuffer<int64_t> & futureTracker,
                                        array<ColumnPlayerData, maxEnemies> & columnData, ACausalTimingOption timingOption);
-        void computePlaceACausalLabels(const Ticks & ticks, const TickRates & tickRates, int64_t curTick,
-                                           CircularBuffer<int64_t> & futureTracker,
-                                           array<ColumnPlayerData,maxEnemies> & columnData,
-                                           double futureSecondsTheshold);
+        void computePlaceACausalLabels(const Games & games, const Ticks & ticks, const TickRates & tickRates,
+                                       int64_t curGame, int64_t curTick,
+                                       CircularBuffer<int64_t> & futureTracker,
+                                       array<ColumnPlayerData,maxEnemies> & columnData,
+                                       double futureSecondsTheshold, const Players & players,
+                                       const DistanceToPlacesResult & distanceToPlacesResult,
+                                       const nav_mesh::nav_file & navFile);
         void computeAreaACausalLabels(const Ticks & ticks, const TickRates & tickRates, int64_t curTick,
                                            CircularBuffer<int64_t> & futureTracker,
                                            array<ColumnPlayerData,maxEnemies> & columnData,
                                            double futureSecondsTheshold);
-        void computeAcausalLabels(const Games & games, const Rounds & rounds,
-                                  const Ticks & ticks);
+        void computeAcausalLabels(const Games & games, const Rounds & rounds, const Ticks & ticks,
+                                  const Players & players, const DistanceToPlacesResult & distanceToPlacesResult,
+                                  const nav_mesh::nav_file & navFile);
         void toHDF5Inner(HighFive::File & file) override;
         /*
         void checkPossiblyBadValue() {
