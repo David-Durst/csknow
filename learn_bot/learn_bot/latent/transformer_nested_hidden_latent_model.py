@@ -44,8 +44,8 @@ class TransformerNestedHiddenLatentModel(nn.Module):
             nn.Linear(self.internal_width, self.internal_width),
         )
 
-        transformer_encoder_layer = nn.TransformerEncoderLayer(d_model=self.internal_width, nhead=8, batch_first=True)
-        self.transformer_model = nn.TransformerEncoder(transformer_encoder_layer, num_layers=4)
+        transformer_encoder_layer = nn.TransformerEncoderLayer(d_model=self.internal_width, nhead=4, batch_first=True)
+        self.transformer_model = nn.TransformerEncoder(transformer_encoder_layer, num_layers=2)
 
         self.decoder = nn.Sequential(
             nn.Linear(self.internal_width, inner_latent_size),
