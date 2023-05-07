@@ -31,7 +31,8 @@ namespace csknow::compute_nav_area {
         string reallyCurPlace = blackboard.navFile.get_place(curArea.m_place);
         std::cout << "really cur place: "  << reallyCurPlace << std::endl;
          */
-        bool useAnyPlace = true;
+        bool useAnyPlace = false;
+        bool limitClosePlaces = false;
 
         PlaceIndex curPlace = 0;
         double minPlaceDistance = std::numeric_limits<double>::max();
@@ -44,6 +45,10 @@ namespace csknow::compute_nav_area {
             }
         }
 
+        size_t c4AreaIndex = blackboard.navFile.m_area_ids_to_indices.at(blackboard.navFile
+                .get_nearest_area_by_position(vec3Conv(state.getC4Pos())).get_id());
+        double timeAllowedAway = 10.; //std::max(15., 40. - state.ticksSinceLastPlant);
+
         string curPlaceName = blackboard.distanceToPlaces.places[curPlace];
         set<PlaceIndex> validPlaces;
         vector<PlaceIndex> validPlacesVectorOrderedOrder;
@@ -54,14 +59,22 @@ namespace csknow::compute_nav_area {
         PlaceIndex lastPlaceIndex = blackboard.distanceToPlaces.placeNameToIndex.at(curOrder.waypoints.back().placeName);
         modelNavData.orderPlaceOptions.clear();
         modelNavData.orderPlaceProbs.clear();
+        set<PlaceIndex> ignorePlacesOnOrders = {2, 7, 8, 15, 25};
         if (useAnyPlace) {
             for (size_t placeIndex = 0; placeIndex < blackboard.distanceToPlaces.places.size(); placeIndex++) {
+                bool tooFarAway = secondsAwayAtMaxSpeed(
+                        blackboard.distanceToPlaces.getClosestDistance(c4AreaIndex, placeIndex)) > timeAllowedAway;
+                //std::cout << "(" << blackboard.distanceToPlaces.places[placeIndex] << "," << blackboard.distanceToPlaces.getClosestDistance(c4AreaIndex, placeIndex) << "; ";
+                if (limitClosePlaces && tooFarAway) {
+                    continue;
+                }
                 validPlaces.insert(placeIndex);
                 validPlacesVectorOrderedOrder.push_back(placeIndex);
                 modelNavData.orderPlaceOptions.push_back(blackboard.distanceToPlaces.places[placeIndex]);
                 modelNavData.orderPlaceProbs.push_back(placeProbabilities.placeProbabilities[placeIndex]);
                 placeIndexToWaypointIndex[placeIndex] = 0;
             }
+            std::cout << std::endl;
         }
         else {
             for (size_t i = 0; i < curOrder.waypoints.size(); i++) {
@@ -73,7 +86,7 @@ namespace csknow::compute_nav_area {
                     hitCurPlace = true;
                 }
                  */
-                if (true /*|| (curClient.team == ENGINE_TEAM_CT && hitCurPlace) ||
+                if (ignorePlacesOnOrders.find(placeIndex) == ignorePlacesOnOrders.end()/*true || (curClient.team == ENGINE_TEAM_CT && hitCurPlace) ||
                     (curClient.team == ENGINE_TEAM_T &&
                      blackboard.placesVisibleFromDestination.find(placeIndex) != blackboard.placesVisibleFromDestination.end())*/) {
                     validPlaces.insert(placeIndex);
@@ -223,11 +236,6 @@ namespace csknow::compute_nav_area {
         }
          */
 
-        // if cur place is bombsite and CT defuser, then move to c4
-        if (blackboard.isPlayerDefuser(csgoId) && (curPlaceName == "BombsiteA" || curPlaceName == "BombsiteB")) {
-            placeOption = validPlacesVectorOrderedOrder.back();
-        }
-
         modelNavData.curPlace = curPlaceName;
         modelNavData.nextPlace = blackboard.distanceToPlaces.places[placeOption];
         modelNavData.nextPlaceIndex = placeOption;
@@ -289,6 +297,21 @@ namespace csknow::compute_nav_area {
 
         curPriority.targetAreaId = blackboard.navFile
             .get_nearest_area_by_position_in_place(vec3Conv(areaGridPos), modelNavData.nextPlaceIndex).get_id();
+
+        // if cur place is bombsite and CT defuser, then move to c4
+        if (blackboard.isPlayerDefuser(csgoId)) {
+            bool tAlive = false;
+            for (const auto & client : state.clients) {
+                if (client.isAlive && client.team == ENGINE_TEAM_T) {
+                    tAlive = true;
+                }
+            }
+            if (!tAlive) {
+                curPriority.targetAreaId = blackboard.navFile
+                        .get_nearest_area_by_position(vec3Conv(state.getC4Pos())).get_id();
+            }
+        }
+
         if (blackboard.removedAreas.find(curPriority.targetAreaId) != blackboard.removedAreas.end()) {
             curPriority.targetAreaId = blackboard.removedAreaAlternatives[curPriority.targetAreaId];
         }

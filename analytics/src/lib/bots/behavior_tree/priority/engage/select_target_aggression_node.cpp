@@ -65,8 +65,8 @@ namespace engage {
             }
 
             if (aggressionOption == static_cast<size_t>(csknow::feature_store::NearestEnemyState::Decrease)) {
-                curPriority.moveOptions = {true, false, true};
-                curPriority.targetPos = curPriority.targetPlayer.footPos;
+                curPriority.moveOptions = {true, false, false};
+                //curPriority.targetPos = curPriority.targetPlayer.footPos;
             }
             else if (aggressionOption == static_cast<size_t>(csknow::feature_store::NearestEnemyState::Constant)) {
                 if (curTarget.visible) {
@@ -79,6 +79,7 @@ namespace engage {
             else {
                 // move to nearest area not visible to enemy
                 curPriority.moveOptions = {true, false, false};
+                /*
                 AreaBits targetVisBits =
                     blackboard.getVisibleAreasByPlayer(state.getClient(curPriority.targetPlayer.playerId));
                 const nav_mesh::nav_area & curArea = blackboard.getPlayerNavArea(state.getClient(treeThinker.csgoId));
@@ -95,6 +96,7 @@ namespace engage {
                     }
                 }
                 curPriority.targetPos = blackboard.visPoints.getCellVisPoints()[minAreaIndex].center;
+                 */
             }
         }
 
