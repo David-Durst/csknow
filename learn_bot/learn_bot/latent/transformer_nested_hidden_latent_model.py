@@ -49,6 +49,13 @@ class TransformerNestedHiddenLatentModel(nn.Module):
 
         self.decoder = nn.Sequential(
             nn.Linear(self.internal_width, inner_latent_size),
+        )
+
+        self.logits_output = nn.Sequential(
+            nn.Flatten(1)
+        )
+
+        self.prob_output = nn.Sequential(
             nn.Softmax(dim=2),
             nn.Flatten(1)
         )
@@ -73,7 +80,7 @@ class TransformerNestedHiddenLatentModel(nn.Module):
 
         # https://github.com/pytorch/pytorch/issues/22440 how to parse tuple output
         # hack for now to keep same API, will remove later
-        return latent, latent
+        return self.logits_output(latent), self.prob_output(latent)
 
 
 #class SimplifiedTransformerNestedHiddenLatentModel(nn.Module):

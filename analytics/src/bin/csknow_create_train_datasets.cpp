@@ -251,6 +251,7 @@ int main(int argc, char * argv[]) {
     std::cout << "processing behaviorTreeLatentEvents" << std::endl;
     csknow::behavior_tree_latent_states::BehaviorTreeLatentStates behaviorTreeLatentEvents(ticks, playerAtTick,
                                                                                            ordersResult.orders);
+    behaviorTreeLatentEvents.featureStoreResult.disable = true;
     behaviorTreeLatentEvents.runQuery(navPath + "/de_dust2.nav", map_visPoints.at("de_dust2"), d2MeshResult,
                                       d2ReachableResult, d2DistanceToPlacesResult,
                                       nearestNavCellResult, ordersResult, players, games, filteredRounds, ticks,
@@ -259,7 +260,7 @@ int main(int argc, char * argv[]) {
     //behaviorTreeLatentEvents.featureStoreResult.teamFeatureStoreResult.checkPossiblyBadValue();
 
     std::cout << "processing behavior tree feature store" << std::endl;
-    behaviorTreeLatentEvents.featureStoreResult.computeAcausalLabels(games, filteredRounds, ticks, playerAtTick);
+    //behaviorTreeLatentEvents.featureStoreResult.computeAcausalLabels(games, filteredRounds, ticks, playerAtTick);
     std::cout << "size: " << behaviorTreeLatentEvents.featureStoreResult.size << std::endl;
 
     std::cout << "processing behavior tree team feature store" << std::endl;

@@ -31,6 +31,7 @@ namespace csknow::feature_store {
         void init(size_t size);
 
     public:
+        bool disable = false;
         vector<int64_t> roundId;
         vector<int64_t> tickId;
         vector<int64_t> playerId;

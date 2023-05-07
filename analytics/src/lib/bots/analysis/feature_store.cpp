@@ -12,6 +12,9 @@
 
 namespace csknow::feature_store {
     void FeatureStoreResult::init(size_t size) {
+        if (disable) {
+            return;
+        }
         roundId.resize(size, INVALID_ID);
         tickId.resize(size, INVALID_ID);
         playerId.resize(size, INVALID_ID);
@@ -70,6 +73,9 @@ namespace csknow::feature_store {
     }
     
     void FeatureStoreResult::reinit() {
+        if (disable) {
+            return;
+        }
         for (int64_t rowIndex = 0; rowIndex < size; rowIndex++) {
             roundId[rowIndex] = INVALID_ID;
             tickId[rowIndex] = INVALID_ID;
@@ -118,6 +124,9 @@ namespace csknow::feature_store {
 
     void FeatureStoreResult::commitPlayerRow(FeatureStorePreCommitBuffer & buffer, size_t rowIndex,
                                              int64_t roundIndex, int64_t tickIndex, int64_t playerIndex) {
+        if (disable) {
+            return;
+        }
         roundId[rowIndex] = roundIndex;
         tickId[rowIndex] = tickIndex;
         playerId[rowIndex] = playerIndex;

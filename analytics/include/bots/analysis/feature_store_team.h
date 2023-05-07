@@ -23,6 +23,7 @@ namespace csknow::feature_store {
     constexpr int num_places = 26;
     constexpr int area_grid_dim = 5;
     constexpr int area_grid_size = area_grid_dim*area_grid_dim;
+    constexpr int every_nth_row = 10;
     const string a_site = "BombsiteA", b_site = "BombsiteB";
 
     enum class C4Status {

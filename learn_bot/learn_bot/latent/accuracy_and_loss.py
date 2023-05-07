@@ -63,7 +63,12 @@ def compute_loss(x, pred, y_transformed, y_untransformed, column_transformers: I
 
     if column_transformers.output_types.categorical_distribution_cols:
         col_ranges = column_transformers.get_name_ranges(False, True, frozenset({ColumnTransformerType.CATEGORICAL_DISTRIBUTION}))
-        losses.cat_loss += latent_to_prob(pred_transformed, y_transformed, col_ranges)
+        # remove negatives where player isn't alive
+        for i, col_range in enumerate(col_ranges):
+            valid_y_transformed = y_transformed[y_transformed[:, col_range[0]] >= 0.][:, col_range]
+            valid_pred_transformed = pred_transformed[y_transformed[:, col_range[0]] >= 0.][:, col_range]
+            losses.cat_loss += base_classification_loss_fn(valid_pred_transformed, valid_y_transformed)
+        #losses.cat_loss += latent_to_prob(pred_transformed, y_transformed, col_ranges)
     return losses
 
 
