@@ -40,6 +40,7 @@ namespace csknow::inference_manager {
                 curClients.insert(client.csgoId);
                 if (playerToInferenceData.find(client.csgoId) == playerToInferenceData.end()) {
                     playerToInferenceData[client.csgoId] = {};
+                    playerToInferenceData[client.csgoId].team = client.team;
                     playerToInferenceData[client.csgoId].validData = false;
                     playerToInferenceData[client.csgoId].ticksSinceLastInference = max_track_ticks;
                 }
@@ -136,9 +137,9 @@ namespace csknow::inference_manager {
 
         at::Tensor output = orderModule.forward(inputs).toTuple()->elements()[1].toTensor();
 
-        for (auto & [csgoId, _] : playerToInferenceData) {
+        for (auto & [csgoId, inferenceData] : playerToInferenceData) {
             playerToInferenceData[csgoId].orderProbabilities =
-                extractFeatureStoreOrderResults(output, orderValues, csgoId);
+                extractFeatureStoreOrderResults(output, orderValues, csgoId, inferenceData.team);
         }
     }
 
@@ -152,9 +153,9 @@ namespace csknow::inference_manager {
 
         at::Tensor output = placeModule.forward(inputs).toTuple()->elements()[1].toTensor();
 
-        for (auto & [csgoId, _] : playerToInferenceData) {
+        for (auto & [csgoId, inferenceData] : playerToInferenceData) {
             playerToInferenceData[csgoId].placeProbabilities =
-                    extractFeatureStorePlaceResults(output, placeValues, csgoId);
+                    extractFeatureStorePlaceResults(output, placeValues, csgoId, inferenceData.team);
         }
     }
 
@@ -168,9 +169,9 @@ namespace csknow::inference_manager {
 
         at::Tensor output = areaModule.forward(inputs).toTuple()->elements()[1].toTensor();
 
-        for (auto & [csgoId, _] : playerToInferenceData) {
+        for (auto & [csgoId, inferenceData] : playerToInferenceData) {
             playerToInferenceData[csgoId].areaProbabilities =
-                    extractFeatureStoreAreaResults(output, areaValues, csgoId);
+                    extractFeatureStoreAreaResults(output, areaValues, csgoId, inferenceData.team);
         }
     }
 

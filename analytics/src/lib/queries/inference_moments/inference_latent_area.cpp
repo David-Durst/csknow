@@ -100,9 +100,10 @@ namespace csknow::inference_latent_area {
                 for (int64_t patIndex = ticks.patPerTick[tickIndex].minId;
                      patIndex <= ticks.patPerTick[tickIndex].maxId; patIndex++) {
                     int64_t curPlayerId = playerAtTick.playerId[patIndex];
+                    TeamId curPlayerTeam = playerAtTick.team[patIndex];
                     InferenceAreaPlayerAtTickProbabilities probabilities{};
                     if (playerAtTick.isAlive[patIndex]) {
-                        probabilities = extractFeatureStoreAreaResults(output, values, curPlayerId);
+                        probabilities = extractFeatureStoreAreaResults(output, values, curPlayerId, curPlayerTeam);
                         for (size_t areaIndex = 0; areaIndex < csknow::feature_store::area_grid_size; areaIndex++) {
                             playerAreaProb[patIndex][areaIndex] = probabilities.areaProbabilities[areaIndex];
                         }

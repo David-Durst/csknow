@@ -100,9 +100,10 @@ namespace csknow::inference_latent_place {
                 for (int64_t patIndex = ticks.patPerTick[tickIndex].minId;
                      patIndex <= ticks.patPerTick[tickIndex].maxId; patIndex++) {
                     int64_t curPlayerId = playerAtTick.playerId[patIndex];
+                    TeamId curPlayerTeam = playerAtTick.team[patIndex];
                     InferencePlacePlayerAtTickProbabilities probabilities{};
                     if (playerAtTick.isAlive[patIndex]) {
-                        probabilities = extractFeatureStorePlaceResults(output, values, curPlayerId);
+                        probabilities = extractFeatureStorePlaceResults(output, values, curPlayerId, curPlayerTeam);
                         for (size_t placeIndex = 0; placeIndex < csknow::feature_store::num_places; placeIndex++) {
                             playerPlaceProb[patIndex][placeIndex] = probabilities.placeProbabilities[placeIndex];
                         }

@@ -19,7 +19,7 @@ namespace csknow::inference_latent_place {
         PlaceIndex mostLikelyPlace;
     };
     InferencePlacePlayerAtTickProbabilities extractFeatureStorePlaceResults(
-            const at::Tensor & output, const InferencePlaceTickValues & values, int64_t curPlayerId);
+            const at::Tensor & output, const InferencePlaceTickValues & values, int64_t curPlayerId, TeamId teamId);
 }
 
 #endif //CSKNOW_INFERENCE_LATENT_PLACE_HELPERS_H

@@ -91,12 +91,12 @@ namespace csknow::inference_latent_order {
     }
 
     InferenceOrderPlayerAtTickProbabilities extractFeatureStoreOrderResults(
-        const at::Tensor & output, const InferenceOrderTickValues & values, int64_t curPlayerId) {
+        const at::Tensor & output, const InferenceOrderTickValues & values, int64_t curPlayerId, TeamId teamId) {
         InferenceOrderPlayerAtTickProbabilities result;
         float mostLikelyOrderProb = -1;
         size_t playerStartIndex = values.playerIdToColumnIndex.at(curPlayerId) * total_orders;
         for (size_t orderIndex = 0; orderIndex < total_orders; orderIndex++) {
-            if (useRealProb) {
+            if ((useRealProbT && teamId == ENGINE_TEAM_T) || (useRealProbCT && teamId == ENGINE_TEAM_CT)) {
                 result.orderProbabilities.push_back(output[0][playerStartIndex + orderIndex].item<float>());
             }
             else {

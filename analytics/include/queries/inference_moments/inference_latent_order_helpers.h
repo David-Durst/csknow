@@ -30,7 +30,7 @@ namespace csknow::inference_latent_order {
         OrderRole mostLikelyOrder;
     };
     InferenceOrderPlayerAtTickProbabilities extractFeatureStoreOrderResults(
-        const at::Tensor & output, const InferenceOrderTickValues & values, int64_t curPlayerId);
+        const at::Tensor & output, const InferenceOrderTickValues & values, int64_t curPlayerId, TeamId teamId);
 }
 
 #endif //CSKNOW_INFERENCE_LATENT_ORDER_HELPERS_H

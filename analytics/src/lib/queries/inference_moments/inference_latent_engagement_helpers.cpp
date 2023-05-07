@@ -41,7 +41,7 @@ namespace csknow::inference_latent_engagement {
         result.mostLikelyEnemyNum = csknow::feature_store::maxEnemies + 1;
         for (size_t enemyNum = 0; enemyNum <= csknow::feature_store::maxEnemies; enemyNum++) {
             //std::cout << output[0][enemyNum].item<float>() << std::endl;
-            if (useRealProb) {
+            if (false) {
                 result.enemyProbabilities.push_back(output[0][enemyNum].item<float>());
             }
             else {

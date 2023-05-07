@@ -22,6 +22,7 @@ namespace csknow::inference_manager {
 
     struct ClientInferenceData {
         bool validData;
+        TeamId team;
         size_t ticksSinceLastInference;
         csknow::inference_latent_engagement::InferenceEngagementTickValues engagementValues;
         csknow::inference_latent_engagement::InferenceEngagementTickProbabilities engagementProbabilities;

@@ -19,7 +19,7 @@ namespace csknow::inference_latent_area {
         size_t mostLikelyArea;
     };
     InferenceAreaPlayerAtTickProbabilities extractFeatureStoreAreaResults(
-        const at::Tensor & output, const InferenceAreaTickValues & values, int64_t curPlayerId);
+        const at::Tensor & output, const InferenceAreaTickValues & values, int64_t curPlayerId, TeamId teamId);
 }
 
 #endif //CSKNOW_INFERENCE_LATENT_AREA_HELPERS_H

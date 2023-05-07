@@ -40,7 +40,7 @@ namespace csknow::inference_latent_aggression {
         float mostLikelyAggressionProb = -1;
         for (size_t aggressionOption = 0; aggressionOption < csknow::feature_store::numNearestEnemyState;
              aggressionOption++) {
-            if (false && useRealProb) {
+            if (false) {
                 result.aggressionProbabilities.push_back(output[0][aggressionOption].item<float>());
             }
             else {

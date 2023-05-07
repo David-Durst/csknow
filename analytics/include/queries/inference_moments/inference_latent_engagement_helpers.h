@@ -5,6 +5,7 @@
 #ifndef CSKNOW_INFERENCE_LATENT_ENGAGEMENT_HELPERS_H
 #define CSKNOW_INFERENCE_LATENT_ENGAGEMENT_HELPERS_H
 
+#include "bots/load_save_bot_data.h"
 #include "bots/analysis/feature_store.h"
 #include <torch/script.h>
 #include <ATen/Parallel.h>

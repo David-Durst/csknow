@@ -74,12 +74,12 @@ namespace csknow::inference_latent_place {
     }
 
     InferencePlacePlayerAtTickProbabilities extractFeatureStorePlaceResults(
-            const at::Tensor & output, const InferencePlaceTickValues & values, int64_t curPlayerId) {
+            const at::Tensor & output, const InferencePlaceTickValues & values, int64_t curPlayerId, TeamId teamId) {
         InferencePlacePlayerAtTickProbabilities result;
         float mostLikelyPlaceProb = -1;
         size_t playerStartIndex = values.playerIdToColumnIndex.at(curPlayerId) * csknow::feature_store::num_places;
         for (size_t placeIndex = 0; placeIndex < csknow::feature_store::num_places; placeIndex++) {
-            if (useRealProb) {
+            if ((useRealProbT && teamId == ENGINE_TEAM_T) || (useRealProbCT && teamId == ENGINE_TEAM_CT)) {
                 result.placeProbabilities.push_back(output[0][playerStartIndex + placeIndex].item<float>());
             }
             else {

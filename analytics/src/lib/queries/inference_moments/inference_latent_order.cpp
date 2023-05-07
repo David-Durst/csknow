@@ -101,9 +101,10 @@ namespace csknow::inference_latent_order {
                 for (int64_t patIndex = ticks.patPerTick[tickIndex].minId;
                      patIndex <= ticks.patPerTick[tickIndex].maxId; patIndex++) {
                     int64_t curPlayerId = playerAtTick.playerId[patIndex];
+                    TeamId curPlayerTeam = playerAtTick.team[patIndex];
                     InferenceOrderPlayerAtTickProbabilities probabilities{};
                     if (playerAtTick.isAlive[patIndex]) {
-                        probabilities = extractFeatureStoreOrderResults(output, values, curPlayerId);
+                        probabilities = extractFeatureStoreOrderResults(output, values, curPlayerId, curPlayerTeam);
                         for (size_t orderIndex = 0; orderIndex < total_orders; orderIndex++) {
                             playerOrderProb[patIndex][orderIndex] = probabilities.orderProbabilities[orderIndex];
                         }

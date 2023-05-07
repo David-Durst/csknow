@@ -74,12 +74,12 @@ namespace csknow::inference_latent_area {
     }
 
     InferenceAreaPlayerAtTickProbabilities extractFeatureStoreAreaResults(
-            const at::Tensor & output, const InferenceAreaTickValues & values, int64_t curPlayerId) {
+            const at::Tensor & output, const InferenceAreaTickValues & values, int64_t curPlayerId, TeamId teamId) {
         InferenceAreaPlayerAtTickProbabilities result;
         float mostLikelyAreaProb = -1;
         size_t playerStartIndex = values.playerIdToColumnIndex.at(curPlayerId) * csknow::feature_store::area_grid_size;
         for (size_t areaIndex = 0; areaIndex < csknow::feature_store::area_grid_size; areaIndex++) {
-            if (useRealProb) {
+            if ((useRealProbT && teamId == ENGINE_TEAM_T) || (useRealProbCT && teamId == ENGINE_TEAM_CT)) {
                 result.areaProbabilities.push_back(output[0][playerStartIndex + areaIndex].item<float>());
             }
             else {
