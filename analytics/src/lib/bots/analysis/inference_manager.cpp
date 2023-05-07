@@ -89,7 +89,7 @@ namespace csknow::inference_manager {
                              {static_cast<long>(clientsToInfer.size()), static_cast<long>(elementsPerClient)}, options);
         inputs.push_back(rowPT);
 
-        at::Tensor output = engagementModule.forward(inputs).toTuple()->elements()[0].toTensor();
+        at::Tensor output = engagementModule.forward(inputs).toTuple()->elements()[1].toTensor();
 
         for (size_t i = 0; i < clientsToInfer.size(); i++) {
             at::Tensor playerOutput = output.index({Slice(i, None, i+1), "..."});
@@ -117,7 +117,7 @@ namespace csknow::inference_manager {
                              {static_cast<long>(clientsToInfer.size()), static_cast<long>(elementsPerClient)}, options);
         inputs.push_back(rowPT);
 
-        at::Tensor output = aggressionModule.forward(inputs).toTuple()->elements()[0].toTensor();
+        at::Tensor output = aggressionModule.forward(inputs).toTuple()->elements()[1].toTensor();
 
         for (size_t i = 0; i < clientsToInfer.size(); i++) {
             at::Tensor playerOutput = output.index({Slice(i, None, i+1), "..."});
@@ -134,7 +134,7 @@ namespace csknow::inference_manager {
 
         inputs.push_back(rowPT);
 
-        at::Tensor output = orderModule.forward(inputs).toTuple()->elements()[0].toTensor();
+        at::Tensor output = orderModule.forward(inputs).toTuple()->elements()[1].toTensor();
 
         for (auto & [csgoId, _] : playerToInferenceData) {
             playerToInferenceData[csgoId].orderProbabilities =
@@ -150,7 +150,7 @@ namespace csknow::inference_manager {
 
         inputs.push_back(rowPT);
 
-        at::Tensor output = placeModule.forward(inputs).toTuple()->elements()[0].toTensor();
+        at::Tensor output = placeModule.forward(inputs).toTuple()->elements()[1].toTensor();
 
         for (auto & [csgoId, _] : playerToInferenceData) {
             playerToInferenceData[csgoId].placeProbabilities =
@@ -166,7 +166,7 @@ namespace csknow::inference_manager {
 
         inputs.push_back(rowPT);
 
-        at::Tensor output = areaModule.forward(inputs).toTuple()->elements()[0].toTensor();
+        at::Tensor output = areaModule.forward(inputs).toTuple()->elements()[1].toTensor();
 
         for (auto & [csgoId, _] : playerToInferenceData) {
             playerToInferenceData[csgoId].areaProbabilities =
