@@ -43,7 +43,7 @@ namespace strategy {
         bool probOrderChange = useOrderModelProbabilitiesEitherTeam &&
             !blackboard.inTest && !blackboard.inAnalysis &&
             blackboard.ticksSinceLastProbOrderAssignment >= newOrderTicks && ctPlayersAlive && tPlayersAlive &&
-            defuserNearC4; // if have a defuser, don't interrup them
+            !defuserNearC4; // if have a defuser, don't interrup them
         // as soon as have valid inference data, need to get model orders, as rest of tree will assume switching to models
         bool switchToModelOrders = useOrderModelProbabilitiesEitherTeam && !blackboard.inTest && !blackboard.inAnalysis &&
             !blackboard.modelOrdersT && !blackboard.modelOrdersCT && blackboard.inferenceManager.haveValidData();
@@ -69,7 +69,6 @@ namespace strategy {
             // first setup orders to go A or B
             bool plantedA = blackboard.navFile.get_place(
                     blackboard.navFile.get_nearest_area_by_position(vec3Conv(state.getC4Pos())).m_place) == "BombsiteA";
-            //std::cout << "new orders " << probOrderChange << std::endl;
 
             bool eitherTeamModelRequirements = !blackboard.inTest && !blackboard.inAnalysis &&
                 blackboard.inferenceManager.haveValidData();
