@@ -11,7 +11,8 @@
 
 namespace csknow::feature_store {
     void TeamFeatureStoreResult::init(size_t totalSize) {
-        size_t size = (totalSize == 1) ? totalSize : totalSize / every_nth_row;
+        //size_t size = (totalSize == 1) ? totalSize : totalSize / every_nth_row;
+        size_t size = totalSize;
         roundId.resize(size, INVALID_ID);
         tickId.resize(size, INVALID_ID);
         valid.resize(size, false);
@@ -211,10 +212,12 @@ namespace csknow::feature_store {
                                                DistanceToPlacesResult & distanceToPlaces,
                                                const nav_mesh::nav_file & navFile,
                                                int64_t roundIndex, int64_t tickIndex) {
+        /*
         if (tickIndex % every_nth_row != 0) {
             return;
         }
         tickIndex /= every_nth_row;
+         */
 
         roundId[tickIndex] = roundIndex;
         tickId[tickIndex] = tickIndex;
