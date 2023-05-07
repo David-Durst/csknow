@@ -31,7 +31,7 @@ namespace csknow::compute_nav_area {
         string reallyCurPlace = blackboard.navFile.get_place(curArea.m_place);
         std::cout << "really cur place: "  << reallyCurPlace << std::endl;
          */
-        bool useAnyPlace = false;
+        bool useAnyPlace = true;
         bool limitClosePlaces = false;
 
         PlaceIndex curPlace = 0;
@@ -74,7 +74,7 @@ namespace csknow::compute_nav_area {
                 modelNavData.orderPlaceProbs.push_back(placeProbabilities.placeProbabilities[placeIndex]);
                 placeIndexToWaypointIndex[placeIndex] = 0;
             }
-            std::cout << std::endl;
+            //std::cout << std::endl;
         }
         else {
             for (size_t i = 0; i < curOrder.waypoints.size(); i++) {

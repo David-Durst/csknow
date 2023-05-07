@@ -32,10 +32,18 @@ namespace strategy {
             }
         }
         bool useOrderModelProbabilitiesEitherTeam = useOrderModelProbabilitiesT || useOrderModelProbabilitiesCT;
+        bool defuserNearC4 = false;
+        if (blackboard.defuserId) {
+            const nav_mesh::nav_area & c4Area = blackboard.navFile
+                    .get_nearest_area_by_position(vec3Conv(state.getC4Pos()));
+            const nav_mesh::nav_area & playerArea = blackboard.navFile
+                    .get_nearest_area_by_position(vec3Conv(state.getClient(blackboard.defuserId.value()).getFootPosForPlayer()));
+            defuserNearC4 = c4Area.m_place == playerArea.m_place;
+        }
         bool probOrderChange = useOrderModelProbabilitiesEitherTeam &&
             !blackboard.inTest && !blackboard.inAnalysis &&
             blackboard.ticksSinceLastProbOrderAssignment >= newOrderTicks && ctPlayersAlive && tPlayersAlive &&
-            blackboard.defuserId == INVALID_ID; // if have a defuser, don't interrup them
+            defuserNearC4; // if have a defuser, don't interrup them
         // as soon as have valid inference data, need to get model orders, as rest of tree will assume switching to models
         bool switchToModelOrders = useOrderModelProbabilitiesEitherTeam && !blackboard.inTest && !blackboard.inAnalysis &&
             !blackboard.modelOrdersT && !blackboard.modelOrdersCT && blackboard.inferenceManager.haveValidData();
@@ -61,6 +69,7 @@ namespace strategy {
             // first setup orders to go A or B
             bool plantedA = blackboard.navFile.get_place(
                     blackboard.navFile.get_nearest_area_by_position(vec3Conv(state.getC4Pos())).m_place) == "BombsiteA";
+            //std::cout << "new orders " << probOrderChange << std::endl;
 
             bool eitherTeamModelRequirements = !blackboard.inTest && !blackboard.inAnalysis &&
                 blackboard.inferenceManager.haveValidData();
