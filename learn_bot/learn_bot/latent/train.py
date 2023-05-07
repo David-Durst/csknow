@@ -298,7 +298,7 @@ def train(train_type: TrainType, all_data_df: pd.DataFrame, num_epochs: int,
 latent_team_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / 'analytics' / 'csv_outputs' / 'behaviorTreeTeamFeatureStore.hdf5'
 small_latent_team_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / 'analytics' / 'csv_outputs' / 'smallBehaviorTreeTeamFeatureStore.parquet'
 
-use_small_data = True
+use_small_data = False
 
 def run_team_analysis():
     read_start = time.time()

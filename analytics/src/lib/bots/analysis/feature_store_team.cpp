@@ -474,7 +474,7 @@ namespace csknow::feature_store {
             }
             // want all points where alive, and accounting for ties
             size_t numPointsInDistribution = 0;
-            for (int64_t futureTickIndex = 0; futureTickIndex < futureTracker.getCurSize(); futureTickIndex++) {
+            for (int64_t futureTickIndex = 0; futureTickIndex < 1L /*futureTracker.getCurSize()*/; futureTickIndex++) {
                 int64_t futureTick = futureTracker.fromOldest(futureTickIndex);
                 bool inWindow = secondsBetweenTicks(ticks, tickRates, curTick, futureTick) >=
                         futureSecondsThreshold;
@@ -581,7 +581,7 @@ namespace csknow::feature_store {
             }
             // want all points where alive, and accounting for ties
             size_t numPointsInDistribution = 0;
-            for (int64_t futureTickIndex = 0; futureTickIndex < futureTracker.getCurSize(); futureTickIndex++) {
+            for (int64_t futureTickIndex = 0; futureTickIndex < 1L/*futureTracker.getCurSize()*/; futureTickIndex++) {
                 int64_t futureTick = futureTracker.fromOldest(futureTickIndex);
                 bool inWindow = secondsBetweenTicks(ticks, tickRates, curTick, futureTick) >=
                         futureSecondsTheshold;
