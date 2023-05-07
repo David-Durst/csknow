@@ -209,7 +209,7 @@ def train(train_type: TrainType, all_data_df: pd.DataFrame, num_epochs: int,
                 compute_accuracy(pred, Y, accuracy, column_transformers)
                 pbar.update(1)
 
-        cumulative_loss /= size
+        cumulative_loss /= len(dataloader)
         for name in column_transformers.output_types.column_names():
             accuracy[name] /= size
         accuracy_string = finish_accuracy(accuracy, column_transformers)
