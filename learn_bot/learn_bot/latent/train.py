@@ -299,7 +299,11 @@ latent_team_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / 'analy
 
 
 def run_team_analysis():
+    read_start = time.time()
     team_data_df = load_hdf5_to_pd(latent_team_hdf5_data_path)
+    read_end = time.time()
+    print(f'''read time: {read_end - read_start}''')
+    sys.exit(0)
     #print(f'''num retake save ticks {len(team_data_df[(team_data_df['valid'] == 1.) & (team_data_df['c4 status'] < 2) &
     #                                                  (team_data_df['retake save round tick'] == 1)])}''')
     #print(f'''num retake non-save ticks {len(team_data_df[(team_data_df['valid'] == 1.) & (team_data_df['c4 status'] < 2) &

@@ -333,6 +333,7 @@ int main(int argc, char * argv[]) {
             //{trainingNavigationName, trainingNavigationResult},
     };
 
+    auto writeStart = std::chrono::system_clock::now();
     // create the output files and the metadata describing files
     for (const auto & [name, result] : analyses) {
         //std::ofstream fsOverride;
@@ -342,6 +343,9 @@ int main(int argc, char * argv[]) {
         result.get().toHDF5(outputDir + "/" + name + ".hdf5");
         //fsOverride.close();
     }
+    auto writeEnd = std::chrono::system_clock::now();
+    std::chrono::duration<double> writeTime = writeEnd - writeStart;
+    std::cout << "write time " << writeTime.count() << std::endl;
 
     return 0;
 }
