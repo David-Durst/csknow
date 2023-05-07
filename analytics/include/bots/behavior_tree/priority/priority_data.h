@@ -52,6 +52,7 @@ enum class PriorityType {
 enum class NonDangerAimAreaType {
     Hold,
     Path,
+    Learned,
     NUM_PRIORITY_TYPES [[maybe_unused]]
 };
 

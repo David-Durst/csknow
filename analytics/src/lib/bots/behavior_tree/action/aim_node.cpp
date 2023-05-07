@@ -106,7 +106,8 @@ namespace action {
             aimTarget.z += EYE_HEIGHT;
             curAction.aimTargetType = AimTargetType::DangerArea;
         }
-        else if (curPriority.nonDangerAimArea && curPriority.nonDangerAimAreaType == NonDangerAimAreaType::Path) {
+        else if (curPriority.nonDangerAimArea && (curPriority.nonDangerAimAreaType == NonDangerAimAreaType::Path ||
+                 curPriority.nonDangerAimAreaType == NonDangerAimAreaType::Learned)) {
             aimTarget = vec3tConv(blackboard.navFile.get_area_by_id_fast(curPriority.nonDangerAimArea.value()).get_center());
             aimTarget.z += EYE_HEIGHT;
             curAction.aimTargetType = AimTargetType::PathNonDangerArea;

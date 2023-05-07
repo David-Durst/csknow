@@ -296,19 +296,25 @@ def train(train_type: TrainType, all_data_df: pd.DataFrame, num_epochs: int,
     return TrainResult(train_data, test_data, train_df, test_df, column_transformers, model)
 
 latent_team_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / 'analytics' / 'csv_outputs' / 'behaviorTreeTeamFeatureStore.hdf5'
+small_latent_team_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / 'analytics' / 'csv_outputs' / 'smallBehaviorTreeTeamFeatureStore.parquet'
 
+use_small_data = True
 
 def run_team_analysis():
     read_start = time.time()
-    team_data_df = load_hdf5_to_pd(latent_team_hdf5_data_path)
-    read_end = time.time()
-    print(f'''read time: {read_end - read_start}''')
-    #print(f'''num retake save ticks {len(team_data_df[(team_data_df['valid'] == 1.) & (team_data_df['c4 status'] < 2) &
-    #                                                  (team_data_df['retake save round tick'] == 1)])}''')
-    #print(f'''num retake non-save ticks {len(team_data_df[(team_data_df['valid'] == 1.) & (team_data_df['c4 status'] < 2) &
-    #                                                  (team_data_df['retake save round tick'] == 0)])}''')
-    team_data_df = team_data_df[(team_data_df['valid'] == 1.) & (team_data_df['c4 status'] < 2)]
-                                #(team_data_df['retake save round tick'] == 0)]
+    if use_small_data:
+        team_data_df = pd.read_parquet(small_latent_team_hdf5_data_path)
+    else:
+        team_data_df = load_hdf5_to_pd(latent_team_hdf5_data_path)
+        read_end = time.time()
+        print(f'''read time: {read_end - read_start}''')
+        #print(f'''num retake save ticks {len(team_data_df[(team_data_df['valid'] == 1.) & (team_data_df['c4 status'] < 2) &
+        #                                                  (team_data_df['retake save round tick'] == 1)])}''')
+        #print(f'''num retake non-save ticks {len(team_data_df[(team_data_df['valid'] == 1.) & (team_data_df['c4 status'] < 2) &
+        #                                                  (team_data_df['retake save round tick'] == 0)])}''')
+        team_data_df = team_data_df[(team_data_df['valid'] == 1.) & (team_data_df['c4 status'] < 2)]
+                                    #(team_data_df['retake save round tick'] == 0)]
+        team_data_df.to_parquet(small_latent_team_hdf5_data_path)
     train_result = train(TrainType.Order, team_data_df, num_epochs=3, windowed=False)
     train_result = train(TrainType.Place, team_data_df, num_epochs=3, windowed=False)
     train_result = train(TrainType.Area, team_data_df, num_epochs=3, windowed=False)
