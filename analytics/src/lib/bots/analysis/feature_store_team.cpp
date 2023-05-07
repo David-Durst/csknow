@@ -19,6 +19,9 @@ namespace csknow::feature_store {
         retakeSaveRoundTick.resize(size, false);
         c4Status.resize(size, C4Status::NotPlanted);
         c4TicksSincePlant.resize(size, INVALID_ID);
+        for (int j = 0; j < num_c4_timer_buckets; j++) {
+            c4TimerBucketed[j].resize(size, false);
+        }
         c4Pos.resize(size, invalidWorldPos);
         c4DistanceToASite.resize(size, INVALID_ID);
         c4DistanceToBSite.resize(size, INVALID_ID);
@@ -120,6 +123,9 @@ namespace csknow::feature_store {
             retakeSaveRoundTick[rowIndex] = false;
             c4Status[rowIndex] = C4Status::NotPlanted;
             c4TicksSincePlant[rowIndex] = INVALID_ID;
+            for (int j = 0; j < num_c4_timer_buckets; j++) {
+                c4TimerBucketed[j][rowIndex] = INVALID_ID;
+            }
             c4Pos[rowIndex] = invalidWorldPos;
             c4DistanceToASite[rowIndex] = INVALID_ID;
             c4DistanceToBSite[rowIndex] = INVALID_ID;
@@ -234,6 +240,10 @@ namespace csknow::feature_store {
             c4Status[tickIndex] = C4Status::NotPlanted;
         }
         c4TicksSincePlant[tickIndex] = buffer.c4MapData.ticksSincePlant;
+        int c4TimerBucket = std::min(num_c4_timer_buckets - 1,
+                                     static_cast<int>(c4TicksSincePlant[tickIndex] / seconds_per_c4_timer_bucket));
+        c4TimerBucketed[c4TimerBucket][tickIndex] = true;
+
         c4Pos[tickIndex] = buffer.c4MapData.c4Pos;
         c4DistanceToASite[tickIndex] =
             distanceToPlaces.getClosestDistance(buffer.c4MapData.c4AreaId, a_site, navFile);
@@ -690,6 +700,9 @@ namespace csknow::feature_store {
         file.createDataSet("/data/retake save round tick", retakeSaveRoundTick, hdf5FlatCreateProps);
         file.createDataSet("/data/c4 status", vectorOfEnumsToVectorOfInts(c4Status), hdf5FlatCreateProps);
         file.createDataSet("/data/c4 ticks since plant", c4TicksSincePlant, hdf5FlatCreateProps);
+        for (size_t c4TimerBucketIndex = 0; c4TimerBucketIndex < num_c4_timer_buckets; c4TimerBucketIndex++) {
+            file.createDataSet("/data/c4 timer bucketed " + std::to_string(c4TimerBucketIndex), c4TimerBucketed[c4TimerBucketIndex], hdf5FlatCreateProps);
+        }
         saveVec3VectorToHDF5(c4Pos, file, "c4 pos", hdf5FlatCreateProps);
         file.createDataSet("/data/c4 distance to a site", c4DistanceToASite, hdf5FlatCreateProps);
         file.createDataSet("/data/c4 distance to b site", c4DistanceToBSite, hdf5FlatCreateProps);

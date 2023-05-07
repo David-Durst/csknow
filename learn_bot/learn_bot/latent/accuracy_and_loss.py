@@ -68,10 +68,12 @@ def compute_loss(x, pred, y_transformed, y_untransformed, column_transformers: I
         for i, col_range in enumerate(col_ranges):
             valid_y_transformed = y_transformed[y_transformed[:, col_range[0]] >= 0.][:, col_range]
             valid_pred_transformed = pred_transformed[y_transformed[:, col_range[0]] >= 0.][:, col_range]
-            loss = base_classification_loss_fn(valid_pred_transformed, valid_y_transformed)
-            if torch.isnan(loss).any():
-                print('bad loss')
-            losses.cat_loss += loss
+            # don't add nan loss if no valid rows
+            if valid_y_transformed.shape[0] > 0:
+                loss = base_classification_loss_fn(valid_pred_transformed, valid_y_transformed)
+                if torch.isnan(loss).any():
+                    print('bad loss')
+                losses.cat_loss += loss
         #losses.cat_loss += latent_to_prob(pred_transformed, y_transformed, col_ranges)
     return losses
 
@@ -90,8 +92,11 @@ def compute_accuracy(pred, Y, accuracy, column_transformers: IOColumnTransformer
     for name, col_range in zip(column_transformers.output_types.categorical_distribution_first_sub_cols,
                                column_transformers.get_name_ranges(False, False,
                                                                    frozenset({ColumnTransformerType.CATEGORICAL_DISTRIBUTION}))):
-        accuracy[name] += (torch.argmax(pred_untransformed[:, col_range], -1, keepdim=True) ==
-                           torch.argmax(Y[:, col_range], -1, keepdim=True)).type(torch.float).sum().item()
+        valid_Y = Y[Y[:, col_range[0]] >= 0.][:, col_range]
+        valid_pred_untransformed = pred_untransformed[Y[:, col_range[0]] >= 0.][:, col_range]
+        if valid_Y.shape[0] > 0:
+            accuracy[name] += (torch.argmax(valid_pred_untransformed, -1, keepdim=True) ==
+                               torch.argmax(valid_Y, -1, keepdim=True)).type(torch.float).sum().item()
         #accuracy[name] += base_classification_loss_fn(pred_untransformed[:, col_range], Y[:, col_range])
 
 

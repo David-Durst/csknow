@@ -23,6 +23,8 @@ namespace csknow::feature_store {
     constexpr int num_places = 26;
     constexpr int area_grid_dim = 5;
     constexpr int area_grid_size = area_grid_dim*area_grid_dim;
+    constexpr double seconds_per_c4_timer_bucket = 10.;
+    constexpr int num_c4_timer_buckets = 4;
     constexpr int every_nth_row = 10;
     const string a_site = "BombsiteA", b_site = "BombsiteB";
 
@@ -45,6 +47,7 @@ namespace csknow::feature_store {
 
         vector<C4Status> c4Status;
         vector<int64_t> c4TicksSincePlant;
+        array<vector<bool>, num_c4_timer_buckets> c4TimerBucketed;
         vector<Vec3> c4Pos;
         vector<float> c4DistanceToASite, c4DistanceToBSite;
         array<vector<float>, num_orders_per_site> c4DistanceToNearestAOrderNavArea, c4DistanceToNearestBOrderNavArea;
