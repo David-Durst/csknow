@@ -41,6 +41,7 @@ namespace action {
             else {
                 Vec2 curViewAngle = curClient.getCurrentViewAnglesWithAimpunch();
                 Vec3 targetVector = curPath.waypoints[curPath.curWaypoint].pos - curClient.getEyePosForPlayer();
+                Vec3 finalVector = curPath.waypoints.back().pos - curClient.getFootPosForPlayer();
                 // add eye height since waypoints are on floor and aim is from eye
                 targetVector.z += EYE_HEIGHT;
                 Vec2 targetViewAngle = vectorAngles(targetVector);
@@ -48,7 +49,9 @@ namespace action {
 
                 Vec2 deltaViewAngle = targetViewAngle - curViewAngle;
                 deltaViewAngle.makeYawNeg180To180();
-                moveInDir(curAction, deltaViewAngle);
+                if (blackboard.isPlayerDefuser(curClient.csgoId) || computeMagnitude(finalVector) > WIDTH) {
+                    moveInDir(curAction, deltaViewAngle);
+                }
 
                 const PathNode & curNode = curPath.waypoints[curPath.curWaypoint];
                 // jump if moving to higher navmesh area, cur area, not marked no jump, and near target navmesh
