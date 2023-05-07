@@ -3,10 +3,10 @@
 //
 
 #include "bots/analysis/learned_models.h"
-#include "bots/behavior_tree/priority/follow_order_node.h"
+#include "bots/behavior_tree/priority/compute_model_nav_area_node.h"
 #include "bots/behavior_tree/priority/priority_helpers.h"
 
-namespace follow::compute_nav_area {
+namespace csknow::compute_nav_area {
     constexpr double max_place_distance_seconds = 5.;
 
     PlaceIndex ComputeModelNavAreaNode::computePlaceProbabilistic(const ServerState & state, const Order & curOrder,
@@ -332,12 +332,16 @@ namespace follow::compute_nav_area {
 
         // default values are set to invalid where necessary, so this is fine
         Priority & curPriority = blackboard.playerToPriority[treeThinker.csgoId];
-        bool wasInEngagement = curPriority.priorityType == PriorityType::Engagement;
-        curPriority.priorityType = PriorityType::Order;
-        curPriority.targetPlayer.playerId = INVALID_ID;
-        curPriority.nonDangerAimArea = {};
+        // if still in engagement, then this isn't reason to switch
+        bool wasInEngagement = false;
+        if (!inEngagePath) {
+            wasInEngagement = curPriority.priorityType == PriorityType::Engagement;
+            curPriority.priorityType = PriorityType::Order;
+            curPriority.targetPlayer.playerId = INVALID_ID;
+            curPriority.nonDangerAimArea = {};
+            curPriority.shootOptions = ShootOptions::DontShoot;
+        }
         curPriority.moveOptions = {true, false, false};
-        curPriority.shootOptions = ShootOptions::DontShoot;
 
         // if put in the model orders but not ready for this player, just stand still
         if (blackboard.inferenceManager.playerToInferenceData.find(treeThinker.csgoId) ==

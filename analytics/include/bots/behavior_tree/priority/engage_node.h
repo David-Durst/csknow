@@ -6,6 +6,7 @@
 #define CSKNOW_ENGAGE_NODE_H
 #include "bots/behavior_tree/node.h"
 #include "bots/behavior_tree/pathing_node.h"
+#include "bots/behavior_tree/priority/compute_model_nav_area_node.h"
 #include <map>
 #define COMMUNICATED_ENEMY_RELEVANT_TIME 2.0
 #define MIN_ENGAGE_FRIENDLY_DISTANCE 100.
@@ -49,7 +50,10 @@ public:
                                  make_unique<engage::RecordEngagementRound>(blackboard),
                                  make_unique<engage::SelectTargetNode>(blackboard),
                                  make_unique<engage::SelectFireModeNode>(blackboard),
-                                 make_unique<engage::SelectTargetAggressionNode>(blackboard),
+                                 //make_unique<engage::SelectTargetAggressionNode>(blackboard),
+                                 make_unique<RunChildAndReturnSuccessNode>(
+                                         blackboard,
+                                         make_unique<csknow::compute_nav_area::ComputeModelNavAreaNode>(blackboard, true)),
                                  make_unique<movement::PathingNode>(blackboard)),
                          "EngageNode") { };
 };

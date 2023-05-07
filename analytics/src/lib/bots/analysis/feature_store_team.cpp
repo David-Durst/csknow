@@ -672,8 +672,8 @@ namespace csknow::feature_store {
 
     void TeamFeatureStoreResult::toHDF5Inner(HighFive::File & file) {
         HighFive::DataSetCreateProps hdf5FlatCreateProps;
-        hdf5FlatCreateProps.add(HighFive::Deflate(6));
-        hdf5FlatCreateProps.add(HighFive::Chunking(roundId.size()));
+        //hdf5FlatCreateProps.add(HighFive::Deflate(6));
+        //hdf5FlatCreateProps.add(HighFive::Chunking(roundId.size()));
 
         file.createDataSet("/data/round id", roundId, hdf5FlatCreateProps);
         file.createDataSet("/data/tick id", tickId, hdf5FlatCreateProps);

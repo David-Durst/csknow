@@ -321,4 +321,26 @@ public:
     }
 };
 
+class RunChildAndReturnSuccessNode : public Node {
+protected:
+    Node::Ptr child;
+
+public:
+    RunChildAndReturnSuccessNode(Blackboard & blackboard, Node::Ptr && node) :
+        Node(blackboard, "RunChildAndReturnSuccess"), child(std::move(node)) { };
+
+    NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
+        child->exec(state, treeThinker);
+        playerNodeState[treeThinker.csgoId] = NodeState::Success;
+        return playerNodeState[treeThinker.csgoId];
+    }
+
+    [[nodiscard]]
+    PrintState printState(const ServerState & state, CSGOId playerId) const override {
+        PrintState printState = Node::printState(state, playerId);
+        printState.childrenStates.push_back(child->printState(state, playerId));
+        return printState;
+    }
+};
+
 #endif //CSKNOW_NODE_H
