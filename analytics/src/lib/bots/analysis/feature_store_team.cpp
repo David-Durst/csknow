@@ -700,10 +700,17 @@ namespace csknow::feature_store {
                 string iStr = std::to_string(columnPlayer);
                 file.createDataSet("/data/player id " + columnTeam + " " + iStr,
                                    columnData[columnPlayer].playerId, hdf5FlatCreateProps);
+
+                vector<string> playerIndexOnTeamColNames;
+
                 for (int indexOnTeam = 0; indexOnTeam < maxEnemies; indexOnTeam++) {
-                    file.createDataSet("/data/player index on team " + std::to_string(indexOnTeam) + " " + columnTeam + " " + iStr,
-                                       columnData[columnPlayer].indexOnTeam[indexOnTeam], hdf5FlatCreateProps);
+                    playerIndexOnTeamColNames.push_back(
+                            "player index on team " + std::to_string(indexOnTeam) + " " + columnTeam + " " + iStr);
                 }
+                saveArrayOfVectorsToHDF5(columnData[columnPlayer].indexOnTeam, file,
+                                         "player index on team " + columnTeam + " " + iStr,
+                                         playerIndexOnTeamColNames, hdf5NestedCreateProps);
+
                 file.createDataSet("/data/player ctTeam " + columnTeam + " " + iStr,
                                    columnData[columnPlayer].ctTeam, hdf5FlatCreateProps);
                 saveVec3VectorToHDF5(columnData[columnPlayer].footPos, file,
@@ -719,38 +726,38 @@ namespace csknow::feature_store {
                                    columnData[columnPlayer].distanceToASite, hdf5FlatCreateProps);
                 file.createDataSet("/data/distance to b site " + columnTeam + " " + iStr,
                                    columnData[columnPlayer].distanceToBSite, hdf5FlatCreateProps);
+
+                vector<string> distanceToNearestAOrderNavAreaColNames, distanceToNearestBOrderNavAreaColNames,
+                    distributionNearestAOrders, distributionNearestBOrders;
                 for (size_t orderIndex = 0; orderIndex < num_orders_per_site; orderIndex++) {
                     string orderIndexStr = std::to_string(orderIndex);
-                    file.createDataSet("/data/distance to nearest a order " + orderIndexStr + " nav area " + columnTeam + " " + iStr,
-                                       columnData[columnPlayer].distanceToNearestAOrderNavArea[orderIndex], hdf5FlatCreateProps);
-                    file.createDataSet("/data/distance to nearest b order " + orderIndexStr + " nav area " + columnTeam + " " + iStr,
-                                       columnData[columnPlayer].distanceToNearestBOrderNavArea[orderIndex], hdf5FlatCreateProps);
-                    file.createDataSet("/data/distribution nearest a order " + orderIndexStr + " " + columnTeam + " " + iStr,
-                                       columnData[columnPlayer].distributionNearestAOrders[orderIndex], hdf5FlatCreateProps);
-                    file.createDataSet("/data/distribution nearest b order " + orderIndexStr + " " + columnTeam + " " + iStr,
-                                       columnData[columnPlayer].distributionNearestBOrders[orderIndex], hdf5FlatCreateProps);
-                    //file.createDataSet("/data/distribution nearest a order " + orderIndexStr + " 15s " + columnTeam + " " + iStr,
-                    //                   columnData[columnPlayer].distributionNearestAOrders15s[orderIndex], hdf5FlatCreateProps);
-                    //file.createDataSet("/data/distribution nearest b order " + orderIndexStr + " 15s " + columnTeam + " " + iStr,
-                    //                   columnData[columnPlayer].distributionNearestBOrders15s[orderIndex], hdf5FlatCreateProps);
-                    //file.createDataSet("/data/distribution nearest a order " + orderIndexStr + " 30s " + columnTeam + " " + iStr,
-                    //                   columnData[columnPlayer].distributionNearestAOrders30s[orderIndex], hdf5FlatCreateProps);
-                    //file.createDataSet("/data/distribution nearest b order " + orderIndexStr + " 30s " + columnTeam + " " + iStr,
-                    //                   columnData[columnPlayer].distributionNearestBOrders30s[orderIndex], hdf5FlatCreateProps);
+                    distanceToNearestAOrderNavAreaColNames.push_back(
+                            "distance to nearest a order " + orderIndexStr + " nav area " + columnTeam + " " + iStr);
+                    distanceToNearestBOrderNavAreaColNames.push_back(
+                            "distance to nearest b order " + orderIndexStr + " nav area " + columnTeam + " " + iStr);
+                    distributionNearestAOrders.push_back(
+                            "distribution nearest a order " + orderIndexStr + " " + columnTeam + " " + iStr);
+                    distributionNearestBOrders.push_back(
+                            "distribution nearest b order " + orderIndexStr + " " + columnTeam + " " + iStr);
                 }
+                saveArrayOfVectorsToHDF5(columnData[columnPlayer].distanceToNearestAOrderNavArea, file,
+                                         "distance to nearest a order nav area " + columnTeam + " " + iStr,
+                                         distanceToNearestAOrderNavAreaColNames, hdf5NestedCreateProps);
+                saveArrayOfVectorsToHDF5(columnData[columnPlayer].distanceToNearestBOrderNavArea, file,
+                                         "distance to nearest b order nav area " + columnTeam + " " + iStr,
+                                         distanceToNearestBOrderNavAreaColNames, hdf5NestedCreateProps);
+                saveArrayOfVectorsToHDF5(columnData[columnPlayer].distributionNearestAOrders, file,
+                                         "distribution nearest a order " + columnTeam + " " + iStr,
+                                         distributionNearestAOrders, hdf5NestedCreateProps);
+                saveArrayOfVectorsToHDF5(columnData[columnPlayer].distributionNearestBOrders, file,
+                                         "distribution nearest b order " + columnTeam + " " + iStr,
+                                         distributionNearestBOrders, hdf5NestedCreateProps);
+
                 vector<string> curPlaceColNames, distributionNearestPlaceColNames;
                 for (size_t placeIndex = 0; placeIndex < num_places; placeIndex++) {
                     string placeIndexStr = std::to_string(placeIndex);
                     curPlaceColNames.push_back("cur place " + placeIndexStr + " " + columnTeam + " " + iStr);
                     distributionNearestPlaceColNames.push_back("distribution nearest place " + placeIndexStr + " " + columnTeam + " " + iStr);
-                    //file.createDataSet("/data/distribution nearest place 7 to 15s " + placeIndexStr + " " + columnTeam + " " + iStr,
-                    //                   columnData[columnPlayer].distributionNearestPlace7to15s[placeIndex], hdf5FlatCreateProps);
-                    /*
-                    for (int priorTick = 0; priorTick < num_prior_ticks; priorTick++) {
-                        file.createDataSet("/data/prior place " + placeIndexStr + " " + columnTeam + " " + iStr +  " t-" + std::to_string(priorTick+1),
-                                           columnData[columnPlayer].priorPlaces[priorTick][placeIndex], hdf5FlatCreateProps);
-                    }
-                     */
                 }
                 saveArrayOfVectorsToHDF5(columnData[columnPlayer].curPlace, file,
                                          "cur place " + columnTeam + " " + iStr, curPlaceColNames,
@@ -758,21 +765,21 @@ namespace csknow::feature_store {
                 saveArrayOfVectorsToHDF5(columnData[columnPlayer].distributionNearestPlace, file,
                                          "distribution nearest place " + columnTeam + " " + iStr, distributionNearestPlaceColNames,
                                          hdf5NestedCreateProps);
+
+                vector<string> areaGridCellInPlaceColNames, distributionNearestAreaGridInPlaceColNames;
                 for (size_t areaGridIndex = 0; areaGridIndex < area_grid_size; areaGridIndex++) {
                     string areaGridIndexStr = std::to_string(areaGridIndex);
-                    file.createDataSet("/data/area grid cell in place " + areaGridIndexStr + " " + columnTeam + " " + iStr,
-                                       columnData[columnPlayer].areaGridCellInPlace[areaGridIndex], hdf5FlatCreateProps);
-                    file.createDataSet("/data/distribution nearest area grid in place " + areaGridIndexStr + " " + columnTeam + " " + iStr,
-                                       columnData[columnPlayer].distributionNearestAreaGridInPlace[areaGridIndex], hdf5FlatCreateProps);
-                    //file.createDataSet("/data/distribution nearest area grid in place 7 to 15s " + areaGridIndexStr + " " + columnTeam + " " + iStr,
-                    //                   columnData[columnPlayer].distributionNearestAreaGridInPlace7to15s[areaGridIndex], hdf5FlatCreateProps);
-                    /*
-                    for (int priorTick = 0; priorTick < num_prior_ticks; priorTick++) {
-                        file.createDataSet("/data/prior area grid cell in place " + areaGridIndexStr + " " + columnTeam + " " + iStr +  " t-" + std::to_string(priorTick+1),
-                                           columnData[columnPlayer].priorAreaGridCellInPlace[priorTick][areaGridIndex], hdf5FlatCreateProps);
-                    }
-                     */
+                    areaGridCellInPlaceColNames.push_back(
+                            "area grid cell in place " + areaGridIndexStr + " " + columnTeam + " " + iStr);
+                    distributionNearestAreaGridInPlaceColNames.push_back(
+                            "distribution nearest area grid in place " + areaGridIndexStr + " " + columnTeam + " " + iStr);
                 }
+                saveArrayOfVectorsToHDF5(columnData[columnPlayer].areaGridCellInPlace, file,
+                                         "area grid cell in place " + columnTeam + " " + iStr,
+                                         areaGridCellInPlaceColNames, hdf5NestedCreateProps);
+                saveArrayOfVectorsToHDF5(columnData[columnPlayer].distributionNearestAreaGridInPlace, file,
+                                         "distribution nearest area grid in place " + columnTeam + " " + iStr,
+                                         distributionNearestAreaGridInPlaceColNames, hdf5NestedCreateProps);
             }
         }
     }
