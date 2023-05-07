@@ -235,7 +235,9 @@ namespace csknow::inference_manager {
             return false;
         }
         for (const auto & [_, inferenceData] : playerToInferenceData) {
-            if (!inferenceData.validData) {
+            if (!inferenceData.validData || inferenceData.orderProbabilities.orderProbabilities.empty() ||
+                inferenceData.placeProbabilities.placeProbabilities.empty() ||
+                inferenceData.areaProbabilities.areaProbabilities.empty()) {
                 return false;
             }
         }
