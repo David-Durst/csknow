@@ -294,6 +294,23 @@ void saveTemporalVectorOfEnumsToHDF5(const std::vector<std::array<T, N>> & vecto
 }
 
 template <typename T, std::size_t N>
+void saveArrayOfVectorsToHDF5(const std::array<std::vector<T>, N> & arrayOfVectors, HighFive::File & file,
+                              std::string baseString, const std::vector<string> columnNames,
+                              const HighFive::DataSetCreateProps & hdf5CreateProps) {
+    HighFive::DataSet dataset = file.createDataSet("/data/" + baseString, arrayOfVectors, hdf5CreateProps);
+    HighFive::Attribute names = dataset.createAttribute<std::string>("column names",
+                                                                     HighFive::DataSpace::From(baseString));
+    std::stringstream namesStream;
+    for (size_t arrayIndex = 0; arrayIndex < columnNames.size(); arrayIndex++) {
+        if (arrayIndex > 0) {
+            namesStream << ",";
+        }
+        namesStream << columnNames[arrayIndex];
+    }
+    names.write(namesStream.str());
+}
+
+template <typename T, std::size_t N>
 void saveTemporalArrayOfVectorsToHDF5(const std::vector<std::array<T, N>> & vectorOfArrays, HighFive::File & file,
                                       int startOffset, const string & baseString,
                                       const HighFive::DataSetCreateProps & hdf5CreateProps) {

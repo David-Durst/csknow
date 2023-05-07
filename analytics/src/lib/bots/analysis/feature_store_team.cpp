@@ -675,6 +675,10 @@ namespace csknow::feature_store {
         hdf5FlatCreateProps.add(HighFive::Deflate(6));
         hdf5FlatCreateProps.add(HighFive::Chunking(roundId.size()));
 
+        HighFive::DataSetCreateProps hdf5NestedCreateProps;
+        hdf5NestedCreateProps.add(HighFive::Deflate(6));
+        hdf5NestedCreateProps.add(HighFive::Chunking({1, roundId.size()}));
+
         file.createDataSet("/data/round id", roundId, hdf5FlatCreateProps);
         file.createDataSet("/data/tick id", tickId, hdf5FlatCreateProps);
         file.createDataSet("/data/valid", valid, hdf5FlatCreateProps);
@@ -734,12 +738,11 @@ namespace csknow::feature_store {
                     //file.createDataSet("/data/distribution nearest b order " + orderIndexStr + " 30s " + columnTeam + " " + iStr,
                     //                   columnData[columnPlayer].distributionNearestBOrders30s[orderIndex], hdf5FlatCreateProps);
                 }
+                vector<string> curPlaceColNames, distributionNearestPlaceColNames;
                 for (size_t placeIndex = 0; placeIndex < num_places; placeIndex++) {
                     string placeIndexStr = std::to_string(placeIndex);
-                    file.createDataSet("/data/cur place " + placeIndexStr + " " + columnTeam + " " + iStr,
-                                       columnData[columnPlayer].curPlace[placeIndex], hdf5FlatCreateProps);
-                    file.createDataSet("/data/distribution nearest place " + placeIndexStr + " " + columnTeam + " " + iStr,
-                                       columnData[columnPlayer].distributionNearestPlace[placeIndex], hdf5FlatCreateProps);
+                    curPlaceColNames.push_back("cur place " + placeIndexStr + " " + columnTeam + " " + iStr);
+                    distributionNearestPlaceColNames.push_back("distribution nearest place " + placeIndexStr + " " + columnTeam + " " + iStr);
                     //file.createDataSet("/data/distribution nearest place 7 to 15s " + placeIndexStr + " " + columnTeam + " " + iStr,
                     //                   columnData[columnPlayer].distributionNearestPlace7to15s[placeIndex], hdf5FlatCreateProps);
                     /*
@@ -749,6 +752,12 @@ namespace csknow::feature_store {
                     }
                      */
                 }
+                saveArrayOfVectorsToHDF5(columnData[columnPlayer].curPlace, file,
+                                         "cur place " + columnTeam + " " + iStr, curPlaceColNames,
+                                         hdf5NestedCreateProps);
+                saveArrayOfVectorsToHDF5(columnData[columnPlayer].distributionNearestPlace, file,
+                                         "distribution nearest place " + columnTeam + " " + iStr, distributionNearestPlaceColNames,
+                                         hdf5NestedCreateProps);
                 for (size_t areaGridIndex = 0; areaGridIndex < area_grid_size; areaGridIndex++) {
                     string areaGridIndexStr = std::to_string(areaGridIndex);
                     file.createDataSet("/data/area grid cell in place " + areaGridIndexStr + " " + columnTeam + " " + iStr,

@@ -328,7 +328,7 @@ int main(int argc, char * argv[]) {
     map<string, reference_wrapper<QueryResult>> analyses {
             //{engagementAimName, engagementAimResult},
             //{latentEngagementAimName, latentEngagementAimResult},
-            {behaviorTreeFeatureStoreName, behaviorTreeLatentEvents.featureStoreResult},
+            //{behaviorTreeFeatureStoreName, behaviorTreeLatentEvents.featureStoreResult},
             {behaviorTreeTeamFeatureStoreName, behaviorTreeLatentEvents.featureStoreResult.teamFeatureStoreResult}
             //{trainingNavigationName, trainingNavigationResult},
     };
