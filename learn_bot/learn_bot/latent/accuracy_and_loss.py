@@ -1,5 +1,6 @@
 from typing import Callable
 
+import torch
 from torch.utils.tensorboard import SummaryWriter
 
 from learn_bot.latent.dataset import *
@@ -67,7 +68,10 @@ def compute_loss(x, pred, y_transformed, y_untransformed, column_transformers: I
         for i, col_range in enumerate(col_ranges):
             valid_y_transformed = y_transformed[y_transformed[:, col_range[0]] >= 0.][:, col_range]
             valid_pred_transformed = pred_transformed[y_transformed[:, col_range[0]] >= 0.][:, col_range]
-            losses.cat_loss += base_classification_loss_fn(valid_pred_transformed, valid_y_transformed)
+            loss = base_classification_loss_fn(valid_pred_transformed, valid_y_transformed)
+            if torch.isnan(loss).any():
+                print('bad loss')
+            losses.cat_loss += loss
         #losses.cat_loss += latent_to_prob(pred_transformed, y_transformed, col_ranges)
     return losses
 
