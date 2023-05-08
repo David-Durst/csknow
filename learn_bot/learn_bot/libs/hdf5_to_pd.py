@@ -2,12 +2,12 @@ import h5py
 import pandas as pd
 import numpy as np
 from pathlib import Path
-from typing import List
+from typing import List, Set, Optional
 
 from pandas.core.dtypes.common import is_numeric_dtype
 
 
-def load_hdf5_to_pd(hdf5_path: Path):
+def load_hdf5_to_pd(hdf5_path: Path, selector_df: Optional[pd.DataFrame] = None, cols_to_get: Optional[List] = None):
     # get data as numpy arrays and column names
     #np_arrs: List[np.ndarray] = []
     #col_names: List[List[str]] = []
@@ -15,6 +15,8 @@ def load_hdf5_to_pd(hdf5_path: Path):
     with h5py.File(hdf5_path) as hdf5_file:
         hdf5_data = hdf5_file['data']
         for k in hdf5_data.keys():
+            if cols_to_get is not None and k not in cols_to_get:
+                continue
             np_arr: np.ndarray = hdf5_data[k][...]
             col_names: List[str]
             if hdf5_data[k].attrs:
@@ -23,9 +25,15 @@ def load_hdf5_to_pd(hdf5_path: Path):
                 col_names = [k]
 
             if len(np_arr.shape) == 2 and np_arr.shape[1] > np_arr.shape[0]:
-                partial_dfs.append(pd.DataFrame(np_arr.transpose(), columns=col_names))
+                df_to_append = pd.DataFrame(np_arr.transpose(), columns=col_names)
+                partial_dfs.append()
             else:
-                partial_dfs.append(pd.DataFrame(np_arr, columns=col_names))
+                df_to_append = pd.DataFrame(np_arr, columns=col_names)
+
+            if selector_df is not None:
+                df_to_append = df_to_append.loc[selector_df]
+
+            partial_dfs.append(df_to_append)
 
     result_df = pd.concat(partial_dfs, axis=1)
     for col in result_df.columns:

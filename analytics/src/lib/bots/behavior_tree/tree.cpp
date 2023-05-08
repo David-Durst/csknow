@@ -112,9 +112,11 @@ void Tree::tick(ServerState & state, const string & mapsPath) {
 
         // wait until plant to do anything (HACK FOR NOW)
 
+        /*
         if (!state.c4IsPlanted) {
             return;
         }
+         */
 
         // update streaming analytics database used in tree
         // blackboard->streamingManager.update(state);
