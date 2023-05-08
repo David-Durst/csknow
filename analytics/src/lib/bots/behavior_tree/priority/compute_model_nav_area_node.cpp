@@ -31,7 +31,7 @@ namespace csknow::compute_nav_area {
         string reallyCurPlace = blackboard.navFile.get_place(curArea.m_place);
         std::cout << "really cur place: "  << reallyCurPlace << std::endl;
          */
-        bool useAnyPlace = false;
+        bool useAnyPlace = true;
         bool limitClosePlaces = false;
 
         PlaceIndex curPlace = 0;

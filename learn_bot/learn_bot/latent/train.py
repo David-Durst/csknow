@@ -305,9 +305,9 @@ def run_team_analysis():
     if use_small_data:
         team_data_df = pd.read_parquet(small_latent_team_hdf5_data_path)
     else:
-        valid_df = load_hdf5_to_pd(latent_team_hdf5_data_path, cols_to_get="valid")
-        valid_selector_df = valid_df[valid_df['valid'] == 1.].index
-        team_data_df = load_hdf5_to_pd(latent_team_hdf5_data_path, selector_df=valid_selector_df)
+        team_data_df = load_hdf5_to_pd(latent_team_hdf5_data_path)
+        #valid_selector_df = valid_df[valid_df['valid'] == 1.].index
+        #team_data_df = load_hdf5_to_pd(latent_team_hdf5_data_path, selector_df=valid_selector_df)
         read_end = time.time()
         print(f'''read time: {read_end - read_start}''')
         #print(f'''num retake save ticks {len(team_data_df[(team_data_df['valid'] == 1.) & (team_data_df['c4 status'] < 2) &
@@ -315,7 +315,7 @@ def run_team_analysis():
         #print(f'''num retake non-save ticks {len(team_data_df[(team_data_df['valid'] == 1.) & (team_data_df['c4 status'] < 2) &
         #                                                  (team_data_df['retake save round tick'] == 0)])}''')
         #team_data_df = team_data_df[(team_data_df['valid'] == 1.) & (team_data_df['c4 status'] < 2)]
-        #team_data_df = team_data_df[(team_data_df['valid'] == 1.)]
+        team_data_df = team_data_df[(team_data_df['valid'] == 1.) & (team_data_df['freeze time ended'] == 1.)]
                                     #(team_data_df['retake save round tick'] == 0)]
         team_data_df.to_parquet(small_latent_team_hdf5_data_path)
     train_result = train(TrainType.Order, team_data_df, num_epochs=3, windowed=False)
