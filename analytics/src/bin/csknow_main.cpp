@@ -302,6 +302,7 @@ int main(int argc, char * argv[]) {
     string dust2DangerName = "de_dust2_danger";
     NavDangerResult d2NavDangerResult = queryNavDanger(map_visPoints.find("de_dust2")->second, dust2MeshName);
 
+    /*
     // orders
     string ordersName = "orders";
     std::cout << "processing orders" << std::endl;
@@ -350,12 +351,14 @@ int main(int argc, char * argv[]) {
     engagementTicksUntilHurtKill.runQuery(filteredRounds, ticks, playerAtTick, hurt, kills, behaviorTreeLatentEvents);
     std::cout << "size: " << engagementTicksUntilHurtKill.size << std::endl;
 
+     */
     // inference latent engagement
     // https://pytorch.org/docs/stable/notes/cpu_threading_torchscript_inference.html
     // want high intra-op parallelism but not inter-op parallelism
     // intra-op
     //at::set_num_threads(1);
     // inter-op
+    /*
     at::set_num_interop_threads(1);
 
     string inferenceLatentOrderName = "inferenceLatentOrder";
@@ -418,6 +421,7 @@ int main(int argc, char * argv[]) {
     csknow::inference_latent_aggression::InferenceLatentAggressionDistributionResult
         inferenceLatentAggressionDistributionResult(playerAtTick, queryPlayerAtTick, inferenceLatentAggressionResult);
     inferenceLatentAggressionResult.perTickPlayerLabelsQuery = inferenceLatentAggressionDistributionName;
+     */
     /*
     string inferenceLatentEngagementHitName = "inferenceLatentEngagementHit";
     std::cout << "processing inference latent engagements hit" << std::endl;
@@ -438,6 +442,7 @@ int main(int argc, char * argv[]) {
     AggressionEventResult aggressionEventResult =
             queryAggressionRoles(games, filteredRounds, ticks, playerAtTick, map_navs["de_dust2"], map_visPoints.find("de_dust2")->second, d2ReachableResult);
             */
+    /*
     std::cout << "processing non engagement trajectory" << std::endl;
     string nonEngagementTrajectoryName = "nonEngagementTrajectory";
     NonEngagementTrajectoryResult nonEngagementTrajectoryResult =
@@ -448,6 +453,7 @@ int main(int argc, char * argv[]) {
     TrajectorySegmentResult trajectorySegmentResult =
             queryAllTrajectories(players, games, filteredRounds, ticks, playerAtTick, nonEngagementTrajectoryResult);
     std::cout << "size: " << trajectorySegmentResult.size << std::endl;
+     */
 
     /*
      disabling aim model stuff
@@ -615,12 +621,12 @@ int main(int argc, char * argv[]) {
         {"weaponFire", queryWeaponFire},
         {"hurt", queryHurt},
         {"kills", queryKills},
-        {inferenceLatentOrderName, inferenceLatentOrderResult},
-        {inferenceLatentPlaceName, inferenceLatentPlaceResult},
-        {inferenceLatentAreaName, inferenceLatentAreaResult},
-        {latentEngagementName, latentEngagementResult},
-        {inferenceLatentEngagementName, inferenceLatentEngagementResult},
-        {inferenceLatentAggressionName, inferenceLatentAggressionResult},
+        //{inferenceLatentOrderName, inferenceLatentOrderResult},
+        //{inferenceLatentPlaceName, inferenceLatentPlaceResult},
+        //{inferenceLatentAreaName, inferenceLatentAreaResult},
+        //{latentEngagementName, latentEngagementResult},
+        //{inferenceLatentEngagementName, inferenceLatentEngagementResult},
+        //{inferenceLatentAggressionName, inferenceLatentAggressionResult},
     };
 
     // create the output files and the metadata describing files
@@ -651,24 +657,24 @@ int main(int argc, char * argv[]) {
             {dust2ReachableName, d2ReachableResult},
             {dust2DistanceToPlacesName, d2DistanceToPlacesResult},
             //{aggressionEventName, aggressionEventResult},
-            {engagementName, engagementResult},
+            //{engagementName, engagementResult},
             /* aim model queries
             {engagementPerTickAimName, engagementPerTickAimResult},
             {inferenceEngagementAimName, inferenceEngagementAimResult},
              */
-            {nonEngagementTrajectoryName, nonEngagementTrajectoryResult},
-            {trajectorySegmentName, trajectorySegmentResult},
-            {inferenceLatentOrderName, inferenceLatentOrderResult},
-            {inferenceLatentOrderDistributionName, inferenceLatentOrderDistributionResult},
-            {inferenceLatentPlaceName, inferenceLatentPlaceResult},
-            {inferenceLatentPlaceDistributionName, inferenceLatentPlaceDistributionResult},
-            {inferenceLatentAreaName, inferenceLatentAreaResult},
-            {inferenceLatentAreaDistributionName, inferenceLatentAreaDistributionResult},
-            {latentEngagementName, latentEngagementResult},
-            {inferenceLatentEngagementName, inferenceLatentEngagementResult},
-            {inferenceLatentEngagementDistributionName, inferenceLatentEngagementDistributionResult},
-            {inferenceLatentAggressionName, inferenceLatentAggressionResult},
-            {inferenceLatentAggressionDistributionName, inferenceLatentAggressionDistributionResult},
+            //{nonEngagementTrajectoryName, nonEngagementTrajectoryResult},
+            //{trajectorySegmentName, trajectorySegmentResult},
+            //{inferenceLatentOrderName, inferenceLatentOrderResult},
+            //{inferenceLatentOrderDistributionName, inferenceLatentOrderDistributionResult},
+            //{inferenceLatentPlaceName, inferenceLatentPlaceResult},
+            //{inferenceLatentPlaceDistributionName, inferenceLatentPlaceDistributionResult},
+            //{inferenceLatentAreaName, inferenceLatentAreaResult},
+            //{inferenceLatentAreaDistributionName, inferenceLatentAreaDistributionResult},
+            //{latentEngagementName, latentEngagementResult},
+            //{inferenceLatentEngagementName, inferenceLatentEngagementResult},
+            //{inferenceLatentEngagementDistributionName, inferenceLatentEngagementDistributionResult},
+            //{inferenceLatentAggressionName, inferenceLatentAggressionResult},
+            //{inferenceLatentAggressionDistributionName, inferenceLatentAggressionDistributionResult},
             //{inferenceLatentEngagementHitName, inferenceLatentEngagementHitResult},
             //{inferenceLatentEngagementVisibleName, inferenceLatentEngagementVisibleResult},
             //{queryNames[5], aCatClusterSequence},
