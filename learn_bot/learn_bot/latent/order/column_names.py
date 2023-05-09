@@ -123,7 +123,7 @@ class PlayerOrderColumns:
         self.distance_to_b_site = "distance to b site " + player_team_str(team_str, player_index)
         self.pos = [get_player_pos_columns(player_index, team_str, dim_str) for dim_str in ["x", "y", "z"]]
         self.prior_pos = []
-        self.vel = [get_player_pos_columns(player_index, team_str, dim_str) for dim_str in ["x", "y", "z"]]
+        self.vel = [get_player_velocity_columns(player_index, team_str, dim_str) for dim_str in ["x", "y", "z"]]
         self.cur_place = []
         # self.prior_place = []
         self.area_grid_cell_in_place = []
