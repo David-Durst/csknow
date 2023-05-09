@@ -641,8 +641,8 @@ namespace csknow::feature_store {
                 }
                 int64_t tickIndex = unmodifiedTickIndex / every_nth_row;
                 freezeTimeEnded[tickIndex] = rounds.freezeTimeEnd[roundIndex] <= unmodifiedTickIndex;
-                retakeSaveRoundTick[tickIndex] = keyRetakeEvents.ctAliveAfterExplosion[tickIndex] ||
-                        keyRetakeEvents.ctAliveAfterExplosion[tickIndex];
+                retakeSaveRoundTick[tickIndex] = keyRetakeEvents.ctAliveAfterExplosion[unmodifiedTickIndex] ||
+                        keyRetakeEvents.ctAliveAfterExplosion[unmodifiedTickIndex];
                 // add a new tick every second
                 if (ticks1sFutureTracker.isEmpty() ||
                     secondsBetweenTicks(ticks, tickRates, tickIndex * every_nth_row, ticks1sFutureTracker.fromNewest() * every_nth_row) >= 0.25) {
@@ -695,6 +695,23 @@ namespace csknow::feature_store {
                     std::cout << "distribution nearest b order 2 30s CT 0 " << columnCTData[0].distributionNearestBOrders30s[2][tickIndex] << std::endl;
                 }
                  */
+                /*
+                for (size_t columnIndex = 0; columnIndex < maxEnemies; columnIndex++) {
+                    if (columnTData[columnIndex].playerId[tickIndex] != INVALID_ID &&
+                        columnTData[columnIndex].curPlace[7][tickIndex] && !retakeSaveRoundTick[tickIndex] &&
+                        (c4Status[tickIndex] == C4Status::PlantedB || c4Status[tickIndex] == C4Status::PlantedA)) {
+                        int64_t badPlayerIndex = columnTData[columnIndex].playerId[tickIndex];
+                        std::cout << games.demoFile[gameIndex] << " bad tick "
+                                  << " for player (" << badPlayerIndex << "," << players.name[badPlayerIndex + players.idOffset] << ") on tick id "
+                                  << unmodifiedTickIndex << " and game tick " << ticks.gameTickNumber[unmodifiedTickIndex] << std::endl;
+                        std::raise(SIGINT);
+                    }
+                }
+                 */
+                if (ticks.gameTickNumber[unmodifiedTickIndex] == 236466) {
+                    std::cout << "good round " << roundIndex << std::endl;
+                    std::raise(SIGINT);
+                }
             }
             roundsProcessed++;
             printProgress(roundsProcessed, rounds.size);

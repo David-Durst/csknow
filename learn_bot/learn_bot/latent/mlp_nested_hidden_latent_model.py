@@ -22,6 +22,8 @@ class MLPNestedHiddenLatentModel(nn.Module):
             nn.Linear(self.internal_width, self.internal_width),
             nn.LeakyReLU(),
             nn.Linear(self.internal_width, outer_latent_size * inner_latent_size),
+        )
+        self.softmax_output = nn.Sequential(
             nn.Unflatten(1, torch.Size([outer_latent_size, inner_latent_size])),
             nn.Softmax(dim=2),
             nn.Flatten(1)
@@ -36,5 +38,5 @@ class MLPNestedHiddenLatentModel(nn.Module):
 
         # https://github.com/pytorch/pytorch/issues/22440 how to parse tuple output
         # hack for now to keep same API, will remove later
-        return latent, latent
+        return latent, self.softmax_output(latent)
 

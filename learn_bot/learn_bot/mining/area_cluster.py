@@ -1,5 +1,7 @@
 from pathlib import Path
 
+import pandas as pd
+
 from learn_bot.latent.place_area.column_names import *
 from learn_bot.latent.train import latent_team_hdf5_data_path
 from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd
@@ -52,33 +54,44 @@ class MapCoordinate:
         im_draw.rectangle([x_min, y_min, x_max, y_max], fill="red", outline="red")
 
 
-def area_cluster():
-    team_data_df = load_hdf5_to_pd(latent_team_hdf5_data_path)
-    team_data_df = team_data_df[(team_data_df['valid'] == 1.) & (team_data_df['c4 status'] < 2) &
-                                (team_data_df['retake save round tick'] == 0)]
-    player_place_area_columns = [PlayerPlaceAreaColumns(team_str, player_index)
-                                 for team_str in team_strs for player_index in range(max_enemies)]
+def cluster_one_team(team_data_df: pd.DataFrame, player_place_area_columns: List[PlayerPlaceAreaColumns], team_str: str, planted_a: bool):
+    team_data_df = team_data_df[team_data_df[c4_status_col] == (0 if planted_a else 1)]
     player_pos_arrs: List[np.ndarray] = []
     for player_cols in player_place_area_columns:
-        single_player_df = team_data_df.loc[:, player_cols.pos + player_cols.vel + [player_cols.ct_team]]
+        single_player_df = team_data_df.loc[:, player_cols.pos + player_cols.vel + [player_cols.ct_team, player_cols.player_id]]
         single_player_df['vel_magnitude'] = (
                 single_player_df[player_cols.vel[0]] ** 2 +
                 single_player_df[player_cols.vel[1]] ** 2 +
                 single_player_df[player_cols.vel[2]] ** 2).pow(1 / 2)
-        single_player_df = single_player_df[(single_player_df['vel_magnitude'] < 10.) &
-                                            (single_player_df[player_cols.ct_team] == 0)]
+        invalid_rows = single_player_df[(single_player_df[player_cols.player_id] == -1) &
+                                        (single_player_df[player_cols.pos[0]] < 5000.)]
+        if len(invalid_rows) > 0:
+            print("BADDD")
+        single_player_df = single_player_df[(single_player_df['vel_magnitude'] < 1.) &
+                                            (single_player_df[player_cols.player_id] != -1)]
         player_pos_arrs.append(single_player_df.loc[:, player_cols.pos].to_numpy())
         (team_data_df.loc[:, player_cols.vel].to_numpy())
     player_pos_arr = np.concatenate(player_pos_arrs)
     pos_kmeans = KMeans(n_clusters=50, random_state=0, n_init="auto").fit(player_pos_arr)
-    print(pos_kmeans.cluster_centers_)
+    # print(pos_kmeans.cluster_centers_)
     with Image.open(d2_radar_path) as im:
         d2_draw = ImageDraw.Draw(im)
         for i in range(len(pos_kmeans.cluster_centers_)):
             coord_arr = pos_kmeans.cluster_centers_[i]
             MapCoordinate(coord_arr[0], coord_arr[1], coord_arr[2]).draw(d2_draw)
-        im.save(Path(__file__).parent / "de_dust2_heatmap.png")
-        im.show()
+        im.save(Path(__file__).parent / ("de_dust2_heatmap_" + team_str + "_" + ("a" if planted_a else "b") + ".png"))
+
+
+def area_cluster():
+    team_data_df = load_hdf5_to_pd(latent_team_hdf5_data_path)
+    team_data_df = team_data_df[(team_data_df['valid'] == 1.) & (team_data_df['c4 status'] < 2) &
+                                (team_data_df['retake save round tick'] == 0)]# & (team_data_df['round id'] == 14)]
+    #print(team_data_df["distribution nearest place 0 T 0"].value_counts())
+    for team_str in team_strs:
+        player_place_area_columns = [PlayerPlaceAreaColumns(team_str, player_index)
+                                     for player_index in range(max_enemies)]
+        cluster_one_team(team_data_df, player_place_area_columns, team_str, True)
+        cluster_one_team(team_data_df, player_place_area_columns, team_str, False)
 
 
 

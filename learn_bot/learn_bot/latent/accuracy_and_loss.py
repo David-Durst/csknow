@@ -78,29 +78,26 @@ def compute_loss(x, pred, y_transformed, y_untransformed, column_transformers: I
     return losses
 
 
-def compute_accuracy(pred, Y, accuracy, column_transformers: IOColumnTransformers):
+def compute_accuracy(pred, Y, accuracy, valids_per_accuracy_column, column_transformers: IOColumnTransformers):
     pred_untransformed = get_untransformed_outputs(pred)
     pred_untransformed = pred_untransformed.to(CPU_DEVICE_STR)
     Y = Y.to(CPU_DEVICE_STR)
-
-    for name, col_range in zip(column_transformers.output_types.categorical_cols,
-                               column_transformers.get_name_ranges(False, False,
-                                                                   frozenset({ColumnTransformerType.CATEGORICAL}))):
-        # compute accuracy using unnormalized outputs on end
-        accuracy[name] += (pred_untransformed[:, col_range] == Y[:, col_range]).type(torch.float).sum().item()
 
     for name, col_range in zip(column_transformers.output_types.categorical_distribution_first_sub_cols,
                                column_transformers.get_name_ranges(False, False,
                                                                    frozenset({ColumnTransformerType.CATEGORICAL_DISTRIBUTION}))):
         valid_Y = Y[Y[:, col_range[0]] >= 0.][:, col_range]
         valid_pred_untransformed = pred_untransformed[Y[:, col_range[0]] >= 0.][:, col_range]
+        if name not in valids_per_accuracy_column:
+            valids_per_accuracy_column[name] = 0
         if valid_Y.shape[0] > 0:
             accuracy[name] += (torch.argmax(valid_pred_untransformed, -1, keepdim=True) ==
                                torch.argmax(valid_Y, -1, keepdim=True)).type(torch.float).sum().item()
+            valids_per_accuracy_column[name] += len(valid_Y)
         #accuracy[name] += base_classification_loss_fn(pred_untransformed[:, col_range], Y[:, col_range])
 
 
-def finish_accuracy(accuracy, column_transformers: IOColumnTransformers):
+def finish_accuracy(accuracy, valids_per_accuracy_column, column_transformers: IOColumnTransformers):
     accuracy_string = ""
     for name, unadjusted_r in zip(column_transformers.output_types.column_names(True),
                                   column_transformers.get_name_ranges(False, False)):
@@ -117,7 +114,10 @@ def finish_accuracy(accuracy, column_transformers: IOColumnTransformers):
         elif name in column_transformers.output_types.categorical_cols:
             accuracy_string += f'''{name}: {accuracy[name]} % cat top 1 acc'''
         elif name in column_transformers.output_types.column_names_all_categorical_columns():
-            accuracy_string += f'''{name}: {accuracy[name]} % cat top 1 acc'''
+            if valids_per_accuracy_column[name] > 0:
+                accuracy_string += f'''{name}: {accuracy[name]} % cat top 1 acc'''
+            else:
+                accuracy_string += f'''{name}: no valids % cat top 1 acc'''
         else:
             raise "Invalid Column Type For finish_accuracy"
         accuracy_string += "; "

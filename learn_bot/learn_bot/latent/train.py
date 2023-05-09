@@ -67,15 +67,21 @@ class TrainType(Enum):
 
 
 def train(train_type: TrainType, all_data_df: pd.DataFrame, num_epochs: int,
-          windowed=False, save=True) -> TrainResult:
+          windowed=False, save=True, diff_train_test=True) -> TrainResult:
 
-    train_test_split = train_test_split_by_col(all_data_df, round_id_column)
-    train_df = train_test_split.train_df.copy()
-    train_group_ids = train_test_split.train_group_ids
-    make_index_column(train_df)
-    test_df = train_test_split.test_df.copy()
-    test_group_ids = get_test_col_ids(train_test_split, round_id_column)
-    make_index_column(test_df)
+    if diff_train_test:
+        train_test_split = train_test_split_by_col(all_data_df, round_id_column)
+        train_df = train_test_split.train_df.copy()
+        train_group_ids = train_test_split.train_group_ids
+        make_index_column(train_df)
+        test_df = train_test_split.test_df.copy()
+        test_group_ids = get_test_col_ids(train_test_split, round_id_column)
+        make_index_column(test_df)
+    else:
+        make_index_column(all_data_df)
+        train_df = all_data_df
+        train_group_ids = list(all_data_df.loc[:, round_id_column].unique())
+        test_df = all_data_df
 
     # Get cpu or gpu device for training.
     device: str = CUDA_DEVICE_STR if torch.cuda.is_available() else CPU_DEVICE_STR
@@ -153,6 +159,7 @@ def train(train_type: TrainType, all_data_df: pd.DataFrame, num_epochs: int,
             model.eval()
         cumulative_loss = LatentLosses()
         accuracy = {}
+        valids_per_accuracy_column = {}
         losses = []
         # bar = Bar('Processing', max=size)
         for name in column_transformers.output_types.column_names():
@@ -206,13 +213,14 @@ def train(train_type: TrainType, all_data_df: pd.DataFrame, num_epochs: int,
                     batch_loss.get_total_loss().backward()
                     optimizer.step()
 
-                compute_accuracy(pred, Y, accuracy, column_transformers)
+                compute_accuracy(pred, Y, accuracy, valids_per_accuracy_column, column_transformers)
                 pbar.update(1)
 
         cumulative_loss /= len(dataloader)
         for name in column_transformers.output_types.column_names():
-            accuracy[name] /= size
-        accuracy_string = finish_accuracy(accuracy, column_transformers)
+            if valids_per_accuracy_column[name] > 0:
+                accuracy[name] /= valids_per_accuracy_column[name]
+        accuracy_string = finish_accuracy(accuracy, valids_per_accuracy_column, column_transformers)
         train_test_str = "Train" if train else "Test"
         print(f"Epoch {train_test_str} Accuracy: {accuracy_string}, Transformed Avg Loss: {cumulative_loss.get_total_loss().item():>8f}")
         return cumulative_loss, accuracy
@@ -314,13 +322,14 @@ def run_team_analysis():
         #                                                  (team_data_df['retake save round tick'] == 1)])}''')
         #print(f'''num retake non-save ticks {len(team_data_df[(team_data_df['valid'] == 1.) & (team_data_df['c4 status'] < 2) &
         #                                                  (team_data_df['retake save round tick'] == 0)])}''')
-        #team_data_df = team_data_df[(team_data_df['valid'] == 1.) & (team_data_df['c4 status'] < 2)]
-        team_data_df = team_data_df[(team_data_df['valid'] == 1.) & (team_data_df['freeze time ended'] == 1.)]
+        team_data_df = team_data_df[(team_data_df['valid'] == 1.) & (team_data_df['c4 status'] < 2) &
+                                    (team_data_df['round id'] == 14)].iloc[range(100)]
+        #team_data_df = team_data_df[(team_data_df['valid'] == 1.) & (team_data_df['freeze time ended'] == 1.)]
                                     #(team_data_df['retake save round tick'] == 0)]
         team_data_df.to_parquet(small_latent_team_hdf5_data_path)
-    train_result = train(TrainType.Order, team_data_df, num_epochs=3, windowed=False)
-    train_result = train(TrainType.Place, team_data_df, num_epochs=3, windowed=False)
-    train_result = train(TrainType.Area, team_data_df, num_epochs=3, windowed=False)
+    #train_result = train(TrainType.Order, team_data_df, num_epochs=3, windowed=False)
+    train_result = train(TrainType.Place, team_data_df, num_epochs=1000, windowed=False, diff_train_test=False)
+    #train_result = train(TrainType.Area, team_data_df, num_epochs=3, windowed=False)
 
 
 def run_individual_analysis():
