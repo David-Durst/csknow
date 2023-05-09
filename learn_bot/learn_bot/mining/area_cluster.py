@@ -60,12 +60,13 @@ def area_cluster():
                                  for team_str in team_strs for player_index in range(max_enemies)]
     player_pos_arrs: List[np.ndarray] = []
     for player_cols in player_place_area_columns:
-        single_player_df = team_data_df.loc[:, player_cols.pos + player_cols.vel]
+        single_player_df = team_data_df.loc[:, player_cols.pos + player_cols.vel + [player_cols.ct_team]]
         single_player_df['vel_magnitude'] = (
                 single_player_df[player_cols.vel[0]] ** 2 +
                 single_player_df[player_cols.vel[1]] ** 2 +
                 single_player_df[player_cols.vel[2]] ** 2).pow(1 / 2)
-        single_player_df = single_player_df[single_player_df['vel_magnitude'] < 10.]
+        single_player_df = single_player_df[(single_player_df['vel_magnitude'] < 10.) &
+                                            (single_player_df[player_cols.ct_team] == 0)]
         player_pos_arrs.append(single_player_df.loc[:, player_cols.pos].to_numpy())
         (team_data_df.loc[:, player_cols.vel].to_numpy())
     player_pos_arr = np.concatenate(player_pos_arrs)
