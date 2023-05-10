@@ -116,6 +116,7 @@ namespace csknow::nearest_nav_cell {
         }
 
         // true if distance metric is cells, false if distance metric is areas
+        // grid is fully dense, cells are regular but missing in areas where no nav area
         std::vector<CellIdAndDistance> getNearestCells(Vec3 pos) const;
         // NEED TO FIX, 1807 DOESN'T APPEAR AS TOO SMALL FOR CELL, SO CAN"T GET IT
         // NEED A BETTER FIX

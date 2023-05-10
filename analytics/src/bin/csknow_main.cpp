@@ -616,6 +616,7 @@ int main(int argc, char * argv[]) {
         }
          */
 
+    /*
     map<string, reference_wrapper<QueryResult>> analyses {
         {"rounds", queryRounds},
         {"weaponFire", queryWeaponFire},
@@ -638,6 +639,7 @@ int main(int argc, char * argv[]) {
         result.get().toHDF5(outputDir + "/" + name + ".hdf5");
         //fsOverride.close();
     }
+     */
     d2DistanceToPlacesResult.writeAreasPerPlace(outputDir + "/" + "areas_per_place.csv");
 
     //vector<string> queryNames = {"games", "rounds", "players", "ticks", "playerAtTick", "aCatClusterSequence", "aCatClusters", "midCTClusterSequence", "midTClusters", "lookers"};

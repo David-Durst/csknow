@@ -56,6 +56,9 @@ const botRetakesPath = "../bot_retakes_data/"
 // these will be used to replace the AWS S3 prefixes if using manual data set
 const manualProcessedPrefix = "demos/manual_data/processed/"
 const manualCsvPrefixBase = "demos/manual_data/csvs/"
+const manualAlreadyDownloadedFileName = "../manual_data/already_downloaded.txt"
+const manualDir = "manual_data"
+const manualPath = "../manual_data/"
 
 var csvPrefixLocal string
 var csvPrefixGlobal string
@@ -152,6 +155,9 @@ func main() {
 		processedPrefix = manualProcessedPrefix
 		processedSmallPrefix = manualProcessedPrefix
 		csvPrefixBase = manualCsvPrefixBase
+		alreadyDownloadedFileName = manualAlreadyDownloadedFileName
+		dataDir = manualDir
+		dataPath = manualPath
 		updatePrefixs()
 	} else if *bigTrainDataFlag {
 		processedPrefix = bigTrainProcessedPrefix

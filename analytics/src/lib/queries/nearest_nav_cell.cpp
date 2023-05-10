@@ -110,7 +110,20 @@ namespace csknow::nearest_nav_cell {
         Vec3 curGridCenter = gridIndexToCenterPos(curGridIndex);
         IVec3 otherGridIndex = curGridIndex;
         otherGridIndex.x += pos.x >= curGridCenter.x ? 1 : -1;
+        // if on edge, mirror reflect so not out of bounds
+        if (otherGridIndex.x >= gridDimensions.x) {
+            otherGridIndex.x -= 2;
+        }
+        else if (otherGridIndex.x < 0) {
+            otherGridIndex.x = 1;
+        }
         otherGridIndex.y += pos.y >= curGridCenter.y ? 1 : -1;
+        if (otherGridIndex.y >= gridDimensions.y) {
+            otherGridIndex.y -= 2;
+        }
+        else if (otherGridIndex.y < 0) {
+            otherGridIndex.y = 1;
+        }
         const NearestGridData & otherGridData = gridIndexToNearestCells(otherGridIndex);
 
         CellIdAndDistance firstNearest = nearestGridData[0];
