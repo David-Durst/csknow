@@ -14,7 +14,9 @@ namespace csknow::feature_store {
         size_t size = (totalSize == 1) ? totalSize : totalSize / every_nth_row;
         //size_t size = totalSize;
         roundId.resize(size, INVALID_ID);
+        roundNumber.resize(size, INVALID_ID);
         tickId.resize(size, INVALID_ID);
+        gameTickNumber.resize(size, INVALID_ID);
         valid.resize(size, false);
         freezeTimeEnded.resize(size, false);
         retakeSaveRoundTick.resize(size, false);
@@ -119,7 +121,9 @@ namespace csknow::feature_store {
     void TeamFeatureStoreResult::reinit() {
         for (int64_t rowIndex = 0; rowIndex < size; rowIndex++) {
             roundId[rowIndex] = INVALID_ID;
+            roundNumber[rowIndex] = INVALID_ID;
             tickId[rowIndex] = INVALID_ID;
+            gameTickNumber[rowIndex] = INVALID_ID;
             valid[rowIndex] = false;
             freezeTimeEnded[rowIndex] = false;
             retakeSaveRoundTick[rowIndex] = false;
@@ -640,6 +644,8 @@ namespace csknow::feature_store {
                     continue;
                 }
                 int64_t tickIndex = unmodifiedTickIndex / every_nth_row;
+                gameTickNumber[tickIndex] = ticks.gameTickNumber[unmodifiedTickIndex];
+                roundNumber[tickIndex] = rounds.roundNumber[roundIndex];
                 freezeTimeEnded[tickIndex] = rounds.freezeTimeEnd[roundIndex] <= unmodifiedTickIndex;
                 retakeSaveRoundTick[tickIndex] = keyRetakeEvents.ctAliveAfterExplosion[unmodifiedTickIndex] ||
                         keyRetakeEvents.ctAliveAfterExplosion[unmodifiedTickIndex];
@@ -725,6 +731,8 @@ namespace csknow::feature_store {
 
         file.createDataSet("/data/round id", roundId, hdf5FlatCreateProps);
         file.createDataSet("/data/tick id", tickId, hdf5FlatCreateProps);
+        file.createDataSet("/data/game tick number", gameTickNumber, hdf5FlatCreateProps);
+        file.createDataSet("/data/round number", roundNumber, hdf5FlatCreateProps);
         file.createDataSet("/data/valid", valid, hdf5FlatCreateProps);
         file.createDataSet("/data/freeze time ended", freezeTimeEnded, hdf5FlatCreateProps);
         file.createDataSet("/data/retake save round tick", retakeSaveRoundTick, hdf5FlatCreateProps);

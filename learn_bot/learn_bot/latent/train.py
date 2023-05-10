@@ -3,6 +3,7 @@ from enum import Enum
 from typing import Dict
 import sys
 
+import pandas as pd
 import torch.optim
 from torch import nn
 from torch.utils.data import DataLoader
@@ -305,13 +306,25 @@ def train(train_type: TrainType, all_data_df: pd.DataFrame, num_epochs: int,
 
 latent_team_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / 'analytics' / 'csv_outputs' / 'behaviorTreeTeamFeatureStore.hdf5'
 small_latent_team_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / 'analytics' / 'csv_outputs' / 'smallBehaviorTreeTeamFeatureStore.parquet'
+manual_latent_team_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / 'analytics' / 'manual_outputs' / 'behaviorTreeTeamFeatureStore.hdf5'
+manual_rounds_data_path = Path(__file__).parent / '..' / '..' / '..' / 'analytics' / 'saved_datasets' / 'bot_sample_traces_5_10_23_ticks.csv'
 
 use_small_data = False
+use_manual_data = True
 
 def run_team_analysis():
     read_start = time.time()
     if use_small_data:
         team_data_df = pd.read_parquet(small_latent_team_hdf5_data_path)
+    elif use_manual_data:
+        team_data_df = load_hdf5_to_pd(manual_latent_team_hdf5_data_path)
+        valid_rounds_df = pd.read_csv(manual_rounds_data_path)
+        rounds_condition = False
+        for index, row in valid_rounds_df.iterrows():
+            rounds_condition = rounds_condition | ((team_data_df['round number'] == row['round id']) &
+                               (team_data_df['game tick number'] >= row['start game tick']) &
+                               (team_data_df['game tick number'] <= row['end game tick']))
+        team_data_df = team_data_df[rounds_condition]
     else:
         team_data_df = load_hdf5_to_pd(latent_team_hdf5_data_path)
         #valid_selector_df = valid_df[valid_df['valid'] == 1.].index

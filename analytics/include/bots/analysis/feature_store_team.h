@@ -41,7 +41,9 @@ namespace csknow::feature_store {
         std::vector<csknow::orders::QueryOrder> aOrders, bOrders;
 
         vector<int64_t> roundId;
+        vector<int64_t> roundNumber;
         vector<int64_t> tickId;
+        vector<int64_t> gameTickNumber;
         vector<bool> valid;
         vector<bool> freezeTimeEnded;
         vector<bool> retakeSaveRoundTick;
