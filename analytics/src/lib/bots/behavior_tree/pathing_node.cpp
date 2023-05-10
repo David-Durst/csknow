@@ -29,10 +29,12 @@ namespace movement {
         //updateAreasToIncreaseCost(state, blackboard, curClient);
         AreaId targetAreaId = blackboard.navFile.get_nearest_area_by_position(preCheckTargetPos).get_id();
         nav_mesh::vec3_t targetPos;
+        bool validArea = false;
         if (blackboard.removedAreas.find(targetAreaId) != blackboard.removedAreas.end()) {
             targetPos = blackboard.navFile.get_area_by_id_fast(blackboard.removedAreaAlternatives[targetAreaId]).get_center();
         }
         else {
+            validArea = true;
             targetPos = preCheckTargetPos;
         }
 
@@ -51,6 +53,26 @@ namespace movement {
             newPath.curWaypoint = 0;
             newPath.pathEndAreaId =
                     blackboard.navFile.get_nearest_area_by_position(targetPos).get_id();
+            if (validArea) {
+                size_t targetAreaIndex = blackboard.navFile.m_area_ids_to_indices.at(targetAreaId);
+                const AABB & targetAreaAABB = blackboard.reachability.coordinate[targetAreaIndex];
+                Vec3 & endPos = newPath.waypoints.back().pos;
+                // force player to center if not wide enough
+                if (targetAreaAABB.max.x - targetAreaAABB.min.x < WIDTH*5) {
+                    endPos.x = getCenter(targetAreaAABB).x;
+                }
+                else {
+                    endPos.x = std::min(targetAreaAABB.max.x - WIDTH * 2.5, endPos.x);
+                    endPos.x = std::max(targetAreaAABB.min.x + WIDTH * 2.5, endPos.x);
+                }
+                if (targetAreaAABB.max.y - targetAreaAABB.min.y < WIDTH*5) {
+                    endPos.y = getCenter(targetAreaAABB).y;
+                }
+                else {
+                    endPos.y = std::min(targetAreaAABB.max.y - WIDTH * 2.5, endPos.y);
+                    endPos.y = std::max(targetAreaAABB.min.y + WIDTH * 2.5, endPos.y);
+                }
+            }
         }
         else {
             // do nothing if the pathing call failed
@@ -66,6 +88,10 @@ namespace movement {
         Vec3 curPos = curClient.getFootPosForPlayer();
         const nav_mesh::nav_area & curArea = blackboard.navFile.get_nearest_area_by_position(vec3Conv(curPos));
         uint32_t targetAreaId = blackboard.navFile.get_nearest_area_by_position(vec3Conv(curPriority.targetPos)).get_id();
+        if (blackboard.forceTestPosPerPlayer.find(curClient.csgoId) != blackboard.forceTestPosPerPlayer.end()) {
+            targetAreaId = blackboard.navFile.get_nearest_area_by_position(vec3Conv(
+                    blackboard.forceTestPosPerPlayer.at(curClient.csgoId))).get_id();
+        }
 
         // if have a path and haven't changed source or target nav area id and not stuck.
         // If so, do nothing (except increment waypoint if necessary)
@@ -113,7 +139,11 @@ namespace movement {
         }
 
         // otherwise, either no old path or old path is out of date, so update it
-        Path newPath = computePath(blackboard, vec3Conv(curPriority.targetPos), curClient);
+        Vec3 targetPos = curPriority.targetPos;
+        if (blackboard.forceTestPosPerPlayer.find(curClient.csgoId) != blackboard.forceTestPosPerPlayer.end()) {
+            targetPos = blackboard.forceTestPosPerPlayer.at(curClient.csgoId);
+        }
+        Path newPath = computePath(blackboard, vec3Conv(targetPos), curClient);
         /*
         // IF LOOPING, LOOK HERE FOR CYCLES
         if (blackboard.playerToPath.find(treeThinker.csgoId) != blackboard.playerToPath.end()) {

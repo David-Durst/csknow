@@ -104,6 +104,19 @@ public:
     }
 };
 
+class ForceTargetPos : public Node {
+    CSGOId targetId;
+    Vec3 targetPos;
+public:
+    ForceTargetPos(Blackboard & blackboard, CSGOId targetId, Vec3 targetPos, string name = "ForceTargetPos") :
+            Node(blackboard, std::move(name)), targetId(targetId), targetPos(targetPos) { };
+    NodeState exec(const ServerState &, TreeThinker &treeThinker) override {
+        blackboard.forceTestPosPerPlayer[targetId] = targetPos;
+        playerNodeState[treeThinker.csgoId] = NodeState::Success;
+        return playerNodeState[treeThinker.csgoId];
+    }
+};
+
 class DisableActionsNode : public Node {
     vector<CSGOId> targetIds;
     bool disableMouse, disableFiring, disableMove;

@@ -3,6 +3,7 @@
 #include "bots/testing/script.h"
 #include "bots/testing/scripts/navigation/test_entry.h"
 #include "bots/testing/scripts/navigation/test_hold.h"
+#include "bots/testing/scripts/navigation/test_basic.h"
 #include "bots/testing/scripts/test_aim.h"
 #include "bots/testing/scripts/test_memory.h"
 #include "bots/testing/scripts/test_communication.h"
@@ -71,8 +72,9 @@ int main(int argc, char * argv[]) {
             make_unique<CTPushBDoorsScript>(state),
             make_unique<CTPushBHoleScript>(state),
             make_unique<DefuseScript>(state),
+            make_unique<InterruptedDefuseScript>(state),
              */
-            make_unique<InterruptedDefuseScript>(state)
+            make_unique<NavInsideNodeScript>(state)
             /*
             make_unique<HoldLongScript>(state),
             make_unique<HoldASitePushScript>(state),

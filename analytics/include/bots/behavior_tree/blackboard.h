@@ -195,6 +195,7 @@ struct Blackboard {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wattributes"
     [[maybe_unused]] bool inTest = false; // inTest just for debugging, setting break points once test setup
+    [[maybe_unused]] std::map<CSGOId, Vec3> forceTestPosPerPlayer;
     [[maybe_unused]] bool inAnalysis = false; // inAnalysis just bt rerun over logs
 #pragma GCC diagnostic pop
     map<TeamId, RoundNumber> teamToLastRoundSawEnemy;
