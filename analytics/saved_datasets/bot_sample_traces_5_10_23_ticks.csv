@@ -1,0 +1,6 @@
+test name,start game tick,end game tick,round id
+full ct cat,14670,16082,5
+short ct cat,16479,17127,6
+long ct,17464,19495,7
+bdoors ct,20029,20862,8
+hole ct,21199,22348,9
