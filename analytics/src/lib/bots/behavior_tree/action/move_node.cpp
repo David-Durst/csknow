@@ -49,7 +49,7 @@ namespace action {
 
                 Vec2 deltaViewAngle = targetViewAngle - curViewAngle;
                 deltaViewAngle.makeYawNeg180To180();
-                if (blackboard.isPlayerDefuser(curClient.csgoId) || computeMagnitude(finalVector) > WIDTH) {
+                if (blackboard.isPlayerDefuser(curClient.csgoId) || computeMagnitude(finalVector) > WIDTH/2) {
                     moveInDir(curAction, deltaViewAngle);
                 }
 

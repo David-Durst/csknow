@@ -73,14 +73,16 @@ int main(int argc, char * argv[]) {
             make_unique<CTPushBHoleScript>(state),
             make_unique<DefuseScript>(state),
             make_unique<InterruptedDefuseScript>(state),
-             */
-            make_unique<NavInsideNodeScript>(state)
-            /*
+             // * /
+            make_unique<NavInsideNodeScript>(state),
+            // / *
             make_unique<HoldLongScript>(state),
+                    */
             make_unique<HoldASitePushScript>(state),
-            make_unique<HoldASiteBaitScript>(state),
+            make_unique<HoldASiteBaitScript>(state)
+                    /*
             make_unique<HoldBSitePushScript>(state),
-            make_unique<HoldBSiteBaitScript>(state),
+            make_unique<HoldBSiteBaitScript>(state)
             make_unique<AimAndKillWithinTimeCheck>(state),
             make_unique<CTEngageSpacingScript>(state),
             make_unique<PushBaitGooseToCatScript>(state),
