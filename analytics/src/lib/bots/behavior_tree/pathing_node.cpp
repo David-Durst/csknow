@@ -58,19 +58,19 @@ namespace movement {
                 const AABB & targetAreaAABB = blackboard.reachability.coordinate[targetAreaIndex];
                 Vec3 & endPos = newPath.waypoints.back().pos;
                 // force player to center if not wide enough
-                if (targetAreaAABB.max.x - targetAreaAABB.min.x < WIDTH*5) {
+                if (targetAreaAABB.max.x - targetAreaAABB.min.x < WIDTH*4) {
                     endPos.x = getCenter(targetAreaAABB).x;
                 }
                 else {
-                    endPos.x = std::min(targetAreaAABB.max.x - WIDTH * 2.5, endPos.x);
-                    endPos.x = std::max(targetAreaAABB.min.x + WIDTH * 2.5, endPos.x);
+                    endPos.x = std::min(targetAreaAABB.max.x - WIDTH * 2, endPos.x);
+                    endPos.x = std::max(targetAreaAABB.min.x + WIDTH * 2, endPos.x);
                 }
-                if (targetAreaAABB.max.y - targetAreaAABB.min.y < WIDTH*5) {
+                if (targetAreaAABB.max.y - targetAreaAABB.min.y < WIDTH*4) {
                     endPos.y = getCenter(targetAreaAABB).y;
                 }
                 else {
-                    endPos.y = std::min(targetAreaAABB.max.y - WIDTH * 2.5, endPos.y);
-                    endPos.y = std::max(targetAreaAABB.min.y + WIDTH * 2.5, endPos.y);
+                    endPos.y = std::min(targetAreaAABB.max.y - WIDTH * 2, endPos.y);
+                    endPos.y = std::max(targetAreaAABB.min.y + WIDTH * 2, endPos.y);
                 }
             }
         }
@@ -93,12 +93,27 @@ namespace movement {
                     blackboard.forceTestPosPerPlayer.at(curClient.csgoId))).get_id();
         }
 
+        // filter out accidental cur area changes that are recoverable
+        bool changeCurArea = curArea.get_id() != blackboard.playerToLastPathingSourceNavAreaId[treeThinker.csgoId];
+        if (changeCurArea && blackboard.playerToPath.find(treeThinker.csgoId) != blackboard.playerToPath.end() &&
+            blackboard.playerToLastPathingSourceNavAreaId.find(treeThinker.csgoId) != blackboard.playerToLastPathingSourceNavAreaId.end()) {
+            Path & curPath = blackboard.playerToPath[treeThinker.csgoId];
+            if (curPath.areas.find(curArea.get_id()) == curPath.areas.end()) {
+                for (const auto & conId : curArea.get_connections()) {
+                    if (blackboard.playerToLastPathingSourceNavAreaId[treeThinker.csgoId] == conId.id) {
+                        changeCurArea = false;
+                        break;
+                    }
+                }
+            }
+        }
+
         // if have a path and haven't changed source or target nav area id and not stuck.
         // If so, do nothing (except increment waypoint if necessary)
         // also check that not in an already visited area because missed a jump
         if (blackboard.playerToPath.find(treeThinker.csgoId) != blackboard.playerToPath.end() &&
             blackboard.playerToLastPathingSourceNavAreaId.find(treeThinker.csgoId) != blackboard.playerToLastPathingSourceNavAreaId.end() &&
-            curArea.get_id() == blackboard.playerToLastPathingSourceNavAreaId[treeThinker.csgoId] &&
+            !changeCurArea &&
             blackboard.playerToLastPathingTargetNavAreaId.find(treeThinker.csgoId) != blackboard.playerToLastPathingTargetNavAreaId.end() &&
             targetAreaId == blackboard.playerToLastPathingTargetNavAreaId[treeThinker.csgoId]) {
             Path & curPath = blackboard.playerToPath[treeThinker.csgoId];
