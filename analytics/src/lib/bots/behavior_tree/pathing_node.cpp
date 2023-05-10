@@ -24,7 +24,7 @@ namespace movement {
      */
 
     Path computePath(Blackboard & blackboard, nav_mesh::vec3_t preCheckTargetPos,
-                     const ServerState::Client & curClient) {
+                     const ServerState::Client & curClient, std::optional<Vec3> c4Pos) {
         Path newPath;
         //updateAreasToIncreaseCost(state, blackboard, curClient);
         AreaId targetAreaId = blackboard.navFile.get_nearest_area_by_position(preCheckTargetPos).get_id();
@@ -53,10 +53,12 @@ namespace movement {
             newPath.curWaypoint = 0;
             newPath.pathEndAreaId =
                     blackboard.navFile.get_nearest_area_by_position(targetPos).get_id();
-            if (validArea) {
+            if (validArea && (!c4Pos || vec3Conv(c4Pos.value()) != targetPos)) {
                 size_t targetAreaIndex = blackboard.navFile.m_area_ids_to_indices.at(targetAreaId);
                 const AABB & targetAreaAABB = blackboard.reachability.coordinate[targetAreaIndex];
+                // create an extra waypoint that is known to be good before getting to end
                 Vec3 & endPos = newPath.waypoints.back().pos;
+                //newPath.waypoints.push_back(newPath.waypoints.back());
                 // force player to center if not wide enough
                 if (targetAreaAABB.max.x - targetAreaAABB.min.x < WIDTH*4) {
                     endPos.x = getCenter(targetAreaAABB).x;
@@ -158,7 +160,7 @@ namespace movement {
         if (blackboard.forceTestPosPerPlayer.find(curClient.csgoId) != blackboard.forceTestPosPerPlayer.end()) {
             targetPos = blackboard.forceTestPosPerPlayer.at(curClient.csgoId);
         }
-        Path newPath = computePath(blackboard, vec3Conv(targetPos), curClient);
+        Path newPath = computePath(blackboard, vec3Conv(targetPos), curClient, state.getC4Pos());
         /*
         // IF LOOPING, LOOK HERE FOR CYCLES
         if (blackboard.playerToPath.find(treeThinker.csgoId) != blackboard.playerToPath.end()) {

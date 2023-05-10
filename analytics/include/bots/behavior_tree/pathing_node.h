@@ -15,7 +15,7 @@
 
 namespace movement {
     Path computePath(Blackboard & blackboard, nav_mesh::vec3_t preCheckTargetPos,
-                     const ServerState::Client & curClient);
+                     const ServerState::Client & curClient, std::optional<Vec3> c4Pos = std::nullopt);
 
     class PathingNode : public Node {
     public:
