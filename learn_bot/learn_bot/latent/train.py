@@ -83,6 +83,14 @@ class ColumnsToFlip:
             cols_rename_map[cols_to_swap[1]] = cols_to_swap[0]
         df.rename(columns=cols_rename_map, inplace=True)
 
+    def check_flip(self, old_df: pd.DataFrame, new_df: pd.DataFrame):
+        col1_columns = [col for col in old_df.columns if self.col1_template in col]
+        col2_columns = [col for col in old_df.columns if self.col2_template in col]
+        print("flipped columns " + ",".join(col2_columns))
+        for (col1, col2) in zip(col1_columns, col2_columns):
+            assert (old_df[col1] == new_df[col2]).all()
+            assert (old_df[col2] == new_df[col1]).all()
+
 
 def train(train_type: TrainType, all_data_df: pd.DataFrame, num_epochs: int,
           windowed=False, save=True, diff_train_test=True, flip_columns: List[ColumnsToFlip] = []) -> TrainResult:
@@ -104,6 +112,7 @@ def train(train_type: TrainType, all_data_df: pd.DataFrame, num_epochs: int,
 
     for flip_column in flip_columns:
         flip_column.apply_flip(test_df)
+        flip_column.check_flip(train_df, test_df)
 
     # Get cpu or gpu device for training.
     device: str = CUDA_DEVICE_STR if torch.cuda.is_available() else CPU_DEVICE_STR
@@ -372,7 +381,7 @@ def run_team_analysis():
     #train_result = train(TrainType.Place, team_data_df, num_epochs=500, windowed=False, diff_train_test=False)
     #train_result = train(TrainType.Area, team_data_df, num_epochs=3, windowed=False)
     train_result = train(TrainType.DeltaPos, team_data_df, num_epochs=500, windowed=False, diff_train_test=False,
-                         flip_columns=[ColumnsToFlip("CT 0", "CT 1")])
+                         flip_columns=[ColumnsToFlip(" CT 0", " CT 1")])
 
 
 def run_individual_analysis():

@@ -81,7 +81,7 @@ class PlayerPlaceAreaColumns:
             flatten_list([self.pos, self.prior_pos, self.vel])
 
     def to_input_distribution_cat_list(self) -> list[list[str]]:
-        return [self.cur_place, self.area_grid_cell_in_place, self.index_on_team, [self.ct_team]]
+        return [self.cur_place, self.area_grid_cell_in_place]#, self.index_on_team, [self.ct_team]]
 
     def to_output_cat_list(self, place: bool, area: bool, delta: bool) -> list[list[str]]:
         result = []
@@ -101,7 +101,7 @@ flat_input_float_place_area_columns: list[str] = \
 flat_input_cat_place_area_columns: list[str] = [c4_status_col]
 flat_input_cat_place_area_num_options: list[int] = [num_c4_status]
 flat_input_distribution_cat_place_area_columns: list[list[str]] = \
-    flatten_list([cols.to_input_distribution_cat_list() for cols in specific_player_order_columns])
+    flatten_list([cols.to_input_distribution_cat_list() for cols in specific_player_place_area_columns])
 flat_output_cat_place_distribution_columns: list[list[str]] = \
     flatten_list([cols.to_output_cat_list(True, False, False) for cols in specific_player_place_area_columns])
 flat_output_cat_area_distribution_columns: list[list[str]] = \
