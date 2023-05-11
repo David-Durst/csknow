@@ -21,8 +21,9 @@ from learn_bot.latent.lstm_latent_model import LSTMLatentModel
 from learn_bot.latent.mlp_hidden_latent_model import MLPHiddenLatentModel
 from learn_bot.latent.mlp_latent_model import MLPLatentModel
 from learn_bot.latent.mlp_nested_hidden_latent_model import MLPNestedHiddenLatentModel
-from learn_bot.latent.order.column_names import order_input_column_types, order_output_column_types, num_orders_per_site, \
-    PlayerOrderColumns
+from learn_bot.latent.order.column_names import order_input_column_types, order_output_column_types, \
+    num_orders_per_site, \
+    PlayerOrderColumns, delta_pos_grid_num_cells
 from learn_bot.latent.order.latent_to_distributions import get_order_probability
 from learn_bot.latent.place_area.column_names import place_area_input_column_types, place_output_column_types, \
     num_places, area_grid_size, area_output_column_types, delta_pos_output_column_types
@@ -171,7 +172,7 @@ def train(train_type: TrainType, all_data_df: pd.DataFrame, num_epochs: int,
     elif train_type == TrainType.DeltaPos:
         column_transformers = IOColumnTransformers(place_area_input_column_types, delta_pos_output_column_types,
                                                    io_column_transform_df)
-        model = TransformerNestedHiddenLatentModel(column_transformers, 2 * max_enemies, area_grid_size).to(device)
+        model = TransformerNestedHiddenLatentModel(column_transformers, 2 * max_enemies, delta_pos_grid_num_cells).to(device)
         input_column_types = place_area_input_column_types
         output_column_types = delta_pos_output_column_types
         prob_func = get_place_area_probability
@@ -275,12 +276,26 @@ def train(train_type: TrainType, all_data_df: pd.DataFrame, num_epochs: int,
         return cumulative_loss, accuracy
 
     def save_model():
+        nonlocal train_type
+        if train_type == TrainType.Engagement:
+            model_path = checkpoints_path / 'engagement_checkpoint.pt'
+        elif train_type == TrainType.Aggression:
+            model_path = checkpoints_path / 'aggression_checkpoint.pt'
+        elif train_type == TrainType.Order:
+            model_path = checkpoints_path / 'order_checkpoint.pt'
+        elif train_type == TrainType.Place:
+            model_path = checkpoints_path / 'place_checkpoint.pt'
+        elif train_type == TrainType.Area:
+            model_path = checkpoints_path / 'area_checkpoint.pt'
+        elif train_type == TrainType.DeltaPos:
+            model_path = checkpoints_path / 'delta_pos_checkpoint.pt'
         torch.save({
             'train_group_ids': train_group_ids,
             'model_state_dict': model.state_dict(),
             'optimizer_state_dict': optimizer.state_dict(),
             'column_transformers': column_transformers,
-        }, checkpoints_path / 'checkpoint.pt')
+            'diff_test_train': diff_train_test
+        }, model_path)
 
     writer = SummaryWriter(runs_path)
     def save_tensorboard(train_loss: LatentLosses, test_loss: LatentLosses, train_accuracy: Dict, test_accuracy: Dict,
@@ -348,6 +363,10 @@ def train(train_type: TrainType, all_data_df: pd.DataFrame, num_epochs: int,
                 script_model.save(checkpoints_path / 'area_script_model.pt')
                 with open(checkpoints_path / 'area_test_round_ids.csv', 'w+') as f:
                     f.write(test_group_ids_str)
+            elif train_type == TrainType.DeltaPos:
+                script_model.save(checkpoints_path / 'delta_pos_script_model.pt')
+                with open(checkpoints_path / 'delta_pos_test_round_ids.csv', 'w+') as f:
+                    f.write(test_group_ids_str)
             model.to(device)
 
     return TrainResult(train_data, test_data, train_df, test_df, column_transformers, model)
@@ -391,8 +410,8 @@ def run_team_analysis():
     #train_result = train(TrainType.Order, team_data_df, num_epochs=3, windowed=False)
     #train_result = train(TrainType.Place, team_data_df, num_epochs=500, windowed=False, diff_train_test=False)
     #train_result = train(TrainType.Area, team_data_df, num_epochs=3, windowed=False)
-    train_result = train(TrainType.DeltaPos, team_data_df, num_epochs=500, windowed=False, diff_train_test=False,
-                         flip_columns=[ColumnsToFlip(" CT 0", " CT 1")])
+    train_result = train(TrainType.DeltaPos, team_data_df, num_epochs=500, windowed=False, diff_train_test=False)
+                         #flip_columns=[ColumnsToFlip(" CT 0", " CT 1")])
 
 
 def run_individual_analysis():

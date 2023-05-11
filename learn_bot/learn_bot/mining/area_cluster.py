@@ -45,13 +45,13 @@ class MapCoordinate:
             self.coords.z
         )
 
-    def draw(self, im_draw: ImageDraw):
+    def draw(self, im_draw: ImageDraw, fill=(255, 0, 0, 255), outline=(255, 0, 0, 255)):
         canvas_coords = self.get_canvas_coordinates()
         x_min = canvas_coords.x - 20
         y_min = canvas_coords.y - 20
         x_max = canvas_coords.x + 20
         y_max = canvas_coords.y + 20
-        im_draw.rectangle([x_min, y_min, x_max, y_max], fill="red", outline="red")
+        im_draw.rectangle([x_min, y_min, x_max, y_max], fill=fill, outline=outline)
 
 
 def cluster_one_team(team_data_df: pd.DataFrame, player_place_area_columns: List[PlayerPlaceAreaColumns], team_str: str, planted_a: bool):

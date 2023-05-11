@@ -645,7 +645,7 @@ class IOColumnTransformers:
         return result
 
     @cache
-    def get_name_ranges_dict(self, input: bool, transformed: bool) -> Dict[str, range]:
+    def get_name_ranges_dict(self, input: bool, transformed: bool, separate_distribution_cols: bool = False) -> Dict[str, range]:
         result: Dict[str, range] = {}
         cur_start: int = 0
 
@@ -689,8 +689,13 @@ class IOColumnTransformers:
 
         for ct in cts:
             if ct.pt_ct_type == ColumnTransformerType.CATEGORICAL_DISTRIBUTION:
-                result[ct.col_names[0]] = range(cur_start, cur_start + len(ct.col_names))
-                cur_start += len(ct.col_names)
+                if separate_distribution_cols:
+                    for col_name in ct.col_names:
+                        result[col_name] = range(cur_start, cur_start + 1)
+                        cur_start += 1
+                else:
+                    result[ct.col_names[0]] = range(cur_start, cur_start + len(ct.col_names))
+                    cur_start += len(ct.col_names)
 
         return result
 
@@ -1040,22 +1045,15 @@ class IOColumnTransformers:
 
         return result
 
-    def get_untransformed_values_multiple_rows(self, x: Union[torch.Tensor, ModelOutput], input: bool,
-                                               subset_str: str = None) -> pd.DataFrame:
-        col_names = self.input_types.column_names() if input else self.output_types.column_names()
-        col_ranges = self.get_name_ranges(input, False)
+    def get_untransformed_values_whole_pd(self, x: np.ndarray, input: bool) -> pd.DataFrame:
+        col_names_to_ranges = self.get_name_ranges_dict(input, False, True)
 
-        x_tensor: torch.Tensor = x if input else x[1]
-        result = []
+        col_names_to_np_arr = {}
+        for col_name, range in col_names_to_ranges.items():
+            col_names_to_ranges[col_name] = x[:, range.start]
 
-        for i in range(x_tensor.shape[0]):
-            row_result = {}
-            for col_name, col_range in zip(col_names, col_ranges):
-                if subset_str is None or subset_str in col_name:
-                    row_result[col_name] = x_tensor[i, col_range.start].item()
-            result.append(row_result)
+        return pd.DataFrame(data=col_names_to_np_arr)
 
-        return pd.DataFrame(result)
 
     def get_untransformed_values_like(self, x: Union[torch.Tensor, ModelOutput], input: bool, subset_str: str) -> Dict:
         all_untransformed_values = self.get_untransformed_values(x, input)
