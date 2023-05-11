@@ -25,7 +25,7 @@ from learn_bot.latent.order.column_names import order_input_column_types, order_
     PlayerOrderColumns
 from learn_bot.latent.order.latent_to_distributions import get_order_probability
 from learn_bot.latent.place_area.column_names import place_area_input_column_types, place_output_column_types, \
-    num_places, area_grid_size, area_output_column_types
+    num_places, area_grid_size, area_output_column_types, delta_pos_output_column_types
 from learn_bot.latent.place_area.latent_to_distributions import get_place_area_probability
 from learn_bot.latent.profiling import profile_latent_model
 from learn_bot.latent.transformer_nested_hidden_latent_model import TransformerNestedHiddenLatentModel
@@ -65,10 +65,27 @@ class TrainType(Enum):
     Order = 3
     Place = 4
     Area = 5
+    DeltaPos = 6
+
+
+@dataclass
+class ColumnsToFlip:
+    col1_template: str
+    col2_template: str
+
+    def apply_flip(self, df: pd.DataFrame):
+        col1_columns = [col for col in df.columns if self.col1_template in col]
+        col2_columns = [col for col in df.columns if self.col2_template in col]
+        cols_to_swap_list = zip(col1_columns, col2_columns)
+        cols_rename_map = {}
+        for cols_to_swap in cols_to_swap_list:
+            cols_rename_map[cols_to_swap[0]] = cols_to_swap[1]
+            cols_rename_map[cols_to_swap[1]] = cols_to_swap[0]
+        df.rename(columns=cols_rename_map, inplace=True)
 
 
 def train(train_type: TrainType, all_data_df: pd.DataFrame, num_epochs: int,
-          windowed=False, save=True, diff_train_test=True) -> TrainResult:
+          windowed=False, save=True, diff_train_test=True, flip_columns: List[ColumnsToFlip] = []) -> TrainResult:
 
     if diff_train_test:
         train_test_split = train_test_split_by_col(all_data_df, round_id_column)
@@ -82,7 +99,11 @@ def train(train_type: TrainType, all_data_df: pd.DataFrame, num_epochs: int,
         make_index_column(all_data_df)
         train_df = all_data_df
         train_group_ids = list(all_data_df.loc[:, round_id_column].unique())
-        test_df = all_data_df
+        test_df = all_data_df.copy(deep=True)
+        test_group_ids = train_group_ids
+
+    for flip_column in flip_columns:
+        flip_column.apply_flip(test_df)
 
     # Get cpu or gpu device for training.
     device: str = CUDA_DEVICE_STR if torch.cuda.is_available() else CPU_DEVICE_STR
@@ -126,6 +147,13 @@ def train(train_type: TrainType, all_data_df: pd.DataFrame, num_epochs: int,
         model = TransformerNestedHiddenLatentModel(column_transformers, 2 * max_enemies, area_grid_size).to(device)
         input_column_types = place_area_input_column_types
         output_column_types = area_output_column_types
+        prob_func = get_place_area_probability
+    elif train_type == TrainType.DeltaPos:
+        column_transformers = IOColumnTransformers(place_area_input_column_types, delta_pos_output_column_types,
+                                                   train_df)
+        model = TransformerNestedHiddenLatentModel(column_transformers, 2 * max_enemies, area_grid_size).to(device)
+        input_column_types = place_area_input_column_types
+        output_column_types = delta_pos_output_column_types
         prob_func = get_place_area_probability
     else:
         raise Exception("invalid train type")
@@ -341,8 +369,10 @@ def run_team_analysis():
                                     #(team_data_df['retake save round tick'] == 0)]
         team_data_df.to_parquet(small_latent_team_hdf5_data_path)
     #train_result = train(TrainType.Order, team_data_df, num_epochs=3, windowed=False)
-    train_result = train(TrainType.Place, team_data_df, num_epochs=1000, windowed=False, diff_train_test=False)
+    #train_result = train(TrainType.Place, team_data_df, num_epochs=500, windowed=False, diff_train_test=False)
     #train_result = train(TrainType.Area, team_data_df, num_epochs=3, windowed=False)
+    train_result = train(TrainType.DeltaPos, team_data_df, num_epochs=500, windowed=False, diff_train_test=False,
+                         flip_columns=[ColumnsToFlip("CT 0", "CT 1")])
 
 
 def run_individual_analysis():

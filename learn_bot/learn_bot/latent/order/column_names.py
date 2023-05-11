@@ -16,6 +16,10 @@ num_prior_ticks = 4
 num_places = 26
 area_grid_dim = 5
 area_grid_size = area_grid_dim * area_grid_dim
+delta_pos_grid_radius = 250
+delta_pos_grid_cell_dim = 100
+delta_pos_grid_num_cells = int((delta_pos_grid_radius * 2 * delta_pos_grid_radius * 2) /
+                               (delta_pos_grid_cell_dim * delta_pos_grid_cell_dim))
 
 c4_status_col = "c4 status"
 c4_pos_cols = ["c4 pos x", "c4 pos y", "c4 pos z"]
@@ -74,6 +78,10 @@ def get_player_prior_place_columns(player_index: int, place_index: int, team_str
 
 def get_player_area_grid_cell_in_place_columns(player_index: int, area_grid_index: int, team_str: str) -> str:
     return "area grid cell in place " + str(area_grid_index) + " " + team_str + " " + str(player_index)
+
+
+def get_delta_pos_columns(player_index: int, delta_pos_index: int, team_str: str) -> str:
+    return "delta pos " + str(delta_pos_index) + " " + team_str + " " + str(player_index)
 
 
 def get_player_prior_area_grid_cell_in_place_columns(player_index: int, area_grid_index: int, team_str: str,

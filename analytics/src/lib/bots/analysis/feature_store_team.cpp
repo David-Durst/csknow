@@ -95,6 +95,10 @@ namespace csknow::feature_store {
                     columnCTData[i].priorAreaGridCellInPlace[k][j].resize(size, false);
                 }
             }
+            for (int j = 0; j < delta_pos_grid_num_cells; j++) {
+                columnTData[i].deltaPos[j].resize(size, false);
+                columnCTData[i].deltaPos[j].resize(size, false);
+            }
         }
         this->size = size;
         //checkPossiblyBadValue();
@@ -201,6 +205,10 @@ namespace csknow::feature_store {
                         columnTData[i].priorAreaGridCellInPlace[k][j][rowIndex] = false;
                         columnCTData[i].priorAreaGridCellInPlace[k][j][rowIndex] = false;
                     }
+                }
+                for (int j = 0; j < delta_pos_grid_num_cells; j++) {
+                    columnTData[i].deltaPos[j][rowIndex] = false;
+                    columnCTData[i].deltaPos[j][rowIndex] = false;
                 }
             }
         }
@@ -618,6 +626,43 @@ namespace csknow::feature_store {
         }
     }
 
+    void TeamFeatureStoreResult::computeDeltaPosACausalLabels(int64_t curTick, CircularBuffer<int64_t> & futureTracker,
+                                                              array<ColumnPlayerData,maxEnemies> & columnData) {
+        for (size_t playerColumn = 0; playerColumn < maxEnemies; playerColumn++) {
+            if (columnData[playerColumn].playerId[curTick] == INVALID_ID) {
+                continue;
+            }
+            // clear out values for current tick
+            for (size_t deltaPosGridIndex = 0; deltaPosGridIndex < delta_pos_grid_num_cells; deltaPosGridIndex++) {
+                columnData[playerColumn].deltaPos[deltaPosGridIndex][curTick] = false;
+            }
+            if (futureTracker.isEmpty()) {
+                std::cout << "delta pos acausal label with no future ticks" << std::endl;
+                std::raise(SIGINT);
+            }
+            int64_t futureTickIndex = futureTracker.fromOldest();
+            if (futureTickIndex < curTick) {
+                std::cout << "delta pos acausal future tick in past" << std::endl;
+                std::raise(SIGINT);
+            }
+            Vec3 curFootPos = columnData[playerColumn].footPos[curTick];
+            AABB deltaPosRange = {
+                    {
+                        curFootPos.x - delta_pos_grid_radius,
+                        curFootPos.y - delta_pos_grid_radius,
+                        curFootPos.z
+                    },
+                    {
+                        curFootPos.x + delta_pos_grid_radius,
+                        curFootPos.y + delta_pos_grid_radius,
+                        curFootPos.z
+                    }
+            };
+            int deltaPosIndex = getAreaGridFlatIndex(columnData[playerColumn].footPos[futureTickIndex], deltaPosRange);
+            columnData[playerColumn].deltaPos[deltaPosIndex][curTick] = true;
+        }
+    }
+
     void TeamFeatureStoreResult::computeAcausalLabels(const Games & games, const Rounds & rounds,
                                                       const Ticks & ticks,
                                                       const Players & players,
@@ -636,7 +681,9 @@ namespace csknow::feature_store {
         for (int64_t roundIndex = 0; roundIndex < rounds.size; roundIndex++) {
             int64_t gameIndex = rounds.gameId[roundIndex];
             TickRates tickRates = computeTickRates(games, rounds, roundIndex);
-            CircularBuffer<int64_t> ticks1sFutureTracker(4), ticks2sFutureTracker(4), ticks6sFutureTracker(6);
+            CircularBuffer<int64_t> ticks1sFutureTracker(4), ticks2sFutureTracker(4), ticks6sFutureTracker(6),
+                // this one I add to every frame and remove when too far in the future, more accuracte
+                bothSidesTicks1sFutureTracker(10);
             //, ticks15sFutureTracker(15), ticks30sFutureTracker(30);
             for (int64_t unmodifiedTickIndex = rounds.ticksPerRound[roundIndex].maxId;
                  unmodifiedTickIndex >= rounds.ticksPerRound[roundIndex].minId; unmodifiedTickIndex--) {
@@ -661,6 +708,10 @@ namespace csknow::feature_store {
                 if (ticks6sFutureTracker.isEmpty() ||
                     secondsBetweenTicks(ticks, tickRates, tickIndex * every_nth_row, ticks6sFutureTracker.fromNewest() * every_nth_row) >= 1.) {
                     ticks6sFutureTracker.enqueue(tickIndex);
+                }
+                bothSidesTicks1sFutureTracker.enqueue(tickIndex);
+                while (secondsBetweenTicks(ticks, tickRates, tickIndex * every_nth_row, bothSidesTicks1sFutureTracker.fromOldest() * every_nth_row) > 1.) {
+                    bothSidesTicks1sFutureTracker.dequeue();
                 }
                 /*
                 if (ticks15sFutureTracker.isEmpty() ||
@@ -688,6 +739,8 @@ namespace csknow::feature_store {
                                           players, distanceToPlacesResult, navFile);
                 computeAreaACausalLabels(ticks, tickRates, tickIndex, ticks1sFutureTracker, columnCTData, 0.1);
                 computeAreaACausalLabels(ticks, tickRates, tickIndex, ticks1sFutureTracker, columnTData, 0.1);
+                computeDeltaPosACausalLabels(tickIndex, bothSidesTicks1sFutureTracker, columnCTData);
+                computeDeltaPosACausalLabels(tickIndex, bothSidesTicks1sFutureTracker, columnTData);
                 //computePlaceAreaACausalLabels(ticks, tickRates, tickIndex, ticks15sFutureTracker, columnCTData);
                 //computePlaceAreaACausalLabels(ticks, tickRates, tickIndex, ticks15sFutureTracker, columnTData);
                 /*
@@ -823,6 +876,11 @@ namespace csknow::feature_store {
                                            columnData[columnPlayer].priorAreaGridCellInPlace[priorTick][areaGridIndex], hdf5FlatCreateProps);
                     }
                      */
+                }
+                for (size_t deltaPosIndex = 0; deltaPosIndex < delta_pos_grid_num_cells; deltaPosIndex++) {
+                    string deltaPosIndexStr = std::to_string(deltaPosIndex);
+                    file.createDataSet("/data/delta pos " + deltaPosIndexStr + " " + columnTeam + " " + iStr,
+                                       columnData[columnPlayer].deltaPos[deltaPosIndex], hdf5FlatCreateProps);
                 }
             }
         }

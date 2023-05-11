@@ -46,6 +46,7 @@ class PlayerPlaceAreaColumns:
         #self.prior_area_grid_cell_in_place = []
         self.distribution_nearest_place = []
         self.distribution_nearest_grid_area = []
+        self.delta_pos = []
         for place_index in range(num_places):
             self.cur_place \
                 .append(get_player_cur_place_columns(player_index, place_index, team_str))
@@ -56,6 +57,9 @@ class PlayerPlaceAreaColumns:
                 .append(get_player_area_grid_cell_in_place_columns(player_index, area_grid_index, team_str))
             self.distribution_nearest_grid_area \
                 .append(get_player_distribution_nearest_grid_area(player_index, area_grid_index, team_str))
+        for delta_pos_index in range(delta_pos_grid_num_cells):
+            self.delta_pos \
+                .append(get_delta_pos_columns(player_index, delta_pos_index, team_str))
         for prior_tick in range(1, num_prior_ticks+1):
             for dim_str in ["x", "y", "z"]:
                 self.prior_pos.append(get_player_pos_columns(player_index, team_str, dim_str, prior_tick))
@@ -79,12 +83,14 @@ class PlayerPlaceAreaColumns:
     def to_input_distribution_cat_list(self) -> list[list[str]]:
         return [self.cur_place, self.area_grid_cell_in_place, self.index_on_team, [self.ct_team]]
 
-    def to_output_cat_list(self, place: bool, area: bool) -> list[list[str]]:
+    def to_output_cat_list(self, place: bool, area: bool, delta: bool) -> list[list[str]]:
         result = []
         if place:
             result.append(self.distribution_nearest_place)
         if area:
             result.append(self.distribution_nearest_grid_area)
+        if delta:
+            result.append(self.delta_pos)
         return result
 
 
@@ -97,9 +103,11 @@ flat_input_cat_place_area_num_options: list[int] = [num_c4_status]
 flat_input_distribution_cat_place_area_columns: list[list[str]] = \
     flatten_list([cols.to_input_distribution_cat_list() for cols in specific_player_order_columns])
 flat_output_cat_place_distribution_columns: list[list[str]] = \
-    flatten_list([cols.to_output_cat_list(True, False) for cols in specific_player_place_area_columns])
+    flatten_list([cols.to_output_cat_list(True, False, False) for cols in specific_player_place_area_columns])
 flat_output_cat_area_distribution_columns: list[list[str]] = \
-    flatten_list([cols.to_output_cat_list(False, True) for cols in specific_player_place_area_columns])
+    flatten_list([cols.to_output_cat_list(False, True, False) for cols in specific_player_place_area_columns])
+flat_output_cat_delta_pos_columns: list[list[str]] = \
+    flatten_list([cols.to_output_cat_list(False, False, True) for cols in specific_player_place_area_columns])
 
 place_area_input_column_types = get_simplified_column_types(flat_input_float_place_area_columns,
                                                             flat_input_cat_place_area_columns,
@@ -110,3 +118,4 @@ place_area_input_column_types = get_simplified_column_types(flat_input_float_pla
 #                                                  flat_output_cat_distribution_columns)
 place_output_column_types = get_simplified_column_types([], [], [], flat_output_cat_place_distribution_columns)
 area_output_column_types = get_simplified_column_types([], [], [], flat_output_cat_area_distribution_columns)
+delta_pos_output_column_types = get_simplified_column_types([], [], [], flat_output_cat_delta_pos_columns)
