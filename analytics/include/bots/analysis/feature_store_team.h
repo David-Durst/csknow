@@ -64,6 +64,7 @@ namespace csknow::feature_store {
             // inputs
             array<vector<bool>, maxEnemies> indexOnTeam;
             vector<bool> ctTeam;
+            vector<bool> alive;
             vector<Vec3> footPos;
             array<vector<Vec3>, num_prior_ticks> priorFootPos;
             vector<Vec3> velocity;

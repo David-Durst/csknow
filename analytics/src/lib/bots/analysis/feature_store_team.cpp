@@ -39,12 +39,14 @@ namespace csknow::feature_store {
             }
             columnTData[i].playerId.resize(size, INVALID_ID);
             columnTData[i].ctTeam.resize(size, false);
+            columnTData[i].alive.resize(size, false);
             columnTData[i].footPos.resize(size, invalidWorldPos);
             columnTData[i].velocity.resize(size, {INVALID_ID, INVALID_ID, INVALID_ID});
             columnTData[i].distanceToASite.resize(size, 2 * maxWorldDistance);
             columnTData[i].distanceToBSite.resize(size, 2 * maxWorldDistance);
             columnCTData[i].playerId.resize(size, INVALID_ID);
             columnCTData[i].ctTeam.resize(size, true);
+            columnCTData[i].alive.resize(size, false);
             columnCTData[i].footPos.resize(size, invalidWorldPos);
             columnCTData[i].velocity.resize(size, {INVALID_ID, INVALID_ID, INVALID_ID});
             columnCTData[i].distanceToASite.resize(size, 2 * maxWorldDistance);
@@ -150,12 +152,14 @@ namespace csknow::feature_store {
                 }
                 columnTData[i].playerId[rowIndex] = INVALID_ID;
                 columnTData[i].ctTeam[rowIndex] = false;
+                columnTData[i].alive[rowIndex] = false;
                 columnTData[i].footPos[rowIndex] = invalidWorldPos;
                 columnTData[i].velocity[rowIndex] = {INVALID_ID, INVALID_ID, INVALID_ID};
                 columnTData[i].distanceToASite[rowIndex] = 2 * maxWorldDistance;
                 columnTData[i].distanceToBSite[rowIndex] = 2 * maxWorldDistance;
                 columnCTData[i].playerId[rowIndex] = INVALID_ID;
-                columnTData[i].ctTeam[rowIndex] = true;
+                columnCTData[i].ctTeam[rowIndex] = true;
+                columnCTData[i].alive[rowIndex] = false;
                 columnCTData[i].footPos[rowIndex] = invalidWorldPos;
                 columnCTData[i].velocity[rowIndex] = {INVALID_ID, INVALID_ID, INVALID_ID};
                 columnCTData[i].distanceToASite[rowIndex] = 2 * maxWorldDistance;
@@ -300,6 +304,7 @@ namespace csknow::feature_store {
                 std::cout << "bad round index " << roundIndex << ", tickIndex " << tickIndex << std::endl;
             }
             columnData[columnIndex].playerId[tickIndex] = btTeamPlayerData.playerId;
+            columnData[columnIndex].alive[tickIndex] = true;
             columnData[columnIndex].footPos[tickIndex] = btTeamPlayerData.curFootPos;
             columnData[columnIndex].velocity[tickIndex] = btTeamPlayerData.velocity;
             columnData[columnIndex].distanceToASite[tickIndex] =
@@ -813,6 +818,8 @@ namespace csknow::feature_store {
                     file.createDataSet("/data/player index on team " + std::to_string(indexOnTeam) + " " + columnTeam + " " + iStr,
                                        columnData[columnPlayer].indexOnTeam[indexOnTeam], hdf5FlatCreateProps);
                 }
+                file.createDataSet("/data/alive " + columnTeam + " " + iStr,
+                                   columnData[columnPlayer].alive, hdf5FlatCreateProps);
                 file.createDataSet("/data/player ctTeam " + columnTeam + " " + iStr,
                                    columnData[columnPlayer].ctTeam, hdf5FlatCreateProps);
                 saveVec3VectorToHDF5(columnData[columnPlayer].footPos, file,

@@ -5,6 +5,7 @@ from torch import nn
 
 from learn_bot.latent.engagement.column_names import max_enemies
 from learn_bot.latent.order.column_names import team_strs, player_team_str, flatten_list
+from learn_bot.latent.place_area.column_names import specific_player_place_area_columns
 from learn_bot.libs.io_transforms import IOColumnTransformers, CUDA_DEVICE_STR
 
 
@@ -36,6 +37,11 @@ class TransformerNestedHiddenLatentModel(nn.Module):
         self.player_columns_cpu = torch.tensor(flatten_list(player_columns))
         self.player_columns_gpu = self.player_columns_cpu.to(CUDA_DEVICE_STR)
 
+        alive_columns = [range_list_to_index_list(cts.get_name_ranges(True, True, contained_str=player_place_area_columns.alive))
+                         for player_place_area_columns in specific_player_place_area_columns]
+        self.alive_columns_cpu = torch.tensor(flatten_list(alive_columns))
+        self.alive_columns_gpu = self.alive_columns_cpu.to(CUDA_DEVICE_STR)
+
         self.encoder_model = nn.Sequential(
             nn.Linear(len(player_columns[0]), self.internal_width),
             nn.LeakyReLU(),
@@ -66,15 +72,19 @@ class TransformerNestedHiddenLatentModel(nn.Module):
 
         if x_transformed.device.type == CUDA_DEVICE_STR:
             x_gathered = torch.index_select(x_transformed, 1, self.player_columns_gpu)
+            alive_gathered = torch.index_select(x_transformed, 1, self.alive_columns_gpu)
         else:
             x_gathered = torch.index_select(x_transformed, 1, self.player_columns_cpu)
+            alive_gathered = torch.index_select(x_transformed, 1, self.alive_columns_cpu)
+
+        alive_gathered = alive_gathered > 0.1
 
         split_x_gathered = x_gathered.unflatten(1, torch.Size([self.num_players, self.columns_per_players]))
 
         # run model except last layer
         encoded = self.encoder_model(split_x_gathered)
 
-        transformed = self.transformer_model(encoded)
+        transformed = self.transformer_model(encoded, src_key_padding_mask=alive_gathered)
 
         latent = self.decoder(transformed)
 

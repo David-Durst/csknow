@@ -61,6 +61,9 @@ def get_player_index_on_team_column(player_index: int, team_str: str) -> list[st
 def get_player_ctteam_column(player_index: int, team_str: str) -> str:
     return "player ctTeam " + team_str + " " + str(player_index)
 
+def get_player_alive_column(player_index: int, team_str: str) -> str:
+    return "alive " + team_str + " " + str(player_index)
+
 def get_player_pos_columns(player_index: int, team_str: str, dim_str: str, history_index: int = 0) -> str:
     return "player pos " + team_str + " " + str(player_index) + \
         ("" if history_index == 0 else " t-" + str(history_index)) + " " + dim_str

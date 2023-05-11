@@ -19,6 +19,7 @@ class PlayerPlaceAreaColumns:
     player_id: str
     index_on_team: list[str]
     ct_team: str
+    alive: str
     distance_to_a_site: str
     distance_to_b_site: str
     pos: list[str]
@@ -35,6 +36,7 @@ class PlayerPlaceAreaColumns:
         self.player_id = player_id_column + " " + player_team_str(team_str, player_index)
         self.index_on_team = get_player_index_on_team_column(player_index, team_str)
         self.ct_team = get_player_ctteam_column(player_index, team_str)
+        self.alive = get_player_alive_column(player_index, team_str)
         self.distance_to_a_site = "distance to a site " + player_team_str(team_str, player_index)
         self.distance_to_b_site = "distance to b site " + player_team_str(team_str, player_index)
         self.pos = [get_player_pos_columns(player_index, team_str, dim_str) for dim_str in ["x", "y", "z"]]
@@ -81,7 +83,7 @@ class PlayerPlaceAreaColumns:
             flatten_list([self.pos, self.prior_pos, self.vel])
 
     def to_input_distribution_cat_list(self) -> list[list[str]]:
-        return [self.cur_place, self.area_grid_cell_in_place]#, self.index_on_team, [self.ct_team]]
+        return [self.cur_place, self.area_grid_cell_in_place, [self.alive]]#, self.index_on_team, [self.ct_team]]
 
     def to_output_cat_list(self, place: bool, area: bool, delta: bool) -> list[list[str]]:
         result = []
