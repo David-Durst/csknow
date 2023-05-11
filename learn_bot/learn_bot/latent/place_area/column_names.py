@@ -79,11 +79,13 @@ class PlayerPlaceAreaColumns:
                           self.distribution_nearest_place, self.distribution_nearest_grid_area])
 
     def to_input_float_list(self) -> list[str]:
-        return [self.distance_to_a_site, self.distance_to_b_site] + \
-            flatten_list([self.pos, self.prior_pos, self.vel])
+        #return [self.distance_to_a_site, self.distance_to_b_site] + \
+        #    flatten_list([self.pos, self.prior_pos, self.vel])
+        return flatten_list([self.pos, self.prior_pos, self.vel])
 
     def to_input_distribution_cat_list(self) -> list[list[str]]:
-        return [self.cur_place, self.area_grid_cell_in_place, [self.alive]]#, self.index_on_team, [self.ct_team]]
+        #return [self.cur_place, self.area_grid_cell_in_place, [self.alive]]#, self.index_on_team, [self.ct_team]]
+        return [[self.alive]]#, self.index_on_team, [self.ct_team]]
 
     def to_output_cat_list(self, place: bool, area: bool, delta: bool) -> list[list[str]]:
         result = []
