@@ -1047,12 +1047,12 @@ class IOColumnTransformers:
 
     def get_untransformed_values_whole_pd(self, x: np.ndarray, input: bool) -> pd.DataFrame:
         col_names_to_ranges = self.get_name_ranges_dict(input, False, True)
+        col_names = ["" for _ in range(x.shape[1])]
 
-        col_names_to_np_arr = {}
-        for col_name, range in col_names_to_ranges.items():
-            col_names_to_ranges[col_name] = x[:, range.start]
+        for col_name, col_range in col_names_to_ranges.items():
+            col_names[col_range.start] = col_name
 
-        return pd.DataFrame(data=col_names_to_np_arr)
+        return pd.DataFrame(x, columns=col_names)
 
 
     def get_untransformed_values_like(self, x: Union[torch.Tensor, ModelOutput], input: bool, subset_str: str) -> Dict:
