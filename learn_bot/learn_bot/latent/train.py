@@ -86,10 +86,16 @@ class ColumnsToFlip:
     def check_flip(self, old_df: pd.DataFrame, new_df: pd.DataFrame):
         col1_columns = [col for col in old_df.columns if self.col1_template in col]
         col2_columns = [col for col in old_df.columns if self.col2_template in col]
-        print("flipped columns " + ",".join(col2_columns))
+        #print("flipped columns " + ",".join(col2_columns))
         for (col1, col2) in zip(col1_columns, col2_columns):
             assert (old_df[col1] == new_df[col2]).all()
             assert (old_df[col2] == new_df[col1]).all()
+
+    def duplicate(self, df: pd.DataFrame):
+        col1_columns = [col for col in df.columns if self.col1_template in col]
+        col2_columns = [col for col in df.columns if self.col2_template in col]
+        for (col1, col2) in zip(col1_columns, col2_columns):
+            df[col2] = df[col1]
 
 
 def train(train_type: TrainType, all_data_df: pd.DataFrame, num_epochs: int,
@@ -110,9 +116,14 @@ def train(train_type: TrainType, all_data_df: pd.DataFrame, num_epochs: int,
         test_df = all_data_df.copy(deep=True)
         test_group_ids = train_group_ids
 
-    for flip_column in flip_columns:
-        flip_column.apply_flip(test_df)
-        flip_column.check_flip(train_df, test_df)
+    if len(flip_columns) > 0:
+        io_column_transform_df = all_data_df.copy(deep=True)
+        for flip_column in flip_columns:
+            flip_column.apply_flip(test_df)
+            flip_column.check_flip(train_df, test_df)
+            flip_column.duplicate(io_column_transform_df)
+    else:
+        io_column_transform_df = all_data_df
 
     # Get cpu or gpu device for training.
     device: str = CUDA_DEVICE_STR if torch.cuda.is_available() else CPU_DEVICE_STR
@@ -159,7 +170,7 @@ def train(train_type: TrainType, all_data_df: pd.DataFrame, num_epochs: int,
         prob_func = get_place_area_probability
     elif train_type == TrainType.DeltaPos:
         column_transformers = IOColumnTransformers(place_area_input_column_types, delta_pos_output_column_types,
-                                                   train_df)
+                                                   io_column_transform_df)
         model = TransformerNestedHiddenLatentModel(column_transformers, 2 * max_enemies, area_grid_size).to(device)
         input_column_types = place_area_input_column_types
         output_column_types = delta_pos_output_column_types

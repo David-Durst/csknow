@@ -74,9 +74,9 @@ class TransformerNestedHiddenLatentModel(nn.Module):
         # run model except last layer
         encoded = self.encoder_model(split_x_gathered)
 
-        #transformed = self.transformer_model(encoded)
+        transformed = self.transformer_model(encoded)
 
-        latent = self.decoder(encoded)
+        latent = self.decoder(transformed)
 
         # https://github.com/pytorch/pytorch/issues/22440 how to parse tuple output
         # hack for now to keep same API, will remove later
