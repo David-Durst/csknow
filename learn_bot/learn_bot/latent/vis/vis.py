@@ -4,20 +4,21 @@ from learn_bot.libs.df_grouping import make_index_column
 from learn_bot.latent.dataset import *
 from learn_bot.mining.area_cluster import *
 import tkinter as tk
-from tkinter import ttk
-from PIL import Image, ImageDraw
+from tkinter import ttk, font
+from PIL import Image, ImageDraw, ImageTk as itk
 
 def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame):
-    all_data_df = all_data_df.sort_values([tick_id_column])
     make_index_column(all_data_df)
-    pred_df = pred_df.sort_values([tick_id_column])
     make_index_column(pred_df)
 
     #This creates the main window of an application
     window = tk.Tk()
     window.title("Delta Position Model")
-    window.resizable(width=False, height=False)
+    window.resizable(width=True, height=True)
     window.configure(background='grey')
+
+    your_font = font.nametofont("TkDefaultFont")  # Get default font value into Font object
+    your_font.actual()
 
     #def change_img():
     #   img2=ImageTk.PhotoImage(Image.open("tutorialspoint.png"))
@@ -26,8 +27,10 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame):
 
     img_frame = tk.Frame(window)
     img_frame.pack(pady=5)
-    d2_img = tk.PhotoImage(Image.open(d2_radar_path))
-    img_label = tk.Label(img_frame, image=d2_img)
+    d2_img = Image.open(d2_radar_path)
+    d2_img = d2_img.resize((700, 700), Image.ANTIALIAS)
+    d2_photo_img = itk.PhotoImage(d2_img)
+    img_label = tk.Label(img_frame, image=d2_photo_img)
     img_label.pack(side="left")
 
     rounds = all_data_df.loc[:, round_id_column].unique().tolist()
@@ -112,11 +115,11 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame):
     def change_round_dependent_data():
         nonlocal selected_df, pred_selected_df, cur_round, indices, ticks, game_ticks
         selected_df = all_data_df.loc[all_data_df[round_id_column] == cur_round]
-        pred_selected_df = pred_df.loc[pred_df[round_id_column] == cur_round]
+        pred_selected_df = pred_df.loc[all_data_df[round_id_column] == cur_round]
 
         indices = selected_df.loc[:, 'index'].tolist()
         ticks = selected_df.loc[:, 'tick id'].tolist()
-        game_ticks = selected_df.loc[:, 'game tick id'].tolist()
+        game_ticks = selected_df.loc[:, 'game tick number'].tolist()
         tick_slider.configure(to=len(ticks)-1)
         tick_slider.set(0)
         tick_slider_changed(0)
@@ -148,9 +151,9 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame):
     round_slider.pack(side="left")
 
     # engagegment id stepper
-    back_round_button = tk.Button(round_frame, text="⏪", command=round_back_clicked)
+    back_round_button = tk.Button(round_frame, text="<<", command=round_back_clicked)
     back_round_button.pack(side="left")
-    forward_round_button = tk.Button(round_frame, text="⏩", command=round_forward_clicked)
+    forward_round_button = tk.Button(round_frame, text=">>", command=round_forward_clicked)
     forward_round_button.pack(side="left")
 
     # creating tick slider and label
@@ -184,21 +187,13 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame):
     tick_slider.pack(side="left")
 
     # creating tick play/pause/step buttons
-    back_step_button = tk.Button(tick_slider_frame, text="⏪", command=step_back_clicked)
+    back_step_button = tk.Button(tick_slider_frame, text="<<", command=step_back_clicked)
     back_step_button.pack(side="left")
-    play_button = tk.Button(tick_slider_frame, text="⏯", command=play_clicked)
+    play_button = tk.Button(tick_slider_frame, text="|>", command=play_clicked)
     orig_player_button_color = play_button.cget("background")
     play_button.pack(side="left")
-    forward_step_button = tk.Button(tick_slider_frame, text="⏩", command=step_forward_clicked)
+    forward_step_button = tk.Button(tick_slider_frame, text=">>", command=step_forward_clicked)
     forward_step_button.pack(side="left")
-
-    # creating text label
-    text_data_frame = tk.Frame(window)
-    text_data_frame.pack(pady=5)
-
-    text_data_text_var = tk.StringVar()
-    text_data_label = tk.Label(text_data_frame, textvariable=text_data_text_var)
-    text_data_label.pack(side="left")
 
     # initial value settings
     round_slider_changed(0)
