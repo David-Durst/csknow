@@ -402,8 +402,8 @@ def run_team_analysis():
         #                                                  (team_data_df['retake save round tick'] == 1)])}''')
         #print(f'''num retake non-save ticks {len(team_data_df[(team_data_df['valid'] == 1.) & (team_data_df['c4 status'] < 2) &
         #                                                  (team_data_df['retake save round tick'] == 0)])}''')
-        team_data_df = team_data_df[(team_data_df['valid'] == 1.) & (team_data_df['c4 status'] < 2) &
-                                    (team_data_df['round id'] == 14)].iloc[range(100)]
+        team_data_df = team_data_df[(team_data_df['valid'] == 1.) & (team_data_df['c4 status'] < 2)]
+                                    #(team_data_df['round id'] == 14)].iloc[range(100)]
         #team_data_df = team_data_df[(team_data_df['valid'] == 1.) & (team_data_df['freeze time ended'] == 1.)]
                                     #(team_data_df['retake save round tick'] == 0)]
         team_data_df.to_parquet(small_latent_team_hdf5_data_path)
