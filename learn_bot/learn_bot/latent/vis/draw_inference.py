@@ -5,7 +5,7 @@ import pandas as pd
 from PIL import Image, ImageDraw, ImageTk as itk
 
 from learn_bot.latent.order.column_names import delta_pos_grid_num_cells, delta_pos_grid_num_cells_per_dim, \
-    delta_pos_grid_cell_dim
+    delta_pos_grid_cell_dim, tick_id_column
 from learn_bot.latent.place_area.column_names import specific_player_place_area_columns
 from learn_bot.mining.area_cluster import Vec3
 
@@ -18,6 +18,7 @@ minimapHeight = 700
 minimapScale = 4.4 * 1024 / minimapHeight
 
 class VisMapCoordinate():
+    coords: Vec3
     is_player: bool
     is_prediction: bool
 
@@ -42,27 +43,32 @@ class VisMapCoordinate():
         new_grid_cell = VisMapCoordinate(self.coords.x, self.coords.y, self.coords.z, False)
         new_grid_cell.is_player = False
         new_grid_cell.is_prediction = is_prediction
-        x_index = int(cell_index / delta_pos_grid_num_cells_per_dim) - int(delta_pos_grid_num_cells_per_dim / 2)
-        y_index = int(cell_index % delta_pos_grid_num_cells_per_dim) - int(delta_pos_grid_num_cells_per_dim / 2)
-        new_grid_cell.coords.x -= x_index * delta_pos_grid_cell_dim
-        new_grid_cell.coords.y -= y_index * delta_pos_grid_cell_dim
+        x_index = int(cell_index % delta_pos_grid_num_cells_per_dim) - int(delta_pos_grid_num_cells_per_dim / 2)
+        y_index = int(cell_index / delta_pos_grid_num_cells_per_dim) - int(delta_pos_grid_num_cells_per_dim / 2)
+        new_grid_cell.coords.x += x_index * delta_pos_grid_cell_dim
+        new_grid_cell.coords.y += y_index * delta_pos_grid_cell_dim
         return new_grid_cell
 
     def draw_vis(self, im_draw: ImageDraw):
-        canvas_coords = self.get_canvas_coordinates()
-        half_width = player_width / 2
-        if not self.is_player:
-            half_width = delta_pos_grid_cell_dim / 2
-        x_min = canvas_coords.x - half_width
-        y_min = canvas_coords.y - half_width
-        x_max = canvas_coords.x + half_width
-        y_max = canvas_coords.y + half_width
-        if self.is_player:
-            im_draw.rectangle([x_min, y_min, x_max, y_max], fill="green")
+        half_width = delta_pos_grid_cell_dim / 2
+        if not self.is_player and not self.is_prediction:
+            half_width *= 0.8
         elif self.is_prediction:
-            im_draw.rectangle([x_min, y_min, x_max, y_max], fill="red")
+            half_width *= 0.6
+        x_min = self.coords.x - half_width
+        y_min = self.coords.y - half_width
+        canvas_min = VisMapCoordinate(x_min, y_min, self.coords.z)
+        canvas_min_vec = canvas_min.get_canvas_coordinates()
+        x_max = self.coords.x + half_width
+        y_max = self.coords.y + half_width
+        canvas_max = VisMapCoordinate(x_max, y_max, self.coords.z)
+        canvas_max_vec = canvas_max.get_canvas_coordinates()
+        if self.is_player:
+            im_draw.rectangle([canvas_min_vec.x, canvas_min_vec.y, canvas_max_vec.x, canvas_max_vec.y], fill="green")
+        elif self.is_prediction:
+            im_draw.rectangle([canvas_min_vec.x, canvas_min_vec.y, canvas_max_vec.x, canvas_max_vec.y], fill="red")
         else:
-            im_draw.rectangle([x_min, y_min, x_max, y_max], outline="blue")
+            im_draw.rectangle([canvas_min_vec.x, canvas_min_vec.y, canvas_max_vec.x, canvas_max_vec.y], fill="blue")
 
 
 def draw_all_players(data_series: pd.Series, pred_series: pd.Series, im_draw: ImageDraw):
@@ -82,14 +88,17 @@ def draw_all_players(data_series: pd.Series, pred_series: pd.Series, im_draw: Im
             for i in range(delta_pos_grid_num_cells):
                 cur_data_prob = data_series[player_place_area_columns.delta_pos[i]]
                 if cur_data_prob > max_data_prob:
-                    max_pred_prob = cur_data_prob
+                    max_data_prob = cur_data_prob
                     max_data_index = i
                 cur_pred_prob = pred_series[player_place_area_columns.delta_pos[i]]
                 if cur_pred_prob > max_pred_prob:
                     max_pred_prob = cur_pred_prob
                     max_pred_index = i
 
+            if data_series[tick_id_column] == 1318:
+                x = 1
             data_coord = pos_coord.get_grid_cell(max_data_index, False)
             data_coord.draw_vis(im_draw)
-            pred_coord = pos_coord.get_grid_cell(max_pred_index, False)
+            pred_coord = pos_coord.get_grid_cell(max_pred_index, True)
             pred_coord.draw_vis(im_draw)
+            #print(f'''pos {pos_coord.coords}, data {data_coord.coords}, pred {pred_coord.coords}''')

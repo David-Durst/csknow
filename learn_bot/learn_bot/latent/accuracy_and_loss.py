@@ -94,7 +94,6 @@ def compute_accuracy(pred, Y, accuracy, valids_per_accuracy_column, column_trans
             accuracy[name] += (torch.argmax(valid_pred_untransformed, -1, keepdim=True) ==
                                torch.argmax(valid_Y, -1, keepdim=True)).type(torch.float).sum().item()
             valids_per_accuracy_column[name] += len(valid_Y)
-        #accuracy[name] += base_classification_loss_fn(pred_untransformed[:, col_range], Y[:, col_range])
 
 
 def finish_accuracy(accuracy, valids_per_accuracy_column, column_transformers: IOColumnTransformers):
