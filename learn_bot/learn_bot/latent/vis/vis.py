@@ -1,7 +1,5 @@
-from enum import Enum
-import pandas as pd
+from learn_bot.latent.vis.draw_inference import draw_all_players
 from learn_bot.libs.df_grouping import make_index_column
-from learn_bot.latent.dataset import *
 from learn_bot.mining.area_cluster import *
 import tkinter as tk
 from tkinter import ttk, font
@@ -20,16 +18,12 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame):
     your_font = font.nametofont("TkDefaultFont")  # Get default font value into Font object
     your_font.actual()
 
-    #def change_img():
-    #   img2=ImageTk.PhotoImage(Image.open("tutorialspoint.png"))
-    #   label.configure(image=img2)
-    #   label.image=img2
-
     img_frame = tk.Frame(window)
     img_frame.pack(pady=5)
     d2_img = Image.open(d2_radar_path)
     d2_img = d2_img.resize((700, 700), Image.ANTIALIAS)
-    d2_photo_img = itk.PhotoImage(d2_img)
+    d2_img_draw = d2_img.copy()
+    d2_photo_img = itk.PhotoImage(d2_img_draw)
     img_label = tk.Label(img_frame, image=d2_photo_img)
     img_label.pack(side="left")
 
@@ -41,7 +35,6 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame):
     cur_tick: int = -1
     cur_tick_index: int = -1
     selected_df: pd.DataFrame = all_data_df
-    not_selected_df: pd.DataFrame = pd.DataFrame()
     pred_selected_df: pd.DataFrame = pred_df
 
     def round_slider_changed(cur_round_index):
@@ -64,7 +57,7 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame):
             round_slider_changed(cur_round_index)
 
     def tick_slider_changed(cur_tick_index_str):
-        nonlocal cur_tick, cur_tick_index
+        nonlocal cur_tick, cur_tick_index, d2_img, d2_img_draw, img_label
         cur_tick_index = int(cur_tick_index_str)
         cur_index = indices[cur_tick_index]
         cur_tick = ticks[cur_tick_index]
@@ -72,6 +65,14 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame):
         tick_id_text_var.set("Tick ID: " + str(cur_tick))
         tick_game_id_text_var.set("Game Tick ID: " + str(cur_game_tick))
         round_id_text_var.set(f"Round ID: {int(cur_round)}")
+        d2_img_draw = d2_img.copy()
+        if len(selected_df) > 0:
+            data_series = selected_df.loc[cur_index, :]
+            pred_series = pred_selected_df.loc[cur_index, :]
+            draw_all_players(data_series, pred_series, d2_img_draw)
+        updated_d2_photo_img = itk.PhotoImage(d2_img_draw)
+        img_label.configure(image=updated_d2_photo_img)
+        img_label.image = updated_d2_photo_img
 
     def step_back_clicked():
         nonlocal cur_tick_index

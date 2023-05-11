@@ -1,5 +1,6 @@
 from enum import Enum
 from typing import TypeVar
+from math import isqrt
 
 from learn_bot.latent.engagement.column_names import *
 
@@ -20,6 +21,7 @@ delta_pos_grid_radius = 250
 delta_pos_grid_cell_dim = 100
 delta_pos_grid_num_cells = int((delta_pos_grid_radius * 2 * delta_pos_grid_radius * 2) /
                                (delta_pos_grid_cell_dim * delta_pos_grid_cell_dim))
+delta_pos_grid_num_cells_per_dim = isqrt(delta_pos_grid_num_cells)
 
 c4_status_col = "c4 status"
 c4_pos_cols = ["c4 pos x", "c4 pos y", "c4 pos z"]
