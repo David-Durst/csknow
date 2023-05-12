@@ -51,7 +51,7 @@ class TransformerNestedHiddenLatentModel(nn.Module):
         )
 
         transformer_encoder_layer = nn.TransformerEncoderLayer(d_model=self.internal_width, nhead=4, batch_first=True)
-        self.transformer_model = nn.TransformerEncoder(transformer_encoder_layer, num_layers=2)
+        self.transformer_model = nn.TransformerEncoder(transformer_encoder_layer, num_layers=2, enable_nested_tensor=False)
 
         self.decoder = nn.Sequential(
             nn.Linear(self.internal_width, inner_latent_size),
@@ -77,7 +77,7 @@ class TransformerNestedHiddenLatentModel(nn.Module):
             x_gathered = torch.index_select(x_transformed, 1, self.player_columns_cpu)
             alive_gathered = torch.index_select(x_transformed, 1, self.alive_columns_cpu)
 
-        alive_gathered = alive_gathered > 0.1
+        alive_gathered = alive_gathered < 0.1
 
         split_x_gathered = x_gathered.unflatten(1, torch.Size([self.num_players, self.columns_per_players]))
 
@@ -89,7 +89,6 @@ class TransformerNestedHiddenLatentModel(nn.Module):
         latent = self.decoder(transformed)
 
         # https://github.com/pytorch/pytorch/issues/22440 how to parse tuple output
-        # hack for now to keep same API, will remove later
         return self.logits_output(latent), self.prob_output(latent)
 
 
