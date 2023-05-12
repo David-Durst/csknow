@@ -373,10 +373,10 @@ namespace csknow::compute_nav_area {
 
         // compute map grid to pos, and then pos to area
         // ok to pick bad area, as computePath in path node will pick a valid alternative (tree computes alternatives)
-        size_t xVal = (deltaPosOption % csknow::feature_store::delta_pos_grid_num_cells) -
-                      (csknow::feature_store::delta_pos_grid_num_cells / 2);
-        size_t yVal = (deltaPosOption / csknow::feature_store::delta_pos_grid_num_cells) -
-                      (csknow::feature_store::delta_pos_grid_num_cells / 2);
+        int xVal = (deltaPosOption % csknow::feature_store::delta_pos_grid_num_cells_per_dim) -
+                      (csknow::feature_store::delta_pos_grid_num_cells_per_dim / 2);
+        int yVal = (deltaPosOption / csknow::feature_store::delta_pos_grid_num_cells_per_dim) -
+                      (csknow::feature_store::delta_pos_grid_num_cells_per_dim / 2);
         // add half so get center of each area grid
         // no need for z since doing 2d compare
         curPriority.targetPos = curClient.getFootPosForPlayer() + Vec3{
@@ -385,11 +385,16 @@ namespace csknow::compute_nav_area {
                 0.
         };
 
+        std::cout << "xVal: " << xVal << ", yVal: " << yVal
+            << ", curClient foot pos: " << curClient.getFootPosForPlayer().toCSV()
+            << ", delta pos grid cell dim: " << csknow::feature_store::delta_pos_grid_cell_dim
+            << ", deltaPosOption: " << deltaPosOption << std::endl;
+
         curPriority.targetAreaId = blackboard.navFile
                 .get_nearest_area_by_position(vec3Conv(curPriority.targetPos)).get_id();
 
         // if cur place is bombsite and CT defuser, then move to c4
-        if (blackboard.isPlayerDefuser(csgoId)) {
+        if (blackboard.isPlayerDefuser(csgoId) && !blackboard.inTest) {
             bool tAlive = false;
             for (const auto & client : state.clients) {
                 if (client.isAlive && client.team == ENGINE_TEAM_T) {
@@ -491,7 +496,7 @@ namespace csknow::compute_nav_area {
                         blackboard.playerToLastProbDeltaPosAssignment[treeThinker.csgoId];
                 if (!lastProbDeltaPosAssignment.valid) {
                     computeDeltaPosProbabilistic(state, curPriority, treeThinker.csgoId, modelNavData);
-                    lastProbDeltaPosAssignment = {curPriority.targetPos, curPriority.targetAreaId, true};
+                    lastProbDeltaPosAssignment = {curPriority.targetPos, curPriority.targetAreaId, modelNavData.deltaPosIndex, true};
                     blackboard.playerToTicksSinceLastProbDeltaPosAssignment[treeThinker.csgoId] = 0;
                     lastProbDeltaPosAssignment.valid = true;
                 }

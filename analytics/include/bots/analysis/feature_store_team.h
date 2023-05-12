@@ -27,6 +27,7 @@ namespace csknow::feature_store {
     constexpr int delta_pos_grid_cell_dim = 100;
     constexpr int delta_pos_grid_num_cells = (delta_pos_grid_radius * 2 * delta_pos_grid_radius * 2) /
             (delta_pos_grid_cell_dim * delta_pos_grid_cell_dim);
+    constexpr int delta_pos_grid_num_cells_per_dim = static_cast<int>(std::sqrt(delta_pos_grid_num_cells));
     constexpr double seconds_per_c4_timer_bucket = 10.;
     constexpr int num_c4_timer_buckets = 4;
     constexpr int every_nth_row = 10;
