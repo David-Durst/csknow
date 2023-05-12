@@ -106,3 +106,12 @@ class TransformerNestedHiddenLatentModel(nn.Module):
 #        transformed = self.transformer_model(x)
 #
 #        return transformed
+#
+#        ones = torch.rand(encoded.shape).to(CUDA_DEVICE_STR)
+#        ones_output = self.simple_transformer_encoder_layer(ones)
+#        second_ones_output = self.simple_transformer_encoder_layer(ones)
+#        ones_mask_output = self.simple_transformer_encoder_layer(ones, src_key_padding_mask=alive_gathered)
+#        ones_mod = torch.clone(ones)
+#        ones_mod[:, 1, :] = 2
+#        ones_mod_output = self.simple_transformer_encoder_layer(ones_mod)
+#        ones_mod_mask_output = self.simple_transformer_encoder_layer(ones_mod, src_key_padding_mask=alive_gathered)

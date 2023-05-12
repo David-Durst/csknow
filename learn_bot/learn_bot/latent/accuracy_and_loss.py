@@ -66,8 +66,9 @@ def compute_loss(x, pred, y_transformed, y_untransformed, column_transformers: I
         col_ranges = column_transformers.get_name_ranges(False, True, frozenset({ColumnTransformerType.CATEGORICAL_DISTRIBUTION}))
         # remove negatives where player isn't alive
         for i, col_range in enumerate(col_ranges):
-            valid_y_transformed = y_transformed[y_transformed[:, col_range[0]] >= 0.][:, col_range]
-            valid_pred_transformed = pred_transformed[y_transformed[:, col_range[0]] >= 0.][:, col_range]
+            valid_rows = y_transformed[:, col_range].sum(axis=1) > 0.1
+            valid_y_transformed = y_transformed[valid_rows][:, col_range]
+            valid_pred_transformed = pred_transformed[valid_rows][:, col_range]
             # don't add nan loss if no valid rows
             if valid_y_transformed.shape[0] > 0:
                 loss = base_classification_loss_fn(valid_pred_transformed, valid_y_transformed)
@@ -86,8 +87,9 @@ def compute_accuracy(pred, Y, accuracy, valids_per_accuracy_column, column_trans
     for name, col_range in zip(column_transformers.output_types.categorical_distribution_first_sub_cols,
                                column_transformers.get_name_ranges(False, False,
                                                                    frozenset({ColumnTransformerType.CATEGORICAL_DISTRIBUTION}))):
-        valid_Y = Y[Y[:, col_range[0]] >= 0.][:, col_range]
-        valid_pred_untransformed = pred_untransformed[Y[:, col_range[0]] >= 0.][:, col_range]
+        valid_rows = Y[:, col_range].sum(axis=1) > 0.1
+        valid_Y = Y[valid_rows][:, col_range]
+        valid_pred_untransformed = pred_untransformed[valid_rows][:, col_range]
         if name not in valids_per_accuracy_column:
             valids_per_accuracy_column[name] = 0
         if valid_Y.shape[0] > 0:
