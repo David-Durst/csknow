@@ -423,7 +423,7 @@ namespace csknow::compute_nav_area {
 
     NodeState ComputeModelNavAreaNode::exec(const ServerState &state, TreeThinker &treeThinker) {
         const ServerState::Client & curClient = state.getClient(treeThinker.csgoId);
-        if (blackboard.inAnalysis || blackboard.inTest || !getPlaceAreaModelProbabilities(curClient.team) ||
+        if (blackboard.inAnalysis || !getPlaceAreaModelProbabilities(curClient.team) ||
             !blackboard.inferenceManager.haveValidData()) {
             playerNodeState[treeThinker.csgoId] = NodeState::Failure;
             return playerNodeState[treeThinker.csgoId];

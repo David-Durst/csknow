@@ -34,7 +34,7 @@ int main(int argc, char * argv[]) {
             << "3. path/to/log\n"
             << "4. path/to/models\n"
             << "5. path/to/saved/data\n"
-            << "6. t for tests, r for rounds, rh for rounds with hueristics, rht for rounds with t hueristics, rhct for rounds with ct heuristics\n"
+            << "6. t for tests, tl for tests with learned, r for rounds, rh for rounds with hueristics, rht for rounds with t hueristics, rhct for rounds with ct heuristics\n"
             << "7. 1 for all csknow bots, ct for ct only csknow bots, t for t only csknow bots, 0 for for no csknow bots\n"
             << std::endl;
         return 1;
@@ -42,10 +42,8 @@ int main(int argc, char * argv[]) {
     string mapsPath = argv[1], dataPath = argv[2], logPath = argv[3], modelsDir = argv[4], savedDatasetsDir = argv[5],
         roundsTestStr = argv[6], botStop = argv[7];
 
-    bool runTest = roundsTestStr == "t";
-    if (!runTest) {
-        processModelArg(roundsTestStr);
-    }
+    bool runTest = roundsTestStr == "t" || roundsTestStr == "tl";
+    processModelArg(roundsTestStr);
 
     ServerState state;
     state.dataPath = dataPath;
@@ -53,11 +51,6 @@ int main(int argc, char * argv[]) {
     uint64_t numFailures = 0;
     Tree tree(modelsDir);
     std::thread filterReceiver(&Tree::readFilterNames, &tree);
-
-    SetBotStop setBotStop(*tree.blackboard, botStop);
-    setBotStop.exec(state, tree.defaultThinker);
-    SetMaxRounds setMaxRounds(*tree.blackboard, 100, false);
-    setMaxRounds.exec(state, tree.defaultThinker);
 
     bool finishedTests = false;
     csknow::plant_states::PlantStatesResult plantStatesResult;
