@@ -12,6 +12,7 @@
 #include "bots/behavior_tree/tree.h"
 #include "bots/testing/blackboard_management.h"
 #include "bots/testing/state_checks.h"
+#include "bots/analysis/learned_models.h"
 
 class JumpedBeforeCat : public Node {
     CSGOId targetId;
@@ -66,7 +67,10 @@ public:
         if (tree.newBlackboard) {
             Blackboard & blackboard = *tree.blackboard;
             Script::initialize(tree, state);
-            set<AreaId> areasToRemove{4048};
+            set<AreaId> areasToRemove{};
+            if (!getPlaceAreaModelProbabilities(ENGINE_TEAM_CT)) {
+                areasToRemove.insert(4048);
+            }
             commands = make_unique<SequenceNode>(blackboard, Node::makeList(
                                                          make_unique<InitTestingRound>(blackboard, name),
                                                          make_unique<movement::WaitNode>(blackboard, 1.0),
@@ -118,7 +122,10 @@ public:
         if (tree.newBlackboard) {
             Blackboard & blackboard = *tree.blackboard;
             Script::initialize(tree, state);
-            set<AreaId> areasToRemove{4048};
+            set<AreaId> areasToRemove{};
+            if (!getPlaceAreaModelProbabilities(ENGINE_TEAM_CT)) {
+                areasToRemove.insert(4048);
+            }
             commands = make_unique<SequenceNode>(blackboard, Node::makeList(
                                                          make_unique<InitTestingRound>(blackboard, name),
                                                          make_unique<movement::WaitNode>(blackboard, 1.0),

@@ -377,6 +377,8 @@ namespace csknow::compute_nav_area {
                       (csknow::feature_store::delta_pos_grid_num_cells_per_dim / 2);
         int yVal = (deltaPosOption / csknow::feature_store::delta_pos_grid_num_cells_per_dim) -
                       (csknow::feature_store::delta_pos_grid_num_cells_per_dim / 2);
+        modelNavData.deltaXVal = xVal;
+        modelNavData.deltaYVal = yVal;
         // add half so get center of each area grid
         // no need for z since doing 2d compare
         curPriority.targetPos = curClient.getFootPosForPlayer() + Vec3{
@@ -384,11 +386,6 @@ namespace csknow::compute_nav_area {
                 static_cast<double>(yVal * csknow::feature_store::delta_pos_grid_cell_dim),
                 0.
         };
-
-        std::cout << "xVal: " << xVal << ", yVal: " << yVal
-            << ", curClient foot pos: " << curClient.getFootPosForPlayer().toCSV()
-            << ", delta pos grid cell dim: " << csknow::feature_store::delta_pos_grid_cell_dim
-            << ", deltaPosOption: " << deltaPosOption << std::endl;
 
         curPriority.targetAreaId = blackboard.navFile
                 .get_nearest_area_by_position(vec3Conv(curPriority.targetPos)).get_id();
@@ -483,9 +480,9 @@ namespace csknow::compute_nav_area {
                     blackboard.playerToTicksSinceLastProbDeltaPosAssignment.end()) {
                     blackboard.playerToTicksSinceLastProbDeltaPosAssignment[treeThinker.csgoId] = newDeltaPosTicks;
                 }
-                blackboard.playerToTicksSinceLastProbAreaAssignment[treeThinker.csgoId]++;
+                blackboard.playerToTicksSinceLastProbDeltaPosAssignment[treeThinker.csgoId]++;
                 bool timeForNewDeltaPos =
-                        blackboard.playerToTicksSinceLastProbAreaAssignment.at(treeThinker.csgoId) >= newAreaTicks ||
+                        blackboard.playerToTicksSinceLastProbDeltaPosAssignment.at(treeThinker.csgoId) >= newAreaTicks ||
                         wasInEngagement;
                 if (blackboard.playerToLastProbDeltaPosAssignment.find(treeThinker.csgoId) ==
                     blackboard.playerToLastProbDeltaPosAssignment.end() || timeForNewDeltaPos) {

@@ -13,6 +13,7 @@ struct ModelNavData {
     bool deltaPosMode;
     vector<float> deltaPosProbs;
     int64_t deltaPosIndex;
+    int deltaXVal, deltaYVal;
     vector<string> orderPlaceOptions;
     vector<float> orderPlaceProbs;
     string curPlace;

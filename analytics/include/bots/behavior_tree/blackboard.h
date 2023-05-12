@@ -36,7 +36,7 @@ constexpr size_t newTargetTicks = 128 * 0.5;
 constexpr size_t newAggressionTicks = 128 * 0.5;
 constexpr size_t newPlaceTicks = 128 * 2.;
 constexpr size_t newAreaTicks = 128 * 1.;
-constexpr size_t newDeltaPosTicks = 128 * 1.;
+constexpr size_t newDeltaPosTicks = 128 * 0.5;
 
 enum class AggressiveType {
     Push,
