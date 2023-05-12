@@ -42,13 +42,14 @@ def load_model_file(all_data_df: pd.DataFrame, model_file_name: str) -> TrainRes
     return TrainResult(train_data, test_data, train_df, test_df, column_transformers, model)
 
 
-manual_data = True
+manual_data = False
 
 if __name__ == "__main__":
     if manual_data:
         all_data_df = load_hdf5_to_pd(manual_latent_team_hdf5_data_path)
     else:
         all_data_df = load_hdf5_to_pd(latent_team_hdf5_data_path)
+        all_data_df = all_data_df[(all_data_df['valid'] == 1.) & (all_data_df['c4 status'] < 2)]
     all_data_df = all_data_df.copy()
 
     load_result = load_model_file(all_data_df, "delta_pos_checkpoint.pt")

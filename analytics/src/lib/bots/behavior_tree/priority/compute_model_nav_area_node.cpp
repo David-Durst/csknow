@@ -349,7 +349,6 @@ namespace csknow::compute_nav_area {
         }
          */
         size_t deltaPosOption = 0;
-        /*
         bool setDeltaPosOption = false;
         double probSample = blackboard.aggressionDis(blackboard.gen);
         double weightSoFar = 0.;
@@ -362,7 +361,7 @@ namespace csknow::compute_nav_area {
                 setDeltaPosOption = true;
             }
         }
-         */
+        /*
         double maxProb = -1.;
         modelNavData.deltaPosProbs.clear();
         for (size_t i = 0; i < probabilities.size(); i++) {
@@ -372,6 +371,7 @@ namespace csknow::compute_nav_area {
                 maxProb = probabilities[i];
             }
         }
+         */
         modelNavData.deltaPosIndex = deltaPosOption;
 
         // compute map grid to pos, and then pos to area
