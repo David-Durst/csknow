@@ -380,6 +380,10 @@ namespace csknow::compute_nav_area {
                       (csknow::feature_store::delta_pos_grid_num_cells_per_dim / 2);
         int yVal = (deltaPosOption / csknow::feature_store::delta_pos_grid_num_cells_per_dim) -
                       (csknow::feature_store::delta_pos_grid_num_cells_per_dim / 2);
+        if (yVal > 0) {
+            int x = 1;
+            (void) x;
+        }
         modelNavData.deltaXVal = xVal;
         modelNavData.deltaYVal = yVal;
         // add half so get center of each area grid

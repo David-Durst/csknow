@@ -25,7 +25,7 @@ namespace csknow::feature_store {
         for (int j = 0; j < num_c4_timer_buckets; j++) {
             c4TimerBucketed[j].resize(size, false);
         }
-        c4Pos.resize(size, invalidWorldPos);
+        c4Pos.resize(size, zeroVec);
         c4DistanceToASite.resize(size, INVALID_ID);
         c4DistanceToBSite.resize(size, INVALID_ID);
         for (int j = 0; j < num_orders_per_site; j++) {
@@ -40,20 +40,22 @@ namespace csknow::feature_store {
             columnTData[i].playerId.resize(size, INVALID_ID);
             columnTData[i].ctTeam.resize(size, false);
             columnTData[i].alive.resize(size, false);
-            columnTData[i].footPos.resize(size, invalidWorldPos);
-            columnTData[i].velocity.resize(size, {INVALID_ID, INVALID_ID, INVALID_ID});
-            columnTData[i].distanceToASite.resize(size, 2 * maxWorldDistance);
-            columnTData[i].distanceToBSite.resize(size, 2 * maxWorldDistance);
+            columnTData[i].footPos.resize(size, zeroVec);
+            columnTData[i].alignedFootPos.resize(size, zeroVec);
+            columnTData[i].velocity.resize(size, zeroVec);
+            columnTData[i].distanceToASite.resize(size, 0);
+            columnTData[i].distanceToBSite.resize(size, 0);
             columnCTData[i].playerId.resize(size, INVALID_ID);
             columnCTData[i].ctTeam.resize(size, true);
             columnCTData[i].alive.resize(size, false);
-            columnCTData[i].footPos.resize(size, invalidWorldPos);
-            columnCTData[i].velocity.resize(size, {INVALID_ID, INVALID_ID, INVALID_ID});
-            columnCTData[i].distanceToASite.resize(size, 2 * maxWorldDistance);
-            columnCTData[i].distanceToBSite.resize(size, 2 * maxWorldDistance);
+            columnCTData[i].footPos.resize(size, zeroVec);
+            columnCTData[i].alignedFootPos.resize(size, zeroVec);
+            columnCTData[i].velocity.resize(size, zeroVec);
+            columnCTData[i].distanceToASite.resize(size, 0);
+            columnCTData[i].distanceToBSite.resize(size, 0);
             for (int j = 0; j < num_prior_ticks; j++) {
-                columnTData[i].priorFootPos[j].resize(size, invalidWorldPos);
-                columnCTData[i].priorFootPos[j].resize(size, invalidWorldPos);
+                columnTData[i].priorFootPos[j].resize(size, zeroVec);
+                columnCTData[i].priorFootPos[j].resize(size, zeroVec);
             }
             for (int j = 0; j < num_orders_per_site; j++) {
                 columnTData[i].distanceToNearestAOrderNavArea[j].resize(size, 2 * maxWorldDistance);
@@ -138,7 +140,7 @@ namespace csknow::feature_store {
             for (int j = 0; j < num_c4_timer_buckets; j++) {
                 c4TimerBucketed[j][rowIndex] = INVALID_ID;
             }
-            c4Pos[rowIndex] = invalidWorldPos;
+            c4Pos[rowIndex] = zeroVec;
             c4DistanceToASite[rowIndex] = INVALID_ID;
             c4DistanceToBSite[rowIndex] = INVALID_ID;
             for (int j = 0; j < num_orders_per_site; j++) {
@@ -153,20 +155,22 @@ namespace csknow::feature_store {
                 columnTData[i].playerId[rowIndex] = INVALID_ID;
                 columnTData[i].ctTeam[rowIndex] = false;
                 columnTData[i].alive[rowIndex] = false;
-                columnTData[i].footPos[rowIndex] = invalidWorldPos;
-                columnTData[i].velocity[rowIndex] = {INVALID_ID, INVALID_ID, INVALID_ID};
-                columnTData[i].distanceToASite[rowIndex] = 2 * maxWorldDistance;
-                columnTData[i].distanceToBSite[rowIndex] = 2 * maxWorldDistance;
+                columnTData[i].footPos[rowIndex] = zeroVec;
+                columnTData[i].alignedFootPos[rowIndex] = zeroVec;
+                columnTData[i].velocity[rowIndex] = zeroVec;
+                columnTData[i].distanceToASite[rowIndex] = 0.;
+                columnTData[i].distanceToBSite[rowIndex] = 0.;
                 columnCTData[i].playerId[rowIndex] = INVALID_ID;
                 columnCTData[i].ctTeam[rowIndex] = true;
                 columnCTData[i].alive[rowIndex] = false;
-                columnCTData[i].footPos[rowIndex] = invalidWorldPos;
-                columnCTData[i].velocity[rowIndex] = {INVALID_ID, INVALID_ID, INVALID_ID};
-                columnCTData[i].distanceToASite[rowIndex] = 2 * maxWorldDistance;
-                columnCTData[i].distanceToBSite[rowIndex] = 2 * maxWorldDistance;
+                columnCTData[i].footPos[rowIndex] = zeroVec;
+                columnCTData[i].alignedFootPos[rowIndex] = zeroVec;
+                columnCTData[i].velocity[rowIndex] = zeroVec;
+                columnCTData[i].distanceToASite[rowIndex] = 0.;
+                columnCTData[i].distanceToBSite[rowIndex] = 0.;
                 for (int j = 0; j < num_prior_ticks; j++) {
-                    columnTData[i].priorFootPos[j][rowIndex] = invalidWorldPos;
-                    columnCTData[i].priorFootPos[j][rowIndex] = invalidWorldPos;
+                    columnTData[i].priorFootPos[j][rowIndex] = zeroVec;
+                    columnCTData[i].priorFootPos[j][rowIndex] = zeroVec;
                 }
                 for (int j = 0; j < num_orders_per_site; j++) {
                     columnTData[i].distanceToNearestAOrderNavArea[j][rowIndex] = 2 * maxWorldDistance;
@@ -243,7 +247,7 @@ namespace csknow::feature_store {
 
         roundId[tickIndex] = roundIndex;
         tickId[tickIndex] = tickIndex;
-        valid[tickIndex] = true;
+        valid[tickIndex] = !buffer.btTeamPlayerData.empty();
 
         if (buffer.c4MapData.c4Planted) {
             double c4DistanceToASite =
@@ -306,6 +310,7 @@ namespace csknow::feature_store {
             columnData[columnIndex].playerId[tickIndex] = btTeamPlayerData.playerId;
             columnData[columnIndex].alive[tickIndex] = true;
             columnData[columnIndex].footPos[tickIndex] = btTeamPlayerData.curFootPos;
+            columnData[columnIndex].alignedFootPos[tickIndex] = (btTeamPlayerData.curFootPos / delta_pos_grid_num_cells_per_dim).trunc();
             columnData[columnIndex].velocity[tickIndex] = btTeamPlayerData.velocity;
             columnData[columnIndex].distanceToASite[tickIndex] =
                 distanceToPlaces.getClosestDistance(btTeamPlayerData.curArea, a_site, navFile);
@@ -688,7 +693,7 @@ namespace csknow::feature_store {
             TickRates tickRates = computeTickRates(games, rounds, roundIndex);
             CircularBuffer<int64_t> ticks1sFutureTracker(4), ticks2sFutureTracker(4), ticks6sFutureTracker(6),
                 // this one I add to every frame and remove when too far in the future, more accuracte
-                bothSidesTicks1sFutureTracker(10);
+                bothSidesTicks1sFutureTracker(20);
             //, ticks15sFutureTracker(15), ticks30sFutureTracker(30);
             for (int64_t unmodifiedTickIndex = rounds.ticksPerRound[roundIndex].maxId;
                  unmodifiedTickIndex >= rounds.ticksPerRound[roundIndex].minId; unmodifiedTickIndex--) {
@@ -771,11 +776,11 @@ namespace csknow::feature_store {
                         std::raise(SIGINT);
                     }
                 }
-                 */
                 if (ticks.gameTickNumber[unmodifiedTickIndex] == 236466) {
                     std::cout << "good round " << roundIndex << std::endl;
                     std::raise(SIGINT);
                 }
+                 */
             }
             roundsProcessed++;
             printProgress(roundsProcessed, rounds.size);
@@ -824,6 +829,8 @@ namespace csknow::feature_store {
                                    columnData[columnPlayer].ctTeam, hdf5FlatCreateProps);
                 saveVec3VectorToHDF5(columnData[columnPlayer].footPos, file,
                                      "player pos " + columnTeam + " " + iStr, hdf5FlatCreateProps);
+                saveVec3VectorToHDF5(columnData[columnPlayer].alignedFootPos, file,
+                                     "player aligned pos " + columnTeam + " " + iStr, hdf5FlatCreateProps);
                 for (int priorTick = 0; priorTick < num_prior_ticks; priorTick++) {
                     saveVec3VectorToHDF5(columnData[columnPlayer].priorFootPos[priorTick], file,
                                          "player pos " + columnTeam + " " + iStr + " t-" + std::to_string(priorTick+1),

@@ -27,11 +27,12 @@ namespace csknow::feature_store {
     constexpr int delta_pos_grid_cell_dim = 100;
     constexpr int delta_pos_grid_num_cells = (delta_pos_grid_radius * 2 * delta_pos_grid_radius * 2) /
             (delta_pos_grid_cell_dim * delta_pos_grid_cell_dim);
-    constexpr int delta_pos_grid_num_cells_per_dim = static_cast<int>(std::sqrt(delta_pos_grid_num_cells));
+    const int delta_pos_grid_num_cells_per_dim = static_cast<int>(std::sqrt(delta_pos_grid_num_cells));
     constexpr double seconds_per_c4_timer_bucket = 10.;
     constexpr int num_c4_timer_buckets = 4;
     constexpr int every_nth_row = 10;
     const string a_site = "BombsiteA", b_site = "BombsiteB";
+    const Vec3 zeroVec = {0., 0., 0.};
 
     enum class C4Status {
         PlantedA,
@@ -67,6 +68,7 @@ namespace csknow::feature_store {
             vector<bool> ctTeam;
             vector<bool> alive;
             vector<Vec3> footPos;
+            vector<Vec3> alignedFootPos;
             array<vector<Vec3>, num_prior_ticks> priorFootPos;
             vector<Vec3> velocity;
             vector<float> distanceToASite, distanceToBSite;

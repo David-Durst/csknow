@@ -40,6 +40,7 @@ class PlayerPlaceAreaColumns:
         self.distance_to_a_site = "distance to a site " + player_team_str(team_str, player_index)
         self.distance_to_b_site = "distance to b site " + player_team_str(team_str, player_index)
         self.pos = [get_player_pos_columns(player_index, team_str, dim_str) for dim_str in ["x", "y", "z"]]
+        self.aligned_pos = [get_player_aligned_pos_columns(player_index, team_str, dim_str) for dim_str in ["x", "y", "z"]]
         self.prior_pos = []
         self.vel = [get_player_velocity_columns(player_index, team_str, dim_str) for dim_str in ["x", "y", "z"]]
         self.cur_place = []
@@ -82,11 +83,12 @@ class PlayerPlaceAreaColumns:
         #return [self.distance_to_a_site, self.distance_to_b_site] + \
         #    flatten_list([self.pos, self.prior_pos, self.vel])
         return flatten_list([self.pos, self.prior_pos, self.vel])
+        #return flatten_list([self.aligned_pos])
 
     def to_input_distribution_cat_list(self) -> list[list[str]]:
         #return [self.cur_place, self.area_grid_cell_in_place, [self.alive]]#, self.index_on_team, [self.ct_team]]
-        return [self.cur_place, self.area_grid_cell_in_place, [self.alive], [self.ct_team]]#, self.index_on_team, [self.ct_team]]
-        #return [[self.alive], [self.ct_team]]
+        #return [self.cur_place, self.area_grid_cell_in_place, [self.alive], [self.ct_team]]#, self.index_on_team, [self.ct_team]]
+        return [[self.alive], [self.ct_team]]
 
     def to_output_cat_list(self, place: bool, area: bool, delta: bool) -> list[list[str]]:
         result = []

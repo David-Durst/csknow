@@ -319,7 +319,7 @@ def train(train_type: TrainType, all_data_df: pd.DataFrame, num_epochs: int,
 
     train_data = LatentDataset(train_df, column_transformers, windowed=windowed)
     test_data = LatentDataset(test_df, column_transformers, windowed=windowed)
-    batch_size = 64
+    batch_size = min(64, min(len(train_df), len(test_df)))
     train_dataloader = DataLoader(train_data, batch_size=batch_size, shuffle=True)
     test_dataloader = DataLoader(test_data, batch_size=batch_size, shuffle=True)
 
@@ -377,7 +377,7 @@ manual_latent_team_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' /
 manual_rounds_data_path = Path(__file__).parent / '..' / '..' / '..' / 'analytics' / 'saved_datasets' / 'bot_sample_traces_5_10_23_ticks.csv'
 
 use_small_data = False
-use_manual_data = True
+use_manual_data = False
 
 def run_team_analysis():
     read_start = time.time()
@@ -410,7 +410,7 @@ def run_team_analysis():
     #train_result = train(TrainType.Order, team_data_df, num_epochs=3, windowed=False)
     #train_result = train(TrainType.Place, team_data_df, num_epochs=500, windowed=False, diff_train_test=False)
     #train_result = train(TrainType.Area, team_data_df, num_epochs=3, windowed=False)
-    train_result = train(TrainType.DeltaPos, team_data_df, num_epochs=500, windowed=False, diff_train_test=False)
+    train_result = train(TrainType.DeltaPos, team_data_df, num_epochs=75, windowed=False, diff_train_test=False)
                          #flip_columns=[ColumnsToFlip(" CT 0", " CT 1")])
 
 

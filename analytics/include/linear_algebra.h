@@ -171,6 +171,20 @@ struct Vec3 {
     glm::vec3 toGLM() const {
         return {static_cast<float>(x), static_cast<float>(y), static_cast<float>(z)};
     };
+    Vec3 trunc() {
+        Vec3 result = *this;
+        result.x = std::trunc(result.x);
+        result.y = std::trunc(result.y);
+        result.z = std::trunc(result.z);
+        return result;
+    };
+    Vec3 round() {
+        Vec3 result = *this;
+        result.x = std::round(result.x);
+        result.y = std::round(result.y);
+        result.z = std::round(result.z);
+        return result;
+    };
 };
 
 static inline __attribute__((always_inline))

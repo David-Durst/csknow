@@ -77,14 +77,22 @@ class TransformerNestedHiddenLatentModel(nn.Module):
             x_gathered = torch.index_select(x_transformed, 1, self.player_columns_cpu)
             alive_gathered = torch.index_select(x_transformed, 1, self.alive_columns_cpu)
 
-        alive_gathered = alive_gathered < 0.1
+        dead_gathered = alive_gathered < 0.1
 
         split_x_gathered = x_gathered.unflatten(1, torch.Size([self.num_players, self.columns_per_players]))
 
         # run model except last layer
         encoded = self.encoder_model(split_x_gathered)
 
-        transformed = self.transformer_model(encoded, src_key_padding_mask=alive_gathered)
+        transformed = self.transformer_model(encoded, src_key_padding_mask=dead_gathered)
+
+        #if torch.isnan(transformed).any():
+        #       all_in_tick_dead_gathered = dead_gathered.all(axis=1)
+        #       all_in_tick_dead_gathered = all_in_tick_dead_gathered.unflatten(0, [-1, 1, 1]).expand(transformed.shape)
+        #       new_transformed = torch.where(all_in_tick_dead_gathered, 0., transformed)
+        #       if torch.isnan(new_transformed).any():
+        #           print("bad")
+        #       transformed = new_transformed
 
         latent = self.decoder(transformed)
 
