@@ -110,12 +110,17 @@ namespace movement {
             }
         }
 
+        bool newDeltaPosDestination =
+                blackboard.playerToTicksSinceLastProbDeltaPosAssignment.find(curClient.csgoId) !=
+                blackboard.playerToTicksSinceLastProbDeltaPosAssignment.end() &&
+                blackboard.playerToTicksSinceLastProbDeltaPosAssignment[curClient.csgoId] == 0;
+
         // if have a path and haven't changed source or target nav area id and not stuck.
         // If so, do nothing (except increment waypoint if necessary)
         // also check that not in an already visited area because missed a jump
         if (blackboard.playerToPath.find(treeThinker.csgoId) != blackboard.playerToPath.end() &&
             blackboard.playerToLastPathingSourceNavAreaId.find(treeThinker.csgoId) != blackboard.playerToLastPathingSourceNavAreaId.end() &&
-            !changeCurArea &&
+            !changeCurArea && !newDeltaPosDestination &&
             blackboard.playerToLastPathingTargetNavAreaId.find(treeThinker.csgoId) != blackboard.playerToLastPathingTargetNavAreaId.end() &&
             targetAreaId == blackboard.playerToLastPathingTargetNavAreaId[treeThinker.csgoId]) {
             Path & curPath = blackboard.playerToPath[treeThinker.csgoId];

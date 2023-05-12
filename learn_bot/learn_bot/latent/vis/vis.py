@@ -64,7 +64,7 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame):
         cur_game_tick = game_ticks[cur_tick_index]
         tick_id_text_var.set("Tick ID: " + str(cur_tick))
         tick_game_id_text_var.set("Game Tick ID: " + str(cur_game_tick))
-        round_id_text_var.set(f"Round ID: {int(cur_round)}")
+        round_id_text_var.set(f"Round ID: {int(cur_round)}, Round Number: {selected_df.loc[cur_index, 'round number']}")
         d2_img_copy = d2_img.copy()
         d2_img_draw = ImageDraw.Draw(d2_img_copy)
         if len(selected_df) > 0:

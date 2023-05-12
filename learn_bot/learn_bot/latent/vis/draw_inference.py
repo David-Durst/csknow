@@ -95,10 +95,8 @@ def draw_all_players(data_series: pd.Series, pred_series: pd.Series, im_draw: Im
                     max_pred_prob = cur_pred_prob
                     max_pred_index = i
 
-            if data_series[tick_id_column] == 1318:
-                x = 1
             data_coord = pos_coord.get_grid_cell(max_data_index, False)
-            data_coord.draw_vis(im_draw)
             pred_coord = pos_coord.get_grid_cell(max_pred_index, True)
+            print(f'''pos {pos_coord.coords}, data {data_coord.coords}, pred {pred_coord.coords}''')
+            data_coord.draw_vis(im_draw)
             pred_coord.draw_vis(im_draw)
-            #print(f'''pos {pos_coord.coords}, data {data_coord.coords}, pred {pred_coord.coords}''')

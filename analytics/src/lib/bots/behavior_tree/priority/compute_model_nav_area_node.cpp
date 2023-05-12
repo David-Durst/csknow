@@ -350,13 +350,16 @@ namespace csknow::compute_nav_area {
          */
         size_t deltaPosOption = 0;
         /*
+        bool setDeltaPosOption = false;
         double probSample = blackboard.aggressionDis(blackboard.gen);
         double weightSoFar = 0.;
+        modelNavData.deltaPosProbs.clear();
         for (size_t i = 0; i < probabilities.size(); i++) {
             weightSoFar += probabilities[i];
-            if (probSample < weightSoFar) {
+            modelNavData.deltaPosProbs.push_back(probabilities[i]);
+            if (probSample < weightSoFar && !setDeltaPosOption) {
                 deltaPosOption = i;
-                break;
+                setDeltaPosOption = true;
             }
         }
          */

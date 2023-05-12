@@ -52,6 +52,14 @@ namespace csknow::inference_delta_pos {
                 const auto & columnPlayerData = columnData.get()[playerNum];
                 result.playerIdToColumnIndex[columnPlayerData.playerId[rowIndex]] =
                     playerNum + (ctColumnData ? 0 : csknow::feature_store::maxEnemies);
+                for (size_t placeIndex = 0; placeIndex < csknow::feature_store::num_places; placeIndex++) {
+                    result.rowCPP.push_back(static_cast<float>(
+                                                    columnPlayerData.curPlace[placeIndex][rowIndex]));
+                }
+                for (size_t areaIndex = 0; areaIndex < csknow::feature_store::area_grid_size; areaIndex++) {
+                    result.rowCPP.push_back(static_cast<float>(
+                                                    columnPlayerData.areaGridCellInPlace[areaIndex][rowIndex]));
+                }
                 result.rowCPP.push_back(static_cast<float>(columnPlayerData.alive[rowIndex]));
                 result.rowCPP.push_back(static_cast<float>(columnPlayerData.ctTeam[rowIndex]));
             }
