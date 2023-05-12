@@ -17,7 +17,9 @@ namespace csknow::inference_manager {
         placeModelPath(fs::path(modelsDir) / fs::path("latent_model") /
                        fs::path("place_script_model.pt")),
         areaModelPath(fs::path(modelsDir) / fs::path("latent_model") /
-                       fs::path("area_script_model.pt")) {
+                       fs::path("area_script_model.pt")),
+        deltaPosModelPath(fs::path(modelsDir) / fs::path("latent_model") /
+                      fs::path("delta_pos_script_model.pt")) {
         at::set_num_threads(1);
         at::set_num_interop_threads(1);
         torch::jit::getProfilingMode() = false;
@@ -31,6 +33,8 @@ namespace csknow::inference_manager {
         placeModule = torch::jit::optimize_for_inference(tmpPlaceModule);
         auto tmpAreaModule = torch::jit::load(areaModelPath);
         areaModule = torch::jit::optimize_for_inference(tmpAreaModule);
+        auto tmpDeltaPosModule = torch::jit::load(deltaPosModelPath);
+        deltaPosModule = torch::jit::optimize_for_inference(tmpDeltaPosModule);
     }
 
     void InferenceManager::setCurClients(const vector<ServerState::Client> & clients) {
@@ -62,6 +66,7 @@ namespace csknow::inference_manager {
         orderValues = csknow::inference_latent_order::extractFeatureStoreOrderValues(featureStoreResult, 0);
         placeValues = csknow::inference_latent_place::extractFeatureStorePlaceValues(featureStoreResult, 0);
         areaValues = csknow::inference_latent_area::extractFeatureStoreAreaValues(featureStoreResult, 0);
+        deltaPosValues = csknow::inference_delta_pos::extractFeatureStoreDeltaPosValues(featureStoreResult, 0);
     }
 
     void InferenceManager::recordPlayerValues(csknow::feature_store::FeatureStoreResult &featureStoreResult,
@@ -175,6 +180,22 @@ namespace csknow::inference_manager {
         }
     }
 
+    void InferenceManager::runDeltaPosInference() {
+        std::vector<torch::jit::IValue> inputs;
+        torch::Tensor rowPT = torch::from_blob(deltaPosValues.rowCPP.data(),
+                                               {1, static_cast<long>(deltaPosValues.rowCPP.size())},
+                                               options);
+
+        inputs.push_back(rowPT);
+
+        at::Tensor output = deltaPosModule.forward(inputs).toTuple()->elements()[1].toTensor();
+
+        for (auto & [csgoId, inferenceData] : playerToInferenceData) {
+            playerToInferenceData[csgoId].deltaPosProbabilities =
+                    extractFeatureStoreDeltaPosResults(output, deltaPosValues, csgoId, inferenceData.team);
+        }
+    }
+
     void InferenceManager::runInferences() {
         if (!valid) {
             inferenceSeconds = 0;
@@ -221,24 +242,29 @@ namespace csknow::inference_manager {
             runPlaceInference();
             ranPlaceInference = true;
         }
-        else {
+        else if (overallModelToRun == 2) {
             runAreaInference();
             ranAreaInference = true;
         }
-        overallModelToRun = (overallModelToRun + 1) % 3;
+        else {
+            runDeltaPosInference();
+            ranDeltaPosInference = true;
+        }
+        overallModelToRun = (overallModelToRun + 1) % 4;
         auto end = std::chrono::system_clock::now();
         std::chrono::duration<double> inferenceTime = end - start;
         inferenceSeconds = inferenceTime.count();
     }
 
     bool InferenceManager::haveValidData() const {
-        if (!ranOrderInference || !ranPlaceInference || !ranAreaInference) {
+        if (!ranOrderInference || !ranPlaceInference || !ranAreaInference || !ranDeltaPosInference) {
             return false;
         }
         for (const auto & [_, inferenceData] : playerToInferenceData) {
             if (!inferenceData.validData || inferenceData.orderProbabilities.orderProbabilities.empty() ||
                 inferenceData.placeProbabilities.placeProbabilities.empty() ||
-                inferenceData.areaProbabilities.areaProbabilities.empty()) {
+                inferenceData.areaProbabilities.areaProbabilities.empty() ||
+                inferenceData.deltaPosProbabilities.deltaPosProbabilities.empty()) {
                 return false;
             }
         }

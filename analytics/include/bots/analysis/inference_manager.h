@@ -10,6 +10,7 @@
 #include "queries/inference_moments/inference_latent_order_helpers.h"
 #include "queries/inference_moments/inference_latent_place_helpers.h"
 #include "queries/inference_moments/inference_latent_area_helpers.h"
+#include "queries/inference_moments/inference_latent_delta_pos_helpers.h"
 #include "bots/load_save_bot_data.h"
 #include <filesystem>
 
@@ -31,6 +32,7 @@ namespace csknow::inference_manager {
         csknow::inference_latent_order::InferenceOrderPlayerAtTickProbabilities orderProbabilities;
         csknow::inference_latent_place::InferencePlacePlayerAtTickProbabilities placeProbabilities;
         csknow::inference_latent_area::InferenceAreaPlayerAtTickProbabilities areaProbabilities;
+        csknow::inference_delta_pos::InferenceDeltaPosPlayerAtTickProbabilities deltaPosProbabilities;
     };
 
     class InferenceManager {
@@ -42,6 +44,8 @@ namespace csknow::inference_manager {
         void runPlaceInference();
         bool ranAreaInference = false;
         void runAreaInference();
+        bool ranDeltaPosInference = false;
+        void runDeltaPosInference();
         int overallModelToRun = 0;
     public:
         bool valid;
@@ -51,9 +55,10 @@ namespace csknow::inference_manager {
         csknow::inference_latent_order::InferenceOrderTickValues orderValues;
         csknow::inference_latent_place::InferencePlaceTickValues placeValues;
         csknow::inference_latent_area::InferenceAreaTickValues areaValues;
+        csknow::inference_delta_pos::InferenceDeltaPosTickValues deltaPosValues;
 
-        fs::path engagementModelPath, aggressionModelPath, orderModelPath, placeModelPath, areaModelPath;
-        torch::jit::script::Module engagementModule, aggressionModule, orderModule, placeModule, areaModule;
+        fs::path engagementModelPath, aggressionModelPath, orderModelPath, placeModelPath, areaModelPath, deltaPosModelPath;
+        torch::jit::script::Module engagementModule, aggressionModule, orderModule, placeModule, areaModule, deltaPosModule;
         InferenceManager(const std::string & modelsDir);
         InferenceManager() : valid(false) { };
 
