@@ -20,6 +20,13 @@ struct PriorityAreaAssignment {
     bool valid;
 };
 
+struct PriorityDeltaPosAssignment {
+    Vec3 targetPos;
+    AreaId targetAreaId;
+    int64_t deltaPos;
+    bool valid;
+};
+
 struct MoveOptions {
     bool move;
     bool walk;

@@ -10,6 +10,9 @@
 #include "geometryNavConversions.h"
 
 struct ModelNavData {
+    bool deltaPosMode;
+    vector<float> deltaPosProbs;
+    int64_t deltaPosIndex;
     vector<string> orderPlaceOptions;
     vector<float> orderPlaceProbs;
     string curPlace;

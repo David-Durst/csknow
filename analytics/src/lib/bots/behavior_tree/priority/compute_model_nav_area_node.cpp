@@ -330,6 +330,97 @@ namespace csknow::compute_nav_area {
         modelNavData.nextArea = curPriority.targetAreaId;
     }
 
+    void ComputeModelNavAreaNode::computeDeltaPosProbabilistic(const ServerState & state, Priority & curPriority,
+                                                               CSGOId csgoId, ModelNavData & modelNavData) {
+        // compute area probabilities
+        const csknow::inference_delta_pos::InferenceDeltaPosPlayerAtTickProbabilities & deltaPosProbabilities =
+                blackboard.inferenceManager.playerToInferenceData.at(csgoId).deltaPosProbabilities;
+        vector<float> probabilities = deltaPosProbabilities.deltaPosProbabilities;
+        const ServerState::Client & curClient = state.getClient(csgoId);
+
+        // re-weight just because want to be certain sums to one
+        /*
+        double reweightFactor = 0.;
+        for (size_t i = 0; i < probabilities.size(); i++) {
+            reweightFactor += probabilities[i];
+        }
+        for (size_t i = 0; i < probabilities.size(); i++) {
+            probabilities[i] *= 1/reweightFactor;
+        }
+         */
+        size_t deltaPosOption = 0;
+        /*
+        double probSample = blackboard.aggressionDis(blackboard.gen);
+        double weightSoFar = 0.;
+        for (size_t i = 0; i < probabilities.size(); i++) {
+            weightSoFar += probabilities[i];
+            if (probSample < weightSoFar) {
+                deltaPosOption = i;
+                break;
+            }
+        }
+         */
+        double maxProb = -1.;
+        modelNavData.deltaPosProbs.clear();
+        for (size_t i = 0; i < probabilities.size(); i++) {
+            modelNavData.deltaPosProbs.push_back(probabilities[i]);
+            if (probabilities[i] > maxProb) {
+                deltaPosOption = i;
+                maxProb = probabilities[i];
+            }
+        }
+        modelNavData.deltaPosIndex = deltaPosOption;
+
+        // compute map grid to pos, and then pos to area
+        // ok to pick bad area, as computePath in path node will pick a valid alternative (tree computes alternatives)
+        size_t xVal = (deltaPosOption % csknow::feature_store::delta_pos_grid_num_cells) -
+                      (csknow::feature_store::delta_pos_grid_num_cells / 2);
+        size_t yVal = (deltaPosOption / csknow::feature_store::delta_pos_grid_num_cells) -
+                      (csknow::feature_store::delta_pos_grid_num_cells / 2);
+        // add half so get center of each area grid
+        // no need for z since doing 2d compare
+        curPriority.targetPos = curClient.getFootPosForPlayer() + Vec3{
+                static_cast<double>(xVal * csknow::feature_store::delta_pos_grid_cell_dim),
+                static_cast<double>(yVal * csknow::feature_store::delta_pos_grid_cell_dim),
+                0.
+        };
+
+        curPriority.targetAreaId = blackboard.navFile
+                .get_nearest_area_by_position(vec3Conv(curPriority.targetPos)).get_id();
+
+        // if cur place is bombsite and CT defuser, then move to c4
+        if (blackboard.isPlayerDefuser(csgoId)) {
+            bool tAlive = false;
+            for (const auto & client : state.clients) {
+                if (client.isAlive && client.team == ENGINE_TEAM_T) {
+                    tAlive = true;
+                }
+            }
+            if (!tAlive) {
+                curPriority.targetAreaId = blackboard.navFile
+                        .get_nearest_area_by_position(vec3Conv(state.getC4Pos())).get_id();
+            }
+        }
+
+        if (blackboard.removedAreas.find(curPriority.targetAreaId) != blackboard.removedAreas.end()) {
+            curPriority.targetAreaId = blackboard.removedAreaAlternatives[curPriority.targetAreaId];
+        }
+        // if same next place and not at old next area, keep using that area
+        /*
+        if (blackboard.playerToModelNavData.find(csgoId) != blackboard.playerToModelNavData.end()) {
+            const ModelNavData & oldModelNavData = blackboard.playerToModelNavData.at(csgoId);
+            AreaId curAreaId = blackboard.navFile
+                .get_nearest_area_by_position(vec3Conv(state.getClient(csgoId).getFootPosForPlayer())).get_id();
+            if (oldModelNavData.nextPlace == modelNavData.nextPlace && oldModelNavData.nextArea != curAreaId) {
+                curPriority.targetAreaId = oldModelNavData.nextArea;
+            }
+        }
+         */
+        curPriority.targetPos = vec3tConv(blackboard.navFile.get_nearest_point_in_area(
+                vec3Conv(curPriority.targetPos), blackboard.navFile.get_area_by_id_fast(curPriority.targetAreaId)));
+        modelNavData.nextArea = curPriority.targetAreaId;
+    }
+
     NodeState ComputeModelNavAreaNode::exec(const ServerState &state, TreeThinker &treeThinker) {
         const ServerState::Client & curClient = state.getClient(treeThinker.csgoId);
         if (blackboard.inAnalysis || blackboard.inTest || !getPlaceAreaModelProbabilities(curClient.team) ||
@@ -374,61 +465,94 @@ namespace csknow::compute_nav_area {
             curPriority.targetAreaId = curAreaId;
         }
         else {
+            bool useDeltaPos = true;
             // NEEED TO FIX MODELNAVDEATA, DOING AREA WITH NO PLACE
             bool needNewModelNavData = blackboard.playerToModelNavData.find(treeThinker.csgoId) ==
                                        blackboard.playerToModelNavData.end();
             ModelNavData & modelNavData = blackboard.playerToModelNavData[treeThinker.csgoId];
 
-
-            // update place
-            if (blackboard.playerToTicksSinceLastProbPlaceAssignment.find(treeThinker.csgoId) ==
-                blackboard.playerToTicksSinceLastProbPlaceAssignment.end()) {
-                blackboard.playerToTicksSinceLastProbPlaceAssignment[treeThinker.csgoId] = newPlaceTicks;
-            }
-            blackboard.playerToTicksSinceLastProbPlaceAssignment[treeThinker.csgoId]++;
-            bool timeForNewPlace =
-                blackboard.playerToTicksSinceLastProbPlaceAssignment.at(treeThinker.csgoId) >= newPlaceTicks ||
-                wasInEngagement || needNewModelNavData;
-            if (blackboard.playerToLastProbPlaceAssignment.find(treeThinker.csgoId) ==
-                blackboard.playerToLastProbPlaceAssignment.end() || timeForNewPlace) {
-                blackboard.playerToLastProbPlaceAssignment[treeThinker.csgoId] =
-                    {0, false};
-                    //{Vec3{INVALID_ID, INVALID_ID, INVALID_ID}, 0, false};
-            }
-            PriorityPlaceAssignment & lastProbPlaceAssignment =
-                blackboard.playerToLastProbPlaceAssignment[treeThinker.csgoId];
-            if (!lastProbPlaceAssignment.valid) {
-                lastProbPlaceAssignment.nextPlace = computePlaceProbabilistic(state, curOrder, curAreaId, treeThinker.csgoId,
-                                                                              modelNavData);
-                blackboard.playerToTicksSinceLastProbPlaceAssignment[treeThinker.csgoId] = 0;
-                lastProbPlaceAssignment.valid = true;
-            }
-
-            // update area
-            if (blackboard.playerToTicksSinceLastProbAreaAssignment.find(treeThinker.csgoId) ==
-                blackboard.playerToTicksSinceLastProbAreaAssignment.end()) {
-                blackboard.playerToTicksSinceLastProbAreaAssignment[treeThinker.csgoId] = newAreaTicks;
-            }
-            blackboard.playerToTicksSinceLastProbAreaAssignment[treeThinker.csgoId]++;
-            bool timeForNewArea =
-                    blackboard.playerToTicksSinceLastProbAreaAssignment.at(treeThinker.csgoId) >= newAreaTicks ||
-                    wasInEngagement || timeForNewPlace;
-            if (blackboard.playerToLastProbAreaAssignment.find(treeThinker.csgoId) ==
-                blackboard.playerToLastProbAreaAssignment.end() || timeForNewArea) {
-                blackboard.playerToLastProbAreaAssignment[treeThinker.csgoId] =
-                        {Vec3{INVALID_ID, INVALID_ID, INVALID_ID}, 0, false};
-            }
-            PriorityAreaAssignment & lastProbAreaAssignment =
-                    blackboard.playerToLastProbAreaAssignment[treeThinker.csgoId];
-            if (!lastProbAreaAssignment.valid) {
-                computeAreaProbabilistic(state, curPriority, lastProbPlaceAssignment.nextPlace, treeThinker.csgoId, modelNavData);
-                lastProbAreaAssignment = {curPriority.targetPos, curPriority.targetAreaId, true};
-                blackboard.playerToTicksSinceLastProbAreaAssignment[treeThinker.csgoId] = 0;
-                lastProbAreaAssignment.valid = true;
+            if (useDeltaPos) {
+                modelNavData.deltaPosMode = true;
+                // update area
+                if (blackboard.playerToTicksSinceLastProbDeltaPosAssignment.find(treeThinker.csgoId) ==
+                    blackboard.playerToTicksSinceLastProbDeltaPosAssignment.end()) {
+                    blackboard.playerToTicksSinceLastProbDeltaPosAssignment[treeThinker.csgoId] = newDeltaPosTicks;
+                }
+                blackboard.playerToTicksSinceLastProbAreaAssignment[treeThinker.csgoId]++;
+                bool timeForNewDeltaPos =
+                        blackboard.playerToTicksSinceLastProbAreaAssignment.at(treeThinker.csgoId) >= newAreaTicks ||
+                        wasInEngagement;
+                if (blackboard.playerToLastProbDeltaPosAssignment.find(treeThinker.csgoId) ==
+                    blackboard.playerToLastProbDeltaPosAssignment.end() || timeForNewDeltaPos) {
+                    blackboard.playerToLastProbDeltaPosAssignment[treeThinker.csgoId] =
+                            {Vec3{INVALID_ID, INVALID_ID, INVALID_ID}, 0, 0, false};
+                }
+                PriorityDeltaPosAssignment & lastProbDeltaPosAssignment =
+                        blackboard.playerToLastProbDeltaPosAssignment[treeThinker.csgoId];
+                if (!lastProbDeltaPosAssignment.valid) {
+                    computeDeltaPosProbabilistic(state, curPriority, treeThinker.csgoId, modelNavData);
+                    lastProbDeltaPosAssignment = {curPriority.targetPos, curPriority.targetAreaId, true};
+                    blackboard.playerToTicksSinceLastProbDeltaPosAssignment[treeThinker.csgoId] = 0;
+                    lastProbDeltaPosAssignment.valid = true;
+                }
+                else {
+                    curPriority.targetPos = lastProbDeltaPosAssignment.targetPos;
+                    curPriority.targetAreaId = lastProbDeltaPosAssignment.targetAreaId;
+                }
             }
             else {
-                curPriority.targetPos = lastProbAreaAssignment.targetPos;
-                curPriority.targetAreaId = lastProbAreaAssignment.targetAreaId;
+                modelNavData.deltaPosMode = false;
+
+                // update place
+                if (blackboard.playerToTicksSinceLastProbPlaceAssignment.find(treeThinker.csgoId) ==
+                    blackboard.playerToTicksSinceLastProbPlaceAssignment.end()) {
+                    blackboard.playerToTicksSinceLastProbPlaceAssignment[treeThinker.csgoId] = newPlaceTicks;
+                }
+                blackboard.playerToTicksSinceLastProbPlaceAssignment[treeThinker.csgoId]++;
+                bool timeForNewPlace =
+                        blackboard.playerToTicksSinceLastProbPlaceAssignment.at(treeThinker.csgoId) >= newPlaceTicks ||
+                        wasInEngagement || needNewModelNavData;
+                if (blackboard.playerToLastProbPlaceAssignment.find(treeThinker.csgoId) ==
+                    blackboard.playerToLastProbPlaceAssignment.end() || timeForNewPlace) {
+                    blackboard.playerToLastProbPlaceAssignment[treeThinker.csgoId] =
+                            {0, false};
+                    //{Vec3{INVALID_ID, INVALID_ID, INVALID_ID}, 0, false};
+                }
+                PriorityPlaceAssignment & lastProbPlaceAssignment =
+                        blackboard.playerToLastProbPlaceAssignment[treeThinker.csgoId];
+                if (!lastProbPlaceAssignment.valid) {
+                    lastProbPlaceAssignment.nextPlace = computePlaceProbabilistic(state, curOrder, curAreaId, treeThinker.csgoId,
+                                                                                  modelNavData);
+                    blackboard.playerToTicksSinceLastProbPlaceAssignment[treeThinker.csgoId] = 0;
+                    lastProbPlaceAssignment.valid = true;
+                }
+
+                // update area
+                if (blackboard.playerToTicksSinceLastProbAreaAssignment.find(treeThinker.csgoId) ==
+                    blackboard.playerToTicksSinceLastProbAreaAssignment.end()) {
+                    blackboard.playerToTicksSinceLastProbAreaAssignment[treeThinker.csgoId] = newAreaTicks;
+                }
+                blackboard.playerToTicksSinceLastProbAreaAssignment[treeThinker.csgoId]++;
+                bool timeForNewArea =
+                        blackboard.playerToTicksSinceLastProbAreaAssignment.at(treeThinker.csgoId) >= newAreaTicks ||
+                        wasInEngagement || timeForNewPlace;
+                if (blackboard.playerToLastProbAreaAssignment.find(treeThinker.csgoId) ==
+                    blackboard.playerToLastProbAreaAssignment.end() || timeForNewArea) {
+                    blackboard.playerToLastProbAreaAssignment[treeThinker.csgoId] =
+                            {Vec3{INVALID_ID, INVALID_ID, INVALID_ID}, 0, false};
+                }
+                PriorityAreaAssignment & lastProbAreaAssignment =
+                        blackboard.playerToLastProbAreaAssignment[treeThinker.csgoId];
+                if (!lastProbAreaAssignment.valid) {
+                    computeAreaProbabilistic(state, curPriority, lastProbPlaceAssignment.nextPlace, treeThinker.csgoId, modelNavData);
+                    lastProbAreaAssignment = {curPriority.targetPos, curPriority.targetAreaId, true};
+                    blackboard.playerToTicksSinceLastProbAreaAssignment[treeThinker.csgoId] = 0;
+                    lastProbAreaAssignment.valid = true;
+                }
+                else {
+                    curPriority.targetPos = lastProbAreaAssignment.targetPos;
+                    curPriority.targetAreaId = lastProbAreaAssignment.targetAreaId;
+                }
             }
 
             // if CT defuser and in bombsite, then move to c4

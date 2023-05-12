@@ -271,7 +271,7 @@ namespace nav_mesh {
         return std::sqrt(dx * dx + dy * dy);
     }
 
-    vec3_t nav_file::get_nearest_point_in_area( vec3_t position, nav_area& area) {
+    vec3_t nav_file::get_nearest_point_in_area( vec3_t position, const nav_area& area) const {
         vec3_t result = position;
         if (position.x < area.m_nw_corner.x) {
             result.x = area.m_nw_corner.x;
