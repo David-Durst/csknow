@@ -42,7 +42,7 @@ def load_model_file(all_data_df: pd.DataFrame, model_file_name: str) -> TrainRes
     return TrainResult(train_data, test_data, train_df, test_df, column_transformers, model)
 
 
-manual_data = False
+manual_data = True
 
 if __name__ == "__main__":
     if manual_data:

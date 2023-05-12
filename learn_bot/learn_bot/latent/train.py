@@ -377,7 +377,7 @@ manual_latent_team_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' /
 manual_rounds_data_path = Path(__file__).parent / '..' / '..' / '..' / 'analytics' / 'saved_datasets' / 'bot_sample_traces_5_10_23_ticks.csv'
 
 use_small_data = False
-use_manual_data = False
+use_manual_data = True
 
 def run_team_analysis():
     read_start = time.time()
