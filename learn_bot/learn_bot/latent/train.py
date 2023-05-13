@@ -241,7 +241,10 @@ def train(train_type: TrainType, all_data_df: pd.DataFrame, num_epochs: int,
                     profile_latent_model(model_path, batch_size, X)
 
                 # Compute prediction error
+                if train:
+                    model.add_noise = True
                 pred = model(X)
+                model.add_noise = False
                 if torch.isnan(X).any():
                     print('bad X')
                     sys.exit(0)
@@ -410,7 +413,7 @@ def run_team_analysis():
     #train_result = train(TrainType.Order, team_data_df, num_epochs=3, windowed=False)
     #train_result = train(TrainType.Place, team_data_df, num_epochs=500, windowed=False, diff_train_test=False)
     #train_result = train(TrainType.Area, team_data_df, num_epochs=3, windowed=False)
-    train_result = train(TrainType.DeltaPos, team_data_df, num_epochs=75, windowed=False, diff_train_test=False)
+    train_result = train(TrainType.DeltaPos, team_data_df, num_epochs=500, windowed=False, diff_train_test=False)
                          #flip_columns=[ColumnsToFlip(" CT 0", " CT 1")])
 
 
