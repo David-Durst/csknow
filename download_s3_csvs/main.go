@@ -60,6 +60,12 @@ const manualAlreadyDownloadedFileName = "../manual_data/already_downloaded.txt"
 const manualDir = "manual_data"
 const manualPath = "../manual_data/"
 
+const rolloutProcessedPrefix = "demos/rollout_data/processed/"
+const rolloutCsvPrefixBase = "demos/rollout_data/csvs/"
+const rolloutAlreadyDownloadedFileName = "../rollout_data/already_downloaded.txt"
+const rolloutDir = "rollout_data"
+const rolloutPath = "../rollout_data/"
+
 var csvPrefixLocal string
 var csvPrefixGlobal string
 
@@ -134,11 +140,12 @@ func main() {
 	var needToDownload []string
 	fillAlreadyDownloaded(&alreadyDownloaded)
 
-	trainDataFlag := flag.Bool("t", true, "set -t=false if not using bot training data")
+	trainDataFlag := flag.Bool("t", false, "set if using bot training data")
 	bigTrainDataFlag := flag.Bool("bt", false, "set if using big train data")
 	retakesDataFlag := flag.Bool("rd", false, "set if using retakes data")
 	botRetakesDataFlag := flag.Bool("brd", false, "set if using retakes data")
 	manualDataFlag := flag.Bool("m", false, "set if using manual data")
+	rolloutDataFlag := flag.Bool("ro", false, "set if using rollout data")
 	localFlag := flag.Bool("l", false, "set for desktop runs that only download a few csvs")
 	keyFilterFlag := flag.String("f", "", "set for adding to local runs files that contain a substring")
 	subsetFlag := flag.Bool("s", false, "set for server runs that only download a subset csvs (but more than -l)")
@@ -183,6 +190,17 @@ func main() {
 		dataDir = botRetakesDir
 		dataPath = botRetakesPath
 		updatePrefixs()
+	} else if *rolloutDataFlag {
+		processedPrefix = rolloutProcessedPrefix
+		processedSmallPrefix = rolloutProcessedPrefix
+		csvPrefixBase = rolloutCsvPrefixBase
+		alreadyDownloadedFileName = rolloutAlreadyDownloadedFileName
+		dataDir = rolloutDir
+		dataPath = rolloutPath
+		updatePrefixs()
+	} else {
+		fmt.Printf("please set one of the data set flags\n")
+		os.Exit(0)
 	}
 
 	sess := session.Must(session.NewSession(&aws.Config{

@@ -51,6 +51,10 @@ const manualDemoUnprocessedPrefix = "demos/manual_data/unprocessed/"
 const manualDemoProcessedPrefix = "demos/manual_data/processed/"
 const manualCSVPrefixBase = "demos/manual_data/csvs/"
 
+const rolloutDemoUnprocessedPrefix = "demos/rollout_data/unprocessed/"
+const rolloutDemoProcessedPrefix = "demos/rollout_data/processed/"
+const rolloutCSVPrefixBase = "demos/rollout_data/csvs/"
+
 func updatePrefixs() {
 	csvPrefixLocal = csvPrefixBase + "local/"
 	csvPrefixGlobal = csvPrefixBase + "global/"
@@ -59,11 +63,12 @@ func updatePrefixs() {
 func main() {
 	startIDState := d.DefaultIDState()
 
-	trainDataFlag := flag.Bool("t", true, "set -t=false if not using bot training data")
+	trainDataFlag := flag.Bool("t", false, "set if using bot training data")
 	bigTrainDataFlag := flag.Bool("bt", false, "set if using big train data")
 	retakesDataFlag := flag.Bool("rd", false, "set if using retakes data")
 	botRetakesDataFlag := flag.Bool("brd", false, "set if using retakes data")
 	manualDataFlag := flag.Bool("m", false, "set if using manual data")
+	rolloutDataFlag := flag.Bool("ro", false, "set if using rollout data")
 	// if reprocessing, don't move the demos
 	firstRunPtr := flag.Bool("f", true, "set if first file processed is first overall")
 	reprocessFlag := flag.Bool("r", false, "set for reprocessing demos")
@@ -78,7 +83,7 @@ func main() {
 		os.Exit(0)
 	}
 
-	shouldFilterRounds := !*manualDataFlag && !*botRetakesDataFlag
+	shouldFilterRounds := !*manualDataFlag && !*botRetakesDataFlag && !*rolloutDataFlag
 	if *localFlag {
 		if !firstRun {
 			startIDState = d.ParseInputStateCSV()
@@ -113,6 +118,14 @@ func main() {
 		demoProcessedPrefix = botRetakesDemoProcessedPrefix
 		csvPrefixBase = botRetakesCSVPrefixBase
 		updatePrefixs()
+	} else if *rolloutDataFlag {
+		demoUnprocessedPrefix = rolloutDemoUnprocessedPrefix
+		demoProcessedPrefix = rolloutDemoProcessedPrefix
+		csvPrefixBase = rolloutCSVPrefixBase
+		updatePrefixs()
+	} else {
+		fmt.Printf("please set one of the data set flags\n")
+		os.Exit(0)
 	}
 
 	sess := session.Must(session.NewSession(&aws.Config{

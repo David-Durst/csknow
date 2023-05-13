@@ -7,6 +7,7 @@ bot_retakes_data/
 manual_data/
 local_data_remote/
 big_train_data/
+rollout_data/
 download_s3_csvs/already_downloaded.txt
 .vscode/
 client_manager/config.txt

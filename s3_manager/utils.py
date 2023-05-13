@@ -43,3 +43,16 @@ def generate_big_train_data_folder(s3):
     s3_mkdir(s3, BIG_TRAIN_UNPROCESSED)
     s3_mkdir(s3, BIG_TRAIN_UNPROCESSED_BOTS)
     s3_mkdir(s3, BIG_TRAIN_UNPROCESSED_PROS)
+
+def generate_rollout_data_folder(s3):
+    s3_mkdir(s3, ROLLOUT_DATA)
+    s3_mkdir(s3, ROLLOUT_DISABLED)
+    s3_mkdir(s3, ROLLOUT_CSVS)
+    s3_mkdir(s3, ROLLOUT_CSVS / "global")
+    s3_mkdir(s3, ROLLOUT_CSVS / "local")
+    s3_mkdir(s3, ROLLOUT_PROCESSED)
+    s3_mkdir(s3, ROLLOUT_PROCESSED_BOTS)
+    s3_mkdir(s3, ROLLOUT_PROCESSED_PROS)
+    s3_mkdir(s3, ROLLOUT_UNPROCESSED)
+    s3_mkdir(s3, ROLLOUT_UNPROCESSED_BOTS)
+    s3_mkdir(s3, ROLLOUT_UNPROCESSED_PROS)
