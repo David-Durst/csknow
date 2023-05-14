@@ -242,7 +242,7 @@ def train(train_type: TrainType, all_data_df: pd.DataFrame, num_epochs: int,
 
                 # Compute prediction error
                 if train:
-                    model.add_noise = True
+                    model.add_noise = False
                 pred = model(X)
                 model.add_noise = False
                 if torch.isnan(X).any():
