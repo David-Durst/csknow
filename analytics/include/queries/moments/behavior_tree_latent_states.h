@@ -72,8 +72,9 @@ namespace csknow::behavior_tree_latent_states {
         feature_store::FeatureStoreResult featureStoreResult;
 
         BehaviorTreeLatentStates(const Ticks & ticks, const PlayerAtTick & playerAtTick,
-                                 const std::vector<csknow::orders::QueryOrder> & orders) :
-            featureStoreResult(ticks.size, playerAtTick.size, orders) {
+                                 const std::vector<csknow::orders::QueryOrder> & orders,
+                                 const csknow::key_retake_events::KeyRetakeEvents & keyRetakeEvents) :
+            featureStoreResult(ticks, ticks.size, playerAtTick.size, orders, keyRetakeEvents) {
             variableLength = false;
             nonTemporal = true;
             overlay = true;

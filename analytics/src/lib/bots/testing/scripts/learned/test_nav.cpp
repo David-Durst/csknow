@@ -7,9 +7,7 @@
 namespace csknow::tests::learned {
     LearnedGooseToCatScript::LearnedGooseToCatScript(size_t testIndex, size_t numTests, bool waitForever) :
             Script("LearnedGooseToCatScript", {{0, ENGINE_TEAM_CT}}, {ObserveType::FirstPerson, 0}),
-            testIndex(testIndex), numTests(numTests), waitForever(waitForever) {
-        name += "," + std::to_string(testIndex) + "," + std::to_string(numTests);
-    }
+            testIndex(testIndex), numTests(numTests), waitForever(waitForever) { }
 
     void LearnedGooseToCatScript::initialize(Tree &tree, ServerState &state) {
         if (tree.newBlackboard) {
@@ -42,13 +40,14 @@ namespace csknow::tests::learned {
                     make_unique<movement::WaitNode>(blackboard, 30, false)));
             }
 
-            string specific_test_ready_string = test_ready_string + "," + name;
-            string specific_test_finished_string = test_finished_string + "," + name;
+            string specificDetails = name + "," + std::to_string(testIndex) + "," + std::to_string(numTests);
+            string specificTestReadyString = test_ready_string + "," + name;
+            string specificTestFinishedString = test_finished_string + "," + name;
             commands = make_unique<SequenceNode>(blackboard, Node::makeList(
                 std::move(disableAllBothDuringSetup),
-                make_unique<SayCmd>(blackboard, specific_test_ready_string),
+                make_unique<SayCmd>(blackboard, specificTestReadyString),
                 std::move(finishCondition),
-                make_unique<SayCmd>(blackboard, specific_test_finished_string)),
+                make_unique<SayCmd>(blackboard, specificTestFinishedString)),
             "LearnedGooseToLongSequence");
         }
     }

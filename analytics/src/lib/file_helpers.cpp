@@ -160,3 +160,13 @@ vector<int64_t> getFileStartingRows(const vector<string> & filePaths, bool print
     }
     return startingPointPerFile;
 }
+
+std::vector<std::string> parseString(const std::string & input, char delimiter) {
+    std::stringstream inputStream(input);
+    std::vector<std::string> result;
+    string token;
+    while (getline(inputStream, token, delimiter)) {
+        result.push_back(token);
+    }
+    return result;
+}

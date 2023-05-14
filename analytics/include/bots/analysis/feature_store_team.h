@@ -46,6 +46,7 @@ namespace csknow::feature_store {
     public:
         std::vector<csknow::orders::QueryOrder> aOrders, bOrders;
 
+        vector<int64_t> tickIdToInternalId;
         vector<int64_t> roundId;
         vector<int64_t> roundNumber;
         vector<int64_t> tickId;
@@ -95,7 +96,9 @@ namespace csknow::feature_store {
 
 
         void setOrders(const std::vector<csknow::orders::QueryOrder> & orders);
-        TeamFeatureStoreResult(size_t size, const std::vector<csknow::orders::QueryOrder> & orders);
+        TeamFeatureStoreResult(size_t size, const std::vector<csknow::orders::QueryOrder> & orders,
+                               std::optional<std::reference_wrapper<const Ticks>> ticks = std::nullopt,
+                               std::optional<std::reference_wrapper<const csknow::key_retake_events::KeyRetakeEvents>> keyRetakeEvents = std::nullopt);
         void reinit();
         void commitTeamRow(FeatureStorePreCommitBuffer & buffer, DistanceToPlacesResult & distanceToPlaces,
                            const nav_mesh::nav_file & navFile,

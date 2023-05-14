@@ -10,9 +10,7 @@
 #include <csignal>
 
 namespace csknow::feature_store {
-    void TeamFeatureStoreResult::init(size_t totalSize) {
-        size_t size = (totalSize == 1) ? totalSize : totalSize / every_nth_row;
-        //size_t size = totalSize;
+    void TeamFeatureStoreResult::init(size_t size) {
         roundId.resize(size, INVALID_ID);
         roundNumber.resize(size, INVALID_ID);
         tickId.resize(size, INVALID_ID);
@@ -121,8 +119,36 @@ namespace csknow::feature_store {
         }
     }
 
-    TeamFeatureStoreResult::TeamFeatureStoreResult(size_t size, const std::vector<csknow::orders::QueryOrder> & orders) {
-        init(size);
+    TeamFeatureStoreResult::TeamFeatureStoreResult(size_t size, const std::vector<csknow::orders::QueryOrder> & orders,
+                                                   std::optional<std::reference_wrapper<const Ticks>> ticks,
+                                                   std::optional<std::reference_wrapper<const csknow::key_retake_events::KeyRetakeEvents>> keyRetakeEvents) {
+        tickIdToInternalId.resize(size, INVALID_ID);
+        size_t internalSize = 0;
+        if (keyRetakeEvents && ticks) {
+            int64_t nextTickId = 0;
+            const Ticks & refTicks = ticks->get();
+            const csknow::key_retake_events::KeyRetakeEvents & refKeyRetakeEvents = keyRetakeEvents->get();
+            for (int64_t i = 0; i < static_cast<int64_t>(size); i++) {
+                int64_t roundIndex = refTicks.roundId[i];
+                if (refKeyRetakeEvents.roundHasCompleteTest[roundIndex] &&
+                    refKeyRetakeEvents.testStartBeforeOrDuringThisTick[i] &&
+                    !refKeyRetakeEvents.testEndBeforeOrDuringThisTick[i]) {
+                    if (i % every_nth_row != 0) {
+                        continue;
+                    }
+                    tickIdToInternalId[i] = nextTickId;
+                    nextTickId++;
+                }
+            }
+            internalSize = static_cast<size_t>(nextTickId);
+        }
+        else {
+            for (int64_t i = 0; i < static_cast<int64_t>(size); i++) {
+                tickIdToInternalId[i] = i;
+            }
+            internalSize = size;
+        }
+        init(internalSize);
         setOrders(orders);
     }
     
@@ -240,43 +266,43 @@ namespace csknow::feature_store {
                                                DistanceToPlacesResult & distanceToPlaces,
                                                const nav_mesh::nav_file & navFile,
                                                int64_t roundIndex, int64_t tickIndex) {
-        if (tickIndex % every_nth_row != 0) {
+        int64_t internalTickIndex = tickIdToInternalId[tickIndex];
+        if (internalTickIndex == INVALID_ID) {
             return;
         }
-        tickIndex /= every_nth_row;
 
-        roundId[tickIndex] = roundIndex;
-        tickId[tickIndex] = tickIndex;
-        valid[tickIndex] = !buffer.btTeamPlayerData.empty();
+        roundId[internalTickIndex] = roundIndex;
+        tickId[internalTickIndex] = internalTickIndex;
+        valid[internalTickIndex] = !buffer.btTeamPlayerData.empty();
 
         if (buffer.c4MapData.c4Planted) {
             double c4DistanceToASite =
                 distanceToPlaces.getClosestDistance(buffer.c4MapData.c4AreaId, a_site, navFile);
             double c4DistanceToBSite =
                 distanceToPlaces.getClosestDistance(buffer.c4MapData.c4AreaId, b_site, navFile);
-            c4Status[tickIndex] = c4DistanceToASite < c4DistanceToBSite ? C4Status::PlantedA : C4Status::PlantedB;
+            c4Status[internalTickIndex] = c4DistanceToASite < c4DistanceToBSite ? C4Status::PlantedA : C4Status::PlantedB;
         }
         else {
-            c4Status[tickIndex] = C4Status::NotPlanted;
+            c4Status[internalTickIndex] = C4Status::NotPlanted;
         }
-        c4TicksSincePlant[tickIndex] = buffer.c4MapData.ticksSincePlant;
+        c4TicksSincePlant[internalTickIndex] = buffer.c4MapData.ticksSincePlant;
         int c4TimerBucket = std::min(num_c4_timer_buckets - 1,
-                                     static_cast<int>(c4TicksSincePlant[tickIndex] / seconds_per_c4_timer_bucket));
-        c4TimerBucketed[c4TimerBucket][tickIndex] = true;
+                                     static_cast<int>(c4TicksSincePlant[internalTickIndex] / seconds_per_c4_timer_bucket));
+        c4TimerBucketed[c4TimerBucket][internalTickIndex] = true;
 
-        c4Pos[tickIndex] = buffer.c4MapData.c4Pos;
-        c4DistanceToASite[tickIndex] =
+        c4Pos[internalTickIndex] = buffer.c4MapData.c4Pos;
+        c4DistanceToASite[internalTickIndex] =
             distanceToPlaces.getClosestDistance(buffer.c4MapData.c4AreaId, a_site, navFile);
-        c4DistanceToBSite[tickIndex] =
+        c4DistanceToBSite[internalTickIndex] =
             distanceToPlaces.getClosestDistance(buffer.c4MapData.c4AreaId, b_site, navFile);
         for (size_t j = 0; j < num_orders_per_site; j++) {
-            float & aOrderDistance = c4DistanceToNearestAOrderNavArea[j][tickIndex];
+            float & aOrderDistance = c4DistanceToNearestAOrderNavArea[j][internalTickIndex];
             aOrderDistance = std::numeric_limits<double>::max();
             for (size_t k = 1; k < aOrders[j].places.size(); k++) {
                 aOrderDistance = std::min(aOrderDistance,
                                           static_cast<float>(distanceToPlaces.getClosestDistance(buffer.c4MapData.c4AreaIndex, aOrders[j].places[k])));
             }
-            float & bOrderDistance = c4DistanceToNearestBOrderNavArea[j][tickIndex];
+            float & bOrderDistance = c4DistanceToNearestBOrderNavArea[j][internalTickIndex];
             bOrderDistance = std::numeric_limits<double>::max();
             for (size_t k = 1; k < bOrders[j].places.size(); k++) {
                 bOrderDistance = std::min(bOrderDistance,
@@ -305,26 +331,26 @@ namespace csknow::feature_store {
              */
 
             if (columnIndex >= columnData.size()) {
-                std::cout << "bad round index " << roundIndex << ", tickIndex " << tickIndex << std::endl;
+                std::cout << "bad round index " << roundIndex << ", internalTickIndex " << internalTickIndex << std::endl;
             }
-            columnData[columnIndex].playerId[tickIndex] = btTeamPlayerData.playerId;
-            columnData[columnIndex].alive[tickIndex] = true;
-            columnData[columnIndex].footPos[tickIndex] = btTeamPlayerData.curFootPos;
-            columnData[columnIndex].alignedFootPos[tickIndex] = (btTeamPlayerData.curFootPos / delta_pos_grid_num_cells_per_dim).trunc();
-            columnData[columnIndex].velocity[tickIndex] = btTeamPlayerData.velocity;
-            columnData[columnIndex].distanceToASite[tickIndex] =
+            columnData[columnIndex].playerId[internalTickIndex] = btTeamPlayerData.playerId;
+            columnData[columnIndex].alive[internalTickIndex] = true;
+            columnData[columnIndex].footPos[internalTickIndex] = btTeamPlayerData.curFootPos;
+            columnData[columnIndex].alignedFootPos[internalTickIndex] = (btTeamPlayerData.curFootPos / delta_pos_grid_num_cells_per_dim).trunc();
+            columnData[columnIndex].velocity[internalTickIndex] = btTeamPlayerData.velocity;
+            columnData[columnIndex].distanceToASite[internalTickIndex] =
                 distanceToPlaces.getClosestDistance(btTeamPlayerData.curArea, a_site, navFile);
-            columnData[columnIndex].distanceToBSite[tickIndex] =
+            columnData[columnIndex].distanceToBSite[internalTickIndex] =
                 distanceToPlaces.getClosestDistance(btTeamPlayerData.curArea, b_site, navFile);
             for (size_t j = 0; j < num_orders_per_site; j++) {
-                float & aOrderDistance = columnData[columnIndex].distanceToNearestAOrderNavArea[j][tickIndex];
+                float & aOrderDistance = columnData[columnIndex].distanceToNearestAOrderNavArea[j][internalTickIndex];
                 aOrderDistance = std::numeric_limits<double>::max();
                 // start at 1 so skip tspawn (as all T's spend a significant time pre unfreeze in all orders then)
                 for (size_t k = 1; k < aOrders[j].places.size(); k++) {
                     aOrderDistance = std::min(aOrderDistance,
                                               static_cast<float>(distanceToPlaces.getClosestDistance(btTeamPlayerData.curAreaIndex, aOrders[j].places[k])));
                 }
-                float & bOrderDistance = columnData[columnIndex].distanceToNearestBOrderNavArea[j][tickIndex];
+                float & bOrderDistance = columnData[columnIndex].distanceToNearestBOrderNavArea[j][internalTickIndex];
                 bOrderDistance = std::numeric_limits<double>::max();
                 for (size_t k = 1; k < bOrders[j].places.size(); k++) {
                     bOrderDistance = std::min(bOrderDistance,
@@ -333,32 +359,32 @@ namespace csknow::feature_store {
             }
             PlaceIndex curPlaceIndex = distanceToPlaces.getClosestValidPlace(btTeamPlayerData.curAreaIndex, navFile);
             string curPlaceString = navFile.get_place(curPlaceIndex);
-            columnData[columnIndex].curPlace[curPlaceIndex][tickIndex] = true;
+            columnData[columnIndex].curPlace[curPlaceIndex][internalTickIndex] = true;
             size_t areaGridIndex = getAreaGridFlatIndex(btTeamPlayerData.curFootPos,
                                                         distanceToPlaces.placeToAABB.at(curPlaceString));
-            columnData[columnIndex].areaGridCellInPlace[areaGridIndex][tickIndex] = true;
+            columnData[columnIndex].areaGridCellInPlace[areaGridIndex][internalTickIndex] = true;
             for (int64_t j = 0; j < num_prior_ticks; j++) {
                 int64_t priorTickIndex = (j + 1) * prior_tick_spacing;
                 priorTickIndex = std::min(priorTickIndex, oldestHistoryIndex);
                 const BTTeamPlayerData & priorBTTeamPlayerData =
                     buffer.historicalPlayerDataBuffer.fromNewest(priorTickIndex).at(btTeamPlayerData.playerId);
-                columnData[columnIndex].priorFootPos[j][tickIndex] = priorBTTeamPlayerData.curFootPos;
+                columnData[columnIndex].priorFootPos[j][internalTickIndex] = priorBTTeamPlayerData.curFootPos;
                 if (isnan(priorBTTeamPlayerData.curFootPos.x) || isnan(priorBTTeamPlayerData.curFootPos.y) || isnan(priorBTTeamPlayerData.curFootPos.z) ) {
                     std::cout << "found nan" << std::endl;
                 }
                 PlaceIndex priorPlaceIndex = distanceToPlaces.getClosestValidPlace(priorBTTeamPlayerData.curAreaIndex, navFile);
                 string priorPlaceString = navFile.get_place(priorPlaceIndex);
-                columnData[columnIndex].priorPlaces[j][priorPlaceIndex][tickIndex] = true;
+                columnData[columnIndex].priorPlaces[j][priorPlaceIndex][internalTickIndex] = true;
                 size_t priorAreaGridIndex = getAreaGridFlatIndex(priorBTTeamPlayerData.curFootPos,
                                                             distanceToPlaces.placeToAABB.at(priorPlaceString));
-                columnData[columnIndex].priorAreaGridCellInPlace[j][priorAreaGridIndex][tickIndex] = true;
+                columnData[columnIndex].priorAreaGridCellInPlace[j][priorAreaGridIndex][internalTickIndex] = true;
             }
         }
 
         /*
-        if (tickIndex == 1195) {
-            std::cout << "T 0 player id " << columnTData[0].playerId[tickIndex] << " pos " << t0Pos.toCSV() << " area id " << areaId
-                << " distance to BSite order 2 " << columnTData[0].distanceToNearestBOrderNavArea[0][tickIndex] << std::endl;
+        if (internalTickIndex == 1195) {
+            std::cout << "T 0 player id " << columnTData[0].playerId[internalTickIndex] << " pos " << t0Pos.toCSV() << " area id " << areaId
+                << " distance to BSite order 2 " << columnTData[0].distanceToNearestBOrderNavArea[0][internalTickIndex] << std::endl;
             for (size_t k = 0; k < bOrders[2].places.size(); k++) {
                 std::cout << "place " << bOrders[2].places[k] << " " << distanceToPlaces.places[bOrders[2].places[k]]
                     << " distance " << distanceToPlaces.getClosestDistance(areaIndex, bOrders[2].places[k]) << std::endl;

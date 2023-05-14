@@ -179,7 +179,8 @@ int main(int argc, char * argv[]) {
     }}
     std::cout << std::endl;
 
-    csknow::key_retake_events::KeyRetakeEvents keyRetakeEvents(filteredRounds, ticks, playerAtTick, plants, defusals, kills);
+    csknow::key_retake_events::KeyRetakeEvents keyRetakeEvents(filteredRounds, ticks, playerAtTick, plants, defusals,
+                                                               kills, say);
 
     /*
     std::cout << "closest distance " << d2DistanceToPlacesResult.getClosestDistance(1742, "ExtendedA", map_navs.at("de_dust2")) << std::endl;
@@ -250,7 +251,8 @@ int main(int argc, char * argv[]) {
     string behaviorTreeWindowFeatureStoreName = "behaviorTreeWindowFeatureStore";
     std::cout << "processing behaviorTreeLatentEvents" << std::endl;
     csknow::behavior_tree_latent_states::BehaviorTreeLatentStates behaviorTreeLatentEvents(ticks, playerAtTick,
-                                                                                           ordersResult.orders);
+                                                                                           ordersResult.orders,
+                                                                                           keyRetakeEvents);
     behaviorTreeLatentEvents.featureStoreResult.disable = true;
     behaviorTreeLatentEvents.runQuery(navPath + "/de_dust2.nav", map_visPoints.at("de_dust2"), d2MeshResult,
                                       d2ReachableResult, d2DistanceToPlacesResult,

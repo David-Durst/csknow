@@ -3,16 +3,22 @@
 //
 
 #include "queries/moments/key_retake_events.h"
+#include "bots/testing/command.h"
+#include "file_helpers.h"
 
 namespace csknow::key_retake_events {
     KeyRetakeEvents::KeyRetakeEvents(const Rounds &rounds, const Ticks &ticks, const PlayerAtTick & playerAtTick,
-                                     const Plants & plants, const Defusals & defusals, const Kills & kills) {
+                                     const Plants & plants, const Defusals & defusals, const Kills & kills,
+                                     const Say & say) {
         firedBeforeOrDuringThisTick.resize(ticks.size, false);
         plantFinishedBeforeOrDuringThisTick.resize(ticks.size, false);
         defusalFinishedBeforeOrDuringThisTick.resize(ticks.size, false);
         explosionBeforeOrDuringThisTick.resize(ticks.size, false);
         ctAliveAfterExplosion.resize(ticks.size, false);
         tAliveAfterDefusal.resize(ticks.size, false);
+        testStartBeforeOrDuringThisTick.resize(ticks.size, false);
+        testEndBeforeOrDuringThisTick.resize(ticks.size, false);
+
         roundHasPlant.resize(rounds.size,  false);
         roundCTAliveOnPlant.resize(rounds.size, 0);
         roundTAliveOnPlant.resize(rounds.size, 0);
@@ -22,10 +28,14 @@ namespace csknow::key_retake_events {
         roundHasRetakeSave.resize(rounds.size,  false);
         roundC4Deaths.resize(rounds.size, 0);
         roundNonC4PostPlantWorldDeaths.resize(rounds.size, 0);
+        roundTestName.resize(rounds.size, "INVALID");
+        roundTestIndex.resize(rounds.size, INVALID_ID);
+        roundNumTests.resize(rounds.size, INVALID_ID);
+        roundHasCompleteTest.resize(rounds.size, INVALID_ID);
 #pragma omp parallel for
         for (int64_t roundIndex = 0; roundIndex < rounds.size; roundIndex++) {
             bool foundFirstFireInRound = false, foundFirstPlantInRound = false, foundFirstDefusalInRound = false,
-                foundExplosionInRound = false;
+                foundExplosionInRound = false, foundTestStartInRound = false, foundTestFinishInRound = false;
             int64_t firstPlantTick = INVALID_ID;
             int64_t firstExplosionTick = INVALID_ID;
             for (int64_t tickIndex = rounds.ticksPerRound[roundIndex].minId;
@@ -87,6 +97,25 @@ namespace csknow::key_retake_events {
                         }
                     }
                 }
+
+                // say event
+                for (const auto & [_0, _1, sayIndex] :
+                        ticks.sayPerTick.intervalToEvent.findOverlapping(tickIndex, tickIndex)) {
+                    std::string sayMessage = say.message[sayIndex];
+                    if (sayMessage.find(test_ready_string) != std::string::npos) {
+                        foundTestStartInRound = true;
+                        std::vector<std::string> parsedMessage = parseString(sayMessage, '_');
+                        roundTestName[roundIndex] = parsedMessage[1];
+                        roundTestIndex[roundIndex] = std::stoi(parsedMessage[2]);
+                        roundNumTests[roundIndex] = std::stoi(parsedMessage[3]);
+                    }
+                    else if (sayMessage.find(test_finished_string) != std::string::npos) {
+                        foundTestFinishInRound = true;
+                        roundHasCompleteTest[roundIndex] = foundTestStartInRound && foundTestFinishInRound;
+                    }
+                }
+                testStartBeforeOrDuringThisTick[tickIndex] = foundTestStartInRound;
+                testEndBeforeOrDuringThisTick[tickIndex] = foundTestFinishInRound;
             }
 
 

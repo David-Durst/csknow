@@ -7,6 +7,7 @@
 
 #include "bots/load_save_bot_data.h"
 #include "bots/testing/script_data.h"
+#include "bots/behavior_tree/node.h"
 #include <memory>
 
 struct Command : Node {

@@ -65,9 +65,10 @@ namespace csknow::feature_store {
         init(1);
     }
 
-    FeatureStoreResult::FeatureStoreResult(size_t tickSize, size_t patSize,
-                                           const std::vector<csknow::orders::QueryOrder> & orders) :
-                                           teamFeatureStoreResult(tickSize, orders) {
+    FeatureStoreResult::FeatureStoreResult(const Ticks & ticks, size_t tickSize, size_t patSize,
+                                           const std::vector<csknow::orders::QueryOrder> & orders,
+                                           const csknow::key_retake_events::KeyRetakeEvents & keyRetakeEvents) :
+                                           teamFeatureStoreResult(tickSize, orders, ticks, keyRetakeEvents) {
         training = true;
         init(patSize);
     }
@@ -594,41 +595,6 @@ namespace csknow::feature_store {
         if (dst.nextPATId2s[dstIndex] == 0) {
             std::cout << "bad things are happening" << std::endl;
         }
-    }
-
-    FeatureStoreResult FeatureStoreResult::makeWindows() const {
-        size_t numValid = 0;
-        for (size_t i = 0; i < static_cast<size_t>(size); i++) {
-            if (valid[i] && tickId[i] % 10 == 0) {
-                numValid++;
-            }
-        }
-
-        FeatureStoreResult windowResult(1, numValid * windowSize, {});
-        windowResult.patId.resize(numValid * windowSize);
-        size_t windowResultIndex = 0;
-        for (size_t i = 0; i < static_cast<size_t>(size); i++) {
-            if (!valid[i] || tickId[i] % 10 != 0) {
-                continue;
-            }
-
-            size_t patPointer = i;
-            bool curWindowValid = true;
-            for (size_t j = 0; j < windowSize; j++) {
-                clone(*this, windowResult, patPointer, windowResultIndex, !curWindowValid);
-                if (curWindowValid) {
-                    if (nextPATId2s[patPointer] != INVALID_ID) {
-                        patPointer = static_cast<size_t>(nextPATId2s[patPointer]);
-                    }
-                    else {
-                        curWindowValid = false;
-                    }
-                }
-                windowResultIndex++;
-            }
-        }
-
-        return windowResult;
     }
 
     void FeatureStoreResult::toHDF5Inner(HighFive::File & file) {

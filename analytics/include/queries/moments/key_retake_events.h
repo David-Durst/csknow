@@ -23,6 +23,10 @@ namespace csknow::key_retake_events {
         vector<bool> explosionBeforeOrDuringThisTick;
         vector<bool> ctAliveAfterExplosion;
         vector<bool> tAliveAfterDefusal;
+        // per tick data tracking test states
+        vector<bool> testStartBeforeOrDuringThisTick;
+        vector<bool> testEndBeforeOrDuringThisTick;
+
         // per round data
         vector<bool> roundHasPlant;
         vector<int> roundCTAliveOnPlant;
@@ -33,9 +37,15 @@ namespace csknow::key_retake_events {
         vector<bool> roundHasRetakeSave;
         vector<int> roundC4Deaths;
         vector<int> roundNonC4PostPlantWorldDeaths;
+        // test state data
+        vector<string> roundTestName;
+        vector<int> roundTestIndex;
+        vector<int> roundNumTests;
+        vector<bool> roundHasCompleteTest;
 
         KeyRetakeEvents(const Rounds & rounds, const Ticks & ticks, const PlayerAtTick & playerAtTick,
-                        const Plants & plants, const Defusals & defusals, const Kills & kills);
+                        const Plants & plants, const Defusals & defusals, const Kills & kills,
+                        const Say & say);
     };
 }
 

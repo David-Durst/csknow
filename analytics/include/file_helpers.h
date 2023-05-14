@@ -134,4 +134,6 @@ void readCol(const char * file, size_t start, size_t end, int64_t rowNumber, int
     printParsingError(messages.ec, rowNumber, colNumber);
 }
 
+std::vector<std::string> parseString(const std::string & input, char delimiter);
+
 #endif //CSKNOW_FILE_HELPERS_H
