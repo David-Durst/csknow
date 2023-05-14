@@ -58,7 +58,7 @@ int main(int argc, char * argv[]) {
     plantStatesResult.load(savedDatasetsDir + "/plantStates.hdf5");
     ScriptsRunner roundScriptsRunner(createRoundScripts(plantStatesResult, false), true);
 
-    ScriptsRunner learnedDataGenerator(csknow::tests::learned::createLearnedNavScripts(200, false), false);
+    ScriptsRunner learnedDataGenerator(csknow::tests::learned::createLearnedNavScripts(200, true), false);
 
     ScriptsRunner scriptsRunner(Script::makeList(
          make_unique<GooseToCatScript>(state)

@@ -42,11 +42,13 @@ namespace csknow::tests::learned {
                     make_unique<movement::WaitNode>(blackboard, 30, false)));
             }
 
+            string specific_test_ready_string = test_ready_string + "," + name;
+            string specific_test_finished_string = test_finished_string + "," + name;
             commands = make_unique<SequenceNode>(blackboard, Node::makeList(
                 std::move(disableAllBothDuringSetup),
-                make_unique<SayCmd>(blackboard, test_ready_string),
+                make_unique<SayCmd>(blackboard, specific_test_ready_string),
                 std::move(finishCondition),
-                make_unique<SayCmd>(blackboard, test_finished_string)),
+                make_unique<SayCmd>(blackboard, specific_test_finished_string)),
             "LearnedGooseToLongSequence");
         }
     }
