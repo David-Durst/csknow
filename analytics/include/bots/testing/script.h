@@ -205,4 +205,10 @@ public:
     string curLog() { return scripts[curScript]->curLog; }
 };
 
+class QuitScript : public Script {
+public:
+    QuitScript();
+    void initialize(Tree & tree, ServerState & state) override;
+};
+
 #endif //CSKNOW_SCRIPT_H

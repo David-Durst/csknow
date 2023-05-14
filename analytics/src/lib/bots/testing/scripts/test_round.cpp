@@ -71,18 +71,6 @@ void RoundScript::initialize(Tree &tree, ServerState &state) {
     }
 }
 
-QuitScript::QuitScript() : Script("QuitScript", {{0, ENGINE_TEAM_CT}},
-                                  {ObserveType::FirstPerson, 0}) { }
-
-void QuitScript::initialize(Tree & tree, ServerState & state) {
-    if (tree.newBlackboard) {
-        Blackboard &blackboard = *tree.blackboard;
-        Script::initialize(tree, state);
-        commands = make_unique<SequenceNode>(blackboard, Node::makeList(
-            make_unique<Quit>(blackboard)), "RoundSequence");
-    }
-}
-
 WaitUntilScoreScript::WaitUntilScoreScript() : Script("WaitUntilScoreScript", {{0, ENGINE_TEAM_CT}},
                                                       {ObserveType::FirstPerson, 0}) { }
 

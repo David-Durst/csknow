@@ -84,8 +84,8 @@ public:
                                                          make_unique<movement::WaitNode>(blackboard, 1.0),
                                                          make_unique<ForceOrderNode>(blackboard, "ForceTCat", vector{neededBots[0].id}, testAToCatWaypoints, areasToRemove, addedOrderId),
                                                          make_unique<ParallelFirstNode>(blackboard, Node::makeList(
-                                                                                                make_unique<JumpedBeforeCat>(blackboard, neededBots[0].id)//,
-                                                                                                /*make_unique<movement::WaitNode>(blackboard, 20, false)*/),
+                                                                                                make_unique<JumpedBeforeCat>(blackboard, neededBots[0].id),
+                                                                                                make_unique<movement::WaitNode>(blackboard, 20, false)),
                                                                                         "GooseToLongCondition")),
                                                  "GooseToLongSequence");
         }

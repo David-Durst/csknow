@@ -28,12 +28,6 @@ public:
     void initialize(Tree & tree, ServerState & state) override;
 };
 
-class QuitScript : public Script {
-public:
-    QuitScript();
-    void initialize(Tree & tree, ServerState & state) override;
-};
-
 class WaitUntilScoreScript : public Script {
 public:
     WaitUntilScoreScript();

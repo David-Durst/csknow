@@ -14,6 +14,7 @@
 #include "bots/testing/scripts/test_defuse.h"
 #include "bots/testing/scripts/test_head_position.h"
 #include "bots/testing/scripts/test_round.h"
+#include "bots/testing/scripts/learned/test_nav.h"
 #include "queries/moments/plant_states.h"
 #include "bots/analysis/learned_models.h"
 #include "navmesh/nav_file.h"
@@ -56,6 +57,8 @@ int main(int argc, char * argv[]) {
     csknow::plant_states::PlantStatesResult plantStatesResult;
     plantStatesResult.load(savedDatasetsDir + "/plantStates.hdf5");
     ScriptsRunner roundScriptsRunner(createRoundScripts(plantStatesResult, false), true);
+    
+    ScriptsRunner learnedDataGenerator(csknow::tests::learned::createLearnedNavScripts(200, false), false);
 
     ScriptsRunner scriptsRunner(Script::makeList(
          make_unique<GooseToCatScript>(state)
@@ -434,12 +437,14 @@ int main(int argc, char * argv[]) {
             else if (state.clients.size() > 0) {
                 //std::cout << "time since last save " << state.getSecondsBetweenTimes(start, priorStart) << std::endl;
                 if (runTest) {
-                    scriptsRunner.initialize(tree, state);
-                    finishedTests = scriptsRunner.tick(tree, state);
+                    //scriptsRunner.initialize(tree, state);
+                    //finishedTests = scriptsRunner.tick(tree, state);
                     //scenarioRunner.initialize(tree, state);
                     //finishedTests = scenarioRunner.tick(tree, state);
                     //humanScenarioRunner.initialize(tree, state);
                     //finishedTests = humanScenarioRunner.tick(tree, state);
+                    learnedDataGenerator.initialize(tree, state);
+                    finishedTests = learnedDataGenerator.tick(tree, state);
                 }
                 else {
                     roundScriptsRunner.initialize(tree, state);
