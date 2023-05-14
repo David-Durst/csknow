@@ -55,4 +55,4 @@ if __name__ == "__main__":
     load_result = load_model_file(all_data_df, "delta_pos_checkpoint.pt")
 
     pred_df = off_policy_inference(load_result.test_dataset, load_result.model, load_result.column_transformers)
-    vis(all_data_df, pred_df)
+    vis(load_result.test_df, pred_df)

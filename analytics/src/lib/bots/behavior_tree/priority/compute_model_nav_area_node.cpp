@@ -489,7 +489,7 @@ namespace csknow::compute_nav_area {
                 }
                 blackboard.playerToTicksSinceLastProbDeltaPosAssignment[treeThinker.csgoId]++;
                 bool timeForNewDeltaPos =
-                        blackboard.playerToTicksSinceLastProbDeltaPosAssignment.at(treeThinker.csgoId) >= newAreaTicks ||
+                        blackboard.playerToTicksSinceLastProbDeltaPosAssignment.at(treeThinker.csgoId) >= newDeltaPosTicks ||
                         wasInEngagement;
                 if (blackboard.playerToLastProbDeltaPosAssignment.find(treeThinker.csgoId) ==
                     blackboard.playerToLastProbDeltaPosAssignment.end() || timeForNewDeltaPos) {
