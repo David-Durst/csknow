@@ -356,7 +356,7 @@ struct SpecDynamic : Command {
     }
 };
 
-const string test_ready_string = "test ready";
+const string test_ready_string = "test ready", test_finished_string = "test finished";
 
 struct SayIf : Command {
     bool condition;

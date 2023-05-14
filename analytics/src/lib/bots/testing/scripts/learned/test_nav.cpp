@@ -45,7 +45,8 @@ namespace csknow::tests::learned {
             commands = make_unique<SequenceNode>(blackboard, Node::makeList(
                 std::move(disableAllBothDuringSetup),
                 make_unique<SayCmd>(blackboard, test_ready_string),
-                std::move(finishCondition)),
+                std::move(finishCondition),
+                make_unique<SayCmd>(blackboard, test_finished_string)),
             "LearnedGooseToLongSequence");
         }
     }

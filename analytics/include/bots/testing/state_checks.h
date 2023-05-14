@@ -173,23 +173,7 @@ enum class PosConstraintOp {
    EQ
 };
 
-string posConstraintOpToString(const PosConstraintOp & op) {
-    switch (op) {
-        case PosConstraintOp::LT:
-            return "<";
-        case PosConstraintOp::LTE:
-            return "<=";
-        case PosConstraintOp::GT:
-            return ">";
-        case PosConstraintOp::GTE:
-            return ">=";
-        case PosConstraintOp::EQ:
-            return "==";
-        default:
-            throw std::runtime_error("invalid pos constraint in to string");
-    }
-
-}
+string posConstraintOpToString(const PosConstraintOp & op);
 
 class PosConstraint : public Node {
     CSGOId playerId;
