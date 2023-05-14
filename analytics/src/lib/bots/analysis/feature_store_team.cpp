@@ -148,6 +148,14 @@ namespace csknow::feature_store {
             }
             internalSize = size;
         }
+
+        internalIdToTickId.resize(internalSize, INVALID_ID);
+        for (size_t i = 0; i < size; i++) {
+            if (tickIdToInternalId[i] != INVALID_ID) {
+                internalIdToTickId[tickIdToInternalId[i]] = static_cast<int64_t>(i);
+            }
+        }
+
         init(internalSize);
         setOrders(orders);
     }
@@ -393,44 +401,44 @@ namespace csknow::feature_store {
          */
     }
 
-    void TeamFeatureStoreResult::computeOrderACausalLabels(int64_t curTick, CircularBuffer<int64_t> & futureTracker,
+    void TeamFeatureStoreResult::computeOrderACausalLabels(int64_t internalTickId, CircularBuffer<int64_t> & futureTracker,
                                                            array<ColumnPlayerData, maxEnemies> & columnData,
                                                            ACausalTimingOption timingOption) {
         for (size_t playerColumn = 0; playerColumn < maxEnemies; playerColumn++) {
             /*
-            if (curTick == 8240 && playerColumn == 4) {
-                std::cout << "tick " << curTick << " player id " << columnData[playerColumn].playerId[curTick] << std::endl;
+            if (internalTickId == 8240 && playerColumn == 4) {
+                std::cout << "tick " << internalTickId << " player id " << columnData[playerColumn].playerId[internalTickId] << std::endl;
                 for (size_t orderPerSite = 0; orderPerSite < num_orders_per_site; orderPerSite++) {
                     std::cout << "distribution nearest a orders 15s order " << orderPerSite << " " <<
-                              columnData[playerColumn].distributionNearestAOrders15s[orderPerSite][curTick]
+                              columnData[playerColumn].distributionNearestAOrders15s[orderPerSite][internalTickId]
                               << std::endl;
                 }
             }
              */
-            if (columnData[playerColumn].playerId[curTick] == INVALID_ID) {
+            if (columnData[playerColumn].playerId[internalTickId] == INVALID_ID) {
                 continue;
             }
             // clear out values for current tick
             for (size_t orderPerSite = 0; orderPerSite < num_orders_per_site; orderPerSite++) {
                 if (timingOption == ACausalTimingOption::s6) {
-                    columnData[playerColumn].distributionNearestAOrders[orderPerSite][curTick] = 0;
-                    columnData[playerColumn].distributionNearestBOrders[orderPerSite][curTick] = 0;
+                    columnData[playerColumn].distributionNearestAOrders[orderPerSite][internalTickId] = 0;
+                    columnData[playerColumn].distributionNearestBOrders[orderPerSite][internalTickId] = 0;
                 }
                 else if (timingOption == ACausalTimingOption::s15) {
-                    //columnData[playerColumn].distributionNearestAOrders15s[orderPerSite][curTick] = 0;
-                    //columnData[playerColumn].distributionNearestBOrders15s[orderPerSite][curTick] = 0;
+                    //columnData[playerColumn].distributionNearestAOrders15s[orderPerSite][internalTickId] = 0;
+                    //columnData[playerColumn].distributionNearestBOrders15s[orderPerSite][internalTickId] = 0;
                 }
                 else {
-                    //columnData[playerColumn].distributionNearestAOrders30s[orderPerSite][curTick] = 0;
-                    //columnData[playerColumn].distributionNearestBOrders30s[orderPerSite][curTick] = 0;
+                    //columnData[playerColumn].distributionNearestAOrders30s[orderPerSite][internalTickId] = 0;
+                    //columnData[playerColumn].distributionNearestBOrders30s[orderPerSite][internalTickId] = 0;
                 }
             }
             // want all points where alive, and accounting for ties
             size_t numPointsInDistribution = 0;
             for (int64_t futureTickIndex = 0; futureTickIndex < futureTracker.getCurSize(); futureTickIndex++) {
                 int64_t futureTick = futureTracker.fromOldest(futureTickIndex);
-                if (futureTick != curTick &&
-                    columnData[playerColumn].playerId[curTick] == columnData[playerColumn].playerId[futureTick]) {
+                if (futureTick != internalTickId &&
+                    columnData[playerColumn].playerId[internalTickId] == columnData[playerColumn].playerId[futureTick]) {
                     vector<int64_t> minDistanceAOrders{}, minDistanceBOrders{};
                     double minDistance = std::numeric_limits<double>::max();
                     for (int64_t orderPerSite = 0; orderPerSite < num_orders_per_site; orderPerSite++) {
@@ -458,24 +466,24 @@ namespace csknow::feature_store {
                     numPointsInDistribution += minDistanceAOrders.size() + minDistanceBOrders.size();
                     for (const auto & orderPerSite : minDistanceAOrders) {
                         if (timingOption == ACausalTimingOption::s6) {
-                            columnData[playerColumn].distributionNearestAOrders[orderPerSite][curTick]++;
+                            columnData[playerColumn].distributionNearestAOrders[orderPerSite][internalTickId]++;
                         }
                         else if (timingOption == ACausalTimingOption::s15) {
-                            //columnData[playerColumn].distributionNearestAOrders15s[orderPerSite][curTick]++;
+                            //columnData[playerColumn].distributionNearestAOrders15s[orderPerSite][internalTickId]++;
                         }
                         else {
-                            //columnData[playerColumn].distributionNearestAOrders30s[orderPerSite][curTick]++;
+                            //columnData[playerColumn].distributionNearestAOrders30s[orderPerSite][internalTickId]++;
                         }
                     }
                     for (const auto & orderPerSite : minDistanceBOrders) {
                         if (timingOption == ACausalTimingOption::s6) {
-                            columnData[playerColumn].distributionNearestBOrders[orderPerSite][curTick]++;
+                            columnData[playerColumn].distributionNearestBOrders[orderPerSite][internalTickId]++;
                         }
                         else if (timingOption == ACausalTimingOption::s15) {
-                            //columnData[playerColumn].distributionNearestBOrders15s[orderPerSite][curTick]++;
+                            //columnData[playerColumn].distributionNearestBOrders15s[orderPerSite][internalTickId]++;
                         }
                         else {
-                            //columnData[playerColumn].distributionNearestBOrders30s[orderPerSite][curTick]++;
+                            //columnData[playerColumn].distributionNearestBOrders30s[orderPerSite][internalTickId]++;
                         }
                     }
                 }
@@ -483,21 +491,21 @@ namespace csknow::feature_store {
             if (numPointsInDistribution != 0) {
                 for (size_t orderPerSite = 0; orderPerSite < num_orders_per_site; orderPerSite++) {
                     if (timingOption == ACausalTimingOption::s6) {
-                        columnData[playerColumn].distributionNearestAOrders[orderPerSite][curTick] /=
+                        columnData[playerColumn].distributionNearestAOrders[orderPerSite][internalTickId] /=
                             static_cast<double>(numPointsInDistribution);
-                        columnData[playerColumn].distributionNearestBOrders[orderPerSite][curTick] /=
+                        columnData[playerColumn].distributionNearestBOrders[orderPerSite][internalTickId] /=
                             static_cast<double>(numPointsInDistribution);
                     }
                     else if (timingOption == ACausalTimingOption::s15) {
-                        //columnData[playerColumn].distributionNearestAOrders15s[orderPerSite][curTick] /=
+                        //columnData[playerColumn].distributionNearestAOrders15s[orderPerSite][internalTickId] /=
                         //    static_cast<double>(numPointsInDistribution);
-                        //columnData[playerColumn].distributionNearestBOrders15s[orderPerSite][curTick] /=
+                        //columnData[playerColumn].distributionNearestBOrders15s[orderPerSite][internalTickId] /=
                         //    static_cast<double>(numPointsInDistribution);
                     }
                     else {
-                        //columnData[playerColumn].distributionNearestAOrders30s[orderPerSite][curTick] /=
+                        //columnData[playerColumn].distributionNearestAOrders30s[orderPerSite][internalTickId] /=
                         //    static_cast<double>(numPointsInDistribution);
-                        //columnData[playerColumn].distributionNearestBOrders30s[orderPerSite][curTick] /=
+                        //columnData[playerColumn].distributionNearestBOrders30s[orderPerSite][internalTickId] /=
                         //    static_cast<double>(numPointsInDistribution);
                     }
                 }
@@ -524,7 +532,7 @@ namespace csknow::feature_store {
             size_t numPointsInDistribution = 0;
             for (int64_t futureTickIndex = 0; futureTickIndex < futureTracker.getCurSize(); futureTickIndex++) {
                 int64_t futureTick = futureTracker.fromOldest(futureTickIndex);
-                bool inWindow = secondsBetweenTicks(ticks, tickRates, curTick * every_nth_row, futureTick * every_nth_row) >=
+                bool inWindow = secondsBetweenTicks(ticks, tickRates, internalIdToTickId[curTick], internalIdToTickId[futureTick]) >=
                         futureSecondsThreshold;
                 if (futureTick != curTick &&
                     columnData[playerColumn].playerId[curTick] == columnData[playerColumn].playerId[futureTick] &&
@@ -602,7 +610,7 @@ namespace csknow::feature_store {
                                   << distanceToPlacesResult.places[curPlace] << ") to (" << badNextPlace << ","
                                   << distanceToPlacesResult.places[badNextPlace] << ") in under 2 seconds "
                                   << " for player (" << curPlayerId << "," << players.name[curPlayerId + players.idOffset] << ") on tick id "
-                                  << curTick * every_nth_row << " and game tick " << ticks.gameTickNumber[curTick * every_nth_row] << " distance " << distanceBetweenCurAndNextPlace << std::endl;
+                                  << internalIdToTickId[curTick] << " and game tick " << ticks.gameTickNumber[internalIdToTickId[curTick]] << " distance " << distanceBetweenCurAndNextPlace << std::endl;
                         for (int64_t futureTickIndex = 0; futureTickIndex < futureTracker.getCurSize(); futureTickIndex++) {
                             int64_t futureTick = futureTracker.fromOldest(futureTickIndex);
                             bool inWindow = secondsBetweenTicks(ticks, tickRates, curTick, futureTick) >=
@@ -611,7 +619,7 @@ namespace csknow::feature_store {
                                 columnData[playerColumn].playerId[curTick] ==
                                 columnData[playerColumn].playerId[futureTick] &&
                                 inWindow && columnData[playerColumn].curPlace[badNextPlace][futureTick]) {
-                                std::cout << "future tick " << futureTick * every_nth_row << std::endl;
+                                std::cout << "future tick " << internalIdToTickId[futureTick] << std::endl;
                             }
                         }
                         std::raise(SIGINT);
@@ -638,7 +646,7 @@ namespace csknow::feature_store {
             size_t numPointsInDistribution = 0;
             for (int64_t futureTickIndex = 0; futureTickIndex < futureTracker.getCurSize(); futureTickIndex++) {
                 int64_t futureTick = futureTracker.fromOldest(futureTickIndex);
-                bool inWindow = secondsBetweenTicks(ticks, tickRates, curTick * every_nth_row, futureTick * every_nth_row) >=
+                bool inWindow = secondsBetweenTicks(ticks, tickRates, internalIdToTickId[curTick], internalIdToTickId[futureTick]) >=
                         futureSecondsTheshold;
                 if (futureTick != curTick &&
                     columnData[playerColumn].playerId[curTick] == columnData[playerColumn].playerId[futureTick] &&
@@ -723,10 +731,10 @@ namespace csknow::feature_store {
             //, ticks15sFutureTracker(15), ticks30sFutureTracker(30);
             for (int64_t unmodifiedTickIndex = rounds.ticksPerRound[roundIndex].maxId;
                  unmodifiedTickIndex >= rounds.ticksPerRound[roundIndex].minId; unmodifiedTickIndex--) {
-                if (unmodifiedTickIndex % every_nth_row != 0) {
+                int64_t tickIndex = tickIdToInternalId[unmodifiedTickIndex];
+                if (tickIndex == INVALID_ID) {
                     continue;
                 }
-                int64_t tickIndex = unmodifiedTickIndex / every_nth_row;
                 gameTickNumber[tickIndex] = ticks.gameTickNumber[unmodifiedTickIndex];
                 roundNumber[tickIndex] = rounds.roundNumber[roundIndex];
                 freezeTimeEnded[tickIndex] = rounds.freezeTimeEnd[roundIndex] <= unmodifiedTickIndex;
@@ -734,19 +742,19 @@ namespace csknow::feature_store {
                         keyRetakeEvents.ctAliveAfterExplosion[unmodifiedTickIndex];
                 // add a new tick every second
                 if (ticks1sFutureTracker.isEmpty() ||
-                    secondsBetweenTicks(ticks, tickRates, tickIndex * every_nth_row, ticks1sFutureTracker.fromNewest() * every_nth_row) >= 0.25) {
+                    secondsBetweenTicks(ticks, tickRates, internalIdToTickId[tickIndex], internalIdToTickId[ticks1sFutureTracker.fromNewest()]) >= 0.25) {
                     ticks1sFutureTracker.enqueue(tickIndex);
                 }
                 if (ticks2sFutureTracker.isEmpty() ||
-                    secondsBetweenTicks(ticks, tickRates, tickIndex * every_nth_row, ticks2sFutureTracker.fromNewest() * every_nth_row) >= 0.5) {
+                    secondsBetweenTicks(ticks, tickRates, internalIdToTickId[tickIndex], internalIdToTickId[ticks2sFutureTracker.fromNewest()]) >= 0.5) {
                     ticks2sFutureTracker.enqueue(tickIndex);
                 }
                 if (ticks6sFutureTracker.isEmpty() ||
-                    secondsBetweenTicks(ticks, tickRates, tickIndex * every_nth_row, ticks6sFutureTracker.fromNewest() * every_nth_row) >= 1.) {
+                    secondsBetweenTicks(ticks, tickRates, internalIdToTickId[tickIndex], internalIdToTickId[ticks6sFutureTracker.fromNewest()]) >= 1.) {
                     ticks6sFutureTracker.enqueue(tickIndex);
                 }
                 bothSidesTicks1sFutureTracker.enqueue(tickIndex);
-                while (secondsBetweenTicks(ticks, tickRates, tickIndex * every_nth_row, bothSidesTicks1sFutureTracker.fromOldest() * every_nth_row) > 1.) {
+                while (secondsBetweenTicks(ticks, tickRates, internalIdToTickId[tickIndex], internalIdToTickId[bothSidesTicks1sFutureTracker.fromOldest()]) > 1.) {
                     bothSidesTicks1sFutureTracker.dequeue();
                 }
                 /*
@@ -759,8 +767,8 @@ namespace csknow::feature_store {
                     ticks30sFutureTracker.enqueue(tickIndex);
                 }
                  */
-                if (ticks.roundId[ticks1sFutureTracker.fromOldest() * every_nth_row] != ticks.roundId[tickIndex * every_nth_row]) {
-                    std::cout << "round id mismatch cur tick " << tickIndex * every_nth_row << " future tick " << ticks1sFutureTracker.fromOldest() * every_nth_row << std::endl;
+                if (ticks.roundId[internalIdToTickId[ticks1sFutureTracker.fromOldest()]] != ticks.roundId[internalIdToTickId[tickIndex]]) {
+                    std::cout << "round id mismatch cur tick " << internalIdToTickId[tickIndex] << " future tick " << internalIdToTickId[ticks1sFutureTracker.fromOldest()] << std::endl;
                     std::raise(SIGINT);
                 }
                 computeOrderACausalLabels(tickIndex, ticks6sFutureTracker, columnCTData, ACausalTimingOption::s6);

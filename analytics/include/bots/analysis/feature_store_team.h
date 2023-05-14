@@ -47,6 +47,7 @@ namespace csknow::feature_store {
         std::vector<csknow::orders::QueryOrder> aOrders, bOrders;
 
         vector<int64_t> tickIdToInternalId;
+        vector<int64_t> internalIdToTickId;
         vector<int64_t> roundId;
         vector<int64_t> roundNumber;
         vector<int64_t> tickId;

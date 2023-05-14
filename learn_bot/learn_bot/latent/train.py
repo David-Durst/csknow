@@ -388,13 +388,13 @@ def run_team_analysis():
         team_data_df = pd.read_parquet(small_latent_team_hdf5_data_path)
     elif use_manual_data:
         team_data_df = load_hdf5_to_pd(manual_latent_team_hdf5_data_path)
-        valid_rounds_df = pd.read_csv(manual_rounds_data_path)
-        rounds_condition = False
-        for index, row in valid_rounds_df.iterrows():
-            rounds_condition = rounds_condition | ((team_data_df['round number'] == row['round id']) &
-                               (team_data_df['game tick number'] >= row['start game tick']) &
-                               (team_data_df['game tick number'] <= row['end game tick']))
-        team_data_df = team_data_df[rounds_condition]
+        #valid_rounds_df = pd.read_csv(manual_rounds_data_path)
+        #rounds_condition = False
+        #for index, row in valid_rounds_df.iterrows():
+        #    rounds_condition = rounds_condition | ((team_data_df['round number'] == row['round id']) &
+        #                       (team_data_df['game tick number'] >= row['start game tick']) &
+        #                       (team_data_df['game tick number'] <= row['end game tick']))
+        #team_data_df = team_data_df[rounds_condition]
     else:
         team_data_df = load_hdf5_to_pd(latent_team_hdf5_data_path)
         #valid_selector_df = valid_df[valid_df['valid'] == 1.].index
@@ -413,7 +413,7 @@ def run_team_analysis():
     #train_result = train(TrainType.Order, team_data_df, num_epochs=3, windowed=False)
     #train_result = train(TrainType.Place, team_data_df, num_epochs=500, windowed=False, diff_train_test=False)
     #train_result = train(TrainType.Area, team_data_df, num_epochs=3, windowed=False)
-    train_result = train(TrainType.DeltaPos, team_data_df, num_epochs=500, windowed=False, diff_train_test=False)
+    train_result = train(TrainType.DeltaPos, team_data_df, num_epochs=100, windowed=False, diff_train_test=True)
                          #flip_columns=[ColumnsToFlip(" CT 0", " CT 1")])
 
 
