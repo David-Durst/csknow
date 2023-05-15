@@ -14,6 +14,8 @@ struct ModelNavData {
     vector<float> deltaPosProbs;
     int64_t deltaPosIndex;
     int deltaXVal, deltaYVal;
+    // this is a target pos that doesn't need to be modified to match the world
+    Vec3 unmodifiedTargetPos;
     vector<string> orderPlaceOptions;
     vector<float> orderPlaceProbs;
     string curPlace;

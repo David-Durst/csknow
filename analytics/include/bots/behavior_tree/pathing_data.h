@@ -38,7 +38,7 @@ struct Path {
     size_t curWaypoint;
 
     [[nodiscard]]
-    string print(const ServerState &, const nav_mesh::nav_file & navFile) const {
+    string print() const {
         stringstream result;
 
         result << "path call succeeded: " + boolToString(pathCallSucceeded);
@@ -50,7 +50,7 @@ struct Path {
             else {
                 result << "invalid waypoint, ";
             }
-            result << "end waypoint: " << waypoints.size() - 1 << " " << vec3tConv(navFile.get_area_by_id_fast(pathEndAreaId).get_center()).toString();
+            result << "end waypoint: " << waypoints.size() - 1 << " " << waypoints.back().toString();
         }
 
         return result.str();

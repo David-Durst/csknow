@@ -54,7 +54,7 @@ vector<PrintState> Blackboard::printPerPlayerState(const ServerState &state, CSG
                                           vec3Conv(curClient.getFootPosForPlayer())).get_id()) +
                                   ", danger area " + dangerArea);
     printStates.emplace_back(playerToPriority[playerId].print(state));
-    printStates.emplace_back(playerToPath[playerId].print(state, navFile));
+    printStates.emplace_back(playerToPath[playerId].print());
     printStates.emplace_back(playerToAction[playerId].print());
     printStates.emplace_back(playerToMemory[playerId].print(state));
     if (playerToModelNavData.find(playerId) != playerToModelNavData.end()) {

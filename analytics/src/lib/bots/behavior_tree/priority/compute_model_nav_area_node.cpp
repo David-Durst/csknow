@@ -330,6 +330,53 @@ namespace csknow::compute_nav_area {
         modelNavData.nextArea = curPriority.targetAreaId;
     }
 
+    void ComputeModelNavAreaNode::tryDeltaPosTargetPos(const ServerState & state, const ServerState::Client & curClient,
+                                                       Priority &curPriority, ModelNavData &modelNavData) {
+        // add half so get center of each area grid
+        // no need for z since doing 2d compare
+        curPriority.targetPos = curClient.getFootPosForPlayer() + Vec3{
+                static_cast<double>(modelNavData.deltaXVal * csknow::feature_store::delta_pos_grid_cell_dim),
+                static_cast<double>(modelNavData.deltaYVal * csknow::feature_store::delta_pos_grid_cell_dim),
+                0.
+        };
+
+        curPriority.targetAreaId = blackboard.navFile
+                .get_nearest_area_by_position(vec3Conv(curPriority.targetPos)).get_id();
+
+        // if cur place is bombsite and CT defuser, then move to c4
+        if (blackboard.isPlayerDefuser(curClient.csgoId) && !blackboard.inTest) {
+            bool tAlive = false;
+            for (const auto & client : state.clients) {
+                if (client.isAlive && client.team == ENGINE_TEAM_T) {
+                    tAlive = true;
+                }
+            }
+            if (!tAlive) {
+                curPriority.targetAreaId = blackboard.navFile
+                        .get_nearest_area_by_position(vec3Conv(state.getC4Pos())).get_id();
+            }
+        }
+
+        if (blackboard.removedAreas.find(curPriority.targetAreaId) != blackboard.removedAreas.end()) {
+            curPriority.targetAreaId = blackboard.removedAreaAlternatives[curPriority.targetAreaId];
+        }
+        // if same next place and not at old next area, keep using that area
+        /*
+        if (blackboard.playerToModelNavData.find(csgoId) != blackboard.playerToModelNavData.end()) {
+            const ModelNavData & oldModelNavData = blackboard.playerToModelNavData.at(csgoId);
+            AreaId curAreaId = blackboard.navFile
+                .get_nearest_area_by_position(vec3Conv(state.getClient(csgoId).getFootPosForPlayer())).get_id();
+            if (oldModelNavData.nextPlace == modelNavData.nextPlace && oldModelNavData.nextArea != curAreaId) {
+                curPriority.targetAreaId = oldModelNavData.nextArea;
+            }
+        }
+         */
+        curPriority.targetPos = vec3tConv(blackboard.navFile.get_nearest_point_in_area(
+                vec3Conv(curPriority.targetPos), blackboard.navFile.get_area_by_id_fast(curPriority.targetAreaId)));
+        modelNavData.nextArea = curPriority.targetAreaId;
+
+    }
+
     void ComputeModelNavAreaNode::computeDeltaPosProbabilistic(const ServerState & state, Priority & curPriority,
                                                                CSGOId csgoId, ModelNavData & modelNavData) {
         // compute area probabilities
@@ -376,58 +423,31 @@ namespace csknow::compute_nav_area {
 
         // compute map grid to pos, and then pos to area
         // ok to pick bad area, as computePath in path node will pick a valid alternative (tree computes alternatives)
-        int xVal = (deltaPosOption % csknow::feature_store::delta_pos_grid_num_cells_per_dim) -
-                      (csknow::feature_store::delta_pos_grid_num_cells_per_dim / 2);
-        int yVal = (deltaPosOption / csknow::feature_store::delta_pos_grid_num_cells_per_dim) -
-                      (csknow::feature_store::delta_pos_grid_num_cells_per_dim / 2);
-        if (yVal > 0) {
-            int x = 1;
-            (void) x;
-        }
-        modelNavData.deltaXVal = xVal;
-        modelNavData.deltaYVal = yVal;
-        // add half so get center of each area grid
-        // no need for z since doing 2d compare
-        curPriority.targetPos = curClient.getFootPosForPlayer() + Vec3{
-                static_cast<double>(xVal * csknow::feature_store::delta_pos_grid_cell_dim),
-                static_cast<double>(yVal * csknow::feature_store::delta_pos_grid_cell_dim),
-                0.
-        };
+        modelNavData.deltaXVal = (deltaPosOption % csknow::feature_store::delta_pos_grid_num_cells_per_dim) -
+                (csknow::feature_store::delta_pos_grid_num_cells_per_dim / 2);
+        modelNavData.deltaYVal = (deltaPosOption / csknow::feature_store::delta_pos_grid_num_cells_per_dim) -
+                (csknow::feature_store::delta_pos_grid_num_cells_per_dim / 2);
 
-        curPriority.targetAreaId = blackboard.navFile
-                .get_nearest_area_by_position(vec3Conv(curPriority.targetPos)).get_id();
+        AreaId priorTargetAreaId = curPriority.targetAreaId;
+        Vec3 priorTargetPos = curPriority.targetPos;
 
-        // if cur place is bombsite and CT defuser, then move to c4
-        if (blackboard.isPlayerDefuser(csgoId) && !blackboard.inTest) {
-            bool tAlive = false;
-            for (const auto & client : state.clients) {
-                if (client.isAlive && client.team == ENGINE_TEAM_T) {
-                    tAlive = true;
-                }
-            }
-            if (!tAlive) {
-                curPriority.targetAreaId = blackboard.navFile
-                        .get_nearest_area_by_position(vec3Conv(state.getC4Pos())).get_id();
-            }
+        tryDeltaPosTargetPos(state, curClient, curPriority,modelNavData);
+
+        // if same as prior target pos, try doubling distance and picking something else
+        if (curPriority.targetPos.x == modelNavData.unmodifiedTargetPos.x &&
+            curPriority.targetPos.y == modelNavData.unmodifiedTargetPos.y) {
+            modelNavData.deltaXVal *= 2;
+            modelNavData.deltaYVal *= 2;
+            tryDeltaPosTargetPos(state, curClient, curPriority,modelNavData);
         }
 
-        if (blackboard.removedAreas.find(curPriority.targetAreaId) != blackboard.removedAreas.end()) {
-            curPriority.targetAreaId = blackboard.removedAreaAlternatives[curPriority.targetAreaId];
+
+        if (priorTargetAreaId == 7566 && curPriority.targetAreaId == 7566) {
+            std::cout << "repeat with prior target pos " << priorTargetPos.toString()
+                << " to cur target pos " << curPriority.targetPos.toString()
+                << " and prior unmodified target pos " << modelNavData.unmodifiedTargetPos.toString() << std::endl;
         }
-        // if same next place and not at old next area, keep using that area
-        /*
-        if (blackboard.playerToModelNavData.find(csgoId) != blackboard.playerToModelNavData.end()) {
-            const ModelNavData & oldModelNavData = blackboard.playerToModelNavData.at(csgoId);
-            AreaId curAreaId = blackboard.navFile
-                .get_nearest_area_by_position(vec3Conv(state.getClient(csgoId).getFootPosForPlayer())).get_id();
-            if (oldModelNavData.nextPlace == modelNavData.nextPlace && oldModelNavData.nextArea != curAreaId) {
-                curPriority.targetAreaId = oldModelNavData.nextArea;
-            }
-        }
-         */
-        curPriority.targetPos = vec3tConv(blackboard.navFile.get_nearest_point_in_area(
-                vec3Conv(curPriority.targetPos), blackboard.navFile.get_area_by_id_fast(curPriority.targetAreaId)));
-        modelNavData.nextArea = curPriority.targetAreaId;
+        modelNavData.unmodifiedTargetPos = curPriority.targetPos;
     }
 
     NodeState ComputeModelNavAreaNode::exec(const ServerState &state, TreeThinker &treeThinker) {
@@ -564,12 +584,14 @@ namespace csknow::compute_nav_area {
                 }
             }
 
+            /*
             // if CT defuser and in bombsite, then move to c4
             if (blackboard.isPlayerDefuser(treeThinker.csgoId) &&
                 blackboard.navFile.get_place(curArea.m_place) == curOrder.waypoints.back().placeName) {
                 curPriority.targetPos = state.getC4Pos();
                 curPriority.targetAreaId = blackboard.navFile.get_nearest_area_by_position(vec3Conv(curPriority.targetPos)).get_id();
             }
+             */
 
             // if in the target area (and not moving to c4), don't move
             /*
