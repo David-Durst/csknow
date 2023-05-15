@@ -23,6 +23,7 @@ namespace csknow::tests::learned {
                 make_unique<SetPos>(blackboard, startPos, startViewAngle),
                 make_unique<Teleport>(blackboard, neededBots[0].id, state),
                 make_unique<ForceOrderNode>(blackboard, forceOrderNodeName, vector{neededBots[0].id}, waypoints, areasToRemove, addedOrderId),
+                make_unique<movement::WaitNode>(blackboard, 0.1),
                 make_unique<StandingStill>(blackboard, vector{neededBots[0].id})),
             "Setup");
 
