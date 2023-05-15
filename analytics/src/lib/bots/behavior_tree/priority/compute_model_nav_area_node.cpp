@@ -330,7 +330,7 @@ namespace csknow::compute_nav_area {
         modelNavData.nextArea = curPriority.targetAreaId;
     }
 
-    void ComputeModelNavAreaNode::tryDeltaPosTargetPos(const ServerState & state, const ServerState::Client & curClient,
+    Vec3 ComputeModelNavAreaNode::tryDeltaPosTargetPos(const ServerState & state, const ServerState::Client & curClient,
                                                        Priority &curPriority, ModelNavData &modelNavData) {
         // add half so get center of each area grid
         // no need for z since doing 2d compare
@@ -339,6 +339,8 @@ namespace csknow::compute_nav_area {
                 static_cast<double>(modelNavData.deltaYVal * csknow::feature_store::delta_pos_grid_cell_dim),
                 0.
         };
+
+        Vec3 desiredPos = curPriority.targetPos;
 
         curPriority.targetAreaId = blackboard.navFile
                 .get_nearest_area_by_position(vec3Conv(curPriority.targetPos)).get_id();
@@ -374,7 +376,7 @@ namespace csknow::compute_nav_area {
         curPriority.targetPos = vec3tConv(blackboard.navFile.get_nearest_point_in_area(
                 vec3Conv(curPriority.targetPos), blackboard.navFile.get_area_by_id_fast(curPriority.targetAreaId)));
         modelNavData.nextArea = curPriority.targetAreaId;
-
+        return desiredPos;
     }
 
     void ComputeModelNavAreaNode::computeDeltaPosProbabilistic(const ServerState & state, Priority & curPriority,
@@ -431,14 +433,27 @@ namespace csknow::compute_nav_area {
         AreaId priorTargetAreaId = curPriority.targetAreaId;
         Vec3 priorTargetPos = curPriority.targetPos;
 
-        tryDeltaPosTargetPos(state, curClient, curPriority,modelNavData);
+        Vec3 desiredPos = tryDeltaPosTargetPos(state, curClient, curPriority, modelNavData);
 
         // if same as prior target pos, try doubling distance and picking something else
         if (curPriority.targetPos.x == modelNavData.unmodifiedTargetPos.x &&
             curPriority.targetPos.y == modelNavData.unmodifiedTargetPos.y) {
             modelNavData.deltaXVal *= 2;
             modelNavData.deltaYVal *= 2;
-            tryDeltaPosTargetPos(state, curClient, curPriority,modelNavData);
+            AreaId badAreaId = curPriority.targetAreaId;
+            tryDeltaPosTargetPos(state, curClient, curPriority, modelNavData);
+            if (badAreaId != curPriority.targetAreaId) {
+                modelNavData.disabledArea = badAreaId;
+            }
+        }
+        // if overrode target previously, don't go back, stick with fixed destination
+        else if (curPriority.targetAreaId == modelNavData.disabledArea) {
+            curPriority.targetPos = priorTargetPos;
+            curPriority.targetAreaId = priorTargetAreaId;
+            modelNavData.nextArea = curPriority.targetAreaId;
+        }
+        else {
+            modelNavData.disabledArea = std::nullopt;
         }
 
 
