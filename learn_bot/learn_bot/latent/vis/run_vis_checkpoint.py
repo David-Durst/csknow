@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import pandas as pd
 import torch
 
@@ -10,7 +12,7 @@ from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd
 from learn_bot.libs.io_transforms import IOColumnTransformers, CUDA_DEVICE_STR
 from learn_bot.latent.transformer_nested_hidden_latent_model import TransformerNestedHiddenLatentModel
 from learn_bot.latent.train import checkpoints_path, TrainResult, manual_latent_team_hdf5_data_path, \
-    latent_team_hdf5_data_path
+    latent_team_hdf5_data_path, rollout_latent_team_hdf5_data_path
 from learn_bot.libs.df_grouping import make_index_column, train_test_split_by_col
 from learn_bot.latent.vis.off_policy_inference import off_policy_inference
 from learn_bot.latent.vis.vis import vis
@@ -42,17 +44,39 @@ def load_model_file(all_data_df: pd.DataFrame, model_file_name: str) -> TrainRes
     return TrainResult(train_data, test_data, train_df, test_df, column_transformers, model)
 
 
+def load_model_file_for_rollout(all_data_df: pd.DataFrame, model_file_name: str) -> TrainResult:
+    model_file = torch.load(checkpoints_path / model_file_name)
+
+    make_index_column(all_data_df)
+
+    all_data = LatentDataset(all_data_df, model_file['column_transformers'])
+
+    column_transformers = IOColumnTransformers(place_area_input_column_types, delta_pos_output_column_types, all_data_df)
+
+    model = TransformerNestedHiddenLatentModel(model_file['column_transformers'], 2 * max_enemies, delta_pos_grid_num_cells)
+    model.load_state_dict(model_file['model_state_dict'])
+    model.to(CUDA_DEVICE_STR)
+
+    return TrainResult(all_data, all_data, all_data_df, all_data_df, column_transformers, model)
+
 manual_data = True
+rollout_data = False
 
 if __name__ == "__main__":
     if manual_data:
         all_data_df = load_hdf5_to_pd(manual_latent_team_hdf5_data_path)
+        #all_data_df = all_data_df[all_data_df['test name'] == b'LearnedGooseToCatScript']
+    elif rollout_data:
+        all_data_df = load_hdf5_to_pd(rollout_latent_team_hdf5_data_path)
     else:
         all_data_df = load_hdf5_to_pd(latent_team_hdf5_data_path)
         all_data_df = all_data_df[(all_data_df['valid'] == 1.) & (all_data_df['c4 status'] < 2)]
     all_data_df = all_data_df.copy()
 
-    load_result = load_model_file(all_data_df, "delta_pos_checkpoint.pt")
+    if rollout_data:
+        load_result = load_model_file_for_rollout(all_data_df, "delta_pos_checkpoint.pt")
+    else:
+        load_result = load_model_file(all_data_df, "delta_pos_checkpoint.pt")
 
-    pred_df = off_policy_inference(load_result.test_dataset, load_result.model, load_result.column_transformers)
-    vis(load_result.test_df, pred_df)
+    pred_df = off_policy_inference(load_result.train_dataset, load_result.model, load_result.column_transformers)
+    vis(load_result.train_df, pred_df)

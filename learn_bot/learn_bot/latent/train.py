@@ -378,6 +378,7 @@ latent_team_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / 'analy
 small_latent_team_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / 'analytics' / 'csv_outputs' / 'smallBehaviorTreeTeamFeatureStore.parquet'
 manual_latent_team_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / 'analytics' / 'manual_outputs' / 'behaviorTreeTeamFeatureStore.hdf5'
 manual_rounds_data_path = Path(__file__).parent / '..' / '..' / '..' / 'analytics' / 'saved_datasets' / 'bot_sample_traces_5_10_23_ticks.csv'
+rollout_latent_team_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / 'analytics' / 'rollout_outputs' / 'behaviorTreeTeamFeatureStore.hdf5'
 
 use_small_data = False
 use_manual_data = True
@@ -395,6 +396,7 @@ def run_team_analysis():
         #                       (team_data_df['game tick number'] >= row['start game tick']) &
         #                       (team_data_df['game tick number'] <= row['end game tick']))
         #team_data_df = team_data_df[rounds_condition]
+        #team_data_df = team_data_df[team_data_df['test name'] == b'LearnedGooseToCatScript']
     else:
         team_data_df = load_hdf5_to_pd(latent_team_hdf5_data_path)
         #valid_selector_df = valid_df[valid_df['valid'] == 1.].index
