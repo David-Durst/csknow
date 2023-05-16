@@ -25,7 +25,8 @@ namespace csknow::tests::learned {
                 make_unique<Teleport>(blackboard, neededBots[0].id, state),
                 make_unique<ForceOrderNode>(blackboard, forceOrderNodeName, vector{neededBots[0].id}, waypoints, areasToRemove, addedOrderId),
                 make_unique<movement::WaitNode>(blackboard, 0.1),
-                make_unique<StandingStill>(blackboard, vector{neededBots[0].id})),
+                make_unique<RepeatDecorator>(blackboard,
+                                             make_unique<StandingStill>(blackboard, vector{neededBots[0].id}), true)),
             "Setup");
 
             Node::Ptr disableAllBothDuringSetup = make_unique<ParallelFirstNode>(blackboard, Node::makeList(
@@ -100,9 +101,9 @@ namespace csknow::tests::learned {
 
         for (size_t i = 0; i < numTests; i++) {
             result.push_back(make_unique<LearnedGooseToCatScript>(i, numTests, false));
-            //result.push_back(make_unique<LearnedCTPushLongScript>(i, numTests, false));
-            //result.push_back(make_unique<LearnedCTPushBDoorsScript>(i, numTests, false));
-            //result.push_back(make_unique<LearnedCTPushBHoleScript>(i, numTests, false));
+            result.push_back(make_unique<LearnedCTPushLongScript>(i, numTests, false));
+            result.push_back(make_unique<LearnedCTPushBDoorsScript>(i, numTests, false));
+            result.push_back(make_unique<LearnedCTPushBHoleScript>(i, numTests, false));
         }
         if (quitAtEnd) {
             result.push_back(make_unique<QuitScript>());
