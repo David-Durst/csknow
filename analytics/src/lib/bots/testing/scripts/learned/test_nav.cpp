@@ -3,6 +3,7 @@
 //
 
 #include "bots/testing/scripts/learned/test_nav.h"
+#include "bots/analysis/learned_models.h"
 
 namespace csknow::tests::learned {
     LearnedNavScript::LearnedNavScript(const std::string & name, size_t testIndex, size_t numTests, bool waitForever) :
@@ -32,14 +33,21 @@ namespace csknow::tests::learned {
                     make_unique<DisableActionsNode>(blackboard, "DisableSetup", vector{neededBots[0].id}, false)
             ), "DisableDuringSetup");
 
+            Node::Ptr placeCheck;
+            if (getPlaceAreaModelProbabilities(ENGINE_TEAM_CT) || getPlaceAreaModelProbabilities(ENGINE_TEAM_T)) {
+                placeCheck = make_unique<NearPlace>(blackboard, neededBots[0].id, destinationPlace, 200);
+            }
+            else {
+                placeCheck = make_unique<InPlace>(blackboard, neededBots[0].id, destinationPlace);
+            }
+
             Node::Ptr finishCondition;
             if (waitForever) {
-                finishCondition = make_unique<RepeatDecorator>(
-                        blackboard, make_unique<InPlace>(blackboard, neededBots[0].id, destinationPlace), true);
+                finishCondition = make_unique<RepeatDecorator>(blackboard, std::move(placeCheck), true);
             }
             else {
                 finishCondition = make_unique<ParallelFirstNode>(blackboard, Node::makeList(
-                    make_unique<RepeatDecorator>(blackboard, make_unique<InPlace>(blackboard, neededBots[0].id, destinationPlace), true),
+                    make_unique<RepeatDecorator>(blackboard, std::move(placeCheck), true),
                     make_unique<movement::WaitNode>(blackboard, 30, false)));
             }
 
