@@ -180,18 +180,6 @@ public:
 };
 
 template <typename T>
-std::vector<T> arrayToVector(const T * input, size_t len) {
-    std::vector<T> result;
-    result.reserve(len);
-
-    for (size_t i = 0; i < len; i++) {
-        result.push_back(input[i]);
-    }
-
-    return result;
-}
-
-template <typename T>
 std::vector<int> vectorOfEnumsToVectorOfInts(const std::vector<T> & vectorOfEnums) {
     std::vector<int> result;
     result.reserve(vectorOfEnums.size());

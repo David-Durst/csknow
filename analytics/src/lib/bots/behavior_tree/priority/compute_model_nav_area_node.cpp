@@ -55,8 +55,8 @@ namespace csknow::compute_nav_area {
         //bool hitCurPlace = false;
         map<PlaceIndex, size_t> placeIndexToWaypointIndex;
         //size_t nearestWaypoint = 0;
-        double nearestWaypointDistance = std::numeric_limits<double>::max();
-        PlaceIndex lastPlaceIndex = blackboard.distanceToPlaces.placeNameToIndex.at(curOrder.waypoints.back().placeName);
+        //double nearestWaypointDistance = std::numeric_limits<double>::max();
+        //PlaceIndex lastPlaceIndex = blackboard.distanceToPlaces.placeNameToIndex.at(curOrder.waypoints.back().placeName);
         modelNavData.orderPlaceOptions.clear();
         modelNavData.orderPlaceProbs.clear();
         set<PlaceIndex> ignorePlacesOnOrders = {2, 7, 8, 15, 25};
@@ -156,7 +156,6 @@ namespace csknow::compute_nav_area {
         // if T, distribute evenly as less proscriptive
         PlaceIndex placeOption = 0;
         double reweightFactor = 0., probSum = 0.;
-        bool pathTest = false;
         if (false && curClient.team == ENGINE_TEAM_CT) {
             double probSample = blackboard.aggressionDis(blackboard.gen);
             //std::cout << "csgoid " << csgoId << " probSample " << probSample << " curPlaceProbability " << curPlaceProbability << std::endl;
@@ -433,7 +432,7 @@ namespace csknow::compute_nav_area {
         AreaId priorTargetAreaId = curPriority.targetAreaId;
         Vec3 priorTargetPos = curPriority.targetPos;
 
-        Vec3 desiredPos = tryDeltaPosTargetPos(state, curClient, curPriority, modelNavData);
+        tryDeltaPosTargetPos(state, curClient, curPriority, modelNavData);
 
         // if same as prior target pos, try doubling distance and picking something else
         if (curPriority.targetPos.x == modelNavData.unmodifiedTargetPos.x &&

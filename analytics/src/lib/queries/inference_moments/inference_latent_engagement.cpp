@@ -214,7 +214,7 @@ namespace csknow::inference_latent_engagement {
                                hurtTickIds.push_back(tmpHurtTickIds[minThreadId][tmpRowId]);
                                hurtIds.push_back(tmpHurtIds[minThreadId][tmpRowId]);
                            });
-        vector<const int64_t *> foreignKeyCols{startTickId.data(), endTickId.data()};
+        vector<std::reference_wrapper<const vector<int64_t>>> foreignKeyCols{startTickId, endTickId};
         engagementsPerTick = buildIntervalIndex(foreignKeyCols, size);
     }
 }

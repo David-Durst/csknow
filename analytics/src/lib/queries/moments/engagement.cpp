@@ -135,7 +135,7 @@ EngagementResult queryEngagementResult(const Games & games, const Rounds & round
                            result.hurtTickIds.push_back(tmpHurtTickIds[minThreadId][tmpRowId]);
                            result.hurtIds.push_back(tmpHurtIds[minThreadId][tmpRowId]);
                        });
-    vector<const int64_t *> foreignKeyCols{result.startTickId.data(), result.endTickId.data()};
+    vector<std::reference_wrapper<const vector<int64_t>>> foreignKeyCols{result.startTickId, result.endTickId};
     result.engagementsPerTick = buildIntervalIndex(foreignKeyCols, result.size);
     return result;
 }

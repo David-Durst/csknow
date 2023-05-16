@@ -162,7 +162,7 @@ namespace csknow::inference_latent_area {
                                playerId.push_back(tmpPlayerId[minThreadId][tmpRowId]);
                                areaGridIndex.push_back(tmpAreaIndex[minThreadId][tmpRowId]);
                            });
-        vector<const int64_t *> foreignKeyCols{startTickId.data(), endTickId.data()};
+        vector<std::reference_wrapper<const vector<int64_t>>> foreignKeyCols{startTickId, endTickId};
         areasPerTick = buildIntervalIndex(foreignKeyCols, size);
         std::cout << "areas time per inference " << inferenceSeconds / numInferences << std::endl;
     }

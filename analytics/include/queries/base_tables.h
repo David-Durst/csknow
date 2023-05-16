@@ -77,18 +77,17 @@ public:
         HighFive::DataSetCreateProps hdf5FlatCreateProps;
         hdf5FlatCreateProps.add(HighFive::Deflate(6));
         hdf5FlatCreateProps.add(HighFive::Chunking(rounds.id.size()));
-        size_t len = rounds.id.size();
 
-        file.createDataSet("/data/game id", arrayToVector(rounds.gameId, len), hdf5FlatCreateProps);
-        file.createDataSet("/data/start tick", arrayToVector(rounds.startTick, len), hdf5FlatCreateProps);
-        file.createDataSet("/data/end tick", arrayToVector(rounds.endTick, len), hdf5FlatCreateProps);
-        file.createDataSet("/data/warmup", arrayToVector(rounds.warmup, len), hdf5FlatCreateProps);
-        file.createDataSet("/data/freeze time end", arrayToVector(rounds.freezeTimeEnd, len), hdf5FlatCreateProps);
-        file.createDataSet("/data/round number", arrayToVector(rounds.roundNumber, len), hdf5FlatCreateProps);
-        file.createDataSet("/data/round end reason", arrayToVector(rounds.roundEndReason, len), hdf5FlatCreateProps);
-        file.createDataSet("/data/winner", arrayToVector(rounds.winner, len), hdf5FlatCreateProps);
-        file.createDataSet("/data/tWins", arrayToVector(rounds.tWins, len), hdf5FlatCreateProps);
-        file.createDataSet("/data/ctWins", arrayToVector(rounds.ctWins, len), hdf5FlatCreateProps);
+        file.createDataSet("/data/game id", rounds.gameId, hdf5FlatCreateProps);
+        file.createDataSet("/data/start tick", rounds.startTick, hdf5FlatCreateProps);
+        file.createDataSet("/data/end tick", rounds.endTick, hdf5FlatCreateProps);
+        file.createDataSet("/data/warmup", rounds.warmup, hdf5FlatCreateProps);
+        file.createDataSet("/data/freeze time end", rounds.freezeTimeEnd, hdf5FlatCreateProps);
+        file.createDataSet("/data/round number", rounds.roundNumber, hdf5FlatCreateProps);
+        file.createDataSet("/data/round end reason", rounds.roundEndReason, hdf5FlatCreateProps);
+        file.createDataSet("/data/winner", rounds.winner, hdf5FlatCreateProps);
+        file.createDataSet("/data/tWins", rounds.tWins, hdf5FlatCreateProps);
+        file.createDataSet("/data/ctWins", rounds.ctWins, hdf5FlatCreateProps);
     }
 };
 
@@ -241,11 +240,10 @@ public:
         HighFive::DataSetCreateProps hdf5FlatCreateProps;
         hdf5FlatCreateProps.add(HighFive::Deflate(6));
         hdf5FlatCreateProps.add(HighFive::Chunking(weaponFire.id.size()));
-        size_t len = weaponFire.id.size();
 
-        file.createDataSet("/data/tick id", arrayToVector(weaponFire.tickId, len), hdf5FlatCreateProps);
-        file.createDataSet("/data/shooter", arrayToVector(weaponFire.shooter, len), hdf5FlatCreateProps);
-        file.createDataSet("/data/weapon", arrayToVector(weaponFire.weapon, len), hdf5FlatCreateProps);
+        file.createDataSet("/data/tick id", weaponFire.tickId, hdf5FlatCreateProps);
+        file.createDataSet("/data/shooter", weaponFire.shooter, hdf5FlatCreateProps);
+        file.createDataSet("/data/weapon", weaponFire.weapon, hdf5FlatCreateProps);
     }
 };
 
@@ -275,7 +273,7 @@ public:
 
     void oneLineToCSV(int64_t index, std::ostream &s) override {
         s << hurt.id[index] << "," << hurt.tickId[index] << "," << hurt.attacker[index] << ","
-          << hurt.victim[index] << "," << hurt.weapon << std::endl;
+          << hurt.victim[index] << "," << enumAsInt(hurt.weapon[index]) << std::endl;
     }
 
     vector<string> getForeignKeyNames() override {
@@ -291,12 +289,11 @@ public:
         HighFive::DataSetCreateProps hdf5FlatCreateProps;
         hdf5FlatCreateProps.add(HighFive::Deflate(6));
         hdf5FlatCreateProps.add(HighFive::Chunking(hurt.id.size()));
-        size_t len = hurt.id.size();
 
-        file.createDataSet("/data/tick id", arrayToVector(hurt.tickId, len), hdf5FlatCreateProps);
-        file.createDataSet("/data/attacker", arrayToVector(hurt.attacker, len), hdf5FlatCreateProps);
-        file.createDataSet("/data/victim", arrayToVector(hurt.victim, len), hdf5FlatCreateProps);
-        file.createDataSet("/data/weapon", vectorOfEnumsToVectorOfInts(arrayToVector(hurt.weapon, len)), hdf5FlatCreateProps);
+        file.createDataSet("/data/tick id", hurt.tickId, hdf5FlatCreateProps);
+        file.createDataSet("/data/attacker", hurt.attacker, hdf5FlatCreateProps);
+        file.createDataSet("/data/victim", hurt.victim, hdf5FlatCreateProps);
+        file.createDataSet("/data/weapon", vectorOfEnumsToVectorOfInts(hurt.weapon), hdf5FlatCreateProps);
     }
 };
 
@@ -326,7 +323,7 @@ public:
 
     void oneLineToCSV(int64_t index, std::ostream &s) override {
         s << kills.id[index] << "," << kills.tickId[index] << "," << kills.killer[index] << ","
-          << kills.victim[index] << "," << kills.weapon << std::endl;
+          << kills.victim[index] << "," << kills.weapon[index] << std::endl;
     }
 
     vector<string> getForeignKeyNames() override {
@@ -342,12 +339,11 @@ public:
         HighFive::DataSetCreateProps hdf5FlatCreateProps;
         hdf5FlatCreateProps.add(HighFive::Deflate(6));
         hdf5FlatCreateProps.add(HighFive::Chunking(kills.id.size()));
-        size_t len = kills.id.size();
 
-        file.createDataSet("/data/tick id", arrayToVector(kills.tickId, len), hdf5FlatCreateProps);
-        file.createDataSet("/data/killer", arrayToVector(kills.killer, len), hdf5FlatCreateProps);
-        file.createDataSet("/data/victim", arrayToVector(kills.victim, len), hdf5FlatCreateProps);
-        file.createDataSet("/data/weapon", arrayToVector(kills.weapon, len), hdf5FlatCreateProps);
+        file.createDataSet("/data/tick id", kills.tickId, hdf5FlatCreateProps);
+        file.createDataSet("/data/killer", kills.killer, hdf5FlatCreateProps);
+        file.createDataSet("/data/victim", kills.victim, hdf5FlatCreateProps);
+        file.createDataSet("/data/weapon", kills.weapon, hdf5FlatCreateProps);
     }
 };
 

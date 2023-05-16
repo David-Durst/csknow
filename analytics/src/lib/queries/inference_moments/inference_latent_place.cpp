@@ -162,7 +162,7 @@ namespace csknow::inference_latent_place {
                                playerId.push_back(tmpPlayerId[minThreadId][tmpRowId]);
                                placeIndex.push_back(tmpPlaceIndex[minThreadId][tmpRowId]);
                            });
-        vector<const int64_t *> foreignKeyCols{startTickId.data(), endTickId.data()};
+        vector<std::reference_wrapper<const vector<int64_t>>> foreignKeyCols{startTickId, endTickId};
         placesPerTick = buildIntervalIndex(foreignKeyCols, size);
         std::cout << "places time per inference " << inferenceSeconds / numInferences << std::endl;
     }

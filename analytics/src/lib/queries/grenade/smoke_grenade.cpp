@@ -86,7 +86,7 @@ namespace csknow::smoke_grenade {
                                state.push_back(tmpState[minThreadId][tmpRowId]);
                                pos.push_back(tmpPos[minThreadId][tmpRowId]);
                            });
-        vector<const int64_t *> foreignKeyCols{tickId.data()};
+        vector<std::reference_wrapper<const vector<int64_t>>> foreignKeyCols{tickId};
         smokeGrenadesPerTick = buildIntervalIndex(foreignKeyCols, size);
     }
 }

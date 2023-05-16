@@ -70,7 +70,7 @@ namespace action {
     NodeState AimTaskNode::exec(const ServerState &state, TreeThinker &treeThinker) {
         const ServerState::Client & curClient = state.getClient(treeThinker.csgoId);
         SecondOrderController & mouseController = blackboard.playerToMouseController.find(treeThinker.csgoId)->second;
-        const Order & curOrder = blackboard.strategy.getOrderForPlayer(treeThinker.csgoId);
+        //const Order & curOrder = blackboard.strategy.getOrderForPlayer(treeThinker.csgoId);
         Action & curAction = blackboard.playerToAction[treeThinker.csgoId];
         //Action & oldAction = blackboard.lastPlayerToAction[treeThinker.csgoId];
         Priority & curPriority = blackboard.playerToPriority[treeThinker.csgoId];

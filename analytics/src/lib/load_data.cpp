@@ -32,7 +32,7 @@ void loadEquipmentFile(Equipment & equipment, const string & filePath) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, equipment.id[arrayEntry]);
         }
         else if (colNumber == 1) {
-            readCol(file, curStart, curDelimiter, &equipment.name[arrayEntry]);
+            readCol(file, curStart, curDelimiter, equipment.name[arrayEntry]);
             rowNumber++;
             arrayEntry++;
         }
@@ -78,7 +78,7 @@ void loadGameTypesFile(GameTypes & gameTypes, const string & filePath) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, gameTypes.id[arrayEntry]);
         }
         else if (colNumber == 1) {
-            readCol(file, curStart, curDelimiter, &gameTypes.tableType[arrayEntry]);
+            readCol(file, curStart, curDelimiter, gameTypes.tableType[arrayEntry]);
             rowNumber++;
             arrayEntry++;
         }
@@ -124,7 +124,7 @@ void loadHitGroupsFile(HitGroups & hitGroups, const string & filePath) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, hitGroups.id[arrayEntry]);
         }
         else if (colNumber == 1) {
-            readCol(file, curStart, curDelimiter, &hitGroups.groupName[arrayEntry]);
+            readCol(file, curStart, curDelimiter, hitGroups.groupName[arrayEntry]);
             rowNumber++;
             arrayEntry++;
         }
@@ -170,7 +170,7 @@ void loadGamesFile(Games & games, const string & filePath) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, games.id[arrayEntry]);
         }
         else if (colNumber == 1) {
-            readCol(file, curStart, curDelimiter, &games.demoFile[arrayEntry]);
+            readCol(file, curStart, curDelimiter, games.demoFile[arrayEntry]);
         }
         else if (colNumber == 2) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, games.demoTickRate[arrayEntry]);
@@ -179,7 +179,7 @@ void loadGamesFile(Games & games, const string & filePath) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, games.gameTickRate[arrayEntry]);
         }
         else if (colNumber == 4) {
-            readCol(file, curStart, curDelimiter, &games.mapName[arrayEntry]);
+            readCol(file, curStart, curDelimiter, games.mapName[arrayEntry]);
         }
         else if (colNumber == 5) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, games.gameType[arrayEntry]);
@@ -231,7 +231,7 @@ void loadPlayersFile(Players & players, const string & filePath, int64_t fileRow
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, players.gameId[arrayEntry]);
         }
         else if (colNumber == 2) {
-            readCol(file, curStart, curDelimiter, &players.name[arrayEntry]);
+            readCol(file, curStart, curDelimiter, players.name[arrayEntry]);
         }
         else if (colNumber == 3) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, players.steamId[arrayEntry]);
@@ -294,10 +294,10 @@ void loadRoundsFile(Rounds & rounds, const string & filePath, int64_t fileRowSta
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, rounds.endOfficialTick[arrayEntry]);
         }
         else if (colNumber == 5) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, rounds.warmup[arrayEntry]);
+            rounds.warmup[arrayEntry] = readCol(file, curStart, curDelimiter, rowNumber, colNumber);
         }
         else if (colNumber == 6) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, rounds.overtime[arrayEntry]);
+            rounds.overtime[arrayEntry] = readCol(file, curStart, curDelimiter, rowNumber, colNumber);
         }
         else if (colNumber == 7) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, rounds.freezeTimeEnd[arrayEntry]);
@@ -506,28 +506,28 @@ void loadPlayerAtTickFile(PlayerAtTick & pat, const string & filePath, int64_t f
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, pat.armor[arrayEntry]);
         }
         else if (colNumber == 23) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, pat.hasHelmet[arrayEntry]);
+            pat.hasHelmet[arrayEntry] = readCol(file, curStart, curDelimiter, rowNumber, colNumber);
         }
         else if (colNumber == 24) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, pat.isAlive[arrayEntry]);
+            pat.isAlive[arrayEntry] = readCol(file, curStart, curDelimiter, rowNumber, colNumber);
         }
         else if (colNumber == 25) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, pat.duckingKeyPressed[arrayEntry]);
+            pat.duckingKeyPressed[arrayEntry] = readCol(file, curStart, curDelimiter, rowNumber, colNumber);
         }
         else if (colNumber == 26) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, pat.duckAmount[arrayEntry]);
         }
         else if (colNumber == 27) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, pat.isReloading[arrayEntry]);
+            pat.isReloading[arrayEntry] = readCol(file, curStart, curDelimiter, rowNumber, colNumber);
         }
         else if (colNumber == 28) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, pat.isWalking[arrayEntry]);
+            pat.isWalking[arrayEntry] = readCol(file, curStart, curDelimiter, rowNumber, colNumber);
         }
         else if (colNumber == 29) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, pat.isScoped[arrayEntry]);
+            pat.isScoped[arrayEntry] = readCol(file, curStart, curDelimiter, rowNumber, colNumber);
         }
         else if (colNumber == 30) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, pat.isAirborne[arrayEntry]);
+            pat.isAirborne[arrayEntry] = readCol(file, curStart, curDelimiter, rowNumber, colNumber);
         }
         else if (colNumber == 31) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, pat.flashDuration[arrayEntry]);
@@ -575,10 +575,10 @@ void loadPlayerAtTickFile(PlayerAtTick & pat, const string & filePath, int64_t f
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, pat.numZeus[arrayEntry]);
         }
         else if (colNumber == 46) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, pat.hasDefuser[arrayEntry]);
+            pat.hasDefuser[arrayEntry] = readCol(file, curStart, curDelimiter, rowNumber, colNumber);
         }
         else if (colNumber == 47) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, pat.hasBomb[arrayEntry]);
+            pat.hasBomb[arrayEntry] = readCol(file, curStart, curDelimiter, rowNumber, colNumber);
         }
         else if (colNumber == 48) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, pat.money[arrayEntry]);
@@ -646,7 +646,7 @@ void loadSpottedFile(Spotted & spotted, const string & filePath, int64_t fileRow
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, spotted.spotterPlayer[arrayEntry]);
         }
         else if (colNumber == 4) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, spotted.isSpotted[arrayEntry]);
+            spotted.isSpotted[arrayEntry] = readCol(file, curStart, curDelimiter, rowNumber, colNumber);
             rowNumber++;
             arrayEntry++;
         }
@@ -814,10 +814,10 @@ void loadKillsFile(Kills & kills, const string & filePath, int64_t fileRowStart)
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, kills.assister[arrayEntry]);
         }
         else if (colNumber == 6) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, kills.isHeadshot[arrayEntry]);
+            kills.isHeadshot[arrayEntry] = readCol(file, curStart, curDelimiter, rowNumber, colNumber);
         }
         else if (colNumber == 7) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, kills.isWallbang[arrayEntry]);
+            kills.isWallbang[arrayEntry] = readCol(file, curStart, curDelimiter, rowNumber, colNumber);
         }
         else if (colNumber == 8) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, kills.penetratedObjects[arrayEntry]);
@@ -1130,7 +1130,7 @@ void loadPlantsFile(Plants & plants, const string & filePath, int64_t fileRowSta
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, plants.planter[arrayEntry]);
         }
         else if (colNumber == 4) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, plants.succesful[arrayEntry]);
+            plants.succesful[arrayEntry] = readCol(file, curStart, curDelimiter, rowNumber, colNumber);
             rowNumber++;
             arrayEntry++;
         }
@@ -1190,7 +1190,7 @@ void loadDefusalsFile(Defusals & defusals, const string & filePath, int64_t file
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, defusals.defuser[arrayEntry]);
         }
         else if (colNumber == 5) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, defusals.succesful[arrayEntry]);
+            defusals.succesful[arrayEntry] = readCol(file, curStart, curDelimiter, rowNumber, colNumber);
             rowNumber++;
             arrayEntry++;
         }
@@ -1292,7 +1292,7 @@ void loadSayFile(Say & say, const string & filePath, int64_t fileRowStart) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, say.tickId[arrayEntry]);
         }
         else if (colNumber == 2) {
-            readCol(file, curStart, curDelimiter, &say.message[arrayEntry]);
+            readCol(file, curStart, curDelimiter, say.message[arrayEntry]);
             rowNumber++;
             arrayEntry++;
         }

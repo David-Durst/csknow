@@ -36,7 +36,7 @@ struct RangeIndexEntry {
     }
 };
 
-typedef RangeIndexEntry * RangeIndex;
+typedef vector<RangeIndexEntry> RangeIndex;
 //typedef IntervalTree<int64_t, int64_t> IntervalIndex;
 struct IntervalIndex {
     IntervalTree<int64_t, int64_t> intervalToEvent;
@@ -62,227 +62,120 @@ public:
 
 class Equipment : public ColStore {
 public:
-    char ** name;
+    vector<string> name;
 
     void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) override {
         ColStore::init(rows, numFiles, gameStarts);
-        name = (char **) malloc(rows * sizeof(char*));
+        name.resize(rows);
     }
-
-    Equipment() = default;
-    ~Equipment() {
-        if (!beenInitialized){
-            return;
-        }
-        for (int64_t row = 0; row < size; row++) {
-            free(name[row]);
-        }
-        free(name);
-    }
-
-    Equipment(const Equipment& other) = delete;
-    Equipment& operator=(const Equipment& other) = delete;
 };
 
 class GameTypes : public ColStore {
 public:
-    char ** tableType;
+    vector<string> tableType;
 
     void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) override {
         ColStore::init(rows, numFiles, gameStarts);
-        tableType = (char **) malloc(rows * sizeof(char*));
+        tableType.resize(rows);
     }
-
-    GameTypes() = default;
-    ~GameTypes() {
-        if (!beenInitialized){
-            return;
-        }
-        for (int64_t row = 0; row < size; row++) {
-            free(tableType[row]);
-        }
-        free(tableType);
-    }
-
-    GameTypes(const GameTypes& other) = delete;
-    GameTypes& operator=(const GameTypes& other) = delete;
 };
 
 class HitGroups : public ColStore {
 public:
-    char ** groupName;
+    vector<string> groupName;
 
     void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) override {
         ColStore::init(rows, numFiles, gameStarts);
-        groupName = (char **) malloc(rows * sizeof(char*));
+        groupName.resize(rows);
     }
-
-    HitGroups() = default;
-    ~HitGroups() {
-        if (!beenInitialized){
-            return;
-        }
-        for (int64_t row = 0; row < size; row++) {
-            free(groupName[row]);
-        }
-        free(groupName);
-    }
-
-    HitGroups(const HitGroups& other) = delete;
-    HitGroups& operator=(const HitGroups& other) = delete;
 };
 
 class Games : public ColStore {
 public:
-    char ** demoFile;
-    double * demoTickRate;
-    double * gameTickRate;
-    char ** mapName;
-    int64_t * gameType;
+    vector<string> demoFile;
+    vector<double> demoTickRate;
+    vector<double> gameTickRate;
+    vector<string> mapName;
+    vector<int64_t> gameType;
     RangeIndex roundsPerGame;
     RangeIndex playersPerGame;
 
     void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) override {
         ColStore::init(rows, numFiles, gameStarts);
-        demoFile = (char **) malloc(rows * sizeof(char*));
-        demoTickRate = (double *) malloc(rows * sizeof(double));
-        gameTickRate = (double *) malloc(rows * sizeof(double));
-        mapName = (char **) malloc(rows * sizeof(char*));
-        gameType = (int64_t *) malloc(rows * sizeof(int64_t));
-        roundsPerGame = (RangeIndexEntry *) malloc(rows * sizeof(RangeIndexEntry));
-        playersPerGame = (RangeIndexEntry *) malloc(rows * sizeof(RangeIndexEntry));
+        demoFile.resize(rows);
+        demoTickRate.resize(rows);
+        gameTickRate.resize(rows);
+        mapName.resize(rows);
+        gameType.resize(rows);
+        roundsPerGame.resize(rows);
+        playersPerGame.resize(rows);
     }
-
-    Games() = default;
-    ~Games() {
-        if (!beenInitialized){
-            return;
-        }
-        for (int64_t row = 0; row < size; row++) {
-            free(demoFile[row]);
-        }
-        free(demoFile);
-
-        free(demoTickRate);
-        free(gameTickRate);
-        for (int64_t row = 0; row < size; row++) {
-            free(mapName[row]);
-        }
-        free(mapName);
-        free(gameType);
-        free(roundsPerGame);
-        free(playersPerGame);
-    }
-
-    Games(const Games& other) = delete;
-    Games& operator=(const Games& other) = delete;
 };
 
 class Players : public ColStore {
 public:
-    int64_t * gameId;
-    char ** name;
-    int64_t * steamId;
+    vector<int64_t> gameId;
+    vector<string> name;
+    vector<int64_t> steamId;
     // add this offset to id to get the row entry
     int64_t idOffset = 1;
 
     void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) override {
         ColStore::init(rows, numFiles, gameStarts);
-        gameId = (int64_t *) malloc(rows * sizeof(int64_t));
-        name = (char **) malloc(rows * sizeof(char*));
-        steamId = (int64_t *) malloc(rows * sizeof(int64_t));
+        gameId.resize(rows);
+        name.resize(rows);
+        steamId.resize(rows);
     }
-
-    Players() = default;
-    ~Players() {
-        if (!beenInitialized){
-            return;
-        }
-        for (int64_t row = 0; row < size; row++) {
-            free(name[row]);
-        }
-        free(name);
-
-        free(gameId);
-        free(steamId);
-    }
-
-    Players(const Players& other) = delete;
-    Players& operator=(const Players& other) = delete;
 };
 
 class Rounds : public ColStore {
 public:
-    int64_t * gameId;
-    int64_t * startTick;
+    vector<int64_t> gameId;
+    vector<int64_t> startTick;
     // tick when objective accomplished
-    int64_t * endTick;
+    vector<int64_t> endTick;
     // tick when run around time ends
-    int64_t * endOfficialTick;
-    bool * warmup;
-    bool * overtime;
-    int64_t * freezeTimeEnd;
-    int16_t * roundNumber;
-    int16_t * roundEndReason;
-    int16_t * winner;
-    int16_t * tWins;
-    int16_t * ctWins;
+    vector<int64_t> endOfficialTick;
+    vector<bool> warmup;
+    vector<bool> overtime;
+    vector<int64_t> freezeTimeEnd;
+    vector<int16_t> roundNumber;
+    vector<int16_t> roundEndReason;
+    vector<int16_t> winner;
+    vector<int16_t> tWins;
+    vector<int16_t> ctWins;
     RangeIndex ticksPerRound;
     // add this offset to id to get the row entry
     int64_t idOffset = 1;
 
     void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) override {
         ColStore::init(rows, numFiles, gameStarts);
-        gameId = (int64_t *) malloc(rows * sizeof(int64_t));
-        startTick = (int64_t *) malloc(rows * sizeof(int64_t));
-        endTick = (int64_t *) malloc(rows * sizeof(int64_t));
-        endOfficialTick = (int64_t *) malloc(rows * sizeof(int64_t));
-        warmup = (bool *) malloc(rows * sizeof(bool));
-        overtime = (bool *) malloc(rows * sizeof(bool));
-        freezeTimeEnd = (int64_t *) malloc(rows * sizeof(int64_t));
-        roundNumber = (int16_t *) malloc(rows * sizeof(int16_t));
-        roundEndReason = (int16_t *) malloc(rows * sizeof(int16_t));
-        winner = (int16_t *) malloc(rows * sizeof(int16_t));
-        tWins = (int16_t *) malloc(rows * sizeof(int16_t));
-        ctWins = (int16_t *) malloc(rows * sizeof(int16_t));
-        ticksPerRound = (RangeIndexEntry *) malloc(rows * sizeof(RangeIndexEntry));
+        gameId.resize(rows);
+        startTick.resize(rows);
+        endTick.resize(rows);
+        endOfficialTick.resize(rows);
+        warmup.resize(rows);
+        overtime.resize(rows);
+        freezeTimeEnd.resize(rows);
+        roundNumber.resize(rows);
+        roundEndReason.resize(rows);
+        winner.resize(rows);
+        tWins.resize(rows);
+        ctWins.resize(rows);
+        ticksPerRound.resize(rows);
     }
-
-    Rounds() = default;
-    ~Rounds() {
-        if (!beenInitialized){
-            return;
-        }
-
-        free(gameId);
-        free(startTick);
-        free(endTick);
-        free(endOfficialTick);
-        free(warmup);
-        free(overtime);
-        free(freezeTimeEnd);
-        free(roundNumber);
-        free(roundEndReason);
-        free(winner);
-        free(tWins);
-        free(ctWins);
-        free(ticksPerRound);
-    }
-
-    Rounds(const Rounds& other) = delete;
-    Rounds& operator=(const Rounds& other) = delete;
 };
 
 class Ticks: public ColStore {
 public:
-    int64_t * roundId;
-    int64_t * gameTime;
-    int64_t * demoTickNumber;
-    int64_t * gameTickNumber;
-    int64_t * bombCarrier;
-    double * bombX;
-    double * bombY;
-    double * bombZ;
+    vector<int64_t> roundId;
+    vector<int64_t> gameTime;
+    vector<int64_t> demoTickNumber;
+    vector<int64_t> gameTickNumber;
+    vector<int64_t> bombCarrier;
+    vector<double> bombX;
+    vector<double> bombY;
+    vector<double> bombZ;
     RangeIndex patPerTick;
     RangeIndex spottedPerTick;
     RangeIndex footstepPerTick;
@@ -306,171 +199,123 @@ public:
 
     void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) override {
         ColStore::init(rows, numFiles, gameStarts);
-        roundId = (int64_t *) malloc(rows * sizeof(int64_t));
-        gameTime = (int64_t *) malloc(rows * sizeof(int64_t));
-        demoTickNumber = (int64_t *) malloc(rows * sizeof(int64_t));
-        gameTickNumber = (int64_t *) malloc(rows * sizeof(int64_t));
-        bombCarrier = (int64_t *) malloc(rows * sizeof(int64_t));
-        bombX = (double *) malloc(rows * sizeof(double));
-        bombY = (double *) malloc(rows * sizeof(double));
-        bombZ = (double *) malloc(rows * sizeof(double));
-        patPerTick = (RangeIndexEntry *) malloc(rows * sizeof(RangeIndexEntry));
-        spottedPerTick = (RangeIndexEntry *) malloc(rows * sizeof(RangeIndexEntry));
-        footstepPerTick = (RangeIndexEntry *) malloc(rows * sizeof(RangeIndexEntry));
+        roundId.resize(rows);
+        gameTime.resize(rows);
+        demoTickNumber.resize(rows);
+        gameTickNumber.resize(rows);
+        bombCarrier.resize(rows);
+        bombX.resize(rows);
+        bombY.resize(rows);
+        bombZ.resize(rows);
+        patPerTick.resize(rows);
+        spottedPerTick.resize(rows);
+        footstepPerTick.resize(rows);
     }
-
-    Ticks() = default;
-    ~Ticks() {
-        if (!beenInitialized){
-            return;
-        }
-        free(roundId);
-        free(gameTime);
-        free(demoTickNumber);
-        free(gameTickNumber);
-        free(bombCarrier);
-        free(bombX);
-        free(bombY);
-        free(bombZ);
-        free(patPerTick);
-        free(spottedPerTick);
-        free(footstepPerTick);
-    }
-
-    Ticks(const Ticks& other) = delete;
-    Ticks& operator=(const Ticks& other) = delete;
-
-    /*
-    // since spotted tracks names for spotted player, need to map that to the player index
-
-    map<string, int> getPlayerNameToIndex(int64_t gameIndex) const {
-        map<string, int> result;
-        for (int i = 0; i < NUM_PLAYERS; i++) {
-            result.insert({players[i].name[firstRowAfterWarmup[gameIndex]], i});
-        }
-        return result;
-    }
-
-    map<int, vector<int>> getEnemiesForTeam(int64_t gameIndex) const {
-        map<int, vector<int>> result;
-        result.insert({2, {}});
-        result.insert({3, {}});
-        for (int i = 0; i < NUM_PLAYERS; i++) {
-            if (players[i].team[firstRowAfterWarmup[gameIndex]] == 2) {
-                result[3].push_back(i);
-            }
-            else {
-                result[2].push_back(i);
-            }
-        }
-        return result;
-    }
-     */
 };
 
 class PlayerAtTick: public ColStore {
 public:
-    int64_t * playerId;
-    int64_t * tickId;
-    double * posX;
-    double * posY;
-    double * posZ;
-    double * eyePosZ;
-    double * velX;
-    double * velY;
-    double * velZ;
-    double * viewX;
-    double * viewY;
-    double * aimPunchX;
-    double * aimPunchY;
-    double * viewPunchX;
-    double * viewPunchY;
-    double * recoilIndex;
-    double * nextPrimaryAttack;
-    double * nextSecondaryAttack;
-    double * gameTime;
-    int16_t * team;
-    double * health;
-    double * armor;
-    bool * hasHelmet;
-    bool * isAlive;
-    bool * duckingKeyPressed;
-    double * duckAmount;
-    bool * isReloading;
-    bool * isWalking;
-    bool * isScoped;
-    bool * isAirborne;
-    double * flashDuration;
-    int16_t * activeWeapon;
-    int16_t * primaryWeapon;
-    int16_t * primaryBulletsClip;
-    int16_t * primaryBulletsReserve;
-    int16_t * secondaryWeapon;
-    int16_t * secondaryBulletsClip;
-    int16_t * secondaryBulletsReserve;
-    int16_t * numHe;
-    int16_t * numFlash;
-    int16_t * numSmoke;
-    int16_t * numMolotov;
-    int16_t * numIncendiary;
-    int16_t * numDecoy;
-    int16_t * numZeus;
-    bool * hasDefuser;
-    bool * hasBomb;
-    int32_t * money;
-    int32_t * ping;
+    vector<int64_t> playerId;
+    vector<int64_t> tickId;
+    vector<double> posX;
+    vector<double> posY;
+    vector<double> posZ;
+    vector<double> eyePosZ;
+    vector<double> velX;
+    vector<double> velY;
+    vector<double> velZ;
+    vector<double> viewX;
+    vector<double> viewY;
+    vector<double> aimPunchX;
+    vector<double> aimPunchY;
+    vector<double> viewPunchX;
+    vector<double> viewPunchY;
+    vector<double> recoilIndex;
+    vector<double> nextPrimaryAttack;
+    vector<double> nextSecondaryAttack;
+    vector<double> gameTime;
+    vector<int16_t> team;
+    vector<double> health;
+    vector<double> armor;
+    vector<bool> hasHelmet;
+    vector<bool> isAlive;
+    vector<bool> duckingKeyPressed;
+    vector<double> duckAmount;
+    vector<bool> isReloading;
+    vector<bool> isWalking;
+    vector<bool> isScoped;
+    vector<bool> isAirborne;
+    vector<double> flashDuration;
+    vector<int16_t> activeWeapon;
+    vector<int16_t> primaryWeapon;
+    vector<int16_t> primaryBulletsClip;
+    vector<int16_t> primaryBulletsReserve;
+    vector<int16_t> secondaryWeapon;
+    vector<int16_t> secondaryBulletsClip;
+    vector<int16_t> secondaryBulletsReserve;
+    vector<int16_t> numHe;
+    vector<int16_t> numFlash;
+    vector<int16_t> numSmoke;
+    vector<int16_t> numMolotov;
+    vector<int16_t> numIncendiary;
+    vector<int16_t> numDecoy;
+    vector<int16_t> numZeus;
+    vector<bool> hasDefuser;
+    vector<bool> hasBomb;
+    vector<int32_t> money;
+    vector<int32_t> ping;
 
     void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) override {
         ColStore::init(rows, numFiles, gameStarts);
-        playerId = (int64_t *) malloc(rows * sizeof(int64_t));
-        tickId = (int64_t *) malloc(rows * sizeof(int64_t));
-        posX = (double *) malloc(rows * sizeof(double));
-        posY = (double *) malloc(rows * sizeof(double));
-        posZ = (double *) malloc(rows * sizeof(double));
-        eyePosZ = (double *) malloc(rows * sizeof(double));
-        velX = (double *) malloc(rows * sizeof(double));
-        velY = (double *) malloc(rows * sizeof(double));
-        velZ = (double *) malloc(rows * sizeof(double));
-        viewX = (double *) malloc(rows * sizeof(double));
-        viewY = (double *) malloc(rows * sizeof(double));
-        aimPunchX = (double *) malloc(rows * sizeof(double));
-        aimPunchY = (double *) malloc(rows * sizeof(double));
-        viewPunchX = (double *) malloc(rows * sizeof(double));
-        viewPunchY = (double *) malloc(rows * sizeof(double));
-        recoilIndex = (double *) malloc(rows * sizeof(double));
-        nextPrimaryAttack = (double *) malloc(rows * sizeof(double));
-        nextSecondaryAttack = (double *) malloc(rows * sizeof(double));
-        gameTime = (double *) malloc(rows * sizeof(double));
-        team = (int16_t *) malloc(rows * sizeof(int16_t));
-        health = (double *) malloc(rows * sizeof(double));
-        armor = (double *) malloc(rows * sizeof(double));
-        hasHelmet = (bool *) malloc(rows * sizeof(bool));
-        isAlive = (bool *) malloc(rows * sizeof(bool));
-        duckingKeyPressed = (bool *) malloc(rows * sizeof(bool));
-        duckAmount = (double *) malloc(rows * sizeof(double));
-        isReloading = (bool *) malloc(rows * sizeof(bool));
-        isWalking = (bool *) malloc(rows * sizeof(bool));
-        isScoped = (bool *) malloc(rows * sizeof(bool));
-        isAirborne = (bool *) malloc(rows * sizeof(bool));
-        flashDuration = (double *) malloc(rows * sizeof(double));
-        activeWeapon = (int16_t *) malloc(rows * sizeof(int16_t));
-        primaryWeapon = (int16_t *) malloc(rows * sizeof(int16_t));
-        primaryBulletsClip = (int16_t *) malloc(rows * sizeof(int16_t));
-        primaryBulletsReserve = (int16_t *) malloc(rows * sizeof(int16_t));
-        secondaryWeapon = (int16_t *) malloc(rows * sizeof(int16_t));
-        secondaryBulletsClip = (int16_t *) malloc(rows * sizeof(int16_t));
-        secondaryBulletsReserve = (int16_t *) malloc(rows * sizeof(int16_t));
-        numHe = (int16_t *) malloc(rows * sizeof(int16_t));
-        numFlash = (int16_t *) malloc(rows * sizeof(int16_t));
-        numSmoke = (int16_t *) malloc(rows * sizeof(int16_t));
-        numMolotov = (int16_t *) malloc(rows * sizeof(int16_t));
-        numIncendiary = (int16_t *) malloc(rows * sizeof(int16_t));
-        numDecoy = (int16_t *) malloc(rows * sizeof(int16_t));
-        numZeus = (int16_t *) malloc(rows * sizeof(int16_t));
-        hasDefuser = (bool *) malloc(rows * sizeof(bool));
-        hasBomb = (bool *) malloc(rows * sizeof(bool));
-        money = (int32_t *) malloc(rows * sizeof(int32_t));
-        ping = (int32_t *) malloc(rows * sizeof(int32_t));
+        playerId.resize(rows);
+        tickId.resize(rows);
+        posX.resize(rows);
+        posY.resize(rows);
+        posZ.resize(rows);
+        eyePosZ.resize(rows);
+        velX.resize(rows);
+        velY.resize(rows);
+        velZ.resize(rows);
+        viewX.resize(rows);
+        viewY.resize(rows);
+        aimPunchX.resize(rows);
+        aimPunchY.resize(rows);
+        viewPunchX.resize(rows);
+        viewPunchY.resize(rows);
+        recoilIndex.resize(rows);
+        nextPrimaryAttack.resize(rows);
+        nextSecondaryAttack.resize(rows);
+        gameTime.resize(rows);
+        team.resize(rows);
+        health.resize(rows);
+        armor.resize(rows);
+        hasHelmet.resize(rows);
+        isAlive.resize(rows);
+        duckingKeyPressed.resize(rows);
+        duckAmount.resize(rows);
+        isReloading.resize(rows);
+        isWalking.resize(rows);
+        isScoped.resize(rows);
+        isAirborne.resize(rows);
+        flashDuration.resize(rows);
+        activeWeapon.resize(rows);
+        primaryWeapon.resize(rows);
+        primaryBulletsClip.resize(rows);
+        primaryBulletsReserve.resize(rows);
+        secondaryWeapon.resize(rows);
+        secondaryBulletsClip.resize(rows);
+        secondaryBulletsReserve.resize(rows);
+        numHe.resize(rows);
+        numFlash.resize(rows);
+        numSmoke.resize(rows);
+        numMolotov.resize(rows);
+        numIncendiary.resize(rows);
+        numDecoy.resize(rows);
+        numZeus.resize(rows);
+        hasDefuser.resize(rows);
+        hasBomb.resize(rows);
+        money.resize(rows);
+        ping.resize(rows);
     }
 
     void makePitchNeg90To90() {
@@ -481,488 +326,219 @@ public:
             }
         }
     }
-
-
-    PlayerAtTick() = default;
-    ~PlayerAtTick() {
-        if (!beenInitialized){
-            return;
-        }
-        free(playerId);
-        free(tickId);
-        free(posX);
-        free(posY);
-        free(posZ);
-        free(eyePosZ);
-        free(velX);
-        free(velY);
-        free(velZ);
-        free(viewX);
-        free(viewY);
-        free(aimPunchX);
-        free(aimPunchY);
-        free(viewPunchX);
-        free(viewPunchY);
-        free(recoilIndex);
-        free(nextPrimaryAttack);
-        free(nextSecondaryAttack);
-        free(gameTime);
-        free(team);
-        free(health);
-        free(armor);
-        free(hasHelmet);
-        free(isAlive);
-        free(duckingKeyPressed);
-        free(duckAmount);
-        free(isReloading);
-        free(isWalking);
-        free(isScoped);
-        free(isAirborne);
-        free(flashDuration);
-        free(activeWeapon);
-        free(primaryWeapon);
-        free(primaryBulletsClip);
-        free(primaryBulletsReserve);
-        free(secondaryWeapon);
-        free(secondaryBulletsClip);
-        free(secondaryBulletsReserve);
-        free(numHe);
-        free(numFlash);
-        free(numSmoke);
-        free(numMolotov);
-        free(numIncendiary);
-        free(numDecoy);
-        free(numZeus);
-        free(hasDefuser);
-        free(hasBomb);
-        free(money);
-        free(ping);
-    }
-
-    PlayerAtTick(const PlayerAtTick& other) = delete;
-    PlayerAtTick& operator=(const PlayerAtTick& other) = delete;
-
-    /*
-    // since spotted tracks names for spotted player, need to map that to the player index
-
-    map<string, int> getPlayerNameToIndex(int64_t gameIndex) const {
-        map<string, int> result;
-        for (int i = 0; i < NUM_PLAYERS; i++) {
-            result.insert({players[i].name[firstRowAfterWarmup[gameIndex]], i});
-        }
-        return result;
-    }
-
-    map<int, vector<int>> getEnemiesForTeam(int64_t gameIndex) const {
-        map<int, vector<int>> result;
-        result.insert({2, {}});
-        result.insert({3, {}});
-        for (int i = 0; i < NUM_PLAYERS; i++) {
-            if (players[i].team[firstRowAfterWarmup[gameIndex]] == 2) {
-                result[3].push_back(i);
-            }
-            else {
-                result[2].push_back(i);
-            }
-        }
-        return result;
-    }
-     */
 };
 
 class Spotted : public ColStore {
 public:
-    int64_t * tickId;
-    int64_t * spottedPlayer;
-    int64_t * spotterPlayer;
-    bool * isSpotted;
+    vector<int64_t> tickId;
+    vector<int64_t> spottedPlayer;
+    vector<int64_t> spotterPlayer;
+    vector<bool> isSpotted;
 
     void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) override {
         ColStore::init(rows, numFiles, gameStarts);
-        tickId = (int64_t *) malloc(rows * sizeof(int64_t));
-        spottedPlayer = (int64_t *) malloc(rows * sizeof(int64_t));
-        spotterPlayer = (int64_t *) malloc(rows * sizeof(int64_t));
-        isSpotted = (bool *) malloc(rows * sizeof(bool));
+        tickId.resize(rows);
+        spottedPlayer.resize(rows);
+        spotterPlayer.resize(rows);
+        isSpotted.resize(rows);
     }
-
-    Spotted() = default;
-    ~Spotted() {
-        if (!beenInitialized){
-            return;
-        }
-        free(tickId);
-        free(spottedPlayer);
-        free(spotterPlayer);
-        free(isSpotted);
-    }
-
-    Spotted(const Spotted& other) = delete;
-    Spotted& operator=(const Spotted& other) = delete;
 };
 
 class Footstep : public ColStore {
 public:
-    int64_t * tickId;
-    int64_t * steppingPlayer;
+    vector<int64_t> tickId;
+    vector<int64_t> steppingPlayer;
 
     void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) override {
         ColStore::init(rows, numFiles, gameStarts);
-        tickId = (int64_t *) malloc(rows * sizeof(int64_t));
-        steppingPlayer = (int64_t *) malloc(rows * sizeof(int64_t));
+        tickId.resize(rows);
+        steppingPlayer.resize(rows);
     }
-
-    Footstep() = default;
-    ~Footstep() {
-        if (!beenInitialized){
-            return;
-        }
-        free(tickId);
-        free(steppingPlayer);
-    }
-
-    Footstep(const Footstep& other) = delete;
-    Footstep& operator=(const Footstep& other) = delete;
 };
 
 class WeaponFire : public ColStore {
 public:
-    int64_t * tickId;
-    int64_t * shooter;
-    int16_t * weapon;
+    vector<int64_t> tickId;
+    vector<int64_t> shooter;
+    vector<int16_t> weapon;
 
     void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) override {
         ColStore::init(rows, numFiles, gameStarts);
-        tickId = (int64_t *) malloc(rows * sizeof(int64_t));
-        shooter = (int64_t *) malloc(rows * sizeof(int64_t));
-        weapon = (int16_t *) malloc(rows * sizeof(int16_t));
+        tickId.resize(rows);
+        shooter.resize(rows);
+        weapon.resize(rows);
     }
-
-    WeaponFire() = default;
-    ~WeaponFire() {
-        if (!beenInitialized){
-            return;
-        }
-        free(tickId);
-        free(shooter);
-        free(weapon);
-    }
-
-    WeaponFire(const WeaponFire& other) = delete;
-    WeaponFire& operator=(const WeaponFire& other) = delete;
 };
 
 class Kills : public ColStore {
 public:
-    int64_t * tickId;
-    int64_t * killer;
-    int64_t * victim;
-    int16_t * weapon;
-    int64_t * assister;
-    bool * isHeadshot;
-    bool * isWallbang;
-    int32_t * penetratedObjects;
+    vector<int64_t> tickId;
+    vector<int64_t> killer;
+    vector<int64_t> victim;
+    vector<int16_t> weapon;
+    vector<int64_t> assister;
+    vector<bool> isHeadshot;
+    vector<bool> isWallbang;
+    vector<int32_t> penetratedObjects;
 
     void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) override {
         ColStore::init(rows, numFiles, gameStarts);
-        tickId = (int64_t *) malloc(rows * sizeof(int64_t));
-        killer = (int64_t *) malloc(rows * sizeof(int64_t));
-        victim = (int64_t *) malloc(rows * sizeof(int64_t));
-        weapon = (int16_t *) malloc(rows * sizeof(int16_t));
-        assister = (int64_t *) malloc(rows * sizeof(int64_t));
-        isHeadshot = (bool *) malloc(rows * sizeof(int64_t));
-        isWallbang = (bool *) malloc(rows * sizeof(int64_t));
-        penetratedObjects = (int32_t *) malloc(rows * sizeof(int32_t));
+        tickId.resize(rows);
+        killer.resize(rows);
+        victim.resize(rows);
+        weapon.resize(rows);
+        assister.resize(rows);
+        isHeadshot.resize(rows);
+        isWallbang.resize(rows);
+        penetratedObjects.resize(rows);
     }
-
-    Kills() = default;
-    ~Kills() {
-        if (!beenInitialized){
-            return;
-        }
-        free(tickId);
-        free(killer);
-        free(victim);
-        free(weapon);
-        free(assister);
-        free(isHeadshot);
-        free(isWallbang);
-        free(penetratedObjects);
-    }
-
-    Kills(const Kills& other) = delete;
-    Kills& operator=(const Kills& other) = delete;
 };
 
 class Hurt : public ColStore {
 public:
-    int64_t * tickId;
-    int64_t * victim;
-    int64_t * attacker;
-    DemoEquipmentType * weapon;
-    int32_t * armorDamage;
-    int32_t * armor;
-    int32_t * healthDamage;
-    int32_t * health;
-    int64_t * hitGroup;
+    vector<int64_t> tickId;
+    vector<int64_t> victim;
+    vector<int64_t> attacker;
+    vector<DemoEquipmentType> weapon;
+    vector<int32_t> armorDamage;
+    vector<int32_t> armor;
+    vector<int32_t> healthDamage;
+    vector<int32_t> health;
+    vector<int64_t> hitGroup;
 
     void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) override {
         ColStore::init(rows, numFiles, gameStarts);
-        tickId = (int64_t *) malloc(rows * sizeof(int64_t));
-        victim = (int64_t *) malloc(rows * sizeof(int64_t));
-        attacker = (int64_t *) malloc(rows * sizeof(int64_t));
-        weapon = (DemoEquipmentType *) malloc(rows * sizeof(int16_t));
-        armorDamage = (int32_t *) malloc(rows * sizeof(int32_t));
-        armor = (int32_t *) malloc(rows * sizeof(int32_t));
-        healthDamage = (int32_t *) malloc(rows * sizeof(int32_t));
-        health = (int32_t *) malloc(rows * sizeof(int32_t));
-        hitGroup = (int64_t *) malloc(rows * sizeof(int64_t));
+        tickId.resize(rows);
+        victim.resize(rows);
+        attacker.resize(rows);
+        weapon.resize(rows);
+        armorDamage.resize(rows);
+        armor.resize(rows);
+        healthDamage.resize(rows);
+        health.resize(rows);
+        hitGroup.resize(rows);
     }
-
-    Hurt() = default;
-    ~Hurt() {
-        if (!beenInitialized){
-            return;
-        }
-        free(tickId);
-        free(victim);
-        free(attacker);
-        free(weapon);
-        free(armorDamage);
-        free(armor);
-        free(healthDamage);
-        free(health);
-        free(hitGroup);
-    }
-
-    Hurt(const Hurt& other) = delete;
-    Hurt& operator=(const Hurt& other) = delete;
 };
 
 class Grenades : public ColStore {
 public:
-    int64_t * thrower;
-    int16_t * grenadeType;
-    int64_t * throwTick;
-    int64_t * activeTick;
-    int64_t * expiredTick;
-    int64_t * destroyTick;
+    vector<int64_t> thrower;
+    vector<int16_t> grenadeType;
+    vector<int64_t> throwTick;
+    vector<int64_t> activeTick;
+    vector<int64_t> expiredTick;
+    vector<int64_t> destroyTick;
     RangeIndex flashedPerGrenade;
     IntervalIndex trajectoryPerGrenade;
 
     void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) override {
         ColStore::init(rows, numFiles, gameStarts);
-        thrower = (int64_t *) malloc(rows * sizeof(int64_t));
-        grenadeType = (int16_t *) malloc(rows * sizeof(int16_t));
-        throwTick = (int64_t *) malloc(rows * sizeof(int64_t));
-        activeTick = (int64_t *) malloc(rows * sizeof(int64_t));
-        expiredTick = (int64_t *) malloc(rows * sizeof(int64_t));
-        destroyTick = (int64_t *) malloc(rows * sizeof(int64_t));
-        flashedPerGrenade = (RangeIndexEntry *) malloc(rows * sizeof(RangeIndexEntry));
+        thrower.resize(rows);
+        grenadeType.resize(rows);
+        throwTick.resize(rows);
+        activeTick.resize(rows);
+        expiredTick.resize(rows);
+        destroyTick.resize(rows);
+        flashedPerGrenade.resize(rows);
     }
-
-    Grenades() = default;
-    ~Grenades() {
-        if (!beenInitialized){
-            return;
-        }
-        free(thrower);
-        free(grenadeType);
-        free(throwTick);
-        free(activeTick);
-        free(expiredTick);
-        free(destroyTick);
-        free(flashedPerGrenade);
-    }
-
-    Grenades(const Grenades& other) = delete;
-    Grenades& operator=(const Grenades& other) = delete;
 };
 
 class Flashed : public ColStore {
 public:
-    int64_t * tickId;
-    int64_t * grenadeId;
-    int64_t * thrower;
-    int64_t * victim;
+    vector<int64_t> tickId;
+    vector<int64_t> grenadeId;
+    vector<int64_t> thrower;
+    vector<int64_t> victim;
 
     void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) override {
         ColStore::init(rows, numFiles, gameStarts);
-        tickId = (int64_t *) malloc(rows * sizeof(int64_t));
-        grenadeId = (int64_t *) malloc(rows * sizeof(int64_t));
-        thrower = (int64_t *) malloc(rows * sizeof(int64_t));
-        victim = (int64_t *) malloc(rows * sizeof(int64_t));
+        tickId.resize(rows);
+        grenadeId.resize(rows);
+        thrower.resize(rows);
+        victim.resize(rows);
     }
-
-    Flashed() = default;
-    ~Flashed() {
-        if (!beenInitialized){
-            return;
-        }
-        free(tickId);
-        free(grenadeId);
-        free(thrower);
-        free(victim);
-    }
-
-    Flashed(const Flashed& other) = delete;
-    Flashed& operator=(const Flashed& other) = delete;
 };
 
 class GrenadeTrajectories : public ColStore {
 public:
-    int64_t * grenadeId;
-    int32_t * idPerGrenade;
-    double * posX;
-    double * posY;
-    double * posZ;
+    vector<int64_t> grenadeId;
+    vector<int32_t> idPerGrenade;
+    vector<double> posX;
+    vector<double> posY;
+    vector<double> posZ;
 
     void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) override {
         ColStore::init(rows, numFiles, gameStarts);
-        grenadeId = (int64_t *) malloc(rows * sizeof(int64_t));
-        idPerGrenade = (int32_t *) malloc(rows * sizeof(int32_t));
-        posX = (double *) malloc(rows * sizeof(double));
-        posY = (double *) malloc(rows * sizeof(double));
-        posZ = (double *) malloc(rows * sizeof(double));
+        grenadeId.resize(rows);
+        idPerGrenade.resize(rows);
+        posX.resize(rows);
+        posY.resize(rows);
+        posZ.resize(rows);
     }
-
-    GrenadeTrajectories() = default;
-    ~GrenadeTrajectories() {
-        if (!beenInitialized){
-            return;
-        }
-        free(grenadeId);
-        free(idPerGrenade);
-        free(posX);
-        free(posY);
-        free(posZ);
-    }
-
-    GrenadeTrajectories(const GrenadeTrajectories& other) = delete;
-    GrenadeTrajectories& operator=(const GrenadeTrajectories& other) = delete;
 };
 
 class Plants : public ColStore {
 public:
-    int64_t * startTick;
-    int64_t * endTick;
-    int64_t * planter;
-    bool * succesful;
+    vector<int64_t> startTick;
+    vector<int64_t> endTick;
+    vector<int64_t> planter;
+    vector<bool> succesful;
     RangeIndex defusalsPerPlant;
     RangeIndex explosionsPerPlant;
 
     void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) override {
         ColStore::init(rows, numFiles, gameStarts);
-        startTick = (int64_t *) malloc(rows * sizeof(int64_t));
-        endTick = (int64_t *) malloc(rows * sizeof(int64_t));
-        planter = (int64_t *) malloc(rows * sizeof(int64_t));
-        succesful = (bool *) malloc(rows * sizeof(bool));
-        defusalsPerPlant = (RangeIndexEntry *) malloc(rows * sizeof(RangeIndexEntry));
-        explosionsPerPlant = (RangeIndexEntry *) malloc(rows * sizeof(RangeIndexEntry));
+        startTick.resize(rows);
+        endTick.resize(rows);
+        planter.resize(rows);
+        succesful.resize(rows);
+        defusalsPerPlant.resize(rows);
+        explosionsPerPlant.resize(rows);
     }
-
-    Plants() = default;
-    ~Plants() {
-        if (!beenInitialized){
-            return;
-        }
-        free(startTick);
-        free(endTick);
-        free(planter);
-        free(succesful);
-        free(defusalsPerPlant);
-        free(explosionsPerPlant);
-    }
-
-    Plants(const Plants& other) = delete;
-    Plants& operator=(const Plants& other) = delete;
 };
 
 class Defusals : public ColStore {
 public:
-    int64_t * plantId;
-    int64_t * startTick;
-    int64_t * endTick;
-    int64_t * defuser;
-    bool * succesful;
+    vector<int64_t> plantId;
+    vector<int64_t> startTick;
+    vector<int64_t> endTick;
+    vector<int64_t> defuser;
+    vector<bool> succesful;
 
     void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) override {
         ColStore::init(rows, numFiles, gameStarts);
-        plantId = (int64_t *) malloc(rows * sizeof(int64_t));
-        startTick = (int64_t *) malloc(rows * sizeof(int64_t));
-        endTick = (int64_t *) malloc(rows * sizeof(int64_t));
-        defuser = (int64_t *) malloc(rows * sizeof(int64_t));
-        succesful = (bool *) malloc(rows * sizeof(bool));
+        plantId.resize(rows);
+        startTick.resize(rows);
+        endTick.resize(rows);
+        defuser.resize(rows);
+        succesful.resize(rows);
     }
-
-    Defusals() = default;
-    ~Defusals() {
-        if (!beenInitialized){
-            return;
-        }
-        free(plantId);
-        free(startTick);
-        free(endTick);
-        free(defuser);
-        free(succesful);
-    }
-
-    Defusals(const Defusals& other) = delete;
-    Defusals& operator=(const Defusals& other) = delete;
 };
 
 class Explosions : public ColStore {
 public:
-    int64_t * plantId;
-    int64_t * tickId;
+    vector<int64_t> plantId;
+    vector<int64_t> tickId;
 
     void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) override {
         ColStore::init(rows, numFiles, gameStarts);
-        plantId = (int64_t *) malloc(rows * sizeof(int64_t));
-        tickId = (int64_t *) malloc(rows * sizeof(int64_t));
+        plantId.resize(rows);
+        tickId.resize(rows);
     }
-
-    Explosions() = default;
-    ~Explosions() {
-        if (!beenInitialized){
-            return;
-        }
-        free(plantId);
-        free(tickId);
-    }
-
-    Explosions(const Explosions& other) = delete;
-    Explosions& operator=(const Explosions& other) = delete;
 };
 
 class Say : public ColStore {
 public:
-    int64_t * gameId;
-    int64_t * tickId;
-    char ** message;
+    vector<int64_t> gameId;
+    vector<int64_t> tickId;
+    vector<string> message;
 
     void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) override {
         ColStore::init(rows, numFiles, gameStarts);
-        gameId = (int64_t *) malloc(rows * sizeof(int64_t));
-        tickId = (int64_t *) malloc(rows * sizeof(int64_t));
-        message = (char **) malloc(rows * sizeof(char*));
+        gameId.resize(rows);
+        tickId.resize(rows);
+        message.resize(rows);
     }
-
-    Say() = default;
-    ~Say() {
-        if (!beenInitialized){
-            return;
-        }
-        for (int64_t row = 0; row < size; row++) {
-            free(message[row]);
-        }
-        free(message);
-
-        free(gameId);
-        free(tickId);
-    }
-
-    Say(const Say& other) = delete;
-    Say& operator=(const Say& other) = delete;
 };
 
 void loadData(Equipment & equipment, GameTypes & gameTypes, HitGroups & hitGroups, Games & games, Players & players,

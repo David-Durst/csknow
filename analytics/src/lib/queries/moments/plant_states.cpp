@@ -163,7 +163,7 @@ namespace csknow::plant_states {
                                    tPlayerStates[i].viewAngle.push_back(tmpTPlayerStates[minThreadId][i].viewAngle[tmpRowId]);
                                }
                            });
-        vector<const int64_t *> foreignKeyCols{plantTickId.data(), roundEndTickId.data()};
+        vector<std::reference_wrapper<const vector<int64_t>>> foreignKeyCols{plantTickId, roundEndTickId};
         plantStatesPerTick = buildIntervalIndex(foreignKeyCols, size);
 
         /*

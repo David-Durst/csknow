@@ -94,7 +94,7 @@ namespace csknow::player_flashed {
                                victimId.push_back(tmpVictimId[minThreadId][tmpRowId]);
                                flashAmount.push_back(tmpFlashAmount[minThreadId][tmpRowId]);
                            });
-        vector<const int64_t *> foreignKeyCols{tickId.data()};
+        vector<std::reference_wrapper<const vector<int64_t>>> foreignKeyCols{tickId};
         playerFlashedPerTick = buildIntervalIndex(foreignKeyCols, size);
     }
 }

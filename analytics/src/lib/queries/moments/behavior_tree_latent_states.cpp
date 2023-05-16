@@ -291,7 +291,7 @@ namespace csknow::behavior_tree_latent_states {
                                latentStateType.push_back(tmpLatentStateType[minThreadId][tmpRowId]);
                                statePayload.push_back(tmpStatePayload[minThreadId][tmpRowId]);
                            });
-        vector<const int64_t *> foreignKeyCols{startTickId.data(), endTickId.data()};
+        vector<std::reference_wrapper<const vector<int64_t>>> foreignKeyCols{startTickId, endTickId};
         eventsPerTick = buildIntervalIndex(foreignKeyCols, size);
     }
 

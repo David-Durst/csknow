@@ -4,7 +4,6 @@
 #include "bots/load_save_bot_data.h"
 #include <thread>
 #include "queries/query.h"
-#include "load_cover.h"
 #include "load_data.h"
 #include "file_helpers.h"
 #include "bots/input_bits.h"
@@ -94,7 +93,7 @@ void ServerState::loadClientStates(const string& clientStatesFilePath) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].armor);
         }
         else if (colNumber == 7) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].hasHelmet);
+            clients[arrayEntry].hasHelmet = readCol(file, curStart, curDelimiter, rowNumber, colNumber);
         }
         else if (colNumber == 8) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].currentWeaponId);
@@ -112,7 +111,7 @@ void ServerState::loadClientStates(const string& clientStatesFilePath) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].recoilIndex);
         }
         else if (colNumber == 13) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].reloadVisuallyComplete);
+            clients[arrayEntry].reloadVisuallyComplete = readCol(file, curStart, curDelimiter, rowNumber, colNumber);
         }
         else if (colNumber == 14) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].rifleId);
@@ -154,7 +153,7 @@ void ServerState::loadClientStates(const string& clientStatesFilePath) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].zeus);
         }
         else if (colNumber == 27) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].hasC4);
+            clients[arrayEntry].hasC4 = readCol(file, curStart, curDelimiter, rowNumber, colNumber);
         }
         else if (colNumber == 28) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].lastEyePosX);
@@ -203,34 +202,34 @@ void ServerState::loadClientStates(const string& clientStatesFilePath) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].lastEyeWithRecoilAngleX);
         }
         else if (colNumber == 43) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].isAlive);
+            clients[arrayEntry].isAlive = readCol(file, curStart, curDelimiter, rowNumber, colNumber);
         }
         else if (colNumber == 44) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].isBot);
+            clients[arrayEntry].isBot = readCol(file, curStart, curDelimiter, rowNumber, colNumber);
         }
         else if (colNumber == 45) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].isAirborne);
+            clients[arrayEntry].isAirborne = readCol(file, curStart, curDelimiter, rowNumber, colNumber);
         }
         else if (colNumber == 46) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].isScoped);
+            clients[arrayEntry].isScoped = readCol(file, curStart, curDelimiter, rowNumber, colNumber);
         }
         else if (colNumber == 47) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].duckAmount);
         }
         else if (colNumber == 48) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].duckKeyPressed);
+            clients[arrayEntry].duckKeyPressed = readCol(file, curStart, curDelimiter, rowNumber, colNumber);
         }
         else if (colNumber == 49) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].isReloading);
+            clients[arrayEntry].isReloading = readCol(file, curStart, curDelimiter, rowNumber, colNumber);
         }
         else if (colNumber == 50) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].isWalking);
+            clients[arrayEntry].isWalking = readCol(file, curStart, curDelimiter, rowNumber, colNumber);
         }
         else if (colNumber == 51) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].flashDuration);
         }
         else if (colNumber == 52) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].hasDefuser);
+            clients[arrayEntry].hasDefuser = readCol(file, curStart, curDelimiter, rowNumber, colNumber);
         }
         else if (colNumber == 53) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].money);
@@ -242,7 +241,7 @@ void ServerState::loadClientStates(const string& clientStatesFilePath) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].gameTime);
         }
         else if (colNumber == 56) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, clients[arrayEntry].inputSet);
+            clients[arrayEntry].inputSet = readCol(file, curStart, curDelimiter, rowNumber, colNumber);
             rowNumber++;
             arrayEntry++;
         }
@@ -298,13 +297,13 @@ void ServerState::loadC4State(const string& visibilityFilePath) {
          curStart = curDelimiter + 1, curDelimiter = getNextDelimiter(file, curStart, stats.st_size)) {
         if (colNumber == 0) {
             c4Exists = true;
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, c4IsPlanted);
+            c4IsPlanted = readCol(file, curStart, curDelimiter, rowNumber, colNumber);
         }
         else if (colNumber == 1) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, c4IsDropped);
+            c4IsDropped = readCol(file, curStart, curDelimiter, rowNumber, colNumber);
         }
         else if (colNumber == 2) {
-            readCol(file, curStart, curDelimiter, rowNumber, colNumber, c4IsDefused);
+            c4IsDefused = readCol(file, curStart, curDelimiter, rowNumber, colNumber);
         }
         else if (colNumber == 3) {
             readCol(file, curStart, curDelimiter, rowNumber, colNumber, c4X);

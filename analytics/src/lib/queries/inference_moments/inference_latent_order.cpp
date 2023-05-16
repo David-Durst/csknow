@@ -163,7 +163,7 @@ namespace csknow::inference_latent_order {
                                playerId.push_back(tmpPlayerId[minThreadId][tmpRowId]);
                                role.push_back(tmpRole[minThreadId][tmpRowId]);
                            });
-        vector<const int64_t *> foreignKeyCols{startTickId.data(), endTickId.data()};
+        vector<std::reference_wrapper<const vector<int64_t>>> foreignKeyCols{startTickId, endTickId};
         ordersPerTick = buildIntervalIndex(foreignKeyCols, size);
         std::cout << "orders time per inference " << inferenceSeconds / numInferences << std::endl;
     }

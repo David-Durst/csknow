@@ -118,7 +118,7 @@ NonEngagementTrajectoryResult queryNonEngagementTrajectory(const Rounds & rounds
                            result.tickLength.push_back(tmpLength[minThreadId][tmpRowId]);
                            result.playerId.push_back(tmpPlayerId[minThreadId][tmpRowId]);
                        });
-    vector<const int64_t *> foreignKeyCols{result.startTickId.data(), result.endTickId.data()};
+    vector<std::reference_wrapper<const vector<int64_t>>> foreignKeyCols{result.startTickId, result.endTickId};
     result.trajectoriesPerTick = buildIntervalIndex(foreignKeyCols, result.size);
     return result;
 }

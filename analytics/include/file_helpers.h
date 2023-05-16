@@ -127,11 +127,11 @@ void readCol(const char * file, size_t start, size_t end, string & value) {
 }
 
 static inline __attribute__((always_inline))
-void readCol(const char * file, size_t start, size_t end, int64_t rowNumber, int64_t colNumber, bool & value) {
+bool readCol(const char * file, size_t start, size_t end, int64_t rowNumber, int64_t colNumber) {
     int tmpVal;
     auto messages = std::from_chars(&file[start], &file[end], tmpVal);
-    value = tmpVal != 0;
     printParsingError(messages.ec, rowNumber, colNumber);
+    return tmpVal != 0;
 }
 
 std::vector<std::string> parseString(const std::string & input, char delimiter);
