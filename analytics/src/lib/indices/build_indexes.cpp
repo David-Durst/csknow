@@ -9,7 +9,7 @@ using std::endl;
 // dense as have a relationship for every row in primary column (like PAT showing playing position for ever tick)
 // since dense, wnat to iterate over times (as will have event for every time)
 void buildRangeIndex(const vector<int64_t> &primaryKeyCol, int64_t primarySize, const vector<int64_t> &foreignKeyCol,
-                          int64_t foreignSize, RangeIndex rangeIndexCol,
+                          int64_t foreignSize, RangeIndex & rangeIndexCol,
                           const string & primaryName, const string & foreignName) {
     for (int64_t primaryIndex = 0, foreignIndex = 0; primaryIndex < primarySize; primaryIndex++) {
         if (foreignIndex >= foreignSize || foreignKeyCol[foreignIndex] > primaryKeyCol[primaryIndex]) {

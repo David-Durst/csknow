@@ -8,7 +8,7 @@
 #include "load_data.h"
 
 void buildRangeIndex(const vector<int64_t> &primaryKeyCol, int64_t primarySize, const vector<int64_t> &foreignKeyCol,
-                     int64_t foreignSize, RangeIndex rangeIndexCol, string primaryName, string foreignName);
+                     int64_t foreignSize, RangeIndex & rangeIndexCol, string primaryName, string foreignName);
 
 IntervalIndex buildIntervalIndex(const vector<std::reference_wrapper<const vector<int64_t>>> &foreignKeyCols, int64_t foreignSize);
 
