@@ -4,7 +4,7 @@ from typing import TypeVar, Optional
 from learn_bot.latent.engagement.column_names import *
 from learn_bot.latent.order.column_names import *
 
-float_c4_cols = [c4_distance_to_a_site_col, c4_distance_to_b_site_col] + c4_pos_cols + c4_ticks_since_plant
+float_c4_cols = [] #[c4_distance_to_a_site_col, c4_distance_to_b_site_col] + c4_pos_cols + c4_ticks_since_plant
 
 
 def get_player_distribution_nearest_place(player_index: int, place_index: int, team_str: str) -> str:

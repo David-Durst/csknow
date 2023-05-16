@@ -12,12 +12,14 @@ namespace csknow::inference_delta_pos {
         const csknow::feature_store::TeamFeatureStoreResult & teamFeatureStoreResult =
                 featureStoreResult.teamFeatureStoreResult;
         // c4 float data
+        /*
         result.rowCPP.push_back(static_cast<float>(teamFeatureStoreResult.c4DistanceToASite[rowIndex]));
         result.rowCPP.push_back(static_cast<float>(teamFeatureStoreResult.c4DistanceToBSite[rowIndex]));
         result.rowCPP.push_back(static_cast<float>(teamFeatureStoreResult.c4Pos[rowIndex].x));
         result.rowCPP.push_back(static_cast<float>(teamFeatureStoreResult.c4Pos[rowIndex].y));
         result.rowCPP.push_back(static_cast<float>(teamFeatureStoreResult.c4Pos[rowIndex].z));
         result.rowCPP.push_back(static_cast<float>(teamFeatureStoreResult.c4TicksSincePlant[rowIndex]));
+         */
         // player data
         bool ctColumnData = true;
         for (const auto & columnData :
@@ -53,6 +55,7 @@ namespace csknow::inference_delta_pos {
         // cat data
         result.rowCPP.push_back(static_cast<float>(teamFeatureStoreResult.c4Status[rowIndex]));
         // distribution cat data
+        ctColumnData = true;
         for (const auto & columnData :
             featureStoreResult.teamFeatureStoreResult.getAllColumnData()) {
             for (size_t playerNum = 0; playerNum < csknow::feature_store::maxEnemies; playerNum++) {
