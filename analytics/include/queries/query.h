@@ -90,7 +90,6 @@ public:
     int64_t blobTotalBytes = INVALID_ID;
     string extension = ".query";
     vector<int> keyPlayerColumns = {};
-    string hdf5Prefix = "/data/";
     static HighFive::DataSetCreateProps defaultHDF5CreateProps;
 //    vector<int> keysForDiff;
 

@@ -9,6 +9,7 @@
 #include <list>
 #include "IntervalTree.h"
 #include "queries/parser_constants.h"
+#include <highfive/H5File.hpp>
 using std::string;
 using std::vector;
 using std::set;
@@ -43,19 +44,26 @@ struct IntervalIndex {
     unordered_map<int64_t, RangeIndexEntry> eventToInterval;
 };
 
+const string hdf5Prefix = "/data/";
+
 class ColStore {
 public:
-    bool beenInitialized = false;
     int64_t size = INVALID_ID;
     vector<string> fileNames;
     vector<int64_t> gameStarts;
     vector<int64_t> id;
     virtual void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) {
-        beenInitialized = true;
         size = rows;
         fileNames.resize(numFiles);
         this->gameStarts = std::move(gameStarts);
         this->id.resize(rows);
+    }
+    virtual void toHDF5Inner(HighFive::File &) {
+        throw std::runtime_error("HDFS saving not implemented for this query yet");
+    }
+    void toHDF5(const string & filePath);
+    virtual void fromHDF5Inner(HighFive::File &) {
+        throw std::runtime_error("HDFS loading not implemented for this query yet");
     }
 };
 
@@ -68,6 +76,8 @@ public:
         ColStore::init(rows, numFiles, gameStarts);
         name.resize(rows);
     }
+    void toHDF5Inner(HighFive::File & file) override;
+    void fromHDF5Inner(HighFive::File & file) override;
 };
 
 class GameTypes : public ColStore {
@@ -78,6 +88,8 @@ public:
         ColStore::init(rows, numFiles, gameStarts);
         tableType.resize(rows);
     }
+    void toHDF5Inner(HighFive::File & file) override;
+    void fromHDF5Inner(HighFive::File & file) override;
 };
 
 class HitGroups : public ColStore {
@@ -88,6 +100,8 @@ public:
         ColStore::init(rows, numFiles, gameStarts);
         groupName.resize(rows);
     }
+    void toHDF5Inner(HighFive::File & file) override;
+    void fromHDF5Inner(HighFive::File & file) override;
 };
 
 class Games : public ColStore {
@@ -110,6 +124,8 @@ public:
         roundsPerGame.resize(rows);
         playersPerGame.resize(rows);
     }
+    void toHDF5Inner(HighFive::File & file) override;
+    void fromHDF5Inner(HighFive::File & file) override;
 };
 
 class Players : public ColStore {
@@ -126,6 +142,8 @@ public:
         name.resize(rows);
         steamId.resize(rows);
     }
+    void toHDF5Inner(HighFive::File & file) override;
+    void fromHDF5Inner(HighFive::File & file) override;
 };
 
 class Rounds : public ColStore {
@@ -164,6 +182,8 @@ public:
         ctWins.resize(rows);
         ticksPerRound.resize(rows);
     }
+    void toHDF5Inner(HighFive::File & file) override;
+    void fromHDF5Inner(HighFive::File & file) override;
 };
 
 class Ticks: public ColStore {
@@ -211,6 +231,8 @@ public:
         spottedPerTick.resize(rows);
         footstepPerTick.resize(rows);
     }
+    void toHDF5Inner(HighFive::File & file) override;
+    void fromHDF5Inner(HighFive::File & file) override;
 };
 
 class PlayerAtTick: public ColStore {
@@ -317,6 +339,8 @@ public:
         money.resize(rows);
         ping.resize(rows);
     }
+    void toHDF5Inner(HighFive::File & file) override;
+    void fromHDF5Inner(HighFive::File & file) override;
 
     void makePitchNeg90To90() {
 #pragma omp parallel for
@@ -342,6 +366,8 @@ public:
         spotterPlayer.resize(rows);
         isSpotted.resize(rows);
     }
+    void toHDF5Inner(HighFive::File & file) override;
+    void fromHDF5Inner(HighFive::File & file) override;
 };
 
 class Footstep : public ColStore {
@@ -354,6 +380,8 @@ public:
         tickId.resize(rows);
         steppingPlayer.resize(rows);
     }
+    void toHDF5Inner(HighFive::File & file) override;
+    void fromHDF5Inner(HighFive::File & file) override;
 };
 
 class WeaponFire : public ColStore {
@@ -368,6 +396,8 @@ public:
         shooter.resize(rows);
         weapon.resize(rows);
     }
+    void toHDF5Inner(HighFive::File & file) override;
+    void fromHDF5Inner(HighFive::File & file) override;
 };
 
 class Kills : public ColStore {
@@ -392,6 +422,8 @@ public:
         isWallbang.resize(rows);
         penetratedObjects.resize(rows);
     }
+    void toHDF5Inner(HighFive::File & file) override;
+    void fromHDF5Inner(HighFive::File & file) override;
 };
 
 class Hurt : public ColStore {
@@ -418,6 +450,8 @@ public:
         health.resize(rows);
         hitGroup.resize(rows);
     }
+    void toHDF5Inner(HighFive::File & file) override;
+    void fromHDF5Inner(HighFive::File & file) override;
 };
 
 class Grenades : public ColStore {
@@ -441,6 +475,8 @@ public:
         destroyTick.resize(rows);
         flashedPerGrenade.resize(rows);
     }
+    void toHDF5Inner(HighFive::File & file) override;
+    void fromHDF5Inner(HighFive::File & file) override;
 };
 
 class Flashed : public ColStore {
@@ -457,6 +493,8 @@ public:
         thrower.resize(rows);
         victim.resize(rows);
     }
+    void toHDF5Inner(HighFive::File & file) override;
+    void fromHDF5Inner(HighFive::File & file) override;
 };
 
 class GrenadeTrajectories : public ColStore {
@@ -475,6 +513,8 @@ public:
         posY.resize(rows);
         posZ.resize(rows);
     }
+    void toHDF5Inner(HighFive::File & file) override;
+    void fromHDF5Inner(HighFive::File & file) override;
 };
 
 class Plants : public ColStore {
@@ -495,6 +535,8 @@ public:
         defusalsPerPlant.resize(rows);
         explosionsPerPlant.resize(rows);
     }
+    void toHDF5Inner(HighFive::File & file) override;
+    void fromHDF5Inner(HighFive::File & file) override;
 };
 
 class Defusals : public ColStore {
@@ -513,6 +555,8 @@ public:
         defuser.resize(rows);
         succesful.resize(rows);
     }
+    void toHDF5Inner(HighFive::File & file) override;
+    void fromHDF5Inner(HighFive::File & file) override;
 };
 
 class Explosions : public ColStore {
@@ -525,6 +569,8 @@ public:
         plantId.resize(rows);
         tickId.resize(rows);
     }
+    void toHDF5Inner(HighFive::File & file) override;
+    void fromHDF5Inner(HighFive::File & file) override;
 };
 
 class Say : public ColStore {
@@ -539,6 +585,8 @@ public:
         tickId.resize(rows);
         message.resize(rows);
     }
+    void toHDF5Inner(HighFive::File & file) override;
+    void fromHDF5Inner(HighFive::File & file) override;
 };
 
 void loadData(Equipment & equipment, GameTypes & gameTypes, HitGroups & hitGroups, Games & games, Players & players,

@@ -73,7 +73,6 @@ public:
     }
 
     void toHDF5Inner(HighFive::File & file) override {
-
         HighFive::DataSetCreateProps hdf5FlatCreateProps;
         hdf5FlatCreateProps.add(HighFive::Deflate(6));
         hdf5FlatCreateProps.add(HighFive::Chunking(rounds.id.size()));

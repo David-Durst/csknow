@@ -10,7 +10,6 @@ using std::to_string;
 using std::string;
 using std::string_view;
 
-
 void loadEquipmentFile(Equipment & equipment, const string & filePath) {
     // mmap the file
     auto [fd, stats, file] = openMMapFile(filePath);
