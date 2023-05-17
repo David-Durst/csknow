@@ -27,11 +27,9 @@ void Equipment::toHDF5Inner(HighFive::File & file) {
 }
 
 void Equipment::fromHDF5Inner(HighFive::File & file) {
-    auto idDataset = file.getDataSet("/data/id");
-    id = idDataset.read<std::vector<int64_t>>();
-
-    auto nameDataset = file.getDataSet("/data/name");
-    name = nameDataset.read<std::vector<string>>();
+    id = file.getDataSet("/data/id").read<std::vector<int64_t>>();
+    name = file.getDataSet("/data/name").read<std::vector<string>>();
+    size = static_cast<int64_t>(id.size());
 }
 
 void GameTypes::toHDF5Inner(HighFive::File & file) {
@@ -43,11 +41,9 @@ void GameTypes::toHDF5Inner(HighFive::File & file) {
 }
 
 void GameTypes::fromHDF5Inner(HighFive::File & file) {
-    auto idDataset = file.getDataSet("/data/id");
-    id = idDataset.read<std::vector<int64_t>>();
-
-    auto tableTypeDataset = file.getDataSet("/data/table type");
-    tableType = tableTypeDataset.read<std::vector<string>>();
+    id = file.getDataSet("/data/id").read<std::vector<int64_t>>();
+    tableType = file.getDataSet("/data/table type").read<std::vector<string>>();
+    size = static_cast<int64_t>(id.size());
 }
 
 void HitGroups::toHDF5Inner(HighFive::File & file) {
@@ -59,11 +55,9 @@ void HitGroups::toHDF5Inner(HighFive::File & file) {
 }
 
 void HitGroups::fromHDF5Inner(HighFive::File & file) {
-    auto idDataset = file.getDataSet("/data/id");
-    id = idDataset.read<std::vector<int64_t>>();
-
-    auto groupNameDataset = file.getDataSet("/data/group name");
-    groupName = groupNameDataset.read<std::vector<string>>();
+    id = file.getDataSet("/data/id").read<std::vector<int64_t>>();
+    groupName = file.getDataSet("/data/group name").read<std::vector<string>>();
+    size = static_cast<int64_t>(id.size());
 }
 
 void Games::toHDF5Inner(HighFive::File & file) {
@@ -79,23 +73,13 @@ void Games::toHDF5Inner(HighFive::File & file) {
 }
 
 void Games::fromHDF5Inner(HighFive::File & file) {
-    auto idDataset = file.getDataSet("/data/id");
-    id = idDataset.read<std::vector<int64_t>>();
-
-    auto demoFileDataset = file.getDataSet("/data/demo file");
-    demoFile = demoFileDataset.read<std::vector<string>>();
-
-    auto demoTickRateDataset = file.getDataSet("/data/demo tick rate");
-    demoTickRate = demoTickRateDataset.read<std::vector<double>>();
-
-    auto gameTickRateDataset = file.getDataSet("/data/game tick rate");
-    gameTickRate = gameTickRateDataset.read<std::vector<double>>();
-
-    auto mapNameDataset = file.getDataSet("/data/map name");
-    mapName = mapNameDataset.read<std::vector<string>>();
-
-    auto gameTypeDataset = file.getDataSet("/data/game type");
-    gameType = gameTypeDataset.read<std::vector<int64_t>>();
+    id = file.getDataSet("/data/id").read<std::vector<int64_t>>();
+    demoFile = file.getDataSet("/data/demo file").read<std::vector<string>>();
+    demoTickRate = file.getDataSet("/data/demo tick rate").read<std::vector<double>>();
+    gameTickRate = file.getDataSet("/data/game tick rate").read<std::vector<double>>();
+    mapName = file.getDataSet("/data/map name").read<std::vector<string>>();
+    gameType = file.getDataSet("/data/game type").read<std::vector<int64_t>>();
+    size = static_cast<int64_t>(id.size());
 }
 
 void Players::toHDF5Inner(HighFive::File & file) {
@@ -109,17 +93,11 @@ void Players::toHDF5Inner(HighFive::File & file) {
 }
 
 void Players::fromHDF5Inner(HighFive::File & file) {
-    auto idDataset = file.getDataSet("/data/id");
-    id = idDataset.read<std::vector<int64_t>>();
-
-    auto gameIdDataset = file.getDataSet("/data/game id");
-    gameId = gameIdDataset.read<std::vector<int64_t>>();
-
-    auto nameDataset = file.getDataSet("/data/name");
-    name = nameDataset.read<std::vector<string>>();
-
-    auto steamIdDataset = file.getDataSet("/data/steam id");
-    steamId = steamIdDataset.read<std::vector<int64_t>>();
+    id = file.getDataSet("/data/id").read<std::vector<int64_t>>();
+    gameId = file.getDataSet("/data/game id").read<std::vector<int64_t>>();
+    name = file.getDataSet("/data/name").read<std::vector<string>>();
+    steamId = file.getDataSet("/data/steam id").read<std::vector<int64_t>>();
+    size = static_cast<int64_t>(id.size());
 }
 
 void Rounds::toHDF5Inner(HighFive::File & file) {
@@ -142,44 +120,20 @@ void Rounds::toHDF5Inner(HighFive::File & file) {
 }
 
 void Rounds::fromHDF5Inner(HighFive::File & file) {
-    auto idDataset = file.getDataSet("/data/id");
-    id = idDataset.read<std::vector<int64_t>>();
-
-    auto gameIdDataset = file.getDataSet("/data/game id");
-    gameId = gameIdDataset.read<std::vector<int64_t>>();
-
-    auto startTickDataset = file.getDataSet("/data/start tick");
-    startTick = startTickDataset.read<std::vector<int64_t>>();
-
-    auto endTickDataset = file.getDataSet("/data/end tick");
-    endTick = endTickDataset.read<std::vector<int64_t>>();
-
-    auto endOfficialTickDataset = file.getDataSet("/data/end official tick");
-    endOfficialTick = endOfficialTickDataset.read<std::vector<int64_t>>();
-
-    auto warmupDataset = file.getDataSet("/data/warmup");
-    warmup = warmupDataset.read<std::vector<bool>>();
-
-    auto overtimeDataset = file.getDataSet("/data/overtime");
-    overtime = overtimeDataset.read<std::vector<bool>>();
-
-    auto freezeTimeEndDataset = file.getDataSet("/data/freeze time end");
-    freezeTimeEnd = freezeTimeEndDataset.read<std::vector<int64_t>>();
-
-    auto roundNumberDataset = file.getDataSet("/data/round number");
-    roundNumber = roundNumberDataset.read<std::vector<int16_t>>();
-
-    auto roundEndReasonDataset = file.getDataSet("/data/round end reason");
-    roundEndReason = roundEndReasonDataset.read<std::vector<int16_t>>();
-
-    auto winnerDataset = file.getDataSet("/data/winner");
-    winner = winnerDataset.read<std::vector<int16_t>>();
-
-    auto tWinsDataset = file.getDataSet("/data/t wins");
-    tWins = tWinsDataset.read<std::vector<int16_t>>();
-
-    auto ctWinsDataset = file.getDataSet("/data/ct wins");
-    ctWins = ctWinsDataset.read<std::vector<int16_t>>();
+    id = file.getDataSet("/data/id").read<std::vector<int64_t>>();
+    gameId = file.getDataSet("/data/game id").read<std::vector<int64_t>>();
+    startTick = file.getDataSet("/data/start tick").read<std::vector<int64_t>>();
+    endTick = file.getDataSet("/data/end tick").read<std::vector<int64_t>>();
+    endOfficialTick = file.getDataSet("/data/end official tick").read<std::vector<int64_t>>();
+    warmup = file.getDataSet("/data/warmup").read<std::vector<bool>>();
+    overtime = file.getDataSet("/data/overtime").read<std::vector<bool>>();
+    freezeTimeEnd = file.getDataSet("/data/freeze time end").read<std::vector<int64_t>>();
+    roundNumber = file.getDataSet("/data/round number").read<std::vector<int16_t>>();
+    roundEndReason = file.getDataSet("/data/round end reason").read<std::vector<int16_t>>();
+    winner = file.getDataSet("/data/winner").read<std::vector<int16_t>>();
+    tWins = file.getDataSet("/data/t wins").read<std::vector<int16_t>>();
+    ctWins = file.getDataSet("/data/ct wins").read<std::vector<int16_t>>();
+    size = static_cast<int64_t>(id.size());
 }
 
 void Ticks::toHDF5Inner(HighFive::File & file) {
@@ -198,32 +152,16 @@ void Ticks::toHDF5Inner(HighFive::File & file) {
 }
 
 void Ticks::fromHDF5Inner(HighFive::File & file) {
-    auto idDataset = file.getDataSet("/data/id");
-    id = idDataset.read<std::vector<int64_t>>();
-
-    auto roundIdDataset = file.getDataSet("/data/round id");
-    roundId = roundIdDataset.read<std::vector<int64_t>>();
-
-    auto gameTimeDataset = file.getDataSet("/data/game time");
-    gameTime = gameTimeDataset.read<std::vector<int64_t>>();
-
-    auto demoTickNumberDataset = file.getDataSet("/data/demo tick number");
-    demoTickNumber = demoTickNumberDataset.read<std::vector<int64_t>>();
-
-    auto gameTickNumberDataset = file.getDataSet("/data/game tick number");
-    gameTickNumber = gameTickNumberDataset.read<std::vector<int64_t>>();
-
-    auto bombCarrierDataset = file.getDataSet("/data/bomb carrier");
-    bombCarrier = bombCarrierDataset.read<std::vector<int64_t>>();
-
-    auto bombXDataset = file.getDataSet("/data/bomb x");
-    bombX = bombXDataset.read<std::vector<double>>();
-
-    auto bombYDataset = file.getDataSet("/data/bomb y");
-    bombY = bombYDataset.read<std::vector<double>>();
-
-    auto bombZDataset = file.getDataSet("/data/bomb z");
-    bombZ = bombZDataset.read<std::vector<double>>();
+    id = file.getDataSet("/data/id").read<std::vector<int64_t>>();
+    roundId = file.getDataSet("/data/round id").read<std::vector<int64_t>>();
+    gameTime = file.getDataSet("/data/game time").read<std::vector<int64_t>>();
+    demoTickNumber = file.getDataSet("/data/demo tick number").read<std::vector<int64_t>>();
+    gameTickNumber = file.getDataSet("/data/game tick number").read<std::vector<int64_t>>();
+    bombCarrier = file.getDataSet("/data/bomb carrier").read<std::vector<int64_t>>();
+    bombX = file.getDataSet("/data/bomb x").read<std::vector<double>>();
+    bombY = file.getDataSet("/data/bomb y").read<std::vector<double>>();
+    bombZ = file.getDataSet("/data/bomb z").read<std::vector<double>>();
+    size = static_cast<int64_t>(id.size());
 }
 
 void PlayerAtTick::toHDF5Inner(HighFive::File & file) {
@@ -282,84 +220,132 @@ void PlayerAtTick::toHDF5Inner(HighFive::File & file) {
 }
 
 void PlayerAtTick::fromHDF5Inner(HighFive::File & file) {
-    auto idDataset = file.getDataSet("/data/id");
-    id = idDataset.read<std::vector<int64_t>>();
+    id = file.getDataSet("/data/id").read<std::vector<int64_t>>();
+    playerId = file.getDataSet("/data/player id").read<std::vector<int64_t>>();
+    tickId = file.getDataSet("/data/tick id").read<std::vector<int64_t>>();
+    posX = file.getDataSet("/data/pos x").read<std::vector<double>>();
+    posY = file.getDataSet("/data/pos y").read<std::vector<double>>();
+    posZ = file.getDataSet("/data/pos z").read<std::vector<double>>();
+    eyePosZ = file.getDataSet("/data/eye pos z").read<std::vector<double>>();
+    velX = file.getDataSet("/data/vel x").read<std::vector<double>>();
+    velY = file.getDataSet("/data/vel y").read<std::vector<double>>();
+    velZ = file.getDataSet("/data/vel z").read<std::vector<double>>();
+    viewX = file.getDataSet("/data/view x").read<std::vector<double>>();
+    viewY = file.getDataSet("/data/view y").read<std::vector<double>>();
+    aimPunchX = file.getDataSet("/data/aim punch x").read<std::vector<double>>();
+    aimPunchY = file.getDataSet("/data/aim punch y").read<std::vector<double>>();
+    viewPunchX = file.getDataSet("/data/view punch x").read<std::vector<double>>();
+    viewPunchY = file.getDataSet("/data/view punch y").read<std::vector<double>>();
+    recoilIndex = file.getDataSet("/data/recoil index").read<std::vector<double>>();
+    nextPrimaryAttack = file.getDataSet("/data/next primary attack").read<std::vector<double>>();
+    nextSecondaryAttack = file.getDataSet("/data/next secondary attack").read<std::vector<double>>();
+    gameTime = file.getDataSet("/data/game time").read<std::vector<double>>();
+    team = file.getDataSet("/data/team").read<std::vector<int16_t>>();
+    health = file.getDataSet("/data/health").read<std::vector<double>>();
+    armor = file.getDataSet("/data/armor").read<std::vector<double>>();
+    hasHelmet = file.getDataSet("/data/has helmet").read<std::vector<bool>>();
+    isAlive = file.getDataSet("/data/is alive").read<std::vector<bool>>();
+    duckingKeyPressed = file.getDataSet("/data/ducking key pressed").read<std::vector<bool>>();
+    duckAmount = file.getDataSet("/data/duck amount").read<std::vector<double>>();
+    isReloading = file.getDataSet("/data/is reloading").read<std::vector<bool>>();
+    isWalking = file.getDataSet("/data/is walking").read<std::vector<bool>>();
+    isScoped = file.getDataSet("/data/is scoped").read<std::vector<bool>>();
+    isAirborne = file.getDataSet("/data/is airborne").read<std::vector<bool>>();
+    flashDuration = file.getDataSet("/data/flash duration").read<std::vector<double>>();
+    activeWeapon = file.getDataSet("/data/active weapon").read<std::vector<int16_t>>();
+    primaryWeapon = file.getDataSet("/data/primary weapon").read<std::vector<int16_t>>();
+    primaryBulletsClip = file.getDataSet("/data/primary bullets clip").read<std::vector<int16_t>>();
+    primaryBulletsReserve = file.getDataSet("/data/primary bullets reserve").read<std::vector<int16_t>>();
+    secondaryWeapon = file.getDataSet("/data/secondary weapon").read<std::vector<int16_t>>();
+    secondaryBulletsClip = file.getDataSet("/data/secondary bullets clip").read<std::vector<int16_t>>();
+    secondaryBulletsReserve = file.getDataSet("/data/secondary bullets reserve").read<std::vector<int16_t>>();
+    numHe = file.getDataSet("/data/num HE").read<std::vector<int16_t>>();
+    numFlash = file.getDataSet("/data/num flash").read<std::vector<int16_t>>();
+    numMolotov = file.getDataSet("/data/num molotov").read<std::vector<int16_t>>();
+    numIncendiary = file.getDataSet("/data/num incendiary").read<std::vector<int16_t>>();
+    numDecoy = file.getDataSet("/data/num decoy").read<std::vector<int16_t>>();
+    numZeus = file.getDataSet("/data/num zeus").read<std::vector<int16_t>>();
+    hasDefuser = file.getDataSet("/data/has defuser").read<std::vector<bool>>();
+    hasBomb = file.getDataSet("/data/has bomb").read<std::vector<bool>>();
+    money = file.getDataSet("/data/money").read<std::vector<int32_t>>();
+    ping = file.getDataSet("/data/ping").read<std::vector<int32_t>>();
+    size = static_cast<int64_t>(id.size());
+}
 
-    auto playerIdDataset = file.getDataSet("/data/player id");
-    playerId = playerIdDataset.read<std::vector<int64_t>>();
+void Spotted::toHDF5Inner(HighFive::File & file) {
+    HighFive::DataSetCreateProps hdf5FlatCreateProps;
+    hdf5FlatCreateProps.add(HighFive::Deflate(6));
+    hdf5FlatCreateProps.add(HighFive::Chunking(id.size()));
 
-    auto tickIdDataset = file.getDataSet("/data/tick id");
-    tickId = tickIdDataset.read<std::vector<int64_t>>();
+    file.createDataSet("/data/tick id", tickId, hdf5FlatCreateProps);
+    file.createDataSet("/data/spotted player", spottedPlayer, hdf5FlatCreateProps);
+    file.createDataSet("/data/spotter player", spotterPlayer, hdf5FlatCreateProps);
+    file.createDataSet("/data/is spotted", isSpotted, hdf5FlatCreateProps);
+}
 
-    auto posXDataset = file.getDataSet("/data/pos x");
-    posX = posXDataset.read<std::vector<double>>();
+void Spotted::fromHDF5Inner(HighFive::File & file) {
+    id = file.getDataSet("/data/id").read<std::vector<int64_t>>();
+    tickId = file.getDataSet("/data/tick id").read<std::vector<int64_t>>();
+    spottedPlayer = file.getDataSet("/data/spotted player").read<std::vector<int64_t>>();
+    spotterPlayer = file.getDataSet("/data/spotter player").read<std::vector<int64_t>>();
+    isSpotted = file.getDataSet("/data/is spotted").read<std::vector<bool>>();
+    size = static_cast<int64_t>(id.size());
+}
 
-    auto posYDataset = file.getDataSet("/data/pos y");
-    posY = posYDataset.read<std::vector<double>>();
+void Footstep::toHDF5Inner(HighFive::File & file) {
+    HighFive::DataSetCreateProps hdf5FlatCreateProps;
+    hdf5FlatCreateProps.add(HighFive::Deflate(6));
+    hdf5FlatCreateProps.add(HighFive::Chunking(id.size()));
 
-    auto posZDataset = file.getDataSet("/data/pos z");
-    posZ = posZDataset.read<std::vector<double>>();
+    file.createDataSet("/data/tick id", tickId, hdf5FlatCreateProps);
+    file.createDataSet("/data/stepping player", steppingPlayer, hdf5FlatCreateProps);
+}
 
-    auto eyePosZDataset = file.getDataSet("/data/eye pos z");
-    eyePosZ = eyePosZDataset.read<std::vector<double>>();
+void Footstep::fromHDF5Inner(HighFive::File & file) {
+    id = file.getDataSet("/data/id").read<std::vector<int64_t>>();
+    tickId = file.getDataSet("/data/tick id").read<std::vector<int64_t>>();
+    steppingPlayer = file.getDataSet("/data/stepping player").read<std::vector<int64_t>>();
+    size = static_cast<int64_t>(id.size());
+}
 
-    auto velXDataset = file.getDataSet("/data/vel x");
-    velX = velXDataset.read<std::vector<double>>();
+void WeaponFire::toHDF5Inner(HighFive::File & file) {
+    HighFive::DataSetCreateProps hdf5FlatCreateProps;
+    hdf5FlatCreateProps.add(HighFive::Deflate(6));
+    hdf5FlatCreateProps.add(HighFive::Chunking(id.size()));
 
-    auto velYDataset = file.getDataSet("/data/vel y");
-    velY = velYDataset.read<std::vector<double>>();
+    file.createDataSet("/data/tick id", tickId, hdf5FlatCreateProps);
+    file.createDataSet("/data/shooter", shooter, hdf5FlatCreateProps);
+    file.createDataSet("/data/weapon", shooter, hdf5FlatCreateProps);
+}
 
-    auto velZDataset = file.getDataSet("/data/vel z");
-    velZ = velZDataset.read<std::vector<double>>();
+void WeaponFire::fromHDF5Inner(HighFive::File & file) {
+    id = file.getDataSet("/data/id").read<std::vector<int64_t>>();
+    tickId = file.getDataSet("/data/tick id").read<std::vector<int64_t>>();
+    shooter = file.getDataSet("/data/shooter").read<std::vector<int64_t>>();
+    weapon = file.getDataSet("/data/weapon").read<std::vector<int16_t>>();
+    size = static_cast<int64_t>(id.size());
+}
 
-    auto viewXDataset = file.getDataSet("/data/view x");
-    viewX = viewXDataset.read<std::vector<double>>();
+void Kills::toHDF5Inner(HighFive::File & file) {
+    HighFive::DataSetCreateProps hdf5FlatCreateProps;
+    hdf5FlatCreateProps.add(HighFive::Deflate(6));
+    hdf5FlatCreateProps.add(HighFive::Chunking(id.size()));
 
-    auto viewYDataset = file.getDataSet("/data/view y");
-    viewY = viewYDataset.read<std::vector<double>>();
+    file.createDataSet("/data/tick id", tickId, hdf5FlatCreateProps);
+    file.createDataSet("/data/killer", killer, hdf5FlatCreateProps);
+    file.createDataSet("/data/victim", victim, hdf5FlatCreateProps);
+    file.createDataSet("/data/weapon", weapon, hdf5FlatCreateProps);
+    file.createDataSet("/data/assister", assister, hdf5FlatCreateProps);
+    file.createDataSet("/data/isHeadshot", isHeadshot, hdf5FlatCreateProps);
+    file.createDataSet("/data/isWallbang", isWallbang, hdf5FlatCreateProps);
+    file.createDataSet("/data/penetrated objects", penetratedObjects, hdf5FlatCreateProps);
+}
 
-    auto aimPunchXDataset = file.getDataSet("/data/aim punch x");
-    aimPunchX = aimPunchXDataset.read<std::vector<double>>();
-
-    auto aimPunchYDataset = file.getDataSet("/data/aim punch y");
-    aimPunchY = aimPunchYDataset.read<std::vector<double>>();
-
-    auto viewPunchXDataset = file.getDataSet("/data/view punch x");
-    viewPunchX = viewPunchXDataset.read<std::vector<double>>();
-
-    auto viewPunchYDataset = file.getDataSet("/data/view punch y");
-    viewPunchY = viewPunchYDataset.read<std::vector<double>>();
-
-    auto recoilIndexDataset = file.getDataSet("/data/recoil index");
-    recoilIndex = recoilIndexDataset.read<std::vector<double>>();
-
-    auto nextPrimaryAttackDataset = file.getDataSet("/data/next primary attack");
-    nextPrimaryAttack = nextPrimaryAttackDataset.read<std::vector<double>>();
-
-    auto nextSecondaryAttackDataset = file.getDataSet("/data/next secondary attack");
-    nextSecondaryAttack = nextSecondaryAttackDataset.read<std::vector<double>>();
-
-    auto gameTimeDataset = file.getDataSet("/data/game time");
-    gameTime = gameTimeDataset.read<std::vector<double>>();
-
-    auto teamDataset = file.getDataSet("/data/team");
-    team = teamDataset.read<std::vector<int16_t>>();
-
-    auto healthDataset = file.getDataSet("/data/health");
-    health = healthDataset.read<std::vector<double>>();
-
-    auto armorDataset = file.getDataSet("/data/armor");
-    armor = armorDataset.read<std::vector<double>>();
-
-    auto hasHelmetDataset = file.getDataSet("/data/has helmet");
-    hasHelmet = hasHelmetDataset.read<std::vector<bool>>();
-
-    auto isAliveDataset = file.getDataSet("/data/is alive");
-    isAlive = isAliveDataset.read<std::vector<bool>>();
-
-    auto duckingKeyPressedDataset = file.getDataSet("/data/ducking key pressed");
-    duckingKeyPressed = duckingKeyPressedDataset.read<std::vector<bool>>();
-
-    auto duckAmountDataset = file.getDataSet("/data/ducking key pressed");
-    duckingKeyPressed = duckingKeyPressedDataset.read<std::vector<bool>>();
+void Kills::fromHDF5Inner(HighFive::File & file) {
+    id = file.getDataSet("/data/id").read<std::vector<int64_t>>();
+    tickId = file.getDataSet("/data/tick id").read<std::vector<int64_t>>();
+    killer = file.getDataSet("/data/killer").read<std::vector<int64_t>>();
+    weapon = file.getDataSet("/data/weapon").read<std::vector<int64_t>>();
+    weapon = file.getDataSet("/data/weapon").read<std::vector<int16_t>>();
+    size = static_cast<int64_t>(id.size());
 }

@@ -111,31 +111,23 @@ namespace csknow::plant_states {
             // We open the file as read-only:
             HighFive::File file(filePath, HighFive::File::ReadOnly);
 
-            auto plantTickIdDataset = file.getDataSet("/data/plant tick id");
-            plantTickId = plantTickIdDataset.read<std::vector<int64_t>>();
+            plantTickId = file.getDataSet("/data/plant tick id").read<std::vector<int64_t>>();
 
-            auto roundEndTickIdDataset = file.getDataSet("/data/round end tick id");
-            roundEndTickId = roundEndTickIdDataset.read<std::vector<int64_t>>();
+            roundEndTickId = file.getDataSet("/data/round end tick id").read<std::vector<int64_t>>();
 
-            auto tickLengthDataset = file.getDataSet("/data/tick length");
-            tickLength = tickLengthDataset.read<std::vector<int64_t>>();
+            tickLength = file.getDataSet("/data/tick length").read<std::vector<int64_t>>();
 
-            auto roundIdDataset = file.getDataSet("/data/round id");
-            roundId = roundIdDataset.read<std::vector<int64_t>>();
+            roundId = file.getDataSet("/data/round id").read<std::vector<int64_t>>();
 
-            auto plantIdDataset = file.getDataSet("/data/plant id");
-            plantId = plantIdDataset.read<std::vector<int64_t>>();
+            plantId = file.getDataSet("/data/plant id").read<std::vector<int64_t>>();
 
-            auto defusalIdDataset = file.getDataSet("/data/defusal id");
-            defusalId = defusalIdDataset.read<std::vector<int64_t>>();
+            defusalId = file.getDataSet("/data/defusal id").read<std::vector<int64_t>>();
 
             loadVec3VectorFromHDF5(c4Pos, file, "c4 pos");
 
-            auto winnerTeamDataset = file.getDataSet("/data/winner team");
-            winnerTeam = winnerTeamDataset.read<std::vector<TeamId>>();
+            winnerTeam = file.getDataSet("/data/winner team").read<std::vector<TeamId>>();
 
-            auto c4DefusedDataset = file.getDataSet("/data/c4 defused");
-            c4Defused = c4DefusedDataset.read<std::vector<bool>>();
+            c4Defused = file.getDataSet("/data/c4 defused").read<std::vector<bool>>();
 
             for (size_t i = 0; i < max_players_per_team; i++) {
                 string iStr = std::to_string(i);
