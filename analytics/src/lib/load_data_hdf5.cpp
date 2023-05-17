@@ -7,10 +7,8 @@
 
 void ColStore::toHDF5(HighFive::File & file) {
     HighFive::DataSetCreateProps hdf5CreateProps;
-    hdf5CreateProps.add(HighFive::Deflate(6));
     hdf5CreateProps.add(HighFive::Chunking(id.size()));
     file.createDataSet(hdf5Prefix + "id", id, hdf5CreateProps);
-
 
     // create all other columns
     toHDF5Inner(file, hdf5CreateProps);
@@ -310,7 +308,7 @@ void Hurt::toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf
     file.createDataSet(hdf5Prefix + "weapon", vectorOfEnumsToVectorOfInts(weapon), hdf5FlatCreateProps);
     file.createDataSet(hdf5Prefix + "armor damage", armorDamage, hdf5FlatCreateProps);
     file.createDataSet(hdf5Prefix + "armor", armor, hdf5FlatCreateProps);
-    file.createDataSet(hdf5Prefix + "healthDamage", healthDamage, hdf5FlatCreateProps);
+    file.createDataSet(hdf5Prefix + "health damage", healthDamage, hdf5FlatCreateProps);
     file.createDataSet(hdf5Prefix + "health", health, hdf5FlatCreateProps);
     file.createDataSet(hdf5Prefix + "hit group", hitGroup, hdf5FlatCreateProps);
 }
@@ -449,7 +447,7 @@ void loadDataHDF5(Equipment & equipment, GameTypes & gameTypes, HitGroups & hitG
 
     // We create an empty HDF55 file, by truncating an existing
     // file if required:
-    HighFive::File file(filePath, HighFive::File::Overwrite);
+    HighFive::File file(filePath, HighFive::File::ReadOnly);
     equipment.fromHDF5(file);
     gameTypes.fromHDF5(file);
     hitGroups.fromHDF5(file);
@@ -466,7 +464,7 @@ void loadDataHDF5(Equipment & equipment, GameTypes & gameTypes, HitGroups & hitG
     hurt.fromHDF5(file);
     grenades.fromHDF5(file);
     flashed.fromHDF5(file);
-    grenadeTrajectories.toHDF5(file);
+    grenadeTrajectories.fromHDF5(file);
     plants.fromHDF5(file);
     defusals.fromHDF5(file);
     explosions.fromHDF5(file);

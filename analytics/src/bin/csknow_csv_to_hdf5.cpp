@@ -10,11 +10,12 @@
 #include <fstream>
 #include <iomanip>
 #include <ctime>
+#include <chrono>
 #include "load_data.h"
 
 int main(int argc, char * argv[]) {
-    if (argc != 5 && argc != 6) {
-        std::cout << "please call this code 5 arguments: " << std::endl;
+    if (argc != 3) {
+        std::cout << "please call this code 2 arguments: " << std::endl;
         std::cout << "1. path/to/csv_folder" << std::endl;
         std::cout << "2. path/to/hdf5_file" << std::endl;
         return 1;
@@ -35,7 +36,8 @@ int main(int argc, char * argv[]) {
     HitGroups hitGroupsCSV, hitGroupsHDF5;
     Games gamesCSV, gamesHDF5;
     Players playersCSV, playersHDF5;
-    Rounds unfilteredRoundsCSV, unfilteredRoundsHDF5, filteredRoundsCSV, filteredRoundsHDF5;
+    Rounds unfilteredRoundsCSV("/unfiltered rounds/"), unfilteredRoundsHDF5("/unfiltered rounds/"),
+        filteredRoundsCSV("/filtered rounds/"), filteredRoundsHDF5("/filtered rounds/");
     Ticks ticksCSV, ticksHDF5;
     PlayerAtTick playerAtTickCSV, playerAtTickHDF5;
     Spotted spottedCSV, spottedHDF5;
@@ -51,10 +53,15 @@ int main(int argc, char * argv[]) {
     Explosions explosionsCSV, explosionsHDF5;
     Say sayCSV, sayHDF5;
 
+    auto csvReadStart = std::chrono::system_clock::now();
     loadDataCSV(equipmentCSV, gameTypesCSV, hitGroupsCSV, gamesCSV, playersCSV, unfilteredRoundsCSV, filteredRoundsCSV,
                 ticksCSV, playerAtTickCSV, spottedCSV, footstepCSV, weaponFireCSV,
                 killsCSV, hurtCSV, grenadesCSV, flashedCSV, grenadeTrajectoriesCSV, plantsCSV, defusalsCSV,
                 explosionsCSV, sayCSV, csvPath);
+    auto csvReadEnd = std::chrono::system_clock::now();
+    std::chrono::duration<double> csvReadTime = csvReadEnd - csvReadStart;
+    std::cout << "csv read time " << csvReadTime.count() << std::endl;
+
     //std::printf("GLIBCXX: %d\n",__GLIBCXX__);
     std::cout << "num elements in equipment: " << equipmentCSV.size << std::endl;
     std::cout << "num elements in game_types: " << gameTypesCSV.size << std::endl;
@@ -78,13 +85,21 @@ int main(int argc, char * argv[]) {
     std::cout << "num elements in explosions: " << explosionsCSV.size << std::endl;
     std::cout << "num elements in say: " << sayCSV.size << std::endl;
 
+    auto hdf5WriteStart = std::chrono::system_clock::now();
     saveDataHDF5(equipmentCSV, gameTypesCSV, hitGroupsCSV, gamesCSV, playersCSV, unfilteredRoundsCSV, filteredRoundsCSV,
                 ticksCSV, playerAtTickCSV, spottedCSV, footstepCSV, weaponFireCSV,
                 killsCSV, hurtCSV, grenadesCSV, flashedCSV, grenadeTrajectoriesCSV, plantsCSV, defusalsCSV,
-                explosionsCSV, sayCSV, csvPath);
+                explosionsCSV, sayCSV, hdf5Path);
+    auto hdf5WriteEnd = std::chrono::system_clock::now();
+    std::chrono::duration<double> hdf5WriteTime = hdf5WriteEnd - hdf5WriteStart;
+    std::cout << "hdf5 write time " << hdf5WriteTime.count() << std::endl;
 
+    auto hdf5ReadStart = std::chrono::system_clock::now();
     loadDataHDF5(equipmentHDF5, gameTypesHDF5, hitGroupsHDF5, gamesHDF5, playersHDF5, unfilteredRoundsHDF5, filteredRoundsHDF5,
                  ticksHDF5, playerAtTickHDF5, spottedHDF5, footstepHDF5, weaponFireHDF5,
                  killsHDF5, hurtHDF5, grenadesHDF5, flashedHDF5, grenadeTrajectoriesHDF5, plantsHDF5, defusalsHDF5,
-                 explosionsHDF5, sayHDF5, csvPath);
+                 explosionsHDF5, sayHDF5, hdf5Path);
+    auto hdf5ReadEnd = std::chrono::system_clock::now();
+    std::chrono::duration<double> hdf5ReadTime = hdf5ReadEnd - hdf5ReadStart;
+    std::cout << "hdf5 read time " << hdf5ReadTime.count() << std::endl;
 }

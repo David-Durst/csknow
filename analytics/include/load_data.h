@@ -172,6 +172,7 @@ public:
     int64_t idOffset = 1;
 
     Rounds() : ColStore("/rounds/") { }
+    Rounds(const string & hdf5Prefix) : ColStore(hdf5Prefix) { }
     void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) override {
         ColStore::init(rows, numFiles, gameStarts);
         gameId.resize(rows);
