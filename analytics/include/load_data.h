@@ -44,14 +44,14 @@ struct IntervalIndex {
     unordered_map<int64_t, RangeIndexEntry> eventToInterval;
 };
 
-const string hdf5Prefix = "/data/";
-
 class ColStore {
 public:
     int64_t size = INVALID_ID;
     vector<string> fileNames;
     vector<int64_t> gameStarts;
     vector<int64_t> id;
+    string hdf5Prefix = "/colStore/";
+    ColStore(string hdf5Prefix) : hdf5Prefix(hdf5Prefix) { }
     virtual void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) {
         size = rows;
         fileNames.resize(numFiles);
@@ -72,6 +72,7 @@ class Equipment : public ColStore {
 public:
     vector<string> name;
 
+    Equipment() : ColStore("/equipment/") { }
     void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) override {
         ColStore::init(rows, numFiles, gameStarts);
         name.resize(rows);
@@ -84,6 +85,7 @@ class GameTypes : public ColStore {
 public:
     vector<string> tableType;
 
+    GameTypes() : ColStore("/game types/") { }
     void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) override {
         ColStore::init(rows, numFiles, gameStarts);
         tableType.resize(rows);
@@ -96,6 +98,7 @@ class HitGroups : public ColStore {
 public:
     vector<string> groupName;
 
+    HitGroups() : ColStore("/hit groups/") { }
     void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) override {
         ColStore::init(rows, numFiles, gameStarts);
         groupName.resize(rows);
@@ -114,6 +117,7 @@ public:
     RangeIndex roundsPerGame;
     RangeIndex playersPerGame;
 
+    Games() : ColStore("/games/") { }
     void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) override {
         ColStore::init(rows, numFiles, gameStarts);
         demoFile.resize(rows);
@@ -136,6 +140,7 @@ public:
     // add this offset to id to get the row entry
     int64_t idOffset = 1;
 
+    Players() : ColStore("/players/") { }
     void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) override {
         ColStore::init(rows, numFiles, gameStarts);
         gameId.resize(rows);
@@ -166,6 +171,7 @@ public:
     // add this offset to id to get the row entry
     int64_t idOffset = 1;
 
+    Rounds() : ColStore("/rounds/") { }
     void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) override {
         ColStore::init(rows, numFiles, gameStarts);
         gameId.resize(rows);
@@ -217,6 +223,7 @@ public:
     IntervalIndex explosionsPerTick;
     IntervalIndex sayPerTick;
 
+    Ticks() : ColStore("/ticks/") { }
     void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) override {
         ColStore::init(rows, numFiles, gameStarts);
         roundId.resize(rows);
@@ -287,6 +294,7 @@ public:
     vector<int32_t> money;
     vector<int32_t> ping;
 
+    PlayerAtTick() : ColStore("/player at tick/") { }
     void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) override {
         ColStore::init(rows, numFiles, gameStarts);
         playerId.resize(rows);
@@ -359,6 +367,7 @@ public:
     vector<int64_t> spotterPlayer;
     vector<bool> isSpotted;
 
+    Spotted() : ColStore("/spotted/") { }
     void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) override {
         ColStore::init(rows, numFiles, gameStarts);
         tickId.resize(rows);
@@ -375,6 +384,7 @@ public:
     vector<int64_t> tickId;
     vector<int64_t> steppingPlayer;
 
+    Footstep() : ColStore("/footstep/") { }
     void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) override {
         ColStore::init(rows, numFiles, gameStarts);
         tickId.resize(rows);
@@ -390,6 +400,7 @@ public:
     vector<int64_t> shooter;
     vector<int16_t> weapon;
 
+    WeaponFire() : ColStore("/weapon fire/") { }
     void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) override {
         ColStore::init(rows, numFiles, gameStarts);
         tickId.resize(rows);
@@ -411,6 +422,7 @@ public:
     vector<bool> isWallbang;
     vector<int32_t> penetratedObjects;
 
+    Kills() : ColStore("/kills/") { }
     void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) override {
         ColStore::init(rows, numFiles, gameStarts);
         tickId.resize(rows);
@@ -438,6 +450,7 @@ public:
     vector<int32_t> health;
     vector<int64_t> hitGroup;
 
+    Hurt() : ColStore("/hurt/") { }
     void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) override {
         ColStore::init(rows, numFiles, gameStarts);
         tickId.resize(rows);
@@ -465,6 +478,7 @@ public:
     RangeIndex flashedPerGrenade;
     IntervalIndex trajectoryPerGrenade;
 
+    Grenades() : ColStore("/grenades/") { }
     void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) override {
         ColStore::init(rows, numFiles, gameStarts);
         thrower.resize(rows);
@@ -486,6 +500,7 @@ public:
     vector<int64_t> thrower;
     vector<int64_t> victim;
 
+    Flashed() : ColStore("/flashed/") { }
     void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) override {
         ColStore::init(rows, numFiles, gameStarts);
         tickId.resize(rows);
@@ -505,6 +520,7 @@ public:
     vector<double> posY;
     vector<double> posZ;
 
+    GrenadeTrajectories() : ColStore("/grenade trajectories/") { }
     void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) override {
         ColStore::init(rows, numFiles, gameStarts);
         grenadeId.resize(rows);
@@ -526,6 +542,7 @@ public:
     RangeIndex defusalsPerPlant;
     RangeIndex explosionsPerPlant;
 
+    Plants() : ColStore("/plants/") { }
     void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) override {
         ColStore::init(rows, numFiles, gameStarts);
         startTick.resize(rows);
@@ -547,6 +564,7 @@ public:
     vector<int64_t> defuser;
     vector<bool> succesful;
 
+    Defusals() : ColStore("/defusals/") { }
     void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) override {
         ColStore::init(rows, numFiles, gameStarts);
         plantId.resize(rows);
@@ -564,6 +582,7 @@ public:
     vector<int64_t> plantId;
     vector<int64_t> tickId;
 
+    Explosions() : ColStore("/explosions/") { }
     void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) override {
         ColStore::init(rows, numFiles, gameStarts);
         plantId.resize(rows);
@@ -579,6 +598,7 @@ public:
     vector<int64_t> tickId;
     vector<string> message;
 
+    Say() : ColStore("/say/") { }
     void init(int64_t rows, int64_t numFiles, vector<int64_t> gameStarts) override {
         ColStore::init(rows, numFiles, gameStarts);
         gameId.resize(rows);
