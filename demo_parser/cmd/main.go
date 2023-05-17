@@ -9,56 +9,23 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	"log"
 	"os"
+	"os/exec"
 	"path"
+	"path/filepath"
 	"strings"
+	"time"
 )
 
 var localDemName string
 
-// prefixes for paths to demos on AWS S3
-var demoUnprocessedPrefix = "demos/unprocessed2/"
-var demoProcessedPrefix = "demos/processed2/"
-var demoProcessedSmallPrefix = "demos/processed2_small/"
-
-// paths to CSVs in AWS
-var csvPrefixBase = "demos/csvs3/"
-var csvPrefixLocal string
-var csvPrefixGlobal string
-
-// these will be used to replace the AWS S3 prefixes if using bot train data set
-const trainDemoUnprocessedPrefix = "demos/train_data/unprocessed/"
-const trainDemoProcessedPrefix = "demos/train_data/processed/"
-const trainCSVPrefixBase = "demos/train_data/csvs/"
-
-// these will be used to replace the AWS S3 prefixes if using big bot train data set
-const bigTrainDemoUnprocessedPrefix = "demos/big_train_data/demos/"
-const bigTrainDemoProcessedPrefix = "demos/big_train_data/processed/"
-const bigTrainCSVPrefixBase = "demos/big_train_data/csvs/"
-
-// these will be used to replace the AWS S3 prefixes if using retakes data set
-const retakesDemoUnprocessedPrefix = "demos/retakes_data/unprocessed/"
-const retakesDemoProcessedPrefix = "demos/retakes_data/processed/"
-const retakesCSVPrefixBase = "demos/retakes_data/csvs/"
-
-// these will be used to replace the AWS S3 prefixes if using bot retakes data set
-const botRetakesDemoUnprocessedPrefix = "demos/bot_retakes_data/unprocessed/"
-const botRetakesDemoProcessedPrefix = "demos/bot_retakes_data/processed/"
-const botRetakesCSVPrefixBase = "demos/bot_retakes_data/csvs/"
-
-// these will be used to replace the AWS S3 prefixes if using manual data set
-const manualDemoUnprocessedPrefix = "demos/manual_data/unprocessed/"
-const manualDemoProcessedPrefix = "demos/manual_data/processed/"
-const manualCSVPrefixBase = "demos/manual_data/csvs/"
-
-const rolloutDemoUnprocessedPrefix = "demos/rollout_data/unprocessed/"
-const rolloutDemoProcessedPrefix = "demos/rollout_data/processed/"
-const rolloutCSVPrefixBase = "demos/rollout_data/csvs/"
-
-func updatePrefixs() {
-	csvPrefixLocal = csvPrefixBase + "local/"
-	csvPrefixGlobal = csvPrefixBase + "global/"
-}
+const trainDataName = "train_data"
+const bigTrainDataName = "big_train_data"
+const retakesDataName = "retakes_data"
+const botRetakesDataName = "bot_retakes_data"
+const manualDataName = "manual_data"
+const rolloutDataName = "rollout_data"
 
 func main() {
 	startIDState := d.DefaultIDState()
@@ -83,39 +50,38 @@ func main() {
 		os.Exit(0)
 	}
 
+	var dataName string
 	if *trainDataFlag {
-		demoUnprocessedPrefix = trainDemoUnprocessedPrefix
-		demoProcessedPrefix = trainDemoProcessedPrefix
-		csvPrefixBase = trainCSVPrefixBase
-		updatePrefixs()
+		dataName = trainDataName
 	} else if *bigTrainDataFlag {
-		demoUnprocessedPrefix = bigTrainDemoUnprocessedPrefix
-		demoProcessedPrefix = bigTrainDemoProcessedPrefix
-		csvPrefixBase = bigTrainCSVPrefixBase
-		updatePrefixs()
+		dataName = bigTrainDataName
 	} else if *manualDataFlag {
-		demoUnprocessedPrefix = manualDemoUnprocessedPrefix
-		demoProcessedPrefix = manualDemoProcessedPrefix
-		csvPrefixBase = manualCSVPrefixBase
-		updatePrefixs()
+		dataName = manualDataName
 	} else if *retakesDataFlag {
-		demoUnprocessedPrefix = retakesDemoUnprocessedPrefix
-		demoProcessedPrefix = retakesDemoProcessedPrefix
-		csvPrefixBase = retakesCSVPrefixBase
-		updatePrefixs()
+		dataName = retakesDataName
 	} else if *botRetakesDataFlag {
-		demoUnprocessedPrefix = botRetakesDemoUnprocessedPrefix
-		demoProcessedPrefix = botRetakesDemoProcessedPrefix
-		csvPrefixBase = botRetakesCSVPrefixBase
-		updatePrefixs()
+		dataName = botRetakesDataName
 	} else if *rolloutDataFlag {
-		demoUnprocessedPrefix = rolloutDemoUnprocessedPrefix
-		demoProcessedPrefix = rolloutDemoProcessedPrefix
-		csvPrefixBase = rolloutCSVPrefixBase
-		updatePrefixs()
+		dataName = rolloutDataName
 	} else {
 		fmt.Printf("please set one of the data set flags\n")
 		os.Exit(0)
+	}
+	dataS3FolderKey := path.Join(d.DemosS3KeyPrefixSuffix, dataName)
+	demosS3FolderKey := path.Join(dataS3FolderKey, d.DemosS3KeyPrefixSuffix)
+	hdf5S3FolderKey := path.Join(dataS3FolderKey, d.HDF5KeySuffix)
+
+	// get local data folder ready
+	if _, err := os.Stat(c.TmpDir); err == nil {
+		rmErr := os.RemoveAll(c.TmpDir)
+		if rmErr != nil {
+			log.Println(rmErr)
+			return
+		}
+	}
+	_, cpErr := exec.Command("cp", "-r", c.TemplateTmpDir, c.TmpDir).Output()
+	if cpErr != nil {
+		log.Fatal(cpErr)
 	}
 
 	sess := session.Must(session.NewSession(&aws.Config{
@@ -125,14 +91,11 @@ func main() {
 	svc := s3.New(sess)
 
 	downloader := s3manager.NewDownloader(sess)
-	uploader := s3manager.NewUploader(sess)
-
-	demosFolder := demoUnprocessedPrefix
 
 	i := 0
 	svc.ListObjectsV2Pages(&s3.ListObjectsV2Input{
 		Bucket: aws.String(d.BucketName),
-		Prefix: aws.String(demosFolder),
+		Prefix: aws.String(demosS3FolderKey),
 	}, func(p *s3.ListObjectsV2Output, last bool) bool {
 		fmt.Printf("Processing page %d\n", i)
 
@@ -141,16 +104,42 @@ func main() {
 				fmt.Printf("Skipping: %s\n", *obj.Key)
 				continue
 			}
-			fmt.Printf("Handling file: %s\n", *obj.Key)
-			*localDemName = path.Join(c.DemoDirectory, path.Base(*obj.Key))
+			fmt.Printf("handling S3 demo: %s\n", path.Join(d.BucketName, *obj.Key))
+			*localDemName = filepath.Join(c.DemoDirectory, filepath.Base(*obj.Key))
 			d.DownloadDemo(downloader, *obj.Key, *localDemName)
 			d.ParseDemo(*obj.Key, *localDemName, &startIDState, firstRun, c.Pro, shouldFilterRounds)
 			firstRun = false
-			if *uploadFlag {
-				d.UploadCSVs(uploader, *obj.Key, csvPrefixLocal)
-			}
 		}
-
 		return true
 	})
+
+	currentPath, err := os.Getwd()
+	if err != nil {
+		log.Println(err)
+	}
+	csvsPathForConverter := filepath.Join(currentPath, c.TmpDir)
+	hdf5FileName := dataName + ".hdf5"
+	hdf5PathForConverter := filepath.Join(currentPath, c.HDF5Directory, hdf5FileName)
+	csvToHDF5Path := filepath.Join(currentPath, "..", "analytics", "scripts", "csv_to_hdf5.sh")
+	csvToHDF5PathCommand := csvToHDF5Path + " " + csvsPathForConverter + " " + hdf5PathForConverter
+	fmt.Println("executing " + csvToHDF5PathCommand)
+	out, err := exec.Command("/bin/bash", csvToHDF5PathCommand).Output()
+	if err != nil {
+		log.Println(string(out))
+		log.Fatal(err)
+	}
+	fmt.Println(string(out))
+
+	if *uploadFlag {
+		uploader := s3manager.NewUploader(sess)
+		hdf5S3CurrentKey := path.Join(dataS3FolderKey, hdf5FileName)
+		t := time.Now()
+		hdf5S3TemporalKey := path.Join(hdf5S3FolderKey, t.Format("2006_01_02_15_04_05_")+hdf5FileName)
+		d.UploadFile(uploader, path.Join(c.HDF5Directory, hdf5FileName), hdf5S3CurrentKey)
+		svc.CopyObject(&s3.CopyObjectInput{
+			CopySource: aws.String(path.Join(d.BucketName, hdf5S3CurrentKey)),
+			Bucket:     aws.String(d.BucketName),
+			Key:        aws.String(hdf5S3TemporalKey),
+		})
+	}
 }

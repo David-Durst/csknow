@@ -62,9 +62,10 @@ public:
         throw std::runtime_error("HDFS saving not implemented for this query yet");
     }
     void toHDF5(HighFive::File & file);
-    virtual void fromHDF5(HighFive::File &) {
+    virtual void fromHDF5Inner(HighFive::File &) {
         throw std::runtime_error("HDFS loading not implemented for this query yet");
     }
+    void fromHDF5(HighFive::File & file);
 };
 
 class Equipment : public ColStore {
@@ -77,7 +78,7 @@ public:
         name.resize(rows);
     }
     void toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) override;
-    void fromHDF5(HighFive::File & file) override;
+    void fromHDF5Inner(HighFive::File & file) override;
 };
 bool operator==(const Equipment & lhs, const Equipment & rhs);
 
@@ -91,7 +92,7 @@ public:
         tableType.resize(rows);
     }
     void toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) override;
-    void fromHDF5(HighFive::File & file) override;
+    void fromHDF5Inner(HighFive::File & file) override;
 };
 bool operator==(const GameTypes & lhs, const GameTypes & rhs);
 
@@ -105,7 +106,7 @@ public:
         groupName.resize(rows);
     }
     void toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) override;
-    void fromHDF5(HighFive::File & file) override;
+    void fromHDF5Inner(HighFive::File & file) override;
 };
 bool operator==(const HitGroups & lhs, const HitGroups & rhs);
 
@@ -131,7 +132,7 @@ public:
         playersPerGame.resize(rows);
     }
     void toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) override;
-    void fromHDF5(HighFive::File & file) override;
+    void fromHDF5Inner(HighFive::File & file) override;
 };
 bool operator==(const Games & lhs, const Games & rhs);
 
@@ -151,7 +152,7 @@ public:
         steamId.resize(rows);
     }
     void toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) override;
-    void fromHDF5(HighFive::File & file) override;
+    void fromHDF5Inner(HighFive::File & file) override;
 };
 bool operator==(const Players & lhs, const Players & rhs);
 
@@ -194,7 +195,7 @@ public:
         ticksPerRound.resize(rows);
     }
     void toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) override;
-    void fromHDF5(HighFive::File & file) override;
+    void fromHDF5Inner(HighFive::File & file) override;
 };
 bool operator==(const Rounds & lhs, const Rounds & rhs);
 
@@ -245,7 +246,7 @@ public:
         footstepPerTick.resize(rows);
     }
     void toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) override;
-    void fromHDF5(HighFive::File & file) override;
+    void fromHDF5Inner(HighFive::File & file) override;
 };
 bool operator==(const Ticks & lhs, const Ticks & rhs);
 
@@ -355,7 +356,7 @@ public:
         ping.resize(rows);
     }
     void toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) override;
-    void fromHDF5(HighFive::File & file) override;
+    void fromHDF5Inner(HighFive::File & file) override;
 
     void makePitchNeg90To90() {
 #pragma omp parallel for
@@ -384,7 +385,7 @@ public:
         isSpotted.resize(rows);
     }
     void toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) override;
-    void fromHDF5(HighFive::File & file) override;
+    void fromHDF5Inner(HighFive::File & file) override;
 };
 bool operator==(const Spotted & lhs, const Spotted & rhs);
 
@@ -400,7 +401,7 @@ public:
         steppingPlayer.resize(rows);
     }
     void toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) override;
-    void fromHDF5(HighFive::File & file) override;
+    void fromHDF5Inner(HighFive::File & file) override;
 };
 bool operator==(const Footstep & lhs, const Footstep & rhs);
 
@@ -418,7 +419,7 @@ public:
         weapon.resize(rows);
     }
     void toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) override;
-    void fromHDF5(HighFive::File & file) override;
+    void fromHDF5Inner(HighFive::File & file) override;
 };
 bool operator==(const WeaponFire & lhs, const WeaponFire & rhs);
 
@@ -446,7 +447,7 @@ public:
         penetratedObjects.resize(rows);
     }
     void toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) override;
-    void fromHDF5(HighFive::File & file) override;
+    void fromHDF5Inner(HighFive::File & file) override;
 };
 bool operator==(const Kills & lhs, const Kills & rhs);
 
@@ -476,7 +477,7 @@ public:
         hitGroup.resize(rows);
     }
     void toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) override;
-    void fromHDF5(HighFive::File & file) override;
+    void fromHDF5Inner(HighFive::File & file) override;
 };
 bool operator==(const Hurt & lhs, const Hurt & rhs);
 
@@ -503,7 +504,7 @@ public:
         flashedPerGrenade.resize(rows);
     }
     void toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) override;
-    void fromHDF5(HighFive::File & file) override;
+    void fromHDF5Inner(HighFive::File & file) override;
 };
 bool operator==(const Grenades & lhs, const Grenades & rhs);
 
@@ -523,7 +524,7 @@ public:
         victim.resize(rows);
     }
     void toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) override;
-    void fromHDF5(HighFive::File & file) override;
+    void fromHDF5Inner(HighFive::File & file) override;
 };
 bool operator==(const Flashed & lhs, const Flashed & rhs);
 
@@ -545,7 +546,7 @@ public:
         posZ.resize(rows);
     }
     void toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) override;
-    void fromHDF5(HighFive::File & file) override;
+    void fromHDF5Inner(HighFive::File & file) override;
 };
 bool operator==(const GrenadeTrajectories & lhs, const GrenadeTrajectories & rhs);
 
@@ -569,7 +570,7 @@ public:
         explosionsPerPlant.resize(rows);
     }
     void toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) override;
-    void fromHDF5(HighFive::File & file) override;
+    void fromHDF5Inner(HighFive::File & file) override;
 };
 bool operator==(const Plants & lhs, const Plants & rhs);
 
@@ -591,7 +592,7 @@ public:
         succesful.resize(rows);
     }
     void toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) override;
-    void fromHDF5(HighFive::File & file) override;
+    void fromHDF5Inner(HighFive::File & file) override;
 };
 bool operator==(const Defusals & lhs, const Defusals & rhs);
 
@@ -607,7 +608,7 @@ public:
         tickId.resize(rows);
     }
     void toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) override;
-    void fromHDF5(HighFive::File & file) override;
+    void fromHDF5Inner(HighFive::File & file) override;
 };
 bool operator==(const Explosions & lhs, const Explosions & rhs);
 
@@ -625,7 +626,7 @@ public:
         message.resize(rows);
     }
     void toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) override;
-    void fromHDF5(HighFive::File & file) override;
+    void fromHDF5Inner(HighFive::File & file) override;
 };
 bool operator==(const Say & lhs, const Say & rhs);
 

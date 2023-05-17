@@ -3,26 +3,32 @@ package internal
 import (
 	"fmt"
 	c "github.com/David-Durst/csknow/demo_parser/internal/constants"
+	"path/filepath"
 )
 
-func InitTablesTrackers() {
-	playersTable.init(c.LocalPlayersCSVName, playersHeader)
-	unfilteredRoundsTable.init(c.LocalUnfilteredRoundsCSVName, roundsHeader)
-	filteredRoundsTable.init(c.LocalFilteredRoundsCSVName, roundsHeader)
-	ticksTable.init(c.LocalTicksCSVName, ticksHeader)
-	playerAtTicksTable.init(c.LocalPlayerAtTickCSVName, playerAtTicksHeader)
-	spottedTable.init(c.LocalSpottedCSVName, spottedHeader)
-	footstepTable.init(c.LocalFootstepCSVName, footstepHeader)
-	weaponFireTable.init(c.LocalWeaponFireCSVName, weaponFireHeader)
-	hurtTable.init(c.LocalHurtCSVName, hurtHeader)
-	killTable.init(c.LocalKillsCSVName, killHeader)
-	grenadeTable.init(c.LocalGrenadesCSVName, grenadeHeader)
-	grenadeTrajectoryTable.init(c.LocalGrenadeTrajectoriesCSVName, grenadeTrajectoryHeader)
-	playerFlashedTable.init(c.LocalPlayerFlashedCSVName, playerFlashedHeader)
-	plantTable.init(c.LocalPlantsCSVName, plantHeader)
-	defusalTable.init(c.LocalDefusalsCSVName, defusalHeader)
-	explosionTable.init(c.LocalExplosionsCSVName, explosionHeader)
-	sayTable.init(c.LocalSayCSVName, sayHeader)
+func getCSVFilePath(baseName string, localCSVName string) string {
+	return filepath.Join(baseName, localCSVName)
+}
+
+func InitTablesTrackers(localDemName string) {
+	localCSVName := filepath.Base(localDemName) + ".csv"
+	unfilteredRoundsTable.init(getCSVFilePath(c.BaseUnfilteredRoundsName, localCSVName), roundsHeader)
+	filteredRoundsTable.init(getCSVFilePath(c.BaseFilteredRoundsName, localCSVName), roundsHeader)
+	playersTable.init(getCSVFilePath(c.BasePlayersName, localCSVName), playersHeader)
+	ticksTable.init(getCSVFilePath(c.BaseTicksName, localCSVName), ticksHeader)
+	playerAtTicksTable.init(getCSVFilePath(c.BasePlayerAtTickName, localCSVName), playerAtTicksHeader)
+	spottedTable.init(getCSVFilePath(c.BaseSpottedName, localCSVName), spottedHeader)
+	footstepTable.init(getCSVFilePath(c.BaseFootstepName, localCSVName), footstepHeader)
+	weaponFireTable.init(getCSVFilePath(c.BaseWeaponFireName, localCSVName), weaponFireHeader)
+	hurtTable.init(getCSVFilePath(c.BaseHurtName, localCSVName), hurtHeader)
+	killTable.init(getCSVFilePath(c.BaseKillsName, localCSVName), killHeader)
+	grenadeTable.init(getCSVFilePath(c.BaseGrenadesName, localCSVName), grenadeHeader)
+	grenadeTrajectoryTable.init(getCSVFilePath(c.BaseGrenadeTrajectoriesName, localCSVName), grenadeTrajectoryHeader)
+	playerFlashedTable.init(getCSVFilePath(c.BasePlayerFlashedName, localCSVName), playerFlashedHeader)
+	plantTable.init(getCSVFilePath(c.BasePlantsName, localCSVName), plantHeader)
+	defusalTable.init(getCSVFilePath(c.BaseDefusalsName, localCSVName), defusalHeader)
+	explosionTable.init(getCSVFilePath(c.BaseExplosionsName, localCSVName), explosionHeader)
+	sayTable.init(getCSVFilePath(c.BaseSayName, localCSVName), sayHeader)
 
 	playersTracker.init()
 	grenadeTracker.init()
@@ -31,7 +37,7 @@ func InitTablesTrackers() {
 func ParseDemo(unprocessedKey string, localDemName string, idState *IDState, firstRun bool, gameType c.GameType,
 	shouldFilterRounds bool) {
 	fmt.Printf("localDemName: %s\n", localDemName)
-	InitTablesTrackers()
+	InitTablesTrackers(localDemName)
 	ProcessStructure(unprocessedKey, localDemName, idState, gameType)
 	FixRounds()
 	FilterRounds(idState, shouldFilterRounds)
