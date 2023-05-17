@@ -15,15 +15,12 @@ void ColStore::toHDF5(const std::string &filePath) {
     hdf5CreateProps.add(HighFive::Chunking(id.size()));
     file.createDataSet(hdf5Prefix + "id", id, hdf5CreateProps);
 
+
     // create all other columns
-    toHDF5Inner(file);
+    toHDF5Inner(file, hdf5CreateProps);
 }
 
-void Equipment::toHDF5Inner(HighFive::File & file) {
-    HighFive::DataSetCreateProps hdf5FlatCreateProps;
-    hdf5FlatCreateProps.add(HighFive::Deflate(6));
-    hdf5FlatCreateProps.add(HighFive::Chunking(id.size()));
-
+void Equipment::toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) {
     file.createDataSet(hdf5Prefix + "name", name, hdf5FlatCreateProps);
 }
 
@@ -33,11 +30,7 @@ void Equipment::fromHDF5Inner(HighFive::File & file) {
     size = static_cast<int64_t>(id.size());
 }
 
-void GameTypes::toHDF5Inner(HighFive::File & file) {
-    HighFive::DataSetCreateProps hdf5FlatCreateProps;
-    hdf5FlatCreateProps.add(HighFive::Deflate(6));
-    hdf5FlatCreateProps.add(HighFive::Chunking(id.size()));
-
+void GameTypes::toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) {
     file.createDataSet(hdf5Prefix + "table type", tableType, hdf5FlatCreateProps);
 }
 
@@ -47,11 +40,7 @@ void GameTypes::fromHDF5Inner(HighFive::File & file) {
     size = static_cast<int64_t>(id.size());
 }
 
-void HitGroups::toHDF5Inner(HighFive::File & file) {
-    HighFive::DataSetCreateProps hdf5FlatCreateProps;
-    hdf5FlatCreateProps.add(HighFive::Deflate(6));
-    hdf5FlatCreateProps.add(HighFive::Chunking(id.size()));
-
+void HitGroups::toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) {
     file.createDataSet(hdf5Prefix + "group name", groupName, hdf5FlatCreateProps);
 }
 
@@ -61,11 +50,7 @@ void HitGroups::fromHDF5Inner(HighFive::File & file) {
     size = static_cast<int64_t>(id.size());
 }
 
-void Games::toHDF5Inner(HighFive::File & file) {
-    HighFive::DataSetCreateProps hdf5FlatCreateProps;
-    hdf5FlatCreateProps.add(HighFive::Deflate(6));
-    hdf5FlatCreateProps.add(HighFive::Chunking(id.size()));
-
+void Games::toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) {
     file.createDataSet(hdf5Prefix + "demo file", demoFile, hdf5FlatCreateProps);
     file.createDataSet(hdf5Prefix + "demo tick rate", demoTickRate, hdf5FlatCreateProps);
     file.createDataSet(hdf5Prefix + "game tick rate", gameTickRate, hdf5FlatCreateProps);
@@ -83,11 +68,7 @@ void Games::fromHDF5Inner(HighFive::File & file) {
     size = static_cast<int64_t>(id.size());
 }
 
-void Players::toHDF5Inner(HighFive::File & file) {
-    HighFive::DataSetCreateProps hdf5FlatCreateProps;
-    hdf5FlatCreateProps.add(HighFive::Deflate(6));
-    hdf5FlatCreateProps.add(HighFive::Chunking(id.size()));
-
+void Players::toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) {
     file.createDataSet(hdf5Prefix + "game id", gameId, hdf5FlatCreateProps);
     file.createDataSet(hdf5Prefix + "name", name, hdf5FlatCreateProps);
     file.createDataSet(hdf5Prefix + "steam id", steamId, hdf5FlatCreateProps);
@@ -101,11 +82,7 @@ void Players::fromHDF5Inner(HighFive::File & file) {
     size = static_cast<int64_t>(id.size());
 }
 
-void Rounds::toHDF5Inner(HighFive::File & file) {
-    HighFive::DataSetCreateProps hdf5FlatCreateProps;
-    hdf5FlatCreateProps.add(HighFive::Deflate(6));
-    hdf5FlatCreateProps.add(HighFive::Chunking(id.size()));
-
+void Rounds::toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) {
     file.createDataSet(hdf5Prefix + "game id", gameId, hdf5FlatCreateProps);
     file.createDataSet(hdf5Prefix + "start tick", startTick, hdf5FlatCreateProps);
     file.createDataSet(hdf5Prefix + "end tick", endTick, hdf5FlatCreateProps);
@@ -137,11 +114,7 @@ void Rounds::fromHDF5Inner(HighFive::File & file) {
     size = static_cast<int64_t>(id.size());
 }
 
-void Ticks::toHDF5Inner(HighFive::File & file) {
-    HighFive::DataSetCreateProps hdf5FlatCreateProps;
-    hdf5FlatCreateProps.add(HighFive::Deflate(6));
-    hdf5FlatCreateProps.add(HighFive::Chunking(id.size()));
-
+void Ticks::toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) {
     file.createDataSet(hdf5Prefix + "round id", roundId, hdf5FlatCreateProps);
     file.createDataSet(hdf5Prefix + "game time", gameTime, hdf5FlatCreateProps);
     file.createDataSet(hdf5Prefix + "demo tick number", demoTickNumber, hdf5FlatCreateProps);
@@ -165,11 +138,7 @@ void Ticks::fromHDF5Inner(HighFive::File & file) {
     size = static_cast<int64_t>(id.size());
 }
 
-void PlayerAtTick::toHDF5Inner(HighFive::File & file) {
-    HighFive::DataSetCreateProps hdf5FlatCreateProps;
-    hdf5FlatCreateProps.add(HighFive::Deflate(6));
-    hdf5FlatCreateProps.add(HighFive::Chunking(id.size()));
-
+void PlayerAtTick::toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) {
     file.createDataSet(hdf5Prefix + "player id", playerId, hdf5FlatCreateProps);
     file.createDataSet(hdf5Prefix + "tick id", tickId, hdf5FlatCreateProps);
     file.createDataSet(hdf5Prefix + "pos x", posX, hdf5FlatCreateProps);
@@ -273,11 +242,7 @@ void PlayerAtTick::fromHDF5Inner(HighFive::File & file) {
     size = static_cast<int64_t>(id.size());
 }
 
-void Spotted::toHDF5Inner(HighFive::File & file) {
-    HighFive::DataSetCreateProps hdf5FlatCreateProps;
-    hdf5FlatCreateProps.add(HighFive::Deflate(6));
-    hdf5FlatCreateProps.add(HighFive::Chunking(id.size()));
-
+void Spotted::toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) {
     file.createDataSet(hdf5Prefix + "tick id", tickId, hdf5FlatCreateProps);
     file.createDataSet(hdf5Prefix + "spotted player", spottedPlayer, hdf5FlatCreateProps);
     file.createDataSet(hdf5Prefix + "spotter player", spotterPlayer, hdf5FlatCreateProps);
@@ -293,11 +258,7 @@ void Spotted::fromHDF5Inner(HighFive::File & file) {
     size = static_cast<int64_t>(id.size());
 }
 
-void Footstep::toHDF5Inner(HighFive::File & file) {
-    HighFive::DataSetCreateProps hdf5FlatCreateProps;
-    hdf5FlatCreateProps.add(HighFive::Deflate(6));
-    hdf5FlatCreateProps.add(HighFive::Chunking(id.size()));
-
+void Footstep::toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) {
     file.createDataSet(hdf5Prefix + "tick id", tickId, hdf5FlatCreateProps);
     file.createDataSet(hdf5Prefix + "stepping player", steppingPlayer, hdf5FlatCreateProps);
 }
@@ -309,11 +270,7 @@ void Footstep::fromHDF5Inner(HighFive::File & file) {
     size = static_cast<int64_t>(id.size());
 }
 
-void WeaponFire::toHDF5Inner(HighFive::File & file) {
-    HighFive::DataSetCreateProps hdf5FlatCreateProps;
-    hdf5FlatCreateProps.add(HighFive::Deflate(6));
-    hdf5FlatCreateProps.add(HighFive::Chunking(id.size()));
-
+void WeaponFire::toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) {
     file.createDataSet(hdf5Prefix + "tick id", tickId, hdf5FlatCreateProps);
     file.createDataSet(hdf5Prefix + "shooter", shooter, hdf5FlatCreateProps);
     file.createDataSet(hdf5Prefix + "weapon", shooter, hdf5FlatCreateProps);
@@ -327,11 +284,7 @@ void WeaponFire::fromHDF5Inner(HighFive::File & file) {
     size = static_cast<int64_t>(id.size());
 }
 
-void Kills::toHDF5Inner(HighFive::File & file) {
-    HighFive::DataSetCreateProps hdf5FlatCreateProps;
-    hdf5FlatCreateProps.add(HighFive::Deflate(6));
-    hdf5FlatCreateProps.add(HighFive::Chunking(id.size()));
-
+void Kills::toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) {
     file.createDataSet(hdf5Prefix + "tick id", tickId, hdf5FlatCreateProps);
     file.createDataSet(hdf5Prefix + "killer", killer, hdf5FlatCreateProps);
     file.createDataSet(hdf5Prefix + "victim", victim, hdf5FlatCreateProps);
@@ -354,11 +307,7 @@ void Kills::fromHDF5Inner(HighFive::File & file) {
     size = static_cast<int64_t>(id.size());
 }
 
-void Hurt::toHDF5Inner(HighFive::File & file) {
-    HighFive::DataSetCreateProps hdf5FlatCreateProps;
-    hdf5FlatCreateProps.add(HighFive::Deflate(6));
-    hdf5FlatCreateProps.add(HighFive::Chunking(id.size()));
-
+void Hurt::toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) {
     file.createDataSet(hdf5Prefix + "tick id", tickId, hdf5FlatCreateProps);
     file.createDataSet(hdf5Prefix + "victim", victim, hdf5FlatCreateProps);
     file.createDataSet(hdf5Prefix + "attacker", attacker, hdf5FlatCreateProps);
@@ -384,11 +333,7 @@ void Hurt::fromHDF5Inner(HighFive::File & file) {
     size = static_cast<int64_t>(id.size());
 }
 
-void Grenades::toHDF5Inner(HighFive::File & file) {
-    HighFive::DataSetCreateProps hdf5FlatCreateProps;
-    hdf5FlatCreateProps.add(HighFive::Deflate(6));
-    hdf5FlatCreateProps.add(HighFive::Chunking(id.size()));
-
+void Grenades::toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) {
     file.createDataSet(hdf5Prefix + "thrower", thrower, hdf5FlatCreateProps);
     file.createDataSet(hdf5Prefix + "grenade type", grenadeType, hdf5FlatCreateProps);
     file.createDataSet(hdf5Prefix + "throw tick", throwTick, hdf5FlatCreateProps);
@@ -408,11 +353,7 @@ void Grenades::fromHDF5Inner(HighFive::File & file) {
     size = static_cast<int64_t>(id.size());
 }
 
-void Flashed::toHDF5Inner(HighFive::File & file) {
-    HighFive::DataSetCreateProps hdf5FlatCreateProps;
-    hdf5FlatCreateProps.add(HighFive::Deflate(6));
-    hdf5FlatCreateProps.add(HighFive::Chunking(id.size()));
-
+void Flashed::toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) {
     file.createDataSet(hdf5Prefix + "tick id", tickId, hdf5FlatCreateProps);
     file.createDataSet(hdf5Prefix + "grenade id", grenadeId, hdf5FlatCreateProps);
     file.createDataSet(hdf5Prefix + "thrower", thrower, hdf5FlatCreateProps);
@@ -427,11 +368,7 @@ void Flashed::fromHDF5Inner(HighFive::File & file) {
     size = static_cast<int64_t>(id.size());
 }
 
-void GrenadeTrajectories::toHDF5Inner(HighFive::File & file) {
-    HighFive::DataSetCreateProps hdf5FlatCreateProps;
-    hdf5FlatCreateProps.add(HighFive::Deflate(6));
-    hdf5FlatCreateProps.add(HighFive::Chunking(id.size()));
-
+void GrenadeTrajectories::toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) {
     file.createDataSet(hdf5Prefix + "grenade id", grenadeId, hdf5FlatCreateProps);
     file.createDataSet(hdf5Prefix + "id per grenade", idPerGrenade, hdf5FlatCreateProps);
     file.createDataSet(hdf5Prefix + "pos x", posX, hdf5FlatCreateProps);
@@ -449,11 +386,7 @@ void GrenadeTrajectories::fromHDF5Inner(HighFive::File & file) {
     size = static_cast<int64_t>(id.size());
 }
 
-void Plants::toHDF5Inner(HighFive::File & file) {
-    HighFive::DataSetCreateProps hdf5FlatCreateProps;
-    hdf5FlatCreateProps.add(HighFive::Deflate(6));
-    hdf5FlatCreateProps.add(HighFive::Chunking(id.size()));
-
+void Plants::toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) {
     file.createDataSet(hdf5Prefix + "start tick", startTick, hdf5FlatCreateProps);
     file.createDataSet(hdf5Prefix + "end tick", endTick, hdf5FlatCreateProps);
     file.createDataSet(hdf5Prefix + "planter", planter, hdf5FlatCreateProps);
@@ -469,11 +402,7 @@ void Plants::fromHDF5Inner(HighFive::File & file) {
     size = static_cast<int64_t>(id.size());
 }
 
-void Defusals::toHDF5Inner(HighFive::File & file) {
-    HighFive::DataSetCreateProps hdf5FlatCreateProps;
-    hdf5FlatCreateProps.add(HighFive::Deflate(6));
-    hdf5FlatCreateProps.add(HighFive::Chunking(id.size()));
-
+void Defusals::toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) {
     file.createDataSet(hdf5Prefix + "plant id", plantId, hdf5FlatCreateProps);
     file.createDataSet(hdf5Prefix + "start tick", startTick, hdf5FlatCreateProps);
     file.createDataSet(hdf5Prefix + "end tick", endTick, hdf5FlatCreateProps);
@@ -491,11 +420,7 @@ void Defusals::fromHDF5Inner(HighFive::File & file) {
     size = static_cast<int64_t>(id.size());
 }
 
-void Explosions::toHDF5Inner(HighFive::File & file) {
-    HighFive::DataSetCreateProps hdf5FlatCreateProps;
-    hdf5FlatCreateProps.add(HighFive::Deflate(6));
-    hdf5FlatCreateProps.add(HighFive::Chunking(id.size()));
-
+void Explosions::toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) {
     file.createDataSet(hdf5Prefix + "plant id", plantId, hdf5FlatCreateProps);
     file.createDataSet(hdf5Prefix + "tick id", tickId, hdf5FlatCreateProps);
 }
@@ -507,11 +432,7 @@ void Explosions::fromHDF5Inner(HighFive::File & file) {
     size = static_cast<int64_t>(id.size());
 }
 
-void Say::toHDF5Inner(HighFive::File & file) {
-    HighFive::DataSetCreateProps hdf5FlatCreateProps;
-    hdf5FlatCreateProps.add(HighFive::Deflate(6));
-    hdf5FlatCreateProps.add(HighFive::Chunking(id.size()));
-
+void Say::toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) {
     file.createDataSet(hdf5Prefix + "game id", gameId, hdf5FlatCreateProps);
     file.createDataSet(hdf5Prefix + "tick id", tickId, hdf5FlatCreateProps);
     file.createDataSet(hdf5Prefix + "message", message, hdf5FlatCreateProps);

@@ -58,7 +58,7 @@ public:
         this->gameStarts = std::move(gameStarts);
         this->id.resize(rows);
     }
-    virtual void toHDF5Inner(HighFive::File &) {
+    virtual void toHDF5Inner(HighFive::File &, HighFive::DataSetCreateProps & hdf5FlatCreateProps) {
         throw std::runtime_error("HDFS saving not implemented for this query yet");
     }
     void toHDF5(const string & filePath);
@@ -77,7 +77,7 @@ public:
         ColStore::init(rows, numFiles, gameStarts);
         name.resize(rows);
     }
-    void toHDF5Inner(HighFive::File & file) override;
+    void toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) override;
     void fromHDF5Inner(HighFive::File & file) override;
 };
 
@@ -90,7 +90,7 @@ public:
         ColStore::init(rows, numFiles, gameStarts);
         tableType.resize(rows);
     }
-    void toHDF5Inner(HighFive::File & file) override;
+    void toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) override;
     void fromHDF5Inner(HighFive::File & file) override;
 };
 
@@ -103,7 +103,7 @@ public:
         ColStore::init(rows, numFiles, gameStarts);
         groupName.resize(rows);
     }
-    void toHDF5Inner(HighFive::File & file) override;
+    void toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) override;
     void fromHDF5Inner(HighFive::File & file) override;
 };
 
@@ -128,7 +128,7 @@ public:
         roundsPerGame.resize(rows);
         playersPerGame.resize(rows);
     }
-    void toHDF5Inner(HighFive::File & file) override;
+    void toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) override;
     void fromHDF5Inner(HighFive::File & file) override;
 };
 
@@ -147,7 +147,7 @@ public:
         name.resize(rows);
         steamId.resize(rows);
     }
-    void toHDF5Inner(HighFive::File & file) override;
+    void toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) override;
     void fromHDF5Inner(HighFive::File & file) override;
 };
 
@@ -188,7 +188,7 @@ public:
         ctWins.resize(rows);
         ticksPerRound.resize(rows);
     }
-    void toHDF5Inner(HighFive::File & file) override;
+    void toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) override;
     void fromHDF5Inner(HighFive::File & file) override;
 };
 
@@ -238,7 +238,7 @@ public:
         spottedPerTick.resize(rows);
         footstepPerTick.resize(rows);
     }
-    void toHDF5Inner(HighFive::File & file) override;
+    void toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) override;
     void fromHDF5Inner(HighFive::File & file) override;
 };
 
@@ -347,7 +347,7 @@ public:
         money.resize(rows);
         ping.resize(rows);
     }
-    void toHDF5Inner(HighFive::File & file) override;
+    void toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) override;
     void fromHDF5Inner(HighFive::File & file) override;
 
     void makePitchNeg90To90() {
@@ -375,7 +375,7 @@ public:
         spotterPlayer.resize(rows);
         isSpotted.resize(rows);
     }
-    void toHDF5Inner(HighFive::File & file) override;
+    void toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) override;
     void fromHDF5Inner(HighFive::File & file) override;
 };
 
@@ -390,7 +390,7 @@ public:
         tickId.resize(rows);
         steppingPlayer.resize(rows);
     }
-    void toHDF5Inner(HighFive::File & file) override;
+    void toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) override;
     void fromHDF5Inner(HighFive::File & file) override;
 };
 
@@ -407,7 +407,7 @@ public:
         shooter.resize(rows);
         weapon.resize(rows);
     }
-    void toHDF5Inner(HighFive::File & file) override;
+    void toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) override;
     void fromHDF5Inner(HighFive::File & file) override;
 };
 
@@ -434,7 +434,7 @@ public:
         isWallbang.resize(rows);
         penetratedObjects.resize(rows);
     }
-    void toHDF5Inner(HighFive::File & file) override;
+    void toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) override;
     void fromHDF5Inner(HighFive::File & file) override;
 };
 
@@ -463,7 +463,7 @@ public:
         health.resize(rows);
         hitGroup.resize(rows);
     }
-    void toHDF5Inner(HighFive::File & file) override;
+    void toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) override;
     void fromHDF5Inner(HighFive::File & file) override;
 };
 
@@ -489,7 +489,7 @@ public:
         destroyTick.resize(rows);
         flashedPerGrenade.resize(rows);
     }
-    void toHDF5Inner(HighFive::File & file) override;
+    void toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) override;
     void fromHDF5Inner(HighFive::File & file) override;
 };
 
@@ -508,7 +508,7 @@ public:
         thrower.resize(rows);
         victim.resize(rows);
     }
-    void toHDF5Inner(HighFive::File & file) override;
+    void toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) override;
     void fromHDF5Inner(HighFive::File & file) override;
 };
 
@@ -529,7 +529,7 @@ public:
         posY.resize(rows);
         posZ.resize(rows);
     }
-    void toHDF5Inner(HighFive::File & file) override;
+    void toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) override;
     void fromHDF5Inner(HighFive::File & file) override;
 };
 
@@ -552,7 +552,7 @@ public:
         defusalsPerPlant.resize(rows);
         explosionsPerPlant.resize(rows);
     }
-    void toHDF5Inner(HighFive::File & file) override;
+    void toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) override;
     void fromHDF5Inner(HighFive::File & file) override;
 };
 
@@ -573,7 +573,7 @@ public:
         defuser.resize(rows);
         succesful.resize(rows);
     }
-    void toHDF5Inner(HighFive::File & file) override;
+    void toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) override;
     void fromHDF5Inner(HighFive::File & file) override;
 };
 
@@ -588,7 +588,7 @@ public:
         plantId.resize(rows);
         tickId.resize(rows);
     }
-    void toHDF5Inner(HighFive::File & file) override;
+    void toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) override;
     void fromHDF5Inner(HighFive::File & file) override;
 };
 
@@ -605,7 +605,7 @@ public:
         tickId.resize(rows);
         message.resize(rows);
     }
-    void toHDF5Inner(HighFive::File & file) override;
+    void toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) override;
     void fromHDF5Inner(HighFive::File & file) override;
 };
 
