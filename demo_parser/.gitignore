@@ -1,3 +1,4 @@
 *.dem
 *.csv
-demo_parser
+demos/
+hdf5/

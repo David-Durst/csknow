@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"os"
+	"path"
 	"strings"
 )
 
@@ -68,6 +69,7 @@ func main() {
 	botRetakesDataFlag := flag.Bool("brd", false, "set if using retakes data")
 	manualDataFlag := flag.Bool("m", false, "set if using manual data")
 	rolloutDataFlag := flag.Bool("ro", false, "set if using rollout data")
+	uploadFlag := flag.Bool("u", true, "set to false if not uploading results to s3")
 	// if running locally, skip the aws stuff and just return
 	localFlag := flag.Bool("l", false, "set for non-aws (aka local) runs")
 	localDemName := flag.String("n", "local.dem", "set for demo's name on local file system")
@@ -125,7 +127,6 @@ func main() {
 	downloader := s3manager.NewDownloader(sess)
 	uploader := s3manager.NewUploader(sess)
 
-	var filesToMove []string
 	demosFolder := demoUnprocessedPrefix
 
 	i := 0
@@ -141,17 +142,15 @@ func main() {
 				continue
 			}
 			fmt.Printf("Handling file: %s\n", *obj.Key)
-			d.DownloadFile(downloader, *obj.Key, *localDemName)
+			*localDemName = path.Join(c.DemoDirectory, path.Base(*obj.Key))
+			d.DownloadDemo(downloader, *obj.Key, *localDemName)
 			d.ParseDemo(*obj.Key, *localDemName, &startIDState, firstRun, c.Pro, shouldFilterRounds)
 			firstRun = false
-			d.UploadCSVs(uploader, *obj.Key, csvPrefixLocal)
-			filesToMove = append(filesToMove, *obj.Key)
+			if *uploadFlag {
+				d.UploadCSVs(uploader, *obj.Key, csvPrefixLocal)
+			}
 		}
 
 		return true
 	})
-
-	if len(filesToMove) == 0 {
-		os.Exit(0)
-	}
 }

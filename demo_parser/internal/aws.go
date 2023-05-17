@@ -13,7 +13,7 @@ import (
 
 const BucketName = "csknow"
 
-func DownloadFile(downloader *s3manager.Downloader, fileKey string, localFileName string) {
+func DownloadDemo(downloader *s3manager.Downloader, fileKey string, localFileName string) {
 	// Create a file to write the S3 Object contents to.
 	awsF, err := os.Create(localFileName)
 	if err != nil {

@@ -1,6 +1,8 @@
 package constants
 
 const (
+	DemoDirectory                   = "demos"
+	HDF5Directory                   = "hdf5"
 	BaseStateCSVName                = "global_id_state.csv"
 	InputStateCSVName               = "input_" + BaseStateCSVName
 	OutputStateCSVName              = "output_" + BaseStateCSVName
