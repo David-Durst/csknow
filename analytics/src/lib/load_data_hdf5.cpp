@@ -24,6 +24,10 @@ void Equipment::fromHDF5(HighFive::File & file) {
     size = static_cast<int64_t>(id.size());
 }
 
+bool operator==(const Equipment & lhs, const Equipment & rhs) {
+    return lhs.id == rhs.id && lhs.name == rhs.name;
+}
+
 void GameTypes::toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) {
     file.createDataSet(hdf5Prefix + "table type", tableType, hdf5FlatCreateProps);
 }
@@ -34,6 +38,10 @@ void GameTypes::fromHDF5(HighFive::File & file) {
     size = static_cast<int64_t>(id.size());
 }
 
+bool operator==(const GameTypes & lhs, const GameTypes & rhs) {
+    return lhs.id == rhs.id && lhs.tableType == rhs.tableType;
+}
+
 void HitGroups::toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) {
     file.createDataSet(hdf5Prefix + "group name", groupName, hdf5FlatCreateProps);
 }
@@ -42,6 +50,10 @@ void HitGroups::fromHDF5(HighFive::File & file) {
     id = file.getDataSet(hdf5Prefix + "id").read<std::vector<int64_t>>();
     groupName = file.getDataSet(hdf5Prefix + "group name").read<std::vector<string>>();
     size = static_cast<int64_t>(id.size());
+}
+
+bool operator==(const HitGroups & lhs, const HitGroups & rhs) {
+    return lhs.id == rhs.id && lhs.groupName == rhs.groupName;
 }
 
 void Games::toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) {
@@ -62,6 +74,11 @@ void Games::fromHDF5(HighFive::File & file) {
     size = static_cast<int64_t>(id.size());
 }
 
+bool operator==(const Games & lhs, const Games & rhs) {
+    return lhs.id == rhs.id && lhs.demoFile == rhs.demoFile && lhs.demoTickRate == rhs.demoTickRate &&
+        lhs.gameTickRate == rhs.gameTickRate && lhs.mapName == rhs.mapName && lhs.gameType == rhs.gameType;
+}
+
 void Players::toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) {
     file.createDataSet(hdf5Prefix + "game id", gameId, hdf5FlatCreateProps);
     file.createDataSet(hdf5Prefix + "name", name, hdf5FlatCreateProps);
@@ -74,6 +91,10 @@ void Players::fromHDF5(HighFive::File & file) {
     name = file.getDataSet(hdf5Prefix + "name").read<std::vector<string>>();
     steamId = file.getDataSet(hdf5Prefix + "steam id").read<std::vector<int64_t>>();
     size = static_cast<int64_t>(id.size());
+}
+
+bool operator==(const Players & lhs, const Players & rhs) {
+    return lhs.id == rhs.id && lhs.gameId == rhs.gameId && lhs.name == rhs.name && lhs.steamId == rhs.steamId;
 }
 
 void Rounds::toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) {
@@ -108,6 +129,14 @@ void Rounds::fromHDF5(HighFive::File & file) {
     size = static_cast<int64_t>(id.size());
 }
 
+bool operator==(const Rounds & lhs, const Rounds & rhs) {
+    return lhs.id == rhs.id && lhs.gameId == rhs.gameId && lhs.startTick == rhs.startTick &&
+        lhs.endTick == rhs.endTick && lhs.endOfficialTick == rhs.endOfficialTick && lhs.warmup == rhs.warmup &&
+        lhs.overtime == rhs.overtime && lhs.freezeTimeEnd == rhs.freezeTimeEnd && lhs.roundNumber == rhs.roundNumber &&
+        lhs.roundEndReason == rhs.roundEndReason && lhs.winner == rhs.winner && lhs.tWins == rhs.tWins &&
+        lhs.ctWins == rhs.ctWins;
+}
+
 void Ticks::toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) {
     file.createDataSet(hdf5Prefix + "round id", roundId, hdf5FlatCreateProps);
     file.createDataSet(hdf5Prefix + "game time", gameTime, hdf5FlatCreateProps);
@@ -130,6 +159,13 @@ void Ticks::fromHDF5(HighFive::File & file) {
     bombY = file.getDataSet(hdf5Prefix + "bomb y").read<std::vector<double>>();
     bombZ = file.getDataSet(hdf5Prefix + "bomb z").read<std::vector<double>>();
     size = static_cast<int64_t>(id.size());
+}
+
+bool operator==(const Ticks & lhs, const Ticks & rhs) {
+    return lhs.id == rhs.id && lhs.roundId == rhs.roundId && lhs.gameTime == rhs.gameTime &&
+           lhs.demoTickNumber == rhs.demoTickNumber && lhs.gameTickNumber == rhs.gameTickNumber &&
+           lhs.bombCarrier == rhs.bombCarrier && lhs.bombX == rhs.bombX && lhs.bombY == rhs.bombY &&
+           lhs.bombZ == rhs.bombZ;
 }
 
 void PlayerAtTick::toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) {
@@ -168,11 +204,12 @@ void PlayerAtTick::toHDF5Inner(HighFive::File & file, HighFive::DataSetCreatePro
     file.createDataSet(hdf5Prefix + "primary weapon", primaryWeapon, hdf5FlatCreateProps);
     file.createDataSet(hdf5Prefix + "primary bullets clip", primaryBulletsClip, hdf5FlatCreateProps);
     file.createDataSet(hdf5Prefix + "primary bullets reserve", primaryBulletsReserve, hdf5FlatCreateProps);
-    file.createDataSet(hdf5Prefix + "secondary weapon", primaryWeapon, hdf5FlatCreateProps);
-    file.createDataSet(hdf5Prefix + "secondary bullets clip", primaryBulletsClip, hdf5FlatCreateProps);
-    file.createDataSet(hdf5Prefix + "secondary bullets reserve", primaryBulletsReserve, hdf5FlatCreateProps);
+    file.createDataSet(hdf5Prefix + "secondary weapon", secondaryWeapon, hdf5FlatCreateProps);
+    file.createDataSet(hdf5Prefix + "secondary bullets clip", secondaryBulletsClip, hdf5FlatCreateProps);
+    file.createDataSet(hdf5Prefix + "secondary bullets reserve", secondaryBulletsReserve, hdf5FlatCreateProps);
     file.createDataSet(hdf5Prefix + "num HE", numHe, hdf5FlatCreateProps);
     file.createDataSet(hdf5Prefix + "num flash", numFlash, hdf5FlatCreateProps);
+    file.createDataSet(hdf5Prefix + "num smoke", numSmoke, hdf5FlatCreateProps);
     file.createDataSet(hdf5Prefix + "num molotov", numMolotov, hdf5FlatCreateProps);
     file.createDataSet(hdf5Prefix + "num incendiary", numIncendiary, hdf5FlatCreateProps);
     file.createDataSet(hdf5Prefix + "num decoy", numDecoy, hdf5FlatCreateProps);
@@ -225,6 +262,7 @@ void PlayerAtTick::fromHDF5(HighFive::File & file) {
     secondaryBulletsReserve = file.getDataSet(hdf5Prefix + "secondary bullets reserve").read<std::vector<int16_t>>();
     numHe = file.getDataSet(hdf5Prefix + "num HE").read<std::vector<int16_t>>();
     numFlash = file.getDataSet(hdf5Prefix + "num flash").read<std::vector<int16_t>>();
+    numSmoke = file.getDataSet(hdf5Prefix + "num smoke").read<std::vector<int16_t>>();
     numMolotov = file.getDataSet(hdf5Prefix + "num molotov").read<std::vector<int16_t>>();
     numIncendiary = file.getDataSet(hdf5Prefix + "num incendiary").read<std::vector<int16_t>>();
     numDecoy = file.getDataSet(hdf5Prefix + "num decoy").read<std::vector<int16_t>>();
@@ -235,6 +273,31 @@ void PlayerAtTick::fromHDF5(HighFive::File & file) {
     ping = file.getDataSet(hdf5Prefix + "ping").read<std::vector<int32_t>>();
     size = static_cast<int64_t>(id.size());
 }
+
+bool operator==(const PlayerAtTick & lhs, const PlayerAtTick & rhs) {
+    return lhs.id == rhs.id && lhs.playerId == rhs.playerId && lhs.tickId == rhs.tickId &&
+           lhs.posX == rhs.posX && lhs.posY == rhs.posY && lhs.posZ == rhs.posZ && lhs.eyePosZ == rhs.eyePosZ &&
+           lhs.velX == rhs.velX && lhs.velY == rhs.velY && lhs.velZ == rhs.velZ &&
+           lhs.viewX == rhs.viewX && lhs.viewY == rhs.viewY && lhs.aimPunchX == rhs.aimPunchX && lhs.aimPunchY == rhs.aimPunchY &&
+           lhs.viewPunchX == rhs.viewPunchX && lhs.viewPunchY == rhs.viewPunchY &&
+           lhs.recoilIndex == rhs.recoilIndex && lhs.nextPrimaryAttack == rhs.nextPrimaryAttack &&
+           lhs.nextSecondaryAttack == rhs.nextSecondaryAttack && lhs.gameTime == rhs.gameTime &&
+           lhs.team == rhs.team && lhs.health == rhs.health && lhs.armor == rhs.armor &&
+           lhs.hasHelmet == rhs.hasHelmet && lhs.isAlive == rhs.isAlive &&
+           lhs.duckingKeyPressed == rhs.duckingKeyPressed && lhs.duckAmount == rhs.duckAmount &&
+           lhs.isReloading == rhs.isReloading && lhs.isWalking == rhs.isWalking &&
+           lhs.isScoped == rhs.isScoped && lhs.isAirborne == rhs.isAirborne &&
+           lhs.flashDuration == rhs.flashDuration && lhs.activeWeapon == rhs.activeWeapon &&
+           lhs.primaryWeapon == rhs.primaryWeapon && lhs.primaryBulletsClip == rhs.primaryBulletsClip &&
+           lhs.primaryBulletsReserve == rhs.primaryBulletsReserve &&
+           lhs.secondaryWeapon == rhs.secondaryWeapon && lhs.secondaryBulletsClip == rhs.secondaryBulletsClip &&
+           lhs.secondaryBulletsReserve == rhs.secondaryBulletsReserve &&
+           lhs.numHe == rhs.numHe && lhs.numFlash == rhs.numFlash && lhs.numSmoke == rhs.numSmoke &&
+           lhs.numMolotov == rhs.numMolotov && lhs.numIncendiary == rhs.numIncendiary && lhs.numDecoy == rhs.numDecoy &&
+           lhs.numZeus == rhs.numZeus && lhs.hasDefuser == rhs.hasDefuser && lhs.hasBomb == rhs.hasBomb &&
+           lhs.money == rhs.money && lhs.ping == rhs.ping;
+}
+
 
 void Spotted::toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) {
     file.createDataSet(hdf5Prefix + "tick id", tickId, hdf5FlatCreateProps);
@@ -252,6 +315,11 @@ void Spotted::fromHDF5(HighFive::File & file) {
     size = static_cast<int64_t>(id.size());
 }
 
+bool operator==(const Spotted & lhs, const Spotted & rhs) {
+    return lhs.id == rhs.id && lhs.tickId == rhs.tickId && lhs.spottedPlayer == rhs.spottedPlayer &&
+        lhs.spotterPlayer == rhs.spotterPlayer && lhs.isSpotted == rhs.isSpotted;
+}
+
 void Footstep::toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) {
     file.createDataSet(hdf5Prefix + "tick id", tickId, hdf5FlatCreateProps);
     file.createDataSet(hdf5Prefix + "stepping player", steppingPlayer, hdf5FlatCreateProps);
@@ -264,10 +332,14 @@ void Footstep::fromHDF5(HighFive::File & file) {
     size = static_cast<int64_t>(id.size());
 }
 
+bool operator==(const Footstep & lhs, const Footstep & rhs) {
+    return lhs.id == rhs.id && lhs.tickId == rhs.tickId && lhs.steppingPlayer == rhs.steppingPlayer;
+}
+
 void WeaponFire::toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) {
     file.createDataSet(hdf5Prefix + "tick id", tickId, hdf5FlatCreateProps);
     file.createDataSet(hdf5Prefix + "shooter", shooter, hdf5FlatCreateProps);
-    file.createDataSet(hdf5Prefix + "weapon", shooter, hdf5FlatCreateProps);
+    file.createDataSet(hdf5Prefix + "weapon", weapon, hdf5FlatCreateProps);
 }
 
 void WeaponFire::fromHDF5(HighFive::File & file) {
@@ -276,6 +348,10 @@ void WeaponFire::fromHDF5(HighFive::File & file) {
     shooter = file.getDataSet(hdf5Prefix + "shooter").read<std::vector<int64_t>>();
     weapon = file.getDataSet(hdf5Prefix + "weapon").read<std::vector<int16_t>>();
     size = static_cast<int64_t>(id.size());
+}
+
+bool operator==(const WeaponFire & lhs, const WeaponFire & rhs) {
+    return lhs.id == rhs.id && lhs.tickId == rhs.tickId && lhs.shooter == rhs.shooter && lhs.weapon == rhs.weapon;
 }
 
 void Kills::toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) {
@@ -299,6 +375,12 @@ void Kills::fromHDF5(HighFive::File & file) {
     isWallbang = file.getDataSet(hdf5Prefix + "is wallbang").read<std::vector<bool>>();
     penetratedObjects = file.getDataSet(hdf5Prefix + "penetrated objects").read<std::vector<int32_t>>();
     size = static_cast<int64_t>(id.size());
+}
+
+bool operator==(const Kills & lhs, const Kills & rhs) {
+    return lhs.id == rhs.id && lhs.tickId == rhs.tickId && lhs.killer == rhs.killer && lhs.weapon == rhs.weapon &&
+        lhs.assister == rhs.assister && lhs.isHeadshot == rhs.isHeadshot && lhs.isWallbang == rhs.isWallbang &&
+        lhs.penetratedObjects == rhs.penetratedObjects;
 }
 
 void Hurt::toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) {
@@ -327,6 +409,12 @@ void Hurt::fromHDF5(HighFive::File & file) {
     size = static_cast<int64_t>(id.size());
 }
 
+bool operator==(const Hurt & lhs, const Hurt & rhs) {
+    return lhs.id == rhs.id && lhs.tickId == rhs.tickId && lhs.victim == rhs.victim && lhs.attacker == rhs.attacker &&
+           lhs.weapon == rhs.weapon && lhs.armorDamage == rhs.armorDamage && lhs.armor == rhs.armor &&
+           lhs.healthDamage == rhs.healthDamage && lhs.health == rhs.health && lhs.hitGroup == rhs.hitGroup;
+}
+
 void Grenades::toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) {
     file.createDataSet(hdf5Prefix + "thrower", thrower, hdf5FlatCreateProps);
     file.createDataSet(hdf5Prefix + "grenade type", grenadeType, hdf5FlatCreateProps);
@@ -347,6 +435,12 @@ void Grenades::fromHDF5(HighFive::File & file) {
     size = static_cast<int64_t>(id.size());
 }
 
+bool operator==(const Grenades & lhs, const Grenades & rhs) {
+    return lhs.id == rhs.id && lhs.thrower == rhs.thrower && lhs.grenadeType == rhs.grenadeType &&
+           lhs.throwTick == rhs.throwTick && lhs.activeTick == rhs.activeTick && lhs.expiredTick == rhs.expiredTick &&
+           lhs.destroyTick == rhs.destroyTick;
+}
+
 void Flashed::toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) {
     file.createDataSet(hdf5Prefix + "tick id", tickId, hdf5FlatCreateProps);
     file.createDataSet(hdf5Prefix + "grenade id", grenadeId, hdf5FlatCreateProps);
@@ -357,9 +451,15 @@ void Flashed::toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & 
 void Flashed::fromHDF5(HighFive::File & file) {
     id = file.getDataSet(hdf5Prefix + "id").read<std::vector<int64_t>>();
     tickId = file.getDataSet(hdf5Prefix + "tick id").read<std::vector<int64_t>>();
+    grenadeId = file.getDataSet(hdf5Prefix + "grenade id").read<std::vector<int64_t>>();
     thrower = file.getDataSet(hdf5Prefix + "thrower").read<std::vector<int64_t>>();
     victim = file.getDataSet(hdf5Prefix + "victim").read<std::vector<int64_t>>();
     size = static_cast<int64_t>(id.size());
+}
+
+bool operator==(const Flashed & lhs, const Flashed & rhs) {
+    return lhs.id == rhs.id && lhs.tickId == rhs.tickId && lhs.grenadeId == rhs.grenadeId &&
+           lhs.thrower == rhs.thrower && lhs.victim == rhs.victim;
 }
 
 void GrenadeTrajectories::toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) {
@@ -380,6 +480,11 @@ void GrenadeTrajectories::fromHDF5(HighFive::File & file) {
     size = static_cast<int64_t>(id.size());
 }
 
+bool operator==(const GrenadeTrajectories & lhs, const GrenadeTrajectories & rhs) {
+    return lhs.id == rhs.id && lhs.grenadeId == rhs.grenadeId && lhs.idPerGrenade == rhs.idPerGrenade &&
+           lhs.posX == rhs.posX && lhs.posY == rhs.posY && lhs.posZ == rhs.posZ;
+}
+
 void Plants::toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) {
     file.createDataSet(hdf5Prefix + "start tick", startTick, hdf5FlatCreateProps);
     file.createDataSet(hdf5Prefix + "end tick", endTick, hdf5FlatCreateProps);
@@ -396,6 +501,11 @@ void Plants::fromHDF5(HighFive::File & file) {
     size = static_cast<int64_t>(id.size());
 }
 
+bool operator==(const Plants & lhs, const Plants & rhs) {
+    return lhs.id == rhs.id && lhs.startTick == rhs.startTick && lhs.endTick == rhs.endTick &&
+           lhs.planter == rhs.planter && lhs.succesful == rhs.succesful;
+}
+
 void Defusals::toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) {
     file.createDataSet(hdf5Prefix + "plant id", plantId, hdf5FlatCreateProps);
     file.createDataSet(hdf5Prefix + "start tick", startTick, hdf5FlatCreateProps);
@@ -406,12 +516,17 @@ void Defusals::toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps &
 
 void Defusals::fromHDF5(HighFive::File & file) {
     id = file.getDataSet(hdf5Prefix + "id").read<std::vector<int64_t>>();
-    startTick = file.getDataSet(hdf5Prefix + "plant id").read<std::vector<int64_t>>();
+    plantId = file.getDataSet(hdf5Prefix + "plant id").read<std::vector<int64_t>>();
     startTick = file.getDataSet(hdf5Prefix + "start tick").read<std::vector<int64_t>>();
     endTick = file.getDataSet(hdf5Prefix + "end tick").read<std::vector<int64_t>>();
     defuser = file.getDataSet(hdf5Prefix + "defuser").read<std::vector<int64_t>>();
     succesful = file.getDataSet(hdf5Prefix + "succesful").read<std::vector<bool>>();
     size = static_cast<int64_t>(id.size());
+}
+
+bool operator==(const Defusals & lhs, const Defusals & rhs) {
+    return lhs.id == rhs.id && lhs.plantId == rhs.plantId && lhs.startTick == rhs.startTick &&
+           lhs.endTick == rhs.endTick && lhs.defuser == rhs.defuser && lhs.succesful == rhs.succesful;
 }
 
 void Explosions::toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) {
@@ -426,6 +541,10 @@ void Explosions::fromHDF5(HighFive::File & file) {
     size = static_cast<int64_t>(id.size());
 }
 
+bool operator==(const Explosions & lhs, const Explosions & rhs) {
+    return lhs.id == rhs.id && lhs.plantId == rhs.plantId && lhs.tickId == rhs.tickId;
+}
+
 void Say::toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) {
     file.createDataSet(hdf5Prefix + "game id", gameId, hdf5FlatCreateProps);
     file.createDataSet(hdf5Prefix + "tick id", tickId, hdf5FlatCreateProps);
@@ -438,6 +557,10 @@ void Say::fromHDF5(HighFive::File & file) {
     tickId = file.getDataSet(hdf5Prefix + "tick id").read<std::vector<int64_t>>();
     message = file.getDataSet(hdf5Prefix + "message").read<std::vector<string>>();
     size = static_cast<int64_t>(id.size());
+}
+
+bool operator==(const Say & lhs, const Say & rhs) {
+    return lhs.id == rhs.id && lhs.gameId == rhs.gameId && lhs.tickId == rhs.tickId && lhs.message == rhs.message;
 }
 
 void loadDataHDF5(Equipment & equipment, GameTypes & gameTypes, HitGroups & hitGroups, Games & games, Players & players,

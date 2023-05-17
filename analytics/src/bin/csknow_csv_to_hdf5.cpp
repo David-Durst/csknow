@@ -102,4 +102,51 @@ int main(int argc, char * argv[]) {
     auto hdf5ReadEnd = std::chrono::system_clock::now();
     std::chrono::duration<double> hdf5ReadTime = hdf5ReadEnd - hdf5ReadStart;
     std::cout << "hdf5 read time " << hdf5ReadTime.count() << std::endl;
+
+    std::cout << "testing equality" << std::endl;
+    bool equipmentEqual = equipmentCSV == equipmentHDF5;
+    std::cout << "equipment equal " << equipmentEqual << std::endl;
+    bool gameTypesEqual = gameTypesCSV == gameTypesHDF5;
+    std::cout << "game types equal " << gameTypesEqual << std::endl;
+    bool hitGroupsEqual = hitGroupsCSV == hitGroupsHDF5;
+    std::cout << "hit groups equal " << hitGroupsEqual << std::endl;
+    bool playersEqual = playersCSV == playersHDF5;
+    std::cout << "players equal " << playersEqual << std::endl;
+    bool unfilteredRoundsEqual = unfilteredRoundsCSV == unfilteredRoundsHDF5;
+    std::cout << "unfiltered rounds equal " << unfilteredRoundsEqual << std::endl;
+    bool filteredRoundsEqual = filteredRoundsCSV == filteredRoundsHDF5;
+    std::cout << "filtered rounds equal " << filteredRoundsEqual << std::endl;
+    bool ticksEqual = ticksCSV == ticksHDF5;
+    std::cout << "ticks equal " << ticksEqual << std::endl;
+    bool playerAtTickEqual = playerAtTickCSV == playerAtTickHDF5;
+    std::cout << "playerAtTick equal " << playerAtTickEqual << std::endl;
+    bool spottedEqual = spottedCSV == spottedHDF5;
+    std::cout << "spotted equal " << spottedEqual << std::endl;
+    bool footstepEqual = footstepCSV == footstepHDF5;
+    std::cout << "footstep equal " << footstepEqual << std::endl;
+    bool weaponFireEqual = weaponFireCSV == weaponFireHDF5;
+    std::cout << "weaponFire equal " << weaponFireEqual << std::endl;
+    bool killsEqual = killsCSV == killsHDF5;
+    std::cout << "kills equal " << killsEqual << std::endl;
+    bool hurtEqual = hurtCSV == hurtHDF5;
+    std::cout << "hurt equal " << hurtEqual << std::endl;
+    bool grenadesEqual = grenadesCSV == grenadesHDF5;
+    std::cout << "grenades equal " << grenadesEqual << std::endl;
+    bool flashedEqual = flashedCSV == flashedHDF5;
+    std::cout << "flashed equal " << flashedEqual << std::endl;
+    bool grenadeTrajectoriesEqual = grenadeTrajectoriesCSV == grenadeTrajectoriesHDF5;
+    std::cout << "grenadeTrajectories equal " << grenadeTrajectoriesEqual << std::endl;
+    bool plantsEqual = plantsCSV == plantsHDF5;
+    std::cout << "plants equal " << plantsEqual << std::endl;
+    bool defusalsEqual = defusalsCSV == defusalsHDF5;
+    std::cout << "defusals equal " << defusalsEqual << std::endl;
+    bool explosionsEqual = explosionsCSV == explosionsHDF5;
+    std::cout << "explosions equal " << explosionsEqual << std::endl;
+    bool sayEqual = sayCSV == sayHDF5;
+    std::cout << "say equal " << sayEqual << std::endl;
+    std::cout << "all equal " << (equipmentEqual && gameTypesEqual && hitGroupsEqual && playersEqual &&
+        unfilteredRoundsEqual && filteredRoundsEqual && ticksEqual && playerAtTickEqual &&
+        spottedEqual && footstepEqual && weaponFireEqual && killsEqual && hurtEqual && grenadesEqual &&
+        flashedEqual && grenadeTrajectoriesEqual && plantsEqual && defusalsEqual && explosionsEqual && sayEqual)
+        << std::endl;
 }

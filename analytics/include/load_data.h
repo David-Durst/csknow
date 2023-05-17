@@ -67,7 +67,6 @@ public:
     }
 };
 
-
 class Equipment : public ColStore {
 public:
     vector<string> name;
@@ -80,6 +79,7 @@ public:
     void toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) override;
     void fromHDF5(HighFive::File & file) override;
 };
+bool operator==(const Equipment & lhs, const Equipment & rhs);
 
 class GameTypes : public ColStore {
 public:
@@ -93,6 +93,7 @@ public:
     void toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) override;
     void fromHDF5(HighFive::File & file) override;
 };
+bool operator==(const GameTypes & lhs, const GameTypes & rhs);
 
 class HitGroups : public ColStore {
 public:
@@ -106,6 +107,7 @@ public:
     void toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) override;
     void fromHDF5(HighFive::File & file) override;
 };
+bool operator==(const HitGroups & lhs, const HitGroups & rhs);
 
 class Games : public ColStore {
 public:
@@ -131,6 +133,7 @@ public:
     void toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) override;
     void fromHDF5(HighFive::File & file) override;
 };
+bool operator==(const Games & lhs, const Games & rhs);
 
 class Players : public ColStore {
 public:
@@ -150,6 +153,7 @@ public:
     void toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) override;
     void fromHDF5(HighFive::File & file) override;
 };
+bool operator==(const Players & lhs, const Players & rhs);
 
 class Rounds : public ColStore {
 public:
@@ -192,6 +196,7 @@ public:
     void toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) override;
     void fromHDF5(HighFive::File & file) override;
 };
+bool operator==(const Rounds & lhs, const Rounds & rhs);
 
 class Ticks: public ColStore {
 public:
@@ -242,6 +247,7 @@ public:
     void toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) override;
     void fromHDF5(HighFive::File & file) override;
 };
+bool operator==(const Ticks & lhs, const Ticks & rhs);
 
 class PlayerAtTick: public ColStore {
 public:
@@ -360,6 +366,7 @@ public:
         }
     }
 };
+bool operator==(const PlayerAtTick & lhs, const PlayerAtTick & rhs);
 
 class Spotted : public ColStore {
 public:
@@ -379,6 +386,7 @@ public:
     void toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) override;
     void fromHDF5(HighFive::File & file) override;
 };
+bool operator==(const Spotted & lhs, const Spotted & rhs);
 
 class Footstep : public ColStore {
 public:
@@ -394,6 +402,7 @@ public:
     void toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) override;
     void fromHDF5(HighFive::File & file) override;
 };
+bool operator==(const Footstep & lhs, const Footstep & rhs);
 
 class WeaponFire : public ColStore {
 public:
@@ -411,6 +420,7 @@ public:
     void toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) override;
     void fromHDF5(HighFive::File & file) override;
 };
+bool operator==(const WeaponFire & lhs, const WeaponFire & rhs);
 
 class Kills : public ColStore {
 public:
@@ -438,6 +448,7 @@ public:
     void toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) override;
     void fromHDF5(HighFive::File & file) override;
 };
+bool operator==(const Kills & lhs, const Kills & rhs);
 
 class Hurt : public ColStore {
 public:
@@ -467,6 +478,7 @@ public:
     void toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) override;
     void fromHDF5(HighFive::File & file) override;
 };
+bool operator==(const Hurt & lhs, const Hurt & rhs);
 
 class Grenades : public ColStore {
 public:
@@ -493,6 +505,7 @@ public:
     void toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) override;
     void fromHDF5(HighFive::File & file) override;
 };
+bool operator==(const Grenades & lhs, const Grenades & rhs);
 
 class Flashed : public ColStore {
 public:
@@ -512,6 +525,7 @@ public:
     void toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) override;
     void fromHDF5(HighFive::File & file) override;
 };
+bool operator==(const Flashed & lhs, const Flashed & rhs);
 
 class GrenadeTrajectories : public ColStore {
 public:
@@ -533,6 +547,7 @@ public:
     void toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) override;
     void fromHDF5(HighFive::File & file) override;
 };
+bool operator==(const GrenadeTrajectories & lhs, const GrenadeTrajectories & rhs);
 
 class Plants : public ColStore {
 public:
@@ -556,6 +571,7 @@ public:
     void toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) override;
     void fromHDF5(HighFive::File & file) override;
 };
+bool operator==(const Plants & lhs, const Plants & rhs);
 
 class Defusals : public ColStore {
 public:
@@ -577,6 +593,7 @@ public:
     void toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) override;
     void fromHDF5(HighFive::File & file) override;
 };
+bool operator==(const Defusals & lhs, const Defusals & rhs);
 
 class Explosions : public ColStore {
 public:
@@ -592,6 +609,7 @@ public:
     void toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) override;
     void fromHDF5(HighFive::File & file) override;
 };
+bool operator==(const Explosions & lhs, const Explosions & rhs);
 
 class Say : public ColStore {
 public:
@@ -609,6 +627,7 @@ public:
     void toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) override;
     void fromHDF5(HighFive::File & file) override;
 };
+bool operator==(const Say & lhs, const Say & rhs);
 
 void loadDataCSV(Equipment & equipment, GameTypes & gameTypes, HitGroups & hitGroups, Games & games, Players & players,
                  Rounds & unfilteredRounds, Rounds & filteredRounds, Ticks & ticks, PlayerAtTick & playerAtTick, Spotted & spotted, Footstep & footstep, WeaponFire & weaponFire,
