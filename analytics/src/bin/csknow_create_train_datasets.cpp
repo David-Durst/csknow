@@ -9,7 +9,6 @@
 #include <ctime>
 #include "load_data.h"
 #include "indices/build_indexes.h"
-#include "load_clusters.h"
 #include "queries/base_tables.h"
 #include "queries/nav_visible.h"
 #include "queries/nav_danger.h"
