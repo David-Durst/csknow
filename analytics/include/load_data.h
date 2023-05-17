@@ -58,11 +58,11 @@ public:
         this->gameStarts = std::move(gameStarts);
         this->id.resize(rows);
     }
-    virtual void toHDF5Inner(HighFive::File &, HighFive::DataSetCreateProps & hdf5FlatCreateProps) {
+    virtual void toHDF5Inner(HighFive::File &, HighFive::DataSetCreateProps &) {
         throw std::runtime_error("HDFS saving not implemented for this query yet");
     }
-    void toHDF5(const string & filePath);
-    virtual void fromHDF5Inner(HighFive::File &) {
+    void toHDF5(HighFive::File & file);
+    virtual void fromHDF5(HighFive::File &) {
         throw std::runtime_error("HDFS loading not implemented for this query yet");
     }
 };
@@ -78,7 +78,7 @@ public:
         name.resize(rows);
     }
     void toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) override;
-    void fromHDF5Inner(HighFive::File & file) override;
+    void fromHDF5(HighFive::File & file) override;
 };
 
 class GameTypes : public ColStore {
@@ -91,7 +91,7 @@ public:
         tableType.resize(rows);
     }
     void toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) override;
-    void fromHDF5Inner(HighFive::File & file) override;
+    void fromHDF5(HighFive::File & file) override;
 };
 
 class HitGroups : public ColStore {
@@ -104,7 +104,7 @@ public:
         groupName.resize(rows);
     }
     void toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) override;
-    void fromHDF5Inner(HighFive::File & file) override;
+    void fromHDF5(HighFive::File & file) override;
 };
 
 class Games : public ColStore {
@@ -129,7 +129,7 @@ public:
         playersPerGame.resize(rows);
     }
     void toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) override;
-    void fromHDF5Inner(HighFive::File & file) override;
+    void fromHDF5(HighFive::File & file) override;
 };
 
 class Players : public ColStore {
@@ -148,7 +148,7 @@ public:
         steamId.resize(rows);
     }
     void toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) override;
-    void fromHDF5Inner(HighFive::File & file) override;
+    void fromHDF5(HighFive::File & file) override;
 };
 
 class Rounds : public ColStore {
@@ -189,7 +189,7 @@ public:
         ticksPerRound.resize(rows);
     }
     void toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) override;
-    void fromHDF5Inner(HighFive::File & file) override;
+    void fromHDF5(HighFive::File & file) override;
 };
 
 class Ticks: public ColStore {
@@ -239,7 +239,7 @@ public:
         footstepPerTick.resize(rows);
     }
     void toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) override;
-    void fromHDF5Inner(HighFive::File & file) override;
+    void fromHDF5(HighFive::File & file) override;
 };
 
 class PlayerAtTick: public ColStore {
@@ -348,7 +348,7 @@ public:
         ping.resize(rows);
     }
     void toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) override;
-    void fromHDF5Inner(HighFive::File & file) override;
+    void fromHDF5(HighFive::File & file) override;
 
     void makePitchNeg90To90() {
 #pragma omp parallel for
@@ -376,7 +376,7 @@ public:
         isSpotted.resize(rows);
     }
     void toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) override;
-    void fromHDF5Inner(HighFive::File & file) override;
+    void fromHDF5(HighFive::File & file) override;
 };
 
 class Footstep : public ColStore {
@@ -391,7 +391,7 @@ public:
         steppingPlayer.resize(rows);
     }
     void toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) override;
-    void fromHDF5Inner(HighFive::File & file) override;
+    void fromHDF5(HighFive::File & file) override;
 };
 
 class WeaponFire : public ColStore {
@@ -408,7 +408,7 @@ public:
         weapon.resize(rows);
     }
     void toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) override;
-    void fromHDF5Inner(HighFive::File & file) override;
+    void fromHDF5(HighFive::File & file) override;
 };
 
 class Kills : public ColStore {
@@ -435,7 +435,7 @@ public:
         penetratedObjects.resize(rows);
     }
     void toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) override;
-    void fromHDF5Inner(HighFive::File & file) override;
+    void fromHDF5(HighFive::File & file) override;
 };
 
 class Hurt : public ColStore {
@@ -464,7 +464,7 @@ public:
         hitGroup.resize(rows);
     }
     void toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) override;
-    void fromHDF5Inner(HighFive::File & file) override;
+    void fromHDF5(HighFive::File & file) override;
 };
 
 class Grenades : public ColStore {
@@ -490,7 +490,7 @@ public:
         flashedPerGrenade.resize(rows);
     }
     void toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) override;
-    void fromHDF5Inner(HighFive::File & file) override;
+    void fromHDF5(HighFive::File & file) override;
 };
 
 class Flashed : public ColStore {
@@ -509,7 +509,7 @@ public:
         victim.resize(rows);
     }
     void toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) override;
-    void fromHDF5Inner(HighFive::File & file) override;
+    void fromHDF5(HighFive::File & file) override;
 };
 
 class GrenadeTrajectories : public ColStore {
@@ -530,7 +530,7 @@ public:
         posZ.resize(rows);
     }
     void toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) override;
-    void fromHDF5Inner(HighFive::File & file) override;
+    void fromHDF5(HighFive::File & file) override;
 };
 
 class Plants : public ColStore {
@@ -553,7 +553,7 @@ public:
         explosionsPerPlant.resize(rows);
     }
     void toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) override;
-    void fromHDF5Inner(HighFive::File & file) override;
+    void fromHDF5(HighFive::File & file) override;
 };
 
 class Defusals : public ColStore {
@@ -574,7 +574,7 @@ public:
         succesful.resize(rows);
     }
     void toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) override;
-    void fromHDF5Inner(HighFive::File & file) override;
+    void fromHDF5(HighFive::File & file) override;
 };
 
 class Explosions : public ColStore {
@@ -589,7 +589,7 @@ public:
         tickId.resize(rows);
     }
     void toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) override;
-    void fromHDF5Inner(HighFive::File & file) override;
+    void fromHDF5(HighFive::File & file) override;
 };
 
 class Say : public ColStore {
@@ -606,12 +606,22 @@ public:
         message.resize(rows);
     }
     void toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5FlatCreateProps) override;
-    void fromHDF5Inner(HighFive::File & file) override;
+    void fromHDF5(HighFive::File & file) override;
 };
 
-void loadData(Equipment & equipment, GameTypes & gameTypes, HitGroups & hitGroups, Games & games, Players & players,
-              Rounds & unfilteredRounds, Rounds & filteredRounds, Ticks & ticks, PlayerAtTick & playerAtTick, Spotted & spotted, Footstep & footstep, WeaponFire & weaponFire,
-              Kills & kills, Hurt & hurt, Grenades & grenades, Flashed & flashed, GrenadeTrajectories & grenadeTrajectories,
-              Plants & plants, Defusals & defusals, Explosions & explosions, Say & say, const string & dataPath);
+void loadDataCSV(Equipment & equipment, GameTypes & gameTypes, HitGroups & hitGroups, Games & games, Players & players,
+                 Rounds & unfilteredRounds, Rounds & filteredRounds, Ticks & ticks, PlayerAtTick & playerAtTick, Spotted & spotted, Footstep & footstep, WeaponFire & weaponFire,
+                 Kills & kills, Hurt & hurt, Grenades & grenades, Flashed & flashed, GrenadeTrajectories & grenadeTrajectories,
+                 Plants & plants, Defusals & defusals, Explosions & explosions, Say & say, const string & dataPath);
+
+void loadDataHDF5(Equipment & equipment, GameTypes & gameTypes, HitGroups & hitGroups, Games & games, Players & players,
+                  Rounds & unfilteredRounds, Rounds & filteredRounds, Ticks & ticks, PlayerAtTick & playerAtTick, Spotted & spotted, Footstep & footstep, WeaponFire & weaponFire,
+                  Kills & kills, Hurt & hurt, Grenades & grenades, Flashed & flashed, GrenadeTrajectories & grenadeTrajectories,
+                  Plants & plants, Defusals & defusals, Explosions & explosions, Say & say, const string & dataPath);
+
+void saveDataHDF5(Equipment & equipment, GameTypes & gameTypes, HitGroups & hitGroups, Games & games, Players & players,
+                  Rounds & unfilteredRounds, Rounds & filteredRounds, Ticks & ticks, PlayerAtTick & playerAtTick, Spotted & spotted, Footstep & footstep, WeaponFire & weaponFire,
+                  Kills & kills, Hurt & hurt, Grenades & grenades, Flashed & flashed, GrenadeTrajectories & grenadeTrajectories,
+                  Plants & plants, Defusals & defusals, Explosions & explosions, Say & say, const string & filePath);
 
 #endif //CSKNOW_LOAD_DATA_H

@@ -118,8 +118,9 @@ int main(int argc, char * argv[]) {
     Explosions explosions;
     Say say;
 
-    loadData(equipment, gameTypes, hitGroups, games, players, unfilteredRounds, filteredRounds, ticks, playerAtTick, spotted, footstep, weaponFire,
-             kills, hurt, grenades, flashed, grenadeTrajectories, plants, defusals, explosions, say, dataPath);
+    loadDataCSV(equipment, gameTypes, hitGroups, games, players, unfilteredRounds, filteredRounds, ticks, playerAtTick,
+                spotted, footstep, weaponFire,
+                kills, hurt, grenades, flashed, grenadeTrajectories, plants, defusals, explosions, say, dataPath);
     buildIndexes(equipment, gameTypes, hitGroups, games, players, filteredRounds, ticks, playerAtTick, spotted, footstep, weaponFire,
                  kills, hurt, grenades, flashed, grenadeTrajectories, plants, defusals, explosions, say);
     //std::printf("GLIBCXX: %d\n",__GLIBCXX__);

@@ -50,21 +50,6 @@ using std::map;
 using std::string;
 using std::reference_wrapper;
 
-void exec(const string & cmd) {
-    std::array<char, 128> buffer;
-    std::string result;
-    std::string cmdWithPipe = cmd + " 2>&1";
-    std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmdWithPipe.c_str(), "r"), pclose);
-    if (!pipe) {
-        std::cerr << "error code: " << strerror(errno) << std::endl;
-        throw std::runtime_error("popen() failed!");
-    }
-    while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
-        result += buffer.data();
-    }
-    std::cout << result;
-}
-
 int main(int argc, char * argv[]) {
     if (argc != 5 && argc != 6) {
         std::cout << "please call this code 5 arguments: " << std::endl;
@@ -141,8 +126,9 @@ int main(int argc, char * argv[]) {
     Explosions explosions;
     Say say;
 
-    loadData(equipment, gameTypes, hitGroups, games, players, unfilteredRounds, filteredRounds, ticks, playerAtTick, spotted, footstep, weaponFire,
-             kills, hurt, grenades, flashed, grenadeTrajectories, plants, defusals, explosions, say, dataPath);
+    loadDataCSV(equipment, gameTypes, hitGroups, games, players, unfilteredRounds, filteredRounds, ticks, playerAtTick,
+                spotted, footstep, weaponFire,
+                kills, hurt, grenades, flashed, grenadeTrajectories, plants, defusals, explosions, say, dataPath);
     buildIndexes(equipment, gameTypes, hitGroups, games, players, filteredRounds, ticks, playerAtTick, spotted, footstep, weaponFire,
                  kills, hurt, grenades, flashed, grenadeTrajectories, plants, defusals, explosions, say);
     //std::printf("GLIBCXX: %d\n",__GLIBCXX__);

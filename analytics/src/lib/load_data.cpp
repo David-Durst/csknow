@@ -1318,10 +1318,10 @@ void loadSay(Say & say, const string & dataPath) {
     }
 }
 
-void loadData(Equipment & equipment, GameTypes & gameTypes, HitGroups & hitGroups, Games & games, Players & players,
-              Rounds & unfilteredRounds, Rounds & filteredRounds, Ticks & ticks, PlayerAtTick & playerAtTick, Spotted & spotted, Footstep & footstep, WeaponFire & weaponFire,
-              Kills & kills, Hurt & hurt, Grenades & grenades, Flashed & flashed, GrenadeTrajectories & grenadeTrajectories,
-              Plants & plants, Defusals & defusals, Explosions & explosions, Say & say, const string & dataPath) {
+void loadDataCSV(Equipment & equipment, GameTypes & gameTypes, HitGroups & hitGroups, Games & games, Players & players,
+                 Rounds & unfilteredRounds, Rounds & filteredRounds, Ticks & ticks, PlayerAtTick & playerAtTick, Spotted & spotted, Footstep & footstep, WeaponFire & weaponFire,
+                 Kills & kills, Hurt & hurt, Grenades & grenades, Flashed & flashed, GrenadeTrajectories & grenadeTrajectories,
+                 Plants & plants, Defusals & defusals, Explosions & explosions, Say & say, const string & dataPath) {
     std::cout << "loading equipment" << std::endl;
     loadEquipment(equipment, dataPath);
     std::cout << "loading game_types" << std::endl;

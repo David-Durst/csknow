@@ -5,11 +5,7 @@
 #include "load_data.h"
 #include "hdf5_helpers.h"
 
-void ColStore::toHDF5(const std::string &filePath) {
-    // We create an empty HDF55 file, by truncating an existing
-    // file if required:
-    HighFive::File file(filePath, HighFive::File::Overwrite);
-
+void ColStore::toHDF5(HighFive::File & file) {
     HighFive::DataSetCreateProps hdf5CreateProps;
     hdf5CreateProps.add(HighFive::Deflate(6));
     hdf5CreateProps.add(HighFive::Chunking(id.size()));
@@ -24,7 +20,7 @@ void Equipment::toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps 
     file.createDataSet(hdf5Prefix + "name", name, hdf5FlatCreateProps);
 }
 
-void Equipment::fromHDF5Inner(HighFive::File & file) {
+void Equipment::fromHDF5(HighFive::File & file) {
     id = file.getDataSet(hdf5Prefix + "id").read<std::vector<int64_t>>();
     name = file.getDataSet(hdf5Prefix + "name").read<std::vector<string>>();
     size = static_cast<int64_t>(id.size());
@@ -34,7 +30,7 @@ void GameTypes::toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps 
     file.createDataSet(hdf5Prefix + "table type", tableType, hdf5FlatCreateProps);
 }
 
-void GameTypes::fromHDF5Inner(HighFive::File & file) {
+void GameTypes::fromHDF5(HighFive::File & file) {
     id = file.getDataSet(hdf5Prefix + "id").read<std::vector<int64_t>>();
     tableType = file.getDataSet(hdf5Prefix + "table type").read<std::vector<string>>();
     size = static_cast<int64_t>(id.size());
@@ -44,7 +40,7 @@ void HitGroups::toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps 
     file.createDataSet(hdf5Prefix + "group name", groupName, hdf5FlatCreateProps);
 }
 
-void HitGroups::fromHDF5Inner(HighFive::File & file) {
+void HitGroups::fromHDF5(HighFive::File & file) {
     id = file.getDataSet(hdf5Prefix + "id").read<std::vector<int64_t>>();
     groupName = file.getDataSet(hdf5Prefix + "group name").read<std::vector<string>>();
     size = static_cast<int64_t>(id.size());
@@ -58,7 +54,7 @@ void Games::toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hd
     file.createDataSet(hdf5Prefix + "game type", gameType, hdf5FlatCreateProps);
 }
 
-void Games::fromHDF5Inner(HighFive::File & file) {
+void Games::fromHDF5(HighFive::File & file) {
     id = file.getDataSet(hdf5Prefix + "id").read<std::vector<int64_t>>();
     demoFile = file.getDataSet(hdf5Prefix + "demo file").read<std::vector<string>>();
     demoTickRate = file.getDataSet(hdf5Prefix + "demo tick rate").read<std::vector<double>>();
@@ -74,7 +70,7 @@ void Players::toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & 
     file.createDataSet(hdf5Prefix + "steam id", steamId, hdf5FlatCreateProps);
 }
 
-void Players::fromHDF5Inner(HighFive::File & file) {
+void Players::fromHDF5(HighFive::File & file) {
     id = file.getDataSet(hdf5Prefix + "id").read<std::vector<int64_t>>();
     gameId = file.getDataSet(hdf5Prefix + "game id").read<std::vector<int64_t>>();
     name = file.getDataSet(hdf5Prefix + "name").read<std::vector<string>>();
@@ -97,7 +93,7 @@ void Rounds::toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & h
     file.createDataSet(hdf5Prefix + "ct wins", ctWins, hdf5FlatCreateProps);
 }
 
-void Rounds::fromHDF5Inner(HighFive::File & file) {
+void Rounds::fromHDF5(HighFive::File & file) {
     id = file.getDataSet(hdf5Prefix + "id").read<std::vector<int64_t>>();
     gameId = file.getDataSet(hdf5Prefix + "game id").read<std::vector<int64_t>>();
     startTick = file.getDataSet(hdf5Prefix + "start tick").read<std::vector<int64_t>>();
@@ -125,7 +121,7 @@ void Ticks::toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hd
     file.createDataSet(hdf5Prefix + "bomb z", bombZ, hdf5FlatCreateProps);
 }
 
-void Ticks::fromHDF5Inner(HighFive::File & file) {
+void Ticks::fromHDF5(HighFive::File & file) {
     id = file.getDataSet(hdf5Prefix + "id").read<std::vector<int64_t>>();
     roundId = file.getDataSet(hdf5Prefix + "round id").read<std::vector<int64_t>>();
     gameTime = file.getDataSet(hdf5Prefix + "game time").read<std::vector<int64_t>>();
@@ -189,7 +185,7 @@ void PlayerAtTick::toHDF5Inner(HighFive::File & file, HighFive::DataSetCreatePro
     file.createDataSet(hdf5Prefix + "ping", ping, hdf5FlatCreateProps);
 }
 
-void PlayerAtTick::fromHDF5Inner(HighFive::File & file) {
+void PlayerAtTick::fromHDF5(HighFive::File & file) {
     id = file.getDataSet(hdf5Prefix + "id").read<std::vector<int64_t>>();
     playerId = file.getDataSet(hdf5Prefix + "player id").read<std::vector<int64_t>>();
     tickId = file.getDataSet(hdf5Prefix + "tick id").read<std::vector<int64_t>>();
@@ -249,7 +245,7 @@ void Spotted::toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & 
     file.createDataSet(hdf5Prefix + "is spotted", isSpotted, hdf5FlatCreateProps);
 }
 
-void Spotted::fromHDF5Inner(HighFive::File & file) {
+void Spotted::fromHDF5(HighFive::File & file) {
     id = file.getDataSet(hdf5Prefix + "id").read<std::vector<int64_t>>();
     tickId = file.getDataSet(hdf5Prefix + "tick id").read<std::vector<int64_t>>();
     spottedPlayer = file.getDataSet(hdf5Prefix + "spotted player").read<std::vector<int64_t>>();
@@ -263,7 +259,7 @@ void Footstep::toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps &
     file.createDataSet(hdf5Prefix + "stepping player", steppingPlayer, hdf5FlatCreateProps);
 }
 
-void Footstep::fromHDF5Inner(HighFive::File & file) {
+void Footstep::fromHDF5(HighFive::File & file) {
     id = file.getDataSet(hdf5Prefix + "id").read<std::vector<int64_t>>();
     tickId = file.getDataSet(hdf5Prefix + "tick id").read<std::vector<int64_t>>();
     steppingPlayer = file.getDataSet(hdf5Prefix + "stepping player").read<std::vector<int64_t>>();
@@ -276,7 +272,7 @@ void WeaponFire::toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps
     file.createDataSet(hdf5Prefix + "weapon", shooter, hdf5FlatCreateProps);
 }
 
-void WeaponFire::fromHDF5Inner(HighFive::File & file) {
+void WeaponFire::fromHDF5(HighFive::File & file) {
     id = file.getDataSet(hdf5Prefix + "id").read<std::vector<int64_t>>();
     tickId = file.getDataSet(hdf5Prefix + "tick id").read<std::vector<int64_t>>();
     shooter = file.getDataSet(hdf5Prefix + "shooter").read<std::vector<int64_t>>();
@@ -295,7 +291,7 @@ void Kills::toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hd
     file.createDataSet(hdf5Prefix + "penetrated objects", penetratedObjects, hdf5FlatCreateProps);
 }
 
-void Kills::fromHDF5Inner(HighFive::File & file) {
+void Kills::fromHDF5(HighFive::File & file) {
     id = file.getDataSet(hdf5Prefix + "id").read<std::vector<int64_t>>();
     tickId = file.getDataSet(hdf5Prefix + "tick id").read<std::vector<int64_t>>();
     killer = file.getDataSet(hdf5Prefix + "killer").read<std::vector<int64_t>>();
@@ -319,7 +315,7 @@ void Hurt::toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf
     file.createDataSet(hdf5Prefix + "hit group", hitGroup, hdf5FlatCreateProps);
 }
 
-void Hurt::fromHDF5Inner(HighFive::File & file) {
+void Hurt::fromHDF5(HighFive::File & file) {
     id = file.getDataSet(hdf5Prefix + "id").read<std::vector<int64_t>>();
     tickId = file.getDataSet(hdf5Prefix + "tick id").read<std::vector<int64_t>>();
     victim = file.getDataSet(hdf5Prefix + "victim").read<std::vector<int64_t>>();
@@ -342,7 +338,7 @@ void Grenades::toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps &
     file.createDataSet(hdf5Prefix + "destroy tick", destroyTick, hdf5FlatCreateProps);
 }
 
-void Grenades::fromHDF5Inner(HighFive::File & file) {
+void Grenades::fromHDF5(HighFive::File & file) {
     id = file.getDataSet(hdf5Prefix + "id").read<std::vector<int64_t>>();
     thrower = file.getDataSet(hdf5Prefix + "thrower").read<std::vector<int64_t>>();
     grenadeType = file.getDataSet(hdf5Prefix + "grenade type").read<std::vector<int16_t>>();
@@ -360,7 +356,7 @@ void Flashed::toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & 
     file.createDataSet(hdf5Prefix + "victim", victim, hdf5FlatCreateProps);
 }
 
-void Flashed::fromHDF5Inner(HighFive::File & file) {
+void Flashed::fromHDF5(HighFive::File & file) {
     id = file.getDataSet(hdf5Prefix + "id").read<std::vector<int64_t>>();
     tickId = file.getDataSet(hdf5Prefix + "tick id").read<std::vector<int64_t>>();
     thrower = file.getDataSet(hdf5Prefix + "thrower").read<std::vector<int64_t>>();
@@ -376,7 +372,7 @@ void GrenadeTrajectories::toHDF5Inner(HighFive::File & file, HighFive::DataSetCr
     file.createDataSet(hdf5Prefix + "pos z", posZ, hdf5FlatCreateProps);
 }
 
-void GrenadeTrajectories::fromHDF5Inner(HighFive::File & file) {
+void GrenadeTrajectories::fromHDF5(HighFive::File & file) {
     id = file.getDataSet(hdf5Prefix + "id").read<std::vector<int64_t>>();
     grenadeId = file.getDataSet(hdf5Prefix + "grenade id").read<std::vector<int64_t>>();
     idPerGrenade = file.getDataSet(hdf5Prefix + "id per grenade").read<std::vector<int32_t>>();
@@ -393,7 +389,7 @@ void Plants::toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & h
     file.createDataSet(hdf5Prefix + "succesful", succesful, hdf5FlatCreateProps);
 }
 
-void Plants::fromHDF5Inner(HighFive::File & file) {
+void Plants::fromHDF5(HighFive::File & file) {
     id = file.getDataSet(hdf5Prefix + "id").read<std::vector<int64_t>>();
     startTick = file.getDataSet(hdf5Prefix + "start tick").read<std::vector<int64_t>>();
     endTick = file.getDataSet(hdf5Prefix + "end tick").read<std::vector<int64_t>>();
@@ -410,7 +406,7 @@ void Defusals::toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps &
     file.createDataSet(hdf5Prefix + "succesful", succesful, hdf5FlatCreateProps);
 }
 
-void Defusals::fromHDF5Inner(HighFive::File & file) {
+void Defusals::fromHDF5(HighFive::File & file) {
     id = file.getDataSet(hdf5Prefix + "id").read<std::vector<int64_t>>();
     startTick = file.getDataSet(hdf5Prefix + "plant id").read<std::vector<int64_t>>();
     startTick = file.getDataSet(hdf5Prefix + "start tick").read<std::vector<int64_t>>();
@@ -425,7 +421,7 @@ void Explosions::toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps
     file.createDataSet(hdf5Prefix + "tick id", tickId, hdf5FlatCreateProps);
 }
 
-void Explosions::fromHDF5Inner(HighFive::File & file) {
+void Explosions::fromHDF5(HighFive::File & file) {
     id = file.getDataSet(hdf5Prefix + "id").read<std::vector<int64_t>>();
     plantId = file.getDataSet(hdf5Prefix + "plant id").read<std::vector<int64_t>>();
     tickId = file.getDataSet(hdf5Prefix + "tick id").read<std::vector<int64_t>>();
@@ -438,10 +434,72 @@ void Say::toHDF5Inner(HighFive::File & file, HighFive::DataSetCreateProps & hdf5
     file.createDataSet(hdf5Prefix + "message", message, hdf5FlatCreateProps);
 }
 
-void Say::fromHDF5Inner(HighFive::File & file) {
+void Say::fromHDF5(HighFive::File & file) {
     id = file.getDataSet(hdf5Prefix + "id").read<std::vector<int64_t>>();
     gameId = file.getDataSet(hdf5Prefix + "game id").read<std::vector<int64_t>>();
     tickId = file.getDataSet(hdf5Prefix + "tick id").read<std::vector<int64_t>>();
     message = file.getDataSet(hdf5Prefix + "message").read<std::vector<string>>();
     size = static_cast<int64_t>(id.size());
+}
+
+void loadDataHDF5(Equipment & equipment, GameTypes & gameTypes, HitGroups & hitGroups, Games & games, Players & players,
+                  Rounds & unfilteredRounds, Rounds & filteredRounds, Ticks & ticks, PlayerAtTick & playerAtTick, Spotted & spotted, Footstep & footstep, WeaponFire & weaponFire,
+                  Kills & kills, Hurt & hurt, Grenades & grenades, Flashed & flashed, GrenadeTrajectories & grenadeTrajectories,
+                  Plants & plants, Defusals & defusals, Explosions & explosions, Say & say, const string & filePath) {
+
+    // We create an empty HDF55 file, by truncating an existing
+    // file if required:
+    HighFive::File file(filePath, HighFive::File::Overwrite);
+    equipment.fromHDF5(file);
+    gameTypes.fromHDF5(file);
+    hitGroups.fromHDF5(file);
+    games.fromHDF5(file);
+    players.fromHDF5(file);
+    unfilteredRounds.fromHDF5(file);
+    filteredRounds.fromHDF5(file);
+    ticks.fromHDF5(file);
+    playerAtTick.fromHDF5(file);
+    spotted.fromHDF5(file);
+    footstep.fromHDF5(file);
+    weaponFire.fromHDF5(file);
+    kills.fromHDF5(file);
+    hurt.fromHDF5(file);
+    grenades.fromHDF5(file);
+    flashed.fromHDF5(file);
+    grenadeTrajectories.toHDF5(file);
+    plants.fromHDF5(file);
+    defusals.fromHDF5(file);
+    explosions.fromHDF5(file);
+    say.fromHDF5(file);
+}
+
+void saveDataHDF5(Equipment & equipment, GameTypes & gameTypes, HitGroups & hitGroups, Games & games, Players & players,
+                  Rounds & unfilteredRounds, Rounds & filteredRounds, Ticks & ticks, PlayerAtTick & playerAtTick, Spotted & spotted, Footstep & footstep, WeaponFire & weaponFire,
+                  Kills & kills, Hurt & hurt, Grenades & grenades, Flashed & flashed, GrenadeTrajectories & grenadeTrajectories,
+                  Plants & plants, Defusals & defusals, Explosions & explosions, Say & say, const string & filePath) {
+
+    // We create an empty HDF55 file, by truncating an existing
+    // file if required:
+    HighFive::File file(filePath, HighFive::File::Overwrite);
+    equipment.toHDF5(file);
+    gameTypes.toHDF5(file);
+    hitGroups.toHDF5(file);
+    games.toHDF5(file);
+    players.toHDF5(file);
+    unfilteredRounds.toHDF5(file);
+    filteredRounds.toHDF5(file);
+    ticks.toHDF5(file);
+    playerAtTick.toHDF5(file);
+    spotted.toHDF5(file);
+    footstep.toHDF5(file);
+    weaponFire.toHDF5(file);
+    kills.toHDF5(file);
+    hurt.toHDF5(file);
+    grenades.toHDF5(file);
+    flashed.toHDF5(file);
+    grenadeTrajectories.toHDF5(file);
+    plants.toHDF5(file);
+    defusals.toHDF5(file);
+    explosions.toHDF5(file);
+    say.toHDF5(file);
 }
