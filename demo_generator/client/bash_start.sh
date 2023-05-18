@@ -19,10 +19,11 @@ get_script_dir
 echo $script_dir
 
 docker run --name durst_csgo_client \
-    --rm -it --net=host \
+    --rm -it --privileged \
     --entrypoint /bin/bash \
     --runtime=nvidia --gpus all \
     -v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY -e XAUTHORITY -e NVIDIA_DRIVER_CAPABILITIES=all \
-    --mount type=bind,source="$(script_dir)"/game,target=/home/steam/game \
+    --mount type=bind,source="$script_dir"/game,target=/home/steam/.local \
+    -p 5901:5901 \
     durst/csgo-client:0.1
 
