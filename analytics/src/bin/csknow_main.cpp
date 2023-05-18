@@ -110,7 +110,7 @@ int main(int argc, char * argv[]) {
     HitGroups hitGroups;
     Games games;
     Players players;
-    Rounds unfilteredRounds, filteredRounds;
+    Rounds unfilteredRounds(false), filteredRounds(true);
     Ticks ticks;
     PlayerAtTick playerAtTick;
     Spotted spotted;
@@ -126,7 +126,7 @@ int main(int argc, char * argv[]) {
     Explosions explosions;
     Say say;
 
-    loadDataCSV(equipment, gameTypes, hitGroups, games, players, unfilteredRounds, filteredRounds, ticks, playerAtTick,
+    loadDataHDF5(equipment, gameTypes, hitGroups, games, players, unfilteredRounds, filteredRounds, ticks, playerAtTick,
                 spotted, footstep, weaponFire,
                 kills, hurt, grenades, flashed, grenadeTrajectories, plants, defusals, explosions, say, dataPath);
     buildIndexes(equipment, gameTypes, hitGroups, games, players, filteredRounds, ticks, playerAtTick, spotted, footstep, weaponFire,

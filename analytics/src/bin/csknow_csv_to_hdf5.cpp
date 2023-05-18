@@ -36,8 +36,8 @@ int main(int argc, char * argv[]) {
     HitGroups hitGroupsCSV, hitGroupsHDF5;
     Games gamesCSV, gamesHDF5;
     Players playersCSV, playersHDF5;
-    Rounds unfilteredRoundsCSV("/unfiltered rounds/"), unfilteredRoundsHDF5("/unfiltered rounds/"),
-        filteredRoundsCSV("/filtered rounds/"), filteredRoundsHDF5("/filtered rounds/");
+    Rounds unfilteredRoundsCSV(false), unfilteredRoundsHDF5(false),
+        filteredRoundsCSV(true), filteredRoundsHDF5(true);
     Ticks ticksCSV, ticksHDF5;
     PlayerAtTick playerAtTickCSV, playerAtTickHDF5;
     Spotted spottedCSV, spottedHDF5;
