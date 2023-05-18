@@ -397,7 +397,7 @@ def run_team_analysis():
         #                       (team_data_df['game tick number'] <= row['end game tick']))
         #team_data_df = team_data_df[rounds_condition]
         #team_data_df = team_data_df[team_data_df['test name'] == b'LearnedGooseToCatScript']
-        team_data_df = team_data_df[team_data_df[round_id_column].isin(team_data_df[round_id_column].unique()[0:60])]
+        #team_data_df = team_data_df[team_data_df[round_id_column].isin(team_data_df[round_id_column].unique()[0:60])]
     else:
         team_data_df = load_hdf5_to_pd(latent_team_hdf5_data_path)
         #valid_selector_df = valid_df[valid_df['valid'] == 1.].index

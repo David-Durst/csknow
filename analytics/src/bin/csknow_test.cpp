@@ -6,7 +6,7 @@
 
 int main([[maybe_unused]] int argc, [[maybe_unused]] char * argv[]) {
     //makeMapBasic();
-    Rounds filteredRounds;
+    Rounds filteredRounds(true);
     Ticks ticks;
     PlayerAtTick playerAtTick;
     EngagementResult engagementResult;
