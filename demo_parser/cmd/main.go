@@ -110,6 +110,8 @@ func main() {
 			d.ParseDemo(*obj.Key, *localDemName, &startIDState, firstRun, c.Pro, shouldFilterRounds)
 			firstRun = false
 		}
+
+		i++
 		return true
 	})
 
@@ -121,9 +123,8 @@ func main() {
 	hdf5FileName := dataName + ".hdf5"
 	hdf5PathForConverter := filepath.Join(currentPath, c.HDF5Directory, hdf5FileName)
 	csvToHDF5Path := filepath.Join(currentPath, "..", "analytics", "scripts", "csv_to_hdf5.sh")
-	csvToHDF5PathCommand := csvToHDF5Path + " " + csvsPathForConverter + " " + hdf5PathForConverter
-	fmt.Println("executing " + csvToHDF5PathCommand)
-	out, err := exec.Command("/bin/bash", csvToHDF5PathCommand).Output()
+	fmt.Println("executing " + csvToHDF5Path + " " + csvsPathForConverter + " " + hdf5PathForConverter)
+	out, err := exec.Command("/bin/bash", csvToHDF5Path, csvsPathForConverter, hdf5PathForConverter).Output()
 	if err != nil {
 		log.Println(string(out))
 		log.Fatal(err)
@@ -135,7 +136,7 @@ func main() {
 		hdf5S3CurrentKey := path.Join(dataS3FolderKey, hdf5FileName)
 		t := time.Now()
 		hdf5S3TemporalKey := path.Join(hdf5S3FolderKey, t.Format("2006_01_02_15_04_05_")+hdf5FileName)
-		d.UploadFile(uploader, path.Join(c.HDF5Directory, hdf5FileName), hdf5S3CurrentKey)
+		d.UploadFile(uploader, hdf5PathForConverter, hdf5S3CurrentKey)
 		svc.CopyObject(&s3.CopyObjectInput{
 			CopySource: aws.String(path.Join(d.BucketName, hdf5S3CurrentKey)),
 			Bucket:     aws.String(d.BucketName),

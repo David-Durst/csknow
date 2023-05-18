@@ -2,12 +2,10 @@ package internal
 
 import (
 	"fmt"
-	c "github.com/David-Durst/csknow/demo_parser/internal/constants"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"os"
-	"path/filepath"
 )
 
 const BucketName = "csknow"
@@ -35,7 +33,7 @@ func DownloadDemo(downloader *s3manager.Downloader, fileKey string, localFileNam
 }
 
 func UploadFile(uploader *s3manager.Uploader, localPath string, s3Key string) {
-	csvFile, err := os.Open(filepath.Join(c.TmpDir, localPath))
+	csvFile, err := os.Open(localPath)
 	if err != nil {
 		panic(err)
 	}
