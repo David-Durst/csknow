@@ -1,0 +1,5 @@
+FROM cm2network/csgo:latest 
+ENV NONVOLUMESTEAMAPPDIR "${HOMEDIR}/${STEAMAPP}-dedicated-non-volume"
+ADD ./update.sh ${HOMEDIR}/update.sh
+RUN ${HOMEDIR}/update.sh
+CMD ["bash", "entry.sh"]
