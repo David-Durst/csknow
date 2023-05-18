@@ -80,6 +80,13 @@ FATAL: In-source builds are not allowed.
 endif()
 
 add_library(csknow_lib SHARED ${CSKNOW_SOURCES} ${CSKNOW_HEADERS})
+add_library(csknow_data_only_lib SHARED
+        ${PROJECT_SOURCE_DIR}/src/lib/load_data.cpp ${PROJECT_SOURCE_DIR}/src/lib/load_data_hdf5.cpp
+        ${PROJECT_SOURCE_DIR}/src/lib/file_helpers.cpp
+        ${PROJECT_SOURCE_DIR}/include/load_data.h ${PROJECT_SOURCE_DIR}/include/IntervalTree.h
+        ${PROJECT_SOURCE_DIR}/include/queries/parser_constants.h
+        ${PROJECT_SOURCE_DIR}/include/enum_helpers.h ${PROJECT_SOURCE_DIR}/include/hdf5_helpers.h
+        ${PROJECT_SOURCE_DIR}/include/linear_algebra.h)
 add_executable(csknow ${PROJECT_SOURCE_DIR}/src/bin/csknow_main.cpp)
 add_executable(csknow_test ${PROJECT_SOURCE_DIR}/src/bin/csknow_test.cpp)
 #add_executable(csknow_bot ${PROJECT_SOURCE_DIR}/src/bin/csknow_bot.cpp)
@@ -99,6 +106,9 @@ target_link_libraries(csknow_lib "${TORCH_LIBRARIES}")
 target_link_libraries(csknow_lib ${OpenCV_LIBS})
 target_link_libraries(csknow_lib glm)
 target_link_libraries(csknow_lib HighFive)
+target_link_libraries(csknow_data_only_lib OpenMP::OpenMP_CXX)
+target_link_libraries(csknow_data_only_lib glm)
+target_link_libraries(csknow_data_only_lib HighFive)
 target_link_libraries(csknow csknow_lib)
 target_link_libraries(csknow_test csknow_lib)
 #target_link_libraries(csknow_bot csknow_lib)
@@ -109,7 +119,7 @@ target_link_libraries(csknow_compute_vis_points csknow_lib)
 target_link_libraries(csknow_create_train_datasets csknow_lib)
 target_link_libraries(csknow_create_retakes_datasets csknow_lib)
 target_link_libraries(csknow_create_retakes_moments_datasets csknow_lib)
-target_link_libraries(csknow_csv_to_hdf5 csknow_lib)
+target_link_libraries(csknow_csv_to_hdf5 csknow_data_only_lib)
 #target_link_libraries(csknow_train csknow_lib)
 #target_link_libraries(csknow_intersection csknow_lib)
 

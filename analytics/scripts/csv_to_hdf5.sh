@@ -19,8 +19,8 @@ get_script_dir
 
 mkdir -p ${script_dir}/../build
 cd ${script_dir}/../build
-cmake .. -DCMAKE_BUILD_TYPE=Release
-if make -j4; then
+cmake .. -DCMAKE_BUILD_TYPE=Release 
+if cmake --build . --target csknow_csv_to_hdf5; then
     chmod a+x csknow_csv_to_hdf5
     ${script_dir}/../build/csknow_csv_to_hdf5 $csv_dir $hdf5_path
 fi
