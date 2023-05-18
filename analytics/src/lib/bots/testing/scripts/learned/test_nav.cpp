@@ -77,7 +77,7 @@ namespace csknow::tests::learned {
 
     void LearnedCTPushLongScript::initialize(Tree &tree, ServerState &state) {
         LearnedNavScript::initialize(tree, state, Vec3({593., 282., 2.}), Vec2({2.903987, -95.587982}),
-                                     "ForceCTLong", testAToCatWaypoints, "BombsiteA");
+                                     "ForceCTLong", strategy::offenseLongToAWaypoints, "BombsiteA");
     }
 
     LearnedCTPushBDoorsScript::LearnedCTPushBDoorsScript(std::size_t testIndex, std::size_t numTests, bool waitForever) :
