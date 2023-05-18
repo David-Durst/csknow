@@ -17,9 +17,13 @@ void ColStore::toHDF5(HighFive::File & file) {
 }
 
 void ColStore::fromHDF5(HighFive::File &file) {
-    id = file.getDataSet(hdf5Prefix + "id").read<std::vector<int64_t>>();
-    if (!id.empty()) {
+    auto idDataset = file.getDataSet(hdf5Prefix + "id");
+    if (idDataset.getElementCount() > 0) {
+        id = file.getDataSet(hdf5Prefix + "id").read<std::vector<int64_t>>();
         fromHDF5Inner(file);
+    }
+    else {
+        size = 0;
     }
 }
 

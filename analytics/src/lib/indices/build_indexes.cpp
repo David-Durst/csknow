@@ -11,6 +11,7 @@ using std::endl;
 void buildRangeIndex(const vector<int64_t> &primaryKeyCol, int64_t primarySize, const vector<int64_t> &foreignKeyCol,
                           int64_t foreignSize, RangeIndex & rangeIndexCol,
                           const string & primaryName, const string & foreignName) {
+    rangeIndexCol.resize(primarySize);
     for (int64_t primaryIndex = 0, foreignIndex = 0; primaryIndex < primarySize; primaryIndex++) {
         if (foreignIndex >= foreignSize || foreignKeyCol[foreignIndex] > primaryKeyCol[primaryIndex]) {
             rangeIndexCol[primaryIndex].minId = -1;
