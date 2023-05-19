@@ -19,6 +19,7 @@ namespace csknow::feature_store {
         freezeTimeEnded.resize(size, false);
         retakeSaveRoundTick.resize(size, false);
         testName.resize(size, "INVALID");
+        baiting.resize(size, false);
         c4Status.resize(size, C4Status::NotPlanted);
         c4TicksSincePlant.resize(size, INVALID_ID);
         for (int j = 0; j < num_c4_timer_buckets; j++) {
@@ -773,6 +774,7 @@ namespace csknow::feature_store {
                 retakeSaveRoundTick[tickIndex] = keyRetakeEvents.ctAliveAfterExplosion[unmodifiedTickIndex] ||
                         keyRetakeEvents.ctAliveAfterExplosion[unmodifiedTickIndex];
                 testName[tickIndex] = keyRetakeEvents.roundTestName[roundIndex];
+                baiting[tickIndex] = keyRetakeEvents.roundBaiters[roundIndex];
                 // add a new tick every second
                 if (ticks1sFutureTracker.isEmpty() ||
                     secondsBetweenTicks(ticks, tickRates, internalIdToTickId[tickIndex], internalIdToTickId[ticks1sFutureTracker.fromNewest()]) >= 0.25) {
@@ -873,6 +875,7 @@ namespace csknow::feature_store {
         file.createDataSet("/data/freeze time ended", freezeTimeEnded, hdf5FlatCreateProps);
         file.createDataSet("/data/retake save round tick", retakeSaveRoundTick, hdf5FlatCreateProps);
         file.createDataSet("/data/test name", testName, hdf5FlatCreateProps);
+        file.createDataSet("/data/baiting", baiting, hdf5FlatCreateProps);
         file.createDataSet("/data/c4 status", vectorOfEnumsToVectorOfInts(c4Status), hdf5FlatCreateProps);
         file.createDataSet("/data/c4 ticks since plant", c4TicksSincePlant, hdf5FlatCreateProps);
         for (size_t c4TimerBucketIndex = 0; c4TimerBucketIndex < num_c4_timer_buckets; c4TimerBucketIndex++) {

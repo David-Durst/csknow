@@ -28,7 +28,8 @@ class TransformerNestedHiddenLatentModel(nn.Module):
         super(TransformerNestedHiddenLatentModel, self).__init__()
         self.cts = cts
         c4_columns_ranges = range_list_to_index_list(cts.get_name_ranges(True, True, contained_str="c4"))
-        player_columns = [c4_columns_ranges +
+        baiting_columns_ranges = range_list_to_index_list(cts.get_name_ranges(True, True, contained_str="baiting"))
+        player_columns = [c4_columns_ranges + baiting_columns_ranges +
                           range_list_to_index_list(cts.get_name_ranges(True, True, contained_str=" " + player_team_str(team_str, player_index)))
                           for team_str in team_strs for player_index in range(max_enemies)]
 

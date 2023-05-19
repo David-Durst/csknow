@@ -416,7 +416,7 @@ def run_team_analysis():
     #train_result = train(TrainType.Order, team_data_df, num_epochs=3, windowed=False)
     #train_result = train(TrainType.Place, team_data_df, num_epochs=500, windowed=False, diff_train_test=False)
     #train_result = train(TrainType.Area, team_data_df, num_epochs=3, windowed=False)
-    train_result = train(TrainType.DeltaPos, team_data_df, num_epochs=100, windowed=False, diff_train_test=True)
+    train_result = train(TrainType.DeltaPos, team_data_df, num_epochs=200, windowed=False, diff_train_test=True)
                          #flip_columns=[ColumnsToFlip(" CT 0", " CT 1")])
 
 

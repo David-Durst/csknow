@@ -56,6 +56,7 @@ namespace csknow::feature_store {
         vector<bool> freezeTimeEnded;
         vector<bool> retakeSaveRoundTick;
         vector<string> testName;
+        vector<bool> baiting;
 
         vector<C4Status> c4Status;
         vector<int64_t> c4TicksSincePlant;
