@@ -11,7 +11,7 @@ def run(args: List[str]):
     update_dir(args[0])
     generate_data_folder(s3)
     for arg in args[1:]:
-        print(f"uploading {arg}")
+        print(f"uploading {arg} to {get_demos_folder()}")
         s3.upload_file(Filename=arg, Bucket=BUCKET.bucket, Key=(get_demos_folder() / Path(arg).name).key)
 
 
