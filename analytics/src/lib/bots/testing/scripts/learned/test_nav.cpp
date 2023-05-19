@@ -4,6 +4,7 @@
 
 #include "bots/testing/scripts/learned/test_nav.h"
 #include "bots/analysis/learned_models.h"
+#include "bots/testing/scripts/learned/log_nodes.h"
 
 namespace csknow::tests::learned {
     LearnedNavScript::LearnedNavScript(const std::string & name, size_t testIndex, size_t numTests, bool waitForever) :
@@ -49,17 +50,14 @@ namespace csknow::tests::learned {
             else {
                 finishCondition = make_unique<ParallelFirstNode>(blackboard, Node::makeList(
                     make_unique<RepeatDecorator>(blackboard, std::move(placeCheck), true),
-                    make_unique<movement::WaitNode>(blackboard, 30, false)));
+                    make_unique<FailIfTimeoutEndNode>(blackboard, name, testIndex, numTests, 30)));
             }
 
-            string specificDetails = name + "," + std::to_string(testIndex) + "," + std::to_string(numTests);
-            string specificTestReadyString = test_ready_string + "," + specificDetails;
-            string specificTestFinishedString = test_finished_string + "," + specificDetails;
             commands = make_unique<SequenceNode>(blackboard, Node::makeList(
                 std::move(disableAllBothDuringSetup),
-                make_unique<SayCmd>(blackboard, specificTestReadyString),
+                make_unique<StartNode>(blackboard, name, testIndex, numTests),
                 std::move(finishCondition),
-                make_unique<SayCmd>(blackboard, specificTestFinishedString)),
+                make_unique<SuccessEndNode>(blackboard, name, testIndex, numTests)),
             "LearnedNavSequence");
         }
     }

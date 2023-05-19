@@ -357,7 +357,7 @@ struct SpecDynamic : Command {
     }
 };
 
-const string test_ready_string = "test ready", test_finished_string = "test finished";
+const string test_ready_string = "test ready", test_finished_string = "test finished", test_failed_string = "test failed";
 
 struct SayIf : Command {
     bool condition;
@@ -378,8 +378,8 @@ struct SayIf : Command {
 
 struct SayCmd : Command {
     string str;
-    SayCmd(Blackboard & blackboard, string str) :
-            Command(blackboard, "SayCmd"), str(str) { }
+    SayCmd(Blackboard & blackboard, string str, const string & name = "SayCmd") :
+            Command(blackboard, name), str(str) { }
     virtual NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
         scriptLines = {"say " + str + ";"};
         return Command::exec(state, treeThinker);
