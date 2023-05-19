@@ -42,6 +42,7 @@ namespace csknow::key_retake_events {
         vector<int> roundTestIndex;
         vector<int> roundNumTests;
         vector<bool> roundHasCompleteTest;
+        vector<bool> roundBaiters;
 
         KeyRetakeEvents(const Rounds & rounds, const Ticks & ticks, const PlayerAtTick & playerAtTick,
                         const Plants & plants, const Defusals & defusals, const Kills & kills,

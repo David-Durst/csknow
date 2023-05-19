@@ -615,7 +615,7 @@ namespace csknow::feature_store {
                                   << internalIdToTickId[curTick] << " and game tick " << ticks.gameTickNumber[internalIdToTickId[curTick]] << " distance " << distanceBetweenCurAndNextPlace << std::endl;
                         for (int64_t futureTickIndex = 0; futureTickIndex < futureTracker.getCurSize(); futureTickIndex++) {
                             int64_t futureTick = futureTracker.fromOldest(futureTickIndex);
-                            bool inWindow = secondsBetweenTicks(ticks, tickRates, curTick, futureTick) >=
+                            bool inWindow = secondsBetweenTicks(ticks, tickRates, internalIdToTickId[curTick], internalIdToTickId[futureTick]) >=
                                             futureSecondsThreshold;
                             if (futureTick != curTick &&
                                 columnData[playerColumn].playerId[curTick] ==

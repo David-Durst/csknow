@@ -31,7 +31,8 @@ namespace csknow::key_retake_events {
         roundTestName.resize(rounds.size, "INVALID");
         roundTestIndex.resize(rounds.size, INVALID_ID);
         roundNumTests.resize(rounds.size, INVALID_ID);
-        roundHasCompleteTest.resize(rounds.size, INVALID_ID);
+        roundHasCompleteTest.resize(rounds.size, false);
+        roundBaiters.resize(rounds.size, false);
 #pragma omp parallel for
         for (int64_t roundIndex = 0; roundIndex < rounds.size; roundIndex++) {
             bool foundFirstFireInRound = false, foundFirstPlantInRound = false, foundFirstDefusalInRound = false,
@@ -112,6 +113,9 @@ namespace csknow::key_retake_events {
                     else if (sayMessage.find(test_finished_string) != std::string::npos) {
                         foundTestFinishInRound = true;
                         roundHasCompleteTest[roundIndex] = foundTestStartInRound && foundTestFinishInRound;
+                        if (sayMessage.find("Bait") != std::string::npos) {
+                            roundBaiters[roundIndex] = true;
+                        }
                     }
                 }
                 testStartBeforeOrDuringThisTick[tickIndex] = foundTestStartInRound;
@@ -162,8 +166,9 @@ namespace csknow::key_retake_events {
             roundHasRetakeSave[roundIndex] = roundHasRetakeCTSave[roundIndex] || roundHasRetakeTSave[roundIndex];
         }
         int numRetakeRounds = 0, numRetakeNonSaveRounds = 0, numRetakeCTSaveRounds = 0, numRetakeTSaveRounds = 0,
-            numC4Deaths = 0, numNonC4PostPlantWorldDeaths = 0;
-        double pctRetakeNonSaveRounds = 0., pctRetakeCTSaveRounds = 0., pctRetakeTSaveRounds = 0.;
+            numC4Deaths [[maybe_unused]] = 0, numNonC4PostPlantWorldDeaths [[maybe_unused]] = 0;
+        double pctRetakeNonSaveRounds [[maybe_unused]] = 0., pctRetakeCTSaveRounds [[maybe_unused]] = 0.,
+            pctRetakeTSaveRounds [[maybe_unused]] = 0.;
 
         for (int64_t roundIndex = 0; roundIndex < rounds.size; roundIndex++) {
             if (roundHasPlant[roundIndex]) {
