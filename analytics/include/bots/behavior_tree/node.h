@@ -347,7 +347,7 @@ class FailureNode : public Node {
 public:
     FailureNode(Blackboard & blackboard) : Node(blackboard, "FailureNode") { };
 
-    NodeState exec(const ServerState & state, TreeThinker &treeThinker) override {
+    NodeState exec(const ServerState &, TreeThinker &treeThinker) override {
         playerNodeState[treeThinker.csgoId] = NodeState::Failure;
         return playerNodeState[treeThinker.csgoId];
     }

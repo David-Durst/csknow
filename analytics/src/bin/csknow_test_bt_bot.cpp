@@ -15,6 +15,7 @@
 #include "bots/testing/scripts/test_head_position.h"
 #include "bots/testing/scripts/test_round.h"
 #include "bots/testing/scripts/learned/test_nav.h"
+#include "bots/testing/scripts/learned/test_hold.h"
 #include "bots/testing/scripts/learned/test_out_distribution.h"
 #include "queries/moments/plant_states.h"
 #include "bots/analysis/learned_models.h"
@@ -59,7 +60,8 @@ int main(int argc, char * argv[]) {
     plantStatesResult.load(savedDatasetsDir + "/plantStates.hdf5");
     ScriptsRunner roundScriptsRunner(createRoundScripts(plantStatesResult, false), true);
 
-    ScriptsRunner learnedDataGenerator(csknow::tests::learned::createLearnedNavScripts(200, true), false);
+    ScriptsRunner learnedNavDataGenerator(csknow::tests::learned::createLearnedNavScripts(200, true), false);
+    ScriptsRunner learnedHoldDataGenerator(csknow::tests::learned::createLearnedHoldScripts(200, true), false);
     ScriptsRunner outDistributionDataGenerator(csknow::tests::learned::createOutDistributionNavScripts(200, true), false);
 
     ScriptsRunner scriptsRunner(Script::makeList(
@@ -445,8 +447,10 @@ int main(int argc, char * argv[]) {
                     //finishedTests = scenarioRunner.tick(tree, state);
                     //humanScenarioRunner.initialize(tree, state);
                     //finishedTests = humanScenarioRunner.tick(tree, state);
-                    learnedDataGenerator.initialize(tree, state);
-                    finishedTests = learnedDataGenerator.tick(tree, state);
+                    //learnedNavDataGenerator.initialize(tree, state);
+                    //finishedTests = learnedNavDataGenerator.tick(tree, state);
+                    learnedHoldDataGenerator.initialize(tree, state);
+                    finishedTests = learnedHoldDataGenerator.tick(tree, state);
                     //outDistributionDataGenerator.initialize(tree, state);
                     //finishedTests = outDistributionDataGenerator.tick(tree, state);
                 }
