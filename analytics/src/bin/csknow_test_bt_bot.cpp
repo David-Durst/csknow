@@ -445,10 +445,10 @@ int main(int argc, char * argv[]) {
                     //finishedTests = scenarioRunner.tick(tree, state);
                     //humanScenarioRunner.initialize(tree, state);
                     //finishedTests = humanScenarioRunner.tick(tree, state);
-                    //learnedDataGenerator.initialize(tree, state);
-                    //finishedTests = learnedDataGenerator.tick(tree, state);
-                    outDistributionDataGenerator.initialize(tree, state);
-                    finishedTests = outDistributionDataGenerator.tick(tree, state);
+                    learnedDataGenerator.initialize(tree, state);
+                    finishedTests = learnedDataGenerator.tick(tree, state);
+                    //outDistributionDataGenerator.initialize(tree, state);
+                    //finishedTests = outDistributionDataGenerator.tick(tree, state);
                 }
                 else {
                     roundScriptsRunner.initialize(tree, state);

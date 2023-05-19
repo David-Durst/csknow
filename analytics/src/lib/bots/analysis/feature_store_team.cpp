@@ -672,7 +672,22 @@ namespace csknow::feature_store {
         }
     }
 
+    int getDeltaPosFlatIndex(Vec3 pos, AABB placeAABB) {
+        double xPct = std::max(0., std::min(1., (pos.x - placeAABB.min.x) / (placeAABB.max.x - placeAABB.min.x)));
+        double yPct = std::max(0., std::min(1., (pos.y - placeAABB.min.y) / (placeAABB.max.y - placeAABB.min.y)));
+        int xValue = static_cast<int>(xPct * delta_pos_grid_num_cells_per_dim);
+        if (xValue == delta_pos_grid_num_cells_per_dim) {
+            xValue--;
+        }
+        int yValue = static_cast<int>(yPct * delta_pos_grid_num_cells_per_dim);
+        if (yValue == delta_pos_grid_num_cells_per_dim) {
+            yValue--;
+        }
+        return xValue + yValue * delta_pos_grid_num_cells_per_dim;
+    }
+
     void TeamFeatureStoreResult::computeDeltaPosACausalLabels(int64_t curTick, CircularBuffer<int64_t> & futureTracker,
+                                                              CircularBuffer<int64_t> & jumpFutureTracker,
                                                               array<ColumnPlayerData,maxEnemies> & columnData) {
         for (size_t playerColumn = 0; playerColumn < maxEnemies; playerColumn++) {
             if (columnData[playerColumn].playerId[curTick] == INVALID_ID) {
@@ -686,7 +701,17 @@ namespace csknow::feature_store {
                 std::cout << "delta pos acausal label with no future ticks" << std::endl;
                 std::raise(SIGINT);
             }
+
             int64_t futureTickIndex = futureTracker.fromOldest();
+            bool jumping = false;
+            // if jumping, look twice as far in future
+            for (int64_t i = 0; i < futureTracker.getCurSize(); i++) {
+                if (columnData[playerColumn].velocity[futureTracker.fromNewest(i)].z > 10.) {
+                    jumping = true;
+                    break;
+                }
+            }
+
             if (futureTickIndex < curTick) {
                 std::cout << "delta pos acausal future tick in past" << std::endl;
                 std::raise(SIGINT);
@@ -704,7 +729,12 @@ namespace csknow::feature_store {
                         curFootPos.z
                     }
             };
-            int deltaPosIndex = getAreaGridFlatIndex(columnData[playerColumn].footPos[futureTickIndex], deltaPosRange);
+            int deltaPosIndex = getDeltaPosFlatIndex(columnData[playerColumn].footPos[futureTickIndex], deltaPosRange);
+            // if jumping and standing still in xy, look twice as far in future
+            if (deltaPosIndex == 12 && jumping) {
+                futureTickIndex = jumpFutureTracker.fromOldest();
+                deltaPosIndex = getDeltaPosFlatIndex(columnData[playerColumn].footPos[futureTickIndex], deltaPosRange);
+            }
             columnData[playerColumn].deltaPos[deltaPosIndex][curTick] = true;
         }
     }
@@ -729,7 +759,7 @@ namespace csknow::feature_store {
             TickRates tickRates = computeTickRates(games, rounds, roundIndex);
             CircularBuffer<int64_t> ticks1sFutureTracker(4), ticks2sFutureTracker(4), ticks6sFutureTracker(6),
                 // this one I add to every frame and remove when too far in the future, more accuracte
-                bothSidesTicks1sFutureTracker(20);
+                bothSidesTicks1sFutureTracker(20), bothSidesTicks1_5sFutureTracker(30);
             //, ticks15sFutureTracker(15), ticks30sFutureTracker(30);
             for (int64_t unmodifiedTickIndex = rounds.ticksPerRound[roundIndex].maxId;
                  unmodifiedTickIndex >= rounds.ticksPerRound[roundIndex].minId; unmodifiedTickIndex--) {
@@ -760,6 +790,10 @@ namespace csknow::feature_store {
                 while (secondsBetweenTicks(ticks, tickRates, internalIdToTickId[tickIndex], internalIdToTickId[bothSidesTicks1sFutureTracker.fromOldest()]) > 1.) {
                     bothSidesTicks1sFutureTracker.dequeue();
                 }
+                bothSidesTicks1_5sFutureTracker.enqueue(tickIndex);
+                while (secondsBetweenTicks(ticks, tickRates, internalIdToTickId[tickIndex], internalIdToTickId[bothSidesTicks1_5sFutureTracker.fromOldest()]) > 1.5) {
+                    bothSidesTicks1_5sFutureTracker.dequeue();
+                }
                 /*
                 if (ticks15sFutureTracker.isEmpty() ||
                     secondsBetweenTicks(ticks, tickRates, tickIndex, ticks15sFutureTracker.fromNewest()) >= 1.) {
@@ -786,8 +820,10 @@ namespace csknow::feature_store {
                                           players, distanceToPlacesResult, navFile);
                 computeAreaACausalLabels(ticks, tickRates, tickIndex, ticks1sFutureTracker, columnCTData, 0.1);
                 computeAreaACausalLabels(ticks, tickRates, tickIndex, ticks1sFutureTracker, columnTData, 0.1);
-                computeDeltaPosACausalLabels(tickIndex, bothSidesTicks1sFutureTracker, columnCTData);
-                computeDeltaPosACausalLabels(tickIndex, bothSidesTicks1sFutureTracker, columnTData);
+                computeDeltaPosACausalLabels(tickIndex, bothSidesTicks1sFutureTracker, bothSidesTicks1_5sFutureTracker,
+                                             columnCTData);
+                computeDeltaPosACausalLabels(tickIndex, bothSidesTicks1sFutureTracker, bothSidesTicks1_5sFutureTracker,
+                                             columnTData);
                 //computePlaceAreaACausalLabels(ticks, tickRates, tickIndex, ticks15sFutureTracker, columnCTData);
                 //computePlaceAreaACausalLabels(ticks, tickRates, tickIndex, ticks15sFutureTracker, columnTData);
                 /*

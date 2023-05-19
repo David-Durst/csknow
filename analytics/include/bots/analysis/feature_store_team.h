@@ -124,6 +124,7 @@ namespace csknow::feature_store {
                                            array<ColumnPlayerData,maxEnemies> & columnData,
                                            double futureSecondsTheshold);
         void computeDeltaPosACausalLabels(int64_t curTick, CircularBuffer<int64_t> & futureTracker,
+                                          CircularBuffer<int64_t> & jumpFutureTracker,
                                           array<ColumnPlayerData,maxEnemies> & columnData);
         void computeAcausalLabels(const Games & games, const Rounds & rounds, const Ticks & ticks,
                                   const Players & players, const DistanceToPlacesResult & distanceToPlacesResult,
