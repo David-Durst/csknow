@@ -23,6 +23,7 @@ namespace csknow::inference_manager {
         at::set_num_threads(1);
         at::set_num_interop_threads(1);
         torch::jit::getProfilingMode() = false;
+        /*
         auto tmpEngagementModule = torch::jit::load(engagementModelPath);
         engagementModule = torch::jit::optimize_for_inference(tmpEngagementModule);
         auto tmpAggressionModule = torch::jit::load(aggressionModelPath);
@@ -33,6 +34,7 @@ namespace csknow::inference_manager {
         placeModule = torch::jit::optimize_for_inference(tmpPlaceModule);
         auto tmpAreaModule = torch::jit::load(areaModelPath);
         areaModule = torch::jit::optimize_for_inference(tmpAreaModule);
+         */
         auto tmpDeltaPosModule = torch::jit::load(deltaPosModelPath);
         deltaPosModule = torch::jit::optimize_for_inference(tmpDeltaPosModule);
     }
@@ -63,9 +65,11 @@ namespace csknow::inference_manager {
     }
 
     void InferenceManager::recordTeamValues(csknow::feature_store::FeatureStoreResult & featureStoreResult) {
+        /*
         orderValues = csknow::inference_latent_order::extractFeatureStoreOrderValues(featureStoreResult, 0);
         placeValues = csknow::inference_latent_place::extractFeatureStorePlaceValues(featureStoreResult, 0);
         areaValues = csknow::inference_latent_area::extractFeatureStoreAreaValues(featureStoreResult, 0);
+         */
         deltaPosValues = csknow::inference_delta_pos::extractFeatureStoreDeltaPosValues(featureStoreResult, 0);
     }
 
@@ -232,18 +236,18 @@ namespace csknow::inference_manager {
         }
 
         auto start = std::chrono::system_clock::now();
-        runEngagementInference(clients);
-        runAggressionInference(clients);
+        //runEngagementInference(clients);
+        //runAggressionInference(clients);
         if (overallModelToRun == 0) {
-            runOrderInference();
+            //runOrderInference();
             ranOrderInference = true;
         }
         else if (overallModelToRun == 1) {
-            runPlaceInference();
+            //runPlaceInference();
             ranPlaceInference = true;
         }
         else if (overallModelToRun == 2) {
-            runAreaInference();
+            //runAreaInference();
             ranAreaInference = true;
         }
         else {
@@ -257,6 +261,8 @@ namespace csknow::inference_manager {
     }
 
     bool InferenceManager::haveValidData() const {
+        return ranDeltaPosInference;
+        /*
         if (!ranOrderInference || !ranPlaceInference || !ranAreaInference || !ranDeltaPosInference) {
             return false;
         }
@@ -269,6 +275,7 @@ namespace csknow::inference_manager {
             }
         }
         return true;
+         */
     }
 
 }

@@ -24,29 +24,35 @@ void processModelArg(string modelArg) {
         std::cout << "invalid test option " << modelArg << std::endl;
         exit(1);
     }
+    if (runRoundsNoHeuristics) {
+        setAllTeamModelProbabilities(true, ENGINE_TEAM_T);
+        setAllTeamModelProbabilities(true, ENGINE_TEAM_CT);
+    }
     if (runRoundsHeuristics) {
         setAllTeamModelProbabilities(false, ENGINE_TEAM_T);
         setAllTeamModelProbabilities(false, ENGINE_TEAM_CT);
     }
     if (runRoundsHeuristicsT) {
         setAllTeamModelProbabilities(false, ENGINE_TEAM_T);
+        setAllTeamModelProbabilities(true, ENGINE_TEAM_CT);
     }
     if (runRoundsHeuristicsCT) {
+        setAllTeamModelProbabilities(true, ENGINE_TEAM_T);
         setAllTeamModelProbabilities(false, ENGINE_TEAM_CT);
     }
 }
 
 void setAllTeamModelProbabilities(bool value, TeamId teamId) {
     if (teamId == ENGINE_TEAM_T) {
-        useOrderModelProbabilitiesT = value;
-        useAggressionModelProbabilitiesT = value;
-        useTargetModelProbabilitiesT = value;
+        useOrderModelProbabilitiesT = false;
+        useAggressionModelProbabilitiesT = false;
+        useTargetModelProbabilitiesT = false;
         usePlaceAreaModelProbabilitiesT = value;
     }
     else {
-        useOrderModelProbabilitiesCT = value;
-        useAggressionModelProbabilitiesCT = value;
-        useTargetModelProbabilitiesCT = value;
+        useOrderModelProbabilitiesCT = false;
+        useAggressionModelProbabilitiesCT = false;
+        useTargetModelProbabilitiesCT = false;
         usePlaceAreaModelProbabilitiesCT = value;
     }
 }
