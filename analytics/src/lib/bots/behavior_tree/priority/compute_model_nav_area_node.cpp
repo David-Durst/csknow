@@ -455,12 +455,13 @@ namespace csknow::compute_nav_area {
             modelNavData.disabledArea = std::nullopt;
         }
 
-
+        /*
         if (priorTargetAreaId == 7566 && curPriority.targetAreaId == 7566) {
             std::cout << "repeat with prior target pos " << priorTargetPos.toString()
                 << " to cur target pos " << curPriority.targetPos.toString()
                 << " and prior unmodified target pos " << modelNavData.unmodifiedTargetPos.toString() << std::endl;
         }
+         */
         modelNavData.unmodifiedTargetPos = curPriority.targetPos;
     }
 
