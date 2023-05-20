@@ -84,13 +84,13 @@ int main(int argc, char * argv[]) {
             make_unique<HoldBSiteBaitScript>(state)
             make_unique<AimAndKillWithinTimeCheck>(state),
             make_unique<CTEngageSpacingScript>(state),
-              */
             make_unique<PushBaitGooseToCatScript>(state),
             make_unique<PushWaitForBaitGooseToCatScript>(state),
             make_unique<PushMultipleBaitGooseToCatScript>(state),
             make_unique<PushLurkBaitASiteScript>(state),
             make_unique<PushATwoOrdersScript>(state),
             make_unique<PushTwoBDoorsScript>(state),
+              */
             make_unique<PushThreeBScript>(state)
                     /*
             make_unique<MemoryAimCheck>(state),
