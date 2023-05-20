@@ -163,7 +163,7 @@ namespace csknow::tests::learned {
 
             set<string> baiterValidLocations{"ShortStairs", "ExtendedA"};
             Node::Ptr condition =
-                    make_unique<ParallelFirstNode>(blackboard, Node::makeList(
+                    make_unique<SequenceNode>(blackboard, Node::makeList(
                             make_unique<RepeatDecorator>(blackboard, make_unique<InPlace>(blackboard, neededBots[0].id, "BombsiteB"), true),
                             make_unique<RepeatDecorator>(blackboard, make_unique<InPlace>(blackboard, neededBots[1].id, "BDoors"), true),
                             make_unique<RepeatDecorator>(blackboard, make_unique<InPlace>(blackboard, neededBots[2].id, "UpperTunnel"), true)),
