@@ -48,6 +48,11 @@ plot_path = Path(__file__).parent / 'distributions'
 now = datetime.now()
 runs_path = Path(__file__).parent / 'runs' / now.strftime("%m_%d_%Y__%H_%M_%S")
 
+
+def path_append(p: Path, suffix: str) -> Path:
+    return p.parent / (p.name + suffix)
+
+
 time_model = False
 
 @dataclass(frozen=True)
@@ -71,18 +76,22 @@ class TrainType(Enum):
 
 @dataclass
 class HyperparameterOptions:
+    num_epochs: int = 20000
     learning_rate: float = 0.0001
     weight_decay: float = 0.01 # default is 0, but people say this is reaosnable too
     layers: int = 2
     heads: int = 4
 
     def __str__(self):
-        return f"lr_{self.learning_rate}_wd_{self.weight_decay}_l_{self.layers}_h_{self.heads}"
+        return f"e_{self.num_epochs}_lr_{self.learning_rate}_wd_{self.weight_decay}_l_{self.layers}_h_{self.heads}"
 
 
-hyperparamter_option_range = [HyperparameterOptions(0.0001, 0.01, 2, 4), HyperparameterOptions(0.00001, 0.01, 2, 4),
-                              HyperparameterOptions(0.001, 0.01, 2, 4), HyperparameterOptions(0.0001, 0.1, 2, 4),
-                              HyperparameterOptions(0.0001, 0.1, 4, 8)]
+default_hyperparameter_options = HyperparameterOptions()
+hyperparameter_option_range = [HyperparameterOptions(20000, 0.0001, 0.01, 2, 4),
+                               HyperparameterOptions(20000, 0.00001, 0.01, 2, 4),
+                               HyperparameterOptions(20000, 0.001, 0.01, 2, 4),
+                               HyperparameterOptions(20000, 0.0001, 0.1, 2, 4),
+                               HyperparameterOptions(20000, 0.0001, 0.01, 4, 8)]
 
 
 @dataclass
@@ -115,8 +124,12 @@ class ColumnsToFlip:
             df[col2] = df[col1]
 
 
-def train(train_type: TrainType, all_data_df: pd.DataFrame, num_epochs: int,
+def train(train_type: TrainType, all_data_df: pd.DataFrame, hyperparameter_options: HyperparameterOptions = default_hyperparameter_options,
           windowed=False, save=True, diff_train_test=True, flip_columns: List[ColumnsToFlip] = []) -> TrainResult:
+
+    run_checkpoints_path = checkpoints_path
+    if hyperparameter_options != default_hyperparameter_options:
+        run_checkpoints_path = path_append(run_checkpoints_path, "_" + str(hyperparameter_options))
 
     if diff_train_test:
         train_test_split = train_test_split_by_col(all_data_df, round_id_column)
@@ -167,28 +180,32 @@ def train(train_type: TrainType, all_data_df: pd.DataFrame, num_epochs: int,
     elif train_type == TrainType.Order:
         column_transformers = IOColumnTransformers(order_input_column_types, order_output_column_types,
                                                    train_df)
-        model = TransformerNestedHiddenLatentModel(column_transformers, 2*max_enemies, 2*num_orders_per_site).to(device)
+        model = TransformerNestedHiddenLatentModel(column_transformers, 2*max_enemies, 2*num_orders_per_site,
+                                                   hyperparameter_options.layers, hyperparameter_options.heads).to(device)
         input_column_types = order_input_column_types
         output_column_types = order_output_column_types
         prob_func = get_order_probability
     elif train_type == TrainType.Place:
         column_transformers = IOColumnTransformers(place_area_input_column_types, place_output_column_types,
                                                    train_df)
-        model = TransformerNestedHiddenLatentModel(column_transformers, 2*max_enemies, num_places).to(device)
+        model = TransformerNestedHiddenLatentModel(column_transformers, 2*max_enemies, num_places,
+                                                   hyperparameter_options.layers, hyperparameter_options.heads).to(device)
         input_column_types = place_area_input_column_types
         output_column_types = place_output_column_types
         prob_func = get_place_area_probability
     elif train_type == TrainType.Area:
         column_transformers = IOColumnTransformers(place_area_input_column_types, area_output_column_types,
                                                    train_df)
-        model = TransformerNestedHiddenLatentModel(column_transformers, 2 * max_enemies, area_grid_size).to(device)
+        model = TransformerNestedHiddenLatentModel(column_transformers, 2 * max_enemies, area_grid_size,
+                                                   hyperparameter_options.layers, hyperparameter_options.heads).to(device)
         input_column_types = place_area_input_column_types
         output_column_types = area_output_column_types
         prob_func = get_place_area_probability
     elif train_type == TrainType.DeltaPos:
         column_transformers = IOColumnTransformers(place_area_input_column_types, delta_pos_output_column_types,
                                                    io_column_transform_df)
-        model = TransformerNestedHiddenLatentModel(column_transformers, 2 * max_enemies, delta_pos_grid_num_cells).to(device)
+        model = TransformerNestedHiddenLatentModel(column_transformers, 2 * max_enemies, delta_pos_grid_num_cells,
+                                                   hyperparameter_options.layers, hyperparameter_options.heads).to(device)
         input_column_types = place_area_input_column_types
         output_column_types = delta_pos_output_column_types
         prob_func = get_place_area_probability
@@ -209,7 +226,8 @@ def train(train_type: TrainType, all_data_df: pd.DataFrame, num_epochs: int,
         print(param_layer.shape)
 
     # define losses
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.0001)
+    optimizer = torch.optim.Adam(model.parameters(), lr=hyperparameter_options.learning_rate,
+                                 weight_decay=hyperparameter_options.weight_decay)
     #optimizer = torch.optim.SGD(model.parameters(), lr=0.001)
 
     # train and test the model
@@ -245,15 +263,15 @@ def train(train_type: TrainType, all_data_df: pd.DataFrame, num_epochs: int,
 
                 if time_model:
                     if train_type == TrainType.Engagement:
-                        model_path = checkpoints_path / 'engagement_script_model.pt'
+                        model_path = run_checkpoints_path / 'engagement_script_model.pt'
                     elif train_type == TrainType.Aggression:
-                        model_path = checkpoints_path / 'aggression_script_model.pt'
+                        model_path = run_checkpoints_path / 'aggression_script_model.pt'
                     elif train_type == TrainType.Order:
-                        model_path = checkpoints_path / 'order_script_model.pt'
+                        model_path = run_checkpoints_path / 'order_script_model.pt'
                     elif train_type == TrainType.Place:
-                        model_path = checkpoints_path / 'place_script_model.pt'
+                        model_path = run_checkpoints_path / 'place_script_model.pt'
                     elif train_type == TrainType.Area:
-                        model_path = checkpoints_path / 'area_script_model.pt'
+                        model_path = run_checkpoints_path / 'area_script_model.pt'
                     profile_latent_model(model_path, batch_size, X)
 
                 # Compute prediction error
@@ -297,17 +315,17 @@ def train(train_type: TrainType, all_data_df: pd.DataFrame, num_epochs: int,
     def save_model():
         nonlocal train_type
         if train_type == TrainType.Engagement:
-            model_path = checkpoints_path / 'engagement_checkpoint.pt'
+            model_path = run_checkpoints_path / 'engagement_checkpoint.pt'
         elif train_type == TrainType.Aggression:
-            model_path = checkpoints_path / 'aggression_checkpoint.pt'
+            model_path = run_checkpoints_path / 'aggression_checkpoint.pt'
         elif train_type == TrainType.Order:
-            model_path = checkpoints_path / 'order_checkpoint.pt'
+            model_path = run_checkpoints_path / 'order_checkpoint.pt'
         elif train_type == TrainType.Place:
-            model_path = checkpoints_path / 'place_checkpoint.pt'
+            model_path = run_checkpoints_path / 'place_checkpoint.pt'
         elif train_type == TrainType.Area:
-            model_path = checkpoints_path / 'area_checkpoint.pt'
+            model_path = run_checkpoints_path / 'area_checkpoint.pt'
         elif train_type == TrainType.DeltaPos:
-            model_path = checkpoints_path / 'delta_pos_checkpoint.pt'
+            model_path = run_checkpoints_path / 'delta_pos_checkpoint.pt'
         torch.save({
             'train_group_ids': train_group_ids,
             'model_state_dict': model.state_dict(),
@@ -316,7 +334,8 @@ def train(train_type: TrainType, all_data_df: pd.DataFrame, num_epochs: int,
             'diff_test_train': diff_train_test
         }, model_path)
 
-    writer = SummaryWriter(runs_path)
+    cur_runs_path = path_append(runs_path, "_" + str(hyperparameter_options))
+    writer = SummaryWriter(cur_runs_path)
     def save_tensorboard(train_loss: LatentLosses, test_loss: LatentLosses, train_accuracy: Dict, test_accuracy: Dict,
                          epoch_num):
         train_loss.add_scalars(writer, 'train', epoch_num)
@@ -354,7 +373,7 @@ def train(train_type: TrainType, all_data_df: pd.DataFrame, num_epochs: int,
         print(f"Train shape of Y: {Y.shape} {Y.dtype}")
         break
 
-    train_and_test_SL(model, train_dataloader, test_dataloader, num_epochs)
+    train_and_test_SL(model, train_dataloader, test_dataloader, hyperparameter_options.num_epochs)
 
     if save:
         with torch.no_grad():
@@ -367,28 +386,28 @@ def train(train_type: TrainType, all_data_df: pd.DataFrame, num_epochs: int,
             #  torch.jit.script(tmp_model)
             test_group_ids_str = ",".join([str(round_id) for round_id in test_group_ids])
             if train_type == TrainType.Engagement:
-                script_model.save(checkpoints_path / 'engagement_script_model.pt')
-                with open(checkpoints_path / 'engagement_test_round_ids.csv', 'w+') as f:
+                script_model.save(run_checkpoints_path / 'engagement_script_model.pt')
+                with open(run_checkpoints_path / 'engagement_test_round_ids.csv', 'w+') as f:
                     f.write(test_group_ids_str)
             elif train_type == TrainType.Aggression:
-                script_model.save(checkpoints_path / 'aggression_script_model.pt')
-                with open(checkpoints_path / 'aggression_test_round_ids.csv', 'w+') as f:
+                script_model.save(run_checkpoints_path / 'aggression_script_model.pt')
+                with open(run_checkpoints_path / 'aggression_test_round_ids.csv', 'w+') as f:
                     f.write(test_group_ids_str)
             elif train_type == TrainType.Order:
-                script_model.save(checkpoints_path / 'order_script_model.pt')
-                with open(checkpoints_path / 'order_test_round_ids.csv', 'w+') as f:
+                script_model.save(run_checkpoints_path / 'order_script_model.pt')
+                with open(run_checkpoints_path / 'order_test_round_ids.csv', 'w+') as f:
                     f.write(test_group_ids_str)
             elif train_type == TrainType.Place:
-                script_model.save(checkpoints_path / 'place_script_model.pt')
-                with open(checkpoints_path / 'place_test_round_ids.csv', 'w+') as f:
+                script_model.save(run_checkpoints_path / 'place_script_model.pt')
+                with open(run_checkpoints_path / 'place_test_round_ids.csv', 'w+') as f:
                     f.write(test_group_ids_str)
             elif train_type == TrainType.Area:
-                script_model.save(checkpoints_path / 'area_script_model.pt')
-                with open(checkpoints_path / 'area_test_round_ids.csv', 'w+') as f:
+                script_model.save(run_checkpoints_path / 'area_script_model.pt')
+                with open(run_checkpoints_path / 'area_test_round_ids.csv', 'w+') as f:
                     f.write(test_group_ids_str)
             elif train_type == TrainType.DeltaPos:
-                script_model.save(checkpoints_path / 'delta_pos_script_model.pt')
-                with open(checkpoints_path / 'delta_pos_test_round_ids.csv', 'w+') as f:
+                script_model.save(run_checkpoints_path / 'delta_pos_script_model.pt')
+                with open(run_checkpoints_path / 'delta_pos_test_round_ids.csv', 'w+') as f:
                     f.write(test_group_ids_str)
             model.to(device)
 

@@ -24,7 +24,7 @@ class TransformerNestedHiddenLatentModel(nn.Module):
     latent_to_distributions: Callable
     add_noise: bool
 
-    def __init__(self, cts: IOColumnTransformers, outer_latent_size: int, inner_latent_size: int):
+    def __init__(self, cts: IOColumnTransformers, outer_latent_size: int, inner_latent_size: int, num_layers, num_heads):
         super(TransformerNestedHiddenLatentModel, self).__init__()
         self.cts = cts
         c4_columns_ranges = range_list_to_index_list(cts.get_name_ranges(True, True, contained_str="c4"))
@@ -55,8 +55,8 @@ class TransformerNestedHiddenLatentModel(nn.Module):
             nn.Linear(self.internal_width, self.internal_width),
         )
 
-        transformer_encoder_layer = nn.TransformerEncoderLayer(d_model=self.internal_width, nhead=4, batch_first=True)
-        self.transformer_model = nn.TransformerEncoder(transformer_encoder_layer, num_layers=2, enable_nested_tensor=False)
+        transformer_encoder_layer = nn.TransformerEncoderLayer(d_model=self.internal_width, nhead=num_heads, batch_first=True)
+        self.transformer_model = nn.TransformerEncoder(transformer_encoder_layer, num_layers=num_layers, enable_nested_tensor=False)
 
         self.decoder = nn.Sequential(
             nn.Linear(self.internal_width, inner_latent_size),
