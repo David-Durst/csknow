@@ -5,7 +5,7 @@
 #ifndef CSKNOW_TEST_OUT_DISTRIBUTION_H
 #define CSKNOW_TEST_OUT_DISTRIBUTION_H
 
-#include "bots/testing/scripts/learned/test_nav.h"
+#include "bots/testing/scripts/learned/test_learned_nav.h"
 
 namespace csknow::tests::learned {
     class OutDistributionNavScript : public LearnedNavScript {

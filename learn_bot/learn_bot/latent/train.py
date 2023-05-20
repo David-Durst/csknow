@@ -76,9 +76,9 @@ class TrainType(Enum):
 
 @dataclass
 class HyperparameterOptions:
-    num_epochs: int = 20000
+    num_epochs: int = 1000
     learning_rate: float = 0.0001
-    weight_decay: float = 0.01 # default is 0, but people say this is reaosnable too
+    weight_decay: float = 0.
     layers: int = 2
     heads: int = 4
 
@@ -87,11 +87,12 @@ class HyperparameterOptions:
 
 
 default_hyperparameter_options = HyperparameterOptions()
-hyperparameter_option_range = [HyperparameterOptions(20000, 0.0001, 0.01, 2, 4),
-                               HyperparameterOptions(20000, 0.00001, 0.01, 2, 4),
-                               HyperparameterOptions(20000, 0.001, 0.01, 2, 4),
-                               HyperparameterOptions(20000, 0.0001, 0.1, 2, 4),
-                               HyperparameterOptions(20000, 0.0001, 0.01, 4, 8)]
+hyperparameter_option_range = [default_hyperparameter_options,
+                               HyperparameterOptions(1000, 0.00001, 0., 2, 4),
+                               HyperparameterOptions(1000, 0.001, 0., 2, 4),
+                               HyperparameterOptions(1000, 0.0001, 0.1, 2, 4),
+                               HyperparameterOptions(1000, 0.0001, 0.01, 2, 4),
+                               HyperparameterOptions(1000, 0.0001, 0., 4, 8)]
 
 
 @dataclass
@@ -125,11 +126,13 @@ class ColumnsToFlip:
 
 
 def train(train_type: TrainType, all_data_df: pd.DataFrame, hyperparameter_options: HyperparameterOptions = default_hyperparameter_options,
-          windowed=False, save=True, diff_train_test=True, flip_columns: List[ColumnsToFlip] = []) -> TrainResult:
+          windowed=False, diff_train_test=True, flip_columns: List[ColumnsToFlip] = []) -> TrainResult:
 
     run_checkpoints_path = checkpoints_path
     if hyperparameter_options != default_hyperparameter_options:
-        run_checkpoints_path = path_append(run_checkpoints_path, "_" + str(hyperparameter_options))
+        run_checkpoints_path = run_checkpoints_path / str(hyperparameter_options)
+        run_checkpoints_path.mkdir(parents=True, exist_ok=True)
+
 
     if diff_train_test:
         train_test_split = train_test_split_by_col(all_data_df, round_id_column)
@@ -333,6 +336,40 @@ def train(train_type: TrainType, all_data_df: pd.DataFrame, hyperparameter_optio
             'column_transformers': column_transformers,
             'diff_test_train': diff_train_test
         }, model_path)
+        with torch.no_grad():
+            model.eval()
+            script_model = torch.jit.trace(model.to(CPU_DEVICE_STR), first_row)
+            #tmp_model = SimplifiedTransformerNestedHiddenLatentModel().to(device)
+            #tmp_model.to(CPU_DEVICE_STR)
+            #tmp_model.eval()
+            #torch.jit.trace(tmp_model, torch.ones([64, 10, 512]))
+            #  torch.jit.script(tmp_model)
+            test_group_ids_str = ",".join([str(round_id) for round_id in test_group_ids])
+            if train_type == TrainType.Engagement:
+                script_model.save(run_checkpoints_path / 'engagement_script_model.pt')
+                with open(run_checkpoints_path / 'engagement_test_round_ids.csv', 'w+') as f:
+                    f.write(test_group_ids_str)
+            elif train_type == TrainType.Aggression:
+                script_model.save(run_checkpoints_path / 'aggression_script_model.pt')
+                with open(run_checkpoints_path / 'aggression_test_round_ids.csv', 'w+') as f:
+                    f.write(test_group_ids_str)
+            elif train_type == TrainType.Order:
+                script_model.save(run_checkpoints_path / 'order_script_model.pt')
+                with open(run_checkpoints_path / 'order_test_round_ids.csv', 'w+') as f:
+                    f.write(test_group_ids_str)
+            elif train_type == TrainType.Place:
+                script_model.save(run_checkpoints_path / 'place_script_model.pt')
+                with open(run_checkpoints_path / 'place_test_round_ids.csv', 'w+') as f:
+                    f.write(test_group_ids_str)
+            elif train_type == TrainType.Area:
+                script_model.save(run_checkpoints_path / 'area_script_model.pt')
+                with open(run_checkpoints_path / 'area_test_round_ids.csv', 'w+') as f:
+                    f.write(test_group_ids_str)
+            elif train_type == TrainType.DeltaPos:
+                script_model.save(run_checkpoints_path / 'delta_pos_script_model.pt')
+                with open(run_checkpoints_path / 'delta_pos_test_round_ids.csv', 'w+') as f:
+                    f.write(test_group_ids_str)
+            model.to(device)
 
     cur_runs_path = path_append(runs_path, "_" + str(hyperparameter_options))
     writer = SummaryWriter(cur_runs_path)
@@ -374,42 +411,6 @@ def train(train_type: TrainType, all_data_df: pd.DataFrame, hyperparameter_optio
         break
 
     train_and_test_SL(model, train_dataloader, test_dataloader, hyperparameter_options.num_epochs)
-
-    if save:
-        with torch.no_grad():
-            model.eval()
-            script_model = torch.jit.trace(model.to(CPU_DEVICE_STR), first_row)
-            #tmp_model = SimplifiedTransformerNestedHiddenLatentModel().to(device)
-            #tmp_model.to(CPU_DEVICE_STR)
-            #tmp_model.eval()
-            #torch.jit.trace(tmp_model, torch.ones([64, 10, 512]))
-            #  torch.jit.script(tmp_model)
-            test_group_ids_str = ",".join([str(round_id) for round_id in test_group_ids])
-            if train_type == TrainType.Engagement:
-                script_model.save(run_checkpoints_path / 'engagement_script_model.pt')
-                with open(run_checkpoints_path / 'engagement_test_round_ids.csv', 'w+') as f:
-                    f.write(test_group_ids_str)
-            elif train_type == TrainType.Aggression:
-                script_model.save(run_checkpoints_path / 'aggression_script_model.pt')
-                with open(run_checkpoints_path / 'aggression_test_round_ids.csv', 'w+') as f:
-                    f.write(test_group_ids_str)
-            elif train_type == TrainType.Order:
-                script_model.save(run_checkpoints_path / 'order_script_model.pt')
-                with open(run_checkpoints_path / 'order_test_round_ids.csv', 'w+') as f:
-                    f.write(test_group_ids_str)
-            elif train_type == TrainType.Place:
-                script_model.save(run_checkpoints_path / 'place_script_model.pt')
-                with open(run_checkpoints_path / 'place_test_round_ids.csv', 'w+') as f:
-                    f.write(test_group_ids_str)
-            elif train_type == TrainType.Area:
-                script_model.save(run_checkpoints_path / 'area_script_model.pt')
-                with open(run_checkpoints_path / 'area_test_round_ids.csv', 'w+') as f:
-                    f.write(test_group_ids_str)
-            elif train_type == TrainType.DeltaPos:
-                script_model.save(run_checkpoints_path / 'delta_pos_script_model.pt')
-                with open(run_checkpoints_path / 'delta_pos_test_round_ids.csv', 'w+') as f:
-                    f.write(test_group_ids_str)
-            model.to(device)
 
     return TrainResult(train_data, test_data, train_df, test_df, column_transformers, model)
 
@@ -457,9 +458,13 @@ def run_team_analysis():
     #train_result = train(TrainType.Area, team_data_df, num_epochs=3, windowed=False)
     hyperparameter_options = default_hyperparameter_options
     if len(sys.argv) > 1:
-        hyperparameter_options = hyperparameter_option_range[int(sys.argv[1])]
-    train_result = train(TrainType.DeltaPos, team_data_df, hyperparameter_options, windowed=False, diff_train_test=True)
-                         #flip_columns=[ColumnsToFlip(" CT 0", " CT 1")])
+        hyperparameter_indices = [int(i) for i in sys.argv[1].split(",")]
+        for index in hyperparameter_indices:
+            hyperparameter_options = hyperparameter_option_range[index]
+            train(TrainType.DeltaPos, team_data_df, hyperparameter_options, windowed=False, diff_train_test=True)
+    else:
+        train_result = train(TrainType.DeltaPos, team_data_df, windowed=False, diff_train_test=True)
+                             #flip_columns=[ColumnsToFlip(" CT 0", " CT 1")])
 
 
 def run_individual_analysis():

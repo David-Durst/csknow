@@ -2,7 +2,7 @@
 // Created by durst on 5/18/23.
 //
 
-#include "bots/testing/scripts/learned/test_hold.h"
+#include "bots/testing/scripts/learned/test_learned_hold.h"
 #include "bots/testing/scripts/learned/log_nodes.h"
 
 namespace csknow::tests::learned {

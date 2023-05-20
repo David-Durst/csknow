@@ -2,8 +2,8 @@
 // Created by durst on 5/18/23.
 //
 
-#ifndef CSKNOW_TEST_HOLD_H
-#define CSKNOW_TEST_HOLD_H
+#ifndef CSKNOW_TEST_LEARNED_HOLD_H
+#define CSKNOW_TEST_LEARNED_HOLD_H
 
 #include "bots/testing/script.h"
 #include "bots/behavior_tree/pathing_node.h"
@@ -53,4 +53,4 @@ namespace csknow::tests::learned {
     vector<Script::Ptr> createLearnedHoldScripts(size_t numTests, bool quitAtEnd);
 }
 
-#endif //CSKNOW_TEST_HOLD_H
+#endif //CSKNOW_TEST_LEARNED_HOLD_H

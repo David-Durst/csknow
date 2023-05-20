@@ -2,7 +2,7 @@
 // Created by durst on 5/14/23.
 //
 
-#include "bots/testing/scripts/learned/test_nav.h"
+#include "bots/testing/scripts/learned/test_learned_nav.h"
 #include "bots/analysis/learned_models.h"
 #include "bots/testing/scripts/learned/log_nodes.h"
 
