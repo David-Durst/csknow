@@ -10,6 +10,7 @@
 #include "bots/testing/script.h"
 #include "bots/behavior_tree/pathing_node.h"
 #include "bots/analysis/save_nav_overlay.h"
+#include "bots/analysis/learned_models.h"
 
 const static Waypoints testCatToAWaypoints = {
         {WaypointType::NavPlace, "Catwalk"},
@@ -283,6 +284,30 @@ public:
     NodeState exec(const ServerState &, TreeThinker &treeThinker) override {
         blackboard.streamingManager.streamingTestLogger.startTest(testName);
         blackboard.streamingManager.streamingTestLogger.attackerId = attackerId;
+        playerNodeState[treeThinker.csgoId] = NodeState::Success;
+        return playerNodeState[treeThinker.csgoId];
+    }
+};
+
+class EnableLearnedControllers : public Node {
+public:
+    EnableLearnedControllers(Blackboard & blackboard, const string & name = "EnableLearnedControllers") :
+        Node(blackboard, name) { };
+    NodeState exec(const ServerState &, TreeThinker & treeThinker) override {
+        setAllTeamModelProbabilities(true, ENGINE_TEAM_T);
+        setAllTeamModelProbabilities(true, ENGINE_TEAM_CT);
+        playerNodeState[treeThinker.csgoId] = NodeState::Success;
+        return playerNodeState[treeThinker.csgoId];
+    }
+};
+
+class DisableLearnedControllers : public Node {
+public:
+    DisableLearnedControllers(Blackboard & blackboard, const string & name = "DisableLearnedControllers") :
+            Node(blackboard, name) { };
+    NodeState exec(const ServerState &, TreeThinker & treeThinker) override {
+        setAllTeamModelProbabilities(false, ENGINE_TEAM_T);
+        setAllTeamModelProbabilities(false, ENGINE_TEAM_CT);
         playerNodeState[treeThinker.csgoId] = NodeState::Success;
         return playerNodeState[treeThinker.csgoId];
     }

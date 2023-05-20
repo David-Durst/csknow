@@ -45,12 +45,24 @@ namespace csknow::tests::learned {
                             make_unique<AimingAtArea>(blackboard, neededBotIds, chokeAreas[2]))),
                     true);
 
+            /*
+            Node::Ptr toggleLearnedControllers = make_unique<SequenceNode>(blackboard, Node::makeList(
+                            make_unique<SayCmd>(blackboard, "disabling learned controllers"),
+                            make_unique<DisableLearnedControllers>(blackboard),
+                            make_unique<movement::WaitNode>(blackboard, 7, true),
+                            make_unique<SayCmd>(blackboard, "enabling learned controllers"),
+                            make_unique<EnableLearnedControllers>(blackboard),
+                            make_unique<movement::WaitNode>(blackboard, 40, true)),
+                    "ToggleLearnedControllers");
+            */
+
             Node::Ptr finishCondition;
             if (waitForever) {
                 finishCondition = make_unique<RepeatDecorator>(blackboard, std::move(stillAndLookingAtChoke), true);
             }
             else {
                 finishCondition = make_unique<ParallelFirstNode>(blackboard, Node::makeList(
+                        //std::move(toggleLearnedControllers),
                         make_unique<RepeatDecorator>(blackboard, std::move(stillAndLookingAtChoke), true),
                         make_unique<FailIfTimeoutEndNode>(blackboard, name, testIndex, numTests, 30)));
             }
@@ -144,7 +156,7 @@ namespace csknow::tests::learned {
 
         for (size_t i = 0; i < numTests; i++) {
             //result.push_back(make_unique<LearnedHoldASitePushScript>(i, numTests, false));
-            result.push_back(make_unique<LearnedHoldASiteBaitScript>(i, numTests, false));
+            //result.push_back(make_unique<LearnedHoldASiteBaitScript>(i, numTests, false));
             //result.push_back(make_unique<LearnedHoldBSitePushScript>(i, numTests, false));
             result.push_back(make_unique<LearnedHoldBSiteBaitScript>(i, numTests, false));
         }
