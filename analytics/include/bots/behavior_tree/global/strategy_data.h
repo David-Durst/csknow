@@ -468,6 +468,11 @@ public:
         return result;
     }
 
+    void playerForceSetup(CSGOId playerId) {
+        // for testing purposes, force back to setup
+        playerToExecuteStatus[playerId] = ExecuteStatus::Setup;
+    }
+
     void playerSetup(CSGOId playerId) {
         // only allow swapping between ready and setup, once executing it's game time
         if (playerToExecuteStatus.find(playerId) == playerToExecuteStatus.end() ||

@@ -18,12 +18,12 @@ namespace csknow::tests::learned {
         OrderId addedOrderId;
         size_t testIndex, numTests;
         bool waitForever;
-        Node::Ptr forceSetup, condition;
 
         explicit LearnedTeamworkScript(const std::string &name, vector<NeededBot> neededBots, ObserveSettings observeSettings,
                                    size_t testIndex, size_t numTests, bool waitForever);
 
-        void initialize(Tree &tree, ServerState &state, vector<Vec3> playerPos, vector<Vec2> playerViewAngle, Vec3 c4Pos);
+        void initialize(Tree &tree, ServerState &state, vector<Vec3> playerPos, vector<Vec2> playerViewAngle, Vec3 c4Pos,
+                        Node::Ptr forceSetup, Node::Ptr condition);
     };
 
     class LearnedPushLurkBaitASiteScript : public LearnedTeamworkScript {

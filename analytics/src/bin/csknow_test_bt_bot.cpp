@@ -21,6 +21,7 @@
 #include "bots/analysis/learned_models.h"
 #include "navmesh/nav_file.h"
 #include "bots/testing/scripts/test_setup.h"
+#include "bots/testing/scripts/learned/test_learned_teamwork.h"
 #include <iostream>
 #include <thread>
 #include <chrono>
@@ -62,10 +63,11 @@ int main(int argc, char * argv[]) {
 
     ScriptsRunner learnedNavDataGenerator(csknow::tests::learned::createLearnedNavScripts(200, true), false);
     ScriptsRunner learnedHoldDataGenerator(csknow::tests::learned::createLearnedHoldScripts(200, true), false);
+    ScriptsRunner learnedTeamworkDataGenerator(csknow::tests::learned::createLearnedTeamworkScripts(200, true), false);
     ScriptsRunner outDistributionDataGenerator(csknow::tests::learned::createOutDistributionNavScripts(200, true), false);
 
     ScriptsRunner scriptsRunner(Script::makeList(
-         make_unique<GooseToCatScript>(state)
+         //make_unique<GooseToCatScript>(state)
              /*
             make_unique<GooseToCatShortScript>(state)
             make_unique<CTPushLongScript>(state),
@@ -74,26 +76,23 @@ int main(int argc, char * argv[]) {
             make_unique<DefuseScript>(state),
             // * /
             make_unique<InterruptedDefuseScript>(state)
-             /*
-             * /
             make_unique<NavInsideNodeScript>(state)
-            /*
             make_unique<HoldLongScript>(state),
-                    * /
             make_unique<HoldASitePushScript>(state),
             make_unique<HoldASiteBaitScript>(state)
-                    / *
             make_unique<HoldBSitePushScript>(state),
             make_unique<HoldBSiteBaitScript>(state)
             make_unique<AimAndKillWithinTimeCheck>(state),
             make_unique<CTEngageSpacingScript>(state),
+              */
             make_unique<PushBaitGooseToCatScript>(state),
             make_unique<PushWaitForBaitGooseToCatScript>(state),
             make_unique<PushMultipleBaitGooseToCatScript>(state),
             make_unique<PushLurkBaitASiteScript>(state),
             make_unique<PushATwoOrdersScript>(state),
             make_unique<PushTwoBDoorsScript>(state),
-            make_unique<PushThreeBScript>(state),
+            make_unique<PushThreeBScript>(state)
+                    /*
             make_unique<MemoryAimCheck>(state),
             make_unique<MemoryForgetCheck>(state),
             make_unique<CommunicationAimCheck>(state),
@@ -441,16 +440,18 @@ int main(int argc, char * argv[]) {
             else if (state.clients.size() > 0) {
                 //std::cout << "time since last save " << state.getSecondsBetweenTimes(start, priorStart) << std::endl;
                 if (runTest) {
-                    //scriptsRunner.initialize(tree, state);
-                    //finishedTests = scriptsRunner.tick(tree, state);
+                    scriptsRunner.initialize(tree, state);
+                    finishedTests = scriptsRunner.tick(tree, state);
                     //scenarioRunner.initialize(tree, state);
                     //finishedTests = scenarioRunner.tick(tree, state);
                     //humanScenarioRunner.initialize(tree, state);
                     //finishedTests = humanScenarioRunner.tick(tree, state);
                     //learnedNavDataGenerator.initialize(tree, state);
                     //finishedTests = learnedNavDataGenerator.tick(tree, state);
-                    learnedHoldDataGenerator.initialize(tree, state);
-                    finishedTests = learnedHoldDataGenerator.tick(tree, state);
+                    //learnedHoldDataGenerator.initialize(tree, state);
+                    //finishedTests = learnedHoldDataGenerator.tick(tree, state);
+                    //learnedTeamworkDataGenerator.initialize(tree, state);
+                    //finishedTests = learnedTeamworkDataGenerator.tick(tree, state);
                     //outDistributionDataGenerator.initialize(tree, state);
                     //finishedTests = outDistributionDataGenerator.tick(tree, state);
                 }

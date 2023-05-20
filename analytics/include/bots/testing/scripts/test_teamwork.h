@@ -339,7 +339,7 @@ public:
 class PushThreeBScript : public Script {
 public:
     explicit PushThreeBScript(const ServerState &) :
-            Script("PushThreeBScript", {{0, ENGINE_TEAM_CT}, {0, ENGINE_TEAM_CT}, {0, ENGINE_TEAM_CT}},
+            Script("PushThreeBScript", {{0, ENGINE_TEAM_CT}, {0, ENGINE_TEAM_CT}, {0, ENGINE_TEAM_CT, AggressiveType::Bait}},
                    {ObserveType::FirstPerson, 0}) { };
 
     void initialize(Tree & tree, ServerState & state) override {

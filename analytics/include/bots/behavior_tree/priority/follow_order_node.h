@@ -123,7 +123,7 @@ public:
                                                         make_unique<follow::ComputeNavAreaNode>(blackboard),
                                                         make_unique<follow::ComputeNonDangerAimAreaNode>(blackboard),
                                                         make_unique<movement::PathingNode>(blackboard),
-                                                        make_unique<follow::EnemiesAliveTaskNode>(blackboard),
+                                                        //make_unique<follow::EnemiesAliveTaskNode>(blackboard),
                                                         make_unique<follow::SpacingNode>(blackboard)),
                                         "FollowOrderSequenceNode") { };
 };

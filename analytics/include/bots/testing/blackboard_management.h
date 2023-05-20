@@ -70,6 +70,7 @@ public:
     NodeState exec(const ServerState &, TreeThinker &treeThinker) override {
         for (size_t i = 0; i < targetIds.size(); i++) {
             blackboard.strategy.playerToEntryIndex[targetIds[i]] = entryIndices[i];
+            blackboard.strategy.playerForceSetup(targetIds[i]);
         }
         playerNodeState[treeThinker.csgoId] = NodeState::Success;
         return playerNodeState[treeThinker.csgoId];
