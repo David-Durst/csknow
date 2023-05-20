@@ -310,14 +310,18 @@ def train(train_type: TrainType, all_data_df: pd.DataFrame, num_epochs: int,
         for name, acc in test_accuracy.items():
             writer.add_scalar('test/acc/' + name, acc, epoch_num)
 
+    min_test_loss = float("inf")
     def train_and_test_SL(model, train_dataloader, test_dataloader, num_epochs):
-        nonlocal optimizer
+        nonlocal optimizer, min_test_loss
         for epoch_num in range(num_epochs):
             print(f"\nEpoch {epoch_num}\n" + f"-------------------------------")
             train_loss, train_accuracy = train_or_test_SL_epoch(train_dataloader, model, optimizer, True)
             with torch.no_grad():
                 test_loss, test_accuracy = train_or_test_SL_epoch(test_dataloader, model, None, False)
-            save_model()
+            cur_test_less_float = test_loss.get_total_loss().item()
+            if cur_test_less_float < min_test_loss:
+                save_model()
+                min_test_loss = cur_test_less_float
             save_tensorboard(train_loss, test_loss, train_accuracy, test_accuracy, epoch_num)
 
     train_data = LatentDataset(train_df, column_transformers, windowed=windowed)
@@ -416,7 +420,7 @@ def run_team_analysis():
     #train_result = train(TrainType.Order, team_data_df, num_epochs=3, windowed=False)
     #train_result = train(TrainType.Place, team_data_df, num_epochs=500, windowed=False, diff_train_test=False)
     #train_result = train(TrainType.Area, team_data_df, num_epochs=3, windowed=False)
-    train_result = train(TrainType.DeltaPos, team_data_df, num_epochs=200, windowed=False, diff_train_test=True)
+    train_result = train(TrainType.DeltaPos, team_data_df, num_epochs=20000, windowed=False, diff_train_test=True)
                          #flip_columns=[ColumnsToFlip(" CT 0", " CT 1")])
 
 
