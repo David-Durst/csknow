@@ -440,8 +440,8 @@ int main(int argc, char * argv[]) {
             else if (state.clients.size() > 0) {
                 //std::cout << "time since last save " << state.getSecondsBetweenTimes(start, priorStart) << std::endl;
                 if (runTest) {
-                    scriptsRunner.initialize(tree, state);
-                    finishedTests = scriptsRunner.tick(tree, state);
+                    //scriptsRunner.initialize(tree, state);
+                    //finishedTests = scriptsRunner.tick(tree, state);
                     //scenarioRunner.initialize(tree, state);
                     //finishedTests = scenarioRunner.tick(tree, state);
                     //humanScenarioRunner.initialize(tree, state);
@@ -450,8 +450,8 @@ int main(int argc, char * argv[]) {
                     //finishedTests = learnedNavDataGenerator.tick(tree, state);
                     //learnedHoldDataGenerator.initialize(tree, state);
                     //finishedTests = learnedHoldDataGenerator.tick(tree, state);
-                    //learnedTeamworkDataGenerator.initialize(tree, state);
-                    //finishedTests = learnedTeamworkDataGenerator.tick(tree, state);
+                    learnedTeamworkDataGenerator.initialize(tree, state);
+                    finishedTests = learnedTeamworkDataGenerator.tick(tree, state);
                     //outDistributionDataGenerator.initialize(tree, state);
                     //finishedTests = outDistributionDataGenerator.tick(tree, state);
                 }

@@ -27,6 +27,7 @@ namespace csknow::tests::learned {
     };
 
     class LearnedPushLurkBaitASiteScript : public LearnedTeamworkScript {
+        OrderId pushAddedOrderId, lurkAddedOrderId;
     public:
         explicit LearnedPushLurkBaitASiteScript(size_t testIndex, size_t numTests, bool waitForever);
         void initialize(Tree & tree, ServerState & state) override;

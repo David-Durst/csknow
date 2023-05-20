@@ -78,7 +78,6 @@ namespace csknow::tests::learned {
                     {-78.701942, -7.463999}, {-89.683349, 0.746031}, {-89.683349, 0.746031}, {-89.683349, 0.746031}
             };
 
-            OrderId pushAddedOrderId, lurkAddedOrderId;
             Node::Ptr forceSetup = make_unique<SequenceNode>(blackboard, Node::makeList(
                     make_unique<ForceOrderNode>(blackboard, "ForceCTLongCat", vector{neededBots[0].id, neededBots[1].id}, strategy::offenseLongToAWaypoints, lurkAddedOrderId),
                     make_unique<ForceOrderNode>(blackboard, "ForceCTCat", vector{neededBots[2].id}, strategy::offenseCatToAWaypoints, pushAddedOrderId),
@@ -166,8 +165,8 @@ namespace csknow::tests::learned {
             Node::Ptr condition =
                     make_unique<ParallelFirstNode>(blackboard, Node::makeList(
                             make_unique<RepeatDecorator>(blackboard, make_unique<InPlace>(blackboard, neededBots[0].id, "BombsiteB"), true),
-                            make_unique<RepeatDecorator>(blackboard, make_unique<InPlace>(blackboard, neededBots[1].id, "BombsiteB"), true),
-                            make_unique<RepeatDecorator>(blackboard, make_unique<InPlace>(blackboard, neededBots[2].id, "BombsiteB"), true)),
+                            make_unique<RepeatDecorator>(blackboard, make_unique<InPlace>(blackboard, neededBots[1].id, "BDoors"), true),
+                            make_unique<RepeatDecorator>(blackboard, make_unique<InPlace>(blackboard, neededBots[2].id, "UpperTunnel"), true)),
                 "Condition");
 
             LearnedTeamworkScript::initialize(tree, state, playerPos, playerViewAngle, {-1463., 2489., 46.},
@@ -179,9 +178,9 @@ namespace csknow::tests::learned {
         vector<Script::Ptr> result;
 
         for (size_t i = 0; i < numTests; i++) {
-            //result.push_back(make_unique<LearnedPushLurkBaitASiteScript>(i, numTests, false));
-            result.push_back(make_unique<LearnedPushATwoOrdersScript>(i, numTests, false));
-            result.push_back(make_unique<LearnedPushThreeBScript>(i, numTests, false));
+            result.push_back(make_unique<LearnedPushLurkBaitASiteScript>(i, numTests, false));
+            //result.push_back(make_unique<LearnedPushATwoOrdersScript>(i, numTests, false));
+            //result.push_back(make_unique<LearnedPushThreeBScript>(i, numTests, false));
         }
         if (quitAtEnd) {
             result.push_back(make_unique<QuitScript>());
