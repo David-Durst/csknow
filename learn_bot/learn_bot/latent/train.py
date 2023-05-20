@@ -70,6 +70,22 @@ class TrainType(Enum):
 
 
 @dataclass
+class HyperparameterOptions:
+    learning_rate: float = 0.0001
+    weight_decay: float = 0.01 # default is 0, but people say this is reaosnable too
+    layers: int = 2
+    heads: int = 4
+
+    def __str__(self):
+        return f"lr_{self.learning_rate}_wd_{self.weight_decay}_l_{self.layers}_h_{self.heads}"
+
+
+hyperparamter_option_range = [HyperparameterOptions(0.0001, 0.01, 2, 4), HyperparameterOptions(0.00001, 0.01, 2, 4),
+                              HyperparameterOptions(0.001, 0.01, 2, 4), HyperparameterOptions(0.0001, 0.1, 2, 4),
+                              HyperparameterOptions(0.0001, 0.1, 4, 8)]
+
+
+@dataclass
 class ColumnsToFlip:
     col1_template: str
     col2_template: str
