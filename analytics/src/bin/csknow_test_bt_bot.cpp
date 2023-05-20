@@ -448,10 +448,10 @@ int main(int argc, char * argv[]) {
                     //finishedTests = humanScenarioRunner.tick(tree, state);
                     //learnedNavDataGenerator.initialize(tree, state);
                     //finishedTests = learnedNavDataGenerator.tick(tree, state);
-                    //learnedHoldDataGenerator.initialize(tree, state);
-                    //finishedTests = learnedHoldDataGenerator.tick(tree, state);
-                    learnedTeamworkDataGenerator.initialize(tree, state);
-                    finishedTests = learnedTeamworkDataGenerator.tick(tree, state);
+                    learnedHoldDataGenerator.initialize(tree, state);
+                    finishedTests = learnedHoldDataGenerator.tick(tree, state);
+                    //learnedTeamworkDataGenerator.initialize(tree, state);
+                    //finishedTests = learnedTeamworkDataGenerator.tick(tree, state);
                     //outDistributionDataGenerator.initialize(tree, state);
                     //finishedTests = outDistributionDataGenerator.tick(tree, state);
                 }

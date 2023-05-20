@@ -37,7 +37,7 @@ def load_model_file(all_data_df: pd.DataFrame, model_file_name: str) -> TrainRes
     train_data = LatentDataset(train_df, model_file['column_transformers'])
     test_data = LatentDataset(test_df, model_file['column_transformers'])
 
-    model = TransformerNestedHiddenLatentModel(model_file['column_transformers'], 2 * max_enemies, delta_pos_grid_num_cells)
+    model = TransformerNestedHiddenLatentModel(model_file['column_transformers'], 2 * max_enemies, delta_pos_grid_num_cells, 2, 4)
     model.load_state_dict(model_file['model_state_dict'])
     model.to(CUDA_DEVICE_STR)
 
@@ -53,7 +53,7 @@ def load_model_file_for_rollout(all_data_df: pd.DataFrame, model_file_name: str)
 
     column_transformers = IOColumnTransformers(place_area_input_column_types, delta_pos_output_column_types, all_data_df)
 
-    model = TransformerNestedHiddenLatentModel(model_file['column_transformers'], 2 * max_enemies, delta_pos_grid_num_cells)
+    model = TransformerNestedHiddenLatentModel(model_file['column_transformers'], 2 * max_enemies, delta_pos_grid_num_cells, 2, 4)
     model.load_state_dict(model_file['model_state_dict'])
     model.to(CUDA_DEVICE_STR)
 
