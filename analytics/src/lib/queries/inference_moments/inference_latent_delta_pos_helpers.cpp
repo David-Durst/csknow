@@ -77,7 +77,7 @@ namespace csknow::inference_delta_pos {
             }
             ctColumnData = false;
         }
-        result.rowCPP.push_back(0.f);
+        result.rowCPP.push_back(1.f);
         return result;
     }
 
