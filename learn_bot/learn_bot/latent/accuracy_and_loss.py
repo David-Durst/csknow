@@ -45,29 +45,17 @@ class LatentLosses:
 
 
 # https://discuss.pytorch.org/t/how-to-combine-multiple-criterions-to-a-loss-function/348/4
-def compute_loss(x, pred, y_transformed, y_untransformed, column_transformers: IOColumnTransformers,
-                 latent_to_prob: Callable):
-    #x = x.to(CPU_DEVICE_STR)
+def compute_loss(pred, Y, column_transformers: IOColumnTransformers):
     pred_transformed = get_transformed_outputs(pred)
-    #pred_transformed = pred_transformed.to(CPU_DEVICE_STR)
-    #pred_untransformed = get_untransformed_outputs(pred)
-    #pred_untransformed = pred_untransformed.to(CPU_DEVICE_STR)
-    #y_transformed = y_transformed.to(CPU_DEVICE_STR)
-    #y_untransformed = y_untransformed.to(CPU_DEVICE_STR)
 
     losses = LatentLosses()
-
-    if column_transformers.output_types.categorical_cols:
-        col_ranges = column_transformers.get_name_ranges(False, True, frozenset({ColumnTransformerType.CATEGORICAL}))
-        for i, col_range in enumerate(col_ranges):
-            losses.cat_loss += base_classification_loss_fn(pred_transformed[:, col_range], y_transformed[:, col_range])
 
     if column_transformers.output_types.categorical_distribution_cols:
         col_ranges = column_transformers.get_name_ranges(False, True, frozenset({ColumnTransformerType.CATEGORICAL_DISTRIBUTION}))
         # remove negatives where player isn't alive
         for i, col_range in enumerate(col_ranges):
-            valid_rows = y_transformed[:, col_range].sum(axis=1) > 0.1
-            valid_y_transformed = y_transformed[valid_rows][:, col_range]
+            valid_rows = Y[:, col_range].sum(axis=1) > 0.1
+            valid_y_transformed = Y[valid_rows][:, col_range]
             valid_pred_transformed = pred_transformed[valid_rows][:, col_range]
             # don't add nan loss if no valid rows
             if valid_y_transformed.shape[0] > 0:
