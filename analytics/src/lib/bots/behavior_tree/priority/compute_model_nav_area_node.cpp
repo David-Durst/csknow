@@ -19,6 +19,9 @@ namespace csknow::compute_nav_area {
                 0.
         };
 
+        curPriority.targetAreaId = blackboard.navFile
+                .get_nearest_area_by_position_z_last(vec3Conv(curPriority.targetPos), 2000.f, MAX_JUMP_HEIGHT).get_id();
+        /*
         // check if closer jumping or not
         const nav_mesh::nav_area & flatArea = blackboard.navFile
                 .get_nearest_area_by_position(vec3Conv(curPriority.targetPos));
@@ -35,6 +38,7 @@ namespace csknow::compute_nav_area {
         else {
             curPriority.targetAreaId = flatArea.get_id();
         }
+         */
 
         Vec3 desiredPos = curPriority.targetPos;
 
@@ -133,6 +137,7 @@ namespace csknow::compute_nav_area {
 
         tryDeltaPosTargetPos(state, curClient, curPriority, modelNavData);
 
+        /*
         // if same as prior target pos, try doubling distance and picking something else
         if (curPriority.targetPos.x == modelNavData.unmodifiedTargetPos.x &&
             curPriority.targetPos.y == modelNavData.unmodifiedTargetPos.y) {
@@ -153,6 +158,7 @@ namespace csknow::compute_nav_area {
         else {
             modelNavData.disabledArea = std::nullopt;
         }
+         */
 
         /*
         if (priorTargetAreaId == 7566 && curPriority.targetAreaId == 7566) {

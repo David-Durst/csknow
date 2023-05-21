@@ -324,7 +324,54 @@ namespace nav_mesh {
         else {
             return m_areas[nearest_area_id];
         }
+    }
 
+    const nav_area& nav_file::get_nearest_area_by_position_z_last(nav_mesh::vec3_t position, float z_below_limit,
+                                                                  float z_above_limit) const {
+        // if contained in 3d, return immediately, if contained only in 2d, grab nearest
+        float nearest_area_distance_2d = std::numeric_limits<float>::max();
+        size_t nearest_area_id_2d = -1;
+        // if not contained in 2d, then just get nearest in 3d
+        float nearest_area_distance_3d = std::numeric_limits<float>::max();
+        size_t nearest_area_id_3d = -1;
+
+        for ( size_t area_id = 0; area_id < m_areas.size(); area_id++) {
+            const nav_area& area = m_areas[area_id];
+            // skip bugged areas with no connections
+            if ( area.m_connections.empty() ) {
+                continue;
+            }
+            if ( area.is_within_3d( position ) ) {
+                return area;
+            }
+            float other_distance_3d = get_point_to_area_distance( position, area);
+            // only do 2d compare if z distance in range
+            if ( area.get_min_corner().z - position.z <= z_above_limit &&
+                 position.z - area.get_max_corner().z <= z_below_limit) {
+                float other_distance_2d = get_point_to_area_distance_2d( position, area);
+                // since 2d is 0, other distance 3d is just z component
+                if ( other_distance_2d == 0. && other_distance_3d < nearest_area_distance_2d ) {
+                    nearest_area_distance_2d = other_distance_3d;
+                    nearest_area_id_2d = area_id;
+                }
+            }
+            if ( other_distance_3d < nearest_area_distance_3d ) {
+                nearest_area_distance_3d = other_distance_3d;
+                nearest_area_id_3d = area_id;
+            }
+        }
+
+        if ( nearest_area_id_3d == static_cast<size_t>(-1)) {
+            throw std::runtime_error( "nav_file::get_nearest_area_by_position_z_last: no areas" );
+        }
+        else {
+            if ( nearest_area_id_2d != static_cast<size_t>(-1)) {
+                return m_areas[nearest_area_id_2d];
+            }
+            else {
+                return m_areas[nearest_area_id_3d];
+            }
+        }
     }
 
     const nav_area& nav_file::get_nearest_area_by_position_in_place( vec3_t position, std::uint16_t place_id ) const {
