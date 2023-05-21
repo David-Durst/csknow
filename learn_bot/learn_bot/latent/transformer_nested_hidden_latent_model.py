@@ -22,7 +22,7 @@ class TransformerNestedHiddenLatentModel(nn.Module):
     cts: IOColumnTransformers
     output_layers: List[nn.Module]
     latent_to_distributions: Callable
-    add_noise: bool
+    noise_var: float
 
     def __init__(self, cts: IOColumnTransformers, outer_latent_size: int, inner_latent_size: int, num_layers, num_heads):
         super(TransformerNestedHiddenLatentModel, self).__init__()
@@ -45,7 +45,7 @@ class TransformerNestedHiddenLatentModel(nn.Module):
         self.alive_columns_gpu = self.alive_columns_cpu.to(CUDA_DEVICE_STR)
 
         self.pos_columns = range_list_to_index_list(cts.get_name_ranges(True, True, contained_str="pos"))
-        self.add_noise = False
+        self.noise_var = -1.
 
         self.encoder_model = nn.Sequential(
             nn.Linear(len(player_columns[0]), self.internal_width),
@@ -74,8 +74,11 @@ class TransformerNestedHiddenLatentModel(nn.Module):
     def forward(self, x, noise=None):
         # transform inputs
         x_transformed = self.cts.transform_columns(True, x, x)
-        if self.add_noise:
-            x_transformed[:, self.pos_columns] += torch.randn([x.shape[0], len(self.pos_columns)]).to(x_transformed.device.type)
+        if self.noise_var >= 0.:
+            rand_shape = [x.shape[0], len(self.pos_columns)]
+            means = torch.zeros(rand_shape)
+            vars = torch.full(rand_shape, self.noise_var)
+            x_transformed[:, self.pos_columns] += torch.normal(means, vars).to(x_transformed.device.type)
 
         if x_transformed.device.type == CUDA_DEVICE_STR:
             x_gathered = torch.index_select(x_transformed, 1, self.player_columns_gpu)

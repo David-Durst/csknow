@@ -77,22 +77,25 @@ class TrainType(Enum):
 @dataclass
 class HyperparameterOptions:
     num_epochs: int = 1000
-    learning_rate: float = 0.00001
+    learning_rate: float = 1e-5
     weight_decay: float = 0.
     layers: int = 2
     heads: int = 4
+    noise_var: float = -1.
 
     def __str__(self):
-        return f"e_{self.num_epochs}_lr_{self.learning_rate}_wd_{self.weight_decay}_l_{self.layers}_h_{self.heads}"
+        return f"e_{self.num_epochs}_lr_{self.learning_rate}_wd_{self.weight_decay}_l_{self.layers}_h_{self.heads}_n_{self.noise_var}"
 
 
 default_hyperparameter_options = HyperparameterOptions()
-hyperparameter_option_range = [HyperparameterOptions(1000, 0.00001, 0., 2, 4),
-                               HyperparameterOptions(1000, 0.0001, 0., 2, 4),
-                               HyperparameterOptions(1000, 0.001, 0., 2, 4),
-                               HyperparameterOptions(1000, 0.0001, 0.1, 2, 4),
-                               HyperparameterOptions(1000, 0.0001, 0.01, 2, 4),
-                               HyperparameterOptions(1000, 0.0001, 0., 4, 8)]
+hyperparameter_option_range = [HyperparameterOptions(noise_var=0.1),
+                               HyperparameterOptions(noise_var=0.01)]
+#hyperparameter_option_range = [HyperparameterOptions(),
+#                               HyperparameterOptions(learning_rate=1e-4),
+#                               HyperparameterOptions(learning_rate=1e-6),
+#                               HyperparameterOptions(weight_decay=0.1),
+#                               HyperparameterOptions(weight_decay=0.2),
+#                               HyperparameterOptions(layers=4, heads=8)]
 
 
 @dataclass
@@ -279,9 +282,9 @@ def train(train_type: TrainType, all_data_df: pd.DataFrame, hyperparameter_optio
 
                 # Compute prediction error
                 if train:
-                    model.add_noise = False
+                    model.noise_var = hyperparameter_options.noise_var
                 pred = model(X)
-                model.add_noise = False
+                model.noise_var = -1.
                 if torch.isnan(X).any():
                     print('bad X')
                     sys.exit(0)
