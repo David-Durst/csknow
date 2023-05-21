@@ -69,45 +69,34 @@ def compute_loss(pred, Y, column_transformers: IOColumnTransformers):
 
 def compute_accuracy(pred, Y, accuracy, valids_per_accuracy_column, column_transformers: IOColumnTransformers):
     pred_untransformed = get_untransformed_outputs(pred)
-    #pred_untransformed = pred_untransformed.to(CPU_DEVICE_STR)
-    #Y = Y.to(CPU_DEVICE_STR)
 
-    for name, col_range in zip(column_transformers.output_types.categorical_distribution_first_sub_cols,
-                               column_transformers.get_name_ranges(False, False,
-                                                                   frozenset({ColumnTransformerType.CATEGORICAL_DISTRIBUTION}))):
-        valid_rows = Y[:, col_range].sum(axis=1) > 0.1
-        valid_Y = Y[valid_rows][:, col_range]
-        valid_pred_untransformed = pred_untransformed[valid_rows][:, col_range]
-        if name not in valids_per_accuracy_column:
-            valids_per_accuracy_column[name] = 0
-        if valid_Y.shape[0] > 0:
-            accuracy[name] += (torch.argmax(valid_pred_untransformed, -1, keepdim=True) ==
-                               torch.argmax(valid_Y, -1, keepdim=True)).type(torch.float).sum().item()
-            valids_per_accuracy_column[name] += len(valid_Y)
+    name = column_transformers.output_types.categorical_distribution_first_sub_cols[0]
+    col_ranges = column_transformers.get_name_ranges(False, False, frozenset({ColumnTransformerType.CATEGORICAL_DISTRIBUTION}))
+
+    Y_per_player = torch.unflatten(Y, 1, [-1, len(col_ranges[0])])
+    pred_untransformed_per_player = torch.unflatten(pred_untransformed, 1, [-1, len(col_ranges[0])])
+    accuracy_per_player = (torch.argmax(Y_per_player, -1) ==
+                           torch.argmax(pred_untransformed_per_player, -1)).type(torch.float)
+    Y_valid_per_player_row = Y_per_player.sum(axis=2)
+    masked_accuracy_per_player = accuracy_per_player * Y_valid_per_player_row
+
+    if name not in accuracy:
+        accuracy[name] = 0
+        valids_per_accuracy_column[name] = 0
+    accuracy[name] += masked_accuracy_per_player.sum().item()
+    valids_per_accuracy_column[name] += Y_valid_per_player_row.sum().item()
 
 
 def finish_accuracy(accuracy, valids_per_accuracy_column, column_transformers: IOColumnTransformers):
     accuracy_string = ""
     for name, unadjusted_r in zip(column_transformers.output_types.column_names(True),
                                   column_transformers.get_name_ranges(False, False)):
-        # make float accuracy into rmse
-        if name in column_transformers.output_types.float_standard_cols or \
-                name in column_transformers.output_types.delta_float_column_names() or \
-                name in column_transformers.output_types.float_180_angle_cols or \
-                name in column_transformers.output_types.delta_180_angle_column_names() or \
-                name in column_transformers.output_types.float_90_angle_cols or \
-                name in column_transformers.output_types.delta_90_angle_column_names():
-            accuracy[name] = sqrt(accuracy[name])
-            accuracy_string += f'''{name}: {accuracy[name]} rmse'''
-        # record top-1 accuracy for others
-        elif name in column_transformers.output_types.categorical_cols:
-            accuracy_string += f'''{name}: {accuracy[name]} % cat top 1 acc'''
+        if name not in accuracy:
+            continue
         elif name in column_transformers.output_types.column_names_all_categorical_columns():
             if valids_per_accuracy_column[name] > 0:
                 accuracy_string += f'''{name}: {accuracy[name]} % cat top 1 acc'''
             else:
                 accuracy_string += f'''{name}: no valids % cat top 1 acc'''
-        else:
-            raise "Invalid Column Type For finish_accuracy"
         accuracy_string += "; "
     return accuracy_string

@@ -203,8 +203,6 @@ def train(train_type: TrainType, all_data_df: pd.DataFrame, hyperparameter_optio
         valids_per_accuracy_column = {}
         losses = []
         # bar = Bar('Processing', max=size)
-        for name in column_transformers.output_types.column_names():
-            accuracy[name] = 0
         with tqdm(total=len(dataloader), disable=False) as pbar:
             for batch, (X, Y) in enumerate(dataloader):
                 if first_row is None:
@@ -250,7 +248,7 @@ def train(train_type: TrainType, all_data_df: pd.DataFrame, hyperparameter_optio
 
         cumulative_loss /= len(dataloader)
         for name in column_transformers.output_types.column_names():
-            if valids_per_accuracy_column[name] > 0:
+            if name in valids_per_accuracy_column and valids_per_accuracy_column[name] > 0:
                 accuracy[name] /= valids_per_accuracy_column[name]
         accuracy_string = finish_accuracy(accuracy, valids_per_accuracy_column, column_transformers)
         train_test_str = "Train" if train else "Test"
@@ -259,17 +257,7 @@ def train(train_type: TrainType, all_data_df: pd.DataFrame, hyperparameter_optio
 
     def save_model():
         nonlocal train_type
-        if train_type == TrainType.Engagement:
-            model_path = run_checkpoints_path / 'engagement_checkpoint.pt'
-        elif train_type == TrainType.Aggression:
-            model_path = run_checkpoints_path / 'aggression_checkpoint.pt'
-        elif train_type == TrainType.Order:
-            model_path = run_checkpoints_path / 'order_checkpoint.pt'
-        elif train_type == TrainType.Place:
-            model_path = run_checkpoints_path / 'place_checkpoint.pt'
-        elif train_type == TrainType.Area:
-            model_path = run_checkpoints_path / 'area_checkpoint.pt'
-        elif train_type == TrainType.DeltaPos:
+        if train_type == TrainType.DeltaPos:
             model_path = run_checkpoints_path / 'delta_pos_checkpoint.pt'
         torch.save({
             'train_group_ids': train_group_ids,
