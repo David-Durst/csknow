@@ -32,8 +32,8 @@ string ModelNavData::print(const ServerState &) const {
     std::sort(optionAndProbs.begin(), optionAndProbs.end(), [](const OptionAndProb & left, const OptionAndProb & right) {
         return left.prob > right.prob;
     });
-    for (const auto & optionAndProb : optionAndProbs) {
-        result << "(" << optionAndProb.option << "," << optionAndProb.prob << "), ";
+    for (size_t i = 0; i < optionAndProbs.size() && i < 5; i++) {
+        result << "(" << optionAndProbs[i].option << "," << optionAndProbs[i].prob << "), ";
     }
 
     return result.str();

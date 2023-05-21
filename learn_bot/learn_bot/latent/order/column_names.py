@@ -18,7 +18,7 @@ num_places = 26
 area_grid_dim = 5
 area_grid_size = area_grid_dim * area_grid_dim
 delta_pos_grid_radius = 250
-delta_pos_grid_cell_dim = 100
+delta_pos_grid_cell_dim = 25
 delta_pos_grid_num_cells = int((delta_pos_grid_radius * 2 * delta_pos_grid_radius * 2) /
                                (delta_pos_grid_cell_dim * delta_pos_grid_cell_dim))
 delta_pos_grid_num_cells_per_dim = isqrt(delta_pos_grid_num_cells)

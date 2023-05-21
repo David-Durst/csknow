@@ -24,7 +24,7 @@ namespace csknow::feature_store {
     constexpr int area_grid_dim = 5;
     constexpr int area_grid_size = area_grid_dim*area_grid_dim;
     constexpr int delta_pos_grid_radius = 250;
-    constexpr int delta_pos_grid_cell_dim = 100;
+    constexpr int delta_pos_grid_cell_dim = 25;
     constexpr int delta_pos_grid_num_cells = (delta_pos_grid_radius * 2 * delta_pos_grid_radius * 2) /
             (delta_pos_grid_cell_dim * delta_pos_grid_cell_dim);
     const int delta_pos_grid_num_cells_per_dim = static_cast<int>(std::sqrt(delta_pos_grid_num_cells));
