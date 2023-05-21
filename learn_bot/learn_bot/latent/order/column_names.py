@@ -24,6 +24,9 @@ delta_pos_grid_num_cells = int((delta_pos_grid_radius * 2 * delta_pos_grid_radiu
 delta_pos_grid_num_cells_per_dim = isqrt(delta_pos_grid_num_cells)
 
 c4_status_col = "c4 status"
+c4_plant_a_col = "c4 planted a"
+c4_plant_b_col = "c4 planted b"
+c4_not_planted_col = "c4 not planted"
 c4_pos_cols = ["c4 pos x", "c4 pos y", "c4 pos z"]
 c4_ticks_since_plant = ["c4 ticks since plant"]
 c4_distance_to_a_site_col = "c4 distance to a site"

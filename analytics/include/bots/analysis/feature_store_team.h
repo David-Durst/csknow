@@ -59,6 +59,9 @@ namespace csknow::feature_store {
         vector<bool> baiting;
 
         vector<C4Status> c4Status;
+        vector<bool> c4PlantA;
+        vector<bool> c4PlantB;
+        vector<bool> c4NotPlanted;
         vector<int64_t> c4TicksSincePlant;
         array<vector<bool>, num_c4_timer_buckets> c4TimerBucketed;
         vector<Vec3> c4Pos;

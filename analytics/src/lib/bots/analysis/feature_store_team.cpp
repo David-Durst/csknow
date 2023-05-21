@@ -21,6 +21,9 @@ namespace csknow::feature_store {
         testName.resize(size, "INVALID");
         baiting.resize(size, false);
         c4Status.resize(size, C4Status::NotPlanted);
+        c4PlantA.resize(size, false);
+        c4PlantB.resize(size, false);
+        c4NotPlanted.resize(size, false);
         c4TicksSincePlant.resize(size, INVALID_ID);
         for (int j = 0; j < num_c4_timer_buckets; j++) {
             c4TimerBucketed[j].resize(size, false);
@@ -173,6 +176,9 @@ namespace csknow::feature_store {
             retakeSaveRoundTick[rowIndex] = false;
             testName[rowIndex] = "INVALID";
             c4Status[rowIndex] = C4Status::NotPlanted;
+            c4PlantA[rowIndex] = false;
+            c4PlantB[rowIndex] = false;
+            c4NotPlanted[rowIndex] = false;
             c4TicksSincePlant[rowIndex] = INVALID_ID;
             for (int j = 0; j < num_c4_timer_buckets; j++) {
                 c4TimerBucketed[j][rowIndex] = INVALID_ID;
@@ -292,9 +298,16 @@ namespace csknow::feature_store {
             double c4DistanceToBSite =
                 distanceToPlaces.getClosestDistance(buffer.c4MapData.c4AreaId, b_site, navFile);
             c4Status[internalTickIndex] = c4DistanceToASite < c4DistanceToBSite ? C4Status::PlantedA : C4Status::PlantedB;
+            if (c4Status[internalTickIndex] == C4Status::PlantedA) {
+                c4PlantA[internalTickIndex] = true;
+            }
+            else {
+                c4PlantB[internalTickIndex] = true;
+            }
         }
         else {
             c4Status[internalTickIndex] = C4Status::NotPlanted;
+            c4NotPlanted[internalTickIndex] = true;
         }
         c4TicksSincePlant[internalTickIndex] = buffer.c4MapData.ticksSincePlant;
         int c4TimerBucket = std::min(num_c4_timer_buckets - 1,
@@ -877,6 +890,9 @@ namespace csknow::feature_store {
         file.createDataSet("/data/test name", testName, hdf5FlatCreateProps);
         file.createDataSet("/data/baiting", baiting, hdf5FlatCreateProps);
         file.createDataSet("/data/c4 status", vectorOfEnumsToVectorOfInts(c4Status), hdf5FlatCreateProps);
+        file.createDataSet("/data/c4 planted a", c4PlantA, hdf5FlatCreateProps);
+        file.createDataSet("/data/c4 planted b", c4PlantB, hdf5FlatCreateProps);
+        file.createDataSet("/data/c4 not planted", c4NotPlanted, hdf5FlatCreateProps);
         file.createDataSet("/data/c4 ticks since plant", c4TicksSincePlant, hdf5FlatCreateProps);
         for (size_t c4TimerBucketIndex = 0; c4TimerBucketIndex < num_c4_timer_buckets; c4TimerBucketIndex++) {
             file.createDataSet("/data/c4 timer bucketed " + std::to_string(c4TimerBucketIndex), c4TimerBucketed[c4TimerBucketIndex], hdf5FlatCreateProps);

@@ -109,7 +109,8 @@ flat_input_float_place_area_columns: list[str] = \
 flat_input_cat_place_area_columns: list[str] = [c4_status_col]
 flat_input_cat_place_area_num_options: list[int] = [num_c4_status]
 flat_input_distribution_cat_place_area_columns: list[list[str]] = \
-    flatten_list([cols.to_input_distribution_cat_list() for cols in specific_player_place_area_columns]) + [['baiting']]
+    flatten_list([cols.to_input_distribution_cat_list() for cols in specific_player_place_area_columns]) + \
+    [['baiting'], [c4_plant_a_col, c4_plant_b_col, c4_not_planted_col]]
 flat_output_cat_place_distribution_columns: list[list[str]] = \
     flatten_list([cols.to_output_cat_list(True, False, False) for cols in specific_player_place_area_columns])
 flat_output_cat_area_distribution_columns: list[list[str]] = \
@@ -118,8 +119,8 @@ flat_output_cat_delta_pos_columns: list[list[str]] = \
     flatten_list([cols.to_output_cat_list(False, False, True) for cols in specific_player_place_area_columns])
 
 place_area_input_column_types = get_simplified_column_types(flat_input_float_place_area_columns,
-                                                            flat_input_cat_place_area_columns,
-                                                            flat_input_cat_place_area_num_options,
+                                                            [], #flat_input_cat_place_area_columns,
+                                                            [], #flat_input_cat_place_area_num_options,
                                                             flat_input_distribution_cat_place_area_columns)
                                                             #flat_input_distribution_cat_place_area_columns)
 #output_column_types = get_simplified_column_types([], flat_output_cat_columns, flat_output_num_options,
