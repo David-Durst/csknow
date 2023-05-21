@@ -5,7 +5,7 @@ from torch.utils.tensorboard import SummaryWriter
 
 from learn_bot.latent.dataset import *
 from learn_bot.libs.io_transforms import IOColumnTransformers, ColumnTransformerType, CPU_DEVICE_STR, \
-    get_untransformed_outputs, get_transformed_outputs
+    get_untransformed_outputs, get_transformed_outputs, CUDA_DEVICE_STR
 from math import sqrt
 from torch import nn
 
@@ -26,7 +26,7 @@ class LatentLosses:
     cat_loss: torch.Tensor
 
     def __init__(self):
-        self.cat_loss = torch.zeros([1])
+        self.cat_loss = torch.zeros([1]).to(CUDA_DEVICE_STR)
 
     def get_total_loss(self):
         return self.cat_loss
@@ -47,13 +47,13 @@ class LatentLosses:
 # https://discuss.pytorch.org/t/how-to-combine-multiple-criterions-to-a-loss-function/348/4
 def compute_loss(x, pred, y_transformed, y_untransformed, column_transformers: IOColumnTransformers,
                  latent_to_prob: Callable):
-    x = x.to(CPU_DEVICE_STR)
+    #x = x.to(CPU_DEVICE_STR)
     pred_transformed = get_transformed_outputs(pred)
-    pred_transformed = pred_transformed.to(CPU_DEVICE_STR)
-    pred_untransformed = get_untransformed_outputs(pred)
-    pred_untransformed = pred_untransformed.to(CPU_DEVICE_STR)
-    y_transformed = y_transformed.to(CPU_DEVICE_STR)
-    y_untransformed = y_untransformed.to(CPU_DEVICE_STR)
+    #pred_transformed = pred_transformed.to(CPU_DEVICE_STR)
+    #pred_untransformed = get_untransformed_outputs(pred)
+    #pred_untransformed = pred_untransformed.to(CPU_DEVICE_STR)
+    #y_transformed = y_transformed.to(CPU_DEVICE_STR)
+    #y_untransformed = y_untransformed.to(CPU_DEVICE_STR)
 
     losses = LatentLosses()
 
@@ -81,8 +81,8 @@ def compute_loss(x, pred, y_transformed, y_untransformed, column_transformers: I
 
 def compute_accuracy(pred, Y, accuracy, valids_per_accuracy_column, column_transformers: IOColumnTransformers):
     pred_untransformed = get_untransformed_outputs(pred)
-    pred_untransformed = pred_untransformed.to(CPU_DEVICE_STR)
-    Y = Y.to(CPU_DEVICE_STR)
+    #pred_untransformed = pred_untransformed.to(CPU_DEVICE_STR)
+    #Y = Y.to(CPU_DEVICE_STR)
 
     for name, col_range in zip(column_transformers.output_types.categorical_distribution_first_sub_cols,
                                column_transformers.get_name_ranges(False, False,
