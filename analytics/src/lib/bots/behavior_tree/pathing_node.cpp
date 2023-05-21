@@ -53,7 +53,8 @@ namespace movement {
             newPath.curWaypoint = 0;
             newPath.pathEndAreaId =
                     blackboard.navFile.get_nearest_area_by_position(targetPos).get_id();
-            if (validArea && (!c4Pos || vec3Conv(c4Pos.value()) != targetPos)) {
+            double pathDistance = computeDistance(curClient.getFootPosForPlayer(), vec3tConv(targetPos));
+            if (validArea && (!c4Pos || vec3Conv(c4Pos.value()) != targetPos) && pathDistance > 4*WIDTH) {
                 size_t targetAreaIndex = blackboard.navFile.m_area_ids_to_indices.at(targetAreaId);
                 const AABB & targetAreaAABB = blackboard.reachability.coordinate[targetAreaIndex];
                 // create an extra waypoint that is known to be good before getting to end

@@ -339,10 +339,24 @@ namespace csknow::compute_nav_area {
                 0.
         };
 
-        Vec3 desiredPos = curPriority.targetPos;
+        // check if closer jumping or not
+        const nav_mesh::nav_area & flatArea = blackboard.navFile
+                .get_nearest_area_by_position(vec3Conv(curPriority.targetPos));
+        float flatDistance = blackboard.navFile.get_point_to_area_distance(vec3Conv(curPriority.targetPos), flatArea);
+        Vec3 jumpingTargetPos = curPriority.targetPos;
+        jumpingTargetPos.z += MAX_JUMP_HEIGHT;
+        const nav_mesh::nav_area & jumpingArea = blackboard.navFile
+                .get_nearest_area_by_position(vec3Conv(jumpingTargetPos));
+        float jumpingDistance = blackboard.navFile.get_point_to_area_distance(vec3Conv(jumpingTargetPos), jumpingArea);
+        if (jumpingDistance < flatDistance) {
+            curPriority.targetPos = jumpingTargetPos;
+            curPriority.targetAreaId = jumpingArea.get_id();
+        }
+        else {
+            curPriority.targetAreaId = flatArea.get_id();
+        }
 
-        curPriority.targetAreaId = blackboard.navFile
-                .get_nearest_area_by_position(vec3Conv(curPriority.targetPos)).get_id();
+        Vec3 desiredPos = curPriority.targetPos;
 
         // if cur place is bombsite and CT defuser, then move to c4
         if (blackboard.isPlayerDefuser(curClient.csgoId) && !blackboard.inTest) {
@@ -429,6 +443,11 @@ namespace csknow::compute_nav_area {
         modelNavData.deltaYVal = (deltaPosOption / csknow::feature_store::delta_pos_grid_num_cells_per_dim) -
                 (csknow::feature_store::delta_pos_grid_num_cells_per_dim / 2);
 
+        if (modelNavData.deltaXVal == 0  && modelNavData.deltaYVal == 0) {
+            int x = 1;
+            (void) x;
+        }
+
         AreaId priorTargetAreaId = curPriority.targetAreaId;
         Vec3 priorTargetPos = curPriority.targetPos;
 
@@ -462,6 +481,9 @@ namespace csknow::compute_nav_area {
                 << " and prior unmodified target pos " << modelNavData.unmodifiedTargetPos.toString() << std::endl;
         }
          */
+        if (priorTargetAreaId == 6803 && curPriority.targetAreaId == 8802) {
+            std::cout << "jumping" << std::endl;
+        }
         modelNavData.unmodifiedTargetPos = curPriority.targetPos;
     }
 

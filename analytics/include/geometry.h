@@ -89,6 +89,7 @@ bool aabbOverlapExclusive(AABB b0, AABB b1) {
 const int STANDING_HEIGHT = 72;
 const int CROUCHED_HEIGHT = 54;
 const int WIDTH = 32;
+const int MAX_JUMP_HEIGHT = 65;
 static inline __attribute__((always_inline))
 AABB getAABBForPlayer(Vec3 pos, double duckAmount = 0.) {
     //https://developer.valvesoftware.com/wiki/Counter-Strike:_Global_Offensive_Mapper%27s_Reference

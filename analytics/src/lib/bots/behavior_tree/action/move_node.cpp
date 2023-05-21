@@ -116,6 +116,13 @@ namespace action {
             curAction.inputAngleY = 0;
         }
 
+        if (blackboard.playerToModelNavData.count(curClient.csgoId) > 0) {
+            const ModelNavData & modelNavData = blackboard.playerToModelNavData[treeThinker.csgoId];
+            if ((modelNavData.deltaXVal != 0 || modelNavData.deltaYVal != 0) && curAction.buttons == 0) {
+                //std::cout << "bad" << std::endl;
+            }
+        }
+
         playerNodeState[treeThinker.csgoId] = curPath.pathCallSucceeded ? NodeState::Success : NodeState::Failure;
         return playerNodeState[treeThinker.csgoId];
     }
