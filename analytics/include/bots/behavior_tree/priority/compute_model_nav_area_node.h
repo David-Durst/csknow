@@ -18,10 +18,6 @@ namespace csknow {
         public:
             ComputeModelNavAreaNode(Blackboard & blackboard, bool inEngagePath) :
                 Node(blackboard, "ComputeModelNavAreaNode"), inEngagePath(inEngagePath) { };
-            PlaceIndex computePlaceProbabilistic(const ServerState & state, const Order & curOrder,
-                                                 AreaId curAreaId, CSGOId csgoId, ModelNavData & modelNavData);
-            void computeAreaProbabilistic(const ServerState & state, Priority & curPriority, PlaceIndex nextPlace,
-                                          CSGOId csgoId, ModelNavData & modelNavData);
             Vec3 tryDeltaPosTargetPos(const ServerState & state, const ServerState::Client & curClient,
                                       Priority & curPriority, ModelNavData & modelNavData);
             void computeDeltaPosProbabilistic(const ServerState & state, Priority & curPriority, CSGOId csgoId,
