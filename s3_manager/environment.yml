@@ -6,6 +6,7 @@ dependencies:
   - _openmp_mutex=5.1=1_gnu
   - bzip2=1.0.8=h7b6447c_0
   - ca-certificates=2022.10.11=h06a4308_0
+  - cffi=1.15.1=py310h5eee18b_3
   - jmespath=0.10.0=pyhd3eb1b0_0
   - ld_impl_linux-64=2.38=h1181459_1
   - libffi=3.4.2=h6a678d5_6
@@ -28,18 +29,35 @@ dependencies:
   - xz=5.2.8=h5eee18b_0
   - zlib=1.2.13=h5eee18b_0
   - pip:
-    - boto3==1.24.28
-    - botocore==1.27.59
-    - brotlipy==0.7.0
-    - certifi==2022.12.7
-    - cffi==1.15.1
-    - cryptography==38.0.1
-    - idna==3.4
-    - pip==22.3.1
-    - pysocks==1.7.1
-    - s3path==0.3.4
-    - s3transfer==0.6.0
-    - setuptools==65.5.0
-    - smart-open==6.3.0
-    - urllib3==1.26.13
-prefix: /home/durst/anaconda3/envs/s3_manager
+      - aiobotocore==2.5.0
+      - aiohttp==3.8.4
+      - aioitertools==0.11.0
+      - aiosignal==1.3.1
+      - async-timeout==4.0.2
+      - attrs==23.1.0
+      - boto3==1.24.28
+      - botocore==1.29.76
+      - brotlipy==0.7.0
+      - certifi==2022.12.7
+      - charset-normalizer==3.1.0
+      - cryptography==38.0.1
+      - defusedxml==0.7.1
+      - frozenlist==1.3.3
+      - fsspec==2023.4.0
+      - glances==3.4.0.2
+      - idna==3.4
+      - multidict==6.0.4
+      - packaging==23.1
+      - pip==22.3.1
+      - psutil==5.9.5
+      - pysocks==1.7.1
+      - s3fs==2023.4.0
+      - s3path==0.3.4
+      - s3transfer==0.6.0
+      - setuptools==65.5.0
+      - smart-open==6.3.0
+      - ujson==5.7.0
+      - urllib3==1.26.13
+      - wrapt==1.15.0
+      - yarl==1.9.2
+prefix: /home/durst/miniconda3/envs/s3_manager
