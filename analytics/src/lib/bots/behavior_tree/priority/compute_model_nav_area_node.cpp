@@ -248,6 +248,17 @@ namespace csknow::compute_nav_area {
                 curPriority.targetAreaId = lastProbDeltaPosAssignment.targetAreaId;
             }
 
+            curPriority.nonDangerAimAreaType = NonDangerAimAreaType::Path;
+            if (curClient.team == ENGINE_TEAM_T) {
+                if (curOrder.playerToHoldIndex.count(curClient.csgoId) > 0) {
+                    AreaId chokeAreaId = curOrder.holdIndexToChokeAreaId.find(
+                            curOrder.playerToHoldIndex.find(treeThinker.csgoId)->second)->second;
+                    if (blackboard.visPoints.isVisibleAreaId(curAreaId, chokeAreaId)) {
+                        curPriority.nonDangerAimArea = chokeAreaId;
+                        curPriority.nonDangerAimAreaType = NonDangerAimAreaType::Hold;
+                    }
+                }
+            }
             /*
             // if CT defuser and in bombsite, then move to c4
             if (blackboard.isPlayerDefuser(treeThinker.csgoId) &&

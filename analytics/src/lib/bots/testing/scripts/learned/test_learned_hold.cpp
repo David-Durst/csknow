@@ -157,8 +157,8 @@ namespace csknow::tests::learned {
         for (size_t i = 0; i < numTests; i++) {
             //result.push_back(make_unique<LearnedHoldASitePushScript>(i, numTests, false));
             //result.push_back(make_unique<LearnedHoldASiteBaitScript>(i, numTests, false));
-            //result.push_back(make_unique<LearnedHoldBSitePushScript>(i, numTests, false));
-            result.push_back(make_unique<LearnedHoldBSiteBaitScript>(i, numTests, false));
+            result.push_back(make_unique<LearnedHoldBSitePushScript>(i, numTests, false));
+            //result.push_back(make_unique<LearnedHoldBSiteBaitScript>(i, numTests, false));
         }
         if (quitAtEnd) {
             result.push_back(make_unique<QuitScript>());
