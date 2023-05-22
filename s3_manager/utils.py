@@ -13,6 +13,10 @@ BIG_TRAIN_NAME = "big_train_data"
 ROLLOUT_NAME = "rollout_data"
 
 
+def get_data_root():
+    return DATA_ROOT
+
+
 def get_disabled_folder():
     return DISABLED_FOLDER
 
@@ -23,6 +27,17 @@ def get_demos_folder():
 
 def get_hdf5_folder():
     return HDF5_FOLDER
+
+
+def get_hdf5_file():
+    if dir_cmd == "manual":
+        return MANUAL_DATA_NAME
+    elif dir_cmd == "bot_retakes":
+        return BOT_RETAKES_NAME
+    elif dir_cmd == "big_train":
+        return BIG_TRAIN_NAME
+    elif dir_cmd == "rollout":
+        return ROLLOUT_NAME
 
 
 def update_dir(dir_cmd: str):
