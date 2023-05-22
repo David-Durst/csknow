@@ -366,6 +366,7 @@ def run_team_analysis():
     #train_result = train(TrainType.Order, team_data_df, num_epochs=3, windowed=False)
     #train_result = train(TrainType.Place, team_data_df, num_epochs=500, windowed=False, diff_train_test=False)
     #train_result = train(TrainType.Area, team_data_df, num_epochs=3, windowed=False)
+    team_data_df = team_data_df[team_data_df['test success'] > 0.5]
     hyperparameter_options = default_hyperparameter_options
     if len(sys.argv) > 1:
         hyperparameter_indices = [int(i) for i in sys.argv[1].split(",")]

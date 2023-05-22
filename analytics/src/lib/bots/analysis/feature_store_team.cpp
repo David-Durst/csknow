@@ -19,6 +19,7 @@ namespace csknow::feature_store {
         freezeTimeEnded.resize(size, false);
         retakeSaveRoundTick.resize(size, false);
         testName.resize(size, "INVALID");
+        testSuccess.resize(size, false);
         baiting.resize(size, false);
         c4Status.resize(size, C4Status::NotPlanted);
         c4PlantA.resize(size, false);
@@ -135,7 +136,7 @@ namespace csknow::feature_store {
             const csknow::key_retake_events::KeyRetakeEvents & refKeyRetakeEvents = keyRetakeEvents->get();
             for (int64_t i = 0; i < static_cast<int64_t>(size); i++) {
                 int64_t roundIndex = refTicks.roundId[i];
-                if (refKeyRetakeEvents.roundHasCompleteTest[roundIndex] &&
+                if ((refKeyRetakeEvents.roundHasCompleteTest[roundIndex] || refKeyRetakeEvents.roundHasFailedTest[roundIndex]) &&
                     refKeyRetakeEvents.testStartBeforeOrDuringThisTick[i] &&
                     !refKeyRetakeEvents.testEndBeforeOrDuringThisTick[i]) {
                     if (i % every_nth_row != 0) {
@@ -175,6 +176,7 @@ namespace csknow::feature_store {
             freezeTimeEnded[rowIndex] = false;
             retakeSaveRoundTick[rowIndex] = false;
             testName[rowIndex] = "INVALID";
+            testSuccess[rowIndex] = false;
             c4Status[rowIndex] = C4Status::NotPlanted;
             c4PlantA[rowIndex] = false;
             c4PlantB[rowIndex] = false;
@@ -787,6 +789,7 @@ namespace csknow::feature_store {
                 retakeSaveRoundTick[tickIndex] = keyRetakeEvents.ctAliveAfterExplosion[unmodifiedTickIndex] ||
                         keyRetakeEvents.ctAliveAfterExplosion[unmodifiedTickIndex];
                 testName[tickIndex] = keyRetakeEvents.roundTestName[roundIndex];
+                testSuccess[tickIndex] = keyRetakeEvents.roundHasCompleteTest[roundIndex];
                 baiting[tickIndex] = keyRetakeEvents.roundBaiters[roundIndex];
                 // add a new tick every second
                 if (ticks1sFutureTracker.isEmpty() ||
@@ -888,6 +891,7 @@ namespace csknow::feature_store {
         file.createDataSet("/data/freeze time ended", freezeTimeEnded, hdf5FlatCreateProps);
         file.createDataSet("/data/retake save round tick", retakeSaveRoundTick, hdf5FlatCreateProps);
         file.createDataSet("/data/test name", testName, hdf5FlatCreateProps);
+        file.createDataSet("/data/test success", testSuccess, hdf5FlatCreateProps);
         file.createDataSet("/data/baiting", baiting, hdf5FlatCreateProps);
         file.createDataSet("/data/c4 status", vectorOfEnumsToVectorOfInts(c4Status), hdf5FlatCreateProps);
         file.createDataSet("/data/c4 planted a", c4PlantA, hdf5FlatCreateProps);

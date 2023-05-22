@@ -32,6 +32,7 @@ namespace csknow::key_retake_events {
         roundTestIndex.resize(rounds.size, INVALID_ID);
         roundNumTests.resize(rounds.size, INVALID_ID);
         roundHasCompleteTest.resize(rounds.size, false);
+        roundHasFailedTest.resize(rounds.size, false);
         roundBaiters.resize(rounds.size, false);
 #pragma omp parallel for
         for (int64_t roundIndex = 0; roundIndex < rounds.size; roundIndex++) {
@@ -113,6 +114,13 @@ namespace csknow::key_retake_events {
                     else if (sayMessage.find(test_finished_string) != std::string::npos) {
                         foundTestFinishInRound = true;
                         roundHasCompleteTest[roundIndex] = foundTestStartInRound && foundTestFinishInRound;
+                        if (sayMessage.find("Bait") != std::string::npos) {
+                            roundBaiters[roundIndex] = true;
+                        }
+                    }
+                    else if (sayMessage.find(test_failed_string) != std::string::npos) {
+                        foundTestFinishInRound = true;
+                        roundHasFailedTest[roundIndex] = foundTestStartInRound && foundTestFinishInRound;
                         if (sayMessage.find("Bait") != std::string::npos) {
                             roundBaiters[roundIndex] = true;
                         }
