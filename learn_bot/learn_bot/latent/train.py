@@ -201,7 +201,7 @@ def train(train_type: TrainType, all_data_df: pd.DataFrame, hyperparameter_optio
         cumulative_loss = LatentLosses()
         accuracy = {}
         valids_per_accuracy_column = {}
-        losses = []
+        #losses = []
         # bar = Bar('Processing', max=size)
         with tqdm(total=len(dataloader), disable=False) as pbar:
             for batch, (X, Y) in enumerate(dataloader):
@@ -235,7 +235,7 @@ def train(train_type: TrainType, all_data_df: pd.DataFrame, hyperparameter_optio
                     sys.exit(0)
                 batch_loss = compute_loss(pred, Y, column_transformers)
                 cumulative_loss += batch_loss
-                losses.append(batch_loss.get_total_loss().tolist()[0])
+                #losses.append(batch_loss.get_total_loss().tolist()[0])
 
                 # Backpropagation
                 if train:
