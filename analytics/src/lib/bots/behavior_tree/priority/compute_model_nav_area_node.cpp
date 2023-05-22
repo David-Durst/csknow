@@ -19,15 +19,17 @@ namespace csknow::compute_nav_area {
                 0.
         };
 
-        curPriority.targetAreaId = blackboard.navFile
-                .get_nearest_area_by_position_z_last(vec3Conv(curPriority.targetPos), 2000.f, MAX_JUMP_HEIGHT).get_id();
+
         /*
+        curPriority.targetAreaId = blackboard.navFile
+                .get_nearest_area_by_position_z_limit(vec3Conv(curPriority.targetPos), 2000.f, 2*MAX_JUMP_HEIGHT).get_id();
+                */
         // check if closer jumping or not
         const nav_mesh::nav_area & flatArea = blackboard.navFile
                 .get_nearest_area_by_position(vec3Conv(curPriority.targetPos));
         float flatDistance = blackboard.navFile.get_point_to_area_distance(vec3Conv(curPriority.targetPos), flatArea);
         Vec3 jumpingTargetPos = curPriority.targetPos;
-        jumpingTargetPos.z += MAX_JUMP_HEIGHT;
+        jumpingTargetPos.z += MAX_JUMP_HEIGHT;// * 0.85;
         const nav_mesh::nav_area & jumpingArea = blackboard.navFile
                 .get_nearest_area_by_position(vec3Conv(jumpingTargetPos));
         float jumpingDistance = blackboard.navFile.get_point_to_area_distance(vec3Conv(jumpingTargetPos), jumpingArea);
@@ -38,7 +40,6 @@ namespace csknow::compute_nav_area {
         else {
             curPriority.targetAreaId = flatArea.get_id();
         }
-         */
 
         Vec3 desiredPos = curPriority.targetPos;
 
@@ -69,9 +70,9 @@ namespace csknow::compute_nav_area {
                 curPriority.targetAreaId = oldModelNavData.nextArea;
             }
         }
-         */
         curPriority.targetPos = vec3tConv(blackboard.navFile.get_nearest_point_in_area(
                 vec3Conv(curPriority.targetPos), blackboard.navFile.get_area_by_id_fast(curPriority.targetAreaId)));
+         */
         modelNavData.nextArea = curPriority.targetAreaId;
         return desiredPos;
     }

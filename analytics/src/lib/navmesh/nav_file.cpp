@@ -326,9 +326,9 @@ namespace nav_mesh {
         }
     }
 
-    const nav_area& nav_file::get_nearest_area_by_position_z_last(nav_mesh::vec3_t position, float z_below_limit,
+    const nav_area& nav_file::get_nearest_area_by_position_z_limit(nav_mesh::vec3_t position, float z_below_limit,
                                                                   float z_above_limit) const {
-        // if contained in 3d, return immediately, if contained only in 2d, grab nearest
+        // if contained in 3d, return immediately, if nearest in 2d and in z range, grab nearest
         float nearest_area_distance_2d = std::numeric_limits<float>::max();
         size_t nearest_area_id_2d = -1;
         // if not contained in 2d, then just get nearest in 3d
@@ -349,9 +349,8 @@ namespace nav_mesh {
             if ( area.get_min_corner().z - position.z <= z_above_limit &&
                  position.z - area.get_max_corner().z <= z_below_limit) {
                 float other_distance_2d = get_point_to_area_distance_2d( position, area);
-                // since 2d is 0, other distance 3d is just z component
-                if ( other_distance_2d == 0. && other_distance_3d < nearest_area_distance_2d ) {
-                    nearest_area_distance_2d = other_distance_3d;
+                if ( other_distance_2d < nearest_area_distance_2d ) {
+                    nearest_area_distance_2d = other_distance_2d;
                     nearest_area_id_2d = area_id;
                 }
             }

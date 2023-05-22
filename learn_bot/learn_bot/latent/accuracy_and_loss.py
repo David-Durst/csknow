@@ -73,10 +73,10 @@ def compute_accuracy(pred, Y, accuracy, valids_per_accuracy_column, column_trans
     masked_accuracy_per_player = accuracy_per_player * Y_valid_per_player_row
 
     if name not in accuracy:
-        accuracy[name] = 0
-        valids_per_accuracy_column[name] = 0
-    accuracy[name] += masked_accuracy_per_player.sum().item()
-    valids_per_accuracy_column[name] += Y_valid_per_player_row.sum().item()
+        accuracy[name] = torch.zeros([1]).to(CUDA_DEVICE_STR)
+        valids_per_accuracy_column[name] = torch.zeros([1]).to(CUDA_DEVICE_STR)
+    accuracy[name] += masked_accuracy_per_player.sum()
+    valids_per_accuracy_column[name] += Y_valid_per_player_row.sum()
 
 
 def finish_accuracy(accuracy, valids_per_accuracy_column, column_transformers: IOColumnTransformers):

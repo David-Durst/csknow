@@ -52,8 +52,6 @@ namespace csknow::inference_delta_pos {
             }
             ctColumnData = false;
         }
-        // cat data
-        result.rowCPP.push_back(static_cast<float>(teamFeatureStoreResult.c4Status[rowIndex]));
         // distribution cat data
         ctColumnData = true;
         for (const auto & columnData :
@@ -77,7 +75,10 @@ namespace csknow::inference_delta_pos {
             }
             ctColumnData = false;
         }
-        result.rowCPP.push_back(1.f);
+        result.rowCPP.push_back(0.f);
+        result.rowCPP.push_back(static_cast<float>(teamFeatureStoreResult.c4PlantA[rowIndex]));
+        result.rowCPP.push_back(static_cast<float>(teamFeatureStoreResult.c4PlantB[rowIndex]));
+        result.rowCPP.push_back(static_cast<float>(teamFeatureStoreResult.c4NotPlanted[rowIndex]));
         return result;
     }
 

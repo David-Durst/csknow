@@ -82,7 +82,7 @@ class HyperparameterOptions:
 
 
 default_hyperparameter_options = HyperparameterOptions()
-hyperparameter_option_range = [HyperparameterOptions(noise_var=0.1),
+hyperparameter_option_range = [HyperparameterOptions(num_epochs=20, noise_var=0.1),
                                HyperparameterOptions(noise_var=0.01)]
 #hyperparameter_option_range = [HyperparameterOptions(),
 #                               HyperparameterOptions(learning_rate=4e-4),
@@ -249,7 +249,7 @@ def train(train_type: TrainType, all_data_df: pd.DataFrame, hyperparameter_optio
         cumulative_loss /= len(dataloader)
         for name in column_transformers.output_types.column_names():
             if name in valids_per_accuracy_column and valids_per_accuracy_column[name] > 0:
-                accuracy[name] /= valids_per_accuracy_column[name]
+                accuracy[name] = accuracy[name].item() / valids_per_accuracy_column[name].item()
         accuracy_string = finish_accuracy(accuracy, valids_per_accuracy_column, column_transformers)
         train_test_str = "Train" if train else "Test"
         print(f"Epoch {train_test_str} Accuracy: {accuracy_string}, Transformed Avg Loss: {cumulative_loss.get_total_loss().item():>8f}")
