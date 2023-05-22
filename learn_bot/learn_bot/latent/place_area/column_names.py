@@ -6,6 +6,7 @@ from learn_bot.latent.order.column_names import *
 
 float_c4_cols = [] #[c4_distance_to_a_site_col, c4_distance_to_b_site_col] + c4_pos_cols + c4_ticks_since_plant
 
+test_success_col = 'test success'
 
 def get_player_distribution_nearest_place(player_index: int, place_index: int, team_str: str) -> str:
     return "distribution nearest place " + str(place_index) + " " + team_str + " " + str(player_index)
@@ -110,7 +111,8 @@ flat_input_cat_place_area_columns: list[str] = [c4_status_col]
 flat_input_cat_place_area_num_options: list[int] = [num_c4_status]
 flat_input_distribution_cat_place_area_columns: list[list[str]] = \
     flatten_list([cols.to_input_distribution_cat_list() for cols in specific_player_place_area_columns]) + \
-    [['baiting'], [c4_plant_a_col, c4_plant_b_col, c4_not_planted_col]]
+    [[c4_plant_a_col, c4_plant_b_col, c4_not_planted_col]]
+#[['baiting'], [c4_plant_a_col, c4_plant_b_col, c4_not_planted_col]]
 flat_output_cat_place_distribution_columns: list[list[str]] = \
     flatten_list([cols.to_output_cat_list(True, False, False) for cols in specific_player_place_area_columns])
 flat_output_cat_area_distribution_columns: list[list[str]] = \

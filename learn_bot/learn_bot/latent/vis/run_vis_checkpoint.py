@@ -7,7 +7,7 @@ from learn_bot.latent.dataset import LatentDataset
 from learn_bot.latent.engagement.column_names import max_enemies
 from learn_bot.latent.order.column_names import delta_pos_grid_num_cells
 from learn_bot.latent.place_area.column_names import round_id_column, place_area_input_column_types, \
-    delta_pos_output_column_types
+    delta_pos_output_column_types, test_success_col
 from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd
 from learn_bot.libs.io_transforms import IOColumnTransformers, CUDA_DEVICE_STR
 from learn_bot.latent.transformer_nested_hidden_latent_model import TransformerNestedHiddenLatentModel
@@ -72,6 +72,7 @@ if __name__ == "__main__":
     else:
         all_data_df = load_hdf5_to_pd(latent_team_hdf5_data_path)
         all_data_df = all_data_df[(all_data_df['valid'] == 1.) & (all_data_df['c4 status'] < 2)]
+    all_data_df = all_data_df[all_data_df[test_success_col] == 1.]
     all_data_df = all_data_df.copy()
 
     if rollout_data:

@@ -26,7 +26,7 @@ from learn_bot.latent.order.column_names import order_input_column_types, order_
     PlayerOrderColumns, delta_pos_grid_num_cells
 from learn_bot.latent.order.latent_to_distributions import get_order_probability
 from learn_bot.latent.place_area.column_names import place_area_input_column_types, place_output_column_types, \
-    num_places, area_grid_size, area_output_column_types, delta_pos_output_column_types
+    num_places, area_grid_size, area_output_column_types, delta_pos_output_column_types, test_success_col
 from learn_bot.latent.profiling import profile_latent_model
 from learn_bot.latent.transformer_nested_hidden_latent_model import TransformerNestedHiddenLatentModel
 from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd
@@ -366,7 +366,7 @@ def run_team_analysis():
     #train_result = train(TrainType.Order, team_data_df, num_epochs=3, windowed=False)
     #train_result = train(TrainType.Place, team_data_df, num_epochs=500, windowed=False, diff_train_test=False)
     #train_result = train(TrainType.Area, team_data_df, num_epochs=3, windowed=False)
-    team_data_df = team_data_df[team_data_df['test success'] > 0.5]
+    team_data_df = team_data_df[team_data_df[test_success_col] == 1.]
     hyperparameter_options = default_hyperparameter_options
     if len(sys.argv) > 1:
         hyperparameter_indices = [int(i) for i in sys.argv[1].split(",")]
