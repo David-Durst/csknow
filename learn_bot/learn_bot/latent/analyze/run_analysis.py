@@ -4,15 +4,16 @@ import pandas as pd
 import os
 from typing import Dict, List
 
-from PIL import Image
-from PIL.ImageDraw import ImageDraw
+from PIL import Image, ImageDraw
 
 from learn_bot.engagement_aim.analysis.fitts import test_name_col
 from learn_bot.latent.engagement.column_names import round_id_column
-from learn_bot.latent.place_area.column_names import test_success_col
+from learn_bot.latent.place_area.column_names import test_success_col, specific_player_place_area_columns
 from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd
 from learn_bot.latent.train import manual_latent_team_hdf5_data_path
-from learn_bot.mining.area_cluster import d2_radar_path
+from learn_bot.mining.area_cluster import d2_radar_path, Vec3, MapCoordinate
+import matplotlib as mpl
+import matplotlib.pyplot as plt
 
 plots_path = Path(__file__).parent / 'plots'
 
@@ -32,21 +33,50 @@ def get_rounds_per_test_result(data_df: pd.DataFrame) -> Dict[str, Dict[bool, Li
         num_failure = 0
         if True in result[test_name]:
             num_success = len(result[test_name][True])
+        if False in result[test_name]:
             num_failure = len(result[test_name][False])
-        print(f"{test_name}: {float(success) / (num_success + num_failure)}% success")
+        print(f"{test_name}: {float(num_success) / (num_success + num_failure)}% success")
 
     return result
 
 
+def create_shifted_pos(df: pd.DataFrame):
+    df['prior ' + round_id_column] = df[round_id_column].shift(periods=-1)
+    for player in specific_player_place_area_columns:
+        df['prior ' + player.player_id] = df[player.player_id].shift(periods=-1)
+        for pos in player.pos:
+            df['prior ' + pos] = df[pos].shift(periods=-1)
+
+
+cmap = mpl.cm.get_cmap("Set3").colors
+
+
 def plot_similar_rounds(human: bool, test_name: str, success: bool, round_ids: List[int], df: pd.DataFrame):
+    img = plt.imread("airlines.jpg")
+    fig, ax = plt.subplots()
+    ax.imshow(img)
     with Image.open(d2_radar_path) as im:
+        im = im.convert("RGBA")
         d2_draw = ImageDraw.Draw(im)
         for round_id in round_ids:
             round_df = df[df[round_id_column] == round_id]
-            round_df['shifted_pos']
-            coord_arr = pos_kmeans.cluster_centers_[i]
-            MapCoordinate(coord_arr[0], coord_arr[1], coord_arr[2]).draw(d2_draw)
+            for _, tick in round_df.iterrows():
+                player_id = 0
+                for player in specific_player_place_area_columns:
+                    if tick[player.player_id] == -1 or tick[player.player_id] != tick['prior ' + player.player_id] or \
+                            tick[round_id_column] != tick['prior ' + round_id_column]:
+                        continue
+                    cur_pos = MapCoordinate(tick[player.pos[0]], tick[player.pos[1]], tick[player.pos[2]])
+                    cur_pos_canvas = cur_pos.get_canvas_coordinates()
+                    prior_pos = MapCoordinate(tick['prior ' + player.pos[0]], tick['prior ' + player.pos[1]],
+                                              tick['prior ' + player.pos[2]])
+                    prior_pos_canvas = prior_pos.get_canvas_coordinates()
 
+                    color = cmap[player_id]
+                    d2_draw.line([(prior_pos_canvas.x, prior_pos_canvas.y), (cur_pos_canvas.x, cur_pos_canvas.y)],
+                                 fill=(int(color[0] * 255), int(color[1] * 255), int(color[2] * 255), 20), width=5)
+                    player_id += 1
+            break
         im.save(plots_path / f"{'human' if human else 'bot'}_{test_name}_{success}.png")
 
 
@@ -57,3 +87,8 @@ if __name__ == "__main__":
     all_data_df = all_data_df.copy()
     all_data_df[test_name_col] = all_data_df[test_name_col].str.decode("utf-8")
     rounds_per_test_result = get_rounds_per_test_result(all_data_df)
+    create_shifted_pos(all_data_df)
+    for test_name, success_to_rounds in rounds_per_test_result.items():
+        print(f"processing {test_name}")
+        for success, rounds in success_to_rounds.items():
+            plot_similar_rounds(True, test_name, success, rounds, all_data_df)
