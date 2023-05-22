@@ -52,17 +52,16 @@ cmap = mpl.cm.get_cmap("Set3").colors
 
 
 def plot_similar_rounds(human: bool, test_name: str, success: bool, round_ids: List[int], df: pd.DataFrame):
-    img = plt.imread("airlines.jpg")
-    fig, ax = plt.subplots()
-    ax.imshow(img)
     with Image.open(d2_radar_path) as im:
-        im = im.convert("RGBA")
-        d2_draw = ImageDraw.Draw(im)
+        fig = plt.figure(figsize=(8,8), dpi=256)
+        ax = plt.axes()
+        ax.imshow(im)
         for round_id in round_ids:
             round_df = df[df[round_id_column] == round_id]
             for _, tick in round_df.iterrows():
                 player_id = 0
                 for player in specific_player_place_area_columns:
+                    player_id += 1
                     if tick[player.player_id] == -1 or tick[player.player_id] != tick['prior ' + player.player_id] or \
                             tick[round_id_column] != tick['prior ' + round_id_column]:
                         continue
@@ -73,11 +72,10 @@ def plot_similar_rounds(human: bool, test_name: str, success: bool, round_ids: L
                     prior_pos_canvas = prior_pos.get_canvas_coordinates()
 
                     color = cmap[player_id]
-                    d2_draw.line([(prior_pos_canvas.x, prior_pos_canvas.y), (cur_pos_canvas.x, cur_pos_canvas.y)],
-                                 fill=(int(color[0] * 255), int(color[1] * 255), int(color[2] * 255), 20), width=5)
-                    player_id += 1
-            break
-        im.save(plots_path / f"{'human' if human else 'bot'}_{test_name}_{success}.png")
+                    ax.plot([prior_pos_canvas.x, cur_pos_canvas.x], [prior_pos_canvas.y, cur_pos_canvas.y], color=color,
+                            alpha=0.025, linestyle='-', linewidth=1)
+        plt.axis('off')
+        plt.savefig(plots_path / f"{'human' if human else 'bot'}_{test_name}_{success}.png", bbox_inches='tight', pad_inches=0)
 
 
 if __name__ == "__main__":
