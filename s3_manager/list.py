@@ -24,6 +24,7 @@ def run(arg: str):
     generate_data_folder(s3)
 
     fs = s3fs.S3FileSystem()
+    print_folder(fs, get_data_root())
     print_folder(fs, get_disabled_folder())
     print_folder(fs, get_demos_folder())
     print_folder(fs, get_hdf5_folder())

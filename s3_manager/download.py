@@ -10,10 +10,11 @@ def run(args: List[str]):
     # make manual folder structure if doesn't exists
     update_dir(args[0])
     generate_data_folder(s3)
-    print(f"downloading {args[0]} from {get_demos_folder()}")
     hdf5_file_name = get_data_name() + ".hdf5"
+    local_path = str(Path(__file__).parent / ".." / "demo_parser" / "hdf5" / hdf5_file_name)
+    print(f"downloading {hdf5_file_name} from {get_data_root()} to {local_path}")
     s3.download_file(Bucket=BUCKET.bucket, Key=(get_data_root() / hdf5_file_name).key, 
-                     Filename=Path(__file__).parent / ".." / "demo_parser" / "hdf5" / hdf5_file_name)
+                     Filename=local_path)
 
 
 if __name__ == "__main__":
