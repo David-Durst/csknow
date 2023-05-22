@@ -75,7 +75,7 @@ namespace csknow::inference_delta_pos {
             }
             ctColumnData = false;
         }
-        result.rowCPP.push_back(0.f);
+        result.rowCPP.push_back(teamFeatureStoreResult.curBaiting ? 1.0f : 0.f);
         result.rowCPP.push_back(static_cast<float>(teamFeatureStoreResult.c4PlantA[rowIndex]));
         result.rowCPP.push_back(static_cast<float>(teamFeatureStoreResult.c4PlantB[rowIndex]));
         result.rowCPP.push_back(static_cast<float>(teamFeatureStoreResult.c4NotPlanted[rowIndex]));

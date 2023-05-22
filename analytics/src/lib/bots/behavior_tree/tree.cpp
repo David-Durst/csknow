@@ -179,6 +179,13 @@ void Tree::tick(ServerState & state, const string & mapsPath) {
         }
 
         inferenceManager.runInferences();
+        featureStoreResult.teamFeatureStoreResult.curBaiting = false;
+        for (const auto & [_, treeThinker] : blackboard->playerToTreeThinkers) {
+            if (treeThinker.aggressiveType == AggressiveType::Bait) {
+                featureStoreResult.teamFeatureStoreResult.curBaiting = true;
+                break;
+            }
+        }
 
         stringstream logCollector;
         logCollector << "inference time " << inferenceManager.inferenceSeconds << "s" << std::endl;

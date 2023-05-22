@@ -45,6 +45,7 @@ namespace csknow::feature_store {
 
     public:
         std::vector<csknow::orders::QueryOrder> aOrders, bOrders;
+        bool curBaiting = false;
 
         vector<int64_t> tickIdToInternalId;
         vector<int64_t> internalIdToTickId;
