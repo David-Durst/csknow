@@ -11,7 +11,7 @@ def run(args: List[str]):
     update_dir(args[0])
     generate_data_folder(s3)
     print(f"downloading {args[0]} from {get_demos_folder()}")
-    hdf5_file_name = get_hdf5_file() + ".hdf5"
+    hdf5_file_name = get_data_name() + ".hdf5"
     s3.download_file(Bucket=BUCKET.bucket, Key=(get_data_root() / hdf5_file_name).key, 
                      Filename=Path(__file__).parent / ".." / "demo_parser" / "hdf5" / hdf5_file_name)
 

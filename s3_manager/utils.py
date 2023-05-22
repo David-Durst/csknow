@@ -6,6 +6,7 @@ DATA_ROOT = BUCKET / "demos" / "manual_data"
 DISABLED_FOLDER = DATA_ROOT / "disabled"
 DEMOS_FOLDER = DATA_ROOT / "demos"
 HDF5_FOLDER = DATA_ROOT / "hdf5"
+DATA_NAME = "INVALID"
 
 MANUAL_DATA_NAME = "manual_data"
 BOT_RETAKES_NAME = "bot_retakes_data"
@@ -29,27 +30,24 @@ def get_hdf5_folder():
     return HDF5_FOLDER
 
 
-def get_hdf5_file():
-    if dir_cmd == "manual":
-        return MANUAL_DATA_NAME
-    elif dir_cmd == "bot_retakes":
-        return BOT_RETAKES_NAME
-    elif dir_cmd == "big_train":
-        return BIG_TRAIN_NAME
-    elif dir_cmd == "rollout":
-        return ROLLOUT_NAME
+def get_data_name():
+    return DATA_NAME
 
 
 def update_dir(dir_cmd: str):
-    global DATA_ROOT, DISABLED_FOLDER, DEMOS_FOLDER, HDF5_FOLDER
+    global DATA_ROOT, DISABLED_FOLDER, DEMOS_FOLDER, HDF5_FOLDER, DATA_NAME
     if dir_cmd == "manual":
         DATA_ROOT = BUCKET / "demos" / MANUAL_DATA_NAME
+        DATA_NAME = MANUAL_DATA_NAME
     elif dir_cmd == "bot_retakes":
         DATA_ROOT = BUCKET / "demos" / BOT_RETAKES_NAME
+        DATA_NAME = BOT_RETAKES_NAME
     elif dir_cmd == "big_train":
         DATA_ROOT = BUCKET / "demos" / BIG_TRAIN_NAME
+        DATA_NAME = BIG_TRAIN_NAME
     elif dir_cmd == "rollout":
         DATA_ROOT = BUCKET / "demos" / ROLLOUT_NAME
+        DATA_NAME = ROLLOUT_NAME
     else:
         print("invalid data set command")
         sys.exit(1)
