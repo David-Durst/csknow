@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pandas as pd
 import os
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 from PIL import Image, ImageDraw
 
@@ -10,7 +10,7 @@ from learn_bot.engagement_aim.analysis.fitts import test_name_col
 from learn_bot.latent.engagement.column_names import round_id_column
 from learn_bot.latent.place_area.column_names import test_success_col, specific_player_place_area_columns
 from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd
-from learn_bot.latent.train import manual_latent_team_hdf5_data_path
+from learn_bot.latent.train import manual_latent_team_hdf5_data_path, rollout_latent_team_hdf5_data_path
 from learn_bot.mining.area_cluster import d2_radar_path, Vec3, MapCoordinate
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -18,7 +18,10 @@ import matplotlib.pyplot as plt
 plots_path = Path(__file__).parent / 'plots'
 
 
-def get_rounds_per_test_result(data_df: pd.DataFrame) -> Dict[str, Dict[bool, List[int]]]:
+RoundsPerTestResult = Dict[str, Dict[bool, List[int]]]
+
+
+def get_rounds_per_test_result(data_df: pd.DataFrame) -> RoundsPerTestResult:
     grouped_df = data_df.groupby([test_name_col, test_success_col])[round_id_column].agg('unique')
     group_items = list(grouped_df.items())
     result = {}
@@ -51,7 +54,7 @@ def create_shifted_pos(df: pd.DataFrame):
 cmap = mpl.cm.get_cmap("Set3").colors
 
 
-def plot_similar_rounds(human: bool, test_name: str, success: bool, round_ids: List[int], df: pd.DataFrame):
+def plot_similar_rounds(learned: bool, test_name: str, success: bool, round_ids: List[int], df: pd.DataFrame):
     with Image.open(d2_radar_path) as im:
         fig = plt.figure(figsize=(8,8), dpi=256)
         ax = plt.axes()
@@ -75,18 +78,25 @@ def plot_similar_rounds(human: bool, test_name: str, success: bool, round_ids: L
                     ax.plot([prior_pos_canvas.x, cur_pos_canvas.x], [prior_pos_canvas.y, cur_pos_canvas.y], color=color,
                             alpha=0.025, linestyle='-', linewidth=1)
         plt.axis('off')
-        plt.savefig(plots_path / f"{'human' if human else 'bot'}_{test_name}_{success}.png", bbox_inches='tight', pad_inches=0)
+        plt.savefig(plots_path / f"{'learned' if learned else 'handcraft'}_{test_name}_{success}.png", bbox_inches='tight', pad_inches=0)
+
+
+def prepare_df(p: Path) -> Tuple[pd.DataFrame, RoundsPerTestResult]:
+    df = load_hdf5_to_pd(p)
+    df = df.copy()
+    df[test_name_col] = df[test_name_col].str.decode("utf-8")
+    rounds_per_test_result = get_rounds_per_test_result(df)
+    create_shifted_pos(df)
+    return df, rounds_per_test_result
 
 
 if __name__ == "__main__":
     os.makedirs(plots_path, exist_ok=True)
 
-    all_data_df = load_hdf5_to_pd(manual_latent_team_hdf5_data_path)
-    all_data_df = all_data_df.copy()
-    all_data_df[test_name_col] = all_data_df[test_name_col].str.decode("utf-8")
-    rounds_per_test_result = get_rounds_per_test_result(all_data_df)
-    create_shifted_pos(all_data_df)
-    for test_name, success_to_rounds in rounds_per_test_result.items():
-        print(f"processing {test_name}")
-        for success, rounds in success_to_rounds.items():
-            plot_similar_rounds(True, test_name, success, rounds, all_data_df)
+    for p, learned in zip([manual_latent_team_hdf5_data_path, rollout_latent_team_hdf5_data_path], [False, True]):
+        df, rounds_per_test_result = prepare_df(p)
+
+        for test_name, success_to_rounds in rounds_per_test_result.items():
+            print(f"processing {test_name}")
+            for success, rounds in success_to_rounds.items():
+                plot_similar_rounds(learned, test_name, success, rounds, df)
