@@ -83,7 +83,7 @@ class HyperparameterOptions:
 
 default_hyperparameter_options = HyperparameterOptions()
 hyperparameter_option_range = [HyperparameterOptions(learning_rate=1e-5),
-                               HyperparameterOptions(learning_rate=1e-6),
+                               HyperparameterOptions(num_epochs=3000, learning_rate=1e-6),
                                HyperparameterOptions(weight_decay=0.1),
                                HyperparameterOptions(layers=4, heads=8)]
 #hyperparameter_option_range = [HyperparameterOptions(),
