@@ -7,6 +7,8 @@ from learn_bot.latent.engagement.column_names import max_enemies
 from learn_bot.latent.order.column_names import team_strs, player_team_str, flatten_list
 from learn_bot.latent.place_area.column_names import specific_player_place_area_columns
 from learn_bot.libs.io_transforms import IOColumnTransformers, CUDA_DEVICE_STR
+from learn_bot.libs.positional_encoding import *
+from einops import rearrange
 
 
 def range_list_to_index_list(range_list: list[range]) -> list[int]:
@@ -15,6 +17,10 @@ def range_list_to_index_list(range_list: list[range]) -> list[int]:
         for i in range:
             result.append(i)
     return result
+
+
+d2_min = [-2257., -1207., -204.128]
+d2_max = [1832., 3157., 236.]
 
 
 class TransformerNestedHiddenLatentModel(nn.Module):
@@ -29,32 +35,39 @@ class TransformerNestedHiddenLatentModel(nn.Module):
         self.cts = cts
         c4_columns_ranges = range_list_to_index_list(cts.get_name_ranges(True, True, contained_str="c4"))
         baiting_columns_ranges = range_list_to_index_list(cts.get_name_ranges(True, True, contained_str="baiting"))
-        player_columns = [c4_columns_ranges + baiting_columns_ranges +
+        players_columns = [c4_columns_ranges + baiting_columns_ranges +
                           range_list_to_index_list(cts.get_name_ranges(True, True, contained_str=" " + player_team_str(team_str, player_index)))
                           for team_str in team_strs for player_index in range(max_enemies)]
-        player_pos_columns = flatten_list(
+        self.players_pos_columns = flatten_list(
             [range_list_to_index_list(cts.get_name_ranges(True, False, contained_str="player pos " + player_team_str(team_str, player_index)))
              for team_str in team_strs for player_index in range(max_enemies)]
         )
-        self.player_pos_columns_cpu = torch.tensor(player_pos_columns)
-        self.player_pos_columns_gpu = self.player_pos_columns_cpu.to(CUDA_DEVICE_STR)
+        self.players_non_pos_columns = flatten_list([
+            [player_column for player_column in player_columns if player_column not in self.players_pos_columns]
+            for player_columns in players_columns
+        ])
 
-        self.num_players = len(player_columns)
+        self.num_players = len(players_columns)
         assert self.num_players == outer_latent_size
-        self.columns_per_players = len(player_columns[0])
-        self.player_columns_cpu = torch.tensor(flatten_list(player_columns))
-        self.player_columns_gpu = self.player_columns_cpu.to(CUDA_DEVICE_STR)
 
-        alive_columns = [range_list_to_index_list(cts.get_name_ranges(True, True, contained_str=player_place_area_columns.alive))
-                         for player_place_area_columns in specific_player_place_area_columns]
-        self.alive_columns_cpu = torch.tensor(flatten_list(alive_columns))
-        self.alive_columns_gpu = self.alive_columns_cpu.to(CUDA_DEVICE_STR)
+        self.alive_columns = flatten_list(
+            [range_list_to_index_list(cts.get_name_ranges(True, True, contained_str=player_place_area_columns.alive))
+             for player_place_area_columns in specific_player_place_area_columns]
+        )
 
-        self.pos_columns = range_list_to_index_list(cts.get_name_ranges(True, True, contained_str="pos"))
         self.noise_var = -1.
 
+        self.d2_min_cpu = torch.tensor(d2_min)
+        self.d2_max_cpu = torch.tensor(d2_max)
+        self.d2_min_gpu = self.d2_min_cpu.to(CUDA_DEVICE_STR)
+        self.d2_max_gpu = self.d2_max_cpu.to(CUDA_DEVICE_STR)
+
+        # NERF code calls it positional embedder, but it's encoder since not learned
+        self.positional_encoder, self.positional_encoder_out_dim = get_embedder()
+        self.columns_per_player = (len(self.players_non_pos_columns) // self.num_players) + self.positional_encoder_out_dim
+
         self.encoder_model = nn.Sequential(
-            nn.Linear(len(player_columns[0]), self.internal_width),
+            nn.Linear(self.columns_per_player, self.internal_width),
             nn.LeakyReLU(),
             nn.Linear(self.internal_width, self.internal_width),
             nn.LeakyReLU(),
@@ -80,8 +93,6 @@ class TransformerNestedHiddenLatentModel(nn.Module):
     def forward(self, x, noise=None):
         # transform inputs
         #x_transformed = self.cts.transform_columns(True, x, x)
-        tmp = self.player_pos_columns
-
 
         if self.noise_var >= 0.:
             rand_shape = [x.shape[0], len(self.pos_columns)]
@@ -89,19 +100,26 @@ class TransformerNestedHiddenLatentModel(nn.Module):
             vars = torch.full(rand_shape, self.noise_var)
             x[:, self.pos_columns] += torch.normal(means, vars).to(x.device.type)
 
-        if x.device.type == CUDA_DEVICE_STR:
-            x_gathered = torch.index_select(x, 1, self.player_columns_gpu)
-            alive_gathered = torch.index_select(x, 1, self.alive_columns_gpu)
-        else:
-            x_gathered = torch.index_select(x, 1, self.player_columns_cpu)
-            alive_gathered = torch.index_select(x, 1, self.alive_columns_cpu)
+        x_pos = rearrange(x[:, self.players_pos_columns], "b (p e) -> b p e", p=self.num_players, e=3)
 
+        # https://arxiv.org/pdf/2003.08934.pdf
+        # 5.1 - everything is normalized -1 to 1
+        if x.device.type == CUDA_DEVICE_STR:
+            x_pos_scaled = (x_pos - self.d2_min_gpu) / (self.d2_max_gpu - self.d2_min_gpu)
+        else:
+            x_pos_scaled = (x_pos - self.d2_min_cpu) / (self.d2_max_cpu - self.d2_min_cpu)
+        x_pos_scaled = torch.clamp(x_pos_scaled, 0, 1)
+        x_pos_scaled = (x_pos_scaled * 2) - 1
+        x_pos_encoded = self.positional_encoder(x_pos_scaled)
+
+        x_non_pos = rearrange(x[:, self.players_non_pos_columns], "b (p e) -> b p e", p=self.num_players)
+        x_gathered = torch.cat([x_pos_encoded, x_non_pos], -1)
+
+        alive_gathered = x[:, self.alive_columns]
         dead_gathered = alive_gathered < 0.1
 
-        split_x_gathered = x_gathered.unflatten(1, torch.Size([self.num_players, self.columns_per_players]))
-
         # run model except last layer
-        encoded = self.encoder_model(split_x_gathered)
+        encoded = self.encoder_model(x_gathered)
 
         transformed = self.transformer_model(encoded, src_key_padding_mask=dead_gathered)
 

@@ -165,6 +165,19 @@ int main(int argc, char * argv[]) {
     }}
     std::cout << std::endl;
 
+    Vec3 minPos{std::numeric_limits<double>::max(), std::numeric_limits<double>::max(), std::numeric_limits<double>::max()};
+    Vec3 maxPos = minPos * -1;
+    for (const auto & area : d2ReachableResult.coordinate) {
+        minPos = min(minPos, area.min);
+        maxPos = max(maxPos, area.max);
+    }
+    minPos.x -= WIDTH;
+    minPos.y -= WIDTH;
+    maxPos.x += WIDTH;
+    maxPos.y += WIDTH;
+    maxPos.z += STANDING_HEIGHT;
+    std::cout << "d2 min " << minPos.toString() << " max " << maxPos.toString() << std::endl;
+
     csknow::key_retake_events::KeyRetakeEvents keyRetakeEvents(filteredRounds, ticks, playerAtTick, plants, defusals,
                                                                kills, say);
 

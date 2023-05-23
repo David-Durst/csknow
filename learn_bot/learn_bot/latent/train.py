@@ -309,8 +309,8 @@ def train(train_type: TrainType, all_data_df: pd.DataFrame, hyperparameter_optio
     train_data = LatentDataset(train_df, column_transformers)
     test_data = LatentDataset(test_df, column_transformers)
     batch_size = min(256, min(len(train_df), len(test_df)))
-    train_dataloader = DataLoader(train_data, batch_size=batch_size, num_workers=0, shuffle=True)
-    test_dataloader = DataLoader(test_data, batch_size=batch_size, num_workers=0, shuffle=True)
+    train_dataloader = DataLoader(train_data, batch_size=batch_size, num_workers=3, shuffle=True)
+    test_dataloader = DataLoader(test_data, batch_size=batch_size, num_workers=3, shuffle=True)
 
     print(f"num train examples: {len(train_data)}")
     print(f"num test examples: {len(test_data)}")
