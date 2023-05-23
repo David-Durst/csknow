@@ -75,14 +75,13 @@ if __name__ == "__main__":
     #all_data_df = all_data_df[all_data_df[test_success_col] == 1.]
     all_data_df = all_data_df.copy()
 
+    for flip_column in [ColumnsToFlip(" CT 1", " CT 2")]:
+        flip_column.apply_flip(all_data_df)
+
     if rollout_data:
         load_result = load_model_file_for_rollout(all_data_df, "delta_pos_checkpoint.pt")
     else:
         load_result = load_model_file(all_data_df, "delta_pos_checkpoint.pt")
-
-    io_column_transform_df = all_data_df.copy(deep=True)
-    for flip_column in [ColumnsToFlip(" CT 1", " CT 2")]:
-        flip_column.apply_flip(load_result.test_df)
 
     pred_df = off_policy_inference(load_result.test_dataset, load_result.model, load_result.column_transformers)
     vis(load_result.test_df, pred_df)
