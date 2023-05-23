@@ -7,6 +7,7 @@ from learn_bot.latent.engagement.column_names import max_enemies
 from learn_bot.latent.order.column_names import team_strs, player_team_str, flatten_list
 from learn_bot.latent.place_area.column_names import specific_player_place_area_columns
 from learn_bot.libs.io_transforms import IOColumnTransformers, CUDA_DEVICE_STR
+from einops import rearrange
 
 
 def range_list_to_index_list(range_list: list[range]) -> list[int]:
@@ -32,6 +33,8 @@ class TransformerNestedHiddenLatentModel(nn.Module):
         player_columns = [c4_columns_ranges + baiting_columns_ranges +
                           range_list_to_index_list(cts.get_name_ranges(True, True, contained_str=" " + player_team_str(team_str, player_index)))
                           for team_str in team_strs for player_index in range(max_enemies)]
+        player_pos_columns = [range_list_to_index_list(cts.get_name_ranges(True, True, contained_str=" " + player_team_str(team_str, player_index)))
+                              for team_str in team_strs for player_index in range(max_enemies)]
 
         self.num_players = len(player_columns)
         assert self.num_players == outer_latent_size
@@ -105,6 +108,12 @@ class TransformerNestedHiddenLatentModel(nn.Module):
         #       transformed = new_transformed
 
         latent = self.decoder(transformed)
+        #max_diff = -1
+        #for i in range(transformed.shape[0]):
+        #    for j in range(transformed.shape[1]):
+        #        tmp_l = self.decoder(transformed[i, j])
+        #        max_diff = max(torch.max(torch.abs(latent[i, j] - tmp_l)), max_diff)
+
 
         # https://github.com/pytorch/pytorch/issues/22440 how to parse tuple output
         return self.logits_output(latent), self.prob_output(latent)

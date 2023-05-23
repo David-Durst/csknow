@@ -12,7 +12,7 @@ from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd
 from learn_bot.libs.io_transforms import IOColumnTransformers, CUDA_DEVICE_STR
 from learn_bot.latent.transformer_nested_hidden_latent_model import TransformerNestedHiddenLatentModel
 from learn_bot.latent.train import checkpoints_path, TrainResult, manual_latent_team_hdf5_data_path, \
-    latent_team_hdf5_data_path, rollout_latent_team_hdf5_data_path
+    latent_team_hdf5_data_path, rollout_latent_team_hdf5_data_path, ColumnsToFlip
 from learn_bot.libs.df_grouping import make_index_column, train_test_split_by_col
 from learn_bot.latent.vis.off_policy_inference import off_policy_inference
 from learn_bot.latent.vis.vis import vis
@@ -72,7 +72,7 @@ if __name__ == "__main__":
     else:
         all_data_df = load_hdf5_to_pd(latent_team_hdf5_data_path)
         all_data_df = all_data_df[(all_data_df['valid'] == 1.) & (all_data_df['c4 status'] < 2)]
-    all_data_df = all_data_df[all_data_df[test_success_col] == 1.]
+    #all_data_df = all_data_df[all_data_df[test_success_col] == 1.]
     all_data_df = all_data_df.copy()
 
     if rollout_data:
@@ -80,5 +80,9 @@ if __name__ == "__main__":
     else:
         load_result = load_model_file(all_data_df, "delta_pos_checkpoint.pt")
 
-    pred_df = off_policy_inference(load_result.train_dataset, load_result.model, load_result.column_transformers)
-    vis(load_result.train_df, pred_df)
+    io_column_transform_df = all_data_df.copy(deep=True)
+    for flip_column in [ColumnsToFlip(" CT 1", " CT 2")]:
+        flip_column.apply_flip(load_result.test_df)
+
+    pred_df = off_policy_inference(load_result.test_dataset, load_result.model, load_result.column_transformers)
+    vis(load_result.test_df, pred_df)
