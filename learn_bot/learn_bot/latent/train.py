@@ -70,7 +70,7 @@ class TrainType(Enum):
 
 @dataclass
 class HyperparameterOptions:
-    num_epochs: int = 1000
+    num_epochs: int = 300
     learning_rate: float = 4e-5
     weight_decay: float = 0.
     layers: int = 2
@@ -83,7 +83,9 @@ class HyperparameterOptions:
 
 default_hyperparameter_options = HyperparameterOptions()
 hyperparameter_option_range = [HyperparameterOptions(learning_rate=1e-5),
-                               HyperparameterOptions(learning_rate=1e-6)]
+                               HyperparameterOptions(learning_rate=1e-6),
+                               HyperparameterOptions(weight_decay=0.1),
+                               HyperparameterOptions(layers=4, heads=8)]
 #hyperparameter_option_range = [HyperparameterOptions(),
 #                               HyperparameterOptions(learning_rate=4e-4),
 #                               HyperparameterOptions(learning_rate=4e-6),

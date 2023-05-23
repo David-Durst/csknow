@@ -1,1 +1,1 @@
-python -m learn_bot.latent.train 1 #3,4,5
+python -m learn_bot.latent.train 2,3
