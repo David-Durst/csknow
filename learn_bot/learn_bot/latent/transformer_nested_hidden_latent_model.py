@@ -7,7 +7,6 @@ from learn_bot.latent.engagement.column_names import max_enemies
 from learn_bot.latent.order.column_names import team_strs, player_team_str, flatten_list
 from learn_bot.latent.place_area.column_names import specific_player_place_area_columns
 from learn_bot.libs.io_transforms import IOColumnTransformers, CUDA_DEVICE_STR
-from einops import rearrange
 
 
 def range_list_to_index_list(range_list: list[range]) -> list[int]:
@@ -33,8 +32,12 @@ class TransformerNestedHiddenLatentModel(nn.Module):
         player_columns = [c4_columns_ranges + baiting_columns_ranges +
                           range_list_to_index_list(cts.get_name_ranges(True, True, contained_str=" " + player_team_str(team_str, player_index)))
                           for team_str in team_strs for player_index in range(max_enemies)]
-        player_pos_columns = [range_list_to_index_list(cts.get_name_ranges(True, True, contained_str=" " + player_team_str(team_str, player_index)))
-                              for team_str in team_strs for player_index in range(max_enemies)]
+        player_pos_columns = flatten_list(
+            [range_list_to_index_list(cts.get_name_ranges(True, False, contained_str="player pos " + player_team_str(team_str, player_index)))
+             for team_str in team_strs for player_index in range(max_enemies)]
+        )
+        self.player_pos_columns_cpu = torch.tensor(player_pos_columns)
+        self.player_pos_columns_gpu = self.player_pos_columns_cpu.to(CUDA_DEVICE_STR)
 
         self.num_players = len(player_columns)
         assert self.num_players == outer_latent_size
@@ -76,19 +79,22 @@ class TransformerNestedHiddenLatentModel(nn.Module):
 
     def forward(self, x, noise=None):
         # transform inputs
-        x_transformed = self.cts.transform_columns(True, x, x)
+        #x_transformed = self.cts.transform_columns(True, x, x)
+        tmp = self.player_pos_columns
+
+
         if self.noise_var >= 0.:
             rand_shape = [x.shape[0], len(self.pos_columns)]
             means = torch.zeros(rand_shape)
             vars = torch.full(rand_shape, self.noise_var)
-            x_transformed[:, self.pos_columns] += torch.normal(means, vars).to(x_transformed.device.type)
+            x[:, self.pos_columns] += torch.normal(means, vars).to(x.device.type)
 
-        if x_transformed.device.type == CUDA_DEVICE_STR:
-            x_gathered = torch.index_select(x_transformed, 1, self.player_columns_gpu)
-            alive_gathered = torch.index_select(x_transformed, 1, self.alive_columns_gpu)
+        if x.device.type == CUDA_DEVICE_STR:
+            x_gathered = torch.index_select(x, 1, self.player_columns_gpu)
+            alive_gathered = torch.index_select(x, 1, self.alive_columns_gpu)
         else:
-            x_gathered = torch.index_select(x_transformed, 1, self.player_columns_cpu)
-            alive_gathered = torch.index_select(x_transformed, 1, self.alive_columns_cpu)
+            x_gathered = torch.index_select(x, 1, self.player_columns_cpu)
+            alive_gathered = torch.index_select(x, 1, self.alive_columns_cpu)
 
         dead_gathered = alive_gathered < 0.1
 
