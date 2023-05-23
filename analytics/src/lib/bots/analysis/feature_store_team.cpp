@@ -59,7 +59,9 @@ namespace csknow::feature_store {
             columnCTData[i].distanceToBSite.resize(size, 0);
             for (int j = 0; j < num_prior_ticks; j++) {
                 columnTData[i].priorFootPos[j].resize(size, zeroVec);
+                columnTData[i].priorFootPosValid[j].resize(size, false);
                 columnCTData[i].priorFootPos[j].resize(size, zeroVec);
+                columnCTData[i].priorFootPosValid[j].resize(size, false);
             }
             for (int j = 0; j < num_orders_per_site; j++) {
                 columnTData[i].distanceToNearestAOrderNavArea[j].resize(size, 2 * maxWorldDistance);
@@ -86,10 +88,6 @@ namespace csknow::feature_store {
                 columnCTData[i].curPlace[j].resize(size, false);
                 columnCTData[i].distributionNearestPlace[j].resize(size, INVALID_ID);
                 //columnCTData[i].distributionNearestPlace7to15s[j].resize(size, INVALID_ID);
-                for (int k = 0; k < num_prior_ticks; k++) {
-                    columnTData[i].priorPlaces[k][j].resize(size, false);
-                    columnCTData[i].priorPlaces[k][j].resize(size, false);
-                }
             }
             for (int j = 0; j < area_grid_size; j++) {
                 columnTData[i].areaGridCellInPlace[j].resize(size, false);
@@ -98,10 +96,6 @@ namespace csknow::feature_store {
                 columnCTData[i].areaGridCellInPlace[j].resize(size, false);
                 columnCTData[i].distributionNearestAreaGridInPlace[j].resize(size, INVALID_ID);
                 //columnCTData[i].distributionNearestAreaGridInPlace7to15s[j].resize(size, INVALID_ID);
-                for (int k = 0; k < num_prior_ticks; k++) {
-                    columnTData[i].priorAreaGridCellInPlace[k][j].resize(size, false);
-                    columnCTData[i].priorAreaGridCellInPlace[k][j].resize(size, false);
-                }
             }
             for (int j = 0; j < delta_pos_grid_num_cells; j++) {
                 columnTData[i].deltaPos[j].resize(size, false);
@@ -215,7 +209,9 @@ namespace csknow::feature_store {
                 columnCTData[i].distanceToBSite[rowIndex] = 0.;
                 for (int j = 0; j < num_prior_ticks; j++) {
                     columnTData[i].priorFootPos[j][rowIndex] = zeroVec;
+                    columnTData[i].priorFootPosValid[j][rowIndex] = false;
                     columnCTData[i].priorFootPos[j][rowIndex] = zeroVec;
+                    columnCTData[i].priorFootPosValid[j][rowIndex] = false;
                 }
                 for (int j = 0; j < num_orders_per_site; j++) {
                     columnTData[i].distanceToNearestAOrderNavArea[j][rowIndex] = 2 * maxWorldDistance;
@@ -242,10 +238,6 @@ namespace csknow::feature_store {
                     columnCTData[i].curPlace[j][rowIndex] = false;
                     columnCTData[i].distributionNearestPlace[j][rowIndex] = INVALID_ID;
                     //columnCTData[i].distributionNearestPlace7to15s[j][rowIndex] = INVALID_ID;
-                    for (int k = 0; k < num_prior_ticks; k++) {
-                        columnTData[i].priorPlaces[k][j][rowIndex] = false;
-                        columnCTData[i].priorPlaces[k][j][rowIndex] = false;
-                    }
                 }
                 for (int j = 0; j < area_grid_size; j++) {
                     columnTData[i].areaGridCellInPlace[j][rowIndex] = false;
@@ -254,10 +246,6 @@ namespace csknow::feature_store {
                     columnCTData[i].areaGridCellInPlace[j][rowIndex] = false;
                     columnCTData[i].distributionNearestAreaGridInPlace[j][rowIndex] = INVALID_ID;
                     //columnCTData[i].distributionNearestAreaGridInPlace7to15s[j][rowIndex] = INVALID_ID;
-                    for (int k = 0; k < num_prior_ticks; k++) {
-                        columnTData[i].priorAreaGridCellInPlace[k][j][rowIndex] = false;
-                        columnCTData[i].priorAreaGridCellInPlace[k][j][rowIndex] = false;
-                    }
                 }
                 for (int j = 0; j < delta_pos_grid_num_cells; j++) {
                     columnTData[i].deltaPos[j][rowIndex] = false;
@@ -392,18 +380,21 @@ namespace csknow::feature_store {
             for (int64_t j = 0; j < num_prior_ticks; j++) {
                 int64_t priorTickIndex = (j + 1) * prior_tick_spacing;
                 priorTickIndex = std::min(priorTickIndex, oldestHistoryIndex);
-                const BTTeamPlayerData & priorBTTeamPlayerData =
-                    buffer.historicalPlayerDataBuffer.fromNewest(priorTickIndex).at(btTeamPlayerData.playerId);
-                columnData[columnIndex].priorFootPos[j][internalTickIndex] = priorBTTeamPlayerData.curFootPos;
-                if (isnan(priorBTTeamPlayerData.curFootPos.x) || isnan(priorBTTeamPlayerData.curFootPos.y) || isnan(priorBTTeamPlayerData.curFootPos.z) ) {
-                    std::cout << "found nan" << std::endl;
+                bool setPlayerPriorFootPos = false;
+                const map<CSGOId, BTTeamPlayerData> & priorBTTeamTickData =
+                        buffer.historicalPlayerDataBuffer.fromNewest(priorTickIndex);
+                if (buffer.historicalPlayerDataBuffer.getCurSize() > priorTickIndex) {
+                    if (priorBTTeamTickData.count(btTeamPlayerData.playerId) > 0) {
+                        setPlayerPriorFootPos = true;
+                        const BTTeamPlayerData & priorBTTeamPlayerData =
+                                priorBTTeamTickData.at(btTeamPlayerData.playerId);
+                        columnData[columnIndex].priorFootPos[j][internalTickIndex] = priorBTTeamPlayerData.curFootPos;
+                        if (isnan(priorBTTeamPlayerData.curFootPos.x) || isnan(priorBTTeamPlayerData.curFootPos.y) || isnan(priorBTTeamPlayerData.curFootPos.z) ) {
+                            std::cout << "found nan" << std::endl;
+                        }
+                    }
                 }
-                PlaceIndex priorPlaceIndex = distanceToPlaces.getClosestValidPlace(priorBTTeamPlayerData.curAreaIndex, navFile);
-                string priorPlaceString = navFile.get_place(priorPlaceIndex);
-                columnData[columnIndex].priorPlaces[j][priorPlaceIndex][internalTickIndex] = true;
-                size_t priorAreaGridIndex = getAreaGridFlatIndex(priorBTTeamPlayerData.curFootPos,
-                                                            distanceToPlaces.placeToAABB.at(priorPlaceString));
-                columnData[columnIndex].priorAreaGridCellInPlace[j][priorAreaGridIndex][internalTickIndex] = true;
+                columnData[columnIndex].priorFootPosValid[j][internalTickIndex] = setPlayerPriorFootPos;
             }
         }
 
@@ -932,6 +923,8 @@ namespace csknow::feature_store {
                     saveVec3VectorToHDF5(columnData[columnPlayer].priorFootPos[priorTick], file,
                                          "player pos " + columnTeam + " " + iStr + " t-" + std::to_string(priorTick+1),
                                          hdf5FlatCreateProps);
+                    file.createDataSet("/data/player history valid " + columnTeam + " " + iStr + " t-" + std::to_string(priorTick+1),
+                                       columnData[columnPlayer].priorFootPosValid[priorTick], hdf5FlatCreateProps);
                 }
                 saveVec3VectorToHDF5(columnData[columnPlayer].velocity, file,
                                      "player velocity " + columnTeam + " " + iStr, hdf5FlatCreateProps);
@@ -964,14 +957,6 @@ namespace csknow::feature_store {
                                        columnData[columnPlayer].curPlace[placeIndex], hdf5FlatCreateProps);
                     file.createDataSet("/data/distribution nearest place " + placeIndexStr + " " + columnTeam + " " + iStr,
                                        columnData[columnPlayer].distributionNearestPlace[placeIndex], hdf5FlatCreateProps);
-                    //file.createDataSet("/data/distribution nearest place 7 to 15s " + placeIndexStr + " " + columnTeam + " " + iStr,
-                    //                   columnData[columnPlayer].distributionNearestPlace7to15s[placeIndex], hdf5FlatCreateProps);
-                    /*
-                    for (int priorTick = 0; priorTick < num_prior_ticks; priorTick++) {
-                        file.createDataSet("/data/prior place " + placeIndexStr + " " + columnTeam + " " + iStr +  " t-" + std::to_string(priorTick+1),
-                                           columnData[columnPlayer].priorPlaces[priorTick][placeIndex], hdf5FlatCreateProps);
-                    }
-                     */
                 }
                 for (size_t areaGridIndex = 0; areaGridIndex < area_grid_size; areaGridIndex++) {
                     string areaGridIndexStr = std::to_string(areaGridIndex);
@@ -979,14 +964,6 @@ namespace csknow::feature_store {
                                        columnData[columnPlayer].areaGridCellInPlace[areaGridIndex], hdf5FlatCreateProps);
                     file.createDataSet("/data/distribution nearest area grid in place " + areaGridIndexStr + " " + columnTeam + " " + iStr,
                                        columnData[columnPlayer].distributionNearestAreaGridInPlace[areaGridIndex], hdf5FlatCreateProps);
-                    //file.createDataSet("/data/distribution nearest area grid in place 7 to 15s " + areaGridIndexStr + " " + columnTeam + " " + iStr,
-                    //                   columnData[columnPlayer].distributionNearestAreaGridInPlace7to15s[areaGridIndex], hdf5FlatCreateProps);
-                    /*
-                    for (int priorTick = 0; priorTick < num_prior_ticks; priorTick++) {
-                        file.createDataSet("/data/prior area grid cell in place " + areaGridIndexStr + " " + columnTeam + " " + iStr +  " t-" + std::to_string(priorTick+1),
-                                           columnData[columnPlayer].priorAreaGridCellInPlace[priorTick][areaGridIndex], hdf5FlatCreateProps);
-                    }
-                     */
                 }
                 for (size_t deltaPosIndex = 0; deltaPosIndex < delta_pos_grid_num_cells; deltaPosIndex++) {
                     string deltaPosIndexStr = std::to_string(deltaPosIndex);

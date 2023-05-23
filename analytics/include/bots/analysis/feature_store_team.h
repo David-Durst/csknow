@@ -79,21 +79,16 @@ namespace csknow::feature_store {
             vector<Vec3> footPos;
             vector<Vec3> alignedFootPos;
             array<vector<Vec3>, num_prior_ticks> priorFootPos;
+            array<vector<bool>, num_prior_ticks> priorFootPosValid;
             vector<Vec3> velocity;
             vector<float> distanceToASite, distanceToBSite;
             array<vector<float>, num_orders_per_site> distanceToNearestAOrderNavArea, distanceToNearestBOrderNavArea;
             array<vector<bool>, num_places> curPlace;
-            array<array<vector<bool>, num_places>, num_prior_ticks> priorPlaces;
             array<vector<bool>, area_grid_size> areaGridCellInPlace;
-            array<array<vector<bool>, area_grid_size>, num_prior_ticks> priorAreaGridCellInPlace;
             // outputs
             array<vector<float>, num_orders_per_site> distributionNearestAOrders, distributionNearestBOrders;
-            //array<vector<float>, num_orders_per_site> distributionNearestAOrders15s, distributionNearestBOrders15s;
-            //array<vector<float>, num_orders_per_site> distributionNearestAOrders30s, distributionNearestBOrders30s;
             array<vector<float>, num_places> distributionNearestPlace;
-            //array<vector<float>, num_places> distributionNearestPlace7to15s;
             array<vector<float>, area_grid_size> distributionNearestAreaGridInPlace;
-            //array<vector<float>, area_grid_size> distributionNearestAreaGridInPlace7to15s;
             array<vector<bool>, delta_pos_grid_num_cells> deltaPos;
         };
         array<ColumnPlayerData, maxEnemies> columnCTData, columnTData;

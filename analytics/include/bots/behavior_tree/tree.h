@@ -26,7 +26,7 @@ public:
     std::unique_ptr<PriorityNode> priorityNode;
     std::unique_ptr<ActionNode> actionNode;
     set<CSGOId> lastFramePlayers;
-    int32_t curMapNumber = INVALID_ID;
+    int32_t curMapNumber = INVALID_ID, curRoundNumber = INVALID_ID;
     bool newBlackboard = false;
     bool resetState = false;
     TreeThinker defaultThinker{INVALID_ID, AggressiveType::Push};

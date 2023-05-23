@@ -38,16 +38,16 @@ namespace csknow::feature_store {
         engagementTeammateBuffer.push_back(engagementTeammate);
     }
 
-    void FeatureStorePreCommitBuffer::clearHistory() {
-        historicalPlayerDataBuffer.clear();
-    }
-
     void FeatureStorePreCommitBuffer::appendPlayerHistory() {
         std::map<int64_t, BTTeamPlayerData> newEntryHistoricalPlayerDataBuffer;
         for (const auto & playerData : btTeamPlayerData) {
             newEntryHistoricalPlayerDataBuffer[playerData.playerId] = playerData;
         }
         historicalPlayerDataBuffer.enqueue(newEntryHistoricalPlayerDataBuffer);
+    }
+
+    void FeatureStorePreCommitBuffer::clearHistory() {
+        historicalPlayerDataBuffer.clear();
     }
 
     int64_t FeatureStorePreCommitBuffer::getPlayerOldestContiguousHistoryIndex(int64_t playerId) {

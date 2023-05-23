@@ -45,7 +45,6 @@ void Tree::tick(ServerState & state, const string & mapsPath) {
                                                          featureStoreResult.defaultBuffer);
                 }
                 featureStoreResult.teamFeatureStoreResult.setOrders(blackboard->ordersResult.orders);
-                featureStoreResult.defaultBuffer.clearHistory();
                 makeBlackboardSuccesfully = true;
             }
             catch (const std::exception & ex) {
@@ -105,6 +104,12 @@ void Tree::tick(ServerState & state, const string & mapsPath) {
     if (filterMutex.try_lock()) {
         localLogFilterNames = sharedLogFilterNames;
         filterMutex.unlock();
+    }
+
+    // clear history state on round number
+    if (state.roundNumber != curRoundNumber) {
+       curRoundNumber = state.roundNumber;
+       featureStoreResult.defaultBuffer.clearHistory();
     }
 
     if (!blackboard->playerToTreeThinkers.empty()) {
