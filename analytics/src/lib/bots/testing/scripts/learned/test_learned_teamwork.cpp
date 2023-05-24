@@ -63,7 +63,7 @@ namespace csknow::tests::learned {
             LearnedTeamworkScript("LearnedPushLurkBaitASiteScript",
                                   {{0, ENGINE_TEAM_CT, AggressiveType::Bait}, {0, ENGINE_TEAM_CT, AggressiveType::Bait},
                                    {0, ENGINE_TEAM_CT, AggressiveType::Push}, {0, ENGINE_TEAM_T}},
-                                   {ObserveType::FirstPerson, 0},
+                                   {ObserveType::FirstPerson, 2},
                                    testIndex, numTests, waitForever) { }
 
     void LearnedPushLurkBaitASiteScript::initialize(Tree &tree, ServerState &state) {

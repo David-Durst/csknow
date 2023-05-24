@@ -60,8 +60,8 @@ def load_model_file_for_rollout(all_data_df: pd.DataFrame, model_file_name: str)
     return TrainResult(all_data, all_data, all_data_df, all_data_df, column_transformers, model)
 
 
-manual_data = True
-rollout_data = False
+manual_data = False
+rollout_data = True
 
 if __name__ == "__main__":
     if manual_data:
@@ -75,8 +75,8 @@ if __name__ == "__main__":
     #all_data_df = all_data_df[all_data_df[test_success_col] == 1.]
     all_data_df = all_data_df.copy()
 
-    for flip_column in [ColumnsToFlip(" CT 1", " CT 2")]:
-        flip_column.apply_flip(all_data_df)
+    #for flip_column in [ColumnsToFlip(" CT 1", " CT 2")]:
+    #    flip_column.apply_flip(all_data_df)
 
     if rollout_data:
         load_result = load_model_file_for_rollout(all_data_df, "delta_pos_checkpoint.pt")

@@ -96,6 +96,7 @@ namespace csknow::compute_nav_area {
         }
          */
         size_t deltaPosOption = 0;
+        /*
         bool setDeltaPosOption = false;
         double probSample = blackboard.aggressionDis(blackboard.gen);
         double weightSoFar = 0.;
@@ -108,7 +109,8 @@ namespace csknow::compute_nav_area {
                 setDeltaPosOption = true;
             }
         }
-        /*
+        */
+        // / *
         double maxProb = -1.;
         modelNavData.deltaPosProbs.clear();
         for (size_t i = 0; i < probabilities.size(); i++) {
@@ -118,7 +120,7 @@ namespace csknow::compute_nav_area {
                 maxProb = probabilities[i];
             }
         }
-         */
+        //  * /
         modelNavData.deltaPosIndex = deltaPosOption;
 
         // compute map grid to pos, and then pos to area
@@ -128,7 +130,7 @@ namespace csknow::compute_nav_area {
         modelNavData.deltaYVal = (deltaPosOption / csknow::feature_store::delta_pos_grid_num_cells_per_dim) -
                 (csknow::feature_store::delta_pos_grid_num_cells_per_dim / 2);
 
-        if (modelNavData.deltaXVal == 0  && modelNavData.deltaYVal == 0) {
+        if ((modelNavData.deltaXVal < 0 || modelNavData.deltaYVal < 0) && curClient.getFootPosForPlayer().x < 600 && curClient.getFootPosForPlayer().y > 1700) {
             int x = 1;
             (void) x;
         }
@@ -138,7 +140,19 @@ namespace csknow::compute_nav_area {
 
         tryDeltaPosTargetPos(state, curClient, curPriority, modelNavData);
 
+        if (modelNavData.deltaXVal == 0  && modelNavData.deltaYVal == 0 && !(curPriority.targetPos == curClient.getFootPosForPlayer())) {
+            int x = 1;
+            (void) x;
+        }
+        if (curClient.getFootPosForPlayer().x < 600 && curClient.getFootPosForPlayer().y > 1700 &&
+            (curPriority.targetPos.x < curClient.getFootPosForPlayer().x)) {
+            std::cout << "bad backwards: " << curClient.getFootPosForPlayer().toString() << std::endl;
+        }
+
         /*
+         * this worked when deltaX/Y == 0 because mul by 2
+         * this was for bad angled areas. I coudl try replacing it with taking nearest pos in area by 2d rather than 3d
+         * distance, which would fix angled pos and work because all area don't overlap in z
         // if same as prior target pos, try doubling distance and picking something else
         if (curPriority.targetPos.x == modelNavData.unmodifiedTargetPos.x &&
             curPriority.targetPos.y == modelNavData.unmodifiedTargetPos.y) {

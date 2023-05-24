@@ -53,7 +53,7 @@ public:
                                  make_unique<RunChildAndReturnSuccessNode>(
                                          blackboard,
                                          make_unique<csknow::compute_nav_area::ComputeModelNavAreaNode>(blackboard, true)),
-                                 make_unique<engage::SelectTargetAggressionNode>(blackboard),
+                                 //make_unique<engage::SelectTargetAggressionNode>(blackboard),
                                  make_unique<movement::PathingNode>(blackboard)),
                          "EngageNode") { };
 };

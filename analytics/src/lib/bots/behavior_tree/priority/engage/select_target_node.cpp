@@ -123,7 +123,9 @@ namespace engage {
             }
             curTarget = targetOptions[closestI];
             // pick random nearby area for target pos
-            curPriority.targetPos = curTarget.footPos;
+            if (!getPlaceAreaModelProbabilities(curClient.team)) {
+                curPriority.targetPos = curTarget.footPos;
+            }
         }
 
         if (curTarget.playerId == INVALID_ID) {
