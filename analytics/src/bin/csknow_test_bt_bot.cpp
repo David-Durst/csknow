@@ -508,6 +508,10 @@ int main(int argc, char * argv[]) {
         logFile.close();
         if (runTest) {
             testLogFile << scriptsRunner.curLog();
+            testLogFile << learnedNavDataGenerator.curLog();
+            testLogFile << learnedHoldDataGenerator.curLog();
+            testLogFile << learnedTeamworkDataGenerator.curLog();
+            testLogFile << outDistributionDataGenerator.curLog();
         }
         else {
             testLogFile << roundScriptsRunner.curLog();

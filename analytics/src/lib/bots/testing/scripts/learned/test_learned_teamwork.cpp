@@ -63,7 +63,7 @@ namespace csknow::tests::learned {
             LearnedTeamworkScript("LearnedPushLurkBaitASiteScript",
                                   {{0, ENGINE_TEAM_CT, AggressiveType::Bait}, {0, ENGINE_TEAM_CT, AggressiveType::Bait},
                                    {0, ENGINE_TEAM_CT, AggressiveType::Push}, {0, ENGINE_TEAM_T}},
-                                   {ObserveType::FirstPerson, 2},
+                                   {ObserveType::FirstPerson, 0},
                                    testIndex, numTests, waitForever) { }
 
     void LearnedPushLurkBaitASiteScript::initialize(Tree &tree, ServerState &state) {
@@ -86,16 +86,20 @@ namespace csknow::tests::learned {
                                                      vector{0, 1, 0}),
                     make_unique<movement::WaitNode>(blackboard, 2.0)), "ForceSetup");
 
-            Node::Ptr pusherSeesEnemyBeforeLurkerMoves = make_unique<ParallelAndNode>(blackboard, Node::makeList(
-                    make_unique<RepeatDecorator>(blackboard, make_unique<InPlace>(blackboard, neededBots[0].id, "LongDoors"), true),
-                    make_unique<RepeatDecorator>(blackboard, make_unique<InPlace>(blackboard, neededBots[1].id, "OutsideLong"), true),
-                    make_unique<RepeatDecorator>(blackboard, make_unique<InPlace>(blackboard, neededBots[2].id, "ExtendedA"), true)
-            ));
-            Node::Ptr pusherHoldsLurkerReachesLongBaiterFollows = make_unique<ParallelAndNode>(blackboard, Node::makeList(
-                    make_unique<RepeatDecorator>(blackboard, make_unique<InPlace>(blackboard, neededBots[0].id, "LongA"), true),
-                    make_unique<RepeatDecorator>(blackboard, make_unique<InPlace>(blackboard, neededBots[1].id, "LongA"), true),
-                    make_unique<RepeatDecorator>(blackboard, make_unique<InPlace>(blackboard, neededBots[2].id, "ExtendedA"), true)
-            ));
+            Node::Ptr pusherSeesEnemyBeforeLurkerMoves =
+                    make_unique<RepeatDecorator>(blackboard, make_unique<ParallelAndNode>(blackboard, Node::makeList(
+                            make_unique<InPlace>(blackboard, neededBots[0].id, "LongDoors"),
+                            make_unique<PosConstraint>(blackboard, neededBots[0].id, PosConstraintDimension::Y, PosConstraintOp::LT, 450),
+                            make_unique<InPlace>(blackboard, neededBots[1].id, "OutsideLong"),
+                            make_unique<InPlace>(blackboard, neededBots[2].id, "ExtendedA")
+            )), true);
+
+            Node::Ptr pusherHoldsLurkerReachesLongBaiterFollows =
+                    make_unique<RepeatDecorator>(blackboard, make_unique<ParallelAndNode>(blackboard, Node::makeList(
+                            make_unique<InPlace>(blackboard, neededBots[0].id, "LongA"),
+                            make_unique<InPlace>(blackboard, neededBots[1].id, "LongA"),
+                            make_unique<InPlace>(blackboard, neededBots[2].id, "ExtendedA")
+            )), true);
             Node::Ptr placeChecks = make_unique<SequenceNode>(blackboard, Node::makeList(
                     std::move(pusherSeesEnemyBeforeLurkerMoves),
                     std::move(pusherHoldsLurkerReachesLongBaiterFollows)

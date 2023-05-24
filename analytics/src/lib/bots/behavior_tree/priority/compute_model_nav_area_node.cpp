@@ -70,9 +70,10 @@ namespace csknow::compute_nav_area {
                 curPriority.targetAreaId = oldModelNavData.nextArea;
             }
         }
+         */
         curPriority.targetPos = vec3tConv(blackboard.navFile.get_nearest_point_in_area(
                 vec3Conv(curPriority.targetPos), blackboard.navFile.get_area_by_id_fast(curPriority.targetAreaId)));
-         */
+
         modelNavData.nextArea = curPriority.targetAreaId;
         return desiredPos;
     }
@@ -140,19 +141,11 @@ namespace csknow::compute_nav_area {
 
         tryDeltaPosTargetPos(state, curClient, curPriority, modelNavData);
 
-        if (modelNavData.deltaXVal == 0  && modelNavData.deltaYVal == 0 && !(curPriority.targetPos == curClient.getFootPosForPlayer())) {
-            int x = 1;
-            (void) x;
-        }
-        if (curClient.getFootPosForPlayer().x < 600 && curClient.getFootPosForPlayer().y > 1700 &&
-            (curPriority.targetPos.x < curClient.getFootPosForPlayer().x)) {
-            std::cout << "bad backwards: " << curClient.getFootPosForPlayer().toString() << std::endl;
-        }
-
         /*
          * this worked when deltaX/Y == 0 because mul by 2
          * this was for bad angled areas. I coudl try replacing it with taking nearest pos in area by 2d rather than 3d
          * distance, which would fix angled pos and work because all area don't overlap in z
+         * NOT SURE IF NECESSARY NOW THAT ALLOWING CLOSER TO EDGE IF CLOSE IN COMPUTE PATH
         // if same as prior target pos, try doubling distance and picking something else
         if (curPriority.targetPos.x == modelNavData.unmodifiedTargetPos.x &&
             curPriority.targetPos.y == modelNavData.unmodifiedTargetPos.y) {
