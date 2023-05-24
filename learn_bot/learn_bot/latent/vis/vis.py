@@ -36,6 +36,7 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame):
     cur_tick_index: int = -1
     selected_df: pd.DataFrame = all_data_df
     pred_selected_df: pd.DataFrame = pred_df
+    draw_max: bool = True
 
     def round_slider_changed(cur_round_index):
         nonlocal cur_round
@@ -152,7 +153,7 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame):
     )
     round_slider.pack(side="left")
 
-    # engagegment id stepper
+    # round id stepper
     back_round_button = tk.Button(round_frame, text="<<", command=round_back_clicked)
     back_round_button.pack(side="left")
     forward_round_button = tk.Button(round_frame, text=">>", command=round_forward_clicked)
@@ -196,6 +197,12 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame):
     play_button.pack(side="left")
     forward_step_button = tk.Button(tick_slider_frame, text=">>", command=step_forward_clicked)
     forward_step_button.pack(side="left")
+
+    # creating vis control frame
+    distribution_toggle_frame = tk.Frame(window)
+    distribution_toggle_frame.pack(pady=5)
+    distribution_toggle_button = tk.Button(distribution_toggle_frame, text="toggle max/distribution", command=toggle_distribution_clicked)
+    distribution_toggle_frame.pack()
 
     # initial value settings
     round_slider_changed(0)

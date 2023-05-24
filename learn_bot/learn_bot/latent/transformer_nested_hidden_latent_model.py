@@ -94,12 +94,6 @@ class TransformerNestedHiddenLatentModel(nn.Module):
         # transform inputs
         #x_transformed = self.cts.transform_columns(True, x, x)
 
-        if self.noise_var >= 0.:
-            rand_shape = [x.shape[0], len(self.pos_columns)]
-            means = torch.zeros(rand_shape)
-            vars = torch.full(rand_shape, self.noise_var)
-            x[:, self.pos_columns] += torch.normal(means, vars).to(x.device.type)
-
         x_pos = rearrange(x[:, self.players_pos_columns], "b (p e) -> b p e", p=self.num_players, e=3)
 
         # https://arxiv.org/pdf/2003.08934.pdf
@@ -110,6 +104,14 @@ class TransformerNestedHiddenLatentModel(nn.Module):
             x_pos_scaled = (x_pos - self.d2_min_cpu) / (self.d2_max_cpu - self.d2_min_cpu)
         x_pos_scaled = torch.clamp(x_pos_scaled, 0, 1)
         x_pos_scaled = (x_pos_scaled * 2) - 1
+
+        if self.noise_var >= 0.:
+            means = torch.zeros(x_pos.shape)
+            vars = torch.full(x_pos.shape, self.noise_var)
+            noise = torch.normal(means, vars).to(x.device.type)
+            noise_scaled = noise / (self.d2_max_gpu - self.d2_min_gpu)
+            x_pos_scaled += noise_scaled
+
         x_pos_encoded = self.positional_encoder(x_pos_scaled)
 
         x_non_pos = rearrange(x[:, self.players_non_pos_columns], "b (p e) -> b p e", p=self.num_players)

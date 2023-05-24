@@ -17,6 +17,8 @@ minimapWidth = 700
 minimapHeight = 700
 minimapScale = 4.4 * 1024 / minimapHeight
 
+bbox_scale_factor = 2
+
 class VisMapCoordinate():
     coords: Vec3
     is_player: bool
@@ -55,6 +57,7 @@ class VisMapCoordinate():
             half_width *= 0.8
         elif self.is_prediction:
             half_width *= 0.6
+        half_width *= bbox_scale_factor
         x_min = self.coords.x - half_width
         y_min = self.coords.y - half_width
         canvas_min = VisMapCoordinate(x_min, y_min, self.coords.z)
