@@ -58,7 +58,7 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame):
             round_slider_changed(cur_round_index)
 
     def tick_slider_changed(cur_tick_index_str):
-        nonlocal cur_tick, cur_tick_index, d2_img, d2_img_draw, img_label
+        nonlocal cur_tick, cur_tick_index, d2_img, d2_img_draw, img_label, draw_max
         cur_tick_index = int(cur_tick_index_str)
         cur_index = indices[cur_tick_index]
         cur_tick = ticks[cur_tick_index]
@@ -71,7 +71,13 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame):
         if len(selected_df) > 0:
             data_series = selected_df.loc[cur_index, :]
             pred_series = pred_selected_df.loc[cur_index, :]
-            draw_all_players(data_series, pred_series, d2_img_draw)
+            players_to_draw_str = player_distributions_var.get()
+            if players_to_draw_str == "*":
+                players_to_draw = list(range(0, len(specific_player_place_area_columns)))
+            else:
+                players_to_draw = [int(p) for p in players_to_draw_str.split(",")]
+            players_str = draw_all_players(data_series, pred_series, d2_img_draw, draw_max, players_to_draw)
+            details_text_var.set(players_str)
         updated_d2_photo_img = itk.PhotoImage(d2_img_copy)
         img_label.configure(image=updated_d2_photo_img)
         img_label.image = updated_d2_photo_img
@@ -113,6 +119,12 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame):
             cur_tick_index += 1
             tick_slider.set(cur_tick_index)
             tick_slider_changed(cur_tick_index)
+
+
+    def toggle_distribution_clicked():
+        nonlocal draw_max
+        draw_max = not draw_max
+        tick_slider_changed(cur_tick_index)
 
     # state setters
     def change_round_dependent_data():
@@ -199,10 +211,23 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame):
     forward_step_button.pack(side="left")
 
     # creating vis control frame
-    distribution_toggle_frame = tk.Frame(window)
-    distribution_toggle_frame.pack(pady=5)
-    distribution_toggle_button = tk.Button(distribution_toggle_frame, text="toggle max/distribution", command=toggle_distribution_clicked)
-    distribution_toggle_frame.pack()
+    distribution_control_frame = tk.Frame(window)
+    distribution_control_frame.pack(pady=5)
+    distribution_toggle_button = tk.Button(distribution_control_frame, text="toggle max/distribution", command=toggle_distribution_clicked)
+    distribution_toggle_button.pack(side="left")
+    player_distributions_label = tk.Label(distribution_control_frame, text="players to show")
+    player_distributions_label.pack(side="left")
+    player_distributions_var = tk.StringVar(value="*")
+    player_distributions_entry = tk.Entry(distribution_control_frame, width=30, textvariable=player_distributions_var)
+    player_distributions_entry.pack(side="left")
+
+
+    details_frame = tk.Frame(window)
+    details_frame.pack(pady=5)
+
+    details_text_var = tk.StringVar()
+    details_label = tk.Label(details_frame, textvariable=details_text_var, anchor="e", justify=tk.LEFT)
+    details_label.pack(side="left")
 
     # initial value settings
     round_slider_changed(0)

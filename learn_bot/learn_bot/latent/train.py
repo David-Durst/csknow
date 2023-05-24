@@ -86,7 +86,7 @@ hyperparameter_option_range = [HyperparameterOptions(learning_rate=1e-5),
                                HyperparameterOptions(num_epochs=3000, learning_rate=1e-6),
                                HyperparameterOptions(weight_decay=0.1),
                                HyperparameterOptions(layers=4, heads=8),
-                               HyperparameterOptions(noise_var=32.)]
+                               HyperparameterOptions(noise_var=10.)]
 #hyperparameter_option_range = [HyperparameterOptions(),
 #                               HyperparameterOptions(learning_rate=4e-4),
 #                               HyperparameterOptions(learning_rate=4e-6),

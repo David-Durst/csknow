@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import ttk, font
+from typing import Tuple, Optional, List
 
 import pandas as pd
 from PIL import Image, ImageDraw, ImageTk as itk
@@ -51,13 +52,14 @@ class VisMapCoordinate():
         new_grid_cell.coords.y += y_index * delta_pos_grid_cell_dim
         return new_grid_cell
 
-    def draw_vis(self, im_draw: ImageDraw):
+    def draw_vis(self, im_draw: ImageDraw, use_scale: bool, custom_color: Optional[Tuple] = None):
         half_width = delta_pos_grid_cell_dim / 2
-        if not self.is_player and not self.is_prediction:
-            half_width *= 0.8
-        elif self.is_prediction:
-            half_width *= 0.6
-        half_width *= bbox_scale_factor
+        if use_scale:
+            if not self.is_player and not self.is_prediction:
+                half_width *= 0.8
+            elif self.is_prediction:
+                half_width *= 0.6
+            half_width *= bbox_scale_factor
         x_min = self.coords.x - half_width
         y_min = self.coords.y - half_width
         canvas_min = VisMapCoordinate(x_min, y_min, self.coords.z)
@@ -66,22 +68,32 @@ class VisMapCoordinate():
         y_max = self.coords.y + half_width
         canvas_max = VisMapCoordinate(x_max, y_max, self.coords.z)
         canvas_max_vec = canvas_max.get_canvas_coordinates()
-        if self.is_player:
-            im_draw.rectangle([canvas_min_vec.x, canvas_min_vec.y, canvas_max_vec.x, canvas_max_vec.y], fill="green")
+
+        if custom_color:
+            cur_color = custom_color
+        elif self.is_player:
+            cur_color = "green"
         elif self.is_prediction:
-            im_draw.rectangle([canvas_min_vec.x, canvas_min_vec.y, canvas_max_vec.x, canvas_max_vec.y], fill="red")
+            cur_color = "red"
         else:
-            im_draw.rectangle([canvas_min_vec.x, canvas_min_vec.y, canvas_max_vec.x, canvas_max_vec.y], fill="blue")
+            cur_color = "blue"
+        im_draw.rectangle([canvas_min_vec.x, canvas_min_vec.y, canvas_max_vec.x, canvas_max_vec.y], fill=cur_color)
 
 
-def draw_all_players(data_series: pd.Series, pred_series: pd.Series, im_draw: ImageDraw):
-    for player_place_area_columns in specific_player_place_area_columns:
+def draw_all_players(data_series: pd.Series, pred_series: pd.Series, im_draw: ImageDraw, draw_max: bool,
+                     players_to_draw: List[int]) -> str:
+    result = ""
+    for player_index in range(len(specific_player_place_area_columns)):
+        if player_index not in players_to_draw:
+            continue
+        player_place_area_columns = specific_player_place_area_columns[player_index]
         if data_series[player_place_area_columns.player_id] != -1:
             # draw player
             pos_coord = VisMapCoordinate(data_series[player_place_area_columns.pos[0]],
                                          data_series[player_place_area_columns.pos[1]],
                                          data_series[player_place_area_columns.pos[2]])
-            pos_coord.draw_vis(im_draw)
+            if draw_max:
+                pos_coord.draw_vis(im_draw, True)
 
             # draw next step and predicted next step
             max_data_prob = -1
@@ -100,6 +112,16 @@ def draw_all_players(data_series: pd.Series, pred_series: pd.Series, im_draw: Im
 
             data_coord = pos_coord.get_grid_cell(max_data_index, False)
             pred_coord = pos_coord.get_grid_cell(max_pred_index, True)
-            print(f'''{player_place_area_columns.player_id} pos {pos_coord.coords}, data {data_coord.coords}, pred {pred_coord.coords}''')
-            data_coord.draw_vis(im_draw)
-            pred_coord.draw_vis(im_draw)
+            player_str = f'''{player_place_area_columns.player_id} pos {pos_coord.coords}, data {data_coord.coords}, pred {pred_coord.coords}'''
+            result += player_str + "\n"
+            print(player_str)
+            if draw_max:
+                data_coord.draw_vis(im_draw, True)
+                pred_coord.draw_vis(im_draw, True)
+            else:
+                for i in range(delta_pos_grid_num_cells):
+                    cur_pred_prob = pred_series[player_place_area_columns.delta_pos[i]]
+                    cur_pred_coord = pos_coord.get_grid_cell(i, True)
+                    cur_pred_coord.draw_vis(im_draw, False, (int(255 * (1-cur_pred_prob)), int(255 * cur_pred_prob), 0))
+    return result
+

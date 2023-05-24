@@ -27,7 +27,7 @@ class Vec3:
     z: float
 
     def __str__(self) -> str:
-        return f'''({self.x}, {self.y}, {self.z})'''
+        return f'''({self.x:8.2f}, {self.y:8.2f}, {self.z:8.2f})'''
 
 
 class MapCoordinate:
