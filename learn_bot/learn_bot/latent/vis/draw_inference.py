@@ -122,6 +122,6 @@ def draw_all_players(data_series: pd.Series, pred_series: pd.Series, im_draw: Im
                 for i in range(delta_pos_grid_num_cells):
                     cur_pred_prob = pred_series[player_place_area_columns.delta_pos[i]]
                     cur_pred_coord = pos_coord.get_grid_cell(i, True)
-                    cur_pred_coord.draw_vis(im_draw, False, (int(255 * (1-cur_pred_prob)), int(255 * cur_pred_prob), 0))
+                    cur_pred_coord.draw_vis(im_draw, False, (255, 0, 0, int(255 * cur_pred_prob)))
     return result
 

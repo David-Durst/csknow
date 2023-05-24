@@ -66,8 +66,9 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame):
         tick_id_text_var.set("Tick ID: " + str(cur_tick))
         tick_game_id_text_var.set("Game Tick ID: " + str(cur_game_tick))
         round_id_text_var.set(f"Round ID: {int(cur_round)}, Round Number: {selected_df.loc[cur_index, 'round number']}")
-        d2_img_copy = d2_img.copy()
-        d2_img_draw = ImageDraw.Draw(d2_img_copy)
+        d2_img_copy = d2_img.copy().convert("RGBA")
+        d2_overlay_im = Image.new("RGBA", d2_img_copy.size, (255, 255, 255, 0))
+        d2_img_draw = ImageDraw.Draw(d2_overlay_im)
         if len(selected_df) > 0:
             data_series = selected_df.loc[cur_index, :]
             pred_series = pred_selected_df.loc[cur_index, :]
@@ -78,6 +79,7 @@ def vis(all_data_df: pd.DataFrame, pred_df: pd.DataFrame):
                 players_to_draw = [int(p) for p in players_to_draw_str.split(",")]
             players_str = draw_all_players(data_series, pred_series, d2_img_draw, draw_max, players_to_draw)
             details_text_var.set(players_str)
+        d2_img_copy.alpha_composite(d2_overlay_im)
         updated_d2_photo_img = itk.PhotoImage(d2_img_copy)
         img_label.configure(image=updated_d2_photo_img)
         img_label.image = updated_d2_photo_img
