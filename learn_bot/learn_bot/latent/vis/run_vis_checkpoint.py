@@ -1,3 +1,4 @@
+import sys
 from pathlib import Path
 
 import pandas as pd
@@ -45,7 +46,10 @@ def load_model_file(all_data_df: pd.DataFrame, model_file_name: str) -> TrainRes
 
 
 def load_model_file_for_rollout(all_data_df: pd.DataFrame, model_file_name: str) -> TrainResult:
-    model_file = torch.load(checkpoints_path / model_file_name)
+    cur_checkpoints_path = checkpoints_path
+    if len(sys.argv) > 1:
+        cur_checkpoints_path = cur_checkpoints_path / sys.argv[1]
+    model_file = torch.load(cur_checkpoints_path / model_file_name)
 
     make_index_column(all_data_df)
 

@@ -63,7 +63,7 @@ int main(int argc, char * argv[]) {
 
     ScriptsRunner learnedNavDataGenerator(csknow::tests::learned::createLearnedNavScripts(200, true), false);
     ScriptsRunner learnedHoldDataGenerator(csknow::tests::learned::createLearnedHoldScripts(200, true), false);
-    ScriptsRunner learnedTeamworkDataGenerator(csknow::tests::learned::createLearnedTeamworkScripts(200, true), false);
+    ScriptsRunner learnedTeamworkDataGenerator(csknow::tests::learned::createLearnedTeamworkScripts(60, true), false);
     ScriptsRunner outDistributionDataGenerator(csknow::tests::learned::createOutDistributionNavScripts(200, true), false);
 
     ScriptsRunner scriptsRunner(Script::makeList(
