@@ -693,6 +693,8 @@ namespace csknow::feature_store {
         return xValue + yValue * delta_pos_grid_num_cells_per_dim;
     }
 
+    //double max_z_delta = 0;
+
     void TeamFeatureStoreResult::computeDeltaPosACausalLabels(int64_t curTick, CircularBuffer<int64_t> & futureTracker,
                                                               CircularBuffer<int64_t> & jumpFutureTracker,
                                                               array<ColumnPlayerData,maxEnemies> & columnData) {
@@ -736,6 +738,7 @@ namespace csknow::feature_store {
                         curFootPos.z
                     }
             };
+            //max_z_delta = std::max(max_z_delta, std::abs(columnData[playerColumn].footPos[futureTickIndex].z - curFootPos.z));
             int deltaPosIndex = getDeltaPosFlatIndex(columnData[playerColumn].footPos[futureTickIndex], deltaPosRange);
             // if jumping and standing still in xy, look twice as far in future
             if (deltaPosIndex == 12 && jumping) {
@@ -867,6 +870,7 @@ namespace csknow::feature_store {
             roundsProcessed++;
             printProgress(roundsProcessed, rounds.size);
         }
+        //std::cout << "max z delta " << max_z_delta << std::endl;
     }
 
     void TeamFeatureStoreResult::toHDF5Inner(HighFive::File & file) {
