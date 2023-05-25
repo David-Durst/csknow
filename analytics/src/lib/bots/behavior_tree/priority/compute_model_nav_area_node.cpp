@@ -19,6 +19,14 @@ namespace csknow::compute_nav_area {
                 0.
         };
 
+        /*
+        curPriority.targetPos = Vec3{-2182.96875, 2191.69189453125, 1.5059620141983032} + Vec3{
+                static_cast<double>(-1 * csknow::feature_store::delta_pos_grid_cell_dim),
+                static_cast<double>(0 * csknow::feature_store::delta_pos_grid_cell_dim),
+                0.
+        };
+         */
+
 
         /*
         curPriority.targetAreaId = blackboard.navFile
@@ -121,7 +129,7 @@ namespace csknow::compute_nav_area {
                 maxProb = probabilities[i];
             }
         }
-        //  * /
+        // * /
         modelNavData.deltaPosIndex = deltaPosOption;
 
         // compute map grid to pos, and then pos to area
@@ -140,6 +148,16 @@ namespace csknow::compute_nav_area {
         Vec3 priorTargetPos = curPriority.targetPos;
 
         tryDeltaPosTargetPos(state, curClient, curPriority, modelNavData);
+
+        /*
+        // this triggers is in b and model never seen defuse (so trying to go away) but c4 active so go wrong way
+        if (modelNavData.deltaXVal < 0 && curClient.getFootPosForPlayer().x < curPriority.targetPos.x) {
+            int x = 1;
+            curPriority.targetPos = priorTargetPos;
+            tryDeltaPosTargetPos(state, curClient, curPriority, modelNavData);
+            (void) x;
+        }
+         */
 
         /*
          * this worked when deltaX/Y == 0 because mul by 2
