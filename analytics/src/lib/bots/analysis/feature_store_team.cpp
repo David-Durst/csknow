@@ -101,6 +101,10 @@ namespace csknow::feature_store {
                 columnTData[i].deltaPos[j].resize(size, false);
                 columnCTData[i].deltaPos[j].resize(size, false);
             }
+            columnTData[i].jumping.resize(size, false);
+            columnTData[i].falling.resize(size, false);
+            columnCTData[i].jumping.resize(size, false);
+            columnCTData[i].falling.resize(size, false);
         }
         this->size = size;
         //checkPossiblyBadValue();
@@ -251,6 +255,10 @@ namespace csknow::feature_store {
                     columnTData[i].deltaPos[j][rowIndex] = false;
                     columnCTData[i].deltaPos[j][rowIndex] = false;
                 }
+                columnTData[i].jumping[rowIndex] = false;
+                columnTData[i].falling[rowIndex] = false;
+                columnCTData[i].jumping[rowIndex] = false;
+                columnCTData[i].falling[rowIndex] = false;
             }
         }
     }
@@ -712,12 +720,13 @@ namespace csknow::feature_store {
             }
 
             int64_t futureTickIndex = futureTracker.fromOldest();
-            bool jumping = false;
             // if jumping, look twice as far in future
             for (int64_t i = 0; i < futureTracker.getCurSize(); i++) {
                 if (columnData[playerColumn].velocity[futureTracker.fromNewest(i)].z > 10.) {
-                    jumping = true;
-                    break;
+                    columnData[playerColumn].jumping[curTick] = true;
+                }
+                if (columnData[playerColumn].velocity[futureTracker.fromNewest(i)].z < -10.) {
+                    columnData[playerColumn].falling[curTick] = true;
                 }
             }
 
@@ -740,11 +749,13 @@ namespace csknow::feature_store {
             };
             //max_z_delta = std::max(max_z_delta, std::abs(columnData[playerColumn].footPos[futureTickIndex].z - curFootPos.z));
             int deltaPosIndex = getDeltaPosFlatIndex(columnData[playerColumn].footPos[futureTickIndex], deltaPosRange);
+            /*
             // if jumping and standing still in xy, look twice as far in future
             if (deltaPosIndex == 12 && jumping) {
                 futureTickIndex = jumpFutureTracker.fromOldest();
                 deltaPosIndex = getDeltaPosFlatIndex(columnData[playerColumn].footPos[futureTickIndex], deltaPosRange);
             }
+             */
             columnData[playerColumn].deltaPos[deltaPosIndex][curTick] = true;
         }
     }
@@ -974,6 +985,10 @@ namespace csknow::feature_store {
                     file.createDataSet("/data/delta pos " + deltaPosIndexStr + " " + columnTeam + " " + iStr,
                                        columnData[columnPlayer].deltaPos[deltaPosIndex], hdf5FlatCreateProps);
                 }
+                file.createDataSet("/data/jumping " + columnTeam + " " + iStr,
+                                   columnData[columnPlayer].jumping, hdf5FlatCreateProps);
+                file.createDataSet("/data/falling " + columnTeam + " " + iStr,
+                                   columnData[columnPlayer].falling, hdf5FlatCreateProps);
             }
         }
     }

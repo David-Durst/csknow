@@ -90,6 +90,8 @@ namespace csknow::feature_store {
             array<vector<float>, num_places> distributionNearestPlace;
             array<vector<float>, area_grid_size> distributionNearestAreaGridInPlace;
             array<vector<bool>, delta_pos_grid_num_cells> deltaPos;
+            vector<bool> jumping;
+            vector<bool> falling;
         };
         array<ColumnPlayerData, maxEnemies> columnCTData, columnTData;
         vector<std::reference_wrapper<const array<ColumnPlayerData, maxEnemies>>> getAllColumnData() const {
