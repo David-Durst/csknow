@@ -22,24 +22,32 @@ class RoundLengths:
     num_rounds: int
     max_length_per_round: int
     round_to_tick_ids: Dict[int, range]
+    round_id_to_list_id: Dict[int, int]
 
 
 def get_round_lengths(df: pd.DataFrame) -> RoundLengths:
     grouped_df = df.groupby([round_id_column]).agg({tick_id_column: ['count', 'min', 'max']})
-    result = RoundLengths(len(grouped_df), max(grouped_df[tick_id_column]['count']), {})
+    result = RoundLengths(len(grouped_df), max(grouped_df[tick_id_column]['count']), {}, {})
+    list_id = 0
     for round_id, round_row in grouped_df[tick_id_column].iterrows():
         result.round_to_tick_ids[round_id] = range(round_row['min'], round_row['max']+1)
+        result.round_id_to_list_id[round_id] = list_id
+        list_id += 1
     return result
 
 
 # src tensor is variable length per round, rollout tensor is fixed length for efficiency
 def build_rollout_tensor(round_lengths: RoundLengths, dataset: LatentDataset) -> torch.Tensor:
-    result = torch.zeros([round_lengths.num_rounds * (round_lengths.max_length_per_round + 1), dataset.X.shape[1]])
+    result = torch.zeros([round_lengths.num_rounds * round_lengths.max_length_per_round, dataset.X.shape[1]])
     src_first_tick_in_round = [tick_range.start for _, tick_range in round_lengths.round_to_tick_ids.items()]
     rollout_first_tick_in_round = [round_index * round_lengths.max_length_per_round
-                               for round_index in range(round_lengths.num_rounds)]
+                                   for round_index in range(round_lengths.num_rounds)]
     result[rollout_first_tick_in_round] = dataset.X[src_first_tick_in_round]
     return result
+
+
+# 250 units per second, 12.8 ticks per second
+max_run_speed_per_tick = 250. / 12.8
 
 
 def step(rollout_tensor: torch.Tensor, pred_tensor: torch.Tensor, model: TransformerNestedHiddenLatentModel,
@@ -56,19 +64,28 @@ def step(rollout_tensor: torch.Tensor, pred_tensor: torch.Tensor, model: Transfo
               int(delta_pos_grid_num_cells_per_dim / 2)
     y_index = torch.floor(pred_per_player / delta_pos_grid_num_cells_per_dim) - int(delta_pos_grid_num_cells_per_dim / 2)
     z_index = torch.zeros_like(x_index)
-    pos_index = rearrange(torch.stack([x_index, y_index, z_index], dim=-1), 'b p d -> b (p d)')
+    #pos_index = rearrange(torch.stack([x_index, y_index, z_index], dim=-1), 'b p d -> b (p d)')
+    pos_index = torch.stack([x_index, y_index, z_index], dim=-1)
     unscaled_pos_change = (pos_index * delta_pos_grid_cell_dim)
+    pos_change_norm = torch.linalg.vector_norm(unscaled_pos_change, dim=-1, keepdim=True)
+    all_scaled_pos_change = (max_run_speed_per_tick / pos_change_norm) * unscaled_pos_change
+    # if norm less than max run speed, don't scape
+    scaled_pos_change = torch.where(pos_change_norm > max_run_speed_per_tick, all_scaled_pos_change,
+                                    unscaled_pos_change)
+    #other_scaled_pos_change = rearrange(unscaled_pos_change, 'b p d -> b (p d)')
 
     tmp_rollout_tensor = rollout_tensor[rollout_tensor_input_indices]
-    tmp_rollout_tensor[:, model.players_pos_columns] += (pos_index * delta_pos_grid_cell_dim).to(CPU_DEVICE_STR)
+    tmp_rollout_tensor[:, model.players_pos_columns] += rearrange(scaled_pos_change, 'b p d -> b (p d)')\
+        .to(CPU_DEVICE_STR)
     rollout_tensor[rollout_tensor_output_indices] = tmp_rollout_tensor
 
 
 def match_round_lengths(df: pd.DataFrame, rollout_tensor: torch.Tensor, pred_tensor: torch.Tensor,
                         round_lengths: RoundLengths, cts: IOColumnTransformers) -> Tuple[pd.DataFrame, pd.DataFrame]:
     complete_matched_rollout_df = df.copy()
-    required_indices = [tick_index for _, round_tick_range in round_lengths.round_to_tick_ids.items()
-                        for tick_index in round_tick_range]
+    required_indices = [round_lengths.round_id_to_list_id[round_id] * round_lengths.max_length_per_round + tick_index
+                        for round_id, round_tick_range in round_lengths.round_to_tick_ids.items()
+                        for tick_index in range(len(round_tick_range))]
     matched_rollout_tensor = rollout_tensor[required_indices]
     matched_pred_tensor = pred_tensor[required_indices]
 
@@ -87,7 +104,7 @@ def delta_pos_rollout(df: pd.DataFrame, dataset: LatentDataset, model: Transform
     pred_tensor = torch.zeros(rollout_tensor.shape[0], dataset.Y.shape[1])
     model.eval()
     with torch.no_grad():
-        num_steps = round_lengths.max_length_per_round
+        num_steps = round_lengths.max_length_per_round - 1
         with tqdm(total=num_steps, disable=False) as pbar:
             for step_index in range(num_steps):
                 step(rollout_tensor, pred_tensor, model, round_lengths, step_index)
