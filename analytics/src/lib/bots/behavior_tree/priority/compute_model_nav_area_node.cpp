@@ -134,10 +134,10 @@ namespace csknow::compute_nav_area {
 
         // compute map grid to pos, and then pos to area
         // ok to pick bad area, as computePath in path node will pick a valid alternative (tree computes alternatives)
-        modelNavData.deltaXVal = (deltaPosOption % csknow::feature_store::delta_pos_grid_num_cells_per_dim) -
-                (csknow::feature_store::delta_pos_grid_num_cells_per_dim / 2);
-        modelNavData.deltaYVal = (deltaPosOption / csknow::feature_store::delta_pos_grid_num_cells_per_dim) -
-                (csknow::feature_store::delta_pos_grid_num_cells_per_dim / 2);
+        modelNavData.deltaXVal = (deltaPosOption % csknow::feature_store::delta_pos_grid_num_cells_per_xy_dim) -
+                                 (csknow::feature_store::delta_pos_grid_num_cells_per_xy_dim / 2);
+        modelNavData.deltaYVal = (deltaPosOption / csknow::feature_store::delta_pos_grid_num_cells_per_xy_dim) -
+                                 (csknow::feature_store::delta_pos_grid_num_cells_per_xy_dim / 2);
 
         if ((modelNavData.deltaXVal < 0 || modelNavData.deltaYVal < 0) && curClient.getFootPosForPlayer().x < 600 && curClient.getFootPosForPlayer().y > 1700) {
             int x = 1;

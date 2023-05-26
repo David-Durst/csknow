@@ -5,8 +5,8 @@ from typing import Tuple, Optional, List
 import pandas as pd
 from PIL import Image, ImageDraw, ImageTk as itk
 
-from learn_bot.latent.order.column_names import delta_pos_grid_num_cells, delta_pos_grid_num_cells_per_dim, \
-    delta_pos_grid_cell_dim, tick_id_column
+from learn_bot.latent.order.column_names import delta_pos_grid_num_cells, delta_pos_grid_num_cells_per_xy_dim, \
+    delta_pos_grid_cell_dim, tick_id_column, delta_pos_grid_num_xy_cells_per_z_change
 from learn_bot.latent.place_area.column_names import specific_player_place_area_columns
 from learn_bot.mining.area_cluster import Vec3
 
@@ -46,8 +46,10 @@ class VisMapCoordinate():
         new_grid_cell = VisMapCoordinate(self.coords.x, self.coords.y, self.coords.z, False)
         new_grid_cell.is_player = False
         new_grid_cell.is_prediction = is_prediction
-        x_index = int(cell_index % delta_pos_grid_num_cells_per_dim) - int(delta_pos_grid_num_cells_per_dim / 2)
-        y_index = int(cell_index / delta_pos_grid_num_cells_per_dim) - int(delta_pos_grid_num_cells_per_dim / 2)
+        z_index = int(cell_index / delta_pos_grid_num_xy_cells_per_z_change) - int(delta_pos_grid_num_xy_cells_per_z_change / 2)
+        xy_cell_index = cell_index % delta_pos_grid_num_cells_per_xy_dim
+        x_index = int(xy_cell_index % delta_pos_grid_num_cells_per_xy_dim) - int(delta_pos_grid_num_cells_per_xy_dim / 2)
+        y_index = int(xy_cell_index / delta_pos_grid_num_cells_per_xy_dim) - int(delta_pos_grid_num_cells_per_xy_dim / 2)
         new_grid_cell.coords.x += x_index * delta_pos_grid_cell_dim
         new_grid_cell.coords.y += y_index * delta_pos_grid_cell_dim
         return new_grid_cell

@@ -7,7 +7,7 @@ from tqdm import tqdm
 
 from learn_bot.latent.dataset import LatentDataset
 from learn_bot.latent.engagement.column_names import round_id_column, tick_id_column
-from learn_bot.latent.order.column_names import delta_pos_grid_num_cells_per_dim, delta_pos_grid_cell_dim
+from learn_bot.latent.order.column_names import delta_pos_grid_num_cells_per_xy_dim, delta_pos_grid_cell_dim
 from learn_bot.latent.train import manual_latent_team_hdf5_data_path, rollout_latent_team_hdf5_data_path, \
     latent_team_hdf5_data_path
 from learn_bot.latent.transformer_nested_hidden_latent_model import *
@@ -60,9 +60,9 @@ def step(rollout_tensor: torch.Tensor, pred_tensor: torch.Tensor, model: Transfo
     pred_tensor[rollout_tensor_input_indices] = pred.to(CPU_DEVICE_STR)
     pred_per_player = torch.argmax(rearrange(pred, 'b (p d) -> b p d', p=len(specific_player_place_area_columns)), 2)
 
-    x_index = torch.floor(torch.remainder(pred_per_player, delta_pos_grid_num_cells_per_dim)) - \
-              int(delta_pos_grid_num_cells_per_dim / 2)
-    y_index = torch.floor(pred_per_player / delta_pos_grid_num_cells_per_dim) - int(delta_pos_grid_num_cells_per_dim / 2)
+    x_index = torch.floor(torch.remainder(pred_per_player, delta_pos_grid_num_cells_per_xy_dim)) - \
+              int(delta_pos_grid_num_cells_per_xy_dim / 2)
+    y_index = torch.floor(pred_per_player / delta_pos_grid_num_cells_per_xy_dim) - int(delta_pos_grid_num_cells_per_xy_dim / 2)
     z_index = torch.zeros_like(x_index)
     #pos_index = rearrange(torch.stack([x_index, y_index, z_index], dim=-1), 'b p d -> b (p d)')
     pos_index = torch.stack([x_index, y_index, z_index], dim=-1)

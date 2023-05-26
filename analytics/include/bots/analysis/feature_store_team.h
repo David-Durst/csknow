@@ -25,9 +25,12 @@ namespace csknow::feature_store {
     constexpr int area_grid_size = area_grid_dim*area_grid_dim;
     constexpr int delta_pos_grid_radius = 250;
     constexpr int delta_pos_grid_cell_dim = 20;
-    constexpr int delta_pos_grid_num_cells = (delta_pos_grid_radius * 2 * delta_pos_grid_radius * 2) /
+    constexpr int delta_pos_z_num_cells = 3;
+    constexpr int delta_pos_grid_num_cells = delta_pos_z_num_cells *
+            (delta_pos_grid_radius * 2 * delta_pos_grid_radius * 2) /
             (delta_pos_grid_cell_dim * delta_pos_grid_cell_dim);
-    const int delta_pos_grid_num_cells_per_dim = static_cast<int>(std::sqrt(delta_pos_grid_num_cells));
+    const int delta_pos_grid_num_cells_per_xy_dim = static_cast<int>(std::sqrt(delta_pos_grid_num_cells / delta_pos_z_num_cells));
+    const int delta_pos_grid_num_xy_cells_per_z_change = delta_pos_grid_num_cells_per_xy_dim * delta_pos_grid_num_cells_per_xy_dim;
     constexpr double seconds_per_c4_timer_bucket = 10.;
     constexpr int num_c4_timer_buckets = 4;
     constexpr int every_nth_row = 10;
@@ -90,8 +93,6 @@ namespace csknow::feature_store {
             array<vector<float>, num_places> distributionNearestPlace;
             array<vector<float>, area_grid_size> distributionNearestAreaGridInPlace;
             array<vector<bool>, delta_pos_grid_num_cells> deltaPos;
-            vector<bool> jumping;
-            vector<bool> falling;
         };
         array<ColumnPlayerData, maxEnemies> columnCTData, columnTData;
         vector<std::reference_wrapper<const array<ColumnPlayerData, maxEnemies>>> getAllColumnData() const {

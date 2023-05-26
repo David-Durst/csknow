@@ -101,10 +101,6 @@ namespace csknow::feature_store {
                 columnTData[i].deltaPos[j].resize(size, false);
                 columnCTData[i].deltaPos[j].resize(size, false);
             }
-            columnTData[i].jumping.resize(size, false);
-            columnTData[i].falling.resize(size, false);
-            columnCTData[i].jumping.resize(size, false);
-            columnCTData[i].falling.resize(size, false);
         }
         this->size = size;
         //checkPossiblyBadValue();
@@ -255,10 +251,6 @@ namespace csknow::feature_store {
                     columnTData[i].deltaPos[j][rowIndex] = false;
                     columnCTData[i].deltaPos[j][rowIndex] = false;
                 }
-                columnTData[i].jumping[rowIndex] = false;
-                columnTData[i].falling[rowIndex] = false;
-                columnCTData[i].jumping[rowIndex] = false;
-                columnCTData[i].falling[rowIndex] = false;
             }
         }
     }
@@ -358,7 +350,7 @@ namespace csknow::feature_store {
             columnData[columnIndex].playerId[internalTickIndex] = btTeamPlayerData.playerId;
             columnData[columnIndex].alive[internalTickIndex] = true;
             columnData[columnIndex].footPos[internalTickIndex] = btTeamPlayerData.curFootPos;
-            columnData[columnIndex].alignedFootPos[internalTickIndex] = (btTeamPlayerData.curFootPos / delta_pos_grid_num_cells_per_dim).trunc();
+            columnData[columnIndex].alignedFootPos[internalTickIndex] = (btTeamPlayerData.curFootPos / delta_pos_grid_num_cells_per_xy_dim).trunc();
             columnData[columnIndex].velocity[internalTickIndex] = btTeamPlayerData.velocity;
             columnData[columnIndex].distanceToASite[internalTickIndex] =
                 distanceToPlaces.getClosestDistance(btTeamPlayerData.curArea, a_site, navFile);
@@ -687,18 +679,25 @@ namespace csknow::feature_store {
         }
     }
 
-    int getDeltaPosFlatIndex(Vec3 pos, AABB placeAABB) {
+    int getDeltaPosFlatIndex(Vec3 pos, AABB placeAABB, bool jumping, bool falling) {
         double xPct = std::max(0., std::min(1., (pos.x - placeAABB.min.x) / (placeAABB.max.x - placeAABB.min.x)));
         double yPct = std::max(0., std::min(1., (pos.y - placeAABB.min.y) / (placeAABB.max.y - placeAABB.min.y)));
-        int xValue = static_cast<int>(xPct * delta_pos_grid_num_cells_per_dim);
-        if (xValue == delta_pos_grid_num_cells_per_dim) {
+        int xValue = static_cast<int>(xPct * delta_pos_grid_num_cells_per_xy_dim);
+        if (xValue == delta_pos_grid_num_cells_per_xy_dim) {
             xValue--;
         }
-        int yValue = static_cast<int>(yPct * delta_pos_grid_num_cells_per_dim);
-        if (yValue == delta_pos_grid_num_cells_per_dim) {
+        int yValue = static_cast<int>(yPct * delta_pos_grid_num_cells_per_xy_dim);
+        if (yValue == delta_pos_grid_num_cells_per_xy_dim) {
             yValue--;
         }
-        return xValue + yValue * delta_pos_grid_num_cells_per_dim;
+        int zValue = 1;
+        if (jumping) {
+            zValue = 2;
+        }
+        else if (falling) {
+            zValue = 0;
+        }
+        return xValue + yValue * delta_pos_grid_num_cells_per_xy_dim + zValue * delta_pos_grid_num_xy_cells_per_z_change;
     }
 
     //double max_z_delta = 0;
@@ -720,14 +719,16 @@ namespace csknow::feature_store {
 
             int64_t futureTickIndex = futureTracker.fromOldest();
             // if jumping, look twice as far in future
+            bool jumping = false, falling = false;
             for (int64_t i = 0; i < futureTracker.getCurSize(); i++) {
                 if (columnData[playerColumn].velocity[futureTracker.fromNewest(i)].z > 10.) {
-                    columnData[playerColumn].jumping[curTick] = true;
+                    jumping = true;
                 }
                 if (columnData[playerColumn].velocity[futureTracker.fromNewest(i)].z < -10.) {
-                    columnData[playerColumn].falling[curTick] = true;
+                    falling = true;
                 }
             }
+            falling = falling && !jumping;
 
             if (futureTickIndex < curTick) {
                 std::cout << "delta pos acausal future tick in past" << std::endl;
@@ -747,7 +748,8 @@ namespace csknow::feature_store {
                     }
             };
             //max_z_delta = std::max(max_z_delta, std::abs(columnData[playerColumn].footPos[futureTickIndex].z - curFootPos.z));
-            int deltaPosIndex = getDeltaPosFlatIndex(columnData[playerColumn].footPos[futureTickIndex], deltaPosRange);
+            int deltaPosIndex = getDeltaPosFlatIndex(columnData[playerColumn].footPos[futureTickIndex], deltaPosRange,
+                                                     jumping, falling);
             /*
             // if jumping and standing still in xy, look twice as far in future
             if (deltaPosIndex == 12 && jumping) {
@@ -977,15 +979,15 @@ namespace csknow::feature_store {
                     file.createDataSet("/data/distribution nearest area grid in place " + areaGridIndexStr + " " + columnTeam + " " + iStr,
                                        columnData[columnPlayer].distributionNearestAreaGridInPlace[areaGridIndex], hdf5FlatCreateProps);
                 }
+                vector<string> deltaPosNames;
                 for (size_t deltaPosIndex = 0; deltaPosIndex < delta_pos_grid_num_cells; deltaPosIndex++) {
                     string deltaPosIndexStr = std::to_string(deltaPosIndex);
+                    //deltaPosNames.push_back("delta pos " + deltaPosIndexStr + " " + columnTeam + " " + iStr);
                     file.createDataSet("/data/delta pos " + deltaPosIndexStr + " " + columnTeam + " " + iStr,
                                        columnData[columnPlayer].deltaPos[deltaPosIndex], hdf5FlatCreateProps);
                 }
-                file.createDataSet("/data/jumping " + columnTeam + " " + iStr,
-                                   columnData[columnPlayer].jumping, hdf5FlatCreateProps);
-                file.createDataSet("/data/falling " + columnTeam + " " + iStr,
-                                   columnData[columnPlayer].falling, hdf5FlatCreateProps);
+                //saveArrayOfVectorsToHDF5(columnData[columnPlayer].deltaPos, file, "delta pos " + columnTeam + " " + iStr, deltaPosNames,
+                //                         hdf5FlatCreateProps);
             }
         }
     }
