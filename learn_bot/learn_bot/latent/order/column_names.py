@@ -23,7 +23,7 @@ delta_pos_z_num_cells = 3
 delta_pos_grid_num_cells = delta_pos_z_num_cells * \
     int((delta_pos_grid_radius * 2 * delta_pos_grid_radius * 2) /
         (delta_pos_grid_cell_dim * delta_pos_grid_cell_dim))
-delta_pos_grid_num_cells_per_xy_dim = isqrt(delta_pos_grid_num_cells / delta_pos_z_num_cells)
+delta_pos_grid_num_cells_per_xy_dim = isqrt(int(delta_pos_grid_num_cells / delta_pos_z_num_cells))
 delta_pos_grid_num_xy_cells_per_z_change = delta_pos_grid_num_cells_per_xy_dim * delta_pos_grid_num_cells_per_xy_dim
 
 c4_status_col = "c4 status"

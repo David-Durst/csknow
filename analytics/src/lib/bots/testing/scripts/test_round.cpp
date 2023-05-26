@@ -2,6 +2,7 @@
 // Created by durst on 4/27/23.
 //
 #include "bots/testing/scripts/test_round.h"
+#include "bots/testing/scripts/learned/log_nodes.h"
 
 RoundScript::RoundScript(const csknow::plant_states::PlantStatesResult & plantStatesResult, size_t plantStateIndex,
                          size_t numRounds) :
@@ -61,13 +62,16 @@ void RoundScript::initialize(Tree &tree, ServerState &state) {
             make_unique<DisableActionsNode>(blackboard, "DisableSetup", neededBotIds, false)
         ), "DefuserDisableDuringSetup");
 
+        Node::Ptr finishCondition = make_unique<ParallelFirstNode>(blackboard, Node::makeList(
+                make_unique<RepeatDecorator>(blackboard, make_unique<RoundStart>(blackboard), true),
+                make_unique<csknow::tests::learned::FailIfTimeoutEndNode>(blackboard, name, plantStateIndex, numRounds, 60)));
+
         commands = make_unique<SequenceNode>(blackboard, Node::makeList(
-                                                 std::move(disableAllBothDuringSetup),
-                                                 make_unique<ParallelFirstNode>(blackboard, Node::makeList(
-                                                                                    make_unique<RepeatDecorator>(blackboard, make_unique<RoundStart>(blackboard), true),
-                                                                                    make_unique<movement::WaitNode>(blackboard, 60, false)),
-                                                                                "RoundCondition")),
-                                             "RoundSequence");
+                std::move(disableAllBothDuringSetup),
+                make_unique<csknow::tests::learned::StartNode>(blackboard, name, plantStateIndex, numRounds),
+                std::move(finishCondition),
+                make_unique<csknow::tests::learned::SuccessEndNode>(blackboard, name, plantStateIndex, numRounds)),
+        "RoundSequence");
     }
 }
 
