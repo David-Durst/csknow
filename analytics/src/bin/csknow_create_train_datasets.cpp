@@ -34,6 +34,7 @@
 #include "queries/nav_mesh.h"
 #include "queries/reachable.h"
 #include "queries/moments/behavior_tree_latent_states.h"
+#include "bots/analysis/nav_area_above_below.h"
 #include <filesystem>
 namespace fs = std::filesystem;
 
@@ -165,18 +166,8 @@ int main(int argc, char * argv[]) {
     }}
     std::cout << std::endl;
 
-    Vec3 minPos{std::numeric_limits<double>::max(), std::numeric_limits<double>::max(), std::numeric_limits<double>::max()};
-    Vec3 maxPos = minPos * -1;
-    for (const auto & area : d2ReachableResult.coordinate) {
-        minPos = min(minPos, area.min);
-        maxPos = max(maxPos, area.max);
-    }
-    minPos.x -= WIDTH;
-    minPos.y -= WIDTH;
-    maxPos.x += WIDTH;
-    maxPos.y += WIDTH;
-    maxPos.z += STANDING_HEIGHT;
-    std::cout << "d2 min " << minPos.toString() << " max " << maxPos.toString() << std::endl;
+    csknow::nav_area_above_below::NavAreaAboveBelow d2AboveBelow(d2MeshResult, navPath);
+
 
     csknow::key_retake_events::KeyRetakeEvents keyRetakeEvents(filteredRounds, ticks, playerAtTick, plants, defusals,
                                                                kills, say);

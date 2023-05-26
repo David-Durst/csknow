@@ -1,5 +1,18 @@
 #include "queries/nav_mesh.h"
 
+MapMeshResult::OverlappingResult MapMeshResult::overlappingAreas(Vec3 pos) const {
+    OverlappingResult result;
+    for (size_t i = 0; i < coordinate.size(); i++) {
+        if (pointInRegion(coordinate[i], pos)) {
+            result.overlappingIn3D.push_back(areaId[i]);
+        }
+        if (pointInRegion2D(coordinate[i], pos)) {
+            result.overlappingIn2D.push_back(areaId[i]);
+        }
+    }
+    return result;
+}
+
 MapMeshResult queryMapMesh(nav_mesh::nav_file & navFile, const string & queryName) {
     MapMeshResult result(queryName);
     int64_t i = 0;
@@ -27,3 +40,4 @@ MapMeshResult queryMapMesh(nav_mesh::nav_file & navFile, const string & queryNam
     result.size = navFile.m_area_count;
     return result;
 }
+

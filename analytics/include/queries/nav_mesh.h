@@ -15,6 +15,8 @@
 #include "load_data.h"
 #include "queries/query.h"
 #include "geometry.h"
+#include "geometryNavConversions.h"
+
 using std::string;
 using std::vector;
 using std::set;
@@ -62,6 +64,12 @@ public:
     vector<string> getOtherColumnNames() override {
         return {"placeName", "areaId", "min_x", "min_y", "min_z", "max_x", "max_y", "max_z", "connectionAreaIds"};
     }
+
+    struct OverlappingResult {
+        vector<AreaId> overlappingIn2D;
+        vector<AreaId> overlappingIn3D;
+    };
+    OverlappingResult overlappingAreas(Vec3 pos) const;
 };
 
 MapMeshResult queryMapMesh(nav_mesh::nav_file & navFile, const string & queryName);

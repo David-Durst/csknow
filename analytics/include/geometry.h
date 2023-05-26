@@ -123,6 +123,12 @@ bool pointInRegion(AABB box, Vec3 point) {
 }
 
 static inline __attribute__((always_inline))
+bool pointInRegion2D(AABB box, Vec3 point, float margin = 0.) {
+    return point.x > box.min.x - margin && point.x < box.max.x + margin &&
+           point.y > box.min.y - margin && point.y < box.max.y + margin;
+}
+
+static inline __attribute__((always_inline))
 bool pointInRegionMaxInclusive(AABB box, Vec3 point) {
     return point.x > box.min.x && point.x <= box.max.x &&
            point.y > box.min.y && point.y <= box.max.y &&
