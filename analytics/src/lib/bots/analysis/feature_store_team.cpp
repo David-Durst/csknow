@@ -781,7 +781,7 @@ namespace csknow::feature_store {
             TickRates tickRates = computeTickRates(games, rounds, roundIndex);
             CircularBuffer<int64_t> ticks1sFutureTracker(4), ticks2sFutureTracker(4), ticks6sFutureTracker(6),
                 // this one I add to every frame and remove when too far in the future, more accuracte
-                bothSidesTicks1sFutureTracker(20), bothSidesTicks1_5sFutureTracker(30);
+                bothSidesTicks0_5sFutureTracker(20), bothSidesTicks1_5sFutureTracker(30);
             //, ticks15sFutureTracker(15), ticks30sFutureTracker(30);
             for (int64_t unmodifiedTickIndex = rounds.ticksPerRound[roundIndex].maxId;
                  unmodifiedTickIndex >= rounds.ticksPerRound[roundIndex].minId; unmodifiedTickIndex--) {
@@ -810,9 +810,9 @@ namespace csknow::feature_store {
                     secondsBetweenTicks(ticks, tickRates, internalIdToTickId[tickIndex], internalIdToTickId[ticks6sFutureTracker.fromNewest()]) >= 1.) {
                     ticks6sFutureTracker.enqueue(tickIndex);
                 }
-                bothSidesTicks1sFutureTracker.enqueue(tickIndex);
-                while (secondsBetweenTicks(ticks, tickRates, internalIdToTickId[tickIndex], internalIdToTickId[bothSidesTicks1sFutureTracker.fromOldest()]) > 1.) {
-                    bothSidesTicks1sFutureTracker.dequeue();
+                bothSidesTicks0_5sFutureTracker.enqueue(tickIndex);
+                while (secondsBetweenTicks(ticks, tickRates, internalIdToTickId[tickIndex], internalIdToTickId[bothSidesTicks0_5sFutureTracker.fromOldest()]) > 0.5) {
+                    bothSidesTicks0_5sFutureTracker.dequeue();
                 }
                 bothSidesTicks1_5sFutureTracker.enqueue(tickIndex);
                 while (secondsBetweenTicks(ticks, tickRates, internalIdToTickId[tickIndex], internalIdToTickId[bothSidesTicks1_5sFutureTracker.fromOldest()]) > 1.5) {
@@ -844,8 +844,8 @@ namespace csknow::feature_store {
                                           players, distanceToPlacesResult, navFile);
                 computeAreaACausalLabels(ticks, tickRates, tickIndex, ticks1sFutureTracker, columnCTData, 0.1);
                 computeAreaACausalLabels(ticks, tickRates, tickIndex, ticks1sFutureTracker, columnTData, 0.1);
-                computeDeltaPosACausalLabels(tickIndex, bothSidesTicks1sFutureTracker, columnCTData);
-                computeDeltaPosACausalLabels(tickIndex, bothSidesTicks1sFutureTracker, columnTData);
+                computeDeltaPosACausalLabels(tickIndex, bothSidesTicks0_5sFutureTracker, columnCTData);
+                computeDeltaPosACausalLabels(tickIndex, bothSidesTicks0_5sFutureTracker, columnTData);
                 //computePlaceAreaACausalLabels(ticks, tickRates, tickIndex, ticks15sFutureTracker, columnCTData);
                 //computePlaceAreaACausalLabels(ticks, tickRates, tickIndex, ticks15sFutureTracker, columnTData);
                 /*

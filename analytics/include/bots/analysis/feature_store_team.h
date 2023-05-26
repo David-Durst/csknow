@@ -23,7 +23,7 @@ namespace csknow::feature_store {
     constexpr int num_places = 26;
     constexpr int area_grid_dim = 5;
     constexpr int area_grid_size = area_grid_dim*area_grid_dim;
-    constexpr int delta_pos_grid_radius = 250;
+    constexpr int delta_pos_grid_radius = 130;
     constexpr int delta_pos_grid_cell_dim = 20;
     constexpr int delta_pos_z_num_cells = 3;
     constexpr int delta_pos_grid_num_cells = delta_pos_z_num_cells *
