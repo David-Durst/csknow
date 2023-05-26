@@ -57,10 +57,11 @@ def step(rollout_tensor: torch.Tensor, pred_tensor: torch.Tensor, model: Transfo
     y_index = torch.floor(pred_per_player / delta_pos_grid_num_cells_per_dim) - int(delta_pos_grid_num_cells_per_dim / 2)
     z_index = torch.zeros_like(x_index)
     pos_index = rearrange(torch.stack([x_index, y_index, z_index], dim=-1), 'b p d -> b (p d)')
+    unscaled_pos_change = (pos_index * delta_pos_grid_cell_dim)
 
-    rollout_tensor[rollout_tensor_output_indices] = rollout_tensor[rollout_tensor_input_indices]
-    rollout_tensor[rollout_tensor_output_indices][:, model.players_pos_columns] += \
-        (pos_index * delta_pos_grid_cell_dim).to(CPU_DEVICE_STR)
+    tmp_rollout_tensor = rollout_tensor[rollout_tensor_input_indices]
+    tmp_rollout_tensor[:, model.players_pos_columns] += (pos_index * delta_pos_grid_cell_dim).to(CPU_DEVICE_STR)
+    rollout_tensor[rollout_tensor_output_indices] = tmp_rollout_tensor
 
 
 def match_round_lengths(df: pd.DataFrame, rollout_tensor: torch.Tensor, pred_tensor: torch.Tensor,
