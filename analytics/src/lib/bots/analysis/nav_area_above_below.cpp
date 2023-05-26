@@ -7,9 +7,9 @@
 
 namespace csknow::nav_area_above_below {
     NavAreaAboveBelow::NavAreaAboveBelow(const MapMeshResult &mapMeshResult, const std::string &navPath) {
-        std::string filePath = navPath + "/d2_dust_nav_above_below.hdf5";
+        std::string filePath = navPath + "/de_dust2_nav_above_below.hdf5";
         if (std::filesystem::exists(filePath)) {
-            load(mapMeshResult, filePath);
+            load(filePath);
         }
         else {
             computeNavRegion(mapMeshResult);
@@ -25,29 +25,67 @@ namespace csknow::nav_area_above_below {
                             navRegion.min.z + (static_cast<double>(zStep) + 0.5) * step_size,
                         };
                         MapMeshResult::OverlappingResult overlappingResult = mapMeshResult.overlappingAreas(pos);
+                        AreaId areaAboveId = 0;
                         float minZAbove = std::numeric_limits<float>::max() * -1.;
                         bool foundZAbove = false;
+                        AreaId areaBelowId = 0;
                         float maxZBelow = std::numeric_limits<float>::max();
                         bool foundZBelow = false;
+                        AreaId areaNearestId = 0;
+                        float localZNearest = std::numeric_limits<float>::max();
+                        bool foundZNearest = false;
                         // look for non-overlapping area above or below
                         for (const auto & overlappingAreaId : overlappingResult.overlappingIn2D) {
                             const AABB & area = mapMeshResult.coordinate[mapMeshResult.areaToInternalId.at(overlappingAreaId)];
-                            if (pos.z < area.min.z && (area.min.z < minZAbove)) {
+                            if (pos.z < area.min.z && area.min.z < minZAbove) {
+                                areaAboveId = overlappingAreaId;
                                 minZAbove = area.min.z;
                                 foundZAbove = true;
                             }
-                            if (pos.z > area.max.z && (area.max.z > maxZBelow)) {
+                            if (pos.z > area.max.z && area.max.z > maxZBelow) {
+                                areaBelowId = overlappingAreaId;
                                 maxZBelow = area.max.z;
                                 foundZBelow = true;
+                            }
+                            // assume non-overlapping, will handle overlapping later
+                            double zDistance = std::min(std::abs(pos.z - area.min.z), std::abs(pos.z - area.max.z));
+                            if (zDistance < std::abs(pos.z - localZNearest)) {
+                                areaNearestId = overlappingAreaId;
+                                if (pos.z < area.min.z) {
+                                    localZNearest = area.min.z;
+                                }
+                                else {
+                                    localZNearest = area.max.z;
+                                }
+                                foundZNearest = true;
                             }
                         }
                         // if no nonoverlapping areas, take any overlapping areas
                         if (!foundZAbove && !overlappingResult.overlappingIn3D.empty()) {
+                            areaAboveId = overlappingResult.overlappingIn3D.front();
                             minZAbove = pos.z;
+                            foundZAbove = true;
                         }
                         if (!foundZBelow && !overlappingResult.overlappingIn3D.empty()) {
+                            areaBelowId = overlappingResult.overlappingIn3D.front();
                             maxZBelow = pos.z;
+                            foundZBelow = true;
                         }
+                        // if overlapping, that's nearest, otherwise get nearest
+                        if (!overlappingResult.overlappingIn3D.empty()) {
+                            areaNearestId = overlappingResult.overlappingIn3D.front();
+                            localZNearest = pos.z;
+                            foundZNearest = true;
+                        }
+                        areaAbove.push_back(areaAboveId);
+                        zAbove.push_back(minZAbove);
+                        foundAbove.push_back(foundZAbove);
+                        areaBelow.push_back(areaBelowId);
+                        zBelow.push_back(maxZBelow);
+                        foundBelow.push_back(foundZBelow);
+                        areaNearest.push_back(areaNearestId);
+                        zNearest.push_back(localZNearest);
+                        foundNearest.push_back(foundZNearest);
                     }
                 }
             }
@@ -65,21 +103,28 @@ namespace csknow::nav_area_above_below {
 
         file.createDataSet("/data/area above", areaAbove, hdf5CreateProps);
         file.createDataSet("/data/z above", zAbove, hdf5CreateProps);
+        file.createDataSet("/data/found above", foundAbove, hdf5CreateProps);
         file.createDataSet("/data/area below", areaBelow, hdf5CreateProps);
         file.createDataSet("/data/z below", zBelow, hdf5CreateProps);
+        file.createDataSet("/data/found below", foundBelow, hdf5CreateProps);
+        file.createDataSet("/data/area nearest", areaNearest, hdf5CreateProps);
+        file.createDataSet("/data/z nearest", zNearest, hdf5CreateProps);
+        file.createDataSet("/data/found nearest", foundBelow, hdf5CreateProps);
 
         vector<double> navRegionVec{navRegion.min.x, navRegion.min.y, navRegion.min.z,
                                     navRegion.max.x, navRegion.max.y, navRegion.max.z};
         file.createDataSet("/extra/nav region", navRegionVec);
     }
 
-    void NavAreaAboveBelow::load(const MapMeshResult & mapMeshResult, const std::string &filePath) {
+    void NavAreaAboveBelow::load(const std::string &filePath) {
         HighFive::File file(filePath, HighFive::File::ReadOnly);
 
         areaAbove = file.getDataSet("/data/area above").read<std::vector<AreaId>>();
         zAbove = file.getDataSet("/data/z above").read<std::vector<float>>();
+        foundAbove = file.getDataSet("/data/found above").read<std::vector<bool>>();
         areaBelow = file.getDataSet("/data/area below").read<std::vector<AreaId>>();
         zBelow = file.getDataSet("/data/z below").read<std::vector<float>>();
+        foundBelow = file.getDataSet("/data/found below").read<std::vector<bool>>();
         auto navRegionVec = file.getDataSet("/extra/nav region").read<std::vector<double>>();
         navRegion = AABB{{navRegionVec[0], navRegionVec[1], navRegionVec[2]},
                          {navRegionVec[3], navRegionVec[4], navRegionVec[5]}};
@@ -108,8 +153,7 @@ namespace csknow::nav_area_above_below {
         navRegion.max.x += WIDTH;
         navRegion.max.y += WIDTH;
         navRegion.max.z += STANDING_HEIGHT;
-        std::cout << "d2 range " << navRegion.toString() << std::endl;
-
+        std::cout << "map range " << navRegion.toString() << std::endl;
     }
 
 }

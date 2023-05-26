@@ -704,7 +704,6 @@ namespace csknow::feature_store {
     //double max_z_delta = 0;
 
     void TeamFeatureStoreResult::computeDeltaPosACausalLabels(int64_t curTick, CircularBuffer<int64_t> & futureTracker,
-                                                              CircularBuffer<int64_t> & jumpFutureTracker,
                                                               array<ColumnPlayerData,maxEnemies> & columnData) {
         for (size_t playerColumn = 0; playerColumn < maxEnemies; playerColumn++) {
             if (columnData[playerColumn].playerId[curTick] == INVALID_ID) {
@@ -843,10 +842,8 @@ namespace csknow::feature_store {
                                           players, distanceToPlacesResult, navFile);
                 computeAreaACausalLabels(ticks, tickRates, tickIndex, ticks1sFutureTracker, columnCTData, 0.1);
                 computeAreaACausalLabels(ticks, tickRates, tickIndex, ticks1sFutureTracker, columnTData, 0.1);
-                computeDeltaPosACausalLabels(tickIndex, bothSidesTicks1sFutureTracker, bothSidesTicks1_5sFutureTracker,
-                                             columnCTData);
-                computeDeltaPosACausalLabels(tickIndex, bothSidesTicks1sFutureTracker, bothSidesTicks1_5sFutureTracker,
-                                             columnTData);
+                computeDeltaPosACausalLabels(tickIndex, bothSidesTicks1sFutureTracker, columnCTData);
+                computeDeltaPosACausalLabels(tickIndex, bothSidesTicks1sFutureTracker, columnTData);
                 //computePlaceAreaACausalLabels(ticks, tickRates, tickIndex, ticks15sFutureTracker, columnCTData);
                 //computePlaceAreaACausalLabels(ticks, tickRates, tickIndex, ticks15sFutureTracker, columnTData);
                 /*

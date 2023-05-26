@@ -12,14 +12,15 @@ namespace csknow::nav_area_above_below {
     constexpr double step_size = 10.;
     class NavAreaAboveBelow {
     public:
-        vector<AreaId> areaAbove, areaBelow;
-        vector<float> zAbove, zBelow;
+        vector<AreaId> areaAbove, areaBelow, areaNearest;
+        vector<float> zAbove, zBelow, zNearest;
+        vector<bool> foundAbove, foundBelow, foundNearest;
         AABB navRegion;
 
         NavAreaAboveBelow(const MapMeshResult & mapMeshResult, const string& navPath);
 
         void save(const string& filePath);
-        void load(const MapMeshResult & mapMeshResult, const string& filePath);
+        void load(const string& filePath);
         void computeNavRegion(const MapMeshResult & mapMeshResult);
     };
 }
