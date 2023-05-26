@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import pandas as pd
 from dataclasses import dataclass
 from typing import Dict, Tuple
@@ -7,13 +9,14 @@ from tqdm import tqdm
 
 from learn_bot.latent.dataset import LatentDataset
 from learn_bot.latent.engagement.column_names import round_id_column, tick_id_column
-from learn_bot.latent.order.column_names import delta_pos_grid_num_cells_per_xy_dim, delta_pos_grid_cell_dim
+from learn_bot.latent.order.column_names import delta_pos_grid_num_cells_per_xy_dim, delta_pos_grid_cell_dim, \
+    delta_pos_grid_num_xy_cells_per_z_change
 from learn_bot.latent.train import manual_latent_team_hdf5_data_path, rollout_latent_team_hdf5_data_path, \
     latent_team_hdf5_data_path
 from learn_bot.latent.transformer_nested_hidden_latent_model import *
 from learn_bot.latent.vis.run_vis_checkpoint import load_model_file_for_rollout
 from learn_bot.latent.vis.vis import vis
-from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd
+from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd, load_hdf5_extra_to_list
 from learn_bot.libs.io_transforms import get_untransformed_outputs, CPU_DEVICE_STR
 
 
@@ -60,10 +63,13 @@ def step(rollout_tensor: torch.Tensor, pred_tensor: torch.Tensor, model: Transfo
     pred_tensor[rollout_tensor_input_indices] = pred.to(CPU_DEVICE_STR)
     pred_per_player = torch.argmax(rearrange(pred, 'b (p d) -> b p d', p=len(specific_player_place_area_columns)), 2)
 
-    x_index = torch.floor(torch.remainder(pred_per_player, delta_pos_grid_num_cells_per_xy_dim)) - \
+    z_index = torch.floor(pred_per_player / delta_pos_grid_num_xy_cells_per_z_change) - \
+              int(delta_pos_grid_num_xy_cells_per_z_change / 2)
+    xy_pred_per_player = torch.floor(torch.remainder(pred_per_player, delta_pos_grid_num_xy_cells_per_z_change))
+    x_index = torch.floor(torch.remainder(xy_pred_per_player, delta_pos_grid_num_cells_per_xy_dim)) - \
               int(delta_pos_grid_num_cells_per_xy_dim / 2)
-    y_index = torch.floor(pred_per_player / delta_pos_grid_num_cells_per_xy_dim) - int(delta_pos_grid_num_cells_per_xy_dim / 2)
-    z_index = torch.zeros_like(x_index)
+    y_index = torch.floor(xy_pred_per_player / delta_pos_grid_num_cells_per_xy_dim) - \
+              int(delta_pos_grid_num_cells_per_xy_dim / 2)
     #pos_index = rearrange(torch.stack([x_index, y_index, z_index], dim=-1), 'b p d -> b (p d)')
     pos_index = torch.stack([x_index, y_index, z_index], dim=-1)
     unscaled_pos_change = (pos_index * delta_pos_grid_cell_dim)
@@ -112,6 +118,8 @@ def delta_pos_rollout(df: pd.DataFrame, dataset: LatentDataset, model: Transform
     return match_round_lengths(df, rollout_tensor, pred_tensor, round_lengths, cts)
 
 
+nav_above_below_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / '..' / 'analytics' / 'nav' / 'de_dust2_nav_above_below.hdf5'
+
 manual_data = True
 rollout_data = False
 
@@ -125,6 +133,9 @@ if __name__ == "__main__":
         all_data_df = load_hdf5_to_pd(latent_team_hdf5_data_path)
         all_data_df = all_data_df[(all_data_df['valid'] == 1.) & (all_data_df['c4 status'] < 2)]
     all_data_df = all_data_df.copy()
+
+    nav_above_below = load_hdf5_extra_to_list(nav_above_below_hdf5_data_path)
+    nav_region = load_hdf5_to_pd(nav_above_below_hdf5_data_path)
 
     load_result = load_model_file_for_rollout(all_data_df, "delta_pos_checkpoint.pt")
 

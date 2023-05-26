@@ -22,6 +22,7 @@ namespace csknow::nav_area_above_below {
         void save(const string& filePath);
         void load(const string& filePath);
         void computeNavRegion(const MapMeshResult & mapMeshResult);
+        size_t posToIndex(Vec3 pos);
     };
 }
 

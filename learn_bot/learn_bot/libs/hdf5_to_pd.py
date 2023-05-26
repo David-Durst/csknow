@@ -59,3 +59,13 @@ def compare_to_csv(new_df: pd.DataFrame, old_df: pd.DataFrame):
                 print(f'''{col_name} isn't close, ''' +
                       f'''example new: {new_df[col_name][first_fail]} ; old: {old_df[col_name][first_fail]}''')
 
+
+def load_hdf5_extra_to_list(hdf5_path: Path) -> List[List[int]]:
+    result: List[List[int]] = []
+    with h5py.File(hdf5_path) as hdf5_file:
+        hdf5_data = hdf5_file['extra']
+        for k in hdf5_data.keys():
+            np_arr: np.ndarray = hdf5_data[k][...]
+            result.append(np_arr.tolist())
+    return result
+

@@ -6,6 +6,16 @@
 #include <filesystem>
 
 namespace csknow::nav_area_above_below {
+    size_t NavAreaAboveBelow::posToIndex(Vec3 pos) {
+        size_t xStep = static_cast<size_t>((pos.x - navRegion.min.x) / step_size);
+        size_t yStep = static_cast<size_t>((pos.y - navRegion.min.y) / step_size);
+        size_t zStep = static_cast<size_t>((pos.z - navRegion.min.z) / step_size);
+
+        size_t numYSteps = static_cast<size_t>(std::ceil((navRegion.max.y - navRegion.min.y) / step_size));
+        size_t numZSteps = static_cast<size_t>(std::ceil((navRegion.max.z - navRegion.min.z) / step_size));
+        return zStep + numZSteps * yStep + numZSteps * numYSteps * xStep;
+    }
+
     NavAreaAboveBelow::NavAreaAboveBelow(const MapMeshResult &mapMeshResult, const std::string &navPath) {
         std::string filePath = navPath + "/de_dust2_nav_above_below.hdf5";
         if (std::filesystem::exists(filePath)) {
@@ -20,16 +30,21 @@ namespace csknow::nav_area_above_below {
                 for (size_t yStep = 0; yStep < numYSteps; yStep++) {
                     for (size_t zStep = 0; zStep < numZSteps; zStep++) {
                         Vec3 pos {
-                            navRegion.min.x + (static_cast<double>(xStep) + 0.5) * step_size,
-                            navRegion.min.y + (static_cast<double>(yStep) + 0.5) * step_size,
-                            navRegion.min.z + (static_cast<double>(zStep) + 0.5) * step_size,
+                            navRegion.min.x + static_cast<double>(xStep) * step_size,
+                            navRegion.min.y + static_cast<double>(yStep) * step_size,
+                            navRegion.min.z + static_cast<double>(zStep) * step_size,
                         };
+                        if (pos.x > -1400 && pos.x < -1350 && pos.y > 2675 && pos.y < 2700 && pos.z > 110 && pos.z < 125) {
+                            int x = 0;
+                            posToIndex(pos);
+                            (void) x;
+                        }
                         MapMeshResult::OverlappingResult overlappingResult = mapMeshResult.overlappingAreas(pos);
                         AreaId areaAboveId = 0;
-                        float minZAbove = std::numeric_limits<float>::max() * -1.;
+                        float minZAbove = std::numeric_limits<float>::max();
                         bool foundZAbove = false;
                         AreaId areaBelowId = 0;
-                        float maxZBelow = std::numeric_limits<float>::max();
+                        float maxZBelow = std::numeric_limits<float>::max() * -1.;
                         bool foundZBelow = false;
                         AreaId areaNearestId = 0;
                         float localZNearest = std::numeric_limits<float>::max();
@@ -109,7 +124,7 @@ namespace csknow::nav_area_above_below {
         file.createDataSet("/data/found below", foundBelow, hdf5CreateProps);
         file.createDataSet("/data/area nearest", areaNearest, hdf5CreateProps);
         file.createDataSet("/data/z nearest", zNearest, hdf5CreateProps);
-        file.createDataSet("/data/found nearest", foundBelow, hdf5CreateProps);
+        file.createDataSet("/data/found nearest", foundNearest, hdf5CreateProps);
 
         vector<double> navRegionVec{navRegion.min.x, navRegion.min.y, navRegion.min.z,
                                     navRegion.max.x, navRegion.max.y, navRegion.max.z};
@@ -125,6 +140,9 @@ namespace csknow::nav_area_above_below {
         areaBelow = file.getDataSet("/data/area below").read<std::vector<AreaId>>();
         zBelow = file.getDataSet("/data/z below").read<std::vector<float>>();
         foundBelow = file.getDataSet("/data/found below").read<std::vector<bool>>();
+        areaNearest = file.getDataSet("/data/area nearest").read<std::vector<AreaId>>();
+        zNearest = file.getDataSet("/data/z nearest").read<std::vector<float>>();
+        foundNearest = file.getDataSet("/data/found nearest").read<std::vector<bool>>();
         auto navRegionVec = file.getDataSet("/extra/nav region").read<std::vector<double>>();
         navRegion = AABB{{navRegionVec[0], navRegionVec[1], navRegionVec[2]},
                          {navRegionVec[3], navRegionVec[4], navRegionVec[5]}};

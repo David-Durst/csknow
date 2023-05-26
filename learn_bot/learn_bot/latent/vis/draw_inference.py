@@ -47,7 +47,7 @@ class VisMapCoordinate():
         new_grid_cell.is_player = False
         new_grid_cell.is_prediction = is_prediction
         z_index = int(cell_index / delta_pos_grid_num_xy_cells_per_z_change) - int(delta_pos_grid_num_xy_cells_per_z_change / 2)
-        xy_cell_index = cell_index % delta_pos_grid_num_cells_per_xy_dim
+        xy_cell_index = cell_index % delta_pos_grid_num_xy_cells_per_z_change
         x_index = int(xy_cell_index % delta_pos_grid_num_cells_per_xy_dim) - int(delta_pos_grid_num_cells_per_xy_dim / 2)
         y_index = int(xy_cell_index / delta_pos_grid_num_cells_per_xy_dim) - int(delta_pos_grid_num_cells_per_xy_dim / 2)
         new_grid_cell.coords.x += x_index * delta_pos_grid_cell_dim
