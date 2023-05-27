@@ -19,11 +19,13 @@ minimapHeight = 700
 minimapScale = 4.4 * 1024 / minimapHeight
 
 bbox_scale_factor = 2
+dot_radius = 0.5
 
 class VisMapCoordinate():
     coords: Vec3
     is_player: bool
     is_prediction: bool
+    z_index: int
 
     def __init__(self, x: float, y: float, z: float, from_canvas_pixels: bool = False):
         if from_canvas_pixels:
@@ -34,6 +36,7 @@ class VisMapCoordinate():
         self.coords = Vec3(x, y, z)
         self.is_player = True
         self.is_prediction = False
+        self.z_index = -1
 
     def get_canvas_coordinates(self) -> Vec3:
         return Vec3(
@@ -46,7 +49,7 @@ class VisMapCoordinate():
         new_grid_cell = VisMapCoordinate(self.coords.x, self.coords.y, self.coords.z, False)
         new_grid_cell.is_player = False
         new_grid_cell.is_prediction = is_prediction
-        z_index = int(cell_index / delta_pos_grid_num_xy_cells_per_z_change) - int(delta_pos_grid_num_xy_cells_per_z_change / 2)
+        new_grid_cell.z_index = int(cell_index / delta_pos_grid_num_xy_cells_per_z_change)
         xy_cell_index = cell_index % delta_pos_grid_num_xy_cells_per_z_change
         x_index = int(xy_cell_index % delta_pos_grid_num_cells_per_xy_dim) - int(delta_pos_grid_num_cells_per_xy_dim / 2)
         y_index = int(xy_cell_index / delta_pos_grid_num_cells_per_xy_dim) - int(delta_pos_grid_num_cells_per_xy_dim / 2)
@@ -54,7 +57,8 @@ class VisMapCoordinate():
         new_grid_cell.coords.y += y_index * delta_pos_grid_cell_dim
         return new_grid_cell
 
-    def draw_vis(self, im_draw: ImageDraw, use_scale: bool, custom_color: Optional[Tuple] = None):
+    def draw_vis(self, im_draw: ImageDraw, use_scale: bool, custom_color: Optional[Tuple] = None,
+                 draw_dot: bool = False):
         half_width = delta_pos_grid_cell_dim / 2
         if use_scale:
             if not self.is_player and not self.is_prediction:
@@ -80,6 +84,10 @@ class VisMapCoordinate():
         else:
             cur_color = "blue"
         im_draw.rectangle([canvas_min_vec.x, canvas_min_vec.y, canvas_max_vec.x, canvas_max_vec.y], fill=cur_color)
+        if draw_dot:
+            im_draw.rectangle([canvas_min_vec.x - dot_radius, canvas_min_vec.y - dot_radius,
+                               canvas_max_vec.x + dot_radius, canvas_max_vec.y + dot_radius], fill=(0, 0, 0, 255))
+
 
 
 def draw_all_players(data_series: pd.Series, pred_series: pd.Series, im_draw: ImageDraw, draw_max: bool,
@@ -114,7 +122,7 @@ def draw_all_players(data_series: pd.Series, pred_series: pd.Series, im_draw: Im
 
             data_coord = pos_coord.get_grid_cell(max_data_index, False)
             pred_coord = pos_coord.get_grid_cell(max_pred_index, True)
-            player_str = f'''{player_place_area_columns.player_id} pos {pos_coord.coords}, data {data_coord.coords}, pred {pred_coord.coords}'''
+            player_str = f'''{player_place_area_columns.player_id} pos {pos_coord.coords}, data {data_coord.coords} {data_coord.z_index}, pred {pred_coord.coords} {pred_coord.z_index}'''
             result += player_str + "\n"
             print(player_str)
             if draw_max:
@@ -122,16 +130,32 @@ def draw_all_players(data_series: pd.Series, pred_series: pd.Series, im_draw: Im
                 pred_coord.draw_vis(im_draw, True)
             else:
                 xy_coord_to_sum_prob: Dict[Tuple[int, int], float] = {}
+                xy_coord_to_max_prob: Dict[Tuple[int, int], float] = {}
                 xy_coord_to_sum_coord: Dict[Tuple[int, int], VisMapCoordinate] = {}
+                xy_coord_to_max_prob_z_index: Dict[Tuple[int, int], int] = {}
                 for i in range(delta_pos_grid_num_cells):
                     cur_pred_prob = pred_series[player_place_area_columns.delta_pos[i]]
                     cur_pred_coord = pos_coord.get_grid_cell(i, True)
                     xy_coord = cur_pred_coord.coords.x, cur_pred_coord.coords.y
                     if xy_coord not in xy_coord_to_sum_prob:
                         xy_coord_to_sum_prob[xy_coord] = 0
+                        xy_coord_to_max_prob[xy_coord] = -1.
                         xy_coord_to_sum_coord[xy_coord] = cur_pred_coord
+                        xy_coord_to_max_prob_z_index[xy_coord] = cur_pred_coord.z_index
                     xy_coord_to_sum_prob[xy_coord] += cur_pred_prob
+                    if cur_pred_prob > xy_coord_to_max_prob[xy_coord]:
+                        xy_coord_to_max_prob[xy_coord] = cur_pred_prob
+                        xy_coord_to_max_prob_z_index[xy_coord] = cur_pred_coord.z_index
                 for xy_coord, prob in xy_coord_to_sum_prob.items():
-                    xy_coord_to_sum_coord[xy_coord].draw_vis(im_draw, False, (int(255 * (1-prob)), int(255 * prob), 0, 100))
+                    draw_dot = xy_coord_to_max_prob_z_index[xy_coord] == 2 and prob > 0.1
+                    if xy_coord_to_max_prob_z_index[xy_coord] == 1:
+                        color = (int(255 * (1-prob)), int(255 * prob), 0, 100)
+                        if prob > 0.3:
+                            x = 1
+                    elif xy_coord_to_max_prob_z_index[xy_coord] == 0 or xy_coord_to_max_prob_z_index[xy_coord] == 2:
+                        color = (int(255 * (1-prob)), 0, int(255 * prob), 100)
+                        if prob > 0.3:
+                            x = 1
+                    xy_coord_to_sum_coord[xy_coord].draw_vis(im_draw, False, color, draw_dot)
     return result
 
