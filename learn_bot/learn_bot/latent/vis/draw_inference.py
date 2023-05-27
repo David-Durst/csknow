@@ -84,10 +84,6 @@ class VisMapCoordinate():
         else:
             cur_color = "blue"
         im_draw.rectangle([canvas_min_vec.x, canvas_min_vec.y, canvas_max_vec.x, canvas_max_vec.y], fill=cur_color)
-        if draw_dot:
-            im_draw.rectangle([canvas_min_vec.x - dot_radius, canvas_min_vec.y - dot_radius,
-                               canvas_max_vec.x + dot_radius, canvas_max_vec.y + dot_radius], fill=(0, 0, 0, 255))
-
 
 
 def draw_all_players(data_series: pd.Series, pred_series: pd.Series, im_draw: ImageDraw, draw_max: bool,
@@ -147,15 +143,21 @@ def draw_all_players(data_series: pd.Series, pred_series: pd.Series, im_draw: Im
                         xy_coord_to_max_prob[xy_coord] = cur_pred_prob
                         xy_coord_to_max_prob_z_index[xy_coord] = cur_pred_coord.z_index
                 for xy_coord, prob in xy_coord_to_sum_prob.items():
-                    draw_dot = xy_coord_to_max_prob_z_index[xy_coord] == 2 and prob > 0.1
-                    if xy_coord_to_max_prob_z_index[xy_coord] == 1:
-                        color = (int(255 * (1-prob)), int(255 * prob), 0, 100)
-                        if prob > 0.3:
-                            x = 1
-                    elif xy_coord_to_max_prob_z_index[xy_coord] == 0 or xy_coord_to_max_prob_z_index[xy_coord] == 2:
-                        color = (int(255 * (1-prob)), 0, int(255 * prob), 100)
-                        if prob > 0.3:
-                            x = 1
-                    xy_coord_to_sum_coord[xy_coord].draw_vis(im_draw, False, color, draw_dot)
+                    if prob < 0.05:
+                        color = (255, 0, 0, 100)
+                    else:
+                        if xy_coord_to_max_prob_z_index[xy_coord] == 0:
+                            color = (int(255 * (1-prob)), 0, int(255 * prob), 255)
+                            if prob > 0.3:
+                                x = 1
+                        if xy_coord_to_max_prob_z_index[xy_coord] == 1:
+                            color = (int(255 * (1-prob)), int(255 * prob), 0, 255)
+                            if prob > 0.3:
+                                x = 1
+                        elif xy_coord_to_max_prob_z_index[xy_coord] == 2:
+                            color = (int(255 * (1-prob)), int(255 * prob), int(255 * prob), 255)
+                            if prob > 0.3:
+                                x = 1
+                    xy_coord_to_sum_coord[xy_coord].draw_vis(im_draw, False, color)
     return result
 
