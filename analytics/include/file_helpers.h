@@ -28,6 +28,7 @@ using std::vector;
 using std::atomic;
 
 void printProgress(const atomic<int64_t> & numFinished, size_t numToComplete);
+void printProgress(const atomic<size_t> & numFinished, size_t numToComplete);
 void printProgress(double progress);
 
 const string placeholderFileName = ".placeholder";

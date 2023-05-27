@@ -135,6 +135,15 @@ bool pointInRegionMaxInclusive(AABB box, Vec3 point) {
            point.z > box.min.z && point.z <= box.max.z;
 }
 
+
+static inline __attribute__((always_inline))
+double pointToAreaDistance(Vec3 position, AABB area) {
+    double dx = std::max(area.min.x - position.x, std::max(0., position.x - area.max.x));
+    double dy = std::max(area.min.y - position.y, std::max(0., position.y - area.max.y));
+    double dz = std::max(area.min.z - position.z, std::max(0., position.z - area.max.z));
+    return std::sqrt(dx * dx + dy * dy + dz * dz);
+}
+
 static inline __attribute__((always_inline))
 vector<Vec3> getAABBCorners(AABB aabb) {
     vector<Vec3> result;

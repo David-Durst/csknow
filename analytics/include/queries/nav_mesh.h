@@ -68,6 +68,8 @@ public:
     struct OverlappingResult {
         vector<AreaId> overlappingIn2D;
         vector<AreaId> overlappingIn3D;
+        AreaId nearest;
+        double nearestZ;
     };
     OverlappingResult overlappingAreas(Vec3 pos) const;
 };
