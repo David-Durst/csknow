@@ -71,6 +71,7 @@ class TrainType(Enum):
 @dataclass
 class HyperparameterOptions:
     num_epochs: int = 300
+    batch_size: int = 256
     learning_rate: float = 4e-5
     weight_decay: float = 0.
     layers: int = 2
@@ -78,14 +79,18 @@ class HyperparameterOptions:
     noise_var: float = 1.
 
     def __str__(self):
-        return f"e_{self.num_epochs}_lr_{self.learning_rate}_wd_{self.weight_decay}_l_{self.layers}_h_{self.heads}_n_{self.noise_var}"
+        return f"e_{self.num_epochs}_b_{self.batch_size}_lr_{self.learning_rate}_wd_{self.weight_decay}_l_{self.layers}_h_{self.heads}_n_{self.noise_var}"
 
 
 default_hyperparameter_options = HyperparameterOptions()
-hyperparameter_option_range = [HyperparameterOptions(learning_rate=1e-5),
-                               HyperparameterOptions(num_epochs=3000, learning_rate=1e-6),
-                               HyperparameterOptions(weight_decay=0.1),
-                               HyperparameterOptions(layers=4, heads=8)]
+hyperparameter_option_range = [HyperparameterOptions(batch_size=2048, learning_rate=4e-4),
+                               HyperparameterOptions(batch_size=4096, learning_rate=8e-4),
+                               HyperparameterOptions(batch_size=8192, learning_rate=2e-3),
+                               HyperparameterOptions(batch_size=16384, learning_rate=4e-3)]
+#hyperparameter_option_range = [HyperparameterOptions(learning_rate=1e-5),
+#                               HyperparameterOptions(num_epochs=3000, learning_rate=1e-6),
+#                               HyperparameterOptions(weight_decay=0.1),
+#                               HyperparameterOptions(layers=4, heads=8)]
                                #HyperparameterOptions(noise_var=1.)]
 #hyperparameter_option_range = [HyperparameterOptions(),
 #                               HyperparameterOptions(learning_rate=4e-4),
@@ -311,7 +316,7 @@ def train(train_type: TrainType, all_data_df: pd.DataFrame, hyperparameter_optio
 
     train_data = LatentDataset(train_df, column_transformers)
     test_data = LatentDataset(test_df, column_transformers)
-    batch_size = min(256, min(len(train_df), len(test_df)))
+    batch_size = min(hyperparameter_options.batch_size, min(len(train_df), len(test_df)))
     train_dataloader = DataLoader(train_data, batch_size=batch_size, num_workers=10, shuffle=True, pin_memory=True)
     test_dataloader = DataLoader(test_data, batch_size=batch_size, num_workers=10, shuffle=True, pin_memory=True)
 
