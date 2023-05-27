@@ -6,6 +6,7 @@ from learn_bot.latent.place_area.column_names import *
 from learn_bot.latent.train import latent_team_hdf5_data_path
 from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd
 from sklearn.cluster import KMeans
+from learn_bot.libs.vec import Vec3
 import numpy as np
 from PIL import Image, ImageDraw
 
@@ -18,16 +19,6 @@ minimapWidth = 2048
 minimapHeight = 2048
 minimapScale = 4.4 * 1024 / minimapHeight
 d2_radar_path = Path(__file__).parent / '..' / '..' / '..' / 'web_vis' / 'vis_images' / 'de_dust2_radar_upsampled_all_labels.png'
-
-
-@dataclass
-class Vec3:
-    x: float
-    y: float
-    z: float
-
-    def __str__(self) -> str:
-        return f'''({self.x:8.2f}, {self.y:8.2f}, {self.z:8.2f})'''
 
 
 class MapCoordinate:

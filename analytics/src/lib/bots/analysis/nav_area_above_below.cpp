@@ -146,6 +146,9 @@ namespace csknow::nav_area_above_below {
         auto navRegionVec = file.getDataSet("/extra/nav region").read<std::vector<double>>();
         navRegion = AABB{{navRegionVec[0], navRegionVec[1], navRegionVec[2]},
                          {navRegionVec[3], navRegionVec[4], navRegionVec[5]}};
+
+        size_t tmpIndex = posToIndex({466.8466, -47.859, -4.96});
+        std::cout << tmpIndex << std::endl;
     }
 
     void NavAreaAboveBelow::computeNavRegion(const MapMeshResult &mapMeshResult) {

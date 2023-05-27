@@ -6,6 +6,7 @@ from typing import Dict, Tuple
 
 import torch
 from tqdm import tqdm
+from math import ceil
 
 from learn_bot.latent.dataset import LatentDataset
 from learn_bot.latent.engagement.column_names import round_id_column, tick_id_column
@@ -18,6 +19,17 @@ from learn_bot.latent.vis.run_vis_checkpoint import load_model_file_for_rollout
 from learn_bot.latent.vis.vis import vis
 from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd, load_hdf5_extra_to_list
 from learn_bot.libs.io_transforms import get_untransformed_outputs, CPU_DEVICE_STR
+from learn_bot.libs.vec import Vec3
+
+
+@dataclass
+class AABB:
+    min: Vec3
+    max: Vec3
+
+
+def nav_region_to_aabb(nav_region: List[int]) -> AABB:
+    return AABB(Vec3(nav_region[0], nav_region[1], nav_region[2]), Vec3(nav_region[3], nav_region[4], nav_region[5]))
 
 
 @dataclass
@@ -49,42 +61,71 @@ def build_rollout_tensor(round_lengths: RoundLengths, dataset: LatentDataset) ->
     return result
 
 
-# 250 units per second, 12.8 ticks per second
-max_run_speed_per_tick = 250. / 12.8
+# 130 units per half second (rounded up), 12.8 ticks per second
+max_run_speed_per_tick = 130. / (12.8 / 2)
+max_jump_height = 65.
+nav_step_size = 10.
 
 
-def step(rollout_tensor: torch.Tensor, pred_tensor: torch.Tensor, model: TransformerNestedHiddenLatentModel,
-         round_lengths: RoundLengths, step_index: int):
-    rollout_tensor_input_indices = [step_index + round_lengths.max_length_per_round * round_id
-                                    for round_id in range(round_lengths.num_rounds)]
-    rollout_tensor_output_indices = [index + 1 for index in rollout_tensor_input_indices]
-
-    pred = get_untransformed_outputs(model(rollout_tensor[rollout_tensor_input_indices].to(CUDA_DEVICE_STR)))
-    pred_tensor[rollout_tensor_input_indices] = pred.to(CPU_DEVICE_STR)
-    pred_per_player = torch.argmax(rearrange(pred, 'b (p d) -> b p d', p=len(specific_player_place_area_columns)), 2)
-
-    z_index = torch.floor(pred_per_player / delta_pos_grid_num_xy_cells_per_z_change) - \
-              int(delta_pos_grid_num_xy_cells_per_z_change / 2)
+def compute_new_pos(input_pos_tensor: torch.tensor, pred_per_player: torch.Tensor,
+                    nav_above_below: torch.Tensor, nav_region: AABB):
+    # compute indices for changes
+    z_jump_index = torch.floor(pred_per_player / delta_pos_grid_num_xy_cells_per_z_change)
     xy_pred_per_player = torch.floor(torch.remainder(pred_per_player, delta_pos_grid_num_xy_cells_per_z_change))
     x_index = torch.floor(torch.remainder(xy_pred_per_player, delta_pos_grid_num_cells_per_xy_dim)) - \
               int(delta_pos_grid_num_cells_per_xy_dim / 2)
     y_index = torch.floor(xy_pred_per_player / delta_pos_grid_num_cells_per_xy_dim) - \
               int(delta_pos_grid_num_cells_per_xy_dim / 2)
-    #pos_index = rearrange(torch.stack([x_index, y_index, z_index], dim=-1), 'b p d -> b (p d)')
+    z_index = torch.zeros_like(x_index)
+
+
+    # convert to xy pos changes
     pos_index = torch.stack([x_index, y_index, z_index], dim=-1)
     unscaled_pos_change = (pos_index * delta_pos_grid_cell_dim)
     pos_change_norm = torch.linalg.vector_norm(unscaled_pos_change, dim=-1, keepdim=True)
     all_scaled_pos_change = (max_run_speed_per_tick / pos_change_norm) * unscaled_pos_change
-    # if norm less than max run speed, don't scape
+    # if norm less than max run speed, don't scale
     scaled_pos_change = torch.where(pos_change_norm > max_run_speed_per_tick, all_scaled_pos_change,
                                     unscaled_pos_change)
-    #other_scaled_pos_change = rearrange(unscaled_pos_change, 'b p d -> b (p d)')
 
-    tmp_rollout_tensor = rollout_tensor[rollout_tensor_input_indices]
-    tmp_rollout_tensor[:, model.players_pos_columns] += rearrange(scaled_pos_change, 'b p d -> b (p d)')\
-        .to(CPU_DEVICE_STR)
-    rollout_tensor[rollout_tensor_output_indices] = tmp_rollout_tensor
+    # apply to input pos
+    output_pos_tensor = input_pos_tensor + scaled_pos_change
+    output_pos_tensor[:, :, 2] += torch.where(z_jump_index == 2., max_jump_height, 0.)
+    output_pos_tensor[:, :, 0] = output_pos_tensor[:, :, 0].clamp(min=nav_region.min.x, max=nav_region.max.x)
+    output_pos_tensor[:, :, 1] = output_pos_tensor[:, :, 1].clamp(min=nav_region.min.y, max=nav_region.max.y)
+    output_pos_tensor[:, :, 2] = output_pos_tensor[:, :, 2].clamp(min=nav_region.min.z, max=nav_region.max.z)
 
+    # compute z pos
+    num_y_steps = int(ceil((nav_region.max.y - nav_region.min.y) / nav_step_size))
+    num_z_steps = int(ceil((nav_region.max.z - nav_region.min.z) / nav_step_size))
+    num_steps = torch.tensor([[[num_y_steps * num_z_steps, num_z_steps, 1]]]).to(CUDA_DEVICE_STR).long()
+    nav_grid_base = torch.tensor([[[nav_region.min.x, nav_region.min.y, nav_region.min.z]]]).to(CUDA_DEVICE_STR)
+    nav_grid_steps = torch.floor((output_pos_tensor - nav_grid_base) / nav_step_size).long()
+    nav_grid_index = rearrange(torch.sum(num_steps * nav_grid_steps, dim=-1), 'b p -> (b p)')
+    nav_above_below_per_player = rearrange(torch.index_select(nav_above_below, 0, nav_grid_index), '(b p) o -> b p o',
+                                           p=len(specific_player_place_area_columns))
+    output_pos_tensor[:, :, 2] = torch.where(z_jump_index == 1,
+                                             nav_above_below_per_player[:, :, 0], nav_above_below_per_player[:, :, 1])
+    return rearrange(output_pos_tensor, 'b p d -> b (p d)').to(CPU_DEVICE_STR)
+
+
+def step(rollout_tensor: torch.Tensor, pred_tensor: torch.Tensor, model: TransformerNestedHiddenLatentModel,
+         round_lengths: RoundLengths, step_index: int, nav_above_below: torch.Tensor, nav_region: AABB):
+    rollout_tensor_input_indices = [step_index + round_lengths.max_length_per_round * round_id
+                                    for round_id in range(round_lengths.num_rounds)]
+    rollout_tensor_output_indices = [index + 1 for index in rollout_tensor_input_indices]
+
+    input_tensor = rollout_tensor[rollout_tensor_input_indices].to(CUDA_DEVICE_STR)
+    input_pos_tensor = rearrange(input_tensor[:, model.players_pos_columns], 'b (p d) -> b p d',
+                                 p=len(specific_player_place_area_columns))
+    pred = get_untransformed_outputs(model(input_tensor))
+    pred_tensor[rollout_tensor_input_indices] = pred.to(CPU_DEVICE_STR)
+    pred_per_player = torch.argmax(rearrange(pred, 'b (p d) -> b p d', p=len(specific_player_place_area_columns)), 2)
+
+    tmp_rollout = rollout_tensor[rollout_tensor_input_indices]
+    tmp_rollout[:, model.players_pos_columns] = compute_new_pos(input_pos_tensor, pred_per_player,
+                                                                nav_above_below, nav_region)
+    rollout_tensor[rollout_tensor_output_indices] = tmp_rollout
 
 def match_round_lengths(df: pd.DataFrame, rollout_tensor: torch.Tensor, pred_tensor: torch.Tensor,
                         round_lengths: RoundLengths, cts: IOColumnTransformers) -> Tuple[pd.DataFrame, pd.DataFrame]:
@@ -104,7 +145,8 @@ def match_round_lengths(df: pd.DataFrame, rollout_tensor: torch.Tensor, pred_ten
 
 
 def delta_pos_rollout(df: pd.DataFrame, dataset: LatentDataset, model: TransformerNestedHiddenLatentModel,
-                      cts: IOColumnTransformers) -> Tuple[pd.DataFrame, pd.DataFrame]:
+                      cts: IOColumnTransformers, nav_above_below: torch.Tensor,
+                      nav_region: AABB) -> Tuple[pd.DataFrame, pd.DataFrame]:
     round_lengths = get_round_lengths(df)
     rollout_tensor = build_rollout_tensor(round_lengths, dataset)
     pred_tensor = torch.zeros(rollout_tensor.shape[0], dataset.Y.shape[1])
@@ -113,7 +155,7 @@ def delta_pos_rollout(df: pd.DataFrame, dataset: LatentDataset, model: Transform
         num_steps = round_lengths.max_length_per_round - 1
         with tqdm(total=num_steps, disable=False) as pbar:
             for step_index in range(num_steps):
-                step(rollout_tensor, pred_tensor, model, round_lengths, step_index)
+                step(rollout_tensor, pred_tensor, model, round_lengths, step_index, nav_above_below, nav_region)
                 pbar.update(1)
     return match_round_lengths(df, rollout_tensor, pred_tensor, round_lengths, cts)
 
@@ -134,11 +176,13 @@ if __name__ == "__main__":
         all_data_df = all_data_df[(all_data_df['valid'] == 1.) & (all_data_df['c4 status'] < 2)]
     all_data_df = all_data_df.copy()
 
-    nav_above_below = load_hdf5_extra_to_list(nav_above_below_hdf5_data_path)
-    nav_region = load_hdf5_to_pd(nav_above_below_hdf5_data_path)
+    nav_region = nav_region_to_aabb(load_hdf5_extra_to_list(nav_above_below_hdf5_data_path)[0])
+    nav_above_below_df = load_hdf5_to_pd(nav_above_below_hdf5_data_path)
+    nav_above_below_tensor = torch.Tensor(nav_above_below_df[['z nearest', 'z below']].to_numpy()).to(CUDA_DEVICE_STR)
 
     load_result = load_model_file_for_rollout(all_data_df, "delta_pos_checkpoint.pt")
 
     rollout_df, pred_df = delta_pos_rollout(load_result.test_df, load_result.test_dataset, load_result.model,
-                                            load_result.column_transformers)
+                                            load_result.column_transformers, nav_above_below_tensor, nav_region)
+
     vis(rollout_df, pred_df)

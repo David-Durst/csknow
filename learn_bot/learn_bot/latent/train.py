@@ -75,7 +75,7 @@ class HyperparameterOptions:
     weight_decay: float = 0.
     layers: int = 2
     heads: int = 4
-    noise_var: float = -1.
+    noise_var: float = 1.
 
     def __str__(self):
         return f"e_{self.num_epochs}_lr_{self.learning_rate}_wd_{self.weight_decay}_l_{self.layers}_h_{self.heads}_n_{self.noise_var}"
@@ -85,8 +85,8 @@ default_hyperparameter_options = HyperparameterOptions()
 hyperparameter_option_range = [HyperparameterOptions(learning_rate=1e-5),
                                HyperparameterOptions(num_epochs=3000, learning_rate=1e-6),
                                HyperparameterOptions(weight_decay=0.1),
-                               HyperparameterOptions(layers=4, heads=8),
-                               HyperparameterOptions(noise_var=1.)]
+                               HyperparameterOptions(layers=4, heads=8)]
+                               #HyperparameterOptions(noise_var=1.)]
 #hyperparameter_option_range = [HyperparameterOptions(),
 #                               HyperparameterOptions(learning_rate=4e-4),
 #                               HyperparameterOptions(learning_rate=4e-6),
