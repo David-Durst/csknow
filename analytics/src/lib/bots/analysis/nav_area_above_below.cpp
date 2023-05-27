@@ -3,7 +3,9 @@
 //
 
 #include "bots/analysis/nav_area_above_below.h"
+#include "file_helpers.h"
 #include <filesystem>
+#include <atomic>
 
 namespace csknow::nav_area_above_below {
     size_t NavAreaAboveBelow::posToIndex(Vec3 pos) {
@@ -34,7 +36,8 @@ namespace csknow::nav_area_above_below {
                             navRegion.min.y + static_cast<double>(yStep) * step_size,
                             navRegion.min.z + static_cast<double>(zStep) * step_size,
                         };
-                        if (pos.x > -1400 && pos.x < -1350 && pos.y > 2675 && pos.y < 2700 && pos.z > 110 && pos.z < 125) {
+                        size_t index = posToIndex(pos);
+                        if (index == 4002863) {
                             int x = 0;
                             posToIndex(pos);
                             (void) x;
@@ -92,6 +95,19 @@ namespace csknow::nav_area_above_below {
                             localZNearest = pos.z;
                             foundZNearest = true;
                         }
+                        // if not found nearest overlapping in 2d or 3d, just grab nearest
+                        if (!foundZNearest) {
+                            areaNearestId = overlappingResult.nearest;
+                            localZNearest = overlappingResult.nearestZ;
+                            foundZNearest = true;
+                        }
+                        // if not found abvoe or below, just take nearest
+                        if (!foundZAbove) {
+                            minZAbove = localZNearest;
+                        }
+                        if (!foundZBelow) {
+                            maxZBelow = localZNearest;
+                        }
                         areaAbove.push_back(areaAboveId);
                         zAbove.push_back(minZAbove);
                         foundAbove.push_back(foundZAbove);
@@ -147,7 +163,7 @@ namespace csknow::nav_area_above_below {
         navRegion = AABB{{navRegionVec[0], navRegionVec[1], navRegionVec[2]},
                          {navRegionVec[3], navRegionVec[4], navRegionVec[5]}};
 
-        size_t tmpIndex = posToIndex({466.8466, -47.859, -4.96});
+        size_t tmpIndex = posToIndex({-223.07, 1207.14, 32.03});
         std::cout << tmpIndex << std::endl;
     }
 
