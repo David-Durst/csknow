@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter import ttk, font
-from typing import Tuple, Optional, List
+from typing import Tuple, Optional, List, Dict
 
 import pandas as pd
 from PIL import Image, ImageDraw, ImageTk as itk
@@ -121,9 +121,17 @@ def draw_all_players(data_series: pd.Series, pred_series: pd.Series, im_draw: Im
                 data_coord.draw_vis(im_draw, True)
                 pred_coord.draw_vis(im_draw, True)
             else:
+                xy_coord_to_sum_prob: Dict[Tuple[int, int], float] = {}
+                xy_coord_to_sum_coord: Dict[Tuple[int, int], VisMapCoordinate] = {}
                 for i in range(delta_pos_grid_num_cells):
                     cur_pred_prob = pred_series[player_place_area_columns.delta_pos[i]]
                     cur_pred_coord = pos_coord.get_grid_cell(i, True)
-                    cur_pred_coord.draw_vis(im_draw, False, (int(255 * (1-cur_pred_prob)), int(255 * cur_pred_prob), 0, 100))
+                    xy_coord = cur_pred_coord.coords.x, cur_pred_coord.coords.y
+                    if xy_coord not in xy_coord_to_sum_prob:
+                        xy_coord_to_sum_prob[xy_coord] = 0
+                        xy_coord_to_sum_coord[xy_coord] = cur_pred_coord
+                    xy_coord_to_sum_prob[xy_coord] += cur_pred_prob
+                for xy_coord, prob in xy_coord_to_sum_prob.items():
+                    xy_coord_to_sum_coord[xy_coord].draw_vis(im_draw, False, (int(255 * (1-prob)), int(255 * prob), 0, 100))
     return result
 
