@@ -25,6 +25,10 @@ void printProgress(const atomic<size_t> & numFinished, size_t numToComplete) {
     printProgress(static_cast<double>(numFinished.load()) / static_cast<double>(numToComplete));
 }
 
+void printProgress(size_t numFinished, size_t numToComplete) {
+    printProgress(static_cast<double>(numFinished) / static_cast<double>(numToComplete));
+}
+
 void printProgress(double progress) {
     int barWidth = 70;
 
