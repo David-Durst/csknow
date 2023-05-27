@@ -11,14 +11,12 @@ MapMeshResult::OverlappingResult MapMeshResult::overlappingAreas(Vec3 pos) const
         if (pointInRegion2D(coordinate[i], pos)) {
             result.overlappingIn2D.push_back(areaId[i]);
         }
-        /*
         double curDistance = pointToAreaDistance(pos, coordinate[i]);
         if (curDistance < nearestDistance) {
             nearestDistance = curDistance;
             result.nearest = areaId[i];
             result.nearestZ = coordinate[i].max.z;
         }
-         */
     }
     return result;
 }
