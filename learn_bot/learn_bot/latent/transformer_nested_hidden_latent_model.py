@@ -6,6 +6,8 @@ from torch import nn
 from learn_bot.latent.engagement.column_names import max_enemies
 from learn_bot.latent.order.column_names import team_strs, player_team_str, flatten_list
 from learn_bot.latent.place_area.column_names import specific_player_place_area_columns
+from learn_bot.latent.place_area.pos_abs_delta_conversion import compute_new_pos, load_nav_region_and_above_below, \
+    delta_one_hot_to_index
 from learn_bot.libs.io_transforms import IOColumnTransformers, CUDA_DEVICE_STR
 from learn_bot.libs.positional_encoding import *
 from einops import rearrange
@@ -74,11 +76,13 @@ class TransformerNestedHiddenLatentModel(nn.Module):
             nn.Linear(self.internal_width, self.internal_width),
         )
 
+        self.nav_region, self.nav_above_below = load_nav_region_and_above_below()
+
         transformer_encoder_layer = nn.TransformerEncoderLayer(d_model=self.internal_width, nhead=num_heads, batch_first=True)
         transformer_encoder = nn.TransformerEncoder(transformer_encoder_layer, num_layers=num_layers, enable_nested_tensor=False)
         self.transformer_model = nn.Transformer(d_model=self.internal_width, nhead=num_heads,
                                                 num_encoder_layers=num_layers, num_decoder_layers=num_layers,
-                                                custom_encoder=transformer_encoder)
+                                                custom_encoder=transformer_encoder, batch_first=True)
 
         self.decoder = nn.Sequential(
             nn.Linear(self.internal_width, inner_latent_size),
@@ -93,42 +97,63 @@ class TransformerNestedHiddenLatentModel(nn.Module):
             nn.Flatten(1)
         )
 
+    def encode_pos(self, pos: torch.tensor):
+        # https://arxiv.org/pdf/2003.08934.pdf
+        # 5.1 - everything is normalized -1 to 1
+        if pos.device.type == CUDA_DEVICE_STR:
+            pos_scaled = (pos - self.d2_min_gpu) / (self.d2_max_gpu - self.d2_min_gpu)
+        else:
+            pos_scaled = (pos - self.d2_min_cpu) / (self.d2_max_cpu - self.d2_min_cpu)
+        pos_scaled = torch.clamp(pos_scaled, 0, 1)
+        pos_scaled = (pos_scaled * 2) - 1
+
+        if self.noise_var >= 0.:
+            means = torch.zeros(pos.shape)
+            vars = torch.full(pos.shape, self.noise_var)
+            noise = torch.normal(means, vars).to(pos.device.type)
+            noise_scaled = noise / (self.d2_max_gpu - self.d2_min_gpu)
+            pos_scaled += noise_scaled
+
+        return self.positional_encoder(pos_scaled)
+
+    #https://pytorch.org/tutorials/beginner/translation_transformer.html
+    def generate_square_subsequent_mask(self, device):
+        mask = (torch.triu(torch.ones((self.num_players, self.num_players), device=device)) == 1).transpose(0, 1)
+        mask = mask.float().masked_fill(mask == 0, float('-inf')).masked_fill(mask == 1, float(0.0))
+        return mask
+
     def forward(self, x, y=None):
         # transform inputs
         #x_transformed = self.cts.transform_columns(True, x, x)
 
-        x_pos = rearrange(x[:, self.players_pos_columns], "b (p e) -> b p e", p=self.num_players, e=3)
+        x_pos = rearrange(x[:, self.players_pos_columns], "b (p d) -> b p d", p=self.num_players, d=3)
 
-        # https://arxiv.org/pdf/2003.08934.pdf
-        # 5.1 - everything is normalized -1 to 1
-        if x.device.type == CUDA_DEVICE_STR:
-            x_pos_scaled = (x_pos - self.d2_min_gpu) / (self.d2_max_gpu - self.d2_min_gpu)
-        else:
-            x_pos_scaled = (x_pos - self.d2_min_cpu) / (self.d2_max_cpu - self.d2_min_cpu)
-        x_pos_scaled = torch.clamp(x_pos_scaled, 0, 1)
-        x_pos_scaled = (x_pos_scaled * 2) - 1
+        y_per_player = delta_one_hot_to_index(y)
+        # shift by 1 so never looking into future (and 0 out for past)
+        y_per_player_shifted = torch.roll(y_per_player, 1, dims=1)
+        y_per_player_shifted[:, 0] = 0
+        y_pos = rearrange(compute_new_pos(x_pos, y_per_player_shifted, self.nav_above_below, self.nav_region),
+                          "b (p d) -> b p d", p=self.num_players, d=3)
 
-        if self.noise_var >= 0.:
-            means = torch.zeros(x_pos.shape)
-            vars = torch.full(x_pos.shape, self.noise_var)
-            noise = torch.normal(means, vars).to(x.device.type)
-            noise_scaled = noise / (self.d2_max_gpu - self.d2_min_gpu)
-            x_pos_scaled += noise_scaled
+        x_pos_encoded = self.encode_pos(x_pos)
+        y_pos_encoded = self.encode_pos(y_pos)
 
-        x_pos_encoded = self.positional_encoder(x_pos_scaled)
-
-        x_non_pos = rearrange(x[:, self.players_non_pos_columns], "b (p e) -> b p e", p=self.num_players)
+        x_non_pos = rearrange(x[:, self.players_non_pos_columns], "b (p d) -> b p d", p=self.num_players)
         x_gathered = torch.cat([x_pos_encoded, x_non_pos], -1)
+        y_gathered = torch.cat([y_pos_encoded, x_non_pos], -1)
 
         alive_gathered = x[:, self.alive_columns]
         dead_gathered = alive_gathered < 0.1
 
         # run model except last layer
-        encoded = self.encoder_model(x_gathered)
+        x_encoded = self.encoder_model(x_gathered)
+        y_encoded = self.encoder_model(y_gathered)
 
         if y is None:
             raise Exception("y can't be none for now")
-        transformed = self.transformer_model(encoded, y, src_key_padding_mask=dead_gathered)
+        tgt_mask = self.generate_square_subsequent_mask(x.device.type)
+        transformed = self.transformer_model(x_encoded, y_encoded, tgt_mask=tgt_mask, src_key_padding_mask=dead_gathered)
+        #transformed = self.transformer_model(x_encoded, y_encoded, src_key_padding_mask=dead_gathered)
 
         #if torch.isnan(transformed).any():
         #       all_in_tick_dead_gathered = dead_gathered.all(axis=1)

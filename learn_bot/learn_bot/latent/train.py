@@ -69,7 +69,7 @@ class TrainType(Enum):
 @dataclass
 class HyperparameterOptions:
     num_epochs: int = 300
-    batch_size: int = 2048
+    batch_size: int = 512
     learning_rate: float = 4e-5
     weight_decay: float = 0.
     layers: int = 2

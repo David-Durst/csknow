@@ -11,7 +11,7 @@ from learn_bot.latent.dataset import LatentDataset
 from learn_bot.latent.engagement.column_names import round_id_column, tick_id_column
 from learn_bot.latent.place_area.pos_abs_delta_conversion import delta_pos_grid_num_cells_per_xy_dim, \
     delta_pos_grid_cell_dim, \
-    delta_pos_grid_num_xy_cells_per_z_change, compute_new_pos, load_nav_region_and_above_below, AABB
+    delta_pos_grid_num_xy_cells_per_z_change, compute_new_pos, load_nav_region_and_above_below, AABB, delta_one_hot_to_index
 from learn_bot.latent.train import manual_latent_team_hdf5_data_path, rollout_latent_team_hdf5_data_path, \
     latent_team_hdf5_data_path
 from learn_bot.latent.transformer_nested_hidden_latent_model import *
@@ -60,7 +60,7 @@ def step(rollout_tensor: torch.Tensor, pred_tensor: torch.Tensor, model: Transfo
                                  p=len(specific_player_place_area_columns))
     pred = get_untransformed_outputs(model(input_tensor))
     pred_tensor[rollout_tensor_input_indices] = pred.to(CPU_DEVICE_STR)
-    pred_per_player = torch.argmax(rearrange(pred, 'b (p d) -> b p d', p=len(specific_player_place_area_columns)), 2)
+    pred_per_player = delta_one_hot_to_index(pred)
 
     tmp_rollout = rollout_tensor[rollout_tensor_input_indices]
     tmp_rollout[:, model.players_pos_columns] = compute_new_pos(input_pos_tensor, pred_per_player,

@@ -5,6 +5,17 @@ from learn_bot.latent.engagement.column_names import *
 from learn_bot.latent.order.column_names import *
 from learn_bot.latent.place_area.pos_abs_delta_conversion import *
 
+delta_pos_grid_radius = 130
+delta_pos_grid_cell_dim = 20
+delta_pos_z_num_cells = 3
+delta_pos_grid_num_cells = delta_pos_z_num_cells * \
+                           int((delta_pos_grid_radius * 2 * delta_pos_grid_radius * 2) /
+                               (delta_pos_grid_cell_dim * delta_pos_grid_cell_dim))
+delta_pos_grid_num_cells_per_xy_dim = isqrt(int(delta_pos_grid_num_cells / delta_pos_z_num_cells))
+delta_pos_grid_num_xy_cells_per_z_change = delta_pos_grid_num_cells_per_xy_dim * delta_pos_grid_num_cells_per_xy_dim
+
+
+
 float_c4_cols = [] #[c4_distance_to_a_site_col, c4_distance_to_b_site_col] + c4_pos_cols + c4_ticks_since_plant
 
 test_success_col = 'test success'

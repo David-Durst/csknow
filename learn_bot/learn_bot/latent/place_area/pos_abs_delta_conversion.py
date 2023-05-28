@@ -4,22 +4,14 @@ from pathlib import Path
 import torch
 from einops import rearrange
 
-from learn_bot.latent.place_area.column_names import specific_player_place_area_columns
+from learn_bot.latent.place_area.column_names import specific_player_place_area_columns, delta_pos_grid_radius, \
+    delta_pos_grid_cell_dim, delta_pos_z_num_cells, delta_pos_grid_num_cells, delta_pos_grid_num_cells_per_xy_dim, \
+    delta_pos_grid_num_xy_cells_per_z_change
 from learn_bot.libs.hdf5_to_pd import load_hdf5_extra_to_list, load_hdf5_to_pd
 from learn_bot.libs.vec import Vec3
 from dataclasses import dataclass
 from typing import List, Tuple
 from learn_bot.libs.io_transforms import CUDA_DEVICE_STR, CPU_DEVICE_STR
-
-delta_pos_grid_radius = 130
-delta_pos_grid_cell_dim = 20
-delta_pos_z_num_cells = 3
-delta_pos_grid_num_cells = delta_pos_z_num_cells * \
-                           int((delta_pos_grid_radius * 2 * delta_pos_grid_radius * 2) /
-                               (delta_pos_grid_cell_dim * delta_pos_grid_cell_dim))
-delta_pos_grid_num_cells_per_xy_dim = isqrt(int(delta_pos_grid_num_cells / delta_pos_z_num_cells))
-delta_pos_grid_num_xy_cells_per_z_change = delta_pos_grid_num_cells_per_xy_dim * delta_pos_grid_num_cells_per_xy_dim
-
 
 @dataclass
 class AABB:
@@ -85,6 +77,8 @@ def compute_new_pos(input_pos_tensor: torch.tensor, pred_per_player: torch.Tenso
                                            p=len(specific_player_place_area_columns))
     output_pos_tensor[:, :, 2] = torch.where(z_jump_index == 1,
                                              nav_above_below_per_player[:, :, 0], nav_above_below_per_player[:, :, 1])
-    return rearrange(output_pos_tensor, 'b p d -> b (p d)').to(CPU_DEVICE_STR)
+    return rearrange(output_pos_tensor, 'b p d -> b (p d)')
 
 
+def delta_one_hot_to_index(pred: torch.Tensor) -> torch.Tensor:
+    return torch.argmax(rearrange(pred, 'b (p d) -> b p d', p=len(specific_player_place_area_columns)), 2)
