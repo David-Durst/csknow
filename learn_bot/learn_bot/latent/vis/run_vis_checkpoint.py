@@ -6,7 +6,7 @@ import torch
 
 from learn_bot.latent.dataset import LatentDataset
 from learn_bot.latent.engagement.column_names import max_enemies
-from learn_bot.latent.order.column_names import delta_pos_grid_num_cells
+from learn_bot.latent.place_area.pos_abs_delta_conversion import delta_pos_grid_num_cells
 from learn_bot.latent.place_area.column_names import round_id_column, place_area_input_column_types, \
     delta_pos_output_column_types, test_success_col
 from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd

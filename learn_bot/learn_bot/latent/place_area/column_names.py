@@ -3,6 +3,7 @@ from typing import TypeVar, Optional
 
 from learn_bot.latent.engagement.column_names import *
 from learn_bot.latent.order.column_names import *
+from learn_bot.latent.place_area.pos_abs_delta_conversion import *
 
 float_c4_cols = [] #[c4_distance_to_a_site_col, c4_distance_to_b_site_col] + c4_pos_cols + c4_ticks_since_plant
 

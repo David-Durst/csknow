@@ -75,7 +75,10 @@ class TransformerNestedHiddenLatentModel(nn.Module):
         )
 
         transformer_encoder_layer = nn.TransformerEncoderLayer(d_model=self.internal_width, nhead=num_heads, batch_first=True)
-        self.transformer_model = nn.TransformerEncoder(transformer_encoder_layer, num_layers=num_layers, enable_nested_tensor=False)
+        transformer_encoder = nn.TransformerEncoder(transformer_encoder_layer, num_layers=num_layers, enable_nested_tensor=False)
+        self.transformer_model = nn.Transformer(d_model=self.internal_width, nhead=num_heads,
+                                                num_encoder_layers=num_layers, num_decoder_layers=num_layers,
+                                                custom_encoder=transformer_encoder)
 
         self.decoder = nn.Sequential(
             nn.Linear(self.internal_width, inner_latent_size),
@@ -90,7 +93,7 @@ class TransformerNestedHiddenLatentModel(nn.Module):
             nn.Flatten(1)
         )
 
-    def forward(self, x, noise=None):
+    def forward(self, x, y=None):
         # transform inputs
         #x_transformed = self.cts.transform_columns(True, x, x)
 
@@ -123,7 +126,9 @@ class TransformerNestedHiddenLatentModel(nn.Module):
         # run model except last layer
         encoded = self.encoder_model(x_gathered)
 
-        transformed = self.transformer_model(encoded, src_key_padding_mask=dead_gathered)
+        if y is None:
+            raise Exception("y can't be none for now")
+        transformed = self.transformer_model(encoded, y, src_key_padding_mask=dead_gathered)
 
         #if torch.isnan(transformed).any():
         #       all_in_tick_dead_gathered = dead_gathered.all(axis=1)

@@ -6,12 +6,12 @@ from typing import Dict, Tuple
 
 import torch
 from tqdm import tqdm
-from math import ceil
 
 from learn_bot.latent.dataset import LatentDataset
 from learn_bot.latent.engagement.column_names import round_id_column, tick_id_column
-from learn_bot.latent.order.column_names import delta_pos_grid_num_cells_per_xy_dim, delta_pos_grid_cell_dim, \
-    delta_pos_grid_num_xy_cells_per_z_change
+from learn_bot.latent.place_area.pos_abs_delta_conversion import delta_pos_grid_num_cells_per_xy_dim, \
+    delta_pos_grid_cell_dim, \
+    delta_pos_grid_num_xy_cells_per_z_change, compute_new_pos, load_nav_region_and_above_below, AABB
 from learn_bot.latent.train import manual_latent_team_hdf5_data_path, rollout_latent_team_hdf5_data_path, \
     latent_team_hdf5_data_path
 from learn_bot.latent.transformer_nested_hidden_latent_model import *
@@ -19,18 +19,6 @@ from learn_bot.latent.vis.run_vis_checkpoint import load_model_file_for_rollout
 from learn_bot.latent.vis.vis import vis
 from learn_bot.libs.hdf5_to_pd import load_hdf5_to_pd, load_hdf5_extra_to_list
 from learn_bot.libs.io_transforms import get_untransformed_outputs, CPU_DEVICE_STR
-from learn_bot.libs.vec import Vec3
-
-
-@dataclass
-class AABB:
-    min: Vec3
-    max: Vec3
-
-
-def nav_region_to_aabb(nav_region: List[int]) -> AABB:
-    return AABB(Vec3(nav_region[0], nav_region[1], nav_region[2]), Vec3(nav_region[3], nav_region[4], nav_region[5]))
-
 
 @dataclass
 class RoundLengths:
@@ -61,54 +49,6 @@ def build_rollout_tensor(round_lengths: RoundLengths, dataset: LatentDataset) ->
     return result
 
 
-# 130 units per half second (rounded up), 12.8 ticks per second
-max_run_speed_per_tick = 130. / (12.8 / 2)
-max_jump_height = 65.
-nav_step_size = 10.
-
-
-def compute_new_pos(input_pos_tensor: torch.tensor, pred_per_player: torch.Tensor,
-                    nav_above_below: torch.Tensor, nav_region: AABB):
-    # compute indices for changes
-    z_jump_index = torch.floor(pred_per_player / delta_pos_grid_num_xy_cells_per_z_change)
-    xy_pred_per_player = torch.floor(torch.remainder(pred_per_player, delta_pos_grid_num_xy_cells_per_z_change))
-    x_index = torch.floor(torch.remainder(xy_pred_per_player, delta_pos_grid_num_cells_per_xy_dim)) - \
-              int(delta_pos_grid_num_cells_per_xy_dim / 2)
-    y_index = torch.floor(xy_pred_per_player / delta_pos_grid_num_cells_per_xy_dim) - \
-              int(delta_pos_grid_num_cells_per_xy_dim / 2)
-    z_index = torch.zeros_like(x_index)
-
-
-    # convert to xy pos changes
-    pos_index = torch.stack([x_index, y_index, z_index], dim=-1)
-    unscaled_pos_change = (pos_index * delta_pos_grid_cell_dim)
-    pos_change_norm = torch.linalg.vector_norm(unscaled_pos_change, dim=-1, keepdim=True)
-    all_scaled_pos_change = (max_run_speed_per_tick / pos_change_norm) * unscaled_pos_change
-    # if norm less than max run speed, don't scale
-    scaled_pos_change = torch.where(pos_change_norm > max_run_speed_per_tick, all_scaled_pos_change,
-                                    unscaled_pos_change)
-
-    # apply to input pos
-    output_pos_tensor = input_pos_tensor + scaled_pos_change
-    output_pos_tensor[:, :, 2] += torch.where(z_jump_index == 2., max_jump_height, 0.)
-    output_pos_tensor[:, :, 0] = output_pos_tensor[:, :, 0].clamp(min=nav_region.min.x, max=nav_region.max.x)
-    output_pos_tensor[:, :, 1] = output_pos_tensor[:, :, 1].clamp(min=nav_region.min.y, max=nav_region.max.y)
-    output_pos_tensor[:, :, 2] = output_pos_tensor[:, :, 2].clamp(min=nav_region.min.z, max=nav_region.max.z)
-
-    # compute z pos
-    num_y_steps = int(ceil((nav_region.max.y - nav_region.min.y) / nav_step_size))
-    num_z_steps = int(ceil((nav_region.max.z - nav_region.min.z) / nav_step_size))
-    num_steps = torch.tensor([[[num_y_steps * num_z_steps, num_z_steps, 1]]]).to(CUDA_DEVICE_STR).long()
-    nav_grid_base = torch.tensor([[[nav_region.min.x, nav_region.min.y, nav_region.min.z]]]).to(CUDA_DEVICE_STR)
-    nav_grid_steps = torch.floor((output_pos_tensor - nav_grid_base) / nav_step_size).long()
-    nav_grid_index = rearrange(torch.sum(num_steps * nav_grid_steps, dim=-1), 'b p -> (b p)')
-    nav_above_below_per_player = rearrange(torch.index_select(nav_above_below, 0, nav_grid_index), '(b p) o -> b p o',
-                                           p=len(specific_player_place_area_columns))
-    output_pos_tensor[:, :, 2] = torch.where(z_jump_index == 1,
-                                             nav_above_below_per_player[:, :, 0], nav_above_below_per_player[:, :, 1])
-    return rearrange(output_pos_tensor, 'b p d -> b (p d)').to(CPU_DEVICE_STR)
-
-
 def step(rollout_tensor: torch.Tensor, pred_tensor: torch.Tensor, model: TransformerNestedHiddenLatentModel,
          round_lengths: RoundLengths, step_index: int, nav_above_below: torch.Tensor, nav_region: AABB):
     rollout_tensor_input_indices = [step_index + round_lengths.max_length_per_round * round_id
@@ -124,8 +64,9 @@ def step(rollout_tensor: torch.Tensor, pred_tensor: torch.Tensor, model: Transfo
 
     tmp_rollout = rollout_tensor[rollout_tensor_input_indices]
     tmp_rollout[:, model.players_pos_columns] = compute_new_pos(input_pos_tensor, pred_per_player,
-                                                                nav_above_below, nav_region)
+                                                                nav_above_below, nav_region).to(CPU_DEVICE_STR)
     rollout_tensor[rollout_tensor_output_indices] = tmp_rollout
+
 
 def match_round_lengths(df: pd.DataFrame, rollout_tensor: torch.Tensor, pred_tensor: torch.Tensor,
                         round_lengths: RoundLengths, cts: IOColumnTransformers) -> Tuple[pd.DataFrame, pd.DataFrame]:
@@ -160,12 +101,12 @@ def delta_pos_rollout(df: pd.DataFrame, dataset: LatentDataset, model: Transform
     return match_round_lengths(df, rollout_tensor, pred_tensor, round_lengths, cts)
 
 
-nav_above_below_hdf5_data_path = Path(__file__).parent / '..' / '..' / '..' / '..' / 'analytics' / 'nav' / 'de_dust2_nav_above_below.hdf5'
-
 manual_data = True
 rollout_data = False
 
 if __name__ == "__main__":
+    nav_region, nav_above_below = load_nav_region_and_above_below()
+
     if manual_data:
         all_data_df = load_hdf5_to_pd(manual_latent_team_hdf5_data_path)
         #all_data_df = all_data_df[all_data_df['test name'] == b'LearnedGooseToCatScript']
@@ -176,13 +117,9 @@ if __name__ == "__main__":
         all_data_df = all_data_df[(all_data_df['valid'] == 1.) & (all_data_df['c4 status'] < 2)]
     all_data_df = all_data_df.copy()
 
-    nav_region = nav_region_to_aabb(load_hdf5_extra_to_list(nav_above_below_hdf5_data_path)[0])
-    nav_above_below_df = load_hdf5_to_pd(nav_above_below_hdf5_data_path)
-    nav_above_below_tensor = torch.Tensor(nav_above_below_df[['z nearest', 'z below']].to_numpy()).to(CUDA_DEVICE_STR)
-
     load_result = load_model_file_for_rollout(all_data_df, "delta_pos_checkpoint.pt")
 
     rollout_df, pred_df = delta_pos_rollout(load_result.test_df, load_result.test_dataset, load_result.model,
-                                            load_result.column_transformers, nav_above_below_tensor, nav_region)
+                                            load_result.column_transformers, nav_above_below, nav_region)
 
     vis(rollout_df, pred_df)

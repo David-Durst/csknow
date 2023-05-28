@@ -5,8 +5,8 @@ from typing import Tuple, Optional, List, Dict
 import pandas as pd
 from PIL import Image, ImageDraw, ImageTk as itk
 
-from learn_bot.latent.order.column_names import delta_pos_grid_num_cells, delta_pos_grid_num_cells_per_xy_dim, \
-    delta_pos_grid_cell_dim, tick_id_column, delta_pos_grid_num_xy_cells_per_z_change
+from learn_bot.latent.place_area.pos_abs_delta_conversion import delta_pos_grid_num_cells, delta_pos_grid_num_cells_per_xy_dim, \
+    delta_pos_grid_cell_dim, delta_pos_grid_num_xy_cells_per_z_change
 from learn_bot.latent.place_area.column_names import specific_player_place_area_columns
 from learn_bot.mining.area_cluster import Vec3
 

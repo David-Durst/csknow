@@ -21,9 +21,7 @@ from learn_bot.latent.lstm_latent_model import LSTMLatentModel
 from learn_bot.latent.mlp_hidden_latent_model import MLPHiddenLatentModel
 from learn_bot.latent.mlp_latent_model import MLPLatentModel
 from learn_bot.latent.mlp_nested_hidden_latent_model import MLPNestedHiddenLatentModel
-from learn_bot.latent.order.column_names import order_input_column_types, order_output_column_types, \
-    num_orders_per_site, \
-    PlayerOrderColumns, delta_pos_grid_num_cells
+from learn_bot.latent.place_area.pos_abs_delta_conversion import delta_pos_grid_num_cells
 from learn_bot.latent.order.latent_to_distributions import get_order_probability
 from learn_bot.latent.place_area.column_names import place_area_input_column_types, place_output_column_types, \
     num_places, area_grid_size, area_output_column_types, delta_pos_output_column_types, test_success_col
@@ -228,7 +226,7 @@ def train(train_type: TrainType, all_data_df: pd.DataFrame, hyperparameter_optio
                 # Compute prediction error
                 if train:
                     model.noise_var = hyperparameter_options.noise_var
-                pred = model(X)
+                pred = model(X, Y)
                 model.noise_var = -1.
                 if torch.isnan(X).any():
                     print('bad X')
@@ -310,15 +308,15 @@ def train(train_type: TrainType, all_data_df: pd.DataFrame, hyperparameter_optio
                 test_loss, test_accuracy = train_or_test_SL_epoch(test_dataloader, model, None, False)
             cur_test_less_float = test_loss.get_total_loss().item()
             if cur_test_less_float < min_test_loss:
-                save_model()
+                #save_model()
                 min_test_loss = cur_test_less_float
             save_tensorboard(train_loss, test_loss, train_accuracy, test_accuracy, epoch_num)
 
     train_data = LatentDataset(train_df, column_transformers)
     test_data = LatentDataset(test_df, column_transformers)
     batch_size = min(hyperparameter_options.batch_size, min(len(train_df), len(test_df)))
-    train_dataloader = DataLoader(train_data, batch_size=batch_size, num_workers=10, shuffle=True, pin_memory=True)
-    test_dataloader = DataLoader(test_data, batch_size=batch_size, num_workers=10, shuffle=True, pin_memory=True)
+    train_dataloader = DataLoader(train_data, batch_size=batch_size, num_workers=0, shuffle=True, pin_memory=True)
+    test_dataloader = DataLoader(test_data, batch_size=batch_size, num_workers=0, shuffle=True, pin_memory=True)
 
     print(f"num train examples: {len(train_data)}")
     print(f"num test examples: {len(test_data)}")
